@@ -1,0 +1,3278 @@
+[
+  {
+    "bank": "18",
+    "offset": "561F",
+    "entries": 14,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Ha ha ha!{EF}{EE}{FA}{F7}{EF"
+      ],
+      [
+        1,
+        "{EA}DeathMore{A3}Ha ha ha{EF}{EE}You cam"
+      ],
+      [
+        2,
+        "{EA}DeathMore{A3}Argh..{EF}{EE}I..lost.."
+      ],
+      [
+        7,
+        "{EA}{9F}{A3}Oh, Monster{EF}{EE}Master {F"
+      ],
+      [
+        13,
+        "{EA}{9F}{A3}Master Monster{EF}{EE}{F6}, "
+      ]
+    ]
+  },
+  {
+    "bank": "18",
+    "offset": "5643",
+    "entries": 17,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}King{A3}Oh, {F6}!{EF}{EE}You beat {F"
+      ],
+      [
+        1,
+        "{EA}King{A3}You could {EF}{EE}beat an ev"
+      ],
+      [
+        2,
+        "{EA}King{A3}Just kidding!{EF}{EE}{FA}{F7"
+      ],
+      [
+        8,
+        "{EA}King{A3}Oh {F6}!{EF}{EE}You beat Piz"
+      ],
+      [
+        16,
+        "{EA}{9F}{A3}The girl{EF}{EE}downstairs h"
+      ]
+    ]
+  },
+  {
+    "bank": "18",
+    "offset": "5667",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Great, it's so{EF}{EE}great."
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Yes. It's the{EF}{EE}right w"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}I feel the air{EF}{EE}is spa"
+      ],
+      [
+        5,
+        "{EA}{9F}{A3}Enter here to{EF}{EE}the Vau"
+      ],
+      [
+        10,
+        "{EB}{9F}{A3}Huff, {EF}{EE}I don't need y"
+      ]
+    ]
+  },
+  {
+    "bank": "1A",
+    "offset": "400B",
+    "entries": 28,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Yo! Pulio was{EF}{EE}happy!{"
+      ],
+      [
+        1,
+        "{EB}Pulio{A3}Thank you{EF}{EE}{F6}!{FA}{"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}This is the{EF}{EE}monster f"
+      ],
+      [
+        14,
+        "{EA}{9F}{A3}Being a{EF}{EE}daredevil doe"
+      ],
+      [
+        27,
+        "{EB}{9F}{A3}Relax,{F6}.{EF}{EE}It's okay"
+      ]
+    ]
+  },
+  {
+    "bank": "1A",
+    "offset": "4045",
+    "entries": 80,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Snickering...{EF}{EE}{FA}{F7"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}I won't lose.I'm{EF}{EE}just"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}All of you!{EF}{EE}Get down "
+      ],
+      [
+        40,
+        "{EB}{9F}{A3}...I am not{EF}{EE}a rebel!{"
+      ],
+      [
+        79,
+        "The door is{EF}{EE}shut tight.{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "1A",
+    "offset": "40F3",
+    "entries": 13,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Hmm,When you{EF}{EE}are reco"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Well. You have{EF}{EE}to cre"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Here's the{EF}{EE}Travelers'"
+      ],
+      [
+        6,
+        "{EA}{9F}{A3}Too bad. Your{EF}{EE}monster"
+      ],
+      [
+        12,
+        "{EA}{9F}{A3}An eye ball in{EF}{EE}an Eye"
+      ]
+    ]
+  },
+  {
+    "bank": "1A",
+    "offset": "4119",
+    "entries": 17,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Oh, well.{EF}{EE}{F7}"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}I heard there is{EF}{EE}a we"
+      ],
+      [
+        2,
+        "{F6} looked at{EF}{EE}the bookshelf.{FA}"
+      ],
+      [
+        8,
+        "{F6} looked at{EF}{EE}the bookshelf.{FA}"
+      ],
+      [
+        16,
+        "{EA}{9F}{A3}Welcome to the{EF}{EE}item s"
+      ]
+    ]
+  },
+  {
+    "bank": "1B",
+    "offset": "400D",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Do you know the{EF}{EE}name "
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Warubou?{EF}{EE}Hee hee hee!"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}Oh gosh! I{EF}{EE}wonder if "
+      ],
+      [
+        5,
+        "{EA}{9F}{A3}When GreatTree{EF}{EE}grows,"
+      ],
+      [
+        10,
+        "{EA}{9F}{A3}Oh well,{EF}{EE}nobody's her"
+      ]
+    ]
+  },
+  {
+    "bank": "1B",
+    "offset": "4025",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}There's a{EF}{EE}person who "
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}BadMeat is bad{EF}{EE}and po"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}We disobey when{EF}{EE}we ge"
+      ],
+      [
+        4,
+        "{EA}{9F}{A3}Hey! The Monster{EF}{EE}Stab"
+      ],
+      [
+        7,
+        "{EB}{9F}{A3}The Travelers'{EF}{EE}Gates "
+      ]
+    ]
+  },
+  {
+    "bank": "1B",
+    "offset": "4043",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F6} got{EF}{EE}leftovers from{FA}{F7}{E"
+      ],
+      [
+        1,
+        "{EB}Watabou{A3}you gotta{EF}{EE}win!{F7}"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}No monster can{EF}{EE}stay u"
+      ],
+      [
+        5,
+        "{EA}King{A3}Oh {F6}!{EF}{EE}You beat{FA}"
+      ],
+      [
+        10,
+        "{EA}{9F}{A3}Oh I'm sorry!{EF}{EE}I was r"
+      ]
+    ]
+  },
+  {
+    "bank": "1B",
+    "offset": "406B",
+    "entries": 12,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}I'll wait{EF}{EE}for a stron"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Why don't you{EF}{EE}breed w"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}I'll try not{EF}{EE}to boast"
+      ],
+      [
+        6,
+        "{EA}{9F}{A3}These statues{EF}{EE}stand a"
+      ],
+      [
+        11,
+        "{EA}{9F}{A3}Hi ho! Hi ho!{EF}{EE}{FA}{F7"
+      ]
+    ]
+  },
+  {
+    "bank": "1B",
+    "offset": "40B3",
+    "entries": 17,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F6} got{EF}{EE}leftovers from{FA}{F7}{E"
+      ],
+      [
+        1,
+        "{EA}Warubou{A3}Ha!{EF}{EE}Serves you rig"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}WhipBird can do{EF}{EE}Call."
+      ],
+      [
+        8,
+        "{EA}{9F}{A3}Well done! You{EF}{EE}surviv"
+      ],
+      [
+        16,
+        "{EA}{9F}{A3}My rival is{EF}{EE}watching "
+      ]
+    ]
+  },
+  {
+    "bank": "1B",
+    "offset": "40F1",
+    "entries": 16,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{A3}Journal of My{EF}{EE}Baby, Part 3{FA"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}You collected{EF}{EE}more th"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}This room is{EF}{EE}yours!{F"
+      ],
+      [
+        8,
+        "{F6} looked at{EF}{EE}the bookshelf.{FA}"
+      ],
+      [
+        15,
+        "{F6} looked at{EF}{EE}the bookshelf.{FA}"
+      ]
+    ]
+  },
+  {
+    "bank": "1F",
+    "offset": "4029",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}It'll be better{EF}{EE}if st"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Don't say that.{EF}{EE}It is"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}Hm. It seems{EF}{EE}there ar"
+      ],
+      [
+        5,
+        "Splash!{EF}{EE}{FA}{F7}{EF}{EE}Something"
+      ],
+      [
+        10,
+        "{EA}{9F}{A3}Mostly garbage,{EF}{EE}but s"
+      ]
+    ]
+  },
+  {
+    "bank": "1F",
+    "offset": "404D",
+    "entries": 13,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Oh, {F6}!{EF}{EE}I was waiti"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Well done!{EF}{EE}You surviv"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}The classes{EF}{EE}are S to "
+      ],
+      [
+        6,
+        "{EA}{9F}{A3}{F6}!{EF}{EE}We'll have to{F"
+      ],
+      [
+        12,
+        "{EA}{9F}{A3}Hi ho! Hi ho!{EF}{EE}{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "1F",
+    "offset": "408D",
+    "entries": 16,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}BigTrunk vs.{EF}{EE}GreatTre"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}The rep of{EF}{EE}GreatTree "
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}DeadTree vs.{EF}{EE}GreatTre"
+      ],
+      [
+        8,
+        "{EB}Milayou{A3}That's my{EF}{EE}boy, Ter"
+      ],
+      [
+        15,
+        "{EA}King{A3}Oh {F6}!{EF}{EE}Well done!{F"
+      ]
+    ]
+  },
+  {
+    "bank": "1F",
+    "offset": "40AF",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}King{A3}You don't{EF}{EE}want to. I{"
+      ],
+      [
+        1,
+        "{EA}King{A3}Oh!! You will{EF}{EE}stay in"
+      ],
+      [
+        2,
+        "{EA}King{A3}{F6}, go to{EF}{EE}the chamb"
+      ],
+      [
+        5,
+        "{EB}{9F}{A3}Congratulations!{EF}{EE}Toni"
+      ],
+      [
+        9,
+        "{EB}{9F}{A3}Oh my dear{EF}{EE}{F6}!{FA}{"
+      ]
+    ]
+  },
+  {
+    "bank": "1F",
+    "offset": "40CB",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Okay I'll fish{EF}{EE}for st"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}No running!{EF}{EE}{F7}"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}Squawk! Squawk!{EF}{EE}{F7}"
+      ],
+      [
+        5,
+        "{EB}Pulio{A3}If you{EF}{EE}didn't help m"
+      ],
+      [
+        9,
+        "{EB}{9F}{A3}{F6}! You did{EF}{EE}great!{"
+      ]
+    ]
+  },
+  {
+    "bank": "21",
+    "offset": "400F",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}I'll send my{EF}{EE}StoneMan"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Well, I thought{EF}{EE}to..."
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}...fine.{EF}{EE}If you chang"
+      ],
+      [
+        4,
+        "{EB}{9F}{A3}It's a{EF}{EE}LifeAcorn.{FA}"
+      ],
+      [
+        7,
+        "{EA}{9F}{A3}Perfect your{EF}{EE}ability "
+      ]
+    ]
+  },
+  {
+    "bank": "21",
+    "offset": "4027",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}We clowns hustle{EF}{EE}on t"
+      ],
+      [
+        1,
+        "{EA}King{A3}{F6}! At{EF}{EE}last you're "
+      ],
+      [
+        2,
+        "{EA}King of GreatLog{A3}{EF}{EE}How are "
+      ],
+      [
+        5,
+        "{EA}King of GreatLog{A3}{EF}{EE}Ha ha ha"
+      ],
+      [
+        9,
+        "{EA}{9F}{A3}The King fears{EF}{EE}for yo"
+      ]
+    ]
+  },
+  {
+    "bank": "21",
+    "offset": "403D",
+    "entries": 15,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Be careful{EF}{EE}behind the"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Far beyond the{EF}{EE}Gate, "
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}So you became{EF}{EE}the mas"
+      ],
+      [
+        7,
+        "{EB}{9F}{A3}You'll win!{EF}{EE}I can fee"
+      ],
+      [
+        14,
+        "{EB}{9F}{A3}Eek eek eek!{EF}{EE}{FA}{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "21",
+    "offset": "4073",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Whaat?{EF}{EE}100 thousand i"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}My god, up{EF}{EE}close, I s"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}I bet on{EF}{EE}{F6}!{FA}{F7"
+      ],
+      [
+        5,
+        "{EA}{9F}{A3}It's unfortunate{EF}{EE}but "
+      ],
+      [
+        9,
+        "{EA}{9F}{A3}They say people{EF}{EE}see t"
+      ]
+    ]
+  },
+  {
+    "bank": "21",
+    "offset": "40A1",
+    "entries": 12,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Do ya know{EF}{EE}GigaSlash?"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}The arena is{EF}{EE}currentl"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}I heard his{EF}{EE}Majesty c"
+      ],
+      [
+        6,
+        "{EB}{9F}{A3}You, obey my{EF}{EE}command."
+      ],
+      [
+        11,
+        "{EA}{9F}{A3}Scurry away{EF}{EE}Scurry aw"
+      ]
+    ]
+  },
+  {
+    "bank": "21",
+    "offset": "40BB",
+    "entries": 17,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Hee hee! I dunno{EF}{EE}eith"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}I'm your mother.{EF}{EE}C'mo"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Why do you have{EF}{EE}to be"
+      ],
+      [
+        8,
+        "{EA}{9F}{A3}I heard a rumor{EF}{EE}about"
+      ],
+      [
+        16,
+        "{EA}{9F}{A3}I can't say it{EF}{EE}loud b"
+      ]
+    ]
+  },
+  {
+    "bank": "21",
+    "offset": "40DF",
+    "entries": 9,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Actually,{EF}{EE}nobody has{"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}I...I agree with{EF}{EE}you."
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}How do you{EF}{EE}do? I am t"
+      ],
+      [
+        4,
+        "{EA}Durran{A3}Hmm. You{EF}{EE}came back "
+      ],
+      [
+        8,
+        "{EA}Durran{A3}Ha ha ha!{EF}{EE}You came "
+      ]
+    ]
+  },
+  {
+    "bank": "22",
+    "offset": "4023",
+    "entries": 21,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Oh, you don't{EF}{EE}have en"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Oh, you don't{EF}{EE}have en"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Take good{EF}{EE}care of it."
+      ],
+      [
+        10,
+        "{EA}{9F}{A3}I'm collecting{EF}{EE}medals"
+      ],
+      [
+        20,
+        "{EA}{9F}{A3}Oh, You have{EF}{EE}medals. "
+      ]
+    ]
+  },
+  {
+    "bank": "22",
+    "offset": "404F",
+    "entries": 9,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}It's an egg of{EF}{EE}a ZapB"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}It's an egg of{EF}{EE}a Trum"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}It's an egg of{EF}{EE}a Spik"
+      ],
+      [
+        4,
+        "{EA}{9F}{A3}It's a Trumpeter{EF}{EE}egg!"
+      ],
+      [
+        8,
+        "{EA}{9F}{A3}I'll take it{EF}{EE}back. It"
+      ]
+    ]
+  },
+  {
+    "bank": "22",
+    "offset": "406B",
+    "entries": 60,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Sorry, I don't{EF}{EE}have a"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}{F6}, I want{EF}{EE}to give "
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}You're at the{EF}{EE}library"
+      ],
+      [
+        30,
+        "{EB}{9F}{A3}Oh my little{EF}{EE}{F6},{FA"
+      ],
+      [
+        59,
+        "{EB}{9F}{A3}I'm sorry, you{EF}{EE}are sh"
+      ]
+    ]
+  },
+  {
+    "bank": "22",
+    "offset": "410B",
+    "entries": 27,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Wanna change{EF}{EE}your pal"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Come back when{EF}{EE}you ne"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Which one's name{EF}{EE}do y"
+      ],
+      [
+        13,
+        "{EB}{9F}{A3}How many{EF}{EE}monsters hav"
+      ],
+      [
+        26,
+        "{EB}{9F}{A3}Unbelievable{EF}{EE}number o"
+      ]
+    ]
+  },
+  {
+    "bank": "22",
+    "offset": "4143",
+    "entries": 35,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Looking at the{EF}{EE}Travel"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Looking at the{EF}{EE}Travel"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Looking at the{EF}{EE}Travel"
+      ],
+      [
+        17,
+        "{EA}{9F}{A3}The Starry Night{EF}{EE}is o"
+      ],
+      [
+        34,
+        "{EB}{9F}{A3}I'm HammerMan.{EF}{EE}I am t"
+      ]
+    ]
+  },
+  {
+    "bank": "3F",
+    "offset": "4487",
+    "entries": 25,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}I won't give{EF}{EE}this Tra"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Oh, I see.{EF}{EE}I heard ab"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Oh my!{EF}{EE}So, this is{FA"
+      ],
+      [
+        12,
+        "{EA}{9F}{A3}Even after the{EF}{EE}Starry"
+      ],
+      [
+        24,
+        "{EA}{9F}{A3}My flame became{EF}{EE}more "
+      ]
+    ]
+  },
+  {
+    "bank": "3F",
+    "offset": "44BD",
+    "entries": 21,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Oh, it's a{EF}{EE}Phoenix! I"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Here's{EF}{EE}CheaterBK.{FA}"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}I'm satisfied.{EF}{EE}{F6}, "
+      ],
+      [
+        10,
+        "{EB}{9F}{A3}Your big sister{EF}{EE}Milay"
+      ],
+      [
+        20,
+        "{EA}{9F}{A3}How are you?{EF}{EE}{FA}{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "3F",
+    "offset": "44FD",
+    "entries": 41,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{9F}{A3}{F6} looked{EF}{EE}in front.{F7}"
+      ],
+      [
+        1,
+        "Wow, a Sirloin!{EF}{EE}{F7}"
+      ],
+      [
+        2,
+        "Wow, found a{EF}{EE}Sirloin! But can't{F"
+      ],
+      [
+        20,
+        "{EB}{9F}{A3}I heard my wish{EF}{EE}will "
+      ],
+      [
+        40,
+        "{EA}King{A3}Hmm. It's an{EF}{EE}exaggera"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "4087",
+    "entries": 16,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "CHMBROP"
+      ],
+      [
+        1,
+        "CHMBR G"
+      ],
+      [
+        2,
+        "CHMBR F"
+      ],
+      [
+        8,
+        "CHMBR S"
+      ],
+      [
+        15,
+        "MELKID"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "40A9",
+    "entries": 43,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "ILMWOOD"
+      ],
+      [
+        1,
+        "TOMDOLA"
+      ],
+      [
+        2,
+        "CASINO"
+      ],
+      [
+        21,
+        "ZOMACSL"
+      ],
+      [
+        42,
+        "CSLBG"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "410D",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Nothing happens.{F7}"
+      ],
+      [
+        1,
+        "Record to the{F1}Journal?{F7}"
+      ],
+      [
+        2,
+        "{F6} found{F1}1 {F9}0{F7}"
+      ],
+      [
+        4,
+        "Please choose{F1}another name.{F7}"
+      ],
+      [
+        7,
+        "Empty"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "4135",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F6}'s side is{F1}wiped out!{F7}"
+      ],
+      [
+        1,
+        "Not ready for{F1}link up.{FA}{F7}{F2}Che"
+      ],
+      [
+        2,
+        "Choose a monster{F1}for breeding."
+      ],
+      [
+        5,
+        "One moment please."
+      ],
+      [
+        10,
+        "The ceremony!"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "414D",
+    "entries": 13,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "What would you{F1}like to do?"
+      ],
+      [
+        1,
+        "Choose another{F1}monster?{F7}"
+      ],
+      [
+        2,
+        "Submit a prize?{F7}"
+      ],
+      [
+        6,
+        "Fight!!"
+      ],
+      [
+        12,
+        "Recorded in the{F1}Journal.{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "41B5",
+    "entries": 14,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "You cannot choose{F1}the monster in{FA}{"
+      ],
+      [
+        1,
+        "You cannot choose{F1}the monster in{FA}{"
+      ],
+      [
+        2,
+        "You cannot choose{F1}the monster in{FA}{"
+      ],
+      [
+        7,
+        "TALISMAN{A3}"
+      ],
+      [
+        13,
+        "ANGER{A3}"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "4339",
+    "entries": 59,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "DrakSlime"
+      ],
+      [
+        1,
+        "SpotSlime"
+      ],
+      [
+        2,
+        "WingSlime"
+      ],
+      [
+        29,
+        "MiniDrak"
+      ],
+      [
+        58,
+        "Grizzly"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "43B1",
+    "entries": 70,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "MadGopher"
+      ],
+      [
+        1,
+        "FairyRat"
+      ],
+      [
+        2,
+        "Unicorn"
+      ],
+      [
+        35,
+        "Gulpple"
+      ],
+      [
+        69,
+        "Digster"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "443F",
+    "entries": 12,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "ArcDemon"
+      ],
+      [
+        1,
+        "AgDevil"
+      ],
+      [
+        2,
+        "Demonite"
+      ],
+      [
+        6,
+        "EvilBeast"
+      ],
+      [
+        11,
+        "GoatHorn"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "445B",
+    "entries": 18,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "GateGuard"
+      ],
+      [
+        1,
+        "ChopClown"
+      ],
+      [
+        2,
+        "Grendal"
+      ],
+      [
+        9,
+        "Durran"
+      ],
+      [
+        17,
+        "Shadow"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "4481",
+    "entries": 41,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Mudron"
+      ],
+      [
+        1,
+        "NiteWhip"
+      ],
+      [
+        2,
+        "MadSpirit"
+      ],
+      [
+        20,
+        "Voodoll"
+      ],
+      [
+        40,
+        "Baramos"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "44D5",
+    "entries": 14,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Pizzaro"
+      ],
+      [
+        1,
+        "Esterk"
+      ],
+      [
+        2,
+        "Mirudraas"
+      ],
+      [
+        7,
+        "DeathMore"
+      ],
+      [
+        13,
+        "Bazoo"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "455F",
+    "entries": 9,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Defeat"
+      ],
+      [
+        1,
+        "Sacrifice"
+      ],
+      [
+        2,
+        "Sleep"
+      ],
+      [
+        4,
+        "StopSpell"
+      ],
+      [
+        8,
+        "TakeMagic"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "457B",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "SlowAll"
+      ],
+      [
+        1,
+        "Speed"
+      ],
+      [
+        2,
+        "SpeedUp"
+      ],
+      [
+        5,
+        "MagicWall"
+      ],
+      [
+        9,
+        "Ironize"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "4591",
+    "entries": 68,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "HealMore"
+      ],
+      [
+        1,
+        "HealAll"
+      ],
+      [
+        2,
+        "HealUs"
+      ],
+      [
+        34,
+        "CleanCut"
+      ],
+      [
+        67,
+        "Curse"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "461B",
+    "entries": 38,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "K.O.Dance"
+      ],
+      [
+        1,
+        "SandStorm"
+      ],
+      [
+        2,
+        "Radiant"
+      ],
+      [
+        19,
+        "TatsuCall"
+      ],
+      [
+        37,
+        "LifeDance"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "469D",
+    "entries": 40,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "SAGESTONE"
+      ],
+      [
+        1,
+        "WARLDDEW"
+      ],
+      [
+        2,
+        "POTION"
+      ],
+      [
+        20,
+        "SIRLOIN"
+      ],
+      [
+        39,
+        "GigaSlash"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "48EB",
+    "entries": 19,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Lovewater"
+      ],
+      [
+        1,
+        "SageStone"
+      ],
+      [
+        2,
+        "WorldDew"
+      ],
+      [
+        9,
+        "AwakeSand"
+      ],
+      [
+        18,
+        "PorkChop"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "4913",
+    "entries": 22,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "BadMeat"
+      ],
+      [
+        1,
+        "Sirloin"
+      ],
+      [
+        2,
+        "BoltStaff"
+      ],
+      [
+        11,
+        "BeNiceBK"
+      ],
+      [
+        21,
+        "BookMark"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "4941",
+    "entries": 47,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Restores between{F1}30 to 40 HP"
+      ],
+      [
+        1,
+        "Restores between{F1}60 to 70 HP"
+      ],
+      [
+        2,
+        "Restores 60 to{F1}70 HP for all"
+      ],
+      [
+        23,
+        "Makes damage with{F1}a lightning bolt"
+      ],
+      [
+        46,
+        "LONE WOLF"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "49AF",
+    "entries": 12,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "WHIZ KID"
+      ],
+      [
+        1,
+        "ORDINARY"
+      ],
+      [
+        2,
+        "HASTY"
+      ],
+      [
+        6,
+        "HUMANE"
+      ],
+      [
+        11,
+        "GULLIBLE"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "49D5",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{ED}But {F9}0{F1}cannot master any{FA}{F"
+      ],
+      [
+        1,
+        "{ED}OK to forget{F1}{F9}0?"
+      ],
+      [
+        2,
+        "{ED}Forgets {F9}0!{FA}{F7}"
+      ],
+      [
+        4,
+        "Everyone{F1}one at a time."
+      ],
+      [
+        7,
+        "Fight"
+      ]
+    ]
+  },
+  {
+    "bank": "41",
+    "offset": "49ED",
+    "entries": 14,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{ED}Wow! {F9}0{F1}got up and is{FA}{F7}{"
+      ],
+      [
+        1,
+        "{ED}Cannot take any{F1}more monsters!{FA"
+      ],
+      [
+        2,
+        "{ED}{F9}0 looks{F1}sad and leaves.{FA}{F"
+      ],
+      [
+        7,
+        "{ED}Please name{F1}{F9}0.{FA}{F7}"
+      ],
+      [
+        13,
+        "{ED}Returns the egg{F1}to the wild.{FA}{"
+      ]
+    ]
+  },
+  {
+    "bank": "42",
+    "offset": "4009",
+    "entries": 26,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}Milayou{A3}Terry!{EF}{EE}Wait! It's "
+      ],
+      [
+        1,
+        "{EB}Milayou{A3}... zzz.{EF}{EE}{F7}"
+      ],
+      [
+        2,
+        "Terry looked at{EF}{EE}a stuffed animal."
+      ],
+      [
+        13,
+        "Terry looked in{EF}{EE}front of him.{FA}"
+      ],
+      [
+        25,
+        "{EA}{9F}{A3}Hurry! Go{EF}{EE}see the Kin"
+      ]
+    ]
+  },
+  {
+    "bank": "42",
+    "offset": "403F",
+    "entries": 9,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F6} opened a{EF}{EE}treasure chest!{FA}"
+      ],
+      [
+        1,
+        "{F6} picked up{EF}{EE}an Herb.{F7}"
+      ],
+      [
+        2,
+        "{F6} found{EF}{EE}an Herb.{FA}{F7}{EF}{E"
+      ],
+      [
+        4,
+        "{EA}{9F}{A3}This is the{EF}{EE}Kingdom o"
+      ],
+      [
+        8,
+        "{EB}{9F}{A3}I have a{EF}{EE}feeling that"
+      ]
+    ]
+  },
+  {
+    "bank": "42",
+    "offset": "4065",
+    "entries": 14,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Here it is{EF}{EE}again.{FA}"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}The tournament{EF}{EE}is hel"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Pulio from the{EF}{EE}farm i"
+      ],
+      [
+        7,
+        "{EA}{9F}{A3}No! You'll be{EF}{EE}hurt if"
+      ],
+      [
+        13,
+        "{F6} looked into{EF}{EE}the jar.{FA}{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "42",
+    "offset": "4091",
+    "entries": 22,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}You are at the{EF}{EE}monste"
+      ],
+      [
+        1,
+        "{EA}King{A3}Oh, this{EF}{EE}monster is t"
+      ],
+      [
+        2,
+        "{EB}Pulio{A3}Your{EF}{EE}Majesty, please"
+      ],
+      [
+        11,
+        "{EB}{9F}{A3}In the Chamber{EF}{EE}of Tra"
+      ],
+      [
+        21,
+        "{EB}{9F}{A3}You are strong!{EF}{EE}I lik"
+      ]
+    ]
+  },
+  {
+    "bank": "42",
+    "offset": "40BF",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}Pulio{A3}Thank you{EF}{EE}{F6}! Now "
+      ],
+      [
+        1,
+        "{EA}King{A3}{F6}.{EF}{EE}Go to the arena"
+      ],
+      [
+        2,
+        "{EA}Slio{A3}{F6}!{EF}{EE}Congratulations"
+      ],
+      [
+        5,
+        "{EA}{9F}{A3}This is the{EF}{EE}castle of"
+      ],
+      [
+        10,
+        "{EB}{9F}{A3}Once I picked up{EF}{EE}a Ti"
+      ]
+    ]
+  },
+  {
+    "bank": "43",
+    "offset": "4015",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}The battle{EF}{EE}classes go"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}The last battle{EF}{EE}in G "
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Eeek! What?{EF}{EE}Talk to m"
+      ],
+      [
+        5,
+        "{EA}{9F}{A3}Only those{EF}{EE}registered"
+      ],
+      [
+        9,
+        "{EA}{9F}{A3}Where did the{EF}{EE}MiniDra"
+      ]
+    ]
+  },
+  {
+    "bank": "43",
+    "offset": "407B",
+    "entries": 17,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Army Bomb Army,{EF}{EE}Bubbl"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Who the heck is{EF}{EE}that "
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}I am the Queen{EF}{EE}of Gre"
+      ],
+      [
+        8,
+        "{EB}{9F}{A3}For the 1st{EF}{EE}match, th"
+      ],
+      [
+        16,
+        "Wow! A TinyMedal{EF}{EE}was found! But{F"
+      ]
+    ]
+  },
+  {
+    "bank": "43",
+    "offset": "409F",
+    "entries": 38,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}You don't have{EF}{EE}it? Wh"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}I see. Go to the{EF}{EE}room"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Great! Go to the{EF}{EE}room"
+      ],
+      [
+        19,
+        "{EB}{9F}{A3}How many times{EF}{EE}do I h"
+      ],
+      [
+        37,
+        "{EA}King{A3}Oh {F6}!{EF}{EE}You beat Gol"
+      ]
+    ]
+  },
+  {
+    "bank": "43",
+    "offset": "40FB",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Enter here to{EF}{EE}the Vau"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}The Bazaar's to{EF}{EE}the r"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}Hello, welcome{EF}{EE}to the"
+      ],
+      [
+        5,
+        "{EB}{9F}{A3}Rumor has it{EF}{EE}that the"
+      ],
+      [
+        9,
+        "{EA}{9F}{A3}You? A master?{EF}{EE}You're"
+      ]
+    ]
+  },
+  {
+    "bank": "44",
+    "offset": "402D",
+    "entries": 18,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}The devil{EF}{EE}settled in "
+      ],
+      [
+        1,
+        "{EA}King{A3}Oh {F6}!{EF}{EE}You beat Mad"
+      ],
+      [
+        2,
+        "{EA}King{A3}It reminds{EF}{EE}me. Have y"
+      ],
+      [
+        9,
+        "{EB}{9F}{A3}Meet the old man{EF}{EE}of t"
+      ],
+      [
+        17,
+        "{EA}{9F}{A3}BigRoost is{EF}{EE}roasting "
+      ]
+    ]
+  },
+  {
+    "bank": "44",
+    "offset": "4061",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{A3}Monster Journal{EF}{EE}by Master Mon"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Master Monster{EF}{EE}Tamer "
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}The level of a{EF}{EE}newbor"
+      ],
+      [
+        4,
+        "{EB}{9F}{A3}Oh! What a cute{EF}{EE}monst"
+      ],
+      [
+        7,
+        "{F6} looked at{EF}{EE}the bookshelf.{FA}"
+      ]
+    ]
+  },
+  {
+    "bank": "44",
+    "offset": "4073",
+    "entries": 12,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}You don't!?{EF}{EE}Such a pr"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}See, isn't she{EF}{EE}the pr"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}What does the{EF}{EE}person "
+      ],
+      [
+        6,
+        "The dresser is{EF}{EE}filled with girl's"
+      ],
+      [
+        11,
+        "{EB}{9F}{A3}My professor is{EF}{EE}a gen"
+      ]
+    ]
+  },
+  {
+    "bank": "44",
+    "offset": "40B7",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Discretion is{EF}{EE}the bet"
+      ],
+      [
+        1,
+        "{E9};{F6} looked into{EF}{EE}the dresser"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}In an enormous{EF}{EE}underg"
+      ],
+      [
+        5,
+        "{EA}King{A3}Oh,{F6}{EF}{EE}you beat{FA}{"
+      ],
+      [
+        10,
+        "{EB}{9F}{A3}You've been{EF}{EE}babied fo"
+      ]
+    ]
+  },
+  {
+    "bank": "45",
+    "offset": "401B",
+    "entries": 9,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}If you've got{EF}{EE}money y"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}When you receive{EF}{EE}an o"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Hic, yo brother.{EF}{EE}Wann"
+      ],
+      [
+        4,
+        "{EA}{9F}{A3}Zzz... zzzz....{EF}{EE}{F7}"
+      ],
+      [
+        8,
+        "{EB}Watabou{A3}You{EF}{EE}couldn't carry"
+      ]
+    ]
+  },
+  {
+    "bank": "45",
+    "offset": "403D",
+    "entries": 9,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}I'm Mick. It's{EF}{EE}hard t"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}The Queen gave{EF}{EE}me a p"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}If you become{EF}{EE}famous,"
+      ],
+      [
+        4,
+        "{EB}Watabou{A3}This{EF}{EE}village is an"
+      ],
+      [
+        8,
+        "{EA}{9F}{A3}Grrrr...{EF}{EE}Cackle cackl"
+      ]
+    ]
+  },
+  {
+    "bank": "45",
+    "offset": "4051",
+    "entries": 23,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}Watabou{A3}It seems{EF}{EE}MadCat is"
+      ],
+      [
+        1,
+        "{F6} read the{EF}{EE}sign.{FA}{F7}{EF}{E"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Hee hee hee!{EF}{EE}I didn't"
+      ],
+      [
+        11,
+        "{EA}{9F}{A3}The Gate of{EF}{EE}Anger see"
+      ],
+      [
+        22,
+        "{EA}{9F}{A3}I guess staying{EF}{EE}on th"
+      ]
+    ]
+  },
+  {
+    "bank": "45",
+    "offset": "40B5",
+    "entries": 22,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}Mick{A3}As proof{EF}{EE}of my friend"
+      ],
+      [
+        1,
+        "{EA}Mick{A3}I'm going{EF}{EE}on a journe"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}{F6}, here is{EF}{EE}the Roo"
+      ],
+      [
+        11,
+        "{EA}{9F}{A3}It's you again!{EF}{EE}You'l"
+      ],
+      [
+        21,
+        "{EA}{9F}{A3}The shaking of{EF}{EE}GreatT"
+      ]
+    ]
+  },
+  {
+    "bank": "45",
+    "offset": "40E7",
+    "entries": 12,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}I looked back{EF}{EE}and the"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}I see. It's okay{EF}{EE}then"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}Sometimes a lie{EF}{EE}makes"
+      ],
+      [
+        6,
+        "{EA}{9F}{A3}You're at{EF}{EE}the castle "
+      ],
+      [
+        11,
+        "{EB}{9F}{A3}Right to the{EF}{EE}Bazaar! "
+      ]
+    ]
+  },
+  {
+    "bank": "46",
+    "offset": "400F",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}You sure don't{EF}{EE}know h"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Eeek! I cannot{EF}{EE}stand "
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}You again!?{EF}{EE}I'm reall"
+      ],
+      [
+        4,
+        "{EA}{9F}{A3}It can't be!{EF}{EE}My Betty"
+      ],
+      [
+        7,
+        "{EB}{9F}{A3}What? You can't{EF}{EE}even "
+      ]
+    ]
+  },
+  {
+    "bank": "46",
+    "offset": "4021",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}You...You are{EF}{EE}one tou"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Go to one of my{EF}{EE}broth"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}May I help you{EF}{EE}{F6}! "
+      ],
+      [
+        4,
+        "{EB}{9F}{A3}How do you do?{EF}{EE}My nam"
+      ],
+      [
+        7,
+        "There are 3 Slimes{EF}{EE}sleeping insid"
+      ]
+    ]
+  },
+  {
+    "bank": "46",
+    "offset": "4049",
+    "entries": 18,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Being a master{EF}{EE}requir"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Oh! You believe{EF}{EE}me! A"
+      ],
+      [
+        2,
+        "There is a sign on{EF}{EE}the slot machi"
+      ],
+      [
+        9,
+        "{EA}{9F}{A3}Gwrrrrrrrr..{EF}{EE}This mac"
+      ],
+      [
+        17,
+        "{EA}{9F}{A3}How are you?{EF}{EE}I'm read"
+      ]
+    ]
+  },
+  {
+    "bank": "46",
+    "offset": "4073",
+    "entries": 29,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}A bird spins{EF}{EE}a round "
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}A mysterious{EF}{EE}spring w"
+      ],
+      [
+        2,
+        "{EA}King{A3}Well done,{EF}{EE}{F6}!{FA}{"
+      ],
+      [
+        14,
+        "{EB}{9F}{A3}The last match{EF}{EE}will b"
+      ],
+      [
+        28,
+        "{EA}{9F}{A3}Is this an{EF}{EE}Orc or Por"
+      ]
+    ]
+  },
+  {
+    "bank": "46",
+    "offset": "40B3",
+    "entries": 12,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}I see. you've{EF}{EE}grown t"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Ho ho ho!!{EF}{EE}They were "
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Even though we{EF}{EE}are Ho"
+      ],
+      [
+        6,
+        "{EB}{9F}{A3}It is a Sirloin.{EF}{EE}Use "
+      ],
+      [
+        11,
+        "{EA}{9F}{A3}{F6}, why{EF}{EE}don't you g"
+      ]
+    ]
+  },
+  {
+    "bank": "46",
+    "offset": "40D1",
+    "entries": 18,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}The legend of{EF}{EE}the vil"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Choose one of{EF}{EE}the thr"
+      ],
+      [
+        2,
+        "{EA}King{A3}Oh {F6}!{EF}{EE}You beat Jam"
+      ],
+      [
+        9,
+        "{EB}{9F}{A3}One of my{EF}{EE}relatives i"
+      ],
+      [
+        17,
+        "{EB}{9F}{A3}I heard that{EF}{EE}wishes o"
+      ]
+    ]
+  },
+  {
+    "bank": "46",
+    "offset": "40F7",
+    "entries": 19,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}No?! You must be{EF}{EE}a he"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Sirloin is the{EF}{EE}tastie"
+      ],
+      [
+        2,
+        "{F6} checked{EF}{EE}out the treasure{FA}"
+      ],
+      [
+        9,
+        "{EA}{9F}{A3}There are{EF}{EE}monsters wi"
+      ],
+      [
+        18,
+        "{EA}{9F}{A3}Go up 3 times,{EF}{EE}left o"
+      ]
+    ]
+  },
+  {
+    "bank": "47",
+    "offset": "4059",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}I wonder what{EF}{EE}will ha"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Well done! You{EF}{EE}surviv"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Monster Master{EF}{EE}{F6}! "
+      ],
+      [
+        5,
+        "{EA}{9F}{A3}Tut! Not in{EF}{EE}here eith"
+      ],
+      [
+        9,
+        "{EA}{9F}{A3}Yeti doesn't{EF}{EE}say yet."
+      ]
+    ]
+  },
+  {
+    "bank": "48",
+    "offset": "4025",
+    "entries": 21,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}TERRY?{A3}Take care{EF}{EE}of your s"
+      ],
+      [
+        1,
+        "{EA}TERRY?{A3}...You{EF}{EE}don't want t"
+      ],
+      [
+        2,
+        "{EB}Watabou{A3}Let's{EF}{EE}go back!{F7}"
+      ],
+      [
+        10,
+        "{EB}{9F}{A3}Long long ago..{EF}{EE}an an"
+      ],
+      [
+        20,
+        "{EB}{9F}{A3}Go right to the{EF}{EE}Bazaa"
+      ]
+    ]
+  },
+  {
+    "bank": "48",
+    "offset": "4051",
+    "entries": 9,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}...Don't lose.{EF}{EE}{F7}"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}...Don't lose.{EF}{EE}Don't "
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}You're right!{EF}{EE}It's im"
+      ],
+      [
+        4,
+        "{EA}{9F}{A3}The Master{EF}{EE}Monster Ta"
+      ],
+      [
+        8,
+        "{EA}{9F}{A3}What kind of{EF}{EE}future d"
+      ]
+    ]
+  },
+  {
+    "bank": "48",
+    "offset": "4065",
+    "entries": 13,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Hello. Down{EF}{EE}to the st"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}The Starry Night{EF}{EE}is s"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}There's{EF}{EE}something goo"
+      ],
+      [
+        6,
+        "{EB}{9F}{A3}When the Starry{EF}{EE}Night"
+      ],
+      [
+        12,
+        "{EB}{9F}{A3}You win,{EF}{EE}GreatTree ha"
+      ]
+    ]
+  },
+  {
+    "bank": "48",
+    "offset": "4089",
+    "entries": 12,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Everybody in the{EF}{EE}king"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}You made it!{EF}{EE}{FA}{F7}"
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}Oh! Its a{EF}{EE}HornBeet! W"
+      ],
+      [
+        6,
+        "{EB}{9F}{A3}Here is{EF}{EE}MysticNut.{FA"
+      ],
+      [
+        11,
+        "{EA}{9F}{A3}I would like to{EF}{EE}go de"
+      ]
+    ]
+  },
+  {
+    "bank": "48",
+    "offset": "40CD",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Behind the Gate{EF}{EE}of Re"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}I will do{EF}{EE}anything fo"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Ha ha ha! I made{EF}{EE}Giga"
+      ],
+      [
+        5,
+        "{EB}{9F}{A3}You must listen{EF}{EE}to my"
+      ],
+      [
+        9,
+        "{EB}{9F}{A3}Ladies {B6} Gents!{EF}{EE}We"
+      ]
+    ]
+  },
+  {
+    "bank": "49",
+    "offset": "4009",
+    "entries": 18,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}Milayou{A3}Yes, it{EF}{EE}feels like"
+      ],
+      [
+        1,
+        "{EB}Milayou{A3}Yes, it{EF}{EE}was truly "
+      ],
+      [
+        2,
+        "{EB}Milayou{A3}Good night{EF}{EE}{F6}!{F"
+      ],
+      [
+        9,
+        "{E9};{F6} looked in{EF}{EE}the dresser.{"
+      ],
+      [
+        17,
+        "{F6} looked into{EF}{EE}a jar.{FA}{F7}{E"
+      ]
+    ]
+  },
+  {
+    "bank": "49",
+    "offset": "402F",
+    "entries": 13,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}So,yoooou saaaw{EF}{EE}my fa"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}It's yoooou{EF}{EE}agaaaain!"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Yoooou win...!!{EF}{EE}{F7}"
+      ],
+      [
+        6,
+        "{EB}Watabou{A3}Good{EF}{EE}work reading{"
+      ],
+      [
+        12,
+        "There is a voice{EF}{EE}coming from out{"
+      ]
+    ]
+  },
+  {
+    "bank": "49",
+    "offset": "4077",
+    "entries": 30,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Hee hee hee.{EF}{EE}Burn'em "
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}You are so{EF}{EE}boring!{FA"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}You again!{EF}{EE}You really"
+      ],
+      [
+        15,
+        "{EB}Watabou{A3}Had a{EF}{EE}good time!? "
+      ],
+      [
+        29,
+        "{EB}Watabou{A3}You{EF}{EE}think the doll"
+      ]
+    ]
+  },
+  {
+    "bank": "49",
+    "offset": "40BF",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}None of your{EF}{EE}cheek! I"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Then die!{EF}{EE}{F7}"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}You want to have{EF}{EE}addi"
+      ],
+      [
+        5,
+        "{F6} touched the{EF}{EE}blade of the{FA}"
+      ],
+      [
+        9,
+        "{EA}{9F}{A3}Aaarrrggh...{EF}{EE}{FA}{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "4A",
+    "offset": "400B",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Humpf, I don't{EF}{EE}need y"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}I don't have {EF}{EE}such a "
+      ],
+      [
+        2,
+        "{EB}{9F}{A3}Yep. It's Santi.{EF}{EE}How "
+      ],
+      [
+        4,
+        "{EB}Santi{A3}Talk to my{EF}{EE}Grandpa!!"
+      ],
+      [
+        7,
+        "{EB}Santi{A3}Don't just{EF}{EE}stand the"
+      ]
+    ]
+  },
+  {
+    "bank": "4A",
+    "offset": "4039",
+    "entries": 143,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}Yes, of course.{EF}{EE}The v"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}The monstrous{EF}{EE}master "
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Hey! Our hero{EF}{EE}{F6}!{F"
+      ],
+      [
+        71,
+        "{EB}{9F}{A3}Please come to{EF}{EE}me whe"
+      ],
+      [
+        142,
+        "{EA}{9F}{A3}How many?{EF}{EE}"
+      ]
+    ]
+  },
+  {
+    "bank": "4A",
+    "offset": "4167",
+    "entries": 60,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}You can only{EF}{EE}have up "
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Thanks again!{EF}{EE}{F7}"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}Vault.{EF}{EE}May I help you"
+      ],
+      [
+        30,
+        "{EA}{9F}{A3}Excuse me but{EF}{EE}you can"
+      ],
+      [
+        59,
+        "{EB}Pulio{A3}Replace it{EF}{EE}with this"
+      ]
+    ]
+  },
+  {
+    "bank": "4A",
+    "offset": "41E1",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}Pulio{A3}Picking up{EF}{EE}which one"
+      ],
+      [
+        1,
+        "{EB}Pulio{A3}No monsters{EF}{EE}here to "
+      ],
+      [
+        2,
+        "{EB}Pulio{A3}You can't{EF}{EE}take any m"
+      ],
+      [
+        5,
+        "{EB}Pulio{A3}Replacing{EF}{EE}a monster,"
+      ],
+      [
+        9,
+        "{EB}Pulio{A3}Replace{EF}{EE}this one?"
+      ]
+    ]
+  },
+  {
+    "bank": "4A",
+    "offset": "41F7",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}Pulio{A3}Check on{EF}{EE}which one?"
+      ],
+      [
+        1,
+        "{EB}Pulio{A3}Hey, none{EF}{EE}to check o"
+      ],
+      [
+        2,
+        "{EB}Pulio{A3}Check on{EF}{EE}which one, "
+      ],
+      [
+        5,
+        "{EB}Pulio{A3}Hey, nothing{EF}{EE}here!{F"
+      ],
+      [
+        10,
+        "{F9}0 was{EF}{EE}returned to the{FA}{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "4A",
+    "offset": "420F",
+    "entries": 23,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}Pulio{A3}You wanna{EF}{EE}make the m"
+      ],
+      [
+        1,
+        "{EB}Pulio{A3}All the{EF}{EE}monsters her"
+      ],
+      [
+        2,
+        "{EB}Pulio{A3}I put all{EF}{EE}the monste"
+      ],
+      [
+        11,
+        "{EA}{9F}{A3}What can I do{EF}{EE}for you"
+      ],
+      [
+        22,
+        "{EA}{9F}{A3}The same gender.{EF}{EE}Cann"
+      ]
+    ]
+  },
+  {
+    "bank": "4B",
+    "offset": "402F",
+    "entries": 11,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}Oh {F6}!{EF}{EE}You really w"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Oh {F6}! Here{EF}{EE}is your"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}What? Where{EF}{EE}are you?{"
+      ],
+      [
+        5,
+        "{EA}{9F}{A3}I..I heard that{EF}{EE}monst"
+      ],
+      [
+        10,
+        "{EA}{9F}{A3}A Servant has{EF}{EE}4 hands"
+      ]
+    ]
+  },
+  {
+    "bank": "4C",
+    "offset": "4037",
+    "entries": 10,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F9}0 is{F1}sleeping!{EC}"
+      ],
+      [
+        1,
+        "{F9}0 is{F1}confused!{EC}"
+      ],
+      [
+        2,
+        "{F9}0 becames{F1}a lump of iron!{EC}"
+      ],
+      [
+        5,
+        "{ED}{F9}0 can't{F1}resist dancing!{EC}"
+      ],
+      [
+        9,
+        "{F9}0 is{F1}daydreaming!{EC}"
+      ]
+    ]
+  },
+  {
+    "bank": "4C",
+    "offset": "418F",
+    "entries": 28,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "But nothing{F1}happens!{EC}"
+      ],
+      [
+        1,
+        "{F9}0 doesn't{F1}fall asleep!{EC}"
+      ],
+      [
+        2,
+        "{F9}0 is{F1}already sleeping!{EC}"
+      ],
+      [
+        14,
+        "But {F9}0{F1}dodges easily!{EC}"
+      ],
+      [
+        27,
+        "{F9}0 can't{F1}counterattack!{EC}"
+      ]
+    ]
+  },
+  {
+    "bank": "4C",
+    "offset": "41C9",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F9}0{F1}disappears!{EC}"
+      ],
+      [
+        1,
+        "The wind is{F1}stopped!{EC}"
+      ],
+      [
+        2,
+        "Allies have gone!{F1}{EC}"
+      ],
+      [
+        4,
+        "{F9}0 returns{F1}to normal!{EC}"
+      ],
+      [
+        7,
+        "The devil leaves,{F1}laughing!{EC}"
+      ]
+    ]
+  },
+  {
+    "bank": "4C",
+    "offset": "41DF",
+    "entries": 20,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F9}0{F1}collapses!{EC}"
+      ],
+      [
+        1,
+        "{F9}0 is{F1}knocked out!{EC}"
+      ],
+      [
+        2,
+        "{F9}0 is weak{F1}after the dance!{EC}"
+      ],
+      [
+        10,
+        "{F6} beats the{F1}{F9}0 gang!{FA}{F7}"
+      ],
+      [
+        19,
+        "{ED}Waiting for {F9}0{F1}to choose a mov"
+      ]
+    ]
+  },
+  {
+    "bank": "4C",
+    "offset": "423B",
+    "entries": 17,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "No monsters that{F1}can give commands!{F"
+      ],
+      [
+        1,
+        "{F9}0 doesn't{F1}have any skill to{FA}{F"
+      ],
+      [
+        2,
+        "{F9}0 doesn't{F1}have any skill to{FA}{F"
+      ],
+      [
+        8,
+        "{F6} takes out{F1}the BeastTail!{EC}"
+      ],
+      [
+        16,
+        "{F6} takes out{F1}the BeastTail!{EC}"
+      ]
+    ]
+  },
+  {
+    "bank": "4C",
+    "offset": "425F",
+    "entries": 28,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F9}0 has been{F1}your pal before!{EC}"
+      ],
+      [
+        1,
+        "{F9}0 hasn't{F1}been your pal yet!{EC}"
+      ],
+      [
+        2,
+        "{ED}EXECUTIVE DIRECTOR"
+      ],
+      [
+        14,
+        "{ED}QA MANAGERS"
+      ],
+      [
+        27,
+        "{ED}PRESIDENT"
+      ]
+    ]
+  },
+  {
+    "bank": "4D",
+    "offset": "4191",
+    "entries": 20,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Goopi    Goopi    "
+      ],
+      [
+        1,
+        "MudDoll  MudDoll  "
+      ],
+      [
+        2,
+        "Golem    Golem    "
+      ],
+      [
+        10,
+        "DracoLordSidoh    "
+      ],
+      [
+        19,
+        "DeathMoreWatabou  "
+      ]
+    ]
+  },
+  {
+    "bank": "4D",
+    "offset": "420B",
+    "entries": 27,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Moves {B6} jumps with{F1}its tail {B6} w"
+      ],
+      [
+        1,
+        "Larger than a{F1}regular slime {B6}{F1}s"
+      ],
+      [
+        2,
+        "Flies with wings{F1}that grew on{F1}its "
+      ],
+      [
+        13,
+        "Flees very fast{F1}with its strong{F1}hi"
+      ],
+      [
+        26,
+        "The fluid that is{F1}secreted from its{F"
+      ]
+    ]
+  },
+  {
+    "bank": "4D",
+    "offset": "4243",
+    "entries": 59,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "The oldest living{F1}species of dragon"
+      ],
+      [
+        1,
+        "Runs by using{F1}its hands {B6} long{F1}"
+      ],
+      [
+        2,
+        "Runs by using{F1}its hands {B6} long{F1}"
+      ],
+      [
+        29,
+        "It has a hammer{F1}bigger than itself"
+      ],
+      [
+        58,
+        "Attacks with the{F1}thundercloud that{F1"
+      ]
+    ]
+  },
+  {
+    "bank": "4D",
+    "offset": "42BB",
+    "entries": 25,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Likes to dance{F1}{B6} sing"
+      ],
+      [
+        1,
+        "It has 4 strong{F1}legs {B6} a pair of{F"
+      ],
+      [
+        2,
+        "Secretes sweet{F1}sap to attract{F1}bugs"
+      ],
+      [
+        12,
+        "Its bad balance{F1}forces it to walk{F1}"
+      ],
+      [
+        24,
+        "Since it lives{F1}underground, it{F1}hat"
+      ]
+    ]
+  },
+  {
+    "bank": "4D",
+    "offset": "42FD",
+    "entries": 27,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "A shell protects{F1}its back but not{F1}"
+      ],
+      [
+        1,
+        "Each tentacle{F1}has a specific{F1}funct"
+      ],
+      [
+        2,
+        "Creates a violent{F1}wind with its{F1}hu"
+      ],
+      [
+        13,
+        "Catches its prey{F1}with its tentacles"
+      ],
+      [
+        26,
+        "Not too clever,{F1}but uses its{F1}weapo"
+      ]
+    ]
+  },
+  {
+    "bank": "4D",
+    "offset": "4351",
+    "entries": 52,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Its acidic saliva{F1}will dissolve{F1}an"
+      ],
+      [
+        1,
+        "A swamp mud{F1}infested spirit of{F1}the"
+      ],
+      [
+        2,
+        "Flies in the{F1}air leaving a{F1}streak "
+      ],
+      [
+        26,
+        "Last suviving war{F1}robot made in{F1}an"
+      ],
+      [
+        51,
+        "The master of{F1}destruction {B6}{F1}car"
+      ]
+    ]
+  },
+  {
+    "bank": "4E",
+    "offset": "4009",
+    "entries": 14,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EB}{9F}{A3}To show my{EF}{EE}appreciati"
+      ],
+      [
+        1,
+        "{EB}{9F}{A3}Hi. Welcome to{EF}{EE}the li"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}W, Well, it's no{EF}{EE}use "
+      ],
+      [
+        7,
+        "{A3}If you choose{EF}{EE}CHARGE you can{"
+      ],
+      [
+        13,
+        "{EA}{9F}{A3}Humpf, okay.{EF}{EE}{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "4E",
+    "offset": "407F",
+    "entries": 23,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}I see... I don't{EF}{EE}reme"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}Tut, you remind{EF}{EE}me of"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}I,I thought you{EF}{EE}went "
+      ],
+      [
+        11,
+        "{EB}{9F}{A3}Oh! it is{EF}{EE}Armorpion!{"
+      ],
+      [
+        22,
+        "{EB}{9F}{A3}{F6}, my{EF}{EE}hearts conte"
+      ]
+    ]
+  },
+  {
+    "bank": "4F",
+    "offset": "5028",
+    "entries": 253,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{EA}{9F}{A3}You're at the{EF}{EE}monster"
+      ],
+      [
+        1,
+        "{EA}{9F}{A3}For {F6}'s{EF}{EE}safe journ"
+      ],
+      [
+        2,
+        "{EA}{9F}{A3}For {F6}'s{EF}{EE}safe journ"
+      ],
+      [
+        126,
+        "{EA}{9F}{A3}You're a wimp.{EF}{EE}But I'"
+      ],
+      [
+        252,
+        "{F9}0 in Gold{EF}{EE}was taken away!{F7}"
+      ]
+    ]
+  },
+  {
+    "bank": "4F",
+    "offset": "5236",
+    "entries": 8,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{F6} checked the{EF}{EE}treasure chest.{"
+      ],
+      [
+        1,
+        "{F6} opened the{EF}{EE}treasure chest!{F"
+      ],
+      [
+        2,
+        "{F6} opened the{EF}{EE}treasure chest!{F"
+      ],
+      [
+        4,
+        "{EA}{9F}{A3}Is there anybody{EF}{EE}who "
+      ],
+      [
+        7,
+        "{EA}{9F}{A3}Let there be{EF}{EE}light! H"
+      ]
+    ]
+  },
+  {
+    "bank": "56",
+    "offset": "6655",
+    "entries": 67,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "  ITEMNAME{F1}   ITEMMES{F1}SEIKAKUMES{F"
+      ],
+      [
+        1,
+        " BATTLEMES{F1}  ITEMMES2{F1}TOKUGUMES2{F"
+      ],
+      [
+        2,
+        "KAIWAMES01{F1}KAIWAMES02{F1}KAIWAMES03{F"
+      ],
+      [
+        33,
+        "Engulfs all the{F1}enemies with an{F1}il"
+      ],
+      [
+        66,
+        "A random spell,{F1}can be good or bad"
+      ]
+    ]
+  },
+  {
+    "bank": "56",
+    "offset": "66DD",
+    "entries": 92,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "Fearless attack"
+      ],
+      [
+        1,
+        "Attacks like a ram{F1}with its true{F1}i"
+      ],
+      [
+        2,
+        "Attacks like there{F1}is no tomorrow"
+      ],
+      [
+        46,
+        "Paralyzes the{F1}enemy that{F1}attacked "
+      ],
+      [
+        91,
+        "Revives all allies"
+      ]
+    ]
+  },
+  {
+    "bank": "59",
+    "offset": "5313",
+    "entries": 16,
+    "first_target": null,
+    "samples": [
+      [
+        0,
+        "{ED}Grandpa Sakamoto{F1}is here!{EC}"
+      ],
+      [
+        1,
+        "Select \"FIGHT\" {B6}{EF}{EE}the monsters "
+      ],
+      [
+        2,
+        "Select \"PLAN\" and{EF}{EE}the master can "
+      ],
+      [
+        8,
+        "Selecting {EF}{EE}\"COMMAND\" allows{FA}{F"
+      ],
+      [
+        15,
+        "{ED}Direction No."
+      ]
+    ]
+  }
+]

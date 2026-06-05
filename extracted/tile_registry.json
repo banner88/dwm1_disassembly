@@ -1,0 +1,61 @@
+{
+  "next_id": 9,
+  "tiles": {
+    "T2": {
+      "name": "Milayou bottom left",
+      "collection": "Milayou",
+      "uncompressed_index": 0,
+      "pixel_data_hex": "77587f5f737f794e7b7f7f5c343f3f3f",
+      "rom_source_block": "0xC50FA",
+      "byte_offset_in_block": 0
+    },
+    "T3": {
+      "name": "Milayou bottom right",
+      "collection": "Milayou",
+      "uncompressed_index": 1,
+      "pixel_data_hex": "dc34fcf49cf40cfcbcf4fc5cacdcf8f8",
+      "rom_source_block": "0xC50FA",
+      "byte_offset_in_block": 16
+    },
+    "T4": {
+      "name": "Milayou top right",
+      "collection": "Milayou",
+      "rom_source_block": "0xC50EA",
+      "uncompressed_index": 0,
+      "byte_offset_in_block": 0,
+      "pixel_data_hex": "0e0f1e113926362f392f685f7f547f54"
+    },
+    "T5": {
+      "name": "Milayou bot left alt",
+      "collection": "Milayou",
+      "rom_source_block": "0xC50EA",
+      "uncompressed_index": 1,
+      "byte_offset_in_block": 16,
+      "pixel_data_hex": "77587f5f737f794e7b7f7f5c343f3f3f"
+    },
+    "T6": {
+      "name": "Milayou bot right alt",
+      "collection": "Milayou",
+      "rom_source_block": "0xC50EA",
+      "uncompressed_index": 2,
+      "byte_offset_in_block": 32,
+      "pixel_data_hex": "dc34fcf49cf40cfcbcf4fc5cacdcf8f8"
+    },
+    "T7": {
+      "name": "Milayou face up bot right",
+      "collection": "Milayou",
+      "rom_source_block": "0xC5182",
+      "uncompressed_index": 0,
+      "byte_offset_in_block": 0,
+      "pixel_data_hex": "6f506d52edd2edb2fdfa576f37380f0f"
+    },
+    "T8": {
+      "name": "Milayou face up bot left",
+      "collection": "Milayou",
+      "rom_source_block": "0xC5182",
+      "uncompressed_index": 1,
+      "byte_offset_in_block": 16,
+      "pixel_data_hex": "ec146c946c946c9c74bcd4ecf818f0f0"
+    }
+  }
+}

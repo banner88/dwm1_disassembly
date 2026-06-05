@@ -1,0 +1,282 @@
+{
+  "0x00": {
+    "table_bank": "41",
+    "table_offset": "48EB",
+    "table_label": "unknown_41_48EB"
+  },
+  "0x01": {
+    "table_bank": "41",
+    "table_offset": "445B",
+    "table_label": "unknown_41_445B"
+  },
+  "0x02": {
+    "table_bank": "3F",
+    "table_offset": "4487",
+    "table_label": "unknown_3F_4487"
+  },
+  "0x03": {
+    "table_bank": "4C",
+    "table_offset": "41DF",
+    "table_label": "unknown_4C_41DF"
+  },
+  "0x04": {
+    "table_bank": "3F",
+    "table_offset": "44FD",
+    "table_label": "unknown_3F_44FD"
+  },
+  "0x05": {
+    "table_bank": "22",
+    "table_offset": "4023",
+    "table_label": "unknown_22_4023"
+  },
+  "0x06": {
+    "table_bank": "21",
+    "table_offset": "403D",
+    "table_label": "unknown_21_403D"
+  },
+  "0x07": {
+    "table_bank": "22",
+    "table_offset": "410B",
+    "table_label": "unknown_22_410B"
+  },
+  "0x09": {
+    "table_bank": "18",
+    "table_offset": "5667",
+    "table_label": "unknown_18_5667"
+  },
+  "0x0C": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x0F": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x10": {
+    "table_bank": "41",
+    "table_offset": "445B",
+    "table_label": "unknown_41_445B"
+  },
+  "0x13": {
+    "table_bank": "1B",
+    "table_offset": "40F1",
+    "table_label": "unknown_1B_40F1"
+  },
+  "0x16": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x18": {
+    "table_bank": "21",
+    "table_offset": "40DF",
+    "table_label": "unknown_21_40DF"
+  },
+  "0x19": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x1A": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x1D": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x1E": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x1F": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x24": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x25": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x26": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x28": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x29": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x2A": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x2C": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x2D": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x2F": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x30": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x31": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x32": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x33": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x34": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x36": {
+    "table_bank": "21",
+    "table_offset": "40DF",
+    "table_label": "unknown_21_40DF"
+  },
+  "0x37": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x38": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x39": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x3B": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x3C": {
+    "table_bank": "21",
+    "table_offset": "40DF",
+    "table_label": "unknown_21_40DF"
+  },
+  "0x3D": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x3E": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x3F": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x41": {
+    "table_bank": "41",
+    "table_offset": "445B",
+    "table_label": "unknown_41_445B"
+  },
+  "0x43": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x44": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x45": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x46": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x47": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x48": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x49": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x4A": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x4B": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x4C": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x4F": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  },
+  "0x51": {
+    "table_bank": "1B",
+    "table_offset": "4025",
+    "table_label": "unknown_1B_4025"
+  }
+}

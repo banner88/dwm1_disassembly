@@ -1,0 +1,1794 @@
+[
+  {
+    "id": 0,
+    "name": "DrakSlime",
+    "ptr_location": "41:4339",
+    "name_offset": "41:5B1F",
+    "byte_length": 10
+  },
+  {
+    "id": 1,
+    "name": "SpotSlime",
+    "ptr_location": "41:433B",
+    "name_offset": "41:5B29",
+    "byte_length": 10
+  },
+  {
+    "id": 2,
+    "name": "WingSlime",
+    "ptr_location": "41:433D",
+    "name_offset": "41:5B33",
+    "byte_length": 10
+  },
+  {
+    "id": 3,
+    "name": "TreeSlime",
+    "ptr_location": "41:433F",
+    "name_offset": "41:5B3D",
+    "byte_length": 10
+  },
+  {
+    "id": 4,
+    "name": "Snaily",
+    "ptr_location": "41:4341",
+    "name_offset": "41:5B47",
+    "byte_length": 7
+  },
+  {
+    "id": 5,
+    "name": "SlimeNite",
+    "ptr_location": "41:4343",
+    "name_offset": "41:5B4E",
+    "byte_length": 10
+  },
+  {
+    "id": 6,
+    "name": "Babble",
+    "ptr_location": "41:4345",
+    "name_offset": "41:5B58",
+    "byte_length": 7
+  },
+  {
+    "id": 7,
+    "name": "BoxSlime",
+    "ptr_location": "41:4347",
+    "name_offset": "41:5B5F",
+    "byte_length": 9
+  },
+  {
+    "id": 8,
+    "name": "Slime",
+    "ptr_location": "41:4349",
+    "name_offset": "41:5B68",
+    "byte_length": 6
+  },
+  {
+    "id": 9,
+    "name": "Healer",
+    "ptr_location": "41:434B",
+    "name_offset": "41:5B6E",
+    "byte_length": 7
+  },
+  {
+    "id": 10,
+    "name": "FangSlime",
+    "ptr_location": "41:434D",
+    "name_offset": "41:5B75",
+    "byte_length": 10
+  },
+  {
+    "id": 11,
+    "name": "RockSlime",
+    "ptr_location": "41:434F",
+    "name_offset": "41:5B7F",
+    "byte_length": 10
+  },
+  {
+    "id": 12,
+    "name": "SlimeBorg",
+    "ptr_location": "41:4351",
+    "name_offset": "41:5B89",
+    "byte_length": 10
+  },
+  {
+    "id": 13,
+    "name": "Slabbit",
+    "ptr_location": "41:4353",
+    "name_offset": "41:5B93",
+    "byte_length": 8
+  },
+  {
+    "id": 14,
+    "name": "SpotKing",
+    "ptr_location": "41:4355",
+    "name_offset": "41:5B9B",
+    "byte_length": 9
+  },
+  {
+    "id": 15,
+    "name": "KingSlime",
+    "ptr_location": "41:4357",
+    "name_offset": "41:5BA4",
+    "byte_length": 10
+  },
+  {
+    "id": 16,
+    "name": "Metaly",
+    "ptr_location": "41:4359",
+    "name_offset": "41:5BAE",
+    "byte_length": 7
+  },
+  {
+    "id": 17,
+    "name": "Metabble",
+    "ptr_location": "41:435B",
+    "name_offset": "41:5BB5",
+    "byte_length": 9
+  },
+  {
+    "id": 18,
+    "name": "MetalKing",
+    "ptr_location": "41:435D",
+    "name_offset": "41:5BBE",
+    "byte_length": 10
+  },
+  {
+    "id": 19,
+    "name": "GoldSlime",
+    "ptr_location": "41:435F",
+    "name_offset": "41:5BC8",
+    "byte_length": 10
+  },
+  {
+    "id": 20,
+    "name": "DragonKid",
+    "ptr_location": "41:4361",
+    "name_offset": "41:5BD2",
+    "byte_length": 10
+  },
+  {
+    "id": 21,
+    "name": "Tortragon",
+    "ptr_location": "41:4363",
+    "name_offset": "41:5BDC",
+    "byte_length": 10
+  },
+  {
+    "id": 22,
+    "name": "Pteranod",
+    "ptr_location": "41:4365",
+    "name_offset": "41:5BE6",
+    "byte_length": 9
+  },
+  {
+    "id": 23,
+    "name": "Gasgon",
+    "ptr_location": "41:4367",
+    "name_offset": "41:5BEF",
+    "byte_length": 7
+  },
+  {
+    "id": 24,
+    "name": "FairyDrak",
+    "ptr_location": "41:4369",
+    "name_offset": "41:5BF6",
+    "byte_length": 10
+  },
+  {
+    "id": 25,
+    "name": "LizardMan",
+    "ptr_location": "41:436B",
+    "name_offset": "41:5C00",
+    "byte_length": 10
+  },
+  {
+    "id": 26,
+    "name": "Poisongon",
+    "ptr_location": "41:436D",
+    "name_offset": "41:5C0A",
+    "byte_length": 10
+  },
+  {
+    "id": 27,
+    "name": "Swordgon",
+    "ptr_location": "41:436F",
+    "name_offset": "41:5C14",
+    "byte_length": 9
+  },
+  {
+    "id": 28,
+    "name": "Dragon",
+    "ptr_location": "41:4371",
+    "name_offset": "41:5C1D",
+    "byte_length": 7
+  },
+  {
+    "id": 29,
+    "name": "MiniDrak",
+    "ptr_location": "41:4373",
+    "name_offset": "41:5C24",
+    "byte_length": 9
+  },
+  {
+    "id": 30,
+    "name": "MadDragon",
+    "ptr_location": "41:4375",
+    "name_offset": "41:5C2D",
+    "byte_length": 10
+  },
+  {
+    "id": 31,
+    "name": "Rayburn",
+    "ptr_location": "41:4377",
+    "name_offset": "41:5C37",
+    "byte_length": 8
+  },
+  {
+    "id": 32,
+    "name": "Chamelgon",
+    "ptr_location": "41:4379",
+    "name_offset": "41:5C3F",
+    "byte_length": 10
+  },
+  {
+    "id": 33,
+    "name": "LizardFly",
+    "ptr_location": "41:437B",
+    "name_offset": "41:5C49",
+    "byte_length": 10
+  },
+  {
+    "id": 34,
+    "name": "Andreal",
+    "ptr_location": "41:437D",
+    "name_offset": "41:5C53",
+    "byte_length": 8
+  },
+  {
+    "id": 35,
+    "name": "KingCobra",
+    "ptr_location": "41:437F",
+    "name_offset": "41:5C5B",
+    "byte_length": 10
+  },
+  {
+    "id": 36,
+    "name": "Spikerous",
+    "ptr_location": "41:4381",
+    "name_offset": "41:5C65",
+    "byte_length": 10
+  },
+  {
+    "id": 37,
+    "name": "GreatDrak",
+    "ptr_location": "41:4383",
+    "name_offset": "41:5C6F",
+    "byte_length": 10
+  },
+  {
+    "id": 38,
+    "name": "Crestpent",
+    "ptr_location": "41:4385",
+    "name_offset": "41:5C79",
+    "byte_length": 10
+  },
+  {
+    "id": 39,
+    "name": "WingSnake",
+    "ptr_location": "41:4387",
+    "name_offset": "41:5C83",
+    "byte_length": 10
+  },
+  {
+    "id": 40,
+    "name": "Coatol",
+    "ptr_location": "41:4389",
+    "name_offset": "41:5C8D",
+    "byte_length": 7
+  },
+  {
+    "id": 41,
+    "name": "Orochi",
+    "ptr_location": "41:438B",
+    "name_offset": "41:5C94",
+    "byte_length": 7
+  },
+  {
+    "id": 42,
+    "name": "BattleRex",
+    "ptr_location": "41:438D",
+    "name_offset": "41:5C9B",
+    "byte_length": 10
+  },
+  {
+    "id": 43,
+    "name": "SkyDragon",
+    "ptr_location": "41:438F",
+    "name_offset": "41:5CA5",
+    "byte_length": 10
+  },
+  {
+    "id": 44,
+    "name": "Divinegon",
+    "ptr_location": "41:4391",
+    "name_offset": "41:5CAF",
+    "byte_length": 10
+  },
+  {
+    "id": 45,
+    "name": "Tonguella",
+    "ptr_location": "41:4393",
+    "name_offset": "41:5CB9",
+    "byte_length": 10
+  },
+  {
+    "id": 46,
+    "name": "Almiraj",
+    "ptr_location": "41:4395",
+    "name_offset": "41:5CC3",
+    "byte_length": 8
+  },
+  {
+    "id": 47,
+    "name": "CatFly",
+    "ptr_location": "41:4397",
+    "name_offset": "41:5CCB",
+    "byte_length": 7
+  },
+  {
+    "id": 48,
+    "name": "PillowRat",
+    "ptr_location": "41:4399",
+    "name_offset": "41:5CD2",
+    "byte_length": 10
+  },
+  {
+    "id": 49,
+    "name": "Saccer",
+    "ptr_location": "41:439B",
+    "name_offset": "41:5CDC",
+    "byte_length": 7
+  },
+  {
+    "id": 50,
+    "name": "GulpBeast",
+    "ptr_location": "41:439D",
+    "name_offset": "41:5CE3",
+    "byte_length": 10
+  },
+  {
+    "id": 51,
+    "name": "Skullroo",
+    "ptr_location": "41:439F",
+    "name_offset": "41:5CED",
+    "byte_length": 9
+  },
+  {
+    "id": 52,
+    "name": "WindBeast",
+    "ptr_location": "41:43A1",
+    "name_offset": "41:5CF6",
+    "byte_length": 10
+  },
+  {
+    "id": 53,
+    "name": "Anteater",
+    "ptr_location": "41:43A3",
+    "name_offset": "41:5D00",
+    "byte_length": 9
+  },
+  {
+    "id": 54,
+    "name": "SuperTen",
+    "ptr_location": "41:43A5",
+    "name_offset": "41:5D09",
+    "byte_length": 9
+  },
+  {
+    "id": 55,
+    "name": "IronTurt",
+    "ptr_location": "41:43A7",
+    "name_offset": "41:5D12",
+    "byte_length": 9
+  },
+  {
+    "id": 56,
+    "name": "Mommonja",
+    "ptr_location": "41:43A9",
+    "name_offset": "41:5D1B",
+    "byte_length": 9
+  },
+  {
+    "id": 57,
+    "name": "HammerMan",
+    "ptr_location": "41:43AB",
+    "name_offset": "41:5D24",
+    "byte_length": 10
+  },
+  {
+    "id": 58,
+    "name": "Grizzly",
+    "ptr_location": "41:43AD",
+    "name_offset": "41:5D2E",
+    "byte_length": 8
+  },
+  {
+    "id": 59,
+    "name": "Yeti",
+    "ptr_location": "41:43AF",
+    "name_offset": "41:5D36",
+    "byte_length": 5
+  },
+  {
+    "id": 60,
+    "name": "MadGopher",
+    "ptr_location": "41:43B1",
+    "name_offset": "41:5D3B",
+    "byte_length": 10
+  },
+  {
+    "id": 61,
+    "name": "FairyRat",
+    "ptr_location": "41:43B3",
+    "name_offset": "41:5D45",
+    "byte_length": 9
+  },
+  {
+    "id": 62,
+    "name": "Unicorn",
+    "ptr_location": "41:43B5",
+    "name_offset": "41:5D4E",
+    "byte_length": 8
+  },
+  {
+    "id": 63,
+    "name": "Goategon",
+    "ptr_location": "41:43B7",
+    "name_offset": "41:5D56",
+    "byte_length": 9
+  },
+  {
+    "id": 64,
+    "name": "WildApe",
+    "ptr_location": "41:43B9",
+    "name_offset": "41:5D5F",
+    "byte_length": 8
+  },
+  {
+    "id": 65,
+    "name": "Trumpeter",
+    "ptr_location": "41:43BB",
+    "name_offset": "41:5D67",
+    "byte_length": 10
+  },
+  {
+    "id": 66,
+    "name": "KingLeo",
+    "ptr_location": "41:43BD",
+    "name_offset": "41:5D71",
+    "byte_length": 8
+  },
+  {
+    "id": 67,
+    "name": "DarkHorn",
+    "ptr_location": "41:43BF",
+    "name_offset": "41:5D79",
+    "byte_length": 9
+  },
+  {
+    "id": 68,
+    "name": "MadCat",
+    "ptr_location": "41:43C1",
+    "name_offset": "41:5D82",
+    "byte_length": 7
+  },
+  {
+    "id": 69,
+    "name": "BigEye",
+    "ptr_location": "41:43C3",
+    "name_offset": "41:5D89",
+    "byte_length": 7
+  },
+  {
+    "id": 70,
+    "name": "Picky",
+    "ptr_location": "41:43C5",
+    "name_offset": "41:5D90",
+    "byte_length": 6
+  },
+  {
+    "id": 71,
+    "name": "Wyvern",
+    "ptr_location": "41:43C7",
+    "name_offset": "41:5D96",
+    "byte_length": 7
+  },
+  {
+    "id": 72,
+    "name": "BullBird",
+    "ptr_location": "41:43C9",
+    "name_offset": "41:5D9D",
+    "byte_length": 9
+  },
+  {
+    "id": 73,
+    "name": "Florajay",
+    "ptr_location": "41:43CB",
+    "name_offset": "41:5DA6",
+    "byte_length": 9
+  },
+  {
+    "id": 74,
+    "name": "DuckKite",
+    "ptr_location": "41:43CD",
+    "name_offset": "41:5DAF",
+    "byte_length": 9
+  },
+  {
+    "id": 75,
+    "name": "MadPecker",
+    "ptr_location": "41:43CF",
+    "name_offset": "41:5DB8",
+    "byte_length": 10
+  },
+  {
+    "id": 76,
+    "name": "MadRaven",
+    "ptr_location": "41:43D1",
+    "name_offset": "41:5DC2",
+    "byte_length": 9
+  },
+  {
+    "id": 77,
+    "name": "MistyWing",
+    "ptr_location": "41:43D3",
+    "name_offset": "41:5DCB",
+    "byte_length": 10
+  },
+  {
+    "id": 78,
+    "name": "Dracky",
+    "ptr_location": "41:43D5",
+    "name_offset": "41:5DD5",
+    "byte_length": 7
+  },
+  {
+    "id": 79,
+    "name": "BigRoost",
+    "ptr_location": "41:43D7",
+    "name_offset": "41:5DDC",
+    "byte_length": 9
+  },
+  {
+    "id": 80,
+    "name": "StubBird",
+    "ptr_location": "41:43D9",
+    "name_offset": "41:5DE5",
+    "byte_length": 9
+  },
+  {
+    "id": 81,
+    "name": "LandOwl",
+    "ptr_location": "41:43DB",
+    "name_offset": "41:5DEE",
+    "byte_length": 8
+  },
+  {
+    "id": 82,
+    "name": "MadGoose",
+    "ptr_location": "41:43DD",
+    "name_offset": "41:5DF6",
+    "byte_length": 9
+  },
+  {
+    "id": 83,
+    "name": "MadCondor",
+    "ptr_location": "41:43DF",
+    "name_offset": "41:5DFF",
+    "byte_length": 10
+  },
+  {
+    "id": 84,
+    "name": "Blizzardy",
+    "ptr_location": "41:43E1",
+    "name_offset": "41:5E09",
+    "byte_length": 10
+  },
+  {
+    "id": 85,
+    "name": "Phoenix",
+    "ptr_location": "41:43E3",
+    "name_offset": "41:5E13",
+    "byte_length": 8
+  },
+  {
+    "id": 86,
+    "name": "ZapBird",
+    "ptr_location": "41:43E5",
+    "name_offset": "41:5E1B",
+    "byte_length": 8
+  },
+  {
+    "id": 87,
+    "name": "WhipBird",
+    "ptr_location": "41:43E7",
+    "name_offset": "41:5E23",
+    "byte_length": 9
+  },
+  {
+    "id": 88,
+    "name": "FunkyBird",
+    "ptr_location": "41:43E9",
+    "name_offset": "41:5E2C",
+    "byte_length": 10
+  },
+  {
+    "id": 89,
+    "name": "RainHawk",
+    "ptr_location": "41:43EB",
+    "name_offset": "41:5E36",
+    "byte_length": 9
+  },
+  {
+    "id": 90,
+    "name": "MadPlant",
+    "ptr_location": "41:43ED",
+    "name_offset": "41:5E3F",
+    "byte_length": 9
+  },
+  {
+    "id": 91,
+    "name": "FireWeed",
+    "ptr_location": "41:43EF",
+    "name_offset": "41:5E48",
+    "byte_length": 9
+  },
+  {
+    "id": 92,
+    "name": "FloraMan",
+    "ptr_location": "41:43F1",
+    "name_offset": "41:5E51",
+    "byte_length": 9
+  },
+  {
+    "id": 93,
+    "name": "WingTree",
+    "ptr_location": "41:43F3",
+    "name_offset": "41:5E5A",
+    "byte_length": 9
+  },
+  {
+    "id": 94,
+    "name": "CactiBall",
+    "ptr_location": "41:43F5",
+    "name_offset": "41:5E63",
+    "byte_length": 10
+  },
+  {
+    "id": 95,
+    "name": "Gulpple",
+    "ptr_location": "41:43F7",
+    "name_offset": "41:5E6D",
+    "byte_length": 8
+  },
+  {
+    "id": 96,
+    "name": "Toadstool",
+    "ptr_location": "41:43F9",
+    "name_offset": "41:5E75",
+    "byte_length": 10
+  },
+  {
+    "id": 97,
+    "name": "AmberWeed",
+    "ptr_location": "41:43FB",
+    "name_offset": "41:5E7F",
+    "byte_length": 10
+  },
+  {
+    "id": 98,
+    "name": "Stubsuck",
+    "ptr_location": "41:43FD",
+    "name_offset": "41:5E89",
+    "byte_length": 9
+  },
+  {
+    "id": 99,
+    "name": "Oniono",
+    "ptr_location": "41:43FF",
+    "name_offset": "41:5E92",
+    "byte_length": 7
+  },
+  {
+    "id": 100,
+    "name": "DanceVegi",
+    "ptr_location": "41:4401",
+    "name_offset": "41:5E99",
+    "byte_length": 10
+  },
+  {
+    "id": 101,
+    "name": "TreeBoy",
+    "ptr_location": "41:4403",
+    "name_offset": "41:5EA3",
+    "byte_length": 8
+  },
+  {
+    "id": 102,
+    "name": "FaceTree",
+    "ptr_location": "41:4405",
+    "name_offset": "41:5EAB",
+    "byte_length": 9
+  },
+  {
+    "id": 103,
+    "name": "HerbMan",
+    "ptr_location": "41:4407",
+    "name_offset": "41:5EB4",
+    "byte_length": 8
+  },
+  {
+    "id": 104,
+    "name": "BeanMan",
+    "ptr_location": "41:4409",
+    "name_offset": "41:5EBC",
+    "byte_length": 8
+  },
+  {
+    "id": 105,
+    "name": "EvilSeed",
+    "ptr_location": "41:440B",
+    "name_offset": "41:5EC4",
+    "byte_length": 9
+  },
+  {
+    "id": 106,
+    "name": "ManEater",
+    "ptr_location": "41:440D",
+    "name_offset": "41:5ECD",
+    "byte_length": 9
+  },
+  {
+    "id": 107,
+    "name": "Snapper",
+    "ptr_location": "41:440F",
+    "name_offset": "41:5ED6",
+    "byte_length": 8
+  },
+  {
+    "id": 108,
+    "name": "Rosevine",
+    "ptr_location": "41:4411",
+    "name_offset": "41:5EDE",
+    "byte_length": 9
+  },
+  {
+    "id": 109,
+    "name": "Watabou",
+    "ptr_location": "41:4413",
+    "name_offset": "41:5EE7",
+    "byte_length": 8
+  },
+  {
+    "id": 110,
+    "name": "GiantSlug",
+    "ptr_location": "41:4415",
+    "name_offset": "41:5EEF",
+    "byte_length": 10
+  },
+  {
+    "id": 111,
+    "name": "Catapila",
+    "ptr_location": "41:4417",
+    "name_offset": "41:5EF9",
+    "byte_length": 9
+  },
+  {
+    "id": 112,
+    "name": "Gophecada",
+    "ptr_location": "41:4419",
+    "name_offset": "41:5F02",
+    "byte_length": 10
+  },
+  {
+    "id": 113,
+    "name": "Butterfly",
+    "ptr_location": "41:441B",
+    "name_offset": "41:5F0C",
+    "byte_length": 10
+  },
+  {
+    "id": 114,
+    "name": "WeedBug",
+    "ptr_location": "41:441D",
+    "name_offset": "41:5F16",
+    "byte_length": 8
+  },
+  {
+    "id": 115,
+    "name": "GiantWorm",
+    "ptr_location": "41:441F",
+    "name_offset": "41:5F1E",
+    "byte_length": 10
+  },
+  {
+    "id": 116,
+    "name": "Lipsy",
+    "ptr_location": "41:4421",
+    "name_offset": "41:5F28",
+    "byte_length": 6
+  },
+  {
+    "id": 117,
+    "name": "StagBug",
+    "ptr_location": "41:4423",
+    "name_offset": "41:5F2E",
+    "byte_length": 8
+  },
+  {
+    "id": 118,
+    "name": "ArmyAnt",
+    "ptr_location": "41:4425",
+    "name_offset": "41:5F36",
+    "byte_length": 8
+  },
+  {
+    "id": 119,
+    "name": "GoHopper",
+    "ptr_location": "41:4427",
+    "name_offset": "41:5F3E",
+    "byte_length": 9
+  },
+  {
+    "id": 120,
+    "name": "TailEater",
+    "ptr_location": "41:4429",
+    "name_offset": "41:5F47",
+    "byte_length": 10
+  },
+  {
+    "id": 121,
+    "name": "ArmorPede",
+    "ptr_location": "41:442B",
+    "name_offset": "41:5F51",
+    "byte_length": 10
+  },
+  {
+    "id": 122,
+    "name": "Eyeder",
+    "ptr_location": "41:442D",
+    "name_offset": "41:5F5B",
+    "byte_length": 7
+  },
+  {
+    "id": 123,
+    "name": "GiantMoth",
+    "ptr_location": "41:442F",
+    "name_offset": "41:5F62",
+    "byte_length": 10
+  },
+  {
+    "id": 124,
+    "name": "Droll",
+    "ptr_location": "41:4431",
+    "name_offset": "41:5F6C",
+    "byte_length": 6
+  },
+  {
+    "id": 125,
+    "name": "ArmyCrab",
+    "ptr_location": "41:4433",
+    "name_offset": "41:5F72",
+    "byte_length": 9
+  },
+  {
+    "id": 126,
+    "name": "MadHornet",
+    "ptr_location": "41:4435",
+    "name_offset": "41:5F7B",
+    "byte_length": 10
+  },
+  {
+    "id": 127,
+    "name": "HornBeet",
+    "ptr_location": "41:4437",
+    "name_offset": "41:5F85",
+    "byte_length": 9
+  },
+  {
+    "id": 128,
+    "name": "Armorpion",
+    "ptr_location": "41:4439",
+    "name_offset": "41:5F8E",
+    "byte_length": 10
+  },
+  {
+    "id": 129,
+    "name": "Digster",
+    "ptr_location": "41:443B",
+    "name_offset": "41:5F98",
+    "byte_length": 8
+  },
+  {
+    "id": 130,
+    "name": "Pixy",
+    "ptr_location": "41:443D",
+    "name_offset": "41:5FA0",
+    "byte_length": 5
+  },
+  {
+    "id": 131,
+    "name": "ArcDemon",
+    "ptr_location": "41:443F",
+    "name_offset": "41:5FA5",
+    "byte_length": 9
+  },
+  {
+    "id": 132,
+    "name": "AgDevil",
+    "ptr_location": "41:4441",
+    "name_offset": "41:5FAE",
+    "byte_length": 8
+  },
+  {
+    "id": 133,
+    "name": "Demonite",
+    "ptr_location": "41:4443",
+    "name_offset": "41:5FB6",
+    "byte_length": 9
+  },
+  {
+    "id": 134,
+    "name": "DarkEye",
+    "ptr_location": "41:4445",
+    "name_offset": "41:5FBF",
+    "byte_length": 8
+  },
+  {
+    "id": 135,
+    "name": "EyeBall",
+    "ptr_location": "41:4447",
+    "name_offset": "41:5FC7",
+    "byte_length": 8
+  },
+  {
+    "id": 136,
+    "name": "SkulRider",
+    "ptr_location": "41:4449",
+    "name_offset": "41:5FCF",
+    "byte_length": 10
+  },
+  {
+    "id": 137,
+    "name": "EvilBeast",
+    "ptr_location": "41:444B",
+    "name_offset": "41:5FD9",
+    "byte_length": 10
+  },
+  {
+    "id": 138,
+    "name": "1EyeClown",
+    "ptr_location": "41:444D",
+    "name_offset": "41:5FE3",
+    "byte_length": 10
+  },
+  {
+    "id": 139,
+    "name": "Gremlin",
+    "ptr_location": "41:444F",
+    "name_offset": "41:5FED",
+    "byte_length": 8
+  },
+  {
+    "id": 140,
+    "name": "MedusaEye",
+    "ptr_location": "41:4451",
+    "name_offset": "41:5FF5",
+    "byte_length": 10
+  },
+  {
+    "id": 141,
+    "name": "Lionex",
+    "ptr_location": "41:4453",
+    "name_offset": "41:5FFF",
+    "byte_length": 7
+  },
+  {
+    "id": 142,
+    "name": "GoatHorn",
+    "ptr_location": "41:4455",
+    "name_offset": "41:6006",
+    "byte_length": 9
+  },
+  {
+    "id": 143,
+    "name": "Orc",
+    "ptr_location": "41:4457",
+    "name_offset": "41:600F",
+    "byte_length": 4
+  },
+  {
+    "id": 144,
+    "name": "Ogre",
+    "ptr_location": "41:4459",
+    "name_offset": "41:6013",
+    "byte_length": 5
+  },
+  {
+    "id": 145,
+    "name": "GateGuard",
+    "ptr_location": "41:445B",
+    "name_offset": "41:6018",
+    "byte_length": 10
+  },
+  {
+    "id": 146,
+    "name": "ChopClown",
+    "ptr_location": "41:445D",
+    "name_offset": "41:6022",
+    "byte_length": 10
+  },
+  {
+    "id": 147,
+    "name": "Grendal",
+    "ptr_location": "41:445F",
+    "name_offset": "41:602C",
+    "byte_length": 8
+  },
+  {
+    "id": 148,
+    "name": "Akubar",
+    "ptr_location": "41:4461",
+    "name_offset": "41:6034",
+    "byte_length": 7
+  },
+  {
+    "id": 149,
+    "name": "MadKnight",
+    "ptr_location": "41:4463",
+    "name_offset": "41:603B",
+    "byte_length": 10
+  },
+  {
+    "id": 150,
+    "name": "Gigantes",
+    "ptr_location": "41:4465",
+    "name_offset": "41:6045",
+    "byte_length": 9
+  },
+  {
+    "id": 151,
+    "name": "Centasaur",
+    "ptr_location": "41:4467",
+    "name_offset": "41:604E",
+    "byte_length": 10
+  },
+  {
+    "id": 152,
+    "name": "EvilArmor",
+    "ptr_location": "41:4469",
+    "name_offset": "41:6058",
+    "byte_length": 10
+  },
+  {
+    "id": 153,
+    "name": "Jamirus",
+    "ptr_location": "41:446B",
+    "name_offset": "41:6062",
+    "byte_length": 8
+  },
+  {
+    "id": 154,
+    "name": "Durran",
+    "ptr_location": "41:446D",
+    "name_offset": "41:606A",
+    "byte_length": 7
+  },
+  {
+    "id": 155,
+    "name": "Spooky",
+    "ptr_location": "41:446F",
+    "name_offset": "41:6071",
+    "byte_length": 7
+  },
+  {
+    "id": 156,
+    "name": "Skullgon",
+    "ptr_location": "41:4471",
+    "name_offset": "41:6078",
+    "byte_length": 9
+  },
+  {
+    "id": 157,
+    "name": "Putrepup",
+    "ptr_location": "41:4473",
+    "name_offset": "41:6081",
+    "byte_length": 9
+  },
+  {
+    "id": 158,
+    "name": "RotRaven",
+    "ptr_location": "41:4475",
+    "name_offset": "41:608A",
+    "byte_length": 9
+  },
+  {
+    "id": 159,
+    "name": "Mummy",
+    "ptr_location": "41:4477",
+    "name_offset": "41:6093",
+    "byte_length": 6
+  },
+  {
+    "id": 160,
+    "name": "DarkCrab",
+    "ptr_location": "41:4479",
+    "name_offset": "41:6099",
+    "byte_length": 9
+  },
+  {
+    "id": 161,
+    "name": "DeadNite",
+    "ptr_location": "41:447B",
+    "name_offset": "41:60A2",
+    "byte_length": 9
+  },
+  {
+    "id": 162,
+    "name": "Shadow",
+    "ptr_location": "41:447D",
+    "name_offset": "41:60AB",
+    "byte_length": 7
+  },
+  {
+    "id": 163,
+    "name": "Hork",
+    "ptr_location": "41:447F",
+    "name_offset": "41:60B2",
+    "byte_length": 5
+  },
+  {
+    "id": 164,
+    "name": "Mudron",
+    "ptr_location": "41:4481",
+    "name_offset": "41:60B7",
+    "byte_length": 7
+  },
+  {
+    "id": 165,
+    "name": "NiteWhip",
+    "ptr_location": "41:4483",
+    "name_offset": "41:60BE",
+    "byte_length": 9
+  },
+  {
+    "id": 166,
+    "name": "MadSpirit",
+    "ptr_location": "41:4485",
+    "name_offset": "41:60C7",
+    "byte_length": 10
+  },
+  {
+    "id": 167,
+    "name": "WindMerge",
+    "ptr_location": "41:4487",
+    "name_offset": "41:60D1",
+    "byte_length": 10
+  },
+  {
+    "id": 168,
+    "name": "Reaper",
+    "ptr_location": "41:4489",
+    "name_offset": "41:60DB",
+    "byte_length": 7
+  },
+  {
+    "id": 169,
+    "name": "DeadNoble",
+    "ptr_location": "41:448B",
+    "name_offset": "41:60E2",
+    "byte_length": 10
+  },
+  {
+    "id": 170,
+    "name": "WhiteKing",
+    "ptr_location": "41:448D",
+    "name_offset": "41:60EC",
+    "byte_length": 10
+  },
+  {
+    "id": 171,
+    "name": "BoneSlave",
+    "ptr_location": "41:448F",
+    "name_offset": "41:60F6",
+    "byte_length": 10
+  },
+  {
+    "id": 172,
+    "name": "Skeletor",
+    "ptr_location": "41:4491",
+    "name_offset": "41:6100",
+    "byte_length": 9
+  },
+  {
+    "id": 173,
+    "name": "Servant",
+    "ptr_location": "41:4493",
+    "name_offset": "41:6109",
+    "byte_length": 8
+  },
+  {
+    "id": 174,
+    "name": "Copycat",
+    "ptr_location": "41:4495",
+    "name_offset": "41:6111",
+    "byte_length": 8
+  },
+  {
+    "id": 175,
+    "name": "JewelBag",
+    "ptr_location": "41:4497",
+    "name_offset": "41:6119",
+    "byte_length": 9
+  },
+  {
+    "id": 176,
+    "name": "EvilWand",
+    "ptr_location": "41:4499",
+    "name_offset": "41:6122",
+    "byte_length": 9
+  },
+  {
+    "id": 177,
+    "name": "MadCandle",
+    "ptr_location": "41:449B",
+    "name_offset": "41:612B",
+    "byte_length": 10
+  },
+  {
+    "id": 178,
+    "name": "CoilBird",
+    "ptr_location": "41:449D",
+    "name_offset": "41:6135",
+    "byte_length": 9
+  },
+  {
+    "id": 179,
+    "name": "Facer",
+    "ptr_location": "41:449F",
+    "name_offset": "41:613E",
+    "byte_length": 6
+  },
+  {
+    "id": 180,
+    "name": "SpikyBoy",
+    "ptr_location": "41:44A1",
+    "name_offset": "41:6144",
+    "byte_length": 9
+  },
+  {
+    "id": 181,
+    "name": "MadMirror",
+    "ptr_location": "41:44A3",
+    "name_offset": "41:614D",
+    "byte_length": 10
+  },
+  {
+    "id": 182,
+    "name": "RogueNite",
+    "ptr_location": "41:44A5",
+    "name_offset": "41:6157",
+    "byte_length": 10
+  },
+  {
+    "id": 183,
+    "name": "Goopi",
+    "ptr_location": "41:44A7",
+    "name_offset": "41:6161",
+    "byte_length": 6
+  },
+  {
+    "id": 184,
+    "name": "Voodoll",
+    "ptr_location": "41:44A9",
+    "name_offset": "41:6167",
+    "byte_length": 8
+  },
+  {
+    "id": 185,
+    "name": "MetalDrak",
+    "ptr_location": "41:44AB",
+    "name_offset": "41:616F",
+    "byte_length": 10
+  },
+  {
+    "id": 186,
+    "name": "Balzak",
+    "ptr_location": "41:44AD",
+    "name_offset": "41:6179",
+    "byte_length": 7
+  },
+  {
+    "id": 187,
+    "name": "SabreMan",
+    "ptr_location": "41:44AF",
+    "name_offset": "41:6180",
+    "byte_length": 9
+  },
+  {
+    "id": 188,
+    "name": "CurseLamp",
+    "ptr_location": "41:44B1",
+    "name_offset": "41:6189",
+    "byte_length": 10
+  },
+  {
+    "id": 189,
+    "name": "Roboster",
+    "ptr_location": "41:44B3",
+    "name_offset": "41:6193",
+    "byte_length": 9
+  },
+  {
+    "id": 190,
+    "name": "EvilPot",
+    "ptr_location": "41:44B5",
+    "name_offset": "41:619C",
+    "byte_length": 8
+  },
+  {
+    "id": 191,
+    "name": "Gismo",
+    "ptr_location": "41:44B7",
+    "name_offset": "41:61A4",
+    "byte_length": 6
+  },
+  {
+    "id": 192,
+    "name": "LavaMan",
+    "ptr_location": "41:44B9",
+    "name_offset": "41:61AA",
+    "byte_length": 8
+  },
+  {
+    "id": 193,
+    "name": "IceMan",
+    "ptr_location": "41:44BB",
+    "name_offset": "41:61B2",
+    "byte_length": 7
+  },
+  {
+    "id": 194,
+    "name": "Mimic",
+    "ptr_location": "41:44BD",
+    "name_offset": "41:61B9",
+    "byte_length": 6
+  },
+  {
+    "id": 195,
+    "name": "MudDoll",
+    "ptr_location": "41:44BF",
+    "name_offset": "41:61BF",
+    "byte_length": 8
+  },
+  {
+    "id": 196,
+    "name": "Golem",
+    "ptr_location": "41:44C1",
+    "name_offset": "41:61C7",
+    "byte_length": 6
+  },
+  {
+    "id": 197,
+    "name": "StoneMan",
+    "ptr_location": "41:44C3",
+    "name_offset": "41:61CD",
+    "byte_length": 9
+  },
+  {
+    "id": 198,
+    "name": "BombCrag",
+    "ptr_location": "41:44C5",
+    "name_offset": "41:61D6",
+    "byte_length": 9
+  },
+  {
+    "id": 199,
+    "name": "GoldGolem",
+    "ptr_location": "41:44C7",
+    "name_offset": "41:61DF",
+    "byte_length": 10
+  },
+  {
+    "id": 200,
+    "name": "DracoLord",
+    "ptr_location": "41:44C9",
+    "name_offset": "41:61E9",
+    "byte_length": 10
+  },
+  {
+    "id": 201,
+    "name": "DracoLord",
+    "ptr_location": "41:44CB",
+    "name_offset": "41:61F3",
+    "byte_length": 10
+  },
+  {
+    "id": 202,
+    "name": "Hargon",
+    "ptr_location": "41:44CD",
+    "name_offset": "41:61FD",
+    "byte_length": 7
+  },
+  {
+    "id": 203,
+    "name": "Sidoh",
+    "ptr_location": "41:44CF",
+    "name_offset": "41:6204",
+    "byte_length": 6
+  },
+  {
+    "id": 204,
+    "name": "Baramos",
+    "ptr_location": "41:44D1",
+    "name_offset": "41:620A",
+    "byte_length": 8
+  },
+  {
+    "id": 205,
+    "name": "Zoma",
+    "ptr_location": "41:44D3",
+    "name_offset": "41:6212",
+    "byte_length": 5
+  },
+  {
+    "id": 206,
+    "name": "Pizzaro",
+    "ptr_location": "41:44D5",
+    "name_offset": "41:6217",
+    "byte_length": 8
+  },
+  {
+    "id": 207,
+    "name": "Esterk",
+    "ptr_location": "41:44D7",
+    "name_offset": "41:621F",
+    "byte_length": 7
+  },
+  {
+    "id": 208,
+    "name": "Mirudraas",
+    "ptr_location": "41:44D9",
+    "name_offset": "41:6226",
+    "byte_length": 10
+  },
+  {
+    "id": 209,
+    "name": "Mirudraas",
+    "ptr_location": "41:44DB",
+    "name_offset": "41:6230",
+    "byte_length": 10
+  },
+  {
+    "id": 210,
+    "name": "Mudou",
+    "ptr_location": "41:44DD",
+    "name_offset": "41:623A",
+    "byte_length": 6
+  },
+  {
+    "id": 211,
+    "name": "DeathMore",
+    "ptr_location": "41:44DF",
+    "name_offset": "41:6240",
+    "byte_length": 10
+  },
+  {
+    "id": 212,
+    "name": "DeathMore",
+    "ptr_location": "41:44E1",
+    "name_offset": "41:624A",
+    "byte_length": 10
+  },
+  {
+    "id": 213,
+    "name": "DeathMore",
+    "ptr_location": "41:44E3",
+    "name_offset": "41:6254",
+    "byte_length": 10
+  },
+  {
+    "id": 214,
+    "name": "Darkdrium",
+    "ptr_location": "41:44E5",
+    "name_offset": "41:625E",
+    "byte_length": 10
+  },
+  {
+    "id": 215,
+    "name": "TERRY?",
+    "ptr_location": "41:44E7",
+    "name_offset": "41:6268",
+    "byte_length": 7
+  },
+  {
+    "id": 216,
+    "name": "Tatsu",
+    "ptr_location": "41:44E9",
+    "name_offset": "41:626F",
+    "byte_length": 6
+  },
+  {
+    "id": 217,
+    "name": "Diago",
+    "ptr_location": "41:44EB",
+    "name_offset": "41:6275",
+    "byte_length": 6
+  },
+  {
+    "id": 218,
+    "name": "Samsi",
+    "ptr_location": "41:44ED",
+    "name_offset": "41:627B",
+    "byte_length": 6
+  },
+  {
+    "id": 219,
+    "name": "Bazoo",
+    "ptr_location": "41:44EF",
+    "name_offset": "41:6281",
+    "byte_length": 6
+  },
+  {
+    "id": 220,
+    "name": "",
+    "ptr_location": "41:44F1",
+    "name_offset": "41:6287",
+    "byte_length": 1
+  },
+  {
+    "id": 221,
+    "name": "",
+    "ptr_location": "41:44F3",
+    "name_offset": "41:6287",
+    "byte_length": 1
+  },
+  {
+    "id": 222,
+    "name": "",
+    "ptr_location": "41:44F5",
+    "name_offset": "41:6287",
+    "byte_length": 1
+  },
+  {
+    "id": 223,
+    "name": "",
+    "ptr_location": "41:44F7",
+    "name_offset": "41:6287",
+    "byte_length": 1
+  },
+  {
+    "id": 224,
+    "name": "",
+    "ptr_location": "41:44F9",
+    "name_offset": "41:6287",
+    "byte_length": 1
+  },
+  {
+    "id": 225,
+    "name": "?????",
+    "ptr_location": "41:44FB",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 226,
+    "name": "?????",
+    "ptr_location": "41:44FD",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 227,
+    "name": "?????",
+    "ptr_location": "41:44FF",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 228,
+    "name": "?????",
+    "ptr_location": "41:4501",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 229,
+    "name": "?????",
+    "ptr_location": "41:4503",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 230,
+    "name": "?????",
+    "ptr_location": "41:4505",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 231,
+    "name": "?????",
+    "ptr_location": "41:4507",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 232,
+    "name": "?????",
+    "ptr_location": "41:4509",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 233,
+    "name": "?????",
+    "ptr_location": "41:450B",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 234,
+    "name": "?????",
+    "ptr_location": "41:450D",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 235,
+    "name": "?????",
+    "ptr_location": "41:450F",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 236,
+    "name": "?????",
+    "ptr_location": "41:4511",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 237,
+    "name": "?????",
+    "ptr_location": "41:4513",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 238,
+    "name": "?????",
+    "ptr_location": "41:4515",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 239,
+    "name": "?????",
+    "ptr_location": "41:4517",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 240,
+    "name": "?????",
+    "ptr_location": "41:4519",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 241,
+    "name": "?????",
+    "ptr_location": "41:451B",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 242,
+    "name": "?????",
+    "ptr_location": "41:451D",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 243,
+    "name": "?????",
+    "ptr_location": "41:451F",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 244,
+    "name": "?????",
+    "ptr_location": "41:4521",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 245,
+    "name": "?????",
+    "ptr_location": "41:4523",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 246,
+    "name": "?????",
+    "ptr_location": "41:4525",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 247,
+    "name": "?????",
+    "ptr_location": "41:4527",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 248,
+    "name": "?????",
+    "ptr_location": "41:4529",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 249,
+    "name": "?????",
+    "ptr_location": "41:452B",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 250,
+    "name": "?????",
+    "ptr_location": "41:452D",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 251,
+    "name": "?????",
+    "ptr_location": "41:452F",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 252,
+    "name": "?????",
+    "ptr_location": "41:4531",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 253,
+    "name": "?????",
+    "ptr_location": "41:4533",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 254,
+    "name": "?????",
+    "ptr_location": "41:4535",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  },
+  {
+    "id": 255,
+    "name": "?????",
+    "ptr_location": "41:4537",
+    "name_offset": "41:6288",
+    "byte_length": 6
+  }
+]

@@ -1,0 +1,4609 @@
+{
+  "0": {
+    "name": "Gate of Beginning",
+    "floor_groups": [
+      {
+        "floor_range": "All floors",
+        "pool_index": 0,
+        "monsters": [
+          {
+            "enemy_stats_id": 2,
+            "species_id": 8,
+            "monster_name": "Slime",
+            "weight": 1,
+            "rom_offset": "0x06AB8"
+          },
+          {
+            "enemy_stats_id": 4,
+            "species_id": 78,
+            "monster_name": "Dracky",
+            "weight": 1,
+            "rom_offset": "0x06ABA"
+          },
+          {
+            "enemy_stats_id": 3,
+            "species_id": 53,
+            "monster_name": "Anteater",
+            "weight": 1,
+            "rom_offset": "0x06ABC"
+          }
+        ]
+      }
+    ]
+  },
+  "1": {
+    "name": "Gate of Villager",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-3",
+        "pool_index": 1,
+        "monsters": [
+          {
+            "enemy_stats_id": 5,
+            "species_id": 98,
+            "monster_name": "Stubsuck",
+            "weight": 3,
+            "rom_offset": "0x06AD2"
+          },
+          {
+            "enemy_stats_id": 6,
+            "species_id": 119,
+            "monster_name": "GoHopper",
+            "weight": 3,
+            "rom_offset": "0x06AD4"
+          },
+          {
+            "enemy_stats_id": 3,
+            "species_id": 53,
+            "monster_name": "Anteater",
+            "weight": 3,
+            "rom_offset": "0x06AD6"
+          },
+          {
+            "enemy_stats_id": 14,
+            "species_id": 70,
+            "monster_name": "Picky",
+            "weight": 1,
+            "rom_offset": "0x06AD8"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 4-6",
+        "pool_index": 2,
+        "monsters": [
+          {
+            "enemy_stats_id": 5,
+            "species_id": 98,
+            "monster_name": "Stubsuck",
+            "weight": 3,
+            "rom_offset": "0x06AEC"
+          },
+          {
+            "enemy_stats_id": 6,
+            "species_id": 119,
+            "monster_name": "GoHopper",
+            "weight": 3,
+            "rom_offset": "0x06AEE"
+          },
+          {
+            "enemy_stats_id": 7,
+            "species_id": 139,
+            "monster_name": "Gremlin",
+            "weight": 3,
+            "rom_offset": "0x06AF0"
+          },
+          {
+            "enemy_stats_id": 15,
+            "species_id": 48,
+            "monster_name": "PillowRat",
+            "weight": 2,
+            "rom_offset": "0x06AF2"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7+",
+        "pool_index": 3,
+        "monsters": [
+          {
+            "enemy_stats_id": 8,
+            "species_id": 155,
+            "monster_name": "Spooky",
+            "weight": 3,
+            "rom_offset": "0x06B06"
+          },
+          {
+            "enemy_stats_id": 10,
+            "species_id": 118,
+            "monster_name": "ArmyAnt",
+            "weight": 3,
+            "rom_offset": "0x06B08"
+          },
+          {
+            "enemy_stats_id": 3,
+            "species_id": 53,
+            "monster_name": "Anteater",
+            "weight": 3,
+            "rom_offset": "0x06B0A"
+          },
+          {
+            "enemy_stats_id": 13,
+            "species_id": 29,
+            "monster_name": "MiniDrak",
+            "weight": 1,
+            "rom_offset": "0x06B0C"
+          }
+        ]
+      }
+    ]
+  },
+  "2": {
+    "name": "Gate of Talisman",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-3",
+        "pool_index": 3,
+        "monsters": [
+          {
+            "enemy_stats_id": 8,
+            "species_id": 155,
+            "monster_name": "Spooky",
+            "weight": 3,
+            "rom_offset": "0x06B06"
+          },
+          {
+            "enemy_stats_id": 10,
+            "species_id": 118,
+            "monster_name": "ArmyAnt",
+            "weight": 3,
+            "rom_offset": "0x06B08"
+          },
+          {
+            "enemy_stats_id": 3,
+            "species_id": 53,
+            "monster_name": "Anteater",
+            "weight": 3,
+            "rom_offset": "0x06B0A"
+          },
+          {
+            "enemy_stats_id": 13,
+            "species_id": 29,
+            "monster_name": "MiniDrak",
+            "weight": 1,
+            "rom_offset": "0x06B0C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 4-6",
+        "pool_index": 4,
+        "monsters": [
+          {
+            "enemy_stats_id": 8,
+            "species_id": 155,
+            "monster_name": "Spooky",
+            "weight": 3,
+            "rom_offset": "0x06B20"
+          },
+          {
+            "enemy_stats_id": 9,
+            "species_id": 183,
+            "monster_name": "Goopi",
+            "weight": 3,
+            "rom_offset": "0x06B22"
+          },
+          {
+            "enemy_stats_id": 10,
+            "species_id": 118,
+            "monster_name": "ArmyAnt",
+            "weight": 3,
+            "rom_offset": "0x06B24"
+          },
+          {
+            "enemy_stats_id": 14,
+            "species_id": 70,
+            "monster_name": "Picky",
+            "weight": 2,
+            "rom_offset": "0x06B26"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7+",
+        "pool_index": 5,
+        "monsters": [
+          {
+            "enemy_stats_id": 9,
+            "species_id": 183,
+            "monster_name": "Goopi",
+            "weight": 3,
+            "rom_offset": "0x06B3A"
+          },
+          {
+            "enemy_stats_id": 15,
+            "species_id": 48,
+            "monster_name": "PillowRat",
+            "weight": 3,
+            "rom_offset": "0x06B3C"
+          },
+          {
+            "enemy_stats_id": 17,
+            "species_id": 20,
+            "monster_name": "DragonKid",
+            "weight": 3,
+            "rom_offset": "0x06B3E"
+          },
+          {
+            "enemy_stats_id": 19,
+            "species_id": 111,
+            "monster_name": "Catapila",
+            "weight": 2,
+            "rom_offset": "0x06B40"
+          }
+        ]
+      }
+    ]
+  },
+  "3": {
+    "name": "Gate of Memories",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-3",
+        "pool_index": 5,
+        "monsters": [
+          {
+            "enemy_stats_id": 9,
+            "species_id": 183,
+            "monster_name": "Goopi",
+            "weight": 3,
+            "rom_offset": "0x06B3A"
+          },
+          {
+            "enemy_stats_id": 15,
+            "species_id": 48,
+            "monster_name": "PillowRat",
+            "weight": 3,
+            "rom_offset": "0x06B3C"
+          },
+          {
+            "enemy_stats_id": 17,
+            "species_id": 20,
+            "monster_name": "DragonKid",
+            "weight": 3,
+            "rom_offset": "0x06B3E"
+          },
+          {
+            "enemy_stats_id": 19,
+            "species_id": 111,
+            "monster_name": "Catapila",
+            "weight": 2,
+            "rom_offset": "0x06B40"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 4-6",
+        "pool_index": 6,
+        "monsters": [
+          {
+            "enemy_stats_id": 14,
+            "species_id": 70,
+            "monster_name": "Picky",
+            "weight": 3,
+            "rom_offset": "0x06B54"
+          },
+          {
+            "enemy_stats_id": 20,
+            "species_id": 61,
+            "monster_name": "FairyRat",
+            "weight": 3,
+            "rom_offset": "0x06B56"
+          },
+          {
+            "enemy_stats_id": 19,
+            "species_id": 111,
+            "monster_name": "Catapila",
+            "weight": 3,
+            "rom_offset": "0x06B58"
+          },
+          {
+            "enemy_stats_id": 25,
+            "species_id": 1,
+            "monster_name": "SpotSlime",
+            "weight": 2,
+            "rom_offset": "0x06B5A"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7+",
+        "pool_index": 7,
+        "monsters": [
+          {
+            "enemy_stats_id": 13,
+            "species_id": 29,
+            "monster_name": "MiniDrak",
+            "weight": 3,
+            "rom_offset": "0x06B6E"
+          },
+          {
+            "enemy_stats_id": 21,
+            "species_id": 79,
+            "monster_name": "BigRoost",
+            "weight": 3,
+            "rom_offset": "0x06B70"
+          },
+          {
+            "enemy_stats_id": 17,
+            "species_id": 20,
+            "monster_name": "DragonKid",
+            "weight": 3,
+            "rom_offset": "0x06B72"
+          },
+          {
+            "enemy_stats_id": 25,
+            "species_id": 1,
+            "monster_name": "SpotSlime",
+            "weight": 2,
+            "rom_offset": "0x06B74"
+          }
+        ]
+      }
+    ]
+  },
+  "4": {
+    "name": "Gate of Bewilder",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-3",
+        "pool_index": 7,
+        "monsters": [
+          {
+            "enemy_stats_id": 13,
+            "species_id": 29,
+            "monster_name": "MiniDrak",
+            "weight": 3,
+            "rom_offset": "0x06B6E"
+          },
+          {
+            "enemy_stats_id": 21,
+            "species_id": 79,
+            "monster_name": "BigRoost",
+            "weight": 3,
+            "rom_offset": "0x06B70"
+          },
+          {
+            "enemy_stats_id": 17,
+            "species_id": 20,
+            "monster_name": "DragonKid",
+            "weight": 3,
+            "rom_offset": "0x06B72"
+          },
+          {
+            "enemy_stats_id": 25,
+            "species_id": 1,
+            "monster_name": "SpotSlime",
+            "weight": 2,
+            "rom_offset": "0x06B74"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 4-6",
+        "pool_index": 8,
+        "monsters": [
+          {
+            "enemy_stats_id": 18,
+            "species_id": 105,
+            "monster_name": "EvilSeed",
+            "weight": 3,
+            "rom_offset": "0x06B88"
+          },
+          {
+            "enemy_stats_id": 22,
+            "species_id": 133,
+            "monster_name": "Demonite",
+            "weight": 3,
+            "rom_offset": "0x06B8A"
+          },
+          {
+            "enemy_stats_id": 25,
+            "species_id": 1,
+            "monster_name": "SpotSlime",
+            "weight": 3,
+            "rom_offset": "0x06B8C"
+          },
+          {
+            "enemy_stats_id": 16,
+            "species_id": 163,
+            "monster_name": "Hork",
+            "weight": 2,
+            "rom_offset": "0x06B8E"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7+",
+        "pool_index": 9,
+        "monsters": [
+          {
+            "enemy_stats_id": 20,
+            "species_id": 61,
+            "monster_name": "FairyRat",
+            "weight": 3,
+            "rom_offset": "0x06BA2"
+          },
+          {
+            "enemy_stats_id": 21,
+            "species_id": 79,
+            "monster_name": "BigRoost",
+            "weight": 3,
+            "rom_offset": "0x06BA4"
+          },
+          {
+            "enemy_stats_id": 25,
+            "species_id": 1,
+            "monster_name": "SpotSlime",
+            "weight": 3,
+            "rom_offset": "0x06BA6"
+          },
+          {
+            "enemy_stats_id": 26,
+            "species_id": 38,
+            "monster_name": "Crestpent",
+            "weight": 2,
+            "rom_offset": "0x06BA8"
+          }
+        ]
+      }
+    ]
+  },
+  "5": {
+    "name": "Bazaar Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-3",
+        "pool_index": 9,
+        "monsters": [
+          {
+            "enemy_stats_id": 20,
+            "species_id": 61,
+            "monster_name": "FairyRat",
+            "weight": 3,
+            "rom_offset": "0x06BA2"
+          },
+          {
+            "enemy_stats_id": 21,
+            "species_id": 79,
+            "monster_name": "BigRoost",
+            "weight": 3,
+            "rom_offset": "0x06BA4"
+          },
+          {
+            "enemy_stats_id": 25,
+            "species_id": 1,
+            "monster_name": "SpotSlime",
+            "weight": 3,
+            "rom_offset": "0x06BA6"
+          },
+          {
+            "enemy_stats_id": 26,
+            "species_id": 38,
+            "monster_name": "Crestpent",
+            "weight": 2,
+            "rom_offset": "0x06BA8"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 4-6",
+        "pool_index": 10,
+        "monsters": [
+          {
+            "enemy_stats_id": 21,
+            "species_id": 79,
+            "monster_name": "BigRoost",
+            "weight": 3,
+            "rom_offset": "0x06BBC"
+          },
+          {
+            "enemy_stats_id": 17,
+            "species_id": 20,
+            "monster_name": "DragonKid",
+            "weight": 3,
+            "rom_offset": "0x06BBE"
+          },
+          {
+            "enemy_stats_id": 19,
+            "species_id": 111,
+            "monster_name": "Catapila",
+            "weight": 3,
+            "rom_offset": "0x06BC0"
+          },
+          {
+            "enemy_stats_id": 27,
+            "species_id": 104,
+            "monster_name": "BeanMan",
+            "weight": 2,
+            "rom_offset": "0x06BC2"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7+",
+        "pool_index": 11,
+        "monsters": [
+          {
+            "enemy_stats_id": 22,
+            "species_id": 133,
+            "monster_name": "Demonite",
+            "weight": 3,
+            "rom_offset": "0x06BD6"
+          },
+          {
+            "enemy_stats_id": 19,
+            "species_id": 111,
+            "monster_name": "Catapila",
+            "weight": 3,
+            "rom_offset": "0x06BD8"
+          },
+          {
+            "enemy_stats_id": 16,
+            "species_id": 163,
+            "monster_name": "Hork",
+            "weight": 3,
+            "rom_offset": "0x06BDA"
+          },
+          {
+            "enemy_stats_id": 28,
+            "species_id": 138,
+            "monster_name": "1EyeClown",
+            "weight": 2,
+            "rom_offset": "0x06BDC"
+          }
+        ]
+      }
+    ]
+  },
+  "6": {
+    "name": "Gate of Peace",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 12,
+        "monsters": [
+          {
+            "enemy_stats_id": 21,
+            "species_id": 79,
+            "monster_name": "BigRoost",
+            "weight": 3,
+            "rom_offset": "0x06BF0"
+          },
+          {
+            "enemy_stats_id": 25,
+            "species_id": 1,
+            "monster_name": "SpotSlime",
+            "weight": 3,
+            "rom_offset": "0x06BF2"
+          },
+          {
+            "enemy_stats_id": 29,
+            "species_id": 178,
+            "monster_name": "CoilBird",
+            "weight": 3,
+            "rom_offset": "0x06BF4"
+          },
+          {
+            "enemy_stats_id": 26,
+            "species_id": 38,
+            "monster_name": "Crestpent",
+            "weight": 2,
+            "rom_offset": "0x06BF6"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 13,
+        "monsters": [
+          {
+            "enemy_stats_id": 17,
+            "species_id": 20,
+            "monster_name": "DragonKid",
+            "weight": 3,
+            "rom_offset": "0x06C0A"
+          },
+          {
+            "enemy_stats_id": 26,
+            "species_id": 38,
+            "monster_name": "Crestpent",
+            "weight": 3,
+            "rom_offset": "0x06C0C"
+          },
+          {
+            "enemy_stats_id": 23,
+            "species_id": 171,
+            "monster_name": "BoneSlave",
+            "weight": 3,
+            "rom_offset": "0x06C0E"
+          },
+          {
+            "enemy_stats_id": 33,
+            "species_id": 46,
+            "monster_name": "Almiraj",
+            "weight": 2,
+            "rom_offset": "0x06C10"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 14,
+        "monsters": [
+          {
+            "enemy_stats_id": 16,
+            "species_id": 163,
+            "monster_name": "Hork",
+            "weight": 3,
+            "rom_offset": "0x06C24"
+          },
+          {
+            "enemy_stats_id": 26,
+            "species_id": 38,
+            "monster_name": "Crestpent",
+            "weight": 3,
+            "rom_offset": "0x06C26"
+          },
+          {
+            "enemy_stats_id": 33,
+            "species_id": 46,
+            "monster_name": "Almiraj",
+            "weight": 3,
+            "rom_offset": "0x06C28"
+          },
+          {
+            "enemy_stats_id": 34,
+            "species_id": 72,
+            "monster_name": "BullBird",
+            "weight": 2,
+            "rom_offset": "0x06C2A"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10+",
+        "pool_index": 15,
+        "monsters": [
+          {
+            "enemy_stats_id": 22,
+            "species_id": 133,
+            "monster_name": "Demonite",
+            "weight": 3,
+            "rom_offset": "0x06C3E"
+          },
+          {
+            "enemy_stats_id": 27,
+            "species_id": 104,
+            "monster_name": "BeanMan",
+            "weight": 3,
+            "rom_offset": "0x06C40"
+          },
+          {
+            "enemy_stats_id": 28,
+            "species_id": 138,
+            "monster_name": "1EyeClown",
+            "weight": 3,
+            "rom_offset": "0x06C42"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 2,
+            "rom_offset": "0x06C44"
+          }
+        ]
+      }
+    ]
+  },
+  "7": {
+    "name": "Gate of Bravery",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 15,
+        "monsters": [
+          {
+            "enemy_stats_id": 22,
+            "species_id": 133,
+            "monster_name": "Demonite",
+            "weight": 3,
+            "rom_offset": "0x06C3E"
+          },
+          {
+            "enemy_stats_id": 27,
+            "species_id": 104,
+            "monster_name": "BeanMan",
+            "weight": 3,
+            "rom_offset": "0x06C40"
+          },
+          {
+            "enemy_stats_id": 28,
+            "species_id": 138,
+            "monster_name": "1EyeClown",
+            "weight": 3,
+            "rom_offset": "0x06C42"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 2,
+            "rom_offset": "0x06C44"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 16,
+        "monsters": [
+          {
+            "enemy_stats_id": 27,
+            "species_id": 104,
+            "monster_name": "BeanMan",
+            "weight": 3,
+            "rom_offset": "0x06C58"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 3,
+            "rom_offset": "0x06C5A"
+          },
+          {
+            "enemy_stats_id": 24,
+            "species_id": 187,
+            "monster_name": "SabreMan",
+            "weight": 3,
+            "rom_offset": "0x06C5C"
+          },
+          {
+            "enemy_stats_id": 36,
+            "species_id": 115,
+            "monster_name": "GiantWorm",
+            "weight": 2,
+            "rom_offset": "0x06C5E"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 17,
+        "monsters": [
+          {
+            "enemy_stats_id": 27,
+            "species_id": 104,
+            "monster_name": "BeanMan",
+            "weight": 3,
+            "rom_offset": "0x06C72"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 3,
+            "rom_offset": "0x06C74"
+          },
+          {
+            "enemy_stats_id": 36,
+            "species_id": 115,
+            "monster_name": "GiantWorm",
+            "weight": 3,
+            "rom_offset": "0x06C76"
+          },
+          {
+            "enemy_stats_id": 34,
+            "species_id": 72,
+            "monster_name": "BullBird",
+            "weight": 2,
+            "rom_offset": "0x06C78"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10+",
+        "pool_index": 18,
+        "monsters": [
+          {
+            "enemy_stats_id": 23,
+            "species_id": 171,
+            "monster_name": "BoneSlave",
+            "weight": 3,
+            "rom_offset": "0x06C8C"
+          },
+          {
+            "enemy_stats_id": 33,
+            "species_id": 46,
+            "monster_name": "Almiraj",
+            "weight": 3,
+            "rom_offset": "0x06C8E"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 3,
+            "rom_offset": "0x06C90"
+          },
+          {
+            "enemy_stats_id": 38,
+            "species_id": 110,
+            "monster_name": "GiantSlug",
+            "weight": 3,
+            "rom_offset": "0x06C92"
+          }
+        ]
+      }
+    ]
+  },
+  "8": {
+    "name": "Well Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 18,
+        "monsters": [
+          {
+            "enemy_stats_id": 23,
+            "species_id": 171,
+            "monster_name": "BoneSlave",
+            "weight": 3,
+            "rom_offset": "0x06C8C"
+          },
+          {
+            "enemy_stats_id": 33,
+            "species_id": 46,
+            "monster_name": "Almiraj",
+            "weight": 3,
+            "rom_offset": "0x06C8E"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 3,
+            "rom_offset": "0x06C90"
+          },
+          {
+            "enemy_stats_id": 38,
+            "species_id": 110,
+            "monster_name": "GiantSlug",
+            "weight": 3,
+            "rom_offset": "0x06C92"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 19,
+        "monsters": [
+          {
+            "enemy_stats_id": 33,
+            "species_id": 46,
+            "monster_name": "Almiraj",
+            "weight": 3,
+            "rom_offset": "0x06CA6"
+          },
+          {
+            "enemy_stats_id": 40,
+            "species_id": 3,
+            "monster_name": "TreeSlime",
+            "weight": 3,
+            "rom_offset": "0x06CA8"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 3,
+            "rom_offset": "0x06CAA"
+          },
+          {
+            "enemy_stats_id": 38,
+            "species_id": 110,
+            "monster_name": "GiantSlug",
+            "weight": 3,
+            "rom_offset": "0x06CAC"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 20,
+        "monsters": [
+          {
+            "enemy_stats_id": 36,
+            "species_id": 115,
+            "monster_name": "GiantWorm",
+            "weight": 3,
+            "rom_offset": "0x06CC0"
+          },
+          {
+            "enemy_stats_id": 34,
+            "species_id": 72,
+            "monster_name": "BullBird",
+            "weight": 3,
+            "rom_offset": "0x06CC2"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 3,
+            "rom_offset": "0x06CC4"
+          },
+          {
+            "enemy_stats_id": 39,
+            "species_id": 195,
+            "monster_name": "MudDoll",
+            "weight": 3,
+            "rom_offset": "0x06CC6"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10+",
+        "pool_index": 21,
+        "monsters": [
+          {
+            "enemy_stats_id": 34,
+            "species_id": 72,
+            "monster_name": "BullBird",
+            "weight": 3,
+            "rom_offset": "0x06CDA"
+          },
+          {
+            "enemy_stats_id": 24,
+            "species_id": 187,
+            "monster_name": "SabreMan",
+            "weight": 3,
+            "rom_offset": "0x06CDC"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 3,
+            "rom_offset": "0x06CDE"
+          },
+          {
+            "enemy_stats_id": 39,
+            "species_id": 195,
+            "monster_name": "MudDoll",
+            "weight": 3,
+            "rom_offset": "0x06CE0"
+          }
+        ]
+      }
+    ]
+  },
+  "9": {
+    "name": "Gate of Strength",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 22,
+        "monsters": [
+          {
+            "enemy_stats_id": 39,
+            "species_id": 195,
+            "monster_name": "MudDoll",
+            "weight": 3,
+            "rom_offset": "0x06CF4"
+          },
+          {
+            "enemy_stats_id": 40,
+            "species_id": 3,
+            "monster_name": "TreeSlime",
+            "weight": 3,
+            "rom_offset": "0x06CF6"
+          },
+          {
+            "enemy_stats_id": 37,
+            "species_id": 136,
+            "monster_name": "SkulRider",
+            "weight": 3,
+            "rom_offset": "0x06CF8"
+          },
+          {
+            "enemy_stats_id": 47,
+            "species_id": 24,
+            "monster_name": "FairyDrak",
+            "weight": 3,
+            "rom_offset": "0x06CFA"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 23,
+        "monsters": [
+          {
+            "enemy_stats_id": 39,
+            "species_id": 195,
+            "monster_name": "MudDoll",
+            "weight": 3,
+            "rom_offset": "0x06D0E"
+          },
+          {
+            "enemy_stats_id": 37,
+            "species_id": 136,
+            "monster_name": "SkulRider",
+            "weight": 3,
+            "rom_offset": "0x06D10"
+          },
+          {
+            "enemy_stats_id": 47,
+            "species_id": 24,
+            "monster_name": "FairyDrak",
+            "weight": 3,
+            "rom_offset": "0x06D12"
+          },
+          {
+            "enemy_stats_id": 43,
+            "species_id": 93,
+            "monster_name": "WingTree",
+            "weight": 2,
+            "rom_offset": "0x06D14"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 24,
+        "monsters": [
+          {
+            "enemy_stats_id": 40,
+            "species_id": 3,
+            "monster_name": "TreeSlime",
+            "weight": 3,
+            "rom_offset": "0x06D28"
+          },
+          {
+            "enemy_stats_id": 37,
+            "species_id": 136,
+            "monster_name": "SkulRider",
+            "weight": 3,
+            "rom_offset": "0x06D2A"
+          },
+          {
+            "enemy_stats_id": 43,
+            "species_id": 93,
+            "monster_name": "WingTree",
+            "weight": 3,
+            "rom_offset": "0x06D2C"
+          },
+          {
+            "enemy_stats_id": 46,
+            "species_id": 0,
+            "monster_name": "DrakSlime",
+            "weight": 2,
+            "rom_offset": "0x06D2E"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10+",
+        "pool_index": 25,
+        "monsters": [
+          {
+            "enemy_stats_id": 40,
+            "species_id": 3,
+            "monster_name": "TreeSlime",
+            "weight": 3,
+            "rom_offset": "0x06D42"
+          },
+          {
+            "enemy_stats_id": 43,
+            "species_id": 93,
+            "monster_name": "WingTree",
+            "weight": 3,
+            "rom_offset": "0x06D44"
+          },
+          {
+            "enemy_stats_id": 47,
+            "species_id": 24,
+            "monster_name": "FairyDrak",
+            "weight": 3,
+            "rom_offset": "0x06D46"
+          },
+          {
+            "enemy_stats_id": 46,
+            "species_id": 0,
+            "monster_name": "DrakSlime",
+            "weight": 2,
+            "rom_offset": "0x06D48"
+          }
+        ]
+      }
+    ]
+  },
+  "10": {
+    "name": "Gate of Anger",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 26,
+        "monsters": [
+          {
+            "enemy_stats_id": 36,
+            "species_id": 115,
+            "monster_name": "GiantWorm",
+            "weight": 3,
+            "rom_offset": "0x06D5C"
+          },
+          {
+            "enemy_stats_id": 38,
+            "species_id": 110,
+            "monster_name": "GiantSlug",
+            "weight": 3,
+            "rom_offset": "0x06D5E"
+          },
+          {
+            "enemy_stats_id": 41,
+            "species_id": 26,
+            "monster_name": "Poisongon",
+            "weight": 3,
+            "rom_offset": "0x06D60"
+          },
+          {
+            "enemy_stats_id": 42,
+            "species_id": 47,
+            "monster_name": "CatFly",
+            "weight": 3,
+            "rom_offset": "0x06D62"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 27,
+        "monsters": [
+          {
+            "enemy_stats_id": 38,
+            "species_id": 110,
+            "monster_name": "GiantSlug",
+            "weight": 3,
+            "rom_offset": "0x06D76"
+          },
+          {
+            "enemy_stats_id": 41,
+            "species_id": 26,
+            "monster_name": "Poisongon",
+            "weight": 3,
+            "rom_offset": "0x06D78"
+          },
+          {
+            "enemy_stats_id": 42,
+            "species_id": 47,
+            "monster_name": "CatFly",
+            "weight": 3,
+            "rom_offset": "0x06D7A"
+          },
+          {
+            "enemy_stats_id": 44,
+            "species_id": 122,
+            "monster_name": "Eyeder",
+            "weight": 2,
+            "rom_offset": "0x06D7C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 28,
+        "monsters": [
+          {
+            "enemy_stats_id": 42,
+            "species_id": 47,
+            "monster_name": "CatFly",
+            "weight": 3,
+            "rom_offset": "0x06D90"
+          },
+          {
+            "enemy_stats_id": 41,
+            "species_id": 26,
+            "monster_name": "Poisongon",
+            "weight": 3,
+            "rom_offset": "0x06D92"
+          },
+          {
+            "enemy_stats_id": 44,
+            "species_id": 122,
+            "monster_name": "Eyeder",
+            "weight": 3,
+            "rom_offset": "0x06D94"
+          },
+          {
+            "enemy_stats_id": 45,
+            "species_id": 157,
+            "monster_name": "Putrepup",
+            "weight": 2,
+            "rom_offset": "0x06D96"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10+",
+        "pool_index": 29,
+        "monsters": [
+          {
+            "enemy_stats_id": 42,
+            "species_id": 47,
+            "monster_name": "CatFly",
+            "weight": 3,
+            "rom_offset": "0x06DAA"
+          },
+          {
+            "enemy_stats_id": 44,
+            "species_id": 122,
+            "monster_name": "Eyeder",
+            "weight": 3,
+            "rom_offset": "0x06DAC"
+          },
+          {
+            "enemy_stats_id": 45,
+            "species_id": 157,
+            "monster_name": "Putrepup",
+            "weight": 3,
+            "rom_offset": "0x06DAE"
+          },
+          {
+            "enemy_stats_id": 46,
+            "species_id": 0,
+            "monster_name": "DrakSlime",
+            "weight": 2,
+            "rom_offset": "0x06DB0"
+          }
+        ]
+      }
+    ]
+  },
+  "11": {
+    "name": "Farm Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 30,
+        "monsters": [
+          {
+            "enemy_stats_id": 47,
+            "species_id": 24,
+            "monster_name": "FairyDrak",
+            "weight": 3,
+            "rom_offset": "0x06DC4"
+          },
+          {
+            "enemy_stats_id": 49,
+            "species_id": 113,
+            "monster_name": "Butterfly",
+            "weight": 3,
+            "rom_offset": "0x06DC6"
+          },
+          {
+            "enemy_stats_id": 50,
+            "species_id": 76,
+            "monster_name": "MadRaven",
+            "weight": 3,
+            "rom_offset": "0x06DC8"
+          },
+          {
+            "enemy_stats_id": 48,
+            "species_id": 51,
+            "monster_name": "Skullroo",
+            "weight": 2,
+            "rom_offset": "0x06DCA"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 31,
+        "monsters": [
+          {
+            "enemy_stats_id": 47,
+            "species_id": 24,
+            "monster_name": "FairyDrak",
+            "weight": 3,
+            "rom_offset": "0x06DDE"
+          },
+          {
+            "enemy_stats_id": 50,
+            "species_id": 76,
+            "monster_name": "MadRaven",
+            "weight": 3,
+            "rom_offset": "0x06DE0"
+          },
+          {
+            "enemy_stats_id": 48,
+            "species_id": 51,
+            "monster_name": "Skullroo",
+            "weight": 3,
+            "rom_offset": "0x06DE2"
+          },
+          {
+            "enemy_stats_id": 57,
+            "species_id": 164,
+            "monster_name": "Mudron",
+            "weight": 2,
+            "rom_offset": "0x06DE4"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 32,
+        "monsters": [
+          {
+            "enemy_stats_id": 46,
+            "species_id": 0,
+            "monster_name": "DrakSlime",
+            "weight": 3,
+            "rom_offset": "0x06DF8"
+          },
+          {
+            "enemy_stats_id": 50,
+            "species_id": 76,
+            "monster_name": "MadRaven",
+            "weight": 3,
+            "rom_offset": "0x06DFA"
+          },
+          {
+            "enemy_stats_id": 48,
+            "species_id": 51,
+            "monster_name": "Skullroo",
+            "weight": 3,
+            "rom_offset": "0x06DFC"
+          },
+          {
+            "enemy_stats_id": 58,
+            "species_id": 179,
+            "monster_name": "Facer",
+            "weight": 2,
+            "rom_offset": "0x06DFE"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10+",
+        "pool_index": 33,
+        "monsters": [
+          {
+            "enemy_stats_id": 46,
+            "species_id": 0,
+            "monster_name": "DrakSlime",
+            "weight": 3,
+            "rom_offset": "0x06E12"
+          },
+          {
+            "enemy_stats_id": 48,
+            "species_id": 51,
+            "monster_name": "Skullroo",
+            "weight": 3,
+            "rom_offset": "0x06E14"
+          },
+          {
+            "enemy_stats_id": 57,
+            "species_id": 164,
+            "monster_name": "Mudron",
+            "weight": 3,
+            "rom_offset": "0x06E16"
+          },
+          {
+            "enemy_stats_id": 58,
+            "species_id": 179,
+            "monster_name": "Facer",
+            "weight": 2,
+            "rom_offset": "0x06E18"
+          }
+        ]
+      }
+    ]
+  },
+  "12": {
+    "name": "Arena - Left Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 34,
+        "monsters": [
+          {
+            "enemy_stats_id": 59,
+            "species_id": 4,
+            "monster_name": "Snaily",
+            "weight": 3,
+            "rom_offset": "0x06E2C"
+          },
+          {
+            "enemy_stats_id": 60,
+            "species_id": 49,
+            "monster_name": "Saccer",
+            "weight": 3,
+            "rom_offset": "0x06E2E"
+          },
+          {
+            "enemy_stats_id": 62,
+            "species_id": 95,
+            "monster_name": "Gulpple",
+            "weight": 3,
+            "rom_offset": "0x06E30"
+          },
+          {
+            "enemy_stats_id": 61,
+            "species_id": 75,
+            "monster_name": "MadPecker",
+            "weight": 1,
+            "rom_offset": "0x06E32"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 35,
+        "monsters": [
+          {
+            "enemy_stats_id": 59,
+            "species_id": 4,
+            "monster_name": "Snaily",
+            "weight": 3,
+            "rom_offset": "0x06E46"
+          },
+          {
+            "enemy_stats_id": 60,
+            "species_id": 49,
+            "monster_name": "Saccer",
+            "weight": 3,
+            "rom_offset": "0x06E48"
+          },
+          {
+            "enemy_stats_id": 62,
+            "species_id": 95,
+            "monster_name": "Gulpple",
+            "weight": 3,
+            "rom_offset": "0x06E4A"
+          },
+          {
+            "enemy_stats_id": 61,
+            "species_id": 75,
+            "monster_name": "MadPecker",
+            "weight": 2,
+            "rom_offset": "0x06E4C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 36,
+        "monsters": [
+          {
+            "enemy_stats_id": 60,
+            "species_id": 49,
+            "monster_name": "Saccer",
+            "weight": 3,
+            "rom_offset": "0x06E60"
+          },
+          {
+            "enemy_stats_id": 62,
+            "species_id": 95,
+            "monster_name": "Gulpple",
+            "weight": 3,
+            "rom_offset": "0x06E62"
+          },
+          {
+            "enemy_stats_id": 63,
+            "species_id": 135,
+            "monster_name": "EyeBall",
+            "weight": 3,
+            "rom_offset": "0x06E64"
+          },
+          {
+            "enemy_stats_id": 61,
+            "species_id": 75,
+            "monster_name": "MadPecker",
+            "weight": 2,
+            "rom_offset": "0x06E66"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10-13",
+        "pool_index": 37,
+        "monsters": [
+          {
+            "enemy_stats_id": 60,
+            "species_id": 49,
+            "monster_name": "Saccer",
+            "weight": 3,
+            "rom_offset": "0x06E7A"
+          },
+          {
+            "enemy_stats_id": 63,
+            "species_id": 135,
+            "monster_name": "EyeBall",
+            "weight": 3,
+            "rom_offset": "0x06E7C"
+          },
+          {
+            "enemy_stats_id": 65,
+            "species_id": 6,
+            "monster_name": "Babble",
+            "weight": 3,
+            "rom_offset": "0x06E7E"
+          },
+          {
+            "enemy_stats_id": 64,
+            "species_id": 159,
+            "monster_name": "Mummy",
+            "weight": 2,
+            "rom_offset": "0x06E80"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 14+",
+        "pool_index": 38,
+        "monsters": [
+          {
+            "enemy_stats_id": 65,
+            "species_id": 6,
+            "monster_name": "Babble",
+            "weight": 3,
+            "rom_offset": "0x06E94"
+          },
+          {
+            "enemy_stats_id": 63,
+            "species_id": 135,
+            "monster_name": "EyeBall",
+            "weight": 3,
+            "rom_offset": "0x06E96"
+          },
+          {
+            "enemy_stats_id": 61,
+            "species_id": 75,
+            "monster_name": "MadPecker",
+            "weight": 3,
+            "rom_offset": "0x06E98"
+          },
+          {
+            "enemy_stats_id": 64,
+            "species_id": 159,
+            "monster_name": "Mummy",
+            "weight": 2,
+            "rom_offset": "0x06E9A"
+          }
+        ]
+      }
+    ]
+  },
+  "13": {
+    "name": "Gate of Joy",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-3",
+        "pool_index": 39,
+        "monsters": [
+          {
+            "enemy_stats_id": 58,
+            "species_id": 179,
+            "monster_name": "Facer",
+            "weight": 3,
+            "rom_offset": "0x06EAE"
+          },
+          {
+            "enemy_stats_id": 67,
+            "species_id": 45,
+            "monster_name": "Tonguella",
+            "weight": 3,
+            "rom_offset": "0x06EB0"
+          },
+          {
+            "enemy_stats_id": 68,
+            "species_id": 73,
+            "monster_name": "Florajay",
+            "weight": 3,
+            "rom_offset": "0x06EB2"
+          },
+          {
+            "enemy_stats_id": 66,
+            "species_id": 22,
+            "monster_name": "Pteranod",
+            "weight": 1,
+            "rom_offset": "0x06EB4"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 4-6",
+        "pool_index": 40,
+        "monsters": [
+          {
+            "enemy_stats_id": 58,
+            "species_id": 179,
+            "monster_name": "Facer",
+            "weight": 3,
+            "rom_offset": "0x06EC8"
+          },
+          {
+            "enemy_stats_id": 67,
+            "species_id": 45,
+            "monster_name": "Tonguella",
+            "weight": 3,
+            "rom_offset": "0x06ECA"
+          },
+          {
+            "enemy_stats_id": 68,
+            "species_id": 73,
+            "monster_name": "Florajay",
+            "weight": 3,
+            "rom_offset": "0x06ECC"
+          },
+          {
+            "enemy_stats_id": 66,
+            "species_id": 22,
+            "monster_name": "Pteranod",
+            "weight": 2,
+            "rom_offset": "0x06ECE"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7+",
+        "pool_index": 41,
+        "monsters": [
+          {
+            "enemy_stats_id": 67,
+            "species_id": 45,
+            "monster_name": "Tonguella",
+            "weight": 3,
+            "rom_offset": "0x06EE2"
+          },
+          {
+            "enemy_stats_id": 68,
+            "species_id": 73,
+            "monster_name": "Florajay",
+            "weight": 3,
+            "rom_offset": "0x06EE4"
+          },
+          {
+            "enemy_stats_id": 66,
+            "species_id": 22,
+            "monster_name": "Pteranod",
+            "weight": 3,
+            "rom_offset": "0x06EE6"
+          },
+          {
+            "enemy_stats_id": 70,
+            "species_id": 121,
+            "monster_name": "ArmorPede",
+            "weight": 2,
+            "rom_offset": "0x06EE8"
+          }
+        ]
+      }
+    ]
+  },
+  "14": {
+    "name": "Gate of Wisdom",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 44,
+        "monsters": [
+          {
+            "enemy_stats_id": 73,
+            "species_id": 2,
+            "monster_name": "WingSlime",
+            "weight": 3,
+            "rom_offset": "0x06F30"
+          },
+          {
+            "enemy_stats_id": 72,
+            "species_id": 177,
+            "monster_name": "MadCandle",
+            "weight": 3,
+            "rom_offset": "0x06F32"
+          },
+          {
+            "enemy_stats_id": 71,
+            "species_id": 140,
+            "monster_name": "MedusaEye",
+            "weight": 3,
+            "rom_offset": "0x06F34"
+          },
+          {
+            "enemy_stats_id": 74,
+            "species_id": 60,
+            "monster_name": "MadGopher",
+            "weight": 1,
+            "rom_offset": "0x06F36"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 45,
+        "monsters": [
+          {
+            "enemy_stats_id": 73,
+            "species_id": 2,
+            "monster_name": "WingSlime",
+            "weight": 3,
+            "rom_offset": "0x06F4A"
+          },
+          {
+            "enemy_stats_id": 72,
+            "species_id": 177,
+            "monster_name": "MadCandle",
+            "weight": 3,
+            "rom_offset": "0x06F4C"
+          },
+          {
+            "enemy_stats_id": 71,
+            "species_id": 140,
+            "monster_name": "MedusaEye",
+            "weight": 3,
+            "rom_offset": "0x06F4E"
+          },
+          {
+            "enemy_stats_id": 74,
+            "species_id": 60,
+            "monster_name": "MadGopher",
+            "weight": 2,
+            "rom_offset": "0x06F50"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 46,
+        "monsters": [
+          {
+            "enemy_stats_id": 72,
+            "species_id": 177,
+            "monster_name": "MadCandle",
+            "weight": 3,
+            "rom_offset": "0x06F64"
+          },
+          {
+            "enemy_stats_id": 71,
+            "species_id": 140,
+            "monster_name": "MedusaEye",
+            "weight": 3,
+            "rom_offset": "0x06F66"
+          },
+          {
+            "enemy_stats_id": 74,
+            "species_id": 60,
+            "monster_name": "MadGopher",
+            "weight": 3,
+            "rom_offset": "0x06F68"
+          },
+          {
+            "enemy_stats_id": 81,
+            "species_id": 13,
+            "monster_name": "Slabbit",
+            "weight": 2,
+            "rom_offset": "0x06F6A"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10-13",
+        "pool_index": 47,
+        "monsters": [
+          {
+            "enemy_stats_id": 72,
+            "species_id": 177,
+            "monster_name": "MadCandle",
+            "weight": 3,
+            "rom_offset": "0x06F7E"
+          },
+          {
+            "enemy_stats_id": 74,
+            "species_id": 60,
+            "monster_name": "MadGopher",
+            "weight": 3,
+            "rom_offset": "0x06F80"
+          },
+          {
+            "enemy_stats_id": 83,
+            "species_id": 52,
+            "monster_name": "WindBeast",
+            "weight": 3,
+            "rom_offset": "0x06F82"
+          },
+          {
+            "enemy_stats_id": 81,
+            "species_id": 13,
+            "monster_name": "Slabbit",
+            "weight": 2,
+            "rom_offset": "0x06F84"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 14+",
+        "pool_index": 48,
+        "monsters": [
+          {
+            "enemy_stats_id": 74,
+            "species_id": 60,
+            "monster_name": "MadGopher",
+            "weight": 3,
+            "rom_offset": "0x06F98"
+          },
+          {
+            "enemy_stats_id": 83,
+            "species_id": 52,
+            "monster_name": "WindBeast",
+            "weight": 3,
+            "rom_offset": "0x06F9A"
+          },
+          {
+            "enemy_stats_id": 81,
+            "species_id": 13,
+            "monster_name": "Slabbit",
+            "weight": 3,
+            "rom_offset": "0x06F9C"
+          },
+          {
+            "enemy_stats_id": 82,
+            "species_id": 23,
+            "monster_name": "Gasgon",
+            "weight": 2,
+            "rom_offset": "0x06F9E"
+          }
+        ]
+      }
+    ]
+  },
+  "15": {
+    "name": "Medal Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-5",
+        "pool_index": 49,
+        "monsters": [
+          {
+            "enemy_stats_id": 85,
+            "species_id": 99,
+            "monster_name": "Oniono",
+            "weight": 3,
+            "rom_offset": "0x06FB2"
+          },
+          {
+            "enemy_stats_id": 86,
+            "species_id": 112,
+            "monster_name": "Gophecada",
+            "weight": 3,
+            "rom_offset": "0x06FB4"
+          },
+          {
+            "enemy_stats_id": 87,
+            "species_id": 130,
+            "monster_name": "Pixy",
+            "weight": 3,
+            "rom_offset": "0x06FB6"
+          },
+          {
+            "enemy_stats_id": 82,
+            "species_id": 23,
+            "monster_name": "Gasgon",
+            "weight": 2,
+            "rom_offset": "0x06FB8"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 6-9",
+        "pool_index": 50,
+        "monsters": [
+          {
+            "enemy_stats_id": 85,
+            "species_id": 99,
+            "monster_name": "Oniono",
+            "weight": 3,
+            "rom_offset": "0x06FCC"
+          },
+          {
+            "enemy_stats_id": 86,
+            "species_id": 112,
+            "monster_name": "Gophecada",
+            "weight": 3,
+            "rom_offset": "0x06FCE"
+          },
+          {
+            "enemy_stats_id": 87,
+            "species_id": 130,
+            "monster_name": "Pixy",
+            "weight": 3,
+            "rom_offset": "0x06FD0"
+          },
+          {
+            "enemy_stats_id": 88,
+            "species_id": 161,
+            "monster_name": "DeadNite",
+            "weight": 2,
+            "rom_offset": "0x06FD2"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10-13",
+        "pool_index": 51,
+        "monsters": [
+          {
+            "enemy_stats_id": 85,
+            "species_id": 99,
+            "monster_name": "Oniono",
+            "weight": 3,
+            "rom_offset": "0x06FE6"
+          },
+          {
+            "enemy_stats_id": 86,
+            "species_id": 112,
+            "monster_name": "Gophecada",
+            "weight": 3,
+            "rom_offset": "0x06FE8"
+          },
+          {
+            "enemy_stats_id": 87,
+            "species_id": 130,
+            "monster_name": "Pixy",
+            "weight": 3,
+            "rom_offset": "0x06FEA"
+          },
+          {
+            "enemy_stats_id": 88,
+            "species_id": 161,
+            "monster_name": "DeadNite",
+            "weight": 2,
+            "rom_offset": "0x06FEC"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 14-17",
+        "pool_index": 52,
+        "monsters": [
+          {
+            "enemy_stats_id": 86,
+            "species_id": 112,
+            "monster_name": "Gophecada",
+            "weight": 3,
+            "rom_offset": "0x07000"
+          },
+          {
+            "enemy_stats_id": 87,
+            "species_id": 130,
+            "monster_name": "Pixy",
+            "weight": 3,
+            "rom_offset": "0x07002"
+          },
+          {
+            "enemy_stats_id": 88,
+            "species_id": 161,
+            "monster_name": "DeadNite",
+            "weight": 3,
+            "rom_offset": "0x07004"
+          },
+          {
+            "enemy_stats_id": 84,
+            "species_id": 80,
+            "monster_name": "StubBird",
+            "weight": 2,
+            "rom_offset": "0x07006"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 18+",
+        "pool_index": 53,
+        "monsters": [
+          {
+            "enemy_stats_id": 86,
+            "species_id": 112,
+            "monster_name": "Gophecada",
+            "weight": 3,
+            "rom_offset": "0x0701A"
+          },
+          {
+            "enemy_stats_id": 88,
+            "species_id": 161,
+            "monster_name": "DeadNite",
+            "weight": 3,
+            "rom_offset": "0x0701C"
+          },
+          {
+            "enemy_stats_id": 89,
+            "species_id": 180,
+            "monster_name": "SpikyBoy",
+            "weight": 3,
+            "rom_offset": "0x0701E"
+          },
+          {
+            "enemy_stats_id": 84,
+            "species_id": 80,
+            "monster_name": "StubBird",
+            "weight": 2,
+            "rom_offset": "0x07020"
+          }
+        ]
+      }
+    ]
+  },
+  "16": {
+    "name": "Gate of Happiness",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-5",
+        "pool_index": 54,
+        "monsters": [
+          {
+            "enemy_stats_id": 89,
+            "species_id": 180,
+            "monster_name": "SpikyBoy",
+            "weight": 3,
+            "rom_offset": "0x07034"
+          },
+          {
+            "enemy_stats_id": 91,
+            "species_id": 35,
+            "monster_name": "KingCobra",
+            "weight": 3,
+            "rom_offset": "0x07036"
+          },
+          {
+            "enemy_stats_id": 92,
+            "species_id": 56,
+            "monster_name": "Mommonja",
+            "weight": 3,
+            "rom_offset": "0x07038"
+          },
+          {
+            "enemy_stats_id": 90,
+            "species_id": 5,
+            "monster_name": "SlimeNite",
+            "weight": 2,
+            "rom_offset": "0x0703A"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 6-9",
+        "pool_index": 55,
+        "monsters": [
+          {
+            "enemy_stats_id": 89,
+            "species_id": 180,
+            "monster_name": "SpikyBoy",
+            "weight": 3,
+            "rom_offset": "0x0704E"
+          },
+          {
+            "enemy_stats_id": 91,
+            "species_id": 35,
+            "monster_name": "KingCobra",
+            "weight": 3,
+            "rom_offset": "0x07050"
+          },
+          {
+            "enemy_stats_id": 92,
+            "species_id": 56,
+            "monster_name": "Mommonja",
+            "weight": 3,
+            "rom_offset": "0x07052"
+          },
+          {
+            "enemy_stats_id": 90,
+            "species_id": 5,
+            "monster_name": "SlimeNite",
+            "weight": 2,
+            "rom_offset": "0x07054"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10-13",
+        "pool_index": 56,
+        "monsters": [
+          {
+            "enemy_stats_id": 91,
+            "species_id": 35,
+            "monster_name": "KingCobra",
+            "weight": 3,
+            "rom_offset": "0x07068"
+          },
+          {
+            "enemy_stats_id": 92,
+            "species_id": 56,
+            "monster_name": "Mommonja",
+            "weight": 3,
+            "rom_offset": "0x0706A"
+          },
+          {
+            "enemy_stats_id": 90,
+            "species_id": 5,
+            "monster_name": "SlimeNite",
+            "weight": 3,
+            "rom_offset": "0x0706C"
+          },
+          {
+            "enemy_stats_id": 94,
+            "species_id": 117,
+            "monster_name": "StagBug",
+            "weight": 2,
+            "rom_offset": "0x0706E"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 14-17",
+        "pool_index": 57,
+        "monsters": [
+          {
+            "enemy_stats_id": 91,
+            "species_id": 35,
+            "monster_name": "KingCobra",
+            "weight": 3,
+            "rom_offset": "0x07082"
+          },
+          {
+            "enemy_stats_id": 90,
+            "species_id": 5,
+            "monster_name": "SlimeNite",
+            "weight": 3,
+            "rom_offset": "0x07084"
+          },
+          {
+            "enemy_stats_id": 93,
+            "species_id": 77,
+            "monster_name": "MistyWing",
+            "weight": 3,
+            "rom_offset": "0x07086"
+          },
+          {
+            "enemy_stats_id": 94,
+            "species_id": 117,
+            "monster_name": "StagBug",
+            "weight": 2,
+            "rom_offset": "0x07088"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 18+",
+        "pool_index": 58,
+        "monsters": [
+          {
+            "enemy_stats_id": 90,
+            "species_id": 5,
+            "monster_name": "SlimeNite",
+            "weight": 3,
+            "rom_offset": "0x0709C"
+          },
+          {
+            "enemy_stats_id": 93,
+            "species_id": 77,
+            "monster_name": "MistyWing",
+            "weight": 3,
+            "rom_offset": "0x0709E"
+          },
+          {
+            "enemy_stats_id": 95,
+            "species_id": 134,
+            "monster_name": "DarkEye",
+            "weight": 3,
+            "rom_offset": "0x070A0"
+          },
+          {
+            "enemy_stats_id": 94,
+            "species_id": 117,
+            "monster_name": "StagBug",
+            "weight": 2,
+            "rom_offset": "0x070A2"
+          }
+        ]
+      }
+    ]
+  },
+  "17": {
+    "name": "Gate of Temptation",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-4",
+        "pool_index": 59,
+        "monsters": [
+          {
+            "enemy_stats_id": 96,
+            "species_id": 165,
+            "monster_name": "NiteWhip",
+            "weight": 3,
+            "rom_offset": "0x070B6"
+          },
+          {
+            "enemy_stats_id": 98,
+            "species_id": 7,
+            "monster_name": "BoxSlime",
+            "weight": 3,
+            "rom_offset": "0x070B8"
+          },
+          {
+            "enemy_stats_id": 107,
+            "species_id": 191,
+            "monster_name": "Gismo",
+            "weight": 3,
+            "rom_offset": "0x070BA"
+          },
+          {
+            "enemy_stats_id": 105,
+            "species_id": 143,
+            "monster_name": "Orc",
+            "weight": 1,
+            "rom_offset": "0x070BC"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 5-6",
+        "pool_index": 60,
+        "monsters": [
+          {
+            "enemy_stats_id": 96,
+            "species_id": 165,
+            "monster_name": "NiteWhip",
+            "weight": 3,
+            "rom_offset": "0x070D0"
+          },
+          {
+            "enemy_stats_id": 98,
+            "species_id": 7,
+            "monster_name": "BoxSlime",
+            "weight": 3,
+            "rom_offset": "0x070D2"
+          },
+          {
+            "enemy_stats_id": 107,
+            "species_id": 191,
+            "monster_name": "Gismo",
+            "weight": 3,
+            "rom_offset": "0x070D4"
+          },
+          {
+            "enemy_stats_id": 105,
+            "species_id": 143,
+            "monster_name": "Orc",
+            "weight": 2,
+            "rom_offset": "0x070D6"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-9",
+        "pool_index": 61,
+        "monsters": [
+          {
+            "enemy_stats_id": 98,
+            "species_id": 7,
+            "monster_name": "BoxSlime",
+            "weight": 3,
+            "rom_offset": "0x070EA"
+          },
+          {
+            "enemy_stats_id": 107,
+            "species_id": 191,
+            "monster_name": "Gismo",
+            "weight": 3,
+            "rom_offset": "0x070EC"
+          },
+          {
+            "enemy_stats_id": 105,
+            "species_id": 143,
+            "monster_name": "Orc",
+            "weight": 3,
+            "rom_offset": "0x070EE"
+          },
+          {
+            "enemy_stats_id": 97,
+            "species_id": 182,
+            "monster_name": "RogueNite",
+            "weight": 2,
+            "rom_offset": "0x070F0"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 10+",
+        "pool_index": 62,
+        "monsters": [
+          {
+            "enemy_stats_id": 98,
+            "species_id": 7,
+            "monster_name": "BoxSlime",
+            "weight": 3,
+            "rom_offset": "0x07104"
+          },
+          {
+            "enemy_stats_id": 105,
+            "species_id": 143,
+            "monster_name": "Orc",
+            "weight": 3,
+            "rom_offset": "0x07106"
+          },
+          {
+            "enemy_stats_id": 106,
+            "species_id": 168,
+            "monster_name": "Reaper",
+            "weight": 3,
+            "rom_offset": "0x07108"
+          },
+          {
+            "enemy_stats_id": 97,
+            "species_id": 182,
+            "monster_name": "RogueNite",
+            "weight": 2,
+            "rom_offset": "0x0710A"
+          }
+        ]
+      }
+    ]
+  },
+  "18": {
+    "name": "Gate of Labyrinth",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 64,
+        "monsters": [
+          {
+            "enemy_stats_id": 108,
+            "species_id": 11,
+            "monster_name": "RockSlime",
+            "weight": 3,
+            "rom_offset": "0x07138"
+          },
+          {
+            "enemy_stats_id": 109,
+            "species_id": 32,
+            "monster_name": "Chamelgon",
+            "weight": 3,
+            "rom_offset": "0x0713A"
+          },
+          {
+            "enemy_stats_id": 112,
+            "species_id": 94,
+            "monster_name": "CactiBall",
+            "weight": 3,
+            "rom_offset": "0x0713C"
+          },
+          {
+            "enemy_stats_id": 113,
+            "species_id": 120,
+            "monster_name": "TailEater",
+            "weight": 3,
+            "rom_offset": "0x0713E"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 65,
+        "monsters": [
+          {
+            "enemy_stats_id": 108,
+            "species_id": 11,
+            "monster_name": "RockSlime",
+            "weight": 3,
+            "rom_offset": "0x07152"
+          },
+          {
+            "enemy_stats_id": 111,
+            "species_id": 74,
+            "monster_name": "DuckKite",
+            "weight": 3,
+            "rom_offset": "0x07154"
+          },
+          {
+            "enemy_stats_id": 112,
+            "species_id": 94,
+            "monster_name": "CactiBall",
+            "weight": 3,
+            "rom_offset": "0x07156"
+          },
+          {
+            "enemy_stats_id": 113,
+            "species_id": 120,
+            "monster_name": "TailEater",
+            "weight": 3,
+            "rom_offset": "0x07158"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-16",
+        "pool_index": 66,
+        "monsters": [
+          {
+            "enemy_stats_id": 108,
+            "species_id": 11,
+            "monster_name": "RockSlime",
+            "weight": 3,
+            "rom_offset": "0x0716C"
+          },
+          {
+            "enemy_stats_id": 111,
+            "species_id": 74,
+            "monster_name": "DuckKite",
+            "weight": 3,
+            "rom_offset": "0x0716E"
+          },
+          {
+            "enemy_stats_id": 112,
+            "species_id": 94,
+            "monster_name": "CactiBall",
+            "weight": 3,
+            "rom_offset": "0x07170"
+          },
+          {
+            "enemy_stats_id": 107,
+            "species_id": 191,
+            "monster_name": "Gismo",
+            "weight": 2,
+            "rom_offset": "0x07172"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 17-21",
+        "pool_index": 67,
+        "monsters": [
+          {
+            "enemy_stats_id": 108,
+            "species_id": 11,
+            "monster_name": "RockSlime",
+            "weight": 3,
+            "rom_offset": "0x07186"
+          },
+          {
+            "enemy_stats_id": 111,
+            "species_id": 74,
+            "monster_name": "DuckKite",
+            "weight": 3,
+            "rom_offset": "0x07188"
+          },
+          {
+            "enemy_stats_id": 113,
+            "species_id": 120,
+            "monster_name": "TailEater",
+            "weight": 3,
+            "rom_offset": "0x0718A"
+          },
+          {
+            "enemy_stats_id": 107,
+            "species_id": 191,
+            "monster_name": "Gismo",
+            "weight": 2,
+            "rom_offset": "0x0718C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 68,
+        "monsters": [
+          {
+            "enemy_stats_id": 108,
+            "species_id": 11,
+            "monster_name": "RockSlime",
+            "weight": 3,
+            "rom_offset": "0x071A0"
+          },
+          {
+            "enemy_stats_id": 111,
+            "species_id": 74,
+            "monster_name": "DuckKite",
+            "weight": 3,
+            "rom_offset": "0x071A2"
+          },
+          {
+            "enemy_stats_id": 107,
+            "species_id": 191,
+            "monster_name": "Gismo",
+            "weight": 3,
+            "rom_offset": "0x071A4"
+          },
+          {
+            "enemy_stats_id": 114,
+            "species_id": 132,
+            "monster_name": "AgDevil",
+            "weight": 3,
+            "rom_offset": "0x071A6"
+          }
+        ]
+      }
+    ]
+  },
+  "19": {
+    "name": "Gate of Judgement",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 69,
+        "monsters": [
+          {
+            "enemy_stats_id": 116,
+            "species_id": 114,
+            "monster_name": "WeedBug",
+            "weight": 3,
+            "rom_offset": "0x071BA"
+          },
+          {
+            "enemy_stats_id": 119,
+            "species_id": 57,
+            "monster_name": "HammerMan",
+            "weight": 3,
+            "rom_offset": "0x071BC"
+          },
+          {
+            "enemy_stats_id": 120,
+            "species_id": 82,
+            "monster_name": "MadGoose",
+            "weight": 3,
+            "rom_offset": "0x071BE"
+          },
+          {
+            "enemy_stats_id": 121,
+            "species_id": 101,
+            "monster_name": "TreeBoy",
+            "weight": 3,
+            "rom_offset": "0x071C0"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 70,
+        "monsters": [
+          {
+            "enemy_stats_id": 119,
+            "species_id": 57,
+            "monster_name": "HammerMan",
+            "weight": 3,
+            "rom_offset": "0x071D4"
+          },
+          {
+            "enemy_stats_id": 120,
+            "species_id": 82,
+            "monster_name": "MadGoose",
+            "weight": 3,
+            "rom_offset": "0x071D6"
+          },
+          {
+            "enemy_stats_id": 121,
+            "species_id": 101,
+            "monster_name": "TreeBoy",
+            "weight": 3,
+            "rom_offset": "0x071D8"
+          },
+          {
+            "enemy_stats_id": 122,
+            "species_id": 124,
+            "monster_name": "Droll",
+            "weight": 3,
+            "rom_offset": "0x071DA"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-16",
+        "pool_index": 71,
+        "monsters": [
+          {
+            "enemy_stats_id": 119,
+            "species_id": 57,
+            "monster_name": "HammerMan",
+            "weight": 3,
+            "rom_offset": "0x071EE"
+          },
+          {
+            "enemy_stats_id": 121,
+            "species_id": 101,
+            "monster_name": "TreeBoy",
+            "weight": 3,
+            "rom_offset": "0x071F0"
+          },
+          {
+            "enemy_stats_id": 122,
+            "species_id": 124,
+            "monster_name": "Droll",
+            "weight": 3,
+            "rom_offset": "0x071F2"
+          },
+          {
+            "enemy_stats_id": 117,
+            "species_id": 14,
+            "monster_name": "SpotKing",
+            "weight": 2,
+            "rom_offset": "0x071F4"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 17-21",
+        "pool_index": 72,
+        "monsters": [
+          {
+            "enemy_stats_id": 119,
+            "species_id": 57,
+            "monster_name": "HammerMan",
+            "weight": 3,
+            "rom_offset": "0x07208"
+          },
+          {
+            "enemy_stats_id": 121,
+            "species_id": 101,
+            "monster_name": "TreeBoy",
+            "weight": 3,
+            "rom_offset": "0x0720A"
+          },
+          {
+            "enemy_stats_id": 129,
+            "species_id": 123,
+            "monster_name": "GiantMoth",
+            "weight": 3,
+            "rom_offset": "0x0720C"
+          },
+          {
+            "enemy_stats_id": 117,
+            "species_id": 14,
+            "monster_name": "SpotKing",
+            "weight": 2,
+            "rom_offset": "0x0720E"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 73,
+        "monsters": [
+          {
+            "enemy_stats_id": 119,
+            "species_id": 57,
+            "monster_name": "HammerMan",
+            "weight": 3,
+            "rom_offset": "0x07222"
+          },
+          {
+            "enemy_stats_id": 120,
+            "species_id": 82,
+            "monster_name": "MadGoose",
+            "weight": 3,
+            "rom_offset": "0x07224"
+          },
+          {
+            "enemy_stats_id": 129,
+            "species_id": 123,
+            "monster_name": "GiantMoth",
+            "weight": 3,
+            "rom_offset": "0x07226"
+          },
+          {
+            "enemy_stats_id": 117,
+            "species_id": 14,
+            "monster_name": "SpotKing",
+            "weight": 3,
+            "rom_offset": "0x07228"
+          }
+        ]
+      }
+    ]
+  },
+  "20": {
+    "name": "Library Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 74,
+        "monsters": [
+          {
+            "enemy_stats_id": 130,
+            "species_id": 131,
+            "monster_name": "ArcDemon",
+            "weight": 3,
+            "rom_offset": "0x0723C"
+          },
+          {
+            "enemy_stats_id": 132,
+            "species_id": 188,
+            "monster_name": "CurseLamp",
+            "weight": 3,
+            "rom_offset": "0x0723E"
+          },
+          {
+            "enemy_stats_id": 136,
+            "species_id": 97,
+            "monster_name": "AmberWeed",
+            "weight": 3,
+            "rom_offset": "0x07240"
+          },
+          {
+            "enemy_stats_id": 137,
+            "species_id": 125,
+            "monster_name": "ArmyCrab",
+            "weight": 3,
+            "rom_offset": "0x07242"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 75,
+        "monsters": [
+          {
+            "enemy_stats_id": 130,
+            "species_id": 131,
+            "monster_name": "ArcDemon",
+            "weight": 3,
+            "rom_offset": "0x07256"
+          },
+          {
+            "enemy_stats_id": 132,
+            "species_id": 188,
+            "monster_name": "CurseLamp",
+            "weight": 3,
+            "rom_offset": "0x07258"
+          },
+          {
+            "enemy_stats_id": 134,
+            "species_id": 64,
+            "monster_name": "WildApe",
+            "weight": 3,
+            "rom_offset": "0x0725A"
+          },
+          {
+            "enemy_stats_id": 137,
+            "species_id": 125,
+            "monster_name": "ArmyCrab",
+            "weight": 3,
+            "rom_offset": "0x0725C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-16",
+        "pool_index": 76,
+        "monsters": [
+          {
+            "enemy_stats_id": 130,
+            "species_id": 131,
+            "monster_name": "ArcDemon",
+            "weight": 3,
+            "rom_offset": "0x07270"
+          },
+          {
+            "enemy_stats_id": 132,
+            "species_id": 188,
+            "monster_name": "CurseLamp",
+            "weight": 3,
+            "rom_offset": "0x07272"
+          },
+          {
+            "enemy_stats_id": 134,
+            "species_id": 64,
+            "monster_name": "WildApe",
+            "weight": 3,
+            "rom_offset": "0x07274"
+          },
+          {
+            "enemy_stats_id": 137,
+            "species_id": 125,
+            "monster_name": "ArmyCrab",
+            "weight": 3,
+            "rom_offset": "0x07276"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 17-21",
+        "pool_index": 77,
+        "monsters": [
+          {
+            "enemy_stats_id": 130,
+            "species_id": 131,
+            "monster_name": "ArcDemon",
+            "weight": 3,
+            "rom_offset": "0x0728A"
+          },
+          {
+            "enemy_stats_id": 131,
+            "species_id": 166,
+            "monster_name": "MadSpirit",
+            "weight": 3,
+            "rom_offset": "0x0728C"
+          },
+          {
+            "enemy_stats_id": 134,
+            "species_id": 64,
+            "monster_name": "WildApe",
+            "weight": 3,
+            "rom_offset": "0x0728E"
+          },
+          {
+            "enemy_stats_id": 137,
+            "species_id": 125,
+            "monster_name": "ArmyCrab",
+            "weight": 3,
+            "rom_offset": "0x07290"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 78,
+        "monsters": [
+          {
+            "enemy_stats_id": 130,
+            "species_id": 131,
+            "monster_name": "ArcDemon",
+            "weight": 3,
+            "rom_offset": "0x072A4"
+          },
+          {
+            "enemy_stats_id": 131,
+            "species_id": 166,
+            "monster_name": "MadSpirit",
+            "weight": 3,
+            "rom_offset": "0x072A6"
+          },
+          {
+            "enemy_stats_id": 133,
+            "species_id": 21,
+            "monster_name": "Tortragon",
+            "weight": 3,
+            "rom_offset": "0x072A8"
+          },
+          {
+            "enemy_stats_id": 134,
+            "species_id": 64,
+            "monster_name": "WildApe",
+            "weight": 3,
+            "rom_offset": "0x072AA"
+          }
+        ]
+      }
+    ]
+  },
+  "21": {
+    "name": "Gate of Reflection",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 79,
+        "monsters": [
+          {
+            "enemy_stats_id": 138,
+            "species_id": 137,
+            "monster_name": "EvilBeast",
+            "weight": 3,
+            "rom_offset": "0x072BE"
+          },
+          {
+            "enemy_stats_id": 139,
+            "species_id": 162,
+            "monster_name": "Shadow",
+            "weight": 3,
+            "rom_offset": "0x072C0"
+          },
+          {
+            "enemy_stats_id": 140,
+            "species_id": 176,
+            "monster_name": "EvilWand",
+            "weight": 3,
+            "rom_offset": "0x072C2"
+          },
+          {
+            "enemy_stats_id": 141,
+            "species_id": 12,
+            "monster_name": "SlimeBorg",
+            "weight": 3,
+            "rom_offset": "0x072C4"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 80,
+        "monsters": [
+          {
+            "enemy_stats_id": 138,
+            "species_id": 137,
+            "monster_name": "EvilBeast",
+            "weight": 3,
+            "rom_offset": "0x072D8"
+          },
+          {
+            "enemy_stats_id": 139,
+            "species_id": 162,
+            "monster_name": "Shadow",
+            "weight": 3,
+            "rom_offset": "0x072DA"
+          },
+          {
+            "enemy_stats_id": 141,
+            "species_id": 12,
+            "monster_name": "SlimeBorg",
+            "weight": 3,
+            "rom_offset": "0x072DC"
+          },
+          {
+            "enemy_stats_id": 142,
+            "species_id": 25,
+            "monster_name": "LizardMan",
+            "weight": 3,
+            "rom_offset": "0x072DE"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-16",
+        "pool_index": 81,
+        "monsters": [
+          {
+            "enemy_stats_id": 142,
+            "species_id": 25,
+            "monster_name": "LizardMan",
+            "weight": 3,
+            "rom_offset": "0x072F2"
+          },
+          {
+            "enemy_stats_id": 141,
+            "species_id": 12,
+            "monster_name": "SlimeBorg",
+            "weight": 3,
+            "rom_offset": "0x072F4"
+          },
+          {
+            "enemy_stats_id": 144,
+            "species_id": 71,
+            "monster_name": "Wyvern",
+            "weight": 3,
+            "rom_offset": "0x072F6"
+          },
+          {
+            "enemy_stats_id": 145,
+            "species_id": 91,
+            "monster_name": "FireWeed",
+            "weight": 3,
+            "rom_offset": "0x072F8"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 17-21",
+        "pool_index": 82,
+        "monsters": [
+          {
+            "enemy_stats_id": 142,
+            "species_id": 25,
+            "monster_name": "LizardMan",
+            "weight": 3,
+            "rom_offset": "0x0730C"
+          },
+          {
+            "enemy_stats_id": 144,
+            "species_id": 71,
+            "monster_name": "Wyvern",
+            "weight": 3,
+            "rom_offset": "0x0730E"
+          },
+          {
+            "enemy_stats_id": 146,
+            "species_id": 126,
+            "monster_name": "MadHornet",
+            "weight": 3,
+            "rom_offset": "0x07310"
+          },
+          {
+            "enemy_stats_id": 157,
+            "species_id": 141,
+            "monster_name": "Lionex",
+            "weight": 3,
+            "rom_offset": "0x07312"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22-26",
+        "pool_index": 83,
+        "monsters": [
+          {
+            "enemy_stats_id": 144,
+            "species_id": 71,
+            "monster_name": "Wyvern",
+            "weight": 3,
+            "rom_offset": "0x07326"
+          },
+          {
+            "enemy_stats_id": 146,
+            "species_id": 126,
+            "monster_name": "MadHornet",
+            "weight": 3,
+            "rom_offset": "0x07328"
+          },
+          {
+            "enemy_stats_id": 157,
+            "species_id": 141,
+            "monster_name": "Lionex",
+            "weight": 3,
+            "rom_offset": "0x0732A"
+          },
+          {
+            "enemy_stats_id": 158,
+            "species_id": 158,
+            "monster_name": "RotRaven",
+            "weight": 3,
+            "rom_offset": "0x0732C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 27+",
+        "pool_index": 84,
+        "monsters": [
+          {
+            "enemy_stats_id": 143,
+            "species_id": 58,
+            "monster_name": "Grizzly",
+            "weight": 3,
+            "rom_offset": "0x07340"
+          },
+          {
+            "enemy_stats_id": 146,
+            "species_id": 126,
+            "monster_name": "MadHornet",
+            "weight": 3,
+            "rom_offset": "0x07342"
+          },
+          {
+            "enemy_stats_id": 157,
+            "species_id": 141,
+            "monster_name": "Lionex",
+            "weight": 3,
+            "rom_offset": "0x07344"
+          },
+          {
+            "enemy_stats_id": 158,
+            "species_id": 158,
+            "monster_name": "RotRaven",
+            "weight": 3,
+            "rom_offset": "0x07346"
+          }
+        ]
+      }
+    ]
+  },
+  "22": {
+    "name": "Gate of Ambition",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 85,
+        "monsters": [
+          {
+            "enemy_stats_id": 6,
+            "species_id": 119,
+            "monster_name": "GoHopper",
+            "weight": 3,
+            "rom_offset": "0x0735A"
+          },
+          {
+            "enemy_stats_id": 10,
+            "species_id": 118,
+            "monster_name": "ArmyAnt",
+            "weight": 3,
+            "rom_offset": "0x0735C"
+          },
+          {
+            "enemy_stats_id": 19,
+            "species_id": 111,
+            "monster_name": "Catapila",
+            "weight": 3,
+            "rom_offset": "0x0735E"
+          },
+          {
+            "enemy_stats_id": 36,
+            "species_id": 115,
+            "monster_name": "GiantWorm",
+            "weight": 3,
+            "rom_offset": "0x07360"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 86,
+        "monsters": [
+          {
+            "enemy_stats_id": 38,
+            "species_id": 110,
+            "monster_name": "GiantSlug",
+            "weight": 3,
+            "rom_offset": "0x07374"
+          },
+          {
+            "enemy_stats_id": 44,
+            "species_id": 122,
+            "monster_name": "Eyeder",
+            "weight": 3,
+            "rom_offset": "0x07376"
+          },
+          {
+            "enemy_stats_id": 49,
+            "species_id": 113,
+            "monster_name": "Butterfly",
+            "weight": 3,
+            "rom_offset": "0x07378"
+          },
+          {
+            "enemy_stats_id": 70,
+            "species_id": 121,
+            "monster_name": "ArmorPede",
+            "weight": 3,
+            "rom_offset": "0x0737A"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 87,
+        "monsters": [
+          {
+            "enemy_stats_id": 86,
+            "species_id": 112,
+            "monster_name": "Gophecada",
+            "weight": 3,
+            "rom_offset": "0x0738E"
+          },
+          {
+            "enemy_stats_id": 94,
+            "species_id": 117,
+            "monster_name": "StagBug",
+            "weight": 3,
+            "rom_offset": "0x07390"
+          },
+          {
+            "enemy_stats_id": 113,
+            "species_id": 120,
+            "monster_name": "TailEater",
+            "weight": 3,
+            "rom_offset": "0x07392"
+          },
+          {
+            "enemy_stats_id": 116,
+            "species_id": 114,
+            "monster_name": "WeedBug",
+            "weight": 3,
+            "rom_offset": "0x07394"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 88,
+        "monsters": [
+          {
+            "enemy_stats_id": 122,
+            "species_id": 124,
+            "monster_name": "Droll",
+            "weight": 3,
+            "rom_offset": "0x073A8"
+          },
+          {
+            "enemy_stats_id": 129,
+            "species_id": 123,
+            "monster_name": "GiantMoth",
+            "weight": 3,
+            "rom_offset": "0x073AA"
+          },
+          {
+            "enemy_stats_id": 137,
+            "species_id": 125,
+            "monster_name": "ArmyCrab",
+            "weight": 3,
+            "rom_offset": "0x073AC"
+          },
+          {
+            "enemy_stats_id": 146,
+            "species_id": 126,
+            "monster_name": "MadHornet",
+            "weight": 3,
+            "rom_offset": "0x073AE"
+          }
+        ]
+      }
+    ]
+  },
+  "23": {
+    "name": "Gate of Demolition",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 89,
+        "monsters": [
+          {
+            "enemy_stats_id": 5,
+            "species_id": 98,
+            "monster_name": "Stubsuck",
+            "weight": 3,
+            "rom_offset": "0x073C2"
+          },
+          {
+            "enemy_stats_id": 18,
+            "species_id": 105,
+            "monster_name": "EvilSeed",
+            "weight": 3,
+            "rom_offset": "0x073C4"
+          },
+          {
+            "enemy_stats_id": 27,
+            "species_id": 104,
+            "monster_name": "BeanMan",
+            "weight": 3,
+            "rom_offset": "0x073C6"
+          },
+          {
+            "enemy_stats_id": 35,
+            "species_id": 92,
+            "monster_name": "FloraMan",
+            "weight": 3,
+            "rom_offset": "0x073C8"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 90,
+        "monsters": [
+          {
+            "enemy_stats_id": 43,
+            "species_id": 93,
+            "monster_name": "WingTree",
+            "weight": 3,
+            "rom_offset": "0x073DC"
+          },
+          {
+            "enemy_stats_id": 62,
+            "species_id": 95,
+            "monster_name": "Gulpple",
+            "weight": 3,
+            "rom_offset": "0x073DE"
+          },
+          {
+            "enemy_stats_id": 69,
+            "species_id": 90,
+            "monster_name": "MadPlant",
+            "weight": 3,
+            "rom_offset": "0x073E0"
+          },
+          {
+            "enemy_stats_id": 85,
+            "species_id": 99,
+            "monster_name": "Oniono",
+            "weight": 3,
+            "rom_offset": "0x073E2"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 91,
+        "monsters": [
+          {
+            "enemy_stats_id": 112,
+            "species_id": 94,
+            "monster_name": "CactiBall",
+            "weight": 3,
+            "rom_offset": "0x073F6"
+          },
+          {
+            "enemy_stats_id": 121,
+            "species_id": 101,
+            "monster_name": "TreeBoy",
+            "weight": 3,
+            "rom_offset": "0x073F8"
+          },
+          {
+            "enemy_stats_id": 136,
+            "species_id": 97,
+            "monster_name": "AmberWeed",
+            "weight": 3,
+            "rom_offset": "0x073FA"
+          },
+          {
+            "enemy_stats_id": 145,
+            "species_id": 91,
+            "monster_name": "FireWeed",
+            "weight": 3,
+            "rom_offset": "0x073FC"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 92,
+        "monsters": [
+          {
+            "enemy_stats_id": 145,
+            "species_id": 91,
+            "monster_name": "FireWeed",
+            "weight": 3,
+            "rom_offset": "0x07410"
+          },
+          {
+            "enemy_stats_id": 163,
+            "species_id": 106,
+            "monster_name": "ManEater",
+            "weight": 3,
+            "rom_offset": "0x07412"
+          },
+          {
+            "enemy_stats_id": 169,
+            "species_id": 100,
+            "monster_name": "DanceVegi",
+            "weight": 3,
+            "rom_offset": "0x07414"
+          },
+          {
+            "enemy_stats_id": 189,
+            "species_id": 107,
+            "monster_name": "Snapper",
+            "weight": 3,
+            "rom_offset": "0x07416"
+          }
+        ]
+      }
+    ]
+  },
+  "24": {
+    "name": "Gate of Mastermind",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 93,
+        "monsters": [
+          {
+            "enemy_stats_id": 4,
+            "species_id": 78,
+            "monster_name": "Dracky",
+            "weight": 3,
+            "rom_offset": "0x0742A"
+          },
+          {
+            "enemy_stats_id": 14,
+            "species_id": 70,
+            "monster_name": "Picky",
+            "weight": 3,
+            "rom_offset": "0x0742C"
+          },
+          {
+            "enemy_stats_id": 21,
+            "species_id": 79,
+            "monster_name": "BigRoost",
+            "weight": 3,
+            "rom_offset": "0x0742E"
+          },
+          {
+            "enemy_stats_id": 34,
+            "species_id": 72,
+            "monster_name": "BullBird",
+            "weight": 3,
+            "rom_offset": "0x07430"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 94,
+        "monsters": [
+          {
+            "enemy_stats_id": 50,
+            "species_id": 76,
+            "monster_name": "MadRaven",
+            "weight": 3,
+            "rom_offset": "0x07444"
+          },
+          {
+            "enemy_stats_id": 61,
+            "species_id": 75,
+            "monster_name": "MadPecker",
+            "weight": 3,
+            "rom_offset": "0x07446"
+          },
+          {
+            "enemy_stats_id": 68,
+            "species_id": 73,
+            "monster_name": "Florajay",
+            "weight": 3,
+            "rom_offset": "0x07448"
+          },
+          {
+            "enemy_stats_id": 84,
+            "species_id": 80,
+            "monster_name": "StubBird",
+            "weight": 3,
+            "rom_offset": "0x0744A"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 95,
+        "monsters": [
+          {
+            "enemy_stats_id": 93,
+            "species_id": 77,
+            "monster_name": "MistyWing",
+            "weight": 3,
+            "rom_offset": "0x0745E"
+          },
+          {
+            "enemy_stats_id": 111,
+            "species_id": 74,
+            "monster_name": "DuckKite",
+            "weight": 3,
+            "rom_offset": "0x07460"
+          },
+          {
+            "enemy_stats_id": 120,
+            "species_id": 82,
+            "monster_name": "MadGoose",
+            "weight": 3,
+            "rom_offset": "0x07462"
+          },
+          {
+            "enemy_stats_id": 135,
+            "species_id": 81,
+            "monster_name": "LandOwl",
+            "weight": 3,
+            "rom_offset": "0x07464"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 96,
+        "monsters": [
+          {
+            "enemy_stats_id": 144,
+            "species_id": 71,
+            "monster_name": "Wyvern",
+            "weight": 3,
+            "rom_offset": "0x07478"
+          },
+          {
+            "enemy_stats_id": 162,
+            "species_id": 83,
+            "monster_name": "MadCondor",
+            "weight": 3,
+            "rom_offset": "0x0747A"
+          },
+          {
+            "enemy_stats_id": 197,
+            "species_id": 86,
+            "monster_name": "ZapBird",
+            "weight": 3,
+            "rom_offset": "0x0747C"
+          },
+          {
+            "enemy_stats_id": 198,
+            "species_id": 87,
+            "monster_name": "WhipBird",
+            "weight": 3,
+            "rom_offset": "0x0747E"
+          }
+        ]
+      }
+    ]
+  },
+  "25": {
+    "name": "Gate of Control",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 97,
+        "monsters": [
+          {
+            "enemy_stats_id": 2,
+            "species_id": 8,
+            "monster_name": "Slime",
+            "weight": 3,
+            "rom_offset": "0x07492"
+          },
+          {
+            "enemy_stats_id": 25,
+            "species_id": 1,
+            "monster_name": "SpotSlime",
+            "weight": 3,
+            "rom_offset": "0x07494"
+          },
+          {
+            "enemy_stats_id": 30,
+            "species_id": 16,
+            "monster_name": "Metaly",
+            "weight": 3,
+            "rom_offset": "0x07496"
+          },
+          {
+            "enemy_stats_id": 40,
+            "species_id": 3,
+            "monster_name": "TreeSlime",
+            "weight": 3,
+            "rom_offset": "0x07498"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 98,
+        "monsters": [
+          {
+            "enemy_stats_id": 46,
+            "species_id": 0,
+            "monster_name": "DrakSlime",
+            "weight": 3,
+            "rom_offset": "0x074AC"
+          },
+          {
+            "enemy_stats_id": 59,
+            "species_id": 4,
+            "monster_name": "Snaily",
+            "weight": 3,
+            "rom_offset": "0x074AE"
+          },
+          {
+            "enemy_stats_id": 65,
+            "species_id": 6,
+            "monster_name": "Babble",
+            "weight": 3,
+            "rom_offset": "0x074B0"
+          },
+          {
+            "enemy_stats_id": 73,
+            "species_id": 2,
+            "monster_name": "WingSlime",
+            "weight": 3,
+            "rom_offset": "0x074B2"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 99,
+        "monsters": [
+          {
+            "enemy_stats_id": 81,
+            "species_id": 13,
+            "monster_name": "Slabbit",
+            "weight": 3,
+            "rom_offset": "0x074C6"
+          },
+          {
+            "enemy_stats_id": 90,
+            "species_id": 5,
+            "monster_name": "SlimeNite",
+            "weight": 3,
+            "rom_offset": "0x074C8"
+          },
+          {
+            "enemy_stats_id": 98,
+            "species_id": 7,
+            "monster_name": "BoxSlime",
+            "weight": 3,
+            "rom_offset": "0x074CA"
+          },
+          {
+            "enemy_stats_id": 108,
+            "species_id": 11,
+            "monster_name": "RockSlime",
+            "weight": 3,
+            "rom_offset": "0x074CC"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 100,
+        "monsters": [
+          {
+            "enemy_stats_id": 108,
+            "species_id": 11,
+            "monster_name": "RockSlime",
+            "weight": 3,
+            "rom_offset": "0x074E0"
+          },
+          {
+            "enemy_stats_id": 117,
+            "species_id": 14,
+            "monster_name": "SpotKing",
+            "weight": 3,
+            "rom_offset": "0x074E2"
+          },
+          {
+            "enemy_stats_id": 141,
+            "species_id": 12,
+            "monster_name": "SlimeBorg",
+            "weight": 3,
+            "rom_offset": "0x074E4"
+          },
+          {
+            "enemy_stats_id": 181,
+            "species_id": 17,
+            "monster_name": "Metabble",
+            "weight": 2,
+            "rom_offset": "0x074E6"
+          }
+        ]
+      }
+    ]
+  },
+  "26": {
+    "name": "Gate of Extinction",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 101,
+        "monsters": [
+          {
+            "enemy_stats_id": 7,
+            "species_id": 139,
+            "monster_name": "Gremlin",
+            "weight": 3,
+            "rom_offset": "0x074FA"
+          },
+          {
+            "enemy_stats_id": 22,
+            "species_id": 133,
+            "monster_name": "Demonite",
+            "weight": 3,
+            "rom_offset": "0x074FC"
+          },
+          {
+            "enemy_stats_id": 28,
+            "species_id": 138,
+            "monster_name": "1EyeClown",
+            "weight": 3,
+            "rom_offset": "0x074FE"
+          },
+          {
+            "enemy_stats_id": 37,
+            "species_id": 136,
+            "monster_name": "SkulRider",
+            "weight": 3,
+            "rom_offset": "0x07500"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 102,
+        "monsters": [
+          {
+            "enemy_stats_id": 63,
+            "species_id": 135,
+            "monster_name": "EyeBall",
+            "weight": 3,
+            "rom_offset": "0x07514"
+          },
+          {
+            "enemy_stats_id": 71,
+            "species_id": 140,
+            "monster_name": "MedusaEye",
+            "weight": 3,
+            "rom_offset": "0x07516"
+          },
+          {
+            "enemy_stats_id": 87,
+            "species_id": 130,
+            "monster_name": "Pixy",
+            "weight": 3,
+            "rom_offset": "0x07518"
+          },
+          {
+            "enemy_stats_id": 95,
+            "species_id": 134,
+            "monster_name": "DarkEye",
+            "weight": 3,
+            "rom_offset": "0x0751A"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 103,
+        "monsters": [
+          {
+            "enemy_stats_id": 105,
+            "species_id": 143,
+            "monster_name": "Orc",
+            "weight": 3,
+            "rom_offset": "0x0752E"
+          },
+          {
+            "enemy_stats_id": 114,
+            "species_id": 132,
+            "monster_name": "AgDevil",
+            "weight": 3,
+            "rom_offset": "0x07530"
+          },
+          {
+            "enemy_stats_id": 130,
+            "species_id": 131,
+            "monster_name": "ArcDemon",
+            "weight": 3,
+            "rom_offset": "0x07532"
+          },
+          {
+            "enemy_stats_id": 138,
+            "species_id": 137,
+            "monster_name": "EvilBeast",
+            "weight": 3,
+            "rom_offset": "0x07534"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 104,
+        "monsters": [
+          {
+            "enemy_stats_id": 157,
+            "species_id": 141,
+            "monster_name": "Lionex",
+            "weight": 3,
+            "rom_offset": "0x07548"
+          },
+          {
+            "enemy_stats_id": 164,
+            "species_id": 147,
+            "monster_name": "Grendal",
+            "weight": 3,
+            "rom_offset": "0x0754A"
+          },
+          {
+            "enemy_stats_id": 170,
+            "species_id": 144,
+            "monster_name": "Ogre",
+            "weight": 3,
+            "rom_offset": "0x0754C"
+          },
+          {
+            "enemy_stats_id": 190,
+            "species_id": 142,
+            "monster_name": "GoatHorn",
+            "weight": 3,
+            "rom_offset": "0x0754E"
+          }
+        ]
+      }
+    ]
+  },
+  "27": {
+    "name": "Gate of Sleep",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 105,
+        "monsters": [
+          {
+            "enemy_stats_id": 8,
+            "species_id": 155,
+            "monster_name": "Spooky",
+            "weight": 3,
+            "rom_offset": "0x07562"
+          },
+          {
+            "enemy_stats_id": 16,
+            "species_id": 163,
+            "monster_name": "Hork",
+            "weight": 3,
+            "rom_offset": "0x07564"
+          },
+          {
+            "enemy_stats_id": 23,
+            "species_id": 171,
+            "monster_name": "BoneSlave",
+            "weight": 3,
+            "rom_offset": "0x07566"
+          },
+          {
+            "enemy_stats_id": 45,
+            "species_id": 157,
+            "monster_name": "Putrepup",
+            "weight": 3,
+            "rom_offset": "0x07568"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 106,
+        "monsters": [
+          {
+            "enemy_stats_id": 57,
+            "species_id": 164,
+            "monster_name": "Mudron",
+            "weight": 3,
+            "rom_offset": "0x0757C"
+          },
+          {
+            "enemy_stats_id": 64,
+            "species_id": 159,
+            "monster_name": "Mummy",
+            "weight": 3,
+            "rom_offset": "0x0757E"
+          },
+          {
+            "enemy_stats_id": 88,
+            "species_id": 161,
+            "monster_name": "DeadNite",
+            "weight": 3,
+            "rom_offset": "0x07580"
+          },
+          {
+            "enemy_stats_id": 96,
+            "species_id": 165,
+            "monster_name": "NiteWhip",
+            "weight": 3,
+            "rom_offset": "0x07582"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 107,
+        "monsters": [
+          {
+            "enemy_stats_id": 106,
+            "species_id": 168,
+            "monster_name": "Reaper",
+            "weight": 3,
+            "rom_offset": "0x07596"
+          },
+          {
+            "enemy_stats_id": 115,
+            "species_id": 167,
+            "monster_name": "WindMerge",
+            "weight": 3,
+            "rom_offset": "0x07598"
+          },
+          {
+            "enemy_stats_id": 131,
+            "species_id": 166,
+            "monster_name": "MadSpirit",
+            "weight": 3,
+            "rom_offset": "0x0759A"
+          },
+          {
+            "enemy_stats_id": 139,
+            "species_id": 162,
+            "monster_name": "Shadow",
+            "weight": 3,
+            "rom_offset": "0x0759C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 108,
+        "monsters": [
+          {
+            "enemy_stats_id": 158,
+            "species_id": 158,
+            "monster_name": "RotRaven",
+            "weight": 3,
+            "rom_offset": "0x075B0"
+          },
+          {
+            "enemy_stats_id": 165,
+            "species_id": 160,
+            "monster_name": "DarkCrab",
+            "weight": 3,
+            "rom_offset": "0x075B2"
+          },
+          {
+            "enemy_stats_id": 171,
+            "species_id": 156,
+            "monster_name": "Skullgon",
+            "weight": 3,
+            "rom_offset": "0x075B4"
+          },
+          {
+            "enemy_stats_id": 186,
+            "species_id": 172,
+            "monster_name": "Skeletor",
+            "weight": 3,
+            "rom_offset": "0x075B6"
+          }
+        ]
+      }
+    ]
+  },
+  "28": {
+    "name": "Bazaar Edge Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 109,
+        "monsters": [
+          {
+            "enemy_stats_id": 9,
+            "species_id": 183,
+            "monster_name": "Goopi",
+            "weight": 3,
+            "rom_offset": "0x075CA"
+          },
+          {
+            "enemy_stats_id": 24,
+            "species_id": 187,
+            "monster_name": "SabreMan",
+            "weight": 3,
+            "rom_offset": "0x075CC"
+          },
+          {
+            "enemy_stats_id": 29,
+            "species_id": 178,
+            "monster_name": "CoilBird",
+            "weight": 3,
+            "rom_offset": "0x075CE"
+          },
+          {
+            "enemy_stats_id": 39,
+            "species_id": 195,
+            "monster_name": "MudDoll",
+            "weight": 3,
+            "rom_offset": "0x075D0"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 110,
+        "monsters": [
+          {
+            "enemy_stats_id": 58,
+            "species_id": 179,
+            "monster_name": "Facer",
+            "weight": 3,
+            "rom_offset": "0x075E4"
+          },
+          {
+            "enemy_stats_id": 72,
+            "species_id": 177,
+            "monster_name": "MadCandle",
+            "weight": 3,
+            "rom_offset": "0x075E6"
+          },
+          {
+            "enemy_stats_id": 89,
+            "species_id": 180,
+            "monster_name": "SpikyBoy",
+            "weight": 3,
+            "rom_offset": "0x075E8"
+          },
+          {
+            "enemy_stats_id": 97,
+            "species_id": 182,
+            "monster_name": "RogueNite",
+            "weight": 3,
+            "rom_offset": "0x075EA"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 111,
+        "monsters": [
+          {
+            "enemy_stats_id": 107,
+            "species_id": 191,
+            "monster_name": "Gismo",
+            "weight": 3,
+            "rom_offset": "0x075FE"
+          },
+          {
+            "enemy_stats_id": 132,
+            "species_id": 188,
+            "monster_name": "CurseLamp",
+            "weight": 3,
+            "rom_offset": "0x07600"
+          },
+          {
+            "enemy_stats_id": 140,
+            "species_id": 176,
+            "monster_name": "EvilWand",
+            "weight": 3,
+            "rom_offset": "0x07602"
+          },
+          {
+            "enemy_stats_id": 159,
+            "species_id": 175,
+            "monster_name": "JewelBag",
+            "weight": 3,
+            "rom_offset": "0x07604"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 112,
+        "monsters": [
+          {
+            "enemy_stats_id": 172,
+            "species_id": 184,
+            "monster_name": "Voodoll",
+            "weight": 3,
+            "rom_offset": "0x07618"
+          },
+          {
+            "enemy_stats_id": 183,
+            "species_id": 186,
+            "monster_name": "Balzak",
+            "weight": 3,
+            "rom_offset": "0x0761A"
+          },
+          {
+            "enemy_stats_id": 187,
+            "species_id": 185,
+            "monster_name": "MetalDrak",
+            "weight": 3,
+            "rom_offset": "0x0761C"
+          },
+          {
+            "enemy_stats_id": 192,
+            "species_id": 189,
+            "monster_name": "Roboster",
+            "weight": 3,
+            "rom_offset": "0x0761E"
+          }
+        ]
+      }
+    ]
+  },
+  "29": {
+    "name": "Arena - Right Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 113,
+        "monsters": [
+          {
+            "enemy_stats_id": 15,
+            "species_id": 48,
+            "monster_name": "PillowRat",
+            "weight": 3,
+            "rom_offset": "0x07632"
+          },
+          {
+            "enemy_stats_id": 20,
+            "species_id": 61,
+            "monster_name": "FairyRat",
+            "weight": 3,
+            "rom_offset": "0x07634"
+          },
+          {
+            "enemy_stats_id": 33,
+            "species_id": 46,
+            "monster_name": "Almiraj",
+            "weight": 3,
+            "rom_offset": "0x07636"
+          },
+          {
+            "enemy_stats_id": 42,
+            "species_id": 47,
+            "monster_name": "CatFly",
+            "weight": 3,
+            "rom_offset": "0x07638"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 114,
+        "monsters": [
+          {
+            "enemy_stats_id": 60,
+            "species_id": 49,
+            "monster_name": "Saccer",
+            "weight": 3,
+            "rom_offset": "0x0764C"
+          },
+          {
+            "enemy_stats_id": 67,
+            "species_id": 45,
+            "monster_name": "Tonguella",
+            "weight": 3,
+            "rom_offset": "0x0764E"
+          },
+          {
+            "enemy_stats_id": 74,
+            "species_id": 60,
+            "monster_name": "MadGopher",
+            "weight": 3,
+            "rom_offset": "0x07650"
+          },
+          {
+            "enemy_stats_id": 83,
+            "species_id": 52,
+            "monster_name": "WindBeast",
+            "weight": 3,
+            "rom_offset": "0x07652"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 115,
+        "monsters": [
+          {
+            "enemy_stats_id": 110,
+            "species_id": 63,
+            "monster_name": "Goategon",
+            "weight": 3,
+            "rom_offset": "0x07666"
+          },
+          {
+            "enemy_stats_id": 119,
+            "species_id": 57,
+            "monster_name": "HammerMan",
+            "weight": 3,
+            "rom_offset": "0x07668"
+          },
+          {
+            "enemy_stats_id": 134,
+            "species_id": 64,
+            "monster_name": "WildApe",
+            "weight": 3,
+            "rom_offset": "0x0766A"
+          },
+          {
+            "enemy_stats_id": 143,
+            "species_id": 58,
+            "monster_name": "Grizzly",
+            "weight": 3,
+            "rom_offset": "0x0766C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 116,
+        "monsters": [
+          {
+            "enemy_stats_id": 168,
+            "species_id": 59,
+            "monster_name": "Yeti",
+            "weight": 3,
+            "rom_offset": "0x07680"
+          },
+          {
+            "enemy_stats_id": 174,
+            "species_id": 55,
+            "monster_name": "IronTurt",
+            "weight": 3,
+            "rom_offset": "0x07682"
+          },
+          {
+            "enemy_stats_id": 182,
+            "species_id": 50,
+            "monster_name": "GulpBeast",
+            "weight": 3,
+            "rom_offset": "0x07684"
+          },
+          {
+            "enemy_stats_id": 185,
+            "species_id": 65,
+            "monster_name": "Trumpeter",
+            "weight": 3,
+            "rom_offset": "0x07686"
+          }
+        ]
+      }
+    ]
+  },
+  "30": {
+    "name": "Old Man's Gate",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 117,
+        "monsters": [
+          {
+            "enemy_stats_id": 13,
+            "species_id": 29,
+            "monster_name": "MiniDrak",
+            "weight": 3,
+            "rom_offset": "0x0769A"
+          },
+          {
+            "enemy_stats_id": 17,
+            "species_id": 20,
+            "monster_name": "DragonKid",
+            "weight": 3,
+            "rom_offset": "0x0769C"
+          },
+          {
+            "enemy_stats_id": 26,
+            "species_id": 38,
+            "monster_name": "Crestpent",
+            "weight": 3,
+            "rom_offset": "0x0769E"
+          },
+          {
+            "enemy_stats_id": 41,
+            "species_id": 26,
+            "monster_name": "Poisongon",
+            "weight": 3,
+            "rom_offset": "0x076A0"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 118,
+        "monsters": [
+          {
+            "enemy_stats_id": 47,
+            "species_id": 24,
+            "monster_name": "FairyDrak",
+            "weight": 3,
+            "rom_offset": "0x076B4"
+          },
+          {
+            "enemy_stats_id": 66,
+            "species_id": 22,
+            "monster_name": "Pteranod",
+            "weight": 3,
+            "rom_offset": "0x076B6"
+          },
+          {
+            "enemy_stats_id": 82,
+            "species_id": 23,
+            "monster_name": "Gasgon",
+            "weight": 3,
+            "rom_offset": "0x076B8"
+          },
+          {
+            "enemy_stats_id": 91,
+            "species_id": 35,
+            "monster_name": "KingCobra",
+            "weight": 3,
+            "rom_offset": "0x076BA"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 119,
+        "monsters": [
+          {
+            "enemy_stats_id": 118,
+            "species_id": 33,
+            "monster_name": "LizardFly",
+            "weight": 3,
+            "rom_offset": "0x076CE"
+          },
+          {
+            "enemy_stats_id": 133,
+            "species_id": 21,
+            "monster_name": "Tortragon",
+            "weight": 3,
+            "rom_offset": "0x076D0"
+          },
+          {
+            "enemy_stats_id": 142,
+            "species_id": 25,
+            "monster_name": "LizardMan",
+            "weight": 3,
+            "rom_offset": "0x076D2"
+          },
+          {
+            "enemy_stats_id": 160,
+            "species_id": 27,
+            "monster_name": "Swordgon",
+            "weight": 3,
+            "rom_offset": "0x076D4"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22+",
+        "pool_index": 120,
+        "monsters": [
+          {
+            "enemy_stats_id": 173,
+            "species_id": 31,
+            "monster_name": "Rayburn",
+            "weight": 3,
+            "rom_offset": "0x076E8"
+          },
+          {
+            "enemy_stats_id": 184,
+            "species_id": 36,
+            "monster_name": "Spikerous",
+            "weight": 3,
+            "rom_offset": "0x076EA"
+          },
+          {
+            "enemy_stats_id": 188,
+            "species_id": 30,
+            "monster_name": "MadDragon",
+            "weight": 3,
+            "rom_offset": "0x076EC"
+          },
+          {
+            "enemy_stats_id": 194,
+            "species_id": 34,
+            "monster_name": "Andreal",
+            "weight": 3,
+            "rom_offset": "0x076EE"
+          }
+        ]
+      }
+    ]
+  },
+  "31": {
+    "name": "Unused Gate (99 Floors)",
+    "floor_groups": [
+      {
+        "floor_range": "Floors 1-6",
+        "pool_index": 121,
+        "monsters": [
+          {
+            "enemy_stats_id": 186,
+            "species_id": 172,
+            "monster_name": "Skeletor",
+            "weight": 3,
+            "rom_offset": "0x07702"
+          },
+          {
+            "enemy_stats_id": 185,
+            "species_id": 65,
+            "monster_name": "Trumpeter",
+            "weight": 3,
+            "rom_offset": "0x07704"
+          },
+          {
+            "enemy_stats_id": 187,
+            "species_id": 185,
+            "monster_name": "MetalDrak",
+            "weight": 3,
+            "rom_offset": "0x07706"
+          },
+          {
+            "enemy_stats_id": 188,
+            "species_id": 30,
+            "monster_name": "MadDragon",
+            "weight": 3,
+            "rom_offset": "0x07708"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 7-11",
+        "pool_index": 122,
+        "monsters": [
+          {
+            "enemy_stats_id": 187,
+            "species_id": 185,
+            "monster_name": "MetalDrak",
+            "weight": 3,
+            "rom_offset": "0x0771C"
+          },
+          {
+            "enemy_stats_id": 188,
+            "species_id": 30,
+            "monster_name": "MadDragon",
+            "weight": 3,
+            "rom_offset": "0x0771E"
+          },
+          {
+            "enemy_stats_id": 189,
+            "species_id": 107,
+            "monster_name": "Snapper",
+            "weight": 3,
+            "rom_offset": "0x07720"
+          },
+          {
+            "enemy_stats_id": 190,
+            "species_id": 142,
+            "monster_name": "GoatHorn",
+            "weight": 3,
+            "rom_offset": "0x07722"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 12-21",
+        "pool_index": 123,
+        "monsters": [
+          {
+            "enemy_stats_id": 189,
+            "species_id": 107,
+            "monster_name": "Snapper",
+            "weight": 3,
+            "rom_offset": "0x07736"
+          },
+          {
+            "enemy_stats_id": 190,
+            "species_id": 142,
+            "monster_name": "GoatHorn",
+            "weight": 3,
+            "rom_offset": "0x07738"
+          },
+          {
+            "enemy_stats_id": 191,
+            "species_id": 169,
+            "monster_name": "DeadNoble",
+            "weight": 3,
+            "rom_offset": "0x0773A"
+          },
+          {
+            "enemy_stats_id": 192,
+            "species_id": 189,
+            "monster_name": "Roboster",
+            "weight": 3,
+            "rom_offset": "0x0773C"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 22-41",
+        "pool_index": 124,
+        "monsters": [
+          {
+            "enemy_stats_id": 191,
+            "species_id": 169,
+            "monster_name": "DeadNoble",
+            "weight": 3,
+            "rom_offset": "0x07750"
+          },
+          {
+            "enemy_stats_id": 192,
+            "species_id": 189,
+            "monster_name": "Roboster",
+            "weight": 3,
+            "rom_offset": "0x07752"
+          },
+          {
+            "enemy_stats_id": 193,
+            "species_id": 198,
+            "monster_name": "BombCrag",
+            "weight": 3,
+            "rom_offset": "0x07754"
+          },
+          {
+            "enemy_stats_id": 194,
+            "species_id": 34,
+            "monster_name": "Andreal",
+            "weight": 3,
+            "rom_offset": "0x07756"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 42-61",
+        "pool_index": 125,
+        "monsters": [
+          {
+            "enemy_stats_id": 193,
+            "species_id": 198,
+            "monster_name": "BombCrag",
+            "weight": 3,
+            "rom_offset": "0x0776A"
+          },
+          {
+            "enemy_stats_id": 194,
+            "species_id": 34,
+            "monster_name": "Andreal",
+            "weight": 3,
+            "rom_offset": "0x0776C"
+          },
+          {
+            "enemy_stats_id": 195,
+            "species_id": 62,
+            "monster_name": "Unicorn",
+            "weight": 3,
+            "rom_offset": "0x0776E"
+          },
+          {
+            "enemy_stats_id": 196,
+            "species_id": 37,
+            "monster_name": "GreatDrak",
+            "weight": 3,
+            "rom_offset": "0x07770"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 62-81",
+        "pool_index": 126,
+        "monsters": [
+          {
+            "enemy_stats_id": 195,
+            "species_id": 62,
+            "monster_name": "Unicorn",
+            "weight": 3,
+            "rom_offset": "0x07784"
+          },
+          {
+            "enemy_stats_id": 196,
+            "species_id": 37,
+            "monster_name": "GreatDrak",
+            "weight": 3,
+            "rom_offset": "0x07786"
+          },
+          {
+            "enemy_stats_id": 197,
+            "species_id": 86,
+            "monster_name": "ZapBird",
+            "weight": 3,
+            "rom_offset": "0x07788"
+          },
+          {
+            "enemy_stats_id": 198,
+            "species_id": 87,
+            "monster_name": "WhipBird",
+            "weight": 3,
+            "rom_offset": "0x0778A"
+          }
+        ]
+      },
+      {
+        "floor_range": "Floors 82+",
+        "pool_index": 127,
+        "monsters": [
+          {
+            "enemy_stats_id": 197,
+            "species_id": 86,
+            "monster_name": "ZapBird",
+            "weight": 3,
+            "rom_offset": "0x0779E"
+          },
+          {
+            "enemy_stats_id": 198,
+            "species_id": 87,
+            "monster_name": "WhipBird",
+            "weight": 3,
+            "rom_offset": "0x077A0"
+          },
+          {
+            "enemy_stats_id": 30,
+            "species_id": 16,
+            "monster_name": "Metaly",
+            "weight": 3,
+            "rom_offset": "0x077A2"
+          },
+          {
+            "enemy_stats_id": 181,
+            "species_id": 17,
+            "monster_name": "Metabble",
+            "weight": 3,
+            "rom_offset": "0x077A4"
+          }
+        ]
+      }
+    ]
+  }
+}

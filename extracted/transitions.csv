@@ -1,0 +1,1170 @@
+flat_addr,source,c925,dest_map_type,dest_name,gate_flag,confirmed,data_hex
+0x02CDFE,Castle,0,0x07,Arena Rooms,1,False,07 01 0a 00 00 07 07 ff 02 05 03 00
+0x02CE00,Castle,0,0x0A,Secret Passage,0,False,0a 00 00 07 07 ff 02 05 03 00 01 02
+0x02CE01,Castle,0,0x00,Castle,0,False,00 00 07 07 ff 02 05 03 00 01 02 05
+0x02CE08,0x22,1,0x03,Gate Hub,0,True,03 00 01 02 05 07 05 04 00 05 07 05
+0x02CE09,Castle,0,0x00,Castle,1,False,00 01 02 05 07 05 04 00 05 07 05 04
+0x02CE0F,0x22,1,0x04,Farm,0,True,04 00 05 07 05 04 07 01 00 80 04 04
+0x02CE15,Castle,0,0x07,Arena Rooms,1,False,07 01 00 80 04 04 05 07 01 00 80 05
+0x02CE16,Castle,0,0x01,GreatTree,0,False,01 00 80 04 04 05 07 01 00 80 05 04
+0x02CE1C,Castle,0,0x07,Arena Rooms,1,False,07 01 00 80 05 04 ff 43 4e 63 4e ff
+0x02CE1D,Castle,0,0x01,GreatTree,0,False,01 00 80 05 04 ff 43 4e 63 4e ff ff
+0x02CFC0,GreatTree,0,0x04,Farm,0,False,04 00 00 05 04 07 05 04 00 00 05 05
+0x02CFC1,GreatTree,0,0x00,Castle,0,True,00 00 05 04 07 05 04 00 00 05 05 07
+0x02CFC7,GreatTree,0,0x04,Farm,0,False,04 00 00 05 05 07 ff 03 02 16 00 00
+0x02CFC8,GreatTree,0,0x00,Castle,0,False,00 00 05 05 07 ff 03 02 16 00 00 03
+0x02CFD0,GreatTree,0,0x16,MedalMan Room,0,True,16 00 00 03 07 ff 04 03 06 00 01 04
+0x02CFD1,GreatTree,0,0x00,Castle,0,False,00 00 03 07 ff 04 03 06 00 01 04 07
+0x02CFD8,GreatTree,1,0x06,Arena Lobby,0,True,06 00 01 04 07 05 03 06 00 01 05 07
+0x02CFD9,GreatTree,0,0x00,Castle,1,False,00 01 04 07 05 03 06 00 01 05 07 ff
+0x02CFDF,GreatTree,0,0x06,Arena Lobby,0,False,06 00 01 05 07 ff ff 05 03 12 00 04
+0x02CFE0,GreatTree,0,0x00,Castle,1,False,00 01 05 07 ff ff 05 03 12 00 04 05
+0x02CFE8,GreatTree,1,0x12,Library,0,True,12 00 04 05 07 04 05 18 00 00 04 00
+0x02CFEF,GreatTree,1,0x18,Well,0,True,18 00 00 04 00 ff 05 01 0f 00 00 05
+0x02CFF0,GreatTree,0,0x00,Castle,0,False,00 00 04 00 ff 05 01 0f 00 00 05 07
+0x02CFF2,GreatTree,0,0x04,Farm,0,False,04 00 ff 05 01 0f 00 00 05 07 09 03
+0x02CFF5,GreatTree,0,0x05,Stable,1,False,05 01 0f 00 00 05 07 09 03 02 00 00
+0x02CFF7,GreatTree,1,0x0F,Vault,0,True,0f 00 00 05 07 09 03 02 00 00 00 03
+0x02CFF8,GreatTree,0,0x00,Castle,0,False,00 00 05 07 09 03 02 00 00 00 03 ff
+0x02CFFE,GreatTree,0,0x02,Bazaar,0,False,02 00 00 00 03 ff 04 06 09 00 04 04
+0x02CFFF,GreatTree,0,0x00,Castle,0,False,00 00 00 03 ff 04 06 09 00 04 04 06
+0x02D000,GreatTree,0,0x00,Castle,0,False,00 00 03 ff 04 06 09 00 04 04 06 05
+0x02D006,GreatTree,1,0x09,Starry Shrine,0,True,09 00 04 04 06 05 01 0d 00 00 05 07
+0x02D00B,GreatTree,0,0x05,Stable,1,False,05 01 0d 00 00 05 07 04 04 10 00 00
+0x02D00D,GreatTree,1,0x0D,Old Man Gate,0,True,0d 00 00 05 07 04 04 10 00 00 04 07
+0x02D00E,GreatTree,0,0x00,Castle,0,False,00 00 05 07 04 04 10 00 00 04 07 ff
+0x02D014,GreatTree,1,0x10,Copycat Room,0,True,10 00 00 04 07 ff 04 06 09 00 04 04
+0x02D015,GreatTree,0,0x00,Castle,0,False,00 00 04 07 ff 04 06 09 00 04 04 06
+0x02D01C,GreatTree,0,0x09,Starry Shrine,0,False,09 00 04 04 06 05 01 0d 00 00 05 07
+0x02D021,GreatTree,0,0x05,Stable,1,False,05 01 0d 00 00 05 07 04 04 10 00 00
+0x02D023,GreatTree,0,0x0D,Old Man Gate,0,False,0d 00 00 05 07 04 04 10 00 00 04 07
+0x02D024,GreatTree,0,0x00,Castle,0,False,00 00 05 07 04 04 10 00 00 04 07 ff
+0x02D02A,GreatTree,0,0x10,Copycat Room,0,False,10 00 00 04 07 ff 02 01 0c 00 00 02
+0x02D02B,GreatTree,0,0x00,Castle,0,False,00 00 04 07 ff 02 01 0c 00 00 02 07
+0x02D030,GreatTree,0,0x02,Bazaar,1,False,02 01 0c 00 00 02 07 ff 02 01 0c 00
+0x02D032,GreatTree,1,0x0C,Renamer Room,0,True,0c 00 00 02 07 ff 02 01 0c 00 00 02
+0x02D033,GreatTree,0,0x00,Castle,0,False,00 00 02 07 ff 02 01 0c 00 00 02 07
+0x02D038,GreatTree,0,0x02,Bazaar,1,False,02 01 0c 00 00 02 07 01 04 19 00 00
+0x02D03A,GreatTree,0,0x0C,Renamer Room,0,False,0c 00 00 02 07 01 04 19 00 00 01 07
+0x02D03B,GreatTree,0,0x00,Castle,0,False,00 00 02 07 01 04 19 00 00 01 07 ff
+0x02D03E,GreatTree,0,0x07,Arena Rooms,1,False,07 01 04 19 00 00 01 07 ff 02 01 0c
+0x02D042,GreatTree,0,0x00,Castle,0,False,00 00 01 07 ff 02 01 0c 00 00 02 07
+0x02D043,GreatTree,0,0x00,Castle,1,False,00 01 07 ff 02 01 0c 00 00 02 07 01
+0x02D047,GreatTree,0,0x02,Bazaar,1,False,02 01 0c 00 00 02 07 01 04 19 00 00
+0x02D049,GreatTree,0,0x0C,Renamer Room,0,False,0c 00 00 02 07 01 04 19 00 00 01 07
+0x02D04A,GreatTree,0,0x00,Castle,0,False,00 00 02 07 01 04 19 00 00 01 07 04
+0x02D04D,GreatTree,0,0x07,Arena Rooms,1,False,07 01 04 19 00 00 01 07 04 06 1a 00
+0x02D051,GreatTree,0,0x00,Castle,0,False,00 00 01 07 04 06 1a 00 00 04 07 ff
+0x02D052,GreatTree,0,0x00,Castle,1,False,00 01 07 04 06 1a 00 00 04 07 ff 6d
+0x02D058,GreatTree,0,0x00,Castle,0,False,00 00 04 07 ff 6d 50 7b 50 8f 50 ff
+0x02D2D3,Bazaar,0,0x03,Gate Hub,1,False,03 01 05 01 00 00 00 ff 03 01 05 01
+0x02D2D5,Bazaar,0,0x05,Stable,1,False,05 01 00 00 00 ff 03 01 05 01 00 00
+0x02D2D6,Bazaar,0,0x01,GreatTree,0,False,01 00 00 00 ff 03 01 05 01 00 00 00
+0x02D2D7,Bazaar,0,0x00,Castle,0,False,00 00 00 ff 03 01 05 01 00 00 00 ff
+0x02D2D8,Bazaar,0,0x00,Castle,0,False,00 00 ff 03 01 05 01 00 00 00 ff 03
+0x02D2DB,Bazaar,0,0x03,Gate Hub,1,False,03 01 05 01 00 00 00 ff 03 01 05 01
+0x02D2DD,Bazaar,0,0x05,Stable,1,False,05 01 00 00 00 ff 03 01 05 01 00 00
+0x02D2DE,Bazaar,0,0x01,GreatTree,0,False,01 00 00 00 ff 03 01 05 01 00 00 00
+0x02D2DF,Bazaar,0,0x00,Castle,0,False,00 00 00 ff 03 01 05 01 00 00 00 07
+0x02D2E0,Bazaar,0,0x00,Castle,0,False,00 00 ff 03 01 05 01 00 00 00 07 04
+0x02D2E3,Bazaar,0,0x03,Gate Hub,1,False,03 01 05 01 00 00 00 07 04 1c 01 00
+0x02D2E5,Bazaar,0,0x05,Stable,1,False,05 01 00 00 00 07 04 1c 01 00 00 00
+0x02D2E6,Bazaar,0,0x01,GreatTree,0,False,01 00 00 00 07 04 1c 01 00 00 00 ff
+0x02D2E7,Bazaar,0,0x00,Castle,0,False,00 00 00 07 04 1c 01 00 00 00 ff 02
+0x02D2E8,Bazaar,0,0x00,Castle,0,False,00 00 07 04 1c 01 00 00 00 ff 02 53
+0x02D2EC,Bazaar,0,0x1C,Coffin Room,1,False,1c 01 00 00 00 ff 02 53 1c 53 ff ff
+0x02D2ED,Bazaar,0,0x01,GreatTree,0,False,01 00 00 00 ff 02 53 1c 53 ff ff ff
+0x02D2EE,Bazaar,0,0x00,Castle,0,False,00 00 00 ff 02 53 1c 53 ff ff ff ff
+0x02D2EF,Bazaar,0,0x00,Castle,0,False,00 00 ff 02 53 1c 53 ff ff ff ff 3c
+0x02D36C,Bazaar,0,0x04,Farm,1,False,04 01 01 8f ff 05 01 01 8f ff 02 02
+0x02D36D,Bazaar,0,0x01,GreatTree,1,False,01 01 8f ff 05 01 01 8f ff 02 02 02
+0x02D371,Bazaar,0,0x05,Stable,1,False,05 01 01 8f ff 02 02 02 8f ff 07 02
+0x02D372,Bazaar,0,0x01,GreatTree,1,False,01 01 8f ff 02 02 02 8f ff 07 02 03
+0x02D386,Bazaar,0,0x04,Farm,1,False,04 01 01 8f ff 05 01 01 8f ff 02 02
+0x02D387,Bazaar,0,0x01,GreatTree,1,False,01 01 8f ff 05 01 01 8f ff 02 02 02
+0x02D38B,Bazaar,0,0x05,Stable,1,False,05 01 01 8f ff 02 02 02 20 0b 03 05
+0x02D38C,Bazaar,0,0x01,GreatTree,1,False,01 01 8f ff 02 02 02 20 0b 03 05 04
+0x02D492,Gate Hub,0,0x03,Gate Hub,0,True,03 00 04 07 05 07 02 26 00 00 08 07
+0x02D499,Gate Hub,0,0x26,Room of Peace/Bravery,0,False,26 00 00 08 07 ff 07 05 03 00 04 07
+0x02D49A,Gate Hub,0,0x00,Castle,0,False,00 00 08 07 ff 07 05 03 00 04 07 05
+0x02D4A1,Gate Hub,0,0x03,Gate Hub,0,False,03 00 04 07 05 07 02 26 00 00 08 07
+0x02D4A8,Gate Hub,0,0x26,Room of Peace/Bravery,0,False,26 00 00 08 07 04 01 27 00 00 04 07
+0x02D4A9,Gate Hub,0,0x00,Castle,0,False,00 00 08 07 04 01 27 00 00 04 07 05
+0x02D4AD,Gate Hub,0,0x04,Farm,1,False,04 01 27 00 00 04 07 05 01 27 00 00
+0x02D4AF,Gate Hub,0,0x27,Room of Strength/Anger,0,False,27 00 00 04 07 05 01 27 00 00 05 07
+0x02D4B0,Gate Hub,0,0x00,Castle,0,False,00 00 04 07 05 01 27 00 00 05 07 ff
+0x02D4B4,Gate Hub,0,0x05,Stable,1,False,05 01 27 00 00 05 07 ff 07 05 03 00
+0x02D4B6,Gate Hub,0,0x27,Room of Strength/Anger,0,False,27 00 00 05 07 ff 07 05 03 00 04 07
+0x02D4B7,Gate Hub,0,0x00,Castle,0,False,00 00 05 07 ff 07 05 03 00 04 07 05
+0x02D4BE,Gate Hub,0,0x03,Gate Hub,0,False,03 00 04 07 05 07 02 26 00 00 08 07
+0x02D4C5,Gate Hub,0,0x26,Room of Peace/Bravery,0,False,26 00 00 08 07 04 01 27 00 00 04 07
+0x02D4C6,Gate Hub,0,0x00,Castle,0,False,00 00 08 07 04 01 27 00 00 04 07 05
+0x02D4CA,Gate Hub,0,0x04,Farm,1,False,04 01 27 00 00 04 07 05 01 27 00 00
+0x02D4CC,Gate Hub,0,0x27,Room of Strength/Anger,0,False,27 00 00 04 07 05 01 27 00 00 05 07
+0x02D4CD,Gate Hub,0,0x00,Castle,0,False,00 00 04 07 05 01 27 00 00 05 07 02
+0x02D4D1,Gate Hub,0,0x05,Stable,1,False,05 01 27 00 00 05 07 02 02 28 00 00
+0x02D4D3,Gate Hub,0,0x27,Room of Strength/Anger,0,False,27 00 00 05 07 02 02 28 00 00 04 07
+0x02D4D4,Gate Hub,0,0x00,Castle,0,False,00 00 05 07 02 02 28 00 00 04 07 ff
+0x02D4DA,Gate Hub,0,0x28,Room of Joy/Wisdom,0,False,28 00 00 04 07 ff 02 05 00 00 05 02
+0x02D4DB,Gate Hub,0,0x00,Castle,0,False,00 00 04 07 ff 02 05 00 00 05 02 05
+0x02D4E1,Gate Hub,0,0x05,Stable,0,False,05 00 00 05 02 05 ff 02 05 00 00 05
+0x02D4E2,Gate Hub,0,0x00,Castle,0,False,00 00 05 02 05 ff 02 05 00 00 05 02
+0x02D4E9,Gate Hub,0,0x05,Stable,0,False,05 00 00 05 02 05 04 01 23 00 00 07
+0x02D4EA,Gate Hub,0,0x00,Castle,0,False,00 00 05 02 05 04 01 23 00 00 07 07
+0x02D4EF,Gate Hub,0,0x04,Farm,1,False,04 01 23 00 00 07 07 05 01 23 00 00
+0x02D4F1,Gate Hub,0,0x23,Room of Beginning,0,False,23 00 00 07 07 05 01 23 00 00 08 07
+0x02D4F2,Gate Hub,0,0x00,Castle,0,False,00 00 07 07 05 01 23 00 00 08 07 ff
+0x02D4F6,Gate Hub,0,0x05,Stable,1,False,05 01 23 00 00 08 07 ff 02 05 00 00
+0x02D4F8,Gate Hub,0,0x23,Room of Beginning,0,False,23 00 00 08 07 ff 02 05 00 00 05 02
+0x02D4F9,Gate Hub,0,0x00,Castle,0,False,00 00 08 07 ff 02 05 00 00 05 02 05
+0x02D4FF,Gate Hub,0,0x05,Stable,0,False,05 00 00 05 02 05 04 01 23 00 00 07
+0x02D500,Gate Hub,0,0x00,Castle,0,False,00 00 05 02 05 04 01 23 00 00 07 07
+0x02D505,Gate Hub,0,0x04,Farm,1,False,04 01 23 00 00 07 07 05 01 23 00 00
+0x02D507,Gate Hub,0,0x23,Room of Beginning,0,False,23 00 00 07 07 05 01 23 00 00 08 07
+0x02D508,Gate Hub,0,0x00,Castle,0,False,00 00 07 07 05 01 23 00 00 08 07 02
+0x02D50C,Gate Hub,0,0x05,Stable,1,False,05 01 23 00 00 08 07 02 02 24 00 00
+0x02D50E,Gate Hub,0,0x23,Room of Beginning,0,False,23 00 00 08 07 02 02 24 00 00 06 07
+0x02D50F,Gate Hub,0,0x00,Castle,0,False,00 00 08 07 02 02 24 00 00 06 07 ff
+0x02D515,Gate Hub,0,0x24,Room of Villager/Talisman,0,False,24 00 00 06 07 ff 02 05 00 00 05 02
+0x02D516,Gate Hub,0,0x00,Castle,0,False,00 00 06 07 ff 02 05 00 00 05 02 05
+0x02D51C,Gate Hub,0,0x05,Stable,0,False,05 00 00 05 02 05 04 01 23 00 00 07
+0x02D51D,Gate Hub,0,0x00,Castle,0,False,00 00 05 02 05 04 01 23 00 00 07 07
+0x02D522,Gate Hub,0,0x04,Farm,1,False,04 01 23 00 00 07 07 05 01 23 00 00
+0x02D524,Gate Hub,1,0x23,Room of Beginning,0,True,23 00 00 07 07 05 01 23 00 00 08 07
+0x02D525,Gate Hub,0,0x00,Castle,0,False,00 00 07 07 05 01 23 00 00 08 07 02
+0x02D529,Gate Hub,0,0x05,Stable,1,False,05 01 23 00 00 08 07 02 02 24 00 00
+0x02D52B,Gate Hub,0,0x23,Room of Beginning,0,False,23 00 00 08 07 02 02 24 00 00 06 07
+0x02D52C,Gate Hub,0,0x00,Castle,0,False,00 00 08 07 02 02 24 00 00 06 07 07
+0x02D532,Gate Hub,0,0x24,Room of Villager/Talisman,0,False,24 00 00 06 07 07 02 25 00 00 01 07
+0x02D533,Gate Hub,0,0x00,Castle,0,False,00 00 06 07 07 02 25 00 00 01 07 ff
+0x02D539,Gate Hub,0,0x25,Room of Memories/Bewilder,0,False,25 00 00 01 07 ff 07 05 03 00 00 07
+0x02D53A,Gate Hub,0,0x00,Castle,0,False,00 00 01 07 ff 07 05 03 00 00 07 05
+0x02D53B,Gate Hub,0,0x00,Castle,1,False,00 01 07 ff 07 05 03 00 00 07 05 ff
+0x02D541,Gate Hub,1,0x03,Gate Hub,0,True,03 00 00 07 05 ff 07 05 03 00 00 07
+0x02D542,Gate Hub,0,0x00,Castle,0,False,00 00 07 05 ff 07 05 03 00 00 07 05
+0x02D549,Gate Hub,0,0x03,Gate Hub,0,False,03 00 00 07 05 07 02 29 00 00 04 07
+0x02D54A,Gate Hub,0,0x00,Castle,0,False,00 00 07 05 07 02 29 00 00 04 07 ff
+0x02D550,Gate Hub,0,0x29,Room of Happiness/Temptation,0,False,29 00 00 04 07 ff 07 05 03 00 00 07
+0x02D551,Gate Hub,0,0x00,Castle,0,False,00 00 04 07 ff 07 05 03 00 00 07 05
+0x02D558,Gate Hub,1,0x03,Gate Hub,0,False,03 00 00 07 05 07 02 29 00 00 04 07
+0x02D559,Gate Hub,1,0x00,Castle,0,False,00 00 07 05 07 02 29 00 00 04 07 02
+0x02D55F,Gate Hub,1,0x29,Room of Happiness/Temptation,0,False,29 00 00 04 07 02 02 2a 00 00 04 07
+0x02D560,Gate Hub,1,0x00,Castle,0,False,00 00 04 07 02 02 2a 00 00 04 07 ff
+0x02D566,Gate Hub,1,0x2A,Room of Labyrinth/Judgment,0,False,2a 00 00 04 07 ff 07 05 03 00 00 07
+0x02D567,Gate Hub,1,0x00,Castle,0,False,00 00 04 07 ff 07 05 03 00 00 07 05
+0x02D56E,Gate Hub,1,0x03,Gate Hub,0,False,03 00 00 07 05 07 02 29 00 00 04 07
+0x02D56F,Gate Hub,1,0x00,Castle,0,False,00 00 07 05 07 02 29 00 00 04 07 02
+0x02D575,Gate Hub,1,0x29,Room of Happiness/Temptation,0,False,29 00 00 04 07 02 02 2a 00 00 04 07
+0x02D576,Gate Hub,1,0x00,Castle,0,False,00 00 04 07 02 02 2a 00 00 04 07 04
+0x02D57C,Gate Hub,1,0x2A,Room of Labyrinth/Judgment,0,False,2a 00 00 04 07 04 01 2b 00 00 07 07
+0x02D57D,Gate Hub,1,0x00,Castle,0,False,00 00 04 07 04 01 2b 00 00 07 07 05
+0x02D581,Gate Hub,1,0x04,Farm,1,False,04 01 2b 00 00 07 07 05 01 2b 00 00
+0x02D583,Gate Hub,1,0x2B,Room of Reflection,0,False,2b 00 00 07 07 05 01 2b 00 00 08 07
+0x02D584,Gate Hub,1,0x00,Castle,0,False,00 00 07 07 05 01 2b 00 00 08 07 ff
+0x02D588,Gate Hub,1,0x05,Stable,1,False,05 01 2b 00 00 08 07 ff ff 02 02 2c
+0x02D58A,Gate Hub,1,0x2B,Room of Reflection,0,False,2b 00 00 08 07 ff ff 02 02 2c 00 00
+0x02D58B,Gate Hub,1,0x00,Castle,0,False,00 00 08 07 ff ff 02 02 2c 00 00 08
+0x02D593,Gate Hub,1,0x2C,Room of Ambition/Demolition,0,False,2c 00 00 08 07 07 02 2d 00 00 02 07
+0x02D594,Gate Hub,1,0x00,Castle,0,False,00 00 08 07 07 02 2d 00 00 02 07 04
+0x02D59A,Gate Hub,1,0x2D,Room of Mastermind/Control,0,False,2d 00 00 02 07 04 01 2e 00 00 06 07
+0x02D59B,Gate Hub,1,0x00,Castle,0,False,00 00 02 07 04 01 2e 00 00 06 07 05
+0x02D59F,Gate Hub,1,0x04,Farm,1,False,04 01 2e 00 00 06 07 05 01 2e 00 00
+0x02D5A1,Gate Hub,1,0x2E,Room of Extinction/Sleep,0,False,2e 00 00 06 07 05 01 2e 00 00 07 07
+0x02D5A2,Gate Hub,1,0x00,Castle,0,False,00 00 06 07 05 01 2e 00 00 07 07 ff
+0x02D5A6,Gate Hub,1,0x05,Stable,1,False,05 01 2e 00 00 07 07 ff be 55 d8 55
+0x02D5A8,Gate Hub,1,0x2E,Room of Extinction/Sleep,0,False,2e 00 00 07 07 ff be 55 d8 55 ec 55
+0x02D5A9,Gate Hub,1,0x00,Castle,0,False,00 00 07 07 ff be 55 d8 55 ec 55 ff
+0x02D823,Farm,0,0x0B,Castle alias,1,False,0b 01 00 00 00 ff 06 04 05 00 02 06
+0x02D824,Farm,0,0x01,GreatTree,0,False,01 00 00 00 ff 06 04 05 00 02 06 04
+0x02D825,Farm,0,0x00,Castle,0,False,00 00 00 ff 06 04 05 00 02 06 04 ff
+0x02D826,Farm,0,0x00,Castle,0,False,00 00 ff 06 04 05 00 02 06 04 ff 07
+0x02D82B,Farm,2,0x05,Stable,0,True,05 00 02 06 04 ff 07 05 00 00 05 07
+0x02D832,Farm,0,0x05,Stable,0,False,05 00 00 05 07 05 ff ff 40 58 4e 58
+0x02D833,Farm,2,0x00,Castle,0,True,00 00 05 07 05 ff ff 40 58 4e 58 5c
+0x02D879,Farm,0,0x02,Bazaar,1,False,02 01 36 3a 04 06 02 00 3a 05 06 03
+0x02D87F,Farm,0,0x02,Bazaar,0,False,02 00 3a 05 06 03 ff 8f ff 04 03 04
+0x02D899,Farm,0,0x04,Farm,1,False,04 01 1b 02 02 05 06 2a 04 06 06 00
+0x02D8A3,Farm,0,0x06,Arena Lobby,0,False,06 00 16 05 06 07 ff 8f ff 04 02 ff
+0x02D8D2,Farm,0,0x08,Gate tileset,0,False,08 00 49 01 01 09 10 4a 08 03 0a 20
+0x02D8D5,Farm,0,0x01,GreatTree,1,False,01 01 09 10 4a 08 03 0a 20 4b 03 06
+0x02D978,Stable,0,0x04,Farm,0,False,04 00 1b 00 00 04 07 05 00 1b 00 00
+0x02D97A,Stable,0,0x1B,SlimeKing Room,0,False,1b 00 00 04 07 05 00 1b 00 00 05 07
+0x02D97B,Stable,0,0x00,Castle,0,False,00 00 04 07 05 00 1b 00 00 05 07 ff
+0x02D97F,Stable,0,0x05,Stable,0,False,05 00 1b 00 00 05 07 ff 04 00 1c 00
+0x02D981,Stable,0,0x1B,SlimeKing Room,0,False,1b 00 00 05 07 ff 04 00 1c 00 00 04
+0x02D982,Stable,0,0x00,Castle,0,False,00 00 05 07 ff 04 00 1c 00 00 04 07
+0x02D987,Stable,0,0x04,Farm,0,False,04 00 1c 00 00 04 07 05 00 1c 00 00
+0x02D989,Stable,0,0x1C,Coffin Room,0,False,1c 00 00 04 07 05 00 1c 00 00 05 07
+0x02D98A,Stable,0,0x00,Castle,0,False,00 00 04 07 05 00 1c 00 00 05 07 ff
+0x02D98E,Stable,0,0x05,Stable,0,False,05 00 1c 00 00 05 07 ff 06 04 04 00
+0x02D990,Stable,0,0x1C,Coffin Room,0,False,1c 00 00 05 07 ff 06 04 04 00 04 06
+0x02D991,Stable,0,0x00,Castle,0,False,00 00 05 07 ff 06 04 04 00 04 06 04
+0x02D998,Stable,1,0x04,Farm,0,True,04 00 04 06 04 ff a6 59 ae 59 b6 59
+0x02D9B9,Stable,0,0x29,Room of Happiness/Temptation,1,False,29 01 5a 23 5a 90 ff 05 04 01 50 e0
+0x02D9C1,Stable,0,0x04,Farm,1,False,04 01 50 e0 05 04 ff 70 e1 03 05 02
+0x02DA05,Stable,0,0x0A,Secret Passage,0,False,0a 00 0b 06 04 0b ff 05 00 07 00 04
+0x02DA0C,Stable,0,0x05,Stable,0,False,05 00 07 00 04 05 07 ff 04 07 01 00
+0x02DA0E,Stable,0,0x07,Arena Rooms,0,False,07 00 04 05 07 ff 04 07 01 00 84 04
+0x02DA15,Stable,0,0x07,Arena Rooms,1,False,07 01 00 84 04 03 05 07 01 00 84 05
+0x02DA16,Stable,0,0x01,GreatTree,0,False,01 00 84 04 03 05 07 01 00 84 05 03
+0x02DA1C,Stable,0,0x07,Arena Rooms,1,False,07 01 00 84 05 03 ff 04 00 07 00 06
+0x02DA1D,Stable,0,0x01,GreatTree,0,False,01 00 84 05 03 ff 04 00 07 00 06 04
+0x02DA23,Stable,0,0x04,Farm,0,False,04 00 07 00 06 04 07 ff 3b 5a 43 5a
+0x02DA25,Stable,0,0x07,Arena Rooms,0,False,07 00 06 04 07 ff 3b 5a 43 5a 75 5a
+0x02DA9E,Arena Lobby,0,0x04,Farm,1,False,04 01 00 41 08 03 02 40 52 03 04 ff
+0x02DA9F,Arena Lobby,0,0x01,GreatTree,0,False,01 00 41 08 03 02 40 52 03 04 ff 40
+0x02DAC8,Arena Lobby,0,0x06,Arena Lobby,0,False,06 00 08 03 06 07 00 08 07 05 08 ff
+0x02DACD,Arena Lobby,0,0x07,Arena Rooms,0,False,07 00 08 07 05 08 ff 90 ff 03 05 03
+0x02DAE7,Arena Lobby,1,0x06,Arena Lobby,0,False,06 00 08 03 06 07 00 08 07 05 08 00
+0x02DAEC,Arena Lobby,2,0x07,Arena Rooms,0,False,07 00 08 07 05 08 00 4d 02 04 ff ff
+0x02DAF1,Arena Lobby,2,0x08,Gate tileset,0,False,08 00 4d 02 04 ff ff 90 ff 03 05 03
+0x02DC34,Arena Rooms,1,0x1F,Queen Room,0,True,1f 00 00 05 02 ff 05 02 1f 00 00 05
+0x02DC35,Arena Rooms,0,0x00,Castle,0,False,00 00 05 02 ff 05 02 1f 00 00 05 02
+0x02DC3C,Arena Rooms,0,0x1F,Queen Room,0,False,1f 00 00 05 02 02 04 0e 01 00 00 00
+0x02DC3D,Arena Rooms,0,0x00,Castle,0,False,00 00 05 02 02 04 0e 01 00 00 00 ff
+0x02DC44,Arena Rooms,0,0x01,GreatTree,0,False,01 00 00 00 ff 05 02 1f 00 00 05 02
+0x02DC45,Arena Rooms,0,0x00,Castle,0,False,00 00 00 ff 05 02 1f 00 00 05 02 02
+0x02DC46,Arena Rooms,0,0x00,Castle,0,False,00 00 ff 05 02 1f 00 00 05 02 02 04
+0x02DC4B,Arena Rooms,0,0x1F,Queen Room,0,False,1f 00 00 05 02 02 04 0e 01 00 00 00
+0x02DC4C,Arena Rooms,0,0x00,Castle,0,False,00 00 05 02 02 04 0e 01 00 00 00 06
+0x02DC53,Arena Rooms,0,0x01,GreatTree,0,False,01 00 00 00 06 04 1d 01 00 00 00 ff
+0x02DC54,Arena Rooms,0,0x00,Castle,0,False,00 00 00 06 04 1d 01 00 00 00 ff 05
+0x02DC55,Arena Rooms,0,0x00,Castle,0,False,00 00 06 04 1d 01 00 00 00 ff 05 01
+0x02DC59,Arena Rooms,0,0x1D,Monster School,1,False,1d 01 00 00 00 ff 05 01 1e 00 00 05
+0x02DC5A,Arena Rooms,0,0x01,GreatTree,0,False,01 00 00 00 ff 05 01 1e 00 00 05 07
+0x02DC5B,Arena Rooms,0,0x00,Castle,0,False,00 00 00 ff 05 01 1e 00 00 05 07 ff
+0x02DC5C,Arena Rooms,0,0x00,Castle,0,False,00 00 ff 05 01 1e 00 00 05 07 ff 05
+0x02DC5F,Arena Rooms,0,0x05,Stable,1,False,05 01 1e 00 00 05 07 ff 05 07 06 00
+0x02DC61,Arena Rooms,1,0x1E,Restaurant,0,True,1e 00 00 05 07 ff 05 07 06 00 00 05
+0x02DC62,Arena Rooms,0,0x00,Castle,0,False,00 00 05 07 ff 05 07 06 00 00 05 00
+0x02DC69,Arena Rooms,0,0x06,Arena Lobby,0,False,06 00 00 05 00 ff 04 07 06 00 01 04
+0x02DC6A,Arena Rooms,0,0x00,Castle,0,False,00 00 05 00 ff 04 07 06 00 01 04 03
+0x02DC6C,Arena Rooms,0,0x05,Stable,0,False,05 00 ff 04 07 06 00 01 04 03 05 07
+0x02DC71,Arena Rooms,0,0x06,Arena Lobby,0,False,06 00 01 04 03 05 07 06 00 01 05 03
+0x02DC72,Arena Rooms,0,0x00,Castle,1,False,00 01 04 03 05 07 06 00 01 05 03 ff
+0x02DC78,Arena Rooms,0,0x06,Arena Lobby,0,False,06 00 01 05 03 ff 04 07 06 00 02 04
+0x02DC79,Arena Rooms,0,0x00,Castle,1,False,00 01 05 03 ff 04 07 06 00 02 04 00
+0x02DC80,Arena Rooms,0,0x06,Arena Lobby,0,False,06 00 02 04 00 ff 88 5c 51 d9 1e 29
+0x02DC83,Arena Rooms,0,0x04,Farm,0,False,04 00 ff 88 5c 51 d9 1e 29 c0 5c ff
+0x02DCA9,Arena Rooms,0,0x29,Room of Happiness/Temptation,0,False,29 00 5d ff ff 1e 29 10 5d ff ff 1e
+0x02DE8E,Secret Passage,0,0x16,MedalMan Room,0,False,16 00 80 03 01 ff 96 5e 57 d9 27 29
+0x02DE91,Secret Passage,0,0x03,Gate Hub,1,False,03 01 ff 96 5e 57 d9 27 29 9e 5e b8
+0x02DEA0,Secret Passage,0,0x01,GreatTree,1,False,01 01 01 8f ff 02 01 02 8f ff 03 01
+0x02DEA1,Secret Passage,0,0x01,GreatTree,1,False,01 01 8f ff 02 01 02 8f ff 03 01 03
+0x02DEA5,Secret Passage,0,0x02,Bazaar,1,False,02 01 02 8f ff 03 01 03 82 ff 02 04
+0x02DEAA,Secret Passage,0,0x03,Gate Hub,1,False,03 01 03 82 ff 02 04 04 00 0f 02 03
+0x02DEB1,Secret Passage,0,0x04,Farm,0,False,04 00 0f 02 03 05 ff 02 07 01 00 8d
+0x02DEB9,Secret Passage,0,0x07,Arena Rooms,1,False,07 01 00 8d 02 01 ff c2 5e 58 d9 01
+0x02DEBA,Secret Passage,0,0x01,GreatTree,0,False,01 00 8d 02 01 ff c2 5e 58 d9 01 30
+0x02DEBD,Secret Passage,0,0x02,Bazaar,1,False,02 01 ff c2 5e 58 d9 01 30 d0 5e 3b
+0x02DEE1,Secret Passage,0,0x02,Bazaar,1,False,02 01 01 8f ff 03 01 02 8f ff 01 05
+0x02DEE2,Secret Passage,0,0x01,GreatTree,1,False,01 01 8f ff 03 01 02 8f ff 01 05 03
+0x02DEE6,Secret Passage,0,0x03,Gate Hub,1,False,03 01 02 8f ff 01 05 03 8f ff 01 06
+0x02DEF2,Secret Passage,0,0x04,Farm,0,False,04 00 05 03 05 05 00 04 06 03 06 00
+0x02DEF7,Secret Passage,0,0x05,Stable,0,False,05 00 04 06 03 06 00 08 08 04 07 00
+0x02DEFC,Secret Passage,0,0x06,Arena Lobby,0,False,06 00 08 08 04 07 00 4d 08 02 ff ff
+0x02DF01,Secret Passage,0,0x07,Arena Rooms,0,False,07 00 4d 08 02 ff ff 90 ff 06 04 08
+0x02DF19,Secret Passage,0,0x02,Bazaar,1,False,02 01 01 8f ff 03 01 02 8f ff 01 05
+0x02DF1A,Secret Passage,0,0x01,GreatTree,1,False,01 01 8f ff 03 01 02 8f ff 01 05 03
+0x02DF1E,Secret Passage,0,0x03,Gate Hub,1,False,03 01 02 8f ff 01 05 03 8f ff 01 06
+0x02DF2A,Secret Passage,0,0x04,Farm,0,False,04 00 05 03 05 05 00 04 06 03 06 00
+0x02DF2F,Secret Passage,0,0x05,Stable,0,False,05 00 04 06 03 06 00 08 08 04 07 ff
+0x02DF34,Secret Passage,0,0x06,Arena Lobby,0,False,06 00 08 08 04 07 ff 05 07 01 00 8c
+0x02DF3C,Secret Passage,0,0x07,Arena Rooms,1,False,07 01 00 8c 05 01 08 02 1e 01 00 00
+0x02DF3D,Secret Passage,0,0x01,GreatTree,0,False,01 00 8c 05 01 08 02 1e 01 00 00 00
+0x02DF40,Secret Passage,0,0x05,Stable,1,False,05 01 08 02 1e 01 00 00 00 ff 4c 5f
+0x02DF44,Secret Passage,0,0x1E,Restaurant,1,False,1e 01 00 00 00 ff 4c 5f 59 d9 03 30
+0x02DF45,Secret Passage,0,0x01,GreatTree,0,False,01 00 00 00 ff 4c 5f 59 d9 03 30 54
+0x02DF46,Secret Passage,0,0x00,Castle,0,False,00 00 00 ff 4c 5f 59 d9 03 30 54 5f
+0x02DF47,Secret Passage,0,0x00,Castle,0,False,00 00 ff 4c 5f 59 d9 03 30 54 5f 69
+0x02DF57,Secret Passage,1,0x03,Gate Hub,1,False,03 01 8f ff 03 05 02 00 09 05 02 01
+0x02DF5D,Renamer Room,0,0x02,Bazaar,0,False,02 00 09 05 02 01 30 02 02 05 02 ff
+0x02DF61,Renamer Room,0,0x02,Bazaar,1,False,02 01 30 02 02 05 02 ff 05 07 01 00
+0x02DF6A,Renamer Room,0,0x07,Arena Rooms,1,False,07 01 00 89 05 01 ff 73 5f 5a d9 05
+0x02DF6B,Renamer Room,0,0x01,GreatTree,0,False,01 00 89 05 01 ff 73 5f 5a d9 05 30
+0x02DF6E,Renamer Room,0,0x05,Stable,1,False,05 01 ff 73 5f 5a d9 05 30 81 5f c4
+0x02DF83,Renamer Room,0,0x02,Bazaar,1,False,02 01 01 8f ff 03 01 02 8f ff 04 01
+0x02DF84,Renamer Room,0,0x01,GreatTree,1,False,01 01 8f ff 03 01 02 8f ff 04 01 03
+0x02DF88,Old Man Gate,0,0x03,Gate Hub,1,False,03 01 02 8f ff 04 01 03 82 ff 05 04
+0x02DF8D,Old Man Gate,0,0x04,Farm,1,False,04 01 03 82 ff 05 04 04 20 03 05 03
+0x02DF99,Old Man Gate,0,0x05,Stable,0,False,05 00 0a 04 06 06 50 21 0a 00 ff ff
+0x02DFA1,Old Man Gate,0,0x0A,Secret Passage,0,False,0a 00 ff ff 90 ff 07 06 07 90 ff 08
+0x02DFB1,Old Man Gate,0,0x02,Bazaar,1,False,02 01 01 8f ff 03 01 02 8f ff 04 01
+0x02DFB2,Old Man Gate,0,0x01,GreatTree,1,False,01 01 8f ff 03 01 02 8f ff 04 01 03
+0x02DFB6,Old Man Gate,0,0x03,Gate Hub,1,False,03 01 02 8f ff 04 01 03 00 0a 04 06
+0x02DFBB,Old Man Gate,0,0x04,Farm,1,False,04 01 03 00 0a 04 06 06 ff 04 07 01
+0x02DFBD,Old Man Gate,0,0x03,Gate Hub,0,False,03 00 0a 04 06 06 ff 04 07 01 00 8c
+0x02DFC5,Old Man Gate,0,0x07,Arena Rooms,1,False,07 01 00 8c 04 04 ff 04 07 01 00 8c
+0x02DFC6,Old Man Gate,0,0x01,GreatTree,0,False,01 00 8c 04 04 ff 04 07 01 00 8c 04
+0x02DFCD,Old Man Gate,0,0x07,Arena Rooms,1,False,07 01 00 8c 04 04 08 06 00 00 01 04
+0x02DFCE,Old Man Gate,0,0x01,GreatTree,0,False,01 00 8c 04 04 08 06 00 00 01 04 05
+0x02DFD4,Old Man Gate,0,0x06,Arena Lobby,0,False,06 00 00 01 04 05 ff eb 5f ff ff ff
+0x02DFD5,Old Man Gate,0,0x00,Castle,0,False,00 00 01 04 05 ff eb 5f ff ff ff ff
+0x02DFD6,Old Man Gate,0,0x00,Castle,1,False,00 01 04 05 ff eb 5f ff ff ff ff ff
+0x02DFEE,Old Man Gate,0,0x30,Boss: Beginning,1,False,30 01 60 6d 60 5c d9 09 30 43 60 6e
+0x02E003,Old Man Gate,0,0x01,GreatTree,1,False,01 01 01 8f ff 02 01 02 8f ff 03 01
+0x02E004,Old Man Gate,0,0x01,GreatTree,1,False,01 01 8f ff 02 01 02 8f ff 03 01 03
+0x02E008,Old Man Gate,0,0x02,Bazaar,1,False,02 01 02 8f ff 03 01 03 8f ff 04 01
+0x02E00D,Old Man Gate,0,0x03,Gate Hub,1,False,03 01 03 8f ff 04 01 04 8f ff 07 01
+0x02E012,Vault,0,0x04,Farm,1,False,04 01 04 8f ff 07 01 05 8f ff 08 01
+0x02E017,Vault,0,0x07,Arena Rooms,1,False,07 01 05 8f ff 08 01 06 8f ff 02 04
+0x02E01C,Vault,0,0x08,Gate tileset,1,False,08 01 06 8f ff 02 04 07 8f ff 03 04
+0x02E03A,Copycat Room,0,0x06,Arena Lobby,1,False,06 01 0c 10 02 02 06 0d ff 82 ff 04
+0x02E04C,Copycat Room,0,0x0F,Vault,0,False,0f 00 03 06 03 11 30 03 01 06 10 40
+0x02E053,Copycat Room,0,0x03,Gate Hub,1,False,03 01 06 10 40 54 06 02 ff ff 82 ff
+0x02E068,Copycat Room,0,0x03,Gate Hub,1,False,03 01 06 10 ff ff 05 07 01 00 88 05
+0x02E06F,Copycat Room,0,0x07,Arena Rooms,1,False,07 01 00 88 05 03 06 01 13 00 00 06
+0x02E070,0x17,0,0x01,GreatTree,0,True,01 00 88 05 03 06 01 13 00 00 06 07
+0x02E075,Copycat Room,0,0x06,Arena Lobby,1,False,06 01 13 00 00 06 07 ff 7f 60 5d d9
+0x02E077,Copycat Room,0,0x13,GreatTree Hub 2,0,False,13 00 00 06 07 ff 7f 60 5d d9 0b 30
+0x02E078,Copycat Room,0,0x00,Castle,0,False,00 00 06 07 ff 7f 60 5d d9 0b 30 8d
+0x02E08F,Copycat Room,0,0x01,GreatTree,1,False,01 01 01 8f ff 02 01 02 8f ff 03 01
+0x02E090,Copycat Room,0,0x01,GreatTree,1,False,01 01 8f ff 02 01 02 8f ff 03 01 03
+0x02E094,Library,0,0x02,Bazaar,1,False,02 01 02 8f ff 03 01 03 8f ff 04 01
+0x02E099,Library,0,0x03,Gate Hub,1,False,03 01 03 8f ff 04 01 04 8f ff 05 01
+0x02E09E,Library,0,0x04,Farm,1,False,04 01 04 8f ff 05 01 05 8f ff 06 01
+0x02E0A3,Library,0,0x05,Stable,1,False,05 01 05 8f ff 06 01 06 8f ff 07 01
+0x02E0A8,Library,0,0x06,Arena Lobby,1,False,06 01 06 8f ff 07 01 07 8f ff 08 01
+0x02E0AD,Library,0,0x07,Arena Rooms,1,False,07 01 07 8f ff 08 01 08 8f ff 01 04
+0x02E0B2,Library,0,0x08,Gate tileset,1,False,08 01 08 8f ff 01 04 09 8f ff 02 04
+0x02E0D7,Library,0,0x0F,Vault,0,False,0f 00 4d 01 06 ff ff 8f ff 01 01 01
+0x02E0D9,Library,0,0x4D,Boss: Arena Right,1,False,4d 01 06 ff ff 8f ff 01 01 01 8f ff
+0x02E0E0,Library,0,0x01,GreatTree,1,False,01 01 01 8f ff 02 01 02 8f ff 03 01
+0x02E0E1,Library,0,0x01,GreatTree,1,False,01 01 8f ff 02 01 02 8f ff 03 01 03
+0x02E0E5,Library,0,0x02,Bazaar,1,False,02 01 02 8f ff 03 01 03 8f ff 04 01
+0x02E0EA,Library,0,0x03,Gate Hub,1,False,03 01 03 8f ff 04 01 04 8f ff 05 01
+0x02E0EF,Library,0,0x04,Farm,1,False,04 01 04 8f ff 05 01 05 8f ff 06 01
+0x02E0F4,Library,0,0x05,Stable,1,False,05 01 05 8f ff 06 01 06 8f ff 07 01
+0x02E0F9,Library,0,0x06,Arena Lobby,1,False,06 01 06 8f ff 07 01 07 8f ff 08 01
+0x02E0FE,Library,0,0x07,Arena Rooms,1,False,07 01 07 8f ff 08 01 08 8f ff 01 04
+0x02E103,Library,0,0x08,Gate tileset,1,False,08 01 08 8f ff 01 04 09 8f ff 02 04
+0x02E12C,Library,0,0x12,Library,0,False,12 00 84 06 01 01 06 14 01 00 00 00
+0x02E12F,Library,0,0x06,Arena Lobby,1,False,06 01 01 06 14 01 00 00 00 ff 3b 61
+0x02E130,Library,0,0x01,GreatTree,1,False,01 01 06 14 01 00 00 00 ff 3b 61 5e
+0x02E134,Library,0,0x01,GreatTree,0,False,01 00 00 00 ff 3b 61 5e d9 0d 30 61
+0x02E135,Library,0,0x00,Castle,0,False,00 00 00 ff 3b 61 5e d9 0d 30 61 61
+0x02E164,GreatTree Hub 2,0,0x04,Farm,1,False,04 01 00 13 02 03 02 00 4c 03 02 03
+0x02E165,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 13 02 03 02 00 4c 03 02 03 ff
+0x02E16A,GreatTree Hub 2,0,0x02,Bazaar,0,False,02 00 4c 03 02 03 ff 82 ff 02 04 01
+0x02E174,GreatTree Hub 2,0,0x04,Farm,1,False,04 01 00 13 02 03 02 00 4c 03 02 03
+0x02E175,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 13 02 03 02 00 4c 03 02 03 00
+0x02E17A,GreatTree Hub 2,0,0x02,Bazaar,0,False,02 00 4c 03 02 03 00 4d 01 06 ff ff
+0x02E17F,GreatTree Hub 2,0,0x03,Gate Hub,0,False,03 00 4d 01 06 ff ff 82 ff 02 04 01
+0x02E181,GreatTree Hub 2,0,0x4D,Boss: Arena Right,1,False,4d 01 06 ff ff 82 ff 02 04 01 00 13
+0x02E189,GreatTree Hub 2,0,0x04,Farm,1,False,04 01 00 13 02 03 02 00 4c 03 02 03
+0x02E18A,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 13 02 03 02 00 4c 03 02 03 ff
+0x02E18F,GreatTree Hub 2,0,0x02,Bazaar,0,False,02 00 4c 03 02 03 ff 82 ff 02 04 01
+0x02E199,GreatTree Hub 2,0,0x04,Farm,1,False,04 01 00 13 02 03 02 00 4c 01 02 03
+0x02E19A,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 13 02 03 02 00 4c 01 02 03 ff
+0x02E19F,GreatTree Hub 2,0,0x02,Bazaar,0,False,02 00 4c 01 02 03 ff 82 ff 02 04 01
+0x02E1A9,GreatTree Hub 2,0,0x04,Farm,1,False,04 01 00 13 02 03 02 00 4c 01 02 03
+0x02E1AA,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 13 02 03 02 00 4c 01 02 03 00
+0x02E1AF,GreatTree Hub 2,0,0x02,Bazaar,0,False,02 00 4c 01 02 03 00 4d 01 06 ff ff
+0x02E1B4,GreatTree Hub 2,0,0x03,Gate Hub,0,False,03 00 4d 01 06 ff ff 82 ff 02 04 01
+0x02E1B6,GreatTree Hub 2,0,0x4D,Boss: Arena Right,1,False,4d 01 06 ff ff 82 ff 02 04 01 00 13
+0x02E1BE,GreatTree Hub 2,0,0x04,Farm,1,False,04 01 00 13 02 03 02 00 4c 01 02 03
+0x02E1BF,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 13 02 03 02 00 4c 01 02 03 ff
+0x02E1C4,GreatTree Hub 2,0,0x02,Bazaar,0,False,02 00 4c 01 02 03 ff 03 07 01 00 81
+0x02E1CC,GreatTree Hub 2,0,0x07,Arena Rooms,1,False,07 01 00 81 03 02 ff 03 07 01 00 81
+0x02E1CD,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 81 03 02 ff 03 07 01 00 81 03
+0x02E1D4,GreatTree Hub 2,0,0x07,Arena Rooms,1,False,07 01 00 81 03 02 03 01 0a 00 01 03
+0x02E1D5,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 81 03 02 03 01 0a 00 01 03 07
+0x02E1DA,GreatTree Hub 2,0,0x03,Gate Hub,1,False,03 01 0a 00 01 03 07 01 06 11 01 00
+0x02E1DC,GreatTree Hub 2,0,0x0A,Secret Passage,0,False,0a 00 01 03 07 01 06 11 01 00 00 00
+0x02E1DD,GreatTree Hub 2,0,0x00,Castle,1,False,00 01 03 07 01 06 11 01 00 00 00 ff
+0x02E1E0,GreatTree Hub 2,0,0x07,Arena Rooms,1,False,07 01 06 11 01 00 00 00 ff 03 07 01
+0x02E1E4,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 00 00 ff 03 07 01 00 81 03 02
+0x02E1E5,GreatTree Hub 2,0,0x00,Castle,0,False,00 00 00 ff 03 07 01 00 81 03 02 03
+0x02E1E6,GreatTree Hub 2,0,0x00,Castle,0,False,00 00 ff 03 07 01 00 81 03 02 03 01
+0x02E1EA,GreatTree Hub 2,0,0x07,Arena Rooms,1,False,07 01 00 81 03 02 03 01 0a 00 01 03
+0x02E1EB,GreatTree Hub 2,0,0x01,GreatTree,0,False,01 00 81 03 02 03 01 0a 00 01 03 07
+0x02E1F0,GreatTree Hub 2,0,0x03,Gate Hub,1,False,03 01 0a 00 01 03 07 ff 08 62 ff ff
+0x02E1F2,GreatTree Hub 2,0,0x0A,Secret Passage,0,False,0a 00 01 03 07 ff 08 62 ff ff ff ff
+0x02E1F3,GreatTree Hub 2,0,0x00,Castle,1,False,00 01 03 07 ff 08 62 ff ff ff ff ff
+0x02E227,MedalMan Room,0,0x01,GreatTree,1,False,01 01 01 8f ff 07 01 02 8f ff 08 01
+0x02E228,MedalMan Room,0,0x01,GreatTree,1,False,01 01 8f ff 07 01 02 8f ff 08 01 03
+0x02E22C,MedalMan Room,0,0x07,Arena Rooms,1,False,07 01 02 8f ff 08 01 03 8f ff 02 05
+0x02E231,MedalMan Room,0,0x08,Gate tileset,1,False,08 01 03 8f ff 02 05 04 8f ff 03 05
+0x02E25F,MedalMan Room,0,0x01,GreatTree,1,False,01 01 01 8f ff 07 01 02 8f ff 08 01
+0x02E260,MedalMan Room,0,0x01,GreatTree,1,False,01 01 8f ff 07 01 02 8f ff 08 01 03
+0x02E264,MedalMan Room,0,0x07,Arena Rooms,1,False,07 01 02 8f ff 08 01 03 8f ff 01 06
+0x02E269,MedalMan Room,0,0x08,Gate tileset,1,False,08 01 03 8f ff 01 06 05 82 ff 06 04
+0x02E27F,MedalMan Room,0,0x08,Gate tileset,0,False,08 00 4d 02 06 ff ff 8f ff 01 01 01
+0x02E288,MedalMan Room,0,0x01,GreatTree,1,False,01 01 01 8f ff 07 01 02 8f ff 08 01
+0x02E289,MedalMan Room,0,0x01,GreatTree,1,False,01 01 8f ff 07 01 02 8f ff 08 01 03
+0x02E28D,MedalMan Room,0,0x07,Arena Rooms,1,False,07 01 02 8f ff 08 01 03 8f ff 01 06
+0x02E292,MedalMan Room,0,0x08,Gate tileset,1,False,08 01 03 8f ff 01 06 05 82 ff 06 04
+0x02E2B5,Well,0,0x08,Gate tileset,1,False,08 01 00 00 00 ff bd 62 61 d9 14 30
+0x02E2B6,Well,0,0x01,GreatTree,0,False,01 00 00 00 ff bd 62 61 d9 14 30 c5
+0x02E2B7,Well,0,0x00,Castle,0,False,00 00 00 ff bd 62 61 d9 14 30 c5 62
+0x02E2B8,Well,0,0x00,Castle,0,False,00 00 ff bd 62 61 d9 14 30 c5 62 da
+0x02E2D7,Well,0,0x02,Bazaar,1,False,02 01 ff 01 07 01 00 8d 01 04 ff e4
+0x02E2DB,Well,0,0x07,Arena Rooms,1,False,07 01 00 8d 01 04 ff e4 62 62 d9 16
+0x02E2DC,Well,0,0x01,GreatTree,0,False,01 00 8d 01 04 ff e4 62 62 d9 16 30
+0x02E2FE,Well,0,0x02,Bazaar,1,False,02 01 00 11 05 05 02 08 3b 02 06 03
+0x02E2FF,Well,0,0x01,GreatTree,0,False,01 00 11 05 05 02 08 3b 02 06 03 ff
+0x02E30C,Well,0,0x07,Arena Rooms,1,False,07 01 00 8d 04 06 ff 15 63 63 d9 18
+0x02E30D,Well,0,0x01,GreatTree,0,False,01 00 8d 04 06 ff 15 63 63 d9 18 30
+0x02E32C,Well,0,0x02,Bazaar,1,False,02 01 00 ff 05 02 01 ff 00 24 04 02
+0x02E32D,Well,0,0x01,GreatTree,0,False,01 00 ff 05 02 01 ff 00 24 04 02 02
+0x02E331,Well,0,0x02,Bazaar,1,False,02 01 ff 00 24 04 02 02 00 ff 05 02
+0x02E338,Well,0,0x02,Bazaar,0,False,02 00 ff 05 02 02 ff 00 3b 03 03 03
+0x02E343,Well,0,0x03,Gate Hub,0,False,03 00 24 04 02 02 00 ff 05 02 02 ff
+0x02E348,Well,0,0x02,Bazaar,0,False,02 00 ff 05 02 02 ff 04 07 05 00 80
+0x02E351,Well,0,0x05,Stable,0,False,05 00 80 04 00 05 07 05 00 80 05 00
+0x02E354,Well,0,0x04,Farm,0,False,04 00 05 07 05 00 80 05 00 ff 60 63
+0x02E358,Well,0,0x05,Stable,0,False,05 00 80 05 00 ff 60 63 64 d9 1a 30
+0x02E35B,Well,0,0x05,Stable,0,False,05 00 ff 60 63 64 d9 1a 30 6e 63 b6
+0x02E371,Well,0,0x02,Bazaar,1,False,02 01 8f ff 05 02 01 8f ff 01 04 02
+0x02E376,Well,0,0x02,Bazaar,1,False,02 01 8f ff 01 04 02 8f ff 08 04 03
+0x02E385,0x19,0,0x02,Bazaar,1,False,02 01 40 41 05 02 01 02 40 03 05 04
+0x02E38A,0x19,0,0x02,Bazaar,1,False,02 01 02 40 03 05 04 ff 8f ff 04 02
+0x02E3B8,0x1A,0,0x05,Stable,0,False,05 00 81 04 00 05 07 05 00 81 05 00
+0x02E3BB,0x1A,0,0x04,Farm,0,False,04 00 05 07 05 00 81 05 00 ff c7 63
+0x02E3BF,0x1A,0,0x05,Stable,0,False,05 00 81 05 00 ff c7 63 65 d9 1c 30
+0x02E3C2,0x1A,0,0x05,Stable,0,False,05 00 ff c7 63 65 d9 1c 30 cf 63 ee
+0x02E3D1,0x1A,0,0x04,Farm,1,False,04 01 01 8f ff 06 01 02 8f ff 05 03
+0x02E3D2,0x1A,0,0x01,GreatTree,1,False,01 01 8f ff 06 01 02 8f ff 05 03 03
+0x02E3D6,0x1A,0,0x06,Arena Lobby,1,False,06 01 02 8f ff 05 03 03 07 11 05 02
+0x02E3E3,SlimeKing Room,0,0x27,Room of Strength/Anger,0,False,27 00 03 05 05 20 02 08 06 06 ff 05
+0x02E3F0,SlimeKing Room,0,0x07,Arena Rooms,0,False,07 00 80 05 01 ff f8 63 66 d9 1e 30
+0x02E3F3,SlimeKing Room,0,0x05,Stable,1,False,05 01 ff f8 63 66 d9 1e 30 06 64 30
+0x02E409,SlimeKing Room,0,0x03,Gate Hub,1,False,03 01 00 05 05 02 01 37 0f 02 03 02
+0x02E40A,SlimeKing Room,0,0x01,GreatTree,0,False,01 00 05 05 02 01 37 0f 02 03 02 20
+0x02E40E,SlimeKing Room,0,0x02,Bazaar,1,False,02 01 37 0f 02 03 02 20 0b 06 04 03
+0x02E41E,SlimeKing Room,0,0x03,Gate Hub,1,False,03 01 00 05 05 02 01 37 0f 02 03 02
+0x02E41F,SlimeKing Room,0,0x01,GreatTree,0,False,01 00 05 05 02 01 37 0f 02 03 02 20
+0x02E423,SlimeKing Room,0,0x02,Bazaar,1,False,02 01 37 0f 02 03 02 20 0c 06 04 04
+0x02E432,Coffin Room,0,0x07,Arena Rooms,0,False,07 00 82 05 01 ff 3a 64 67 d9 01 2d
+0x02E435,Coffin Room,0,0x05,Stable,1,False,05 01 ff 3a 64 67 d9 01 2d 4e 64 9c
+0x02E451,Coffin Room,0,0x06,Arena Lobby,1,False,06 01 00 0e 05 06 02 00 11 07 03 03
+0x02E452,Coffin Room,0,0x01,GreatTree,0,False,01 00 0e 05 06 02 00 11 07 03 03 00
+0x02E457,Coffin Room,0,0x02,Bazaar,0,False,02 00 11 07 03 03 00 02 04 04 04 81
+0x02E45C,Coffin Room,0,0x03,Gate Hub,0,False,03 00 02 04 04 04 81 ff 05 04 07 ff
+0x02E46B,Coffin Room,0,0x06,Arena Lobby,1,False,06 01 00 0e 05 06 02 00 11 07 03 03
+0x02E46C,Coffin Room,0,0x01,GreatTree,0,False,01 00 0e 05 06 02 00 11 07 03 03 00
+0x02E471,Coffin Room,0,0x02,Bazaar,0,False,02 00 11 07 03 03 00 13 04 04 05 81
+0x02E476,Coffin Room,0,0x03,Gate Hub,0,False,03 00 13 04 04 05 81 ff 05 04 08 ff
+0x02E485,Coffin Room,0,0x06,Arena Lobby,1,False,06 01 00 0e 05 06 02 00 11 07 03 03
+0x02E486,Coffin Room,0,0x01,GreatTree,0,False,01 00 0e 05 06 02 00 11 07 03 03 00
+0x02E48B,Coffin Room,0,0x02,Bazaar,0,False,02 00 11 07 03 03 00 14 04 04 06 81
+0x02E490,Monster School,0,0x03,Gate Hub,0,False,03 00 14 04 04 06 81 ff 05 04 09 ff
+0x02E49E,Restaurant,0,0x07,Arena Rooms,0,True,07 00 01 05 02 ff a6 64 68 d9 03 2d
+0x02E49F,Monster School,0,0x00,Castle,1,False,00 01 05 02 ff a6 64 68 d9 03 2d b4
+0x02E4B7,Monster School,0,0x05,Stable,1,False,05 01 00 4d 08 02 ff ff 00 0b 08 05
+0x02E4B8,Monster School,0,0x01,GreatTree,0,False,01 00 4d 08 02 ff ff 00 0b 08 05 01
+0x02E4C2,Restaurant,0,0x05,Stable,1,False,05 01 ff 07 07 03 00 81 04 01 08 07
+0x02E4C7,Restaurant,0,0x03,Gate Hub,0,False,03 00 81 04 01 08 07 03 00 81 05 01
+0x02E4CA,Restaurant,0,0x04,Farm,1,False,04 01 08 07 03 00 81 05 01 08 02 00
+0x02E4CE,Restaurant,0,0x03,Gate Hub,0,False,03 00 81 05 01 08 02 00 01 00 00 00
+0x02E4D1,Restaurant,0,0x05,Stable,1,False,05 01 08 02 00 01 00 00 00 ff dd 64
+0x02E4D4,Restaurant,0,0x02,Bazaar,0,False,02 00 01 00 00 00 ff dd 64 69 d9 05
+0x02E4D5,Queen Room,0,0x00,Castle,1,True,00 01 00 00 00 ff dd 64 69 d9 05 2d
+0x02E4D6,Restaurant,0,0x01,GreatTree,0,False,01 00 00 00 ff dd 64 69 d9 05 2d f7
+0x02E4D7,Restaurant,0,0x00,Castle,0,False,00 00 00 ff dd 64 69 d9 05 2d f7 64
+0x02E4D8,Restaurant,0,0x00,Castle,0,False,00 00 ff dd 64 69 d9 05 2d f7 64 23
+0x02E4FA,Restaurant,0,0x05,Stable,1,False,05 01 00 4d 02 02 ff 00 4d 02 06 ff
+0x02E4FB,Restaurant,0,0x01,GreatTree,0,False,01 00 4d 02 02 ff 00 4d 02 06 ff ff
+0x02E50A,Queen Room,0,0x05,Stable,1,False,05 01 00 4d 02 06 ff ff 10 0b 07 05
+0x02E50B,Queen Room,0,0x01,GreatTree,0,False,01 00 4d 02 06 ff ff 10 0b 07 05 01
+0x02E515,Queen Room,0,0x05,Stable,1,False,05 01 00 4d 02 02 ff ff 10 0b 07 05
+0x02E516,Queen Room,0,0x01,GreatTree,0,False,01 00 4d 02 02 ff ff 10 0b 07 05 01
+0x02E520,Queen Room,0,0x05,Stable,1,False,05 01 ff 06 07 03 00 81 02 02 02 02
+0x02E525,Queen Room,0,0x03,Gate Hub,0,False,03 00 81 02 02 02 02 01 01 00 00 00
+0x02E52B,Queen Room,0,0x02,Bazaar,1,False,02 01 01 00 00 00 02 06 02 01 00 00
+0x02E52C,Queen Room,0,0x01,GreatTree,1,False,01 01 00 00 00 02 06 02 01 00 00 00
+0x02E52D,Queen Room,0,0x01,GreatTree,0,False,01 00 00 00 02 06 02 01 00 00 00 ff
+0x02E52E,Queen Room,0,0x00,Castle,0,False,00 00 00 02 06 02 01 00 00 00 ff 3b
+0x02E52F,Queen Room,0,0x00,Castle,0,False,00 00 02 06 02 01 00 00 00 ff 3b 65
+0x02E533,Queen Room,0,0x02,Bazaar,1,False,02 01 00 00 00 ff 3b 65 6a d9 07 2d
+0x02E534,Queen Room,0,0x01,GreatTree,0,False,01 00 00 00 ff 3b 65 6a d9 07 2d 55
+0x02E535,Queen Room,0,0x00,Castle,0,False,00 00 00 ff 3b 65 6a d9 07 2d 55 65
+0x02E536,Queen Room,0,0x00,Castle,0,False,00 00 ff 3b 65 6a d9 07 2d 55 65 81
+0x02E558,Queen Room,0,0x03,Gate Hub,1,False,03 01 00 4d 05 01 ff 00 4d 07 01 ff
+0x02E559,Queen Room,0,0x01,GreatTree,0,False,01 00 4d 05 01 ff 00 4d 07 01 ff ff
+0x02E55C,Queen Room,0,0x05,Stable,1,False,05 01 ff 00 4d 07 01 ff ff 00 0b 06
+0x02E561,Queen Room,0,0x07,Arena Rooms,1,False,07 01 ff ff 00 0b 06 03 01 00 4d 07
+0x02E568,Queen Room,0,0x03,Gate Hub,1,False,03 01 00 4d 07 01 ff ff 00 0b 06 03
+0x02E569,Queen Room,0,0x01,GreatTree,0,False,01 00 4d 07 01 ff ff 00 0b 06 03 01
+0x02E56C,Room of Beginning,0,0x07,Arena Rooms,1,False,07 01 ff ff 00 0b 06 03 01 00 4d 05
+0x02E573,Room of Beginning,0,0x03,Gate Hub,1,False,03 01 00 4d 05 01 ff ff 00 0b 06 03
+0x02E574,Room of Beginning,0,0x01,GreatTree,0,False,01 00 4d 05 01 ff ff 00 0b 06 03 01
+0x02E577,Room of Beginning,0,0x05,Stable,1,False,05 01 ff ff 00 0b 06 03 01 ff 01 07
+0x02E57E,Room of Beginning,0,0x03,Gate Hub,1,False,03 01 ff 01 07 03 00 81 07 02 05 01
+0x02E583,Room of Beginning,0,0x03,Gate Hub,0,False,03 00 81 07 02 05 01 03 01 00 00 00
+0x02E588,Room of Beginning,0,0x05,Stable,1,False,05 01 03 01 00 00 00 07 01 04 01 00
+0x02E58A,Room of Beginning,0,0x03,Gate Hub,1,False,03 01 00 00 00 07 01 04 01 00 00 00
+0x02E58B,Room of Beginning,0,0x01,GreatTree,0,False,01 00 00 00 07 01 04 01 00 00 00 ff
+0x02E58C,Room of Beginning,0,0x00,Castle,0,False,00 00 00 07 01 04 01 00 00 00 ff 99
+0x02E58D,Room of Beginning,0,0x00,Castle,0,False,00 00 07 01 04 01 00 00 00 ff 99 65
+0x02E58F,Room of Beginning,0,0x07,Arena Rooms,1,False,07 01 04 01 00 00 00 ff 99 65 6b d9
+0x02E591,Room of Beginning,0,0x04,Farm,1,False,04 01 00 00 00 ff 99 65 6b d9 09 2d
+0x02E592,Room of Beginning,0,0x01,GreatTree,0,False,01 00 00 00 ff 99 65 6b d9 09 2d b3
+0x02E593,Room of Beginning,0,0x00,Castle,0,False,00 00 00 ff 99 65 6b d9 09 2d b3 65
+0x02E594,Room of Beginning,0,0x00,Castle,0,False,00 00 ff 99 65 6b d9 09 2d b3 65 df
+0x02E5B6,Room of Villager/Talisman,0,0x05,Stable,1,False,05 01 00 4d 03 03 ff 00 4d 06 03 ff
+0x02E5B7,Room of Villager/Talisman,0,0x01,GreatTree,0,False,01 00 4d 03 03 ff 00 4d 06 03 ff ff
+0x02E5C6,Room of Villager/Talisman,0,0x05,Stable,1,False,05 01 00 4d 06 03 ff ff 00 0b 08 05
+0x02E5C7,Room of Villager/Talisman,0,0x01,GreatTree,0,False,01 00 4d 06 03 ff ff 00 0b 08 05 01
+0x02E5D1,Room of Villager/Talisman,0,0x05,Stable,1,False,05 01 00 4d 03 03 ff ff 00 0b 08 05
+0x02E5D2,Room of Villager/Talisman,0,0x01,GreatTree,0,False,01 00 4d 03 03 ff ff 00 0b 08 05 01
+0x02E5DC,Room of Villager/Talisman,0,0x05,Stable,1,False,05 01 ff 08 07 03 00 80 07 02 03 03
+0x02E5E1,Room of Villager/Talisman,0,0x03,Gate Hub,0,False,03 00 80 07 02 03 03 06 01 00 00 00
+0x02E5E8,Room of Villager/Talisman,0,0x06,Arena Lobby,1,False,06 01 00 00 00 06 03 07 01 00 00 00
+0x02E5E9,Room of Villager/Talisman,0,0x01,GreatTree,0,False,01 00 00 00 06 03 07 01 00 00 00 ff
+0x02E5EA,Room of Villager/Talisman,0,0x00,Castle,0,False,00 00 00 06 03 07 01 00 00 00 ff f7
+0x02E5EB,Room of Villager/Talisman,0,0x00,Castle,0,False,00 00 06 03 07 01 00 00 00 ff f7 65
+0x02E5EF,Room of Villager/Talisman,0,0x07,Arena Rooms,1,False,07 01 00 00 00 ff f7 65 6c d9 0b 2d
+0x02E5F0,Room of Villager/Talisman,0,0x01,GreatTree,0,False,01 00 00 00 ff f7 65 6c d9 0b 2d 0b
+0x02E5F1,Room of Villager/Talisman,0,0x00,Castle,0,False,00 00 00 ff f7 65 6c d9 0b 2d 0b 66
+0x02E5F2,Room of Villager/Talisman,0,0x00,Castle,0,False,00 00 ff f7 65 6c d9 0b 2d 0b 66 3b
+0x02E60E,Room of Memories/Bewilder,0,0x04,Farm,1,False,04 01 01 0b 08 05 02 00 4d 02 03 ff
+0x02E60F,Room of Memories/Bewilder,0,0x01,GreatTree,1,False,01 01 0b 08 05 02 00 4d 02 03 ff 00
+0x02E614,Room of Memories/Bewilder,0,0x02,Bazaar,0,False,02 00 4d 02 03 ff 00 4d 07 03 ff ff
+0x02E621,Room of Memories/Bewilder,0,0x0B,Castle alias,1,False,0b 01 06 01 10 0b 08 05 02 00 4d 02
+0x02E623,Room of Memories/Bewilder,0,0x06,Arena Lobby,1,False,06 01 10 0b 08 05 02 00 4d 02 03 ff
+0x02E629,Room of Memories/Bewilder,0,0x02,Bazaar,0,False,02 00 4d 02 03 ff ff 20 0b 01 06 01
+0x02E631,Room of Memories/Bewilder,0,0x0B,Castle alias,1,False,0b 01 06 01 10 0b 08 05 02 ff 04 07
+0x02E633,Room of Memories/Bewilder,0,0x06,Arena Lobby,1,False,06 01 10 0b 08 05 02 ff 04 07 03 00
+0x02E63D,Room of Memories/Bewilder,0,0x03,Gate Hub,0,False,03 00 80 04 01 05 07 03 00 80 05 01
+0x02E640,Room of Memories/Bewilder,0,0x04,Farm,1,False,04 01 05 07 03 00 80 05 01 02 03 09
+0x02E644,Room of Memories/Bewilder,0,0x03,Gate Hub,0,False,03 00 80 05 01 02 03 09 01 00 00 00
+0x02E647,Room of Memories/Bewilder,0,0x05,Stable,1,False,05 01 02 03 09 01 00 00 00 07 03 0a
+0x02E64B,Room of Memories/Bewilder,0,0x09,Starry Shrine,1,False,09 01 00 00 00 07 03 0a 01 00 00 00
+0x02E64C,Room of Memories/Bewilder,0,0x01,GreatTree,0,False,01 00 00 00 07 03 0a 01 00 00 00 ff
+0x02E64D,Room of Memories/Bewilder,0,0x00,Castle,0,False,00 00 00 07 03 0a 01 00 00 00 ff 5a
+0x02E64E,Room of Memories/Bewilder,0,0x00,Castle,0,False,00 00 07 03 0a 01 00 00 00 ff 5a 66
+0x02E652,Room of Memories/Bewilder,0,0x0A,Secret Passage,1,False,0a 01 00 00 00 ff 5a 66 6d d9 0d 2d
+0x02E653,Room of Memories/Bewilder,0,0x01,GreatTree,0,False,01 00 00 00 ff 5a 66 6d d9 0d 2d 74
+0x02E654,Room of Memories/Bewilder,0,0x00,Castle,0,False,00 00 00 ff 5a 66 6d d9 0d 2d 74 66
+0x02E655,Room of Memories/Bewilder,0,0x00,Castle,0,False,00 00 ff 5a 66 6d d9 0d 2d 74 66 a0
+0x02E677,Room of Peace/Bravery,0,0x06,Arena Lobby,1,False,06 01 00 4d 03 02 ff 00 4d 05 02 ff
+0x02E678,Room of Peace/Bravery,0,0x01,GreatTree,0,False,01 00 4d 03 02 ff 00 4d 05 02 ff ff
+0x02E687,Room of Peace/Bravery,0,0x06,Arena Lobby,1,False,06 01 00 4d 03 02 ff ff 10 0b 06 06
+0x02E688,Room of Peace/Bravery,0,0x01,GreatTree,0,False,01 00 4d 03 02 ff ff 10 0b 06 06 01
+0x02E692,Room of Peace/Bravery,0,0x06,Arena Lobby,1,False,06 01 00 4d 05 02 ff ff 10 0b 06 06
+0x02E693,Room of Peace/Bravery,0,0x01,GreatTree,0,False,01 00 4d 05 02 ff ff 10 0b 06 06 01
+0x02E69D,Room of Peace/Bravery,0,0x06,Arena Lobby,1,False,06 01 ff 04 07 03 00 80 02 02 03 02
+0x02E6A2,Room of Peace/Bravery,0,0x03,Gate Hub,0,False,03 00 80 02 02 03 02 0c 01 00 00 00
+0x02E6A9,Room of Peace/Bravery,0,0x0C,Renamer Room,1,False,0c 01 00 00 00 05 02 0d 01 00 00 00
+0x02E6AA,Room of Peace/Bravery,0,0x01,GreatTree,0,False,01 00 00 00 05 02 0d 01 00 00 00 ff
+0x02E6AB,Room of Peace/Bravery,0,0x00,Castle,0,False,00 00 00 05 02 0d 01 00 00 00 ff b8
+0x02E6AC,Room of Peace/Bravery,0,0x00,Castle,0,False,00 00 05 02 0d 01 00 00 00 ff b8 66
+0x02E6B0,Room of Peace/Bravery,0,0x0D,Old Man Gate,1,False,0d 01 00 00 00 ff b8 66 6e d9 0f 2d
+0x02E6B1,Room of Peace/Bravery,0,0x01,GreatTree,0,False,01 00 00 00 ff b8 66 6e d9 0f 2d d2
+0x02E6B2,Room of Peace/Bravery,0,0x00,Castle,0,False,00 00 00 ff b8 66 6e d9 0f 2d d2 66
+0x02E6B3,Room of Peace/Bravery,0,0x00,Castle,0,False,00 00 ff b8 66 6e d9 0f 2d d2 66 fe
+0x02E6D5,Room of Strength/Anger,0,0x06,Arena Lobby,1,False,06 01 00 4d 03 02 ff 00 4d 06 02 ff
+0x02E6D6,Room of Strength/Anger,0,0x01,GreatTree,0,False,01 00 4d 03 02 ff 00 4d 06 02 ff ff
+0x02E6E5,Room of Strength/Anger,0,0x06,Arena Lobby,1,False,06 01 00 4d 06 02 ff ff 10 0b 07 06
+0x02E6E6,Room of Strength/Anger,0,0x01,GreatTree,0,False,01 00 4d 06 02 ff ff 10 0b 07 06 01
+0x02E6F0,Room of Strength/Anger,0,0x06,Arena Lobby,1,False,06 01 00 4d 03 02 ff ff 10 0b 07 06
+0x02E6F1,Room of Strength/Anger,0,0x01,GreatTree,0,False,01 00 4d 03 02 ff ff 10 0b 07 06 01
+0x02E6FB,Room of Strength/Anger,0,0x06,Arena Lobby,1,False,06 01 ff 04 07 03 00 84 07 02 03 02
+0x02E700,Room of Strength/Anger,0,0x03,Gate Hub,0,False,03 00 84 07 02 03 02 0f 01 00 00 00
+0x02E707,Room of Strength/Anger,0,0x0F,Vault,1,False,0f 01 00 00 00 06 02 10 01 00 00 00
+0x02E708,Room of Strength/Anger,0,0x01,GreatTree,0,False,01 00 00 00 06 02 10 01 00 00 00 ff
+0x02E709,Room of Strength/Anger,0,0x00,Castle,0,False,00 00 00 06 02 10 01 00 00 00 ff 16
+0x02E70A,Room of Strength/Anger,0,0x00,Castle,0,False,00 00 06 02 10 01 00 00 00 ff 16 67
+0x02E70E,Room of Strength/Anger,0,0x10,Copycat Room,1,False,10 01 00 00 00 ff 16 67 6f d9 11 2d
+0x02E70F,Room of Strength/Anger,0,0x01,GreatTree,0,False,01 00 00 00 ff 16 67 6f d9 11 2d 30
+0x02E710,Room of Strength/Anger,0,0x00,Castle,0,False,00 00 00 ff 16 67 6f d9 11 2d 30 67
+0x02E711,Room of Strength/Anger,0,0x00,Castle,0,False,00 00 ff 16 67 6f d9 11 2d 30 67 5c
+0x02E733,Room of Joy/Wisdom,0,0x02,Bazaar,1,False,02 01 00 4d 02 04 ff 00 4d 07 04 ff
+0x02E734,Room of Joy/Wisdom,0,0x01,GreatTree,0,False,01 00 4d 02 04 ff 00 4d 07 04 ff ff
+0x02E743,Room of Joy/Wisdom,0,0x02,Bazaar,1,False,02 01 00 4d 07 04 ff ff 00 0b 05 02
+0x02E744,Room of Joy/Wisdom,0,0x01,GreatTree,0,False,01 00 4d 07 04 ff ff 00 0b 05 02 01
+0x02E74E,Room of Joy/Wisdom,0,0x02,Bazaar,1,False,02 01 00 4d 02 04 ff ff 00 0b 05 02
+0x02E74F,Room of Joy/Wisdom,0,0x01,GreatTree,0,False,01 00 4d 02 04 ff ff 00 0b 05 02 01
+0x02E759,Room of Joy/Wisdom,0,0x02,Bazaar,1,False,02 01 ff 04 07 03 00 84 02 02 02 04
+0x02E75E,Room of Joy/Wisdom,0,0x03,Gate Hub,0,False,03 00 84 02 02 02 04 12 01 00 00 00
+0x02E765,Room of Joy/Wisdom,0,0x12,Library,1,False,12 01 00 00 00 07 04 13 01 00 00 00
+0x02E766,Room of Joy/Wisdom,0,0x01,GreatTree,0,False,01 00 00 00 07 04 13 01 00 00 00 ff
+0x02E767,Room of Joy/Wisdom,0,0x00,Castle,0,False,00 00 00 07 04 13 01 00 00 00 ff 74
+0x02E768,Room of Joy/Wisdom,0,0x00,Castle,0,False,00 00 07 04 13 01 00 00 00 ff 74 67
+0x02E76C,Room of Joy/Wisdom,0,0x13,GreatTree Hub 2,1,False,13 01 00 00 00 ff 74 67 70 d9 13 2d
+0x02E76D,Room of Joy/Wisdom,0,0x01,GreatTree,0,False,01 00 00 00 ff 74 67 70 d9 13 2d 82
+0x02E76E,Room of Joy/Wisdom,0,0x00,Castle,0,False,00 00 00 ff 74 67 70 d9 13 2d 82 67
+0x02E76F,Room of Joy/Wisdom,0,0x00,Castle,0,False,00 00 ff 74 67 70 d9 13 2d 82 67 93
+0x02E783,Room of Happiness/Temptation,0,0x0B,Castle alias,1,False,0b 01 06 01 00 4d 03 02 ff ff 30 0b
+0x02E785,Room of Happiness/Temptation,0,0x06,Arena Lobby,1,False,06 01 00 4d 03 02 ff ff 30 0b 01 06
+0x02E786,Room of Happiness/Temptation,0,0x01,GreatTree,0,False,01 00 4d 03 02 ff ff 30 0b 01 06 01
+0x02E78E,Room of Happiness/Temptation,0,0x0B,Castle alias,1,False,0b 01 06 01 ff 07 07 03 00 84 04 01
+0x02E790,Room of Happiness/Temptation,0,0x06,Arena Lobby,1,False,06 01 ff 07 07 03 00 84 04 01 08 07
+0x02E795,Room of Happiness/Temptation,0,0x03,Gate Hub,0,False,03 00 84 04 01 08 07 03 00 84 05 01
+0x02E798,Room of Happiness/Temptation,0,0x04,Farm,1,False,04 01 08 07 03 00 84 05 01 03 02 15
+0x02E79C,Room of Happiness/Temptation,0,0x03,Gate Hub,0,False,03 00 84 05 01 03 02 15 01 00 00 00
+0x02E79F,Room of Happiness/Temptation,0,0x05,Stable,1,False,05 01 03 02 15 01 00 00 00 ff ab 67
+0x02E7A4,Room of Happiness/Temptation,0,0x01,GreatTree,0,False,01 00 00 00 ff ab 67 71 d9 15 2d c5
+0x02E7A5,Room of Happiness/Temptation,0,0x00,Castle,0,False,00 00 00 ff ab 67 71 d9 15 2d c5 67
+0x02E7A6,Room of Happiness/Temptation,0,0x00,Castle,0,False,00 00 ff ab 67 71 d9 15 2d c5 67 f1
+0x02E7C6,Room of Happiness/Temptation,0,0x0B,Castle alias,1,False,0b 01 06 01 00 4d 01 03 ff 00 4d 03
+0x02E7C8,Room of Happiness/Temptation,0,0x06,Arena Lobby,1,False,06 01 00 4d 01 03 ff 00 4d 03 03 ff
+0x02E7C9,Room of Happiness/Temptation,0,0x01,GreatTree,0,False,01 00 4d 01 03 ff 00 4d 03 03 ff ff
+0x02E7CB,Room of Happiness/Temptation,0,0x4D,Boss: Arena Right,1,False,4d 01 03 ff 00 4d 03 03 ff ff 30 0b
+0x02E7D6,Room of Happiness/Temptation,0,0x0B,Castle alias,1,False,0b 01 06 01 00 4d 03 03 ff ff 30 0b
+0x02E7D8,Room of Happiness/Temptation,0,0x06,Arena Lobby,1,False,06 01 00 4d 03 03 ff ff 30 0b 01 06
+0x02E7D9,Room of Happiness/Temptation,0,0x01,GreatTree,0,False,01 00 4d 03 03 ff ff 30 0b 01 06 01
+0x02E7E1,Room of Labyrinth/Judgment,0,0x0B,Castle alias,1,False,0b 01 06 01 00 4d 01 03 ff ff 30 0b
+0x02E7E3,Room of Labyrinth/Judgment,0,0x06,Arena Lobby,1,False,06 01 00 4d 01 03 ff ff 30 0b 01 06
+0x02E7E4,Room of Labyrinth/Judgment,0,0x01,GreatTree,0,False,01 00 4d 01 03 ff ff 30 0b 01 06 01
+0x02E7E6,Room of Labyrinth/Judgment,0,0x4D,Boss: Arena Right,1,False,4d 01 03 ff ff 30 0b 01 06 01 ff 08
+0x02E7EC,Room of Labyrinth/Judgment,0,0x0B,Castle alias,1,False,0b 01 06 01 ff 08 07 03 00 85 02 02
+0x02E7EE,Room of Labyrinth/Judgment,0,0x06,Arena Lobby,1,False,06 01 ff 08 07 03 00 85 02 02 01 03
+0x02E7F3,Room of Labyrinth/Judgment,0,0x03,Gate Hub,0,False,03 00 85 02 02 01 03 16 01 00 00 00
+0x02E7F7,Room of Labyrinth/Judgment,0,0x02,Bazaar,1,False,02 01 03 16 01 00 00 00 03 03 17 01
+0x02E7FA,Room of Labyrinth/Judgment,0,0x16,MedalMan Room,1,False,16 01 00 00 00 03 03 17 01 00 00 00
+0x02E7FB,Room of Labyrinth/Judgment,0,0x01,GreatTree,0,False,01 00 00 00 03 03 17 01 00 00 00 ff
+0x02E7FC,Room of Labyrinth/Judgment,0,0x00,Castle,0,False,00 00 00 03 03 17 01 00 00 00 ff 09
+0x02E7FD,Room of Labyrinth/Judgment,0,0x00,Castle,0,False,00 00 03 03 17 01 00 00 00 ff 09 68
+0x02E802,Room of Labyrinth/Judgment,0,0x01,GreatTree,0,False,01 00 00 00 ff 09 68 72 d9 17 2d 23
+0x02E803,Room of Labyrinth/Judgment,0,0x00,Castle,0,False,00 00 00 ff 09 68 72 d9 17 2d 23 68
+0x02E804,Room of Labyrinth/Judgment,0,0x00,Castle,0,False,00 00 ff 09 68 72 d9 17 2d 23 68 4f
+0x02E826,Room of Labyrinth/Judgment,0,0x02,Bazaar,1,False,02 01 00 4d 06 02 ff 00 4d 06 04 ff
+0x02E827,Room of Labyrinth/Judgment,0,0x01,GreatTree,0,False,01 00 4d 06 02 ff 00 4d 06 04 ff ff
+0x02E836,Room of Labyrinth/Judgment,0,0x02,Bazaar,1,False,02 01 00 4d 06 04 ff ff 00 0b 02 02
+0x02E837,Room of Labyrinth/Judgment,0,0x01,GreatTree,0,False,01 00 4d 06 04 ff ff 00 0b 02 02 01
+0x02E841,Room of Reflection,0,0x02,Bazaar,1,False,02 01 00 4d 06 02 ff ff 00 0b 02 02
+0x02E842,Room of Reflection,0,0x01,GreatTree,0,False,01 00 4d 06 02 ff ff 00 0b 02 02 01
+0x02E84C,Room of Reflection,0,0x02,Bazaar,1,False,02 01 ff 02 07 03 00 85 07 02 06 02
+0x02E851,Room of Reflection,0,0x03,Gate Hub,0,False,03 00 85 07 02 06 02 18 01 00 00 00
+0x02E858,Room of Reflection,0,0x18,Well,1,False,18 01 00 00 00 06 04 19 01 00 00 00
+0x02E859,Room of Reflection,0,0x01,GreatTree,0,False,01 00 00 00 06 04 19 01 00 00 00 ff
+0x02E85A,Room of Reflection,0,0x00,Castle,0,False,00 00 00 06 04 19 01 00 00 00 ff 67
+0x02E85B,Room of Reflection,0,0x00,Castle,0,False,00 00 06 04 19 01 00 00 00 ff 67 68
+0x02E860,Room of Reflection,0,0x01,GreatTree,0,False,01 00 00 00 ff 67 68 73 d9 19 2d 81
+0x02E861,Room of Reflection,0,0x00,Castle,0,False,00 00 00 ff 67 68 73 d9 19 2d 81 68
+0x02E862,Room of Reflection,0,0x00,Castle,0,False,00 00 ff 67 68 73 d9 19 2d 81 68 ad
+0x02E884,Room of Ambition/Demolition,0,0x04,Farm,1,False,04 01 00 4d 02 02 ff 00 4d 04 02 ff
+0x02E885,Room of Ambition/Demolition,0,0x01,GreatTree,0,False,01 00 4d 02 02 ff 00 4d 04 02 ff ff
+0x02E894,Room of Ambition/Demolition,0,0x04,Farm,1,False,04 01 00 4d 04 02 ff ff 00 0b 03 04
+0x02E895,Room of Ambition/Demolition,0,0x01,GreatTree,0,False,01 00 4d 04 02 ff ff 00 0b 03 04 01
+0x02E89F,Room of Ambition/Demolition,0,0x04,Farm,1,False,04 01 00 4d 02 02 ff ff 00 0b 03 04
+0x02E8A0,Room of Ambition/Demolition,0,0x01,GreatTree,0,False,01 00 4d 02 02 ff ff 00 0b 03 04 01
+0x02E8AA,Room of Ambition/Demolition,0,0x04,Farm,1,False,04 01 ff 06 07 03 00 85 04 01 07 07
+0x02E8AF,Room of Ambition/Demolition,0,0x03,Gate Hub,0,False,03 00 85 04 01 07 07 03 00 85 05 01
+0x02E8B2,Room of Ambition/Demolition,0,0x04,Farm,1,False,04 01 07 07 03 00 85 05 01 02 02 1a
+0x02E8B6,Room of Ambition/Demolition,0,0x03,Gate Hub,0,False,03 00 85 05 01 02 02 1a 01 00 00 00
+0x02E8B9,Room of Ambition/Demolition,0,0x05,Stable,1,False,05 01 02 02 1a 01 00 00 00 04 02 1b
+0x02E8BE,Room of Ambition/Demolition,0,0x01,GreatTree,0,False,01 00 00 00 04 02 1b 01 00 00 00 ff
+0x02E8BF,Room of Ambition/Demolition,0,0x00,Castle,0,False,00 00 00 04 02 1b 01 00 00 00 ff ff
+0x02E8C0,Room of Ambition/Demolition,0,0x00,Castle,0,False,00 00 04 02 1b 01 00 00 00 ff ff ff
+0x02E8C4,Room of Ambition/Demolition,0,0x1B,SlimeKing Room,1,False,1b 01 00 00 00 ff ff ff ff ff ff ff
+0x02E8C5,Room of Ambition/Demolition,0,0x01,GreatTree,0,False,01 00 00 00 ff ff ff ff ff ff ff ff
+0x02E8C6,Room of Ambition/Demolition,0,0x00,Castle,0,False,00 00 00 ff ff ff ff ff ff ff ff ff
+0x02E8C7,Room of Ambition/Demolition,0,0x00,Castle,0,False,00 00 ff ff ff ff ff ff ff ff ff d6
+0x02E912,Room of Mastermind/Control,0,0x01,GreatTree,1,False,01 01 01 8f ff 02 01 02 8f ff 07 01
+0x02E913,Room of Mastermind/Control,0,0x01,GreatTree,1,False,01 01 8f ff 02 01 02 8f ff 07 01 03
+0x02E917,Room of Mastermind/Control,0,0x02,Bazaar,1,False,02 01 02 8f ff 07 01 03 8f ff 08 01
+0x02E91C,Room of Mastermind/Control,0,0x07,Arena Rooms,1,False,07 01 03 8f ff 08 01 04 8f ff 05 04
+0x02E921,Room of Mastermind/Control,0,0x08,Gate tileset,1,False,08 01 04 8f ff 05 04 05 8f ff 04 01
+0x02E92B,Room of Mastermind/Control,0,0x04,Farm,1,False,04 01 06 8f ff 05 01 06 50 14 05 03
+0x02E930,Room of Extinction/Sleep,0,0x05,Stable,1,False,05 01 06 50 14 05 03 07 00 51 06 04
+0x02E937,Room of Extinction/Sleep,0,0x07,Arena Rooms,0,False,07 00 51 06 04 07 40 50 03 04 ff ff
+0x02E945,Room of Extinction/Sleep,0,0x01,GreatTree,1,False,01 01 01 8f ff 02 01 02 8f ff 07 01
+0x02E946,Room of Extinction/Sleep,0,0x01,GreatTree,1,False,01 01 8f ff 02 01 02 8f ff 07 01 03
+0x02E94A,Room of Extinction/Sleep,0,0x02,Bazaar,1,False,02 01 02 8f ff 07 01 03 8f ff 08 01
+0x02E94F,Room of Extinction/Sleep,0,0x07,Arena Rooms,1,False,07 01 03 8f ff 08 01 04 8f ff 05 04
+0x02E954,Room of Extinction/Sleep,0,0x08,Gate tileset,1,False,08 01 04 8f ff 05 04 05 8f ff 04 01
+0x02E95E,Room of Extinction/Sleep,0,0x04,Farm,1,False,04 01 06 8f ff 05 01 06 ff 8f ff 01
+0x02E963,Room of Extinction/Sleep,0,0x05,Stable,1,False,05 01 06 ff 8f ff 01 01 01 8f ff 02
+0x02E969,Room of Extinction/Sleep,0,0x01,GreatTree,1,False,01 01 01 8f ff 02 01 02 8f ff 07 01
+0x02E96A,Room of Extinction/Sleep,0,0x01,GreatTree,1,False,01 01 8f ff 02 01 02 8f ff 07 01 03
+0x02E96E,Room of Extinction/Sleep,0,0x02,Bazaar,1,False,02 01 02 8f ff 07 01 03 8f ff 08 01
+0x02E973,Room of Extinction/Sleep,0,0x07,Arena Rooms,1,False,07 01 03 8f ff 08 01 04 8f ff 05 04
+0x02E978,Room of Extinction/Sleep,0,0x08,Gate tileset,1,False,08 01 04 8f ff 05 04 05 8f ff 04 01
+0x02E982,Room of Extinction/Sleep,0,0x04,Farm,1,False,04 01 06 8f ff 05 01 06 50 14 07 04
+0x02E987,Room of Extinction/Sleep,0,0x05,Stable,1,False,05 01 06 50 14 07 04 07 50 21 0b 00
+0x02E991,Room of Extinction/Sleep,0,0x0B,Castle alias,0,False,0b 00 ff 00 51 06 04 07 40 5f 05 03
+0x02EACD,Boss: Beginning,0,0x02,Bazaar,0,False,02 00 00 01 04 05 ff d6 6a 77 d9 10
+0x02EACE,Boss: Beginning,0,0x00,Castle,0,True,00 00 01 04 05 ff d6 6a 77 d9 10 26
+0x02EACF,Boss: Beginning,0,0x00,Castle,1,False,00 01 04 05 ff d6 6a 77 d9 10 26 e4
+0x02EAE6,Boss: Beginning,0,0x04,Farm,1,False,04 01 02 8f ff 05 01 02 8f ff 04 02
+0x02EAEB,Boss: Beginning,0,0x05,Stable,1,False,05 01 02 8f ff 04 02 02 8f ff 05 02
+0x02EAF7,Boss: Beginning,0,0x02,Bazaar,0,False,02 00 0e 08 03 01 70 21 00 00 ff ff
+0x02EAFB,Boss: Beginning,0,0x03,Gate Hub,1,False,03 01 70 21 00 00 ff ff 00 0e 08 03
+0x02EAFF,Boss: Beginning,0,0x00,Castle,0,False,00 00 ff ff 00 0e 08 03 01 ff ff 04
+0x02EB06,Boss: Beginning,0,0x03,Gate Hub,1,False,03 01 ff ff 04 01 00 00 01 04 05 ff
+0x02EB0A,Boss: Beginning,0,0x04,Farm,1,False,04 01 00 00 01 04 05 ff 14 6b 78 d9
+0x02EB0B,Boss: Beginning,0,0x01,GreatTree,0,False,01 00 00 01 04 05 ff 14 6b 78 d9 16
+0x02EB0C,Boss: Beginning,0,0x00,Castle,0,False,00 00 01 04 05 ff 14 6b 78 d9 16 24
+0x02EB0D,Boss: Beginning,0,0x00,Castle,1,False,00 01 04 05 ff 14 6b 78 d9 16 24 22
+0x02EB26,Boss: Beginning,0,0x02,Bazaar,0,False,02 00 20 04 04 01 40 39 08 00 ff 50
+0x02EB2A,Boss: Beginning,0,0x04,Farm,1,False,04 01 40 39 08 00 ff 50 21 0a 01 ff
+0x02EB2E,Boss: Beginning,0,0x08,Gate tileset,0,False,08 00 ff 50 21 0a 01 ff ff ff ff 05
+0x02EB33,Boss: Beginning,0,0x0A,Secret Passage,1,False,0a 01 ff ff ff ff 05 04 00 00 01 04
+0x02EB3A,Boss: Beginning,0,0x04,Farm,0,False,04 00 00 01 04 05 ff 43 6b 79 d9 13
+0x02EB3B,Boss: Beginning,0,0x00,Castle,0,False,00 00 01 04 05 ff 43 6b 79 d9 13 26
+0x02EB3C,Boss: Beginning,0,0x00,Castle,1,False,00 01 04 05 ff 43 6b 79 d9 13 26 51
+0x02EB54,Boss: Beginning,0,0x04,Farm,1,False,04 01 50 21 0a 00 ff ff ff ff 01 04
+0x02EB58,Boss: Beginning,0,0x0A,Secret Passage,0,False,0a 00 ff ff ff ff 01 04 00 00 01 04
+0x02EB5F,Boss: Beginning,0,0x04,Farm,0,False,04 00 00 01 04 05 ff 68 6b 7a d9 16
+0x02EB60,Boss: Beginning,0,0x00,Castle,0,False,00 00 01 04 05 ff 68 6b 7a d9 16 26
+0x02EB61,Boss: Beginning,0,0x00,Castle,1,False,00 01 04 05 ff 68 6b 7a d9 16 26 76
+0x02EB78,Boss: Beginning,0,0x07,Arena Rooms,1,False,07 01 07 90 ff 04 04 08 90 ff 05 05
+0x02EB8D,Boss: Beginning,0,0x06,Arena Lobby,1,False,06 01 8f ff 04 01 02 8f ff 05 01 02
+0x02EB91,Boss: Beginning,0,0x04,Farm,1,False,04 01 02 8f ff 05 01 02 06 25 01 02
+0x02EB96,Boss: Villager,0,0x05,Stable,1,False,05 01 02 06 25 01 02 03 06 25 08 00
+0x02EB9A,Boss: Villager,0,0x25,Room of Memories/Bewilder,1,False,25 01 02 03 06 25 08 00 04 06 25 05
+0x02EBA0,Boss: Villager,0,0x08,Gate tileset,0,False,08 00 04 06 25 05 03 05 06 25 06 06
+0x02EBAF,Boss: Villager,0,0x0A,Secret Passage,0,False,0a 00 ff ff 8f ff 00 06 01 ff ff 05
+0x02EBB6,Boss: Villager,0,0x06,Arena Lobby,1,False,06 01 ff ff 05 01 00 00 01 04 05 ff
+0x02EBBA,Boss: Villager,0,0x05,Stable,1,False,05 01 00 00 01 04 05 ff c4 6b 7b d9
+0x02EBBB,Boss: Villager,0,0x01,GreatTree,0,False,01 00 00 01 04 05 ff c4 6b 7b d9 19
+0x02EBBC,Boss: Villager,0,0x00,Castle,0,False,00 00 01 04 05 ff c4 6b 7b d9 19 26
+0x02EBBD,Boss: Villager,0,0x00,Castle,1,False,00 01 04 05 ff c4 6b 7b d9 19 26 d2
+0x02EBD5,Boss: Talisman,0,0x06,Arena Lobby,1,False,06 01 82 ff 05 00 02 10 1d 07 03 03
+0x02EBD9,Boss: Talisman,0,0x05,Stable,0,False,05 00 02 10 1d 07 03 03 50 21 0a 00
+0x02EBE3,Boss: Talisman,0,0x0A,Secret Passage,0,False,0a 00 ff ff 8f ff 06 06 01 82 ff 05
+0x02EBEA,Boss: Talisman,0,0x06,Arena Lobby,1,False,06 01 82 ff 05 00 02 ff ff 07 03 00
+0x02EBEE,Boss: Talisman,0,0x05,Stable,0,False,05 00 02 ff ff 07 03 00 00 01 04 05
+0x02EBF4,Boss: Talisman,0,0x03,Gate Hub,0,False,03 00 00 01 04 05 ff fd 6b 7c d9 1c
+0x02EBF5,Boss: Talisman,0,0x00,Castle,0,False,00 00 01 04 05 ff fd 6b 7c d9 1c 26
+0x02EBF6,Boss: Talisman,0,0x00,Castle,1,False,00 01 04 05 ff fd 6b 7c d9 1c 26 0b
+0x02EC0E,Boss: Memories,0,0x02,Bazaar,1,False,02 01 80 ff 06 02 01 82 ff 08 02 02
+0x02EC13,Boss: Memories,0,0x02,Bazaar,1,False,02 01 82 ff 08 02 02 80 ff 08 02 02
+0x02EC37,Boss: Bewilder,0,0x07,Arena Rooms,0,False,07 00 12 03 01 05 00 12 03 02 06 30
+0x02EC3A,Boss: Bewilder,0,0x03,Gate Hub,1,False,03 01 05 00 12 03 02 06 30 02 03 06
+0x02EC3C,Boss: Bewilder,0,0x05,Stable,0,False,05 00 12 03 02 06 30 02 03 06 07 20
+0x02EC55,Boss: Bewilder,0,0x02,Bazaar,1,False,02 01 8f ff 08 02 02 8f ff 06 04 03
+0x02EC6A,Boss: Bewilder,0,0x07,Arena Rooms,0,False,07 00 12 03 01 05 00 12 03 02 06 30
+0x02EC6D,Boss: Bewilder,0,0x03,Gate Hub,1,False,03 01 05 00 12 03 02 06 30 02 03 06
+0x02EC6F,Boss: Bewilder,0,0x05,Stable,0,False,05 00 12 03 02 06 30 02 03 06 07 ff
+0x02EC7D,Boss: Bewilder,0,0x06,Arena Lobby,0,False,06 00 00 01 04 05 ff 86 6c 7d d9 1b
+0x02EC7E,Boss: Bewilder,0,0x00,Castle,0,False,00 00 01 04 05 ff 86 6c 7d d9 1b 25
+0x02EC7F,Boss: Bewilder,0,0x00,Castle,1,False,00 01 04 05 ff 86 6c 7d d9 1b 25 94
+0x02ECB9,0x35,0,0x05,Stable,0,False,05 00 ff 40 e1 05 00 ff 40 e2 05 00
+0x02ECBE,Boss: Peace,0,0x05,Stable,0,False,05 00 ff 40 e2 05 00 ff 40 e3 05 00
+0x02ECC3,Boss: Peace,0,0x05,Stable,0,False,05 00 ff 40 e3 05 00 ff 00 19 04 01
+0x02ECC8,Boss: Peace,0,0x05,Stable,0,False,05 00 ff 00 19 04 01 01 60 15 04 08
+0x02ECCD,Boss: Peace,0,0x04,Farm,1,False,04 01 01 60 15 04 08 ff 50 21 0a 01
+0x02ECCE,Boss: Peace,0,0x01,GreatTree,1,False,01 01 60 15 04 08 ff 50 21 0a 01 ff
+0x02ECD7,Boss: Peace,0,0x0A,Secret Passage,1,False,0a 01 ff ff 90 ff 04 04 03 90 ff 03
+0x02ECFB,Boss: Peace,0,0x05,Stable,0,False,05 00 ff 40 e1 05 00 ff 40 e2 05 00
+0x02ED00,Boss: Peace,0,0x05,Stable,0,False,05 00 ff 40 e2 05 00 ff 40 e3 05 00
+0x02ED05,Boss: Peace,0,0x05,Stable,0,False,05 00 ff 40 e3 05 00 ff ff ff 04 01
+0x02ED0A,Boss: Peace,0,0x05,Stable,0,False,05 00 ff ff ff 04 01 00 00 01 04 05
+0x02ED0F,Boss: Peace,0,0x04,Farm,1,False,04 01 00 00 01 04 05 ff 19 6d 7e d9
+0x02ED10,Boss: Peace,0,0x01,GreatTree,0,False,01 00 00 01 04 05 ff 19 6d 7e d9 01
+0x02ED11,Boss: Peace,0,0x00,Castle,0,False,00 00 01 04 05 ff 19 6d 7e d9 01 25
+0x02ED12,Boss: Peace,0,0x00,Castle,1,False,00 01 04 05 ff 19 6d 7e d9 01 25 27
+0x02ED29,Boss: Peace,0,0x04,Farm,0,False,04 00 02 90 ff 05 00 03 90 ff 06 00
+0x02ED2E,Boss: Peace,0,0x05,Stable,0,False,05 00 03 90 ff 06 00 04 90 ff 01 01
+0x02ED33,Boss: Peace,0,0x06,Arena Lobby,0,False,06 00 04 90 ff 01 01 05 90 ff 05 02
+0x02ED38,Boss: Peace,0,0x01,GreatTree,1,False,01 01 05 90 ff 05 02 06 90 ff 08 02
+0x02ED74,Boss: Bravery,0,0x08,Gate tileset,0,False,08 00 ff 40 e1 08 00 ff 40 e2 08 00
+0x02ED79,Boss: Bravery,0,0x08,Gate tileset,0,False,08 00 ff 40 e2 08 00 ff 40 e3 08 00
+0x02ED7E,Boss: Bravery,0,0x08,Gate tileset,0,False,08 00 ff 40 e3 08 00 ff 40 39 02 00
+0x02ED83,Boss: Bravery,0,0x08,Gate tileset,0,False,08 00 ff 40 39 02 00 ff 00 1e 08 05
+0x02ED88,Boss: Bravery,0,0x02,Bazaar,0,False,02 00 ff 00 1e 08 05 01 70 21 00 00
+0x02ED8E,Boss: Bravery,0,0x05,Stable,1,False,05 01 70 21 00 00 ff ff 90 ff 04 00
+0x02ED92,Boss: Bravery,0,0x00,Castle,0,False,00 00 ff ff 90 ff 04 00 02 90 ff 05
+0x02ED98,Boss: Bravery,0,0x04,Farm,0,False,04 00 02 90 ff 05 00 03 90 ff 06 00
+0x02ED9D,Boss: Bravery,0,0x05,Stable,0,False,05 00 03 90 ff 06 00 04 90 ff 01 01
+0x02EDA2,Boss: Bravery,0,0x06,Arena Lobby,0,False,06 00 04 90 ff 01 01 05 90 ff 05 02
+0x02EDA7,Boss: Bravery,0,0x01,GreatTree,1,False,01 01 05 90 ff 05 02 06 90 ff 08 02
+0x02EDF3,0x38,0,0x05,Stable,0,False,05 00 00 01 04 05 ff fc 6d 7f d9 04
+0x02EDF4,0x38,0,0x00,Castle,0,False,00 00 01 04 05 ff fc 6d 7f d9 04 23
+0x02EDF5,0x38,0,0x00,Castle,1,False,00 01 04 05 ff fc 6d 7f d9 04 23 0a
+0x02EE12,0x38,0,0x06,Arena Lobby,1,False,06 01 8f ff 07 04 02 00 2c 01 01 03
+0x02EE18,0x38,0,0x02,Bazaar,0,False,02 00 2c 01 01 03 50 21 0a 00 ff ff
+0x02EE1A,0x38,0,0x2C,Room of Ambition/Demolition,1,False,2c 01 01 03 50 21 0a 00 ff ff 8f ff
+0x02EE1B,0x38,0,0x01,GreatTree,1,False,01 01 03 50 21 0a 00 ff ff 8f ff 07
+0x02EE20,0x38,0,0x0A,Secret Passage,0,False,0a 00 ff ff 8f ff 07 04 02 ff ff 07
+0x02EE2C,0x38,0,0x06,Arena Lobby,0,False,06 00 00 01 04 05 ff 35 6e 80 d9 04
+0x02EE2D,0x38,0,0x00,Castle,0,False,00 00 01 04 05 ff 35 6e 80 d9 04 25
+0x02EE2E,0x38,0,0x00,Castle,1,False,00 01 04 05 ff 35 6e 80 d9 04 25 43
+0x02EEB3,0x38,0,0x01,GreatTree,0,False,01 00 ff 40 e1 01 00 ff 40 e2 01 00
+0x02EEB8,0x38,0,0x01,GreatTree,0,False,01 00 ff 40 e2 01 00 ff 40 e3 01 00
+0x02EEBD,0x39,0,0x01,GreatTree,0,False,01 00 ff 40 e3 01 00 ff 00 18 01 01
+0x02EEC2,0x39,0,0x01,GreatTree,0,False,01 00 ff 00 18 01 01 01 50 21 0a 00
+0x02EEC6,0x39,0,0x18,Well,1,False,18 01 01 01 50 21 0a 00 ff ff 90 ff
+0x02EEC7,0x39,0,0x01,GreatTree,1,False,01 01 01 50 21 0a 00 ff ff 90 ff 02
+0x02EEC8,0x39,0,0x01,GreatTree,1,False,01 01 50 21 0a 00 ff ff 90 ff 02 02
+0x02EECC,0x39,0,0x0A,Secret Passage,0,False,0a 00 ff ff 90 ff 02 02 02 90 ff 02
+0x02EF36,0x3A,0,0x01,GreatTree,1,False,01 01 00 00 01 04 05 ff 40 6f 81 d9
+0x02EF37,0x3A,0,0x01,GreatTree,0,False,01 00 00 01 04 05 ff 40 6f 81 d9 07
+0x02EF38,0x3A,0,0x00,Castle,0,False,00 00 01 04 05 ff 40 6f 81 d9 07 24
+0x02EF39,0x3A,0,0x00,Castle,1,False,00 01 04 05 ff 40 6f 81 d9 07 24 4e
+0x02EF51,0x3A,0,0x04,Farm,1,False,04 01 50 21 0a 01 ff ff ff ff 05 03
+0x02EF55,0x3A,0,0x0A,Secret Passage,1,False,0a 01 ff ff ff ff 05 03 00 00 01 04
+0x02EF5C,0x3A,0,0x03,Gate Hub,0,False,03 00 00 01 04 05 ff 65 6f 82 d9 07
+0x02EF5D,0x3A,0,0x00,Castle,0,False,00 00 01 04 05 ff 65 6f 82 d9 07 23
+0x02EF5E,0x3A,0,0x00,Castle,1,False,00 01 04 05 ff 65 6f 82 d9 07 23 79
+0x02EF7C,0x3A,0,0x02,Bazaar,1,False,02 01 8f ff 02 03 02 8f ff 01 04 03
+0x02EFA3,0x3A,0,0x00,Castle,0,False,00 00 ff 00 23 05 01 08 00 ff 05 01
+0x02EFA8,0x3A,0,0x05,Stable,1,False,05 01 08 00 ff 05 01 08 00 ff 06 01
+0x02EFAA,0x3A,0,0x08,Gate tileset,0,False,08 00 ff 05 01 08 00 ff 06 01 08 ff
+0x02EFAD,0x3A,0,0x05,Stable,1,False,05 01 08 00 ff 06 01 08 ff 8f ff 04
+0x02EFAF,0x3A,0,0x08,Gate tileset,0,False,08 00 ff 06 01 08 ff 8f ff 04 02 01
+0x02EFB2,0x3A,0,0x06,Arena Lobby,1,False,06 01 08 ff 8f ff 04 02 01 8f ff 02
+0x02EFB9,0x3A,0,0x02,Bazaar,1,False,02 01 8f ff 02 03 02 8f ff 01 04 03
+0x02EFDB,0x3A,0,0x06,Arena Lobby,1,False,06 01 00 00 01 04 05 ff e5 6f 83 d9
+0x02EFDC,0x3A,0,0x01,GreatTree,0,False,01 00 00 01 04 05 ff e5 6f 83 d9 07
+0x02EFDD,0x3A,0,0x00,Castle,0,False,00 00 01 04 05 ff e5 6f 83 d9 07 25
+0x02EFDE,0x3A,0,0x00,Castle,1,False,00 01 04 05 ff e5 6f 83 d9 07 25 f3
+0x02EFF6,0x3A,0,0x04,Farm,1,False,04 01 90 ff 05 04 02 40 e1 04 04 ff
+0x02F00E,0x3B,0,0x00,Castle,0,False,00 00 ff 60 e0 05 04 ff ff 90 ff 04
+0x02F035,0x3C,0,0x0A,Secret Passage,1,False,0a 01 ff 00 28 04 05 01 00 ff 04 04
+0x02F03B,0x3C,0,0x05,Stable,1,False,05 01 00 ff 04 04 01 00 ff 05 04 01
+0x02F03C,0x3C,0,0x01,GreatTree,0,False,01 00 ff 04 04 01 00 ff 05 04 01 ff
+0x02F040,0x3C,0,0x04,Farm,1,False,04 01 00 ff 05 04 01 ff ff ff 01 03
+0x02F041,0x3C,0,0x01,GreatTree,0,False,01 00 ff 05 04 01 ff ff ff 01 03 00
+0x02F045,0x3C,0,0x04,Farm,1,False,04 01 ff ff ff 01 03 00 00 01 04 05
+0x02F04B,0x3C,0,0x03,Gate Hub,0,False,03 00 00 01 04 05 ff 54 70 85 d9 01
+0x02F04C,0x3C,0,0x00,Castle,0,False,00 00 01 04 05 ff 54 70 85 d9 01 24
+0x02F04D,0x3C,0,0x00,Castle,1,False,00 01 04 05 ff 54 70 85 d9 01 24 62
+0x02F063,0x3C,0,0x2B,Room of Reflection,1,False,2b 01 05 01 50 21 0a 00 ff ff ff ff
+0x02F065,0x3C,0,0x05,Stable,1,False,05 01 50 21 0a 00 ff ff ff ff 01 05
+0x02F069,0x3C,0,0x0A,Secret Passage,0,False,0a 00 ff ff ff ff 01 05 00 00 01 04
+0x02F070,0x3C,0,0x05,Stable,0,False,05 00 00 01 04 05 ff 79 70 86 d9 16
+0x02F071,0x3C,0,0x00,Castle,0,False,00 00 01 04 05 ff 79 70 86 d9 16 25
+0x02F072,0x3C,0,0x00,Castle,1,False,00 01 04 05 ff 79 70 86 d9 16 25 81
+0x02F083,0x3C,0,0x01,GreatTree,1,False,01 01 06 90 ff 02 01 06 90 ff 04 01
+0x02F088,0x3C,0,0x02,Bazaar,1,False,02 01 06 90 ff 04 01 07 90 ff 05 01
+0x02F08D,0x3C,0,0x04,Farm,1,False,04 01 07 90 ff 05 01 07 90 ff 07 01
+0x02F092,0x3C,0,0x05,Stable,1,False,05 01 07 90 ff 07 01 08 90 ff 08 01
+0x02F097,0x3C,0,0x07,Arena Rooms,1,False,07 01 08 90 ff 08 01 08 8f ff 03 03
+0x02F09C,0x3C,0,0x08,Gate tileset,1,False,08 01 08 8f ff 03 03 01 8f ff 06 03
+0x02F0A2,0x3C,0,0x03,Gate Hub,1,False,03 01 8f ff 06 03 02 00 05 02 02 03
+0x02F0A8,0x3D,0,0x02,Bazaar,0,False,02 00 05 02 02 03 00 05 05 02 04 00
+0x02F0AD,0x3D,0,0x03,Gate Hub,0,False,03 00 05 05 02 04 00 05 08 02 05 ff
+0x02F0B2,0x3D,0,0x04,Farm,0,False,04 00 05 08 02 05 ff 01 01 41 00 00
+0x02F0B9,0x3D,0,0x01,GreatTree,1,False,01 01 41 00 00 01 06 02 01 41 00 00
+0x02F0BC,0x3D,0,0x00,Castle,0,False,00 00 01 06 02 01 41 00 00 02 06 04
+0x02F0BD,0x3D,0,0x00,Castle,1,False,00 01 06 02 01 41 00 00 02 06 04 01
+0x02F0C0,0x3D,0,0x02,Bazaar,1,False,02 01 41 00 00 02 06 04 01 41 00 00
+0x02F0C3,0x3D,0,0x00,Castle,0,False,00 00 02 06 04 01 41 00 00 04 06 05
+0x02F0C7,0x3D,0,0x04,Farm,1,False,04 01 41 00 00 04 06 05 01 41 00 00
+0x02F0CA,0x3D,0,0x00,Castle,0,False,00 00 04 06 05 01 41 00 00 05 06 07
+0x02F0CE,0x3D,0,0x05,Stable,1,False,05 01 41 00 00 05 06 07 01 41 00 00
+0x02F0D1,0x3D,0,0x00,Castle,0,False,00 00 05 06 07 01 41 00 00 07 06 08
+0x02F0D5,0x3D,0,0x07,Arena Rooms,1,False,07 01 41 00 00 07 06 08 01 41 00 00
+0x02F0D8,0x3D,0,0x00,Castle,0,False,00 00 07 06 08 01 41 00 00 08 06 ff
+0x02F0DC,0x3D,0,0x08,Gate tileset,1,False,08 01 41 00 00 08 06 ff e6 70 87 d9
+0x02F0DF,0x3D,0,0x00,Castle,0,False,00 00 08 06 ff e6 70 87 d9 18 25 00
+0x02F0E9,0x3D,0,0x25,Room of Memories/Bewilder,0,False,25 00 71 2b 71 18 25 0b 71 2b 71 18
+0x02F101,0x3E,0,0x1C,Coffin Room,1,False,1c 01 04 01 50 21 0a 00 ff ff 00 22
+0x02F103,0x3E,0,0x04,Farm,1,False,04 01 50 21 0a 00 ff ff 00 22 04 03
+0x02F107,0x3E,0,0x0A,Secret Passage,0,False,0a 00 ff ff 00 22 04 03 02 50 21 0a
+0x02F112,0x3F,0,0x0A,Secret Passage,0,False,0a 00 ff 00 ff 04 03 02 00 ff 05 03
+0x02F119,0x3F,0,0x02,Bazaar,0,False,02 00 ff 05 03 02 ff 00 3e 07 04 03
+0x02F127,0x3F,0,0x0A,Secret Passage,0,False,0a 00 ff ff ff 01 02 00 00 01 04 05
+0x02F12D,0x3F,0,0x02,Bazaar,0,False,02 00 00 01 04 05 04 02 00 00 01 04
+0x02F12E,0x3F,0,0x00,Castle,0,False,00 00 01 04 05 04 02 00 00 01 04 05
+0x02F12F,0x3F,0,0x00,Castle,1,False,00 01 04 05 04 02 00 00 01 04 05 07
+0x02F134,0x3F,0,0x02,Bazaar,0,False,02 00 00 01 04 05 07 02 00 00 01 04
+0x02F135,0x3F,0,0x00,Castle,0,False,00 00 01 04 05 07 02 00 00 01 04 05
+0x02F136,0x3F,0,0x00,Castle,1,False,00 01 04 05 07 02 00 00 01 04 05 ff
+0x02F13B,0x40,0,0x02,Bazaar,0,False,02 00 00 01 04 05 ff 46 71 84 71 88
+0x02F13C,0x40,0,0x00,Castle,0,False,00 00 01 04 05 ff 46 71 84 71 88 d9
+0x02F13D,0x40,0,0x00,Castle,1,False,00 01 04 05 ff 46 71 84 71 88 d9 13
+0x02F19A,0x40,0,0x07,Arena Rooms,1,False,07 01 90 ff 07 07 01 90 ff 09 02 0f
+0x02F19F,0x40,0,0x07,Arena Rooms,1,False,07 01 90 ff 09 02 0f 90 ff 09 05 0f
+0x02F1AD,0x41,0,0x02,Bazaar,0,False,02 00 04 90 ff 07 00 04 90 ff 00 02
+0x02F1B2,0x41,0,0x07,Arena Rooms,0,False,07 00 04 90 ff 00 02 0f 90 ff 00 05
+0x02F1DB,0x41,0,0x02,Bazaar,0,False,02 00 0f 90 ff 07 00 0f 90 ff 00 02
+0x02F1E0,0x41,0,0x07,Arena Rooms,0,False,07 00 0f 90 ff 00 02 0f 90 ff 00 05
+0x02F3FF,Labyrinth,0,0x05,Stable,0,False,05 00 00 01 04 05 02 00 42 00 00 02
+0x02F400,Labyrinth,0,0x00,Castle,0,False,00 00 01 04 05 02 00 42 00 00 02 07
+0x02F401,Labyrinth,0,0x00,Castle,1,False,00 01 04 05 02 00 42 00 00 02 07 07
+0x02F405,Labyrinth,0,0x02,Bazaar,0,False,02 00 42 00 00 02 07 07 00 42 00 00
+0x02F407,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 02 07 07 00 42 00 00 07 07
+0x02F408,Labyrinth,0,0x00,Castle,0,False,00 00 02 07 07 00 42 00 00 07 07 00
+0x02F40C,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 42 00 00 07 07 00 02 42 00 00
+0x02F40E,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 07 07 00 02 42 00 00 09 02
+0x02F40F,Labyrinth,0,0x00,Castle,0,False,00 00 07 07 00 02 42 00 00 09 02 00
+0x02F412,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 02 42 00 00 09 02 00 05 42 00
+0x02F415,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 09 02 00 05 42 00 00 09 05
+0x02F416,Labyrinth,0,0x00,Castle,0,False,00 00 09 02 00 05 42 00 00 09 05 02
+0x02F419,Labyrinth,0,0x02,Bazaar,0,False,02 00 05 42 00 00 09 05 02 07 42 00
+0x02F41C,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 09 05 02 07 42 00 00 02 00
+0x02F41D,Labyrinth,0,0x00,Castle,0,False,00 00 09 05 02 07 42 00 00 02 00 07
+0x02F423,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 02 00 07 07 42 00 00 07 00
+0x02F424,Labyrinth,0,0x00,Castle,0,False,00 00 02 00 07 07 42 00 00 07 00 09
+0x02F426,Labyrinth,0,0x02,Bazaar,0,False,02 00 07 07 42 00 00 07 00 09 02 42
+0x02F42A,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 07 00 09 02 42 00 00 00 02
+0x02F42B,Labyrinth,0,0x00,Castle,0,False,00 00 07 00 09 02 42 00 00 00 02 09
+0x02F42D,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 09 02 42 00 00 00 02 09 05 60
+0x02F431,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 00 02 09 05 60 00 00 00 05
+0x02F432,Labyrinth,0,0x00,Castle,0,False,00 00 00 02 09 05 60 00 00 00 05 ff
+0x02F433,Labyrinth,0,0x00,Castle,0,False,00 00 02 09 05 60 00 00 00 05 ff 05
+0x02F439,Labyrinth,0,0x00,Castle,0,False,00 00 00 05 ff 05 05 00 00 01 04 05
+0x02F43A,Labyrinth,0,0x00,Castle,0,False,00 00 05 ff 05 05 00 00 01 04 05 02
+0x02F43F,Labyrinth,0,0x05,Stable,0,False,05 00 00 01 04 05 02 00 42 00 00 02
+0x02F440,Labyrinth,0,0x00,Castle,0,False,00 00 01 04 05 02 00 42 00 00 02 07
+0x02F441,Labyrinth,0,0x00,Castle,1,False,00 01 04 05 02 00 42 00 00 02 07 07
+0x02F445,Labyrinth,0,0x02,Bazaar,0,False,02 00 42 00 00 02 07 07 00 42 00 00
+0x02F447,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 02 07 07 00 42 00 00 07 07
+0x02F448,Labyrinth,0,0x00,Castle,0,False,00 00 02 07 07 00 42 00 00 07 07 00
+0x02F44C,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 42 00 00 07 07 00 02 42 00 00
+0x02F44E,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 07 07 00 02 42 00 00 09 02
+0x02F44F,Labyrinth,0,0x00,Castle,0,False,00 00 07 07 00 02 42 00 00 09 02 00
+0x02F452,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 02 42 00 00 09 02 00 05 60 00
+0x02F455,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 09 02 00 05 60 00 00 09 05
+0x02F456,Labyrinth,0,0x00,Castle,0,False,00 00 09 02 00 05 60 00 00 09 05 02
+0x02F459,Labyrinth,0,0x02,Bazaar,0,False,02 00 05 60 00 00 09 05 02 07 42 00
+0x02F45D,Labyrinth,0,0x00,Castle,0,False,00 00 09 05 02 07 42 00 00 02 00 07
+0x02F463,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 02 00 07 07 42 00 00 07 00
+0x02F464,Labyrinth,0,0x00,Castle,0,False,00 00 02 00 07 07 42 00 00 07 00 09
+0x02F466,Labyrinth,0,0x02,Bazaar,0,False,02 00 07 07 42 00 00 07 00 09 02 42
+0x02F46A,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 07 00 09 02 42 00 00 00 02
+0x02F46B,Labyrinth,0,0x00,Castle,0,False,00 00 07 00 09 02 42 00 00 00 02 09
+0x02F46D,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 09 02 42 00 00 00 02 09 05 42
+0x02F471,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 00 02 09 05 42 00 00 00 05
+0x02F472,Labyrinth,0,0x00,Castle,0,False,00 00 00 02 09 05 42 00 00 00 05 ff
+0x02F473,Labyrinth,0,0x00,Castle,0,False,00 00 02 09 05 42 00 00 00 05 ff 05
+0x02F478,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 00 05 ff 05 05 00 00 01 04
+0x02F479,Labyrinth,0,0x00,Castle,0,False,00 00 00 05 ff 05 05 00 00 01 04 05
+0x02F47A,Labyrinth,0,0x00,Castle,0,False,00 00 05 ff 05 05 00 00 01 04 05 02
+0x02F47F,Labyrinth,0,0x05,Stable,0,False,05 00 00 01 04 05 02 00 42 00 00 02
+0x02F480,Labyrinth,0,0x00,Castle,0,False,00 00 01 04 05 02 00 42 00 00 02 07
+0x02F481,Labyrinth,0,0x00,Castle,1,False,00 01 04 05 02 00 42 00 00 02 07 07
+0x02F485,Labyrinth,0,0x02,Bazaar,0,False,02 00 42 00 00 02 07 07 00 42 00 00
+0x02F487,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 02 07 07 00 42 00 00 07 07
+0x02F488,Labyrinth,0,0x00,Castle,0,False,00 00 02 07 07 00 42 00 00 07 07 00
+0x02F48C,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 42 00 00 07 07 00 02 60 00 00
+0x02F48E,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 07 07 00 02 60 00 00 09 02
+0x02F48F,Labyrinth,0,0x00,Castle,0,False,00 00 07 07 00 02 60 00 00 09 02 00
+0x02F492,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 02 60 00 00 09 02 00 05 42 00
+0x02F496,Labyrinth,0,0x00,Castle,0,False,00 00 09 02 00 05 42 00 00 09 05 02
+0x02F499,Labyrinth,0,0x02,Bazaar,0,False,02 00 05 42 00 00 09 05 02 07 42 00
+0x02F49C,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 09 05 02 07 42 00 00 02 00
+0x02F49D,Labyrinth,0,0x00,Castle,0,False,00 00 09 05 02 07 42 00 00 02 00 07
+0x02F4A3,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 02 00 07 07 42 00 00 07 00
+0x02F4A4,Labyrinth,0,0x00,Castle,0,False,00 00 02 00 07 07 42 00 00 07 00 09
+0x02F4A6,Labyrinth,0,0x02,Bazaar,0,False,02 00 07 07 42 00 00 07 00 09 02 42
+0x02F4AA,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 07 00 09 02 42 00 00 00 02
+0x02F4AB,Labyrinth,0,0x00,Castle,0,False,00 00 07 00 09 02 42 00 00 00 02 09
+0x02F4AD,Labyrinth,0,0x07,Arena Rooms,0,False,07 00 09 02 42 00 00 00 02 09 05 42
+0x02F4B1,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 00 02 09 05 42 00 00 00 05
+0x02F4B2,Labyrinth,0,0x00,Castle,0,False,00 00 00 02 09 05 42 00 00 00 05 ff
+0x02F4B3,Labyrinth,0,0x00,Castle,0,False,00 00 02 09 05 42 00 00 00 05 ff 00
+0x02F4B8,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 00 05 ff 00 02 42 00 00 09
+0x02F4B9,Labyrinth,0,0x00,Castle,0,False,00 00 00 05 ff 00 02 42 00 00 09 02
+0x02F4BA,Labyrinth,0,0x00,Castle,0,False,00 00 05 ff 00 02 42 00 00 09 02 00
+0x02F4C0,Labyrinth,0,0x42,Labyrinth,0,False,42 00 00 09 02 00 05 42 00 00 09 05
+0x02F4C1,Labyrinth,0,0x00,Castle,0,False,00 00 09 02 00 05 42 00 00 09 05 09
+0x02F4C4,Labyrinth,0,0x02,Bazaar,0,False,02 00 05 42 00 00 09 05 09 02 42 00
+0x02F4EE,Labyrinth,1,0x05,Stable,1,False,05 01 82 ff 08 05 01 50 21 0a 01 ff
+0x02F4F3,Labyrinth,1,0x05,Stable,1,False,05 01 50 21 0a 01 ff 06 27 04 02 02
+0x02F4F7,Labyrinth,1,0x0A,Secret Passage,1,False,0a 01 ff 06 27 04 02 02 00 ff 04 02
+0x02F4FE,Labyrinth,1,0x02,Bazaar,0,False,02 00 ff 04 02 02 00 ff 05 02 02 ff
+0x02F503,Labyrinth,1,0x02,Bazaar,0,False,02 00 ff 05 02 02 ff 82 ff 07 05 01
+0x02F50D,Labyrinth,1,0x05,Stable,1,False,05 01 82 ff 08 05 01 ff ff 02 05 00
+0x02F512,Labyrinth,1,0x05,Stable,1,False,05 01 ff ff 02 05 00 00 01 04 05 ff
+0x02F517,Labyrinth,1,0x05,Stable,0,False,05 00 00 01 04 05 ff 20 75 8b d9 19
+0x02F518,Labyrinth,1,0x00,Castle,0,False,00 00 01 04 05 ff 20 75 8b d9 19 24
+0x02F519,Labyrinth,1,0x00,Castle,1,False,00 01 04 05 ff 20 75 8b d9 19 24 2e
+0x02F535,Labyrinth,1,0x0A,Secret Passage,1,False,0a 01 ff 00 24 05 02 01 60 e0 05 03
+0x02F53B,Labyrinth,1,0x02,Bazaar,1,False,02 01 60 e0 05 03 ff 60 e1 05 04 ff
+0x02F554,Labyrinth,1,0x02,Bazaar,1,False,02 01 ff ff ff 06 01 00 00 01 04 05
+0x02F559,Labyrinth,1,0x06,Arena Lobby,1,False,06 01 00 00 01 04 05 ff 63 75 8c d9
+0x02F55A,Labyrinth,1,0x01,GreatTree,0,False,01 00 00 01 04 05 ff 63 75 8c d9 0a
+0x02F55B,Labyrinth,1,0x00,Castle,0,False,00 00 01 04 05 ff 63 75 8c d9 0a 24
+0x02F55C,Labyrinth,1,0x00,Castle,1,False,00 01 04 05 ff 63 75 8c d9 0a 24 77
+0x02F58D,Labyrinth,1,0x04,Farm,0,False,04 00 ff 50 21 0a 01 ff 00 29 04 05
+0x02F592,Labyrinth,1,0x0A,Secret Passage,1,False,0a 01 ff 00 29 04 05 ff ff 20 e0 04
+0x02F5B1,0x43,0,0x04,Farm,0,False,04 00 ff 50 21 0a 01 ff 00 29 04 05
+0x02F5B6,0x43,0,0x0A,Secret Passage,1,False,0a 01 ff 00 29 04 05 ff ff ff ff 05
+0x02F5C2,0x43,0,0x05,Stable,0,False,05 00 00 01 04 05 ff cb 75 8d d9 01
+0x02F5C3,0x43,0,0x00,Castle,0,False,00 00 01 04 05 ff cb 75 8d d9 01 23
+0x02F5C4,0x43,0,0x00,Castle,1,False,00 01 04 05 ff cb 75 8d d9 01 23 d9
+0x02F5DB,0x43,0,0x0A,Secret Passage,0,False,0a 00 ff 00 2d 04 03 01 00 ff 04 03
+0x02F5E1,0x44,0,0x03,Gate Hub,1,False,03 01 00 ff 04 03 01 00 ff 05 03 01
+0x02F5E2,0x44,0,0x01,GreatTree,0,False,01 00 ff 04 03 01 00 ff 05 03 01 ff
+0x02F5E6,0x44,0,0x03,Gate Hub,1,False,03 01 00 ff 05 03 01 ff ff ff 02 04
+0x02F5E7,0x44,0,0x01,GreatTree,0,False,01 00 ff 05 03 01 ff ff ff 02 04 00
+0x02F5EB,0x44,0,0x03,Gate Hub,1,False,03 01 ff ff ff 02 04 00 00 01 04 05
+0x02F5F1,0x44,0,0x04,Farm,0,False,04 00 00 01 04 05 ff fa 75 8e d9 1c
+0x02F5F2,0x44,0,0x00,Castle,0,False,00 00 01 04 05 ff fa 75 8e d9 1c 24
+0x02F5F3,0x44,0,0x00,Castle,1,False,00 01 04 05 ff fa 75 8e d9 1c 24 0e
+0x02F610,0x44,0,0x0A,Secret Passage,0,False,0a 00 ff 00 2e 04 03 01 00 ff 05 03
+0x02F616,0x44,0,0x03,Gate Hub,1,False,03 01 00 ff 05 03 01 00 ff 04 03 01
+0x02F617,0x44,0,0x01,GreatTree,0,False,01 00 ff 05 03 01 00 ff 04 03 01 ff
+0x02F61B,0x44,0,0x03,Gate Hub,1,False,03 01 00 ff 04 03 01 ff 50 21 0a 00
+0x02F61C,0x44,0,0x01,GreatTree,0,False,01 00 ff 04 03 01 ff 50 21 0a 00 ff
+0x02F620,0x44,0,0x03,Gate Hub,1,False,03 01 ff 50 21 0a 00 ff 00 2f 04 03
+0x02F625,0x45,0,0x0A,Secret Passage,0,False,0a 00 ff 00 2f 04 03 02 00 ff 05 03
+0x02F62C,0x45,0,0x02,Bazaar,0,False,02 00 ff 05 03 02 00 ff 04 03 02 ff
+0x02F631,0x45,0,0x02,Bazaar,0,False,02 00 ff 04 03 02 ff ff ff ff 03 04
+0x02F63C,0x45,0,0x04,Farm,0,False,04 00 00 01 04 05 ff 45 76 8f d9 0d
+0x02F63D,0x45,0,0x00,Castle,0,False,00 00 01 04 05 ff 45 76 8f d9 0d 24
+0x02F63E,0x45,0,0x00,Castle,1,False,00 01 04 05 ff 45 76 8f d9 0d 24 53
+0x02F655,0x45,0,0x0A,Secret Passage,0,False,0a 00 ff 00 30 04 01 01 00 ff 04 01
+0x02F65A,0x45,0,0x04,Farm,1,False,04 01 01 00 ff 04 01 01 00 ff 05 01
+0x02F65B,0x45,0,0x01,GreatTree,1,False,01 01 00 ff 04 01 01 00 ff 05 01 01
+0x02F65C,0x45,0,0x01,GreatTree,0,False,01 00 ff 04 01 01 00 ff 05 01 01 ff
+0x02F65F,0x45,0,0x04,Farm,1,False,04 01 01 00 ff 05 01 01 ff ff ff 04
+0x02F660,0x45,0,0x01,GreatTree,1,False,01 01 00 ff 05 01 01 ff ff ff 04 01
+0x02F661,0x45,0,0x01,GreatTree,0,False,01 00 ff 05 01 01 ff ff ff 04 01 00
+0x02F664,0x45,0,0x05,Stable,1,False,05 01 01 ff ff ff 04 01 00 00 01 04
+0x02F665,0x45,0,0x01,GreatTree,1,False,01 01 ff ff ff 04 01 00 00 01 04 05
+0x02F66A,0x45,0,0x04,Farm,1,False,04 01 00 00 01 04 05 ff 74 76 90 d9
+0x02F66B,0x45,0,0x01,GreatTree,0,False,01 00 00 01 04 05 ff 74 76 90 d9 0c
+0x02F66C,0x45,0,0x00,Castle,0,False,00 00 01 04 05 ff 74 76 90 d9 0c 25
+0x02F66D,0x45,0,0x00,Castle,1,False,00 01 04 05 ff 74 76 90 d9 0c 25 82
+0x02F684,0x45,0,0x0A,Secret Passage,0,False,0a 00 ff 00 31 04 02 01 00 ff 04 02
+0x02F68A,Boss: Ambition,0,0x02,Bazaar,1,False,02 01 00 ff 04 02 01 00 ff 05 02 01
+0x02F68B,Boss: Ambition,0,0x01,GreatTree,0,False,01 00 ff 04 02 01 00 ff 05 02 01 ff
+0x02F68F,Boss: Ambition,0,0x02,Bazaar,1,False,02 01 00 ff 05 02 01 ff ff ff 02 04
+0x02F690,Boss: Ambition,0,0x01,GreatTree,0,False,01 00 ff 05 02 01 ff ff ff 02 04 00
+0x02F694,Boss: Ambition,0,0x02,Bazaar,1,False,02 01 ff ff ff 02 04 00 00 01 04 05
+0x02F69A,Boss: Ambition,0,0x04,Farm,0,False,04 00 00 01 04 05 ff a3 76 91 d9 0b
+0x02F69B,Boss: Ambition,0,0x00,Castle,0,False,00 00 01 04 05 ff a3 76 91 d9 0b 23
+0x02F69C,Boss: Ambition,0,0x00,Castle,1,False,00 01 04 05 ff a3 76 91 d9 0b 23 b1
+0x02F6B3,Boss: Ambition,0,0x0A,Secret Passage,0,False,0a 00 ff 00 32 04 01 01 00 ff 04 01
+0x02F6B8,0x47,0,0x04,Farm,1,False,04 01 01 00 ff 04 01 01 00 ff 05 01
+0x02F6B9,0x47,0,0x01,GreatTree,1,False,01 01 00 ff 04 01 01 00 ff 05 01 01
+0x02F6BA,0x47,0,0x01,GreatTree,0,False,01 00 ff 04 01 01 00 ff 05 01 01 ff
+0x02F6BD,0x47,0,0x04,Farm,1,False,04 01 01 00 ff 05 01 01 ff ff ff 05
+0x02F6BE,0x47,0,0x01,GreatTree,1,False,01 01 00 ff 05 01 01 ff ff ff 05 03
+0x02F6BF,0x47,0,0x01,GreatTree,0,False,01 00 ff 05 01 01 ff ff ff 05 03 00
+0x02F6C2,0x47,0,0x05,Stable,1,False,05 01 01 ff ff ff 05 03 00 00 01 04
+0x02F6C3,0x47,0,0x01,GreatTree,1,False,01 01 ff ff ff 05 03 00 00 01 04 05
+0x02F6C9,0x47,0,0x03,Gate Hub,0,False,03 00 00 01 04 05 ff d2 76 92 d9 0e
+0x02F6CA,0x47,0,0x00,Castle,0,False,00 00 01 04 05 ff d2 76 92 d9 0e 23
+0x02F6CB,0x47,0,0x00,Castle,1,False,00 01 04 05 ff d2 76 92 d9 0e 23 e0
+0x02F6E2,0x47,0,0x0A,Secret Passage,0,False,0a 00 ff 00 33 04 01 01 00 ff 04 01
+0x02F6E7,0x47,0,0x04,Farm,1,False,04 01 01 00 ff 04 01 01 00 ff 05 01
+0x02F6E8,0x47,0,0x01,GreatTree,1,False,01 01 00 ff 04 01 01 00 ff 05 01 01
+0x02F6E9,0x47,0,0x01,GreatTree,0,False,01 00 ff 04 01 01 00 ff 05 01 01 ff
+0x02F6EC,0x47,0,0x04,Farm,1,False,04 01 01 00 ff 05 01 01 ff ff ff 04
+0x02F6ED,0x47,0,0x01,GreatTree,1,False,01 01 00 ff 05 01 01 ff ff ff 04 03
+0x02F6EE,0x47,0,0x01,GreatTree,0,False,01 00 ff 05 01 01 ff ff ff 04 03 00
+0x02F6F1,0x47,0,0x05,Stable,1,False,05 01 01 ff ff ff 04 03 00 00 01 04
+0x02F6F2,0x47,0,0x01,GreatTree,1,False,01 01 ff ff ff 04 03 00 00 01 04 05
+0x02F6F8,0x47,0,0x03,Gate Hub,0,False,03 00 00 01 04 05 ff 01 77 93 d9 11
+0x02F6F9,0x47,0,0x00,Castle,0,False,00 00 01 04 05 ff 01 77 93 d9 11 23
+0x02F6FA,0x47,0,0x00,Castle,1,False,00 01 04 05 ff 01 77 93 d9 11 23 0f
+0x02F717,0x48,0,0x02,Bazaar,1,False,02 01 00 ff 04 03 01 00 ff 05 03 01
+0x02F718,0x48,0,0x01,GreatTree,0,False,01 00 ff 04 03 01 00 ff 05 03 01 ff
+0x02F71C,0x48,0,0x03,Gate Hub,1,False,03 01 00 ff 05 03 01 ff ff ff 04 04
+0x02F71D,0x48,0,0x01,GreatTree,0,False,01 00 ff 05 03 01 ff ff ff 04 04 00
+0x02F721,0x48,0,0x03,Gate Hub,1,False,03 01 ff ff ff 04 04 00 00 01 04 05
+0x02F727,0x48,0,0x04,Farm,0,False,04 00 00 01 04 05 ff 30 77 94 d9 0f
+0x02F728,0x48,0,0x00,Castle,0,False,00 00 01 04 05 ff 30 77 94 d9 0f 25
+0x02F729,0x48,0,0x00,Castle,1,False,00 01 04 05 ff 30 77 94 d9 0f 25 3e
+0x02F740,0x49,0,0x0A,Secret Passage,0,False,0a 00 ff 00 35 04 01 01 00 ff 04 01
+0x02F745,0x49,0,0x04,Farm,1,False,04 01 01 00 ff 04 01 01 00 ff 05 01
+0x02F746,0x49,0,0x01,GreatTree,1,False,01 01 00 ff 04 01 01 00 ff 05 01 01
+0x02F747,0x49,0,0x01,GreatTree,0,False,01 00 ff 04 01 01 00 ff 05 01 01 ff
+0x02F74A,0x49,0,0x04,Farm,1,False,04 01 01 00 ff 05 01 01 ff ff ff 03
+0x02F74B,0x49,0,0x01,GreatTree,1,False,01 01 00 ff 05 01 01 ff ff ff 03 03
+0x02F74C,0x49,0,0x01,GreatTree,0,False,01 00 ff 05 01 01 ff ff ff 03 03 00
+0x02F74F,0x49,0,0x05,Stable,1,False,05 01 01 ff ff ff 03 03 00 00 01 04
+0x02F750,0x49,0,0x01,GreatTree,1,False,01 01 ff ff ff 03 03 00 00 01 04 05
+0x02F756,0x49,0,0x03,Gate Hub,0,False,03 00 00 01 04 05 ff 6d 77 ff ff ff
+0x02F757,0x49,0,0x00,Castle,0,False,00 00 01 04 05 ff 6d 77 ff ff ff ff
+0x02F758,0x49,0,0x00,Castle,1,False,00 01 04 05 ff 6d 77 ff ff ff ff ff
+0x02F785,0x4A,0,0x0A,Secret Passage,1,False,0a 01 ff 0a 36 04 02 01 00 ff 03 03
+0x02F78B,0x4A,0,0x02,Bazaar,1,False,02 01 00 ff 03 03 01 00 ff 04 03 01
+0x02F78C,0x4A,0,0x01,GreatTree,0,False,01 00 ff 03 03 01 00 ff 04 03 01 00
+0x02F790,0x4B,0,0x03,Gate Hub,1,False,03 01 00 ff 04 03 01 00 ff 05 03 01
+0x02F791,0x4B,0,0x01,GreatTree,0,False,01 00 ff 04 03 01 00 ff 05 03 01 ff
+0x02F795,0x4B,0,0x03,Gate Hub,1,False,03 01 00 ff 05 03 01 ff ff ff ff 04
+0x02F796,0x4B,0,0x01,GreatTree,0,False,01 00 ff 05 03 01 ff ff ff ff 04 04
+0x02F79A,0x4B,0,0x03,Gate Hub,1,False,03 01 ff ff ff ff 04 04 00 00 01 04
+0x02F7A1,0x4B,0,0x04,Farm,0,False,04 00 00 01 04 05 ff ff ab 77 97 d9
+0x02F7A2,0x4B,0,0x00,Castle,0,False,00 00 01 04 05 ff ff ab 77 97 d9 04
+0x02F7A3,0x4B,0,0x00,Castle,1,False,00 01 04 05 ff ff ab 77 97 d9 04 24
+0x02F7BC,0x4B,0,0x04,Farm,1,False,04 01 90 ff 05 04 01 40 37 04 03 02
+0x02F7C1,0x4C,0,0x04,Farm,1,False,04 01 40 37 04 03 02 40 ff 04 03 02
+0x02F7D6,0x4C,0,0x05,Stable,0,False,05 00 00 01 04 05 ff df 77 98 d9 01
+0x02F7D7,0x4C,0,0x00,Castle,0,False,00 00 01 04 05 ff df 77 98 d9 01 26
+0x02F7D8,0x4C,0,0x00,Castle,1,False,00 01 04 05 ff df 77 98 d9 01 26 e7
+0x02F7EA,0x4C,0,0x03,Gate Hub,1,False,03 01 00 06 04 02 01 ff 01 06 00 80
+0x02F7EB,0x4C,0,0x01,GreatTree,0,False,01 00 06 04 02 01 ff 01 06 00 80 00
+0x02F7EF,Boss: Arena Right,0,0x02,Bazaar,1,False,02 01 ff 01 06 00 80 00 00 00 ff fc
+0x02F7F3,Boss: Arena Right,0,0x06,Arena Lobby,0,False,06 00 80 00 00 00 ff fc 77 98 d9 03
+0x02F7F6,Boss: Arena Right,0,0x00,Castle,0,False,00 00 00 ff fc 77 98 d9 03 26 04 78
+0x02F7F7,Boss: Arena Right,0,0x00,Castle,0,False,00 00 ff fc 77 98 d9 03 26 04 78 0f
+0x02F808,Boss: Arena Right,0,0x02,Bazaar,0,False,02 00 11 04 02 01 ff 08 02 00 80 00
+0x02F80C,Boss: Arena Right,0,0x02,Bazaar,1,False,02 01 ff 08 02 00 80 00 00 00 ff 19
+0x02F810,Boss: Arena Right,0,0x02,Bazaar,0,False,02 00 80 00 00 00 ff 19 78 98 d9 05
+0x02F813,Boss: Arena Right,0,0x00,Castle,0,False,00 00 00 ff 19 78 98 d9 05 26 21 78
+0x02F814,Boss: Arena Right,0,0x00,Castle,0,False,00 00 ff 19 78 98 d9 05 26 21 78 4a
+0x02F881,Boss: Unused Gate,0,0x00,Castle,0,False,00 00 09 03 01 00 61 00 00 01 07 08
+0x02F884,Boss: Unused Gate,0,0x03,Gate Hub,1,False,03 01 00 61 00 00 01 07 08 00 63 00
+0x02F885,Boss: Unused Gate,0,0x01,GreatTree,0,False,01 00 61 00 00 01 07 08 00 63 00 00
+0x02F888,Boss: Unused Gate,0,0x00,Castle,0,False,00 00 01 07 08 00 63 00 00 08 07 09
+0x02F889,Boss: Unused Gate,0,0x00,Castle,1,False,00 01 07 08 00 63 00 00 08 07 09 03
+0x02F88C,Boss: Unused Gate,0,0x08,Gate tileset,0,False,08 00 63 00 00 08 07 09 03 61 00 00
+0x02F88F,Boss: Unused Gate,0,0x00,Castle,0,False,00 00 08 07 09 03 61 00 00 00 03 ff
+0x02F896,Boss: Unused Gate,0,0x00,Castle,0,False,00 00 00 03 ff 01 07 53 00 00 01 00
+0x02F897,Boss: Unused Gate,0,0x00,Castle,0,False,00 00 03 ff 01 07 53 00 00 01 00 08
+0x02F89D,0x50,0,0x53,Forest Maze,0,False,53 00 00 01 00 08 07 53 00 00 08 00
+0x02F89E,0x50,0,0x00,Castle,0,False,00 00 01 00 08 07 53 00 00 08 00 00
+0x02F89F,0x50,0,0x00,Castle,1,False,00 01 00 08 07 53 00 00 08 00 00 03
+0x02F8A0,0x50,0,0x01,GreatTree,0,False,01 00 08 07 53 00 00 08 00 00 03 53
+0x02F8A4,0x50,0,0x53,Forest Maze,0,False,53 00 00 08 00 00 03 53 00 00 09 03
+0x02F8A5,0x50,0,0x00,Castle,0,False,00 00 08 00 00 03 53 00 00 09 03 01
+0x02F8A7,0x50,0,0x08,Gate tileset,0,False,08 00 00 03 53 00 00 09 03 01 00 62
+0x02F8A8,0x50,0,0x00,Castle,0,False,00 00 03 53 00 00 09 03 01 00 62 00
+0x02F8AB,0x50,0,0x53,Forest Maze,0,False,53 00 00 09 03 01 00 62 00 00 01 07
+0x02F8AC,0x50,0,0x00,Castle,0,False,00 00 09 03 01 00 62 00 00 01 07 ff
+0x02F8AF,0x50,0,0x03,Gate Hub,1,False,03 01 00 62 00 00 01 07 ff 01 07 61
+0x02F8B0,0x50,0,0x01,GreatTree,0,False,01 00 62 00 00 01 07 ff 01 07 61 00
+0x02F8B3,0x50,0,0x00,Castle,0,False,00 00 01 07 ff 01 07 61 00 00 01 00
+0x02F8B4,0x50,0,0x00,Castle,1,False,00 01 07 ff 01 07 61 00 00 01 00 08
+0x02F8BB,0x50,0,0x00,Castle,0,False,00 00 01 00 08 00 61 00 00 08 07 09
+0x02F8BC,0x50,0,0x00,Castle,1,False,00 01 00 08 00 61 00 00 08 07 09 03
+0x02F8BD,0x50,0,0x01,GreatTree,0,False,01 00 08 00 61 00 00 08 07 09 03 53
+0x02F8BF,0x50,0,0x08,Gate tileset,0,False,08 00 61 00 00 08 07 09 03 53 00 00
+0x02F8C2,0x51,0,0x00,Castle,0,False,00 00 08 07 09 03 53 00 00 00 03 ff
+0x02F8C8,0x51,0,0x53,Forest Maze,0,False,53 00 00 00 03 ff 08 07 62 00 00 08
+0x02F8C9,0x51,0,0x00,Castle,0,False,00 00 00 03 ff 08 07 62 00 00 08 00
+0x02F8CA,0x51,0,0x00,Castle,0,False,00 00 03 ff 08 07 62 00 00 08 00 09
+0x02F8D1,0x51,0,0x00,Castle,0,False,00 00 08 00 09 05 63 00 00 00 05 01
+0x02F8D3,0x51,0,0x08,Gate tileset,0,False,08 00 09 05 63 00 00 00 05 01 00 63
+0x02F8D8,0x51,0,0x00,Castle,0,False,00 00 00 05 01 00 63 00 00 01 07 04
+0x02F8D9,0x51,0,0x00,Castle,0,False,00 00 05 01 00 63 00 00 01 07 04 00
+0x02F8DB,0x51,0,0x05,Stable,1,False,05 01 00 63 00 00 01 07 04 00 64 00
+0x02F8DC,0x51,0,0x01,GreatTree,0,False,01 00 63 00 00 01 07 04 00 64 00 00
+0x02F8DF,Coliseum,0,0x00,Castle,0,False,00 00 01 07 04 00 64 00 00 04 07 00
+0x02F8E0,Coliseum,0,0x00,Castle,1,False,00 01 07 04 00 64 00 00 04 07 00 05
+0x02F8E3,Coliseum,0,0x04,Farm,0,False,04 00 64 00 00 04 07 00 05 63 00 00
+0x02F8E6,Coliseum,0,0x00,Castle,0,False,00 00 04 07 00 05 63 00 00 09 05 01
+0x02F8E9,Coliseum,0,0x07,Arena Rooms,0,False,07 00 05 63 00 00 09 05 01 07 63 00
+0x02F8ED,Coliseum,0,0x00,Castle,0,False,00 00 09 05 01 07 63 00 00 01 00 ff
+0x02F8F0,Coliseum,0,0x05,Stable,1,False,05 01 07 63 00 00 01 00 ff 04 07 63
+0x02F8F4,Coliseum,0,0x00,Castle,0,False,00 00 01 00 ff 04 07 63 00 00 04 00
+0x02F8F5,Coliseum,0,0x00,Castle,1,False,00 01 00 ff 04 07 63 00 00 04 00 04
+0x02F8F6,Coliseum,0,0x01,GreatTree,0,False,01 00 ff 04 07 63 00 00 04 00 04 04
+0x02F8FC,Coliseum,0,0x00,Castle,0,False,00 00 04 00 04 04 00 80 00 00 00 ff
+0x02F8FE,Coliseum,0,0x04,Farm,0,False,04 00 04 04 00 80 00 00 00 ff 20 79
+0x02F901,Coliseum,0,0x04,Farm,0,False,04 00 80 00 00 00 ff 20 79 28 79 30
+0x02F904,Coliseum,0,0x00,Castle,0,False,00 00 00 ff 20 79 28 79 30 79 ff ff
+0x02F905,Coliseum,0,0x00,Castle,0,False,00 00 ff 20 79 28 79 30 79 ff ff 38
+0x02F971,Forest Maze,1,0x02,Bazaar,0,False,02 00 80 00 00 00 ff 90 79 98 79 a0
+0x02F974,Forest Maze,1,0x00,Castle,0,False,00 00 00 ff 90 79 98 79 a0 79 ff ff
+0x02F975,Forest Maze,1,0x00,Castle,0,False,00 00 ff 90 79 98 79 a0 79 ff ff a8
+0x02F9DF,0x54,0,0x06,Arena Lobby,0,False,06 00 80 00 00 00 ff ff ff 00 7a 08
+0x02F9E2,0x54,0,0x00,Castle,0,False,00 00 00 ff ff ff 00 7a 08 7a 10 7a
+0x02F9E3,0x54,0,0x00,Castle,0,False,00 00 ff ff ff 00 7a 08 7a 10 7a ff
+0x02FA4B,0x55,0,0x03,Gate Hub,0,False,03 00 80 00 00 00 ff ff ff ff ff ff
+0x02FA4E,0x55,0,0x00,Castle,0,False,00 00 00 ff ff ff ff ff ff ff 70 7a
+0x02FA4F,0x55,0,0x00,Castle,0,False,00 00 ff ff ff ff ff ff ff 70 7a 78
+0x02FABF,0x56,0,0x06,Arena Lobby,0,False,06 00 80 00 00 00 ff ff ff e0 7a e8
+0x02FAC2,0x56,0,0x00,Castle,0,False,00 00 00 ff ff ff e0 7a e8 7a f0 7a
+0x02FAC3,0x56,0,0x00,Castle,0,False,00 00 ff ff ff e0 7a e8 7a f0 7a ff
+0x02FB30,0x57,0,0x06,Arena Lobby,0,False,06 00 80 00 00 00 ff ff 50 7b 58 7b
+0x02FB33,0x57,0,0x00,Castle,0,False,00 00 00 ff ff 50 7b 58 7b 60 7b ff
+0x02FB34,0x57,0,0x00,Castle,0,False,00 00 ff ff 50 7b 58 7b 60 7b ff ff
+0x02FBA1,0x58,0,0x06,Arena Lobby,0,False,06 00 80 00 00 00 ff aa 7b 98 d9 07
+0x02FBA4,0x58,0,0x00,Castle,0,False,00 00 00 ff aa 7b 98 d9 07 26 b2 7b
+0x02FBA5,0x58,0,0x00,Castle,0,False,00 00 ff aa 7b 98 d9 07 26 b2 7b d1
+0x02FBB5,0x58,0,0x02,Bazaar,1,False,02 01 8f ff 08 02 02 8f ff 03 03 03
+0x02FBD2,0x58,0,0x06,Arena Lobby,0,False,06 00 80 00 00 00 ff db 7b 98 d9 09
+0x02FBD5,0x58,0,0x00,Castle,0,False,00 00 00 ff db 7b 98 d9 09 26 e3 7b
+0x02FBD6,0x58,0,0x00,Castle,0,False,00 00 ff db 7b 98 d9 09 26 e3 7b 02
+0x02FBE6,0x58,0,0x03,Gate Hub,1,False,03 01 8f ff 06 03 02 8f ff 03 04 03
+0x02FC03,0x59,0,0x02,Bazaar,0,False,02 00 80 00 00 00 ff 0c 7c 98 d9 0b
+0x02FC06,0x59,0,0x00,Castle,0,False,00 00 00 ff 0c 7c 98 d9 0b 26 14 7c
+0x02FC07,0x59,0,0x00,Castle,0,False,00 00 ff 0c 7c 98 d9 0b 26 14 7c 3d
+0x02FC17,0x59,0,0x02,Bazaar,1,False,02 01 8f ff 04 02 02 8f ff 05 02 03
+0x02FC3E,0x59,0,0x04,Farm,0,False,04 00 80 00 00 00 ff 47 7c 99 d9 14
+0x02FC41,0x59,0,0x00,Castle,0,False,00 00 00 ff 47 7c 99 d9 14 23 67 7c
+0x02FC42,0x59,0,0x00,Castle,0,False,00 00 ff 47 7c 99 d9 14 23 67 7c ff
+0x02FCD9,0x5C,0,0x0A,Secret Passage,1,False,0a 01 ff 10 e3 06 06 ff ff e4 7c 9a
+0x02FD05,0x5C,0,0x04,Farm,0,False,04 00 ff 40 52 04 05 ff ff 70 08 00

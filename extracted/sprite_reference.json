@@ -1,0 +1,893 @@
+{
+  "0x00": {
+    "decimal": 0,
+    "count": 15,
+    "rooms": [
+      "Bazaar",
+      "Castle",
+      "Farm",
+      "GreatTree",
+      "Monster School"
+    ]
+  },
+  "0x01": {
+    "decimal": 1,
+    "count": 5,
+    "rooms": [
+      "Farm",
+      "GreatTree"
+    ]
+  },
+  "0x02": {
+    "decimal": 2,
+    "count": 10,
+    "rooms": [
+      "Copycat House",
+      "Farm",
+      "GreatTree",
+      "Map_36",
+      "Monster School",
+      "Restaurant",
+      "Vault"
+    ]
+  },
+  "0x03": {
+    "decimal": 3,
+    "count": 14,
+    "rooms": [
+      "Bazaar",
+      "Copycat House",
+      "GreatTree",
+      "Map_13"
+    ]
+  },
+  "0x04": {
+    "decimal": 4,
+    "count": 12,
+    "rooms": [
+      "Arena Rooms",
+      "Bazaar",
+      "Farm",
+      "GreatTree",
+      "Renamer"
+    ]
+  },
+  "0x05": {
+    "decimal": 5,
+    "count": 22,
+    "rooms": [
+      "Bazaar",
+      "Farm",
+      "GreatTree",
+      "Map_3D",
+      "Map_3E",
+      "Renamer",
+      "Restaurant"
+    ]
+  },
+  "0x06": {
+    "decimal": 6,
+    "count": 10,
+    "rooms": [
+      "Bazaar",
+      "Boss: Unused Gate"
+    ]
+  },
+  "0x07": {
+    "decimal": 7,
+    "count": 14,
+    "rooms": [
+      "Bazaar",
+      "Starry Shrine",
+      "Well"
+    ]
+  },
+  "0x08": {
+    "decimal": 8,
+    "count": 38,
+    "rooms": [
+      "Arena Battle(5E)",
+      "Arena Rooms",
+      "Farm",
+      "Gate(08)",
+      "GreatTree",
+      "Renamer",
+      "Starry Shrine"
+    ]
+  },
+  "0x09": {
+    "decimal": 9,
+    "count": 6,
+    "rooms": [
+      "Arena Rooms",
+      "GreatTree",
+      "Vault"
+    ]
+  },
+  "0x0A": {
+    "decimal": 10,
+    "count": 27,
+    "rooms": [
+      "Arena Rooms",
+      "Bazaar",
+      "Copycat House"
+    ]
+  },
+  "0x0B": {
+    "decimal": 11,
+    "count": 97,
+    "rooms": [
+      "Ambition/Demolition",
+      "Arena Lobby",
+      "Arena Rooms",
+      "Boss: Unused Gate",
+      "Castle",
+      "Farm",
+      "Gate Hub",
+      "GreatTree",
+      "Happiness/Temptation",
+      "Joy/Wisdom",
+      "Labyrinth/Judgment",
+      "Mastermind/Control",
+      "Memories/Bewilder",
+      "Peace/Bravery",
+      "Queen Room",
+      "Restaurant",
+      "Starry Shrine",
+      "Villager/Talisman"
+    ]
+  },
+  "0x0C": {
+    "decimal": 12,
+    "count": 2,
+    "rooms": [
+      "Farm",
+      "Restaurant"
+    ]
+  },
+  "0x0D": {
+    "decimal": 13,
+    "count": 5,
+    "rooms": [
+      "Castle",
+      "Farm"
+    ]
+  },
+  "0x0E": {
+    "decimal": 14,
+    "count": 6,
+    "rooms": [
+      "Farm",
+      "Map_31",
+      "Restaurant"
+    ]
+  },
+  "0x0F": {
+    "decimal": 15,
+    "count": 12,
+    "rooms": [
+      "Arena Rooms",
+      "Bazaar",
+      "Farm",
+      "GreatTree",
+      "Renamer",
+      "Restaurant",
+      "Starry Shrine"
+    ]
+  },
+  "0x10": {
+    "decimal": 16,
+    "count": 24,
+    "rooms": [
+      "Castle",
+      "Farm"
+    ]
+  },
+  "0x11": {
+    "decimal": 17,
+    "count": 20,
+    "rooms": [
+      "Arena Lobby",
+      "Arena Rooms",
+      "Castle",
+      "Farm",
+      "Map_1A",
+      "Map_51",
+      "Monster School",
+      "Restaurant",
+      "Starry Shrine"
+    ]
+  },
+  "0x12": {
+    "decimal": 18,
+    "count": 10,
+    "rooms": [
+      "Arena Lobby",
+      "Bazaar",
+      "Farm",
+      "Map_36"
+    ]
+  },
+  "0x13": {
+    "decimal": 19,
+    "count": 7,
+    "rooms": [
+      "MedalMan",
+      "Restaurant"
+    ]
+  },
+  "0x14": {
+    "decimal": 20,
+    "count": 8,
+    "rooms": [
+      "Map_2F",
+      "Restaurant"
+    ]
+  },
+  "0x15": {
+    "decimal": 21,
+    "count": 5,
+    "rooms": [
+      "Map_37",
+      "Map_3C",
+      "Map_44",
+      "Map_45"
+    ]
+  },
+  "0x16": {
+    "decimal": 22,
+    "count": 2,
+    "rooms": [
+      "Boss: Beginning",
+      "Stable"
+    ]
+  },
+  "0x17": {
+    "decimal": 23,
+    "count": 2,
+    "rooms": [
+      "Arena Rooms",
+      "Map_36"
+    ]
+  },
+  "0x18": {
+    "decimal": 24,
+    "count": 1,
+    "rooms": [
+      "Farm"
+    ]
+  },
+  "0x19": {
+    "decimal": 25,
+    "count": 4,
+    "rooms": [
+      "Farm",
+      "Map_37"
+    ]
+  },
+  "0x1A": {
+    "decimal": 26,
+    "count": 3,
+    "rooms": [
+      "Farm",
+      "Map_41"
+    ]
+  },
+  "0x1B": {
+    "decimal": 27,
+    "count": 4,
+    "rooms": [
+      "Farm",
+      "Map_3B",
+      "Stable"
+    ]
+  },
+  "0x1C": {
+    "decimal": 28,
+    "count": 6,
+    "rooms": [
+      "Farm",
+      "Map_41"
+    ]
+  },
+  "0x1D": {
+    "decimal": 29,
+    "count": 6,
+    "rooms": [
+      "Farm",
+      "Map_34"
+    ]
+  },
+  "0x1E": {
+    "decimal": 30,
+    "count": 2,
+    "rooms": [
+      "Map_1A",
+      "Map_38"
+    ]
+  },
+  "0x1F": {
+    "decimal": 31,
+    "count": 9,
+    "rooms": [
+      "Arena Rooms",
+      "Map_19",
+      "Map_1A"
+    ]
+  },
+  "0x20": {
+    "decimal": 32,
+    "count": 3,
+    "rooms": [
+      "Arena Rooms",
+      "Farm",
+      "Map_31"
+    ]
+  },
+  "0x21": {
+    "decimal": 33,
+    "count": 43,
+    "rooms": [
+      "Arena Battle(5E)",
+      "Boss: Beginning",
+      "Copycat House",
+      "Gate(08)",
+      "Map_2F",
+      "Map_31",
+      "Map_32",
+      "Map_33",
+      "Map_34",
+      "Map_36",
+      "Map_37",
+      "Map_38",
+      "Map_39",
+      "Map_3B",
+      "Map_3C",
+      "Map_3D",
+      "Map_3F",
+      "Map_41",
+      "Map_43",
+      "Map_44",
+      "Map_45",
+      "Map_46",
+      "Map_47",
+      "Map_48",
+      "Map_49",
+      "Map_4A",
+      "Map_4B",
+      "Map_4C",
+      "Stable"
+    ]
+  },
+  "0x22": {
+    "decimal": 34,
+    "count": 2,
+    "rooms": [
+      "Map_19",
+      "Map_41"
+    ]
+  },
+  "0x23": {
+    "decimal": 35,
+    "count": 1,
+    "rooms": [
+      "Map_3C"
+    ]
+  },
+  "0x24": {
+    "decimal": 36,
+    "count": 3,
+    "rooms": [
+      "Map_19",
+      "Map_44"
+    ]
+  },
+  "0x25": {
+    "decimal": 37,
+    "count": 8,
+    "rooms": [
+      "Map_32",
+      "Stable"
+    ]
+  },
+  "0x26": {
+    "decimal": 38,
+    "count": 3,
+    "rooms": [
+      "Starry Shrine"
+    ]
+  },
+  "0x27": {
+    "decimal": 39,
+    "count": 1,
+    "rooms": [
+      "Map_43"
+    ]
+  },
+  "0x28": {
+    "decimal": 40,
+    "count": 1,
+    "rooms": [
+      "Map_3D"
+    ]
+  },
+  "0x29": {
+    "decimal": 41,
+    "count": 2,
+    "rooms": [
+      "Map_45"
+    ]
+  },
+  "0x2A": {
+    "decimal": 42,
+    "count": 1,
+    "rooms": [
+      "Stable"
+    ]
+  },
+  "0x2B": {
+    "decimal": 43,
+    "count": 7,
+    "rooms": [
+      "Map_1A",
+      "Map_3F",
+      "Map_45"
+    ]
+  },
+  "0x2C": {
+    "decimal": 44,
+    "count": 2,
+    "rooms": [
+      "Farm",
+      "Map_39"
+    ]
+  },
+  "0x2D": {
+    "decimal": 45,
+    "count": 1,
+    "rooms": [
+      "Map_45"
+    ]
+  },
+  "0x2E": {
+    "decimal": 46,
+    "count": 1,
+    "rooms": [
+      "Map_47"
+    ]
+  },
+  "0x2F": {
+    "decimal": 47,
+    "count": 1,
+    "rooms": [
+      "Map_47"
+    ]
+  },
+  "0x30": {
+    "decimal": 48,
+    "count": 1,
+    "rooms": [
+      "Map_46"
+    ]
+  },
+  "0x31": {
+    "decimal": 49,
+    "count": 1,
+    "rooms": [
+      "Map_47"
+    ]
+  },
+  "0x32": {
+    "decimal": 50,
+    "count": 1,
+    "rooms": [
+      "Map_48"
+    ]
+  },
+  "0x33": {
+    "decimal": 51,
+    "count": 1,
+    "rooms": [
+      "Map_49"
+    ]
+  },
+  "0x34": {
+    "decimal": 52,
+    "count": 1,
+    "rooms": [
+      "Map_4A"
+    ]
+  },
+  "0x35": {
+    "decimal": 53,
+    "count": 1,
+    "rooms": [
+      "Map_4B"
+    ]
+  },
+  "0x36": {
+    "decimal": 54,
+    "count": 1,
+    "rooms": [
+      "Map_4C"
+    ]
+  },
+  "0x37": {
+    "decimal": 55,
+    "count": 2,
+    "rooms": [
+      "Boss: Unused Gate",
+      "Castle"
+    ]
+  },
+  "0x38": {
+    "decimal": 56,
+    "count": 1,
+    "rooms": [
+      "Castle"
+    ]
+  },
+  "0x39": {
+    "decimal": 57,
+    "count": 11,
+    "rooms": [
+      "Bazaar",
+      "Map_2F",
+      "Map_31",
+      "Map_38",
+      "Map_3D",
+      "Map_45",
+      "Map_5B",
+      "Stable"
+    ]
+  },
+  "0x3A": {
+    "decimal": 58,
+    "count": 5,
+    "rooms": [
+      "Farm",
+      "Stable"
+    ]
+  },
+  "0x3B": {
+    "decimal": 59,
+    "count": 3,
+    "rooms": [
+      "Map_19",
+      "Map_1A",
+      "Stable"
+    ]
+  },
+  "0x3C": {
+    "decimal": 60,
+    "count": 1,
+    "rooms": [
+      "Map_33"
+    ]
+  },
+  "0x3D": {
+    "decimal": 61,
+    "count": 2,
+    "rooms": [
+      "Stable"
+    ]
+  },
+  "0x3E": {
+    "decimal": 62,
+    "count": 3,
+    "rooms": [
+      "Map_41",
+      "Stable"
+    ]
+  },
+  "0x3F": {
+    "decimal": 63,
+    "count": 2,
+    "rooms": [
+      "Farm"
+    ]
+  },
+  "0x40": {
+    "decimal": 64,
+    "count": 1,
+    "rooms": [
+      "Map_1A"
+    ]
+  },
+  "0x41": {
+    "decimal": 65,
+    "count": 3,
+    "rooms": [
+      "Arena Rooms",
+      "Map_1A"
+    ]
+  },
+  "0x42": {
+    "decimal": 66,
+    "count": 2,
+    "rooms": [
+      "Arena Rooms"
+    ]
+  },
+  "0x43": {
+    "decimal": 67,
+    "count": 3,
+    "rooms": [
+      "Well"
+    ]
+  },
+  "0x44": {
+    "decimal": 68,
+    "count": 1,
+    "rooms": [
+      "Farm"
+    ]
+  },
+  "0x45": {
+    "decimal": 69,
+    "count": 1,
+    "rooms": [
+      "Farm"
+    ]
+  },
+  "0x46": {
+    "decimal": 70,
+    "count": 1,
+    "rooms": [
+      "Farm"
+    ]
+  },
+  "0x47": {
+    "decimal": 71,
+    "count": 1,
+    "rooms": [
+      "Farm"
+    ]
+  },
+  "0x48": {
+    "decimal": 72,
+    "count": 1,
+    "rooms": [
+      "Farm"
+    ]
+  },
+  "0x49": {
+    "decimal": 73,
+    "count": 1,
+    "rooms": [
+      "Stable"
+    ]
+  },
+  "0x4A": {
+    "decimal": 74,
+    "count": 1,
+    "rooms": [
+      "Stable"
+    ]
+  },
+  "0x4B": {
+    "decimal": 75,
+    "count": 1,
+    "rooms": [
+      "Stable"
+    ]
+  },
+  "0x4C": {
+    "decimal": 76,
+    "count": 6,
+    "rooms": [
+      "MedalMan"
+    ]
+  },
+  "0x4D": {
+    "decimal": 77,
+    "count": 63,
+    "rooms": [
+      "Ambition/Demolition",
+      "Arena Rooms",
+      "Bazaar",
+      "Farm",
+      "Happiness/Temptation",
+      "Joy/Wisdom",
+      "Labyrinth/Judgment",
+      "Map_13",
+      "Mastermind/Control",
+      "MedalMan",
+      "Memories/Bewilder",
+      "Peace/Bravery",
+      "Queen Room",
+      "Renamer",
+      "Villager/Talisman",
+      "Well"
+    ]
+  },
+  "0x50": {
+    "decimal": 80,
+    "count": 5,
+    "rooms": [
+      "Map_2F"
+    ]
+  },
+  "0x51": {
+    "decimal": 81,
+    "count": 4,
+    "rooms": [
+      "Map_2F"
+    ]
+  },
+  "0x52": {
+    "decimal": 82,
+    "count": 4,
+    "rooms": [
+      "Arena Battle(5E)",
+      "Arena Rooms",
+      "Castle",
+      "Map_5B"
+    ]
+  },
+  "0x53": {
+    "decimal": 83,
+    "count": 2,
+    "rooms": [
+      "Farm"
+    ]
+  },
+  "0x54": {
+    "decimal": 84,
+    "count": 3,
+    "rooms": [
+      "Arena Lobby",
+      "Copycat House",
+      "Farm"
+    ]
+  },
+  "0x55": {
+    "decimal": 85,
+    "count": 8,
+    "rooms": [
+      "Arena Battle(5E)",
+      "Gate(08)"
+    ]
+  },
+  "0x57": {
+    "decimal": 87,
+    "count": 1,
+    "rooms": [
+      "Arena Battle(5E)"
+    ]
+  },
+  "0x5E": {
+    "decimal": 94,
+    "count": 3,
+    "rooms": [
+      "Gate(08)"
+    ]
+  },
+  "0x5F": {
+    "decimal": 95,
+    "count": 5,
+    "rooms": [
+      "Map_2F",
+      "Map_3D"
+    ]
+  },
+  "0xE0": {
+    "decimal": 224,
+    "count": 23,
+    "rooms": [
+      "Arena Battle(5E)",
+      "Arena Lobby",
+      "Arena Rooms",
+      "Boss: Unused Gate",
+      "Castle",
+      "Map_37",
+      "Map_38",
+      "Map_3A",
+      "Map_3D",
+      "Map_44",
+      "Map_45",
+      "Map_5B",
+      "Starry Shrine"
+    ]
+  },
+  "0xE1": {
+    "decimal": 225,
+    "count": 17,
+    "rooms": [
+      "Arena Lobby",
+      "Arena Rooms",
+      "Boss: Unused Gate",
+      "Map_37",
+      "Map_38",
+      "Map_3A",
+      "Map_3D",
+      "Map_44",
+      "Map_5B",
+      "Starry Shrine"
+    ]
+  },
+  "0xE2": {
+    "decimal": 226,
+    "count": 16,
+    "rooms": [
+      "Arena Lobby",
+      "Arena Rooms",
+      "Boss: Unused Gate",
+      "Map_37",
+      "Map_38",
+      "Map_3A",
+      "Map_44",
+      "Map_5B",
+      "Starry Shrine"
+    ]
+  },
+  "0xE3": {
+    "decimal": 227,
+    "count": 15,
+    "rooms": [
+      "Arena Lobby",
+      "Arena Rooms",
+      "Boss: Unused Gate",
+      "Map_37",
+      "Map_38",
+      "Map_3A",
+      "Map_44",
+      "Map_5B",
+      "Starry Shrine"
+    ]
+  },
+  "0xF0": {
+    "decimal": 240,
+    "count": 7,
+    "rooms": [
+      "Boss: Unused Gate",
+      "Gate(08)",
+      "Map_5B"
+    ]
+  },
+  "0xF1": {
+    "decimal": 241,
+    "count": 6,
+    "rooms": [
+      "Boss: Unused Gate",
+      "Gate(08)",
+      "Map_5B"
+    ]
+  },
+  "0xF2": {
+    "decimal": 242,
+    "count": 4,
+    "rooms": [
+      "Boss: Unused Gate",
+      "Map_5B"
+    ]
+  },
+  "0xF3": {
+    "decimal": 243,
+    "count": 3,
+    "rooms": [
+      "Map_5B"
+    ]
+  },
+  "0xFF": {
+    "decimal": 255,
+    "count": 35,
+    "rooms": [
+      "Boss: Unused Gate",
+      "Map_19",
+      "Map_3C",
+      "Map_3D",
+      "Map_41",
+      "Map_43",
+      "Map_44",
+      "Map_45",
+      "Map_46",
+      "Map_47",
+      "Map_48",
+      "Map_49",
+      "Map_4A",
+      "Map_4B",
+      "Map_4C"
+    ]
+  }
+}

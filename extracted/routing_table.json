@@ -1,0 +1,1952 @@
+[
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 0,
+    "dest_ptr": "0x41EE",
+    "dest_flat": "0x0301EE",
+    "raw_bytes": "0e ff 01 00 46 42 0e ff",
+    "byte0": 14,
+    "byte1": 255,
+    "byte2": 1,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 1,
+    "dest_ptr": "0x50ED",
+    "dest_flat": "0x0310ED",
+    "raw_bytes": "24 00 15 ff 3c c8 01 00",
+    "byte0": 36,
+    "byte1": 0,
+    "byte2": 21,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 2,
+    "dest_ptr": "0x50FF",
+    "dest_flat": "0x0310FF",
+    "raw_bytes": "27 00 15 ff 3c c8 01 00",
+    "byte0": 39,
+    "byte1": 0,
+    "byte2": 21,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 3,
+    "dest_ptr": "0x5111",
+    "dest_flat": "0x031111",
+    "raw_bytes": "01 ff 3a 00 83 51 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 58,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 4,
+    "dest_ptr": "0x5191",
+    "dest_flat": "0x031191",
+    "raw_bytes": "01 ff 3b 00 03 52 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 59,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 5,
+    "dest_ptr": "0x5211",
+    "dest_flat": "0x031211",
+    "raw_bytes": "3b 08 2c ff 1f 52 3c 08",
+    "byte0": 59,
+    "byte1": 8,
+    "byte2": 44,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 6,
+    "dest_ptr": "0x5223",
+    "dest_flat": "0x031223",
+    "raw_bytes": "3b 08 2c ff 31 52 3e 08",
+    "byte0": 59,
+    "byte1": 8,
+    "byte2": 44,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 7,
+    "dest_ptr": "0x5235",
+    "dest_flat": "0x031235",
+    "raw_bytes": "40 08 33 ff 10 27 ff ff",
+    "byte0": 64,
+    "byte1": 8,
+    "byte2": 51,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 8,
+    "dest_ptr": "0x523D",
+    "dest_flat": "0x03123D",
+    "raw_bytes": "41 08 05 ff e0 01 27 ff",
+    "byte0": 65,
+    "byte1": 8,
+    "byte2": 5,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 9,
+    "dest_ptr": "0x5247",
+    "dest_flat": "0x031247",
+    "raw_bytes": "01 ff f1 00 73 52 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 10,
+    "dest_ptr": "0x5277",
+    "dest_flat": "0x031277",
+    "raw_bytes": "01 ff f1 00 cd 52 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 11,
+    "dest_ptr": "0x52D1",
+    "dest_flat": "0x0312D1",
+    "raw_bytes": "2a 00 ff ff 01 ff f1 00",
+    "byte0": 42,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 12,
+    "dest_ptr": "0x52D5",
+    "dest_flat": "0x0312D5",
+    "raw_bytes": "01 ff f1 00 fd 52 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 13,
+    "dest_ptr": "0x5301",
+    "dest_flat": "0x031301",
+    "raw_bytes": "01 ff f1 00 cd 54 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 14,
+    "dest_ptr": "0x54DF",
+    "dest_flat": "0x0314DF",
+    "raw_bytes": "00 ff 2f 00 eb 54 01 ff",
+    "byte0": 0,
+    "byte1": 255,
+    "byte2": 47,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 15,
+    "dest_ptr": "0x556B",
+    "dest_flat": "0x03156B",
+    "raw_bytes": "50 00 ff ff 01 ff 08 00",
+    "byte0": 80,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 16,
+    "dest_ptr": "0x556F",
+    "dest_flat": "0x03156F",
+    "raw_bytes": "01 ff 08 00 83 55 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 8,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 17,
+    "dest_ptr": "0x5587",
+    "dest_flat": "0x031587",
+    "raw_bytes": "01 ff 09 00 a5 55 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 9,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 18,
+    "dest_ptr": "0x55A9",
+    "dest_flat": "0x0315A9",
+    "raw_bytes": "01 ff f1 00 e5 55 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      0
+    ],
+    "room_id": 19,
+    "dest_ptr": "0x55E9",
+    "dest_flat": "0x0315E9",
+    "raw_bytes": "51 08 2c ff f7 55 4b 08",
+    "byte0": 81,
+    "byte1": 8,
+    "byte2": 44,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 0,
+    "dest_ptr": "0x5625",
+    "dest_flat": "0x031625",
+    "raw_bytes": "15 ff 51 d9 ff 00 41 56",
+    "byte0": 21,
+    "byte1": 255,
+    "byte2": 81,
+    "byte3": 217
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 1,
+    "dest_ptr": "0x591D",
+    "dest_flat": "0x03191D",
+    "raw_bytes": "01 ff 02 00 27 59 19 00",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 2,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 2,
+    "dest_ptr": "0x592B",
+    "dest_flat": "0x03192B",
+    "raw_bytes": "1f 00 ff ff 01 ff f1 00",
+    "byte0": 31,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 3,
+    "dest_ptr": "0x592F",
+    "dest_flat": "0x03192F",
+    "raw_bytes": "01 ff f1 00 6f 59 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 4,
+    "dest_ptr": "0x5973",
+    "dest_flat": "0x031973",
+    "raw_bytes": "01 ff f1 00 87 59 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 5,
+    "dest_ptr": "0x598B",
+    "dest_flat": "0x03198B",
+    "raw_bytes": "63 00 ff ff 64 00 ff ff",
+    "byte0": 99,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 6,
+    "dest_ptr": "0x598F",
+    "dest_flat": "0x03198F",
+    "raw_bytes": "64 00 ff ff 01 ff f1 00",
+    "byte0": 100,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 7,
+    "dest_ptr": "0x5993",
+    "dest_flat": "0x031993",
+    "raw_bytes": "01 ff f1 00 c9 59 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 8,
+    "dest_ptr": "0x59CD",
+    "dest_flat": "0x0319CD",
+    "raw_bytes": "01 ff f1 00 19 5a 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 9,
+    "dest_ptr": "0x5A2B",
+    "dest_flat": "0x031A2B",
+    "raw_bytes": "01 ff f1 00 67 5a 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 10,
+    "dest_ptr": "0x5A6B",
+    "dest_flat": "0x031A6B",
+    "raw_bytes": "57 01 03 ff 80 00 ff ff",
+    "byte0": 87,
+    "byte1": 1,
+    "byte2": 3,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 11,
+    "dest_ptr": "0x5A73",
+    "dest_flat": "0x031A73",
+    "raw_bytes": "01 ff f1 00 87 5a 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 12,
+    "dest_ptr": "0x5A8B",
+    "dest_flat": "0x031A8B",
+    "raw_bytes": "58 01 ff ff 01 ff 14 01",
+    "byte0": 88,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 13,
+    "dest_ptr": "0x5A8F",
+    "dest_flat": "0x031A8F",
+    "raw_bytes": "01 ff 14 01 cf 5a 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 20,
+    "byte3": 1
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 14,
+    "dest_ptr": "0x5AD3",
+    "dest_flat": "0x031AD3",
+    "raw_bytes": "01 ff f1 00 e7 5a 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 15,
+    "dest_ptr": "0x5AEB",
+    "dest_flat": "0x031AEB",
+    "raw_bytes": "01 ff f1 00 2b 5b 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 16,
+    "dest_ptr": "0x5B2F",
+    "dest_flat": "0x031B2F",
+    "raw_bytes": "01 ff 2f 00 8b 5d 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 47,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 17,
+    "dest_ptr": "0x5D9D",
+    "dest_flat": "0x031D9D",
+    "raw_bytes": "01 ff f1 00 cb 5d 00 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 18,
+    "dest_ptr": "0x5DCF",
+    "dest_flat": "0x031DCF",
+    "raw_bytes": "12 ff e8 d9 01 00 21 ff",
+    "byte0": 18,
+    "byte1": 255,
+    "byte2": 232,
+    "byte3": 217
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 19,
+    "dest_ptr": "0x5DF1",
+    "dest_flat": "0x031DF1",
+    "raw_bytes": "12 ff e8 d9 01 00 21 ff",
+    "byte0": 18,
+    "byte1": 255,
+    "byte2": 232,
+    "byte3": 217
+  },
+  {
+    "master_indices": [
+      1
+    ],
+    "room_id": 20,
+    "dest_ptr": "0x5E07",
+    "dest_flat": "0x031E07",
+    "raw_bytes": "12 ff e8 d9 01 00 21 ff",
+    "byte0": 18,
+    "byte1": 255,
+    "byte2": 232,
+    "byte3": 217
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 0,
+    "dest_ptr": "0x5E4F",
+    "dest_flat": "0x031E4F",
+    "raw_bytes": "0e ff 01 00 57 5e ff ff",
+    "byte0": 14,
+    "byte1": 255,
+    "byte2": 1,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 1,
+    "dest_ptr": "0x5E8F",
+    "dest_flat": "0x031E8F",
+    "raw_bytes": "01 ff 3f 00 ab 5e 3a 00",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 63,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 2,
+    "dest_ptr": "0x5EAF",
+    "dest_flat": "0x031EAF",
+    "raw_bytes": "5e 01 ff ff 5e 01 ff ff",
+    "byte0": 94,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 3,
+    "dest_ptr": "0x5EB3",
+    "dest_flat": "0x031EB3",
+    "raw_bytes": "5e 01 ff ff 01 ff 15 01",
+    "byte0": 94,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 4,
+    "dest_ptr": "0x5EB7",
+    "dest_flat": "0x031EB7",
+    "raw_bytes": "01 ff 15 01 d9 5e 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 21,
+    "byte3": 1
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 5,
+    "dest_ptr": "0x5EF5",
+    "dest_flat": "0x031EF5",
+    "raw_bytes": "01 ff f1 00 1d 5f 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 6,
+    "dest_ptr": "0x5F21",
+    "dest_flat": "0x031F21",
+    "raw_bytes": "01 ff f1 00 3f 5f 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 7,
+    "dest_ptr": "0x5F43",
+    "dest_flat": "0x031F43",
+    "raw_bytes": "01 ff f1 00 8f 60 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 8,
+    "dest_ptr": "0x6093",
+    "dest_flat": "0x032093",
+    "raw_bytes": "01 ff f1 00 bb 60 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 9,
+    "dest_ptr": "0x60BF",
+    "dest_flat": "0x0320BF",
+    "raw_bytes": "01 ff f1 00 fd 60 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 10,
+    "dest_ptr": "0x6101",
+    "dest_flat": "0x032101",
+    "raw_bytes": "01 ff f1 00 61 61 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 11,
+    "dest_ptr": "0x6169",
+    "dest_flat": "0x032169",
+    "raw_bytes": "49 ff 03 00 80 06 04 ff",
+    "byte0": 73,
+    "byte1": 255,
+    "byte2": 3,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 12,
+    "dest_ptr": "0x616D",
+    "dest_flat": "0x03216D",
+    "raw_bytes": "80 06 04 ff 00 00 80 06",
+    "byte0": 128,
+    "byte1": 6,
+    "byte2": 4,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 13,
+    "dest_ptr": "0x6179",
+    "dest_flat": "0x032179",
+    "raw_bytes": "01 ff f1 00 91 61 2b 04",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 14,
+    "dest_ptr": "0x61A3",
+    "dest_flat": "0x0321A3",
+    "raw_bytes": "01 ff 9d 00 cd 61 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 157,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 15,
+    "dest_ptr": "0x61D9",
+    "dest_flat": "0x0321D9",
+    "raw_bytes": "01 ff f1 00 23 62 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 16,
+    "dest_ptr": "0x6231",
+    "dest_flat": "0x032231",
+    "raw_bytes": "01 ff f1 00 91 62 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 17,
+    "dest_ptr": "0x62A3",
+    "dest_flat": "0x0322A3",
+    "raw_bytes": "79 03 ff ff 79 03 ff ff",
+    "byte0": 121,
+    "byte1": 3,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 18,
+    "dest_ptr": "0x62A7",
+    "dest_flat": "0x0322A7",
+    "raw_bytes": "79 03 ff ff 80 06 04 ff",
+    "byte0": 121,
+    "byte1": 3,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 19,
+    "dest_ptr": "0x62AB",
+    "dest_flat": "0x0322AB",
+    "raw_bytes": "80 06 04 ff 00 00 80 06",
+    "byte0": 128,
+    "byte1": 6,
+    "byte2": 4,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 20,
+    "dest_ptr": "0x62B7",
+    "dest_flat": "0x0322B7",
+    "raw_bytes": "01 ff f1 00 c1 62 32 04",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 21,
+    "dest_ptr": "0x62C5",
+    "dest_flat": "0x0322C5",
+    "raw_bytes": "01 ff f1 00 cf 62 65 01",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 22,
+    "dest_ptr": "0x62D3",
+    "dest_flat": "0x0322D3",
+    "raw_bytes": "01 ff f6 00 31 64 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 246,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 23,
+    "dest_ptr": "0x6455",
+    "dest_flat": "0x032455",
+    "raw_bytes": "01 ff f6 00 59 65 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 246,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      2
+    ],
+    "room_id": 24,
+    "dest_ptr": "0x657D",
+    "dest_flat": "0x03257D",
+    "raw_bytes": "01 ff f3 00 1d 66 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 243,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 0,
+    "dest_ptr": "0x665B",
+    "dest_flat": "0x03265B",
+    "raw_bytes": "ff ff 33 01 ff ff 32 01",
+    "byte0": 255,
+    "byte1": 255,
+    "byte2": 51,
+    "byte3": 1
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 1,
+    "dest_ptr": "0x665D",
+    "dest_flat": "0x03265D",
+    "raw_bytes": "33 01 ff ff 32 01 ff ff",
+    "byte0": 51,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 2,
+    "dest_ptr": "0x6661",
+    "dest_flat": "0x032661",
+    "raw_bytes": "32 01 ff ff 34 01 ff ff",
+    "byte0": 50,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 3,
+    "dest_ptr": "0x6665",
+    "dest_flat": "0x032665",
+    "raw_bytes": "34 01 ff ff 01 ff f1 00",
+    "byte0": 52,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 4,
+    "dest_ptr": "0x6669",
+    "dest_flat": "0x032669",
+    "raw_bytes": "01 ff f1 00 59 67 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 5,
+    "dest_ptr": "0x6771",
+    "dest_flat": "0x032771",
+    "raw_bytes": "ff ff 30 01 ff ff 31 01",
+    "byte0": 255,
+    "byte1": 255,
+    "byte2": 48,
+    "byte3": 1
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 6,
+    "dest_ptr": "0x6773",
+    "dest_flat": "0x032773",
+    "raw_bytes": "30 01 ff ff 31 01 ff ff",
+    "byte0": 48,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 7,
+    "dest_ptr": "0x6777",
+    "dest_flat": "0x032777",
+    "raw_bytes": "31 01 ff ff 01 ff 09 00",
+    "byte0": 49,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 8,
+    "dest_ptr": "0x677B",
+    "dest_flat": "0x03277B",
+    "raw_bytes": "01 ff 09 00 85 67 54 00",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 9,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 9,
+    "dest_ptr": "0x6789",
+    "dest_flat": "0x032789",
+    "raw_bytes": "55 00 ff ff 01 ff f8 00",
+    "byte0": 85,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 10,
+    "dest_ptr": "0x678D",
+    "dest_flat": "0x03278D",
+    "raw_bytes": "01 ff f8 00 eb 67 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 248,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 11,
+    "dest_ptr": "0x67EF",
+    "dest_flat": "0x0327EF",
+    "raw_bytes": "36 01 ff ff 35 01 ff ff",
+    "byte0": 54,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 12,
+    "dest_ptr": "0x67F3",
+    "dest_flat": "0x0327F3",
+    "raw_bytes": "35 01 ff ff dd 00 ff ff",
+    "byte0": 53,
+    "byte1": 1,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 13,
+    "dest_ptr": "0x67F7",
+    "dest_flat": "0x0327F7",
+    "raw_bytes": "dd 00 ff ff 01 ff f1 00",
+    "byte0": 221,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 14,
+    "dest_ptr": "0x67FB",
+    "dest_flat": "0x0327FB",
+    "raw_bytes": "01 ff f1 00 31 68 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 15,
+    "dest_ptr": "0x6835",
+    "dest_flat": "0x032835",
+    "raw_bytes": "01 ff 25 00 63 68 00 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 37,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 16,
+    "dest_ptr": "0x6867",
+    "dest_flat": "0x032867",
+    "raw_bytes": "ff ff ff ff ff ff 01 ff",
+    "byte0": 255,
+    "byte1": 255,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 17,
+    "dest_ptr": "0x6869",
+    "dest_flat": "0x032869",
+    "raw_bytes": "ff ff ff ff 01 ff fa 00",
+    "byte0": 255,
+    "byte1": 255,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 18,
+    "dest_ptr": "0x686B",
+    "dest_flat": "0x03286B",
+    "raw_bytes": "ff ff 01 ff fa 00 7b 68",
+    "byte0": 255,
+    "byte1": 255,
+    "byte2": 1,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      3
+    ],
+    "room_id": 19,
+    "dest_ptr": "0x686D",
+    "dest_flat": "0x03286D",
+    "raw_bytes": "01 ff fa 00 7b 68 a8 07",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 250,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 0,
+    "dest_ptr": "0x68D5",
+    "dest_flat": "0x0328D5",
+    "raw_bytes": "0e ff 01 00 e3 68 0e ff",
+    "byte0": 14,
+    "byte1": 255,
+    "byte2": 1,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 1,
+    "dest_ptr": "0x6ABB",
+    "dest_flat": "0x032ABB",
+    "raw_bytes": "01 ff 45 00 dd 6a 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 69,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 2,
+    "dest_ptr": "0x6AE1",
+    "dest_flat": "0x032AE1",
+    "raw_bytes": "0d ff 01 00 00 00 00 00",
+    "byte0": 13,
+    "byte1": 255,
+    "byte2": 1,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 3,
+    "dest_ptr": "0x6BAB",
+    "dest_flat": "0x032BAB",
+    "raw_bytes": "01 ff f1 00 bf 6b 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 4,
+    "dest_ptr": "0x6BC3",
+    "dest_flat": "0x032BC3",
+    "raw_bytes": "01 ff 94 00 cd 6b eb 04",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 148,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 5,
+    "dest_ptr": "0x6BD1",
+    "dest_flat": "0x032BD1",
+    "raw_bytes": "01 ff e3 00 df 6b ed 04",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 227,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 6,
+    "dest_ptr": "0x6BE3",
+    "dest_flat": "0x032BE3",
+    "raw_bytes": "01 ff f1 00 0f 6c 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 7,
+    "dest_ptr": "0x6C1F",
+    "dest_flat": "0x032C1F",
+    "raw_bytes": "34 00 ff ff 01 ff f1 00",
+    "byte0": 52,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 8,
+    "dest_ptr": "0x6C23",
+    "dest_flat": "0x032C23",
+    "raw_bytes": "01 ff f1 00 4b 6c 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 9,
+    "dest_ptr": "0x6C4F",
+    "dest_flat": "0x032C4F",
+    "raw_bytes": "01 ff f1 00 6d 6c 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 10,
+    "dest_ptr": "0x6C71",
+    "dest_flat": "0x032C71",
+    "raw_bytes": "f3 04 ff ff 01 ff e6 00",
+    "byte0": 243,
+    "byte1": 4,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 11,
+    "dest_ptr": "0x6C75",
+    "dest_flat": "0x032C75",
+    "raw_bytes": "01 ff e6 00 83 6c f4 04",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 230,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 12,
+    "dest_ptr": "0x6C87",
+    "dest_flat": "0x032C87",
+    "raw_bytes": "f7 04 1c ff 03 09 19 ff",
+    "byte0": 247,
+    "byte1": 4,
+    "byte2": 28,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 13,
+    "dest_ptr": "0x6C91",
+    "dest_flat": "0x032C91",
+    "raw_bytes": "f9 04 1c ff 04 09 19 ff",
+    "byte0": 249,
+    "byte1": 4,
+    "byte2": 28,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 14,
+    "dest_ptr": "0x6C9B",
+    "dest_flat": "0x032C9B",
+    "raw_bytes": "f6 04 ff ff f8 04 1c ff",
+    "byte0": 246,
+    "byte1": 4,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 15,
+    "dest_ptr": "0x6C9F",
+    "dest_flat": "0x032C9F",
+    "raw_bytes": "f8 04 1c ff 06 09 19 ff",
+    "byte0": 248,
+    "byte1": 4,
+    "byte2": 28,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 16,
+    "dest_ptr": "0x6CA9",
+    "dest_flat": "0x032CA9",
+    "raw_bytes": "37 00 ff ff 01 ff f1 00",
+    "byte0": 55,
+    "byte1": 0,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 17,
+    "dest_ptr": "0x6CAD",
+    "dest_flat": "0x032CAD",
+    "raw_bytes": "01 ff f1 00 df 6c 00 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 18,
+    "dest_ptr": "0x6CE3",
+    "dest_flat": "0x032CE3",
+    "raw_bytes": "d6 02 ff ff 01 ff e7 00",
+    "byte0": 214,
+    "byte1": 2,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 19,
+    "dest_ptr": "0x6CE7",
+    "dest_flat": "0x032CE7",
+    "raw_bytes": "01 ff e7 00 9b 6d fb 04",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 231,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 20,
+    "dest_ptr": "0x6DA9",
+    "dest_flat": "0x032DA9",
+    "raw_bytes": "fa 04 ff ff 01 ff f1 00",
+    "byte0": 250,
+    "byte1": 4,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 21,
+    "dest_ptr": "0x6DAD",
+    "dest_flat": "0x032DAD",
+    "raw_bytes": "01 ff f1 00 05 6e 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 22,
+    "dest_ptr": "0x6E0D",
+    "dest_flat": "0x032E0D",
+    "raw_bytes": "01 ff f1 00 3f 6e 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 23,
+    "dest_ptr": "0x6E43",
+    "dest_flat": "0x032E43",
+    "raw_bytes": "01 ff 32 00 57 6e 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 50,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 24,
+    "dest_ptr": "0x6E5B",
+    "dest_flat": "0x032E5B",
+    "raw_bytes": "01 ff fc 00 8d 6e 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 252,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 25,
+    "dest_ptr": "0x6E91",
+    "dest_flat": "0x032E91",
+    "raw_bytes": "01 05 ff ff 01 ff f1 00",
+    "byte0": 1,
+    "byte1": 5,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 26,
+    "dest_ptr": "0x6E95",
+    "dest_flat": "0x032E95",
+    "raw_bytes": "01 ff f1 00 e7 6e 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 27,
+    "dest_ptr": "0x6F07",
+    "dest_flat": "0x032F07",
+    "raw_bytes": "00 ff e4 00 13 6f 01 ff",
+    "byte0": 0,
+    "byte1": 255,
+    "byte2": 228,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 28,
+    "dest_ptr": "0x6FFD",
+    "dest_flat": "0x032FFD",
+    "raw_bytes": "01 ff 32 00 1b 70 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 50,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 29,
+    "dest_ptr": "0x701F",
+    "dest_flat": "0x03301F",
+    "raw_bytes": "d9 02 15 ff 3c c8 01 00",
+    "byte0": 217,
+    "byte1": 2,
+    "byte2": 21,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 30,
+    "dest_ptr": "0x7073",
+    "dest_flat": "0x033073",
+    "raw_bytes": "05 05 ff ff 06 05 ff ff",
+    "byte0": 5,
+    "byte1": 5,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 31,
+    "dest_ptr": "0x7077",
+    "dest_flat": "0x033077",
+    "raw_bytes": "06 05 ff ff 07 05 ff ff",
+    "byte0": 6,
+    "byte1": 5,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 32,
+    "dest_ptr": "0x707B",
+    "dest_flat": "0x03307B",
+    "raw_bytes": "07 05 ff ff 01 ff 32 00",
+    "byte0": 7,
+    "byte1": 5,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 33,
+    "dest_ptr": "0x707F",
+    "dest_flat": "0x03307F",
+    "raw_bytes": "01 ff 32 00 89 70 74 00",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 50,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 34,
+    "dest_ptr": "0x708D",
+    "dest_flat": "0x03308D",
+    "raw_bytes": "01 ff f1 00 ab 70 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 35,
+    "dest_ptr": "0x70AF",
+    "dest_flat": "0x0330AF",
+    "raw_bytes": "01 ff f1 00 d3 70 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 36,
+    "dest_ptr": "0x70D7",
+    "dest_flat": "0x0330D7",
+    "raw_bytes": "01 ff e8 00 11 71 68 03",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 232,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 37,
+    "dest_ptr": "0x7115",
+    "dest_flat": "0x033115",
+    "raw_bytes": "08 05 ff ff 09 05 15 ff",
+    "byte0": 8,
+    "byte1": 5,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 38,
+    "dest_ptr": "0x7119",
+    "dest_flat": "0x033119",
+    "raw_bytes": "09 05 15 ff 3c c8 01 00",
+    "byte0": 9,
+    "byte1": 5,
+    "byte2": 21,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 39,
+    "dest_ptr": "0x712B",
+    "dest_flat": "0x03312B",
+    "raw_bytes": "0c 05 ff ff 0d 05 ff ff",
+    "byte0": 12,
+    "byte1": 5,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 40,
+    "dest_ptr": "0x712F",
+    "dest_flat": "0x03312F",
+    "raw_bytes": "0d 05 ff ff 09 ff 02 00",
+    "byte0": 13,
+    "byte1": 5,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 41,
+    "dest_ptr": "0x7133",
+    "dest_flat": "0x033133",
+    "raw_bytes": "09 ff 02 00 21 ff 55 00",
+    "byte0": 9,
+    "byte1": 255,
+    "byte2": 2,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      4
+    ],
+    "room_id": 42,
+    "dest_ptr": "0x7181",
+    "dest_flat": "0x033181",
+    "raw_bytes": "09 ff 02 00 21 ff 55 00",
+    "byte0": 9,
+    "byte1": 255,
+    "byte2": 2,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 0,
+    "dest_ptr": "0x71F9",
+    "dest_flat": "0x0331F9",
+    "raw_bytes": "ff ff 01 ff 34 00 0f 72",
+    "byte0": 255,
+    "byte1": 255,
+    "byte2": 1,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 1,
+    "dest_ptr": "0x71FB",
+    "dest_flat": "0x0331FB",
+    "raw_bytes": "01 ff 34 00 0f 72 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 52,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 2,
+    "dest_ptr": "0x7213",
+    "dest_flat": "0x033213",
+    "raw_bytes": "0f 02 ff ff 01 ff 34 00",
+    "byte0": 15,
+    "byte1": 2,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 3,
+    "dest_ptr": "0x7217",
+    "dest_flat": "0x033217",
+    "raw_bytes": "01 ff 34 00 2b 72 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 52,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 4,
+    "dest_ptr": "0x722F",
+    "dest_flat": "0x03322F",
+    "raw_bytes": "00 ff 22 00 41 72 01 ff",
+    "byte0": 0,
+    "byte1": 255,
+    "byte2": 34,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 5,
+    "dest_ptr": "0x7257",
+    "dest_flat": "0x033257",
+    "raw_bytes": "01 ff f1 00 7f 72 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 6,
+    "dest_ptr": "0x7283",
+    "dest_flat": "0x033283",
+    "raw_bytes": "01 ff f1 00 a1 72 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 7,
+    "dest_ptr": "0x72A5",
+    "dest_flat": "0x0332A5",
+    "raw_bytes": "01 ff f1 00 cd 72 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 8,
+    "dest_ptr": "0x72D1",
+    "dest_flat": "0x0332D1",
+    "raw_bytes": "01 ff f1 00 2d 73 00 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 9,
+    "dest_ptr": "0x7331",
+    "dest_flat": "0x033331",
+    "raw_bytes": "01 ff f1 00 55 73 00 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 10,
+    "dest_ptr": "0x7359",
+    "dest_flat": "0x033359",
+    "raw_bytes": "01 ff f1 00 7d 73 00 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 11,
+    "dest_ptr": "0x7383",
+    "dest_flat": "0x033383",
+    "raw_bytes": "01 ff f1 00 a7 73 00 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 12,
+    "dest_ptr": "0x73AB",
+    "dest_flat": "0x0333AB",
+    "raw_bytes": "01 ff f1 00 bf 73 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 13,
+    "dest_ptr": "0x73C3",
+    "dest_flat": "0x0333C3",
+    "raw_bytes": "01 ff f1 00 d7 73 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 14,
+    "dest_ptr": "0x73DB",
+    "dest_flat": "0x0333DB",
+    "raw_bytes": "01 ff 4e 00 f7 73 d1 01",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 78,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 15,
+    "dest_ptr": "0x73FB",
+    "dest_flat": "0x0333FB",
+    "raw_bytes": "01 ff f1 00 0d 74 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 16,
+    "dest_ptr": "0x742B",
+    "dest_flat": "0x03342B",
+    "raw_bytes": "00 ff 2f 00 f1 74 00 ff",
+    "byte0": 0,
+    "byte1": 255,
+    "byte2": 47,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 17,
+    "dest_ptr": "0x75BB",
+    "dest_flat": "0x0335BB",
+    "raw_bytes": "18 02 ff ff 01 ff f1 00",
+    "byte0": 24,
+    "byte1": 2,
+    "byte2": 255,
+    "byte3": 255
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 18,
+    "dest_ptr": "0x75BF",
+    "dest_flat": "0x0335BF",
+    "raw_bytes": "01 ff f1 00 d3 75 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 19,
+    "dest_ptr": "0x75D7",
+    "dest_flat": "0x0335D7",
+    "raw_bytes": "01 ff 8e 00 f3 75 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 142,
+    "byte3": 0
+  },
+  {
+    "master_indices": [
+      5
+    ],
+    "room_id": 20,
+    "dest_ptr": "0x7647",
+    "dest_flat": "0x033647",
+    "raw_bytes": "01 ff f1 00 6f 76 01 ff",
+    "byte0": 1,
+    "byte1": 255,
+    "byte2": 241,
+    "byte3": 0
+  }
+]

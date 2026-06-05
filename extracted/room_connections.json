@@ -1,0 +1,6223 @@
+{
+  "0x00:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x00:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x00:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x00:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x01:c925=0:step=2": [
+    {
+      "next_room_id": 18,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 6,
+      "next_room_id_flat": "0x02CEF1"
+    }
+  ],
+  "0x01:c925=0:step=3": [
+    {
+      "next_room_id": 18,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 6,
+      "next_room_id_flat": "0x02CEFC"
+    }
+  ],
+  "0x01:c925=0:step=4": [
+    {
+      "next_room_id": 18,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 6,
+      "next_room_id_flat": "0x02CF02"
+    }
+  ],
+  "0x02:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D107"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D10C"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D111"
+    }
+  ],
+  "0x02:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D121"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D126"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D12B"
+    }
+  ],
+  "0x02:c925=2:step=1": [
+    {
+      "next_room_id": 11,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D180"
+    }
+  ],
+  "0x02:c925=2:step=2": [
+    {
+      "next_room_id": 11,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D190"
+    }
+  ],
+  "0x03:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D36E"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D373"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D378"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D37D"
+    }
+  ],
+  "0x03:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D388"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D38D"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D392"
+    }
+  ],
+  "0x03:c925=0:step=2": [
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D39D"
+    }
+  ],
+  "0x03:c925=1:step=0": [
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3AE"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3B3"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3B8"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3BD"
+    }
+  ],
+  "0x03:c925=1:step=1": [
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3D2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3D7"
+    }
+  ],
+  "0x03:c925=1:step=2": [
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3EC"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3F1"
+    }
+  ],
+  "0x03:c925=1:step=3": [
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D3FC"
+    }
+  ],
+  "0x04:c925=0:step=1": [
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 5,
+      "next_room_id_flat": "0x02D659"
+    }
+  ],
+  "0x04:c925=0:step=2": [
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 5,
+      "next_room_id_flat": "0x02D66E"
+    }
+  ],
+  "0x04:c925=1:step=0": [
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 2,
+      "next_room_id_flat": "0x02D693"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D698"
+    }
+  ],
+  "0x04:c925=1:step=1": [
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 2,
+      "next_room_id_flat": "0x02D6A3"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D6A8"
+    }
+  ],
+  "0x04:c925=2:step=0": [
+    {
+      "next_room_id": 16,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D6D7"
+    }
+  ],
+  "0x04:c925=2:step=1": [
+    {
+      "next_room_id": 41,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02D6EC"
+    },
+    {
+      "next_room_id": 16,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D6F1"
+    }
+  ],
+  "0x04:c925=2:step=2": [
+    {
+      "next_room_id": 41,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02D706"
+    },
+    {
+      "next_room_id": 41,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02D70B"
+    },
+    {
+      "next_room_id": 42,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 4,
+      "next_room_id_flat": "0x02D710"
+    },
+    {
+      "next_room_id": 42,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 5,
+      "next_room_id_flat": "0x02D715"
+    }
+  ],
+  "0x04:c925=2:step=3": [
+    {
+      "next_room_id": 41,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02D72A"
+    },
+    {
+      "next_room_id": 41,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02D72F"
+    },
+    {
+      "next_room_id": 42,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 4,
+      "next_room_id_flat": "0x02D734"
+    },
+    {
+      "next_room_id": 42,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 5,
+      "next_room_id_flat": "0x02D739"
+    }
+  ],
+  "0x04:c925=2:step=4": [
+    {
+      "next_room_id": 41,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02D749"
+    },
+    {
+      "next_room_id": 41,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02D74E"
+    },
+    {
+      "next_room_id": 42,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 4,
+      "next_room_id_flat": "0x02D753"
+    },
+    {
+      "next_room_id": 42,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 5,
+      "next_room_id_flat": "0x02D758"
+    }
+  ],
+  "0x05:c925=0:step=1": [
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D88A"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D88F"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D894"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D899"
+    }
+  ],
+  "0x05:c925=1:step=0": [
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D8B8"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D8BD"
+    }
+  ],
+  "0x05:c925=1:step=1": [
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D8CD"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D8D2"
+    }
+  ],
+  "0x05:c925=2:step=0": [
+    {
+      "next_room_id": 12,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D8E7"
+    },
+    {
+      "next_room_id": 13,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D8EC"
+    },
+    {
+      "next_room_id": 14,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D8F1"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D8F6"
+    }
+  ],
+  "0x05:c925=2:step=1": [
+    {
+      "next_room_id": 12,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D90B"
+    },
+    {
+      "next_room_id": 13,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D910"
+    },
+    {
+      "next_room_id": 14,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D915"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D91A"
+    }
+  ],
+  "0x05:c925=2:step=2": [
+    {
+      "next_room_id": 12,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D92A"
+    },
+    {
+      "next_room_id": 13,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D92F"
+    },
+    {
+      "next_room_id": 14,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D934"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D939"
+    }
+  ],
+  "0x05:c925=2:step=3": [
+    {
+      "next_room_id": 12,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D94E"
+    },
+    {
+      "next_room_id": 13,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D953"
+    },
+    {
+      "next_room_id": 14,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D958"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D95D"
+    }
+  ],
+  "0x06:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02D9C2"
+    },
+    {
+      "next_room_id": 112,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9C8"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9CD"
+    },
+    {
+      "next_room_id": 80,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9D2"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9DC"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9E1"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9E6"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9EB"
+    }
+  ],
+  "0x06:c925=1:step=0": [
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9DC"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9E1"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9E6"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02D9EB"
+    }
+  ],
+  "0x06:c925=2:step=0": [
+    {
+      "next_room_id": 10,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DA05"
+    }
+  ],
+  "0x07:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DA9F"
+    }
+  ],
+  "0x07:c925=1:step=0": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02DAB9"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 5,
+      "next_room_id_flat": "0x02DABE"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02DAC3"
+    }
+  ],
+  "0x07:c925=1:step=1": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02DAB9"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 5,
+      "next_room_id_flat": "0x02DABE"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02DAC3"
+    }
+  ],
+  "0x07:c925=1:step=2": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02DAD8"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 5,
+      "next_room_id_flat": "0x02DADD"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02DAE2"
+    }
+  ],
+  "0x07:c925=1:step=3": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02DAFC"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 5,
+      "next_room_id_flat": "0x02DB01"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02DB06"
+    }
+  ],
+  "0x07:c925=1:step=4": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02DB1B"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 5,
+      "next_room_id_flat": "0x02DB20"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02DB25"
+    }
+  ],
+  "0x07:c925=1:step=5": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02DB44"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 5,
+      "next_room_id_flat": "0x02DB49"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02DB4E"
+    }
+  ],
+  "0x07:c925=1:step=6": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02DB68"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 5,
+      "next_room_id_flat": "0x02DB6D"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02DB72"
+    }
+  ],
+  "0x07:c925=1:step=7": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02DB8C"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 5,
+      "next_room_id_flat": "0x02DB91"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02DB96"
+    }
+  ],
+  "0x07:c925=2:step=0": [
+    {
+      "next_room_id": 9,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DBAB"
+    },
+    {
+      "next_room_id": 10,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DBB0"
+    }
+  ],
+  "0x0B:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x0B:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x0B:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x0B:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x0C:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DEA2"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DEA7"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DEAC"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DEB1"
+    }
+  ],
+  "0x0D:c925=0:step=0": [
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 4,
+      "next_room_id_flat": "0x02DED4"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 5,
+      "next_room_id_flat": "0x02DED9"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 5,
+      "next_room_id_flat": "0x02DEDE"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DEE3"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DEE8"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DEED"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DEF2"
+    }
+  ],
+  "0x0D:c925=0:step=1": [
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 4,
+      "next_room_id_flat": "0x02DF0C"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 5,
+      "next_room_id_flat": "0x02DF11"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 5,
+      "next_room_id_flat": "0x02DF16"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF1B"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF20"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF25"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF2A"
+    }
+  ],
+  "0x0E:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x0E:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x0E:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x0E:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x0F:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF58"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF5D"
+    }
+  ],
+  "0x10:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF85"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF8A"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF8F"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF94"
+    }
+  ],
+  "0x10:c925=0:step=1": [
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 6,
+      "next_room_id_flat": "0x02DFA9"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 5,
+      "next_room_id_flat": "0x02DFAE"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DFB3"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DFB8"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DFBD"
+    }
+  ],
+  "0x11:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x11:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x11:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x11:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x12:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E005"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E00A"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E00F"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E014"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E019"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E01E"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E023"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E028"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E02D"
+    },
+    {
+      "next_room_id": 10,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E032"
+    },
+    {
+      "next_room_id": 11,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E037"
+    },
+    {
+      "next_room_id": 12,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E03C"
+    }
+  ],
+  "0x13:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E091"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E096"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E09B"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0A0"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0A5"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0AA"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0AF"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0B4"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0B9"
+    },
+    {
+      "next_room_id": 10,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0BE"
+    },
+    {
+      "next_room_id": 11,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0C3"
+    },
+    {
+      "next_room_id": 12,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0C8"
+    },
+    {
+      "next_room_id": 13,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0CD"
+    },
+    {
+      "next_room_id": 14,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0D2"
+    }
+  ],
+  "0x13:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0E2"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0E7"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0EC"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0F1"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0F6"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E0FB"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E100"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E105"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E10A"
+    },
+    {
+      "next_room_id": 10,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E10F"
+    },
+    {
+      "next_room_id": 11,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E114"
+    },
+    {
+      "next_room_id": 12,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E119"
+    },
+    {
+      "next_room_id": 13,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E11E"
+    },
+    {
+      "next_room_id": 14,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E123"
+    }
+  ],
+  "0x14:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x14:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x14:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x14:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x15:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x15:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x15:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x15:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x16:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E165"
+    }
+  ],
+  "0x16:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E175"
+    }
+  ],
+  "0x16:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E18A"
+    }
+  ],
+  "0x16:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E19A"
+    }
+  ],
+  "0x16:c925=0:step=4": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E1AA"
+    }
+  ],
+  "0x16:c925=0:step=5": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E1BF"
+    }
+  ],
+  "0x17:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF85"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF8A"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF8F"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DF94"
+    }
+  ],
+  "0x17:c925=0:step=1": [
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 6,
+      "next_room_id_flat": "0x02DFA9"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 5,
+      "next_room_id_flat": "0x02DFAE"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DFB3"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DFB8"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02DFBD"
+    }
+  ],
+  "0x19:c925=0:step=0": [
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 1,
+      "y": 4,
+      "next_room_id_flat": "0x02E2C9"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 4,
+      "next_room_id_flat": "0x02E2CE"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 4,
+      "next_room_id_flat": "0x02E2D3"
+    }
+  ],
+  "0x1A:c925=0:step=0": [
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 4,
+      "next_room_id_flat": "0x02E2F0"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02E2F5"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02E2FA"
+    }
+  ],
+  "0x1C:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E372"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E377"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E37C"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E381"
+    }
+  ],
+  "0x1C:c925=0:step=1": [
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E396"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E39B"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E3A0"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E3A5"
+    }
+  ],
+  "0x1D:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E3D3"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E3D8"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E3DD"
+    }
+  ],
+  "0x1E:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E40A"
+    }
+  ],
+  "0x1E:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E41F"
+    }
+  ],
+  "0x1F:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E452"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E466"
+    }
+  ],
+  "0x1F:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E46C"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E480"
+    }
+  ],
+  "0x1F:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E486"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02E49A"
+    }
+  ],
+  "0x20:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x20:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x20:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x20:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x21:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x21:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x21:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x21:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x22:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x22:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x22:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x22:c925=0:step=3": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC99"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CC9E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCA8"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCAD"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB2"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCB7"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCBC"
+    },
+    {
+      "next_room_id": 19,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02CCC1"
+    }
+  ],
+  "0x31:c925=0:step=0": [
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EAE8"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EAED"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EAF2"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EAF7"
+    }
+  ],
+  "0x32:c925=0:step=0": [
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02EB26"
+    }
+  ],
+  "0x34:c925=0:step=0": [
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 1,
+      "next_room_id_flat": "0x02EB7A"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02EB7F"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 5,
+      "next_room_id_flat": "0x02EB84"
+    },
+    {
+      "next_room_id": 10,
+      "kind": "coord_exit",
+      "x": 1,
+      "y": 3,
+      "next_room_id_flat": "0x02EB89"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EB8E"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EB93"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EB98"
+    }
+  ],
+  "0x34:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EBB7"
+    }
+  ],
+  "0x35:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EBD6"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EBDB"
+    }
+  ],
+  "0x35:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EBEB"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EBF0"
+    }
+  ],
+  "0x36:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC0F"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC14"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC19"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC1E"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC23"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC28"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC2D"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC32"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC37"
+    }
+  ],
+  "0x36:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC56"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC5B"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC60"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC65"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EC6A"
+    }
+  ],
+  "0x37:c925=0:step=0": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02EC98"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02EC9D"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 6,
+      "next_room_id_flat": "0x02ECA2"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 4,
+      "next_room_id_flat": "0x02ECA7"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 5,
+      "next_room_id_flat": "0x02ECAC"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 6,
+      "next_room_id_flat": "0x02ECB1"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 3,
+      "next_room_id_flat": "0x02ECB6"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ECBC"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ECC1"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ECC6"
+    },
+    {
+      "next_room_id": 0,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ECCB"
+    }
+  ],
+  "0x37:c925=0:step=1": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02ECDF"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 5,
+      "next_room_id_flat": "0x02ECE4"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 6,
+      "next_room_id_flat": "0x02ECE9"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 4,
+      "next_room_id_flat": "0x02ECEE"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 5,
+      "next_room_id_flat": "0x02ECF3"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 6,
+      "next_room_id_flat": "0x02ECF8"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ECFE"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ED03"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ED08"
+    }
+  ],
+  "0x38:c925=0:step=0": [
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 0,
+      "next_room_id_flat": "0x02ED2B"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 0,
+      "next_room_id_flat": "0x02ED30"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 0,
+      "next_room_id_flat": "0x02ED35"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 1,
+      "y": 1,
+      "next_room_id_flat": "0x02ED3A"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 2,
+      "next_room_id_flat": "0x02ED3F"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 2,
+      "next_room_id_flat": "0x02ED44"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 4,
+      "next_room_id_flat": "0x02ED49"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 4,
+      "next_room_id_flat": "0x02ED4E"
+    },
+    {
+      "next_room_id": 10,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02ED53"
+    },
+    {
+      "next_room_id": 11,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 4,
+      "next_room_id_flat": "0x02ED58"
+    },
+    {
+      "next_room_id": 12,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 4,
+      "next_room_id_flat": "0x02ED5D"
+    },
+    {
+      "next_room_id": 13,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 5,
+      "next_room_id_flat": "0x02ED62"
+    },
+    {
+      "next_room_id": 14,
+      "kind": "coord_exit",
+      "x": 1,
+      "y": 6,
+      "next_room_id_flat": "0x02ED67"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 6,
+      "next_room_id_flat": "0x02ED6C"
+    },
+    {
+      "next_room_id": 16,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 2,
+      "next_room_id_flat": "0x02ED71"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ED77"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ED7C"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ED81"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02ED86"
+    }
+  ],
+  "0x38:c925=0:step=1": [
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 0,
+      "next_room_id_flat": "0x02ED9A"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 0,
+      "next_room_id_flat": "0x02ED9F"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 0,
+      "next_room_id_flat": "0x02EDA4"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 1,
+      "y": 1,
+      "next_room_id_flat": "0x02EDA9"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 2,
+      "next_room_id_flat": "0x02EDAE"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 2,
+      "next_room_id_flat": "0x02EDB3"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 4,
+      "next_room_id_flat": "0x02EDB8"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "coord_exit",
+      "x": 3,
+      "y": 4,
+      "next_room_id_flat": "0x02EDBD"
+    },
+    {
+      "next_room_id": 10,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02EDC2"
+    },
+    {
+      "next_room_id": 11,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 4,
+      "next_room_id_flat": "0x02EDC7"
+    },
+    {
+      "next_room_id": 12,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 4,
+      "next_room_id_flat": "0x02EDCC"
+    },
+    {
+      "next_room_id": 13,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 5,
+      "next_room_id_flat": "0x02EDD1"
+    },
+    {
+      "next_room_id": 14,
+      "kind": "coord_exit",
+      "x": 1,
+      "y": 6,
+      "next_room_id_flat": "0x02EDD6"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 6,
+      "next_room_id_flat": "0x02EDDB"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EDE1"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EDE6"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EDEB"
+    }
+  ],
+  "0x39:c925=0:step=0": [
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 6,
+      "next_room_id_flat": "0x02EE0E"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EE13"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EE18"
+    }
+  ],
+  "0x39:c925=0:step=1": [
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EE28"
+    }
+  ],
+  "0x3A:c925=0:step=0": [
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 2,
+      "next_room_id_flat": "0x02EE47"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 3,
+      "next_room_id_flat": "0x02EE4C"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 5,
+      "next_room_id_flat": "0x02EE51"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 6,
+      "next_room_id_flat": "0x02EE56"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 2,
+      "next_room_id_flat": "0x02EE5B"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02EE60"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 6,
+      "next_room_id_flat": "0x02EE65"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 2,
+      "next_room_id_flat": "0x02EE6A"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 3,
+      "next_room_id_flat": "0x02EE6F"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 5,
+      "next_room_id_flat": "0x02EE74"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 6,
+      "next_room_id_flat": "0x02EE79"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 2,
+      "next_room_id_flat": "0x02EE7E"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 3,
+      "next_room_id_flat": "0x02EE83"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 4,
+      "next_room_id_flat": "0x02EE88"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 5,
+      "next_room_id_flat": "0x02EE8D"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 6,
+      "next_room_id_flat": "0x02EE92"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 1,
+      "y": 5,
+      "next_room_id_flat": "0x02EE97"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 4,
+      "next_room_id_flat": "0x02EE9C"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 3,
+      "next_room_id_flat": "0x02EEA1"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02EEA6"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 3,
+      "next_room_id_flat": "0x02EEAB"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 5,
+      "next_room_id_flat": "0x02EEB0"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EEB6"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EEBB"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EEC0"
+    },
+    {
+      "next_room_id": 0,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EEC5"
+    }
+  ],
+  "0x3A:c925=0:step=1": [
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 2,
+      "next_room_id_flat": "0x02EED4"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 3,
+      "next_room_id_flat": "0x02EED9"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 5,
+      "next_room_id_flat": "0x02EEDE"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 6,
+      "next_room_id_flat": "0x02EEE3"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 2,
+      "next_room_id_flat": "0x02EEE8"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02EEED"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 6,
+      "next_room_id_flat": "0x02EEF2"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 2,
+      "next_room_id_flat": "0x02EEF7"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 3,
+      "next_room_id_flat": "0x02EEFC"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 5,
+      "next_room_id_flat": "0x02EF01"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 6,
+      "y": 6,
+      "next_room_id_flat": "0x02EF06"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 2,
+      "next_room_id_flat": "0x02EF0B"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 3,
+      "next_room_id_flat": "0x02EF10"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 4,
+      "next_room_id_flat": "0x02EF15"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 5,
+      "next_room_id_flat": "0x02EF1A"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 6,
+      "next_room_id_flat": "0x02EF1F"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF25"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF2A"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF2F"
+    }
+  ],
+  "0x3C:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF7D"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF82"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF87"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF8C"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF91"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF96"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF9B"
+    }
+  ],
+  "0x3C:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF7D"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF82"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF87"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF8C"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF91"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF96"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EF9B"
+    }
+  ],
+  "0x3C:c925=0:step=2": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EFBA"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EFBF"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EFC4"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EFC9"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EFCE"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EFD3"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02EFD8"
+    }
+  ],
+  "0x3D:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02EFF7"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02EFFC"
+    },
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F002"
+    }
+  ],
+  "0x3D:c925=0:step=1": [
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F01B"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02F020"
+    }
+  ],
+  "0x40:c925=0:step=0": [
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 1,
+      "y": 1,
+      "next_room_id_flat": "0x02F085"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 1,
+      "next_room_id_flat": "0x02F08A"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 1,
+      "next_room_id_flat": "0x02F08F"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 1,
+      "next_room_id_flat": "0x02F094"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 1,
+      "next_room_id_flat": "0x02F099"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 8,
+      "y": 1,
+      "next_room_id_flat": "0x02F09E"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F0A3"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F0A8"
+    }
+  ],
+  "0x42:c925=0:step=0": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F196"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F19B"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F1A0"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F1A5"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F1AA"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F1AF"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F1B4"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F1B9"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F1BE"
+    }
+  ],
+  "0x42:c925=0:step=1": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F1C4"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F1C9"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F1CE"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F1D3"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F1D8"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F1DD"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F1E2"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F1E7"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F1EC"
+    }
+  ],
+  "0x42:c925=0:step=2": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F1F2"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F1F7"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F1FC"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F201"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F206"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F20B"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F210"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F215"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F21A"
+    }
+  ],
+  "0x42:c925=0:step=3": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F220"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F225"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F22A"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F22F"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F234"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F239"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F23E"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F243"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F248"
+    }
+  ],
+  "0x42:c925=0:step=4": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F24E"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F253"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F258"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F25D"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F262"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F267"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F26C"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F271"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F276"
+    }
+  ],
+  "0x42:c925=0:step=5": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F27C"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F281"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F286"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F28B"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F290"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F295"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F29A"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F29F"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F2A4"
+    }
+  ],
+  "0x42:c925=0:step=6": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F2AA"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F2AF"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F2B4"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F2B9"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F2BE"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F2C3"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F2C8"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F2CD"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F2D2"
+    }
+  ],
+  "0x42:c925=0:step=7": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F2D8"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F2DD"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F2E2"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F2E7"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F2EC"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F2F1"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F2F6"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F2FB"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F300"
+    }
+  ],
+  "0x42:c925=0:step=8": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F306"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F30B"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F310"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F315"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F31A"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F31F"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F324"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F329"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F32E"
+    }
+  ],
+  "0x42:c925=0:step=9": [
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F334"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 7,
+      "next_room_id_flat": "0x02F339"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 7,
+      "next_room_id_flat": "0x02F33E"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 2,
+      "next_room_id_flat": "0x02F343"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 9,
+      "y": 5,
+      "next_room_id_flat": "0x02F348"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 2,
+      "y": 0,
+      "next_room_id_flat": "0x02F34D"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 7,
+      "y": 0,
+      "next_room_id_flat": "0x02F352"
+    },
+    {
+      "next_room_id": 9,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 2,
+      "next_room_id_flat": "0x02F357"
+    },
+    {
+      "next_room_id": 15,
+      "kind": "coord_exit",
+      "x": 0,
+      "y": 5,
+      "next_room_id_flat": "0x02F35C"
+    }
+  ],
+  "0x42:c925=1:step=0": [
+    {
+      "next_room_id": 16,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F362"
+    },
+    {
+      "next_room_id": 18,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F367"
+    }
+  ],
+  "0x42:c925=1:step=1": [
+    {
+      "next_room_id": 16,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F377"
+    },
+    {
+      "next_room_id": 18,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F37C"
+    }
+  ],
+  "0x43:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F4EF"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F4F4"
+    }
+  ],
+  "0x43:c925=0:step=1": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F50E"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F513"
+    }
+  ],
+  "0x45:c925=0:step=0": [
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F57C"
+    }
+  ],
+  "0x45:c925=0:step=2": [
+    {
+      "next_room_id": 64,
+      "kind": "exit_type_EX",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F5A0"
+    }
+  ],
+  "0x4F:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "coord_exit",
+      "x": 4,
+      "y": 4,
+      "next_room_id_flat": "0x02F7BD"
+    },
+    {
+      "next_room_id": 1,
+      "kind": "coord_exit",
+      "x": 5,
+      "y": 4,
+      "next_room_id_flat": "0x02F7C2"
+    }
+  ],
+  "0x50:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F7EB"
+    }
+  ],
+  "0x51:c925=0:step=0": [
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F808"
+    }
+  ],
+  "0x5A:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBB6"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBBB"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBC0"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBC5"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBCA"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBCF"
+    }
+  ],
+  "0x5B:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBE7"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBEC"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBF1"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBF6"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FBFB"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC00"
+    }
+  ],
+  "0x5C:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC18"
+    },
+    {
+      "next_room_id": 2,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC1D"
+    },
+    {
+      "next_room_id": 3,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC22"
+    },
+    {
+      "next_room_id": 4,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC27"
+    },
+    {
+      "next_room_id": 5,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC2C"
+    },
+    {
+      "next_room_id": 6,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC31"
+    },
+    {
+      "next_room_id": 7,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC36"
+    },
+    {
+      "next_room_id": 8,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02FC3B"
+    }
+  ],
+  "0x5F:c925=0:step=0": [
+    {
+      "next_room_id": 1,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F7EB"
+    }
+  ],
+  "0x60:c925=0:step=0": [
+    {
+      "next_room_id": 16,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F362"
+    },
+    {
+      "next_room_id": 18,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F367"
+    }
+  ],
+  "0x60:c925=0:step=1": [
+    {
+      "next_room_id": 16,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F377"
+    },
+    {
+      "next_room_id": 18,
+      "kind": "exit_type_8X",
+      "x": null,
+      "y": null,
+      "next_room_id_flat": "0x02F37C"
+    }
+  ]
+}
