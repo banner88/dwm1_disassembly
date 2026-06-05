@@ -1,54 +1,93 @@
-; Disassembly of "baserom.gbc"
-; This file was created with:
-; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
-; https://github.com/mattcurrie/mgbdis
+; =============================================================================
+; BANK $0B — ROOM SYSTEM
+; =============================================================================
+; This bank contains the entire room loading pipeline:
+;   - Tileset/graphics loading (entries 0,1)
+;   - Screen/scroll management (entry 2)
+;   - NPC interaction dispatch (entries 3,4,5)
+;   - Exit detection — runs EVERY STEP (entry 6)
+;   - Room initialization after transition (entry 7)
+;   - Step block reader (entry 8)
+;   - Special room handlers (entry 9)
+;
+; Cross-bank calls use `rst $10` where HL = (bank << 8) | entry_index.
+; rst $10 saves current bank, switches to bank H, calls $4001+(L*2) jump
+; table entry, then restores original bank.
+;
+; Room Data Chain:
+;   ptr_table[$4B43 + mapID*2] → screen_ptr_block (up to 4 screen slots × 2)
+;     → step_block: [ram_flag_ptr:2] then [step_entry × N] + terminator
+;       → step_entry (6 bytes): [step_id:1][tileset:1][interact_ptr:2][exit_ptr:2]
+;         → interact_block: NPC entries (5 bytes each) + $FF terminator
+;         → exit_block: exit entries (7 bytes each) + $FF terminator
+;
+; Sources: Mallos31/dwm disassembly, NiyaDev/DWM rst docs,
+;          user reverse-engineering (ROUTING_DISCOVERIES.md, NPC_AND_ROUTING_HANDOFF.md)
+; =============================================================================
 
 SECTION "ROM Bank $00b", ROMX[$4000], BANK[$b]
-    db $0b	;rom bank
+    db $0b	; ROM bank ID
 
-    ;JUMPTABLE
-    dw labelb_4015
-    dw labelb_4088
-    dw labelb_40ce
-    dw labelb_4213
-    dw labelb_4332
-    dw labelb_43a4
-    dw labelb_451d
-    dw labelb_470f
-    dw Call_00b_4239
-    dw labelb_4488
+; -----------------------------------------------------------------------------
+; JUMP TABLE — dispatched via rst $10 with H=$0B
+; Called from bank $51 game loop. Entry = L value in HL before rst $10.
+; -----------------------------------------------------------------------------
+    dw RoomEntry0_TilesetLoader     ; Entry 0: load tileset + apply map change
+    dw RoomEntry1_GraphicsLoader    ; Entry 1: load tileset only (no map change)
+    dw RoomEntry2_ScreenScroll      ; Entry 2: screen/scroll position manager
+    dw RoomEntry3_NPCDispatch       ; Entry 3: NPC interaction handler
+    dw RoomEntry4_NPCMovement       ; Entry 4: NPC movement/patrol
+    dw RoomEntry5_NPCRender         ; Entry 5: NPC sprite render
+    dw RoomEntry6_ExitChecker       ; Entry 6: exit detection (RUNS EVERY STEP)
+    dw RoomEntry7_RoomInit          ; Entry 7: room initializer (after transition)
+    dw ReadStepBlock                ; Entry 8: read step_id + tileset from ptr table
+    dw RoomEntry9_SpecialRooms      ; Entry 9: special room handlers (mazes, arenas)
 
+; =============================================================================
+; ENTRY 0: RoomEntry0_TilesetLoader ($4015)
+; =============================================================================
+; Called during room transitions. If wIsPlayerChangingMaps is set, copies the
+; destination map_type from $C96D to wMapID (making the transition "real").
+; Then loads the tileset graphics from the tileset table at $26DD (normal) or
+; $2A5D (gate worlds). Does NOT read the room pointer table at $4B43.
+; -----------------------------------------------------------------------------
+RoomEntry0_TilesetLoader:
 labelb_4015:
-    ld a, [wIsPlayerChangingMaps]
+    ld a, [wIsPlayerChangingMaps]   ; $C96C — is a map change pending?
     or a
-    jr z, jr_00b_4027
+    jr z, jr_00b_4027               ; skip if no pending change
 
-    ld a, [$c96d]
-    ld [wMapID], a
-    ld a, [$c96e]
-    ld [wInGateworld], a
+    ; Apply pending map change: copy destination to active
+    ld a, [$c96d]                   ; destination map_type (set by exit checker)
+    ld [wMapID], a                  ; $C968 — now the active map
+    ld a, [$c96e]                   ; destination gate flag
+    ld [wInGateworld], a            ; $C969 — gate/normal mode
 
 jr_00b_4027:
-    ld hl, $1605	;set ROM bank to 16, RAM bank to 00, and call function 16:400b
+    ld hl, $1605	; rst $10: bank $16, entry 5 — tileset prep function
     rst $10
 
 
 
-    ld de, $26dd
+    ; Select tileset table based on gate flag
+    ; Normal rooms: $26DD (bank 0), Gate rooms: $2A5D (bank 0)
+    ; Each entry is 8 bytes: [gfx_ptr:2][spawn_data:6]
+    ld de, $26dd                    ; tileset_table (normal rooms)
     ld a, [wInGateworld]
     or a
     jr z, jr_00b_4037
 
-    ld de, $2a5d
+    ld de, $2a5d                    ; tileset_table (gate rooms)
 
 jr_00b_4037:
+    ; Index into table: DE = tileset_table + wMapID * 8
     ld a, [wMapID]
     ld l, a
     ld h, $00
-    add hl, hl
-    add hl, hl
-    add hl, hl
-    add hl, de
+    add hl, hl                      ; × 2
+    add hl, hl                      ; × 4
+    add hl, hl                      ; × 8
+    add hl, de                      ; HL = &tileset_table[mapID]
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -91,6 +130,15 @@ jr_00b_4076:
     rst $10
     ret
 
+; =============================================================================
+; ENTRY 1: RoomEntry1_GraphicsLoader ($4088)
+; =============================================================================
+; Same as Entry 0 but WITHOUT applying pending map change.
+; Used for graphics refresh when room doesn't change (e.g., screen scroll).
+; Does NOT read the room pointer table at $4B43.
+; Reads from tileset table $26DD/$2A5D only.
+; -----------------------------------------------------------------------------
+RoomEntry1_GraphicsLoader:
 labelb_4088:
     ld de, $26dd
     ld a, [wInGateworld]
@@ -137,6 +185,7 @@ jr_00b_40c0:
     ldh [$a0], a
     ret
 
+RoomEntry2_ScreenScroll:
 labelb_40ce:
     ldh a, [$95]
     ld l, a
@@ -362,6 +411,7 @@ jr_00b_41d8:
     ld [hl], $01
     ret
 
+RoomEntry3_NPCDispatch:
 labelb_4213:
     ld hl, $1700
     rst $10
@@ -383,58 +433,96 @@ labelb_4213:
     ret
 
 
+; =============================================================================
+; ENTRY 8: ReadStepBlock ($4239)
+; =============================================================================
+; Reads step_id and tileset from the room pointer table.
+; Returns: DE = [step_id, tileset] (first 2 bytes of current step entry)
+;
+; THIS IS ONE OF FOUR FUNCTIONS THAT READ THE POINTER TABLE AT $4B43.
+; All four share identical pointer-chasing code but return different fields:
+;   ReadStepBlock ($4239): returns bytes 0-1 (step_id + tileset) → DE
+;   ReadInteractPtr ($4274): skips 2, returns bytes 2-3 (interact_ptr) → HL
+;   ExitChecker ($451D): skips 4, returns bytes 4-5 (exit_ptr) → HL
+;   ~$44A7 func: skips 4, returns bytes 4-5 (exit_ptr) → HL
+;
+; For cross-bank rooms, ALL FOUR must be modified to support data
+; outside bank $0B. This is the key architectural constraint.
+; -----------------------------------------------------------------------------
+ReadStepBlock:
 Call_00b_4239:
-    ld a, [wInGateworld]
+    ld a, [wInGateworld]            ; gate rooms use different path
     or a
     jr z, jr_00b_4244
 
-    ld hl, $1609
+    ld hl, $1609                    ; rst $10: bank $16, entry 9 — gate step reader
     rst $10
     ret
 
 
 jr_00b_4244:
-    ld hl, $4b43
-    ld a, [wMapID]
-    add a
+    ; === POINTER TABLE READ — shared pattern ===
+    ; Step 1: ptr_table[$4B43 + mapID * 2] → screen_ptr_block
+    ld hl, $4b43                    ; room pointer table (107 entries × 2 bytes)
+    ld a, [wMapID]                  ; current room map_type ($C968)
+    add a                           ; mapID × 2 (2 bytes per entry)
     add l
     ld l, a
     ld a, $00
     adc h
-    ld h, a
+    ld h, a                         ; HL = &ptr_table[mapID]
     ld a, [hl+]
     ld h, [hl]
-    ld l, a
-    ld a, [$c925]
-    add a
+    ld l, a                         ; HL = *ptr_table[mapID] → screen_ptr_block
+
+    ; Step 2: screen_ptr_block[$C925 * 2] → step_block
+    ld a, [$c925]                   ; screen_index (which screen of multi-screen room)
+    add a                           ; × 2 (pointer is 2 bytes)
     add l
     ld l, a
     ld a, $00
     adc h
-    ld h, a
+    ld h, a                         ; HL = &screen_ptr_block[screen_index]
     ld a, [hl+]
     ld h, [hl]
-    ld l, a
-    ld e, [hl]
+    ld l, a                         ; HL = *screen_ptr_block[screen] → step_block
+
+    ; Step 3: step_block[0:2] = ram_flag_ptr, then index by step value
+    ; step_block format: [ram_flag_ptr:2][step0:6][step1:6]...[FF]
+    ld e, [hl]                      ; ram_flag_ptr low byte
     inc hl
-    ld d, [hl]
-    inc hl
-    ld a, [de]
+    ld d, [hl]                      ; ram_flag_ptr high byte (DE = RAM address)
+    inc hl                          ; HL now points to first step entry
+    ld a, [de]                      ; read current step value from RAM
+    ; Index: step_value * 6 (each step entry is 6 bytes)
     ld e, a
-    add a
-    add e
-    add a
+    add a                           ; × 2
+    add e                           ; × 3
+    add a                           ; × 6
     add l
     ld l, a
     ld a, $00
     adc h
-    ld h, a
-    ld e, [hl]
+    ld h, a                         ; HL = &step_entries[step_value]
+
+    ; Step 4 (ReadStepBlock specific): return bytes 0-1 as DE
+    ld e, [hl]                      ; step_id
     inc hl
-    ld d, [hl]
+    ld d, [hl]                      ; tileset byte
     ret
 
 
+; =============================================================================
+; ReadInteractPtr ($4274)
+; =============================================================================
+; Reads the interact_ptr (NPC data pointer) from the room pointer table.
+; Returns: HL = interact_ptr (bytes 2-3 of current step entry)
+;
+; Same pointer-chasing as ReadStepBlock but skips step_id+tileset (2 bytes)
+; and returns interact_ptr instead.
+; Called by Entry 7 (RoomEntry7_RoomInit) to load NPC data after transition.
+; -----------------------------------------------------------------------------
+ReadInteractPtr:
 Call_00b_4274:
     ld a, [wInGateworld]
     or a
@@ -584,6 +672,7 @@ Call_00b_4309:
     ld [hl], a
     ret
 
+RoomEntry4_NPCMovement:
 labelb_4332:
     ld a, $00
     ldh [$d6], a
@@ -681,6 +770,7 @@ jr_00b_43a1:
     ld a, $ff
     ret
 
+RoomEntry5_NPCRender:
 labelb_43a4:
     ld a, $ff
     ldh [$d5], a
@@ -880,6 +970,7 @@ Call_00b_4452:
 
 
 
+RoomEntry9_SpecialRooms:
 labelb_4488:
     ld a, [$c850]
     or a
@@ -1007,22 +1098,58 @@ jr_00b_4513:
     jr jr_00b_44ec
 
 
+; =============================================================================
+; ENTRY 6: RoomEntry6_ExitChecker ($451D)
+; =============================================================================
+; **RUNS EVERY GAME STEP** — checks if player is standing on an exit tile.
+; This is the most performance-critical room function.
+;
+; For non-gate rooms: reads exit_ptr from pointer table, scans exit entries,
+; compares player position against each exit's trigger coordinates.
+; If match found, writes destination to $C96D and sets transition flag.
+;
+; For gate rooms: uses separate gate exit logic at Jump_00b_46a7.
+;
+; CRITICAL FOR CUSTOM ROOMS: This function reads the pointer table during
+; EVERY step, including during the fade transition before Entry 7 runs.
+; If the pointer table points to invalid data, this function will crash
+; or block the state machine from advancing.
+; 
+; Exit entry format (7 bytes each, in the exit_block):
+;   [trigger_X:1][trigger_Y:1][dest_map_type:1][gate_flag:1]
+;   [screen_byte:1][spawn_X:1][spawn_Y:1]
+; Terminated by $FF.
+; -----------------------------------------------------------------------------
+RoomEntry6_ExitChecker:
 labelb_451d:
 ;check if text box open
-    ld a, [wGameState]
-    bit 0, a
-    jp nz, Jump_00b_4674
+    ld a, [wGameState]              ; $C8EB — current game UI state
+    bit 0, a                        ; bit 0 = text box open
+    jp nz, Jump_00b_4674            ; skip if text box open
 
-    ldh a, [$90]
+    ldh a, [$90]                    ; animation/movement state
     bit 0, a
-    jp nz, Jump_00b_4674
+    jp nz, Jump_00b_4674            ; skip if animating
 
-    ld a, [wInGateworld]
+    ld a, [wInGateworld]            ; $C969
     or a
-    jp nz, Jump_00b_46a7
+    jp nz, Jump_00b_46a7            ; gate rooms use separate exit logic
 
-    ld hl, $4b43
+    ; === POINTER TABLE READ (same pattern as ReadStepBlock) ===
+    ; Reads exit_ptr (bytes 4-5 of step entry)
+    ld hl, $4b43                    ; room pointer table
     ld a, [wMapID]
+    add a                           ; mapID × 2
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                         ; HL → screen_ptr_block
+
+    ld a, [$c925]                   ; screen_index
     add a
     add l
     ld l, a
@@ -1031,114 +1158,168 @@ labelb_451d:
     ld h, a
     ld a, [hl+]
     ld h, [hl]
-    ld l, a
-    ld a, [$c925]
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    ld e, [hl]
+    ld l, a                         ; HL → step_block
+
+    ld e, [hl]                      ; ram_flag_ptr
     inc hl
     ld d, [hl]
     inc hl
-    ld a, [de]
+    ld a, [de]                      ; current step value
     ld e, a
     add a
     add e
-    add a
+    add a                           ; × 6
     add l
     ld l, a
     ld a, $00
     adc h
-    ld h, a
+    ld h, a                         ; HL → current step entry
+
+    ; Skip step_id(1) + tileset(1) + interact_ptr(2) = 4 bytes → exit_ptr
     inc hl
     inc hl
     inc hl
     inc hl
     ld a, [hl+]
     ld h, [hl]
-    ld l, a
-    ld bc, $2de7
-    ld a, [$c925]
-    add a
+    ld l, a                         ; HL → exit_block (list of 7-byte exit entries)
+
+    ; Load screen offset from $2DE7 table for position comparison
+    ld bc, $2de7                    ; screen position offset table (16 entries × 2)
+    ld a, [$c925]                   ; screen_index
+    add a                           ; × 2
     add c
     ld c, a
     ld a, $00
     adc b
-    ld b, a
+    ld b, a                         ; BC → $2DE7[screen_index]
     ld a, [bc]
-    ld e, a
+    ld e, a                         ; E = screen X offset
     inc bc
     ld a, [bc]
-    ld d, a
+    ld d, a                         ; D = screen Y offset
 
+; --- EXIT SCAN LOOP ---
+; Iterates through exit entries (7 bytes each), comparing player position.
+; HL points to current exit entry, DE = screen offset for position calc.
 jr_00b_4578:
+    ; Check terminator
     ld a, [hl]
     cp $ff
-    jp z, Jump_00b_4674
+    jp z, Jump_00b_4674             ; $FF = end of exit list, no match
 
+    ; Skip non-exit entries (type 0x00 = arrival point, 0x09 = special)
     ld a, [hl]
     or a
-    jr z, jr_00b_459e
+    jr z, jr_00b_459e               ; skip type $00
 
     cp $09
-    jr z, jr_00b_459e
+    jr z, jr_00b_459e               ; skip type $09
 
-    ldh a, [$97]
-    sub e
-    cp [hl]
-    jr nz, jr_00b_459e
+    ; Compare trigger X: player_col - screen_X_offset == exit.trigger_X?
+    ldh a, [$97]                    ; player column (pixel units)
+    sub e                           ; subtract screen X offset
+    cp [hl]                         ; compare with exit trigger_X (byte 0)
+    jr nz, jr_00b_459e              ; no match
 
+    ; Validate trigger_Y is reasonable
     inc hl
     ld a, [hl]
     dec hl
     or a
-    jr z, jr_00b_459e
+    jr z, jr_00b_459e               ; Y=0 means invalid
 
     cp $07
-    jr z, jr_00b_459e
+    jr z, jr_00b_459e               ; Y=7 means invalid
 
+    ; Compare trigger Y: player_row - screen_Y_offset == exit.trigger_Y?
     inc hl
-    ldh a, [$98]
-    sub d
-    cp [hl]
+    ldh a, [$98]                    ; player row (pixel units)
+    sub d                           ; subtract screen Y offset
+    cp [hl]                         ; compare with exit trigger_Y (byte 1)
     dec hl
-    jr z, jr_00b_45a8
+    jr z, jr_00b_45a8               ; MATCH! → process transition
 
 jr_00b_459e:
+    ; Advance to next exit entry (+7 bytes)
     ld a, l
     add $07
     ld l, a
     ld a, h
     adc $00
     ld h, a
-    jr jr_00b_4578
+    jr jr_00b_4578                  ; continue scanning
 
+; =============================================================================
+; EXIT MATCH — PROCESS ROOM TRANSITION ($45AB)
+; =============================================================================
+; Player stepped on an exit. HL points to the matched exit entry.
+; Read transition data (bytes 2-6) and set up the room change.
+;
+; Exit entry layout (HL currently at byte 0):
+;   +0: trigger_X (already matched)
+;   +1: trigger_Y (already matched)
+;   +2: dest_map_type → written to $C96D
+;   +3: gate_flag → written to $C96E
+;   +4: screen_byte → indexes $2DE7 table for spawn position
+;   +5: spawn_X → added to table value, SWAP'd for pixel position
+;   +6: spawn_Y → added to table value, SWAP'd for pixel position
+;
+; THIS IS THE ONLY PATCHABLE TRANSITION CODE PATH for ROM data.
+; Other paths ($524B, $52E8, $52F3, $5A16, $46C1) use RAM/register values.
+;
+; Flat ROM address = $2C000 + (HL - $4000) when breakpoint fires here.
+; Use `breakpoint $0B:$45AB` in SameBoy to capture any transition.
+; -----------------------------------------------------------------------------
 Jump_00b_45a8:
 jr_00b_45a8:
-    inc hl
-    inc hl
-    ld a, [hl+]
-    ld [$c96d], a
-    ld a, [hl+]
-    ld [$c96e], a
-    ld de, $2de7
-    ld a, [hl+]
-    push af
-    and $0f
-    add a
+    inc hl                          ; skip trigger_X (byte 0)
+    inc hl                          ; skip trigger_Y (byte 1)
+    ld a, [hl+]                     ; byte 2: dest_map_type
+    ld [$c96d], a                   ; → destination map_type
+    ld a, [hl+]                     ; byte 3: gate_flag
+    ld [$c96e], a                   ; → destination gate flag
+
+    ; === SPAWN POSITION CALCULATION ===
+    ; Screen byte (byte 4) indexes $2DE7 table for base position.
+    ; Lower nibble selects table entry, bit 7 adds extra $08 to Y.
+    ld de, $2de7                    ; spawn offset table
+    ld a, [hl+]                     ; byte 4: screen_byte
+    push af                         ; save for bit 7 check later
+    and $0f                         ; lower nibble = table index
+    add a                           ; × 2 (entries are 2 bytes)
     add e
     ld e, a
     ld a, $00
     adc d
-    ld d, a
-    ld a, [de]
-    add [hl]
+    ld d, a                         ; DE → $2DE7[screen_byte & $0F]
+
+    ; X position: table[index].X + spawn_X, then SWAP for pixels
+    ld a, [de]                      ; table X base
+    add [hl]                        ; + spawn_X (byte 5)
+    inc de
+    inc hl
+    swap a                          ; nibble swap = multiply by 16
+    ld b, a
+    and $f0
+    ld c, a
+    ld a, b
+    and $0f
+    ld b, a
+    ld a, c
+    add $08                         ; add 8 pixel offset
+    ld c, a
+    ld a, b
+    adc $00
+    ld b, a
+    ld a, c
+    ld [$c96f], a                   ; X spawn position low
+    ld a, b
+    ld [$c970], a                   ; X spawn position high
+
+    ; Y position: same calculation
+    ld a, [de]                      ; table Y base
+    add [hl]                        ; + spawn_Y (byte 6)
     inc de
     inc hl
     swap a
@@ -1154,31 +1335,11 @@ jr_00b_45a8:
     ld a, b
     adc $00
     ld b, a
-    ld a, c
-    ld [$c96f], a
-    ld a, b
-    ld [$c970], a
-    ld a, [de]
-    add [hl]
-    inc de
-    inc hl
-    swap a
-    ld b, a
-    and $f0
-    ld c, a
-    ld a, b
-    and $0f
-    ld b, a
-    ld a, c
-    add $08
-    ld c, a
-    ld a, b
-    adc $00
-    ld b, a
-    pop af
-    bit 7, a
+    pop af                          ; recover screen_byte
+    bit 7, a                        ; bit 7 set = multi-screen offset
     jr z, jr_00b_4601
 
+    ; Add extra $08 to Y for multi-screen rooms (bit 7 of screen_byte)
     ld a, c
     add $08
     ld c, a
@@ -1188,11 +1349,13 @@ jr_00b_45a8:
 
 jr_00b_4601:
     ld a, c
-    ld [$c971], a
+    ld [$c971], a                   ; Y spawn position low
     ld a, b
-    ld [$c972], a
+    ld [$c972], a                   ; Y spawn position high
+
+    ; === TRIGGER THE TRANSITION ===
     ld a, $01
-    ld [wIsPlayerChangingMaps], a	;if c96c is 0, room transitions do not work. The scren fades, but that's it.
+    ld [wIsPlayerChangingMaps], a	; $C96C — signal map change to Entry 0
     ld a, [$c96e]
     or a
     jr nz, jr_00b_466b
@@ -1256,46 +1419,54 @@ jr_00b_466b:
     xor a
     ld [$c905], a
 
+; --- Post-transition or no-exit: special room handling ---
+; Checks if current room is a special type (mazes, conveyors, etc.)
+; that need per-step processing beyond normal exit checking.
 Jump_00b_4674:
 jr_00b_4674:
     ld a, [wMapID]
-    ld a, [wMapID]
-    cp $53
+    ld a, [wMapID]                  ; (loaded twice — original bug or intentional?)
+    ; Special room map_types that get per-step processing:
+    cp $53                          ; Forest Maze
     jr z, jr_00b_46d5
 
-    cp $61
+    cp $61                          ; sub-room 1
     jr z, jr_00b_46d5
 
-    cp $62
+    cp $62                          ; sub-room 2
     jr z, jr_00b_46d5
 
-    cp $63
+    cp $63                          ; sub-room 3
     jr z, jr_00b_46d5
 
-    cp $64
+    cp $64                          ; sub-room 4
     jr z, jr_00b_46d5
 
-    cp $54
+    cp $54                          ; Conveyor Belt Maze 1
     jr z, jr_00b_46d5
 
-    cp $55
+    cp $55                          ; Conveyor Belt Maze 2
     jr z, jr_00b_46d5
 
-    cp $56
+    cp $56                          ; Conveyor Belt Maze 3
     jr z, jr_00b_46d5
 
-    cp $57
+    cp $57                          ; Maze 1
     jr z, jr_00b_46d5
 
-    cp $58
+    cp $58                          ; Maze 2
     jr z, jr_00b_46d5
 
-    cp $59
+    cp $59                          ; Maze 3
     jr z, jr_00b_46d5
 
     ret
 
 
+; --- Gate world exit handler ---
+; For rooms inside gates ($C969 != 0), exit logic is different:
+; checks $C960 (gate exit screen) and $FFAA position to detect
+; when player reaches the gate floor exit.
 Jump_00b_46a7:
     ld hl, $c960
     ld a, [$c925]
@@ -1375,6 +1546,21 @@ jr_00b_4709:
     ld [$c92d], a
     ret
 
+; =============================================================================
+; ENTRY 7: RoomEntry7_RoomInit ($470F)
+; =============================================================================
+; Called AFTER the fade transition completes. Initializes the new room:
+; loads NPC data via ReadInteractPtr, sets up NPC sprites, positions, etc.
+;
+; State machine: checks $C8EA bit 7 (transition_phase).
+;   If SET → fade still in progress, calls bank 6 fade handler, returns.
+;   If CLEAR → fade done, proceeds with room initialization.
+;
+; CRITICAL: This function only runs AFTER the exit checker + Entry 0 have
+; already processed the transition. If the exit checker crashes (e.g., from
+; invalid pointer table data), this function NEVER RUNS.
+; -----------------------------------------------------------------------------
+RoomEntry7_RoomInit:
 labelb_470f:
     ld a, [$c8ea]
     bit 7, a
