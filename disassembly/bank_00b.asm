@@ -2541,11783 +2541,4850 @@ jr_00b_4aef:
 jr_00b_4b40:
     ld [hl], $3a
     rst $38
-    inc de
-    ld c, h
-    inc hl
-    ld c, [hl]
-    ld e, l
-    ld d, b
-    ld a, [c]
-    ld d, d
-    xor [hl]
-    ld d, l
-    ld a, [hl-]
-    ld e, b
-    sbc [hl]
 
+; =============================================================================
+; ROOM DATA SECTION ($4B43 - $7FFF) — AUTO-ANNOTATED
+; Generated from extracted/map_table.json, npc_catalog.json, all_exits.json
+; =============================================================================
+
+RoomPtrTable:  ; 107 entries x 2B, indexed by wMapID ($C968)
+    dw $4C13  ; $00 m00_Castle
+    dw $4E23  ; $01 m01_GreatTree_Overworld
+    dw $505D  ; $02 m02_Bazaar
+    dw $52F2  ; $03 m03_Gate_Hub
+    dw $55AE  ; $04 m04_Farm_top_of_GreatTree
+    dw $583A  ; $05 m05_Stable
+    db $9E  ; $06 m06_Arena_Lobby ptr low
 jr_00b_4b50:
-    ld e, c
-    dec hl
-    ld e, d
-    add [hl]
-    ld e, h
-    ld b, l
-    ld e, l
-    ld l, d
-    ld e, [hl]
-    inc de
-    ld c, h
-    sub h
-    ld e, [hl]
-    ret nz
-
-    ld e, [hl]
-    inc de
-
+    db $59  ; $06 m06_Arena_Lobby ptr high → $599E
+    dw $5A2B  ; $07 m07_Arena_Rooms
+    dw $5C86  ; $08 m08_Gate_tileset
+    dw $5D45  ; $09 m09
+    dw $5E6A  ; $0A m0A_Secret_Passage_ThroneMedalMan
+    dw $4C13  ; $0B m0B_X
+    dw $5E94  ; $0C m0C_Gate_tileset
+    dw $5EC0  ; $0D m0D_Old_Man_Gate_Room
+    db $13  ; $0E m0E_X ptr low
 jr_00b_4b60:
-    ld c, h
-    ld c, d
-    ld e, a
-    ld [hl], c
-    ld e, a
-    inc de
-    ld c, h
-    db $db
-    ld e, a
-    ld a, l
-    ld h, b
-    inc de
-    ld c, h
-    inc de
-    ld c, h
-    add hl, sp
-
+    db $4C  ; $0E m0E_X ptr high → $4C13
+    dw $5F4A  ; $0F m0F_X
+    dw $5F71  ; $10 m10_Copycat_Room
+    dw $4C13  ; $11 m11_X
+    dw $5FDB  ; $12 m12_Library
+    dw $607D  ; $13 m13_X
+    dw $4C13  ; $14 m14_X
+    dw $4C13  ; $15 m15_X
+    db $39  ; $16 m16_MedalMan_Room ptr low
 jr_00b_4b70:
-    ld h, c
-    ld [hl], c
-    ld e, a
-    ld hl, sp+$61
-    cp e
-    ld h, d
-    ld [c], a
-    ld h, d
-    inc de
-    ld h, e
-    ld e, [hl]
-    ld h, e
-    push bc
-    ld h, e
-    or $63
-    jr c, @+$66
-
-    inc de
-    ld c, h
-    inc de
-    ld c, h
-    inc de
-    ld c, h
-    and h
-    ld h, h
-    db $db
-    ld h, h
-    add hl, sp
-    ld h, l
-    sub a
-    ld h, l
-    push af
-    ld h, l
-    ld e, b
-    ld h, [hl]
-    or [hl]
-    ld h, [hl]
-    inc d
-    ld h, a
-    ld [hl], d
-    ld h, a
-    xor c
-    ld h, a
-    rlca
-    ld l, b
-    ld h, l
-    ld l, b
-    jp z, $af68
-
-    ld l, d
-    db $d4, $6a, $12
-    ld l, e
-    ld b, c
-    ld l, e
-    ld h, [hl]
-    ld l, e
-    jp nz, $fb6b
-
-    ld l, e
-    add h
-    ld l, h
-    rla
-    ld l, l
-    ld a, [$336d]
-    ld l, [hl]
-    ld a, $6f
-    ld h, e
-    ld l, a
-    db $e3
-    ld l, a
-    inc hl
-    ld [hl], b
-    ld d, d
-    ld [hl], b
-    ld [hl], a
-    ld [hl], b
-    db $e4
-    ld [hl], b
-    ld b, d
-    ld [hl], c
-    db $db
-    ld [hl], h
-    ld e, $75
-    ld h, c
-    ld [hl], l
-    ret
-
-
-    ld [hl], l
-    ld hl, sp+$75
-    ld b, e
-    db $76
-    ld [hl], d
-    db $76
-    and c
-    db $76
-    ret nc
-
-    db $76
-    rst $38
-    db $76
-    ld l, $77
-    ld e, l
-    ld [hl], a
-    xor c
-    ld [hl], a
-    db $dd
-    ld [hl], a
-    ld a, [$1777]
-    ld a, b
-    ld c, e
-    ld a, b
-    ld [$7879], sp
-    ld a, c
-    add sp, $79
-    ld e, b
-    ld a, d
-    ret z
-
-    ld a, d
-    jr c, jr_00b_4c72
-
-    xor b
-    ld a, e
-    reti
-
-
-    ld a, e
-    ld a, [bc]
-    ld a, h
-    ld b, l
-    ld a, h
-    ld [c], a
-    ld a, h
-    db $dd
-    ld [hl], a
-    ld b, h
-    ld [hl], c
-    ld c, l
-    ld a, b
-    ld c, a
-    ld a, b
-    ld d, c
-    ld a, b
-    ld d, e
-    ld a, b
-    ld b, h
-    ld [hl], c
-    ld b, h
-    ld [hl], c
-    ld b, h
-    ld [hl], c
-    inc hl
-    ld c, h
-    dec a
-    ld c, h
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [hl], l
-    ld c, h
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [hl+]
-    reti
-
-
-    ld bc, $952a
-    ld c, h
-    db $fc
-    ld c, l
-    ld [bc], a
-    ld a, [hl+]
-    sub l
-    ld c, h
-    db $fc
-    ld c, l
-    inc bc
-    ld a, [hl+]
-    sub l
-    ld c, h
-    db $fc
-    ld c, l
-    inc b
-    ld a, [hl+]
-    sub l
-    ld c, h
-    db $fc
-    ld c, l
-    dec hl
-    reti
-
-
-    dec b
-    ld a, [hl+]
-    call $fe4c
-    ld c, l
-    ld b, $2a
-    db $ec
-    ld c, h
-    cp $4d
-    ld b, $2a
-    ld bc, $fe4d
-    ld c, l
-    ld b, $2a
-    dec de
-    ld c, l
-    cp $4d
-    ld b, $2a
-    dec hl
-    ld c, l
-    cp $4d
-    ld b, $2a
-    ld d, h
-    ld c, l
-    cp $4d
-    ld b, $2a
-    adc b
-    ld c, l
-    cp $4d
-    dec b
-    ld a, [hl+]
-    ld h, h
-    ld c, l
-    db $fd
-    ld c, l
-    ld b, $2a
-    adc b
-
-jr_00b_4c72:
-    ld c, l
-    cp $4d
-    inc l
-    reti
-
-
-    rlca
-    ld a, [hl+]
-    and d
-    ld c, l
-    ld b, $4e
-    rlca
-    ld a, [hl+]
-    cp h
-    ld c, l
-    ld b, $4e
-    rlca
-    ld a, [hl+]
-    call z, $064d
-    ld c, [hl]
-    rlca
-    ld a, [hl+]
-    call c, $064d
-    ld c, [hl]
-    rlca
-    ld a, [hl+]
-    db $ec
-    ld c, l
-    ld b, $4e
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    inc bc
-    ld [bc], a
-    inc bc
-    adc a
-    rst $38
-    inc b
-    ld [bc], a
-    inc b
-    adc a
-    rst $38
-    ld [bc], a
-    rlca
-    dec b
-    adc a
-    rst $38
-    inc bc
-    rlca
-    ld b, $8f
-    rst $38
-    inc b
-    rlca
-    rlca
-    adc a
-    rst $38
-    dec b
-    rlca
-    ld [$ff8f], sp
-    ld b, $07
-    inc de
-    ld bc, $0510
-    ld [bc], a
-    add hl, bc
-    nop
-    db $10
-    rlca
-    inc b
-    ld a, [bc]
-    rst $38
-    nop
-    db $10
-    ld [bc], a
-    ld [bc], a
-    inc c
-    nop
-    db $10
-    rlca
-    ld [bc], a
-    dec c
-    jr nc, @+$13
-
-    inc bc
-    dec b
-    ld c, $60
-    nop
-    ld b, $08
-    rrca
-    nop
-    dec c
-    inc b
-    inc bc
-    dec bc
-    ld h, b
-    scf
-    dec b
-    ld [$ffff], sp
-    nop
-    db $10
-    ld [bc], a
-    ld [bc], a
-    inc c
-    nop
-    db $10
-    rlca
-    ld [bc], a
-    dec c
-    jr nc, jr_00b_4d09
-
-    inc bc
-    dec b
-    ld c, $20
-    nop
-    ld b, $06
-    rrca
-    rst $38
-    nop
-    db $10
-    ld [bc], a
-    ld [bc], a
-    inc c
-    nop
-    db $10
-    rlca
-
-jr_00b_4d09:
-    ld [bc], a
-    dec c
-    jr nc, jr_00b_4d1e
-
-    inc bc
-    dec b
-    ld c, $20
-    nop
-    ld b, $06
-    rrca
-    nop
-    dec c
-    inc b
-    inc bc
-    dec bc
-    rst $38
-    nop
-    db $10
-    ld [bc], a
-
-jr_00b_4d1e:
-    ld [bc], a
-    inc c
-    nop
-    db $10
-    rlca
-    ld [bc], a
-    dec c
-    jr nc, jr_00b_4d38
-
-    inc bc
-    dec b
-    ld c, $ff
-    nop
-    db $10
-    ld [bc], a
-    ld [bc], a
-    inc c
-    nop
-    db $10
-    rlca
-    ld [bc], a
-    dec c
-    jr nz, jr_00b_4d48
-
-    inc b
-
-jr_00b_4d38:
-    ld b, $0e
-    ld h, b
-    nop
-    ld b, $06
-    rst $38
-    nop
-    dec c
-    inc b
-    inc bc
-    dec bc
-    ld h, b
-    nop
-    ld b, $06
-
-jr_00b_4d48:
-    rst $38
-    ld b, b
-    ldh [rDIV], a
-    dec b
-    rst $38
-    ld b, b
-    ld d, d
-    inc b
-    ld b, $ff
-    rst $38
-    nop
-    db $10
-    ld [bc], a
-    ld [bc], a
-    inc c
-    nop
-    db $10
-    ld [$0d02], sp
-    jr nc, jr_00b_4d71
-
-    inc bc
-    dec b
-    ld c, $ff
-    nop
-    db $10
-    ld [bc], a
-    ld [bc], a
-    inc c
-    nop
-    db $10
-    rlca
-    ld [bc], a
-    dec c
-    jr nc, @+$13
-
-    inc bc
-
-jr_00b_4d71:
-    dec b
-    ld c, $60
-    nop
-    ld b, $06
-    rst $38
-    nop
-    dec c
-    inc b
-    inc bc
-    rst $38
-    ld h, b
-    jr c, @+$07
-
-    ld [$40ff], sp
-    db $10
-    ld [$0d02], sp
-    rst $38
-    nop
-    db $10
-    ld [bc], a
-    ld [bc], a
-    inc c
-    nop
-    db $10
-    rlca
-    ld [bc], a
-    dec c
-    jr nc, jr_00b_4da5
-
-    inc bc
-    dec b
-    ld c, $60
-    nop
-    ld b, $06
-    rrca
-    ld b, b
-    db $10
-    ld [$0d02], sp
-    rst $38
-    jr nc, @+$0d
-
-    ld [bc], a
-
-jr_00b_4da5:
-    dec b
-    db $10
-    db $10
-    dec bc
-    rlca
-    dec b
-    ld de, $0b10
-    ld b, $03
-    ld [de], a
-    nop
-    ld de, $0404
-    rst $38
-    ld h, b
-    ldh [rDIV], a
-    rlca
-    rst $38
-    rst $38
-    jr nc, @+$0d
-
-    ld [bc], a
-    dec b
-    db $10
-    db $10
-    dec bc
-    rlca
-    dec b
-    ld de, $0b10
-    ld b, $03
-    ld [de], a
-    rst $38
-    jr nc, @+$0d
-
-    ld [bc], a
-    dec b
-    db $10
-    db $10
-    dec bc
-    ld [$1105], sp
-    db $10
-    dec bc
-    ld b, $03
-    ld [de], a
-    rst $38
-    jr nc, @+$0d
-
-    ld bc, $1004
-    db $10
-    dec bc
-    rlca
-    dec b
-    ld de, $0b10
-    ld b, $03
-    ld [de], a
-    rst $38
-    jr nc, @+$0d
-
-    ld bc, $1004
-    db $10
-    dec bc
-    ld [$1105], sp
-    db $10
-    dec bc
-    ld b, $03
-    ld [de], a
-    rst $38
-    rst $38
-    rst $38
-    rlca
-    ld bc, $000a
-    nop
-    rlca
-    rlca
-    rst $38
-    ld [bc], a
-    dec b
-    inc bc
-    nop
-    ld bc, $0502
-    rlca
-    dec b
-    inc b
-    nop
-    dec b
-    rlca
-    dec b
-    inc b
-    rlca
-    ld bc, $8000
-    inc b
-    inc b
-    dec b
-    rlca
-    ld bc, $8000
-    dec b
-    inc b
-    rst $38
-    ld b, e
-    ld c, [hl]
-    ld h, e
-    ld c, [hl]
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld l, e
-    ld c, [hl]
-    add l
-    ld c, [hl]
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    adc l
-    ld c, [hl]
-    and c
-    ld c, [hl]
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    xor c
-    ld c, [hl]
-    jp $ff4e
-
-
-    rst $38
-    rst $38
-    rst $38
-    dec l
-    reti
-
-
-    add hl, bc
-    ld a, [hl+]
-    rst $10
-    ld c, [hl]
-    cp [hl]
-    ld c, a
-    add hl, bc
-    ld a, [hl+]
-    ld [c], a
-    ld c, [hl]
-    cp a
-    ld c, a
-    add hl, bc
-    ld a, [hl+]
-    db $ed
-    ld c, [hl]
-    cp a
-    ld c, a
-    add hl, bc
-    ld a, [hl+]
-    ld hl, sp+$4e
-    cp a
-    ld c, a
-    add hl, bc
-    ld a, [hl+]
-    cp $4e
-    cp [hl]
-    ld c, a
-    ld l, $d9
-    ld a, [bc]
-    ld a, [hl+]
-    add hl, bc
-    ld c, a
-    adc $4f
-    cpl
-    reti
-
-
-    dec bc
-    ld a, [hl+]
-    rrca
-    ld c, a
-    sub $4f
-    dec bc
-    ld a, [hl+]
-    rra
-    ld c, a
-    sub $4f
-    dec bc
-    ld a, [hl+]
-    inc [hl]
-    ld c, a
-    sub $4f
-    dec bc
-    ld a, [hl+]
-    ccf
-    ld c, a
-    sub $4f
-    jr nc, @-$25
-
-    inc c
-    ld a, [hl+]
-    ld c, a
-    ld c, a
-    push hl
-    ld c, a
-    ld sp, $0dd9
-    ld a, [hl+]
-    ld e, d
-    ld c, a
-    and $4f
-    dec c
-    ld a, [hl+]
-    ld l, a
-    ld c, a
-    and $4f
-    dec c
-    ld a, [hl+]
-    add h
-    ld c, a
-    and $4f
-    ld [hl-], a
-    reti
-
-
-    ld c, $2a
-    sub h
-    ld c, a
-    push af
-    ld c, a
-    inc sp
-    reti
-
-
-    rrca
-    ld a, [hl+]
-    sbc a
-    ld c, a
-    inc b
-    ld d, b
-    rrca
-    ld a, [hl+]
-    and l
-    ld c, a
-    inc b
-    ld d, b
-    db $10
-    ld a, [hl+]
-    or b
-    ld c, a
-    ld a, [de]
-    ld d, b
-    db $10
-    ld a, [hl+]
-    sbc a
-    ld c, a
-    ld a, [de]
-    ld d, b
-    inc [hl]
-    reti
-
-
-    ld de, $bb2a
-    ld c, a
-    jr nc, jr_00b_4f1b
-
-    ld [de], a
-    ld a, [hl+]
-    cp h
-    ld c, a
-    jr c, jr_00b_4f21
-
-    inc de
-    ld a, [hl+]
-    cp l
-    ld c, a
-    ld b, a
-    ld d, b
-    jr nz, jr_00b_4ee1
-
-    ld [bc], a
-    ld b, $ff
-    db $10
-    dec b
-    ld b, $05
-    ld [bc], a
-
-jr_00b_4ee1:
-    rst $38
-    nop
-    ld [$0602], sp
-    ld bc, $0500
-    ld b, $05
-    ld [bc], a
-    rst $38
-    sub b
-    rst $38
-    ld b, $06
-    ld [de], a
-    nop
-    dec b
-    ld b, $05
-    ld [bc], a
-    rst $38
-    sub b
-    rst $38
-    ld b, $06
-    ld [de], a
-    rst $38
-    sub b
-    rst $38
-    ld b, $06
-    ld [de], a
-    jr nz, jr_00b_4f0d
-
-    ld [bc], a
-    ld b, $ff
-    rst $38
-    jr nc, jr_00b_4f0e
-
-    dec b
-    ld [bc], a
-
-jr_00b_4f0d:
-    inc bc
-
-jr_00b_4f0e:
-    rst $38
-    jr nz, jr_00b_4f19
-
-    ld [bc], a
-    ld b, $ff
-    nop
-    inc bc
-    rlca
-    inc bc
-    inc b
-
-jr_00b_4f19:
-    ld b, b
-    dec bc
-
-jr_00b_4f1b:
-    inc b
-    inc bc
-    rst $38
-    rst $38
-    sub b
-    rst $38
-
-jr_00b_4f21:
-    ld b, $06
-    inc de
-    nop
-    inc bc
-    rlca
-    inc bc
-    inc b
-    nop
-    dec b
-    ld b, $05
-    dec b
-    nop
-    ld [$0602], sp
-    ld b, $ff
-    sub b
-    rst $38
-    ld b, $06
-    inc de
-    nop
-    inc bc
-    rlca
-    inc bc
-    inc b
-    rst $38
-    sub b
-    rst $38
-    ld b, $06
-    inc de
-    nop
-    inc bc
-    rlca
-    inc bc
-    inc b
-    nop
-    dec bc
-    inc bc
-    dec b
-    rlca
-    rst $38
-    nop
-    dec bc
-    inc bc
-    ld [bc], a
-    ld [$0f30], sp
-    ld b, $01
-    add hl, bc
-    rst $38
-    sub b
-    rst $38
-    ld b, $07
-    inc d
-    jr nz, jr_00b_4f69
-
-    ld [bc], a
-    ld b, $ff
-    rla
-    ld bc, $0603
-    ld a, [bc]
-
-jr_00b_4f69:
-    nop
-    add hl, bc
-    ld [$0b03], sp
-    rst $38
-    sub b
-    rst $38
-    ld b, $07
-    inc d
-    nop
-    add hl, bc
-    ld [$0b03], sp
-    rlca
-    ld bc, $0702
-    ld a, [bc]
-    nop
-    dec b
-    ld b, $06
-    inc c
-    rst $38
-    sub b
-    rst $38
-    ld b, $07
-    inc d
-    nop
-    add hl, bc
-    ld [$0b03], sp
-    db $10
-    inc b
-    inc bc
-    ld b, $0d
-    rst $38
-    nop
-    ld [bc], a
-    inc b
-    ld [bc], a
-    ld c, $10
-    nop
-    rlca
-    inc b
-    rrca
-    rst $38
-    jr nz, jr_00b_4fa9
-
-    inc b
-    dec b
-    rst $38
-    rst $38
-    rlca
-    ld bc, $0601
-
-jr_00b_4fa9:
-    stop
-    dec b
-    rlca
-    dec b
-    ld de, $07ff
-    ld bc, $0601
-    stop
-    dec b
-    rlca
-    dec b
-    ld de, $ffff
-    rst $38
-    rst $38
-    rst $38
-    inc b
-    inc b
-    nop
-    nop
-    dec b
-    inc b
-    rlca
-    dec b
-    inc b
-    nop
-    nop
-    dec b
-    dec b
-    rlca
-    rst $38
-    inc bc
-    ld [bc], a
-    ld d, $00
-    nop
-    inc bc
-    rlca
-    rst $38
-    inc b
-    inc bc
-    ld b, $00
-    ld bc, $0704
-    dec b
-    inc bc
-    ld b, $00
-    ld bc, $0705
-    rst $38
-    rst $38
-    dec b
-    inc bc
-    ld [de], a
-    nop
-    inc b
-    dec b
-    rlca
-    inc b
-    dec b
-    jr jr_00b_4ff1
-
-jr_00b_4ff1:
-    nop
-    inc b
-    nop
-    rst $38
-    dec b
-    ld bc, $000f
-    nop
-    dec b
-    rlca
-    add hl, bc
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc bc
-    rst $38
-    inc b
-    ld b, $09
-    nop
-    inc b
-    inc b
-    ld b, $05
-    ld bc, $000d
-    nop
-    dec b
-    rlca
-    inc b
-    inc b
-    stop
-    nop
-    inc b
-    rlca
-    rst $38
-    inc b
-    ld b, $09
-    nop
-    inc b
-    inc b
-    ld b, $05
-    ld bc, $000d
-    nop
-    dec b
-    rlca
-    inc b
-    inc b
-    stop
-    nop
-    inc b
-    rlca
-    rst $38
-    ld [bc], a
-    ld bc, $000c
-    nop
-    ld [bc], a
-    rlca
-    rst $38
-    ld [bc], a
-    ld bc, $000c
-    nop
-    ld [bc], a
-    rlca
-    ld bc, $1904
-    nop
-    nop
-    ld bc, $ff07
-    ld [bc], a
-    ld bc, $000c
-    nop
-    ld [bc], a
-    rlca
-    ld bc, $1904
-    nop
-    nop
-    ld bc, $0407
-    ld b, $1a
-    nop
-    nop
-    inc b
-    rlca
-    rst $38
-    ld l, l
-    ld d, b
-    ld a, e
-    ld d, b
-    adc a
-    ld d, b
-    rst $38
-    rst $38
-    and e
-    ld d, b
-    or a
-    ld d, b
-    bit 2, b
-    rst $38
-    rst $38
-    dec [hl]
-    reti
-
-
-    dec d
-    ld a, [hl+]
-    inc bc
-    ld d, c
-    db $c3, $52, $15
-
-    ld a, [hl+]
-    dec e
-    ld d, c
-    jp $3652
-
-
-    reti
-
-
-    ld d, $2a
-    inc a
-    ld d, c
-    bit 2, d
-    ld d, $2a
-    ld c, h
-    ld d, c
-    bit 2, d
-    ld d, $2a
-    ld h, c
-    ld d, c
-    bit 2, d
-    scf
-    reti
-
-
-    rla
-    ld a, [hl+]
-    db $76
-    ld d, c
-    call z, $1852
-    ld a, [hl+]
-    ld a, h
-    ld d, c
-    call $1852
-    ld a, [hl+]
-    adc h
-    ld d, c
-    call $3852
-    reti
-
-
-    add hl, de
-    ld a, [hl+]
-    and c
-    ld d, c
-    adc $52
-    ld a, [de]
-    ld a, [hl+]
-    xor h
-    ld d, c
-    rst $08
-    ld d, d
-    add hl, de
-    ld a, [hl+]
-    or a
-    ld d, c
-    adc $52
-    add hl, sp
-    reti
-
-
-    dec de
-    ld a, [hl+]
-    jp nz, $d051
-
-    ld d, d
-    inc e
-    ld a, [hl+]
-    ret z
-
-    ld d, c
-    pop de
-    ld d, d
-    inc e
-    ld a, [hl+]
-    db $dd
-    ld d, c
-    pop de
-    ld d, d
-    ld a, [hl-]
-    reti
-
-
-    dec e
-    ld a, [hl+]
-    rst $30
-    ld d, c
-    jp nc, $1e52
-
-    ld a, [hl+]
-    ld de, $d352
-    ld d, d
-    ld e, $2a
-    dec hl
-    ld d, d
-    db $d3
-    ld d, d
-    rra
-    ld a, [hl+]
-    ld b, b
-    ld d, d
-    db $db
-    ld d, d
-    rra
-    ld a, [hl+]
-    ld e, d
-    ld d, d
-    db $db
-    ld d, d
-    jr nz, jr_00b_5117
-
-    ld l, a
-    ld d, d
-    db $e3
-    ld d, d
-    jr nz, jr_00b_511d
-
-    adc c
-    ld d, d
-    db $e3
-    ld d, d
-    jr nz, @+$2c
-
-    sbc [hl]
-    ld d, d
-    db $e3
-    ld d, d
-    jr nz, jr_00b_5129
-
-    or e
-    ld d, d
-    db $e3
-    ld d, d
-    adc a
-    rst $38
-    ld b, $02
-    ld bc, $ff8f
-    ld [$0202], sp
-    adc a
-    rst $38
-    ld [$0301], sp
-    nop
-    ld b, $07
-    ld [bc], a
-    inc b
-
-jr_00b_5117:
-    nop
-    inc bc
-    inc bc
-    inc b
-    dec b
-    rst $38
-
-jr_00b_511d:
-    adc a
-    rst $38
-    ld b, $02
-    ld bc, $ff8f
-    ld [$0202], sp
-    adc a
-    rst $38
-
-jr_00b_5129:
-    ld [$0301], sp
-    nop
-    ld b, $07
-    ld [bc], a
-    inc b
-    nop
-    inc bc
-    inc bc
-    inc b
-    dec b
-    jr nc, jr_00b_513c
-
-    inc b
-    dec b
-    ld b, $ff
-
-jr_00b_513c:
-    nop
-    inc b
-    inc b
-    inc b
-    rlca
-    jr nz, @+$06
-
-    inc b
-    dec b
-    ld [$3950], sp
-    ld a, [bc]
-    inc b
-    rst $38
-    rst $38
-    nop
-    inc b
-    inc b
-    inc b
-    rlca
-    jr nz, @+$06
-
-    inc b
-    dec b
-    ld [$3950], sp
-    ld a, [bc]
-    inc b
-    rst $38
-    nop
-    nop
-    inc bc
-    ld [bc], a
-    add hl, bc
-    rst $38
-    nop
-    inc b
-    inc b
-    inc b
-    rlca
-    jr nz, @+$06
-
-    inc b
-    dec b
-    ld [$3950], sp
-    ld a, [bc]
-    inc b
-    rst $38
-    ld [bc], a
-    nop
-    inc b
-    ld [bc], a
-    add hl, bc
-    rst $38
-    jr nc, jr_00b_5187
-
-    ld bc, $0a04
-    rst $38
-    adc a
-    rst $38
-    ld b, $03
-    dec bc
-    ld [hl-], a
-    rrca
-    ld [bc], a
-    inc b
-    ld a, [bc]
-    db $10
-
-jr_00b_5187:
-    ld b, $07
-    inc bc
-    inc c
-    rst $38
-    adc a
-    rst $38
-    ld b, $03
-    dec bc
-    ld [hl-], a
-    rrca
-    ld [bc], a
-    inc b
-    ld a, [bc]
-    db $10
-    ld b, $07
-    inc bc
-    inc c
-    nop
-    ld [de], a
-    inc b
-    ld b, $0d
-    rst $38
-    jr nc, @+$08
-
-    inc bc
-    inc bc
-    ld c, $00
-    ld a, [bc]
-    ld [$0f01], sp
-    rst $38
-    jr nc, @+$08
-
-    inc bc
-    inc bc
-    ld c, $00
-    ld a, [bc]
-    ld [$0f01], sp
-    rst $38
-    jr nc, @+$08
-
-    inc bc
-    inc bc
-    ld c, $00
-    ld a, [bc]
-    ld [$0f01], sp
-    rst $38
-    db $10
-    dec b
-    ld [$1002], sp
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-    ld de, $ff8f
-    ld b, $03
-    ld [de], a
-    jr nz, @+$08
-
-    dec b
-    inc bc
-    inc de
-    db $10
-    dec b
-    ld [$1002], sp
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-    ld de, $ff8f
-    ld b, $03
-    ld [de], a
-    jr nz, @+$08
-
-    dec b
-    inc bc
-    inc de
-    db $10
-    dec b
-    ld [$1002], sp
-    nop
-    inc bc
-    ld [bc], a
-    ld bc, $ff14
-    adc a
-    rst $38
-    inc bc
-    ld bc, $1715
-    ld a, [bc]
-    inc b
-    ld bc, $2716
-    ld a, [bc]
-    inc bc
-    ld [bc], a
-    rla
-    nop
-    rlca
-    inc b
-    inc bc
-    jr jr_00b_520c
-
-jr_00b_520c:
-    ld c, l
-    rlca
-    inc b
-    rst $38
-    rst $38
-    rla
-    ld a, [bc]
-    inc b
-    ld bc, $2716
-    ld a, [bc]
-    inc bc
-    ld [bc], a
-    rla
-    nop
-    rlca
-    inc b
-    inc bc
-    jr jr_00b_5221
-
-jr_00b_5221:
-    ld c, l
-    inc bc
-    ld bc, $00ff
-    ld c, l
-    rlca
-    inc b
-    rst $38
-    rst $38
-    rla
-    ld a, [bc]
-    inc b
-    ld bc, $2716
-    ld a, [bc]
-    inc bc
-    ld [bc], a
-    rla
-    nop
-    rlca
-    inc b
-    inc bc
-    jr jr_00b_523b
-
-jr_00b_523b:
-    ld c, l
-    rlca
-    inc b
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    rlca
-    inc b
-    dec d
-    rlca
-    ld a, [bc]
-    rlca
-    inc bc
-    ld d, $37
-    ld a, [bc]
-    ld b, $04
-    rla
-    nop
-    rlca
-    inc b
-    ld [bc], a
-    jr jr_00b_5255
-
-jr_00b_5255:
-    ld c, l
-    inc bc
-    ld bc, $ffff
-    adc a
-    rst $38
-    rlca
-    inc b
-    dec d
-    rlca
-    ld a, [bc]
-    rlca
-    inc bc
-    ld d, $37
-    ld a, [bc]
-    ld b, $04
-    rla
-    nop
-    rlca
-    inc b
-    ld [bc], a
-    jr @+$01
-
-    rlca
-    ld a, [bc]
-    rlca
-    inc bc
-    ld d, $37
-    ld a, [bc]
-    ld b, $04
-    rla
-    jr nz, @+$09
-
-    inc b
-    ld [bc], a
-    jr jr_00b_527f
-
-jr_00b_527f:
-    ld c, l
-    inc bc
-    ld bc, $00ff
-    ld c, l
-    rlca
-    inc b
-    rst $38
-    rst $38
-    rlca
-    ld a, [bc]
-    rlca
-    inc bc
-    ld d, $37
-    ld a, [bc]
-    ld b, $04
-    rla
-    jr nz, jr_00b_529c
-
-    inc b
-    ld [bc], a
-    jr jr_00b_5299
-
-jr_00b_5299:
-    ld c, l
-    rlca
-    inc b
-
-jr_00b_529c:
-    rst $38
-    rst $38
-    rlca
-    ld a, [bc]
-    rlca
-    inc bc
-    ld d, $37
-    ld a, [bc]
-    ld b, $04
-    rla
-    jr nz, @+$09
-
-    inc b
-    ld [bc], a
-    jr jr_00b_52ae
-
-jr_00b_52ae:
-    ld c, l
-    inc bc
-    ld bc, $ffff
-    rlca
-    ld a, [bc]
-    rlca
-    inc bc
-    ld d, $37
-    ld a, [bc]
-    ld b, $04
-    rla
-    jr nz, @+$09
-
-    inc b
-    ld [bc], a
-    jr @+$01
-
-    nop
-    inc bc
-    ld bc, $0900
-    add hl, bc
-    inc bc
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc bc
-    ld bc, $0105
-    nop
-    nop
-    nop
-    rst $38
-    inc bc
-    ld bc, $0105
-    nop
-    nop
-    nop
-    rst $38
-    inc bc
-    ld bc, $0105
-    nop
-    nop
-    nop
-    rlca
-    inc b
-    inc e
-    ld bc, $0000
-    nop
-    rst $38
-    ld [bc], a
-    ld d, e
-    inc e
-    ld d, e
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc a
-    ld d, e
-    ld e, h
-    ld d, e
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec sp
-    reti
-
-
-    ld [hl+], a
-    ld a, [hl+]
-    ld l, d
-    ld d, e
-    adc b
-    ld d, h
-    inc hl
-    ld a, [hl+]
-    add h
-    ld d, e
-    sub b
-    ld d, h
-    inc h
-    ld a, [hl+]
-    sbc c
-    ld d, e
-    sbc a
-    ld d, h
-    dec h
-    ld a, [hl+]
-    and h
-    ld d, e
-    cp h
-    ld d, h
-    inc a
-    reti
-
-
-    ld h, $2a
-    xor d
-    ld d, e
-    ldh [rHDMA4], a
-    daa
-    ld a, [hl+]
-    adc $53
-    add sp, $54
-    daa
-    ld a, [hl+]
-    add sp, $53
-    add sp, $54
-    jr z, jr_00b_535c
-
-    ld hl, sp+$53
-    cp $54
-    add hl, hl
-    ld a, [hl+]
-    inc bc
-    ld d, h
-    dec de
-    ld d, l
-    dec a
-    reti
-
-
-    ld a, [hl+]
-    ld a, [hl+]
-    add hl, bc
-    ld d, h
-    ccf
-    ld d, l
-    dec hl
-    ld a, [hl+]
-    jr z, jr_00b_539c
-
-    ld b, a
-    ld d, l
-    inc l
-    ld a, [hl+]
-    ld b, d
-    ld d, h
-    ld d, [hl]
-    ld d, l
-    dec l
-    ld a, [hl+]
-    ld d, a
-    ld d, h
-    ld l, h
-    ld d, l
-    dec l
-    ld a, [hl+]
-    ld h, d
-    ld d, h
-    ld l, h
-    ld d, l
-
-jr_00b_535c:
-    ld a, $d9
-    ld l, $2a
-    ld l, b
-    ld d, h
-    sub b
-    ld d, l
-    nop
-    add hl, hl
-    add d
-    ld d, h
-    sub c
-    ld d, l
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f01
-    rst $38
-    dec b
-    ld bc, $8f01
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    adc a
-    rst $38
-    rlca
-    ld [bc], a
-    inc bc
-    jr nz, jr_00b_538b
-
-    inc bc
-    dec b
-    inc b
-    rst $38
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f01
-    rst $38
-
-jr_00b_538b:
-    dec b
-    ld bc, $8f01
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    jr nz, jr_00b_53a0
-
-    inc bc
-    dec b
-    inc b
-    rst $38
-    adc a
-    rst $38
-    ld [bc], a
-
-jr_00b_539c:
-    ld [bc], a
-    ld [bc], a
-    jr nz, jr_00b_53ab
-
-jr_00b_53a0:
-    inc bc
-    dec b
-    inc b
-    rst $38
-    jr nz, jr_00b_53b1
-
-    inc bc
-    dec b
-    inc b
-    rst $38
-    adc a
-
-jr_00b_53ab:
-    rst $38
-    inc b
-    ld bc, $8f05
-    rst $38
-
-jr_00b_53b1:
-    dec b
-    ld bc, $8f05
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld b, $8f
-    rst $38
-    rlca
-    ld [bc], a
-    rlca
-    jr nc, jr_00b_53cb
-
-    nop
-    inc b
-    ld [$0b30], sp
-    nop
-    dec b
-    add hl, bc
-    jr nz, jr_00b_53d5
-
-    inc b
-
-jr_00b_53cb:
-    ld b, $0a
-    rst $38
-    adc a
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld b, $8f
-    rst $38
-
-jr_00b_53d5:
-    rlca
-    ld [bc], a
-    rlca
-    jr nc, jr_00b_53e5
-
-    nop
-    inc b
-    ld [$0b30], sp
-    nop
-    dec b
-    add hl, bc
-    jr nz, jr_00b_53ef
-
-    inc b
-
-jr_00b_53e5:
-    ld b, $0a
-    rst $38
-    adc a
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld b, $8f
-    rst $38
-
-jr_00b_53ef:
-    rlca
-    ld [bc], a
-    rlca
-    ld [hl+], a
-    dec bc
-    dec b
-    dec b
-    ld a, [bc]
-    rst $38
-    adc a
-    rst $38
-    rlca
-    ld [bc], a
-    rlca
-    ld [hl+], a
-    dec bc
-    dec b
-    dec b
-    ld a, [bc]
-    rst $38
-    ld [hl+], a
-    dec bc
-    dec b
-    dec b
-    ld a, [bc]
-    rst $38
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f0b
-    rst $38
-    dec b
-    ld bc, $8f0b
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    inc c
-    adc a
-    rst $38
-    rlca
-    ld [bc], a
-    dec c
-    db $10
-    dec bc
-    add hl, bc
-    inc b
-    ld c, $10
-    dec bc
-    add hl, bc
-    dec b
-    rrca
-    rst $38
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f0b
-    rst $38
-    dec b
-    ld bc, $8f0b
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    inc c
-    db $10
-    dec bc
-    add hl, bc
-    inc b
-    ld c, $10
-    dec bc
-    add hl, bc
-    dec b
-    rrca
-    rst $38
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f0b
-    rst $38
-    dec b
-    ld bc, $100b
-    dec bc
-    add hl, bc
-    inc b
-    ld c, $10
-    dec bc
-    add hl, bc
-    dec b
-    rrca
-    rst $38
-    db $10
-    dec bc
-    add hl, bc
-    inc b
-    ld c, $10
-    dec bc
-    add hl, bc
-    dec b
-    rrca
-    rst $38
-    nop
-    dec bc
-    inc bc
-    inc b
-    ld c, $ff
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f10
-    rst $38
-    dec b
-    ld bc, $8f10
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld de, $ff8f
-    rlca
-    ld [bc], a
-    ld [de], a
-    jr nz, jr_00b_5489
-
-    inc b
-    ld b, $13
-    rst $38
-    jr nz, jr_00b_548f
-
-    inc b
-    ld b, $13
-    rst $38
-    rlca
-
-jr_00b_5489:
-    dec b
-    inc bc
-    nop
-    inc b
-    rlca
-    dec b
-
-jr_00b_548f:
-    rst $38
-    rlca
-    dec b
-    inc bc
-    nop
-    inc b
-    rlca
-    dec b
-    rlca
-    ld [bc], a
-    ld h, $00
-    nop
-    ld [$ff07], sp
-    rlca
-    dec b
-    inc bc
-    nop
-    inc b
-    rlca
-    dec b
-    rlca
-    ld [bc], a
-    ld h, $00
-    nop
-    ld [$0407], sp
-    ld bc, $0027
-    nop
-    inc b
-    rlca
-    dec b
-    ld bc, $0027
-    nop
-    dec b
-    rlca
-    rst $38
-    rlca
-    dec b
-    inc bc
-    nop
-    inc b
-    rlca
-    dec b
-    rlca
-    ld [bc], a
-    ld h, $00
-    nop
-    ld [$0407], sp
-    ld bc, $0027
-    nop
-    inc b
-    rlca
-    dec b
-    ld bc, $0027
-    nop
-    dec b
-    rlca
-    ld [bc], a
-    ld [bc], a
-    jr z, jr_00b_54dc
-
-jr_00b_54dc:
-    nop
-    inc b
-    rlca
-    rst $38
-    ld [bc], a
-    dec b
-    nop
-    nop
-    dec b
-    ld [bc], a
-    dec b
-    rst $38
-    ld [bc], a
-    dec b
-    nop
-    nop
-    dec b
-    ld [bc], a
-    dec b
-    inc b
-    ld bc, $0023
-    nop
-    rlca
-    rlca
-    dec b
-    ld bc, $0023
-    nop
-    ld [$ff07], sp
-    ld [bc], a
-    dec b
-    nop
-    nop
-    dec b
-    ld [bc], a
-    dec b
-    inc b
-    ld bc, $0023
-    nop
-    rlca
-    rlca
-    dec b
-    ld bc, $0023
-    nop
-    ld [$0207], sp
-    ld [bc], a
-    inc h
-    nop
-    nop
-    ld b, $07
-    rst $38
-    ld [bc], a
-    dec b
-    nop
-    nop
-    dec b
-    ld [bc], a
-    dec b
-    inc b
-    ld bc, $0023
-    nop
-    rlca
-    rlca
-    dec b
-    ld bc, $0023
-    nop
-    ld [$0207], sp
-    ld [bc], a
-    inc h
-    nop
-    nop
-    ld b, $07
-    rlca
-    ld [bc], a
-    dec h
-    nop
-    nop
-    ld bc, $ff07
-    rlca
-    dec b
-    inc bc
-    nop
-    nop
-    rlca
-    dec b
-    rst $38
-    rlca
-    dec b
-    inc bc
-    nop
-    nop
-    rlca
-    dec b
-    rlca
-    ld [bc], a
-    add hl, hl
-    nop
-    nop
-    inc b
-    rlca
-    rst $38
-    rlca
-    dec b
-    inc bc
-    nop
-    nop
-    rlca
-    dec b
-    rlca
-    ld [bc], a
-    add hl, hl
-    nop
-    nop
-    inc b
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld a, [hl+]
-    nop
-    nop
-    inc b
-    rlca
-    rst $38
-    rlca
-    dec b
-    inc bc
-    nop
-    nop
-    rlca
-    dec b
-    rlca
-    ld [bc], a
-    add hl, hl
-    nop
-    nop
-    inc b
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld a, [hl+]
-    nop
-    nop
-    inc b
-    rlca
-    inc b
-    ld bc, $002b
-    nop
-    rlca
-    rlca
-    dec b
-    ld bc, $002b
-    nop
-    ld [$ff07], sp
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    inc l
-    nop
-    nop
-    ld [$0707], sp
-    ld [bc], a
-    dec l
-    nop
-    nop
-    ld [bc], a
-    rlca
-    inc b
-    ld bc, $002e
-    nop
-    ld b, $07
-    dec b
-    ld bc, $002e
-    nop
-    rlca
-    rlca
-    rst $38
-    cp [hl]
-    ld d, l
-    ret c
-
-    ld d, l
-    db $ec
-    ld d, l
-    rst $38
-    rst $38
-    inc c
-    ld d, [hl]
-    ld h, $56
-    ld a, [hl-]
-    ld d, [hl]
-    rst $38
-    rst $38
-    ccf
-    reti
-
-
-    ld [bc], a
-    add hl, hl
-    ld d, h
-    ld d, [hl]
-    ld e, $58
-    ld [bc], a
-    add hl, hl
-    ld d, l
-    ld d, [hl]
-    ld e, $58
-    ld [bc], a
-    add hl, hl
-    ld l, d
-    ld d, [hl]
-    ld e, $58
-    ld [bc], a
-    add hl, hl
-    ld a, a
-    ld d, [hl]
-    ld e, $58
-    ld b, b
-    reti
-
-
-    inc bc
-    add hl, hl
-    adc a
-    ld d, [hl]
-    rra
-    ld e, b
-    inc bc
-    add hl, hl
-    sbc a
-    ld d, [hl]
-    rra
-    ld e, b
-    inc bc
-    add hl, hl
-    or h
-    ld d, [hl]
-    rra
-    ld e, b
-    ld b, c
-    reti
-
-
-    inc b
-    add hl, hl
-    db $d3
-    ld d, [hl]
-    jr nz, jr_00b_564c
-
-    inc b
-    add hl, hl
-    add sp, $56
-    jr nz, jr_00b_5652
-
-    dec b
-    add hl, hl
-    ld [bc], a
-    ld d, a
-    ld hl, $0558
-    add hl, hl
-    ld h, $57
-    ld hl, $0558
-    add hl, hl
-    ld b, l
-    ld d, a
-    ld hl, $4258
-    reti
-
-
-    ld b, $29
-    ld l, [hl]
-    ld d, a
-    add hl, hl
-    ld e, b
-    ld b, $29
-    ld a, [hl]
-    ld d, a
-    add hl, hl
-    ld e, b
-    ld b, $29
-    adc [hl]
-    ld d, a
-    add hl, hl
-    ld e, b
-    ld b, $29
-    sbc [hl]
-    ld d, a
-    add hl, hl
-    ld e, b
-    ld b, e
-    reti
-
-
-    rlca
-    add hl, hl
-    or e
-    ld d, a
-    ld sp, $0758
-    add hl, hl
-    jp Jump_000_3157
-
-
-    ld e, b
-    rlca
-    add hl, hl
-    db $d3
-    ld d, a
-    ld sp, $4458
-    reti
-
-
-    ld [$ed29], sp
-    ld d, a
-    add hl, sp
-    ld e, b
-    ld [$ee29], sp
-    ld d, a
-    add hl, sp
-    ld e, b
-    ld [$f429], sp
-    ld d, a
-
-jr_00b_564c:
-    add hl, sp
-    ld e, b
-    ld [$ff29], sp
-    ld d, a
-
-jr_00b_5652:
-    add hl, sp
-    ld e, b
-    rst $38
-    sub b
-    rst $38
-    ld b, $05
-    ld [bc], a
-    ld [bc], a
-    jr @+$06
-
-    ld bc, $10ff
-    jr nz, jr_00b_5666
-
-    ld b, $01
-    ld b, b
-    ld d, e
-
-jr_00b_5666:
-    ld b, $01
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    ld b, $05
-    ld [bc], a
-    ld [bc], a
-    dec de
-    inc b
-    ld bc, $00ff
-    inc l
-    inc b
-    ld b, $03
-    ld b, b
-    ld d, e
-    ld b, $01
-    rst $38
-    rst $38
-    ld [bc], a
-    dec de
-    inc b
-    ld bc, $30ff
-    inc c
-    inc b
-    ld b, $04
-    jr nc, jr_00b_568d
-
-    ld b, $05
-
-jr_00b_568d:
-    dec b
-    rst $38
-    sub b
-    rst $38
-    dec b
-    ld [bc], a
-    ld b, $8f
-    rst $38
-    inc b
-    ld bc, $0007
-    add hl, de
-    ld b, $02
-    ld [$90ff], sp
-    rst $38
-    dec b
-    ld [bc], a
-    ld b, $8f
-    rst $38
-    inc b
-    ld bc, $0007
-    add hl, de
-    ld b, $02
-    ld [$1900], sp
-    inc bc
-    inc b
-    add hl, bc
-    rst $38
-    nop
-    dec c
-    dec b
-    ld [bc], a
-    ld a, [bc]
-    nop
-    ld c, $04
-    ld [bc], a
-    dec bc
-    nop
-    db $10
-    ld [bc], a
-    inc bc
-    inc c
-    nop
-    db $10
-    ld bc, $0d04
-    nop
-    db $10
-    rlca
-    inc bc
-    ld c, $00
-    db $10
-    ld [$0f04], sp
-    rst $38
-    adc a
-    rst $38
-    inc b
-    dec b
-    db $10
-    ld h, $1d
-    dec b
-    ld b, $11
-    ld b, $1c
-    dec b
-    inc bc
-    ld [de], a
-    nop
-    ld c, l
-    ld [$ff02], sp
-    rst $38
-    sub b
-    rst $38
-    dec b
-    dec b
-    add hl, hl
-    adc a
-    rst $38
-    inc b
-    dec b
-    db $10
-    scf
-    dec e
-    ld bc, $1104
-    ld b, $1c
-    dec b
-    inc bc
-    ld [de], a
-    nop
-    ld c, l
-    ld [$ff02], sp
-    rst $38
-    sub b
-    rst $38
-    dec b
-    inc b
-    add hl, hl
-    sub b
-    rst $38
-    dec b
-    dec b
-    add hl, hl
-    sub b
-    rst $38
-    rlca
-    inc b
-    ld a, [hl+]
-    sub b
-    rst $38
-    rlca
-    dec b
-    ld a, [hl+]
-    scf
-    dec e
-    inc b
-    ld [bc], a
-    ld de, $1c16
-    dec b
-    ld [bc], a
-    ld [de], a
-    nop
-    ld c, l
-    ld [$ff02], sp
-    rst $38
-    sub b
-    rst $38
-    dec b
-    inc b
-    add hl, hl
-    sub b
-    rst $38
-    dec b
-    dec b
-    add hl, hl
-    sub b
-    rst $38
-    rlca
-    inc b
-    ld a, [hl+]
-    sub b
-    rst $38
-    rlca
-    dec b
-    ld a, [hl+]
-    scf
-    dec e
-    inc b
-    ld [bc], a
-    ld de, $1c16
-    dec b
-    ld [bc], a
-    ld [de], a
-    rst $38
-    sub b
-    rst $38
-    dec b
-    inc b
-    add hl, hl
-    sub b
-    rst $38
-    dec b
-    dec b
-    add hl, hl
-    sub b
-    rst $38
-    rlca
-    inc b
-    ld a, [hl+]
-    sub b
-    rst $38
-    rlca
-    dec b
-    ld a, [hl+]
-    ld [hl], $1d
-    inc b
-    ld [bc], a
-    ld de, $1c16
-    dec b
-    ld [bc], a
-    ld [de], a
-    db $10
-    ld [$0504], sp
-    inc de
-    db $10
-    rrca
-    dec b
-    ld b, $14
-    rst $38
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $1715
-    dec b
-    ld [bc], a
-    ld [bc], a
-    ld d, $00
-    ccf
-    ld b, $04
-    rla
-    rst $38
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $1715
-    dec b
-    ld [bc], a
-    ld [bc], a
-    ld d, $00
-    ccf
-    dec b
-    inc b
-    rla
-    rst $38
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $1715
-    dec b
-    ld [bc], a
-    ld [bc], a
-    ld d, $00
-    ld a, [de]
-    dec b
-    inc b
-    jr @+$01
-
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $1715
-    dec b
-    ld [bc], a
-    ld [bc], a
-    ld d, $00
-    ld a, [de]
-    ld b, $04
-    jr jr_00b_57b1
-
-    nop
-    ld b, $01
-
-jr_00b_57b1:
-    add hl, de
-    rst $38
-    nop
-    nop
-    dec b
-    inc bc
-    ld a, [de]
-    nop
-    ld a, [hl-]
-    dec b
-    ld [bc], a
-    dec de
-    jr nc, @+$46
-
-    inc b
-    ld b, $1c
-    rst $38
-    nop
-    nop
-    dec b
-    inc bc
-    ld a, [de]
-    nop
-    ld a, [hl-]
-    dec b
-    ld [bc], a
-    dec de
-    jr nc, jr_00b_5814
-
-    inc b
-    ld b, $1d
-    rst $38
-    nop
-    nop
-    dec b
-    inc bc
-    ld a, [de]
-    nop
-    ld a, [hl-]
-    dec b
-    ld [bc], a
-    dec de
-    ld [hl-], a
-    ld bc, $0504
-    ld e, $00
-    ld de, $0507
-    rra
-    inc sp
-    dec bc
-    ld [bc], a
-    ld [bc], a
-    jr nz, @+$01
-
-    rst $38
-    nop
-    ld b, [hl]
-    inc bc
-    inc bc
-    ld hl, $02ff
-    ld b, a
-    ld [bc], a
-    ld bc, $0022
-    ld c, b
-    inc bc
-    inc bc
-    inc hl
-    rst $38
-    db $10
-    ld [de], a
-    dec b
-    ld bc, $1024
-    ld [de], a
-    dec b
-    ld [bc], a
-    dec h
-    db $10
-    ld [de], a
-    dec b
-    inc bc
-    ld h, $01
-    inc b
-    ld bc, $2702
-    nop
-
-jr_00b_5814:
-    rrca
-    ld [bc], a
-    dec b
-    jr z, jr_00b_5859
-
-    ld d, h
-    dec b
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [$0b02], sp
-    ld bc, $0000
-    nop
-    rst $38
-    ld b, $04
-    dec b
-    nop
-    ld [bc], a
-    ld b, $04
-    rst $38
-    rlca
-    dec b
-    nop
-    nop
-    dec b
-    rlca
-    dec b
-    rst $38
-    rst $38
-    ld b, b
-    ld e, b
-    ld c, [hl]
-    ld e, b
-    ld e, h
-    ld e, b
-    ld b, l
-    reti
-
-
-    ld a, [bc]
-    add hl, hl
-    db $76
-    ld e, b
-    ld l, c
-    ld e, c
-    dec bc
-    add hl, hl
-    add [hl]
-    ld e, b
-    ld a, b
-    ld e, c
-    ld b, [hl]
-    reti
-
-
-    inc c
-    add hl, hl
-    xor d
-    ld e, b
-    add a
-    ld e, c
-    inc c
-    add hl, hl
-    cp a
-
-jr_00b_5859:
-    ld e, b
-    add a
-    ld e, c
-    ld b, a
-    reti
-
-
-    dec c
-    add hl, hl
-    db $e3
-    ld e, b
-    sub [hl]
-    ld e, c
-    dec c
-    add hl, hl
-    rlca
-    ld e, c
-    sub [hl]
-    ld e, c
-    dec c
-    add hl, hl
-    ld h, $59
-    sub [hl]
-    ld e, c
-    dec c
-    add hl, hl
-    ld c, d
-    ld e, c
-    sub [hl]
-    ld e, c
-    ld bc, $023b
-    ld [bc], a
-    ld bc, $3a36
-    inc b
-    ld b, $02
-    nop
-    ld a, [hl-]
-    dec b
-    ld b, $03
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-    inc b
-    adc a
-    rst $38
-    dec b
-    inc bc
-    inc b
-    adc a
-    rst $38
-    inc b
-    inc b
-    inc b
-    adc a
-    rst $38
-    dec b
-    inc b
-    inc b
-    ld bc, $021b
-    ld [bc], a
-    dec b
-    ld b, $2a
-    inc b
-    ld b, $06
-    nop
-    ld d, $05
-    ld b, $07
-    rst $38
-    adc a
-    rst $38
-    inc b
-    ld [bc], a
-    rst $38
-    adc a
-    rst $38
-    dec b
-    ld [bc], a
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-    ld [$ff8f], sp
-    dec b
-    inc bc
-    ld [$8fff], sp
-    rst $38
-    inc b
-    ld [bc], a
-    rst $38
-    adc a
-    rst $38
-    dec b
-    ld [bc], a
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-    ld [$ff8f], sp
-    dec b
-    inc bc
-    ld [$4900], sp
-    ld bc, $0901
-    db $10
-    ld c, d
-    ld [$0a03], sp
-    jr nz, jr_00b_592a
-
-    inc bc
-    ld b, $0b
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-    inc c
-    adc a
-    rst $38
-    dec b
-    inc bc
-    dec c
-    adc a
-    rst $38
-    rlca
-    nop
-    ld c, $8f
-    rst $38
-    ld [$0f00], sp
-    ld b, $25
-    ld [bc], a
-    ld bc, $0011
-    ld a, $08
-    ld [bc], a
-    ld [de], a
-    scf
-    ld hl, $0303
-    db $10
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-    inc c
-    adc a
-    rst $38
-    dec b
-    inc bc
-    dec c
-    adc a
-    rst $38
-    rlca
-    nop
-    ld c, $8f
-    rst $38
-    ld [$0f00], sp
-    ld b, $25
-    ld [bc], a
-    ld bc, $0011
-    ld a, $08
-    ld [bc], a
-    ld [de], a
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-
-jr_00b_592a:
-    inc c
-    adc a
-    rst $38
-    dec b
-    inc bc
-    dec c
-    adc a
-    rst $38
-    rlca
-    nop
-    ld c, $8f
-    rst $38
-    ld [$0f00], sp
-    ld b, $25
-    ld [bc], a
-    ld bc, $0011
-    dec a
-    ld [$1402], sp
-    scf
-    add hl, sp
-    inc bc
-    inc bc
-    inc de
-    rst $38
-    adc a
-    rst $38
-    inc b
-    inc bc
-    inc c
-    adc a
-    rst $38
-    dec b
-    inc bc
-    dec c
-    adc a
-    rst $38
-    rlca
-    nop
-    ld c, $8f
-    rst $38
-    ld [$0f00], sp
-    ld b, $25
-    ld [bc], a
-    ld bc, $0011
-    dec a
-    ld [$1402], sp
-    rst $38
-    inc b
-    nop
-    dec de
-    nop
-    nop
-    inc b
-    rlca
-    dec b
-    nop
-    dec de
-    nop
-    nop
-    dec b
-    rlca
-    rst $38
-    inc b
-    nop
-    dec de
-    nop
-    nop
-    inc b
-    rlca
-    dec b
-    nop
-    dec de
-    nop
-    nop
-    dec b
-    rlca
-    rst $38
-    inc b
-    nop
-    inc e
-    nop
-    nop
-    inc b
-    rlca
-    dec b
-    nop
-    inc e
-    nop
-    nop
-    dec b
-    rlca
-    rst $38
-    ld b, $04
-    inc b
-    nop
-    inc b
-    ld b, $04
-    rst $38
-    and [hl]
-    ld e, c
-    xor [hl]
-    ld e, c
-    or [hl]
-    ld e, c
-    rst $38
-    rst $38
-    ld c, b
-    reti
-
-
-    rrca
-    add hl, hl
-    cp [hl]
-    ld e, c
-    inc c
-    ld e, d
-    ld c, c
-    reti
-
-
-    db $10
-    add hl, hl
-    ret c
-
-    ld e, c
-    inc d
-    ld e, d
-    ld c, d
-    reti
-
-
-    ld de, $0129
-    ld e, d
-    inc hl
-    ld e, d
-    sub b
-    rst $38
-    dec b
-    inc b
-    ld bc, $e050
-    dec b
-    inc b
-    rst $38
-    ld [hl], b
-    pop hl
-    inc bc
-    dec b
-    ld [bc], a
-    ld b, b
-    ld [c], a
-    ld [bc], a
-    inc b
-    inc bc
-    ld d, b
-    db $e3
-    inc bc
-    inc bc
-    inc b
-    rst $38
-    adc a
-    rst $38
-    inc b
-    ld [bc], a
-    dec b
-    adc a
-    rst $38
-    dec b
-    ld [bc], a
-    dec b
-    adc a
-    rst $38
-    inc bc
-    inc b
-    ld b, $8f
-    rst $38
-    ld b, $06
-    rlca
-    scf
-    ld [de], a
-    ld [bc], a
-    inc b
-    ld [$1217], sp
-    rlca
-    ld b, $09
-    ld h, b
-    ld de, $0804
-    ld c, $40
-    ld d, h
-    ld b, $05
-    rst $38
-    rst $38
-    add d
-    rst $38
-    ld b, $05
-    ld a, [bc]
-    nop
-    dec bc
-    ld b, $04
-    dec bc
-    rst $38
-    dec b
-    nop
-    rlca
-    nop
-    inc b
-    dec b
-    rlca
-    rst $38
-    inc b
-    rlca
-    ld bc, $8400
-    inc b
-    inc bc
-    dec b
-    rlca
-    ld bc, $8400
-    dec b
-    inc bc
-    rst $38
-    inc b
-    nop
-    rlca
-    nop
-    ld b, $04
-    rlca
-    rst $38
-    dec sp
-    ld e, d
-    ld b, e
-    ld e, d
-    ld [hl], l
-    ld e, d
-    rst $38
-    rst $38
-    ld a, l
-    ld e, d
-    adc e
-    ld e, d
-    sub e
-    ld e, d
-    rst $38
-    rst $38
-    ld c, e
-    reti
-
-
-    inc de
-    add hl, hl
-    sbc e
-    ld e, d
-    add hl, hl
-    ld e, h
-    ld c, h
-    reti
-
-
-    inc d
-    add hl, hl
-    or l
-    ld e, d
-    ld sp, $155c
-    add hl, hl
-    or l
-    ld e, d
-    ld [hl-], a
-    ld e, h
-    ld d, $29
-    call nc, Call_000_3a5a
-    ld e, h
-    ld d, $29
-    ld hl, sp+$5a
-    ld a, [hl-]
-    ld e, h
-    rla
-    add hl, hl
-    rla
-    ld e, e
-    ld c, c
-    ld e, h
-    rla
-    add hl, hl
-    ld b, b
-    ld e, e
-    ld c, c
-    ld e, h
-    rla
-    add hl, hl
-    ld h, h
-    ld e, e
-    ld c, c
-    ld e, h
-    rla
-    add hl, hl
-    adc b
-    ld e, e
-    ld c, c
-    ld e, h
-    ld c, l
-    reti
-
-
-    jr jr_00b_5aa2
-
-    and a
-    ld e, e
-    ld e, a
-    ld e, h
-    ld c, [hl]
-    reti
-
-
-    add hl, de
-    add hl, hl
-    pop bc
-    ld e, e
-    ld h, a
-    ld e, h
-    add hl, de
-    add hl, hl
-    pop de
-    ld e, e
-    ld h, a
-    ld e, h
-    ld c, a
-    reti
-
-
-    ld a, [de]
-    add hl, hl
-    pop hl
-    ld e, e
-    ld l, a
-    ld e, h
-    ld d, b
-    reti
-
-
-    dec de
-    add hl, hl
-    pop af
-    ld e, e
-    ld a, [hl]
-    ld e, h
-    add d
-    rst $38
-    inc bc
-    inc b
-    ld bc, $4100
-
-jr_00b_5aa2:
-    ld [$0203], sp
-    ld b, b
-    ld d, d
-    inc bc
-    inc b
-    rst $38
-    ld b, b
-    ldh [$03], a
-    inc b
-    rst $38
-    nop
-    ld de, $0204
-    ld a, [de]
-    rst $38
-    sub b
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc b
-    dec b
-    inc b
-    sub b
-    rst $38
-    dec b
-    dec b
-    dec b
-    ld b, $1f
-    inc b
-    ld [bc], a
-    ld b, $00
-    ld [$0603], sp
-    rlca
-    nop
-    ld [$0507], sp
-    ld [$90ff], sp
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc b
-    dec b
-    inc b
-    sub b
-    rst $38
-    dec b
-    dec b
-    dec b
-    ld b, $1f
-    inc b
-    ld [bc], a
-    ld b, $00
-    ld [$0603], sp
-    rlca
-    nop
-    ld [$0507], sp
-    ld [$4d00], sp
-    ld [bc], a
-    inc b
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc b
-    dec b
-    inc b
-    sub b
-    rst $38
-    dec b
-    dec b
-    dec b
-    ld b, $1f
-    inc b
-    ld [bc], a
-    ld b, $00
-    ld [$0603], sp
-    rlca
-    nop
-    ld [$0507], sp
-    ld [$90ff], sp
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc b
-    dec b
-    inc b
-    sub b
-    rst $38
-    dec b
-    dec b
-    dec b
-    ld b, $1f
-    inc b
-    ld [bc], a
-    ld b, $00
-    ld [$0603], sp
-    rlca
-    nop
-    ld [$0507], sp
-    ld [$4d00], sp
-    ld [bc], a
-    inc b
-    rst $38
-    nop
-    ld c, l
-    ld b, $04
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc b
-    dec b
-    inc b
-    sub b
-    rst $38
-    dec b
-    dec b
-    dec b
-    ld b, $1f
-    inc b
-    ld [bc], a
-    ld b, $00
-    ld [$0603], sp
-    rlca
-    nop
-    ld [$0507], sp
-    ld [$4d00], sp
-    ld b, $04
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc b
-    dec b
-    inc b
-    sub b
-    rst $38
-    dec b
-    dec b
-    dec b
-    ld b, $1f
-    inc b
-    ld [bc], a
-    ld b, $00
-    ld [$0603], sp
-    rlca
-    nop
-    ld [$0507], sp
-    ld [$4d00], sp
-    ld [bc], a
-    inc b
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc b
-    dec b
-    inc b
-    sub b
-    rst $38
-    dec b
-    dec b
-    dec b
-    ld b, $1f
-    inc b
-    ld [bc], a
-    ld b, $00
-    ld [$0603], sp
-    rlca
-    nop
-    ld [$0507], sp
-    ld [$8fff], sp
-    rst $38
-    ld bc, $0902
-    adc a
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld a, [bc]
-    nop
-    inc b
-    inc bc
-    inc b
-    dec bc
-    nop
-    dec bc
-    ld b, $02
-    inc c
-    rla
-    ld a, [bc]
-    ld [$0d05], sp
-    rst $38
-    rlca
-    add hl, bc
-    ld [bc], a
-    ld bc, $040e
-    ld b, d
-    ld [$0f05], sp
-    jr nc, @+$0c
-
-    ld bc, $1006
-    rst $38
-    inc b
-    add hl, bc
-    ld [$0e05], sp
-    ld b, $42
-    ld [bc], a
-    ld bc, $300f
-    ld a, [bc]
-    ld bc, $1006
-    rst $38
-    nop
-    dec bc
-    dec b
-    ld bc, $2011
-    rrca
-    dec b
-    ld [bc], a
-    ld [de], a
-    ld [hl+], a
-    rla
-    inc b
-    dec b
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    ld [$1303], sp
-    adc a
-    rst $38
-    rlca
-    inc b
-    inc d
-    adc a
-    rst $38
-    ld b, $05
-    dec d
-    adc a
-    rst $38
-    ld b, $06
-    ld d, $06
-    ld a, [bc]
-    inc bc
-    ld [bc], a
-    rla
-    ld h, $20
-    inc bc
-    inc bc
-    jr jr_00b_5c40
-
-    dec bc
-    ld [bc], a
-    ld b, $19
-    ld b, b
-    ldh [rTIMA], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    dec b
-    nop
-    rst $38
-    ld b, b
-    ld [c], a
-    dec b
-    nop
-    rst $38
-    ld b, b
-    db $e3
-    dec b
-    nop
-    rst $38
-    rst $38
-    dec b
-    ld bc, $001d
-    nop
-    dec b
-    rlca
-    rst $38
-    rst $38
-    dec b
-    ld [bc], a
-    rra
-    nop
-    nop
-    dec b
-    ld [bc], a
-    rst $38
-    dec b
-    ld [bc], a
-    rra
-    nop
-    nop
-    dec b
-
-jr_00b_5c40:
-    ld [bc], a
-    ld [bc], a
-    inc b
-    ld c, $01
-    nop
-    nop
-    nop
-    rst $38
-    dec b
-    ld [bc], a
-    rra
-    nop
-    nop
-    dec b
-    ld [bc], a
-    ld [bc], a
-    inc b
-    ld c, $01
-    nop
-    nop
-    nop
-    ld b, $04
-    dec e
-    ld bc, $0000
-    nop
-    rst $38
-    dec b
-    ld bc, $001e
-    nop
-    dec b
-    rlca
-    rst $38
-    dec b
-    rlca
-    ld b, $00
-    nop
-    dec b
-    nop
-    rst $38
-    inc b
-    rlca
-    ld b, $00
-    ld bc, $0304
-    dec b
-    rlca
-    ld b, $00
-    ld bc, $0305
-    rst $38
-    inc b
-    rlca
-    ld b, $00
-    ld [bc], a
-    inc b
-    nop
-    rst $38
-    adc b
-    ld e, h
-    ld d, c
-    reti
-
-
-    ld e, $29
-    ret nz
-
-    ld e, h
-    rst $38
-    rst $38
-    ld e, $29
-    ret nc
-
-    ld e, h
-    rst $38
-    rst $38
-    ld e, $29
-    ldh [$5c], a
-    rst $38
-    rst $38
-    ld e, $29
-    ldh [$5c], a
-    rst $38
-    rst $38
-    ld e, $29
-    ldh a, [$5c]
-    rst $38
-    rst $38
-    ld e, $29
-    nop
-    ld e, l
-    rst $38
-    rst $38
-    ld e, $29
-    db $10
-    ld e, l
-    rst $38
-    rst $38
-    ld e, $29
-    dec de
-    ld e, l
-    rst $38
-    rst $38
-    ld e, $29
-    jr nc, jr_00b_5d1b
-
-    rst $38
-    rst $38
-    jr nz, jr_00b_5cca
-
-    dec b
-    ld [$40ff], sp
-    ldh a, [rTIMA]
-    inc b
-    rst $38
-
-jr_00b_5cca:
-    ld b, b
-    pop af
-    dec b
-    inc b
-    rst $38
-    rst $38
-    jr nz, jr_00b_5cda
-
-    dec b
-    ld [$00ff], sp
-    ld d, l
-    dec b
-    inc b
-    rst $38
-
-jr_00b_5cda:
-    nop
-    ld d, l
-    dec b
-    inc b
-    rst $38
-    rst $38
-    jr nz, jr_00b_5cea
-
-    dec b
-    ld [$40ff], sp
-    ldh a, [rTIMA]
-    inc b
-    rst $38
-
-jr_00b_5cea:
-    ld b, b
-    ld d, l
-    dec b
-    inc b
-    rst $38
-    rst $38
-    jr nz, jr_00b_5cfa
-
-    dec b
-    ld [$40ff], sp
-    ldh a, [rTIMA]
-    inc b
-    rst $38
-
-jr_00b_5cfa:
-    ld b, b
-    pop af
-    dec b
-    inc b
-    rst $38
-    rst $38
-    jr nz, jr_00b_5d0a
-
-    dec b
-    ld [$00ff], sp
-    ld d, l
-    dec b
-    inc b
-    rst $38
-
-jr_00b_5d0a:
-    nop
-    ld d, l
-    dec b
-    inc b
-    rst $38
-    rst $38
-    ld h, b
-    ld [$0805], sp
-    rst $38
-    jr nz, jr_00b_5d75
-
-    dec b
-    inc b
-    rst $38
-    rst $38
-
-jr_00b_5d1b:
-    ld h, b
-    ld [$0805], sp
-    rst $38
-    ld [hl], b
-    ld hl, $0400
-    rst $38
-    ld b, b
-    ld d, l
-    dec b
-    inc b
-    rst $38
-    jr nz, jr_00b_5d8a
-
-    dec b
-    rlca
-    rst $38
-    rst $38
-    jr nz, jr_00b_5d3a
-
-    dec b
-    rlca
-    rst $38
-    ld b, b
-    ld hl, $0405
-    rst $38
-
-jr_00b_5d3a:
-    ld b, b
-    ld d, l
-    dec b
-    inc b
-    rst $38
-    jr nz, @+$60
-
-    dec b
-    ld b, $ff
-    rst $38
-    rst $38
-    rst $38
-    ld d, l
-    ld e, l
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld l, c
-    ld e, l
-    ld a, l
-    ld e, l
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld d, d
-    reti
-
-
-    jr nz, @+$2b
-
-    adc e
-    ld e, l
-    ld e, a
-    ld e, [hl]
-    jr nz, jr_00b_5d88
-
-    cp [hl]
-    ld e, l
-    ld e, a
-    ld e, [hl]
-    jr nz, jr_00b_5d8e
-
-    or $5d
-    ld e, a
-    ld e, [hl]
-    ld d, e
-    reti
-
-
-    ld hl, $2929
-    ld e, [hl]
-    ld h, b
-    ld e, [hl]
-    ld hl, $2f29
-    ld e, [hl]
-
-jr_00b_5d75:
-    ld h, b
-    ld e, [hl]
-    ld hl, $2929
-    ld e, [hl]
-    ld l, b
-    ld e, [hl]
-    ld d, h
-    reti
-
-
-    ld [hl+], a
-    add hl, hl
-    jr nc, @+$60
-
-    ld l, c
-    ld e, [hl]
-    ld [hl+], a
-    add hl, hl
-    ld c, d
-
-jr_00b_5d88:
-    ld e, [hl]
-    ld l, c
-
-jr_00b_5d8a:
-    ld e, [hl]
-    adc a
-    rst $38
-    dec b
-
-jr_00b_5d8e:
-    nop
-    ld bc, $ff8f
-    rlca
-    nop
-    ld [bc], a
-    adc a
-    rst $38
-    ld [$0300], sp
-    nop
-    ld h, $02
-    ld bc, $0004
-    ld [$0105], sp
-    dec b
-    nop
-    rrca
-    ld b, $04
-    ld b, $40
-    ldh [rTIMA], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    dec b
-    nop
-    rst $38
-    ld b, b
-    ld [c], a
-    dec b
-    nop
-    rst $38
-    ld b, b
-    db $e3
-    dec b
-    nop
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    dec b
-    nop
-    ld bc, $ff8f
-    rlca
-    nop
-    ld [bc], a
-    adc a
-    rst $38
-    ld [$0300], sp
-    add c
-    rst $38
-    dec b
-    inc bc
-    rlca
-    nop
-    ld h, $02
-    ld bc, $0004
-    ld [$0304], sp
-    dec b
-    nop
-    rrca
-    ld b, $04
-    ld b, $40
-    ldh [rTAC], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    rlca
-    nop
-    rst $38
-    ld b, b
-    ld [c], a
-    rlca
-    nop
-    rst $38
-    ld b, b
-    db $e3
-    rlca
-    nop
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    dec b
-    nop
-    ld bc, $ff8f
-    rlca
-    nop
-    ld [bc], a
-    adc a
-    rst $38
-    ld [$0300], sp
-    ld b, b
-    ld h, $02
-    ld [bc], a
-    inc b
-    jr nc, jr_00b_5e14
-
-    ld b, $05
-    rst $38
-    ld b, b
-    ldh [rSC], a
-    nop
-    rst $38
-
-jr_00b_5e14:
-    ld b, b
-    ldh [rTAC], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    rlca
-    nop
-    rst $38
-    ld b, b
-    ld [c], a
-    rlca
-    nop
-    rst $38
-    ld b, b
-    db $e3
-    rlca
-    nop
-    rst $38
-    rst $38
-    db $10
-    ld [$0608], sp
-    rst $38
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    ld [$0b01], sp
-    nop
-    rlca
-    inc bc
-    ld [bc], a
-    ld [$0b00], sp
-    ld [bc], a
-    inc b
-    add hl, bc
-    nop
-    ld de, $0507
-    ld a, [bc]
-    nop
-    ld [HeaderLogo], sp
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    ld [$0b01], sp
-    nop
-    rlca
-    inc bc
-    ld [bc], a
-    ld [$0b00], sp
-    ld [bc], a
-    inc b
-    add hl, bc
-    nop
-    ld de, $0507
-    ld a, [bc]
-    rst $38
-    rst $38
-    inc b
-    ld b, $01
-    nop
-    inc c
-    inc b
-    ld b, $ff
-    rst $38
-    rst $38
-    ld [hl], d
-    ld e, [hl]
-    ld a, d
-    ld e, [hl]
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld d, l
-    reti
-
-
-    inc h
-    add hl, hl
-    add d
-    ld e, [hl]
-    add h
-    ld e, [hl]
-    ld d, [hl]
-    reti
-
-
-    dec h
-    add hl, hl
-    add e
-    ld e, [hl]
-    adc h
-    ld e, [hl]
-    rst $38
-    rst $38
-    rlca
-    rlca
-    nop
-    nop
-    add c
-    rlca
-    ld bc, $03ff
-    rlca
-    ld d, $00
-    add b
-    inc bc
-    ld bc, $96ff
-    ld e, [hl]
-    ld d, a
-    reti
-
-
-    daa
-    add hl, hl
-    sbc [hl]
-    ld e, [hl]
-    cp b
-    ld e, [hl]
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    inc bc
-    ld bc, $8203
-    rst $38
-    ld [bc], a
-    inc b
-    inc b
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    dec b
-    rst $38
-    ld [bc], a
-    rlca
-    ld bc, $8d00
-    ld [bc], a
-    ld bc, $c2ff
-    ld e, [hl]
-    ld e, b
-    reti
-
-
-    ld bc, $d030
-    ld e, [hl]
-    dec sp
-    ld e, a
-    ld bc, $0830
-    ld e, a
-    dec sp
-    ld e, a
-    sub b
-    rst $38
-    ld b, $04
-    ld [$ff90], sp
-    rlca
-    dec b
-    ld [$ff90], sp
-    ld [$0905], sp
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f01
-    rst $38
-    inc bc
-    ld bc, $8f02
-    rst $38
-    ld bc, $0305
-    adc a
-    rst $38
-    ld bc, $0406
-    nop
-    dec b
-    inc bc
-    dec b
-    dec b
-    nop
-
-jr_00b_5ef9:
-    inc b
-    ld b, $03
-    ld b, $00
-    ld [$0408], sp
-    rlca
-    nop
-    ld c, l
-    ld [$ff02], sp
-    rst $38
-    sub b
-    rst $38
-    ld b, $04
-    ld [$ff90], sp
-    rlca
-    dec b
-    ld [$ff90], sp
-    ld [$0905], sp
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f01
-    rst $38
-    inc bc
-    ld bc, $8f02
-    rst $38
-
-jr_00b_5f23:
-    ld bc, $0305
-    adc a
-    rst $38
-    ld bc, $0406
-    nop
-    dec b
-    inc bc
-    dec b
-    dec b
-    nop
-    inc b
-    ld b, $03
-    ld b, $00
-    ld [$0408], sp
-    rlca
-    rst $38
-    dec b
-    rlca
-    ld bc, $8c00
-    dec b
-    ld bc, $0208
-    ld e, $01
-    nop
-    nop
-    nop
-    rst $38
-    ld c, h
-    ld e, a
-    ld e, c
-    reti
-
-
-    inc bc
-    jr nc, jr_00b_5fa5
-
-    ld e, a
-    ld l, c
-    ld e, a
-    adc a
-    rst $38
-    dec b
-    inc bc
-    ld bc, $ff8f
-    inc bc
-    dec b
-    ld [bc], a
-    nop
-    add hl, bc
-    dec b
-    ld [bc], a
-    ld bc, $0230
-    ld [bc], a
-    dec b
-    ld [bc], a
-    rst $38
-    dec b
-    rlca
-    ld bc, $8900
-    dec b
-    ld bc, $73ff
-    ld e, a
-    ld e, d
-    reti
-
-
-    dec b
-    jr nc, jr_00b_5ef9
-
-    ld e, a
-    call nz, Call_000_065f
-    jr nc, jr_00b_5f23
-
-    ld e, a
-    call z, $8f5f
-    rst $38
-    ld [bc], a
-    ld bc, $8f01
-    rst $38
-    inc bc
-    ld bc, $8f02
-    rst $38
-    inc b
-    ld bc, $8203
-    rst $38
-    dec b
-    inc b
-    inc b
-    jr nz, jr_00b_5f9a
-
-    dec b
-    inc bc
-    dec b
-
-jr_00b_5f9a:
-    nop
-    ld a, [bc]
-    inc b
-    ld b, $06
-    ld d, b
-    ld hl, $000a
-    rst $38
-    rst $38
-
-jr_00b_5fa5:
-    sub b
-    rst $38
-    rlca
-    ld b, $07
-    sub b
-    rst $38
-    ld [$0705], sp
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f01
-    rst $38
-    inc bc
-    ld bc, $8f02
-    rst $38
-    inc b
-    ld bc, $0003
-    ld a, [bc]
-    inc b
-    ld b, $06
-    rst $38
-    inc b
-    rlca
-    ld bc, $8c00
-    inc b
-    inc b
-    rst $38
-    inc b
-    rlca
-    ld bc, $8c00
-    inc b
-    inc b
-    ld [$0006], sp
-    nop
-    ld bc, $0504
-    rst $38
-    db $eb
-    ld e, a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    di
-    ld e, a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld e, e
-    reti
-
-
-    ld [$0130], sp
-    ld h, b
-    ld l, l
-    ld h, b
-    ld e, h
-    reti
-
-
-    add hl, bc
-    jr nc, @+$45
-
-    ld h, b
-    ld l, [hl]
-    ld h, b
-    add hl, bc
-    jr nc, jr_00b_605b
-
-    ld h, b
-    ld l, [hl]
-    ld h, b
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    inc bc
-    ld bc, $8f03
-
-jr_00b_6011:
-    rst $38
-    inc b
-    ld bc, $8f04
-    rst $38
-    rlca
-    ld bc, $8f05
-    rst $38
-    ld [$0601], sp
-    adc a
-    rst $38
-    ld [bc], a
-    inc b
-    rlca
-    adc a
-    rst $38
-    inc bc
-    inc b
-    ld [$ff8f], sp
-    inc b
-    inc b
-    add hl, bc
-    adc a
-    rst $38
-    ld b, $04
-    ld a, [bc]
-    adc a
-    rst $38
-    rlca
-    inc b
-    dec bc
-    adc a
-    rst $38
-    ld b, $01
-    inc c
-    db $10
-    ld [bc], a
-    ld [bc], a
-    ld b, $0d
-    rst $38
-    add d
-    rst $38
-    inc b
-    inc bc
-    ld c, $00
-    ld [bc], a
-    inc b
-    ld [bc], a
-    rrca
-    nop
-    inc bc
-    ld b, $03
-    ld de, $0330
-    ld bc, $1006
-    ld b, b
-    ld d, h
-    ld b, $02
-
-jr_00b_605b:
-    rst $38
-    rst $38
-    add d
-    rst $38
-    inc b
-    inc bc
-    ld c, $00
-    ld [bc], a
-    inc b
-    ld [bc], a
-    rrca
-    jr nc, jr_00b_606c
-
-    ld bc, $1006
-
-jr_00b_606c:
-    rst $38
-    rst $38
-    dec b
-    rlca
-    ld bc, $8800
-    dec b
-    inc bc
-    ld b, $01
-    inc de
-    nop
-    nop
-    ld b, $07
-    rst $38
-    ld a, a
-    ld h, b
-    ld e, l
-    reti
-
-
-    dec bc
-    jr nc, jr_00b_6011
-
-    ld h, b
-    ld a, [hl+]
-    ld h, c
-    dec bc
-    jr nc, @-$20
-
-    ld h, b
-    ld a, [hl+]
-    ld h, c
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    inc bc
-    ld bc, $8f03
-    rst $38
-    inc b
-    ld bc, $8f04
-    rst $38
-    dec b
-    ld bc, $8f05
-    rst $38
-    ld b, $01
-    ld b, $8f
-    rst $38
-    rlca
-    ld bc, $8f07
-    rst $38
-    ld [$0801], sp
-    adc a
-    rst $38
-    ld bc, $0904
-    adc a
-    rst $38
-    ld [bc], a
-    inc b
-    ld a, [bc]
-    adc a
-    rst $38
-    inc bc
-    inc b
-    dec bc
-    adc a
-    rst $38
-    inc b
-    inc b
-    inc c
-    adc a
-    rst $38
-    rlca
-    inc b
-    dec c
-    adc a
-    rst $38
-    ld [$0e04], sp
-    db $10
-    inc bc
-    ld b, $04
-    rrca
-    nop
-    ld c, l
-    ld bc, $ff06
-    rst $38
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    inc bc
-    ld bc, $8f03
-    rst $38
-    inc b
-    ld bc, $8f04
-    rst $38
-    dec b
-    ld bc, $8f05
-    rst $38
-    ld b, $01
-    ld b, $8f
-    rst $38
-    rlca
-    ld bc, $8f07
-    rst $38
-    ld [$0801], sp
-    adc a
-    rst $38
-    ld bc, $0904
-    adc a
-    rst $38
-    ld [bc], a
-    inc b
-    ld a, [bc]
-    adc a
-    rst $38
-    inc bc
-    inc b
-    dec bc
-    adc a
-    rst $38
-    inc b
-    inc b
-    inc c
-    adc a
-    rst $38
-    rlca
-    inc b
-    dec c
-    adc a
-    rst $38
-    ld [$0e04], sp
-    db $10
-    inc bc
-    ld b, $04
-    rrca
-    rst $38
-    ld b, $07
-    ld [de], a
-    nop
-    add h
-    ld b, $01
-    ld bc, $1406
-    ld bc, $0000
-    nop
-    rst $38
-    dec sp
-    ld h, c
-    ld e, [hl]
-    reti
-
-
-    dec c
-    jr nc, jr_00b_61a1
-
-    ld h, c
-    bit 4, c
-    ld c, $30
-    ld [hl], c
-    ld h, c
-    db $d3
-    ld h, c
-    ld c, $30
-    add [hl]
-    ld h, c
-    db $d3
-    ld h, c
-    dec c
-    jr nc, @-$68
-
-    ld h, c
-    jp hl
-
-
-    ld h, c
-    ld c, $30
-    and [hl]
-    ld h, c
-    db $d3
-    ld h, c
-    ld c, $30
-    cp e
-    ld h, c
-    db $d3
-    ld h, c
-    add d
-    rst $38
-    ld [bc], a
-    inc b
-    ld bc, $1300
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    ld c, h
-    inc bc
-    ld [bc], a
-    inc bc
-    rst $38
-    add d
-    rst $38
-    ld [bc], a
-    inc b
-    ld bc, $1300
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    ld c, h
-    inc bc
-    ld [bc], a
-    inc bc
-    nop
-    ld c, l
-    ld bc, $ff06
-    rst $38
-    add d
-    rst $38
-    ld [bc], a
-    inc b
-    ld bc, $1300
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    ld c, h
-    inc bc
-    ld [bc], a
-    inc bc
-    rst $38
-    add d
-    rst $38
-    ld [bc], a
-    inc b
-    ld bc, $1300
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-
-jr_00b_61a1:
-    ld c, h
-    ld bc, $0302
-    rst $38
-    add d
-
-jr_00b_61a7:
-    rst $38
-    ld [bc], a
-    inc b
-    ld bc, $1300
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    ld c, h
-    ld bc, $0302
-    nop
-    ld c, l
-    ld bc, $ff06
-    rst $38
-    add d
-    rst $38
-    ld [bc], a
-    inc b
-    ld bc, $1300
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    ld c, h
-    ld bc, $0302
-    rst $38
-    inc bc
-    rlca
-    ld bc, $8100
-    inc bc
-    ld [bc], a
-    rst $38
-    inc bc
-    rlca
-    ld bc, $8100
-    inc bc
-    ld [bc], a
-    inc bc
-    ld bc, $000a
-    ld bc, $0703
-    ld bc, $1106
-    ld bc, $0000
-    nop
-    rst $38
-    inc bc
-    rlca
-    ld bc, $8100
-    inc bc
-    ld [bc], a
-    inc bc
-    ld bc, $000a
-    ld bc, $0703
-    rst $38
-    ld [$ff62], sp
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    db $10
-    ld h, d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld e, a
-    reti
-
-
-    db $10
-    jr nc, jr_00b_6231
-
-    ld h, d
-    xor d
-    ld h, d
-    ld h, b
-    reti
-
-
-    ld de, $2530
-    ld h, d
-    or d
-    ld h, d
-    ld [de], a
-    jr nc, jr_00b_6278
-
-    ld h, d
-    or e
-    ld h, d
-    ld [de], a
-    jr nc, jr_00b_61a7
-
-    ld h, d
-    or e
-    ld h, d
-    rst $38
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    rlca
-    ld bc, $8f02
-    rst $38
-
-jr_00b_6231:
-    ld [$0301], sp
-    adc a
-    rst $38
-    ld [bc], a
-    dec b
-    inc b
-    adc a
-    rst $38
-    inc bc
-    dec b
-    inc b
-    adc a
-    rst $38
-    ld [bc], a
-    ld b, $04
-    adc a
-    rst $38
-    inc bc
-    ld b, $04
-    adc a
-    rst $38
-    ld bc, $0506
-    add d
-    rst $38
-    ld b, $04
-    ld b, $07
-    ld b, e
-    ld b, $03
-    rlca
-    ld [bc], a
-    rlca
-    ld b, $05
-    ld [$8fff], sp
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    rlca
-    ld bc, $8f02
-    rst $38
-    ld [$0301], sp
-    adc a
-    rst $38
-    ld bc, $0506
-    add d
-    rst $38
-    ld b, $04
-    ld b, $07
-    ld b, e
-
-jr_00b_6278:
-    ld b, $03
-    rlca
-    ld [bc], a
-    rlca
-    ld b, $05
-    ld [$4d00], sp
-    ld [bc], a
-    ld b, $ff
-    rst $38
-    adc a
-
-jr_00b_6287:
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    rlca
-    ld bc, $8f02
-    rst $38
-    ld [$0301], sp
-    adc a
-    rst $38
-    ld bc, $0506
-    add d
-    rst $38
-    ld b, $04
-    ld b, $07
-    ld b, e
-    ld b, $03
-    rlca
-    ld [bc], a
-    rlca
-    ld b, $05
-    ld [$04ff], sp
-    nop
-    ld bc, $0800
-    inc b
-    dec b
-    rst $38
-    rst $38
-    ld [bc], a
-    ld b, $08
-    ld bc, $0000
-    nop
-    rst $38
-    cp l
-    ld h, d
-    ld h, c
-    reti
-
-
-    inc d
-    jr nc, jr_00b_6287
-
-    ld h, d
-    jp c, $9062
-
-    rst $38
-    ld bc, $0204
-    sub b
-    rst $38
-    ld [bc], a
-    inc b
-    inc bc
-    sub b
-    rst $38
-    inc bc
-    inc b
-    inc b
-    ld b, $1f
-    ld [bc], a
-    ld [bc], a
-    ld bc, $01ff
-    rlca
-    ld bc, $8d00
-    ld bc, $ff04
-    db $e4
-    ld h, d
-    ld h, d
-    reti
-
-
-    ld d, $30
-    db $ec
-    ld h, d
-    dec bc
-    ld h, e
-    sub b
-    rst $38
-    inc bc
-    inc b
-    inc b
-    sub b
-    rst $38
-
-Call_00b_62f3:
-    inc b
-    inc b
-    dec b
-    sub b
-    rst $38
-    dec b
-    inc b
-    ld b, $06
-    rra
-
-jr_00b_62fd:
-    inc b
-    ld [bc], a
-    ld bc, $1100
-    dec b
-    dec b
-    ld [bc], a
-    ld [$023b], sp
-    ld b, $03
-    rst $38
-    inc b
-    rlca
-    ld bc, $8d00
-    inc b
-    ld b, $ff
-    dec d
-    ld h, e
-    ld h, e
-    reti
-
-
-    jr jr_00b_6349
-
-    add hl, hl
-    ld h, e
-    ld c, a
-    ld h, e
-    jr jr_00b_634f
-
-    inc [hl]
-    ld h, e
-    ld c, a
-    ld h, e
-    jr jr_00b_6355
-
-    ccf
-    ld h, e
-    ld c, a
-    ld h, e
-    nop
-    ld [hl+], a
-    inc b
-    ld [bc], a
-    ld bc, $ff00
-    dec b
-    ld [bc], a
-    ld bc, $00ff
-    inc h
-    inc b
-    ld [bc], a
-    ld [bc], a
-    nop
-    rst $38
-    dec b
-    ld [bc], a
-    ld [bc], a
-    rst $38
-    nop
-    dec sp
-    inc bc
-    inc bc
-    inc bc
-    nop
-    inc h
-    inc b
-    ld [bc], a
-    ld [bc], a
-
-jr_00b_6349:
-    nop
-    rst $38
-    dec b
-    ld [bc], a
-    ld [bc], a
-    rst $38
-
-jr_00b_634f:
-    inc b
-    rlca
-    dec b
-    nop
-    add b
-    inc b
-
-jr_00b_6355:
-    nop
-    dec b
-    rlca
-    dec b
-    nop
-    add b
-    dec b
-    nop
-    rst $38
-    ld h, b
-    ld h, e
-    ld h, h
-    reti
-
-
-    ld a, [de]
-    jr nc, @+$70
-
-    ld h, e
-    or [hl]
-    ld h, e
-    ld a, [de]
-    jr nc, jr_00b_62fd
-
-    ld h, e
-    or [hl]
-    ld h, e
-    adc a
-    rst $38
-    inc b
-    ld [bc], a
-    ld bc, $ff8f
-    dec b
-    ld [bc], a
-    ld bc, $ff8f
-    ld bc, $0204
-    adc a
-    rst $38
-    ld [$0304], sp
-    ld b, b
-    ld b, c
-    inc b
-    ld [bc], a
-    ld bc, $4140
-    dec b
-    ld [bc], a
-    ld bc, $4002
-    inc bc
-    dec b
-    inc b
-    rst $38
-    adc a
-    rst $38
-    inc b
-    ld [bc], a
-    dec b
-    adc a
-    rst $38
-    dec b
-    ld [bc], a
-
-jr_00b_639b:
-    dec b
-    adc a
-    rst $38
-    ld bc, $0204
-    adc a
-    rst $38
-    ld [$0304], sp
-    ld b, b
-    dec hl
-    inc b
-    ld [bc], a
-    dec b
-    ld b, b
-    dec hl
-    dec b
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld e, $03
-    dec b
-    ld b, $ff
-    inc b
-    rlca
-    dec b
-    nop
-    add c
-    inc b
-    nop
-    dec b
-    rlca
-    dec b
-    nop
-    add c
-    dec b
-    nop
-    rst $38
-    rst $00
-    ld h, e
-    ld h, l
-    reti
-
-
-    inc e
-    jr nc, jr_00b_639b
-
-    ld h, e
-    xor $63
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f01
-    rst $38
-    ld b, $01
-    ld [bc], a
-    adc a
-    rst $38
-    dec b
-    inc bc
-    inc bc
-    rlca
-    ld de, $0205
-    inc b
-    daa
-    nop
-    inc bc
-    dec b
-    dec b
-    jr nz, @+$04
-
-    ld [$0606], sp
-    rst $38
-    dec b
-    rlca
-    rlca
-    nop
-    add b
-    dec b
-    ld bc, $f8ff
-    ld h, e
-    ld h, [hl]
-    reti
-
-
-    ld e, $30
-    ld b, $64
-    jr nc, jr_00b_6464
-
-    ld e, $30
-    dec de
-    ld h, h
-    jr nc, jr_00b_646a
-
-    adc a
-    rst $38
-    dec b
-    inc bc
-    ld bc, $0500
-    dec b
-    ld [bc], a
-    ld bc, $0f37
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    jr nz, jr_00b_6422
-
-    ld b, $04
-    inc bc
-    rst $38
-    adc a
-    rst $38
-    dec b
-    inc bc
-    ld bc, $0500
-
-jr_00b_6422:
-    dec b
-    ld [bc], a
-    ld bc, $0f37
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    jr nz, @+$0e
-
-    ld b, $04
-    inc b
-    rst $38
-    dec b
-    rlca
-    rlca
-    nop
-    add d
-    dec b
-    ld bc, $3aff
-    ld h, h
-    ld h, a
-    reti
-
-
-    ld bc, $4e2d
-    ld h, h
-    sbc h
-    ld h, h
-    ld bc, $682d
-    ld h, h
-    sbc h
-    ld h, h
-    ld bc, $822d
-    ld h, h
-    sbc h
-    ld h, h
-    adc a
-    rst $38
-    ld [bc], a
-    ld b, $01
-    nop
-    ld c, $05
-    ld b, $02
-    nop
-    ld de, $0307
-    inc bc
-    nop
-    ld [bc], a
-    inc b
-    inc b
-    inc b
-    add c
-    rst $38
-
-jr_00b_6464:
-    dec b
-    inc b
-    rlca
-    rst $38
-    adc a
-    rst $38
-
-jr_00b_646a:
-    ld [bc], a
-    ld b, $01
-    nop
-    ld c, $05
-    ld b, $02
-    nop
-    ld de, $0307
-    inc bc
-    nop
-    inc de
-    inc b
-    inc b
-    dec b
-    add c
-    rst $38
-    dec b
-    inc b
-    ld [$8fff], sp
-    rst $38
-    ld [bc], a
-    ld b, $01
-    nop
-    ld c, $05
-    ld b, $02
-    nop
-    ld de, $0307
-    inc bc
-    nop
-    inc d
-    inc b
-    inc b
-    ld b, $81
-    rst $38
-    dec b
-    inc b
-    add hl, bc
-    rst $38
-    dec b
-    ld [bc], a
-    rlca
-    nop
-    ld bc, $0205
-    rst $38
-    and [hl]
-    ld h, h
-    ld l, b
-    reti
-
-
-    inc bc
-    dec l
-    or h
-    ld h, h
-    push bc
-    ld h, h
-    inc bc
-    dec l
-    cp a
-    ld h, h
-    push bc
-    ld h, h
-    nop
-    dec bc
-    ld [$0105], sp
-    nop
-    ld c, l
-    ld [$ff02], sp
-    rst $38
-    nop
-    dec bc
-    ld [$0105], sp
-    rst $38
-    rlca
-    rlca
-    inc bc
-    nop
-    add c
-    inc b
-    ld bc, $0708
-    inc bc
-    nop
-    add c
-    dec b
-    ld bc, $0208
-    nop
-    ld bc, $0000
-    nop
-    rst $38
-    db $dd
-    ld h, h
-    ld l, c
-    reti
-
-
-    dec b
-    dec l
-    rst $30
-    ld h, h
-    inc hl
-    ld h, l
-    dec b
-    dec l
-    rlca
-    ld h, l
-    inc hl
-    ld h, l
-    dec b
-    dec l
-    ld [de], a
-    ld h, l
-    inc hl
-    ld h, l
-    dec b
-    dec l
-    dec e
-    ld h, l
-    inc hl
-    ld h, l
-    db $10
-    dec bc
-    rlca
-    dec b
-    ld bc, $4d00
-    ld [bc], a
-    ld [bc], a
-    rst $38
-    nop
-    ld c, l
-    ld [bc], a
-    ld b, $ff
-    rst $38
-    db $10
-    dec bc
-    rlca
-    dec b
-    ld bc, $4d00
-    ld [bc], a
-    ld b, $ff
-    rst $38
-    db $10
-    dec bc
-    rlca
-    dec b
-    ld bc, $4d00
-    ld [bc], a
-    ld [bc], a
-    rst $38
-    rst $38
-    db $10
-    dec bc
-    rlca
-    dec b
-    ld bc, $06ff
-    rlca
-    inc bc
-    nop
-    add c
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    ld [bc], a
-    ld b, $02
-    ld bc, $0000
-    nop
-    rst $38
-    dec sp
-    ld h, l
-    ld l, d
-    reti
-
-
-    rlca
-    dec l
-    ld d, l
-    ld h, l
-    add c
-    ld h, l
-    rlca
-    dec l
-    ld h, l
-    ld h, l
-    add c
-    ld h, l
-    rlca
-    dec l
-    ld [hl], b
-    ld h, l
-    add c
-    ld h, l
-    rlca
-    dec l
-    ld a, e
-    ld h, l
-    add c
-    ld h, l
-    nop
-    dec bc
-    ld b, $03
-    ld bc, $4d00
-    dec b
-    ld bc, $00ff
-    ld c, l
-    rlca
-    ld bc, $ffff
-    nop
-    dec bc
-    ld b, $03
-    ld bc, $4d00
-    rlca
-    ld bc, $ffff
-    nop
-    dec bc
-    ld b, $03
-    ld bc, $4d00
-    dec b
-    ld bc, $ffff
-    nop
-    dec bc
-    ld b, $03
-    ld bc, $01ff
-    rlca
-    inc bc
-    nop
-    add c
-    rlca
-    ld [bc], a
-    dec b
-    ld bc, $0103
-    nop
-    nop
-    nop
-    rlca
-    ld bc, HeaderLogo
-    nop
-    nop
-    nop
-    rst $38
-    sbc c
-    ld h, l
-    ld l, e
-    reti
-
-
-    add hl, bc
-    dec l
-    or e
-    ld h, l
-    rst $18
-    ld h, l
-    add hl, bc
-    dec l
-    jp $df65
-
-
-    ld h, l
-    add hl, bc
-    dec l
-    adc $65
-    rst $18
-    ld h, l
-    add hl, bc
-    dec l
-    reti
-
-
-    ld h, l
-    rst $18
-    ld h, l
-    nop
-    dec bc
-    ld [$0105], sp
-    nop
-    ld c, l
-    inc bc
-    inc bc
-    rst $38
-    nop
-    ld c, l
-    ld b, $03
-    rst $38
-    rst $38
-    nop
-    dec bc
-    ld [$0105], sp
-    nop
-    ld c, l
-    ld b, $03
-    rst $38
-    rst $38
-    nop
-    dec bc
-    ld [$0105], sp
-    nop
-    ld c, l
-    inc bc
-    inc bc
-    rst $38
-    rst $38
-    nop
-    dec bc
-    ld [$0105], sp
-    rst $38
-    ld [$0307], sp
-    nop
-    add b
-    rlca
-    ld [bc], a
-    inc bc
-    inc bc
-    ld b, $01
-    nop
-    nop
-    nop
-    ld b, $03
-    rlca
-    ld bc, $0000
-    nop
-    rst $38
-    rst $30
-    ld h, l
-    ld l, h
-    reti
-
-
-    dec bc
-    dec l
-    dec bc
-    ld h, [hl]
-    dec sp
-    ld h, [hl]
-    dec bc
-    dec l
-    jr nz, jr_00b_6669
-
-    dec sp
-    ld h, [hl]
-    dec bc
-    dec l
-    jr nc, jr_00b_666f
-
-    dec sp
-    ld h, [hl]
-    ld bc, $020b
-    inc b
-    ld bc, $0b01
-    ld [$0205], sp
-    nop
-    ld c, l
-    ld [bc], a
-    inc bc
-    rst $38
-    nop
-    ld c, l
-    rlca
-    inc bc
-    rst $38
-    rst $38
-    jr nz, jr_00b_662d
-
-    ld bc, $0106
-    db $10
-    dec bc
-    ld [$0205], sp
-    nop
-    ld c, l
-    ld [bc], a
-
-jr_00b_662d:
-    inc bc
-    rst $38
-    rst $38
-    jr nz, jr_00b_663d
-
-    ld bc, $0106
-    db $10
-    dec bc
-    ld [$0205], sp
-    rst $38
-    inc b
-    rlca
-
-jr_00b_663d:
-    inc bc
-    nop
-    add b
-    inc b
-    ld bc, $0705
-    inc bc
-    nop
-    add b
-    dec b
-    ld bc, $0302
-    add hl, bc
-    ld bc, $0000
-    nop
-    rlca
-    inc bc
-    ld a, [bc]
-    ld bc, $0000
-    nop
-    rst $38
-    ld e, d
-    ld h, [hl]
-    ld l, l
-    reti
-
-
-    dec c
-    dec l
-    ld [hl], h
-    ld h, [hl]
-    and b
-    ld h, [hl]
-    dec c
-    dec l
-    add h
-    ld h, [hl]
-    and b
-    ld h, [hl]
-    dec c
-
-jr_00b_6669:
-    dec l
-    adc a
-    ld h, [hl]
-    and b
-    ld h, [hl]
-    dec c
-
-jr_00b_666f:
-    dec l
-    sbc d
-    ld h, [hl]
-    and b
-    ld h, [hl]
-    db $10
-    dec bc
-    ld b, $06
-    ld bc, $4d00
-    inc bc
-    ld [bc], a
-    rst $38
-    nop
-    ld c, l
-    dec b
-    ld [bc], a
-    rst $38
-    rst $38
-    db $10
-    dec bc
-    ld b, $06
-    ld bc, $4d00
-    inc bc
-    ld [bc], a
-    rst $38
-    rst $38
-    db $10
-    dec bc
-    ld b, $06
-    ld bc, $4d00
-    dec b
-    ld [bc], a
-    rst $38
-    rst $38
-    db $10
-    dec bc
-    ld b, $06
-    ld bc, $04ff
-    rlca
-    inc bc
-    nop
-    add b
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc c
-    ld bc, $0000
-    nop
-    dec b
-    ld [bc], a
-    dec c
-    ld bc, $0000
-    nop
-    rst $38
-    cp b
-    ld h, [hl]
-    ld l, [hl]
-    reti
-
-
-    rrca
-    dec l
-    jp nc, $fe66
-
-    ld h, [hl]
-    rrca
-    dec l
-    ld [c], a
-    ld h, [hl]
-    cp $66
-    rrca
-    dec l
-    db $ed
-    ld h, [hl]
-    cp $66
-    rrca
-    dec l
-    ld hl, sp+$66
-    cp $66
-    db $10
-    dec bc
-    rlca
-    ld b, $01
-    nop
-    ld c, l
-    inc bc
-    ld [bc], a
-    rst $38
-    nop
-    ld c, l
-    ld b, $02
-    rst $38
-    rst $38
-    db $10
-    dec bc
-    rlca
-    ld b, $01
-    nop
-    ld c, l
-    ld b, $02
-    rst $38
-    rst $38
-    db $10
-    dec bc
-    rlca
-    ld b, $01
-    nop
-    ld c, l
-    inc bc
-    ld [bc], a
-    rst $38
-    rst $38
-    db $10
-    dec bc
-    rlca
-    ld b, $01
-    rst $38
-    inc b
-    rlca
-    inc bc
-    nop
-    add h
-    rlca
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    rrca
-    ld bc, $0000
-    nop
-    ld b, $02
-    db $10
-    ld bc, $0000
-    nop
-    rst $38
-    ld d, $67
-    ld l, a
-    reti
-
-
-    ld de, $302d
-    ld h, a
-    ld e, h
-    ld h, a
-    ld de, $402d
-    ld h, a
-    ld e, h
-    ld h, a
-    ld de, $4b2d
-    ld h, a
-    ld e, h
-    ld h, a
-    ld de, $562d
-    ld h, a
-    ld e, h
-    ld h, a
-    nop
-    dec bc
-    dec b
-    ld [bc], a
-    ld bc, $4d00
-    ld [bc], a
-    inc b
-    rst $38
-    nop
-    ld c, l
-    rlca
-    inc b
-    rst $38
-    rst $38
-    nop
-    dec bc
-    dec b
-    ld [bc], a
-    ld bc, $4d00
-    rlca
-    inc b
-    rst $38
-    rst $38
-    nop
-    dec bc
-    dec b
-    ld [bc], a
-    ld bc, $4d00
-    ld [bc], a
-    inc b
-    rst $38
-    rst $38
-    nop
-    dec bc
-    dec b
-    ld [bc], a
-    ld bc, $04ff
-    rlca
-    inc bc
-    nop
-    add h
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc b
-    ld [de], a
-    ld bc, $0000
-    nop
-    rlca
-    inc b
-    inc de
-    ld bc, $0000
-    nop
-    rst $38
-    ld [hl], h
-    ld h, a
-    ld [hl], b
-    reti
-
-
-    inc de
-    dec l
-    add d
-    ld h, a
-    sub e
-    ld h, a
-    inc de
-    dec l
-    adc l
-    ld h, a
-    sub e
-    ld h, a
-    jr nc, jr_00b_678f
-
-    ld bc, $0106
-    nop
-    ld c, l
-    inc bc
-    ld [bc], a
-    rst $38
-    rst $38
-    jr nc, @+$0d
-
-jr_00b_678f:
-    ld bc, $0106
-    rst $38
-    rlca
-    rlca
-    inc bc
-    nop
-    add h
-    inc b
-    ld bc, $0708
-    inc bc
-    nop
-    add h
-    dec b
-    ld bc, $0203
-    dec d
-    ld bc, $0000
-    nop
-    rst $38
-    xor e
-    ld h, a
-    ld [hl], c
-    reti
-
-
-    dec d
-    dec l
-    push bc
-    ld h, a
-    pop af
-    ld h, a
-    dec d
-    dec l
-    push de
-    ld h, a
-    pop af
-    ld h, a
-    dec d
-    dec l
-    ldh [$67], a
-    pop af
-    ld h, a
-    dec d
-    dec l
-    db $eb
-    ld h, a
-    pop af
-    ld h, a
-    jr nc, jr_00b_67d2
-
-    ld bc, $0106
-    nop
-    ld c, l
-    ld bc, $ff03
-    nop
-    ld c, l
-    inc bc
-
-jr_00b_67d2:
-    inc bc
-    rst $38
-    rst $38
-    jr nc, jr_00b_67e2
-
-    ld bc, $0106
-    nop
-    ld c, l
-    inc bc
-    inc bc
-    rst $38
-    rst $38
-    jr nc, jr_00b_67ed
-
-jr_00b_67e2:
-    ld bc, $0106
-    nop
-    ld c, l
-    ld bc, $ff03
-    rst $38
-    jr nc, jr_00b_67f8
-
-jr_00b_67ed:
-    ld bc, $0106
-    rst $38
-    ld [$0307], sp
-    nop
-    add l
-    ld [bc], a
-    ld [bc], a
-
-jr_00b_67f8:
-    ld bc, $1603
-    ld bc, $0000
-    nop
-    inc bc
-    inc bc
-    rla
-    ld bc, $0000
-    nop
-    rst $38
-    add hl, bc
-    ld l, b
-    ld [hl], d
-    reti
-
-
-    rla
-    dec l
-    inc hl
-    ld l, b
-    ld c, a
-    ld l, b
-    rla
-    dec l
-    inc sp
-    ld l, b
-    ld c, a
-    ld l, b
-    rla
-    dec l
-    ld a, $68
-    ld c, a
-    ld l, b
-    rla
-    dec l
-    ld c, c
-    ld l, b
-    ld c, a
-    ld l, b
-    nop
-    dec bc
-    ld [bc], a
-    ld [bc], a
-    ld bc, $4d00
-    ld b, $02
-    rst $38
-    nop
-    ld c, l
-    ld b, $04
-    rst $38
-    rst $38
-    nop
-    dec bc
-    ld [bc], a
-    ld [bc], a
-    ld bc, $4d00
-    ld b, $04
-    rst $38
-    rst $38
-    nop
-    dec bc
-    ld [bc], a
-    ld [bc], a
-    ld bc, $4d00
-    ld b, $02
-    rst $38
-    rst $38
-    nop
-    dec bc
-    ld [bc], a
-    ld [bc], a
-    ld bc, $02ff
-    rlca
-    inc bc
-    nop
-    add l
-    rlca
-    ld [bc], a
-    ld b, $02
-    jr jr_00b_685b
-
-    nop
-
-jr_00b_685b:
-    nop
-    nop
-    ld b, $04
-    add hl, de
-    ld bc, $0000
-    nop
-    rst $38
-    ld h, a
-    ld l, b
-    ld [hl], e
-    reti
-
-
-    add hl, de
-    dec l
-    add c
-    ld l, b
-    xor l
-    ld l, b
-    add hl, de
-    dec l
-    sub c
-    ld l, b
-    xor l
-    ld l, b
-    add hl, de
-    dec l
-    sbc h
-    ld l, b
-    xor l
-    ld l, b
-    add hl, de
-    dec l
-    and a
-    ld l, b
-    xor l
-    ld l, b
-    nop
-    dec bc
-    inc bc
-    inc b
-    ld bc, $4d00
-    ld [bc], a
-    ld [bc], a
-    rst $38
-    nop
-    ld c, l
-    inc b
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    dec bc
-    inc bc
-    inc b
-    ld bc, $4d00
-    inc b
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    dec bc
-    inc bc
-    inc b
-    ld bc, $4d00
-    ld [bc], a
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    dec bc
-    inc bc
-    inc b
-    ld bc, $06ff
-    rlca
-    inc bc
-    nop
-    add l
-    inc b
-    ld bc, $0707
-    inc bc
-    nop
-    add l
-    dec b
-    ld bc, $0202
-    ld a, [de]
-    ld bc, $0000
-    nop
-    inc b
-    ld [bc], a
-    dec de
-    ld bc, $0000
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    sub $68
-    ld [bc], a
-    ld l, c
-    ld [hl], h
-    reti
-
-
-    dec de
-    dec l
-    db $10
-    ld l, c
-    xor l
-    ld l, d
-    dec de
-    dec l
-    ld b, e
-    ld l, c
-    xor l
-    ld l, d
-    dec de
-    dec l
-    ld h, a
-    ld l, c
-    xor l
-    ld l, d
-    dec de
-    dec l
-    and h
-    ld l, c
-    xor l
-    ld l, d
-    dec de
-    dec l
-    pop hl
-    ld l, c
-    xor l
-    ld l, d
-    dec de
-    dec l
-    jr z, jr_00b_6964
-
-    xor l
-    ld l, d
-    dec de
-    dec l
-    ld h, a
-    ld l, c
-    xor l
-    ld l, d
-    ld [hl], l
-    reti
-
-
-    inc e
-    dec l
-    ld h, l
-    ld l, d
-    xor [hl]
-    ld l, d
-    inc e
-    dec l
-    adc [hl]
-    ld l, d
-    xor [hl]
-    ld l, d
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    rlca
-    ld bc, $8f03
-    rst $38
-    ld [$0401], sp
-    adc a
-    rst $38
-    dec b
-    inc b
-    dec b
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f06
-    rst $38
-    dec b
-    ld bc, $5006
-    inc d
-    dec b
-    inc bc
-    rlca
-    nop
-    ld d, c
-    ld b, $04
-    rlca
-    ld b, b
-    ld d, b
-    inc bc
-    inc b
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    rlca
-    ld bc, $8f03
-    rst $38
-    ld [$0401], sp
-    adc a
-    rst $38
-    dec b
-    inc b
-    dec b
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f06
-    rst $38
-    dec b
-
-jr_00b_6964:
-    ld bc, $ff06
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    rlca
-    ld bc, $8f03
-    rst $38
-    ld [$0401], sp
-    adc a
-    rst $38
-    dec b
-    inc b
-    dec b
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f06
-    rst $38
-    dec b
-    ld bc, $5006
-    inc d
-    rlca
-    inc b
-    rlca
-    ld d, b
-    ld hl, $000b
-    rst $38
-    nop
-    ld d, c
-    ld b, $04
-    rlca
-    ld b, b
-    ld e, a
-    dec b
-    inc bc
-    rst $38
-    ld b, b
-    ld d, b
-    inc bc
-    inc b
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    rlca
-    ld bc, $8f03
-    rst $38
-    ld [$0401], sp
-    adc a
-    rst $38
-    dec b
-    inc b
-    dec b
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f06
-    rst $38
-    dec b
-    ld bc, $5006
-    inc d
-    rlca
-    inc b
-    rlca
-    ld d, b
-    ld hl, $000b
-    rst $38
-    nop
-    ld d, c
-    ld b, $04
-    rlca
-    ld b, b
-    ld e, a
-    dec b
-    inc bc
-    rst $38
-    ld b, b
-    ld d, b
-    inc bc
-    inc b
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    ld [bc], a
-    inc bc
-    dec c
-    sub b
-    rst $38
-    inc b
-    inc bc
-    ld c, $8f
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    rlca
-    ld bc, $8f03
-    rst $38
-    ld [$0401], sp
-    adc a
-    rst $38
-    dec b
-    inc b
-    dec b
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f06
-    rst $38
-    dec b
-    ld bc, $1006
-    inc d
-    rlca
-    inc b
-    rlca
-    ld b, b
-    ld hl, $040b
-    rst $38
-    ld [hl], b
-    inc d
-    rlca
-    inc b
-    rlca
-    ld b, b
-    ld e, a
-    dec b
-    inc bc
-    rst $38
-    ld b, b
-
-Call_00b_6a23:
-    ld d, b
-    inc bc
-    inc b
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    ld bc, $0101
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f02
-    rst $38
-    rlca
-    ld bc, $8f03
-    rst $38
-    ld [$0401], sp
-    adc a
-    rst $38
-    dec b
-    inc b
-    dec b
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f06
-    rst $38
-    dec b
-    ld bc, $5006
-    inc d
-    ld b, $04
-    ld b, $50
-    ld hl, $000b
-    rst $38
-    nop
-    ld d, c
-    ld b, $04
-    ld b, $00
-    ld e, a
-    inc b
-    dec b
-    rst $38
-    nop
-    ld d, b
-    inc bc
-    inc b
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    ld bc, $0801
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f09
-    rst $38
-    ld [$0a01], sp
-    adc a
-    rst $38
-    ld [$0b05], sp
-    adc a
-    rst $38
-    dec b
-    ld bc, $400c
-    ld hl, $0108
-    rst $38
-    ld b, b
-    add hl, sp
-    ld [$ff01], sp
-    ld d, b
-    inc d
-    nop
-    inc b
-    rlca
-    rst $38
-    adc a
-    rst $38
-    ld bc, $0801
-    adc a
-    rst $38
-    ld [bc], a
-    ld bc, $8f09
-    rst $38
-    ld [$0a01], sp
-    adc a
-    rst $38
-    ld [$0b05], sp
-    adc a
-    rst $38
-    dec b
-    ld bc, $400c
-    ld hl, $0208
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    or c
-    ld l, d
-    db $76
-    reti
-
-
-    dec c
-    ld h, $bf
-    ld l, d
-    bit 5, d
-    ld c, $26
-    jp z, $cc6a
-
-    ld l, d
-    nop
-    ld d, $01
-    ld [bc], a
-    ld bc, $2150
-    ld a, [bc]
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld bc, $0002
-    nop
-    ld bc, $0504
-    rst $38
-    sub $6a
-    ld [hl], a
-    reti
-
-
-    db $10
-    ld h, $e4
-    ld l, d
-    add hl, bc
-    ld l, e
-    ld de, $0326
-    ld l, e
-    ld a, [bc]
-    ld l, e
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f02
-    rst $38
-    dec b
-    ld bc, $8f02
-    rst $38
-    inc b
-    ld [bc], a
-    ld [bc], a
-    adc a
-    rst $38
-    dec b
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld c, $08
-    inc bc
-    ld bc, $2170
-    nop
-    nop
-    rst $38
-    rst $38
-    nop
-    ld c, $08
-    inc bc
-    ld bc, $ffff
-    inc b
-    ld bc, $0000
-    ld bc, $0504
-    rst $38
-    inc d
-    ld l, e
-    ld a, b
-    reti
-
-
-    ld d, $24
-    ld [hl+], a
-    ld l, e
-    jr c, jr_00b_6b87
-
-    rla
-    inc h
-    scf
-    ld l, e
-    add hl, sp
-    ld l, e
-    sub b
-    rst $38
-    dec b
-    inc b
-    ld [bc], a
-    nop
-    jr nz, jr_00b_6b2e
-
-    inc b
-    ld bc, $3940
-
-jr_00b_6b2e:
-    ld [$ff00], sp
-    ld d, b
-    ld hl, $010a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec b
-    inc b
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    ld b, e
-    ld l, e
-    ld a, c
-    reti
-
-
-    inc de
-    ld h, $51
-    ld l, e
-    ld e, l
-    ld l, e
-    inc d
-    ld h, $5c
-    ld l, e
-    ld e, [hl]
-    ld l, e
-    nop
-    inc a
-    inc b
-    inc b
-    ld bc, $2150
-    ld a, [bc]
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld bc, $0004
-    nop
-    ld bc, $0504
-    rst $38
-    ld l, b
-    ld l, e
-    ld a, d
-    reti
-
-
-    ld d, $26
-    db $76
-    ld l, e
-    cp c
-    ld l, e
-    rla
-    ld h, $b3
-    ld l, e
-    cp d
-    ld l, e
-    sub b
-    rst $38
-    rlca
-    ld bc, $9007
-    rst $38
-    inc b
-    inc b
-    ld [$ff90], sp
-    dec b
-    dec b
-    add hl, bc
-    sub b
-    rst $38
-
-jr_00b_6b87:
-    ld bc, $0a03
-    adc a
-    rst $38
-    nop
-    ld b, $01
-    adc a
-    rst $38
-    inc b
-    ld bc, $8f02
-    rst $38
-    dec b
-    ld bc, $0602
-    dec h
-    ld bc, $0302
-    ld b, $25
-    ld [$0400], sp
-    ld b, $25
-    dec b
-    inc bc
-    dec b
-    ld b, $25
-    ld b, $06
-    ld b, $50
-    ld hl, $000a
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    nop
-    ld b, $01
-    rst $38
-    rst $38
-    dec b
-    ld bc, $0000
-    ld bc, $0504
-    rst $38
-    call nz, $7b6b
-    reti
-
-
-    add hl, de
-    ld h, $d2
-    ld l, e
-    ld a, [c]
-    ld l, e
-    ld a, [de]
-    ld h, $e7
-    ld l, e
-    di
-    ld l, e
-    adc a
-    rst $38
-    ld b, $06
-    ld bc, $ff82
-    dec b
-    nop
-    ld [bc], a
-    db $10
-    dec e
-    rlca
-    inc bc
-    inc bc
-    ld d, b
-    ld hl, $000a
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    ld b, $06
-    ld bc, $ff82
-    dec b
-    nop
-    ld [bc], a
-    rst $38
-    rst $38
-    rlca
-    inc bc
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    db $fd
-    ld l, e
-    ld a, h
-    reti
-
-
-    inc e
-    ld h, $0b
-    ld l, h
-    ld a, e
-    ld l, h
-    dec e
-    ld h, $52
-    ld l, h
-    ld a, h
-    ld l, h
-    add d
-    rst $38
-    ld b, $02
-    ld bc, $ff80
-    ld b, $02
-    ld bc, $ff82
-    ld [$0202], sp
-    add b
-    rst $38
-    ld [$0202], sp
-    add d
-    rst $38
-    ld b, $04
-    inc bc
-    add b
-    rst $38
-    ld b, $04
-    inc bc
-    add d
-    rst $38
-    ld [$0404], sp
-    add b
-    rst $38
-    ld [$0404], sp
-    adc a
-    rst $38
-    inc b
-    ld b, $07
-    nop
-    ld [de], a
-    inc bc
-    ld bc, $0005
-    ld [de], a
-    inc bc
-    ld [bc], a
-    ld b, $30
-    ld [bc], a
-    inc bc
-    ld b, $07
-    jr nz, jr_00b_6c60
-
-    ld [$0805], sp
-    ld [hl], b
-    ld hl, $0200
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    ld b, $02
-    ld bc, $ff8f
-    ld [$0202], sp
-    adc a
-    rst $38
-    ld b, $04
-
-jr_00b_6c60:
-    inc bc
-    adc a
-    rst $38
-    ld [$0404], sp
-    adc a
-    rst $38
-    inc b
-    ld b, $07
-    nop
-    ld [de], a
-    inc bc
-    ld bc, $0005
-    ld [de], a
-    inc bc
-    ld [bc], a
-    ld b, $30
-    ld [bc], a
-    inc bc
-    ld b, $07
-    rst $38
-    rst $38
-    ld [$0006], sp
-    nop
-    ld bc, $0504
-    rst $38
-    add [hl]
-    ld l, h
-    ld a, l
-    reti
-
-
-    dec de
-    dec h
-    sub h
-    ld l, h
-    ld c, $6d
-    inc e
-    dec h
-    db $db
-    ld l, h
-    rrca
-    ld l, l
-    sub b
-    rst $38
-    inc b
-    inc b
-    inc bc
-    sub b
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc bc
-    ld b, $03
-    sub b
-    rst $38
-    ld b, $04
-    inc b
-    sub b
-    rst $38
-    ld b, $05
-    inc b
-    sub b
-    rst $38
-    dec b
-    ld b, $04
-    sub b
-    rst $38
-    dec b
-    inc bc
-    ld [bc], a
-    ld b, b
-    ldh [rTIMA], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    dec b
-    nop
-    rst $38
-    ld b, b
-    ld [c], a
-    dec b
-    nop
-    rst $38
-    ld b, b
-    db $e3
-    dec b
-    nop
-    rst $38
-    nop
-    add hl, de
-    inc b
-    ld bc, $6001
-    dec d
-    inc b
-    ld [$50ff], sp
-    ld hl, $010a
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    inc bc
-    sub b
-    rst $38
-    inc bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    inc bc
-    ld b, $03
-    sub b
-    rst $38
-    ld b, $04
-    inc b
-    sub b
-    rst $38
-    ld b, $05
-    inc b
-    sub b
-    rst $38
-    dec b
-    ld b, $04
-    ld b, b
-    ldh [rTIMA], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    dec b
-    nop
-    rst $38
-    ld b, b
-    ld [c], a
-    dec b
-    nop
-    rst $38
-    ld b, b
-    db $e3
-    dec b
-    nop
-    rst $38
-    rst $38
-    rst $38
-    inc b
-    ld bc, $0000
-    ld bc, $0504
-    rst $38
-    add hl, de
-    ld l, l
-    ld a, [hl]
-    reti
-
-
-    ld bc, $2725
-    ld l, l
-    pop af
-    ld l, l
-    ld [bc], a
-    dec h
-    sub [hl]
-    ld l, l
-    ld a, [c]
-    ld l, l
-    sub b
-    rst $38
-    inc b
-    nop
-    ld [bc], a
-    sub b
-    rst $38
-    dec b
-    nop
-    inc bc
-    sub b
-    rst $38
-    ld b, $00
-    inc b
-    sub b
-    rst $38
-    ld bc, $0501
-    sub b
-    rst $38
-    dec b
-    ld [bc], a
-    ld b, $90
-    rst $38
-    ld [$0702], sp
-    sub b
-    rst $38
-    ld [bc], a
-    inc b
-    ld [$ff90], sp
-    inc bc
-    inc b
-    add hl, bc
-    sub b
-    rst $38
-    inc b
-    inc b
-    ld a, [bc]
-    sub b
-    rst $38
-    rlca
-    inc b
-    dec bc
-    sub b
-    rst $38
-    ld [$0c04], sp
-    sub b
-    rst $38
-    rlca
-    dec b
-    dec c
-    sub b
-    rst $38
-    ld bc, $0e06
-    sub b
-    rst $38
-    dec b
-    ld b, $0f
-    sub b
-    rst $38
-    ld b, $02
-    db $10
-    ld b, b
-    ldh [$08], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    ld [$ff00], sp
-    ld b, b
-    ld [c], a
-    ld [$ff00], sp
-    ld b, b
-    db $e3
-    ld [$ff00], sp
-    ld b, b
-    add hl, sp
-    ld [bc], a
-    nop
-    rst $38
-    nop
-    ld e, $08
-    dec b
-    ld bc, $2170
-    nop
-    nop
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    inc b
-    nop
-    ld [bc], a
-    sub b
-    rst $38
-    dec b
-    nop
-    inc bc
-    sub b
-    rst $38
-    ld b, $00
-    inc b
-    sub b
-    rst $38
-    ld bc, $0501
-    sub b
-    rst $38
-    dec b
-    ld [bc], a
-    ld b, $90
-    rst $38
-    ld [$0702], sp
-    sub b
-    rst $38
-    ld [bc], a
-    inc b
-    ld [$ff90], sp
-    inc bc
-    inc b
-    add hl, bc
-    sub b
-    rst $38
-    inc b
-    inc b
-    ld a, [bc]
-    sub b
-    rst $38
-    rlca
-    inc b
-    dec bc
-    sub b
-    rst $38
-    ld [$0c04], sp
-    sub b
-    rst $38
-    rlca
-    dec b
-    dec c
-    sub b
-    rst $38
-    ld bc, $0e06
-    sub b
-    rst $38
-    dec b
-    ld b, $0f
-    ld b, b
-    ldh [$08], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    ld [$ff00], sp
-    ld b, b
-    ld [c], a
-    ld [$ff00], sp
-    ld b, b
-    db $e3
-    ld [$ff00], sp
-    rst $38
-    rst $38
-    ld [$0005], sp
-    nop
-    ld bc, $0504
-    rst $38
-    db $fc
-    ld l, l
-    ld a, a
-    reti
-
-
-    inc b
-    inc hl
-    ld a, [bc]
-    ld l, [hl]
-    ld a, [hl+]
-    ld l, [hl]
-    dec b
-    inc hl
-    inc h
-    ld l, [hl]
-    dec hl
-    ld l, [hl]
-    sub b
-    rst $38
-    ld b, $06
-    inc b
-    adc a
-    rst $38
-    ld [$0106], sp
-    adc a
-    rst $38
-    rlca
-    inc b
-    ld [bc], a
-    nop
-    inc l
-    ld bc, $0301
-    ld d, b
-    ld hl, $000a
-    rst $38
-    rst $38
-    adc a
-    rst $38
-    rlca
-    inc b
-    ld [bc], a
-    rst $38
-    rst $38
-    rlca
-    ld b, $00
-    nop
-    ld bc, $0504
-    rst $38
-    dec [hl]
-    ld l, [hl]
-    add b
-    reti
-
-
-    inc b
-    dec h
-    ld b, e
-    ld l, [hl]
-    dec [hl]
-    ld l, a
-    dec b
-    dec h
-    ret nc
-
-    ld l, [hl]
-    ld [hl], $6f
-    sub b
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    sub b
-    rst $38
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    sub b
-    rst $38
-    ld [bc], a
-    dec b
-    ld [bc], a
-    sub b
-    rst $38
-    ld [bc], a
-    ld b, $02
-    sub b
-    rst $38
-    inc b
-    ld [bc], a
-    ld [bc], a
-    sub b
-    rst $38
-    inc b
-    inc b
-    ld [bc], a
-    sub b
-    rst $38
-    inc b
-    ld b, $02
-    sub b
-    rst $38
-    ld b, $02
-    ld [bc], a
-    sub b
-    rst $38
-    ld b, $03
-    ld [bc], a
-    sub b
-    rst $38
-    ld b, $05
-    ld [bc], a
-    sub b
-    rst $38
-    ld b, $06
-    ld [bc], a
-    sub b
-    rst $38
-    ld [$0202], sp
-    sub b
-    rst $38
-    ld [$0203], sp
-    sub b
-    rst $38
-    ld [$0204], sp
-    sub b
-    rst $38
-    ld [$0205], sp
-    sub b
-    rst $38
-    ld [$0206], sp
-    sub b
-    rst $38
-    ld bc, $0305
-    sub b
-    rst $38
-    ld [bc], a
-    inc b
-    inc b
-    sub b
-    rst $38
-    dec b
-    inc bc
-    dec b
-    sub b
-    rst $38
-    dec b
-    inc b
-    ld b, $90
-    rst $38
-    rlca
-    inc bc
-    rlca
-    sub b
-    rst $38
-    rlca
-    dec b
-    ld [$e040], sp
-    ld bc, $ff00
-    ld b, b
-    pop hl
-    ld bc, $ff00
-    ld b, b
-    ld [c], a
-    ld bc, $ff00
-    ld b, b
-    db $e3
-    ld bc, $ff00
-    nop
-    jr @+$03
-
-    ld bc, $5001
-    ld hl, $000a
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    sub b
-    rst $38
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    sub b
-    rst $38
-    ld [bc], a
-    dec b
-    ld [bc], a
-    sub b
-    rst $38
-    ld [bc], a
-    ld b, $02
-    sub b
-    rst $38
-    inc b
-    ld [bc], a
-    ld [bc], a
-    sub b
-    rst $38
-    inc b
-    inc b
-    ld [bc], a
-    sub b
-    rst $38
-    inc b
-    ld b, $02
-    sub b
-    rst $38
-    ld b, $02
-    ld [bc], a
-    sub b
-    rst $38
-    ld b, $03
-    ld [bc], a
-    sub b
-    rst $38
-    ld b, $05
-    ld [bc], a
-    sub b
-    rst $38
-    ld b, $06
-    ld [bc], a
-    sub b
-    rst $38
-    ld [$0202], sp
-    sub b
-    rst $38
-    ld [$0203], sp
-    sub b
-    rst $38
-    ld [$0204], sp
-    sub b
-    rst $38
-    ld [$0205], sp
-    sub b
-    rst $38
-    ld [$0206], sp
-    ld b, b
-    ldh [rSB], a
-    nop
-    rst $38
-    ld b, b
-    pop hl
-    ld bc, $ff00
-    ld b, b
-    ld [c], a
-    ld bc, $ff00
-    ld b, b
-    db $e3
-    ld bc, $ff00
-    rst $38
-    rst $38
-    ld bc, $0001
-    nop
-    ld bc, $0504
-    rst $38
-    ld b, b
-    ld l, a
-    add c
-    reti
-
-
-    rlca
-    inc h
-    ld c, [hl]
-    ld l, a
-    ld e, d
-    ld l, a
-    ld [$5924], sp
-    ld l, a
-    ld e, e
-    ld l, a
-    dec b
-    dec de
-    inc bc
-    inc b
-    ld bc, $2150
-    ld a, [bc]
-    ld bc, $ffff
-    rst $38
-    rst $38
-    dec b
-    inc bc
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    ld h, l
-    ld l, a
-    add d
-    reti
-
-
-    rlca
-    inc hl
-    ld a, c
-    ld l, a
-    jp c, $096f
-
-    inc hl
-    ld a, c
-    ld l, a
-    db $db
-    ld l, a
-    ld [$b623], sp
-    ld l, a
-    db $db
-    ld l, a
-    adc a
-    rst $38
-    inc b
-    ld [bc], a
-    ld bc, $ff8f
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    adc a
-    rst $38
-    ld bc, $0304
-    adc a
-    rst $38
-    ld [$0404], sp
-    adc a
-    rst $38
-    ld b, $05
-    dec b
-    adc a
-    rst $38
-    inc bc
-    inc bc
-    ld b, $8f
-    rst $38
-    rlca
-    inc b
-    rlca
-    ld h, b
-    dec d
-    ld [bc], a
-    ld b, $ff
-    ld [hl], b
-    ld hl, $0000
-    rst $38
-    nop
-    inc hl
-    dec b
-    ld bc, $0008
-    rst $38
-    dec b
-    ld bc, $0008
-    rst $38
-    ld b, $01
-    ld [$8fff], sp
-    rst $38
-    inc b
-    ld [bc], a
-    ld bc, $ff8f
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    adc a
-    rst $38
-    ld bc, $0304
-    adc a
-    rst $38
-    ld [$0404], sp
-    adc a
-    rst $38
-    ld b, $05
-    dec b
-    adc a
-    rst $38
-    inc bc
-    inc bc
-    ld b, $8f
-    rst $38
-    rlca
-    inc b
-    rlca
-    rst $38
-    rst $38
-    ld b, $01
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    push hl
-    ld l, a
-    add e
-    reti
-
-
-    rlca
-    dec h
-    di
-    ld l, a
-    ld [hl+], a
-    ld [hl], b
-    rlca
-    dec h
-    rla
-    ld [hl], b
-    ld [hl+], a
-    ld [hl], b
-    sub b
-    rst $38
-    inc b
-    inc b
-    ld bc, $ff90
-    dec b
-    inc b
-    ld [bc], a
-    ld b, b
-    pop hl
-    inc b
-    inc b
-    rst $38
-    ld b, b
-    ld e, a
-    inc b
-    ld [bc], a
-    rst $38
-    ld b, b
-    dec b
-    inc b
-    ld [bc], a
-    rst $38
-    ld b, b
-    add hl, sp
-    nop
-    nop
-    rst $38
-    ld h, b
-    ldh [rTIMA], a
-    inc b
-    rst $38
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    inc bc
-    sub b
-    rst $38
-    dec b
-    inc b
-    inc bc
-    rst $38
-    rst $38
-    dec h
-    ld [hl], b
-    add h
-    reti
-
-
-    add hl, bc
-    dec h
-    inc sp
-    ld [hl], b
-    ld c, c
-    ld [hl], b
-    ld a, [bc]
-    dec h
-    ld c, b
-    ld [hl], b
-    ld c, d
-    ld [hl], b
-    ld d, b
-    ld hl, $010a
-    rst $38
-    nop
-    jr z, jr_00b_703f
-
-    dec b
-    ld bc, $ff00
-
-jr_00b_703f:
-    inc b
-    inc b
-    ld bc, $ff00
-    dec b
-    inc b
-    ld bc, $ffff
-    rst $38
-    ld bc, $0003
-    nop
-    ld bc, $0504
-    rst $38
-    ld d, h
-    ld [hl], b
-    add l
-    reti
-
-
-    ld bc, $6224
-    ld [hl], b
-    ld l, [hl]
-    ld [hl], b
-    ld [bc], a
-    inc h
-    ld l, l
-    ld [hl], b
-    ld l, a
-    ld [hl], b
-    nop
-    dec hl
-    ld bc, $0105
-    ld d, b
-    ld hl, $000a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld bc, $0005
-    nop
-    ld bc, $0504
-    rst $38
-    ld a, c
-    ld [hl], b
-    add [hl]
-    reti
-
-
-    ld d, $25
-    add c
-    ld [hl], b
-    cp c
-    ld [hl], b
-    sub b
-    rst $38
-    ld bc, $0601
-    sub b
-    rst $38
-    ld [bc], a
-    ld bc, $9006
-    rst $38
-    inc b
-    ld bc, $9007
-    rst $38
-    dec b
-    ld bc, $9007
-    rst $38
-    rlca
-    ld bc, $9008
-    rst $38
-    ld [$0801], sp
-    adc a
-    rst $38
-    inc bc
-    inc bc
-    ld bc, $ff8f
-    ld b, $03
-    ld [bc], a
-    nop
-    dec b
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    nop
-    dec b
-    dec b
-    ld [bc], a
-    inc b
-    nop
-    dec b
-    ld [$0502], sp
-    rst $38
-    ld bc, $4101
-    nop
-    nop
-    ld bc, $0206
-    ld bc, $0041
-    nop
-    ld [bc], a
-    ld b, $04
-    ld bc, $0041
-    nop
-    inc b
-    ld b, $05
-    ld bc, $0041
-    nop
-    dec b
-    ld b, $07
-    ld bc, $0041
-    nop
-    rlca
-    ld b, $08
-    ld bc, $0041
-    nop
-    ld [$ff06], sp
-    and $70
-    add a
-    reti
-
-
-    jr jr_00b_710f
-
-    nop
-    ld [hl], c
-    dec hl
-    ld [hl], c
-    jr jr_00b_7115
-
-    dec bc
-    ld [hl], c
-    dec hl
-    ld [hl], c
-    jr jr_00b_711b
-
-    jr nz, jr_00b_7169
-
-    dec hl
-    ld [hl], c
-    add hl, de
-    dec h
-    ld b, d
-    ld c, e
-    inc l
-    ld [hl], c
-    nop
-    inc e
-    ld bc, HeaderLogo
-    ld d, b
-    ld hl, $000a
-    rst $38
-    rst $38
-    nop
-    ld [hl+], a
-    inc b
-    inc bc
-
-jr_00b_710f:
-    ld [bc], a
-    ld d, b
-    ld hl, $000a
-    rst $38
-
-jr_00b_7115:
-    nop
-    rst $38
-    inc b
-    inc bc
-    ld [bc], a
-    nop
-
-jr_00b_711b:
-    rst $38
-    dec b
-    inc bc
-    ld [bc], a
-    rst $38
-    nop
-    ld a, $07
-    inc b
-    inc bc
-    ld d, b
-    ld hl, $000a
-    rst $38
-    rst $38
-    rst $38
-    ld bc, $0002
-    nop
-    ld bc, $0504
-    inc b
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0504
-    rlca
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    ld b, [hl]
-    ld [hl], c
-    add h
-    ld [hl], c
-    adc b
-    reti
-
-
-    inc de
-    inc h
-    sub d
-    ld [hl], c
-    cp [hl]
-    ld [hl], e
-    inc de
-    inc h
-    ret nz
-
-    ld [hl], c
-    ld a, [hl]
-    ld [hl], e
-    inc de
-    inc h
-    xor $71
-    ld a, [hl]
-    ld [hl], e
-    inc de
-    inc h
-    inc e
-    ld [hl], d
-    cp $73
-    inc de
-    inc h
-    ld c, d
-    ld [hl], d
-    ld a, [hl]
-    ld [hl], e
-    inc de
-    inc h
-    ld a, b
-
-jr_00b_7169:
-    ld [hl], d
-    ld a, $74
-    inc de
-    inc h
-    and [hl]
-    ld [hl], d
-    ld a, [hl]
-    ld [hl], e
-    inc de
-    inc h
-    call nc, Call_00b_7e72
-    ld [hl], e
-    inc de
-    inc h
-    ld [bc], a
-    ld [hl], e
-    ld a, [hl]
-    ld [hl], e
-    inc de
-    inc h
-    jr nc, jr_00b_71f5
-
-    ld a, [hl]
-    ld [hl], h
-    adc c
-    reti
-
-
-    inc d
-    inc h
-    ld e, [hl]
-    ld [hl], e
-    cp [hl]
-    ld [hl], h
-    inc d
-    inc h
-    ld [hl], e
-    ld [hl], e
-    cp [hl]
-    ld [hl], h
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    ld bc, $ff90
-    rlca
-    rlca
-    ld bc, $ff90
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    inc b
-    sub b
-    rst $38
-    rlca
-    nop
-    inc b
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    nop
-    dec b
-    rrca
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    ld [bc], a
-    sub b
-    rst $38
-    rlca
-    rlca
-    ld [bc], a
-    sub b
-    rst $38
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    rrca
-    sub b
-    rst $38
-    rlca
-    nop
-    rrca
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    nop
-    dec b
-    rrca
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-
-jr_00b_71f5:
-    ld [bc], a
-    rlca
-    inc bc
-    sub b
-    rst $38
-    rlca
-    rlca
-    inc bc
-    sub b
-    rst $38
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    rrca
-    sub b
-    rst $38
-    rlca
-    nop
-    rrca
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    nop
-    dec b
-    rrca
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    rrca
-    sub b
-    rst $38
-    rlca
-    rlca
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    inc bc
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    rrca
-    sub b
-    rst $38
-    rlca
-    nop
-    rrca
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    nop
-    dec b
-    rrca
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    rrca
-    sub b
-    rst $38
-    rlca
-    rlca
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    dec b
-    sub b
-    rst $38
-    rlca
-    nop
-    dec b
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    nop
-    dec b
-    rrca
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    rrca
-    sub b
-    rst $38
-    rlca
-    rlca
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    ld b, $90
-    rst $38
-    rlca
-    nop
-    ld b, $90
-    rst $38
-    nop
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    nop
-    dec b
-    dec b
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    rrca
-    sub b
-    rst $38
-    rlca
-    rlca
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    rrca
-    sub b
-    rst $38
-    rlca
-    nop
-    rrca
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    rlca
-    sub b
-    rst $38
-    nop
-    dec b
-    rlca
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    ld [$ff90], sp
-    rlca
-    rlca
-    ld [$ff90], sp
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    rrca
-    sub b
-    rst $38
-    rlca
-    nop
-    rrca
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    nop
-    dec b
-    rrca
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    add hl, bc
-    sub b
-    rst $38
-    rlca
-    rlca
-    add hl, bc
-    sub b
-    rst $38
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    rrca
-    sub b
-    rst $38
-    rlca
-    nop
-    rrca
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    nop
-    dec b
-    rrca
-    rst $38
-    sub b
-    rst $38
-    inc b
-    inc b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    rlca
-    rrca
-    sub b
-    rst $38
-    rlca
-    rlca
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    ld [bc], a
-    rrca
-    sub b
-    rst $38
-    add hl, bc
-    dec b
-    rrca
-    sub b
-    rst $38
-    ld [bc], a
-    nop
-    rrca
-    sub b
-    rst $38
-    rlca
-    nop
-    rrca
-    sub b
-    rst $38
-    nop
-    ld [bc], a
-    add hl, bc
-    sub b
-    rst $38
-    nop
-    dec b
-    rrca
-    rst $38
-    adc a
-    rst $38
-    inc bc
-    ld [bc], a
-    db $10
-    adc a
-    rst $38
-    inc bc
-    dec b
-    ld [de], a
-    nop
-    ld a, [de]
-    ld b, $02
-    ld de, $2170
-    nop
-    ld bc, $ffff
-    adc a
-    rst $38
-    inc bc
-    ld [bc], a
-    db $10
-    adc a
-    rst $38
-    inc bc
-    dec b
-    ld [de], a
-    rst $38
-    dec b
-    dec b
-    nop
-    nop
-    ld bc, $0504
-    ld [bc], a
-    nop
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    rlca
-    rlca
-    nop
-    ld b, d
-    nop
-    nop
-    rlca
-    rlca
-    nop
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    ld [bc], a
-    nop
-    dec b
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    dec b
-    ld [bc], a
-    rlca
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    nop
-    rlca
-    rlca
-    ld b, d
-    nop
-    nop
-    rlca
-    nop
-    add hl, bc
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    nop
-    ld [bc], a
-    add hl, bc
-    dec b
-    ld b, d
-    nop
-    nop
-    nop
-    dec b
-    rst $38
-    dec b
-    dec b
-    nop
-    nop
-    ld bc, $0504
-    ld [bc], a
-    nop
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    rlca
-    rlca
-    nop
-    ld b, d
-    nop
-    nop
-    rlca
-    rlca
-    nop
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    ld [bc], a
-    nop
-    dec b
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    dec b
-    ld [bc], a
-    rlca
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    nop
-    rlca
-    rlca
-    ld b, d
-    nop
-    nop
-    rlca
-    nop
-    add hl, bc
-    ld [bc], a
-    ld h, b
-    nop
-    nop
-    nop
-    ld [bc], a
-    add hl, bc
-    dec b
-    ld b, d
-    nop
-    nop
-    nop
-    dec b
-    rst $38
-    dec b
-    dec b
-    nop
-    nop
-    ld bc, $0504
-    ld [bc], a
-    nop
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    rlca
-    rlca
-    nop
-    ld b, d
-    nop
-    nop
-    rlca
-    rlca
-    nop
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    ld [bc], a
-    nop
-    dec b
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    dec b
-    ld [bc], a
-    rlca
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    nop
-    rlca
-    rlca
-    ld b, d
-    nop
-    nop
-    rlca
-    nop
-    add hl, bc
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    nop
-    ld [bc], a
-    add hl, bc
-    dec b
-    ld h, b
-    nop
-    nop
-    nop
-    dec b
-    rst $38
-    dec b
-    dec b
-    nop
-    nop
-    ld bc, $0504
-    ld [bc], a
-    nop
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    rlca
-    rlca
-    nop
-    ld b, d
-    nop
-    nop
-    rlca
-    rlca
-    nop
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    ld [bc], a
-    nop
-    dec b
-    ld h, b
-    nop
-    nop
-    add hl, bc
-    dec b
-    ld [bc], a
-    rlca
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    nop
-    rlca
-    rlca
-    ld b, d
-    nop
-    nop
-    rlca
-    nop
-    add hl, bc
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    nop
-    ld [bc], a
-    add hl, bc
-    dec b
-    ld b, d
-    nop
-    nop
-    nop
-    dec b
-    rst $38
-    dec b
-    dec b
-    nop
-    nop
-    ld bc, $0504
-    ld [bc], a
-    nop
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    rlca
-    rlca
-    nop
-    ld b, d
-    nop
-    nop
-    rlca
-    rlca
-    nop
-    ld [bc], a
-    ld h, b
-    nop
-    nop
-    add hl, bc
-    ld [bc], a
-    nop
-    dec b
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    dec b
-    ld [bc], a
-    rlca
-    ld b, d
-    nop
-    nop
-    ld [bc], a
-    nop
-    rlca
-    rlca
-    ld b, d
-    nop
-    nop
-    rlca
-    nop
-    add hl, bc
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    nop
-    ld [bc], a
-    add hl, bc
-    dec b
-    ld b, d
-    nop
-    nop
-    nop
-    dec b
-    rst $38
-    nop
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    ld [bc], a
-    nop
-    dec b
-    ld b, d
-    nop
-    nop
-    add hl, bc
-    dec b
-    add hl, bc
-    ld [bc], a
-    ld b, d
-    nop
-    nop
-    nop
-    ld [bc], a
-    add hl, bc
-    dec b
-    ld b, d
-    nop
-    nop
-    nop
-    dec b
-    rst $38
-    db $dd
-    ld [hl], h
-    adc d
-    reti
-
-
-    db $10
-    inc h
-    db $eb
-    ld [hl], h
-    dec d
-    ld [hl], l
-    ld de, $0a24
-    ld [hl], l
-    ld d, $75
-    add d
-    rst $38
-    rlca
-    dec b
-    ld bc, $ff82
-    ld [$0105], sp
-    ld d, b
-    ld hl, $010a
-    rst $38
-    ld b, $27
-    inc b
-    ld [bc], a
-    ld [bc], a
-    nop
-    rst $38
-    inc b
-    ld [bc], a
-    ld [bc], a
-    nop
-    rst $38
-    dec b
-    ld [bc], a
-    ld [bc], a
-    rst $38
-    add d
-    rst $38
-    rlca
-    dec b
-    ld bc, $ff82
-    ld [$0105], sp
-    rst $38
-    rst $38
-    ld [bc], a
-    dec b
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    jr nz, jr_00b_7595
-
-    adc e
-    reti
-
-
-    add hl, de
-    inc h
-    ld l, $75
-    ld e, b
-    ld [hl], l
-    ld a, [de]
-    inc h
-    ld d, a
-    ld [hl], l
-    ld e, c
-    ld [hl], l
-    ld h, b
-    dec d
-    nop
-    rlca
-    ld [bc], a
-    ld d, b
-    ld hl, $010a
-    rst $38
-    nop
-    inc h
-    dec b
-    ld [bc], a
-    ld bc, $e060
-    dec b
-    inc bc
-    rst $38
-    ld h, b
-    pop hl
-    dec b
-    inc b
-    rst $38
-    ld h, b
-    ld [c], a
-    dec b
-    inc b
-    rst $38
-    ld h, b
-    db $e3
-    dec b
-    inc b
-    rst $38
-    nop
-    rst $38
-    ld b, $02
-    ld bc, $ffff
-    rst $38
-
-jr_00b_7559:
-    ld b, $01
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    ld h, e
-    ld [hl], l
-    adc h
-    reti
-
-
-    ld a, [bc]
-    inc h
-    ld [hl], a
-    ld [hl], l
-    ret nz
-
-    ld [hl], l
-    dec bc
-    inc h
-    cp a
-    ld [hl], l
-    pop bc
-    ld [hl], l
-    ld a, [bc]
-    inc h
-    sbc e
-    ld [hl], l
-    ret nz
-
-    ld [hl], l
-    jr nz, jr_00b_7559
-
-    inc b
-    rlca
-    rst $38
-    ld b, b
-
-jr_00b_757d:
-    dec hl
-    inc b
-    ld b, $ff
-    ld b, b
-    dec hl
-    dec b
-    ld b, $ff
-    ld b, b
-    dec d
-    inc b
-    ld b, $ff
-    ld b, b
-    add hl, sp
-    inc b
-    nop
-    rst $38
-    ld d, b
-    ld hl, $010a
-    rst $38
-
-jr_00b_7595:
-    nop
-    add hl, hl
-    inc b
-    dec b
-    rst $38
-    rst $38
-    jr nz, jr_00b_757d
-
-    inc b
-    rlca
-    rst $38
-    ld b, b
-    dec hl
-    inc b
-    ld b, $ff
-    ld b, b
-    dec hl
-    dec b
-    ld b, $ff
-    jr nz, jr_00b_75c1
-
-    inc bc
-    inc b
-    rst $38
-    ld b, b
-    add hl, sp
-    inc b
-    nop
-    rst $38
-    ld d, b
-    ld hl, $010a
-    rst $38
-    nop
-    add hl, hl
-    inc b
-    dec b
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-
-jr_00b_75c1:
-    dec b
-    dec b
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    bit 6, l
-    adc l
-    reti
-
-
-    ld bc, $d923
-    ld [hl], l
-    rst $28
-    ld [hl], l
-    ld [bc], a
-    inc hl
-    xor $75
-    ldh a, [$75]
-    ld d, b
-    ld hl, $000a
-    rst $38
-    nop
-    dec l
-    inc b
-    inc bc
-    ld bc, $ff00
-    inc b
-    inc bc
-    ld bc, $ff00
-    dec b
-    inc bc
-    ld bc, $ffff
-    rst $38
-    ld [bc], a
-    inc b
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    ld a, [$8e75]
-    reti
-
-
-    inc e
-    inc h
-    ld c, $76
-    add hl, sp
-    db $76
-    inc e
-    inc h
-    inc hl
-    db $76
-    ld a, [hl-]
-    db $76
-    dec e
-    inc h
-    jr c, jr_00b_7682
-
-    dec sp
-    db $76
-    ld d, b
-    ld hl, $000a
-    rst $38
-    nop
-    ld l, $04
-    inc bc
-    ld bc, $ff00
-    dec b
-    inc bc
-    ld bc, $ff00
-    inc b
-    inc bc
-    ld bc, $50ff
-    ld hl, $000a
-    rst $38
-    nop
-    cpl
-    inc b
-    inc bc
-    ld [bc], a
-    nop
-    rst $38
-    dec b
-    inc bc
-    ld [bc], a
-    nop
-    rst $38
-    inc b
-    inc bc
-    ld [bc], a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc bc
-    inc b
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    ld b, l
-    db $76
-    adc a
-    reti
-
-
-    dec c
-    inc h
-    ld d, e
-    db $76
-    ld l, c
-    db $76
-    ld c, $24
-    ld l, b
-    db $76
-    ld l, d
-    db $76
-    ld d, b
-    ld hl, $000a
-    rst $38
-    nop
-    jr nc, jr_00b_765f
-
-    ld bc, $0001
-    rst $38
-
-jr_00b_765f:
-    inc b
-    ld bc, $0001
-    rst $38
-    dec b
-    ld bc, $ff01
-    rst $38
-    rst $38
-    inc b
-    ld bc, $0000
-    ld bc, $0504
-    rst $38
-    ld [hl], h
-    db $76
-    sub b
-    reti
-
-
-    inc c
-    dec h
-    add d
-    db $76
-    sbc b
-    db $76
-    dec c
-    dec h
-    sub a
-    db $76
-    sbc c
-    db $76
-
-jr_00b_7682:
-    ld d, b
-    ld hl, $000a
-    rst $38
-    nop
-    ld sp, $0204
-    ld bc, $ff00
-    inc b
-    ld [bc], a
-    ld bc, $ff00
-    dec b
-    ld [bc], a
-    ld bc, $ffff
-    rst $38
-    ld [bc], a
-    inc b
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    and e
-    db $76
-    sub c
-    reti
-
-
-    dec bc
-    inc hl
-    or c
-    db $76
-    rst $00
-    db $76
-    inc c
-    inc hl
-    add $76
-    ret z
-
-    db $76
-    ld d, b
-    ld hl, $000a
-    rst $38
-    nop
-    ld [hl-], a
-    inc b
-    ld bc, $0001
-    rst $38
-    inc b
-    ld bc, $0001
-    rst $38
-    dec b
-    ld bc, $ff01
-    rst $38
-    rst $38
-    dec b
-    inc bc
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    jp nc, $9276
-
-    reti
-
-
-    ld c, $23
-    ldh [rPCM12], a
-    or $76
-    rrca
-    inc hl
-    push af
-    db $76
-    rst $30
-    db $76
-    ld d, b
-    ld hl, $000a
-    rst $38
-    nop
-    inc sp
-    inc b
-    ld bc, $0001
-    rst $38
-    inc b
-    ld bc, $0001
-    rst $38
-    dec b
-    ld bc, $ff01
-    rst $38
-    rst $38
-    inc b
-    inc bc
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    ld bc, $9377
-    reti
-
-
-    ld de, $0f23
-    ld [hl], a
-    dec h
-    ld [hl], a
-    ld [de], a
-    inc hl
-    inc h
-    ld [hl], a
-    ld h, $77
-    ld d, b
-    ld hl, $020a
-    rst $38
-    nop
-    inc [hl]
-    inc b
-    ld [bc], a
-    ld bc, $ff00
-    inc b
-    inc bc
-    ld bc, $ff00
-    dec b
-    inc bc
-    ld bc, $ffff
-    rst $38
-    inc b
-    inc b
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    jr nc, jr_00b_77a7
-
-    sub h
-    reti
-
-
-    rrca
-    dec h
-    ld a, $77
-    ld d, h
-    ld [hl], a
-    db $10
-    dec h
-    ld d, e
-    ld [hl], a
-    ld d, l
-    ld [hl], a
-    ld d, b
-    ld hl, $000a
-    rst $38
-    nop
-    dec [hl]
-    inc b
-    ld bc, $0001
-    rst $38
-    inc b
-    ld bc, $0001
-    rst $38
-    dec b
-    ld bc, $ff01
-    rst $38
-    rst $38
-    inc bc
-    inc bc
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    ld l, l
-    ld [hl], a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, e
-    ld [hl], a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    sub l
-    reti
-
-
-    ld [de], a
-    dec h
-    add e
-    ld [hl], a
-    sbc a
-    ld [hl], a
-    inc de
-    dec h
-    sbc l
-    ld [hl], a
-    and b
-    ld [hl], a
-    sub [hl]
-    reti
-
-
-    inc d
-    dec h
-    sbc [hl]
-    ld [hl], a
-    xor b
-    ld [hl], a
-    ld d, b
-    ld hl, $010a
-    rst $38
-    ld a, [bc]
-    ld [hl], $04
-    ld [bc], a
-    ld bc, $ff00
-    inc bc
-    inc bc
-    ld bc, $ff00
-    inc b
-    inc bc
-    ld bc, $ff00
-    dec b
-    inc bc
-    ld bc, $ffff
-    rst $38
-    rst $38
-    inc b
-    inc b
-    nop
-    nop
-    ld bc, $0504
-
-jr_00b_77a7:
-    rst $38
-    rst $38
-    xor e
-    ld [hl], a
-    sub a
-    reti
-
-
-    inc b
-    inc h
-    cp c
-    ld [hl], a
-    call nc, $0577
-    inc h
-    db $d3
-    ld [hl], a
-    push de
-    ld [hl], a
-    sub b
-    rst $38
-    inc b
-    inc b
-    ld bc, $ff90
-    dec b
-    inc b
-    ld bc, $3740
-    inc b
-    inc bc
-    ld [bc], a
-    ld b, b
-    rst $38
-    inc b
-    inc bc
-    ld [bc], a
-    ld b, b
-    rst $38
-    dec b
-    inc bc
-    ld [bc], a
-    rst $38
-    rst $38
-    rst $38
-    inc bc
-    dec b
-    nop
-    nop
-    ld bc, $0504
-    rst $38
-    rst $18
-    ld [hl], a
-    sbc b
-    reti
-
-
-    ld bc, $e726
-    ld [hl], a
-    ld a, [c]
-    ld [hl], a
-    adc a
-    rst $38
-    inc b
-    inc bc
-    ld bc, $0600
-    inc b
-    ld [bc], a
-    ld bc, $01ff
-    ld b, $00
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    db $fc
-    ld [hl], a
-    sbc b
-    reti
-
-
-    inc bc
-    ld h, $04
-    ld a, b
-    rrca
-    ld a, b
-    add d
-    rst $38
-    inc b
-    inc bc
-    ld [bc], a
-    nop
-    ld de, $0204
-    ld bc, $08ff
-    ld [bc], a
-    nop
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    add hl, de
-
-jr_00b_7818:
-    ld a, b
-    sbc b
-    reti
-
-
-    dec b
-    ld h, $21
-
-jr_00b_781e:
-    ld a, b
-    ld c, d
-    ld a, b
-    nop
-    dec bc
-    inc b
-
-jr_00b_7824:
-    inc bc
-    rst $38
-
-jr_00b_7826:
-    nop
-    ldh a, [$03]
-    inc bc
-    rst $38
-    nop
-    pop af
-    dec b
-    inc bc
-    rst $38
-    nop
-    ld a, [c]
-    ld b, $03
-    rst $38
-    jr nz, jr_00b_7818
-
-    dec b
-    dec b
-    rst $38
-    jr nz, jr_00b_781e
-
-    inc bc
-    dec b
-    rst $38
-    jr nz, jr_00b_7824
-
-    ld b, $05
-    rst $38
-    jr nz, jr_00b_7826
-
-    inc b
-    dec b
-    rst $38
-    rst $38
-    rst $38
-    ld d, l
-    ld a, b
-    ld e, l
-    ld a, b
-    ld h, l
-    ld a, b
-    ld l, l
-    ld a, b
-    ld [hl], l
-    ld a, b
-    sbc b
-    reti
-
-
-    add hl, de
-    inc hl
-    ld a, l
-    ld a, b
-    ld a, [hl]
-    ld a, b
-    sbc b
-    reti
-
-
-    ld a, [de]
-    inc hl
-    ld a, l
-    ld a, b
-    sbc e
-    ld a, b
-    sbc b
-    reti
-
-
-    dec de
-    inc hl
-    ld a, l
-    ld a, b
-    cp b
-    ld a, b
-    sbc b
-    reti
-
-
-    inc e
-    inc hl
-    ld a, l
-    ld a, b
-    adc $78
-    sbc b
-    reti
-
-
-    dec e
-    inc hl
-    ld a, l
-    ld a, b
-    ld sp, hl
-    ld a, b
-    rst $38
-    nop
-    inc bc
-    ld h, d
-    nop
-    nop
-    add hl, bc
-    inc bc
-    ld bc, $6100
-    nop
-    nop
-    ld bc, $0807
-    nop
-    ld h, e
-    nop
-    nop
-    ld [$0907], sp
-    inc bc
-    ld h, c
-    nop
-    nop
-    nop
-    inc bc
-    rst $38
-    ld bc, $5307
-    nop
-    nop
-    ld bc, $0800
-    rlca
-    ld d, e
-    nop
-    nop
-    ld [$0000], sp
-    inc bc
-    ld d, e
-    nop
-    nop
-    add hl, bc
-    inc bc
-    ld bc, $6200
-    nop
-    nop
-    ld bc, $ff07
-    ld bc, $6107
-    nop
-    nop
-    ld bc, $0800
-    nop
-    ld h, c
-    nop
-    nop
-    ld [$0907], sp
-    inc bc
-    ld d, e
-    nop
-    nop
-    nop
-    inc bc
-    rst $38
-    ld [$6207], sp
-    nop
-    nop
-    ld [$0900], sp
-    dec b
-    ld h, e
-    nop
-    nop
-    nop
-    dec b
-    ld bc, $6300
-    nop
-    nop
-    ld bc, $0407
-    nop
-    ld h, h
-    nop
-    nop
-    inc b
-    rlca
-    nop
-    dec b
-    ld h, e
-    nop
-    nop
-    add hl, bc
-    dec b
-    ld bc, $6307
-    nop
-    nop
-    ld bc, $ff00
-    inc b
-    rlca
-    ld h, e
-    nop
-    nop
-    inc b
-    nop
-    inc b
-    inc b
-    nop
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    jr nz, jr_00b_7983
-
-    jr z, jr_00b_7985
-
-    jr nc, jr_00b_7987
-
-    rst $38
-    rst $38
-    jr c, jr_00b_798b
-
-    ld b, b
-    ld a, c
-    ld c, b
-    ld a, c
-    rst $38
-    rst $38
-    ld d, b
-    ld a, c
-    ld e, b
-    ld a, c
-    ld h, b
-    ld a, c
-    rst $38
-    rst $38
-    sbc b
-    reti
-
-
-    ld bc, $4237
-    ld c, e
-    ld l, b
-    ld a, c
-    sbc b
-    reti
-
-
-    ld [bc], a
-    scf
-    ld b, d
-    ld c, e
-    ld l, c
-    ld a, c
-    sbc b
-    reti
-
-
-    inc bc
-    scf
-    ld b, d
-    ld c, e
-    ld l, d
-    ld a, c
-    sbc b
-    reti
-
-
-    inc b
-    scf
-    ld b, d
-    ld c, e
-    ld l, e
-    ld a, c
-    sbc b
-    reti
-
-
-    dec b
-    scf
-    ld b, d
-    ld c, e
-    ld l, h
-    ld a, c
-    sbc b
-    reti
-
-
-    ld b, $37
-    ld b, d
-    ld c, e
-    ld l, l
-    ld a, c
-    sbc b
-    reti
-
-
-    rlca
-    scf
-    ld b, d
-    ld c, e
-    ld l, [hl]
-    ld a, c
-    sbc b
-    reti
-
-
-    ld [$4237], sp
-    ld c, e
-    ld l, a
-    ld a, c
-    sbc b
-    reti
-
-
-    add hl, bc
-    scf
-    ld b, d
-    ld c, e
-    ld [hl], b
-    ld a, c
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [$0002], sp
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    sub b
-    ld a, c
-    sbc b
-    ld a, c
-    and b
-    ld a, c
-    rst $38
-    rst $38
-    xor b
-    ld a, c
-    or b
-
-jr_00b_7983:
-    ld a, c
-    cp b
-
-jr_00b_7985:
-    ld a, c
-    rst $38
-
-jr_00b_7987:
-    rst $38
-    ret nz
-
-    ld a, c
-    ret z
-
-jr_00b_798b:
-    ld a, c
-    ret nc
-
-    ld a, c
-    rst $38
-    rst $38
-    sbc b
-    reti
-
-
-    dec bc
-    scf
-    ld b, d
-    ld c, e
-    ret c
-
-    ld a, c
-    sbc b
-    reti
-
-
-    inc c
-    scf
-    ld b, d
-    ld c, e
-    reti
-
-
-    ld a, c
-    sbc b
-    reti
-
-
-    dec c
-    scf
-    ld b, d
-    ld c, e
-    jp c, $9879
-
-    reti
-
-
-    ld c, $37
-    ld b, d
-    ld c, e
-    db $db
-    ld a, c
-    sbc b
-    reti
-
-
-    rrca
-    scf
-    ld b, d
-    ld c, e
-    call c, $9879
-    reti
-
-
-    db $10
-    scf
-    ld b, d
-    ld c, e
-    db $dd
-    ld a, c
-    sbc b
-    reti
-
-
-    ld de, $4237
-    ld c, e
-    sbc $79
-    sbc b
-    reti
-
-
-    ld [de], a
-    scf
-    ld b, d
-    ld c, e
-    and $79
-    sbc b
-    reti
-
-
-    inc de
-    scf
-    ld b, d
-    ld c, e
-    rst $20
-    ld a, c
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld b, $06
-    nop
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    nop
-    ld a, d
-    ld [$107a], sp
-    ld a, d
-    rst $38
-    rst $38
-    jr jr_00b_7a6c
-
-    jr nz, jr_00b_7a6e
-
-    jr z, jr_00b_7a70
-
-    rst $38
-    rst $38
-    jr nc, jr_00b_7a74
-
-    jr c, jr_00b_7a76
-
-    ld b, b
-    ld a, d
-    rst $38
-    rst $38
-    sbc b
-    reti
-
-
-    dec d
-    scf
-    ld b, d
-    ld c, e
-    ld c, b
-    ld a, d
-    sbc b
-    reti
-
-
-    ld d, $37
-    ld b, d
-    ld c, e
-    ld c, c
-    ld a, d
-    sbc b
-    reti
-
-
-    rla
-    scf
-    ld b, d
-    ld c, e
-    ld c, d
-    ld a, d
-    sbc b
-    reti
-
-
-    jr jr_00b_7a53
-
-    ld b, d
-    ld c, e
-    ld d, d
-    ld a, d
-    sbc b
-    reti
-
-
-    add hl, de
-    scf
-    ld b, d
-    ld c, e
-    ld d, e
-    ld a, d
-    sbc b
-    reti
-
-
-    ld a, [de]
-    scf
-    ld b, d
-    ld c, e
-    ld d, h
-    ld a, d
-    sbc b
-    reti
-
-
-    dec de
-    scf
-    ld b, d
-    ld c, e
-    ld d, l
-    ld a, d
-    sbc b
-    reti
-
-
-    inc e
-    scf
-    ld b, d
-    ld c, e
-    ld d, [hl]
-    ld a, d
-    sbc b
-    reti
-
-
-    dec e
-    scf
-    ld b, d
-    ld c, e
-    ld d, a
-    ld a, d
-    rst $38
-    rst $38
-    inc bc
-    inc bc
-    nop
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-
-jr_00b_7a53:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [hl], b
-    ld a, d
-    ld a, b
-    ld a, d
-    add b
-    ld a, d
-    rst $38
-    rst $38
-    adc b
-    ld a, d
-    sub b
-    ld a, d
-    sbc b
-    ld a, d
-    rst $38
-    rst $38
-    and b
-    ld a, d
-    xor b
-    ld a, d
-
-jr_00b_7a6c:
-    or b
-    ld a, d
-
-jr_00b_7a6e:
-    rst $38
-    rst $38
-
-jr_00b_7a70:
-    sbc b
-    reti
-
-
-    rra
-    scf
-
-jr_00b_7a74:
-    ld b, d
-    ld c, e
-
-jr_00b_7a76:
-    cp b
-    ld a, d
-    sbc b
-    reti
-
-
-    jr nz, jr_00b_7ab3
-
-    ld b, d
-    ld c, e
-    cp c
-    ld a, d
-    sbc b
-    reti
-
-
-    ld hl, $4237
-    ld c, e
-    cp d
-    ld a, d
-    sbc b
-    reti
-
-
-    ld [hl+], a
-    scf
-    ld b, d
-    ld c, e
-    cp e
-    ld a, d
-    sbc b
-    reti
-
-
-    inc hl
-    scf
-    ld b, d
-    ld c, e
-    cp h
-    ld a, d
-    sbc b
-    reti
-
-
-    inc h
-    scf
-    ld b, d
-    ld c, e
-    cp l
-    ld a, d
-    sbc b
-    reti
-
-
-    dec h
-    scf
-    ld b, d
-    ld c, e
-    cp [hl]
-    ld a, d
-    sbc b
-    reti
-
-
-    ld h, $37
-    ld b, d
-    ld c, e
-    add $7a
-    sbc b
-    reti
-
-
-    daa
-
-jr_00b_7ab3:
-    scf
-    ld b, d
-    ld c, e
-    rst $00
-    ld a, d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld bc, $0006
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    ldh [$7a], a
-    add sp, $7a
-    ldh a, [$7a]
-    rst $38
-    rst $38
-    ld hl, sp+$7a
-    nop
-    ld a, e
-    ld [$ff7b], sp
-    rst $38
-    db $10
-    ld a, e
-    jr jr_00b_7b57
-
-    jr nz, jr_00b_7b59
-
-    rst $38
-    rst $38
-    sbc b
-    reti
-
-
-    add hl, hl
-    scf
-    ld b, d
-    ld c, e
-    jr z, jr_00b_7b63
-
-    sbc b
-    reti
-
-
-    ld a, [hl+]
-    scf
-    ld b, d
-    ld c, e
-    add hl, hl
-    ld a, e
-    sbc b
-    reti
-
-
-    dec hl
-    scf
-    ld b, d
-    ld c, e
-    ld a, [hl+]
-    ld a, e
-    sbc b
-    reti
-
-
-    inc l
-    scf
-    ld b, d
-    ld c, e
-    dec hl
-    ld a, e
-    sbc b
-    reti
-
-
-    dec l
-    scf
-    ld b, d
-    ld c, e
-    inc l
-    ld a, e
-    sbc b
-    reti
-
-
-    ld l, $37
-    ld b, d
-    ld c, e
-    dec l
-    ld a, e
-    sbc b
-    reti
-
-
-    cpl
-    scf
-    ld b, d
-    ld c, e
-    ld l, $7b
-    sbc b
-    reti
-
-
-    jr nc, jr_00b_7b53
-
-    ld b, d
-    ld c, e
-    cpl
-    ld a, e
-    sbc b
-    reti
-
-
-    ld sp, $4237
-    ld c, e
-    scf
-    ld a, e
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc bc
-    ld b, $00
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    ld d, b
-    ld a, e
-    ld e, b
-    ld a, e
-    ld h, b
-    ld a, e
-    rst $38
-    rst $38
-    ld l, b
-    ld a, e
-    ld [hl], b
-    ld a, e
-    ld a, b
-    ld a, e
-    rst $38
-    rst $38
-    add b
-    ld a, e
-    adc b
-    ld a, e
-    sub b
-    ld a, e
-    rst $38
-    rst $38
-    sbc b
-    reti
-
-
-    inc sp
-
-jr_00b_7b53:
-    scf
-    ld b, d
-    ld c, e
-    sbc b
-
-jr_00b_7b57:
-    ld a, e
-    sbc b
-
-jr_00b_7b59:
-    reti
-
-
-    inc [hl]
-    scf
-    ld b, d
-    ld c, e
-    sbc c
-    ld a, e
-    sbc b
-    reti
-
-
-    dec [hl]
-
-jr_00b_7b63:
-    scf
-    ld b, d
-    ld c, e
-    sbc d
-    ld a, e
-    sbc b
-    reti
-
-
-    ld [hl], $37
-    ld b, d
-    ld c, e
-    sbc e
-    ld a, e
-    sbc b
-    reti
-
-
-    scf
-    scf
-    ld b, d
-    ld c, e
-    sbc h
-    ld a, e
-    sbc b
-    reti
-
-
-    jr c, jr_00b_7bb3
-
-    ld b, d
-    ld c, e
-    sbc l
-    ld a, e
-    sbc b
-    reti
-
-
-    add hl, sp
-    scf
-    ld b, d
-    ld c, e
-    sbc [hl]
-    ld a, e
-    sbc b
-    reti
-
-
-    ld a, [hl-]
-    scf
-    ld b, d
-    ld c, e
-    sbc a
-    ld a, e
-    sbc b
-    reti
-
-
-    dec sp
-    scf
-    ld b, d
-    ld c, e
-    and b
-    ld a, e
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [$0006], sp
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    xor d
-    ld a, e
-    sbc b
-    reti
-
-
-    rlca
-    ld h, $b2
-    ld a, e
-    pop de
-    ld a, e
-    adc a
-
-jr_00b_7bb3:
-    rst $38
-    ld bc, $0102
-    adc a
-    rst $38
-    ld [$0202], sp
-    adc a
-    rst $38
-    inc bc
-    inc bc
-    inc bc
-    adc a
-    rst $38
-    ld b, $03
-    inc b
-    adc a
-    rst $38
-    ld [bc], a
-    dec b
-    dec b
-    adc a
-    rst $38
-    rlca
-    dec b
-    ld b, $ff
-    dec b
-    ld b, $00
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    db $db
-    ld a, e
-    sbc b
-    reti
-
-
-    add hl, bc
-    ld h, $e3
-    ld a, e
-    ld [bc], a
-    ld a, h
-    adc a
-    rst $38
-    inc bc
-    inc bc
-    ld bc, $ff8f
-    ld b, $03
-    ld [bc], a
-    adc a
-    rst $38
-    inc bc
-    inc b
-    inc bc
-    adc a
-    rst $38
-    ld b, $04
-    inc b
-    adc a
-    rst $38
-    inc bc
-    dec b
-    dec b
-    adc a
-    rst $38
-    ld b, $05
-    ld b, $ff
-    dec b
-    ld [bc], a
-    nop
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    inc c
-    ld a, h
-    sbc b
-    reti
-
-
-    dec bc
-    ld h, $14
-    ld a, h
-    dec a
-    ld a, h
-    adc a
-    rst $38
-    inc bc
-    ld [bc], a
-    ld bc, $ff8f
-    inc b
-    ld [bc], a
-    ld [bc], a
-    adc a
-    rst $38
-    dec b
-    ld [bc], a
-    inc bc
-    adc a
-    rst $38
-    ld b, $02
-    inc b
-    adc a
-    rst $38
-    inc bc
-    ld b, $05
-    adc a
-    rst $38
-    inc b
-    ld b, $06
-    adc a
-    rst $38
-    dec b
-    ld b, $07
-    adc a
-    rst $38
-    ld b, $06
-    ld [$03ff], sp
-    inc b
-    nop
-    add b
-    nop
-    nop
-    nop
-    rst $38
-    ld b, a
-    ld a, h
-    sbc c
-    reti
-
-
-    inc d
-    inc hl
-    ld h, a
-    ld a, h
-    rst $38
-    rst $38
-    dec d
-    inc hl
-    ld h, a
-    ld a, h
-    rst $38
-    rst $38
-    dec d
-    inc hl
-    sub b
-    ld a, h
-    rst $38
-    rst $38
-    dec d
-    inc hl
-    cp c
-    ld a, h
-    rst $38
-    rst $38
-    dec d
-    inc hl
-    ld h, a
-    ld a, h
-    rst $38
-    rst $38
-    db $10
-    ldh a, [rDIV]
-    add hl, bc
-    rst $38
-    db $10
-    pop af
-    inc b
-    ld a, [bc]
-    rst $38
-    db $10
-    di
-    inc b
-    dec bc
-    rst $38
-    db $10
-    ld a, [c]
-    inc b
-    inc c
-    rst $38
-    db $10
-    ldh [rTAC], a
-    dec b
-    rst $38
-    db $10
-    pop hl
-    ld b, $05
-    rst $38
-    db $10
-    ld [c], a
-    ld b, $04
-    rst $38
-    db $10
-    db $e3
-    ld b, $06
-    rst $38
-    rst $38
-    ld b, b
-    ldh a, [rDIV]
-    dec b
-    rst $38
-    ld [hl], b
-    di
-    inc bc
-    inc b
-    rst $38
-    ld [hl], b
-    pop af
-    inc bc
-    dec b
-    rst $38
-    ld [hl], b
-    ld a, [c]
-    inc bc
-    ld b, $ff
-    db $10
-    pop hl
-    ld b, $05
-    rst $38
-    db $10
-    ld [c], a
-
-jr_00b_7cab:
-    ld b, $04
-    rst $38
-    db $10
-    db $e3
-    ld b, $06
-    rst $38
-
-jr_00b_7cb3:
-    ld b, b
-    ld d, d
-    inc b
-
-jr_00b_7cb6:
-    dec b
-    rst $38
-    rst $38
-    jr nc, jr_00b_7cab
-
-    ld [bc], a
-
-jr_00b_7cbc:
-    dec b
-    rst $38
-    jr nc, jr_00b_7cb3
-
-    inc bc
-    inc b
-    rst $38
-    jr nc, jr_00b_7cb6
-
-    inc bc
-    dec b
-    rst $38
-    jr nc, jr_00b_7cbc
-
-    inc bc
-    ld b, $ff
-    db $10
-    pop hl
-    ld b, $05
-    rst $38
-    db $10
-    ld [c], a
-    ld b, $04
-    rst $38
-    ld d, b
-    add hl, sp
-    ld a, [bc]
-    ld bc, $10ff
-    db $e3
-    ld b, $06
-    rst $38
-    rst $38
-    db $e4
-    ld a, h
-    sbc d
-    reti
-
-
-    rla
-    inc hl
-    cp $7c
-    rst $38
-    rst $38
-    rla
-    inc hl
-    ld c, $7d
-    rst $38
-    rst $38
-    rla
-    inc hl
-    add hl, de
-    ld a, l
-    rst $38
-    rst $38
-    rla
-    inc hl
-    ld b, d
-
-jr_00b_7cfb:
-    ld c, e
-    rst $38
-    rst $38
-    db $10
-    ldh [rTAC], a
-    dec b
-    rst $38
-    ld b, b
-    ld d, a
-    inc b
-    nop
-    rst $38
-    ld b, b
-    ld d, d
-    inc b
-    dec b
-    rst $38
-    rst $38
-    ld [hl], b
-    ld [$0400], sp
-    rst $38
-    ld b, b
-    ld d, l
-    dec b
-    inc b
-    rst $38
-    rst $38
-    jr nz, jr_00b_7cfb
-
-    dec b
-    dec b
-    rst $38
-    ld d, b
-    ld hl, $0509
-    rst $38
-    rst $38
-    ldh [$1f], a
-    ld [hl], b
-    adc a
-    jr @-$17
-
-    add e
-    ld a, h
-    rlca
-    ld hl, sp-$3f
-    ld a, $81
-    rst $38
-    ret nz
-
-    rst $38
-    ret nz
-
-    rst $38
-    add c
-    rst $38
-    add c
-    rst $38
-    inc bc
-    rst $38
-    inc bc
-    rst $38
-    add c
-    rst $38
-    inc b
-    inc b
-    ld a, [bc]
-    ld c, $35
-    dec sp
-    jp z, Jump_000_33f7
-
-    rst $08
-    add c
-    rst $38
-    ld h, a
-    rst $38
-    sbc h
-    ld a, a
-    inc e
-    db $e3
-    ld [hl], $c9
-    ld [hl+], a
-    db $dd
-    add d
-    ld a, l
-    ret nz
-
-    ccf
-    pop bc
-    ld a, $49
-    or [hl]
-    dec e
-    ld [c], a
-    rlca
-    ld hl, sp+$70
-    adc a
-    pop bc
-    ld a, $83
-    ld a, h
-    pop bc
-    ld a, $60
-    sbc a
-    ld c, $f1
-    inc e
-    db $e3
-    ret nz
-
-    rst $38
-    add c
-
-jr_00b_7d73:
-    rst $38
-    add c
-    rst $38
-    inc bc
-    rst $38
-    inc bc
-    rst $38
-    add c
-    rst $38
-    add c
-    rst $38
-    ret nz
-
-    rst $38
-    ld bc, $8201
-    add e
-    ld c, l
-    adc $b2
-    db $fd
-    call z, Call_00b_62f3
-    rst $38
-    sbc l
-    rst $38
-    ld [hl], d
-    db $fd
-    ld de, $41ee
-    cp [hl]
-    ld h, b
-    sbc a
-    ldh [$1f], a
-    and h
-    ld e, e
-    adc [hl]
-    ld [hl], c
-    ld c, $f1
-    dec de
-    db $e4
-    pop bc
-
-jr_00b_7da1:
-    ld a, $07
-    ld hl, sp+$0e
-    pop af
-    rlca
-    ld hl, sp-$7f
-    ld a, [hl]
-    jr c, jr_00b_7d73
-
-    ld [hl], b
-    adc a
-    inc e
-    db $e3
-    add c
-    rst $38
-    inc bc
-    rst $38
-    inc bc
-    rst $38
-    add c
-    rst $38
-    add c
-    rst $38
-    ret nz
-
-    rst $38
-    ret nz
-
-    rst $38
-    add c
-    rst $38
-    ld b, b
-    ld b, b
-    and b
-    ldh [rHDMA3], a
-    or e
-    xor h
-    ld a, a
-    inc sp
-    db $fc
-    jr @+$01
-
-    db $76
-    rst $38
-    ret
-
-
-    rst $30
-    jr nc, jr_00b_7da1
-
-    ld [hl], b
-    adc a
-    ld d, d
-    xor l
-    ld b, a
-    cp b
-    rlca
-
-jr_00b_7dd9:
-    ld hl, sp-$73
-    ld [hl], d
-    adc b
-    ld [hl], a
-    and b
-    ld e, a
-    inc e
-    db $e3
-    jr c, @-$37
-
-    inc e
-    db $e3
-    ld b, $f9
-    ldh [$1f], a
-    pop bc
-    ld a, $70
-    adc a
-    rlca
-    ld hl, sp+$03
-    rst $38
-    add c
-    rst $38
-    add c
-    rst $38
-    ret nz
-
-    rst $38
-    ret nz
-
-    rst $38
-    add c
-    rst $38
-    add c
-    rst $38
-    inc bc
-    rst $38
-    nop
-    rst $38
-    nop
-    rst $38
-    nop
-    rst $38
-    db $10
-    rst $28
-    jr nz, jr_00b_7dd9
-
-    ld b, b
-    adc a
-    ld b, b
-    sbc [hl]
-    ld b, b
-    adc b
-    nop
-    rst $38
-    nop
-    rst $38
-    nop
-    rst $38
-    ld [$04f7], sp
-    di
-    ld [bc], a
-    pop af
-    ld [bc], a
-    ld a, c
-    ld [bc], a
-    ld de, $c020
-    ld h, b
-    add b
-    and b
-    db $10
-    sub d
-    ld [hl+], a
-
-jr_00b_7e28:
-    sub a
-    rla
-
-jr_00b_7e2a:
-    sub a
-    rla
-    cp [hl]
-    ld a, $b8
-    jr c, jr_00b_7e35
-
-jr_00b_7e31:
-    inc bc
-    ld b, $01
-    dec b
-
-jr_00b_7e35:
-    ld [$4449], sp
-    jp hl
-
-
-    add sp, -$17
-    add sp, $7d
-    ld a, h
-    dec e
-    inc e
-    inc b
-    ei
-    ld c, $f5
-    rrca
-    or $0f
-    rst $30
-    rrca
-    rst $30
-    ccf
-    rst $08
-    ld a, l
-    xor l
-    ld a, b
-    xor b
-    jr nz, jr_00b_7e31
-
-    ld [hl], b
-    xor a
-    ldh a, [$6f]
-    ldh a, [$ef]
-    ldh a, [$ef]
-    db $fc
-    di
-    cp [hl]
-    or l
-    ld e, $15
-    ld [hl], b
-    or b
-    ld h, b
-    and b
-    ld h, b
-    and b
-    jr nz, jr_00b_7e28
-
-    jr nz, jr_00b_7e2a
-
-    db $10
-    ldh [rNR10], a
-    ldh [rNR10], a
-    ldh [$0e], a
-    dec c
-
-Call_00b_7e72:
-    ld b, $05
-    ld b, $05
-    inc b
-    inc bc
-    inc b
-    inc bc
-    ld [$0807], sp
-    rlca
-    ld [$0007], sp
-    rst $38
-    nop
-    rst $38
-    nop
-    rst $38
-    db $10
-    rst $28
-    jr nz, @-$2f
-
-    ld b, b
-    adc a
-    ld b, b
-    sbc [hl]
-    ld b, b
-    adc b
-    nop
-    rst $38
-    nop
-    rst $38
-    nop
-    rst $38
-    ld [$04f7], sp
-    di
-    ld [bc], a
-    pop af
-    ld [bc], a
-    ld a, c
-    ld [bc], a
-    ld de, $c020
-    ld h, b
-    add b
-    and b
-    db $10
-    sub d
-    ld [hl+], a
-
-jr_00b_7ea8:
-    sub a
-    rla
-
-jr_00b_7eaa:
-    sub a
-    rla
-    cp [hl]
-    ld a, $b8
-    jr c, jr_00b_7eb5
-
-jr_00b_7eb1:
-    inc bc
-    ld b, $01
-    dec b
-
-jr_00b_7eb5:
-    ld [$4449], sp
-    jp hl
-
-
-    add sp, -$17
-    add sp, $7d
-    ld a, h
-    dec e
-    inc e
-    inc b
-    ei
-    ld c, $f5
-    rrca
-    or $0f
-    rst $30
-    rrca
-    rst $30
-    ccf
-    rst $08
-    ld a, l
-    xor l
-    ld a, b
-    xor b
-    jr nz, jr_00b_7eb1
-
-    ld [hl], b
-    xor a
-    ldh a, [$6f]
-    ldh a, [$ef]
-    ldh a, [$ef]
-    db $fc
-    di
-    cp [hl]
-    or l
-    ld e, $15
-    ld [hl], b
-    or b
-    ld h, b
-    and b
-    ld h, b
-    and b
-    jr nz, jr_00b_7ea8
-
-    jr nz, jr_00b_7eaa
-
-    db $10
-    ldh [rNR10], a
-    ldh [rNR10], a
-    ldh [$0e], a
-    dec c
-    ld b, $05
-    ld b, $05
-    inc b
-    inc bc
-    inc b
-    inc bc
-    ld [$0807], sp
-    rlca
-    ld [$1007], sp
-    db $10
-    jr z, @+$3a
-
-    call nc, Call_000_2bec
-    rst $18
-    call z, Call_000_263f
-    rst $38
-    reti
-
-
-    rst $38
-    daa
-    rst $18
-    ld b, $f9
-    dec e
-    ld [c], a
-    dec sp
-    call nz, $08f7
-    ld l, $d1
-    ld l, l
-    sub d
-    ld l, l
-    sub d
-    or [hl]
-    ld c, b
-    ret nz
-
-    ccf
-    ld l, d
-    sub l
-    cp d
-    ld b, l
-    cp d
-    ld b, l
-    call c, Call_00b_6a23
-    sub l
-    ld l, [hl]
-    sub c
-    db $dc, $23, $00
-    rst $38
-    ld b, b
-    cp d
-    and b
-    ld e, a
-    ld b, b
-    cp a
-    nop
-    rst $38
-    ld [$1457], sp
-    db $eb
-    ld [$04f7], sp
-    inc b
-    ld a, [bc]
-    ld c, $35
-    dec sp
-    jp z, Jump_000_33f7
-
-    rst $08
-    add c
-    rst $38
-    ld h, a
-    rst $38
-    sbc h
-    ld a, a
-    inc bc
-    db $fc
-    ld d, $e9
-    ld c, $f1
-    db $fd
-    ld [bc], a
-    dec de
-    db $e4
-    ld [hl], $c9
-    ld d, l
-    xor d
-    cp d
-    ld b, h
-    ld h, b
-    sbc a
-    cp d
-    ld b, l
-    jp c, $de25
-
-    ld hl, $13ec
-    or $09
-    db $76
-    adc c
-    xor $11
-    nop
-    rst $38
-    nop
-    ld a, [$f708]
-    inc d
-    db $eb
-    add hl, bc
-    or $82
-    ld e, l
-    ld bc, $00ee
-    rst $38
-    ld bc, $8201
-    add e
-    ld c, l
-    adc $b2
-    db $fd
-    call z, Call_00b_62f3
-    rst $38
-    sbc l
-    rst $38
-    ld [hl], d
-    db $fd
-    ld b, $f9
-    dec e
-    ld [c], a
-    dec sp
-    call nz, $08f7
-    ld l, $d1
-    ld l, l
-    sub d
-    ld l, l
-    sub d
-    or [hl]
-    ld c, b
-    ret nz
-
-    ccf
-    ld l, d
-    sub l
-    cp d
-    ld b, l
-    cp d
-    ld b, l
-    call c, Call_00b_6a23
-    sub l
-    ld l, [hl]
-    sub c
-    db $dc, $23, $00
-    rst $38
-    ld [bc], a
-    ld hl, sp+$05
-    ld a, [$fd02]
-    nop
-    rst $38
-    ld b, b
-    rra
-    and b
-    ld c, a
-    ld b, b
-    cp a
-    ld b, b
-    ld b, b
-    and b
-    ldh [rHDMA3], a
-    or e
-    xor h
-    ld a, a
-    inc sp
-    db $fc
-    jr @+$01
-
-    db $76
-    rst $38
-    ret
-
-
-    rst $30
-    inc bc
-    db $fc
-    ld d, $e9
-    ld c, $f1
-    db $fd
-    ld [bc], a
-    dec de
-    db $e4
-    ld [hl], $c9
-    ld d, l
-    xor d
-    cp d
-    ld b, h
-    ld h, b
-    sbc a
-    cp d
-    ld b, l
-    jp c, $de25
-
-    ld hl, $13ec
-    or $09
-    db $76
-    adc c
-    xor $11
-    nop
-    rst $38
-    nop
-    ld a, [$7f80]
-    ld b, c
-    cp [hl]
-    sub b
-    ld l, a
-    jr z, @+$59
-
-    db $10
-    rst $08
-    nop
-    rst $38
+    db $61  ; $16 m16_MedalMan_Room ptr high → $6139
+    dw $5F71  ; $17 m17_X
+    dw $61F8  ; $18 m18_Well
+    dw $62BB  ; $19 m19_X
+    dw $62E2  ; $1A m1A_X
+    dw $6313  ; $1B m1B_X
+    dw $635E  ; $1C m1C_X
+    dw $63C5  ; $1D m1D_X
+    dw $63F6  ; $1E m1E_X
+    dw $6438  ; $1F m1F_X
+    dw $4C13  ; $20 m20_X
+    dw $4C13  ; $21 m21_X
+    dw $4C13  ; $22 m22_X
+    dw $64A4  ; $23 m23_Room_of_Beginning
+    dw $64DB  ; $24 m24_Room_of_Villager_And_Talisman
+    dw $6539  ; $25 m25_Room_of_Memories_And_Bewilder
+    dw $6597  ; $26 m26_Room_of_Peace_And_Bravery
+    dw $65F5  ; $27 m27_Room_of_Strength_And_Anger
+    dw $6658  ; $28 m28_Room_of_Joy_And_Wisdom
+    dw $66B6  ; $29 m29_Room_of_Happiness_And_Temptation
+    dw $6714  ; $2A m2A_Room_of_Labyrinth_And_Judgment
+    dw $6772  ; $2B m2B_Room_of_Reflection
+    dw $67A9  ; $2C m2C_Room_of_Ambition_And_Demolition
+    dw $6807  ; $2D m2D_Room_of_Mastermind_And_Control
+    dw $6865  ; $2E m2E_Room_of_Extinction_And_Sleep
+    dw $68CA  ; $2F m2F
+    dw $6AAF  ; $30 m30_Boss_Room___Gate_of_Beginning
+    dw $6AD4  ; $31 m31_Boss_Room___Gate_of_Villager
+    dw $6B12  ; $32 m32_Boss_Room___Gate_of_Talisman
+    dw $6B41  ; $33 m33_Boss_Room___Gate_of_Memories
+    dw $6B66  ; $34 m34_Boss_Room___Gate_of_Bewilder
+    dw $6BC2  ; $35 m35_X
+    dw $6BFB  ; $36 m36_Boss_Room___Gate_of_Peace
+    dw $6C84  ; $37 m37_Boss_Room___Gate_of_Bravery
+    dw $6D17  ; $38 m38_X
+    dw $6DFA  ; $39 m39_X
+    dw $6E33  ; $3A m3A_X
+    dw $6F3E  ; $3B m3B_X
+    dw $6F63  ; $3C m3C_X
+    dw $6FE3  ; $3D m3D_X
+    dw $7023  ; $3E m3E_X
+    dw $7052  ; $3F m3F_X
+    dw $7077  ; $40 m40_X
+    dw $70E4  ; $41 m41_X
+    dw $7142  ; $42 m42_Labyrinth
+    dw $74DB  ; $43 m43_X
+    dw $751E  ; $44 m44_X
+    dw $7561  ; $45 m45_X
+    dw $75C9  ; $46 m46_Boss_Room___Gate_of_Ambition
+    dw $75F8  ; $47 m47_X
+    dw $7643  ; $48 m48_X
+    dw $7672  ; $49 m49_X
+    dw $76A1  ; $4A m4A_X
+    dw $76D0  ; $4B m4B_X
+    dw $76FF  ; $4C m4C_X
+    dw $772E  ; $4D m4D_Boss_Room___Arena_Right_Gate
+    dw $775D  ; $4E m4E_X
+    dw $77A9  ; $4F m4F_Boss_Room___Unused_Gate
+    dw $77DD  ; $50 m50_X
+    dw $77FA  ; $51 m51_X
+    dw $7817  ; $52 m52_Special___Coliseum
+    dw $784B  ; $53 m53_Special___Forest_Maze
+    dw $7908  ; $54 m54_Special___Conveyor_Belt_1
+    dw $7978  ; $55 m55_Special___Conveyor_Belt_2
+    dw $79E8  ; $56 m56_Special___Conveyor_Belt_3
+    dw $7A58  ; $57 m57_Special___Maze_1
+    dw $7AC8  ; $58 m58_Special___Maze_2
+    dw $7B38  ; $59 m59_Special___Maze_3
+    dw $7BA8  ; $5A m5A_Special___Treasure_Chest_1
+    dw $7BD9  ; $5B m5B_X
+    dw $7C0A  ; $5C m5C_Special___Treasure_Chest_3
+    dw $7C45  ; $5D m5D_Arena_Battle
+    dw $7CE2  ; $5E m5E_X
+    dw $77DD  ; $5F m5F_X
+    dw $7144  ; $60 m60_Labyrinth_Final_Room
+    dw $784D  ; $61 m61_X
+    dw $784F  ; $62 m62_X
+    dw $7851  ; $63 m63_X
+    dw $7853  ; $64 m64_X
+    dw $7144  ; $65 m65
+    dw $7144  ; $66 m66
+    dw $7144  ; $67 m67
+    dw $4C23  ; $68 m68
+    dw $4C3D  ; $69 m69
+    dw $FFFF  ; $6A m6A
+
+; --- ROOM DATA BLOCKS ---
+    db $FF, $FF, $FF, $FF, $75, $4C, $FF, $FF, $FF, $FF
+
+m00_Castle_SB0:  ; $4C23
+    ; step_block scr0 ram=0xD92A
+    ; step_block scr0 ram=0xD92A
+    ; step_block scr0 ram=0xD92A
+    db $2A, $D9, $01, $2A, $95, $4C, $FC, $4D, $02, $2A, $95, $4C, $FC, $4D, $03, $2A
+    db $95, $4C, $FC, $4D, $04, $2A, $95, $4C, $FC, $4D
+
+m00_Castle_SB1:  ; $4C3D
+    ; step_block scr1 ram=0xD92B
+    ; step_block scr1 ram=0xD92B
+    ; step_block scr1 ram=0xD92B
+    db $2B, $D9, $05, $2A, $CD, $4C, $FE, $4D, $06, $2A, $EC, $4C, $FE, $4D, $06, $2A
+    db $01, $4D, $FE, $4D, $06, $2A, $1B, $4D, $FE, $4D, $06, $2A, $2B, $4D, $FE, $4D
+    db $06, $2A, $54, $4D, $FE, $4D, $06, $2A, $88, $4D, $FE, $4D, $05, $2A, $64, $4D
+    db $FD, $4D, $06, $2A, $88, $4D, $FE, $4D, $2C, $D9, $07, $2A, $A2, $4D, $06, $4E
+    db $07, $2A, $BC, $4D, $06, $4E, $07, $2A, $CC, $4D, $06, $4E, $07, $2A, $DC, $4D
+    db $06, $4E, $07, $2A, $EC, $4D, $06, $4E
+
+m00_Castle_X0v0:  ; $4C95
+    ; exits s0v0
+    ; exits s0v1
+    ; exits s0v2
+    db $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02, $8F, $FF, $03, $02, $03, $8F
+    db $FF, $04, $02, $04, $8F, $FF, $02, $07, $05, $8F, $FF, $03, $07, $06, $8F, $FF
+    db $04, $07, $07, $8F, $FF, $05, $07, $08, $8F, $FF, $06, $07, $13
+    ; NPC t$01 spr$10 (5,2) scr9
+    db $01, $10, $05, $02, $09
+    ; NPC t$00 spr$10 (7,4) scr10
+    db $00, $10, $07, $04, $0A, $FF
+
+m00_Castle_X1v0:  ; $4CCD
+    ; exits s1v0
+    ; exits s1v0
+    ; exits s1v0
+    db $00, $10, $02, $02, $0C
+    ; NPC t$00 spr$10 (7,2) scr13
+    db $00, $10, $07, $02, $0D
+    ; NPC t$30 spr$11 (3,5) scr14
+    db $30, $11, $03, $05, $0E
+    ; NPC t$60 spr$00 (6,8) scr15
+    db $60, $00, $06, $08, $0F
+    ; NPC t$00 spr$0D (4,3) scr11
+    db $00, $0D, $04, $03, $0B
+    ; NPC t$60 spr$37 (5,8) scr255
+    db $60, $37, $05, $08, $FF, $FF
+
+m00_Castle_X1v1:  ; $4CEC
+    ; exits s1v1
+    ; exits s1v1
+    ; exits s1v1
+    db $00, $10, $02, $02, $0C
+    ; NPC t$00 spr$10 (7,2) scr13
+    db $00, $10, $07, $02, $0D
+    ; NPC t$30 spr$11 (3,5) scr14
+    db $30, $11, $03, $05, $0E
+    ; NPC t$20 spr$00 (6,6) scr15
+    db $20, $00, $06, $06, $0F, $FF
+
+m00_Castle_X1v2:  ; $4D01
+    ; exits s1v2
+    ; exits s1v2
+    ; exits s1v2
+    db $00, $10, $02, $02, $0C
+    ; NPC t$00 spr$10 (7,2) scr13
+    db $00, $10, $07, $02, $0D
+    ; NPC t$30 spr$11 (3,5) scr14
+    db $30, $11, $03, $05, $0E
+    ; NPC t$20 spr$00 (6,6) scr15
+    db $20, $00, $06, $06, $0F
+    ; NPC t$00 spr$0D (4,3) scr11
+    db $00, $0D, $04, $03, $0B, $FF
+
+m00_Castle_X1v3:  ; $4D1B
+    ; exits s1v3
+    ; exits s1v3
+    ; exits s1v3
+    db $00, $10, $02, $02, $0C
+    ; NPC t$00 spr$10 (7,2) scr13
+    db $00, $10, $07, $02, $0D
+    ; NPC t$30 spr$11 (3,5) scr14
+    db $30, $11, $03, $05, $0E, $FF
+
+m00_Castle_X1v4:  ; $4D2B
+    ; exits s1v4
+    ; exits s1v4
+    ; exits s1v4
+    db $00, $10, $02, $02, $0C
+    ; NPC t$00 spr$10 (7,2) scr13
+    db $00, $10, $07, $02, $0D
+    ; NPC t$20 spr$11 (4,6) scr14
+    db $20, $11, $04, $06, $0E
+    ; NPC t$60 spr$00 (6,6) scr255
+    db $60, $00, $06, $06, $FF
+    ; NPC t$00 spr$0D (4,3) scr11
+    db $00, $0D, $04, $03, $0B
+    ; NPC t$60 spr$00 (6,6) scr255
+    db $60, $00, $06, $06, $FF
+    ; NPC t$40 spr$E0 (4,5) scr255
+    db $40, $E0, $04, $05, $FF
+    ; NPC t$40 spr$52 (4,6) scr255
+    db $40, $52, $04, $06, $FF, $FF
+
+m00_Castle_X1v5:  ; $4D54
+    ; exits s1v5
+    ; exits s1v5
+    ; exits s1v5
+    db $00, $10, $02, $02, $0C
+    ; NPC t$00 spr$10 (8,2) scr13
+    db $00, $10, $08, $02, $0D
+    ; NPC t$30 spr$11 (3,5) scr14
+    db $30, $11, $03, $05, $0E, $FF
+
+m00_Castle_X1v7:  ; $4D64
+    ; exits s1v7
+    ; exits s1v7
+    ; exits s1v7
+    db $00, $10, $02, $02, $0C
+    ; NPC t$00 spr$10 (7,2) scr13
+    db $00, $10, $07, $02, $0D
+    ; NPC t$30 spr$11 (3,5) scr14
+    db $30, $11, $03, $05, $0E
+    ; NPC t$60 spr$00 (6,6) scr255
+    db $60, $00, $06, $06, $FF
+    ; NPC t$00 spr$0D (4,3) scr255
+    db $00, $0D, $04, $03, $FF
+    ; NPC t$60 spr$38 (5,8) scr255
+    db $60, $38, $05, $08, $FF
+    ; NPC t$40 spr$10 (8,2) scr13
+    db $40, $10, $08, $02, $0D, $FF
+
+m00_Castle_X1v6:  ; $4D88
+    ; exits s1v6
+    ; exits s1v8
+    ; exits s1v6
+    db $00, $10, $02, $02, $0C
+    ; NPC t$00 spr$10 (7,2) scr13
+    db $00, $10, $07, $02, $0D
+    ; NPC t$30 spr$11 (3,5) scr14
+    db $30, $11, $03, $05, $0E
+    ; NPC t$60 spr$00 (6,6) scr15
+    db $60, $00, $06, $06, $0F
+    ; NPC t$40 spr$10 (8,2) scr13
+    db $40, $10, $08, $02, $0D, $FF
+    ; NPC t$30 spr$0B (2,5) scr16
+    db $30, $0B, $02, $05, $10
+    ; NPC t$10 spr$0B (7,5) scr17
+    db $10, $0B, $07, $05, $11
+    ; NPC t$10 spr$0B (6,3) scr18
+    db $10, $0B, $06, $03, $12
+    ; NPC t$00 spr$11 (4,4) scr255
+    db $00, $11, $04, $04, $FF
+    ; NPC t$60 spr$E0 (4,7) scr255
+    db $60, $E0, $04, $07, $FF, $FF
+    ; NPC t$30 spr$0B (2,5) scr16
+    db $30, $0B, $02, $05, $10
+    ; NPC t$10 spr$0B (7,5) scr17
+    db $10, $0B, $07, $05, $11
+    ; NPC t$10 spr$0B (6,3) scr18
+    db $10, $0B, $06, $03, $12, $FF
+    ; NPC t$30 spr$0B (2,5) scr16
+    db $30, $0B, $02, $05, $10
+    ; NPC t$10 spr$0B (8,5) scr17
+    db $10, $0B, $08, $05, $11
+    ; NPC t$10 spr$0B (6,3) scr18
+    db $10, $0B, $06, $03, $12, $FF
+    ; NPC t$30 spr$0B (1,4) scr16
+    db $30, $0B, $01, $04, $10
+    ; NPC t$10 spr$0B (7,5) scr17
+    db $10, $0B, $07, $05, $11
+    ; NPC t$10 spr$0B (6,3) scr18
+    db $10, $0B, $06, $03, $12, $FF
+    ; NPC t$30 spr$0B (1,4) scr16
+    db $30, $0B, $01, $04, $10
+    ; NPC t$10 spr$0B (8,5) scr17
+    db $10, $0B, $08, $05, $11
+    ; NPC t$10 spr$0B (6,3) scr18
+    db $10, $0B, $06, $03, $12, $FF
+
+m00_Castle_N0v0:  ; $4DFC
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $FF
+
+m00_Castle_N1v7:  ; $4DFD
+    ; npcs s1v7
+    ; npcs s1v7
+    ; npcs s1v7
+    db $FF
+
+m00_Castle_N1v0:  ; $4DFE
+    ; npcs s1v0
+    ; npcs s1v1
+    ; npcs s1v2
+    db $07, $01
+    ; Exit (7,1)->Secret_Passage
+    db $0A, $00, $00, $07, $07, $FF, $02, $05
+    ; Exit (2,5)->Gate_Hub
+    db $03, $00, $01, $02, $05, $07, $05
+    ; Exit (7,5)->Farm
+    db $04, $00, $05, $07, $05, $04, $07
+    ; Exit (4,7)->GreatTree
+    db $01, $00, $80, $04, $04, $05, $07
+    ; Exit (5,7)->GreatTree
+    db $01, $00, $80, $05, $04, $FF
+
+m01_GreatTree_Overworld_SP:  ; $4E23
+    ; screen_ptrs $01
+    db $43, $4E, $63, $4E, $FF, $FF, $FF, $FF, $6B, $4E, $85, $4E, $FF, $FF, $FF, $FF
+    db $8D, $4E, $A1, $4E, $FF, $FF, $FF, $FF, $A9, $4E, $C3, $4E, $FF, $FF, $FF, $FF
+
+m01_GreatTree_Overworld_SB0:  ; $4E43
+    ; step_block scr0 ram=0xD92D
+    db $2D, $D9, $09, $2A, $D7, $4E, $BE, $4F, $09, $2A, $E2, $4E, $BF, $4F, $09, $2A
+    db $ED, $4E, $BF, $4F, $09, $2A, $F8, $4E, $BF, $4F, $09, $2A, $FE, $4E, $BE, $4F
+
+m01_GreatTree_Overworld_SB1:  ; $4E63
+    ; step_block scr1 ram=0xD92E
+    db $2E, $D9, $0A, $2A, $09, $4F, $CE, $4F, $2F, $D9, $0B, $2A, $0F, $4F, $D6, $4F
+    db $0B, $2A, $1F, $4F, $D6, $4F, $0B, $2A, $34, $4F, $D6, $4F, $0B, $2A, $3F, $4F
+    db $D6, $4F, $30, $D9, $0C, $2A, $4F, $4F, $E5, $4F, $31, $D9, $0D, $2A, $5A, $4F
+    db $E6, $4F, $0D, $2A, $6F, $4F, $E6, $4F, $0D, $2A, $84, $4F, $E6, $4F, $32, $D9
+    db $0E, $2A, $94, $4F, $F5, $4F, $33, $D9, $0F, $2A, $9F, $4F, $04, $50, $0F, $2A
+    db $A5, $4F, $04, $50, $10, $2A, $B0, $4F, $1A, $50, $10, $2A, $9F, $4F, $1A, $50
+    db $34, $D9, $11, $2A, $BB, $4F, $30, $50, $12, $2A, $BC, $4F, $38, $50, $13, $2A
+    db $BD, $4F, $47, $50
+
+m01_GreatTree_Overworld_X0v0:  ; $4ED7
+    ; exits s0v0
+    ; NPC t$20 spr$08 (2,6) scr255
+    db $20, $08, $02, $06, $FF
+    ; NPC t$10 spr$05 (6,5) scr2
+    db $10, $05, $06, $05, $02, $FF
+
+m01_GreatTree_Overworld_X0v1:  ; $4EE2
+    ; exits s0v1
+    ; NPC t$00 spr$08 (2,6) scr1
+    db $00, $08, $02, $06, $01
+    ; NPC t$00 spr$05 (6,5) scr2
+    db $00, $05, $06, $05, $02, $FF
+
+m01_GreatTree_Overworld_X0v2:  ; $4EED
+    ; exits s0v2
+    db $90, $FF, $06, $06, $12
+    ; NPC t$00 spr$05 (6,5) scr2
+    db $00, $05, $06, $05, $02, $FF
+
+m01_GreatTree_Overworld_X0v3:  ; $4EF8
+    ; exits s0v3
+    db $90, $FF, $06, $06, $12, $FF
+
+m01_GreatTree_Overworld_X0v4:  ; $4EFE
+    ; exits s0v4
+    db $90, $FF, $06, $06, $12
+    ; NPC t$20 spr$08 (2,6) scr255
+    db $20, $08, $02, $06, $FF, $FF
+
+m01_GreatTree_Overworld_X1v0:  ; $4F09
+    ; exits s1v0
+    ; NPC t$30 spr$03 (5,2) scr3
+    db $30, $03, $05, $02, $03, $FF
+    ; NPC t$20 spr$08 (2,6) scr255
+    db $20, $08, $02, $06, $FF
+    ; NPC t$00 spr$03 (7,3) scr4
+    db $00, $03, $07, $03, $04
+    ; NPC t$40 spr$0B (4,3) scr255
+    db $40, $0B, $04, $03, $FF, $FF, $90, $FF, $06, $06, $13
+    ; NPC t$00 spr$03 (7,3) scr4
+    db $00, $03, $07, $03, $04
+    ; NPC t$00 spr$05 (6,5) scr5
+    db $00, $05, $06, $05, $05
+    ; NPC t$00 spr$08 (2,6) scr6
+    db $00, $08, $02, $06, $06, $FF, $90, $FF, $06, $06, $13
+    ; NPC t$00 spr$03 (7,3) scr4
+    db $00, $03, $07, $03, $04, $FF, $90, $FF, $06, $06, $13
+    ; NPC t$00 spr$03 (7,3) scr4
+    db $00, $03, $07, $03, $04
+    ; NPC t$00 spr$0B (3,5) scr7
+    db $00, $0B, $03, $05, $07, $FF
+    ; NPC t$00 spr$0B (3,2) scr8
+    db $00, $0B, $03, $02, $08
+    ; NPC t$30 spr$0F (6,1) scr9
+    db $30, $0F, $06, $01, $09, $FF, $90, $FF, $06, $07, $14
+    ; NPC t$20 spr$08 (2,6) scr255
+    db $20, $08, $02, $06, $FF
+    ; NPC t$17 spr$01 (3,6) scr10
+    db $17, $01, $03, $06, $0A
+    ; NPC t$00 spr$09 (8,3) scr11
+    db $00, $09, $08, $03, $0B, $FF, $90, $FF, $06, $07, $14
+    ; NPC t$00 spr$09 (8,3) scr11
+    db $00, $09, $08, $03, $0B
+    ; NPC t$07 spr$01 (2,7) scr10
+    db $07, $01, $02, $07, $0A
+    ; NPC t$00 spr$05 (6,6) scr12
+    db $00, $05, $06, $06, $0C, $FF, $90, $FF, $06, $07, $14
+    ; NPC t$00 spr$09 (8,3) scr11
+    db $00, $09, $08, $03, $0B
+    ; NPC t$10 spr$04 (3,6) scr13
+    db $10, $04, $03, $06, $0D, $FF
+    ; NPC t$00 spr$02 (4,2) scr14
+    db $00, $02, $04, $02, $0E
+    ; NPC t$10 spr$00 (7,4) scr15
+    db $10, $00, $07, $04, $0F, $FF
+    ; NPC t$20 spr$08 (4,5) scr255
+    db $20, $08, $04, $05, $FF, $FF
+    ; NPC t$07 spr$01 (1,6) scr16
+    db $07, $01, $01, $06, $10
+    ; NPC t$00 spr$05 (7,5) scr17
+    db $00, $05, $07, $05, $11, $FF
+    ; NPC t$07 spr$01 (1,6) scr16
+    db $07, $01, $01, $06, $10
+    ; NPC t$00 spr$05 (7,5) scr17
+    db $00, $05, $07, $05, $11, $FF, $FF, $FF, $FF
+
+m01_GreatTree_Overworld_N0v0:  ; $4FBE
+    ; npcs s0v0
+    ; npcs s0v4
+    db $FF
+
+m01_GreatTree_Overworld_N0v1:  ; $4FBF
+    ; npcs s0v1
+    ; npcs s0v2
+    ; npcs s0v3
+    db $04, $04
+    ; Exit (4,4)->Castle
+    db $00, $00, $05, $04, $07, $05, $04
+    ; Exit (5,4)->Castle
+    db $00, $00, $05, $05, $07, $FF
+
+m01_GreatTree_Overworld_N1v0:  ; $4FCE
+    ; npcs s1v0
+    db $03, $02
+    ; Exit (3,2)->MedalMan
+    db $16, $00, $00, $03, $07, $FF, $04, $03
+    ; Exit (4,3)->Arena_Lobby
+    db $06, $00, $01, $04, $07, $05, $03
+    ; Exit (5,3)->Arena_Lobby
+    db $06, $00, $01, $05, $07, $FF, $FF, $05, $03
+    ; Exit (5,3)->Library
+    db $12, $00, $04, $05, $07, $04, $05
+    ; Exit (4,5)->Well
+    db $18, $00, $00, $04, $00, $FF, $05, $01
+    ; Exit (5,1)->Vault
+    db $0F, $00, $00, $05, $07, $09, $03
+    ; Exit (9,3)->Bazaar
+    db $02, $00, $00, $00, $03, $FF, $04, $06
+    ; Exit (4,6)->Starry_Shrine
+    db $09, $00, $04, $04, $06, $05, $01
+    ; Exit (5,1)->Old_Man_Gate_Room
+    db $0D, $00, $00, $05, $07, $04, $04
+    ; Exit (4,4)->Copycat_House
+    db $10, $00, $00, $04, $07, $FF, $04, $06
+    ; Exit (4,6)->Starry_Shrine
+    db $09, $00, $04, $04, $06, $05, $01
+    ; Exit (5,1)->Old_Man_Gate_Room
+    db $0D, $00, $00, $05, $07, $04, $04
+    ; Exit (4,4)->Copycat_House
+    db $10, $00, $00, $04, $07, $FF, $02, $01
+    ; Exit (2,1)->Egg_Evaluator
+    db $0C, $00, $00, $02, $07, $FF, $02, $01
+    ; Exit (2,1)->Egg_Evaluator
+    db $0C, $00, $00, $02, $07, $01, $04
+    ; Exit (1,4)->Goopy_Room_1
+    db $19, $00, $00, $01, $07, $FF, $02, $01
+    ; Exit (2,1)->Egg_Evaluator
+    db $0C, $00, $00, $02, $07, $01, $04
+    ; Exit (1,4)->Goopy_Room_1
+    db $19, $00, $00, $01, $07, $04, $06
+    ; Exit (4,6)->Goopy_Room_2
+    db $1A, $00, $00, $04, $07, $FF
+
+m02_Bazaar_SP:  ; $505D
+    ; screen_ptrs $02
+    db $6D, $50, $7B, $50, $8F, $50, $FF, $FF, $A3, $50, $B7, $50, $CB, $50, $FF, $FF
+
+m02_Bazaar_SB0:  ; $506D
+    ; step_block scr0 ram=0xD935
+    db $35, $D9, $15, $2A, $03, $51, $C3, $52, $15, $2A, $1D, $51, $C3, $52
+
+m02_Bazaar_SB1:  ; $507B
+    ; step_block scr1 ram=0xD936
+    db $36, $D9, $16, $2A, $3C, $51, $CB, $52, $16, $2A, $4C, $51, $CB, $52, $16, $2A
+    db $61, $51, $CB, $52
+
+m02_Bazaar_SB2:  ; $508F
+    ; step_block scr2 ram=0xD937
+    db $37, $D9, $17, $2A, $76, $51, $CC, $52, $18, $2A, $7C, $51, $CD, $52, $18, $2A
+    db $8C, $51, $CD, $52, $38, $D9, $19, $2A, $A1, $51, $CE, $52, $1A, $2A, $AC, $51
+    db $CF, $52, $19, $2A, $B7, $51, $CE, $52, $39, $D9, $1B, $2A, $C2, $51, $D0, $52
+    db $1C, $2A, $C8, $51, $D1, $52, $1C, $2A, $DD, $51, $D1, $52, $3A, $D9, $1D, $2A
+    db $F7, $51, $D2, $52, $1E, $2A, $11, $52, $D3, $52, $1E, $2A, $2B, $52, $D3, $52
+    db $1F, $2A, $40, $52, $DB, $52, $1F, $2A, $5A, $52, $DB, $52, $20, $2A, $6F, $52
+    db $E3, $52, $20, $2A, $89, $52, $E3, $52, $20, $2A, $9E, $52, $E3, $52, $20, $2A
+    db $B3, $52, $E3, $52
+
+m02_Bazaar_X0v0:  ; $5103
+    ; exits s0v0
+    db $8F, $FF, $06, $02, $01, $8F, $FF, $08, $02, $02, $8F, $FF, $08, $01, $03
+    ; NPC t$00 spr$06 (7,2) scr4
+    db $00, $06, $07, $02, $04
+    ; NPC t$00 spr$03 (3,4) scr5
+    db $00, $03, $03, $04, $05, $FF
+
+m02_Bazaar_X0v1:  ; $511D
+    ; exits s0v1
+    db $8F, $FF, $06, $02, $01, $8F, $FF, $08, $02, $02, $8F, $FF, $08, $01, $03
+    ; NPC t$00 spr$06 (7,2) scr4
+    db $00, $06, $07, $02, $04
+    ; NPC t$00 spr$03 (3,4) scr5
+    db $00, $03, $03, $04, $05
+    ; NPC t$30 spr$04 (4,5) scr6
+    db $30, $04, $04, $05, $06, $FF
+
+m02_Bazaar_X1v0:  ; $513C
+    ; exits s1v0
+    ; NPC t$00 spr$04 (4,4) scr7
+    db $00, $04, $04, $04, $07
+    ; NPC t$20 spr$04 (4,5) scr8
+    db $20, $04, $04, $05, $08
+    ; NPC t$50 spr$39 (10,4) scr255
+    db $50, $39, $0A, $04, $FF, $FF
+
+m02_Bazaar_X1v1:  ; $514C
+    ; exits s1v1
+    ; NPC t$00 spr$04 (4,4) scr7
+    db $00, $04, $04, $04, $07
+    ; NPC t$20 spr$04 (4,5) scr8
+    db $20, $04, $04, $05, $08
+    ; NPC t$50 spr$39 (10,4) scr255
+    db $50, $39, $0A, $04, $FF
+    ; NPC t$00 spr$00 (3,2) scr9
+    db $00, $00, $03, $02, $09, $FF
+
+m02_Bazaar_X1v2:  ; $5161
+    ; exits s1v2
+    ; NPC t$00 spr$04 (4,4) scr7
+    db $00, $04, $04, $04, $07
+    ; NPC t$20 spr$04 (4,5) scr8
+    db $20, $04, $04, $05, $08
+    ; NPC t$50 spr$39 (10,4) scr255
+    db $50, $39, $0A, $04, $FF
+    ; NPC t$02 spr$00 (4,2) scr9
+    db $02, $00, $04, $02, $09, $FF
+
+m02_Bazaar_X2v0:  ; $5176
+    ; exits s2v0
+    ; NPC t$30 spr$0F (1,4) scr10
+    db $30, $0F, $01, $04, $0A, $FF
+
+m02_Bazaar_X2v1:  ; $517C
+    ; exits s2v1
+    db $8F, $FF, $06, $03, $0B
+    ; NPC t$32 spr$0F (2,4) scr10
+    db $32, $0F, $02, $04, $0A
+    ; NPC t$10 spr$06 (7,3) scr12
+    db $10, $06, $07, $03, $0C, $FF
+
+m02_Bazaar_X2v2:  ; $518C
+    ; exits s2v2
+    db $8F, $FF, $06, $03, $0B
+    ; NPC t$32 spr$0F (2,4) scr10
+    db $32, $0F, $02, $04, $0A
+    ; NPC t$10 spr$06 (7,3) scr12
+    db $10, $06, $07, $03, $0C
+    ; NPC t$00 spr$12 (4,6) scr13
+    db $00, $12, $04, $06, $0D, $FF
+    ; NPC t$30 spr$06 (3,3) scr14
+    db $30, $06, $03, $03, $0E
+    ; NPC t$00 spr$0A (8,1) scr15
+    db $00, $0A, $08, $01, $0F, $FF
+    ; NPC t$30 spr$06 (3,3) scr14
+    db $30, $06, $03, $03, $0E
+    ; NPC t$00 spr$0A (8,1) scr15
+    db $00, $0A, $08, $01, $0F, $FF
+    ; NPC t$30 spr$06 (3,3) scr14
+    db $30, $06, $03, $03, $0E
+    ; NPC t$00 spr$0A (8,1) scr15
+    db $00, $0A, $08, $01, $0F, $FF
+    ; NPC t$10 spr$05 (8,2) scr16
+    db $10, $05, $08, $02, $10, $FF, $8F, $FF, $04, $03, $11, $8F, $FF, $06, $03, $12
+    ; NPC t$20 spr$06 (5,3) scr19
+    db $20, $06, $05, $03, $13
+    ; NPC t$10 spr$05 (8,2) scr16
+    db $10, $05, $08, $02, $10, $FF, $8F, $FF, $04, $03, $11, $8F, $FF, $06, $03, $12
+    ; NPC t$20 spr$06 (5,3) scr19
+    db $20, $06, $05, $03, $13
+    ; NPC t$10 spr$05 (8,2) scr16
+    db $10, $05, $08, $02, $10
+    ; NPC t$00 spr$03 (2,1) scr20
+    db $00, $03, $02, $01, $14, $FF, $8F, $FF, $03, $01, $15
+    ; NPC t$17 spr$0A (4,1) scr22
+    db $17, $0A, $04, $01, $16
+    ; NPC t$27 spr$0A (3,2) scr23
+    db $27, $0A, $03, $02, $17
+    ; NPC t$00 spr$07 (4,3) scr24
+    db $00, $07, $04, $03, $18
+    ; NPC t$00 spr$4D (7,4) scr255
+    db $00, $4D, $07, $04, $FF, $FF
+    ; NPC t$17 spr$0A (4,1) scr22
+    db $17, $0A, $04, $01, $16
+    ; NPC t$27 spr$0A (3,2) scr23
+    db $27, $0A, $03, $02, $17
+    ; NPC t$00 spr$07 (4,3) scr24
+    db $00, $07, $04, $03, $18
+    ; NPC t$00 spr$4D (3,1) scr255
+    db $00, $4D, $03, $01, $FF
+    ; NPC t$00 spr$4D (7,4) scr255
+    db $00, $4D, $07, $04, $FF, $FF
+    ; NPC t$17 spr$0A (4,1) scr22
+    db $17, $0A, $04, $01, $16
+    ; NPC t$27 spr$0A (3,2) scr23
+    db $27, $0A, $03, $02, $17
+    ; NPC t$00 spr$07 (4,3) scr24
+    db $00, $07, $04, $03, $18
+    ; NPC t$00 spr$4D (7,4) scr255
+    db $00, $4D, $07, $04, $FF, $FF, $8F, $FF, $07, $04, $15
+    ; NPC t$07 spr$0A (7,3) scr22
+    db $07, $0A, $07, $03, $16
+    ; NPC t$37 spr$0A (6,4) scr23
+    db $37, $0A, $06, $04, $17
+    ; NPC t$00 spr$07 (4,2) scr24
+    db $00, $07, $04, $02, $18
+    ; NPC t$00 spr$4D (3,1) scr255
+    db $00, $4D, $03, $01, $FF, $FF, $8F, $FF, $07, $04, $15
+    ; NPC t$07 spr$0A (7,3) scr22
+    db $07, $0A, $07, $03, $16
+    ; NPC t$37 spr$0A (6,4) scr23
+    db $37, $0A, $06, $04, $17
+    ; NPC t$00 spr$07 (4,2) scr24
+    db $00, $07, $04, $02, $18, $FF
+    ; NPC t$07 spr$0A (7,3) scr22
+    db $07, $0A, $07, $03, $16
+    ; NPC t$37 spr$0A (6,4) scr23
+    db $37, $0A, $06, $04, $17
+    ; NPC t$20 spr$07 (4,2) scr24
+    db $20, $07, $04, $02, $18
+    ; NPC t$00 spr$4D (3,1) scr255
+    db $00, $4D, $03, $01, $FF
+    ; NPC t$00 spr$4D (7,4) scr255
+    db $00, $4D, $07, $04, $FF, $FF
+    ; NPC t$07 spr$0A (7,3) scr22
+    db $07, $0A, $07, $03, $16
+    ; NPC t$37 spr$0A (6,4) scr23
+    db $37, $0A, $06, $04, $17
+    ; NPC t$20 spr$07 (4,2) scr24
+    db $20, $07, $04, $02, $18
+    ; NPC t$00 spr$4D (7,4) scr255
+    db $00, $4D, $07, $04, $FF, $FF
+    ; NPC t$07 spr$0A (7,3) scr22
+    db $07, $0A, $07, $03, $16
+    ; NPC t$37 spr$0A (6,4) scr23
+    db $37, $0A, $06, $04, $17
+    ; NPC t$20 spr$07 (4,2) scr24
+    db $20, $07, $04, $02, $18
+    ; NPC t$00 spr$4D (3,1) scr255
+    db $00, $4D, $03, $01, $FF, $FF
+    ; NPC t$07 spr$0A (7,3) scr22
+    db $07, $0A, $07, $03, $16
+    ; NPC t$37 spr$0A (6,4) scr23
+    db $37, $0A, $06, $04, $17
+    ; NPC t$20 spr$07 (4,2) scr24
+    db $20, $07, $04, $02, $18, $FF
+
+m02_Bazaar_N0v0:  ; $52C3
+    ; npcs s0v0
+    ; npcs s0v1
+    db $00, $03
+    ; Exit (0,3)->GreatTree
+    db $01, $00, $09, $09, $03, $FF
+
+m02_Bazaar_N1v0:  ; $52CB
+    ; npcs s1v0
+    ; npcs s1v1
+    ; npcs s1v2
+    db $FF
+
+m02_Bazaar_N2v0:  ; $52CC
+    ; npcs s2v0
+    db $FF
+
+m02_Bazaar_N2v1:  ; $52CD
+    ; npcs s2v1
+    ; npcs s2v2
+    db $FF, $FF, $FF, $FF, $FF, $FF, $03, $01
+    ; Exit (3,1)->Stable
+    db $05, $01, $00, $00, $00, $FF, $03, $01
+    ; Exit (3,1)->Stable
+    db $05, $01, $00, $00, $00, $FF, $03, $01
+    ; Exit (3,1)->Stable
+    db $05, $01, $00, $00, $00, $07, $04
+    ; Exit (7,4)->Map_1C
+    db $1C, $01, $00, $00, $00, $FF
+
+m03_Gate_Hub_SP:  ; $52F2
+    ; screen_ptrs $03
+    db $02, $53, $1C, $53, $FF, $FF, $FF, $FF, $3C, $53, $5C, $53, $FF, $FF, $FF, $FF
+
+m03_Gate_Hub_SB0:  ; $5302
+    ; step_block scr0 ram=0xD93B
+    db $3B, $D9, $22, $2A, $6A, $53, $88, $54, $23, $2A, $84, $53, $90, $54, $24, $2A
+    db $99, $53, $9F, $54, $25, $2A, $A4, $53, $BC, $54
+
+m03_Gate_Hub_SB1:  ; $531C
+    ; step_block scr1 ram=0xD93C
+    db $3C, $D9, $26, $2A, $AA, $53, $E0, $54, $27, $2A, $CE, $53, $E8, $54, $27, $2A
+    db $E8, $53, $E8, $54, $28, $2A, $F8, $53, $FE, $54, $29, $2A, $03, $54, $1B, $55
+    db $3D, $D9, $2A, $2A, $09, $54, $3F, $55, $2B, $2A, $28, $54, $47, $55, $2C, $2A
+    db $42, $54, $56, $55, $2D, $2A, $57, $54, $6C, $55, $2D, $2A, $62, $54, $6C, $55
+    db $3E, $D9, $2E, $2A, $68, $54, $90, $55, $00, $29, $82, $54, $91, $55
+
+m03_Gate_Hub_X0v0:  ; $536A
+    ; exits s0v0
+    db $8F, $FF, $04, $01, $01, $8F, $FF, $05, $01, $01, $8F, $FF, $02, $02, $02, $8F
+    db $FF, $07, $02, $03
+    ; NPC t$20 spr$0B (3,5) scr4
+    db $20, $0B, $03, $05, $04, $FF
+
+m03_Gate_Hub_X0v1:  ; $5384
+    ; exits s0v1
+    db $8F, $FF, $04, $01, $01, $8F, $FF, $05, $01, $01, $8F, $FF, $02, $02, $02
+    ; NPC t$20 spr$0B (3,5) scr4
+    db $20, $0B, $03, $05, $04, $FF
+
+m03_Gate_Hub_X0v2:  ; $5399
+    ; exits s0v2
+    db $8F, $FF, $02, $02, $02
+    ; NPC t$20 spr$0B (3,5) scr4
+    db $20, $0B, $03, $05, $04, $FF
+
+m03_Gate_Hub_X0v3:  ; $53A4
+    ; exits s0v3
+    ; NPC t$20 spr$0B (3,5) scr4
+    db $20, $0B, $03, $05, $04, $FF
+
+m03_Gate_Hub_X1v0:  ; $53AA
+    ; exits s1v0
+    db $8F, $FF, $04, $01, $05, $8F, $FF, $05, $01, $05, $8F, $FF, $02, $02, $06, $8F
+    db $FF, $07, $02, $07
+    ; NPC t$30 spr$0B (0,4) scr8
+    db $30, $0B, $00, $04, $08
+    ; NPC t$30 spr$0B (0,5) scr9
+    db $30, $0B, $00, $05, $09
+    ; NPC t$20 spr$0B (4,6) scr10
+    db $20, $0B, $04, $06, $0A, $FF
+
+m03_Gate_Hub_X1v1:  ; $53CE
+    ; exits s1v1
+    db $8F, $FF, $02, $02, $06, $8F, $FF, $07, $02, $07
+    ; NPC t$30 spr$0B (0,4) scr8
+    db $30, $0B, $00, $04, $08
+    ; NPC t$30 spr$0B (0,5) scr9
+    db $30, $0B, $00, $05, $09
+    ; NPC t$20 spr$0B (4,6) scr10
+    db $20, $0B, $04, $06, $0A, $FF
+
+m03_Gate_Hub_X1v2:  ; $53E8
+    ; exits s1v2
+    db $8F, $FF, $02, $02, $06, $8F, $FF, $07, $02, $07
+    ; NPC t$22 spr$0B (5,5) scr10
+    db $22, $0B, $05, $05, $0A, $FF
+
+m03_Gate_Hub_X1v3:  ; $53F8
+    ; exits s1v3
+    db $8F, $FF, $07, $02, $07
+    ; NPC t$22 spr$0B (5,5) scr10
+    db $22, $0B, $05, $05, $0A, $FF
+
+m03_Gate_Hub_X1v4:  ; $5403
+    ; exits s1v4
+    ; NPC t$22 spr$0B (5,5) scr10
+    db $22, $0B, $05, $05, $0A, $FF, $8F, $FF, $04, $01, $0B, $8F, $FF, $05, $01, $0B
+    db $8F, $FF, $02, $02, $0C, $8F, $FF, $07, $02, $0D
+    ; NPC t$10 spr$0B (9,4) scr14
+    db $10, $0B, $09, $04, $0E
+    ; NPC t$10 spr$0B (9,5) scr15
+    db $10, $0B, $09, $05, $0F, $FF, $8F, $FF, $04, $01, $0B, $8F, $FF, $05, $01, $0B
+    db $8F, $FF, $02, $02, $0C
+    ; NPC t$10 spr$0B (9,4) scr14
+    db $10, $0B, $09, $04, $0E
+    ; NPC t$10 spr$0B (9,5) scr15
+    db $10, $0B, $09, $05, $0F, $FF, $8F, $FF, $04, $01, $0B, $8F, $FF, $05, $01, $0B
+    ; NPC t$10 spr$0B (9,4) scr14
+    db $10, $0B, $09, $04, $0E
+    ; NPC t$10 spr$0B (9,5) scr15
+    db $10, $0B, $09, $05, $0F, $FF
+    ; NPC t$10 spr$0B (9,4) scr14
+    db $10, $0B, $09, $04, $0E
+    ; NPC t$10 spr$0B (9,5) scr15
+    db $10, $0B, $09, $05, $0F, $FF
+    ; NPC t$00 spr$0B (3,4) scr14
+    db $00, $0B, $03, $04, $0E, $FF, $8F, $FF, $04, $01, $10, $8F, $FF, $05, $01, $10
+    db $8F, $FF, $02, $02, $11, $8F, $FF, $07, $02, $12
+    ; NPC t$20 spr$0B (4,6) scr19
+    db $20, $0B, $04, $06, $13, $FF
+    ; NPC t$20 spr$0B (4,6) scr19
+    db $20, $0B, $04, $06, $13, $FF
+
+m03_Gate_Hub_N0v0:  ; $5488
+    ; npcs s0v0
+    db $07, $05
+    ; Exit (7,5)->Gate_Hub
+    db $03, $00, $04, $07, $05, $FF
+
+m03_Gate_Hub_N0v1:  ; $5490
+    ; npcs s0v1
+    db $07, $05
+    ; Exit (7,5)->Gate_Hub
+    db $03, $00, $04, $07, $05, $07, $02
+    ; Exit (7,2)->Room_PeaceBravery
+    db $26, $00, $00, $08, $07, $FF
+
+m03_Gate_Hub_N0v2:  ; $549F
+    ; npcs s0v2
+    db $07, $05
+    ; Exit (7,5)->Gate_Hub
+    db $03, $00, $04, $07, $05, $07, $02
+    ; Exit (7,2)->Room_PeaceBravery
+    db $26, $00, $00, $08, $07, $04, $01
+    ; Exit (4,1)->Room_StrengthAnger
+    db $27, $00, $00, $04, $07, $05, $01
+    ; Exit (5,1)->Room_StrengthAnger
+    db $27, $00, $00, $05, $07, $FF
+
+m03_Gate_Hub_N0v3:  ; $54BC
+    ; npcs s0v3
+    db $07, $05
+    ; Exit (7,5)->Gate_Hub
+    db $03, $00, $04, $07, $05, $07, $02
+    ; Exit (7,2)->Room_PeaceBravery
+    db $26, $00, $00, $08, $07, $04, $01
+    ; Exit (4,1)->Room_StrengthAnger
+    db $27, $00, $00, $04, $07, $05, $01
+    ; Exit (5,1)->Room_StrengthAnger
+    db $27, $00, $00, $05, $07, $02, $02
+    ; Exit (2,2)->Room_JoyWisdom
+    db $28, $00, $00, $04, $07, $FF
+
+m03_Gate_Hub_N1v0:  ; $54E0
+    ; npcs s1v0
+    db $02, $05
+    ; Exit (2,5)->Castle
+    db $00, $00, $05, $02, $05, $FF
+
+m03_Gate_Hub_N1v1:  ; $54E8
+    ; npcs s1v1
+    ; npcs s1v2
+    db $02, $05
+    ; Exit (2,5)->Castle
+    db $00, $00, $05, $02, $05, $04, $01
+    ; Exit (4,1)->Room_of_Beginning
+    db $23, $00, $00, $07, $07, $05, $01
+    ; Exit (5,1)->Room_of_Beginning
+    db $23, $00, $00, $08, $07, $FF
+
+m03_Gate_Hub_N1v3:  ; $54FE
+    ; npcs s1v3
+    db $02, $05
+    ; Exit (2,5)->Castle
+    db $00, $00, $05, $02, $05, $04, $01
+    ; Exit (4,1)->Room_of_Beginning
+    db $23, $00, $00, $07, $07, $05, $01
+    ; Exit (5,1)->Room_of_Beginning
+    db $23, $00, $00, $08, $07, $02, $02
+    ; Exit (2,2)->Room_VillagerTalisman
+    db $24, $00, $00, $06, $07, $FF
+
+m03_Gate_Hub_N1v4:  ; $551B
+    ; npcs s1v4
+    db $02, $05
+    ; Exit (2,5)->Castle
+    db $00, $00, $05, $02, $05, $04, $01
+    ; Exit (4,1)->Room_of_Beginning
+    db $23, $00, $00, $07, $07, $05, $01
+    ; Exit (5,1)->Room_of_Beginning
+    db $23, $00, $00, $08, $07, $02, $02
+    ; Exit (2,2)->Room_VillagerTalisman
+    db $24, $00, $00, $06, $07, $07, $02
+    ; Exit (7,2)->Room_MemoriesBewilder
+    db $25, $00, $00, $01, $07, $FF, $07, $05
+    ; Exit (7,5)->Gate_Hub
+    db $03, $00, $00, $07, $05, $FF, $07, $05
+    ; Exit (7,5)->Gate_Hub
+    db $03, $00, $00, $07, $05, $07, $02
+    ; Exit (7,2)->Room_HappinessTemptation
+    db $29, $00, $00, $04, $07, $FF, $07, $05
+    ; Exit (7,5)->Gate_Hub
+    db $03, $00, $00, $07, $05, $07, $02
+    ; Exit (7,2)->Room_HappinessTemptation
+    db $29, $00, $00, $04, $07, $02, $02
+    ; Exit (2,2)->Room_LabyrinthJudgment
+    db $2A, $00, $00, $04, $07, $FF, $07, $05
+    ; Exit (7,5)->Gate_Hub
+    db $03, $00, $00, $07, $05, $07, $02
+    ; Exit (7,2)->Room_HappinessTemptation
+    db $29, $00, $00, $04, $07, $02, $02
+    ; Exit (2,2)->Room_LabyrinthJudgment
+    db $2A, $00, $00, $04, $07, $04, $01
+    ; Exit (4,1)->Room_Reflection
+    db $2B, $00, $00, $07, $07, $05, $01
+    ; Exit (5,1)->Room_Reflection
+    db $2B, $00, $00, $08, $07, $FF, $FF, $02, $02
+    ; Exit (2,2)->Room_AmbitionDemolition
+    db $2C, $00, $00, $08, $07, $07, $02
+    ; Exit (7,2)->Room_MastermindControl
+    db $2D, $00, $00, $02, $07, $04, $01
+    ; Exit (4,1)->Room_ExtinctionSleep
+    db $2E, $00, $00, $06, $07, $05, $01
+    ; Exit (5,1)->Room_ExtinctionSleep
+    db $2E, $00, $00, $07, $07, $FF
+
+m04_Farm_top_of_GreatTree_SP:  ; $55AE
+    ; screen_ptrs $04
+    db $BE, $55, $D8, $55, $EC, $55, $FF, $FF, $0C, $56, $26, $56, $3A, $56, $FF, $FF
+
+m04_Farm_top_of_GreatTree_SB0:  ; $55BE
+    ; step_block scr0 ram=0xD93F
+    db $3F, $D9, $02, $29, $54, $56, $1E, $58, $02, $29, $55, $56, $1E, $58, $02, $29
+    db $6A, $56, $1E, $58, $02, $29, $7F, $56, $1E, $58
+
+m04_Farm_top_of_GreatTree_SB1:  ; $55D8
+    ; step_block scr1 ram=0xD940
+    db $40, $D9, $03, $29, $8F, $56, $1F, $58, $03, $29, $9F, $56, $1F, $58, $03, $29
+    db $B4, $56, $1F, $58
+
+m04_Farm_top_of_GreatTree_SB2:  ; $55EC
+    ; step_block scr2 ram=0xD941
+    db $41, $D9, $04, $29, $D3, $56, $20, $58, $04, $29, $E8, $56, $20, $58, $05, $29
+    db $02, $57, $21, $58, $05, $29, $26, $57, $21, $58, $05, $29, $45, $57, $21, $58
+    db $42, $D9, $06, $29, $6E, $57, $29, $58, $06, $29, $7E, $57, $29, $58, $06, $29
+    db $8E, $57, $29, $58, $06, $29, $9E, $57, $29, $58, $43, $D9, $07, $29, $B3, $57
+    db $31, $58, $07, $29, $C3, $57, $31, $58, $07, $29, $D3, $57, $31, $58, $44, $D9
+    db $08, $29, $ED, $57, $39, $58, $08, $29, $EE, $57, $39, $58, $08, $29, $F4, $57
+    db $39, $58, $08, $29, $FF, $57, $39, $58
+
+m04_Farm_top_of_GreatTree_X0v0:  ; $5654
+    ; exits s0v0
+    db $FF
+
+m04_Farm_top_of_GreatTree_X0v1:  ; $5655
+    ; exits s0v1
+    db $90, $FF, $06, $05, $02
+    ; NPC t$02 spr$18 (4,1) scr255
+    db $02, $18, $04, $01, $FF
+    ; NPC t$10 spr$20 (4,6) scr1
+    db $10, $20, $04, $06, $01
+    ; NPC t$40 spr$53 (6,1) scr255
+    db $40, $53, $06, $01, $FF, $FF
+
+m04_Farm_top_of_GreatTree_X0v2:  ; $566A
+    ; exits s0v2
+    db $90, $FF, $06, $05, $02
+    ; NPC t$02 spr$1B (4,1) scr255
+    db $02, $1B, $04, $01, $FF
+    ; NPC t$00 spr$2C (4,6) scr3
+    db $00, $2C, $04, $06, $03
+    ; NPC t$40 spr$53 (6,1) scr255
+    db $40, $53, $06, $01, $FF, $FF
+
+m04_Farm_top_of_GreatTree_X0v3:  ; $567F
+    ; exits s0v3
+    ; NPC t$02 spr$1B (4,1) scr255
+    db $02, $1B, $04, $01, $FF
+    ; NPC t$30 spr$0C (4,6) scr4
+    db $30, $0C, $04, $06, $04
+    ; NPC t$30 spr$02 (6,5) scr5
+    db $30, $02, $06, $05, $05, $FF
+
+m04_Farm_top_of_GreatTree_X1v0:  ; $568F
+    ; exits s1v0
+    db $90, $FF, $05, $02, $06, $8F, $FF, $04, $01, $07
+    ; NPC t$00 spr$19 (6,2) scr8
+    db $00, $19, $06, $02, $08, $FF
+
+m04_Farm_top_of_GreatTree_X1v1:  ; $569F
+    ; exits s1v1
+    db $90, $FF, $05, $02, $06, $8F, $FF, $04, $01, $07
+    ; NPC t$00 spr$19 (6,2) scr8
+    db $00, $19, $06, $02, $08
+    ; NPC t$00 spr$19 (3,4) scr9
+    db $00, $19, $03, $04, $09, $FF
+
+m04_Farm_top_of_GreatTree_X1v2:  ; $56B4
+    ; exits s1v2
+    ; NPC t$00 spr$0D (5,2) scr10
+    db $00, $0D, $05, $02, $0A
+    ; NPC t$00 spr$0E (4,2) scr11
+    db $00, $0E, $04, $02, $0B
+    ; NPC t$00 spr$10 (2,3) scr12
+    db $00, $10, $02, $03, $0C
+    ; NPC t$00 spr$10 (1,4) scr13
+    db $00, $10, $01, $04, $0D
+    ; NPC t$00 spr$10 (7,3) scr14
+    db $00, $10, $07, $03, $0E
+    ; NPC t$00 spr$10 (8,4) scr15
+    db $00, $10, $08, $04, $0F, $FF
+
+m04_Farm_top_of_GreatTree_X2v0:  ; $56D3
+    ; exits s2v0
+    db $8F, $FF, $04, $05, $10
+    ; NPC t$26 spr$1D (5,6) scr17
+    db $26, $1D, $05, $06, $11
+    ; NPC t$06 spr$1C (5,3) scr18
+    db $06, $1C, $05, $03, $12
+    ; NPC t$00 spr$4D (8,2) scr255
+    db $00, $4D, $08, $02, $FF, $FF
+
+m04_Farm_top_of_GreatTree_X2v1:  ; $56E8
+    ; exits s2v1
+    db $90, $FF, $05, $05, $29, $8F, $FF, $04, $05, $10
+    ; NPC t$37 spr$1D (1,4) scr17
+    db $37, $1D, $01, $04, $11
+    ; NPC t$06 spr$1C (5,3) scr18
+    db $06, $1C, $05, $03, $12
+    ; NPC t$00 spr$4D (8,2) scr255
+    db $00, $4D, $08, $02, $FF, $FF
+
+m04_Farm_top_of_GreatTree_X2v2:  ; $5702
+    ; exits s2v2
+    db $90, $FF, $05, $04, $29, $90, $FF, $05, $05, $29, $90, $FF, $07, $04, $2A, $90
+    db $FF, $07, $05, $2A
+    ; NPC t$37 spr$1D (4,2) scr17
+    db $37, $1D, $04, $02, $11
+    ; NPC t$16 spr$1C (5,2) scr18
+    db $16, $1C, $05, $02, $12
+    ; NPC t$00 spr$4D (8,2) scr255
+    db $00, $4D, $08, $02, $FF, $FF
+
+m04_Farm_top_of_GreatTree_X2v3:  ; $5726
+    ; exits s2v3
+    db $90, $FF, $05, $04, $29, $90, $FF, $05, $05, $29, $90, $FF, $07, $04, $2A, $90
+    db $FF, $07, $05, $2A
+    ; NPC t$37 spr$1D (4,2) scr17
+    db $37, $1D, $04, $02, $11
+    ; NPC t$16 spr$1C (5,2) scr18
+    db $16, $1C, $05, $02, $12, $FF
+
+m04_Farm_top_of_GreatTree_X2v4:  ; $5745
+    ; exits s2v4
+    db $90, $FF, $05, $04, $29, $90, $FF, $05, $05, $29, $90, $FF, $07, $04, $2A, $90
+    db $FF, $07, $05, $2A
+    ; NPC t$36 spr$1D (4,2) scr17
+    db $36, $1D, $04, $02, $11
+    ; NPC t$16 spr$1C (5,2) scr18
+    db $16, $1C, $05, $02, $12
+    ; NPC t$10 spr$08 (4,5) scr19
+    db $10, $08, $04, $05, $13
+    ; NPC t$10 spr$0F (5,6) scr20
+    db $10, $0F, $05, $06, $14, $FF, $8F, $FF, $02, $01, $15
+    ; NPC t$17 spr$05 (2,2) scr22
+    db $17, $05, $02, $02, $16
+    ; NPC t$00 spr$3F (6,4) scr23
+    db $00, $3F, $06, $04, $17, $FF, $8F, $FF, $02, $01, $15
+    ; NPC t$17 spr$05 (2,2) scr22
+    db $17, $05, $02, $02, $16
+    ; NPC t$00 spr$3F (5,4) scr23
+    db $00, $3F, $05, $04, $17, $FF, $8F, $FF, $02, $01, $15
+    ; NPC t$17 spr$05 (2,2) scr22
+    db $17, $05, $02, $02, $16
+    ; NPC t$00 spr$1A (5,4) scr24
+    db $00, $1A, $05, $04, $18, $FF, $8F, $FF, $02, $01, $15
+    ; NPC t$17 spr$05 (2,2) scr22
+    db $17, $05, $02, $02, $16
+    ; NPC t$00 spr$1A (6,4) scr24
+    db $00, $1A, $06, $04, $18
+    ; NPC t$03 spr$00 (6,1) scr25
+    db $03, $00, $06, $01, $19, $FF
+    ; NPC t$00 spr$00 (5,3) scr26
+    db $00, $00, $05, $03, $1A
+    ; NPC t$00 spr$3A (5,2) scr27
+    db $00, $3A, $05, $02, $1B
+    ; NPC t$30 spr$44 (4,6) scr28
+    db $30, $44, $04, $06, $1C, $FF
+    ; NPC t$00 spr$00 (5,3) scr26
+    db $00, $00, $05, $03, $1A
+    ; NPC t$00 spr$3A (5,2) scr27
+    db $00, $3A, $05, $02, $1B
+    ; NPC t$30 spr$45 (4,6) scr29
+    db $30, $45, $04, $06, $1D, $FF
+    ; NPC t$00 spr$00 (5,3) scr26
+    db $00, $00, $05, $03, $1A
+    ; NPC t$00 spr$3A (5,2) scr27
+    db $00, $3A, $05, $02, $1B
+    ; NPC t$32 spr$01 (4,5) scr30
+    db $32, $01, $04, $05, $1E
+    ; NPC t$00 spr$11 (7,5) scr31
+    db $00, $11, $07, $05, $1F
+    ; NPC t$33 spr$0B (2,2) scr32
+    db $33, $0B, $02, $02, $20, $FF, $FF
+    ; NPC t$00 spr$46 (3,3) scr33
+    db $00, $46, $03, $03, $21, $FF
+    ; NPC t$02 spr$47 (2,1) scr34
+    db $02, $47, $02, $01, $22
+    ; NPC t$00 spr$48 (3,3) scr35
+    db $00, $48, $03, $03, $23, $FF
+    ; NPC t$10 spr$12 (5,1) scr36
+    db $10, $12, $05, $01, $24
+    ; NPC t$10 spr$12 (5,2) scr37
+    db $10, $12, $05, $02, $25
+    ; NPC t$10 spr$12 (5,3) scr38
+    db $10, $12, $05, $03, $26
+    ; NPC t$01 spr$04 (1,2) scr39
+    db $01, $04, $01, $02, $27
+    ; NPC t$00 spr$0F (2,5) scr40
+    db $00, $0F, $02, $05, $28
+    ; NPC t$40 spr$54 (5,0) scr255
+    db $40, $54, $05, $00, $FF, $FF
+
+m04_Farm_top_of_GreatTree_N0v0:  ; $581E
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $FF
+
+m04_Farm_top_of_GreatTree_N1v0:  ; $581F
+    ; npcs s1v0
+    ; npcs s1v1
+    ; npcs s1v2
+    db $FF
+
+m04_Farm_top_of_GreatTree_N2v0:  ; $5820
+    ; npcs s2v0
+    ; npcs s2v1
+    db $FF
+
+m04_Farm_top_of_GreatTree_N2v2:  ; $5821
+    ; npcs s2v2
+    ; npcs s2v3
+    ; npcs s2v4
+    db $08, $02
+    ; Exit (8,2)->Map_0B
+    db $0B, $01, $00, $00, $00, $FF, $06, $04
+    ; Exit (6,4)->Stable
+    db $05, $00, $02, $06, $04, $FF, $07, $05
+    ; Exit (7,5)->Castle
+    db $00, $00, $05, $07, $05, $FF, $FF
+
+m05_Stable_SP:  ; $583A
+    ; screen_ptrs $05
+    db $40, $58, $4E, $58, $5C, $58
+
+m05_Stable_SB0:  ; $5840
+    ; step_block scr0 ram=0xD945
+    db $45, $D9, $0A, $29, $76, $58, $69, $59, $0B, $29, $86, $58, $78, $59
+
+m05_Stable_SB1:  ; $584E
+    ; step_block scr1 ram=0xD946
+    db $46, $D9, $0C, $29, $AA, $58, $87, $59, $0C, $29, $BF, $58, $87, $59
+
+m05_Stable_SB2:  ; $585C
+    ; step_block scr2 ram=0xD947
+    db $47, $D9, $0D, $29, $E3, $58, $96, $59, $0D, $29, $07, $59, $96, $59, $0D, $29
+    db $26, $59, $96, $59, $0D, $29, $4A, $59, $96, $59
+
+m05_Stable_X0v0:  ; $5876
+    ; exits s0v0
+    ; NPC t$01 spr$3B (2,2) scr1
+    db $01, $3B, $02, $02, $01
+    ; NPC t$36 spr$3A (4,6) scr2
+    db $36, $3A, $04, $06, $02
+    ; NPC t$00 spr$3A (5,6) scr3
+    db $00, $3A, $05, $06, $03, $FF
+
+m05_Stable_X0v1:  ; $5886
+    ; exits s0v1
+    db $8F, $FF, $04, $03, $04, $8F, $FF, $05, $03, $04, $8F, $FF, $04, $04, $04, $8F
+    db $FF, $05, $04, $04
+    ; NPC t$01 spr$1B (2,2) scr5
+    db $01, $1B, $02, $02, $05
+    ; NPC t$06 spr$2A (4,6) scr6
+    db $06, $2A, $04, $06, $06
+    ; NPC t$00 spr$16 (5,6) scr7
+    db $00, $16, $05, $06, $07, $FF
+
+m05_Stable_X1v0:  ; $58AA
+    ; exits s1v0
+    db $8F, $FF, $04, $02, $FF, $8F, $FF, $05, $02, $FF, $8F, $FF, $04, $03, $08, $8F
+    db $FF, $05, $03, $08, $FF
+
+m05_Stable_X1v1:  ; $58BF
+    ; exits s1v1
+    db $8F, $FF, $04, $02, $FF, $8F, $FF, $05, $02, $FF, $8F, $FF, $04, $03, $08, $8F
+    db $FF, $05, $03, $08
+    ; NPC t$00 spr$49 (1,1) scr9
+    db $00, $49, $01, $01, $09
+    ; NPC t$10 spr$4A (8,3) scr10
+    db $10, $4A, $08, $03, $0A
+    ; NPC t$20 spr$4B (3,6) scr11
+    db $20, $4B, $03, $06, $0B, $FF
+
+m05_Stable_X2v0:  ; $58E3
+    ; exits s2v0
+    db $8F, $FF, $04, $03, $0C, $8F, $FF, $05, $03, $0D, $8F, $FF, $07, $00, $0E, $8F
+    db $FF, $08, $00, $0F
+    ; NPC t$06 spr$25 (2,1) scr17
+    db $06, $25, $02, $01, $11
+    ; NPC t$00 spr$3E (8,2) scr18
+    db $00, $3E, $08, $02, $12
+    ; NPC t$37 spr$21 (3,3) scr16
+    db $37, $21, $03, $03, $10, $FF
+
+m05_Stable_X2v1:  ; $5907
+    ; exits s2v1
+    db $8F, $FF, $04, $03, $0C, $8F, $FF, $05, $03, $0D, $8F, $FF, $07, $00, $0E, $8F
+    db $FF, $08, $00, $0F
+    ; NPC t$06 spr$25 (2,1) scr17
+    db $06, $25, $02, $01, $11
+    ; NPC t$00 spr$3E (8,2) scr18
+    db $00, $3E, $08, $02, $12, $FF
+
+m05_Stable_X2v2:  ; $5926
+    ; exits s2v2
+    db $8F, $FF, $04, $03, $0C, $8F, $FF, $05, $03, $0D, $8F, $FF, $07, $00, $0E, $8F
+    db $FF, $08, $00, $0F
+    ; NPC t$06 spr$25 (2,1) scr17
+    db $06, $25, $02, $01, $11
+    ; NPC t$00 spr$3D (8,2) scr20
+    db $00, $3D, $08, $02, $14
+    ; NPC t$37 spr$39 (3,3) scr19
+    db $37, $39, $03, $03, $13, $FF
+
+m05_Stable_X2v3:  ; $594A
+    ; exits s2v3
+    db $8F, $FF, $04, $03, $0C, $8F, $FF, $05, $03, $0D, $8F, $FF, $07, $00, $0E, $8F
+    db $FF, $08, $00, $0F
+    ; NPC t$06 spr$25 (2,1) scr17
+    db $06, $25, $02, $01, $11
+    ; NPC t$00 spr$3D (8,2) scr20
+    db $00, $3D, $08, $02, $14, $FF
+
+m05_Stable_N0v0:  ; $5969
+    ; npcs s0v0
+    db $04, $00
+    ; Exit (4,0)->Map_1B
+    db $1B, $00, $00, $04, $07, $05, $00
+    ; Exit (5,0)->Map_1B
+    db $1B, $00, $00, $05, $07, $FF
+
+m05_Stable_N0v1:  ; $5978
+    ; npcs s0v1
+    db $04, $00
+    ; Exit (4,0)->Map_1B
+    db $1B, $00, $00, $04, $07, $05, $00
+    ; Exit (5,0)->Map_1B
+    db $1B, $00, $00, $05, $07, $FF
+
+m05_Stable_N1v0:  ; $5987
+    ; npcs s1v0
+    ; npcs s1v1
+    db $04, $00
+    ; Exit (4,0)->Map_1C
+    db $1C, $00, $00, $04, $07, $05, $00
+    ; Exit (5,0)->Map_1C
+    db $1C, $00, $00, $05, $07, $FF
+
+m05_Stable_N2v0:  ; $5996
+    ; npcs s2v0
+    ; npcs s2v1
+    ; npcs s2v2
+    db $06, $04
+    ; Exit (6,4)->Farm
+    db $04, $00, $04, $06, $04, $FF
+
+m06_Arena_Lobby_SP:  ; $599E
+    ; screen_ptrs $06
+    db $A6, $59, $AE, $59, $B6, $59, $FF, $FF
+
+m06_Arena_Lobby_SB0:  ; $59A6
+    ; step_block scr0 ram=0xD948
+    db $48, $D9, $0F, $29, $BE, $59, $0C, $5A
+
+m06_Arena_Lobby_SB1:  ; $59AE
+    ; step_block scr1 ram=0xD949
+    db $49, $D9, $10, $29, $D8, $59, $14, $5A
+
+m06_Arena_Lobby_SB2:  ; $59B6
+    ; step_block scr2 ram=0xD94A
+    db $4A, $D9, $11, $29, $01, $5A, $23, $5A
+
+m06_Arena_Lobby_X0v0:  ; $59BE
+    ; exits s0v0
+    db $90, $FF, $05, $04, $01
+    ; NPC t$50 spr$E0 (5,4) scr255
+    db $50, $E0, $05, $04, $FF
+    ; NPC t$70 spr$E1 (3,5) scr2
+    db $70, $E1, $03, $05, $02
+    ; NPC t$40 spr$E2 (2,4) scr3
+    db $40, $E2, $02, $04, $03
+    ; NPC t$50 spr$E3 (3,3) scr4
+    db $50, $E3, $03, $03, $04, $FF
+
+m06_Arena_Lobby_X1v0:  ; $59D8
+    ; exits s1v0
+    db $8F, $FF, $04, $02, $05, $8F, $FF, $05, $02, $05, $8F, $FF, $03, $04, $06, $8F
+    db $FF, $06, $06, $07
+    ; NPC t$37 spr$12 (2,4) scr8
+    db $37, $12, $02, $04, $08
+    ; NPC t$17 spr$12 (7,6) scr9
+    db $17, $12, $07, $06, $09
+    ; NPC t$60 spr$11 (4,8) scr14
+    db $60, $11, $04, $08, $0E
+    ; NPC t$40 spr$54 (6,5) scr255
+    db $40, $54, $06, $05, $FF, $FF
+
+m06_Arena_Lobby_X2v0:  ; $5A01
+    ; exits s2v0
+    db $82, $FF, $06, $05, $0A
+    ; NPC t$00 spr$0B (6,4) scr11
+    db $00, $0B, $06, $04, $0B, $FF
+
+m06_Arena_Lobby_N0v0:  ; $5A0C
+    ; npcs s0v0
+    db $05, $00
+    ; Exit (5,0)->Arena_Rooms
+    db $07, $00, $04, $05, $07, $FF
+
+m06_Arena_Lobby_N1v0:  ; $5A14
+    ; npcs s1v0
+    db $04, $07
+    ; Exit (4,7)->GreatTree
+    db $01, $00, $84, $04, $03, $05, $07
+    ; Exit (5,7)->GreatTree
+    db $01, $00, $84, $05, $03, $FF
+
+m06_Arena_Lobby_N2v0:  ; $5A23
+    ; npcs s2v0
+    db $04, $00
+    ; Exit (4,0)->Arena_Rooms
+    db $07, $00, $06, $04, $07, $FF
+
+m07_Arena_Rooms_SP:  ; $5A2B
+    ; screen_ptrs $07
+    db $3B, $5A, $43, $5A, $75, $5A, $FF, $FF, $7D, $5A, $8B, $5A, $93, $5A, $FF, $FF
+
+m07_Arena_Rooms_SB0:  ; $5A3B
+    ; step_block scr0 ram=0xD94B
+    db $4B, $D9, $13, $29, $9B, $5A, $29, $5C
+
+m07_Arena_Rooms_SB1:  ; $5A43
+    ; step_block scr1 ram=0xD94C
+    db $4C, $D9, $14, $29, $B5, $5A, $31, $5C, $15, $29, $B5, $5A, $32, $5C, $16, $29
+    db $D4, $5A, $3A, $5C, $16, $29, $F8, $5A, $3A, $5C, $17, $29, $17, $5B, $49, $5C
+    db $17, $29, $40, $5B, $49, $5C, $17, $29, $64, $5B, $49, $5C, $17, $29, $88, $5B
+    db $49, $5C
+
+m07_Arena_Rooms_SB2:  ; $5A75
+    ; step_block scr2 ram=0xD94D
+    db $4D, $D9, $18, $29, $A7, $5B, $5F, $5C, $4E, $D9, $19, $29, $C1, $5B, $67, $5C
+    db $19, $29, $D1, $5B, $67, $5C, $4F, $D9, $1A, $29, $E1, $5B, $6F, $5C, $50, $D9
+    db $1B, $29, $F1, $5B, $7E, $5C
+
+m07_Arena_Rooms_X0v0:  ; $5A9B
+    ; exits s0v0
+    db $82, $FF, $03, $04, $01
+    ; NPC t$00 spr$41 (8,3) scr2
+    db $00, $41, $08, $03, $02
+    ; NPC t$40 spr$52 (3,4) scr255
+    db $40, $52, $03, $04, $FF
+    ; NPC t$40 spr$E0 (3,4) scr255
+    db $40, $E0, $03, $04, $FF
+    ; NPC t$00 spr$11 (4,2) scr26
+    db $00, $11, $04, $02, $1A, $FF
+
+m07_Arena_Rooms_X1v0:  ; $5AB5
+    ; exits s1v0
+    ; exits s1v1
+    db $90, $FF, $03, $05, $03, $90, $FF, $04, $05, $04, $90, $FF, $05, $05, $05
+    ; NPC t$06 spr$1F (4,2) scr6
+    db $06, $1F, $04, $02, $06
+    ; NPC t$00 spr$08 (3,6) scr7
+    db $00, $08, $03, $06, $07
+    ; NPC t$00 spr$08 (7,5) scr8
+    db $00, $08, $07, $05, $08, $FF
+
+m07_Arena_Rooms_X1v2:  ; $5AD4
+    ; exits s1v2
+    db $90, $FF, $03, $05, $03, $90, $FF, $04, $05, $04, $90, $FF, $05, $05, $05
+    ; NPC t$06 spr$1F (4,2) scr6
+    db $06, $1F, $04, $02, $06
+    ; NPC t$00 spr$08 (3,6) scr7
+    db $00, $08, $03, $06, $07
+    ; NPC t$00 spr$08 (7,5) scr8
+    db $00, $08, $07, $05, $08
+    ; NPC t$00 spr$4D (2,4) scr255
+    db $00, $4D, $02, $04, $FF, $FF
+
+m07_Arena_Rooms_X1v3:  ; $5AF8
+    ; exits s1v3
+    db $90, $FF, $03, $05, $03, $90, $FF, $04, $05, $04, $90, $FF, $05, $05, $05
+    ; NPC t$06 spr$1F (4,2) scr6
+    db $06, $1F, $04, $02, $06
+    ; NPC t$00 spr$08 (3,6) scr7
+    db $00, $08, $03, $06, $07
+    ; NPC t$00 spr$08 (7,5) scr8
+    db $00, $08, $07, $05, $08, $FF
+
+m07_Arena_Rooms_X1v4:  ; $5B17
+    ; exits s1v4
+    db $90, $FF, $03, $05, $03, $90, $FF, $04, $05, $04, $90, $FF, $05, $05, $05
+    ; NPC t$06 spr$1F (4,2) scr6
+    db $06, $1F, $04, $02, $06
+    ; NPC t$00 spr$08 (3,6) scr7
+    db $00, $08, $03, $06, $07
+    ; NPC t$00 spr$08 (7,5) scr8
+    db $00, $08, $07, $05, $08
+    ; NPC t$00 spr$4D (2,4) scr255
+    db $00, $4D, $02, $04, $FF
+    ; NPC t$00 spr$4D (6,4) scr255
+    db $00, $4D, $06, $04, $FF, $FF
+
+m07_Arena_Rooms_X1v5:  ; $5B40
+    ; exits s1v5
+    db $90, $FF, $03, $05, $03, $90, $FF, $04, $05, $04, $90, $FF, $05, $05, $05
+    ; NPC t$06 spr$1F (4,2) scr6
+    db $06, $1F, $04, $02, $06
+    ; NPC t$00 spr$08 (3,6) scr7
+    db $00, $08, $03, $06, $07
+    ; NPC t$00 spr$08 (7,5) scr8
+    db $00, $08, $07, $05, $08
+    ; NPC t$00 spr$4D (6,4) scr255
+    db $00, $4D, $06, $04, $FF, $FF
+
+m07_Arena_Rooms_X1v6:  ; $5B64
+    ; exits s1v6
+    db $90, $FF, $03, $05, $03, $90, $FF, $04, $05, $04, $90, $FF, $05, $05, $05
+    ; NPC t$06 spr$1F (4,2) scr6
+    db $06, $1F, $04, $02, $06
+    ; NPC t$00 spr$08 (3,6) scr7
+    db $00, $08, $03, $06, $07
+    ; NPC t$00 spr$08 (7,5) scr8
+    db $00, $08, $07, $05, $08
+    ; NPC t$00 spr$4D (2,4) scr255
+    db $00, $4D, $02, $04, $FF, $FF
+
+m07_Arena_Rooms_X1v7:  ; $5B88
+    ; exits s1v7
+    db $90, $FF, $03, $05, $03, $90, $FF, $04, $05, $04, $90, $FF, $05, $05, $05
+    ; NPC t$06 spr$1F (4,2) scr6
+    db $06, $1F, $04, $02, $06
+    ; NPC t$00 spr$08 (3,6) scr7
+    db $00, $08, $03, $06, $07
+    ; NPC t$00 spr$08 (7,5) scr8
+    db $00, $08, $07, $05, $08, $FF
+
+m07_Arena_Rooms_X2v0:  ; $5BA7
+    ; exits s2v0
+    db $8F, $FF, $01, $02, $09, $8F, $FF, $02, $02, $0A
+    ; NPC t$00 spr$04 (3,4) scr11
+    db $00, $04, $03, $04, $0B
+    ; NPC t$00 spr$0B (6,2) scr12
+    db $00, $0B, $06, $02, $0C
+    ; NPC t$17 spr$0A (8,5) scr13
+    db $17, $0A, $08, $05, $0D, $FF
+    ; NPC t$07 spr$09 (2,1) scr14
+    db $07, $09, $02, $01, $0E
+    ; NPC t$04 spr$42 (8,5) scr15
+    db $04, $42, $08, $05, $0F
+    ; NPC t$30 spr$0A (1,6) scr16
+    db $30, $0A, $01, $06, $10, $FF
+    ; NPC t$04 spr$09 (8,5) scr14
+    db $04, $09, $08, $05, $0E
+    ; NPC t$06 spr$42 (2,1) scr15
+    db $06, $42, $02, $01, $0F
+    ; NPC t$30 spr$0A (1,6) scr16
+    db $30, $0A, $01, $06, $10, $FF
+    ; NPC t$00 spr$0B (5,1) scr17
+    db $00, $0B, $05, $01, $11
+    ; NPC t$20 spr$0F (5,2) scr18
+    db $20, $0F, $05, $02, $12
+    ; NPC t$22 spr$17 (4,5) scr255
+    db $22, $17, $04, $05, $FF, $FF, $8F, $FF, $08, $03, $13, $8F, $FF, $07, $04, $14
+    db $8F, $FF, $06, $05, $15, $8F, $FF, $06, $06, $16
+    ; NPC t$06 spr$0A (3,2) scr23
+    db $06, $0A, $03, $02, $17
+    ; NPC t$26 spr$20 (3,3) scr24
+    db $26, $20, $03, $03, $18
+    ; NPC t$30 spr$0B (2,6) scr25
+    db $30, $0B, $02, $06, $19
+    ; NPC t$40 spr$E0 (5,0) scr255
+    db $40, $E0, $05, $00, $FF
+    ; NPC t$40 spr$E1 (5,0) scr255
+    db $40, $E1, $05, $00, $FF
+    ; NPC t$40 spr$E2 (5,0) scr255
+    db $40, $E2, $05, $00, $FF
+    ; NPC t$40 spr$E3 (5,0) scr255
+    db $40, $E3, $05, $00, $FF, $FF
+
+m07_Arena_Rooms_N0v0:  ; $5C29
+    ; npcs s0v0
+    db $05, $01
+    ; Exit (5,1)->Monster_School
+    db $1D, $00, $00, $05, $07, $FF
+
+m07_Arena_Rooms_N1v0:  ; $5C31
+    ; npcs s1v0
+    db $FF
+
+m07_Arena_Rooms_N1v1:  ; $5C32
+    ; npcs s1v1
+    db $05, $02
+    ; Exit (5,2)->Queen_Room
+    db $1F, $00, $00, $05, $02, $FF
+
+m07_Arena_Rooms_N1v2:  ; $5C3A
+    ; npcs s1v2
+    ; npcs s1v3
+    db $05, $02
+    ; Exit (5,2)->Queen_Room
+    db $1F, $00, $00, $05, $02, $02, $04
+    ; Exit (2,4)->Map_0E
+    db $0E, $01, $00, $00, $00, $FF
+
+m07_Arena_Rooms_N1v4:  ; $5C49
+    ; npcs s1v4
+    ; npcs s1v5
+    ; npcs s1v6
+    db $05, $02
+    ; Exit (5,2)->Queen_Room
+    db $1F, $00, $00, $05, $02, $02, $04
+    ; Exit (2,4)->Map_0E
+    db $0E, $01, $00, $00, $00, $06, $04
+    ; Exit (6,4)->Monster_School
+    db $1D, $01, $00, $00, $00, $FF
+
+m07_Arena_Rooms_N2v0:  ; $5C5F
+    ; npcs s2v0
+    db $05, $01
+    ; Exit (5,1)->Restaurant
+    db $1E, $00, $00, $05, $07, $FF, $05, $07
+    ; Exit (5,7)->Arena_Lobby
+    db $06, $00, $00, $05, $00, $FF, $04, $07
+    ; Exit (4,7)->Arena_Lobby
+    db $06, $00, $01, $04, $03, $05, $07
+    ; Exit (5,7)->Arena_Lobby
+    db $06, $00, $01, $05, $03, $FF, $04, $07
+    ; Exit (4,7)->Arena_Lobby
+    db $06, $00, $02, $04, $00, $FF
+
+m08_Gate_tileset_SP:  ; $5C86
+    ; screen_ptrs $08
+    db $88, $5C
+
+m08_Gate_tileset_SB0:  ; $5C88
+    ; step_block scr0 ram=0xD951
+    db $51, $D9, $1E, $29, $C0, $5C, $FF, $FF, $1E, $29, $D0, $5C, $FF, $FF, $1E, $29
+    db $E0, $5C, $FF, $FF, $1E, $29, $E0, $5C, $FF, $FF, $1E, $29, $F0, $5C, $FF, $FF
+    db $1E, $29, $00, $5D, $FF, $FF, $1E, $29, $10, $5D, $FF, $FF, $1E, $29, $1B, $5D
+    db $FF, $FF, $1E, $29, $30, $5D, $FF, $FF
+    ; NPC t$20 spr$08 (5,8) scr255
+    db $20, $08, $05, $08, $FF
+    ; NPC t$40 spr$F0 (5,4) scr255
+    db $40, $F0, $05, $04, $FF
+    ; NPC t$40 spr$F1 (5,4) scr255
+    db $40, $F1, $05, $04, $FF, $FF
+    ; NPC t$20 spr$08 (5,8) scr255
+    db $20, $08, $05, $08, $FF
+    ; NPC t$00 spr$55 (5,4) scr255
+    db $00, $55, $05, $04, $FF
+    ; NPC t$00 spr$55 (5,4) scr255
+    db $00, $55, $05, $04, $FF, $FF
+    ; NPC t$20 spr$08 (5,8) scr255
+    db $20, $08, $05, $08, $FF
+    ; NPC t$40 spr$F0 (5,4) scr255
+    db $40, $F0, $05, $04, $FF
+    ; NPC t$40 spr$55 (5,4) scr255
+    db $40, $55, $05, $04, $FF, $FF
+    ; NPC t$20 spr$08 (5,8) scr255
+    db $20, $08, $05, $08, $FF
+    ; NPC t$40 spr$F0 (5,4) scr255
+    db $40, $F0, $05, $04, $FF
+    ; NPC t$40 spr$F1 (5,4) scr255
+    db $40, $F1, $05, $04, $FF, $FF
+    ; NPC t$20 spr$08 (5,8) scr255
+    db $20, $08, $05, $08, $FF
+    ; NPC t$00 spr$55 (5,4) scr255
+    db $00, $55, $05, $04, $FF
+    ; NPC t$00 spr$55 (5,4) scr255
+    db $00, $55, $05, $04, $FF, $FF
+    ; NPC t$60 spr$08 (5,8) scr255
+    db $60, $08, $05, $08, $FF
+    ; NPC t$20 spr$5E (5,4) scr255
+    db $20, $5E, $05, $04, $FF, $FF
+    ; NPC t$60 spr$08 (5,8) scr255
+    db $60, $08, $05, $08, $FF
+    ; NPC t$70 spr$21 (0,4) scr255
+    db $70, $21, $00, $04, $FF
+    ; NPC t$40 spr$55 (5,4) scr255
+    db $40, $55, $05, $04, $FF
+    ; NPC t$20 spr$5E (5,7) scr255
+    db $20, $5E, $05, $07, $FF, $FF
+    ; NPC t$20 spr$08 (5,7) scr255
+    db $20, $08, $05, $07, $FF
+    ; NPC t$40 spr$21 (5,4) scr255
+    db $40, $21, $05, $04, $FF
+    ; NPC t$40 spr$55 (5,4) scr255
+    db $40, $55, $05, $04, $FF
+    ; NPC t$20 spr$5E (5,6) scr255
+    db $20, $5E, $05, $06, $FF, $FF, $FF, $FF, $55, $5D, $FF, $FF, $FF, $FF, $69, $5D
+    db $7D, $5D, $FF, $FF, $FF, $FF, $52, $D9, $20, $29, $8B, $5D, $5F, $5E, $20, $29
+    db $BE, $5D, $5F, $5E, $20, $29, $F6, $5D, $5F, $5E, $53, $D9, $21, $29, $29, $5E
+    db $60, $5E, $21, $29, $2F, $5E, $60, $5E, $21, $29, $29, $5E, $68, $5E, $54, $D9
+    db $22, $29, $30, $5E, $69, $5E, $22, $29, $4A, $5E, $69, $5E, $8F, $FF, $05, $00
+    db $01, $8F, $FF, $07, $00, $02, $8F, $FF, $08, $00, $03
+    ; NPC t$00 spr$26 (2,1) scr4
+    db $00, $26, $02, $01, $04
+    ; NPC t$00 spr$08 (5,1) scr5
+    db $00, $08, $05, $01, $05
+    ; NPC t$00 spr$0F (6,4) scr6
+    db $00, $0F, $06, $04, $06
+    ; NPC t$40 spr$E0 (5,0) scr255
+    db $40, $E0, $05, $00, $FF
+    ; NPC t$40 spr$E1 (5,0) scr255
+    db $40, $E1, $05, $00, $FF
+    ; NPC t$40 spr$E2 (5,0) scr255
+    db $40, $E2, $05, $00, $FF
+    ; NPC t$40 spr$E3 (5,0) scr255
+    db $40, $E3, $05, $00, $FF, $FF, $8F, $FF, $05, $00, $01, $8F, $FF, $07, $00, $02
+    db $8F, $FF, $08, $00, $03, $81, $FF, $05, $03, $07
+    ; NPC t$00 spr$26 (2,1) scr4
+    db $00, $26, $02, $01, $04
+    ; NPC t$00 spr$08 (4,3) scr5
+    db $00, $08, $04, $03, $05
+    ; NPC t$00 spr$0F (6,4) scr6
+    db $00, $0F, $06, $04, $06
+    ; NPC t$40 spr$E0 (7,0) scr255
+    db $40, $E0, $07, $00, $FF
+    ; NPC t$40 spr$E1 (7,0) scr255
+    db $40, $E1, $07, $00, $FF
+    ; NPC t$40 spr$E2 (7,0) scr255
+    db $40, $E2, $07, $00, $FF
+    ; NPC t$40 spr$E3 (7,0) scr255
+    db $40, $E3, $07, $00, $FF, $FF, $8F, $FF, $05, $00, $01, $8F, $FF, $07, $00, $02
+    db $8F, $FF, $08, $00, $03
+    ; NPC t$40 spr$26 (2,2) scr4
+    db $40, $26, $02, $02, $04
+    ; NPC t$30 spr$08 (6,5) scr255
+    db $30, $08, $06, $05, $FF
+    ; NPC t$40 spr$E0 (2,0) scr255
+    db $40, $E0, $02, $00, $FF
+    ; NPC t$40 spr$E0 (7,0) scr255
+    db $40, $E0, $07, $00, $FF
+    ; NPC t$40 spr$E1 (7,0) scr255
+    db $40, $E1, $07, $00, $FF
+    ; NPC t$40 spr$E2 (7,0) scr255
+    db $40, $E2, $07, $00, $FF
+    ; NPC t$40 spr$E3 (7,0) scr255
+    db $40, $E3, $07, $00, $FF, $FF
+    ; NPC t$10 spr$08 (8,6) scr255
+    db $10, $08, $08, $06, $FF, $FF, $FF, $90, $FF, $08, $01, $0B
+    ; NPC t$00 spr$07 (3,2) scr8
+    db $00, $07, $03, $02, $08
+    ; NPC t$00 spr$0B (2,4) scr9
+    db $00, $0B, $02, $04, $09
+    ; NPC t$00 spr$11 (7,5) scr10
+    db $00, $11, $07, $05, $0A
+    ; NPC t$00 spr$08 (4,1) scr255
+    db $00, $08, $04, $01, $FF, $FF, $90, $FF, $08, $01, $0B
+    ; NPC t$00 spr$07 (3,2) scr8
+    db $00, $07, $03, $02, $08
+    ; NPC t$00 spr$0B (2,4) scr9
+    db $00, $0B, $02, $04, $09
+    ; NPC t$00 spr$11 (7,5) scr10
+    db $00, $11, $07, $05, $0A, $FF, $FF, $04, $06
+    ; Exit (4,6)->GreatTree
+    db $01, $00, $0C, $04, $06, $FF, $FF, $FF
+
+m0A_Secret_Passage_ThroneMedalMan_SP:  ; $5E6A
+    ; screen_ptrs $0A
+    db $72, $5E, $7A, $5E, $FF, $FF, $FF, $FF
+
+m0A_Secret_Passage_ThroneMedalMan_SB0:  ; $5E72
+    ; step_block scr0 ram=0xD955
+    db $55, $D9, $24, $29, $82, $5E, $84, $5E
+
+m0A_Secret_Passage_ThroneMedalMan_SB1:  ; $5E7A
+    ; step_block scr1 ram=0xD956
+    db $56, $D9, $25, $29, $83, $5E, $8C, $5E
+
+m0A_Secret_Passage_ThroneMedalMan_X0v0:  ; $5E82
+    ; exits s0v0
+    db $FF
+
+m0A_Secret_Passage_ThroneMedalMan_X1v0:  ; $5E83
+    ; exits s1v0
+    db $FF
+
+m0A_Secret_Passage_ThroneMedalMan_N0v0:  ; $5E84
+    ; npcs s0v0
+    db $07, $07
+    ; Exit (7,7)->Castle
+    db $00, $00, $81, $07, $01, $FF
+
+m0A_Secret_Passage_ThroneMedalMan_N1v0:  ; $5E8C
+    ; npcs s1v0
+    db $03, $07
+    ; Exit (3,7)->MedalMan
+    db $16, $00, $80, $03, $01, $FF
+
+m0C_Gate_tileset_SP:  ; $5E94
+    ; screen_ptrs $0C
+    db $96, $5E
+
+m0C_Gate_tileset_SB0:  ; $5E96
+    ; step_block scr0 ram=0xD957
+    db $57, $D9, $27, $29, $9E, $5E, $B8, $5E
+
+m0C_Gate_tileset_X0v0:  ; $5E9E
+    ; exits s0v0
+    db $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02, $8F, $FF, $03, $01, $03, $82
+    db $FF, $02, $04, $04
+    ; NPC t$00 spr$0F (2,3) scr5
+    db $00, $0F, $02, $03, $05, $FF
+
+m0C_Gate_tileset_N0v0:  ; $5EB8
+    ; npcs s0v0
+    db $02, $07
+    ; Exit (2,7)->GreatTree
+    db $01, $00, $8D, $02, $01, $FF
+
+m0D_Old_Man_Gate_Room_SP:  ; $5EC0
+    ; screen_ptrs $0D
+    db $C2, $5E
+
+m0D_Old_Man_Gate_Room_SB0:  ; $5EC2
+    ; step_block scr0 ram=0xD958
+    db $58, $D9, $01, $30, $D0, $5E, $3B, $5F, $01, $30, $08, $5F, $3B, $5F
+
+m0D_Old_Man_Gate_Room_X0v0:  ; $5ED0
+    ; exits s0v0
+    db $90, $FF, $06, $04, $08, $90, $FF, $07, $05, $08, $90, $FF, $08, $05, $09, $8F
+    db $FF, $02, $01, $01, $8F, $FF, $03, $01, $02, $8F, $FF, $01, $05, $03, $8F, $FF
+    db $01, $06, $04
+    ; NPC t$00 spr$05 (3,5) scr5
+    db $00, $05, $03, $05, $05
+    ; NPC t$00 spr$04 (6,3) scr6
+    db $00, $04, $06, $03, $06
+    ; NPC t$00 spr$08 (8,4) scr7
+    db $00, $08, $08, $04, $07
+    ; NPC t$00 spr$4D (8,2) scr255
+    db $00, $4D, $08, $02, $FF, $FF
+
+m0D_Old_Man_Gate_Room_X0v1:  ; $5F08
+    ; exits s0v1
+    db $90, $FF, $06, $04, $08, $90, $FF, $07, $05, $08, $90, $FF, $08, $05, $09, $8F
+    db $FF, $02, $01, $01, $8F, $FF, $03, $01, $02, $8F, $FF, $01, $05, $03, $8F, $FF
+    db $01, $06, $04
+    ; NPC t$00 spr$05 (3,5) scr5
+    db $00, $05, $03, $05, $05
+    ; NPC t$00 spr$04 (6,3) scr6
+    db $00, $04, $06, $03, $06
+    ; NPC t$00 spr$08 (8,4) scr7
+    db $00, $08, $08, $04, $07, $FF
+
+m0D_Old_Man_Gate_Room_N0v0:  ; $5F3B
+    ; npcs s0v0
+    ; npcs s0v1
+    db $05, $07
+    ; Exit (5,7)->GreatTree
+    db $01, $00, $8C, $05, $01, $08, $02
+    ; Exit (8,2)->Restaurant
+    db $1E, $01, $00, $00, $00, $FF
+
+m0F_X_SP:  ; $5F4A
+    ; screen_ptrs $0F
+    db $4C, $5F
+
+m0F_X_SB0:  ; $5F4C
+    ; step_block scr0 ram=0xD959
+    db $59, $D9, $03, $30, $54, $5F, $69, $5F
+
+m0F_X_X0v0:  ; $5F54
+    ; exits s0v0
+    db $8F, $FF, $05, $03, $01, $8F, $FF, $03, $05, $02
+    ; NPC t$00 spr$09 (5,2) scr1
+    db $00, $09, $05, $02, $01
+    ; NPC t$30 spr$02 (2,5) scr2
+    db $30, $02, $02, $05, $02, $FF
+
+m0F_X_N0v0:  ; $5F69
+    ; npcs s0v0
+    db $05, $07
+    ; Exit (5,7)->GreatTree
+    db $01, $00, $89, $05, $01, $FF
+
+m10_Copycat_Room_SP:  ; $5F71
+    ; screen_ptrs $10
+    ; screen_ptrs $17
+    db $73, $5F
+
+m10_Copycat_Room_SB0:  ; $5F73
+    ; step_block scr0 ram=0xD95A
+    ; step_block scr0 ram=0xD95A
+    db $5A, $D9, $05, $30, $81, $5F, $C4, $5F, $06, $30, $A5, $5F, $CC, $5F
+
+m10_Copycat_Room_X0v0:  ; $5F81
+    ; exits s0v0
+    ; exits s0v0
+    db $8F, $FF, $02, $01, $01, $8F, $FF, $03, $01, $02, $8F, $FF, $04, $01, $03, $82
+    db $FF, $05, $04, $04
+    ; NPC t$20 spr$03 (5,3) scr5
+    db $20, $03, $05, $03, $05
+    ; NPC t$00 spr$0A (4,6) scr6
+    db $00, $0A, $04, $06, $06
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m10_Copycat_Room_X0v1:  ; $5FA5
+    ; exits s0v1
+    ; exits s0v1
+    db $90, $FF, $07, $06, $07, $90, $FF, $08, $05, $07, $8F, $FF, $02, $01, $01, $8F
+    db $FF, $03, $01, $02, $8F, $FF, $04, $01, $03
+    ; NPC t$00 spr$0A (4,6) scr6
+    db $00, $0A, $04, $06, $06, $FF
+
+m10_Copycat_Room_N0v0:  ; $5FC4
+    ; npcs s0v0
+    ; npcs s0v0
+    db $04, $07
+    ; Exit (4,7)->GreatTree
+    db $01, $00, $8C, $04, $04, $FF
+
+m10_Copycat_Room_N0v1:  ; $5FCC
+    ; npcs s0v1
+    ; npcs s0v1
+    db $04, $07
+    ; Exit (4,7)->GreatTree
+    db $01, $00, $8C, $04, $04, $08, $06
+    ; Exit (8,6)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m12_Library_SP:  ; $5FDB
+    ; screen_ptrs $12
+    db $EB, $5F, $FF, $FF, $FF, $FF, $FF, $FF, $F3, $5F, $FF, $FF, $FF, $FF, $FF, $FF
+
+m12_Library_SB0:  ; $5FEB
+    ; step_block scr0 ram=0xD95B
+    db $5B, $D9, $08, $30, $01, $60, $6D, $60, $5C, $D9, $09, $30, $43, $60, $6E, $60
+    db $09, $30, $5D, $60, $6E, $60
+
+m12_Library_X0v0:  ; $6001
+    ; exits s0v0
+    db $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02, $8F, $FF, $03, $01, $03, $8F
+    db $FF, $04, $01, $04, $8F, $FF, $07, $01, $05, $8F, $FF, $08, $01, $06, $8F, $FF
+    db $02, $04, $07, $8F, $FF, $03, $04, $08, $8F, $FF, $04, $04, $09, $8F, $FF, $06
+    db $04, $0A, $8F, $FF, $07, $04, $0B, $8F, $FF, $06, $01, $0C
+    ; NPC t$10 spr$02 (2,6) scr13
+    db $10, $02, $02, $06, $0D, $FF, $82, $FF, $04, $03, $0E
+    ; NPC t$00 spr$02 (4,2) scr15
+    db $00, $02, $04, $02, $0F
+    ; NPC t$00 spr$03 (6,3) scr17
+    db $00, $03, $06, $03, $11
+    ; NPC t$30 spr$03 (1,6) scr16
+    db $30, $03, $01, $06, $10
+    ; NPC t$40 spr$54 (6,2) scr255
+    db $40, $54, $06, $02, $FF, $FF, $82, $FF, $04, $03, $0E
+    ; NPC t$00 spr$02 (4,2) scr15
+    db $00, $02, $04, $02, $0F
+    ; NPC t$30 spr$03 (1,6) scr16
+    db $30, $03, $01, $06, $10, $FF
+
+m12_Library_N0v0:  ; $606D
+    ; npcs s0v0
+    db $FF, $05, $07
+    ; Exit (5,7)->GreatTree
+    db $01, $00, $88, $05, $03, $06, $01
+    ; Exit (6,1)->Library_Gate_Room
+    db $13, $00, $00, $06, $07, $FF
+
+m13_X_SP:  ; $607D
+    ; screen_ptrs $13
+    db $7F, $60
+
+m13_X_SB0:  ; $607F
+    ; step_block scr0 ram=0xD95D
+    db $5D, $D9, $0B, $30, $8D, $60, $2A, $61, $0B, $30, $DE, $60, $2A, $61
+
+m13_X_X0v0:  ; $608D
+    ; exits s0v0
+    db $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02, $8F, $FF, $03, $01, $03, $8F
+    db $FF, $04, $01, $04, $8F, $FF, $05, $01, $05, $8F, $FF, $06, $01, $06, $8F, $FF
+    db $07, $01, $07, $8F, $FF, $08, $01, $08, $8F, $FF, $01, $04, $09, $8F, $FF, $02
+    db $04, $0A, $8F, $FF, $03, $04, $0B, $8F, $FF, $04, $04, $0C, $8F, $FF, $07, $04
+    db $0D, $8F, $FF, $08, $04, $0E
+    ; NPC t$10 spr$03 (6,4) scr15
+    db $10, $03, $06, $04, $0F
+    ; NPC t$00 spr$4D (1,6) scr255
+    db $00, $4D, $01, $06, $FF, $FF
+
+m13_X_X0v1:  ; $60DE
+    ; exits s0v1
+    db $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02, $8F, $FF, $03, $01, $03, $8F
+    db $FF, $04, $01, $04, $8F, $FF, $05, $01, $05, $8F, $FF, $06, $01, $06, $8F, $FF
+    db $07, $01, $07, $8F, $FF, $08, $01, $08, $8F, $FF, $01, $04, $09, $8F, $FF, $02
+    db $04, $0A, $8F, $FF, $03, $04, $0B, $8F, $FF, $04, $04, $0C, $8F, $FF, $07, $04
+    db $0D, $8F, $FF, $08, $04, $0E
+    ; NPC t$10 spr$03 (6,4) scr15
+    db $10, $03, $06, $04, $0F, $FF
+
+m13_X_N0v0:  ; $612A
+    ; npcs s0v0
+    ; npcs s0v1
+    db $06, $07
+    ; Exit (6,7)->Library
+    db $12, $00, $84, $06, $01, $01, $06
+    ; Exit (1,6)->Map_14
+    db $14, $01, $00, $00, $00, $FF
+
+m16_MedalMan_Room_SP:  ; $6139
+    ; screen_ptrs $16
+    db $3B, $61
+
+m16_MedalMan_Room_SB0:  ; $613B
+    ; step_block scr0 ram=0xD95E
+    db $5E, $D9, $0D, $30, $61, $61, $CB, $61, $0E, $30, $71, $61, $D3, $61, $0E, $30
+    db $86, $61, $D3, $61, $0D, $30, $96, $61, $E9, $61, $0E, $30, $A6, $61, $D3, $61
+    db $0E, $30, $BB, $61, $D3, $61
+
+m16_MedalMan_Room_X0v0:  ; $6161
+    ; exits s0v0
+    db $82, $FF, $02, $04, $01
+    ; NPC t$00 spr$13 (2,3) scr2
+    db $00, $13, $02, $03, $02
+    ; NPC t$00 spr$4C (3,2) scr3
+    db $00, $4C, $03, $02, $03, $FF
+
+m16_MedalMan_Room_X0v1:  ; $6171
+    ; exits s0v1
+    db $82, $FF, $02, $04, $01
+    ; NPC t$00 spr$13 (2,3) scr2
+    db $00, $13, $02, $03, $02
+    ; NPC t$00 spr$4C (3,2) scr3
+    db $00, $4C, $03, $02, $03
+    ; NPC t$00 spr$4D (1,6) scr255
+    db $00, $4D, $01, $06, $FF, $FF
+
+m16_MedalMan_Room_X0v2:  ; $6186
+    ; exits s0v2
+    db $82, $FF, $02, $04, $01
+    ; NPC t$00 spr$13 (2,3) scr2
+    db $00, $13, $02, $03, $02
+    ; NPC t$00 spr$4C (3,2) scr3
+    db $00, $4C, $03, $02, $03, $FF
+
+m16_MedalMan_Room_X0v3:  ; $6196
+    ; exits s0v3
+    db $82, $FF, $02, $04, $01
+    ; NPC t$00 spr$13 (2,3) scr2
+    db $00, $13, $02, $03, $02
+    ; NPC t$00 spr$4C (1,2) scr3
+    db $00, $4C, $01, $02, $03, $FF
+
+m16_MedalMan_Room_X0v4:  ; $61A6
+    ; exits s0v4
+    db $82, $FF, $02, $04, $01
+    ; NPC t$00 spr$13 (2,3) scr2
+    db $00, $13, $02, $03, $02
+    ; NPC t$00 spr$4C (1,2) scr3
+    db $00, $4C, $01, $02, $03
+    ; NPC t$00 spr$4D (1,6) scr255
+    db $00, $4D, $01, $06, $FF, $FF
+
+m16_MedalMan_Room_X0v5:  ; $61BB
+    ; exits s0v5
+    db $82, $FF, $02, $04, $01
+    ; NPC t$00 spr$13 (2,3) scr2
+    db $00, $13, $02, $03, $02
+    ; NPC t$00 spr$4C (1,2) scr3
+    db $00, $4C, $01, $02, $03, $FF
+
+m16_MedalMan_Room_N0v0:  ; $61CB
+    ; npcs s0v0
+    db $03, $07
+    ; Exit (3,7)->GreatTree
+    db $01, $00, $81, $03, $02, $FF
+
+m16_MedalMan_Room_N0v1:  ; $61D3
+    ; npcs s0v1
+    ; npcs s0v2
+    ; npcs s0v4
+    db $03, $07
+    ; Exit (3,7)->GreatTree
+    db $01, $00, $81, $03, $02, $03, $01
+    ; Exit (3,1)->Secret_Passage
+    db $0A, $00, $01, $03, $07, $01, $06
+    ; Exit (1,6)->Map_11
+    db $11, $01, $00, $00, $00, $FF
+
+m16_MedalMan_Room_N0v3:  ; $61E9
+    ; npcs s0v3
+    db $03, $07
+    ; Exit (3,7)->GreatTree
+    db $01, $00, $81, $03, $02, $03, $01
+    ; Exit (3,1)->Secret_Passage
+    db $0A, $00, $01, $03, $07, $FF
+
+m18_Well_SP:  ; $61F8
+    ; screen_ptrs $18
+    db $08, $62, $FF, $FF, $FF, $FF, $FF, $FF, $10, $62, $FF, $FF, $FF, $FF, $FF, $FF
+
+m18_Well_SB0:  ; $6208
+    ; step_block scr0 ram=0xD95F
+    db $5F, $D9, $10, $30, $24, $62, $AA, $62, $60, $D9, $11, $30, $25, $62, $B2, $62
+    db $12, $30, $5D, $62, $B3, $62, $12, $30, $86, $62, $B3, $62
+
+m18_Well_X0v0:  ; $6224
+    ; exits s0v0
+    db $FF, $8F, $FF, $01, $01, $01, $8F, $FF, $07, $01, $02, $8F, $FF, $08, $01, $03
+    db $8F, $FF, $02, $05, $04, $8F, $FF, $03, $05, $04, $8F, $FF, $02, $06, $04, $8F
+    db $FF, $03, $06, $04, $8F, $FF, $01, $06, $05, $82, $FF, $06, $04, $06
+    ; NPC t$07 spr$43 (6,3) scr7
+    db $07, $43, $06, $03, $07
+    ; NPC t$02 spr$07 (6,5) scr8
+    db $02, $07, $06, $05, $08, $FF, $8F, $FF, $01, $01, $01, $8F, $FF, $07, $01, $02
+    db $8F, $FF, $08, $01, $03, $8F, $FF, $01, $06, $05, $82, $FF, $06, $04, $06
+    ; NPC t$07 spr$43 (6,3) scr7
+    db $07, $43, $06, $03, $07
+    ; NPC t$02 spr$07 (6,5) scr8
+    db $02, $07, $06, $05, $08
+    ; NPC t$00 spr$4D (2,6) scr255
+    db $00, $4D, $02, $06, $FF, $FF, $8F, $FF, $01, $01, $01, $8F, $FF, $07, $01, $02
+    db $8F, $FF, $08, $01, $03, $8F, $FF, $01, $06, $05, $82, $FF, $06, $04, $06
+    ; NPC t$07 spr$43 (6,3) scr7
+    db $07, $43, $06, $03, $07
+    ; NPC t$02 spr$07 (6,5) scr8
+    db $02, $07, $06, $05, $08, $FF
+
+m18_Well_N0v0:  ; $62AA
+    ; npcs s0v0
+    db $04, $00
+    ; Exit (4,0)->GreatTree
+    db $01, $00, $08, $04, $05, $FF, $FF, $02, $06
+    ; Exit (2,6)->Gate_08
+    db $08, $01, $00, $00, $00, $FF
+
+m19_X_SP:  ; $62BB
+    ; screen_ptrs $19
+    db $BD, $62
+
+m19_X_SB0:  ; $62BD
+    ; step_block scr0 ram=0xD961
+    db $61, $D9, $14, $30, $C5, $62, $DA, $62
+
+m19_X_X0v0:  ; $62C5
+    ; exits s0v0
+    db $90, $FF, $01, $04, $02, $90, $FF, $02, $04, $03, $90, $FF, $03, $04, $04
+    ; NPC t$06 spr$1F (2,2) scr1
+    db $06, $1F, $02, $02, $01, $FF
+
+m19_X_N0v0:  ; $62DA
+    ; npcs s0v0
+    db $01, $07
+    ; Exit (1,7)->GreatTree
+    db $01, $00, $8D, $01, $04, $FF
+
+m1A_X_SP:  ; $62E2
+    ; screen_ptrs $1A
+    db $E4, $62
+
+m1A_X_SB0:  ; $62E4
+    ; step_block scr0 ram=0xD962
+    db $62, $D9, $16, $30, $EC, $62, $0B, $63
+
+m1A_X_X0v0:  ; $62EC
+    ; exits s0v0
+    db $90, $FF, $03, $04, $04, $90, $FF, $04, $04, $05, $90, $FF, $05, $04, $06
+    ; NPC t$06 spr$1F (4,2) scr1
+    db $06, $1F, $04, $02, $01
+    ; NPC t$00 spr$11 (5,5) scr2
+    db $00, $11, $05, $05, $02
+    ; NPC t$08 spr$3B (2,6) scr3
+    db $08, $3B, $02, $06, $03, $FF
+
+m1A_X_N0v0:  ; $630B
+    ; npcs s0v0
+    db $04, $07
+    ; Exit (4,7)->GreatTree
+    db $01, $00, $8D, $04, $06, $FF
+
+m1B_X_SP:  ; $6313
+    ; screen_ptrs $1B
+    db $15, $63
+
+m1B_X_SB0:  ; $6315
+    ; step_block scr0 ram=0xD963
+    db $63, $D9, $18, $30, $29, $63, $4F, $63, $18, $30, $34, $63, $4F, $63, $18, $30
+    db $3F, $63, $4F, $63
+
+m1B_X_X0v0:  ; $6329
+    ; exits s0v0
+    ; NPC t$00 spr$22 (4,2) scr1
+    db $00, $22, $04, $02, $01
+    ; NPC t$00 spr$FF (5,2) scr1
+    db $00, $FF, $05, $02, $01, $FF
+
+m1B_X_X0v1:  ; $6334
+    ; exits s0v1
+    ; NPC t$00 spr$24 (4,2) scr2
+    db $00, $24, $04, $02, $02
+    ; NPC t$00 spr$FF (5,2) scr2
+    db $00, $FF, $05, $02, $02, $FF
+
+m1B_X_X0v2:  ; $633F
+    ; exits s0v2
+    ; NPC t$00 spr$3B (3,3) scr3
+    db $00, $3B, $03, $03, $03
+    ; NPC t$00 spr$24 (4,2) scr2
+    db $00, $24, $04, $02, $02
+    ; NPC t$00 spr$FF (5,2) scr2
+    db $00, $FF, $05, $02, $02, $FF
+
+m1B_X_N0v0:  ; $634F
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $04, $07
+    ; Exit (4,7)->Stable
+    db $05, $00, $80, $04, $00, $05, $07
+    ; Exit (5,7)->Stable
+    db $05, $00, $80, $05, $00, $FF
+
+m1C_X_SP:  ; $635E
+    ; screen_ptrs $1C
+    db $60, $63
+
+m1C_X_SB0:  ; $6360
+    ; step_block scr0 ram=0xD964
+    db $64, $D9, $1A, $30, $6E, $63, $B6, $63, $1A, $30, $92, $63, $B6, $63
+
+m1C_X_X0v0:  ; $636E
+    ; exits s0v0
+    db $8F, $FF, $04, $02, $01, $8F, $FF, $05, $02, $01, $8F, $FF, $01, $04, $02, $8F
+    db $FF, $08, $04, $03
+    ; NPC t$40 spr$41 (4,2) scr1
+    db $40, $41, $04, $02, $01
+    ; NPC t$40 spr$41 (5,2) scr1
+    db $40, $41, $05, $02, $01
+    ; NPC t$02 spr$40 (3,5) scr4
+    db $02, $40, $03, $05, $04, $FF
+
+m1C_X_X0v1:  ; $6392
+    ; exits s0v1
+    db $8F, $FF, $04, $02, $05, $8F, $FF, $05, $02, $05, $8F, $FF, $01, $04, $02, $8F
+    db $FF, $08, $04, $03
+    ; NPC t$40 spr$2B (4,2) scr5
+    db $40, $2B, $04, $02, $05
+    ; NPC t$40 spr$2B (5,2) scr5
+    db $40, $2B, $05, $02, $05
+    ; NPC t$02 spr$1E (3,5) scr6
+    db $02, $1E, $03, $05, $06, $FF
+
+m1C_X_N0v0:  ; $63B6
+    ; npcs s0v0
+    ; npcs s0v1
+    db $04, $07
+    ; Exit (4,7)->Stable
+    db $05, $00, $81, $04, $00, $05, $07
+    ; Exit (5,7)->Stable
+    db $05, $00, $81, $05, $00, $FF
+
+m1D_X_SP:  ; $63C5
+    ; screen_ptrs $1D
+    db $C7, $63
+
+m1D_X_SB0:  ; $63C7
+    ; step_block scr0 ram=0xD965
+    db $65, $D9, $1C, $30, $CF, $63, $EE, $63
+
+m1D_X_X0v0:  ; $63CF
+    ; exits s0v0
+    db $8F, $FF, $04, $01, $01, $8F, $FF, $06, $01, $02, $8F, $FF, $05, $03, $03
+    ; NPC t$07 spr$11 (5,2) scr4
+    db $07, $11, $05, $02, $04
+    ; NPC t$27 spr$00 (3,5) scr5
+    db $27, $00, $03, $05, $05
+    ; NPC t$20 spr$02 (8,6) scr6
+    db $20, $02, $08, $06, $06, $FF
+
+m1D_X_N0v0:  ; $63EE
+    ; npcs s0v0
+    db $05, $07
+    ; Exit (5,7)->Arena_Rooms
+    db $07, $00, $80, $05, $01, $FF
+
+m1E_X_SP:  ; $63F6
+    ; screen_ptrs $1E
+    db $F8, $63
+
+m1E_X_SB0:  ; $63F8
+    ; step_block scr0 ram=0xD966
+    db $66, $D9, $1E, $30, $06, $64, $30, $64, $1E, $30, $1B, $64, $30, $64
+
+m1E_X_X0v0:  ; $6406
+    ; exits s0v0
+    db $8F, $FF, $05, $03, $01
+    ; NPC t$00 spr$05 (5,2) scr1
+    db $00, $05, $05, $02, $01
+    ; NPC t$37 spr$0F (2,3) scr2
+    db $37, $0F, $02, $03, $02
+    ; NPC t$20 spr$0B (6,4) scr3
+    db $20, $0B, $06, $04, $03, $FF
+
+m1E_X_X0v1:  ; $641B
+    ; exits s0v1
+    db $8F, $FF, $05, $03, $01
+    ; NPC t$00 spr$05 (5,2) scr1
+    db $00, $05, $05, $02, $01
+    ; NPC t$37 spr$0F (2,3) scr2
+    db $37, $0F, $02, $03, $02
+    ; NPC t$20 spr$0C (6,4) scr4
+    db $20, $0C, $06, $04, $04, $FF
+
+m1E_X_N0v0:  ; $6430
+    ; npcs s0v0
+    ; npcs s0v1
+    db $05, $07
+    ; Exit (5,7)->Arena_Rooms
+    db $07, $00, $82, $05, $01, $FF
+
+m1F_X_SP:  ; $6438
+    ; screen_ptrs $1F
+    db $3A, $64
+
+m1F_X_SB0:  ; $643A
+    ; step_block scr0 ram=0xD967
+    db $67, $D9, $01, $2D, $4E, $64, $9C, $64, $01, $2D, $68, $64, $9C, $64, $01, $2D
+    db $82, $64, $9C, $64
+
+m1F_X_X0v0:  ; $644E
+    ; exits s0v0
+    db $8F, $FF, $02, $06, $01
+    ; NPC t$00 spr$0E (5,6) scr2
+    db $00, $0E, $05, $06, $02
+    ; NPC t$00 spr$11 (7,3) scr3
+    db $00, $11, $07, $03, $03
+    ; NPC t$00 spr$02 (4,4) scr4
+    db $00, $02, $04, $04, $04, $81, $FF, $05, $04, $07, $FF
+
+m1F_X_X0v1:  ; $6468
+    ; exits s0v1
+    db $8F, $FF, $02, $06, $01
+    ; NPC t$00 spr$0E (5,6) scr2
+    db $00, $0E, $05, $06, $02
+    ; NPC t$00 spr$11 (7,3) scr3
+    db $00, $11, $07, $03, $03
+    ; NPC t$00 spr$13 (4,4) scr5
+    db $00, $13, $04, $04, $05, $81, $FF, $05, $04, $08, $FF
+
+m1F_X_X0v2:  ; $6482
+    ; exits s0v2
+    db $8F, $FF, $02, $06, $01
+    ; NPC t$00 spr$0E (5,6) scr2
+    db $00, $0E, $05, $06, $02
+    ; NPC t$00 spr$11 (7,3) scr3
+    db $00, $11, $07, $03, $03
+    ; NPC t$00 spr$14 (4,4) scr6
+    db $00, $14, $04, $04, $06, $81, $FF, $05, $04, $09, $FF
+
+m1F_X_N0v0:  ; $649C
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $05, $02
+    ; Exit (5,2)->Arena_Rooms
+    db $07, $00, $01, $05, $02, $FF
+
+m23_Room_of_Beginning_SP:  ; $64A4
+    ; screen_ptrs $23
+    db $A6, $64
+
+m23_Room_of_Beginning_SB0:  ; $64A6
+    ; step_block scr0 ram=0xD968
+    db $68, $D9, $03, $2D, $B4, $64, $C5, $64, $03, $2D, $BF, $64, $C5, $64
+
+m23_Room_of_Beginning_X0v0:  ; $64B4
+    ; exits s0v0
+    ; NPC t$00 spr$0B (8,5) scr1
+    db $00, $0B, $08, $05, $01
+    ; NPC t$00 spr$4D (8,2) scr255
+    db $00, $4D, $08, $02, $FF, $FF
+
+m23_Room_of_Beginning_X0v1:  ; $64BF
+    ; exits s0v1
+    ; NPC t$00 spr$0B (8,5) scr1
+    db $00, $0B, $08, $05, $01, $FF
+
+m23_Room_of_Beginning_N0v0:  ; $64C5
+    ; npcs s0v0
+    ; npcs s0v1
+    db $07, $07
+    ; Exit (7,7)->Gate_Hub
+    db $03, $00, $81, $04, $01, $08, $07
+    ; Exit (8,7)->Gate_Hub
+    db $03, $00, $81, $05, $01, $08, $02
+    ; Exit (8,2)->Castle
+    db $00, $01, $00, $00, $00, $FF
+
+m24_Room_of_Villager_And_Talisman_SP:  ; $64DB
+    ; screen_ptrs $24
+    db $DD, $64
+
+m24_Room_of_Villager_And_Talisman_SB0:  ; $64DD
+    ; step_block scr0 ram=0xD969
+    db $69, $D9, $05, $2D, $F7, $64, $23, $65, $05, $2D, $07, $65, $23, $65, $05, $2D
+    db $12, $65, $23, $65, $05, $2D, $1D, $65, $23, $65
+
+m24_Room_of_Villager_And_Talisman_X0v0:  ; $64F7
+    ; exits s0v0
+    ; NPC t$10 spr$0B (7,5) scr1
+    db $10, $0B, $07, $05, $01
+    ; NPC t$00 spr$4D (2,2) scr255
+    db $00, $4D, $02, $02, $FF
+    ; NPC t$00 spr$4D (2,6) scr255
+    db $00, $4D, $02, $06, $FF, $FF
+
+m24_Room_of_Villager_And_Talisman_X0v1:  ; $6507
+    ; exits s0v1
+    ; NPC t$10 spr$0B (7,5) scr1
+    db $10, $0B, $07, $05, $01
+    ; NPC t$00 spr$4D (2,6) scr255
+    db $00, $4D, $02, $06, $FF, $FF
+
+m24_Room_of_Villager_And_Talisman_X0v2:  ; $6512
+    ; exits s0v2
+    ; NPC t$10 spr$0B (7,5) scr1
+    db $10, $0B, $07, $05, $01
+    ; NPC t$00 spr$4D (2,2) scr255
+    db $00, $4D, $02, $02, $FF, $FF
+
+m24_Room_of_Villager_And_Talisman_X0v3:  ; $651D
+    ; exits s0v3
+    ; NPC t$10 spr$0B (7,5) scr1
+    db $10, $0B, $07, $05, $01, $FF
+
+m24_Room_of_Villager_And_Talisman_N0v0:  ; $6523
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $06, $07
+    ; Exit (6,7)->Gate_Hub
+    db $03, $00, $81, $02, $02, $02, $02
+    ; Exit (2,2)->GreatTree
+    db $01, $01, $00, $00, $00, $02, $06
+    ; Exit (2,6)->Bazaar
+    db $02, $01, $00, $00, $00, $FF
+
+m25_Room_of_Memories_And_Bewilder_SP:  ; $6539
+    ; screen_ptrs $25
+    db $3B, $65
+
+m25_Room_of_Memories_And_Bewilder_SB0:  ; $653B
+    ; step_block scr0 ram=0xD96A
+    db $6A, $D9, $07, $2D, $55, $65, $81, $65, $07, $2D, $65, $65, $81, $65, $07, $2D
+    db $70, $65, $81, $65, $07, $2D, $7B, $65, $81, $65
+
+m25_Room_of_Memories_And_Bewilder_X0v0:  ; $6555
+    ; exits s0v0
+    ; NPC t$00 spr$0B (6,3) scr1
+    db $00, $0B, $06, $03, $01
+    ; NPC t$00 spr$4D (5,1) scr255
+    db $00, $4D, $05, $01, $FF
+    ; NPC t$00 spr$4D (7,1) scr255
+    db $00, $4D, $07, $01, $FF, $FF
+
+m25_Room_of_Memories_And_Bewilder_X0v1:  ; $6565
+    ; exits s0v1
+    ; NPC t$00 spr$0B (6,3) scr1
+    db $00, $0B, $06, $03, $01
+    ; NPC t$00 spr$4D (7,1) scr255
+    db $00, $4D, $07, $01, $FF, $FF
+
+m25_Room_of_Memories_And_Bewilder_X0v2:  ; $6570
+    ; exits s0v2
+    ; NPC t$00 spr$0B (6,3) scr1
+    db $00, $0B, $06, $03, $01
+    ; NPC t$00 spr$4D (5,1) scr255
+    db $00, $4D, $05, $01, $FF, $FF
+
+m25_Room_of_Memories_And_Bewilder_X0v3:  ; $657B
+    ; exits s0v3
+    ; NPC t$00 spr$0B (6,3) scr1
+    db $00, $0B, $06, $03, $01, $FF
+
+m25_Room_of_Memories_And_Bewilder_N0v0:  ; $6581
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $01, $07
+    ; Exit (1,7)->Gate_Hub
+    db $03, $00, $81, $07, $02, $05, $01
+    ; Exit (5,1)->Gate_Hub
+    db $03, $01, $00, $00, $00, $07, $01
+    ; Exit (7,1)->Farm
+    db $04, $01, $00, $00, $00, $FF
+
+m26_Room_of_Peace_And_Bravery_SP:  ; $6597
+    ; screen_ptrs $26
+    db $99, $65
+
+m26_Room_of_Peace_And_Bravery_SB0:  ; $6599
+    ; step_block scr0 ram=0xD96B
+    db $6B, $D9, $09, $2D, $B3, $65, $DF, $65, $09, $2D, $C3, $65, $DF, $65, $09, $2D
+    db $CE, $65, $DF, $65, $09, $2D, $D9, $65, $DF, $65
+
+m26_Room_of_Peace_And_Bravery_X0v0:  ; $65B3
+    ; exits s0v0
+    ; NPC t$00 spr$0B (8,5) scr1
+    db $00, $0B, $08, $05, $01
+    ; NPC t$00 spr$4D (3,3) scr255
+    db $00, $4D, $03, $03, $FF
+    ; NPC t$00 spr$4D (6,3) scr255
+    db $00, $4D, $06, $03, $FF, $FF
+
+m26_Room_of_Peace_And_Bravery_X0v1:  ; $65C3
+    ; exits s0v1
+    ; NPC t$00 spr$0B (8,5) scr1
+    db $00, $0B, $08, $05, $01
+    ; NPC t$00 spr$4D (6,3) scr255
+    db $00, $4D, $06, $03, $FF, $FF
+
+m26_Room_of_Peace_And_Bravery_X0v2:  ; $65CE
+    ; exits s0v2
+    ; NPC t$00 spr$0B (8,5) scr1
+    db $00, $0B, $08, $05, $01
+    ; NPC t$00 spr$4D (3,3) scr255
+    db $00, $4D, $03, $03, $FF, $FF
+
+m26_Room_of_Peace_And_Bravery_X0v3:  ; $65D9
+    ; exits s0v3
+    ; NPC t$00 spr$0B (8,5) scr1
+    db $00, $0B, $08, $05, $01, $FF
+
+m26_Room_of_Peace_And_Bravery_N0v0:  ; $65DF
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $08, $07
+    ; Exit (8,7)->Gate_Hub
+    db $03, $00, $80, $07, $02, $03, $03
+    ; Exit (3,3)->Arena_Lobby
+    db $06, $01, $00, $00, $00, $06, $03
+    ; Exit (6,3)->Arena_Rooms
+    db $07, $01, $00, $00, $00, $FF
+
+m27_Room_of_Strength_And_Anger_SP:  ; $65F5
+    ; screen_ptrs $27
+    db $F7, $65
+
+m27_Room_of_Strength_And_Anger_SB0:  ; $65F7
+    ; step_block scr0 ram=0xD96C
+    db $6C, $D9, $0B, $2D, $0B, $66, $3B, $66, $0B, $2D, $20, $66, $3B, $66, $0B, $2D
+    db $30, $66, $3B, $66
+
+m27_Room_of_Strength_And_Anger_X0v0:  ; $660B
+    ; exits s0v0
+    ; NPC t$01 spr$0B (2,4) scr1
+    db $01, $0B, $02, $04, $01
+    ; NPC t$01 spr$0B (8,5) scr2
+    db $01, $0B, $08, $05, $02
+    ; NPC t$00 spr$4D (2,3) scr255
+    db $00, $4D, $02, $03, $FF
+    ; NPC t$00 spr$4D (7,3) scr255
+    db $00, $4D, $07, $03, $FF, $FF
+
+m27_Room_of_Strength_And_Anger_X0v1:  ; $6620
+    ; exits s0v1
+    ; NPC t$20 spr$0B (1,6) scr1
+    db $20, $0B, $01, $06, $01
+    ; NPC t$10 spr$0B (8,5) scr2
+    db $10, $0B, $08, $05, $02
+    ; NPC t$00 spr$4D (2,3) scr255
+    db $00, $4D, $02, $03, $FF, $FF
+
+m27_Room_of_Strength_And_Anger_X0v2:  ; $6630
+    ; exits s0v2
+    ; NPC t$20 spr$0B (1,6) scr1
+    db $20, $0B, $01, $06, $01
+    ; NPC t$10 spr$0B (8,5) scr2
+    db $10, $0B, $08, $05, $02, $FF
+
+m27_Room_of_Strength_And_Anger_N0v0:  ; $663B
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $04, $07
+    ; Exit (4,7)->Gate_Hub
+    db $03, $00, $80, $04, $01, $05, $07
+    ; Exit (5,7)->Gate_Hub
+    db $03, $00, $80, $05, $01, $02, $03
+    ; Exit (2,3)->Starry_Shrine
+    db $09, $01, $00, $00, $00, $07, $03
+    ; Exit (7,3)->Secret_Passage
+    db $0A, $01, $00, $00, $00, $FF
+
+m28_Room_of_Joy_And_Wisdom_SP:  ; $6658
+    ; screen_ptrs $28
+    db $5A, $66
+
+m28_Room_of_Joy_And_Wisdom_SB0:  ; $665A
+    ; step_block scr0 ram=0xD96D
+    db $6D, $D9, $0D, $2D, $74, $66, $A0, $66, $0D, $2D, $84, $66, $A0, $66, $0D, $2D
+    db $8F, $66, $A0, $66, $0D, $2D, $9A, $66, $A0, $66
+
+m28_Room_of_Joy_And_Wisdom_X0v0:  ; $6674
+    ; exits s0v0
+    ; NPC t$10 spr$0B (6,6) scr1
+    db $10, $0B, $06, $06, $01
+    ; NPC t$00 spr$4D (3,2) scr255
+    db $00, $4D, $03, $02, $FF
+    ; NPC t$00 spr$4D (5,2) scr255
+    db $00, $4D, $05, $02, $FF, $FF
+
+m28_Room_of_Joy_And_Wisdom_X0v1:  ; $6684
+    ; exits s0v1
+    ; NPC t$10 spr$0B (6,6) scr1
+    db $10, $0B, $06, $06, $01
+    ; NPC t$00 spr$4D (3,2) scr255
+    db $00, $4D, $03, $02, $FF, $FF
+
+m28_Room_of_Joy_And_Wisdom_X0v2:  ; $668F
+    ; exits s0v2
+    ; NPC t$10 spr$0B (6,6) scr1
+    db $10, $0B, $06, $06, $01
+    ; NPC t$00 spr$4D (5,2) scr255
+    db $00, $4D, $05, $02, $FF, $FF
+
+m28_Room_of_Joy_And_Wisdom_X0v3:  ; $669A
+    ; exits s0v3
+    ; NPC t$10 spr$0B (6,6) scr1
+    db $10, $0B, $06, $06, $01, $FF
+
+m28_Room_of_Joy_And_Wisdom_N0v0:  ; $66A0
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $04, $07
+    ; Exit (4,7)->Gate_Hub
+    db $03, $00, $80, $02, $02, $03, $02
+    ; Exit (3,2)->Egg_Evaluator
+    db $0C, $01, $00, $00, $00, $05, $02
+    ; Exit (5,2)->Old_Man_Gate_Room
+    db $0D, $01, $00, $00, $00, $FF
+
+m29_Room_of_Happiness_And_Temptation_SP:  ; $66B6
+    ; screen_ptrs $29
+    db $B8, $66
+
+m29_Room_of_Happiness_And_Temptation_SB0:  ; $66B8
+    ; step_block scr0 ram=0xD96E
+    db $6E, $D9, $0F, $2D, $D2, $66, $FE, $66, $0F, $2D, $E2, $66, $FE, $66, $0F, $2D
+    db $ED, $66, $FE, $66, $0F, $2D, $F8, $66, $FE, $66
+
+m29_Room_of_Happiness_And_Temptation_X0v0:  ; $66D2
+    ; exits s0v0
+    ; NPC t$10 spr$0B (7,6) scr1
+    db $10, $0B, $07, $06, $01
+    ; NPC t$00 spr$4D (3,2) scr255
+    db $00, $4D, $03, $02, $FF
+    ; NPC t$00 spr$4D (6,2) scr255
+    db $00, $4D, $06, $02, $FF, $FF
+
+m29_Room_of_Happiness_And_Temptation_X0v1:  ; $66E2
+    ; exits s0v1
+    ; NPC t$10 spr$0B (7,6) scr1
+    db $10, $0B, $07, $06, $01
+    ; NPC t$00 spr$4D (6,2) scr255
+    db $00, $4D, $06, $02, $FF, $FF
+
+m29_Room_of_Happiness_And_Temptation_X0v2:  ; $66ED
+    ; exits s0v2
+    ; NPC t$10 spr$0B (7,6) scr1
+    db $10, $0B, $07, $06, $01
+    ; NPC t$00 spr$4D (3,2) scr255
+    db $00, $4D, $03, $02, $FF, $FF
+
+m29_Room_of_Happiness_And_Temptation_X0v3:  ; $66F8
+    ; exits s0v3
+    ; NPC t$10 spr$0B (7,6) scr1
+    db $10, $0B, $07, $06, $01, $FF
+
+m29_Room_of_Happiness_And_Temptation_N0v0:  ; $66FE
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $04, $07
+    ; Exit (4,7)->Gate_Hub
+    db $03, $00, $84, $07, $02, $03, $02
+    ; Exit (3,2)->Vault
+    db $0F, $01, $00, $00, $00, $06, $02
+    ; Exit (6,2)->Copycat_House
+    db $10, $01, $00, $00, $00, $FF
+
+m2A_Room_of_Labyrinth_And_Judgment_SP:  ; $6714
+    ; screen_ptrs $2A
+    db $16, $67
+
+m2A_Room_of_Labyrinth_And_Judgment_SB0:  ; $6716
+    ; step_block scr0 ram=0xD96F
+    db $6F, $D9, $11, $2D, $30, $67, $5C, $67, $11, $2D, $40, $67, $5C, $67, $11, $2D
+    db $4B, $67, $5C, $67, $11, $2D, $56, $67, $5C, $67
+
+m2A_Room_of_Labyrinth_And_Judgment_X0v0:  ; $6730
+    ; exits s0v0
+    ; NPC t$00 spr$0B (5,2) scr1
+    db $00, $0B, $05, $02, $01
+    ; NPC t$00 spr$4D (2,4) scr255
+    db $00, $4D, $02, $04, $FF
+    ; NPC t$00 spr$4D (7,4) scr255
+    db $00, $4D, $07, $04, $FF, $FF
+
+m2A_Room_of_Labyrinth_And_Judgment_X0v1:  ; $6740
+    ; exits s0v1
+    ; NPC t$00 spr$0B (5,2) scr1
+    db $00, $0B, $05, $02, $01
+    ; NPC t$00 spr$4D (7,4) scr255
+    db $00, $4D, $07, $04, $FF, $FF
+
+m2A_Room_of_Labyrinth_And_Judgment_X0v2:  ; $674B
+    ; exits s0v2
+    ; NPC t$00 spr$0B (5,2) scr1
+    db $00, $0B, $05, $02, $01
+    ; NPC t$00 spr$4D (2,4) scr255
+    db $00, $4D, $02, $04, $FF, $FF
+
+m2A_Room_of_Labyrinth_And_Judgment_X0v3:  ; $6756
+    ; exits s0v3
+    ; NPC t$00 spr$0B (5,2) scr1
+    db $00, $0B, $05, $02, $01, $FF
+
+m2A_Room_of_Labyrinth_And_Judgment_N0v0:  ; $675C
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $04, $07
+    ; Exit (4,7)->Gate_Hub
+    db $03, $00, $84, $02, $02, $02, $04
+    ; Exit (2,4)->Library
+    db $12, $01, $00, $00, $00, $07, $04
+    ; Exit (7,4)->Library_Gate_Room
+    db $13, $01, $00, $00, $00, $FF
+
+m2B_Room_of_Reflection_SP:  ; $6772
+    ; screen_ptrs $2B
+    db $74, $67
+
+m2B_Room_of_Reflection_SB0:  ; $6774
+    ; step_block scr0 ram=0xD970
+    db $70, $D9, $13, $2D, $82, $67, $93, $67, $13, $2D, $8D, $67, $93, $67
+
+m2B_Room_of_Reflection_X0v0:  ; $6782
+    ; exits s0v0
+    ; NPC t$30 spr$0B (1,6) scr1
+    db $30, $0B, $01, $06, $01
+    ; NPC t$00 spr$4D (3,2) scr255
+    db $00, $4D, $03, $02, $FF, $FF
+
+m2B_Room_of_Reflection_X0v1:  ; $678D
+    ; exits s0v1
+    ; NPC t$30 spr$0B (1,6) scr1
+    db $30, $0B, $01, $06, $01, $FF
+
+m2B_Room_of_Reflection_N0v0:  ; $6793
+    ; npcs s0v0
+    ; npcs s0v1
+    db $07, $07
+    ; Exit (7,7)->Gate_Hub
+    db $03, $00, $84, $04, $01, $08, $07
+    ; Exit (8,7)->Gate_Hub
+    db $03, $00, $84, $05, $01, $03, $02
+    ; Exit (3,2)->Map_15
+    db $15, $01, $00, $00, $00, $FF
+
+m2C_Room_of_Ambition_And_Demolition_SP:  ; $67A9
+    ; screen_ptrs $2C
+    db $AB, $67
+
+m2C_Room_of_Ambition_And_Demolition_SB0:  ; $67AB
+    ; step_block scr0 ram=0xD971
+    db $71, $D9, $15, $2D, $C5, $67, $F1, $67, $15, $2D, $D5, $67, $F1, $67, $15, $2D
+    db $E0, $67, $F1, $67, $15, $2D, $EB, $67, $F1, $67
+
+m2C_Room_of_Ambition_And_Demolition_X0v0:  ; $67C5
+    ; exits s0v0
+    ; NPC t$30 spr$0B (1,6) scr1
+    db $30, $0B, $01, $06, $01
+    ; NPC t$00 spr$4D (1,3) scr255
+    db $00, $4D, $01, $03, $FF
+    ; NPC t$00 spr$4D (3,3) scr255
+    db $00, $4D, $03, $03, $FF, $FF
+
+m2C_Room_of_Ambition_And_Demolition_X0v1:  ; $67D5
+    ; exits s0v1
+    ; NPC t$30 spr$0B (1,6) scr1
+    db $30, $0B, $01, $06, $01
+    ; NPC t$00 spr$4D (3,3) scr255
+    db $00, $4D, $03, $03, $FF, $FF
+
+m2C_Room_of_Ambition_And_Demolition_X0v2:  ; $67E0
+    ; exits s0v2
+    ; NPC t$30 spr$0B (1,6) scr1
+    db $30, $0B, $01, $06, $01
+    ; NPC t$00 spr$4D (1,3) scr255
+    db $00, $4D, $01, $03, $FF, $FF
+
+m2C_Room_of_Ambition_And_Demolition_X0v3:  ; $67EB
+    ; exits s0v3
+    ; NPC t$30 spr$0B (1,6) scr1
+    db $30, $0B, $01, $06, $01, $FF
+
+m2C_Room_of_Ambition_And_Demolition_N0v0:  ; $67F1
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $08, $07
+    ; Exit (8,7)->Gate_Hub
+    db $03, $00, $85, $02, $02, $01, $03
+    ; Exit (1,3)->MedalMan
+    db $16, $01, $00, $00, $00, $03, $03
+    ; Exit (3,3)->Map_17
+    db $17, $01, $00, $00, $00, $FF
+
+m2D_Room_of_Mastermind_And_Control_SP:  ; $6807
+    ; screen_ptrs $2D
+    db $09, $68
+
+m2D_Room_of_Mastermind_And_Control_SB0:  ; $6809
+    ; step_block scr0 ram=0xD972
+    db $72, $D9, $17, $2D, $23, $68, $4F, $68, $17, $2D, $33, $68, $4F, $68, $17, $2D
+    db $3E, $68, $4F, $68, $17, $2D, $49, $68, $4F, $68
+
+m2D_Room_of_Mastermind_And_Control_X0v0:  ; $6823
+    ; exits s0v0
+    ; NPC t$00 spr$0B (2,2) scr1
+    db $00, $0B, $02, $02, $01
+    ; NPC t$00 spr$4D (6,2) scr255
+    db $00, $4D, $06, $02, $FF
+    ; NPC t$00 spr$4D (6,4) scr255
+    db $00, $4D, $06, $04, $FF, $FF
+
+m2D_Room_of_Mastermind_And_Control_X0v1:  ; $6833
+    ; exits s0v1
+    ; NPC t$00 spr$0B (2,2) scr1
+    db $00, $0B, $02, $02, $01
+    ; NPC t$00 spr$4D (6,4) scr255
+    db $00, $4D, $06, $04, $FF, $FF
+
+m2D_Room_of_Mastermind_And_Control_X0v2:  ; $683E
+    ; exits s0v2
+    ; NPC t$00 spr$0B (2,2) scr1
+    db $00, $0B, $02, $02, $01
+    ; NPC t$00 spr$4D (6,2) scr255
+    db $00, $4D, $06, $02, $FF, $FF
+
+m2D_Room_of_Mastermind_And_Control_X0v3:  ; $6849
+    ; exits s0v3
+    ; NPC t$00 spr$0B (2,2) scr1
+    db $00, $0B, $02, $02, $01, $FF
+
+m2D_Room_of_Mastermind_And_Control_N0v0:  ; $684F
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $02, $07
+    ; Exit (2,7)->Gate_Hub
+    db $03, $00, $85, $07, $02, $06, $02
+    ; Exit (6,2)->Well
+    db $18, $01, $00, $00, $00, $06, $04
+    ; Exit (6,4)->Goopy_Room_1
+    db $19, $01, $00, $00, $00, $FF
+
+m2E_Room_of_Extinction_And_Sleep_SP:  ; $6865
+    ; screen_ptrs $2E
+    db $67, $68
+
+m2E_Room_of_Extinction_And_Sleep_SB0:  ; $6867
+    ; step_block scr0 ram=0xD973
+    db $73, $D9, $19, $2D, $81, $68, $AD, $68, $19, $2D, $91, $68, $AD, $68, $19, $2D
+    db $9C, $68, $AD, $68, $19, $2D, $A7, $68, $AD, $68
+
+m2E_Room_of_Extinction_And_Sleep_X0v0:  ; $6881
+    ; exits s0v0
+    ; NPC t$00 spr$0B (3,4) scr1
+    db $00, $0B, $03, $04, $01
+    ; NPC t$00 spr$4D (2,2) scr255
+    db $00, $4D, $02, $02, $FF
+    ; NPC t$00 spr$4D (4,2) scr255
+    db $00, $4D, $04, $02, $FF, $FF
+
+m2E_Room_of_Extinction_And_Sleep_X0v1:  ; $6891
+    ; exits s0v1
+    ; NPC t$00 spr$0B (3,4) scr1
+    db $00, $0B, $03, $04, $01
+    ; NPC t$00 spr$4D (4,2) scr255
+    db $00, $4D, $04, $02, $FF, $FF
+
+m2E_Room_of_Extinction_And_Sleep_X0v2:  ; $689C
+    ; exits s0v2
+    ; NPC t$00 spr$0B (3,4) scr1
+    db $00, $0B, $03, $04, $01
+    ; NPC t$00 spr$4D (2,2) scr255
+    db $00, $4D, $02, $02, $FF, $FF
+
+m2E_Room_of_Extinction_And_Sleep_X0v3:  ; $68A7
+    ; exits s0v3
+    ; NPC t$00 spr$0B (3,4) scr1
+    db $00, $0B, $03, $04, $01, $FF
+
+m2E_Room_of_Extinction_And_Sleep_N0v0:  ; $68AD
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $06, $07
+    ; Exit (6,7)->Gate_Hub
+    db $03, $00, $85, $04, $01, $07, $07
+    ; Exit (7,7)->Gate_Hub
+    db $03, $00, $85, $05, $01, $02, $02
+    ; Exit (2,2)->Goopy_Room_2
+    db $1A, $01, $00, $00, $00, $04, $02
+    ; Exit (4,2)->Map_1B
+    db $1B, $01, $00, $00, $00, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $D6, $68
+    db $02, $69, $74, $D9, $1B, $2D, $10, $69, $AD, $6A, $1B, $2D, $43, $69, $AD, $6A
+    db $1B, $2D, $67, $69, $AD, $6A, $1B, $2D, $A4, $69, $AD, $6A, $1B, $2D, $E1, $69
+    db $AD, $6A, $1B, $2D, $28, $6A, $AD, $6A, $1B, $2D, $67, $69, $AD, $6A, $75, $D9
+    db $1C, $2D, $65, $6A, $AE, $6A, $1C, $2D, $8E, $6A, $AE, $6A, $8F, $FF, $01, $01
+    db $01, $8F, $FF, $02, $01, $02, $8F, $FF, $07, $01, $03, $8F, $FF, $08, $01, $04
+    db $8F, $FF, $05, $04, $05, $8F, $FF, $04, $01, $06, $8F, $FF, $05, $01, $06
+    ; NPC t$50 spr$14 (5,3) scr7
+    db $50, $14, $05, $03, $07
+    ; NPC t$00 spr$51 (6,4) scr7
+    db $00, $51, $06, $04, $07
+    ; NPC t$40 spr$50 (3,4) scr255
+    db $40, $50, $03, $04, $FF, $FF, $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02
+    db $8F, $FF, $07, $01, $03, $8F, $FF, $08, $01, $04, $8F, $FF, $05, $04, $05, $8F
+    db $FF, $04, $01, $06, $8F, $FF, $05, $01, $06, $FF, $8F, $FF, $01, $01, $01, $8F
+    db $FF, $02, $01, $02, $8F, $FF, $07, $01, $03, $8F, $FF, $08, $01, $04, $8F, $FF
+    db $05, $04, $05, $8F, $FF, $04, $01, $06, $8F, $FF, $05, $01, $06
+    ; NPC t$50 spr$14 (7,4) scr7
+    db $50, $14, $07, $04, $07
+    ; NPC t$50 spr$21 (11,0) scr255
+    db $50, $21, $0B, $00, $FF
+    ; NPC t$00 spr$51 (6,4) scr7
+    db $00, $51, $06, $04, $07
+    ; NPC t$40 spr$5F (5,3) scr255
+    db $40, $5F, $05, $03, $FF
+    ; NPC t$40 spr$50 (3,4) scr255
+    db $40, $50, $03, $04, $FF, $FF, $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02
+    db $8F, $FF, $07, $01, $03, $8F, $FF, $08, $01, $04, $8F, $FF, $05, $04, $05, $8F
+    db $FF, $04, $01, $06, $8F, $FF, $05, $01, $06
+    ; NPC t$50 spr$14 (7,4) scr7
+    db $50, $14, $07, $04, $07
+    ; NPC t$50 spr$21 (11,0) scr255
+    db $50, $21, $0B, $00, $FF
+    ; NPC t$00 spr$51 (6,4) scr7
+    db $00, $51, $06, $04, $07
+    ; NPC t$40 spr$5F (5,3) scr255
+    db $40, $5F, $05, $03, $FF
+    ; NPC t$40 spr$50 (3,4) scr255
+    db $40, $50, $03, $04, $FF, $FF, $90, $FF, $02, $03, $0D, $90, $FF, $04, $03, $0E
+    db $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02, $8F, $FF, $07, $01, $03, $8F
+    db $FF, $08, $01, $04, $8F, $FF, $05, $04, $05, $8F, $FF, $04, $01, $06, $8F, $FF
+    db $05, $01, $06
+    ; NPC t$10 spr$14 (7,4) scr7
+    db $10, $14, $07, $04, $07
+    ; NPC t$40 spr$21 (11,4) scr255
+    db $40, $21, $0B, $04, $FF
+    ; NPC t$70 spr$14 (7,4) scr7
+    db $70, $14, $07, $04, $07
+    ; NPC t$40 spr$5F (5,3) scr255
+    db $40, $5F, $05, $03, $FF
+    ; NPC t$40 spr$50 (3,4) scr255
+    db $40, $50, $03, $04, $FF, $FF, $8F, $FF, $01, $01, $01, $8F, $FF, $02, $01, $02
+    db $8F, $FF, $07, $01, $03, $8F, $FF, $08, $01, $04, $8F, $FF, $05, $04, $05, $8F
+    db $FF, $04, $01, $06, $8F, $FF, $05, $01, $06
+    ; NPC t$50 spr$14 (6,4) scr6
+    db $50, $14, $06, $04, $06
+    ; NPC t$50 spr$21 (11,0) scr255
+    db $50, $21, $0B, $00, $FF
+    ; NPC t$00 spr$51 (6,4) scr6
+    db $00, $51, $06, $04, $06
+    ; NPC t$00 spr$5F (4,5) scr255
+    db $00, $5F, $04, $05, $FF
+    ; NPC t$00 spr$50 (3,4) scr255
+    db $00, $50, $03, $04, $FF, $FF, $8F, $FF, $01, $01, $08, $8F, $FF, $02, $01, $09
+    db $8F, $FF, $08, $01, $0A, $8F, $FF, $08, $05, $0B, $8F, $FF, $05, $01, $0C
+    ; NPC t$40 spr$21 (8,1) scr255
+    db $40, $21, $08, $01, $FF
+    ; NPC t$40 spr$39 (8,1) scr255
+    db $40, $39, $08, $01, $FF
+    ; NPC t$50 spr$14 (0,4) scr7
+    db $50, $14, $00, $04, $07, $FF, $8F, $FF, $01, $01, $08, $8F, $FF, $02, $01, $09
+    db $8F, $FF, $08, $01, $0A, $8F, $FF, $08, $05, $0B, $8F, $FF, $05, $01, $0C
+    ; NPC t$40 spr$21 (8,2) scr255
+    db $40, $21, $08, $02, $FF, $FF, $FF, $FF
+
+m30_Boss_Room___Gate_of_Beginning_SP:  ; $6AAF
+    ; screen_ptrs $30
+    db $B1, $6A
+
+m30_Boss_Room___Gate_of_Beginning_SB0:  ; $6AB1
+    ; step_block scr0 ram=0xD976
+    db $76, $D9, $0D, $26, $BF, $6A, $CB, $6A, $0E, $26, $CA, $6A, $CC, $6A
+
+m30_Boss_Room___Gate_of_Beginning_X0v0:  ; $6ABF
+    ; exits s0v0
+    ; NPC t$00 spr$16 (1,2) scr1
+    db $00, $16, $01, $02, $01
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m30_Boss_Room___Gate_of_Beginning_X0v1:  ; $6ACA
+    ; exits s0v1
+    db $FF
+
+m30_Boss_Room___Gate_of_Beginning_N0v0:  ; $6ACB
+    ; npcs s0v0
+    db $FF
+
+m30_Boss_Room___Gate_of_Beginning_N0v1:  ; $6ACC
+    ; npcs s0v1
+    db $01, $02
+    ; Exit (1,2)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m31_Boss_Room___Gate_of_Villager_SP:  ; $6AD4
+    ; screen_ptrs $31
+    db $D6, $6A
+
+m31_Boss_Room___Gate_of_Villager_SB0:  ; $6AD6
+    ; step_block scr0 ram=0xD977
+    db $77, $D9, $10, $26, $E4, $6A, $09, $6B, $11, $26, $03, $6B, $0A, $6B
+
+m31_Boss_Room___Gate_of_Villager_X0v0:  ; $6AE4
+    ; exits s0v0
+    db $8F, $FF, $04, $01, $02, $8F, $FF, $05, $01, $02, $8F, $FF, $04, $02, $02, $8F
+    db $FF, $05, $02, $02
+    ; NPC t$00 spr$0E (8,3) scr1
+    db $00, $0E, $08, $03, $01
+    ; NPC t$70 spr$21 (0,0) scr255
+    db $70, $21, $00, $00, $FF, $FF
+
+m31_Boss_Room___Gate_of_Villager_X0v1:  ; $6B03
+    ; exits s0v1
+    ; NPC t$00 spr$0E (8,3) scr1
+    db $00, $0E, $08, $03, $01, $FF
+
+m31_Boss_Room___Gate_of_Villager_N0v0:  ; $6B09
+    ; npcs s0v0
+    db $FF
+
+m31_Boss_Room___Gate_of_Villager_N0v1:  ; $6B0A
+    ; npcs s0v1
+    db $04, $01
+    ; Exit (4,1)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m32_Boss_Room___Gate_of_Talisman_SP:  ; $6B12
+    ; screen_ptrs $32
+    db $14, $6B
+
+m32_Boss_Room___Gate_of_Talisman_SB0:  ; $6B14
+    ; step_block scr0 ram=0xD978
+    db $78, $D9, $16, $24, $22, $6B, $38, $6B, $17, $24, $37, $6B, $39, $6B
+
+m32_Boss_Room___Gate_of_Talisman_X0v0:  ; $6B22
+    ; exits s0v0
+    db $90, $FF, $05, $04, $02
+    ; NPC t$00 spr$20 (4,4) scr1
+    db $00, $20, $04, $04, $01
+    ; NPC t$40 spr$39 (8,0) scr255
+    db $40, $39, $08, $00, $FF
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF, $FF
+
+m32_Boss_Room___Gate_of_Talisman_X0v1:  ; $6B37
+    ; exits s0v1
+    db $FF
+
+m32_Boss_Room___Gate_of_Talisman_N0v0:  ; $6B38
+    ; npcs s0v0
+    db $FF
+
+m32_Boss_Room___Gate_of_Talisman_N0v1:  ; $6B39
+    ; npcs s0v1
+    db $05, $04
+    ; Exit (5,4)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m33_Boss_Room___Gate_of_Memories_SP:  ; $6B41
+    ; screen_ptrs $33
+    db $43, $6B
+
+m33_Boss_Room___Gate_of_Memories_SB0:  ; $6B43
+    ; step_block scr0 ram=0xD979
+    db $79, $D9, $13, $26, $51, $6B, $5D, $6B, $14, $26, $5C, $6B, $5E, $6B
+
+m33_Boss_Room___Gate_of_Memories_X0v0:  ; $6B51
+    ; exits s0v0
+    ; NPC t$00 spr$3C (4,4) scr1
+    db $00, $3C, $04, $04, $01
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m33_Boss_Room___Gate_of_Memories_X0v1:  ; $6B5C
+    ; exits s0v1
+    db $FF
+
+m33_Boss_Room___Gate_of_Memories_N0v0:  ; $6B5D
+    ; npcs s0v0
+    db $FF
+
+m33_Boss_Room___Gate_of_Memories_N0v1:  ; $6B5E
+    ; npcs s0v1
+    db $01, $04
+    ; Exit (1,4)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m34_Boss_Room___Gate_of_Bewilder_SP:  ; $6B66
+    ; screen_ptrs $34
+    db $68, $6B
+
+m34_Boss_Room___Gate_of_Bewilder_SB0:  ; $6B68
+    ; step_block scr0 ram=0xD97A
+    db $7A, $D9, $16, $26, $76, $6B, $B9, $6B, $17, $26, $B3, $6B, $BA, $6B
+
+m34_Boss_Room___Gate_of_Bewilder_X0v0:  ; $6B76
+    ; exits s0v0
+    db $90, $FF, $07, $01, $07, $90, $FF, $04, $04, $08, $90, $FF, $05, $05, $09, $90
+    db $FF, $01, $03, $0A, $8F, $FF, $00, $06, $01, $8F, $FF, $04, $01, $02, $8F, $FF
+    db $05, $01, $02
+    ; NPC t$06 spr$25 (1,2) scr3
+    db $06, $25, $01, $02, $03
+    ; NPC t$06 spr$25 (8,0) scr4
+    db $06, $25, $08, $00, $04
+    ; NPC t$06 spr$25 (5,3) scr5
+    db $06, $25, $05, $03, $05
+    ; NPC t$06 spr$25 (6,6) scr6
+    db $06, $25, $06, $06, $06
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m34_Boss_Room___Gate_of_Bewilder_X0v1:  ; $6BB3
+    ; exits s0v1
+    db $8F, $FF, $00, $06, $01, $FF
+
+m34_Boss_Room___Gate_of_Bewilder_N0v0:  ; $6BB9
+    ; npcs s0v0
+    db $FF
+
+m34_Boss_Room___Gate_of_Bewilder_N0v1:  ; $6BBA
+    ; npcs s0v1
+    db $05, $01
+    ; Exit (5,1)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m35_X_SP:  ; $6BC2
+    ; screen_ptrs $35
+    db $C4, $6B
+
+m35_X_SB0:  ; $6BC4
+    ; step_block scr0 ram=0xD97B
+    db $7B, $D9, $19, $26, $D2, $6B, $F2, $6B, $1A, $26, $E7, $6B, $F3, $6B
+
+m35_X_X0v0:  ; $6BD2
+    ; exits s0v0
+    db $8F, $FF, $06, $06, $01, $82, $FF, $05, $00, $02
+    ; NPC t$10 spr$1D (7,3) scr3
+    db $10, $1D, $07, $03, $03
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m35_X_X0v1:  ; $6BE7
+    ; exits s0v1
+    db $8F, $FF, $06, $06, $01, $82, $FF, $05, $00, $02, $FF
+
+m35_X_N0v0:  ; $6BF2
+    ; npcs s0v0
+    db $FF
+
+m35_X_N0v1:  ; $6BF3
+    ; npcs s0v1
+    db $07, $03
+    ; Exit (7,3)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m36_Boss_Room___Gate_of_Peace_SP:  ; $6BFB
+    ; screen_ptrs $36
+    db $FD, $6B
+
+m36_Boss_Room___Gate_of_Peace_SB0:  ; $6BFD
+    ; step_block scr0 ram=0xD97C
+    db $7C, $D9, $1C, $26, $0B, $6C, $7B, $6C, $1D, $26, $52, $6C, $7C, $6C
+
+m36_Boss_Room___Gate_of_Peace_X0v0:  ; $6C0B
+    ; exits s0v0
+    db $82, $FF, $06, $02, $01, $80, $FF, $06, $02, $01, $82, $FF, $08, $02, $02, $80
+    db $FF, $08, $02, $02, $82, $FF, $06, $04, $03, $80, $FF, $06, $04, $03, $82, $FF
+    db $08, $04, $04, $80, $FF, $08, $04, $04, $8F, $FF, $04, $06, $07
+    ; NPC t$00 spr$12 (3,1) scr5
+    db $00, $12, $03, $01, $05
+    ; NPC t$00 spr$12 (3,2) scr6
+    db $00, $12, $03, $02, $06
+    ; NPC t$30 spr$02 (3,6) scr7
+    db $30, $02, $03, $06, $07
+    ; NPC t$20 spr$17 (8,5) scr8
+    db $20, $17, $08, $05, $08
+    ; NPC t$70 spr$21 (0,2) scr255
+    db $70, $21, $00, $02, $FF, $FF
+
+m36_Boss_Room___Gate_of_Peace_X0v1:  ; $6C52
+    ; exits s0v1
+    db $8F, $FF, $06, $02, $01, $8F, $FF, $08, $02, $02, $8F, $FF, $06, $04, $03, $8F
+    db $FF, $08, $04, $04, $8F, $FF, $04, $06, $07
+    ; NPC t$00 spr$12 (3,1) scr5
+    db $00, $12, $03, $01, $05
+    ; NPC t$00 spr$12 (3,2) scr6
+    db $00, $12, $03, $02, $06
+    ; NPC t$30 spr$02 (3,6) scr7
+    db $30, $02, $03, $06, $07, $FF
+
+m36_Boss_Room___Gate_of_Peace_N0v0:  ; $6C7B
+    ; npcs s0v0
+    db $FF
+
+m36_Boss_Room___Gate_of_Peace_N0v1:  ; $6C7C
+    ; npcs s0v1
+    db $08, $06
+    ; Exit (8,6)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m37_Boss_Room___Gate_of_Bravery_SP:  ; $6C84
+    ; screen_ptrs $37
+    db $86, $6C
+
+m37_Boss_Room___Gate_of_Bravery_SB0:  ; $6C86
+    ; step_block scr0 ram=0xD97D
+    db $7D, $D9, $1B, $25, $94, $6C, $0E, $6D, $1C, $25, $DB, $6C, $0F, $6D
+
+m37_Boss_Room___Gate_of_Bravery_X0v0:  ; $6C94
+    ; exits s0v0
+    db $90, $FF, $04, $04, $03, $90, $FF, $03, $05, $03, $90, $FF, $03, $06, $03, $90
+    db $FF, $06, $04, $04, $90, $FF, $06, $05, $04, $90, $FF, $05, $06, $04, $90, $FF
+    db $05, $03, $02
+    ; NPC t$40 spr$E0 (5,0) scr255
+    db $40, $E0, $05, $00, $FF
+    ; NPC t$40 spr$E1 (5,0) scr255
+    db $40, $E1, $05, $00, $FF
+    ; NPC t$40 spr$E2 (5,0) scr255
+    db $40, $E2, $05, $00, $FF
+    ; NPC t$40 spr$E3 (5,0) scr255
+    db $40, $E3, $05, $00, $FF
+    ; NPC t$00 spr$19 (4,1) scr1
+    db $00, $19, $04, $01, $01
+    ; NPC t$60 spr$15 (4,8) scr255
+    db $60, $15, $04, $08, $FF
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF, $FF
+
+m37_Boss_Room___Gate_of_Bravery_X0v1:  ; $6CDB
+    ; exits s0v1
+    db $90, $FF, $04, $04, $03, $90, $FF, $03, $05, $03, $90, $FF, $03, $06, $03, $90
+    db $FF, $06, $04, $04, $90, $FF, $06, $05, $04, $90, $FF, $05, $06, $04
+    ; NPC t$40 spr$E0 (5,0) scr255
+    db $40, $E0, $05, $00, $FF
+    ; NPC t$40 spr$E1 (5,0) scr255
+    db $40, $E1, $05, $00, $FF
+    ; NPC t$40 spr$E2 (5,0) scr255
+    db $40, $E2, $05, $00, $FF
+    ; NPC t$40 spr$E3 (5,0) scr255
+    db $40, $E3, $05, $00, $FF, $FF
+
+m37_Boss_Room___Gate_of_Bravery_N0v0:  ; $6D0E
+    ; npcs s0v0
+    db $FF
+
+m37_Boss_Room___Gate_of_Bravery_N0v1:  ; $6D0F
+    ; npcs s0v1
+    db $04, $01
+    ; Exit (4,1)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m38_X_SP:  ; $6D17
+    ; screen_ptrs $38
+    db $19, $6D
+
+m38_X_SB0:  ; $6D19
+    ; step_block scr0 ram=0xD97E
+    db $7E, $D9, $01, $25, $27, $6D, $F1, $6D, $02, $25, $96, $6D, $F2, $6D
+
+m38_X_X0v0:  ; $6D27
+    ; exits s0v0
+    db $90, $FF, $04, $00, $02, $90, $FF, $05, $00, $03, $90, $FF, $06, $00, $04, $90
+    db $FF, $01, $01, $05, $90, $FF, $05, $02, $06, $90, $FF, $08, $02, $07, $90, $FF
+    db $02, $04, $08, $90, $FF, $03, $04, $09, $90, $FF, $04, $04, $0A, $90, $FF, $07
+    db $04, $0B, $90, $FF, $08, $04, $0C, $90, $FF, $07, $05, $0D, $90, $FF, $01, $06
+    db $0E, $90, $FF, $05, $06, $0F, $90, $FF, $06, $02, $10
+    ; NPC t$40 spr$E0 (8,0) scr255
+    db $40, $E0, $08, $00, $FF
+    ; NPC t$40 spr$E1 (8,0) scr255
+    db $40, $E1, $08, $00, $FF
+    ; NPC t$40 spr$E2 (8,0) scr255
+    db $40, $E2, $08, $00, $FF
+    ; NPC t$40 spr$E3 (8,0) scr255
+    db $40, $E3, $08, $00, $FF
+    ; NPC t$40 spr$39 (2,0) scr255
+    db $40, $39, $02, $00, $FF
+    ; NPC t$00 spr$1E (8,5) scr1
+    db $00, $1E, $08, $05, $01
+    ; NPC t$70 spr$21 (0,0) scr255
+    db $70, $21, $00, $00, $FF, $FF
+
+m38_X_X0v1:  ; $6D96
+    ; exits s0v1
+    db $90, $FF, $04, $00, $02, $90, $FF, $05, $00, $03, $90, $FF, $06, $00, $04, $90
+    db $FF, $01, $01, $05, $90, $FF, $05, $02, $06, $90, $FF, $08, $02, $07, $90, $FF
+    db $02, $04, $08, $90, $FF, $03, $04, $09, $90, $FF, $04, $04, $0A, $90, $FF, $07
+    db $04, $0B, $90, $FF, $08, $04, $0C, $90, $FF, $07, $05, $0D, $90, $FF, $01, $06
+    db $0E, $90, $FF, $05, $06, $0F
+    ; NPC t$40 spr$E0 (8,0) scr255
+    db $40, $E0, $08, $00, $FF
+    ; NPC t$40 spr$E1 (8,0) scr255
+    db $40, $E1, $08, $00, $FF
+    ; NPC t$40 spr$E2 (8,0) scr255
+    db $40, $E2, $08, $00, $FF
+    ; NPC t$40 spr$E3 (8,0) scr255
+    db $40, $E3, $08, $00, $FF, $FF
+
+m38_X_N0v0:  ; $6DF1
+    ; npcs s0v0
+    db $FF
+
+m38_X_N0v1:  ; $6DF2
+    ; npcs s0v1
+    db $08, $05
+    ; Exit (8,5)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m39_X_SP:  ; $6DFA
+    ; screen_ptrs $39
+    db $FC, $6D
+
+m39_X_SB0:  ; $6DFC
+    ; step_block scr0 ram=0xD97F
+    db $7F, $D9, $04, $23, $0A, $6E, $2A, $6E, $05, $23, $24, $6E, $2B, $6E
+
+m39_X_X0v0:  ; $6E0A
+    ; exits s0v0
+    db $90, $FF, $06, $06, $04, $8F, $FF, $08, $06, $01, $8F, $FF, $07, $04, $02
+    ; NPC t$00 spr$2C (1,1) scr3
+    db $00, $2C, $01, $01, $03
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m39_X_X0v1:  ; $6E24
+    ; exits s0v1
+    db $8F, $FF, $07, $04, $02, $FF
+
+m39_X_N0v0:  ; $6E2A
+    ; npcs s0v0
+    db $FF
+
+m39_X_N0v1:  ; $6E2B
+    ; npcs s0v1
+    db $07, $06
+    ; Exit (7,6)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m3A_X_SP:  ; $6E33
+    ; screen_ptrs $3A
+    db $35, $6E
+
+m3A_X_SB0:  ; $6E35
+    ; step_block scr0 ram=0xD980
+    db $80, $D9, $04, $25, $43, $6E, $35, $6F, $05, $25, $D0, $6E, $36, $6F
+
+m3A_X_X0v0:  ; $6E43
+    ; exits s0v0
+    db $90, $FF, $02, $02, $02, $90, $FF, $02, $03, $02, $90, $FF, $02, $05, $02, $90
+    db $FF, $02, $06, $02, $90, $FF, $04, $02, $02, $90, $FF, $04, $04, $02, $90, $FF
+    db $04, $06, $02, $90, $FF, $06, $02, $02, $90, $FF, $06, $03, $02, $90, $FF, $06
+    db $05, $02, $90, $FF, $06, $06, $02, $90, $FF, $08, $02, $02, $90, $FF, $08, $03
+    db $02, $90, $FF, $08, $04, $02, $90, $FF, $08, $05, $02, $90, $FF, $08, $06, $02
+    db $90, $FF, $01, $05, $03, $90, $FF, $02, $04, $04, $90, $FF, $05, $03, $05, $90
+    db $FF, $05, $04, $06, $90, $FF, $07, $03, $07, $90, $FF, $07, $05, $08
+    ; NPC t$40 spr$E0 (1,0) scr255
+    db $40, $E0, $01, $00, $FF
+    ; NPC t$40 spr$E1 (1,0) scr255
+    db $40, $E1, $01, $00, $FF
+    ; NPC t$40 spr$E2 (1,0) scr255
+    db $40, $E2, $01, $00, $FF, $40, $E3, $01, $00, $FF, $00, $18, $01, $01, $01, $50
+    db $21, $0A, $00, $FF, $FF
+
+m3A_X_X0v1:  ; $6ED0
+    ; exits s0v1
+    db $90, $FF, $02, $02, $02, $90, $FF, $02, $03, $02, $90, $FF, $02, $05, $02, $90
+    db $FF, $02, $06, $02, $90, $FF, $04, $02, $02, $90, $FF, $04, $04, $02, $90, $FF
+    db $04, $06, $02, $90, $FF, $06, $02, $02, $90, $FF, $06, $03, $02, $90, $FF, $06
+    db $05, $02, $90, $FF, $06, $06, $02, $90, $FF, $08, $02, $02, $90, $FF, $08, $03
+    db $02, $90, $FF, $08, $04, $02, $90, $FF, $08, $05, $02, $90, $FF, $08, $06, $02
+    ; NPC t$40 spr$E0 (1,0) scr255
+    db $40, $E0, $01, $00, $FF
+    ; NPC t$40 spr$E1 (1,0) scr255
+    db $40, $E1, $01, $00, $FF
+    ; NPC t$40 spr$E2 (1,0) scr255
+    db $40, $E2, $01, $00, $FF
+    ; NPC t$40 spr$E3 (1,0) scr255
+    db $40, $E3, $01, $00, $FF, $FF
+
+m3A_X_N0v0:  ; $6F35
+    ; npcs s0v0
+    db $FF
+
+m3A_X_N0v1:  ; $6F36
+    ; npcs s0v1
+    db $01, $01
+    ; Exit (1,1)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m3B_X_SP:  ; $6F3E
+    ; screen_ptrs $3B
+    db $40, $6F
+
+m3B_X_SB0:  ; $6F40
+    ; step_block scr0 ram=0xD981
+    db $81, $D9, $07, $24, $4E, $6F, $5A, $6F, $08, $24, $59, $6F, $5B, $6F
+
+m3B_X_X0v0:  ; $6F4E
+    ; exits s0v0
+    ; NPC t$05 spr$1B (3,4) scr1
+    db $05, $1B, $03, $04, $01
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF, $FF
+
+m3B_X_X0v1:  ; $6F59
+    ; exits s0v1
+    db $FF
+
+m3B_X_N0v0:  ; $6F5A
+    ; npcs s0v0
+    db $FF
+
+m3B_X_N0v1:  ; $6F5B
+    ; npcs s0v1
+    db $05, $03
+    ; Exit (5,3)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m3C_X_SP:  ; $6F63
+    ; screen_ptrs $3C
+    db $65, $6F
+
+m3C_X_SB0:  ; $6F65
+    ; step_block scr0 ram=0xD982
+    db $82, $D9, $07, $23, $79, $6F, $DA, $6F, $09, $23, $79, $6F, $DB, $6F, $08, $23
+    db $B6, $6F, $DB, $6F
+
+m3C_X_X0v0:  ; $6F79
+    ; exits s0v0
+    ; exits s0v1
+    db $8F, $FF, $04, $02, $01, $8F, $FF, $02, $03, $02, $8F, $FF, $01, $04, $03, $8F
+    db $FF, $08, $04, $04, $8F, $FF, $06, $05, $05, $8F, $FF, $03, $03, $06, $8F, $FF
+    db $07, $04, $07
+    ; NPC t$60 spr$15 (2,6) scr255
+    db $60, $15, $02, $06, $FF
+    ; NPC t$70 spr$21 (0,0) scr255
+    db $70, $21, $00, $00, $FF
+    ; NPC t$00 spr$23 (5,1) scr8
+    db $00, $23, $05, $01, $08
+    ; NPC t$00 spr$FF (5,1) scr8
+    db $00, $FF, $05, $01, $08
+    ; NPC t$00 spr$FF (6,1) scr8
+    db $00, $FF, $06, $01, $08, $FF
+
+m3C_X_X0v2:  ; $6FB6
+    ; exits s0v2
+    db $8F, $FF, $04, $02, $01, $8F, $FF, $02, $03, $02, $8F, $FF, $01, $04, $03, $8F
+    db $FF, $08, $04, $04, $8F, $FF, $06, $05, $05, $8F, $FF, $03, $03, $06, $8F, $FF
+    db $07, $04, $07, $FF
+
+m3C_X_N0v0:  ; $6FDA
+    ; npcs s0v0
+    db $FF
+
+m3C_X_N0v1:  ; $6FDB
+    ; npcs s0v1
+    ; npcs s0v2
+    db $06, $01
+    ; Exit (6,1)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m3D_X_SP:  ; $6FE3
+    ; screen_ptrs $3D
+    db $E5, $6F
+
+m3D_X_SB0:  ; $6FE5
+    ; step_block scr0 ram=0xD983
+    db $83, $D9, $07, $25, $F3, $6F, $22, $70, $07, $25, $17, $70, $22, $70
+
+m3D_X_X0v0:  ; $6FF3
+    ; exits s0v0
+    db $90, $FF, $04, $04, $01, $90, $FF, $05, $04, $02
+    ; NPC t$40 spr$E1 (4,4) scr255
+    db $40, $E1, $04, $04, $FF
+    ; NPC t$40 spr$5F (4,2) scr255
+    db $40, $5F, $04, $02, $FF
+    ; NPC t$40 spr$05 (4,2) scr255
+    db $40, $05, $04, $02, $FF
+    ; NPC t$40 spr$39 (0,0) scr255
+    db $40, $39, $00, $00, $FF
+    ; NPC t$60 spr$E0 (5,4) scr255
+    db $60, $E0, $05, $04, $FF, $FF
+
+m3D_X_X0v1:  ; $7017
+    ; exits s0v1
+    db $90, $FF, $04, $04, $03, $90, $FF, $05, $04, $03, $FF
+
+m3D_X_N0v0:  ; $7022
+    ; npcs s0v0
+    ; npcs s0v1
+    db $FF
+
+m3E_X_SP:  ; $7023
+    ; screen_ptrs $3E
+    db $25, $70
+
+m3E_X_SB0:  ; $7025
+    ; step_block scr0 ram=0xD984
+    db $84, $D9, $09, $25, $33, $70, $49, $70, $0A, $25, $48, $70, $4A, $70
+
+m3E_X_X0v0:  ; $7033
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF
+    ; NPC t$00 spr$28 (4,5) scr1
+    db $00, $28, $04, $05, $01
+    ; NPC t$00 spr$FF (4,4) scr1
+    db $00, $FF, $04, $04, $01
+    ; NPC t$00 spr$FF (5,4) scr1
+    db $00, $FF, $05, $04, $01, $FF
+
+m3E_X_X0v1:  ; $7048
+    ; exits s0v1
+    db $FF
+
+m3E_X_N0v0:  ; $7049
+    ; npcs s0v0
+    db $FF
+
+m3E_X_N0v1:  ; $704A
+    ; npcs s0v1
+    db $01, $03
+    ; Exit (1,3)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m3F_X_SP:  ; $7052
+    ; screen_ptrs $3F
+    db $54, $70
+
+m3F_X_SB0:  ; $7054
+    ; step_block scr0 ram=0xD985
+    db $85, $D9, $01, $24, $62, $70, $6E, $70, $02, $24, $6D, $70, $6F, $70
+
+m3F_X_X0v0:  ; $7062
+    ; exits s0v0
+    ; NPC t$00 spr$2B (1,5) scr1
+    db $00, $2B, $01, $05, $01
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m3F_X_X0v1:  ; $706D
+    ; exits s0v1
+    db $FF
+
+m3F_X_N0v0:  ; $706E
+    ; npcs s0v0
+    db $FF
+
+m3F_X_N0v1:  ; $706F
+    ; npcs s0v1
+    db $01, $05
+    ; Exit (1,5)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m40_X_SP:  ; $7077
+    ; screen_ptrs $40
+    db $79, $70
+
+m40_X_SB0:  ; $7079
+    ; step_block scr0 ram=0xD986
+    db $86, $D9, $16, $25, $81, $70, $B9, $70
+
+m40_X_X0v0:  ; $7081
+    ; exits s0v0
+    db $90, $FF, $01, $01, $06, $90, $FF, $02, $01, $06, $90, $FF, $04, $01, $07, $90
+    db $FF, $05, $01, $07, $90, $FF, $07, $01, $08, $90, $FF, $08, $01, $08, $8F, $FF
+    db $03, $03, $01, $8F, $FF, $06, $03, $02
+    ; NPC t$00 spr$05 (2,2) scr3
+    db $00, $05, $02, $02, $03
+    ; NPC t$00 spr$05 (5,2) scr4
+    db $00, $05, $05, $02, $04
+    ; NPC t$00 spr$05 (8,2) scr5
+    db $00, $05, $08, $02, $05, $FF
+
+m40_X_N0v0:  ; $70B9
+    ; npcs s0v0
+    db $01, $01
+    ; Exit (1,1)->Boss_Medal_Lipsy
+    db $41, $00, $00, $01, $06, $02, $01
+    ; Exit (2,1)->Boss_Medal_Lipsy
+    db $41, $00, $00, $02, $06, $04, $01
+    ; Exit (4,1)->Boss_Medal_Lipsy
+    db $41, $00, $00, $04, $06, $05, $01
+    ; Exit (5,1)->Boss_Medal_Lipsy
+    db $41, $00, $00, $05, $06, $07, $01
+    ; Exit (7,1)->Boss_Medal_Lipsy
+    db $41, $00, $00, $07, $06, $08, $01
+    ; Exit (8,1)->Boss_Medal_Lipsy
+    db $41, $00, $00, $08, $06, $FF
+
+m41_X_SP:  ; $70E4
+    ; screen_ptrs $41
+    db $E6, $70
+
+m41_X_SB0:  ; $70E6
+    ; step_block scr0 ram=0xD987
+    db $87, $D9, $18, $25, $00, $71, $2B, $71, $18, $25, $0B, $71, $2B, $71, $18, $25
+    db $20, $71, $2B, $71, $19, $25, $42, $4B, $2C, $71
+
+m41_X_X0v0:  ; $7100
+    ; exits s0v0
+    ; NPC t$00 spr$1C (1,4) scr1
+    db $00, $1C, $01, $04, $01
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m41_X_X0v1:  ; $710B
+    ; exits s0v1
+    ; NPC t$00 spr$22 (4,3) scr2
+    db $00, $22, $04, $03, $02
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$FF (4,3) scr2
+    db $00, $FF, $04, $03, $02
+    ; NPC t$00 spr$FF (5,3) scr2
+    db $00, $FF, $05, $03, $02, $FF
+
+m41_X_X0v2:  ; $7120
+    ; exits s0v2
+    ; NPC t$00 spr$3E (7,4) scr3
+    db $00, $3E, $07, $04, $03
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF, $FF
+
+m41_X_N0v0:  ; $712B
+    ; npcs s0v0
+    ; npcs s0v1
+    ; npcs s0v2
+    db $FF
+
+m41_X_N0v3:  ; $712C
+    ; npcs s0v3
+    db $01, $02
+    ; Exit (1,2)->Castle
+    db $00, $00, $01, $04, $05, $04, $02
+    ; Exit (4,2)->Castle
+    db $00, $00, $01, $04, $05, $07, $02
+    ; Exit (7,2)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m42_Labyrinth_SP:  ; $7142
+    ; screen_ptrs $42
+    db $46, $71
+
+m60_Labyrinth_Final_Room_SP:  ; $7144
+    ; screen_ptrs $60
+    db $84, $71
+
+m42_Labyrinth_SB0:  ; $7146
+    ; step_block scr0 ram=0xD988
+    db $88, $D9, $13, $24, $92, $71, $BE, $73, $13, $24, $C0, $71, $7E, $73, $13, $24
+    db $EE, $71, $7E, $73, $13, $24, $1C, $72, $FE, $73, $13, $24, $4A, $72, $7E, $73
+    db $13, $24, $78, $72, $3E, $74, $13, $24, $A6, $72, $7E, $73, $13, $24, $D4, $72
+    db $7E, $73, $13, $24, $02, $73, $7E, $73, $13, $24, $30, $73, $7E, $74
+
+m42_Labyrinth_SB1:  ; $7184
+    ; step_block scr1 ram=0xD989
+    ; step_block scr0 ram=0xD989
+    db $89, $D9, $14, $24, $5E, $73, $BE, $74, $14, $24, $73, $73, $BE, $74
+
+m42_Labyrinth_X0v0:  ; $7192
+    ; exits s0v0
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $01, $90, $FF, $07, $07, $01, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $04, $90, $FF
+    db $07, $00, $04, $90, $FF, $00, $02, $0F, $90, $FF, $00, $05, $0F, $FF
+
+m42_Labyrinth_X0v1:  ; $71C0
+    ; exits s0v1
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $02, $90, $FF, $07, $07, $02, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $0F, $90, $FF
+    db $07, $00, $0F, $90, $FF, $00, $02, $0F, $90, $FF, $00, $05, $0F, $FF
+
+m42_Labyrinth_X0v2:  ; $71EE
+    ; exits s0v2
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $03, $90, $FF, $07, $07, $03, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $0F, $90, $FF
+    db $07, $00, $0F, $90, $FF, $00, $02, $0F, $90, $FF, $00, $05, $0F, $FF
+
+m42_Labyrinth_X0v3:  ; $721C
+    ; exits s0v3
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $0F, $90, $FF, $07, $07, $0F, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $03, $90, $FF, $02, $00, $0F, $90, $FF
+    db $07, $00, $0F, $90, $FF, $00, $02, $0F, $90, $FF, $00, $05, $0F, $FF
+
+m42_Labyrinth_X0v4:  ; $724A
+    ; exits s0v4
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $0F, $90, $FF, $07, $07, $0F, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $05, $90, $FF
+    db $07, $00, $05, $90, $FF, $00, $02, $0F, $90, $FF, $00, $05, $0F, $FF
+
+m42_Labyrinth_X0v5:  ; $7278
+    ; exits s0v5
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $0F, $90, $FF, $07, $07, $0F, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $06, $90, $FF
+    db $07, $00, $06, $90, $FF, $00, $02, $0F, $90, $FF, $00, $05, $05, $FF
+
+m42_Labyrinth_X0v6:  ; $72A6
+    ; exits s0v6
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $0F, $90, $FF, $07, $07, $0F, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $0F, $90, $FF
+    db $07, $00, $0F, $90, $FF, $00, $02, $07, $90, $FF, $00, $05, $07, $FF
+
+m42_Labyrinth_X0v7:  ; $72D4
+    ; exits s0v7
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $08, $90, $FF, $07, $07, $08, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $0F, $90, $FF
+    db $07, $00, $0F, $90, $FF, $00, $02, $0F, $90, $FF, $00, $05, $0F, $FF
+
+m42_Labyrinth_X0v8:  ; $7302
+    ; exits s0v8
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $09, $90, $FF, $07, $07, $09, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $0F, $90, $FF
+    db $07, $00, $0F, $90, $FF, $00, $02, $0F, $90, $FF, $00, $05, $0F, $FF
+
+m42_Labyrinth_X0v9:  ; $7330
+    ; exits s0v9
+    db $90, $FF, $04, $04, $0F, $90, $FF, $02, $07, $0F, $90, $FF, $07, $07, $0F, $90
+    db $FF, $09, $02, $0F, $90, $FF, $09, $05, $0F, $90, $FF, $02, $00, $0F, $90, $FF
+    db $07, $00, $0F, $90, $FF, $00, $02, $09, $90, $FF, $00, $05, $0F, $FF
+
+m42_Labyrinth_X1v0:  ; $735E
+    ; exits s1v0
+    ; exits s0v0
+    db $8F, $FF, $03, $02, $10, $8F, $FF, $03, $05, $12
+    ; NPC t$00 spr$1A (6,2) scr17
+    db $00, $1A, $06, $02, $11
+    ; NPC t$70 spr$21 (0,1) scr255
+    db $70, $21, $00, $01, $FF, $FF
+
+m42_Labyrinth_X1v1:  ; $7373
+    ; exits s1v1
+    ; exits s0v1
+    db $8F, $FF, $03, $02, $10, $8F, $FF, $03, $05, $12, $FF
+
+m42_Labyrinth_N0v1:  ; $737E
+    ; npcs s0v1
+    ; npcs s0v2
+    ; npcs s0v4
+    db $05, $05
+    ; Exit (5,5)->Castle
+    db $00, $00, $01, $04, $05, $02, $00
+    ; Exit (2,0)->Labyrinth
+    db $42, $00, $00, $02, $07, $07, $00
+    ; Exit (7,0)->Labyrinth
+    db $42, $00, $00, $07, $07, $00, $02
+    ; Exit (0,2)->Labyrinth
+    db $42, $00, $00, $09, $02, $00, $05
+    ; Exit (0,5)->Labyrinth
+    db $42, $00, $00, $09, $05, $02, $07
+    ; Exit (2,7)->Labyrinth
+    db $42, $00, $00, $02, $00, $07, $07
+    ; Exit (7,7)->Labyrinth
+    db $42, $00, $00, $07, $00, $09, $02
+    ; Exit (9,2)->Labyrinth
+    db $42, $00, $00, $00, $02, $09, $05
+    ; Exit (9,5)->Labyrinth
+    db $42, $00, $00, $00, $05, $FF
+
+m42_Labyrinth_N0v0:  ; $73BE
+    ; npcs s0v0
+    db $05, $05
+    ; Exit (5,5)->Castle
+    db $00, $00, $01, $04, $05, $02, $00
+    ; Exit (2,0)->Labyrinth
+    db $42, $00, $00, $02, $07, $07, $00
+    ; Exit (7,0)->Labyrinth
+    db $42, $00, $00, $07, $07, $00, $02
+    ; Exit (0,2)->Labyrinth
+    db $42, $00, $00, $09, $02, $00, $05
+    ; Exit (0,5)->Labyrinth
+    db $42, $00, $00, $09, $05, $02, $07
+    ; Exit (2,7)->Labyrinth
+    db $42, $00, $00, $02, $00, $07, $07
+    ; Exit (7,7)->Labyrinth
+    db $42, $00, $00, $07, $00, $09, $02
+    ; Exit (9,2)->Map_60
+    db $60, $00, $00, $00, $02, $09, $05
+    ; Exit (9,5)->Labyrinth
+    db $42, $00, $00, $00, $05, $FF
+
+m42_Labyrinth_N0v3:  ; $73FE
+    ; npcs s0v3
+    db $05, $05
+    ; Exit (5,5)->Castle
+    db $00, $00, $01, $04, $05, $02, $00
+    ; Exit (2,0)->Labyrinth
+    db $42, $00, $00, $02, $07, $07, $00
+    ; Exit (7,0)->Labyrinth
+    db $42, $00, $00, $07, $07, $00, $02
+    ; Exit (0,2)->Labyrinth
+    db $42, $00, $00, $09, $02, $00, $05
+    ; Exit (0,5)->Labyrinth
+    db $42, $00, $00, $09, $05, $02, $07
+    ; Exit (2,7)->Labyrinth
+    db $42, $00, $00, $02, $00, $07, $07
+    ; Exit (7,7)->Labyrinth
+    db $42, $00, $00, $07, $00, $09, $02
+    ; Exit (9,2)->Labyrinth
+    db $42, $00, $00, $00, $02, $09, $05
+    ; Exit (9,5)->Map_60
+    db $60, $00, $00, $00, $05, $FF
+
+m42_Labyrinth_N0v5:  ; $743E
+    ; npcs s0v5
+    db $05, $05
+    ; Exit (5,5)->Castle
+    db $00, $00, $01, $04, $05, $02, $00
+    ; Exit (2,0)->Labyrinth
+    db $42, $00, $00, $02, $07, $07, $00
+    ; Exit (7,0)->Labyrinth
+    db $42, $00, $00, $07, $07, $00, $02
+    ; Exit (0,2)->Labyrinth
+    db $42, $00, $00, $09, $02, $00, $05
+    ; Exit (0,5)->Map_60
+    db $60, $00, $00, $09, $05, $02, $07
+    ; Exit (2,7)->Labyrinth
+    db $42, $00, $00, $02, $00, $07, $07
+    ; Exit (7,7)->Labyrinth
+    db $42, $00, $00, $07, $00, $09, $02
+    ; Exit (9,2)->Labyrinth
+    db $42, $00, $00, $00, $02, $09, $05
+    ; Exit (9,5)->Labyrinth
+    db $42, $00, $00, $00, $05, $FF
+
+m42_Labyrinth_N0v9:  ; $747E
+    ; npcs s0v9
+    db $05, $05
+    ; Exit (5,5)->Castle
+    db $00, $00, $01, $04, $05, $02, $00
+    ; Exit (2,0)->Labyrinth
+    db $42, $00, $00, $02, $07, $07, $00
+    ; Exit (7,0)->Labyrinth
+    db $42, $00, $00, $07, $07, $00, $02
+    ; Exit (0,2)->Map_60
+    db $60, $00, $00, $09, $02, $00, $05
+    ; Exit (0,5)->Labyrinth
+    db $42, $00, $00, $09, $05, $02, $07
+    ; Exit (2,7)->Labyrinth
+    db $42, $00, $00, $02, $00, $07, $07
+    ; Exit (7,7)->Labyrinth
+    db $42, $00, $00, $07, $00, $09, $02
+    ; Exit (9,2)->Labyrinth
+    db $42, $00, $00, $00, $02, $09, $05
+    ; Exit (9,5)->Labyrinth
+    db $42, $00, $00, $00, $05, $FF
+
+m42_Labyrinth_N1v0:  ; $74BE
+    ; npcs s1v0
+    ; npcs s1v1
+    ; npcs s0v0
+    db $00, $02
+    ; Exit (0,2)->Labyrinth
+    db $42, $00, $00, $09, $02, $00, $05
+    ; Exit (0,5)->Labyrinth
+    db $42, $00, $00, $09, $05, $09, $02
+    ; Exit (9,2)->Labyrinth
+    db $42, $00, $00, $00, $02, $09, $05
+    ; Exit (9,5)->Labyrinth
+    db $42, $00, $00, $00, $05, $FF
+
+m43_X_SP:  ; $74DB
+    ; screen_ptrs $43
+    db $DD, $74
+
+m43_X_SB0:  ; $74DD
+    ; step_block scr0 ram=0xD98A
+    db $8A, $D9, $10, $24, $EB, $74, $15, $75, $11, $24, $0A, $75, $16, $75
+
+m43_X_X0v0:  ; $74EB
+    ; exits s0v0
+    db $82, $FF, $07, $05, $01, $82, $FF, $08, $05, $01
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF
+    ; NPC t$06 spr$27 (4,2) scr2
+    db $06, $27, $04, $02, $02
+    ; NPC t$00 spr$FF (4,2) scr2
+    db $00, $FF, $04, $02, $02
+    ; NPC t$00 spr$FF (5,2) scr2
+    db $00, $FF, $05, $02, $02, $FF
+
+m43_X_X0v1:  ; $750A
+    ; exits s0v1
+    db $82, $FF, $07, $05, $01, $82, $FF, $08, $05, $01, $FF
+
+m43_X_N0v0:  ; $7515
+    ; npcs s0v0
+    db $FF
+
+m43_X_N0v1:  ; $7516
+    ; npcs s0v1
+    db $02, $05
+    ; Exit (2,5)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m44_X_SP:  ; $751E
+    ; screen_ptrs $44
+    db $20, $75
+
+m44_X_SB0:  ; $7520
+    ; step_block scr0 ram=0xD98B
+    db $8B, $D9, $19, $24, $2E, $75, $58, $75, $1A, $24, $57, $75, $59, $75
+
+m44_X_X0v0:  ; $752E
+    ; exits s0v0
+    ; NPC t$60 spr$15 (0,7) scr2
+    db $60, $15, $00, $07, $02
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF
+    ; NPC t$00 spr$24 (5,2) scr1
+    db $00, $24, $05, $02, $01
+    ; NPC t$60 spr$E0 (5,3) scr255
+    db $60, $E0, $05, $03, $FF
+    ; NPC t$60 spr$E1 (5,4) scr255
+    db $60, $E1, $05, $04, $FF
+    ; NPC t$60 spr$E2 (5,4) scr255
+    db $60, $E2, $05, $04, $FF
+    ; NPC t$60 spr$E3 (5,4) scr255
+    db $60, $E3, $05, $04, $FF
+    ; NPC t$00 spr$FF (6,2) scr1
+    db $00, $FF, $06, $02, $01, $FF
+
+m44_X_X0v1:  ; $7557
+    ; exits s0v1
+    db $FF
+
+m44_X_N0v0:  ; $7558
+    ; npcs s0v0
+    db $FF
+
+m44_X_N0v1:  ; $7559
+    ; npcs s0v1
+    db $06, $01
+    ; Exit (6,1)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m45_X_SP:  ; $7561
+    ; screen_ptrs $45
+    db $63, $75
+
+m45_X_SB0:  ; $7563
+    ; step_block scr0 ram=0xD98C
+    db $8C, $D9, $0A, $24, $77, $75, $C0, $75, $0B, $24, $BF, $75, $C1, $75, $0A, $24
+    db $9B, $75, $C0, $75
+
+m45_X_X0v0:  ; $7577
+    ; exits s0v0
+    ; NPC t$20 spr$E0 (4,7) scr255
+    db $20, $E0, $04, $07, $FF
+    ; NPC t$40 spr$2B (4,6) scr255
+    db $40, $2B, $04, $06, $FF
+    ; NPC t$40 spr$2B (5,6) scr255
+    db $40, $2B, $05, $06, $FF
+    ; NPC t$40 spr$15 (4,6) scr255
+    db $40, $15, $04, $06, $FF
+    ; NPC t$40 spr$39 (4,0) scr255
+    db $40, $39, $04, $00, $FF
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF
+    ; NPC t$00 spr$29 (4,5) scr255
+    db $00, $29, $04, $05, $FF, $FF
+
+m45_X_X0v2:  ; $759B
+    ; exits s0v2
+    ; NPC t$20 spr$E0 (4,7) scr255
+    db $20, $E0, $04, $07, $FF
+    ; NPC t$40 spr$2B (4,6) scr255
+    db $40, $2B, $04, $06, $FF
+    ; NPC t$40 spr$2B (5,6) scr255
+    db $40, $2B, $05, $06, $FF
+    ; NPC t$20 spr$15 (3,4) scr255
+    db $20, $15, $03, $04, $FF
+    ; NPC t$40 spr$39 (4,0) scr255
+    db $40, $39, $04, $00, $FF
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF
+    ; NPC t$00 spr$29 (4,5) scr255
+    db $00, $29, $04, $05, $FF, $FF
+
+m45_X_X0v1:  ; $75BF
+    ; exits s0v1
+    db $FF
+
+m45_X_N0v0:  ; $75C0
+    ; npcs s0v0
+    ; npcs s0v2
+    db $FF
+
+m45_X_N0v1:  ; $75C1
+    ; npcs s0v1
+    db $05, $05
+    ; Exit (5,5)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m46_Boss_Room___Gate_of_Ambition_SP:  ; $75C9
+    ; screen_ptrs $46
+    db $CB, $75
+
+m46_Boss_Room___Gate_of_Ambition_SB0:  ; $75CB
+    ; step_block scr0 ram=0xD98D
+    db $8D, $D9, $01, $23, $D9, $75, $EF, $75, $02, $23, $EE, $75, $F0, $75
+
+m46_Boss_Room___Gate_of_Ambition_X0v0:  ; $75D9
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$2D (4,3) scr1
+    db $00, $2D, $04, $03, $01
+    ; NPC t$00 spr$FF (4,3) scr1
+    db $00, $FF, $04, $03, $01
+    ; NPC t$00 spr$FF (5,3) scr1
+    db $00, $FF, $05, $03, $01, $FF
+
+m46_Boss_Room___Gate_of_Ambition_X0v1:  ; $75EE
+    ; exits s0v1
+    db $FF
+
+m46_Boss_Room___Gate_of_Ambition_N0v0:  ; $75EF
+    ; npcs s0v0
+    db $FF
+
+m46_Boss_Room___Gate_of_Ambition_N0v1:  ; $75F0
+    ; npcs s0v1
+    db $02, $04
+    ; Exit (2,4)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m47_X_SP:  ; $75F8
+    ; screen_ptrs $47
+    db $FA, $75
+
+m47_X_SB0:  ; $75FA
+    ; step_block scr0 ram=0xD98E
+    db $8E, $D9, $1C, $24, $0E, $76, $39, $76, $1C, $24, $23, $76, $3A, $76, $1D, $24
+    db $38, $76, $3B, $76
+
+m47_X_X0v0:  ; $760E
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$2E (4,3) scr1
+    db $00, $2E, $04, $03, $01
+    ; NPC t$00 spr$FF (5,3) scr1
+    db $00, $FF, $05, $03, $01
+    ; NPC t$00 spr$FF (4,3) scr1
+    db $00, $FF, $04, $03, $01, $FF
+
+m47_X_X0v1:  ; $7623
+    ; exits s0v1
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$2F (4,3) scr2
+    db $00, $2F, $04, $03, $02
+    ; NPC t$00 spr$FF (5,3) scr2
+    db $00, $FF, $05, $03, $02
+    ; NPC t$00 spr$FF (4,3) scr2
+    db $00, $FF, $04, $03, $02, $FF
+
+m47_X_X0v2:  ; $7638
+    ; exits s0v2
+    db $FF
+
+m47_X_N0v0:  ; $7639
+    ; npcs s0v0
+    db $FF
+
+m47_X_N0v1:  ; $763A
+    ; npcs s0v1
+    db $FF
+
+m47_X_N0v2:  ; $763B
+    ; npcs s0v2
+    db $03, $04
+    ; Exit (3,4)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m48_X_SP:  ; $7643
+    ; screen_ptrs $48
+    db $45, $76
+
+m48_X_SB0:  ; $7645
+    ; step_block scr0 ram=0xD98F
+    db $8F, $D9, $0D, $24, $53, $76, $69, $76, $0E, $24, $68, $76, $6A, $76
+
+m48_X_X0v0:  ; $7653
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$30 (4,1) scr1
+    db $00, $30, $04, $01, $01
+    ; NPC t$00 spr$FF (4,1) scr1
+    db $00, $FF, $04, $01, $01
+    ; NPC t$00 spr$FF (5,1) scr1
+    db $00, $FF, $05, $01, $01, $FF
+
+m48_X_X0v1:  ; $7668
+    ; exits s0v1
+    db $FF
+
+m48_X_N0v0:  ; $7669
+    ; npcs s0v0
+    db $FF
+
+m48_X_N0v1:  ; $766A
+    ; npcs s0v1
+    db $04, $01
+    ; Exit (4,1)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m49_X_SP:  ; $7672
+    ; screen_ptrs $49
+    db $74, $76
+
+m49_X_SB0:  ; $7674
+    ; step_block scr0 ram=0xD990
+    db $90, $D9, $0C, $25, $82, $76, $98, $76, $0D, $25, $97, $76, $99, $76
+
+m49_X_X0v0:  ; $7682
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$31 (4,2) scr1
+    db $00, $31, $04, $02, $01
+    ; NPC t$00 spr$FF (4,2) scr1
+    db $00, $FF, $04, $02, $01
+    ; NPC t$00 spr$FF (5,2) scr1
+    db $00, $FF, $05, $02, $01, $FF
+
+m49_X_X0v1:  ; $7697
+    ; exits s0v1
+    db $FF
+
+m49_X_N0v0:  ; $7698
+    ; npcs s0v0
+    db $FF
+
+m49_X_N0v1:  ; $7699
+    ; npcs s0v1
+    db $02, $04
+    ; Exit (2,4)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m4A_X_SP:  ; $76A1
+    ; screen_ptrs $4A
+    db $A3, $76
+
+m4A_X_SB0:  ; $76A3
+    ; step_block scr0 ram=0xD991
+    db $91, $D9, $0B, $23, $B1, $76, $C7, $76, $0C, $23, $C6, $76, $C8, $76
+
+m4A_X_X0v0:  ; $76B1
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$32 (4,1) scr1
+    db $00, $32, $04, $01, $01
+    ; NPC t$00 spr$FF (4,1) scr1
+    db $00, $FF, $04, $01, $01
+    ; NPC t$00 spr$FF (5,1) scr1
+    db $00, $FF, $05, $01, $01, $FF
+
+m4A_X_X0v1:  ; $76C6
+    ; exits s0v1
+    db $FF
+
+m4A_X_N0v0:  ; $76C7
+    ; npcs s0v0
+    db $FF
+
+m4A_X_N0v1:  ; $76C8
+    ; npcs s0v1
+    db $05, $03
+    ; Exit (5,3)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m4B_X_SP:  ; $76D0
+    ; screen_ptrs $4B
+    db $D2, $76
+
+m4B_X_SB0:  ; $76D2
+    ; step_block scr0 ram=0xD992
+    db $92, $D9, $0E, $23, $E0, $76, $F6, $76, $0F, $23, $F5, $76, $F7, $76
+
+m4B_X_X0v0:  ; $76E0
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$33 (4,1) scr1
+    db $00, $33, $04, $01, $01
+    ; NPC t$00 spr$FF (4,1) scr1
+    db $00, $FF, $04, $01, $01
+    ; NPC t$00 spr$FF (5,1) scr1
+    db $00, $FF, $05, $01, $01, $FF
+
+m4B_X_X0v1:  ; $76F5
+    ; exits s0v1
+    db $FF
+
+m4B_X_N0v0:  ; $76F6
+    ; npcs s0v0
+    db $FF
+
+m4B_X_N0v1:  ; $76F7
+    ; npcs s0v1
+    db $04, $03
+    ; Exit (4,3)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m4C_X_SP:  ; $76FF
+    ; screen_ptrs $4C
+    db $01, $77
+
+m4C_X_SB0:  ; $7701
+    ; step_block scr0 ram=0xD993
+    db $93, $D9, $11, $23, $0F, $77, $25, $77, $12, $23, $24, $77, $26, $77
+
+m4C_X_X0v0:  ; $770F
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,2) scr255
+    db $50, $21, $0A, $02, $FF
+    ; NPC t$00 spr$34 (4,2) scr1
+    db $00, $34, $04, $02, $01
+    ; NPC t$00 spr$FF (4,3) scr1
+    db $00, $FF, $04, $03, $01
+    ; NPC t$00 spr$FF (5,3) scr1
+    db $00, $FF, $05, $03, $01, $FF
+
+m4C_X_X0v1:  ; $7724
+    ; exits s0v1
+    db $FF
+
+m4C_X_N0v0:  ; $7725
+    ; npcs s0v0
+    db $FF
+
+m4C_X_N0v1:  ; $7726
+    ; npcs s0v1
+    db $04, $04
+    ; Exit (4,4)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m4D_Boss_Room___Arena_Right_Gate_SP:  ; $772E
+    ; screen_ptrs $4D
+    db $30, $77
+
+m4D_Boss_Room___Arena_Right_Gate_SB0:  ; $7730
+    ; step_block scr0 ram=0xD994
+    db $94, $D9, $0F, $25, $3E, $77, $54, $77, $10, $25, $53, $77, $55, $77
+
+m4D_Boss_Room___Arena_Right_Gate_X0v0:  ; $773E
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,0) scr255
+    db $50, $21, $0A, $00, $FF
+    ; NPC t$00 spr$35 (4,1) scr1
+    db $00, $35, $04, $01, $01
+    ; NPC t$00 spr$FF (4,1) scr1
+    db $00, $FF, $04, $01, $01
+    ; NPC t$00 spr$FF (5,1) scr1
+    db $00, $FF, $05, $01, $01, $FF
+
+m4D_Boss_Room___Arena_Right_Gate_X0v1:  ; $7753
+    ; exits s0v1
+    db $FF
+
+m4D_Boss_Room___Arena_Right_Gate_N0v0:  ; $7754
+    ; npcs s0v0
+    db $FF
+
+m4D_Boss_Room___Arena_Right_Gate_N0v1:  ; $7755
+    ; npcs s0v1
+    db $03, $03
+    ; Exit (3,3)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m4E_X_SP:  ; $775D
+    ; screen_ptrs $4E
+    db $6D, $77, $FF, $FF, $FF, $FF, $FF, $FF, $7B, $77, $FF, $FF, $FF, $FF, $FF, $FF
+
+m4E_X_SB0:  ; $776D
+    ; step_block scr0 ram=0xD995
+    db $95, $D9, $12, $25, $83, $77, $9F, $77, $13, $25, $9D, $77, $A0, $77, $96, $D9
+    db $14, $25, $9E, $77, $A8, $77
+
+m4E_X_X0v0:  ; $7783
+    ; exits s0v0
+    ; NPC t$50 spr$21 (10,1) scr255
+    db $50, $21, $0A, $01, $FF
+    ; NPC t$0A spr$36 (4,2) scr1
+    db $0A, $36, $04, $02, $01
+    ; NPC t$00 spr$FF (3,3) scr1
+    db $00, $FF, $03, $03, $01
+    ; NPC t$00 spr$FF (4,3) scr1
+    db $00, $FF, $04, $03, $01
+    ; NPC t$00 spr$FF (5,3) scr1
+    db $00, $FF, $05, $03, $01, $FF
+
+m4E_X_X0v1:  ; $779D
+    ; exits s0v1
+    db $FF, $FF
+
+m4E_X_N0v0:  ; $779F
+    ; npcs s0v0
+    db $FF
+
+m4E_X_N0v1:  ; $77A0
+    ; npcs s0v1
+    db $04, $04
+    ; Exit (4,4)->Castle
+    db $00, $00, $01, $04, $05, $FF, $FF
+
+m4F_Boss_Room___Unused_Gate_SP:  ; $77A9
+    ; screen_ptrs $4F
+    db $AB, $77
+
+m4F_Boss_Room___Unused_Gate_SB0:  ; $77AB
+    ; step_block scr0 ram=0xD997
+    db $97, $D9, $04, $24, $B9, $77, $D4, $77, $05, $24, $D3, $77, $D5, $77
+
+m4F_Boss_Room___Unused_Gate_X0v0:  ; $77B9
+    ; exits s0v0
+    db $90, $FF, $04, $04, $01, $90, $FF, $05, $04, $01
+    ; NPC t$40 spr$37 (4,3) scr2
+    db $40, $37, $04, $03, $02
+    ; NPC t$40 spr$FF (4,3) scr2
+    db $40, $FF, $04, $03, $02
+    ; NPC t$40 spr$FF (5,3) scr2
+    db $40, $FF, $05, $03, $02, $FF
+
+m4F_Boss_Room___Unused_Gate_X0v1:  ; $77D3
+    ; exits s0v1
+    db $FF
+
+m4F_Boss_Room___Unused_Gate_N0v0:  ; $77D4
+    ; npcs s0v0
+    db $FF
+
+m4F_Boss_Room___Unused_Gate_N0v1:  ; $77D5
+    ; npcs s0v1
+    db $03, $05
+    ; Exit (3,5)->Castle
+    db $00, $00, $01, $04, $05, $FF
+
+m50_X_SP:  ; $77DD
+    ; screen_ptrs $50
+    ; screen_ptrs $5F
+    db $DF, $77
+
+m50_X_SB0:  ; $77DF
+    ; step_block scr0 ram=0xD998
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $01, $26, $E7, $77, $F2, $77
+
+m50_X_X0v0:  ; $77E7
+    ; exits s0v0
+    ; exits s0v0
+    db $8F, $FF, $04, $03, $01
+    ; NPC t$00 spr$06 (4,2) scr1
+    db $00, $06, $04, $02, $01, $FF
+
+m50_X_N0v0:  ; $77F2
+    ; npcs s0v0
+    ; npcs s0v0
+    db $01, $06, $00, $80, $00, $00, $00, $FF
+
+m51_X_SP:  ; $77FA
+    ; screen_ptrs $51
+    db $FC, $77
+
+m51_X_SB0:  ; $77FC
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $03, $26, $04, $78, $0F, $78
+
+m51_X_X0v0:  ; $7804
+    ; exits s0v0
+    db $82, $FF, $04, $03, $02
+    ; NPC t$00 spr$11 (4,2) scr1
+    db $00, $11, $04, $02, $01, $FF
+
+m51_X_N0v0:  ; $780F
+    ; npcs s0v0
+    db $08, $02, $00, $80, $00, $00, $00, $FF
+
+m52_Special___Coliseum_SP:  ; $7817
+    ; screen_ptrs $52
+    db $19, $78
+
+m52_Special___Coliseum_SB0:  ; $7819
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $05, $26, $21, $78, $4A, $78
+
+m52_Special___Coliseum_X0v0:  ; $7821
+    ; exits s0v0
+    ; NPC t$00 spr$0B (4,3) scr255
+    db $00, $0B, $04, $03, $FF
+    ; NPC t$00 spr$F0 (3,3) scr255
+    db $00, $F0, $03, $03, $FF
+    ; NPC t$00 spr$F1 (5,3) scr255
+    db $00, $F1, $05, $03, $FF
+    ; NPC t$00 spr$F2 (6,3) scr255
+    db $00, $F2, $06, $03, $FF
+    ; NPC t$20 spr$E1 (5,5) scr255
+    db $20, $E1, $05, $05, $FF
+    ; NPC t$20 spr$E2 (3,5) scr255
+    db $20, $E2, $03, $05, $FF
+    ; NPC t$20 spr$E3 (6,5) scr255
+    db $20, $E3, $06, $05, $FF
+    ; NPC t$20 spr$E0 (4,5) scr255
+    db $20, $E0, $04, $05, $FF, $FF
+
+m52_Special___Coliseum_N0v0:  ; $784A
+    ; npcs s0v0
+    db $FF
+
+m53_Special___Forest_Maze_SP:  ; $784B
+    ; screen_ptrs $53
+    db $55, $78
+
+m61_X_SP:  ; $784D
+    ; screen_ptrs $61
+    db $5D, $78
+
+m62_X_SP:  ; $784F
+    ; screen_ptrs $62
+    db $65, $78
+
+m63_X_SP:  ; $7851
+    ; screen_ptrs $63
+    db $6D, $78
+
+m64_X_SP:  ; $7853
+    ; screen_ptrs $64
+    db $75, $78
+
+m53_Special___Forest_Maze_SB0:  ; $7855
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $19, $23, $7D, $78, $7E, $78
+
+m53_Special___Forest_Maze_SB1:  ; $785D
+    ; step_block scr1 ram=0xD998
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $1A, $23, $7D, $78, $9B, $78
+
+m53_Special___Forest_Maze_SB2:  ; $7865
+    ; step_block scr2 ram=0xD998
+    ; step_block scr1 ram=0xD998
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $1B, $23, $7D, $78, $B8, $78
+
+m53_Special___Forest_Maze_SB3:  ; $786D
+    ; step_block scr3 ram=0xD998
+    ; step_block scr2 ram=0xD998
+    ; step_block scr1 ram=0xD998
+    db $98, $D9, $1C, $23, $7D, $78, $CE, $78
+
+m53_Special___Forest_Maze_SB4:  ; $7875
+    ; step_block scr4 ram=0xD998
+    ; step_block scr3 ram=0xD998
+    ; step_block scr2 ram=0xD998
+    db $98, $D9, $1D, $23, $7D, $78, $F9, $78
+
+m53_Special___Forest_Maze_X0v0:  ; $787D
+    ; exits s0v0
+    ; exits s1v0
+    ; exits s2v0
+    db $FF
+
+m53_Special___Forest_Maze_N0v0:  ; $787E
+    ; npcs s0v0
+    db $00, $03
+    ; Exit (0,3)->Map_62
+    db $62, $00, $00, $09, $03, $01, $00
+    ; Exit (1,0)->Map_61
+    db $61, $00, $00, $01, $07, $08, $00
+    ; Exit (8,0)->Map_63
+    db $63, $00, $00, $08, $07, $09, $03
+    ; Exit (9,3)->Map_61
+    db $61, $00, $00, $00, $03, $FF
+
+m53_Special___Forest_Maze_N1v0:  ; $789B
+    ; npcs s1v0
+    ; npcs s0v0
+    db $01, $07
+    ; Exit (1,7)->Forest_Maze
+    db $53, $00, $00, $01, $00, $08, $07
+    ; Exit (8,7)->Forest_Maze
+    db $53, $00, $00, $08, $00, $00, $03
+    ; Exit (0,3)->Forest_Maze
+    db $53, $00, $00, $09, $03, $01, $00
+    ; Exit (1,0)->Map_62
+    db $62, $00, $00, $01, $07, $FF
+
+m53_Special___Forest_Maze_N2v0:  ; $78B8
+    ; npcs s2v0
+    ; npcs s1v0
+    ; npcs s0v0
+    db $01, $07
+    ; Exit (1,7)->Map_61
+    db $61, $00, $00, $01, $00, $08, $00
+    ; Exit (8,0)->Map_61
+    db $61, $00, $00, $08, $07, $09, $03
+    ; Exit (9,3)->Forest_Maze
+    db $53, $00, $00, $00, $03, $FF
+
+m53_Special___Forest_Maze_N3v0:  ; $78CE
+    ; npcs s3v0
+    ; npcs s2v0
+    ; npcs s1v0
+    db $08, $07
+    ; Exit (8,7)->Map_62
+    db $62, $00, $00, $08, $00, $09, $05
+    ; Exit (9,5)->Map_63
+    db $63, $00, $00, $00, $05, $01, $00
+    ; Exit (1,0)->Map_63
+    db $63, $00, $00, $01, $07, $04, $00
+    ; Exit (4,0)->Map_64
+    db $64, $00, $00, $04, $07, $00, $05
+    ; Exit (0,5)->Map_63
+    db $63, $00, $00, $09, $05, $01, $07
+    ; Exit (1,7)->Map_63
+    db $63, $00, $00, $01, $00, $FF
+
+m53_Special___Forest_Maze_N4v0:  ; $78F9
+    ; npcs s4v0
+    ; npcs s3v0
+    ; npcs s2v0
+    db $04, $07
+    ; Exit (4,7)->Map_63
+    db $63, $00, $00, $04, $00, $04, $04, $00, $80, $00, $00, $00, $FF
+
+m54_Special___Conveyor_Belt_1_SP:  ; $7908
+    ; screen_ptrs $54
+    db $20, $79, $28, $79, $30, $79, $FF, $FF, $38, $79, $40, $79, $48, $79, $FF, $FF
+    db $50, $79, $58, $79, $60, $79, $FF, $FF
+
+m54_Special___Conveyor_Belt_1_SB0:  ; $7920
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $01, $37, $42, $4B, $68, $79
+
+m54_Special___Conveyor_Belt_1_SB1:  ; $7928
+    ; step_block scr1 ram=0xD998
+    db $98, $D9, $02, $37, $42, $4B, $69, $79
+
+m54_Special___Conveyor_Belt_1_SB2:  ; $7930
+    ; step_block scr2 ram=0xD998
+    db $98, $D9, $03, $37, $42, $4B, $6A, $79, $98, $D9, $04, $37, $42, $4B, $6B, $79
+    db $98, $D9, $05, $37, $42, $4B, $6C, $79, $98, $D9, $06, $37, $42, $4B, $6D, $79
+    db $98, $D9, $07, $37, $42, $4B, $6E, $79, $98, $D9, $08, $37, $42, $4B, $6F, $79
+    db $98, $D9, $09, $37, $42, $4B, $70, $79
+
+m54_Special___Conveyor_Belt_1_N0v0:  ; $7968
+    ; npcs s0v0
+    db $FF
+
+m54_Special___Conveyor_Belt_1_N1v0:  ; $7969
+    ; npcs s1v0
+    db $FF
+
+m54_Special___Conveyor_Belt_1_N2v0:  ; $796A
+    ; npcs s2v0
+    db $FF, $FF, $FF, $FF, $FF, $FF, $08, $02, $00, $80, $00, $00, $00, $FF
+
+m55_Special___Conveyor_Belt_2_SP:  ; $7978
+    ; screen_ptrs $55
+    db $90, $79, $98, $79, $A0, $79, $FF, $FF, $A8, $79, $B0, $79, $B8, $79, $FF, $FF
+    db $C0, $79, $C8, $79, $D0, $79, $FF, $FF
+
+m55_Special___Conveyor_Belt_2_SB0:  ; $7990
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $0B, $37, $42, $4B, $D8, $79
+
+m55_Special___Conveyor_Belt_2_SB1:  ; $7998
+    ; step_block scr1 ram=0xD998
+    db $98, $D9, $0C, $37, $42, $4B, $D9, $79
+
+m55_Special___Conveyor_Belt_2_SB2:  ; $79A0
+    ; step_block scr2 ram=0xD998
+    db $98, $D9, $0D, $37, $42, $4B, $DA, $79, $98, $D9, $0E, $37, $42, $4B, $DB, $79
+    db $98, $D9, $0F, $37, $42, $4B, $DC, $79, $98, $D9, $10, $37, $42, $4B, $DD, $79
+    db $98, $D9, $11, $37, $42, $4B, $DE, $79, $98, $D9, $12, $37, $42, $4B, $E6, $79
+    db $98, $D9, $13, $37, $42, $4B, $E7, $79
+
+m55_Special___Conveyor_Belt_2_N0v0:  ; $79D8
+    ; npcs s0v0
+    db $FF
+
+m55_Special___Conveyor_Belt_2_N1v0:  ; $79D9
+    ; npcs s1v0
+    db $FF
+
+m55_Special___Conveyor_Belt_2_N2v0:  ; $79DA
+    ; npcs s2v0
+    db $FF, $FF, $FF, $FF, $06, $06, $00, $80, $00, $00, $00, $FF, $FF, $FF
+
+m56_Special___Conveyor_Belt_3_SP:  ; $79E8
+    ; screen_ptrs $56
+    db $00, $7A, $08, $7A, $10, $7A, $FF, $FF, $18, $7A, $20, $7A, $28, $7A, $FF, $FF
+    db $30, $7A, $38, $7A, $40, $7A, $FF, $FF
+
+m56_Special___Conveyor_Belt_3_SB0:  ; $7A00
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $15, $37, $42, $4B, $48, $7A
+
+m56_Special___Conveyor_Belt_3_SB1:  ; $7A08
+    ; step_block scr1 ram=0xD998
+    db $98, $D9, $16, $37, $42, $4B, $49, $7A
+
+m56_Special___Conveyor_Belt_3_SB2:  ; $7A10
+    ; step_block scr2 ram=0xD998
+    db $98, $D9, $17, $37, $42, $4B, $4A, $7A, $98, $D9, $18, $37, $42, $4B, $52, $7A
+    db $98, $D9, $19, $37, $42, $4B, $53, $7A, $98, $D9, $1A, $37, $42, $4B, $54, $7A
+    db $98, $D9, $1B, $37, $42, $4B, $55, $7A, $98, $D9, $1C, $37, $42, $4B, $56, $7A
+    db $98, $D9, $1D, $37, $42, $4B, $57, $7A
+
+m56_Special___Conveyor_Belt_3_N0v0:  ; $7A48
+    ; npcs s0v0
+    db $FF
+
+m56_Special___Conveyor_Belt_3_N1v0:  ; $7A49
+    ; npcs s1v0
+    db $FF
+
+m56_Special___Conveyor_Belt_3_N2v0:  ; $7A4A
+    ; npcs s2v0
+    db $03, $03, $00, $80, $00, $00, $00, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+
+m57_Special___Maze_1_SP:  ; $7A58
+    ; screen_ptrs $57
+    db $70, $7A, $78, $7A, $80, $7A, $FF, $FF, $88, $7A, $90, $7A, $98, $7A, $FF, $FF
+    db $A0, $7A, $A8, $7A, $B0, $7A, $FF, $FF
+
+m57_Special___Maze_1_SB0:  ; $7A70
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $1F, $37, $42, $4B, $B8, $7A
+
+m57_Special___Maze_1_SB1:  ; $7A78
+    ; step_block scr1 ram=0xD998
+    db $98, $D9, $20, $37, $42, $4B, $B9, $7A
+
+m57_Special___Maze_1_SB2:  ; $7A80
+    ; step_block scr2 ram=0xD998
+    db $98, $D9, $21, $37, $42, $4B, $BA, $7A, $98, $D9, $22, $37, $42, $4B, $BB, $7A
+    db $98, $D9, $23, $37, $42, $4B, $BC, $7A, $98, $D9, $24, $37, $42, $4B, $BD, $7A
+    db $98, $D9, $25, $37, $42, $4B, $BE, $7A, $98, $D9, $26, $37, $42, $4B, $C6, $7A
+    db $98, $D9, $27, $37, $42, $4B, $C7, $7A
+
+m57_Special___Maze_1_N0v0:  ; $7AB8
+    ; npcs s0v0
+    db $FF
+
+m57_Special___Maze_1_N1v0:  ; $7AB9
+    ; npcs s1v0
+    db $FF
+
+m57_Special___Maze_1_N2v0:  ; $7ABA
+    ; npcs s2v0
+    db $FF, $FF, $FF, $FF, $01, $06, $00, $80, $00, $00, $00, $FF, $FF, $FF
+
+m58_Special___Maze_2_SP:  ; $7AC8
+    ; screen_ptrs $58
+    db $E0, $7A, $E8, $7A, $F0, $7A, $FF, $FF, $F8, $7A, $00, $7B, $08, $7B, $FF, $FF
+    db $10, $7B, $18, $7B, $20, $7B, $FF, $FF
+
+m58_Special___Maze_2_SB0:  ; $7AE0
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $29, $37, $42, $4B, $28, $7B
+
+m58_Special___Maze_2_SB1:  ; $7AE8
+    ; step_block scr1 ram=0xD998
+    db $98, $D9, $2A, $37, $42, $4B, $29, $7B
+
+m58_Special___Maze_2_SB2:  ; $7AF0
+    ; step_block scr2 ram=0xD998
+    db $98, $D9, $2B, $37, $42, $4B, $2A, $7B, $98, $D9, $2C, $37, $42, $4B, $2B, $7B
+    db $98, $D9, $2D, $37, $42, $4B, $2C, $7B, $98, $D9, $2E, $37, $42, $4B, $2D, $7B
+    db $98, $D9, $2F, $37, $42, $4B, $2E, $7B, $98, $D9, $30, $37, $42, $4B, $2F, $7B
+    db $98, $D9, $31, $37, $42, $4B, $37, $7B
+
+m58_Special___Maze_2_N0v0:  ; $7B28
+    ; npcs s0v0
+    db $FF
+
+m58_Special___Maze_2_N1v0:  ; $7B29
+    ; npcs s1v0
+    db $FF
+
+m58_Special___Maze_2_N2v0:  ; $7B2A
+    ; npcs s2v0
+    db $FF, $FF, $FF, $FF, $FF, $03, $06, $00, $80, $00, $00, $00, $FF, $FF
+
+m59_Special___Maze_3_SP:  ; $7B38
+    ; screen_ptrs $59
+    db $50, $7B, $58, $7B, $60, $7B, $FF, $FF, $68, $7B, $70, $7B, $78, $7B, $FF, $FF
+    db $80, $7B, $88, $7B, $90, $7B, $FF, $FF
+
+m59_Special___Maze_3_SB0:  ; $7B50
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $33, $37, $42, $4B, $98, $7B
+
+m59_Special___Maze_3_SB1:  ; $7B58
+    ; step_block scr1 ram=0xD998
+    db $98, $D9, $34, $37, $42, $4B, $99, $7B
+
+m59_Special___Maze_3_SB2:  ; $7B60
+    ; step_block scr2 ram=0xD998
+    db $98, $D9, $35, $37, $42, $4B, $9A, $7B, $98, $D9, $36, $37, $42, $4B, $9B, $7B
+    db $98, $D9, $37, $37, $42, $4B, $9C, $7B, $98, $D9, $38, $37, $42, $4B, $9D, $7B
+    db $98, $D9, $39, $37, $42, $4B, $9E, $7B, $98, $D9, $3A, $37, $42, $4B, $9F, $7B
+    db $98, $D9, $3B, $37, $42, $4B, $A0, $7B
+
+m59_Special___Maze_3_N0v0:  ; $7B98
+    ; npcs s0v0
+    db $FF
+
+m59_Special___Maze_3_N1v0:  ; $7B99
+    ; npcs s1v0
+    db $FF
+
+m59_Special___Maze_3_N2v0:  ; $7B9A
+    ; npcs s2v0
+    db $FF, $FF, $FF, $FF, $FF, $FF, $08, $06, $00, $80, $00, $00, $00, $FF
+
+m5A_Special___Treasure_Chest_1_SP:  ; $7BA8
+    ; screen_ptrs $5A
+    db $AA, $7B
+
+m5A_Special___Treasure_Chest_1_SB0:  ; $7BAA
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $07, $26, $B2, $7B, $D1, $7B
+
+m5A_Special___Treasure_Chest_1_X0v0:  ; $7BB2
+    ; exits s0v0
+    db $8F, $FF, $01, $02, $01, $8F, $FF, $08, $02, $02, $8F, $FF, $03, $03, $03, $8F
+    db $FF, $06, $03, $04, $8F, $FF, $02, $05, $05, $8F, $FF, $07, $05, $06, $FF
+
+m5A_Special___Treasure_Chest_1_N0v0:  ; $7BD1
+    ; npcs s0v0
+    db $05, $06, $00, $80, $00, $00, $00, $FF
+
+m5B_X_SP:  ; $7BD9
+    ; screen_ptrs $5B
+    db $DB, $7B
+
+m5B_X_SB0:  ; $7BDB
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $09, $26, $E3, $7B, $02, $7C
+
+m5B_X_X0v0:  ; $7BE3
+    ; exits s0v0
+    db $8F, $FF, $03, $03, $01, $8F, $FF, $06, $03, $02, $8F, $FF, $03, $04, $03, $8F
+    db $FF, $06, $04, $04, $8F, $FF, $03, $05, $05, $8F, $FF, $06, $05, $06, $FF
+
+m5B_X_N0v0:  ; $7C02
+    ; npcs s0v0
+    db $05, $02, $00, $80, $00, $00, $00, $FF
+
+m5C_Special___Treasure_Chest_3_SP:  ; $7C0A
+    ; screen_ptrs $5C
+    db $0C, $7C
+
+m5C_Special___Treasure_Chest_3_SB0:  ; $7C0C
+    ; step_block scr0 ram=0xD998
+    db $98, $D9, $0B, $26, $14, $7C, $3D, $7C
+
+m5C_Special___Treasure_Chest_3_X0v0:  ; $7C14
+    ; exits s0v0
+    db $8F, $FF, $03, $02, $01, $8F, $FF, $04, $02, $02, $8F, $FF, $05, $02, $03, $8F
+    db $FF, $06, $02, $04, $8F, $FF, $03, $06, $05, $8F, $FF, $04, $06, $06, $8F, $FF
+    db $05, $06, $07, $8F, $FF, $06, $06, $08, $FF
+
+m5C_Special___Treasure_Chest_3_N0v0:  ; $7C3D
+    ; npcs s0v0
+    db $03, $04, $00, $80, $00, $00, $00, $FF
+
+m5D_Arena_Battle_SP:  ; $7C45
+    ; screen_ptrs $5D
+    db $47, $7C
+
+m5D_Arena_Battle_SB0:  ; $7C47
+    ; step_block scr0 ram=0xD999
+    db $99, $D9, $14, $23, $67, $7C, $FF, $FF, $15, $23, $67, $7C, $FF, $FF, $15, $23
+    db $90, $7C, $FF, $FF, $15, $23, $B9, $7C, $FF, $FF, $15, $23, $67, $7C, $FF, $FF
+    ; NPC t$10 spr$F0 (4,9) scr255
+    db $10, $F0, $04, $09, $FF
+    ; NPC t$10 spr$F1 (4,10) scr255
+    db $10, $F1, $04, $0A, $FF
+    ; NPC t$10 spr$F3 (4,11) scr255
+    db $10, $F3, $04, $0B, $FF
+    ; NPC t$10 spr$F2 (4,12) scr255
+    db $10, $F2, $04, $0C, $FF
+    ; NPC t$10 spr$E0 (7,5) scr255
+    db $10, $E0, $07, $05, $FF
+    ; NPC t$10 spr$E1 (6,5) scr255
+    db $10, $E1, $06, $05, $FF
+    ; NPC t$10 spr$E2 (6,4) scr255
+    db $10, $E2, $06, $04, $FF
+    ; NPC t$10 spr$E3 (6,6) scr255
+    db $10, $E3, $06, $06, $FF, $FF
+    ; NPC t$40 spr$F0 (4,5) scr255
+    db $40, $F0, $04, $05, $FF
+    ; NPC t$70 spr$F3 (3,4) scr255
+    db $70, $F3, $03, $04, $FF
+    ; NPC t$70 spr$F1 (3,5) scr255
+    db $70, $F1, $03, $05, $FF
+    ; NPC t$70 spr$F2 (3,6) scr255
+    db $70, $F2, $03, $06, $FF
+    ; NPC t$10 spr$E1 (6,5) scr255
+    db $10, $E1, $06, $05, $FF
+    ; NPC t$10 spr$E2 (6,4) scr255
+    db $10, $E2, $06, $04, $FF
+    ; NPC t$10 spr$E3 (6,6) scr255
+    db $10, $E3, $06, $06, $FF
+    ; NPC t$40 spr$52 (4,5) scr255
+    db $40, $52, $04, $05, $FF, $FF
+    ; NPC t$30 spr$F0 (2,5) scr255
+    db $30, $F0, $02, $05, $FF
+    ; NPC t$30 spr$F3 (3,4) scr255
+    db $30, $F3, $03, $04, $FF
+    ; NPC t$30 spr$F1 (3,5) scr255
+    db $30, $F1, $03, $05, $FF
+    ; NPC t$30 spr$F2 (3,6) scr255
+    db $30, $F2, $03, $06, $FF
+    ; NPC t$10 spr$E1 (6,5) scr255
+    db $10, $E1, $06, $05, $FF
+    ; NPC t$10 spr$E2 (6,4) scr255
+    db $10, $E2, $06, $04, $FF
+    ; NPC t$50 spr$39 (10,1) scr255
+    db $50, $39, $0A, $01, $FF
+    ; NPC t$10 spr$E3 (6,6) scr255
+    db $10, $E3, $06, $06, $FF, $FF
+
+m5E_X_SP:  ; $7CE2
+    ; screen_ptrs $5E
+    db $E4, $7C
+
+m5E_X_SB0:  ; $7CE4
+    ; step_block scr0 ram=0xD99A
+    db $9A, $D9, $17, $23, $FE, $7C, $FF, $FF, $17, $23, $0E, $7D, $FF, $FF, $17, $23
+    db $19, $7D, $FF, $FF, $17, $23, $42, $4B, $FF, $FF
+    ; NPC t$10 spr$E0 (7,5) scr255
+    db $10, $E0, $07, $05, $FF
+    ; NPC t$40 spr$57 (4,0) scr255
+    db $40, $57, $04, $00, $FF
+    ; NPC t$40 spr$52 (4,5) scr255
+    db $40, $52, $04, $05, $FF, $FF
+    ; NPC t$70 spr$08 (0,4) scr255
+    db $70, $08, $00, $04, $FF
+    ; NPC t$40 spr$55 (5,4) scr255
+    db $40, $55, $05, $04, $FF, $FF
+    ; NPC t$20 spr$E0 (5,5) scr255
+    db $20, $E0, $05, $05, $FF
+    ; NPC t$50 spr$21 (9,5) scr255
+    db $50, $21, $09, $05, $FF, $FF, $E0, $1F, $70, $8F, $18, $E7, $83, $7C, $07, $F8
+    db $C1, $3E, $81, $FF, $C0, $FF, $C0, $FF, $81, $FF, $81, $FF, $03, $FF, $03, $FF
+    db $81, $FF, $04, $04, $0A, $0E, $35, $3B, $CA, $F7, $33, $CF, $81, $FF, $67, $FF
+    db $9C, $7F, $1C, $E3, $36, $C9, $22, $DD, $82, $7D, $C0, $3F, $C1, $3E, $49, $B6
+    db $1D, $E2, $07, $F8, $70, $8F, $C1, $3E, $83, $7C, $C1, $3E, $60, $9F, $0E, $F1
+    db $1C, $E3, $C0, $FF, $81, $FF, $81, $FF, $03, $FF, $03, $FF, $81, $FF, $81, $FF
+    db $C0, $FF, $01, $01, $82, $83, $4D, $CE, $B2, $FD, $CC, $F3, $62, $FF, $9D, $FF
+    db $72, $FD, $11, $EE, $41, $BE, $60, $9F, $E0, $1F, $A4, $5B, $8E, $71, $0E, $F1
+    db $1B, $E4, $C1, $3E, $07, $F8, $0E, $F1, $07, $F8, $81, $7E, $38, $C7, $70, $8F
+    db $1C, $E3, $81, $FF, $03, $FF, $03, $FF, $81, $FF, $81, $FF, $C0, $FF, $C0, $FF
+    db $81, $FF, $40, $40, $A0, $E0, $53, $B3, $AC, $7F, $33, $FC, $18, $FF, $76, $FF
+    db $C9, $F7, $30, $CF, $70, $8F, $52, $AD, $47, $B8, $07, $F8, $8D, $72, $88, $77
+    db $A0, $5F, $1C, $E3, $38, $C7, $1C, $E3, $06, $F9, $E0, $1F, $C1, $3E, $70, $8F
+    db $07, $F8, $03, $FF, $81, $FF, $81, $FF, $C0, $FF, $C0, $FF, $81, $FF, $81, $FF
+    db $03, $FF, $00, $FF, $00, $FF, $00, $FF, $10, $EF, $20, $CF, $40, $8F, $40, $9E
+    db $40, $88, $00, $FF, $00, $FF, $00, $FF, $08, $F7, $04, $F3, $02, $F1, $02, $79
+    db $02, $11, $20, $C0, $60, $80, $A0, $10, $92, $22, $97, $17, $97, $17, $BE, $3E
+    db $B8, $38, $04, $03, $06, $01, $05, $08, $49, $44, $E9, $E8, $E9, $E8, $7D, $7C
+    db $1D, $1C, $04, $FB, $0E, $F5, $0F, $F6, $0F, $F7, $0F, $F7, $3F, $CF, $7D, $AD
+    db $78, $A8, $20, $DF, $70, $AF, $F0, $6F, $F0, $EF, $F0, $EF, $FC, $F3, $BE, $B5
+    db $1E, $15, $70, $B0, $60, $A0, $60, $A0, $20, $C0, $20, $C0, $10, $E0, $10, $E0
+    db $10, $E0, $0E, $0D, $06, $05, $06, $05, $04, $03, $04, $03, $08, $07, $08, $07
+    db $08, $07, $00, $FF, $00, $FF, $00, $FF, $10, $EF, $20, $CF, $40, $8F, $40, $9E
+    db $40, $88, $00, $FF, $00, $FF, $00, $FF, $08, $F7, $04, $F3, $02, $F1, $02, $79
+    db $02, $11, $20, $C0, $60, $80, $A0, $10, $92, $22, $97, $17, $97, $17, $BE, $3E
+    db $B8, $38, $04, $03, $06, $01, $05, $08, $49, $44, $E9, $E8, $E9, $E8, $7D, $7C
+    db $1D, $1C, $04, $FB, $0E, $F5, $0F, $F6, $0F, $F7, $0F, $F7, $3F, $CF, $7D, $AD
+    db $78, $A8, $20, $DF, $70, $AF, $F0, $6F, $F0, $EF, $F0, $EF, $FC, $F3, $BE, $B5
+    db $1E, $15, $70, $B0, $60, $A0, $60, $A0, $20, $C0, $20, $C0, $10, $E0, $10, $E0
+    db $10, $E0, $0E, $0D, $06, $05, $06, $05, $04, $03, $04, $03, $08, $07, $08, $07
+    db $08, $07, $10, $10, $28, $38, $D4, $EC, $2B, $DF, $CC, $3F, $26, $FF, $D9, $FF
+    db $27, $DF, $06, $F9, $1D, $E2, $3B, $C4, $F7, $08, $2E, $D1, $6D, $92, $6D, $92
+    db $B6, $48, $C0, $3F, $6A, $95, $BA, $45, $BA, $45, $DC, $23, $6A, $95, $6E, $91
+    db $DC, $23, $00, $FF, $40, $BA, $A0, $5F, $40, $BF, $00, $FF, $08, $57, $14, $EB
+    db $08, $F7, $04, $04, $0A, $0E, $35, $3B, $CA, $F7, $33, $CF, $81, $FF, $67, $FF
+    db $9C, $7F, $03, $FC, $16, $E9, $0E, $F1, $FD, $02, $1B, $E4, $36, $C9, $55, $AA
+    db $BA, $44, $60, $9F, $BA, $45, $DA, $25, $DE, $21, $EC, $13, $F6, $09, $76, $89
+    db $EE, $11, $00, $FF, $00, $FA, $08, $F7, $14, $EB, $09, $F6, $82, $5D, $01, $EE
+    db $00, $FF, $01, $01, $82, $83, $4D, $CE, $B2, $FD, $CC, $F3, $62, $FF, $9D, $FF
+    db $72, $FD, $06, $F9, $1D, $E2, $3B, $C4, $F7, $08, $2E, $D1, $6D, $92, $6D, $92
+    db $B6, $48, $C0, $3F, $6A, $95, $BA, $45, $BA, $45, $DC, $23, $6A, $95, $6E, $91
+    db $DC, $23, $00, $FF, $02, $F8, $05, $FA, $02, $FD, $00, $FF, $40, $1F, $A0, $4F
+    db $40, $BF, $40, $40, $A0, $E0, $53, $B3, $AC, $7F, $33, $FC, $18, $FF, $76, $FF
+    db $C9, $F7, $03, $FC, $16, $E9, $0E, $F1, $FD, $02, $1B, $E4, $36, $C9, $55, $AA
+    db $BA, $44, $60, $9F, $BA, $45, $DA, $25, $DE, $21, $EC, $13, $F6, $09, $76, $89
+    db $EE, $11, $00, $FF, $00, $FA, $80, $7F, $41, $BE, $90, $6F, $28, $57, $10, $CF
+    db $00, $FF
