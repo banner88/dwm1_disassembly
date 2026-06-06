@@ -2051,6 +2051,10 @@ jr_000_0ac2:
     ret
 
 
+
+; Queue text display. HL=text ID. Copies to DE, dispatches via RST $00.
+; Jump table at $0ADD maps text_ID_high → script handler bank ($42-$4E).
+QueueTextByID:
 Call_000_0ad4:
     ld [hl+], a
     ld a, $f0
@@ -2076,6 +2080,11 @@ Call_000_0ad9:
     dec bc
     db $fd	;investigate this one byte that doesn't correspond to an instruction. May be a byte of data?
 
+
+; RST $00 jump table for text dispatch (misassembled as instructions).
+; Idx: 0→$42/$43, 1→$43/$44, 2→$44/$45, 3→$46/$47, 4→$47/$48,
+; 5→$48/$49/$4A, 6→$4A, 7→$4A/$4B, 8→$4B/$4E, 9→$4E
+TextDispatchJumpTable:
 Call_000_0aea:
 Jump_000_0aea:
     dec bc
@@ -2106,6 +2115,9 @@ jr_000_0b03:
     ld e, a
     ld a, d
 
+
+; Text range → bank $43 (Castle mid-game text).
+TextDispatch_Bank43:
 Call_000_0b07:
 Jump_000_0b07:
     ld [$c822], a
@@ -2497,6 +2509,9 @@ jr_000_0cd1:
     ret
 
 
+
+; Near text dispatch area (4 refs).
+TextRelated_0CE7:
 Call_000_0ce7:
 jr_000_0ce7:
     call Call_000_0cee
@@ -3207,6 +3222,9 @@ jr_000_1007:
     ret
 
 
+
+; Most-called function (31 refs). Core utility.
+CoreUtil_1013:
 Call_000_1013:
     ld a, [wIsSGB]
     or a
@@ -3413,6 +3431,9 @@ jr_000_111a:
     call TurnOffLCD
     ret
 
+
+; Core utility (9 refs).
+CoreUtil_113E:
 Call_000_113e:
     ld [$c774], a
     ld a, [wIsSGB]
@@ -3675,6 +3696,9 @@ Call_000_127f:
     ld a, $00
     ldh [rSC], a
 
+
+; Core utility (7 refs).
+CoreUtil_1284:
 Call_000_1284:
     ld a, b
     ldh [rSB], a
@@ -5823,6 +5847,9 @@ jr_000_1de1:
     ret
 
 
+
+; Multiply A × BC → result.
+Multiply_A_x_BC:
 Call_000_1de6:
     push af
     push bc
@@ -6442,6 +6469,9 @@ Jump_000_20d2:
     ret
 
 
+
+; Display utility (7 refs).
+DisplayUtil_20D3:
 Call_000_20d3:
     add $f0
     call Write_gfx_tile
@@ -6454,6 +6484,9 @@ Call_000_20d9:
     ret
 
 
+
+; Display/UI utility (12 refs).
+DisplayUtil_20DF:
 Call_000_20df:
     push af
     ld a, l
@@ -6666,6 +6699,9 @@ Jump_000_2200:
     ret
 
 
+
+; Display utility (7 refs).
+DisplayUtil_2208:
 Call_000_2208:
     push bc
     ld b, a
@@ -6720,6 +6756,9 @@ Jump_000_2235:
     ret
 
 
+
+; Display/render utility (10 refs).
+DisplayUtil_223B:
 Call_000_223b:
     push bc
     push de
@@ -7151,6 +7190,9 @@ Call_000_2438:
     ret
 
 
+
+; Graphics utility (11 refs).
+GraphicsUtil_2442:
 Call_000_2442:
     push hl
     call Call_000_2208
@@ -7182,6 +7224,9 @@ Call_000_2455:
     ret
 
 
+
+; Graphics utility (11 refs).
+GraphicsUtil_2462:
 Call_000_2462:
     push hl
     call Call_000_2208
@@ -10062,6 +10107,9 @@ Call_000_2fef:
     ret
 
 
+
+; Utility function (6 refs).
+Util_2FF6:
 Call_000_2ff6:
     add a
     add l
@@ -12492,6 +12540,9 @@ Jump_000_3a44:
     ret
 
 
+
+; Utility function (6 refs).
+Util_3A48:
 Call_000_3a48:
     ld a, [$de1f]
     ld b, a

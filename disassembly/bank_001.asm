@@ -1,3 +1,23 @@
+; =============================================================================
+; BANK $01 — GAME LOOP, ENCOUNTERS, TEXT DISPATCH, GATE DATA
+; =============================================================================
+; Contains:
+;   - Game initialization and main field loop (entries 0-1)
+;   - Random encounter monster selection (entry 11 at $683E)
+;   - Load next dungeon floor (entry 13 at $69E1)
+;   - Per-room VRAM update dispatch ($60E7, table at $6119)
+;     NOTE: The $6119 table was previously identified as "NPC text dispatch"
+;     but it actually handles VISUAL EFFECTS (palette animation, tile swaps).
+;     The actual NPC dialogue mechanism is UNKNOWN — needs SameBoy tracing.
+;   - Gate encounter pool data ($6A22, $6A42, $6AAE)
+;
+; KEY DISCOVERY: The dispatch table at $6119 does NOT handle NPC dialogue.
+; It runs per-room visual updates. Rooms with RET handlers have no visual
+; effects, NOT "no text." NPC text dispatch is a separate, undocumented system.
+;
+; Sources: Mallos31/dwm disassembly, NiyaDev/DWM, user reverse-engineering
+; =============================================================================
+
 ; Disassembly of "baserom.gbc"
 ; This file was created with:
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
@@ -7,20 +27,35 @@ SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
 
     db $01
 
+    ; Bank $01 jump table (14 entries, called via rst $10 with H=$01)
     dw label1_401d
+    ; Entry 0: Game initialization
     dw label1_4dd3
+    ; Entry 1: Main game loop / field update
     dw Call_001_421c
+    ; Entry 2
     dw Call_001_484e
+    ; Entry 3: Battle encounter data setup
     dw label1_4845
+    ; Entry 4: Pre-battle preparation
     dw Call_001_46f6
+    ; Entry 5
     dw jr_001_4686
+    ; Entry 6
     dw label1_4c58
+    ; Entry 7
     dw label1_5a72
+    ; Entry 8
     dw label1_4bc1
+    ; Entry 9
     dw Call_001_5d6d
+    ; Entry 10: Unknown — possibly NPC text?
     dw label1_683e
+    ; Entry 11: Random encounter monster selection ($683E)
     dw label1_69c8
+    ; Entry 12
     dw Call_001_69e1
+    ; Entry 13: Load next dungeon floor ($69E1)
 
 label1_401d:
     ld hl, sp+$00
@@ -6136,7 +6171,12 @@ jr_001_606f:
     nop
     dec b
 
-Call_001_60e7:
+; Per-room VRAM update function
+; Called from main game loop. Checks various state flags, then dispatches
+; to a per-room handler via rst $00 indexed by wMapID.
+; NOT the NPC text system — handlers do palette animation and tile swaps.
+PerRoomVRAMDispatch:
+Call_001_60e7:  ; original label
     ld a, [$c850]
     or a
     ret nz
@@ -6175,7 +6215,10 @@ Call_001_60e7:
     cp $0f
     ret z
 
-jr_001_6115:
+; The actual dispatch point: ld a,[wMapID]; rst $00
+; Jump table follows (107 entries indexed by map_type)
+PerRoomDispatchEntry:
+jr_001_6115:  ; original label
     ld a, [wMapID]
     rst $00
 
@@ -6294,16 +6337,22 @@ jr_001_6115:
     dw label1_63fa
     dw label1_63fa
 
-label1_61f9:
+; Castle ($00): LD HL,$94D0; CALL $65E0 — VRAM update
+Handler_Castle:
+label1_61f9:  ; original label
     ld hl, $94d0
     call Call_001_65e0
     ret
 
-label1_6200:
+; GreatTree ($01): CALL $659F — story event visual effect
+Handler_GreatTree:
+label1_6200:  ; original label
     call Call_001_659f
     ret
 
-label1_6204:
+; Bazaar ($02): RET — no visual update
+Handler_Bazaar:
+label1_6204:  ; original label
     ret
 
 
@@ -6320,10 +6369,15 @@ label1_6204:
     call Call_001_668f
     ret
 
-label1_621f:
+; GateHub ($03-$07): RET — no visual update
+Handler_GateHub:
+label1_621f:  ; original label
     ret
 
-label1_6220:
+; GateHub2 ($08): Palette animation
+; Reads $C8A6/$C8A7 as 16-bit counter, shifts right 5, indexes palette table
+Handler_GateHub2_Palette:
+label1_6220:  ; original label
     ld a, [$d9cb]
     cp $02
     jp z, $62b1
@@ -6399,20 +6453,31 @@ jr_001_6260:
 label1_b2b1:
     ret
 
-label1_62b2:
+; StarryShrine ($09): RET — no visual update
+Handler_StarryShrine:
+label1_62b2:  ; original label
     ret
 
-label1_62b3:
+; SecretPassage ($0A): CALL $659F
+Handler_SecretPassage:
+label1_62b3:  ; original label
     call Call_001_659f
     ret
 
-label1_62b7:
+; $0B-$0F: RET
+Handler_RET_Group1:
+label1_62b7:  ; original label
     ret
 
-label1_62b8:
+; $10-$18 (Copycat through Well): RET
+Handler_RET_Group2:
+label1_62b8:  ; original label
     ret
 
-label1_62b9:
+; GoopyRoom1/2 ($19/$1A): VRAM tile swap
+; Checks $C8A6 AND $1F == 3, then copies tiles $9320↔$93D0
+Handler_GoopyRooms:
+label1_62b9:  ; original label
     ld a, [$c8a6]
     and $1f
     cp $03
@@ -6448,7 +6513,12 @@ label1_62e3:
 label1_62e4:
     ret
 
-label1_62e5:
+; Map $20/$21 (Castle aliases): VRAM tile swap
+; Same pattern: $C8A6 check, copies $9320↔$9380
+; THIS is what crashes when custom room NPCs are talked to:
+; $C8A6 AND $1F == 3 passes, then copies garbage VRAM addresses
+Handler_Map20:
+label1_62e5:  ; original label
     ld a, [$c8a6]
     and $1f
     cp $03
@@ -6904,7 +6974,12 @@ label1_659e:
     ret
 
 
-Call_001_659f:
+; Text/event visual helper
+; Checks $C8A6 AND $1F for values $05, $07
+; Different paths for different interaction states
+; Reads from $9400, calls $65D4, $66BC, $668F
+TextHelper_659F:
+Call_001_659f:  ; original label
     ld a, [$c8a6]
     and $1f
     cp $05
@@ -6943,7 +7018,11 @@ Call_001_65d4:
     jp Jump_001_6636
 
 
-Call_001_65e0:
+; VRAM update helper (used by Castle handler)
+; Checks $C8A6 AND $7F against values $07, $27, $47, $67
+; Different VRAM copy operations for each
+TextHelper_65E0:
+Call_001_65e0:  ; original label
     ld a, [$c8a6]
     and $7f
     cp $07
@@ -6971,7 +7050,11 @@ jr_001_65fc:
     jp Jump_001_668f
 
 
-Call_001_6602:
+; VRAM tile swap routine
+; DI; copies B bytes between [HL] and [DE] (swap, not just copy)
+; Used by room handlers for animated tile effects
+VRAMTileSwap_6602:
+Call_001_6602:  ; original label
 jr_001_6602:
     di
     call Call_000_1aa6
@@ -7018,7 +7101,10 @@ Call_001_6611:
     ret
 
 
-Call_001_6636:
+; VRAM tile copy routine (one-way)
+; DI; copies tiles from [HL] area using VRAM-safe timing
+VRAMTileCopy_6636:
+Call_001_6636:  ; original label
 Jump_001_6636:
     di
     call Call_000_1aa6
@@ -7392,7 +7478,12 @@ Call_001_67f8:
     ld [$cab5], a
     ret
 
-label1_683e:
+; Entry 11: Random encounter monster selection
+; Reads $CA38 (encounter pool index), calculates pool offset
+; Uses weighted random selection ($6989) to pick monsters
+; Writes enemy IDs to $DA03/$DA05/$DA07
+EncounterMonsterSelect:
+label1_683e:  ; original label
     call Call_001_69e1
     ld a, [$ca38]
     ld bc, $001a
