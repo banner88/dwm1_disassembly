@@ -79,9 +79,20 @@
                  03 - Front, walking
                  04 - Side, walking
                  05 - Back, walking
-   1:D8D3   1    Copy of current Map type
+   1:D8D3   1    Copy of current map_type (selects script data bank)
                  See wC968
-   1:D8D4   1    Next step or next room id
+   1:D8D4   1    NPC script_id (selects per-NPC script in banks $0C-$0F)
+                 Used by ScriptDataLookup: $41BA[map_type×2] → per_map_table[script_id×2] → data
+   1:D8D5   2    Script counter (16-bit position in NPC script data)
+   1:D8D7   1    Script state flags (bit0=active, bit1=text_queued, bit2=delay,
+                 bit3=NPC_walk, bit4/6=pos_update, bit5=movement_lock)
+   1:D8D9   2    Queued text ID (16-bit) for ROM0 dispatch
+   1:D8DB   1    Delay frame counter (decremented by entry 4)
+   1:D8DC   1    NPC number for pending walk-toward (1-based)
+   1:D8DD   2    NPC X movement delta (signed 16-bit)
+   1:D8DF   2    NPC Y movement delta (signed 16-bit)
+   1:D99B  ~32   Event flag bitfield. Flag BC → byte $D99B+(BC/8), bit (BC&7).
+                 182 unique flags used. Set by cmd $03, cleared by $02, checked by $00/$01.
    1:D988   1    Current step in Labyrinth
                  From the initial room:
                    RIGHT (north one): Mimic

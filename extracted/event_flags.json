@@ -1,0 +1,60 @@
+{
+  "story_timeline_latest_to_earliest": [
+    {
+      "flag": "$00F1",
+      "checked_first_count": 259,
+      "checked_later_count": 0
+    },
+    {
+      "flag": "$0037",
+      "checked_first_count": 132,
+      "checked_later_count": 66
+    },
+    {
+      "flag": "$0025",
+      "checked_first_count": 111,
+      "checked_later_count": 40
+    },
+    {
+      "flag": "$0035",
+      "checked_first_count": 82,
+      "checked_later_count": 107
+    },
+    {
+      "flag": "$0036",
+      "checked_first_count": 47,
+      "checked_later_count": 42
+    },
+    {
+      "flag": "$001D",
+      "checked_first_count": 45,
+      "checked_later_count": 105
+    },
+    {
+      "flag": "$0033",
+      "checked_first_count": 31,
+      "checked_later_count": 76
+    },
+    {
+      "flag": "$0034",
+      "checked_first_count": 31,
+      "checked_later_count": 37
+    },
+    {
+      "flag": "$0032",
+      "checked_first_count": 15,
+      "checked_later_count": 155
+    },
+    {
+      "flag": "$0031",
+      "checked_first_count": 8,
+      "checked_later_count": 78
+    },
+    {
+      "flag": "$0030",
+      "checked_first_count": 0,
+      "checked_later_count": 55
+    }
+  ],
+  "note": "Flags checked FIRST in scripts are the LATEST story events. Scripts check newest\u2192oldest, branching to alternate dialogue when a flag is SET."
+}

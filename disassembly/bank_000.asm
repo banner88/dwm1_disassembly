@@ -7770,51 +7770,87 @@ Call_000_2683:
     ret
 
 
+; ---------------------------------------------------------------------------
+; SetEventFlag — Set a single event flag bit in the $D99B bitfield
+; ---------------------------------------------------------------------------
+; Input:  BC = event flag index
+; Effect: Sets the bit at $D99B + (BC/8), bit position (C & 7)
+; Used by script command $03 to mark story events as triggered.
+; ---------------------------------------------------------------------------
 Call_000_26a0:
-    call Call_000_26b3
-    or [hl]
-    ld [hl], a
+    call Call_000_26b3       ; Compute mask → A, address → HL
+    or [hl]                  ; Set the bit
+    ld [hl], a               ; Write back
     ret
 
 
+; ---------------------------------------------------------------------------
+; ClearEventFlag — Clear a single event flag bit in the $D99B bitfield
+; ---------------------------------------------------------------------------
+; Input:  BC = event flag index
+; Effect: Clears the bit at $D99B + (BC/8), bit position (C & 7)
+; Used by script command $02 to reset event state.
+; ---------------------------------------------------------------------------
 Call_000_26a6:
-    call Call_000_26b3
-    xor $ff
-    and [hl]
-    ld [hl], a
+    call Call_000_26b3       ; Compute mask → A, address → HL
+    xor $ff                  ; Invert mask
+    and [hl]                 ; Clear the target bit, keep all others
+    ld [hl], a               ; Write back
     ret
 
 
+; ---------------------------------------------------------------------------
+; CheckEventFlag — Test a single event flag in the $D99B bitfield
+; ---------------------------------------------------------------------------
+; Input:  BC = event flag index (16-bit)
+; Output: Z flag = bit is CLEAR (event not triggered)
+;         NZ flag = bit is SET (event has been triggered)
+;
+; Calculation:
+;   byte_address = $D99B + (BC / 8)
+;   bit_mask     = bitmask_table[C & 7]  (table at $26D5: $80,$40,$20,$10,$08,$04,$02,$01)
+;   result       = [byte_address] AND bit_mask
+;
+; Used by script commands $00 (ConditionalBranchNZ) and $01 (ConditionalBranchZ)
+; to check story progression flags. 182 unique flags are used across all scripts.
+; Flag range covers $D99B-$DAxx (event bitfield).
+; ---------------------------------------------------------------------------
 Call_000_26ae:
-    call Call_000_26b3
+    call Call_000_26b3       ; Compute bit mask → A, byte address → HL
 
 Call_000_26b1:
-    and [hl]
-    ret
+    and [hl]                 ; Test: is this event flag set?
+    ret                      ; Z = flag clear, NZ = flag set
 
 
+; ---------------------------------------------------------------------------
+; ComputeFlagAddress — Compute byte address and bit mask for event flag
+; ---------------------------------------------------------------------------
+; Input:  BC = flag index
+; Output: A = bit mask, HL = byte address in event bitfield
+; ---------------------------------------------------------------------------
 Call_000_26b3:
     push bc
     srl b
-    rr c
+    rr c                     ; BC >>= 1
     srl b
-    rr c
+    rr c                     ; BC >>= 2
     srl b
-    rr c
+    rr c                     ; BC >>= 3 (BC / 8 = byte offset)
     ld hl, $d99b
-    add hl, bc
+    add hl, bc               ; HL = $D99B + (flag_index / 8) = byte address
     pop bc
     push hl
-    ld hl, $26d5
+    ld hl, $26d5             ; Bit mask lookup table
     ld a, c
-    and $07
+    and $07                  ; C & 7 = bit position within byte
     add l
     ld l, a
     ld a, $00
     adc h
-    ld h, a
-    ld a, [hl]
-    pop hl
+    ld h, a                  ; HL = $26D5 + (C & 7)
+    ld a, [hl]               ; A = bit mask ($80,$40,$20,$10,$08,$04,$02,$01)
+    pop hl                   ; HL = byte address
     ret
 
 

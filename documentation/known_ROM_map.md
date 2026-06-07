@@ -2321,3 +2321,67 @@ These are used commonly in the skill functions to calculate damage and such
 </pre>
 
 {{Internal Data|game=Dragon Warrior Monsters}}
+
+## Functions Annotated This Session
+
+### Bank $00 (ROM0)
+| Address | Name | Purpose |
+|---------|------|---------|
+| $00:$0AD4 | QueueTextByID | Store text ID to $C822/$C823 |
+| $00:$0AD9 | TextDispatchCascade | Route text ID to handler bank $42-$4E via rst $00 |
+| $00:$0ADD | TextDispatchTable | 10-entry jump table for cascade (by high byte) |
+| $00:$26A0 | SetEventFlag | Set bit in $D99B+ event bitfield |
+| $00:$26A6 | ClearEventFlag | Clear bit in $D99B+ event bitfield |
+| $00:$26AE | CheckEventFlag | Test bit (Z=clear, NZ=set) |
+| $00:$26B3 | ComputeFlagAddress | Compute byte+mask for flag index |
+| $00:$26D5 | BitMaskTable | 8 bytes: $80,$40,$20,$10,$08,$04,$02,$01 |
+
+### Bank $01
+| Address | Name | Purpose |
+|---------|------|---------|
+| $01:$55D7 | NPCTalkHandler | "Player pressed A near NPC" — calls $0B:5, sets $D8D4, calls $04:5 |
+| $01:$4C3B | RoomEntryScript | Trigger script_id $00 on room load (overworld) |
+| $01:$4C49 | RoomEntryScriptGW | Trigger script_id $00 on room load (gate world, $D8D3=$70) |
+
+### Bank $04 — Script Engine
+| Address | Name | Purpose |
+|---------|------|---------|
+| $04:$400F | NPCSpriteLoad | Entry 0: NPC sprite dispatch via $0D91 |
+| $04:$4016 | NPCSpriteLoadAlt | Entry 1: NPC sprite dispatch variant |
+| $04:$4081 | NPCInteractDispatch | Entry 2: route by $FFC7 to bank $10/$11 |
+| $04:$40A7 | NPCInteractDispatchB | Entry 3: routing variant |
+| $04:$4167 | NPCFrameUpdate | Entry 4: per-frame NPC state machine |
+| $04:$42CD | NPCIndexLookup | Calculate NPC buffer addr: $D7D2+(A-1)×32 |
+| $04:$43EC | NPCPositionUpdateAll | Check/update 8 NPC movement buffers |
+| $04:$454B | NPCMovementSetup | Direction → sprite rendering params |
+| $04:$55EC | ScriptInit | Entry 5: reset counter, begin script |
+| $04:$55F5 | ScriptExecContinue | Increment counter, dispatch next command |
+| $04:$5605 | ScriptExecNext | Main VM dispatch loop |
+| $04:$5622 | ScriptCommandTable | 100-entry opcode dispatch table |
+| $04:$56EC | TextIDQueue | Store BC to $D8D9/$D8DA, set $D8D7 bit 1 |
+| $04:$56FA | TextQueueCheck | Entry 6: dispatch queued text to ROM0 |
+| $04:$71EF | ScriptDataRead | Dispatch to bank $0C/$0D/$0E/$0F by map type |
+| $04:$7212 | ScriptBranch | Relative branch within script data |
+
+### Banks $0C/$0D/$0E/$0F — Script Data
+| Address | Name | Purpose |
+|---------|------|---------|
+| $0C:$4007 | ScriptDataLookup | Triple-index: $41BA[maptype] → [script_id] → [counter] → BC |
+| $0D:$4007 | ScriptDataLookup | Same structure (map types $06-$1F) |
+| $0E:$4007 | ScriptDataLookup | Same structure (map types $20-$3F) |
+| $0F:$4007 | ScriptDataLookup | Same structure (map types $40+) |
+
+### Bank $0B — Room System
+| Address | Name | Purpose |
+|---------|------|---------|
+| $0B:$43A4 | NPCScriptIDLookup | Entry 5: find NPC at facing pos, return script_id |
+| $0B:$43B8 | NPCSearchAtFacing | Walk NPC list, match position |
+| $0B:$4274 | GetCurrentNPCList | Trace room data chain to NPC interact block |
+| $0B:$4452 | CheckNPCAtFacing | Compare NPC X/Y against player facing |
+
+### Bank $50 — Event State Machine
+| Address | Name | Purpose |
+|---------|------|---------|
+| $50:$4017 | EventStateDispatch | Read $D9F4, dispatch to 11 state handlers |
+| $50:$4031 | State0_Init | Room/game initialization |
+| $50:$40ED | State1_Gameplay | Normal gameplay main loop |

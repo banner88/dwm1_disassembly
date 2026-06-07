@@ -523,14 +523,41 @@ jr_00b_4244:
 ; Called by Entry 7 (RoomEntry7_RoomInit) to load NPC data after transition.
 ; -----------------------------------------------------------------------------
 ReadInteractPtr:
+; ---------------------------------------------------------------------------
+; GetCurrentNPCList — Trace room data chain to find NPC interact block
+; ---------------------------------------------------------------------------
+; Follows the room data pointer chain to find the NPC list for the
+; current room, screen, and step:
+;
+;   $4B43[wMapID × 2] → screen_ptr_block
+;   screen_ptr_block[$C925 × 2] → step_block
+;   step_block[0:2] → ram_flag_ptr (DE) → [DE] = current step_id
+;   step_block + 2 + step_id × 6 → step_entry
+;   step_entry[2:4] → interact_ptr = NPC list
+;
+; Output: HL = pointer to first NPC entry (5-byte entries, $FF terminated)
+; ---------------------------------------------------------------------------
 Call_00b_4274:
     ld a, [wInGateworld]
     or a
-    jr nz, jr_00b_42ac
+    jr nz, jr_00b_42ac       ; Gate world uses different lookup path
 
-    ld hl, $4b43
+    ; Level 1: map_type → screen_ptr_block
+    ld hl, $4b43             ; Room pointer table base
     ld a, [wMapID]
-    add a
+    add a                    ; × 2 (word-sized entries)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                  ; HL = $4B43 + wMapID × 2
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                  ; HL = screen_ptr_block
+
+    ; Level 2: screen → step_block
+    ld a, [$c925]            ; Current screen index
+    add a                    ; × 2
     add l
     ld l, a
     ld a, $00
@@ -538,36 +565,28 @@ Call_00b_4274:
     ld h, a
     ld a, [hl+]
     ld h, [hl]
-    ld l, a
-    ld a, [$c925]
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
+    ld l, a                  ; HL = step_block
+
+    ; Level 3: read step_id from RAM
     ld e, [hl]
     inc hl
-    ld d, [hl]
-    inc hl
-    ld a, [de]
+    ld d, [hl]               ; DE = ram_flag_ptr
+    inc hl                   ; HL = step_block + 2 (step_entries start)
+    ld a, [de]               ; A = current step_id (from RAM)
     ld e, a
-    add a
-    add e
-    add a
+    add a                    ; × 2
+    add e                    ; × 3
+    add a                    ; × 6 (6 bytes per step_entry)
     add l
     ld l, a
     ld a, $00
     adc h
-    ld h, a
+    ld h, a                  ; HL = step_entry for current step_id
     inc hl
-    inc hl
+    inc hl                   ; Skip byte 0 (step_id) and byte 1 (tileset)
     ld a, [hl+]
     ld h, [hl]
-    ld l, a
+    ld l, a                  ; HL = interact_ptr (NPC list)
     ret
 
 
@@ -770,62 +789,87 @@ jr_00b_43a1:
     ld a, $ff
     ret
 
+; ---------------------------------------------------------------------------
+; Entry 5: NPCScriptIDLookup — Find NPC at facing position, return script_id
+; ---------------------------------------------------------------------------
+; Called by bank $01 NPCTalkHandler when player presses A.
+; Player position is pre-loaded to $FFDB-$FFDE by the caller.
+;
+; Flow:
+;   1. Default $FFD5 = $FF (no NPC)
+;   2. Guard: if $FF90 bit 6 set or $D8D7 non-zero → return
+;   3. Call Call_00b_43b8:
+;      a. Get current room's NPC list (interact block) via Call_00b_4274
+;      b. Walk NPC entries (5 bytes each, $FF terminated)
+;      c. For each: check type byte (bit 7 must be set = interactable)
+;      d. If type & $F0 == $90: check if NPC is at player's facing position
+;      e. If match: return byte 4 (script_id) in A
+;      f. If no match: advance 5 bytes, check next NPC
+;   4. Result stored to $FFD5 by caller
+;
+; NPC entry format (5 bytes): [type] [sprite] [X] [Y] [script_id]
+; Returns: A = script_id ($FF if no interactable NPC found)
+; ---------------------------------------------------------------------------
 RoomEntry5_NPCRender:
 labelb_43a4:
     ld a, $ff
-    ldh [$d5], a
+    ldh [$d5], a             ; Default: no NPC found
     ldh a, [$90]
     bit 6, a
-    ret nz
+    ret nz                   ; Busy flag set → return
 
     ld a, [$d8d7]
     or a
-    ret nz
+    ret nz                   ; Script already running → return
 
-    call Call_00b_43b8
-    ldh [$d5], a
+    call Call_00b_43b8       ; Search for NPC at facing position
+    ldh [$d5], a             ; Store result (script_id or $FF)
     ret
 
 
+; ---------------------------------------------------------------------------
+; NPCSearchAtFacing — Walk NPC list, find match at player's facing position
+; ---------------------------------------------------------------------------
 Call_00b_43b8:
-    call Call_00b_4274
+    call Call_00b_4274       ; Get interact_block pointer for current room/step
 
 jr_00b_43bb:
-    ld a, [hl]
+    ld a, [hl]               ; Read NPC type byte (byte 0)
     cp $ff
-    ret z
+    ret z                    ; $FF terminator → no more NPCs, return $FF
 
     bit 7, a
-    jr z, jr_00b_43e2
+    jr z, jr_00b_43e2        ; Bit 7 clear → NPC not interactable, return $FF
 
     and $f0
     cp $90
-    jr nz, jr_00b_43d8
+    jr nz, jr_00b_43d8       ; Type != $9x → skip this NPC
 
-    call Call_00b_4452
-    jr nz, jr_00b_43d8
+    call Call_00b_4452       ; Check if NPC is at player's facing position
+    jr nz, jr_00b_43d8       ; Not at facing position → skip
 
+    ; NPC found at facing position! Read script_id (byte 4)
     ld a, l
     add $04
     ld l, a
     ld a, h
     adc $00
-    ld h, a
-    ld a, [hl]
+    ld h, a                  ; HL = NPC entry + 4
+    ld a, [hl]               ; A = script_id (byte 4 of NPC entry)
     ret
 
 
 jr_00b_43d8:
     ld a, l
-    add $05
+    add $05                  ; Advance to next NPC entry (+5 bytes)
     ld l, a
     ld a, h
     adc $00
     ld h, a
-    jr jr_00b_43bb
+    jr jr_00b_43bb           ; Check next NPC
 
 jr_00b_43e2:
-    ld a, $ff
+    ld a, $ff                ; No interactable NPC → return $FF
     ret
 
 
@@ -931,6 +975,17 @@ jr_00b_444c:
     ret
 
 
+; ---------------------------------------------------------------------------
+; CheckNPCAtFacing — Compare NPC position against player's facing position
+; ---------------------------------------------------------------------------
+; Input:  HL = pointer to NPC entry (byte 0 = type)
+;         $FFDB/$FFDC = player facing X position
+;         $FFDD/$FFDE = player facing Y position
+; Output: Z = NPC is at facing position (match)
+;         NZ = NPC is NOT at facing position
+;
+; Compares NPC entry bytes 2 (X) and 3 (Y) against computed facing coords.
+; ---------------------------------------------------------------------------
 Call_00b_4452:
     push hl
     push bc

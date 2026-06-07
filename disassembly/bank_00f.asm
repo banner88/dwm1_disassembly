@@ -11,6 +11,12 @@ SECTION "ROM Bank $00f", ROMX[$4000], BANK[$f]
     dw labelf_402f
     dw labelf_4110
 
+; ---------------------------------------------------------------------------
+; ScriptDataLookup — Same triple-index as bank $0C (see bank_00c.asm)
+; $D8D3 (map_type) → $41BA → per-map table
+; $D8D4 (script_id) → per-NPC data pointer
+; $D8D5/$D8D6 (counter) → BC command pair
+; ---------------------------------------------------------------------------
 Call_00f_4007:
     ld a, [$d8d3]
     ld l, a

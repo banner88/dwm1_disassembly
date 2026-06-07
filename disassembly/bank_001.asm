@@ -2457,25 +2457,35 @@ Call_001_4c10:
     or a
     ret nz
 
+; ---------------------------------------------------------------------------
+; RoomEntryScript — Trigger script_id $00 on room load
+; ---------------------------------------------------------------------------
+; Called when entering a room. Sets script_id = $00 (the room's entry script)
+; and dispatches to the script engine. Script $00 in each map's script data
+; handles room initialization events (NPCs appearing, cutscenes, etc.)
+;
+; Overworld: $D8D3 = wMapID (actual map type)
+; Gate world: $D8D3 = $70 (fixed gate world map type)
+; ---------------------------------------------------------------------------
     ld a, [wInGateworld]
     or a
     jr nz, jr_001_4c49
 
     ld a, $00
-    ld [$d8d4], a
+    ld [$d8d4], a            ; script_id = $00 (room entry script)
     ld a, [wMapID]
-    ld [$d8d3], a
-    ld hl, $0405
+    ld [$d8d3], a            ; map type = current map
+    ld hl, $0405             ; Bank $04 entry 5: ScriptInit
     rst $10
     ret
 
 
 jr_001_4c49:
     ld a, $00
-    ld [$d8d4], a
+    ld [$d8d4], a            ; script_id = $00 (room entry script)
     ld a, $70
-    ld [$d8d3], a
-    ld hl, $0405
+    ld [$d8d3], a            ; map type = $70 (gate world)
+    ld hl, $0405             ; Bank $04 entry 5: ScriptInit
     rst $10
     ret
 
@@ -4133,50 +4143,67 @@ Call_001_55b1:
     ret
 
 
+; ===========================================================================
+; NPCTalkHandler — "Player pressed A near NPC" dispatcher
+; ===========================================================================
+; Called when the player presses A while facing an NPC.
+; Reads player position from HRAM ($FF92-$FF96), calls bank $0B entry 5
+; to find the NPC at the facing position and retrieve its script_id.
+;
+; If an NPC is found ($FFD5 != $FF):
+;   1. $D8D4 ← script_id (from NPC ROM data byte 4)
+;   2. $D8D3 ← wMapID (current map type)
+;   3. $D8D7 ← 0 (clear script state)
+;   4. Calls bank $04 entry 5 (ScriptInit) to begin script execution
+;   5. If script produced text (bit 1 of $D8D7): sets up text display mode
+;
+; This is the bridge between player input and the script engine.
+; ===========================================================================
 Call_001_55d7:
-    ldh a, [$92]
+    ldh a, [$92]             ; Player position (from HRAM)
     ld l, a
     ldh a, [$93]
     ld h, a
     ld a, l
-    ldh [$db], a
+    ldh [$db], a             ; Store to $FFDB (facing position low)
     ld a, h
-    ldh [$dc], a
+    ldh [$dc], a             ; Store to $FFDC (facing position high)
     ldh a, [$95]
     ld l, a
     ldh a, [$96]
     ld h, a
     ld a, l
-    ldh [$dd], a
+    ldh [$dd], a             ; Store to $FFDD (facing tile low)
     ld a, h
-    ldh [$de], a
-    ld hl, $0b05
-    rst $10
-    ldh a, [$d5]
+    ldh [$de], a             ; Store to $FFDE (facing tile high)
+    ld hl, $0b05             ; Bank $0B entry 5: NPC lookup at facing position
+    rst $10                  ; Returns script_id in $FFD5 ($FF if no NPC)
+    ldh a, [$d5]             ; Read script_id result
     cp $ff
-    ret z
+    ret z                    ; No NPC found → return
 
-    ld [$d8d4], a
+    ld [$d8d4], a            ; ★ Store NPC script_id for script bank lookup
     ld a, [wMapID]
-    ld [$d8d3], a
+    ld [$d8d3], a            ; Store map type for script bank selection
     xor a
-    ld [$d8d7], a
-    ld hl, $0405
-    rst $10
+    ld [$d8d7], a            ; Clear script state flags
+    ld hl, $0405             ; Bank $04 entry 5: ScriptInit
+    rst $10                  ; Execute NPC script (may queue text)
     ld a, [$d8d7]
     or a
-    ret z
+    ret z                    ; Script produced nothing → return
 
     bit 1, a
-    ret z
+    ret z                    ; No text queued → return
 
+    ; Script queued text → set up text display mode
     ld hl, $ffff
     ld a, l
     ld [$c917], a
     ld a, h
     ld [$c918], a
     ld hl, wGameState
-    set 0, [hl]
+    set 0, [hl]              ; Enable text display mode
     xor a
     ld [$c915], a
     ld [$c916], a

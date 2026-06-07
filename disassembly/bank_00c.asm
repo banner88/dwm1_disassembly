@@ -3,45 +3,78 @@
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
 ; https://github.com/mattcurrie/mgbdis
 
+; ===========================================================================
+; Bank $0C — Script Data Bank (Map Types $00–$05)
+; ===========================================================================
+; Handles script data for: Castle ($00), GreatTree ($01), Bazaar ($02),
+; GateHub ($03), Farm ($04), Stable ($05).
+;
+; Called by bank $04 Call_004_71ef (ScriptDataRead) when $D8D3 < $06.
+; ===========================================================================
+
 SECTION "ROM Bank $00c", ROMX[$4000], BANK[$c]
     ;rom bank
     db $0c
 
     ;code jump table
-    dw Call_00c_4007
-    dw labelc_402f
-    dw labelc_4110
+    dw ScriptDataLookup      ; Entry 0: Triple-index script data read
+    dw labelc_402f           ; Entry 1: VRAM tile update (screen rendering)
+    dw labelc_4110           ; Entry 2: (unknown)
 
-Call_00c_4007:			;jumped to by call_004_71ef's RST10 call.
-    ld a, [$d8d3]		;
+; ---------------------------------------------------------------------------
+; Entry 0: ScriptDataLookup — Triple-index script data reader
+; ---------------------------------------------------------------------------
+; Performs a 3-level lookup to fetch the next script command BC pair:
+;
+;   Level 1: $D8D3 (map_type) → master table at $41BA
+;            $41BA[map_type × 2] → per-map script pointer table
+;
+;   Level 2: $D8D4 (script_id) → per-map pointer table
+;            per_map_table[script_id × 2] → per-NPC script data base
+;
+;   Level 3: $D8D5/$D8D6 (script counter) → script data
+;            script_data[counter × 2] → BC command pair
+;
+; Input:  $D8D3 = map type, $D8D4 = NPC script_id, $D8D5/$D8D6 = counter
+; Output: BC = next script command, HL = pointer to that command in ROM
+;
+; Script data format: array of 16-bit words (BC pairs).
+;   BC = $FFFF:           script end
+;   B != $FF:             BC is a 16-bit text ID
+;   B == $FF, C = opcode: script command (dispatched by bank $04)
+;   Addresses ($4xxx-$7xxx): branch targets for ConditionalBranch commands
+; ---------------------------------------------------------------------------
+ScriptDataLookup:
+Call_00c_4007:
+    ld a, [$d8d3]            ; Map type (0=Castle, 1=GreatTree, etc.)
     ld l, a
     ld h, $00
-    add hl, hl
-    ld de, $41ba		;data block. First 2 bytes may be a pointer
-    add hl, de
+    add hl, hl               ; HL = map_type × 2
+    ld de, $41ba             ; Master script pointer table
+    add hl, de               ; HL = $41BA + map_type × 2
     ld e, [hl]
     inc hl
-    ld d, [hl]
+    ld d, [hl]               ; DE = per-map pointer table address
 
-    ld a, [$d8d4]
+    ld a, [$d8d4]            ; NPC script_id (set before ScriptInit)
     ld l, a
     ld h, $00
-    add hl, hl
-    add hl, de
+    add hl, hl               ; HL = script_id × 2
+    add hl, de               ; HL = per-map table + script_id × 2
     ld e, [hl]
     inc hl
-    ld d, [hl]
+    ld d, [hl]               ; DE = per-NPC script data base pointer
 
-    ld a, [$d8d5]		;unknown counter from rom bank 4
+    ld a, [$d8d5]            ; Script counter low
     ld l, a
-    ld a, [$d8d6]
+    ld a, [$d8d6]            ; Script counter high
     ld h, a
-    add hl, hl
-    add hl, de
-    ld c, [hl]
+    add hl, hl               ; HL = counter × 2 (each entry is 2 bytes)
+    add hl, de               ; HL = script_data + counter × 2
+    ld c, [hl]               ; C = command low byte
     inc hl
-    ld b, [hl]
-    dec hl
+    ld b, [hl]               ; B = command high byte
+    dec hl                   ; HL points back to current entry (for ScriptBranch)
     ret
 
 labelc_402f:

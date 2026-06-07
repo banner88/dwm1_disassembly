@@ -3,50 +3,134 @@
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
 ; https://github.com/mattcurrie/mgbdis
 
+; ===========================================================================
+; Bank $50 — Event State Machine & Game Loop Manager
+; ===========================================================================
+; Controls the main game state via $D9F4 (11 states, 0-10).
+; Called per-frame to drive room initialization, normal gameplay,
+; battle transitions, and story event processing.
+;
+; $D9F4 State Machine:
+;   State 0  ($4031): Room/game initialization — setup party, clear state
+;     Calls: bank $55 entry 6
+;     Writes: $C1C0, $D9F8/$D9F9 (VRAM ptr), $DB88
+;     Reads: $C86C (gate world flag), $C863
+;     Validates party monsters, sets up initial screen
+;
+;   State 1  ($40ED): Normal gameplay — main game loop
+;     Calls: bank $55 entry 5 (per-frame update)
+;     Reads: $C846 (input), $C8DA, $D9F3
+;     Writes: $D9F3, $D9F5
+;     Transitions: → 9 (UI wait), → 1 (loop)
+;
+;   State 2  ($4114): Battle transition check (overworld)
+;     Calls: bank $55 entry 6
+;     Reads: $C846, $C863, $C8DA, $D9F3
+;     Writes: $C8DD, $D9F3, $D9F5
+;     Checks if battle should trigger, transitions: → 9 or → 1
+;
+;   State 3  ($41EE): Battle transition check (gate world)
+;     Reads: $C846, $C863, $C86C, $C8DA, $D9F3
+;     Writes: $C8C7, $D9F3
+;     Gate-world variant of state 2
+;
+;   State 4  ($4215): Post-event processing
+;     Reads: $C863, $C86C, $C86E, $D9F3
+;     Writes: $C873, $C8C7, $D9F3
+;     Handles post-battle/post-event cleanup
+;
+;   State 5  ($425E): Return to init (from overworld event)
+;     Reads: $C863, $C86C, $C86E, $C899, $C89A, $C8DA
+;     Writes: $C873
+;     Transitions: → 0 (back to init)
+;
+;   State 6  ($426E): Return to init (from gate world event)
+;     Reads: $C863, $C86C, $C86E, $C899, $C89A, $C8DA
+;     Gate-world variant of state 5. Transitions: → 0
+;
+;   State 7  ($4301): Complex event handler (overworld)
+;     Reads: $C863, $C86C, $C86E
+;     Writes: $C1D5, $C1D6, $C873
+;     Handles story events, cutscenes. Multiple paths:
+;     Transitions: → 0, → 4, → 1
+;
+;   State 8  ($43A7): Complex event handler (gate world)
+;     Calls: bank $56 entry 5
+;     Reads: $C863, $D9F5, $DB74/$DB75
+;     Writes: $C8C7, $D9F4, $DB77, $DB88, $DD72/$DD73
+;     Gate-world variant of state 7
+;     Transitions: → 0, → 4, → 1
+;
+;   State 9  ($41E0): UI wait → return to normal gameplay
+;     Reads: $C825 (UI busy flag)
+;     Writes: $C8C7, $D9F3, $D9F4
+;     Waits for $C825 to clear, then transitions: → 1
+;
+;   State 10 ($59D6): Full reset → state 0
+;     Reads: $DB58-$DB5A, $DB88
+;     Writes: $D9F4, $DB50
+;     Complete state reset. Transitions: → 0
+;
+; Key RAM Variables:
+;   $D9F3    Sub-state counter within current state
+;   $D9F4    Main state index (0-10)
+;   $D9F5    Secondary state flag
+;   $C846    Input/button state
+;   $C863    Game mode flags
+;   $C86C    Gate world flag (0=overworld, non-0=gate)
+;   $C86E    Current gate ID
+;   $C825    UI busy flag (text box active)
+;   $C873    Screen transition flag
+;   $C8C7    Event completion flag
+;   $C8DA    Animation/effect counter
+; ===========================================================================
+
 SECTION "ROM Bank $050", ROMX[$4000], BANK[$50]
 
-    ld d, b
-    ret
+    db $50 ; Bank number
 
+; Jump table: 11 external entry points (called via rst $10, H=$50)
+    dw $5DC9                    ; Entry 0
+    dw $5E21                    ; Entry 1
+    dw $5E49                    ; Entry 2
+    dw Call_050_6053            ; Entry 3
+    dw Call_050_7c4d            ; Entry 4
+    dw Call_050_768e            ; Entry 5
+    dw $79EB                    ; Entry 6
+    dw $59EB                    ; Entry 7
+    dw $5B58                    ; Entry 8
+    dw $5C78                    ; Entry 9
+    dw jr_050_5cb4              ; Entry 10
 
-    ld e, l
-    ld hl, $495e
-    ld e, [hl]
-    ld d, e
-    ld h, b
-    ld c, l
-    ld a, h
-    adc [hl]
-    db $76
-    db $eb
-    ld a, c
-    db $eb
-    ld e, c
-    ld e, b
-    ld e, e
-    ld a, b
-    ld e, h
-    or h
-    ld e, h
-
+; ---------------------------------------------------------------------------
+; EventStateDispatch — Per-frame state machine dispatcher
+; ---------------------------------------------------------------------------
+; Reads $D9F4 (current event state) and dispatches to the appropriate
+; handler via rst $00 jump table.
+; ---------------------------------------------------------------------------
 Call_050_4017:
-    ld a, [$d9f4]
-    rst $00
-    ld sp, $ed40
-    ld b, b
-    inc d
-    ld b, c
-    xor $41
-    dec d
-    ld b, d
-    ld e, [hl]
-    ld b, d
-    ld l, [hl]
-    ld b, d
-    ld bc, $a743
-    ld b, e
-    ldh [rSTAT], a
-    sub $59
+    ld a, [$d9f4]            ; Current event state (0-10)
+    rst $00                  ; Dispatch via jump table below
+
+; State dispatch table (11 entries, indexed by $D9F4)
+    dw $4031                    ; State 0: Room/game initialization
+    dw Jump_050_40ed            ; State 1: Normal gameplay loop
+    dw $4114                    ; State 2: Battle transition check (overworld)
+    dw $41EE                    ; State 3: Battle transition check (gate world)
+    dw $4215                    ; State 4: Post-event processing
+    dw $425E                    ; State 5: Return to init (overworld)
+    dw $426E                    ; State 6: Return to init (gate world)
+    dw $4301                    ; State 7: Complex event handler (overworld)
+    dw $43A7                    ; State 8: Complex event handler (gate world)
+    dw $41E0                    ; State 9: UI wait → return to gameplay
+    dw $59D6                    ; State 10: Full reset → state 0
+
+; ---------------------------------------------------------------------------
+; State 0 ($4031): Room/Game Initialization
+; ---------------------------------------------------------------------------
+; Calls bank $55 entry 6 for setup, clears $D9F4-$D9FB (8 bytes),
+; initializes VRAM tilemap pointer, validates party monsters.
+; ---------------------------------------------------------------------------
     ld hl, $5506
     rst $10
     xor a
@@ -179,6 +263,13 @@ jr_050_40e8:
     ret
 
 
+; ---------------------------------------------------------------------------
+; State 1 ($40ED): Normal Gameplay — Main Loop
+; ---------------------------------------------------------------------------
+; Active during normal gameplay. Handles NPC interaction, screen updates,
+; and checks for battle/event transitions.
+; Transitions: → state 9 (UI wait), → state 1 (loop)
+; ---------------------------------------------------------------------------
 Jump_050_40ed:
     ld hl, $5505
     rst $10

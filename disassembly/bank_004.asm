@@ -3,23 +3,75 @@
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
 ; https://github.com/mattcurrie/mgbdis
 
+; ===========================================================================
+; Bank $04 — NPC Interaction Engine & Script System
+; ===========================================================================
+; This bank is the core NPC interaction handler. It manages:
+;   - NPC sprite loading and OAM assembly (entries 0-3)
+;   - Per-frame NPC interaction state machine (entry 4)
+;   - Script executor with 100-opcode command set (entry 5)
+;   - Text ID dispatch to ROM0 text rendering (entry 6)
+;
+; Script Architecture:
+;   Entry 5 calls Call_004_71ef which dispatches to banks $0C/$0D/$0E/$0F
+;   based on $D8D3 (map_type). Those banks return the next script command
+;   as a BC pair:
+;     BC = $FFFF → script ended
+;     B != $FF  → BC is a 16-bit text ID, queued to $D8D9/$D8DA
+;     B == $FF  → C is an opcode index into the 100-entry command table
+;
+; Key RAM Variables:
+;   $D7D2+     NPC RAM buffer (32 bytes per NPC, up to 40 NPCs)
+;   $D8D3      Map type copy (selects script data bank via Call_004_71ef)
+;   $D8D4      NPC script_id (selects per-NPC script data in script bank)
+;   $D8D5-D8D6 Script counter / event counter (16-bit)
+;   $D8D7      Script state flags (see bit definitions below)
+;   $D8D8      Secondary state flags
+;   $D8D9-D8DA Queued text ID (16-bit, low/high)
+;   $D8DB      Delay counter (frames to wait)
+;   $D8DC      NPC number for pending interaction
+;   $D8DD-D8DE NPC X movement delta (signed 16-bit)
+;   $D8DF-D8E0 NPC Y movement delta (signed 16-bit)
+;
+; $D8D7 Bit Definitions:
+;   Bit 0: Script is active/running
+;   Bit 1: Text ID queued for display (consumed by entry 6)
+;   Bit 2: Delay/wait active (countdown via $D8DB)
+;   Bit 3: NPC walk-toward-player pending
+;   Bit 4: NPC position update pending (group A)
+;   Bit 5: Movement lock / suppress NPC facing updates
+;   Bit 6: NPC position update pending (group B)
+; ===========================================================================
+
 SECTION "ROM Bank $004", ROMX[$4000], BANK[$4]
 
   db $04 ;ROM Bank
 
-    dw label400f
-    dw label4016
-    dw label4081
-    dw label40a7
-    dw label4167
-    dw label55ec
-    dw label56fa
+; Jump table: 7 entry points called via rst $10 with H=$04
+    dw NPCSpriteLoad         ; Entry 0 ($400F): NPC sprite dispatch (via $0D91)
+    dw NPCSpriteLoadAlt      ; Entry 1 ($4016): NPC sprite dispatch variant (via Call_004_40cd)
+    dw NPCInteractDispatch   ; Entry 2 ($4081): NPC interaction routing by $FFC7
+    dw NPCInteractDispatchB  ; Entry 3 ($40A7): NPC interaction routing variant
+    dw NPCFrameUpdate        ; Entry 4 ($4167): Per-frame NPC state machine (MAIN ENTRY)
+    dw ScriptInit            ; Entry 5 ($55EC): Initialize & run NPC script
+    dw TextQueueCheck        ; Entry 6 ($56FA): Check & dispatch queued text ID
 
+; ---------------------------------------------------------------------------
+; Entry 0: NPCSpriteLoad
+; Loads NPC sprite data into OAM via the sprite table at $401D.
+; Called during room initialization to set up NPC visuals.
+; ---------------------------------------------------------------------------
+NPCSpriteLoad:
 label400f:
     ld de, $401d
     call $0d91
     ret
 
+; ---------------------------------------------------------------------------
+; Entry 1: NPCSpriteLoadAlt
+; Variant of entry 0, uses Call_004_40cd instead of $0D91.
+; ---------------------------------------------------------------------------
+NPCSpriteLoadAlt:
 label4016:
     ld de, $401d
     call Call_004_40cd
@@ -34,6 +86,14 @@ label4016:
     db $08, $11, $00, $80
 
 
+; ---------------------------------------------------------------------------
+; Entry 2: NPCInteractDispatch
+; Routes NPC interactions based on $FFC7 (NPC interaction index).
+; $FFC7 < $10:  local handler via Call_004_4126 + sprite table
+; $FFC7 $10-$8F: bank $10 entry 0 (rst $10 → $10:fn0)
+; $FFC7 >= $90:  bank $11 entry 0 (rst $10 → $11:fn0)
+; ---------------------------------------------------------------------------
+NPCInteractDispatch:
 label4081:
     ldh a, [$c7]        ; load(h) the contents of ffc7 into a
     cp $90              ; compare $90 to a (ffc7)
@@ -63,6 +123,11 @@ jr_004_409e:
     rst $10            ; call bank ff10 func 4005
     ret
 
+; ---------------------------------------------------------------------------
+; Entry 3: NPCInteractDispatchB
+; Same routing as entry 2 but uses Call_004_40cd instead of $0D91.
+; ---------------------------------------------------------------------------
+NPCInteractDispatchB:
 label40a7:
     ldh a, [$c7]       ; load(h) the contents of ffc7 into a
     cp $90             ; compare $90 to a (ffc7)
@@ -189,6 +254,24 @@ data_4157:
     db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
 
 
+; ---------------------------------------------------------------------------
+; Entry 4: NPCFrameUpdate — Per-Frame NPC Interaction State Machine
+; ---------------------------------------------------------------------------
+; Called every frame by the game loop. Manages the script state machine:
+;
+; Flow:
+; 1. Guard checks: wGameState bits, $C850 busy, $C825 UI busy
+; 2. Check $D8D7 bit 0 (script active):
+;    - If clear → return (no script running)
+;    - If set, check bit 1 (text queued):
+;      * If text queued → return (wait for text display to finish)
+; 3. Handle pending operations:
+;    - Bit 4/6: NPC position updates via Call_004_43ec
+;    - Bit 2: Delay countdown ($D8DB)
+;    - Bit 3: NPC walk-toward via Jump_004_41e0 → Jump_004_42cd
+; 4. If none pending: call Call_004_55f5 to execute next script command
+; ---------------------------------------------------------------------------
+NPCFrameUpdate:
 label4167:
     ld a, [wGameState]
     res 0, a
@@ -215,41 +298,41 @@ jr_004_417f:
     ret nz
 
 jr_004_4189:
-    ld a, [$c850]
+    ld a, [$c850]            ; System busy flag
     or a
-    ret nz
+    ret nz                   ; Return if system busy
 
-    ld a, [$c825]
+    ld a, [$c825]            ; UI interaction busy flag
     or a
-    ret nz
+    ret nz                   ; Return if UI busy
 
-    ld a, [$d8d7]
+    ld a, [$d8d7]            ; Script state flags
     bit 0, a
-    jp z, Jump_004_41c7
+    jp z, Jump_004_41c7      ; Bit 0 clear = no script running → return
 
     bit 1, a
-    jp nz, Jump_004_41c7
+    jp nz, Jump_004_41c7     ; Bit 1 set = text queued, wait for display → return
 
     ld a, [$d8d7]
-    bit 4, a
+    bit 4, a                 ; Bit 4: NPC position update pending (group A)
     call nz, Call_004_43ec
     ld a, [$d8d7]
-    bit 6, a
+    bit 6, a                 ; Bit 6: NPC position update pending (group B)
     call nz, Call_004_43ec
     ld a, [$d8d7]
-    bit 2, a
+    bit 2, a                 ; Bit 2: delay/wait active
     jr nz, jr_004_41c8
 
-    bit 3, a
+    bit 3, a                 ; Bit 3: NPC walk-toward pending
     jp nz, Jump_004_41e0
 
 jr_004_41bc:
-    ld a, [$d8d8]
-    bit 2, a
+    ld a, [$d8d8]            ; Secondary state flags
+    bit 2, a                 ; Bit 2: secondary delay active
     jp nz, Jump_004_43db
 
 jr_004_41c4:
-    call Call_004_55f5
+    call Call_004_55f5       ; → ScriptExecContinue: run next script command
 
 Jump_004_41c7:
     ret
@@ -272,17 +355,28 @@ jr_004_41dd:
     jp Jump_004_41c7
 
 
+; ---------------------------------------------------------------------------
+; NPCWalkToward — Handle NPC walking toward player
+; ---------------------------------------------------------------------------
+; When bit 3 of $D8D7 is set, an NPC is walking toward the player.
+; $D8DC holds the NPC number. If non-zero, goes to NPCIndexLookup.
+; Otherwise handles the step-by-step movement using $D8DD/$D8DE (X delta)
+; and $D8DF/$D8E0 (Y delta), updating NPC position via HRAM $FF90-$FF96.
+;
+; Movement direction is written to $FF8E:
+;   $00 = down, $01 = up, $02 = right, $03 = left
+; ---------------------------------------------------------------------------
 Jump_004_41e0:
-    ld a, [$d8dc]
+    ld a, [$d8dc]            ; NPC number for pending interaction
     or a
-    jp nz, Jump_004_42cd
+    jp nz, Jump_004_42cd     ; If NPC specified → NPCIndexLookup
 
     ld hl, $ff90
-    set 0, [hl]
-    ld a, [$c8a4]
+    set 0, [hl]              ; Mark NPC as moving
+    ld a, [$c8a4]            ; Interaction type
     and $03
     cp $01
-    jp z, Jump_004_43d8
+    jp z, Jump_004_43d8      ; Type 1 → skip movement
 
     ld a, [$d8dd]
     ld l, a
@@ -403,32 +497,44 @@ jr_004_42c0:
     jp Jump_004_43d8
 
 
+; ---------------------------------------------------------------------------
+; NPCIndexLookup — Calculate NPC RAM buffer address from NPC number
+; ---------------------------------------------------------------------------
+; Input:  A = NPC number (1-based)
+; Output: HL = $D7D2 + (A-1) × 32 (NPC RAM buffer start)
+;         $FFD5/$FFD6 = HL (cached NPC pointer)
+;         Sets bit 0 at HL+5 (interacting flag)
+;
+; Then checks interaction type ($C8A4 AND 3):
+;   == 1: just set flags and return
+;   != 1: proceed to NPC movement/walk-toward logic using $D8DD/$D8DE
+; ---------------------------------------------------------------------------
 Jump_004_42cd:
-    dec a
-    swap a
-    add a
-    ld hl, $d7d2
+    dec a                    ; NPC number 1-based → 0-based
+    swap a                   ; × 16
+    add a                    ; × 32 (total: 32 bytes per NPC)
+    ld hl, $d7d2             ; NPC RAM buffer base
     add l
     ld l, a
     ld a, $00
     adc h
-    ld h, a
+    ld h, a                  ; HL = $D7D2 + (npc-1)*32
     ld a, l
-    ldh [$d5], a
+    ldh [$d5], a             ; Cache NPC pointer low → $FFD5
     ld a, h
-    ldh [$d6], a
+    ldh [$d6], a             ; Cache NPC pointer high → $FFD6
     ld a, l
     add $05
     ld l, a
     ld a, h
     adc $00
-    ld h, a
-    set 0, [hl]
-    res 6, [hl]
-    ld a, [$c8a4]
+    ld h, a                  ; HL = NPC buffer + 5 (status byte)
+    set 0, [hl]              ; Set bit 0: NPC is being interacted with
+    res 6, [hl]              ; Clear bit 6
+    ld a, [$c8a4]            ; Interaction type
     and $03
-    cp $01
-    jp z, Jump_004_43d8
+    cp $01                   ; Type 1 = simple talk (no walk-toward)
+    jp z, Jump_004_43d8      ; → return via main exit
 
     ld a, [$d8dd]
     ld e, a
@@ -576,20 +682,25 @@ jr_004_43b5:
     ld [hl], d
     jr jr_004_43d8
 
+; Movement complete: clear NPC interaction flags
 jr_004_43c7:
-    ldh a, [$d5]
+    ldh a, [$d5]             ; Cached NPC pointer low
     add $05
     ld l, a
-    ldh a, [$d6]
+    ldh a, [$d6]             ; Cached NPC pointer high
     adc $00
-    ld h, a
-    res 0, [hl]
+    ld h, a                  ; HL = NPC buffer + 5 (status byte)
+    res 0, [hl]              ; Clear interacting flag
     ld hl, $d8d7
-    res 3, [hl]
+    res 3, [hl]              ; Clear walk-toward pending flag
 
+; ---------------------------------------------------------------------------
+; ScriptReturn — Main exit point for entry 4
+; All paths through entry 4 converge here via JP/JR.
+; ---------------------------------------------------------------------------
 Jump_004_43d8:
 jr_004_43d8:
-    jp Jump_004_41c7
+    jp Jump_004_41c7         ; Return to caller
 
 
 Jump_004_43db:
@@ -605,6 +716,14 @@ jr_004_43e9:
     jp Jump_004_41c7
 
 
+; ---------------------------------------------------------------------------
+; NPCPositionUpdateAll — Check and update positions for up to 8 NPCs
+; ---------------------------------------------------------------------------
+; Iterates through 8 NPC movement buffers at $D8E9, $D8F1, $D8F9, ...
+; (spaced 8 bytes apart). Accumulates OR of all movement states.
+; If all NPCs have finished moving (result is zero), clears bits 4 and 6
+; of $D8D7 (position update pending flags).
+; ---------------------------------------------------------------------------
 Call_004_43ec:
     ld a, [$d8e9]
     push af
@@ -800,6 +919,16 @@ jr_004_4524:
     ld a, $02
     ldh [$8e], a
 
+; ---------------------------------------------------------------------------
+; NPCMovementSetup — Convert direction to movement rendering parameters
+; ---------------------------------------------------------------------------
+; Reads $FF8E (direction: 0=down, 1=up, 2=right, 3=left)
+; Sets $FF8D (sprite offset) and $FF8F (movement axis):
+;   Dir 0 (down):  $8D=$00, $8F=$00
+;   Dir 1 (up):    $8D=$20, $8F=$01
+;   Dir 2 (right): $8D=$00, $8F=$02
+;   Dir 3 (left):  $8D=$00, $8F=$01
+; ---------------------------------------------------------------------------
 Call_004_454b:
 Jump_004_454b:
 jr_004_454b:
@@ -2165,43 +2294,188 @@ Jump_004_55a9:
     db $00, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00, $03, $00, $04, $00
     db $80, $80
 
+; ===========================================================================
+; Entry 5: ScriptInit — Initialize and begin NPC script execution
+; ===========================================================================
+; Resets the script counter ($D8D5/$D8D6) to 0, then falls through to the
+; main script execution loop at ScriptExecNext.
+; ---------------------------------------------------------------------------
+ScriptInit:
 label55ec:
     xor a
-    ld [$d8d5], a
-    ld [$d8d6], a
-    jr jr_004_5605
+    ld [$d8d5], a            ; Reset script counter low
+    ld [$d8d6], a            ; Reset script counter high
+    jr jr_004_5605           ; → ScriptExecNext
 
+; ---------------------------------------------------------------------------
+; ScriptExecContinue — Advance counter and execute next script command
+; ---------------------------------------------------------------------------
+; Called from NPCFrameUpdate (entry 4) each frame when script is running
+; and no text/delay is pending. Increments the event counter then runs
+; the next command.
+; ---------------------------------------------------------------------------
 Call_004_55f5:
 Jump_004_55f5:
     ld a, [$d8d5]
     add $01
-    ld [$d8d5], a
+    ld [$d8d5], a            ; Increment script counter low
     ld a, [$d8d6]
     adc $00
-    ld [$d8d6], a
+    ld [$d8d6], a            ; Increment script counter high (16-bit inc)
 
+; ---------------------------------------------------------------------------
+; ScriptExecNext — Main script dispatch loop
+; ---------------------------------------------------------------------------
+; Calls ScriptDataRead (Call_004_71ef) to fetch next BC pair from the
+; script data bank ($0C/$0D/$0E/$0F based on map type).
+;
+; Dispatch logic:
+;   BC == $FFFF → Script ended. Clear $D8D7, return.
+;   B != $FF   → BC is a 16-bit text ID. Queue it via TextIDQueue ($56EC).
+;   B == $FF   → C is a script opcode (0-99). Dispatch via rst $00 to
+;                the 100-entry ScriptCommandTable.
+; ---------------------------------------------------------------------------
 Jump_004_5605:
 jr_004_5605:
-    call Call_004_71ef
+    call Call_004_71ef       ; → ScriptDataRead: fetch next BC from script bank
     ld a, b
     and c
-    cp $ff
+    cp $ff                   ; Check if BC == $FFFF
     jr nz, jr_004_5613
 
     xor a
-    ld [$d8d7], a
+    ld [$d8d7], a            ; Script ended: clear all state flags
     ret
 
 
 jr_004_5613:
     ld hl, $d8d7
-    set 0, [hl]
+    set 0, [hl]              ; Mark script as active (bit 0)
     ld a, b
     cp $ff
-    jp nz, $56ec
+    jp nz, $56ec             ; B != $FF → TextIDQueue (BC = text ID)
 
+    ; B == $FF: C is a script command opcode
     ld a, c
-    rst $00
+    rst $00                  ; Dispatch via rst $00 jump table
+
+; ===========================================================================
+; ScriptCommandTable — 100 script opcodes ($00-$63, indexed by C when B=$FF)
+; ===========================================================================
+; Each entry is a 2-byte pointer to a handler function.
+; Commands handle: conditional branches, variable reads/writes, NPC movement,
+; sound effects, screen effects, event triggers, menu operations, etc.
+;
+; SCRIPT COMMAND CATALOG (refined via code analysis):
+; Cmd  Label       Cat          Description
+; ---  ----------  -----------  -----------
+; $00  $5711       Flow         ConditionalBranchNZ: branch if flag clear
+; $01  $5740       Flow         ConditionalBranchZ: branch if flag set
+; $02  $576F       Event        ClearEventFlag: clear bit in $D99B+ bitfield
+; $03  $5788       Event        SetEventFlag: set bit in $D99B+ bitfield
+; $04  $57A1       Screen       TriggerScreenEffect: set $C8EF/$C8F0/$C8F1
+; $05  $57EB       Battle       TriggerBattle: set enemy in $DA03, start fight
+; $06  $5819       State        IncrementC915: inc $C915 dialogue counter
+; $07  $5824       State        InitDialogMode: set wGameState bit 0, init $C917
+; $08  $5842       Flow         NOP: no operation
+; $09  $5843       Timer        SetDelay: set frame countdown in $D8DB
+; $0A  $5860       NPC          SetNPCMoveX: set NPC + X delta, trigger walk
+; $0B  $5898       NPC          SetNPCMoveY: set NPC + Y delta, trigger walk
+; $0C  $58D0       NPC          SetNPCFacing: set facing via NPC buffer (81 lines)
+; $0D  $5968       NPC          WriteNPCBuffer: write byte to NPC buffer (52 lines)
+; $0E  $59D2       Flow         BranchByScreen: branch based on $C925 screen index
+; $0F  $5A02       Map          MapTransitionFull: write $C96D-$C96F, set $C88F
+; $10  $5A6F       NPC          NPCMoveToPos: move NPC to position via $D7EA (47 lines)
+; $11  $5AC5       NPC          NPCMoveToPos2: move NPC to position via $D7EC
+; $12  $5B1B       Flow         SkipScriptData: increment counter 2x (skip 2 params)
+; $13  $5B49       Flow         ReadScriptParams: read 2 params, store to RAM
+; $14  $5B79       Flow         BranchAlways: unconditional branch via $7212
+; $15  $5B8F       Flow         ConditionalBranch3: complex condition + branch
+; $16  $5BD4       State        ReturnFromScript: pop and continue
+; $17  $5BDB       Map          GateSetup: configure gate tileset ($9380/$9600)
+; $18  $5C14       Monster      MonsterPartyOp: party monster operation (bank $01/$14)
+; $19  $5C6D       Timer        SetDelayAndFlags: delay + set $D8D7 flags
+; $1A  $5C86       NPC          NPCMoveSequence: multi-step NPC movement ($D8E9)
+; $1B  $5CCF       NPC          NPCMoveSequence2: movement variant with $D8E9
+; $1C  $5D1A       NPC          NPCMoveCheck: check NPC movement completion
+; $1D  $5D4B       NPC          LockMovement: set $D8D7 bit 5, suppress facing
+; $1E  $5D53       NPC          UnlockMovement: clear $D8D7 bit 5
+; $1F  $5D5B       Event        LargeEventHandler: 157-line event dispatcher
+;                                Accesses $D7CA-$D7CE, calls bank $00/$01
+; $20  $5E5E       Battle       SetBattleMode: set $DA09, $C905, $C8EB
+; $21  $5E6D       Flow         SkipScriptData2: read 1 param, discard
+; $22  $5E87       Script       SetD8D7Bit3: set NPC walk-toward flag
+; $23  $5E8F       Monster      MonsterCheck: check monster in $CAC1 storage (62 lines)
+; $24  $5F13       Data         CallScriptBank_E1: call bank $0C/$0D/$0E entry 1
+; $25  $5F36       Monster      CheckPartyMonster: check party via bank $01
+; $26  $5F52       State        SetC88F: set movement suppression flag
+; $27  $5F5C       Monster      MonsterPartyOp2: bank $01 entry 3/9
+; $28  $5F67       Monster      CheckStorageFull: branch if 20 monsters stored
+; $29  $5F9A       Monster      AddMonster: add to storage by enemy stats ID
+; $2A  $5FDB       Inventory    GiveItem: add item to first empty slot
+; $2B  $6002       Monster      CheckMonsterLevel: check levels in storage (62 lines)
+; $2C  $6064       Inventory    CheckInvFull: branch if inventory full
+; $2D  $6093       Event        MassiveEventHandler: 263-line event processor
+;                                Accesses $C600-$C800, bank $03/$01
+; $2E  $61E0       Event        CheckStepVariable: read $D9DF/$D9E0
+; $2F  $623A       Flow         ReadAndDiscard: read 2 params, continue
+; $30  $6253       Monster      CheckMonsterSpecies: check $CAC2 species data
+; $31  $62AB       Monster      CheckPartyLevel: check $CA94 party level
+; $32  $62DD       Monster      CheckMonsterSpecies2: check $CACA species
+; $33  $6332       Flow         SkipScriptData3: skip params
+; $34  $634F       Monster      CheckMonsterSpecies3: check $CAEA species (50 lines)
+; $35  $63BB       Monster      ResetPartyOrder: bank $01 entry 3/9
+; $36  $63C6       Battle       SetupBossEncounter: set $DA02-$DA04, $CAB4
+; $37  $6401       Event        CheckStoryVariable: check $D9CF region
+; $38  $643F       Monster      CheckPartyMonster2: check $CAEA data (48 lines)
+; $39  $64A7       Flow         ReadAndContinue: read params, continue
+; $3A  $64C2       Map          GateTransition: 113-line gate transition handler
+;                                Accesses $C8F2-$C8FF, bank $00/$16
+; $3B  $65AB       Map          MapTransitionFade: transition with $C96D + fade
+; $3C  $6618       Script       SetSecondaryDelay: set $D8D8 bit 2
+; $3D  $6620       Script       ClearSecondaryDelay: clear $D8D8 bit 2
+; $3E  $6628       State        ToggleC88E: toggle map rendering flag
+; $3F  $6632       Monster      CheckSpeciesInParty: check $CACA for species
+; $40  $6646       Monster      CheckMonsterWithBGM: monster check + $C8B6 BGM
+; $41  $669D       Sound        SetBGM: save current, play new BGM
+; $42  $66BD       Map          SaveMapPosition: save $C8F7-$C8FF for return
+; $43  $6723       Map          RestoreMapPosition: restore and transition back
+; $44  $676F       NPC          SetNPCPosAndFace: set position+facing via buffer
+; $45  $67B1       Monster      FullMonsterOp: bank $01 entries 3/5/9
+; $46  $67FD       Event        CheckDungeonFlags: check $DDB4/$DDCE/$DDE8
+; $47  $6822       NPC          NPCBufferCheck: check NPC buffer $D7D8 area
+; $48  $684D       Flow         ReadAndContinue2: read params, continue
+; $49  $6866       Flow         ReadAndContinue3: read params, continue
+; $4A  $687F       Flow         ReadAndContinue4: read params, continue
+; $4B  $6898       Sound        ReadSavedBGM: read $C8B6 (prev BGM)
+; $4C  $68A1       Sound        RestoreBGM: restore BGM from $C8B6
+; $4D  $68BA       Timer        SetLongDelay: extended delay via $D8D8
+; $4E  $68D7       Map          SaveGateInfo: save $C8FB-$C8FF gate state
+; $4F  $690B       Map          RestoreFromGate: restore gate state, transition
+; $50  $6957       NPC          SetNPCField: write to $D7F8 NPC field
+; $51  $696C       Event        CheckAndBranch: check $CA94, branch (42 lines)
+; $52  $69A9       Battle       BossSetup: 106-line boss battle configuration
+;                                Accesses $CA8E-$CB0C monster stats
+; $53  $6A61       NPC          NPCComplexOp: 74-line NPC buffer manipulation
+; $54  $6ACE       State        CheckC180: check $C180 game flag
+; $55  $6AFA       Monster      MonsterGive: give monster via bank $03
+; $56  $6B3A       State        CheckC180_2: check $C180 variant
+; $57  $6B73       State        CheckC180_3: check $C180 variant
+; $58  $6BA0       Map          MapTransitionSpec: special map transition ($C939)
+; $59  $6BDF       Event        HugeNPCHandler: 184-line NPC event processor
+;                                Accesses $CAC0-$CAC2, bank $00/$14
+; $5A  $6D56       Battle       TriggerBattle3: battle with $DA02/$DA03
+; $5B  $6D84       Battle       SetBattleFlags: set $C905/$DA09
+; $5C  $6D93       Battle       HugeBattleSetup: 249-line battle configuration
+;                                Accesses $CA8E-$CB0C, bank $02/$0D/$14
+; $5D  $6F64       Event        CheckStoryRegion: check $D9D0 region var
+; $5E  $6F89       State        CheckLabyrinth: check $D951/$C0D8
+; $5F  $6F9B       Monster      CheckMultiSpecies: check party species (44 lines)
+; $60  $6FFB       Monster      CheckInventoryItem: check $CA40/$CB23
+; $61  $7038       Data         CallScriptBank_E2: call bank $0C/$0D/$0E entry 2
+; $62  $705B       Screen       VRAMTileOp: VRAM operation at $9800
+; $63  $707F       Monster      MonsterSpecialOp: bank $01 entry 3 (62 lines)
+; ===========================================================================
 
     dw label4_5711
     dw label4_5740
@@ -2307,30 +2581,53 @@ jr_004_5613:
     dw label4_71d2
 
 
+; ---------------------------------------------------------------------------
+; TextIDQueue — Store text ID from script and flag for display
+; ---------------------------------------------------------------------------
+; Input:  BC = 16-bit text ID (C=low, B=high)
+; Effect: Sets $D8D7 bit 1 (text queued), stores ID to $D8D9/$D8DA
+; Called when script emits a text command (B != $FF in the script stream).
+; Entry 6 (TextQueueCheck) will pick this up on the next frame.
+; ---------------------------------------------------------------------------
 LAB_rom4__56ec:
     ld hl, $d8d7
-    set 1, [hl]
+    set 1, [hl]              ; Flag: text ID queued for display
     ld a, c
-    ld [$d8d9], a
+    ld [$d8d9], a            ; Store text ID low byte
     ld a, b
-    ld [$d8da], a
+    ld [$d8da], a            ; Store text ID high byte
     ret
 
+; ===========================================================================
+; Entry 6: TextQueueCheck — Check for queued text and dispatch to ROM0
+; ===========================================================================
+; Called per-frame. If bit 1 of $D8D7 is set (text queued by script),
+; loads the text ID from $D8D9/$D8DA into HL and calls ROM0 $0AD9
+; (TextDispatchCascade) which routes to the appropriate script handler
+; bank ($42-$4E) based on the text ID range.
+; ---------------------------------------------------------------------------
+TextQueueCheck:
 label56fa:
     ld a, [$d8d7]
-    bit 1, a
-    ret z
+    bit 1, a                 ; Text queued?
+    ret z                    ; No → return
 
 jr_004_5700:
     ld hl, $d8d7
-    res 1, [hl]
+    res 1, [hl]              ; Clear text-queued flag
     ld a, [$d8d9]
-    ld l, a
+    ld l, a                  ; Text ID low → L
     ld a, [$d8da]
-    ld h, a
-    call Call_000_0ad9
+    ld h, a                  ; Text ID high → H
+    call Call_000_0ad9       ; → ROM0 TextDispatchCascade
     ret
 
+; ---------------------------------------------------------------------------
+; Script Command $00: ConditionalBranchNZ
+; Reads next BC (condition value), calls Call_000_26ae (RAM compare?).
+; If NZ (condition true): continue to next command.
+; If Z (condition false): read another BC and branch via ScriptBranch.
+; ---------------------------------------------------------------------------
 label4_5711:
     ld a, [$d8d5]
     add $01
@@ -2338,19 +2635,23 @@ label4_5711:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call Call_004_71ef       ; Read condition parameter
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_000_26ae
-    jp nz, Jump_004_55f5
+    call Call_000_26ae       ; Evaluate condition
+    jp nz, Jump_004_55f5     ; True → continue script
 
-    call Call_004_71ef
-    jp Jump_004_7212
+    call Call_004_71ef       ; Read branch target
+    jp Jump_004_7212         ; → ScriptBranch (jump to target)
 
+; ---------------------------------------------------------------------------
+; Script Command $01: ConditionalBranchZ
+; Same as $00 but inverted: branches if condition IS true (Z flag).
+; ---------------------------------------------------------------------------
 label4_5740:
     ld a, [$d8d5]
     add $01
@@ -2371,6 +2672,11 @@ label4_5740:
     call Call_004_71ef
     jp Jump_004_7212
 
+; ---------------------------------------------------------------------------
+; Script Command $02: ClearEventFlag
+; Reads event flag index from script, clears that bit in the $D99B
+; event bitfield via Call_000_26a6. Used to reset story state.
+; ---------------------------------------------------------------------------
 label4_576f:
     ld a, [$d8d5]
     add $01
@@ -2378,10 +2684,15 @@ label4_576f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
-    call Call_000_26a6
-    jp Jump_004_55f5
+    call Call_004_71ef       ; Read event flag index
+    call Call_000_26a6       ; Clear event flag
+    jp Jump_004_55f5         ; Continue script
 
+; ---------------------------------------------------------------------------
+; Script Command $03: SetEventFlag
+; Reads event flag index from script, sets that bit in the $D99B
+; event bitfield via Call_000_26a0. Used to mark story progress.
+; ---------------------------------------------------------------------------
 label4_5788:
     ld a, [$d8d5]
     add $01
@@ -2393,6 +2704,12 @@ label4_5788:
     call Call_000_26a0
     jp Jump_004_55f5
 
+; ---------------------------------------------------------------------------
+; Script Command $04: TriggerScreenEffect
+; Reads two BC pairs: first sets $C8EF (effect type), second sets
+; $C8F0/$C8F1 (effect parameters). Sets wGameState bit 4.
+; Plays sound effect $59 unless effect type is $09 or $0A.
+; ---------------------------------------------------------------------------
 label4_57a1:
     ld a, [$d8d5]
     add $01
@@ -2430,6 +2747,11 @@ label4_57a1:
     ret
 
 
+; ---------------------------------------------------------------------------
+; Script Command $05: TriggerBattle
+; Reads enemy stats ID from script, writes to $DA03/$DA04 (battle enemy),
+; sets wGameState bit 6 (battle pending), sets $DA09=1 (battle trigger).
+; ---------------------------------------------------------------------------
 label4_57eb:
     ld a, [$d8d5]
     add $01
@@ -2437,19 +2759,19 @@ label4_57eb:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call Call_004_71ef       ; Read enemy stats ID
     ld a, c
-    ld [$da03], a
+    ld [$da03], a            ; Enemy 1 stats ID low
     ld a, b
-    ld [$da04], a
+    ld [$da04], a            ; Enemy 1 stats ID high
     xor a
-    ld [$da02], a
+    ld [$da02], a            ; Clear battle type
     ld hl, wGameState
-    set 6, [hl]
+    set 6, [hl]              ; Set battle pending flag
     xor a
     ld [$c905], a
     ld a, $01
-    ld [$da09], a
+    ld [$da09], a            ; Trigger battle
     ret
 
 
@@ -2479,9 +2801,18 @@ label4_5824:
     ld [$c916], a
     ret
 
+; ---------------------------------------------------------------------------
+; Script Command $08: NOP — No operation, just returns
+; ---------------------------------------------------------------------------
 label4_5842:
     ret
 
+; ---------------------------------------------------------------------------
+; Script Command $09: SetDelay
+; Reads delay value from script, stores to $D8DB (frame counter).
+; Sets $D8D7 bit 2 (delay active). Entry 4 will decrement each frame
+; and resume script execution when counter reaches 0.
+; ---------------------------------------------------------------------------
 label4_5843:
     ld a, [$d8d5]
     add $01
@@ -2489,13 +2820,20 @@ label4_5843:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call Call_004_71ef       ; Read delay frame count
     ld a, c
-    ld [$d8db], a
+    ld [$d8db], a            ; Set delay counter
     ld hl, $d8d7
-    set 2, [hl]
+    set 2, [hl]              ; Flag: delay active
     ret
 
+; ---------------------------------------------------------------------------
+; Script Command $0A: SetNPCMoveX
+; Reads NPC number from script → $D8DC
+; Reads X movement delta (signed 16-bit) → $D8DD/$D8DE
+; Sets $D8D7 bit 3 (NPC walk-toward pending).
+; Entry 4 will animate the NPC moving step-by-step.
+; ---------------------------------------------------------------------------
 label4_5860:
     ld a, [$d8d5]
     add $01
@@ -2503,24 +2841,29 @@ label4_5860:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call Call_004_71ef       ; Read NPC number
     ld a, c
-    ld [$d8dc], a
+    ld [$d8dc], a            ; Store NPC number
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call Call_004_71ef       ; Read X movement delta
     ld a, c
-    ld [$d8dd], a
+    ld [$d8dd], a            ; X delta low (signed)
     ld a, b
-    ld [$d8de], a
+    ld [$d8de], a            ; X delta high (signed, bit 7 = negative)
     ld hl, $d8d7
-    set 3, [hl]
+    set 3, [hl]              ; Flag: NPC walk-toward pending
     ret
 
+; ---------------------------------------------------------------------------
+; Script Command $0B: SetNPCMoveY
+; Same as $0A but for Y axis. Reads NPC number → $D8DC,
+; Y movement delta → $D8DF/$D8E0. Sets bit 3.
+; ---------------------------------------------------------------------------
 label4_5898:
     ld a, [$d8d5]
     add $01
@@ -2695,6 +3038,12 @@ jr_004_59b9:
     ld [hl], c
     jp Jump_004_55f5
 
+; ---------------------------------------------------------------------------
+; Script Command $0E: SetMapTransition
+; Reads destination map_type and gate_flag from script,
+; writes directly to $C96D/$C96E to trigger a room transition.
+; This is how cutscenes teleport the player (e.g., after story events).
+; ---------------------------------------------------------------------------
 label4_59d2:
     ld a, [$d8d5]
     add $01
@@ -3195,15 +3544,25 @@ label4_5d1a:
     set 4, [hl]
     jp Jump_004_55f5
 
+; ---------------------------------------------------------------------------
+; Script Command $1D: LockMovement
+; Sets bit 5 of $D8D7 which suppresses NPC facing direction updates
+; during walk-toward sequences. Used during cutscenes to prevent NPCs
+; from turning to face the player while being scripted to move.
+; ---------------------------------------------------------------------------
 label4_5d4b:
     ld hl, $d8d7
-    set 5, [hl]
-    jp Jump_004_55f5
+    set 5, [hl]              ; Lock NPC facing updates
+    jp Jump_004_55f5          ; Continue script
 
+; ---------------------------------------------------------------------------
+; Script Command $1E: UnlockMovement
+; Clears bit 5 of $D8D7, re-enabling normal NPC facing behavior.
+; ---------------------------------------------------------------------------
 label4_5d53:
     ld hl, $d8d7
-    res 5, [hl]
-    jp Jump_004_55f5
+    res 5, [hl]              ; Unlock NPC facing updates
+    jp Jump_004_55f5          ; Continue script
 
 label4_5d5b:
     ld a, [$d9ce]
@@ -3539,6 +3898,12 @@ label4_5f5c:
     rst $10
     jp Jump_004_55f5
 
+; ---------------------------------------------------------------------------
+; Script Command $28: CheckMonsterStorageFull
+; Iterates 20 monster slots ($CAC1, stride $95=149 bytes).
+; Counts occupied slots. If count >= 20 (all full), reads branch target
+; and jumps. Otherwise continues script execution.
+; ---------------------------------------------------------------------------
 label4_5f67:
     ld a, [$d8d5]
     add $01
@@ -3573,6 +3938,12 @@ jr_004_5f8e:
     call Call_004_71ef
     jp Jump_004_7212
 
+; ---------------------------------------------------------------------------
+; Script Command $29: AddMonsterToStorage
+; Reads enemy_stats_id from script → $DA12/$DA13.
+; Finds first empty monster slot in $CAC1 array (20 slots, stride $95).
+; Loads enemy stats and copies to the empty slot to add the monster.
+; ---------------------------------------------------------------------------
 label4_5f9a:
     ld a, [$d8d5]
     add $01
@@ -3617,6 +3988,12 @@ jr_004_5fce:
 jr_004_5fda:
     ret
 
+; ---------------------------------------------------------------------------
+; Script Command $2A: GiveItem
+; Reads item ID from script. Scans wInventory (20 slots) for first empty
+; slot ($00 or $FF). If found, places item there. If full, returns
+; without giving (script should check with CheckInvFull first).
+; ---------------------------------------------------------------------------
 label4_5fdb:
     ld a, [$d8d5]
     add $01
@@ -4684,6 +5061,11 @@ jr_004_668d:
     jp Jump_004_55f5
 
 
+; ---------------------------------------------------------------------------
+; Script Command $41: SetBGM
+; Saves current BGM to $C8B6 (for later restore), reads new BGM offset
+; from script, calls SetBGM to change the music.
+; ---------------------------------------------------------------------------
 label4_669d:
     ld a, [$d8d5]
     add $01
@@ -6470,13 +6852,26 @@ label4_71d2:
     ret
 
 
+; ===========================================================================
+; ScriptDataRead — Fetch next script command from per-map-type bank
+; ===========================================================================
+; Reads the next BC pair from the script data bank. The bank is selected
+; based on $D8D3 (copy of current map type):
+;   $D8D3 < $06  → bank $0C entry 0 (Castle, GreatTree, Bazaar, etc.)
+;   $D8D3 < $20  → bank $0D entry 0 (gate rooms, special rooms)
+;   $D8D3 < $40  → bank $0E entry 0 (gate entrance rooms, boss rooms)
+;   $D8D3 >= $40 → bank $0F entry 0 (labyrinth, arena, post-game)
+;
+; Each script bank's entry 0 uses $D8D5/$D8D6 (script counter) to index
+; into its script data and returns the next command in BC.
+; ---------------------------------------------------------------------------
 Call_004_71ef:
-    ld a, [$d8d3]       ; load the contents of d8d3 into a
-    cp $06              ; compare $06 to a
+    ld a, [$d8d3]            ; Map type copy
+    cp $06
     jr nc, jr_004_71fb
 
-    ld hl, $0c00        ; load 0c00 (rom bank c ram bank 0) into hl
-    rst $10             ; push current address then go to address 10 bank 0
+    ld hl, $0c00             ; Bank $0C entry 0
+    rst $10
     ret
 
 
@@ -6484,7 +6879,7 @@ jr_004_71fb:
     cp $20
     jr nc, jr_004_7204
 
-    ld hl, $0d00
+    ld hl, $0d00             ; Bank $0D entry 0
     rst $10
 
 jr_004_7203:
@@ -6495,42 +6890,50 @@ jr_004_7204:
     cp $40
     jr nc, jr_004_720d
 
-    ld hl, $0e00
+    ld hl, $0e00             ; Bank $0E entry 0
     rst $10
     ret
 
 
 jr_004_720d:
-    ld hl, $0f00
+    ld hl, $0f00             ; Bank $0F entry 0
     rst $10
     ret
 
 
+; ---------------------------------------------------------------------------
+; ScriptBranch — Relative branch within script data
+; ---------------------------------------------------------------------------
+; Computes a signed offset from BC relative to HL (some reference point),
+; divides by 2 (preserving sign via bit 7), adds to script counter
+; ($D8D5/$D8D6), then loops back to ScriptExecNext.
+; Used by conditional branch commands to skip or rewind script instructions.
+; ---------------------------------------------------------------------------
 Jump_004_7212:
     ld a, c
     sub l
     ld c, a
     ld a, b
     sbc h
-    ld b, a
+    ld b, a                  ; BC = BC - HL (signed offset)
     ld a, b
     push af
     srl b
-    rr c
+    rr c                     ; BC >>= 1 (divide by 2)
     pop af
     and $80
     or b
-    ld b, a
+    ld b, a                  ; Restore sign bit
     ld a, [$d8d5]
     ld l, a
     ld a, [$d8d6]
-    ld h, a
-    add hl, bc
+    ld h, a                  ; HL = current script counter
+    add hl, bc               ; HL += signed offset
     ld a, l
     ld [$d8d5], a
     ld a, h
-    ld [$d8d6], a
-    jp Jump_004_5605
+    ld [$d8d6], a            ; Update script counter
+    jp Jump_004_5605          ; → ScriptExecNext (continue execution)
 
 
     ld h, c
