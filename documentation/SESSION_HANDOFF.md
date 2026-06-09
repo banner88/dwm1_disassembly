@@ -35,7 +35,15 @@ bank_016 (breeding), bank_054 (join). All build byte-identical.
 ### 9. dwm Package + Tool Updates (randomize.py, dump_monsters.py, test_roundtrip.py)
 
 ## Build Verification
-MD5: `1ca6579359f21d8e27b446f865bf6b83` (byte-identical)
+```bash
+cd disassembly
+rm -f game.o game.gbc game.sym game.map
+make
+md5sum game.gbc
+# MUST output: 1ca6579359f21d8e27b446f865bf6b83
+```
+**NEVER run `make clean`** — it deletes committed `.2bpp` graphics files that
+cannot be regenerated with matching bytes. Only delete `game.o game.gbc game.sym game.map`.
 
 ## Remaining Unknowns (Medium Priority)
 - **byte_2A** in monster info: labeled "tier/rank", not verified

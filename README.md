@@ -13,13 +13,17 @@ A work-in-progress annotated disassembly of Dragon Warrior Monsters (1998, Game 
 git clone https://github.com/banner88/dwm1_disassembly.git
 cd dwm1_disassembly
 
-# Build rgbds 0.6.1
+# Build rgbds 0.6.1 — ALL tools (rgbasm, rgblink, rgbfix, rgbgfx)
 git clone https://github.com/gbdev/rgbds.git /tmp/rgbds
-cd /tmp/rgbds && git checkout v0.6.1 && make && sudo cp rgbasm rgblink rgbfix /usr/local/bin/
+cd /tmp/rgbds && git checkout v0.6.1
+sudo apt-get install -y bison
+make && sudo cp rgbasm rgblink rgbfix rgbgfx /usr/local/bin/
 cd -
 
 # Build ROM
-cd disassembly && make
+cd disassembly
+rm -f game.o game.gbc game.sym game.map
+make
 # Output: game.gbc (MD5 must match 1ca6579359f21d8e27b446f865bf6b83)
 
 # Run tools (need original ROM in data/)
@@ -28,6 +32,11 @@ mkdir -p data
 cp /path/to/DWM-original.gbc data/
 python3 -m tools.dump_boss_table
 ```
+
+> **CRITICAL: Never run `make clean`.** It deletes the 18 `.2bpp` graphics files in
+> `disassembly/gfx/` which are committed binary assets. These CANNOT be regenerated
+> from the `.png` files — rgbgfx produces different bytes, breaking the MD5 match.
+> When rebuilding, only delete: `rm -f game.o game.gbc game.sym game.map`
 
 ## Repo Structure
 
