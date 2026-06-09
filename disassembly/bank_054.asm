@@ -1,3 +1,33 @@
+; =============================================================================
+; BANK $54 — POST-BATTLE PROCESSING, MONSTER JOIN SYSTEM
+; =============================================================================
+; Contains:
+;   - Post-battle EXP distribution and level-up (entries 0-6)
+;   - Monster join decision (entry 7 → JoinDecision at $55BB)
+;   - Join probability calculation
+;
+; JOIN SYSTEM (entry 7, $55BB):
+;   1. Generates RNG seed
+;   2. Reads $DD61 (defeated monster slot, 0 = none)
+;   3. Checks $DB85+slot (joinability flag): $07 = non-joinable, else = recruitable
+;   4. Reads monster species from $DC3C+slot
+;   5. Checks party capacity via Call_000_267E
+;   6. Calls join probability handler (Call_054_560E or Call_054_5655)
+;   7. If join succeeds: Call_054_5683 processes the join
+;   8. If join fails: increments $D9EC to advance post-battle state
+;
+; KEY RAM:
+;   $DB85+N: Per-enemy joinability ($07=non-joinable, $00-$06=joinable tiers)
+;   $DB4D:   Current join tier (copied from $DB85+slot)
+;   $DB4C:   Party capacity flag
+;   $DC3C+N: Enemy species ID per battle slot
+;   $DD61:   Defeated monster slot for join check (0 = no candidate)
+;   $D9EC:   Post-battle state machine index
+;   $CA94:   Party/storage count
+;
+; Sources: DISCOVERIES_v2 watchpoint analysis, disassembly trace
+; =============================================================================
+
 ; Disassembly of "baserom.gbc"
 ; This file was created with:
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
@@ -4783,57 +4813,59 @@ jr_054_55b7:
     ret
 
 
+; JoinDecision — Entry 7: Determine if defeated monster joins party
+; Called from post-battle state $0D in bank $50
     call GenerateRNG
-    ld a, [$dd61]
+    ld a, [$dd61]            ; defeated monster slot (0=none)
     or a
-    jr z, jr_054_5609
+    jr z, jr_054_5609        ; no candidate → skip
 
-    and $03
-    ld hl, $db85
+    and $03                  ; slot index 0-3
+    ld hl, $db85             ; per-enemy joinability table
     add l
     ld l, a
     ld a, $00
     adc h
     ld h, a
-    ld a, [hl]
-    ld [$db4d], a
-    cp $07
-    jr z, jr_054_5609
+    ld a, [hl]               ; A = joinability flag for this slot
+    ld [$db4d], a            ; save join tier
+    cp $07                   ; $07 = non-joinable
+    jr z, jr_054_5609        ; non-joinable → skip
 
-    ld a, [$dd61]
-    ld hl, $dc3c
+    ld a, [$dd61]            ; get slot again
+    ld hl, $dc3c             ; per-enemy species table
     add l
     ld l, a
     ld a, $00
     adc h
     ld h, a
-    ld a, [hl]
-    ld hl, $ca94
-    call Call_000_267e
+    ld a, [hl]               ; A = species ID
+    ld hl, $ca94             ; party/storage count
+    call Call_000_267e        ; check capacity
     push af
     pop bc
     ld a, c
-    ld [$db4c], a
+    ld [$db4c], a            ; save capacity flag
     push bc
-    ld a, [$db83]
+    ld a, [$db83]            ; join RNG parameter low
     ld l, a
-    ld a, [$db84]
+    ld a, [$db84]            ; join RNG parameter high
     ld h, a
     pop af
-    jr nz, jr_054_5601
+    jr nz, jr_054_5601       ; if party not full → standard join check
 
-    call Call_054_560e
+    call Call_054_560e        ; party full → different join probability
     jr jr_054_5604
 
 jr_054_5601:
-    call Call_054_5655
+    call Call_054_5655        ; standard join probability check
 
 jr_054_5604:
-    call Call_054_5683
-    jr c, jr_054_560d
+    call Call_054_5683        ; process join result
+    jr c, jr_054_560d        ; carry = joined successfully
 
 jr_054_5609:
-    ld hl, $d9ec
+    ld hl, $d9ec             ; advance post-battle state
     inc [hl]
 
 jr_054_560d:

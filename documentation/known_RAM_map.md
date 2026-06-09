@@ -48,30 +48,37 @@
                  00 - Not in a Gate
                  01 - In a Gate
    C96D     1    Gate to warp to
-   CA38     1    offset_specific_to_current_gate_and_current_floor + current_floor_threshold
+   CA38     1    Encounter pool index (gate + floor → pool via $01:Call_69e1)
    CA39     2    Counter before random encounter
    CA4B     3    Gold
    CA51    20    Items
-   CB0E     3    Experience - Monster n°1
-   CBA3     3    Experience - Monster n°2
-   CC38     3    Experience - Monster n°3
-   CCCD     3    Experience - Monster n°4
-   CD62     3    Experience - Monster n°5
-   CDF7     3    Experience - Monster n°6
-   CE8C     3    Experience - Monster n°7
-   CF21     3    Experience - Monster n°8
-   CFB6     3    Experience - Monster n°9
-   1:D04B   3    Experience - Monster n°10
-   1:D0E0   3    Experience - Monster n°11
-   1:D175   3    Experience - Monster n°12
-   1:D20A   3    Experience - Monster n°13
-   1:D29F   3    Experience - Monster n°14
-   1:D334   3    Experience - Monster n°15
-   1:D3C9   3    Experience - Monster n°16
-   1:D45E   3    Experience - Monster n°17
-   1:D4F3   3    Experience - Monster n°18
-   1:D588   3    Experience - Monster n°19
-   1:D61D   3    Experience - Monster n°20
+   CAC0     1    Current monster slot index (0-19, used by Call_000_223b)
+   CAC1   149    Party monster slot 0 (base address; see Party Monster Structure below)
+   CB56   149    Party monster slot 1 ($CAC1 + $95 × 1)
+   CBEB   149    Party monster slot 2 ($CAC1 + $95 × 2)
+                 ... 20 slots total, each $95 (149) bytes
+   1:D6B0        End of party/storage monster data (slot 19 + $95)
+; Party Monster Structure ($95 = 149 bytes per slot, 20 slots):
+;   Base = $CAC1 + slot_index × $95
+;   Call_000_223b: HL = field_addr + index × $95
+;
+;   Offset  Size  Field
+;   $00     1     In-use flag
+;   $09     1     Species ID
+;   $0A     1     Family
+;   $14     1     Name data
+;   $4B     1     Level
+;   $4C     1     Level cap
+;   $4D     3     Experience (24-bit)
+;   $50     2     HP (16-bit)
+;   $52     2     MP
+;   $54     2     ATK
+;   $56     2     DEF
+;   $58     2     AGL
+;   $5A     2     INT
+;   $62     1     Plus value (0-99)
+;   $68     27    Resistances
+
    1:D7B8   1    Main character sprite being displayed
                  00 - Front, still
                  01 - Side, still
@@ -102,16 +109,33 @@
    1:D997   1    Current step (?) in Unused Gate
    1:D999   1    Current Arena Battle in Starry Night Tournament (00 01 02), or post-game battle against the King (04)
    1:D9CD   1    Current Coliseum Battle in Gates, and current Arena Battle (except Starry Night Tournament)
+   1:D9E6   1    Breeding mutation flag
    1:D9E9   1    Current step in multi-step screens
+   1:D9EC   1    Post-battle state machine index (15 states, dispatch at $50:$5F3A)
+   1:D9F4   1    Event state machine index (11 states 0-10)
    1:DA03   1    Enemy 1 ID
                  Enemy stats ID 1 (while loading battle)
    1:DA05   1    Enemy 2 ID
                  Enemy stats ID 2 (while loading battle)
    1:DA07   1    Enemy 3 ID
                  Enemy stats ID 3 (while loading battle)
-   1:DA12   2    Enemy stats ID
-   1:DA18  25    Enemy stats being loaded
-   1:DA1D   2    Enemy Max HP being loaded
+   1:DA12   2    Enemy stats ID (16-bit, input for bank $14 loader)
+   1:DA18  25    Enemy stats copy (loaded by Call_014_4849)
+   1:DA31   1    Species ID (input for bank $03 monster info loader)
+   1:DA33  43    Monster info copy (loaded by Call_003_4446)
+                 +$00=family, +$09=HP_growth, +$0F=resistances(27), etc.
+   1:DA6F   1    Breeding: parent 1 (pedigree) species ID
+   1:DA70   1    Breeding: parent 2 (mate) species or family code ($F0-$F9)
+   1:DA71   1    Breeding: result species ($FF = not found)
+   1:DA72   1    Breeding: parent 1 family code (family table)
+   1:DA73   1    Breeding: parent 1 family code (special table)
+   1:DA74   1    Breeding: parent 2 family code (special table)
+   1:DA75   1    Breeding: parent 1 party slot index
+   1:DA76   1    Breeding: parent 2 party slot index
+   1:DA77   1    Breeding: offspring plus value (0-99)
+   1:DB55   1    Post-battle flag (always 0 for bosses)
+   1:DB73   1    Post-battle gate flag ($FF = skip dispatch)
+   1:DB85   1    Joinability: $07=non-joinable, other=recruitable via RNG
    1:DBAB   2    Enemy 1 HP
    1:DBAD   2    Enemy 2 HP
    1:DBAF   2    Enemy 3 HP
@@ -119,6 +143,7 @@
    1:DBBD   2    Enemy 2 Max HP
    1:DBBF   2    Enemy 3 Max HP
    1:DD23   1    ? (related to random battles or exp)
+   1:DD61   1    Join candidate species ($FF = none)
 
 ==HRAM==
  Address Size    Description

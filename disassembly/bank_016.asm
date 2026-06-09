@@ -1,3 +1,52 @@
+; =============================================================================
+; BANK $16 — BREEDING SYSTEM
+; =============================================================================
+; Contains:
+;   - Breeding initialization (entry 0 → BreedingInit at $4015)
+;   - Offspring determination (entry 2 → BreedingResolve at $456E)
+;   - Offspring determination alt (entry 3 → $45A3, same logic minus $44D0 call)
+;   - Offspring skill inheritance (entry 4 → $474A)
+;   - Resistance inheritance (Call_016_4360/$4373)
+;
+; BREEDING ALGORITHM (Call_016_456e):
+;   1. Call_016_4653 — Compute offspring "plus" value from parents
+;      Then search SPECIAL RECIPE TABLE at $4B30 (825 entries × 5 bytes)
+;      Format: [parent1_match, parent2_match, min_plus, result_species, plus_mod]
+;      Matches: specific species OR family code ($F0-$F9)
+;      Checked FIRST — takes priority over family table
+;
+;   2. Call_016_45d5 → Call_016_45ff — Search FAMILY RECIPE TABLE at $4974
+;      Format: 2-byte pairs [B, C] with $FFFF separators between result species
+;      D (result species index) increments at EVERY entry
+;      EXACT species match: returns immediately
+;      FAMILY match: stores result but KEEPS SCANNING (last family match wins)
+;      Two passes: first with specific parent2, then with parent2→family
+;
+;   3. Fallback — offspring = parent 1 species ($DA6F)
+;
+;   4. Mutation system (~1-5% RNG, at $44DA) can override result post-recipe
+;
+; KEY DATA TABLES:
+;   $4B30: Special recipe table — 825 entries × 5 bytes, $FF terminated
+;   $4974: Family recipe table — 2-byte pairs, $0000 terminated
+;          215 result species indexed by position (separators = $FFFF)
+;
+; RAM VARIABLES:
+;   $DA6F: Parent 1 (pedigree) species ID
+;   $DA70: Parent 2 (mate) species ID (or family code $F0-$F9 after conversion)
+;   $DA71: Result species ID (output, $FF = not yet found)
+;   $DA72: Parent 1 family code ($F0-$F9)
+;   $DA73: Parent 1 family code (for special table)
+;   $DA74: Parent 2 family code (for special table)
+;   $DA75: Parent 1 party slot index
+;   $DA76: Parent 2 party slot index
+;   $DA77: Offspring "plus" value (0-99)
+;   $CAC0: Current monster slot index
+;   $CB23+idx*$95: Monster "plus" value in party struct (offset $62)
+;
+; Sources: pure disassembly analysis, breeding_complete.json
+; =============================================================================
+
 ; Disassembly of "baserom.gbc"
 ; This file was created with:
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
@@ -6,16 +55,17 @@
 SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
     db $16 ;rom bank
 
-    dw label16_4015
-    dw label16_485c
-    dw Call_016_456e
-    dw label16_45a3
-    dw label16_474a
-    dw label16_5b4e
-    dw label16_5fe4
-    dw Call_016_6db0
-    dw label16_6f05
-    dw label16_7033
+    ; Bank $16 jump table (10 entries)
+    dw label16_4015          ; Entry 0: BreedingInit — find empty slot, init offspring
+    dw label16_485c          ; Entry 1: Unknown
+    dw Call_016_456e          ; Entry 2: BreedingResolve — determine offspring species
+    dw label16_45a3          ; Entry 3: BreedingResolve alt (no mutation step)
+    dw label16_474a          ; Entry 4: Skill/stat inheritance
+    dw label16_5b4e          ; Entry 5
+    dw label16_5fe4          ; Entry 6
+    dw Call_016_6db0          ; Entry 7
+    dw label16_6f05          ; Entry 8
+    dw label16_7033          ; Entry 9
 
 label16_4015:
     ld de, $cac1
@@ -889,9 +939,13 @@ jr_016_4566:
     ret
 
 
+; BreedingResolve — Determine offspring species from two parents
+; Input: $DA6F = parent 1 species, $DA70 = parent 2 species
+;        $DA75/$DA76 = parent party slot indices
+; Output: $DA71 = result species, $DA77 = offspring plus value
 Call_016_456e:
     ld a, $ff
-    ld [$da71], a
+    ld [$da71], a            ; result = not found
     ld a, $ff
     ld [$da72], a
     ld a, $ff
@@ -900,18 +954,18 @@ Call_016_456e:
     ld [$da74], a
     ld a, $ff
     ld [$da77], a
-    call Call_016_4653
+    call Call_016_4653        ; Step 1: compute plus, search special table ($4B30)
     ld a, [$da71]
     cp $ff
-    ret nz
+    ret nz                   ; if special table found a result, done
 
-    call Call_016_45d5
-    call $44d0
+    call Call_016_45d5        ; Step 2: search family table ($4974)
+    call $44d0                ; Step 3: clear utility (checks $C86C link flag)
     ld a, [$da71]
     cp $ff
-    ret nz
+    ret nz                   ; if family table found a result, done
 
-    ld a, [$da6f]
+    ld a, [$da6f]            ; Step 4: fallback — offspring = parent 1 species
     ld [$da71], a
     ret
 
@@ -941,95 +995,112 @@ label16_45a3:
     ret
 
 
+; BreedingFamilySearch — Search family recipe table with parent swap
+; First pass: parent1 specific + parent2 specific → exact matches only
+; If no match: convert parent2 to family code, search again
 Call_016_45d5:
-    ld a, [$da70]
+    ld a, [$da70]            ; parent 2
     cp $f0
-    jr nc, jr_016_45ff
+    jr nc, jr_016_45ff       ; if already family-coded, skip first pass
 
-    ld a, [$da6f]
+    ld a, [$da6f]            ; save parent 1
     push af
-    call Call_016_45ff
+    call Call_016_45ff        ; first pass: parent2 still specific
     pop af
-    ld [$da6f], a
+    ld [$da6f], a            ; restore parent 1
     ld a, [$da71]
     cp $ff
-    ret nz
+    ret nz                   ; found something, return
 
-    ld a, [$da70]
+    ld a, [$da70]            ; convert parent 2 species → family code
     ld [$da31], a
     ld hl, $0301
-    rst $10
-    ld a, [$da33]
-    add $f0
+    rst $10                  ; load parent 2 monster info
+    ld a, [$da33]            ; family byte (offset 0)
+    add $f0                  ; convert to family code ($F0-$F9)
     ld [$da70], a
 
+; BreedingTableScan — Search family recipe table at $4974
+; Converts parent 1 to family code, then scans all entries
 Call_016_45ff:
 jr_016_45ff:
-    ld a, [$da6f]
+    ld a, [$da6f]            ; parent 1
     cp $f0
-    jr nc, jr_016_4615
+    jr nc, jr_016_4615       ; if already family-coded, skip conversion
 
     ld [$da31], a
     ld hl, $0301
-    rst $10
-    ld a, [$da33]
-    add $f0
-    ld [$da72], a
+    rst $10                  ; load parent 1 monster info
+    ld a, [$da33]            ; family byte
+    add $f0                  ; convert to family code
+    ld [$da72], a            ; parent 1 family code
 
 jr_016_4615:
-    ld hl, $4974
-    ld d, $ff
+    ld hl, $4974             ; family recipe table base
+    ld d, $ff                ; D = result species index (starts at $FF, first inc → 0)
 
+; Family table scan loop
+; Table format: 2-byte pairs [B, C], $FFFF = separator (next result species), $0000 = end
+; D increments at every entry (including separators)
+; B = parent 1 matcher (species or family code)
+; C = parent 2 matcher (species or family code)
 jr_016_461a:
-    inc d
-    ld b, [hl]
+    inc d                    ; result species index++
+    ld b, [hl]               ; B = entry parent 1 matcher
     inc hl
-    ld c, [hl]
+    ld c, [hl]               ; C = entry parent 2 matcher
     inc hl
     ld a, b
     or c
-    ret z
+    ret z                    ; $0000 = end of table
 
     ld a, b
     and c
     cp $ff
-    jr z, jr_016_461a
+    jr z, jr_016_461a        ; $FFFF = separator, skip (D already incremented)
 
+    ; Check parent 2 ($DA70) against C
     ld a, [$da70]
     and $f0
     cp $f0
-    jr nz, jr_016_4636
+    jr nz, jr_016_4636       ; parent 2 is specific species → exact compare
 
+    ; Parent 2 is family-coded: special handling for Boss family
     ld a, c
-    cp $fa
+    cp $fa                   ; Boss family ($FA) matches any family parent 2
     jr z, jr_016_463c
 
 jr_016_4636:
     ld a, [$da70]
-    cp c
-    jr nz, jr_016_461a
+    cp c                     ; compare parent 2 with C
+    jr nz, jr_016_461a       ; no match → next entry
 
 jr_016_463c:
+    ; Parent 2 matched. Now check parent 1 against B
     ld a, [$da6f]
     cp b
-    jr z, jr_016_464e
+    jr z, jr_016_464e        ; EXACT species match → immediate return
 
-    ld a, [$da72]
+    ld a, [$da72]            ; try family match
     cp b
-    jr nz, jr_016_464c
+    jr nz, jr_016_464c       ; no family match either → skip
 
     ld a, d
-    ld [$da71], a
+    ld [$da71], a            ; FAMILY match → store result, keep scanning (last wins)
 
 jr_016_464c:
-    jr jr_016_461a
+    jr jr_016_461a            ; continue scanning
 
 jr_016_464e:
-    ld a, d
+    ld a, d                  ; EXACT match → store result and return immediately
     ld [$da71], a
     ret
 
 
+; BreedingSpecialAndPlus — Compute plus value, then search special table ($4B30)
+; Computes offspring plus from parents' plus values and levels
+; Then converts parent species to family codes ($DA73/$DA74)
+; Finally searches the 825-entry special recipe table
 Call_016_4653:
     ld a, [$da75]
     ld hl, $cb23
@@ -1124,22 +1195,23 @@ jr_016_46dc:
     ld [$da74], a
 
 jr_016_46f2:
-    ld hl, $4b30
+    ld hl, $4b30             ; special recipe table base (825 entries × 5 bytes)
 
+; Special table scan loop
 jr_016_46f5:
     ld a, [hl]
-    cp $ff
+    cp $ff                   ; $FF = end of table
     jr z, jr_016_4710
 
     push hl
-    call Call_016_471c
+    call Call_016_471c        ; check this entry against parents
     pop hl
     ld a, [$da71]
     cp $ff
-    jr nz, jr_016_4710
+    jr nz, jr_016_4710       ; found a match → done
 
     ld a, l
-    add $05
+    add $05                  ; advance to next 5-byte entry
     ld l, a
     ld a, h
     adc $00
@@ -1147,7 +1219,7 @@ jr_016_46f5:
     jr jr_016_46f5
 
 jr_016_4710:
-    ld a, [$da77]
+    ld a, [$da77]            ; clamp plus to max 99
     cp $63
     ret c
 
@@ -1156,37 +1228,41 @@ jr_016_4710:
     ret
 
 
+; SpecialEntryCheck — Check one 5-byte special table entry
+; Format: [parent1_match, parent2_match, min_plus, result_species, plus_mod]
+; Matches parent species (specific) or family code ($DA73/$DA74)
+; Plus threshold: offspring plus ($DA77) must be >= entry byte 2
 Call_016_471c:
-    ld a, [$da6f]
+    ld a, [$da6f]            ; parent 1 species (specific)
     cp [hl]
-    jr z, jr_016_4728
+    jr z, jr_016_4728        ; exact parent 1 match
 
-    ld a, [$da73]
+    ld a, [$da73]            ; parent 1 family code
     cp [hl]
-    jr nz, jr_016_4749
+    jr nz, jr_016_4749       ; no match → skip
 
 jr_016_4728:
     inc hl
-    ld a, [$da70]
+    ld a, [$da70]            ; parent 2 species (specific)
     cp [hl]
-    jr z, jr_016_4735
+    jr z, jr_016_4735        ; exact parent 2 match
 
-    ld a, [$da74]
+    ld a, [$da74]            ; parent 2 family code
     cp [hl]
-    jr nz, jr_016_4749
+    jr nz, jr_016_4749       ; no match → skip
 
 jr_016_4735:
     inc hl
-    ld a, [$da77]
+    ld a, [$da77]            ; offspring plus value
     cp [hl]
-    jr c, jr_016_4749
+    jr c, jr_016_4749        ; plus < threshold → skip
 
     inc hl
-    ld a, [hl]
-    ld [$da71], a
+    ld a, [hl]               ; result species ID
+    ld [$da71], a            ; store result
     inc hl
     ld a, [$da77]
-    add [hl]
+    add [hl]                 ; add plus modifier
     ld [$da77], a
 
 jr_016_4749:

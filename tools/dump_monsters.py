@@ -26,7 +26,7 @@ def parse(raw: bytes, idx: int) -> dict:
 def main():
     rom = ROM(Path("data/DWM-original.gbc"))
     names = {n["id"]: n["name"] for n in
-             json.loads(Path("extracted/monster_names.json").read_text())}
+             json.loads(Path("extracted/monsters_full.json").read_text())}
 
     monsters = []
     for i in range(221):

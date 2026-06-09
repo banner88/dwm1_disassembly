@@ -1,3 +1,41 @@
+; =============================================================================
+; BANK $14 — ENEMY STATS, BOSS TABLE, PARTY MONSTER MANAGEMENT
+; =============================================================================
+; Contains:
+;   - Enemy stats loader (entries 0,1 → EnemyStatsLoad at $4849)
+;   - Party monster init/clear (entry 3 → $401D)
+;   - Boss EID redirect table (entry 6 → BossRedirectLookup at $4869)
+;
+; KEY DATA TABLES:
+;   $4893: Boss redirect table (first entry is non-boss redirect EID 4→486)
+;   $4897: Boss table proper — 32 gates × 4 bytes each
+;          Format: [fight_eid_lo, fight_eid_hi, join_eid_lo, join_eid_hi]
+;          fight_eid = enemy stats entry used for boss fight
+;          join_eid  = enemy stats entry for the monster that joins after defeat
+;   $4C1D: Enemy stats table — 487 entries × 25 bytes each
+;          Format per entry:
+;            +0:  species_id (1 byte)
+;            +1:  EXP reward low byte
+;            +2:  EXP reward high byte (16-bit LE)
+;            +3:  Joinability (0=always joins, 5=standard, 7=never → $DB85)
+;            +4:  level (1 byte)
+;            +5:  HP (2 bytes LE)
+;            +7:  MP (2 bytes LE)
+;            +9:  ATK (2 bytes LE)
+;            +11: DEF (2 bytes LE)
+;            +13: AGL (2 bytes LE)
+;            +15: INT (2 bytes LE)
+;            +17: AI weights (4 bytes)
+;            +21: skills (4 bytes, $FF = none)
+;
+; RAM VARIABLES:
+;   $DA12-$DA13: Enemy stats ID (16-bit LE) — input for loader
+;   $DA18+:      25-byte copy of loaded enemy stats entry
+;   $DA14:       Party monster index for init
+;
+; Sources: editor.py constants, dump_boss_table.py, dump_enemy_stats.py
+; =============================================================================
+
 ; Disassembly of "baserom.gbc"
 ; This file was created with:
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
@@ -7,13 +45,14 @@ SECTION "ROM Bank $014", ROMX[$4000], BANK[$14]
 
     db $14 ;ROM Bank
 
-    dw label14_400f
-    dw label14_4016
-    dw label14_40b4
-    dw label14_401d
-    dw label14_7bac
-    dw label14_7d12
-    dw label14_4869
+    ; Bank $14 jump table (7 entries, called via rst $10 with H=$14)
+    dw label14_400f          ; Entry 0: Load enemy stats → $DA18
+    dw label14_4016          ; Entry 1: Load enemy stats → $DA18 (same as entry 0)
+    dw label14_40b4          ; Entry 2: Unknown
+    dw label14_401d          ; Entry 3: Party monster slot init/clear
+    dw label14_7bac          ; Entry 4: Unknown
+    dw label14_7d12          ; Entry 5: Unknown
+    dw label14_4869          ; Entry 6: Boss EID redirect lookup
 
 label14_400f:
     ld de, $da18
@@ -1202,22 +1241,27 @@ Call_014_4821:
     ret
 
 
+; EnemyStatsLoad — Copy 25 bytes from enemy stats table to WRAM
+; Input: $DA12/$DA13 = enemy stats ID (16-bit LE)
+;        DE = destination WRAM address
+; Calculates: table_base($4C1D) + eid × 25
+; Output: 25 bytes copied to [DE]
 Call_014_4849:
     push de
-    ld a, [$da12]
+    ld a, [$da12]            ; EID low byte
     ld c, a
-    ld a, [$da13]
-    ld b, a
-    ld a, $19
-    call Call_000_1de6
+    ld a, [$da13]            ; EID high byte
+    ld b, a                  ; BC = enemy stats ID
+    ld a, $19                ; 25 = entry size
+    call Call_000_1de6       ; HL = EID × 25
     ld a, l
-    add $1d
+    add $1d                  ; HL += $4C1D (enemy stats table base)
     ld l, a
     ld a, h
     adc $4c
     ld h, a
     pop de
-    ld b, $19
+    ld b, $19                ; copy 25 bytes
 
 jr_014_4862:
     ld a, [hl+]
@@ -1228,45 +1272,64 @@ jr_014_4862:
 
     ret
 
+; BossRedirectLookup — Remap a fight EID to its join EID
+; Input: $DA12/$DA13 = source EID (boss fight encounter)
+; Scans redirect table at $4893 for matching fight EID
+; If found: overwrites $DA12/$DA13 with join EID
+; Table format: [match_eid_lo, match_eid_hi, replace_eid_lo, replace_eid_hi]
+;   terminated by $FFFF
+; First entry at $4893 is a non-boss redirect (EID 4 → EID 486)
+; Boss entries start at $4897: 32 gates × 4 bytes
+;   Gate 0:  fight EID 11 → join EID 12 (Healer)
+;   Gate 1:  fight EID 31 → join EID 484 (Dragon)
+;   ...see dump_boss_table.py output for full list
 label14_4869:
-    ld a, [$da12]
+    ld a, [$da12]            ; source EID low
     ld c, a
-    ld a, [$da13]
-    ld b, a
-    ld hl, $4893
+    ld a, [$da13]            ; source EID high
+    ld b, a                  ; BC = source EID
+    ld hl, $4893             ; redirect table base
 
 jr_014_4874:
-    ld a, [hl+]
+    ld a, [hl+]              ; read match EID low
     ld e, a
-    ld a, [hl+]
+    ld a, [hl+]              ; read match EID high
     ld d, a
     and e
-    cp $ff
+    cp $ff                   ; check for $FFFF terminator
     jr nz, jr_014_487e
 
-    ret
+    ret                      ; no match found
 
 
 jr_014_487e:
     ld a, e
-    cp c
+    cp c                     ; compare match EID low with source
     jr nz, jr_014_488f
 
     ld a, d
-    cp b
+    cp b                     ; compare match EID high with source
     jr nz, jr_014_488f
 
-    ld a, [hl+]
+    ld a, [hl+]              ; MATCH: read replacement EID low
     ld [$da12], a
-    ld a, [hl+]
+    ld a, [hl+]              ; read replacement EID high
     ld [$da13], a
     ret
 
 
 jr_014_488f:
+    inc hl                   ; skip replacement EID (no match)
     inc hl
-    inc hl
-    jr jr_014_4874
+    jr jr_014_4874           ; check next entry
+
+; ---------------------------------------------------------------
+; Boss redirect table data starts here ($4893)
+; First 4 bytes: non-boss redirect (EID 4 → EID 486)
+; Followed by 32 boss entries at $4897 (see BOSS_TABLE in editor.py)
+; Then enemy stats table at $4C1D (487 entries × 25 bytes)
+; These are raw data bytes disassembled as instructions by mgbdis.
+; ---------------------------------------------------------------
 
     inc b
     nop

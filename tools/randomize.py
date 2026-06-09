@@ -18,7 +18,7 @@ def main():
     args = ap.parse_args()
     random.seed(args.seed)
 
-    monsters = json.loads(Path("extracted/monsters.json").read_text())
+    monsters = json.loads(Path("extracted/monsters_full.json").read_text())
     monster_edits = {}
 
     # Skill pool shuffle (always)
@@ -57,16 +57,16 @@ def main():
     # Chaos: name shuffle within same byte-length groups (so we never overflow)
     text_edits = {}
     if args.mode == "chaos":
-        names = json.loads(Path("extracted/monster_names.json").read_text())
+        names = monsters  # monsters_full.json already has name_byte_length and name_offset
         groups = defaultdict(list)
         for n in names:
-            groups[n["byte_length"]].append(n)
+            if n.get("name_byte_length"):
+                groups[n["name_byte_length"]].append(n)
         for length, group in groups.items():
             if len(group) <= 1: continue
             new_order = [g["name"] for g in group]
             random.shuffle(new_order)
             for g, new_name in zip(group, new_order):
-                # name_offset stored as "41:XXXX"
                 text_edits[g["name_offset"]] = new_name
 
     edits = {

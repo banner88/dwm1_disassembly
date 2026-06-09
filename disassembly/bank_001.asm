@@ -7509,6 +7509,21 @@ Call_001_67f8:
 ; Reads $CA38 (encounter pool index), calculates pool offset
 ; Uses weighted random selection ($6989) to pick monsters
 ; Writes enemy IDs to $DA03/$DA05/$DA07
+;
+; ENCOUNTER POOL FORMAT (26 bytes each at $6AAE + pool_index × 26):
+;   +0:  header (10 bytes, includes floor range info)
+;   +10: EID slots (5 × 2 bytes LE) — enemy stats IDs for this pool
+;   +20: weights (5 × 1 byte) — probability weights for each slot
+;        (unused slots have EID $0000 and weight 0)
+;   Pool index determined by Call_001_69e1 from gate ID + current floor
+;
+; GATE → POOL MAPPING:
+;   $6A22: per-gate base pool index (32 bytes, one per gate)
+;   $6A42: per-gate floor breakpoint table pointers (32 × 2 bytes)
+;          Each points to a list of floor thresholds used to select
+;          which pool within the gate to use
+;   $6AAE: encounter pool data blocks (128 pools × 26 bytes)
+;   See dump_encounters.py for full decoded pool data
 EncounterMonsterSelect:
 label1_683e:  ; original label
     call Call_001_69e1
@@ -7792,40 +7807,49 @@ label1_69c8:
     ret
 
 
+; EncounterPoolSelect — Determine encounter pool index from gate + floor
+; Input: wGateID = current gate, $C939 = current floor number
+; Output: $CA38 = pool index
+; Algorithm:
+;   1. Read base pool index from $6A22[wGateID]
+;   2. Read floor breakpoint table pointer from $6A42[wGateID × 2]
+;   3. Walk breakpoints to find which sub-pool matches current floor
+;   4. Pool index = base + floor_offset
+;   5. Calculate pool data address = $6AAE + pool_index × 26($1A)
 Call_001_69e1:
     ld a, [wGateID]
-    ld hl, $6a22
+    ld hl, $6a22             ; per-gate base pool index table
     add l
     ld l, a
     ld a, $00
     adc h
     ld h, a
-    ld a, [hl]
+    ld a, [hl]               ; A = base pool index for this gate
     push af
     ld a, [wGateID]
-    add a
-    ld hl, $6a42
+    add a                    ; × 2 for pointer table
+    ld hl, $6a42             ; per-gate floor breakpoint pointer table
     add l
     ld l, a
     ld a, $00
     adc h
     ld h, a
-    ld a, [hl+]
+    ld a, [hl+]              ; read pointer (little-endian)
     ld h, [hl]
-    ld l, a
-    ld c, $ff
+    ld l, a                  ; HL = floor breakpoint list for this gate
+    ld c, $ff                ; C = floor sub-index counter
 
 jr_001_6a01:
-    ld a, [$c939]
+    ld a, [$c939]            ; current floor
     inc a
-    cp [hl]
-    inc c
+    cp [hl]                  ; compare with breakpoint
+    inc c                    ; advance sub-index
     inc hl
-    jr nc, jr_001_6a01
+    jr nc, jr_001_6a01       ; if floor >= breakpoint, keep checking
 
-    pop af
-    add c
-    ld [$ca38], a
+    pop af                   ; A = base pool index
+    add c                    ; + floor sub-index
+    ld [$ca38], a            ; store final pool index
     ld bc, $001a
     call Call_000_1de6
     ld a, l

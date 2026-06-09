@@ -1,3 +1,44 @@
+; =============================================================================
+; BANK $03 — LINK/SERIAL COMMUNICATION, MONSTER INFO TABLE
+; =============================================================================
+; Contains:
+;   - Serial/link cable communication (entry 0)
+;   - Monster info table loader (entry 1 → MonsterInfoLoad at $443F)
+;   - Monster info table data at $4461 (221 entries × 43 bytes)
+;
+; MONSTER INFO TABLE ($4461):
+;   Format per 43-byte entry:
+;     +$00: Family (0=Slime,1=Dragon,2=Beast,3=Flying,4=Plant,5=Bug,
+;                    6=Devil,7=Zombie,8=Material,9=Boss)
+;     +$01: Base level cap
+;     +$02: Experience table index (selects growth curve in bank $13)
+;     +$03: Female ratio (0=0%, 1≈10%, 2=50%, 3≈84%)
+;     +$04: Can fly flag (1=floating/flying sprite)
+;     +$05: Metal body flag (1=Metaly/Metabble/MetalKing only)
+;     +$06: Skill 1 ID
+;     +$07: Skill 2 ID
+;     +$08: Skill 3 ID
+;     +$09: HP growth rate (curve index for bank $13:$6706 table)
+;     +$0A: MP growth rate
+;     +$0B: ATK growth rate (gets bonus scaling via Call_013_4163)
+;     +$0C: DEF growth rate
+;     +$0D: AGL growth rate
+;     +$0E: INT growth rate
+;     +$0F-$29: Resistances (27 bytes, values 0=weak..3=immune)
+;                 Index 0-25 = types A-Z: Fire,Heat,Explosion,Wind,Lightning,Ice,
+;                 Accuracy,Sleep,Death,MP,SpellBlock,Confusion,DefDown,AglDown,
+;                 Sacrifice,MegaMagic,FireBreath,IceBreath,Poison,Paralyze,Curse,
+;                 MissATurn,DanceBlock,BreathBlock,Aid,GigaSlash
+;                 Index 26 = unused (always 0)
+;     +$2A: Monster tier/rank (0=starter, 3-6=normal, 7=endgame boss)
+;
+; RAM VARIABLES:
+;   $DA31:   Species ID input for loader
+;   $DA33+:  43-byte copy of loaded monster info entry
+;
+; Sources: dump_monsters.py, known_ROM_map.md, bank $13 level-up analysis
+; =============================================================================
+
     ; Disassembly of "baserom.gbc"
 ; This file was created with:
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
@@ -7,15 +48,16 @@ SECTION "ROM Bank $003", ROMX[$4000], BANK[$3]
 
     db $03
 
-    dw label4013
-    dw label443f
-    dw Call_003_6980
-    dw label69a2
-    dw label6e24
-    dw Call_003_7160
-    dw label7190
-    dw label71b6
-    dw Call_003_7134
+    ; Bank $03 jump table (9 entries, called via rst $10 with H=$03)
+    dw label4013             ; Entry 0: Serial/link communication
+    dw label443f             ; Entry 1: MonsterInfoLoad → $DA33
+    dw Call_003_6980         ; Entry 2
+    dw label69a2             ; Entry 3
+    dw label6e24             ; Entry 4
+    dw Call_003_7160         ; Entry 5
+    dw label7190             ; Entry 6
+    dw label71b6             ; Entry 7
+    dw Call_003_7134         ; Entry 8
 
 label4013:
     ld a, [$c864]
@@ -663,25 +705,31 @@ jr_003_4424:
     ld [$c8c9], a
     ret
 
+; MonsterInfoLoad — Entry 1: Load monster info to $DA33
+; Input: $DA31 = species ID
+; Output: 43 bytes copied to $DA33-$DA5D
 label443f:
-    ld de, $da33
+    ld de, $da33             ; destination = WRAM $DA33
     call Call_003_4446
     ret
 
 
+; MonsterInfoCopy — Calculate table address and copy 43 bytes
+; Input: $DA31 = species ID, DE = destination
+; Calculates: $4461 + species_id × 43($2B)
 Call_003_4446:
     push de
-    ld a, [$da31]
-    ld c, $2b
-    call Call_000_1dbe
+    ld a, [$da31]            ; species ID
+    ld c, $2b                ; 43 = entry size
+    call Call_000_1dbe       ; HL = species_id × 43
     ld a, l
-    add $61
+    add $61                  ; HL += $4461 (monster info table base)
     ld l, a
     ld a, h
     adc $44
     ld h, a
     pop de
-    ld b, $2b
+    ld b, $2b                ; copy 43 bytes
 
 jr_003_445a:
     ld a, [hl+]
@@ -691,6 +739,14 @@ jr_003_445a:
     jr nz, jr_003_445a
 
     ret
+
+; ---------------------------------------------------------------
+; Monster info table data starts here ($4461)
+; 221 entries × 43 bytes = 9503 bytes
+; Species 0 (DrakSlime) through 220 (unused)
+; These are raw data bytes disassembled as instructions by mgbdis.
+; See extracted/monsters_full.json for decoded contents.
+; ---------------------------------------------------------------
 
 
     nop

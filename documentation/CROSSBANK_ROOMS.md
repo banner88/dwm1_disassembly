@@ -1,6 +1,4 @@
-# DWM1 Custom Rooms — Session Handoff Document
-## Date: June 2026 | For: Next Claude Instance
-
+# Cross-Bank Custom Rooms — Technical Reference
 ---
 
 ## PROJECT OVERVIEW

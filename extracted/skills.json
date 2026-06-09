@@ -1,0 +1,1282 @@
+[
+  {
+    "id": 0,
+    "name": "Blaze",
+    "function_addr": "$41CD"
+  },
+  {
+    "id": 1,
+    "name": "Blazemore",
+    "function_addr": "$41CD"
+  },
+  {
+    "id": 2,
+    "name": "Blazemost",
+    "function_addr": "$41CD"
+  },
+  {
+    "id": 3,
+    "name": "Firebal",
+    "function_addr": "$41D4"
+  },
+  {
+    "id": 4,
+    "name": "Firebane",
+    "function_addr": "$41D4"
+  },
+  {
+    "id": 5,
+    "name": "Firebolt",
+    "function_addr": "$41D4"
+  },
+  {
+    "id": 6,
+    "name": "Bang",
+    "function_addr": "$41DB"
+  },
+  {
+    "id": 7,
+    "name": "Boom",
+    "function_addr": "$41DB"
+  },
+  {
+    "id": 8,
+    "name": "Explodet",
+    "function_addr": "$41DB"
+  },
+  {
+    "id": 9,
+    "name": "Infernos",
+    "function_addr": "$41E2"
+  },
+  {
+    "id": 10,
+    "name": "Infermore",
+    "function_addr": "$41E2"
+  },
+  {
+    "id": 11,
+    "name": "Infermost",
+    "function_addr": "$41E2"
+  },
+  {
+    "id": 12,
+    "name": "IceBolt",
+    "function_addr": "$41E9"
+  },
+  {
+    "id": 13,
+    "name": "SnowStorm",
+    "function_addr": "$41E9"
+  },
+  {
+    "id": 14,
+    "name": "Blizzard",
+    "function_addr": "$41E9"
+  },
+  {
+    "id": 15,
+    "name": "Bolt",
+    "function_addr": "$41F0"
+  },
+  {
+    "id": 16,
+    "name": "Zap",
+    "function_addr": "$41F0"
+  },
+  {
+    "id": 17,
+    "name": "Thordain",
+    "function_addr": "$41F0"
+  },
+  {
+    "id": 18,
+    "name": "Beat",
+    "function_addr": "$41F7"
+  },
+  {
+    "id": 19,
+    "name": "Defeat",
+    "function_addr": "$41F7"
+  },
+  {
+    "id": 20,
+    "name": "Sacrifice",
+    "function_addr": "$422B"
+  },
+  {
+    "id": 21,
+    "name": "Sleep",
+    "function_addr": "$4235"
+  },
+  {
+    "id": 22,
+    "name": "SleepAll",
+    "function_addr": "$4235"
+  },
+  {
+    "id": 23,
+    "name": "StopSpell",
+    "function_addr": "$427C"
+  },
+  {
+    "id": 24,
+    "name": "Surround",
+    "function_addr": "$42AA"
+  },
+  {
+    "id": 25,
+    "name": "PanicAll",
+    "function_addr": "$42D8"
+  },
+  {
+    "id": 26,
+    "name": "RobMagic",
+    "function_addr": "$4308"
+  },
+  {
+    "id": 27,
+    "name": "TakeMagic",
+    "function_addr": "$4330"
+  },
+  {
+    "id": 28,
+    "name": "Sap",
+    "function_addr": "$434A"
+  },
+  {
+    "id": 29,
+    "name": "Defence",
+    "function_addr": "$434A"
+  },
+  {
+    "id": 30,
+    "name": "Upper",
+    "function_addr": "$436D"
+  },
+  {
+    "id": 31,
+    "name": "Increase",
+    "function_addr": "$436D"
+  },
+  {
+    "id": 32,
+    "name": "Slow",
+    "function_addr": "$4385"
+  },
+  {
+    "id": 33,
+    "name": "SlowAll",
+    "function_addr": "$4385"
+  },
+  {
+    "id": 34,
+    "name": "Speed",
+    "function_addr": "$43A8"
+  },
+  {
+    "id": 35,
+    "name": "SpeedUp",
+    "function_addr": "$43A8"
+  },
+  {
+    "id": 36,
+    "name": "Barrier",
+    "function_addr": "$43C0"
+  },
+  {
+    "id": 37,
+    "name": "TwinHits",
+    "function_addr": "$43FB"
+  },
+  {
+    "id": 38,
+    "name": "MagicWall",
+    "function_addr": "$4415"
+  },
+  {
+    "id": 39,
+    "name": "MagicBack",
+    "function_addr": "$4434"
+  },
+  {
+    "id": 40,
+    "name": "Bounce",
+    "function_addr": "$4434"
+  },
+  {
+    "id": 41,
+    "name": "Transform",
+    "function_addr": "$446C"
+  },
+  {
+    "id": 42,
+    "name": "Ironize",
+    "function_addr": "$447F"
+  },
+  {
+    "id": 43,
+    "name": "Heal",
+    "function_addr": "$44C4"
+  },
+  {
+    "id": 44,
+    "name": "HealMore",
+    "function_addr": "$44C4"
+  },
+  {
+    "id": 45,
+    "name": "HealAll",
+    "function_addr": "$44C4"
+  },
+  {
+    "id": 46,
+    "name": "HealUs",
+    "function_addr": "$44C4"
+  },
+  {
+    "id": 47,
+    "name": "HealUsAll",
+    "function_addr": "$44C4"
+  },
+  {
+    "id": 48,
+    "name": "Vivify",
+    "function_addr": "$44F8"
+  },
+  {
+    "id": 49,
+    "name": "Revive",
+    "function_addr": "$44F8"
+  },
+  {
+    "id": 50,
+    "name": "Farewell",
+    "function_addr": "$457E"
+  },
+  {
+    "id": 51,
+    "name": "Antidote",
+    "function_addr": "$458F"
+  },
+  {
+    "id": 52,
+    "name": "NumbOff",
+    "function_addr": "$45A7"
+  },
+  {
+    "id": 53,
+    "name": "DeChaos",
+    "function_addr": "$45D8"
+  },
+  {
+    "id": 54,
+    "name": "CurseOff",
+    "function_addr": "$45FE"
+  },
+  {
+    "id": 55,
+    "name": "StepGuard",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 56,
+    "name": "MapMagic",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 57,
+    "name": "Chance",
+    "function_addr": "$4616"
+  },
+  {
+    "id": 58,
+    "name": "Attack",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 59,
+    "name": "TwinSlash",
+    "function_addr": "$462F"
+  },
+  {
+    "id": 60,
+    "name": "Ramming",
+    "function_addr": "$464C"
+  },
+  {
+    "id": 61,
+    "name": "Beserker",
+    "function_addr": "$4653"
+  },
+  {
+    "id": 62,
+    "name": "Kamikaze",
+    "function_addr": "$467C"
+  },
+  {
+    "id": 63,
+    "name": "Massacre",
+    "function_addr": "$4683"
+  },
+  {
+    "id": 64,
+    "name": "EvilSlash",
+    "function_addr": "$4683"
+  },
+  {
+    "id": 65,
+    "name": "ChargeUP",
+    "function_addr": "$46BE"
+  },
+  {
+    "id": 66,
+    "name": "HighJump",
+    "function_addr": "$46CF"
+  },
+  {
+    "id": 67,
+    "name": "SuckAir",
+    "function_addr": "$470F"
+  },
+  {
+    "id": 68,
+    "name": "FireSlash",
+    "function_addr": "$4720"
+  },
+  {
+    "id": 69,
+    "name": "BoltSlash",
+    "function_addr": "$472A"
+  },
+  {
+    "id": 70,
+    "name": "VacuSlash",
+    "function_addr": "$4734"
+  },
+  {
+    "id": 71,
+    "name": "IceSlash",
+    "function_addr": "$473E"
+  },
+  {
+    "id": 72,
+    "name": "MetalCut",
+    "function_addr": "$4748"
+  },
+  {
+    "id": 73,
+    "name": "DrakSlash",
+    "function_addr": "$4752"
+  },
+  {
+    "id": 74,
+    "name": "BeastCut",
+    "function_addr": "$475C"
+  },
+  {
+    "id": 75,
+    "name": "BirdBlow",
+    "function_addr": "$4766"
+  },
+  {
+    "id": 76,
+    "name": "DevilCut",
+    "function_addr": "$4770"
+  },
+  {
+    "id": 77,
+    "name": "ZombieCut",
+    "function_addr": "$477A"
+  },
+  {
+    "id": 78,
+    "name": "CleanCut",
+    "function_addr": "$4784"
+  },
+  {
+    "id": 79,
+    "name": "MultiCut",
+    "function_addr": "$478E"
+  },
+  {
+    "id": 80,
+    "name": "BiAttack",
+    "function_addr": "$4798"
+  },
+  {
+    "id": 81,
+    "name": "QuadHits",
+    "function_addr": "$4798"
+  },
+  {
+    "id": 82,
+    "name": "CallHelp",
+    "function_addr": "$480C"
+  },
+  {
+    "id": 83,
+    "name": "YellHelp",
+    "function_addr": "$480C"
+  },
+  {
+    "id": 84,
+    "name": "Focus",
+    "function_addr": "$4888"
+  },
+  {
+    "id": 85,
+    "name": "SquallHit",
+    "function_addr": "$4897"
+  },
+  {
+    "id": 86,
+    "name": "PsycheUp",
+    "function_addr": "$462F"
+  },
+  {
+    "id": 87,
+    "name": "RainSlash",
+    "function_addr": "$48B4"
+  },
+  {
+    "id": 88,
+    "name": "WindBeast",
+    "function_addr": "$4918"
+  },
+  {
+    "id": 89,
+    "name": "Vacuum",
+    "function_addr": "$4918"
+  },
+  {
+    "id": 90,
+    "name": "Lightning",
+    "function_addr": "$41F0"
+  },
+  {
+    "id": 91,
+    "name": "RockThrow",
+    "function_addr": "$492B"
+  },
+  {
+    "id": 92,
+    "name": "FireAir",
+    "function_addr": "$4932"
+  },
+  {
+    "id": 93,
+    "name": "BlazeAir",
+    "function_addr": "$4932"
+  },
+  {
+    "id": 94,
+    "name": "Scorching",
+    "function_addr": "$4932"
+  },
+  {
+    "id": 95,
+    "name": "WhiteFire",
+    "function_addr": "$4932"
+  },
+  {
+    "id": 96,
+    "name": "FrigidAir",
+    "function_addr": "$493C"
+  },
+  {
+    "id": 97,
+    "name": "IceAir",
+    "function_addr": "$493C"
+  },
+  {
+    "id": 98,
+    "name": "IceStorm",
+    "function_addr": "$493C"
+  },
+  {
+    "id": 99,
+    "name": "WhiteAir",
+    "function_addr": "$493C"
+  },
+  {
+    "id": 100,
+    "name": "Hellblast",
+    "function_addr": "$41F0"
+  },
+  {
+    "id": 101,
+    "name": "BigBang",
+    "function_addr": "$4946"
+  },
+  {
+    "id": 102,
+    "name": "MegaMagic",
+    "function_addr": "$494D"
+  },
+  {
+    "id": 103,
+    "name": "PoisonHit",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 104,
+    "name": "NapAttack",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 105,
+    "name": "Paralyze",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 106,
+    "name": "SleepAir",
+    "function_addr": "$4235"
+  },
+  {
+    "id": 107,
+    "name": "PalsyAir",
+    "function_addr": "$4954"
+  },
+  {
+    "id": 108,
+    "name": "PoisonGas",
+    "function_addr": "$497B"
+  },
+  {
+    "id": 109,
+    "name": "PoisonAir",
+    "function_addr": "$497B"
+  },
+  {
+    "id": 110,
+    "name": "PaniDance",
+    "function_addr": "$42D8"
+  },
+  {
+    "id": 111,
+    "name": "Curse",
+    "function_addr": "$49D2"
+  },
+  {
+    "id": 112,
+    "name": "Ahhh",
+    "function_addr": "$4A00"
+  },
+  {
+    "id": 113,
+    "name": "K.O.Dance",
+    "function_addr": "$41F7"
+  },
+  {
+    "id": 114,
+    "name": "SandStorm",
+    "function_addr": "$4A22"
+  },
+  {
+    "id": 115,
+    "name": "Radiant",
+    "function_addr": "$4A22"
+  },
+  {
+    "id": 116,
+    "name": "EerieLite",
+    "function_addr": "$4A57"
+  },
+  {
+    "id": 117,
+    "name": "OddDance",
+    "function_addr": "$4A7B"
+  },
+  {
+    "id": 118,
+    "name": "RobDance",
+    "function_addr": "$4308"
+  },
+  {
+    "id": 119,
+    "name": "SideStep",
+    "function_addr": "$4AA3"
+  },
+  {
+    "id": 120,
+    "name": "LureDance",
+    "function_addr": "$4AC5"
+  },
+  {
+    "id": 121,
+    "name": "LushLicks",
+    "function_addr": "$4AE7"
+  },
+  {
+    "id": 122,
+    "name": "SickLick",
+    "function_addr": "$4AE7"
+  },
+  {
+    "id": 123,
+    "name": "LegSweep",
+    "function_addr": "$4B34"
+  },
+  {
+    "id": 124,
+    "name": "BigTrip",
+    "function_addr": "$4B34"
+  },
+  {
+    "id": 125,
+    "name": "WarCry",
+    "function_addr": "$4B68"
+  },
+  {
+    "id": 126,
+    "name": "Whistle",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 127,
+    "name": "Imitate",
+    "function_addr": "$4B92"
+  },
+  {
+    "id": 128,
+    "name": "DeMagic",
+    "function_addr": "$4BA1"
+  },
+  {
+    "id": 129,
+    "name": "Surge",
+    "function_addr": "$4BAB"
+  },
+  {
+    "id": 130,
+    "name": "UltraDown",
+    "function_addr": "$4BB6"
+  },
+  {
+    "id": 131,
+    "name": "ThickFog",
+    "function_addr": "$4BA1"
+  },
+  {
+    "id": 132,
+    "name": "TatsuCall",
+    "function_addr": "$4BD0"
+  },
+  {
+    "id": 133,
+    "name": "DiagoCall",
+    "function_addr": "$4BD0"
+  },
+  {
+    "id": 134,
+    "name": "SamsiCall",
+    "function_addr": "$4BD0"
+  },
+  {
+    "id": 135,
+    "name": "BazooCall",
+    "function_addr": "$4BD0"
+  },
+  {
+    "id": 136,
+    "name": "Cover",
+    "function_addr": "$4C31"
+  },
+  {
+    "id": 137,
+    "name": "Guardian",
+    "function_addr": "$4C31"
+  },
+  {
+    "id": 138,
+    "name": "TailWind",
+    "function_addr": "$4C3B"
+  },
+  {
+    "id": 139,
+    "name": "StormWind",
+    "function_addr": "$4C3B"
+  },
+  {
+    "id": 140,
+    "name": "Dodge",
+    "function_addr": "$4C72"
+  },
+  {
+    "id": 141,
+    "name": "Defence",
+    "function_addr": "$4C81"
+  },
+  {
+    "id": 142,
+    "name": "StrongD",
+    "function_addr": "$4C81"
+  },
+  {
+    "id": 143,
+    "name": "SuckAll",
+    "function_addr": "$4CA5"
+  },
+  {
+    "id": 144,
+    "name": "BladeD",
+    "function_addr": "$4C81"
+  },
+  {
+    "id": 145,
+    "name": "DanceShut",
+    "function_addr": "$4CDC"
+  },
+  {
+    "id": 146,
+    "name": "MouthShut",
+    "function_addr": "$4D0A"
+  },
+  {
+    "id": 147,
+    "name": "Meditate",
+    "function_addr": "$4D38"
+  },
+  {
+    "id": 148,
+    "name": "Hustle",
+    "function_addr": "$44C4"
+  },
+  {
+    "id": 149,
+    "name": "LifeSong",
+    "function_addr": "$4D92"
+  },
+  {
+    "id": 150,
+    "name": "LifeDance",
+    "function_addr": "$4DE9"
+  },
+  {
+    "id": 151,
+    "name": "Run",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 152,
+    "name": "Daze",
+    "function_addr": "$4E0A"
+  },
+  {
+    "id": 153,
+    "name": "HitAlly",
+    "function_addr": "$4E8A"
+  },
+  {
+    "id": 154,
+    "name": "HitEnemy",
+    "function_addr": "$4EA4"
+  },
+  {
+    "id": 155,
+    "name": "HitRandom",
+    "function_addr": "$4EBE"
+  },
+  {
+    "id": 156,
+    "name": "Scared",
+    "function_addr": "$4EE3"
+  },
+  {
+    "id": 157,
+    "name": "Dance",
+    "function_addr": "$4EE3"
+  },
+  {
+    "id": 158,
+    "name": "Trip",
+    "function_addr": "$4ED8"
+  },
+  {
+    "id": 159,
+    "name": "Paralyze",
+    "function_addr": "$4EE7"
+  },
+  {
+    "id": 160,
+    "name": "CANTMOVE",
+    "function_addr": "$4EE7"
+  },
+  {
+    "id": 161,
+    "name": "RUN",
+    "function_addr": "$4E3A"
+  },
+  {
+    "id": 162,
+    "name": "CALLHOROR",
+    "function_addr": "$4EF9"
+  },
+  {
+    "id": 163,
+    "name": "HealUsAll",
+    "function_addr": "$4F2C"
+  },
+  {
+    "id": 164,
+    "name": "Smashed",
+    "function_addr": "$4EF9"
+  },
+  {
+    "id": 165,
+    "name": "FILTHZONE",
+    "function_addr": "$4BA1"
+  },
+  {
+    "id": 166,
+    "name": "ALLCHANGE",
+    "function_addr": "$4F35"
+  },
+  {
+    "id": 167,
+    "name": "BIGSLEEP",
+    "function_addr": "$4F54"
+  },
+  {
+    "id": 168,
+    "name": "MP0",
+    "function_addr": "$4F7F"
+  },
+  {
+    "id": 169,
+    "name": "ECHO",
+    "function_addr": "$4EE3"
+  },
+  {
+    "id": 170,
+    "name": "CHGDRAGON",
+    "function_addr": "$4E0E"
+  },
+  {
+    "id": 171,
+    "name": "CALLEVIL",
+    "function_addr": "$4FA1"
+  },
+  {
+    "id": 172,
+    "name": "FREEZY",
+    "function_addr": "$4FCC"
+  },
+  {
+    "id": 173,
+    "name": "ALLREVIVE",
+    "function_addr": "$44F8"
+  },
+  {
+    "id": 174,
+    "name": "RESTOREMP",
+    "function_addr": "$4FFC"
+  },
+  {
+    "id": 175,
+    "name": "METEOR",
+    "function_addr": "$501F"
+  },
+  {
+    "id": 176,
+    "name": "HERB",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 177,
+    "name": "HEALWATER",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 178,
+    "name": "SAGESTONE",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 179,
+    "name": "WARLDDEW",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 180,
+    "name": "POTION",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 181,
+    "name": "ELFWATER",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 182,
+    "name": "ANTIDOTE",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 183,
+    "name": "MOONHERB",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 184,
+    "name": "SKYBELL",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 185,
+    "name": "LAUREL",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 186,
+    "name": "AWAKESAND",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 187,
+    "name": "WARLDLEAF",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 188,
+    "name": "LIFEACORN",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 189,
+    "name": "MYSTICNUT",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 190,
+    "name": "PWRSEED",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 191,
+    "name": "DEFSEED",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 192,
+    "name": "AGILSEED",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 193,
+    "name": "INTSEED",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 194,
+    "name": "FEEDMEAT",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 195,
+    "name": "BEFFJERKY",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 196,
+    "name": "PORKCHOP",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 197,
+    "name": "BADMEAT",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 198,
+    "name": "SIRLOIN",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 199,
+    "name": "BOLTSTAFF",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 200,
+    "name": "STAFF",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 201,
+    "name": "BLOKSTAFF",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 202,
+    "name": "LAVASTAFF",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 203,
+    "name": "SNOWSTAFF",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 204,
+    "name": "FIRESTAFF",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 205,
+    "name": "WARPWING",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 206,
+    "name": "TINYMEDAL",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 207,
+    "name": "QuestBk",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 208,
+    "name": "HORRORBK",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 209,
+    "name": "BENICEBK",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 210,
+    "name": "CHEATERBK",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 211,
+    "name": "SMARTBK",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 212,
+    "name": "COMEDYBK",
+    "function_addr": "$4625"
+  },
+  {
+    "id": 213,
+    "name": "BeDragon",
+    "function_addr": "$4E0E"
+  },
+  {
+    "id": 214,
+    "name": "Smashlime",
+    "function_addr": "$4E15"
+  },
+  {
+    "id": 215,
+    "name": "Sheldodge",
+    "function_addr": "$4E1F"
+  },
+  {
+    "id": 216,
+    "name": "Branching",
+    "function_addr": "$4E29"
+  },
+  {
+    "id": 217,
+    "name": "GigaSlash",
+    "function_addr": "$4E33"
+  },
+  {
+    "id": 218,
+    "name": "LIFE",
+    "function_addr": "$42D8"
+  },
+  {
+    "id": 219,
+    "name": "RUN",
+    "function_addr": "$4E3A"
+  },
+  {
+    "id": 220,
+    "name": "IRONIZE",
+    "function_addr": "$4479"
+  },
+  {
+    "id": 221,
+    "name": "Ahhh",
+    "function_addr": "$4E6D"
+  },
+  {
+    "id": 222,
+    "name": "",
+    "function_addr": "$FFCD"
+  },
+  {
+    "id": 223,
+    "name": "DS",
+    "function_addr": "$CD5B"
+  },
+  {
+    "id": 224,
+    "name": "SP",
+    "function_addr": "$54E7"
+  },
+  {
+    "id": 225,
+    "name": "WS",
+    "function_addr": "$CDC9"
+  },
+  {
+    "id": 226,
+    "name": "TS",
+    "function_addr": "$5C0D"
+  },
+  {
+    "id": 227,
+    "name": "SN",
+    "function_addr": "$E7CD"
+  },
+  {
+    "id": 228,
+    "name": "KN",
+    "function_addr": "$C954"
+  },
+  {
+    "id": 229,
+    "name": "BB",
+    "function_addr": "$1BCD"
+  },
+  {
+    "id": 230,
+    "name": "BX",
+    "function_addr": "$CD5C"
+  },
+  {
+    "id": 231,
+    "name": "SL",
+    "function_addr": "$54E7"
+  },
+  {
+    "id": 232,
+    "name": "HL",
+    "function_addr": "$CDC9"
+  },
+  {
+    "id": 233,
+    "name": "FS",
+    "function_addr": "$5C27"
+  },
+  {
+    "id": 234,
+    "name": "RS",
+    "function_addr": "$E7CD"
+  },
+  {
+    "id": 235,
+    "name": "SB",
+    "function_addr": "$C954"
+  },
+  {
+    "id": 236,
+    "name": "ST",
+    "function_addr": "$43CD"
+  },
+  {
+    "id": 237,
+    "name": "SK",
+    "function_addr": "$CD5C"
+  },
+  {
+    "id": 238,
+    "name": "KS",
+    "function_addr": "$54E7"
+  },
+  {
+    "id": 239,
+    "name": "MK",
+    "function_addr": "$CDC9"
+  },
+  {
+    "id": 240,
+    "name": "MB",
+    "function_addr": "$5C35"
+  },
+  {
+    "id": 241,
+    "name": "MT",
+    "function_addr": "$E7CD"
+  },
+  {
+    "id": 242,
+    "name": "GS",
+    "function_addr": "$C954"
+  },
+  {
+    "id": 243,
+    "name": "DK",
+    "function_addr": "$EAAF"
+  },
+  {
+    "id": 244,
+    "name": "TG",
+    "function_addr": "$D9F0"
+  },
+  {
+    "id": 245,
+    "name": "PT",
+    "function_addr": "$51CD"
+  },
+  {
+    "id": 246,
+    "name": "BG",
+    "function_addr": "$305C"
+  },
+  {
+    "id": 247,
+    "name": "BD",
+    "function_addr": "$FA25"
+  },
+  {
+    "id": 248,
+    "name": "LM",
+    "function_addr": "$DB89"
+  },
+  {
+    "id": 249,
+    "name": "PG",
+    "function_addr": "$1B21"
+  },
+  {
+    "id": 250,
+    "name": "SD",
+    "function_addr": "$85DD"
+  },
+  {
+    "id": 251,
+    "name": "DR",
+    "function_addr": "$3E6F"
+  },
+  {
+    "id": 252,
+    "name": "MD",
+    "function_addr": "$8C00"
+  },
+  {
+    "id": 253,
+    "name": "DK",
+    "function_addr": "$3667"
+  },
+  {
+    "id": 254,
+    "name": "RB",
+    "function_addr": "$2101"
+  },
+  {
+    "id": 255,
+    "name": "CH",
+    "function_addr": "$B8E8"
+  }
+]

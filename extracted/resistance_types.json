@@ -1,0 +1,218 @@
+[
+  {
+    "index": 0,
+    "letter": "A",
+    "offset": "+$0F",
+    "type": "Fire",
+    "skills": "Blaze/more/most, FireSlash, BigBang",
+    "confirmed": true
+  },
+  {
+    "index": 1,
+    "letter": "B",
+    "offset": "+$10",
+    "type": "Heat",
+    "skills": "Firebal/bane/bolt, LavaStaff",
+    "confirmed": true
+  },
+  {
+    "index": 2,
+    "letter": "C",
+    "offset": "+$11",
+    "type": "Explosion",
+    "skills": "Bang/Boom/Explodet",
+    "confirmed": true
+  },
+  {
+    "index": 3,
+    "letter": "D",
+    "offset": "+$12",
+    "type": "Wind",
+    "skills": "Infernos/more/most, VacuSlash, MultiCut",
+    "confirmed": true
+  },
+  {
+    "index": 4,
+    "letter": "E",
+    "offset": "+$13",
+    "type": "Lightning",
+    "skills": "Bolt/Zap/Thordain, BoltSlash, Lightning, Hellblast",
+    "confirmed": true
+  },
+  {
+    "index": 5,
+    "letter": "F",
+    "offset": "+$14",
+    "type": "Ice",
+    "skills": "IceBolt/SnowStorm/Blizzard, IceSlash",
+    "confirmed": true
+  },
+  {
+    "index": 6,
+    "letter": "G",
+    "offset": "+$15",
+    "type": "Accuracy",
+    "skills": "Surround, SandStorm, Radiant",
+    "confirmed": true
+  },
+  {
+    "index": 7,
+    "letter": "H",
+    "offset": "+$16",
+    "type": "Sleep",
+    "skills": "Sleep, NapAttack, SleepAir",
+    "confirmed": true
+  },
+  {
+    "index": 8,
+    "letter": "I",
+    "offset": "+$17",
+    "type": "Death",
+    "skills": "Beat/Defeat, K.O.Dance, EerieLite, UltraDown",
+    "confirmed": true
+  },
+  {
+    "index": 9,
+    "letter": "J",
+    "offset": "+$18",
+    "type": "MP",
+    "skills": "RobMagic/TakeMagic, OddDance, RobDance",
+    "confirmed": true
+  },
+  {
+    "index": 10,
+    "letter": "K",
+    "offset": "+$19",
+    "type": "SpellBlock",
+    "skills": "StopSpell, MistStaff",
+    "confirmed": true
+  },
+  {
+    "index": 11,
+    "letter": "L",
+    "offset": "+$1A",
+    "type": "Confusion",
+    "skills": "PanicAll, PaniDance",
+    "confirmed": true
+  },
+  {
+    "index": 12,
+    "letter": "M",
+    "offset": "+$1B",
+    "type": "DefDown",
+    "skills": "Sap, SickLick",
+    "confirmed": true
+  },
+  {
+    "index": 13,
+    "letter": "N",
+    "offset": "+$1C",
+    "type": "AglDown",
+    "skills": "Slow",
+    "confirmed": true
+  },
+  {
+    "index": 14,
+    "letter": "O",
+    "offset": "+$1D",
+    "type": "Sacrifice",
+    "skills": "Sacrifice, Ramming, Kamikaze",
+    "confirmed": true
+  },
+  {
+    "index": 15,
+    "letter": "P",
+    "offset": "+$1E",
+    "type": "MegaMagic",
+    "skills": "MegaMagic",
+    "confirmed": true
+  },
+  {
+    "index": 16,
+    "letter": "Q",
+    "offset": "+$1F",
+    "type": "FireBreath",
+    "skills": "FireAir/BlazeAir/Scorching/WhiteFire",
+    "confirmed": true
+  },
+  {
+    "index": 17,
+    "letter": "R",
+    "offset": "+$20",
+    "type": "IceBreath",
+    "skills": "FrigidAir/IceAir/IceStorm/WhiteAir",
+    "confirmed": true
+  },
+  {
+    "index": 18,
+    "letter": "S",
+    "offset": "+$21",
+    "type": "Poison",
+    "skills": "PoisonHit, PoisonGas, PoisonAir, BadMeat",
+    "confirmed": true
+  },
+  {
+    "index": 19,
+    "letter": "T",
+    "offset": "+$22",
+    "type": "Paralyze",
+    "skills": "Paralyze, PalsyAir",
+    "confirmed": true
+  },
+  {
+    "index": 20,
+    "letter": "U",
+    "offset": "+$23",
+    "type": "Curse",
+    "skills": "Curse",
+    "confirmed": true
+  },
+  {
+    "index": 21,
+    "letter": "V",
+    "offset": "+$24",
+    "type": "MissATurn",
+    "skills": "LureDance, LushLicks, LegSweep, BigTrip, WarCry",
+    "confirmed": true
+  },
+  {
+    "index": 22,
+    "letter": "W",
+    "offset": "+$25",
+    "type": "DanceBlock",
+    "skills": "DanceShut",
+    "confirmed": true
+  },
+  {
+    "index": 23,
+    "letter": "X",
+    "offset": "+$26",
+    "type": "BreathBlock",
+    "skills": "MouthShut",
+    "confirmed": true
+  },
+  {
+    "index": 24,
+    "letter": "Y",
+    "offset": "+$27",
+    "type": "Aid",
+    "skills": "CallHelp, YellHelp, RockThrow",
+    "confirmed": true
+  },
+  {
+    "index": 25,
+    "letter": "Z",
+    "offset": "+$28",
+    "type": "GigaSlash",
+    "skills": "GigaSlash",
+    "confirmed": true
+  },
+  {
+    "index": 26,
+    "letter": "-",
+    "offset": "+$29",
+    "type": "unused (always 0)",
+    "skills": "",
+    "confirmed": true
+  }
+]

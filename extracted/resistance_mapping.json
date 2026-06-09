@@ -1,0 +1,353 @@
+[
+  {
+    "index": 0,
+    "offset": "+$0F",
+    "type": "Frizz (fire magic)",
+    "skills": [
+      {
+        "id": 0,
+        "name": "Blaze"
+      },
+      {
+        "id": 1,
+        "name": "Blazemore"
+      },
+      {
+        "id": 2,
+        "name": "Blazemost"
+      }
+    ]
+  },
+  {
+    "index": 1,
+    "offset": "+$10",
+    "type": "Sizz (fire group)",
+    "skills": [
+      {
+        "id": 3,
+        "name": "Firebal"
+      },
+      {
+        "id": 4,
+        "name": "Firebane"
+      },
+      {
+        "id": 5,
+        "name": "Firebolt"
+      }
+    ]
+  },
+  {
+    "index": 2,
+    "offset": "+$11",
+    "type": "Bang (explosion)",
+    "skills": [
+      {
+        "id": 6,
+        "name": "Bang"
+      },
+      {
+        "id": 7,
+        "name": "Boom"
+      },
+      {
+        "id": 8,
+        "name": "Explodet"
+      }
+    ]
+  },
+  {
+    "index": 3,
+    "offset": "+$12",
+    "type": "Woosh (breath/wind)",
+    "skills": [
+      {
+        "id": 9,
+        "name": "Infernos"
+      },
+      {
+        "id": 10,
+        "name": "Infermore"
+      },
+      {
+        "id": 11,
+        "name": "Infermost"
+      }
+    ]
+  },
+  {
+    "index": 4,
+    "offset": "+$13",
+    "type": "Zap (thunder)",
+    "skills": [
+      {
+        "id": 15,
+        "name": "Bolt"
+      },
+      {
+        "id": 16,
+        "name": "Zap"
+      },
+      {
+        "id": 17,
+        "name": "Thordain"
+      },
+      {
+        "id": 90,
+        "name": "Lightning"
+      },
+      {
+        "id": 100,
+        "name": "Hellblast"
+      }
+    ]
+  },
+  {
+    "index": 5,
+    "offset": "+$14",
+    "type": "Zap (thunder)",
+    "skills": [
+      {
+        "id": 12,
+        "name": "IceBolt"
+      },
+      {
+        "id": 13,
+        "name": "SnowStorm"
+      },
+      {
+        "id": 14,
+        "name": "Blizzard"
+      }
+    ]
+  },
+  {
+    "index": 6,
+    "offset": "+$15",
+    "type": "Dazzle (accuracy)",
+    "skills": [
+      {
+        "id": 24,
+        "name": "Surround"
+      },
+      {
+        "id": 114,
+        "name": "SandStorm"
+      },
+      {
+        "id": 115,
+        "name": "Radiant"
+      }
+    ]
+  },
+  {
+    "index": 7,
+    "offset": "+$16",
+    "type": "Sleep",
+    "skills": [
+      {
+        "id": 20,
+        "name": "Sacrifice"
+      },
+      {
+        "id": 21,
+        "name": "Sleep"
+      },
+      {
+        "id": 22,
+        "name": "SleepAll"
+      },
+      {
+        "id": 106,
+        "name": "SleepAir"
+      }
+    ]
+  },
+  {
+    "index": 8,
+    "offset": "+$17",
+    "type": "Beat (instant death)",
+    "skills": [
+      {
+        "id": 18,
+        "name": "Beat"
+      },
+      {
+        "id": 19,
+        "name": "Defeat"
+      },
+      {
+        "id": 113,
+        "name": "K.O.Dance"
+      },
+      {
+        "id": 116,
+        "name": "EerieLite"
+      },
+      {
+        "id": 130,
+        "name": "UltraDown"
+      }
+    ]
+  },
+  {
+    "index": 9,
+    "offset": "+$18",
+    "type": "Drain (MP steal)",
+    "skills": [
+      {
+        "id": 26,
+        "name": "RobMagic"
+      },
+      {
+        "id": 117,
+        "name": "OddDance"
+      },
+      {
+        "id": 118,
+        "name": "RobDance"
+      }
+    ]
+  },
+  {
+    "index": 10,
+    "offset": "+$19",
+    "type": "StopSpell (seal)",
+    "skills": [
+      {
+        "id": 23,
+        "name": "StopSpell"
+      }
+    ]
+  },
+  {
+    "index": 11,
+    "offset": "+$1A",
+    "type": "Panic (confusion)",
+    "skills": [
+      {
+        "id": 25,
+        "name": "PanicAll"
+      },
+      {
+        "id": 110,
+        "name": "PaniDance"
+      },
+      {
+        "id": 218,
+        "name": "LIFE"
+      }
+    ]
+  },
+  {
+    "index": 12,
+    "offset": "+$1B",
+    "type": "Sap (DEF down)",
+    "skills": [
+      {
+        "id": 28,
+        "name": "Sap"
+      },
+      {
+        "id": 29,
+        "name": "Defence"
+      },
+      {
+        "id": 27,
+        "name": "TakeMagic"
+      },
+      {
+        "id": 121,
+        "name": "LushLicks"
+      },
+      {
+        "id": 122,
+        "name": "SickLick"
+      }
+    ]
+  },
+  {
+    "index": 13,
+    "offset": "+$1C",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 14,
+    "offset": "+$1D",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 15,
+    "offset": "+$1E",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 16,
+    "offset": "+$1F",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 17,
+    "offset": "+$20",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 18,
+    "offset": "+$21",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 19,
+    "offset": "+$22",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 20,
+    "offset": "+$23",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 21,
+    "offset": "+$24",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 22,
+    "offset": "+$25",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 23,
+    "offset": "+$26",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 24,
+    "offset": "+$27",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 25,
+    "offset": "+$28",
+    "type": "unmapped",
+    "skills": []
+  },
+  {
+    "index": 26,
+    "offset": "+$29",
+    "type": "unmapped",
+    "skills": []
+  }
+]

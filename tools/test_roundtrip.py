@@ -6,7 +6,7 @@ from dwm.rom import ROM
 from dwm.text import decode, encode
 
 ROM_PATH = Path("data/DWM-original.gbc")
-NAMES_JSON = Path("extracted/monster_names.json")
+NAMES_JSON = Path("extracted/monsters_full.json")
 
 
 @pytest.fixture(scope="module")
