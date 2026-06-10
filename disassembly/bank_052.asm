@@ -48,262 +48,279 @@ SECTION "ROM Bank $052", ROMX[$4000], BANK[$52]
 ; ---------------------------------------------------------------
 
 SkillFunctionTable:
-    dw $41CD  ; [  0] Blaze
-    dw $41CD  ; [  1] Blazemore
-    dw $41CD  ; [  2] Blazemost
-    dw $41D4  ; [  3] Firebal
-    dw $41D4  ; [  4] Firebane
-    dw $41D4  ; [  5] Firebolt
-    dw $41DB  ; [  6] Bang
-    dw $41DB  ; [  7] Boom
-    dw $41DB  ; [  8] Explodet
-    dw $41E2  ; [  9] Infernos
-    dw $41E2  ; [ 10] Infermore
-    dw $41E2  ; [ 11] Infermost
-    dw $41E9  ; [ 12] IceBolt
-    dw $41E9  ; [ 13] SnowStorm
-    dw $41E9  ; [ 14] Blizzard
-    dw $41F0  ; [ 15] Bolt
-    dw $41F0  ; [ 16] Zap
-    dw $41F0  ; [ 17] Thordain
-    dw $41F7  ; [ 18] Beat
-    dw $41F7  ; [ 19] Defeat
-    dw $422B  ; [ 20] Sacrifice
-    dw $4235  ; [ 21] Sleep
-    dw $4235  ; [ 22] SleepAll
-    dw $427C  ; [ 23] StopSpell
-    dw $42AA  ; [ 24] Surround
-    dw $42D8  ; [ 25] PanicAll
-    dw $4308  ; [ 26] RobMagic
-    dw $4330  ; [ 27] TakeMagic
-    dw $434A  ; [ 28] Sap
-    dw $434A  ; [ 29] Defence
-    dw $436D  ; [ 30] Upper
-    dw $436D  ; [ 31] Increase
-    dw $4385  ; [ 32] Slow
-    dw $4385  ; [ 33] SlowAll
-    dw $43A8  ; [ 34] Speed
-    dw $43A8  ; [ 35] SpeedUp
-    dw $43C0  ; [ 36] Barrier
-    dw $43FB  ; [ 37] TwinHits
-    dw $4415  ; [ 38] MagicWall
-    dw $4434  ; [ 39] MagicBack
-    dw $4434  ; [ 40] Bounce
-    dw $446C  ; [ 41] Transform
-    dw $447F  ; [ 42] Ironize
-    dw $44C4  ; [ 43] Heal
-    dw $44C4  ; [ 44] HealMore
-    dw $44C4  ; [ 45] HealAll
-    dw $44C4  ; [ 46] HealUs
-    dw $44C4  ; [ 47] HealUsAll
-    dw $44F8  ; [ 48] Vivify
-    dw $44F8  ; [ 49] Revive
-    dw $457E  ; [ 50] Farewell
-    dw $458F  ; [ 51] Antidote
-    dw $45A7  ; [ 52] NumbOff
-    dw $45D8  ; [ 53] DeChaos
-    dw $45FE  ; [ 54] CurseOff
-    dw $4625  ; [ 55] StepGuard
-    dw $4625  ; [ 56] MapMagic
-    dw $4616  ; [ 57] Chance
-    dw $4625  ; [ 58] Attack
-    dw $462F  ; [ 59] TwinSlash
-    dw $464C  ; [ 60] Ramming
-    dw $4653  ; [ 61] Beserker
-    dw $467C  ; [ 62] Kamikaze
-    dw $4683  ; [ 63] Massacre
-    dw $4683  ; [ 64] EvilSlash
-    dw $46BE  ; [ 65] ChargeUP
-    dw $46CF  ; [ 66] HighJump
-    dw $470F  ; [ 67] SuckAir
-    dw $4720  ; [ 68] FireSlash
-    dw $472A  ; [ 69] BoltSlash
-    dw $4734  ; [ 70] VacuSlash
-    dw $473E  ; [ 71] IceSlash
-    dw $4748  ; [ 72] MetalCut
-    dw $4752  ; [ 73] DrakSlash
-    dw $475C  ; [ 74] BeastCut
-    dw $4766  ; [ 75] BirdBlow
-    dw $4770  ; [ 76] DevilCut
-    dw $477A  ; [ 77] ZombieCut
-    dw $4784  ; [ 78] CleanCut
-    dw $478E  ; [ 79] MultiCut
-    dw $4798  ; [ 80] BiAttack
-    dw $4798  ; [ 81] QuadHits
-    dw $480C  ; [ 82] CallHelp
-    dw $480C  ; [ 83] YellHelp
-    dw $4888  ; [ 84] Focus
-    dw $4897  ; [ 85] SquallHit
-    dw $462F  ; [ 86] PsycheUp
-    dw $48B4  ; [ 87] RainSlash
-    dw $4918  ; [ 88] WindBeast
-    dw $4918  ; [ 89] Vacuum
-    dw $41F0  ; [ 90] Lightning
-    dw $492B  ; [ 91] RockThrow
-    dw $4932  ; [ 92] FireAir
-    dw $4932  ; [ 93] BlazeAir
-    dw $4932  ; [ 94] Scorching
-    dw $4932  ; [ 95] WhiteFire
-    dw $493C  ; [ 96] FrigidAir
-    dw $493C  ; [ 97] IceAir
-    dw $493C  ; [ 98] IceStorm
-    dw $493C  ; [ 99] WhiteAir
-    dw $41F0  ; [100] Hellblast
-    dw $4946  ; [101] BigBang
-    dw $494D  ; [102] MegaMagic
-    dw $4625  ; [103] PoisonHit
-    dw $4625  ; [104] NapAttack
-    dw $4625  ; [105] Paralyze
-    dw $4235  ; [106] SleepAir
-    dw $4954  ; [107] PalsyAir
-    dw $497B  ; [108] PoisonGas
-    dw $497B  ; [109] PoisonAir
-    dw $42D8  ; [110] PaniDance
-    dw $49D2  ; [111] Curse
-    dw $4A00  ; [112] Ahhh
-    dw $41F7  ; [113] K.O.Dance
-    dw $4A22  ; [114] SandStorm
-    dw $4A22  ; [115] Radiant
-    dw $4A57  ; [116] EerieLite
-    dw $4A7B  ; [117] OddDance
-    dw $4308  ; [118] RobDance
-    dw $4AA3  ; [119] SideStep
-    dw $4AC5  ; [120] LureDance
-    dw $4AE7  ; [121] LushLicks
-    dw $4AE7  ; [122] SickLick
-    dw $4B34  ; [123] LegSweep
-    dw $4B34  ; [124] BigTrip
-    dw $4B68  ; [125] WarCry
-    dw $4625  ; [126] Whistle
-    dw $4B92  ; [127] Imitate
-    dw $4BA1  ; [128] DeMagic
-    dw $4BAB  ; [129] Surge
-    dw $4BB6  ; [130] UltraDown
-    dw $4BA1  ; [131] ThickFog
-    dw $4BD0  ; [132] TatsuCall
-    dw $4BD0  ; [133] DiagoCall
-    dw $4BD0  ; [134] SamsiCall
-    dw $4BD0  ; [135] BazooCall
-    dw $4C31  ; [136] Cover
-    dw $4C31  ; [137] Guardian
-    dw $4C3B  ; [138] TailWind
-    dw $4C3B  ; [139] StormWind
-    dw $4C72  ; [140] Dodge
-    dw $4C81  ; [141] Defence
-    dw $4C81  ; [142] StrongD
-    dw $4CA5  ; [143] SuckAll
-    dw $4C81  ; [144] BladeD
-    dw $4CDC  ; [145] DanceShut
-    dw $4D0A  ; [146] MouthShut
-    dw $4D38  ; [147] Meditate
-    dw $44C4  ; [148] Hustle
-    dw $4D92  ; [149] LifeSong
-    dw $4DE9  ; [150] LifeDance
-    dw $4625  ; [151] Run
-    dw $4E0A  ; [152] Daze
-    dw $4E8A  ; [153] HitAlly
-    dw $4EA4  ; [154] HitEnemy
-    dw $4EBE  ; [155] HitRandom
-    dw $4EE3  ; [156] Scared
-    dw $4EE3  ; [157] Dance
-    dw $4ED8  ; [158] Trip
-    dw $4EE7  ; [159] Paralyze
-    dw $4EE7  ; [160] CANTMOVE
-    dw $4E3A  ; [161] RUN
-    dw $4EF9  ; [162] CALLHOROR
-    dw $4F2C  ; [163] HealUsAll
-    dw $4EF9  ; [164] Smashed
-    dw $4BA1  ; [165] FILTHZONE
-    dw $4F35  ; [166] ALLCHANGE
-    dw $4F54  ; [167] BIGSLEEP
-    dw $4F7F  ; [168] MP0
-    dw $4EE3  ; [169] ECHO
-    dw $4E0E  ; [170] CHGDRAGON
-    dw $4FA1  ; [171] CALLEVIL
-    dw $4FCC  ; [172] FREEZY
-    dw $44F8  ; [173] ALLREVIVE
-    dw $4FFC  ; [174] RESTOREMP
-    dw $501F  ; [175] METEOR
-    dw $4625  ; [176] HERB
-    dw $4625  ; [177] HEALWATER
-    dw $4625  ; [178] SAGESTONE
-    dw $4625  ; [179] WARLDDEW
-    dw $4625  ; [180] POTION
-    dw $4625  ; [181] ELFWATER
-    dw $4625  ; [182] ANTIDOTE
-    dw $4625  ; [183] MOONHERB
-    dw $4625  ; [184] SKYBELL
-    dw $4625  ; [185] LAUREL
-    dw $4625  ; [186] AWAKESAND
-    dw $4625  ; [187] WARLDLEAF
-    dw $4625  ; [188] LIFEACORN
-    dw $4625  ; [189] MYSTICNUT
-    dw $4625  ; [190] PWRSEED
-    dw $4625  ; [191] DEFSEED
-    dw $4625  ; [192] AGILSEED
-    dw $4625  ; [193] INTSEED
-    dw $4625  ; [194] FEEDMEAT
-    dw $4625  ; [195] BEFFJERKY
-    dw $4625  ; [196] PORKCHOP
-    dw $4625  ; [197] BADMEAT
-    dw $4625  ; [198] SIRLOIN
-    dw $4625  ; [199] BOLTSTAFF
-    dw $4625  ; [200] STAFF
-    dw $4625  ; [201] BLOKSTAFF
-    dw $4625  ; [202] LAVASTAFF
-    dw $4625  ; [203] SNOWSTAFF
-    dw $4625  ; [204] FIRESTAFF
-    dw $4625  ; [205] WARPWING
-    dw $4625  ; [206] TINYMEDAL
-    dw $4625  ; [207] QuestBk
-    dw $4625  ; [208] HORRORBK
-    dw $4625  ; [209] BENICEBK
-    dw $4625  ; [210] CHEATERBK
-    dw $4625  ; [211] SMARTBK
-    dw $4625  ; [212] COMEDYBK
-    dw $4E0E  ; [213] BeDragon
-    dw $4E15  ; [214] Smashlime
-    dw $4E1F  ; [215] Sheldodge
-    dw $4E29  ; [216] Branching
-    dw $4E33  ; [217] GigaSlash
-    dw $42D8  ; [218] LIFE
-    dw $4E3A  ; [219] RUN
-    dw $4479  ; [220] IRONIZE
-    dw $4E6D  ; [221] Ahhh
-    dw $FFCD  ; [222] 
-    dw $CD5B  ; [223] DS
-    dw $54E7  ; [224] SP
-    dw $CDC9  ; [225] WS
-    dw $5C0D  ; [226] TS
-    dw $E7CD  ; [227] SN
-    dw $C954  ; [228] KN
-    dw $1BCD  ; [229] BB
-    dw $CD5C  ; [230] BX
-    dw $54E7  ; [231] SL
-    dw $CDC9  ; [232] HL
-    dw $5C27  ; [233] FS
-    dw $E7CD  ; [234] RS
-    dw $C954  ; [235] SB
-    dw $43CD  ; [236] ST
-    dw $CD5C  ; [237] SK
-    dw $54E7  ; [238] KS
-    dw $CDC9  ; [239] MK
-    dw $5C35  ; [240] MB
-    dw $E7CD  ; [241] MT
-    dw $C954  ; [242] GS
-    dw $EAAF  ; [243] DK
-    dw $D9F0  ; [244] TG
-    dw $51CD  ; [245] PT
-    dw $305C  ; [246] BG
-    dw $FA25  ; [247] BD
-    dw $DB89  ; [248] LM
-    dw $1B21  ; [249] PG
-    dw $85DD  ; [250] SD
-    dw $3E6F  ; [251] DR
-    dw $8C00  ; [252] MD
-    dw $3667  ; [253] DK
-    dw $2101  ; [254] RB
-    dw $B8E8  ; [255] CH
+    dw SkillBlaze  ; [  0] Blaze
+    dw SkillBlaze  ; [  1] Blazemore
+    dw SkillBlaze  ; [  2] Blazemost
+    dw SkillFirebal  ; [  3] Firebal
+    dw SkillFirebal  ; [  4] Firebane
+    dw SkillFirebal  ; [  5] Firebolt
+    dw SkillBang  ; [  6] Bang
+    dw SkillBang  ; [  7] Boom
+    dw SkillBang  ; [  8] Explodet
+    dw SkillInfernos  ; [  9] Infernos
+    dw SkillInfernos  ; [ 10] Infermore
+    dw SkillInfernos  ; [ 11] Infermost
+    dw SkillIceBolt  ; [ 12] IceBolt
+    dw SkillIceBolt  ; [ 13] SnowStorm
+    dw SkillIceBolt  ; [ 14] Blizzard
+    dw SkillBolt  ; [ 15] Bolt
+    dw SkillBolt  ; [ 16] Zap
+    dw SkillBolt  ; [ 17] Thordain
+    dw SkillBeat  ; [ 18] Beat
+    dw SkillBeat  ; [ 19] Defeat
+    dw SkillSacrifice  ; [ 20] Sacrifice
+    dw SkillSleep  ; [ 21] Sleep
+    dw SkillSleep  ; [ 22] SleepAll
+    dw SkillStopSpell  ; [ 23] StopSpell
+    dw SkillSurround  ; [ 24] Surround
+    dw SkillPanicAll  ; [ 25] PanicAll
+    dw SkillRobMagic  ; [ 26] RobMagic
+    dw SkillTakeMagic  ; [ 27] TakeMagic
+    dw SkillSap  ; [ 28] Sap
+    dw SkillSap  ; [ 29] Defence
+    dw SkillUpper  ; [ 30] Upper
+    dw SkillUpper  ; [ 31] Increase
+    dw SkillSlow  ; [ 32] Slow
+    dw SkillSlow  ; [ 33] SlowAll
+    dw SkillSpeed  ; [ 34] Speed
+    dw SkillSpeed  ; [ 35] SpeedUp
+    dw SkillBarrier  ; [ 36] Barrier
+    dw SkillTwinHits  ; [ 37] TwinHits
+    dw SkillMagicWall  ; [ 38] MagicWall
+    dw SkillMagicBack  ; [ 39] MagicBack
+    dw SkillMagicBack  ; [ 40] Bounce
+    dw SkillTransform  ; [ 41] Transform
+    dw SkillIronize  ; [ 42] Ironize
+    dw SkillHeal  ; [ 43] Heal
+    dw SkillHeal  ; [ 44] HealMore
+    dw SkillHeal  ; [ 45] HealAll
+    dw SkillHeal  ; [ 46] HealUs
+    dw SkillHeal  ; [ 47] HealUsAll
+    dw SkillVivify  ; [ 48] Vivify
+    dw SkillVivify  ; [ 49] Revive
+    dw SkillFarewell  ; [ 50] Farewell
+    dw SkillAntidote  ; [ 51] Antidote
+    dw SkillNumbOff  ; [ 52] NumbOff
+    dw SkillDeChaos  ; [ 53] DeChaos
+    dw SkillCurseOff  ; [ 54] CurseOff
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [ 55] StepGuard
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [ 56] MapMagic
+    dw SkillChance  ; [ 57] Chance
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [ 58] Attack
+    dw SkillPsycheUp_TwinSlash  ; [ 59] TwinSlash
+    dw SkillRamming  ; [ 60] Ramming
+    dw SkillBeserker  ; [ 61] Beserker
+    dw SkillKamikaze  ; [ 62] Kamikaze
+    dw SkillMassacre  ; [ 63] Massacre
+    dw SkillMassacre  ; [ 64] EvilSlash
+    dw SkillChargeUP  ; [ 65] ChargeUP
+    dw SkillHighJump  ; [ 66] HighJump
+    dw SkillSuckAir  ; [ 67] SuckAir
+    dw SkillFireSlash  ; [ 68] FireSlash
+    dw SkillBoltSlash  ; [ 69] BoltSlash
+    dw SkillVacuSlash  ; [ 70] VacuSlash
+    dw SkillIceSlash  ; [ 71] IceSlash
+    dw SkillMetalCut  ; [ 72] MetalCut
+    dw SkillDrakSlash  ; [ 73] DrakSlash
+    dw SkillBeastCut  ; [ 74] BeastCut
+    dw SkillBirdBlow  ; [ 75] BirdBlow
+    dw SkillDevilCut  ; [ 76] DevilCut
+    dw SkillZombieCut  ; [ 77] ZombieCut
+    dw SkillCleanCut  ; [ 78] CleanCut
+    dw SkillMultiCut  ; [ 79] MultiCut
+    dw SkillBiAttack  ; [ 80] BiAttack
+    dw SkillBiAttack  ; [ 81] QuadHits
+    dw SkillCallHelp  ; [ 82] CallHelp
+    dw SkillCallHelp  ; [ 83] YellHelp
+    dw SkillFocus  ; [ 84] Focus
+    dw SkillSquallHit  ; [ 85] SquallHit
+    dw SkillPsycheUp_TwinSlash  ; [ 86] PsycheUp
+    dw SkillRainSlash  ; [ 87] RainSlash
+    dw SkillWindBeast  ; [ 88] WindBeast
+    dw SkillWindBeast  ; [ 89] Vacuum
+    dw SkillBolt  ; [ 90] Lightning
+    dw SkillRockThrow  ; [ 91] RockThrow
+    dw SkillFireAir  ; [ 92] FireAir
+    dw SkillFireAir  ; [ 93] BlazeAir
+    dw SkillFireAir  ; [ 94] Scorching
+    dw SkillFireAir  ; [ 95] WhiteFire
+    dw SkillFrigidAir  ; [ 96] FrigidAir
+    dw SkillFrigidAir  ; [ 97] IceAir
+    dw SkillFrigidAir  ; [ 98] IceStorm
+    dw SkillFrigidAir  ; [ 99] WhiteAir
+    dw SkillBolt  ; [100] Hellblast
+    dw SkillBigBang  ; [101] BigBang
+    dw SkillMegaMagic  ; [102] MegaMagic
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [103] PoisonHit
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [104] NapAttack
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [105] Paralyze
+    dw SkillSleep  ; [106] SleepAir
+    dw SkillPalsyAir  ; [107] PalsyAir
+    dw SkillPoisonGas  ; [108] PoisonGas
+    dw SkillPoisonGas  ; [109] PoisonAir
+    dw SkillPanicAll  ; [110] PaniDance
+    dw SkillCurse  ; [111] Curse
+    dw SkillAhhh  ; [112] Ahhh
+    dw SkillBeat  ; [113] K.O.Dance
+    dw SkillSandStorm  ; [114] SandStorm
+    dw SkillSandStorm  ; [115] Radiant
+    dw SkillEerieLite  ; [116] EerieLite
+    dw SkillOddDance  ; [117] OddDance
+    dw SkillRobMagic  ; [118] RobDance
+    dw SkillSideStep  ; [119] SideStep
+    dw SkillLureDance  ; [120] LureDance
+    dw SkillLushLicks  ; [121] LushLicks
+    dw SkillLushLicks  ; [122] SickLick
+    dw SkillLegSweep  ; [123] LegSweep
+    dw SkillLegSweep  ; [124] BigTrip
+    dw SkillWarCry  ; [125] WarCry
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [126] Whistle
+    dw SkillImitate  ; [127] Imitate
+    dw SkillDeMagic_ThickFog  ; [128] DeMagic
+    dw SkillSurge  ; [129] Surge
+    dw SkillUltraDown  ; [130] UltraDown
+    dw SkillDeMagic_ThickFog  ; [131] ThickFog
+    dw SkillTatsuCall  ; [132] TatsuCall
+    dw SkillTatsuCall  ; [133] DiagoCall
+    dw SkillTatsuCall  ; [134] SamsiCall
+    dw SkillTatsuCall  ; [135] BazooCall
+    dw SkillCover  ; [136] Cover
+    dw SkillCover  ; [137] Guardian
+    dw SkillTailWind  ; [138] TailWind
+    dw SkillTailWind  ; [139] StormWind
+    dw SkillDodge  ; [140] Dodge
+    dw SkillBladeD_Defense  ; [141] Defence
+    dw SkillBladeD_Defense  ; [142] StrongD
+    dw SkillSuckAll  ; [143] SuckAll
+    dw SkillBladeD_Defense  ; [144] BladeD
+    dw SkillDanceShut  ; [145] DanceShut
+    dw SkillMouthShut  ; [146] MouthShut
+    dw SkillMeditate  ; [147] Meditate
+    dw SkillHeal  ; [148] Hustle
+    dw SkillLifeSong  ; [149] LifeSong
+    dw SkillLifeDance  ; [150] LifeDance
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [151] Run
+    dw SkillDaze  ; [152] Daze
+    dw SkillHitAlly  ; [153] HitAlly
+    dw SkillHitEnemy  ; [154] HitEnemy
+    dw SkillHitRandom  ; [155] HitRandom
+    dw SkillScared  ; [156] Scared
+    dw SkillScared  ; [157] Dance
+    dw SkillTrip  ; [158] Trip
+    dw SkillParalyze  ; [159] Paralyze
+    dw SkillParalyze  ; [160] CANTMOVE
+    dw SkillRUN  ; [161] RUN
+    dw SkillSmashed  ; [162] CALLHOROR
+    dw SkillHealUsAll  ; [163] HealUsAll
+    dw SkillSmashed  ; [164] Smashed
+    dw SkillDeMagic_ThickFog  ; [165] FILTHZONE
+    dw SkillALLCHANGE  ; [166] ALLCHANGE
+    dw SkillBIGSLEEP  ; [167] BIGSLEEP
+    dw SkillMP0  ; [168] MP0
+    dw SkillScared  ; [169] ECHO
+    dw SkillBeDragon  ; [170] CHGDRAGON
+    dw SkillCALLEVIL  ; [171] CALLEVIL
+    dw SkillFREEZY  ; [172] FREEZY
+    dw SkillVivify  ; [173] ALLREVIVE
+    dw SkillRESTOREMP  ; [174] RESTOREMP
+    dw SkillMETEOR  ; [175] METEOR
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [176] HERB
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [177] HEALWATER
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [178] SAGESTONE
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [179] WARLDDEW
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [180] POTION
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [181] ELFWATER
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [182] ANTIDOTE
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [183] MOONHERB
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [184] SKYBELL
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [185] LAUREL
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [186] AWAKESAND
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [187] WARLDLEAF
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [188] LIFEACORN
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [189] MYSTICNUT
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [190] PWRSEED
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [191] DEFSEED
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [192] AGILSEED
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [193] INTSEED
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [194] FEEDMEAT
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [195] BEFFJERKY
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [196] PORKCHOP
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [197] BADMEAT
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [198] SIRLOIN
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [199] BOLTSTAFF
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [200] STAFF
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [201] BLOKSTAFF
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [202] LAVASTAFF
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [203] SNOWSTAFF
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [204] FIRESTAFF
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [205] WARPWING
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [206] TINYMEDAL
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [207] QuestBk
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [208] HORRORBK
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [209] BENICEBK
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [210] CHEATERBK
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [211] SMARTBK
+    dw SkillPoisonHit_StepGuard_Whistle_Attack  ; [212] COMEDYBK
+    dw SkillBeDragon  ; [213] BeDragon
+    dw SkillSmashlime  ; [214] Smashlime
+    dw SkillSheldodge  ; [215] Sheldodge
+    dw SkillBranching  ; [216] Branching
+    dw SkillGigaSlash  ; [217] GigaSlash
+    dw SkillPanicAll  ; [218] LIFE
+    dw SkillRUN  ; [219] RUN
+    dw SkillIRONIZE  ; [220] IRONIZE
+    dw SkillAhhh2  ; [221] Ahhh
+
+; ---------------------------------------------------------------
+; Skill Handler Functions
+; Table entries 222-255 overlap with the first 7 handlers below
+; (skills 222+ don't exist so those table entries are never read)
+; ---------------------------------------------------------------
+
+SkillBlaze:
+    call $5BFF
+    call $54E7
+    ret
+
+SkillFirebal:
+    call $5C0D
+    call $54E7
+    ret
+
+SkillBang:
+    call $5C1B
+    call $54E7
+    ret
+
+SkillInfernos:
+    call $5C27
+    call $54E7
+    ret
+
+SkillIceBolt:
+    call $5C43
+    call $54E7
+    ret
+
+SkillBolt:
+    call $5C35
+    call $54E7
+    ret
+
+SkillBeat:  ; $41F7
+    xor a
+    ld [$d9f0], a
+    call $5C51
+    jr nc, jr_052_4225
+    ld a, [$db89]
+    ld hl, $dd1b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld [hl], $01
+    ld hl, $b8e8
     call Call_052_54af
     push hl
     ld a, [$db89]
@@ -315,11 +332,12 @@ SkillFunctionTable:
     pop hl
     ret
 
-
 jr_052_4225:
     ld a, $b8
     call Call_052_545d
     ret
+
+SkillSacrifice:
 
 
     ld a, $03
@@ -327,6 +345,8 @@ jr_052_4225:
     xor a
     ld [$d9ee], a
     ret
+
+SkillSleep:
 
 
     ld hl, $c180
@@ -371,6 +391,8 @@ jr_052_4276:
     call Call_052_5475
     ret
 
+SkillStopSpell:
+
 
     ld a, [$db89]
     ld hl, $db03
@@ -400,6 +422,8 @@ jr_052_42a4:
     call Call_052_545d
     ret
 
+SkillSurround:
+
 
     ld a, [$db89]
     ld hl, $db03
@@ -428,6 +452,8 @@ jr_052_42d2:
     ld a, $b8
     call Call_052_545d
     ret
+
+SkillPanicAll:
 
 
     ld a, [$db89]
@@ -459,6 +485,8 @@ jr_052_4302:
     call Call_052_545d
     ret
 
+SkillRobMagic:
+
 
     ld a, [$db89]
     ld hl, $dbc3
@@ -487,6 +515,8 @@ jr_052_432a:
     call Call_052_545d
     ret
 
+SkillTakeMagic:
+
 
     ld a, [$db88]
     ld hl, $db04
@@ -503,6 +533,8 @@ jr_052_432a:
 jr_052_4346:
     call Call_052_548d
     ret
+
+SkillSap:
 
 
     call Call_052_5dcc
@@ -529,6 +561,8 @@ jr_052_4367:
     call Call_052_545d
     ret
 
+SkillUpper:
+
 
     call Call_052_5e3e
     jr nc, jr_052_437f
@@ -544,6 +578,8 @@ jr_052_437f:
     ld a, $bb
     call Call_052_5475
     ret
+
+SkillSlow:
 
 
     call Call_052_5e94
@@ -570,6 +606,8 @@ jr_052_43a2:
     call Call_052_545d
     ret
 
+SkillSpeed:
+
 
     call Call_052_5f08
     jr nc, jr_052_43ba
@@ -585,6 +623,8 @@ jr_052_43ba:
     ld a, $bb
     call Call_052_5475
     ret
+
+SkillBarrier:
 
 
     ld a, [$db89]
@@ -632,6 +672,8 @@ jr_052_43f7:
     call Call_052_548d
     ret
 
+SkillTwinHits:
+
 
     ld a, [$db89]
     ld hl, $db03
@@ -648,6 +690,8 @@ jr_052_43f7:
 jr_052_4411:
     call Call_052_548d
     ret
+
+SkillMagicWall:
 
 
     ld a, [$db88]
@@ -672,6 +716,8 @@ jr_052_442c:
 
     call Call_052_548d
     ret
+
+SkillMagicBack:
 
 
     ld a, [$db88]
@@ -711,6 +757,8 @@ jr_052_4466:
     call Call_052_5475
     ret
 
+SkillTransform:
+
 
     ld a, [$db88]
     call Call_052_5382
@@ -718,9 +766,13 @@ jr_052_4466:
     call Call_052_54bd
     ret
 
+SkillIRONIZE:
+
 
     ld a, [$db88]
     ld [$db89], a
+
+SkillIronize:
     ld a, [$c86c]
     or a
     jr nz, jr_052_449c
@@ -770,7 +822,7 @@ jr_052_44b4:
     ret
 
 
-Call_052_44c4:
+SkillHeal:
     ld a, [$db89]
     call Call_000_2fa5
     jr nc, jr_052_44d2
@@ -806,7 +858,7 @@ jr_052_44d2:
     ret
 
 
-Call_052_44f8:
+SkillVivify:
     ld a, [$db89]
     call Call_000_2fa5
     jr nc, jr_052_456d
@@ -903,6 +955,8 @@ jr_052_457a:
     call Call_052_548d
     ret
 
+SkillFarewell:
+
 
     ld a, $04
     ld [$d9ed], a
@@ -912,6 +966,8 @@ jr_052_457a:
     xor a
     ld [$d9ef], a
     ret
+
+SkillAntidote:
 
 
     call Call_052_519e
@@ -930,6 +986,8 @@ jr_052_45a1:
     ld a, $bb
     call Call_052_545d
     ret
+
+SkillNumbOff:
 
 
     call Call_052_519e
@@ -968,6 +1026,8 @@ jr_052_45d2:
     call Call_052_545d
     ret
 
+SkillDeChaos:
+
 
     call Call_052_519e
     and $10
@@ -994,6 +1054,8 @@ jr_052_45f8:
     call Call_052_545d
     ret
 
+SkillCurseOff:
+
 
     call Call_052_519e
     and $20
@@ -1012,6 +1074,8 @@ jr_052_4610:
     call Call_052_545d
     ret
 
+SkillChance:
+
 
     ld hl, $5303
     rst $10
@@ -1021,11 +1085,15 @@ jr_052_4610:
     ld [$d9ed], a
     ret
 
+SkillPoisonHit_StepGuard_Whistle_Attack:
+
 
     call Call_052_519a
     ld hl, $b682
     call Call_052_54ea
     ret
+
+SkillPsycheUp_TwinSlash:
 
 
     call Call_052_519a
@@ -1042,10 +1110,14 @@ jr_052_4610:
     call Call_052_54ea
     ret
 
+SkillRamming:
+
 
     call Call_052_6214
     call Call_052_54e7
     ret
+
+SkillBeserker:
 
 
     ld a, [$db88]
@@ -1067,10 +1139,14 @@ jr_052_4610:
     call Call_052_54ea
     ret
 
+SkillKamikaze:
+
 
     call Call_052_6232
     call Call_052_54e7
     ret
+
+SkillMassacre:
 
 
     ld a, [$db89]
@@ -1110,6 +1186,8 @@ jr_052_46b8:
     call Call_052_545d
     ret
 
+SkillChargeUP:
+
 
     ld a, [$db88]
     ld hl, $db06
@@ -1119,6 +1197,8 @@ jr_052_46b8:
     ld [hl], a
     call Call_052_548d
     ret
+
+SkillHighJump:
 
 
     ld a, [$db88]
@@ -1157,6 +1237,8 @@ jr_052_46ee:
     call Call_052_54ea
     ret
 
+SkillSuckAir:
+
 
     ld a, [$db88]
     ld hl, $db06
@@ -1167,11 +1249,15 @@ jr_052_46ee:
     call Call_052_548d
     ret
 
+SkillFireSlash:
+
 
     call Call_052_6298
     ld hl, $b682
     call Call_052_54ea
     ret
+
+SkillBoltSlash:
 
 
     call Call_052_62a9
@@ -1179,11 +1265,15 @@ jr_052_46ee:
     call Call_052_54ea
     ret
 
+SkillVacuSlash:
+
 
     call Call_052_62ba
     ld hl, $b682
     call Call_052_54ea
     ret
+
+SkillIceSlash:
 
 
     call Call_052_62cb
@@ -1191,53 +1281,71 @@ jr_052_46ee:
     call Call_052_54ea
     ret
 
+SkillMetalCut:
+
 
     call Call_052_62dc
     ld hl, $b682
     call Call_052_54ea
     ret
 
+SkillDrakSlash:
 
-    call Call_052_6311
+
+    call CheckIsDragon
     ld hl, $b682
     call Call_052_54ea
     ret
 
+SkillBeastCut:
 
-    call Call_052_631f
+
+    call CheckIsBeast
     ld hl, $b682
     call Call_052_54ea
     ret
 
+SkillBirdBlow:
 
-    call Call_052_632d
+
+    call CheckIsFlying
     ld hl, $b682
     call Call_052_54ea
     ret
 
+SkillDevilCut:
 
-    call Call_052_6357
+
+    call CheckIsDevil
     ld hl, $b682
     call Call_052_54ea
     ret
 
+SkillZombieCut:
 
-    call Call_052_6365
+
+    call CheckIsZombie
     ld hl, $b682
     call Call_052_54ea
     ret
 
+SkillCleanCut:
 
-    call Call_052_6373
+
+    call CheckIsMaterial
     ld hl, $b682
     call Call_052_54ea
     ret
+
+SkillMultiCut:
 
 
     call Call_052_6381
     ld hl, $b682
     call Call_052_54ea
     ret
+
+SkillBiAttack:
 
 
     ld a, [$db8a]
@@ -1278,10 +1386,10 @@ jr_052_47bb:
     jr jr_052_47e2
 
 jr_052_47d9:
-    call Call_052_6b43
+    call HLsrl1
     ld b, h
     ld c, l
-    call Call_052_6b2e
+    call BCsrl2
     add hl, bc
 
 jr_052_47e2:
@@ -1314,6 +1422,8 @@ Call_052_4807:
     ld hl, $580a
     rst $10
     ret
+
+SkillCallHelp:
 
 
     ld a, [$dd69]
@@ -1383,6 +1493,8 @@ jr_052_486b:
     call Call_052_54ea
     ret
 
+SkillFocus:
+
 
     ld a, [$db88]
     ld hl, $db06
@@ -1390,6 +1502,8 @@ jr_052_486b:
     set 7, [hl]
     call Call_052_548d
     ret
+
+SkillSquallHit:
 
 
     call Call_052_519a
@@ -1405,6 +1519,8 @@ jr_052_486b:
     ld hl, $b682
     call Call_052_54ea
     ret
+
+SkillRainSlash:
 
 
     ld a, [$dd69]
@@ -1468,6 +1584,8 @@ jr_052_4914:
     call Call_052_548d
     ret
 
+SkillWindBeast:
+
 
     ld a, [$db8a]
     cp $59
@@ -1483,10 +1601,14 @@ jr_052_4927:
     call Call_052_54e7
     ret
 
+SkillRockThrow:
+
 
     call Call_052_6506
     call Call_052_54e7
     ret
+
+SkillFireAir:
 
 
     call Call_052_6514
@@ -1494,21 +1616,29 @@ jr_052_4927:
     call Call_052_54e7
     ret
 
+SkillFrigidAir:
+
 
     call Call_052_6522
     call Call_052_5539
     call Call_052_54e7
     ret
 
+SkillBigBang:
+
 
     call Call_052_6530
     call Call_052_54e7
     ret
 
+SkillMegaMagic:
+
 
     call Call_052_653e
     call Call_052_54e7
     ret
+
+SkillPalsyAir:
 
 
     ld a, [$db89]
@@ -1537,6 +1667,8 @@ jr_052_496e:
 jr_052_4977:
     call Call_052_548d
     ret
+
+SkillPoisonGas:
 
 
     ld a, [$db89]
@@ -1597,6 +1729,8 @@ jr_052_49ce:
     call Call_052_548d
     ret
 
+SkillCurse:
+
 
     ld a, [$db89]
     ld hl, $db02
@@ -1626,6 +1760,8 @@ jr_052_49fc:
     call Call_052_548d
     ret
 
+SkillAhhh:
+
 
     call Call_052_5422
     bit 5, [hl]
@@ -1650,6 +1786,8 @@ jr_052_4a1c:
     ld a, $b8
     call Call_052_5469
     ret
+
+SkillSandStorm:
 
 
     ld a, [$db89]
@@ -1685,6 +1823,8 @@ jr_052_4a53:
     call Call_052_548d
     ret
 
+SkillEerieLite:
+
 
     call Call_052_5422
     bit 7, [hl]
@@ -1710,6 +1850,8 @@ jr_052_4a75:
     ld a, $b8
     call Call_052_5469
     ret
+
+SkillOddDance:
 
 
     ld a, [$db89]
@@ -1739,6 +1881,8 @@ jr_052_4a9d:
     call Call_052_545d
     ret
 
+SkillSideStep:
+
 
     call Call_052_5559
     ld a, [$db88]
@@ -1760,6 +1904,8 @@ jr_052_4a9d:
 jr_052_4ac1:
     call Call_052_548d
     ret
+
+SkillLureDance:
 
 
     call Call_052_5422
@@ -1785,6 +1931,8 @@ jr_052_4add:
 jr_052_4ae3:
     call Call_052_548d
     ret
+
+SkillLushLicks:
 
 
     call Call_052_5422
@@ -1838,6 +1986,8 @@ jr_052_4b30:
     call Call_052_548d
     ret
 
+SkillLegSweep:
+
 
     call Call_052_5422
     bit 2, [hl]
@@ -1876,6 +2026,8 @@ jr_052_4b64:
     call Call_052_545d
     ret
 
+SkillWarCry:
+
 
     ld a, [$db89]
     call Call_000_2fa5
@@ -1905,6 +2057,8 @@ jr_052_4b8c:
     call Call_052_5469
     ret
 
+SkillImitate:
+
 
     ld a, [$db88]
     ld hl, $db08
@@ -1913,6 +2067,8 @@ jr_052_4b8c:
     call Call_052_548d
     ret
 
+SkillDeMagic_ThickFog:
+
 
     ld a, $03
     ld [$d9ed], a
@@ -1920,12 +2076,16 @@ jr_052_4b8c:
     ld [$d9ee], a
     ret
 
+SkillSurge:
+
 
     ld hl, $530a
     rst $10
     ld hl, $aeae
     call Call_052_5493
     ret
+
+SkillUltraDown:
 
 
     call Call_052_5c51
@@ -1945,6 +2105,8 @@ jr_052_4bca:
     ld a, $b8
     call Call_052_545d
     ret
+
+SkillTatsuCall:
 
 
     call Call_052_5559
@@ -2006,6 +2168,8 @@ jr_052_4c2b:
     call Call_052_545d
     ret
 
+SkillCover:
+
 
     ld a, $03
     ld [$d9ed], a
@@ -2014,7 +2178,7 @@ jr_052_4c2b:
     ret
 
 
-jr_052_4c3b:
+SkillTailWind:
     ld a, [$db89]
     ld hl, $db04
     call Call_000_2f6c
@@ -2030,7 +2194,7 @@ jr_052_4c3b:
 
     ld hl, $db89
     inc [hl]
-    jr jr_052_4c3b
+    jr SkillTailWind
 
 jr_052_4c5c:
     ld a, [$db89]
@@ -2049,6 +2213,8 @@ jr_052_4c6e:
     call Call_052_548d
     ret
 
+SkillDodge:
+
 
     ld a, [$db88]
     ld hl, $db08
@@ -2056,6 +2222,8 @@ jr_052_4c6e:
     set 5, [hl]
     call Call_052_548d
     ret
+
+SkillBladeD_Defense:
 
 
     ld a, [$db88]
@@ -2082,6 +2250,8 @@ jr_052_4c9b:
 jr_052_4ca1:
     call Call_052_548d
     ret
+
+SkillSuckAll:
 
 
     ld a, [$db88]
@@ -2122,6 +2292,8 @@ jr_052_4cd8:
     call Call_052_548d
     ret
 
+SkillDanceShut:
+
 
     ld a, [$db89]
     ld hl, $db03
@@ -2151,6 +2323,8 @@ jr_052_4d06:
     call Call_052_548d
     ret
 
+SkillMouthShut:
+
 
     ld a, [$db89]
     ld hl, $db03
@@ -2179,6 +2353,8 @@ jr_052_4d32:
     ld a, $c9
     call Call_052_5469
     ret
+
+SkillMeditate:
 
 
     ld a, [$db88]
@@ -2235,6 +2411,8 @@ jr_052_4d8c:
     ld a, $bb
     call Call_052_545d
     ret
+
+SkillLifeSong:
 
 
     ld a, [$db88]
@@ -2297,6 +2475,8 @@ jr_052_4de3:
     call Call_052_545d
     ret
 
+SkillLifeDance:
+
 
     call Call_052_5559
     ld a, [wRNG1]
@@ -2318,32 +2498,44 @@ jr_052_4df9:
     ld [$d9ef], a
     ret
 
+SkillDaze:
+
 
     call Call_052_548d
     ret
+
+SkillBeDragon:
 
 
     ld hl, $9191
     call Call_052_54bd
     ret
 
+SkillSmashlime:
 
-    call Call_052_6304
+
+    call CheckIsSlime
     ld hl, $b682
     call Call_052_54ea
     ret
 
+SkillSheldodge:
 
-    call Call_052_6349
+
+    call CheckIsBug
     ld hl, $b682
     call Call_052_54ea
     ret
 
+SkillBranching:
 
-    call Call_052_633b
+
+    call CheckIsPlant
     ld hl, $b682
     call Call_052_54ea
     ret
+
+SkillGigaSlash:
 
 
     call Call_052_66ac
@@ -2351,7 +2543,7 @@ jr_052_4df9:
     ret
 
 
-Call_052_4e3a:
+SkillRUN:
     ld a, [$db88]
     ld hl, $dd1b
     add l
@@ -2386,13 +2578,15 @@ jr_052_4e64:
     call Call_052_548d
     ret
 
+SkillAhhh2:
+
 
     call Call_052_519a
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_052_6b43
+    call HLsrl1
     ld a, l
     ld [$db56], a
     ld a, h
@@ -2400,6 +2594,8 @@ jr_052_4e64:
     ld hl, $ca82
     call Call_052_54ea
     ret
+
+SkillHitAlly:
 
 
     call Call_052_5559
@@ -2418,6 +2614,8 @@ jr_052_4e9e:
     call Call_052_545d
     ret
 
+SkillHitEnemy:
+
 
     call Call_052_5559
     ld a, [wRNG1]
@@ -2435,6 +2633,8 @@ jr_052_4eb8:
     call Call_052_545d
     ret
 
+SkillHitRandom:
+
 
     ld a, [$db88]
     ld [$db89], a
@@ -2447,13 +2647,19 @@ jr_052_4eb8:
     call Call_052_54ea
     ret
 
+SkillTrip:
+
 
     ld a, [$db88]
     ld hl, $db05
     call Call_000_2f6c
     set 2, [hl]
+
+SkillScared:
     call Call_052_548d
     ret
+
+SkillParalyze:
 
 
     ld a, [$db88]
@@ -2463,6 +2669,8 @@ jr_052_4eb8:
     ld hl, $cf00
     call Call_052_54a1
     ret
+
+SkillSmashed:
 
 
     ld a, [$db89]
@@ -2475,7 +2683,7 @@ jr_052_4eb8:
     push af
     ld a, [$db89]
     ld [$db88], a
-    call Call_052_4e3a
+    call SkillRUN
     pop af
     ld [$db88], a
     ld a, $01
@@ -2491,11 +2699,15 @@ jr_052_4f28:
     call Call_052_54bd
     ret
 
+SkillHealUsAll:
+
 
     ld a, $2f
     ld [$db8a], a
-    call Call_052_44c4
+    call SkillHeal
     ret
+
+SkillALLCHANGE:
 
 
     ld a, [$db88]
@@ -2520,6 +2732,8 @@ jr_052_4f4c:
 
     call Call_052_548d
     ret
+
+SkillBIGSLEEP:
 
 
     ld a, [$db89]
@@ -2552,6 +2766,8 @@ jr_052_4f7b:
     call Call_052_548d
     ret
 
+SkillMP0:
+
 
     ld a, [$db89]
     ld c, a
@@ -2577,6 +2793,8 @@ jr_052_4f9d:
     call Call_052_548d
     ret
 
+SkillCALLEVIL:
+
 
     ld a, [$db88]
     ld hl, $dced
@@ -2599,6 +2817,8 @@ jr_052_4f9d:
 jr_052_4fc8:
     call Call_052_548d
     ret
+
+SkillFREEZY:
 
 
     call Call_052_5422
@@ -2636,6 +2856,8 @@ jr_052_4ff8:
     call Call_052_548d
     ret
 
+SkillRESTOREMP:
+
 
     ld a, [$db89]
     call Call_000_2fe1
@@ -2659,6 +2881,8 @@ jr_052_4ff8:
 jr_052_501b:
     call Call_052_548d
     ret
+
+SkillMETEOR:
 
 
     ld a, [$dd69]
@@ -3599,7 +3823,7 @@ Call_052_5539:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_052_6b43
+    call HLsrl1
     ld a, l
     ld [$db56], a
     ld a, h
@@ -3963,7 +4187,7 @@ jr_052_5733:
 
     ld b, h
     ld c, l
-    call Call_052_6b32
+    call BCsrl1
     call Call_052_5bd1
 
 jr_052_5766:
@@ -4550,7 +4774,7 @@ Call_052_5af6:
     bit 1, a
     jr nz, jr_052_5b0f
 
-    call Call_052_6b43
+    call HLsrl1
     jr jr_052_5b14
 
 jr_052_5b0f:
@@ -4627,7 +4851,7 @@ jr_052_5b71:
     ld c, a
     ld a, [$db5b]
     ld b, a
-    call Call_052_6b32
+    call BCsrl1
     call Call_052_5be3
     pop bc
     ld a, [$db61]
@@ -5099,7 +5323,7 @@ Call_052_5dfc:
 jr_052_5e0e:
     ld a, [$db89]
     call Call_052_52b1
-    call Call_052_6b32
+    call BCsrl1
     ld a, [$db89]
     ld hl, $dbf3
     call Call_052_6ab8
@@ -5145,7 +5369,7 @@ Call_052_5e3e:
 
     ld a, [$db89]
     call Call_052_52b1
-    call Call_052_6b32
+    call BCsrl1
     ld a, c
     ld [$db56], a
     ld a, b
@@ -5224,7 +5448,7 @@ jr_052_5eb0:
 Call_052_5eb4:
     ld a, [$db89]
     call Call_052_52c6
-    call Call_052_6b32
+    call BCsrl1
     ld a, [$db89]
     ld hl, $dc03
     call Call_052_6ab8
@@ -5292,7 +5516,7 @@ Call_052_5f08:
 
     ld a, [$db89]
     call Call_052_52c6
-    call Call_052_6b32
+    call BCsrl1
     ld a, c
     ld [$db56], a
     ld a, b
@@ -5595,7 +5819,7 @@ Call_052_60d7:
     ld a, [hl+]
     ld b, [hl]
     ld c, a
-    call Call_052_6b32
+    call BCsrl1
     ld a, [$db88]
     call Call_000_2fcc
     call Call_000_2f45
@@ -5615,7 +5839,7 @@ Call_052_60d7:
     push bc
     ld b, d
     ld c, e
-    call Call_052_6b37
+    call HLsrl4
     call Call_000_2f45
     pop bc
     pop hl
@@ -5634,7 +5858,7 @@ jr_052_6112:
 
 
 jr_052_611d:
-    call Call_052_6b37
+    call HLsrl4
     ld a, h
     or l
     jr z, jr_052_6112
@@ -5657,7 +5881,7 @@ jr_052_6138:
     push de
     ld h, d
     ld l, e
-    call Call_052_6b3b
+    call HLsrl3
     pop de
     ld a, h
     or l
@@ -5676,7 +5900,7 @@ jr_052_6138:
     pop de
     ld c, a
     ld b, $00
-    call Call_052_6b32
+    call BCsrl1
     ld a, [wRNG2]
     and $0f
     or a
@@ -5880,7 +6104,7 @@ jr_052_626e:
     ld a, [$db57]
     ld h, a
     dec hl
-    call Call_052_6b43
+    call HLsrl1
 
 jr_052_627a:
     ld a, h
@@ -5977,7 +6201,7 @@ jr_052_6303:
     ret
 
 
-Call_052_6304:
+CheckIsSlime:
     call Call_052_60d7
     call Call_052_6ac0
     or a
@@ -5989,7 +6213,7 @@ jr_052_6310:
     ret
 
 
-Call_052_6311:
+CheckIsDragon:
     call Call_052_60d7
     call Call_052_6ac0
     cp $01
@@ -6001,7 +6225,7 @@ jr_052_631e:
     ret
 
 
-Call_052_631f:
+CheckIsBeast:
     call Call_052_60d7
     call Call_052_6ac0
     cp $02
@@ -6013,7 +6237,7 @@ jr_052_632c:
     ret
 
 
-Call_052_632d:
+CheckIsFlying:
     call Call_052_60d7
     call Call_052_6ac0
     cp $03
@@ -6025,7 +6249,7 @@ jr_052_633a:
     ret
 
 
-Call_052_633b:
+CheckIsPlant:
     call Call_052_60d7
     call Call_052_6ac0
     cp $04
@@ -6037,7 +6261,7 @@ jr_052_6348:
     ret
 
 
-Call_052_6349:
+CheckIsBug:
     call Call_052_60d7
     call Call_052_6ac0
     cp $05
@@ -6049,7 +6273,7 @@ jr_052_6356:
     ret
 
 
-Call_052_6357:
+CheckIsDevil:
     call Call_052_60d7
     call Call_052_6ac0
     cp $06
@@ -6061,7 +6285,7 @@ jr_052_6364:
     ret
 
 
-Call_052_6365:
+CheckIsZombie:
     call Call_052_60d7
     call Call_052_6ac0
     cp $07
@@ -6073,7 +6297,7 @@ jr_052_6372:
     ret
 
 
-Call_052_6373:
+CheckIsMaterial:
     call Call_052_60d7
     call Call_052_6ac0
     cp $08
@@ -6201,7 +6425,7 @@ Call_052_641a:
     cp $04
     jr c, jr_052_643d
 
-    call Call_052_6b32
+    call BCsrl1
     jr jr_052_6442
 
 jr_052_643d:
@@ -6281,7 +6505,7 @@ Call_052_6491:
 
     ld b, h
     ld c, l
-    call Call_052_6b32
+    call BCsrl1
     jr jr_052_64b5
 
 jr_052_64b1:
@@ -6409,7 +6633,7 @@ Call_052_653e:
     ld a, h
     ld [$db57], a
     call Call_052_69e1
-    call Call_052_6b3f
+    call HLsrl2
     ld a, l
     or h
     jr z, jr_052_65a7
@@ -7212,7 +7436,7 @@ Jump_052_690d:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_052_6b43
+    call HLsrl1
     ld a, l
     ld [$db56], a
     ld a, h
@@ -7251,7 +7475,7 @@ Jump_052_6949:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_052_6b3f
+    call HLsrl2
     ld a, l
     ld [$db56], a
     ld a, h
@@ -7282,7 +7506,7 @@ Call_052_6965:
 Call_052_6979:
     ld b, h
     ld c, l
-    call Call_052_6b43
+    call HLsrl1
     add hl, bc
     ret
 
@@ -7290,9 +7514,9 @@ Call_052_6979:
 Call_052_6980:
     ld b, h
     ld c, l
-    call Call_052_6b2e
+    call BCsrl2
     add hl, bc
-    call Call_052_6b2e
+    call BCsrl2
     add hl, bc
     ret
 
@@ -7300,21 +7524,21 @@ Call_052_6980:
 Call_052_698b:
     ld b, h
     ld c, l
-    call Call_052_6b2a
+    call BCsrl3
     add hl, bc
-    call Call_052_6b2e
+    call BCsrl2
     add hl, bc
     ret
 
 
-    call Call_052_6b43
+    call HLsrl1
     ld b, h
     ld c, l
-    call Call_052_6b32
+    call BCsrl1
     add hl, bc
-    call Call_052_6b32
+    call BCsrl1
     add hl, bc
-    call Call_052_6b2e
+    call BCsrl2
     add hl, bc
     ret
 
@@ -7345,10 +7569,10 @@ Call_052_69b7:
 
 Call_052_69c6:
     push bc
-    call Call_052_6b43
+    call HLsrl1
     ld b, h
     ld c, l
-    call Call_052_6b32
+    call BCsrl1
     add hl, bc
     pop bc
     ret
@@ -7368,13 +7592,13 @@ Call_052_69d2:
 
 Call_052_69e1:
     call Call_052_69b7
-    call Call_052_6b43
+    call HLsrl1
     ret
 
 
 Call_052_69e8:
     call Call_052_69d2
-    call Call_052_6b43
+    call HLsrl1
     ret
 
 
@@ -7633,33 +7857,33 @@ Call_052_6b21:
     ret
 
 
-Call_052_6b2a:
+BCsrl3:
     srl b
     rr c
 
-Call_052_6b2e:
+BCsrl2:
     srl b
     rr c
 
-Call_052_6b32:
+BCsrl1:
     srl b
     rr c
     ret
 
 
-Call_052_6b37:
+HLsrl4:
     srl h
     rr l
 
-Call_052_6b3b:
+HLsrl3:
     srl h
     rr l
 
-Call_052_6b3f:
+HLsrl2:
     srl h
     rr l
 
-Call_052_6b43:
+HLsrl1:
     srl h
     rr l
     ret
@@ -10384,7 +10608,7 @@ jr_052_7a5a:
 
     jr nc, jr_052_7a7b
 
-    call Call_052_44f8
+    call SkillVivify
     ret
 
 
@@ -10683,7 +10907,7 @@ jr_052_7c32:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_052_6b43
+    call HLsrl1
     ld a, h
     or l
     or a
@@ -10761,7 +10985,7 @@ jr_052_7c98:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_052_6b43
+    call HLsrl1
     ld a, l
     ld [$db56], a
     ld a, h

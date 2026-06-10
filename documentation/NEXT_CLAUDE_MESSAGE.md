@@ -7,116 +7,136 @@ This is a **reverse-engineering / disassembly project** for **Dragon Warrior Mon
 The ROM was auto-disassembled using **mgbdis** (a GB/GBC disassembler) which produces functional but unreadable assembly — raw hex bytes with auto-generated labels like `Call_003_4461`. Our job is to systematically convert this into **properly labeled, human-readable RGBDS assembly** where data tables are `db`/`dw` blocks with meaningful labels, code is annotated, and the game's systems are documented.
 
 **The toolchain:**
-- **RGBDS** (v0.6.1, built from source) — the assembler/linker. `rgbasm` + `rgblink` + `rgbfix`
+- **RGBDS** (v0.6.1, built from source at `~/.local/bin/`) — the assembler/linker
 - **mgbdis** — produced the initial disassembly (already done, we're cleaning it up)
-- **SameBoy** / **Emulicious** — GBC emulators the user runs for debugging and verification
+- **SameBoy** / **Emulicious** — GBC emulators the user runs for debugging
 - Python tools in `tools/` — data extraction, tile decompression/compression, rendering
 
 ## The User's Working Style
 
-**READ THIS CAREFULLY:**
-- The user is the **ultimate authority** on game mechanics. They know the game deeply. If you're unsure, ASK rather than assume.
-- **Do NOT jump ahead.** The user has repeatedly (and correctly) pushed back when Claude tries to skip verification, declare things "ready for building," or rush past annotation work. The priority is DISASSEMBLY and ANNOTATION, not building custom content yet.
-- **Verify before claiming done.** When you convert a data table or decode a format, the user will verify against the actual game. Don't declare victory prematurely.
-- **Show visual evidence.** The tile renderer can produce room images — show them to the user and they can instantly tell you if something is right or wrong. This is the fastest debugging method.
-- **SameBoy debugger syntax:** `watch $ADDR w` (not `watchpoint`), `print [$ADDR]`, `backtrace`, `continue`. The user can set breakpoints and dump memory.
+- The user is the **ultimate authority** on game mechanics. They know the game deeply.
+- **Do NOT jump ahead.** Priority is DISASSEMBLY and ANNOTATION, not building custom content.
+- **Verify before claiming done.** Always build and check MD5 after changes.
+- **Show visual evidence.** The tile renderer can produce room images for verification.
 
 ## Critical Build Rules
 
-- **NEVER run `make clean`** — it deletes .2bpp graphics files that cannot be regenerated
-- Build: `rm -f game.o game.gbc game.sym game.map && make` (from `disassembly/` directory)
-- ROM MD5 must always be: `1ca6579359f21d8e27b446f865bf6b83`
-- RGBDS v0.6.1 is built from source at `/home/claude/.local/bin/`
+```bash
+cd disassembly
+rm -f game.o game.gbc game.sym game.map
+make
+md5sum game.gbc
+# MUST output: 1ca6579359f21d8e27b446f865bf6b83
+```
+- **NEVER run `make clean`** — deletes .2bpp graphics files that cannot be regenerated
+- RGBDS v0.6.1 is at `/home/claude/.local/bin/` — needs `export PATH` or full path
 
 ## Project Setup
 
-- **Repo:** clone from `https://github.com/banner88/dwm1_disassembly.git` to `/home/claude/dwm1_disassembly/`
+- **Repo:** `https://github.com/banner88/dwm1_disassembly.git` → `/home/claude/dwm1_disassembly/`
 - **ROM:** user uploads `DWM-original.gbc` → copy to `data/DWM-original.gbc`
-- Read these docs first: `documentation/SESSION_HANDOFF.md`, `documentation/ROOM_DATA_FORMAT.md`, `documentation/ARCHITECTURE.md`
+- Build RGBDS: `cd /tmp && git clone https://github.com/gbdev/rgbds.git && cd rgbds && git checkout v0.6.1 && make -j4 && cp rgb{asm,link,fix} ~/.local/bin/`
+- Read: `documentation/SESSION_HANDOFF.md`, `documentation/ARCHITECTURE.md`
 
-## What's Been Done (Previous Sessions)
+## What's Been Done (All Sessions Combined)
 
-### Data Tables — All Converted, MD5 Verified
-10 data tables converted from mgbdis fake instructions to labeled `db`/`dw` blocks:
-- Monster info ($03:$4461, 221×43B entries)
-- Boss redirect ($14:$4893, 35 entries)
-- Enemy stats ($14:$4C1D, 487×25B entries)
-- Encounter pools ($01:$6A22, 128×26B pools)
-- Skill function table ($52:$4011, 256×2B pointers)
-- Monster names ($41:$5B1F, charmap encoded)
-- Skill names ($41:$628E, charmap encoded)
-- Exp curves ($13:$41E6, 32×297B tables)
-- Growth tables ($13:$6706, 32×99B tables)
-- Charmap moved to line 86 in game.asm (before bank_041)
+### Fully Annotated Data Banks
+| Bank | Contents | Labels | Status |
+|------|----------|--------|--------|
+| $03 | Monster info table (221×43B) | ~250 | ✅ Complete |
+| $0B | Room data system ($4B43-$7FFF) | ~800 | ✅ Complete |
+| $13 | EXP curves + growth tables | ~100 | ✅ Complete |
+| $14 | Enemy stats (487×25B) + boss redirect | ~500 | ✅ Complete |
+| $17 | Palette/attribute pointer tables | ~120 | ✅ Ptr tables done, per-room entries still raw |
+| $41 | ALL name/text tables + strings | 933 | ✅ **Complete** (this session) |
+| $52 | Skill functions + battle system | 912 | ✅ Handler labels done (this session) |
+| 14 tileset banks | LZSS tile data pointer tables | ~500 | ✅ Complete |
 
-Generator tools in `tools/gen_*.py` can regenerate each table from ROM data.
+### Key Systems Documented
+- **Room data format** — fully decoded, debug-verified (ROOM_DATA_FORMAT.md)
+- **Breeding system** — special/family recipe tables decoded (BREEDING_SYSTEM.md)
+- **Text system** — control codes, charmap encoding (TEXT_SYSTEM.md)
+- **Tile rendering pipeline** — LZSS decompress/compress, color rendering
+- **Cross-bank room system** — working editor code for custom rooms
 
-### Room Data System — Fully Decoded, Debug Verified
-The room system was reverse-engineered and verified via SameBoy watchpoints/breakpoints:
-
-**Screen grid:** 4×2 positions (indices 0-7), formula: `screen = row×4 + column`
-
-**Pointer chain:** `$4B43[mapID×2]` → sub-table → room_data_block → step entries
-
-**Step entry (6 bytes):** `[step_id, tileset_bank, interact_ptr, exit_ptr]`
-- step_id + tileset_bank index LZSS-compressed tile layouts in 9 tileset banks
-- interact_ptr → mixed NPC + spawn block (5-byte entries, $FF terminated)
-- exit_ptr → exit checker block (7-byte entries, $FF terminated)
-
-**NPC entry (5 bytes):** `[type, sprite, x, y, script]`
-- Type bits 5-4 = facing direction, bit 6 = non-interactable
-
-**Exit entry (7 bytes):** `[trigger_x, trigger_y, dest_mt, gate_flag, screen, spawn_x, spawn_y]`
-
-Full details in `documentation/ROOM_DATA_FORMAT.md`.
-
-### Tile Rendering Pipeline — Complete
-- **LZSS decompressor** (`tools/decompress_tiles.py`) — with circular buffer wrapping fix
-- **LZSS compressor** (`tools/compress_tiles.py`) — roundtrip verified 10/10
-- **Color renderer** (`tools/render_rooms.py`) — tiles + attributes + per-room palettes
-- **Attribute lookup** has TWO paths:
-  - Normal rooms: `$476F[mapID]` → screen → step-dependent entries
-  - Gate rooms: `$C940[$C925]` → `$5215/$5415` table (decoded but NOT wired into renderer)
-- 80 room palettes captured from SameBoy → `extracted/room_palettes.json`
-- 220 room screens rendered (see `ALL_ROOMS_FINAL.png`)
-
-### Cross-Bank Room System (in editor.py)
-`editor/editor.py` has working, user-verified code for custom rooms using bank $68 + WRAM trampoline at $0B:$77A9. 128-byte room blocks, pointer table patched for mt $65+.
-
-### Tool Fixes Applied
-- `dump_map_table.py`: interact_ptr/exit_ptr labels were SWAPPED — fixed
-- `find_all_transitions.py`, `find_transitions.py`: same swap — fixed
-- All extracted JSONs regenerated with correct field names
+### Generator Tools (in `tools/`)
+| Tool | Generates | Idempotent? |
+|------|-----------|-------------|
+| `gen_monster_db.py` | Bank $03 monster info | Yes |
+| `gen_enemy_stats_db.py` | Bank $14 enemy stats | Yes |
+| `gen_encounter_db.py` | Bank $01 encounter pools | Yes |
+| `gen_skill_table_db.py` | Bank $52 skill function table | Yes |
+| `gen_name_tables_db.py` | Bank $41 monster/skill name tables | Yes |
+| `gen_bank41_remaining_db.py` | Bank $41 all remaining tables | Yes (`--apply`) |
+| `gen_room_data_db.py` | Bank $0B room data | Yes (`--apply`) |
+| `gen_tileset_banks.py` | 14 tileset banks | Yes (`--apply`) |
+| `gen_growth_tables_db.py` | Bank $13 growth tables | Yes |
+| `annotate_bank052.py` | Bank $52 skill handler labels | **No** (one-time) |
 
 ## NOT Done — Priority Work for Next Session
 
-**Do NOT start building custom rooms.** The disassembly annotation is incomplete.
-
-### HIGH PRIORITY (core disassembly work)
-- [ ] **Bank $0B room data → labeled db blocks** — the room sub-tables, step entries, interact blocks, and exit blocks are still raw mgbdis hex. Convert them to labeled `db`/`dw` format like the monster tables were. This is the single most important remaining task.
-- [ ] **Gate room attribute rendering** — the $C940/$5215 lookup path is decoded but not wired into the renderer. Gate rooms on the contact sheet render with wrong colors.
-- [ ] **Tileset bank pointer tables** ($23-$37 at $4001) → labeled data
-- [ ] **Bank $17 attribute/palette tables** → labeled data
-- [ ] **Monster name pointer table** ($41:$4339) → label-based `dw MonsterName_XXX`
+### HIGH PRIORITY
+1. **Bank $16 data tables** — unevolved skill map ($4874, 256B), random encounter
+   counter table ($6E3D, 50×4B), gate floor data ($70A6, 32×8B), floor type
+   selection table ($71A6). ROM map document has exact formats for all of these.
+2. **Bank $17 per-room attribute entries** — pointer tables are labeled but the
+   per-room/per-step data blocks between them are still raw hex.
+3. **Room name labels** — gen_room_data_db.py could add descriptive room names.
 
 ### MEDIUM PRIORITY
-- [ ] Bank $3C/$3D/$3E attribute data annotation
-- [ ] Collision data (what makes tiles walkable — mechanism unknown)
-- [ ] Palette extraction from ROM tables (currently requires SameBoy captures)
-- [ ] Animated tile system (water etc.)
+4. **Bank $16 code annotation** — breeding functions already have good header docs
+5. **Code bank annotations** — $51 (battle init), $56 (text engine), $57 (battle)
+6. **Bank $00 math/text functions** — label the core utility functions
 
 ### LOWER PRIORITY
-- [ ] Bank annotations: $51 (battle init), $56 (text engine), $57 (battle dispatch)
-- [ ] NPC type lower nibble specific meanings (needs gameplay testing)
-- [ ] Full sprite graphics pipeline
-- [ ] GUI editor
+7. NPC behavior values (lower nibble specific meanings)
+8. Collision data system (what makes tiles walkable)
+9. GUI editor
 
-## Key Patterns Learned
+## Bank $41 Complete Structure Reference
 
-**Embedded labels:** When data tables contain addresses that mgbdis interpreted as code (creating fake labels like `Call_003_59d0`), those labels must be preserved because real code references them. Check with `grep` before removing any label.
+```
+$4000-$4338  Code + dispatch table (73 entries, bank byte $41 at $4000)
+$4339-$4538  MonsterNamePtrTable (256 × dw)
+$4539-$4738  SkillNamePtrTable (256 × dw)
+$4739-$48E6  FamilyCodePtrTable (215 × dw)
+$48E7-$493E  ItemNamePtrTable (44 × dw)
+$493F-$4996  ItemDescPtrTable (44 × dw)
+$4997-$49CC  PersonalityNamePtrTable (27 × dw)
+$49CD-$4A16  MiscTextPtrTable (37 × dw)
+$4A17-$4A1A  WatabouTextPtrTable (2 × dw)
+$4A1B-$4A7A  ItemUseTextPtrTable (48 × dw)
+$4A7B-$4A92  SpellUseTextPtrTable (12 × dw)
+$4A93-$4AA7  Code functions (3 × 7 bytes)
+$4AA8-$5B1E  Dispatch text (raw hex with labels at referenced addrs)
+$5B1F-$628D  MonsterNameStrings (222 unique, $F0 terminated)
+$628E-$69F1  SkillNameStrings (222 unique + 1 empty, $F0 terminated)
+$69F2-$6C77  FamilyCodeStrings (215 entries, 2 chars + $F0)
+$6C78-$6DF7  ItemNameStrings (43 entries + 1 empty)
+$6DF8-$7158  ItemDescStrings (43 entries with $F1=newline)
+$7159-$7228  PersonalityNameStrings (27 entries)
+$7229-$7FFF  Game text (raw hex with labels for misc/itemuse/spelluse)
+```
 
-**LZSS compression:** Used throughout the game for tile graphics, tile layouts, and attribute data. Same algorithm everywhere, with a configurable marker byte. The circular buffer wraps by subtracting $1000 from back-reference addresses.
+All pointer tables use label references — editing a string's length auto-updates
+its pointer on rebuild. Bank is exactly full (no free space).
 
-**Step system:** Rooms change appearance based on story progression. Each screen has a RAM step counter ($D9xx), and the step value selects which tile layout, NPC set, exit set, and attribute data to use. The same screen can look completely different at different steps.
+## Bank $52 Skill Handler Reference
 
-**The user can verify visually:** Render a room image and show it to them — they'll immediately tell you if it's correct or what's wrong. This is far faster than trying to verify from hex dumps.
+Function table at $4011 has 222 valid entries (0-221). Entries 222-255 overlap
+with handler code. Every handler has a named label (SkillBlaze, SkillSleep, etc.).
+Family check functions (CheckIsSlime..CheckIsMaterial) and math helpers
+(BCsrl3..HLsrl1) are also labeled.
+
+## ROM Map Intel Available
+
+An external ROM map document with community research was provided. Key data not
+yet applied to the disassembly:
+- Bank $16: encounter/gate tables with exact formats
+- Bank $13: experience table structure (32×297B)
+- Bank $50: personality adjustment tables (5 plan types × 4×8 matrices)
+- Bank $00: math function signatures (Mul/Div with register conventions)
+- Bank $01: gate floor threshold system
+- Bank $0B: labyrinth exit coordinate system
+
+See `documentation/SESSION_HANDOFF.md` "ROM Map Intel" section for details.

@@ -14,11 +14,11 @@
 | $14 | Enemy stats table ($4C1D), boss redirect table ($4897) |
 | $16 | Breeding system: special table ($4B30), family table ($4974) |
 | $17 | Palette system |
-| $41 | Monster names ($5B1F), skill names ($628E) |
+| $41 | Name/text tables: monster names, skill names, family codes, items, personalities, game text (fully annotated) |
 | $42-$4E | Text handler banks (text ID routing, text data) |
 | $50 | Event state machine (11 states, post-battle states) |
 | $51 | Event sub-handlers, room transitions |
-| $52 | Battle system, skill functions, SkillFunctionTable at $4011, resistance checks |
+| $52 | Battle system: 115 named skill handlers, SkillFunctionTable at $4011, family checks, math helpers |
 | $54 | Post-battle join logic ($55BB), EXP distribution, level-up processing |
 | $56 | Text rendering engine, parallel text dispatch cascade |
 
