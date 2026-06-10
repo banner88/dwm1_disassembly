@@ -27,7 +27,9 @@ $4B43[mapID × 2] → sub_table_ptr
 
 Sub-table size varies per room — determined by the gap between
 sub_table_ptr and the first room_data_block pointer it contains.
-Maximum 8 entries (the full 4×2 grid).
+Size determined by gap between sub_table_ptr and first room_data_block pointer.
+Common sizes: 1 (single screen), 8 (4×2 grid), 12 (conveyor/maze rooms),
+16 (GreatTree), 32 (LabyrinthFinal). Screen indices >7 use extended grids.
 
 Each valid screen has its own RAM step counter ($D9xx), assigned
 sequentially across all rooms regardless of screen index.
@@ -82,7 +84,7 @@ Tileset banks used: $23, $24, $25, $26, $29, $2A, $2D, $30, $37
 ### NPC entries (type byte $00-$7F):
 | Byte | Field |
 |------|-------|
-| 0 | NPC type (bits 4-5 encode facing direction: $00=down, $10=up, $20=left, $30=right?) |
+| 0 | NPC type (bits 4-5 encode facing direction: $00=down, $10=left, $20=up, $30=right) |
 | 1 | Sprite ID |
 | 2 | X grid position (added to screen offset from $00:$2DE7) |
 | 3 | Y grid position (added to screen offset) |
@@ -164,8 +166,8 @@ No explicit boundary checks needed — scrolling is automatic based on position.
 
 
 
-Common values: $00 (down,standard), $10 (up), $20 (left), $30 (right),
-$40 (down,non-interactive), $60 (left,non-interactive).
+Common values: $00 (down,standard), $10 (left), $20 (up), $30 (right),
+$40 (down,non-interactive), $60 (up,non-interactive).
 Lower nibble values 6 and 7 appear frequently — may control movement pattern.
 
 ## Gate Room Differences
