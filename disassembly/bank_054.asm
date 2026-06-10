@@ -4514,7 +4514,7 @@ Call_054_53f6:
     ld l, a
     ld h, $08
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ret
 
 
@@ -4588,7 +4588,7 @@ jr_054_5461:
 
 jr_054_5466:
     ld a, $04
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_054_54a2
 
     ld de, $c180
@@ -4599,7 +4599,7 @@ jr_054_5466:
     ld a, [$dc40]
     ld l, a
     ld h, $05
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$dc40]
     ld [$d9ef], a
     ld hl, $ca94
@@ -4638,7 +4638,7 @@ jr_054_54a2:
 
 jr_054_54b7:
     ld a, $05
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_054_5503
 
     ld de, $c180
@@ -4649,14 +4649,14 @@ jr_054_54b7:
     ld a, [$dc41]
     ld l, a
     ld h, $05
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$dc41]
     ld hl, $dc40
     cp [hl]
     jr nz, jr_054_54e2
 
     ld a, $04
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_054_5503
 
 jr_054_54e2:
@@ -4698,7 +4698,7 @@ jr_054_5503:
 
 jr_054_5518:
     ld a, $06
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_054_5572
 
     ld de, $c180
@@ -4709,14 +4709,14 @@ jr_054_5518:
     ld a, [$dc42]
     ld l, a
     ld h, $05
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$dc42]
     ld hl, $dc40
     cp [hl]
     jr nz, jr_054_5543
 
     ld a, $04
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_054_5572
 
 jr_054_5543:
@@ -4726,7 +4726,7 @@ jr_054_5543:
     jr nz, jr_054_5551
 
     ld a, $05
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_054_5572
 
 jr_054_5551:
@@ -4916,7 +4916,7 @@ jr_054_5637:
 
 jr_054_563d:
     ld a, $05
-    call Call_000_1e0d
+    call Div16x8To16
     jr jr_054_5654
 
 jr_054_5644:
@@ -4947,7 +4947,7 @@ Call_054_5655:
     jr nz, jr_054_5682
 
     ld a, $14
-    call Call_000_1e0d
+    call Div16x8To16
     jr jr_054_5682
 
 jr_054_566c:
@@ -4984,12 +4984,12 @@ Call_054_5683:
     ld a, [wRNG2]
     ld h, a
     ld a, $5b
-    call Call_000_1e0d
+    call Div16x8To16
     add $0a
     ld c, a
     ld b, $00
     pop hl
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_054_56c7
 
     call GenerateRNG
@@ -4998,12 +4998,12 @@ Call_054_5683:
     ld a, [wRNG2]
     ld h, a
     ld a, $64
-    call Call_000_1e0d
+    call Div16x8To16
     inc a
     ld c, a
     ld b, $00
     ld hl, $005a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_054_56c7
 
 jr_054_56c5:

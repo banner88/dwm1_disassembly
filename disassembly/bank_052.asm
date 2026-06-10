@@ -325,7 +325,7 @@ SkillBeat:  ; $41F7
     push hl
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, $00
     ld [hl+], a
     ld [hl], $00
@@ -334,7 +334,7 @@ SkillBeat:  ; $41F7
 
 jr_052_4225:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillSacrifice:
@@ -359,7 +359,7 @@ SkillSleep:
     call Call_052_6b48
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $8c
     jr nz, jr_052_4276
@@ -373,7 +373,7 @@ SkillSleep:
 Call_052_4262:
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     or $8c
     ld [hl], a
@@ -382,7 +382,7 @@ Call_052_4262:
 
 jr_052_4270:
     ld a, $bc
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
@@ -396,7 +396,7 @@ SkillStopSpell:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 0, [hl]
     jr nz, jr_052_42a0
 
@@ -405,7 +405,7 @@ SkillStopSpell:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 0, [hl]
     ld hl, $b888
     call Call_052_54d2
@@ -413,13 +413,13 @@ SkillStopSpell:
 
 
 jr_052_42a0:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
 jr_052_42a4:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillSurround:
@@ -427,7 +427,7 @@ SkillSurround:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 1, [hl]
     jr nz, jr_052_42ce
 
@@ -436,7 +436,7 @@ SkillSurround:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 1, [hl]
     ld hl, $b898
     call Call_052_5493
@@ -444,13 +444,13 @@ SkillSurround:
 
 
 jr_052_42ce:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
 jr_052_42d2:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillPanicAll:
@@ -458,7 +458,7 @@ SkillPanicAll:
 
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 4, [hl]
     jr z, jr_052_42eb
 
@@ -473,7 +473,7 @@ jr_052_42eb:
 
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 4, [hl]
     ld hl, $b88e
     call Call_052_54af
@@ -482,7 +482,7 @@ jr_052_42eb:
 
 jr_052_4302:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillRobMagic:
@@ -490,7 +490,7 @@ SkillRobMagic:
 
     ld a, [$db89]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     or [hl]
     jr z, jr_052_432a
@@ -506,13 +506,13 @@ SkillRobMagic:
 
 jr_052_4324:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
 jr_052_432a:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillTakeMagic:
@@ -520,7 +520,7 @@ SkillTakeMagic:
 
     ld a, [$db88]
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 0, [hl]
     jr nz, jr_052_4346
 
@@ -531,7 +531,7 @@ SkillTakeMagic:
 
 
 jr_052_4346:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillSap:
@@ -558,7 +558,7 @@ jr_052_4361:
 
 jr_052_4367:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillUpper:
@@ -603,7 +603,7 @@ jr_052_439c:
 
 jr_052_43a2:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillSpeed:
@@ -636,9 +636,9 @@ SkillBarrier:
 jr_052_43ca:
     ld a, c
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_43f3
 
     bit 2, [hl]
@@ -669,7 +669,7 @@ jr_052_43f3:
     jr jr_052_43de
 
 jr_052_43f7:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillTwinHits:
@@ -677,7 +677,7 @@ SkillTwinHits:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     jr nz, jr_052_4411
 
@@ -688,7 +688,7 @@ SkillTwinHits:
 
 
 jr_052_4411:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillMagicWall:
@@ -701,12 +701,12 @@ SkillMagicWall:
 
 jr_052_441d:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_442c
 
     ld a, c
     ld hl, $db05
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 6, [hl]
 
 jr_052_442c:
@@ -714,7 +714,7 @@ jr_052_442c:
     dec b
     jr nz, jr_052_441d
 
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillMagicBack:
@@ -722,7 +722,7 @@ SkillMagicBack:
 
     ld a, [$db88]
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [$db8a]
     cp $28
     jr z, jr_052_4455
@@ -782,7 +782,7 @@ SkillIronize:
     jr z, jr_052_449c
 
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     push hl
     pop hl
     ld b, $01
@@ -796,11 +796,11 @@ jr_052_449c:
     and $04
     ld c, a
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
 
 jr_052_44aa:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_44b4
 
     ld a, [hl]
@@ -824,19 +824,19 @@ jr_052_44b4:
 
 SkillHeal:
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_44d2
 
 jr_052_44cc:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
 jr_052_44d2:
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -849,7 +849,7 @@ jr_052_44d2:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr z, jr_052_44cc
 
     call Call_052_607d
@@ -860,7 +860,7 @@ jr_052_44d2:
 
 SkillVivify:
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_456d
 
     jr z, jr_052_457a
@@ -885,7 +885,7 @@ jr_052_4515:
 
 jr_052_451e:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr z, jr_052_4526
 
     jr c, jr_052_452d
@@ -902,14 +902,14 @@ jr_052_452d:
     ld [$db89], a
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld [hl], c
 
 jr_052_453a:
     ld a, [$db89]
     ld b, a
     ld hl, $dbb3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -923,7 +923,7 @@ jr_052_453a:
 jr_052_4552:
     ld a, b
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, e
     ld [hl+], a
     ld [hl], d
@@ -936,7 +936,7 @@ jr_052_4552:
 
 jr_052_4567:
     ld a, $c0
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
@@ -947,12 +947,12 @@ jr_052_456d:
 
 jr_052_4574:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
 jr_052_457a:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillFarewell:
@@ -984,7 +984,7 @@ SkillAntidote:
 
 jr_052_45a1:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillNumbOff:
@@ -1023,7 +1023,7 @@ jr_052_45bb:
 
 jr_052_45d2:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillDeChaos:
@@ -1051,7 +1051,7 @@ SkillDeChaos:
 
 jr_052_45f8:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillCurseOff:
@@ -1071,7 +1071,7 @@ SkillCurseOff:
 
 jr_052_4610:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillChance:
@@ -1090,7 +1090,7 @@ SkillPoisonHit_StepGuard_Whistle_Attack:
 
     call Call_052_519a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillPsycheUp_TwinSlash:
@@ -1107,7 +1107,7 @@ SkillPsycheUp_TwinSlash:
     ld a, h
     ld [$db57], a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillRamming:
@@ -1122,7 +1122,7 @@ SkillBeserker:
 
     ld a, [$db88]
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 2, [hl]
     call Call_052_519a
     ld a, [$db56]
@@ -1136,7 +1136,7 @@ SkillBeserker:
     ld a, h
     ld [$db57], a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillKamikaze:
@@ -1150,7 +1150,7 @@ SkillMassacre:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_46b4
 
     ld a, [$db8a]
@@ -1158,7 +1158,7 @@ SkillMassacre:
     jr z, jr_052_46a2
 
     ld a, [$db89]
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_052_46a2
 
     ld b, $a0
@@ -1169,21 +1169,21 @@ SkillMassacre:
 jr_052_46a2:
     ld a, [$db88]
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 7, [hl]
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 
 jr_052_46b4:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
 jr_052_46b8:
     ld a, $78
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillChargeUP:
@@ -1191,11 +1191,11 @@ SkillChargeUP:
 
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     or $03
     ld [hl], a
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillHighJump:
@@ -1203,7 +1203,7 @@ SkillHighJump:
 
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $0c
     jr nz, jr_052_46ee
@@ -1211,7 +1211,7 @@ SkillHighJump:
     ld a, [hl]
     or $0c
     ld [hl], a
-    call Call_052_548d
+    call SetSkillAnimFlag
     xor a
     ld [$d9ee], a
     ld a, $06
@@ -1234,7 +1234,7 @@ jr_052_46ee:
     ld a, h
     ld [$db57], a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillSuckAir:
@@ -1242,11 +1242,11 @@ SkillSuckAir:
 
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     or $30
     ld [hl], a
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillFireSlash:
@@ -1254,7 +1254,7 @@ SkillFireSlash:
 
     call Call_052_6298
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillBoltSlash:
@@ -1262,7 +1262,7 @@ SkillBoltSlash:
 
     call Call_052_62a9
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillVacuSlash:
@@ -1270,7 +1270,7 @@ SkillVacuSlash:
 
     call Call_052_62ba
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillIceSlash:
@@ -1278,7 +1278,7 @@ SkillIceSlash:
 
     call Call_052_62cb
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillMetalCut:
@@ -1286,7 +1286,7 @@ SkillMetalCut:
 
     call Call_052_62dc
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillDrakSlash:
@@ -1294,7 +1294,7 @@ SkillDrakSlash:
 
     call CheckIsDragon
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillBeastCut:
@@ -1302,7 +1302,7 @@ SkillBeastCut:
 
     call CheckIsBeast
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillBirdBlow:
@@ -1310,7 +1310,7 @@ SkillBirdBlow:
 
     call CheckIsFlying
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillDevilCut:
@@ -1318,7 +1318,7 @@ SkillDevilCut:
 
     call CheckIsDevil
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillZombieCut:
@@ -1326,7 +1326,7 @@ SkillZombieCut:
 
     call CheckIsZombie
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillCleanCut:
@@ -1334,7 +1334,7 @@ SkillCleanCut:
 
     call CheckIsMaterial
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillMultiCut:
@@ -1342,7 +1342,7 @@ SkillMultiCut:
 
     call Call_052_6381
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillBiAttack:
@@ -1353,7 +1353,7 @@ SkillBiAttack:
     jr z, jr_052_47ac
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     call c, Call_052_4807
     ld d, $00
     jr jr_052_47bb
@@ -1361,7 +1361,7 @@ SkillBiAttack:
 jr_052_47ac:
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl]
     ld [$db89], a
     ld d, $01
@@ -1369,7 +1369,7 @@ jr_052_47ac:
 jr_052_47bb:
     ld a, [$db88]
     ld hl, $dbe3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, l
     ld [$db63], a
     ld a, h
@@ -1414,7 +1414,7 @@ jr_052_47e2:
     ld a, h
     ld [bc], a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 
@@ -1448,7 +1448,7 @@ SkillCallHelp:
     rst $10
     ld a, [$db88]
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 0, [hl]
     ld a, [$c86c]
     or a
@@ -1475,22 +1475,22 @@ jr_052_4859:
     ld [$db56], a
     ld [$db57], a
     ld a, $c2
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
 jr_052_486b:
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl]
     ld [$db89], a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jp c, Jump_052_50f8
 
     call Call_052_63dc
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillFocus:
@@ -1498,9 +1498,9 @@ SkillFocus:
 
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 7, [hl]
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillSquallHit:
@@ -1517,7 +1517,7 @@ SkillSquallHit:
     ld a, h
     ld [$db57], a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillRainSlash:
@@ -1528,7 +1528,7 @@ SkillRainSlash:
     jr nc, jr_052_4914
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_48f5
 
     call Call_052_519a
@@ -1559,7 +1559,7 @@ jr_052_48e6:
     ld a, h
     ld [$db57], a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 
@@ -1576,12 +1576,12 @@ jr_052_48f5:
     ld [$db89], a
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [$db89]
     ld [hl], a
 
 jr_052_4914:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillWindBeast:
@@ -1643,7 +1643,7 @@ SkillPalsyAir:
 
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     jr nz, jr_052_4977
 
@@ -1665,7 +1665,7 @@ jr_052_496e:
 
 
 jr_052_4977:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillPoisonGas:
@@ -1673,7 +1673,7 @@ SkillPoisonGas:
 
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [$db8a]
     cp $6d
     jr z, jr_052_4997
@@ -1704,7 +1704,7 @@ jr_052_49a0:
 jr_052_49ab:
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [$db8a]
     cp $6d
     jr z, jr_052_49c1
@@ -1726,7 +1726,7 @@ jr_052_49c5:
 
 
 jr_052_49ce:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillCurse:
@@ -1734,7 +1734,7 @@ SkillCurse:
 
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 5, [hl]
     jr nz, jr_052_49fc
 
@@ -1749,7 +1749,7 @@ SkillCurse:
 jr_052_49ea:
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 5, [hl]
     ld hl, $d1d1
     call Call_052_54bd
@@ -1757,7 +1757,7 @@ jr_052_49ea:
 
 
 jr_052_49fc:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillAhhh:
@@ -1778,7 +1778,7 @@ SkillAhhh:
 
 
 jr_052_4a18:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
@@ -1792,7 +1792,7 @@ SkillSandStorm:
 
     ld a, [$db89]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $03
     jr nz, jr_052_4a53
@@ -1802,7 +1802,7 @@ SkillSandStorm:
 
     ld a, [$db89]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 1, [hl]
     set 0, [hl]
     ld a, [$db8a]
@@ -1820,7 +1820,7 @@ jr_052_4a4d:
 
 
 jr_052_4a53:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillEerieLite:
@@ -1856,7 +1856,7 @@ SkillOddDance:
 
     ld a, [$db89]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     or [hl]
     jr z, jr_052_4a9d
@@ -1872,13 +1872,13 @@ SkillOddDance:
 
 jr_052_4a97:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
 jr_052_4a9d:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillSideStep:
@@ -1887,7 +1887,7 @@ SkillSideStep:
     call Call_052_5559
     ld a, [$db88]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $0c
     jr nz, jr_052_4ac1
@@ -1902,7 +1902,7 @@ SkillSideStep:
     ld [hl], a
 
 jr_052_4ac1:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillLureDance:
@@ -1924,12 +1924,12 @@ SkillLureDance:
 
 jr_052_4add:
     ld a, $c8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
 jr_052_4ae3:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillLushLicks:
@@ -1960,7 +1960,7 @@ jr_052_4afd:
 
     ld a, [$db89]
     ld hl, $dbf3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, $01
     ld [hl+], a
     ld [hl], $00
@@ -1983,7 +1983,7 @@ jr_052_4b2a:
 
 
 jr_052_4b30:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillLegSweep:
@@ -2004,7 +2004,7 @@ SkillLegSweep:
 
 
 jr_052_4b4c:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
@@ -2023,14 +2023,14 @@ jr_052_4b50:
     ld a, $c1
 
 jr_052_4b64:
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillWarCry:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_4b88
 
     call Call_052_5422
@@ -2048,7 +2048,7 @@ SkillWarCry:
 
 
 jr_052_4b88:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
@@ -2062,9 +2062,9 @@ SkillImitate:
 
     ld a, [$db88]
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 3, [hl]
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillDeMagic_ThickFog:
@@ -2103,7 +2103,7 @@ SkillUltraDown:
 
 jr_052_4bca:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillTatsuCall:
@@ -2165,7 +2165,7 @@ jr_052_4c25:
 
 jr_052_4c2b:
     ld a, $cb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillCover:
@@ -2181,7 +2181,7 @@ SkillCover:
 SkillTailWind:
     ld a, [$db89]
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 6, [hl]
     ld a, [$db8a]
     cp $8a
@@ -2210,7 +2210,7 @@ jr_052_4c5c:
     set 5, [hl]
 
 jr_052_4c6e:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillDodge:
@@ -2218,9 +2218,9 @@ SkillDodge:
 
     ld a, [$db88]
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 5, [hl]
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillBladeD_Defense:
@@ -2228,7 +2228,7 @@ SkillBladeD_Defense:
 
     ld a, [$db88]
     ld hl, $db09
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [$db8a]
     cp $90
     jr z, jr_052_4c9b
@@ -2248,7 +2248,7 @@ jr_052_4c9b:
     ld [hl], a
 
 jr_052_4ca1:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillSuckAll:
@@ -2285,11 +2285,11 @@ jr_052_4cb4:
     ld [hl], a
     ld a, [$db88]
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 1, [hl]
 
 jr_052_4cd8:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillDanceShut:
@@ -2297,7 +2297,7 @@ SkillDanceShut:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     jr nz, jr_052_4d06
 
@@ -2306,7 +2306,7 @@ SkillDanceShut:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 6, [hl]
     ld hl, $b0b0
     call Call_052_54d2
@@ -2315,12 +2315,12 @@ SkillDanceShut:
 
 jr_052_4d00:
     ld a, $b8
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
 jr_052_4d06:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillMouthShut:
@@ -2328,7 +2328,7 @@ SkillMouthShut:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 7, [hl]
     jr nz, jr_052_4d2e
 
@@ -2337,7 +2337,7 @@ SkillMouthShut:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 7, [hl]
     ld hl, $b2b2
     call Call_052_54d2
@@ -2345,7 +2345,7 @@ SkillMouthShut:
 
 
 jr_052_4d2e:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
@@ -2359,7 +2359,7 @@ SkillMeditate:
 
     ld a, [$db88]
     ld hl, $dbb3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -2369,7 +2369,7 @@ SkillMeditate:
     ld [$db5b], a
     ld a, [$db88]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, l
     ld [$db5c], a
     ld a, h
@@ -2377,7 +2377,7 @@ SkillMeditate:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr z, jr_052_4d8c
 
     ld bc, $01f4
@@ -2386,7 +2386,7 @@ SkillMeditate:
     ld c, a
     ld a, [$db5b]
     ld b, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_052_4d78
 
     ld h, b
@@ -2409,7 +2409,7 @@ jr_052_4d78:
 
 jr_052_4d8c:
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillLifeSong:
@@ -2417,7 +2417,7 @@ SkillLifeSong:
 
     ld a, [$db88]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $10
     jr nz, jr_052_4daa
@@ -2426,7 +2426,7 @@ SkillLifeSong:
     and $cf
     or $20
     ld [hl], a
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
@@ -2472,7 +2472,7 @@ jr_052_4dd2:
 
 jr_052_4de3:
     ld a, $cb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillLifeDance:
@@ -2484,7 +2484,7 @@ SkillLifeDance:
     jr c, jr_052_4df9
 
     ld a, $bb
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
@@ -2501,7 +2501,7 @@ jr_052_4df9:
 SkillDaze:
 
 
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillBeDragon:
@@ -2516,7 +2516,7 @@ SkillSmashlime:
 
     call CheckIsSlime
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillSheldodge:
@@ -2524,7 +2524,7 @@ SkillSheldodge:
 
     call CheckIsBug
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillBranching:
@@ -2532,7 +2532,7 @@ SkillBranching:
 
     call CheckIsPlant
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillGigaSlash:
@@ -2575,7 +2575,7 @@ SkillRUN:
 jr_052_4e64:
     ld a, $01
     ld [$d9ed], a
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillAhhh2:
@@ -2592,7 +2592,7 @@ SkillAhhh2:
     ld a, h
     ld [$db57], a
     ld hl, $ca82
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillHitAlly:
@@ -2605,13 +2605,13 @@ SkillHitAlly:
 
     call Call_052_519a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 
 jr_052_4e9e:
     ld a, $b6
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillHitEnemy:
@@ -2624,13 +2624,13 @@ SkillHitEnemy:
 
     call Call_052_519a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 
 jr_052_4eb8:
     ld a, $b6
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 SkillHitRandom:
@@ -2639,12 +2639,12 @@ SkillHitRandom:
     ld a, [$db88]
     ld [$db89], a
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [$db88]
     ld [hl], a
     call Call_052_519a
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 SkillTrip:
@@ -2652,11 +2652,11 @@ SkillTrip:
 
     ld a, [$db88]
     ld hl, $db05
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 2, [hl]
 
 SkillScared:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillParalyze:
@@ -2664,7 +2664,7 @@ SkillParalyze:
 
     ld a, [$db88]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 6, [hl]
     ld hl, $cf00
     call Call_052_54a1
@@ -2675,7 +2675,7 @@ SkillSmashed:
 
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     xor a
     ld [hl+], a
     ld [hl], a
@@ -2717,12 +2717,12 @@ SkillALLCHANGE:
 
 jr_052_4f3d:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_4f4c
 
     ld a, c
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 3, [hl]
 
 jr_052_4f4c:
@@ -2730,7 +2730,7 @@ jr_052_4f4c:
     dec b
     jr nz, jr_052_4f3d
 
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillBIGSLEEP:
@@ -2738,12 +2738,12 @@ SkillBIGSLEEP:
 
     ld a, [$db89]
     ld c, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_4f7b
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 7, [hl]
     jr nz, jr_052_4f75
 
@@ -2758,12 +2758,12 @@ SkillBIGSLEEP:
 
 jr_052_4f75:
     ld a, $bd
-    call Call_052_545d
+    call ApplySkillDamage
     ret
 
 
 jr_052_4f7b:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillMP0:
@@ -2771,12 +2771,12 @@ SkillMP0:
 
     ld a, [$db89]
     ld c, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_4f9d
 
     ld a, c
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     or [hl]
     jr z, jr_052_4f9d
@@ -2790,7 +2790,7 @@ SkillMP0:
 
 
 jr_052_4f9d:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillCALLEVIL:
@@ -2798,24 +2798,24 @@ SkillCALLEVIL:
 
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl]
     ld [$db89], a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_4fc8
 
     call Call_052_66ba
     ld a, [$db88]
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 0, [hl]
     ld hl, $b682
-    call Call_052_54ea
+    call CheckSkillResistance
     ret
 
 
 jr_052_4fc8:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillFREEZY:
@@ -2832,7 +2832,7 @@ SkillFREEZY:
 
 
 jr_052_4fdc:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
@@ -2853,7 +2853,7 @@ jr_052_4fdc:
 
 
 jr_052_4ff8:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillRESTOREMP:
@@ -2864,7 +2864,7 @@ SkillRESTOREMP:
     push hl
     ld a, [$db89]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     pop bc
     ld a, [hl+]
     cp [hl]
@@ -2879,7 +2879,7 @@ SkillRESTOREMP:
 
 
 jr_052_501b:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 SkillMETEOR:
@@ -2892,12 +2892,12 @@ SkillMETEOR:
     jr nc, jr_052_5066
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_506a
 
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -2931,7 +2931,7 @@ jr_052_5054:
 
 
 jr_052_5066:
-    call Call_052_548d
+    call SetSkillAnimFlag
     ret
 
 
@@ -2958,7 +2958,7 @@ jr_052_5083:
     ld b, a
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld [hl], b
     ld a, b
     ld [$db89], a
@@ -3128,7 +3128,7 @@ Call_052_519e:
     ld [$db57], a
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     ret
 
@@ -3138,7 +3138,7 @@ Call_052_519e:
     ccf
     ld a, [$db88]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 1, [hl]
     ret z
 
@@ -3149,7 +3149,7 @@ Call_052_519e:
 
     ld a, [$db89]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $0c
     ret z
@@ -3172,7 +3172,7 @@ Call_052_51dd:
     ld [hl], $00
     ld a, b
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     xor a
     ld [hl+], a
     ld [hl+], a
@@ -3225,7 +3225,7 @@ jr_052_5224:
 jr_052_522e:
     push bc
     ld bc, $0240
-    call Call_000_1de6
+    call Mul16x8To24
     ld bc, $9000
     add hl, bc
     pop bc
@@ -3243,7 +3243,7 @@ jr_052_522e:
     inc hl
     ld d, [hl]
     pop hl
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $5110
     rst $10
     ld hl, $1708
@@ -3283,7 +3283,7 @@ Call_052_5270:
     ld a, [$dd73]
     ld b, a
     ld hl, $03e7
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_052_528b
 
     ld bc, $03e7
@@ -3381,7 +3381,7 @@ jr_052_52f2:
 
 jr_052_530d:
     ld hl, $cb29
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     jr jr_052_5324
 
 jr_052_5315:
@@ -3431,7 +3431,7 @@ jr_052_533f:
 
 jr_052_5352:
     ld hl, $caea
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld b, $08
     jr jr_052_536b
 
@@ -3454,7 +3454,7 @@ jr_052_536b:
 Call_052_536c:
     push hl
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 6, [hl]
     pop hl
     ret
@@ -3463,7 +3463,7 @@ Call_052_536c:
 Call_052_5377:
     push hl
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 7, [hl]
     pop hl
     ret
@@ -3472,7 +3472,7 @@ Call_052_5377:
 Call_052_5382:
     push hl
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     or $c0
     ld [hl], a
@@ -3616,7 +3616,7 @@ jr_052_53de:
 Call_052_5422:
     ld a, [$db89]
     ld hl, $db05
-    call Call_000_2f6c
+    call HL_AddA_x8
     ret
 
 
@@ -3650,7 +3650,7 @@ Call_052_5422:
     ret
 
 
-Call_052_545d:
+ApplySkillDamage:
     ld [$dd70], a
     ld [$dd71], a
     ld a, $80
@@ -3682,7 +3682,7 @@ Call_052_5481:
     ret
 
 
-Call_052_548d:
+SetSkillAnimFlag:
     ld a, $40
     ld [$dd6f], a
     ret
@@ -3747,7 +3747,7 @@ Call_052_54d2:
 Call_052_54e7:
     ld hl, $b882
 
-Call_052_54ea:
+CheckSkillResistance:
     ld a, $a8
     ld [$dd6f], a
     ld a, l
@@ -3787,7 +3787,7 @@ jr_052_551b:
 
 jr_052_551d:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_5524
 
     inc d
@@ -3815,7 +3815,7 @@ jr_052_5535:
 Call_052_5539:
     ld a, [$db89]
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     ret z
 
@@ -3878,7 +3878,7 @@ Call_052_5589:
     ld a, [$db89]
     jr z, jr_052_55b1
 
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_55b5
 
 jr_052_55b1:
@@ -4005,7 +4005,7 @@ Call_052_562c:
     call Call_052_6c23
     ld de, $ca42
     ld hl, $c1a0
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$db78]
     cp $c2
     jr c, jr_052_565a
@@ -4053,7 +4053,7 @@ jr_052_5665:
 
 jr_052_568c:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_5698
 
     ld a, c
@@ -4077,7 +4077,7 @@ jr_052_56a3:
 
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -4126,14 +4126,14 @@ jr_052_56ea:
     ld [$db5b], a
     push hl
     ld a, [$db89]
-    call Call_000_2fe8
+    call ReadEventFlags2
     pop bc
     add hl, bc
     push hl
     ld a, [$db89]
     call Call_000_2fda
     pop bc
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_052_5733
 
     ld a, c
@@ -4161,7 +4161,7 @@ Jump_052_5733:
 jr_052_5733:
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -4212,7 +4212,7 @@ jr_052_5766:
 
     ld a, [$db89]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -4268,7 +4268,7 @@ jr_052_57c8:
     ld a, [$db89]
     call Call_000_2fe1
     pop bc
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_052_5811
 
     ld a, c
@@ -4296,7 +4296,7 @@ Jump_052_5811:
 jr_052_5811:
     ld a, [$db89]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -4336,7 +4336,7 @@ jr_052_5841:
     ld [$db55], a
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $03
     jr nz, jr_052_5864
@@ -4359,7 +4359,7 @@ jr_052_5864:
     ld [$db55], a
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $40
     jr nz, jr_052_5889
@@ -4382,7 +4382,7 @@ jr_052_5889:
     ld [$db55], a
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $10
     jr nz, jr_052_58ae
@@ -4405,7 +4405,7 @@ jr_052_58ae:
     ld [$db55], a
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $20
     jr nz, jr_052_58d3
@@ -4427,7 +4427,7 @@ jr_052_58d3:
     ld [$db55], a
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $8c
     jr nz, jr_052_58f5
@@ -4447,7 +4447,7 @@ jr_052_58f5:
 
 
     ld a, [$db77]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_593c
 
     jr z, jr_052_593c
@@ -4461,12 +4461,12 @@ jr_052_58f5:
     call Call_052_51dd
     ld a, b
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld d, h
     ld e, l
     ld a, b
     ld hl, $dbb3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld [de], a
     inc de
@@ -4511,7 +4511,7 @@ jr_052_593c:
     pop hl
     add hl, bc
     ld bc, $0640
-    call Call_000_2f45
+    call CmpHLvsBC
     ld b, h
     ld c, l
     jr c, jr_052_597e
@@ -4527,7 +4527,7 @@ jr_052_597e:
 
 jr_052_5984:
     ld hl, $dc23
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -4580,7 +4580,7 @@ jr_052_59b0:
     ld bc, $0005
     add hl, bc
     ld bc, $0400
-    call Call_000_2f45
+    call CmpHLvsBC
     ld b, h
     ld c, l
     jr c, jr_052_59f7
@@ -4590,7 +4590,7 @@ jr_052_59b0:
 
 jr_052_59e0:
     ld hl, $dc23
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -4617,7 +4617,7 @@ jr_052_59f7:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret c
 
     call Call_052_5ab2
@@ -4630,7 +4630,7 @@ jr_052_59f7:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret c
 
     call Call_052_5ab2
@@ -4644,12 +4644,12 @@ jr_052_59f7:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret c
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 0, [hl]
     ret nz
 
@@ -4660,7 +4660,7 @@ jr_052_59f7:
     ld [$db8a], a
     ld a, [$db77]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 0, [hl]
     ld a, $88
     ld [$db55], a
@@ -4677,7 +4677,7 @@ jr_052_5a66:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret c
 
     call Call_052_5ab2
@@ -4691,7 +4691,7 @@ jr_052_5a66:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret c
 
     call Call_052_5ab2
@@ -4705,7 +4705,7 @@ jr_052_5a66:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret c
 
     call Call_052_5ab2
@@ -4764,7 +4764,7 @@ jr_052_5af5:
 Call_052_5af6:
     ld a, [$db89]
     ld hl, $db09
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $03
     jr z, jr_052_5b24
@@ -4779,7 +4779,7 @@ Call_052_5af6:
 
 jr_052_5b0f:
     ld a, $0a
-    call Call_000_1e0d
+    call Div16x8To16
 
 jr_052_5b14:
     ld a, l
@@ -4806,7 +4806,7 @@ Call_052_5b26:
     ld [$db8a], a
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, l
     ld [$db61], a
     ld a, h
@@ -5180,7 +5180,7 @@ Call_052_5d48:
     call Call_052_5d7a
     ld a, [$db88]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -5217,7 +5217,7 @@ jr_052_5d79:
 Call_052_5d7a:
     ld a, [$db89]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -5238,7 +5238,7 @@ Call_052_5d7a:
     add $05
     ld c, a
     ld b, $00
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_052_5da7
 
     ld b, h
@@ -5309,11 +5309,11 @@ jr_052_5df8:
 
 Call_052_5dfc:
     ld a, [$db89]
-    call Call_000_2fd3
+    call ReadEventFlags3
     ld b, h
     ld c, l
     ld hl, $0001
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_052_5e0e
 
     xor a
@@ -5326,7 +5326,7 @@ jr_052_5e0e:
     call BCsrl1
     ld a, [$db89]
     ld hl, $dbf3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -5376,7 +5376,7 @@ Call_052_5e3e:
     ld [$db57], a
     ld a, [$db89]
     ld hl, $dbf3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl]
     add c
     ld [hl+], a
@@ -5451,13 +5451,13 @@ Call_052_5eb4:
     call BCsrl1
     ld a, [$db89]
     ld hl, $dc03
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld d, $00
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nz, jr_052_5ed3
 
     ld d, $01
@@ -5465,7 +5465,7 @@ Call_052_5eb4:
 jr_052_5ed3:
     push bc
     ld bc, $0002
-    call Call_000_2f45
+    call CmpHLvsBC
     pop bc
     pop hl
     jr c, jr_052_5f06
@@ -5523,7 +5523,7 @@ Call_052_5f08:
     ld [$db57], a
     ld a, [$db89]
     ld hl, $dc03
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl]
     add c
     ld [hl+], a
@@ -5586,12 +5586,12 @@ Call_052_5f5e:
     call Call_052_5270
     ld a, [$db88]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     pop hl
     jr c, jr_052_5f8a
 
@@ -5602,7 +5602,7 @@ Call_052_5f5e:
 jr_052_5f8a:
     ld a, [$db88]
     ld hl, $dbb3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, c
     ld [hl+], a
     ld [hl], b
@@ -5610,12 +5610,12 @@ jr_052_5f8a:
     call Call_052_528d
     ld a, [$db88]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     pop hl
     jr c, jr_052_5fb2
 
@@ -5626,13 +5626,13 @@ jr_052_5f8a:
 jr_052_5fb2:
     ld a, [$db88]
     ld hl, $dbd3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, c
     ld [hl+], a
     ld [hl], b
     ld a, [$db88]
     ld hl, $dbe3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [$db89]
     call Call_052_529f
     ld a, c
@@ -5640,7 +5640,7 @@ jr_052_5fb2:
     ld [hl], b
     ld a, [$db88]
     ld hl, $dbf3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [$db89]
     call Call_052_52b1
     ld a, c
@@ -5648,7 +5648,7 @@ jr_052_5fb2:
     ld [hl], b
     ld a, [$db88]
     ld hl, $dc03
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [$db89]
     call Call_052_52c6
     ld a, c
@@ -5771,7 +5771,7 @@ Call_052_607d:
 jr_052_609d:
     ld a, [$db89]
     ld hl, $dbb3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -5783,7 +5783,7 @@ jr_052_609d:
 jr_052_60b1:
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -5796,7 +5796,7 @@ jr_052_60b1:
     ld b, a
     ld a, [$db89]
     call Call_000_2fda
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_052_60d1
 
     ld b, h
@@ -5815,14 +5815,14 @@ Call_052_60d7:
     call Call_052_5559
     ld a, [$db89]
     ld hl, $dbf3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
     call BCsrl1
     ld a, [$db88]
     call Call_000_2fcc
-    call Call_000_2f45
+    call CmpHLvsBC
     jr z, jr_052_6112
 
     jr c, jr_052_6112
@@ -5840,7 +5840,7 @@ Call_052_60d7:
     ld b, d
     ld c, e
     call HLsrl4
-    call Call_000_2f45
+    call CmpHLvsBC
     pop bc
     pop hl
     jr z, jr_052_611d
@@ -5870,7 +5870,7 @@ jr_052_611d:
     ld l, a
     ld a, [wRNG2]
     ld h, a
-    call Call_000_2f4b
+    call Div16x16To16
     pop hl
     ld d, b
     ld e, c
@@ -5896,7 +5896,7 @@ jr_052_6138:
     ld a, c
     inc a
     push de
-    call Call_000_1e0d
+    call Div16x8To16
     pop de
     ld c, a
     ld b, $00
@@ -6045,7 +6045,7 @@ jr_052_6205:
 
 Call_052_6214:
     ld a, [$db89]
-    call Call_000_2fe8
+    call ReadEventFlags2
     call Call_052_69b7
     inc hl
     ld a, l
@@ -6067,7 +6067,7 @@ Call_052_6232:
     jr nc, jr_052_628b
 
     ld a, [$db88]
-    call Call_000_2fe8
+    call ReadEventFlags2
     ld a, l
     ld [$db56], a
     ld a, h
@@ -6094,7 +6094,7 @@ jr_052_6259:
 
 jr_052_6265:
     ld a, [$db89]
-    call Call_000_2fe8
+    call ReadEventFlags2
     dec hl
     jr jr_052_627a
 
@@ -6436,7 +6436,7 @@ jr_052_643d:
 jr_052_6442:
     add hl, bc
     ld bc, $00b4
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_052_644e
 
     ld hl, $00b4
@@ -6454,7 +6454,7 @@ jr_052_644e:
     ld l, a
     ld a, [wRNG2]
     ld h, a
-    call Call_000_2f4b
+    call Div16x16To16
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6515,7 +6515,7 @@ jr_052_64b1:
 jr_052_64b5:
     add hl, bc
     ld bc, $0096
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_052_64c1
 
     ld hl, $0096
@@ -6526,7 +6526,7 @@ jr_052_64c1:
     ld a, h
     ld [$db57], a
     ld a, $05
-    call Call_000_1e0d
+    call Div16x8To16
     ld b, h
     ld c, l
     call Call_052_5559
@@ -6534,7 +6534,7 @@ jr_052_64c1:
     ld l, a
     ld a, [wRNG2]
     ld h, a
-    call Call_000_2f4b
+    call Div16x16To16
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6645,7 +6645,7 @@ Call_052_653e:
     ld l, a
     ld a, [wRNG2]
     ld h, a
-    call Call_000_2f4b
+    call Div16x16To16
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6781,7 +6781,7 @@ Call_052_6612:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 1, [hl]
     jr z, jr_052_6646
 
@@ -6828,7 +6828,7 @@ jr_052_666d:
     and $04
     or $03
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     xor a
     ld [hl+], a
     ld [hl+], a
@@ -6882,7 +6882,7 @@ Call_052_66ac:
 Call_052_66ba:
     ld a, [$db88]
     ld hl, $dbe3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld b, [hl]
@@ -6932,7 +6932,7 @@ jr_052_66f4:
 Call_052_6706:
     ld a, [$db89]
     ld hl, $db05
-    call Call_000_2f6c
+    call HL_AddA_x8
     ret
 
 
@@ -7548,9 +7548,9 @@ Call_052_69a8:
     ld b, h
     ld c, l
     ld a, $55
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, $64
-    call Call_000_1e1e
+    call Div24x8To16
     pop de
     ret
 
@@ -7560,9 +7560,9 @@ Call_052_69b7:
     ld b, h
     ld c, l
     ld a, $08
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, $0a
-    call Call_000_1e1e
+    call Div24x8To16
     pop de
     ret
 
@@ -7583,9 +7583,9 @@ Call_052_69d2:
     ld b, h
     ld c, l
     ld a, $06
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, $0a
-    call Call_000_1e1e
+    call Div24x8To16
     pop de
     ret
 
@@ -7606,12 +7606,12 @@ Call_052_69ef:
     push hl
     push bc
     ld b, a
-    call Call_000_2fe8
+    call ReadEventFlags2
     push hl
     ld a, b
     call Call_000_2fda
     pop bc
-    call Call_000_2f45
+    call CmpHLvsBC
     pop bc
     pop hl
     ret
@@ -7626,7 +7626,7 @@ Call_052_6a01:
     ld a, b
     call Call_000_2fe1
     pop bc
-    call Call_000_2f45
+    call CmpHLvsBC
     pop bc
     pop hl
     ret
@@ -7634,9 +7634,9 @@ Call_052_6a01:
 
 Call_052_6a13:
     ld [$db4c], a
-    call Call_000_2fd3
+    call ReadEventFlags3
     ld bc, $03e7
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_052_6a45
 
     push hl
@@ -7658,7 +7658,7 @@ jr_052_6a39:
     sla c
     rl b
     pop hl
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_052_6a45
 
 jr_052_6a43:
@@ -7678,7 +7678,7 @@ Call_052_6a49:
     ld hl, $dc03
     call Call_052_6ab1
     ld bc, $01ff
-    call Call_000_2f45
+    call CmpHLvsBC
     jr z, jr_052_6a73
 
     jr nc, jr_052_6a73
@@ -7690,7 +7690,7 @@ Call_052_6a49:
     ld [$dd74], a
     call Call_052_6af5
     pop hl
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_052_6a73
 
     ret
@@ -7721,7 +7721,7 @@ Call_052_6a75:
     push hl
     ld a, [$db4c]
     ld hl, $6aa3
-    call Call_052_6ab8
+    call HL_AddA_x2
     call RST_08
     ld [$db4c], a
     pop hl
@@ -7748,14 +7748,14 @@ Call_052_6a75:
     ld h, a
 
 Call_052_6ab1:
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld h, [hl]
     ld l, a
     ret
 
 
-Call_052_6ab8:
+HL_AddA_x2:
     add a
     add l
     ld l, a
@@ -7897,12 +7897,12 @@ Call_052_6b4c:
 jr_052_6b4c:
     push hl
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     pop hl
     push hl
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
 
 jr_052_6b5b:
@@ -7979,7 +7979,7 @@ Call_052_6b99:
     ld [$db5e], a
     ld a, d
     ld [$db5f], a
-    call Call_000_097a
+    call SetupVRAMParams
     ret
 
 
@@ -8256,7 +8256,7 @@ jr_052_6d0a:
     call Call_052_6684
     ld a, [$db88]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 4, [hl]
     jp Jump_052_6e74
 
@@ -8269,7 +8269,7 @@ jr_052_6d20:
     inc [hl]
     ld a, [$db88]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     set 5, [hl]
     ld a, [$c86c]
     or a
@@ -8364,7 +8364,7 @@ jr_052_6db0:
 
     ld a, [$db89]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -8414,7 +8414,7 @@ jr_052_6e02:
 
 jr_052_6e0a:
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_6e26
 
     ld a, $1a
@@ -8588,7 +8588,7 @@ jr_052_6ed7:
 
     ld a, [$db89]
     ld hl, $db09
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     ret z
 
@@ -8741,7 +8741,7 @@ Jump_052_6f83:
     ld a, $01
     ld [$d9ed], a
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret nc
 
     ld hl, $5805
@@ -8774,7 +8774,7 @@ jr_052_6fb2:
 
     ld a, [$db88]
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 0, [hl]
     jp z, Jump_052_706c
 
@@ -8793,7 +8793,7 @@ jr_052_6fd4:
 
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl]
     inc a
     ld [hl], a
@@ -8802,7 +8802,7 @@ jr_052_6fd4:
     jr z, jr_052_706c
 
     ld a, [hl]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_6fd4
 
     ld a, $01
@@ -8944,7 +8944,7 @@ jr_052_70b2:
     cp $10
     jr z, jr_052_70dc
 
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_70b2
 
 jr_052_70dc:
@@ -9035,7 +9035,7 @@ Jump_052_714c:
 jr_052_714c:
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [$dd69]
     cp $08
     jp nc, Jump_052_706c
@@ -9052,7 +9052,7 @@ jr_052_714c:
 jr_052_7169:
     inc [hl]
     ld a, [hl]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_7176
 
     ld hl, $dd69
@@ -9111,7 +9111,7 @@ jr_052_71aa:
     push af
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     pop af
     ld [hl], a
     ld [$db89], a
@@ -9126,7 +9126,7 @@ jr_052_71aa:
     jr z, jr_052_71d7
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_7184
 
 jr_052_71d7:
@@ -9142,7 +9142,7 @@ jr_052_71d7:
     ld [$d9ed], a
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [$db89]
     ld [hl], a
     ret
@@ -9150,7 +9150,7 @@ jr_052_71d7:
 
 Jump_052_71f8:
     ld a, [$db89]
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jp c, Jump_052_7085
 
     call Call_052_6c23
@@ -9158,7 +9158,7 @@ Jump_052_71f8:
     ld l, a
     ld h, $06
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     xor a
     ld [$c822], a
     ld a, $d7
@@ -9257,13 +9257,13 @@ jr_052_7286:
     ld [$db8a], a
     ld de, $ca42
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$db78]
     sub $af
     ld l, a
     ld h, $08
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $c1a0
     ld a, [$db77]
     ld [$db50], a
@@ -9333,7 +9333,7 @@ jr_052_730f:
 jr_052_733a:
     ld a, [$db77]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $c0
     jr nz, jr_052_730f
@@ -9375,7 +9375,7 @@ jr_052_735b:
 
 jr_052_7375:
     ld a, [$db77]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_739d
 
     ld a, [$db78]
@@ -9440,7 +9440,7 @@ jr_052_73d3:
     ret z
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_73d3
 
     ld hl, $d9ef
@@ -9477,7 +9477,7 @@ jr_052_7408:
 
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_7428
 
     ld hl, $d9ed
@@ -9602,7 +9602,7 @@ jr_052_74d5:
     ld hl, $db77
     inc [hl]
     ld a, [$db77]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_74d5
 
     jr jr_052_74f1
@@ -9649,7 +9649,7 @@ jr_052_7514:
 
 jr_052_7515:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_7525
 
     inc c
@@ -9716,7 +9716,7 @@ jr_052_755c:
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $03
     jr nz, jr_052_758a
@@ -9786,7 +9786,7 @@ jr_052_75bc:
 jr_052_75be:
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $cc
     jr nz, jr_052_75dd
@@ -9809,7 +9809,7 @@ jr_052_75dd:
     ld hl, $db89
     inc [hl]
     ld a, [hl]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_75be
 
     ld a, [hl]
@@ -9892,7 +9892,7 @@ jr_052_762d:
 
     ld a, [$db89]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $c0
     jr z, jr_052_765b
@@ -9975,7 +9975,7 @@ Call_052_7692:
 
     ld a, [$db89]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $c0
     ret z
@@ -9991,12 +9991,12 @@ Call_052_76c8:
 
 jr_052_76cb:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_76dc
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     jr z, jr_052_7709
 
@@ -10020,7 +10020,7 @@ jr_052_76dc:
 jr_052_76f6:
     ld de, $ca42
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $00eb
     ld a, $01
     ld [$db55], a
@@ -10031,7 +10031,7 @@ jr_052_7709:
 
 jr_052_770c:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_7723
 
     ld a, [$c86c]
@@ -10040,7 +10040,7 @@ jr_052_770c:
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     jr z, jr_052_777b
 
@@ -10145,18 +10145,18 @@ Call_052_77a8:
     cp $04
     jr c, jr_052_77b7
 
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret
 
 
 jr_052_77b7:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret c
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     ret z
 
@@ -10168,7 +10168,7 @@ jr_052_77b7:
     ret c
 
     ld a, [$db88]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jp c, Jump_052_797c
 
     ld hl, $5f06
@@ -10209,13 +10209,13 @@ jr_052_77b7:
 jr_052_780f:
     ld a, [$db88]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld d, h
     ld e, l
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     ld h, d
     ld l, e
     jr c, jr_052_782e
@@ -10315,7 +10315,7 @@ jr_052_788e:
 
     ld a, [$db88]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -10456,7 +10456,7 @@ Jump_052_7982:
 
 Call_052_7997:
     ld a, [$db88]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret nc
 
     ld hl, $d9ed
@@ -10483,7 +10483,7 @@ Call_052_7997:
     inc [hl]
     ld a, [$db88]
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [hl+]
     ld h, [hl]
@@ -10581,7 +10581,7 @@ jr_052_7a48:
 
     ld a, [$db88]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 4, [hl]
     jr nz, jr_052_7a5a
 
@@ -10603,7 +10603,7 @@ jr_052_7a5a:
     ld hl, $d9ee
     inc [hl]
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr z, jr_052_7a7b
 
     jr nc, jr_052_7a7b
@@ -10642,7 +10642,7 @@ jr_052_7a95:
     jr z, jr_052_7ab0
 
     ld a, b
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr z, jr_052_7a95
 
     xor a
@@ -10659,7 +10659,7 @@ jr_052_7ab0:
 Call_052_7ab5:
     ld a, [$db88]
     ld hl, $dcec
-    call Call_052_6ab8
+    call HL_AddA_x2
     push hl
     ld a, [wRNG1]
     and $03
@@ -10688,7 +10688,7 @@ Call_052_7ab5:
 
 jr_052_7ae5:
     ld b, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_7af6
 
     ld a, b
@@ -10722,7 +10722,7 @@ jr_052_7af6:
     push hl
     ld a, [$db88]
     ld hl, $db05
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $c0
     ld [hl], a
@@ -10744,7 +10744,7 @@ Call_052_7b1a:
 jr_052_7b24:
     ld a, [$db88]
     ld hl, $dbc3
-    call Call_052_6ab8
+    call HL_AddA_x2
     xor a
     ld [hl+], a
     ld [hl], a
@@ -10754,12 +10754,12 @@ jr_052_7b24:
     ld hl, $d9ee
     inc [hl]
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_7b70
 
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, l
     ld [$db61], a
     ld a, h
@@ -10794,12 +10794,12 @@ jr_052_7b70:
     ld hl, $d9ee
     inc [hl]
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_7bb2
 
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 7, [hl]
     jr nz, jr_052_7bb2
 
@@ -10835,12 +10835,12 @@ jr_052_7bb2:
     ld hl, $d9ee
     inc [hl]
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_7be7
 
     ld a, [$db89]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     jr nz, jr_052_7be7
 
@@ -10880,7 +10880,7 @@ Jump_052_7bec:
     ld [$db4f], a
     ld a, [$db89]
     ld b, a
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jp c, Jump_052_7982
 
     ld a, [$db89]
@@ -10944,7 +10944,7 @@ jr_052_7c47:
     inc [hl]
     call Call_052_7c98
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret c
 
     ld hl, $5f04
@@ -10978,7 +10978,7 @@ jr_052_7c98:
     ld hl, $d9ee
     inc [hl]
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_052_7c98
 
     ld a, [$db56]
@@ -11015,7 +11015,7 @@ jr_052_7cda:
     ld [$da83], a
     call Call_052_7c98
     ld hl, $dba3
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -11155,7 +11155,7 @@ jr_052_7db1:
 
 jr_052_7db7:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_052_7dc3
 
     inc c
@@ -11179,7 +11179,7 @@ jr_052_7dc8:
 Call_052_7dcd:
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ret
 
 
@@ -11214,7 +11214,7 @@ jr_052_7de0:
 jr_052_7df9:
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $0c
     cp $0c
@@ -11226,12 +11226,12 @@ jr_052_7df9:
 
     ld a, [$db89]
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 3, [hl]
     jr z, jr_052_7dde
 
     ld a, [$db89]
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_052_7dde
 
     ld a, [$dcff]
@@ -11261,7 +11261,7 @@ jr_052_7e44:
 
     ld a, [$db89]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [$dcfd]
     bit 6, a
     jr nz, jr_052_7e64
@@ -11324,7 +11324,7 @@ Call_052_7e85:
 jr_052_7e96:
     call Call_052_7ea7
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     res 4, [hl]
     inc hl
     ld a, [hl]
@@ -11337,7 +11337,7 @@ Call_052_7ea7:
 jr_052_7ea7:
     ld a, [$db88]
     ld hl, $dced
-    call Call_052_6ab8
+    call HL_AddA_x2
     ld a, [hl]
     ld [$db89], a
     ret
@@ -11468,12 +11468,12 @@ jr_052_7f55:
     and $04
     or l
     ld [$db4c], a
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_052_7f83
 
     ld a, [$db4c]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $c0
     jr z, jr_052_7f4e
@@ -11546,7 +11546,7 @@ Call_052_7fd8:
 
 jr_052_7fe2:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret nc
 
     inc c

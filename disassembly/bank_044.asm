@@ -232,7 +232,7 @@ jr_044_40de:
 
 jr_044_40f4:
     ld de, $4007
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
@@ -263,7 +263,7 @@ jr_044_410c:
 
 jr_044_4122:
     ld de, $4007
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
@@ -294,7 +294,7 @@ jr_044_413a:
 
 jr_044_4150:
     call Call_044_40cd
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

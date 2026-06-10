@@ -1320,7 +1320,7 @@ Jump_006_472e:
     ld a, h
     ldh [$a8], a
     push bc
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$aa]
     push af
     ldh a, [$92]
@@ -1331,7 +1331,7 @@ Jump_006_472e:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     pop af
     pop bc
     srl a
@@ -1550,7 +1550,7 @@ Jump_006_4874:
     ld a, h
     ldh [$a6], a
     push bc
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$aa]
     push af
     ldh a, [$92]
@@ -1561,7 +1561,7 @@ Jump_006_4874:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     pop af
     pop bc
     srl a
@@ -2562,7 +2562,7 @@ jr_006_4daa:
 jr_006_4dae:
     ld h, a
     ld l, $00
-    call Call_000_1577
+    call WaitDMATransfer
     pop bc
     pop hl
     ld a, [hl]
@@ -3073,7 +3073,7 @@ jr_006_4f98:
 label6_4f9a:
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $50e0
@@ -7271,7 +7271,7 @@ jr_006_606b:
 
 jr_006_60ac:
     ld [wMonsterInfoToggle], a
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     jp Jump_006_6284
 
@@ -7433,7 +7433,7 @@ jr_006_61a2:
     jr z, jr_006_61b7
 
     ld c, $20
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, l
     add $d7
     ld l, a
@@ -7892,7 +7892,7 @@ jr_006_6427:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     ld hl, $010a
     rst $10
     xor a
@@ -8419,7 +8419,7 @@ Call_006_671f:
     ret z
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $01
     ldh [rVBK], a
     ei
@@ -8468,7 +8468,7 @@ jr_006_6737:
     jr nz, jr_006_6734
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $00
     ldh [rVBK], a
     ei
@@ -8614,7 +8614,7 @@ Call_006_67f0:
     cp $ff
     jr z, jr_006_6819
 
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_006_6819:
     ld hl, $c915
@@ -8776,7 +8776,7 @@ Call_006_690a:
 
 jr_006_6920:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl]
     ei
     ld [de], a
@@ -8976,7 +8976,7 @@ jr_006_6a25:
     ld a, [wCurrGoldHi]
     ld e, a
     ld a, $02
-    call Call_000_1e1e
+    call Div24x8To16
     ld a, l
     ld [wCurrGoldLo], a
     ld a, h
@@ -9015,7 +9015,7 @@ jr_006_6aa7:
     ld hl, $0305
     rst $10
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ret
@@ -9401,7 +9401,7 @@ jr_006_6ce8:
     push bc
     ld c, [hl]
     ldh a, [$d5]
-    call Call_000_1dbe
+    call Mul8x8To16
     pop bc
     bit 3, e
     jr z, jr_006_6d02
@@ -9981,7 +9981,7 @@ Call_006_7031:
     ret z
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $01
     ldh [rVBK], a
     ei
@@ -10030,7 +10030,7 @@ jr_006_7050:
     jr nz, jr_006_704d
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $00
     ldh [rVBK], a
     ei

@@ -1184,13 +1184,13 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
 
     call Call_000_0954
     ld d, $00
-    call Call_000_0d78
+    call ReadNextTextByte
     ld e, a
     call Call_000_0954
-    call Call_000_0d78
+    call ReadNextTextByte
     ld c, a
     ld a, [$c82a]
-    call Call_000_1dbe
+    call Mul8x8To16
     add hl, de
     add hl, hl
     add hl, hl
@@ -1213,7 +1213,7 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
 
 
     call Call_000_0954
-    call Call_000_0d78
+    call ReadNextTextByte
     call PlaySoundEffect
     ret
 
@@ -1466,7 +1466,7 @@ jr_056_46b5:
 
 jr_056_46e6:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ei
     ld [de], a
@@ -1605,7 +1605,7 @@ jr_056_478a:
     ld hl, $c825
     set 3, [hl]
     call Call_000_0954
-    call Call_000_0d78
+    call ReadNextTextByte
     ld [$c833], a
     ret
 
@@ -1639,7 +1639,7 @@ jr_056_478a:
 
 
 jr_056_4806:
-    call Call_000_0d78
+    call ReadNextTextByte
     ld de, $c180
     add e
     ld l, a
@@ -1661,7 +1661,7 @@ jr_056_4806:
     ld hl, $c825
     set 6, [hl]
     call Call_000_0954
-    call Call_000_0d78
+    call ReadNextTextByte
     ld [$c835], a
     ld hl, $c826
     res 7, [hl]
@@ -1671,7 +1671,7 @@ jr_056_4806:
     ld hl, $c825
     set 7, [hl]
     call Call_000_0954
-    call Call_000_0d78
+    call ReadNextTextByte
     ld [$c836], a
     ld hl, $c826
     res 7, [hl]
@@ -1705,7 +1705,7 @@ jr_056_486a:
 
 jr_056_486d:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl]
     ei
     ld [de], a
@@ -1746,7 +1746,7 @@ jr_056_486d:
 Call_056_48a1:
     ld de, $560a
     ld hl, $8e50
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $0100
     call Call_000_0d11
     ld b, $0e
@@ -1819,24 +1819,24 @@ jr_056_48dc:
 
 Call_056_4901:
     ld de, $664b
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
     ld de, $664b
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
 Call_056_490f:
     call Call_056_4901
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 
     ld hl, $9000
     ld de, $1207
-    call Call_000_098f
+    call SetupVRAMCopy
     ld hl, wDebug_main_menu_option
     ld bc, $0010
     ld a, $00
@@ -2038,7 +2038,7 @@ jr_056_4a75:
     ld [$df00], a
     ld a, [$df03]
     ld c, $20
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, l
     add $8e
     ld l, a
@@ -2049,10 +2049,10 @@ jr_056_4a75:
     ld [$df04], a
     ld a, l
     ld [$df05], a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ld [$df06], a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl]
     ld [$df07], a
 
@@ -2084,7 +2084,7 @@ jr_056_4aca:
     ld [$df00], a
     ld a, [$df03]
     ld c, $20
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, l
     add $8e
     ld l, a
@@ -2095,10 +2095,10 @@ jr_056_4aca:
     ld [$df04], a
     ld a, l
     ld [$df05], a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ld [$df06], a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl]
     ld [$df07], a
 
@@ -2206,7 +2206,7 @@ jr_056_4b82:
     inc [hl]				;see?
     ld a, [$c88b]
     ld c, $04
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, l
     ld [$df02], a
     ld [$df00], a

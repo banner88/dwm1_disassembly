@@ -336,64 +336,64 @@ jr_000_01d2:      ;all SGB related
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $02
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $03
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $04
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $05
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $06
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $07
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $08
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $09
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $0c
     ld de, $0803
     ld bc, $0800
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $0d
     ld de, $0804
     call Call_000_10e5
-    call Call_000_1013
+    call DisableSRAM
     ld a, $12
 
 Jump_000_025f:
@@ -401,19 +401,19 @@ Jump_000_025f:
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $0a
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $13
     ld [$c774], a
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     ld a, $01
     ld [wIsSGB], a
     ld a, $ff
@@ -474,14 +474,14 @@ jr_000_02f2:
     or a
     call nz, Call_000_3331
     call Call_000_11de
-    call Call_000_1013
+    call DisableSRAM
     ld a, $00
     ld [$c774], a
 
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
     jp Jump_000_028b
 
 Call_000_030f:
@@ -613,7 +613,7 @@ jr_000_039b:
     ld [$c8b9], a
 
 jr_000_03b3:
-    call Call_000_1bb1
+    call ProcessBGMQueue
     call Call_000_046b
     ld a, [$c86c]
     or a
@@ -1002,7 +1002,7 @@ Call_000_05ad:
     ret
 
 
-Call_000_05b6:
+CallTextEngine:
     push de
 
 Call_000_05b7:
@@ -1051,7 +1051,7 @@ Jump_000_05e3:
     ret
 
 
-Call_000_05f6:
+RunTextHandler:
     call Call_000_092f
 
 Jump_000_05f9:
@@ -1081,7 +1081,7 @@ Call_000_0608:
     ret
 
 
-Call_000_0609:
+RequestScreenUpdate:
 Jump_000_0609:
     ld hl, $c825
 
@@ -1367,7 +1367,7 @@ Jump_000_0744:
 
 Call_000_074a:
     ld hl, $8e50
-    call Call_000_1577
+    call WaitDMATransfer
     jp Jump_000_0853
 
 
@@ -1418,7 +1418,7 @@ Jump_000_0789:
 
 jr_000_0794:
     bit 7, a
-    jr z, jr_000_07ab
+    jr z, HandleTextCharacter
 
     ld a, [$c836]
     dec a
@@ -1431,7 +1431,7 @@ jr_000_0794:
     jp Jump_000_0853
 
 
-jr_000_07ab:
+HandleTextCharacter:
     ld a, [$c82d]
     ld l, a
     ld a, [$c82e]
@@ -1788,7 +1788,8 @@ Call_000_0957:
     ret
 
 
-Call_000_096d:
+; SetupTilemapTransfer: Store source/dest for tilemap VRAM transfer
+SetupTilemapTransfer:
     ld a, h
     ld [$c822], a
     ld a, l
@@ -1798,7 +1799,8 @@ Call_000_096d:
     ret
 
 
-Call_000_097a:
+; SetupVRAMParams: Store DE/HL as VRAM transfer parameters
+SetupVRAMParams:
     ld a, e
     ld [$c837], a
     ld a, d
@@ -1812,7 +1814,7 @@ Call_000_097a:
     ret
 
 
-Call_000_098f:
+SetupVRAMCopy:
     ld a, l
     ld [$c827], a
     ld a, h
@@ -1826,7 +1828,7 @@ Call_000_098f:
     ret
 
 
-Call_000_09a4:
+ExtractDigits:
     cp $64
     jr nc, jr_000_09ae
 
@@ -2423,7 +2425,8 @@ jr_000_0c5a:
     ret
 
 
-Call_000_0c80:
+; Copy4Bytes: Copy 4 bytes from [DE] to [HL]
+Copy4Bytes:
     ld b, $04
 
 jr_000_0c82:
@@ -2638,7 +2641,7 @@ jr_000_0d62:
     ret
 
 
-Call_000_0d78:
+ReadNextTextByte:
     ld a, [$4000]
     push af
     ld a, [$c824]	;
@@ -3225,7 +3228,8 @@ jr_000_1007:
 
 ; Most-called function (31 refs). Core utility.
 CoreUtil_1013:
-Call_000_1013:
+; DisableSRAM: Disable external SRAM access
+DisableSRAM:
     ld a, [wIsSGB]
     or a
     ret z
@@ -3249,7 +3253,7 @@ Call_000_1024:
     ld [$c774], a
     ld hl, $0800
     rst $10
-    call Call_000_1013
+    call DisableSRAM
     ldh a, [rP1]
     and $03
     cp $03
@@ -3283,7 +3287,7 @@ Call_000_1024:
     ld [$c774], a
     ld hl, $0800
     rst $10
-    call Call_000_1013
+    call DisableSRAM
     sub a
     ret
 
@@ -3293,7 +3297,7 @@ jr_000_1074:
     ld [$c774], a
     ld hl, $0800
     rst $10
-    call Call_000_1013
+    call DisableSRAM
     scf
     ret
 
@@ -3400,7 +3404,7 @@ Call_000_10e5:
     ld a, $e4
     ldh [rBGP], a
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $9800
     ld de, $000c
     ld a, $80
@@ -3587,7 +3591,7 @@ Call_000_11fb:
     ld hl, $0800
     rst $10
 
-    call Call_000_1013
+    call DisableSRAM
 
 Jump_000_1214:
     ret
@@ -3681,7 +3685,7 @@ Jump_000_126b:
     ret
 
 
-Call_000_1275:
+SerialTransfer:
 Jump_000_1275:
     di
     call Call_000_127f
@@ -4139,7 +4143,8 @@ jr_000_14c7:
     ret
 
 
-Call_000_14cf:
+; WaitLCDTransfer: Busy-wait until $DA78 == 0 (LCD transfer complete)
+WaitLCDTransfer:
 jr_000_14cf:
     ld a, [$da78]
     or a
@@ -4292,7 +4297,8 @@ Jump_000_156a:
     ret
 
 
-Call_000_1577:
+; WaitDMATransfer: Busy-wait until $DA78 == 0 (DMA transfer complete)
+WaitDMATransfer:
 jr_000_1577:
     ld a, [$da78]
     or a
@@ -4418,7 +4424,7 @@ jr_000_15f8:
 
 jr_000_15ff:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ei
 
@@ -4537,7 +4543,8 @@ jr_000_1671:
     ret
 
 
-Call_000_1688:
+; SetGBCPalette: Set palette B, handles GBC color mode
+SetGBCPalette:
     ld b, a
     ld a, [wIsGBC]
     or a
@@ -4623,7 +4630,7 @@ jr_000_16fc:
     ld [de], a
     inc de
     call Call_000_18c0
-    call Call_000_1013
+    call DisableSRAM
     ld a, [$c852]
     bit 4, a
     jp z, Jump_000_17db
@@ -4635,7 +4642,7 @@ jr_000_16fc:
     ld [de], a
     inc de
     call Call_000_18c0
-    call Call_000_1013
+    call DisableSRAM
     jp Jump_000_17db
 
 
@@ -4866,7 +4873,7 @@ jr_000_189a:
     bit 4, a
     ret z
 
-    call Call_000_1013
+    call DisableSRAM
     call Call_000_11bc
     ld hl, $c7e7
     ld de, $c777
@@ -5226,7 +5233,8 @@ jr_000_1aa1:
     ret
 
 
-Call_000_1aa6:
+; WaitVRAM: Wait for VRAM access window (LCD STAT bit 1 clear)
+WaitVRAM:
 jr_000_1aa6:
     ldh a, [rSTAT]
     bit 1, a
@@ -5299,7 +5307,7 @@ SetBGM:
     ret
 
 
-Call_000_1ae5:
+InitBGM:
     ld [wCurrPlayingBGM], a
     di
     call Call_000_3331
@@ -5362,7 +5370,7 @@ PlaySoundEffect:
     ret
 
 
-Call_000_1b30:
+LoadSE:
     push af
     push bc
     push de
@@ -5469,7 +5477,7 @@ jr_000_1ba7:
     ret
 
 
-Call_000_1bb1:
+ProcessBGMQueue:
     ld a, [wBGM]
     cp $ff
     jr z, jr_000_1bc4
@@ -5477,7 +5485,7 @@ Call_000_1bb1:
     cp $9d
     jr z, jr_000_1bc4
 
-    call Call_000_1ae5
+    call InitBGM
     ld a, $ff
     ld [wBGM], a
 
@@ -5486,7 +5494,7 @@ jr_000_1bc4:
     cp $ff
     jr z, jr_000_1bd3
 
-    call Call_000_1b30
+    call LoadSE
     ld a, $ff
     ld [wSoundEffect], a
 
@@ -5650,12 +5658,12 @@ Call_000_1c89:
     ld de, $0805
     ld bc, $1000
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $11
     ld de, $0806
     ld bc, $1000
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $0f
     ld de, $0807
     call Call_000_10e5
@@ -5669,12 +5677,12 @@ jr_000_1cb9:
     ld de, $0808
     ld bc, $1000
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $11
     ld de, $2c00
     ld bc, $1000
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $0f
     ld de, $0809
     call Call_000_10e5
@@ -5688,12 +5696,12 @@ jr_000_1ce3:
     ld de, $2c01
     ld bc, $1000
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $11
     ld de, $3211
     ld bc, $1000
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $0f
     ld de, $3212
     call Call_000_10e5
@@ -5707,12 +5715,12 @@ jr_000_1d0d:
     ld de, $2e24
     ld bc, $1000
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $11
     ld de, $2e25
     ld bc, $1000
     call Call_000_113e
-    call Call_000_1013
+    call DisableSRAM
     ld a, $0f
     ld de, $3213
     call Call_000_10e5
@@ -5772,7 +5780,7 @@ jr_000_1d69:
     ld a, [$c863]
     bit 1, a
     ld a, $f8
-    call nz, Call_000_1275
+    call nz, SerialTransfer
 
 jr_000_1d94:
     xor a
@@ -5792,7 +5800,7 @@ Call_000_1da2:
     ld a, [$c863]
     bit 1, a
     ld a, $f5
-    call nz, Call_000_1275
+    call nz, SerialTransfer
     ld a, [$c863]
     bit 1, a
     ld a, $f5
@@ -5806,7 +5814,8 @@ jr_000_1db6:
     ret
 
 
-Call_000_1dbe:
+; Mul8x8To16: HL = A * C
+Mul8x8To16:
     ld b, $00
     ld h, b
     ld l, b
@@ -5850,15 +5859,16 @@ jr_000_1de1:
 
 ; Multiply A × BC → result.
 Multiply_A_x_BC:
-Call_000_1de6:
+; Mul16x8To24: E:HL = BC * A
+Mul16x8To24:
     push af
     push bc
     ld c, b
-    call Call_000_1dbe
+    call Mul8x8To16
     pop bc
     pop af
     push hl
-    call Call_000_1dbe
+    call Mul8x8To16
     pop bc
 
 Call_000_1df3:
@@ -5871,7 +5881,8 @@ Call_000_1df3:
     ret
 
 
-Call_000_1dfb:
+; Div8x8: B = B // A; A = B % A — 8-bit unsigned division
+Div8x8:
     ld d, $08
     ld e, a
     xor a
@@ -5895,7 +5906,8 @@ jr_000_1e09:
     ret
 
 
-Call_000_1e0d:
+; Div16x8To16: HL = HL // A; A = HL % A
+Div16x8To16:
     ld d, $10
     ld e, a
     xor a
@@ -5919,7 +5931,8 @@ jr_000_1e1a:
     ret
 
 
-Call_000_1e1e:
+; Div24x8To16: HL = E:HL // A; A = E:HL % A
+Div24x8To16:
     ld d, $18
     ld b, a
     xor a
@@ -5944,7 +5957,7 @@ jr_000_1e2d:
     ret
 
 
-Call_000_1e31:
+WaitInputRelease:
     ld a, $ff
     ldh [$a9], a
     ldh a, [$a6]
@@ -6221,7 +6234,7 @@ Call_000_1f94:
     jp nz, Jump_000_1fd6
 
     call Call_000_20d9
-    call Call_000_20df
+    call PrintDigit
 
 Call_000_1fa5:
     ld a, $01
@@ -6235,9 +6248,9 @@ Call_000_1fb1:
     jr nz, jr_000_1fe7
 
     call Call_000_20d9
-    call Call_000_20df
+    call PrintDigit
 
-Call_000_1fb9:
+ConvertNumberToText:
     ld a, $00
     ldh [$db], a
     ld e, $10
@@ -6247,7 +6260,7 @@ Call_000_1fb9:
     jr nz, jr_000_1ff8
 
     call Call_000_20d9
-    call Call_000_20df
+    call PrintDigit
     ldh a, [$d5]
     ld c, a
     ldh a, [$d6]
@@ -6262,7 +6275,7 @@ Jump_000_1fd6:
     ld d, $42
     call Call_000_2036
     call Call_000_20d3
-    call Call_000_20df
+    call PrintDigit
 
 jr_000_1fe7:
     ld a, $01
@@ -6271,7 +6284,7 @@ jr_000_1fe7:
     ld d, $86
     call Call_000_2036
     call Call_000_20d3
-    call Call_000_20df
+    call PrintDigit
 
 Call_000_1ff8:
 jr_000_1ff8:
@@ -6285,7 +6298,7 @@ Jump_000_2003:
     call Call_000_20d3
 
 Call_000_2006:
-    call Call_000_20df
+    call PrintDigit
 
 Call_000_2009:
 Jump_000_2009:
@@ -6377,9 +6390,9 @@ Jump_000_2060:
     jr nz, jr_000_2095
 
     call Call_000_20d9
-    call Call_000_20df
+    call PrintDigit
 
-Call_000_2071:
+FillMemory:
     ld de, $0064
     push bc
     call Call_000_20be
@@ -6392,9 +6405,9 @@ Call_000_2078:
     call Call_000_20d9
 
 Call_000_207f:
-    call Call_000_20df
+    call PrintDigit
 
-Call_000_2082:
+CopyHLtoDE:
     ld de, $000a
     push bc
     call Call_000_20be
@@ -6403,7 +6416,7 @@ Call_000_2082:
     jr nz, jr_000_20ad
 
     call Call_000_20d9
-    call Call_000_20df
+    call PrintDigit
     jr jr_000_20b9
 
 Jump_000_2095:
@@ -6411,21 +6424,21 @@ jr_000_2095:
     ld de, $03e8
     call Call_000_20be
     call Call_000_20d3
-    call Call_000_20df
+    call PrintDigit
 
 Call_000_20a1:
 jr_000_20a1:
     ld de, $0064
     call Call_000_20be
     call Call_000_20d3
-    call Call_000_20df
+    call PrintDigit
 
-Call_000_20ad:
+PrintNumber:
 jr_000_20ad:
     ld de, $000a
     call Call_000_20be
     call Call_000_20d3
-    call Call_000_20df
+    call PrintDigit
 
 jr_000_20b9:
     ld a, c
@@ -6487,7 +6500,7 @@ Call_000_20d9:
 
 ; Display/UI utility (12 refs).
 DisplayUtil_20DF:
-Call_000_20df:
+PrintDigit:
     push af
     ld a, l
     and $e0
@@ -6505,7 +6518,8 @@ Call_000_20e8:
     ret
 
 
-Call_000_20ee:
+; EnableSRAM: Enable external SRAM access (write $0A to $0100)
+EnableSRAM:
     di
     ld a, $0a
     ld [$0100], a
@@ -6737,14 +6751,15 @@ jr_000_221a:
     ret
 
 
-Call_000_2229:
+; GetCurrentMonsterPtr: Resolve current context → pointer to monster's 149B struct
+GetCurrentMonsterPtr:
     push af
     push bc
     push de
     push hl
     call Call_000_2208
     ld c, $95
-    call Call_000_1dbe
+    call Mul8x8To16
 
 Call_000_2235:
 Jump_000_2235:
@@ -6759,7 +6774,8 @@ Jump_000_2235:
 
 ; Display/render utility (10 refs).
 DisplayUtil_223B:
-Call_000_223b:
+; GetMonsterDataPtr: HL = HL + (A & $7F) × $95 — pointer to monster's 149-byte struct
+GetMonsterDataPtr:
     push bc
     push de
     push hl
@@ -6769,7 +6785,7 @@ Call_000_223e:
     and $7f
 
 Jump_000_2242:
-    call Call_000_1dbe
+    call Mul8x8To16
 
 Call_000_2245:
     pop bc
@@ -6779,15 +6795,17 @@ Call_000_2245:
     ret
 
 
-Call_000_224a:
-    call Call_000_2229
+; ReadMonsterByte: Read byte from current monster struct → A
+ReadMonsterByte:
+    call GetCurrentMonsterPtr
     ld a, [hl]
     ret
 
 
-Call_000_224f:
+; ReadMonsterWord: Read 16-bit LE value from current monster struct → BC
+ReadMonsterWord:
 Jump_000_224f:
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -6795,7 +6813,7 @@ Jump_000_224f:
 
 
     push bc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld [hl], c
     ret
@@ -6803,7 +6821,7 @@ Jump_000_224f:
 
 Call_000_225d:
     push bc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld a, c
     ld [hl+], a
@@ -6826,7 +6844,7 @@ Call_000_2266:
     ld h, a
     ld a, [hl]
     ld c, $95
-    call Call_000_1dbe
+    call Mul8x8To16
     pop bc
     add hl, bc
 
@@ -6874,14 +6892,14 @@ Call_000_22a0:
     push hl
     push af
     ld hl, $cb13
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld h, [hl]
     ld l, a
     pop af
     push hl
     ld hl, $cb11
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     pop de
 
@@ -6898,7 +6916,7 @@ Call_000_22be:
 
 Call_000_22c4:
     ld hl, $cb11
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld bc, $0000
     call Call_000_2496
@@ -6912,14 +6930,14 @@ Call_000_22d2:
     push hl
     push af
     ld hl, $cb17
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld h, [hl]
     ld l, a
     pop af
     push hl
     ld hl, $cb15
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     pop de
     call Call_000_2482
@@ -6934,7 +6952,7 @@ Call_000_22f0:
 Call_000_22f5:
     push hl
     ld hl, $cb15
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld bc, $0000
     call Call_000_2496
@@ -7205,7 +7223,7 @@ Call_000_2448:
     push hl
     ld l, e
     ld h, d
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     pop bc
     call Call_000_2482
@@ -7217,7 +7235,7 @@ Call_000_2455:
     push hl
     ld l, e
     ld h, d
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     pop bc
     call Call_000_24af
@@ -7241,7 +7259,7 @@ Call_000_2468:
 
 Jump_000_246b:
     ld h, d
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     pop bc
     call Call_000_2496
@@ -7255,7 +7273,7 @@ Call_000_2475:
     push hl
     ld l, e
     ld h, d
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     pop bc
     call Call_000_24b9
@@ -7441,7 +7459,7 @@ jr_000_2511:
     ret
 
 
-Call_000_2518:
+UpdateOAMSprites:
     ld a, [$ca8d]
     or a
     jr nz, jr_000_252a
@@ -7512,9 +7530,9 @@ Call_000_255f:
     push hl
     ld hl, $cb11
     ldh a, [$d5]
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
-    call Call_000_2071
+    call FillMemory
 
 Call_000_2580:
     pop hl
@@ -7535,9 +7553,9 @@ Jump_000_2592:
     push hl
     ld hl, $cb15
     ldh a, [$d5]
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
-    call Call_000_2071
+    call FillMemory
     ret
 
 
@@ -7555,11 +7573,11 @@ jr_000_25a0:
     push hl
     ld hl, $cb0c
     ldh a, [$d5]
-    call Call_000_224a
+    call ReadMonsterByte
     pop hl
     ld c, a
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     pop hl
     ld a, l
     add $21
@@ -7572,7 +7590,7 @@ Jump_000_25c8:
     push hl
     ld hl, $cb0b
     ldh a, [$d5]
-    call Call_000_224a
+    call ReadMonsterByte
     ld b, a
     pop hl
     bit 0, b
@@ -9956,7 +9974,8 @@ jr_000_2f40:
     reti
 
 
-Call_000_2f45:
+; CmpHLvsBC: Compare HL vs BC, set flags
+CmpHLvsBC:
     ld a, h
     cp b
     ret nz
@@ -9966,7 +9985,8 @@ Call_000_2f45:
     ret
 
 
-Call_000_2f4b:
+; Div16x16To16: DE = HL // BC; BC = HL % BC
+Div16x16To16:
     ld de, $0000
     ld a, b
     or a
@@ -9988,7 +10008,7 @@ Jump_000_2f57:
 
 jr_000_2f5d:
     ld a, c
-    call Call_000_1e0d
+    call Div16x8To16
     ld c, a
     ld b, $00
     jr jr_000_2f6b
@@ -10006,7 +10026,8 @@ jr_000_2f6b:
     ret
 
 
-Call_000_2f6c:
+; HL_AddA_x8: HL += A × 8 — index into array with 8-byte entries
+HL_AddA_x8:
     add a
     add a
     add a
@@ -10018,11 +10039,11 @@ Call_000_2f6c:
     ret
 
 
-Call_000_2f76:
+GetMonsterSlotInfo:
     push hl
     push bc
     ld c, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_000_2fa1
 
     ld a, c
@@ -10068,7 +10089,8 @@ jr_000_2fa1:
     ret
 
 
-Call_000_2fa5:
+; CheckMonsterSlot: Check if party/battle slot A (0-7) has a valid monster. CF=valid
+CheckMonsterSlot:
     push hl
     push bc
     ld c, a
@@ -10113,7 +10135,7 @@ Call_000_2fcc:
     ret
 
 
-Call_000_2fd3:
+ReadEventFlags3:
     ld hl, $dbf3
     call Call_000_2ff6
     ret
@@ -10131,7 +10153,7 @@ Call_000_2fe1:
     ret
 
 
-Call_000_2fe8:
+ReadEventFlags2:
     ld hl, $dba3
     call Call_000_2ff6
     ret

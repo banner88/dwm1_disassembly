@@ -38,14 +38,14 @@ SECTION "ROM Bank $013", ROMX[$4000], BANK[$13]
 label13_4009:
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld hl, $0301
     rst $10
     ld a, [$da35]
     ld bc, $0129
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     add $e6
     ld l, a
@@ -55,7 +55,7 @@ label13_4009:
     push hl
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld b, a
     add a
@@ -84,21 +84,21 @@ Jump_013_4044:
 label13_4050:
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     ret z
 
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld hl, $0301
     rst $10
     ld a, [$da35]
     ld bc, $0129
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     add $e6
     ld l, a
@@ -108,7 +108,7 @@ label13_4050:
     push hl
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     dec a
     ld b, a
@@ -128,7 +128,7 @@ label13_4050:
     push de
     ld a, [$cac0]
     ld hl, $cb0e
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, [de]
     ld [hl+], a
@@ -143,7 +143,7 @@ label13_4050:
 label13_40ae:
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld hl, $0301
@@ -152,11 +152,11 @@ label13_40ae:
     ld [$c8d0], a
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     push hl
     ld a, [$cac0]
     ld hl, $cb0d
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     dec a
     pop hl
@@ -192,7 +192,7 @@ jr_013_40e1:
 
 Call_013_411e:
     ld c, $63
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, l
     add $06
     ld l, a
@@ -202,7 +202,7 @@ Call_013_411e:
     push hl
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     pop hl
     add l
@@ -223,12 +223,12 @@ Call_013_411e:
 jr_013_414b:
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld a, [$c8cf]
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, $64
-    call Call_000_1e0d
+    call Div16x8To16
     ld a, l
     inc a
     ret
@@ -243,7 +243,7 @@ Call_013_4163:
 
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $0e
     jr c, jr_013_41a1
@@ -281,7 +281,7 @@ Call_013_41a5:
     pop bc
     push bc
     ld a, c
-    call Call_000_1e0d
+    call Div16x8To16
     pop bc
     add b
     ld b, a
@@ -290,7 +290,7 @@ Call_013_41a5:
     push bc
     ld a, [$cac0]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     pop de
     ld a, [hl]
@@ -300,7 +300,7 @@ Call_013_41a5:
     ld a, [$c8d1]
     ld b, a
     ld a, d
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     or a
     jr nz, jr_013_41d9
@@ -1086,7 +1086,7 @@ jr_013_73cb:
     ld a, [wRNG1]
     ld b, a
     ld a, $03
-    call Call_000_1dfb
+    call Div8x8
     ld [$c906], a
     ret
 
@@ -1109,7 +1109,7 @@ label13_73f5:
     ld hl, $170a
     rst $10
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $02
     ld [wGameMode], a
     ld a, $00

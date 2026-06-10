@@ -281,7 +281,7 @@ Call_00a_411a:
 Call_00a_4153:
     push hl
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
     ld a, [$c827]
     ld c, a
@@ -457,7 +457,7 @@ Call_00a_4241:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -485,7 +485,7 @@ jr_00a_426e:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -509,7 +509,7 @@ jr_00a_428c:
     push bc
     ld a, b
     ld b, c
-    call Call_000_1dfb
+    call Div8x8
     pop bc
     pop de
     or a
@@ -536,7 +536,7 @@ jr_00a_42a8:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld [$c8e1], a
     ld a, b
     pop bc
@@ -899,7 +899,7 @@ label443b:
     call Call_00a_41ef
     ld de, $2e11
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_00a_4323
     ld a, $78
     ldh [$d4], a
@@ -1175,7 +1175,7 @@ Call_00a_462a:
 
     push de
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, [hl]
     or a
@@ -1183,7 +1183,7 @@ Call_00a_462a:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -1245,7 +1245,7 @@ jr_00a_4671:
     push hl
     ld a, [de]
     ld hl, $cacb
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add a
     ld hl, $46b5
@@ -1259,7 +1259,7 @@ jr_00a_4671:
     ld d, [hl]
     pop hl
     push hl
-    call Call_000_1577
+    call WaitDMATransfer
     pop hl
     ld a, l
     add $10
@@ -1301,14 +1301,14 @@ jr_00a_4671:
     ld a, [hl]
     push af
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $9780
     call Call_00a_4153
     pop af
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $97c0
     and $01
@@ -1371,7 +1371,7 @@ Call_00a_474b:
     ld a, [hl]
     push af
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $0161
@@ -1385,7 +1385,7 @@ Call_00a_474b:
     call $6027
     pop af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     jr nz, jr_00a_4793
@@ -1578,7 +1578,7 @@ jr_00a_48ad:
 jr_00a_48cf:
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $0a
     jr nc, jr_00a_48ea
@@ -1777,7 +1777,7 @@ label4a10:
     inc [hl]
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$d7ca], a
@@ -1785,12 +1785,12 @@ label4a10:
     ld [$d7cb], a
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld de, $d665
     call Call_00a_57b0
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $00
     ld a, [$c8f7]
     ld c, a
@@ -1809,7 +1809,7 @@ label4a10:
     ld [$d705], a
     ld a, $15
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$d7cc], a
@@ -1887,7 +1887,7 @@ label4ad3:
     xor a
     ld [$d8d7], a
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ret
@@ -1930,7 +1930,7 @@ label4b46:
     ld [$c8e3], a
     ld de, $2e11
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call $46c9
     call Call_00a_4610
     ld hl, $0005
@@ -1978,7 +1978,7 @@ Call_00a_4ba2:
     ld l, a
     ld h, $05
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ret
 
 label4bc3:
@@ -2030,7 +2030,7 @@ label4bd1:
     call Call_00a_40e5
     ld de, $2e12
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $10
@@ -2065,7 +2065,7 @@ Call_00a_4c4a:
     ldh [$d7], a
     ld hl, $002e
     call Call_00a_4058
-    call Call_000_1fb9
+    call ConvertNumberToText
     ld de, $75ab
     call Call_00a_40b4
     ld de, $2e07
@@ -2336,7 +2336,7 @@ Call_00a_4e05:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -2413,7 +2413,7 @@ Call_00a_4e55:
     call Call_00a_4e05
     pop af
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $9750
     call Call_00a_4e81
@@ -2481,7 +2481,7 @@ Call_00a_4ed3:
     ld a, [de]
     push af
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $012a
@@ -2491,7 +2491,7 @@ Call_00a_4ed3:
     call $6027
     pop af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     ret nz
@@ -2681,7 +2681,7 @@ jr_00a_5033:
 jr_00a_5055:
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $0a
     jr nc, jr_00a_5070
@@ -2888,7 +2888,7 @@ Call_00a_517c:
     call Call_00a_4e05
     pop af
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $9750
     call Call_00a_4e81
@@ -2913,7 +2913,7 @@ Call_00a_5195:
     call Call_00a_4e05
     pop af
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $97a0
     call Call_00a_4e81
@@ -2925,7 +2925,7 @@ Call_00a_51c1:
     ld a, [de]
     push af
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $012a
@@ -2935,7 +2935,7 @@ Call_00a_51c1:
     call $6027
     pop af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     jr nz, jr_00a_51f0
@@ -2962,7 +2962,7 @@ jr_00a_51f0:
     ld a, [de]
     push af
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $016a
@@ -2972,7 +2972,7 @@ jr_00a_51f0:
     call $6027
     pop af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     ret nz
@@ -3177,7 +3177,7 @@ jr_00a_5369:
 jr_00a_538c:
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $0a
     jr nc, jr_00a_53a7
@@ -3198,14 +3198,14 @@ jr_00a_53a7:
 
     ld a, [$c8e8]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     jr nz, jr_00a_53ef
 
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     jr nz, jr_00a_53ef
@@ -3233,13 +3233,13 @@ jr_00a_53e2:
 jr_00a_53ef:
     ld a, [$c8e8]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     and $01
     push af
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop af
     ld b, a
     ld a, [hl]
@@ -3271,26 +3271,26 @@ jr_00a_541e:
 label5425:
     ld a, [$c8e8]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$cac0]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$c8e8]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da6f], a
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da70], a
     ld a, [$c8e8]
@@ -3322,7 +3322,7 @@ jr_00a_5490:
     ld l, a
     ld h, $05
     ld de, $c1a0
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$da77]
     ld de, $c1a0
     call Call_00a_606d
@@ -3546,21 +3546,21 @@ label565f:
     inc [hl]
     ld a, [$c8e8]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$cac0]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$c8e8]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$d7ca], a
@@ -3568,16 +3568,16 @@ label565f:
     ld [$d7cb], a
     ld a, [$c8e8]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld de, $d665
     call Call_00a_57b0
     ld a, [$c8e8]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $00
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$d7cc], a
@@ -3585,12 +3585,12 @@ label565f:
     ld [$d7cd], a
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld de, $d6fa
     call Call_00a_57b0
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $00
     ld hl, $0105
     rst $10
@@ -3665,24 +3665,24 @@ label573e:
     ld [$d8d7], a
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld l, [hl]
     ld h, $05
     ld de, $c1a0
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$cac0]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     inc a
     ld c, $0a
-    call Call_000_1dbe
+    call Mul8x8To16
     ld c, l
     ld b, h
     ld hl, $c1b0
     call Call_000_0a7c
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ret
@@ -3746,7 +3746,7 @@ label57e4:
     ld [$c8e8], a
     ld de, $2e12
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $10
@@ -3820,7 +3820,7 @@ label5893:
     ld [$c8e5], a
     ld de, $2e12
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $10
@@ -4037,7 +4037,7 @@ Call_00a_59fd:
     jr z, jr_00a_5a27
 
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c823], a
     ld a, $05
@@ -4104,7 +4104,7 @@ Call_00a_5a5b:
     jr z, jr_00a_5ad7
 
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     ld a, $98
@@ -4269,11 +4269,11 @@ label5b46:
     ld h, a
     ld a, [hl]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     inc a
     ld c, $0a
-    call Call_000_1dbe
+    call Mul8x8To16
     ld c, l
     ld b, h
     ld hl, $c1b0
@@ -4357,11 +4357,11 @@ jr_00a_5bed:
     ld h, a
     ld a, [hl]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     inc a
     ld c, $0a
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, [wCurrGoldLo]
     sub l
     ld a, [wCurrGoldMid]
@@ -4459,26 +4459,26 @@ label5c92:
     ld a, [$c908]
     ld [$cac0], a
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld l, [hl]
     ld h, $05
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$cac0]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld de, $c190
     call Call_00a_606d
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld de, $c190
     call Call_00a_6082
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$c8f4], a
@@ -4487,19 +4487,19 @@ label5c92:
     ld [$d7cb], a
     ld a, [$cac0]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, l
     ld [$c8f2], a
     ld a, h
     ld [$c8f3], a
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c8f6], a
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c8f5], a
     ld a, $08
@@ -4523,7 +4523,7 @@ label5c92:
     xor a
     ld [$d8d7], a
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ret
@@ -4577,7 +4577,7 @@ label5d8d:
     ld [$c8e3], a
     ld de, $2e12
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $10
@@ -4603,11 +4603,11 @@ label5d8d:
     ld h, a
     ld a, [hl]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     inc a
     ld c, $0a
-    call Call_000_1dbe
+    call Mul8x8To16
     ld c, l
     ld b, h
     ld hl, $c1b0
@@ -4631,7 +4631,7 @@ label5d8d:
 
 Call_00a_5e1e:
     ld hl, $a002
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr nz, jr_00a_5e84
 
@@ -4685,21 +4685,21 @@ jr_00a_5e84:
     call Call_00a_4153
     call Call_00a_5f65
     ld hl, $a1f2
-    call Call_000_20ee
+    call EnableSRAM
     ld c, a
     ld b, $00
     ld hl, $002d
     call Call_00a_4058
-    call Call_000_20ad
+    call PrintNumber
     ld hl, $a1f1
-    call Call_000_20ee
+    call EnableSRAM
     ld c, a
     ld b, $00
     ld hl, $0030
     call Call_00a_4058
-    call Call_000_20ad
+    call PrintNumber
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_00a_5f31
 
@@ -4708,15 +4708,15 @@ jr_00a_5e84:
     ld [$0100], a
     ld hl, $a246
     ld a, [$a1c8]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ei
     ld b, $00
     ld hl, $0084
     call Call_00a_4058
-    call Call_000_2082
+    call CopyHLtoDE
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     cp $01
     jr z, jr_00a_5f37
 
@@ -4725,15 +4725,15 @@ jr_00a_5e84:
     ld [$0100], a
     ld hl, $a246
     ld a, [$a1c9]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ei
     ld b, $00
     ld hl, $008a
     call Call_00a_4058
-    call Call_000_2082
+    call CopyHLtoDE
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     cp $02
     jr z, jr_00a_5f3d
 
@@ -4742,13 +4742,13 @@ jr_00a_5e84:
     ld [$0100], a
     ld hl, $a246
     ld a, [$a1ca]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ei
     ld b, $00
     ld hl, $0090
     call Call_00a_4058
-    call Call_000_2082
+    call CopyHLtoDE
 
 Jump_00a_5f2b:
     ld a, $00
@@ -4804,7 +4804,7 @@ Call_00a_5f65:
     ld [$0100], a
     ld hl, $a1fc
     ld a, [$a1c8]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ei
     ld e, l
     ld d, h
@@ -4816,7 +4816,7 @@ Call_00a_5f65:
     ld [$0100], a
     ld hl, $a1fc
     ld a, [$a1c9]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ei
     ld e, l
     ld d, h
@@ -4828,7 +4828,7 @@ Call_00a_5f65:
     ld [$0100], a
     ld hl, $a1fc
     ld a, [$a1ca]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ei
     ld e, l
     ld d, h
@@ -4880,7 +4880,7 @@ jr_00a_5fd9:
     ld h, a
     ld a, [hl]
     ld hl, $a205
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ei
     add a
@@ -4899,7 +4899,7 @@ jr_00a_5fd9:
     add $a0
     ld l, a
     ld h, $8d
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 
@@ -4999,7 +4999,7 @@ jr_00a_6070:
     pop af
     ld l, e
     ld h, d
-    call Call_000_09a4
+    call ExtractDigits
     ret
 
 
@@ -5068,7 +5068,7 @@ label60a3:
     call Call_00a_41ef
     ld de, $2e13
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_00a_4323
     ld hl, $c905
     inc [hl]
@@ -5104,7 +5104,7 @@ Call_00a_6101:
     ldh [$d7], a
     ld hl, $002e
     call Call_00a_4058
-    call Call_000_1fb9
+    call ConvertNumberToText
     call Call_00a_4323
     ld de, $6186
     ld a, [wMenu_selection]
@@ -5362,7 +5362,7 @@ Call_00a_62a4:
     jr z, jr_00a_62ce
 
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c823], a
     ld a, $05
@@ -5429,7 +5429,7 @@ Call_00a_6302:
     jr z, jr_00a_637e
 
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     ld a, $98
@@ -5609,14 +5609,14 @@ label63f7:
     ld a, [hl]
     ld [$cac0], a
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld l, [hl]
     ld h, $05
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$cac0]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld de, $c180
     call Call_00a_606d
@@ -5641,7 +5641,7 @@ label645f:
 
     ld a, [$cac0]
     ld hl, $cb11
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -5652,7 +5652,7 @@ label645f:
     push de
     ld a, [$cac0]
     ld hl, $cb15
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, e
     add [hl]
@@ -5668,7 +5668,7 @@ label645f:
     push de
     ld a, [$cac0]
     ld hl, $cb19
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, e
     add [hl]
@@ -5684,7 +5684,7 @@ label645f:
     push de
     ld a, [$cac0]
     ld hl, $cb1b
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, e
     add [hl]
@@ -5700,7 +5700,7 @@ label645f:
     push de
     ld a, [$cac0]
     ld hl, $cb1d
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, e
     add [hl]
@@ -5716,7 +5716,7 @@ label645f:
     push de
     ld a, [$cac0]
     ld hl, $cb1f
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, e
     add [hl]
@@ -5776,7 +5776,7 @@ label6518:
 
     ld a, [$cac0]
     ld hl, $caf2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld b, $19
     ld c, $00
 
@@ -5820,7 +5820,7 @@ label6551:
 
     ld a, [$cac0]
     ld hl, $cb0d
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $000d
     cp $1e
@@ -5854,7 +5854,7 @@ label6585:
 
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $0013
     and $01
@@ -5877,7 +5877,7 @@ label65a6:
     call Call_00a_441f
     ld a, [$cac0]
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $02
     ld hl, $c906
     inc [hl]
@@ -6001,7 +6001,7 @@ label6659:
 label667c:
     ld de, $2e13
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_00a_61f2
     call Call_00a_621c
     call Call_00a_6287
@@ -6025,7 +6025,7 @@ label66aa:
 
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld [$da31], a
@@ -6037,7 +6037,7 @@ label66aa:
     push af
     ld a, [$cac0]
     ld hl, $cb29
-    call Call_000_223b
+    call GetMonsterDataPtr
     xor a
     call Call_00a_66ed
     pop bc
@@ -6212,10 +6212,10 @@ label67bd:
     ld [$cac0], a
     ld a, [$cac0]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld a, $32
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, l
     add $64
     ld l, a
@@ -6364,7 +6364,7 @@ jr_00a_68d1:
     call Call_000_2424
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     xor $01
     ld [hl], a
@@ -6408,7 +6408,7 @@ label6919:
 label6923:
     ld de, $2e13
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_00a_61f2
     call Call_00a_621c
     call Call_00a_6287
@@ -6481,7 +6481,7 @@ label6974:
     call Call_00a_40e5
     ld de, $2e12
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_00a_4323
     ld a, $40
     ldh [$d4], a
@@ -6726,7 +6726,7 @@ Call_00a_6b47:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -6779,7 +6779,7 @@ Call_00a_6b82:
     ld a, [de]
     push af
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $00ca
@@ -6789,7 +6789,7 @@ Call_00a_6b82:
     call $6027
     pop af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     ret nz
@@ -6816,7 +6816,7 @@ Call_00a_6bbc:
     call Call_00a_6c33
     pop af
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $9750
     call Call_00a_6be1
@@ -6876,7 +6876,7 @@ Call_00a_6c33:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -6950,11 +6950,11 @@ jr_00a_6c9e:
 
     ld a, [$c0db]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $0018
     call Call_00a_441f
     ld a, $01
@@ -7099,11 +7099,11 @@ jr_00a_6d9f:
     ld h, a
     ld a, [hl]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $001b
     call Call_00a_441f
     ld hl, $c906
@@ -7120,19 +7120,19 @@ jr_00a_6d9f:
 
     ld a, [$c0d8]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $02
     ld a, [$c0d9]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $02
     ld a, [$c0da]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $02
     ld a, [$c0db]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $02
     ld hl, $c0d8
     ld a, [wOPTN_and_Item_selection]
@@ -7144,7 +7144,7 @@ jr_00a_6d9f:
     ld h, a
     ld a, [hl]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $01
     ld de, $ca8e
     ld a, [$c0d8]
@@ -7169,7 +7169,7 @@ Call_00a_6e3f:
     push bc
     push de
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     pop bc
     ld a, [hl]
@@ -7204,7 +7204,7 @@ jr_00a_6e52:
 
     ld de, $2e12
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $5605
     rst $10
     call Call_00a_6b38

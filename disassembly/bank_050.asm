@@ -95,7 +95,7 @@ SECTION "ROM Bank $050", ROMX[$4000], BANK[$50]
     dw $5E49                    ; Entry 2
     dw Call_050_6053            ; Entry 3
     dw Call_050_7c4d            ; Entry 4
-    dw Call_050_768e            ; Entry 5
+    dw ClearTileBuffer            ; Entry 5
     dw $79EB                    ; Entry 6
     dw $59EB                    ; Entry 7
     dw $5B58                    ; Entry 8
@@ -165,7 +165,7 @@ jr_050_4064:
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 4, [hl]
     jr nz, jr_050_4081
 
@@ -200,7 +200,7 @@ jr_050_409c:
 
 jr_050_409e:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_40a5
 
     inc d
@@ -236,12 +236,12 @@ jr_050_40c8:
 
 jr_050_40cc:
     ld a, c
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_050_40e8
 
     ld a, c
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $0c
     jr z, jr_050_40e8
@@ -273,16 +273,16 @@ jr_050_40e8:
 Jump_050_40ed:
     ld hl, $5505
     rst $10
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld de, $6ed2
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_7848
     ld de, $419b
     ld a, [wMenu_selection]
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f4
     inc [hl]
     ret
@@ -397,9 +397,9 @@ jr_050_41b7:
 
 
 jr_050_41b9:
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld hl, $0002
     ld a, $09
     ld [$d9f4], a
@@ -410,8 +410,8 @@ jr_050_41b9:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ret
 
 
@@ -419,7 +419,7 @@ jr_050_41b9:
     or a
     ret nz
 
-    call Call_050_774e
+    call ClearSpriteBuffer
     ld a, $01
     ld [$d9f4], a
     ret
@@ -485,15 +485,15 @@ jr_050_4224:
 
 jr_050_423c:
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, $f6
     call Call_050_6aa0
-    call Call_050_774e
-    call Call_050_794c
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
     call Call_050_79ae
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
 
 jr_050_4259:
     ld hl, $d9f4
@@ -724,10 +724,10 @@ jr_050_43a2:
 
     ld hl, $5605
     rst $10
-    call Call_050_774e
-    call Call_050_794c
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
     call Call_050_79ae
-    call Call_050_768e
+    call ClearTileBuffer
     xor a
     ld [$db88], a
     xor a
@@ -771,7 +771,7 @@ jr_050_43ed:
 
 jr_050_43f5:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_43ff
 
     ld [hl], $01
@@ -826,25 +826,25 @@ jr_050_4401:
     ret
 
 
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld a, $00
     ld [$d9f4], a
     ld de, $6ed2
-    call Call_050_75f0
+    call LoadPaletteFromDE
     ret
 
 
     ld de, $6f1a
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_7848
     ld de, $44aa
     ld a, [$d9fc]
     set 7, a
     ld [wOPTN_and_Item_selection], a
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
@@ -889,16 +889,16 @@ jr_050_44a9:
     rst $38
 
 Jump_050_44b0:
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld hl, $cac2
     ld a, [$c8dd]
     call Call_050_5b07
     jr c, jr_050_453c
 
     ld a, [$c8dd]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $96c0
@@ -906,9 +906,9 @@ Jump_050_44b0:
     ld de, $74a3
     ld a, [wOPTN_and_Item_selection]
     cp $81
-    call z, Call_050_75f0
+    call z, LoadPaletteFromDE
     ld de, $6f60
-    call Call_050_75f0
+    call LoadPaletteFromDE
     ld a, [$db73]
     cp $02
     call z, Call_050_4550
@@ -953,7 +953,7 @@ jr_050_4523:
     ld de, $4715
     ld a, [wPLAN_selection]
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
@@ -1166,12 +1166,12 @@ jr_050_466d:
 
 jr_050_467c:
     ld a, c
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_050_4699
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 4, [hl]
     jr z, jr_050_469c
 
@@ -1233,12 +1233,12 @@ jr_050_46c6:
 
 jr_050_46d6:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_4701
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 4, [hl]
     jr nz, jr_050_46fe
 
@@ -1331,7 +1331,7 @@ jr_050_4750:
 
 
     call Call_050_4764
-    call Call_050_774e
+    call ClearSpriteBuffer
     ld hl, $d9f4
     inc [hl]
     ld a, $ff
@@ -1360,7 +1360,7 @@ jr_050_4777:
 
 jr_050_4779:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_478f
 
     ld a, c
@@ -1417,12 +1417,12 @@ jr_050_47b0:
 
 Call_050_47be:
     ld a, [$c8dd]
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_050_47b0
 
     ld a, [$c8dd]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     jr nz, jr_050_47b0
 
@@ -1469,16 +1469,16 @@ jr_050_47ff:
 
 
 Jump_050_4816:
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld a, [$c1c1]
     or a
     jr nz, jr_050_4836
 
     ld hl, $cac2
     ld a, [$c8dd]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $96c0
@@ -1487,16 +1487,16 @@ Jump_050_4816:
 jr_050_4836:
     ld de, $6f49
     ld a, [wOPTN_and_Item_selection]
-    call Call_050_75f0
+    call LoadPaletteFromDE
     ld de, $74ba
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_7848
     ld de, $496d
     ld a, [$c8de]
     set 7, a
     ld [$c8de], a
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f7
     inc [hl]
     ret
@@ -1528,7 +1528,7 @@ jr_050_4870:
 
     ld a, [$c8dd]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     jr nz, jr_050_4870
 
@@ -1641,9 +1641,9 @@ jr_050_4937:
 
 
 jr_050_4945:
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld hl, $0202
     ld a, $09
     ld [$d9f7], a
@@ -1654,8 +1654,8 @@ jr_050_4945:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ret
 
 
@@ -1713,11 +1713,11 @@ jr_050_49a7:
 
 
     call Call_050_49d8
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld de, $74f4
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_7848
     ld de, $4cca
     ld b, $04
@@ -1725,7 +1725,7 @@ jr_050_49a7:
     ld c, a
     ld hl, $c8df
     call Call_050_78e9
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f7
     inc [hl]
     ret
@@ -1961,7 +1961,7 @@ jr_050_4b39:
 
 jr_050_4b3c:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_4b44
 
     jr z, jr_050_4b45
@@ -2068,7 +2068,7 @@ Call_050_4ba4:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     pop bc
     ret
 
@@ -2222,9 +2222,9 @@ jr_050_4c9a:
 
 Call_050_4ca4:
     push hl
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     pop hl
     ld a, $03
     ld [$d9f7], a
@@ -2235,8 +2235,8 @@ Call_050_4ca4:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ret
 
 
@@ -2254,11 +2254,11 @@ Call_050_4ca4:
     ld [$c1c2], a
     ld hl, $550b
     rst $10
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld de, $70c9
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_5bd7
     call Call_050_7848
     ld de, $5339
@@ -2266,12 +2266,12 @@ Call_050_4ca4:
     rlca
     and $04
     ld b, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_4d10
 
     inc b
     ld a, b
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_4d10
 
     inc b
@@ -2282,7 +2282,7 @@ jr_050_4d10:
     ld a, b
     ld [$dd72], a
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f7
     inc [hl]
     ret
@@ -2331,7 +2331,7 @@ jr_050_4d51:
 
 jr_050_4d68:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_4d84
 
     ld a, [$c8dd]
@@ -2371,9 +2371,9 @@ jr_050_4d9c:
     ld hl, $c180
     ld [$db50], a
     call Call_050_7d2e
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld hl, $fa00
     ld a, $0a
     ld [$d9f7], a
@@ -2384,8 +2384,8 @@ jr_050_4d9c:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ret
 
 
@@ -2394,11 +2394,11 @@ jr_050_4d9c:
     ld a, a
     ld [$c1c2], a
     call Call_050_53dc
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld de, $7113
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_7848
     ld de, $5664
     ld a, [$c863]
@@ -2406,12 +2406,12 @@ jr_050_4d9c:
     and $04
     xor $04
     ld b, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_4e05
 
     inc b
     ld a, b
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_4e05
 
     inc b
@@ -2422,7 +2422,7 @@ jr_050_4e05:
     ld a, b
     ld [$dd72], a
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f7
     inc [hl]
     ret
@@ -2480,7 +2480,7 @@ jr_050_4e54:
 
 jr_050_4e6b:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jp c, Jump_050_4d9c
 
     call Call_050_4f95
@@ -2502,7 +2502,7 @@ jr_050_4e89:
     or a
     ret nz
 
-    call Call_050_774e
+    call ClearSpriteBuffer
     ld a, $01
     ld [$d9f7], a
     ret
@@ -2512,7 +2512,7 @@ jr_050_4e89:
     or a
     ret nz
 
-    call Call_050_774e
+    call ClearSpriteBuffer
     ld a, [$c8de]
     and $01
     add a
@@ -2565,16 +2565,16 @@ jr_050_4ed7:
     jr z, jr_050_4f36
 
     ld a, [hl]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_4ed7
 
     ld a, [hl]
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_050_4f16
 
     ld a, [$c8dd]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     jr nz, jr_050_4ec9
 
@@ -2643,9 +2643,9 @@ jr_050_4f61:
     ret
 
 
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ret
 
 
@@ -2711,7 +2711,7 @@ Call_050_4fa4:
 
 jr_050_4fab:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_4fb3
 
     inc d
@@ -2805,9 +2805,9 @@ jr_050_4fec:
     jr nz, jr_050_4fec
 
 jr_050_5020:
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld hl, $f300
     call Call_050_51aa
     ld a, $0b
@@ -2829,11 +2829,11 @@ jr_050_503a:
 
     call Call_050_50ac
     call Call_050_506f
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld de, $6fce
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_7848
     ld de, $51c0
     ld b, $04
@@ -2841,7 +2841,7 @@ jr_050_503a:
     ld c, a
     ld hl, wOPTN_and_Item_selection
     call Call_050_78e9
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
@@ -3055,9 +3055,9 @@ jr_050_518c:
 
 
 jr_050_5199:
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld hl, $f200
     ld a, $0a
     ld [$d9f5], a
@@ -3070,8 +3070,8 @@ Call_050_51aa:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ret
 
 
@@ -3083,11 +3083,11 @@ Call_050_51aa:
     ld bc, $0201
     rst $38
     rst $38
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld de, $7045
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_7848
     ld de, $5288
     xor a
@@ -3108,7 +3108,7 @@ Call_050_51aa:
 jr_050_51fb:
     ld a, b
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
@@ -3200,11 +3200,11 @@ jr_050_5287:
     ld [$dd76], a
     ld a, a
     ld [$c1c2], a
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld de, $707f
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_5bd7
     call Call_050_7848
     ld de, $5339
@@ -3212,12 +3212,12 @@ jr_050_5287:
     rlca
     and $04
     ld b, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_52c4
 
     inc b
     ld a, b
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_52c4
 
     inc b
@@ -3228,7 +3228,7 @@ jr_050_52c4:
     ld a, b
     ld [$c8de], a
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
@@ -3269,7 +3269,7 @@ jr_050_5309:
     ld a, [$c8de]
     res 7, a
     ld c, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_5323
 
     ld a, [$db78]
@@ -3303,9 +3303,9 @@ jr_050_5341:
     ld hl, $c180
     ld [$db50], a
     call Call_050_7d2e
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld hl, $fa00
     ld a, $0c
     ld [$d9f5], a
@@ -3316,8 +3316,8 @@ jr_050_5341:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ret
 
 
@@ -3326,11 +3326,11 @@ jr_050_5341:
     ld a, a
     ld [$c1c2], a
     call Call_050_53dc
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld de, $7113
-    call Call_050_75f0
+    call LoadPaletteFromDE
     call Call_050_7848
     ld de, $5664
     ld a, [$c863]
@@ -3338,12 +3338,12 @@ jr_050_5341:
     and $04
     xor $04
     ld b, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_53aa
 
     inc b
     ld a, b
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_53aa
 
     inc b
@@ -3354,7 +3354,7 @@ jr_050_53aa:
     ld a, b
     ld [$c8de], a
     call Call_050_790b
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
@@ -3395,7 +3395,7 @@ Call_050_53dc:
     jp nz, Jump_050_549e
 
     call Call_050_53bd
-    call Call_000_2fa5
+    call CheckMonsterSlot
     call c, Call_050_53c9
     jr c, jr_050_53fe
 
@@ -3432,7 +3432,7 @@ jr_050_541e:
     ld a, [$dd73]
     inc a
     ld [$dd73], a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     call c, Call_050_53c9
     jr c, jr_050_5439
 
@@ -3466,7 +3466,7 @@ jr_050_5456:
     ld a, [$dd73]
     inc a
     ld [$dd73], a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     call c, Call_050_53c9
     jr c, jr_050_5470
 
@@ -3533,7 +3533,7 @@ Jump_050_549e:
 
 jr_050_54ba:
     ld a, [$c1d7]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     call c, Call_050_53c9
     jr nc, jr_050_54ca
 
@@ -3559,7 +3559,7 @@ jr_050_54e5:
     ld hl, $c1d7
     inc [hl]
     ld a, [hl]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     call c, Call_050_53c9
     jr nc, jr_050_54f7
 
@@ -3585,7 +3585,7 @@ jr_050_5510:
     ld hl, $c1d7
     inc [hl]
     ld a, [hl]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     call c, Call_050_53c9
     jr nc, jr_050_5520
 
@@ -3731,7 +3731,7 @@ jr_050_55f5:
 
 Call_050_55f9:
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ret
@@ -3776,7 +3776,7 @@ jr_050_563a:
     res 7, a
     add $04
     ld c, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_5656
 
     ld a, [$db78]
@@ -3817,8 +3817,8 @@ jr_050_566c:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ret
 
 
@@ -3832,7 +3832,7 @@ jr_050_56a0:
     dec b
     jr nz, jr_050_56a0
 
-    call Call_050_774e
+    call ClearSpriteBuffer
     ld hl, $d9f4
     inc [hl]
     ret
@@ -3842,7 +3842,7 @@ jr_050_56a0:
     or a
     ret nz
 
-    call Call_050_774e
+    call ClearSpriteBuffer
     ld a, $01
     ld [$d9f5], a
     ret
@@ -3852,7 +3852,7 @@ jr_050_56a0:
     or a
     ret nz
 
-    call Call_050_774e
+    call ClearSpriteBuffer
     xor a
     ld [$d9f4], a
     xor a
@@ -3864,7 +3864,7 @@ jr_050_56a0:
     or a
     ret nz
 
-    call Call_050_774e
+    call ClearSpriteBuffer
     ld a, $05
     ld [$d9f5], a
     ret
@@ -3874,7 +3874,7 @@ jr_050_56a0:
     or a
     ret nz
 
-    call Call_050_774e
+    call ClearSpriteBuffer
     ld a, $07
     ld [$d9f5], a
     ret
@@ -3904,14 +3904,14 @@ jr_050_56f5:
     dec c
     jr nz, jr_050_56f3
 
-    call Call_050_768e
+    call ClearTileBuffer
     ret
 
 
 Call_050_5708:
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ret
 
 
@@ -3942,15 +3942,15 @@ Call_050_5708:
 jr_050_5738:
     ld de, $ca42
     ld hl, $c180
-    call Call_000_0c80
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call Copy4Bytes
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld a, $2a
     call Call_050_6aa0
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ld a, $ff
     ld [$db77], a
     ld a, $ff
@@ -3969,9 +3969,9 @@ jr_050_576c:
 
 
 Call_050_5772:
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld hl, $0502
     ld a, $03
     ld [$d9f5], a
@@ -3982,13 +3982,13 @@ Call_050_5772:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
+    call LoadPaletteFromDE
     ld hl, $89c0
     ld de, $5112
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $7213
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ret
 
 
@@ -4044,14 +4044,14 @@ jr_050_57e8:
     dec b
     jr nz, jr_050_57e8
 
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld a, $b9
     call Call_050_6aa0
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
@@ -4105,10 +4105,10 @@ jr_050_5808:
 
     ld de, $ca42
     ld hl, $c180
-    call Call_000_0c80
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call Copy4Bytes
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld a, $02
     ld [$c822], a
     ld a, $06
@@ -4116,8 +4116,8 @@ jr_050_5808:
     ld hl, $4c00
     rst $10
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ld a, $ff
     ld [$db77], a
     ld a, $ff
@@ -4151,12 +4151,12 @@ Call_050_58a6:
 
 jr_050_58a9:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_58c8
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $d0
     jr nz, jr_050_58c8
@@ -4192,7 +4192,7 @@ Call_050_58d0:
 
 jr_050_58d6:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_58e3
 
     call Call_050_5900
@@ -4210,7 +4210,7 @@ jr_050_58e3:
 
 jr_050_58ea:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_58f7
 
     call Call_050_5900
@@ -4251,7 +4251,7 @@ Jump_050_590f:
     ld a, b
     ld [$db4d], a
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_5991
 
     ld de, $0000
@@ -4304,7 +4304,7 @@ jr_050_5954:
     jr jr_050_595a
 
 jr_050_595a:
-    ld hl, $59b6
+    ld hl, PersonalityRunTable
     add hl, de
     ld a, [$db4c]
     ld bc, $dc44
@@ -4377,32 +4377,23 @@ jr_050_59b4:
     ld [bc], a
     ret
 
+; ---------------------------------------------------------------
+; PersonalityRunTable — 8 rows × 4 bytes (signed)
+; Adjustments when player selects "Run" plan in battle.
+; Rows 0-3: motivation < 151; rows 4-7: motivation >= 151
+; Within each half: level <10, 10-19, 20-29, >=30
+; Format: [charge_adj, mixed_adj, cautious_adj, motivation_adj]
+; ---------------------------------------------------------------
+PersonalityRunTable:
+    db $fc, $00, $00, $f6 ; motiv<151, lv< 10: charge -4,             motiv -10
+    db $fd, $00, $00, $fb ; motiv<151, lv 10-19: charge -3,            motiv  -5
+    db $fe, $00, $00, $fd ; motiv<151, lv 20-29: charge -2,            motiv  -3
+    db $ff, $00, $00, $fe ; motiv<151, lv>=30: charge -1,              motiv  -2
+    db $f8, $00, $00, $f1 ; motiv>=151, lv< 10: charge -8,             motiv -15
+    db $fa, $00, $00, $f6 ; motiv>=151, lv 10-19: charge -6,           motiv -10
+    db $fc, $00, $00, $fb ; motiv>=151, lv 20-29: charge -4,           motiv  -5
+    db $fe, $00, $00, $fd ; motiv>=151, lv>=30: charge -2,             motiv  -3
 
-    db $fc
-    nop
-    nop
-    or $fd
-    nop
-    nop
-    ei
-    cp $00
-    nop
-    db $fd
-    rst $38
-    nop
-    nop
-    cp $f8
-    nop
-    nop
-    pop af
-    ld a, [$0000]
-    or $fc
-    nop
-    nop
-    ei
-    cp $00
-    nop
-    db $fd
     call Call_050_5708
     ld a, [$db58]
     ld l, a
@@ -4462,7 +4453,7 @@ jr_050_5a1c:
     ld l, a
     ld h, $06
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, $00
     ld [$c822], a
     ld a, [$db4c]
@@ -4597,14 +4588,14 @@ Call_050_5ad2:
 
 Call_050_5ae5:
     push af
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     pop af
     call Call_050_6aa0
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ld a, $00
     ld [$d9f4], a
     ld a, $00
@@ -4616,7 +4607,7 @@ Call_050_5b07:
     push bc
     ld [$dd72], a
     ld b, a
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_050_5b55
 
     ld a, b
@@ -4679,14 +4670,14 @@ jr_050_5b56:
     ret
 
 
-    call Call_050_774e
-    call Call_050_794c
-    call Call_050_79b4
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
+    call UpdateBattleSprites
     ld a, $e0
     call Call_050_6aa0
     ld de, $2e07
-    call Call_050_75f0
-    call Call_050_768e
+    call LoadPaletteFromDE
+    call ClearTileBuffer
     ld a, $00
     ld [$d9f4], a
     ld a, $00
@@ -4750,7 +4741,7 @@ Call_050_5bbc:
     push bc
     ld b, a
     or c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ld a, b
     pop bc
     ret
@@ -4783,7 +4774,7 @@ Call_050_5bd7:
 
 jr_050_5be0:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_5bfb
 
     ld a, [$dd76]
@@ -4976,12 +4967,12 @@ jr_050_5cc1:
 
 jr_050_5cc3:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_5cd4
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     jr z, jr_050_5cf5
 
@@ -5042,7 +5033,7 @@ Call_050_5d1f:
 
 jr_050_5d22:
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ret
 
 
@@ -5137,7 +5128,7 @@ jr_050_5db0:
     ld e, a
     ld d, a
     ld a, c
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     ld a, d
     and a
     jr nz, jr_050_5dbc
@@ -5257,7 +5248,7 @@ jr_050_5e3e:
     ld d, [hl]
     ld e, a
     ld hl, $8000
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$da80], a
     ret
@@ -5464,7 +5455,7 @@ jr_050_5f5e:
     jr nz, jr_050_5f86
 
     ld hl, $0c00
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $d9ec
     inc [hl]
     ret
@@ -5542,7 +5533,7 @@ jr_050_5fa3:
 Call_050_5ff8:
 jr_050_5ff8:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6004
 
     ld a, [hl]
@@ -5569,12 +5560,12 @@ Call_050_600d:
 
 jr_050_6013:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6046
 
     ld a, c
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     jr z, jr_050_6046
 
@@ -5621,8 +5612,8 @@ jr_050_604b:
     jr jr_050_6067
 
 Call_050_6053:
-    call Call_050_774e
-    call Call_050_794c
+    call ClearSpriteBuffer
+    call LoadBattleGraphics
     ld a, [$da88]
     or a
     jr nz, jr_050_6063
@@ -5632,7 +5623,7 @@ Call_050_6053:
 
 
 jr_050_6063:
-    call Call_050_79b4
+    call UpdateBattleSprites
     ret
 
 
@@ -5685,7 +5676,7 @@ jr_050_6067:
 jr_050_60b6:
     ld hl, $5200
     rst $10
-    call Call_050_79b4
+    call UpdateBattleSprites
     call Call_050_7627
     ld a, [$d9ec]
     cp $08
@@ -5748,9 +5739,9 @@ jr_050_6112:
 
 
 jr_050_611d:
-    call Call_050_774e
+    call ClearSpriteBuffer
     call Call_050_79ae
-    call Call_050_768e
+    call ClearTileBuffer
     ld a, [$c86c]
     or a
     jr z, jr_050_6139
@@ -5804,15 +5795,15 @@ jr_050_6150:
 
     ld a, c
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $0b23
 
 jr_050_618f:
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_050_6192:
     ld hl, $d9ec
@@ -5833,7 +5824,7 @@ Call_050_6197:
     ld e, a
     ld a, b
     push af
-    call Call_000_1e1e
+    call Div24x8To16
     pop af
     cp $02
     ret z
@@ -5892,7 +5883,7 @@ Call_050_61e2:
     ld a, [$dd25]
     ld e, a
     ld a, $10
-    call Call_000_1e1e
+    call Div24x8To16
     ld a, l
     ldh [$db], a
     ld a, h
@@ -6073,7 +6064,7 @@ Call_050_62dd:
     ld hl, $cb0b
     push af
     push bc
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     pop af
     bit 7, [hl]
@@ -6167,16 +6158,16 @@ jr_050_6337:
     ld l, a
     ld h, $0a
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$cac0]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $0b21
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, [$c825]
     or a
     ret
@@ -6188,14 +6179,14 @@ Call_050_6383:
 
     ld [$cac0], a
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $63
     jr z, jr_050_63a2
 
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     jr nz, jr_050_63a4
@@ -6210,7 +6201,7 @@ jr_050_63a4:
     rst $10
     ld a, [$cac0]
     ld hl, $cb0e
-    call Call_000_223b
+    call GetMonsterDataPtr
     ldh a, [$d5]
     ld b, a
     ld a, [hl+]
@@ -6290,7 +6281,7 @@ Jump_050_640a:
     ld hl, $c8ea
     set 7, [hl]
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $01
     ld [wGameMode], a
     ld a, $00
@@ -6314,7 +6305,7 @@ Jump_050_640a:
     cp $01
     jr z, jr_050_6486
 
-    call Call_050_66d3
+    call LoadArenaEnemyStats
     xor a
     ld [$d8d7], a
     ld a, [$db55]
@@ -6344,7 +6335,7 @@ Jump_050_640a:
 
 
 jr_050_6486:
-    call Call_050_66d3
+    call LoadArenaEnemyStats
     xor a
     ld [$d8d7], a
     ld a, [$db55]
@@ -6429,13 +6420,13 @@ jr_050_64f5:
 
     ld a, [$ca8e]
     ld hl, $cb11
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $01
     inc hl
     ld [hl], $00
     ld a, [$ca8e]
     ld hl, $cb0b
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $00
     ret
 
@@ -6446,7 +6437,7 @@ Call_050_6535:
 
     inc b
     ld hl, $cb0b
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     and $80
     ld [hl], a
@@ -6499,7 +6490,7 @@ jr_050_6559:
     ld a, [wCurrGoldHi]
     ld e, a
     ld a, $02
-    call Call_000_1e1e
+    call Div24x8To16
     ld a, l
     ld [wCurrGoldLo], a
     ld a, h
@@ -6584,13 +6575,13 @@ jr_050_65f9:
     ei
     ld a, [$c8ba]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld de, $d665
     ld b, $95
     call Call_050_66cc
     ld a, [$c8ba]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $00
     di
     ld hl, $ca8d
@@ -6614,7 +6605,7 @@ jr_050_65f9:
 
 jr_050_6663:
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $06
     ld [wGameMode], a
     ld a, $00
@@ -6698,7 +6689,7 @@ jr_050_66cc:
     ret
 
 
-Call_050_66d3:
+LoadArenaEnemyStats:
     ld a, [$d9cd]
     cp $03
     ret z
@@ -7088,7 +7079,7 @@ jr_050_6922:
 
 jr_050_6929:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6932
 
     ld [hl], d
@@ -7109,7 +7100,7 @@ jr_050_6934:
 
 jr_050_6940:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6949
 
     ld [hl], e
@@ -7140,7 +7131,7 @@ jr_050_6952:
 
 jr_050_695f:
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, $01
     ld [$c823], a
     jp Jump_050_6a4f
@@ -7450,7 +7441,7 @@ jr_050_6b11:
     ld hl, $d9ed
     inc [hl]
     ld a, [$db88]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_6b25
 
     ld a, $05
@@ -7463,7 +7454,7 @@ jr_050_6b25:
     inc [hl]
     ld a, [$db88]
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $3f
     ld d, a
@@ -7500,7 +7491,7 @@ jr_050_6b4f:
 Jump_050_6b5e:
     ld a, [$db88]
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $03
     jr nz, jr_050_6b74
@@ -7528,7 +7519,7 @@ jr_050_6b88:
     ld a, [$db88]
     call Call_000_2fda
     ld a, d
-    call Call_000_1e0d
+    call Div16x8To16
     ld a, h
     or l
     jr nz, jr_050_6b99
@@ -7562,7 +7553,7 @@ Call_050_6bc4:
     jr z, jr_050_6be7
 
     ld bc, $001e
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_050_6c01
 
     ld a, [wRNG1]
@@ -7570,7 +7561,7 @@ Call_050_6bc4:
     ld a, [wRNG2]
     ld h, a
     ld a, $0b
-    call Call_000_1e0d
+    call Div16x8To16
     add $1e
     ld l, a
     ld h, $00
@@ -7578,7 +7569,7 @@ Call_050_6bc4:
 
 jr_050_6be7:
     ld bc, $000a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_050_6c01
 
     ld a, [wRNG1]
@@ -7586,7 +7577,7 @@ jr_050_6be7:
     ld a, [wRNG2]
     ld h, a
     ld a, $06
-    call Call_000_1e0d
+    call Div16x8To16
     add $0a
     ld l, a
     ld h, $00
@@ -7628,7 +7619,7 @@ jr_050_6c14:
     ld c, a
     ld a, [$db57]
     ld b, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr z, jr_050_6c40
 
     jr c, jr_050_6c40
@@ -7653,7 +7644,7 @@ jr_050_6c43:
     or c
     jr z, jr_050_6c59
 
-    call Call_050_79b4
+    call UpdateBattleSprites
     call Call_050_7627
     ld a, $05
     ld [$d9ed], a
@@ -7676,7 +7667,7 @@ jr_050_6c59:
     call Call_050_7e1e
     ld a, $ea
     call Call_050_6aa0
-    call Call_050_79b4
+    call UpdateBattleSprites
     call Call_050_7627
     ld a, [$c86c]
     or a
@@ -7710,7 +7701,7 @@ jr_050_6c59:
 
 jr_050_6cb4:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_6d0c
 
     inc c
@@ -7733,12 +7724,12 @@ jr_050_6cc3:
 
 jr_050_6cd3:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6ce4
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     jr z, jr_050_6d0c
 
@@ -7778,7 +7769,7 @@ jr_050_6d0c:
     cp $08
     jr z, jr_050_6d22
 
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6d0c
 
     ld a, $01
@@ -7798,7 +7789,7 @@ jr_050_6d22:
 
 jr_050_6d33:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6d3c
 
     ld [hl], d
@@ -7814,7 +7805,7 @@ jr_050_6d3e:
     jr nz, jr_050_6d33
 
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6d4b
 
     ld [hl], $01
@@ -7826,7 +7817,7 @@ jr_050_6d4b:
 
 jr_050_6d50:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6d59
 
     ld [hl], e
@@ -7842,7 +7833,7 @@ jr_050_6d5b:
     jr nz, jr_050_6d50
 
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_6d68
 
     ld [hl], $01
@@ -9677,7 +9668,7 @@ jr_050_75e8:
     call Call_050_756b
     jr jr_050_75bf
 
-Call_050_75f0:
+LoadPaletteFromDE:
     ld a, [de]
     ld l, a
     inc de
@@ -9792,7 +9783,7 @@ Call_050_7656:
     ret
 
 
-Call_050_768e:
+ClearTileBuffer:
     ld a, [$d9f8]
     ld l, a
     ld a, [$d9f9]
@@ -9877,7 +9868,7 @@ Call_050_76c7:
 Call_050_7700:
     push hl
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
     ld a, [$c827]
     ld c, a
@@ -9917,7 +9908,7 @@ Call_050_7700:
     ret
 
 
-Call_050_774e:
+ClearSpriteBuffer:
     ld hl, $c500
     ld bc, $0240
 
@@ -9968,7 +9959,7 @@ Call_050_776e:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -9996,7 +9987,7 @@ jr_050_779b:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -10020,7 +10011,7 @@ jr_050_77b9:
     push bc
     ld a, b
     ld b, c
-    call Call_000_1dfb
+    call Div8x8
     pop bc
     pop de
     or a
@@ -10047,7 +10038,7 @@ jr_050_77d5:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld [$c8e1], a
     ld a, b
     pop bc
@@ -10349,7 +10340,7 @@ jr_050_7938:
     ret
 
 
-Call_050_794c:
+LoadBattleGraphics:
     ld a, [$c86c]
     or a
     jr z, jr_050_795e
@@ -10424,9 +10415,9 @@ jr_050_79a0:
 
 Call_050_79ae:
     ld de, $2e07
-    call Call_050_75f0
+    call LoadPaletteFromDE
 
-Call_050_79b4:
+UpdateBattleSprites:
     ld a, [$d9f3]
     or a
     jp nz, Jump_050_7a87
@@ -10468,7 +10459,7 @@ jr_050_79dd:
     ld e, [hl]
     inc hl
     ld d, [hl]
-    call Call_050_75f0
+    call LoadPaletteFromDE
     ret
 
 
@@ -10487,7 +10478,7 @@ jr_050_79f8:
     ld c, a
     ld hl, $0062
     call Call_050_758e
-    call Call_000_2071
+    call FillMemory
     pop hl
     ld bc, $0020
     add hl, bc
@@ -10496,7 +10487,7 @@ jr_050_79f8:
     ld c, a
     ld hl, $0082
     call Call_050_758e
-    call Call_000_2071
+    call FillMemory
     ld a, [$c1d9]
     cp $01
     ret z
@@ -10515,7 +10506,7 @@ jr_050_7a29:
     ld c, a
     ld hl, $0068
     call Call_050_758e
-    call Call_000_2071
+    call FillMemory
     pop hl
     ld bc, $0020
     add hl, bc
@@ -10524,7 +10515,7 @@ jr_050_7a29:
     ld c, a
     ld hl, $0088
     call Call_050_758e
-    call Call_000_2071
+    call FillMemory
     ld a, [$c1d9]
     cp $02
     ret z
@@ -10543,7 +10534,7 @@ jr_050_7a5a:
     ld c, a
     ld hl, $006e
     call Call_050_758e
-    call Call_000_2071
+    call FillMemory
     pop hl
     ld bc, $0020
     add hl, bc
@@ -10552,7 +10543,7 @@ jr_050_7a5a:
     ld c, a
     ld hl, $008e
     call Call_050_758e
-    call Call_000_2071
+    call FillMemory
     ret
 
 
@@ -10594,7 +10585,7 @@ jr_050_7aa9:
     call $7c06
     push hl
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_050_7aba
 
     ld a, $d9
@@ -10631,7 +10622,7 @@ jr_050_7abc:
     cp $02
     jr z, jr_050_7b0a
 
-    call Call_050_768e
+    call ClearTileBuffer
     ld hl, $8da0
     ld a, $02
     call Call_050_7c2a
@@ -10673,10 +10664,10 @@ jr_050_7b19:
     ld a, [bc]
     ld c, a
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     pop bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_7b87
 
     ld hl, $7bfa
@@ -10684,7 +10675,7 @@ jr_050_7b19:
     push hl
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     pop de
     ld a, [hl]
     or a
@@ -10740,7 +10731,7 @@ jr_050_7b87:
     dec b
     jr nz, jr_050_7b19
 
-    call Call_050_768e
+    call ClearTileBuffer
     ret
 
 
@@ -10803,7 +10794,7 @@ jr_050_7b9e:
     xor a
     ld [$d9f3], a
     call Call_050_79bb
-    call Call_050_768e
+    call ClearTileBuffer
     ret
 
 
@@ -10873,7 +10864,7 @@ Call_050_7c2a:
     inc hl
     ld d, [hl]
     pop hl
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 
@@ -10949,12 +10940,12 @@ jr_050_7c86:
     ld h, a
     push hl
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_050_7cbc
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 6, [hl]
     jr nz, jr_050_7cc0
 
@@ -11084,12 +11075,12 @@ Call_050_7d32:
 jr_050_7d32:
     push hl
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     pop hl
     push hl
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
 
 jr_050_7d41:
@@ -11166,7 +11157,7 @@ Call_050_7d7f:
     ld [$db5e], a
     ld a, d
     ld [$db5f], a
-    call Call_000_097a
+    call SetupVRAMParams
     ret
 
 

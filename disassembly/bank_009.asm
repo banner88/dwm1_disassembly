@@ -304,7 +304,7 @@ Call_009_412f:
 Call_009_4168:
     push hl
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
     ld a, [$c827]
     ld c, a
@@ -486,7 +486,7 @@ Call_009_4256:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -518,7 +518,7 @@ jr_009_428c:
     ld a, b     ; load the contents of b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -542,7 +542,7 @@ jr_009_42b3:
     push bc
     ld a, b     ; load the contents of b (unknown variable) into a
     ld b, c     ; load the contents of c (c8el) into b
-    call Call_000_1dfb
+    call Div8x8
     pop bc
     pop de
     or a
@@ -569,7 +569,7 @@ jr_009_42cf:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld [$c8e1], a
     ld a, b
     pop bc
@@ -763,7 +763,7 @@ Call_009_43b7:
     ld c, [hl]
     ld b, $00
     ld hl, wDebug_main_menu_option
-    call Call_000_20ad
+    call PrintNumber
     pop hl
     ld a, [hl]
     ld de, wDebug_main_menu_option
@@ -803,7 +803,7 @@ Call_009_43e9:
     ld a, [wDebug_main_menu_option]
     and $0f
     ld c, $0a
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, [$c0a1]
     and $0f
     add l
@@ -821,7 +821,7 @@ Call_009_43fe:
     ld c, [hl]
     ld b, $00
     ld hl, wDebug_main_menu_option
-    call Call_000_20ad
+    call PrintNumber
     pop hl
     ld de, $c0a1
     ld a, [hl]
@@ -1118,7 +1118,7 @@ Call_009_456d:
     ld c, [hl]
     ld b, $00
     ld hl, wDebug_main_menu_option
-    call Call_000_20ad
+    call PrintNumber
     pop bc
     pop de
     bit 7, c
@@ -1259,7 +1259,7 @@ Call_009_45e5:
     call Call_009_4204
     ld de, $2e0e
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_009_442a
     ld hl, $c905
     inc [hl]
@@ -1289,7 +1289,7 @@ Call_009_465a:
     ldh [$d7], a
     ld hl, $002e
     call Call_009_406d
-    call Call_000_1fb9
+    call ConvertNumberToText
     call Call_009_442a
     ld de, $46df
     ld a, [wMenu_selection]
@@ -1611,7 +1611,7 @@ jr_009_483c:
     ldh [$d6], a
     ld a, $00
     ldh [$d7], a
-    call Call_000_1fb9
+    call ConvertNumberToText
     pop hl
     ld a, l
     add $05
@@ -1830,10 +1830,10 @@ jr_009_498c:
     ld l, a
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$c8dd]
     ld hl, $c190
-    call Call_000_09a4
+    call ExtractDigits
     ld hl, $0302
     rst $10
     ld a, [$da63]
@@ -1841,7 +1841,7 @@ jr_009_498c:
     ld a, [$da64]
     ld b, a
     ld a, [$c8dd]
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -2130,7 +2130,7 @@ jr_009_4b94:
     ldh [$d7], a
     pop hl
     call Call_009_406d
-    call Call_000_1fb9
+    call ConvertNumberToText
     pop hl
     ld a, l
     add $05
@@ -2195,7 +2195,7 @@ jr_009_4bfb:
     ld a, [$da64]
     ld h, a
     ld a, $0a
-    call Call_000_1e0d
+    call Div16x8To16
     ret
 
 
@@ -2412,7 +2412,7 @@ Call_009_4d06:
     ld b, $00
     ld hl, $0164
     call Call_009_406d
-    call Call_000_2082
+    call CopyHLtoDE
     call Call_009_442a
     ld de, $4db5
     ld hl, wPLAN_selection
@@ -2475,15 +2475,15 @@ jr_009_4db4:
     ld l, a
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$c8dd]
     ld hl, $c190
-    call Call_000_09a4
+    call ExtractDigits
     call Call_009_4bc8
     ld c, l
     ld b, h
     ld a, [$c8dd]
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -2703,7 +2703,7 @@ jr_009_4eb4:
     call Call_009_4204
     ld de, $2e0f
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_009_442a
     ld hl, $c905
     inc [hl]
@@ -2744,7 +2744,7 @@ Call_009_4f69:
     ldh [$d7], a
     ld hl, $002e
     call Call_009_406d
-    call Call_000_1fb9
+    call ConvertNumberToText
     call Call_009_442a
     ld de, $501b
     ld a, [wMenu_selection]
@@ -2850,7 +2850,7 @@ Call_009_5049:
     ldh [$d7], a
     ld hl, $002e
     call Call_009_406d
-    call Call_000_1fb9
+    call ConvertNumberToText
     call Call_009_442a
     ld de, $50b0
     ld a, [wOPTN_and_Item_selection]
@@ -3246,7 +3246,7 @@ Call_009_529b:
     ld b, $00
     ld hl, $0164
     call Call_009_406d
-    call Call_000_2082
+    call CopyHLtoDE
     call Call_009_442a
     ld de, $5349
     ld hl, $c8dd
@@ -3825,7 +3825,7 @@ Call_009_567b:
     ld b, $00
     ld hl, $0164
     call Call_009_406d
-    call Call_000_2082
+    call CopyHLtoDE
     call Call_009_442a
     ld de, $5729
     ld hl, $c8dd
@@ -4267,7 +4267,7 @@ Call_009_5999:
     ld bc, $2710
     ld a, [wDebug_main_menu_option]
     and $0f
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     ld [$c8df], a
     ld a, h
@@ -4277,7 +4277,7 @@ Call_009_5999:
     ld bc, $03e8
     ld a, [$c0a1]
     and $0f
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, [$c8df]
     add l
     ld [$c8df], a
@@ -4290,7 +4290,7 @@ Call_009_5999:
     ld bc, $0064
     ld a, [$c0a2]
     and $0f
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, [$c8df]
     add l
     ld [$c8df], a
@@ -4303,7 +4303,7 @@ Call_009_5999:
     ld bc, $000a
     ld a, [$c0a3]
     and $0f
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, [$c8df]
     add l
     ld [$c8df], a
@@ -4611,7 +4611,7 @@ jr_009_5b5e:
     call Call_009_4204
     ld de, $2e11
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $c905
     inc [hl]
     ret
@@ -4735,7 +4735,7 @@ Call_009_5c53:
     ldh [$d7], a
     ld hl, $002e
     call Call_009_406d
-    call Call_000_1fb9
+    call ConvertNumberToText
     call Call_009_442a
     ld de, $5da2
     ld b, $04
@@ -4819,7 +4819,7 @@ Call_009_5cfb:
     ld a, $00
     ldh [$d7], a
     call Call_009_406d
-    call Call_000_1fb9
+    call ConvertNumberToText
     pop hl
     ld a, l
     add $40
@@ -5258,7 +5258,7 @@ jr_009_5fc5:
     ld a, [hl]
     ld d, a
     pop hl
-    call Call_000_1577
+    call WaitDMATransfer
     pop hl
     ld a, l
     add $90
@@ -5494,7 +5494,7 @@ jr_009_60f1:
     rst $10
     ld hl, $0b02
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     ld hl, $0604
     rst $10
@@ -5610,13 +5610,13 @@ jr_009_6155:
     call Call_009_40fa
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e20
     ld hl, $8a00
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, [$c8f4]
     ld l, a
     ld h, $00
@@ -5631,7 +5631,7 @@ jr_009_6155:
     inc hl
     ld d, [hl]
     ld hl, $8500
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_009_442a
     call Call_009_625d
     ld hl, $1702
@@ -5663,7 +5663,7 @@ Call_009_621f:
     ld l, a
     ld h, $07
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $c180
     ld de, $c0c8
 
@@ -5923,7 +5923,7 @@ jr_009_63f5:
     ld [wCursorBlinkTimer], a
     ld a, [wOPTN_and_Item_selection]
     ld c, $11
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, [wMenu_selection]
     add l
     cp $4a
@@ -6039,7 +6039,7 @@ jr_009_64a9:
 
     ld a, [wOPTN_and_Item_selection]
     ld c, $11
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, [wMenu_selection]
     add l
     cp $51
@@ -6259,12 +6259,12 @@ jr_009_65b2:
     push hl
     ld a, [wOPTN_and_Item_selection]
     ld c, $11
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, [wMenu_selection]
     add l
     ld b, a
     ld a, $05
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     pop hl
     ld [hl], a
@@ -6331,7 +6331,7 @@ jr_009_66ca:
 
 jr_009_66d9:
     ld hl, $020a
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_009_40c9
     call Call_009_40fa
@@ -6364,7 +6364,7 @@ jr_009_66ec:
     ld l, a
     ld h, $05
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $c190
 
 jr_009_6718:
@@ -6410,7 +6410,7 @@ jr_009_673a:
     ld hl, $020f
 
 jr_009_6756:
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_009_40c9
     call Call_009_40fa
@@ -6524,7 +6524,7 @@ jr_009_6812:
     rst $10
     ld hl, $0b02
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     ld a, [wInGateworld]
     or a
@@ -6537,28 +6537,28 @@ jr_009_6812:
 jr_009_6832:
     ld de, $2e15
     ld hl, $8500
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e16
     ld hl, $8540
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e17
     ld hl, $8580
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e18
     ld hl, $85c0
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e19
     ld hl, $8600
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1a
     ld hl, $8640
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1b
     ld hl, $8680
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1c
     ld hl, $86c0
-    call Call_000_1577
+    call WaitDMATransfer
 
 jr_009_687a:
     ld hl, wGameState
@@ -6616,7 +6616,7 @@ jr_009_68aa:
     ld l, a
     ld h, $03
     ld de, $c0c8
-    call Call_000_097a
+    call SetupVRAMParams
     ret
 
 
@@ -6713,7 +6713,7 @@ jr_009_692c:
     ld a, c
     push bc
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     ld a, [hl]
     or a
@@ -6803,7 +6803,7 @@ jr_009_6982:
 Call_009_69f6:
     ld a, [wOPTN_and_Item_selection]
     ld c, $11
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, [wMenu_selection]
     add l
     ld de, $6607

@@ -94,14 +94,14 @@ jr_00b_4037:
     inc hl
     push hl
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, [wMapID]
     ld a, $08
     jr nz, jr_00b_4076
 
     ld de, $291d
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     xor a
     ld [$c8a6], a
     ld [$c8a7], a
@@ -161,14 +161,14 @@ jr_00b_4094:
     inc hl
     push hl
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, [wMapID]
     ld a, $08
     jr nz, jr_00b_40c0
 
     ld de, $291d
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     xor a
     ld [$c8a6], a
     ld [$c8a7], a
@@ -192,7 +192,7 @@ labelb_40ce:
     ldh a, [$96]
     ld h, a
     ld a, $80
-    call Call_000_1e0d
+    call Div16x8To16
     ld a, l
     add a
     add a
@@ -200,7 +200,7 @@ labelb_40ce:
     ld a, $80
     ld c, l
     ld b, h
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     ldh [$bb], a
     ld a, h
@@ -210,14 +210,14 @@ labelb_40ce:
     ldh a, [$93]
     ld h, a
     ld a, $a0
-    call Call_000_1e0d
+    call Div16x8To16
     ld a, [$c925]
     add l
     ld [$c925], a
     ld a, $a0
     ld c, l
     ld b, h
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     ldh [$b7], a
     ld a, h
@@ -237,7 +237,7 @@ labelb_40ce:
 
     call Call_00b_4239
     ld hl, $c300
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $c300
     call Call_00b_4309
     ld hl, $1701
@@ -249,7 +249,7 @@ jr_00b_4134:
     jr z, jr_00b_41b3
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $01
     ldh [rVBK], a
     ei
@@ -332,7 +332,7 @@ jr_00b_4168:
     jr nz, jr_00b_4165
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $00
     ldh [rVBK], a
     ei
@@ -417,7 +417,7 @@ labelb_4213:
     rst $10
     call Call_00b_4239
     ld hl, $c500
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $c500
     call Call_00b_4309
     ld hl, $1701
@@ -463,7 +463,7 @@ Call_00b_4239:
 jr_00b_4244:
     ; === POINTER TABLE READ — shared pattern ===
     ; Step 1: ptr_table[$4B43 + mapID * 2] → screen_ptr_block
-    ld hl, $4b43                    ; room pointer table (107 entries × 2 bytes)
+    ld hl, RoomPtrTable                    ; room pointer table (107 entries × 2 bytes)
     ld a, [wMapID]                  ; current room map_type ($C968)
     add a                           ; mapID × 2 (2 bytes per entry)
     add l
@@ -537,13 +537,13 @@ ReadInteractPtr:
 ;
 ; Output: HL = pointer to first NPC entry (5-byte entries, $FF terminated)
 ; ---------------------------------------------------------------------------
-Call_00b_4274:
+GetRoomDataPtr:
     ld a, [wInGateworld]
     or a
     jr nz, jr_00b_42ac       ; Gate world uses different lookup path
 
     ; Level 1: map_type → screen_ptr_block
-    ld hl, $4b43             ; Room pointer table base
+    ld hl, RoomPtrTable             ; Room pointer table base
     ld a, [wMapID]
     add a                    ; × 2 (word-sized entries)
     add l
@@ -738,7 +738,7 @@ jr_00b_4357:
 jr_00b_4366:
     ld a, $ff
     ldh [$d6], a
-    call Call_00b_4274
+    call GetRoomDataPtr
 
 jr_00b_436d:
     ld a, [hl]
@@ -752,7 +752,7 @@ jr_00b_436d:
     cp $80
     jr nz, jr_00b_4397
 
-    call Call_00b_4452
+    call CheckExitCoords
     jr nz, jr_00b_4397
 
     ld a, [hl]
@@ -798,8 +798,8 @@ jr_00b_43a1:
 ; Flow:
 ;   1. Default $FFD5 = $FF (no NPC)
 ;   2. Guard: if $FF90 bit 6 set or $D8D7 non-zero → return
-;   3. Call Call_00b_43b8:
-;      a. Get current room's NPC list (interact block) via Call_00b_4274
+;   3. Call SearchNPCAtFacing:
+;      a. Get current room's NPC list (interact block) via GetRoomDataPtr
 ;      b. Walk NPC entries (5 bytes each, $FF terminated)
 ;      c. For each: check type byte (bit 7 must be set = interactable)
 ;      d. If type & $F0 == $90: check if NPC is at player's facing position
@@ -822,7 +822,7 @@ labelb_43a4:
     or a
     ret nz                   ; Script already running → return
 
-    call Call_00b_43b8       ; Search for NPC at facing position
+    call SearchNPCAtFacing       ; Search for NPC at facing position
     ldh [$d5], a             ; Store result (script_id or $FF)
     ret
 
@@ -830,8 +830,8 @@ labelb_43a4:
 ; ---------------------------------------------------------------------------
 ; NPCSearchAtFacing — Walk NPC list, find match at player's facing position
 ; ---------------------------------------------------------------------------
-Call_00b_43b8:
-    call Call_00b_4274       ; Get interact_block pointer for current room/step
+SearchNPCAtFacing:
+    call GetRoomDataPtr       ; Get interact_block pointer for current room/step
 
 jr_00b_43bb:
     ld a, [hl]               ; Read NPC type byte (byte 0)
@@ -845,7 +845,7 @@ jr_00b_43bb:
     cp $90
     jr nz, jr_00b_43d8       ; Type != $9x → skip this NPC
 
-    call Call_00b_4452       ; Check if NPC is at player's facing position
+    call CheckExitCoords       ; Check if NPC is at player's facing position
     jr nz, jr_00b_43d8       ; Not at facing position → skip
 
     ; NPC found at facing position! Read script_id (byte 4)
@@ -986,7 +986,7 @@ jr_00b_444c:
 ;
 ; Compares NPC entry bytes 2 (X) and 3 (Y) against computed facing coords.
 ; ---------------------------------------------------------------------------
-Call_00b_4452:
+CheckExitCoords:
     push hl
     push bc
     push de
@@ -1002,7 +1002,7 @@ Call_00b_4452:
     or b
     ld b, a
     ld a, $0a
-    call Call_000_1dfb
+    call Div8x8
     cp [hl]
     jr nz, jr_00b_444c
 
@@ -1017,7 +1017,7 @@ Call_00b_4452:
     or b
     ld b, a
     ld a, $08
-    call Call_000_1dfb
+    call Div8x8
     cp [hl]
     jr nz, jr_00b_444c
 
@@ -1051,7 +1051,7 @@ labelb_4488:
     or a
     ret nz
 
-    ld hl, $4b43
+    ld hl, RoomPtrTable
     ld a, [wMapID]
     add a
     add l
@@ -1192,7 +1192,7 @@ labelb_451d:
 
     ; === POINTER TABLE READ (same pattern as ReadStepBlock) ===
     ; Reads exit_ptr (bytes 4-5 of step entry)
-    ld hl, $4b43                    ; room pointer table
+    ld hl, RoomPtrTable                    ; room pointer table
     ld a, [wMapID]
     add a                           ; mapID × 2
     add l
@@ -1461,7 +1461,7 @@ jr_00b_462c:
 
 jr_00b_465b:
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ld a, $51
@@ -1634,7 +1634,7 @@ jr_00b_471b:
     call Call_00b_482b
     ld a, $ff
     ld [$d7d2], a
-    call Call_00b_4274
+    call GetRoomDataPtr
     ld a, [wInGateworld]
     or a
     jr z, jr_00b_477e
@@ -2063,7 +2063,7 @@ jr_00b_493b:
 
 jr_00b_493f:
     ld l, $00
-    call Call_000_1577
+    call WaitDMATransfer
     pop bc
 
 Jump_00b_4945:

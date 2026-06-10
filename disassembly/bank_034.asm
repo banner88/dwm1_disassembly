@@ -5292,7 +5292,7 @@ jr_034_56f4:
     ldh [rDIV], a
     add b
     ld de, $0418
-    call nc, Call_000_1013
+    call nc, DisableSRAM
     inc b
     call c, $0413
     rst $38

@@ -727,17 +727,17 @@ SECTION "ROM Bank $04f", ROMX[$4000], BANK[$4f]
 
 Call_04f_5246:
     ld de, $5010
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
     ld de, $5010
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
     call Call_04f_5246
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

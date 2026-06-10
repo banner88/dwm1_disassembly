@@ -1158,17 +1158,17 @@ jr_03f_4501:
 
 Call_03f_4557:
     ld de, $4485
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
     ld de, $4485
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
     call Call_03f_4557
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

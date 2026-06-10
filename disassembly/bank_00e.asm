@@ -267,13 +267,13 @@ labele_4110:
     ret z
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $01
     ldh [rVBK], a
     ei
     call Call_00e_4075
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $00
     ldh [rVBK], a
     ei

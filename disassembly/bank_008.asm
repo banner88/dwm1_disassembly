@@ -90,7 +90,7 @@ jr_008_404f:
     dec b
     ret z
 
-    call Call_000_1013
+    call DisableSRAM
     jr jr_008_403a
 
     inc de
@@ -480,7 +480,7 @@ jr_008_4208:
     ld [$c774], a
     ld hl, $0800
     rst $10
-    call Call_000_1013
+    call DisableSRAM
     ret
 
 

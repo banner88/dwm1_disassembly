@@ -310,17 +310,17 @@ jr_01a_40e1:
 
 Call_01a_413d:
     ld de, $4007
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
     ld de, $4007
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
     call Call_01a_413d
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

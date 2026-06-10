@@ -1763,7 +1763,7 @@ jr_040_48cb:
     rst $38
     push de
     xor $2b
-    call c, Call_000_20df
+    call c, PrintDigit
     dec hl
     db $f4
     push af

@@ -160,7 +160,7 @@ jr_012_40ac:
     call Call_012_4035
     jr jr_012_4087
 
-Call_012_40b4:
+ReadPtrFromDE:
     ld a, [de]
     ld l, a
     inc de
@@ -202,7 +202,7 @@ jr_012_40e2:
     ld [hl+], a
     jr jr_012_40c3
 
-Call_012_40e5:
+GetScreenPos:
     ld a, [$c909]
     ld l, a
     ld a, [$c90a]
@@ -283,7 +283,7 @@ Call_012_411a:
 Call_012_4153:
     push hl
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
     ld a, [$c827]
     ld c, a
@@ -460,7 +460,7 @@ Call_012_4241:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -488,7 +488,7 @@ jr_012_426e:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -512,7 +512,7 @@ jr_012_428c:
     push bc
     ld a, b
     ld b, c
-    call Call_000_1dfb
+    call Div8x8
     pop bc
     pop de
     or a
@@ -539,7 +539,7 @@ jr_012_42a8:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld [$c8e1], a
     ld a, b
     pop bc
@@ -847,7 +847,7 @@ jr_012_440d:
     ret
 
 
-Call_012_441f:
+AddCursorOffset:
     ld a, [$c8f0]
     add l
     ld l, a
@@ -903,7 +903,7 @@ Call_012_441f:
     call Call_012_41ef
     ld de, $2e10
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $44
@@ -938,15 +938,15 @@ Call_012_441f:
     ld [$c8ec], a
     call Call_012_41ef
     call Call_012_44cb
-    call Call_012_40e5
+    call GetScreenPos
     ret
 
 
 Call_012_44cb:
     ld de, $710c
-    call Call_012_40b4
+    call ReadPtrFromDE
     ld de, $2e07
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $4532
     ld a, [wMenu_selection]
@@ -1018,9 +1018,9 @@ jr_012_4531:
     ld b, l
     call Call_012_41ef
     ld de, $2e07
-    call Call_012_40b4
-    call Call_012_40e5
-    call Call_000_2518
+    call ReadPtrFromDE
+    call GetScreenPos
+    call UpdateOAMSprites
     ld hl, $c13c
     ld de, $c1c0
     call Call_012_457f
@@ -1103,7 +1103,7 @@ jr_012_4581:
     jr nz, jr_012_45e1
 
     ld hl, $0004
-    call Call_012_441f
+    call AddCursorOffset
     call Call_012_4cb7
     or a
     jr nz, jr_012_45d7
@@ -1123,7 +1123,7 @@ jr_012_45d7:
 
 jr_012_45e1:
     ld hl, $0003
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -1152,7 +1152,7 @@ jr_012_45ec:
     call Call_012_4682
     call Call_012_4643
     call Call_012_4621
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -1162,9 +1162,9 @@ Call_012_4621:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $71aa
-    call Call_012_40b4
+    call ReadPtrFromDE
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_46fd
     call Call_012_4323
     ld de, $47af
@@ -1210,7 +1210,7 @@ jr_012_4672:
     ld a, b
     dec a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     pop hl
@@ -1232,14 +1232,14 @@ Call_012_4682:
 Call_012_4691:
     push af
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $9650
     call Call_012_4153
     pop af
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $9690
     and $01
@@ -1299,7 +1299,7 @@ Call_012_46fd:
 Call_012_470c:
     push af
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $016a
@@ -1313,7 +1313,7 @@ Call_012_470c:
     call Call_012_601b
     pop af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     jr nz, jr_012_473e
@@ -1351,9 +1351,9 @@ jr_012_473e:
 
     call Call_012_4682
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_46fd
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_4772:
     ld a, [wJoypad_current_frame]
@@ -1368,7 +1368,7 @@ jr_012_4772:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     jr jr_012_47ae
@@ -1398,7 +1398,7 @@ jr_012_47ae:
     rst $38
     rst $38
     ld hl, $0005
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -1411,7 +1411,7 @@ jr_012_47ae:
     ld a, $5c
     call PlaySoundEffect
     call Call_012_47d7
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -1419,7 +1419,7 @@ jr_012_47ae:
 
 Call_012_47d7:
     ld de, $7b42
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $483b
     ld a, [wPLAN_selection]
@@ -1438,9 +1438,9 @@ Call_012_47d7:
     ld hl, $5605
     rst $10
     call Call_012_4621
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $0003
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $02
     ld [$c906], a
     jr jr_012_483a
@@ -1489,7 +1489,7 @@ jr_012_483a:
     ld hl, $0103
     rst $10
     ld hl, $0006
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -1507,7 +1507,7 @@ jr_012_483a:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     ret
@@ -1538,7 +1538,7 @@ jr_012_483a:
     ld [wOPTN_and_Item_selection], a
     ld de, $2e10
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $44
@@ -1559,9 +1559,9 @@ jr_012_483a:
     rst $10
     call Call_012_4621
     call Call_012_47d7
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $0005
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $05
     ld [$c906], a
     xor a
@@ -1574,7 +1574,7 @@ jr_012_483a:
     ret nz
 
     ld hl, $0007
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -1587,7 +1587,7 @@ jr_012_483a:
     ld a, $5c
     call PlaySoundEffect
     call Call_012_492f
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -1595,7 +1595,7 @@ jr_012_483a:
 
 Call_012_492f:
     ld de, $6f54
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $498d
     ld a, [$c8dd]
@@ -1620,7 +1620,7 @@ jr_012_4954:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     jr jr_012_498c
@@ -1649,7 +1649,7 @@ jr_012_498c:
     call Call_012_4cb7
     call Call_012_4ce5
     ld hl, $0008
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -1662,7 +1662,7 @@ jr_012_498c:
     call Call_012_49e5
     call Call_012_4d5d
     call Call_012_49ba
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -1672,10 +1672,10 @@ Call_012_49ba:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_49ff
     ld de, $71f4
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $4e26
     ld b, $04
@@ -1747,7 +1747,7 @@ Call_012_49ff:
 
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_4a42:
     pop af
@@ -1758,7 +1758,7 @@ jr_012_4a42:
     call Call_012_4d5d
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_4a55:
     ld a, [wJoypad_current_frame]
@@ -1770,9 +1770,9 @@ jr_012_4a55:
     call Call_012_41ef
     call Call_012_44cb
     call Call_012_492f
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $0007
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $0c
     ld [$c906], a
     jr jr_012_4a8e
@@ -1795,7 +1795,7 @@ jr_012_4a8e:
 
 
     ld hl, $0009
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -1808,7 +1808,7 @@ jr_012_4a8e:
     ld a, $5c
     call PlaySoundEffect
     call Call_012_4aaf
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -1816,7 +1816,7 @@ jr_012_4a8e:
 
 Call_012_4aaf:
     ld de, $7b42
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $4b18
     ld a, [wPLAN_selection]
@@ -1837,9 +1837,9 @@ Call_012_4aaf:
     call Call_012_49e5
     call Call_012_4d5d
     call Call_012_49ba
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $0008
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $0f
     ld [$c906], a
     jr jr_012_4b17
@@ -1875,11 +1875,11 @@ jr_012_4b17:
     ld bc, $ffff
     ld a, [$ca8e]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$c8e3]
     add a
     add a
@@ -1896,11 +1896,11 @@ jr_012_4b17:
     ld a, [hl]
     push af
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     pop af
     ld [$ca8e], a
     ld hl, $0105
@@ -1908,7 +1908,7 @@ jr_012_4b17:
     ld hl, $0103
     rst $10
     ld hl, $000a
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -1926,7 +1926,7 @@ jr_012_4b17:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     ret
@@ -1968,7 +1968,7 @@ jr_012_4b17:
     ld [$c8e3], a
     ld de, $2e10
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $44
@@ -1991,9 +1991,9 @@ jr_012_4b17:
     call Call_012_49e5
     call Call_012_49ba
     call Call_012_4aaf
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $0009
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $12
     ld [$c906], a
     xor a
@@ -2073,7 +2073,7 @@ jr_012_4b17:
     jr nz, jr_012_4c92
 
     ld hl, $000c
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $07
     ld [$c906], a
     ret
@@ -2085,7 +2085,7 @@ jr_012_4c92:
     jr nz, jr_012_4ca9
 
     ld hl, $000d
-    call Call_012_441f
+    call AddCursorOffset
     xor a
     ld [$c8dd], a
     ld a, $0a
@@ -2096,7 +2096,7 @@ jr_012_4c92:
 jr_012_4ca9:
     call Call_012_4ce5
     ld hl, $000b
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2207,10 +2207,10 @@ Call_012_4d32:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_49ff
     ld de, $71f4
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $4e26
     ld b, $04
@@ -2218,7 +2218,7 @@ Call_012_4d32:
     ld c, a
     ld hl, $c8e2
     call Call_012_43c0
-    call Call_012_40e5
+    call GetScreenPos
     ret
 
 
@@ -2245,7 +2245,7 @@ Call_012_4d77:
     jr z, jr_012_4d97
 
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -2308,7 +2308,7 @@ jr_012_4d99:
 
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_4dda:
     pop af
@@ -2319,7 +2319,7 @@ jr_012_4dda:
     call Call_012_4d5d
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_4ded:
     ld a, [wJoypad_current_frame]
@@ -2334,7 +2334,7 @@ jr_012_4ded:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     jr jr_012_4e25
@@ -2363,7 +2363,7 @@ jr_012_4e25:
     rst $38
     rst $38
     ld hl, $000e
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2376,7 +2376,7 @@ jr_012_4e25:
     ld a, $5c
     call PlaySoundEffect
     call Call_012_4e52
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -2384,7 +2384,7 @@ jr_012_4e25:
 
 Call_012_4e52:
     ld de, $7b42
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $4eb6
     ld a, [wPLAN_selection]
@@ -2403,9 +2403,9 @@ Call_012_4e52:
     ld hl, $5605
     rst $10
     call Call_012_4d32
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $000b
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $02
     ld [$c906], a
     jr jr_012_4eb5
@@ -2459,7 +2459,7 @@ jr_012_4eb5:
     ld bc, $0007
     call Call_000_26a0
     ld hl, $000f
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2486,7 +2486,7 @@ jr_012_4eef:
     ld hl, $0103
     rst $10
     ld hl, $000f
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2504,7 +2504,7 @@ jr_012_4eef:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     ret
@@ -2546,7 +2546,7 @@ jr_012_4eef:
     ld [$c8e3], a
     ld de, $2e10
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $44
@@ -2567,9 +2567,9 @@ jr_012_4eef:
     rst $10
     call Call_012_4d32
     call Call_012_4e52
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $000e
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $05
     ld [$c906], a
     xor a
@@ -2582,7 +2582,7 @@ jr_012_4eef:
     ret nz
 
     ld hl, $0010
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2595,7 +2595,7 @@ jr_012_4eef:
     ld a, $5c
     call PlaySoundEffect
     call Call_012_4ffa
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -2603,7 +2603,7 @@ jr_012_4eef:
 
 Call_012_4ffa:
     ld de, $6f54
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $5059
     ld a, [$c8dd]
@@ -2628,7 +2628,7 @@ jr_012_501f:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     jr jr_012_5058
@@ -2656,7 +2656,7 @@ jr_012_5058:
     ld bc, $ffff
     call Call_012_4ce5
     ld hl, $0013
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2669,7 +2669,7 @@ jr_012_5058:
     call Call_012_49e5
     call Call_012_4d5d
     call Call_012_5083
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -2679,10 +2679,10 @@ Call_012_5083:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_49ff
     ld de, $71f4
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $4e26
     ld b, $04
@@ -2716,7 +2716,7 @@ Call_012_5083:
 
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_50d7:
     pop af
@@ -2727,7 +2727,7 @@ jr_012_50d7:
     call Call_012_4d5d
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_50ea:
     ld a, [wJoypad_current_frame]
@@ -2738,8 +2738,8 @@ jr_012_50ea:
     call Call_012_4643
     call Call_012_52ee
     ld hl, $0011
-    call Call_012_441f
-    call Call_012_40e5
+    call AddCursorOffset
+    call GetScreenPos
     ld a, $19
     ld [$c906], a
     jr jr_012_511f
@@ -2762,7 +2762,7 @@ jr_012_511f:
 
 
     ld hl, $0014
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2775,7 +2775,7 @@ jr_012_511f:
     ld a, $5c
     call PlaySoundEffect
     call Call_012_5140
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -2783,7 +2783,7 @@ jr_012_511f:
 
 Call_012_5140:
     ld de, $7b42
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $51a5
     ld a, [wPLAN_selection]
@@ -2803,8 +2803,8 @@ Call_012_5140:
     call Call_012_4d5d
     call Call_012_5083
     ld hl, $0013
-    call Call_012_441f
-    call Call_012_40e5
+    call AddCursorOffset
+    call GetScreenPos
     ld a, $0f
     ld [$c906], a
     jr jr_012_51a4
@@ -2848,11 +2848,11 @@ jr_012_51a4:
     ld h, a
     ld a, [hl]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$c8e3]
     add a
     add a
@@ -2869,11 +2869,11 @@ jr_012_51a4:
     ld a, [hl]
     push af
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$c8de]
     and $7f
     ld hl, $ca8e
@@ -2889,7 +2889,7 @@ jr_012_51a4:
     ld hl, $0103
     rst $10
     ld hl, $0015
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2907,7 +2907,7 @@ jr_012_51a4:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     ret
@@ -2949,7 +2949,7 @@ jr_012_51a4:
     ld [$c8e3], a
     ld de, $2e10
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $44
@@ -2971,9 +2971,9 @@ jr_012_51a4:
     rst $10
     call Call_012_5083
     call Call_012_5140
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $0014
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $12
     ld [$c906], a
     xor a
@@ -2982,7 +2982,7 @@ jr_012_51a4:
 
 
     ld hl, $0011
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -2995,7 +2995,7 @@ jr_012_51a4:
     call Call_012_5313
     call Call_012_4643
     call Call_012_52ee
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -3005,9 +3005,9 @@ Call_012_52ee:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $71aa
-    call Call_012_40b4
+    call ReadPtrFromDE
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_5326
     call Call_012_4323
     ld de, $5399
@@ -3063,9 +3063,9 @@ Call_012_5326:
 
     call Call_012_5313
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_5326
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_5363:
     ld a, [wJoypad_current_frame]
@@ -3076,8 +3076,8 @@ jr_012_5363:
     call Call_012_44cb
     call Call_012_4ffa
     ld hl, $0010
-    call Call_012_441f
-    call Call_012_40e5
+    call AddCursorOffset
+    call GetScreenPos
     ld a, $0c
     ld [$c906], a
     jr jr_012_5398
@@ -3107,7 +3107,7 @@ jr_012_5398:
     rst $38
     rst $38
     ld hl, $0012
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -3120,7 +3120,7 @@ jr_012_5398:
     ld a, $5c
     call PlaySoundEffect
     call Call_012_53c1
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -3128,7 +3128,7 @@ jr_012_5398:
 
 Call_012_53c1:
     ld de, $7b42
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $5427
     ld a, [wPLAN_selection]
@@ -3148,8 +3148,8 @@ Call_012_53c1:
     call Call_012_4643
     call Call_012_52ee
     ld hl, $0011
-    call Call_012_441f
-    call Call_012_40e5
+    call AddCursorOffset
+    call GetScreenPos
     ld a, $19
     ld [$c906], a
     jr jr_012_5426
@@ -3208,7 +3208,7 @@ jr_012_5426:
     ld [$c8de], a
     ld de, $2e10
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $44
@@ -3229,9 +3229,9 @@ jr_012_5426:
     rst $10
     call Call_012_52ee
     call Call_012_53c1
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $0012
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $1c
     ld [$c906], a
     xor a
@@ -3263,7 +3263,7 @@ jr_012_5426:
     jp z, Jump_012_45ec
 
     ld hl, $0016
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -3283,13 +3283,13 @@ Call_012_54e5:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $7768
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_5504
     call Call_012_4323
     ld de, $564a
     ld a, [wOPTN_and_Item_selection]
     call Call_012_43e2
-    call Call_012_40e5
+    call GetScreenPos
     ret
 
 
@@ -3346,7 +3346,7 @@ jr_012_553e:
 
     pop hl
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     ret
 
 
@@ -3388,7 +3388,7 @@ jr_012_556e:
 
     pop hl
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     ret
 
 
@@ -3406,7 +3406,7 @@ Call_012_5581:
 
 jr_012_5595:
     push hl
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_012_55ab
 
@@ -3416,7 +3416,7 @@ jr_012_5595:
     ld a, h
     adc $00
     ld h, a
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr nz, jr_012_55ab
 
@@ -3437,7 +3437,7 @@ jr_012_55ab:
 
 jr_012_55b8:
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     ret
 
 
@@ -3455,7 +3455,7 @@ Call_012_55be:
 
 jr_012_55d2:
     push hl
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_012_55e8
 
@@ -3465,7 +3465,7 @@ jr_012_55d2:
     ld a, h
     adc $00
     ld h, a
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_012_55e8
 
@@ -3486,7 +3486,7 @@ jr_012_55e8:
 
 jr_012_55f5:
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     ret
 
 
@@ -3506,7 +3506,7 @@ jr_012_55f5:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     jr jr_012_5649
@@ -3541,7 +3541,7 @@ jr_012_5649:
     jr nz, jr_012_5662
 
     ld hl, $0017
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $08
     ld [$c906], a
     ret
@@ -3550,7 +3550,7 @@ jr_012_5649:
 jr_012_5662:
     call Call_012_56a6
     ld hl, $0018
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -3671,7 +3671,7 @@ Call_012_56fd:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $7768
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_5504
     call Call_012_4323
     ld de, $564a
@@ -3683,12 +3683,12 @@ Call_012_56fd:
     jr nz, jr_012_572e
 
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_49ff
     ld de, $71f4
 
 jr_012_572e:
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $5913
     ld a, [wOPTN_and_Item_selection]
@@ -3703,7 +3703,7 @@ jr_012_5741:
     ld c, a
     ld hl, $c8e2
     call Call_012_43c0
-    call Call_012_40e5
+    call GetScreenPos
     ret
 
 
@@ -3748,7 +3748,7 @@ Call_012_578c:
     jr z, jr_012_57b6
 
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c823], a
     ld a, $05
@@ -3815,7 +3815,7 @@ Call_012_57ea:
     jr z, jr_012_5866
 
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     ld a, $98
@@ -3940,7 +3940,7 @@ jr_012_5892:
 
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_58ba:
     pop af
@@ -3955,7 +3955,7 @@ jr_012_58ba:
 
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_58d4:
     ld a, [wJoypad_current_frame]
@@ -3964,7 +3964,7 @@ jr_012_58d4:
 
     call Call_012_54e5
     ld hl, $0016
-    call Call_012_441f
+    call AddCursorOffset
     xor a
     ld [$c8ec], a
     ld hl, $c906
@@ -4046,7 +4046,7 @@ jr_012_5928:
     ld [$c8e3], a
     ld de, $2e10
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $44
@@ -4060,8 +4060,8 @@ jr_012_5928:
     call Call_012_5751
     call Call_012_56fd
     ld hl, $0018
-    call Call_012_441f
-    call Call_000_0609
+    call AddCursorOffset
+    call RequestScreenUpdate
     ld a, $05
     ld [$c906], a
     ret
@@ -4079,7 +4079,7 @@ jr_012_5928:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     ret
@@ -4117,7 +4117,7 @@ jr_012_5928:
     jp z, Jump_012_45ec
 
     ld hl, $001a
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -4128,7 +4128,7 @@ jr_012_5928:
     ret nz
 
     call Call_012_5a07
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -4138,7 +4138,7 @@ Call_012_5a07:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $7768
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_5504
     call Call_012_4323
     ld de, $5a8e
@@ -4163,7 +4163,7 @@ Call_012_5a07:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     jr jr_012_5a74
@@ -4212,7 +4212,7 @@ Call_012_5a75:
     jr nz, jr_012_5aa6
 
     ld hl, $001b
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $0a
     ld [$c906], a
     ret
@@ -4221,7 +4221,7 @@ Call_012_5a75:
 jr_012_5aa6:
     call Call_012_5aee
     ld hl, $001c
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -4340,7 +4340,7 @@ jr_012_5b28:
     call Call_012_5751
     call Call_012_41ef
     call Call_012_5b4f
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -4349,7 +4349,7 @@ jr_012_5b28:
 Call_012_5b4f:
     call Call_012_44cb
     ld de, $7768
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_5504
     call Call_012_4323
     ld de, $5a8e
@@ -4361,12 +4361,12 @@ Call_012_5b4f:
     jr nz, jr_012_5b7d
 
     ld de, $759a
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_49ff
     ld de, $71f4
 
 jr_012_5b7d:
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $5c30
     ld a, [wOPTN_and_Item_selection]
@@ -4417,7 +4417,7 @@ jr_012_5baf:
 
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_5bd7:
     pop af
@@ -4432,7 +4432,7 @@ jr_012_5bd7:
 
     call Call_012_49e5
     call Call_012_49ff
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_5bf1:
     ld a, [wJoypad_current_frame]
@@ -4440,9 +4440,9 @@ jr_012_5bf1:
     jr z, jr_012_5c1a
 
     call Call_012_5a07
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $001a
-    call Call_012_441f
+    call AddCursorOffset
     xor a
     ld [$c8ec], a
     ld hl, $c906
@@ -4490,7 +4490,7 @@ jr_012_5c2f:
 jr_012_5c45:
     ld bc, $ffff
     ld hl, $001d
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -4503,7 +4503,7 @@ jr_012_5c45:
     ld a, $5c
     call PlaySoundEffect
     call Call_012_5c68
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -4518,7 +4518,7 @@ Call_012_5c68:
     ld de, $7b6c
 
 jr_012_5c75:
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $5cd9
     ld a, [$c8de]
@@ -4539,8 +4539,8 @@ jr_012_5c75:
     call Call_012_41ef
     call Call_012_5b4f
     ld hl, $001c
-    call Call_012_441f
-    call Call_012_40e5
+    call AddCursorOffset
+    call GetScreenPos
     ld a, $05
     ld [$c906], a
     jr jr_012_5cd8
@@ -4591,19 +4591,19 @@ jr_012_5cd8:
     ld a, [hl]
     push af
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop af
     push af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $00
     pop af
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     jr z, jr_012_5d2c
@@ -4613,7 +4613,7 @@ jr_012_5cd8:
     ld hl, $0103
     rst $10
     ld hl, $0b1d
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c906
     inc [hl]
     ret
@@ -4625,7 +4625,7 @@ jr_012_5d2c:
     ld hl, $0103
     rst $10
     ld hl, $001e
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -4643,7 +4643,7 @@ jr_012_5d2c:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     ret
@@ -4685,7 +4685,7 @@ jr_012_5d2c:
     ld [$c8e3], a
     ld de, $2e10
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $02
     ld [$c822], a
     ld a, $44
@@ -4701,9 +4701,9 @@ jr_012_5d2c:
     call Call_012_41ef
     call Call_012_5b4f
     call Call_012_5c68
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $001d
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $08
     ld [$c906], a
     xor a
@@ -4756,7 +4756,7 @@ jr_012_5e0b:
 jr_012_5e27:
     push hl
     push bc
-    call Call_000_20ee
+    call EnableSRAM
     pop bc
     pop hl
     or a
@@ -4787,7 +4787,7 @@ jr_012_5e4d:
     ld hl, $0022
 
 jr_012_5e50:
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -4807,12 +4807,12 @@ Call_012_5e65:
     call Call_012_41ef
     call Call_012_44cb
     ld de, $78ab
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $5ecc
     ld a, [wPLAN_selection]
     call Call_012_43e2
-    call Call_012_40e5
+    call GetScreenPos
     ret
 
 
@@ -4833,7 +4833,7 @@ jr_012_5e93:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     jr jr_012_5ecb
@@ -4897,7 +4897,7 @@ jr_012_5ef4:
 jr_012_5f00:
     push hl
     push bc
-    call Call_000_20ee
+    call EnableSRAM
     pop bc
     pop hl
     or a
@@ -4920,7 +4920,7 @@ jr_012_5f1a:
     ld hl, $0024
 
 jr_012_5f1d:
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ld hl, $c906
@@ -4933,7 +4933,7 @@ jr_012_5f1d:
     ret nz
 
     ld hl, $0022
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -4957,7 +4957,7 @@ jr_012_5f1d:
 jr_012_5f58:
     ld a, b
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     jr z, jr_012_5f68
@@ -5001,7 +5001,7 @@ jr_012_5f68:
     pop af
     ld [wGameState], a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     ret
@@ -5011,11 +5011,11 @@ Call_012_5fb3:
     push bc
     ld a, b
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     push hl
     ld a, c
     ld c, $95
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, l
     add $24
     ld l, a
@@ -5028,7 +5028,7 @@ Call_012_5fb3:
 jr_012_5fcd:
     ld a, [de]
     push af
-    call Call_000_20ee
+    call EnableSRAM
     ld [de], a
     pop af
     call Call_000_20fe
@@ -5074,7 +5074,7 @@ jr_012_5fec:
     ld de, $0601
     call Call_012_411a
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c905], a
     ret
@@ -5189,11 +5189,11 @@ Call_012_6052:
     rst $10
     call Call_012_4221
     ld de, $2e07
-    call Call_012_40b4
-    call Call_012_40e5
+    call ReadPtrFromDE
+    call GetScreenPos
     ld de, $2e14
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_012_4323
     ld a, $01
     ld [$c8ec], a
@@ -5226,12 +5226,12 @@ Call_012_6052:
 
 
     call Call_012_4221
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $0b01
     rst $10
     ld hl, $0b02
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     ld hl, $0604
     rst $10
@@ -5283,7 +5283,7 @@ Jump_012_6119:
     call Call_012_616e
     call Call_012_614e
     call Call_012_61a0
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -5292,9 +5292,9 @@ Jump_012_6119:
 Call_012_614e:
     call Call_012_4221
     ld de, $2e07
-    call Call_012_40b4
+    call ReadPtrFromDE
     ld de, $78d0
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $6226
     ld b, $05
@@ -5344,7 +5344,7 @@ Call_012_61a0:
     call Call_012_6242
     call Call_012_62ce
     ld de, $7935
-    call Call_012_40b4
+    call ReadPtrFromDE
     ret
 
 
@@ -5364,7 +5364,7 @@ Call_012_61a0:
 
     call Call_012_616e
     call Call_012_61a0
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_61d9:
     pop af
@@ -5373,7 +5373,7 @@ jr_012_61d9:
     jr z, jr_012_61e6
 
     call Call_012_61a0
-    call Call_012_40e5
+    call GetScreenPos
 
 jr_012_61e6:
     ld a, [wJoypad_current_frame]
@@ -5386,7 +5386,7 @@ jr_012_61e6:
     jr nz, jr_012_6205
 
     ld hl, $0004
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $09
     ld [$c906], a
     jp Jump_012_6225
@@ -5426,7 +5426,7 @@ Jump_012_6225:
     rst $38
     call Call_012_6242
     ld hl, $0003
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -5517,7 +5517,7 @@ jr_012_6284:
 Call_012_62af:
     call Call_012_614e
     ld de, $7935
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $639e
     ld b, $05
@@ -5525,7 +5525,7 @@ Call_012_62af:
     ld c, a
     ld hl, $c8e2
     call Call_012_43c0
-    call Call_012_40e5
+    call GetScreenPos
     ret
 
 
@@ -5623,10 +5623,10 @@ jr_012_6349:
 
     call Call_012_614e
     ld de, $7935
-    call Call_012_40b4
-    call Call_012_40e5
+    call ReadPtrFromDE
+    call GetScreenPos
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c906], a
     jr jr_012_639d
@@ -5680,7 +5680,7 @@ jr_012_639d:
     add hl, hl
     ld bc, $ffff
     call Call_012_4221
-    call Call_012_40e5
+    call GetScreenPos
     call Call_012_63d0
     call Call_012_63bd
     ld hl, $c906
@@ -5691,10 +5691,10 @@ jr_012_639d:
 Call_012_63bd:
     ld de, $2e26
     ld hl, $8a50
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $79c6
-    call Call_012_40b4
-    call Call_012_40e5
+    call ReadPtrFromDE
+    call GetScreenPos
     ret
 
 
@@ -5743,7 +5743,7 @@ jr_012_63f4:
     inc hl
     ld d, [hl]
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $0021
     ld a, l
     ld [$c820], a
@@ -5931,7 +5931,7 @@ Call_012_6544:
 
 
     call Call_012_4221
-    call Call_012_40e5
+    call GetScreenPos
     call Call_012_616e
     call Call_012_62ce
     call Call_012_62af
@@ -5945,7 +5945,7 @@ Call_012_6544:
     ret nz
 
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c906], a
     ret
@@ -5967,7 +5967,7 @@ Call_012_6544:
     ld a, [wPLAN_selection]
     ld b, a
     ld a, $05
-    call Call_000_1dfb
+    call Div8x8
     or $80
     ld [$c8e2], a
     ld a, b
@@ -6017,7 +6017,7 @@ Call_012_65cb:
     inc hl
     ld d, [hl]
     pop hl
-    call Call_000_1577
+    call WaitDMATransfer
     pop af
     ret
 
@@ -6647,7 +6647,7 @@ jr_012_6835:
     call Call_012_41ef
     ld de, $2e11
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_012_4323
     ld hl, $c905
     inc [hl]
@@ -6678,8 +6678,8 @@ jr_012_6835:
 
     call Call_012_41ef
     ld de, $2e07
-    call Call_012_40b4
-    call Call_012_40e5
+    call ReadPtrFromDE
+    call GetScreenPos
     ld hl, wGameState
     res 4, [hl]
     xor a
@@ -6710,7 +6710,7 @@ jr_012_68dc:
     call Call_012_6903
     call Call_012_690a
     ld hl, $0003
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ret
@@ -6750,9 +6750,9 @@ Call_012_690a:
 Call_012_6938:
     call Call_012_41ef
     ld de, $2e07
-    call Call_012_40b4
+    call ReadPtrFromDE
     ld de, $724e
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $69ed
 
@@ -6762,7 +6762,7 @@ jr_012_694d:
     ld c, a
     ld hl, $c8e2
     call Call_012_43c0
-    call Call_012_40e5
+    call GetScreenPos
     ret
 
 
@@ -6789,7 +6789,7 @@ Call_012_6974:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -6882,7 +6882,7 @@ jr_012_69ec:
     rst $38
     rst $38
     ld hl, $0005
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     xor a
@@ -6897,12 +6897,12 @@ jr_012_69ec:
     ld a, $5c
     call PlaySoundEffect
     ld de, $6dcb
-    call Call_012_40b4
+    call ReadPtrFromDE
     call Call_012_4323
     ld de, $6a62
     ld a, [$c8de]
     call Call_012_43e2
-    call Call_012_40e5
+    call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
@@ -6918,7 +6918,7 @@ jr_012_69ec:
 
 jr_012_6a3c:
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c906], a
     jr jr_012_6a61
@@ -6962,7 +6962,7 @@ jr_012_6a61:
     ld a, [hl]
     ld [$cac0], a
     ld hl, $cacd
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld de, $ca42
     ld b, $09
 
@@ -6972,7 +6972,7 @@ jr_012_6a8c:
     jr z, jr_012_6a9f
 
     ld hl, $0004
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c906
     inc [hl]
     ld hl, $c906
@@ -6988,25 +6988,25 @@ jr_012_6a9f:
 
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$c8f4], a
     ld a, [$cac0]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, l
     ld [$c8f2], a
     ld a, h
     ld [$c8f3], a
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c8f6], a
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c8f5], a
     ld hl, $c906
@@ -7028,7 +7028,7 @@ jr_012_6a9f:
     ret nz
 
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $01
     ld [$c906], a
     ret
@@ -7104,7 +7104,7 @@ jr_012_6b56:
     jr z, jr_012_6b6c
 
     ld hl, $0001
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c905
     inc [hl]
     ret
@@ -7112,7 +7112,7 @@ jr_012_6b56:
 
 jr_012_6b6c:
     ld hl, $000f
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c905
     inc [hl]
     ret
@@ -7167,7 +7167,7 @@ jr_012_6b77:
     jr c, jr_012_6bca
 
     ld hl, $0002
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c905
     inc [hl]
     ret
@@ -7190,7 +7190,7 @@ jr_012_6bd0:
     ld hl, $c180
     call Call_000_0a7c
     ld hl, $0010
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $04
     ld [$c905], a
     ret
@@ -7246,7 +7246,7 @@ jr_012_6c0a:
     rst $10
     ld a, [$da14]
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $01
     ld a, [$d9e1]
     ld bc, $0050
@@ -7296,7 +7296,7 @@ jr_012_6c7b:
 
 jr_012_6c84:
     ld hl, $000b
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $05
     ld [$c905], a
     ret
@@ -7313,7 +7313,7 @@ jr_012_6c84:
     ld a, $00
     adc h
     ld h, a
-    call Call_012_441f
+    call AddCursorOffset
     ld a, $05
     ld [$c905], a
     ret
@@ -7369,9 +7369,9 @@ jr_012_6c84:
     ld l, a
     ld h, $05
     ld de, $c1a0
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $000c
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c905
     inc [hl]
     ret
@@ -7379,7 +7379,7 @@ jr_012_6c84:
 
 jr_012_6d0f:
     ld hl, $0011
-    call Call_012_441f
+    call AddCursorOffset
     ld hl, $c905
     inc [hl]
     ret

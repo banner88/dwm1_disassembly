@@ -57,7 +57,7 @@ label15_4009:
     ld hl, $5f02
     rst $10
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $07
     ldh [$b5], a
     ld a, $ff
@@ -88,7 +88,7 @@ label15_4009:
 
     ld a, $02
     call Call_000_1c89
-    call Call_000_1013
+    call DisableSRAM
     ld hl, $c817
     ld [hl], $00
     inc hl
@@ -100,7 +100,7 @@ label15_4009:
     ld hl, $170a
     rst $10
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $ff8a
     ld bc, $0021
     xor a
@@ -114,19 +114,19 @@ label15_4009:
     call Call_015_60df
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e20
     ld hl, $8a00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -182,25 +182,25 @@ Jump_015_413e:
     ld hl, $0801
     rst $10
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $04
     ld [wTextSpeed], a
     call Call_015_60df
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e20
     ld hl, $8a00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -251,25 +251,25 @@ Jump_015_413e:
     ld hl, $0801
     rst $10
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $04
     ld [wTextSpeed], a
     call Call_015_60df
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e20
     ld hl, $8a00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -324,7 +324,7 @@ label15_42b3:
 
 
     ld a, $f4
-    call Call_000_1275
+    call SerialTransfer
     ld hl, $5f03
     rst $10
     ret
@@ -371,11 +371,11 @@ Call_015_42f1:
     ld b, h
     ld [hl], $44
     ld a, $f4
-    call Call_000_1275
+    call SerialTransfer
     call Call_015_5e7c
     ld de, $6454
     ld hl, $a002
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_015_4318
 
@@ -386,7 +386,7 @@ jr_015_4318:
     call Call_015_5fe3
     ld de, $43b2
     ld hl, $a002
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_015_432d
 
@@ -407,13 +407,13 @@ jr_015_432d:
     ld a, [$c850]
     or a
     ld a, $f4
-    call nz, Call_000_1275
+    call nz, SerialTransfer
     ret nz
 
     ld de, $43b2
     ld b, $01
     ld hl, $a002
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_015_435f
 
@@ -429,7 +429,7 @@ jr_015_435f:
     ld [$c8e0], a
     ld de, $43b6
     ld hl, $a002
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_015_4380
 
@@ -444,7 +444,7 @@ jr_015_4380:
     adc d
     ld d, a
     ld a, [de]
-    call Call_000_1275
+    call SerialTransfer
     ld a, [wJoypad_current_frame]
     bit 0, a
     jp z, Jump_015_43b1
@@ -489,7 +489,7 @@ Jump_015_43b1:
     and $7f
     ld b, a
     ld hl, $a002
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr nz, jr_015_43d5
 
@@ -506,9 +506,9 @@ jr_015_43d5:
     sbc b
     ld b, [hl]
     ld a, $f4
-    call Call_000_1275
+    call SerialTransfer
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $01
     ld [wGameMode], a
     ld a, $00
@@ -523,13 +523,13 @@ jr_015_43d5:
 
 
     ld a, $f4
-    call Call_000_1275
+    call SerialTransfer
     ld a, [wIsSGB]
     cp $01
     jr nz, jr_015_4422
 
     ld hl, $0270
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_015_5d8f
     call Call_015_5dc0
@@ -540,7 +540,7 @@ jr_015_43d5:
 
 jr_015_4422:
     ld hl, $021b
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_015_5d8f
     call Call_015_5dc0
@@ -550,7 +550,7 @@ jr_015_4422:
 
 
     ld a, $f4
-    call Call_000_1275
+    call SerialTransfer
     ld a, [$c825]
     or a
     ret nz
@@ -561,7 +561,7 @@ jr_015_4422:
 
 
     ld a, $f4
-    call Call_000_1275
+    call SerialTransfer
     ld a, [$c8d3]
     rst $00
     ld d, d
@@ -667,49 +667,49 @@ jr_015_44ee:
     ld b, $00
     ld hl, HeaderComplementCheck
     call Call_015_5d33
-    call Call_000_20ad
+    call PrintNumber
     ld a, [$cab7]
     ld c, a
     ld b, $00
     ld hl, $0150
     call Call_015_5d33
-    call Call_000_20ad
+    call PrintNumber
     ld a, [$ca8d]
     or a
     jr z, jr_015_4578
 
     ld hl, $cb0c
     ld a, $00
-    call Call_000_224a
+    call ReadMonsterByte
     ld c, a
     ld b, $00
     ld hl, $01a4
     call Call_015_5d33
-    call Call_000_2082
+    call CopyHLtoDE
     ld a, [$ca8d]
     cp $01
     jr z, jr_015_457e
 
     ld hl, $cb0c
     ld a, $01
-    call Call_000_224a
+    call ReadMonsterByte
     ld c, a
     ld b, $00
     ld hl, $01aa
     call Call_015_5d33
-    call Call_000_2082
+    call CopyHLtoDE
     ld a, [$ca8d]
     cp $02
     jr z, jr_015_4584
 
     ld hl, $cb0c
     ld a, $02
-    call Call_000_224a
+    call ReadMonsterByte
     ld c, a
     ld b, $00
     ld hl, $01b0
     call Call_015_5d33
-    call Call_000_2082
+    call CopyHLtoDE
     jr jr_015_458a
 
 jr_015_4578:
@@ -757,7 +757,7 @@ Call_015_4592:
 Call_015_45ae:
     ld hl, $cac2
     ld a, $00
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $9040
@@ -765,7 +765,7 @@ Call_015_45ae:
     call Call_015_45e5
     ld hl, $cac2
     ld a, $01
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $9080
@@ -773,7 +773,7 @@ Call_015_45ae:
     call Call_015_45e5
     ld hl, $cac2
     ld a, $02
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $90c0
@@ -826,7 +826,7 @@ jr_015_461d:
 
 
     ld a, $f4
-    call Call_000_1275
+    call SerialTransfer
     ld a, [$c8d3]
     rst $00
     dec l
@@ -1141,7 +1141,7 @@ jr_015_47a9:
     call Call_015_4afb
     call Call_015_5dc0
     ld hl, $0225
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -1191,7 +1191,7 @@ Call_015_4825:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -1252,14 +1252,14 @@ Call_015_4860:
 
     push af
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $9000
     call Call_015_5e2e
     pop af
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $9200
     and $01
@@ -1325,7 +1325,7 @@ Call_015_48e5:
 
     push af
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $0161
@@ -1340,7 +1340,7 @@ Call_015_48e5:
     pop af
     push af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop af
     ld b, a
     ld a, [hl]
@@ -1448,7 +1448,7 @@ jr_015_49b8:
 
 jr_015_49c2:
     ld hl, $022d
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $24
     ld [$c8d2], a
     ld a, $fd
@@ -1660,13 +1660,13 @@ Call_015_4afb:
 
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $0225
-    call Call_000_096d
-    call Call_000_0609
+    call SetupTilemapTransfer
+    call RequestScreenUpdate
     call Call_015_5e7c
     call Call_015_4860
     call Call_015_480b
@@ -1683,7 +1683,7 @@ Call_015_4afb:
     call Call_015_5d8f
     call Call_015_5dc0
     ld hl, $0227
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -1765,7 +1765,7 @@ Jump_015_4be2:
     call Call_015_5d8f
     call Call_015_5dc0
     ld hl, $0228
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -1810,7 +1810,7 @@ jr_015_4c3b:
     call Call_015_5d8f
     call Call_015_5dc0
     ld hl, $0229
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $14
     ld [$cac0], a
     ld a, $00
@@ -1864,7 +1864,7 @@ Jump_015_4c8d:
     call Call_015_5d8f
     call Call_015_5dc0
     ld hl, $0229
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $14
     ld [$cac0], a
     ld a, $00
@@ -1969,7 +1969,7 @@ jr_015_4d14:
     call Call_015_4d45
     call Call_015_5dc0
     ld hl, $022a
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -2019,7 +2019,7 @@ Call_015_4d8d:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -2238,14 +2238,14 @@ jr_015_4edd:
 
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     jr nz, jr_015_4f0d
 
 jr_015_4f00:
     ld hl, $025c
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $23
     ld [$c8d2], a
     jr jr_015_4f0d
@@ -2263,37 +2263,37 @@ jr_015_4f0d:
 
 Call_015_4f14:
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr nz, jr_015_4f55
 
     ld hl, $a1f3
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_015_4f55
 
     ld hl, $a1f4
-    call Call_000_20ee
+    call EnableSRAM
     cp b
     jr z, jr_015_4f57
 
     ld hl, $a1f3
-    call Call_000_20ee
+    call EnableSRAM
     cp $01
     jr z, jr_015_4f55
 
     ld hl, $a1f5
-    call Call_000_20ee
+    call EnableSRAM
     cp b
     jr z, jr_015_4f57
 
     ld hl, $a1f3
-    call Call_000_20ee
+    call EnableSRAM
     cp $02
     jr z, jr_015_4f55
 
     ld hl, $a1f6
-    call Call_000_20ee
+    call EnableSRAM
     cp b
     jr z, jr_015_4f57
 
@@ -2325,13 +2325,13 @@ jr_015_4f57:
 
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $022a
-    call Call_000_096d
-    call Call_000_0609
+    call SetupTilemapTransfer
+    call RequestScreenUpdate
     call Call_015_5e7c
     call Call_015_4860
     call Call_015_4d73
@@ -2345,7 +2345,7 @@ jr_015_4f57:
 
 
     ld hl, $021f
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ld a, $01
@@ -2369,7 +2369,7 @@ jr_015_4f57:
     ld a, [$cac0]
     ld [$c8ba], a
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, l
     ld [$c874], a
     ld a, h
@@ -2406,7 +2406,7 @@ jr_015_4f57:
     ret nz
 
     ld hl, $022b
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -2442,7 +2442,7 @@ Call_015_5037:
     jr nz, jr_015_5067
 
     ld hl, $022e
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $1e
     ld [$c8d2], a
     ld a, $fe
@@ -2461,7 +2461,7 @@ jr_015_5067:
 
 jr_015_5079:
     ld hl, $022d
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $1e
     ld [$c8d2], a
     ld a, $fe
@@ -2497,7 +2497,7 @@ jr_015_508c:
 
 jr_015_50b8:
     ld hl, $022f
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $19
     ld [$c8d2], a
     jp Jump_015_50da
@@ -2546,13 +2546,13 @@ Jump_015_50da:
 
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $022b
-    call Call_000_096d
-    call Call_000_0609
+    call SetupTilemapTransfer
+    call RequestScreenUpdate
     call Call_015_5e7c
     call Call_015_4860
     call Call_015_4d73
@@ -2623,12 +2623,12 @@ Jump_015_50da:
     xor a
     ld [$c86d], a
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
     ld hl, $021f
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ld a, $01
@@ -2641,7 +2641,7 @@ Jump_015_50da:
     jr nz, jr_015_51d4
 
     ld hl, $022e
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $1e
     ld [$c8d2], a
     ld a, $fe
@@ -2741,7 +2741,7 @@ jr_015_524b:
     ld hl, $c8d2
     inc [hl]
     ld hl, $022c
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 Jump_015_5286:
     ret
@@ -2760,7 +2760,7 @@ Call_015_5287:
 jr_015_5290:
     push de
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld b, $95
 
@@ -2882,7 +2882,7 @@ jr_015_5317:
     call Call_015_4d45
     call Call_015_5dc0
     ld hl, $022a
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $10
     ld [$c8d2], a
     ret
@@ -2921,7 +2921,7 @@ Call_015_5391:
     ret nz
 
     ld hl, $022e
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_015_5d8f
     call Call_015_5dc0
@@ -2940,7 +2940,7 @@ Call_015_53b2:
 
     ld hl, $caca
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     push af
     ld hl, $ffc3
@@ -2981,7 +2981,7 @@ Call_015_53ee:
 
     ld hl, $cad6
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $ff
     ret z
@@ -3017,7 +3017,7 @@ jr_015_5420:
     rst $10
     ld hl, $cad7
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     push af
     ld hl, $ffc3
@@ -3230,7 +3230,7 @@ jr_015_5511:
     call Call_015_5542
     call Call_015_5dc0
     ld hl, $021c
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -3278,7 +3278,7 @@ Call_015_5584:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -3367,7 +3367,7 @@ jr_015_5604:
     jp z, Jump_015_561e
 
     ld hl, $0221
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $19
     ld [$c8d2], a
     ld a, $fd
@@ -3494,14 +3494,14 @@ jr_015_56dd:
 
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     jr nz, jr_015_5701
 
 jr_015_56f4:
     ld hl, $025d
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $10
     ld [$c8d2], a
     jr jr_015_5728
@@ -3509,13 +3509,13 @@ jr_015_56f4:
 jr_015_5701:
     ld a, [$cac0]
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $0a
     jr nc, jr_015_571c
 
     ld hl, $0230
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $10
     ld [$c8d2], a
     jr jr_015_5728
@@ -3555,13 +3555,13 @@ jr_015_5728:
 
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $021c
-    call Call_000_096d
-    call Call_000_0609
+    call SetupTilemapTransfer
+    call RequestScreenUpdate
     call Call_015_5e7c
     call Call_015_4860
     call Call_015_556a
@@ -3573,7 +3573,7 @@ jr_015_5728:
 
 
     ld hl, $021f
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ld a, $01
@@ -3596,7 +3596,7 @@ jr_015_5728:
     ld [$c872], a
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, l
     ld [$c874], a
     ld a, h
@@ -3621,7 +3621,7 @@ jr_015_5728:
     ld [$c8c7], a
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [$d705]
     and $01
     ld b, a
@@ -3631,7 +3631,7 @@ jr_015_5728:
     jr nz, jr_015_57ef
 
     ld hl, $021e
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $10
     ld [$c8d2], a
     jr jr_015_582e
@@ -3643,7 +3643,7 @@ jr_015_57ef:
     rst $10
     ld a, d
     ld c, $1b
-    call Call_000_1dbe
+    call Mul8x8To16
     push hl
     ld d, $15
     ld hl, $0107
@@ -3666,7 +3666,7 @@ jr_015_57ef:
     jr nz, jr_015_5825
 
     ld hl, $025e
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $10
     ld [$c8d2], a
     jr jr_015_582e
@@ -3682,7 +3682,7 @@ jr_015_582e:
 
 
     ld hl, $0220
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -3716,7 +3716,7 @@ Call_015_584d:
     jr nz, jr_015_587d
 
     ld hl, $0222
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $11
     ld [$c8d2], a
     ld a, $fe
@@ -3735,7 +3735,7 @@ jr_015_587d:
 
 jr_015_588f:
     ld hl, $0221
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $11
     ld [$c8d2], a
     ld a, $fe
@@ -3810,13 +3810,13 @@ Jump_015_58e0:
 
     ld de, $2e1e
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1f
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $0220
-    call Call_000_096d
-    call Call_000_0609
+    call SetupTilemapTransfer
+    call RequestScreenUpdate
     call Call_015_5e7c
     call Call_015_4860
     call Call_015_556a
@@ -3834,8 +3834,8 @@ Jump_015_58e0:
     ld a, $00
     ld [$c873], a
     ld hl, $021c
-    call Call_000_096d
-    call Call_000_0609
+    call SetupTilemapTransfer
+    call RequestScreenUpdate
     call Call_015_5e7c
     call Call_015_4860
     call Call_015_556a
@@ -3904,12 +3904,12 @@ Jump_015_58e0:
     xor a
     ld [$c86d], a
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
     ld hl, $0223
-    call Call_000_096d
+    call SetupTilemapTransfer
     xor a
     ld [$c8de], a
     ld hl, $c8d2
@@ -3947,7 +3947,7 @@ Call_015_59f9:
     jr nz, jr_015_5a29
 
     ld hl, $0222
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $11
     ld [$c8d2], a
     ld a, $fe
@@ -3969,7 +3969,7 @@ jr_015_5a3b:
     call Call_015_584d
     call Call_015_5dc0
     ld hl, $0220
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $0c
     ld [$c8d2], a
     jp Jump_015_5a74
@@ -4003,7 +4003,7 @@ Jump_015_5a74:
     rst $38
     rst $38
     ld hl, $021f
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ld a, $01
@@ -4016,7 +4016,7 @@ Jump_015_5a74:
     jr nz, jr_015_5aa5
 
     ld hl, $0222
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $11
     ld [$c8d2], a
     ld a, $fe
@@ -4050,7 +4050,7 @@ jr_015_5aa5:
     ld hl, $c8d2
     inc [hl]
     ld hl, $0224
-    call Call_000_096d
+    call SetupTilemapTransfer
     ret
 
 
@@ -4084,7 +4084,7 @@ jr_015_5aa5:
     xor a
     ld [$c86d], a
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
@@ -4101,7 +4101,7 @@ jr_015_5aa5:
     ld a, [hl]
     ld [$cac0], a
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld de, $d665
     ld b, $95
 
@@ -4114,7 +4114,7 @@ jr_015_5b41:
 
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$d7ca], a
@@ -4122,11 +4122,11 @@ jr_015_5b41:
     ld [$d7cb], a
     ld a, [$cac0]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $00
     ld a, $15
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$d7cc], a
@@ -4158,25 +4158,25 @@ jr_015_5b93:
     ei
     ld a, $14
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, $15
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld l, [hl]
     ld h, $05
     ld de, $c1a0
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, $04
     ld [wTextSpeed], a
     xor a
@@ -4235,7 +4235,7 @@ Call_015_5c3f:
     ret nz
 
     ld hl, $0222
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_015_5d8f
     call Call_015_5dc0
@@ -4254,7 +4254,7 @@ Call_015_5c60:
 
     ld hl, $caca
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     push af
     ld hl, $ffc3
@@ -4295,7 +4295,7 @@ Call_015_5c9c:
 
     ld hl, $cad6
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $ff
     ret z
@@ -4331,7 +4331,7 @@ jr_015_5cce:
     rst $10
     ld hl, $cad7
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     push af
     ld hl, $ffc3
@@ -4598,7 +4598,7 @@ Call_015_5e2e:
 Jump_015_5e2e:
     push hl
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
     ld a, [$c827]
     ld c, a
@@ -4698,7 +4698,7 @@ jr_015_5e91:
     call DrawWhiteScreen
     ld de, $2e0d
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_015_5fe3
     ld hl, $c8d2
     inc [hl]
@@ -4711,7 +4711,7 @@ jr_015_5e91:
     rst $10
     ld hl, $0b02
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     ld hl, wGameState
     res 1, [hl]
@@ -4742,7 +4742,7 @@ Call_015_5efc:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -4770,7 +4770,7 @@ jr_015_5f29:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -4794,7 +4794,7 @@ jr_015_5f47:
     push bc
     ld a, b
     ld b, c
-    call Call_000_1dfb
+    call Div8x8
     pop bc
     pop de
     or a
@@ -4821,7 +4821,7 @@ jr_015_5f63:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld [$c8e1], a
     ld a, b
     pop bc

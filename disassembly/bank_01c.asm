@@ -5429,7 +5429,7 @@ jr_01c_55e9:
     ld a, [bc]
     and b
     rlca
-    call nz, Call_000_224f
+    call nz, ReadMonsterWord
     ld a, [bc]
     add hl, hl
     ld a, [bc]

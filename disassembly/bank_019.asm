@@ -259,7 +259,7 @@ jr_019_413e:
     ld c, a
     ld b, $00
     inc bc
-    call Call_000_20ad
+    call PrintNumber
     ld a, [wDebug_main_menu_option]
     cp $f0
     jr z, jr_019_4193
@@ -316,7 +316,7 @@ jr_019_4193:
     ld c, a
     ld b, $00
     dec bc
-    call Call_000_20ad
+    call PrintNumber
     ld a, [wDebug_main_menu_option]
     cp $f0
     jr z, jr_019_41ee
@@ -683,19 +683,19 @@ Call_019_4357:
     ld [$c90a], a
     ld de, $281c
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $281f
     ld hl, $8900
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $281d
     ld hl, $8a90
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $281e
     ld hl, $8ac0
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e23
     ld hl, $8b00
-    call Call_000_1577
+    call WaitDMATransfer
     ldh a, [$92]
     ld l, a
     ldh a, [$93]
@@ -860,7 +860,7 @@ jr_019_44a8:
     pop af
     and $0f
     ld c, $14
-    call Call_000_1dbe
+    call Mul8x8To16
     add hl, de
     ld e, l
     ld d, h

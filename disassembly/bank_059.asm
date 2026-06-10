@@ -58,11 +58,11 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     ld [$c8ec], a
     ld hl, $9700
     ld de, $0901
-    call Call_000_098f
+    call SetupVRAMCopy
     call Call_059_42c0
     ld hl, $8800
     ld de, $0601
-    call Call_000_098f
+    call SetupVRAMCopy
     xor a
     ld [$c823], a
     ld a, $03
@@ -80,7 +80,7 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     ld [$c82a], a
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $9800
     ld a, l
     ld [$d9f8], a
@@ -95,7 +95,7 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     call Call_059_42ec
     call Call_059_432d
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $07
     ldh [$b5], a
     ld a, $ff
@@ -185,7 +185,7 @@ jr_059_413c:
 
 jr_059_4152:
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $05
     ld [$c0d8], a
     ret
@@ -436,7 +436,7 @@ Call_059_42c0:
     ld d, [hl]
     ld h, $80
     ld l, $00
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, [wPLAN_selection]
     ld [$c823], a
     ld a, $05
@@ -1110,10 +1110,10 @@ jr_059_453f:
     call Call_059_5d0f
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $9700
     ld de, $0401
-    call Call_000_098f
+    call SetupVRAMCopy
     ld a, $00
     ld [$c823], a
     ld a, $01
@@ -1121,7 +1121,7 @@ jr_059_453f:
     call Call_059_52f2
     ld hl, $96c0
     ld de, $0401
-    call Call_000_098f
+    call SetupVRAMCopy
     ld a, $00
     ld [$c823], a
     ld a, $03
@@ -1130,7 +1130,7 @@ jr_059_453f:
     rst $10
     ld hl, $97c0
     ld de, $0401
-    call Call_000_098f
+    call SetupVRAMCopy
     ld a, $01
     ld [$c823], a
     ld a, $03
@@ -1139,7 +1139,7 @@ jr_059_453f:
     rst $10
     ld hl, $8800
     ld de, $0401
-    call Call_000_098f
+    call SetupVRAMCopy
     ld a, $05
     ld [$c823], a
     ld a, $03
@@ -1148,13 +1148,13 @@ jr_059_453f:
     rst $10
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
     call Call_059_5d27
     ld de, $5e2f
     ld hl, $c500
     call Call_059_5cd2
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $9800
     ld a, l
     ld [$d9f8], a
@@ -1438,7 +1438,7 @@ jr_059_453f:
 
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1510,11 +1510,11 @@ jr_059_453f:
     call Call_059_513c
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     call Call_059_4ec6
     call Call_059_5087
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $07
     ldh [$b5], a
     ld a, $ff
@@ -2117,7 +2117,7 @@ jr_059_4c7f:
     jr nz, jr_059_4c7f
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c0d9
     inc [hl]
     ret
@@ -2669,7 +2669,7 @@ Jump_059_504d:
 jr_059_504d:
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
 
 Jump_059_5056:
     ld hl, $5005
@@ -2932,7 +2932,7 @@ Call_059_521e:
     ld d, h
     ld e, l
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, $02
     ld [$c822], a
     ld a, $00
@@ -3061,18 +3061,18 @@ jr_059_529d:
 
 Call_059_52e4:
     ld de, $52f9
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
     ld de, $52f9
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
 Call_059_52f2:
     call Call_059_52e4
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 
@@ -5244,7 +5244,7 @@ Call_059_5d0f:
     inc hl
     ld d, [hl]
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 

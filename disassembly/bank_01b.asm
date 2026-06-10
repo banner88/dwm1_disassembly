@@ -267,17 +267,17 @@ SECTION "ROM Bank $01b", ROMX[$4000], BANK[$1b]
     db $cc, $74, $11
     rlca
     ld b, b
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
     ld de, $4007
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
     call $4111
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

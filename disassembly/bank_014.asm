@@ -52,40 +52,40 @@ SECTION "ROM Bank $014", ROMX[$4000], BANK[$14]
     dw label14_401d          ; Entry 3: Party monster slot init/clear
     dw label14_7bac          ; Entry 4: Unknown
     dw label14_7d12          ; Entry 5: Unknown
-    dw label14_4869          ; Entry 6: Boss EID redirect lookup
+    dw LookupBossRedirect          ; Entry 6: Boss EID redirect lookup
 
 label14_400f:
     ld de, $da18
-    call Call_014_4849
+    call LoadEnemyStats
     ret
 
 label14_4016:
     ld de, $da18
-    call Call_014_4849
+    call LoadEnemyStats
     ret
 
 label14_401d:
     ld hl, $cac1
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld bc, $0095
     xor a
     call FillNBytesWithRegA
     ld hl, $cad6
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, $ff
     ld [hl+], a
     ld [hl+], a
     ld hl, $caea
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld bc, $0008
     ld a, $ff
     call FillNBytesWithRegA
     ld hl, $caf2
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld bc, $0019
     ld a, $ff
     call FillNBytesWithRegA
@@ -107,7 +107,7 @@ label14_401d:
     call $4782
     ld hl, $cac1
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $01
     ld hl, $cacd
     ld de, $ca42
@@ -115,35 +115,35 @@ label14_401d:
     call $4782
     ld hl, $cad5
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [$ca4a]
     ld [hl], a
     ld de, $da18
-    call Call_014_4849
+    call LoadEnemyStats
     jp Jump_014_4158
 
 label14_40b4:
     ld hl, $cac1
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld bc, $0095
     xor a
     call FillNBytesWithRegA
     ld hl, $cad6
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, $ff
     ld [hl+], a
     ld [hl+], a
     ld hl, $caea
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld bc, $0008
     ld a, $ff
     call FillNBytesWithRegA
     ld hl, $caf2
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld bc, $0019
     ld a, $ff
     call FillNBytesWithRegA
@@ -165,7 +165,7 @@ label14_40b4:
     call $4782
     ld hl, $cac1
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $01
     ld hl, $cacd
     ld de, $ca42
@@ -173,11 +173,11 @@ label14_40b4:
     call $4782
     ld hl, $cad5
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [$ca4a]
     ld [hl], a
     ld de, $da18
-    call Call_014_4849
+    call LoadEnemyStats
     ld a, [$da14]
     cp $15
     jr z, jr_014_4158
@@ -204,14 +204,14 @@ jr_014_4158:
     call Call_014_4821
     ld hl, $cb13
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     inc hl
     ld b, [hl]
     push bc
     ld hl, $cb11
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     ld [hl], c
     inc hl
@@ -223,14 +223,14 @@ jr_014_4158:
     call Call_014_4821
     ld hl, $cb17
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     inc hl
     ld b, [hl]
     push bc
     ld hl, $cb15
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     ld [hl], c
     inc hl
@@ -275,14 +275,14 @@ jr_014_4158:
     call Call_014_47fd
     ld hl, $cb0c
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld bc, $0005
-    call Call_000_1de6
+    call Mul16x8To24
     push hl
     ld a, [$cab4]
     ld bc, $000a
-    call Call_000_1de6
+    call Mul16x8To24
     pop bc
     ld a, c
     sub l
@@ -305,7 +305,7 @@ jr_014_4264:
     push bc
     ld hl, $cb21
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     ld [hl], c
     ld a, [$da18]
@@ -319,7 +319,7 @@ jr_014_4264:
     ld a, [wRNG1]
     ld b, a
     ld a, $05
-    call Call_000_1dfb
+    call Div8x8
     sub $02
     ld b, a
     ld a, [$da34]
@@ -327,7 +327,7 @@ jr_014_4264:
     push af
     ld hl, $cb0d
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop af
     ld [hl], a
     ld hl, $cb29
@@ -341,7 +341,7 @@ jr_014_4264:
     call Call_014_47ad
     ld hl, $cacc
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [$da12]
     ld e, a
     ld a, [$da13]
@@ -374,7 +374,7 @@ jr_014_4264:
 
     ld hl, $cacc
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $01
 
 jr_014_42fe:
@@ -728,7 +728,7 @@ Jump_014_456f:
 Jump_014_4586:
     ld hl, $cb24
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $01
     ret
 
@@ -1074,7 +1074,7 @@ jr_014_473a:
     ldh a, [$c5]
     push de
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     pop bc
 
@@ -1091,7 +1091,7 @@ jr_014_478c:
 Call_014_4793:
     push de
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, [de]
     ld [hl], a
@@ -1116,7 +1116,7 @@ Call_014_47a8:
 Call_014_47ad:
     ld hl, $caea
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld b, $08
@@ -1161,7 +1161,7 @@ jr_014_47d2:
     push af
     ld hl, $caf2
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop af
     ld b, $19
     ld c, a
@@ -1192,19 +1192,19 @@ Call_014_47fd:
     ld a, [wRNG1]
     ld b, a
     ld a, $34
-    call Call_000_1dfb
+    call Div8x8
     add $cd
     pop hl
     ret z
 
     push af
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     pop af
     push hl
-    call Call_000_1de6
+    call Mul16x8To24
     ld c, h
     pop hl
     ld [hl], c
@@ -1217,21 +1217,21 @@ Call_014_4821:
     ld a, [wRNG1]
     ld b, a
     ld a, $34
-    call Call_000_1dfb
+    call Div8x8
     add $cd
     pop hl
     ret z
 
     push af
     ld a, [$da14]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld b, [hl]
     ld c, a
     pop af
     dec hl
     push hl
-    call Call_000_1de6
+    call Mul16x8To24
     ld c, h
     ld b, e
     pop hl
@@ -1246,14 +1246,14 @@ Call_014_4821:
 ;        DE = destination WRAM address
 ; Calculates: table_base($4C1D) + eid × 25
 ; Output: 25 bytes copied to [DE]
-Call_014_4849:
+LoadEnemyStats:
     push de
     ld a, [$da12]            ; EID low byte
     ld c, a
     ld a, [$da13]            ; EID high byte
     ld b, a                  ; BC = enemy stats ID
     ld a, $19                ; 25 = entry size
-    call Call_000_1de6       ; HL = EID × 25
+    call Mul16x8To24       ; HL = EID × 25
     ld a, l
     add $1d                  ; HL += $4C1D (enemy stats table base)
     ld l, a
@@ -1283,7 +1283,7 @@ jr_014_4862:
 ;   Gate 0:  fight EID 11 → join EID 12 (Healer)
 ;   Gate 1:  fight EID 31 → join EID 484 (Dragon)
 ;   ...see dump_boss_table.py output for full list
-label14_4869:
+LookupBossRedirect:
     ld a, [$da12]            ; source EID low
     ld c, a
     ld a, [$da13]            ; source EID high
@@ -1327,7 +1327,7 @@ jr_014_488f:
 
 ; ---------------------------------------------------------------
 ; Boss Redirect Table ($4893)
-; Scanned by label14_4869 (entry 6) to redirect fight EIDs to join EIDs
+; Scanned by LookupBossRedirect (entry 6) to redirect fight EIDs to join EIDs
 ; Format: dw fight_eid, join_eid  (16-bit LE pairs)
 ; Terminated by $FFFF
 ; ---------------------------------------------------------------
@@ -6367,13 +6367,13 @@ Jump_014_7bf4:
 
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
 
 Call_014_7c01:
     push bc
     ld a, [$da60]
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6401,11 +6401,11 @@ Jump_014_7c1b:
 
     ld a, $00
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $00
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6428,11 +6428,11 @@ jr_014_7c4a:
 
     ld a, $01
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $01
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6455,11 +6455,11 @@ jr_014_7c73:
 
     ld a, $02
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $02
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6480,7 +6480,7 @@ jr_014_7c95:
 Jump_014_7c9b:
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     ret nz
 
@@ -6495,7 +6495,7 @@ Jump_014_7cad:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 2, a
     ret nz
 
@@ -6510,7 +6510,7 @@ Jump_014_7cc3:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 0, a
     ret nz
 
@@ -6560,7 +6560,7 @@ Call_014_7d00:
 
 Call_014_7d03:
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     ret z
 
@@ -6617,7 +6617,7 @@ Jump_014_7d55:
     ld a, [wRNG1]
     ld b, a
     ld a, $0b
-    call Call_000_1dfb
+    call Div8x8
     add $1e
     ld l, a
     ld h, $00
@@ -6631,7 +6631,7 @@ Jump_014_7d6d:
     ld a, [wRNG1]
     ld b, a
     ld a, $10
-    call Call_000_1dfb
+    call Div8x8
     add $4b
     ld l, a
     ld h, $00
@@ -6643,7 +6643,7 @@ Jump_014_7d6d:
 Jump_014_7d85:
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb11
     call Call_000_225d
@@ -6668,7 +6668,7 @@ Jump_014_7d98:
 
 Call_014_7db7:
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     ret nz
 
@@ -6676,7 +6676,7 @@ Call_014_7db7:
     ld a, [wRNG1]
     ld b, a
     ld a, $1f
-    call Call_000_1dfb
+    call Div8x8
     add $5a
     ld l, a
     ld h, $00
@@ -6692,7 +6692,7 @@ Jump_014_7dd8:
 
     ld a, $00
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, $00
     ld hl, $cb11
     call Call_000_225d
@@ -6704,7 +6704,7 @@ jr_014_7def:
 
     ld a, $01
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, $01
     ld hl, $cb11
     call Call_000_225d
@@ -6716,7 +6716,7 @@ jr_014_7e06:
 
     ld a, $02
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, $02
     ld hl, $cb11
     call Call_000_225d
@@ -6732,11 +6732,11 @@ Jump_014_7e1e:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld [hl], $00
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     srl b
     rr c
     ld a, [$da60]
@@ -6747,18 +6747,18 @@ Jump_014_7e1e:
 
 jr_014_7e47:
     ld hl, $0e05
-    call Call_000_096d
+    call SetupTilemapTransfer
     ret
 
 
 Jump_014_7e4e:
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld [hl], $00
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb11
     call Call_000_225d
@@ -6768,7 +6768,7 @@ Jump_014_7e4e:
 Jump_014_7e6c:
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     res 2, [hl]
     ret
 
@@ -6776,7 +6776,7 @@ Jump_014_7e6c:
 Jump_014_7e78:
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     res 0, [hl]
     ret
 

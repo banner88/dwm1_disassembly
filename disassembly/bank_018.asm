@@ -44,7 +44,7 @@ label18_400b:
     ld hl, $170a
     rst $10
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $9800
     ld bc, $0400
     ld a, $e0
@@ -71,7 +71,7 @@ label18_400b:
     jr z, jr_018_40d0
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     jr z, jr_018_40d0
@@ -80,7 +80,7 @@ label18_400b:
     push de
     call Call_018_42d1
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     ld a, [hl]
     or a
@@ -88,7 +88,7 @@ label18_400b:
 
     call Call_018_42d1
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld l, [hl]
     ld h, $00
     add hl, hl
@@ -109,7 +109,7 @@ jr_018_40ca:
 jr_018_40d0:
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
     ld hl, $5605
     rst $10
     ld hl, $99c1
@@ -719,7 +719,7 @@ jr_018_42ff:
     ld hl, $0247
 
 jr_018_4361:
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
 
@@ -808,7 +808,7 @@ jr_018_4378:
     jr z, jr_018_43ff
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     jr z, jr_018_43ff
@@ -1005,14 +1005,14 @@ jr_018_4525:
     inc [hl]
     ld de, $c8bb
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     call Call_018_42d1
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $0248
     ld a, [$db55]
     or a
@@ -1021,7 +1021,7 @@ jr_018_4525:
     ld hl, $0249
 
 jr_018_4574:
-    call Call_000_096d
+    call SetupTilemapTransfer
     ret
 
 
@@ -1063,7 +1063,7 @@ jr_018_459b:
     jr nz, jr_018_459b
 
     ld hl, $024b
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -1210,7 +1210,7 @@ Jump_018_468f:
     rst $38
     rst $38
     ld hl, $024c
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -1230,7 +1230,7 @@ Jump_018_468f:
     jr nz, jr_018_46be
 
     ld hl, $0252
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $1e
     ld [$c8d2], a
     ret
@@ -1246,7 +1246,7 @@ jr_018_46be:
     ld hl, $0253
 
 jr_018_46ce:
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -1381,37 +1381,37 @@ jr_018_4763:
 
 Call_018_4774:
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr nz, jr_018_47b5
 
     ld hl, $a1f3
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_018_47b5
 
     ld hl, $a1f4
-    call Call_000_20ee
+    call EnableSRAM
     cp b
     jr z, jr_018_47b7
 
     ld hl, $a1f3
-    call Call_000_20ee
+    call EnableSRAM
     cp $01
     jr z, jr_018_47b5
 
     ld hl, $a1f5
-    call Call_000_20ee
+    call EnableSRAM
     cp b
     jr z, jr_018_47b7
 
     ld hl, $a1f3
-    call Call_000_20ee
+    call EnableSRAM
     cp $02
     jr z, jr_018_47b5
 
     ld hl, $a1f6
-    call Call_000_20ee
+    call EnableSRAM
     cp b
     jr z, jr_018_47b7
 
@@ -1499,7 +1499,7 @@ Call_018_482e:
 
     ld a, [de]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     pop hl
@@ -1558,7 +1558,7 @@ Call_018_487c:
     jr z, jr_018_48a6
 
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c823], a
     ld a, $05
@@ -1625,7 +1625,7 @@ Call_018_48da:
     jr z, jr_018_4956
 
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     ld a, $98
@@ -1738,14 +1738,14 @@ Call_018_4970:
     ld a, [hl]
     push af
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $9100
     call Call_018_5074
     pop af
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld hl, $9140
     and $01
@@ -1812,7 +1812,7 @@ Call_018_49f8:
     ld a, [hl]
     push af
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $0161
@@ -1827,7 +1827,7 @@ Call_018_49f8:
     pop af
     push af
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop af
     ld b, a
     ld a, [hl]
@@ -1903,7 +1903,7 @@ jr_018_4aa0:
     jr z, jr_018_4abd
 
     ld hl, $0251
-    call Call_000_096d
+    call SetupTilemapTransfer
     call Call_018_5142
     call Call_018_4d38
     call Call_018_5006
@@ -2059,7 +2059,7 @@ jr_018_4ba2:
     ld hl, $c8d2
     inc [hl]
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_018_4bb7
 
@@ -2080,7 +2080,7 @@ jr_018_4bb7:
     rst $38
     rst $38
     push bc
-    call Call_000_20ee
+    call EnableSRAM
     pop bc
     cp $ff
     ret z
@@ -2093,8 +2093,8 @@ jr_018_4bb7:
     push bc
     ld a, c
     ld hl, $a245
-    call Call_000_223b
-    call Call_000_20ee
+    call GetMonsterDataPtr
+    call EnableSRAM
     pop bc
     bit 7, a
     ret nz
@@ -2142,7 +2142,7 @@ jr_018_4bb7:
     ld hl, $0253
 
 jr_018_4c34:
-    call Call_000_096d
+    call SetupTilemapTransfer
     call Jump_000_0609
     call Call_018_5142
     call Call_018_4970
@@ -2172,11 +2172,11 @@ jr_018_4c34:
     push hl
     ld a, [hl]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
 
 jr_018_4c76:
@@ -2197,7 +2197,7 @@ jr_018_4c76:
     pop hl
     ld a, [hl]
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $00
     ld hl, $0105
     rst $10
@@ -2226,7 +2226,7 @@ jr_018_4cb0:
     jr nz, jr_018_4cd8
 
     ld hl, $0254
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_018_4cd8:
     ld hl, $c8d2
@@ -2263,12 +2263,12 @@ jr_018_4cd8:
     xor a
     ld [$c86d], a
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
     ld hl, $0251
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c8d2
     inc [hl]
     ret
@@ -2306,7 +2306,7 @@ Call_018_4d38:
     jr z, jr_018_4d76
 
     ld hl, $024f
-    call Call_000_096d
+    call SetupTilemapTransfer
     call Call_018_5142
     call Call_018_463d
     call Call_018_5006
@@ -2343,7 +2343,7 @@ jr_018_4d8f:
     ret nz
 
     ld hl, $0251
-    call Call_000_096d
+    call SetupTilemapTransfer
     call Call_018_5142
     call Call_018_4d38
     call Call_018_5006
@@ -2369,7 +2369,7 @@ jr_018_4d8f:
     ld hl, $0253
 
 jr_018_4dd1:
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $13
     ld [$c8d2], a
     ret
@@ -2381,7 +2381,7 @@ Call_018_4dda:
     ret z
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     ret z
@@ -2464,7 +2464,7 @@ jr_018_4e32:
     push hl
     call Call_018_42d1
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     pop hl
     pop de
@@ -2477,7 +2477,7 @@ jr_018_4e32:
     push hl
     call Call_018_42d1
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     pop hl
     pop de
@@ -2904,7 +2904,7 @@ Call_018_503b:
 Call_018_5074:
     push hl
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
     ld a, [$c827]
     ld c, a
@@ -3080,7 +3080,7 @@ Call_018_5162:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -3108,7 +3108,7 @@ jr_018_518f:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -3132,7 +3132,7 @@ jr_018_51ad:
     push bc
     ld a, b
     ld b, c
-    call Call_000_1dfb
+    call Div8x8
     pop bc
     pop de
     or a
@@ -3159,7 +3159,7 @@ jr_018_51c9:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld [$c8e1], a
     ld a, b
     pop bc
@@ -3474,7 +3474,7 @@ Call_018_5340:
 
     ld a, $00
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $9000
     call Call_018_5378
     ld a, [$ca8d]
@@ -3483,7 +3483,7 @@ Call_018_5340:
 
     ld a, $01
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $9240
     call Call_018_5378
     ld a, [$ca8d]
@@ -3492,7 +3492,7 @@ Call_018_5340:
 
     ld a, $02
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $9480
 
 Call_018_5378:
@@ -3603,7 +3603,7 @@ Call_018_5410:
     pop af
     push af
     ld hl, $caca
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [hl]
     ld [$c81e], a
     pop af
@@ -4125,12 +4125,12 @@ jr_018_5605:
 
 Call_018_567f:
     ld de, $561d
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 label18_5686:
     ld de, $561d
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 label18_568d:

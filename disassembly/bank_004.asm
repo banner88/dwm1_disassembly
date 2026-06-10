@@ -13,7 +13,7 @@
 ;   - Text ID dispatch to ROM0 text rendering (entry 6)
 ;
 ; Script Architecture:
-;   Entry 5 calls Call_004_71ef which dispatches to banks $0C/$0D/$0E/$0F
+;   Entry 5 calls MapTypeDispatch which dispatches to banks $0C/$0D/$0E/$0F
 ;   based on $D8D3 (map_type). Those banks return the next script command
 ;   as a BC pair:
 ;     BC = $FFFF → script ended
@@ -22,7 +22,7 @@
 ;
 ; Key RAM Variables:
 ;   $D7D2+     NPC RAM buffer (32 bytes per NPC, up to 40 NPCs)
-;   $D8D3      Map type copy (selects script data bank via Call_004_71ef)
+;   $D8D3      Map type copy (selects script data bank via MapTypeDispatch)
 ;   $D8D4      NPC script_id (selects per-NPC script data in script bank)
 ;   $D8D5-D8D6 Script counter / event counter (16-bit)
 ;   $D8D7      Script state flags (see bit definitions below)
@@ -2326,7 +2326,7 @@ Jump_004_55f5:
 ; ---------------------------------------------------------------------------
 ; ScriptExecNext — Main script dispatch loop
 ; ---------------------------------------------------------------------------
-; Calls ScriptDataRead (Call_004_71ef) to fetch next BC pair from the
+; Calls ScriptDataRead (MapTypeDispatch) to fetch next BC pair from the
 ; script data bank ($0C/$0D/$0E/$0F based on map type).
 ;
 ; Dispatch logic:
@@ -2337,7 +2337,7 @@ Jump_004_55f5:
 ; ---------------------------------------------------------------------------
 Jump_004_5605:
 jr_004_5605:
-    call Call_004_71ef       ; → ScriptDataRead: fetch next BC from script bank
+    call MapTypeDispatch       ; → ScriptDataRead: fetch next BC from script bank
     ld a, b
     and c
     cp $ff                   ; Check if BC == $FFFF
@@ -2635,7 +2635,7 @@ label4_5711:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef       ; Read condition parameter
+    call MapTypeDispatch       ; Read condition parameter
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -2645,7 +2645,7 @@ label4_5711:
     call Call_000_26ae       ; Evaluate condition
     jp nz, Jump_004_55f5     ; True → continue script
 
-    call Call_004_71ef       ; Read branch target
+    call MapTypeDispatch       ; Read branch target
     jp Jump_004_7212         ; → ScriptBranch (jump to target)
 
 ; ---------------------------------------------------------------------------
@@ -2659,7 +2659,7 @@ label4_5740:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -2669,7 +2669,7 @@ label4_5740:
     call Call_000_26ae
     jp z, Jump_004_55f5
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 ; ---------------------------------------------------------------------------
@@ -2684,7 +2684,7 @@ label4_576f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef       ; Read event flag index
+    call MapTypeDispatch       ; Read event flag index
     call Call_000_26a6       ; Clear event flag
     jp Jump_004_55f5         ; Continue script
 
@@ -2700,7 +2700,7 @@ label4_5788:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     call Call_000_26a0
     jp Jump_004_55f5
 
@@ -2717,7 +2717,7 @@ label4_57a1:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c8ef], a
     ld a, [$d8d5]
@@ -2726,7 +2726,7 @@ label4_57a1:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c8f0], a
     ld a, b
@@ -2759,7 +2759,7 @@ label4_57eb:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef       ; Read enemy stats ID
+    call MapTypeDispatch       ; Read enemy stats ID
     ld a, c
     ld [$da03], a            ; Enemy 1 stats ID low
     ld a, b
@@ -2820,7 +2820,7 @@ label4_5843:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef       ; Read delay frame count
+    call MapTypeDispatch       ; Read delay frame count
     ld a, c
     ld [$d8db], a            ; Set delay counter
     ld hl, $d8d7
@@ -2841,7 +2841,7 @@ label4_5860:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef       ; Read NPC number
+    call MapTypeDispatch       ; Read NPC number
     ld a, c
     ld [$d8dc], a            ; Store NPC number
     ld a, [$d8d5]
@@ -2850,7 +2850,7 @@ label4_5860:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef       ; Read X movement delta
+    call MapTypeDispatch       ; Read X movement delta
     ld a, c
     ld [$d8dd], a            ; X delta low (signed)
     ld a, b
@@ -2871,7 +2871,7 @@ label4_5898:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$d8dc], a
     ld a, [$d8d5]
@@ -2880,7 +2880,7 @@ label4_5898:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$d8df], a
     ld a, b
@@ -2896,7 +2896,7 @@ label4_58d0:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     or a
     jr nz, jr_004_5942
@@ -2907,7 +2907,7 @@ label4_58d0:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
 
 Jump_004_58fa:
     ld a, c
@@ -2976,7 +2976,7 @@ jr_004_5942:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl
     ld [hl], c
     jp Jump_004_55f5
@@ -2988,7 +2988,7 @@ label4_5968:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     or a
     jr nz, jr_004_5996
@@ -2999,7 +2999,7 @@ label4_5968:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld l, c
     ld h, b
     jr jr_004_59b9
@@ -3021,7 +3021,7 @@ jr_004_5996:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl
     add hl, bc
 
@@ -3033,7 +3033,7 @@ jr_004_59b9:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl
     ld [hl], c
     jp Jump_004_55f5
@@ -3051,7 +3051,7 @@ label4_59d2:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -3062,7 +3062,7 @@ label4_59d2:
     cp c
     jp nz, Jump_004_55f5
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_5a02:
@@ -3072,7 +3072,7 @@ label4_5a02:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c96d], a
     ld a, b
@@ -3083,7 +3083,7 @@ label4_5a02:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c96f], a
     ld a, b
@@ -3094,7 +3094,7 @@ label4_5a02:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c971], a
     ld a, b
@@ -3102,7 +3102,7 @@ label4_5a02:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     xor a
@@ -3120,7 +3120,7 @@ label4_5a6f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$d8dc], a
     ld hl, $ff92
@@ -3148,7 +3148,7 @@ jr_004_5a99:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl
     ld a, c
     sub l
@@ -3171,7 +3171,7 @@ label4_5ac5:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$d8dc], a
     ld hl, $ff95
@@ -3199,7 +3199,7 @@ jr_004_5aef:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl
     ld a, c
     sub l
@@ -3224,7 +3224,7 @@ label4_5b1b:                        ; inc unknown counter
     adc $00
     ld [$d8d6], a
 
-    call Call_004_71ef
+    call MapTypeDispatch
     ld l, c             ; load c into l
     ld h, b             ; load b into h
     push hl             ; push hl (location in ram of opened tresure chest flags)
@@ -3235,7 +3235,7 @@ label4_5b1b:                        ; inc unknown counter
     adc $00
     ld [$d8d6], a
 
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl              ; pop hl (location in ram of opened tresure chest flags)
     ld [hl], c          ; load c (chests id bit) into the contents of hl (opened chest bit plane)
     jp Jump_004_55f5
@@ -3248,7 +3248,7 @@ label4_5b49:
     adc $00
     ld [$d8d6], a
 
-    call Call_004_71ef
+    call MapTypeDispatch
     ld l, c             ; load c into l
     ld h, b             ; load b into h
     push hl             ; push hl (unknown)
@@ -3259,7 +3259,7 @@ label4_5b49:
     adc $00
     ld [$d8d6], a
 
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl              ; pop hl (unknown)
     ld [hl], c          ; load c into the contents of hl (unknown)
     inc hl              ; add 1 to the pointer in hl (unknown pointer)
@@ -3274,7 +3274,7 @@ label4_5b79:
     adc $00
     ld [$d8d6], a
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_5b8f:
@@ -3285,7 +3285,7 @@ label4_5b8f:
     adc $00
     ld [$d8d6], a
 
-    call Call_004_71ef
+    call MapTypeDispatch
     ld l, c             ; load c into l
     ld h, b             ; load b into h
     push hl             ; push hl (unknown)
@@ -3296,7 +3296,7 @@ label4_5b8f:
     adc $00
     ld [$d8d6], a
 
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl               ; pop hl (unknown)
     ld a, [$d8d5]        ; inc unknown counter
     add $01
@@ -3308,11 +3308,11 @@ label4_5b8f:
     cp c                 ; compare c to a
     jp nz, Jump_004_55f5 ; jump if a >= c
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_5bd4:
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     ret
 
@@ -3347,7 +3347,7 @@ jr_004_5c04:
 Call_004_5c05:
 jr_004_5c05:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld c, [hl]
     ld a, [de]
     ld [hl+], a
@@ -3367,7 +3367,7 @@ label4_5c14:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$da12], a
     ld a, b
@@ -3438,7 +3438,7 @@ label4_5c86:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld hl, $d8e9
     ld a, c
     add a
@@ -3463,7 +3463,7 @@ label4_5c86:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl
     ld [hl], c
     inc hl
@@ -3479,7 +3479,7 @@ label4_5ccf:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld hl, $d8e9
     ld a, c
     add a
@@ -3506,7 +3506,7 @@ label4_5ccf:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     pop hl
     ld [hl], c
     inc hl
@@ -3522,7 +3522,7 @@ label4_5d1a:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld hl, $d8e9
     ld a, c
     add a
@@ -3747,7 +3747,7 @@ label4_5e6d:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     call PlaySoundEffect
     jp Jump_004_55f5
@@ -3764,7 +3764,7 @@ label4_5e8f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -3781,7 +3781,7 @@ label4_5e8f:
     ld a, c
     ld hl, $caea
     push bc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld b, $08
 
@@ -3830,12 +3830,12 @@ jr_004_5efb:
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
-    call Call_004_71ef
+    call Copy4Bytes
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_5f13:
@@ -3874,19 +3874,19 @@ jr_004_5f31:
 label4_5f36:
     ld a, [$d8e1]
     ld hl, $cac1
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld [hl], $00
     ld hl, $0105
     rst $10
     ld hl, $0103
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     jp Jump_004_55f5
 
 label4_5f52:
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ret
@@ -3935,7 +3935,7 @@ jr_004_5f8e:
     cp $14
     jp c, Jump_004_55f5
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 ; ---------------------------------------------------------------------------
@@ -3951,7 +3951,7 @@ label4_5f9a:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$da12], a
     ld a, b
@@ -4001,7 +4001,7 @@ label4_5fdb:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld hl, wInventory
     ld b, $14
 
@@ -4074,7 +4074,7 @@ jr_004_603c:
     jr nz, jr_004_603c
 
     pop hl
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 
@@ -4129,7 +4129,7 @@ jr_004_6087:
     cp $14
     jp c, Jump_004_55f5
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_6093:
@@ -4139,7 +4139,7 @@ label4_6093:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld hl, $ca8e
     add l
@@ -4153,7 +4153,7 @@ label4_6093:
 
     push af
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld hl, $0301
@@ -4418,7 +4418,7 @@ label4_61e0:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     add a
     add a
@@ -4449,7 +4449,7 @@ label4_623a:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld l, c
     ld h, b
     inc [hl]
@@ -4462,7 +4462,7 @@ label4_6253:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -4479,7 +4479,7 @@ label4_6253:
     ld a, c
     ld hl, $cb19
     push bc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld a, [hl+]
     sub $64
@@ -4490,12 +4490,12 @@ label4_6253:
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
-    call Call_004_71ef
+    call Copy4Bytes
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_62ab:
@@ -4528,7 +4528,7 @@ jr_004_62cb:
     cp $64
     jp c, Jump_004_55f5
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_62dd:
@@ -4538,7 +4538,7 @@ label4_62dd:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -4555,7 +4555,7 @@ label4_62dd:
     ld a, c
     ld hl, $caca
     push bc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld a, [hl]
     cp $af
@@ -4564,12 +4564,12 @@ label4_62dd:
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
-    call Call_004_71ef
+    call Copy4Bytes
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_6332:
@@ -4579,7 +4579,7 @@ label4_6332:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld l, c
     ld h, b
     ld e, $00
@@ -4593,7 +4593,7 @@ label4_634f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -4610,7 +4610,7 @@ label4_634f:
     ld a, c
     ld hl, $caea
     push bc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld b, $08
 
@@ -4641,12 +4641,12 @@ jr_004_63a3:
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
-    call Call_004_71ef
+    call Copy4Bytes
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_63bb:
@@ -4690,7 +4690,7 @@ label4_6401:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld hl, $d9cf
     add l
@@ -4723,7 +4723,7 @@ jr_004_6433:
     ld l, c
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     jp Jump_004_55f5
 
 label4_643f:
@@ -4733,7 +4733,7 @@ label4_643f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -4750,7 +4750,7 @@ label4_643f:
     ld a, c
     ld hl, $caea
     push bc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld b, $08
 
@@ -4778,12 +4778,12 @@ jr_004_648f:
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
-    call Call_004_71ef
+    call Copy4Bytes
+    call MapTypeDispatch
     jp Jump_004_7212
 
 label4_64a7:
@@ -4793,7 +4793,7 @@ label4_64a7:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld l, c
     ld h, b
     call Call_000_0ad9
@@ -4811,26 +4811,26 @@ label4_64c2:
     ld [$c905], a
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld l, [hl]
     ld h, $05
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$cac0]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld de, $c190
     call Call_004_6583
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld de, $c190
     call Call_004_6598
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     add $10
     ld [$c8f4], a
@@ -4839,19 +4839,19 @@ label4_64c2:
     ld [$d7cb], a
     ld a, [$cac0]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, l
     ld [$c8f2], a
     ld a, h
     ld [$c8f3], a
     ld a, [$cac0]
     ld hl, $cacc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c8f6], a
     ld a, [$cac0]
     ld hl, $caca
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$c8f5], a
     ld a, $08
@@ -4875,7 +4875,7 @@ label4_64c2:
     xor a
     ld [$d8d7], a
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ret
@@ -4900,7 +4900,7 @@ jr_004_6586:
     pop af
     ld l, e
     ld h, d
-    call Call_000_09a4
+    call ExtractDigits
     ret
 
 
@@ -4930,7 +4930,7 @@ label4_65ab:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c96d], a
     ld a, b
@@ -4941,7 +4941,7 @@ label4_65ab:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c96f], a
     ld a, b
@@ -4952,7 +4952,7 @@ label4_65ab:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c971], a
     ld a, b
@@ -4986,7 +4986,7 @@ label4_6620:
 
 label4_6628:
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88e
     inc [hl]
     ret
@@ -4995,11 +4995,11 @@ label4_6628:
 label4_6632:
     ld a, $00
     ld hl, $caca
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld l, [hl]
     ld h, $05
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     jp Jump_004_55f5
 
 
@@ -5010,7 +5010,7 @@ label4_6646:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld d, c
     ld a, [$d8d5]
     add $01
@@ -5042,7 +5042,7 @@ jr_004_6671:
     jr nz, jr_004_668d
 
     pop hl
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 
@@ -5073,7 +5073,7 @@ label4_669d:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [wCurrPlayingBGM]
     ld [$c8b6], a
     ld a, c
@@ -5088,7 +5088,7 @@ label4_66bd:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c8f7], a
     ld a, b
@@ -5125,7 +5125,7 @@ label4_66bd:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$c902], a
     jp Jump_004_55f5
@@ -5159,7 +5159,7 @@ label4_6723:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     xor a
@@ -5246,7 +5246,7 @@ Call_004_67f1:
     ret z
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $02
     ret
 
@@ -5278,7 +5278,7 @@ label4_6822:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld c, $02
 
@@ -5306,7 +5306,7 @@ label4_684d:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld c, $00
     jp Jump_004_6838
@@ -5319,7 +5319,7 @@ label4_6866:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld c, $01
     jp Jump_004_6838
@@ -5332,7 +5332,7 @@ label4_687f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld c, $03
     jp Jump_004_6838
@@ -5365,7 +5365,7 @@ label4_68ba:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$d8db], a
     ld hl, $d8d8
@@ -5431,7 +5431,7 @@ label4_690b:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     xor a
@@ -5478,7 +5478,7 @@ jr_004_697c:
     push bc
     ld a, c
     ld hl, $c180
-    call Call_000_09a4
+    call ExtractDigits
     pop bc
     ld hl, $699d
     ld a, c
@@ -5520,7 +5520,7 @@ label4_69a9:
     ld h, b
     inc hl
     ld a, $14
-    call Call_000_1e0d
+    call Div16x8To16
     ld a, l
     cp $07
     jr c, jr_004_69cd
@@ -5613,7 +5613,7 @@ jr_004_69cd:
 
     push bc
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     ld a, [hl]
     add c
@@ -5713,7 +5713,7 @@ label4_6ace:
     ld a, [wRNG1]
     ld b, a
     ld a, $25
-    call Call_000_1dfb
+    call Div8x8
     inc a
     ld c, a
     ld hl, wInventory
@@ -5739,7 +5739,7 @@ jr_004_6aed:
     ld l, c
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     jp Jump_004_55f5
 
 
@@ -5770,7 +5770,7 @@ jr_004_6b0e:
     ld a, [wRNG1]
     ld b, a
     ld a, c
-    call Call_000_1dfb
+    call Div8x8
     ld hl, wInventory
     add l
     ld l, a
@@ -5782,7 +5782,7 @@ jr_004_6b0e:
     ld l, c
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $0305
     rst $10
     jp Jump_004_55f5
@@ -5796,7 +5796,7 @@ label4_6b3a:
     ld a, [wCurrGoldHi]
     ld e, a
     ld a, $0a
-    call Call_000_1e1e
+    call Div24x8To16
     ld a, h
     or l
     or e
@@ -5826,7 +5826,7 @@ label4_6b73:
     ld a, [wRNG1]
     ld b, a
     ld a, $05
-    call Call_000_1dfb
+    call Div8x8
     add $13
     ld c, a
     ld hl, wInventory
@@ -5852,7 +5852,7 @@ jr_004_6b93:
     ld l, c
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     jp Jump_004_55f5
 
 
@@ -5900,7 +5900,7 @@ label4_6bdf:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld hl, $ca8e
     add l
@@ -5915,7 +5915,7 @@ label4_6bdf:
 
     ld [$cac0], a
     ld hl, $cb13
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -5949,7 +5949,7 @@ label4_6bdf:
 jr_004_6c47:
     ld a, [$cac0]
     ld hl, $cb17
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -5979,7 +5979,7 @@ jr_004_6c47:
 jr_004_6c81:
     ld a, [$cac0]
     ld hl, $cb19
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -6004,7 +6004,7 @@ jr_004_6c81:
 jr_004_6cb2:
     ld a, [$cac0]
     ld hl, $cb1b
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld d, [hl]
     ld e, a
@@ -6025,7 +6025,7 @@ jr_004_6cb2:
 jr_004_6cdb:
     ld a, [$cac0]
     ld hl, $cb1d
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -6054,14 +6054,14 @@ jr_004_6d0a:
     ld l, a
     ld h, $02
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$cac0]
     ld hl, $cac2
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     jp Jump_004_55f5
 
 
@@ -6104,7 +6104,7 @@ Call_004_6d40:
 Call_004_6d4a:
     push de
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -6119,7 +6119,7 @@ label4_6d56:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, c
     ld [$da03], a
     ld a, b
@@ -6233,7 +6233,7 @@ jr_004_6e1a:
     ld l, a
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     jp Jump_004_55f5
 
 
@@ -6362,7 +6362,7 @@ Call_004_6f05:
     ret z
 
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp b
     ret c
@@ -6393,7 +6393,7 @@ Call_004_6f35:
     ld a, [wRNG1]
     ld b, a
     ld a, l
-    call Call_000_1dfb
+    call Div8x8
     pop hl
     add h
     ret
@@ -6433,7 +6433,7 @@ label4_6f64:
     ld l, a
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, wInventory
     ld b, $14
 
@@ -6477,7 +6477,7 @@ label4_6f9b:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_004_71ef
+    call MapTypeDispatch
     ld a, [$d8d5]
     add $01
     ld [$d8d5], a
@@ -6494,29 +6494,29 @@ label4_6f9b:
     ld a, c
     ld hl, $cb0d
     push bc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [hl]
     push hl
     ld hl, $c190
-    call Call_000_09a4
+    call ExtractDigits
     pop hl
     pop bc
     push hl
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
     ld a, [hl-]
     dec a
     cp [hl]
     jp nc, Jump_004_55f5
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 
@@ -6529,11 +6529,11 @@ label4_6ffb:
     ld [$d8d6], a
     ld a, [$ca40]
     ld hl, $cb23
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     inc a
     ld c, $0a
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, [wCurrGoldLo]
     sub l
     ld a, [wCurrGoldMid]
@@ -6542,7 +6542,7 @@ label4_6ffb:
     sbc $00
     jr nc, jr_004_7030
 
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 
@@ -6693,17 +6693,17 @@ label4_70d5:
 
     ld a, $00
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     or a
     jp nz, Jump_004_71cf
 
     ld a, $00
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $00
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6717,11 +6717,11 @@ label4_70d5:
 
     ld a, $00
     ld hl, $cb17
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $00
     ld hl, $cb15
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6739,17 +6739,17 @@ label4_70d5:
 
     ld a, $01
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     or a
     jp nz, Jump_004_71cf
 
     ld a, $01
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $01
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6763,11 +6763,11 @@ label4_70d5:
 
     ld a, $01
     ld hl, $cb17
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $01
     ld hl, $cb15
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6785,17 +6785,17 @@ label4_70d5:
 
     ld a, $02
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     or a
     jp nz, Jump_004_71cf
 
     ld a, $02
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $02
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6809,11 +6809,11 @@ label4_70d5:
 
     ld a, $02
     ld hl, $cb17
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $02
     ld hl, $cb15
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -6827,7 +6827,7 @@ label4_70d5:
 
 Jump_004_71c9:
 jr_004_71c9:
-    call Call_004_71ef
+    call MapTypeDispatch
     jp Jump_004_7212
 
 
@@ -6865,7 +6865,7 @@ label4_71d2:
 ; Each script bank's entry 0 uses $D8D5/$D8D6 (script counter) to index
 ; into its script data and returns the next command in BC.
 ; ---------------------------------------------------------------------------
-Call_004_71ef:
+MapTypeDispatch:
     ld a, [$d8d3]            ; Map type copy
     cp $06
     jr nc, jr_004_71fb

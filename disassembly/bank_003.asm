@@ -131,7 +131,7 @@ jr_003_405e:
 
 jr_003_4071:
     ld hl, $a002
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jp z, Jump_003_4142
 
@@ -253,7 +253,7 @@ Jump_003_4142:
     ld a, $03
     ld [$c864], a
     ld a, $f8
-    call Call_000_1275
+    call SerialTransfer
     ret
 
 
@@ -489,7 +489,7 @@ jr_003_42a6:
     xor a
     ld [$c866], a
     ld a, $fa
-    call Call_000_1275
+    call SerialTransfer
     call Call_003_441b
     ld hl, $c8a2
     res 1, [hl]
@@ -503,7 +503,7 @@ jr_003_42c1:
     xor a
     ld [$c866], a
     ld a, $fb
-    call Call_000_1275
+    call SerialTransfer
     ld hl, $c8a2
     set 7, [hl]
     ret
@@ -681,7 +681,7 @@ jr_003_4407:
     xor a
     ld [$c866], a
     ld a, $fa
-    call Call_000_1275
+    call SerialTransfer
     ret
 
 
@@ -721,7 +721,7 @@ Call_003_4446:
     push de
     ld a, [$da31]            ; species ID
     ld c, $2b                ; 43 = entry size
-    call Call_000_1dbe       ; HL = species_id × 43
+    call Mul8x8To16       ; HL = species_id × 43
     ld a, l
     add $61                  ; HL += $4461 (monster info table base)
     ld l, a
@@ -3661,7 +3661,7 @@ Call_003_6987:
     push de
     ld a, [$da5e]
     ld c, $0c
-    call Call_000_1dbe
+    call Mul8x8To16
     ld a, l
     add $da
     ld l, a
@@ -3781,11 +3781,11 @@ Call_003_69ca:
 
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, [$da60]
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -3808,17 +3808,17 @@ Call_003_69ca:
 
     ld a, $00
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     jr nz, jr_003_6a5b
 
     ld a, $00
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $00
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -3837,17 +3837,17 @@ jr_003_6a5b:
 
     ld a, $01
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     jr nz, jr_003_6a8a
 
     ld a, $01
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $01
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -3866,17 +3866,17 @@ jr_003_6a8a:
 
     ld a, $02
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     jr nz, jr_003_6ab9
 
     ld a, $02
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $02
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -3917,7 +3917,7 @@ Call_003_6ad7:
 
     push de
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     pop de
     ret nz
@@ -3925,11 +3925,11 @@ Call_003_6ad7:
     push de
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, [$da60]
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     pop de
     ld a, l
@@ -3954,11 +3954,11 @@ Call_003_6ad7:
     push hl
     ld a, [$da60]
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     pop hl
-    call Call_000_0c80
+    call Copy4Bytes
     pop de
     inc d
     ret
@@ -3969,11 +3969,11 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb17
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, [$da60]
     ld hl, $cb15
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -3995,7 +3995,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 2, a
     ret nz
 
@@ -4009,7 +4009,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 3, a
     ret nz
 
@@ -4023,7 +4023,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 4, a
     ret nz
 
@@ -4037,7 +4037,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 0, a
     ret nz
 
@@ -4051,7 +4051,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 1, a
     ret nz
 
@@ -4062,7 +4062,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     ret nz
 
@@ -4076,7 +4076,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $03e7
     call Call_003_7110
     ret
@@ -4087,7 +4087,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb17
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $03e7
     call Call_003_7110
     ret
@@ -4098,7 +4098,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb19
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $03e7
     call Call_003_7110
     ret
@@ -4109,7 +4109,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb1b
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $03e7
     call Call_003_7110
     ret
@@ -4120,7 +4120,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb1d
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $01ff
     call Call_003_7110
     ret
@@ -4131,7 +4131,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb1f
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $00ff
     call Call_003_7110
     ret
@@ -4148,7 +4148,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb25
-    call Call_000_224a
+    call ReadMonsterByte
     cp $ff
     ret nz
 
@@ -4162,7 +4162,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb25
-    call Call_000_224a
+    call ReadMonsterByte
     or a
     ret nz
 
@@ -4176,7 +4176,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb26
-    call Call_000_224a
+    call ReadMonsterByte
     cp $ff
     ret nz
 
@@ -4190,7 +4190,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb26
-    call Call_000_224a
+    call ReadMonsterByte
     or a
     ret nz
 
@@ -4204,7 +4204,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb28
-    call Call_000_224a
+    call ReadMonsterByte
     cp $ff
     ret nz
 
@@ -4218,7 +4218,7 @@ Call_003_6ad7:
 
     ld a, [$da60]
     ld hl, $cb28
-    call Call_000_224a
+    call ReadMonsterByte
     or a
     ret nz
 
@@ -4416,7 +4416,7 @@ jr_003_6da9:
     ld l, a
     ld h, $02
     ld de, $c1b0
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [wInGateworld]
     or a
     ret nz
@@ -4497,7 +4497,7 @@ jr_003_6e0b:
 Call_003_6e11:
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     bit 7, a
     ret z
 
@@ -4606,7 +4606,7 @@ label6e24:
     ld a, [wRNG1]
     ld b, a
     ld a, $0b
-    call Call_000_1dfb
+    call Div8x8
     ld b, a
     ld a, [$da6b]
     add b
@@ -4636,7 +4636,7 @@ Call_003_6ec4:
     ld a, [wRNG1]
     ld b, a
     ld a, $0b
-    call Call_000_1dfb
+    call Div8x8
     ld b, a
     ld a, [$da6b]
     add b
@@ -4668,7 +4668,7 @@ Call_003_6ef2:
 
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb11
     call Call_000_225d
@@ -4679,7 +4679,7 @@ Call_003_6ef2:
     ld a, [wRNG1]
     ld b, a
     ld a, $0b
-    call Call_000_1dfb
+    call Div8x8
     ld b, a
     ld a, [$da6b]
     add b
@@ -4693,7 +4693,7 @@ Call_003_6ef2:
 
     ld a, [$da60]
     ld hl, $cb17
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb15
     call Call_000_225d
@@ -4703,7 +4703,7 @@ Call_003_6ef2:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     res 2, [hl]
     call Call_003_7134
     ret
@@ -4711,7 +4711,7 @@ Call_003_6ef2:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     res 3, [hl]
     call Call_003_7134
     ret
@@ -4719,7 +4719,7 @@ Call_003_6ef2:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     res 4, [hl]
     call Call_003_7134
     ret
@@ -4727,7 +4727,7 @@ Call_003_6ef2:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     res 0, [hl]
     call Call_003_7134
     ret
@@ -4735,7 +4735,7 @@ Call_003_6ef2:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     res 1, [hl]
     call Call_003_7134
     ret
@@ -4743,11 +4743,11 @@ Call_003_6ef2:
 
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld [hl], $00
     ld a, [$da60]
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb11
     call Call_000_225d
@@ -4827,7 +4827,7 @@ Call_003_6ef2:
     call Call_000_2379
     ld a, [$da60]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     set 2, [hl]
     call Call_003_7134
     ret
@@ -4969,7 +4969,7 @@ Call_003_6ef2:
     call PlaySoundEffect
     ld h, $0d
     ld l, $2f
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_003_710f:
     ret
@@ -5000,7 +5000,7 @@ Call_003_7110:
 
 jr_003_7127:
     ld hl, $c1b0
-    call Call_000_09a4
+    call ExtractDigits
     ret
 
 
@@ -5017,7 +5017,7 @@ Call_003_7134:
     ld a, [wRNG2]
     ld h, a
     ld a, $64
-    call Call_000_1e0d
+    call Div16x8To16
     ld hl, $da65
     cp [hl]
     ret nc

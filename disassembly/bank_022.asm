@@ -429,17 +429,17 @@ SECTION "ROM Bank $022", ROMX[$4000], BANK[$22]
 
 Call_022_4189:
     ld de, $4007
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
     ld de, $4007
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
     call Call_022_4189
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

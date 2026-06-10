@@ -232,7 +232,7 @@ jr_01d_40e4:
     ld bc, $02a3
     and b
     rlca
-    call nz, Call_000_2518
+    call nz, UpdateOAMSprites
     inc bc
     add hl, hl
     inc bc

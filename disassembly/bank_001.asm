@@ -54,7 +54,7 @@ SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
     ; Entry 11: Random encounter monster selection ($683E)
     dw label1_69c8
     ; Entry 12
-    dw Call_001_69e1
+    dw LoadNextDungeonFloor
     ; Entry 13: Load next dungeon floor ($69E1)
 
 label1_401d:
@@ -77,9 +77,9 @@ label1_401d:
     call Call_001_431a
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     call Call_001_4074
     ld a, $07
     ldh [$b5], a
@@ -146,7 +146,7 @@ Call_001_4074:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     ld a, [wMapID]
     ld [$c96a], a
     ld a, [wInGateworld]
@@ -164,7 +164,7 @@ Call_001_4074:
     jr jr_001_410b
 
 jr_001_4105:
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
 
 jr_001_410b:
@@ -263,7 +263,7 @@ jr_001_4161:
     ld [$c774], a
     ld hl, $0800
     rst $10
-    call Call_000_1013
+    call DisableSRAM
     ld hl, $0802
     rst $10
     xor a
@@ -310,7 +310,7 @@ Jump_001_41dc:
     ld [hl], a
     call Call_000_1660
     ld a, $fd
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
@@ -445,7 +445,7 @@ jr_001_42f6:
 
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ret
 
 
@@ -688,10 +688,10 @@ jr_001_4425:
 Call_001_4429:
     ld de, $2f00
     ld hl, $8000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1d
     ld hl, $8180
-    call Call_000_1577
+    call WaitDMATransfer
     xor a
     ldh [$a1], a
     ldh [$a2], a
@@ -783,7 +783,7 @@ Jump_001_44ba:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$92]
     ld l, a
     ldh a, [$93]
@@ -1304,7 +1304,7 @@ Call_001_46a5:
     push bc
     ld a, b
     ld hl, $caea
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop bc
     ld c, $08
 
@@ -1327,7 +1327,7 @@ Call_001_46be:
     push de
     ld a, b
     ld hl, $caf2
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop de
     push hl
     ld c, $19
@@ -1383,7 +1383,7 @@ Call_001_46f6:
     jr z, jr_001_470c
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     jr nz, jr_001_470c
@@ -1397,7 +1397,7 @@ jr_001_470c:
     jr z, jr_001_4722
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     jr nz, jr_001_4722
@@ -1411,7 +1411,7 @@ jr_001_4722:
     jr z, jr_001_4738
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     jr nz, jr_001_4738
@@ -1566,7 +1566,7 @@ Call_001_480d:
     ret z
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], $02
     ret
 
@@ -1665,7 +1665,7 @@ jr_001_4869:
     push hl
     ld a, $00
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop hl
     bit 7, a
     jr nz, jr_001_488f
@@ -1681,7 +1681,7 @@ jr_001_488f:
     push hl
     ld a, $01
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop hl
     bit 7, a
     jr nz, jr_001_48a8
@@ -1697,7 +1697,7 @@ jr_001_48a8:
     push hl
     ld a, $02
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop hl
     bit 7, a
     jr nz, jr_001_48c1
@@ -1713,7 +1713,7 @@ jr_001_48c1:
     push hl
     ld a, $00
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop hl
     bit 7, a
     jr z, jr_001_48e5
@@ -1723,7 +1723,7 @@ jr_001_48c1:
     push hl
     ld a, $00
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld [hl], $80
     pop hl
 
@@ -1735,7 +1735,7 @@ jr_001_48e5:
     push hl
     ld a, $01
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop hl
     bit 7, a
     jr z, jr_001_490a
@@ -1745,7 +1745,7 @@ jr_001_48e5:
     push hl
     ld a, $01
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld [hl], $80
     pop hl
 
@@ -1757,7 +1757,7 @@ jr_001_490a:
     push hl
     ld a, $02
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop hl
     bit 7, a
     jr z, jr_001_492f
@@ -1767,7 +1767,7 @@ jr_001_490a:
     push hl
     ld a, $02
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld [hl], $80
     pop hl
 
@@ -1854,7 +1854,7 @@ jr_001_49a2:
     add $82
     ld h, a
     ld l, $00
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $cacb
     call Call_000_2284
     add a
@@ -1872,7 +1872,7 @@ jr_001_49a2:
     add $a0
     ld l, a
     ld h, $8d
-    call Call_000_1577
+    call WaitDMATransfer
     pop af
     ret
 
@@ -2492,12 +2492,12 @@ jr_001_4c49:
 label1_4c58:
     ld a, d
     ld hl, $cb25
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     call Call_001_4c89
     ld a, $09
-    call Call_000_1dbe
+    call Mul8x8To16
     ld b, l
     ld a, e
     add $01
@@ -2633,7 +2633,7 @@ Call_001_4d02:
     pop af
     push af
     ld hl, $cacb
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld c, a
     pop af
@@ -2657,7 +2657,7 @@ Call_001_4d02:
     call Call_001_4db8
     push af
     ld hl, $cad6
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld hl, $0301
@@ -2669,7 +2669,7 @@ Call_001_4d02:
     call Call_001_4db8
     push af
     ld hl, $cad7
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld hl, $0301
@@ -2684,14 +2684,14 @@ Call_001_4d02:
 
 Call_001_4da8:
     push af
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], c
     pop af
     ret
 
 
     push af
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], c
     inc hl
     ld [hl], b
@@ -2702,7 +2702,7 @@ Call_001_4da8:
 Call_001_4db8:
     push af
     push bc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     call GenerateRNG
@@ -2713,7 +2713,7 @@ Call_001_4db8:
     or c
     ld l, a
     ld h, $03
-    call Call_000_097a
+    call SetupVRAMParams
     pop af
     ret
 
@@ -3118,7 +3118,7 @@ jr_001_5012:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$a9]
     cp $ff
     jp nz, Jump_001_51b2
@@ -3195,7 +3195,7 @@ jr_001_508b:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$a9]
     cp $ff
     jp nz, Jump_001_51b2
@@ -3269,7 +3269,7 @@ jr_001_50fe:
     ldh [$a5], a
     ldh a, [$93]
     ldh [$a6], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$a9]
     cp $ff
     jp nz, Jump_001_51b2
@@ -3338,7 +3338,7 @@ jr_001_5178:
     ldh [$a5], a
     ldh a, [$93]
     ldh [$a6], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$a9]
     cp $ff
     jr nz, jr_001_51b2
@@ -3394,7 +3394,7 @@ jr_001_51ea:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
 
 Jump_001_51fd:
     ldh a, [$90]
@@ -3714,7 +3714,7 @@ jr_001_53a9:
     call Call_001_5a4d
     ld hl, $0b06
     rst $10
-    call Call_001_55d7
+    call CopyPlayerCoordsAndGetNextRoom
     call Call_001_5510
     call Call_001_5c65
     call Call_001_5e19
@@ -4082,7 +4082,7 @@ Call_001_558c:
     ret z
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $02
     ret nz
@@ -4115,7 +4115,7 @@ Call_001_55b1:
     ret z
 
     ld hl, $cac1
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $01
     ret nz
@@ -4159,7 +4159,7 @@ Call_001_55b1:
 ;
 ; This is the bridge between player input and the script engine.
 ; ===========================================================================
-Call_001_55d7:
+CopyPlayerCoordsAndGetNextRoom:
     ldh a, [$92]             ; Player position (from HRAM)
     ld l, a
     ldh a, [$93]
@@ -4513,7 +4513,7 @@ jr_001_57ab:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$a9]
     cp $ff
     jr z, jr_001_57fc
@@ -4543,7 +4543,7 @@ jr_001_57fc:
     ldh [$a5], a
     ldh a, [$93]
     ldh [$a6], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$a9]
     cp $ff
     jr z, jr_001_5852
@@ -4602,7 +4602,7 @@ jr_001_5852:
     ldh [$a5], a
     ldh a, [$93]
     ldh [$a6], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$a9]
     cp $ff
     jr z, jr_001_58a8
@@ -4661,7 +4661,7 @@ jr_001_58a8:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$a9]
     cp $ff
     jr z, jr_001_58fe
@@ -5069,7 +5069,7 @@ jr_001_5aab:
     ld a, [wRNG1]
     ld b, a
     ld a, $0d
-    call Call_000_1dfb
+    call Div8x8
     add $07
     ld [wGroundItemData], a
     xor a
@@ -5083,7 +5083,7 @@ jr_001_5ae0:
     ld a, [wRNG1]
     ld b, a
     ld a, $1e
-    call Call_000_1dfb
+    call Div8x8
     add $28
     ld [wGroundItemData], a
     xor a
@@ -5096,17 +5096,17 @@ jr_001_5af8:
     ld c, a
     ld a, [$c939]
     inc a
-    call Call_000_1dbe
+    call Mul8x8To16
     push hl
     ld a, [wRNG1]
     ld b, a
     ld a, $32
-    call Call_000_1dfb
+    call Div8x8
     add $32
     pop bc
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, $64
-    call Call_000_1e1e
+    call Div24x8To16
     ld a, l
     ld [wGroundItemData], a
     ld a, h
@@ -5225,7 +5225,7 @@ jr_001_5bc3:
     ld l, a
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $0208
     ld a, l
     ld [$c917], a
@@ -5275,7 +5275,7 @@ jr_001_5c09:
     ld l, a
     ld h, $08
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $0211
     ld a, l
     ld [$c917], a
@@ -5345,7 +5345,7 @@ jr_001_5c6f:
     ld a, [$ca3c]
     ld h, a
     ld a, $0a
-    call Call_000_1e0d
+    call Div16x8To16
     cp $01
     jr nz, jr_001_5cac
 
@@ -5356,7 +5356,7 @@ jr_001_5c6f:
     call Call_001_5cd3
     ld a, $02
     call Call_001_5cd3
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
 
 jr_001_5cac:
@@ -5365,7 +5365,7 @@ jr_001_5cac:
     ld a, [$ca3c]
     ld h, a
     ld a, $05
-    call Call_000_1e0d
+    call Div16x8To16
     cp $04
     jr nz, jr_001_5cd2
 
@@ -5375,7 +5375,7 @@ jr_001_5cac:
     call Call_001_5d33
     ld a, $02
     call Call_001_5d33
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
 
 jr_001_5cd2:
@@ -5393,14 +5393,14 @@ Call_001_5cd3:
     ld a, b
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 0, [hl]
     pop bc
     ret nz
 
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     pop bc
     ret nz
@@ -5425,14 +5425,14 @@ Call_001_5cd3:
     ld a, b
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 0, [hl]
     pop bc
     ret z
 
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     pop bc
     ret nz
@@ -5464,14 +5464,14 @@ Call_001_5d33:
     ld a, b
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 2, [hl]
     pop bc
     ret z
 
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     pop bc
     ret nz
@@ -5672,7 +5672,7 @@ jr_001_5e23:
     ld [$c8a8], a
     ld a, $2d
     ld [wBGPalette], a
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
 
 jr_001_5e7c:
@@ -5710,7 +5710,7 @@ Call_001_5e8d:
     push bc
     push hl
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     pop hl
     pop bc
@@ -5749,7 +5749,7 @@ Call_001_5ea9:
     jr nz, jr_001_5f01
 
     call Call_001_484e
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     ld hl, $ff90
     res 1, [hl]
@@ -5783,7 +5783,7 @@ jr_001_5f01:
     ld [$c915], a
     ld [$c916], a
     call Call_001_484e
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     ret
 
@@ -5799,7 +5799,7 @@ Call_001_5f25:
     ld a, b
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     pop bc
     jr nz, jr_001_5f74
@@ -5807,7 +5807,7 @@ Call_001_5f25:
     ld a, b
     push bc
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     ld a, b
     or c
     pop bc
@@ -5816,7 +5816,7 @@ Call_001_5f25:
     ld a, b
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     set 7, [hl]
     pop bc
     ld a, c
@@ -5831,11 +5831,11 @@ Call_001_5f25:
     push hl
     ld hl, $cac2
     ld a, b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     pop hl
-    call Call_000_0c80
+    call Copy4Bytes
     pop bc
     inc c
     ld a, $01
@@ -5859,7 +5859,7 @@ Call_001_5f76:
     ld a, b
     push bc
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     pop bc
     ret z
@@ -6905,7 +6905,7 @@ label1_64f0:
     adc $00
     ld h, a
     ld a, $20
-    call Call_000_1e0d
+    call Div16x8To16
     or a
     jr nz, jr_001_651e
 
@@ -6930,7 +6930,7 @@ jr_001_651e:
     adc $00
     ld h, a
     ld a, $19
-    call Call_000_1e0d
+    call Div16x8To16
     or a
     jr nz, jr_001_6541
 
@@ -6953,7 +6953,7 @@ label1_6543:
     ld a, [$c8a6]
     ld b, a
     ld a, $38
-    call Call_000_1dfb
+    call Div8x8
     or a
     jr nz, jr_001_6560
 
@@ -6967,7 +6967,7 @@ jr_001_6560:
     add $08
     ld b, a
     ld a, $20
-    call Call_000_1dfb
+    call Div8x8
     or a
     jr nz, jr_001_6584
 
@@ -6985,7 +6985,7 @@ jr_001_6584:
     add $10
     ld b, a
     ld a, $18
-    call Call_000_1dfb
+    call Div8x8
     or a
     jr nz, jr_001_659d
 
@@ -7084,7 +7084,7 @@ VRAMTileSwap_6602:
 Call_001_6602:  ; original label
 jr_001_6602:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld c, [hl]
     ld a, [de]
     ld [hl+], a
@@ -7134,56 +7134,56 @@ VRAMTileCopy_6636:
 Call_001_6636:  ; original label
 Jump_001_6636:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rrc [hl]
     inc l
     rrc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rrc [hl]
     inc l
     rrc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rrc [hl]
     inc l
     rrc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rrc [hl]
     inc l
     rrc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rrc [hl]
     inc l
     rrc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rrc [hl]
     inc l
     rrc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rrc [hl]
     inc l
     rrc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rrc [hl]
     inc l
     rrc [hl]
@@ -7195,56 +7195,56 @@ Jump_001_6636:
 Call_001_668f:
 Jump_001_668f:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rlc [hl]
     inc l
     rlc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rlc [hl]
     inc l
     rlc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rlc [hl]
     inc l
     rlc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rlc [hl]
     inc l
     rlc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rlc [hl]
     inc l
     rlc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rlc [hl]
     inc l
     rlc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rlc [hl]
     inc l
     rlc [hl]
     ei
     inc hl
     di
-    call Call_000_1aa6
+    call WaitVRAM
     rlc [hl]
     inc l
     rlc [hl]
@@ -7258,7 +7258,7 @@ Jump_001_668f:
     dec de
     dec de
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld c, [hl]
     dec hl
     ld b, [hl]
@@ -7266,92 +7266,92 @@ Jump_001_668f:
     ei
     push bc
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl-], a
     dec de
     ei
     pop bc
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld [hl], c
     dec hl
     ld [hl], b
@@ -7364,7 +7364,7 @@ Jump_001_668f:
     inc de
     inc de
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld c, [hl]
     inc hl
     ld b, [hl]
@@ -7372,92 +7372,92 @@ Jump_001_668f:
     ei
     push bc
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [hl+], a
     inc de
     ei
     pop bc
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld [hl], c
     inc hl
     ld [hl], b
@@ -7515,7 +7515,7 @@ Call_001_67f8:
 ;   +10: EID slots (5 × 2 bytes LE) — enemy stats IDs for this pool
 ;   +20: weights (5 × 1 byte) — probability weights for each slot
 ;        (unused slots have EID $0000 and weight 0)
-;   Pool index determined by Call_001_69e1 from gate ID + current floor
+;   Pool index determined by LoadNextDungeonFloor from gate ID + current floor
 ;
 ; GATE → POOL MAPPING:
 ;   $6A22: per-gate base pool index (32 bytes, one per gate)
@@ -7526,10 +7526,10 @@ Call_001_67f8:
 ;   See dump_encounters.py for full decoded pool data
 EncounterMonsterSelect:
 label1_683e:  ; original label
-    call Call_001_69e1
+    call LoadNextDungeonFloor
     ld a, [$ca38]
     ld bc, $001a
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     add $b0
     ld l, a
@@ -7546,7 +7546,7 @@ label1_683e:  ; original label
     ld [$da02], a
     ld a, [$ca38]
     ld bc, $001a
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     add $b3
     ld l, a
@@ -7603,7 +7603,7 @@ jr_001_68c6:
 jr_001_68d8:
     ld a, [$ca38]
     ld bc, $001a
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     add $b8
     ld l, a
@@ -7714,7 +7714,7 @@ Call_001_696c:
     push bc
     ld a, [$ca38]
     ld bc, $001a
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     add $c2
     ld l, a
@@ -7740,7 +7740,7 @@ Call_001_6989:
     ld a, [wRNG2]
     ld h, a
     ld a, $64
-    call Call_000_1e0d
+    call Div16x8To16
     pop hl
     ld c, a
     ld b, $ff
@@ -7792,10 +7792,10 @@ Call_001_69ad:
 
 
 label1_69c8:
-    call Call_001_69e1
+    call LoadNextDungeonFloor
     ld a, [$ca38]
     ld bc, $001a
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     add $c7
     ld l, a
@@ -7816,7 +7816,7 @@ label1_69c8:
 ;   3. Walk breakpoints to find which sub-pool matches current floor
 ;   4. Pool index = base + floor_offset
 ;   5. Calculate pool data address = $6AAE + pool_index × 26($1A)
-Call_001_69e1:
+LoadNextDungeonFloor:
     ld a, [wGateID]
     ld hl, $6a22             ; per-gate base pool index table
     add l
@@ -7851,7 +7851,7 @@ jr_001_6a01:
     add c                    ; + floor sub-index
     ld [$ca38], a            ; store final pool index
     ld bc, $001a
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     add $ae
     ld l, a

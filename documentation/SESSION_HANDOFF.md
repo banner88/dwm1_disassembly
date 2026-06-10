@@ -1,4 +1,4 @@
-# DWM1 ROM Hack — Session Handoff (Bank $41 Complete + Bank $52 Skill Labels)
+# DWM1 ROM Hack — Session Handoff
 
 ## Build Verification
 ```bash
@@ -13,126 +13,91 @@ cannot be regenerated with matching bytes.
 
 ## What Was Completed This Session
 
-### 1. Bank $41 — All Remaining Tables Annotated
-Converted ALL raw hex between the already-labeled monster/skill name tables into
-fully labeled assembly. Bank $41 is now **100% annotated** — every pointer table
-uses `dw Label` references, every string has a named label, and all code functions
-are labeled.
+### 1. Bank $16 — All Data Tables Annotated (biggest win)
+Converted ~3930 lines of misinterpreted code to properly labeled `db` blocks.
+Bank went from 9092 to 5477 lines. 12 new data labels with full documentation.
+See DATA_STRUCTURES.md for complete field formats.
 
-**New pointer tables (all using `dw Label` format):**
-- `FamilyCodePtrTable` at $4739 — 215 entries (2-letter family code per monster)
-- `ItemNamePtrTable` at $48E7 — 44 entries (item ID → name string)
-- `ItemDescPtrTable` at $493F — 44 entries (item ID → description string)
-- `PersonalityNamePtrTable` at $4997 — 27 entries (personality ID → name)
-- `MiscTextPtrTable` at $49CD — 37 entries (battle tactics, level up messages)
-- `WatabouTextPtrTable` at $4A17 — 2 entries
-- `ItemUseTextPtrTable` at $4A1B — 48 entries (item use messages)
-- `SpellUseTextPtrTable` at $4A7B — 12 entries (spell cast messages)
+### 2. Bank $00 — 32+ Core Functions Named
+Named the most-called utility functions. ~2300 call site references updated
+across all bank files. Top hits: GetMonsterDataPtr (328 refs), CheckMonsterSlot
+(308), HL_AddA_x8 (270), WaitDMATransfer (128), WaitVRAM (119).
 
-**New string sections (all labeled):**
-- `FamilyCodeStrings` at $69F2 — 215 entries, 2 chars + $F0
-- `ItemNameStrings` at $6C78 — 43 entries (Herb, Lovewater, SageStone, etc.)
-- `ItemDescStrings` at $6DF8 — 43 entries with $F1=newline control codes
-- `PersonalityNameStrings` at $7159 — 27 entries (HOTBLOOD through LAZY)
+### 3. Cross-Bank Function Labels (~15 functions, ~700 refs)
+Named top functions in banks $12, $50, $51, $52, $57 including battle system
+(ClearBattleAction, ProcessBattleTurn, ApplySkillDamage), UI (AddCursorOffset),
+and sprite management (ClearSpriteBuffer, LoadPaletteFromDE).
 
-**Code functions labeled:**
-- `Func_Bank41_GetText` at $4A93
-- `Func_Bank41_PutText` at $4A9A
-- `Func_Bank41_GetPutText` at $4AA1
+### 4. Banks $50/$57 — Personality Adjustment Tables
+All 5 plan tables labeled: PersonalityRunTable, PersonalityChargeTable,
+PersonalityMixedTable, PersonalityCautiousTable, PersonalityCommandTable.
 
-**Bug fixed:** SkillNameStrings was 256 sequential entries bleeding into family
-code territory. Now correctly 222 unique + 1 empty terminator at $69F1.
-Skills 222-255 all point to that empty entry.
+### 5. Bank $17 — 92 Per-Room Attribute Labels
+Added RoomAttr_* labels throughout per-room data ($4845-$5214).
+AttrPtrTable entries converted from raw hex to label references.
 
-**Dispatch text regions** ($4AA8-$5B1E, $7229-$7FFF) are raw hex with labels
-at all referenced addresses from MiscText/WatabouText/ItemUseText/SpellUseText
-pointer tables.
+### 6. ROM Map Functions Labeled (Banks $01/$04/$0B/$14)
+LoadNextDungeonFloor, MapTypeDispatch, GetRoomDataPtr, SearchNPCAtFacing,
+CheckExitCoords, LoadEnemyStats, LookupBossRedirect, LoadBattle, etc.
 
-**Stats:** 2648 lines, 933 labels. File reduced from 6338 lines.
-**Generator:** `tools/gen_bank41_remaining_db.py` (`--apply` to regenerate)
+### 7. DATA_STRUCTURES.md — Comprehensive Catalog Created
+Machine-readable catalog of every decoded data structure. Designed as
+the schema for a future GUI editor.
 
-### 2. Bank $52 — Skill Handler Labels from ROM Map
-Applied named labels to all 115 skill handler functions in the battle system,
-using an externally-sourced ROM map document.
+## All Completed Work (All Sessions Combined)
 
-**Function table:** 222 entries converted from `dw $XXXX` to `dw SkillBlaze` etc.
-The table nominally has 256 entries but entries 222-255 overlap with the first
-handler code (same pattern as bank $41's skill names).
+### Fully Annotated Data Banks
+| Bank | Contents | Labels | Status |
+|------|----------|--------|--------|
+| $03 | Monster info table (221x43B) | ~250 | Done |
+| $0B | Room data system ($4B43-$7FFF) | ~800 | Done |
+| $13 | EXP curves + growth tables | ~100 | Done |
+| $14 | Enemy stats (487x25B) + boss redirect | ~500 | Done |
+| $16 | Breeding + gate floor system | 234 | Done (this session) |
+| $17 | Palette/attribute tables | ~210 | Ptr tables + 92 room attr labels (this session) |
+| $41 | ALL name/text tables + strings | 933 | Done |
+| $52 | Skill functions + battle system | 912 | Done |
+| 14 tileset banks | LZSS tile data pointer tables | ~500 | Done |
 
-**Overlap fix:** Entries 222-255 were fake `dw` values that were actually handler
-code bytes. Replaced with properly disassembled handler functions:
-SkillBlaze, SkillFirebal, SkillBang, SkillInfernos, SkillIceBolt, SkillBolt, SkillBeat.
+### Named Functions by Bank
+| Bank | Named | Total Call_ | Key Functions |
+|------|-------|-------------|---------------|
+| $00 | 89 | 545 remaining | Monster access, VRAM, math, text, SRAM |
+| $01 | 5+ | | LoadNextDungeonFloor, encounter system |
+| $04 | 3+ | | MapTypeDispatch, script engine |
+| $0B | 5+ | | Room loading, NPC search, exits |
+| $12 | 3 | | UI cursor, screen position |
+| $14 | 2 | | LoadEnemyStats, LookupBossRedirect |
+| $16 | 3 | | SetRandomEncounterCounter, SelectFloorType |
+| $50 | 6+ | | Battle sprites, palettes, arena |
+| $51 | 3 | | LoadBattle, ProcessBattleTurn |
+| $52 | 5+ | | Skill damage, resistance, animation |
+| $57 | 2 | | ClearBattleAction, AddBToHL16 |
 
-**104 handler labels inserted** at correct positions throughout the bank:
-SkillSleep, SkillStopSpell, SkillHeal, SkillVivify, SkillFarewell, SkillChargeUP,
-SkillFireSlash, SkillMultiCut, SkillBigBang, SkillMegaMagic, SkillLifeDance, etc.
+## NOT Done — Priority Work for Next Session
 
-**Utility function renames (from ROM map):**
-- 9 family checks: `CheckIsSlime`, `CheckIsDragon`, etc.
-- 7 math helpers: `BCsrl3`/`BCsrl2`/`BCsrl1`, `HLsrl4`/`HLsrl3`/`HLsrl2`/`HLsrl1`
+### HIGH PRIORITY
+1. **More Bank $00 function naming** — 545 Call_ labels remain. Next tier
+   (~20-10 calls each) includes menu system, event handling, sprite/tile ops.
+2. **Bank $17 per-room data parsing** — 92 labels added but data is still
+   raw hex. Parser could decode screen tables vs attribute entries.
+3. **Bank $04 script engine** — 100 opcodes documented but code still
+   has auto-generated labels throughout.
 
-**Stats:** 11578 lines, 912 labels (was 801).
-**Script:** `tools/annotate_bank052.py` (not idempotent — applied once)
+### MEDIUM PRIORITY  
+4. **Bank $52 skill handler code annotation** — handlers labeled but the
+   actual damage calc, resistance check, and effect code is uncommented.
+5. **Bank $57 battle dispatch** — core battle flow code.
+6. **WRAM symbol expansion** — add floor-type, encounter, and battle vars.
 
-## Key Patterns Discovered
+### LOWER PRIORITY
+7. NPC behavior values (lower nibble specific meanings)
+8. Collision data system (what makes tiles walkable)
+9. GUI editor (DATA_STRUCTURES.md provides the schema)
 
-### 222-vs-256 Overlap Pattern
-Both bank $41 and bank $52 use the same space-saving trick: tables nominally
-have 256 entries, but only entries 0-221 are valid. Entries 222-255 are "dead
-space" that the game reuses for other data (strings in bank $41, handler code
-in bank $52). The game never indexes beyond 221 for either skill names or
-skill functions.
-
-### Personality Index Formula (from ROM map)
-```
-personality_id = idx(Charge)*9 + idx(Cautious)*3 + idx(Mixed)
-```
-where `idx(x)` = 0 if x ≥ $C0, 1 if $40 ≤ x < $C0, 2 if x < $40.
-This maps the 3×3×3 grid to the 27 personality names.
-
-### Bank $00 Text System Functions
-- `$07AB HandleTextCharacter` — processes text control codes
-- `$0D78 ReadNextTextByte` — reads next byte from text stream
-- `$05B6` and `$05F6` — called by bank $41's GetText/PutText functions
-
-## ROM Map Intel (for future sessions)
-
-An external ROM map document was provided with detailed analysis of several
-banks. Key findings not yet applied:
-
-**Bank $16 data tables (HIGH PRIORITY):**
-- `$4874` UnevolvedSkillMap — 256 bytes mapping skill ID → base skill in evolution chain
-- `$6E3D` RandomEncounterCounterTable — 50 entries × 4 bytes (PRN threshold + counter)
-- `$702B` EncounterRateTable — variable (modifier per gate floor threshold)
-- `$70A6` GateFloorDataTable — 32 entries × 8 bytes (floor config per gate)
-- `$71A6` GateFloorTypeTable — 16×16 byte arrays (floor type selection)
-
-**Bank $13 experience tables:** 32 entries × 297 bytes at $41E6
-
-**Bank $50 personality adjustment tables:**
-- Run ($59B6), Charge ($70A9), Mixed ($70C9), Cautious ($70E9), Command ($7109)
-- Each 4×8: [Charge_adj, Mixed_adj, Cautious_adj, Motivation_adj]
-- Rows selected by Motivation threshold (151) and Level bracket (10/20/30)
-
-**Bank $00 math functions:**
-- `$1DBE` Mul8x8To16 (HL = A × C)
-- `$1DE6` Mul16x8To24 (E:HL = BC × A)
-- `$1E0D` Div16x8To16 (HL = HL // A; A = HL % A)
-- `$2F45` CmpHLvsBC
-- `$2F4B` Div16x16To16 (DE = HL // BC; BC = HL % BC)
-
-## Priority Work for Next Session
-
-### HIGH — Data Table Annotation
-1. **Bank $16 data tables** — unevolved skill map, encounter tables, gate floor data
-2. **Bank $17 per-room attribute entries** — still raw hex between pointer tables
-3. **Room name labels in gen_room_data_db.py** — add descriptive names
-
-### MEDIUM — Code Bank Annotation
-4. **Bank $16 code** — breeding system functions (already has good header docs)
-5. **Bank $51 code** — battle init, event sub-handlers
-6. **Bank $56/$57 code** — text engine, battle dispatch
-
-### LOWER
-7. NPC behavior values (lower nibble meanings)
-8. GUI editor planning
+## Key Documentation
+- `documentation/DATA_STRUCTURES.md` — Canonical data structure catalog
+- `documentation/ROOM_DATA_FORMAT.md` — Room data format reference
+- `documentation/BREEDING_SYSTEM.md` — Breeding recipe system
+- `documentation/TEXT_SYSTEM.md` — Text encoding and control codes
+- `documentation/SESSION_HANDOFF.md` — This file

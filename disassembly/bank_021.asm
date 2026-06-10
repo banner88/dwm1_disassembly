@@ -232,17 +232,17 @@ SECTION "ROM Bank $021", ROMX[$4000], BANK[$21]
 
 Call_021_40f1:
     ld de, $4007
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
     ld de, $4007
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
     call Call_021_40f1
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

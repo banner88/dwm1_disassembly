@@ -46,7 +46,7 @@ Call_007_402b:
     ldh [$d7], a
     ld hl, $002e
     call Call_007_6880
-    call Call_000_1fb9
+    call ConvertNumberToText
     call Call_007_6c8f
     ld de, $44b4
     ld a, [wMenu_selection]
@@ -61,12 +61,12 @@ Call_007_405c:
 
     ld a, $00
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $95c0
     call Call_007_43ab
     ld a, $00
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $8500
     call Call_007_66b1
     ld a, [$ca8d]
@@ -75,12 +75,12 @@ Call_007_405c:
 
     ld a, $01
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $8800
     call Call_007_43ab
     ld a, $01
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $8600
     call Call_007_66b1
     ld a, [$ca8d]
@@ -89,12 +89,12 @@ Call_007_405c:
 
     ld a, $02
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $8a40
     call Call_007_43ab
     ld a, $02
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     ld hl, $8700
     call Call_007_66b1
 
@@ -216,7 +216,7 @@ Call_007_4181:
     pop af
     push af
     ld hl, $caca
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [hl]
     ld [$c81e], a
     pop af
@@ -236,7 +236,7 @@ Call_007_4181:
 Call_007_41aa:
     push hl
     ld hl, $cacc
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [hl]
     pop hl
     call Call_007_6a3d
@@ -262,7 +262,7 @@ Call_007_41b7:
     push hl
     ld hl, $cb0c
     ldh a, [$d5]
-    call Call_000_224a
+    call ReadMonsterByte
     pop hl
     ld c, a
     ld b, $00
@@ -285,7 +285,7 @@ Call_007_41b7:
     push hl
     ld hl, $cb11
     ldh a, [$d5]
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     call Call_007_6fe2
     pop hl
@@ -306,7 +306,7 @@ Call_007_41b7:
     push hl
     ld hl, $cb15
     ldh a, [$d5]
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     call Call_007_6fe2
     pop hl
@@ -352,19 +352,19 @@ jr_007_425d:
     ld b, $00
     ld hl, $0110
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ld a, [$cab8]
     ld c, a
     ld b, $00
     ld hl, $00ae
     call Call_007_6880
-    call Call_000_20ad
+    call PrintNumber
     ld a, [$cab7]
     ld c, a
     ld b, $00
     ld hl, $00b1
     call Call_007_6880
-    call Call_000_20ad
+    call PrintNumber
     call Call_007_42b4
     ret
 
@@ -379,13 +379,13 @@ Call_007_4290:
     ld b, $00
     ld hl, $00ae
     call Call_007_6889
-    call Call_000_20ad
+    call PrintNumber
     ld a, [$cab7]
     ld c, a
     ld b, $00
     ld hl, $00b1
     call Call_007_6889
-    call Call_000_20ad
+    call PrintNumber
     ret
 
 
@@ -442,7 +442,7 @@ jr_007_42ee:
 
     pop hl
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     ret
 
 
@@ -484,7 +484,7 @@ jr_007_431e:
 
     pop hl
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     ret
 
 
@@ -502,7 +502,7 @@ Call_007_4331:
 
 jr_007_4345:
     push hl
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_007_435b
 
@@ -512,7 +512,7 @@ jr_007_4345:
     ld a, h
     adc $00
     ld h, a
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr nz, jr_007_435b
 
@@ -533,7 +533,7 @@ jr_007_435b:
 
 jr_007_4368:
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     ret
 
 
@@ -551,7 +551,7 @@ Call_007_436e:
 
 jr_007_4382:
     push hl
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_007_4398
 
@@ -561,7 +561,7 @@ jr_007_4382:
     ld a, h
     adc $00
     ld h, a
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_007_4398
 
@@ -582,7 +582,7 @@ jr_007_4398:
 
 jr_007_43a5:
     ld b, $00
-    call Call_000_2082
+    call CopyHLtoDE
     ret
 
 
@@ -608,7 +608,7 @@ Call_007_43ab:
     or a
     ret nz
 
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 label7_43c8:
@@ -733,7 +733,7 @@ jr_007_4498:
     ld a, b
     dec a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     pop hl
@@ -851,7 +851,7 @@ jr_007_4550:
     ld b, $00
     ld hl, $0031
     call Call_007_6880
-    call Call_000_2082
+    call CopyHLtoDE
     ld hl, $cb19
     ld de, $0070
     call Call_007_45e2
@@ -916,7 +916,7 @@ Call_007_45e2:
     call Call_007_6dcd
     pop hl
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ret
 
 
@@ -1020,7 +1020,7 @@ Call_007_466d:
     inc hl
     ld d, [hl]
     ld hl, $8b00
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 
@@ -1143,7 +1143,7 @@ jr_007_4704:
     ld b, $00
     ld hl, $0031
     call Call_007_6880
-    call Call_000_2082
+    call CopyHLtoDE
     ld hl, $cb0e
     call Call_007_6da8
     ld a, [hl+]
@@ -1168,7 +1168,7 @@ jr_007_4704:
     call Call_007_6d8b
     ld [$cac0], a
     ld hl, $cb0c
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     cp $63
     jr z, jr_007_47ca
@@ -1176,7 +1176,7 @@ jr_007_4704:
     push af
     ld a, [$cac0]
     ld hl, $cb0d
-    call Call_000_223b
+    call GetMonsterDataPtr
     pop af
     cp [hl]
     jr z, jr_007_47ca
@@ -1266,7 +1266,7 @@ jr_007_482f:
     inc hl
     ld d, [hl]
     ld hl, $8b00
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $724f
     call Call_007_68dc
     call Call_007_690d
@@ -1633,7 +1633,7 @@ jr_007_4a59:
     ldh [$d7], a
     ld hl, $002e
     call Call_007_6880
-    call Call_000_1fb9
+    call ConvertNumberToText
     call Call_007_6c8f
     ld de, $44b4
     ld a, [wMenu_selection]
@@ -1902,7 +1902,7 @@ jr_007_4c4a:
     ldh [$d7], a
     ld hl, $002e
     call Call_007_6880
-    call Call_000_1fb9
+    call ConvertNumberToText
     ld de, $7748
     call Call_007_68dc
     ld de, $4c53
@@ -1921,7 +1921,7 @@ jr_007_4c4a:
     call Call_007_690d
     ld de, $560b
     ld hl, $8e50
-    call Call_000_1577
+    call WaitDMATransfer
     ld hl, $c90e
     inc [hl]
     ret
@@ -2133,16 +2133,16 @@ Call_007_4da6:
     call Call_007_68dc
     ld hl, $cb11
     ld a, [$c8de]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0201
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ld hl, $cb13
     ld a, [$c8de]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0205
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     jr jr_007_4e80
 
 Jump_007_4e56:
@@ -2150,21 +2150,21 @@ Jump_007_4e56:
     call Call_007_68dc
     ld hl, $cb15
     ld a, [$c8de]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0201
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ld hl, $cb17
     ld a, [$c8de]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0205
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
 
 jr_007_4e80:
     ld hl, $cb0b
     ld a, [$c8de]
-    call Call_000_224a
+    call ReadMonsterByte
     ld b, a
     ld hl, $01c5
     call Call_007_6880
@@ -2250,14 +2250,14 @@ jr_007_4ef4:
     ld bc, $ffff
     ld de, $ca42
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $cac2
     ld a, [$c8de]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [wPLAN_selection]
     ld b, a
     add a
@@ -2278,7 +2278,7 @@ jr_007_4ef4:
     ld l, a
     ld h, $08
     ld de, $c1a0
-    call Call_000_097a
+    call SetupVRAMParams
     ld a, [$da66]
     cp $00
     jr z, jr_007_4f55
@@ -2289,7 +2289,7 @@ jr_007_4ef4:
     ld h, $0d
     ld a, $01
     ld l, a
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $ff
     ld [$da5e], a
     jr jr_007_4f68
@@ -2298,7 +2298,7 @@ jr_007_4f55:
     ld h, $0d
     ld a, [$da69]
     ld l, a
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, [$c8de]
     ld [$da60], a
     ld hl, $0303
@@ -2341,7 +2341,7 @@ jr_007_4f96:
     ld l, $02
 
 jr_007_4f9f:
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_007_4fa2:
     ld hl, $c90e
@@ -2380,7 +2380,7 @@ jr_007_4fa2:
     rst $10
     ld hl, $0103
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     ld a, [$c825]
     or a
     jr nz, jr_007_4ffc
@@ -2395,7 +2395,7 @@ jr_007_4fa2:
 
     ld h, $0d
     ld l, $00
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_007_4ffc:
     ld hl, $c90e
@@ -2432,7 +2432,7 @@ jr_007_5012:
     ld [$da60], a
     ld hl, $0304
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     ld a, $06
     ld [$d92b], a
     ld hl, $0000
@@ -2457,7 +2457,7 @@ jr_007_5012:
     ld a, $01
     ld [$c8ec], a
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     call Call_000_2652
@@ -2483,7 +2483,7 @@ Jump_007_5077:
     ld [$da60], a
     ld hl, $0304
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     ldh a, [$b7]
     ld l, a
     ldh a, [$b8]
@@ -2499,7 +2499,7 @@ Jump_007_5077:
     ld hl, $0b08
     rst $10
     ld hl, $c300
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $c300
     ld a, [$c962]
     ld l, a
@@ -2606,7 +2606,7 @@ jr_007_512a:
     ld hl, wGameState
     res 1, [hl]
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ret
@@ -2618,7 +2618,7 @@ jr_007_5160:
     ld a, [wRNG1]
     ld b, a
     ld a, $08
-    call Call_000_1dfb
+    call Div8x8
     add $01
     swap a
     ld h, a
@@ -2636,7 +2636,7 @@ jr_007_5160:
     ld a, [wRNG1]
     ld b, a
     ld a, $06
-    call Call_000_1dfb
+    call Div8x8
     add $01
     swap a
     ld h, a
@@ -2650,7 +2650,7 @@ jr_007_5160:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_000_1e31
+    call WaitInputRelease
     ldh a, [$aa]
     srl a
     srl a
@@ -2772,7 +2772,7 @@ Call_007_51cb:
     ldh [$d7], a
     ld hl, $002e
     call Call_007_6880
-    call Call_000_1fb9
+    call ConvertNumberToText
     call Call_007_6c8f
     ld de, $7748
     call Call_007_68dc
@@ -2817,9 +2817,9 @@ jr_007_5279:
     ld l, [hl]
     ld h, $08
     ld de, $c190
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $0201
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $5c
     call PlaySoundEffect
     ld de, $2e07
@@ -2886,9 +2886,9 @@ jr_007_5309:
     inc [hl]
     ld de, $ca42
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $0202
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 Jump_007_5330:
 jr_007_5330:
@@ -2978,7 +2978,7 @@ jr_007_5330:
     ldh [$d7], a
     ld hl, $002e
     call Call_007_6880
-    call Call_000_1fb9
+    call ConvertNumberToText
     ld de, $76d1
     call Call_007_68dc
     ld de, $7687
@@ -3036,7 +3036,7 @@ jr_007_541a:
 
     ld hl, $cb0b
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     jr nz, jr_007_5442
 
@@ -3053,7 +3053,7 @@ jr_007_5441:
 
 jr_007_5442:
     ld hl, $0e0b
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $0a
     ld [$c90e], a
     ret
@@ -3137,10 +3137,10 @@ jr_007_54ae:
     call Call_007_558d
     ld hl, $cb15
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0125
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     call Call_007_6c8f
     ld de, $56a4
     ld a, [wPLAN_selection]
@@ -3168,7 +3168,7 @@ jr_007_5510:
 
 jr_007_5513:
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [wPLAN_selection]
     and $7f
     add l
@@ -3224,7 +3224,7 @@ jr_007_552b:
 Call_007_5572:
     ld hl, $caea
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld b, $08
     ld c, $00
 
@@ -3256,7 +3256,7 @@ jr_007_5599:
 
 jr_007_559c:
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [wPLAN_selection]
     and $7f
     add l
@@ -3281,17 +3281,17 @@ jr_007_559c:
 
     ld hl, $0121
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ret
 
 
 jr_007_55cb:
     ld hl, $cb15
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0121
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ret
 
 
@@ -3357,7 +3357,7 @@ jr_007_5635:
     inc [hl]
     ld hl, $caea
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [$c8dd]
     and $7f
     add a
@@ -3410,7 +3410,7 @@ jr_007_5635:
     jr z, jr_007_56a3
 
     ld hl, $0e0a
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld a, $0a
     ld [$c90e], a
     ret
@@ -3964,19 +3964,19 @@ jr_007_58f4:
 
     ld hl, $cb11
     ld a, [$c8dd]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0201
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ld hl, $cb13
     ld a, [$c8dd]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0205
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ld hl, $cb0b
     ld a, [$c8dd]
-    call Call_000_224a
+    call ReadMonsterByte
     ld b, a
     ld hl, $01c5
     call Call_007_6880
@@ -4048,11 +4048,11 @@ jr_007_59b6:
     and $7f
     ld [$da60], a
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, $59
     call PlaySoundEffect
     ld hl, $c90e
@@ -4066,19 +4066,19 @@ jr_007_59dd:
 Call_007_59de:
     ld hl, $cb11
     ld a, [$c8de]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0201
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ld hl, $cb13
     ld a, [$c8de]
-    call Call_000_224f
+    call ReadMonsterWord
     ld hl, $0205
     call Call_007_6880
-    call Call_000_2071
+    call FillMemory
     ld hl, $cb0b
     ld a, [$c8de]
-    call Call_000_224a
+    call ReadMonsterByte
     ld b, a
     ld hl, $01c5
     call Call_007_6880
@@ -4111,16 +4111,16 @@ jr_007_5a2c:
 
     ld hl, $cac2
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     ld a, [$da5e]
     ld l, a
     ld h, $06
     ld de, $c1a0
-    call Call_000_097a
+    call SetupVRAMParams
     ld hl, $0e00
     ld a, [$da5e]
     cp $7e
@@ -4129,7 +4129,7 @@ jr_007_5a2c:
     ld hl, $0e09
 
 jr_007_5a58:
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_007_68dc
     call Call_007_690d
@@ -4156,7 +4156,7 @@ jr_007_5a7f:
 
 jr_007_5a82:
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [wPLAN_selection]
     and $7f
     add l
@@ -4179,7 +4179,7 @@ jr_007_5a82:
     push bc
     ld hl, $cb15
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld a, [hl+]
     sub c
@@ -4232,7 +4232,7 @@ jr_007_5a82:
     ld hl, $0e03
 
 jr_007_5afb:
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_007_5afe:
     ld hl, $c90e
@@ -4256,7 +4256,7 @@ jr_007_5b0c:
 
 Jump_007_5b16:
 jr_007_5b16:
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c90e
     inc [hl]
     ret
@@ -4267,7 +4267,7 @@ Call_007_5b1e:
     rst $10
     ld hl, $0103
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     ld a, [$c8dd]
     cp $00
     jr z, jr_007_5b35
@@ -4280,7 +4280,7 @@ jr_007_5b35:
 
 jr_007_5b38:
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [wPLAN_selection]
     and $7f
     add l
@@ -4303,7 +4303,7 @@ jr_007_5b38:
     push bc
     ld hl, $cb15
     ld a, [wOPTN_and_Item_selection]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     pop bc
     ld a, [hl]
     sub c
@@ -4348,17 +4348,17 @@ jr_007_5b38:
 
     ld hl, $cb0b
     ld a, $00
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     jr nz, jr_007_5be0
 
     ld a, $00
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $00
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -4372,13 +4372,13 @@ jr_007_5b38:
 
     ld hl, $cac2
     ld a, $00
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $0e03
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_007_68dc
     call Call_007_690d
@@ -4399,17 +4399,17 @@ jr_007_5be0:
 
     ld hl, $cb0b
     ld a, $01
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     jr nz, jr_007_5c2f
 
     ld a, $01
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $01
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -4423,13 +4423,13 @@ jr_007_5be0:
 
     ld hl, $cac2
     ld a, $01
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $0e03
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_007_5c2f:
     ld hl, $c90e
@@ -4447,17 +4447,17 @@ jr_007_5c2f:
 
     ld hl, $cb0b
     ld a, $02
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     jr nz, jr_007_5c7e
 
     ld a, $02
     ld hl, $cb13
-    call Call_000_224f
+    call ReadMonsterWord
     push bc
     ld a, $02
     ld hl, $cb11
-    call Call_000_224f
+    call ReadMonsterWord
     pop hl
     ld a, l
     sub c
@@ -4471,13 +4471,13 @@ jr_007_5c2f:
 
     ld hl, $cac2
     ld a, $02
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $c190
-    call Call_000_0c80
+    call Copy4Bytes
     ld hl, $0e03
-    call Call_000_096d
+    call SetupTilemapTransfer
 
 jr_007_5c7e:
     ld hl, $c90e
@@ -4524,7 +4524,7 @@ jr_007_5c7e:
     ld l, $21
     nop
     sub b
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_007_6a8f
     ld de, $704d
     call Call_007_68dc
@@ -4538,7 +4538,7 @@ jr_007_5c7e:
     ldh [$d7], a
     ld hl, $002e
     call Call_007_6880
-    call Call_000_1fb9
+    call ConvertNumberToText
     ld de, $7a61
     call Call_007_68dc
     call Call_007_6c8f
@@ -4671,7 +4671,7 @@ jr_007_5daa:
     ld a, $00
     push bc
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop bc
     bit 7, a
     jr nz, jr_007_5dd1
@@ -4686,7 +4686,7 @@ jr_007_5dd1:
     ld a, $01
     push bc
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop bc
     bit 7, a
     jr nz, jr_007_5de7
@@ -4701,7 +4701,7 @@ jr_007_5de7:
     ld a, $02
     push bc
     ld hl, $cb0b
-    call Call_000_224a
+    call ReadMonsterByte
     pop bc
     bit 7, a
     jr nz, jr_007_5dfd
@@ -5045,7 +5045,7 @@ jr_007_6036:
     ld [$d843], a
 
 jr_007_6039:
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_007_6a8f
     ld a, $01
     ld [$c90d], a
@@ -5114,7 +5114,7 @@ Call_007_604d:
 
 jr_007_6090:
     ld hl, $0243
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     call Call_007_68dc
     call Call_007_690d
@@ -5133,7 +5133,7 @@ jr_007_60a5:
     ld de, $2e07
     call Call_007_68dc
     ld hl, $a002
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr nz, jr_007_6122
 
@@ -5188,7 +5188,7 @@ jr_007_6122:
     ei
     call Call_007_61fd
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     or a
     jr z, jr_007_61a8
 
@@ -5197,15 +5197,15 @@ jr_007_6122:
     ld [$0100], a
     ld hl, $a246
     ld a, [$a1c8]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ei
     ld b, $00
     ld hl, $0084
     call Call_007_6880
-    call Call_000_2082
+    call CopyHLtoDE
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     cp $01
     jr z, jr_007_61ae
 
@@ -5214,15 +5214,15 @@ jr_007_6122:
     ld [$0100], a
     ld hl, $a246
     ld a, [$a1c9]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ei
     ld b, $00
     ld hl, $008a
     call Call_007_6880
-    call Call_000_2082
+    call CopyHLtoDE
     ld hl, $a1c7
-    call Call_000_20ee
+    call EnableSRAM
     cp $02
     jr z, jr_007_61b4
 
@@ -5231,13 +5231,13 @@ jr_007_6122:
     ld [$0100], a
     ld hl, $a246
     ld a, [$a1ca]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld c, [hl]
     ei
     ld b, $00
     ld hl, $0090
     call Call_007_6880
-    call Call_000_2082
+    call CopyHLtoDE
     jr jr_007_61ba
 
 jr_007_61a8:
@@ -5254,25 +5254,25 @@ jr_007_61b4:
 
 jr_007_61ba:
     ld hl, $a1f2
-    call Call_000_20ee
+    call EnableSRAM
     ld c, a
     ld b, $00
     ld hl, $002d
     call Call_007_6880
-    call Call_000_20ad
+    call PrintNumber
     ld hl, $a1f1
-    call Call_000_20ee
+    call EnableSRAM
     ld c, a
     ld b, $00
     ld hl, $0030
     call Call_007_6880
-    call Call_000_20ad
+    call PrintNumber
 
 Jump_007_61de:
     ld a, $00
     ld [$0100], a
     ld hl, $0207
-    call Call_000_096d
+    call SetupTilemapTransfer
     call Call_007_6c8f
     ld de, $6330
     ld a, [$c8de]
@@ -5292,7 +5292,7 @@ Call_007_61fd:
     ld [$0100], a
     ld hl, $a1fc
     ld a, [$a1c8]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ei
     ld e, l
     ld d, h
@@ -5304,7 +5304,7 @@ Call_007_61fd:
     ld [$0100], a
     ld hl, $a1fc
     ld a, [$a1c9]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ei
     ld e, l
     ld d, h
@@ -5316,7 +5316,7 @@ Call_007_61fd:
     ld [$0100], a
     ld hl, $a1fc
     ld a, [$a1ca]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ei
     ld e, l
     ld d, h
@@ -5368,7 +5368,7 @@ jr_007_6271:
     ld h, a
     ld a, [hl]
     ld hl, $a205
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ei
     add a
@@ -5387,7 +5387,7 @@ jr_007_6271:
     add $a0
     ld l, a
     ld h, $8d
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 
@@ -5480,7 +5480,7 @@ jr_007_632f:
     rst $38
     rst $38
     ld hl, $0232
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c90e
     inc [hl]
     ret
@@ -5505,7 +5505,7 @@ jr_007_632f:
 jr_007_6358:
     ld a, [$c8e0]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     jr z, jr_007_6374
 
@@ -5535,7 +5535,7 @@ jr_007_637c:
 Call_007_6385:
     ld hl, $cac2
     ld a, [$c8e0]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $93c0
@@ -5546,7 +5546,7 @@ Call_007_6385:
     call Call_007_68dc
     ld hl, $cacc
     ld a, [$c8e0]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [hl]
     swap a
     and $03
@@ -5576,7 +5576,7 @@ jr_007_63d5:
     dec [hl]
     ld a, [$c8e0]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     jr nz, jr_007_63d5
 
@@ -5604,7 +5604,7 @@ jr_007_63fc:
     push bc
     ld hl, $cacc
     ld a, [$c8e0]
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld a, [hl]
     and $cf
     pop bc
@@ -5622,7 +5622,7 @@ jr_007_6420:
 
     ld a, [$c8e0]
     ld hl, $cb0b
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     bit 7, [hl]
     jr nz, jr_007_6420
 
@@ -5717,7 +5717,7 @@ label7_6468:
     inc [hl]
     ld a, [$cac0]
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     ret z
@@ -5870,7 +5870,7 @@ jr_007_6587:
 Call_007_6588:
     ld a, [$cac0]
     ld hl, $cb24
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     or a
     jr nz, jr_007_65f9
@@ -5972,7 +5972,7 @@ Call_007_6625:
     ret z
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $01
     ldh [rVBK], a
     ei
@@ -6055,7 +6055,7 @@ jr_007_6658:
     jr nz, jr_007_6655
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $00
     ldh [rVBK], a
     ei
@@ -6091,7 +6091,7 @@ Call_007_66b1:
     inc hl
     ld d, [hl]
     pop hl
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 
@@ -6228,7 +6228,7 @@ Call_007_6779:
 
     ld a, $00
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     push af
     ld hl, $ffc3
     ld a, $2f
@@ -6247,7 +6247,7 @@ Call_007_6779:
     push hl
     ld hl, $cb0b
     ld a, $00
-    call Call_000_224a
+    call ReadMonsterByte
     ld a, [hl]
     pop hl
     pop bc
@@ -6275,7 +6275,7 @@ jr_007_67bc:
 
     ld a, $01
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     push af
     ld hl, $ffc3
     ld a, $5f
@@ -6294,7 +6294,7 @@ jr_007_67bc:
     push hl
     ld hl, $cb0b
     ld a, $01
-    call Call_000_224a
+    call ReadMonsterByte
     ld a, [hl]
     pop hl
     pop bc
@@ -6322,7 +6322,7 @@ jr_007_6806:
 
     ld a, $02
     ld hl, $caca
-    call Call_000_224a
+    call ReadMonsterByte
     push af
     ld hl, $ffc3
     ld a, $8f
@@ -6341,7 +6341,7 @@ jr_007_6806:
     push hl
     ld hl, $cb0b
     ld a, $02
-    call Call_000_224a
+    call ReadMonsterByte
     ld a, [hl]
     pop hl
     pop bc
@@ -6576,7 +6576,7 @@ Call_007_6942:
     ld l, c
     ld h, $04
     ld de, $c180
-    call Call_000_097a
+    call SetupVRAMParams
     pop af
     ld de, $c180
     call Call_007_6de2
@@ -6668,7 +6668,7 @@ jr_007_69b6:
 Call_007_69ef:
     push hl
     ld hl, $c180
-    call Call_000_0c80
+    call Copy4Bytes
     pop hl
     ld a, [$c827]
     ld c, a
@@ -6821,7 +6821,7 @@ Call_007_6aba:
     call Call_007_6a9e
     ld de, $2e0d
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     call Call_007_6c8f
     ld hl, $170a
     rst $10
@@ -6842,7 +6842,7 @@ label7_6b04:
     rst $10
     ld hl, $1708
     rst $10
-    call Call_000_2518
+    call UpdateOAMSprites
     call Call_000_25f1
     ld hl, $0604
     rst $10
@@ -6856,28 +6856,28 @@ label7_6b04:
 
     ld de, $2e15
     ld hl, $8500
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e16
     ld hl, $8540
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e17
     ld hl, $8580
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e18
     ld hl, $85c0
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e19
     ld hl, $8600
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1a
     ld hl, $8640
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1b
     ld hl, $8680
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $2e1c
     ld hl, $86c0
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 
@@ -6903,7 +6903,7 @@ Call_007_6b7f:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -6931,7 +6931,7 @@ jr_007_6bac:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld a, b
     inc a
     pop bc
@@ -6955,7 +6955,7 @@ jr_007_6bca:
     push bc
     ld a, b
     ld b, c
-    call Call_000_1dfb
+    call Div8x8
     pop bc
     pop de
     or a
@@ -6982,7 +6982,7 @@ jr_007_6be6:
     ld a, b
     ld b, c
     dec b
-    call Call_000_1dfb
+    call Div8x8
     ld [$c8e1], a
     ld a, b
     pop bc
@@ -7368,7 +7368,7 @@ Call_007_6da8:
 
 jr_007_6db3:
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ret
 
 
@@ -7383,7 +7383,7 @@ Call_007_6dba:
 
 jr_007_6dc5:
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ret
 
@@ -7399,7 +7399,7 @@ Call_007_6dcd:
 
 jr_007_6dd8:
     ld a, [$cac0]
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -7425,7 +7425,7 @@ jr_007_6de3:
     inc de
     ld l, e
     ld h, d
-    call Call_000_09a4
+    call ExtractDigits
     ret
 
 

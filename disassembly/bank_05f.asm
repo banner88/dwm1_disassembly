@@ -49,10 +49,10 @@ SECTION "ROM Bank $05f", ROMX[$4000], BANK[$5f]
     call Call_05f_40eb
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $66b3
     ld hl, $9800
     ld bc, $1412
@@ -66,7 +66,7 @@ jr_05f_4067:
     call Call_05f_439d
     call Call_05f_43ba
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $21
     call SetBGM
     xor a
@@ -97,12 +97,12 @@ jr_05f_4067:
     call Call_05f_424a
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $8b00
     ld de, $1202
-    call Call_000_098f
+    call SetupVRAMCopy
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $31
     call SetBGM
     xor a
@@ -185,7 +185,7 @@ jr_05f_40eb:
     ld hl, $c88f
     inc [hl]
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
@@ -204,7 +204,7 @@ jr_05f_40eb:
     ld hl, $0802
     rst $10
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c0d8
     inc [hl]
     ret
@@ -275,7 +275,7 @@ jr_05f_4173:
     ld hl, $c88e
     inc [hl]
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
@@ -302,7 +302,7 @@ jr_05f_4173:
     ret z
 
     ld hl, $0256
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld de, $2e07
     ld hl, $9800
     call Call_05f_4298
@@ -336,7 +336,7 @@ jr_05f_4173:
     ld hl, $0257
 
 jr_05f_423c:
-    call Call_000_096d
+    call SetupTilemapTransfer
     ld hl, $c0d8
     inc [hl]
     ret
@@ -696,7 +696,7 @@ Call_05f_43ba:
 
     ld a, $02
     call Call_000_1c89
-    call Call_000_1013
+    call DisableSRAM
     xor a
     ld hl, $9800
     ld bc, $0400
@@ -707,7 +707,7 @@ Call_05f_43ba:
     call FillNBytesWithRegA
     ld de, $560e
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $669d
     ld hl, $9800
     call Call_05f_4263
@@ -723,7 +723,7 @@ jr_05f_4469:
     ld hl, $9800
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld a, $00
     ldh [rVBK], a
     ret
@@ -731,7 +731,7 @@ jr_05f_4469:
 
     ld a, $02
     call Call_000_1c89
-    call Call_000_1013
+    call DisableSRAM
     xor a
     ld hl, $9800
     ld bc, $0400
@@ -742,7 +742,7 @@ jr_05f_4469:
     call FillNBytesWithRegA
     ld de, $560c
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $666e
     ld hl, $9800
     call Call_05f_4263
@@ -756,7 +756,7 @@ jr_05f_4469:
     ld hl, $9800
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld a, $00
     ldh [rVBK], a
     ret
@@ -764,7 +764,7 @@ jr_05f_4469:
 
     ld a, $02
     call Call_000_1c89
-    call Call_000_1013
+    call DisableSRAM
     xor a
     ld hl, $9800
     ld bc, $0400
@@ -775,7 +775,7 @@ jr_05f_4469:
     call FillNBytesWithRegA
     ld de, $5b1f
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $6457
     ld hl, $9800
     call Call_05f_4263
@@ -789,7 +789,7 @@ jr_05f_4469:
     ld hl, $9800
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld a, $00
     ldh [rVBK], a
     ret
@@ -805,10 +805,10 @@ jr_05f_4469:
     call FillNBytesWithRegA
     ld de, $5b18
     ld hl, $8000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $5b19
     ld hl, $8040
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, $00
     ld [$c81e], a
     ld hl, $170b
@@ -841,10 +841,10 @@ jr_05f_4469:
     call FillNBytesWithRegA
     ld de, $5b20
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $5b21
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $64f1
     ld hl, $9800
     call Call_05f_4263
@@ -858,7 +858,7 @@ jr_05f_4469:
     ld hl, $9800
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld a, $00
     ldh [rVBK], a
     ret
@@ -874,10 +874,10 @@ jr_05f_4469:
     call FillNBytesWithRegA
     ld de, $5b20
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $5b21
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $6583
     ld hl, $9800
     call Call_05f_4263
@@ -910,7 +910,7 @@ jr_05f_4614:
 
 
     ld a, $f4
-    call Call_000_1275
+    call SerialTransfer
     ld a, [wJoypad_current_frame]
     bit 0, a
     jr nz, jr_05f_463f
@@ -946,7 +946,7 @@ jr_05f_463f:
 
 Jump_05f_464a:
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $00
     ld [$c88b], a
     ld a, $06
@@ -960,7 +960,7 @@ Jump_05f_464a:
 
 jr_05f_4663:
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $01
     ld [$c88b], a
     ld a, $00
@@ -986,7 +986,7 @@ Jump_05f_4685:
     jp nz, Jump_05f_464a
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $00
     ld [$c88b], a
     ld a, $00
@@ -1019,7 +1019,7 @@ Jump_05f_4685:
     ret nz
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     xor a
     ld [$c0d8], a
     ld hl, $c88d
@@ -1040,7 +1040,7 @@ Jump_05f_4685:
     ret nz
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     xor a
     ld [$c0d8], a
     ld hl, $c88d
@@ -1061,7 +1061,7 @@ Jump_05f_4685:
     ret nz
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     xor a
     ld [$c0d8], a
     ld hl, $c88c
@@ -1324,7 +1324,7 @@ jr_05f_4899:
     ret z
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     xor a
     ld [$c0d8], a
     ld hl, $c88c
@@ -1345,7 +1345,7 @@ jr_05f_4899:
     ret nz
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     xor a
     ld [$c0d8], a
     ld hl, $c88c
@@ -1452,7 +1452,7 @@ jr_05f_4997:
     ret z
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     xor a
     ld [$c0d8], a
     ld hl, $c88c
@@ -1829,7 +1829,7 @@ jr_05f_4b88:
     jr z, jr_05f_4b97
 
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_05f_4bf4
 
 jr_05f_4b97:
@@ -2283,7 +2283,7 @@ jr_05f_4e1f:
 
 jr_05f_4e24:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ld [de], a
     ei
@@ -2654,7 +2654,7 @@ jr_05f_4ffe:
     push bc
     ld c, [hl]
     ldh a, [$d5]
-    call Call_000_1dbe
+    call Mul8x8To16
     pop bc
     bit 3, e
     jr z, jr_05f_5018
@@ -3157,7 +3157,7 @@ jr_05f_525f:
 
 jr_05f_5263:
     ld a, [$db88]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_05f_52c8
 
     ld a, [$da84]
@@ -5162,7 +5162,7 @@ jr_05f_5bb0:
     call Call_05f_4263
     ld de, $2e00
     ld hl, $8d00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $6195
     ld de, $8b90
     call Call_05f_5f58
@@ -5174,7 +5174,7 @@ jr_05f_5bb0:
     call Call_05f_5fbc
     call Call_05f_5fdb
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $9800
     ld a, l
     ld [$d9f8], a
@@ -5447,7 +5447,7 @@ Jump_05f_5dd7:
     ld d, [hl]
     ld e, a
     ld hl, $8000
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, [wOPTN_and_Item_selection]
     ld [$c81e], a
     ld hl, $170d
@@ -5488,7 +5488,7 @@ jr_05f_5e27:
 
 Jump_05f_5e3e:
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $07
     ld [wGameMode], a
     ld a, $00
@@ -5578,12 +5578,12 @@ Jump_05f_5ec1:
 Call_05f_5ecc:
 jr_05f_5ecc:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, d
     ld [hl+], a
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, e
     ld [hl+], a
     ei
@@ -5642,7 +5642,7 @@ Call_05f_5f33:
 
 Call_05f_5f36:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $e0
     ld [hl], a
     ei
@@ -5657,7 +5657,7 @@ Call_05f_5f36:
 
 Call_05f_5f47:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $e8
     ld [hl], a
     ei
@@ -5699,7 +5699,7 @@ Call_05f_5f78:
 
 jr_05f_5f7a:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ld [de], a
     ei
@@ -5888,7 +5888,7 @@ Call_05f_607a:
     inc hl
     ld d, [hl]
     ld hl, $9000
-    call Call_000_1577
+    call WaitDMATransfer
     ret
 
 
@@ -6402,12 +6402,12 @@ Call_05f_633d:
 Call_05f_6348:
     ld b, [hl]
     ld a, $64
-    call Call_000_1dfb
+    call Div8x8
     ld hl, $db4f
     ld [hl], b
     ld b, a
     ld a, $0a
-    call Call_000_1dfb
+    call Div8x8
     ld hl, $db50
     ld [hl], b
     ld [$db51], a

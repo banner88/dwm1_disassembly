@@ -459,7 +459,7 @@ Jump_058_4206:
 
 jr_058_4213:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_421e
 
     call Call_058_660d
@@ -481,7 +481,7 @@ jr_058_4228:
 
 jr_058_422e:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4239
 
     call Call_058_43ea
@@ -518,7 +518,7 @@ jr_058_425a:
     jr nz, jr_058_4266
 
     ld a, c
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr nc, jr_058_42c6
 
 jr_058_4266:
@@ -538,7 +538,7 @@ jr_058_4270:
 jr_058_4276:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_42a6
 
     call Call_058_43ea
@@ -546,7 +546,7 @@ jr_058_4276:
 
     call Call_058_43ff
     ld a, c
-    call Call_000_2fe8
+    call ReadEventFlags2
     ld a, [$db56]
     ld c, a
     ld a, [$db57]
@@ -596,7 +596,7 @@ jr_058_42c6:
 jr_058_42cc:
     push bc
     ld a, c
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr c, jr_058_42fc
 
     call Call_058_43ea
@@ -604,7 +604,7 @@ jr_058_42cc:
 
     call Call_058_43ff
     ld a, c
-    call Call_000_2fe8
+    call ReadEventFlags2
     ld a, [$db56]
     ld c, a
     ld a, [$db57]
@@ -694,7 +694,7 @@ jr_058_434e:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr z, jr_058_436b
 
     jr nc, jr_058_4375
@@ -734,7 +734,7 @@ Call_058_4384:
 jr_058_438f:
     ld a, c
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     jr nz, jr_058_439f
 
@@ -755,13 +755,13 @@ jr_058_43a2:
 
 Call_058_43aa:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_43d4
 
-    call Call_000_2fe8
+    call ReadEventFlags2
     push hl
     ld a, c
-    call Call_000_2fd3
+    call ReadEventFlags3
     ld a, [$db63]
     or a
     jr z, jr_058_43d0
@@ -769,7 +769,7 @@ Call_058_43aa:
     push hl
     ld a, c
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     pop hl
     bit 2, a
@@ -808,7 +808,7 @@ jr_058_43d7:
 
 Call_058_43ea:
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     jr nz, jr_058_43fe
 
@@ -912,7 +912,7 @@ jr_058_4463:
     ld h, a
     ld a, [hl]
     ld [$db89], a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_443a
 
     ld a, [$db88]
@@ -933,7 +933,7 @@ jr_058_448a:
 
 jr_058_448d:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_44b2
 
     ld a, c
@@ -948,7 +948,7 @@ jr_058_448d:
     ld d, [hl]
     ld e, a
     ld a, c
-    call Call_000_2fd3
+    call ReadEventFlags3
     srl h
     rr l
     srl d
@@ -1037,7 +1037,7 @@ jr_058_4515:
     ld a, d
     ld [$db50], a
     ld a, e
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_452b
 
     ld bc, $0000
@@ -1058,7 +1058,7 @@ jr_058_452b:
     ld c, a
     ld a, e
     call Call_000_2fda
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nz, jr_058_454a
 
     ld bc, $0001
@@ -1066,7 +1066,7 @@ jr_058_452b:
     jr jr_058_454d
 
 jr_058_454a:
-    call Call_000_2f4b
+    call Div16x16To16
 
 jr_058_454d:
     push hl
@@ -1134,7 +1134,7 @@ jr_058_459e:
     ld a, b
     ld [$db50], a
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_45e1
 
     ld hl, $db4c
@@ -1153,7 +1153,7 @@ jr_058_459e:
     jr z, jr_058_45ca
 
     ld a, $1e
-    call Call_000_1de6
+    call Mul16x8To24
     jr jr_058_45cc
 
 jr_058_45ca:
@@ -1186,9 +1186,9 @@ jr_058_45e1:
     ld a, [$db53]
     ld e, a
     ld a, [$db4c]
-    call Call_000_1e1e
+    call Div24x8To16
     ld a, [$db4c]
-    call Call_000_1e1e
+    call Div24x8To16
     ld a, l
     ld [$db61], a
     ld a, h
@@ -1206,7 +1206,7 @@ jr_058_461a:
     ld a, d
     ld [$db4d], a
     ld a, e
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_466e
 
     ld a, e
@@ -1221,15 +1221,15 @@ jr_058_461a:
     ld b, [hl]
     ld c, a
     ld a, e
-    call Call_000_2fe8
-    call Call_000_2f45
+    call ReadEventFlags2
+    call CmpHLvsBC
     jr z, jr_058_466e
 
     ld a, [$db61]
     ld c, a
     ld a, [$db62]
     ld b, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr z, jr_058_465e
 
     jr nc, jr_058_466e
@@ -1293,7 +1293,7 @@ jr_058_4693:
 
 jr_058_46a8:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_46b0
 
     jr nz, jr_058_46b8
@@ -1332,7 +1332,7 @@ jr_058_46b8:
 jr_058_46d8:
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 1, [hl]
     jr nz, jr_058_46fc
 
@@ -1347,7 +1347,7 @@ jr_058_46d8:
 jr_058_46ed:
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 0, [hl]
     jr nz, jr_058_46fc
 
@@ -1378,13 +1378,13 @@ jr_058_46fc:
 
 jr_058_4716:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_473a
 
     ld de, $0001
     ld a, c
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 2, [hl]
     jr nz, jr_058_473d
 
@@ -1431,13 +1431,13 @@ jr_058_473d:
 jr_058_4764:
     push bc
     ld a, [$db4e]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_47ad
 
     ld a, [$db4e]
     call Call_058_5c96
     ld a, [$db4e]
-    call Call_000_2fd3
+    call ReadEventFlags3
     ld a, [$c86c]
     or a
     jr nz, jr_058_4786
@@ -1459,11 +1459,11 @@ jr_058_4786:
 jr_058_4795:
     sla c
     rl b
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_058_47a8
 
     ld bc, $03e7
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_058_47a8
 
     jr jr_058_47b0
@@ -1521,7 +1521,7 @@ jr_058_47f0:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_4814
 
     jr nz, jr_058_481c
@@ -1587,12 +1587,12 @@ jr_058_481c:
 jr_058_485b:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_489c
 
     ld de, $0001
     ld a, c
-    call Call_000_2fd3
+    call ReadEventFlags3
     cp $01
     jr c, jr_058_489f
 
@@ -1607,7 +1607,7 @@ jr_058_4873:
     push hl
     ld a, c
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     pop hl
     and $22
@@ -1650,7 +1650,7 @@ jr_058_489f:
 jr_058_48b2:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_48ff
 
     ld de, $0001
@@ -1679,7 +1679,7 @@ jr_058_48d4:
     push hl
     ld a, c
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     pop hl
     and $22
@@ -1732,7 +1732,7 @@ jr_058_4902:
 jr_058_4927:
     push bc
     ld a, [$db4e]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_497a
 
     ld a, [$db4e]
@@ -1750,7 +1750,7 @@ jr_058_4927:
     ld l, a
     push bc
     ld bc, $01ff
-    call Call_000_2f45
+    call CmpHLvsBC
     pop bc
     jr nc, jr_058_4975
 
@@ -1774,7 +1774,7 @@ jr_058_495d:
 jr_058_496a:
     sla c
     rl b
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_058_4975
 
     jr jr_058_497d
@@ -1832,7 +1832,7 @@ jr_058_49bd:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_49e1
 
     jr nz, jr_058_49e9
@@ -1907,7 +1907,7 @@ jr_058_49e9:
 
 jr_058_4a37:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4a8d
 
     ld a, c
@@ -1925,7 +1925,7 @@ jr_058_4a37:
     jr c, jr_058_4a7c
 
     ld a, c
-    call Call_000_2fd3
+    call ReadEventFlags3
     call Call_058_60e0
     jr c, jr_058_4a7c
 
@@ -2010,7 +2010,7 @@ jr_058_4a9c:
 jr_058_4ac9:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4af0
 
     ld a, [$db88]
@@ -2018,7 +2018,7 @@ jr_058_4ac9:
     jr z, jr_058_4af0
 
     ld a, c
-    call Call_000_2fe8
+    call ReadEventFlags2
     push hl
     ld a, c
     ld hl, $db8b
@@ -2069,7 +2069,7 @@ jr_058_4af3:
     ld h, a
     ld a, [hl]
     push hl
-    call Call_000_2fa5
+    call CheckMonsterSlot
     pop hl
     ret nc
 
@@ -2086,7 +2086,7 @@ jr_058_4af3:
 jr_058_4b2d:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4b65
 
     ld de, $0001
@@ -2096,7 +2096,7 @@ jr_058_4b2d:
 
     ld a, c
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 7, [hl]
     jr nz, jr_058_4b68
 
@@ -2148,12 +2148,12 @@ jr_058_4b68:
 Jump_058_4b8a:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     pop bc
     jr c, jr_058_4bf8
 
     ld a, c
-    call Call_000_2fd3
+    call ReadEventFlags3
     cp $01
     jr c, jr_058_4bd6
 
@@ -2166,7 +2166,7 @@ Jump_058_4b8a:
 jr_058_4ba0:
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $c0
     jr nz, jr_058_4be7
@@ -2265,7 +2265,7 @@ jr_058_4c07:
 jr_058_4c2b:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4c76
 
     ld de, $0001
@@ -2282,7 +2282,7 @@ jr_058_4c2b:
     ld de, $0002
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $d0
     jr nz, jr_058_4c79
@@ -2334,13 +2334,13 @@ jr_058_4c79:
 jr_058_4c90:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4cc2
 
     ld de, $0001
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 7, [hl]
     jr nz, jr_058_4cc5
 
@@ -2382,7 +2382,7 @@ jr_058_4cc5:
 jr_058_4cd8:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4d0b
 
     ld a, c
@@ -2435,7 +2435,7 @@ jr_058_4d0e:
 jr_058_4d21:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4d4e
 
     ld de, $0001
@@ -2580,13 +2580,13 @@ jr_058_4d51:
 jr_058_4df8:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4e2a
 
     ld de, $0001
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $03
     jr nz, jr_058_4e2d
@@ -2631,13 +2631,13 @@ jr_058_4e2d:
 jr_058_4e44:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4e76
 
     ld de, $0001
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $cc
     jr nz, jr_058_4e79
@@ -2682,13 +2682,13 @@ jr_058_4e79:
 jr_058_4e90:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4ec9
 
     ld de, $0001
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $d0
     jr nz, jr_058_4ecc
@@ -2740,7 +2740,7 @@ jr_058_4ecc:
     ld a, $02
     ld [$db4e], a
     ld a, [$db4c]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4f1c
 
     ld hl, $dbb3
@@ -2783,7 +2783,7 @@ jr_058_4f21:
 
 Jump_058_4f2a:
     ld a, [$db4d]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_4f57
 
     ld hl, $dbb3
@@ -2890,7 +2890,7 @@ Call_058_4fa7:
     ld a, [$db57]
     ld b, a
     ld a, $32
-    call Call_000_1de6
+    call Mul16x8To24
     ld a, l
     ld [$db56], a
     ld a, h
@@ -2913,7 +2913,7 @@ Call_058_4fa7:
 Jump_058_4fdd:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_501e
 
     ld a, $02
@@ -3011,7 +3011,7 @@ jr_058_5030:
 Jump_058_5074:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_50b5
 
     ld a, $00
@@ -3113,13 +3113,13 @@ jr_058_50c7:
 
 jr_058_5118:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_5142
 
     ld de, $0001
     ld a, c
     ld hl, $db08
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 5, [hl]
     jr nz, jr_058_5145
 
@@ -3184,13 +3184,13 @@ jr_058_5145:
     ld a, c
     ld [$db60], a
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_51ac
 
     ld d, $fe
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 4, [hl]
     jr nz, jr_058_51ae
 
@@ -3220,12 +3220,12 @@ jr_058_51ae:
 
 Jump_058_51b8:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_51e3
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     bit 4, [hl]
     jr nz, jr_058_51df
 
@@ -3305,13 +3305,13 @@ jr_058_5208:
 jr_058_522b:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     pop bc
     jr c, jr_058_527e
 
     ld a, c
     ld hl, $db02
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $c0
     jr nz, jr_058_526d
@@ -3410,7 +3410,7 @@ jr_058_528d:
 jr_058_52bf:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     pop bc
     jr c, jr_058_530e
 
@@ -3421,7 +3421,7 @@ jr_058_52bf:
 
     ld a, c
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $22
     jr nz, jr_058_52fd
@@ -3667,7 +3667,7 @@ jr_058_541d:
     jr nz, jr_058_5478
 
     ld a, [$db88]
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     jr nc, jr_058_545b
 
     ld a, [$db88]
@@ -3793,7 +3793,7 @@ Jump_058_5507:
     call nz, Call_058_5c18
     pop de
     ld a, e
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_5587
 
     ld a, e
@@ -3944,7 +3944,7 @@ jr_058_55c4:
     ld e, $00
 
 jr_058_55da:
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_5615
 
     ld a, l
@@ -4081,7 +4081,7 @@ jr_058_5674:
     ld h, a
 
 jr_058_569c:
-    call Call_000_2f45
+    call CmpHLvsBC
     jr z, jr_058_56ab
 
     jr c, jr_058_56ab
@@ -4321,7 +4321,7 @@ jr_058_57c2:
 
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $0c
     jr nz, jr_058_57f4
@@ -4690,7 +4690,7 @@ Call_058_5955:
 
 jr_058_596f:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_5979
 
     ld hl, $dd72
@@ -4711,7 +4711,7 @@ jr_058_5979:
 
 jr_058_5988:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_59b9
 
     ld hl, $dd72
@@ -4794,11 +4794,11 @@ jr_058_59d8:
 jr_058_59f1:
     push hl
     ld hl, $cac2
-    call Call_000_2229
+    call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     pop hl
-    call Call_000_0c80
+    call Copy4Bytes
 
 jr_058_59fe:
     call Call_058_5955
@@ -4822,7 +4822,7 @@ Call_058_5a02:
     ld [$db5e], a
     ld a, d
     ld [$db5f], a
-    call Call_000_097a
+    call SetupVRAMParams
     ret
 
 
@@ -4852,7 +4852,7 @@ jr_058_5a2e:
 
 Call_058_5a40:
     ld a, [$db88]
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     ret c
 
     ld a, [$c86c]
@@ -4877,7 +4877,7 @@ jr_058_5a5a:
 jr_058_5a63:
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $0c
     ret nz
@@ -5137,7 +5137,7 @@ jr_058_5b8c:
 
 Call_058_5ba1:
     ld a, [$db88]
-    call Call_000_2f76
+    call GetMonsterSlotInfo
     ret c
 
     ld a, [$c86c]
@@ -5162,7 +5162,7 @@ jr_058_5bbb:
 jr_058_5bc4:
     ld a, [$db88]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $0c
     ret nz
@@ -5358,7 +5358,7 @@ jr_058_5ccf:
 
 jr_058_5cd6:
     ld hl, $cb1b
-    call Call_000_224f
+    call ReadMonsterWord
     jr jr_058_5ced
 
 jr_058_5cde:
@@ -5433,7 +5433,7 @@ jr_058_5d08:
     ld b, [hl]
     ld c, a
     pop hl
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_5d61
 
     jr nz, jr_058_5d5b
@@ -5532,7 +5532,7 @@ jr_058_5d9f:
     ld b, [hl]
     ld c, a
     pop hl
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_5dee
 
     jr nz, jr_058_5df4
@@ -5595,7 +5595,7 @@ Call_058_5e19:
 Call_058_5e2f:
     ld a, c
     ld hl, $db04
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $22
     ret
@@ -5629,7 +5629,7 @@ Call_058_5e5b:
 
 jr_058_5e62:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_5e6d
 
     ld a, c
@@ -5831,7 +5831,7 @@ Call_058_5f57:
     push hl
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     pop bc
     jr c, jr_058_5f77
 
@@ -5847,7 +5847,7 @@ Call_058_5f57:
     ld d, [hl]
     ld e, a
     ld a, c
-    call Call_000_2fd3
+    call ReadEventFlags3
     add hl, de
     jr nc, jr_058_5f7f
 
@@ -5871,7 +5871,7 @@ Call_058_5f83:
     push hl
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     pop bc
     jr c, jr_058_5f9c
 
@@ -6171,7 +6171,7 @@ jr_058_612c:
 
 jr_058_6132:
     ld hl, $cb1d
-    call Call_000_224f
+    call ReadMonsterWord
     jr jr_058_6149
 
 jr_058_613a:
@@ -6203,7 +6203,7 @@ jr_058_6149:
 
 jr_058_615d:
     ld a, e
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_6178
 
     ld a, e
@@ -6231,7 +6231,7 @@ jr_058_6178:
     ld a, [$db50]
     ld h, b
     ld l, c
-    call Call_000_1e0d
+    call Div16x8To16
     ld b, h
     ld c, l
     pop hl
@@ -6277,7 +6277,7 @@ jr_058_61b3:
     ld b, [hl]
     ld c, a
     pop hl
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_61d9
 
     jr nz, jr_058_61df
@@ -6349,7 +6349,7 @@ Call_058_6224:
     ld c, a
     ld a, [$db5b]
     ld b, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_624b
 
     ld a, $01
@@ -6364,7 +6364,7 @@ jr_058_624b:
     ld c, a
     ld a, [$db5d]
     ld b, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_625d
 
     ld a, $02
@@ -6451,7 +6451,7 @@ Call_058_62d9:
 
 jr_058_62df:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_62ed
 
     inc c
@@ -6486,7 +6486,7 @@ jr_058_62ed:
 
 jr_058_630b:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_631b
 
     ld a, c
@@ -6544,7 +6544,7 @@ jr_058_634f:
 
 jr_058_6350:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_631b
 
     ld a, c
@@ -6576,37 +6576,37 @@ jr_058_6350:
     ld a, [wRNG1]
     ld c, a
     and $07
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_63b4
 
     ld a, [wRNG2]
     ld b, a
     and $07
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_63b7
 
     or c
     and $07
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ld c, a
     jr nc, jr_058_63b4
 
     or b
     and $07
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_63ba
 
     ld a, b
     add c
     and $07
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_63be
 
 jr_058_63a9:
     dec b
     ld a, b
     and $07
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_63a9
 
     jr jr_058_63b7
@@ -6667,7 +6667,7 @@ Call_058_63ec:
 
 jr_058_63f1:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_63f8
 
     inc d
@@ -6686,14 +6686,14 @@ Call_058_63fd:
     ld b, a
     ld a, d
     push de
-    call Call_000_1dfb
+    call Div8x8
     pop bc
     inc a
     ld e, a
 
 jr_058_640c:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_6415
 
 jr_058_6412:
@@ -6741,7 +6741,7 @@ Call_058_642c:
 
 jr_058_644d:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_6462
 
     ld a, c
@@ -6840,7 +6840,7 @@ jr_058_64c4:
 
 jr_058_64cb:
     ld c, a
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_64e1
 
     ld a, c
@@ -6880,7 +6880,7 @@ Call_058_64fc:
 jr_058_64fc:
     push bc
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_651f
 
     call Call_058_6533
@@ -7030,14 +7030,14 @@ jr_058_659b:
 jr_058_65ae:
     ld a, c
     push de
-    call Call_000_2fa5
+    call CheckMonsterSlot
     pop de
     jr c, jr_058_65cf
 
     inc e
     ld a, c
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $0c
     jr nz, jr_058_65ce
@@ -7079,12 +7079,12 @@ jr_058_65de:
 
     push hl
     ld a, [$db89]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_6607
 
     ld a, [$db89]
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $0c
     jr nz, jr_058_6607
@@ -7113,12 +7113,12 @@ jr_058_660b:
 Call_058_660d:
     push hl
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_6623
 
     ld a, c
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $0c
     jr nz, jr_058_6623
@@ -7204,7 +7204,7 @@ jr_058_6669:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_66b5
 
     jr nz, jr_058_66bb
@@ -7231,7 +7231,7 @@ jr_058_6669:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr nc, jr_058_66bb
 
 jr_058_66b5:
@@ -7357,7 +7357,7 @@ Call_058_6762:
 
 jr_058_676a:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr nc, jr_058_677b
 
 jr_058_6770:
@@ -7378,7 +7378,7 @@ jr_058_677b:
     call z, Call_058_6792
     ld a, c
     ld hl, $db07
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl]
     and $c0
     jr nz, jr_058_6770
@@ -7411,7 +7411,7 @@ jr_058_6794:
 
 jr_058_67ac:
     ld a, [hl]
-    call Call_000_2fa5
+    call CheckMonsterSlot
     ret nc
 
     ld a, [hl]
@@ -7431,7 +7431,7 @@ jr_058_67ac:
     ld c, a
     ld a, [$db57]
     ld b, a
-    call Call_000_2f45
+    call CmpHLvsBC
     jp c, Jump_058_6859
 
     ld hl, $dd26
@@ -7452,7 +7452,7 @@ jr_058_67ac:
     ld a, [$db88]
     call Call_000_2fcc
     pop bc
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_6859
 
     ld hl, $dd26
@@ -7471,7 +7471,7 @@ jr_058_67ac:
     ld a, [$db88]
     call Call_000_2fcc
     pop bc
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_6859
 
     ld hl, $dd26
@@ -7493,7 +7493,7 @@ jr_058_67ac:
     ld a, [$db88]
     call Call_000_2fcc
     pop bc
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_6859
 
     ld hl, $dd26
@@ -7504,7 +7504,7 @@ Jump_058_6859:
 jr_058_6859:
     ld a, [$db88]
     ld hl, $db03
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $0c
     jr nz, jr_058_686e
@@ -7529,12 +7529,12 @@ jr_058_6876:
 
 jr_058_6880:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_689b
 
     ld a, c
     ld hl, $db06
-    call Call_000_2f6c
+    call HL_AddA_x8
     ld a, [hl+]
     and $0c
     jr nz, jr_058_689b
@@ -7566,7 +7566,7 @@ Call_058_68a5:
 
 jr_058_68af:
     ld a, c
-    call Call_000_2fa5
+    call CheckMonsterSlot
     jr c, jr_058_68c5
 
     ld a, c
@@ -7614,7 +7614,7 @@ jr_058_68c8:
     ld [$db56], a
     ld a, h
     ld [$db57], a
-    call Call_000_2f45
+    call CmpHLvsBC
     jr c, jr_058_6903
 
     ld a, c
@@ -7629,7 +7629,7 @@ jr_058_6903:
     ld c, a
     ld a, [$db5d]
     ld b, a
-    call Call_000_2f45
+    call CmpHLvsBC
     ret c
 
     ld a, c

@@ -2021,7 +2021,7 @@ jr_055_484f:
 Call_055_4863:
     ld de, $48a9
     call Call_055_486d
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 
@@ -2175,7 +2175,7 @@ Call_055_4924:
 
     ld hl, $9000
     ld de, $1007
-    call Call_000_098f
+    call SetupVRAMCopy
     ld hl, $1709
     rst $10
     ld hl, $170a
@@ -2265,7 +2265,7 @@ Call_055_496c:
     rst $10
     ld de, $2f11
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld hl, $9800
     ld bc, $0400
     ld a, $00
@@ -2581,10 +2581,10 @@ jr_055_4bdc:			;Likely inits data for the title screen
     ld a, [wRNG1]
     ld b, a
     ld a, $03
-    call Call_000_1dfb
+    call Div8x8
     ld [$da02], a
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, wDebug_main_menu_option
     ld a, [hl+]
     ld [wGameMode], a
@@ -2787,7 +2787,7 @@ Call_055_4d44:
     inc hl
     ld d, [hl]
     ld hl, $8800
-    call Call_000_1577
+    call WaitDMATransfer
     ld a, [wMenu_selection]
     ld [$c81e], a		;unknown if this is used by other things, but the debug screen monster id is stored here
     ld a, $04
@@ -2829,7 +2829,7 @@ jr_055_4da3:
     jr z, jr_055_4e0a
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $01
     ld [wGameMode], a
     ld a, $00
@@ -3435,7 +3435,7 @@ SE_IDS:
     jr z, jr_055_5162
 
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ld a, $02
     ld [wGameMode], a
     ld a, $00
@@ -3921,7 +3921,7 @@ Call_055_53f6:
     pop af
     push af
     ld hl, $cacb
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld c, a
     pop af
@@ -3945,7 +3945,7 @@ Call_055_53f6:
     call Call_055_54ac
     push af
     ld hl, $cad6
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld hl, $0301
@@ -3957,7 +3957,7 @@ Call_055_53f6:
     call Call_055_54ac
     push af
     ld hl, $cad7
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld a, [hl]
     ld [$da31], a
     ld hl, $0301
@@ -3972,14 +3972,14 @@ Call_055_53f6:
 
 Call_055_549c:
     push af
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], c
     pop af
     ret
 
 
     push af
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld [hl], c
     inc hl
     ld [hl], b
@@ -3990,7 +3990,7 @@ Call_055_549c:
 Call_055_54ac:
     push af
     push bc
-    call Call_000_223b
+    call GetMonsterDataPtr
     ld e, l
     ld d, h
     call GenerateRNG
@@ -4001,7 +4001,7 @@ Call_055_54ac:
     or c
     ld l, a
     ld h, $03
-    call Call_000_097a
+    call SetupVRAMParams
     pop af
     ret
 

@@ -267,13 +267,13 @@ labelf_4110:
     ret z
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $01
     ldh [rVBK], a
     ei
     call Call_00f_4075
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $00
     ldh [rVBK], a
     ei
@@ -10511,7 +10511,7 @@ jr_00f_6c30:
     rst $38
     sub d
     ld l, h
-    call z, Call_000_0609
+    call z, RequestScreenUpdate
     rst $38
     inc d
     rst $38

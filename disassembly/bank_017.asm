@@ -32,7 +32,7 @@ label17_401d:
     or a
     jp nz, Jump_017_4064
 
-    ld hl, $476f
+    ld hl, AttrPtrTable
     ld a, [wMapID]
     add a
     add l
@@ -79,12 +79,12 @@ label17_401d:
 
 
 Jump_017_4064:
-    ld de, $5215
+    ld de, GateAttrTable_A
     ld a, [$c93f]
     cp $02
     jr nz, jr_017_4071
 
-    ld de, $5415
+    ld de, GateAttrTable_B
 
 jr_017_4071:
     ld a, [$c925]
@@ -123,7 +123,7 @@ label17_409e:
     or a
     jp nz, Jump_017_40da
 
-    ld hl, $476f
+    ld hl, AttrPtrTable
     ld a, [wMapID]
     add a
     add l
@@ -161,17 +161,17 @@ label17_409e:
     ld d, [hl]
     inc hl
     ld hl, $c200
-    call Call_000_14cf
+    call WaitLCDTransfer
     ret
 
 
 Jump_017_40da:
-    ld de, $5215
+    ld de, GateAttrTable_A
     ld a, [$c93f]
     cp $02
     jr nz, jr_017_40e7
 
-    ld de, $5415
+    ld de, GateAttrTable_B
 
 jr_017_40e7:
     ld a, [$c925]
@@ -189,7 +189,7 @@ jr_017_40e7:
     ld d, [hl]
     ld e, a
     ld hl, $c200
-    call Call_000_14cf
+    call WaitLCDTransfer
     ret
 
 
@@ -276,7 +276,7 @@ label17_4192:
     ret z
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $01
     ldh [rVBK], a
     ei
@@ -293,7 +293,7 @@ jr_017_41a5:
     jr nz, jr_017_41a5
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $00
     ldh [rVBK], a
     ei
@@ -378,7 +378,7 @@ jr_017_4229:
     jr nz, jr_017_4229
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $01
     ldh [rVBK], a
     ei
@@ -410,7 +410,7 @@ jr_017_423d:
     jr nz, jr_017_423a
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $00
     ldh [rVBK], a
     ei
@@ -440,7 +440,7 @@ label17_4272:
     cp [hl]
     jp z, Jump_017_4341
 
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rBCPS], a
     ld hl, $c797
@@ -473,7 +473,7 @@ Call_017_42ac:
     ld a, $00
     adc h
     ld h, a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ldh [rBCPD], a
     ld a, [hl]
@@ -496,29 +496,7 @@ Call_017_42ac:
     ld a, $00
     adc h
     ld h, a
-    call Call_000_1aa6
-    ld a, [hl+]
-    ldh [rBCPD], a
-    ld a, [hl]
-    ldh [rBCPD], a
-    pop hl
-    push hl
-    ld a, [wBGPalette]
-    swap a
-    and $03
-    ld de, $440c
-    add e
-    ld e, a
-    ld a, $00
-    adc d
-    ld d, a
-    ld a, [de]
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ldh [rBCPD], a
     ld a, [hl]
@@ -527,6 +505,28 @@ Call_017_42ac:
     push hl
     ld a, [wBGPalette]
     swap a
+    and $03
+    ld de, $440c
+    add e
+    ld e, a
+    ld a, $00
+    adc d
+    ld d, a
+    ld a, [de]
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    call WaitVRAM
+    ld a, [hl+]
+    ldh [rBCPD], a
+    ld a, [hl]
+    ldh [rBCPD], a
+    pop hl
+    push hl
+    ld a, [wBGPalette]
+    swap a
     srl a
     srl a
     and $03
@@ -542,7 +542,7 @@ Call_017_42ac:
     ld a, $00
     adc h
     ld h, a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ldh [rBCPD], a
     ld a, [hl]
@@ -563,7 +563,7 @@ Jump_017_4341:
     cp [hl]
     jp z, Jump_017_440b
 
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rOCPS], a
     ld hl, $c7d7
@@ -596,7 +596,7 @@ Call_017_4376:
     ld a, $00
     adc h
     ld h, a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ldh [rOCPD], a
     ld a, [hl]
@@ -619,29 +619,7 @@ Call_017_4376:
     ld a, $00
     adc h
     ld h, a
-    call Call_000_1aa6
-    ld a, [hl+]
-    ldh [rOCPD], a
-    ld a, [hl]
-    ldh [rOCPD], a
-    pop hl
-    push hl
-    ld a, [wObj1Palette]
-    swap a
-    and $03
-    ld de, $440c
-    add e
-    ld e, a
-    ld a, $00
-    adc d
-    ld d, a
-    ld a, [de]
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ldh [rOCPD], a
     ld a, [hl]
@@ -650,6 +628,28 @@ Call_017_4376:
     push hl
     ld a, [wObj1Palette]
     swap a
+    and $03
+    ld de, $440c
+    add e
+    ld e, a
+    ld a, $00
+    adc d
+    ld d, a
+    ld a, [de]
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    call WaitVRAM
+    ld a, [hl+]
+    ldh [rOCPD], a
+    ld a, [hl]
+    ldh [rOCPD], a
+    pop hl
+    push hl
+    ld a, [wObj1Palette]
+    swap a
     srl a
     srl a
     and $03
@@ -665,7 +665,7 @@ Call_017_4376:
     ld a, $00
     adc h
     ld h, a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ldh [rOCPD], a
     ld a, [hl]
@@ -713,7 +713,7 @@ jr_017_442e:
     ld [$c857], a
     ld [$c858], a
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rBCPS], a
     ei
@@ -721,7 +721,7 @@ jr_017_442e:
 
 jr_017_444c:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $ff
     ldh [rBCPD], a
     ld a, $7f
@@ -731,7 +731,7 @@ jr_017_444c:
     jr nz, jr_017_444c
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rOCPS], a
     ei
@@ -739,7 +739,7 @@ jr_017_444c:
 
 jr_017_4467:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $ff
     ldh [rOCPD], a
     ld a, $7f
@@ -822,7 +822,7 @@ Jump_017_44d3:
 
 Call_017_44d8:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rBCPS], a
     ei
@@ -836,7 +836,7 @@ Call_017_44d8:
     call Call_017_4552
     call Call_017_4552
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rOCPS], a
     ei
@@ -873,7 +873,7 @@ Call_017_452a:
     rr d
     rr e
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, e
     ldh [rOCPD], a
     ld a, d
@@ -901,7 +901,7 @@ Call_017_455b:
     rr d
     rr e
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, e
     ldh [rBCPD], a
     ld a, d
@@ -953,7 +953,7 @@ jr_017_458b:
 
 Call_017_45bb:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rBCPS], a
     ei
@@ -967,7 +967,7 @@ Call_017_45bb:
     call Call_017_4635
     call Call_017_4635
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rOCPS], a
     ei
@@ -1004,7 +1004,7 @@ Call_017_460d:
     rr d
     rr e
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, e
     ldh [rOCPD], a
     ld a, d
@@ -1032,7 +1032,7 @@ Call_017_463e:
     rr d
     rr e
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, e
     ldh [rBCPD], a
     ld a, d
@@ -1150,7 +1150,7 @@ label17_46dd:
     ret z
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rBCPS], a
     ei
@@ -1159,7 +1159,7 @@ label17_46dd:
 
 jr_017_46f0:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ldh [rBCPD], a
     ei
@@ -1167,7 +1167,7 @@ jr_017_46f0:
     jr nz, jr_017_46f0
 
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, $80
     ldh [rOCPS], a
     ei
@@ -1175,7 +1175,7 @@ jr_017_46f0:
 
 jr_017_4706:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl+]
     ldh [rOCPD], a
     ei
@@ -1269,273 +1269,405 @@ label17_4751:
 ;   Indexed by $C940[screen_index], entries are [attr_idx, attr_bank]
 
 AttrPtrTable:  ; $476F — 107 entries × 2B, indexed by wMapID
-    dw $483F  ; $00 Castle
-    dw $489D  ; $01 GreatTree
-    dw $4925  ; $02 Bazaar
-    dw $499D  ; $03 GateHub
-    dw $49F5  ; $04 Farm
-    dw $4A6D  ; $05 Stable
-    dw $4A99  ; $06 ArenaLobby
-    dw $4AB3  ; $07 ArenaRooms
-    dw $4B07  ; $08 Gate_08
-    dw $4B2F  ; $09 StarryShrine
-    dw $4B65  ; $0A SecretPassage
+    dw RoomAttr_Castle  ; $00 Castle
+    dw RoomAttr_GreatTree  ; $01 GreatTree
+    dw RoomAttr_Bazaar  ; $02 Bazaar
+    dw RoomAttr_GateHub  ; $03 GateHub
+    dw RoomAttr_Farm  ; $04 Farm
+    dw RoomAttr_Stable  ; $05 Stable
+    dw RoomAttr_ArenaLobby  ; $06 ArenaLobby
+    dw RoomAttr_ArenaRooms  ; $07 ArenaRooms
+    dw RoomAttr_Gate_08  ; $08 Gate_08
+    dw RoomAttr_StarryShrine  ; $09 StarryShrine
+    dw RoomAttr_SecretPassage  ; $0A SecretPassage
     dw $483F  ; $0B 
-    dw $4B79  ; $0C Gate_0C
-    dw $4B81  ; $0D OldManGate
+    dw RoomAttr_Gate_0C  ; $0C Gate_0C
+    dw RoomAttr_OldManGate  ; $0D OldManGate
     dw $483F  ; $0E 
-    dw $4B8D  ; $0F 
-    dw $4B95  ; $10 CopycatRoom
+    dw RoomAttr_Room_0F  ; $0F 
+    dw RoomAttr_CopycatRoom  ; $10 CopycatRoom
     dw $483F  ; $11 
-    dw $4BA1  ; $12 Library
-    dw $4BC1  ; $13 
+    dw RoomAttr_Library  ; $12 Library
+    dw RoomAttr_Room_13  ; $13 
     dw $483F  ; $14 
     dw $483F  ; $15 
-    dw $4BCD  ; $16 MedalManRoom
+    dw RoomAttr_MedalManRoom  ; $16 MedalManRoom
     dw $4B95  ; $17 
-    dw $4BE9  ; $18 Well
-    dw $4C0D  ; $19 
-    dw $4C15  ; $1A 
-    dw $4C1D  ; $1B 
-    dw $4C2D  ; $1C 
-    dw $4C39  ; $1D 
-    dw $4C41  ; $1E 
-    dw $4C4D  ; $1F 
+    dw RoomAttr_Well  ; $18 Well
+    dw RoomAttr_Map19  ; $19 
+    dw RoomAttr_Map1A  ; $1A 
+    dw RoomAttr_Map1B  ; $1B 
+    dw RoomAttr_Map1C  ; $1C 
+    dw RoomAttr_Map1D  ; $1D 
+    dw RoomAttr_Map1E  ; $1E 
+    dw RoomAttr_Map1F  ; $1F 
     dw $483F  ; $20 
     dw $483F  ; $21 
     dw $483F  ; $22 
-    dw $4C5D  ; $23 
-    dw $4C69  ; $24 
-    dw $4C7D  ; $25 
-    dw $4C91  ; $26 
-    dw $4CA5  ; $27 
-    dw $4CB5  ; $28 
-    dw $4CC9  ; $29 
-    dw $4CDD  ; $2A 
-    dw $4CF1  ; $2B 
-    dw $4CFD  ; $2C 
-    dw $4D11  ; $2D 
-    dw $4D25  ; $2E 
-    dw $4D39  ; $2F Room_2F
-    dw $4D6D  ; $30 
-    dw $4D79  ; $31 
-    dw $4D85  ; $32 
-    dw $4D91  ; $33 
-    dw $4D9D  ; $34 
-    dw $4DA9  ; $35 
-    dw $4DB5  ; $36 
-    dw $4DC1  ; $37 
-    dw $4DCD  ; $38 
-    dw $4DD9  ; $39 
-    dw $4DE5  ; $3A 
-    dw $4DF1  ; $3B 
-    dw $4DFD  ; $3C 
-    dw $4E0D  ; $3D 
-    dw $4E19  ; $3E 
-    dw $4E25  ; $3F 
-    dw $4E31  ; $40 
-    dw $4E39  ; $41 
-    dw $4E4D  ; $42 Labyrinth
-    dw $4E85  ; $43 
-    dw $4E91  ; $44 
-    dw $4E9D  ; $45 
-    dw $4EAD  ; $46 
-    dw $4EB9  ; $47 
-    dw $4EC9  ; $48 
-    dw $4ED5  ; $49 
-    dw $4EE1  ; $4A 
-    dw $4EED  ; $4B 
-    dw $4EF9  ; $4C 
-    dw $4F05  ; $4D 
-    dw $4F11  ; $4E 
-    dw $4F31  ; $4F 
-    dw $4F3D  ; $50 
-    dw $4F45  ; $51 
-    dw $4F4D  ; $52 
-    dw $4F55  ; $53 
-    dw $4F7D  ; $54 
-    dw $4FDB  ; $55 
-    dw $5039  ; $56 
-    dw $5097  ; $57 
-    dw $50F5  ; $58 
-    dw $5153  ; $59 
-    dw $51B1  ; $5A 
-    dw $51B9  ; $5B 
-    dw $51C1  ; $5C 
-    dw $51C9  ; $5D ArenaBattle
-    dw $51E1  ; $5E Room_5E
+    dw RoomAttr_BossRoom_Beginning  ; $23 
+    dw RoomAttr_BossRoom_VilTalis  ; $24 
+    dw RoomAttr_BossRoom_MemBewil  ; $25 
+    dw RoomAttr_BossRoom_PeaceBrave  ; $26 
+    dw RoomAttr_Map27  ; $27 
+    dw RoomAttr_Map28  ; $28 
+    dw RoomAttr_Map29  ; $29 
+    dw RoomAttr_Map2A  ; $2A 
+    dw RoomAttr_Map2B  ; $2B 
+    dw RoomAttr_Map2C  ; $2C 
+    dw RoomAttr_Map2D  ; $2D 
+    dw RoomAttr_Map2E  ; $2E 
+    dw RoomAttr_Map2F  ; $2F Room_2F
+    dw RoomAttr_Boss_Beginning  ; $30 
+    dw RoomAttr_Boss_Villager  ; $31 
+    dw RoomAttr_Boss_Talisman  ; $32 
+    dw RoomAttr_Boss_Memories  ; $33 
+    dw RoomAttr_Map34  ; $34 
+    dw RoomAttr_Map35  ; $35 
+    dw RoomAttr_Map36  ; $36 
+    dw RoomAttr_Map37  ; $37 
+    dw RoomAttr_Map38  ; $38 
+    dw RoomAttr_Map39  ; $39 
+    dw RoomAttr_Map3A  ; $3A 
+    dw RoomAttr_Map3B  ; $3B 
+    dw RoomAttr_Map3C  ; $3C 
+    dw RoomAttr_Map3D  ; $3D 
+    dw RoomAttr_Map3E  ; $3E 
+    dw RoomAttr_Map3F  ; $3F 
+    dw RoomAttr_Map40  ; $40 
+    dw RoomAttr_Map41  ; $41 
+    dw RoomAttr_Labyrinth  ; $42 Labyrinth
+    dw RoomAttr_Map43  ; $43 
+    dw RoomAttr_Map44  ; $44 
+    dw RoomAttr_Map45  ; $45 
+    dw RoomAttr_Map46  ; $46 
+    dw RoomAttr_Map47  ; $47 
+    dw RoomAttr_Map48  ; $48 
+    dw RoomAttr_Map49  ; $49 
+    dw RoomAttr_Map4A  ; $4A 
+    dw RoomAttr_Map4B  ; $4B 
+    dw RoomAttr_Map4C  ; $4C 
+    dw RoomAttr_Map4D  ; $4D 
+    dw RoomAttr_Map4E  ; $4E 
+    dw RoomAttr_Map4F  ; $4F 
+    dw RoomAttr_Map50  ; $50 
+    dw RoomAttr_Map51  ; $51 
+    dw RoomAttr_Map52  ; $52 
+    dw RoomAttr_Map53  ; $53 
+    dw RoomAttr_Map54  ; $54 
+    dw RoomAttr_Map55  ; $55 
+    dw RoomAttr_Map56  ; $56 
+    dw RoomAttr_Map57  ; $57 
+    dw RoomAttr_Map58  ; $58 
+    dw RoomAttr_Map59  ; $59 
+    dw RoomAttr_Map5A  ; $5A 
+    dw RoomAttr_Map5B  ; $5B 
+    dw RoomAttr_Map5C  ; $5C 
+    dw RoomAttr_ArenaBattle  ; $5D ArenaBattle
+    dw RoomAttr_Map5E  ; $5E Room_5E
     dw $4F3D  ; $5F 
-    dw $4E4F  ; $60 LabyrinthFinal
-    dw $4F57  ; $61 
-    dw $4F59  ; $62 
-    dw $4F5B  ; $63 
-    dw $4F5D  ; $64 
+    dw RoomAttr_LabyrinthBoss  ; $60 LabyrinthFinal
+    dw RoomAttr_Map61  ; $61 
+    dw RoomAttr_Map62  ; $62 
+    dw RoomAttr_Map63  ; $63 
+    dw RoomAttr_Map64  ; $64 
     dw $4E4F  ; $65 
     dw $4E4F  ; $66 
     dw $4E4F  ; $67 
-    dw $484F  ; $68 
-    dw $4861  ; $69 
+RoomAttr_Castle: ; $483F — Castle screen table (overlaps AttrPtrTable entries $68-$6A)
+    dw RoomAttr_Map68  ; $68 
+    dw RoomAttr_Map69  ; $69 
     dw $FFFF  ; $6A  (invalid)
 
 ; --- Per-room screen/step attribute entries ($4845-$5214, 2512 bytes) ---
-; Structure: [ram_addr:2] + step × [attr_idx:1, attr_bank:1, pal_ptr:2]
-    db $FF, $FF, $FF, $FF, $87, $48, $FF, $FF, $FF, $FF, $2A, $D9, $00, $3C, $5D, $56
-    db $01, $3C, $5D, $56, $02, $3C, $5D, $56, $03, $3C, $5D, $56, $2B, $D9, $04, $3C
-    db $5D, $56, $05, $3C, $5D, $56, $05, $3C, $5D, $56, $05, $3C, $5D, $56, $05, $3C
-    db $5D, $56, $05, $3C, $5D, $56, $04, $3C, $5D, $56, $04, $3C, $5D, $56, $04, $3C
-    db $5D, $56, $2C, $D9, $06, $3C, $5D, $56, $06, $3C, $5D, $56, $06, $3C, $5D, $56
-    db $06, $3C, $5D, $56, $06, $3C, $5D, $56, $BD, $48, $D3, $48, $FF, $FF, $FF, $FF
-    db $D9, $48, $EB, $48, $FF, $FF, $FF, $FF, $F1, $48, $FF, $48, $FF, $FF, $FF, $FF
-    db $05, $49, $17, $49, $FF, $FF, $FF, $FF, $2D, $D9, $07, $3C, $7D, $56, $07, $3C
-    db $7D, $56, $07, $3C, $7D, $56, $07, $3C, $7D, $56, $07, $3C, $7D, $56, $2E, $D9
-    db $08, $3C, $7D, $56, $2F, $D9, $09, $3C, $7D, $56, $09, $3C, $7D, $56, $09, $3C
-    db $7D, $56, $09, $3C, $7D, $56, $30, $D9, $0A, $3C, $7D, $56, $31, $D9, $0B, $3C
-    db $7D, $56, $0B, $3C, $7D, $56, $0B, $3C, $7D, $56, $32, $D9, $0C, $3C, $7D, $56
-    db $33, $D9, $0D, $3C, $7D, $56, $0D, $3C, $7D, $56, $0E, $3C, $7D, $56, $0E, $3C
-    db $7D, $56, $34, $D9, $0F, $3C, $7D, $56, $10, $3C, $7D, $56, $11, $3C, $7D, $56
-    db $35, $49, $3F, $49, $4D, $49, $FF, $FF, $5B, $49, $69, $49, $77, $49, $FF, $FF
-    db $35, $D9, $12, $3C, $9D, $56, $12, $3C, $9D, $56, $36, $D9, $13, $3C, $9D, $56
-    db $13, $3C, $9D, $56, $13, $3C, $9D, $56, $37, $D9, $14, $3C, $9D, $56, $15, $3C
-    db $9D, $56, $15, $3C, $9D, $56, $38, $D9, $16, $3C, $9D, $56, $17, $3C, $9D, $56
-    db $16, $3C, $9D, $56, $39, $D9, $18, $3C, $9D, $56, $19, $3C, $9D, $56, $19, $3C
-    db $9D, $56, $3A, $D9, $1A, $3C, $9D, $56, $1B, $3C, $9D, $56, $1B, $3C, $9D, $56
-    db $1C, $3C, $9D, $56, $1C, $3C, $9D, $56, $1D, $3C, $9D, $56, $1D, $3C, $9D, $56
-    db $1D, $3C, $9D, $56, $1D, $3C, $9D, $56, $AD, $49, $BF, $49, $FF, $FF, $FF, $FF
-    db $D5, $49, $EB, $49, $FF, $FF, $FF, $FF, $3B, $D9, $1E, $3C, $BD, $56, $1F, $3C
-    db $BD, $56, $20, $3C, $BD, $56, $21, $3C, $BD, $56, $3C, $D9, $22, $3C, $BD, $56
-    db $23, $3C, $BD, $56, $23, $3C, $BD, $56, $24, $3C, $BD, $56, $25, $3C, $BD, $56
-    db $3D, $D9, $26, $3C, $BD, $56, $27, $3C, $BD, $56, $28, $3C, $BD, $56, $29, $3C
-    db $BD, $56, $29, $3C, $BD, $56, $3E, $D9, $2A, $3C, $BD, $56, $2B, $3C, $BD, $56
-    db $05, $4A, $17, $4A, $25, $4A, $FF, $FF, $3B, $4A, $4D, $4A, $5B, $4A, $FF, $FF
-    db $3F, $D9, $2C, $3C, $DD, $56, $2C, $3C, $DD, $56, $2C, $3C, $DD, $56, $2C, $3C
-    db $DD, $56, $40, $D9, $2D, $3C, $DD, $56, $2D, $3C, $DD, $56, $2D, $3C, $DD, $56
-    db $41, $D9, $2E, $3C, $DD, $56, $2E, $3C, $DD, $56, $2F, $3C, $DD, $56, $2F, $3C
-    db $DD, $56, $2F, $3C, $DD, $56, $42, $D9, $30, $3C, $DD, $56, $30, $3C, $DD, $56
-    db $30, $3C, $DD, $56, $30, $3C, $DD, $56, $43, $D9, $31, $3C, $DD, $56, $31, $3C
-    db $DD, $56, $31, $3C, $DD, $56, $44, $D9, $32, $3C, $DD, $56, $32, $3C, $DD, $56
-    db $32, $3C, $DD, $56, $32, $3C, $DD, $56, $73, $4A, $7D, $4A, $87, $4A, $45, $D9
-    db $33, $3C, $FD, $56, $34, $3C, $FD, $56, $46, $D9, $35, $3C, $FD, $56, $35, $3C
-    db $FD, $56, $47, $D9, $36, $3C, $FD, $56, $36, $3C, $FD, $56, $36, $3C, $FD, $56
-    db $36, $3C, $FD, $56, $A1, $4A, $A7, $4A, $AD, $4A, $FF, $FF, $48, $D9, $37, $3C
-    db $1D, $57, $49, $D9, $38, $3C, $1D, $57, $4A, $D9, $39, $3C, $1D, $57, $C3, $4A
-    db $C9, $4A, $EB, $4A, $FF, $FF, $F1, $4A, $FB, $4A, $01, $4B, $FF, $FF, $4B, $D9
-    db $3A, $3C, $3D, $57, $4C, $D9, $3B, $3C, $3D, $57, $3C, $3C, $3D, $57, $3D, $3C
-    db $3D, $57, $3D, $3C, $3D, $57, $3E, $3C, $3D, $57, $3E, $3C, $3D, $57, $3E, $3C
-    db $3D, $57, $3E, $3C, $3D, $57, $4D, $D9, $3F, $3C, $3D, $57, $4E, $D9, $40, $3C
-    db $3D, $57, $40, $3C, $3D, $57, $4F, $D9, $41, $3C, $3D, $57, $50, $D9, $42, $3C
-    db $3D, $57, $09, $4B, $51, $D9, $43, $3C, $5D, $57, $43, $3C, $5D, $57, $43, $3C
-    db $5D, $57, $43, $3C, $5D, $57, $43, $3C, $5D, $57, $43, $3C, $5D, $57, $43, $3C
-    db $5D, $57, $43, $3C, $5D, $57, $43, $3C, $5D, $57, $FF, $FF, $3F, $4B, $FF, $FF
-    db $FF, $FF, $4D, $4B, $5B, $4B, $FF, $FF, $FF, $FF, $52, $D9, $44, $3C, $7D, $57
-    db $44, $3C, $7D, $57, $44, $3C, $7D, $57, $53, $D9, $45, $3C, $7D, $57, $45, $3C
-    db $7D, $57, $45, $3C, $7D, $57, $54, $D9, $46, $3C, $7D, $57, $46, $3C, $7D, $57
-    db $6D, $4B, $73, $4B, $FF, $FF, $FF, $FF, $55, $D9, $47, $3C, $9D, $57, $56, $D9
-    db $48, $3C, $9D, $57, $7B, $4B, $57, $D9, $49, $3C, $BD, $57, $83, $4B, $58, $D9
-    db $4A, $3C, $DD, $57, $4A, $3C, $DD, $57, $8F, $4B, $59, $D9, $4B, $3C, $FD, $57
-    db $97, $4B, $5A, $D9, $4C, $3C, $1D, $58, $4D, $3C, $1D, $58, $B1, $4B, $FF, $FF
-    db $FF, $FF, $FF, $FF, $B7, $4B, $FF, $FF, $FF, $FF, $FF, $FF, $5B, $D9, $4E, $3C
-    db $3D, $58, $5C, $D9, $4F, $3C, $3D, $58, $4F, $3C, $3D, $58, $C3, $4B, $5D, $D9
-    db $50, $3C, $3D, $58, $50, $3C, $3D, $58, $CF, $4B, $5E, $D9, $51, $3C, $5D, $58
-    db $52, $3C, $5D, $58, $52, $3C, $5D, $58, $51, $3C, $5D, $58, $52, $3C, $5D, $58
-    db $52, $3C, $5D, $58, $F9, $4B, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $4B, $FF, $FF
-    db $FF, $FF, $FF, $FF, $5F, $D9, $53, $3C, $7D, $58, $60, $D9, $54, $3C, $7D, $58
-    db $55, $3C, $7D, $58, $55, $3C, $7D, $58, $0F, $4C, $61, $D9, $56, $3C, $9D, $58
-    db $17, $4C, $62, $D9, $57, $3C, $BD, $58, $1F, $4C, $63, $D9, $58, $3C, $DD, $58
-    db $58, $3C, $DD, $58, $58, $3C, $DD, $58, $2F, $4C, $64, $D9, $59, $3C, $FD, $58
-    db $59, $3C, $FD, $58, $3B, $4C, $65, $D9, $5A, $3C, $1D, $59, $43, $4C, $66, $D9
-    db $5B, $3C, $1D, $59, $5B, $3C, $1D, $59, $4F, $4C, $67, $D9, $5C, $3C, $3D, $59
-    db $5C, $3C, $3D, $59, $5C, $3C, $3D, $59, $5F, $4C, $68, $D9, $5D, $3C, $5D, $59
-    db $5D, $3C, $5D, $59, $6B, $4C, $69, $D9, $5E, $3C, $7D, $59, $5E, $3C, $7D, $59
-    db $5E, $3C, $7D, $59, $5E, $3C, $7D, $59, $7F, $4C, $6A, $D9, $5F, $3C, $9D, $59
-    db $5F, $3C, $9D, $59, $5F, $3C, $9D, $59, $5F, $3C, $9D, $59, $93, $4C, $6B, $D9
-    db $60, $3C, $BD, $59, $60, $3C, $BD, $59, $60, $3C, $BD, $59, $60, $3C, $BD, $59
-    db $A7, $4C, $6C, $D9, $61, $3C, $DD, $59, $61, $3C, $DD, $59, $61, $3C, $DD, $59
-    db $B7, $4C, $6D, $D9, $62, $3C, $FD, $59, $62, $3C, $FD, $59, $62, $3C, $FD, $59
-    db $62, $3C, $FD, $59, $CB, $4C, $6E, $D9, $63, $3C, $1D, $5A, $63, $3C, $1D, $5A
-    db $63, $3C, $1D, $5A, $63, $3C, $1D, $5A, $DF, $4C, $6F, $D9, $64, $3C, $3D, $5A
-    db $64, $3C, $3D, $5A, $64, $3C, $3D, $5A, $64, $3C, $3D, $5A, $F3, $4C, $70, $D9
-    db $65, $3C, $5D, $5A, $65, $3C, $5D, $5A, $FF, $4C, $71, $D9, $66, $3C, $7D, $5A
-    db $66, $3C, $7D, $5A, $66, $3C, $7D, $5A, $66, $3C, $7D, $5A, $13, $4D, $72, $D9
-    db $67, $3C, $9D, $5A, $67, $3C, $9D, $5A, $67, $3C, $9D, $5A, $67, $3C, $9D, $5A
-    db $27, $4D, $73, $D9, $68, $3C, $BD, $5A, $68, $3C, $BD, $5A, $68, $3C, $BD, $5A
-    db $68, $3C, $BD, $5A, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $45, $4D, $63, $4D
-    db $74, $D9, $69, $3C, $DD, $5A, $69, $3C, $DD, $5A, $69, $3C, $DD, $5A, $69, $3C
-    db $DD, $5A, $69, $3C, $DD, $5A, $69, $3C, $DD, $5A, $69, $3C, $DD, $5A, $75, $D9
-    db $6A, $3C, $DD, $5A, $6A, $3C, $DD, $5A, $6F, $4D, $76, $D9, $6B, $3C, $FD, $5A
-    db $6C, $3C, $FD, $5A, $7B, $4D, $77, $D9, $6D, $3C, $1D, $5B, $6E, $3C, $1D, $5B
-    db $87, $4D, $78, $D9, $6F, $3C, $3D, $5B, $70, $3C, $3D, $5B, $93, $4D, $79, $D9
-    db $71, $3C, $5D, $5B, $72, $3C, $5D, $5B, $9F, $4D, $7A, $D9, $73, $3C, $7D, $5B
-    db $74, $3C, $7D, $5B, $AB, $4D, $7B, $D9, $75, $3C, $9D, $5B, $76, $3C, $9D, $5B
-    db $B7, $4D, $7C, $D9, $77, $3C, $BD, $5B, $78, $3C, $BD, $5B, $C3, $4D, $7D, $D9
-    db $79, $3C, $DD, $5B, $7A, $3C, $DD, $5B, $CF, $4D, $7E, $D9, $7B, $3C, $FD, $5B
-    db $7C, $3C, $FD, $5B, $DB, $4D, $7F, $D9, $7D, $3C, $1D, $5C, $7E, $3C, $1D, $5C
-    db $E7, $4D, $80, $D9, $7F, $3C, $3D, $5C, $80, $3C, $3D, $5C, $F3, $4D, $81, $D9
-    db $81, $3C, $5D, $5C, $82, $3C, $5D, $5C, $FF, $4D, $82, $D9, $83, $3C, $7D, $5C
-    db $85, $3C, $7D, $5C, $84, $3C, $7D, $5C, $0F, $4E, $83, $D9, $86, $3C, $9D, $5C
-    db $86, $3C, $9D, $5C, $1B, $4E, $84, $D9, $87, $3C, $BD, $5C, $88, $3C, $BD, $5C
-    db $27, $4E, $85, $D9, $89, $3C, $DD, $5C, $8A, $3C, $FD, $5C, $33, $4E, $86, $D9
-    db $8B, $3C, $1D, $5D, $3B, $4E, $87, $D9, $8C, $3C, $1D, $5D, $8C, $3C, $1D, $5D
-    db $8C, $3C, $1D, $5D, $8D, $3C, $1D, $5D, $51, $4E, $7B, $4E, $88, $D9, $8E, $3C
-    db $3D, $5D, $8E, $3C, $3D, $5D, $8E, $3C, $3D, $5D, $8E, $3C, $3D, $5D, $8E, $3C
-    db $3D, $5D, $8E, $3C, $3D, $5D, $8E, $3C, $3D, $5D, $8E, $3C, $3D, $5D, $8E, $3C
-    db $3D, $5D, $8E, $3C, $3D, $5D, $89, $D9, $8F, $3C, $5D, $5D, $8F, $3C, $5D, $5D
-    db $87, $4E, $8A, $D9, $90, $3C, $7D, $5D, $91, $3C, $7D, $5D, $93, $4E, $8B, $D9
-    db $92, $3C, $9D, $5D, $93, $3C, $9D, $5D, $9F, $4E, $8C, $D9, $94, $3C, $BD, $5D
-    db $95, $3C, $BD, $5D, $94, $3C, $BD, $5D, $AF, $4E, $8D, $D9, $96, $3C, $DD, $5D
-    db $97, $3C, $DD, $5D, $BB, $4E, $8E, $D9, $98, $3C, $FD, $5D, $98, $3C, $FD, $5D
-    db $99, $3C, $FD, $5D, $CB, $4E, $8F, $D9, $9A, $3C, $1D, $5E, $9B, $3C, $1D, $5E
-    db $D7, $4E, $90, $D9, $9C, $3C, $3D, $5E, $9D, $3C, $3D, $5E, $E3, $4E, $91, $D9
-    db $9E, $3C, $5D, $5E, $9F, $3C, $5D, $5E, $EF, $4E, $92, $D9, $A0, $3C, $7D, $5E
-    db $A1, $3C, $7D, $5E, $FB, $4E, $93, $D9, $A2, $3C, $9D, $5E, $A3, $3C, $9D, $5E
-    db $07, $4F, $94, $D9, $A4, $3C, $BD, $5E, $A5, $3C, $BD, $5E, $21, $4F, $FF, $FF
-    db $FF, $FF, $FF, $FF, $2B, $4F, $FF, $FF, $FF, $FF, $FF, $FF, $95, $D9, $A6, $3C
-    db $DD, $5E, $A7, $3C, $DD, $5E, $96, $D9, $A8, $3C, $DD, $5E, $33, $4F, $97, $D9
-    db $A9, $3C, $FD, $5E, $AA, $3C, $FD, $5E, $3F, $4F, $98, $D9, $AB, $3C, $1D, $5F
-    db $47, $4F, $98, $D9, $AC, $3C, $3D, $5F, $4F, $4F, $98, $D9, $AD, $3C, $5D, $5F
-    db $5F, $4F, $65, $4F, $6B, $4F, $71, $4F, $77, $4F, $98, $D9, $AE, $3C, $7D, $5F
-    db $98, $D9, $AF, $3C, $7D, $5F, $98, $D9, $B0, $3C, $7D, $5F, $98, $D9, $B1, $3C
-    db $7D, $5F, $98, $D9, $B2, $3C, $7D, $5F, $95, $4F, $9B, $4F, $A1, $4F, $FF, $FF
-    db $A7, $4F, $AD, $4F, $B3, $4F, $FF, $FF, $B9, $4F, $BF, $4F, $C5, $4F, $FF, $FF
-    db $98, $D9, $B3, $3C, $9D, $5F, $98, $D9, $B4, $3C, $9D, $5F, $98, $D9, $B5, $3C
-    db $9D, $5F, $98, $D9, $B6, $3C, $9D, $5F, $98, $D9, $B7, $3C, $9D, $5F, $98, $D9
-    db $B8, $3C, $9D, $5F, $98, $D9, $B9, $3C, $9D, $5F, $98, $D9, $BA, $3C, $9D, $5F
-    db $98, $D9, $BB, $3C, $9D, $5F, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $08, $02
-    db $00, $80, $00, $00, $00, $FF, $F3, $4F, $F9, $4F, $FF, $4F, $FF, $FF, $05, $50
-    db $0B, $50, $11, $50, $FF, $FF, $17, $50, $1D, $50, $23, $50, $FF, $FF, $98, $D9
-    db $BC, $3C, $BD, $5F, $98, $D9, $BD, $3C, $BD, $5F, $98, $D9, $BE, $3C, $BD, $5F
-    db $98, $D9, $BF, $3C, $BD, $5F, $98, $D9, $C0, $3C, $BD, $5F, $98, $D9, $C1, $3C
-    db $BD, $5F, $98, $D9, $C2, $3C, $BD, $5F, $98, $D9, $C3, $3C, $BD, $5F, $98, $D9
-    db $C4, $3C, $BD, $5F, $FF, $FF, $FF, $FF, $FF, $FF, $06, $06, $00, $80, $00, $00
-    db $00, $FF, $FF, $FF, $51, $50, $57, $50, $5D, $50, $FF, $FF, $63, $50, $69, $50
-    db $6F, $50, $FF, $FF, $75, $50, $7B, $50, $81, $50, $FF, $FF, $98, $D9, $C5, $3C
-    db $DD, $5F, $98, $D9, $C6, $3C, $DD, $5F, $98, $D9, $C7, $3C, $DD, $5F, $98, $D9
-    db $C8, $3C, $DD, $5F, $98, $D9, $C9, $3C, $DD, $5F, $98, $D9, $CA, $3C, $DD, $5F
-    db $98, $D9, $CB, $3C, $DD, $5F, $98, $D9, $CC, $3C, $DD, $5F, $98, $D9, $CD, $3C
-    db $DD, $5F, $FF, $FF, $03, $03, $00, $80, $00, $00, $00, $FF, $FF, $FF, $FF, $FF
-    db $FF, $FF, $AF, $50, $B5, $50, $BB, $50, $FF, $FF, $C1, $50, $C7, $50, $CD, $50
-    db $FF, $FF, $D3, $50, $D9, $50, $DF, $50, $FF, $FF, $98, $D9, $CE, $3C, $FD, $5F
-    db $98, $D9, $CF, $3C, $FD, $5F, $98, $D9, $D0, $3C, $FD, $5F, $98, $D9, $D1, $3C
-    db $FD, $5F, $98, $D9, $D2, $3C, $FD, $5F, $98, $D9, $D3, $3C, $FD, $5F, $98, $D9
-    db $D4, $3C, $FD, $5F, $98, $D9, $D5, $3C, $FD, $5F, $98, $D9, $D6, $3C, $FD, $5F
-    db $FF, $FF, $FF, $FF, $FF, $FF, $01, $06, $00, $80, $00, $00, $00, $FF, $FF, $FF
-    db $0D, $51, $13, $51, $19, $51, $FF, $FF, $1F, $51, $25, $51, $2B, $51, $FF, $FF
-    db $31, $51, $37, $51, $3D, $51, $FF, $FF, $98, $D9, $D7, $3C, $1D, $60, $98, $D9
-    db $D8, $3C, $1D, $60, $98, $D9, $D9, $3C, $1D, $60, $98, $D9, $DA, $3C, $1D, $60
-    db $98, $D9, $DB, $3C, $1D, $60, $98, $D9, $DC, $3C, $1D, $60, $98, $D9, $DD, $3C
-    db $1D, $60, $98, $D9, $DE, $3C, $1D, $60, $98, $D9, $DF, $3C, $1D, $60, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $03, $06, $00, $80, $00, $00, $00, $FF, $FF, $6B, $51
-    db $71, $51, $77, $51, $FF, $FF, $7D, $51, $83, $51, $89, $51, $FF, $FF, $8F, $51
-    db $95, $51, $9B, $51, $FF, $FF, $98, $D9, $E0, $3C, $3D, $60, $98, $D9, $E1, $3C
-    db $3D, $60, $98, $D9, $E2, $3C, $3D, $60, $98, $D9, $E3, $3C, $3D, $60, $98, $D9
-    db $E4, $3C, $3D, $60, $98, $D9, $E5, $3C, $3D, $60, $98, $D9, $E6, $3C, $3D, $60
-    db $98, $D9, $E7, $3C, $3D, $60, $98, $D9, $E8, $3C, $3D, $60, $FF, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $08, $06, $00, $80, $00, $00, $00, $FF, $B3, $51, $98, $D9
-    db $E9, $3C, $5D, $60, $BB, $51, $98, $D9, $EA, $3C, $7D, $60, $C3, $51, $98, $D9
-    db $EB, $3C, $9D, $60, $CB, $51, $99, $D9, $EC, $3C, $BD, $60, $ED, $3C, $BD, $60
-    db $ED, $3C, $BD, $60, $ED, $3C, $BD, $60, $ED, $3C, $BD, $60, $E3, $51, $9A, $D9
-    db $EE, $3C, $DD, $60, $EE, $3C, $DD, $60, $EE, $3C, $DD, $60, $EE, $3C, $DD, $60
-    db $FD, $60, $1D, $61, $3D, $61, $5D, $61, $7D, $61, $9D, $61, $BD, $61, $DD, $61
-    db $FD, $61, $1D, $62, $3D, $62, $5D, $62, $7D, $62, $9D, $62, $BD, $62, $DD, $62
+; Labels mark the start of each room's attribute data block.
+; Each block: screen table (pointer pairs) + per-screen attribute entries.
+; Attr entry: [wram_addr:2] + steps * [attr_idx:1, attr_bank:1, pal_ptr:2]
+    db $ff, $ff, $ff, $ff, $87, $48, $ff, $ff, $ff, $ff
+RoomAttr_Map68:
+    db $2a, $d9, $00, $3c, $5d, $56, $01, $3c, $5d, $56, $02, $3c, $5d, $56, $03, $3c
+    db $5d, $56
+RoomAttr_Map69:
+    db $2b, $d9, $04, $3c, $5d, $56, $05, $3c, $5d, $56, $05, $3c, $5d, $56, $05, $3c
+    db $5d, $56, $05, $3c, $5d, $56, $05, $3c, $5d, $56, $04, $3c, $5d, $56, $04, $3c
+    db $5d, $56, $04, $3c, $5d, $56, $2c, $d9, $06, $3c, $5d, $56, $06, $3c, $5d, $56
+    db $06, $3c, $5d, $56, $06, $3c, $5d, $56, $06, $3c, $5d, $56
+RoomAttr_GreatTree:
+    db $bd, $48, $d3, $48, $ff, $ff, $ff, $ff, $d9, $48, $eb, $48, $ff, $ff, $ff, $ff
+    db $f1, $48, $ff, $48, $ff, $ff, $ff, $ff, $05, $49, $17, $49, $ff, $ff, $ff, $ff
+    db $2d, $d9, $07, $3c, $7d, $56, $07, $3c, $7d, $56, $07, $3c, $7d, $56, $07, $3c
+    db $7d, $56, $07, $3c, $7d, $56, $2e, $d9, $08, $3c, $7d, $56, $2f, $d9, $09, $3c
+    db $7d, $56, $09, $3c, $7d, $56, $09, $3c, $7d, $56, $09, $3c, $7d, $56, $30, $d9
+    db $0a, $3c, $7d, $56, $31, $d9, $0b, $3c, $7d, $56, $0b, $3c, $7d, $56, $0b, $3c
+    db $7d, $56, $32, $d9, $0c, $3c, $7d, $56, $33, $d9, $0d, $3c, $7d, $56, $0d, $3c
+    db $7d, $56, $0e, $3c, $7d, $56, $0e, $3c, $7d, $56, $34, $d9, $0f, $3c, $7d, $56
+    db $10, $3c, $7d, $56, $11, $3c, $7d, $56
+RoomAttr_Bazaar:
+    db $35, $49, $3f, $49, $4d, $49, $ff, $ff, $5b, $49, $69, $49, $77, $49, $ff, $ff
+    db $35, $d9, $12, $3c, $9d, $56, $12, $3c, $9d, $56, $36, $d9, $13, $3c, $9d, $56
+    db $13, $3c, $9d, $56, $13, $3c, $9d, $56, $37, $d9, $14, $3c, $9d, $56, $15, $3c
+    db $9d, $56, $15, $3c, $9d, $56, $38, $d9, $16, $3c, $9d, $56, $17, $3c, $9d, $56
+    db $16, $3c, $9d, $56, $39, $d9, $18, $3c, $9d, $56, $19, $3c, $9d, $56, $19, $3c
+    db $9d, $56, $3a, $d9, $1a, $3c, $9d, $56, $1b, $3c, $9d, $56, $1b, $3c, $9d, $56
+    db $1c, $3c, $9d, $56, $1c, $3c, $9d, $56, $1d, $3c, $9d, $56, $1d, $3c, $9d, $56
+    db $1d, $3c, $9d, $56, $1d, $3c, $9d, $56
+RoomAttr_GateHub:
+    db $ad, $49, $bf, $49, $ff, $ff, $ff, $ff, $d5, $49, $eb, $49, $ff, $ff, $ff, $ff
+    db $3b, $d9, $1e, $3c, $bd, $56, $1f, $3c, $bd, $56, $20, $3c, $bd, $56, $21, $3c
+    db $bd, $56, $3c, $d9, $22, $3c, $bd, $56, $23, $3c, $bd, $56, $23, $3c, $bd, $56
+    db $24, $3c, $bd, $56, $25, $3c, $bd, $56, $3d, $d9, $26, $3c, $bd, $56, $27, $3c
+    db $bd, $56, $28, $3c, $bd, $56, $29, $3c, $bd, $56, $29, $3c, $bd, $56, $3e, $d9
+    db $2a, $3c, $bd, $56, $2b, $3c, $bd, $56
+RoomAttr_Farm:
+    db $05, $4a, $17, $4a, $25, $4a, $ff, $ff, $3b, $4a, $4d, $4a, $5b, $4a, $ff, $ff
+    db $3f, $d9, $2c, $3c, $dd, $56, $2c, $3c, $dd, $56, $2c, $3c, $dd, $56, $2c, $3c
+    db $dd, $56, $40, $d9, $2d, $3c, $dd, $56, $2d, $3c, $dd, $56, $2d, $3c, $dd, $56
+    db $41, $d9, $2e, $3c, $dd, $56, $2e, $3c, $dd, $56, $2f, $3c, $dd, $56, $2f, $3c
+    db $dd, $56, $2f, $3c, $dd, $56, $42, $d9, $30, $3c, $dd, $56, $30, $3c, $dd, $56
+    db $30, $3c, $dd, $56, $30, $3c, $dd, $56, $43, $d9, $31, $3c, $dd, $56, $31, $3c
+    db $dd, $56, $31, $3c, $dd, $56, $44, $d9, $32, $3c, $dd, $56, $32, $3c, $dd, $56
+    db $32, $3c, $dd, $56, $32, $3c, $dd, $56
+RoomAttr_Stable:
+    db $73, $4a, $7d, $4a, $87, $4a, $45, $d9, $33, $3c, $fd, $56, $34, $3c, $fd, $56
+    db $46, $d9, $35, $3c, $fd, $56, $35, $3c, $fd, $56, $47, $d9, $36, $3c, $fd, $56
+    db $36, $3c, $fd, $56, $36, $3c, $fd, $56, $36, $3c, $fd, $56
+RoomAttr_ArenaLobby:
+    db $a1, $4a, $a7, $4a, $ad, $4a, $ff, $ff, $48, $d9, $37, $3c, $1d, $57, $49, $d9
+    db $38, $3c, $1d, $57, $4a, $d9, $39, $3c, $1d, $57
+RoomAttr_ArenaRooms:
+    db $c3, $4a, $c9, $4a, $eb, $4a, $ff, $ff, $f1, $4a, $fb, $4a, $01, $4b, $ff, $ff
+    db $4b, $d9, $3a, $3c, $3d, $57, $4c, $d9, $3b, $3c, $3d, $57, $3c, $3c, $3d, $57
+    db $3d, $3c, $3d, $57, $3d, $3c, $3d, $57, $3e, $3c, $3d, $57, $3e, $3c, $3d, $57
+    db $3e, $3c, $3d, $57, $3e, $3c, $3d, $57, $4d, $d9, $3f, $3c, $3d, $57, $4e, $d9
+    db $40, $3c, $3d, $57, $40, $3c, $3d, $57, $4f, $d9, $41, $3c, $3d, $57, $50, $d9
+    db $42, $3c, $3d, $57
+RoomAttr_Gate_08:
+    db $09, $4b, $51, $d9, $43, $3c, $5d, $57, $43, $3c, $5d, $57, $43, $3c, $5d, $57
+    db $43, $3c, $5d, $57, $43, $3c, $5d, $57, $43, $3c, $5d, $57, $43, $3c, $5d, $57
+    db $43, $3c, $5d, $57, $43, $3c, $5d, $57
+RoomAttr_StarryShrine:
+    db $ff, $ff, $3f, $4b, $ff, $ff, $ff, $ff, $4d, $4b, $5b, $4b, $ff, $ff, $ff, $ff
+    db $52, $d9, $44, $3c, $7d, $57, $44, $3c, $7d, $57, $44, $3c, $7d, $57, $53, $d9
+    db $45, $3c, $7d, $57, $45, $3c, $7d, $57, $45, $3c, $7d, $57, $54, $d9, $46, $3c
+    db $7d, $57, $46, $3c, $7d, $57
+RoomAttr_SecretPassage:
+    db $6d, $4b, $73, $4b, $ff, $ff, $ff, $ff, $55, $d9, $47, $3c, $9d, $57, $56, $d9
+    db $48, $3c, $9d, $57
+RoomAttr_Gate_0C:
+    db $7b, $4b, $57, $d9, $49, $3c, $bd, $57
+RoomAttr_OldManGate:
+    db $83, $4b, $58, $d9, $4a, $3c, $dd, $57, $4a, $3c, $dd, $57
+RoomAttr_Room_0F:
+    db $8f, $4b, $59, $d9, $4b, $3c, $fd, $57
+RoomAttr_CopycatRoom:
+    db $97, $4b, $5a, $d9, $4c, $3c, $1d, $58, $4d, $3c, $1d, $58
+RoomAttr_Library:
+    db $b1, $4b, $ff, $ff, $ff, $ff, $ff, $ff, $b7, $4b, $ff, $ff, $ff, $ff, $ff, $ff
+    db $5b, $d9, $4e, $3c, $3d, $58, $5c, $d9, $4f, $3c, $3d, $58, $4f, $3c, $3d, $58
+RoomAttr_Room_13:
+    db $c3, $4b, $5d, $d9, $50, $3c, $3d, $58, $50, $3c, $3d, $58
+RoomAttr_MedalManRoom:
+    db $cf, $4b, $5e, $d9, $51, $3c, $5d, $58, $52, $3c, $5d, $58, $52, $3c, $5d, $58
+    db $51, $3c, $5d, $58, $52, $3c, $5d, $58, $52, $3c, $5d, $58
+RoomAttr_Well:
+    db $f9, $4b, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $4b, $ff, $ff, $ff, $ff, $ff, $ff
+    db $5f, $d9, $53, $3c, $7d, $58, $60, $d9, $54, $3c, $7d, $58, $55, $3c, $7d, $58
+    db $55, $3c, $7d, $58
+RoomAttr_Map19:
+    db $0f, $4c, $61, $d9, $56, $3c, $9d, $58
+RoomAttr_Map1A:
+    db $17, $4c, $62, $d9, $57, $3c, $bd, $58
+RoomAttr_Map1B:
+    db $1f, $4c, $63, $d9, $58, $3c, $dd, $58, $58, $3c, $dd, $58, $58, $3c, $dd, $58
+RoomAttr_Map1C:
+    db $2f, $4c, $64, $d9, $59, $3c, $fd, $58, $59, $3c, $fd, $58
+RoomAttr_Map1D:
+    db $3b, $4c, $65, $d9, $5a, $3c, $1d, $59
+RoomAttr_Map1E:
+    db $43, $4c, $66, $d9, $5b, $3c, $1d, $59, $5b, $3c, $1d, $59
+RoomAttr_Map1F:
+    db $4f, $4c, $67, $d9, $5c, $3c, $3d, $59, $5c, $3c, $3d, $59, $5c, $3c, $3d, $59
+RoomAttr_BossRoom_Beginning:
+    db $5f, $4c, $68, $d9, $5d, $3c, $5d, $59, $5d, $3c, $5d, $59
+RoomAttr_BossRoom_VilTalis:
+    db $6b, $4c, $69, $d9, $5e, $3c, $7d, $59, $5e, $3c, $7d, $59, $5e, $3c, $7d, $59
+    db $5e, $3c, $7d, $59
+RoomAttr_BossRoom_MemBewil:
+    db $7f, $4c, $6a, $d9, $5f, $3c, $9d, $59, $5f, $3c, $9d, $59, $5f, $3c, $9d, $59
+    db $5f, $3c, $9d, $59
+RoomAttr_BossRoom_PeaceBrave:
+    db $93, $4c, $6b, $d9, $60, $3c, $bd, $59, $60, $3c, $bd, $59, $60, $3c, $bd, $59
+    db $60, $3c, $bd, $59
+RoomAttr_Map27:
+    db $a7, $4c, $6c, $d9, $61, $3c, $dd, $59, $61, $3c, $dd, $59, $61, $3c, $dd, $59
+RoomAttr_Map28:
+    db $b7, $4c, $6d, $d9, $62, $3c, $fd, $59, $62, $3c, $fd, $59, $62, $3c, $fd, $59
+    db $62, $3c, $fd, $59
+RoomAttr_Map29:
+    db $cb, $4c, $6e, $d9, $63, $3c, $1d, $5a, $63, $3c, $1d, $5a, $63, $3c, $1d, $5a
+    db $63, $3c, $1d, $5a
+RoomAttr_Map2A:
+    db $df, $4c, $6f, $d9, $64, $3c, $3d, $5a, $64, $3c, $3d, $5a, $64, $3c, $3d, $5a
+    db $64, $3c, $3d, $5a
+RoomAttr_Map2B:
+    db $f3, $4c, $70, $d9, $65, $3c, $5d, $5a, $65, $3c, $5d, $5a
+RoomAttr_Map2C:
+    db $ff, $4c, $71, $d9, $66, $3c, $7d, $5a, $66, $3c, $7d, $5a, $66, $3c, $7d, $5a
+    db $66, $3c, $7d, $5a
+RoomAttr_Map2D:
+    db $13, $4d, $72, $d9, $67, $3c, $9d, $5a, $67, $3c, $9d, $5a, $67, $3c, $9d, $5a
+    db $67, $3c, $9d, $5a
+RoomAttr_Map2E:
+    db $27, $4d, $73, $d9, $68, $3c, $bd, $5a, $68, $3c, $bd, $5a, $68, $3c, $bd, $5a
+    db $68, $3c, $bd, $5a
+RoomAttr_Map2F:
+    db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $45, $4d, $63, $4d, $74, $d9, $69, $3c
+    db $dd, $5a, $69, $3c, $dd, $5a, $69, $3c, $dd, $5a, $69, $3c, $dd, $5a, $69, $3c
+    db $dd, $5a, $69, $3c, $dd, $5a, $69, $3c, $dd, $5a, $75, $d9, $6a, $3c, $dd, $5a
+    db $6a, $3c, $dd, $5a
+RoomAttr_Boss_Beginning:
+    db $6f, $4d, $76, $d9, $6b, $3c, $fd, $5a, $6c, $3c, $fd, $5a
+RoomAttr_Boss_Villager:
+    db $7b, $4d, $77, $d9, $6d, $3c, $1d, $5b, $6e, $3c, $1d, $5b
+RoomAttr_Boss_Talisman:
+    db $87, $4d, $78, $d9, $6f, $3c, $3d, $5b, $70, $3c, $3d, $5b
+RoomAttr_Boss_Memories:
+    db $93, $4d, $79, $d9, $71, $3c, $5d, $5b, $72, $3c, $5d, $5b
+RoomAttr_Map34:
+    db $9f, $4d, $7a, $d9, $73, $3c, $7d, $5b, $74, $3c, $7d, $5b
+RoomAttr_Map35:
+    db $ab, $4d, $7b, $d9, $75, $3c, $9d, $5b, $76, $3c, $9d, $5b
+RoomAttr_Map36:
+    db $b7, $4d, $7c, $d9, $77, $3c, $bd, $5b, $78, $3c, $bd, $5b
+RoomAttr_Map37:
+    db $c3, $4d, $7d, $d9, $79, $3c, $dd, $5b, $7a, $3c, $dd, $5b
+RoomAttr_Map38:
+    db $cf, $4d, $7e, $d9, $7b, $3c, $fd, $5b, $7c, $3c, $fd, $5b
+RoomAttr_Map39:
+    db $db, $4d, $7f, $d9, $7d, $3c, $1d, $5c, $7e, $3c, $1d, $5c
+RoomAttr_Map3A:
+    db $e7, $4d, $80, $d9, $7f, $3c, $3d, $5c, $80, $3c, $3d, $5c
+RoomAttr_Map3B:
+    db $f3, $4d, $81, $d9, $81, $3c, $5d, $5c, $82, $3c, $5d, $5c
+RoomAttr_Map3C:
+    db $ff, $4d, $82, $d9, $83, $3c, $7d, $5c, $85, $3c, $7d, $5c, $84, $3c, $7d, $5c
+RoomAttr_Map3D:
+    db $0f, $4e, $83, $d9, $86, $3c, $9d, $5c, $86, $3c, $9d, $5c
+RoomAttr_Map3E:
+    db $1b, $4e, $84, $d9, $87, $3c, $bd, $5c, $88, $3c, $bd, $5c
+RoomAttr_Map3F:
+    db $27, $4e, $85, $d9, $89, $3c, $dd, $5c, $8a, $3c, $fd, $5c
+RoomAttr_Map40:
+    db $33, $4e, $86, $d9, $8b, $3c, $1d, $5d
+RoomAttr_Map41:
+    db $3b, $4e, $87, $d9, $8c, $3c, $1d, $5d, $8c, $3c, $1d, $5d, $8c, $3c, $1d, $5d
+    db $8d, $3c, $1d, $5d
+RoomAttr_Labyrinth:
+    db $51, $4e
+RoomAttr_LabyrinthBoss:
+    db $7b, $4e, $88, $d9, $8e, $3c, $3d, $5d, $8e, $3c, $3d, $5d, $8e, $3c, $3d, $5d
+    db $8e, $3c, $3d, $5d, $8e, $3c, $3d, $5d, $8e, $3c, $3d, $5d, $8e, $3c, $3d, $5d
+    db $8e, $3c, $3d, $5d, $8e, $3c, $3d, $5d, $8e, $3c, $3d, $5d, $89, $d9, $8f, $3c
+    db $5d, $5d, $8f, $3c, $5d, $5d
+RoomAttr_Map43:
+    db $87, $4e, $8a, $d9, $90, $3c, $7d, $5d, $91, $3c, $7d, $5d
+RoomAttr_Map44:
+    db $93, $4e, $8b, $d9, $92, $3c, $9d, $5d, $93, $3c, $9d, $5d
+RoomAttr_Map45:
+    db $9f, $4e, $8c, $d9, $94, $3c, $bd, $5d, $95, $3c, $bd, $5d, $94, $3c, $bd, $5d
+RoomAttr_Map46:
+    db $af, $4e, $8d, $d9, $96, $3c, $dd, $5d, $97, $3c, $dd, $5d
+RoomAttr_Map47:
+    db $bb, $4e, $8e, $d9, $98, $3c, $fd, $5d, $98, $3c, $fd, $5d, $99, $3c, $fd, $5d
+RoomAttr_Map48:
+    db $cb, $4e, $8f, $d9, $9a, $3c, $1d, $5e, $9b, $3c, $1d, $5e
+RoomAttr_Map49:
+    db $d7, $4e, $90, $d9, $9c, $3c, $3d, $5e, $9d, $3c, $3d, $5e
+RoomAttr_Map4A:
+    db $e3, $4e, $91, $d9, $9e, $3c, $5d, $5e, $9f, $3c, $5d, $5e
+RoomAttr_Map4B:
+    db $ef, $4e, $92, $d9, $a0, $3c, $7d, $5e, $a1, $3c, $7d, $5e
+RoomAttr_Map4C:
+    db $fb, $4e, $93, $d9, $a2, $3c, $9d, $5e, $a3, $3c, $9d, $5e
+RoomAttr_Map4D:
+    db $07, $4f, $94, $d9, $a4, $3c, $bd, $5e, $a5, $3c, $bd, $5e
+RoomAttr_Map4E:
+    db $21, $4f, $ff, $ff, $ff, $ff, $ff, $ff, $2b, $4f, $ff, $ff, $ff, $ff, $ff, $ff
+    db $95, $d9, $a6, $3c, $dd, $5e, $a7, $3c, $dd, $5e, $96, $d9, $a8, $3c, $dd, $5e
+RoomAttr_Map4F:
+    db $33, $4f, $97, $d9, $a9, $3c, $fd, $5e, $aa, $3c, $fd, $5e
+RoomAttr_Map50:
+    db $3f, $4f, $98, $d9, $ab, $3c, $1d, $5f
+RoomAttr_Map51:
+    db $47, $4f, $98, $d9, $ac, $3c, $3d, $5f
+RoomAttr_Map52:
+    db $4f, $4f, $98, $d9, $ad, $3c, $5d, $5f
+RoomAttr_Map53:
+    db $5f, $4f
+RoomAttr_Map61:
+    db $65, $4f
+RoomAttr_Map62:
+    db $6b, $4f
+RoomAttr_Map63:
+    db $71, $4f
+RoomAttr_Map64:
+    db $77, $4f, $98, $d9, $ae, $3c, $7d, $5f, $98, $d9, $af, $3c, $7d, $5f, $98, $d9
+    db $b0, $3c, $7d, $5f, $98, $d9, $b1, $3c, $7d, $5f, $98, $d9, $b2, $3c, $7d, $5f
+RoomAttr_Map54:
+    db $95, $4f, $9b, $4f, $a1, $4f, $ff, $ff, $a7, $4f, $ad, $4f, $b3, $4f, $ff, $ff
+    db $b9, $4f, $bf, $4f, $c5, $4f, $ff, $ff, $98, $d9, $b3, $3c, $9d, $5f, $98, $d9
+    db $b4, $3c, $9d, $5f, $98, $d9, $b5, $3c, $9d, $5f, $98, $d9, $b6, $3c, $9d, $5f
+    db $98, $d9, $b7, $3c, $9d, $5f, $98, $d9, $b8, $3c, $9d, $5f, $98, $d9, $b9, $3c
+    db $9d, $5f, $98, $d9, $ba, $3c, $9d, $5f, $98, $d9, $bb, $3c, $9d, $5f, $ff, $ff
+    db $ff, $ff, $ff, $ff, $ff, $ff, $08, $02, $00, $80, $00, $00, $00, $ff
+RoomAttr_Map55:
+    db $f3, $4f, $f9, $4f, $ff, $4f, $ff, $ff, $05, $50, $0b, $50, $11, $50, $ff, $ff
+    db $17, $50, $1d, $50, $23, $50, $ff, $ff, $98, $d9, $bc, $3c, $bd, $5f, $98, $d9
+    db $bd, $3c, $bd, $5f, $98, $d9, $be, $3c, $bd, $5f, $98, $d9, $bf, $3c, $bd, $5f
+    db $98, $d9, $c0, $3c, $bd, $5f, $98, $d9, $c1, $3c, $bd, $5f, $98, $d9, $c2, $3c
+    db $bd, $5f, $98, $d9, $c3, $3c, $bd, $5f, $98, $d9, $c4, $3c, $bd, $5f, $ff, $ff
+    db $ff, $ff, $ff, $ff, $06, $06, $00, $80, $00, $00, $00, $ff, $ff, $ff
+RoomAttr_Map56:
+    db $51, $50, $57, $50, $5d, $50, $ff, $ff, $63, $50, $69, $50, $6f, $50, $ff, $ff
+    db $75, $50, $7b, $50, $81, $50, $ff, $ff, $98, $d9, $c5, $3c, $dd, $5f, $98, $d9
+    db $c6, $3c, $dd, $5f, $98, $d9, $c7, $3c, $dd, $5f, $98, $d9, $c8, $3c, $dd, $5f
+    db $98, $d9, $c9, $3c, $dd, $5f, $98, $d9, $ca, $3c, $dd, $5f, $98, $d9, $cb, $3c
+    db $dd, $5f, $98, $d9, $cc, $3c, $dd, $5f, $98, $d9, $cd, $3c, $dd, $5f, $ff, $ff
+    db $03, $03, $00, $80, $00, $00, $00, $ff, $ff, $ff, $ff, $ff, $ff, $ff
+RoomAttr_Map57:
+    db $af, $50, $b5, $50, $bb, $50, $ff, $ff, $c1, $50, $c7, $50, $cd, $50, $ff, $ff
+    db $d3, $50, $d9, $50, $df, $50, $ff, $ff, $98, $d9, $ce, $3c, $fd, $5f, $98, $d9
+    db $cf, $3c, $fd, $5f, $98, $d9, $d0, $3c, $fd, $5f, $98, $d9, $d1, $3c, $fd, $5f
+    db $98, $d9, $d2, $3c, $fd, $5f, $98, $d9, $d3, $3c, $fd, $5f, $98, $d9, $d4, $3c
+    db $fd, $5f, $98, $d9, $d5, $3c, $fd, $5f, $98, $d9, $d6, $3c, $fd, $5f, $ff, $ff
+    db $ff, $ff, $ff, $ff, $01, $06, $00, $80, $00, $00, $00, $ff, $ff, $ff
+RoomAttr_Map58:
+    db $0d, $51, $13, $51, $19, $51, $ff, $ff, $1f, $51, $25, $51, $2b, $51, $ff, $ff
+    db $31, $51, $37, $51, $3d, $51, $ff, $ff, $98, $d9, $d7, $3c, $1d, $60, $98, $d9
+    db $d8, $3c, $1d, $60, $98, $d9, $d9, $3c, $1d, $60, $98, $d9, $da, $3c, $1d, $60
+    db $98, $d9, $db, $3c, $1d, $60, $98, $d9, $dc, $3c, $1d, $60, $98, $d9, $dd, $3c
+    db $1d, $60, $98, $d9, $de, $3c, $1d, $60, $98, $d9, $df, $3c, $1d, $60, $ff, $ff
+    db $ff, $ff, $ff, $ff, $ff, $03, $06, $00, $80, $00, $00, $00, $ff, $ff
+RoomAttr_Map59:
+    db $6b, $51, $71, $51, $77, $51, $ff, $ff, $7d, $51, $83, $51, $89, $51, $ff, $ff
+    db $8f, $51, $95, $51, $9b, $51, $ff, $ff, $98, $d9, $e0, $3c, $3d, $60, $98, $d9
+    db $e1, $3c, $3d, $60, $98, $d9, $e2, $3c, $3d, $60, $98, $d9, $e3, $3c, $3d, $60
+    db $98, $d9, $e4, $3c, $3d, $60, $98, $d9, $e5, $3c, $3d, $60, $98, $d9, $e6, $3c
+    db $3d, $60, $98, $d9, $e7, $3c, $3d, $60, $98, $d9, $e8, $3c, $3d, $60, $ff, $ff
+    db $ff, $ff, $ff, $ff, $ff, $ff, $08, $06, $00, $80, $00, $00, $00, $ff
+RoomAttr_Map5A:
+    db $b3, $51, $98, $d9, $e9, $3c, $5d, $60
+RoomAttr_Map5B:
+    db $bb, $51, $98, $d9, $ea, $3c, $7d, $60
+RoomAttr_Map5C:
+    db $c3, $51, $98, $d9, $eb, $3c, $9d, $60
+RoomAttr_ArenaBattle:
+    db $cb, $51, $99, $d9, $ec, $3c, $bd, $60, $ed, $3c, $bd, $60, $ed, $3c, $bd, $60
+    db $ed, $3c, $bd, $60, $ed, $3c, $bd, $60
+RoomAttr_Map5E:
+    db $e3, $51, $9a, $d9, $ee, $3c, $dd, $60, $ee, $3c, $dd, $60, $ee, $3c, $dd, $60
+    db $ee, $3c, $dd, $60, $fd, $60, $1d, $61, $3d, $61, $5d, $61, $7d, $61, $9d, $61
+    db $bd, $61, $dd, $61, $fd, $61, $1d, $62, $3d, $62, $5d, $62, $7d, $62, $9d, $62
+    db $bd, $62, $dd, $62
 
 GateAttrTable_A:  ; $5215 — 256 entries × 2B (attr_idx, attr_bank)
 ; Used when $C93F == 0. Indexed by $C940[screen_index].

@@ -578,7 +578,7 @@ Call_04a_424b:
 
 jr_04a_425c:
     ld de, $4007
-    call Call_000_05b6
+    call CallTextEngine
     ret
 
 
@@ -595,7 +595,7 @@ jr_04a_425c:
 
 jr_04a_4274:
     ld de, $4007
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
@@ -612,7 +612,7 @@ jr_04a_4274:
 
 jr_04a_428c:
     call Call_04a_424b
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

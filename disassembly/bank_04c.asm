@@ -709,19 +709,19 @@ Call_04c_42d1:
     ret z
 
     ld de, $4009
-    call Call_000_05b6
+    call CallTextEngine
     ld a, $ff
     ld [$c823], a
     ret
 
 
     ld de, $4009
-    call Call_000_05f6
+    call RunTextHandler
     ret
 
 
     call Call_04c_42d1
-    call Call_000_0609
+    call RequestScreenUpdate
     ret
 
 

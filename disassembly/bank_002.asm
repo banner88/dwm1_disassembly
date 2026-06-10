@@ -3193,31 +3193,31 @@ label4e9f:
     sbc a
     ld d, b
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld de, $5b17
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $5b18
     ld hl, $8600
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $5b19
     ld hl, $8640
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $5b1a
     ld hl, $8670
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $2f00
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $310d
     ld hl, $8a00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $310e
     ld hl, $8b00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $3110
     ld hl, $8c00
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $6df0
     ld hl, $9800
     call Call_002_5c6d
@@ -3240,12 +3240,12 @@ label4e9f:
     ld hl, $9800
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld de, $3f04
     ld hl, $9c00
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld a, $00
     ldh [rVBK], a
     ld a, $00
@@ -3271,13 +3271,13 @@ label4e9f:
 
 
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld de, $5b1b
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $5b1c
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $ff00
     ld hl, $8ff0
     ld bc, $0008
@@ -3303,7 +3303,7 @@ label4e9f:
     ld hl, $9800
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld a, $00
     ldh [rVBK], a
     xor a
@@ -3329,13 +3329,13 @@ label4e9f:
 
 
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld de, $5b1b
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $5b1c
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $ff00
     ld hl, $8ff0
     ld bc, $0008
@@ -3361,7 +3361,7 @@ label4e9f:
     ld hl, $9800
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld a, $00
     ldh [rVBK], a
     xor a
@@ -3387,13 +3387,13 @@ label4e9f:
 
 
     ld a, $fc
-    call Call_000_1688
+    call SetGBCPalette
     ld de, $5b1d
     ld hl, $9000
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $5b1e
     ld hl, $8800
-    call Call_000_14cf
+    call WaitLCDTransfer
     ld de, $ff00
     ld hl, $8ff0
     ld bc, $0008
@@ -3419,7 +3419,7 @@ label4e9f:
     ld hl, $9800
     ld a, [wIsGBC]
     or a
-    call nz, Call_000_14cf
+    call nz, WaitLCDTransfer
     ld a, $00
     ldh [rVBK], a
     xor a
@@ -4839,7 +4839,7 @@ jr_002_5bcb:
     ld hl, $c0fd
     inc [hl]
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
@@ -5019,24 +5019,24 @@ jr_002_5cbf:
 
 jr_002_5cd4:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ei
     ld [$c0f9], a
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl]
     ei
     push af
     di
-    call Call_000_1aa6
+    call WaitVRAM
     pop af
     ld [de], a
     ei
     ld a, [$c0f9]
     push af
     di
-    call Call_000_1aa6
+    call WaitVRAM
     pop af
     ld [hl], a
     ei
@@ -5127,7 +5127,7 @@ jr_002_5d5f:
     ld hl, $c0fd
     inc [hl]
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
@@ -5240,10 +5240,10 @@ jr_002_5e20:
 
 jr_002_5e22:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [$c0fb], a
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl]
     ld [de], a
     ld a, [$c0fb]
@@ -5283,17 +5283,17 @@ jr_002_5e49:
 
 jr_002_5e5e:
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [de]
     ld [$c0fb], a
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [hl]
     ld [de], a
     ei
     di
-    call Call_000_1aa6
+    call WaitVRAM
     ld a, [$c0fb]
     ld [hl], a
     ei
@@ -5472,7 +5472,7 @@ jr_002_5f66:
     ld hl, $c0fd
     inc [hl]
     ld a, $04
-    call Call_000_1688
+    call SetGBCPalette
     ret
 
 
@@ -5516,10 +5516,10 @@ jr_002_5f66:
 Call_002_5fa7:
     ld de, $5b18
     ld hl, $8700
-    call Call_000_1577
+    call WaitDMATransfer
     ld de, $5b19
     ld hl, $8740
-    call Call_000_1577
+    call WaitDMATransfer
     xor a
     ld hl, $c0d8
     ld bc, $0028
@@ -6631,7 +6631,7 @@ jr_002_67d9:
     xor a
     ld [$c0d8], a
     ld a, $03
-    call Call_000_1688
+    call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     xor a
@@ -11032,7 +11032,7 @@ Jump_002_7ea3:
 
 Jump_002_7ea7:
     dec d
-    call Call_000_05f6
+    call RunTextHandler
     ld l, $07
     ld a, [hl]
     res 0, a
