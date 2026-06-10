@@ -13,97 +13,112 @@ cannot be regenerated with matching bytes.
 
 ## What Was Completed This Session
 
-### 1. Bank $00 — 79 More Functions Named (149 total, 466 remaining)
-Named 79 additional functions across multiple tiers (22 refs down to 4 refs). Key categories:
-- **Battle stat readers** (7 functions): Fixed incorrect `ReadEventFlags2`/`3` → `GetCombatantHP`/`DEF`/`ATK`/`MaxHP`/`MaxMP`/`MP` + `IndexPtrTable`. Reads per-combatant stats from WRAM tables ($DBA3-$DBF3).
-- **Event flags** (4): `SetEventFlag`, `ClearEventFlag`, `TestEventFlag`, `ComputeFlagAddress`.
-- **Monster stat math** (8): `SaturatingAdd16`/`Subtract16`, `MonsterStatAdd`/`Subtract`/`Decrement`, context wrappers.
-- **Active monster** (5): `GetActiveMonsterPtr`, `ReadActiveMonsterByte`/`Word`, `GetMonsterSkillData`, `GetMonsterSlotContext`.
-- **LCD/Video/SGB** (15): BG map, scroll, STAT, SGB packet/tiles/delay, palette, viewport, OAM, sprites.
-- **Text/Display** (11): Text bank switching, digit formatting, tilemap ops, text renderer call.
-- **SRAM/Save** (4): `CopySRAMBlock`, `CopyFromSRAM`, `SavePartyToSRAM`, `SaveGameState`.
-- **Audio** (3): Init, flag check, register write.
-- **Script/Dispatch** (5): `RunScriptEngine`, `CallScriptByType`, `CrossBankCallRet`, `DispatchCD90`, `TextBankDispatch`.
-- **Gold** (2): `AddGold`, `CompareGold`.
-- **Math** (3): `DivBCbyDE`, `ExtractDigit16`, `ComputeTileDataAddr`.
+### 1. Script Data Banks $0C/$0D/$0E/$0F — Full Conversion
+Converted all 4 NPC script data banks from ~58,000 lines of misassembled
+garbage into properly labeled, annotated `dw` data tables.
 
-### 2. WRAM Symbol Expansion — 81 unique symbols, 4676 refs
-Added 60 new WRAM labels in wram.asm with 2546 hex→symbol replacements. Key additions:
-- **Battle stat tables** (9): `wBattleHP` through `wBattleLVL` ($DBA3-$DC23), 16 bytes each.
-- **Battle indices** (2): `wBattleAttackerIdx` (686 refs), `wBattleTargetIdx` (575 refs).
-- **Script engine** (8): `wScriptMapType`, `wScriptCounter` (205 refs), `wScriptStateFlags` (114 refs), etc.
-- **Gate/floor system** (8): `wFloorType1`-`3`, `wCurrentFloor`, `wLastFloor`, `wBossMapType`, `wBossTileset`.
-- **Warp destination** (6): `wWarpGateId`, `wWarpSpawnXLo`/`Hi`/`YLo`/`YHi` (34 refs each).
-- **Event/state** (4): `wEventStateMachineIndex` (155 refs), `wEventFlags`, `wBattlePostFlag` (86 refs).
-- **Arena/encounter** (5): `wColiseumBattle`, `wArenaGroup`, `wEncounterPoolIndex`, `wScreenIndex` (62 refs).
-- **Temp workspace** (8): `wTempEnemyId1` (46 refs), `wTempEnemyStatsId` (40 refs), `wTempSpeciesId` (38 refs), breeding vars.
+- **530 NPC scripts** across 96 map types, fully delineated
+- **1,626 labels** (pointer tables, script starts, branch targets)
+- Every `dw` word annotated with opcode names, text previews, branch refs
+- Generator: `tools/gen_script_banks.py --apply`
 
-### 3. ROM Map Cross-Reference
-Applied community ROM map intelligence to name 3 additional cross-bank functions:
-- `ArenaGenerateBattles` (Bank $04:$5B1B)
-- `ColiseumInitPrize` (Bank $04:$6D93)
-- `LoadScriptRoomData` (Bank $0F:$4007)
+Key technical discovery: script data uses ODD byte alignment (packed
+back-to-back). Master table indexed by ABSOLUTE map type value.
 
-### 4. Documentation Updated
-DATA_STRUCTURES.md Bank $00 section fully reorganized by category. All decode counts current.
+### 2. Script Decompiler
+Built `tools/decompile_script.py` — converts raw `dw` script data into
+human-readable pseudo-code. All 100 opcodes decoded, **0 unknowns** across
+5,377 commands.
+
+### 3. SameBoy Debugger Trace — First 5 Minutes
+Traced the game's opening sequence with breakpoints:
+- Identified Bedroom = map_type $2F (bank $0E), Monster Shrine = $09
+- Confirmed cutscenes use the NPC script engine (not a separate system)
+- Warubou cutscene = branch within Bedroom_Script00 at screen 5
+
+### 4. Opcode Verification — 22 Confirmed via Visual Trace
+Cross-referenced decompiled scripts against observed gameplay:
+- **walk_x ($1A) = horizontal, walk_y ($1B) = vertical** (confirmed via chase)
+- **npc_show ($49), npc_hide ($48)** (confirmed via Warubou appear/disappear)
+- **trigger_anim ($1C) with $01XX = jump** (confirmed: Terry/Watabou jump)
+- **write_ram ($12)** = write value to RAM (335 uses, was mislabeled)
+- **Player control** = automatic via $D8D7 bit 0 (script active flag)
+
+### 5. Custom ROM — Modified Watabou Cutscene (Verified Working!)
+Created and tested custom ROM with 9 byte changes:
+- Watabou jumps first (before Terry)
+- Frantic timing (1-frame delays instead of 4-8)
+- Sprints 7 tiles left/right (instead of 3)
+- Confirmed working in SameBoy — proves full round-trip capability
+
+### 6. Custom Cutscene Documentation
+Created `CUSTOM_CUTSCENES.md` — comprehensive guide to creating custom
+cutscenes including verified opcode reference, construction patterns,
+three modification methods, and the Watabou example.
+
+### 7. All Documentation Updated
+- `DATA_STRUCTURES.md` — script banks, verified opcodes, decompiler tool
+- `CUSTOM_CUTSCENES.md` — NEW: cutscene creation guide
+- `FIRST_5MIN_TRACE.md` — NEW: SameBoy trace instructions
+- `BANK04_SCRIPT_ENGINE.md` — script bank annotation reference
+- `ARCHITECTURE.md` — script bank description expanded
+- `SESSION_HANDOFF.md` — this file
+- `NEXT_CLAUDE_MESSAGE.md` — updated for next instance
 
 ## All Completed Work (All Sessions Combined)
 
 ### Fully Annotated Data Banks
 | Bank | Contents | Labels | Status |
 |------|----------|--------|--------|
-| $03 | Monster info table (221x43B) | ~250 | Done |
+| $03 | Monster info table (221×43B) | ~250 | Done |
 | $0B | Room data system ($4B43-$7FFF) | ~800 | Done |
+| $0C | Script data (Castle/GreatTree/Bazaar/GateHub/Farm/Stable) | 452 | Done |
+| $0D | Script data (Arena/GateTileset/CopycatRoom/MedalMan/Well) | 614 | Done |
+| $0E | Script data (Gate rooms, boss rooms, Bedroom) | 287 | Done |
+| $0F | Script data (Late-game boss rooms, post-game) | 273 | Done |
 | $13 | EXP curves + growth tables | ~100 | Done |
-| $14 | Enemy stats (487x25B) + boss redirect | ~500 | Done |
-| $16 | Breeding + gate floor system | 234 | Done (this session) |
-| $17 | Palette/attribute tables | ~210 | Ptr tables + 92 room attr labels (this session) |
+| $14 | Enemy stats (487×25B) + boss redirect | ~500 | Done |
+| $16 | Breeding + gate floor + encounter system | 234 | Done |
+| $17 | Palette/attribute tables | ~210 | Ptr tables + 92 room attr labels |
 | $41 | ALL name/text tables + strings | 933 | Done |
 | $52 | Skill functions + battle system | 912 | Done |
 | 14 tileset banks | LZSS tile data pointer tables | ~500 | Done |
 
-### Named Functions by Bank
-| Bank | Named | Total Call_ | Key Functions |
-|------|-------|-------------|---------------|
-| $00 | 149 | 466 remaining | Monster access, VRAM, math, text, SRAM, battle stats, gold, events, SGB |
-| $01 | 5+ | | LoadNextDungeonFloor, encounter system |
-| $04 | 3+ | | MapTypeDispatch, script engine |
-| $0B | 5+ | | Room loading, NPC search, exits |
-| $12 | 3 | | UI cursor, screen position |
-| $14 | 2 | | LoadEnemyStats, LookupBossRedirect |
-| $16 | 3 | | SetRandomEncounterCounter, SelectFloorType |
-| $50 | 6+ | | Battle sprites, palettes, arena |
-| $51 | 3 | | LoadBattle, ProcessBattleTurn |
-| $52 | 5+ | | Skill damage, resistance, animation |
-| $57 | 2 | | ClearBattleAction, AddBToHL16 |
+### Script System — Fully Decoded
+- 530 scripts, 5,377 commands, 0 unknown opcodes
+- 22 opcodes verified via SameBoy visual trace
+- Custom ROM modification tested and confirmed working
+- Decompiler produces accurate readable output
+- Cutscene creation guide written
+
+### Named Functions: 149 in Bank $00, plus others across banks
+### WRAM Symbols: 81 unique, 4,676 replacements
 
 ## NOT Done — Priority Work for Next Session
 
-### HIGH PRIORITY
-1. **More Bank $00 function naming** — 466 Call_ labels remain. Next tier
-   (3-4 refs) includes ~80 more functions. Data tables at $0515/$0aea/$2bcc
-   need investigation (misinterpreted as code by mgbdis).
-2. **Bank $17 per-room data parsing** — 92 labels added but data is still
-   raw hex. Parser could decode screen tables vs attribute entries.
-3. **Bank $04 script engine** — 100 opcodes documented but code still
-   has auto-generated labels throughout.
+### HIGH PRIORITY (toward custom event editor)
+1. **Script compiler tool** — reverse of decompiler: human-readable →
+   `dw` assembly. This completes the read/write loop for custom events.
+2. **GUI editor prototype** — web-based editor using the decompiler/compiler
+   tools to create scripts visually.
 
-### MEDIUM PRIORITY  
-4. **Bank $52 skill handler code annotation** — handlers labeled but the
-   actual damage calc, resistance check, and effect code is uncommented.
-5. **Bank $57 battle dispatch** — core battle flow code.
-6. **More WRAM expansion** — 81 symbols / 4676 refs done. More $C8xx/$C9xx
-   game state variables can be decoded from context.
+### MEDIUM PRIORITY
+3. **Bank $00 function naming** — 466 Call_ labels remain.
+4. **Bank $04 code annotation** — 833 auto-labels in VM code.
+5. **Bank $17 per-room data parsing** — data blocks still raw hex.
+6. **More WRAM expansion** — 81 symbols done, more to decode.
 
 ### LOWER PRIORITY
 7. NPC behavior values (lower nibble specific meanings)
-8. Collision data system (what makes tiles walkable)
-9. GUI editor (DATA_STRUCTURES.md provides the schema)
-9. GUI editor (DATA_STRUCTURES.md provides the schema)
+8. Collision data system
+9. Event state machine (Bank $50/$51) — for non-script-based events
 
 ## Key Documentation
-- `documentation/DATA_STRUCTURES.md` — Canonical data structure catalog
-- `documentation/ROOM_DATA_FORMAT.md` — Room data format reference
-- `documentation/BREEDING_SYSTEM.md` — Breeding recipe system
-- `documentation/TEXT_SYSTEM.md` — Text encoding and control codes
-- `documentation/SESSION_HANDOFF.md` — This file
+- `DATA_STRUCTURES.md` — Canonical data structure catalog
+- `SCRIPT_TOOLS.md` — **How to use gen_script_banks.py and decompile_script.py**
+- `CUSTOM_CUTSCENES.md` — Custom cutscene creation guide
+- `BANK04_SCRIPT_ENGINE.md` — Script VM: 100 opcodes, state machine
+- `ROOM_DATA_FORMAT.md` — Room data format reference
+- `BREEDING_SYSTEM.md` — Breeding recipe system
+- `TEXT_SYSTEM.md` — Text encoding and control codes
+- `EVENT_FLAGS.md` — Flag bitfield, story progression

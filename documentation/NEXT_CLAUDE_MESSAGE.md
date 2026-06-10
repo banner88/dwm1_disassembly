@@ -2,144 +2,92 @@
 
 ## What This Project Is
 
-This is a **reverse-engineering / disassembly project** for **Dragon Warrior Monsters** (DWM1), a Game Boy Color RPG from 1998. The user wants "total control" over the game — the ability to create custom rooms, place NPCs, edit tile layouts, modify game events, and eventually build a GUI editor for all of this.
+Reverse-engineering / disassembly of **Dragon Warrior Monsters** (DWM1), GBC RPG from 1998. Goal: total control — custom rooms, NPCs, events, cutscenes, and eventually a GUI editor.
 
-The ROM was auto-disassembled using **mgbdis** (a GB/GBC disassembler) which produces functional but unreadable assembly — raw hex bytes with auto-generated labels like `Call_003_4461`. Our job is to systematically convert this into **properly labeled, human-readable RGBDS assembly** where data tables are `db`/`dw` blocks with meaningful labels, code is annotated, and the game's systems are documented.
-
-**The toolchain:**
-- **RGBDS** (v0.6.1, built from source at `~/.local/bin/`) — the assembler/linker
-- **mgbdis** — produced the initial disassembly (already done, we're cleaning it up)
-- **SameBoy** / **Emulicious** — GBC emulators the user runs for debugging
-- Python tools in `tools/` — data extraction, tile decompression/compression, rendering
+ROM auto-disassembled via **mgbdis**, our job is converting it to properly labeled, human-readable RGBDS assembly with documented data structures.
 
 ## The User's Working Style
 
-- The user is the **ultimate authority** on game mechanics. They know the game deeply.
+- **Ultimate authority** on game mechanics. Knows the game deeply.
 - **Do NOT jump ahead.** Priority is DISASSEMBLY and ANNOTATION, not building custom content.
-- **Verify before claiming done.** Always build and check MD5 after changes.
-- **Show visual evidence.** The tile renderer can produce room images for verification.
+- **Verify before claiming done.** Always build and check MD5.
+- End goal: **custom game editor** with custom triggers, events, quests.
 
 ## Critical Build Rules
 
 ```bash
-cd disassembly
-rm -f game.o game.gbc game.sym game.map
-make
-md5sum game.gbc
+cd disassembly && rm -f game.o game.gbc game.sym game.map && make && md5sum game.gbc
 # MUST output: 1ca6579359f21d8e27b446f865bf6b83
 ```
-- **NEVER run `make clean`** — deletes .2bpp graphics files that cannot be regenerated
-- RGBDS v0.6.1 is at `/home/claude/.local/bin/` — needs `export PATH` or full path
+- **NEVER run `make clean`** — deletes .2bpp graphics files
+- RGBDS v0.6.1 at `~/.local/bin/`
 
-## Project Setup
+## Setup
 
-- **Repo:** `https://github.com/banner88/dwm1_disassembly.git` → `/home/claude/dwm1_disassembly/`
-- **ROM:** user uploads `DWM-original.gbc` → copy to `data/DWM-original.gbc`
+- **Repo:** `https://github.com/banner88/dwm1_disassembly.git`
+- **ROM:** user uploads `DWM-original.gbc` → `data/DWM-original.gbc`
 - Build RGBDS: `cd /tmp && git clone https://github.com/gbdev/rgbds.git && cd rgbds && git checkout v0.6.1 && make -j4 && cp rgb{asm,link,fix} ~/.local/bin/`
-- Read: `documentation/SESSION_HANDOFF.md`, `documentation/ARCHITECTURE.md`
+- Read: `documentation/SESSION_HANDOFF.md`, `documentation/DATA_STRUCTURES.md`
+- **Read `documentation/SCRIPT_TOOLS.md` before touching any script tool or bank.**
 
-## What's Been Done (All Sessions Combined)
+## What's Done
+
+### Script System — FULLY DECODED
+- **530 NPC scripts** across banks $0C/$0D/$0E/$0F, 1,626 labels
+- **100 opcodes**, all decoded, **0 unknowns** across 5,377 commands
+- **22 opcodes verified** via SameBoy visual trace of the Warubou cutscene
+- **Decompiler:** `tools/decompile_script.py --map <bank> <map_type>`
+- **Custom ROM tested:** modified Watabou behavior confirmed working
+- **Cutscenes = same script engine** (not a separate system)
+- **Player control** is automatic ($D8D7 bit 0)
+- See `CUSTOM_CUTSCENES.md` for the full creation guide
 
 ### Fully Annotated Data Banks
 | Bank | Contents | Labels | Status |
 |------|----------|--------|--------|
-| $03 | Monster info table (221×43B) | ~250 | ✅ Complete |
-| $0B | Room data system ($4B43-$7FFF) | ~800 | ✅ Complete |
-| $13 | EXP curves + growth tables | ~100 | ✅ Complete |
-| $14 | Enemy stats (487×25B) + boss redirect | ~500 | ✅ Complete |
-| $17 | Palette/attribute pointer tables | ~120 | ✅ Ptr tables done, per-room entries still raw |
-| $41 | ALL name/text tables + strings | 933 | ✅ **Complete** (this session) |
-| $52 | Skill functions + battle system | 912 | ✅ Handler labels done (this session) |
-| 14 tileset banks | LZSS tile data pointer tables | ~500 | ✅ Complete |
+| $03 | Monster info (221×43B) | ~250 | ✅ Done |
+| $0B | Room data ($4B43-$7FFF) | ~800 | ✅ Done |
+| $0C-$0F | Script data (530 scripts) | 1,626 | ✅ Done, 0 unknowns |
+| $13 | EXP/growth tables | ~100 | ✅ Done |
+| $14 | Enemy stats (487×25B) | ~500 | ✅ Done |
+| $16 | Breeding + gate + encounters | 234 | ✅ Done |
+| $17 | Palette/attribute tables | ~210 | ✅ Ptr tables done |
+| $41 | Name/text tables + strings | 933 | ✅ Done |
+| $52 | Skill functions + battle | 912 | ✅ Done |
+| 14 tileset banks | LZSS tile data | ~500 | ✅ Done |
 
-### Key Systems Documented
-- **Room data format** — fully decoded, debug-verified (ROOM_DATA_FORMAT.md)
-- **Breeding system** — special/family recipe tables decoded (BREEDING_SYSTEM.md)
-- **Text system** — control codes, charmap encoding (TEXT_SYSTEM.md)
-- **Tile rendering pipeline** — LZSS decompress/compress, color rendering
-- **Cross-bank room system** — working editor code for custom rooms
+### Generator Tools
+| Tool | Generates |
+|------|-----------|
+| `gen_script_banks.py` | Script data banks $0C-$0F (`--apply`) |
+| `decompile_script.py` | Human-readable pseudo-code (`--map`) |
+| `gen_monster_db.py` | Bank $03 monster info |
+| `gen_enemy_stats_db.py` | Bank $14 enemy stats |
+| `gen_encounter_db.py` | Bank $01 encounter pools |
+| `gen_room_data_db.py` | Bank $0B room data (`--apply`) |
+| `gen_tileset_banks.py` | 14 tileset banks (`--apply`) |
+| + 5 more generators | See DATA_STRUCTURES.md |
 
-### Generator Tools (in `tools/`)
-| Tool | Generates | Idempotent? |
-|------|-----------|-------------|
-| `gen_monster_db.py` | Bank $03 monster info | Yes |
-| `gen_enemy_stats_db.py` | Bank $14 enemy stats | Yes |
-| `gen_encounter_db.py` | Bank $01 encounter pools | Yes |
-| `gen_skill_table_db.py` | Bank $52 skill function table | Yes |
-| `gen_name_tables_db.py` | Bank $41 monster/skill name tables | Yes |
-| `gen_bank41_remaining_db.py` | Bank $41 all remaining tables | Yes (`--apply`) |
-| `gen_room_data_db.py` | Bank $0B room data | Yes (`--apply`) |
-| `gen_tileset_banks.py` | 14 tileset banks | Yes (`--apply`) |
-| `gen_growth_tables_db.py` | Bank $13 growth tables | Yes |
-| `annotate_bank052.py` | Bank $52 skill handler labels | **No** (one-time) |
-
-## NOT Done — Priority Work for Next Session
+## NOT Done — Priority for Next Session
 
 ### HIGH PRIORITY
-1. **More Bank $00 function naming** — 466 Call_ labels remain. Next tier
-   (3-4 refs) includes ~80 more functions. Data tables at $0515/$0aea/$2bcc
-   need investigation (misinterpreted as code by mgbdis).
-2. **Bank $17 per-room attribute entries** — pointer tables are labeled but the
-   per-room/per-step data blocks between them are still raw hex.
-3. **Bank $04 script engine** — 100 opcodes documented but code still
-   has auto-generated labels throughout.
+1. **Script compiler** — reverse of decompiler: pseudo-code → `dw` assembly
+2. **GUI editor prototype** — web-based script editor
 
 ### MEDIUM PRIORITY
-4. **Bank $52 skill handler code annotation** — handlers labeled but the
-   actual damage calc, resistance check, and effect code is uncommented.
-5. **Code bank annotations** — $51 (battle init), $56 (text engine), $57 (battle)
-6. **More WRAM expansion** — 81 symbols / 4676 refs done. More $C8xx/$C9xx
-   game state variables can be decoded from context.
+3. **Bank $00 function naming** — 466 Call_ labels remain
+4. **Bank $04 code annotation** — 833 auto-labels in script VM
+5. **Bank $17 per-room data** — data blocks still raw hex
 
 ### LOWER PRIORITY
-7. NPC behavior values (lower nibble specific meanings)
-8. Collision data system (what makes tiles walkable)
-9. GUI editor
+6. NPC behavior values, collision data
+7. Event state machine (Bank $50/$51)
 
-## Bank $41 Complete Structure Reference
-
-```
-$4000-$4338  Code + dispatch table (73 entries, bank byte $41 at $4000)
-$4339-$4538  MonsterNamePtrTable (256 × dw)
-$4539-$4738  SkillNamePtrTable (256 × dw)
-$4739-$48E6  FamilyCodePtrTable (215 × dw)
-$48E7-$493E  ItemNamePtrTable (44 × dw)
-$493F-$4996  ItemDescPtrTable (44 × dw)
-$4997-$49CC  PersonalityNamePtrTable (27 × dw)
-$49CD-$4A16  MiscTextPtrTable (37 × dw)
-$4A17-$4A1A  WatabouTextPtrTable (2 × dw)
-$4A1B-$4A7A  ItemUseTextPtrTable (48 × dw)
-$4A7B-$4A92  SpellUseTextPtrTable (12 × dw)
-$4A93-$4AA7  Code functions (3 × 7 bytes)
-$4AA8-$5B1E  Dispatch text (raw hex with labels at referenced addrs)
-$5B1F-$628D  MonsterNameStrings (222 unique, $F0 terminated)
-$628E-$69F1  SkillNameStrings (222 unique + 1 empty, $F0 terminated)
-$69F2-$6C77  FamilyCodeStrings (215 entries, 2 chars + $F0)
-$6C78-$6DF7  ItemNameStrings (43 entries + 1 empty)
-$6DF8-$7158  ItemDescStrings (43 entries with $F1=newline)
-$7159-$7228  PersonalityNameStrings (27 entries)
-$7229-$7FFF  Game text (raw hex with labels for misc/itemuse/spelluse)
-```
-
-All pointer tables use label references — editing a string's length auto-updates
-its pointer on rebuild. Bank is exactly full (no free space).
-
-## Bank $52 Skill Handler Reference
-
-Function table at $4011 has 222 valid entries (0-221). Entries 222-255 overlap
-with handler code. Every handler has a named label (SkillBlaze, SkillSleep, etc.).
-Family check functions (CheckIsSlime..CheckIsMaterial) and math helpers
-(BCsrl3..HLsrl1) are also labeled.
-
-## ROM Map Intel Available
-
-An external ROM map document with community research was provided. Key data not
-yet applied to the disassembly:
-- Bank $16: encounter/gate tables with exact formats
-- Bank $13: experience table structure (32×297B)
-- Bank $50: personality adjustment tables (5 plan types × 4×8 matrices)
-- Bank $00: math function signatures (Mul/Div with register conventions)
-- Bank $01: gate floor threshold system
-- Bank $0B: labyrinth exit coordinate system
-
-See `documentation/SESSION_HANDOFF.md` "ROM Map Intel" section for details.
+## Key Map Types Identified
+| Type | Name | Bank | Notes |
+|------|------|------|-------|
+| $00 | Castle | $0C | Main castle, throne room |
+| $01 | GreatTree | $0C | Overworld hub |
+| $08 | TransitionScreen | $0D | Screen transition effect |
+| $09 | MonsterShrine | $0D | Starry Night intro shrine |
+| $2F | Bedroom | $0E | Terry+Milayou bedroom, Warubou cutscene |

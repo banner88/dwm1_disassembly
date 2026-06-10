@@ -230,6 +230,80 @@ Entries 222-255 overlap with handler code (same trick as Bank $41).
 
 ---
 
+### Banks $0C/$0D/$0E/$0F — NPC Script Data
+
+| Bank | Map Types | Scripts | Labels | Generator |
+|------|-----------|---------|--------|-----------|
+| $0C | $00–$05 (Castle, GreatTree, Bazaar, GateHub, Farm, Stable) | 129 | 452 | `tools/gen_script_banks.py --apply` |
+| $0D | $06–$1F (Arena, GateTileset, CopycatRoom, MedalMan, Well, etc.) | 168 | 614 | same |
+| $0E | $20–$3F (Gate entrance rooms, boss rooms for first gates) | 130 | 287 | same |
+| $0F | $40–$5F (Late-game boss rooms, post-game content) | 103 | 273 | same |
+| **Total** | **All 96 map types** | **530** | **1,626** | |
+
+Documentation: `BANK04_SCRIPT_ENGINE.md`
+
+**Data layout per bank:**
+
+All 4 banks share identical code ($4000–$41B9). Data begins at $41BA:
+
+| Region | Description |
+|--------|-------------|
+| $41BA + map_type×2 | Master pointer table (indexed by ABSOLUTE map type, not relative) |
+| Per-map tables | Variable-size dw arrays: `script_id → script_data_ptr` |
+| Script data | Packed sequences of dw words, one per script + branch target blocks |
+
+Master table indexing: the script engine reads `$41BA + $D8D3 × 2` where `$D8D3` is the raw map type. Banks $0E/$0F use offsets $40+ into the master table, not from offset 0.
+
+**Script data word format:**
+
+| Value | Meaning |
+|-------|---------|
+| `$FFxx` where xx < $64 | Script opcode (100 commands, see BANK04_SCRIPT_ENGINE.md) |
+| `$FFFF` | Script end marker |
+| `$4xxx`–`$7xxx` (odd-aligned) | Branch target address (label reference in assembly) |
+| Other values | Text ID or opcode parameter (event flag ID, delay count, NPC index, etc.) |
+
+**Alignment:** Script data uses odd byte alignment (scripts packed back-to-back, most start at odd addresses). The generator handles this by tracking word boundaries per-script.
+
+**Label scheme:** `{MapName}_ScriptPtrTable`, `{MapName}_Script{NN}`, `Bank{XX}_ScriptAddr_{XXXX}` for branch targets.
+
+**Cross-refs:** Script opcodes dispatch via bank $04's VM.
+
+**Verified Script Opcodes (22 confirmed via SameBoy + visual trace):**
+
+| Opcode | Params | Name | Description |
+|--------|--------|------|-------------|
+| $00 | 2 | if_flag_clear | Branch if event flag NOT set |
+| $01 | 2 | if_flag_set | Branch if event flag IS set |
+| $02 | 1 | clear_flag | Clear event flag in $D99B+ |
+| $03 | 1 | set_flag | Set event flag in $D99B+ |
+| $07 | 1 | init_dialog | Set dialogue mode, suppress input |
+| $08 | 0 | nop | No operation |
+| $09 | 1 | delay | Wait N frames (low byte) |
+| $0A | 2 | npc_move_x | Instant horizontal move |
+| $0B | 2 | npc_move_y | Instant vertical move |
+| $0D | 3 | npc_write | Write byte to NPC buffer |
+| $0E | 2 | branch_by_screen | Branch on screen index |
+| $12 | 2 | write_ram | Write value to RAM address (335 uses) |
+| $19 | 0 | wait_movement | Pause until movement completes |
+| $1A | 2 | npc_walk_x | Animated horizontal walk |
+| $1B | 2 | npc_walk_y | Animated vertical walk |
+| $1C | 1 | trigger_anim | Animation ($01XX=jump NPC XX) |
+| $1D | 0 | lock_movement | Suppress NPC facing |
+| $1E | 0 | unlock_movement | Restore NPC facing |
+| $22 | 0 | begin_walk | Start walk-toward sequence |
+| $47 | 1 | npc_set_state | Set NPC sprite state |
+| $48 | 1 | npc_hide | Hide NPC sprite |
+| $49 | 1 | npc_show | Show NPC sprite |
+
+All 100 opcodes decoded (0 unknowns across 5,377 commands in 530 scripts).
+Full reference: `CUSTOM_CUTSCENES.md`. Parameter counts: `tools/decompile_script.py`.
+
+**Player control:** Automatic. ScriptInit sets $D8D7 bit 0 (script active) →
+player input suppressed. Script `end` ($FFFF) clears $D8D7 → control returns. Text IDs route through ROM0 `$0AD9` → handler banks $42–$4E → data banks $18/$1A/$1B/$1F/$21/$22/$3F. Event flags live in $D99B+ bitfield (see EVENT_FLAGS.md). NPC script_id is set in room data (Bank $0B) NPC entries.
+
+---
+
 ### Banks $50/$57 — Personality Adjustment Tables
 
 | Label | Address | Plan |
@@ -499,6 +573,21 @@ Map Type → Room → Visuals
   ├─ Bank $0B:$4B43  RoomPtrTable → room data, exits, NPCs
   ├─ Bank $17:$476F  AttrPtrTable → palette/attribute data
   └─ Tileset banks   → LZSS compressed tile graphics
+
+Map Type → NPC Scripts → Events
+  ├─ Bank $0B NPC entries  script_id field → per-map script table index
+  ├─ Bank $04:$71EF  MapTypeDispatch → route to script bank by $D8D3
+  ├─ Banks $0C/$0D/$0E/$0F  master table at $41BA[$D8D3 × 2] →
+  │     per-map script ptr table → script data (opcodes + text IDs)
+  ├─ Bank $04  100 opcode handlers (script VM)
+  ├─ ROM0 $0AD9  text ID dispatch → handler banks $42-$4E
+  └─ $D99B+ bitfield  event flags (story state)
+
+Text ID → Display
+  ├─ ROM0 $0AD9  TextDispatchCascade → route by ID range
+  ├─ Banks $42-$4E  text handler banks (select data bank + index)
+  ├─ Banks $18/$1A/$1B/$1F/$21/$22/$3F  text data banks
+  └─ Bank $41  name/item/desc string tables (direct lookup)
 ```
 
 ---
@@ -516,6 +605,7 @@ Map Type → Room → Visuals
 | `gen_room_data_db.py` | Room data | $0B | Yes | `--apply` |
 | `gen_tileset_banks.py` | Tileset data | 14 banks | Yes | `--apply` |
 | `gen_growth_tables_db.py` | Growth/EXP tables | $13 | Yes | — |
+| `gen_script_banks.py` | Script data tables | $0C/$0D/$0E/$0F | Yes | `--apply` |
 | `annotate_bank052.py` | Skill handler labels | $52 | **No** | one-time |
 
 ---
@@ -527,8 +617,12 @@ Map Type → Room → Visuals
 | $00 | — | 149 named / 466 remaining | Core utility functions |
 | $01 | ✅ | Partial | Encounters, gate thresholds done |
 | $03 | ✅ | — | Monster info fully annotated |
-| $04 | — | Partial | Script engine: see `BANK04_SCRIPT_ENGINE.md` |
+| $04 | — | Partial | Script VM engine: see `BANK04_SCRIPT_ENGINE.md` |
 | $0B | ✅ | Partial | Room data done |
+| $0C | ✅ | Shared code | Script data: 129 scripts, 452 labels. 0 unknown opcodes. |
+| $0D | ✅ | Shared code | Script data: 168 scripts, 614 labels. 0 unknown opcodes. |
+| $0E | ✅ | Shared code | Script data: 130 scripts, 287 labels. 0 unknown opcodes. Bedroom ($2F) verified. |
+| $0F | ✅ | Shared code | Script data: 103 scripts, 273 labels. 0 unknown opcodes. |
 | $13 | ✅ | — | EXP/growth tables done |
 | $14 | ✅ | Partial | Enemy stats done |
 | $16 | ✅ | Partial | All data tables done this session |
@@ -556,4 +650,7 @@ Map Type → Room → Visuals
 | `ROUTING.md` | Room transitions, 5 code paths, spawn table |
 | `TEXT_SYSTEM.md` | Charmap encoding, DTE pairs, control codes |
 | `known_RAM_map.md` | Community WRAM documentation |
+| `CUSTOM_CUTSCENES.md` | Custom cutscene creation guide, verified opcode reference |
+| `SCRIPT_TOOLS.md` | How to use gen_script_banks.py and decompile_script.py |
+| `FIRST_5MIN_TRACE.md` | SameBoy trace guide for game opening |
 | `known_ROM_map.md` | Community ROM map (source for much of this work) |

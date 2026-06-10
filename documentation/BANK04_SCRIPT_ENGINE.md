@@ -274,5 +274,20 @@ All of the following have been traced and confirmed:
 
 ---
 
+## Script Data Bank Annotations
+
+All 4 script data banks ($0C/$0D/$0E/$0F) are now fully annotated with
+`tools/gen_script_banks.py`. 530 NPC scripts with 1,626 labels:
+
+- Pointer tables use label references (`Castle_ScriptPtrTable`, etc.)
+- Script starts labeled (`Castle_Script09`, `BossBeginning_Script01`, etc.)
+- Branch targets labeled (`Bank0C_ScriptAddr_5273`, etc.)
+- Every `dw` word annotated: opcode names, text ID previews, RAM addresses
+- Builds byte-identical (MD5 1ca6579359f21d8e27b446f865bf6b83)
+
+See `DATA_STRUCTURES.md` for the full script data format reference.
+
+---
+
 *Discovered June 2026. Builds on TEXT_SYSTEM_ARCHITECTURE.md discoveries.*
 *All annotations build byte-identical (MD5 1ca6579359f21d8e27b446f865bf6b83).*
