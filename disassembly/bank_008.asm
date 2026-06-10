@@ -445,7 +445,7 @@ label8_41e3:
     or a
     ret z
 
-    call Call_000_11bc
+    call ClearPaletteBuffer
     ld a, $51
     ld [$c777], a
     ld a, [$c817]

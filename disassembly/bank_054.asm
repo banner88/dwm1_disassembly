@@ -4325,7 +4325,7 @@ Call_054_526e:
     ld [$db4c], a
     ld a, $00
     ld [$db4d], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     bit 2, a
     jr z, jr_054_52e0
 
@@ -4343,7 +4343,7 @@ jr_054_52e5:
     ld c, a
     ld a, [$db4d]
     ld b, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
     add l
     ld l, a
@@ -4373,7 +4373,7 @@ jr_054_530a:
     ld [$db4c], a
     ld a, $00
     ld [$db4d], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     bit 2, a
     jr z, jr_054_532c
 
@@ -4391,7 +4391,7 @@ jr_054_5331:
     ld c, a
     ld a, [$db4d]
     ld b, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
     add l
     ld l, a
@@ -4603,7 +4603,7 @@ jr_054_5466:
     ld a, [$dc40]
     ld [$d9ef], a
     ld hl, $ca94
-    call Call_000_267e
+    call TestBitInArray
     ld a, $02
     jr nz, jr_054_5493
 
@@ -4663,7 +4663,7 @@ jr_054_54e2:
     ld [$d9f0], a
     ld a, [$dc41]
     ld hl, $ca94
-    call Call_000_267e
+    call TestBitInArray
     ld a, $02
     jr nz, jr_054_54f4
 
@@ -4733,7 +4733,7 @@ jr_054_5551:
     ld [$d9f1], a
     ld a, [$dc42]
     ld hl, $ca94
-    call Call_000_267e
+    call TestBitInArray
     ld a, $02
     jr nz, jr_054_5563
 
@@ -4821,7 +4821,7 @@ jr_054_55b7:
     jr z, jr_054_5609        ; no candidate → skip
 
     and $03                  ; slot index 0-3
-    ld hl, $db85             ; per-enemy joinability table
+    ld hl, wJoinability             ; per-enemy joinability table
     add l
     ld l, a
     ld a, $00
@@ -4841,7 +4841,7 @@ jr_054_55b7:
     ld h, a
     ld a, [hl]               ; A = species ID
     ld hl, $ca94             ; party/storage count
-    call Call_000_267e        ; check capacity
+    call TestBitInArray        ; check capacity
     push af
     pop bc
     ld a, c

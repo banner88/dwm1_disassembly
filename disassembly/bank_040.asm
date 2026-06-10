@@ -312,7 +312,7 @@ jr_040_41a5:
     xor a
     ld hl, $a000
     ld bc, $2000
-    call Call_000_1aaf
+    call WriteVRAMByte
     pop af
     ldh [$a3], a
     ld [$4100], a
@@ -324,7 +324,7 @@ jr_040_41a5:
     xor a
     ld hl, $a000
     ld bc, $2000
-    call Call_000_1aaf
+    call WriteVRAMByte
     pop af
     ldh [$a3], a
     ld [$4100], a
@@ -336,7 +336,7 @@ jr_040_41a5:
     xor a
     ld hl, $a000
     ld bc, $2000
-    call Call_000_1aaf
+    call WriteVRAMByte
     pop af
     ldh [$a3], a
     ld [$4100], a
@@ -348,7 +348,7 @@ jr_040_41a5:
     xor a
     ld hl, $a000
     ld bc, $2000
-    call Call_000_1aaf
+    call WriteVRAMByte
     pop af
     ldh [$a3], a
     ld [$4100], a

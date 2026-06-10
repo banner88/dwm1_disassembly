@@ -184,7 +184,7 @@ label14_40b4:
 
     ld a, [$da18]
     ld hl, $ca94
-    call Call_000_2670
+    call SetBitInArray
 
 Jump_014_4158:
 jr_014_4158:
@@ -309,7 +309,7 @@ jr_014_4264:
     pop bc
     ld [hl], c
     ld a, [$da18]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld hl, $cacb
@@ -342,7 +342,7 @@ jr_014_4264:
     ld hl, $cacc
     ld a, [$da14]
     call GetMonsterDataPtr
-    ld a, [$da12]
+    ld a, [wTempEnemyStatsId]
     ld e, a
     ld a, [$da13]
     ld d, a
@@ -386,7 +386,7 @@ jr_014_42fe:
     or a
     jp nz, Jump_014_4413
 
-    ld a, [$da12]
+    ld a, [wTempEnemyStatsId]
     cp $01
     ld de, $45a2
     jp z, Jump_014_4469
@@ -519,7 +519,7 @@ jr_014_42fe:
 
 
 Jump_014_4413:
-    ld a, [$da12]
+    ld a, [wTempEnemyStatsId]
     cp $31
     jr z, jr_014_4472
 
@@ -1248,7 +1248,7 @@ Call_014_4821:
 ; Output: 25 bytes copied to [DE]
 LoadEnemyStats:
     push de
-    ld a, [$da12]            ; EID low byte
+    ld a, [wTempEnemyStatsId]            ; EID low byte
     ld c, a
     ld a, [$da13]            ; EID high byte
     ld b, a                  ; BC = enemy stats ID
@@ -1284,7 +1284,7 @@ jr_014_4862:
 ;   Gate 1:  fight EID 31 → join EID 484 (Dragon)
 ;   ...see dump_boss_table.py output for full list
 LookupBossRedirect:
-    ld a, [$da12]            ; source EID low
+    ld a, [wTempEnemyStatsId]            ; source EID low
     ld c, a
     ld a, [$da13]            ; source EID high
     ld b, a                  ; BC = source EID
@@ -1312,7 +1312,7 @@ jr_014_487e:
     jr nz, jr_014_488f
 
     ld a, [hl+]              ; MATCH: read replacement EID low
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, [hl+]              ; read replacement EID high
     ld [$da13], a
     ret
@@ -6622,7 +6622,7 @@ Jump_014_7d55:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_22a0
+    call GetMonsterSkillData
     ret
 
 
@@ -6636,7 +6636,7 @@ Jump_014_7d6d:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_22a0
+    call GetMonsterSkillData
     ret
 
 
@@ -6646,7 +6646,7 @@ Jump_014_7d85:
     call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb11
-    call Call_000_225d
+    call WriteMonsterWord
     ret
 
 
@@ -6681,7 +6681,7 @@ Call_014_7db7:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_22a0
+    call GetMonsterSkillData
     ret
 
 
@@ -6695,7 +6695,7 @@ Jump_014_7dd8:
     call ReadMonsterWord
     ld a, $00
     ld hl, $cb11
-    call Call_000_225d
+    call WriteMonsterWord
 
 jr_014_7def:
     ld a, $01
@@ -6707,7 +6707,7 @@ jr_014_7def:
     call ReadMonsterWord
     ld a, $01
     ld hl, $cb11
-    call Call_000_225d
+    call WriteMonsterWord
 
 jr_014_7e06:
     ld a, $02
@@ -6719,7 +6719,7 @@ jr_014_7e06:
     call ReadMonsterWord
     ld a, $02
     ld hl, $cb11
-    call Call_000_225d
+    call WriteMonsterWord
 
 jr_014_7e1d:
     ret
@@ -6741,7 +6741,7 @@ Jump_014_7e1e:
     rr c
     ld a, [$da60]
     ld hl, $cb11
-    call Call_000_225d
+    call WriteMonsterWord
     ret
 
 
@@ -6761,7 +6761,7 @@ Jump_014_7e4e:
     call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb11
-    call Call_000_225d
+    call WriteMonsterWord
     ret
 
 

@@ -13,36 +13,39 @@ cannot be regenerated with matching bytes.
 
 ## What Was Completed This Session
 
-### 1. Bank $16 — All Data Tables Annotated (biggest win)
-Converted ~3930 lines of misinterpreted code to properly labeled `db` blocks.
-Bank went from 9092 to 5477 lines. 12 new data labels with full documentation.
-See DATA_STRUCTURES.md for complete field formats.
+### 1. Bank $00 — 79 More Functions Named (149 total, 466 remaining)
+Named 79 additional functions across multiple tiers (22 refs down to 4 refs). Key categories:
+- **Battle stat readers** (7 functions): Fixed incorrect `ReadEventFlags2`/`3` → `GetCombatantHP`/`DEF`/`ATK`/`MaxHP`/`MaxMP`/`MP` + `IndexPtrTable`. Reads per-combatant stats from WRAM tables ($DBA3-$DBF3).
+- **Event flags** (4): `SetEventFlag`, `ClearEventFlag`, `TestEventFlag`, `ComputeFlagAddress`.
+- **Monster stat math** (8): `SaturatingAdd16`/`Subtract16`, `MonsterStatAdd`/`Subtract`/`Decrement`, context wrappers.
+- **Active monster** (5): `GetActiveMonsterPtr`, `ReadActiveMonsterByte`/`Word`, `GetMonsterSkillData`, `GetMonsterSlotContext`.
+- **LCD/Video/SGB** (15): BG map, scroll, STAT, SGB packet/tiles/delay, palette, viewport, OAM, sprites.
+- **Text/Display** (11): Text bank switching, digit formatting, tilemap ops, text renderer call.
+- **SRAM/Save** (4): `CopySRAMBlock`, `CopyFromSRAM`, `SavePartyToSRAM`, `SaveGameState`.
+- **Audio** (3): Init, flag check, register write.
+- **Script/Dispatch** (5): `RunScriptEngine`, `CallScriptByType`, `CrossBankCallRet`, `DispatchCD90`, `TextBankDispatch`.
+- **Gold** (2): `AddGold`, `CompareGold`.
+- **Math** (3): `DivBCbyDE`, `ExtractDigit16`, `ComputeTileDataAddr`.
 
-### 2. Bank $00 — 32+ Core Functions Named
-Named the most-called utility functions. ~2300 call site references updated
-across all bank files. Top hits: GetMonsterDataPtr (328 refs), CheckMonsterSlot
-(308), HL_AddA_x8 (270), WaitDMATransfer (128), WaitVRAM (119).
+### 2. WRAM Symbol Expansion — 81 unique symbols, 4676 refs
+Added 60 new WRAM labels in wram.asm with 2546 hex→symbol replacements. Key additions:
+- **Battle stat tables** (9): `wBattleHP` through `wBattleLVL` ($DBA3-$DC23), 16 bytes each.
+- **Battle indices** (2): `wBattleAttackerIdx` (686 refs), `wBattleTargetIdx` (575 refs).
+- **Script engine** (8): `wScriptMapType`, `wScriptCounter` (205 refs), `wScriptStateFlags` (114 refs), etc.
+- **Gate/floor system** (8): `wFloorType1`-`3`, `wCurrentFloor`, `wLastFloor`, `wBossMapType`, `wBossTileset`.
+- **Warp destination** (6): `wWarpGateId`, `wWarpSpawnXLo`/`Hi`/`YLo`/`YHi` (34 refs each).
+- **Event/state** (4): `wEventStateMachineIndex` (155 refs), `wEventFlags`, `wBattlePostFlag` (86 refs).
+- **Arena/encounter** (5): `wColiseumBattle`, `wArenaGroup`, `wEncounterPoolIndex`, `wScreenIndex` (62 refs).
+- **Temp workspace** (8): `wTempEnemyId1` (46 refs), `wTempEnemyStatsId` (40 refs), `wTempSpeciesId` (38 refs), breeding vars.
 
-### 3. Cross-Bank Function Labels (~15 functions, ~700 refs)
-Named top functions in banks $12, $50, $51, $52, $57 including battle system
-(ClearBattleAction, ProcessBattleTurn, ApplySkillDamage), UI (AddCursorOffset),
-and sprite management (ClearSpriteBuffer, LoadPaletteFromDE).
+### 3. ROM Map Cross-Reference
+Applied community ROM map intelligence to name 3 additional cross-bank functions:
+- `ArenaGenerateBattles` (Bank $04:$5B1B)
+- `ColiseumInitPrize` (Bank $04:$6D93)
+- `LoadScriptRoomData` (Bank $0F:$4007)
 
-### 4. Banks $50/$57 — Personality Adjustment Tables
-All 5 plan tables labeled: PersonalityRunTable, PersonalityChargeTable,
-PersonalityMixedTable, PersonalityCautiousTable, PersonalityCommandTable.
-
-### 5. Bank $17 — 92 Per-Room Attribute Labels
-Added RoomAttr_* labels throughout per-room data ($4845-$5214).
-AttrPtrTable entries converted from raw hex to label references.
-
-### 6. ROM Map Functions Labeled (Banks $01/$04/$0B/$14)
-LoadNextDungeonFloor, MapTypeDispatch, GetRoomDataPtr, SearchNPCAtFacing,
-CheckExitCoords, LoadEnemyStats, LookupBossRedirect, LoadBattle, etc.
-
-### 7. DATA_STRUCTURES.md — Comprehensive Catalog Created
-Machine-readable catalog of every decoded data structure. Designed as
-the schema for a future GUI editor.
+### 4. Documentation Updated
+DATA_STRUCTURES.md Bank $00 section fully reorganized by category. All decode counts current.
 
 ## All Completed Work (All Sessions Combined)
 
@@ -62,7 +65,7 @@ the schema for a future GUI editor.
 ### Named Functions by Bank
 | Bank | Named | Total Call_ | Key Functions |
 |------|-------|-------------|---------------|
-| $00 | 89 | 545 remaining | Monster access, VRAM, math, text, SRAM |
+| $00 | 149 | 466 remaining | Monster access, VRAM, math, text, SRAM, battle stats, gold, events, SGB |
 | $01 | 5+ | | LoadNextDungeonFloor, encounter system |
 | $04 | 3+ | | MapTypeDispatch, script engine |
 | $0B | 5+ | | Room loading, NPC search, exits |
@@ -77,8 +80,9 @@ the schema for a future GUI editor.
 ## NOT Done — Priority Work for Next Session
 
 ### HIGH PRIORITY
-1. **More Bank $00 function naming** — 545 Call_ labels remain. Next tier
-   (~20-10 calls each) includes menu system, event handling, sprite/tile ops.
+1. **More Bank $00 function naming** — 466 Call_ labels remain. Next tier
+   (3-4 refs) includes ~80 more functions. Data tables at $0515/$0aea/$2bcc
+   need investigation (misinterpreted as code by mgbdis).
 2. **Bank $17 per-room data parsing** — 92 labels added but data is still
    raw hex. Parser could decode screen tables vs attribute entries.
 3. **Bank $04 script engine** — 100 opcodes documented but code still
@@ -88,11 +92,13 @@ the schema for a future GUI editor.
 4. **Bank $52 skill handler code annotation** — handlers labeled but the
    actual damage calc, resistance check, and effect code is uncommented.
 5. **Bank $57 battle dispatch** — core battle flow code.
-6. **WRAM symbol expansion** — add floor-type, encounter, and battle vars.
+6. **More WRAM expansion** — 81 symbols / 4676 refs done. More $C8xx/$C9xx
+   game state variables can be decoded from context.
 
 ### LOWER PRIORITY
 7. NPC behavior values (lower nibble specific meanings)
 8. Collision data system (what makes tiles walkable)
+9. GUI editor (DATA_STRUCTURES.md provides the schema)
 9. GUI editor (DATA_STRUCTURES.md provides the schema)
 
 ## Key Documentation

@@ -45,7 +45,7 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     ld hl, $c500
     ld bc, $0240
     call FillNBytesWithRegA
-    call Call_000_1264
+    call ClearSTATMode
     ld hl, $c817
     ld [hl], $00
     inc hl
@@ -104,7 +104,7 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     ldh [$bb], a
     ld a, $00
     ldh [$b7], a
-    call Call_000_122f
+    call ApplyScrollRegisters
     xor a
     ld [$c8a4], a
     ld [$c8a5], a
@@ -112,7 +112,7 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     ld [$c892], a
     ld a, $03
     ld [$c8a1], a
-    call Call_000_125d
+    call EnableLYCInterrupt
     ld a, $01
     jp Jump_000_11cb
 
@@ -1096,7 +1096,7 @@ jr_059_453f:
     ld [$c83e], a
     ld a, h
     ld [$c83f], a
-    call Call_000_1264
+    call ClearSTATMode
     ld hl, $c817
     ld [hl], $00
     inc hl
@@ -1170,7 +1170,7 @@ jr_059_453f:
     ldh [$bb], a
     ld a, $00
     ldh [$b7], a
-    call Call_000_122f
+    call ApplyScrollRegisters
     xor a
     ld [$c8a4], a
     ld [$c8a5], a
@@ -1178,7 +1178,7 @@ jr_059_453f:
     ld [$c892], a
     ld a, $03
     ld [$c8a1], a
-    call Call_000_125d
+    call EnableLYCInterrupt
     ld a, $01
     jp Jump_000_11cb
 
@@ -1470,7 +1470,7 @@ jr_059_453f:
     ld bc, $0028
     call FillNBytesWithRegA
     xor a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     ld bc, $0008
     call FillNBytesWithRegA
     xor a
@@ -1495,7 +1495,7 @@ jr_059_453f:
     ld [$d9ea], a
     ld a, h
     ld [$d9eb], a
-    call Call_000_1264
+    call ClearSTATMode
     ld hl, $c817
     ld [hl], $00
     inc hl
@@ -1523,7 +1523,7 @@ jr_059_453f:
     ldh [$b7], a
     ld a, $00
     ldh [$bb], a
-    call Call_000_122f
+    call ApplyScrollRegisters
     xor a
     ld [$c8a4], a
     ld [$c8a5], a
@@ -1531,7 +1531,7 @@ jr_059_453f:
     ld [$c892], a
     ld a, $03
     ld [$c8a1], a
-    call Call_000_125d
+    call EnableLYCInterrupt
     ld a, $01
     jp Jump_000_11cb
 
@@ -1617,7 +1617,7 @@ jr_059_4933:
     ld a, $02
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld a, $01
     ld [$c0d8], a
@@ -1637,7 +1637,7 @@ jr_059_495a:
     ld a, $02
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1655,7 +1655,7 @@ jr_059_497b:
     ld a, $02
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1670,7 +1670,7 @@ Jump_059_499c:
     ld a, $02
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     xor a
     ld [$c0d9], a
@@ -1693,7 +1693,7 @@ Jump_059_499c:
     ld a, $01
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld hl, $c0d9
     inc [hl]
@@ -1732,7 +1732,7 @@ Jump_059_499c:
     xor a
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1751,7 +1751,7 @@ jr_059_4a1e:
     ld a, $02
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1766,7 +1766,7 @@ jr_059_4a3f:
     ld a, $04
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1829,7 +1829,7 @@ jr_059_4aa0:
     ld a, $02
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld a, $03
     ld [$c0d8], a
@@ -1858,7 +1858,7 @@ jr_059_4ade:
     ld a, $02
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1885,7 +1885,7 @@ jr_059_4b05:
     ld a, $02
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1909,7 +1909,7 @@ Jump_059_4b15:
     ld a, $04
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld a, $05
     ld [$c0d8], a
@@ -1928,7 +1928,7 @@ jr_059_4b4a:
     ld [wOPTN_and_Item_selection], a
     ld [$d9f6], a
     ld [$d9f5], a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1973,7 +1973,7 @@ jr_059_4b4a:
     ld a, $02
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -1987,7 +1987,7 @@ jr_059_4bb6:
     ld a, $05
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -2007,7 +2007,7 @@ jr_059_4bb6:
     ld a, $03
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld a, $08
     ld [$c823], a
@@ -2064,7 +2064,7 @@ jr_059_4c2e:
     ld a, $03
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld hl, $c0d9
     inc [hl]
@@ -2086,7 +2086,7 @@ jr_059_4c59:
     ld a, $03
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -2103,7 +2103,7 @@ jr_059_4c7f:
     xor a
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     xor a
     ld [$c0d8], a
@@ -2183,7 +2183,7 @@ jr_059_4cff:
     ld a, $01
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld a, $07
     ld [$c0d8], a
@@ -2203,7 +2203,7 @@ jr_059_4d26:
     ld a, $01
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -2223,7 +2223,7 @@ jr_059_4d47:
     xor a
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     xor a
     ld [$c0d8], a
@@ -2279,7 +2279,7 @@ jr_059_4da7:
     ld a, $01
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld a, $08
     ld [$c0d8], a
@@ -2308,7 +2308,7 @@ jr_059_4de5:
     ld a, $01
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -2332,7 +2332,7 @@ jr_059_4e0a:
     ld a, $01
     ld [$d9f6], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -2349,7 +2349,7 @@ jr_059_4e1a:
     ld a, $02
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ld a, $02
     ld [$c0d8], a
@@ -2391,7 +2391,7 @@ jr_059_4e1a:
     ld a, $02
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
@@ -2432,13 +2432,13 @@ jr_059_4e1a:
     ld a, $05
     ld [$d9f5], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_059_4ec6
     ret
 
 
 Call_059_4ec6:
-    ld a, [$d9f4]
+    ld a, [wEventStateMachineIndex]
     or a
     ret nz
 
@@ -2675,7 +2675,7 @@ Jump_059_5056:
     ld hl, $5005
     rst $10
     ld a, $01
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -5214,7 +5214,7 @@ jr_059_5cf5:
 Call_059_5cf7:
     ld hl, $ffbb
     inc [hl]
-    call Call_000_122f
+    call ApplyScrollRegisters
     ldh a, [$bb]
     cp $00
     ret
@@ -5223,7 +5223,7 @@ Call_059_5cf7:
 Call_059_5d03:
     ld hl, $ffbb
     dec [hl]
-    call Call_000_122f
+    call ApplyScrollRegisters
     ldh a, [$bb]
     cp $d8
     ret

@@ -125,12 +125,12 @@ jr_016_402d:
     call Call_016_41b1
     ld a, [$da71]
     ld [hl], a
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
-    ld a, [$da31]
+    ld a, [wTempSpeciesId]
     ld hl, $ca94
-    call Call_000_2670
+    call SetBitInArray
     ld hl, $cacb
     call Call_016_41b1
     ld a, [$da33]
@@ -251,14 +251,14 @@ jr_016_4169:
     ld b, $03
     call Call_016_4496
     ld a, [$d66e]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
     ld b, $03
     call Call_016_4496
     ld a, [$d703]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
@@ -894,7 +894,7 @@ jr_016_453f:
     push de
     ld hl, $ca94
     ld a, b
-    call Call_000_267e
+    call TestBitInArray
     pop de
     pop bc
     jr z, jr_016_454d
@@ -918,7 +918,7 @@ jr_016_4555:
     push de
     ld hl, $ca94
     ld a, b
-    call Call_000_267e
+    call TestBitInArray
     pop de
     pop bc
     jr z, jr_016_4566
@@ -1013,7 +1013,7 @@ Call_016_45d5:
     ret nz                   ; found something, return
 
     ld a, [$da70]            ; convert parent 2 species → family code
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10                  ; load parent 2 monster info
     ld a, [$da33]            ; family byte (offset 0)
@@ -1028,7 +1028,7 @@ jr_016_45ff:
     cp $f0
     jr nc, jr_016_4615       ; if already family-coded, skip conversion
 
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10                  ; load parent 1 monster info
     ld a, [$da33]            ; family byte
@@ -1175,7 +1175,7 @@ jr_016_46c6:
     cp $f0
     jr nc, jr_016_46dc
 
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -1187,7 +1187,7 @@ jr_016_46dc:
     cp $f0
     jr nc, jr_016_46f2
 
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -1290,7 +1290,7 @@ label16_474a:
     ld hl, $caca
     call Call_016_47e0
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
@@ -1302,7 +1302,7 @@ label16_474a:
     cp $ff
     jr z, jr_016_47b9
 
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
@@ -1311,7 +1311,7 @@ label16_474a:
     ld hl, $cad7
     call Call_016_47e0
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
@@ -1800,7 +1800,7 @@ label16_5b4e:
     bit 7, a
     ret nz
 
-    ld hl, $c939
+    ld hl, wCurrentFloor
     inc [hl]
     xor a
     ld [$c93e], a
@@ -1811,7 +1811,7 @@ label16_5b4e:
     ld a, [wMapID]
     ld [wGateID], a
     xor a
-    ld [$c939], a
+    ld [wCurrentFloor], a
 
 jr_016_5b72:
     ld hl, $010c
@@ -1827,22 +1827,22 @@ jr_016_5b72:
     adc h
     ld h, a
     ld a, [hl+]
-    ld [$c936], a
+    ld [wFloorType1], a
     ld a, [hl+]
-    ld [$c937], a
+    ld [wFloorType2], a
     ld a, [hl+]
-    ld [$c938], a
+    ld [wFloorType3], a
     push hl
     ld a, [hl+]
-    ld [$c93a], a
+    ld [wLastFloor], a
     ld a, [hl+]
-    ld [$c93b], a
+    ld [wBossMapType], a
     inc hl
     inc hl
     ld a, [hl]
-    ld [$c93c], a
+    ld [wBossTileset], a
     pop hl
-    ld a, [$c939]
+    ld a, [wCurrentFloor]
     ld b, a
     inc a
     cp [hl]
@@ -1862,7 +1862,7 @@ jr_016_5b72:
     jr z, jr_016_5c1c
 
 jr_016_5bbf:
-    ld a, [$c936]
+    ld a, [wFloorType1]
     add a
     add a
     add a
@@ -1874,8 +1874,8 @@ jr_016_5bbf:
     adc h
     ld h, a
     call SelectFloorType
-    ld [$c936], a
-    ld a, [$c936]
+    ld [wFloorType1], a
+    ld a, [wFloorType1]
     ld [wMapID], a
     ld a, $01
     ld [wInGateworld], a
@@ -1902,24 +1902,24 @@ jr_016_5be1:
     ld b, a
     and $f0
     or $08
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, b
     and $0f
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld a, [hl+]
     swap a
     ld b, a
     and $f0
     or $08
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, b
     and $0f
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
 jr_016_5c1c:
-    ld a, [$c937]
+    ld a, [wFloorType2]
     add a
     add a
     add a
@@ -1930,7 +1930,7 @@ jr_016_5c1c:
     adc h
     ld h, a
     call SelectFloorType
-    ld [$c937], a
+    ld [wFloorType2], a
     rst $00
     ld b, d
     ld e, h
@@ -1966,14 +1966,14 @@ Call_016_5c45:
     ld [wInGateworld], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0048
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -1984,14 +1984,14 @@ jr_016_5c77:
     ld [wInGateworld], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0048
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2002,14 +2002,14 @@ jr_016_5c98:
     ld [wInGateworld], a
     ld hl, $0068
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0048
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2028,14 +2028,14 @@ jr_016_5c98:
     ld [wInGateworld], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0068
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2045,14 +2045,14 @@ jr_016_5c98:
     ld [wInGateworld], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0068
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2062,14 +2062,14 @@ jr_016_5c98:
     ld [wInGateworld], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0068
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2077,7 +2077,7 @@ jr_016_5c98:
     ld [$d9cf], a
     ld [$d9d0], a
     call Call_016_5e38
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
@@ -2102,7 +2102,7 @@ jr_016_5c98:
     ld a, h
     ld [$d9d6], a
     call Call_016_5e38
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
@@ -2135,15 +2135,15 @@ jr_016_5c98:
     ld [wInGateworld], a
     ld hl, $0068
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     xor a
-    ld [$d9cd], a
+    ld [wColiseumBattle], a
     ret
 
 
@@ -2163,12 +2163,12 @@ Call_016_5dc6:
     ld [hl], a
     pop hl
     push hl
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     call Call_016_5e2e
@@ -2186,7 +2186,7 @@ Call_016_5dc6:
     ld a, [$da06]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     call Call_016_5e2e
@@ -2204,7 +2204,7 @@ Call_016_5dc6:
     ld a, [$da08]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     call Call_016_5e2e
@@ -2294,7 +2294,7 @@ jr_016_5ea7:
     ld a, $02
     ld [$da02], a
     call Call_016_5ec9
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     call Call_016_5ec9
     ld [$da05], a
     call Call_016_5ec9
@@ -2334,14 +2334,14 @@ Call_016_5ec9:
     ld [wInGateworld], a
     ld hl, $00f8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $00b8
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2352,14 +2352,14 @@ jr_016_5f0a:
     ld [wInGateworld], a
     ld hl, $0018
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0028
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2370,14 +2370,14 @@ jr_016_5f2b:
     ld [wInGateworld], a
     ld hl, $0018
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0028
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2397,14 +2397,14 @@ jr_016_5f2b:
     ld [wInGateworld], a
     ld hl, $00d8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $00d8
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2415,14 +2415,14 @@ jr_016_5f7e:
     ld [wInGateworld], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0168
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2433,14 +2433,14 @@ jr_016_5f9f:
     ld [wInGateworld], a
     ld hl, $00e8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $00b8
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ret
 
 
@@ -2741,7 +2741,7 @@ jr_016_6171:
     jp z, $605b
 
     call Call_016_66ae
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld [$c960], a
     ldh a, [$a5]
     ld [$c0a5], a
@@ -2821,11 +2821,11 @@ jr_016_620a:
     call Call_016_6585
     ld a, [$c960]
     ld b, a
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp b
     jr z, jr_016_620a
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld [$c926], a
     add a
     add a
@@ -2895,7 +2895,7 @@ jr_016_627e:
 
 jr_016_628a:
     call GenerateRNG
-    ld a, [$c938]
+    ld a, [wFloorType3]
     ld hl, $7886
     add l
     ld l, a
@@ -2945,25 +2945,25 @@ jr_016_62d8:
 
     call Call_016_661b
     ld hl, $c960
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp [hl]
     jr nz, jr_016_62f1
 
     call Call_016_661b
 
 jr_016_62f1:
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld [$c0af], a
     call Call_016_68c6
     jp z, Jump_016_62d8
 
     ld a, [$c926]
     ld b, a
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp b
     jr z, jr_016_62d8
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld [$c0a0], a
     add a
     add a
@@ -2974,13 +2974,13 @@ jr_016_62f1:
     adc h
     ld h, a
     ld a, [hl+]
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, [hl+]
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld a, [hl+]
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, [hl+]
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ldh a, [$a5]
     ld [$c0a1], a
     ldh a, [$a6]
@@ -2989,14 +2989,14 @@ jr_016_62f1:
     ld [$c0a3], a
     ldh a, [$a8]
     ld [$c0a4], a
-    ld hl, $c96f
+    ld hl, wWarpSpawnXLo
     ldh a, [$a5]
     add [hl]
     ld [hl+], a
     ldh a, [$a6]
     adc [hl]
     ld [hl], a
-    ld hl, $c971
+    ld hl, wWarpSpawnYLo
     ldh a, [$a7]
     add [hl]
     ld [hl+], a
@@ -3007,7 +3007,7 @@ jr_016_62f1:
     ld bc, $0010
     xor a
     call FillNBytesWithRegA
-    ld a, [$c938]
+    ld a, [wFloorType3]
     ld hl, $732f
     add a
     add a
@@ -3085,7 +3085,7 @@ jr_016_63b6:
     inc b
     ld a, b
     and $0f
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld hl, $c940
     add l
     ld l, a
@@ -3162,7 +3162,7 @@ Call_016_6432:
     ld a, $10
     ld [$c0a9], a
     push bc
-    ld a, [$c938]
+    ld a, [wFloorType3]
     ld hl, FloorTypeSelectionTable3
     add a
     add a
@@ -3205,7 +3205,7 @@ jr_016_646d:
 
 jr_016_6478:
     call Call_016_63af
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     ld a, [$c960]
     cp b
@@ -3214,7 +3214,7 @@ jr_016_6478:
     call Call_016_63af
 
 jr_016_6488:
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     ld a, [$c0af]
     cp b
@@ -3223,7 +3223,7 @@ jr_016_6488:
     call Call_016_63af
 
 jr_016_6495:
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld hl, $c100
     add l
     ld l, a
@@ -3265,13 +3265,13 @@ jr_016_64a8:
     call Call_016_690e
     jr z, jr_016_646d
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
     cp b
     jp z, Jump_016_646d
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld hl, $c100
     add l
     ld l, a
@@ -3283,7 +3283,7 @@ jr_016_64a8:
     jp z, Jump_016_646d
 
     inc [hl]
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add a
     add a
     ld hl, $2da7
@@ -3330,7 +3330,7 @@ jr_016_64a8:
     cp $01
     jr nz, jr_016_6564
 
-    ld a, [$c938]
+    ld a, [wFloorType3]
     ld l, a
     ld h, $00
     add hl, hl
@@ -3383,7 +3383,7 @@ jr_016_658c:
     inc b
     ld a, b
     and $0f
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld hl, $c940
     add l
     ld l, a
@@ -3463,7 +3463,7 @@ jr_016_65bb:
     ldh [$d5], a
     jr nz, jr_016_65bb
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     jp Jump_016_658c
 
@@ -3478,7 +3478,7 @@ jr_016_6622:
     inc b
     ld a, b
     and $0f
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld hl, $c940
     add l
     ld l, a
@@ -3555,7 +3555,7 @@ jr_016_6651:
     ldh [$d5], a
     jr nz, jr_016_6651
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     jp Jump_016_6622
 
@@ -3570,7 +3570,7 @@ jr_016_66b5:
     inc b
     ld a, b
     and $0f
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld hl, $c940
     add l
     ld l, a
@@ -3650,7 +3650,7 @@ jr_016_66e4:
     ldh [$d5], a
     jr nz, jr_016_66e4
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     jp Jump_016_66b5
 
@@ -3962,7 +3962,7 @@ jr_016_68c5:
 
 Call_016_68c6:
     ld hl, $c960
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp [hl]
     ret nz
 
@@ -3989,7 +3989,7 @@ Call_016_68c6:
 
 Call_016_68ea:
     ld hl, $c0a0
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp [hl]
     ret nz
 
@@ -4062,7 +4062,7 @@ Call_016_6924:
     or $08
     ldh [$db], a
     ld hl, $ffda
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp [hl]
     ret nz
 
@@ -4794,7 +4794,7 @@ jr_016_6db5:
 
 
 Call_016_6dc1:
-    ld a, [$c938]
+    ld a, [wFloorType3]
     ld l, a
     ld h, $00
     add hl, hl
@@ -4870,9 +4870,9 @@ jr_016_6e32:
     inc hl
     inc hl
     ld a, [hl+]
-    ld [$ca39], a
+    ld [wEncounterCounterLo], a
     ld a, [hl+]
-    ld [$ca3a], a
+    ld [wEncounterCounterHi], a
     ret
 
 
@@ -5028,9 +5028,9 @@ jr_016_6f62:
     call Div24x8To16
     ld e, l
     ld d, h
-    ld a, [$ca39]
+    ld a, [wEncounterCounterLo]
     ld l, a
-    ld a, [$ca3a]
+    ld a, [wEncounterCounterHi]
     ld h, a
     ld a, l
     sub e
@@ -5053,9 +5053,9 @@ jr_016_6f62:
 
 jr_016_6fa2:
     ld a, l
-    ld [$ca39], a
+    ld [wEncounterCounterLo], a
     ld a, h
-    ld [$ca3a], a
+    ld [wEncounterCounterHi], a
     ret
 
 ; ---------------------------------------------------------------
@@ -5098,7 +5098,7 @@ LoadFloorDataPointer:
     ld de, FloorDataPtrTable2
 
 jr_016_7040:
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld hl, $c940
     add l
     ld l, a

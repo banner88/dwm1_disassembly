@@ -337,7 +337,7 @@ jr_007_4251:
     push bc
     ld hl, $ca94
     ld a, b
-    call Call_000_267e
+    call TestBitInArray
     pop bc
     jr z, jr_007_425d
 
@@ -1377,7 +1377,7 @@ Call_007_48f7:
     cp $ff
     jr z, jr_007_4927
 
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -1415,7 +1415,7 @@ jr_007_4927:
     cp $ff
     jr z, jr_007_497d
 
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -2437,19 +2437,19 @@ jr_007_5012:
     ld [$d92b], a
     ld hl, $0000
     ld a, l
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, h
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $00e8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0058
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld hl, wGameState
@@ -2495,7 +2495,7 @@ Jump_007_5077:
     ld h, a
     push hl
     ld a, [$c960]
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld hl, $0b08
     rst $10
     ld hl, $c300
@@ -2531,7 +2531,7 @@ Jump_007_5077:
 
 jr_007_50df:
     call Call_007_5160
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add a
     add a
     ld hl, $2da7
@@ -5021,7 +5021,7 @@ jr_007_6004:
     cp $06
     jr nz, jr_007_6039
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     or a
     jr nz, jr_007_6039
 
@@ -5463,7 +5463,7 @@ jr_007_630b:
 
 jr_007_6321:
     di
-    call Call_000_2128
+    call SaveGameState
     ei
     ld a, $59
     call PlaySoundEffect
@@ -6843,7 +6843,7 @@ label7_6b04:
     ld hl, $1708
     rst $10
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     ld hl, $0604
     rst $10
     ld hl, wGameState
@@ -7362,7 +7362,7 @@ Call_007_6da8:
     bit 1, a
     jr z, jr_007_6db3
 
-    call Call_000_2266
+    call GetActiveMonsterPtr
     ret
 
 
@@ -7377,7 +7377,7 @@ Call_007_6dba:
     bit 1, a
     jr z, jr_007_6dc5
 
-    call Call_000_2284
+    call ReadActiveMonsterByte
     ret
 
 
@@ -7393,7 +7393,7 @@ Call_007_6dcd:
     bit 1, a
     jr z, jr_007_6dd8
 
-    call Call_000_2289
+    call ReadActiveMonsterWord
     ret
 
 

@@ -43,7 +43,7 @@ label17_401d:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add a
     add l
     ld l, a
@@ -87,7 +87,7 @@ Jump_017_4064:
     ld de, GateAttrTable_B
 
 jr_017_4071:
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld hl, $c940
     add l
     ld l, a
@@ -134,7 +134,7 @@ label17_409e:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add a
     add l
     ld l, a
@@ -174,7 +174,7 @@ Jump_017_40da:
     ld de, GateAttrTable_B
 
 jr_017_40e7:
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld hl, $c940
     add l
     ld l, a

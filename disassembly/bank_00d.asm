@@ -18,7 +18,7 @@ SECTION "ROM Bank $00d", ROMX[$4000], BANK[$d]
 ; $D8D5/$D8D6 (counter) → BC command pair
 ; ---------------------------------------------------------------------------
 Call_00d_4007:
-    ld a, [$d8d3]
+    ld a, [wScriptMapType]
     ld l, a
     ld h, $00
     add hl, hl
@@ -27,7 +27,7 @@ Call_00d_4007:
     ld e, [hl]
     inc hl
     ld d, [hl]
-    ld a, [$d8d4]
+    ld a, [wScriptNPCId]
     ld l, a
     ld h, $00
     add hl, hl
@@ -35,7 +35,7 @@ Call_00d_4007:
     ld e, [hl]
     inc hl
     ld d, [hl]
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     ld l, a
     ld a, [$d8d6]
     ld h, a
@@ -78,9 +78,9 @@ labeld_402f:
     ld [$d8e7], a
     ld a, h
     ld [$d8e8], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -252,9 +252,9 @@ labeld_4110:
     ld [$d8e7], a
     ld a, h
     ld [$d8e8], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a

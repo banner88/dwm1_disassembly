@@ -6974,7 +6974,7 @@ jr_039_5f96:
 
     or h
     db $fc
-    jp z, Jump_000_06ce
+    jp z, Jump_ShowTextAndWait
 
     ld b, $01
     cp $f6

@@ -76,17 +76,20 @@ md5sum game.gbc
 ## NOT Done — Priority Work for Next Session
 
 ### HIGH PRIORITY
-1. **Bank $16 data tables** — unevolved skill map ($4874, 256B), random encounter
-   counter table ($6E3D, 50×4B), gate floor data ($70A6, 32×8B), floor type
-   selection table ($71A6). ROM map document has exact formats for all of these.
+1. **More Bank $00 function naming** — 466 Call_ labels remain. Next tier
+   (3-4 refs) includes ~80 more functions. Data tables at $0515/$0aea/$2bcc
+   need investigation (misinterpreted as code by mgbdis).
 2. **Bank $17 per-room attribute entries** — pointer tables are labeled but the
    per-room/per-step data blocks between them are still raw hex.
-3. **Room name labels** — gen_room_data_db.py could add descriptive room names.
+3. **Bank $04 script engine** — 100 opcodes documented but code still
+   has auto-generated labels throughout.
 
 ### MEDIUM PRIORITY
-4. **Bank $16 code annotation** — breeding functions already have good header docs
+4. **Bank $52 skill handler code annotation** — handlers labeled but the
+   actual damage calc, resistance check, and effect code is uncommented.
 5. **Code bank annotations** — $51 (battle init), $56 (text engine), $57 (battle)
-6. **Bank $00 math/text functions** — label the core utility functions
+6. **More WRAM expansion** — 81 symbols / 4676 refs done. More $C8xx/$C9xx
+   game state variables can be decoded from context.
 
 ### LOWER PRIORITY
 7. NPC behavior values (lower nibble specific meanings)

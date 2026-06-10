@@ -304,7 +304,7 @@ jr_03a_4121:
     ld e, b
     db $f4
     ld a, h
-    jp z, Jump_000_06ce
+    jp z, Jump_ShowTextAndWait
 
     ld b, $01
     cp $f6

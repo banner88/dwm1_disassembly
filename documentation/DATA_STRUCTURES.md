@@ -257,7 +257,9 @@ Renderer: `tools/render_rooms.py`.
 
 ## Named Functions
 
-### Bank $00 — Core Utilities
+### Bank $00 — Core Utilities (149 named, 466 remaining)
+
+**Math/Comparison:**
 
 | Label | Address | Refs | Signature |
 |-------|---------|------|-----------|
@@ -269,39 +271,172 @@ Renderer: `tools/render_rooms.py`.
 | `Div24x8To16` | $1E1E | — | `HL = E:HL // A; A = E:HL % A` |
 | `CmpHLvsBC` | $2F45 | — | Compare HL vs BC |
 | `Div16x16To16` | $2F4B | — | `DE = HL // BC; BC = HL % BC` |
+| `DivBCbyDE` | $0ABF | 7 | Repeated-subtract division: `H = BC // DE` |
+| `ExtractDigit16` | $20BE | 7 | Repeated-subtract digit extraction for 16-bit |
+| `SaturatingAdd16` | $2482 | — | `[HL] = min([HL]+DE, BC)` — clamped 16-bit add |
+| `SaturatingSubtract16` | $2496 | — | `[HL] = max([HL]-DE, BC)` — clamped 16-bit sub |
+
+**Monster Data Access:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
 | `GetMonsterDataPtr` | $223B | 328 | `HL = HL + (A&$7F) × $95` — monster struct ptr |
 | `GetCurrentMonsterPtr` | $2229 | 97 | Resolve context → monster struct ptr |
 | `ReadMonsterByte` | $224A | 67 | Byte from current monster → A |
 | `ReadMonsterWord` | $224F | 87 | Word from current monster → BC |
+| `WriteMonsterWord` | $225D | 10 | Write BC to current monster struct |
+| `GetActiveMonsterPtr` | $2266 | 6 | Resolve active monster ptr from party index table |
+| `ReadActiveMonsterByte` | $2284 | 6 | Read byte from active monster struct |
+| `ReadActiveMonsterWord` | $2289 | 5 | Read word from active monster struct → BC |
+| `GetMonsterSkillData` | $22A0 | 6 | Get skill/status data for monster slot |
 | `CheckMonsterSlot` | $2FA5 | 308 | Check slot A valid; CF=valid |
 | `GetMonsterSlotInfo` | $2F76 | 30 | Slot lookup via CheckMonsterSlot |
+| `GetMonsterSlotContext` | $2208 | 8 | Resolve monster slot for battle vs overworld |
+| `MonsterStatAddContext` | $2442 | 12 | Context-aware monster stat add wrapper |
+| `MonsterStatSubContext` | $2462 | 12 | Context-aware monster stat subtract wrapper |
+| `MonsterStatAdd` | $2448 | 8 | Add DE to monster stat, cap at BC |
+| `MonsterStatSubtract` | $2468 | 8 | Subtract DE from monster stat, floor at BC |
+| `MonsterStatDecrement` | $2331 | 10 | Subtract 1 from monster stat |
 | `HL_AddA_x8` | $2F6C | 270 | `HL += A × 8` |
+
+**Battle Stat Readers:**
+
+Six functions that read per-combatant stats from WRAM lookup tables ($DBA3-$DBF3). Each takes combatant index in A, returns stat value in HL via `IndexPtrTable`.
+
+| Label | Address | Refs | WRAM Table | Stat |
+|-------|---------|------|------------|------|
+| `GetCombatantHP` | $2FE8 | 21 | $DBA3 | Current HP |
+| `GetCombatantMaxHP` | $2FDA | 11 | $DBB3 | Max HP |
+| `GetCombatantMP` | $2FEF | 9 | $DBC3 | Current MP |
+| `GetCombatantMaxMP` | $2FE1 | 10 | $DBD3 | Max MP |
+| `GetCombatantATK` | $2FCC | 14 | $DBE3 | Attack |
+| `GetCombatantDEF` | $2FD3 | 20 | $DBF3 | Defense |
+| `IndexPtrTable` | $2FF6 | 7 | — | `HL = [HL + A×2]` — underlying lookup |
+
+Tables initialized by Bank $51 battle setup. Each table holds 16 bytes (up to 8 combatants × 2 bytes). HP/MaxHP and MP/MaxMP pairs start at same value; HP/MP get modified during battle.
+
+**Gold:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
+| `AddGold` | $2424 | 9 | Add CDE to wCurrGoldLo (24-bit) |
+| `CompareGold` | $241A | 5 | Compare CDE against wCurrGoldLo |
+
+**LCD/Video:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
 | `WaitVRAM` | $1AA6 | 119 | LCD STAT wait for VRAM access |
 | `WaitDMATransfer` | $1577 | 128 | Busy-wait $DA78 == 0 |
 | `WaitLCDTransfer` | $14CF | 63 | Busy-wait LCD transfer |
+| `GetBGMapAddress` | $25F1 | 16 | Compute VRAM BG map addr from scroll position |
+| `ApplyScrollRegisters` | $122F | 13 | Write SCX/SCY/WX/WY shadow regs to LCD |
+| `ClearSTATMode` | $1264 | 10 | Clear STAT interrupt mode bits |
+| `EnableLYCInterrupt` | $125D | 7 | Set STAT LYC interrupt enable |
+| `SetGBCPalette` | $1688 | 64 | Set palette, GBC color mode |
+| `SetViewportParams` | $164B | 7 | Store HL and HL+BC to viewport shadow regs |
+| `ClearOAMBuffer` | $1417 | 7 | Clear OAM sprite buffer ($C000-$C09F) |
+| `TransferSGBPacket` | $113E | 10 | SGB data packet transfer (checks wIsSGB) |
+| `SetColorMode` | $1C89 | 6 | Set color mode, update SGB palette if needed |
+| `LoadSGBTiles` | $10E5 | 6 | Load tile data for SGB border |
+| `SGBDelay` | $10CF | 6 | SGB timing delay loop |
+| `ClearPaletteBuffer` | $11BC | 6 | Clear 16-byte palette buffer at $C777 |
+| `SetViewportEnd` | $1659 | 5 | Store HL to viewport end shadow regs (ff_b3/b4) |
+| `WriteVRAMByte` | $1AAF | 5 | Wait STAT, write A to [HL], enable interrupts |
+| `GetSpriteAddress` | $1E8D | 5 | Compute OAM sprite address from index |
+
+**Tilemap/VRAM:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
 | `SetupTilemapTransfer` | $096D | 114 | Store VRAM transfer source/dest |
 | `SetupVRAMParams` | $097A | 56 | Store VRAM transfer params |
 | `SetupVRAMCopy` | $098F | 19 | Store HL/DE as copy params |
 | `Copy4Bytes` | $0C80 | 66 | Copy 4 bytes DE→HL |
-| `SetGBCPalette` | $1688 | 64 | Set palette, GBC color mode |
-| `EnableSRAM` | $20EE | 48 | SRAM access on |
-| `DisableSRAM` | $1013 | 41 | SRAM access off |
-| `RequestScreenUpdate` | $0609 | 34 | Set screen refresh flag |
-| `WaitInputRelease` | $1E31 | 23 | Wait for button release |
-| `UpdateOAMSprites` | $2518 | 22 | Update sprite OAM |
+| `AdjustTilemapOffset` | $0CFD | 9 | Add scroll offset to HL for tilemap |
+| `TilemapNextColumn` | $0CEE | 8 | Increment L within 32-col tile row (wrapping) |
+| `TilemapAdvanceColumns` | $0CE7 | 6 | Advance B columns (loop TilemapNextColumn) |
+| `GetTilemapRowAddr` | $0D11 | 6 | Compute scroll-relative tilemap row address |
+| `GetTilemapByte` | $0954 | 9 | Read byte from tilemap pointer, increment |
+| `LookupDoublePtrTable` | $093D | 8 | 2D table lookup: A indexes row, $c823 indexes col |
+
+**Text/Display:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
 | `CallTextEngine` | $05B6 | 24 | Cross-bank to Bank $56 |
 | `RunTextHandler` | $05F6 | 25 | Text display handler |
+| `SetupTextBankSwitch` | $0632 | 8 | Set bank from $c824, enter text processing |
+| `ShowTextAndWait` | $06CE | 21 | Display text box, wait for player button press |
 | `HandleTextCharacter` | $07AB | — | Process text control codes |
 | `ReadNextTextByte` | $0D78 | — | Read from text stream |
 | `PrintNumber` | $20AD | 16 | Format/print number |
 | `ConvertNumberToText` | $1FB9 | 16 | Number → text digits |
+| `FormatDecimalDigits` | $0A7C | 16 | Extract digits by dividing by 1000/100/10 |
+| `FormatLargeNumber` | $09C7 | 9 | Format numbers > 999 (divides by 1M/100K/10K) |
 | `ExtractDigits` | $09A4 | 16 | Decimal digit extraction |
+| `WriteDigitTile` | $20D3 | 8 | `Write_gfx_tile(A + $F0)` — number tile |
+| `WriteBlankTile` | $20D9 | 7 | `Write_gfx_tile($E0)` — blank/space tile |
 | `PrintDigit` | $20DF | 14 | Print single digit |
+| `WriteByteAndTerminate` | $0AD4 | 8 | `[HL] = A; [HL+1] = $F0` — write byte + text terminator |
+
+**Bitfield/Event Flags:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
+| `TestBitInArray` | $267E | 15 | Test bit A in bitfield at HL; Z flag = result |
+| `SetBitInArray` | $2670 | 6 | Set bit A in bitfield at HL |
+| `GetBitAndMask` | $2683 | 4 | Helper: byte offset + bitmask from bit index |
+| `SetEventFlag` | $26A0 | 5 | Set event flag BC in $D99B bitfield |
+| `ClearEventFlag` | $26A6 | 4 | Clear event flag BC in $D99B bitfield |
+| `TestEventFlag` | $26AE | 6 | Test event flag BC; Z=clear, NZ=set |
+| `ComputeFlagAddress` | $26B3 | — | BC → byte addr + bitmask for event flag |
+
+**Input:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
+| `UpdateJoypadState` | $1364 | 10 | Read joypad with edge detection/debounce |
+| `WaitInputRelease` | $1E31 | 23 | Wait for button release |
+| `RequestScreenUpdate` | $0609 | 34 | Set screen refresh flag |
+| `UpdateOAMSprites` | $2518 | 22 | Update sprite OAM |
+
+**SRAM:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
+| `EnableSRAM` | $20EE | 48 | SRAM access on |
+| `DisableSRAM` | $1013 | 41 | SRAM access off |
+| `CopySRAMBlock` | $2184 | 7 | Enable MBC SRAM, copy BC bytes HL→DE, disable |
+| `CopyFromSRAM` | $21F5 | 5 | Enable MBC SRAM, copy BC bytes DE→HL, disable |
+| `SavePartyToSRAM` | $2197 | 5 | Copy party/inventory data to SRAM save area |
+
+**Script Engine:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
+| `RunScriptEngine` | $0B07 | 18 | Store D/E to $c822/$c823, rst $10 to bank $04 |
+| `CallScriptByType` | $0B9B | 10 | Route script execution by E parameter |
+
+**Serial/Link:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
 | `SerialTransfer` | $1275 | 17 | Link cable transfer |
+| `SetSerialByte` | $1284 | 8 | `rSB = B` — set serial byte register |
+
+**Audio:**
+
+| Label | Address | Refs | Signature |
+|-------|---------|------|-----------|
 | `SetBGM` | $1AE1 | — | Store BGM offset |
 | `InitBGM` | $1AE5 | — | Full BGM init with audio setup |
 | `LoadSE` | $1B30 | — | Load sound effect |
 | `ProcessBGMQueue` | $1BB1 | — | Process queued BGM/SE |
+| `InitAudioSystem` | $3331 | 9 | Initialize NR52, clear audio channels |
+| `CheckAudioFlag` | $3A48 | 7 | Check $DE1F/$DE1C audio state flags |
+| `WriteAudioRegister` | $3954 | 5 | Write A to audio I/O port indexed by C |
+| `NopReturn` | $3000 | 5 | Stub — just `ret` |
 
 ### Other Banks
 
@@ -389,7 +524,7 @@ Map Type → Room → Visuals
 
 | Bank | Data | Code | Notes |
 |------|------|------|-------|
-| $00 | — | 89 named / 545 remaining | Core utility functions |
+| $00 | — | 149 named / 466 remaining | Core utility functions |
 | $01 | ✅ | Partial | Encounters, gate thresholds done |
 | $03 | ✅ | — | Monster info fully annotated |
 | $04 | — | Partial | Script engine: see `BANK04_SCRIPT_ENGINE.md` |

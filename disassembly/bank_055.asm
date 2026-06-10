@@ -39,7 +39,7 @@ SECTION "ROM Bank $055", ROMX[$4000], BANK[$55]
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $03
     ret nz
@@ -68,7 +68,7 @@ Call_055_404a:
     ld a, [$c863]
     and $02
     ld b, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     srl a
     xor b
@@ -2380,7 +2380,7 @@ jr_055_4a47:
     ld hl, wDebug_main_menu_option
     ld a, [$da02]
     ld [hl+], a
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld [hl+], a
     ld a, [$da04]
     ld [hl+], a
@@ -2568,7 +2568,7 @@ jr_055_4bdc:			;Likely inits data for the title screen
     call GenerateRNG
     ld a, [wRNG1]			;possible RNG? Otherwise just some timer.
     inc a
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     call GenerateRNG
     ld a, [wRNG1]
     inc a
@@ -2860,9 +2860,9 @@ Jump_055_4dba:
     ld a, [wInGateworld]
     ld [wIsPlayerChangingMaps], a
     ld a, [wMapID]
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, [wInGateworld]
-    ld [$c96e], a
+    ld [wWarpFlag], a
     xor a
     ld [wGateID], a
     ld hl, $c88e
@@ -2870,7 +2870,7 @@ Jump_055_4dba:
     xor a
     ld [wGameState], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ret
 
 
@@ -3144,7 +3144,7 @@ Call_055_4f8f:
 
 
 jr_055_4fbe:
-    call Call_000_3331
+    call InitAudioSystem
     ld a, [$c0a1]
     ld hl, $50d4
     add l
@@ -3456,7 +3456,7 @@ jr_055_5139:
     ld a, [hl+]
     ld [$da02], a
     ld a, [hl+]
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, [hl+]
     ld [$da04], a
     ld a, [hl+]
@@ -3634,7 +3634,7 @@ jr_055_5245:
 
 jr_055_524c:
     ld a, [$c0a1]
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, [$c0a2]
     ld [$da04], a
     ld a, [$c0a3]
@@ -3645,12 +3645,12 @@ jr_055_524c:
     ld [$da07], a
     ld a, [$c0a6]
     ld [$da08], a
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     ld hl, $1400
@@ -3671,7 +3671,7 @@ jr_055_524c:
     ld a, [$da06]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
 
 Jump_055_52ad:
@@ -3687,7 +3687,7 @@ Jump_055_52ad:
     ld a, [$da08]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     ld hl, $1400
@@ -3893,7 +3893,7 @@ Call_055_53f6:
     ld a, [wRNG1]
     and $3f
     inc a
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     xor a
     ld [$da13], a
     ld hl, $1402
@@ -3902,7 +3902,7 @@ Call_055_53f6:
     push af
     call GenerateRNG
     and $7f
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $cad6
     ld c, a
     pop af
@@ -3912,7 +3912,7 @@ Call_055_53f6:
     push af
     call GenerateRNG
     and $7f
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $cad7
     ld c, a
     pop af
@@ -3947,7 +3947,7 @@ Call_055_53f6:
     ld hl, $cad6
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -3959,7 +3959,7 @@ Call_055_53f6:
     ld hl, $cad7
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]

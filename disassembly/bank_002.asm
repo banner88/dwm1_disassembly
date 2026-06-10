@@ -3173,7 +3173,7 @@ jr_002_4bf3:
 
 
 label4e9f:
-    call Call_000_1264
+    call ClearSTATMode
     ld hl, $c817
     ld [hl], $00
     inc hl
@@ -3263,8 +3263,8 @@ label4e9f:
     ld [$c892], a
     ld a, $03
     ld [$c8a1], a
-    call Call_000_122f
-    call Call_000_1417
+    call ApplyScrollRegisters
+    call ClearOAMBuffer
     call $ff80
     ld a, $01
     jp Jump_000_11cb
@@ -3319,8 +3319,8 @@ label4e9f:
     ldh [$b6], a
     ld a, $03
     ld [$c8a1], a
-    call Call_000_122f
-    call Call_000_1417
+    call ApplyScrollRegisters
+    call ClearOAMBuffer
     call $ff80
     xor a
     ld [$c892], a
@@ -3377,8 +3377,8 @@ label4e9f:
     ldh [$b6], a
     ld a, $03
     ld [$c8a1], a
-    call Call_000_122f
-    call Call_000_1417
+    call ApplyScrollRegisters
+    call ClearOAMBuffer
     call $ff80
     xor a
     ld [$c892], a
@@ -3435,8 +3435,8 @@ label4e9f:
     ldh [$b6], a
     ld a, $03
     ld [$c8a1], a
-    call Call_000_122f
-    call Call_000_1417
+    call ApplyScrollRegisters
+    call ClearOAMBuffer
     call $ff80
     xor a
     ld [$c892], a
@@ -5158,25 +5158,25 @@ jr_002_5d75:
     ld [$c88d], a
     ld hl, $0004
     ld a, l
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, h
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $00f8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0038
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     xor a
     ldh [$90], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, wGameState
     res 0, [hl]
     ld hl, $cab9
@@ -10192,7 +10192,7 @@ Call_002_79a3:
     call $0683
     rst $38
     ld bc, $fc00
-    jp Jump_000_0564
+    jp Jump_CallTextRenderer
 
 
     call Call_002_7a1f
@@ -10204,7 +10204,7 @@ Call_002_79a3:
     ld a, $60
 
 Jump_002_79e6:
-    call Call_000_06ce
+    call ShowTextAndWait
     rst $38
     jp Jump_000_05c3
 
@@ -10285,9 +10285,9 @@ jr_002_7a49:
     ld bc, $ff60
     call $0552
     ld bc, $fcc0
-    call Call_000_0564
+    call CallTextRenderer
     call Call_000_0648
-    call Call_000_0632
+    call SetupTextBankSwitch
     ret z
 
     ld bc, $0800
@@ -10401,7 +10401,7 @@ Call_002_7a9d:
     ret
 
 
-    call Call_000_0632
+    call SetupTextBankSwitch
     ld bc, $c8d0
     jr nz, jr_002_7b3d
 
@@ -10416,7 +10416,7 @@ jr_002_7b3d:
     ret nc
 
     call $0638
-    call Call_000_0632
+    call SetupTextBankSwitch
     ret z
 
     ld a, [$ca86]
@@ -10455,7 +10455,7 @@ jr_002_7b5f:
     ld hl, $7b8a
     rst $28
     ld a, [hl]
-    call Call_000_06ce
+    call ShowTextAndWait
     pop bc
     ld a, d
     cp $d3
@@ -10519,7 +10519,7 @@ jr_002_7bcd:
 
 jr_002_7bcf:
     ld a, [hl+]
-    call Call_000_0b07
+    call RunScriptEngine
     inc c
     dec e
     jr nz, jr_002_7bcf
@@ -10722,7 +10722,7 @@ Jump_002_7cbb:
     ld a, $04
     ld [$c9c1], a
     ld a, $20
-    jp Jump_000_06ce
+    jp Jump_ShowTextAndWait
 
 
 Jump_002_7cde:
@@ -10832,7 +10832,7 @@ Jump_002_7d52:
     ld bc, $7d83
     call $02be
     ld a, $e0
-    call Call_000_06ce
+    call ShowTextAndWait
     jp Jump_000_05c3
 
 
@@ -10893,7 +10893,7 @@ jr_002_7db6:
     ret z
 
     ld bc, $e614
-    call Call_000_0632
+    call SetupTextBankSwitch
     rst $30
     jr nz, jr_002_7deb
 
@@ -11015,7 +11015,7 @@ jr_002_7e7f:
     ret z
 
     ld a, $19
-    jp nc, Jump_000_06ce
+    jp nc, Jump_ShowTextAndWait
 
     ld a, $0b
     ld bc, $7250
@@ -11102,13 +11102,13 @@ Jump_002_7ef7:
 jr_002_7f15:
     ld a, $54
     ld c, $0d
-    call Call_000_0b07
+    call RunScriptEngine
     ld a, $78
     ld bc, $98f3
 
 jr_002_7f21:
-    call Call_000_0b07
-    call Call_000_093d
+    call RunScriptEngine
+    call LookupDoublePtrTable
     ret nz
 
     call Call_000_1377

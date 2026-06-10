@@ -306,20 +306,20 @@ jr_004_4189:
     or a
     ret nz                   ; Return if UI busy
 
-    ld a, [$d8d7]            ; Script state flags
+    ld a, [wScriptStateFlags]            ; Script state flags
     bit 0, a
     jp z, Jump_004_41c7      ; Bit 0 clear = no script running → return
 
     bit 1, a
     jp nz, Jump_004_41c7     ; Bit 1 set = text queued, wait for display → return
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 4, a                 ; Bit 4: NPC position update pending (group A)
     call nz, Call_004_43ec
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 6, a                 ; Bit 6: NPC position update pending (group B)
     call nz, Call_004_43ec
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 2, a                 ; Bit 2: delay/wait active
     jr nz, jr_004_41c8
 
@@ -348,7 +348,7 @@ jr_004_41c8:
     ld [$d8db], a
     jr nz, jr_004_41dd
 
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     res 2, [hl]
 
 jr_004_41dd:
@@ -401,7 +401,7 @@ Jump_004_41e0:
     ldh a, [$93]
     adc $00
     ldh [$93], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jp nz, Jump_004_42ba
 
@@ -423,7 +423,7 @@ jr_004_4231:
     ldh a, [$93]
     sbc $00
     ldh [$93], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_42ba
 
@@ -455,7 +455,7 @@ jr_004_425a:
     ldh a, [$96]
     adc $00
     ldh [$96], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_42ba
 
@@ -476,7 +476,7 @@ jr_004_4293:
     ldh a, [$96]
     sbc $00
     ldh [$96], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_42ba
 
@@ -492,7 +492,7 @@ jr_004_42ba:
 jr_004_42c0:
     ld hl, $ff90
     res 0, [hl]
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     res 3, [hl]
     jp Jump_004_43d8
 
@@ -554,7 +554,7 @@ Jump_004_42cd:
     sbc $00
     ld [$d8de], a
     inc hl
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_4320
 
@@ -586,7 +586,7 @@ jr_004_4333:
     adc $00
     ld [$d8de], a
     inc hl
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_434d
 
@@ -628,7 +628,7 @@ jr_004_435f:
     sbc $00
     ld [$d8e0], a
     inc hl
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_4389
 
@@ -659,7 +659,7 @@ jr_004_439b:
     adc $00
     ld [$d8e0], a
     inc hl
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_43b5
 
@@ -691,7 +691,7 @@ jr_004_43c7:
     adc $00
     ld h, a                  ; HL = NPC buffer + 5 (status byte)
     res 0, [hl]              ; Clear interacting flag
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     res 3, [hl]              ; Clear walk-toward pending flag
 
 ; ---------------------------------------------------------------------------
@@ -767,7 +767,7 @@ Call_004_43ec:
     or a
     ret nz
 
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     res 4, [hl]
     res 6, [hl]
     ret
@@ -778,9 +778,9 @@ Call_004_443d:
     or a
     ret z
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     set 4, a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, $d8e9
     ld a, l
     ldh [$d7], a
@@ -836,7 +836,7 @@ Call_004_443d:
     ldh a, [$93]
     adc $00
     ldh [$93], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jp nz, Jump_004_454b
 
@@ -858,7 +858,7 @@ jr_004_44bf:
     ldh a, [$93]
     sbc $00
     ldh [$93], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jp nz, Jump_004_454b
 
@@ -891,7 +891,7 @@ jr_004_44ea:
     ldh a, [$96]
     adc $00
     ldh [$96], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_454b
 
@@ -912,7 +912,7 @@ jr_004_4524:
     ldh a, [$96]
     sbc $00
     ldh [$96], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_454b
 
@@ -976,9 +976,9 @@ Call_004_4584:
     or a
     ret z
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     set 4, a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, l
     ldh [$d7], a
     ld a, h
@@ -1126,7 +1126,7 @@ Call_004_4584:
     sbc $00
     ld [bc], a
     inc hl
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_467b
 
@@ -1165,7 +1165,7 @@ jr_004_468c:
     adc $00
     ld [bc], a
     inc hl
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_46a9
 
@@ -1222,7 +1222,7 @@ jr_004_46ba:
     sbc $00
     ld [bc], a
     inc hl
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_46ee
 
@@ -1261,7 +1261,7 @@ jr_004_46ff:
     adc $00
     ld [bc], a
     inc hl
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 5, a
     jr nz, jr_004_471c
 
@@ -2303,7 +2303,7 @@ Jump_004_55a9:
 ScriptInit:
 label55ec:
     xor a
-    ld [$d8d5], a            ; Reset script counter low
+    ld [wScriptCounter], a            ; Reset script counter low
     ld [$d8d6], a            ; Reset script counter high
     jr jr_004_5605           ; → ScriptExecNext
 
@@ -2316,9 +2316,9 @@ label55ec:
 ; ---------------------------------------------------------------------------
 Call_004_55f5:
 Jump_004_55f5:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a            ; Increment script counter low
+    ld [wScriptCounter], a            ; Increment script counter low
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a            ; Increment script counter high (16-bit inc)
@@ -2344,12 +2344,12 @@ jr_004_5605:
     jr nz, jr_004_5613
 
     xor a
-    ld [$d8d7], a            ; Script ended: clear all state flags
+    ld [wScriptStateFlags], a            ; Script ended: clear all state flags
     ret
 
 
 jr_004_5613:
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 0, [hl]              ; Mark script as active (bit 0)
     ld a, b
     cp $ff
@@ -2495,7 +2495,7 @@ jr_004_5613:
     dw label4_5a02
     dw label4_5a6f
     dw label4_5ac5
-    dw label4_5b1b
+    dw ArenaGenerateBattles
     dw label4_5b49
     dw label4_5b79
     dw label4_5b8f
@@ -2569,7 +2569,7 @@ jr_004_5613:
     dw label4_6bdf
     dw label4_6d56
     dw label4_6d84
-    dw label4_6d93
+    dw ColiseumInitPrize
     dw label4_6f64
     dw label4_6f89
     dw label4_6f9b
@@ -2590,10 +2590,10 @@ jr_004_5613:
 ; Entry 6 (TextQueueCheck) will pick this up on the next frame.
 ; ---------------------------------------------------------------------------
 LAB_rom4__56ec:
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 1, [hl]              ; Flag: text ID queued for display
     ld a, c
-    ld [$d8d9], a            ; Store text ID low byte
+    ld [wScriptQueuedTextId], a            ; Store text ID low byte
     ld a, b
     ld [$d8da], a            ; Store text ID high byte
     ret
@@ -2608,41 +2608,41 @@ LAB_rom4__56ec:
 ; ---------------------------------------------------------------------------
 TextQueueCheck:
 label56fa:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 1, a                 ; Text queued?
     ret z                    ; No → return
 
 jr_004_5700:
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     res 1, [hl]              ; Clear text-queued flag
-    ld a, [$d8d9]
+    ld a, [wScriptQueuedTextId]
     ld l, a                  ; Text ID low → L
     ld a, [$d8da]
     ld h, a                  ; Text ID high → H
-    call Call_000_0ad9       ; → ROM0 TextDispatchCascade
+    call TextBankDispatch       ; → ROM0 TextDispatchCascade
     ret
 
 ; ---------------------------------------------------------------------------
 ; Script Command $00: ConditionalBranchNZ
-; Reads next BC (condition value), calls Call_000_26ae (RAM compare?).
+; Reads next BC (condition value), calls TestEventFlag (RAM compare?).
 ; If NZ (condition true): continue to next command.
 ; If Z (condition false): read another BC and branch via ScriptBranch.
 ; ---------------------------------------------------------------------------
 label4_5711:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch       ; Read condition parameter
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_000_26ae       ; Evaluate condition
+    call TestEventFlag       ; Evaluate condition
     jp nz, Jump_004_55f5     ; True → continue script
 
     call MapTypeDispatch       ; Read branch target
@@ -2653,20 +2653,20 @@ label4_5711:
 ; Same as $00 but inverted: branches if condition IS true (Z flag).
 ; ---------------------------------------------------------------------------
 label4_5740:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_000_26ae
+    call TestEventFlag
     jp z, Jump_004_55f5
 
     call MapTypeDispatch
@@ -2675,33 +2675,33 @@ label4_5740:
 ; ---------------------------------------------------------------------------
 ; Script Command $02: ClearEventFlag
 ; Reads event flag index from script, clears that bit in the $D99B
-; event bitfield via Call_000_26a6. Used to reset story state.
+; event bitfield via ClearEventFlag. Used to reset story state.
 ; ---------------------------------------------------------------------------
 label4_576f:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch       ; Read event flag index
-    call Call_000_26a6       ; Clear event flag
+    call ClearEventFlag       ; Clear event flag
     jp Jump_004_55f5         ; Continue script
 
 ; ---------------------------------------------------------------------------
 ; Script Command $03: SetEventFlag
 ; Reads event flag index from script, sets that bit in the $D99B
-; event bitfield via Call_000_26a0. Used to mark story progress.
+; event bitfield via SetEventFlag. Used to mark story progress.
 ; ---------------------------------------------------------------------------
 label4_5788:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    call Call_000_26a0
+    call SetEventFlag
     jp Jump_004_55f5
 
 ; ---------------------------------------------------------------------------
@@ -2711,18 +2711,18 @@ label4_5788:
 ; Plays sound effect $59 unless effect type is $09 or $0A.
 ; ---------------------------------------------------------------------------
 label4_57a1:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
     ld [$c8ef], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -2753,15 +2753,15 @@ label4_57a1:
 ; sets wGameState bit 6 (battle pending), sets $DA09=1 (battle trigger).
 ; ---------------------------------------------------------------------------
 label4_57eb:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch       ; Read enemy stats ID
     ld a, c
-    ld [$da03], a            ; Enemy 1 stats ID low
+    ld [wTempEnemyId1], a            ; Enemy 1 stats ID low
     ld a, b
     ld [$da04], a            ; Enemy 1 stats ID high
     xor a
@@ -2814,16 +2814,16 @@ label4_5842:
 ; and resume script execution when counter reaches 0.
 ; ---------------------------------------------------------------------------
 label4_5843:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch       ; Read delay frame count
     ld a, c
     ld [$d8db], a            ; Set delay counter
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 2, [hl]              ; Flag: delay active
     ret
 
@@ -2835,18 +2835,18 @@ label4_5843:
 ; Entry 4 will animate the NPC moving step-by-step.
 ; ---------------------------------------------------------------------------
 label4_5860:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch       ; Read NPC number
     ld a, c
     ld [$d8dc], a            ; Store NPC number
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -2855,7 +2855,7 @@ label4_5860:
     ld [$d8dd], a            ; X delta low (signed)
     ld a, b
     ld [$d8de], a            ; X delta high (signed, bit 7 = negative)
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 3, [hl]              ; Flag: NPC walk-toward pending
     ret
 
@@ -2865,18 +2865,18 @@ label4_5860:
 ; Y movement delta → $D8DF/$D8E0. Sets bit 3.
 ; ---------------------------------------------------------------------------
 label4_5898:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
     ld [$d8dc], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -2885,14 +2885,14 @@ label4_5898:
     ld [$d8df], a
     ld a, b
     ld [$d8e0], a
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 3, [hl]
     ret
 
 label4_58d0:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -2901,9 +2901,9 @@ label4_58d0:
     or a
     jr nz, jr_004_5942
 
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -2970,9 +2970,9 @@ jr_004_5942:
     adc h
     ld h, a
     push hl
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -2982,9 +2982,9 @@ jr_004_5942:
     jp Jump_004_55f5
 
 label4_5968:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -2993,9 +2993,9 @@ label4_5968:
     or a
     jr nz, jr_004_5996
 
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3015,9 +3015,9 @@ jr_004_5996:
     adc h
     ld h, a
     push hl
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3027,9 +3027,9 @@ jr_004_5996:
 
 jr_004_59b9:
     push hl
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3045,20 +3045,20 @@ jr_004_59b9:
 ; This is how cutscenes teleport the player (e.g., after story events).
 ; ---------------------------------------------------------------------------
 label4_59d2:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp c
     jp nz, Jump_004_55f5
 
@@ -3066,39 +3066,39 @@ label4_59d2:
     jp Jump_004_7212
 
 label4_5a02:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, b
-    ld [$c96e], a
-    ld a, [$d8d5]
+    ld [wWarpFlag], a
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, b
-    ld [$c970], a
-    ld a, [$d8d5]
+    ld [wWarpSpawnXHi], a
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, b
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $03
@@ -3106,7 +3106,7 @@ label4_5a02:
     ld hl, $c88f
     inc [hl]
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, wGameState
     res 0, [hl]
     xor a
@@ -3114,9 +3114,9 @@ label4_5a02:
     ret
 
 label4_5a6f:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3142,9 +3142,9 @@ jr_004_5a99:
     ld h, [hl]
     ld l, a
     push hl
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3160,14 +3160,14 @@ jr_004_5a99:
     ld [$d8dd], a
     ld a, b
     ld [$d8de], a
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 3, [hl]
     ret
 
 label4_5ac5:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3193,9 +3193,9 @@ jr_004_5aef:
     ld h, [hl]
     ld l, a
     push hl
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3211,15 +3211,15 @@ jr_004_5aef:
     ld [$d8df], a
     ld a, b
     ld [$d8e0], a
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 3, [hl]
     ret
 
                         ; begining of function relating to tresure chests
-label4_5b1b:                        ; inc unknown counter
-    ld a, [$d8d5]
+ArenaGenerateBattles:                        ; inc unknown counter
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3228,9 +3228,9 @@ label4_5b1b:                        ; inc unknown counter
     ld l, c             ; load c into l
     ld h, b             ; load b into h
     push hl             ; push hl (location in ram of opened tresure chest flags)
-    ld a, [$d8d5]       ; inc unknown counter
+    ld a, [wScriptCounter]       ; inc unknown counter
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3241,9 +3241,9 @@ label4_5b1b:                        ; inc unknown counter
     jp Jump_004_55f5
 
 label4_5b49:
-    ld a, [$d8d5]       ; inc unknown counter
+    ld a, [wScriptCounter]       ; inc unknown counter
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3252,9 +3252,9 @@ label4_5b49:
     ld l, c             ; load c into l
     ld h, b             ; load b into h
     push hl             ; push hl (unknown)
-    ld a, [$d8d5]       ; inc unknown counter
+    ld a, [wScriptCounter]       ; inc unknown counter
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3267,9 +3267,9 @@ label4_5b49:
     jp Jump_004_55f5
 
 label4_5b79:
-    ld a, [$d8d5]       ; inc unknown counter
+    ld a, [wScriptCounter]       ; inc unknown counter
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3278,9 +3278,9 @@ label4_5b79:
     jp Jump_004_7212
 
 label4_5b8f:
-    ld a, [$d8d5]       ; inc unknown counter
+    ld a, [wScriptCounter]       ; inc unknown counter
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3289,18 +3289,18 @@ label4_5b8f:
     ld l, c             ; load c into l
     ld h, b             ; load b into h
     push hl             ; push hl (unknown)
-    ld a, [$d8d5]       ; inc unknown counter
+    ld a, [wScriptCounter]       ; inc unknown counter
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
 
     call MapTypeDispatch
     pop hl               ; pop hl (unknown)
-    ld a, [$d8d5]        ; inc unknown counter
+    ld a, [wScriptCounter]        ; inc unknown counter
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3313,7 +3313,7 @@ label4_5b8f:
 
 label4_5bd4:
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     ret
 
 label4_5bdb:
@@ -3321,7 +3321,7 @@ label4_5bdb:
     cp MAP_TERRYS
     jr nz, jr_004_5c04
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp $04
     jr z, jr_004_5bed
 
@@ -3361,15 +3361,15 @@ jr_004_5c05:
     ret
 
 label4_5c14:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, b
     ld [$da13], a
     ld de, $cac1
@@ -3419,22 +3419,22 @@ jr_004_5c68:
     ret
 
 label4_5c6d:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 4, a
     jp z, Jump_004_55f5
 
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     sub $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     sbc $00
     ld [$d8d6], a
     ret
 
 label4_5c86:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3457,9 +3457,9 @@ label4_5c86:
     ld [hl], c
     inc hl
     push hl
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3468,14 +3468,14 @@ label4_5c86:
     ld [hl], c
     inc hl
     ld [hl], b
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 4, [hl]
     jp Jump_004_55f5
 
 label4_5ccf:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3500,9 +3500,9 @@ label4_5ccf:
     inc hl
     inc hl
     push hl
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3511,14 +3511,14 @@ label4_5ccf:
     ld [hl], c
     inc hl
     ld [hl], b
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 4, [hl]
     jp Jump_004_55f5
 
 label4_5d1a:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3540,7 +3540,7 @@ label4_5d1a:
     ld [hl], b
     inc hl
     ld [hl], c
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 4, [hl]
     jp Jump_004_55f5
 
@@ -3551,7 +3551,7 @@ label4_5d1a:
 ; from turning to face the player while being scripted to move.
 ; ---------------------------------------------------------------------------
 label4_5d4b:
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 5, [hl]              ; Lock NPC facing updates
     jp Jump_004_55f5          ; Continue script
 
@@ -3560,17 +3560,17 @@ label4_5d4b:
 ; Clears bit 5 of $D8D7, re-enabling normal NPC facing behavior.
 ; ---------------------------------------------------------------------------
 label4_5d53:
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     res 5, [hl]              ; Unlock NPC facing updates
     jp Jump_004_55f5          ; Continue script
 
 label4_5d5b:
-    ld a, [$d9ce]
+    ld a, [wArenaGroup]
     ld b, a
     add a
     add b
     ld b, a
-    ld a, [$d9cd]
+    ld a, [wColiseumBattle]
     add b
     ld b, a
     add a
@@ -3582,7 +3582,7 @@ label4_5d5b:
     adc h
     ld h, a
     ld a, l
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, h
     ld [$da04], a
     inc hl
@@ -3597,13 +3597,13 @@ label4_5d5b:
     ld [$da08], a
     ld a, $02
     ld [$da02], a
-    ld a, [$d9ce]
+    ld a, [wArenaGroup]
     cp $09
     jr nz, jr_004_5db9
 
     ld hl, $01e1
     ld a, l
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, h
     ld [$da04], a
     ld hl, $01e2
@@ -3618,12 +3618,12 @@ label4_5d5b:
     ld [$da08], a
 
 jr_004_5db9:
-    ld a, [$d9ce]  ;
+    ld a, [wArenaGroup]  ;
     ld b, a
     add a
     add b
     ld b, a
-    ld a, [$d9cd]
+    ld a, [wColiseumBattle]
     add b
     add a
     ld hl, $5e22
@@ -3636,7 +3636,7 @@ jr_004_5db9:
     ld [$d7ca], a
     ld a, [hl]
     ld [$d7cb], a
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
@@ -3665,7 +3665,7 @@ jr_004_5db9:
 
 Call_004_5e10:
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     ld hl, $1401
@@ -3741,9 +3741,9 @@ label4_5e5e:
     ret
 
 label4_5e6d:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3753,21 +3753,21 @@ label4_5e6d:
     jp Jump_004_55f5
 
 label4_5e87:
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 6, [hl]
     jp Jump_004_55f5
 
 label4_5e8f:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3839,7 +3839,7 @@ jr_004_5efb:
     jp Jump_004_7212
 
 label4_5f13:
-    ld a, [$d8d3]
+    ld a, [wScriptMapType]
     cp $06
     jr nc, jr_004_5f1f
 
@@ -3881,7 +3881,7 @@ label4_5f36:
     ld hl, $0103
     rst $10
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     jp Jump_004_55f5
 
 label4_5f52:
@@ -3905,9 +3905,9 @@ label4_5f5c:
 ; and jumps. Otherwise continues script execution.
 ; ---------------------------------------------------------------------------
 label4_5f67:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -3945,15 +3945,15 @@ jr_004_5f8e:
 ; Loads enemy stats and copies to the empty slot to add the monster.
 ; ---------------------------------------------------------------------------
 label4_5f9a:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, b
     ld [$da13], a
     ld de, $cac1
@@ -3995,9 +3995,9 @@ jr_004_5fda:
 ; without giving (script should check with CheckInvFull first).
 ; ---------------------------------------------------------------------------
 label4_5fdb:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4025,9 +4025,9 @@ jr_004_6000:
     ret
 
 label4_6002:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4102,9 +4102,9 @@ jr_004_604c:
 
 
 label4_6064:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4133,9 +4133,9 @@ jr_004_6087:
     jp Jump_004_7212
 
 label4_6093:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4155,7 +4155,7 @@ label4_6093:
     ld hl, $caca
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -4185,10 +4185,10 @@ label4_6093:
     ld a, [hl+]
     ld b, [hl]
     ld c, a
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 1, [hl]
     ld a, c
-    ld [$d8d9], a
+    ld [wScriptQueuedTextId], a
     ld a, b
     ld [$d8da], a
     ret
@@ -4412,9 +4412,9 @@ label4_6093:
     nop
 
 label4_61e0:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4443,9 +4443,9 @@ label4_61e0:
     db $01, $01, $01, $02, $01, $02, $01, $00, $01, $01, $00, $01, $00
 
 label4_623a:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4456,16 +4456,16 @@ label4_623a:
     jp Jump_004_55f5
 
 label4_6253:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4499,9 +4499,9 @@ label4_6253:
     jp Jump_004_7212
 
 label4_62ab:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4512,7 +4512,7 @@ jr_004_62bf:
     push bc
     ld hl, $ca94
     ld a, b
-    call Call_000_267e
+    call TestBitInArray
     pop bc
     jr z, jr_004_62cb
 
@@ -4532,16 +4532,16 @@ jr_004_62cb:
     jp Jump_004_7212
 
 label4_62dd:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4573,9 +4573,9 @@ label4_62dd:
     jp Jump_004_7212
 
 label4_6332:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4583,20 +4583,20 @@ label4_6332:
     ld l, c
     ld h, b
     ld e, $00
-    call Call_000_241a
+    call CompareGold
     jp Jump_004_55f5
 
 label4_634f:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4666,7 +4666,7 @@ label4_63c6:
     adc h
     ld h, a
     ld a, [hl+]
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, [hl]
     ld [$da04], a
     ld a, $00
@@ -4684,9 +4684,9 @@ label4_63c6:
     db $44, $01
 
 label4_6401:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4727,16 +4727,16 @@ jr_004_6433:
     jp Jump_004_55f5
 
 label4_643f:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -4787,16 +4787,16 @@ jr_004_648f:
     jp Jump_004_7212
 
 label4_64a7:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld l, c
     ld h, b
-    call Call_000_0ad9
+    call TextBankDispatch
     jp Jump_004_55f5
 
 label4_64c2:
@@ -4855,25 +4855,25 @@ label4_64c2:
     ld a, [hl]
     ld [$c8f5], a
     ld a, $08
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, $00
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0048
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $02
     ld [$d951], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, $03
     call SetGBCPalette
     ld hl, $c88f
@@ -4924,39 +4924,39 @@ jr_004_6599:
     ret
 
 label4_65ab:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, b
-    ld [$c96e], a
-    ld a, [$d8d5]
+    ld [wWarpFlag], a
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, b
-    ld [$c970], a
-    ld a, [$d8d5]
+    ld [wWarpSpawnXHi], a
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, b
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld hl, wGameState
@@ -4964,7 +4964,7 @@ label4_65ab:
     xor a
     ld [$c905], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, wGameState
     res 0, [hl]
     xor a
@@ -5004,17 +5004,17 @@ label4_6632:
 
 
 label4_6646:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld d, c
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5067,9 +5067,9 @@ jr_004_668d:
 ; from script, calls SetBGM to change the music.
 ; ---------------------------------------------------------------------------
 label4_669d:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5082,9 +5082,9 @@ label4_669d:
 
 
 label4_66bd:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5119,9 +5119,9 @@ label4_66bd:
     ld [$c900], a
     ldh a, [$8e]
     ld [$c901], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5137,25 +5137,25 @@ label4_6723:
     ld a, [$c8fc]
     ld b, a
     ld a, c
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, b
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld a, [$c8fd]
     ld c, a
     ld a, [$c8fe]
     ld b, a
     ld a, c
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, b
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld a, [$c8ff]
     ld c, a
     ld a, [$c900]
     ld b, a
     ld a, c
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, b
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $03
@@ -5163,7 +5163,7 @@ label4_6723:
     ld hl, $c88f
     inc [hl]
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, wGameState
     res 0, [hl]
     xor a
@@ -5199,10 +5199,10 @@ label4_676f:
     ld a, b
     adc $00
     ld b, a
-    ld hl, $d8d7
+    ld hl, wScriptStateFlags
     set 1, [hl]
     ld a, c
-    ld [$d8d9], a
+    ld [wScriptQueuedTextId], a
     ld a, b
     ld [$d8da], a
     ld hl, wGameState
@@ -5262,9 +5262,9 @@ label4_67fd:
     cp $ff
     jp z, Jump_004_55f5
 
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     sub $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     sbc $00
     ld [$d8d6], a
@@ -5272,9 +5272,9 @@ label4_67fd:
 
 
 label4_6822:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5300,9 +5300,9 @@ Jump_004_6838:
 
 
 label4_684d:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5313,9 +5313,9 @@ label4_684d:
 
 
 label4_6866:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5326,9 +5326,9 @@ label4_6866:
 
 
 label4_687f:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5349,9 +5349,9 @@ label4_68a1:
     and $f0
     jp nz, Jump_004_55f5
 
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     sub $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     sbc $00
     ld [$d8d6], a
@@ -5359,9 +5359,9 @@ label4_68a1:
 
 
 label4_68ba:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -5409,25 +5409,25 @@ label4_690b:
     ld a, [$c8fc]
     ld b, a
     ld a, c
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, b
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld a, [$c8fd]
     ld c, a
     ld a, [$c8fe]
     ld b, a
     ld a, c
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, b
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld a, [$c8ff]
     ld c, a
     ld a, [$c900]
     ld b, a
     ld a, c
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, b
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $03
@@ -5435,7 +5435,7 @@ label4_690b:
     ld hl, $c88f
     inc [hl]
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, wGameState
     res 0, [hl]
     xor a
@@ -5463,7 +5463,7 @@ jr_004_6970:
     push bc
     ld hl, $ca94
     ld a, b
-    call Call_000_267e
+    call TestBitInArray
     pop bc
     jr z, jr_004_697c
 
@@ -5550,7 +5550,7 @@ jr_004_69cd:
     adc h
     ld h, a
     ld a, l
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, h
     ld [$da04], a
     pop hl
@@ -5811,14 +5811,14 @@ label4_6b3a:
     ld a, e
     ldh [$d7], a
     ld hl, $c180
-    call Call_000_09c7
+    call FormatLargeNumber
     ldh a, [$d5]
     ld l, a
     ldh a, [$d6]
     ld h, a
     ldh a, [$d7]
     ld e, a
-    call Call_000_2424
+    call AddGold
     jp Jump_004_55f5
 
 
@@ -5857,36 +5857,36 @@ jr_004_6b93:
 
 
 label4_6ba0:
-    ld a, [$c93a]
+    ld a, [wLastFloor]
     dec a
     dec a
     ld b, a
-    ld a, [$c939]
+    ld a, [wCurrentFloor]
     cp b
     jr z, jr_004_6bb9
 
     add $13
-    ld [$c939], a
+    ld [wCurrentFloor], a
     cp b
     jr c, jr_004_6bb9
 
     ld a, b
     dec a
-    ld [$c939], a
+    ld [wCurrentFloor], a
 
 jr_004_6bb9:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $00
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, $80
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, wGameState
     set 5, [hl]
     xor a
     ld [$c905], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, wGameState
     res 0, [hl]
     xor a
@@ -5894,9 +5894,9 @@ jr_004_6bb9:
     ret
 
 label4_6bdf:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -6113,15 +6113,15 @@ Call_004_6d4a:
 
 
 label4_6d56:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
     ld a, c
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, b
     ld [$da04], a
     xor a
@@ -6145,7 +6145,7 @@ label4_6d84:
     ret
 
 
-label4_6d93:
+ColiseumInitPrize:
     ld a, [$d9cf]
     bit 7, a
     jr nz, jr_004_6d9e
@@ -6155,7 +6155,7 @@ label4_6d93:
 
 jr_004_6d9e:
     call Call_004_6eb3
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
@@ -6180,7 +6180,7 @@ jr_004_6d9e:
     ld a, h
     ld [$d9d6], a
     call Call_004_6eb3
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
@@ -6228,7 +6228,7 @@ jr_004_6e1a:
     ld a, [hl]
     ld [$d9d0], a
     xor a
-    ld [$d9cd], a
+    ld [wColiseumBattle], a
     ld a, [$d9d0]
     ld l, a
     ld h, $08
@@ -6253,12 +6253,12 @@ Call_004_6e41:
     ld [hl], a
     pop hl
     push hl
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     call Call_004_6ea9
@@ -6276,7 +6276,7 @@ Call_004_6e41:
     ld a, [$da06]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     call Call_004_6ea9
@@ -6294,7 +6294,7 @@ Call_004_6e41:
     ld a, [$da08]
     ld h, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     call Call_004_6ea9
@@ -6375,7 +6375,7 @@ jr_004_6f13:
     ld a, $02
     ld [$da02], a
     call Call_004_6f35
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     call Call_004_6f35
     ld [$da05], a
     call Call_004_6f35
@@ -6471,16 +6471,16 @@ label4_6f89:
 
 
 label4_6f9b:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -6521,9 +6521,9 @@ label4_6f9b:
 
 
 label4_6ffb:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -6548,12 +6548,12 @@ label4_6ffb:
 
 jr_004_7030:
     ld e, $00
-    call Call_000_2424
+    call AddGold
     jp Jump_004_55f5
 
 
 label4_7038:
-    ld a, [$d8d3]
+    ld a, [wScriptMapType]
     cp $06
     jr nc, jr_004_7044
 
@@ -6681,9 +6681,9 @@ jr_004_70a4:
 
 
 label4_70d5:
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -6843,9 +6843,9 @@ label4_71d2:
     cp $ff
     jp z, Jump_004_55f5
 
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     sub $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     sbc $00
     ld [$d8d6], a
@@ -6866,7 +6866,7 @@ label4_71d2:
 ; into its script data and returns the next command in BC.
 ; ---------------------------------------------------------------------------
 MapTypeDispatch:
-    ld a, [$d8d3]            ; Map type copy
+    ld a, [wScriptMapType]            ; Map type copy
     cp $06
     jr nc, jr_004_71fb
 
@@ -6924,13 +6924,13 @@ Jump_004_7212:
     and $80
     or b
     ld b, a                  ; Restore sign bit
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     ld l, a
     ld a, [$d8d6]
     ld h, a                  ; HL = current script counter
     add hl, bc               ; HL += signed offset
     ld a, l
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, h
     ld [$d8d6], a            ; Update script counter
     jp Jump_004_5605          ; → ScriptExecNext (continue execution)

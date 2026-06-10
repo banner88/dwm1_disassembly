@@ -854,7 +854,7 @@ AddCursorOffset:
     ld a, [$c8f1]
     adc h
     ld h, a
-    call Call_000_0ad9
+    call TextBankDispatch
     ret
 
 
@@ -1139,7 +1139,7 @@ jr_012_45ec:
     ld de, $0601
     call Call_012_411a
     ld hl, $06e1
-    call Call_000_0ad9
+    call TextBankDispatch
     ld a, $01
     ld [$c905], a
     ret
@@ -2457,7 +2457,7 @@ jr_012_4eb5:
     ld hl, $0103
     rst $10
     ld bc, $0007
-    call Call_000_26a0
+    call SetEventFlag
     ld hl, $000f
     call AddCursorOffset
     ld hl, $c906
@@ -4773,7 +4773,7 @@ jr_012_5e27:
 
 jr_012_5e3c:
     ld hl, $06cc
-    call Call_000_0ad9
+    call TextBankDispatch
     ld a, $06
     ld [$c906], a
     ret
@@ -4981,21 +4981,21 @@ jr_012_5f68:
     push af
     xor a
     ld [$c905], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     push af
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, [$c8ec]
     push af
     xor a
     ld [$c8ec], a
     di
-    call Call_000_2128
+    call SaveGameState
     ei
     pop af
     ld [$c8ec], a
     pop af
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     pop af
     ld [$c905], a
     pop af
@@ -5232,7 +5232,7 @@ Call_012_6052:
     ld hl, $0b02
     rst $10
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     ld hl, $0604
     rst $10
     xor a
@@ -5466,7 +5466,7 @@ jr_012_6271:
     push hl
     ld hl, $ca94
     ld a, b
-    call Call_000_267e
+    call TestBitInArray
     pop hl
     pop de
     pop bc
@@ -5708,7 +5708,7 @@ Call_012_63d0:
     call Call_012_411a
     ld hl, $ca94
     ld a, [$cac0]
-    call Call_000_267e
+    call TestBitInArray
     ld a, $ff
     jr z, jr_012_63f4
 
@@ -5797,7 +5797,7 @@ Call_012_6456:
 
 Call_012_648f:
     ld a, [$cac0]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
@@ -6510,7 +6510,7 @@ jr_012_67be:
 Call_012_67c0:
     ld hl, $ca94
     ld a, [$cac0]
-    call Call_000_267e
+    call TestBitInArray
     ret z
 
     ld a, [$da71]
@@ -7133,7 +7133,7 @@ jr_012_6b77:
     ld a, [$c904]
     ld b, a
     ld hl, $c180
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld a, [$d9e1]
     cp $04
     jr z, jr_012_6bd0
@@ -7152,7 +7152,7 @@ jr_012_6b77:
     ld c, a
     push bc
     ld hl, $c190
-    call Call_000_0a7c
+    call FormatDecimalDigits
     pop bc
     ld a, [$c903]
     ld l, a
@@ -7188,7 +7188,7 @@ jr_012_6bd0:
     ld c, a
     ld b, $00
     ld hl, $c180
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld hl, $0010
     call AddCursorOffset
     ld a, $04
@@ -7239,7 +7239,7 @@ jr_012_6c0a:
     ld b, [hl]
     ld c, a
     ld a, c
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, b
     ld [$da13], a
     ld hl, $1402
@@ -7284,7 +7284,7 @@ jr_012_6c0a:
     jr jr_012_6c7b
 
 jr_012_6c78:
-    call Call_000_26a0
+    call SetEventFlag
 
 jr_012_6c7b:
     ld hl, $d9e1
@@ -7328,7 +7328,7 @@ jr_012_6c84:
     ld a, [$c904]
     ld b, a
     ld hl, $c180
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld a, [$d9e1]
     cp $04
     jr z, jr_012_6d0f
@@ -7346,7 +7346,7 @@ jr_012_6c84:
     ld b, [hl]
     ld c, a
     ld hl, $c190
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld a, [$d9e1]
     add a
     add a
@@ -7360,7 +7360,7 @@ jr_012_6c84:
     ld b, [hl]
     ld c, a
     ld a, c
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, b
     ld [$da13], a
     ld hl, $1400

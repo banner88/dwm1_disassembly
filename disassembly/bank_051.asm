@@ -69,7 +69,7 @@ LoadBattle:
     ld a, $ff
     ld [wBGM], a
     ld [wSoundEffect], a
-    call Call_000_3331
+    call InitAudioSystem
 
 jr_051_4073:
     ld b, $27
@@ -79,7 +79,7 @@ jr_051_4073:
 
     ld hl, $c8ea
     res 7, [hl]
-    ld a, [$d999]
+    ld a, [wArenaStarryBattle]
     cp $02
     jr nz, jr_051_408b
 
@@ -97,8 +97,8 @@ jr_051_408b:
     ldh [$bb], a
     ld a, $00
     ldh [$b7], a
-    call Call_000_122f
-    call Call_000_1417
+    call ApplyScrollRegisters
+    call ClearOAMBuffer
     xor a
     ld [$c8a4], a
     ld [$c8a5], a
@@ -116,7 +116,7 @@ jr_051_408b:
     rst $10
     ld a, $03
     ld [$c8a1], a
-    call Call_000_125d
+    call EnableLYCInterrupt
     ld a, $0b
     jp Jump_000_11cb
 
@@ -162,19 +162,19 @@ Call_051_4107:
     call FillNBytesWithRegA
     call Call_051_419f
     ld a, $04
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld de, $dc40
     ld a, [$c863]
     bit 1, a
     jr z, jr_051_412b
 
     xor a
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld de, $dc3c
 
 jr_051_412b:
     ld hl, $9000
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_051_413c
 
@@ -187,11 +187,11 @@ jr_051_413c:
     rst $10
 
 jr_051_4140:
-    ld hl, $db89
+    ld hl, wBattleTargetIdx
     inc [hl]
     inc de
     ld hl, $9240
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_051_4156
 
@@ -204,11 +204,11 @@ jr_051_4156:
     rst $10
 
 jr_051_415a:
-    ld hl, $db89
+    ld hl, wBattleTargetIdx
     inc [hl]
     inc de
     ld hl, $9480
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_051_4170
 
@@ -222,7 +222,7 @@ jr_051_4170:
 
 jr_051_4174:
     xor a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     ld bc, $0008
     call FillNBytesWithRegA
     ld hl, $9800
@@ -254,15 +254,15 @@ Call_051_419f:
 
 jr_051_41b0:
     ld a, d
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     call Call_051_7929
     inc d
     ld a, d
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     call Call_051_7929
     inc d
     ld a, d
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     call Call_051_7929
     ld hl, $9700
     ld b, $60
@@ -509,7 +509,7 @@ jr_051_4364:
     adc h
     ld h, a
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     push de
     ld hl, $0301
     rst $10
@@ -558,7 +558,7 @@ Call_051_43c9:
     or a
     jr z, jr_051_43e0
 
-    ld a, [$d8d3]
+    ld a, [wScriptMapType]
     cp $5d
     jr nz, jr_051_43e4
 
@@ -718,7 +718,7 @@ Call_051_44a9:
     ld a, [$db4c]
     ld c, a
     ld a, $01
-    ld [$db55], a
+    ld [wBattlePostFlag], a
 
 Call_051_44b2:
     ld a, [$c86c]
@@ -869,7 +869,7 @@ jr_051_456a:
     ld a, $00
     adc h
     ld h, a
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     call z, Call_051_4769
     inc hl
@@ -879,44 +879,44 @@ jr_051_456a:
     inc hl
     inc hl
     inc hl
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_051_459e
 
     inc hl
     inc hl
-    ld de, $dbb3
+    ld de, wBattleMaxHP
     call Call_051_469c
     inc hl
     inc hl
-    ld de, $dbd3
+    ld de, wBattleMaxMP
     call Call_051_469c
     jr jr_051_45b6
 
 jr_051_459e:
-    ld de, $dba3
+    ld de, wBattleHP
     call Call_051_469c
-    ld de, $dbb3
+    ld de, wBattleMaxHP
     call Call_051_469c
-    ld de, $dbc3
+    ld de, wBattleMP
     call Call_051_469c
-    ld de, $dbd3
+    ld de, wBattleMaxMP
     call Call_051_469c
 
 jr_051_45b6:
-    ld de, $dbe3
+    ld de, wBattleATK
     call Call_051_469c
-    ld de, $dbf3
+    ld de, wBattleDEF
     call Call_051_469c
-    ld de, $dc03
+    ld de, wBattleAGL
     call Call_051_469c
-    ld de, $dc13
+    ld de, wBattleINT
     call Call_051_469c
-    ld de, $dc23
+    ld de, wBattleLVL
     call Call_051_469c
     inc hl
     inc hl
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_051_45f8
 
@@ -977,7 +977,7 @@ LoadEnemyStatsForBattle:
     sub $04
     ld c, a
     push bc
-    ld hl, $da03
+    ld hl, wTempEnemyId1
     ld a, c
     add a
     add l
@@ -989,7 +989,7 @@ LoadEnemyStatsForBattle:
     ld h, [hl]
     ld l, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     ld hl, $1401
@@ -1006,7 +1006,7 @@ LoadEnemyStatsForBattle:
     ld h, a
     call Call_051_4688
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     push bc
     ld hl, $0301
     rst $10
@@ -1119,7 +1119,7 @@ jr_051_46cf:
 jr_051_46dc:
     ld a, c
     and $03
-    ld hl, $da03
+    ld hl, wTempEnemyId1
     add a
     add l
     ld l, a
@@ -1130,7 +1130,7 @@ jr_051_46dc:
     ld h, [hl]
     ld l, a
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     ld hl, $1401
@@ -1286,7 +1286,7 @@ Call_051_47a5:
     ld h, a
     push hl
     ld a, c
-    ld hl, $dc13
+    ld hl, wBattleINT
     add a
     add l
     ld l, a
@@ -1326,7 +1326,7 @@ jr_051_47d9:
 
 Call_051_47e0:
     push bc
-    ld hl, $db85
+    ld hl, wJoinability
     ld a, c
     add l
     ld l, a
@@ -1351,7 +1351,7 @@ jr_051_47f2:
     ld h, a
     ld a, [$da1c]
     ld [hl], a
-    ld hl, $dba3
+    ld hl, wBattleHP
     ld a, b
     add l
     ld l, a
@@ -1364,7 +1364,7 @@ jr_051_47f2:
     ld [hl-], a
     ld a, b
     call Call_051_4a61
-    ld hl, $dbb3
+    ld hl, wBattleMaxHP
     ld a, b
     add l
     ld l, a
@@ -1375,7 +1375,7 @@ jr_051_47f2:
     ld [hl+], a
     ld a, [$da1e]
     ld [hl], a
-    ld hl, $dbc3
+    ld hl, wBattleMP
     ld a, b
     add l
     ld l, a
@@ -1386,7 +1386,7 @@ jr_051_47f2:
     ld [hl+], a
     ld a, [$da20]
     ld [hl], a
-    ld hl, $dbd3
+    ld hl, wBattleMaxMP
     ld a, b
     add l
     ld l, a
@@ -1397,7 +1397,7 @@ jr_051_47f2:
     ld [hl+], a
     ld a, [$da20]
     ld [hl], a
-    ld hl, $dbe3
+    ld hl, wBattleATK
     ld a, b
     add l
     ld l, a
@@ -1408,7 +1408,7 @@ jr_051_47f2:
     ld [hl+], a
     ld a, [$da22]
     ld [hl], a
-    ld hl, $dbf3
+    ld hl, wBattleDEF
     ld a, b
     add l
     ld l, a
@@ -1419,7 +1419,7 @@ jr_051_47f2:
     ld [hl+], a
     ld a, [$da24]
     ld [hl], a
-    ld hl, $dc03
+    ld hl, wBattleAGL
     ld a, b
     add l
     ld l, a
@@ -1430,7 +1430,7 @@ jr_051_47f2:
     ld [hl+], a
     ld a, [$da26]
     ld [hl], a
-    ld hl, $dc13
+    ld hl, wBattleINT
     ld a, b
     add l
     ld l, a
@@ -1469,7 +1469,7 @@ jr_051_48b4:
 
 jr_051_48b6:
     ld [hl], a
-    ld hl, $dc23
+    ld hl, wBattleLVL
     ld a, b
     add l
     ld l, a
@@ -1961,7 +1961,7 @@ jr_051_4b0e:
     jr jr_051_4b2f
 
 jr_051_4b18:
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr nz, jr_051_4b2f
 
@@ -1992,7 +1992,7 @@ jr_051_4b2f:
 Call_051_4b36:
     push bc
     ld a, c
-    ld de, $dba3
+    ld de, wBattleHP
     add a
     add e
     ld e, a
@@ -2016,7 +2016,7 @@ Call_051_4b36:
 Call_051_4b50:
     push bc
     ld a, c
-    ld de, $dbc3
+    ld de, wBattleMP
     add a
     add e
     ld e, a
@@ -2065,7 +2065,7 @@ jr_051_4b81:
 
 Call_051_4b83:
     ld a, c
-    ld de, $dc23
+    ld de, wBattleLVL
     add a
     add e
     ld e, a
@@ -2190,7 +2190,7 @@ jr_051_4c00:
 
 Call_051_4c26:
     ld a, [$dd72]
-    ld hl, $dba3
+    ld hl, wBattleHP
     add a
     add l
     ld l, a
@@ -2394,7 +2394,7 @@ jr_051_4d10:
 
 
     ld b, $00
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     or $03
     ld [$db4c], a
@@ -2421,7 +2421,7 @@ jr_051_4d10:
     ld a, $1e
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dba3
+    ld hl, wBattleHP
     add a
     add l
     ld l, a
@@ -2432,7 +2432,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbb3
+    ld hl, wBattleMaxHP
     add a
     add l
     ld l, a
@@ -2443,7 +2443,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbc3
+    ld hl, wBattleMP
     add a
     add l
     ld l, a
@@ -2454,7 +2454,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbd3
+    ld hl, wBattleMaxMP
     add a
     add l
     ld l, a
@@ -2465,7 +2465,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbe3
+    ld hl, wBattleATK
     add a
     add l
     ld l, a
@@ -2476,7 +2476,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbf3
+    ld hl, wBattleDEF
     add a
     add l
     ld l, a
@@ -2487,7 +2487,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dc03
+    ld hl, wBattleAGL
     add a
     add l
     ld l, a
@@ -2498,7 +2498,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dc13
+    ld hl, wBattleINT
     add a
     add l
     ld l, a
@@ -2517,7 +2517,7 @@ jr_051_4d10:
     ld h, a
     ld [hl], $01
     ld a, [$db4c]
-    ld hl, $dc23
+    ld hl, wBattleLVL
     add a
     add l
     ld l, a
@@ -2610,7 +2610,7 @@ jr_051_4d10:
 
 
     ld b, $00
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     or $03
     ld [$db4c], a
@@ -2637,7 +2637,7 @@ jr_051_4d10:
     ld a, $28
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dba3
+    ld hl, wBattleHP
     add a
     add l
     ld l, a
@@ -2649,7 +2649,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbb3
+    ld hl, wBattleMaxHP
     add a
     add l
     ld l, a
@@ -2661,7 +2661,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbc3
+    ld hl, wBattleMP
     add a
     add l
     ld l, a
@@ -2672,7 +2672,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbd3
+    ld hl, wBattleMaxMP
     add a
     add l
     ld l, a
@@ -2683,7 +2683,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbe3
+    ld hl, wBattleATK
     add a
     add l
     ld l, a
@@ -2694,7 +2694,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbf3
+    ld hl, wBattleDEF
     add a
     add l
     ld l, a
@@ -2705,7 +2705,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dc03
+    ld hl, wBattleAGL
     add a
     add l
     ld l, a
@@ -2716,7 +2716,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dc13
+    ld hl, wBattleINT
     add a
     add l
     ld l, a
@@ -2735,7 +2735,7 @@ jr_051_4d10:
     ld h, a
     ld [hl], $01
     ld a, [$db4c]
-    ld hl, $dc23
+    ld hl, wBattleLVL
     add a
     add l
     ld l, a
@@ -2828,7 +2828,7 @@ jr_051_4d10:
 
 
     ld b, $00
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     or $03
     ld [$db4c], a
@@ -2855,7 +2855,7 @@ jr_051_4d10:
     ld a, $32
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dba3
+    ld hl, wBattleHP
     add a
     add l
     ld l, a
@@ -2867,7 +2867,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbb3
+    ld hl, wBattleMaxHP
     add a
     add l
     ld l, a
@@ -2879,7 +2879,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbc3
+    ld hl, wBattleMP
     add a
     add l
     ld l, a
@@ -2890,7 +2890,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbd3
+    ld hl, wBattleMaxMP
     add a
     add l
     ld l, a
@@ -2901,7 +2901,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbe3
+    ld hl, wBattleATK
     add a
     add l
     ld l, a
@@ -2912,7 +2912,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dbf3
+    ld hl, wBattleDEF
     add a
     add l
     ld l, a
@@ -2923,7 +2923,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dc03
+    ld hl, wBattleAGL
     add a
     add l
     ld l, a
@@ -2934,7 +2934,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dc13
+    ld hl, wBattleINT
     add a
     add l
     ld l, a
@@ -2953,7 +2953,7 @@ jr_051_4d10:
     ld h, a
     ld [hl], $02
     ld a, [$db4c]
-    ld hl, $dc23
+    ld hl, wBattleLVL
     add a
     add l
     ld l, a
@@ -3046,7 +3046,7 @@ jr_051_4d10:
 
 
     ld b, $00
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     or $03
     ld [$db4c], a
@@ -3073,7 +3073,7 @@ jr_051_4d10:
     ld a, $3c
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dba3
+    ld hl, wBattleHP
     add a
     add l
     ld l, a
@@ -3085,7 +3085,7 @@ jr_051_4d10:
     ld a, $02
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbb3
+    ld hl, wBattleMaxHP
     add a
     add l
     ld l, a
@@ -3097,7 +3097,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbc3
+    ld hl, wBattleMP
     add a
     add l
     ld l, a
@@ -3109,7 +3109,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbd3
+    ld hl, wBattleMaxMP
     add a
     add l
     ld l, a
@@ -3121,7 +3121,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbe3
+    ld hl, wBattleATK
     add a
     add l
     ld l, a
@@ -3133,7 +3133,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dbf3
+    ld hl, wBattleDEF
     add a
     add l
     ld l, a
@@ -3145,7 +3145,7 @@ jr_051_4d10:
     ld a, $01
     ld [hl], a
     ld a, [$db4c]
-    ld hl, $dc03
+    ld hl, wBattleAGL
     add a
     add l
     ld l, a
@@ -3156,7 +3156,7 @@ jr_051_4d10:
     ld [hl+], a
     ld [hl], b
     ld a, [$db4c]
-    ld hl, $dc13
+    ld hl, wBattleINT
     add a
     add l
     ld l, a
@@ -3175,7 +3175,7 @@ jr_051_4d10:
     ld h, a
     ld [hl], $02
     ld a, [$db4c]
-    ld hl, $dc23
+    ld hl, wBattleLVL
     add a
     add l
     ld l, a
@@ -3267,7 +3267,7 @@ jr_051_4d10:
     ret
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db9b
     add l
     ld l, a
@@ -3276,8 +3276,8 @@ jr_051_4d10:
     ld h, a
     ld a, $32
     ld [hl], a
-    ld a, [$db88]
-    ld hl, $dbb3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxHP
     add a
     add l
     ld l, a
@@ -3288,8 +3288,8 @@ jr_051_4d10:
     ld [hl+], a
     ld a, $03
     ld [hl], a
-    ld a, [$db88]
-    ld hl, $dbd3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxMP
     add a
     add l
     ld l, a
@@ -3300,8 +3300,8 @@ jr_051_4d10:
     ld [hl+], a
     ld a, $01
     ld [hl], a
-    ld a, [$db88]
-    ld hl, $dbe3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleATK
     add a
     add l
     ld l, a
@@ -3312,8 +3312,8 @@ jr_051_4d10:
     ld [hl+], a
     ld a, $01
     ld [hl], a
-    ld a, [$db88]
-    ld hl, $dbf3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleDEF
     add a
     add l
     ld l, a
@@ -3324,8 +3324,8 @@ jr_051_4d10:
     ld [hl+], a
     ld a, $00
     ld [hl], a
-    ld a, [$db88]
-    ld hl, $dc03
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleAGL
     add a
     add l
     ld l, a
@@ -3336,8 +3336,8 @@ jr_051_4d10:
     ld [hl+], a
     ld a, $00
     ld [hl], a
-    ld a, [$db88]
-    ld hl, $dc13
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleINT
     add a
     add l
     ld l, a
@@ -3349,7 +3349,7 @@ jr_051_4d10:
     ld a, $00
     ld [hl], a
     call Call_051_5339
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dc64
     swap a
     add l
@@ -3389,7 +3389,7 @@ jr_051_4d10:
     ld [hl+], a
     ld a, $ff
     ld [hl], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld h, a
     add a
     add h
@@ -3415,7 +3415,7 @@ jr_051_4d10:
     ld [hl+], a
     ld a, $5a
     ld [hl], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call Call_051_5355
     ret
 
@@ -3427,7 +3427,7 @@ Call_051_5339:
 
     ld a, $02
     ldh [rSVBK], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db00
     add l
     ld l, a
@@ -3481,7 +3481,7 @@ Call_051_5363:
     ld d, h
     ld hl, $d9f1
     inc [hl]
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dd13
     add l
     ld l, a
@@ -3489,7 +3489,7 @@ Call_051_5363:
     adc h
     ld h, a
     ld [hl], $ff
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
     ld l, a
@@ -3497,7 +3497,7 @@ Call_051_5363:
     adc h
     ld h, a
     ld [hl], $01
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db4c], a
     ld a, [$db4c]
     ld [$dd72], a
@@ -3508,7 +3508,7 @@ Call_051_5363:
     call Call_051_44a9
     ld a, [$c863]
     bit 1, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     jr nz, jr_051_53cd
 
     cp $04
@@ -3566,7 +3566,7 @@ jr_051_5400:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db4c], a
     ld [$dd72], a
     call Call_051_4c26
@@ -3574,14 +3574,14 @@ jr_051_5400:
     or a
     jr nz, jr_051_543f
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     jr c, jr_051_543f
 
     cp $07
     jr z, jr_051_543f
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $03
     jr c, jr_051_543f
 
@@ -3590,7 +3590,7 @@ jr_051_5400:
     cp $07
     jr z, jr_051_543f
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$dd61], a
 
 jr_051_543f:
@@ -3601,9 +3601,9 @@ jr_051_543f:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_051_7a0a
     call Call_051_547f
     and $04
@@ -3627,10 +3627,10 @@ jr_051_543f:
 Call_051_547f:
     ld a, [$c863]
     bit 1, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ret z
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ret
 
 
@@ -3798,7 +3798,7 @@ jr_051_5559:
     ret
 
 
-    ld a, [$d9f4]
+    ld a, [wEventStateMachineIndex]
     rst $00
     and b
     ld d, l
@@ -3844,7 +3844,7 @@ jr_051_5559:
     ld hl, $d9ec
     inc [hl]
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -3868,7 +3868,7 @@ jr_051_55b7:
     ld a, $00
     call FillNBytesWithRegA
     xor a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     ld bc, $0008
     call FillNBytesWithRegA
     ld hl, $9800
@@ -3876,7 +3876,7 @@ jr_051_55b7:
     ld [$d9f8], a
     ld a, h
     ld [$d9f9], a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -3901,7 +3901,7 @@ jr_051_55b7:
     call SetupTilemapTransfer
     ld hl, $1302
     rst $10
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4062,7 +4062,7 @@ jr_051_56ec:
 
 jr_051_572e:
     call SetupTilemapTransfer
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4088,7 +4088,7 @@ jr_051_5754:
     dec b
     jr nz, jr_051_5754
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4154,7 +4154,7 @@ jr_051_57b0:
 jr_051_57b1:
     ld hl, $0106
     rst $10
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4163,7 +4163,7 @@ jr_051_57b1:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4172,7 +4172,7 @@ jr_051_57b1:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4181,7 +4181,7 @@ jr_051_57b1:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4190,12 +4190,12 @@ jr_051_57b1:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4209,12 +4209,12 @@ jr_051_57b1:
     jr nc, jr_051_57f9
 
     ld a, $10
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
 jr_051_57f9:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $0b04
     call SetupTilemapTransfer
@@ -4273,7 +4273,7 @@ jr_051_5837:
     call WaitDMATransfer
     call Call_051_580d
     ld [$d9f6], a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     call Call_051_58f3
     call Call_051_592a
@@ -4487,7 +4487,7 @@ jr_051_59bd:
 
     ld a, $59
     call PlaySoundEffect
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, wOPTN_and_Item_selection
     set 7, [hl]
@@ -4512,7 +4512,7 @@ jr_051_59d6:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $c0d8
     ld a, [wPLAN_selection]
@@ -4543,7 +4543,7 @@ jr_051_59d6:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld a, $5c
     call PlaySoundEffect
@@ -4576,7 +4576,7 @@ jr_051_5a65:
     ld hl, $0b07
     call SetupTilemapTransfer
     ld a, $0b
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_051_5ab5
 
 jr_051_5a72:
@@ -4590,7 +4590,7 @@ jr_051_5a72:
     cp $81
     jr z, jr_051_5a65
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $c8dd
     set 7, [hl]
@@ -4645,7 +4645,7 @@ jr_051_5ab5:
     call SetupTilemapTransfer
 
 jr_051_5ae0:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4661,7 +4661,7 @@ jr_051_5ae0:
     ld hl, $0b07
     call SetupTilemapTransfer
     ld a, $0b
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     xor a
     ld [wOPTN_and_Item_selection], a
     ld [wPLAN_selection], a
@@ -4675,7 +4675,7 @@ jr_051_5b04:
     call Call_051_768a
     call ProcessBattleTurn
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld hl, $d9ec
     dec [hl]
     ret
@@ -4834,7 +4834,7 @@ jr_051_5c23:
     ret
 
 
-    ld a, [$d9f4]
+    ld a, [wEventStateMachineIndex]
     rst $00
     add c
     ld e, h
@@ -4936,7 +4936,7 @@ jr_051_5cb8:
     ld a, $00
     call FillNBytesWithRegA
     xor a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     ld bc, $0008
     call FillNBytesWithRegA
     ld hl, $9800
@@ -4958,7 +4958,7 @@ jr_051_5cb8:
     call Call_051_5d13
     ld a, [$ca90]
     call Call_051_5d13
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4996,7 +4996,7 @@ jr_051_5d20:
     call Call_051_6915
     ld hl, $0b10
     call SetupTilemapTransfer
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -5007,7 +5007,7 @@ jr_051_5d20:
 
     ld a, $5c
     call PlaySoundEffect
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     call Call_051_742a
     call Call_051_768a
@@ -5047,7 +5047,7 @@ jr_051_5da3:
     ld hl, $0b12
     call SetupTilemapTransfer
     ld a, $1d
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_051_5de3
 
 jr_051_5dbc:
@@ -5061,7 +5061,7 @@ jr_051_5dbc:
     cp $81
     jr z, jr_051_5da3
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, wMenu_selection
     set 7, [hl]
@@ -5083,11 +5083,11 @@ jr_051_5de3:
     jr z, jr_051_5df7
 
     ld a, $15
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_051_5e33
 
 jr_051_5df7:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $0b11
     call SetupTilemapTransfer
@@ -5145,7 +5145,7 @@ jr_051_5e40:
 
     ld a, $5c
     call PlaySoundEffect
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $89c0
     ld de, $5112
@@ -5177,7 +5177,7 @@ jr_051_5e8c:
     ld hl, $0b12
     call SetupTilemapTransfer
     ld a, $1d
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_051_5ed0
 
 jr_051_5ea5:
@@ -5200,7 +5200,7 @@ jr_051_5ea5:
     inc hl
     ld [hl], $00
     ld a, $1f
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
 
 jr_051_5ed0:
     ret
@@ -5217,7 +5217,7 @@ jr_051_5ed0:
     ld hl, $0b1c
     call SetupTilemapTransfer
     ld a, $22
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -5234,7 +5234,7 @@ jr_051_5ef9:
     call SetupTilemapTransfer
     call Call_051_5f07
     call ProcessBattleTurn
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -5362,7 +5362,7 @@ jr_051_5f9a:
     call Call_051_5fec
     call Call_051_5fbb
     call ProcessBattleTurn
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -5672,7 +5672,7 @@ jr_051_6175:
 
     call Call_051_67c3
     ld a, $20
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld hl, $0b1a
     call SetupTilemapTransfer
     jr jr_051_61a4
@@ -5684,7 +5684,7 @@ jr_051_618c:
 
     ld a, $59
     call PlaySoundEffect
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, wPLAN_selection
     set 7, [hl]
@@ -5707,7 +5707,7 @@ jr_051_61a4:
     nop
     ld hl, $6101
     ld bc, $ffff
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -5717,7 +5717,7 @@ jr_051_61a4:
     ret nz
 
     call Call_051_61cf
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -5762,15 +5762,15 @@ jr_051_6206:
     bit 1, a
     jr z, jr_051_622b
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
     jr jr_051_629d
 
@@ -5789,7 +5789,7 @@ jr_051_622b:
     ld [$c90d], a
     ld [$c90e], a
     ld a, $19
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_051_629d
 
 jr_051_624c:
@@ -5827,11 +5827,11 @@ jr_051_6260:
     call Call_051_72cc
     call ProcessBattleTurn
     ld a, $1f
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_051_629d
 
 jr_051_6291:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $c8dd
     set 7, [hl]
@@ -5907,7 +5907,7 @@ jr_051_62f6:
     call Call_051_72cc
     call ProcessBattleTurn
     ld a, $15
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -5915,7 +5915,7 @@ jr_051_62f6:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld a, [$da14]
     ld hl, $cac2
@@ -5944,7 +5944,7 @@ jr_051_62f6:
 
     ld a, $5c
     call PlaySoundEffect
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $89c0
     ld de, $5112
@@ -5968,7 +5968,7 @@ jr_051_62f6:
     jr z, jr_051_6398
 
 jr_051_6392:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     jr jr_051_63bb
 
@@ -5983,9 +5983,9 @@ jr_051_6398:
     cp $81
     jr z, jr_051_6392
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $c8de
     set 7, [hl]
@@ -6004,7 +6004,7 @@ jr_051_63bb:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld a, [$da14]
     ld hl, $cac2
@@ -6016,7 +6016,7 @@ jr_051_63bb:
     ld hl, $0b16
     call SetupTilemapTransfer
     ld a, $1e
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -6067,12 +6067,12 @@ jr_051_63ff:
     ld hl, $0105
     rst $10
     ld a, $1e
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
 jr_051_642b:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $0b18
     call SetupTilemapTransfer
@@ -6105,7 +6105,7 @@ Call_051_643c:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     call Call_051_64ac
     call Call_051_6499
@@ -6171,17 +6171,17 @@ Call_051_64d9:
     bit 1, a
     jr z, jr_051_650a
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
     jr jr_051_6526
 
@@ -6192,9 +6192,9 @@ jr_051_650a:
 
     ld a, $59
     call PlaySoundEffect
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $c8df
     set 7, [hl]
@@ -6232,7 +6232,7 @@ jr_051_6526:
     ld hl, $0b17
     call SetupTilemapTransfer
     ld a, $23
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -6241,7 +6241,7 @@ jr_051_6526:
     ret nz
 
     call Call_051_6574
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -6265,11 +6265,11 @@ Call_051_6574:
     bit 1, a
     jr z, jr_051_65aa
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     dec [hl]
     jr jr_051_65d7
 
@@ -6288,11 +6288,11 @@ jr_051_65aa:
     ld [$c90d], a
     ld [$c90e], a
     ld a, $1b
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_051_65d7
 
 jr_051_65cb:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld hl, $c8e0
     set 7, [hl]
@@ -6356,7 +6356,7 @@ jr_051_65d7:
     ld hl, $0105
     rst $10
     ld a, $1d
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -6391,7 +6391,7 @@ Call_051_6650:
     or a
     ret z
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -6439,7 +6439,7 @@ jr_051_66d7:
     ld hl, $1708
     rst $10
     ld a, $0b
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -6461,7 +6461,7 @@ jr_051_66d7:
     or a
     ret z
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -6505,7 +6505,7 @@ jr_051_66d7:
     ld hl, $1708
     rst $10
     ld a, $17
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -6519,7 +6519,7 @@ jr_051_66d7:
     call Call_051_768a
     call ProcessBattleTurn
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld hl, $d9ec
     inc [hl]
     ret
@@ -6531,7 +6531,7 @@ jr_051_66d7:
 
     ld hl, $0b1a
     call SetupTilemapTransfer
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -6541,7 +6541,7 @@ jr_051_66d7:
     ret nz
 
     call Call_051_67c3
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -6574,7 +6574,7 @@ Call_051_67c3:
     jr z, jr_051_6809
 
     ld a, $04
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_051_6822
 
 jr_051_6809:
@@ -6588,7 +6588,7 @@ jr_051_6809:
     ld [$c8e2], a
     ld [$c8e3], a
     ld a, $07
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
 
 Jump_051_6822:
 jr_051_6822:
@@ -6605,7 +6605,7 @@ jr_051_6822:
 
     call Call_051_67c3
     ld a, $20
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld hl, $0b1a
     call SetupTilemapTransfer
     ret
@@ -6637,7 +6637,7 @@ jr_051_6822:
     ld [$c8f2], a
     ld a, h
     ld [$c8f3], a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -6654,7 +6654,7 @@ jr_051_6822:
     call ProcessBattleTurn
     ld hl, $5605
     rst $10
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld de, $5b00
     ld hl, $9600
@@ -6691,7 +6691,7 @@ jr_051_6822:
     call Call_051_6943
     call ProcessBattleTurn
     ld a, $0e
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -6748,7 +6748,7 @@ jr_051_6933:
 
     ld a, [$da18]
     ld hl, $ca94
-    call Call_000_2670
+    call SetBitInArray
     ret
 
 
@@ -6896,15 +6896,15 @@ jr_051_6a0c:
 
 Call_051_6a0d:
     ld a, $00
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $5004
     rst $10
     ld a, $01
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $5004
     rst $10
     ld a, $02
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $5004
     rst $10
     ld hl, $9700
@@ -6965,15 +6965,15 @@ Call_051_6a67:
 
 Call_051_6a7e:
     ld a, $00
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $5004
     rst $10
     ld a, $01
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $5004
     rst $10
     ld a, $02
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $5004
     rst $10
     ret
@@ -9541,7 +9541,7 @@ jr_051_76b9:
 
 
 jr_051_76c7:
-    ld hl, $dba3
+    ld hl, wBattleHP
     ld a, [$c863]
     bit 1, a
     jr z, jr_051_76d4
@@ -9846,8 +9846,8 @@ jr_051_787a:
     ld [hl+], a
     ld [hl], a
     ld a, c
-    ld [$db88], a
-    ld [$db89], a
+    ld [wBattleAttackerIdx], a
+    ld [wBattleTargetIdx], a
     push af
     push bc
     push de
@@ -9968,7 +9968,7 @@ Call_051_7929:
     bit 1, a
     jr z, jr_051_794f
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld c, a
     cp $04
     jr c, jr_051_7943
@@ -9979,7 +9979,7 @@ Call_051_7929:
     jr jr_051_7960
 
 jr_051_7943:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld c, a
     cp $04
     ret c
@@ -9990,12 +9990,12 @@ jr_051_7943:
     jr jr_051_7960
 
 jr_051_794f:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld c, a
     cp $03
     jr c, jr_051_7962
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld c, a
     cp $03
     jr c, jr_051_7962
@@ -10346,7 +10346,7 @@ jr_051_7ae8:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_051_7a0a
     ret
@@ -10357,7 +10357,7 @@ jr_051_7ae8:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$db50], a
     call Call_051_7a0a
     ret

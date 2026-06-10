@@ -27,7 +27,7 @@ SECTION "ROM Bank $05f", ROMX[$4000], BANK[$5f]
     ld e, h
     ld d, c
     ld h, d
-    call Call_000_1264
+    call ClearSTATMode
     ld hl, $c817
     ld [hl], $00
     inc hl
@@ -243,25 +243,25 @@ jr_05f_4173:
     ld [hl], $00
     ld hl, $002f
     ld a, l
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, h
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $0038
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $00c8
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     xor a
     ldh [$90], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, wGameState
     res 0, [hl]
     ld a, $01
@@ -323,13 +323,13 @@ jr_05f_4173:
     xor a
     ldh [$90], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, $01
     ld [$c8ea], a
     ld hl, wGameState
     res 0, [hl]
     di
-    call Call_000_2128
+    call SaveGameState
     ei
     ld a, $59
     call PlaySoundEffect
@@ -695,7 +695,7 @@ Call_05f_43ba:
 
 
     ld a, $02
-    call Call_000_1c89
+    call SetColorMode
     call DisableSRAM
     xor a
     ld hl, $9800
@@ -730,7 +730,7 @@ jr_05f_4469:
 
 
     ld a, $02
-    call Call_000_1c89
+    call SetColorMode
     call DisableSRAM
     xor a
     ld hl, $9800
@@ -763,7 +763,7 @@ jr_05f_4469:
 
 
     ld a, $02
-    call Call_000_1c89
+    call SetColorMode
     call DisableSRAM
     xor a
     ld hl, $9800
@@ -1720,7 +1720,7 @@ jr_05f_4ae8:
     ld b, $02
 
 jr_05f_4afd:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     ld a, b
     jr c, jr_05f_4b07
@@ -1805,12 +1805,12 @@ jr_05f_4b40:
 
     ld a, [$c863]
     ld b, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $03
     jr z, jr_05f_4bf4
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     bit 1, b
     jr nz, jr_05f_4b84
 
@@ -1828,7 +1828,7 @@ jr_05f_4b88:
     cp $0a
     jr z, jr_05f_4b97
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_05f_4bf4
 
@@ -1871,7 +1871,7 @@ jr_05f_4b97:
     add hl, de
     ld e, l
     ld d, h
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     ld hl, $5109
     call Call_05f_50f4
@@ -2325,7 +2325,7 @@ jr_05f_4e51:
     cp $02
     jr z, jr_05f_4e6c
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $01
     jr z, jr_05f_4e7d
@@ -2340,7 +2340,7 @@ jr_05f_4e68:
     jr jr_05f_4e7f
 
 jr_05f_4e6c:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $01
     jr z, jr_05f_4e79
@@ -2392,7 +2392,7 @@ jr_05f_4ea6:
     cp $02
     jr z, jr_05f_4ec1
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $01
     jr z, jr_05f_4ed2
@@ -2407,7 +2407,7 @@ jr_05f_4ebd:
     jr jr_05f_4ed4
 
 jr_05f_4ec1:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $01
     jr z, jr_05f_4ece
@@ -3136,7 +3136,7 @@ jr_05f_5174:
 
     ld a, [$c863]
     ld b, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $07
     jr nc, jr_05f_52c8
 
@@ -3156,7 +3156,7 @@ jr_05f_525f:
     jr nc, jr_05f_52c8
 
 jr_05f_5263:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call CheckMonsterSlot
     jr c, jr_05f_52c8
 
@@ -3201,7 +3201,7 @@ jr_05f_5263:
     add hl, de
     ld e, l
     ld d, h
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     ld hl, $5109
     call Call_05f_50f4
@@ -3424,7 +3424,7 @@ jr_05f_53e3:
 
 Jump_05f_53e9:
 jr_05f_53e9:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $10
     jr z, jr_05f_5409
 
@@ -3432,14 +3432,14 @@ jr_05f_53e9:
     bit 1, a
     jr nz, jr_05f_5400
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_05f_540d
 
     jr jr_05f_5412
 
 jr_05f_5400:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_05f_5412
 
@@ -3535,7 +3535,7 @@ jr_05f_5461:
     cp $02
     jr z, jr_05f_549d
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $01
     jr z, jr_05f_54b3
@@ -3553,7 +3553,7 @@ jr_05f_5499:
     jr jr_05f_54bf
 
 jr_05f_549d:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $03
     jp nc, Jump_05f_5523
@@ -3569,7 +3569,7 @@ jr_05f_54af:
     jr jr_05f_54bf
 
 jr_05f_54b3:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $03
     jp nc, Jump_05f_5523
@@ -3605,7 +3605,7 @@ jr_05f_54c8:
     cp $02
     jr z, jr_05f_54fe
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $01
     jr z, jr_05f_5513
@@ -3623,7 +3623,7 @@ jr_05f_54fa:
     jr jr_05f_551f
 
 jr_05f_54fe:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $01
     jr z, jr_05f_550f
@@ -3639,7 +3639,7 @@ jr_05f_550f:
     jr jr_05f_551f
 
 jr_05f_5513:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $03
     jp nc, Jump_05f_5523
@@ -3659,7 +3659,7 @@ jr_05f_5523:
 
 
 jr_05f_5529:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $03
     jr nc, jr_05f_5523
@@ -3685,7 +3685,7 @@ jr_05f_5529:
     cp $02
     jr z, jr_05f_556d
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $01
     jr z, jr_05f_5583
@@ -3704,7 +3704,7 @@ jr_05f_5569:
     jr jr_05f_551f
 
 jr_05f_556d:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $01
     jr z, jr_05f_557f
@@ -3720,7 +3720,7 @@ jr_05f_557f:
     jr jr_05f_551f
 
 jr_05f_5583:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $03
     jp nc, Jump_05f_5523
@@ -3828,7 +3828,7 @@ jr_05f_55bb:
 
 
 Call_05f_5630:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $10
     jr z, jr_05f_5649
 
@@ -3924,7 +3924,7 @@ Call_05f_5696:
 
 
 Call_05f_56b9:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $10
     jr z, jr_05f_56c7
 
@@ -5095,13 +5095,13 @@ Call_05f_5b8f:
     bit 1, a
     jr nz, jr_05f_5b9c
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     ret
 
 
 jr_05f_5b9c:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     ccf
     ret
@@ -5112,13 +5112,13 @@ Call_05f_5ba3:
     bit 1, a
     jr nz, jr_05f_5bb0
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     ret
 
 
 jr_05f_5bb0:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     ccf
     ret
@@ -5132,7 +5132,7 @@ jr_05f_5bb0:
     ld hl, $c827
     ld bc, $0012
     call FillNBytesWithRegA
-    call Call_000_1264
+    call ClearSTATMode
     ld hl, $c817
     ld [hl], $00
     inc hl
@@ -5205,7 +5205,7 @@ jr_05f_5bb0:
     ld [$c892], a
     ld a, $03
     ld [$c8a1], a
-    call Call_000_125d
+    call EnableLYCInterrupt
     ld a, $03
     jp Jump_000_11cb
 
@@ -5532,7 +5532,7 @@ Jump_05f_5e72:
 
 Jump_05f_5e87:
     ld a, $04
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld a, $01
     ld [$db75], a
     xor a
@@ -6342,7 +6342,7 @@ jr_05f_62d7:
 
     xor a
     ld [$da88], a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 

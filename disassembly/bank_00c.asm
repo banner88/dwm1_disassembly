@@ -46,7 +46,7 @@ SECTION "ROM Bank $00c", ROMX[$4000], BANK[$c]
 ; ---------------------------------------------------------------------------
 ScriptDataLookup:
 Call_00c_4007:
-    ld a, [$d8d3]            ; Map type (0=Castle, 1=GreatTree, etc.)
+    ld a, [wScriptMapType]            ; Map type (0=Castle, 1=GreatTree, etc.)
     ld l, a
     ld h, $00
     add hl, hl               ; HL = map_type × 2
@@ -56,7 +56,7 @@ Call_00c_4007:
     inc hl
     ld d, [hl]               ; DE = per-map pointer table address
 
-    ld a, [$d8d4]            ; NPC script_id (set before ScriptInit)
+    ld a, [wScriptNPCId]            ; NPC script_id (set before ScriptInit)
     ld l, a
     ld h, $00
     add hl, hl               ; HL = script_id × 2
@@ -65,7 +65,7 @@ Call_00c_4007:
     inc hl
     ld d, [hl]               ; DE = per-NPC script data base pointer
 
-    ld a, [$d8d5]            ; Script counter low
+    ld a, [wScriptCounter]            ; Script counter low
     ld l, a
     ld a, [$d8d6]            ; Script counter high
     ld h, a
@@ -108,9 +108,9 @@ labelc_402f:
     ld [$d8e7], a
     ld a, h
     ld [$d8e8], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
@@ -282,9 +282,9 @@ labelc_4110:
     ld [$d8e7], a
     ld a, h
     ld [$d8e8], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a

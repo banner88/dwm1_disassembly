@@ -1966,7 +1966,7 @@ jr_020_4b36:
     or b
     ld [hl], a
     push hl
-    call Call_000_2331
+    call MonsterStatDecrement
     pop hl
     call Call_020_4dda
     jp Jump_020_47bc
@@ -2205,7 +2205,7 @@ jr_020_4c9e:
     or b
     ld [hl], a
     push hl
-    call Call_000_2331
+    call MonsterStatDecrement
     pop hl
     call Call_020_4dda
     ld a, [$c688]
@@ -2239,7 +2239,7 @@ jr_020_4cd1:
     or b
     ld [hl], a
     push hl
-    call Call_000_2331
+    call MonsterStatDecrement
     pop hl
     call Call_020_4dda
     jp Jump_020_47ab
@@ -2405,7 +2405,7 @@ jr_020_4db3:
     or b
     ld [hl], a
     push hl
-    call Call_000_2331
+    call MonsterStatDecrement
     pop hl
     ldh a, [$80]
     bit 1, a
@@ -2497,7 +2497,7 @@ jr_020_4e3f:
     or b
     ld [hl], a
     push hl
-    call Call_000_2331
+    call MonsterStatDecrement
     pop hl
     call Call_000_2778
 
@@ -2536,7 +2536,7 @@ jr_020_4e71:
     or b
     ld [hl], a
     push hl
-    call Call_000_2331
+    call MonsterStatDecrement
     pop hl
     call Call_000_2778
 
@@ -2767,7 +2767,7 @@ jr_020_4f2a:
     ld [$d540], a
     xor $08
     ld [hl], a
-    call Call_000_2331
+    call MonsterStatDecrement
     ld a, [$d53f]
     xor $01
     ld [$d53f], a
@@ -3303,7 +3303,7 @@ jr_020_5352:
     or b
     ld [hl], a
     push hl
-    call Call_000_2331
+    call MonsterStatDecrement
     pop hl
     ldh a, [$a5]
     ld [$c617], a
@@ -3472,7 +3472,7 @@ jr_020_5464:
     or b
     ld [hl], a
     push hl
-    call Call_000_2331
+    call MonsterStatDecrement
     pop hl
     ld a, [$c690]
     and $07

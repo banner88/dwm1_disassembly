@@ -397,8 +397,8 @@ jr_003_41fd:
     ld [$c845], a
     ld a, [$c86a]
     ld [$c844], a
-    call Call_000_12ee
-    call Call_000_1364
+    call UpdateSGBJoypad
+    call UpdateJoypadState
     ld a, $01
     ld [$c866], a
     ld a, [$c842]
@@ -447,7 +447,7 @@ jr_003_4258:
     ld [$c845], a
     ld a, [$c86a]
     ld [$c844], a
-    call Call_000_1364
+    call UpdateJoypadState
     call Call_003_441b
     xor a
     ld [$c866], a
@@ -533,8 +533,8 @@ jr_003_42e6:
     ld [$c86a], a
     ld a, [$c86a]
     ld [$c86e], a
-    call Call_000_12ee
-    call Call_000_1364
+    call UpdateSGBJoypad
+    call UpdateJoypadState
     ld a, $01
     ld [$c866], a
     ld a, [$c873]
@@ -553,8 +553,8 @@ jr_003_4311:
     ld h, a
     ldh a, [rSB]
     ld [hl], a
-    call Call_000_12ee
-    call Call_000_1364
+    call UpdateSGBJoypad
+    call UpdateJoypadState
     ld a, [$c86f]
     add $01
     ld [$c86f], a
@@ -592,8 +592,8 @@ jr_003_436c:
     ld [$c86a], a
     ld a, [$c86a]
     ld [$c86e], a
-    call Call_000_12ee
-    call Call_000_1364
+    call UpdateSGBJoypad
+    call UpdateJoypadState
     ld a, $f0
     jp Jump_000_126b
 
@@ -627,7 +627,7 @@ jr_003_43a5:
 
     ld a, [$c86a]
     ld [$c86e], a
-    call Call_000_1364
+    call UpdateJoypadState
     xor a
     ld [$c866], a
     ret
@@ -645,7 +645,7 @@ jr_003_43bf:
     ld h, a
     ldh a, [rSB]
     ld [hl], a
-    call Call_000_1364
+    call UpdateJoypadState
     ld a, [$c86f]
     add $01
     ld [$c86f], a
@@ -666,7 +666,7 @@ jr_003_43bf:
 jr_003_43f9:
     ld a, [$c86a]
     ld [$c86e], a
-    call Call_000_1364
+    call UpdateJoypadState
     xor a
     ld [$c866], a
     ret
@@ -719,7 +719,7 @@ label443f:
 ; Calculates: $4461 + species_id × 43($2B)
 Call_003_4446:
     push de
-    ld a, [$da31]            ; species ID
+    ld a, [wTempSpeciesId]            ; species ID
     ld c, $2b                ; 43 = entry size
     call Mul8x8To16       ; HL = species_id × 43
     ld a, l
@@ -3775,7 +3775,7 @@ Call_003_69ca:
     ld l, l
     rst $18
     ld l, l
-    ld [$c96d], a
+    ld [wWarpGateId], a
     call Call_003_6e11
     ret nz
 
@@ -4613,7 +4613,7 @@ label6e24:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_22a0
+    call GetMonsterSkillData
     call Call_003_7134
     ret
 
@@ -4643,7 +4643,7 @@ Call_003_6ec4:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_22a0
+    call GetMonsterSkillData
     ret
 
 
@@ -4671,7 +4671,7 @@ Call_003_6ef2:
     call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb11
-    call Call_000_225d
+    call WriteMonsterWord
     ret
 
 
@@ -4696,7 +4696,7 @@ Call_003_6ef2:
     call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb15
-    call Call_000_225d
+    call WriteMonsterWord
     call Call_003_7134
     ret
 
@@ -4750,7 +4750,7 @@ Call_003_6ef2:
     call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb11
-    call Call_000_225d
+    call WriteMonsterWord
     ld hl, $0103
     rst $10
     call Call_003_7134
@@ -4963,7 +4963,7 @@ Call_003_6ef2:
 
     call Call_003_7134
     di
-    call Call_000_2128
+    call SaveGameState
     ei
     ld a, $59
     call PlaySoundEffect
@@ -6074,7 +6074,7 @@ Jump_003_765f:
     ld bc, $407c
     call $05e2
     xor a
-    call Call_000_06ce
+    call ShowTextAndWait
     call Call_003_7939
     call Call_000_0686
     ld d, $cc
@@ -6098,7 +6098,7 @@ jr_003_7693:
     xor a
     call Call_003_7aa1
     call $1185
-    call Call_000_1e8d
+    call GetSpriteAddress
     jp $68c1
 
 
@@ -6161,14 +6161,14 @@ jr_003_76bf:
     jp $68c1
 
 
-    call Call_000_093d
+    call LookupDoublePtrTable
     ret nz
 
     ld a, [$c987]
     and $10
     ret z
 
-    call Call_000_0b3c
+    call CrossBankCallRet
     ld hl, $7aa7
     ld a, [$cdc1]
 
@@ -6194,7 +6194,7 @@ jr_003_7743:
     jp $68c1
 
 
-    call Call_000_093d
+    call LookupDoublePtrTable
     ret nz
 
     call Call_003_7756
@@ -6272,12 +6272,12 @@ jr_003_77b0:
 
     ld a, $0b
     ld bc, $9c63
-    call Call_000_0b07
+    call RunScriptEngine
     ld bc, $9c6a
     jp Jump_000_0d19
 
 
-    call Call_000_0b9b
+    call CallScriptByType
     ret nz
 
     ld a, [$cdc5]
@@ -6308,7 +6308,7 @@ Jump_003_77ef:
     push af
     ld bc, $9c68
     inc a
-    call Call_000_0b07
+    call RunScriptEngine
     pop af
     jp z, Jump_003_77de
 
@@ -6339,12 +6339,12 @@ Jump_003_77ef:
     ld a, $15
     call Call_000_0515
     ld a, $01
-    call Call_000_0cfd
+    call AdjustTilemapOffset
     ld bc, $9c6a
     call Call_000_0d19
     ld bc, $9c63
     xor a
-    call Call_000_0b07
+    call RunScriptEngine
     jp Jump_003_77de
 
 
@@ -6353,17 +6353,17 @@ Call_003_784a:
     jp Jump_000_0ba1
 
 
-    call Call_000_0b9b
+    call CallScriptByType
     ret nz
 
     call $16a0
-    call Call_000_0b3c
+    call CrossBankCallRet
     ld a, $02
     call Call_003_7aa1
     jp $68c1
 
 
-    call Call_000_093d
+    call LookupDoublePtrTable
     ret nz
 
     ld hl, $7ab3
@@ -6390,7 +6390,7 @@ Call_003_784a:
     call Call_000_0c13
     jr c, jr_003_78a2
 
-    call Call_000_0b3c
+    call CrossBankCallRet
     xor a
     ld [$ccb4], a
     jp Jump_003_765f
@@ -6434,7 +6434,7 @@ Call_003_78d9:
     cp $70
     ret z
 
-    call Call_000_0632
+    call SetupTextBankSwitch
     jr nz, jr_003_78eb
 
     ld bc, $3000
@@ -6453,7 +6453,7 @@ Call_003_78f4:
     cp $38
     ret z
 
-    call Call_000_0632
+    call SetupTextBankSwitch
     jr z, jr_003_7906
 
     ld bc, $d000
@@ -6487,7 +6487,7 @@ Call_003_791c:
     ret nz
 
     ld a, $08
-    call Call_000_06ce
+    call ShowTextAndWait
     ld hl, $c008
     inc [hl]
     ret
@@ -6502,7 +6502,7 @@ Call_003_792b:
     jr z, jr_003_7939
 
     ld a, $08
-    call Call_000_06ce
+    call ShowTextAndWait
 
 Call_003_7939:
 jr_003_7939:
@@ -6516,7 +6516,7 @@ jr_003_7939:
 Call_003_7941:
     push de
     xor a
-    call Call_000_06ce
+    call ShowTextAndWait
     call Call_003_7939
     pop de
     ret
@@ -6528,7 +6528,7 @@ Call_003_794b:
     cp [hl]
     ret z
 
-    call Call_000_164b
+    call SetViewportParams
     and $07
     cp $06
     ret nc
@@ -6542,7 +6542,7 @@ Call_003_794b:
 
     ld hl, $cdc2
     inc [hl]
-    call Call_000_164b
+    call SetViewportParams
     set 7, a
     ld e, $0c
     ld [de], a
@@ -6593,11 +6593,11 @@ Call_003_7999:
     ret nz
 
     call Call_000_05cc
-    call Call_000_164b
+    call SetViewportParams
     and $1f
     ld hl, $cd80
     add [hl]
-    call Call_000_06ce
+    call ShowTextAndWait
     jp $07d3
 
 
@@ -6627,7 +6627,7 @@ Call_003_7999:
     ret nz
 
     ld bc, $0100
-    call Call_000_0564
+    call CallTextRenderer
     jp $07d3
 
 
@@ -6670,7 +6670,7 @@ Call_003_79f2:
     ld l, $08
     inc [hl]
     ld a, $20
-    call Call_000_06ce
+    call ShowTextAndWait
     ld a, $04
     jp Jump_000_07dd
 
@@ -6764,7 +6764,7 @@ Call_003_7a92:
     inc c
     inc c
     ld a, $01
-    jp Jump_000_0b07
+    jp Jump_RunScriptEngine
 
 
 Call_003_7a9c:
@@ -7079,7 +7079,7 @@ jr_003_7c27:
 
     push bc
     call $6254
-    call Call_000_1398
+    call ReadJoypadRaw
     call $0ce9
     call $20b7
     call Call_000_20c8
@@ -7191,10 +7191,10 @@ Jump_003_7c8b:
 
 
     ld a, l
-    call Call_000_1398
+    call ReadJoypadRaw
     xor a
     ld [$c988], a
-    call Call_000_1659
+    call SetViewportEnd
     ld de, $0760
     call Call_000_1e65
     ld a, $54
@@ -7213,7 +7213,7 @@ Jump_003_7c8b:
     ld [$c991], a
     ld bc, $1a00
     call Call_000_1193
-    call Call_000_1e8d
+    call GetSpriteAddress
     jp $15f7
 
 
@@ -7446,12 +7446,12 @@ Call_003_7e49:
     and $f0
     swap a
     add $94
-    call Call_000_0b07
+    call RunScriptEngine
     inc bc
     ld a, [$cac0]
     and $0f
     add $94
-    jp Jump_000_0b07
+    jp Jump_RunScriptEngine
 
 
     call $1670
@@ -7665,11 +7665,11 @@ Call_003_7f88:
     ret
 
 
-    call Call_000_093d
+    call LookupDoublePtrTable
     jr nz, jr_003_7f6d
 
     call Call_003_7f88
-    call Call_000_0b9b
+    call CallScriptByType
     jp z, $63fb
 
     cp $0b

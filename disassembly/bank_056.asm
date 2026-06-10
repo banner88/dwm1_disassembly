@@ -1182,11 +1182,11 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
     ret
 
 
-    call Call_000_0954
+    call GetTilemapByte
     ld d, $00
     call ReadNextTextByte
     ld e, a
-    call Call_000_0954
+    call GetTilemapByte
     call ReadNextTextByte
     ld c, a
     ld a, [$c82a]
@@ -1212,7 +1212,7 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
     ret
 
 
-    call Call_000_0954
+    call GetTilemapByte
     call ReadNextTextByte
     call PlaySoundEffect
     ret
@@ -1299,13 +1299,13 @@ jr_056_45c9:
 jr_056_45d6:
     ld a, e
     call Write_gfx_tile
-    call Call_000_0cee
+    call TilemapNextColumn
     inc e
     dec b
     jr nz, jr_056_45d6
 
     ld hl, $0020
-    call Call_000_0cfd
+    call AdjustTilemapOffset
     ld a, [$c829]
     ld c, a
     ld a, [$c82a]
@@ -1341,12 +1341,12 @@ jr_056_4609:
 
     pop bc
     ld hl, $0040
-    call Call_000_0cfd
+    call AdjustTilemapOffset
 
 jr_056_461f:
     ld a, e
     call Write_gfx_tile
-    call Call_000_0cee
+    call TilemapNextColumn
     inc e
     dec b
     jr nz, jr_056_461f
@@ -1398,7 +1398,7 @@ jr_056_461f:
     ld [$c82f], a
     ld a, h
     ld [$c830], a
-    call Call_000_0954
+    call GetTilemapByte
     ret
 
 
@@ -1429,7 +1429,7 @@ jr_056_4679:
     ld a, [$c82a]
     ld b, a
     ld hl, $0020
-    call Call_000_0cfd
+    call AdjustTilemapOffset
     ld a, e
     add b
     ld e, a
@@ -1437,13 +1437,13 @@ jr_056_4679:
 jr_056_46b5:
     ld a, e
     call Write_gfx_tile
-    call Call_000_0cee
+    call TilemapNextColumn
     inc e
     dec b
     jr nz, jr_056_46b5
 
     ld hl, $0040
-    call Call_000_0cfd
+    call AdjustTilemapOffset
     ld a, [$c829]
     ld c, a
     ld a, [$c82a]
@@ -1604,7 +1604,7 @@ jr_056_478a:
 
     ld hl, $c825
     set 3, [hl]
-    call Call_000_0954
+    call GetTilemapByte
     call ReadNextTextByte
     ld [$c833], a
     ret
@@ -1660,7 +1660,7 @@ jr_056_4806:
 
     ld hl, $c825
     set 6, [hl]
-    call Call_000_0954
+    call GetTilemapByte
     call ReadNextTextByte
     ld [$c835], a
     ld hl, $c826
@@ -1670,7 +1670,7 @@ jr_056_4806:
 
     ld hl, $c825
     set 7, [hl]
-    call Call_000_0954
+    call GetTilemapByte
     call ReadNextTextByte
     ld [$c836], a
     ld hl, $c826
@@ -1695,7 +1695,7 @@ Jump_056_4855:
     ld a, $5c
     call PlaySoundEffect
     ld hl, $0000
-    call Call_000_0d11
+    call GetTilemapRowAddr
     ld de, $c500
     ld c, $12
 
@@ -1748,9 +1748,9 @@ Call_056_48a1:
     ld hl, $8e50
     call WaitDMATransfer
     ld hl, $0100
-    call Call_000_0d11
+    call GetTilemapRowAddr
     ld b, $0e
-    call Call_000_0ce7
+    call TilemapAdvanceColumns
     ld de, $48de
 
 jr_056_48b8:
@@ -1780,7 +1780,7 @@ jr_056_48b9:
 
 jr_056_48d4:
     call Write_gfx_tile
-    call Call_000_0cee
+    call TilemapNextColumn
     jr jr_056_48b9
 
 jr_056_48dc:

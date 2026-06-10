@@ -851,7 +851,7 @@ Call_00a_441f:
     ld a, [$c8f1]
     adc h
     ld h, a
-    call Call_000_0ad9
+    call TextBankDispatch
     ret
 
 label442d:
@@ -1797,7 +1797,7 @@ label4a10:
     ld a, [$c8f8]
     ld b, a
     ld a, c
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, b
     ld [$da13], a
     ld a, $15
@@ -1829,10 +1829,10 @@ label4a10:
     push af
     xor a
     ld [$c905], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     push af
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, [$c8ec]
     push af
     xor a
@@ -1842,14 +1842,14 @@ label4a10:
     xor a
     ld [$d951], a
     di
-    call Call_000_2128
+    call SaveGameState
     ei
     pop af
     ld [$d951], a
     pop af
     ld [$c8ec], a
     pop af
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     pop af
     ld [$c905], a
     pop af
@@ -1867,25 +1867,25 @@ label4ad3:
     xor a
     ld [$c905], a
     ld a, $08
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, $00
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0048
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $04
     ld [$d951], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, $03
     call SetGBCPalette
     ld hl, $c88f
@@ -1969,7 +1969,7 @@ Call_00a_4ba2:
     ld a, [$c8f8]
     ld b, a
     ld a, c
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, b
     ld [$da13], a
     ld hl, $1400
@@ -3303,7 +3303,7 @@ label5425:
     rst $10
     ld a, [$da71]
     ld hl, $ca94
-    call Call_000_267e
+    call TestBitInArray
     jr nz, jr_00a_5490
 
     ld a, [$da71]
@@ -3328,7 +3328,7 @@ jr_00a_5490:
     call Call_00a_606d
     ld a, [$da71]
     ld hl, $ca94
-    call Call_000_267e
+    call TestBitInArray
     jr z, jr_00a_54ba
 
     ld hl, $0009
@@ -3606,10 +3606,10 @@ label565f:
     push af
     xor a
     ld [$c905], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     push af
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, [$c8ec]
     push af
     xor a
@@ -3619,14 +3619,14 @@ label565f:
     xor a
     ld [$d951], a
     di
-    call Call_000_2128
+    call SaveGameState
     ei
     pop af
     ld [$d951], a
     pop af
     ld [$c8ec], a
     pop af
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     pop af
     ld [$c905], a
     pop af
@@ -3644,25 +3644,25 @@ label573e:
     xor a
     ld [$c905], a
     ld a, $08
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, $00
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0048
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $00
     ld [$d951], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, [$cac0]
     ld hl, $caca
     call GetMonsterDataPtr
@@ -3680,7 +3680,7 @@ label573e:
     ld c, l
     ld b, h
     ld hl, $c1b0
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld a, $03
     call SetGBCPalette
     ld hl, $c88f
@@ -4277,7 +4277,7 @@ label5b46:
     ld c, l
     ld b, h
     ld hl, $c1b0
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld hl, $0014
     call Call_00a_441f
     ld hl, $c906
@@ -4378,7 +4378,7 @@ jr_00a_5bed:
 
 jr_00a_5c2c:
     ld e, $00
-    call Call_000_2424
+    call AddGold
     xor a
     ld [$c8df], a
     ld hl, $c906
@@ -4503,25 +4503,25 @@ label5c92:
     ld a, [hl]
     ld [$c8f5], a
     ld a, $08
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, $00
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $0048
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0048
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $02
     ld [$d951], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, $03
     call SetGBCPalette
     ld hl, $c88f
@@ -4611,7 +4611,7 @@ label5d8d:
     ld c, l
     ld b, h
     ld hl, $c1b0
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld hl, $0014
     call Call_00a_441f
     call Call_00a_59ba
@@ -5592,7 +5592,7 @@ label63f7:
 
     ld hl, $0014
     ld e, $00
-    call Call_000_2424
+    call AddGold
     ld a, [$c8e3]
     add a
     add a
@@ -6027,8 +6027,8 @@ label66aa:
     ld hl, $caca
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
-    ld [$da31], a
+    ld [wTempSpeciesId], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld hl, $da42
@@ -6248,7 +6248,7 @@ jr_00a_67ff:
     ld a, e
     ld [$c8e6], a
     ld hl, $c180
-    call Call_000_09c7
+    call FormatLargeNumber
     ld hl, $0018
     call Call_00a_441f
     xor a
@@ -6361,7 +6361,7 @@ jr_00a_68d1:
     ld h, a
     ld a, [$c8e6]
     ld e, a
-    call Call_000_2424
+    call AddGold
     ld a, [$cac0]
     ld hl, $cacc
     call GetMonsterDataPtr
@@ -6420,7 +6420,7 @@ label6923:
     ld a, [$c8e6]
     ldh [$d7], a
     ld hl, $c180
-    call Call_000_09c7
+    call FormatLargeNumber
     ld hl, $0018
     call Call_00a_441f
     call Call_00a_6745

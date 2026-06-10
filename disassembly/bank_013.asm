@@ -40,7 +40,7 @@ label13_4009:
     ld hl, $caca
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da35]
@@ -93,7 +93,7 @@ label13_4050:
     ld hl, $caca
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da35]
@@ -145,7 +145,7 @@ label13_40ae:
     ld hl, $caca
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     xor a

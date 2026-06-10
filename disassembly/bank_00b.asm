@@ -58,9 +58,9 @@ labelb_4015:
     jr z, jr_00b_4027               ; skip if no pending change
 
     ; Apply pending map change: copy destination to active
-    ld a, [$c96d]                   ; destination map_type (set by exit checker)
+    ld a, [wWarpGateId]                   ; destination map_type (set by exit checker)
     ld [wMapID], a                  ; $C968 — now the active map
-    ld a, [$c96e]                   ; destination gate flag
+    ld a, [wWarpFlag]                   ; destination gate flag
     ld [wInGateworld], a            ; $C969 — gate/normal mode
 
 jr_00b_4027:
@@ -196,7 +196,7 @@ labelb_40ce:
     ld a, l
     add a
     add a
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld a, $80
     ld c, l
     ld b, h
@@ -211,9 +211,9 @@ labelb_40ce:
     ld h, a
     ld a, $a0
     call Div16x8To16
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add l
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld a, $a0
     ld c, l
     ld b, h
@@ -401,7 +401,7 @@ jr_00b_41d8:
     dec c
     jr nz, jr_00b_41d5
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld hl, $c950
     add l
     ld l, a
@@ -422,7 +422,7 @@ labelb_4213:
     call Call_00b_4309
     ld hl, $1701
     rst $10
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld hl, $c950
     add l
     ld l, a
@@ -476,7 +476,7 @@ jr_00b_4244:
     ld l, a                         ; HL = *ptr_table[mapID] → screen_ptr_block
 
     ; Step 2: screen_ptr_block[$C925 * 2] → step_block
-    ld a, [$c925]                   ; screen_index (which screen of multi-screen room)
+    ld a, [wScreenIndex]                   ; screen_index (which screen of multi-screen room)
     add a                           ; × 2 (pointer is 2 bytes)
     add l
     ld l, a
@@ -556,7 +556,7 @@ GetRoomDataPtr:
     ld l, a                  ; HL = screen_ptr_block
 
     ; Level 2: screen → step_block
-    ld a, [$c925]            ; Current screen index
+    ld a, [wScreenIndex]            ; Current screen index
     add a                    ; × 2
     add l
     ld l, a
@@ -666,7 +666,7 @@ Call_00b_4309:
     ret z
 
     ld hl, $c960
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp [hl]
     ret nz
 
@@ -818,7 +818,7 @@ labelb_43a4:
     bit 6, a
     ret nz                   ; Busy flag set → return
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret nz                   ; Script already running → return
 
@@ -1062,7 +1062,7 @@ labelb_4488:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add a
     add l
     ld l, a
@@ -1094,7 +1094,7 @@ labelb_4488:
     ld h, [hl]
     ld l, a
     ld bc, $2de7
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add a
     add c
     ld c, a
@@ -1204,7 +1204,7 @@ labelb_451d:
     ld h, [hl]
     ld l, a                         ; HL → screen_ptr_block
 
-    ld a, [$c925]                   ; screen_index
+    ld a, [wScreenIndex]                   ; screen_index
     add a
     add l
     ld l, a
@@ -1241,7 +1241,7 @@ labelb_451d:
 
     ; Load screen offset from $2DE7 table for position comparison
     ld bc, $2de7                    ; screen position offset table (16 entries × 2)
-    ld a, [$c925]                   ; screen_index
+    ld a, [wScreenIndex]                   ; screen_index
     add a                           ; × 2
     add c
     ld c, a
@@ -1331,9 +1331,9 @@ jr_00b_45a8:
     inc hl                          ; skip trigger_X (byte 0)
     inc hl                          ; skip trigger_Y (byte 1)
     ld a, [hl+]                     ; byte 2: dest_map_type
-    ld [$c96d], a                   ; → destination map_type
+    ld [wWarpGateId], a                   ; → destination map_type
     ld a, [hl+]                     ; byte 3: gate_flag
-    ld [$c96e], a                   ; → destination gate flag
+    ld [wWarpFlag], a                   ; → destination gate flag
 
     ; === SPAWN POSITION CALCULATION ===
     ; Screen byte (byte 4) indexes $2DE7 table for base position.
@@ -1368,9 +1368,9 @@ jr_00b_45a8:
     adc $00
     ld b, a
     ld a, c
-    ld [$c96f], a                   ; X spawn position low
+    ld [wWarpSpawnXLo], a                   ; X spawn position low
     ld a, b
-    ld [$c970], a                   ; X spawn position high
+    ld [wWarpSpawnXHi], a                   ; X spawn position high
 
     ; Y position: same calculation
     ld a, [de]                      ; table Y base
@@ -1404,14 +1404,14 @@ jr_00b_45a8:
 
 jr_00b_4601:
     ld a, c
-    ld [$c971], a                   ; Y spawn position low
+    ld [wWarpSpawnYLo], a                   ; Y spawn position low
     ld a, b
-    ld [$c972], a                   ; Y spawn position high
+    ld [wWarpSpawnYHi], a                   ; Y spawn position high
 
     ; === TRIGGER THE TRANSITION ===
     ld a, $01
     ld [wIsPlayerChangingMaps], a	; $C96C — signal map change to Entry 0
-    ld a, [$c96e]
+    ld a, [wWarpFlag]
     or a
     jr nz, jr_00b_466b
 
@@ -1437,9 +1437,9 @@ jr_00b_462c:
     ld a, [wInGateworld]
     ld h, a
     push hl
-    ld a, [$c96d]
+    ld a, [wWarpGateId]
     ld l, a
-    ld a, [$c96e]
+    ld a, [wWarpFlag]
     ld h, a
     ld a, l
     ld [wMapID], a
@@ -1524,7 +1524,7 @@ jr_00b_4674:
 ; when player reaches the gate floor exit.
 Jump_00b_46a7:
     ld hl, $c960
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     cp [hl]
     jr nz, jr_00b_46d5
 
@@ -1537,9 +1537,9 @@ Jump_00b_46a7:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $00
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, $80
-    ld [$c96e], a
+    ld [wWarpFlag], a
     call Call_00b_46da
     ld hl, wGameState
     set 5, [hl]
@@ -1643,17 +1643,17 @@ jr_00b_471b:
     cp $ff
     jr z, jr_00b_477e
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld a, b
     ld [$c926], a
     call Call_00b_477e
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
-    ld [$c925], a
+    ld [wScreenIndex], a
     ld a, b
     ld [$c926], a
     ld a, [$c927]
@@ -1704,7 +1704,7 @@ jr_00b_4781:
 jr_00b_479a:
     ldh [$d7], a
     ld bc, $2de7
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add a
     add c
     ld c, a

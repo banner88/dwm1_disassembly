@@ -1211,7 +1211,7 @@ Call_009_45e5:
     ld a, [$c8f1]
     adc h
     ld h, a
-    call Call_000_0ad9
+    call TextBankDispatch
     ret
 
 
@@ -1396,7 +1396,7 @@ jr_009_46de:
     cp $50  ;ID for gateworld shop map
     jr z, .clear_shop_inventory
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld hl, BazaarInventory
     cp $00
     jr z, .clear_shop_inventory
@@ -1855,7 +1855,7 @@ jr_009_498c:
     ld a, e
     ld [$c8e6], a
     ld hl, $c1a0
-    call Call_000_09c7
+    call FormatLargeNumber
     ld hl, $0006
     call Call_009_45e5
     xor a
@@ -1956,7 +1956,7 @@ jr_009_4a63:
     ld h, a
     ld a, [$c8e6]
     ld e, a
-    call Call_000_2424
+    call AddGold
     ld hl, wInventory
     call Call_009_4880
     ld a, c
@@ -2497,7 +2497,7 @@ jr_009_4db4:
     ld a, e
     ld [$c8e6], a
     ld hl, $c1a0
-    call Call_000_09c7
+    call FormatLargeNumber
     ld hl, $000d
     call Call_009_45e5
     xor a
@@ -2597,7 +2597,7 @@ jr_009_4e6c:
     ld h, a
     ld a, [$c8e6]
     ld e, a
-    call Call_000_241a
+    call CompareGold
     ld a, [$c8dd]
     ld b, a
 
@@ -3528,7 +3528,7 @@ jr_009_548e:
     ld h, a
     ld a, [$c8e1]
     ld e, a
-    call Call_000_2424
+    call AddGold
     ld a, [$c8df]
     ld l, a
     ld a, [$c8e0]
@@ -4130,7 +4130,7 @@ jr_009_5881:
     ld h, a
     ld a, [$c8e1]
     ld e, a
-    call Call_000_241a
+    call CompareGold
     call Call_009_57dc
     ld hl, $0019
 
@@ -4914,7 +4914,7 @@ Jump_009_5d90:
     jp z, Jump_009_5da1
 
     ld a, $ff
-    ld [$d9cd], a
+    ld [wColiseumBattle], a
     ld hl, $c905
     inc [hl]
 
@@ -5056,7 +5056,7 @@ jr_009_5e5b:
     ld h, [hl]
     ld l, a
     ld e, $00
-    call Call_000_2424
+    call AddGold
     ld a, [$c8e3]
     add a
     add a
@@ -5064,7 +5064,7 @@ jr_009_5e5b:
     ld a, [$c8e2]
     and $7f
     add b
-    ld [$d9ce], a
+    ld [wArenaGroup], a
     ld hl, $c906
     inc [hl]
 
@@ -5321,7 +5321,7 @@ Call_009_6004:
     ld c, a
     ld b, $00
     push hl
-    call Call_000_26ae
+    call TestEventFlag
     pop hl
     pop bc
     pop de
@@ -5371,7 +5371,7 @@ jr_009_6060:
     ld a, [de]
     ld c, a
     ld b, $00
-    call Call_000_26ae
+    call TestEventFlag
     pop hl
     pop de
     pop bc
@@ -5495,7 +5495,7 @@ jr_009_60f1:
     ld hl, $0b02
     rst $10
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     ld hl, $0604
     rst $10
     xor a
@@ -6525,7 +6525,7 @@ jr_009_6812:
     ld hl, $0b02
     rst $10
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     ld a, [wInGateworld]
     or a
     jr nz, jr_009_6832
@@ -6597,7 +6597,7 @@ jr_009_68aa:
     call GenerateRNG
     ld a, [$c8f4]
     sub $10
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]

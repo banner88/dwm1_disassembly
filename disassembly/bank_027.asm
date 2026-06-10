@@ -5584,7 +5584,7 @@ jr_027_5852:
     inc [hl]
     dec [hl]
     nop
-    call nz, Call_000_3000
+    call nz, NopReturn
     ld sp, $8c00
     rrca
     ld bc, $3332
@@ -7073,7 +7073,7 @@ jr_027_5f2e:
     nop
     ld b, $07
     inc b
-    call nz, Call_000_3000
+    call nz, NopReturn
     ld sp, $1404
     ld [$b004], sp
 

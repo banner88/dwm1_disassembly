@@ -35,7 +35,7 @@ label15_4009:
     ld hl, $c8d2
     ld bc, $0008
     call FillNBytesWithRegA
-    call Call_000_1264
+    call ClearSTATMode
     xor a
     ld [$c8c7], a
     ld a, [$c88b]
@@ -87,7 +87,7 @@ label15_4009:
 
 
     ld a, $02
-    call Call_000_1c89
+    call SetColorMode
     call DisableSRAM
     ld hl, $c817
     ld [hl], $00
@@ -588,18 +588,18 @@ jr_015_4422:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $00
-    ld [$c96d], a
-    ld [$c96e], a
+    ld [wWarpGateId], a
+    ld [wWarpFlag], a
     ld hl, $00e8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0058
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $00
     ldh [$8d], a
     ld a, $02
@@ -632,7 +632,7 @@ jr_015_44cd:
     ld a, $01
     ld [$d9e7], a
     di
-    call Call_000_2128
+    call SaveGameState
     ei
 
 jr_015_44d7:
@@ -850,7 +850,7 @@ jr_015_461d:
     ld hl, $c8d2
     inc [hl]
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, $2f
     ld [wMapID], a
     ld [$c96a], a
@@ -4154,7 +4154,7 @@ jr_015_5b93:
 
     ld a, $00
     ld [$0100], a
-    call Call_000_2197
+    call SavePartyToSRAM
     ei
     ld a, $14
     ld hl, $cac2
@@ -4182,7 +4182,7 @@ jr_015_5b93:
     xor a
     ld [$c8ea], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     xor a
     ld [wGameState], a
     ld a, $08
@@ -4712,7 +4712,7 @@ jr_015_5e91:
     ld hl, $0b02
     rst $10
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     ld hl, wGameState
     res 1, [hl]
     xor a

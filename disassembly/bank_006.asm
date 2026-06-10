@@ -113,7 +113,7 @@ jr_006_4049:
     bit 6, [hl]
     jr nz, jr_006_408d
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
 
 Jump_006_4081:
     or a
@@ -174,7 +174,7 @@ jr_006_40ae:
     bit 6, [hl]
     jp nz, Jump_006_40fd
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_40fd
 
@@ -251,7 +251,7 @@ Call_006_4100:
     bit 6, [hl]
     jp nz, Jump_006_416a
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_416a
 
@@ -351,7 +351,7 @@ Jump_006_41c3:
     bit 6, [hl]
     jp nz, Jump_006_41f7
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_41f7
 
@@ -476,7 +476,7 @@ Call_006_41fa:
     bit 6, [hl]
     jp nz, Jump_006_42b2
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_42b2
 
@@ -540,7 +540,7 @@ Call_006_42b5:
     bit 6, [hl]
     jr nz, jr_006_42f4
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_4a83
 
@@ -549,7 +549,7 @@ Call_006_42b5:
     jp nz, Jump_006_4aa1
 
 jr_006_42f4:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jr nz, jr_006_4306
 
@@ -574,7 +574,7 @@ jr_006_4306:
     bit 6, [hl]
     jr nz, jr_006_433c
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_4a83
 
@@ -627,7 +627,7 @@ jr_006_433c:
     bit 6, [hl]
     jp nz, Jump_006_438b
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_438b
 
@@ -706,7 +706,7 @@ Call_006_438e:
     bit 6, [hl]
     jp nz, Jump_006_43fa
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_43fa
 
@@ -784,7 +784,7 @@ Call_006_43fd:
     bit 6, [hl]
     jp nz, Jump_006_446a
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_446a
 
@@ -882,7 +882,7 @@ Jump_006_448f:
     ret
 
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
     cp b
@@ -915,7 +915,7 @@ Jump_006_448f:
     bit 6, [hl]
     jp nz, Jump_006_4540
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_4540
 
@@ -1129,15 +1129,15 @@ jr_006_463f:
     adc $00
     ld h, a
     ld a, [hl+]
-    ld [$d8d4], a
+    ld [wScriptNPCId], a
     ld a, $70
-    ld [$d8d3], a
+    ld [wScriptMapType], a
     set 6, [hl]
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, $0405
     rst $10
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret z
 
@@ -1179,7 +1179,7 @@ Call_006_467c:
     ret
 
 
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
     cp b
@@ -1212,7 +1212,7 @@ Call_006_467c:
     bit 6, [hl]
     jp nz, Jump_006_46f1
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_46f1
 
@@ -1871,7 +1871,7 @@ Jump_006_4a48:
     res 0, [hl]
 
 jr_006_4a5b:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jr nz, jr_006_4a6d
 
@@ -2055,7 +2055,7 @@ jr_006_4b27:
     jr jr_006_4b27
 
 jr_006_4b40:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret nz
 
@@ -7238,7 +7238,7 @@ jr_006_606b:
     or a
     jp nz, Jump_006_6284
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_6284
 
@@ -7272,7 +7272,7 @@ jr_006_606b:
 jr_006_60ac:
     ld [wMonsterInfoToggle], a
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     jp Jump_006_6284
 
 
@@ -7342,7 +7342,7 @@ jr_006_60e7:
 
 Jump_006_611d:
 jr_006_611d:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_6247
 
@@ -7417,15 +7417,15 @@ jr_006_611d:
     jp z, Jump_006_61e9
 
 jr_006_618e:
-    ld [$d8d4], a
+    ld [wScriptNPCId], a
     ld a, [wMapID]
-    ld [$d8d3], a
+    ld [wScriptMapType], a
     ld a, [wInGateworld]
     or a
     jr z, jr_006_61a2
 
     ld a, $70
-    ld [$d8d3], a
+    ld [wScriptMapType], a
 
 jr_006_61a2:
     ldh a, [$d6]
@@ -7447,10 +7447,10 @@ jr_006_61b7:
     res 0, [hl]
     res 1, [hl]
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, $0405
     rst $10
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp z, Jump_006_61e9
 
@@ -7531,7 +7531,7 @@ Jump_006_61e9:
     rst $10
 
 Jump_006_6247:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_006_6284
 
@@ -7688,9 +7688,9 @@ Jump_006_62f6:
 
     rst $10
     ld h, e
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     dec a
-    ld [$c925], a
+    ld [wScreenIndex], a
     call Call_006_66e5
     ld hl, $0b03
     rst $10
@@ -7912,9 +7912,9 @@ jr_006_6427:
     ld h, h
     rst $10
     ld h, e
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     inc a
-    ld [$c925], a
+    ld [wScreenIndex], a
     call Call_006_66e5
     ld hl, $0b03
     rst $10
@@ -8060,9 +8060,9 @@ jr_006_64f3:
     ld h, l
     rst $10
     ld h, e
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     sub $04
-    ld [$c925], a
+    ld [wScreenIndex], a
     call Call_006_66e5
     ld hl, $0b03
     rst $10
@@ -8203,9 +8203,9 @@ jr_006_65b4:
     ld h, [hl]
     rst $10
     ld h, e
-    ld a, [$c925]
+    ld a, [wScreenIndex]
     add $04
-    ld [$c925], a
+    ld [wScreenIndex], a
     call Call_006_66e5
     ld hl, $0b03
     rst $10
@@ -8354,14 +8354,14 @@ jr_006_66c2:
     or a
     ret nz
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret nz
 
     ld a, $00
-    ld [$d8d4], a
+    ld [wScriptNPCId], a
     ld a, [wMapID]
-    ld [$d8d3], a
+    ld [wScriptMapType], a
     ld hl, $0405
     rst $10
     ret
@@ -8655,7 +8655,7 @@ Call_006_682f:
     ld a, $20
     ld [$c83d], a
     ld de, $0000
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jr z, jr_006_686e
 
@@ -8899,7 +8899,7 @@ jr_006_69c2:
     cp $ff
     jr nz, jr_006_6a02
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     bit 1, a
     jr z, jr_006_6a02
 
@@ -8952,19 +8952,19 @@ jr_006_6a25:
     ld [$d92b], a
     ld hl, $0000
     ld a, l
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, h
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $00e8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0058
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld hl, $c8ea
@@ -9063,7 +9063,7 @@ Call_006_6ad7:
     adc h
     ld h, a
     ld a, [hl+]
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, [hl]
     ld [$da04], a
     ld a, $00
@@ -9222,7 +9222,7 @@ jr_006_6ba7:
 
     ld a, $02
     call SetBGM
-    call Call_000_3331
+    call InitAudioSystem
     ld a, $52
     call PlaySoundEffect
     ld hl, $ffb7
@@ -9489,11 +9489,11 @@ jr_006_6d3a:
     ld [wObj2Palette], a
     ld a, $01
     ld [$c8ec], a
-    ld a, [$c96e]
+    ld a, [wWarpFlag]
     or a
     ret nz
 
-    ld a, [$c96d]
+    ld a, [wWarpGateId]
     or a
     ret nz
 
@@ -12631,8 +12631,8 @@ Call_006_7c18:
 
 Call_006_7c26:
     call $1670
-    call Call_000_1659
-    jp Jump_000_2184
+    call SetViewportEnd
+    jp Jump_CopySRAMBlock
 
 
     ld a, $4e
@@ -12676,7 +12676,7 @@ Jump_006_7c56:
     ld hl, $7d06
 
 Jump_006_7c76:
-    call Call_000_091a
+    call ComputeTileDataAddr
     jp $15f7
 
 
@@ -12696,7 +12696,7 @@ jr_006_7c7f:
     ld hl, $7d18
 
 jr_006_7c93:
-    call Call_000_091a
+    call ComputeTileDataAddr
     jr jr_006_7c7f
 
     call Call_006_7c18
@@ -12733,7 +12733,7 @@ jr_006_7c93:
     ret nz
 
     ld hl, $7dc4
-    call Call_000_091a
+    call ComputeTileDataAddr
     ld a, $00
     ld hl, $7d0e
     jp Jump_006_7c56
@@ -12759,7 +12759,7 @@ jr_006_7c93:
     ld a, $01
     ld [$c9a7], a
     ld hl, $7d0e
-    call Call_000_091a
+    call ComputeTileDataAddr
     ld a, $04
     jp Jump_000_15e6
 
@@ -12973,12 +12973,12 @@ jr_006_7c93:
     xor d
     xor c
     rst $38
-    call Call_000_1398
+    call ReadJoypadRaw
     ld a, $01
     ld [$c9c1], a
     ld a, $00
     ld [$c9c2], a
-    call Call_000_1659
+    call SetViewportEnd
     call $2121
     ld hl, $49f6
     ld de, $99c0
@@ -13022,12 +13022,12 @@ jr_006_7c93:
     jp $15f7
 
 
-    call Call_000_1398
+    call ReadJoypadRaw
     ld a, $01
     ld [$c9c1], a
     ld a, $00
     ld [$c9c2], a
-    call Call_000_1659
+    call SetViewportEnd
     call Call_000_1380
     ld hl, $492e
     ld de, $9821
@@ -13045,7 +13045,7 @@ jr_006_7c93:
     ld bc, $9828
     ld de, $1907
     call $0b0c
-    call Call_000_0b3c
+    call CrossBankCallRet
     ld bc, $9941
     ld de, $9801
     call Call_006_7ed6

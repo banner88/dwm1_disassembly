@@ -312,7 +312,7 @@ SkillBeat:  ; $41F7
     ld [$d9f0], a
     call $5C51
     jr nc, jr_052_4225
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
     ld l, a
@@ -323,8 +323,8 @@ SkillBeat:  ; $41F7
     ld hl, $b8e8
     call Call_052_54af
     push hl
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, $00
     ld [hl+], a
@@ -354,10 +354,10 @@ SkillSleep:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_052_6b48
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -371,7 +371,7 @@ SkillSleep:
     call Call_052_54d2
 
 Call_052_4262:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -394,7 +394,7 @@ jr_052_4276:
 SkillStopSpell:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 0, [hl]
@@ -403,7 +403,7 @@ SkillStopSpell:
     call Call_052_5cbc
     jr nc, jr_052_42a4
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     set 0, [hl]
@@ -425,7 +425,7 @@ jr_052_42a4:
 SkillSurround:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 1, [hl]
@@ -434,7 +434,7 @@ SkillSurround:
     call Call_052_5cda
     jr nc, jr_052_42d2
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     set 1, [hl]
@@ -456,7 +456,7 @@ jr_052_42d2:
 SkillPanicAll:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     bit 4, [hl]
@@ -471,7 +471,7 @@ jr_052_42eb:
     call Call_052_5d05
     jr nc, jr_052_4302
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     set 4, [hl]
@@ -488,8 +488,8 @@ jr_052_4302:
 SkillRobMagic:
 
 
-    ld a, [$db89]
-    ld hl, $dbc3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     ld a, [hl+]
     or [hl]
@@ -518,7 +518,7 @@ jr_052_432a:
 SkillTakeMagic:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db04
     call HL_AddA_x8
     bit 0, [hl]
@@ -543,7 +543,7 @@ SkillSap:
     call Call_052_5dfc
     jr nc, jr_052_4361
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_5377
     ld hl, $b886
     call Call_052_54af
@@ -569,7 +569,7 @@ SkillUpper:
 
     ld hl, $9292
     call Call_052_5493
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_536c
     ret
 
@@ -588,7 +588,7 @@ SkillSlow:
     call Call_052_5eb4
     jr nc, jr_052_439c
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_5377
     ld hl, $b895
     call Call_052_54af
@@ -614,7 +614,7 @@ SkillSpeed:
 
     ld hl, $9797
     call Call_052_5493
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_536c
     ret
 
@@ -627,7 +627,7 @@ jr_052_43ba:
 SkillBarrier:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $04
     ld c, a
     ld b, $04
@@ -675,7 +675,7 @@ jr_052_43f7:
 SkillTwinHits:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 2, [hl]
@@ -694,7 +694,7 @@ jr_052_4411:
 SkillMagicWall:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     ld c, a
     ld b, $03
@@ -720,7 +720,7 @@ jr_052_442c:
 SkillMagicBack:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db04
     call HL_AddA_x8
     ld a, [$db8a]
@@ -760,7 +760,7 @@ jr_052_4466:
 SkillTransform:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call Call_052_5382
     ld hl, $a0a0
     call Call_052_54bd
@@ -769,15 +769,15 @@ SkillTransform:
 SkillIRONIZE:
 
 
-    ld a, [$db88]
-    ld [$db89], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
 
 SkillIronize:
     ld a, [$c86c]
     or a
     jr nz, jr_052_449c
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     bit 2, a
     jr z, jr_052_449c
 
@@ -786,13 +786,13 @@ SkillIronize:
     push hl
     pop hl
     ld b, $01
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld c, a
     jr jr_052_44aa
 
 jr_052_449c:
     ld b, $04
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $04
     ld c, a
     ld hl, $db07
@@ -823,7 +823,7 @@ jr_052_44b4:
 
 
 SkillHeal:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr nc, jr_052_44d2
 
@@ -834,8 +834,8 @@ jr_052_44cc:
 
 
 jr_052_44d2:
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
@@ -859,7 +859,7 @@ jr_052_44d2:
 
 
 SkillVivify:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr nc, jr_052_456d
 
@@ -877,7 +877,7 @@ SkillVivify:
     jr jr_052_453a
 
 jr_052_4515:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     ld c, a
     or $03
@@ -899,16 +899,16 @@ jr_052_4526:
     jr jr_052_4574
 
 jr_052_452d:
-    ld [$db89], a
-    ld a, [$db88]
+    ld [wBattleTargetIdx], a
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     ld [hl], c
 
 jr_052_453a:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld b, a
-    ld hl, $dbb3
+    ld hl, wBattleMaxHP
     call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
@@ -922,7 +922,7 @@ jr_052_453a:
 
 jr_052_4552:
     ld a, b
-    ld hl, $dba3
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, e
     ld [hl+], a
@@ -1010,7 +1010,7 @@ jr_052_45bb:
     ld a, [hl]
     and $33
     ld [hl], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dd13
     add l
     ld l, a
@@ -1036,7 +1036,7 @@ SkillDeChaos:
     ld a, [hl]
     and $ef
     ld [hl], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dd13
     add l
     ld l, a
@@ -1120,7 +1120,7 @@ SkillRamming:
 SkillBeserker:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db08
     call HL_AddA_x8
     set 2, [hl]
@@ -1149,7 +1149,7 @@ SkillKamikaze:
 SkillMassacre:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_46b4
 
@@ -1157,7 +1157,7 @@ SkillMassacre:
     cp $3f
     jr z, jr_052_46a2
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call GetMonsterSlotInfo
     jr c, jr_052_46a2
 
@@ -1167,7 +1167,7 @@ SkillMassacre:
     jr c, jr_052_46b8
 
 jr_052_46a2:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db04
     call HL_AddA_x8
     set 7, [hl]
@@ -1189,7 +1189,7 @@ jr_052_46b8:
 SkillChargeUP:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db06
     call HL_AddA_x8
     ld a, [hl]
@@ -1201,7 +1201,7 @@ SkillChargeUP:
 SkillHighJump:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db06
     call HL_AddA_x8
     ld a, [hl]
@@ -1240,7 +1240,7 @@ jr_052_46ee:
 SkillSuckAir:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db06
     call HL_AddA_x8
     ld a, [hl]
@@ -1352,23 +1352,23 @@ SkillBiAttack:
     cp $51
     jr z, jr_052_47ac
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     call c, Call_052_4807
     ld d, $00
     jr jr_052_47bb
 
 jr_052_47ac:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     ld a, [hl]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld d, $01
 
 jr_052_47bb:
-    ld a, [$db88]
-    ld hl, $dbe3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleATK
     call HL_AddA_x2
     ld a, l
     ld [$db63], a
@@ -1446,7 +1446,7 @@ SkillCallHelp:
     ld [$c823], a
     ld hl, $4c00
     rst $10
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db08
     call HL_AddA_x8
     set 0, [hl]
@@ -1454,7 +1454,7 @@ SkillCallHelp:
     or a
     ret nz
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     ret c
 
@@ -1480,11 +1480,11 @@ jr_052_4859:
 
 
 jr_052_486b:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     ld a, [hl]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     call CheckMonsterSlot
     jp c, Jump_052_50f8
 
@@ -1496,7 +1496,7 @@ jr_052_486b:
 SkillFocus:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db06
     call HL_AddA_x8
     set 7, [hl]
@@ -1527,7 +1527,7 @@ SkillRainSlash:
     cp $05
     jr nc, jr_052_4914
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_48f5
 
@@ -1564,20 +1564,20 @@ jr_052_48e6:
 
 
 jr_052_48f5:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $04
     or $02
     ld b, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp b
     jr z, jr_052_4914
 
     inc a
-    ld [$db89], a
-    ld a, [$db88]
+    ld [wBattleTargetIdx], a
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [hl], a
 
 jr_052_4914:
@@ -1641,7 +1641,7 @@ SkillMegaMagic:
 SkillPalsyAir:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     bit 6, [hl]
@@ -1671,7 +1671,7 @@ jr_052_4977:
 SkillPoisonGas:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [$db8a]
@@ -1702,7 +1702,7 @@ jr_052_49a0:
 
 
 jr_052_49ab:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [$db8a]
@@ -1732,7 +1732,7 @@ jr_052_49ce:
 SkillCurse:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     bit 5, [hl]
@@ -1747,7 +1747,7 @@ SkillCurse:
 
 
 jr_052_49ea:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     set 5, [hl]
@@ -1790,7 +1790,7 @@ jr_052_4a1c:
 SkillSandStorm:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db07
     call HL_AddA_x8
     ld a, [hl]
@@ -1800,7 +1800,7 @@ SkillSandStorm:
     call Call_052_5cda
     jr nc, jr_052_4a4d
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db07
     call HL_AddA_x8
     set 1, [hl]
@@ -1854,8 +1854,8 @@ jr_052_4a75:
 SkillOddDance:
 
 
-    ld a, [$db89]
-    ld hl, $dbc3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     ld a, [hl+]
     or [hl]
@@ -1885,7 +1885,7 @@ SkillSideStep:
 
 
     call Call_052_5559
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db07
     call HL_AddA_x8
     ld a, [hl]
@@ -1958,13 +1958,13 @@ jr_052_4afd:
     cp $79
     jr z, jr_052_4b1f
 
-    ld a, [$db89]
-    ld hl, $dbf3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleDEF
     call HL_AddA_x2
     ld a, $01
     ld [hl+], a
     ld [hl], $00
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_5377
 
 jr_052_4b1f:
@@ -2009,7 +2009,7 @@ jr_052_4b4c:
 
 
 jr_052_4b50:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db8b
     add l
     ld l, a
@@ -2029,7 +2029,7 @@ jr_052_4b64:
 SkillWarCry:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_4b88
 
@@ -2060,7 +2060,7 @@ jr_052_4b8c:
 SkillImitate:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db08
     call HL_AddA_x8
     set 3, [hl]
@@ -2110,7 +2110,7 @@ SkillTatsuCall:
 
 
     call Call_052_5559
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     rrca
     rrca
     and $01
@@ -2151,7 +2151,7 @@ SkillTatsuCall:
     add $54
     ld [hl], a
     ld a, [$db4c]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $afaf
     call Call_052_5493
     ret
@@ -2179,7 +2179,7 @@ SkillCover:
 
 
 SkillTailWind:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db04
     call HL_AddA_x8
     set 6, [hl]
@@ -2187,17 +2187,17 @@ SkillTailWind:
     cp $8a
     jr z, jr_052_4c6e
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $02
     jr z, jr_052_4c5c
 
-    ld hl, $db89
+    ld hl, wBattleTargetIdx
     inc [hl]
     jr SkillTailWind
 
 jr_052_4c5c:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     rra
     rra
     and $01
@@ -2216,7 +2216,7 @@ jr_052_4c6e:
 SkillDodge:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db08
     call HL_AddA_x8
     set 5, [hl]
@@ -2226,7 +2226,7 @@ SkillDodge:
 SkillBladeD_Defense:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db09
     call HL_AddA_x8
     ld a, [$db8a]
@@ -2254,7 +2254,7 @@ jr_052_4ca1:
 SkillSuckAll:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_052_4cb1
 
@@ -2275,7 +2275,7 @@ jr_052_4cb4:
     ld a, $00
     adc h
     ld h, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     rla
     rla
@@ -2283,7 +2283,7 @@ jr_052_4cb4:
     ld a, [hl]
     or b
     ld [hl], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db08
     call HL_AddA_x8
     set 1, [hl]
@@ -2295,7 +2295,7 @@ jr_052_4cd8:
 SkillDanceShut:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 6, [hl]
@@ -2304,7 +2304,7 @@ SkillDanceShut:
     call Call_052_6692
     jr nc, jr_052_4d00
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     set 6, [hl]
@@ -2326,7 +2326,7 @@ jr_052_4d06:
 SkillMouthShut:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 7, [hl]
@@ -2335,7 +2335,7 @@ SkillMouthShut:
     call Call_052_669e
     jr nc, jr_052_4d32
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     set 7, [hl]
@@ -2357,8 +2357,8 @@ jr_052_4d32:
 SkillMeditate:
 
 
-    ld a, [$db88]
-    ld hl, $dbb3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxHP
     call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
@@ -2367,8 +2367,8 @@ SkillMeditate:
     ld [$db5a], a
     ld a, b
     ld [$db5b], a
-    ld a, [$db88]
-    ld hl, $dba3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, l
     ld [$db5c], a
@@ -2415,7 +2415,7 @@ jr_052_4d8c:
 SkillLifeSong:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db07
     call HL_AddA_x8
     ld a, [hl]
@@ -2439,7 +2439,7 @@ jr_052_4daa:
     cp $80
     jr c, jr_052_4de3
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     ld hl, $dd1b
     add l
@@ -2544,7 +2544,7 @@ SkillGigaSlash:
 
 
 SkillRUN:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dd1b
     add l
     ld l, a
@@ -2552,7 +2552,7 @@ SkillRUN:
     adc h
     ld h, a
     ld [hl], $ff
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_052_4e64
 
@@ -2636,11 +2636,11 @@ jr_052_4eb8:
 SkillHitRandom:
 
 
-    ld a, [$db88]
-    ld [$db89], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
     ld hl, $dced
     call HL_AddA_x2
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [hl], a
     call Call_052_519a
     ld hl, $b682
@@ -2650,7 +2650,7 @@ SkillHitRandom:
 SkillTrip:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db05
     call HL_AddA_x8
     set 2, [hl]
@@ -2662,7 +2662,7 @@ SkillScared:
 SkillParalyze:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db02
     call HL_AddA_x8
     set 6, [hl]
@@ -2673,19 +2673,19 @@ SkillParalyze:
 SkillSmashed:
 
 
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     xor a
     ld [hl+], a
     ld [hl], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     push af
-    ld a, [$db89]
-    ld [$db88], a
+    ld a, [wBattleTargetIdx]
+    ld [wBattleAttackerIdx], a
     call SkillRUN
     pop af
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld a, $01
     ld [$d9ed], a
     ld hl, $e9e9
@@ -2710,7 +2710,7 @@ SkillHealUsAll:
 SkillALLCHANGE:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     ld c, a
     ld b, $03
@@ -2736,7 +2736,7 @@ jr_052_4f4c:
 SkillBIGSLEEP:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld c, a
     call CheckMonsterSlot
     jr c, jr_052_4f7b
@@ -2769,13 +2769,13 @@ jr_052_4f7b:
 SkillMP0:
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld c, a
     call CheckMonsterSlot
     jr c, jr_052_4f9d
 
     ld a, c
-    ld hl, $dbc3
+    ld hl, wBattleMP
     call HL_AddA_x2
     ld a, [hl+]
     or [hl]
@@ -2796,16 +2796,16 @@ jr_052_4f9d:
 SkillCALLEVIL:
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     ld a, [hl]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     call CheckMonsterSlot
     jr c, jr_052_4fc8
 
     call Call_052_66ba
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db08
     call HL_AddA_x8
     set 0, [hl]
@@ -2836,7 +2836,7 @@ jr_052_4fdc:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
     ld l, a
@@ -2859,11 +2859,11 @@ jr_052_4ff8:
 SkillRESTOREMP:
 
 
-    ld a, [$db89]
-    call Call_000_2fe1
+    ld a, [wBattleTargetIdx]
+    call GetCombatantMaxMP
     push hl
-    ld a, [$db89]
-    ld hl, $dbc3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     pop bc
     ld a, [hl+]
@@ -2891,12 +2891,12 @@ SkillMETEOR:
     cp $08
     jr nc, jr_052_5066
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_506a
 
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
@@ -2943,25 +2943,25 @@ jr_052_506a:
     cp $04
     jr c, jr_052_507b
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     or b
     jr jr_052_5083
 
 jr_052_507b:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     xor $04
     or b
 
 jr_052_5083:
     ld b, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     ld [hl], b
     ld a, b
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     xor a
     ld [$d9ee], a
     ret
@@ -2974,13 +2974,13 @@ jr_052_5083:
 
 Call_052_50a1:
     call Call_052_50e2
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     ld b, a
     ld a, [$db54]
     or a
     jr z, jr_052_50b5
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     srl a
     srl a
 
@@ -2998,7 +2998,7 @@ jr_052_50b5:
 
 
     ld a, $82
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ld [$db54], a
     ld a, [$db56]
     ld l, a
@@ -3029,7 +3029,7 @@ Call_052_50e9:
     ld c, a
     ld a, [$db57]
     ld b, a
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ret
 
 
@@ -3042,7 +3042,7 @@ Jump_052_50f8:
 
 
     ld hl, $c180
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_052_6b48
     ld a, $00
@@ -3059,7 +3059,7 @@ Jump_052_50f8:
 
 
     ld hl, $c180
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_052_6b48
     ld hl, $0078
@@ -3074,7 +3074,7 @@ Jump_052_50f8:
 
 Call_052_5143:
     ld hl, $c180
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_052_6b48
     call Call_052_7fcb
@@ -3100,10 +3100,10 @@ Call_052_515d:
 
 
     ld hl, $c180
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_052_6b48
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     ld [$c823], a
     ld a, $00
     ld [$c822], a
@@ -3126,7 +3126,7 @@ Call_052_519e:
     ld [$db56], a
     ld a, $00
     ld [$db57], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -3136,7 +3136,7 @@ Call_052_519e:
     call Call_052_5559
     scf
     ccf
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 1, [hl]
@@ -3147,7 +3147,7 @@ Call_052_519e:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db07
     call HL_AddA_x8
     ld a, [hl]
@@ -3362,18 +3362,18 @@ Call_052_52d8:
     jr nz, jr_052_530d
 
     and $03
-    ld hl, $da03
+    ld hl, wTempEnemyId1
     call Call_052_6ab1
 
 jr_052_52f2:
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     ld hl, $1401
     rst $10
     ld a, [$da18]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld hl, $da42
@@ -3415,12 +3415,12 @@ Call_052_5325:
     jr nz, jr_052_5352
 
     sub $04
-    ld hl, $da03
+    ld hl, wTempEnemyId1
     call Call_052_6ab1
 
 jr_052_533f:
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     ld hl, $1401
@@ -3614,13 +3614,13 @@ jr_052_53de:
 
 
 Call_052_5422:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db05
     call HL_AddA_x8
     ret
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
     add l
     ld l, a
@@ -3768,7 +3768,7 @@ Call_052_54f8:
 
 
 Call_052_5506:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr nc, jr_052_5512
 
@@ -3813,7 +3813,7 @@ jr_052_5535:
 
 
 Call_052_5539:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db04
     call HL_AddA_x8
     bit 2, [hl]
@@ -3867,7 +3867,7 @@ Call_052_5589:
     ld a, $00
     ld [$db4d], a
     ld a, [$db77]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld a, [$db78]
     ld [$db4c], a
     sub $b0
@@ -3875,7 +3875,7 @@ Call_052_5589:
     call Call_052_6ab1
     ld a, [$db78]
     cp $bb
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     jr z, jr_052_55b1
 
     call CheckMonsterSlot
@@ -3984,12 +3984,12 @@ Jump_052_560b:
 Jump_052_5616:
 jr_052_5616:
     ld a, $bb
-    ld [$db55], a
+    ld [wBattlePostFlag], a
 
 Call_052_561b:
     ld a, $00
     ld [$c822], a
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     ld [$c823], a
     ld a, $00
     ld [$dd6b], a
@@ -3999,7 +3999,7 @@ Call_052_561b:
 Call_052_562c:
     ld a, $01
     ld [$db8a], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $5004
     rst $10
     call Call_052_6c23
@@ -4020,7 +4020,7 @@ Call_052_562c:
     jr jr_052_5665
 
 jr_052_565a:
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     ld [$c823], a
     ld a, $00
     ld [$c822], a
@@ -4046,7 +4046,7 @@ jr_052_5665:
     cp $01
     jr nz, jr_052_56a3
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $04
     ld c, a
     ld b, $03
@@ -4071,18 +4071,18 @@ jr_052_5698:
 
 
 jr_052_56a3:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_69ef
     jp z, Jump_052_560b
 
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
-    ld a, [$db89]
-    call Call_000_2fda
+    ld a, [wBattleTargetIdx]
+    call GetCombatantMaxHP
     sub c
     ld l, a
     ld a, h
@@ -4096,11 +4096,11 @@ jr_052_56a3:
 
 
 jr_052_56ce:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_69ef
     jp z, Jump_052_560b
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     jr c, jr_052_56e5
 
@@ -4125,13 +4125,13 @@ jr_052_56ea:
     ld a, h
     ld [$db5b], a
     push hl
-    ld a, [$db89]
-    call ReadEventFlags2
+    ld a, [wBattleTargetIdx]
+    call GetCombatantHP
     pop bc
     add hl, bc
     push hl
-    ld a, [$db89]
-    call Call_000_2fda
+    ld a, [wBattleTargetIdx]
+    call GetCombatantMaxHP
     pop bc
     call CmpHLvsBC
     jr nc, jr_052_5733
@@ -4159,8 +4159,8 @@ jr_052_56ea:
 
 Jump_052_5733:
 jr_052_5733:
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -4181,7 +4181,7 @@ jr_052_5733:
     ld l, a
     ld a, [$db5b]
     ld h, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     bit 2, a
     jr z, jr_052_5766
 
@@ -4192,7 +4192,7 @@ jr_052_5733:
 
 jr_052_5766:
     ld a, $84
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_052_562c
     call Call_052_5bc4
     ld hl, $5f06
@@ -4206,18 +4206,18 @@ jr_052_5766:
     cp $b5
     jr nz, jr_052_57ac
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_6a01
     jp z, Jump_052_560b
 
-    ld a, [$db89]
-    ld hl, $dbc3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
-    ld a, [$db89]
-    call Call_000_2fe1
+    ld a, [wBattleTargetIdx]
+    call GetCombatantMaxMP
     sub c
     ld l, a
     ld a, h
@@ -4231,11 +4231,11 @@ jr_052_5766:
 
 
 jr_052_57ac:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_6a01
     jp z, Jump_052_560b
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     jr c, jr_052_57c3
 
@@ -4260,13 +4260,13 @@ jr_052_57c8:
     ld a, h
     ld [$db5b], a
     push hl
-    ld a, [$db89]
-    call Call_000_2fef
+    ld a, [wBattleTargetIdx]
+    call GetCombatantMP
     pop bc
     add hl, bc
     push hl
-    ld a, [$db89]
-    call Call_000_2fe1
+    ld a, [wBattleTargetIdx]
+    call GetCombatantMaxMP
     pop bc
     call CmpHLvsBC
     jr nc, jr_052_5811
@@ -4294,8 +4294,8 @@ jr_052_57c8:
 
 Jump_052_5811:
 jr_052_5811:
-    ld a, [$db89]
-    ld hl, $dbc3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -4316,7 +4316,7 @@ jr_052_5811:
     ld l, a
     ld a, [$db5b]
     ld h, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     bit 2, a
     jr z, jr_052_5841
 
@@ -4326,15 +4326,15 @@ jr_052_5811:
 
 jr_052_5841:
     ld a, $76
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_052_562c
     call Call_052_5bc4
     ret
 
 
     ld a, $9c
-    ld [$db55], a
-    ld a, [$db89]
+    ld [wBattlePostFlag], a
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -4356,8 +4356,8 @@ jr_052_5864:
 
 
     ld a, $9d
-    ld [$db55], a
-    ld a, [$db89]
+    ld [wBattlePostFlag], a
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -4379,8 +4379,8 @@ jr_052_5889:
 
 
     ld a, $dc
-    ld [$db55], a
-    ld a, [$db89]
+    ld [wBattlePostFlag], a
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -4402,8 +4402,8 @@ jr_052_58ae:
 
 
     ld a, $9f
-    ld [$db55], a
-    ld a, [$db89]
+    ld [wBattlePostFlag], a
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -4424,8 +4424,8 @@ jr_052_58d3:
 
 
     ld a, $db
-    ld [$db55], a
-    ld a, [$db89]
+    ld [wBattlePostFlag], a
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -4460,12 +4460,12 @@ jr_052_58f5:
     ld b, a
     call Call_052_51dd
     ld a, b
-    ld hl, $dba3
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld d, h
     ld e, l
     ld a, b
-    ld hl, $dbb3
+    ld hl, wBattleMaxHP
     call HL_AddA_x2
     ld a, [hl+]
     ld [de], a
@@ -4473,7 +4473,7 @@ jr_052_58f5:
     ld a, [hl]
     ld [de], a
     ld a, $9e
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_052_562c
     ret
 
@@ -4526,7 +4526,7 @@ jr_052_597e:
     jr jr_052_59b0
 
 jr_052_5984:
-    ld hl, $dc23
+    ld hl, wBattleLVL
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -4589,7 +4589,7 @@ jr_052_59b0:
     jr jr_052_59f7
 
 jr_052_59e0:
-    ld hl, $dc23
+    ld hl, wBattleLVL
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -4616,7 +4616,7 @@ jr_052_59f7:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret c
 
@@ -4629,7 +4629,7 @@ jr_052_59f7:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret c
 
@@ -4643,11 +4643,11 @@ jr_052_59f7:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret c
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 0, [hl]
@@ -4663,7 +4663,7 @@ jr_052_59f7:
     call HL_AddA_x8
     set 0, [hl]
     ld a, $88
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     jr jr_052_5a66
 
 jr_052_5a62:
@@ -4676,7 +4676,7 @@ jr_052_5a66:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret c
 
@@ -4690,7 +4690,7 @@ jr_052_5a66:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret c
 
@@ -4704,7 +4704,7 @@ jr_052_5a66:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret c
 
@@ -4723,7 +4723,7 @@ Call_052_5ab2:
     ld hl, $5401
     rst $10
     ld a, $82
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ld a, $00
     ld [$db54], a
     ld a, [$db4c]
@@ -4762,7 +4762,7 @@ jr_052_5af5:
 
 
 Call_052_5af6:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db09
     call HL_AddA_x8
     ld a, [hl]
@@ -4804,8 +4804,8 @@ jr_052_5b24:
 Call_052_5b26:
     ld a, $01
     ld [$db8a], a
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, l
     ld [$db61], a
@@ -4836,7 +4836,7 @@ Call_052_5b26:
     ld a, d
     ld [$db5b], a
     ld bc, $0000
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
     ld l, a
@@ -4862,7 +4862,7 @@ jr_052_5b71:
     ld [hl+], a
     ld [hl], b
     ld a, $82
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_052_50e9
     call Call_052_562c
     ret
@@ -4874,14 +4874,14 @@ Call_052_5b98:
 
 Call_052_5b9e:
     ld a, $b8
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_052_6c23
     call Call_052_561b
     ret
 
 
 Call_052_5baa:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     bit 2, a
     jr z, jr_052_5bb8
 
@@ -4895,7 +4895,7 @@ jr_052_5bb8:
 
 
 Call_052_5bb9:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     bit 2, a
     jr z, jr_052_5bc0
 
@@ -4905,7 +4905,7 @@ jr_052_5bc0:
 
 
 Call_052_5bc4:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     jr nc, jr_052_5bd0
 
@@ -5178,8 +5178,8 @@ jr_052_5d44:
 
 Call_052_5d48:
     call Call_052_5d7a
-    ld a, [$db88]
-    ld hl, $dbc3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -5192,11 +5192,11 @@ Call_052_5d48:
     ld a, c
     ld [hl+], a
     ld [hl], b
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call Call_052_6a01
     jr nc, jr_052_5d79
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld bc, $dbd4
     add a
     add c
@@ -5215,8 +5215,8 @@ jr_052_5d79:
 
 
 Call_052_5d7a:
-    ld a, [$db89]
-    ld hl, $dbc3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -5225,7 +5225,7 @@ Call_052_5d7a:
     or h
     jr z, jr_052_5db9
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld de, $db9b
     add e
     ld e, a
@@ -5308,8 +5308,8 @@ jr_052_5df8:
 
 
 Call_052_5dfc:
-    ld a, [$db89]
-    call ReadEventFlags3
+    ld a, [wBattleTargetIdx]
+    call GetCombatantDEF
     ld b, h
     ld c, l
     ld hl, $0001
@@ -5321,11 +5321,11 @@ Call_052_5dfc:
 
 
 jr_052_5e0e:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_52b1
     call BCsrl1
-    ld a, [$db89]
-    ld hl, $dbf3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleDEF
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -5361,21 +5361,21 @@ jr_052_5e3c:
 
 
 Call_052_5e3e:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_6a13
     jr nc, jr_052_5e92
 
     jr z, jr_052_5e92
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_52b1
     call BCsrl1
     ld a, c
     ld [$db56], a
     ld a, b
     ld [$db57], a
-    ld a, [$db89]
-    ld hl, $dbf3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleDEF
     call HL_AddA_x2
     ld a, [hl]
     add c
@@ -5383,7 +5383,7 @@ Call_052_5e3e:
     ld a, [hl]
     adc b
     ld [hl], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     push hl
     call Call_052_6a13
     pop hl
@@ -5446,11 +5446,11 @@ jr_052_5eb0:
 
 
 Call_052_5eb4:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_52c6
     call BCsrl1
-    ld a, [$db89]
-    ld hl, $dc03
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleAGL
     call HL_AddA_x2
     push hl
     ld d, $00
@@ -5510,19 +5510,19 @@ jr_052_5f06:
 
 
 Call_052_5f08:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_6a49
     jr nc, jr_052_5f5c
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_52c6
     call BCsrl1
     ld a, c
     ld [$db56], a
     ld a, b
     ld [$db57], a
-    ld a, [$db89]
-    ld hl, $dc03
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleAGL
     call HL_AddA_x2
     ld a, [hl]
     add c
@@ -5530,7 +5530,7 @@ Call_052_5f08:
     ld a, [hl]
     adc b
     ld [hl], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     push hl
     call Call_052_6a49
     pop hl
@@ -5572,7 +5572,7 @@ jr_052_5f5c:
 
 
 Call_052_5f5e:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $c1cd
     add l
     ld l, a
@@ -5582,10 +5582,10 @@ Call_052_5f5e:
     ld a, [hl]
     and $80
     ld [hl], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_5270
-    ld a, [$db88]
-    ld hl, $dba3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -5600,16 +5600,16 @@ Call_052_5f5e:
     ld [hl], b
 
 jr_052_5f8a:
-    ld a, [$db88]
-    ld hl, $dbb3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxHP
     call HL_AddA_x2
     ld a, c
     ld [hl+], a
     ld [hl], b
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_528d
-    ld a, [$db88]
-    ld hl, $dbc3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -5624,39 +5624,39 @@ jr_052_5f8a:
     ld [hl], b
 
 jr_052_5fb2:
-    ld a, [$db88]
-    ld hl, $dbd3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxMP
     call HL_AddA_x2
     ld a, c
     ld [hl+], a
     ld [hl], b
-    ld a, [$db88]
-    ld hl, $dbe3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleATK
     call HL_AddA_x2
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_529f
     ld a, c
     ld [hl+], a
     ld [hl], b
-    ld a, [$db88]
-    ld hl, $dbf3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleDEF
     call HL_AddA_x2
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_52b1
     ld a, c
     ld [hl+], a
     ld [hl], b
-    ld a, [$db88]
-    ld hl, $dc03
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleAGL
     call HL_AddA_x2
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_52c6
     ld a, c
     ld [hl+], a
     ld [hl], b
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_52d8
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld de, $dd28
     ld b, a
     add a
@@ -5669,9 +5669,9 @@ jr_052_5fb2:
     adc d
     ld d, a
     call Call_052_6a75
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call Call_052_5325
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld de, $dc64
     swap a
     add e
@@ -5735,7 +5735,7 @@ jr_052_605d:
 jr_052_606b:
     call Call_052_6acf
     ld c, [hl]
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld b, a
     call Call_052_5213
     ret
@@ -5769,8 +5769,8 @@ Call_052_607d:
     jr jr_052_60b1
 
 jr_052_609d:
-    ld a, [$db89]
-    ld hl, $dbb3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleMaxHP
     call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
@@ -5781,8 +5781,8 @@ jr_052_609d:
     ld [$db57], a
 
 jr_052_60b1:
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -5794,8 +5794,8 @@ jr_052_60b1:
     ld a, h
     adc d
     ld b, a
-    ld a, [$db89]
-    call Call_000_2fda
+    ld a, [wBattleTargetIdx]
+    call GetCombatantMaxHP
     call CmpHLvsBC
     jr nc, jr_052_60d1
 
@@ -5813,15 +5813,15 @@ jr_052_60d1:
 
 Call_052_60d7:
     call Call_052_5559
-    ld a, [$db89]
-    ld hl, $dbf3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleDEF
     call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
     ld c, a
     call BCsrl1
-    ld a, [$db88]
-    call Call_000_2fcc
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantATK
     call CmpHLvsBC
     jr z, jr_052_6112
 
@@ -5970,7 +5970,7 @@ jr_052_61a9:
     ld l, a
     ld a, [$db57]
     ld h, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $03
     cp $03
     ret z
@@ -5985,7 +5985,7 @@ jr_052_61bd:
     ld l, a
     ld a, [$db57]
     ld h, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $03
     ret z
@@ -5999,7 +5999,7 @@ jr_052_61bd:
     or a
     jr nz, jr_052_61a9
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $03
     ret nc
 
@@ -6010,7 +6010,7 @@ jr_052_61bd:
     ld l, a
     ld a, [$db57]
     ld h, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     jr jr_052_6205
 
 Call_052_61ec:
@@ -6018,7 +6018,7 @@ Call_052_61ec:
     or a
     jr nz, jr_052_61bd
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $03
     ret nc
 
@@ -6029,7 +6029,7 @@ Call_052_61ec:
     ld l, a
     ld a, [$db57]
     ld h, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
 
 jr_052_6205:
     cp $02
@@ -6044,8 +6044,8 @@ jr_052_6205:
 
 
 Call_052_6214:
-    ld a, [$db89]
-    call ReadEventFlags2
+    ld a, [wBattleTargetIdx]
+    call GetCombatantHP
     call Call_052_69b7
     inc hl
     ld a, l
@@ -6066,8 +6066,8 @@ Call_052_6232:
     call Call_052_6733
     jr nc, jr_052_628b
 
-    ld a, [$db88]
-    call ReadEventFlags2
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantHP
     ld a, l
     ld [$db56], a
     ld a, h
@@ -6093,8 +6093,8 @@ jr_052_6259:
     jr nz, jr_052_626e
 
 jr_052_6265:
-    ld a, [$db89]
-    call ReadEventFlags2
+    ld a, [wBattleTargetIdx]
+    call GetCombatantHP
     dec hl
     jr jr_052_627a
 
@@ -6176,7 +6176,7 @@ Call_052_62cb:
 
 Call_052_62dc:
     call Call_052_60d7
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db8b
     add l
     ld l, a
@@ -6318,7 +6318,7 @@ Call_052_6381:
     or a
     jr nz, jr_052_63a0
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_052_63a0
 
@@ -6363,7 +6363,7 @@ jr_052_63ce:
 
 
 Call_052_63dc:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db9b
     add l
     ld l, a
@@ -6376,7 +6376,7 @@ Call_052_63dc:
     or a
     jr nz, jr_052_6403
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_052_6403
 
@@ -6406,7 +6406,7 @@ jr_052_6404:
 
 
 Call_052_641a:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db9b
     add l
     ld l, a
@@ -6421,7 +6421,7 @@ Call_052_641a:
     or a
     jr nz, jr_052_643d
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_052_643d
 
@@ -6487,7 +6487,7 @@ jr_052_6482:
 
 
 Call_052_6491:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db9b
     add l
     ld l, a
@@ -6605,9 +6605,9 @@ Call_052_6530:
 
 
 Call_052_653e:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld e, a
-    call Call_000_2fef
+    call GetCombatantMP
     add hl, hl
     ld a, l
     ld [$db56], a
@@ -6734,7 +6734,7 @@ jr_052_65fe:
 
 
 Call_052_65ff:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db8b
     add l
     ld l, a
@@ -6749,8 +6749,8 @@ Call_052_65ff:
 
 
 Call_052_6612:
-    ld a, [$db89]
-    ld hl, $dbf3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleDEF
     add a
     add l
     ld l, a
@@ -6779,7 +6779,7 @@ Call_052_6612:
     or c
     jr nz, jr_052_6646
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 1, [hl]
@@ -6824,7 +6824,7 @@ jr_052_6669:
     rst $10
 
 jr_052_666d:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     or $03
     ld hl, $db02
@@ -6845,7 +6845,7 @@ Call_052_6684:
     ld hl, $5109
     rst $10
     ld c, $c9
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld b, a
     call Call_052_5213
     ret
@@ -6880,8 +6880,8 @@ Call_052_66ac:
 
 
 Call_052_66ba:
-    ld a, [$db88]
-    ld hl, $dbe3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleATK
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -6909,7 +6909,7 @@ Call_052_66d6:
     or a
     jr nz, jr_052_66f2
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     bit 2, a
     jr z, jr_052_66f2
 
@@ -6930,7 +6930,7 @@ jr_052_66f4:
     call Call_052_679c
 
 Call_052_6706:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db05
     call HL_AddA_x8
     ret
@@ -7135,7 +7135,7 @@ Call_052_67d9:
     ld de, $dd2e
 
 jr_052_67dc:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld b, a
     add a
     add b
@@ -7606,10 +7606,10 @@ Call_052_69ef:
     push hl
     push bc
     ld b, a
-    call ReadEventFlags2
+    call GetCombatantHP
     push hl
     ld a, b
-    call Call_000_2fda
+    call GetCombatantMaxHP
     pop bc
     call CmpHLvsBC
     pop bc
@@ -7621,10 +7621,10 @@ Call_052_6a01:
     push hl
     push bc
     ld b, a
-    call Call_000_2fef
+    call GetCombatantMP
     push hl
     ld a, b
-    call Call_000_2fe1
+    call GetCombatantMaxMP
     pop bc
     call CmpHLvsBC
     pop bc
@@ -7634,7 +7634,7 @@ Call_052_6a01:
 
 Call_052_6a13:
     ld [$db4c], a
-    call ReadEventFlags3
+    call GetCombatantDEF
     ld bc, $03e7
     call CmpHLvsBC
     jr nc, jr_052_6a45
@@ -7675,7 +7675,7 @@ jr_052_6a45:
 
 Call_052_6a49:
     ld [$db4c], a
-    ld hl, $dc03
+    ld hl, wBattleAGL
     call Call_052_6ab1
     ld bc, $01ff
     call CmpHLvsBC
@@ -7768,7 +7768,7 @@ HL_AddA_x2:
 Call_052_6ac0:
     call Call_052_6acf
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -7776,7 +7776,7 @@ Call_052_6ac0:
 
 
 Call_052_6acf:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dc3c
     add l
     ld l, a
@@ -7793,7 +7793,7 @@ Call_052_6adc:
     push bc
     push hl
     ld b, a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db42
     add l
     ld l, a
@@ -7830,7 +7830,7 @@ jr_052_6b06:
 Call_052_6b0b:
     push hl
     push af
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $dd13
     add l
     ld l, a
@@ -8089,7 +8089,7 @@ jr_052_6c26:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_052_6b48
     ret
@@ -8100,7 +8100,7 @@ jr_052_6c26:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$db50], a
     call Call_052_6b48
     ret
@@ -8254,7 +8254,7 @@ jr_052_6d0a:
     ld a, $04
     ld [$d9ed], a
     call Call_052_6684
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db03
     call HL_AddA_x8
     set 4, [hl]
@@ -8267,7 +8267,7 @@ jr_052_6d20:
     call Call_052_5f5e
     ld hl, $d9ed
     inc [hl]
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db03
     call HL_AddA_x8
     set 5, [hl]
@@ -8275,7 +8275,7 @@ jr_052_6d20:
     or a
     jp nz, Jump_052_6f56
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jp c, Jump_052_6f56
 
@@ -8286,7 +8286,7 @@ jr_052_6d20:
     ld a, $00
     adc h
     ld h, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [hl], a
     ret
 
@@ -8362,8 +8362,8 @@ jr_052_6db0:
     bit 5, a
     jp z, Jump_052_6df2
 
-    ld a, [$db89]
-    ld hl, $dba3
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
@@ -8397,7 +8397,7 @@ jr_052_6de8:
 Jump_052_6df2:
     ld a, [$c863]
     bit 1, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     jr z, jr_052_6e02
 
     cp $03
@@ -8413,7 +8413,7 @@ jr_052_6e02:
     jr z, jr_052_6e26
 
 jr_052_6e0a:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr nc, jr_052_6e26
 
@@ -8586,7 +8586,7 @@ jr_052_6ed7:
     cp $08
     ret z
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db09
     call HL_AddA_x8
     bit 2, [hl]
@@ -8740,7 +8740,7 @@ Jump_052_6f83:
 
     ld a, $01
     ld [$d9ed], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret nc
 
@@ -8772,7 +8772,7 @@ jr_052_6fb2:
     cp c
     jp z, Jump_052_706c
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db08
     call HL_AddA_x8
     bit 0, [hl]
@@ -8791,7 +8791,7 @@ jr_052_6fd4:
     cp $04
     jp nc, Jump_052_706c
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     ld a, [hl]
@@ -8828,8 +8828,8 @@ jr_052_7005:
     ld hl, $5004
     rst $10
     ld a, [$c1c8]
-    ld [$db89], a
-    ld a, [$db88]
+    ld [wBattleTargetIdx], a
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     add a
     add l
@@ -8837,7 +8837,7 @@ jr_052_7005:
     ld a, $00
     adc h
     ld h, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [hl], a
     ld a, $ff
     ld [$c1c8], a
@@ -8881,7 +8881,7 @@ jr_052_702c:
 
 Jump_052_706c:
 jr_052_706c:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dd13
     add l
     ld l, a
@@ -8902,8 +8902,8 @@ Jump_052_7085:
     or a
     call nz, Call_052_7d7c
     call Call_052_7b1a
-    ld a, [$db88]
-    ld [$db89], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
     cp $04
     jr nc, jr_052_70a4
 
@@ -9033,7 +9033,7 @@ Call_052_7139:
 
 Jump_052_714c:
 jr_052_714c:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     ld a, [$dd69]
@@ -9090,7 +9090,7 @@ jr_052_7198:
 
 
 jr_052_719c:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     bit 2, a
     push af
     jr z, jr_052_71a8
@@ -9109,12 +9109,12 @@ jr_052_71aa:
 
     inc a
     push af
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     pop af
     ld [hl], a
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld a, [$db8a]
     cp $95
     jr z, jr_052_71d7
@@ -9125,13 +9125,13 @@ jr_052_71aa:
     cp $ad
     jr z, jr_052_71d7
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_7184
 
 jr_052_71d7:
     ld hl, $dd13
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     add l
     ld l, a
     ld a, $00
@@ -9140,16 +9140,16 @@ jr_052_71d7:
     ld [hl], $02
     ld a, $01
     ld [$d9ed], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [hl], a
     ret
 
 
 Jump_052_71f8:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call GetMonsterSlotInfo
     jp c, Jump_052_7085
 
@@ -9194,7 +9194,7 @@ Jump_052_71f8:
 
 
 Call_052_7242:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db4c], a
     ld hl, $5103
     rst $10
@@ -9250,7 +9250,7 @@ jr_052_7286:
     ld a, $80
     ld [wMenu_selection], a
     ld a, $10
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld hl, $580d
     rst $10
     ld a, $00
@@ -9304,13 +9304,13 @@ jr_052_72fb:
     ld a, [$db77]
     ld [$db52], a
     ld a, $10
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ret
 
 
 jr_052_730f:
     ld hl, $c180
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_052_6b48
     ld a, $ba
@@ -9400,7 +9400,7 @@ jr_052_739d:
     ld hl, $d9ef
     inc [hl]
     ld a, [$db77]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld a, [$db78]
     ld [$db8a], a
     call Call_052_75b5
@@ -9432,14 +9432,14 @@ jr_052_73bc:
     ret z
 
 jr_052_73d3:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     inc a
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     and $03
     cp $03
     ret z
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_73d3
 
@@ -9476,7 +9476,7 @@ jr_052_7408:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_7428
 
@@ -9487,7 +9487,7 @@ jr_052_7408:
     jr jr_052_7474
 
 jr_052_7428:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $03
     cp $03
     jr z, jr_052_744b
@@ -9711,7 +9711,7 @@ jr_052_755c:
     ld hl, wRNG1
     cp [hl]
     ld a, c
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     jr nc, jr_052_758a
 
     ld a, c
@@ -9735,7 +9735,7 @@ jr_052_755c:
     rst $10
 
 jr_052_758a:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     ret
 
@@ -9784,7 +9784,7 @@ jr_052_75bc:
 
 
 jr_052_75be:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl+]
@@ -9806,7 +9806,7 @@ jr_052_75be:
     jr z, jr_052_75bc
 
 jr_052_75dd:
-    ld hl, $db89
+    ld hl, wBattleTargetIdx
     inc [hl]
     ld a, [hl]
     call CheckMonsterSlot
@@ -9882,15 +9882,15 @@ jr_052_762d:
     ld a, [hl]
     and $73
     ld [hl], a
-    ld a, [$db88]
-    ld [$db89], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
     ld hl, $5004
     rst $10
     ld a, $db
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db07
     call HL_AddA_x8
     ld a, [hl]
@@ -9958,7 +9958,7 @@ Call_052_7692:
     push af
     ld a, $06
     ld [$d9ed], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $c180
     ld [$db50], a
     call Call_052_6b48
@@ -9973,7 +9973,7 @@ Call_052_7692:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db07
     call HL_AddA_x8
     ld a, [hl]
@@ -10014,7 +10014,7 @@ jr_052_76dc:
     ld hl, $500a
     rst $10
     ld a, $01
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     jr jr_052_7743
 
 jr_052_76f6:
@@ -10023,7 +10023,7 @@ jr_052_76f6:
     call Copy4Bytes
     ld hl, $00eb
     ld a, $01
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     jr jr_052_7737
 
 jr_052_7709:
@@ -10050,7 +10050,7 @@ jr_052_7723:
     jr nz, jr_052_770c
 
     ld a, $00
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ld a, $00
     ld [$db4e], a
     ld hl, $5009
@@ -10069,11 +10069,11 @@ jr_052_7743:
     ld c, $69
     ld a, [$c863]
     bit 1, a
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     jr z, jr_052_7754
 
     xor $01
-    ld [$db55], a
+    ld [wBattlePostFlag], a
 
 jr_052_7754:
     or a
@@ -10095,7 +10095,7 @@ jr_052_775e:
     ld a, $0a
     ld [$d9ec], a
     scf
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     ld [$dd6b], a
     ret
 
@@ -10167,7 +10167,7 @@ jr_052_77b7:
     call Call_052_7997
     ret c
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call CheckMonsterSlot
     jp c, Jump_052_797c
 
@@ -10207,8 +10207,8 @@ jr_052_77b7:
     ld [$db5b], a
 
 jr_052_780f:
-    ld a, [$db88]
-    ld hl, $dba3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld d, h
     ld e, l
@@ -10248,14 +10248,14 @@ jr_052_7840:
     ld c, a
     ld a, [$db5b]
     ld b, a
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld a, $82
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_052_7fcb
     cp $04
     jr c, jr_052_785e
 
-    ld hl, $db55
+    ld hl, wBattlePostFlag
     inc [hl]
 
 jr_052_785e:
@@ -10266,24 +10266,24 @@ jr_052_785e:
 
 
 Call_052_7868:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     ld b, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $04
     cp b
     ret
 
 
 Call_052_7875:
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     xor $01
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ret
 
 
 Call_052_787e:
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     cp $85
     ret z
 
@@ -10297,7 +10297,7 @@ jr_052_788c:
     ld a, $ea
 
 jr_052_788e:
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ret
 
 
@@ -10313,8 +10313,8 @@ jr_052_788e:
     ret
 
 
-    ld a, [$db88]
-    ld hl, $dba3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, [hl+]
     ld b, [hl]
@@ -10342,18 +10342,18 @@ jr_052_78c0:
     ld a, $02
     ld [$d9ee], a
     ld a, $ea
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_052_7fcb
     cp $04
     jr nc, jr_052_78ea
 
     ld a, $e7
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     jr jr_052_78ea
 
 jr_052_78e5:
     ld a, $85
-    ld [$db55], a
+    ld [wBattlePostFlag], a
 
 jr_052_78ea:
     call Call_052_7868
@@ -10370,12 +10370,12 @@ Call_052_78f4:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$db50], a
     call Call_052_6b48
     ld a, $00
     ld [$c822], a
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     ld [$c823], a
     ld hl, $4c00
     rst $10
@@ -10409,7 +10409,7 @@ jr_052_7938:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$db50], a
     call Call_052_6b48
     ld a, $00
@@ -10425,10 +10425,10 @@ jr_052_7966:
     ld a, $ea
 
 jr_052_7968:
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_052_7868
     call z, Call_052_787e
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     ld [$c823], a
     ld hl, $4c00
     rst $10
@@ -10455,7 +10455,7 @@ Jump_052_7982:
 
 
 Call_052_7997:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call CheckMonsterSlot
     ret nc
 
@@ -10481,8 +10481,8 @@ Call_052_7997:
     inc [hl]
     ld hl, $d9ee
     inc [hl]
-    ld a, [$db88]
-    ld hl, $dba3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
     call HL_AddA_x2
     push hl
     ld a, [hl+]
@@ -10550,7 +10550,7 @@ jr_052_7a13:
 
 
 Call_052_7a18:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dd1b
     add l
     ld l, a
@@ -10558,28 +10558,28 @@ Call_052_7a18:
     adc h
     ld h, a
     ld [hl], $01
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     push af
-    ld a, [$db88]
-    ld [$db89], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
     call Call_052_7242
     pop af
-    ld [$db89], a
-    ld a, [$db88]
+    ld [wBattleTargetIdx], a
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_052_7a48
 
     cp $07
     jr z, jr_052_7a48
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$dd61], a
 
 jr_052_7a48:
     ret
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db03
     call HL_AddA_x8
     bit 4, [hl]
@@ -10594,15 +10594,15 @@ jr_052_7a5a:
     ret
 
 
-    ld a, [$db88]
-    ld [$db89], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
     call Call_052_5f5e
     ret
 
 
     ld hl, $d9ee
     inc [hl]
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr z, jr_052_7a7b
 
@@ -10633,7 +10633,7 @@ jr_052_7a7b:
 jr_052_7a95:
     ld hl, $5004
     rst $10
-    ld hl, $db89
+    ld hl, wBattleTargetIdx
     inc [hl]
     ld a, [hl]
     ld b, a
@@ -10657,7 +10657,7 @@ jr_052_7ab0:
 
 
 Call_052_7ab5:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     call HL_AddA_x2
     push hl
@@ -10674,7 +10674,7 @@ Call_052_7ab5:
     ld [hl+], a
     ld c, a
     push hl
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     xor $04
     ld b, a
@@ -10720,7 +10720,7 @@ jr_052_7af6:
     push bc
     push de
     push hl
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db05
     call HL_AddA_x8
     ld a, [hl]
@@ -10742,8 +10742,8 @@ Call_052_7b1a:
     ret nz
 
 jr_052_7b24:
-    ld a, [$db88]
-    ld hl, $dbc3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMP
     call HL_AddA_x2
     xor a
     ld [hl+], a
@@ -10753,11 +10753,11 @@ jr_052_7b24:
 
     ld hl, $d9ee
     inc [hl]
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_7b70
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, l
@@ -10793,11 +10793,11 @@ jr_052_7b70:
 
     ld hl, $d9ee
     inc [hl]
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_7bb2
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     bit 7, [hl]
@@ -10834,11 +10834,11 @@ jr_052_7bb2:
 
     ld hl, $d9ee
     inc [hl]
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_7be7
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     bit 6, [hl]
@@ -10878,17 +10878,17 @@ Jump_052_7bec:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld b, a
     call GetMonsterSlotInfo
     jp c, Jump_052_7982
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_052_6b48
     call Call_052_5559
     ld b, $00
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db42
     add l
     ld l, a
@@ -10943,7 +10943,7 @@ jr_052_7c47:
     ld hl, $d9ee
     inc [hl]
     call Call_052_7c98
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret c
 
@@ -10964,20 +10964,20 @@ Call_052_7c92:
 
 Call_052_7c98:
 jr_052_7c98:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld l, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld h, a
     ld a, l
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld a, h
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ret
 
 
     ld hl, $d9ee
     inc [hl]
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_7c98
 
@@ -11014,7 +11014,7 @@ jr_052_7cda:
     ld a, $00
     ld [$da83], a
     call Call_052_7c98
-    ld hl, $dba3
+    ld hl, wBattleHP
     call HL_AddA_x2
     ld a, [hl+]
     ld d, [hl]
@@ -11061,13 +11061,13 @@ jr_052_7d1e:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$db50], a
     call Call_052_6b48
     ld a, $00
     ld [$c822], a
     ld b, $e3
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     rrca
     rrca
     and $01
@@ -11077,18 +11077,18 @@ jr_052_7d1e:
     rst $10
     ld hl, $d9ee
     dec [hl]
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$db4c], a
     ld hl, $5103
     rst $10
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     push af
-    ld a, [$db88]
-    ld [$db89], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
     ld hl, $5801
     rst $10
     pop af
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ret
 
 
@@ -11110,7 +11110,7 @@ Call_052_7d7c:
     cp $02
     jr nz, jr_052_7dc8
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     rrca
     rrca
     and $01
@@ -11123,7 +11123,7 @@ Call_052_7d7c:
     bit 5, [hl]
     jr z, jr_052_7dc8
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld e, a
     and $04
     ld c, a
@@ -11177,7 +11177,7 @@ jr_052_7dc8:
 
 
 Call_052_7dcd:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db06
     call HL_AddA_x8
     ret
@@ -11212,7 +11212,7 @@ jr_052_7de0:
     jr jr_052_7dde
 
 jr_052_7df9:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db06
     call HL_AddA_x8
     ld a, [hl]
@@ -11224,13 +11224,13 @@ jr_052_7df9:
     bit 4, a
     jr z, jr_052_7dde
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db08
     call HL_AddA_x8
     bit 3, [hl]
     jr z, jr_052_7dde
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     call GetMonsterSlotInfo
     jr c, jr_052_7dde
 
@@ -11259,7 +11259,7 @@ jr_052_7e44:
     ret
 
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
     ld a, [$dcfd]
@@ -11335,11 +11335,11 @@ jr_052_7e96:
 
 Call_052_7ea7:
 jr_052_7ea7:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     call HL_AddA_x2
     ld a, [hl]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ret
 
 
@@ -11391,12 +11391,12 @@ Call_052_7ef1:
 
     ld hl, $c1c0
     ld a, [hl+]
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld a, [hl+]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld a, [hl+]
     ld [$dd69], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld de, $dcec
     add a
     add e
@@ -11409,7 +11409,7 @@ Call_052_7ef1:
     inc de
     ld a, [hl+]
     ld [de], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld de, $dcec
     add a
     add e
@@ -11422,7 +11422,7 @@ Call_052_7ef1:
     inc de
     ld a, [hl+]
     ld [de], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld de, $dd13
     add e
     ld e, a
@@ -11452,7 +11452,7 @@ jr_052_7f4e:
 
 
 jr_052_7f55:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     rrca
     rrca
     and $01
@@ -11464,7 +11464,7 @@ jr_052_7f55:
     rrca
     and $03
     ld l, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     and $04
     or l
     ld [$db4c], a
@@ -11479,10 +11479,10 @@ jr_052_7f55:
     jr z, jr_052_7f4e
 
 jr_052_7f83:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     or $03
-    ld [$db89], a
-    ld a, [$db88]
+    ld [wBattleTargetIdx], a
+    ld a, [wBattleAttackerIdx]
     ld hl, $dced
     add a
     add l
@@ -11530,15 +11530,15 @@ jr_052_7fc9:
 Call_052_7fcb:
     ld a, [$c863]
     bit 1, a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ret z
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ret
 
 
 Call_052_7fd8:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     xor $04
     ld c, a

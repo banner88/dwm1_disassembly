@@ -130,7 +130,7 @@ jr_018_40d0:
     ldh [$bb], a
     ld a, $00
     ldh [$b7], a
-    call Call_000_1264
+    call ClearSTATMode
     xor a
     ld [$c8a4], a
     ld [$c8a5], a
@@ -607,7 +607,7 @@ jr_018_42cf:
     ld [hl], $3a
 
 Call_018_42d1:
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr nz, jr_018_42da
 
@@ -712,7 +712,7 @@ jr_018_42ff:
     jr nz, jr_018_4368
 
     ld hl, $0246
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_018_4361
 
@@ -1014,7 +1014,7 @@ jr_018_4525:
     ld hl, $c190
     call Copy4Bytes
     ld hl, $0248
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_018_4574
 
@@ -1039,7 +1039,7 @@ jr_018_4578:
     or a
     ret nz
 
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr nz, jr_018_45fe
 
@@ -1093,7 +1093,7 @@ jr_018_45c0:
     ei
     ld hl, $ca94
     ld a, [$d703]
-    call Call_000_2670
+    call SetBitInArray
     ld hl, $0105
     rst $10
     di
@@ -1101,7 +1101,7 @@ jr_018_45c0:
     ld de, $a1ce
     ld bc, $0020
     call Call_018_4617
-    call Call_000_2197
+    call SavePartyToSRAM
     ei
 
 jr_018_45fe:
@@ -2193,7 +2193,7 @@ jr_018_4c76:
     ei
     ld hl, $ca94
     ld a, [$d703]
-    call Call_000_2670
+    call SetBitInArray
     pop hl
     ld a, [hl]
     ld hl, $cac1
@@ -2219,7 +2219,7 @@ jr_018_4cb0:
     ld de, $a1ce
     ld bc, $0020
     call Call_018_4617
-    call Call_000_2197
+    call SavePartyToSRAM
     ei
     ld a, [$c8e0]
     and $01
@@ -2520,7 +2520,7 @@ jr_018_4e7f:
 Call_018_4e8f:
     push af
     ld de, $4f46
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_018_4e9c
 
@@ -2611,7 +2611,7 @@ Call_018_4eee:
 Call_018_4f0e:
     push af
     ld de, $4f46
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_018_4f1b
 

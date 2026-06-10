@@ -109,7 +109,7 @@ SECTION "ROM Bank $050", ROMX[$4000], BANK[$50]
 ; handler via rst $00 jump table.
 ; ---------------------------------------------------------------------------
 Call_050_4017:
-    ld a, [$d9f4]            ; Current event state (0-10)
+    ld a, [wEventStateMachineIndex]            ; Current event state (0-10)
     rst $00                  ; Dispatch via jump table below
 
 ; State dispatch table (11 entries, indexed by $D9F4)
@@ -134,7 +134,7 @@ Call_050_4017:
     ld hl, $5506
     rst $10
     xor a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     ld bc, $0008
     call FillNBytesWithRegA
     ld hl, $9800
@@ -183,7 +183,7 @@ jr_050_4081:
     jr nz, jr_050_4064
 
     ld a, d
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld bc, $0404
     ld a, [$c86c]
     or a
@@ -211,7 +211,7 @@ jr_050_40a5:
     jr nz, jr_050_409e
 
     ld a, d
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld b, $08
     ld hl, $c1cd
 
@@ -221,7 +221,7 @@ jr_050_40b2:
     dec b
     jr nz, jr_050_40b2
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld bc, $0300
     ld a, [$c863]
@@ -283,7 +283,7 @@ Jump_050_40ed:
     ld a, [wMenu_selection]
     call Call_050_790b
     call ClearTileBuffer
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -318,7 +318,7 @@ jr_050_412d:
 
     ld a, $59
     call PlaySoundEffect
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     xor a
     ld [$d9f5], a
@@ -402,7 +402,7 @@ jr_050_41b9:
     call UpdateBattleSprites
     ld hl, $0002
     ld a, $09
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld a, l
     ld [$c822], a
     ld a, h
@@ -421,7 +421,7 @@ jr_050_41b9:
 
     call ClearSpriteBuffer
     ld a, $01
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -496,7 +496,7 @@ jr_050_423c:
     call ClearTileBuffer
 
 jr_050_4259:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -509,7 +509,7 @@ jr_050_4259:
     ld [$c873], a
 
 jr_050_4269:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -609,7 +609,7 @@ jr_050_42d0:
     ld [$c873], a
 
 Jump_050_42fc:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -717,7 +717,7 @@ jr_050_438a:
 
 Jump_050_43a2:
 jr_050_43a2:
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -729,11 +729,11 @@ jr_050_43a2:
     call Call_050_79ae
     call ClearTileBuffer
     xor a
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     xor a
     ld [$c8c7], a
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld hl, $d9ec
     inc [hl]
     ret
@@ -794,7 +794,7 @@ jr_050_4401:
 
 
     ld a, $04
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     xor a
     ld [$d9f5], a
     ret
@@ -815,7 +815,7 @@ jr_050_4401:
     ld d, c
     ld b, a
     ld a, $00
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -830,7 +830,7 @@ jr_050_4401:
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld a, $00
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld de, $6ed2
     call LoadPaletteFromDE
     ret
@@ -859,7 +859,7 @@ jr_050_4401:
     jr z, jr_050_4487
 
     ld a, $01
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jr jr_050_44a9
 
 jr_050_4487:
@@ -1072,7 +1072,7 @@ jr_050_45d6:
     ld a, $00
     ld [$d9f5], a
     ld a, $01
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     call Call_050_5708
     jp Jump_050_40ed
 
@@ -1155,7 +1155,7 @@ jr_050_465c:
 
 
 jr_050_466d:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld b, a
     ld c, $00
     ld a, [$c863]
@@ -1302,7 +1302,7 @@ Jump_050_471f:
     xor a
     ld [$d9f7], a
     call Call_050_47be
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $01
     ret z
 
@@ -1332,7 +1332,7 @@ jr_050_4750:
 
     call Call_050_4764
     call ClearSpriteBuffer
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld a, $ff
     ld [$db77], a
@@ -1631,7 +1631,7 @@ jr_050_4918:
 
 jr_050_4937:
     call Call_050_4975
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_050_4945
 
@@ -1678,7 +1678,7 @@ Call_050_4975:
     adc h
     ld h, a
     xor a
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ld bc, $0800
 
 jr_050_498a:
@@ -1696,9 +1696,9 @@ jr_050_498a:
     cp $7e
     jr z, jr_050_49a2
 
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     inc a
-    ld [$db55], a
+    ld [wBattlePostFlag], a
 
 jr_050_49a2:
     inc hl
@@ -2058,7 +2058,7 @@ Call_050_4ba4:
     ld c, a
     ld b, $00
     ld a, [$c8dd]
-    ld hl, $dbc3
+    ld hl, wBattleMP
     add a
     add l
     ld l, a
@@ -2161,20 +2161,20 @@ jr_050_4c3b:
     jr jr_050_4c96
 
 jr_050_4c40:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld b, a
     ld a, [$db8a]
     ld c, a
     push bc
     ld a, [$c8dd]
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld a, [$db4f]
     ld [$db8a], a
     ld hl, $5805
     rst $10
     pop bc
     ld a, b
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld a, c
     ld [$db8a], a
     jr jr_050_4c9a
@@ -2190,20 +2190,20 @@ jr_050_4c6d:
     jr jr_050_4c96
 
 jr_050_4c72:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld b, a
     ld a, [$db8a]
     ld c, a
     push bc
     ld a, [$c8dd]
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld a, [$db4f]
     ld [$db8a], a
     ld hl, $5804
     rst $10
     pop bc
     ld a, b
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld a, c
     ld [$db8a], a
     jr jr_050_4c9a
@@ -2547,7 +2547,7 @@ jr_050_4ec9:
     ld [hl], $02
 
 jr_050_4ed7:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $01
     jr z, jr_050_4f36
 
@@ -2936,7 +2936,7 @@ jr_050_50e1:
     ld hl, $5508
     rst $10
     ld a, $01
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     jp Jump_050_517a
 
 
@@ -3833,7 +3833,7 @@ jr_050_56a0:
     jr nz, jr_050_56a0
 
     call ClearSpriteBuffer
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -3854,7 +3854,7 @@ jr_050_56a0:
 
     call ClearSpriteBuffer
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     xor a
     ld [$d9f5], a
     ret
@@ -3929,7 +3929,7 @@ Call_050_5708:
     cp $01
     jr z, jr_050_576c
 
-    ld a, [$d8d3]
+    ld a, [wScriptMapType]
     cp $5d
     jr nz, jr_050_576c
 
@@ -4060,7 +4060,7 @@ jr_050_57e8:
 jr_050_5808:
     xor a
     ld [$db4e], a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ld a, $0a
     ld [$d9ec], a
@@ -4071,14 +4071,14 @@ jr_050_5808:
     ld [hl+], a
     ld [hl], a
     ld a, $02
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     call Call_050_590c
     ld a, [$db73]
     or a
     ret z
 
     ld a, $01
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ret
 
 
@@ -4086,7 +4086,7 @@ jr_050_5808:
     or a
     ret nz
 
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
@@ -4135,7 +4135,7 @@ jr_050_5892:
 
 jr_050_5895:
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld [wMenu_selection], a
     ld [$d9f5], a
     ret
@@ -4401,15 +4401,15 @@ PersonalityRunTable:
     ld h, a
     call Call_050_56f1
     ld a, [$db5a]
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $c180
     ld [$db50], a
     call Call_050_7d2e
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
     add l
@@ -4437,7 +4437,7 @@ jr_050_5a19:
     call Call_050_5a71
 
 jr_050_5a1c:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
     add l
@@ -4481,7 +4481,7 @@ Call_050_5a53:
 
 Call_050_5a5e:
     ld a, [hl]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $5802
     rst $10
     ld a, [$dd72]
@@ -4493,7 +4493,7 @@ Call_050_5a5e:
 
 Call_050_5a71:
     ld a, [hl]
-    ld [$db89], a
+    ld [wBattleTargetIdx], a
     ld hl, $5802
     rst $10
     ld a, [$dd72]
@@ -4532,7 +4532,7 @@ jr_050_5a9c:
     or a
     jr nz, jr_050_5ac5
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     cp $04
     jr nc, jr_050_5aad
 
@@ -4560,7 +4560,7 @@ jr_050_5aad:
 
 Call_050_5ac5:
 jr_050_5ac5:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld hl, $c1a0
     ld [$db50], a
     call Call_050_7d2e
@@ -4597,7 +4597,7 @@ Call_050_5ae5:
     call LoadPaletteFromDE
     call ClearTileBuffer
     ld a, $00
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld a, $00
     ld [$d9f5], a
     ret
@@ -4679,7 +4679,7 @@ jr_050_5b56:
     call LoadPaletteFromDE
     call ClearTileBuffer
     ld a, $00
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld a, $00
     ld [$d9f5], a
     ret
@@ -5039,7 +5039,7 @@ jr_050_5d22:
 
 Call_050_5d29:
     ld a, $02
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ld a, [$db73]
     or a
     jr nz, jr_050_5d46
@@ -5081,7 +5081,7 @@ jr_050_5d5c:
     add $03
     call Call_050_6aa0
     ld a, $00
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ret
 
 
@@ -5092,7 +5092,7 @@ jr_050_5d71:
     inc [hl]
     call Call_050_696d
     ld a, $04
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld a, [$db4c]
     cp $02
     jr c, jr_050_5d8a
@@ -5110,7 +5110,7 @@ jr_050_5d8a:
     add $09
     call Call_050_6aa0
     ld a, $01
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ret
 
 
@@ -5174,13 +5174,13 @@ jr_050_5dc8:
     ld bc, $0008
     call FillNBytesWithRegA
     xor a
-    ld hl, $d9f4
+    ld hl, wEventStateMachineIndex
     ld bc, $0008
     call FillNBytesWithRegA
     xor a
     ld [$d9ed], a
     ld [$dd62], a
-    call Call_000_1264
+    call ClearSTATMode
     xor a
     ld [$dd60], a
     xor a
@@ -5757,7 +5757,7 @@ jr_050_6139:
     call Call_050_5c40
     ld hl, $5102
     rst $10
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_050_6150
 
@@ -5786,7 +5786,7 @@ jr_050_6150:
     ld a, e
     ldh [$d7], a
     ld hl, $c180
-    call Call_000_09c7
+    call FormatLargeNumber
     call Call_050_61cd
     ld a, b
     ld hl, $0b0e
@@ -6095,7 +6095,7 @@ jr_050_630d:
     ld hl, $d9ec
     inc [hl]
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ret
 
 
@@ -6119,7 +6119,7 @@ jr_050_6318:
     ld hl, $d9ec
     inc [hl]
     xor a
-    ld [$d9f4], a
+    ld [wEventStateMachineIndex], a
     ld hl, $5407
     rst $10
     ret
@@ -6217,7 +6217,7 @@ jr_050_63a4:
     ret
 
 
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr nz, jr_050_63cc
 
@@ -6232,7 +6232,7 @@ jr_050_63cc:
     ret
 
 
-    ld a, [$d9f4]
+    ld a, [wEventStateMachineIndex]
     cp $24
     jr z, jr_050_63de
 
@@ -6254,14 +6254,14 @@ jr_050_63ea:
     ld a, [$dd61]
     sub $04
     add a
-    ld hl, $da03
+    ld hl, wTempEnemyId1
     add l
     ld l, a
     ld a, $00
     adc h
     ld h, a
     ld a, [hl+]
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, [hl]
     ld [$da13], a
     ld hl, $1406
@@ -6298,7 +6298,7 @@ Jump_050_640a:
 
     ld hl, $c8ea
     res 7, [hl]
-    ld a, [$d999]
+    ld a, [wArenaStarryBattle]
     cp $02
     jr z, jr_050_64a0
 
@@ -6307,28 +6307,28 @@ Jump_050_640a:
 
     call LoadArenaEnemyStats
     xor a
-    ld [$d8d7], a
-    ld a, [$db55]
+    ld [wScriptStateFlags], a
+    ld a, [wBattlePostFlag]
     cp $01
     ret nz
 
     ld a, $ff
-    ld [$d9cd], a
+    ld [wColiseumBattle], a
     ld hl, $0006
     ld a, l
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, h
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $00e8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0048
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ret
@@ -6337,26 +6337,26 @@ Jump_050_640a:
 jr_050_6486:
     call LoadArenaEnemyStats
     xor a
-    ld [$d8d7], a
-    ld a, [$db55]
+    ld [wScriptStateFlags], a
+    ld a, [wBattlePostFlag]
     cp $01
     jr z, jr_050_64af
 
-    ld a, [$d9cd]
+    ld a, [wColiseumBattle]
     cp $02
     ret nz
 
     ld a, $02
-    ld [$d999], a
+    ld [wArenaStarryBattle], a
     ret
 
 
 jr_050_64a0:
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld a, $03
-    ld [$d999], a
-    ld a, [$db55]
+    ld [wArenaStarryBattle], a
+    ld a, [wBattlePostFlag]
     cp $01
     ret nz
 
@@ -6365,19 +6365,19 @@ jr_050_64af:
     ld [$d92b], a
     ld hl, $0000
     ld a, l
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, h
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $00e8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0058
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld hl, $c8ea
@@ -6392,7 +6392,7 @@ Jump_050_64e0:
 
     call Call_050_67ae
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, $c8ea
     res 7, [hl]
     jr jr_050_6546
@@ -6402,7 +6402,7 @@ jr_050_64f5:
     cp $02
     jr nz, jr_050_6546
 
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     cp $01
     ret nz
 
@@ -6448,7 +6448,7 @@ Call_050_6535:
 
 
 jr_050_6546:
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     cp $01
     jr z, jr_050_6559
 
@@ -6466,19 +6466,19 @@ jr_050_6559:
     ld [$d92b], a
     ld hl, $0000
     ld a, l
-    ld [$c96d], a
+    ld [wWarpGateId], a
     ld a, h
-    ld [$c96e], a
+    ld [wWarpFlag], a
     ld hl, $00e8
     ld a, l
-    ld [$c96f], a
+    ld [wWarpSpawnXLo], a
     ld a, h
-    ld [$c970], a
+    ld [wWarpSpawnXHi], a
     ld hl, $0058
     ld a, l
-    ld [$c971], a
+    ld [wWarpSpawnYLo], a
     ld a, h
-    ld [$c972], a
+    ld [wWarpSpawnYHi], a
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld hl, $c8ea
@@ -6531,7 +6531,7 @@ jr_050_65c7:
     xor a
     ldh [$90], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, wGameState
     res 0, [hl]
     ret
@@ -6563,7 +6563,7 @@ jr_050_65f9:
     cp $ff
     jr z, jr_050_6663
 
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     or a
     jr z, jr_050_6663
 
@@ -6592,7 +6592,7 @@ jr_050_65f9:
     ld hl, $0105
     rst $10
     di
-    call Call_000_2197
+    call SavePartyToSRAM
     ei
     ld a, $00
     call Call_050_669f
@@ -6690,16 +6690,16 @@ jr_050_66cc:
 
 
 LoadArenaEnemyStats:
-    ld a, [$d9cd]
+    ld a, [wColiseumBattle]
     cp $03
     ret z
 
-    ld a, [$d9ce]
+    ld a, [wArenaGroup]
     ld b, a
     add a
     add b
     ld b, a
-    ld a, [$d9cd]
+    ld a, [wColiseumBattle]
     add b
     ld b, a
     add a
@@ -6711,7 +6711,7 @@ LoadArenaEnemyStats:
     adc h
     ld h, a
     ld a, l
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, h
     ld [$da04], a
     inc hl
@@ -6726,12 +6726,12 @@ LoadArenaEnemyStats:
     ld [$da08], a
     ld a, $02
     ld [$da02], a
-    ld a, [$d9ce]
+    ld a, [wArenaGroup]
     ld b, a
     add a
     add b
     ld b, a
-    ld a, [$d9cd]
+    ld a, [wColiseumBattle]
     add b
     add a
     ld hl, $6778
@@ -6744,7 +6744,7 @@ LoadArenaEnemyStats:
     ld [$d7ca], a
     ld a, [hl]
     ld [$d7cb], a
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
     ld h, a
@@ -6773,7 +6773,7 @@ LoadArenaEnemyStats:
 
 Call_050_6766:
     ld a, l
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
     ld hl, $1401
@@ -6849,12 +6849,12 @@ Call_050_67ae:
     ld [hl+], a
     xor a
     ld [hl], a
-    ld a, [$d9cd]
+    ld a, [wColiseumBattle]
     or a
     jr nz, jr_050_682d
 
     ld a, $01
-    ld [$d9cd], a
+    ld [wColiseumBattle], a
     ld a, $02
     ld [$da02], a
     ld a, [$d9d1]
@@ -6862,7 +6862,7 @@ Call_050_67ae:
     ld a, [$d9d2]
     ld h, a
     ld a, l
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, h
     ld [$da04], a
     call Call_050_6766
@@ -6909,7 +6909,7 @@ jr_050_682d:
     jr nz, jr_050_6898
 
     ld a, $02
-    ld [$d9cd], a
+    ld [wColiseumBattle], a
     ld a, $02
     ld [$da02], a
     ld a, [$d9d9]
@@ -6917,7 +6917,7 @@ jr_050_682d:
     ld a, [$d9da]
     ld h, a
     ld a, l
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld a, h
     ld [$da04], a
     call Call_050_6766
@@ -6961,7 +6961,7 @@ jr_050_682d:
 
 jr_050_6898:
     ld a, $03
-    ld [$d9cd], a
+    ld [wColiseumBattle], a
     ret
 
 
@@ -7044,7 +7044,7 @@ jr_050_68fb:
 
 
 Call_050_68fc:
-    ld a, [$db55]
+    ld a, [wBattlePostFlag]
     cp $02
     jr z, jr_050_6913
 
@@ -7416,7 +7416,7 @@ jr_050_6ae9:
     ld hl, $d9ed
     inc [hl]
     xor a
-    ld [$db88], a
+    ld [wBattleAttackerIdx], a
     ld [$d9f2], a
     ld [$d9f3], a
     jr jr_050_6b11
@@ -7440,7 +7440,7 @@ Jump_050_6b11:
 jr_050_6b11:
     ld hl, $d9ed
     inc [hl]
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call CheckMonsterSlot
     jr nc, jr_050_6b25
 
@@ -7452,7 +7452,7 @@ jr_050_6b11:
 jr_050_6b25:
     ld hl, $d9ed
     inc [hl]
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db07
     call HL_AddA_x8
     ld a, [hl]
@@ -7489,7 +7489,7 @@ jr_050_6b4f:
 
 
 Jump_050_6b5e:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
@@ -7516,8 +7516,8 @@ jr_050_6b81:
     ld d, $06
 
 jr_050_6b88:
-    ld a, [$db88]
-    call Call_000_2fda
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantMaxHP
     ld a, d
     call Div16x8To16
     ld a, h
@@ -7532,14 +7532,14 @@ jr_050_6b99:
     ld [$db56], a
     ld a, h
     ld [$db57], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call Call_050_7e1e
     ld hl, $c190
     ld a, [$db56]
     ld c, a
     ld a, [$db57]
     ld b, a
-    call Call_000_0a7c
+    call FormatDecimalDigits
     ld a, [$db4c]
     call Call_050_6aa0
     ld a, $05
@@ -7603,8 +7603,8 @@ jr_050_6c01:
 jr_050_6c14:
     ld hl, $d9ed
     inc [hl]
-    ld a, [$db88]
-    ld hl, $dba3
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
     add a
     add l
     ld l, a
@@ -7652,18 +7652,18 @@ jr_050_6c43:
 
 
 jr_050_6c59:
-    ld a, [$db88]
-    ld [$db89], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
     ld hl, $5801
     rst $10
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$db4c], a
     ld hl, $5103
     rst $10
     call Call_050_7c4d
     ld a, $04
     ld [$d9ed], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     call Call_050_7e1e
     ld a, $ea
     call Call_050_6aa0
@@ -7673,21 +7673,21 @@ jr_050_6c59:
     or a
     ret nz
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     ret c
 
     cp $07
     ret z
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$dd61], a
     ret
 
 
     ld hl, $d9ed
     inc [hl]
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     and $04
     ld c, a
     ld b, $03
@@ -7695,7 +7695,7 @@ jr_050_6c59:
     or a
     jr nz, jr_050_6cd3
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_050_6cd3
 
@@ -7710,7 +7710,7 @@ jr_050_6cb4:
 
 jr_050_6cbe:
     ld a, $00
-    ld [$db55], a
+    ld [wBattlePostFlag], a
 
 jr_050_6cc3:
     ld a, $0a
@@ -7739,7 +7739,7 @@ jr_050_6ce4:
     jr nz, jr_050_6cd3
 
     ld a, $01
-    ld [$db55], a
+    ld [wBattlePostFlag], a
     ld a, [$c86c]
     or a
     jr z, jr_050_6cc3
@@ -7748,14 +7748,14 @@ jr_050_6ce4:
     bit 1, a
     jr z, jr_050_6d03
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr nc, jr_050_6cc3
 
     jr jr_050_6cbe
 
 jr_050_6d03:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     cp $04
     jr c, jr_050_6cc3
 
@@ -7763,7 +7763,7 @@ jr_050_6d03:
 
 Jump_050_6d0c:
 jr_050_6d0c:
-    ld hl, $db88
+    ld hl, wBattleAttackerIdx
     inc [hl]
     ld a, [hl]
     cp $08
@@ -10464,7 +10464,7 @@ jr_050_79dd:
 
 
 jr_050_79eb:
-    ld hl, $dba3
+    ld hl, wBattleHP
     ld a, [$c863]
     bit 1, a
     jr z, jr_050_79f8
@@ -10769,8 +10769,8 @@ jr_050_7b9e:
     ld [hl+], a
     ld [hl], a
     ld a, c
-    ld [$db88], a
-    ld [$db89], a
+    ld [wBattleAttackerIdx], a
+    ld [wBattleTargetIdx], a
     push af
     push bc
     push de
@@ -10891,7 +10891,7 @@ Call_050_7c4d:
     bit 1, a
     jr z, jr_050_7c73
 
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld c, a
     cp $04
     jr c, jr_050_7c67
@@ -10902,7 +10902,7 @@ Call_050_7c4d:
     jr jr_050_7c84
 
 jr_050_7c67:
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld c, a
     cp $04
     ret c
@@ -10913,12 +10913,12 @@ jr_050_7c67:
     jr jr_050_7c84
 
 jr_050_7c73:
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld c, a
     cp $03
     jr c, jr_050_7c86
 
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld c, a
     cp $03
     jr c, jr_050_7c86
@@ -11266,7 +11266,7 @@ jr_050_7e0c:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db89]
+    ld a, [wBattleTargetIdx]
     ld [$db50], a
     call Call_050_7d2e
     ret
@@ -11278,7 +11278,7 @@ Call_050_7e1e:
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
-    ld a, [$db88]
+    ld a, [wBattleAttackerIdx]
     ld [$db50], a
     call Call_050_7d2e
     ret

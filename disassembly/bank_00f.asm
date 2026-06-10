@@ -7,7 +7,7 @@ SECTION "ROM Bank $00f", ROMX[$4000], BANK[$f]
 
     db $0f ;ROM BANK
 
-    dw Call_00f_4007
+    dw LoadScriptRoomData
     dw labelf_402f
     dw labelf_4110
 
@@ -17,8 +17,8 @@ SECTION "ROM Bank $00f", ROMX[$4000], BANK[$f]
 ; $D8D4 (script_id) → per-NPC data pointer
 ; $D8D5/$D8D6 (counter) → BC command pair
 ; ---------------------------------------------------------------------------
-Call_00f_4007:
-    ld a, [$d8d3]
+LoadScriptRoomData:
+    ld a, [wScriptMapType]
     ld l, a
     ld h, $00
     add hl, hl
@@ -27,7 +27,7 @@ Call_00f_4007:
     ld e, [hl]
     inc hl
     ld d, [hl]
-    ld a, [$d8d4]
+    ld a, [wScriptNPCId]
     ld l, a
     ld h, $00
     add hl, hl
@@ -35,7 +35,7 @@ Call_00f_4007:
     ld e, [hl]
     inc hl
     ld d, [hl]
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     ld l, a
     ld a, [$d8d6]
     ld h, a
@@ -78,13 +78,13 @@ labelf_402f:
     ld [$d8e7], a
     ld a, h
     ld [$d8e8], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_00f_4007
+    call LoadScriptRoomData
     push bc
     call Call_00f_40e7
     pop bc
@@ -252,13 +252,13 @@ labelf_4110:
     ld [$d8e7], a
     ld a, h
     ld [$d8e8], a
-    ld a, [$d8d5]
+    ld a, [wScriptCounter]
     add $01
-    ld [$d8d5], a
+    ld [wScriptCounter], a
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_00f_4007
+    call LoadScriptRoomData
     push bc
     call Call_00f_4171
     pop bc
@@ -6653,7 +6653,7 @@ jr_00f_5bc7:
     xor $5b
     rst $38
     rst $38
-    call z, Call_000_3000
+    call z, NopReturn
     ld sp, $34d8
     dec [hl]
     reti
@@ -7029,7 +7029,7 @@ jr_00f_5d47:
     ld e, l
     rst $38
     rst $38
-    call z, Call_000_3000
+    call z, NopReturn
     ld sp, $34d8
     dec [hl]
     reti

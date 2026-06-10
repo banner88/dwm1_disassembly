@@ -255,7 +255,7 @@ jr_019_413e:
     ld hl, $0401
     rst $10
     ld hl, wDebug_main_menu_option
-    ld a, [$c939]
+    ld a, [wCurrentFloor]
     ld c, a
     ld b, $00
     inc bc
@@ -312,7 +312,7 @@ jr_019_4193:
     ld hl, $0401
     rst $10
     ld hl, wDebug_main_menu_option
-    ld a, [$c93a]
+    ld a, [wLastFloor]
     ld c, a
     ld b, $00
     dec bc
@@ -775,7 +775,7 @@ jr_019_442b:
     ldh [$b6], a
     ld hl, $0b02
     rst $10
-    call Call_000_25f1
+    call GetBGMapAddress
     ld hl, wGameState
     res 3, [hl]
     xor a

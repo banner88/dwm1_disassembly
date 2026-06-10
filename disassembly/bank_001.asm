@@ -67,13 +67,13 @@ label1_401d:
     ld hl, $c827
     ld bc, $0012
     call FillNBytesWithRegA
-    call Call_000_3331
+    call InitAudioSystem
     xor a
     ld [wCurrPlayingBGM], a
     xor a
     ld [$c88f], a
     call Call_001_43e3
-    call Call_000_1c89
+    call SetColorMode
     call Call_001_431a
     ld hl, $8b00
     ld de, $1202
@@ -91,7 +91,7 @@ label1_401d:
     ld [$c8a1], a
     ld a, $01
     ld [$c892], a
-    call Call_000_125d
+    call EnableLYCInterrupt
     ld a, $03
     jp Jump_000_11cb
 
@@ -165,7 +165,7 @@ Call_001_4074:
 
 jr_001_4105:
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
 
 jr_001_410b:
     ld a, $01
@@ -230,7 +230,7 @@ jr_001_4161:
     jr nz, jr_001_4161
 
     call Call_001_4074
-    call Call_000_122f
+    call ApplyScrollRegisters
     ld a, [$c817]
     ld l, a
     ld h, $00
@@ -337,7 +337,7 @@ Call_001_421c:
     xor a
     ld [wGameState], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld [$d8d8], a
     ld a, $04
     ld [wTextSpeed], a
@@ -496,16 +496,16 @@ jr_001_4346:
 
 
 jr_001_4358:
-    ld a, [$c939]
+    ld a, [wCurrentFloor]
     ld b, a
-    ld a, [$c93a]
+    ld a, [wLastFloor]
     sub $02
     cp b
     ld a, $34
     ret nz
 
     ld hl, $4373
-    ld a, [$c93b]
+    ld a, [wBossMapType]
     add l
     ld l, a
     ld a, $00
@@ -635,9 +635,9 @@ Call_001_43e3:
     or a
     jr z, jr_001_43fd
 
-    ld a, [$c96d]
+    ld a, [wWarpGateId]
     ldh [$d5], a
-    ld a, [$c96e]
+    ld a, [wWarpFlag]
     ldh [$d6], a
 
 jr_001_43fd:
@@ -703,13 +703,13 @@ Call_001_4429:
     or a
     jr z, jr_001_4464
 
-    ld a, [$c96f]
+    ld a, [wWarpSpawnXLo]
     ldh [$92], a
-    ld a, [$c970]
+    ld a, [wWarpSpawnXHi]
     ldh [$93], a
-    ld a, [$c971]
+    ld a, [wWarpSpawnYLo]
     ldh [$95], a
-    ld a, [$c972]
+    ld a, [wWarpSpawnYHi]
     ldh [$96], a
     jr jr_001_4498
 
@@ -1822,18 +1822,18 @@ jr_001_4947:
 
 Call_001_4986:
     ld hl, $cac1
-    call Call_000_2284
+    call ReadActiveMonsterByte
     or a
     ret z
 
     ld hl, $cb0b
-    call Call_000_2284
+    call ReadActiveMonsterByte
     bit 7, a
     ld a, $01
     jr nz, jr_001_49a2
 
     ld hl, $caca
-    call Call_000_2284
+    call ReadActiveMonsterByte
     add $10
 
 jr_001_49a2:
@@ -1856,7 +1856,7 @@ jr_001_49a2:
     ld l, $00
     call WaitDMATransfer
     ld hl, $cacb
-    call Call_000_2284
+    call ReadActiveMonsterByte
     add a
     ld hl, $4bad
     add l
@@ -2453,7 +2453,7 @@ Call_001_4c10:
     xor a
     ld [$d9df], a
     ld [$d9e0], a
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret nz
 
@@ -2472,9 +2472,9 @@ Call_001_4c10:
     jr nz, jr_001_4c49
 
     ld a, $00
-    ld [$d8d4], a            ; script_id = $00 (room entry script)
+    ld [wScriptNPCId], a            ; script_id = $00 (room entry script)
     ld a, [wMapID]
-    ld [$d8d3], a            ; map type = current map
+    ld [wScriptMapType], a            ; map type = current map
     ld hl, $0405             ; Bank $04 entry 5: ScriptInit
     rst $10
     ret
@@ -2482,9 +2482,9 @@ Call_001_4c10:
 
 jr_001_4c49:
     ld a, $00
-    ld [$d8d4], a            ; script_id = $00 (room entry script)
+    ld [wScriptNPCId], a            ; script_id = $00 (room entry script)
     ld a, $70
-    ld [$d8d3], a            ; map type = $70 (gate world)
+    ld [wScriptMapType], a            ; map type = $70 (gate world)
     ld hl, $0405             ; Bank $04 entry 5: ScriptInit
     rst $10
     ret
@@ -2605,7 +2605,7 @@ Call_001_4d02:
     ld a, [wRNG1]
     and $3f
     inc a
-    ld [$da12], a
+    ld [wTempEnemyStatsId], a
     xor a
     ld [$da13], a
     ld hl, $1402
@@ -2614,7 +2614,7 @@ Call_001_4d02:
     push af
     call GenerateRNG
     and $7f
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $cad6
     ld c, a
     pop af
@@ -2624,7 +2624,7 @@ Call_001_4d02:
     push af
     call GenerateRNG
     and $7f
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $cad7
     ld c, a
     pop af
@@ -2659,7 +2659,7 @@ Call_001_4d02:
     ld hl, $cad6
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -2671,7 +2671,7 @@ Call_001_4d02:
     ld hl, $cad7
     call GetMonsterDataPtr
     ld a, [hl]
-    ld [$da31], a
+    ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld a, [$da33]
@@ -2901,7 +2901,7 @@ jr_001_4ef9:
 
 
 Call_001_4efa:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret nz
 
@@ -3026,7 +3026,7 @@ Call_001_4f70:
     bit 0, a
     jp nz, Jump_001_51b2
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_001_51b2
 
@@ -3401,7 +3401,7 @@ Jump_001_51fd:
     bit 0, a
     jp nz, Jump_001_5253
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jp nz, Jump_001_5212
 
@@ -3411,7 +3411,7 @@ Jump_001_51fd:
 
 Jump_001_5212:
     ld c, $00
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jr z, jr_001_521c
 
@@ -3800,7 +3800,7 @@ jr_001_5425:
     or a
     ret nz
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret nz
 
@@ -4182,14 +4182,14 @@ CopyPlayerCoordsAndGetNextRoom:
     cp $ff
     ret z                    ; No NPC found → return
 
-    ld [$d8d4], a            ; ★ Store NPC script_id for script bank lookup
+    ld [wScriptNPCId], a            ; ★ Store NPC script_id for script bank lookup
     ld a, [wMapID]
-    ld [$d8d3], a            ; Store map type for script bank selection
+    ld [wScriptMapType], a            ; Store map type for script bank selection
     xor a
-    ld [$d8d7], a            ; Clear script state flags
+    ld [wScriptStateFlags], a            ; Clear script state flags
     ld hl, $0405             ; Bank $04 entry 5: ScriptInit
     rst $10                  ; Execute NPC script (may queue text)
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret z                    ; Script produced nothing → return
 
@@ -4249,7 +4249,7 @@ Call_001_5629:
 
 
 Call_001_565e:
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     jr nz, jr_001_5690
 
@@ -5062,7 +5062,7 @@ jr_001_5aab:
     push hl
     ld hl, $010d
     rst $10
-    ld a, [$c93c]
+    ld a, [wBossTileset]
     cp $01
     jr nz, jr_001_5ae0
 
@@ -5091,10 +5091,10 @@ jr_001_5ae0:
     jr jr_001_5b22
 
 jr_001_5af8:
-    ld a, [$ca38]
+    ld a, [wEncounterPoolIndex]
     add $0a
     ld c, a
-    ld a, [$c939]
+    ld a, [wCurrentFloor]
     inc a
     call Mul8x8To16
     push hl
@@ -5200,7 +5200,7 @@ jr_001_5b87:
     ld a, $00
     ldh [$d7], a
     ld hl, $c180
-    call Call_000_09c7
+    call FormatLargeNumber
     ld hl, $0215
     ld a, l
     ld [$c917], a
@@ -5211,7 +5211,7 @@ jr_001_5b87:
     ld a, [$d792]
     ld h, a
     ld e, $00
-    call Call_000_241a
+    call CompareGold
     ret
 
 
@@ -5305,7 +5305,7 @@ jr_001_5c39:
     ld a, $00
     ldh [$d7], a
     ld hl, $c180
-    call Call_000_09c7
+    call FormatLargeNumber
     ld hl, $0216
     ld a, l
     ld [$c917], a
@@ -5357,7 +5357,7 @@ jr_001_5c6f:
     ld a, $02
     call Call_001_5cd3
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
 
 jr_001_5cac:
     ld a, [$ca3b]
@@ -5376,7 +5376,7 @@ jr_001_5cac:
     ld a, $02
     call Call_001_5d33
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
 
 jr_001_5cd2:
     ret
@@ -5508,11 +5508,11 @@ Call_001_5d6d:
     ret nz
 
     ld a, $01
-    ld [$d8d4], a
+    ld [wScriptNPCId], a
     ld a, $54
-    ld [$d8d3], a
+    ld [wScriptMapType], a
     xor a
-    ld [$d8d7], a
+    ld [wScriptStateFlags], a
     ld hl, $0405
     rst $10
     ret
@@ -5673,7 +5673,7 @@ jr_001_5e23:
     ld a, $2d
     ld [wBGPalette], a
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
 
 jr_001_5e7c:
     ret
@@ -5750,7 +5750,7 @@ Call_001_5ea9:
 
     call Call_001_484e
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     ld hl, $ff90
     res 1, [hl]
     ld a, $4f
@@ -5784,7 +5784,7 @@ jr_001_5f01:
     ld [$c916], a
     call Call_001_484e
     call UpdateOAMSprites
-    call Call_000_25f1
+    call GetBGMapAddress
     ret
 
 
@@ -7111,7 +7111,7 @@ Call_001_6611:
     or a
     ret nz
 
-    ld a, [$d8d7]
+    ld a, [wScriptStateFlags]
     or a
     ret nz
 
@@ -7527,7 +7527,7 @@ Call_001_67f8:
 EncounterMonsterSelect:
 label1_683e:  ; original label
     call LoadNextDungeonFloor
-    ld a, [$ca38]
+    ld a, [wEncounterPoolIndex]
     ld bc, $001a
     call Mul16x8To24
     ld a, l
@@ -7544,7 +7544,7 @@ label1_683e:  ; original label
     ld hl, $c0d8
     call Call_001_6989
     ld [$da02], a
-    ld a, [$ca38]
+    ld a, [wEncounterPoolIndex]
     ld bc, $001a
     call Mul16x8To24
     ld a, l
@@ -7562,12 +7562,12 @@ label1_683e:  ; original label
 
     ;initialize enemy monster slots
     ld a, $ff
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     ld [$da05], a
     ld [$da07], a
     ld hl, $c0d8
     call Call_001_6989
-    ld [$da03], a
+    ld [wTempEnemyId1], a
     call Call_001_696c
     cp $01
     jr z, jr_001_68d8
@@ -7601,7 +7601,7 @@ jr_001_68c6:
     jr z, jr_001_68c6
 
 jr_001_68d8:
-    ld a, [$ca38]
+    ld a, [wEncounterPoolIndex]
     ld bc, $001a
     call Mul16x8To24
     ld a, l
@@ -7610,7 +7610,7 @@ jr_001_68d8:
     ld a, h
     adc $6a
     ld h, a
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     cp $ff
     jr z, jr_001_6940
 
@@ -7622,7 +7622,7 @@ jr_001_68d8:
     adc h
     ld h, a
     ld a, [hl+]
-    ld [$da03], a	;load new monster ID into monster slot 1
+    ld [wTempEnemyId1], a	;load new monster ID into monster slot 1
     ld a, [hl]
     ld [$da04], a
     ld a, $00
@@ -7673,7 +7673,7 @@ Call_001_6941:
     ld b, $00
     push af
     ld c, a
-    ld a, [$da03]
+    ld a, [wTempEnemyId1]
     cp $ff
     jr z, jr_001_6966
 
@@ -7712,7 +7712,7 @@ jr_001_6966:
 Call_001_696c:
     push af
     push bc
-    ld a, [$ca38]
+    ld a, [wEncounterPoolIndex]
     ld bc, $001a
     call Mul16x8To24
     ld a, l
@@ -7793,7 +7793,7 @@ Call_001_69ad:
 
 label1_69c8:
     call LoadNextDungeonFloor
-    ld a, [$ca38]
+    ld a, [wEncounterPoolIndex]
     ld bc, $001a
     call Mul16x8To24
     ld a, l
@@ -7840,7 +7840,7 @@ LoadNextDungeonFloor:
     ld c, $ff                ; C = floor sub-index counter
 
 jr_001_6a01:
-    ld a, [$c939]            ; current floor
+    ld a, [wCurrentFloor]            ; current floor
     inc a
     cp [hl]                  ; compare with breakpoint
     inc c                    ; advance sub-index
@@ -7849,7 +7849,7 @@ jr_001_6a01:
 
     pop af                   ; A = base pool index
     add c                    ; + floor sub-index
-    ld [$ca38], a            ; store final pool index
+    ld [wEncounterPoolIndex], a            ; store final pool index
     ld bc, $001a
     call Mul16x8To24
     ld a, l
@@ -8945,7 +8945,7 @@ jr_001_7827:
     ld l, $10
     ld [hl], $02
     ld a, $80
-    call Call_000_06ce
+    call ShowTextAndWait
     call $050b
     call $7860
     ld e, $01
@@ -8984,7 +8984,7 @@ jr_001_7851:
     ld bc, $0100
     call $0552
     ld bc, $fe00
-    call Call_000_0564
+    call CallTextRenderer
     ld d, $cc
     ret
 
@@ -9002,7 +9002,7 @@ jr_001_7851:
     ld [hl], $18
     rst $38
     ld bc, $0080
-    call Call_000_0564
+    call CallTextRenderer
     ld bc, $ff80
     jp $0552
 
@@ -9028,7 +9028,7 @@ jr_001_78bf:
     call Call_000_05c3
     rst $38
     ld a, $80
-    jp Jump_000_06ce
+    jp Jump_ShowTextAndWait
 
 
 jr_001_78c8:
@@ -9079,7 +9079,7 @@ jr_001_78c8:
 
     rst $38
     ld a, $80
-    call Call_000_06ce
+    call ShowTextAndWait
     ld l, $10
     ld [hl], $02
     ret
@@ -9101,7 +9101,7 @@ jr_001_78c8:
     jr nc, jr_001_7948
 
     ld bc, $0280
-    call Call_000_0632
+    call SetupTextBankSwitch
     jp z, Jump_000_055a
 
     ld bc, $ff00
@@ -9155,7 +9155,7 @@ jr_001_7983:
     ld a, $5c
     rst $20
     ld a, $40
-    call Call_000_06ce
+    call ShowTextAndWait
     ld bc, $9843
     jp Jump_000_3722
 
@@ -9169,7 +9169,7 @@ label7992:
     rst $38
     ld a, $3e
     call Call_000_0515
-    call Call_000_164b
+    call SetViewportParams
     ld hl, $c014
     add [hl]
     ld hl, $c00f
@@ -9252,7 +9252,7 @@ label7a1c:
     sub [hl]
     sub [hl]
     sub [hl]
-    call Call_000_06ce
+    call ShowTextAndWait
     ld hl, $8e8f
     call Call_001_7b1d
     ld a, $01
@@ -9291,7 +9291,7 @@ label7a4e:
     ld a, $60
     call $6371
     ld bc, $0400
-    call Call_000_0564
+    call CallTextRenderer
     ld a, $48
     jp Jump_000_0515
 
@@ -9338,7 +9338,7 @@ jr_001_7a90:
     call Call_000_08e6
     rst $38
     ld a, $40
-    jp Jump_000_06ce
+    jp Jump_ShowTextAndWait
 
 
 jr_001_7abf:
@@ -9387,7 +9387,7 @@ jr_001_7ad6:
     rst $38
     call $05c6
     ld bc, $0100
-    jp Jump_000_0564
+    jp Jump_CallTextRenderer
 
 
 Call_001_7b0c:
@@ -9447,9 +9447,9 @@ jr_001_7b4b:
     jr jr_001_7b4b
 
 Call_001_7b59:
-    call Call_000_0b07
+    call RunScriptEngine
     dec c
-    call Call_000_0b07
+    call RunScriptEngine
     inc c
     ld a, $20
     rst $18
@@ -9582,7 +9582,7 @@ Call_001_7b59:
     ld [hl], h
 
 Call_001_7bec:
-    call Call_000_0564
+    call CallTextRenderer
     ld bc, $0200
     call $0552
     ld a, [$c00f]
@@ -9625,7 +9625,7 @@ jr_001_7c23:
     jp Jump_000_0733
 
 
-    call Call_000_004b
+    call DispatchCD90
     ld b, h
     ld a, h
     ld a, $59
@@ -9655,7 +9655,7 @@ jr_001_7c23:
     jp Jump_000_3ce5
 
 
-    call Call_000_0b9b
+    call CallScriptByType
     jp nz, $4e8d
 
     ld bc, $ffa0
@@ -9722,18 +9722,18 @@ jr_001_7cbf:
     and $07
     ret nz
 
-    call Call_000_0b9b
+    call CallScriptByType
     jr z, jr_001_7cf9
 
     call $07cc
     ld d, h
     ld [hl], $67
-    call Call_000_164b
+    call SetViewportParams
     inc [hl]
     and $3f
     add $14
     ld c, a
-    call Call_000_164b
+    call SetViewportParams
     and $0f
     add $94
     ld b, a
@@ -9749,19 +9749,19 @@ jr_001_7cf9:
     ld bc, $f820
     call $08ba
     xor a
-    call Call_000_0b07
+    call RunScriptEngine
     ld bc, $00f8
     call $08ba
     ld a, $8b
-    call Call_000_0b07
+    call RunScriptEngine
     inc a
     inc b
-    call Call_000_0b07
+    call RunScriptEngine
     ld bc, $0000
     call $08ba
     ld de, $0107
     call $0b0c
-    call Call_000_0b3c
+    call CrossBankCallRet
     jp Jump_000_3ce8
 
 
@@ -9774,7 +9774,7 @@ jr_001_7cf9:
     jp Jump_000_3ce5
 
 
-    call Call_000_0b9b
+    call CallScriptByType
     jp nz, Jump_001_4e9c
 
     ld a, $5d
@@ -9796,12 +9796,12 @@ jr_001_7cf9:
     ld [$c995], a
     ld de, $4f00
     call Call_000_1e65
-    call Call_000_1e8d
+    call GetSpriteAddress
     call Call_001_7da9
     jp $15f7
 
 
-    call Call_000_093d
+    call LookupDoublePtrTable
     ret nz
 
     ld a, $50
@@ -9862,7 +9862,7 @@ label7dc6:
 Call_001_7dcf:
 jr_001_7dcf:
     call Call_001_7dd5
-    jp Jump_000_0b07
+    jp Jump_RunScriptEngine
 
 
 Call_001_7dd5:
@@ -9882,7 +9882,7 @@ label7de6:
     call Call_001_7dcf
     inc a
     inc c
-    jp Jump_000_0b07
+    jp Jump_RunScriptEngine
 
 
     call Call_001_7420
@@ -9894,7 +9894,7 @@ label7de6:
     jp Jump_000_15f4
 
 
-    call Call_000_004b
+    call DispatchCD90
     ld a, [bc]
     ld a, [hl]
     sub a
@@ -9995,7 +9995,7 @@ Call_001_7e5e:
     jp $2043
 
 
-    call Call_000_1e8d
+    call GetSpriteAddress
     ld hl, $c014
     dec [hl]
     inc h
@@ -10028,11 +10028,11 @@ Call_001_7ec4:
     jp Jump_000_1e65
 
 
-    call Call_000_0b9b
+    call CallScriptByType
     ret nz
 
     call Call_000_1e80
-    call Call_000_0b3c
+    call CrossBankCallRet
     ld hl, $cda5
     ld a, [hl]
     inc [hl]
