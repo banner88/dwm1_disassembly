@@ -1,3 +1,25 @@
+; =============================================================================
+; BANK $52 — BATTLE SYSTEM, SKILL FUNCTIONS
+; =============================================================================
+; Contains:
+;   - Skill Function Table at $4011 (256 entries → handler addresses)
+;   - Skill handler functions (140 unique handlers for 256 skills)
+;   - Resistance check functions
+;   - Battle damage calculation
+;
+; SKILL DISPATCH: Code at $4211 reads skill ID, looks up handler address
+;   from SkillFunctionTable ($4011), and calls it. Many skills share handlers
+;   (e.g., Blaze/Blazemore/Blazemost all point to $41CD).
+;
+; Jump table entries (via rst $10 with H=$52):
+;   Entry 0: $6C4D    Entry 4: $52C3
+;   Entry 1: $76C8    Entry 5: $60D7
+;   Entry 2: $7A18    Entry 6: $6A8A
+;   Entry 3: $538F    Entry 7: $7EF1
+;
+; Sources: skill function table analysis, skills.json
+; =============================================================================
+
 ; Disassembly of "baserom.gbc"
 ; This file was created with:
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
@@ -5,504 +27,283 @@
 
 SECTION "ROM Bank $052", ROMX[$4000], BANK[$52]
 
-    ld d, d
-    ld c, l
-    ld l, h
-    ret z
 
-    db $76
-    jr jr_052_4081
+    db $52
 
-    adc a
-    ld d, e
-    jp $d752
+    ; Bank $52 jump table (8 entries)
+    dw $6C4D  ; Entry 0
+    dw $76C8  ; Entry 1
+    dw $7A18  ; Entry 2
+    dw $538F  ; Entry 3
+    dw $52C3  ; Entry 4
+    dw $60D7  ; Entry 5
+    dw $6A8A  ; Entry 6
+    dw $7EF1  ; Entry 7
 
+; ---------------------------------------------------------------
+; Skill Function Table ($4011)
+; 256 entries x 2 bytes = 512 bytes
+; Maps skill ID -> handler function address within bank $52
+; Referenced by code at $4211 via: ld hl, $4011
+; ---------------------------------------------------------------
 
-    ld h, b
-    adc d
-    ld l, d
-    pop af
-    ld a, [hl]
-    call $cd41
-    ld b, c
-    call $d441
-    ld b, c
-    call nc, $d441
-    ld b, c
-    db $db
-    ld b, c
-    db $db
-    ld b, c
-    db $db
-    ld b, c
-    ld [c], a
-    ld b, c
-    ld [c], a
-    ld b, c
-    ld [c], a
-    ld b, c
-    jp hl
-
-
-    ld b, c
-    jp hl
-
-
-    ld b, c
-    jp hl
-
-
-    ld b, c
-    ldh a, [rSTAT]
-    ldh a, [rSTAT]
-    ldh a, [rSTAT]
-    rst $30
-    ld b, c
-    rst $30
-    ld b, c
-    dec hl
-    ld b, d
-    dec [hl]
-    ld b, d
-    dec [hl]
-    ld b, d
-    ld a, h
-    ld b, d
-    xor d
-    ld b, d
-    ret c
-
-    ld b, d
-    ld [$3043], sp
-    ld b, e
-    ld c, d
-    ld b, e
-    ld c, d
-    ld b, e
-    ld l, l
-    ld b, e
-    ld l, l
-    ld b, e
-    add l
-    ld b, e
-    add l
-    ld b, e
-    xor b
-    ld b, e
-    xor b
-    ld b, e
-    ret nz
-
-    ld b, e
-    ei
-    ld b, e
-    dec d
-    ld b, h
-    inc [hl]
-    ld b, h
-    inc [hl]
-    ld b, h
-    ld l, h
-    ld b, h
-    ld a, a
-    ld b, h
-    call nz, $c444
-    ld b, h
-    call nz, $c444
-    ld b, h
-    call nz, $f844
-    ld b, h
-    ld hl, sp+$44
-    ld a, [hl]
-    ld b, l
-    adc a
-    ld b, l
-    and a
-    ld b, l
-    ret c
-
-    ld b, l
-    cp $45
-    dec h
-    ld b, [hl]
-
-jr_052_4081:
-    dec h
-    ld b, [hl]
-    ld d, $46
-    dec h
-    ld b, [hl]
-    cpl
-    ld b, [hl]
-    ld c, h
-    ld b, [hl]
-    ld d, e
-    ld b, [hl]
-    ld a, h
-    ld b, [hl]
-    add e
-    ld b, [hl]
-    add e
-    ld b, [hl]
-    cp [hl]
-    ld b, [hl]
-    rst $08
-    ld b, [hl]
-    rrca
-    ld b, a
-    jr nz, jr_052_40e2
-
-    ld a, [hl+]
-    ld b, a
-    inc [hl]
-    ld b, a
-    ld a, $47
-    ld c, b
-    ld b, a
-    ld d, d
-    ld b, a
-    ld e, h
-    ld b, a
-    ld h, [hl]
-    ld b, a
-    ld [hl], b
-    ld b, a
-    ld a, d
-    ld b, a
-    add h
-    ld b, a
-    adc [hl]
-    ld b, a
-    sbc b
-    ld b, a
-    sbc b
-    ld b, a
-    inc c
-    ld c, b
-    inc c
-    ld c, b
-    adc b
-    ld c, b
-    sub a
-    ld c, b
-    cpl
-    ld b, [hl]
-    or h
-    ld c, b
-    jr jr_052_410c
-
-    jr jr_052_410e
-
-    ldh a, [rSTAT]
-    dec hl
-    ld c, c
-    ld [hl-], a
-    ld c, c
-    ld [hl-], a
-    ld c, c
-    ld [hl-], a
-    ld c, c
-    ld [hl-], a
-    ld c, c
-    inc a
-    ld c, c
-    inc a
-    ld c, c
-    inc a
-    ld c, c
-    inc a
-    ld c, c
-    ldh a, [rSTAT]
-    ld b, [hl]
-    ld c, c
-    ld c, l
-    ld c, c
-    dec h
-    ld b, [hl]
-    dec h
-
-jr_052_40e2:
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec [hl]
-    ld b, d
-    ld d, h
-    ld c, c
-    ld a, e
-    ld c, c
-    ld a, e
-    ld c, c
-    ret c
-
-    ld b, d
-    jp nc, $0049
-
-    ld c, d
-    rst $30
-    ld b, c
-    ld [hl+], a
-    ld c, d
-    ld [hl+], a
-    ld c, d
-    ld d, a
-    ld c, d
-    ld a, e
-    ld c, d
-    ld [$a343], sp
-    ld c, d
-    push bc
-    ld c, d
-    rst $20
-    ld c, d
-    rst $20
-    ld c, d
-    inc [hl]
-    ld c, e
-    inc [hl]
-    ld c, e
-    ld l, b
-
-jr_052_410c:
-    ld c, e
-    dec h
-
-jr_052_410e:
-    ld b, [hl]
-    sub d
-    ld c, e
-    and c
-    ld c, e
-    xor e
-    ld c, e
-    or [hl]
-    ld c, e
-    and c
-    ld c, e
-    ret nc
-
-    ld c, e
-    ret nc
-
-    ld c, e
-    ret nc
-
-    ld c, e
-    ret nc
-
-    ld c, e
-    ld sp, $314c
-    ld c, h
-    dec sp
-    ld c, h
-    dec sp
-    ld c, h
-    ld [hl], d
-    ld c, h
-    add c
-    ld c, h
-    add c
-    ld c, h
-    and l
-    ld c, h
-    add c
-    ld c, h
-    call c, $0a4c
-    ld c, l
-    jr c, jr_052_4186
-
-    call nz, $9244
-    ld c, l
-    jp hl
-
-
-    ld c, l
-    dec h
-    ld b, [hl]
-    ld a, [bc]
-    ld c, [hl]
-    adc d
-    ld c, [hl]
-    and h
-    ld c, [hl]
-    cp [hl]
-    ld c, [hl]
-    db $e3
-    ld c, [hl]
-    db $e3
-    ld c, [hl]
-    ret c
-
-    ld c, [hl]
-    rst $20
-    ld c, [hl]
-    rst $20
-    ld c, [hl]
-    ld a, [hl-]
-    ld c, [hl]
-    ld sp, hl
-    ld c, [hl]
-    inc l
-    ld c, a
-    ld sp, hl
-    ld c, [hl]
-    and c
-    ld c, e
-    dec [hl]
-    ld c, a
-    ld d, h
-    ld c, a
-    ld a, a
-    ld c, a
-    db $e3
-    ld c, [hl]
-    ld c, $4e
-    and c
-    ld c, a
-    call z, $f84f
-    ld b, h
-    db $fc
-    ld c, a
-    rra
-    ld d, b
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-
-jr_052_4186:
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    dec h
-    ld b, [hl]
-    ld c, $4e
-    dec d
-    ld c, [hl]
-    rra
-    ld c, [hl]
-    add hl, hl
-    ld c, [hl]
-    inc sp
-    ld c, [hl]
-    ret c
-
-    ld b, d
-    ld a, [hl-]
-    ld c, [hl]
-    ld a, c
-    ld b, h
-    ld l, l
-    ld c, [hl]
-    call Call_052_5bff
-    call Call_052_54e7
-    ret
-
-
-    call Call_052_5c0d
-    call Call_052_54e7
-    ret
-
-
-    call Call_052_5c1b
-    call Call_052_54e7
-    ret
-
-
-    call Call_052_5c27
-    call Call_052_54e7
-    ret
-
-
-    call Call_052_5c43
-    call Call_052_54e7
-    ret
-
-
-    call Call_052_5c35
-    call Call_052_54e7
-    ret
-
-
-    xor a
-    ld [$d9f0], a
-    call Call_052_5c51
-    jr nc, jr_052_4225
-
-    ld a, [$db89]
-    ld hl, $dd1b
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld [hl], $01
-    ld hl, $b8e8
+SkillFunctionTable:
+    dw $41CD  ; [  0] Blaze
+    dw $41CD  ; [  1] Blazemore
+    dw $41CD  ; [  2] Blazemost
+    dw $41D4  ; [  3] Firebal
+    dw $41D4  ; [  4] Firebane
+    dw $41D4  ; [  5] Firebolt
+    dw $41DB  ; [  6] Bang
+    dw $41DB  ; [  7] Boom
+    dw $41DB  ; [  8] Explodet
+    dw $41E2  ; [  9] Infernos
+    dw $41E2  ; [ 10] Infermore
+    dw $41E2  ; [ 11] Infermost
+    dw $41E9  ; [ 12] IceBolt
+    dw $41E9  ; [ 13] SnowStorm
+    dw $41E9  ; [ 14] Blizzard
+    dw $41F0  ; [ 15] Bolt
+    dw $41F0  ; [ 16] Zap
+    dw $41F0  ; [ 17] Thordain
+    dw $41F7  ; [ 18] Beat
+    dw $41F7  ; [ 19] Defeat
+    dw $422B  ; [ 20] Sacrifice
+    dw $4235  ; [ 21] Sleep
+    dw $4235  ; [ 22] SleepAll
+    dw $427C  ; [ 23] StopSpell
+    dw $42AA  ; [ 24] Surround
+    dw $42D8  ; [ 25] PanicAll
+    dw $4308  ; [ 26] RobMagic
+    dw $4330  ; [ 27] TakeMagic
+    dw $434A  ; [ 28] Sap
+    dw $434A  ; [ 29] Defence
+    dw $436D  ; [ 30] Upper
+    dw $436D  ; [ 31] Increase
+    dw $4385  ; [ 32] Slow
+    dw $4385  ; [ 33] SlowAll
+    dw $43A8  ; [ 34] Speed
+    dw $43A8  ; [ 35] SpeedUp
+    dw $43C0  ; [ 36] Barrier
+    dw $43FB  ; [ 37] TwinHits
+    dw $4415  ; [ 38] MagicWall
+    dw $4434  ; [ 39] MagicBack
+    dw $4434  ; [ 40] Bounce
+    dw $446C  ; [ 41] Transform
+    dw $447F  ; [ 42] Ironize
+    dw $44C4  ; [ 43] Heal
+    dw $44C4  ; [ 44] HealMore
+    dw $44C4  ; [ 45] HealAll
+    dw $44C4  ; [ 46] HealUs
+    dw $44C4  ; [ 47] HealUsAll
+    dw $44F8  ; [ 48] Vivify
+    dw $44F8  ; [ 49] Revive
+    dw $457E  ; [ 50] Farewell
+    dw $458F  ; [ 51] Antidote
+    dw $45A7  ; [ 52] NumbOff
+    dw $45D8  ; [ 53] DeChaos
+    dw $45FE  ; [ 54] CurseOff
+    dw $4625  ; [ 55] StepGuard
+    dw $4625  ; [ 56] MapMagic
+    dw $4616  ; [ 57] Chance
+    dw $4625  ; [ 58] Attack
+    dw $462F  ; [ 59] TwinSlash
+    dw $464C  ; [ 60] Ramming
+    dw $4653  ; [ 61] Beserker
+    dw $467C  ; [ 62] Kamikaze
+    dw $4683  ; [ 63] Massacre
+    dw $4683  ; [ 64] EvilSlash
+    dw $46BE  ; [ 65] ChargeUP
+    dw $46CF  ; [ 66] HighJump
+    dw $470F  ; [ 67] SuckAir
+    dw $4720  ; [ 68] FireSlash
+    dw $472A  ; [ 69] BoltSlash
+    dw $4734  ; [ 70] VacuSlash
+    dw $473E  ; [ 71] IceSlash
+    dw $4748  ; [ 72] MetalCut
+    dw $4752  ; [ 73] DrakSlash
+    dw $475C  ; [ 74] BeastCut
+    dw $4766  ; [ 75] BirdBlow
+    dw $4770  ; [ 76] DevilCut
+    dw $477A  ; [ 77] ZombieCut
+    dw $4784  ; [ 78] CleanCut
+    dw $478E  ; [ 79] MultiCut
+    dw $4798  ; [ 80] BiAttack
+    dw $4798  ; [ 81] QuadHits
+    dw $480C  ; [ 82] CallHelp
+    dw $480C  ; [ 83] YellHelp
+    dw $4888  ; [ 84] Focus
+    dw $4897  ; [ 85] SquallHit
+    dw $462F  ; [ 86] PsycheUp
+    dw $48B4  ; [ 87] RainSlash
+    dw $4918  ; [ 88] WindBeast
+    dw $4918  ; [ 89] Vacuum
+    dw $41F0  ; [ 90] Lightning
+    dw $492B  ; [ 91] RockThrow
+    dw $4932  ; [ 92] FireAir
+    dw $4932  ; [ 93] BlazeAir
+    dw $4932  ; [ 94] Scorching
+    dw $4932  ; [ 95] WhiteFire
+    dw $493C  ; [ 96] FrigidAir
+    dw $493C  ; [ 97] IceAir
+    dw $493C  ; [ 98] IceStorm
+    dw $493C  ; [ 99] WhiteAir
+    dw $41F0  ; [100] Hellblast
+    dw $4946  ; [101] BigBang
+    dw $494D  ; [102] MegaMagic
+    dw $4625  ; [103] PoisonHit
+    dw $4625  ; [104] NapAttack
+    dw $4625  ; [105] Paralyze
+    dw $4235  ; [106] SleepAir
+    dw $4954  ; [107] PalsyAir
+    dw $497B  ; [108] PoisonGas
+    dw $497B  ; [109] PoisonAir
+    dw $42D8  ; [110] PaniDance
+    dw $49D2  ; [111] Curse
+    dw $4A00  ; [112] Ahhh
+    dw $41F7  ; [113] K.O.Dance
+    dw $4A22  ; [114] SandStorm
+    dw $4A22  ; [115] Radiant
+    dw $4A57  ; [116] EerieLite
+    dw $4A7B  ; [117] OddDance
+    dw $4308  ; [118] RobDance
+    dw $4AA3  ; [119] SideStep
+    dw $4AC5  ; [120] LureDance
+    dw $4AE7  ; [121] LushLicks
+    dw $4AE7  ; [122] SickLick
+    dw $4B34  ; [123] LegSweep
+    dw $4B34  ; [124] BigTrip
+    dw $4B68  ; [125] WarCry
+    dw $4625  ; [126] Whistle
+    dw $4B92  ; [127] Imitate
+    dw $4BA1  ; [128] DeMagic
+    dw $4BAB  ; [129] Surge
+    dw $4BB6  ; [130] UltraDown
+    dw $4BA1  ; [131] ThickFog
+    dw $4BD0  ; [132] TatsuCall
+    dw $4BD0  ; [133] DiagoCall
+    dw $4BD0  ; [134] SamsiCall
+    dw $4BD0  ; [135] BazooCall
+    dw $4C31  ; [136] Cover
+    dw $4C31  ; [137] Guardian
+    dw $4C3B  ; [138] TailWind
+    dw $4C3B  ; [139] StormWind
+    dw $4C72  ; [140] Dodge
+    dw $4C81  ; [141] Defence
+    dw $4C81  ; [142] StrongD
+    dw $4CA5  ; [143] SuckAll
+    dw $4C81  ; [144] BladeD
+    dw $4CDC  ; [145] DanceShut
+    dw $4D0A  ; [146] MouthShut
+    dw $4D38  ; [147] Meditate
+    dw $44C4  ; [148] Hustle
+    dw $4D92  ; [149] LifeSong
+    dw $4DE9  ; [150] LifeDance
+    dw $4625  ; [151] Run
+    dw $4E0A  ; [152] Daze
+    dw $4E8A  ; [153] HitAlly
+    dw $4EA4  ; [154] HitEnemy
+    dw $4EBE  ; [155] HitRandom
+    dw $4EE3  ; [156] Scared
+    dw $4EE3  ; [157] Dance
+    dw $4ED8  ; [158] Trip
+    dw $4EE7  ; [159] Paralyze
+    dw $4EE7  ; [160] CANTMOVE
+    dw $4E3A  ; [161] RUN
+    dw $4EF9  ; [162] CALLHOROR
+    dw $4F2C  ; [163] HealUsAll
+    dw $4EF9  ; [164] Smashed
+    dw $4BA1  ; [165] FILTHZONE
+    dw $4F35  ; [166] ALLCHANGE
+    dw $4F54  ; [167] BIGSLEEP
+    dw $4F7F  ; [168] MP0
+    dw $4EE3  ; [169] ECHO
+    dw $4E0E  ; [170] CHGDRAGON
+    dw $4FA1  ; [171] CALLEVIL
+    dw $4FCC  ; [172] FREEZY
+    dw $44F8  ; [173] ALLREVIVE
+    dw $4FFC  ; [174] RESTOREMP
+    dw $501F  ; [175] METEOR
+    dw $4625  ; [176] HERB
+    dw $4625  ; [177] HEALWATER
+    dw $4625  ; [178] SAGESTONE
+    dw $4625  ; [179] WARLDDEW
+    dw $4625  ; [180] POTION
+    dw $4625  ; [181] ELFWATER
+    dw $4625  ; [182] ANTIDOTE
+    dw $4625  ; [183] MOONHERB
+    dw $4625  ; [184] SKYBELL
+    dw $4625  ; [185] LAUREL
+    dw $4625  ; [186] AWAKESAND
+    dw $4625  ; [187] WARLDLEAF
+    dw $4625  ; [188] LIFEACORN
+    dw $4625  ; [189] MYSTICNUT
+    dw $4625  ; [190] PWRSEED
+    dw $4625  ; [191] DEFSEED
+    dw $4625  ; [192] AGILSEED
+    dw $4625  ; [193] INTSEED
+    dw $4625  ; [194] FEEDMEAT
+    dw $4625  ; [195] BEFFJERKY
+    dw $4625  ; [196] PORKCHOP
+    dw $4625  ; [197] BADMEAT
+    dw $4625  ; [198] SIRLOIN
+    dw $4625  ; [199] BOLTSTAFF
+    dw $4625  ; [200] STAFF
+    dw $4625  ; [201] BLOKSTAFF
+    dw $4625  ; [202] LAVASTAFF
+    dw $4625  ; [203] SNOWSTAFF
+    dw $4625  ; [204] FIRESTAFF
+    dw $4625  ; [205] WARPWING
+    dw $4625  ; [206] TINYMEDAL
+    dw $4625  ; [207] QuestBk
+    dw $4625  ; [208] HORRORBK
+    dw $4625  ; [209] BENICEBK
+    dw $4625  ; [210] CHEATERBK
+    dw $4625  ; [211] SMARTBK
+    dw $4625  ; [212] COMEDYBK
+    dw $4E0E  ; [213] BeDragon
+    dw $4E15  ; [214] Smashlime
+    dw $4E1F  ; [215] Sheldodge
+    dw $4E29  ; [216] Branching
+    dw $4E33  ; [217] GigaSlash
+    dw $42D8  ; [218] LIFE
+    dw $4E3A  ; [219] RUN
+    dw $4479  ; [220] IRONIZE
+    dw $4E6D  ; [221] Ahhh
+    dw $FFCD  ; [222] 
+    dw $CD5B  ; [223] DS
+    dw $54E7  ; [224] SP
+    dw $CDC9  ; [225] WS
+    dw $5C0D  ; [226] TS
+    dw $E7CD  ; [227] SN
+    dw $C954  ; [228] KN
+    dw $1BCD  ; [229] BB
+    dw $CD5C  ; [230] BX
+    dw $54E7  ; [231] SL
+    dw $CDC9  ; [232] HL
+    dw $5C27  ; [233] FS
+    dw $E7CD  ; [234] RS
+    dw $C954  ; [235] SB
+    dw $43CD  ; [236] ST
+    dw $CD5C  ; [237] SK
+    dw $54E7  ; [238] KS
+    dw $CDC9  ; [239] MK
+    dw $5C35  ; [240] MB
+    dw $E7CD  ; [241] MT
+    dw $C954  ; [242] GS
+    dw $EAAF  ; [243] DK
+    dw $D9F0  ; [244] TG
+    dw $51CD  ; [245] PT
+    dw $305C  ; [246] BG
+    dw $FA25  ; [247] BD
+    dw $DB89  ; [248] LM
+    dw $1B21  ; [249] PG
+    dw $85DD  ; [250] SD
+    dw $3E6F  ; [251] DR
+    dw $8C00  ; [252] MD
+    dw $3667  ; [253] DK
+    dw $2101  ; [254] RB
+    dw $B8E8  ; [255] CH
     call Call_052_54af
     push hl
     ld a, [$db89]

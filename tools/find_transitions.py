@@ -106,10 +106,10 @@ def find_transitions(data):
                     break
                 
                 bytes_01 = read_u16(data, entry_flat)
-                exit_ptr = read_u16(data, entry_flat + 2)
-                npc_ptr = read_u16(data, entry_flat + 4)
+                interact_ptr = read_u16(data, entry_flat + 2)
+                exit_ptr_val = read_u16(data, entry_flat + 4)
                 
-                if not is_valid_ptr(exit_ptr) or not is_valid_ptr(npc_ptr):
+                if not is_valid_ptr(exit_ptr) or not is_valid_ptr(exit_ptr_val):
                     break
                 
                 # Scan exit data for 0x90 entries (walk-on map_type destinations)
@@ -148,7 +148,7 @@ def find_transitions(data):
                 # The NPC entries are 7 bytes each, terminated by 0xFF.
                 # Door transitions might be embedded after or within the NPC data,
                 # or pointed to by NPC entry fields.
-                npc_flat = flat(BANK_0B, npc_ptr)
+                exit_flat = flat(BANK_0B, exit_ptr_val)
                 npc_pos = npc_flat
                 for _ in range(32):
                     if npc_pos >= len(data):

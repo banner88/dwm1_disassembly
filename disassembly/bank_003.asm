@@ -740,7527 +740,2916 @@ jr_003_445a:
 
     ret
 
+
 ; ---------------------------------------------------------------
-; Monster info table data starts here ($4461)
-; 221 entries × 43 bytes = 9503 bytes
-; Species 0 (DrakSlime) through 220 (unused)
-; These are raw data bytes disassembled as instructions by mgbdis.
-; See extracted/monsters_full.json for decoded contents.
+; Monster Info Table ($4461)
+; 221 entries x 43 bytes = 9503 bytes
+;
+; Format (43 bytes per entry):
+;   +$00  Family (0=Slime..9=Boss)
+;   +$01  Level cap
+;   +$02  Exp table index
+;   +$03  Female ratio (0=0%, 1=~10%, 2=50/50, 3=~84%)
+;   +$04  Can fly       +$05  Metal body
+;   +$06  Skill 1 ID    +$07  Skill 2 ID    +$08  Skill 3 ID
+;   +$09  HP growth     +$0A  MP growth
+;   +$0B  ATK growth    +$0C  DEF growth
+;   +$0D  AGL growth    +$0E  INT growth
+;   +$0F-$29  Resistances (27 bytes: A-Z + unused)
+;             0=weak, 1=some resist, 2=normal, 3=immune
+;   +$2A  Tier/rank
 ; ---------------------------------------------------------------
 
-
-    nop
-    dec l
-    dec c
-    ld [bc], a
-    nop
-    nop
-    ld b, e
-    ld e, h
-    push de
-    db $10
-    ld a, [bc]
-    dec c
-    ld [$1014], sp
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0100
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    nop
-    inc hl
-    ld a, [bc]
-    ld [bc], a
-    nop
-    nop
-    ld d, d
-    ld a, c
-    ld a, a
-    ld de, $1101
-    inc b
-    ld de, $0008
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    inc b
-    nop
-    inc hl
-    ld a, [bc]
-    ld [bc], a
-    ld bc, $5500
-    ld e, b
-    adc d
-    dec c
-    ld [bc], a
-    dec bc
-    dec bc
-    jr jr_003_44ce
-
-    nop
-    nop
-    nop
-    ld bc, $0001
-    ld [bc], a
-    ld [bc], a
-
-jr_003_44ce:
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    inc b
-    nop
-    ld [hl-], a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    inc e
-    ld l, c
-    ld l, d
-    dec c
-    dec bc
-    ld [$110e], sp
-    ld de, $0000
-    nop
-    ld bc, $0001
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    inc b
-    nop
-    ld e, $08
-    ld [bc], a
-    nop
-    nop
-    inc c
-    inc [hl]
-    ld d, d
-    dec bc
-    ld a, [bc]
-    ld de, $1414
-    ld [$0000], sp
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld bc, $0001
-    inc bc
-    nop
-    jr z, @+$11
-
-    ld [bc], a
-    nop
-    nop
-    ld e, $2b
-    ld c, d
-    ld c, $01
-    rrca
-    ld c, $14
-    ld c, $01
-    ld bc, $0101
-    ld bc, $0201
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    nop
-    dec l
-    inc c
-    ld [bc], a
-    nop
-    nop
-    jr jr_003_45d2
-
-    ld [hl], h
-    ld de, $1107
-    ld [$0d0e], sp
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    nop
-    ld [hl-], a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld e, $3c
-    dec bc
-    ld a, [bc]
-    ld c, $13
-    ld c, $0d
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0202
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    jr z, jr_003_45cc
-
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    ld h, [hl]
-    ld [hl], e
-    ld d, $0b
-    ld c, $11
-    dec bc
-    dec c
-    nop
-    nop
-    nop
-    nop
-
-jr_003_45cc:
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-
-jr_003_45d2:
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [hl-], a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    ld e, $2b
-    ld l, $0b
-    rrca
-    dec bc
-    dec bc
-    inc d
-    ld [de], a
-    nop
-    nop
-    nop
-    ld bc, $0001
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0202
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    inc hl
-    ld a, [bc]
-    ld [bc], a
-    nop
-    nop
-    ld b, c
-    ld d, d
-    ld a, l
-    add hl, de
-    ld bc, $0d12
-    inc d
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0100
-    ld bc, $0101
-    ld bc, $0500
-    nop
-    ld [hl-], a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    ld b, d
-    ld e, e
-    adc [hl]
-    dec c
-    ld a, [bc]
-    ld c, $17
-    db $10
-    ld c, $00
-    nop
-    ld bc, $0000
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec b
-    nop
-    ld [hl-], a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    ld d, a
-    ld e, d
-    sub b
-    ld [de], a
-    dec bc
-    inc d
-    rrca
-    ld c, $0d
-    ld bc, $0001
-    ld bc, $0102
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0001
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec b
-    nop
-    inc hl
-    ld a, [bc]
-    ld [bc], a
-    nop
-    nop
-    ld [hl], a
-    ld a, e
-    ld a, [hl]
-    rrca
-    rlca
-    ld c, $08
-    dec d
-    rrca
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0201
-    ld bc, $0400
-    nop
-    jr z, jr_003_46c7
-
-    ld [bc], a
-    nop
-    nop
-    ld c, [hl]
-    ld l, b
-    sub d
-    ld [de], a
-    dec bc
-    ld [de], a
-
-jr_003_46c7:
-    dec bc
-    inc d
-    rrca
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0203
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0001
-    ld bc, $0200
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    nop
-    jr z, jr_003_46f5
-
-    ld [bc], a
-    nop
-    nop
-    inc h
-    dec hl
-    jr nc, jr_003_4702
-
-    ld c, $0f
-    ld c, $14
-    rrca
-
-jr_003_46f5:
-    ld bc, $0101
-    ld bc, $0101
-    inc bc
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-
-jr_003_4702:
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0500
-    nop
-    inc d
-    add hl, de
-    ld [bc], a
-    nop
-    ld bc, $0c00
-    ld [de], a
-    nop
-    ld e, $0b
-    ld e, $1f
-    dec c
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0303
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld b, $00
-    jr z, jr_003_475a
-
-    ld [bc], a
-    nop
-    ld bc, $0603
-    inc d
-    nop
-    ld e, $0e
-    rra
-    rra
-    rrca
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-
-jr_003_475a:
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld b, $00
-    inc a
-    dec e
-    ld [bc], a
-    nop
-    ld bc, $2a0f
-    ld h, h
-    nop
-    rra
-    rrca
-    rra
-    rra
-    ld [de], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    inc bc
-    ld bc, $0600
-    nop
-    ld d, b
-    rra
-    ld [bc], a
-    nop
-    nop
-    add hl, sp
-    ld h, l
-    add c
-    nop
-    rra
-    inc de
-    rra
-    rra
-    ld [de], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0101
-    inc bc
-    ld [bc], a
-    nop
-    ld b, $01
-    add hl, de
-    rlca
-    ld [bc], a
-    nop
-    nop
-    ld e, h
-    ld l, d
-    adc h
-    ld a, [bc]
-    inc bc
-    ld de, $0502
-    dec b
-    ld bc, $0202
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0301
-    ld bc, $0002
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld bc, $1123
-    ld [bc], a
-    nop
-    nop
-    daa
-    ld a, [hl+]
-    ld e, d
-    rrca
-    dec bc
-    ld [de], a
-    ld b, $07
-    dec c
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0201
-    nop
-    ld [bc], a
-    ld bc, $0000
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    inc b
-    ld bc, $1023
-    ld [bc], a
-    ld bc, $0300
-    ld e, b
-    adc d
-    ld c, $0b
-    ld [de], a
-    ld [bc], a
-    inc d
-    inc b
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    inc bc
-    ld bc, $1232
-    ld [bc], a
-    ld bc, $1400
-    ld [hl-], a
-    dec a
-    ld de, $0d0f
-    dec bc
-    rlca
-    ld [de], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    inc b
-    ld bc, $0f1e
-    ld [bc], a
-    ld bc, $1800
-    ld l, d
-    ld a, c
-    add hl, bc
-    dec c
-    ld de, $0e10
-    inc b
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld bc, $0001
-    inc bc
-    ld bc, $1428
-    ld [bc], a
-    nop
-    nop
-    ld b, b
-    ld c, d
-    reti
-
-
-    ld de, $130a
-    dec c
-    dec b
-    db $10
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld bc, $132d
-    ld [bc], a
-    nop
-    nop
-    ld h, a
-    ld l, h
-    ld a, c
-    dec d
-    db $10
-    rrca
-    dec c
-    rlca
-    ld bc, $0202
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    ld bc, $1432
-    ld [bc], a
-    nop
-    nop
-    ld c, [hl]
-    ld d, a
-    sub b
-    add hl, bc
-    inc bc
-    rla
-    ld b, $01
-    dec b
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld bc, $1428
-    ld [bc], a
-    nop
-    nop
-    ld b, h
-    ld e, h
-    adc a
-    ld de, $1401
-    db $10
-    rlca
-    inc b
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    ld bc, $1023
-    ld [bc], a
-    nop
-    nop
-    inc a
-    ld d, d
-    ld [hl], d
-    ld c, $08
-    ld de, $120e
-    ld a, [bc]
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0102
-    ld bc, $0300
-    ld bc, $1323
-    ld [bc], a
-    nop
-    nop
-    ccf
-    ld b, b
-    ld a, b
-    inc de
-    nop
-    dec d
-    dec b
-    ld [$0200], sp
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    ld bc, $0201
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0202
-    nop
-    dec b
-    ld bc, $1123
-    ld [bc], a
-    ld bc, $4600
-    ld c, h
-    ld h, a
-    ld c, $02
-    ld de, $0f10
-    dec b
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0102
-    nop
-    inc b
-    ld bc, $1332
-    ld [bc], a
-    nop
-    nop
-    add hl, de
-    ld l, c
-    ld l, e
-    ld de, $0b12
-    ld b, $08
-    dec c
-    ld bc, $0202
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0300
-    nop
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld bc, $101e
-    ld [bc], a
-    ld bc, $0300
-    ld e, b
-    ld e, h
-    dec bc
-    dec bc
-    ld de, $0d11
-    dec b
-    ld bc, $0202
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    inc bc
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld bc, $0001
-    inc bc
-    ld bc, $1632
-    ld [bc], a
-    nop
-    nop
-    add hl, bc
-    jr jr_003_4a8c
-
-    dec d
-    rrca
-    inc de
-    ld de, $0c13
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    dec b
-    ld bc, $1428
-    ld [bc], a
-    nop
-    nop
-    ld h, a
-    ld l, a
-    ld [hl], c
-    ld [de], a
-    ld [$0d10], sp
-    inc de
-    dec bc
-    ld bc, $0202
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0301
-    ld bc, $0002
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld bc, $131e
-    ld [bc], a
-    nop
-    nop
-    dec a
-    ld a, $5b
-    inc d
-    ld [$1813], sp
-    ld bc, $0202
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    ld bc, $0000
-    inc bc
-    nop
-
-jr_003_4a8c:
-    ld [bc], a
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld bc, $0001
-    dec b
-    ld bc, $173c
-    ld [bc], a
-    nop
-    nop
-    ld b, a
-    ld h, b
-    adc a
-    dec d
-    dec b
-    rla
-    ld c, $10
-    dec bc
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0302
-    ld bc, $0201
-    ld bc, $0301
-    nop
-    inc bc
-    ld bc, $0301
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    ld b, $01
-    inc hl
-    ld [de], a
-    ld [bc], a
-    nop
-    nop
-    rla
-    ld h, a
-    push de
-    ld c, $04
-    rrca
-    dec b
-    inc de
-    ld [$0202], sp
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    nop
-    inc bc
-    ld bc, $142d
-    ld bc, $0000
-    ld b, d
-    ld d, l
-    ld l, h
-    rrca
-    ld [$1114], sp
-    ld c, $0b
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0000
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    nop
-    inc b
-    ld bc, $173c
-    ld [bc], a
-    nop
-    nop
-    ld b, $40
-    ld b, l
-    add hl, de
-    ld c, $14
-    ld d, $12
-    ld c, $02
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0202
-    ld bc, $0101
-    ld bc, $0301
-    ld bc, $0103
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    nop
-    ld b, $01
-    inc a
-    ld d, $02
-    nop
-    nop
-    ld b, h
-    ld d, b
-    ld e, h
-    jr jr_003_4b5c
-
-    jr @+$17
-
-    dec bc
-    ld [$0202], sp
-    ld [bc], a
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-
-jr_003_4b5c:
-    ld bc, $0301
-    ld bc, $0301
-    nop
-    inc bc
-    ld bc, $0202
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0001
-    ld b, $01
-    inc a
-    ld d, $02
-    nop
-    nop
-    ld b, b
-    ld c, b
-    ld e, h
-    rla
-    db $10
-    ld a, [de]
-    inc d
-    ld de, $0210
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0301
-    nop
-    inc bc
-    ld bc, $0201
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    ld b, $01
-    inc hl
-    ld [de], a
-    inc bc
-    ld bc, $4300
-    ld c, a
-    ld e, h
-    rrca
-    dec bc
-    inc d
-    ld c, $12
-    ld [$0201], sp
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0301
-    nop
-    inc bc
-    ld bc, $0201
-    ld bc, $0202
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    ld bc, $1c50
-    inc bc
-    ld bc, $6000
-    ld h, l
-    sub e
-    ld a, [de]
-    add hl, de
-    inc e
-    jr jr_003_4be7
-
-    rla
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0203
-    ld [bc], a
-
-jr_003_4be7:
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld b, $02
-    jr z, @+$0e
-
-    ld [bc], a
-    nop
-    nop
-    ld l, b
-    ld l, d
-    ld a, c
-    ld c, $05
-    rrca
-    inc c
-    dec bc
-    stop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    ld [bc], a
-    dec l
-    dec c
-    ld [bc], a
-    nop
-    nop
-    dec d
-    dec a
-    ld b, c
-    ld [de], a
-    dec b
-    ld c, $09
-    rrca
-    inc b
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0100
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    ld [bc], a
-    inc hl
-    ld a, [bc]
-    ld [bc], a
-    ld bc, $1700
-    jr nz, jr_003_4cc4
-
-    dec bc
-    ld a, [bc]
-    dec c
-    ld [$0e12], sp
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    inc bc
-    ld [bc], a
-    ld [hl-], a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    inc a
-    ld d, d
-    ld [hl], a
-    ld c, $11
-    ld [$1308], sp
-    dec c
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    nop
-    nop
-    ld bc, $0001
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    ld [bc], a
-    jr z, jr_003_4ca8
-
-    ld [bc], a
-    nop
-    nop
-    ld e, $56
-    ld l, e
-    db $10
-    dec b
-    add hl, bc
-
-jr_003_4ca8:
-    ld de, $0d00
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld bc, $0202
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-
-jr_003_4cc4:
-    inc bc
-    nop
-    inc bc
-    ld [bc], a
-    dec l
-    dec c
-    ld [bc], a
-    nop
-    nop
-    inc a
-    ccf
-    ld a, l
-    jr jr_003_4cd3
-
-    ld a, [de]
-
-jr_003_4cd3:
-    dec c
-    rlca
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    ld [bc], a
-    dec l
-    inc c
-    ld [bc], a
-    nop
-    nop
-    ld b, c
-    ld c, c
-    ld l, [hl]
-    ld c, $0a
-    dec bc
-    ld [$0210], sp
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0202
-    ld bc, $0000
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    ld [bc], a
-    ld [hl-], a
-    inc c
-    ld [bc], a
-    nop
-    nop
-    add hl, bc
-    inc c
-    ld b, [hl]
-    dec c
-    inc d
-    dec c
-    rrca
-    rrca
-    dec c
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    ld [bc], a
-    jr z, jr_003_4d53
-
-    ld [bc], a
-    nop
-    nop
-    ld c, b
-    ld d, l
-    ld a, c
-    ld c, $07
-
-jr_003_4d53:
-    ld de, $090b
-    dec bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    dec l
-    add hl, bc
-    ld [bc], a
-    nop
-    nop
-    ld [hl], c
-    ld a, a
-    sub h
-    ld [de], a
-    rlca
-    dec c
-    inc c
-    dec bc
-    rlca
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0102
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    ld [bc], a
-    dec l
-    ld a, [bc]
-    ld [bc], a
-    nop
-    nop
-    daa
-    adc b
-    adc [hl]
-    ld [de], a
-    dec b
-    ld de, $0217
-    dec bc
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0200
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    ld [bc], a
-    inc hl
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    inc c
-    ld a, b
-    sub d
-    ld c, $0b
-    db $10
-    ld c, $14
-    ld [$0000], sp
-    nop
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0202
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    inc b
-    ld [bc], a
-    ld [hl-], a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    ld a, $40
-    ld b, c
-    ld de, $1113
-    dec bc
-    ld de, $000a
-    nop
-    nop
-    ld bc, $0001
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    ld [bc], a
-    jr z, jr_003_4e30
-
-    ld [bc], a
-    nop
-    nop
-    dec sp
-    ld d, l
-    ld a, e
-    inc d
-    nop
-    dec de
-    rlca
-    add hl, bc
-    ld bc, $0101
-
-jr_003_4e30:
-    ld bc, $0101
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    dec b
-    ld [bc], a
-    jr z, @+$0f
-
-    ld [bc], a
-    nop
-    nop
-    inc c
-    ld b, a
-    ld a, l
-    ld [de], a
-    dec bc
-    rrca
-    add hl, bc
-    ld a, [bc]
-    ld [$0101], sp
-    ld bc, $0101
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    inc bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    ld [bc], a
-    ld [hl-], a
-    inc c
-    ld [bc], a
-    nop
-    nop
-    ld b, c
-    ld c, e
-    ld c, l
-    ld c, $0d
-    ld de, $0809
-    dec bc
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0001
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    ld [bc], a
-    dec l
-    dec bc
-    ld [bc], a
-    ld bc, $1800
-    jr nz, @-$28
-
-    inc c
-    dec b
-    dec c
-    ld c, $11
-    rlca
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0100
-    nop
-    nop
-    nop
-    ld bc, $0202
-    ld bc, $0100
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    ld [bc], a
-    ld [hl-], a
-    ld c, $02
-    nop
-    nop
-    dec hl
-    jr nc, @+$35
-
-    inc de
-    dec d
-    ld c, $0d
-    inc c
-    add hl, de
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0202
-    ld bc, $0201
-    inc bc
-    inc bc
-    ld bc, $0001
-    ld [bc], a
-    nop
-    ld bc, $0301
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    ld b, $02
-    jr z, jr_003_4f04
-
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    jr nz, jr_003_4f69
-
-    inc de
-    add hl, bc
-    ld de, $110d
-
-jr_003_4f04:
-    inc bc
-    nop
-    ld bc, $0001
-    nop
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld bc, $0101
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    ld [bc], a
-    inc hl
-    dec c
-    ld [bc], a
-    nop
-    nop
-    dec sp
-    ld d, d
-    ld a, e
-    dec c
-    ld bc, $0a14
-    ld [$0004], sp
-    nop
-    nop
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    dec b
-    ld [bc], a
-    ld [hl-], a
-    ld c, $02
-    nop
-    nop
-    dec a
-    ld [hl], d
-    ld a, l
-    ld de, $1508
-    ld de, $0d0e
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0302
-
-jr_003_4f69:
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    ld b, $02
-    ld b, [hl]
-    rrca
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    ld d, b
-    ld h, b
-    inc d
-    ld c, $18
-    rla
-    ld de, $010e
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0101
-    inc bc
-    ld bc, $0201
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0201
-    ld bc, $0102
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    ld b, $02
-    ld [hl-], a
-    dec c
-    ld [bc], a
-    nop
-    nop
-    dec d
-    rla
-    ld d, [hl]
-    ld de, $1304
-    ld [de], a
-    ld a, [bc]
-    inc c
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0201
-    inc bc
-    ld bc, $0103
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0101
-    nop
-    ld [bc], a
-    ld bc, $0303
-    inc bc
-    inc bc
-    inc bc
-    nop
-    ld b, $02
-    jr z, jr_003_4fdc
-
-    ld [bc], a
-    nop
-    nop
-    ld b, [hl]
-    ld d, l
-    ld a, e
-    rrca
-    rlca
-    ld [de], a
-    ld c, $11
-    dec bc
-
-jr_003_4fdc:
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0100
-    inc bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    nop
-    ld bc, $0001
-    ld bc, $0300
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld b, $02
-    jr z, jr_003_5006
-
-    ld [bc], a
-    nop
-    nop
-    inc c
-    dec hl
-    ld h, b
-    ld c, $08
-    ld c, $0b
-    rlca
-
-jr_003_5006:
-    add hl, bc
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    ld bc, $0003
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0200
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    inc bc
-    jr z, @+$06
-
-    ld [bc], a
-    nop
-    nop
-    jr jr_003_5047
-
-    rst $10
-    dec bc
-    inc c
-    ld c, $08
-    ld [de], a
-    dec c
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    nop
-    nop
-
-jr_003_5047:
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    dec l
-    ld b, $02
-    ld bc, $1500
-    dec hl
-    ld h, b
-    ld de, $130d
-    dec bc
-    db $10
-    inc d
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0100
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    inc bc
-    inc hl
-    dec b
-    ld [bc], a
-    nop
-    nop
-    inc a
-    ld b, c
-    ret c
-
-    ld c, $08
-    ld de, $0609
-    inc b
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    inc b
-    inc bc
-    ld [hl-], a
-    dec b
-    ld [bc], a
-    ld bc, $2200
-    ld c, d
-    sub l
-    ld b, $12
-    inc c
-    inc bc
-    dec d
-    inc de
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    ld e, $03
-    ld [bc], a
-    ld bc, $1500
-    add hl, de
-    ld l, a
-    dec bc
-    dec bc
-    add hl, bc
-    inc c
-    ld [de], a
-    rlca
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    nop
-    inc bc
-    inc bc
-    jr z, jr_003_5101
-
-    ld [bc], a
-    nop
-    nop
-    add hl, bc
-
-jr_003_5101:
-    inc e
-    ld b, [hl]
-    add hl, bc
-    rlca
-    inc d
-    ld c, $17
-    dec c
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    inc bc
-    dec l
-    dec b
-    ld [bc], a
-    ld bc, $4200
-    ld c, c
-    adc d
-    ld b, $0e
-    ld de, $120c
-    dec b
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    ld [hl-], a
-    dec b
-    ld [bc], a
-    ld bc, $1800
-    inc h
-    ld [hl], h
-    inc c
-    ld de, $0f08
-    ld d, $0d
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    jr z, @+$04
-
-    ld [bc], a
-    ld bc, $1500
-    ld a, [de]
-    inc sp
-    dec bc
-    inc b
-    ld [$110d], sp
-    dec bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    jr z, @+$05
-
-    ld [bc], a
-    ld bc, $4600
-    ld [hl], d
-    adc h
-    ld [$0e05], sp
-    inc c
-    ld de, $0008
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    jr z, jr_003_51da
-
-    ld [bc], a
-    nop
-    nop
-    dec h
-    ld d, a
-    rst $10
-
-jr_003_51da:
-    db $10
-    inc c
-    inc d
-    inc d
-    ld c, $0b
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0200
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    inc bc
-    inc hl
-    rlca
-    ld [bc], a
-    nop
-    nop
-    add hl, bc
-    ld b, l
-    ld [hl], a
-    rrca
-    ld a, [bc]
-    dec d
-    dec c
-    dec bc
-    ld [de], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0001
-    nop
-    ld bc, $0202
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    dec b
-    inc bc
-    ld e, $05
-    ld [bc], a
-    ld bc, $1900
-    ld [hl], l
-    ld a, b
-    ld de, $1106
-    rrca
-    inc d
-    ld [$0000], sp
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0201
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    nop
-    inc b
-    inc bc
-    ld [hl-], a
-    ld b, $02
-    ld bc, $0300
-    ld l, $4f
-    ld c, $0b
-    ld [de], a
-    inc c
-    ld de, $010d
-    ld bc, $0200
-    ld [bc], a
-    ld bc, $0000
-    ld [bc], a
-    nop
-    ld bc, $0001
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0002
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    inc bc
-    ld [hl-], a
-    rlca
-    inc bc
-    ld bc, $1200
-    ld b, a
-    ld h, b
-    inc d
-    rlca
-    dec bc
-    ld de, $0b13
-    ld bc, $0001
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0100
-    inc bc
-    nop
-    ld bc, $0200
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    inc bc
-    ld [hl-], a
-    rlca
-    ld bc, $0001
-    ld d, l
-    ld e, h
-    adc d
-    db $10
-    dec c
-    inc de
-    ld [$0c13], sp
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld bc, $0300
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    inc bc
-    ld [hl-], a
-    rlca
-    ld [bc], a
-    ld bc, $4500
-    ld e, d
-    ld h, h
-    inc d
-    rlca
-    inc de
-    ld de, $0c16
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld bc, $0000
-    ld bc, $0002
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0100
-    ld bc, $0100
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    inc bc
-    inc a
-    rrca
-    ld [bc], a
-    ld bc, $2a00
-    add e
-    add h
-    dec de
-    inc de
-    inc c
-    inc d
-    rla
-    rla
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    ld bc, $0001
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld b, $03
-    ld [hl-], a
-    dec b
-    ld [bc], a
-    nop
-    nop
-    ld l, [hl]
-    sub h
-    sub [hl]
-    ld c, $14
-    ld [$1009], sp
-    inc d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    nop
-    ld bc, $0200
-    ld bc, $0101
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld b, $03
-    ld b, [hl]
-    jr jr_003_5359
-
-    nop
-
-jr_003_5359:
-    nop
-    ld h, [hl]
-    add c
-    adc [hl]
-    add hl, de
-    dec de
-    rrca
-    jr @+$14
-
-    jr jr_003_5366
-
-    ld [bc], a
-    ld [bc], a
-
-jr_003_5366:
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    ld bc, $0301
-    ld bc, $0301
-    ld bc, $0302
-    ld bc, $0102
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    ld b, $04
-    jr z, jr_003_538c
-
-    ld [bc], a
-    nop
-    nop
-    inc e
-    jr nz, @+$36
-
-    rrca
-    jr @+$0d
-
-    dec c
-
-jr_003_538c:
-    ld b, $12
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld bc, $0101
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc b
-    inc b
-    dec l
-    rrca
-    ld [bc], a
-    nop
-    nop
-    nop
-    dec [hl]
-    ld l, e
-    ld c, $1a
-    ld a, [bc]
-    inc c
-    dec b
-    ld de, $0101
-    ld bc, $0202
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0200
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc b
-    inc b
-    inc hl
-    rlca
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    inc sp
-    ld [hl], $11
-    inc d
-    ld b, $09
-    ld [bc], a
-    inc de
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    inc b
-    inc hl
-    rlca
-    ld [bc], a
-    ld bc, $3200
-    scf
-    ld c, l
-    inc c
-    inc d
-    ld b, $0b
-    ld c, $07
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    inc b
-    ld e, $06
-    ld [bc], a
-    nop
-    nop
-    ld b, d
-    ld l, c
-    ld [hl], l
-    ld [de], a
-    ld [de], a
-    inc c
-    rrca
-    add hl, bc
-    dec b
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0200
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    inc b
-    inc b
-    jr z, jr_003_5464
-
-    ld [bc], a
-    nop
-    nop
-    add hl, bc
-    dec d
-    ld l, b
-    db $10
-    ld de, $0609
-    ld [bc], a
-
-jr_003_5464:
-    ld c, $01
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0000
-    ld bc, $0202
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc b
-    inc b
-    dec l
-    add hl, bc
-    ld [bc], a
-    nop
-    nop
-    ld l, b
-    ld l, d
-    sub d
-    ld c, $12
-    ld [$0d09], sp
-    dec c
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc bc
-    inc b
-    ld [hl-], a
-    inc c
-    ld [bc], a
-    nop
-    nop
-    inc h
-    dec h
-    ld h, $0c
-    jr jr_003_54c0
-
-    ld de, $0a0c
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-
-jr_003_54c0:
-    ld bc, $0000
-    ld bc, $0202
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc b
-    inc b
-    jr z, @+$0a
-
-    ld [bc], a
-    nop
-    nop
-    dec d
-    scf
-    ld c, l
-    ld de, $040b
-    ld [bc], a
-    add hl, bc
-    ld c, $00
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc bc
-    inc b
-    inc hl
-    add hl, bc
-    ld [bc], a
-    nop
-    nop
-    ld a, [de]
-    ld b, c
-    ld l, d
-    dec c
-    inc d
-    ld c, $0b
-    inc bc
-    stop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0200
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    inc b
-    inc b
-    ld [hl-], a
-    inc c
-    ld [bc], a
-    nop
-    nop
-    ld [hl], c
-    ld [hl], a
-    ld a, b
-    dec bc
-    dec d
-    rlca
-    ld b, $14
-    dec bc
-    ld bc, $0001
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0100
-    ld bc, $0000
-    nop
-    ld [bc], a
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    dec b
-    inc b
-    jr z, jr_003_5566
-
-    ld [bc], a
-    nop
-    nop
-    inc c
-    dec hl
-    ld [hl], $0f
-    ld [de], a
-    ld [$0c03], sp
-
-jr_003_5566:
-    rrca
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld bc, $0100
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc b
-    inc b
-    dec l
-    add hl, bc
-    ld [bc], a
-    nop
-    nop
-    rla
-    ld l, a
-    ld [hl], l
-    inc c
-    inc d
-    dec bc
-    ld [$110a], sp
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0202
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    inc bc
-    nop
-    nop
-    nop
-    ld bc, $0202
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld b, $04
-    jr z, jr_003_55be
-
-    ld [bc], a
-    nop
-    nop
-    ld d, h
-    ld l, a
-    sub c
-    inc de
-    ld de, $0a07
-    rrca
-    rla
-    nop
-
-jr_003_55be:
-    nop
-    nop
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0001
-    ld b, $04
-    inc hl
-    ld a, [bc]
-    ld [bc], a
-    nop
-    nop
-    ld a, [de]
-    dec h
-    jr c, @+$10
-
-    rrca
-    inc c
-    ld c, $0f
-    add hl, bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0202
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    inc b
-    ld e, $06
-    ld [bc], a
-    nop
-    nop
-    ld c, [hl]
-    ld l, c
-    ld [hl], e
-    ld [$080b], sp
-    dec b
-    ld bc, $0103
-    ld bc, $0301
-    inc bc
-    ld bc, $0000
-    ld bc, $0202
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc bc
-    inc b
-    ld [hl-], a
-    add hl, bc
-    ld [bc], a
-    nop
-    nop
-    ld c, c
-    ld d, [hl]
-    ld l, d
-    ld c, $0c
-    inc de
-    rlca
-    ld a, [bc]
-    ld b, $01
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0000
-    ld bc, $0303
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    dec b
-    inc b
-    inc a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    rla
-    ld d, d
-    ld d, a
-    ld de, $140e
-    dec c
-    ld a, [bc]
-    db $10
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    ld [bc], a
-    inc bc
-    inc bc
-    ld bc, $0000
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    ld b, $04
-    ld d, b
-    jr jr_003_568c
-
-    nop
-    nop
-    ld d, b
-
-jr_003_568c:
-    add d
-    sub b
-    jr @+$20
-
-    rla
-    dec d
-    ld [de], a
-    ld [de], a
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld bc, $0101
-    ld [bc], a
-    inc bc
-    inc bc
-    ld bc, $0101
-    inc bc
-    ld bc, $0101
-    ld bc, $0102
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0001
-    ld b, $04
-    ld d, b
-    nop
-    ld [bc], a
-    nop
-    nop
-    add hl, sp
-    ld a, [hl]
-    ld a, a
-    ld a, [bc]
-    dec de
-    dec bc
-    ld c, $18
-    ld e, $02
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0303
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0301
-    ld bc, $0302
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0001
-    ld b, $05
-    inc hl
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld a, c
-    ld a, [hl]
-    adc h
-    dec bc
-    ld [$090e], sp
-    dec bc
-    rlca
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0103
-    ld bc, $0301
-    ld bc, $0101
-    ld bc, $0000
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    dec b
-    jr z, @+$06
-
-    ld [bc], a
-    nop
-    nop
-    ld e, $6c
-    add e
-    dec c
-    dec b
-    dec bc
-    ld c, $0b
-    add hl, bc
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0200
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0100
-    ld bc, $0202
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    dec b
-    ld e, $01
-    ld [bc], a
-    nop
-    nop
-    ld [de], a
-    daa
-    ld d, d
-    ld b, $0b
-    ld c, $12
-    ld [$0007], sp
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    nop
-    dec b
-    dec b
-    ld e, $00
-    ld [bc], a
-    ld bc, $1800
-    ld d, d
-    ld l, a
-    dec bc
-    ld [bc], a
-    dec c
-    rlca
-    inc c
-    ld [$0000], sp
-    nop
-    ld bc, $0001
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    inc bc
-    inc bc
-    nop
-    inc b
-    dec b
-    dec l
-    inc b
-    ld [bc], a
-    nop
-    nop
-    ld a, [de]
-    inc h
-    ld h, $11
-    dec c
-    ld a, [bc]
-    inc c
-    dec b
-    inc de
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0201
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    dec b
-    inc hl
-    ld b, $02
-    nop
-    nop
-    scf
-    ld c, d
-    ld [hl], l
-    dec c
-    ld [$0810], sp
-    dec c
-    ld c, $01
-    ld bc, $0101
-    ld bc, $0001
-    ld [bc], a
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    dec b
-    jr z, jr_003_57e4
-
-    ld [bc], a
-    nop
-    nop
-    ld l, b
-
-jr_003_57e4:
-    ld [hl], b
-    ld a, c
-    inc c
-    ld [$0909], sp
-    inc b
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0103
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld bc, $0000
-    nop
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    dec b
-    dec l
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    dec d
-    ld e, h
-    ld a, e
-    dec c
-    rlca
-    db $10
-    inc d
-    add hl, bc
-    rlca
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0200
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0100
-    ld bc, $0202
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    dec b
-    inc hl
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld a, $52
-    ld l, b
-    ld [$0b04], sp
-    ld de, $010d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    dec b
-    inc hl
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld a, [de]
-    ld b, c
-    ld d, d
-    dec bc
-    inc b
-    ld [$0e0e], sp
-    inc b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    dec b
-    dec l
-    dec b
-    ld [bc], a
-    nop
-    nop
-    ld b, a
-    ld l, h
-    ld [hl], e
-    inc c
-    ld a, [bc]
-    db $10
-    dec bc
-    ld c, $05
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0201
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    dec b
-    ld e, $06
-    ld [bc], a
-    nop
-    nop
-    ld e, $25
-    dec sp
-    rrca
-    ld a, [bc]
-    ld de, $0b14
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0201
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    inc bc
-    inc bc
-    nop
-    inc b
-    dec b
-    dec l
-    inc b
-    ld [bc], a
-    ld bc, $0300
-    dec hl
-    jr c, @+$0b
-
-    dec bc
-    ld b, $03
-    ld a, [bc]
-    add hl, bc
-    nop
-    nop
-    nop
-    ld bc, $0001
-    nop
-    ld [bc], a
-    ld bc, $0101
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    dec b
-    ld e, $02
-    ld [bc], a
-    ld bc, $5800
-    ld l, c
-    ld [hl], e
-    ld c, $09
-    db $10
-    inc c
-    inc d
-    inc c
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    ld bc, $0000
-    ld [bc], a
-    ld bc, $0101
-    nop
-    nop
-    nop
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    inc bc
-    inc bc
-    nop
-    dec b
-    dec b
-    jr z, jr_003_593d
-
-    ld [bc], a
-    nop
-    nop
-    jr nz, jr_003_5974
-
-jr_003_593d:
-    ret c
-
-    ld de, $0f0a
-    db $10
-    rlca
-    ld c, $00
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0103
-    ld bc, $0300
-    nop
-    nop
-    ld bc, $0000
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    dec b
-    jr z, jr_003_5969
-
-    ld [bc], a
-    nop
-    nop
-    ld e, $48
-    ld d, d
-
-jr_003_5969:
-    db $10
-    ld [$130e], sp
-    dec b
-    ld bc, $0000
-    nop
-    nop
-    nop
-
-jr_003_5974:
-    nop
-    ld bc, $0103
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    nop
-    dec b
-    dec b
-    jr z, jr_003_5995
-
-    ld [bc], a
-    ld bc, $6700
-    ld l, c
-    adc d
-    inc d
-
-jr_003_5995:
-    dec b
-    inc de
-    dec c
-    inc d
-    inc b
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0200
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0001
-    nop
-    ld bc, $0201
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    inc bc
-    inc bc
-    nop
-    dec b
-    dec b
-    ld [hl-], a
-    rlca
-    ld [bc], a
-    nop
-    nop
-    ld b, l
-    ld c, h
-    ld e, e
-    dec d
-    inc de
-    rla
-    inc d
-    inc c
-    ld c, $02
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld bc, $0000
-
+MonsterInfoTable:
+; --- Monster $00 (0): DrakSlime ---
+MonsterInfo_000_DrakSlime:
+    db 0  ; Family: Slime
+    db 45  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 67, 92, 213  ; Skills: SuckAir, FireAir, BeDragon
+    db 16, 10, 13, 8, 20, 16  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $01 (1): SpotSlime ---
+MonsterInfo_001_SpotSlime:
+    db 0  ; Family: Slime
+    db 35  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 82, 121, 127  ; Skills: CallHelp, LushLicks, Imitate
+    db 17, 1, 17, 4, 17, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 3, 3  ; Resist A-N: Fire..AglDown
+    db 2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $02 (2): WingSlime ---
+MonsterInfo_002_WingSlime:
+    db 0  ; Family: Slime
+    db 35  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 85, 88, 138  ; Skills: SquallHit, WindBeast, TailWind
+    db 13, 2, 11, 11, 24, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 2, 2, 2, 2, 2, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $03 (3): TreeSlime ---
+MonsterInfo_003_TreeSlime:
+    db 0  ; Family: Slime
+    db 50  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 28, 105, 106  ; Skills: Sap, Paralyze, SleepAir
+    db 13, 11, 8, 14, 17, 17  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 2, 2, 2, 3, 3, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $04 (4): Snaily ---
+MonsterInfo_004_Snaily:
+    db 0  ; Family: Slime
+    db 30  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 12, 52, 82  ; Skills: IceBolt, NumbOff, CallHelp
+    db 11, 10, 17, 20, 20, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 3, 2, 2, 3, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 2, 2, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $05 (5): SlimeNite ---
+MonsterInfo_005_SlimeNite:
+    db 0  ; Family: Slime
+    db 40  ; Level cap
+    db 15  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 30, 43, 74  ; Skills: Upper, Heal, BeastCut
+    db 14, 1, 15, 14, 20, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 2, 2, 3, 2, 2, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $06 (6): Babble ---
+MonsterInfo_006_Babble:
+    db 0  ; Family: Slime
+    db 45  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 24, 103, 116  ; Skills: Surround, PoisonHit, EerieLite
+    db 17, 7, 17, 8, 14, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 3, 3, 3, 2, 2, 3, 2, 2  ; Resist A-N: Fire..AglDown
+    db 2, 2, 0, 0, 3, 1, 1, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $07 (7): BoxSlime ---
+MonsterInfo_007_BoxSlime:
+    db 0  ; Family: Slime
+    db 50  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 30, 60  ; Skills: Blaze, Upper, Ramming
+    db 11, 10, 14, 19, 14, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 1, 0, 0, 1, 2, 2, 3, 2, 2, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $08 (8): Slime ---
+MonsterInfo_008_Slime:
+    db 0  ; Family: Slime
+    db 40  ; Level cap
+    db 16  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 102, 115  ; Skills: Firebal, MegaMagic, Radiant
+    db 22, 11, 14, 17, 11, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 0  ; Tier/rank
+
+; --- Monster $09 (9): Healer ---
+MonsterInfo_009_Healer:
+    db 0  ; Family: Slime
+    db 50  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 30, 43, 46  ; Skills: Upper, Heal, HealUs
+    db 11, 15, 11, 11, 20, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 2, 2, 2, 3, 3, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 2, 2, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $0A (10): FangSlime ---
+MonsterInfo_010_FangSlime:
+    db 0  ; Family: Slime
+    db 35  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 65, 82, 125  ; Skills: ChargeUP, CallHelp, WarCry
+    db 25, 1, 18, 13, 20, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 2, 3, 2, 2, 2, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 2, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $0B (11): RockSlime ---
+MonsterInfo_011_RockSlime:
+    db 0  ; Family: Slime
+    db 50  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 66, 91, 142  ; Skills: HighJump, RockThrow, StrongD
+    db 13, 10, 14, 23, 16, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 1, 0, 0, 2, 2, 2, 3, 2, 2, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $0C (12): SlimeBorg ---
+MonsterInfo_012_SlimeBorg:
+    db 0  ; Family: Slime
+    db 50  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 87, 90, 144  ; Skills: RainSlash, Lightning, BladeD
+    db 18, 11, 20, 15, 14, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 1, 2, 1, 2, 2, 3, 2, 2, 3, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $0D (13): Slabbit ---
+MonsterInfo_013_Slabbit:
+    db 0  ; Family: Slime
+    db 35  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 119, 123, 126  ; Skills: SideStep, LegSweep, Whistle
+    db 15, 7, 14, 8, 21, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 3, 3  ; Resist A-N: Fire..AglDown
+    db 2, 2, 0, 0, 0, 0, 0, 2, 1, 1, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $0E (14): SpotKing ---
+MonsterInfo_014_SpotKing:
+    db 0  ; Family: Slime
+    db 40  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 78, 104, 146  ; Skills: CleanCut, NapAttack, MouthShut
+    db 18, 11, 18, 11, 20, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 1, 3, 2, 3, 2, 2, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 2, 1, 1, 0, 1, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $0F (15): KingSlime ---
+MonsterInfo_015_KingSlime:
+    db 0  ; Family: Slime
+    db 40  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 36, 43, 48  ; Skills: Barrier, Heal, Vivify
+    db 18, 14, 15, 14, 20, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 3, 2, 3, 2, 2, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $10 (16): Metaly ---
+MonsterInfo_016_Metaly:
+    db 0  ; Family: Slime
+    db 20  ; Level cap
+    db 25  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 1  ; Can fly: no, Metal: yes
+    db 0, 12, 18  ; Skills: Blaze, IceBolt, Beat
+    db 0, 30, 11, 30, 31, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 3, 3, 3, 3, 3, 0, 0, 0, 3, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $11 (17): Metabble ---
+MonsterInfo_017_Metabble:
+    db 0  ; Family: Slime
+    db 40  ; Level cap
+    db 27  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 1  ; Can fly: no, Metal: yes
+    db 3, 6, 20  ; Skills: Firebal, Bang, Sacrifice
+    db 0, 30, 14, 31, 31, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 2, 3, 3, 3, 3, 3, 0, 0, 0, 3, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $12 (18): MetalKing ---
+MonsterInfo_018_MetalKing:
+    db 0  ; Family: Slime
+    db 60  ; Level cap
+    db 29  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 1  ; Can fly: no, Metal: yes
+    db 15, 42, 100  ; Skills: Bolt, Ironize, Hellblast
+    db 0, 31, 15, 31, 31, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 2, 3, 3, 3, 3, 3, 0, 0, 0, 3, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $13 (19): GoldSlime ---
+MonsterInfo_019_GoldSlime:
+    db 0  ; Family: Slime
+    db 80  ; Level cap
+    db 31  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 57, 101, 129  ; Skills: Chance, BigBang, Surge
+    db 0, 31, 19, 31, 31, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 2, 3, 3, 3, 3, 3, 1, 1, 1, 3, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $14 (20): DragonKid ---
+MonsterInfo_020_DragonKid:
+    db 1  ; Family: Dragon
+    db 25  ; Level cap
+    db 7  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 92, 106, 140  ; Skills: FireAir, SleepAir, Dodge
+    db 10, 3, 17, 2, 5, 5  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $15 (21): Tortragon ---
+MonsterInfo_021_Tortragon:
+    db 1  ; Family: Dragon
+    db 35  ; Level cap
+    db 17  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 39, 42, 90  ; Skills: MagicBack, Ironize, Lightning
+    db 15, 11, 18, 6, 7, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $16 (22): Pteranod ---
+MonsterInfo_022_Pteranod:
+    db 1  ; Family: Dragon
+    db 35  ; Level cap
+    db 16  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 3, 88, 138  ; Skills: Firebal, WindBeast, TailWind
+    db 14, 11, 18, 2, 20, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $17 (23): Gasgon ---
+MonsterInfo_023_Gasgon:
+    db 1  ; Family: Dragon
+    db 50  ; Level cap
+    db 18  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 20, 50, 61  ; Skills: Sacrifice, Farewell, Beserker
+    db 17, 15, 13, 11, 7, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $18 (24): FairyDrak ---
+MonsterInfo_024_FairyDrak:
+    db 1  ; Family: Dragon
+    db 30  ; Level cap
+    db 15  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 24, 106, 121  ; Skills: Surround, SleepAir, LushLicks
+    db 9, 13, 17, 16, 14, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $19 (25): LizardMan ---
+MonsterInfo_025_LizardMan:
+    db 1  ; Family: Dragon
+    db 40  ; Level cap
+    db 20  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 64, 74, 217  ; Skills: EvilSlash, BeastCut, GigaSlash
+    db 17, 10, 19, 13, 5, 16  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $1A (26): Poisongon ---
+MonsterInfo_026_Poisongon:
+    db 1  ; Family: Dragon
+    db 45  ; Level cap
+    db 19  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 103, 108, 121  ; Skills: PoisonHit, PoisonGas, LushLicks
+    db 21, 16, 15, 13, 7, 1  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 2, 1, 1, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $1B (27): Swordgon ---
+MonsterInfo_027_Swordgon:
+    db 1  ; Family: Dragon
+    db 50  ; Level cap
+    db 20  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 78, 87, 144  ; Skills: CleanCut, RainSlash, BladeD
+    db 9, 3, 23, 6, 1, 5  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 3, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $1C (28): Dragon ---
+MonsterInfo_028_Dragon:
+    db 1  ; Family: Dragon
+    db 40  ; Level cap
+    db 20  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 68, 92, 143  ; Skills: FireSlash, FireAir, SuckAll
+    db 17, 1, 20, 16, 7, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $1D (29): MiniDrak ---
+MonsterInfo_029_MiniDrak:
+    db 1  ; Family: Dragon
+    db 35  ; Level cap
+    db 16  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 60, 82, 114  ; Skills: Ramming, CallHelp, SandStorm
+    db 14, 8, 17, 14, 18, 10  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 0, 0, 0, 2, 1, 2, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $1E (30): MadDragon ---
+MonsterInfo_030_MadDragon:
+    db 1  ; Family: Dragon
+    db 35  ; Level cap
+    db 19  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 63, 64, 120  ; Skills: Massacre, EvilSlash, LureDance
+    db 19, 0, 21, 5, 8, 0  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 0, 0, 0, 2, 2, 1, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $1F (31): Rayburn ---
+MonsterInfo_031_Rayburn:
+    db 1  ; Family: Dragon
+    db 35  ; Level cap
+    db 17  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 70, 76, 103  ; Skills: VacuSlash, DevilCut, PoisonHit
+    db 14, 2, 17, 16, 15, 5  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 0, 0, 2, 0, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 1, 0, 0, 0, 0, 2, 1, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $20 (32): Chamelgon ---
+MonsterInfo_032_Chamelgon:
+    db 1  ; Family: Dragon
+    db 50  ; Level cap
+    db 19  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 25, 105, 107  ; Skills: PanicAll, Paralyze, PalsyAir
+    db 17, 18, 11, 6, 8, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 2, 0, 0, 0, 0, 0, 2, 1, 0, 3, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $21 (33): LizardFly ---
+MonsterInfo_033_LizardFly:
+    db 1  ; Family: Dragon
+    db 30  ; Level cap
+    db 16  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 3, 88, 92  ; Skills: Firebal, WindBeast, FireAir
+    db 11, 11, 17, 17, 13, 5  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 2, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 3, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $22 (34): Andreal ---
+MonsterInfo_034_Andreal:
+    db 1  ; Family: Dragon
+    db 50  ; Level cap
+    db 22  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 9, 24, 108  ; Skills: Infernos, Surround, PoisonGas
+    db 21, 15, 19, 17, 19, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 0, 0, 0, 0, 2, 2, 2, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 2, 0, 0, 0, 1, 1, 1, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $23 (35): KingCobra ---
+MonsterInfo_035_KingCobra:
+    db 1  ; Family: Dragon
+    db 40  ; Level cap
+    db 20  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 103, 111, 113  ; Skills: PoisonHit, Curse, K.O.Dance
+    db 18, 8, 16, 13, 19, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $24 (36): Spikerous ---
+MonsterInfo_036_Spikerous:
+    db 1  ; Family: Dragon
+    db 30  ; Level cap
+    db 19  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 61, 62, 91  ; Skills: Beserker, Kamikaze, RockThrow
+    db 20, 8, 19, 24, 1, 2  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 2, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $25 (37): GreatDrak ---
+MonsterInfo_037_GreatDrak:
+    db 1  ; Family: Dragon
+    db 60  ; Level cap
+    db 23  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 71, 96, 143  ; Skills: IceSlash, FrigidAir, SuckAll
+    db 21, 5, 23, 14, 16, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 3, 2, 1, 1, 1, 1, 2, 3, 1, 1, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 3, 1, 1, 3, 1, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $26 (38): Crestpent ---
+MonsterInfo_038_Crestpent:
+    db 1  ; Family: Dragon
+    db 35  ; Level cap
+    db 18  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 23, 103, 213  ; Skills: StopSpell, PoisonHit, BeDragon
+    db 14, 4, 15, 5, 19, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 0, 0, 0, 2, 2, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $27 (39): WingSnake ---
+MonsterInfo_039_WingSnake:
+    db 1  ; Family: Dragon
+    db 45  ; Level cap
+    db 20  ; Exp table
+    db 1  ; Female ratio (~10%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 66, 85, 108  ; Skills: HighJump, SquallHit, PoisonGas
+    db 15, 8, 20, 17, 14, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 3, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 3, 0, 0, 0, 0, 2, 2, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $28 (40): Coatol ---
+MonsterInfo_040_Coatol:
+    db 1  ; Family: Dragon
+    db 60  ; Level cap
+    db 23  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 6, 64, 69  ; Skills: Bang, EvilSlash, BoltSlash
+    db 25, 14, 20, 22, 18, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 3, 1, 1, 1, 1, 2, 2, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $29 (41): Orochi ---
+MonsterInfo_041_Orochi:
+    db 1  ; Family: Dragon
+    db 60  ; Level cap
+    db 22  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 68, 80, 92  ; Skills: FireSlash, BiAttack, FireAir
+    db 24, 13, 24, 21, 11, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 3, 1, 2, 2, 2, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $2A (42): BattleRex ---
+MonsterInfo_042_BattleRex:
+    db 1  ; Family: Dragon
+    db 60  ; Level cap
+    db 22  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 64, 72, 92  ; Skills: EvilSlash, MetalCut, FireAir
+    db 23, 16, 26, 20, 17, 16  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 1, 1, 2, 2, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 3, 1, 1, 2, 1, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $2B (43): SkyDragon ---
+MonsterInfo_043_SkyDragon:
+    db 1  ; Family: Dragon
+    db 35  ; Level cap
+    db 18  ; Exp table
+    db 3  ; Female ratio (~84%)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 67, 79, 92  ; Skills: SuckAir, MultiCut, FireAir
+    db 15, 11, 20, 14, 18, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 2, 2, 2, 1, 1, 2, 2, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 3, 1, 1, 2, 1, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $2C (44): Divinegon ---
+MonsterInfo_044_Divinegon:
+    db 1  ; Family: Dragon
+    db 80  ; Level cap
+    db 28  ; Exp table
+    db 3  ; Female ratio (~84%)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 96, 101, 147  ; Skills: FrigidAir, BigBang, Meditate
+    db 26, 25, 28, 24, 20, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 3, 3, 2, 2, 2, 2, 2, 3, 2, 2, 3, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 1, 3, 2, 2, 3, 2, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $2D (45): Tonguella ---
+MonsterInfo_045_Tonguella:
+    db 2  ; Family: Beast
+    db 40  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 104, 106, 121  ; Skills: NapAttack, SleepAir, LushLicks
+    db 14, 5, 15, 12, 11, 16  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 3, 3  ; Resist A-N: Fire..AglDown
+    db 1, 1, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $2E (46): Almiraj ---
+MonsterInfo_046_Almiraj:
+    db 2  ; Family: Beast
+    db 45  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 21, 61, 65  ; Skills: Sleep, Beserker, ChargeUP
+    db 18, 5, 14, 9, 15, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $2F (47): CatFly ---
+MonsterInfo_047_CatFly:
+    db 2  ; Family: Beast
+    db 35  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 23, 32, 117  ; Skills: StopSpell, Slow, OddDance
+    db 11, 10, 13, 8, 18, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $30 (48): PillowRat ---
+MonsterInfo_048_PillowRat:
+    db 2  ; Family: Beast
+    db 50  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 60, 82, 119  ; Skills: Ramming, CallHelp, SideStep
+    db 14, 17, 8, 8, 19, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $31 (49): Saccer ---
+MonsterInfo_049_Saccer:
+    db 2  ; Family: Beast
+    db 40  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 30, 86, 107  ; Skills: Upper, PsycheUp, PalsyAir
+    db 16, 5, 9, 17, 0, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $32 (50): GulpBeast ---
+MonsterInfo_050_GulpBeast:
+    db 2  ; Family: Beast
+    db 45  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 60, 63, 125  ; Skills: Ramming, Massacre, WarCry
+    db 24, 1, 26, 13, 7, 1  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $33 (51): Skullroo ---
+MonsterInfo_051_Skullroo:
+    db 2  ; Family: Beast
+    db 45  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 65, 73, 110  ; Skills: ChargeUP, DrakSlash, PaniDance
+    db 14, 10, 11, 8, 16, 2  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $34 (52): WindBeast ---
+MonsterInfo_052_WindBeast:
+    db 2  ; Family: Beast
+    db 50  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 9, 12, 70  ; Skills: Infernos, IceBolt, VacuSlash
+    db 13, 20, 13, 15, 15, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 0, 1, 0, 0, 1, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 1, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $35 (53): Anteater ---
+MonsterInfo_053_Anteater:
+    db 2  ; Family: Beast
+    db 40  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 72, 85, 121  ; Skills: MetalCut, SquallHit, LushLicks
+    db 14, 7, 17, 11, 9, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 0  ; Tier/rank
+
+; --- Monster $36 (54): SuperTen ---
+MonsterInfo_054_SuperTen:
+    db 2  ; Family: Beast
+    db 45  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 113, 127, 148  ; Skills: K.O.Dance, Imitate, Hustle
+    db 18, 7, 13, 12, 11, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $37 (55): IronTurt ---
+MonsterInfo_055_IronTurt:
+    db 2  ; Family: Beast
+    db 45  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 39, 136, 142  ; Skills: MagicBack, Cover, StrongD
+    db 18, 5, 17, 23, 2, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $38 (56): Mommonja ---
+MonsterInfo_056_Mommonja:
+    db 2  ; Family: Beast
+    db 35  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 12, 120, 146  ; Skills: IceBolt, LureDance, MouthShut
+    db 14, 11, 16, 14, 20, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 2, 2  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $39 (57): HammerMan ---
+MonsterInfo_057_HammerMan:
+    db 2  ; Family: Beast
+    db 50  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 62, 64, 65  ; Skills: Kamikaze, EvilSlash, ChargeUP
+    db 17, 19, 17, 11, 17, 10  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 0, 0, 2, 2, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $3A (58): Grizzly ---
+MonsterInfo_058_Grizzly:
+    db 2  ; Family: Beast
+    db 40  ; Level cap
+    db 14  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 59, 85, 123  ; Skills: TwinSlash, SquallHit, LegSweep
+    db 20, 0, 27, 7, 9, 1  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 0, 0, 0, 3, 2, 2, 3, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $3B (59): Yeti ---
+MonsterInfo_059_Yeti:
+    db 2  ; Family: Beast
+    db 40  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 12, 71, 125  ; Skills: IceBolt, IceSlash, WarCry
+    db 18, 11, 15, 9, 10, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 2, 0, 0, 1, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 3, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $3C (60): MadGopher ---
+MonsterInfo_060_MadGopher:
+    db 2  ; Family: Beast
+    db 50  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 65, 75, 77  ; Skills: ChargeUP, BirdBlow, ZombieCut
+    db 14, 13, 17, 9, 8, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 2, 0, 1, 1, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $3D (61): FairyRat ---
+MonsterInfo_061_FairyRat:
+    db 2  ; Family: Beast
+    db 45  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 24, 32, 214  ; Skills: Surround, Slow, Smashlime
+    db 12, 5, 13, 14, 17, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 1, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $3E (62): Unicorn ---
+MonsterInfo_062_Unicorn:
+    db 2  ; Family: Beast
+    db 50  ; Level cap
+    db 14  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 43, 48, 51  ; Skills: Heal, Vivify, Antidote
+    db 19, 21, 14, 13, 12, 25  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 1, 2, 2, 1, 1, 2, 3, 3  ; Resist A-N: Fire..AglDown
+    db 1, 1, 0, 2, 0, 1, 1, 3, 2, 2, 3, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $3F (63): Goategon ---
+MonsterInfo_063_Goategon:
+    db 2  ; Family: Beast
+    db 40  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 32, 106  ; Skills: Firebal, Slow, SleepAir
+    db 19, 9, 17, 13, 17, 3  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 1, 1, 0, 0, 2, 1, 1, 1, 1, 1, 1, 3, 3  ; Resist A-N: Fire..AglDown
+    db 1, 1, 1, 2, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $40 (64): WildApe ---
+MonsterInfo_064_WildApe:
+    db 2  ; Family: Beast
+    db 35  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 59, 82, 123  ; Skills: TwinSlash, CallHelp, LegSweep
+    db 13, 1, 20, 10, 8, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $41 (65): Trumpeter ---
+MonsterInfo_065_Trumpeter:
+    db 2  ; Family: Beast
+    db 50  ; Level cap
+    db 14  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 61, 114, 125  ; Skills: Beserker, SandStorm, WarCry
+    db 17, 8, 21, 17, 14, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 1, 1, 1, 1, 1, 0, 0, 2, 0, 0, 1, 2, 3  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 1, 0, 0, 0, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $42 (66): KingLeo ---
+MonsterInfo_066_KingLeo:
+    db 2  ; Family: Beast
+    db 70  ; Level cap
+    db 15  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 80, 96  ; Skills: Firebal, BiAttack, FrigidAir
+    db 20, 14, 24, 23, 17, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 2, 1, 1, 1, 3, 1, 1, 2, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 2, 1, 2, 1, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $43 (67): DarkHorn ---
+MonsterInfo_067_DarkHorn:
+    db 2  ; Family: Beast
+    db 50  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 21, 23, 86  ; Skills: Sleep, StopSpell, PsycheUp
+    db 17, 4, 19, 18, 10, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 0, 0, 1, 1, 2, 3, 1, 3, 1, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 1, 0, 2, 1, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $44 (68): MadCat ---
+MonsterInfo_068_MadCat:
+    db 2  ; Family: Beast
+    db 40  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 70, 85, 123  ; Skills: VacuSlash, SquallHit, LegSweep
+    db 15, 7, 18, 14, 17, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 1, 0, 1, 3, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 1, 0, 1, 0, 3, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $45 (69): BigEye ---
+MonsterInfo_069_BigEye:
+    db 2  ; Family: Beast
+    db 40  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 12, 43, 96  ; Skills: IceBolt, Heal, FrigidAir
+    db 14, 8, 14, 11, 7, 9  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 0, 1, 3, 0, 2, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 1, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $46 (70): Picky ---
+MonsterInfo_070_Picky:
+    db 3  ; Family: Flying
+    db 40  ; Level cap
+    db 4  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 24, 28, 215  ; Skills: Surround, Sap, Sheldodge
+    db 11, 12, 14, 8, 18, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 1, 1, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $47 (71): Wyvern ---
+MonsterInfo_071_Wyvern:
+    db 3  ; Family: Flying
+    db 45  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 21, 43, 96  ; Skills: Sleep, Heal, FrigidAir
+    db 17, 13, 19, 11, 16, 20  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $48 (72): BullBird ---
+MonsterInfo_072_BullBird:
+    db 3  ; Family: Flying
+    db 35  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 60, 65, 216  ; Skills: Ramming, ChargeUP, Branching
+    db 14, 8, 17, 9, 6, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $49 (73): Florajay ---
+MonsterInfo_073_Florajay:
+    db 3  ; Family: Flying
+    db 50  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 34, 74, 149  ; Skills: Speed, BeastCut, LifeSong
+    db 6, 18, 12, 3, 21, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 3, 3, 0, 0, 0, 0, 1, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $4A (74): DuckKite ---
+MonsterInfo_074_DuckKite:
+    db 3  ; Family: Flying
+    db 30  ; Level cap
+    db 3  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 21, 25, 111  ; Skills: Sleep, PanicAll, Curse
+    db 11, 11, 9, 12, 18, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 1, 0, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $4B (75): MadPecker ---
+MonsterInfo_075_MadPecker:
+    db 3  ; Family: Flying
+    db 40  ; Level cap
+    db 4  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 9, 28, 70  ; Skills: Infernos, Sap, VacuSlash
+    db 9, 7, 20, 14, 23, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 3, 3, 1, 0, 0, 1, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $4C (76): MadRaven ---
+MonsterInfo_076_MadRaven:
+    db 3  ; Family: Flying
+    db 45  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 66, 73, 138  ; Skills: HighJump, DrakSlash, TailWind
+    db 6, 14, 17, 12, 18, 5  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 1, 1, 1, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $4D (77): MistyWing ---
+MonsterInfo_077_MistyWing:
+    db 3  ; Family: Flying
+    db 50  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 24, 36, 116  ; Skills: Surround, Barrier, EerieLite
+    db 12, 17, 8, 15, 22, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 1, 0, 0, 1, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 1, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $4E (78): Dracky ---
+MonsterInfo_078_Dracky:
+    db 3  ; Family: Flying
+    db 40  ; Level cap
+    db 2  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 21, 26, 51  ; Skills: Sleep, RobMagic, Antidote
+    db 11, 4, 8, 13, 17, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 0  ; Tier/rank
+
+; --- Monster $4F (79): BigRoost ---
+MonsterInfo_079_BigRoost:
+    db 3  ; Family: Flying
+    db 40  ; Level cap
+    db 3  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 70, 114, 140  ; Skills: VacuSlash, SandStorm, Dodge
+    db 8, 5, 14, 12, 17, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $50 (80): StubBird ---
+MonsterInfo_080_StubBird:
+    db 3  ; Family: Flying
+    db 40  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 37, 87, 215  ; Skills: TwinHits, RainSlash, Sheldodge
+    db 16, 12, 20, 20, 14, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 1, 1, 0, 2, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $51 (81): LandOwl ---
+MonsterInfo_081_LandOwl:
+    db 3  ; Family: Flying
+    db 35  ; Level cap
+    db 7  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 9, 69, 119  ; Skills: Infernos, BoltSlash, SideStep
+    db 15, 10, 21, 13, 11, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 1, 1, 0, 0, 1, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $52 (82): MadGoose ---
+MonsterInfo_082_MadGoose:
+    db 3  ; Family: Flying
+    db 30  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 25, 117, 120  ; Skills: PanicAll, OddDance, LureDance
+    db 17, 6, 17, 15, 20, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 2, 1, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 2, 1, 1, 2, 2, 2, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $53 (83): MadCondor ---
+MonsterInfo_083_MadCondor:
+    db 3  ; Family: Flying
+    db 50  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 3, 46, 79  ; Skills: Firebal, HealUs, MultiCut
+    db 14, 11, 18, 12, 17, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 2, 2, 1, 0, 0, 2, 0, 1, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 1, 2, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $54 (84): Blizzardy ---
+MonsterInfo_084_Blizzardy:
+    db 3  ; Family: Flying
+    db 50  ; Level cap
+    db 7  ; Exp table
+    db 3  ; Female ratio (~84%)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 18, 71, 96  ; Skills: Beat, IceSlash, FrigidAir
+    db 20, 7, 11, 17, 19, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 2, 2, 3, 0, 0, 2, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 3, 0, 1, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $55 (85): Phoenix ---
+MonsterInfo_085_Phoenix:
+    db 3  ; Family: Flying
+    db 50  ; Level cap
+    db 7  ; Exp table
+    db 1  ; Female ratio (~10%)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 85, 92, 138  ; Skills: SquallHit, FireAir, TailWind
+    db 16, 13, 19, 8, 19, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 3, 0, 0, 1, 0, 3, 3, 3, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $56 (86): ZapBird ---
+MonsterInfo_086_ZapBird:
+    db 3  ; Family: Flying
+    db 50  ; Level cap
+    db 7  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 69, 90, 100  ; Skills: BoltSlash, Lightning, Hellblast
+    db 20, 7, 19, 17, 22, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 3, 3, 1, 0, 0, 1, 2, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 1, 0, 1, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $57 (87): WhipBird ---
+MonsterInfo_087_WhipBird:
+    db 3  ; Family: Flying
+    db 60  ; Level cap
+    db 15  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 42, 131, 132  ; Skills: Ironize, ThickFog, TatsuCall
+    db 27, 19, 12, 20, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 2, 1, 1, 1, 2, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 1, 1, 0, 2, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $58 (88): FunkyBird ---
+MonsterInfo_088_FunkyBird:
+    db 3  ; Family: Flying
+    db 50  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 110, 148, 150  ; Skills: PaniDance, Hustle, LifeDance
+    db 14, 20, 8, 9, 16, 20  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 3, 3, 0, 1, 0, 2, 1, 1, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 2, 0, 3, 3, 3, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $59 (89): RainHawk ---
+MonsterInfo_089_RainHawk:
+    db 3  ; Family: Flying
+    db 70  ; Level cap
+    db 24  ; Exp table
+    db 1  ; Female ratio (~10%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 102, 129, 142  ; Skills: MegaMagic, Surge, StrongD
+    db 25, 27, 15, 24, 18, 24  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 3, 2, 2, 1, 1, 2, 1, 1, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 3, 1, 2, 1, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $5A (90): MadPlant ---
+MonsterInfo_090_MadPlant:
+    db 4  ; Family: Plant
+    db 40  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 28, 32, 52  ; Skills: Sap, Slow, NumbOff
+    db 15, 24, 11, 13, 6, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 1, 1, 1, 3, 3, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 1, 1, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $5B (91): FireWeed ---
+MonsterInfo_091_FireWeed:
+    db 4  ; Family: Plant
+    db 45  ; Level cap
+    db 15  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 53, 107  ; Skills: Blaze, DeChaos, PalsyAir
+    db 14, 26, 10, 12, 5, 17  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 2, 0, 0, 0, 0, 2, 2, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $5C (92): FloraMan ---
+MonsterInfo_092_FloraMan:
+    db 4  ; Family: Plant
+    db 35  ; Level cap
+    db 7  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 51, 54  ; Skills: Firebal, Antidote, CurseOff
+    db 17, 20, 6, 9, 2, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 0, 0, 2, 2, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $5D (93): WingTree ---
+MonsterInfo_093_WingTree:
+    db 4  ; Family: Plant
+    db 35  ; Level cap
+    db 7  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 50, 55, 77  ; Skills: Farewell, StepGuard, ZombieCut
+    db 12, 20, 6, 11, 14, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 3, 3, 0, 0, 0, 0, 2, 2, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $5E (94): CactiBall ---
+MonsterInfo_094_CactiBall:
+    db 4  ; Family: Plant
+    db 30  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 66, 105, 117  ; Skills: HighJump, Paralyze, OddDance
+    db 18, 18, 12, 15, 9, 5  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 1, 0, 2, 2, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $5F (95): Gulpple ---
+MonsterInfo_095_Gulpple:
+    db 4  ; Family: Plant
+    db 40  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 9, 21, 104  ; Skills: Infernos, Sleep, NapAttack
+    db 16, 17, 9, 6, 2, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 2, 1, 0, 0, 1, 2, 2, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $60 (96): Toadstool ---
+MonsterInfo_096_Toadstool:
+    db 4  ; Family: Plant
+    db 45  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 104, 106, 146  ; Skills: NapAttack, SleepAir, MouthShut
+    db 14, 18, 8, 9, 13, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 1, 1, 1, 2, 2, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 1, 1, 1, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $61 (97): AmberWeed ---
+MonsterInfo_097_AmberWeed:
+    db 4  ; Family: Plant
+    db 50  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 36, 37, 38  ; Skills: Barrier, TwinHits, MagicWall
+    db 12, 24, 8, 17, 12, 10  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 1, 0, 0, 1, 2, 2, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 1, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $62 (98): Stubsuck ---
+MonsterInfo_098_Stubsuck:
+    db 4  ; Family: Plant
+    db 40  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 21, 55, 77  ; Skills: Sleep, StepGuard, ZombieCut
+    db 17, 11, 4, 2, 9, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 0, 0, 2, 2, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $63 (99): Oniono ---
+MonsterInfo_099_Oniono:
+    db 4  ; Family: Plant
+    db 35  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 26, 65, 106  ; Skills: RobMagic, ChargeUP, SleepAir
+    db 13, 20, 14, 11, 3, 16  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 1, 0, 2, 2, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $64 (100): DanceVegi ---
+MonsterInfo_100_DanceVegi:
+    db 4  ; Family: Plant
+    db 50  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 113, 119, 120  ; Skills: K.O.Dance, SideStep, LureDance
+    db 11, 21, 7, 6, 20, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 2, 2, 1, 0, 0, 2, 3, 2, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 1, 0, 0, 0, 2, 3, 3, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $65 (101): TreeBoy ---
+MonsterInfo_101_TreeBoy:
+    db 4  ; Family: Plant
+    db 40  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 12, 43, 54  ; Skills: IceBolt, Heal, CurseOff
+    db 15, 18, 8, 3, 12, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 3, 3, 1, 0, 1, 2, 2, 2, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $66 (102): FaceTree ---
+MonsterInfo_102_FaceTree:
+    db 4  ; Family: Plant
+    db 45  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 23, 111, 117  ; Skills: StopSpell, Curse, OddDance
+    db 12, 20, 11, 8, 10, 17  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 1, 2, 2, 2, 2, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 1, 2, 2, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $67 (103): HerbMan ---
+MonsterInfo_103_HerbMan:
+    db 4  ; Family: Plant
+    db 40  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 84, 111, 145  ; Skills: Focus, Curse, DanceShut
+    db 19, 17, 7, 10, 15, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 3, 3, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 2, 0, 3, 3, 3, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $68 (104): BeanMan ---
+MonsterInfo_104_BeanMan:
+    db 4  ; Family: Plant
+    db 35  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 26, 37, 56  ; Skills: RobMagic, TwinHits, MapMagic
+    db 14, 15, 12, 14, 15, 9  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 2, 0, 0, 0, 1, 2, 2, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 0, 0, 0, 3, 3, 3, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $69 (105): EvilSeed ---
+MonsterInfo_105_EvilSeed:
+    db 4  ; Family: Plant
+    db 30  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 78, 105, 115  ; Skills: CleanCut, Paralyze, Radiant
+    db 8, 11, 8, 5, 1, 3  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 3, 3, 1, 0, 0, 1, 2, 2, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $6A (106): ManEater ---
+MonsterInfo_106_ManEater:
+    db 4  ; Family: Plant
+    db 50  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 73, 86, 106  ; Skills: DrakSlash, PsycheUp, SleepAir
+    db 14, 12, 19, 7, 10, 6  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 2, 1, 0, 0, 1, 3, 3, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $6B (107): Snapper ---
+MonsterInfo_107_Snapper:
+    db 4  ; Family: Plant
+    db 60  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 23, 82, 87  ; Skills: StopSpell, CallHelp, RainSlash
+    db 17, 14, 20, 13, 10, 16  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 2, 1, 0, 0, 2, 3, 3, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $6C (108): Rosevine ---
+MonsterInfo_108_Rosevine:
+    db 4  ; Family: Plant
+    db 80  ; Level cap
+    db 24  ; Exp table
+    db 3  ; Female ratio (~84%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 80, 130, 144  ; Skills: BiAttack, UltraDown, BladeD
+    db 24, 30, 23, 21, 18, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 3, 3, 1, 1, 1, 2, 3, 3, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 1, 1, 2, 1, 3, 3, 3, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $6D (109): Watabou ---
+MonsterInfo_109_Watabou:
+    db 4  ; Family: Plant
+    db 80  ; Level cap
+    db 0  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 57, 126, 127  ; Skills: Chance, Whistle, Imitate
+    db 10, 27, 11, 14, 24, 30  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 3, 3, 3, 1, 3, 3, 3, 3, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 3, 3, 3, 3, 3, 3, 3, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $6E (110): GiantSlug ---
+MonsterInfo_110_GiantSlug:
+    db 5  ; Family: Bug
+    db 35  ; Level cap
+    db 2  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 121, 126, 140  ; Skills: LushLicks, Whistle, Dodge
+    db 11, 8, 14, 9, 11, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 1, 3, 1, 1, 1, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 1, 1, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $6F (111): Catapila ---
+MonsterInfo_111_Catapila:
+    db 5  ; Family: Bug
+    db 40  ; Level cap
+    db 4  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 30, 108, 131  ; Skills: Upper, PoisonGas, ThickFog
+    db 13, 5, 11, 14, 11, 9  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 1, 0, 2, 0, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $70 (112): Gophecada ---
+MonsterInfo_112_Gophecada:
+    db 5  ; Family: Bug
+    db 30  ; Level cap
+    db 1  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 18, 39, 82  ; Skills: Beat, MagicBack, CallHelp
+    db 6, 11, 14, 18, 8, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $71 (113): Butterfly ---
+MonsterInfo_113_Butterfly:
+    db 5  ; Family: Bug
+    db 30  ; Level cap
+    db 0  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 24, 82, 111  ; Skills: Surround, CallHelp, Curse
+    db 11, 2, 13, 7, 12, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 2, 0, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $72 (114): WeedBug ---
+MonsterInfo_114_WeedBug:
+    db 5  ; Family: Bug
+    db 45  ; Level cap
+    db 4  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 26, 36, 38  ; Skills: RobMagic, Barrier, MagicWall
+    db 17, 13, 10, 12, 5, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 2, 0, 1, 1, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $73 (115): GiantWorm ---
+MonsterInfo_115_GiantWorm:
+    db 5  ; Family: Bug
+    db 35  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 55, 74, 117  ; Skills: StepGuard, BeastCut, OddDance
+    db 13, 8, 16, 8, 13, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 0, 2, 1, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $74 (116): Lipsy ---
+MonsterInfo_116_Lipsy:
+    db 5  ; Family: Bug
+    db 40  ; Level cap
+    db 4  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 104, 112, 121  ; Skills: NapAttack, Ahhh, LushLicks
+    db 12, 8, 9, 9, 4, 1  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 1, 3, 1, 0, 0, 3, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 3, 3, 3, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $75 (117): StagBug ---
+MonsterInfo_117_StagBug:
+    db 5  ; Family: Bug
+    db 45  ; Level cap
+    db 3  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 21, 92, 123  ; Skills: Sleep, FireAir, LegSweep
+    db 13, 7, 16, 20, 9, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 0, 0, 1, 0, 2, 1, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $76 (118): ArmyAnt ---
+MonsterInfo_118_ArmyAnt:
+    db 5  ; Family: Bug
+    db 35  ; Level cap
+    db 2  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 62, 82, 104  ; Skills: Kamikaze, CallHelp, NapAttack
+    db 8, 4, 11, 17, 13, 1  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $77 (119): GoHopper ---
+MonsterInfo_119_GoHopper:
+    db 5  ; Family: Bug
+    db 35  ; Level cap
+    db 0  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 26, 65, 82  ; Skills: RobMagic, ChargeUP, CallHelp
+    db 11, 4, 8, 14, 14, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $78 (120): TailEater ---
+MonsterInfo_120_TailEater:
+    db 5  ; Family: Bug
+    db 45  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 71, 108, 115  ; Skills: IceSlash, PoisonGas, Radiant
+    db 12, 10, 16, 11, 14, 5  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 2, 0, 1, 1, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 2, 2, 2, 1, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $79 (121): ArmorPede ---
+MonsterInfo_121_ArmorPede:
+    db 5  ; Family: Bug
+    db 30  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 30, 37, 59  ; Skills: Upper, TwinHits, TwinSlash
+    db 15, 10, 17, 20, 11, 2  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 0, 2, 0, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 1, 1, 2, 2, 2, 1, 1, 1, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $7A (122): Eyeder ---
+MonsterInfo_122_Eyeder:
+    db 5  ; Family: Bug
+    db 45  ; Level cap
+    db 4  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 3, 43, 56  ; Skills: Firebal, Heal, MapMagic
+    db 9, 11, 6, 3, 10, 9  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 0, 2, 1, 1, 1, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $7B (123): GiantMoth ---
+MonsterInfo_123_GiantMoth:
+    db 5  ; Family: Bug
+    db 30  ; Level cap
+    db 2  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 88, 105, 115  ; Skills: WindBeast, Paralyze, Radiant
+    db 14, 9, 16, 12, 20, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 0, 3, 1, 0, 0, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 3, 2, 2, 1, 1, 1, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $7C (124): Droll ---
+MonsterInfo_124_Droll:
+    db 5  ; Family: Bug
+    db 40  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 32, 55, 216  ; Skills: Slow, StepGuard, Branching
+    db 17, 10, 15, 16, 7, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 1, 3, 1, 1, 0, 3, 0, 0  ; Resist A-N: Fire..AglDown
+    db 1, 0, 0, 0, 3, 3, 3, 1, 1, 1, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $7D (125): ArmyCrab ---
+MonsterInfo_125_ArmyCrab:
+    db 5  ; Family: Bug
+    db 40  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 30, 72, 82  ; Skills: Upper, MetalCut, CallHelp
+    db 16, 8, 14, 19, 5, 1  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 1, 3, 1, 0, 0, 3, 0, 0  ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $7E (126): MadHornet ---
+MonsterInfo_126_MadHornet:
+    db 5  ; Family: Bug
+    db 40  ; Level cap
+    db 7  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 103, 105, 138  ; Skills: PoisonHit, Paralyze, TailWind
+    db 20, 5, 19, 13, 20, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 1, 0, 2, 0, 0, 0, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 0, 0, 1, 1, 2, 2, 2, 1, 1, 1, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $7F (127): HornBeet ---
+MonsterInfo_127_HornBeet:
+    db 5  ; Family: Bug
+    db 50  ; Level cap
+    db 7  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 69, 76, 91  ; Skills: BoltSlash, DevilCut, RockThrow
+    db 21, 19, 23, 20, 12, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    ; Resist A-N: Fire..AglDown
+    db 2, 2, 2, 0, 0, 2, 0, 2, 1, 0, 0
 Call_003_59d0:
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0200
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld b, $05
-    inc a
-    jr jr_003_59e7
+    db 2, 0, 0
+    db 1, 0, 2, 2, 2, 3, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    nop
-    nop
+; --- Monster $80 (128): Armorpion ---
+MonsterInfo_128_Armorpion:
+    db 5  ; Family: Bug
+    db 60  ; Level cap
+    db 24  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 64, 77, 87  ; Skills: EvilSlash, ZombieCut, RainSlash
+    db 22, 20, 24, 23, 15, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 2, 1, 3, 2, 1, 1, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 2, 3, 3, 3, 1, 1, 1, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-jr_003_59e7:
-    ld b, b
-    ld c, l
-    ld d, a
-    ld d, $14
-    jr jr_003_5a05
+; --- Monster $81 (129): Digster ---
+MonsterInfo_129_Digster:
+    db 5  ; Family: Bug
+    db 50  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 50, 142, 143  ; Skills: Farewell, StrongD, SuckAll
+    db 24, 10, 19, 26, 1, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 1, 1, 2, 2, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    rrca
-    ld [de], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    ld bc, $0203
-    ld bc, $0301
-    ld bc, $0301
-    ld bc, $0202
-    inc bc
-    inc bc
-    inc bc
+; --- Monster $82 (130): Pixy ---
+MonsterInfo_130_Pixy:
+    db 6  ; Family: Devil
+    db 40  ; Level cap
+    db 19  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 34, 37, 51  ; Skills: Speed, TwinHits, Antidote
+    db 11, 7, 15, 8, 15, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-jr_003_5a05:
-    ld bc, $0101
-    inc bc
-    inc bc
-    nop
-    ld b, $05
-    ld [hl-], a
-    dec bc
-    ld [bc], a
-    nop
-    nop
-    ld [hl-], a
-    adc [hl]
-    adc a
-    jr @+$0c
+; --- Monster $83 (131): ArcDemon ---
+MonsterInfo_131_ArcDemon:
+    db 6  ; Family: Devil
+    db 45  ; Level cap
+    db 20  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 6, 69, 75  ; Skills: Bang, BoltSlash, BirdBlow
+    db 14, 13, 17, 12, 7, 21  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 3, 2, 2, 2, 2, 0, 0, 3, 0, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    inc de
-    ld a, [de]
-    ld bc, $010f
-    ld bc, $0001
-    nop
-    ld bc, $0201
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    ld bc, $0201
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld b, $06
-    jr z, @+$15
+; --- Monster $84 (132): AgDevil ---
+MonsterInfo_132_AgDevil:
+    db 6  ; Family: Devil
+    db 35  ; Level cap
+    db 16  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 20, 106  ; Skills: Firebal, Sacrifice, SleepAir
+    db 16, 11, 18, 12, 16, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 2, 2, 2, 2, 0, 0, 2, 0, 0, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    ld [bc], a
-    nop
-    nop
-    ld [hl+], a
-    dec h
-    inc sp
-    dec bc
-    rlca
-    rrca
-    ld [$040f], sp
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld [bc], a
-    ld bc, $0301
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0301
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld b, $2d
-    inc d
-    ld [bc], a
-    nop
-    nop
-    ld b, $45
-    ld c, e
-    ld c, $0d
-    ld de, $070c
-    dec d
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    ld bc, $0000
-    nop
-    inc bc
-    nop
-    ld bc, $0000
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    ld bc, $0400
-    ld b, $23
-    db $10
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    inc d
-    ld l, d
-    db $10
-    dec bc
-    ld [de], a
-    inc c
-    db $10
-    inc de
-    ld bc, $0201
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0201
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0201
-    ld bc, $0400
-    ld b, $19
-    dec c
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld b, h
-    ld h, b
-    dec c
-    ld bc, $0405
-    add hl, bc
-    inc d
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0202
-    ld [bc], a
-    ld bc, $0400
-    ld b, $32
-    ld [de], a
-    ld [bc], a
-    ld bc, $4800
-    ld l, e
-    ld [hl], e
-    dec bc
-    ld [de], a
-    ld a, [bc]
-    db $10
-    add hl, bc
-    inc c
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0303
-    ld bc, $0000
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    nop
-    inc bc
-    ld b, $23
-    db $10
-    ld [bc], a
-    nop
-    nop
-    daa
-    ld a, [hl+]
-    ld a, l
-    db $10
-    ld de, $0e0e
-    dec c
-    ld [$0202], sp
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0002
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld bc, $0001
-    inc b
-    ld b, $2d
-    ld [de], a
-    ld [bc], a
-    nop
-    nop
-    ld b, h
-    ld d, a
-    ld a, e
-    ld de, $110b
-    dec c
-    rrca
-    inc c
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    ld bc, $0301
-    nop
-    nop
-    ld bc, $0000
-    inc bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld b, $32
-    inc d
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    ld a, [hl+]
-    ld h, b
-    db $10
-    ld a, [bc]
-    inc d
-    ld d, $04
-    inc c
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0202
-    inc bc
-    nop
-    nop
-    inc bc
-    ld bc, $0101
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld b, $19
-    dec c
-    ld [bc], a
-    ld bc, $0000
-    inc bc
-    inc c
-    ld a, [bc]
-    ld bc, $0905
-    add hl, bc
-    ld de, $0101
-    ld bc, $0202
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    ld bc, $0000
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld b, $19
-    dec c
-    ld [bc], a
-    ld bc, $0300
-    rla
-    dec hl
-    dec c
-    rlca
-    ld [$0204], sp
-    ld [de], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld bc, $0000
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld b, $23
-    inc de
-    ld [bc], a
-    ld bc, $1800
-    inc e
-    ret c
+; --- Monster $85 (133): Demonite ---
+MonsterInfo_133_Demonite:
+    db 6  ; Family: Devil
+    db 25  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 68, 96  ; Skills: Blaze, FireSlash, FrigidAir
+    db 13, 1, 5, 4, 9, 20  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 3, 3, 2, 0, 0, 2, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    dec bc
-    dec c
-    ld c, $0f
-    ld [$020b], sp
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    nop
-    ld bc, $0002
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    ld bc, $0001
-    inc b
-    ld b, $2d
-    dec d
-    ld [bc], a
-    nop
-    nop
-    add hl, bc
-    ld l, $46
-    rrca
-    dec bc
-    ld c, $0f
-    inc c
-    inc de
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    ld bc, $0101
-    nop
-    nop
-    inc bc
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec b
-    ld b, $23
-    ld d, $02
-    nop
-    nop
-    ld b, $09
-    inc c
-    inc d
-    dec bc
-    ld de, $0b0d
-    inc d
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    ld bc, $0201
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    ld b, $32
-    ld de, $0002
-    nop
-    inc e
-    jr nc, @+$4d
+; --- Monster $86 (134): DarkEye ---
+MonsterInfo_134_DarkEye:
+    db 6  ; Family: Devil
+    db 50  ; Level cap
+    db 18  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 72, 107, 115  ; Skills: MetalCut, PalsyAir, Radiant
+    db 11, 18, 10, 16, 9, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 1, 3, 3, 1, 0, 0, 2, 1, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 0, 0, 0, 2, 2, 1, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
 
-    inc de
-    rlca
-    inc de
-    dec c
-    dec c
-    ld [de], a
-    ld bc, $0101
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0001
-    ld bc, $0201
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc b
-    ld b, $23
-    inc de
-    ld [bc], a
-    nop
-    nop
-    ccf
-    ld c, b
-    ld d, a
-    rrca
-    ld [$0c14], sp
-    ld a, [bc]
-    inc c
-    ld bc, $0201
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0201
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0500
-    ld b, $32
-    rla
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld c, [hl]
-    add e
-    ld [de], a
-    inc c
-    ld [de], a
-    ld c, $0a
-    ld c, $02
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0301
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0202
-    ld [bc], a
-    ld bc, $0500
-    ld b, $32
-    ld d, $02
-    nop
-    nop
-    dec h
-    ld b, [hl]
-    ld d, l
-    ld de, $140c
-    dec bc
-    inc d
-    rrca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0300
-    ld bc, $0001
-    ld bc, $0301
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec b
-    ld b, $3c
-    inc d
-    ld [bc], a
-    nop
-    nop
-    ld b, h
-    ld c, c
-    adc b
-    rla
-    ld bc, $1812
-    inc c
-    inc c
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    inc bc
-    ld bc, $0101
-    ld bc, $0301
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, $06
-    ld d, b
-    ld e, $02
-    nop
-    nop
-    ld b, $54
-    ld h, b
-    jr jr_003_5d66
+; --- Monster $87 (135): EyeBall ---
+MonsterInfo_135_EyeBall:
+    db 6  ; Family: Devil
+    db 35  ; Level cap
+    db 16  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 39, 42, 125  ; Skills: MagicBack, Ironize, WarCry
+    db 16, 17, 14, 14, 13, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 2, 0, 1, 2, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    rla
-    dec d
-    ld [de], a
-    dec d
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0302
-    ld bc, $0203
-    ld bc, $0301
-    nop
-    ld [bc], a
-    ld bc, $0200
-    nop
-    ld bc, $0000
-    nop
-    nop
+; --- Monster $88 (136): SkulRider ---
+MonsterInfo_136_SkulRider:
+    db 6  ; Family: Devil
+    db 45  ; Level cap
+    db 18  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 68, 87, 123  ; Skills: FireSlash, RainSlash, LegSweep
+    db 17, 11, 17, 13, 15, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 2, 1, 1, 3, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-jr_003_5d66:
-    nop
-    ld b, $06
-    ld [hl-], a
-    rla
-    ld [bc], a
-    nop
-    nop
-    ccf
-    ld c, d
-    reti
+; --- Monster $89 (137): EvilBeast ---
+MonsterInfo_137_EvilBeast:
+    db 6  ; Family: Devil
+    db 50  ; Level cap
+    db 20  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 42, 96  ; Skills: Firebal, Ironize, FrigidAir
+    db 16, 10, 20, 22, 4, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 1, 2, 2, 3, 0, 0, 3, 1, 1, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
+; --- Monster $8A (138): 1EyeClown ---
+MonsterInfo_138_1EyeClown:
+    db 6  ; Family: Devil
+    db 25  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 0, 3, 12  ; Skills: Blaze, Firebal, IceBolt
+    db 10, 1, 5, 9, 9, 17  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 2, 2, 0, 0, 3, 0, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    ld de, $1209
-    inc d
-    ld a, [bc]
-    inc c
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld [bc], a
-    ld bc, $0301
-    nop
-    ld bc, $0101
-    ld bc, $0003
-    ld bc, $0001
-    ld [bc], a
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    dec b
-    ld b, $23
-    ld d, $02
-    nop
-    nop
-    ld b, b
-    ld b, c
-    ld c, l
-    dec de
-    nop
-    dec de
-    rlca
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    ld bc, $0003
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0500
-    ld b, $2d
-    rla
-    ld [bc], a
-    nop
-    nop
-    rla
-    ld b, h
-    ld d, a
-    inc d
-    ld bc, $1518
-    ld [de], a
-    inc de
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0201
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0101
-    ld bc, $0003
-    ld bc, $0001
-    ld [bc], a
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    ld b, $06
-    ld e, $16
-    ld [bc], a
-    nop
-    nop
-    ld b, h
-    ld b, l
-    ld c, c
-    db $10
-    ld bc, $1d11
-    dec b
-    dec c
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0100
-    inc bc
-    nop
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0102
-    ld bc, $0000
-    ld bc, $0001
-    ld b, $06
-    inc a
-    dec d
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld d, b
-    adc d
-    jr jr_003_5e28
+; --- Monster $8B (139): Gremlin ---
+MonsterInfo_139_Gremlin:
+    db 6  ; Family: Devil
+    db 25  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 3, 23, 43  ; Skills: Firebal, StopSpell, Heal
+    db 13, 7, 8, 4, 2, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 1, 0, 0, 3, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    dec d
-    jr @+$19
+; --- Monster $8C (140): MedusaEye ---
+MonsterInfo_140_MedusaEye:
+    db 6  ; Family: Devil
+    db 35  ; Level cap
+    db 19  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 24, 28, 216  ; Skills: Surround, Sap, Branching
+    db 11, 13, 14, 15, 8, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 1, 0, 1, 2, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 2, 2, 1, 1, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    ld [de], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
+; --- Monster $8D (141): Lionex ---
+MonsterInfo_141_Lionex:
+    db 6  ; Family: Devil
+    db 45  ; Level cap
+    db 21  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 9, 46, 70  ; Skills: Infernos, HealUs, VacuSlash
+    db 15, 11, 14, 15, 12, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 3, 2, 2, 2, 2, 0, 0, 3, 1, 1, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 2, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-jr_003_5e28:
-    ld bc, $0101
-    inc bc
-    ld bc, $0101
-    ld bc, $0301
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    ld b, $06
-    ld b, [hl]
-    inc e
-    ld [bc], a
-    nop
-    nop
-    ld c, c
-    ld c, e
-    ld e, b
-    add hl, de
-    jr jr_003_5e62
+; --- Monster $8E (142): GoatHorn ---
+MonsterInfo_142_GoatHorn:
+    db 6  ; Family: Devil
+    db 35  ; Level cap
+    db 22  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 6, 9, 12  ; Skills: Bang, Infernos, IceBolt
+    db 20, 11, 17, 13, 11, 20  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 2, 0, 0, 3, 0, 1, 1, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-    rrca
-    ld de, $0214
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0203
-    ld [bc], a
-    inc bc
-    ld bc, $0202
-    ld bc, $0301
-    ld bc, $0101
-    inc bc
-    inc bc
+; --- Monster $8F (143): Orc ---
+MonsterInfo_143_Orc:
+    db 6  ; Family: Devil
+    db 50  ; Level cap
+    db 17  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 28, 48, 75  ; Skills: Sap, Vivify, BirdBlow
+    db 19, 7, 19, 13, 13, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 3, 3, 2, 0, 0, 2, 1, 1, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-jr_003_5e62:
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    ld b, $07
-    jr z, @+$0d
+; --- Monster $90 (144): Ogre ---
+MonsterInfo_144_Ogre:
+    db 6  ; Family: Devil
+    db 35  ; Level cap
+    db 19  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 63, 72, 87  ; Skills: Massacre, MetalCut, RainSlash
+    db 15, 8, 20, 12, 10, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 2, 2, 2, 2, 0, 0, 2, 0, 0, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-    ld [bc], a
-    ld bc, $7300
-    ld a, c
-    sub d
-    dec bc
-    inc c
-    dec c
-    ld [$0f12], sp
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0301
-    ld bc, $0301
-    ld bc, $0000
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    rlca
-    dec l
-    dec c
-    ld [bc], a
-    nop
-    nop
-    dec sp
-    ld b, a
-    ld h, b
-    ld b, $01
-    rla
-    rrca
-    inc b
-    ld b, $01
-    ld bc, $0001
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    rlca
-    inc hl
-    ld b, $02
-    nop
-    nop
-    inc e
-    jr nz, jr_003_5ef0
+; --- Monster $91 (145): GateGuard ---
+MonsterInfo_145_GateGuard:
+    db 6  ; Family: Devil
+    db 50  ; Level cap
+    db 23  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 78, 131  ; Skills: Blaze, CleanCut, ThickFog
+    db 18, 12, 18, 14, 10, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 3, 3, 2, 1, 1, 3, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-    ld de, $110d
-    ld [$040b], sp
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0201
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0001
-    inc b
-    rlca
-    inc hl
-    dec b
-    ld [bc], a
-    nop
+; --- Monster $92 (146): ChopClown ---
+MonsterInfo_146_ChopClown:
+    db 6  ; Family: Devil
+    db 50  ; Level cap
+    db 22  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 37, 70, 85  ; Skills: TwinHits, VacuSlash, SquallHit
+    db 17, 12, 20, 11, 20, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 3, 1, 0, 3, 1, 1, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-jr_003_5ef0:
-    nop
-    ld a, $45
-    ld e, d
-    ld c, $08
-    inc c
-    dec bc
-    ld [de], a
-    add hl, bc
-    nop
-    nop
-    nop
-    ld bc, $0001
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0001
-    inc b
-    rlca
-    ld [hl-], a
-    ld a, [bc]
-    ld [bc], a
-    nop
-    nop
-    ld b, b
-    ld d, d
-    ld l, c
-    rrca
-    ld de, $090c
-    inc b
-    ld [$0000], sp
-    nop
-    ld bc, $0001
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    nop
-    nop
-    nop
-    inc b
-    rlca
-    ld e, $08
-    ld [bc], a
-    nop
-    nop
-    ld h, $2a
-    scf
-    inc c
-    ld [$140f], sp
-    ld bc, $000b
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    ld bc, $0001
-    inc b
-    rlca
-    dec l
-    dec c
-    ld [bc], a
-    nop
-    nop
-    dec hl
-    dec [hl]
-    ld [hl], $11
-    rlca
-    inc de
-    add hl, bc
-    inc c
-    ld [$0101], sp
-    ld bc, $0101
-    ld bc, $0202
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    rlca
-    ld [hl-], a
-    inc c
-    ld [bc], a
-    ld bc, $6000
-    ld [hl], c
-    add e
-    add hl, bc
-    ld b, $06
-    inc d
-    ld [$000c], sp
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0202
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld bc, $0202
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    rlca
-    jr z, @+$0a
+; --- Monster $93 (147): Grendal ---
+MonsterInfo_147_Grendal:
+    db 6  ; Family: Devil
+    db 60  ; Level cap
+    db 20  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 68, 73, 136  ; Skills: FireSlash, DrakSlash, Cover
+    db 23, 1, 18, 24, 12, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 1, 1, 1, 3, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    ld [bc], a
-    nop
-    nop
-    ld l, h
-    ld [hl], h
-    ld a, c
-    ld de, $100d
-    ld [$0a0b], sp
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    rlca
-    ld e, $0a
-    ld [bc], a
-    nop
-    nop
-    ld [de], a
-    dec hl
-    jr nc, jr_003_5ffd
+; --- Monster $94 (148): Akubar ---
+MonsterInfo_148_Akubar:
+    db 6  ; Family: Devil
+    db 80  ; Level cap
+    db 30  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 6, 84, 96  ; Skills: Bang, Focus, FrigidAir
+    db 24, 30, 23, 21, 18, 21  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 3, 2, 2, 2, 1, 2, 3, 1, 3, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 2, 1, 0, 2, 0, 1, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    ld a, [bc]
-    dec bc
-    ld de, $0e07
-    nop
+; --- Monster $95 (149): MadKnight ---
+MonsterInfo_149_MadKnight:
+    db 6  ; Family: Devil
+    db 50  ; Level cap
+    db 23  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 63, 74, 217  ; Skills: Massacre, BeastCut, GigaSlash
+    db 17, 9, 18, 20, 10, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 1, 1, 1, 2, 1, 1, 3, 0, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 1, 0, 2, 0, 1, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-jr_003_5ffd:
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    ld bc, $0201
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    ld bc, $0001
-    inc bc
-    rlca
-    inc hl
-    inc c
-    ld [bc], a
-    ld bc, $5800
-    ld e, d
-    ld e, h
-    ld de, $0a04
-    inc bc
-    rrca
-    add hl, bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0201
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0001
-    inc bc
-    rlca
-    ld [hl-], a
-    dec c
-    ld [bc], a
-    ld bc, $6a00
-    ld [hl], e
-    add e
-    ld c, $0c
-    rrca
-    inc c
-    db $10
-    ld a, [bc]
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0301
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    nop
-    nop
-    nop
-    inc b
-    rlca
-    inc hl
-    add hl, bc
-    ld [bc], a
-    ld bc, $0900
-    inc h
-    ld [hl], $10
-    inc de
-    inc de
-    inc c
-    dec c
-    ld b, $00
-    nop
-    nop
-    inc bc
-    ld bc, $0200
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0201
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0001
-    inc bc
-    rlca
-    ld [hl-], a
-    ld a, [bc]
-    ld [bc], a
-    ld bc, $4c00
-    ld l, a
-    ld [hl], h
-    inc de
-    inc bc
-    dec d
-    ld de, $0613
-    nop
-    nop
-    nop
-    ld bc, $0001
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0301
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0303
-    inc bc
-    ld bc, $0001
-    ld bc, $0001
-    inc bc
-    rlca
-    ld [hl-], a
-    db $10
-    ld [bc], a
-    nop
-    nop
-    ld [de], a
-    ld l, $84
-    dec d
-    ld [bc], a
-    ld a, [de]
-    inc de
-    rrca
-    dec c
-    ld bc, $0101
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld bc, $0201
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    ld b, $07
-    ld b, [hl]
-    add hl, de
-    ld [bc], a
-    nop
-    nop
-    add hl, bc
-    rrca
-    add hl, sp
-    inc d
-    jr @+$10
+; --- Monster $96 (150): Gigantes ---
+MonsterInfo_150_Gigantes:
+    db 6  ; Family: Devil
+    db 35  ; Level cap
+    db 22  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 64, 65, 77  ; Skills: EvilSlash, ChargeUP, ZombieCut
+    db 27, 0, 27, 7, 0, 0  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 0, 1, 3, 0, 0, 0, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 2, 0, 2, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-    inc d
-    rrca
-    dec de
-    ld bc, $0201
-    inc bc
-    ld bc, $0203
-    ld [bc], a
-    inc bc
-    ld bc, $0301
-    ld bc, $0301
-    ld bc, $0201
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0101
-    ld bc, $0001
-    ld b, $07
-    jr z, @+$0c
+; --- Monster $97 (151): Centasaur ---
+MonsterInfo_151_Centasaur:
+    db 6  ; Family: Devil
+    db 45  ; Level cap
+    db 23  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 23, 68, 87  ; Skills: StopSpell, FireSlash, RainSlash
+    db 20, 1, 24, 21, 18, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 3, 2, 1, 1, 2, 0, 0, 2, 0, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 1, 0, 2, 0, 1, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    ld [bc], a
-    nop
-    nop
-    ld b, $45
-    ld c, e
-    ld c, $0d
-    ld de, $070c
-    ld bc, $0000
-    nop
-    ld bc, $0100
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    rlca
-    inc a
-    inc c
-    ld [bc], a
-    nop
-    nop
-    inc e
-    ld c, e
-    ld d, b
-    db $10
-    dec bc
-    ld [de], a
-    inc c
-    db $10
-    inc de
-    nop
-    nop
-    ld bc, $0002
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0201
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld bc, $0202
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, $07
-    ld d, b
-    inc d
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc c
-    ld d, h
-    rla
-    dec d
-    add hl, de
-    ld [de], a
-    rrca
-    inc d
-    ld bc, $0301
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld bc, $0301
-    ld bc, $0301
-    ld bc, $0201
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0101
-    ld bc, $0001
-    ld b, $07
-    jr z, jr_003_619f
+; --- Monster $98 (152): EvilArmor ---
+MonsterInfo_152_EvilArmor:
+    db 6  ; Family: Devil
+    db 30  ; Level cap
+    db 22  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 68, 69, 73  ; Skills: FireSlash, BoltSlash, DrakSlash
+    db 16, 1, 17, 29, 5, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 1, 0, 1, 3, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 1, 2, 1, 1, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    ld [bc], a
+; --- Monster $99 (153): Jamirus ---
+MonsterInfo_153_Jamirus:
+    db 6  ; Family: Devil
+    db 60  ; Level cap
+    db 21  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 80, 138  ; Skills: Blaze, BiAttack, TailWind
+    db 24, 9, 21, 24, 23, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 3, 3, 1, 1, 1, 3, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 0, 2, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-jr_003_619f:
-    ld bc, $2900
-    ld [hl], l
-    ld a, a
-    dec bc
-    inc d
-    ld bc, $1502
-    dec b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0000
-    nop
-    nop
-    nop
-    dec b
-    ld [$0c28], sp
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    rla
-    add hl, de
-    dec c
-    dec bc
-    add hl, bc
-    ld [de], a
-    ld de, $000f
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0301
-    ld bc, $0101
-    ld bc, $0301
-    ld bc, $0200
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld [$0e32], sp
-    ld [bc], a
-    ld bc, $3500
-    jr c, @+$62
+; --- Monster $9A (154): Durran ---
+MonsterInfo_154_Durran:
+    db 6  ; Family: Devil
+    db 70  ; Level cap
+    db 28  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 73, 75, 88  ; Skills: DrakSlash, BirdBlow, WindBeast
+    db 25, 24, 23, 15, 17, 20  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 3, 2, 1, 3, 2, 2, 3, 1, 2, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 1, 3, 3, 2, 1, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    ld c, $0f
-    ld de, $090c
-    dec c
-    ld bc, $0101
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    ld bc, $0002
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld [$0a23], sp
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld d, [hl]
-    ld a, [hl]
-    inc c
-    ld a, [bc]
-    ld c, $06
-    ld de, $020c
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0201
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    inc b
-    ld [$0823], sp
-    ld [bc], a
-    nop
-    nop
-    inc [hl]
+; --- Monster $9B (155): Spooky ---
+MonsterInfo_155_Spooky:
+    db 7  ; Family: Zombie
+    db 40  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 115, 121, 146  ; Skills: Radiant, LushLicks, MouthShut
+    db 11, 12, 13, 8, 18, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 3, 3, 3, 1, 1, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
 
+; --- Monster $9C (156): Skullgon ---
+MonsterInfo_156_Skullgon:
+    db 7  ; Family: Zombie
+    db 45  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 59, 71, 96  ; Skills: TwinSlash, IceSlash, FrigidAir
+    db 6, 1, 23, 15, 4, 6  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 2, 2, 2, 2, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $9D (157): Putrepup ---
+MonsterInfo_157_Putrepup:
+    db 7  ; Family: Zombie
+    db 35  ; Level cap
+    db 6  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 28, 32, 39  ; Skills: Sap, Slow, MagicBack
+    db 17, 13, 17, 8, 11, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 2, 2, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $9E (158): RotRaven ---
+MonsterInfo_158_RotRaven:
+    db 7  ; Family: Zombie
+    db 35  ; Level cap
+    db 5  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 62, 69, 90  ; Skills: Kamikaze, BoltSlash, Lightning
+    db 14, 8, 12, 11, 18, 9  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 2, 2, 2, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 2, 2, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $9F (159): Mummy ---
+MonsterInfo_159_Mummy:
+    db 7  ; Family: Zombie
+    db 50  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 64, 82, 105  ; Skills: EvilSlash, CallHelp, Paralyze
+    db 15, 17, 12, 9, 4, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 2, 2, 2, 1, 1, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 2, 2, 1, 1, 1, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $A0 (160): DarkCrab ---
+MonsterInfo_160_DarkCrab:
+    db 7  ; Family: Zombie
+    db 30  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 38, 42, 55  ; Skills: MagicWall, Ironize, StepGuard
+    db 12, 8, 15, 20, 1, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 3, 2, 0, 0, 3, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 3, 3, 3, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $A1 (161): DeadNite ---
+MonsterInfo_161_DeadNite:
+    db 7  ; Family: Zombie
+    db 45  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 43, 53, 54  ; Skills: Heal, DeChaos, CurseOff
+    db 17, 7, 19, 9, 12, 8  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 2, 2, 3, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $A2 (162): Shadow ---
+MonsterInfo_162_Shadow:
+    db 7  ; Family: Zombie
+    db 50  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 96, 113, 131  ; Skills: FrigidAir, K.O.Dance, ThickFog
+    db 9, 6, 6, 20, 8, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 1, 2, 2, 3, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 1, 2, 2, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $A3 (163): Hork ---
+MonsterInfo_163_Hork:
+    db 7  ; Family: Zombie
+    db 40  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 108, 116, 121  ; Skills: PoisonGas, EerieLite, LushLicks
+    db 17, 13, 16, 8, 11, 10  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $A4 (164): Mudron ---
+MonsterInfo_164_Mudron:
+    db 7  ; Family: Zombie
+    db 30  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 18, 43, 48  ; Skills: Beat, Heal, Vivify
+    db 6, 10, 11, 17, 7, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 3, 2, 0, 0, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 3, 3, 3, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $A5 (165): NiteWhip ---
+MonsterInfo_165_NiteWhip:
+    db 7  ; Family: Zombie
+    db 35  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 88, 90, 92  ; Skills: WindBeast, Lightning, FireAir
+    db 17, 4, 10, 3, 15, 9  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 1, 1, 2, 2, 2, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 2, 2, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $A6 (166): MadSpirit ---
+MonsterInfo_166_MadSpirit:
+    db 7  ; Family: Zombie
+    db 50  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 106, 115, 131  ; Skills: SleepAir, Radiant, ThickFog
+    db 14, 12, 15, 12, 16, 10  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 1, 2, 2, 3, 1, 1, 3, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 0, 2, 2, 2, 1, 1, 1, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $A7 (167): WindMerge ---
+MonsterInfo_167_WindMerge:
+    db 7  ; Family: Zombie
+    db 35  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 9, 36, 54  ; Skills: Infernos, Barrier, CurseOff
+    db 16, 19, 19, 12, 13, 6  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 3, 1, 0, 2, 2, 2, 0, 0, 2, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 2, 2, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $A8 (168): Reaper ---
+MonsterInfo_168_Reaper:
+    db 7  ; Family: Zombie
+    db 50  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 76, 111, 116  ; Skills: DevilCut, Curse, EerieLite
+    db 19, 3, 21, 17, 19, 6  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 0, 2, 3, 2, 1, 1, 3, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 1, 3, 3, 3, 1, 1, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $A9 (169): DeadNoble ---
+MonsterInfo_169_DeadNoble:
+    db 7  ; Family: Zombie
+    db 50  ; Level cap
+    db 16  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 18, 46, 132  ; Skills: Beat, HealUs, TatsuCall
+    db 21, 2, 26, 19, 15, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 1, 2, 2, 2, 3, 1, 1, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 2, 2, 3, 2, 1, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $AA (170): WhiteKing ---
+MonsterInfo_170_WhiteKing:
+    db 7  ; Family: Zombie
+    db 70  ; Level cap
+    db 25  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 9, 15, 57  ; Skills: Infernos, Bolt, Chance
+    db 20, 24, 14, 20, 15, 27  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 2, 3, 1, 3, 2, 2, 3, 1, 1, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 2, 3, 3, 3, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $AB (171): BoneSlave ---
+MonsterInfo_171_BoneSlave:
+    db 7  ; Family: Zombie
+    db 40  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 6, 69, 75  ; Skills: Bang, BoltSlash, BirdBlow
+    db 14, 13, 17, 12, 7, 1  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 0, 1, 2, 2, 2, 1, 1, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $AC (172): Skeletor ---
+MonsterInfo_172_Skeletor:
+    db 7  ; Family: Zombie
+    db 60  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 28, 75, 80  ; Skills: Sap, BirdBlow, BiAttack
+    db 16, 11, 18, 12, 16, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 1, 2, 0, 2, 2, 2, 3, 1, 1, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 1, 2, 2, 2, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $AD (173): Servant ---
+MonsterInfo_173_Servant:
+    db 7  ; Family: Zombie
+    db 80  ; Level cap
+    db 20  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 12, 84  ; Skills: Blaze, IceBolt, Focus
+    db 23, 21, 25, 18, 15, 20  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 3, 2, 1, 2, 2, 2, 3, 1, 1, 3, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 2, 3, 3, 3, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $AE (174): Copycat ---
+MonsterInfo_174_Copycat:
+    db 7  ; Family: Zombie
+    db 40  ; Level cap
+    db 1  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 41, 117, 127  ; Skills: Transform, OddDance, Imitate
+    db 11, 20, 1, 2, 21, 5  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 0, 2, 2, 3, 0, 0, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 0, 2, 3, 2, 1, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $AF (175): JewelBag ---
+MonsterInfo_175_JewelBag:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 23, 25  ; Skills: Firebal, StopSpell, PanicAll
+    db 13, 11, 9, 18, 17, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 2, 1, 1, 3, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $B0 (176): EvilWand ---
+MonsterInfo_176_EvilWand:
+    db 8  ; Family: Material
+    db 50  ; Level cap
+    db 14  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 53, 56, 96  ; Skills: DeChaos, MapMagic, FrigidAir
+    db 14, 15, 17, 12, 9, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $B1 (177): MadCandle ---
+MonsterInfo_177_MadCandle:
+    db 8  ; Family: Material
+    db 35  ; Level cap
+    db 10  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 86, 126  ; Skills: Blaze, PsycheUp, Whistle
+    db 12, 10, 14, 6, 17, 12  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 0, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $B2 (178): CoilBird ---
+MonsterInfo_178_CoilBird:
+    db 8  ; Family: Material
+    db 35  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    ; Skills: NumbOff, DeChaos, SuckAll
+    db 52
 Call_003_624e:
-    dec [hl]
-    adc a
-    db $10
-    dec c
-    dec b
-    ld c, $0e
-    rlca
-    nop
-    nop
-    nop
-    ld bc, $0201
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    inc bc
-    ld [$0c32], sp
-    ld [bc], a
-    nop
-    nop
-    add hl, bc
-    inc d
-    sub l
-    ld [$0b17], sp
-    inc c
-    inc bc
-    inc de
-    nop
-    nop
-    nop
-    ld bc, $0201
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    inc bc
-    ld [$081e], sp
-    ld [bc], a
-    nop
-    nop
-    inc d
-    ld b, d
-    sub $09
-    dec c
-    ld c, $11
-    rlca
-    dec bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0002
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld bc, $0001
-    inc bc
-    ld [$0e2d], sp
-    ld [bc], a
-    nop
-    nop
-    daa
-    add hl, hl
-    jr c, jr_003_62e1
+    db 53, 143
+    db 16, 13, 5, 14, 14, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 2, 0, 0, 2, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 2, 0, 0, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
 
-    dec bc
-    ld [$0b06], sp
-    inc de
-    ld bc, $0101
-    ld bc, $0201
-    nop
-    nop
-    inc bc
-    nop
+; --- Monster $B3 (179): Facer ---
+MonsterInfo_179_Facer:
+    db 8  ; Family: Material
+    db 50  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 9, 20, 149  ; Skills: Infernos, Sacrifice, LifeSong
+    db 8, 23, 11, 12, 3, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 1, 1, 2, 0, 0, 2, 1, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 2, 0, 0, 0, 1, 1, 1, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
 
-jr_003_62e1:
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld [$0c2d], sp
-    ld [bc], a
-    nop
-    nop
-    dec hl
-    ld b, b
-    ld c, b
-    ld c, $04
-    inc d
-    dec d
-    ld a, [bc]
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0301
-    nop
-    nop
-    ld bc, $0000
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    ld [$0828], sp
-    ld [bc], a
-    nop
-    nop
-    ld d, d
-    ld a, e
-    adc h
-    ld [$0b0d], sp
-    ld c, $07
-    inc b
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    ld [$0b23], sp
-    ld [bc], a
-    nop
-    nop
-    jr jr_003_636a
+; --- Monster $B4 (180): SpikyBoy ---
+MonsterInfo_180_SpikyBoy:
+    db 8  ; Family: Material
+    db 30  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 20, 66, 214  ; Skills: Sacrifice, HighJump, Smashlime
+    db 9, 13, 14, 17, 7, 11  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 2, 1, 1, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
 
-    inc e
-    ld c, $11
-    inc c
-    inc c
-    ld [$000e], sp
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0002
-    nop
-    ld bc, $0000
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
+; --- Monster $B5 (181): MadMirror ---
+MonsterInfo_181_MadMirror:
+    db 8  ; Family: Material
+    db 45  ; Level cap
+    db 14  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 39, 41, 56  ; Skills: MagicBack, Transform, MapMagic
+    db 15, 11, 8, 6, 11, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 2, 0, 0, 3, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-jr_003_636a:
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0000
-    nop
-    ld bc, $0001
-    inc b
-    ld [$0f2d], sp
-    ld [bc], a
-    nop
-    nop
-    ccf
-    ld e, e
-    ld [hl], d
-    ld [de], a
-    dec c
-    inc d
-    rla
-    add hl, bc
-    ld a, [bc]
-    ld bc, $0101
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    ld bc, $0203
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, $08
-    inc hl
-    dec c
-    ld [bc], a
-    nop
-    nop
-    ld b, $0f
-    ld c, a
-    dec d
-    dec bc
-    rla
-    dec d
-    ld [de], a
-    inc de
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0201
-    ld bc, $0101
-    ld bc, $0201
-    ld bc, $0200
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    ld b, $08
-    ld e, $0b
-    ld [bc], a
-    ld bc, $1a00
-    ld c, h
-    ld l, c
-    ld [$0903], sp
-    dec bc
-    inc c
-    ld b, $00
-    nop
-    ld bc, $0001
-    ld [bc], a
-    nop
-    ld bc, $0102
-    ld bc, $0001
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld bc, $0001
-    inc b
-    ld [$0932], sp
-    ld [bc], a
-    ld bc, $1e00
-    ld [hl+], a
-    dec h
-    inc c
-    ld [de], a
-    add hl, bc
-    inc de
-    dec c
-    rrca
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0002
-    nop
-    ld [bc], a
-    ld bc, $0001
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc bc
-    ld [$0d28], sp
-    ld [bc], a
-    nop
-    nop
-    ld d, b
-    ld d, l
-    ld d, a
-    inc c
-    dec b
-    dec d
-    ld d, $18
-    ld de, $0101
-    ld bc, $0101
-    ld [bc], a
-    ld bc, $0302
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    ld bc, $0202
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec b
-    ld [$0b28], sp
-    ld [bc], a
-    ld bc, $1200
-    dec d
-    ccf
-    ld [de], a
-    inc de
-    rrca
-    ld [de], a
-    add hl, bc
-    inc de
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0101
-    ld bc, $0301
-    ld bc, $0200
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; --- Monster $B6 (182): RogueNite ---
+MonsterInfo_182_RogueNite:
+    db 8  ; Family: Material
+    db 45  ; Level cap
+    db 12  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 43, 64, 72  ; Skills: Heal, EvilSlash, MetalCut
+    db 14, 4, 20, 21, 10, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 2, 1, 1, 3, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
 
+; --- Monster $B7 (183): Goopi ---
+MonsterInfo_183_Goopi:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 82, 123, 140  ; Skills: CallHelp, LegSweep, Dodge
+    db 8, 13, 11, 14, 7, 4  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $B8 (184): Voodoll ---
+MonsterInfo_184_Voodoll:
+    db 8  ; Family: Material
+    db 35  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 24, 25, 28  ; Skills: Surround, PanicAll, Sap
+    db 14, 17, 12, 12, 8, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 2, 2, 2, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $B9 (185): MetalDrak ---
+MonsterInfo_185_MetalDrak:
+    db 8  ; Family: Material
+    db 45  ; Level cap
+    db 15  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 63, 91, 114  ; Skills: Massacre, RockThrow, SandStorm
+    db 18, 13, 20, 23, 9, 10  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $BA (186): Balzak ---
+MonsterInfo_186_Balzak:
+    db 8  ; Family: Material
+    db 35  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 6, 15, 79  ; Skills: Bang, Bolt, MultiCut
+    db 21, 11, 23, 21, 18, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 2, 1, 1, 2, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 2, 1, 0, 2, 0, 0, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
+
+; --- Monster $BB (187): SabreMan ---
+MonsterInfo_187_SabreMan:
+    db 8  ; Family: Material
+    db 30  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 26, 76, 105  ; Skills: RobMagic, DevilCut, Paralyze
+    db 8, 3, 9, 11, 12, 6  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 1, 1, 0, 2, 0, 1, 2, 1, 1, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 2, 1, 1, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
+
+; --- Monster $BC (188): CurseLamp ---
+MonsterInfo_188_CurseLamp:
+    db 8  ; Family: Material
+    db 50  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 30, 34, 37  ; Skills: Upper, Speed, TwinHits
+    db 12, 18, 9, 19, 13, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 2, 1, 2, 0, 0, 2, 1, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 0, 2, 0, 0, 0, 2, 2, 2, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3  ; Tier/rank
+
+; --- Monster $BD (189): Roboster ---
+MonsterInfo_189_Roboster:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 80, 85, 87  ; Skills: BiAttack, SquallHit, RainSlash
+    db 12, 5, 21, 22, 24, 17  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 2, 1, 2, 3, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
+
+; --- Monster $BE (190): EvilPot ---
+MonsterInfo_190_EvilPot:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 18, 21, 63  ; Skills: Beat, Sleep, Massacre
+    db 18, 19, 15, 18, 9, 19  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 0, 0, 0, 2, 2, 2, 3, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0
 Jump_003_6473:
-    nop
-    nop
-    inc bc
-    ld [$0928], sp
-    ld [bc], a
-    ld bc, $4300
-    ld e, h
-    ld h, b
-    dec c
-    rrca
-    dec bc
-    ld c, $14
-    ld [de], a
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld bc, $0002
-    nop
-    ld [bc], a
+    db 0, 0
+    db 3  ; Tier/rank
 
+; --- Monster $BF (191): Gismo ---
+MonsterInfo_191_Gismo:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 9  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 67, 92, 96  ; Skills: SuckAir, FireAir, FrigidAir
+    db 13, 15, 11, 14, 20, 18  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    ; Resist A-N: Fire..AglDown
+    db 0, 0, 0, 2, 1, 2, 0, 0, 2
 Jump_003_648e:
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0002
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld [$0d28], sp
-    ld [bc], a
-    nop
-    nop
-    nop
-    ld e, h
-    adc b
-    ld [de], a
-    inc c
-    ld de, $0418
-    rlca
-    inc bc
-    inc bc
-    ld bc, $0002
-    ld bc, $0000
-    inc bc
-    nop
-    nop
-    ld bc, $0000
-    inc bc
-    nop
-    inc bc
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, $08
-    jr z, @+$0f
+    db 0, 0, 0, 0, 1
+    db 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    ld [bc], a
-    nop
-    nop
-    inc c
-    ld h, b
-    adc [hl]
-    db $10
-    ld b, $12
-    jr jr_003_64de
+; --- Monster $C0 (192): LavaMan ---
+MonsterInfo_192_LavaMan:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 92, 136  ; Skills: Blaze, FireAir, Cover
+    db 18, 12, 17, 24, 4, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 3, 1, 2, 0, 1, 0, 0, 3, 0, 0, 1, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    rlca
-    ld bc, $0101
+; --- Monster $C1 (193): IceMan ---
+MonsterInfo_193_IceMan:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 13  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 12, 96, 142  ; Skills: IceBolt, FrigidAir, StrongD
+    db 16, 6, 18, 24, 4, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 0, 3, 0, 0, 3, 0, 0, 0, 1, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-jr_003_64de:
-    ld [bc], a
-    nop
-    inc bc
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    ld bc, $0300
-    nop
-    ld bc, $0003
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, $08
-    jr z, @+$0d
+; --- Monster $C2 (194): Mimic ---
+MonsterInfo_194_Mimic:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 11  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 0, 18, 55  ; Skills: Blaze, Beat, StepGuard
+    db 25, 10, 20, 12, 1, 20  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 1, 2, 1, 2, 1, 1, 3, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    ld [bc], a
-    ld bc, $0000
-    ld [de], a
-    scf
-    add hl, de
-    ld a, [bc]
-    inc d
-    inc c
-    ld bc, $0014
-    nop
-    ld bc, $0102
-    ld [bc], a
-    ld bc, $0301
-    ld bc, $0101
-    ld bc, $0301
-    ld bc, $0100
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, $08
-    jr z, jr_003_652d
+; --- Monster $C3 (195): MudDoll ---
+MonsterInfo_195_MudDoll:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 8  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 117, 119, 148  ; Skills: OddDance, SideStep, Hustle
+    db 12, 3, 13, 14, 1, 15  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 1, 1, 0, 3, 1, 0, 3, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 4  ; Tier/rank
 
-    ld [bc], a
-    nop
-    nop
-    ld [hl], l
-    ld [hl], a
-    sub h
-    inc c
-    inc bc
+; --- Monster $C4 (196): Golem ---
+MonsterInfo_196_Golem:
+    db 8  ; Family: Material
+    db 40  ; Level cap
+    db 18  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 65, 86, 142  ; Skills: ChargeUP, PsycheUp, StrongD
+    db 17, 4, 12, 21, 4, 6  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 0, 0, 1, 1, 0, 3, 1, 1, 3, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 0, 3, 0, 0, 0, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-jr_003_652d:
-    dec c
-    ld c, $01
-    rrca
-    nop
-    nop
-    ld bc, $0001
-    inc bc
-    ld bc, $0300
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc b
-    ld [$1228], sp
-    ld [bc], a
-    nop
-    nop
-    ld b, c
-    ld d, [hl]
-    adc [hl]
-    ld de, $0c04
-    dec d
-    inc b
-    ld b, $00
-    nop
-    ld bc, $0001
-    inc bc
-    ld bc, $0301
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0001
-    dec b
-    ld [$0f32], sp
-    ld [bc], a
-    nop
-    nop
-    adc b
-    adc a
-    sub e
-    jr jr_003_658d
+; --- Monster $C5 (197): StoneMan ---
+MonsterInfo_197_StoneMan:
+    db 8  ; Family: Material
+    db 50  ; Level cap
+    db 15  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 136, 143, 147  ; Skills: Cover, SuckAll, Meditate
+    db 24, 10, 23, 24, 1, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 0, 3, 1, 1, 3, 0, 1, 0, 0, 0  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 3, 0, 2, 1, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    rla
-    jr @+$03
+; --- Monster $C6 (198): BombCrag ---
+MonsterInfo_198_BombCrag:
+    db 8  ; Family: Material
+    db 50  ; Level cap
+    db 14  ; Exp table
+    db 2  ; Female ratio (50/50)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 20, 50, 147  ; Skills: Sacrifice, Farewell, Meditate
+    db 15, 11, 17, 20, 0, 13  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 0, 0, 2, 0, 1, 3, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 2, 1, 1, 1, 0, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 5  ; Tier/rank
 
-    ld c, $01
-    ld bc, $0101
-    nop
-    inc bc
+; --- Monster $C7 (199): GoldGolem ---
+MonsterInfo_199_GoldGolem:
+    db 8  ; Family: Material
+    db 80  ; Level cap
+    db 18  ; Exp table
+    db 1  ; Female ratio (~10%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 101, 129, 132  ; Skills: BigBang, Surge, TatsuCall
+    db 24, 21, 24, 27, 17, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 1, 2, 3, 3, 3, 3, 3, 3, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 2, 3, 3, 3, 2, 2, 2, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-jr_003_658d:
-    ld bc, $0301
-    nop
-    ld bc, $0000
-    nop
-    inc bc
-    nop
-    ld bc, $0003
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    ld b, $08
-    ld [hl-], a
-    ld c, $02
-    nop
-    nop
-    inc d
-    ld [hl-], a
-    sub e
-    rrca
-    dec bc
-    ld de, $0014
-    dec c
-    ld bc, $0001
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0103
-    ld bc, $0101
-    ld bc, $0003
-    ld bc, $0102
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0001
-    dec b
-    ld [$1250], sp
-    ld bc, $0000
-    ld h, l
-    add c
-    add h
-    jr @+$17
+; --- Monster $C8 (200): DracoLord ---
+MonsterInfo_200_DracoLord:
+    db 9  ; Family: Boss
+    db 50  ; Level cap
+    db 24  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 147, 213  ; Skills: Firebal, Meditate, BeDragon
+    db 20, 30, 21, 20, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 0, 0, 0, 1, 3, 3, 3, 2, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 0, 1, 1, 3, 2, 3, 3, 3, 3, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    jr @+$1d
+; --- Monster $C9 (201): DracoLord ---
+MonsterInfo_201_DracoLord:
+    db 9  ; Family: Boss
+    db 80  ; Level cap
+    db 25  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 63, 92, 129  ; Skills: Massacre, FireAir, Surge
+    db 21, 30, 24, 21, 23, 21  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 1, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 2, 3, 3, 3, 3, 3, 3, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    ld de, $0217
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0302
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0202
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0001
-    ld b, $09
-    ld [hl-], a
-    jr jr_003_65fd
+; --- Monster $CA (202): Hargon ---
+MonsterInfo_202_Hargon:
+    db 9  ; Family: Boss
+    db 70  ; Level cap
+    db 24  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 3, 6, 132  ; Skills: Firebal, Bang, TatsuCall
+    db 19, 30, 20, 21, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 0, 1, 3, 3, 3, 2, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 0, 0, 3, 2, 3, 3, 3, 3, 2, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-jr_003_65fd:
-    nop
-    nop
-    inc bc
-    sub e
-    push de
-    inc d
-    ld e, $15
-    inc d
-    rla
-    rla
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0303
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    ld bc, $0301
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    ld b, $09
-    ld d, b
-    add hl, de
-    nop
-    nop
-    nop
-    ccf
-    ld e, h
-    add c
-    dec d
-    ld e, $18
-    dec d
-    rla
-    dec d
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0202
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0001
-    ld b, $09
-    ld b, [hl]
-    jr jr_003_6653
+; --- Monster $CB (203): Sidoh ---
+MonsterInfo_203_Sidoh:
+    db 9  ; Family: Boss
+    db 80  ; Level cap
+    db 25  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 92, 96, 100  ; Skills: FireAir, FrigidAir, Hellblast
+    db 24, 30, 24, 21, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 0, 0, 3, 3, 3, 3, 3, 3, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-jr_003_6653:
-    nop
-    nop
-    inc bc
-    ld b, $84
-    inc de
-    ld e, $14
-    dec d
-    rla
-    rla
-    ld bc, $0101
-    ld bc, $0100
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0000
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    nop
-    ld b, $09
-    ld d, b
-    add hl, de
-    nop
-    ld bc, $5c00
-    ld h, b
-    ld h, h
-    jr @+$20
+; --- Monster $CC (204): Baramos ---
+MonsterInfo_204_Baramos:
+    db 9  ; Family: Boss
+    db 70  ; Level cap
+    db 24  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 6, 91, 100  ; Skills: Bang, RockThrow, Hellblast
+    db 20, 30, 20, 20, 22, 21  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 2, 0, 2, 3, 3, 3, 2, 3, 3, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 1, 3, 3, 3, 3, 3, 3, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    jr jr_003_669c
+; --- Monster $CD (205): Zoma ---
+MonsterInfo_205_Zoma:
+    db 9  ; Family: Boss
+    db 80  ; Level cap
+    db 25  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 96, 101, 128  ; Skills: FrigidAir, BigBang, DeMagic
+    db 24, 30, 26, 21, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 3, 3, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 2, 2, 2, 3, 3, 3, 3, 3, 3, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    rla
-    rla
-    ld bc, $0101
-    ld bc, $0101
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0000
-    inc bc
-
-jr_003_669c:
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0600
-    add hl, bc
-    ld b, [hl]
-    jr jr_003_66a9
-
-jr_003_66a9:
-    nop
-    nop
-    ld b, $5b
-    ld h, h
-    inc d
-    ld e, $14
-    inc d
-    ld d, $15
-    ld bc, $0101
-    ld [bc], a
-    nop
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0101
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    ld b, $09
-    ld d, b
-    add hl, de
-    nop
-    nop
-    nop
-    ld h, b
-    ld h, l
-    add b
-    jr @+$20
-
-    ld a, [de]
-    dec d
-    rla
-    rla
-    ld bc, $0302
-    inc bc
-    ld bc, $0303
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0600
-    add hl, bc
-    ld b, [hl]
-    jr jr_003_66ff
-
-jr_003_66ff:
-    nop
-    nop
-    ld d, b
-    ld e, h
-    ld h, h
-    dec d
-    ld e, $1a
-    dec d
-    rla
-    rla
-    ld bc, $0101
-    ld bc, $0200
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-
+; --- Monster $CE (206): Pizzaro ---
+MonsterInfo_206_Pizzaro:
+    db 9  ; Family: Boss
+    db 70  ; Level cap
+    db 24  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 80, 92, 100  ; Skills: BiAttack, FireAir, Hellblast
+    db 21, 30, 26, 21, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 1, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 3
 Jump_003_6719:
-    ld bc, $0000
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0600
-    add hl, bc
-    ld d, b
-    rra
-    nop
-    nop
-    nop
-    ld d, a
-    add b
-    reti
+    db 1, 0, 0, 3, 3, 3, 3, 3, 3, 2, 1, 0
+    db 6  ; Tier/rank
 
+; --- Monster $CF (207): Esterk ---
+MonsterInfo_207_Esterk:
+    db 9  ; Family: Boss
+    db 80  ; Level cap
+    db 31  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 87, 128, 217  ; Skills: RainSlash, DeMagic, GigaSlash
+    db 29, 30, 26, 24, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 2, 2, 0, 1, 3, 3, 3, 3, 3, 3, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 1, 3, 2, 3, 3, 3, 3, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    dec e
-    ld e, $1a
-    jr jr_003_674b
+; --- Monster $D0 (208): Mirudraas ---
+MonsterInfo_208_Mirudraas:
+    db 9  ; Family: Boss
+    db 70  ; Level cap
+    db 30  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 6, 15  ; Skills: Blaze, Bang, Bolt
+    db 21, 30, 26, 21, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 2, 2, 3, 3, 3, 2, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 2, 3, 2, 3, 3, 3, 3, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    rla
-    ld bc, $0202
-    ld [bc], a
-    nop
-    ld bc, $0303
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0102
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
+; --- Monster $D1 (209): Mirudraas ---
+MonsterInfo_209_Mirudraas:
+    db 9  ; Family: Boss
+    db 80  ; Level cap
+    db 31  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 67, 92, 128  ; Skills: SuckAir, FireAir, DeMagic
+    db 29, 30, 26, 21, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 0, 0, 0, 3, 3, 3, 3, 3, 3, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 1, 3, 1, 3, 3, 3, 3, 3, 3, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-jr_003_674b:
-    inc bc
-    inc bc
-    ld bc, $0001
-    ld b, $09
-    ld b, [hl]
-    ld e, $00
-    nop
-    nop
-    nop
-    ld b, $0f
-    dec d
-    ld e, $1a
-    dec d
-    rla
-    rla
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0202
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0201
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0001
-    ld b, $09
-    ld d, b
-    rra
-    nop
-    nop
-    nop
-    ld b, e
-    ld e, h
-    add b
-    dec e
-    ld e, $1a
-    dec d
-    rla
-    rla
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0103
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0001
-    ld b, $09
-    ld b, [hl]
-    inc e
-    nop
-    nop
-    nop
-    ld e, h
-    ld h, b
-    ld l, h
-    dec d
-    ld e, $1a
-    jr jr_003_67cc
+; --- Monster $D2 (210): Mudou ---
+MonsterInfo_210_Mudou:
+    db 9  ; Family: Boss
+    db 70  ; Level cap
+    db 28  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 92, 96, 108  ; Skills: FireAir, FrigidAir, PoisonGas
+    db 21, 30, 26, 24, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 1, 3, 0, 1, 3, 3, 3, 2, 3, 3, 2, 3  ; Resist A-N: Fire..AglDown
+    db 3, 0, 3, 3, 3, 2, 3, 3, 3, 3, 0, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    rla
-    ld bc, $0101
-    inc bc
-    nop
-    ld bc, $0303
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
+; --- Monster $D3 (211): DeathMore ---
+MonsterInfo_211_DeathMore:
+    db 9  ; Family: Boss
+    db 60  ; Level cap
+    db 27  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 100, 101, 132  ; Skills: Hellblast, BigBang, TatsuCall
+    db 21, 30, 26, 21, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 2, 1, 1, 2, 3, 3, 3, 2, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 2, 3, 2, 3, 3, 3, 3, 1, 0, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-jr_003_67cc:
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    ld b, $09
-    inc a
-    dec de
-    nop
-    ld bc, $6400
-    ld h, l
-    add h
-    dec d
-    ld e, $1a
-    dec d
-    rla
-    rla
-    ld bc, $0202
-    ld bc, $0201
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0201
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0000
-    ld b, $09
-    ld b, [hl]
-    dec e
-    nop
-    nop
-    nop
-    inc a
-    ld e, h
-    add d
-    jr @+$20
+; --- Monster $D4 (212): DeathMore ---
+MonsterInfo_212_DeathMore:
+    db 9  ; Family: Boss
+    db 70  ; Level cap
+    db 29  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 60, 92, 130  ; Skills: Ramming, FireAir, UltraDown
+    db 24, 30, 26, 21, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3  ; Resist A-N: Fire..AglDown
+    db 3, 1, 1, 2, 3, 2, 3, 3, 3, 3, 2, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    ld a, [de]
-    dec d
-    rla
-    rla
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0201
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $0600
-    add hl, bc
-    ld d, b
-    rra
-    nop
-    ld bc, $5400
-    ld h, l
-    add b
-    dec e
-    ld e, $1e
-    jr jr_003_684d
+; --- Monster $D5 (213): DeathMore ---
+MonsterInfo_213_DeathMore:
+    db 9  ; Family: Boss
+    db 80  ; Level cap
+    db 31  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 1, 0  ; Can fly: yes, Metal: no
+    db 84, 101, 128  ; Skills: Focus, BigBang, DeMagic
+    db 29, 30, 30, 24, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 2, 2  ; Resist A-N: Fire..AglDown
+    db 3, 1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 6  ; Tier/rank
 
-    rla
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0202
-    inc bc
-    inc bc
-    inc bc
-    inc bc
+; --- Monster $D6 (214): Darkdrium ---
+MonsterInfo_214_Darkdrium:
+    db 9  ; Family: Boss
+    db 80  ; Level cap
+    db 30  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 15, 92, 96  ; Skills: Bolt, FireAir, FrigidAir
+    db 31, 30, 31, 24, 23, 23  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 3, 3, 3, 2, 2, 3, 3, 2, 3  ; Resist A-N: Fire..AglDown
+    db 3, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 7  ; Tier/rank
 
-jr_003_684d:
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    ld b, $09
-    ld d, b
-    ld e, $00
-    nop
-    nop
-    rrca
-    ld e, h
-    ld h, b
-    rra
-    ld e, $1f
-    jr jr_003_6878
+; --- Monster $D7 (215): TERRY? ---
+MonsterInfo_215_TERRY:
+    db 9  ; Family: Boss
+    db 0  ; Level cap
+    db 0  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 0, 0  ; Skills: Blaze, Blaze, Blaze
+    db 0, 0, 0, 0, 0, 0  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 1, 1, 0, 1, 2, 3, 3, 1, 1, 2, 0, 0  ; Resist A-N: Fire..AglDown
+    db 2, 0, 1, 1, 0, 3, 0, 1, 0, 0, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 7  ; Tier/rank
 
-    rla
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-
-jr_003_6878:
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rlca
-    add hl, bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0102
-    ld bc, $0100
-    ld [bc], a
-    inc bc
-    inc bc
-    ld bc, $0201
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0001
-    inc bc
-    nop
-    ld bc, $0000
-    ld bc, $0001
-    rlca
-    add hl, bc
-    nop
-
+; --- Monster $D8 (216): Tatsu ---
+MonsterInfo_216_Tatsu:
+    db 9  ; Family: Boss
+    db 0  ; Level cap
+    ; Exp table
 Jump_003_68ab:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0201
-    ld [bc], a
-    inc bc
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0700
-    add hl, bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    nop
-    ld bc, $0101
-    ld [bc], a
-    ld bc, $0100
-    ld bc, $0001
-    nop
-    inc bc
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0001
-    rlca
-    add hl, bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0102
-    inc bc
-    nop
-    ld bc, $0202
-    inc bc
-    ld bc, $0101
-    nop
-    ld bc, $0000
-    ld bc, $0102
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0700
-    add hl, bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0202
-    ld bc, $0302
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0100
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    rlca
-    add hl, bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc d
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0001
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    ld [bc], a
-    nop
-    rlca
+    db 0
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 0, 0  ; Skills: Blaze, Blaze, Blaze
+    db 0, 0, 0, 0, 0, 0  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 1, 2, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 7  ; Tier/rank
+
+; --- Monster $D9 (217): Diago ---
+MonsterInfo_217_Diago:
+    db 9  ; Family: Boss
+    db 0  ; Level cap
+    db 0  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 0, 0  ; Skills: Blaze, Blaze, Blaze
+    db 0, 0, 0, 0, 0, 0  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 3, 2, 2, 0, 0, 1, 1, 1, 2, 1, 0, 1, 1, 1  ; Resist A-N: Fire..AglDown
+    db 0, 0, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 7  ; Tier/rank
+
+; --- Monster $DA (218): Samsi ---
+MonsterInfo_218_Samsi:
+    db 9  ; Family: Boss
+    db 0  ; Level cap
+    db 0  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 0, 0  ; Skills: Blaze, Blaze, Blaze
+    db 0, 0, 0, 0, 0, 0  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 1, 3, 0, 1, 2, 2, 3, 1, 1, 1, 0, 1  ; Resist A-N: Fire..AglDown
+    db 0, 0, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 7  ; Tier/rank
+
+; --- Monster $DB (219): Bazoo ---
+MonsterInfo_219_Bazoo:
+    db 9  ; Family: Boss
+    db 0  ; Level cap
+    db 0  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 0, 0  ; Skills: Blaze, Blaze, Blaze
+    db 0, 0, 0, 0, 0, 0  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 1, 2, 2, 1, 2, 3, 3, 3, 3, 2, 2, 2, 2, 2  ; Resist A-N: Fire..AglDown
+    db 1, 0, 1, 3, 2, 2, 2, 2, 2, 2, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 7  ; Tier/rank
+
+; --- Monster $DC (220): Unused_220 ---
+MonsterInfo_220_Unused_220:
+    db 9  ; Family: Boss
+    db 0  ; Level cap
+    db 0  ; Exp table
+    db 0  ; Female ratio (0%)
+    db 0, 0  ; Can fly: no, Metal: no
+    db 0, 0, 0  ; Skills: Blaze, Blaze, Blaze
+    db 0, 0, 20, 0, 0, 0  ; Growth: HP, MP, ATK, DEF, AGL, INT
+    db 2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 1, 2, 2, 1  ; Resist A-N: Fire..AglDown
+    db 1, 0, 3, 3, 2, 3, 2, 2, 1, 1, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
+    db 7  ; Tier/rank
 
 Call_003_6980:
     ld de, $da62

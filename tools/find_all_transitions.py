@@ -175,13 +175,13 @@ def find_room_transitions(data):
             if base + 5 >= len(data):
                 continue
             
-            exit_ptr = read_u16(data, base + 2)
-            npc_ptr = read_u16(data, base + 4)
+            interact_ptr = read_u16(data, base + 2)
+            exit_ptr = read_u16(data, base + 4)
             
-            if not is_valid_ptr(npc_ptr):
+            if not is_valid_ptr(exit_ptr):
                 continue
             
-            npc_flat = flat(BANK_0B, npc_ptr)
+            exit_flat = flat(BANK_0B, exit_ptr)
             
             # Scan past NPC entries (7 bytes each, terminated by 0xFF)
             pos = npc_flat
@@ -223,7 +223,7 @@ def find_room_transitions(data):
                     "source_map_type": map_type,
                     "source_name": MAP_TYPES.get(map_type, f"0x{map_type:02X}"),
                     "c925": c925,
-                    "npc_ptr": f"0x{npc_ptr:04X}",
+                    "exit_ptr": f"0x{exit_ptr:04X}",
                     "npc_count": npc_count,
                     "transitions": transitions_found,
                 })

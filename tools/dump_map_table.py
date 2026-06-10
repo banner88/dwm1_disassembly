@@ -7,8 +7,8 @@ Traces the pointer chain:
     +0,+1  = RAM counter address (identifies room type)
     +2...  = array of 6-byte step entries:
                +0,+1 = unknown (possibly tilemap/config pointer)
-               +2,+3 = exit data pointer
-               +4,+5 = NPC/interaction data pointer
+               +2,+3 = interact/NPC data pointer
+               +4,+5 = exit checker data pointer
 
 Exit data: variable-length list terminated by 0xFF.
   Type 0x9X entries: [type, ?, X, Y, next_room_id]
@@ -231,28 +231,28 @@ def decode_step_entries(data: bytes, room_data_flat: int, max_steps: int = 16) -
             break
 
         bytes_01 = read_u16(data, entry_flat)
-        exit_ptr = read_u16(data, entry_flat + 2)
-        npc_ptr = read_u16(data, entry_flat + 4)
+        interact_ptr = read_u16(data, entry_flat + 2)
+        exit_ptr = read_u16(data, entry_flat + 4)
 
-        # Validate: exit_ptr and npc_ptr should be valid bank-local addresses
-        if not is_valid_bank_ptr(exit_ptr) or not is_valid_bank_ptr(npc_ptr):
+        # Validate: interact_ptr and exit_ptr should be valid bank-local addresses
+        if not is_valid_bank_ptr(interact_ptr) or not is_valid_bank_ptr(exit_ptr):
             break
 
         entry = {
             "step": step,
             "flat": f"0x{entry_flat:06X}",
             "bytes_0_1": f"0x{bytes_01:04X}",
+            "interact_ptr": f"0x{interact_ptr:04X}",
+            "interact_ptr_flat": f"0x{local_to_flat(interact_ptr):06X}",
             "exit_ptr": f"0x{exit_ptr:04X}",
             "exit_ptr_flat": f"0x{local_to_flat(exit_ptr):06X}",
-            "npc_ptr": f"0x{npc_ptr:04X}",
-            "npc_ptr_flat": f"0x{local_to_flat(npc_ptr):06X}",
         }
 
         # Decode exits
-        entry["exits"] = decode_exit_entries(data, exit_ptr)
+        entry["interact_data"] = decode_exit_entries(data, interact_ptr)
 
         # Decode NPCs
-        entry["npcs"] = decode_npc_entries(data, npc_ptr)
+        entry["exit_data"] = decode_npc_entries(data, exit_ptr)
 
         steps.append(entry)
 
@@ -349,14 +349,14 @@ def print_summary(result: dict, verbose: bool = False):
             print(f"    raw: {sr['raw_header']}")
 
         for step in sr["steps"]:
-            n_exits = len(step["exits"])
-            n_npcs = len(step["npcs"])
+            n_interact = len(step["interact_data"])
+            n_exits = len(step["exit_data"])
             print(f"    step {step['step']}: "
                   f"bytes01={step['bytes_0_1']}  "
-                  f"exits@{step['exit_ptr']}({n_exits})  "
-                  f"npcs@{step['npc_ptr']}({n_npcs})")
+                  f"interact@{step['interact_ptr']}({n_interact})  "
+                  f"exits@{step['exit_ptr']}({n_interact})")
 
-            for ex in step["exits"]:
+            for ex in step["interact_data"]:
                 kind = ex["kind"]
                 if kind == "coord_exit":
                     print(f"      EXIT: ({ex['x']},{ex['y']}) → room {ex['next_room_id']}  "
@@ -365,7 +365,7 @@ def print_summary(result: dict, verbose: bool = False):
                     nrid = ex.get("next_room_id", "?")
                     print(f"      EXIT ({kind}): next={nrid}  [{ex['raw']}]")
 
-            for npc in step["npcs"]:
+            for npc in step["exit_data"]:
                 print(f"      NPC: type={npc['npc_type']} "
                       f"pos=({npc['x']},{npc['y']})  [{npc['raw']}]")
 
@@ -381,7 +381,7 @@ def build_connection_graph(all_results: list) -> dict:
             for step in sr["steps"]:
                 key = f"0x{mt:02X}:c925={c925}:step={step['step']}"
                 dests = []
-                for ex in step["exits"]:
+                for ex in step["interact_data"]:
                     nrid = ex.get("next_room_id")
                     if nrid is not None and nrid != 0xFF:
                         dests.append({
@@ -479,12 +479,12 @@ def main():
             for r in all_results for sr in r["sub_rooms"]
         )
         total_exits = sum(
-            len(step["exits"])
+            len(step["interact_data"])
             for r in all_results for sr in r["sub_rooms"]
             for step in sr["steps"]
         )
         total_npcs = sum(
-            len(step["npcs"])
+            len(step["exit_data"])
             for r in all_results for sr in r["sub_rooms"]
             for step in sr["steps"]
         )
@@ -517,7 +517,7 @@ def main():
         mt = result["map_type"]
         for sr in result["sub_rooms"]:
             for step in sr["steps"]:
-                for ex in step["exits"]:
+                for ex in step["interact_data"]:
                     nrid = ex.get("next_room_id")
                     if nrid is not None:
                         exit_summary.append({

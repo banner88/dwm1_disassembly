@@ -1,3 +1,23 @@
+; =============================================================================
+; BANK $41 — NAME TABLES (MONSTERS, SKILLS, PERSONALITIES, ITEMS)
+; =============================================================================
+; Contains:
+;   - Master string table pointer at $4007 (points to sub-tables)
+;   - Monster name pointer table at $4339 (256 × 2 bytes → name addresses)
+;   - Monster name strings at $5B1F (222 unique, $F0 terminated, charmap encoded)
+;   - Skill name strings at $628E (256 entries, $F0 terminated, charmap encoded)
+;   - Personality name pointer table at $4997 (27 × 2 bytes)
+;   - Personality name strings at $7159 ($F0 terminated)
+;   - Various other string tables (items, families, etc.)
+;
+; TEXT ENCODING: Uses charmap.asm (A=$24, a=$3E, space=$62, etc.)
+;   Names terminated by $F0. Edit strings directly: db "NewName", $F0
+;   NOTE: Changing name LENGTH requires updating the pointer table at $4339
+;   unless pointer table is converted to label-based (future work).
+;
+; Sources: dump_monster_names.py, known_ROM_map.md, charmap.asm
+; =============================================================================
+
 ; Disassembly of "baserom.gbc"
 ; This file was created with:
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
@@ -6390,3208 +6410,504 @@ jr_041_5aec:
     ldh a, [rNR24]
     ldh a, [$f0]
 
+
+; ---------------------------------------------------------------
+; Monster Name Strings ($5B1F)
+; $F0 terminated, charmap encoded
+; ---------------------------------------------------------------
+
 jr_041_5b1f:
-    daa
-    ld c, a
-    ld a, $48
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$36]
-    ld c, l
-    ld c, h
-    ld d, c
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$37]
-    ld c, a
-    ld b, d
-    ld b, d
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$36]
-    ld c, e
-    ld a, $46
-    ld c, c
-    ld d, [hl]
-    ldh a, [$36]
-    ld c, c
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld sp, $5146
-    ld b, d
-    ldh a, [rNR51]
-    ld a, $3f
-    ccf
-    ld c, c
-    ld b, d
-    ldh a, [rNR51]
-    ld c, h
-    ld d, l
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$36]
-    ld c, c
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$2b]
-    ld b, d
-    ld a, $49
-    ld b, d
-    ld c, a
-    ldh a, [$29]
-    ld a, $4b
-    ld b, h
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$35]
-    ld c, h
-    ld b, b
-    ld c, b
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$36]
-    ld c, c
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    dec h
-    ld c, h
-    ld c, a
-    ld b, h
-    ldh a, [$36]
-    ld c, c
-    ld a, $3f
-    ccf
-    ld b, [hl]
-    ld d, c
-    ldh a, [$36]
-    ld c, l
-    ld c, h
-    ld d, c
-    ld l, $46
-    ld c, e
-    ld b, h
-    ldh a, [$2e]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $49
-    ld d, [hl]
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $3f
-    ccf
-    ld c, c
-    ld b, d
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $49
-    ld l, $46
-    ld c, e
-    ld b, h
-    ldh a, [$2a]
-    ld c, h
-    ld c, c
-    ld b, c
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$27]
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ld l, $46
-    ld b, c
-    ldh a, [$37]
-    ld c, h
-    ld c, a
-    ld d, c
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ldh a, [$33]
-    ld d, c
-    ld b, d
-    ld c, a
-    ld a, $4b
-    ld c, h
-    ld b, c
-    ldh a, [$2a]
-    ld a, $50
-    ld b, h
-    ld c, h
-    ld c, e
-    ldh a, [$29]
-    ld a, $46
-    ld c, a
-    ld d, [hl]
-    daa
-    ld c, a
-    ld a, $48
-    ldh a, [$2f]
-    ld b, [hl]
-    ld d, a
-    ld a, $4f
-    ld b, c
-    jr nc, jr_041_5c46
-
-    ld c, e
-    ldh a, [$33]
-    ld c, h
-    ld b, [hl]
-    ld d, b
-    ld c, h
-    ld c, e
-    ld b, h
-    ld c, h
-    ld c, e
-    ldh a, [$36]
-    ld d, h
-    ld c, h
-    ld c, a
-    ld b, c
-    ld b, h
-    ld c, h
-    ld c, e
-    ldh a, [$27]
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ldh a, [$30]
-    ld b, [hl]
-    ld c, e
-    ld b, [hl]
-    daa
-    ld c, a
-    ld a, $48
-    ldh a, [$30]
-    ld a, $41
-    daa
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ldh a, [$35]
-    ld a, $56
-    ccf
-    ld d, d
-    ld c, a
-    ld c, e
-    ldh a, [rNR52]
-    ld b, l
-    ld a, $4a
-    ld b, d
-    ld c, c
-    ld b, h
-
-jr_041_5c46:
-    ld c, h
-    ld c, e
-    ldh a, [$2f]
-    ld b, [hl]
-    ld d, a
-    ld a, $4f
-    ld b, c
-    add hl, hl
-    ld c, c
-    ld d, [hl]
-    ldh a, [rNR50]
-    ld c, e
-    ld b, c
-    ld c, a
-    ld b, d
-    ld a, $49
-    ldh a, [$2e]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, $4c
-    ccf
-    ld c, a
-    ld a, $f0
-    ld [hl], $4d
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    ld c, a
-    ld c, h
-    ld d, d
-    ld d, b
-    ldh a, [$2a]
-    ld c, a
-    ld b, d
-    ld a, $51
-    daa
-    ld c, a
-    ld a, $48
-    ldh a, [rNR52]
-    ld c, a
-    ld b, d
-    ld d, b
-    ld d, c
-    ld c, l
-    ld b, d
-    ld c, e
-    ld d, c
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld [hl], $4b
-    ld a, $48
-    ld b, d
-    ldh a, [rNR52]
-    ld c, h
-    ld a, $51
-    ld c, h
-    ld c, c
-    ldh a, [$32]
-    ld c, a
-    ld c, h
-    ld b, b
-    ld b, l
-    ld b, [hl]
-    ldh a, [rNR51]
-    ld a, $51
-    ld d, c
-    ld c, c
-    ld b, d
-    dec [hl]
-    ld b, d
-    ld d, l
-    ldh a, [$36]
-    ld c, b
-    ld d, [hl]
-    daa
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ldh a, [$27]
-    ld b, [hl]
-    ld d, e
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ldh a, [$37]
-    ld c, h
-    ld c, e
-    ld b, h
-    ld d, d
-    ld b, d
-    ld c, c
-    ld c, c
-    ld a, $f0
-    inc h
-    ld c, c
-    ld c, d
-    ld b, [hl]
-    ld c, a
-    ld a, $47
-    ldh a, [rNR52]
-    ld a, $51
-    add hl, hl
-    ld c, c
-    ld d, [hl]
-    ldh a, [$33]
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld c, h
-    ld d, h
-    dec [hl]
-    ld a, $51
-    ldh a, [$36]
-    ld a, $40
-    ld b, b
-    ld b, d
-    ld c, a
-    ldh a, [$2a]
-    ld d, d
-    ld c, c
-    ld c, l
-    dec h
-    ld b, d
-    ld a, $50
-    ld d, c
-    ldh a, [$36]
-    ld c, b
-    ld d, d
-    ld c, c
-    ld c, c
-    ld c, a
-    ld c, h
-    ld c, h
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    dec h
-    ld b, d
-    ld a, $50
-    ld d, c
-    ldh a, [rNR50]
-    ld c, e
-    ld d, c
-    ld b, d
-    ld a, $51
-    ld b, d
-    ld c, a
-    ldh a, [$36]
-    ld d, d
-    ld c, l
-    ld b, d
-    ld c, a
-    scf
-    ld b, d
-    ld c, e
-    ldh a, [$2c]
-    ld c, a
-    ld c, h
-    ld c, e
-    scf
-    ld d, d
-    ld c, a
-    ld d, c
-    ldh a, [$30]
-    ld c, h
-    ld c, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld b, a
-    ld a, $f0
-    dec hl
-    ld a, $4a
-    ld c, d
-    ld b, d
-    ld c, a
-    jr nc, jr_041_5d6a
-
-    ld c, e
-    ldh a, [$2a]
-    ld c, a
-    ld b, [hl]
-    ld d, a
-    ld d, a
-    ld c, c
-    ld d, [hl]
-    ldh a, [$3c]
-    ld b, d
-    ld d, c
-    ld b, [hl]
-    ldh a, [$30]
-    ld a, $41
-    ld a, [hl+]
-    ld c, h
-    ld c, l
-    ld b, l
-    ld b, d
-    ld c, a
-    ldh a, [$29]
-    ld a, $46
-    ld c, a
-    ld d, [hl]
-    dec [hl]
-    ld a, $51
-    ldh a, [$38]
-    ld c, e
-    ld b, [hl]
-    ld b, b
-    ld c, h
-    ld c, a
-    ld c, e
-    ldh a, [$2a]
-    ld c, h
-    ld a, $51
-    ld b, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, c
-    ld b, c
-    inc h
-    ld c, l
-    ld b, d
-    ldh a, [$37]
-    ld c, a
-    ld d, d
-
-jr_041_5d6a:
-    ld c, d
-    ld c, l
-    ld b, d
-    ld d, c
-    ld b, d
-    ld c, a
-    ldh a, [$2e]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    cpl
-    ld b, d
-    ld c, h
-    ldh a, [$27]
-    ld a, $4f
-    ld c, b
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, e
-    ldh a, [$30]
-    ld a, $41
-    ld h, $3e
-    ld d, c
-    ldh a, [rNR51]
-    ld b, [hl]
-    ld b, h
-    jr z, jr_041_5de4
-
-    ld b, d
-    ldh a, [$33]
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld d, [hl]
-    ldh a, [$3a]
-    ld d, [hl]
-    ld d, e
-    ld b, d
-    ld c, a
-    ld c, e
-    ldh a, [rNR51]
-    ld d, d
-    ld c, c
-    ld c, c
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ldh a, [$29]
-    ld c, c
-    ld c, h
-    ld c, a
-    ld a, $47
-    ld a, $56
-    ldh a, [$27]
-    ld d, d
-    ld b, b
-    ld c, b
-    ld l, $46
-    ld d, c
-    ld b, d
-    ldh a, [$30]
-    ld a, $41
-    inc sp
-    ld b, d
-    ld b, b
-    ld c, b
-    ld b, d
-    ld c, a
-    ldh a, [$30]
-    ld a, $41
-    dec [hl]
-    ld a, $53
-    ld b, d
-    ld c, e
-    ldh a, [$30]
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld d, [hl]
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ldh a, [$27]
-    ld c, a
-    ld a, $40
-    ld c, b
-    ld d, [hl]
-    ldh a, [rNR51]
-    ld b, [hl]
-    ld b, h
-    dec [hl]
-    ld c, h
-    ld c, h
-    ld d, b
-    ld d, c
-
-jr_041_5de4:
-    ldh a, [$36]
-    ld d, c
-    ld d, d
-    ccf
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ldh a, [$2f]
-    ld a, $4b
-    ld b, c
-    ld [hl-], a
-    ld d, h
-    ld c, c
-    ldh a, [$30]
-    ld a, $41
-    ld a, [hl+]
-    ld c, h
-    ld c, h
-    ld d, b
-    ld b, d
-    ldh a, [$30]
-    ld a, $41
-    ld h, $4c
-    ld c, e
-    ld b, c
-    ld c, h
-    ld c, a
-    ldh a, [rNR51]
-    ld c, c
-    ld b, [hl]
-    ld d, a
-    ld d, a
-    ld a, $4f
-    ld b, c
-    ld d, [hl]
-    ldh a, [$33]
-    ld b, l
-    ld c, h
-    ld b, d
-    ld c, e
-    ld b, [hl]
-    ld d, l
-    ldh a, [$3d]
-    ld a, $4d
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ldh a, [$3a]
-    ld b, l
-    ld b, [hl]
-    ld c, l
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ldh a, [$29]
-    ld d, d
-    ld c, e
-    ld c, b
-    ld d, [hl]
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ldh a, [$35]
-    ld a, $46
-    ld c, e
-    dec hl
-    ld a, $54
-    ld c, b
-    ldh a, [$30]
-    ld a, $41
-    inc sp
-    ld c, c
-    ld a, $4b
-    ld d, c
-    ldh a, [$29]
-    ld b, [hl]
-    ld c, a
-    ld b, d
-    ld a, [hl-]
-    ld b, d
-    ld b, d
-    ld b, c
-    ldh a, [$29]
-    ld c, c
-    ld c, h
-    ld c, a
-    ld a, $30
-    ld a, $4b
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    scf
-    ld c, a
-    ld b, d
-    ld b, d
-    ldh a, [rNR52]
-    ld a, $40
-    ld d, c
-    ld b, [hl]
-    dec h
-    ld a, $49
-    ld c, c
-    ldh a, [$2a]
-    ld d, d
-    ld c, c
-    ld c, l
-    ld c, l
-    ld c, c
-    ld b, d
-    ldh a, [$37]
-    ld c, h
-    ld a, $41
-    ld d, b
-    ld d, c
-    ld c, h
-    ld c, h
-    ld c, c
-    ldh a, [rNR50]
-    ld c, d
-    ccf
-    ld b, d
-    ld c, a
-    ld a, [hl-]
-    ld b, d
-    ld b, d
-    ld b, c
-    ldh a, [$36]
-    ld d, c
-    ld d, d
-    ccf
-    ld d, b
-    ld d, d
-    ld b, b
-    ld c, b
-    ldh a, [$32]
-    ld c, e
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld c, h
-    ldh a, [$27]
-    ld a, $4b
-    ld b, b
-    ld b, d
-    add hl, sp
-    ld b, d
-    ld b, h
-    ld b, [hl]
-    ldh a, [$37]
-    ld c, a
-    ld b, d
-    ld b, d
-    dec h
-    ld c, h
-    ld d, [hl]
-    ldh a, [$29]
-    ld a, $40
-    ld b, d
-    scf
-    ld c, a
-    ld b, d
-    ld b, d
-    ldh a, [$2b]
-    ld b, d
-    ld c, a
-    ccf
-    jr nc, jr_041_5ef8
-
-    ld c, e
-    ldh a, [rNR51]
-    ld b, d
-    ld a, $4b
-    jr nc, jr_041_5f00
-
-    ld c, e
-    ldh a, [$28]
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld [hl], $42
-    ld b, d
-    ld b, c
-    ldh a, [$30]
-    ld a, $4b
-    jr z, jr_041_5f10
-
-    ld d, c
-    ld b, d
-    ld c, a
-    ldh a, [$36]
-    ld c, e
-    ld a, $4d
-    ld c, l
-    ld b, d
-    ld c, a
-    ldh a, [$35]
-    ld c, h
-    ld d, b
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ldh a, [$3a]
-    ld a, $51
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ldh a, [$2a]
-    ld b, [hl]
-    ld a, $4b
-    ld d, c
-    ld [hl], $49
-    ld d, d
-    ld b, h
-
-jr_041_5ef8:
-    ldh a, [rNR52]
-    ld a, $51
-    ld a, $4d
-    ld b, [hl]
-    ld c, c
-
-jr_041_5f00:
-    ld a, $f0
-    ld a, [hl+]
-    ld c, h
-    ld c, l
-    ld b, l
-    ld b, d
-    ld b, b
-    ld a, $41
-    ld a, $f0
-    dec h
-    ld d, d
-    ld d, c
-    ld d, c
-
-jr_041_5f10:
-    ld b, d
-    ld c, a
-    ld b, e
-    ld c, c
-    ld d, [hl]
-    ldh a, [$3a]
-    ld b, d
-    ld b, d
-    ld b, c
-    dec h
-    ld d, d
-    ld b, h
-    ldh a, [$2a]
-    ld b, [hl]
-    ld a, $4b
-    ld d, c
-    ld a, [hl-]
-    ld c, h
-    ld c, a
-    ld c, d
-    ldh a, [$2f]
-    ld b, [hl]
-    ld c, l
-    ld d, b
-    ld d, [hl]
-    ldh a, [$36]
-    ld d, c
-    ld a, $44
-    dec h
-    ld d, d
-    ld b, h
-    ldh a, [rNR50]
-    ld c, a
-    ld c, d
-    ld d, [hl]
-    inc h
-    ld c, e
-    ld d, c
-    ldh a, [$2a]
-    ld c, h
-    dec hl
-    ld c, h
-    ld c, l
-    ld c, l
-    ld b, d
-    ld c, a
-    ldh a, [$37]
-    ld a, $46
-    ld c, c
-    jr z, jr_041_5f8b
-
-    ld d, c
-    ld b, d
-    ld c, a
-    ldh a, [rNR50]
-    ld c, a
-    ld c, d
-    ld c, h
-    ld c, a
-    inc sp
-    ld b, d
-    ld b, c
-    ld b, d
-    ldh a, [$28]
-    ld d, [hl]
-    ld b, d
-    ld b, c
-    ld b, d
-    ld c, a
-    ldh a, [$2a]
-    ld b, [hl]
-    ld a, $4b
-    ld d, c
-    jr nc, jr_041_5fb5
-
-    ld d, c
-    ld b, l
-    ldh a, [$27]
-    ld c, a
-    ld c, h
-    ld c, c
-    ld c, c
-    ldh a, [rNR50]
-    ld c, a
-    ld c, d
-    ld d, [hl]
-    ld h, $4f
-    ld a, $3f
-    ldh a, [$30]
-    ld a, $41
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, e
-    ld b, d
-    ld d, c
-    ldh a, [$2b]
-    ld c, h
-    ld c, a
-    ld c, e
-    dec h
-    ld b, d
-
-jr_041_5f8b:
-    ld b, d
-    ld d, c
-    ldh a, [rNR50]
-    ld c, a
-    ld c, d
-    ld c, h
-    ld c, a
-    ld c, l
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ldh a, [$27]
-    ld b, [hl]
-    ld b, h
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ldh a, [$33]
-    ld b, [hl]
-    ld d, l
-    ld d, [hl]
-    ldh a, [rNR50]
-    ld c, a
-    ld b, b
-    daa
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ldh a, [rNR50]
-    ld b, h
-    daa
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld c, c
-
-jr_041_5fb5:
-    ldh a, [$27]
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ldh a, [$27]
-    ld a, $4f
-    ld c, b
-    jr z, jr_041_601b
-
-    ld b, d
-    ldh a, [$28]
-    ld d, [hl]
-    ld b, d
-    dec h
-    ld a, $49
-    ld c, c
-    ldh a, [$36]
-    ld c, b
-    ld d, d
-    ld c, c
-    dec [hl]
-    ld b, [hl]
-    ld b, c
-    ld b, d
-    ld c, a
-    ldh a, [$28]
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    dec h
-    ld b, d
-    ld a, $50
-    ld d, c
-    ldh a, [rSB]
-    jr z, jr_041_603c
-
-    ld b, d
-    ld h, $49
-    ld c, h
-    ld d, h
-    ld c, e
-    ldh a, [$2a]
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, c
-    ld b, [hl]
-    ld c, e
-    ldh a, [$30]
-    ld b, d
-    ld b, c
-    ld d, d
-    ld d, b
-    ld a, $28
-    ld d, [hl]
-    ld b, d
-    ldh a, [$2f]
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld b, d
-    ld d, l
-    ldh a, [$2a]
-    ld c, h
-    ld a, $51
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, e
-    ldh a, [$32]
-    ld c, a
-    ld b, b
-    ldh a, [$32]
-    ld b, h
-    ld c, a
-    ld b, d
-    ldh a, [$2a]
-    ld a, $51
-
-jr_041_601b:
-    ld b, d
-    ld a, [hl+]
-    ld d, d
-    ld a, $4f
-    ld b, c
-    ldh a, [rNR52]
-    ld b, l
-    ld c, h
-    ld c, l
-    ld h, $49
-    ld c, h
-    ld d, h
-    ld c, e
-    ldh a, [$2a]
-    ld c, a
-    ld b, d
-    ld c, e
-    ld b, c
-    ld a, $49
-    ldh a, [rNR50]
-    ld c, b
-    ld d, d
-    ccf
-    ld a, $4f
-    ldh a, [$30]
-
-jr_041_603c:
-    ld a, $41
-    ld l, $4b
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ldh a, [$2a]
-    ld b, [hl]
-    ld b, h
-    ld a, $4b
-    ld d, c
-    ld b, d
-    ld d, b
-    ldh a, [rNR52]
-    ld b, d
-    ld c, e
-    ld d, c
-    ld a, $50
-    ld a, $52
-    ld c, a
-    ldh a, [$28]
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    inc h
-    ld c, a
-    ld c, d
-    ld c, h
-    ld c, a
-    ldh a, [$2d]
-    ld a, $4a
-    ld b, [hl]
-    ld c, a
-    ld d, d
-    ld d, b
-    ldh a, [$27]
-    ld d, d
-    ld c, a
-    ld c, a
-    ld a, $4b
-    ldh a, [$36]
-    ld c, l
-    ld c, h
-    ld c, h
-    ld c, b
-    ld d, [hl]
-    ldh a, [$36]
-    ld c, b
-    ld d, d
-    ld c, c
-    ld c, c
-    ld b, h
-    ld c, h
-    ld c, e
-    ldh a, [$33]
-    ld d, d
-    ld d, c
-    ld c, a
-    ld b, d
-    ld c, l
-    ld d, d
-    ld c, l
-    ldh a, [$35]
-    ld c, h
-    ld d, c
-    dec [hl]
-    ld a, $53
-    ld b, d
-    ld c, e
-    ldh a, [$30]
-    ld d, d
-    ld c, d
-    ld c, d
-    ld d, [hl]
-    ldh a, [$27]
-    ld a, $4f
-    ld c, b
-    ld h, $4f
-    ld a, $3f
-    ldh a, [$27]
-    ld b, d
-    ld a, $41
-    ld sp, $5146
-    ld b, d
-    ldh a, [$36]
-    ld b, l
-    ld a, $41
-    ld c, h
-    ld d, h
-    ldh a, [$2b]
-    ld c, h
-    ld c, a
-    ld c, b
-    ldh a, [$30]
-    ld d, d
-    ld b, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ldh a, [$31]
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld c, l
-    ldh a, [$30]
-    ld a, $41
-    ld [hl], $4d
-    ld b, [hl]
-    ld c, a
-    ld b, [hl]
-    ld d, c
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    jr nc, @+$44
-
-    ld c, a
-    ld b, h
-    ld b, d
-    ldh a, [$35]
-    ld b, d
-    ld a, $4d
-    ld b, d
-    ld c, a
-    ldh a, [$27]
-    ld b, d
-    ld a, $41
-    ld sp, $3f4c
-    ld c, c
-    ld b, d
-    ldh a, [$3a]
-    ld b, l
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld l, $46
-    ld c, e
-    ld b, h
-    ldh a, [rNR51]
-    ld c, h
-    ld c, e
-    ld b, d
-    ld [hl], $49
-    ld a, $53
-    ld b, d
-    ldh a, [$36]
-    ld c, b
-    ld b, d
-    ld c, c
-    ld b, d
-    ld d, c
-    ld c, h
-    ld c, a
-    ldh a, [$36]
-    ld b, d
-    ld c, a
-    ld d, e
-    ld a, $4b
-    ld d, c
-    ldh a, [rNR52]
-    ld c, h
-    ld c, l
-    ld d, [hl]
-    ld b, b
-    ld a, $51
-    ldh a, [$2d]
-    ld b, d
-    ld d, h
-    ld b, d
-    ld c, c
-    dec h
-    ld a, $44
-    ldh a, [$28]
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld a, [hl-]
-    ld a, $4b
-    ld b, c
-    ldh a, [$30]
-    ld a, $41
-    ld h, $3e
-    ld c, e
-    ld b, c
-    ld c, c
-    ld b, d
-    ldh a, [rNR52]
-    ld c, h
-    ld b, [hl]
-    ld c, c
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ldh a, [$29]
-    ld a, $40
-    ld b, d
-    ld c, a
-    ldh a, [$36]
-    ld c, l
-    ld b, [hl]
-    ld c, b
-    ld d, [hl]
-    dec h
-    ld c, h
-    ld d, [hl]
-    ldh a, [$30]
-    ld a, $41
-    jr nc, jr_041_6198
-
-    ld c, a
-    ld c, a
-    ld c, h
-    ld c, a
-    ldh a, [$35]
-    ld c, h
-    ld b, h
-    ld d, d
-    ld b, d
-    ld sp, $5146
-    ld b, d
-    ldh a, [$2a]
-    ld c, h
-    ld c, h
-    ld c, l
-    ld b, [hl]
-    ldh a, [$39]
-    ld c, h
-    ld c, h
-    ld b, c
-    ld c, h
-    ld c, c
-    ld c, c
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $49
-    daa
-    ld c, a
-    ld a, $48
-    ldh a, [rNR51]
-    ld a, $49
-    ld d, a
-    ld a, $48
-    ldh a, [$36]
-    ld a, $3f
-    ld c, a
-    ld b, d
-    jr nc, jr_041_61c5
-
-    ld c, e
-    ldh a, [rNR52]
-    ld d, d
-    ld c, a
-    ld d, b
-    ld b, d
-    cpl
-    ld a, $4a
-    ld c, l
-    ldh a, [$35]
-    ld c, h
-    ccf
-    ld c, h
-    ld d, b
-
-jr_041_6198:
-    ld d, c
-    ld b, d
-    ld c, a
-    ldh a, [$28]
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    inc sp
-    ld c, h
-    ld d, c
-    ldh a, [$2a]
-    ld b, [hl]
-    ld d, b
-    ld c, d
-    ld c, h
-    ldh a, [$2f]
-    ld a, $53
-    ld a, $30
-    ld a, $4b
-    ldh a, [$2c]
-    ld b, b
-    ld b, d
-    jr nc, jr_041_61f5
-
-    ld c, e
-    ldh a, [$30]
-    ld b, [hl]
-    ld c, d
-    ld b, [hl]
-    ld b, b
-    ldh a, [$30]
-    ld d, d
-    ld b, c
-    daa
-    ld c, h
-    ld c, c
-
-jr_041_61c5:
-    ld c, c
-    ldh a, [$2a]
-    ld c, h
-    ld c, c
-    ld b, d
-    ld c, d
-    ldh a, [$36]
-    ld d, c
-    ld c, h
-    ld c, e
-    ld b, d
-    jr nc, @+$40
-
-    ld c, e
-    ldh a, [rNR51]
-    ld c, h
-    ld c, d
-    ccf
-    ld h, $4f
-    ld a, $44
-    ldh a, [$2a]
-    ld c, h
-    ld c, c
-    ld b, c
-    ld a, [hl+]
-    ld c, h
-    ld c, c
-    ld b, d
-    ld c, d
-    ldh a, [$27]
-    ld c, a
-    ld a, $40
-    ld c, h
-    cpl
-    ld c, h
-    ld c, a
-    ld b, c
-    ldh a, [$27]
-    ld c, a
-
-jr_041_61f5:
-    ld a, $40
-    ld c, h
-    cpl
-    ld c, h
-    ld c, a
-    ld b, c
-    ldh a, [$2b]
-    ld a, $4f
-    ld b, h
-    ld c, h
-    ld c, e
-    ldh a, [$36]
-    ld b, [hl]
-    ld b, c
-    ld c, h
-    ld b, l
-    ldh a, [rNR51]
-    ld a, $4f
-    ld a, $4a
-    ld c, h
-    ld d, b
-    ldh a, [$3d]
-    ld c, h
-    ld c, d
-    ld a, $f0
-    inc sp
-    ld b, [hl]
-    ld d, a
-    ld d, a
-    ld a, $4f
-    ld c, h
-    ldh a, [$28]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld c, b
-    ldh a, [$30]
-    ld b, [hl]
-    ld c, a
-    ld d, d
-    ld b, c
-    ld c, a
-    ld a, $3e
-    ld d, b
-    ldh a, [$30]
-    ld b, [hl]
-    ld c, a
-    ld d, d
-    ld b, c
-    ld c, a
-    ld a, $3e
-    ld d, b
-    ldh a, [$30]
-    ld d, d
-    ld b, c
-    ld c, h
-    ld d, d
-    ldh a, [$27]
-    ld b, d
-    ld a, $51
-    ld b, l
-    jr nc, jr_041_6293
-
-    ld c, a
-    ld b, d
-    ldh a, [$27]
-    ld b, d
-    ld a, $51
-    ld b, l
-    jr nc, jr_041_629d
-
-    ld c, a
-    ld b, d
-    ldh a, [$27]
-    ld b, d
-    ld a, $51
-    ld b, l
-    jr nc, jr_041_62a7
-
-    ld c, a
-    ld b, d
-    ldh a, [$27]
-    ld a, $4f
-    ld c, b
-    ld b, c
-    ld c, a
-    ld b, [hl]
-    ld d, d
-    ld c, d
-    ldh a, [$37]
-    jr z, jr_041_62a0
-
-    dec [hl]
-    inc a
-    ld h, h
-    ldh a, [$37]
-    ld a, $51
-    ld d, b
-    ld d, d
-    ldh a, [$27]
-    ld b, [hl]
-    ld a, $44
-    ld c, h
-    ldh a, [$36]
-    ld a, $4a
-    ld d, b
-    ld b, [hl]
-    ldh a, [rNR51]
-    ld a, $57
-    ld c, h
-    ld c, h
-    ldh a, [$f0]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ldh a, [rNR51]
-    ld c, c
-    ld a, $57
-    ld b, d
-
-jr_041_6293:
-    ldh a, [rNR51]
-    ld c, c
-    ld a, $57
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, d
-
-jr_041_629d:
-    ldh a, [rNR51]
-    ld c, c
-
-jr_041_62a0:
-    ld a, $57
-    ld b, d
-    ld c, d
-    ld c, h
-    ld d, b
-    ld d, c
-
-jr_041_62a7:
-    ldh a, [$29]
-    ld b, [hl]
-    ld c, a
-    ld b, d
-    ccf
-    ld a, $49
-    ldh a, [$29]
-    ld b, [hl]
-    ld c, a
-    ld b, d
-    ccf
-    ld a, $4b
-    ld b, d
-    ldh a, [$29]
-    ld b, [hl]
-    ld c, a
-    ld b, d
-    ccf
-    ld c, h
-    ld c, c
-    ld d, c
-    ldh a, [rNR51]
-    ld a, $4b
-    ld b, h
-    ldh a, [rNR51]
-    ld c, h
-    ld c, h
-    ld c, d
-    ldh a, [$28]
-    ld d, l
-    ld c, l
-    ld c, c
-    ld c, h
-    ld b, c
-    ld b, d
-    ld d, c
-    ldh a, [$2c]
-    ld c, e
-    ld b, e
-    ld b, d
-    ld c, a
-    ld c, e
-    ld c, h
-    ld d, b
-    ldh a, [$2c]
-    ld c, e
-    ld b, e
-    ld b, d
-    ld c, a
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, d
-    ldh a, [$2c]
-    ld c, e
-    ld b, e
-    ld b, d
-    ld c, a
-    ld c, d
-    ld c, h
-    ld d, b
-    ld d, c
-    ldh a, [$2c]
-    ld b, b
-    ld b, d
-    dec h
-    ld c, h
-    ld c, c
-    ld d, c
-    ldh a, [$36]
-    ld c, e
-    ld c, h
-    ld d, h
-    ld [hl], $51
-    ld c, h
-    ld c, a
-    ld c, d
-    ldh a, [rNR51]
-    ld c, c
-    ld b, [hl]
-    ld d, a
-    ld d, a
-    ld a, $4f
-    ld b, c
-    ldh a, [rNR51]
-    ld c, h
-    ld c, c
-    ld d, c
-    ldh a, [$3d]
-    ld a, $4d
-    ldh a, [$37]
-    ld b, l
-    ld c, h
-    ld c, a
-    ld b, c
-    ld a, $46
-    ld c, e
-    ldh a, [rNR51]
-    ld b, d
-    ld a, $51
-    ldh a, [$27]
-    ld b, d
-    ld b, e
-    ld b, d
-    ld a, $51
-    ldh a, [$36]
-    ld a, $40
-    ld c, a
-    ld b, [hl]
-    ld b, e
-    ld b, [hl]
-    ld b, b
-    ld b, d
-    ldh a, [$36]
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ldh a, [$36]
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    inc h
-    ld c, c
-    ld c, c
-    ldh a, [$36]
-    ld d, c
-    ld c, h
-    ld c, l
-    ld [hl], $4d
-    ld b, d
-    ld c, c
-    ld c, c
-    ldh a, [$36]
-    ld d, d
-    ld c, a
-    ld c, a
-    ld c, h
-    ld d, d
-    ld c, e
-    ld b, c
-    ldh a, [$33]
-    ld a, $4b
-    ld b, [hl]
-    ld b, b
-    inc h
-    ld c, c
-    ld c, c
-    ldh a, [$35]
-    ld c, h
-    ccf
-    jr nc, jr_041_63a3
-
-    ld b, h
-    ld b, [hl]
-    ld b, b
-    ldh a, [$37]
-    ld a, $48
-    ld b, d
-    jr nc, jr_041_63ad
-
-    ld b, h
-    ld b, [hl]
-    ld b, b
-    ldh a, [$36]
-    ld a, $4d
-    ldh a, [$27]
-    ld b, d
-    ld b, e
-    ld b, d
-    ld c, e
-    ld b, b
-    ld b, d
-    ldh a, [$38]
-    ld c, l
-    ld c, l
-    ld b, d
-    ld c, a
-    ldh a, [$2c]
-    ld c, e
-    ld b, b
-    ld c, a
-    ld b, d
-    ld a, $50
-    ld b, d
-    ldh a, [$36]
-    ld c, c
-    ld c, h
-    ld d, h
-    ldh a, [$36]
-    ld c, c
-    ld c, h
-    ld d, h
-    inc h
-    ld c, c
-    ld c, c
-    ldh a, [$36]
-    ld c, l
-    ld b, d
-    ld b, d
-    ld b, c
-    ldh a, [$36]
-    ld c, l
-
-jr_041_63a3:
-    ld b, d
-    ld b, d
-    ld b, c
-    jr c, @+$4f
-
-    ldh a, [rNR51]
-    ld a, $4f
-    ld c, a
-
-jr_041_63ad:
-    ld b, [hl]
-    ld b, d
-    ld c, a
-    ldh a, [$37]
-    ld d, h
-    ld b, [hl]
-    ld c, e
-    dec hl
-    ld b, [hl]
-    ld d, c
-    ld d, b
-    ldh a, [$30]
-    ld a, $44
-    ld b, [hl]
-    ld b, b
-    ld a, [hl-]
-    ld a, $49
-    ld c, c
-    ldh a, [$30]
-    ld a, $44
-    ld b, [hl]
-    ld b, b
-    dec h
-    ld a, $40
-    ld c, b
-    ldh a, [rNR51]
-    ld c, h
-    ld d, d
-    ld c, e
-    ld b, b
-    ld b, d
-    ldh a, [$37]
-    ld c, a
-    ld a, $4b
-    ld d, b
-    ld b, e
-    ld c, h
-    ld c, a
-    ld c, d
-    ldh a, [$2c]
-    ld c, a
-    ld c, h
-    ld c, e
-    ld b, [hl]
-    ld d, a
-    ld b, d
-    ldh a, [$2b]
-    ld b, d
-    ld a, $49
-    ldh a, [$2b]
-    ld b, d
-    ld a, $49
-    jr nc, @+$4e
-
-    ld c, a
-    ld b, d
-    ldh a, [$2b]
-    ld b, d
-    ld a, $49
-    inc h
-    ld c, c
-    ld c, c
-    ldh a, [$2b]
-    ld b, d
-    ld a, $49
-    jr c, @+$52
-
-    ldh a, [$2b]
-    ld b, d
-    ld a, $49
-    jr c, @+$52
-
-    inc h
-    ld c, c
-    ld c, c
-    ldh a, [$39]
-    ld b, [hl]
-    ld d, e
-    ld b, [hl]
-    ld b, e
-    ld d, [hl]
-    ldh a, [$35]
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ldh a, [$29]
-    ld a, $4f
-    ld b, d
-    ld d, h
-    ld b, d
-    ld c, c
-    ld c, c
-    ldh a, [rNR50]
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    ld b, c
-    ld c, h
-    ld d, c
-    ld b, d
-    ldh a, [$31]
-    ld d, d
-    ld c, d
-    ccf
-    ld [hl-], a
-    ld b, e
-    ld b, e
-    ldh a, [$27]
-    ld b, d
-    ld h, $45
-    ld a, $4c
-    ld d, b
-    ldh a, [rNR52]
-    ld d, d
-    ld c, a
-    ld d, b
-    ld b, d
-    ld [hl-], a
-    ld b, e
-    ld b, e
-    ldh a, [$36]
-    ld d, c
-    ld b, d
-    ld c, l
-    ld a, [hl+]
-    ld d, d
-    ld a, $4f
-    ld b, c
-    ldh a, [$30]
-    ld a, $4d
-    jr nc, jr_041_6494
-
-    ld b, h
-    ld b, [hl]
-    ld b, b
-    ldh a, [rNR52]
-    ld b, l
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ldh a, [rNR50]
-    ld d, c
-    ld d, c
-    ld a, $40
-    ld c, b
-    ldh a, [$37]
-    ld d, h
-    ld b, [hl]
-    ld c, e
-    ld [hl], $49
-    ld a, $50
-    ld b, l
-    ldh a, [$35]
-    ld a, $4a
-    ld c, d
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ldh a, [rNR51]
-    ld b, d
-    ld d, b
-    ld b, d
-    ld c, a
-    ld c, b
-    ld b, d
-    ld c, a
-    ldh a, [$2e]
-    ld a, $4a
-    ld b, [hl]
-    ld c, b
-    ld a, $57
-    ld b, d
-    ldh a, [$30]
-    ld a, $50
-    ld d, b
-    ld a, $40
-    ld c, a
-    ld b, d
-
-jr_041_6494:
-    ldh a, [$28]
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld [hl], $49
-    ld a, $50
-    ld b, l
-    ldh a, [rNR52]
-    ld b, l
-    ld a, $4f
-    ld b, h
-    ld b, d
-    jr c, jr_041_64da
-
-    ldh a, [$2b]
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    dec l
-    ld d, d
-    ld c, d
-    ld c, l
-    ldh a, [$36]
-    ld d, d
-    ld b, b
-    ld c, b
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [$29]
-    ld b, [hl]
-    ld c, a
-    ld b, d
-    ld [hl], $49
-    ld a, $50
-    ld b, l
-    ldh a, [rNR51]
-    ld c, h
-    ld c, c
-    ld d, c
-    ld [hl], $49
-    ld a, $50
-    ld b, l
-    ldh a, [$39]
-    ld a, $40
-    ld d, d
-    ld [hl], $49
-    ld a, $50
-    ld b, l
-    ldh a, [$2c]
-    ld b, b
-    ld b, d
-
-jr_041_64da:
-    ld [hl], $49
-    ld a, $50
-    ld b, l
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $49
-    ld h, $52
-    ld d, c
-    ldh a, [$27]
-    ld c, a
-    ld a, $48
-    ld [hl], $49
-    ld a, $50
-    ld b, l
-    ldh a, [rNR51]
-    ld b, d
-    ld a, $50
-    ld d, c
-    ld h, $52
-    ld d, c
-    ldh a, [rNR51]
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    dec h
-    ld c, c
-    ld c, h
-    ld d, h
-    ldh a, [$27]
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld h, $52
-    ld d, c
-    ldh a, [$3d]
-    ld c, h
-    ld c, d
-    ccf
-    ld b, [hl]
-    ld b, d
-    ld h, $52
-    ld d, c
-    ldh a, [rNR52]
-    ld c, c
-    ld b, d
-    ld a, $4b
-    ld h, $52
-    ld d, c
-    ldh a, [$30]
-    ld d, d
-    ld c, c
-    ld d, c
-    ld b, [hl]
-    ld h, $52
-    ld d, c
-    ldh a, [rNR51]
-    ld b, [hl]
-    inc h
-    ld d, c
-    ld d, c
-    ld a, $40
-    ld c, b
-    ldh a, [$34]
-    ld d, d
-    ld a, $41
-    dec hl
-    ld b, [hl]
-    ld d, c
-    ld d, b
-    ldh a, [rNR52]
-    ld a, $49
-    ld c, c
-    dec hl
-    ld b, d
-    ld c, c
-    ld c, l
-    ldh a, [$3c]
-    ld b, d
-    ld c, c
-    ld c, c
-    dec hl
-    ld b, d
-    ld c, c
-    ld c, l
-    ldh a, [$29]
-    ld c, h
-    ld b, b
-    ld d, d
-    ld d, b
-    ldh a, [$36]
-    ld c, [hl]
-    ld d, d
-    ld a, $49
-    ld c, c
-    dec hl
-    ld b, [hl]
-    ld d, c
-    ldh a, [$33]
-    ld d, b
-    ld d, [hl]
-    ld b, b
-    ld b, l
-    ld b, d
-    jr c, jr_041_65b3
-
-    ldh a, [$35]
-    ld a, $46
-    ld c, e
-    ld [hl], $49
-    ld a, $50
-    ld b, l
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    dec h
-    ld b, d
-    ld a, $50
-    ld d, c
-    ldh a, [$39]
-    ld a, $40
-    ld d, d
-    ld d, d
-    ld c, d
-    ldh a, [$2f]
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld c, e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ldh a, [$35]
-    ld c, h
-    ld b, b
-    ld c, b
-    scf
-    ld b, l
-    ld c, a
-    ld c, h
-    ld d, h
-    ldh a, [$29]
-    ld b, [hl]
-    ld c, a
-    ld b, d
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [rNR51]
-    ld c, c
-    ld a, $57
-    ld b, d
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [$36]
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, b
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ldh a, [$3a]
-    ld b, l
-
-jr_041_65b3:
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    add hl, hl
-    ld b, [hl]
-    ld c, a
-    ld b, d
-    ldh a, [$29]
-    ld c, a
-    ld b, [hl]
-    ld b, h
-    ld b, [hl]
-    ld b, c
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [$2c]
-    ld b, b
-    ld b, d
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [$2c]
-    ld b, b
-    ld b, d
-    ld [hl], $51
-    ld c, h
-    ld c, a
-    ld c, d
-    ldh a, [$3a]
-    ld b, l
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [$2b]
-    ld b, d
-    ld c, c
-    ld c, c
-    ccf
-    ld c, c
-    ld a, $50
-    ld d, c
-    ldh a, [rNR51]
-    ld b, [hl]
-    ld b, h
-    dec h
-    ld a, $4b
-    ld b, h
-    ldh a, [$30]
-    ld b, d
-    ld b, h
-    ld a, $30
-    ld a, $44
-    ld b, [hl]
-    ld b, b
-    ldh a, [$33]
-    ld c, h
-    ld b, [hl]
-    ld d, b
-    ld c, h
-    ld c, e
-    dec hl
-    ld b, [hl]
-    ld d, c
-    ldh a, [$31]
-    ld a, $4d
-    inc h
-    ld d, c
-    ld d, c
-    ld a, $40
-    ld c, b
-    ldh a, [$33]
-    ld a, $4f
-    ld a, $49
-    ld d, [hl]
-    ld d, a
-    ld b, d
-    ldh a, [$36]
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [$33]
-    ld a, $49
-    ld d, b
-    ld d, [hl]
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [$33]
-    ld c, h
-    ld b, [hl]
-    ld d, b
-    ld c, h
-    ld c, e
-    ld a, [hl+]
-    ld a, $50
-    ldh a, [$33]
-    ld c, h
-    ld b, [hl]
-    ld d, b
-    ld c, h
-    ld c, e
-    inc h
-    ld b, [hl]
-    ld c, a
-    ldh a, [$33]
-    ld a, $4b
-    ld b, [hl]
-    daa
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ldh a, [rNR52]
-    ld d, d
-    ld c, a
-    ld d, b
-    ld b, d
-    ldh a, [rNR50]
-    ld b, l
-    ld b, l
-    ld b, l
-    ldh a, [$2e]
-    ld e, a
-    ld [hl-], a
-    ld e, a
-    daa
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ldh a, [$36]
-    ld a, $4b
-    ld b, c
-    ld [hl], $51
-    ld c, h
-    ld c, a
-    ld c, d
-    ldh a, [$35]
-    ld a, $41
-    ld b, [hl]
-    ld a, $4b
-    ld d, c
-    ldh a, [$28]
-    ld b, d
-    ld c, a
-    ld b, [hl]
-    ld b, d
-    cpl
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ldh a, [$32]
-    ld b, c
-    ld b, c
-    daa
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ldh a, [$35]
-    ld c, h
-    ccf
-    daa
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ldh a, [$36]
-    ld b, [hl]
-    ld b, c
-    ld b, d
-    ld [hl], $51
-    ld b, d
-    ld c, l
-    ldh a, [$2f]
-    ld d, d
-    ld c, a
-    ld b, d
-    daa
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ldh a, [$2f]
-    ld d, d
-    ld d, b
-    ld b, l
-    cpl
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld d, b
-    ldh a, [$36]
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    cpl
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ldh a, [$2f]
-    ld b, d
-    ld b, h
-    ld [hl], $54
-    ld b, d
-    ld b, d
-    ld c, l
-    ldh a, [rNR51]
-    ld b, [hl]
-    ld b, h
-    scf
-    ld c, a
-    ld b, [hl]
-    ld c, l
-    ldh a, [$3a]
-    ld a, $4f
-    ld h, $4f
-    ld d, [hl]
-    ldh a, [$3a]
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld c, c
-    ld b, d
-    ldh a, [$2c]
-    ld c, d
-    ld b, [hl]
-    ld d, c
-    ld a, $51
-    ld b, d
-    ldh a, [$27]
-    ld b, d
-    jr nc, jr_041_671a
-
-    ld b, h
-    ld b, [hl]
-    ld b, b
-    ldh a, [$36]
-    ld d, d
-    ld c, a
-    ld b, h
-    ld b, d
-    ldh a, [$38]
-    ld c, c
-    ld d, c
-    ld c, a
-    ld a, $27
-    ld c, h
-    ld d, h
-    ld c, e
-    ldh a, [$37]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    add hl, hl
-    ld c, h
-    ld b, h
-    ldh a, [$37]
-    ld a, $51
-    ld d, b
-    ld d, d
-    ld h, $3e
-    ld c, c
-    ld c, c
-    ldh a, [$27]
-    ld b, [hl]
-    ld a, $44
-    ld c, h
-    ld h, $3e
-    ld c, c
-    ld c, c
-    ldh a, [$36]
-    ld a, $4a
-    ld d, b
-    ld b, [hl]
-    ld h, $3e
-    ld c, c
-    ld c, c
-    ldh a, [rNR51]
-    ld a, $57
-
-jr_041_671a:
-    ld c, h
-    ld c, h
-    ld h, $3e
-    ld c, c
-    ld c, c
-    ldh a, [rNR52]
-    ld c, h
-    ld d, e
-    ld b, d
-    ld c, a
-    ldh a, [$2a]
-    ld d, d
-    ld a, $4f
-    ld b, c
-    ld b, [hl]
-    ld a, $4b
-    ldh a, [$37]
-    ld a, $46
-    ld c, c
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ldh a, [$36]
-    ld d, c
-    ld c, h
-    ld c, a
-    ld c, d
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ldh a, [$27]
-    ld c, h
-    ld b, c
-    ld b, h
-    ld b, d
-    ldh a, [$27]
-    ld b, d
-    ld b, e
-    ld b, d
-    ld c, e
-    ld b, b
-    ld b, d
-    ldh a, [$36]
-    ld d, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ld b, h
-    daa
-    ldh a, [$36]
-    ld d, d
-    ld b, b
-    ld c, b
-    inc h
-    ld c, c
-    ld c, c
-    ldh a, [rNR51]
-    ld c, c
-    ld a, $41
-    ld b, d
-    daa
-    ldh a, [$27]
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ld [hl], $45
-    ld d, d
-    ld d, c
-    ldh a, [$30]
-    ld c, h
-    ld d, d
-    ld d, c
-    ld b, l
-    ld [hl], $45
-    ld d, d
-    ld d, c
-    ldh a, [$30]
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld d, c
-    ld a, $51
-    ld b, d
-    ldh a, [$2b]
-    ld d, d
-    ld d, b
-    ld d, c
-    ld c, c
-    ld b, d
-    ldh a, [$2f]
-    ld b, [hl]
-    ld b, e
-    ld b, d
-    ld [hl], $4c
-    ld c, e
-    ld b, h
-    ldh a, [$2f]
-    ld b, [hl]
-    ld b, e
-    ld b, d
-    daa
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ldh a, [$35]
-    ld d, d
-    ld c, e
-    ldh a, [$27]
-    ld a, $57
-    ld b, d
-    ldh a, [$2b]
-    ld b, [hl]
-    ld d, c
-    inc h
-    ld c, c
-    ld c, c
-    ld d, [hl]
-    ldh a, [$2b]
-    ld b, [hl]
-    ld d, c
-    jr z, jr_041_6800
-
-    ld b, d
-    ld c, d
-    ld d, [hl]
-    ldh a, [$2b]
-    ld b, [hl]
-    ld d, c
-    dec [hl]
-    ld a, $4b
-    ld b, c
-    ld c, h
-    ld c, d
-    ldh a, [$36]
-    ld b, b
-    ld a, $4f
-    ld b, d
-    ld b, c
-    ldh a, [$27]
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ldh a, [$37]
-    ld c, a
-    ld b, [hl]
-    ld c, l
-    ldh a, [$33]
-    ld a, $4f
-    ld a, $49
-    ld d, [hl]
-    ld d, a
-    ld b, d
-    ldh a, [rNR52]
-    inc h
-    ld sp, $3037
-    ld [hl-], a
-    add hl, sp
-    jr z, @-$0e
-
-    dec [hl]
-    jr c, @+$33
-
-    ldh a, [rNR52]
-    inc h
-    cpl
-    cpl
-    dec hl
-    ld [hl-], a
-    dec [hl]
-    ld [hl-], a
-    dec [hl]
-    ldh a, [$2b]
-    ld b, d
-    ld a, $49
-    jr c, jr_041_684b
-
-    inc h
-    ld c, c
-    ld c, c
-    ldh a, [$36]
-
-jr_041_6800:
-    ld c, d
-    ld a, $50
-    ld b, l
-    ld b, d
-    ld b, c
-    ldh a, [$29]
-    inc l
-    cpl
-    scf
-    dec hl
-    dec a
-    ld [hl-], a
-    ld sp, $f028
-    inc h
-    cpl
-    cpl
-    ld h, $2b
-    inc h
-    ld sp, $282a
-    ldh a, [rNR51]
-    inc l
-    ld a, [hl+]
-    ld [hl], $2f
-    jr z, jr_041_684a
-
-    inc sp
-    ldh a, [$30]
-    inc sp
-    nop
-    ldh a, [$28]
-    ld h, $2b
-    ld [hl-], a
-    ldh a, [rNR52]
-    dec hl
-    ld a, [hl+]
-    daa
-    dec [hl]
-    inc h
-    ld a, [hl+]
-    ld [hl-], a
-    ld sp, $26f0
-    inc h
-    cpl
-    cpl
-    jr z, jr_041_6876
-
-    inc l
-    cpl
-    ldh a, [$29]
-
-jr_041_6841:
-    dec [hl]
-    jr z, jr_041_686c
-
-    dec a
-    inc a
-    ldh a, [rNR50]
-    cpl
-    cpl
-
-jr_041_684a:
-    dec [hl]
-
-jr_041_684b:
-    jr z, jr_041_6886
-
-    inc l
-    add hl, sp
-    jr z, jr_041_6841
-
-    dec [hl]
-    jr z, @+$38
-
-    scf
-    ld [hl-], a
-    dec [hl]
-    jr z, jr_041_6889
-
-    inc sp
-    ldh a, [$30]
-    jr z, jr_041_6895
-
-    jr z, @+$34
-
-    dec [hl]
-    ldh a, [$2b]
-    jr z, jr_041_689a
-
-    dec h
-    ldh a, [$2b]
-    jr z, jr_041_688e
-
-    cpl
-    ld a, [hl-]
-
-jr_041_686c:
-    inc h
-    scf
-    jr z, jr_041_68a5
-
-    ldh a, [$36]
-    inc h
-    ld a, [hl+]
-    jr z, jr_041_68ac
-
-jr_041_6876:
-    scf
-    ld [hl-], a
-    ld sp, $f028
-    ld a, [hl-]
-    inc h
-    dec [hl]
-    cpl
-    daa
-    daa
-    jr z, @+$3c
-
-    ldh a, [$33]
-    ld [hl-], a
-
-jr_041_6886:
-    scf
-    inc l
-    ld [hl-], a
-
-jr_041_6889:
-    ld sp, $28f0
-    cpl
-
-jr_041_688d:
-    add hl, hl
-
-jr_041_688e:
-    ld a, [hl-]
-    inc h
-    scf
-    jr z, jr_041_68c8
-
-    ldh a, [rNR50]
-
-jr_041_6895:
-    ld sp, $2c37
-    daa
-    ld [hl-], a
-
-jr_041_689a:
-    scf
-    jr z, jr_041_688d
-
-    jr nc, jr_041_68d1
-
-    ld [hl-], a
-    ld sp, $282b
-    dec [hl]
-    dec h
-
-jr_041_68a5:
-    ldh a, [$36]
-    ld l, $3c
-    dec h
-    jr z, @+$31
-
-jr_041_68ac:
-    cpl
-    ldh a, [$2f]
-    inc h
-    jr c, @+$37
-
-    jr z, @+$31
-
-    ldh a, [rNR50]
-    ld a, [hl-]
-    inc h
-    ld l, $28
-    ld [hl], $24
-    ld sp, $f027
-    ld a, [hl-]
-    inc h
-    dec [hl]
-    cpl
-    daa
-    cpl
-    jr z, @+$26
-
-    add hl, hl
-
-jr_041_68c8:
-    ldh a, [$2f]
-    inc l
-    add hl, hl
-    jr z, @+$26
-
-    ld h, $32
-    dec [hl]
-
-jr_041_68d1:
-    ld sp, $30f0
-    inc a
-    ld [hl], $37
-    inc l
-    ld h, $31
-    jr c, jr_041_6913
-
-    ldh a, [$33]
-    ld a, [hl-]
-    dec [hl]
-    ld [hl], $28
-    jr z, jr_041_690b
-
-    ldh a, [$27]
-    jr z, @+$2b
-
-    ld [hl], $28
-    jr z, jr_041_6913
-
-    ldh a, [rNR50]
-    ld a, [hl+]
-    inc l
-    cpl
-    ld [hl], $28
-    jr z, jr_041_691c
-
-    ldh a, [$2c]
-    ld sp, $3637
-    jr z, jr_041_6924
-
-    daa
-    ldh a, [$29]
-    jr z, @+$2a
-
-    daa
-    jr nc, jr_041_692c
-
-    inc h
-    scf
-    ldh a, [rNR51]
-    jr z, jr_041_6933
-
-    add hl, hl
-
-jr_041_690b:
-    dec l
-    jr z, jr_041_6943
-
-    ld l, $3c
-    ldh a, [$33]
-    ld [hl-], a
-
-jr_041_6913:
-    dec [hl]
-    ld l, $26
-    dec hl
-    ld [hl-], a
-    inc sp
-    ldh a, [rNR51]
-    inc h
-
-jr_041_691c:
-    daa
-    jr nc, jr_041_6947
-
-    inc h
-    scf
-    ldh a, [$36]
-    inc l
-
-jr_041_6924:
-    dec [hl]
-    cpl
-    ld [hl-], a
-    inc l
-    ld sp, $25f0
-    ld [hl-], a
-
-jr_041_692c:
-    cpl
-    scf
-    ld [hl], $37
-    inc h
-    add hl, hl
-    add hl, hl
-
-jr_041_6933:
-    ldh a, [$36]
-    scf
-    inc h
-    add hl, hl
-    add hl, hl
-    ldh a, [rNR51]
-    cpl
-    ld [hl-], a
-    ld l, $36
-    scf
-    inc h
-    add hl, hl
-    add hl, hl
-
-jr_041_6943:
-    ldh a, [$2f]
-    inc h
-    add hl, sp
-
-jr_041_6947:
-    inc h
-    ld [hl], $37
-    inc h
-    add hl, hl
-    add hl, hl
-    ldh a, [$36]
-    ld sp, $3a32
-    ld [hl], $37
-    inc h
-    add hl, hl
-    add hl, hl
-    ldh a, [$29]
-    inc l
-    dec [hl]
-    jr z, jr_041_6993
-
-    scf
-    inc h
-    add hl, hl
-    add hl, hl
-    ldh a, [$3a]
-    inc h
-    dec [hl]
-    inc sp
-    ld a, [hl-]
-    inc l
-    ld sp, $f02a
-    scf
-    inc l
-    ld sp, $303c
-    jr z, jr_041_6999
-
-    inc h
-    cpl
-    ldh a, [$34]
-    ld d, d
-    ld b, d
-    ld d, b
-    ld d, c
-    dec h
-    ld c, b
-    ldh a, [$2b]
-    ld [hl-], a
-    dec [hl]
-    dec [hl]
-    ld [hl-], a
-    dec [hl]
-    dec h
-    ld l, $f0
-    dec h
-    jr z, jr_041_69ba
-
-    inc l
-    ld h, $28
-    dec h
-    ld l, $f0
-    ld h, $2b
-    jr z, jr_041_69b7
-
-jr_041_6993:
-    scf
-    jr z, jr_041_69cb
-
-    dec h
-    ld l, $f0
-
-jr_041_6999:
-    ld [hl], $30
-    inc h
-    dec [hl]
-    scf
-    dec h
-    ld l, $f0
-    ld h, $32
-    jr nc, jr_041_69cd
-
-    daa
-    inc a
-    dec h
-    ld l, $f0
-    dec h
-    ld b, d
-    daa
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ldh a, [$36]
-    ld c, d
-    ld a, $50
-
-jr_041_69b7:
-    ld b, l
-    ld c, c
-    ld b, [hl]
-
-jr_041_69ba:
-    ld c, d
-    ld b, d
-    ldh a, [$36]
-    ld b, l
-    ld b, d
-    ld c, c
-    ld b, c
-    ld c, h
-    ld b, c
-    ld b, h
-    ld b, d
-    ldh a, [rNR51]
-    ld c, a
-    ld a, $4b
-
-jr_041_69cb:
-    ld b, b
-    ld b, l
-
-jr_041_69cd:
-    ld b, [hl]
-    ld c, e
-    ld b, h
-
-jr_041_69d0:
-    ldh a, [$2a]
-    ld b, [hl]
-    ld b, h
-    ld a, $36
-    ld c, c
-    ld a, $50
-    ld b, l
-    ldh a, [$2f]
-
-jr_041_69dc:
-    inc l
-    add hl, hl
-    jr z, jr_041_69d0
-
-    dec [hl]
-    jr c, jr_041_6a14
-
-    ldh a, [$2c]
-    dec [hl]
-    ld [hl-], a
-    ld sp, $3d2c
-    jr z, jr_041_69dc
-
-    inc h
-    ld b, l
-    ld b, l
-    ld b, l
-    ldh a, [$f0]
-    daa
-    ld [hl], $f0
-    ld [hl], $33
-    ldh a, [$3a]
-    ld [hl], $f0
-    scf
-    ld [hl], $f0
-    ld [hl], $31
-    ldh a, [$2e]
-    ld sp, $25f0
-    dec h
-    ldh a, [rNR51]
-    dec sp
-    ldh a, [$36]
-    cpl
-    ldh a, [$2b]
-    cpl
-    ldh a, [$29]
-    ld [hl], $f0
-    dec [hl]
-
-jr_041_6a14:
-    ld [hl], $f0
-    ld [hl], $25
-    ldh a, [$36]
-    scf
-    ldh a, [$36]
-    ld l, $f0
-    ld l, $36
-    ldh a, [$30]
-    ld l, $f0
-    jr nc, @+$27
-
-    ldh a, [$30]
-    scf
-    ldh a, [$2a]
-    ld [hl], $f0
-    daa
-    ld l, $f0
-    scf
-    ld a, [hl+]
-    ldh a, [$33]
-    scf
-    ldh a, [rNR51]
-    ld a, [hl+]
-    ldh a, [rNR51]
-    daa
-    ldh a, [$2f]
-    jr nc, @-$0e
-
-    inc sp
-    ld a, [hl+]
-    ldh a, [$36]
-    daa
-    ldh a, [$27]
-    dec [hl]
-    ldh a, [$30]
-    daa
-    ldh a, [$27]
-    ld l, $f0
-    dec [hl]
-    dec h
-    ldh a, [rNR52]
-    dec hl
-    ldh a, [$2f]
-    add hl, hl
-    ldh a, [rNR50]
-    daa
-    ldh a, [$2f]
-    ld h, $f0
-    ld [hl], $36
-    ldh a, [$2a]
-    daa
-    ldh a, [rNR52]
-    inc sp
-    ldh a, [$3a]
-    ld [hl], $f0
-    ld h, $37
-    ldh a, [$32]
-    dec [hl]
-    ldh a, [rNR51]
-    dec [hl]
-    ldh a, [$36]
-    daa
-    ldh a, [$27]
-    ld a, [hl+]
-    ldh a, [$37]
-    ld a, [hl+]
-    ldh a, [$2b]
-    dec h
-    ldh a, [rNR52]
-    add hl, hl
-    ldh a, [$33]
-    dec [hl]
+MonsterNameStrings:
+MonsterName_000_DrakSlime: db "DrakSlime", $F0
+MonsterName_001_SpotSlime: db "SpotSlime", $F0
+MonsterName_002_WingSlime: db "WingSlime", $F0
+MonsterName_003_TreeSlime: db "TreeSlime", $F0
+MonsterName_004_Snaily: db "Snaily", $F0
+MonsterName_005_SlimeNite: db "SlimeNite", $F0
+MonsterName_006_Babble: db "Babble", $F0
+MonsterName_007_BoxSlime: db "BoxSlime", $F0
+MonsterName_008_Slime: db "Slime", $F0
+MonsterName_009_Healer: db "Healer", $F0
+MonsterName_010_FangSlime: db "FangSlime", $F0
+MonsterName_011_RockSlime: db "RockSlime", $F0
+MonsterName_012_SlimeBorg: db "SlimeBorg", $F0
+MonsterName_013_Slabbit: db "Slabbit", $F0
+MonsterName_014_SpotKing: db "SpotKing", $F0
+MonsterName_015_KingSlime: db "KingSlime", $F0
+MonsterName_016_Metaly: db "Metaly", $F0
+MonsterName_017_Metabble: db "Metabble", $F0
+MonsterName_018_MetalKing: db "MetalKing", $F0
+MonsterName_019_GoldSlime: db "GoldSlime", $F0
+MonsterName_020_DragonKid: db "DragonKid", $F0
+MonsterName_021_Tortragon: db "Tortragon", $F0
+MonsterName_022_Pteranod: db "Pteranod", $F0
+MonsterName_023_Gasgon: db "Gasgon", $F0
+MonsterName_024_FairyDrak: db "FairyDrak", $F0
+MonsterName_025_LizardMan: db "LizardMan", $F0
+MonsterName_026_Poisongon: db "Poisongon", $F0
+MonsterName_027_Swordgon: db "Swordgon", $F0
+MonsterName_028_Dragon: db "Dragon", $F0
+MonsterName_029_MiniDrak: db "MiniDrak", $F0
+MonsterName_030_MadDragon: db "MadDragon", $F0
+MonsterName_031_Rayburn: db "Rayburn", $F0
+MonsterName_032_Chamelgon: db "Chamelgon", $F0
+MonsterName_033_LizardFly: db "LizardFly", $F0
+MonsterName_034_Andreal: db "Andreal", $F0
+MonsterName_035_KingCobra: db "KingCobra", $F0
+MonsterName_036_Spikerous: db "Spikerous", $F0
+MonsterName_037_GreatDrak: db "GreatDrak", $F0
+MonsterName_038_Crestpent: db "Crestpent", $F0
+MonsterName_039_WingSnake: db "WingSnake", $F0
+MonsterName_040_Coatol: db "Coatol", $F0
+MonsterName_041_Orochi: db "Orochi", $F0
+MonsterName_042_BattleRex: db "BattleRex", $F0
+MonsterName_043_SkyDragon: db "SkyDragon", $F0
+MonsterName_044_Divinegon: db "Divinegon", $F0
+MonsterName_045_Tonguella: db "Tonguella", $F0
+MonsterName_046_Almiraj: db "Almiraj", $F0
+MonsterName_047_CatFly: db "CatFly", $F0
+MonsterName_048_PillowRat: db "PillowRat", $F0
+MonsterName_049_Saccer: db "Saccer", $F0
+MonsterName_050_GulpBeast: db "GulpBeast", $F0
+MonsterName_051_Skullroo: db "Skullroo", $F0
+MonsterName_052_WindBeast: db "WindBeast", $F0
+MonsterName_053_Anteater: db "Anteater", $F0
+MonsterName_054_SuperTen: db "SuperTen", $F0
+MonsterName_055_IronTurt: db "IronTurt", $F0
+MonsterName_056_Mommonja: db "Mommonja", $F0
+MonsterName_057_HammerMan: db "HammerMan", $F0
+MonsterName_058_Grizzly: db "Grizzly", $F0
+MonsterName_059_Yeti: db "Yeti", $F0
+MonsterName_060_MadGopher: db "MadGopher", $F0
+MonsterName_061_FairyRat: db "FairyRat", $F0
+MonsterName_062_Unicorn: db "Unicorn", $F0
+MonsterName_063_Goategon: db "Goategon", $F0
+MonsterName_064_WildApe: db "WildApe", $F0
+MonsterName_065_Trumpeter: db "Trumpeter", $F0
+MonsterName_066_KingLeo: db "KingLeo", $F0
+MonsterName_067_DarkHorn: db "DarkHorn", $F0
+MonsterName_068_MadCat: db "MadCat", $F0
+MonsterName_069_BigEye: db "BigEye", $F0
+MonsterName_070_Picky: db "Picky", $F0
+MonsterName_071_Wyvern: db "Wyvern", $F0
+MonsterName_072_BullBird: db "BullBird", $F0
+MonsterName_073_Florajay: db "Florajay", $F0
+MonsterName_074_DuckKite: db "DuckKite", $F0
+MonsterName_075_MadPecker: db "MadPecker", $F0
+MonsterName_076_MadRaven: db "MadRaven", $F0
+MonsterName_077_MistyWing: db "MistyWing", $F0
+MonsterName_078_Dracky: db "Dracky", $F0
+MonsterName_079_BigRoost: db "BigRoost", $F0
+MonsterName_080_StubBird: db "StubBird", $F0
+MonsterName_081_LandOwl: db "LandOwl", $F0
+MonsterName_082_MadGoose: db "MadGoose", $F0
+MonsterName_083_MadCondor: db "MadCondor", $F0
+MonsterName_084_Blizzardy: db "Blizzardy", $F0
+MonsterName_085_Phoenix: db "Phoenix", $F0
+MonsterName_086_ZapBird: db "ZapBird", $F0
+MonsterName_087_WhipBird: db "WhipBird", $F0
+MonsterName_088_FunkyBird: db "FunkyBird", $F0
+MonsterName_089_RainHawk: db "RainHawk", $F0
+MonsterName_090_MadPlant: db "MadPlant", $F0
+MonsterName_091_FireWeed: db "FireWeed", $F0
+MonsterName_092_FloraMan: db "FloraMan", $F0
+MonsterName_093_WingTree: db "WingTree", $F0
+MonsterName_094_CactiBall: db "CactiBall", $F0
+MonsterName_095_Gulpple: db "Gulpple", $F0
+MonsterName_096_Toadstool: db "Toadstool", $F0
+MonsterName_097_AmberWeed: db "AmberWeed", $F0
+MonsterName_098_Stubsuck: db "Stubsuck", $F0
+MonsterName_099_Oniono: db "Oniono", $F0
+MonsterName_100_DanceVegi: db "DanceVegi", $F0
+MonsterName_101_TreeBoy: db "TreeBoy", $F0
+MonsterName_102_FaceTree: db "FaceTree", $F0
+MonsterName_103_HerbMan: db "HerbMan", $F0
+MonsterName_104_BeanMan: db "BeanMan", $F0
+MonsterName_105_EvilSeed: db "EvilSeed", $F0
+MonsterName_106_ManEater: db "ManEater", $F0
+MonsterName_107_Snapper: db "Snapper", $F0
+MonsterName_108_Rosevine: db "Rosevine", $F0
+MonsterName_109_Watabou: db "Watabou", $F0
+MonsterName_110_GiantSlug: db "GiantSlug", $F0
+MonsterName_111_Catapila: db "Catapila", $F0
+MonsterName_112_Gophecada: db "Gophecada", $F0
+MonsterName_113_Butterfly: db "Butterfly", $F0
+MonsterName_114_WeedBug: db "WeedBug", $F0
+MonsterName_115_GiantWorm: db "GiantWorm", $F0
+MonsterName_116_Lipsy: db "Lipsy", $F0
+MonsterName_117_StagBug: db "StagBug", $F0
+MonsterName_118_ArmyAnt: db "ArmyAnt", $F0
+MonsterName_119_GoHopper: db "GoHopper", $F0
+MonsterName_120_TailEater: db "TailEater", $F0
+MonsterName_121_ArmorPede: db "ArmorPede", $F0
+MonsterName_122_Eyeder: db "Eyeder", $F0
+MonsterName_123_GiantMoth: db "GiantMoth", $F0
+MonsterName_124_Droll: db "Droll", $F0
+MonsterName_125_ArmyCrab: db "ArmyCrab", $F0
+MonsterName_126_MadHornet: db "MadHornet", $F0
+MonsterName_127_HornBeet: db "HornBeet", $F0
+MonsterName_128_Armorpion: db "Armorpion", $F0
+MonsterName_129_Digster: db "Digster", $F0
+MonsterName_130_Pixy: db "Pixy", $F0
+MonsterName_131_ArcDemon: db "ArcDemon", $F0
+MonsterName_132_AgDevil: db "AgDevil", $F0
+MonsterName_133_Demonite: db "Demonite", $F0
+MonsterName_134_DarkEye: db "DarkEye", $F0
+MonsterName_135_EyeBall: db "EyeBall", $F0
+MonsterName_136_SkulRider: db "SkulRider", $F0
+MonsterName_137_EvilBeast: db "EvilBeast", $F0
+MonsterName_138_1EyeClown: db "1EyeClown", $F0
+MonsterName_139_Gremlin: db "Gremlin", $F0
+MonsterName_140_MedusaEye: db "MedusaEye", $F0
+MonsterName_141_Lionex: db "Lionex", $F0
+MonsterName_142_GoatHorn: db "GoatHorn", $F0
+MonsterName_143_Orc: db "Orc", $F0
+MonsterName_144_Ogre: db "Ogre", $F0
+MonsterName_145_GateGuard: db "GateGuard", $F0
+MonsterName_146_ChopClown: db "ChopClown", $F0
+MonsterName_147_Grendal: db "Grendal", $F0
+MonsterName_148_Akubar: db "Akubar", $F0
+MonsterName_149_MadKnight: db "MadKnight", $F0
+MonsterName_150_Gigantes: db "Gigantes", $F0
+MonsterName_151_Centasaur: db "Centasaur", $F0
+MonsterName_152_EvilArmor: db "EvilArmor", $F0
+MonsterName_153_Jamirus: db "Jamirus", $F0
+MonsterName_154_Durran: db "Durran", $F0
+MonsterName_155_Spooky: db "Spooky", $F0
+MonsterName_156_Skullgon: db "Skullgon", $F0
+MonsterName_157_Putrepup: db "Putrepup", $F0
+MonsterName_158_RotRaven: db "RotRaven", $F0
+MonsterName_159_Mummy: db "Mummy", $F0
+MonsterName_160_DarkCrab: db "DarkCrab", $F0
+MonsterName_161_DeadNite: db "DeadNite", $F0
+MonsterName_162_Shadow: db "Shadow", $F0
+MonsterName_163_Hork: db "Hork", $F0
+MonsterName_164_Mudron: db "Mudron", $F0
+MonsterName_165_NiteWhip: db "NiteWhip", $F0
+MonsterName_166_MadSpirit: db "MadSpirit", $F0
+MonsterName_167_WindMerge: db "WindMerge", $F0
+MonsterName_168_Reaper: db "Reaper", $F0
+MonsterName_169_DeadNoble: db "DeadNoble", $F0
+MonsterName_170_WhiteKing: db "WhiteKing", $F0
+MonsterName_171_BoneSlave: db "BoneSlave", $F0
+MonsterName_172_Skeletor: db "Skeletor", $F0
+MonsterName_173_Servant: db "Servant", $F0
+MonsterName_174_Copycat: db "Copycat", $F0
+MonsterName_175_JewelBag: db "JewelBag", $F0
+MonsterName_176_EvilWand: db "EvilWand", $F0
+MonsterName_177_MadCandle: db "MadCandle", $F0
+MonsterName_178_CoilBird: db "CoilBird", $F0
+MonsterName_179_Facer: db "Facer", $F0
+MonsterName_180_SpikyBoy: db "SpikyBoy", $F0
+MonsterName_181_MadMirror: db "MadMirror", $F0
+MonsterName_182_RogueNite: db "RogueNite", $F0
+MonsterName_183_Goopi: db "Goopi", $F0
+MonsterName_184_Voodoll: db "Voodoll", $F0
+MonsterName_185_MetalDrak: db "MetalDrak", $F0
+MonsterName_186_Balzak: db "Balzak", $F0
+MonsterName_187_SabreMan: db "SabreMan", $F0
+MonsterName_188_CurseLamp: db "CurseLamp", $F0
+MonsterName_189_Roboster: db "Roboster", $F0
+MonsterName_190_EvilPot: db "EvilPot", $F0
+MonsterName_191_Gismo: db "Gismo", $F0
+MonsterName_192_LavaMan: db "LavaMan", $F0
+MonsterName_193_IceMan: db "IceMan", $F0
+MonsterName_194_Mimic: db "Mimic", $F0
+MonsterName_195_MudDoll: db "MudDoll", $F0
+MonsterName_196_Golem: db "Golem", $F0
+MonsterName_197_StoneMan: db "StoneMan", $F0
+MonsterName_198_BombCrag: db "BombCrag", $F0
+MonsterName_199_GoldGolem: db "GoldGolem", $F0
+MonsterName_200_DracoLord: db "DracoLord", $F0
+MonsterName_201_DracoLord: db "DracoLord", $F0
+MonsterName_202_Hargon: db "Hargon", $F0
+MonsterName_203_Sidoh: db "Sidoh", $F0
+MonsterName_204_Baramos: db "Baramos", $F0
+MonsterName_205_Zoma: db "Zoma", $F0
+MonsterName_206_Pizzaro: db "Pizzaro", $F0
+MonsterName_207_Esterk: db "Esterk", $F0
+MonsterName_208_Mirudraas: db "Mirudraas", $F0
+MonsterName_209_Mirudraas: db "Mirudraas", $F0
+MonsterName_210_Mudou: db "Mudou", $F0
+MonsterName_211_DeathMore: db "DeathMore", $F0
+MonsterName_212_DeathMore: db "DeathMore", $F0
+MonsterName_213_DeathMore: db "DeathMore", $F0
+MonsterName_214_Darkdrium: db "Darkdrium", $F0
+MonsterName_215_TERRY: db "TERRY?", $F0
+MonsterName_216_Tatsu: db "Tatsu", $F0
+MonsterName_217_Diago: db "Diago", $F0
+MonsterName_218_Samsi: db "Samsi", $F0
+MonsterName_219_Bazoo: db "Bazoo", $F0
+MonsterName_220_Unused_220: db $F0
+MonsterName_225_Unused_225: db "?????", $F0
+
+; ---------------------------------------------------------------
+; Skill Name Strings ($628E)
+; 256 entries, $F0 terminated, charmap encoded
+; ---------------------------------------------------------------
+
+SkillNameStrings:
+SkillName_000_Blaze: db "Blaze", $F0
+SkillName_001_Blazemore: db "Blazemore", $F0
+SkillName_002_Blazemost: db "Blazemost", $F0
+SkillName_003_Firebal: db "Firebal", $F0
+SkillName_004_Firebane: db "Firebane", $F0
+SkillName_005_Firebolt: db "Firebolt", $F0
+SkillName_006_Bang: db "Bang", $F0
+SkillName_007_Boom: db "Boom", $F0
+SkillName_008_Explodet: db "Explodet", $F0
+SkillName_009_Infernos: db "Infernos", $F0
+SkillName_010_Infermore: db "Infermore", $F0
+SkillName_011_Infermost: db "Infermost", $F0
+SkillName_012_IceBolt: db "IceBolt", $F0
+SkillName_013_SnowStorm: db "SnowStorm", $F0
+SkillName_014_Blizzard: db "Blizzard", $F0
+SkillName_015_Bolt: db "Bolt", $F0
+SkillName_016_Zap: db "Zap", $F0
+SkillName_017_Thordain: db "Thordain", $F0
+SkillName_018_Beat: db "Beat", $F0
+SkillName_019_Defeat: db "Defeat", $F0
+SkillName_020_Sacrifice: db "Sacrifice", $F0
+SkillName_021_Sleep: db "Sleep", $F0
+SkillName_022_SleepAll: db "SleepAll", $F0
+SkillName_023_StopSpell: db "StopSpell", $F0
+SkillName_024_Surround: db "Surround", $F0
+SkillName_025_PanicAll: db "PanicAll", $F0
+SkillName_026_RobMagic: db "RobMagic", $F0
+SkillName_027_TakeMagic: db "TakeMagic", $F0
+SkillName_028_Sap: db "Sap", $F0
+SkillName_029_Defence: db "Defence", $F0
+SkillName_030_Upper: db "Upper", $F0
+SkillName_031_Increase: db "Increase", $F0
+SkillName_032_Slow: db "Slow", $F0
+SkillName_033_SlowAll: db "SlowAll", $F0
+SkillName_034_Speed: db "Speed", $F0
+SkillName_035_SpeedUp: db "SpeedUp", $F0
+SkillName_036_Barrier: db "Barrier", $F0
+SkillName_037_TwinHits: db "TwinHits", $F0
+SkillName_038_MagicWall: db "MagicWall", $F0
+SkillName_039_MagicBack: db "MagicBack", $F0
+SkillName_040_Bounce: db "Bounce", $F0
+SkillName_041_Transform: db "Transform", $F0
+SkillName_042_Ironize: db "Ironize", $F0
+SkillName_043_Heal: db "Heal", $F0
+SkillName_044_HealMore: db "HealMore", $F0
+SkillName_045_HealAll: db "HealAll", $F0
+SkillName_046_HealUs: db "HealUs", $F0
+SkillName_047_HealUsAll: db "HealUsAll", $F0
+SkillName_048_Vivify: db "Vivify", $F0
+SkillName_049_Revive: db "Revive", $F0
+SkillName_050_Farewell: db "Farewell", $F0
+SkillName_051_Antidote: db "Antidote", $F0
+SkillName_052_NumbOff: db "NumbOff", $F0
+SkillName_053_DeChaos: db "DeChaos", $F0
+SkillName_054_CurseOff: db "CurseOff", $F0
+SkillName_055_StepGuard: db "StepGuard", $F0
+SkillName_056_MapMagic: db "MapMagic", $F0
+SkillName_057_Chance: db "Chance", $F0
+SkillName_058_Attack: db "Attack", $F0
+SkillName_059_TwinSlash: db "TwinSlash", $F0
+SkillName_060_Ramming: db "Ramming", $F0
+SkillName_061_Beserker: db "Beserker", $F0
+SkillName_062_Kamikaze: db "Kamikaze", $F0
+SkillName_063_Massacre: db "Massacre", $F0
+SkillName_064_EvilSlash: db "EvilSlash", $F0
+SkillName_065_ChargeUP: db "ChargeUP", $F0
+SkillName_066_HighJump: db "HighJump", $F0
+SkillName_067_SuckAir: db "SuckAir", $F0
+SkillName_068_FireSlash: db "FireSlash", $F0
+SkillName_069_BoltSlash: db "BoltSlash", $F0
+SkillName_070_VacuSlash: db "VacuSlash", $F0
+SkillName_071_IceSlash: db "IceSlash", $F0
+SkillName_072_MetalCut: db "MetalCut", $F0
+SkillName_073_DrakSlash: db "DrakSlash", $F0
+SkillName_074_BeastCut: db "BeastCut", $F0
+SkillName_075_BirdBlow: db "BirdBlow", $F0
+SkillName_076_DevilCut: db "DevilCut", $F0
+SkillName_077_ZombieCut: db "ZombieCut", $F0
+SkillName_078_CleanCut: db "CleanCut", $F0
+SkillName_079_MultiCut: db "MultiCut", $F0
+SkillName_080_BiAttack: db "BiAttack", $F0
+SkillName_081_QuadHits: db "QuadHits", $F0
+SkillName_082_CallHelp: db "CallHelp", $F0
+SkillName_083_YellHelp: db "YellHelp", $F0
+SkillName_084_Focus: db "Focus", $F0
+SkillName_085_SquallHit: db "SquallHit", $F0
+SkillName_086_PsycheUp: db "PsycheUp", $F0
+SkillName_087_RainSlash: db "RainSlash", $F0
+SkillName_088_WindBeast: db "WindBeast", $F0
+SkillName_089_Vacuum: db "Vacuum", $F0
+SkillName_090_Lightning: db "Lightning", $F0
+SkillName_091_RockThrow: db "RockThrow", $F0
+SkillName_092_FireAir: db "FireAir", $F0
+SkillName_093_BlazeAir: db "BlazeAir", $F0
+SkillName_094_Scorching: db "Scorching", $F0
+SkillName_095_WhiteFire: db "WhiteFire", $F0
+SkillName_096_FrigidAir: db "FrigidAir", $F0
+SkillName_097_IceAir: db "IceAir", $F0
+SkillName_098_IceStorm: db "IceStorm", $F0
+SkillName_099_WhiteAir: db "WhiteAir", $F0
+SkillName_100_Hellblast: db "Hellblast", $F0
+SkillName_101_BigBang: db "BigBang", $F0
+SkillName_102_MegaMagic: db "MegaMagic", $F0
+SkillName_103_PoisonHit: db "PoisonHit", $F0
+SkillName_104_NapAttack: db "NapAttack", $F0
+SkillName_105_Paralyze: db "Paralyze", $F0
+SkillName_106_SleepAir: db "SleepAir", $F0
+SkillName_107_PalsyAir: db "PalsyAir", $F0
+SkillName_108_PoisonGas: db "PoisonGas", $F0
+SkillName_109_PoisonAir: db "PoisonAir", $F0
+SkillName_110_PaniDance: db "PaniDance", $F0
+SkillName_111_Curse: db "Curse", $F0
+SkillName_112_Ahhh: db "Ahhh", $F0
+SkillName_113_KODance: db "K.O.Dance", $F0
+SkillName_114_SandStorm: db "SandStorm", $F0
+SkillName_115_Radiant: db "Radiant", $F0
+SkillName_116_EerieLite: db "EerieLite", $F0
+SkillName_117_OddDance: db "OddDance", $F0
+SkillName_118_RobDance: db "RobDance", $F0
+SkillName_119_SideStep: db "SideStep", $F0
+SkillName_120_LureDance: db "LureDance", $F0
+SkillName_121_LushLicks: db "LushLicks", $F0
+SkillName_122_SickLick: db "SickLick", $F0
+SkillName_123_LegSweep: db "LegSweep", $F0
+SkillName_124_BigTrip: db "BigTrip", $F0
+SkillName_125_WarCry: db "WarCry", $F0
+SkillName_126_Whistle: db "Whistle", $F0
+SkillName_127_Imitate: db "Imitate", $F0
+SkillName_128_DeMagic: db "DeMagic", $F0
+SkillName_129_Surge: db "Surge", $F0
+SkillName_130_UltraDown: db "UltraDown", $F0
+SkillName_131_ThickFog: db "ThickFog", $F0
+SkillName_132_TatsuCall: db "TatsuCall", $F0
+SkillName_133_DiagoCall: db "DiagoCall", $F0
+SkillName_134_SamsiCall: db "SamsiCall", $F0
+SkillName_135_BazooCall: db "BazooCall", $F0
+SkillName_136_Cover: db "Cover", $F0
+SkillName_137_Guardian: db "Guardian", $F0
+SkillName_138_TailWind: db "TailWind", $F0
+SkillName_139_StormWind: db "StormWind", $F0
+SkillName_140_Dodge: db "Dodge", $F0
+SkillName_141_Defence: db "Defence", $F0
+SkillName_142_StrongD: db "StrongD", $F0
+SkillName_143_SuckAll: db "SuckAll", $F0
+SkillName_144_BladeD: db "BladeD", $F0
+SkillName_145_DanceShut: db "DanceShut", $F0
+SkillName_146_MouthShut: db "MouthShut", $F0
+SkillName_147_Meditate: db "Meditate", $F0
+SkillName_148_Hustle: db "Hustle", $F0
+SkillName_149_LifeSong: db "LifeSong", $F0
+SkillName_150_LifeDance: db "LifeDance", $F0
+SkillName_151_Run: db "Run", $F0
+SkillName_152_Daze: db "Daze", $F0
+SkillName_153_HitAlly: db "HitAlly", $F0
+SkillName_154_HitEnemy: db "HitEnemy", $F0
+SkillName_155_HitRandom: db "HitRandom", $F0
+SkillName_156_Scared: db "Scared", $F0
+SkillName_157_Dance: db "Dance", $F0
+SkillName_158_Trip: db "Trip", $F0
+SkillName_159_Paralyze: db "Paralyze", $F0
+SkillName_160_CANTMOVE: db "CANTMOVE", $F0
+SkillName_161_RUN: db "RUN", $F0
+SkillName_162_CALLHOROR: db "CALLHOROR", $F0
+SkillName_163_HealUsAll: db "HealUsAll", $F0
+SkillName_164_Smashed: db "Smashed", $F0
+SkillName_165_FILTHZONE: db "FILTHZONE", $F0
+SkillName_166_ALLCHANGE: db "ALLCHANGE", $F0
+SkillName_167_BIGSLEEP: db "BIGSLEEP", $F0
+SkillName_168_MP0: db "MP0", $F0
+SkillName_169_ECHO: db "ECHO", $F0
+SkillName_170_CHGDRAGON: db "CHGDRAGON", $F0
+SkillName_171_CALLEVIL: db "CALLEVIL", $F0
+SkillName_172_FREEZY: db "FREEZY", $F0
+SkillName_173_ALLREVIVE: db "ALLREVIVE", $F0
+SkillName_174_RESTOREMP: db "RESTOREMP", $F0
+SkillName_175_METEOR: db "METEOR", $F0
+SkillName_176_HERB: db "HERB", $F0
+SkillName_177_HEALWATER: db "HEALWATER", $F0
+SkillName_178_SAGESTONE: db "SAGESTONE", $F0
+SkillName_179_WARLDDEW: db "WARLDDEW", $F0
+SkillName_180_POTION: db "POTION", $F0
+SkillName_181_ELFWATER: db "ELFWATER", $F0
+SkillName_182_ANTIDOTE: db "ANTIDOTE", $F0
+SkillName_183_MOONHERB: db "MOONHERB", $F0
+SkillName_184_SKYBELL: db "SKYBELL", $F0
+SkillName_185_LAUREL: db "LAUREL", $F0
+SkillName_186_AWAKESAND: db "AWAKESAND", $F0
+SkillName_187_WARLDLEAF: db "WARLDLEAF", $F0
+SkillName_188_LIFEACORN: db "LIFEACORN", $F0
+SkillName_189_MYSTICNUT: db "MYSTICNUT", $F0
+SkillName_190_PWRSEED: db "PWRSEED", $F0
+SkillName_191_DEFSEED: db "DEFSEED", $F0
+SkillName_192_AGILSEED: db "AGILSEED", $F0
+SkillName_193_INTSEED: db "INTSEED", $F0
+SkillName_194_FEEDMEAT: db "FEEDMEAT", $F0
+SkillName_195_BEFFJERKY: db "BEFFJERKY", $F0
+SkillName_196_PORKCHOP: db "PORKCHOP", $F0
+SkillName_197_BADMEAT: db "BADMEAT", $F0
+SkillName_198_SIRLOIN: db "SIRLOIN", $F0
+SkillName_199_BOLTSTAFF: db "BOLTSTAFF", $F0
+SkillName_200_STAFF: db "STAFF", $F0
+SkillName_201_BLOKSTAFF: db "BLOKSTAFF", $F0
+SkillName_202_LAVASTAFF: db "LAVASTAFF", $F0
+SkillName_203_SNOWSTAFF: db "SNOWSTAFF", $F0
+SkillName_204_FIRESTAFF: db "FIRESTAFF", $F0
+SkillName_205_WARPWING: db "WARPWING", $F0
+SkillName_206_TINYMEDAL: db "TINYMEDAL", $F0
+SkillName_207_QuestBk: db "QuestBk", $F0
+SkillName_208_HORRORBK: db "HORRORBK", $F0
+SkillName_209_BENICEBK: db "BENICEBK", $F0
+SkillName_210_CHEATERBK: db "CHEATERBK", $F0
+SkillName_211_SMARTBK: db "SMARTBK", $F0
+SkillName_212_COMEDYBK: db "COMEDYBK", $F0
+SkillName_213_BeDragon: db "BeDragon", $F0
+SkillName_214_Smashlime: db "Smashlime", $F0
+SkillName_215_Sheldodge: db "Sheldodge", $F0
+SkillName_216_Branching: db "Branching", $F0
+SkillName_217_GigaSlash: db "GigaSlash", $F0
+SkillName_218_LIFE: db "LIFE", $F0
+SkillName_219_RUN: db "RUN", $F0
+SkillName_220_IRONIZE: db "IRONIZE", $F0
+SkillName_221_Ahhh: db "Ahhh", $F0
+SkillName_222_Unused_222: db $F0
+SkillName_223_DS: db "DS", $F0
+SkillName_224_SP: db "SP", $F0
+SkillName_225_WS: db "WS", $F0
+SkillName_226_TS: db "TS", $F0
+SkillName_227_SN: db "SN", $F0
+SkillName_228_KN: db "KN", $F0
+SkillName_229_BB: db "BB", $F0
+SkillName_230_BX: db "BX", $F0
+SkillName_231_SL: db "SL", $F0
+SkillName_232_HL: db "HL", $F0
+SkillName_233_FS: db "FS", $F0
+SkillName_234_RS: db "RS", $F0
+SkillName_235_SB: db "SB", $F0
+SkillName_236_ST: db "ST", $F0
+SkillName_237_SK: db "SK", $F0
+SkillName_238_KS: db "KS", $F0
+SkillName_239_MK: db "MK", $F0
+SkillName_240_MB: db "MB", $F0
+SkillName_241_MT: db "MT", $F0
+SkillName_242_GS: db "GS", $F0
+SkillName_243_DK: db "DK", $F0
+SkillName_244_TG: db "TG", $F0
+SkillName_245_PT: db "PT", $F0
+SkillName_246_BG: db "BG", $F0
+SkillName_247_BD: db "BD", $F0
+SkillName_248_LM: db "LM", $F0
+SkillName_249_PG: db "PG", $F0
+SkillName_250_SD: db "SD", $F0
+SkillName_251_DR: db "DR", $F0
+SkillName_252_MD: db "MD", $F0
+SkillName_253_DK: db "DK", $F0
+SkillName_254_RB: db "RB", $F0
+SkillName_255_CH: db "CH", $F0
+
+; Unknown string data ($6A55-$6A83)
+    db $2F, $29, $F0, $24, $27, $F0, $2F, $26, $F0, $36, $36, $F0, $2A, $27, $F0, $26  ; $6A55
+    db $33, $F0, $3A, $36, $F0, $26, $37, $F0, $32, $35, $F0, $25, $35, $F0, $36, $27  ; $6A65
+    db $F0, $27, $2A, $F0, $37, $2A, $F0, $2B, $25, $F0, $26, $29, $F0, $33, $35  ; $6A75
 
 jr_041_6a84:
     ldh a, [$36]

@@ -7863,3153 +7863,979 @@ jr_001_6a01:
     ret
 
 
-    nop
-    ld bc, $0503
-    rlca
-    add hl, bc
-    inc c
-    rrca
-    ld [de], a
-    ld d, $1a
-    ld e, $22
-    daa
-    inc l
-    ld sp, $3b36
-    ld b, b
-    ld b, l
-    ld c, d
-    ld c, a
-    ld d, l
-    ld e, c
-    ld e, l
-    ld h, c
-    ld h, l
-    ld l, c
-    ld l, l
-    ld [hl], c
-    ld [hl], l
-    ld a, c
-    add d
-    ld l, d
-    add e
-    ld l, d
-    add e
-    ld l, d
-    add e
-    ld l, d
-    add e
-    ld l, d
-    add e
-    ld l, d
-    add [hl]
-    ld l, d
-    add [hl]
-    ld l, d
-    add [hl]
-    ld l, d
-    adc d
-    ld l, d
-    adc d
-    ld l, d
-    adc d
-    ld l, d
-    adc [hl]
-    ld l, d
-    add e
-    ld l, d
-    adc [hl]
-    ld l, d
-    sub e
-    ld l, d
-    sub e
-    ld l, d
-    add [hl]
-    ld l, d
-    sbc b
-    ld l, d
-    sbc b
-    ld l, d
-    sbc b
-    ld l, d
-    sbc l
-    ld l, d
-    and e
-    ld l, d
-    and e
-    ld l, d
-    and e
-    ld l, d
-    and e
-    ld l, d
-    and e
-    ld l, d
-    and e
-    ld l, d
-    and e
-    ld l, d
-    and e
-    ld l, d
-    and e
-    ld l, d
-    and a
-    ld l, d
-    rst $38
-    inc bc
-    ld b, $ff
-    inc b
-    ld b, $09
-    rst $38
-    inc b
-    ld b, $09
-    rst $38
-    inc b
-    ld b, $09
-    dec c
-    rst $38
-    dec b
-    add hl, bc
-    dec c
-    ld de, $06ff
-    dec bc
-    db $10
-    dec d
-    rst $38
-    ld b, $0b
-    db $10
-    dec d
-    ld a, [de]
-    rst $38
-    ld b, $0b
-    dec d
-    rst $38
-    ld b, $0b
-    dec d
-    add hl, hl
-    dec a
-    ld d, c
-    rst $38
-    inc bc
-    ld bc, $0007
-    nop
-    inc bc
-    dec b
-    ld [bc], a
-    nop
-    nop
-    ld [bc], a
-    nop
-    inc b
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    ld [$0203], sp
-    dec b
-    dec b
-    nop
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    nop
-    ld b, $00
-    inc bc
-    nop
-    ld c, $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0800
-    inc bc
-    inc bc
-    inc bc
-    dec b
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0500
-    nop
-    ld b, $00
-    rlca
-    nop
-    rrca
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    ld [$0303], sp
-    inc bc
-    dec b
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld [$0a00], sp
-    nop
-    inc bc
-    nop
-    dec c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0800
-    inc bc
-    inc bc
-    inc bc
-    dec b
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0800
-    nop
-    add hl, bc
-    nop
-    ld a, [bc]
-    nop
-    ld c, $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    ld [$0303], sp
-    inc bc
-    ld b, $00
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    add hl, bc
-    nop
-    rrca
-    nop
-    ld de, $1300
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    ld [$0303], sp
-    ld [bc], a
-    inc bc
-    dec b
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $0e00
-    nop
-    inc d
-    nop
-    inc de
-    nop
-    add hl, de
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    ld [$0303], sp
-    inc bc
-    ld b, $00
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec c
-    nop
-    dec d
-    nop
-    ld de, $1900
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    ld [$0303], sp
-    ld [bc], a
-    inc bc
-    dec b
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $1200
-    nop
-    ld d, $00
-    add hl, de
-    nop
-    stop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    ld [$0304], sp
-    inc bc
-    dec b
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc d
-    nop
-    dec d
-    nop
-    add hl, de
-    nop
-    ld a, [de]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    inc bc
-    dec b
-    ld [bc], a
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $1500
-    nop
-    ld de, $1300
-    nop
-    dec de
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $1600
-    nop
-    inc de
-    nop
-    stop
-    inc e
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    dec b
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $1500
-    nop
-    add hl, de
-    nop
-    dec e
-    nop
-    ld a, [de]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld [bc], a
-    dec b
-    inc bc
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $1100
-    nop
-    ld a, [de]
-    nop
-    rla
-    nop
-    ld hl, $0000
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $1000
-    nop
-    ld a, [de]
-    nop
-    ld hl, $2200
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    inc bc
-    dec b
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $1600
-    nop
-    dec de
-    nop
-    inc e
-    nop
-    inc hl
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld [bc], a
-    dec b
-    inc bc
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $1b00
-    nop
-    inc hl
-    nop
-    jr jr_001_6c5e
 
-jr_001_6c5e:
-    inc h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $1b00
-    nop
-    inc hl
-    nop
-    inc h
-    nop
-    ld [hl+], a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    ld b, $03
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $1700
-    nop
-    ld hl, $2300
-    nop
-    ld h, $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    ld b, $03
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $2100
-    nop
-    jr z, jr_001_6caa
+; ---------------------------------------------------------------
+; Encounter Data ($6A22-$77AD)
+; ---------------------------------------------------------------
 
-jr_001_6caa:
-    inc hl
-    nop
-    ld h, $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    ld b, $03
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $2400
-    nop
-    ld [hl+], a
-    nop
-    inc hl
-    nop
-    daa
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    ld b, $03
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0022
-    jr jr_001_6cde
+; Gate base pool index table ($6A22)
+; 32 bytes: gate_id → base pool index in pool data at $6AAE
+GateBasePoolIndex:
+    db 0, 1, 3, 5, 7, 9, 12, 15  ; Gates 0-7
+    db 18, 22, 26, 30, 34, 39, 44, 49  ; Gates 8-15
+    db 54, 59, 64, 69, 74, 79, 85, 89  ; Gates 16-23
+    db 93, 97, 101, 105, 109, 113, 117, 121  ; Gates 24-31
 
-jr_001_6cde:
-    inc hl
-    nop
-    daa
-    nop
-    ld e, $00
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0405
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    daa
-    nop
-    jr z, jr_001_6cf8
+; Floor breakpoint table pointers ($6A42)
+; 32 × dw: gate_id → pointer to floor threshold list
+GateFloorBreakpoints:
+    dw $6A82  ; [0] Gate of Beginning
+    dw $6A83  ; [1] Gate of Villager
+    dw $6A83  ; [2] Gate of Talisman
+    dw $6A83  ; [3] Gate of Memories
+    dw $6A83  ; [4] Gate of Bewilder
+    dw $6A83  ; [5] Bazaar Gate
+    dw $6A86  ; [6] Gate of Peace
+    dw $6A86  ; [7] Gate of Bravery
+    dw $6A86  ; [8] Well Gate
+    dw $6A8A  ; [9] Gate of Strength
+    dw $6A8A  ; [10] Gate of Anger
+    dw $6A8A  ; [11] Farm Gate
+    dw $6A8E  ; [12] Gate of Joy
+    dw $6A83  ; [13] Gate of Wisdom
+    dw $6A8E  ; [14] Arena - Left Gate
+    dw $6A93  ; [15] Gate of Happiness
+    dw $6A93  ; [16] Gate of Temptation
+    dw $6A86  ; [17] Medal Gate
+    dw $6A98  ; [18] Gate of Labyrinth
+    dw $6A98  ; [19] Gate of Judgement
+    dw $6A98  ; [20] Library Gate
+    dw $6A9D  ; [21] Gate of Reflection
+    dw $6AA3  ; [22] Gate of Ambition
+    dw $6AA3  ; [23] Gate of Demolition (Hargon)
+    dw $6AA3  ; [24] Gate of Demolition (Sidoh)
+    dw $6AA3  ; [25] Gate of Mastermind
+    dw $6AA3  ; [26] Gate of Control
+    dw $6AA3  ; [27] Gate of Extinction
+    dw $6AA3  ; [28] Gate of Sleep
+    dw $6AA3  ; [29] Bazaar Edge Gate
+    dw $6AA3  ; [30] Arena - Right Gate
+    dw $6AA7  ; [31] Unused Gate (99 Floors)
 
-jr_001_6cf8:
-    dec h
-    nop
-    cpl
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0405
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $2700
-    nop
-    dec h
-    nop
-    cpl
-    nop
-    dec hl
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0405
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $2800
-    nop
-    dec h
-    nop
-    dec hl
-    nop
-    ld l, $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0405
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $2800
-    nop
-    dec hl
-    nop
-    cpl
-    nop
-    ld l, $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0405
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc h
-    nop
-    ld h, $00
-    add hl, hl
-    nop
-    ld a, [hl+]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0405
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $2600
-    nop
-    add hl, hl
-    nop
-    ld a, [hl+]
-    nop
-    inc l
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0405
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $2a00
-    nop
-    add hl, hl
-    nop
-    inc l
-    nop
-    dec l
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0405
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $2a00
-    nop
-    inc l
-    nop
-    dec l
-    nop
-    ld l, $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    dec b
-    dec b
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    cpl
-    nop
-    ld sp, $3200
-    nop
-    jr nc, jr_001_6dcc
+; Floor breakpoint data ($6A82)
+; Variable-length lists of floor thresholds, $FF-terminated
+; Referenced by pointers above
+FloorBreakpointData:
+    db $FF, $03, $06, $FF, $04, $06, $09, $FF, $04, $06, $09, $FF, $04, $06, $09, $0D  ; $6A82
+    db $FF, $05, $09, $0D, $11, $FF, $06, $0B, $10, $15, $FF, $06, $0B, $10, $15, $1A  ; $6A92
+    db $FF, $06, $0B, $15, $FF, $06, $0B, $15, $29, $3D, $51, $FF  ; $6AA2
 
-jr_001_6dcc:
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    dec b
-    dec b
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $2f00
-    nop
-    ld [hl-], a
-    nop
-    jr nc, jr_001_6de4
+; ---------------------------------------------------------------
+; Encounter Pool Data ($6AAE)
+; 128 pools x 26 bytes = 3328 bytes
+;
+; Format (26 bytes per pool):
+;   +$00-$09  Header (10 bytes)
+;   +$0A-$13  EID slots (5 x 2 bytes LE, $0000 = unused)
+;   +$14-$18  Weights (5 x 1 byte, 0 = unused)
+;   +$19      Unknown (usually 8 or 15)
+; ---------------------------------------------------------------
 
-jr_001_6de4:
-    add hl, sp
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    dec b
-    dec b
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $2e00
-    nop
-    ld [hl-], a
-    nop
-    jr nc, jr_001_6dfe
+EncounterPoolData:
+; --- Pool 0 ($6AAE): Gate of Beginning ---
+EncounterPool_000:
+    db $03, $01, $07, $00, $00, $03, $05, $02, $00, $00  ; Header
+    dw 2, 4, 3, 0, 0  ; EIDs: Slime, Dracky, Anteater, (none), (none)
+    db 1, 1, 1, 0, 0  ; Weights
+    db 8  ; Extra
 
-jr_001_6dfe:
-    ld a, [hl-]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    dec b
-    dec b
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $2e00
-    nop
-    jr nc, jr_001_6e16
+; --- Pool 1 ($6AC8): Gate of Villager ---
+EncounterPool_001:
+    db $03, $02, $05, $05, $00, $03, $03, $02, $02, $00  ; Header
+    dw 5, 6, 3, 14, 0  ; EIDs: Stubsuck, GoHopper, Anteater, Picky, (none)
+    db 3, 3, 3, 1, 0  ; Weights
+    db 8  ; Extra
 
-jr_001_6e16:
-    add hl, sp
-    nop
-    ld a, [hl-]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec sp
-    nop
-    inc a
-    nop
-    ld a, $00
-    dec a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0f00
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $3b00
-    nop
-    inc a
-    nop
-    ld a, $00
-    dec a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $3c00
-    nop
-    ld a, $00
-    ccf
-    nop
-    dec a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $3c00
-    nop
-    ccf
-    nop
-    ld b, c
-    nop
-    ld b, b
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc b
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $4100
-    nop
-    ccf
-    nop
-    dec a
-    nop
-    ld b, b
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld a, [hl-]
-    nop
-    ld b, e
-    nop
-    ld b, h
-    nop
-    ld b, d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0f00
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $3a00
-    nop
-    ld b, e
-    nop
-    ld b, h
-    nop
-    ld b, d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $4300
-    nop
-    ld b, h
-    nop
-    ld b, d
-    nop
-    ld b, [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $4300
-    nop
-    ld b, d
-    nop
-    ld b, l
-    nop
-    ld b, [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc b
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $4200
-    nop
-    ld b, l
-    nop
-    ld b, a
-    nop
-    ld b, [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld c, c
-    nop
-    ld c, b
-    nop
-    ld b, a
-    nop
-    ld c, d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0300
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    inc bc
-    inc bc
-    ld bc, $4900
-    nop
-    ld c, b
-    nop
-    ld b, a
-    nop
-    ld c, d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $04
-    inc bc
-    ld [bc], a
-    ld bc, $4800
-    nop
-    ld b, a
-    nop
-    ld c, d
-    nop
-    ld d, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $04
-    inc bc
-    ld [bc], a
-    ld bc, $4800
-    nop
-    ld c, d
-    nop
-    ld d, e
-    nop
-    ld d, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $04
-    inc bc
-    ld [bc], a
-    ld bc, $4a00
-    nop
-    ld d, e
-    nop
-    ld d, c
-    nop
-    ld d, d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld d, l
-    nop
-    ld d, [hl]
-    nop
-    ld d, a
-    nop
-    ld d, d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $5500
-    nop
-    ld d, [hl]
-    nop
-    ld d, a
-    nop
-    ld e, b
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $5500
-    nop
-    ld d, [hl]
-    nop
-    ld d, a
-    nop
-    ld e, b
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $5600
-    nop
-    ld d, a
-    nop
-    ld e, b
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc b
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $5600
-    nop
-    ld e, b
-    nop
-    ld e, c
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld e, c
-    nop
-    ld e, e
-    nop
-    ld e, h
-    nop
-    ld e, d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $5900
-    nop
-    ld e, e
-    nop
-    ld e, h
-    nop
-    ld e, d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $5b00
-    nop
-    ld e, h
-    nop
-    ld e, d
-    nop
-    ld e, [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $5b00
-    nop
-    ld e, d
-    nop
-    ld e, l
-    nop
-    ld e, [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc b
-    inc bc
-    ld bc, $0504
-    inc b
-    inc bc
-    ld [bc], a
-    ld bc, $5a00
-    nop
-    ld e, l
-    nop
-    ld e, a
-    nop
-    ld e, [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld h, b
-    nop
-    ld h, d
-    nop
-    ld l, e
-    nop
-    ld l, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0300
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    inc bc
-    inc bc
-    ld bc, $6000
-    nop
-    ld h, d
-    nop
-    ld l, e
-    nop
-    ld l, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $04
-    inc bc
-    ld [bc], a
-    ld bc, $6200
-    nop
-    ld l, e
-    nop
-    ld l, c
-    nop
-    ld h, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $04
-    inc bc
-    ld [bc], a
-    ld bc, $6200
-    nop
-    ld l, c
-    nop
-    ld l, d
-    nop
-    ld h, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $04
-    inc bc
-    ld [bc], a
-    ld bc, $6900
-    nop
-    ld l, d
-    nop
-    ld l, e
-    nop
-    ld h, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $006c
-    ld l, l
-    nop
-    ld [hl], b
-    nop
-    ld [hl], c
-    nop
-    ld l, e
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $006c
-    ld l, a
-    nop
-    ld [hl], b
-    nop
-    ld [hl], c
-    nop
-    ld l, e
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $006c
-    ld l, a
-    nop
-    ld [hl], b
-    nop
-    ld l, e
-    nop
-    ld [hl], d
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $006c
-    ld l, a
-    nop
-    ld [hl], c
-    nop
-    ld l, e
-    nop
-    ld [hl], d
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    rrca
-    inc b
-    inc bc
-    ld bc, $0504
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld l, h
-    nop
-    ld l, a
-    nop
-    ld l, e
-    nop
-    ld [hl], d
-    nop
-    ld [hl], e
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0074
-    ld [hl], a
-    nop
-    ld a, b
-    nop
-    ld a, c
-    nop
-    ld [hl], l
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0077
-    ld a, b
-    nop
-    ld a, c
-    nop
-    ld a, d
-    nop
-    ld [hl], l
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0077
-    ld a, c
-    nop
-    ld a, d
-    nop
-    ld [hl], l
-    nop
-    halt
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    ld bc, $0504
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0077
-    ld a, c
-    nop
-    add c
-    nop
-    ld [hl], l
-    nop
-    halt
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    rrca
-    inc b
-    inc bc
-    ld bc, $0504
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [hl], a
-    nop
-    ld a, b
-    nop
-    add c
-    nop
-    ld [hl], l
-    nop
-    halt
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0082
-    add h
-    nop
-    adc b
-    nop
-    adc c
-    nop
-    add e
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0082
-    add h
-    nop
-    add [hl]
-    nop
-    adc c
-    nop
-    add e
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0082
-    add h
-    nop
-    add [hl]
-    nop
-    adc c
-    nop
-    add l
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0082
-    add e
-    nop
-    add [hl]
-    nop
-    adc c
-    nop
-    add l
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $02
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    add d
-    nop
-    add e
-    nop
-    add l
-    nop
-    add [hl]
-    nop
-    add a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc bc
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $008a
-    adc e
-    nop
-    adc h
-    nop
-    adc l
-    nop
-    adc [hl]
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $008a
-    adc e
-    nop
-    adc l
-    nop
-    adc [hl]
-    nop
-    adc a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $008e
-    adc l
-    nop
-    sub b
-    nop
-    sub c
-    nop
-    adc a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $008e
-    sub b
-    nop
-    sub d
-    nop
-    sbc l
-    nop
-    adc a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc bc
-    inc bc
-    nop
-    inc bc
-    ld b, $03
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0090
-    sub d
-    nop
-    sbc l
-    nop
-    sbc [hl]
-    nop
-    adc a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    rrca
-    inc b
-    inc bc
-    nop
-    inc bc
-    ld b, $02
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    adc a
-    nop
-    sub d
-    nop
-    sbc l
-    nop
-    sbc [hl]
-    nop
-    sbc a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld b, $00
-    ld a, [bc]
-    nop
-    inc de
-    nop
-    inc h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld h, $00
-    inc l
-    nop
-    ld sp, $4600
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld d, [hl]
-    nop
-    ld e, [hl]
-    nop
-    ld [hl], c
-    nop
-    ld [hl], h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld a, d
-    nop
-    add c
-    nop
-    adc c
-    nop
-    sub d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec b
-    nop
-    ld [de], a
-    nop
-    dec de
-    nop
-    inc hl
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec hl
-    nop
-    ld a, $00
-    ld b, l
-    nop
-    ld d, l
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld [hl], b
-    nop
-    ld a, c
-    nop
-    adc b
-    nop
-    sub c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
+; --- Pool 2 ($6AE2): Gate of Villager ---
+EncounterPool_002:
+    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; Header
+    dw 5, 6, 7, 15, 0  ; EIDs: Stubsuck, GoHopper, Gremlin, PillowRat, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 8  ; Extra
 
+; --- Pool 3 ($6AFC): Gate of Talisman ---
+EncounterPool_003:
+    db $03, $03, $03, $05, $02, $03, $03, $02, $02, $00  ; Header
+    dw 8, 10, 3, 13, 0  ; EIDs: Spooky, ArmyAnt, Anteater, MiniDrak, (none)
+    db 3, 3, 3, 1, 0  ; Weights
+    db 8  ; Extra
+
+; --- Pool 4 ($6B16): Gate of Talisman ---
+EncounterPool_004:
+    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; Header
+    dw 8, 9, 10, 14, 0  ; EIDs: Spooky, Goopi, ArmyAnt, Picky, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 8  ; Extra
+
+; --- Pool 5 ($6B30): Gate of Memories ---
+EncounterPool_005:
+    db $03, $03, $03, $06, $00, $03, $03, $02, $02, $00  ; Header
+    dw 9, 15, 17, 19, 0  ; EIDs: Goopi, PillowRat, DragonKid, Catapila, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 8  ; Extra
+
+; --- Pool 6 ($6B4A): Gate of Memories ---
+EncounterPool_006:
+    db $03, $03, $02, $03, $05, $04, $03, $02, $01, $00  ; Header
+    dw 14, 20, 19, 25, 0  ; EIDs: Picky, FairyRat, Catapila, SpotSlime, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 8  ; Extra
+
+; --- Pool 7 ($6B64): Gate of Bewilder ---
+EncounterPool_007:
+    db $03, $03, $03, $06, $00, $03, $03, $02, $02, $00  ; Header
+    dw 13, 21, 17, 25, 0  ; EIDs: MiniDrak, BigRoost, DragonKid, SpotSlime, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 8  ; Extra
+
+; --- Pool 8 ($6B7E): Gate of Bewilder ---
+EncounterPool_008:
+    db $03, $03, $02, $03, $05, $04, $03, $02, $01, $00  ; Header
+    dw 18, 22, 25, 16, 0  ; EIDs: EvilSeed, Demonite, SpotSlime, Hork, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 8  ; Extra
+
+; --- Pool 9 ($6B98): Bazaar Gate ---
+EncounterPool_009:
+    db $04, $03, $03, $05, $02, $03, $03, $02, $02, $00  ; Header
+    dw 20, 21, 25, 26, 0  ; EIDs: FairyRat, BigRoost, SpotSlime, Crestpent, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 10 ($6BB2): Bazaar Gate ---
+EncounterPool_010:
+    db $04, $03, $03, $05, $02, $04, $03, $02, $01, $00  ; Header
+    dw 21, 17, 19, 27, 0  ; EIDs: BigRoost, DragonKid, Catapila, BeanMan, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 11 ($6BCC): Bazaar Gate ---
+EncounterPool_011:
+    db $04, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; Header
+    dw 22, 19, 16, 28, 0  ; EIDs: Demonite, Catapila, Hork, 1EyeClown, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 12 ($6BE6): Gate of Peace ---
+EncounterPool_012:
+    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; Header
+    dw 21, 25, 29, 26, 0  ; EIDs: BigRoost, SpotSlime, CoilBird, Crestpent, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 13 ($6C00): Gate of Peace ---
+EncounterPool_013:
+    db $03, $03, $02, $05, $03, $04, $03, $02, $01, $00  ; Header
+    dw 17, 26, 23, 33, 0  ; EIDs: DragonKid, Crestpent, BoneSlave, Almiraj, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 14 ($6C1A): Gate of Peace ---
+EncounterPool_014:
+    db $03, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; Header
+    dw 16, 26, 33, 34, 0  ; EIDs: Hork, Crestpent, Almiraj, BullBird, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 15 ($6C34): Gate of Bravery ---
+EncounterPool_015:
+    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; Header
+    dw 22, 27, 28, 35, 0  ; EIDs: Demonite, BeanMan, 1EyeClown, FloraMan, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 16 ($6C4E): Gate of Bravery ---
+EncounterPool_016:
+    db $03, $03, $02, $05, $03, $04, $03, $02, $01, $00  ; Header
+    dw 27, 35, 24, 36, 0  ; EIDs: BeanMan, FloraMan, SabreMan, GiantWorm, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 17 ($6C68): Gate of Bravery ---
+EncounterPool_017:
+    db $03, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; Header
+    dw 27, 35, 36, 34, 0  ; EIDs: BeanMan, FloraMan, GiantWorm, BullBird, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 18 ($6C82): Well Gate ---
+EncounterPool_018:
+    db $04, $03, $00, $06, $03, $03, $03, $03, $01, $00  ; Header
+    dw 23, 33, 35, 38, 0  ; EIDs: BoneSlave, Almiraj, FloraMan, GiantSlug, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 19 ($6C9C): Well Gate ---
+EncounterPool_019:
+    db $04, $03, $00, $06, $03, $04, $03, $02, $01, $00  ; Header
+    dw 33, 40, 35, 38, 0  ; EIDs: Almiraj, TreeSlime, FloraMan, GiantSlug, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 20 ($6CB6): Well Gate ---
+EncounterPool_020:
+    db $04, $03, $00, $06, $03, $04, $03, $02, $01, $00  ; Header
+    dw 36, 34, 35, 39, 0  ; EIDs: GiantWorm, BullBird, FloraMan, MudDoll, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 21 ($6CD0): Well Gate ---
+EncounterPool_021:
+    db $04, $03, $00, $06, $03, $03, $02, $02, $02, $01  ; Header
+    dw 34, 24, 35, 39, 30  ; EIDs: BullBird, SabreMan, FloraMan, MudDoll, Metaly
+    db 3, 3, 3, 3, 3  ; Weights
+    db 3  ; Extra
+
+; --- Pool 22 ($6CEA): Gate of Strength ---
+EncounterPool_022:
+    db $03, $03, $01, $05, $04, $03, $03, $02, $02, $00  ; Header
+    dw 39, 40, 37, 47, 0  ; EIDs: MudDoll, TreeSlime, SkulRider, FairyDrak, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 23 ($6D04): Gate of Strength ---
+EncounterPool_023:
+    db $03, $03, $01, $05, $04, $03, $03, $03, $01, $00  ; Header
+    dw 39, 37, 47, 43, 0  ; EIDs: MudDoll, SkulRider, FairyDrak, WingTree, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 24 ($6D1E): Gate of Strength ---
+EncounterPool_024:
+    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; Header
+    dw 40, 37, 43, 46, 0  ; EIDs: TreeSlime, SkulRider, WingTree, DrakSlime, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 25 ($6D38): Gate of Strength ---
+EncounterPool_025:
+    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; Header
+    dw 40, 43, 47, 46, 0  ; EIDs: TreeSlime, WingTree, FairyDrak, DrakSlime, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 26 ($6D52): Gate of Anger ---
+EncounterPool_026:
+    db $03, $03, $01, $05, $04, $03, $03, $02, $02, $00  ; Header
+    dw 36, 38, 41, 42, 0  ; EIDs: GiantWorm, GiantSlug, Poisongon, CatFly, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 27 ($6D6C): Gate of Anger ---
+EncounterPool_027:
+    db $03, $03, $01, $05, $04, $03, $03, $03, $01, $00  ; Header
+    dw 38, 41, 42, 44, 0  ; EIDs: GiantSlug, Poisongon, CatFly, Eyeder, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 28 ($6D86): Gate of Anger ---
+EncounterPool_028:
+    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; Header
+    dw 42, 41, 44, 45, 0  ; EIDs: CatFly, Poisongon, Eyeder, Putrepup, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 29 ($6DA0): Gate of Anger ---
+EncounterPool_029:
+    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; Header
+    dw 42, 44, 45, 46, 0  ; EIDs: CatFly, Eyeder, Putrepup, DrakSlime, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 30 ($6DBA): Farm Gate ---
+EncounterPool_030:
+    db $04, $03, $00, $05, $05, $03, $03, $02, $02, $00  ; Header
+    dw 47, 49, 50, 48, 0  ; EIDs: FairyDrak, Butterfly, MadRaven, Skullroo, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 31 ($6DD4): Farm Gate ---
+EncounterPool_031:
+    db $04, $03, $00, $05, $05, $03, $03, $03, $01, $00  ; Header
+    dw 47, 50, 48, 57, 0  ; EIDs: FairyDrak, MadRaven, Skullroo, Mudron, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 32 ($6DEE): Farm Gate ---
+EncounterPool_032:
+    db $04, $03, $00, $05, $05, $04, $03, $02, $01, $00  ; Header
+    dw 46, 50, 48, 58, 0  ; EIDs: DrakSlime, MadRaven, Skullroo, Facer, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 33 ($6E08): Farm Gate ---
+EncounterPool_033:
+    db $04, $03, $00, $05, $05, $04, $03, $02, $01, $00  ; Header
+    dw 46, 48, 57, 58, 0  ; EIDs: DrakSlime, Skullroo, Mudron, Facer, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 34 ($6E22): Gate of Joy ---
+EncounterPool_034:
+    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; Header
+    dw 59, 60, 62, 61, 0  ; EIDs: Snaily, Saccer, Gulpple, MadPecker, (none)
+    db 3, 3, 3, 1, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 35 ($6E3C): Gate of Joy ---
+EncounterPool_035:
+    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; Header
+    dw 59, 60, 62, 61, 0  ; EIDs: Snaily, Saccer, Gulpple, MadPecker, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 36 ($6E56): Gate of Joy ---
+EncounterPool_036:
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 60, 62, 63, 61, 0  ; EIDs: Saccer, Gulpple, EyeBall, MadPecker, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 37 ($6E70): Gate of Joy ---
+EncounterPool_037:
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 60, 63, 65, 64, 0  ; EIDs: Saccer, EyeBall, Babble, Mummy, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 38 ($6E8A): Gate of Joy ---
+EncounterPool_038:
+    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 65, 63, 61, 64, 0  ; EIDs: Babble, EyeBall, MadPecker, Mummy, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 39 ($6EA4): Gate of Wisdom ---
+EncounterPool_039:
+    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; Header
+    dw 58, 67, 68, 66, 0  ; EIDs: Facer, Tonguella, Florajay, Pteranod, (none)
+    db 3, 3, 3, 1, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 40 ($6EBE): Gate of Wisdom ---
+EncounterPool_040:
+    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; Header
+    dw 58, 67, 68, 66, 0  ; EIDs: Facer, Tonguella, Florajay, Pteranod, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 41 ($6ED8): Gate of Wisdom ---
+EncounterPool_041:
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 67, 68, 66, 70, 0  ; EIDs: Tonguella, Florajay, Pteranod, ArmorPede, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 42 ($6EF2): Gate of Wisdom ---
+EncounterPool_042:
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 67, 66, 69, 70, 0  ; EIDs: Tonguella, Pteranod, MadPlant, ArmorPede, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 43 ($6F0C): Gate of Wisdom ---
+EncounterPool_043:
+    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 66, 69, 71, 70, 0  ; EIDs: Pteranod, MadPlant, MedusaEye, ArmorPede, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 44 ($6F26): Arena - Left Gate ---
+EncounterPool_044:
+    db $04, $03, $00, $03, $06, $03, $03, $02, $02, $00  ; Header
+    dw 73, 72, 71, 74, 0  ; EIDs: WingSlime, MadCandle, MedusaEye, MadGopher, (none)
+    db 3, 3, 3, 1, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 45 ($6F40): Arena - Left Gate ---
+EncounterPool_045:
+    db $04, $03, $00, $03, $06, $03, $03, $03, $01, $00  ; Header
+    dw 73, 72, 71, 74, 0  ; EIDs: WingSlime, MadCandle, MedusaEye, MadGopher, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 46 ($6F5A): Arena - Left Gate ---
+EncounterPool_046:
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    dw 72, 71, 74, 81, 0  ; EIDs: MadCandle, MedusaEye, MadGopher, Slabbit, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 47 ($6F74): Arena - Left Gate ---
+EncounterPool_047:
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    dw 72, 74, 83, 81, 0  ; EIDs: MadCandle, MadGopher, WindBeast, Slabbit, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 48 ($6F8E): Arena - Left Gate ---
+EncounterPool_048:
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    dw 74, 83, 81, 82, 0  ; EIDs: MadGopher, WindBeast, Slabbit, Gasgon, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 49 ($6FA8): Gate of Happiness ---
+EncounterPool_049:
+    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; Header
+    dw 85, 86, 87, 82, 0  ; EIDs: Oniono, Gophecada, Pixy, Gasgon, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 50 ($6FC2): Gate of Happiness ---
+EncounterPool_050:
+    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; Header
+    dw 85, 86, 87, 88, 0  ; EIDs: Oniono, Gophecada, Pixy, DeadNite, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 51 ($6FDC): Gate of Happiness ---
+EncounterPool_051:
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 85, 86, 87, 88, 0  ; EIDs: Oniono, Gophecada, Pixy, DeadNite, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 52 ($6FF6): Gate of Happiness ---
+EncounterPool_052:
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 86, 87, 88, 84, 0  ; EIDs: Gophecada, Pixy, DeadNite, StubBird, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 53 ($7010): Gate of Happiness ---
+EncounterPool_053:
+    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 86, 88, 89, 84, 0  ; EIDs: Gophecada, DeadNite, SpikyBoy, StubBird, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 54 ($702A): Gate of Temptation ---
+EncounterPool_054:
+    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; Header
+    dw 89, 91, 92, 90, 0  ; EIDs: SpikyBoy, KingCobra, Mommonja, SlimeNite, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 55 ($7044): Gate of Temptation ---
+EncounterPool_055:
+    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; Header
+    dw 89, 91, 92, 90, 0  ; EIDs: SpikyBoy, KingCobra, Mommonja, SlimeNite, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 56 ($705E): Gate of Temptation ---
+EncounterPool_056:
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 91, 92, 90, 94, 0  ; EIDs: KingCobra, Mommonja, SlimeNite, StagBug, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 57 ($7078): Gate of Temptation ---
+EncounterPool_057:
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 91, 90, 93, 94, 0  ; EIDs: KingCobra, SlimeNite, MistyWing, StagBug, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 58 ($7092): Gate of Temptation ---
+EncounterPool_058:
+    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    dw 90, 93, 95, 94, 0  ; EIDs: SlimeNite, MistyWing, DarkEye, StagBug, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 59 ($70AC): Medal Gate ---
+EncounterPool_059:
+    db $04, $03, $00, $03, $06, $03, $03, $02, $02, $00  ; Header
+    dw 96, 98, 107, 105, 0  ; EIDs: NiteWhip, BoxSlime, Gismo, Orc, (none)
+    db 3, 3, 3, 1, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 60 ($70C6): Medal Gate ---
+EncounterPool_060:
+    db $04, $03, $00, $03, $06, $03, $03, $03, $01, $00  ; Header
+    dw 96, 98, 107, 105, 0  ; EIDs: NiteWhip, BoxSlime, Gismo, Orc, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 61 ($70E0): Medal Gate ---
+EncounterPool_061:
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    dw 98, 107, 105, 97, 0  ; EIDs: BoxSlime, Gismo, Orc, RogueNite, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 62 ($70FA): Medal Gate ---
+EncounterPool_062:
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    dw 98, 105, 106, 97, 0  ; EIDs: BoxSlime, Orc, Reaper, RogueNite, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 63 ($7114): Medal Gate ---
+EncounterPool_063:
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    dw 105, 106, 107, 97, 0  ; EIDs: Orc, Reaper, Gismo, RogueNite, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 3  ; Extra
+
+; --- Pool 64 ($712E): Gate of Labyrinth ---
+EncounterPool_064:
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    dw 108, 109, 112, 113, 107  ; EIDs: RockSlime, Chamelgon, CactiBall, TailEater, Gismo
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 65 ($7148): Gate of Labyrinth ---
+EncounterPool_065:
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    dw 108, 111, 112, 113, 107  ; EIDs: RockSlime, DuckKite, CactiBall, TailEater, Gismo
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 66 ($7162): Gate of Labyrinth ---
+EncounterPool_066:
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    dw 108, 111, 112, 107, 114  ; EIDs: RockSlime, DuckKite, CactiBall, Gismo, AgDevil
+    db 3, 3, 3, 2, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 67 ($717C): Gate of Labyrinth ---
+EncounterPool_067:
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    dw 108, 111, 113, 107, 114  ; EIDs: RockSlime, DuckKite, TailEater, Gismo, AgDevil
+    db 3, 3, 3, 2, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 68 ($7196): Gate of Labyrinth ---
+EncounterPool_068:
+    db $04, $03, $01, $04, $05, $02, $02, $02, $02, $02  ; Header
+    dw 108, 111, 107, 114, 115  ; EIDs: RockSlime, DuckKite, Gismo, AgDevil, WindMerge
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 69 ($71B0): Gate of Judgement ---
+EncounterPool_069:
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    dw 116, 119, 120, 121, 117  ; EIDs: WeedBug, HammerMan, MadGoose, TreeBoy, SpotKing
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 70 ($71CA): Gate of Judgement ---
+EncounterPool_070:
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    dw 119, 120, 121, 122, 117  ; EIDs: HammerMan, MadGoose, TreeBoy, Droll, SpotKing
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 71 ($71E4): Gate of Judgement ---
+EncounterPool_071:
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    dw 119, 121, 122, 117, 118  ; EIDs: HammerMan, TreeBoy, Droll, SpotKing, LizardFly
+    db 3, 3, 3, 2, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 72 ($71FE): Gate of Judgement ---
+EncounterPool_072:
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    dw 119, 121, 129, 117, 118  ; EIDs: HammerMan, TreeBoy, GiantMoth, SpotKing, LizardFly
+    db 3, 3, 3, 2, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 73 ($7218): Gate of Judgement ---
+EncounterPool_073:
+    db $04, $03, $01, $04, $05, $02, $02, $02, $02, $02  ; Header
+    dw 119, 120, 129, 117, 118  ; EIDs: HammerMan, MadGoose, GiantMoth, SpotKing, LizardFly
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 74 ($7232): Library Gate ---
+EncounterPool_074:
+    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 130, 132, 136, 137, 131  ; EIDs: ArcDemon, CurseLamp, AmberWeed, ArmyCrab, MadSpirit
+    db 3, 3, 3, 3, 2  ; Weights
+    db 3  ; Extra
+
+; --- Pool 75 ($724C): Library Gate ---
+EncounterPool_075:
+    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 130, 132, 134, 137, 131  ; EIDs: ArcDemon, CurseLamp, WildApe, ArmyCrab, MadSpirit
+    db 3, 3, 3, 3, 2  ; Weights
+    db 3  ; Extra
+
+; --- Pool 76 ($7266): Library Gate ---
+EncounterPool_076:
+    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 130, 132, 134, 137, 133  ; EIDs: ArcDemon, CurseLamp, WildApe, ArmyCrab, Tortragon
+    db 3, 3, 3, 3, 2  ; Weights
+    db 3  ; Extra
+
+; --- Pool 77 ($7280): Library Gate ---
+EncounterPool_077:
+    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 130, 131, 134, 137, 133  ; EIDs: ArcDemon, MadSpirit, WildApe, ArmyCrab, Tortragon
+    db 3, 3, 3, 3, 2  ; Weights
+    db 3  ; Extra
+
+; --- Pool 78 ($729A): Library Gate ---
+EncounterPool_078:
+    db $04, $03, $00, $03, $06, $02, $02, $02, $02, $02  ; Header
+    dw 130, 131, 133, 134, 135  ; EIDs: ArcDemon, MadSpirit, Tortragon, WildApe, LandOwl
+    db 3, 3, 3, 3, 2  ; Weights
+    db 3  ; Extra
+
+; --- Pool 79 ($72B4): Gate of Reflection ---
+EncounterPool_079:
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 138, 139, 140, 141, 142  ; EIDs: EvilBeast, Shadow, EvilWand, SlimeBorg, LizardMan
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 80 ($72CE): Gate of Reflection ---
+EncounterPool_080:
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 138, 139, 141, 142, 143  ; EIDs: EvilBeast, Shadow, SlimeBorg, LizardMan, Grizzly
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 81 ($72E8): Gate of Reflection ---
+EncounterPool_081:
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 142, 141, 144, 145, 143  ; EIDs: LizardMan, SlimeBorg, Wyvern, FireWeed, Grizzly
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 82 ($7302): Gate of Reflection ---
+EncounterPool_082:
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 142, 144, 146, 157, 143  ; EIDs: LizardMan, Wyvern, MadHornet, Lionex, Grizzly
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 83 ($731C): Gate of Reflection ---
+EncounterPool_083:
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    dw 144, 146, 157, 158, 143  ; EIDs: Wyvern, MadHornet, Lionex, RotRaven, Grizzly
+    db 3, 3, 3, 3, 2  ; Weights
+    db 15  ; Extra
+
+; --- Pool 84 ($7336): Gate of Reflection ---
+EncounterPool_084:
+    db $04, $03, $00, $03, $06, $02, $02, $02, $02, $02  ; Header
+    dw 143, 146, 157, 158, 159  ; EIDs: Grizzly, MadHornet, Lionex, RotRaven, JewelBag
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 85 ($7350): Gate of Ambition ---
+EncounterPool_085:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 6, 10, 19, 36, 0  ; EIDs: GoHopper, ArmyAnt, Catapila, GiantWorm, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 86 ($736A): Gate of Ambition ---
+EncounterPool_086:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 38, 44, 49, 70, 0  ; EIDs: GiantSlug, Eyeder, Butterfly, ArmorPede, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 87 ($7384): Gate of Ambition ---
+EncounterPool_087:
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 86, 94, 113, 116, 0  ; EIDs: Gophecada, StagBug, TailEater, WeedBug, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 88 ($739E): Gate of Ambition ---
+EncounterPool_088:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 122, 129, 137, 146, 0  ; EIDs: Droll, GiantMoth, ArmyCrab, MadHornet, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 89 ($73B8): Gate of Demolition (Hargon) ---
+EncounterPool_089:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 5, 18, 27, 35, 0  ; EIDs: Stubsuck, EvilSeed, BeanMan, FloraMan, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 90 ($73D2): Gate of Demolition (Hargon) ---
+EncounterPool_090:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 43, 62, 69, 85, 0  ; EIDs: WingTree, Gulpple, MadPlant, Oniono, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 91 ($73EC): Gate of Demolition (Hargon) ---
+EncounterPool_091:
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 112, 121, 136, 145, 0  ; EIDs: CactiBall, TreeBoy, AmberWeed, FireWeed, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 92 ($7406): Gate of Demolition (Hargon) ---
+EncounterPool_092:
+    ; Header
+    db $04
 Call_001_7407:
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    sub c
-    nop
-    and e
-    nop
-    xor c
-    nop
-    cp l
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
+    db $03, $00, $00, $07, $03, $03, $02, $02, $00
+    dw 145, 163, 169, 189, 0  ; EIDs
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
+; --- Pool 93 ($7420): Gate of Demolition (Sidoh) ---
+EncounterPool_093:
+    ; Header
 Call_001_7420:
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc b
-    nop
-    ld c, $00
-    dec d
-    nop
-    ld [hl+], a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld [hl-], a
-    nop
-    dec a
-    nop
-    ld b, h
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld e, l
-    nop
-    ld l, a
-    nop
-    ld a, b
-    nop
-    add a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    sub b
-    nop
-    and d
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00
+    dw 4, 14, 21, 34, 0  ; EIDs
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
+; --- Pool 94 ($743A): Gate of Demolition (Sidoh) ---
+EncounterPool_094:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 50, 61, 68, 84, 0  ; EIDs: MadRaven, MadPecker, Florajay, StubBird, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 95 ($7454): Gate of Demolition (Sidoh) ---
+EncounterPool_095:
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 93, 111, 120, 135, 0  ; EIDs: MistyWing, DuckKite, MadGoose, LandOwl, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 96 ($746E): Gate of Demolition (Sidoh) ---
+EncounterPool_096:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    ; EIDs (split by label)
+    db $90, $00, $A2
 Call_001_747b:
-    nop
-    push bc
-    nop
-    add $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    add hl, de
-    nop
-    ld e, $00
-    jr z, jr_001_749a
+    db $00, $C5, $00, $C6, $00, $00, $00
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-jr_001_749a:
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld l, $00
-    dec sp
-    nop
-    ld b, c
-    nop
-    ld c, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld d, c
-    nop
-    ld e, d
-    nop
-    ld h, d
-    nop
-    ld l, h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld l, h
-    nop
-    ld [hl], l
-    nop
-    adc l
-    nop
-    or l
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    ld [bc], a
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    rlca
-    nop
-    ld d, $00
-    inc e
-    nop
-    dec h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ccf
-    nop
-    ld b, a
-    nop
-    ld d, a
-    nop
-    ld e, a
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld l, c
-    nop
-    ld [hl], d
-    nop
-    add d
-    nop
-    adc d
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    sbc l
-    nop
-    and h
-    nop
-    xor d
-    nop
-    cp [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld [$1000], sp
-    nop
-    rla
-    nop
-    dec l
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    add hl, sp
-    nop
-    ld b, b
-    nop
-    ld e, b
-    nop
-    ld h, b
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld l, d
-    nop
-    ld [hl], e
-    nop
-    add e
-    nop
-    adc e
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    sbc [hl]
-    nop
-    and l
-    nop
-    xor e
-    nop
-    cp d
-    nop
-    cp a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    add hl, bc
-    nop
-    jr jr_001_75ce
+; --- Pool 97 ($7488): Gate of Mastermind ---
+EncounterPool_097:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 2, 25, 30, 40, 0  ; EIDs: Slime, SpotSlime, Metaly, TreeSlime, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-jr_001_75ce:
-    dec e
-    nop
-    daa
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld a, [hl-]
-    nop
-    ld c, b
-    nop
-    ld e, c
-    nop
-    ld h, c
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld l, e
-    nop
-    add h
-    nop
-    adc h
-    nop
-    sbc a
-    nop
-    and [hl]
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    xor h
-    nop
-    or a
-    nop
-    cp e
-    nop
-    ret nz
+; --- Pool 98 ($74A2): Gate of Mastermind ---
+EncounterPool_098:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 46, 59, 65, 73, 0  ; EIDs: DrakSlime, Snaily, Babble, WingSlime, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-    nop
-    pop bc
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    rrca
-    nop
-    inc d
-    nop
-    ld hl, $2a00
-    nop
-    jr nc, jr_001_763c
+; --- Pool 99 ($74BC): Gate of Mastermind ---
+EncounterPool_099:
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 81, 90, 98, 108, 0  ; EIDs: Slabbit, SlimeNite, BoxSlime, RockSlime, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-jr_001_763c:
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc a
-    nop
-    ld b, e
-    nop
-    ld c, d
-    nop
-    ld d, e
-    nop
-    ld e, h
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld l, [hl]
-    nop
-    ld [hl], a
-    nop
-    add [hl]
-    nop
-    adc a
-    nop
-    and c
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    xor b
-    nop
-    xor [hl]
-    nop
-    or [hl]
-    nop
-    cp c
-    nop
-    db $c3, $00, $03
+; --- Pool 100 ($74D6): Gate of Mastermind ---
+EncounterPool_100:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 108, 117, 141, 181, 0  ; EIDs: RockSlime, SpotKing, SlimeBorg, Metabble, (none)
+    db 3, 3, 3, 2, 0  ; Weights
+    db 15  ; Extra
 
+; --- Pool 101 ($74F0): Gate of Control ---
+EncounterPool_101:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 7, 22, 28, 37, 0  ; EIDs: Gremlin, Demonite, 1EyeClown, SkulRider, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    dec c
-    nop
-    ld de, $1a00
-    nop
-    add hl, hl
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    ld [bc], a
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    cpl
-    nop
-    ld b, d
-    nop
-    ld d, d
-    nop
-    ld e, e
-    nop
-    ld l, l
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    inc bc
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    halt
-    add l
-    nop
-    adc [hl]
-    nop
-    and b
-    nop
-    and a
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    xor l
-    nop
-    cp b
-    nop
-    cp h
-    nop
-    jp nz, $c400
+; --- Pool 102 ($750A): Gate of Control ---
+EncounterPool_102:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 63, 71, 87, 95, 0  ; EIDs: EyeBall, MedusaEye, Pixy, DarkEye, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    cp d
-    nop
-    cp c
-    nop
-    cp e
-    nop
-    cp h
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    cp e
-    nop
-    cp h
-    nop
-    cp l
-    nop
-    cp [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    cp l
-    nop
-    cp [hl]
-    nop
-    cp a
-    nop
-    ret nz
+; --- Pool 103 ($7524): Gate of Control ---
+EncounterPool_103:
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 105, 114, 130, 138, 0  ; EIDs: Orc, AgDevil, ArcDemon, EvilBeast, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    cp a
-    nop
-    ret nz
+; --- Pool 104 ($753E): Gate of Control ---
+EncounterPool_104:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 157, 164, 170, 190, 0  ; EIDs: Lionex, Grendal, Ogre, GoatHorn, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-    nop
-    pop bc
-    nop
-    jp nz, RST_00
+; --- Pool 105 ($7558): Gate of Extinction ---
+EncounterPool_105:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 8, 16, 23, 45, 0  ; EIDs: Spooky, Hork, BoneSlave, Putrepup, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    pop bc
-    nop
-    jp nz, $c300
+; --- Pool 106 ($7572): Gate of Extinction ---
+EncounterPool_106:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 57, 64, 88, 96, 0  ; EIDs: Mudron, Mummy, DeadNite, NiteWhip, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
-    nop
-    call nz, RST_00
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    jp $c400
+; --- Pool 107 ($758C): Gate of Extinction ---
+EncounterPool_107:
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 106, 115, 131, 139, 0  ; EIDs: Reaper, WindMerge, MadSpirit, Shadow, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
 
+; --- Pool 108 ($75A6): Gate of Extinction ---
+EncounterPool_108:
+    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 158, 165, 171, 186, 191  ; EIDs: RotRaven, DarkCrab, Skullgon, Skeletor, DeadNoble
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
 
-    nop
-    push bc
-    nop
-    add $00
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
-    inc b
-    inc bc
-    nop
-    nop
-    rlca
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    push bc
-    nop
-    add $00
-    ld e, $00
-    or l
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    nop
-    rrca
+; --- Pool 109 ($75C0): Gate of Sleep ---
+EncounterPool_109:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 9, 24, 29, 39, 0  ; EIDs: Goopi, SabreMan, CoilBird, MudDoll, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 110 ($75DA): Gate of Sleep ---
+EncounterPool_110:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 58, 72, 89, 97, 0  ; EIDs: Facer, MadCandle, SpikyBoy, RogueNite, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 111 ($75F4): Gate of Sleep ---
+EncounterPool_111:
+    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 107, 132, 140, 159, 166  ; EIDs: Gismo, CurseLamp, EvilWand, JewelBag, MadMirror
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 112 ($760E): Gate of Sleep ---
+EncounterPool_112:
+    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 172, 183, 187, 192, 193  ; EIDs: Voodoll, Balzak, MetalDrak, Roboster, BombCrag
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 113 ($7628): Bazaar Edge Gate ---
+EncounterPool_113:
+    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 15, 20, 33, 42, 48  ; EIDs: PillowRat, FairyRat, Almiraj, CatFly, Skullroo
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 114 ($7642): Bazaar Edge Gate ---
+EncounterPool_114:
+    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 60, 67, 74, 83, 92  ; EIDs: Saccer, Tonguella, MadGopher, WindBeast, Mommonja
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 115 ($765C): Bazaar Edge Gate ---
+EncounterPool_115:
+    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 110, 119, 134, 143, 161  ; EIDs: Goategon, HammerMan, WildApe, Grizzly, SuperTen
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 116 ($7676): Bazaar Edge Gate ---
+EncounterPool_116:
+    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 168, 174, 182, 185, 195  ; EIDs: Yeti, IronTurt, GulpBeast, Trumpeter, Unicorn
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 117 ($7690): Arena - Right Gate ---
+EncounterPool_117:
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 13, 17, 26, 41, 0  ; EIDs: MiniDrak, DragonKid, Crestpent, Poisongon, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 118 ($76AA): Arena - Right Gate ---
+EncounterPool_118:
+    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 47, 66, 82, 91, 109  ; EIDs: FairyDrak, Pteranod, Gasgon, KingCobra, Chamelgon
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 119 ($76C4): Arena - Right Gate ---
+EncounterPool_119:
+    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 118, 133, 142, 160, 167  ; EIDs: LizardFly, Tortragon, LizardMan, Swordgon, WingSnake
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 120 ($76DE): Arena - Right Gate ---
+EncounterPool_120:
+    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    dw 173, 184, 188, 194, 196  ; EIDs: Rayburn, Spikerous, MadDragon, Andreal, GreatDrak
+    db 3, 3, 3, 3, 3  ; Weights
+    db 15  ; Extra
+
+; --- Pool 121 ($76F8): Unused Gate (99 Floors) ---
+EncounterPool_121:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 186, 185, 187, 188, 0  ; EIDs: Skeletor, Trumpeter, MetalDrak, MadDragon, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 122 ($7712): Unused Gate (99 Floors) ---
+EncounterPool_122:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 187, 188, 189, 190, 0  ; EIDs: MetalDrak, MadDragon, Snapper, GoatHorn, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 123 ($772C): Unused Gate (99 Floors) ---
+EncounterPool_123:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 189, 190, 191, 192, 0  ; EIDs: Snapper, GoatHorn, DeadNoble, Roboster, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 124 ($7746): Unused Gate (99 Floors) ---
+EncounterPool_124:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 191, 192, 193, 194, 0  ; EIDs: DeadNoble, Roboster, BombCrag, Andreal, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 125 ($7760): Unused Gate (99 Floors) ---
+EncounterPool_125:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 193, 194, 195, 196, 0  ; EIDs: BombCrag, Andreal, Unicorn, GreatDrak, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 126 ($777A): Unused Gate (99 Floors) ---
+EncounterPool_126:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 195, 196, 197, 198, 0  ; EIDs: Unicorn, GreatDrak, ZapBird, WhipBird, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
+; --- Pool 127 ($7794): Unused Gate (99 Floors) ---
+EncounterPool_127:
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    dw 197, 198, 30, 181, 0  ; EIDs: ZapBird, WhipBird, Metaly, Metabble, (none)
+    db 3, 3, 3, 3, 0  ; Weights
+    db 15  ; Extra
+
     ld e, d
     rst $20
     ret
