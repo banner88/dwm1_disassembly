@@ -618,27 +618,137 @@ Text ID → Display
 
 ## Decode Status
 
+**ALL 2,404 `Call_` labels named — 0 unnamed function entry points remain.**
+
 | Bank | Data | Code | Notes |
 |------|------|------|-------|
-| $00 | — | 149 named / 466 remaining | Core utility functions |
-| $01 | ✅ | Partial | Encounters, gate thresholds done |
-| $03 | ✅ | — | Monster info fully annotated |
-| $04 | — | Partial | Script VM engine: see `BANK04_SCRIPT_ENGINE.md` |
-| $0B | ✅ | Refactored | Room data done; SharedPtrChase freed 119B |
-| $0C | ✅ | Shared code | Script data: 129 scripts, 452 labels. 0 unknown opcodes. |
-| $0D | ✅ | Shared code | Script data: 168 scripts, 614 labels. 0 unknown opcodes. |
-| $0E | ✅ | Shared code | Script data: 130 scripts, 287 labels. 0 unknown opcodes. Bedroom ($2F) verified. |
-| $0F | ✅ | Shared code | Script data: 103 scripts, 273 labels. 0 unknown opcodes. |
+| $00 | — | 654 named / 0 Call_ | Core engine: 396 Call_ hand-named this session |
+| $01 | ✅ | 248 named / 0 Call_ | Game loop, encounters, gate data. 95 Call_ named |
+| $02 | — | 44 named / 0 Call_ | Screen rendering, 6 layer flags |
+| $03 | ✅ | 72 Call_ named | Monster info fully annotated |
+| $04 | — | 23 Call_ named | Script VM engine |
+| $05-$09 | — | All Call_ named | Field utilities, audio |
+| $0A-$0B | ✅ | All Call_ named | Room data, field util |
+| $0C-$0F | ✅ | Shared code | Script data: 530 scripts, 0 unknown opcodes |
+| $10-$19 | Mixed | All Call_ named | Various systems |
 | $13 | ✅ | — | EXP/growth tables done |
-| $14 | ✅ | Partial | Enemy stats done |
-| $16 | ✅ | Partial | All data tables done this session |
-| $17 | ✅ | Partial | Attr entries decoded; palette format parsed |
+| $14 | ✅ | 11 Call_ named | Enemy stats done |
+| $16 | ✅ | 50 Call_ named | Breeding + gates |
+| $17 | ✅ | 18 Call_ named | Palette/attributes |
 | $41 | ✅ | ✅ | 100% annotated |
-| $50 | Partial | Partial | Personality Run table; battle event functions |
-| $51 | — | Partial | Battle init labeled |
-| $52 | ✅ | Partial | Function table + handlers labeled |
-| $57 | Partial | Partial | Personality Charge/Mixed/Cautious/Command; battle |
+| $42-$4E | ✅ headers | All Call_ named | Dialogue banks, dispatch tables |
+| $50 | Partial | 131 Call_ named | Battle core |
+| $51 | — | 113 Call_ named | Battle setup |
+| $52 | ✅ | 190 Call_ named | Skill functions + battle helpers |
+| $53-$58 | Partial | All Call_ named | Battle sub-systems |
+| $55-$5F | — | All Call_ named | Battle display, field UI |
 | Tilesets | ✅ | — | 14 banks LZSS tile data |
+| **Total** | — | **7,881 named / 19,053 auto** | **40% named — 0 Call_ labels** |
+
+---
+
+## Cross-Bank Dispatch Map (rst $10)
+
+1,028 cross-bank calls traced. Every bank's dispatch table is now documented
+in the asm files as proper `db`/`dw` directives (47 banks fixed this session).
+Full call data in `extracted/crossbank_calls.json`.
+
+### Bank Role Classification (from call graph analysis)
+
+**Core Engine (Bank $00):** 654 properly named functions, 0 Call_ remaining.
+All function entry points named. ~1,200 Jump_/jr_ auto-labels remain for
+internal control flow. Covers game loop, interrupts, DMA, text, audio, 
+map transitions, PRNG, math, joypad.
+
+**Overworld / Field:**
+| Bank | Role | Evidence |
+|------|------|----------|
+| $01 | Game loop, encounters, gate data | 14 entries, called by engine+field banks |
+| $02 | Screen/map rendering | 6 entries, called by engine+battle+field |
+| $06 | Map state, NPC management | 7 entries, called by field banks |
+| $07 | Tile/sprite loading | 4 entries; entries 1-2 called 11× each |
+| $09 | Field utility | 2 entries, low call count |
+| $0A | Field utility | 1 entry, called only by $09 |
+| $0B | Room data + room loading | 10 entries, called by 8 banks |
+| $15 | Map transition pipeline | 4 entries, called by $00 and $03 |
+| $19 | Field utility | 1 entry, called only by $06 |
+
+**Script System:**
+| Bank | Role | Evidence |
+|------|------|----------|
+| $04 | Script VM engine | 7 entries, called by field+UI banks |
+| $0C-$0F | Script data (4 map-type groups) | 3 entries each, called only by $04 |
+| $10 | Script utility | 2 entries, called only by $04 |
+
+**Data Banks (fully decoded):**
+| Bank | Role | Evidence |
+|------|------|----------|
+| $03 | Monster info (221×43B) | 9 entries, called by 18 banks |
+| $13 | EXP/growth tables | 4 entries |
+| $14 | Enemy stats (487×25B) | 7 entries, called by 13 banks |
+| $16 | Breeding + gates + encounters | 10 entries |
+| $17 | Palette/attribute system | 14 entries, 69 calls — heavily used |
+| $41 | Text/name tables | 3 entries, 50 calls — GetText/PutText/GetPutText |
+
+**Battle System:**
+| Bank | Role | Evidence |
+|------|------|----------|
+| $50 | Battle core / UI | 11 entries, called by battle banks + $00 |
+| $51 | Battle setup / init | 19 entries, called by battle banks |
+| $52 | Skill function dispatch (230 entries) | 7 used entries, called by $50/$53/$57/$58 |
+| $53 | Battle sub-routines | 18 entries, called by $52/$53 |
+| $54 | Battle stat tables (231 entries) | 8 used entries, monster stat lookups |
+| $55 | Battle display / effects | 15 entries, called by battle+engine |
+| $57 | Battle AI / personality | 9 entries, called by battle banks |
+| $58 | Battle animation / effects (245 entries) | 14 used entries |
+
+**Dialogue / Text Display Banks ($42-$4B):**
+The text dispatch function at $0AEA in bank $00 routes text IDs
+to banks $42-$4B via range checks. Each bank's entry 0 handles text
+display; other dispatch entries are animation/rendering helpers.
+Text ID passed via wram [$C823], bank ID via [$C822].
+
+| Bank | Dispatch Entries | Animation Bank | Notes |
+|------|-----------------|----------------|-------|
+| $42 | 117 | $1A (158 entries) | First dialogue block |
+| $43 | 147 | $1A (shared) | Castle/early game text |
+| $44 | 102 | $1B (136 entries) | |
+| $45 | 128 | $1F (120 entries) | |
+| $46 | 148 | $1B (shared) | |
+| $47 | 60 | $21 (120 entries) | |
+| $48 | 112 | $1F (shared) | |
+| $49 | 162 | — | |
+| $4A | 293 | $22 (196 entries) | Largest dialogue block |
+| $4B | 68 | $3F (11 entries) | |
+
+**Menu/UI System:**
+| Bank | Role | Evidence |
+|------|------|----------|
+| $56 | UI dispatch / menu router | 7 entries, called by 13 banks |
+| $4C | Shared UI rendering (360 entries!) | 78 calls to entry 0 from battle+UI banks |
+| $4D | Dialogue portraits / sprite data | 476 entries |
+| $4E | Text rendering utility | 92 entries, called by $00 and $56 |
+| $4F | Sub-UI utility | 3 entries, called only by $4E |
+
+**Audio:**
+| Bank | Role | Evidence |
+|------|------|----------|
+| $08 | Audio/sound engine | 3 used entries, 41 calls from 12 banks |
+| $05 | Audio utility | 1 used entry, 6 calls |
+| $18 | Audio data/music | 5 entries, called by $00 and $49 |
+
+**Save/Load / Field UI:**
+| Bank | Role | Evidence |
+|------|------|----------|
+| $59 | Save/load screens | 9 entries, called by $00/$56 |
+| $5C-$5E | Field UI (2 entries each) | Called by $00 and $5F |
+| $5F | Field UI router | 11 entries, called by engine+battle+field |
+| $12 | Item system | 1 entry, called by $09 |
+
+### Tileset Banks (14 banks, 100% annotated)
+$23-$26, $28-$31, $37-$38: LZSS compressed tile data, 29-72 entries each.
+$32-$36, $39-$3B: Tileset data with large dispatch tables (20-81 entries).
+$3C-$3E: Attribute/palette map data (78-239 entries).
 
 ---
 

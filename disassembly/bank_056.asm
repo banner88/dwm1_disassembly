@@ -1070,7 +1070,7 @@ jr_056_4128:
     rst $38
     rst $38
 
-Call_056_4485:
+SetB56_4485:
     ld hl, $c829	
     ld a, [hl+]
     or [hl]
@@ -1174,7 +1174,7 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
     jp Jump_056_4855
 
 
-    call Call_056_4855
+    call SetB56_4855
     ld a, $01
     ld [$c83c], a
     ld a, $ff
@@ -1310,7 +1310,7 @@ jr_056_45d6:
     ld c, a
     ld a, [$c82a]
     ld b, a
-    call Call_000_0d34
+    call LoadTileE0
     ld a, [$c82a]
     ld l, a
     ld h, $00
@@ -1411,7 +1411,7 @@ jr_056_4679:
     ld c, a
     ld a, [$c82a]
     ld b, a
-    call Call_000_0d34
+    call LoadTileE0
     ld a, [$c827]
     ld e, a
     ld a, [$c828]
@@ -1448,7 +1448,7 @@ jr_056_46b5:
     ld c, a
     ld a, [$c82a]
     ld b, a
-    call Call_000_0d34
+    call LoadTileE0
     ld a, [$c82a]
     ld l, a
     ld h, $00
@@ -1534,8 +1534,8 @@ Jump_056_4722:
 
 
     call HandleScreenRefresh
-    call Call_056_4771
-    call Call_056_4485
+    call SetB56_4771
+    call SetB56_4485
     ld a, [$c827]
     ld l, a
     ld a, [$c828]
@@ -1551,7 +1551,7 @@ Jump_056_4722:
     ret
 
 
-Call_056_4771:
+SetB56_4771:
     ld hl, $c826
     res 7, [hl]
     ld hl, $c825
@@ -1688,7 +1688,7 @@ jr_056_4806:
     ret
 
 
-Call_056_4855:
+SetB56_4855:
 Jump_056_4855:
     ld hl, $c826
     res 7, [hl]
@@ -1735,7 +1735,7 @@ jr_056_486d:
     dec c
     jr nz, jr_056_486a
 
-    call Call_056_48a1
+    call SetB56_48a1
     ld hl, $c825
     set 2, [hl]
     xor a
@@ -1743,7 +1743,7 @@ jr_056_486d:
     ret
 
 
-Call_056_48a1:
+SetB56_48a1:
     ld de, $560a
     ld hl, $8e50
     call WaitDMATransfer
@@ -1817,7 +1817,7 @@ jr_056_48dc:
     reti
 
 
-Call_056_4901:
+SetB56_4901:
     ld de, $664b
     call CallTextEngine
     ret
@@ -1828,8 +1828,8 @@ Call_056_4901:
     ret
 
 
-Call_056_490f:
-    call Call_056_4901
+CallB56_490f:
+    call SetB56_4901
     call RequestScreenUpdate
     ret
 
@@ -1848,12 +1848,12 @@ Call_056_490f:
     ld hl, $9c00
     ld bc, $1204
     ld a, $80
-    call Call_056_4a0a
+    call SaveB56_4a0a
     xor a
     ld [$c8da], a
     xor a
     ldh [rVBK], a
-    call Call_056_4996
+    call SetB56_4996
     ld a, $00
     call SetBGM
     ld a, $0a
@@ -1889,7 +1889,7 @@ Call_056_490f:
     jp Jump_000_11cb
 
 
-Call_056_4996:
+SetB56_4996:
     ld hl, $c817
     ld [hl], $00
     inc hl
@@ -1902,27 +1902,27 @@ Call_056_4996:
     ld a, $00
     ld [$c823], a
     ld de, $1002
-    call Call_056_49e2
+    call LoadB56_49e2
     ld hl, $9300
     ld a, [$c88b]
     inc a
     ld [$c823], a
     ld de, $1004
-    call Call_056_49e2
-    call Call_056_4a23
+    call LoadB56_49e2
+    call SetB56_4a23
     ld hl, $9823
     ld bc, $1002
     ld a, $10
-    call Call_056_4a0a
+    call SaveB56_4a0a
     ld hl, $9883
     ld bc, $1004
     ld a, $30
-    call Call_056_4a0a
-    call Call_056_4a2f
+    call SaveB56_4a0a
+    call FuncB56_4a2f
     ret
 
 
-Call_056_49e2:
+LoadB56_49e2:
     ld a, e
     ld [$c829], a
     ld a, d
@@ -1931,11 +1931,11 @@ Call_056_49e2:
     ld [$c827], a
     ld a, h
     ld [$c828], a
-    call Call_056_490f
+    call CallB56_490f
     ret
 
 
-Call_056_49f6:
+LoadB56_49f6:
     ld a, e
     ld [$c829], a
     ld a, d
@@ -1944,11 +1944,11 @@ Call_056_49f6:
     ld [$c827], a
     ld a, h
     ld [$c828], a
-    call Call_056_4901
+    call SetB56_4901
     ret
 
 
-Call_056_4a0a:
+SaveB56_4a0a:
 jr_056_4a0a:
     push hl
     ld d, b
@@ -1975,7 +1975,7 @@ jr_056_4a0c:
     ret
 
 
-Call_056_4a23:
+SetB56_4a23:
     ld hl, $9800
     ld bc, $0400
     ld a, $1f
@@ -1983,7 +1983,7 @@ Call_056_4a23:
     ret
 
 
-Call_056_4a2f:
+FuncB56_4a2f:
     ld b, $04
     ld hl, $988e
     ld c, $6f
@@ -2004,13 +2004,13 @@ jr_056_4a36:
     ret
 
 
-    call Call_056_4a50
-    call Call_056_4d7a
-    call Call_056_4dba
+    call LoadB56_4a50
+    call BlinkDebugMsgSelection
+    call LoadB56_4dba
     ret
 
 
-Call_056_4a50:
+LoadB56_4a50:
     ld a, [wJoypad_current_frame]
     bit 6, a
     jr z, jr_056_4aa6
@@ -2239,7 +2239,7 @@ jr_056_4b9e:
     ld [$c823], a
     ld de, $1204
     ld hl, $8800
-    call Call_056_49f6
+    call LoadB56_49f6
     ret
 
 
@@ -2548,7 +2548,7 @@ jr_056_4d79:
     ret
 
 
-Call_056_4d7a:		;function for blinking the msg debug selection
+BlinkDebugMsgSelection:		;function for blinking the msg debug selection
     ld a, [$df08]
     cp $00
     jr nz, jr_056_4db5
@@ -2587,7 +2587,7 @@ jr_056_4db5:
     ret
 
 
-Call_056_4dba:
+LoadB56_4dba:
     ld a, [$df06]
     sub $70
     rlca

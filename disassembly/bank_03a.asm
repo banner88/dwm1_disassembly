@@ -5,161 +5,94 @@
 
 SECTION "ROM Bank $03a", ROMX[$4000], BANK[$3a]
 
-    ld a, [hl-]
-    and e
-    ld b, b
-    ld [hl], d
-    ld b, c
-    ld c, c
-    ld b, d
-    db $fd
-    ld b, d
-    push de
-    ld b, e
-    cp l
-    ld b, h
-    xor e
-    ld b, l
-    adc l
-    ld b, [hl]
-    ld e, [hl]
-    ld b, a
-    inc d
-    ld c, b
-    dec c
-    ld c, c
-    ld [c], a
-    ld c, c
-    reti
+    db $3A ; Bank number
 
+    ; Cross-bank dispatch table (81 entries)
+    ; Called via: ld hl, $3AXX / rst $10
+    dw $40A3                          ; Entry 0
+    dw $4172                          ; Entry 1
+    dw $4249                          ; Entry 2
+    dw $42FD                          ; Entry 3
+    dw $43D5                          ; Entry 4
+    dw $44BD                          ; Entry 5
+    dw $45AB                          ; Entry 6
+    dw $468D                          ; Entry 7
+    dw $475E                          ; Entry 8
+    dw $4814                          ; Entry 9
+    dw $490D                          ; Entry 10
+    dw $49E2                          ; Entry 11
+    dw $4AD9                          ; Entry 12
+    dw $4BAB                          ; Entry 13
+    dw $4CAB                          ; Entry 14
+    dw $4DA8                          ; Entry 15
+    dw $4E9A                          ; Entry 16
+    dw $4F5F                          ; Entry 17
+    dw $5039                          ; Entry 18
+    dw $50F9                          ; Entry 19
+    dw $51A3                          ; Entry 20
+    dw $5275                          ; Entry 21
+    dw $5340                          ; Entry 22
+    dw $541B                          ; Entry 23
+    dw $54FB                          ; Entry 24
+    dw $558B                          ; Entry 25
+    dw $5669                          ; Entry 26
+    dw $5759                          ; Entry 27
+    dw $5823                          ; Entry 28
+    dw $58B3                          ; Entry 29
+    dw $597E                          ; Entry 30
+    dw $5A0B                          ; Entry 31
+    dw $5AD5                          ; Entry 32
+    dw $5BA1                          ; Entry 33
+    dw $5C6D                          ; Entry 34
+    dw $5D34                          ; Entry 35
+    dw jr_03a_5e17                    ; Entry 36
+    dw $5F03                          ; Entry 37
+    dw $6006                          ; Entry 38
+    dw $608C                          ; Entry 39
+    dw $6183                          ; Entry 40
+    dw $6273                          ; Entry 41
+    dw $6369                          ; Entry 42
+    dw $6455                          ; Entry 43
+    dw $651E                          ; Entry 44
+    dw $65FB                          ; Entry 45
+    dw $66CF                          ; Entry 46
+    dw $67A5                          ; Entry 47
+    dw $6894                          ; Entry 48
+    dw $695E                          ; Entry 49
+    dw $6A34                          ; Entry 50
+    dw $6B1A                          ; Entry 51
+    dw $6BF0                          ; Entry 52
+    dw $6CE8                          ; Entry 53
+    dw $6D9F                          ; Entry 54
+    dw DataB3a_6e9e                  ; Entry 55
+    dw $6F18                          ; Entry 56
+    dw $6FCC                          ; Entry 57
+    dw $701C                          ; Entry 58
+    dw $70C0                          ; Entry 59
+    dw $7145                          ; Entry 60
+    dw $720E                          ; Entry 61
+    dw jr_03a_727e                    ; Entry 62
+    dw $7337                          ; Entry 63
+    dw $7398                          ; Entry 64
+    dw $73FF                          ; Entry 65
+    dw $7481                          ; Entry 66
+    dw $752D                          ; Entry 67
+    dw $75C6                          ; Entry 68
+    dw $7699                          ; Entry 69
+    dw $7712                          ; Entry 70
+    dw $77C4                          ; Entry 71
+    dw $7858                          ; Entry 72
+    dw $78F9                          ; Entry 73
+    dw $79A3                          ; Entry 74
+    dw $7A20                          ; Entry 75
+    dw $7ACE                          ; Entry 76
+    dw $7B71                          ; Entry 77
+    dw $7C39                          ; Entry 78
+    dw $7CED                          ; Entry 79
+    dw $7D6E                          ; Entry 80
 
-    ld c, d
-    xor e
-    ld c, e
-    xor e
-    ld c, h
-    xor b
-    ld c, l
-    sbc d
-    ld c, [hl]
-    ld e, a
-    ld c, a
-    add hl, sp
-    ld d, b
-    ld sp, hl
-    ld d, b
-    and e
-    ld d, c
-    ld [hl], l
-    ld d, d
-    ld b, b
-    ld d, e
-    dec de
-    ld d, h
-    ei
-    ld d, h
-    adc e
-    ld d, l
-    ld l, c
-    ld d, [hl]
-    ld e, c
-    ld d, a
-    inc hl
-    ld e, b
-    or e
-    ld e, b
-    ld a, [hl]
-    ld e, c
-    dec bc
-    ld e, d
-    push de
-    ld e, d
-    and c
-    ld e, e
-    ld l, l
-    ld e, h
-    inc [hl]
-    ld e, l
-    rla
-    ld e, [hl]
-    inc bc
-    ld e, a
-    ld b, $60
-    adc h
-    ld h, b
-    add e
-    ld h, c
-    ld [hl], e
-    ld h, d
-    ld l, c
-    ld h, e
-    ld d, l
-    ld h, h
-    ld e, $65
-    ei
-    ld h, l
-    rst $08
-    ld h, [hl]
-    and l
-    ld h, a
-    sub h
-    ld l, b
-    ld e, [hl]
-    ld l, c
-    inc [hl]
-    ld l, d
-    ld a, [de]
-    ld l, e
-    ldh a, [rOCPD]
-    add sp, $6c
-    sbc a
-    ld l, l
-    sbc [hl]
-    ld l, [hl]
-    jr jr_03a_40e2
-
-    db $cc, $6f, $1c
-    ld [hl], b
-    ret nz
-
-    ld [hl], b
-    ld b, l
-    ld [hl], c
-    ld c, $72
-    ld a, [hl]
-    ld [hl], d
-    scf
-    ld [hl], e
-    sbc b
-    ld [hl], e
-    rst $38
-    ld [hl], e
-    add c
-    ld [hl], h
-    dec l
-    ld [hl], l
-    add $75
-    sbc c
-    db $76
-    ld [de], a
-    ld [hl], a
-    call nz, Call_03a_5877
-    ld a, b
-    ld sp, hl
-    ld a, b
-    and e
-    ld a, c
-    jr nz, jr_03a_4113
-
-    adc $7a
-    ld [hl], c
-    ld a, e
-    add hl, sp
-    ld a, h
-    db $ed
-    ld a, h
-    ld l, [hl]
-    ld a, l
+; --- Dispatch entry 0 ($40A3) ---
+DispatchEntry_3A_0:
     nop
     ld bc, $2001
     jr nz, @+$76
@@ -277,7 +210,7 @@ jr_03a_4121:
     ld d, h
     ld bc, $0547
     ld bc, $0480
-    call nz, Call_03a_64fc
+    call nz, DispB3a_64fc
     cp h
     ret c
 
@@ -1219,7 +1152,7 @@ jr_03a_456a:
 
     ldh a, [$d0]
     ld [hl], h
-    call nc, Call_03a_5cbc
+    call nc, CalcB3a_5cbc
     db $ec
     inc d
     ld hl, sp+$08
@@ -2271,7 +2204,7 @@ jr_03a_4a09:
     sbc h
     sub h
     ld bc, $0078
-    call c, Call_03a_4bd4
+    call c, CalcB3a_4bd4
     ld a, a
     ld b, h
     ld a, a
@@ -2576,7 +2509,7 @@ jr_03a_4b6c:
     ld e, d
     ld a, a
 
-Call_03a_4bd4:
+CalcB3a_4bd4:
     dec a
     ccf
     inc d
@@ -2867,7 +2800,7 @@ jr_03a_4d09:
 
 jr_03a_4d20:
     db $ec
-    call c, Call_03a_50b0
+    call c, FuncB3a_50b0
     ld hl, sp+$08
     or b
     ld [hl], b
@@ -2953,7 +2886,7 @@ jr_03a_4d72:
     ldh a, [rNR10]
     and b
     ld h, b
-    call nc, Call_000_3c34
+    call nc, RetNop_3C34
     call z, $04fc
     ld a, l
     ld b, d
@@ -3515,7 +3448,7 @@ jr_03a_5009:
     ldh a, [rNR10]
     ld hl, sp+$28
     db $fc
-    call nz, Call_000_3c3c
+    call nz, ScreenFadeStep
     nop
     ld bc, $0602
     ld b, $0e
@@ -3623,7 +3556,7 @@ jr_03a_50a2:
     add b
     add b
 
-Call_03a_50b0:
+FuncB3a_50b0:
     ld [bc], a
     ld hl, sp-$0a
     rrca
@@ -4209,7 +4142,7 @@ jr_03a_5315:
     ld c, h
     db $f4
     db $fc
-    call c, Call_03a_77f4
+    call c, FuncB3a_77f4
     ld a, b
     rst $38
     sbc a
@@ -5188,7 +5121,7 @@ jr_03a_5794:
     cp $6e
     ld a, [c]
     ld a, h
-    call nc, Call_03a_78f8
+    call nc, FuncB3a_78f8
     inc c
     ld a, d
     inc b
@@ -5298,7 +5231,7 @@ jr_03a_5794:
     rlca
     dec b
 
-Call_03a_5877:
+JmpB3a_5877:
     jr @+$06
 
     add h
@@ -6211,7 +6144,7 @@ jr_03a_5cb5:
     ld bc, $000c
     ld bc, $f0ff
 
-Call_03a_5cbc:
+CalcB3a_5cbc:
     add b
     add b
     ld h, b
@@ -6747,7 +6680,7 @@ jr_03a_5f12:
     ld e, h
     inc [hl]
     db $fc
-    call nz, Call_03a_78fc
+    call nz, CalcB3a_78fc
     ld a, b
     ld c, a
     ld [hl], b
@@ -6867,7 +6800,7 @@ jr_03a_5fa4:
     adc b
     ld a, b
     inc h
-    call c, Call_03a_6e9e
+    call c, DataB3a_6e9e
     ld d, a
     cp c
     rst $38
@@ -7160,7 +7093,7 @@ jr_03a_6073:
     rst $38
     rrca
     rst $38
-    call z, Call_03a_66fc
+    call z, FuncB3a_66fc
     cp $ea
     cp $fe
     ld bc, $017f
@@ -7361,7 +7294,7 @@ jr_03a_6202:
     db $fc
     add h
     db $fc
-    call z, Call_000_36fc
+    call z, AudioGetNoteLength
     ld a, [$fe12]
     ld c, $fe
     add hl, de
@@ -8027,7 +7960,7 @@ jr_03a_64c9:
     ld hl, sp-$01
     db $fd
 
-Call_03a_64fc:
+DispB3a_64fc:
     rst $38
     cp $ff
     cp $ff
@@ -8158,7 +8091,7 @@ jr_03a_6516:
     rst $38
     rst $38
     db $fc
-    call nz, Call_03a_7cfc
+    call nz, FuncB3a_7cfc
     ld hl, sp+$48
     ld hl, sp-$68
     db $fc
@@ -8463,7 +8396,7 @@ jr_03a_66bb:
     dec de
     rra
 
-Call_03a_66fc:
+FuncB3a_66fc:
     ld h, [hl]
     ld a, a
     call $fcb5
@@ -8668,7 +8601,7 @@ jr_03a_67db:
     ld a, [$fefa]
     xor h
     db $fc
-    call nz, Call_03a_6cfc
+    call nz, IntB3a_6cfc
     ld a, h
     ld a, b
     ld a, b
@@ -9123,7 +9056,7 @@ jr_03a_69d0:
     ld de, $0a1f
     rrca
     ld bc, $066e
-    call c, Call_000_28fc
+    call c, DataTable_28FC
     ld hl, sp+$10
     ldh a, [$f0]
     ldh a, [rSB]
@@ -9813,7 +9746,7 @@ jr_03a_6c82:
     ld a, e
     sbc l
 
-Call_03a_6cfc:
+IntB3a_6cfc:
     ei
     or $ff
     ccf
@@ -10167,7 +10100,7 @@ jr_03a_6dbe:
     db $fd
     or $f6
 
-Call_03a_6e9e:
+DataB3a_6e9e:
     nop
     ld [bc], a
     nop
@@ -12265,7 +12198,7 @@ jr_03a_77ed:
     ld [hl], $37
     nop
 
-Call_03a_77f4:
+FuncB3a_77f4:
     ld h, h
     nop
     ld [hl-], a
@@ -12478,11 +12411,11 @@ jr_03a_78e2:
     dec hl
     ld b, $14
 
-Call_03a_78f8:
+FuncB3a_78f8:
     ld [$0200], sp
     nop
 
-Call_03a_78fc:
+CalcB3a_78fc:
     inc l
     dec l
     ld [$0009], sp
@@ -13301,7 +13234,7 @@ jr_03a_7c96:
     ld [$3404], sp
     inc c
     inc b
-    call nz, Call_000_3404
+    call nz, AudioPopDE
     dec [hl]
     inc b
     ld c, $00
@@ -13366,7 +13299,7 @@ jr_03a_7c96:
 
     jr nc, jr_03a_7d2d
 
-Call_03a_7cfc:
+FuncB3a_7cfc:
     ld b, $07
     inc b
     ld [bc], a

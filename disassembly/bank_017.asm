@@ -74,7 +74,7 @@ label17_401d:
     ld l, a
     ld c, $00
     ld b, $04
-    call Call_017_46a1
+    call LoadPal_46a1
     jp Jump_017_4102
 
 
@@ -114,7 +114,7 @@ jr_017_4071:
     ld l, a
     ld c, $00
     ld b, $04
-    call Call_017_46a1
+    call LoadPal_46a1
     jr jr_017_4102
 
 
@@ -193,7 +193,7 @@ jr_017_40e7:
     ret
 
 
-Call_017_4102:
+LoadPal_4102:
 Jump_017_4102:
 jr_017_4102:
     ld a, [wIsGBC]
@@ -203,7 +203,7 @@ jr_017_4102:
     ld hl, $5655
     ld c, $07
     ld b, $01
-    call Call_017_46a1
+    call LoadPal_46a1
     ld a, [$c7d1]
     ld l, a
     ld a, [$c7d2]
@@ -307,7 +307,7 @@ label17_41c0:
     ld hl, $5615
     ld c, $00
     ld b, $08
-    call Call_017_46bf
+    call LoadPal_46bf
     ret
 
 label17_41d0:
@@ -330,8 +330,8 @@ label17_41d0:
     ld a, [$c81f]
     ld c, a
     ld b, $01
-    call Call_017_46a1
-    call Call_017_4102
+    call LoadPal_46a1
+    call LoadPal_4102
 
 label17_41f2:
     ld a, [wIsGBC]
@@ -373,7 +373,7 @@ label17_41f2:
     ld b, a
 
 jr_017_4229:
-    call Call_017_4265
+    call LoadPal_4265
     dec b
     jr nz, jr_017_4229
 
@@ -391,7 +391,7 @@ jr_017_423a:
 jr_017_423d:
     ld a, [$c81f]
     call Write_gfx_tile
-    call Call_017_4265
+    call LoadPal_4265
     dec b
     jr nz, jr_017_423d
 
@@ -417,7 +417,7 @@ jr_017_423d:
     ret
 
 
-Call_017_4265:
+LoadPal_4265:
     ld a, l
     and $e0
     push af
@@ -444,20 +444,20 @@ label17_4272:
     ld a, $80
     ldh [rBCPS], a
     ld hl, $c797
-    call Call_017_42ac
-    call Call_017_42ac
-    call Call_017_42ac
-    call Call_017_42ac
-    call Call_017_42ac
-    call Call_017_42ac
-    call Call_017_42ac
-    call Call_017_42ac
+    call SavePal_42ac
+    call SavePal_42ac
+    call SavePal_42ac
+    call SavePal_42ac
+    call SavePal_42ac
+    call SavePal_42ac
+    call SavePal_42ac
+    call SavePal_42ac
     ld a, [wBGPalette]
     ld [$c89e], a
     jp Jump_017_4341
 
 
-Call_017_42ac:
+SavePal_42ac:
     push hl
     ld a, [wBGPalette]
     and $03
@@ -567,20 +567,20 @@ Jump_017_4341:
     ld a, $80
     ldh [rOCPS], a
     ld hl, $c7d7
-    call Call_017_4376
-    call Call_017_4376
-    call Call_017_4376
-    call Call_017_4376
-    call Call_017_4376
-    call Call_017_4376
-    call Call_017_4376
-    call Call_017_4376
+    call SavePal_4376
+    call SavePal_4376
+    call SavePal_4376
+    call SavePal_4376
+    call SavePal_4376
+    call SavePal_4376
+    call SavePal_4376
+    call SavePal_4376
     ld a, [wObj1Palette]
     ld [$c89f], a
     jp Jump_017_440b
 
 
-Call_017_4376:
+SavePal_4376:
     push hl
     ld a, [wObj1Palette]
     and $03
@@ -699,7 +699,7 @@ label17_4410:
     srl a
     ld [$c857], a
     ld [$c858], a
-    call Call_000_1bd5
+    call CheckAnimBusy
     ret
 
 
@@ -774,7 +774,7 @@ jr_017_448a:
 
 jr_017_4495:
     ld [$c856], a
-    call Call_017_44d8
+    call IntPal_44d8
     ld a, [$c857]
     ld [$c858], a
     ld a, [$c856]
@@ -804,7 +804,7 @@ jr_017_44b5:
 
 jr_017_44bf:
     ld [$c856], a
-    call Call_017_45bb
+    call IntPal_45bb
     ld a, [$c857]
     ld [$c858], a
     ld a, [$c856]
@@ -820,44 +820,44 @@ Jump_017_44d3:
     ret
 
 
-Call_017_44d8:
+IntPal_44d8:
     di
     call WaitVRAM
     ld a, $80
     ldh [rBCPS], a
     ei
     ld hl, $c797
-    call Call_017_4552
-    call Call_017_4552
-    call Call_017_4552
-    call Call_017_4552
-    call Call_017_4552
-    call Call_017_4552
-    call Call_017_4552
-    call Call_017_4552
+    call CallPal_4552
+    call CallPal_4552
+    call CallPal_4552
+    call CallPal_4552
+    call CallPal_4552
+    call CallPal_4552
+    call CallPal_4552
+    call CallPal_4552
     di
     call WaitVRAM
     ld a, $80
     ldh [rOCPS], a
     ei
     ld hl, $c7d7
-    call Call_017_4521
-    call Call_017_4521
-    call Call_017_4521
-    call Call_017_4521
-    call Call_017_4521
-    call Call_017_4521
-    call Call_017_4521
-    call Call_017_4521
+    call CallPal_4521
+    call CallPal_4521
+    call CallPal_4521
+    call CallPal_4521
+    call CallPal_4521
+    call CallPal_4521
+    call CallPal_4521
+    call CallPal_4521
     ret
 
 
-Call_017_4521:
-    call Call_017_452a
-    call Call_017_452a
-    call Call_017_452a
+CallPal_4521:
+    call LoadPal_452a
+    call LoadPal_452a
+    call LoadPal_452a
 
-Call_017_452a:
+LoadPal_452a:
     ld a, [$c856]
     ld d, a
     ld c, [hl]
@@ -865,9 +865,9 @@ Call_017_452a:
     ld b, [hl]
     inc hl
     ld de, $0000
-    call Call_017_457f
-    call Call_017_457f
-    call Call_017_457f
+    call SavePal_457f
+    call SavePal_457f
+    call SavePal_457f
     rr b
     rr c
     rr d
@@ -882,20 +882,20 @@ Call_017_452a:
     ret
 
 
-Call_017_4552:
-    call Call_017_455b
-    call Call_017_455b
-    call Call_017_455b
+CallPal_4552:
+    call FuncPal_455b
+    call FuncPal_455b
+    call FuncPal_455b
 
-Call_017_455b:
+FuncPal_455b:
     ld c, [hl]
     inc hl
     ld b, [hl]
     inc hl
     ld de, $0000
-    call Call_017_457f
-    call Call_017_457f
-    call Call_017_457f
+    call SavePal_457f
+    call SavePal_457f
+    call SavePal_457f
     rr b
     rr c
     rr d
@@ -910,7 +910,7 @@ Call_017_455b:
     ret
 
 
-Call_017_457f:
+SavePal_457f:
     push de
     ld a, c
     and $1f
@@ -951,44 +951,44 @@ jr_017_458b:
     ret
 
 
-Call_017_45bb:
+IntPal_45bb:
     di
     call WaitVRAM
     ld a, $80
     ldh [rBCPS], a
     ei
     ld hl, $c797
-    call Call_017_4635
-    call Call_017_4635
-    call Call_017_4635
-    call Call_017_4635
-    call Call_017_4635
-    call Call_017_4635
-    call Call_017_4635
-    call Call_017_4635
+    call CallPal_4635
+    call CallPal_4635
+    call CallPal_4635
+    call CallPal_4635
+    call CallPal_4635
+    call CallPal_4635
+    call CallPal_4635
+    call CallPal_4635
     di
     call WaitVRAM
     ld a, $80
     ldh [rOCPS], a
     ei
     ld hl, $c7d7
-    call Call_017_4604
-    call Call_017_4604
-    call Call_017_4604
-    call Call_017_4604
-    call Call_017_4604
-    call Call_017_4604
-    call Call_017_4604
-    call Call_017_4604
+    call CallPal_4604
+    call CallPal_4604
+    call CallPal_4604
+    call CallPal_4604
+    call CallPal_4604
+    call CallPal_4604
+    call CallPal_4604
+    call CallPal_4604
     ret
 
 
-Call_017_4604:
-    call Call_017_460d
-    call Call_017_460d
-    call Call_017_460d
+CallPal_4604:
+    call LoadPal_460d
+    call LoadPal_460d
+    call LoadPal_460d
 
-Call_017_460d:
+LoadPal_460d:
     ld a, [$c856]
     ld d, a
     ld c, [hl]
@@ -996,9 +996,9 @@ Call_017_460d:
     ld b, [hl]
     inc hl
     ld de, $0000
-    call Call_017_4662
-    call Call_017_4662
-    call Call_017_4662
+    call SavePal_4662
+    call SavePal_4662
+    call SavePal_4662
     rr b
     rr c
     rr d
@@ -1013,20 +1013,20 @@ Call_017_460d:
     ret
 
 
-Call_017_4635:
-    call Call_017_463e
-    call Call_017_463e
-    call Call_017_463e
+CallPal_4635:
+    call FuncPal_463e
+    call FuncPal_463e
+    call FuncPal_463e
 
-Call_017_463e:
+FuncPal_463e:
     ld c, [hl]
     inc hl
     ld b, [hl]
     inc hl
     ld de, $0000
-    call Call_017_4662
-    call Call_017_4662
-    call Call_017_4662
+    call SavePal_4662
+    call SavePal_4662
+    call SavePal_4662
     rr b
     rr c
     rr d
@@ -1041,7 +1041,7 @@ Call_017_463e:
     ret
 
 
-Call_017_4662:
+SavePal_4662:
     push de
     ld a, c
     and $1f
@@ -1083,7 +1083,7 @@ jr_017_4671:
     ret
 
 
-Call_017_46a1:
+LoadPal_46a1:
     ld a, [wIsGBC]
     or a
     ret z
@@ -1114,7 +1114,7 @@ jr_017_46b8:
     ret
 
 
-Call_017_46bf:
+LoadPal_46bf:
     ld a, [wIsGBC]
     or a
     ret z
@@ -1207,7 +1207,7 @@ label17_4712:
     ld h, a
     ld c, $00
     ld b, $08
-    call Call_017_46a1
+    call LoadPal_46a1
     ret
 
 label17_4733:
@@ -1229,7 +1229,7 @@ label17_4733:
     ld h, a
     ld c, $00
     ld b, $01
-    call Call_017_46bf
+    call LoadPal_46bf
     ret
 
 
@@ -1252,7 +1252,7 @@ label17_4751:
     ld h, a
     ld c, $00
     ld b, $01
-    call Call_017_46bf
+    call LoadPal_46bf
     ret
 
 

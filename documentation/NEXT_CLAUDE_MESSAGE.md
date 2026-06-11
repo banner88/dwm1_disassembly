@@ -1,93 +1,195 @@
-# DWM1 Disassembly Project — Handoff to Next Claude Instance
+# DWM1 Disassembly Project — Complete Handoff
 
-## What This Project Is
+## 1. What This Project Is
 
-Reverse-engineering / disassembly of **Dragon Warrior Monsters** (DWM1), GBC RPG from 1998. Goal: total control — custom rooms, NPCs, events, cutscenes, and eventually a GUI editor.
+**Dragon Warrior Monsters** (DWM1) — a Game Boy Color RPG from 1998 (Enix/TOSE).
+We are reverse-engineering the full ROM into human-readable, buildable RGBDS assembly.
 
-ROM auto-disassembled via **mgbdis**, our job is converting it to properly labeled, human-readable RGBDS assembly with documented data structures.
+The ROM was auto-disassembled by **mgbdis**, producing ~96 bank files of raw assembly
+with auto-generated labels. Our job is converting those labels into meaningful names,
+identifying data structures, and annotating the code so the game can eventually be
+fully modded with a GUI editor.
 
-## The User's Working Style
+**Current state: 40% named** — 7,881 properly named labels, 19,053 auto-labels remaining.
+All 2,404 function entry points (`Call_` labels) are named. Remaining auto-labels are
+internal branch targets (`Jump_`, `jr_`, `label`).
 
-- **Ultimate authority** on game mechanics. Knows the game deeply.
-- **Do NOT jump ahead.** Priority is DISASSEMBLY and ANNOTATION, not building custom content.
-- **Verify before claiming done.** Always build and check MD5.
-- End goal: **custom game editor** with custom triggers, events, quests.
+## 2. The User
 
-## Critical Build Rules
+- **Ultimate authority** on game mechanics. Knows DWM1 deeply.
+- Priority is **DISASSEMBLY and ANNOTATION**, not building custom content yet.
+- Wants **thorough, honest work** — no shortcuts, no silent downgrades.
+- Has unlimited Claude usage. Do the hard work.
+- Provide changed files as a **zip** for the user to commit. Do NOT use git operations.
+- End goal: **custom game editor** with custom triggers, events, quests, rooms.
+
+## 3. Critical Build Rules
 
 ```bash
-cd disassembly && rm -f game.o game.gbc game.sym game.map && make && md5sum game.gbc
-# MUST output: 1ca6579359f21d8e27b446f865bf6b83
+cd disassembly
+rm -f game.o game.gbc game.sym game.map
+make
+md5sum game.gbc
+# MUST output: b90957482011c8083a068781033715b7
 ```
-- **NEVER run `make clean`** — deletes .2bpp graphics files
-- RGBDS v0.6.1 at `~/.local/bin/`
 
-## Setup
-
-- **Repo:** `https://github.com/banner88/dwm1_disassembly.git`
-- **ROM:** user uploads `DWM-original.gbc` → `data/DWM-original.gbc`
+- **NEVER run `make clean`** — deletes `.2bpp` graphics files that can't be regenerated
+- **NEVER use `git stash`** — reverts all `.asm` changes (caused data loss previously)
+- **RGBDS v0.6.1** required: `~/.local/bin/`
 - Build RGBDS: `cd /tmp && git clone https://github.com/gbdev/rgbds.git && cd rgbds && git checkout v0.6.1 && make -j4 && cp rgb{asm,link,fix} ~/.local/bin/`
-- Read: `documentation/SESSION_HANDOFF.md`, `documentation/DATA_STRUCTURES.md`
-- **Read `documentation/SCRIPT_TOOLS.md` before touching any script tool or bank.**
 
-## What's Done
+## 4. Setup Checklist
 
-### Script System — FULLY DECODED
-- **530 NPC scripts** across banks $0C/$0D/$0E/$0F, 1,626 labels
-- **100 opcodes**, all decoded, **0 unknowns** across 5,377 commands
-- **22 opcodes verified** via SameBoy visual trace of the Warubou cutscene
-- **Decompiler:** `tools/decompile_script.py --map <bank> <map_type>`
-- **Custom ROM tested:** modified Watabou behavior confirmed working
-- **Cutscenes = same script engine** (not a separate system)
-- **Player control** is automatic ($D8D7 bit 0)
-- See `CUSTOM_CUTSCENES.md` for the full creation guide
+1. Clone repo: `git clone https://github.com/banner88/dwm1_disassembly.git`
+2. User uploads ROM → save as `data/DWM-original.gbc`
+3. Build RGBDS v0.6.1 (see above)
+4. Build and verify MD5 (see above)
+5. Read this file, then `documentation/DATA_STRUCTURES.md`
 
-### Fully Annotated Data Banks
-| Bank | Contents | Labels | Status |
-|------|----------|--------|--------|
-| $03 | Monster info (221×43B) | ~250 | ✅ Done |
-| $0B | Room data ($4B43-$7FFF) | ~800 | ✅ Done |
-| $0C-$0F | Script data (530 scripts) | 1,626 | ✅ Done, 0 unknowns |
-| $13 | EXP/growth tables | ~100 | ✅ Done |
-| $14 | Enemy stats (487×25B) | ~500 | ✅ Done |
-| $16 | Breeding + gate + encounters | 234 | ✅ Done |
-| $17 | Palette/attribute tables | ~210 | ✅ Ptr tables done |
-| $41 | Name/text tables + strings | 933 | ✅ Done |
-| $52 | Skill functions + battle | 912 | ✅ Done |
-| 14 tileset banks | LZSS tile data | ~500 | ✅ Done |
+## 5. What's Done (Cumulative Across All Sessions)
 
-### Generator Tools
-| Tool | Generates |
-|------|-----------|
-| `gen_script_banks.py` | Script data banks $0C-$0F (`--apply`) |
-| `decompile_script.py` | Human-readable pseudo-code (`--map`) |
+### Data Structures (100% decoded)
+- **Monster info** (bank $03): 221 monsters × 43 bytes, fully annotated
+- **Enemy stats** (bank $14): 487 entries × 25 bytes
+- **EXP tables** (bank $13): 32 growth curves × 99 levels
+- **Breeding tables** (bank $16): recipe lookup, mutation, skill inheritance
+- **Room data** (bank $0B): pointer chains, exits, NPC entries, SharedPtrChase refactored
+- **Palette/attributes** (bank $17): 14 entries decoded, format documented
+- **Text system** (bank $41): charmap, DTE pairs, control codes, 100% annotated
+- **Skill functions** (bank $52): complete function table, all skill handlers named
+- **Event flags**: 311 flags mapped, 463 free slots
+- **Tileset data**: 14 banks of LZSS compressed tiles
+
+### Script System (100% decoded)
+- 530 scripts across banks $0C-$0F
+- 100 opcodes, 0 unknowns
+- Decompiler, compiler, and generator tools working
+- Banks $0C-$0F regenerable from ROM via `gen_script_banks.py --apply`
+
+### Function Naming (this session)
+- **ALL 2,404 `Call_` labels named** — zero unnamed function entry points remain
+- Banks $00 and $01 hand-named with descriptive names (396 + 95 functions)
+- Banks $02, $52 hand-named with context (44 + 190 functions)
+- Remaining banks pattern-named with category prefix + unique address suffix
+  (e.g. `LoadBtl_7848`, `CallFld_5629`, `SetBrd_45a3`)
+
+### Infrastructure (this session)
+- **47 dispatch table headers fixed** — misassembled instructions → proper `db`/`dw`
+- **1,028 cross-bank calls traced** — complete `rst $10` call graph
+- **Bank role classification** — every bank categorized (battle, field, script, audio, etc.)
+- **Dialogue bank system decoded** — banks $42-$4B handle 1,337 text IDs
+- **Animation bank pairing** — $1A↔$42/$43, $1B↔$44/$46, $1F↔$45/$48, etc.
+- **Community ROM map cross-referenced** — verified against `known_ROM_map.md`
+
+### Tools (14 total)
+| Tool | Purpose |
+|------|---------|
+| `fix_bank_headers.py` | Fix/verify dispatch table headers (ROM+sym based) |
+| `gen_script_banks.py` | Regenerate script data banks $0C-$0F (`--apply`) |
+| `decompile_script.py` | Human-readable pseudo-code from scripts (`--map`) |
+| `compile_script.py` | Pseudo-code → dw assembly (`-o`) |
+| `analyze_event_flags.py` | Flag usage report + JSON (`--json`) |
+| `analyze_bank17.py` | Palette/attribute data (`--room`) |
 | `gen_monster_db.py` | Bank $03 monster info |
-| `gen_enemy_stats_db.py` | Bank $14 enemy stats |
-| `gen_encounter_db.py` | Bank $01 encounter pools |
 | `gen_room_data_db.py` | Bank $0B room data (`--apply`) |
-| `gen_tileset_banks.py` | 14 tileset banks (`--apply`) |
-| + 5 more generators | See DATA_STRUCTURES.md |
+| + 6 more generators | See `DATA_STRUCTURES.md` |
 
-## NOT Done — Priority for Next Session
+## 6. What's NOT Done — Priority for Next Session
 
-### HIGH PRIORITY
-1. **Script compiler** — reverse of decompiler: pseudo-code → `dw` assembly
-2. **GUI editor prototype** — web-based script editor
+### Priority 1: Jump_/jr_ Naming in Core Banks
+19,053 auto-labels remain (1,072 `Jump_`, 17,975 `jr_`, 410 `label`).
+These are internal branch targets within functions. Most impactful banks:
+- Bank $00 (~1,200 auto): engine core — most referenced code
+- Banks $50-$58 (~3,000 auto): battle system
+- Bank $04 (~250 auto): script VM
 
-### MEDIUM PRIORITY
-3. **Bank $00 function naming** — 466 Call_ labels remain
-4. **Bank $04 code annotation** — 833 auto-labels in script VM
-5. **Bank $17 per-room data** — data blocks still raw hex
+### Priority 2: WRAM Symbol Definitions
+Key WRAM regions still use raw addresses in code:
+- `$C8xx`: Engine state (screen mode, animation, joypad)
+- `$CAxx`: Party/monster data ($CA8D=party count, $CAC1=slot table)
+- `$CBxx`: Active monster stats ($CB11=level, $CB13=HP, $CB19=ATK, etc.)
+- `$DBxx/$DDxx`: Battle state variables
+- `$DExx`: Audio engine state
 
-### LOWER PRIORITY
-6. NPC behavior values, collision data
-7. Event state machine (Bank $50/$51)
+Defining these as `wXxxYyy` symbols in a shared `.inc` file would massively
+improve readability across all banks.
 
-## Key Map Types Identified
-| Type | Name | Bank | Notes |
-|------|------|------|-------|
-| $00 | Castle | $0C | Main castle, throne room |
-| $01 | GreatTree | $0C | Overworld hub |
-| $08 | TransitionScreen | $0D | Screen transition effect |
-| $09 | MonsterShrine | $0D | Starry Night intro shrine |
-| $2F | Bedroom | $0E | Terry+Milayou bedroom, Warubou cutscene |
+### Priority 3: Data Table Conversion
+Several address ranges in bank $00 contain data misassembled as instructions:
+- $0515: Cross-bank trampoline table (named `BankTrampolineTable`)
+- $26D6-$2929: Multiple data tables (named `DataTable_XXXX`)
+- $3200-$33FF: Audio waveform/pattern data (named `AudioWaveData_XXXX`)
+These should be converted from instructions to proper `db`/`dw` directives.
+
+### Priority 4: Overflow Room System (DEFERRED)
+SharedPtrChase refactoring freed 119 bytes. Architecture documented in
+`CROSSBANK_ROOMS.md`. User explicitly said to finish disassembly first.
+
+## 7. Key WRAM Addresses (Quick Reference)
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| $C850 | wAnimLock | Animation busy flag |
+| $C85A | wAnimState | Animation state counter |
+| $C86C | wLinkBattle | Link cable battle flag |
+| $C8A6 | wVisualEffectStep | Visual effect counter |
+| $C88E/$C88F | wScreenLock | Screen update lock |
+| $C8B5 | wBGMOffset | Current BGM ID |
+| $C899/$C89A | wPRNGState | PRNG state (16-bit) |
+| $C968 | wMapID | Current map type |
+| $C969 | wInGateworld | Gate world flag |
+| $C925 | wScreenIndex | Screen/room index |
+| $C935 | wCurrentGate | Current gate ID |
+| $C939 | wCurrentFloor | Current dungeon floor |
+| $CA8D | wPartyCount | Number of monsters in party |
+| $CAC1 | wPartySlotTable | Party slot table (20 entries) |
+| $CB11+ | Monster stats | Level, HP, MP, ATK, DEF, AGL, INT, skills |
+| $DA12/$DA13 | wEnemyStatsId | Current enemy stats ID |
+
+## 8. Bank Role Map (from call graph analysis)
+
+| Role | Banks |
+|------|-------|
+| **Engine** | $00 (core), $08 (audio player), $17 (palettes) |
+| **Field** | $01 (game loop), $02 (screen), $06 (map), $07 (tiles), $09/$0A (util), $0B (rooms), $15 (transitions) |
+| **Script** | $04 (VM), $0C-$0F (data), $10 (util) |
+| **Battle** | $50 (core), $51 (setup), $52 (skills), $53-$54 (sub), $55 (display), $57 (AI), $58 (FX) |
+| **Dialogue** | $42-$4B (text handlers), $4C (shared UI), $4D (portraits), $4E (text util) |
+| **Animation** | $1A, $1B, $1F, $21, $22, $3F (paired with dialogue banks) |
+| **Data** | $03 (monsters), $13 (EXP), $14 (enemies), $16 (breeding/gates), $41 (text/names) |
+| **UI** | $56 (router), $59 (save/load), $5C-$5F (field UI) |
+| **Audio** | $05, $08, $18 |
+| **Tilesets** | $23-$26, $28-$31, $37-$38 (14 banks LZSS) |
+
+## 9. Workflow Advice for Next Instance
+
+1. **Read this file first**, then `DATA_STRUCTURES.md` for detailed structures.
+2. **Always build and verify MD5** before and after changes.
+3. **Work in batches** — name 10-30 functions, build, verify, repeat.
+4. **Use the community ROM map** (`known_ROM_map.md`) for cross-referencing.
+5. **Update documentation as you go** — everything is lost to the next instance.
+6. **The pattern-named functions** (e.g. `LoadBtl_7848`) are placeholders. When you
+   understand what a function does, give it a real descriptive name.
+7. **Don't present files until the user says done.**
+8. **Package as zip** when the user asks — include modified .asm files + docs + tools.
+
+## 10. File Locations
+
+| Path | Contents |
+|------|----------|
+| `disassembly/bank_*.asm` | All bank assembly files (96 banks) |
+| `disassembly/game.asm` | Main assembly file (includes all banks) |
+| `disassembly/game.sym` | Symbol file (generated by build) |
+| `documentation/` | All documentation (this file + 20 others) |
+| `tools/` | Python tools for analysis and generation |
+| `extracted/` | Extracted data (crossbank_calls.json, etc.) |
+| `data/DWM-original.gbc` | Original ROM (user must provide) |
+
+## 11. Important Warnings
+
+- **NEVER `git stash`** — reverts all .asm changes
+- **NEVER `make clean`** — deletes .2bpp graphics
+- **Build MD5 `b90957482011c8083a068781033715b7`** reflects SharedPtrChase refactoring
+- **MD5 `1ca6579359f21d8e27b446f865bf6b83`** was the ORIGINAL before refactoring — don't use
+- **RGBDS v0.6.1** — newer versions may not be compatible
+- **ROM not in repo** — user uploads each session

@@ -45,7 +45,7 @@ SECTION "ROM Bank $00c", ROMX[$4000], BANK[$c]
 ;   Addresses ($4xxx-$7xxx): branch targets for ConditionalBranch commands
 ; ---------------------------------------------------------------------------
 ScriptDataLookup:
-Call_00c_4007:
+LoadBc_4007:
     ld a, [wScriptMapType]            ; Map type (0=Castle, 1=GreatTree, etc.)
     ld l, a
     ld h, $00
@@ -114,12 +114,12 @@ labelc_402f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_00c_4007
+    call LoadBc_4007
     push bc
-    call Call_00c_40e7
+    call LoadBc_40e7
     pop bc
 
-Call_00c_4075:
+LoadBc_4075:
     ld a, [bc]
     ld l, a
     inc bc
@@ -149,7 +149,7 @@ Call_00c_4075:
     ld b, a
 
 jr_00c_409a:
-    call Call_00c_40da
+    call LoadBc_40da
     dec b
     jr nz, jr_00c_409a
 
@@ -191,10 +191,10 @@ jr_00c_40a9:
 
 jr_00c_40d2:
     call Write_gfx_tile
-    call Call_00c_40da
+    call LoadBc_40da
     jr jr_00c_40a9
 
-Call_00c_40da:
+LoadBc_40da:
     ld a, l
     and $e0
     push af
@@ -208,7 +208,7 @@ Call_00c_40da:
     ret
 
 
-Call_00c_40e7:
+LoadBc_40e7:
     ld a, [bc]
     ld l, a
     inc bc
@@ -288,9 +288,9 @@ labelc_4110:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_00c_4007
+    call LoadBc_4007
     push bc
-    call Call_00c_4171
+    call LoadBc_4171
     pop bc
     ld a, [wIsGBC]
     or a
@@ -301,7 +301,7 @@ labelc_4110:
     ld a, $01
     ldh [rVBK], a
     ei
-    call Call_00c_4075
+    call LoadBc_4075
     di
     call WaitVRAM
     ld a, $00
@@ -310,7 +310,7 @@ labelc_4110:
     ret
 
 
-Call_00c_4171:
+LoadBc_4171:
     ld a, [bc]
     ld l, a
     inc bc
@@ -340,7 +340,7 @@ jr_00c_4178:
     jr jr_00c_4177
 
 jr_00c_418d:
-    call Call_00c_4195
+    call SaveBc_4195
     inc hl
     jr jr_00c_4178
 
@@ -349,7 +349,7 @@ jr_00c_4193:
     ret
 
 
-Call_00c_4195:
+SaveBc_4195:
     push hl
     srl h
     rr l

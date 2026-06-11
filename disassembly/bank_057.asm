@@ -5,22 +5,22 @@
 
 SECTION "ROM Bank $057", ROMX[$4000], BANK[$57]
 
-    ld d, a
-    ld c, $6e
-    ld b, h
-    ld a, h
-    inc de
-    ld b, b
-    adc d
-    ld b, b
-    ld [hl], $41
-    sub d
-    ld b, c
-    xor $41
-    ld c, d
-    ld b, d
-    and [hl]
-    ld b, d
+    db $57 ; Bank number
+
+    ; Cross-bank dispatch table (9 entries)
+    ; Called via: ld hl, $57XX / rst $10
+    dw $6E0E                          ; Entry 0
+    dw $7C44                          ; Entry 1
+    dw $4013                          ; Entry 2
+    dw $408A                          ; Entry 3
+    dw $4136                          ; Entry 4
+    dw $4192                          ; Entry 5
+    dw $41EE                          ; Entry 6
+    dw $424A                          ; Entry 7
+    dw $42A6                          ; Entry 8
+
+; --- Dispatch entry 0 ($6E0E) ---
+DispatchEntry_57_0:
     ld a, [wBattleAttackerIdx]
     ld b, a
     ld a, [wBattleTargetIdx]
@@ -214,11 +214,11 @@ jr_057_40fb:
     cp $03
     jr z, jr_057_417a
 
-Call_057_414b:
+LoadBtlAI_414b:
     ld a, b
     sub $04
     ld hl, wTempEnemyId1
-    call Call_057_4567
+    call CalcBtlAI_4567
 
 jr_057_4154:
     ld a, l
@@ -281,7 +281,7 @@ jr_057_4189:
     ld a, b
     sub $04
     ld hl, wTempEnemyId1
-    call Call_057_4567
+    call CalcBtlAI_4567
 
 jr_057_41b0:
     ld a, l
@@ -344,7 +344,7 @@ jr_057_41e5:
     ld a, b
     sub $04
     ld hl, wTempEnemyId1
-    call Call_057_4567
+    call CalcBtlAI_4567
 
 jr_057_420c:
     ld a, l
@@ -407,7 +407,7 @@ jr_057_4241:
     ld a, b
     sub $04
     ld hl, wTempEnemyId1
-    call Call_057_4567
+    call CalcBtlAI_4567
 
 jr_057_4268:
     ld a, l
@@ -470,7 +470,7 @@ jr_057_429d:
     ld a, b
     sub $04
     ld hl, wTempEnemyId1
-    call Call_057_4567
+    call CalcBtlAI_4567
 
 jr_057_42c4:
     ld a, l
@@ -567,7 +567,7 @@ jr_057_42f9:
     ld h, l
     add hl, de
     ld h, [hl]
-    call z, Call_057_414b
+    call z, LoadBtlAI_414b
     ld c, h
     ld d, [hl]
     ld c, l
@@ -685,7 +685,7 @@ jr_057_4390:
     ld h, h
     sbc l
     ld h, h
-    call z, Call_057_7b64
+    call z, FuncBtlAI_7b64
     ld h, [hl]
     ld d, a
     ld h, a
@@ -830,7 +830,7 @@ jr_057_4390:
     nop
     nop
 
-Call_057_4456:
+LoadBtlAI_4456:
 jr_057_4456:
     ld a, c
     call CheckMonsterSlot
@@ -856,7 +856,7 @@ jr_057_445f:
     ret
 
 
-Call_057_4471:
+LoadBtlAI_4471:
 jr_057_4471:
     ld a, c
     call CheckMonsterSlot
@@ -885,7 +885,7 @@ jr_057_4489:
     inc hl
     jr jr_057_447e
 
-Call_057_448c:
+LoadBtlAI_448c:
 jr_057_448c:
     ld a, c
     call CheckMonsterSlot
@@ -911,7 +911,7 @@ jr_057_4495:
     ret
 
 
-Call_057_44a7:
+LoadBtlAI_44a7:
     ld a, c
     call CheckMonsterSlot
     jr c, jr_057_44ca
@@ -949,7 +949,7 @@ jr_057_44cf:
     ret
 
 
-Call_057_44d8:
+LoadBtlAI_44d8:
 jr_057_44d8:
     ld a, c
     call CheckMonsterSlot
@@ -980,7 +980,7 @@ jr_057_44ef:
     ret
 
 
-Call_057_44f7:
+ClrBtlAI_44f7:
     xor a
     ld [$db56], a
     xor a
@@ -1026,7 +1026,7 @@ jr_057_452b:
     ret
 
 
-Call_057_4532:
+LoadBtlAI_4532:
     ld a, [$db8a]
     ld [$db4c], a
     ld a, $00
@@ -1062,7 +1062,7 @@ AddBToHL16:
     ret
 
 
-Call_057_4567:
+CalcBtlAI_4567:
     add a
     add l
     ld l, a
@@ -1075,7 +1075,7 @@ Call_057_4567:
     ret
 
 
-Call_057_4572:
+LoadBtlAI_4572:
     ld a, c
     ld hl, $db08
     call HL_AddA_x8
@@ -1084,7 +1084,7 @@ Call_057_4572:
     ret
 
 
-Call_057_457d:
+SaveBtlAI_457d:
     push hl
     ld b, a
     ld a, [$c86c]
@@ -1102,7 +1102,7 @@ Call_057_457d:
     ld a, b
     sub $04
     ld hl, wTempEnemyId1
-    call Call_057_45ea
+    call CalcBtlAI_45ea
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -1147,7 +1147,7 @@ jr_057_45cf:
     ret
 
 
-Call_057_45d1:
+LoadBtlAI_45d1:
     ld a, h
     or a
     jr nz, jr_057_45df
@@ -1176,7 +1176,7 @@ ClearBattleAction:
     ret
 
 
-Call_057_45ea:
+CalcBtlAI_45ea:
     add a
     add l
     ld l, a
@@ -1344,7 +1344,7 @@ jr_057_46e8:
     ld hl, $db04
     call HL_AddA_x8
     ld e, $04
-    call Call_057_4456
+    call LoadBtlAI_4456
     ret
 
 
@@ -1367,7 +1367,7 @@ jr_057_470f:
     ld hl, $db02
     call HL_AddA_x8
     ld e, $02
-    call Call_057_4456
+    call LoadBtlAI_4456
     ret
 
 
@@ -1387,7 +1387,7 @@ jr_057_472f:
     ld hl, $db02
     call HL_AddA_x8
     ld e, $03
-    call Call_057_4456
+    call LoadBtlAI_4456
     ret
 
 
@@ -1434,7 +1434,7 @@ jr_057_476f:
     ld hl, $db02
     call HL_AddA_x8
     ld e, $8c
-    call Call_057_4456
+    call LoadBtlAI_4456
     ret
 
 
@@ -1499,7 +1499,7 @@ jr_057_47c3:
     ld hl, $db02
     call HL_AddA_x8
     ld e, $40
-    call Call_057_4456
+    call LoadBtlAI_4456
     ret
 
 
@@ -1515,7 +1515,7 @@ jr_057_47c3:
     ld hl, $db03
     call HL_AddA_x8
     ld e, $02
-    call Call_057_4456
+    call LoadBtlAI_4456
     ret
 
 
@@ -1544,7 +1544,7 @@ jr_057_480b:
     ld hl, $db02
     call HL_AddA_x8
     ld e, $10
-    call Call_057_4456
+    call LoadBtlAI_4456
     ret
 
 
@@ -1568,7 +1568,7 @@ jr_057_482b:
     ld a, $00
     adc h
     ld h, a
-    call Call_057_4471
+    call LoadBtlAI_4471
     ret
 
 
@@ -1592,7 +1592,7 @@ jr_057_484d:
     ld a, $00
     adc h
     ld h, a
-    call Call_057_4471
+    call LoadBtlAI_4471
     ret
 
 
@@ -1621,7 +1621,7 @@ jr_057_487a:
     ld hl, $db05
     call HL_AddA_x8
     ld e, $3f
-    call Call_057_4456
+    call LoadBtlAI_4456
     ret
 
 
@@ -1721,10 +1721,10 @@ jr_057_4916:
     jr c, jr_057_495d
 
     ld a, [$db4c]
-    call Call_057_457d
+    call SaveBtlAI_457d
     ld a, [$db4c]
     ld hl, wBattleAGL
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld a, [$c86c]
     or a
     jr z, jr_057_493f
@@ -1781,7 +1781,7 @@ jr_057_495d:
     call HL_AddA_x8
     ld b, $03
     ld e, $c0
-    call Call_057_448c
+    call LoadBtlAI_448c
     ret
 
 
@@ -1796,7 +1796,7 @@ jr_057_495d:
     call HL_AddA_x8
     ld b, $03
     ld e, $10
-    call Call_057_448c
+    call LoadBtlAI_448c
     ret
 
 
@@ -1811,7 +1811,7 @@ jr_057_495d:
     call HL_AddA_x8
     ld b, $03
     ld e, $20
-    call Call_057_448c
+    call LoadBtlAI_448c
     ret
 
 
@@ -1862,7 +1862,7 @@ jr_057_49f5:
     call CheckMonsterSlot
     jr c, jr_057_49ff
 
-    call Call_057_7ac4
+    call SaveBtlAI_7ac4
     ret nc
 
 jr_057_49ff:
@@ -1922,7 +1922,7 @@ jr_057_4a2b:
     ld a, h
     ld [$db59], a
     ld a, c
-    call Call_057_7ac4
+    call SaveBtlAI_7ac4
     jr c, jr_057_4a27
 
     ret
@@ -1977,7 +1977,7 @@ jr_057_4a89:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -2009,7 +2009,7 @@ jr_057_4aba:
     call CheckMonsterSlot
     jr c, jr_057_4ac4
 
-    call Call_057_7b7d
+    call LoadBtlAI_7b7d
     ret z
 
 jr_057_4ac4:
@@ -2178,7 +2178,7 @@ jr_057_4b88:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$dd6b]
@@ -2227,7 +2227,7 @@ jr_057_4bc3:
     ret
 
 
-    call Call_057_4532
+    call LoadBtlAI_4532
     ld a, [$db4c]
     or a
     ret z
@@ -2254,7 +2254,7 @@ jr_057_4bda:
     rst $10
     pop bc
     pop de
-    call Call_057_7aa6
+    call LoadBtlAI_7aa6
     and $03
     ld hl, $db54
     add [hl]
@@ -2276,7 +2276,7 @@ jr_057_4bfe:
     ret
 
 
-    call Call_057_4532
+    call LoadBtlAI_4532
 
 jr_057_4c16:
     ld a, c
@@ -2293,7 +2293,7 @@ jr_057_4c16:
     rst $10
     pop bc
     pop de
-    call Call_057_7aa6
+    call LoadBtlAI_7aa6
     and $03
     cp $03
     ret nz
@@ -2366,7 +2366,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $00
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2377,7 +2377,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $01
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2388,7 +2388,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $02
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2399,7 +2399,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $03
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2410,7 +2410,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $05
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2421,7 +2421,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $04
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2432,7 +2432,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $06
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2443,7 +2443,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $07
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2454,7 +2454,7 @@ jr_057_4c67:
     ld b, $03
     ld a, $08
     ld [$db4c], a
-    call Call_057_44a7
+    call LoadBtlAI_44a7
     ret
 
 
@@ -2498,10 +2498,10 @@ jr_057_4d4c:
     ret
 
 
-    call Call_057_7c7e
+    call LoadBtlAI_7c7e
     ret nc
 
-    call Call_057_7dbe
+    call LoadBtlAI_7dbe
     ld a, [wBattleAttackerIdx]
     call GetCombatantATK
     ld a, [$db56]
@@ -2598,10 +2598,10 @@ jr_057_4ddd:
     ret
 
 
-    call Call_057_7cb5
+    call LoadBtlAI_7cb5
     ret nc
 
-    call Call_057_7cff
+    call LoadBtlAI_7cff
     jr c, jr_057_4e0a
 
     ld hl, $dd26
@@ -2609,7 +2609,7 @@ jr_057_4ddd:
     call AddBToHL16
 
 jr_057_4e0a:
-    call Call_057_7d37
+    call LoadBtlAI_7d37
     ret nc
 
     ld hl, $dd26
@@ -2621,10 +2621,10 @@ jr_057_4e0a:
     ret
 
 
-    call Call_057_7ce0
+    call LoadBtlAI_7ce0
     ret nc
 
-    call Call_057_7d1d
+    call LoadBtlAI_7d1d
     jr nc, jr_057_4e29
 
     ld hl, $dd26
@@ -2632,7 +2632,7 @@ jr_057_4e0a:
     call AddBToHL16
 
 jr_057_4e29:
-    call Call_057_7d37
+    call LoadBtlAI_7d37
     ret c
 
     ld hl, $dd26
@@ -2830,7 +2830,7 @@ jr_057_4f0b:
     push hl
     ld a, d
     ld hl, wBattleMaxHP
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld a, $05
     call Div16x8To16
     pop bc
@@ -2858,7 +2858,7 @@ jr_057_4f38:
     ld hl, $db02
     call HL_AddA_x8
     ld de, $010f
-    call Call_057_44d8
+    call LoadBtlAI_44d8
     ld a, [wBattleAttackerIdx]
     and $04
     ld c, a
@@ -2866,7 +2866,7 @@ jr_057_4f38:
     ld hl, $db02
     call HL_AddA_x8
     ld de, $020f
-    call Call_057_44d8
+    call LoadBtlAI_44d8
     ret
 
 
@@ -2885,7 +2885,7 @@ jr_057_4f6b:
     ld hl, $db02
     call HL_AddA_x8
     ld de, $400f
-    call Call_057_44d8
+    call LoadBtlAI_44d8
     ld a, [wBattleAttackerIdx]
     and $04
     ld c, a
@@ -2893,7 +2893,7 @@ jr_057_4f6b:
     ld hl, $db02
     call HL_AddA_x8
     ld de, $8c0f
-    call Call_057_44d8
+    call LoadBtlAI_44d8
     ret
 
 
@@ -2912,7 +2912,7 @@ jr_057_4f9e:
     ld hl, $db02
     call HL_AddA_x8
     ld de, $100f
-    call Call_057_44d8
+    call LoadBtlAI_44d8
     ret
 
 
@@ -2931,7 +2931,7 @@ jr_057_4fbd:
     ld hl, $db02
     call HL_AddA_x8
     ld de, $200f
-    call Call_057_44d8
+    call LoadBtlAI_44d8
     ret
 
 
@@ -2977,7 +2977,7 @@ jr_057_4fe3:
     ld a, h
     ld [$db59], a
     ld a, c
-    call Call_057_7ac4
+    call SaveBtlAI_7ac4
     ret c
 
     ld a, $01
@@ -3037,7 +3037,7 @@ jr_057_503d:
     ld a, h
     ld [$db59], a
     ld a, c
-    call Call_057_7b01
+    call SaveBtlAI_7b01
     ret c
 
     ld a, $01
@@ -3073,7 +3073,7 @@ jr_057_503d:
     ld a, h
     ld [$db59], a
     ld a, c
-    call Call_057_7b35
+    call SaveBtlAI_7b35
     ret c
 
     ld a, $01
@@ -3126,7 +3126,7 @@ jr_057_50cd:
     ld a, h
     ld [$db59], a
     ld a, c
-    call Call_057_7b59
+    call SaveBtlAI_7b59
     ret c
 
     ld a, $01
@@ -3190,7 +3190,7 @@ jr_057_5124:
     ret nc
 
 jr_057_5156:
-    call Call_057_6371
+    call LoadBtlAI_6371
     xor a
     ld [$db62], a
     ld a, [wBattleAttackerIdx]
@@ -3229,7 +3229,7 @@ jr_057_5189:
     call CheckMonsterSlot
     jr c, jr_057_519b
 
-    call Call_057_7ac4
+    call SaveBtlAI_7ac4
     jr c, jr_057_519b
 
     ld hl, $db62
@@ -3288,7 +3288,7 @@ jr_057_519b:
     ret nc
 
 jr_057_51e7:
-    call Call_057_6371
+    call LoadBtlAI_6371
     xor a
     ld [$db64], a
     ld a, [wBattleAttackerIdx]
@@ -3327,7 +3327,7 @@ jr_057_521a:
     call CheckMonsterSlot
     jr c, jr_057_522c
 
-    call Call_057_7b01
+    call SaveBtlAI_7b01
     jr c, jr_057_522c
 
     ld hl, $db64
@@ -3365,7 +3365,7 @@ jr_057_522c:
     ld hl, $dd26
     ld b, $0a
     call AddBToHL16
-    call Call_057_6371
+    call LoadBtlAI_6371
     xor a
     ld [$db66], a
     ld a, [wBattleAttackerIdx]
@@ -3404,7 +3404,7 @@ jr_057_5294:
     call CheckMonsterSlot
     jr c, jr_057_52a6
 
-    call Call_057_7b35
+    call SaveBtlAI_7b35
     jr c, jr_057_52a6
 
     ld hl, $db66
@@ -3456,7 +3456,7 @@ jr_057_52a6:
     ret nc
 
 jr_057_52e9:
-    call Call_057_6371
+    call LoadBtlAI_6371
     xor a
     ld [$db68], a
     ld a, [wBattleAttackerIdx]
@@ -3495,7 +3495,7 @@ jr_057_531c:
     call CheckMonsterSlot
     jr c, jr_057_532e
 
-    call Call_057_7b59
+    call SaveBtlAI_7b59
     jr c, jr_057_532e
 
     ld hl, $db68
@@ -3551,7 +3551,7 @@ jr_057_532e:
     ret nc
 
 jr_057_5377:
-    call Call_057_6371
+    call LoadBtlAI_6371
     xor a
     ld [$db6a], a
     ld a, [wBattleAttackerIdx]
@@ -3788,7 +3788,7 @@ jr_057_54b6:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -3804,8 +3804,8 @@ jr_057_54b6:
 jr_057_54d0:
     ld a, [wBattleAttackerIdx]
     ld e, a
-    call Call_057_62e0
-    call Call_057_6321
+    call LoadBtlAI_62e0
+    call LoadBtlAI_6321
     ret c
 
     ld hl, $dd26
@@ -3814,7 +3814,7 @@ jr_057_54d0:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -3834,14 +3834,14 @@ jr_057_54d0:
     ret nc
 
 jr_057_54fd:
-    call Call_057_62e0
+    call LoadBtlAI_62e0
     ld a, [wBattleAttackerIdx]
     and $04
     ld e, a
     ld d, $03
 
 jr_057_5508:
-    call Call_057_6321
+    call LoadBtlAI_6321
     jr nc, jr_057_5512
 
     inc e
@@ -3858,7 +3858,7 @@ jr_057_5512:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -3946,7 +3946,7 @@ jr_057_557f:
     ld [$db59], a
     ld a, [wBattleAttackerIdx]
     and $04
-    call Call_057_7dc5
+    call FuncBtlAI_7dc5
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -3974,11 +3974,11 @@ jr_057_557f:
     and $04
     ld c, a
     ld b, $03
-    call Call_057_634c
+    call LoadBtlAI_634c
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -3997,11 +3997,11 @@ jr_057_55e8:
     xor $04
     ld c, a
     ld b, $03
-    call Call_057_634c
+    call LoadBtlAI_634c
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -4089,7 +4089,7 @@ jr_057_5657:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -4111,7 +4111,7 @@ jr_057_5657:
     ld a, $00
     adc h
     ld h, a
-    call Call_057_44f7
+    call ClrBtlAI_44f7
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -4178,7 +4178,7 @@ jr_057_56d4:
     ld a, $00
     adc h
     ld h, a
-    call Call_057_44f7
+    call ClrBtlAI_44f7
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -4200,7 +4200,7 @@ jr_057_56d4:
     ld a, $00
     adc h
     ld h, a
-    call Call_057_44f7
+    call ClrBtlAI_44f7
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -4224,14 +4224,14 @@ jr_057_56d4:
     cp $29
     ret nz
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleMaxHP
     add a
     ld e, a
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld a, l
     ld [$db56], a
     ld a, h
@@ -4269,7 +4269,7 @@ Jump_057_5788:
 
     ld a, e
     ld hl, wBattleMaxHP
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld a, [$db56]
     ld c, a
     ld a, [$db57]
@@ -4339,7 +4339,7 @@ jr_057_57f3:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -4377,7 +4377,7 @@ jr_057_580d:
     ld [$db58], a
     ld a, h
     ld [$db59], a
-    call Call_057_7b59
+    call SaveBtlAI_7b59
     ret nc
 
     ld hl, $dd26
@@ -4390,7 +4390,7 @@ jr_057_580d:
     cp $80
     ret nz
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [wBattleAttackerIdx]
@@ -4417,17 +4417,17 @@ Jump_057_5868:
     jr z, jr_057_5892
 
     bit 0, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 1, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 2, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 3, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 4, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 5, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
 
 jr_057_5892:
     inc hl
@@ -4436,19 +4436,19 @@ jr_057_5892:
     jr z, jr_057_58bb
 
     bit 0, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 1, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 2, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 3, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 4, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 5, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 6, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
 
 jr_057_58bb:
     inc hl
@@ -4457,9 +4457,9 @@ jr_057_58bb:
     jr z, jr_057_58cb
 
     bit 6, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 7, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
 
 jr_057_58cb:
     inc hl
@@ -4469,15 +4469,15 @@ jr_057_58cb:
     jr z, jr_057_58dd
 
     and $c0
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     ld a, [hl]
     and $0c
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
 
 jr_057_58dd:
     inc hl
     bit 6, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     ld a, [wBattleAttackerIdx]
     rrca
     rrca
@@ -4493,11 +4493,11 @@ jr_057_58dd:
     jr z, jr_057_5907
 
     bit 2, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 3, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
     bit 5, [hl]
-    call nz, Call_057_592c
+    call nz, LoadBtlAI_592c
 
 jr_057_5907:
     ld a, [$db4c]
@@ -4526,7 +4526,7 @@ Jump_057_590e:
     ret
 
 
-Call_057_592c:
+LoadBtlAI_592c:
     ld a, [$db4c]
     inc a
     ld [$db4c], a
@@ -4544,7 +4544,7 @@ jr_057_5934:
     cp $83
     ret nz
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     xor a
@@ -4685,7 +4685,7 @@ jr_057_59ee:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -4775,7 +4775,7 @@ jr_057_5a59:
     ld [$db57], a
     ld a, d
     ld hl, wBattleMaxHP
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld a, l
     ld [$db58], a
     ld a, h
@@ -4812,7 +4812,7 @@ jr_057_5a9f:
 
     ld a, c
     call GetCombatantHP
-    call Call_057_5acf
+    call SaveBtlAI_5acf
     push bc
     ld a, [$db56]
     ld c, a
@@ -4837,7 +4837,7 @@ jr_057_5abd:
     ret
 
 
-Call_057_5acf:
+SaveBtlAI_5acf:
     push de
     push bc
     push hl
@@ -4905,7 +4905,7 @@ jr_057_5aeb:
     ld a, h
     ld [$db59], a
     ld a, c
-    call Call_057_7b59
+    call SaveBtlAI_7b59
     ret c
 
     ld hl, $dd26
@@ -4928,7 +4928,7 @@ jr_057_5aeb:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -5175,7 +5175,7 @@ jr_057_5c7f:
 
 jr_057_5c86:
     pop bc
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
 jr_057_5c8b:
@@ -5235,7 +5235,7 @@ jr_057_5cc4:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -5926,14 +5926,14 @@ jr_057_5ff0:
     ret nz
 
 jr_057_6027:
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_602a:
     ld a, c
     call GetMonsterSlotInfo
     jr c, jr_057_6033
 
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_6033:
     inc c
@@ -5965,7 +5965,7 @@ jr_057_6033:
     ret nc
 
 jr_057_6057:
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_605a:
     ld a, c
@@ -5986,7 +5986,7 @@ jr_057_605a:
     and $03
     jr nz, jr_057_6077
 
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_6077:
     inc c
@@ -6011,7 +6011,7 @@ jr_057_6077:
     cp $17
     ret nz
 
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_6097:
     ld a, c
@@ -6019,7 +6019,7 @@ jr_057_6097:
     jr c, jr_057_60b1
 
     ld a, c
-    call Call_057_7e94
+    call SaveBtlAI_7e94
     jr c, jr_057_60b1
 
     ld a, c
@@ -6028,7 +6028,7 @@ jr_057_6097:
     bit 0, [hl]
     jr nz, jr_057_60b1
 
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_60b1:
     inc c
@@ -6060,7 +6060,7 @@ jr_057_60b1:
     ret nc
 
 jr_057_60d5:
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_60d8:
     ld a, c
@@ -6079,7 +6079,7 @@ jr_057_60d8:
     or [hl]
     jr z, jr_057_60f0
 
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_60f0:
     inc c
@@ -6111,7 +6111,7 @@ jr_057_60f0:
     ret nc
 
 jr_057_6114:
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_6117:
     ld a, c
@@ -6129,7 +6129,7 @@ jr_057_6117:
     jr z, jr_057_612d
 
 jr_057_612a:
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_612d:
     inc c
@@ -6157,7 +6157,7 @@ jr_057_612d:
     cp $22
     ret nc
 
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_6150:
     ld a, c
@@ -6166,7 +6166,7 @@ jr_057_6150:
 
     ld a, c
     ld hl, wBattleAGL
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld a, l
     cp $02
     jr nc, jr_057_6166
@@ -6176,7 +6176,7 @@ jr_057_6150:
     jr z, jr_057_6169
 
 jr_057_6166:
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_6169:
     inc c
@@ -6208,7 +6208,7 @@ jr_057_6169:
     ret nc
 
 jr_057_618d:
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_6190:
     ld a, c
@@ -6222,7 +6222,7 @@ jr_057_6190:
     and $03
     jr nz, jr_057_61a5
 
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_61a5:
     inc c
@@ -6247,7 +6247,7 @@ jr_057_61a5:
     cp $6f
     ret nz
 
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_61c5:
     ld a, c
@@ -6261,7 +6261,7 @@ jr_057_61c5:
     and $20
     jr nz, jr_057_61da
 
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_61da:
     inc c
@@ -6286,7 +6286,7 @@ jr_057_61da:
     cp $91
     ret nz
 
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_61fa:
     ld a, c
@@ -6294,7 +6294,7 @@ jr_057_61fa:
     jr c, jr_057_6215
 
     ld a, c
-    call Call_057_7ef4
+    call SaveBtlAI_7ef4
     jr c, jr_057_6215
 
     ld a, c
@@ -6304,7 +6304,7 @@ jr_057_61fa:
     and $40
     jr nz, jr_057_6215
 
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_6215:
     inc c
@@ -6329,7 +6329,7 @@ jr_057_6215:
     cp $92
     ret nz
 
-    call Call_057_7d4d
+    call CallBtlAI_7d4d
 
 jr_057_6235:
     ld a, c
@@ -6337,7 +6337,7 @@ jr_057_6235:
     jr c, jr_057_6250
 
     ld a, c
-    call Call_057_7ec0
+    call SaveBtlAI_7ec0
     jr c, jr_057_6250
 
     ld a, c
@@ -6347,7 +6347,7 @@ jr_057_6235:
     and $80
     jr nz, jr_057_6250
 
-    call Call_057_7d54
+    call SetBtlAI_7d54
 
 jr_057_6250:
     inc c
@@ -6403,14 +6403,14 @@ jr_057_6250:
     ret nz
 
 jr_057_6291:
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_6294:
     ld a, c
     call GetMonsterSlotInfo
     jr c, jr_057_62a0
 
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6434,7 +6434,7 @@ jr_057_62a0:
     ret nc
 
 jr_057_62b5:
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_62b8:
     ld a, c
@@ -6455,7 +6455,7 @@ jr_057_62b8:
     and $03
     jr nz, jr_057_62d8
 
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6468,7 +6468,7 @@ jr_057_62d8:
     ret
 
 
-Call_057_62e0:
+LoadBtlAI_62e0:
     ld a, [wBattleAttackerIdx]
     and $04
     xor $04
@@ -6513,7 +6513,7 @@ jr_057_631c:
     ret
 
 
-Call_057_6321:
+LoadBtlAI_6321:
     ld a, [$db56]
     ld c, a
     ld a, [$db57]
@@ -6544,7 +6544,7 @@ jr_057_634a:
     ret
 
 
-Call_057_634c:
+LoadBtlAI_634c:
 jr_057_634c:
     ld a, c
     call CheckMonsterSlot
@@ -6572,7 +6572,7 @@ jr_057_6369:
     ret
 
 
-Call_057_6371:
+LoadBtlAI_6371:
     ld a, [wBattleAttackerIdx]
     cp $04
     jr nc, jr_057_637d
@@ -6592,7 +6592,7 @@ jr_057_6380:
     cp $17
     ret nz
 
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_638b:
     ld a, c
@@ -6600,7 +6600,7 @@ jr_057_638b:
     jr c, jr_057_63a8
 
     ld a, c
-    call Call_057_7e94
+    call SaveBtlAI_7e94
     jr c, jr_057_63a8
 
     ld a, c
@@ -6609,7 +6609,7 @@ jr_057_638b:
     bit 0, [hl]
     jr nz, jr_057_63a8
 
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6633,7 +6633,7 @@ jr_057_63a8:
     ret nc
 
 jr_057_63bd:
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_63c0:
     ld a, c
@@ -6652,7 +6652,7 @@ jr_057_63c0:
     or [hl]
     jr z, jr_057_63db
 
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6676,7 +6676,7 @@ jr_057_63db:
     ret nz
 
 jr_057_63f0:
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_63f3:
     ld a, c
@@ -6694,7 +6694,7 @@ jr_057_63f3:
     jr z, jr_057_640c
 
 jr_057_6406:
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6714,7 +6714,7 @@ jr_057_640c:
     cp $22
     ret nc
 
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_6420:
     ld a, c
@@ -6723,7 +6723,7 @@ jr_057_6420:
 
     ld a, c
     ld hl, wBattleAGL
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld a, l
     cp $02
     jr nc, jr_057_6436
@@ -6733,7 +6733,7 @@ jr_057_6420:
     jr z, jr_057_643c
 
 jr_057_6436:
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6757,7 +6757,7 @@ jr_057_643c:
     ret nc
 
 jr_057_6451:
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_6454:
     ld a, c
@@ -6771,7 +6771,7 @@ jr_057_6454:
     and $03
     jr nz, jr_057_646c
 
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6788,7 +6788,7 @@ jr_057_646c:
     cp $6f
     ret nz
 
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_647d:
     ld a, c
@@ -6802,7 +6802,7 @@ jr_057_647d:
     and $20
     jr nz, jr_057_6495
 
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6819,7 +6819,7 @@ jr_057_6495:
     cp $91
     ret nz
 
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_64a6:
     ld a, c
@@ -6827,7 +6827,7 @@ jr_057_64a6:
     jr c, jr_057_64c4
 
     ld a, c
-    call Call_057_7ef4
+    call SaveBtlAI_7ef4
     jr c, jr_057_64c4
 
     ld a, c
@@ -6837,7 +6837,7 @@ jr_057_64a6:
     and $40
     jr nz, jr_057_64c4
 
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -6854,7 +6854,7 @@ jr_057_64c4:
     cp $92
     ret nz
 
-    call Call_057_7d73
+    call LoadBtlAI_7d73
 
 jr_057_64d5:
     ld a, c
@@ -6862,7 +6862,7 @@ jr_057_64d5:
     jr c, jr_057_64f3
 
     ld a, c
-    call Call_057_7ec0
+    call SaveBtlAI_7ec0
     jr c, jr_057_64f3
 
     ld a, c
@@ -6872,7 +6872,7 @@ jr_057_64d5:
     and $80
     jr nz, jr_057_64f3
 
-    call Call_057_7da4
+    call SetBtlAI_7da4
     cp $03
     ret nz
 
@@ -7001,7 +7001,7 @@ jr_057_6594:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -7095,7 +7095,7 @@ jr_057_6600:
     call CheckMonsterSlot
     jr c, jr_057_660b
 
-    call Call_057_4572
+    call LoadBtlAI_4572
     jr nz, jr_057_6610
 
 jr_057_660b:
@@ -7113,7 +7113,7 @@ jr_057_6610:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -7180,7 +7180,7 @@ jr_057_6664:
     call CheckMonsterSlot
     jr c, jr_057_666e
 
-    call Call_057_4572
+    call LoadBtlAI_4572
     ret z
 
 jr_057_666e:
@@ -7194,7 +7194,7 @@ jr_057_666e:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -7785,14 +7785,14 @@ jr_057_6985:
 
     ld a, c
     ld hl, wBattleAGL
-    call Call_057_4567
-    call Call_057_45d1
+    call CalcBtlAI_4567
+    call LoadBtlAI_45d1
     ret nc
 
     ld a, c
     ld hl, wBattleDEF
-    call Call_057_4567
-    call Call_057_45d1
+    call CalcBtlAI_4567
+    call LoadBtlAI_45d1
     ret nc
 
     ld a, c
@@ -8269,7 +8269,7 @@ jr_057_6bec:
     ret
 
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [$db8a]
@@ -8411,7 +8411,7 @@ jr_057_6cb7:
     cp $24
     ret nz
 
-    call Call_057_7c6e
+    call LoadBtlAI_7c6e
     ret nz
 
     ld a, [wBattleAttackerIdx]
@@ -8425,7 +8425,7 @@ jr_057_6cd4:
     call CheckMonsterSlot
     jr c, jr_057_6cdf
 
-    call Call_057_6ce8
+    call SetBtlAI_6ce8
     jr c, jr_057_6ce7
 
 jr_057_6cdf:
@@ -8441,7 +8441,7 @@ jr_057_6ce7:
     ret
 
 
-Call_057_6ce8:
+SetBtlAI_6ce8:
     ld hl, $dc65
     swap a
     add l
@@ -8453,7 +8453,7 @@ Call_057_6ce8:
 
 jr_057_6cf5:
     ld a, [hl+]
-    call Call_057_6d00
+    call CmpBtlAI_6d00
     ret c
 
     inc hl
@@ -8464,7 +8464,7 @@ jr_057_6cf5:
     ret
 
 
-Call_057_6d00:
+CmpBtlAI_6d00:
     cp $5c
     jr c, jr_057_6d07
 
@@ -8476,11 +8476,11 @@ jr_057_6d07:
     ret
 
 
-Call_057_6d09:
+CmpBtlAI_6d09:
     cp $03
     jr nc, jr_057_6d27
 
-Call_057_6d0d:
+SaveBtlAI_6d0d:
 jr_057_6d0d:
     push hl
     ld hl, $cac2
@@ -8542,14 +8542,14 @@ jr_057_6d4d:
 
 jr_057_6d50:
     push af
-    call Call_057_6d5a
+    call FuncBtlAI_6d5a
     pop af
     ld hl, $5104
     rst $10
     ret
 
 
-Call_057_6d5a:
+FuncBtlAI_6d5a:
     ld [$db60], a
     push hl
     ld hl, $dc3c
@@ -8571,7 +8571,7 @@ Call_057_6d5a:
 
 
 jr_057_6d78:
-    call Call_057_6d0d
+    call SaveBtlAI_6d0d
     ld a, $2f
     ld [hl+], a
     ld a, $46
@@ -8677,7 +8677,7 @@ jr_057_6de7:
     ld [$db4f], a
     ld a, [wBattleTargetIdx]
     ld [$db50], a
-    call Call_057_6d09
+    call CmpBtlAI_6d09
     ret
 
 
@@ -8688,7 +8688,7 @@ jr_057_6de7:
     ld [$db4f], a
     ld a, [wBattleAttackerIdx]
     ld [$db50], a
-    call Call_057_6d09
+    call CmpBtlAI_6d09
     ret
 
 
@@ -8831,12 +8831,12 @@ jr_057_6ed8:
 jr_057_6edb:
     ld [$dd72], a
     ld a, [hl]
-    call Call_057_78d4
-    call Call_057_7905
-    call Call_057_791a
-    call Call_057_7a03
-    call Call_057_7a16
-    call Call_057_7a5d
+    call CmpBtlAI_78d4
+    call LoadBtlAI_7905
+    call FuncBtlAI_791a
+    call LoadBtlAI_7a03
+    call LoadBtlAI_7a16
+    call LoadBtlAI_7a5d
     jp nc, Jump_057_6f8c
 
     ld a, [wBattleAttackerIdx]
@@ -8897,7 +8897,7 @@ jr_057_6f1f:
     and $d0
     jp nz, Jump_057_7129
 
-    call Call_057_7e82
+    call SetBtlAI_7e82
     ld a, $b4
     ld [$c823], a
     xor a
@@ -8917,7 +8917,7 @@ jr_057_6f64:
     ld a, [hl]
     and $cf
     ld [hl], a
-    call Call_057_7f5f
+    call SetBtlAI_7f5f
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
@@ -9088,7 +9088,7 @@ jr_057_7050:
     ld a, $00
     adc b
     ld b, a
-    call Call_057_7092
+    call BitBtlAI_7092
     inc hl
     ld a, $08
     add c
@@ -9096,7 +9096,7 @@ jr_057_7050:
     ld a, $00
     adc b
     ld b, a
-    call Call_057_7092
+    call BitBtlAI_7092
     inc hl
     ld a, $08
     add c
@@ -9104,7 +9104,7 @@ jr_057_7050:
     ld a, $00
     adc b
     ld b, a
-    call Call_057_7092
+    call BitBtlAI_7092
     inc hl
     ld a, $08
     add c
@@ -9112,13 +9112,13 @@ jr_057_7050:
     ld a, $00
     adc b
     ld b, a
-    call Call_057_7092
+    call BitBtlAI_7092
     ld hl, $d9ee
     inc [hl]
     jp Jump_057_7129
 
 
-Call_057_7092:
+BitBtlAI_7092:
     bit 7, [hl]
     jr nz, jr_057_709e
 
@@ -9253,11 +9253,11 @@ jr_057_7143:
     jr z, jr_057_718c
 
 jr_057_7160:
-    call Call_057_71b9
+    call FuncBtlAI_71b9
     ld a, [$db76]
     or a
-    call z, Call_057_719b
-    call Call_057_7322
+    call z, LoadBtlAI_719b
+    call LoadBtlAI_7322
     ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
     add l
@@ -9286,12 +9286,12 @@ jr_057_718c:
     jp Jump_057_7859
 
 
-    call Call_057_7f2c
+    call SaveBtlAI_7f2c
     ld a, [wRNG1]
     ret
 
 
-Call_057_719b:
+LoadBtlAI_719b:
     ld a, [wBattleAttackerIdx]
     cp $04
     jr nc, jr_057_71a8
@@ -9316,7 +9316,7 @@ jr_057_71b5:
     ret
 
 
-Call_057_71b9:
+FuncBtlAI_71b9:
     ld c, $00
     ld d, c
     ld a, [$c86c]
@@ -9342,7 +9342,7 @@ jr_057_71cf:
     ld h, a
     ld b, [hl]
     ld hl, $dcfc
-    call Call_057_72ce
+    call SaveBtlAI_72ce
     ld a, d
     or a
     jr nz, jr_057_71e8
@@ -9411,7 +9411,7 @@ jr_057_7228:
     ld h, a
     ld b, [hl]
     ld hl, $dcfd
-    call Call_057_72ce
+    call SaveBtlAI_72ce
     ld a, [$db52]
     ld c, a
     ld a, [wBattleAttackerIdx]
@@ -9423,7 +9423,7 @@ jr_057_7228:
     ld h, a
     ld b, [hl]
     ld hl, $dcfe
-    call Call_057_72ce
+    call SaveBtlAI_72ce
     ld a, [wBattleAttackerIdx]
     ld d, a
     ld hl, $dd0b
@@ -9524,16 +9524,16 @@ jr_057_72c6:
     ret
 
 
-Call_057_72ce:
+SaveBtlAI_72ce:
     push hl
     push de
     ld a, b
     ld [$dd72], a
-    call Call_057_78ce
+    call LoadBtlAI_78ce
     ld a, c
     add b
     ld b, a
-    call Call_057_7f2c
+    call SaveBtlAI_7f2c
     push bc
     ld a, [wRNG1]
     ld l, a
@@ -9589,7 +9589,7 @@ jr_057_7318:
     ret
 
 
-Call_057_7322:
+LoadBtlAI_7322:
     ld a, $01
     ld [$dcff], a
     ld a, $02
@@ -9628,8 +9628,8 @@ jr_057_734d:
     ld [$dd01], a
 
 jr_057_7366:
-    call Call_057_73a5
-    call z, Call_057_73b1
+    call LoadBtlAI_73a5
+    call z, SetBtlAI_73b1
     ld a, [$dd01]
     dec a
     ld hl, $dcfc
@@ -9666,7 +9666,7 @@ jr_057_739f:
     ret
 
 
-Call_057_73a5:
+LoadBtlAI_73a5:
     ld a, [$dd00]
     cp $01
     ret z
@@ -9676,7 +9676,7 @@ Call_057_73a5:
     ret
 
 
-Call_057_73b1:
+SetBtlAI_73b1:
     ld hl, $dcfc
     ld a, $1e
     add [hl]
@@ -9741,11 +9741,11 @@ jr_057_73f1:
     ld a, [$dd02]
     jr nc, jr_057_73ed
 
-    call Call_057_77a4
+    call LoadBtlAI_77a4
     ld a, [$dd02]
     jr nz, jr_057_73d9
 
-    call Call_057_77b4
+    call LoadBtlAI_77b4
     jr nc, jr_057_73ed
 
     ld c, $8d
@@ -9804,7 +9804,7 @@ Jump_057_7441:
     ld a, [$dd6a]
     dec a
     ld hl, $4302
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld a, l
     ld [$c1fa], a
     ld a, h
@@ -9890,15 +9890,15 @@ jr_057_74d7:
     ld a, [$dd6a]
     dec a
     ld hl, $4302
-    call Call_057_4567
-    call Call_057_750c
+    call CalcBtlAI_4567
+    call ReadBtlAI_750c
     pop bc
     pop de
     pop hl
     ret
 
 
-Call_057_750c:
+ReadBtlAI_750c:
 jr_057_750c:
     ld a, [hl+]
     ld d, a
@@ -9907,7 +9907,7 @@ jr_057_750c:
     jr z, jr_057_7524
 
     push hl
-    call Call_057_7525
+    call ReadBtlAI_7525
     pop hl
     ld a, [$dd27]
     cp $ff
@@ -9923,7 +9923,7 @@ jr_057_7524:
     ret
 
 
-Call_057_7525:
+ReadBtlAI_7525:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -9973,7 +9973,7 @@ jr_057_753a:
 jr_057_7566:
     push hl
     ld a, $10
-    call Call_057_7a93
+    call SaveBtlAI_7a93
     pop hl
     add [hl]
     ld [hl], a
@@ -10107,13 +10107,13 @@ jr_057_75fa:
     cp $15
     jp nc, Jump_057_76a9
 
-    call Call_057_77a4
+    call LoadBtlAI_77a4
     jp nz, Jump_057_76a9
 
-    call Call_057_77b4
+    call LoadBtlAI_77b4
     jp nc, Jump_057_7686
 
-    call Call_057_76cd
+    call SetBtlAI_76cd
     ld [hl], $8d
     ret
 
@@ -10124,7 +10124,7 @@ jr_057_762e:
     jr z, jr_057_76a9
 
 jr_057_7632:
-    call Call_057_76cd
+    call SetBtlAI_76cd
     push hl
     ld a, [wBattleAttackerIdx]
     ld hl, $dc65
@@ -10205,7 +10205,7 @@ jr_057_7695:
 
 
 Jump_057_769b:
-    call Call_057_7f2c
+    call SaveBtlAI_7f2c
     ld a, [wRNG1]
     bit 0, a
     jp z, Jump_057_75f5
@@ -10223,24 +10223,24 @@ jr_057_76a9:
 
 
 Jump_057_76b5:
-    call Call_057_76cd
+    call SetBtlAI_76cd
     ld [hl], $42
     jp Jump_057_7859
 
 
 Jump_057_76bd:
-    call Call_057_76cd
+    call SetBtlAI_76cd
     ld [hl], $3a
     jp Jump_057_7859
 
 
 Jump_057_76c5:
-    call Call_057_76cd
+    call SetBtlAI_76cd
     ld [hl], $95
     jp Jump_057_7859
 
 
-Call_057_76cd:
+SetBtlAI_76cd:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleAttackerIdx]
@@ -10290,7 +10290,7 @@ jr_057_7709:
     jr nz, jr_057_7724
 
     push hl
-    call Call_057_7f2c
+    call SaveBtlAI_7f2c
     ld hl, $db61
     ld a, c
     add l
@@ -10311,7 +10311,7 @@ jr_057_7724:
     dec b
     jr nz, jr_057_7709
 
-    call Call_057_7f2c
+    call SaveBtlAI_7f2c
     ld a, d
     cp $02
     jr z, jr_057_7741
@@ -10351,7 +10351,7 @@ jr_057_7754:
     jr jr_057_77a0
 
 jr_057_7758:
-    call Call_057_77a4
+    call LoadBtlAI_77a4
     jr nz, jr_057_7754
 
     ld b, $8d
@@ -10416,10 +10416,10 @@ jr_057_777c:
     ld b, [hl]
 
 jr_057_77a0:
-    call Call_057_76cd
+    call SetBtlAI_76cd
     ld [hl], b
 
-Call_057_77a4:
+LoadBtlAI_77a4:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd03
     add l
@@ -10432,7 +10432,7 @@ Call_057_77a4:
     ret
 
 
-Call_057_77b4:
+LoadBtlAI_77b4:
     ld a, [wBattleAttackerIdx]
     ld c, a
     and $03
@@ -10451,26 +10451,26 @@ jr_057_77c8:
     xor $04
     and $04
     ld c, a
-    call Call_057_77f5
+    call LoadBtlAI_77f5
     jr nc, jr_057_77f0
 
     inc c
-    call Call_057_77f5
+    call LoadBtlAI_77f5
     jr nc, jr_057_77f0
 
     inc c
-    call Call_057_77f5
+    call LoadBtlAI_77f5
     jr nc, jr_057_77f0
 
-    call Call_057_7828
+    call LoadBtlAI_7828
     jr nc, jr_057_77f2
 
     dec c
-    call Call_057_7828
+    call LoadBtlAI_7828
     jr nc, jr_057_77f2
 
     dec c
-    call Call_057_7828
+    call LoadBtlAI_7828
     jr nc, jr_057_77f2
 
 jr_057_77f0:
@@ -10484,7 +10484,7 @@ jr_057_77f2:
     ret
 
 
-Call_057_77f5:
+LoadBtlAI_77f5:
     ld a, c
     call CheckMonsterSlot
     ret c
@@ -10492,17 +10492,17 @@ Call_057_77f5:
     push bc
     ld a, c
     ld hl, wBattleATK
-    call Call_057_4567
+    call CalcBtlAI_4567
     push hl
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleHP
-    call Call_057_4567
+    call CalcBtlAI_4567
     srl h
     rr l
     push hl
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleDEF
-    call Call_057_4567
+    call CalcBtlAI_4567
     srl h
     rr l
     pop bc
@@ -10515,7 +10515,7 @@ Call_057_77f5:
     ret
 
 
-Call_057_7828:
+LoadBtlAI_7828:
     ld a, c
     call CheckMonsterSlot
     ret c
@@ -10523,17 +10523,17 @@ Call_057_7828:
     push bc
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleATK
-    call Call_057_4567
+    call CalcBtlAI_4567
     push hl
     ld a, c
     ld hl, wBattleMaxHP
-    call Call_057_4567
+    call CalcBtlAI_4567
     srl h
     rr l
     push hl
     ld a, c
     ld hl, wBattleDEF
-    call Call_057_4567
+    call CalcBtlAI_4567
     srl h
     rr l
     pop bc
@@ -10568,7 +10568,7 @@ jr_057_786d:
     jr z, jr_057_78a2
 
     push hl
-    call Call_057_78ca
+    call ReadBtlAI_78ca
     pop hl
     ld a, [$dd27]
     cp $ff
@@ -10626,20 +10626,20 @@ jr_057_78c1:
     ret
 
 
-Call_057_78ca:
+ReadBtlAI_78ca:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
     jp hl
 
 
-Call_057_78ce:
+LoadBtlAI_78ce:
     ld a, $0a
     call Div8x8
     ret
 
 
-Call_057_78d4:
+CmpBtlAI_78d4:
     cp $03
     jr z, jr_057_78e5
 
@@ -10673,13 +10673,13 @@ jr_057_78f3:
     adc h
     ld h, a
     ld b, [hl]
-    call Call_057_78ce
+    call LoadBtlAI_78ce
     ld a, b
     ld [$db4c], a
     ret
 
 
-Call_057_7905:
+LoadBtlAI_7905:
     ld a, [wBattleAttackerIdx]
     ld hl, $dc5c
     add l
@@ -10688,13 +10688,13 @@ Call_057_7905:
     adc h
     ld h, a
     ld b, [hl]
-    call Call_057_78ce
+    call LoadBtlAI_78ce
     ld a, b
     ld [$db4d], a
     ret
 
 
-Call_057_791a:
+FuncBtlAI_791a:
     ld b, $00
     ld a, [wBattleAttackerIdx]
     ld hl, $dc44
@@ -10907,10 +10907,10 @@ jr_057_7988:
     add hl, de
     dec b
 
-Call_057_7a03:
+LoadBtlAI_7a03:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleLVL
-    call Call_057_45ea
+    call CalcBtlAI_45ea
     ld b, [hl]
     srl b
     srl b
@@ -10919,10 +10919,10 @@ Call_057_7a03:
     ret
 
 
-Call_057_7a16:
+LoadBtlAI_7a16:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleLVL
-    call Call_057_45ea
+    call CalcBtlAI_45ea
     ld a, [hl]
     cp $20
     jr c, jr_057_7a38
@@ -10962,7 +10962,7 @@ jr_057_7a48:
     ld b, $0d
 
 jr_057_7a4a:
-    call Call_057_7f2c
+    call SaveBtlAI_7f2c
     ld a, [wRNG1]
     and $3f
 
@@ -10980,7 +10980,7 @@ jr_057_7a59:
     ret
 
 
-Call_057_7a5d:
+LoadBtlAI_7a5d:
     ld a, [wBattleAttackerIdx]
     add a
     ld hl, wBattleLVL
@@ -11026,10 +11026,10 @@ jr_057_7a91:
     ret
 
 
-Call_057_7a93:
+SaveBtlAI_7a93:
     push bc
     push af
-    call Call_057_7f2c
+    call SaveBtlAI_7f2c
     ld a, [wRNG1]
     ld l, a
     ld a, [wRNG2]
@@ -11040,7 +11040,7 @@ Call_057_7a93:
     ret
 
 
-Call_057_7aa6:
+LoadBtlAI_7aa6:
     ld a, [$db4c]
     ld h, a
     ld a, e
@@ -11077,7 +11077,7 @@ jr_057_7ac0:
     ret
 
 
-Call_057_7ac4:
+SaveBtlAI_7ac4:
     push bc
     ld a, [$db56]
     ld l, a
@@ -11131,7 +11131,7 @@ jr_057_7afb:
     ret
 
 
-Call_057_7b01:
+SaveBtlAI_7b01:
     push bc
     ld a, [$db56]
     ld l, a
@@ -11176,7 +11176,7 @@ jr_057_7b2f:
     ret
 
 
-Call_057_7b35:
+SaveBtlAI_7b35:
     push bc
     ld a, [$db56]
     ld l, a
@@ -11201,7 +11201,7 @@ Call_057_7b35:
     ret
 
 
-Call_057_7b59:
+SaveBtlAI_7b59:
     push bc
     ld a, [$db56]
     ld l, a
@@ -11210,7 +11210,7 @@ Call_057_7b59:
     ld a, [hl+]
     ld b, [hl]
 
-Call_057_7b64:
+FuncBtlAI_7b64:
     ld c, a
     push bc
     ld a, [$db58]
@@ -11228,7 +11228,7 @@ Call_057_7b64:
     ret
 
 
-Call_057_7b7d:
+LoadBtlAI_7b7d:
     ld a, c
     ld hl, $dc65
     swap a
@@ -11432,7 +11432,7 @@ jr_057_7c68:
     ret
 
 
-Call_057_7c6e:
+LoadBtlAI_7c6e:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
     add l
@@ -11445,7 +11445,7 @@ Call_057_7c6e:
     ret
 
 
-Call_057_7c7e:
+LoadBtlAI_7c7e:
     ld a, [$db8a]
     cp $3b
     jr z, jr_057_7cb3
@@ -11493,7 +11493,7 @@ jr_057_7cb3:
     ret
 
 
-Call_057_7cb5:
+LoadBtlAI_7cb5:
     ld a, [$db8a]
     cp $3b
     jr z, jr_057_7cde
@@ -11532,7 +11532,7 @@ jr_057_7cde:
     ret
 
 
-Call_057_7ce0:
+LoadBtlAI_7ce0:
     ld a, [$db8a]
     cp $14
     jr c, jr_057_7cfd
@@ -11562,10 +11562,10 @@ jr_057_7cfd:
     ret
 
 
-Call_057_7cff:
+LoadBtlAI_7cff:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleHP
-    call Call_057_4567
+    call CalcBtlAI_4567
     ld b, h
     ld c, l
     add hl, bc
@@ -11573,7 +11573,7 @@ Call_057_7cff:
     push hl
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleMaxHP
-    call Call_057_4567
+    call CalcBtlAI_4567
     add hl, hl
     pop bc
     call CmpHLvsBC
@@ -11583,10 +11583,10 @@ Call_057_7cff:
     ret
 
 
-Call_057_7d1d:
+LoadBtlAI_7d1d:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleMaxMP
-    call Call_057_45ea
+    call CalcBtlAI_45ea
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -11598,10 +11598,10 @@ Call_057_7d1d:
     ret
 
 
-Call_057_7d37:
+LoadBtlAI_7d37:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleMaxHP
-    call Call_057_45ea
+    call CalcBtlAI_45ea
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -11611,12 +11611,12 @@ Call_057_7d37:
     ret
 
 
-Call_057_7d4d:
-    call Call_057_7d73
+CallBtlAI_7d4d:
+    call LoadBtlAI_7d73
     xor a
     ld [$db54], a
 
-Call_057_7d54:
+SetBtlAI_7d54:
     ld hl, wBattlePostFlag
     inc [hl]
     ld a, c
@@ -11629,7 +11629,7 @@ Call_057_7d54:
     rst $10
     pop bc
     pop de
-    call Call_057_7aa6
+    call LoadBtlAI_7aa6
     and $03
     ld hl, $db54
     add [hl]
@@ -11637,7 +11637,7 @@ Call_057_7d54:
     ret
 
 
-Call_057_7d73:
+LoadBtlAI_7d73:
     ld a, [$db8a]
     ld [$db4c], a
     ld a, $00
@@ -11664,7 +11664,7 @@ Call_057_7d73:
     ret
 
 
-Call_057_7da4:
+SetBtlAI_7da4:
     ld hl, wBattlePostFlag
     inc [hl]
     ld a, c
@@ -11677,17 +11677,17 @@ Call_057_7da4:
     rst $10
     pop bc
     pop de
-    call Call_057_7aa6
+    call LoadBtlAI_7aa6
     and $03
     ret
 
 
-Call_057_7dbe:
+LoadBtlAI_7dbe:
     ld a, [wBattleAttackerIdx]
     and $04
     xor $04
 
-Call_057_7dc5:
+FuncBtlAI_7dc5:
     ld c, a
     ld b, $03
     ld de, $0000
@@ -11703,7 +11703,7 @@ jr_057_7dd3:
 
     ld a, c
     ld hl, wBattleDEF
-    call Call_057_45ea
+    call CalcBtlAI_45ea
     ld a, [$db56]
     add [hl]
     ld [hl+], a
@@ -11768,7 +11768,7 @@ jr_057_7e35:
 
     ld a, c
     ld hl, wBattleDEF
-    call Call_057_45ea
+    call CalcBtlAI_45ea
     ld a, [$db58]
     add [hl]
     ld [hl+], a
@@ -11815,22 +11815,22 @@ jr_057_7e6d:
     ret
 
 
-Call_057_7e82:
+SetBtlAI_7e82:
     ld hl, $c180
     ld a, l
     ld [$db4e], a
     ld a, h
     ld [$db4f], a
     ld a, [wBattleAttackerIdx]
-    call Call_057_6d09
+    call CmpBtlAI_6d09
     ret
 
 
-Call_057_7e94:
+SaveBtlAI_7e94:
     push bc
     push hl
     ld hl, $dc65
-    call Call_057_7fca
+    call CalcBtlAI_7fca
     ld b, $08
 
 jr_057_7e9e:
@@ -11869,11 +11869,11 @@ jr_057_7ebb:
     ret
 
 
-Call_057_7ec0:
+SaveBtlAI_7ec0:
     push bc
     push hl
     ld hl, $dc65
-    call Call_057_7fca
+    call CalcBtlAI_7fca
     ld b, $08
 
 jr_057_7eca:
@@ -11919,11 +11919,11 @@ jr_057_7eef:
     ret
 
 
-Call_057_7ef4:
+SaveBtlAI_7ef4:
     push bc
     push hl
     ld hl, $dc65
-    call Call_057_7fca
+    call CalcBtlAI_7fca
     ld b, $08
 
 jr_057_7efe:
@@ -11972,7 +11972,7 @@ jr_057_7f27:
     ret
 
 
-Call_057_7f2c:
+SaveBtlAI_7f2c:
     push bc
     ld a, [$c86c]
     or a
@@ -12007,7 +12007,7 @@ jr_057_7f5d:
     ret
 
 
-Call_057_7f5f:
+SetBtlAI_7f5f:
     ld hl, $db4c
     xor a
     ld [hl+], a
@@ -12016,7 +12016,7 @@ Call_057_7f5f:
     ld [hl], a
     ld a, [wBattleAttackerIdx]
     ld hl, $dc44
-    call Call_057_7fc2
+    call CalcBtlAI_7fc2
     ld [$db4d], a
     cp $3f
     jr c, jr_057_7f7c
@@ -12027,7 +12027,7 @@ Call_057_7f5f:
 jr_057_7f7c:
     ld a, [wBattleAttackerIdx]
     ld hl, $dc4c
-    call Call_057_7fc2
+    call CalcBtlAI_7fc2
     ld [$db4e], a
     cp $3f
     jr c, jr_057_7f91
@@ -12038,7 +12038,7 @@ jr_057_7f7c:
 jr_057_7f91:
     ld a, [wBattleAttackerIdx]
     ld hl, $dc54
-    call Call_057_7fc2
+    call CalcBtlAI_7fc2
     ld [$db4f], a
     cp $3f
     jr c, jr_057_7fa6
@@ -12070,7 +12070,7 @@ jr_057_7fbf:
     ret
 
 
-Call_057_7fc2:
+CalcBtlAI_7fc2:
     add l
     ld l, a
     ld a, $00
@@ -12080,11 +12080,11 @@ Call_057_7fc2:
     ret
 
 
-Call_057_7fca:
+CalcBtlAI_7fca:
     add a
     add a
     add a
-    call Call_057_45ea
+    call CalcBtlAI_45ea
     ret
 
 

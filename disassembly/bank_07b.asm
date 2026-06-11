@@ -1473,7 +1473,7 @@ jr_07b_467e:
     ld bc, $0ef3
     ld [hl], a
     rst $38
-    call c, Call_07b_6ef3
+    call c, DataB7b_6ef3
     db $ed
     db $dd
     db $dd
@@ -3409,7 +3409,7 @@ jr_07b_4de4:
     ld h, e
     ld b, a
     call $2464
-    call nc, Call_000_2474
+    call nc, RetNop_2474
     add h
     and b
     or e
@@ -11500,7 +11500,7 @@ jr_07b_5214:
     nop
     nop
 
-Call_07b_6ef3:
+DataB7b_6ef3:
     nop
     nop
     nop

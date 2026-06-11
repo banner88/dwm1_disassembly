@@ -168,29 +168,29 @@ label13_40ae:
 
 jr_013_40e1:
     ld a, [$da3c]
-    call Call_013_411e
-    call Call_013_4163
+    call FuncExp_411e
+    call FuncExp_4163
     ld [$c8ca], a
     ld a, [$da3d]
-    call Call_013_411e
+    call FuncExp_411e
     ld [$c8cb], a
     ld a, [$da3e]
-    call Call_013_411e
-    call Call_013_4163
+    call FuncExp_411e
+    call FuncExp_4163
     ld [$c8cc], a
     ld a, [$da3f]
-    call Call_013_411e
+    call FuncExp_411e
     ld [$c8cd], a
     ld a, [$da40]
-    call Call_013_411e
+    call FuncExp_411e
     ld [$c8ce], a
     ld a, [$da41]
-    call Call_013_411e
+    call FuncExp_411e
     ld [$c8cf], a
     ret
 
 
-Call_013_411e:
+FuncExp_411e:
     ld c, $63
     call Mul8x8To16
     ld a, l
@@ -234,7 +234,7 @@ jr_013_414b:
     ret
 
 
-Call_013_4163:
+FuncExp_4163:
     ld [$c8cf], a
     ld [$c8d1], a
     ld a, [$c8d0]
@@ -251,26 +251,26 @@ Call_013_4163:
     ld b, $01
     ld c, $13
     ld d, $06
-    call Call_013_41a5
+    call SaveExp_41a5
     ld b, $0a
     ld c, $14
     ld d, $08
-    call Call_013_41a5
+    call SaveExp_41a5
     ld b, $14
     ld c, $1e
     ld d, $06
-    call Call_013_41a5
+    call SaveExp_41a5
     ld b, $32
     ld c, $64
     ld d, $05
-    call Call_013_41a5
+    call SaveExp_41a5
 
 jr_013_41a1:
     ld a, [$c8cf]
     ret
 
 
-Call_013_41a5:
+SaveExp_41a5:
     push de
     push bc
     call GenerateRNG
@@ -1040,9 +1040,9 @@ jr_013_7381:
     ld bc, $0008
     call FillNBytesWithRegA
     ld hl, $ffb7
-    call Call_013_774f
+    call ReadExp_774f
     ld hl, $ffbb
-    call Call_013_774f
+    call ReadExp_774f
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -1151,7 +1151,7 @@ jr_013_7434:
 jr_013_7442:
     push hl
     push bc
-    call Call_013_777f
+    call CallExp_777f
     pop bc
     pop hl
     ld a, l
@@ -1178,7 +1178,7 @@ jr_013_7442:
 jr_013_7466:
     push hl
     push bc
-    call Call_013_777f
+    call CallExp_777f
     pop bc
     pop hl
     ld a, l
@@ -1195,7 +1195,7 @@ jr_013_7466:
     ret
 
 
-    call Call_013_779f
+    call LoadExp_779f
     ret nz
 
     ld hl, $c905
@@ -1339,7 +1339,7 @@ jr_013_7545:
     ld a, [$c90a]
     ld h, a
     push hl
-    call Call_013_777f
+    call CallExp_777f
     pop hl
     ld a, l
     sub $20
@@ -1366,7 +1366,7 @@ jr_013_756a:
     ld a, [$c90a]
     ld h, a
     push hl
-    call Call_013_777f
+    call CallExp_777f
     pop hl
     ld a, l
     sub $01
@@ -1383,7 +1383,7 @@ jr_013_7581:
     ld a, [$c90a]
     ld h, a
     push hl
-    call Call_013_777f
+    call CallExp_777f
     pop hl
     ld a, l
     add $20
@@ -1400,7 +1400,7 @@ jr_013_7598:
     ld a, [$c90a]
     ld h, a
     push hl
-    call Call_013_777f
+    call CallExp_777f
     pop hl
     ld a, l
     add $01
@@ -1433,7 +1433,7 @@ jr_013_75c8:
     ret
 
 
-    call Call_013_779f
+    call LoadExp_779f
     ret nz
 
     ld hl, $c905
@@ -1480,12 +1480,12 @@ jr_013_75f2:
     ld e, a
     ld a, [$c90a]
     ld d, a
-    call Call_013_76c4
+    call ReadExp_76c4
 
 jr_013_7617:
     push hl
     push bc
-    call Call_013_777f
+    call CallExp_777f
     pop bc
     pop hl
     inc hl
@@ -1508,7 +1508,7 @@ jr_013_7617:
 jr_013_7637:
     push hl
     push bc
-    call Call_013_777f
+    call CallExp_777f
     pop bc
     pop hl
     inc hl
@@ -1530,7 +1530,7 @@ jr_013_7637:
 jr_013_7652:
     push hl
     push bc
-    call Call_013_777f
+    call CallExp_777f
     pop bc
     pop hl
     ld a, l
@@ -1558,7 +1558,7 @@ jr_013_7652:
 jr_013_7679:
     push hl
     push bc
-    call Call_013_777f
+    call CallExp_777f
     pop bc
     pop hl
     ld a, l
@@ -1602,7 +1602,7 @@ jr_013_7679:
     ret
 
 
-    call Call_013_779f
+    call LoadExp_779f
     ret nz
 
     ld hl, $c905
@@ -1610,7 +1610,7 @@ jr_013_7679:
     ret
 
 
-Call_013_76c4:
+ReadExp_76c4:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -1748,7 +1748,7 @@ Call_013_76c4:
     ld [hl], a
     jr nz, jr_013_77c6
 
-Call_013_774f:
+ReadExp_774f:
     ld a, [hl]
     add $04
     ld [hl+], a
@@ -1761,7 +1761,7 @@ Call_013_774f:
     ret
 
 
-Call_013_775c:
+SaveExp_775c:
     push af
     ld a, l
     and $e0
@@ -1777,7 +1777,7 @@ Call_013_775c:
     ret
 
 
-Call_013_776b:
+LoadExp_776b:
     ld a, [$c90b]
     add l
     ld l, a
@@ -1792,20 +1792,20 @@ Call_013_776b:
     ret
 
 
-Call_013_777f:
-    call Call_013_7788
+CallExp_777f:
+    call SaveExp_7788
     ld a, $e6
     call Write_gfx_tile
     ret
 
 
-Call_013_7788:
+SaveExp_7788:
     push bc
     ld b, l
     ld a, l
     and $e0
     ld l, a
-    call Call_013_776b
+    call LoadExp_776b
     ld a, b
     and $1f
     jr z, jr_013_779d
@@ -1813,7 +1813,7 @@ Call_013_7788:
     ld b, a
 
 jr_013_7797:
-    call Call_013_775c
+    call SaveExp_775c
     dec b
     jr nz, jr_013_7797
 
@@ -1822,7 +1822,7 @@ jr_013_779d:
     ret
 
 
-Call_013_779f:
+LoadExp_779f:
     ld a, [$ddb4]
     ld hl, $ddce
     and [hl]
@@ -1917,7 +1917,7 @@ jr_013_77c6:
     nop
     nop
 
-Call_013_7802:
+DataExp_7802:
     nop
     nop
     nop

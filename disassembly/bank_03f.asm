@@ -5,29 +5,24 @@
 
 SECTION "ROM Bank $03f", ROMX[$4000], BANK[$3f]
 
-    ccf
-    rla
-    ld b, b
-    ld [hl-], a
-    ld b, b
-    ld a, a
-    ld b, b
-    cp c
-    ld b, b
-    ld a, l
-    ld b, d
-    pop af
-    ld b, d
-    dec h
-    ld b, e
-    di
-    ld b, e
-    ld d, a
-    ld b, l
-    ld e, [hl]
-    ld b, l
-    ld h, l
-    ld b, l
+    db $3F ; Bank number
+
+    ; Cross-bank dispatch table (11 entries)
+    ; Called via: ld hl, $3FXX / rst $10
+    dw $4017                          ; Entry 0
+    dw $4032                          ; Entry 1
+    dw $407F                          ; Entry 2
+    dw $40B9                          ; Entry 3
+    dw $427D                          ; Entry 4
+    dw $42F1                          ; Entry 5
+    dw $4325                          ; Entry 6
+    dw $43F3                          ; Entry 7
+    dw SetB3f_4557                  ; Entry 8
+    dw $455E                          ; Entry 9
+    dw $4565                          ; Entry 10
+
+; --- Dispatch entry 0 ($4017) ---
+DispatchEntry_3F_0:
     ld b, b
     ld [bc], a
     ld bc, $a001
@@ -1156,7 +1151,7 @@ jr_03f_4501:
     ld d, d
     ld [hl], e
 
-Call_03f_4557:
+SetB3f_4557:
     ld de, $4485
     call CallTextEngine
     ret
@@ -1167,7 +1162,7 @@ Call_03f_4557:
     ret
 
 
-    call Call_03f_4557
+    call SetB3f_4557
     call RequestScreenUpdate
     ret
 

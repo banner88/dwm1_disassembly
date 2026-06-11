@@ -5,69 +5,46 @@
 
 SECTION "ROM Bank $05a", ROMX[$4000], BANK[$5a]
 ;All invalid jumps to external banks removed.
-    ld e, d
+    db $5A ; Bank number
 
-Call_05a_4001:
-    ld b, c
-    ld b, b
-    add sp, $41
-    ld l, [hl]
-    ld b, h
-    add e
-    ld b, a
-    pop de
-    ld c, c
-    sub a
-    ld c, h
-    ld a, d
-    ld c, a
-    xor h
-    ld d, b
-    sbc c
-    ld d, d
-    ld e, a
-    ld d, l
-    ld d, c
-    ld d, [hl]
-    ld d, l
-    ld e, b
-    ld h, e
-    ld e, d
-    or b
-    ld e, h
-    rst $30
-    ld e, [hl]
-    ld l, e
-    ld h, b
-    ld l, l
-    ld h, d
-    xor d
-    ld h, h
-    adc l
-    ld h, a
-    push de
-    ld l, b
-    jp nz, Jump_05a_5369
+    ; Cross-bank dispatch table (32 entries)
+    ; Called via: ld hl, $5AXX / rst $10
+FuncB5a_4001:
+    dw $4041                          ; Entry 0
+    dw $41E8                          ; Entry 1
+    dw $446E                          ; Entry 2
+    dw $4783                          ; Entry 3
+    dw $49D1                          ; Entry 4
+    dw $4C97                          ; Entry 5
+    dw $4F7A                          ; Entry 6
+    dw $50AC                          ; Entry 7
+    dw $5299                          ; Entry 8
+    dw $555F                          ; Entry 9
+    dw $5651                          ; Entry 10
+    dw $5855                          ; Entry 11
+    dw $5A63                          ; Entry 12
+    dw $5CB0                          ; Entry 13
+    dw $5EF7                          ; Entry 14
+    dw $606B                          ; Entry 15
+    dw $626D                          ; Entry 16
+    dw $64AA                          ; Entry 17
+    dw $678D                          ; Entry 18
+    dw $68D5                          ; Entry 19
+    dw $69C2                          ; Entry 20
+    dw $6A53                          ; Entry 21
+    dw $6AE5                          ; Entry 22
+    dw $6BA5                          ; Entry 23
+    dw $6CA6                          ; Entry 24
+    dw $6EA4                          ; Entry 25
+    dw $6FCA                          ; Entry 26
+    dw $72A0                          ; Entry 27
+    dw $745B                          ; Entry 28
+    dw $771E                          ; Entry 29
+    dw $7860                          ; Entry 30
+    dw jr_05a_7b4b                    ; Entry 31
 
-    ld l, d
-    push hl
-    ld l, d
-    and l
-    ld l, e
-    and [hl]
-    ld l, h
-    and h
-    ld l, [hl]
-    jp z, $a06f
-
-    ld [hl], d
-    ld e, e
-    ld [hl], h
-    ld e, $77
-    ld h, b
-    ld a, b
-    ld c, e
-    ld a, e
+; --- Dispatch entry 0 ($4041) ---
+DispatchEntry_5A_0:
     nop
     ld [$000b], sp
     ld bc, $4701
@@ -371,7 +348,7 @@ jr_05a_4193:
     inc c
     sub b
     nop
-    call z, Call_05a_4700
+    call z, FuncB5a_4700
     nop
     jr nz, jr_05a_41b0
 
@@ -715,7 +692,7 @@ Jump_05a_4300:
     rra
     ld b, $19
     inc bc
-    call z, Call_05a_7f00
+    call z, DataB5a_7f00
     ld b, $3f
     inc bc
     rrca
@@ -1045,7 +1022,7 @@ jr_05a_4458:
     ld a, l
     rst $10
 
-Call_05a_4480:
+DataB5a_4480:
     db $ec
     nop
     ld [$1408], sp
@@ -1195,7 +1172,7 @@ jr_05a_450d:
     ld b, $73
     adc h
     inc sp
-    call z, Call_05a_7887
+    call z, FuncB5a_7887
     rst $08
     jr nc, @+$01
 
@@ -1627,7 +1604,7 @@ jr_05a_46fb:
     and b
     ld [hl], l
 
-Call_05a_4700:
+FuncB5a_4700:
     adc d
     ld [hl], l
     adc d
@@ -2331,7 +2308,7 @@ jr_05a_4965:
 jr_05a_49ef:
     add d
     nop
-    call nz, Call_05a_4480
+    call nz, DataB5a_4480
     nop
     db $ec
     ld c, b
@@ -3149,7 +3126,7 @@ jr_05a_4d4a:
     ld a, l
     add d
     dec sp
-    call nz, Call_05a_649b
+    call nz, ClrB5a_649b
     cp a
     ld b, b
     cp a
@@ -4248,7 +4225,7 @@ jr_05a_522f:
     dec e
     jr c, @-$37
 
-    call nz, Call_05a_703b
+    call nz, SetB5a_703b
     rrca
     nop
     rst $38
@@ -6550,7 +6527,7 @@ jr_05a_5c11:
     dec c
     ld [bc], a
 
-Call_05a_5c1b:
+SetB5a_5c1b:
     ld bc, $050e
     ld a, [bc]
 
@@ -6739,7 +6716,7 @@ jr_05a_5cb8:
     ld [bc], a
 
 jr_05a_5cd9:
-    call nz, Call_05a_6202
+    call nz, FuncB5a_6202
     ld bc, $ff0a
     pop af
     add b
@@ -7952,7 +7929,7 @@ jr_05a_6200:
     ld d, l
     inc sp
 
-Call_05a_6202:
+FuncB5a_6202:
     ld c, h
     inc de
     inc l
@@ -8089,7 +8066,7 @@ jr_05a_623c:
     ld h, l
     sbc d
     dec sp
-    call nz, Call_05a_6b14
+    call nz, DataB5a_6b14
     dec a
     ld b, d
     rla
@@ -8600,7 +8577,7 @@ jr_05a_6430:
     ld c, l
     dec bc
 
-Call_05a_649b:
+ClrB5a_649b:
     xor [hl]
     ld l, a
     ld c, l
@@ -8631,7 +8608,7 @@ Call_05a_649b:
     ld h, l
     sbc d
     dec sp
-    call nz, Call_05a_6b14
+    call nz, DataB5a_6b14
     dec a
     ld b, d
     rla
@@ -9098,7 +9075,7 @@ jr_05a_6683:
 
     scf
     nop
-    call z, Call_05a_5c1b
+    call z, SetB5a_5c1b
     ld bc, $0018
     ld a, b
     nop
@@ -9540,7 +9517,7 @@ jr_05a_684d:
     ld b, b
     ld d, b
     inc bc
-    call nc, Call_05a_4001
+    call nc, FuncB5a_4001
     inc bc
     sbc b
     ld bc, $fc03
@@ -10082,7 +10059,7 @@ jr_05a_6afa:
 
     jr nc, jr_05a_6b16
 
-Call_05a_6b14:
+DataB5a_6b14:
     db $fc
     ld a, [c]
 
@@ -11169,7 +11146,7 @@ jr_05a_7007:
     ld [hl], $02
     dec e
 
-Call_05a_703b:
+SetB5a_703b:
     ld bc, $031e
     inc e
     rlca
@@ -13094,7 +13071,7 @@ jr_05a_787f:
     ld h, b
     add hl, de
 
-Call_05a_7887:
+FuncB5a_7887:
     ld b, b
     dec sp
     jr nc, jr_05a_78d6
@@ -14676,7 +14653,7 @@ jr_05a_7e2f:
     nop
     nop
 
-Call_05a_7f00:
+DataB5a_7f00:
     nop
     nop
     nop

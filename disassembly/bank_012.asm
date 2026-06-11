@@ -7,9 +7,11 @@ SECTION "ROM Bank $012", ROMX[$4000], BANK[$12]
 
 INCLUDE "items.inc"
 
-    db $12 ;ROM Bank
+    db $12 ; Bank number
 
-    dw label12_4003
+    ; Cross-bank dispatch table (1 entries)
+    ; Called via: ld hl, $12XX / rst $10
+    dw label12_4003                   ; Entry 0
 
 label12_4003:
     ld a, [$c8ef]
@@ -37,7 +39,7 @@ label12_4027:
     ret
 
 
-Call_012_4028:
+ReadItem_4028:
     ld a, [hl]
     add $04
     ld [hl+], a
@@ -50,7 +52,7 @@ Call_012_4028:
     ret
 
 
-Call_012_4035:
+SaveItem_4035:
     push af
     ld a, l
     and $e0
@@ -66,7 +68,7 @@ Call_012_4035:
     ret
 
 
-Call_012_4044:
+LoadItem_4044:
     ld a, [$c909]
     add l
     ld l, a
@@ -81,7 +83,7 @@ Call_012_4044:
     ret
 
 
-Call_012_4058:
+LoadItem_4058:
     ld a, l
     add $00
     ld l, a
@@ -91,13 +93,13 @@ Call_012_4058:
     ret
 
 
-Call_012_4061:
+SaveItem_4061:
     push bc
     ld b, l
     ld a, l
     and $e0
     ld l, a
-    call Call_012_4044
+    call LoadItem_4044
     ld a, b
     and $1f
     jr z, jr_012_4076
@@ -105,7 +107,7 @@ Call_012_4061:
     ld b, a
 
 jr_012_4070:
-    call Call_012_4035
+    call SaveItem_4035
     dec b
     jr nz, jr_012_4070
 
@@ -120,7 +122,7 @@ jr_012_4076:
     ld a, [de]
     ld h, a
     inc de
-    call Call_012_4061
+    call SaveItem_4061
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -157,7 +159,7 @@ jr_012_4087:
 
 jr_012_40ac:
     call Write_gfx_tile
-    call Call_012_4035
+    call SaveItem_4035
     jr jr_012_4087
 
 ReadPtrFromDE:
@@ -167,7 +169,7 @@ ReadPtrFromDE:
     ld a, [de]
     ld h, a
     inc de
-    call Call_012_4058
+    call LoadItem_4058
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -246,7 +248,7 @@ jr_012_40f5:
     ret
 
 
-Call_012_411a:
+LoadItem_411a:
     ld a, [$c827]
     ld c, a
     ld a, [$c828]
@@ -280,7 +282,7 @@ Call_012_411a:
     ret
 
 
-Call_012_4153:
+SaveItem_4153:
     push hl
     ld hl, $c180
     call Copy4Bytes
@@ -364,7 +366,7 @@ Call_012_4153:
     ret
 
 
-Call_012_41ef:
+SetItem_41ef:
     ld hl, $c500
     ld de, $c300
     ld bc, $0200
@@ -409,7 +411,7 @@ jr_012_4207:
     ret
 
 
-Call_012_4221:
+SetItem_4221:
     ld hl, $c500
     ld bc, $0240
 
@@ -438,7 +440,7 @@ jr_012_4236:
     ret
 
 
-Call_012_4241:
+LoadItem_4241:
     ld a, c
     ld [$c8e1], a
     inc de
@@ -530,7 +532,7 @@ jr_012_42a8:
     push bc
     push de
     push hl
-    call Call_012_4387
+    call LoadItem_4387
     pop hl
     pop de
     pop bc
@@ -554,7 +556,7 @@ jr_012_42a8:
     inc a
     ld b, a
 
-Call_012_42ca:
+FuncItem_42ca:
 jr_012_42ca:
     res 7, [hl]
     ld a, [wJoypad_Current]
@@ -602,7 +604,7 @@ jr_012_42f3:
 
 jr_012_42fc:
     ld a, [hl]
-    call Call_012_4328
+    call FuncItem_4328
     ret
 
 
@@ -633,13 +635,13 @@ jr_012_4313:
     ld a, $00
     jr jr_012_42ea
 
-Call_012_4323:
+ClrItem_4323:
     xor a
     ld [wCursorBlinkTimer], a
     ret
 
 
-Call_012_4328:
+FuncItem_4328:
     ld c, a
     bit 7, a
     jr nz, jr_012_433d
@@ -675,7 +677,7 @@ jr_012_4340:
     ldh [$d6], a
     push de
     push bc
-    call Call_012_4061
+    call SaveItem_4061
     pop bc
     pop de
     ld a, c
@@ -713,7 +715,7 @@ jr_012_4370:
     inc b
     jr jr_012_4340
 
-Call_012_4387:
+LoadItem_4387:
     ld a, b
     cp c
     ret nc
@@ -739,7 +741,7 @@ Call_012_4387:
     ldh [$d6], a
     push de
     push bc
-    call Call_012_4061
+    call SaveItem_4061
     pop bc
     pop de
     ld a, c
@@ -762,7 +764,7 @@ Call_012_4387:
     ret
 
 
-Call_012_43c0:
+ReadItem_43c0:
     ld a, [hl+]
     push af
     push hl
@@ -797,7 +799,7 @@ jr_012_43d9:
 jr_012_43e1:
     pop af
 
-Call_012_43e2:
+FuncItem_43e2:
     ld c, a
     add a
     add e
@@ -816,7 +818,7 @@ Call_012_43e2:
     ldh [$d6], a
     push de
     push bc
-    call Call_012_4061
+    call SaveItem_4061
     pop bc
     pop de
     ld a, $e9
@@ -871,9 +873,9 @@ AddCursorOffset:
     ld d, b
     ld b, l
     ld hl, $ffb7
-    call Call_012_4028
+    call ReadItem_4028
     ld hl, $ffbb
-    call Call_012_4028
+    call ReadItem_4028
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -900,7 +902,7 @@ AddCursorOffset:
     ld [$c909], a
     ld a, h
     ld [$c90a], a
-    call Call_012_41ef
+    call SetItem_41ef
     ld de, $2e10
     ld hl, $8800
     call WaitDMATransfer
@@ -910,15 +912,15 @@ AddCursorOffset:
     ld [$c823], a
     ld hl, $9600
     ld de, $0501
-    call Call_012_411a
+    call LoadItem_411a
     ld a, $02
     ld [$c822], a
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
-    call Call_012_4323
+    call LoadItem_411a
+    call ClrItem_4323
     ld a, $60
     ldh [$d4], a
     ld hl, $0105
@@ -936,28 +938,28 @@ AddCursorOffset:
     inc [hl]
     xor a
     ld [$c8ec], a
-    call Call_012_41ef
-    call Call_012_44cb
+    call SetItem_41ef
+    call SetItem_44cb
     call GetScreenPos
     ret
 
 
-Call_012_44cb:
+SetItem_44cb:
     ld de, $710c
     call ReadPtrFromDE
     ld de, $2e07
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $4532
     ld a, [wMenu_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $4532
     ld hl, wMenu_selection
     ld b, $06
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     and $0a
     jr z, jr_012_4500
@@ -1016,17 +1018,17 @@ jr_012_4531:
     ld e, l
     ld d, b
     ld b, l
-    call Call_012_41ef
+    call SetItem_41ef
     ld de, $2e07
     call ReadPtrFromDE
     call GetScreenPos
     call UpdateOAMSprites
     ld hl, $c13c
     ld de, $c1c0
-    call Call_012_457f
+    call FuncItem_457f
     ld hl, $c150
     ld de, $c1e0
-    call Call_012_457f
+    call FuncItem_457f
     ld a, $80
     ldh [$d3], a
     ld hl, wGameState
@@ -1036,7 +1038,7 @@ jr_012_4531:
     ret
 
 
-Call_012_457f:
+FuncItem_457f:
     ld b, $14
 
 jr_012_4581:
@@ -1104,7 +1106,7 @@ jr_012_4581:
 
     ld hl, $0004
     call AddCursorOffset
-    call Call_012_4cb7
+    call SetItem_4cb7
     or a
     jr nz, jr_012_45d7
 
@@ -1137,7 +1139,7 @@ jr_012_45ec:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $06e1
     call TextBankDispatch
     ld a, $01
@@ -1149,44 +1151,44 @@ jr_012_45ec:
     or a
     ret nz
 
-    call Call_012_4682
-    call Call_012_4643
-    call Call_012_4621
+    call LoadItem_4682
+    call SetItem_4643
+    call CallItem_4621
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_4621:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_4621:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $71aa
     call ReadPtrFromDE
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_46fd
-    call Call_012_4323
+    call LoadItem_46fd
+    call ClrItem_4323
     ld de, $47af
     ld a, [wOPTN_and_Item_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
-Call_012_4643:
+SetItem_4643:
     ld hl, $8800
     ld a, $01
-    call Call_012_465c
+    call FuncItem_465c
     ld hl, $8840
     ld a, $02
-    call Call_012_465c
+    call FuncItem_465c
     ld hl, $8880
     ld a, $03
-    call Call_012_465c
+    call FuncItem_465c
     ret
 
 
-Call_012_465c:
+FuncItem_465c:
     ld b, a
     ld a, [$ca8d]
     cp b
@@ -1214,11 +1216,11 @@ jr_012_4672:
     ld e, l
     ld d, h
     pop hl
-    call Call_012_4153
+    call SaveItem_4153
     ret
 
 
-Call_012_4682:
+LoadItem_4682:
     ld a, [wOPTN_and_Item_selection]
     and $7f
     ld hl, $ca8e
@@ -1229,14 +1231,14 @@ Call_012_4682:
     ld h, a
     ld a, [hl]
 
-Call_012_4691:
+SaveItem_4691:
     push af
     ld hl, $cac2
     call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $9650
-    call Call_012_4153
+    call SaveItem_4153
     pop af
     ld hl, $cacc
     call GetMonsterDataPtr
@@ -1285,7 +1287,7 @@ Call_012_4691:
     ret
 
 
-Call_012_46fd:
+LoadItem_46fd:
     ld a, [wOPTN_and_Item_selection]
     and $7f
     ld hl, $ca8e
@@ -1296,21 +1298,21 @@ Call_012_46fd:
     ld h, a
     ld a, [hl]
 
-Call_012_470c:
+SaveItem_470c:
     push af
     ld hl, $cb0c
     call GetMonsterDataPtr
     ld c, [hl]
     ld b, $00
     ld hl, $016a
-    call Call_012_4058
+    call LoadItem_4058
     ld a, $de
     ld [hl+], a
     ld a, $e0
     ld [hl+], a
     ld a, $e0
     ld [hl-], a
-    call Call_012_601b
+    call SetItem_601b
     pop af
     ld hl, $cac1
     call GetMonsterDataPtr
@@ -1319,7 +1321,7 @@ Call_012_470c:
     jr nz, jr_012_473e
 
     ld hl, $0172
-    call Call_012_4058
+    call LoadItem_4058
     ld a, $e3
     ld [hl], a
     ret
@@ -1327,7 +1329,7 @@ Call_012_470c:
 
 jr_012_473e:
     ld hl, $0172
-    call Call_012_4058
+    call LoadItem_4058
     ld a, $e0
     ld [hl], a
     ret
@@ -1343,16 +1345,16 @@ jr_012_473e:
     ld b, a
     ld a, [hl]
     push af
-    call Call_012_42ca
+    call FuncItem_42ca
     pop af
     ld hl, wOPTN_and_Item_selection
     cp [hl]
     jr z, jr_012_4772
 
-    call Call_012_4682
+    call LoadItem_4682
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_46fd
+    call LoadItem_46fd
     call GetScreenPos
 
 jr_012_4772:
@@ -1366,7 +1368,7 @@ jr_012_4772:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -1410,34 +1412,34 @@ jr_012_47ae:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_012_47d7
+    call SetItem_47d7
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_47d7:
+SetItem_47d7:
     ld de, $7b42
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $483b
     ld a, [wPLAN_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $483b
     ld hl, wPLAN_selection
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_4813
 
     ld hl, $5605
     rst $10
-    call Call_012_4621
+    call CallItem_4621
     call GetScreenPos
     ld hl, $0003
     call AddCursorOffset
@@ -1505,7 +1507,7 @@ jr_012_483a:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -1545,20 +1547,20 @@ jr_012_483a:
     ld [$c823], a
     ld hl, $9600
     ld de, $0501
-    call Call_012_411a
+    call LoadItem_411a
     ld a, $02
     ld [$c822], a
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
-    call Call_012_4682
-    call Call_012_4643
+    call LoadItem_411a
+    call LoadItem_4682
+    call SetItem_4643
     ld hl, $5605
     rst $10
-    call Call_012_4621
-    call Call_012_47d7
+    call CallItem_4621
+    call SetItem_47d7
     call GetScreenPos
     ld hl, $0005
     call AddCursorOffset
@@ -1586,27 +1588,27 @@ jr_012_483a:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_012_492f
+    call SetItem_492f
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_492f:
+SetItem_492f:
     ld de, $6f54
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $498d
     ld a, [$c8dd]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $498d
     ld hl, $c8dd
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_4974
@@ -1618,7 +1620,7 @@ jr_012_4954:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -1646,8 +1648,8 @@ jr_012_498c:
 
     ld hl, $6101
     ld bc, $ffff
-    call Call_012_4cb7
-    call Call_012_4ce5
+    call SetItem_4cb7
+    call SetItem_4ce5
     ld hl, $0008
     call AddCursorOffset
     ld hl, $c906
@@ -1659,35 +1661,35 @@ jr_012_498c:
     or a
     ret nz
 
-    call Call_012_49e5
-    call Call_012_4d5d
-    call Call_012_49ba
+    call LoadItem_49e5
+    call LoadItem_4d5d
+    call CallItem_49ba
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_49ba:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_49ba:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_49ff
+    call LoadItem_49ff
     ld de, $71f4
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $4e26
     ld b, $04
     ld a, [$c8e9]
     ld c, a
     ld hl, $c8e2
-    call Call_012_43c0
-    call Call_012_492f
+    call ReadItem_43c0
+    call SetItem_492f
     ret
 
 
-Call_012_49e5:
+LoadItem_49e5:
     ld a, [$c8e3]
     add a
     add a
@@ -1702,11 +1704,11 @@ Call_012_49e5:
     adc h
     ld h, a
     ld a, [hl]
-    call Call_012_4691
+    call SaveItem_4691
     ret
 
 
-Call_012_49ff:
+LoadItem_49ff:
     ld a, [$c8e3]
     add a
     add a
@@ -1721,7 +1723,7 @@ Call_012_49ff:
     adc h
     ld h, a
     ld a, [hl]
-    call Call_012_470c
+    call SaveItem_470c
     ret
 
 
@@ -1739,14 +1741,14 @@ Call_012_49ff:
     push af
     ld a, [hl]
     push af
-    call Call_012_4241
+    call LoadItem_4241
     pop af
     ld hl, $c8e2
     cp [hl]
     jr z, jr_012_4a42
 
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_4a42:
@@ -1755,9 +1757,9 @@ jr_012_4a42:
     cp [hl]
     jr z, jr_012_4a55
 
-    call Call_012_4d5d
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_4d5d
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_4a55:
@@ -1767,9 +1769,9 @@ jr_012_4a55:
 
     ld hl, $5605
     rst $10
-    call Call_012_41ef
-    call Call_012_44cb
-    call Call_012_492f
+    call SetItem_41ef
+    call SetItem_44cb
+    call SetItem_492f
     call GetScreenPos
     ld hl, $0007
     call AddCursorOffset
@@ -1807,36 +1809,36 @@ jr_012_4a8e:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_012_4aaf
+    call SetItem_4aaf
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_4aaf:
+SetItem_4aaf:
     ld de, $7b42
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $4b18
     ld a, [wPLAN_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $4b18
     ld hl, wPLAN_selection
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_4af1
 
     ld hl, $5605
     rst $10
-    call Call_012_49e5
-    call Call_012_4d5d
-    call Call_012_49ba
+    call LoadItem_49e5
+    call LoadItem_4d5d
+    call CallItem_49ba
     call GetScreenPos
     ld hl, $0008
     call AddCursorOffset
@@ -1924,7 +1926,7 @@ jr_012_4b17:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -1975,22 +1977,22 @@ jr_012_4b17:
     ld [$c823], a
     ld hl, $9600
     ld de, $0501
-    call Call_012_411a
+    call LoadItem_411a
     ld a, $02
     ld [$c822], a
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
-    call Call_012_4cb7
-    call Call_012_4ce5
-    call Call_012_4d5d
+    call LoadItem_411a
+    call SetItem_4cb7
+    call SetItem_4ce5
+    call LoadItem_4d5d
     ld hl, $5605
     rst $10
-    call Call_012_49e5
-    call Call_012_49ba
-    call Call_012_4aaf
+    call LoadItem_49e5
+    call CallItem_49ba
+    call SetItem_4aaf
     call GetScreenPos
     ld hl, $0009
     call AddCursorOffset
@@ -2057,7 +2059,7 @@ jr_012_4b17:
     ld d, e
     xor h
     ld d, e
-    call nc, Call_000_2d53
+    call nc, TilemapRotateWrite
     ld d, h
     ld d, b
     ld d, h
@@ -2067,8 +2069,8 @@ jr_012_4b17:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
-    call Call_012_4cb7
+    call LoadItem_411a
+    call SetItem_4cb7
     or a
     jr nz, jr_012_4c92
 
@@ -2094,7 +2096,7 @@ jr_012_4c92:
 
 
 jr_012_4ca9:
-    call Call_012_4ce5
+    call SetItem_4ce5
     ld hl, $000b
     call AddCursorOffset
     ld hl, $c906
@@ -2102,7 +2104,7 @@ jr_012_4ca9:
     ret
 
 
-Call_012_4cb7:
+SetItem_4cb7:
     ld de, $cac1
     ld b, $14
     ld c, $00
@@ -2144,7 +2146,7 @@ jr_012_4cd4:
     ret
 
 
-Call_012_4ce5:
+SetItem_4ce5:
     ld hl, $c0d8
     ld bc, $0014
     ld a, $ff
@@ -2195,34 +2197,34 @@ jr_012_4d11:
     or a
     ret nz
 
-    call Call_012_49e5
-    call Call_012_4d5d
-    call Call_012_4d32
+    call LoadItem_49e5
+    call LoadItem_4d5d
+    call CallItem_4d32
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_4d32:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_4d32:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_49ff
+    call LoadItem_49ff
     ld de, $71f4
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $4e26
     ld b, $04
     ld a, [$c8e9]
     ld c, a
     ld hl, $c8e2
-    call Call_012_43c0
+    call ReadItem_43c0
     call GetScreenPos
     ret
 
 
-Call_012_4d5d:
+LoadItem_4d5d:
     ld a, [$c8e3]
     add a
     add a
@@ -2233,11 +2235,11 @@ Call_012_4d5d:
     adc d
     ld d, a
     ld hl, $8800
-    call Call_012_4d77
-    call Call_012_4d77
-    call Call_012_4d77
+    call SaveItem_4d77
+    call SaveItem_4d77
+    call SaveItem_4d77
 
-Call_012_4d77:
+SaveItem_4d77:
     push de
     push hl
     ld a, [de]
@@ -2250,7 +2252,7 @@ Call_012_4d77:
     ld d, h
     pop hl
     push hl
-    call Call_012_4153
+    call SaveItem_4153
     pop hl
     ld a, l
     add $40
@@ -2300,14 +2302,14 @@ jr_012_4d99:
     push af
     ld a, [hl]
     push af
-    call Call_012_4241
+    call LoadItem_4241
     pop af
     ld hl, $c8e2
     cp [hl]
     jr z, jr_012_4dda
 
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_4dda:
@@ -2316,9 +2318,9 @@ jr_012_4dda:
     cp [hl]
     jr z, jr_012_4ded
 
-    call Call_012_4d5d
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_4d5d
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_4ded:
@@ -2332,7 +2334,7 @@ jr_012_4ded:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -2375,34 +2377,34 @@ jr_012_4e25:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_012_4e52
+    call SetItem_4e52
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_4e52:
+SetItem_4e52:
     ld de, $7b42
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $4eb6
     ld a, [wPLAN_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $4eb6
     ld hl, wPLAN_selection
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_4e8e
 
     ld hl, $5605
     rst $10
-    call Call_012_4d32
+    call CallItem_4d32
     call GetScreenPos
     ld hl, $000b
     call AddCursorOffset
@@ -2502,7 +2504,7 @@ jr_012_4eef:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -2553,20 +2555,20 @@ jr_012_4eef:
     ld [$c823], a
     ld hl, $9600
     ld de, $0501
-    call Call_012_411a
+    call LoadItem_411a
     ld a, $02
     ld [$c822], a
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
-    call Call_012_49e5
-    call Call_012_4d5d
+    call LoadItem_411a
+    call LoadItem_49e5
+    call LoadItem_4d5d
     ld hl, $5605
     rst $10
-    call Call_012_4d32
-    call Call_012_4e52
+    call CallItem_4d32
+    call SetItem_4e52
     call GetScreenPos
     ld hl, $000e
     call AddCursorOffset
@@ -2594,27 +2596,27 @@ jr_012_4eef:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_012_4ffa
+    call SetItem_4ffa
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_4ffa:
+SetItem_4ffa:
     ld de, $6f54
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $5059
     ld a, [$c8dd]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $5059
     ld hl, $c8dd
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_503f
@@ -2626,7 +2628,7 @@ jr_012_501f:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -2654,7 +2656,7 @@ jr_012_5058:
 
     ld hl, $6101
     ld bc, $ffff
-    call Call_012_4ce5
+    call SetItem_4ce5
     ld hl, $0013
     call AddCursorOffset
     ld hl, $c906
@@ -2666,31 +2668,31 @@ jr_012_5058:
     or a
     ret nz
 
-    call Call_012_49e5
-    call Call_012_4d5d
-    call Call_012_5083
+    call LoadItem_49e5
+    call LoadItem_4d5d
+    call CallItem_5083
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_5083:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_5083:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_49ff
+    call LoadItem_49ff
     ld de, $71f4
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $4e26
     ld b, $04
     ld a, [$c8e9]
     ld c, a
     ld hl, $c8e2
-    call Call_012_43c0
-    call Call_012_4ffa
+    call ReadItem_43c0
+    call SetItem_4ffa
     ret
 
 
@@ -2708,14 +2710,14 @@ Call_012_5083:
     push af
     ld a, [hl]
     push af
-    call Call_012_4241
+    call LoadItem_4241
     pop af
     ld hl, $c8e2
     cp [hl]
     jr z, jr_012_50d7
 
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_50d7:
@@ -2724,9 +2726,9 @@ jr_012_50d7:
     cp [hl]
     jr z, jr_012_50ea
 
-    call Call_012_4d5d
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_4d5d
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_50ea:
@@ -2734,9 +2736,9 @@ jr_012_50ea:
     bit 1, a
     jr z, jr_012_510a
 
-    call Call_012_5313
-    call Call_012_4643
-    call Call_012_52ee
+    call LoadItem_5313
+    call SetItem_4643
+    call CallItem_52ee
     ld hl, $0011
     call AddCursorOffset
     call GetScreenPos
@@ -2774,34 +2776,34 @@ jr_012_511f:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_012_5140
+    call SetItem_5140
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_5140:
+SetItem_5140:
     ld de, $7b42
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $51a5
     ld a, [wPLAN_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $51a5
     ld hl, wPLAN_selection
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_517e
 
-    call Call_012_49e5
-    call Call_012_4d5d
-    call Call_012_5083
+    call LoadItem_49e5
+    call LoadItem_4d5d
+    call CallItem_5083
     ld hl, $0013
     call AddCursorOffset
     call GetScreenPos
@@ -2905,7 +2907,7 @@ jr_012_51a4:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -2956,21 +2958,21 @@ jr_012_51a4:
     ld [$c823], a
     ld hl, $9600
     ld de, $0501
-    call Call_012_411a
+    call LoadItem_411a
     ld a, $02
     ld [$c822], a
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
-    call Call_012_4ce5
-    call Call_012_49e5
-    call Call_012_4d5d
+    call LoadItem_411a
+    call SetItem_4ce5
+    call LoadItem_49e5
+    call LoadItem_4d5d
     ld hl, $5605
     rst $10
-    call Call_012_5083
-    call Call_012_5140
+    call CallItem_5083
+    call SetItem_5140
     call GetScreenPos
     ld hl, $0014
     call AddCursorOffset
@@ -2992,32 +2994,32 @@ jr_012_51a4:
     or a
     ret nz
 
-    call Call_012_5313
-    call Call_012_4643
-    call Call_012_52ee
+    call LoadItem_5313
+    call SetItem_4643
+    call CallItem_52ee
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_52ee:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_52ee:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $71aa
     call ReadPtrFromDE
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_5326
-    call Call_012_4323
+    call LoadItem_5326
+    call ClrItem_4323
     ld de, $5399
     ld a, [$c8de]
-    call Call_012_43e2
-    call Call_012_4ffa
+    call FuncItem_43e2
+    call SetItem_4ffa
     ret
 
 
-Call_012_5313:
+LoadItem_5313:
     ld a, [$c8de]
     and $7f
     ld hl, $ca8e
@@ -3027,11 +3029,11 @@ Call_012_5313:
     adc h
     ld h, a
     ld a, [hl]
-    call Call_012_4691
+    call SaveItem_4691
     ret
 
 
-Call_012_5326:
+LoadItem_5326:
     ld a, [$c8de]
     and $7f
     ld hl, $ca8e
@@ -3041,7 +3043,7 @@ Call_012_5326:
     adc h
     ld h, a
     ld a, [hl]
-    call Call_012_470c
+    call SaveItem_470c
     ret
 
 
@@ -3055,16 +3057,16 @@ Call_012_5326:
     ld b, a
     ld a, [hl]
     push af
-    call Call_012_42ca
+    call FuncItem_42ca
     pop af
     ld hl, $c8de
     cp [hl]
     jr z, jr_012_5363
 
-    call Call_012_5313
+    call LoadItem_5313
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_5326
+    call LoadItem_5326
     call GetScreenPos
 
 jr_012_5363:
@@ -3072,9 +3074,9 @@ jr_012_5363:
     bit 1, a
     jr z, jr_012_5383
 
-    call Call_012_41ef
-    call Call_012_44cb
-    call Call_012_4ffa
+    call SetItem_41ef
+    call SetItem_44cb
+    call SetItem_4ffa
     ld hl, $0010
     call AddCursorOffset
     call GetScreenPos
@@ -3119,34 +3121,34 @@ jr_012_5398:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_012_53c1
+    call SetItem_53c1
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_53c1:
+SetItem_53c1:
     ld de, $7b42
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $5427
     ld a, [wPLAN_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $5427
     ld hl, wPLAN_selection
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_53ff
 
-    call Call_012_5313
-    call Call_012_4643
-    call Call_012_52ee
+    call LoadItem_5313
+    call SetItem_4643
+    call CallItem_52ee
     ld hl, $0011
     call AddCursorOffset
     call GetScreenPos
@@ -3215,20 +3217,20 @@ jr_012_5426:
     ld [$c823], a
     ld hl, $9600
     ld de, $0501
-    call Call_012_411a
+    call LoadItem_411a
     ld a, $02
     ld [$c822], a
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
-    call Call_012_5313
-    call Call_012_4643
+    call LoadItem_411a
+    call LoadItem_5313
+    call SetItem_4643
     ld hl, $5605
     rst $10
-    call Call_012_52ee
-    call Call_012_53c1
+    call CallItem_52ee
+    call SetItem_53c1
     call GetScreenPos
     ld hl, $0012
     call AddCursorOffset
@@ -3273,40 +3275,40 @@ jr_012_5426:
     or a
     ret nz
 
-    call Call_012_54e5
+    call CallItem_54e5
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_54e5:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_54e5:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $7768
     call ReadPtrFromDE
-    call Call_012_5504
-    call Call_012_4323
+    call SetItem_5504
+    call ClrItem_4323
     ld de, $564a
     ld a, [wOPTN_and_Item_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     call GetScreenPos
     ret
 
 
-Call_012_5504:
+SetItem_5504:
     ld hl, $00a6
-    call Call_012_551d
+    call CallItem_551d
     ld hl, $00e6
-    call Call_012_5551
+    call CallItem_5551
     ld hl, $0126
-    call Call_012_5581
+    call CallItem_5581
     ld hl, $0166
-    call Call_012_55be
+    call CallItem_55be
     ret
 
 
-Call_012_551d:
-    call Call_012_4058
+CallItem_551d:
+    call LoadItem_4058
     push hl
     ld de, $cac1
     ld b, $14
@@ -3350,8 +3352,8 @@ jr_012_553e:
     ret
 
 
-Call_012_5551:
-    call Call_012_4058
+CallItem_5551:
+    call LoadItem_4058
     push hl
     ld de, $cac1
     ld b, $14
@@ -3392,8 +3394,8 @@ jr_012_556e:
     ret
 
 
-Call_012_5581:
-    call Call_012_4058
+CallItem_5581:
+    call LoadItem_4058
     ld c, $00
     ld a, [$ca41]
     bit 7, a
@@ -3441,8 +3443,8 @@ jr_012_55b8:
     ret
 
 
-Call_012_55be:
-    call Call_012_4058
+CallItem_55be:
+    call LoadItem_4058
     ld c, $00
     ld a, [$ca41]
     bit 7, a
@@ -3493,7 +3495,7 @@ jr_012_55f5:
     ld de, $564a
     ld hl, wOPTN_and_Item_selection
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_562d
@@ -3504,7 +3506,7 @@ jr_012_55f5:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -3536,7 +3538,7 @@ jr_012_5649:
     nop
     rst $38
     rst $38
-    call Call_012_5670
+    call SetItem_5670
     or a
     jr nz, jr_012_5662
 
@@ -3548,7 +3550,7 @@ jr_012_5649:
 
 
 jr_012_5662:
-    call Call_012_56a6
+    call SetItem_56a6
     ld hl, $0018
     call AddCursorOffset
     ld hl, $c906
@@ -3556,7 +3558,7 @@ jr_012_5662:
     ret
 
 
-Call_012_5670:
+SetItem_5670:
     ld de, $cac1
     ld b, $14
     ld c, $00
@@ -3602,7 +3604,7 @@ jr_012_5695:
     ret
 
 
-Call_012_56a6:
+SetItem_56a6:
     ld hl, $c0d8
     ld bc, $0014
     ld a, $ff
@@ -3659,24 +3661,24 @@ jr_012_56dc:
     or a
     ret nz
 
-    call Call_012_49e5
-    call Call_012_5751
-    call Call_012_56fd
+    call LoadItem_49e5
+    call LoadItem_5751
+    call CallItem_56fd
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_56fd:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_56fd:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $7768
     call ReadPtrFromDE
-    call Call_012_5504
-    call Call_012_4323
+    call SetItem_5504
+    call ClrItem_4323
     ld de, $564a
     ld a, [wOPTN_and_Item_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ld de, $77cd
     ld a, [wOPTN_and_Item_selection]
     and $01
@@ -3684,12 +3686,12 @@ Call_012_56fd:
 
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_49ff
+    call LoadItem_49ff
     ld de, $71f4
 
 jr_012_572e:
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $5913
     ld a, [wOPTN_and_Item_selection]
     and $01
@@ -3702,12 +3704,12 @@ jr_012_5741:
     ld a, [$c8e9]
     ld c, a
     ld hl, $c8e2
-    call Call_012_43c0
+    call ReadItem_43c0
     call GetScreenPos
     ret
 
 
-Call_012_5751:
+LoadItem_5751:
     ld a, [$c8e3]
     add a
     add a
@@ -3722,25 +3724,25 @@ Call_012_5751:
     jr nz, jr_012_5776
 
     ld hl, $8800
-    call Call_012_4d77
-    call Call_012_4d77
-    call Call_012_4d77
-    call Call_012_4d77
+    call SaveItem_4d77
+    call SaveItem_4d77
+    call SaveItem_4d77
+    call SaveItem_4d77
     ret
 
 
 jr_012_5776:
     ld hl, $9650
-    call Call_012_578c
-    call Call_012_578c
-    call Call_012_578c
+    call SaveItem_578c
+    call SaveItem_578c
+    call SaveItem_578c
     ld hl, $8800
-    call Call_012_578c
-    call Call_012_57d0
+    call SaveItem_578c
+    call LoadItem_57d0
     ret
 
 
-Call_012_578c:
+SaveItem_578c:
     push de
     push hl
     ld a, [de]
@@ -3756,7 +3758,7 @@ Call_012_578c:
     ld de, $0901
     pop hl
     push hl
-    call Call_012_411a
+    call LoadItem_411a
     pop hl
     ld a, l
     add $90
@@ -3792,7 +3794,7 @@ jr_012_57b8:
     ret
 
 
-Call_012_57d0:
+LoadItem_57d0:
     ld a, [$c8e3]
     add a
     add a
@@ -3803,11 +3805,11 @@ Call_012_57d0:
     adc d
     ld d, a
     ld hl, $88c0
-    call Call_012_57ea
-    call Call_012_57ea
-    call Call_012_57ea
+    call SaveItem_57ea
+    call SaveItem_57ea
+    call SaveItem_57ea
 
-Call_012_57ea:
+SaveItem_57ea:
     push de
     push hl
     ld a, [de]
@@ -3928,7 +3930,7 @@ jr_012_5892:
     push af
     ld a, [hl]
     push af
-    call Call_012_4241
+    call LoadItem_4241
     pop af
     ld hl, $c8e2
     cp [hl]
@@ -3938,8 +3940,8 @@ jr_012_5892:
     and $01
     jr nz, jr_012_58ba
 
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_58ba:
@@ -3948,13 +3950,13 @@ jr_012_58ba:
     cp [hl]
     jr z, jr_012_58d4
 
-    call Call_012_5751
+    call LoadItem_5751
     ld a, [wOPTN_and_Item_selection]
     and $01
     jr nz, jr_012_58d4
 
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_58d4:
@@ -3962,7 +3964,7 @@ jr_012_58d4:
     bit 1, a
     jr z, jr_012_58fa
 
-    call Call_012_54e5
+    call CallItem_54e5
     ld hl, $0016
     call AddCursorOffset
     xor a
@@ -4053,12 +4055,12 @@ jr_012_5928:
     ld [$c823], a
     ld hl, $9600
     ld de, $0501
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $5605
     rst $10
-    call Call_012_49e5
-    call Call_012_5751
-    call Call_012_56fd
+    call LoadItem_49e5
+    call LoadItem_5751
+    call CallItem_56fd
     ld hl, $0018
     call AddCursorOffset
     call RequestScreenUpdate
@@ -4077,7 +4079,7 @@ jr_012_5928:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -4127,30 +4129,30 @@ jr_012_5928:
     or a
     ret nz
 
-    call Call_012_5a07
+    call CallItem_5a07
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_5a07:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_5a07:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $7768
     call ReadPtrFromDE
-    call Call_012_5504
-    call Call_012_4323
+    call SetItem_5504
+    call ClrItem_4323
     ld de, $5a8e
     ld a, [wOPTN_and_Item_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $5a8e
     ld hl, wOPTN_and_Item_selection
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_5a55
@@ -4161,7 +4163,7 @@ Call_012_5a07:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -4179,7 +4181,7 @@ jr_012_5a55:
     ld bc, $0008
     ld a, $00
     call FillNBytesWithRegA
-    call Call_012_5a75
+    call LoadItem_5a75
     ld hl, $c906
     inc [hl]
 
@@ -4188,7 +4190,7 @@ jr_012_5a74:
     ret
 
 
-Call_012_5a75:
+LoadItem_5a75:
     ld a, $02
     ld [$c822], a
     ld a, [wOPTN_and_Item_selection]
@@ -4197,7 +4199,7 @@ Call_012_5a75:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ret
 
 
@@ -4207,7 +4209,7 @@ Call_012_5a75:
     nop
     rst $38
     rst $38
-    call Call_012_5ab4
+    call SetItem_5ab4
     or a
     jr nz, jr_012_5aa6
 
@@ -4219,7 +4221,7 @@ Call_012_5a75:
 
 
 jr_012_5aa6:
-    call Call_012_5aee
+    call SetItem_5aee
     ld hl, $001c
     call AddCursorOffset
     ld hl, $c906
@@ -4227,7 +4229,7 @@ jr_012_5aa6:
     ret
 
 
-Call_012_5ab4:
+SetItem_5ab4:
     ld de, $cac1
     ld b, $14
     ld c, $00
@@ -4276,7 +4278,7 @@ jr_012_5add:
     ret
 
 
-Call_012_5aee:
+SetItem_5aee:
     ld hl, $c0d8
     ld bc, $0014
     ld a, $ff
@@ -4336,25 +4338,25 @@ jr_012_5b28:
     or a
     ret nz
 
-    call Call_012_49e5
-    call Call_012_5751
-    call Call_012_41ef
-    call Call_012_5b4f
+    call LoadItem_49e5
+    call LoadItem_5751
+    call SetItem_41ef
+    call CallItem_5b4f
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_5b4f:
-    call Call_012_44cb
+CallItem_5b4f:
+    call SetItem_44cb
     ld de, $7768
     call ReadPtrFromDE
-    call Call_012_5504
-    call Call_012_4323
+    call SetItem_5504
+    call ClrItem_4323
     ld de, $5a8e
     ld a, [wOPTN_and_Item_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     ld de, $77cd
     ld a, [wOPTN_and_Item_selection]
     and $01
@@ -4362,12 +4364,12 @@ Call_012_5b4f:
 
     ld de, $759a
     call ReadPtrFromDE
-    call Call_012_49ff
+    call LoadItem_49ff
     ld de, $71f4
 
 jr_012_5b7d:
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $5c30
     ld a, [wOPTN_and_Item_selection]
     and $01
@@ -4380,7 +4382,7 @@ jr_012_5b90:
     ld a, [$c8e9]
     ld c, a
     ld hl, $c8e2
-    call Call_012_43c0
+    call ReadItem_43c0
     ret
 
 
@@ -4405,7 +4407,7 @@ jr_012_5baf:
     push af
     ld a, [hl]
     push af
-    call Call_012_4241
+    call LoadItem_4241
     pop af
     ld hl, $c8e2
     cp [hl]
@@ -4415,8 +4417,8 @@ jr_012_5baf:
     and $01
     jr nz, jr_012_5bd7
 
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_5bd7:
@@ -4425,13 +4427,13 @@ jr_012_5bd7:
     cp [hl]
     jr z, jr_012_5bf1
 
-    call Call_012_5751
+    call LoadItem_5751
     ld a, [wOPTN_and_Item_selection]
     and $01
     jr nz, jr_012_5bf1
 
-    call Call_012_49e5
-    call Call_012_49ff
+    call LoadItem_49e5
+    call LoadItem_49ff
     call GetScreenPos
 
 jr_012_5bf1:
@@ -4439,7 +4441,7 @@ jr_012_5bf1:
     bit 1, a
     jr z, jr_012_5c1a
 
-    call Call_012_5a07
+    call CallItem_5a07
     call GetScreenPos
     ld hl, $001a
     call AddCursorOffset
@@ -4502,14 +4504,14 @@ jr_012_5c45:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_012_5c68
+    call SetItem_5c68
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_5c68:
+SetItem_5c68:
     ld de, $7b42
     ld a, [wOPTN_and_Item_selection]
     and $01
@@ -4519,25 +4521,25 @@ Call_012_5c68:
 
 jr_012_5c75:
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $5cd9
     ld a, [$c8de]
-    call Call_012_43e2
+    call FuncItem_43e2
     ret
 
 
     ld de, $5cd9
     ld hl, $c8de
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_5cb1
 
     xor a
     ld [$c8ec], a
-    call Call_012_41ef
-    call Call_012_5b4f
+    call SetItem_41ef
+    call CallItem_5b4f
     ld hl, $001c
     call AddCursorOffset
     call GetScreenPos
@@ -4641,7 +4643,7 @@ jr_012_5d2c:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -4692,15 +4694,15 @@ jr_012_5d2c:
     ld [$c823], a
     ld hl, $9600
     ld de, $0501
-    call Call_012_411a
-    call Call_012_5a75
-    call Call_012_49e5
-    call Call_012_5751
+    call LoadItem_411a
+    call LoadItem_5a75
+    call LoadItem_49e5
+    call LoadItem_5751
     ld hl, $5605
     rst $10
-    call Call_012_41ef
-    call Call_012_5b4f
-    call Call_012_5c68
+    call SetItem_41ef
+    call CallItem_5b4f
+    call SetItem_5c68
     call GetScreenPos
     ld hl, $001d
     call AddCursorOffset
@@ -4797,21 +4799,21 @@ jr_012_5e50:
     or a
     ret nz
 
-    call Call_012_5e65
+    call CallItem_5e65
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_5e65:
-    call Call_012_41ef
-    call Call_012_44cb
+CallItem_5e65:
+    call SetItem_41ef
+    call SetItem_44cb
     ld de, $78ab
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $5ecc
     ld a, [wPLAN_selection]
-    call Call_012_43e2
+    call FuncItem_43e2
     call GetScreenPos
     ret
 
@@ -4819,7 +4821,7 @@ Call_012_5e65:
     ld de, $5ecc
     ld hl, $c8e2
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_5eb3
@@ -4831,7 +4833,7 @@ jr_012_5e93:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -4865,7 +4867,7 @@ jr_012_5ecb:
     or a
     ret nz
 
-    call Call_012_5fde
+    call SetItem_5fde
     ld hl, $cac1
     ld b, $14
 
@@ -4951,7 +4953,7 @@ jr_012_5f1d:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld bc, $0000
 
 jr_012_5f58:
@@ -4962,7 +4964,7 @@ jr_012_5f58:
     cp $02
     jr z, jr_012_5f68
 
-    call Call_012_5fb3
+    call SaveItem_5fb3
     inc c
 
 jr_012_5f68:
@@ -5007,7 +5009,7 @@ jr_012_5f68:
     ret
 
 
-Call_012_5fb3:
+SaveItem_5fb3:
     push bc
     ld a, b
     ld hl, $cac1
@@ -5031,7 +5033,7 @@ jr_012_5fcd:
     call EnableSRAM
     ld [de], a
     pop af
-    call Call_000_20fe
+    call DisableIntAndPush
     inc de
     inc hl
     dec b
@@ -5041,7 +5043,7 @@ jr_012_5fcd:
     ret
 
 
-Call_012_5fde:
+SetItem_5fde:
     ld hl, $ca41
     bit 7, [hl]
     ret nz
@@ -5052,7 +5054,7 @@ Call_012_5fde:
 
 jr_012_5fec:
     xor a
-    call Call_000_20fe
+    call DisableIntAndPush
     inc hl
     dec bc
     ld a, b
@@ -5072,7 +5074,7 @@ jr_012_5fec:
     ld [$c823], a
     ld hl, $8aa0
     ld de, $0601
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
     ld a, $01
@@ -5080,26 +5082,26 @@ jr_012_5fec:
     ret
 
 
-Call_012_601b:
+SetItem_601b:
     ld de, $000a
     push bc
-    call Call_012_6037
+    call SaveItem_6037
     pop bc
     or a
     jr z, jr_012_6032
 
     ld de, $000a
-    call Call_012_6037
-    call Call_012_604c
-    call Call_012_6052
+    call SaveItem_6037
+    call CalcItem_604c
+    call SaveItem_6052
 
 jr_012_6032:
     ld a, c
-    call Call_012_604c
+    call CalcItem_604c
     ret
 
 
-Call_012_6037:
+SaveItem_6037:
     push hl
     ld h, $ff
 
@@ -5124,13 +5126,13 @@ jr_012_603a:
     ret
 
 
-Call_012_604c:
+CalcItem_604c:
     add $f0
     call Write_gfx_tile
     ret
 
 
-Call_012_6052:
+SaveItem_6052:
     push af
     ld a, l
     and $e0
@@ -5156,9 +5158,9 @@ Call_012_6052:
     di
     ld h, b
     ld hl, $ffb7
-    call Call_012_4028
+    call ReadItem_4028
     ld hl, $ffbb
-    call Call_012_4028
+    call ReadItem_4028
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -5187,14 +5189,14 @@ Call_012_6052:
     ld [$c90a], a
     ld hl, $170a
     rst $10
-    call Call_012_4221
+    call SetItem_4221
     ld de, $2e07
     call ReadPtrFromDE
     call GetScreenPos
     ld de, $2e14
     ld hl, $9000
     call WaitDMATransfer
-    call Call_012_4323
+    call ClrItem_4323
     ld a, $01
     ld [$c8ec], a
     ld hl, $c905
@@ -5225,7 +5227,7 @@ Call_012_6052:
     jp Jump_012_6119
 
 
-    call Call_012_4221
+    call SetItem_4221
     call GetScreenPos
     ld hl, $0b01
     rst $10
@@ -5280,50 +5282,50 @@ Jump_012_6119:
     or a
     ret nz
 
-    call Call_012_616e
-    call Call_012_614e
-    call Call_012_61a0
+    call LoadItem_616e
+    call CallItem_614e
+    call SetItem_61a0
     call GetScreenPos
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_614e:
-    call Call_012_4221
+CallItem_614e:
+    call SetItem_4221
     ld de, $2e07
     call ReadPtrFromDE
     ld de, $78d0
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $6226
     ld b, $05
     ld c, $0a
     ld hl, wMenu_selection
-    call Call_012_43c0
+    call ReadItem_43c0
     ret
 
 
-Call_012_616e:
+LoadItem_616e:
     ld a, [wOPTN_and_Item_selection]
     ld b, a
     add a
     add a
     add b
     ld hl, $9670
-    call Call_012_6184
-    call Call_012_6184
-    call Call_012_6184
-    call Call_012_6184
+    call SaveItem_6184
+    call SaveItem_6184
+    call SaveItem_6184
+    call SaveItem_6184
 
-Call_012_6184:
+SaveItem_6184:
     push af
     push hl
     ld [$c823], a
     ld a, $04
     ld [$c822], a
     ld de, $0501
-    call Call_012_411a
+    call LoadItem_411a
     pop hl
     ld a, l
     add $50
@@ -5336,13 +5338,13 @@ Call_012_6184:
     ret
 
 
-Call_012_61a0:
+SetItem_61a0:
     ld hl, $c8e2
     ld bc, $0008
     ld a, $00
     call FillNBytesWithRegA
-    call Call_012_6242
-    call Call_012_62ce
+    call SetItem_6242
+    call LoadItem_62ce
     ld de, $7935
     call ReadPtrFromDE
     ret
@@ -5356,14 +5358,14 @@ Call_012_61a0:
     push af
     ld a, [hl-]
     push af
-    call Call_012_4241
+    call LoadItem_4241
     pop af
     ld hl, wOPTN_and_Item_selection
     cp [hl]
     jr z, jr_012_61d9
 
-    call Call_012_616e
-    call Call_012_61a0
+    call LoadItem_616e
+    call SetItem_61a0
     call GetScreenPos
 
 jr_012_61d9:
@@ -5372,7 +5374,7 @@ jr_012_61d9:
     cp [hl]
     jr z, jr_012_61e6
 
-    call Call_012_61a0
+    call SetItem_61a0
     call GetScreenPos
 
 jr_012_61e6:
@@ -5380,7 +5382,7 @@ jr_012_61e6:
     bit 0, a
     jp z, Jump_012_6219
 
-    call Call_012_6242
+    call SetItem_6242
     ld a, [$c8e8]
     or a
     jr nz, jr_012_6205
@@ -5424,7 +5426,7 @@ Jump_012_6225:
     nop
     ld hl, $ff01
     rst $38
-    call Call_012_6242
+    call SetItem_6242
     ld hl, $0003
     call AddCursorOffset
     ld hl, $c906
@@ -5432,7 +5434,7 @@ Jump_012_6225:
     ret
 
 
-Call_012_6242:
+SetItem_6242:
     ld hl, $c0d8
     ld bc, $0020
     ld a, $ff
@@ -5507,29 +5509,29 @@ jr_012_6284:
     or a
     ret nz
 
-    call Call_012_62ce
-    call Call_012_62af
+    call LoadItem_62ce
+    call CallItem_62af
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_62af:
-    call Call_012_614e
+CallItem_62af:
+    call CallItem_614e
     ld de, $7935
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $639e
     ld b, $05
     ld a, [$c8e9]
     ld c, a
     ld hl, $c8e2
-    call Call_012_43c0
+    call ReadItem_43c0
     call GetScreenPos
     ret
 
 
-Call_012_62ce:
+LoadItem_62ce:
     ld a, [$c8e3]
     ld b, a
     add a
@@ -5542,12 +5544,12 @@ Call_012_62ce:
     adc d
     ld d, a
     ld hl, $8800
-    call Call_012_62ed
-    call Call_012_62ed
-    call Call_012_62ed
-    call Call_012_62ed
+    call SaveItem_62ed
+    call SaveItem_62ed
+    call SaveItem_62ed
+    call SaveItem_62ed
 
-Call_012_62ed:
+SaveItem_62ed:
     push de
     push hl
     ld a, [de]
@@ -5560,7 +5562,7 @@ Call_012_62ed:
     ld de, $0901
     pop hl
     push hl
-    call Call_012_411a
+    call LoadItem_411a
     pop hl
     ld a, l
     add $90
@@ -5607,21 +5609,21 @@ jr_012_6312:
     push af
     ld a, [hl]
     push af
-    call Call_012_4241
+    call LoadItem_4241
     pop af
     pop af
     ld hl, $c8e3
     cp [hl]
     jr z, jr_012_6349
 
-    call Call_012_62ce
+    call LoadItem_62ce
 
 jr_012_6349:
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_6369
 
-    call Call_012_614e
+    call CallItem_614e
     ld de, $7935
     call ReadPtrFromDE
     call GetScreenPos
@@ -5679,16 +5681,16 @@ jr_012_639d:
     nop
     add hl, hl
     ld bc, $ffff
-    call Call_012_4221
+    call SetItem_4221
     call GetScreenPos
-    call Call_012_63d0
-    call Call_012_63bd
+    call LoadItem_63d0
+    call SetItem_63bd
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_63bd:
+SetItem_63bd:
     ld de, $2e26
     ld hl, $8a50
     call WaitDMATransfer
@@ -5698,14 +5700,14 @@ Call_012_63bd:
     ret
 
 
-Call_012_63d0:
+LoadItem_63d0:
     ld a, [$cac0]
     ld [$c823], a
     ld a, $05
     ld [$c822], a
     ld hl, $9140
     ld de, $0901
-    call Call_012_411a
+    call LoadItem_411a
     ld hl, $ca94
     ld a, [$cac0]
     call TestBitInArray
@@ -5720,15 +5722,15 @@ jr_012_63f4:
     ld [$c822], a
     ld hl, $91d0
     ld de, $1201
-    call Call_012_6456
+    call LoadItem_6456
     ld a, [$cac0]
     ld [$c823], a
     ld a, $01
     ld [$c822], a
     ld hl, $94a0
     ld de, $1203
-    call Call_012_6456
-    call Call_012_648f
+    call LoadItem_6456
+    call LoadItem_648f
     ld a, [$cac0]
     ld l, a
     ld h, $00
@@ -5757,11 +5759,11 @@ jr_012_63f4:
     rst $10
     ld hl, $1708
     rst $10
-    call Call_012_65a8
+    call LoadItem_65a8
     ret
 
 
-Call_012_6456:
+LoadItem_6456:
     ld a, [$c827]
     ld c, a
     ld a, [$c828]
@@ -5795,17 +5797,17 @@ Call_012_6456:
     ret
 
 
-Call_012_648f:
+LoadItem_648f:
     ld a, [$cac0]
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
     ld hl, $92f0
-    call Call_012_64a5
-    call Call_012_64a5
+    call SaveItem_64a5
+    call SaveItem_64a5
 
-Call_012_64a5:
+SaveItem_64a5:
     push de
     push hl
     ld a, [de]
@@ -5818,7 +5820,7 @@ Call_012_64a5:
     ld de, $0901
     pop hl
     push hl
-    call Call_012_411a
+    call LoadItem_411a
     pop hl
     ld a, l
     add $90
@@ -5859,7 +5861,7 @@ jr_012_64da:
     ld [wPLAN_selection], a
 
 jr_012_64f1:
-    call Call_012_6544
+    call LoadItem_6544
     jr z, jr_012_64da
 
     ld a, $0a
@@ -5887,7 +5889,7 @@ jr_012_6504:
     ld [wPLAN_selection], a
 
 jr_012_651a:
-    call Call_012_6544
+    call LoadItem_6544
     jr z, jr_012_6504
 
     ld a, $0a
@@ -5911,13 +5913,13 @@ jr_012_6535:
     jr jr_012_6543
 
 Jump_012_6540:
-    call Call_012_67c0
+    call SetItem_67c0
 
 jr_012_6543:
     ret
 
 
-Call_012_6544:
+LoadItem_6544:
     ld a, [wPLAN_selection]
     ld hl, $c0d8
     add l
@@ -5930,11 +5932,11 @@ Call_012_6544:
     ret
 
 
-    call Call_012_4221
+    call SetItem_4221
     call GetScreenPos
-    call Call_012_616e
-    call Call_012_62ce
-    call Call_012_62af
+    call LoadItem_616e
+    call LoadItem_62ce
+    call CallItem_62af
     ld a, $05
     ld [$c906], a
     ret
@@ -5960,8 +5962,8 @@ Call_012_6544:
     ld h, a
     ld a, [hl]
     ld [$cac0], a
-    call Call_012_63d0
-    call Call_012_63bd
+    call LoadItem_63d0
+    call SetItem_63bd
     ld a, $07
     ld [$c906], a
     ld a, [wPLAN_selection]
@@ -5975,23 +5977,23 @@ Call_012_6544:
     ret
 
 
-Call_012_65a8:
+LoadItem_65a8:
     ld a, [$cac0]
     ld [$da6f], a
     ld hl, $1601
     rst $10
     ld a, [$da71]
     ld hl, $8600
-    call Call_012_65cb
+    call CmpItem_65cb
     ld [$da71], a
     ld a, [$da72]
     ld hl, $8700
-    call Call_012_65cb
+    call CmpItem_65cb
     ld [$da72], a
     ret
 
 
-Call_012_65cb:
+CmpItem_65cb:
     cp $ff
     ret z
 
@@ -6507,7 +6509,7 @@ jr_012_676d:
 jr_012_67be:
     ld [hl], $3a
 
-Call_012_67c0:
+SetItem_67c0:
     ld hl, $ca94
     ld a, [$cac0]
     call TestBitInArray
@@ -6613,9 +6615,9 @@ jr_012_6835:
     call nz, $c668
     ld l, b
     ld hl, $ffb7
-    call Call_012_4028
+    call ReadItem_4028
     ld hl, $ffbb
-    call Call_012_4028
+    call ReadItem_4028
     ld a, $ff
     ld [$c8f4], a
     ld hl, wMenu_selection
@@ -6644,11 +6646,11 @@ jr_012_6835:
     ld [$c909], a
     ld a, h
     ld [$c90a], a
-    call Call_012_41ef
+    call SetItem_41ef
     ld de, $2e11
     ld hl, $8800
     call WaitDMATransfer
-    call Call_012_4323
+    call ClrItem_4323
     ld hl, $c905
     inc [hl]
     ret
@@ -6676,7 +6678,7 @@ jr_012_6835:
 
     jr jr_012_68dc
 
-    call Call_012_41ef
+    call SetItem_41ef
     ld de, $2e07
     call ReadPtrFromDE
     call GetScreenPos
@@ -6707,8 +6709,8 @@ jr_012_68dc:
     ld l, d
     db $ed
     ld l, d
-    call Call_012_6903
-    call Call_012_690a
+    call LoadItem_6903
+    call SetItem_690a
     ld hl, $0003
     call AddCursorOffset
     ld hl, $c906
@@ -6716,13 +6718,13 @@ jr_012_68dc:
     ret
 
 
-Call_012_6903:
+LoadItem_6903:
     ld a, [$ca8d]
     ld [$c8e9], a
     ret
 
 
-Call_012_690a:
+SetItem_690a:
     ld hl, $c0d8
     ld bc, $0014
     ld a, $ff
@@ -6740,20 +6742,20 @@ Call_012_690a:
     or a
     ret nz
 
-    call Call_012_695d
-    call Call_012_6938
+    call LoadItem_695d
+    call CallItem_6938
     ld hl, $c906
     inc [hl]
     ret
 
 
-Call_012_6938:
-    call Call_012_41ef
+CallItem_6938:
+    call SetItem_41ef
     ld de, $2e07
     call ReadPtrFromDE
     ld de, $724e
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $69ed
 
 jr_012_694d:
@@ -6761,12 +6763,12 @@ jr_012_694d:
     ld a, [$c8e9]
     ld c, a
     ld hl, $c8e2
-    call Call_012_43c0
+    call ReadItem_43c0
     call GetScreenPos
     ret
 
 
-Call_012_695d:
+LoadItem_695d:
     ld a, [$c8e3]
     add a
     add a
@@ -6777,10 +6779,10 @@ Call_012_695d:
     adc d
     ld d, a
     ld hl, $8800
-    call Call_012_6974
-    call Call_012_6974
+    call SaveItem_6974
+    call SaveItem_6974
 
-Call_012_6974:
+SaveItem_6974:
     push de
     push hl
     ld a, [de]
@@ -6794,7 +6796,7 @@ Call_012_6974:
     ld d, h
     pop hl
     push hl
-    call Call_012_4153
+    call SaveItem_4153
     pop hl
     ld a, l
     add $40
@@ -6840,14 +6842,14 @@ jr_012_6997:
     push af
     ld a, [hl]
     push af
-    call Call_012_4241
+    call LoadItem_4241
     pop af
     pop af
     ld hl, $c8e3
     cp [hl]
     jr z, jr_012_69ce
 
-    call Call_012_695d
+    call LoadItem_695d
 
 jr_012_69ce:
     ld a, [wJoypad_current_frame]
@@ -6898,10 +6900,10 @@ jr_012_69ec:
     call PlaySoundEffect
     ld de, $6dcb
     call ReadPtrFromDE
-    call Call_012_4323
+    call ClrItem_4323
     ld de, $6a62
     ld a, [$c8de]
-    call Call_012_43e2
+    call FuncItem_43e2
     call GetScreenPos
     ld hl, $c906
     inc [hl]
@@ -6911,7 +6913,7 @@ jr_012_69ec:
     ld de, $6a62
     ld hl, $c8de
     ld b, $02
-    call Call_012_42ca
+    call FuncItem_42ca
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_012_6a49

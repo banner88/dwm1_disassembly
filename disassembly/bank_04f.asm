@@ -725,7 +725,7 @@ SECTION "ROM Bank $04f", ROMX[$4000], BANK[$4f]
     dec sp
     ld l, e
 
-Call_04f_5246:
+SetB4f_5246:
     ld de, $5010
     call CallTextEngine
     ret
@@ -736,7 +736,7 @@ Call_04f_5246:
     ret
 
 
-    call Call_04f_5246
+    call SetB4f_5246
     call RequestScreenUpdate
     ret
 

@@ -9,7 +9,7 @@ SECTION "ROM Bank $008", ROMX[$4000], BANK[$8]
 
     dw label8_4015
     dw label8_41e3
-    dw Call_008_422c
+    dw LoadAudP_422c
     ;the jumps from here down are all invalid. Find out why they're here. 
     dw label8_447e
     dw label8_449e
@@ -475,7 +475,7 @@ jr_008_4208:
     ld a, [$c818]
     or $80
     ld [de], a
-    call Call_008_422c
+    call LoadAudP_422c
     ld a, $ff
     ld [$c774], a
     ld hl, $0800
@@ -484,7 +484,7 @@ jr_008_4208:
     ret
 
 
-Call_008_422c:
+LoadAudP_422c:
     ld a, [wIsSGB]
     or a
     ret z
@@ -494,29 +494,29 @@ Call_008_422c:
     ld a, [$c85c]
     ld h, a
     ld de, $c7d7
-    call Call_008_426a
+    call CalcAudP_426a
     ld de, $c7df
     ld a, [$c85d]
     ld l, a
     ld a, [$c85e]
     ld h, a
-    call Call_008_426a
+    call CalcAudP_426a
     ld de, $c7e7
     ld a, [$c85f]
     ld l, a
     ld a, [$c860]
     ld h, a
-    call Call_008_426a
+    call CalcAudP_426a
     ld de, $c7ef
     ld a, [$c861]
     ld l, a
     ld a, [$c862]
     ld h, a
-    call Call_008_426a
+    call CalcAudP_426a
     ret
 
 
-Call_008_426a:
+CalcAudP_426a:
     add hl, hl
     add hl, hl
     add hl, hl
@@ -2181,7 +2181,7 @@ jr_008_4910:
     rst $38
     ret nz
 
-    call z, Call_008_6c00
+    call z, HramAudP_6c00
     nop
     jr z, jr_008_492b
 
@@ -4660,7 +4660,7 @@ jr_008_5344:
     rst $28
     ld a, b
     cp h
-    call c, Call_000_372e
+    call c, AudioBranchIfZero
     adc e
     inc c
     ld h, b
@@ -7504,7 +7504,7 @@ jr_008_5f74:
     ld d, d
     ld d, h
     ld d, d
-    call nc, Call_000_3476
+    call nc, SaveAudioBankState
     inc [hl]
     ld e, h
     ld d, $f6
@@ -10590,7 +10590,7 @@ jr_008_6b4d:
     rst $38
     rrca
 
-Call_008_6c00:
+HramAudP_6c00:
     ldh a, [$81]
     ld a, [hl]
     ldh [$1f], a
@@ -11455,7 +11455,7 @@ jr_008_6ef9:
     nop
     inc [hl]
     nop
-    call nz, Call_008_7400
+    call nz, JmpAudP_7400
     nop
     cp a
     ld a, b
@@ -12537,7 +12537,7 @@ jr_008_739a:
     nop
     rlca
 
-Call_008_7400:
+JmpAudP_7400:
     jp $c60f
 
 

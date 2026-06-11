@@ -434,7 +434,7 @@ jr_07d_41cd:
     rst $00
     ld c, [hl]
     ld c, [hl]
-    call c, Call_07d_58dc
+    call c, WriteB7d_58dc
     ld l, a
     rst $18
     ld c, h
@@ -484,7 +484,7 @@ jr_07d_41cd:
     xor $ee
     cp [hl]
     ld d, d
-    call nc, Call_000_2078
+    call nc, CheckLeadingZero
     ldh [rNR31], a
     inc h
     ld c, e
@@ -1343,7 +1343,7 @@ jr_07d_45cb:
     inc b
     inc b
     nop
-    call z, Call_07d_6080
+    call z, CalcB7d_6080
     ld de, $0c13
     jr z, jr_07d_4668
 
@@ -2559,7 +2559,7 @@ jr_07d_4b21:
     ld e, e
     inc bc
     rst $28
-    call Call_07d_7659
+    call DataB7d_7659
     rst $38
     ld a, a
     xor a
@@ -3360,7 +3360,7 @@ jr_07d_4e79:
 
     dec b
     ld [hl], b
-    call z, Call_000_3830
+    call z, AudioLoadLA
     ld e, $0f
     inc bc
     add b
@@ -4257,7 +4257,7 @@ jr_07d_525d:
     and a
     add a
     add [hl]
-    call Call_07d_7f7f
+    call DataB7d_7f7f
     rst $38
     ld [hl], l
     dec hl
@@ -5386,7 +5386,7 @@ jr_07d_574a:
 
 
     cp [hl]
-    call c, Call_07d_6e6c
+    call c, DataB7d_6e6c
     rst $00
     add [hl]
     call z, $c7c6
@@ -5701,7 +5701,7 @@ jr_07d_5840:
     cp d
     cp d
 
-Call_07d_58dc:
+WriteB7d_58dc:
     ld [hl], d
     ld h, h
     call nz, $ff05
@@ -6283,7 +6283,7 @@ jr_07d_5b01:
     rst $38
     rst $38
 
-Call_07d_5b58:
+CmpB7d_5b58:
     cp $7c
     and $7d
     ld a, h
@@ -7190,7 +7190,7 @@ jr_07d_5e94:
     ld hl, sp+$04
     db $fc
     adc [hl]
-    call c, Call_000_389c
+    call c, AudioSetPanning
     ld a, b
     pop af
     db $e3
@@ -7467,7 +7467,7 @@ jr_07d_6053:
     db $fc
     rst $38
 
-Call_07d_6080:
+CalcB7d_6080:
     sub $ce
     db $eb
     push hl
@@ -7929,7 +7929,7 @@ jr_07d_625b:
     pop de
     and a
     rst $28
-    call z, Call_07d_5b58
+    call z, CmpB7d_5b58
     ld d, e
     cp $03
     rst $38
@@ -10886,7 +10886,7 @@ Jump_07d_6dad:
     nop
     nop
 
-Call_07d_6e6c:
+DataB7d_6e6c:
     nop
     nop
     nop
@@ -12917,7 +12917,7 @@ Call_07d_6e6c:
     nop
     nop
 
-Call_07d_7659:
+DataB7d_7659:
     nop
     nop
     nop
@@ -15263,7 +15263,7 @@ Jump_07d_7f3f:
     nop
     nop
 
-Call_07d_7f7f:
+DataB7d_7f7f:
     nop
     nop
     nop

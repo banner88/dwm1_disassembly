@@ -5,28 +5,24 @@
 
 SECTION "ROM Bank $05f", ROMX[$4000], BANK[$5f]
 
-    ld e, a
-    rla
-    ld b, b
-    rst $30
-    ld b, b
-    inc e
-    ld b, h
-    add hl, de
-    ld b, [hl]
-    ld h, b
-    ld c, d
-    dec de
-    ld c, e
-    ldh a, [rHDMA2]
-    jr nc, jr_05f_4067
+    db $5F ; Bank number
 
-    or a
-    ld e, e
-    adc l
-    ld e, h
-    ld d, c
-    ld h, d
+    ; Cross-bank dispatch table (11 entries)
+    ; Called via: ld hl, $5FXX / rst $10
+    dw $4017                          ; Entry 0
+    dw $40F7                          ; Entry 1
+    dw $441C                          ; Entry 2
+    dw $4619                          ; Entry 3
+    dw LoadFldUI_4a60                  ; Entry 4
+    dw $4B1B                          ; Entry 5
+    dw $52F0                          ; Entry 6
+    dw LoadFldUI_5630                  ; Entry 7
+    dw $5BB7                          ; Entry 8
+    dw $5C8D                          ; Entry 9
+    dw $6251                          ; Entry 10
+
+; --- Dispatch entry 0 ($4017) ---
+DispatchEntry_5F_0:
     call ClearSTATMode
     ld hl, $c817
     ld [hl], $00
@@ -46,7 +42,7 @@ SECTION "ROM Bank $05f", ROMX[$4000], BANK[$5f]
     ld b, b
     ld hl, $8000
     ld bc, $0c00
-    call Call_05f_40eb
+    call WriteFldUI_40eb
     ld hl, $8b00
     ld de, $1202
     call SetupVRAMCopy
@@ -56,15 +52,15 @@ SECTION "ROM Bank $05f", ROMX[$4000], BANK[$5f]
     ld de, $66b3
     ld hl, $9800
     ld bc, $1412
-    call Call_05f_424a
+    call SaveFldUI_424a
     xor a
     ld hl, $c0d8
     ld bc, $0028
 
 jr_05f_4067:
     call FillNBytesWithRegA
-    call Call_05f_439d
-    call Call_05f_43ba
+    call LoadFldUI_439d
+    call LoadFldUI_43ba
     ld a, $fc
     call SetGBCPalette
     ld a, $21
@@ -90,11 +86,11 @@ jr_05f_4067:
     call FillNBytesWithRegA
     ld hl, $8800
     ld bc, $0800
-    call Call_05f_40eb
+    call WriteFldUI_40eb
     ld de, $42cf
     ld hl, $99a0
     ld bc, $1404
-    call Call_05f_424a
+    call SaveFldUI_424a
     ld de, $2e00
     ld hl, $8d00
     call WaitLCDTransfer
@@ -120,7 +116,7 @@ jr_05f_4067:
     jp Jump_000_11cb
 
 
-Call_05f_40eb:
+WriteFldUI_40eb:
 jr_05f_40eb:
     ld [hl], $ff
     inc hl
@@ -194,8 +190,8 @@ jr_05f_40eb:
     ld a, [hl]
     cp $1a
     call z, $440f
-    call Call_05f_439d
-    call Call_05f_43ba
+    call LoadFldUI_439d
+    call LoadFldUI_43ba
     ld hl, $c0d8
     inc [hl]
     ret
@@ -305,7 +301,7 @@ jr_05f_4173:
     call SetupTilemapTransfer
     ld de, $2e07
     ld hl, $9800
-    call Call_05f_4298
+    call LoadFldUI_4298
     ld hl, $c0d8
     inc [hl]
     ret
@@ -349,7 +345,7 @@ jr_05f_423c:
     ret
 
 
-Call_05f_424a:
+SaveFldUI_424a:
 jr_05f_424a:
     push bc
     push hl
@@ -376,7 +372,7 @@ jr_05f_424c:
     ret
 
 
-Call_05f_4263:
+LoadFldUI_4263:
     ld a, [de]
     inc de
     ld c, a
@@ -418,7 +414,7 @@ jr_05f_427e:
     ld [$c0ff], a
     jr jr_05f_4272
 
-Call_05f_4298:
+LoadFldUI_4298:
     ld a, [de]
     inc de
     ld c, a
@@ -515,7 +511,7 @@ jr_05f_42b5:
     xor $ee
     db $fd
 
-Call_05f_431f:
+LoadFldUI_431f:
     ld a, [$c827]
     ld c, a
     ld a, [$c828]
@@ -551,7 +547,7 @@ Call_05f_431f:
     ret
 
 
-Call_05f_435e:
+LoadFldUI_435e:
     ld a, [$c827]
     ld c, a
     ld a, [$c828]
@@ -587,21 +583,21 @@ Call_05f_435e:
     ret
 
 
-Call_05f_439d:
+LoadFldUI_439d:
     ld a, [$c0d9]
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    call Call_05f_431f
+    call LoadFldUI_431f
     ld a, [$c0d9]
     ld [$c823], a
     ld a, $06
     ld [$c822], a
-    call Call_05f_435e
+    call LoadFldUI_435e
     ret
 
 
-Call_05f_43ba:
+LoadFldUI_43ba:
     ld a, [$c0d9]
     ld hl, $43f4
     add l
@@ -663,7 +659,7 @@ Call_05f_43ba:
     ld l, b
     ld hl, $9800
     ld bc, $140b
-    call Call_05f_424a
+    call SaveFldUI_424a
     ret
 
 
@@ -710,7 +706,7 @@ Call_05f_43ba:
     call WaitLCDTransfer
     ld de, $669d
     ld hl, $9800
-    call Call_05f_4263
+    call LoadFldUI_4263
     ld a, $00
 
 jr_05f_4469:
@@ -745,7 +741,7 @@ jr_05f_4469:
     call WaitLCDTransfer
     ld de, $666e
     ld hl, $9800
-    call Call_05f_4263
+    call LoadFldUI_4263
     ld a, $00
     ld [$c81e], a
     ld hl, $170b
@@ -778,7 +774,7 @@ jr_05f_4469:
     call WaitLCDTransfer
     ld de, $6457
     ld hl, $9800
-    call Call_05f_4263
+    call LoadFldUI_4263
     ld a, $00
     ld [$c81e], a
     ld hl, $170b
@@ -847,7 +843,7 @@ jr_05f_4469:
     call WaitLCDTransfer
     ld de, $64f1
     ld hl, $9800
-    call Call_05f_4263
+    call LoadFldUI_4263
     ld a, $01
     ld [$c81e], a
     ld hl, $170b
@@ -880,7 +876,7 @@ jr_05f_4469:
     call WaitDMATransfer
     ld de, $6583
     ld hl, $9800
-    call Call_05f_4263
+    call LoadFldUI_4263
     ld a, $06
     call SetBGM
     ld a, $01
@@ -1069,7 +1065,7 @@ Jump_05f_4685:
     ld hl, $c88e
     inc [hl]
     ld hl, $c0dc
-    call Call_05f_49cc
+    call LoadFldUI_49cc
     ret
 
 
@@ -1158,7 +1154,7 @@ jr_05f_4777:
     ld hl, $c88c
     inc [hl]
     ld hl, $c0dc
-    call Call_05f_49f1
+    call LoadFldUI_49f1
     ret
 
 
@@ -1243,7 +1239,7 @@ jr_05f_4808:
     ld hl, $c88c
     inc [hl]
     ld hl, $c0dc
-    call Call_05f_4a16
+    call LoadFldUI_4a16
     ret
 
 
@@ -1359,7 +1355,7 @@ jr_05f_4899:
     xor a
     ld [$c0ea], a
     ld hl, $c0dc
-    call Call_05f_4a3b
+    call LoadFldUI_4a3b
     ret
 
 
@@ -1478,7 +1474,7 @@ jr_05f_4997:
     ret
 
 
-Call_05f_49cc:
+LoadFldUI_49cc:
     ld a, $00
     ld [hl+], a
     ld a, $80
@@ -1506,7 +1502,7 @@ Call_05f_49cc:
     ret
 
 
-Call_05f_49f1:
+LoadFldUI_49f1:
     ld a, $00
     ld [hl+], a
     ld a, $40
@@ -1534,7 +1530,7 @@ Call_05f_49f1:
     ret
 
 
-Call_05f_4a16:
+LoadFldUI_4a16:
     ld a, $00
     ld [hl+], a
     ld a, $a0
@@ -1562,7 +1558,7 @@ Call_05f_4a16:
     ret
 
 
-Call_05f_4a3b:
+LoadFldUI_4a3b:
     ld a, $00
     ld [hl+], a
     ld a, $86
@@ -1590,7 +1586,7 @@ Call_05f_4a3b:
     ret
 
 
-Call_05f_4a60:
+LoadFldUI_4a60:
     ld a, [$db8a]
     cp $12
     jp c, Jump_05f_4ae8
@@ -1845,18 +1841,18 @@ jr_05f_4b97:
     ld c, e
     ld a, $06
     ld [$da85], a
-    call Call_05f_4e3c
+    call LoadFldUI_4e3c
     ld hl, $50ff
-    call Call_05f_50f4
+    call CalcFldUI_50f4
     ld de, $9800
     add hl, de
     ld e, l
     ld d, h
     ld a, $03
     ld hl, $5109
-    call Call_05f_50f4
+    call CalcFldUI_50f4
     ld c, $06
-    call Call_05f_4e1f
+    call SaveFldUI_4e1f
     ld hl, $da84
     inc [hl]
     ret
@@ -1864,9 +1860,9 @@ jr_05f_4b97:
 
     ld a, $06
     ld [$da85], a
-    call Call_05f_4e3c
+    call LoadFldUI_4e3c
     ld hl, $50ff
-    call Call_05f_50f4
+    call CalcFldUI_50f4
     ld de, $9800
     add hl, de
     ld e, l
@@ -1874,9 +1870,9 @@ jr_05f_4b97:
     ld a, [wBattleTargetIdx]
     and $03
     ld hl, $5109
-    call Call_05f_50f4
+    call CalcFldUI_50f4
     ld c, $06
-    call Call_05f_4e1f
+    call SaveFldUI_4e1f
     ld hl, $da84
     inc [hl]
     ret
@@ -1972,7 +1968,7 @@ jr_05f_4c3a:
     ret
 
 
-Call_05f_4c6c:
+SetFldUI_4c6c:
     ld hl, wBGPalette
     ld [hl], $d2
     inc hl
@@ -1984,7 +1980,7 @@ Call_05f_4c6c:
     ret
 
 
-    call Call_05f_4c6c
+    call SetFldUI_4c6c
     ld a, $01
     ld [$da82], a
     xor a
@@ -2001,7 +1997,7 @@ Call_05f_4c6c:
     cp [hl]
     ld c, h
     adc $4c
-    call Call_05f_506e
+    call ClrFldUI_506e
     ld a, [$da87]
     cp $04
     ret c
@@ -2098,7 +2094,7 @@ Call_05f_4c6c:
     ld c, l
     ld e, a
     ld c, l
-    call Call_05f_506e
+    call ClrFldUI_506e
     ld a, [$da87]
     cp $04
     ret c
@@ -2145,8 +2141,8 @@ Call_05f_4c6c:
 
     ld a, [$da84]
     or a
-    call z, Call_05f_4ed5
-    call Call_05f_4f49
+    call z, LoadFldUI_4ed5
+    call LoadFldUI_4f49
     ld a, [$da84]
     or a
     ret z
@@ -2178,7 +2174,7 @@ Call_05f_4c6c:
 
 
 jr_05f_4da1:
-    call Call_05f_4f9b
+    call LoadFldUI_4f9b
     ld hl, $da87
     inc [hl]
     ret
@@ -2191,7 +2187,7 @@ jr_05f_4da1:
     bit 1, l
     sbc $4d
     xor $4d
-    call Call_05f_50b5
+    call ClrFldUI_50b5
     ld a, [$da87]
     cp $04
     ret c
@@ -2275,7 +2271,7 @@ jr_05f_4da1:
     ret
 
 
-Call_05f_4e1f:
+SaveFldUI_4e1f:
 jr_05f_4e1f:
     push de
     ld a, [$da85]
@@ -2303,7 +2299,7 @@ jr_05f_4e24:
     ld d, a
     jr jr_05f_4e1f
 
-Call_05f_4e3c:
+LoadFldUI_4e3c:
     ld a, [$c86c]
     or a
     jr z, jr_05f_4e4e
@@ -2359,12 +2355,12 @@ jr_05f_4e7f:
     ret
 
 
-Call_05f_4e80:
+LoadFldUI_4e80:
     ld a, [$c86c]
     or a
     jr z, jr_05f_4ea3
 
-    call Call_05f_52d6
+    call LoadFldUI_52d6
     jr nz, jr_05f_4e97
 
     ld a, [$c863]
@@ -2426,7 +2422,7 @@ jr_05f_4ed4:
     ret
 
 
-Call_05f_4ed5:
+LoadFldUI_4ed5:
     ld a, [$da84]
     or a
     ret nz
@@ -2504,7 +2500,7 @@ Call_05f_4ed5:
     ret
 
 
-Call_05f_4f49:
+LoadFldUI_4f49:
     ld a, [$da85]
     rst $00
     adc a
@@ -2579,7 +2575,7 @@ Call_05f_4f49:
     ret
 
 
-Call_05f_4f9b:
+LoadFldUI_4f9b:
     ld a, [$c905]
     rst $00
     and a
@@ -2630,7 +2626,7 @@ jr_05f_4fb0:
     xor a
     ld [$c908], a
 
-Call_05f_4fe8:
+LoadFldUI_4fe8:
 jr_05f_4fe8:
     ld a, [$c907]
     ldh [$d5], a
@@ -2713,7 +2709,7 @@ jr_05f_5030:
     inc [hl]
 
 jr_05f_504b:
-    call Call_05f_4fe8
+    call LoadFldUI_4fe8
     ret
 
 
@@ -2734,7 +2730,7 @@ jr_05f_504b:
     ret
 
 
-Call_05f_506e:
+ClrFldUI_506e:
     xor a
     ld [$da86], a
     ld hl, $da87
@@ -2796,7 +2792,7 @@ jr_05f_50af:
     ret
 
 
-Call_05f_50b5:
+ClrFldUI_50b5:
     xor a
     ld [$da86], a
     ld hl, $da87
@@ -2852,7 +2848,7 @@ jr_05f_50ee:
     ret
 
 
-Call_05f_50f4:
+CalcFldUI_50f4:
     add a
     add l
     ld l, a
@@ -3175,18 +3171,18 @@ jr_05f_5263:
     ld d, d
     ld a, $06
     ld [$da85], a
-    call Call_05f_4e80
+    call LoadFldUI_4e80
     ld hl, $50ff
-    call Call_05f_50f4
+    call CalcFldUI_50f4
     ld de, $9800
     add hl, de
     ld e, l
     ld d, h
     ld a, $03
     ld hl, $5109
-    call Call_05f_50f4
+    call CalcFldUI_50f4
     ld c, $06
-    call Call_05f_4e1f
+    call SaveFldUI_4e1f
     ld hl, $da84
     inc [hl]
     ret
@@ -3194,9 +3190,9 @@ jr_05f_5263:
 
     ld a, $06
     ld [$da85], a
-    call Call_05f_4e80
+    call LoadFldUI_4e80
     ld hl, $50ff
-    call Call_05f_50f4
+    call CalcFldUI_50f4
     ld de, $9800
     add hl, de
     ld e, l
@@ -3204,9 +3200,9 @@ jr_05f_5263:
     ld a, [wBattleAttackerIdx]
     and $03
     ld hl, $5109
-    call Call_05f_50f4
+    call CalcFldUI_50f4
     ld c, $06
-    call Call_05f_4e1f
+    call SaveFldUI_4e1f
     ld hl, $da84
     inc [hl]
     ret
@@ -3222,7 +3218,7 @@ jr_05f_52c8:
     ret
 
 
-Call_05f_52d6:
+LoadFldUI_52d6:
     ld a, [$db8a]
     cp $3b
     jr z, jr_05f_52e4
@@ -3446,7 +3442,7 @@ jr_05f_5400:
     jr jr_05f_540d
 
 jr_05f_5409:
-    call Call_05f_5ba3
+    call LoadFldUI_5ba3
     ret c
 
 jr_05f_540d:
@@ -3481,11 +3477,11 @@ jr_05f_5433:
     adc h
     ld h, a
     ld a, [hl]
-    call Call_05f_5441
+    call FuncFldUI_5441
     ret
 
 
-Call_05f_5441:
+FuncFldUI_5441:
     ld c, a
     ld b, $00
     ld hl, $58bd
@@ -3498,7 +3494,7 @@ Call_05f_5441:
     jp hl
 
 
-Call_05f_544e:
+LoadFldUI_544e:
     ld a, [$db8a]
     cp $1a
     jr c, jr_05f_54c3
@@ -3513,7 +3509,7 @@ Call_05f_544e:
     jr nz, jr_05f_54c3
 
 jr_05f_5461:
-    call Call_05f_5b8f
+    call LoadFldUI_5b8f
     jr c, jr_05f_54c3
 
     ld hl, $db74
@@ -3582,7 +3578,7 @@ jr_05f_54bf:
 
 
 jr_05f_54c3:
-    call Call_05f_5b8f
+    call LoadFldUI_5b8f
     jr nc, jr_05f_5529
 
 jr_05f_54c8:
@@ -3664,7 +3660,7 @@ jr_05f_5529:
     cp $03
     jr nc, jr_05f_5523
 
-    call Call_05f_5ba3
+    call LoadFldUI_5ba3
     jr nc, jr_05f_54c8
 
     ld hl, $db74
@@ -3728,7 +3724,7 @@ jr_05f_5583:
     ld a, $01
     jr jr_05f_551f
 
-    call Call_05f_544e
+    call LoadFldUI_544e
     ld a, $01
     ld [$dd68], a
     jr jr_05f_55bb
@@ -3739,7 +3735,7 @@ jr_05f_5583:
     ld [$dd68], a
     jr jr_05f_55bb
 
-    call Call_05f_544e
+    call LoadFldUI_544e
     ld a, $02
     ld [$dd68], a
     jr jr_05f_55bb
@@ -3750,95 +3746,95 @@ jr_05f_5583:
     ld [$dd68], a
 
 jr_05f_55bb:
-    call Call_05f_5630
+    call LoadFldUI_5630
     cp $ff
     ret z
 
-    call Call_05f_5696
+    call CallFldUI_5696
     call CallBank5FEntry7_3103
     ld a, $01
     ld [$da80], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $04
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $05
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $06
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $07
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $08
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $09
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $0a
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $0b
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $0c
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $03
     ld [$da83], a
     ret
 
 
-    call Call_05f_4a60
+    call LoadFldUI_4a60
     ld a, $0d
     ld [$da83], a
     ret
 
 
-Call_05f_5630:
+LoadFldUI_5630:
     ld a, [wBattleAttackerIdx]
     cp $10
     jr z, jr_05f_5649
 
-    call Call_05f_5b8f
+    call LoadFldUI_5b8f
     jr c, jr_05f_563e
 
     jr jr_05f_565f
 
 jr_05f_563e:
-    call Call_05f_5ba3
+    call LoadFldUI_5ba3
     jr nc, jr_05f_564e
 
     ld a, $ff
@@ -3847,7 +3843,7 @@ jr_05f_563e:
 
 
 jr_05f_5649:
-    call Call_05f_5ba3
+    call LoadFldUI_5ba3
     jr c, jr_05f_5690
 
 jr_05f_564e:
@@ -3883,7 +3879,7 @@ jr_05f_565f:
     cp $aa
     jr z, jr_05f_567f
 
-    call Call_05f_5ba3
+    call LoadFldUI_5ba3
     jr c, jr_05f_5690
 
 jr_05f_567f:
@@ -3905,8 +3901,8 @@ jr_05f_5690:
     ret
 
 
-Call_05f_5696:
-    call Call_05f_56b9
+CallFldUI_5696:
+    call LoadFldUI_56b9
     ld a, [$daa4]
     ld [$dd64], a
     ld a, $60
@@ -3923,18 +3919,18 @@ Call_05f_5696:
     ret
 
 
-Call_05f_56b9:
+LoadFldUI_56b9:
     ld a, [wBattleAttackerIdx]
     cp $10
     jr z, jr_05f_56c7
 
-    call Call_05f_5b8f
+    call LoadFldUI_5b8f
     jr c, jr_05f_56c7
 
     jr jr_05f_56dc
 
 jr_05f_56c7:
-    call Call_05f_5ba3
+    call LoadFldUI_5ba3
     ret c
 
     ld a, [$db8a]
@@ -5090,7 +5086,7 @@ jr_05f_577c:
     dec c
     dec c
 
-Call_05f_5b8f:
+LoadFldUI_5b8f:
     ld a, [$c863]
     bit 1, a
     jr nz, jr_05f_5b9c
@@ -5107,7 +5103,7 @@ jr_05f_5b9c:
     ret
 
 
-Call_05f_5ba3:
+LoadFldUI_5ba3:
     ld a, [$c863]
     bit 1, a
     jr nz, jr_05f_5bb0
@@ -5150,29 +5146,29 @@ jr_05f_5bb0:
     ld de, $ff00
     ld hl, $9000
     ld bc, $0120
-    call Call_05f_5ecc
+    call IntFldUI_5ecc
     ld de, $6093
     ld hl, $c500
-    call Call_05f_4263
+    call LoadFldUI_4263
     ld de, $60fe
     ld hl, $c500
-    call Call_05f_4263
+    call LoadFldUI_4263
     ld de, $6169
     ld hl, $c500
-    call Call_05f_4263
+    call LoadFldUI_4263
     ld de, $2e00
     ld hl, $8d00
     call WaitLCDTransfer
     ld hl, $6195
     ld de, $8b90
-    call Call_05f_5f58
+    call ReadFldUI_5f58
     ld hl, $61ad
     ld de, $8ab0
-    call Call_05f_5f58
-    call Call_05f_5f86
-    call Call_05f_5fa5
-    call Call_05f_5fbc
-    call Call_05f_5fdb
+    call ReadFldUI_5f58
+    call SetFldUI_5f86
+    call SetFldUI_5fa5
+    call SetFldUI_5fbc
+    call SetFldUI_5fdb
     ld a, $fc
     call SetGBCPalette
     ld hl, $9800
@@ -5324,7 +5320,7 @@ jr_05f_5c9b:
 
 
 jr_05f_5d30:
-    call Call_05f_5e27
+    call SetFldUI_5e27
     jp Jump_05f_5ec1
 
 
@@ -5340,7 +5336,7 @@ jr_05f_5d36:
     ld [wOPTN_and_Item_selection], a
 
 jr_05f_5d48:
-    call Call_05f_5f86
+    call SetFldUI_5f86
     ret
 
 
@@ -5395,7 +5391,7 @@ Jump_05f_5d91:
     ld a, [wPLAN_selection]
     xor $01
     ld [wPLAN_selection], a
-    call Call_05f_5fa5
+    call SetFldUI_5fa5
     ld a, [wPLAN_selection]
     rst $00
     ld l, l
@@ -5415,12 +5411,12 @@ Jump_05f_5da4:
     ld [$c8dd], a
 
 jr_05f_5db6:
-    call Call_05f_5fbc
+    call SetFldUI_5fbc
     ld a, [wPLAN_selection]
     or a
     ret z
 
-    call Call_05f_607a
+    call LoadFldUI_607a
     ret
 
 
@@ -5471,16 +5467,16 @@ Jump_05f_5dd7:
     ld [$d7b5], a
     ld hl, $0200
     rst $10
-    call Call_05f_6014
+    call SetFldUI_6014
 
-Call_05f_5e27:
+SetFldUI_5e27:
 jr_05f_5e27:
     ld hl, $c6cd
-    call Call_05f_5f36
-    call Call_05f_5f36
-    call Call_05f_5f36
+    call IntFldUI_5f36
+    call IntFldUI_5f36
+    call IntFldUI_5f36
     ld hl, $c56d
-    call Call_05f_5f36
+    call IntFldUI_5f36
     ld hl, $5005
     rst $10
     ret
@@ -5514,7 +5510,7 @@ Jump_05f_5e5c:
     ld [$c8e1], a
 
 jr_05f_5e6e:
-    call Call_05f_5fdb
+    call SetFldUI_5fdb
     ret
 
 
@@ -5548,7 +5544,7 @@ Jump_05f_5ea3:
     or a
     jr z, jr_05f_5eb5
 
-    call Call_05f_5ffa
+    call LoadFldUI_5ffa
     ld hl, $0200
     rst $10
     ld a, [$dd62]
@@ -5575,7 +5571,7 @@ Jump_05f_5ec1:
 
     jr jr_05f_5f1f
 
-Call_05f_5ecc:
+IntFldUI_5ecc:
 jr_05f_5ecc:
     di
     call WaitVRAM
@@ -5596,31 +5592,31 @@ jr_05f_5ecc:
 
 
     ld hl, $c6cd
-    call Call_05f_5f47
-    call Call_05f_5f33
+    call IntFldUI_5f47
+    call CallFldUI_5f33
     ld hl, $c56d
-    call Call_05f_5f36
+    call IntFldUI_5f36
     ld hl, $5005
     rst $10
     ret
 
 
     ld hl, $c6cd
-    call Call_05f_5f36
-    call Call_05f_5f47
-    call Call_05f_5f36
+    call IntFldUI_5f36
+    call IntFldUI_5f47
+    call IntFldUI_5f36
     ld hl, $c56d
-    call Call_05f_5f36
+    call IntFldUI_5f36
     ld hl, $5005
     rst $10
     ret
 
 
     ld hl, $c6cd
-    call Call_05f_5f33
-    call Call_05f_5f47
+    call CallFldUI_5f33
+    call IntFldUI_5f47
     ld hl, $c56d
-    call Call_05f_5f36
+    call IntFldUI_5f36
     ld hl, $5005
     rst $10
     ret
@@ -5628,19 +5624,19 @@ jr_05f_5ecc:
 
 jr_05f_5f1f:
     ld hl, $c6cd
-    call Call_05f_5f36
-    call Call_05f_5f33
+    call IntFldUI_5f36
+    call CallFldUI_5f33
     ld hl, $c56d
-    call Call_05f_5f47
+    call IntFldUI_5f47
     ld hl, $5005
     rst $10
     ret
 
 
-Call_05f_5f33:
-    call Call_05f_5f36
+CallFldUI_5f33:
+    call IntFldUI_5f36
 
-Call_05f_5f36:
+IntFldUI_5f36:
     di
     call WaitVRAM
     ld a, $e0
@@ -5655,7 +5651,7 @@ Call_05f_5f36:
     ret
 
 
-Call_05f_5f47:
+IntFldUI_5f47:
     di
     call WaitVRAM
     ld a, $e8
@@ -5670,7 +5666,7 @@ Call_05f_5f47:
     ret
 
 
-Call_05f_5f58:
+ReadFldUI_5f58:
 jr_05f_5f58:
     ld a, [hl+]
     cp $ff
@@ -5680,10 +5676,10 @@ jr_05f_5f58:
     push de
     ld hl, $c180
     push de
-    call Call_000_0d40
+    call PushHLSetupL
     pop de
     ld hl, $c180
-    call Call_05f_5f78
+    call FuncFldUI_5f78
     pop de
     pop hl
     ld a, $10
@@ -5694,7 +5690,7 @@ jr_05f_5f58:
     ld d, a
     jr jr_05f_5f58
 
-Call_05f_5f78:
+FuncFldUI_5f78:
     ld b, $10
 
 jr_05f_5f7a:
@@ -5710,11 +5706,11 @@ jr_05f_5f7a:
     ret
 
 
-Call_05f_5f86:
+SetFldUI_5f86:
     ld hl, $c8de
     ld a, [wOPTN_and_Item_selection]
     and $f0
-    call Call_05f_6248
+    call FuncFldUI_6248
     ld [hl+], a
     ld a, [wOPTN_and_Item_selection]
     and $0f
@@ -5723,11 +5719,11 @@ Call_05f_5f86:
     ld [hl], a
     ld de, $8b40
     ld hl, $c8de
-    call Call_05f_5f58
+    call ReadFldUI_5f58
     ret
 
 
-Call_05f_5fa5:
+SetFldUI_5fa5:
     ld hl, $61b5
     ld a, [wPLAN_selection]
     add a
@@ -5740,15 +5736,15 @@ Call_05f_5fa5:
     ld h, [hl]
     ld l, a
     ld de, $8b60
-    call Call_05f_5f58
+    call ReadFldUI_5f58
     ret
 
 
-Call_05f_5fbc:
+SetFldUI_5fbc:
     ld hl, $c8de
     ld a, [$c8dd]
     and $f0
-    call Call_05f_6248
+    call FuncFldUI_6248
     ld [hl+], a
     ld a, [$c8dd]
     and $0f
@@ -5757,15 +5753,15 @@ Call_05f_5fbc:
     ld [hl], a
     ld de, $8b20
     ld hl, $c8de
-    call Call_05f_5f58
+    call ReadFldUI_5f58
     ret
 
 
-Call_05f_5fdb:
+SetFldUI_5fdb:
     ld hl, $c8de
     ld a, [$c8e1]
     and $f0
-    call Call_05f_6248
+    call FuncFldUI_6248
     ld [hl+], a
     ld a, [$c8e1]
     and $0f
@@ -5774,11 +5770,11 @@ Call_05f_5fdb:
     ld [hl], a
     ld de, $8a90
     ld hl, $c8de
-    call Call_05f_5f58
+    call ReadFldUI_5f58
     ret
 
 
-Call_05f_5ffa:
+LoadFldUI_5ffa:
     ld a, [wOPTN_and_Item_selection]
     cp $0e
     jr c, jr_05f_600a
@@ -5803,7 +5799,7 @@ jr_05f_600f:
     ret
 
 
-Call_05f_6014:
+SetFldUI_6014:
     ld hl, wBGPalette
     inc hl
     ld a, $d0
@@ -5869,11 +5865,11 @@ jr_05f_6068:
     ld de, $ff00
     ld hl, $9000
     ld bc, $0120
-    call Call_05f_5ecc
+    call IntFldUI_5ecc
     ret
 
 
-Call_05f_607a:
+LoadFldUI_607a:
     ld a, [$c8dd]
     ld l, a
     ld h, $00
@@ -6250,7 +6246,7 @@ jr_05f_61d6:
     ld e, e
     ld d, $5b
 
-Call_05f_6248:
+FuncFldUI_6248:
     srl a
     srl a
     srl a
@@ -6274,10 +6270,10 @@ Call_05f_6248:
     ld [$da88], a
     ld hl, $6452
     ld de, $8860
-    call Call_05f_5f58
+    call ReadFldUI_5f58
     ld de, $63b0
     ld hl, $c500
-    call Call_05f_4263
+    call LoadFldUI_4263
 
 jr_05f_627a:
     ld a, [$c863]
@@ -6295,7 +6291,7 @@ jr_05f_627a:
     ld [$db4d], a
     ld a, h
     ld [$db4e], a
-    call Call_05f_62e5
+    call CallFldUI_62e5
     ld a, [$db4d]
     ld l, a
     ld a, [$db4e]
@@ -6311,7 +6307,7 @@ jr_05f_627a:
     ld [$db4e], a
     ld hl, $db4c
     inc [hl]
-    call Call_05f_62e5
+    call CallFldUI_62e5
     ld a, [$db4d]
     ld l, a
     ld a, [$db4e]
@@ -6327,7 +6323,7 @@ jr_05f_627a:
     ld [$db4e], a
     ld hl, $db4c
     inc [hl]
-    call Call_05f_62e5
+    call CallFldUI_62e5
 
 jr_05f_62d2:
     ld hl, $5005
@@ -6346,8 +6342,8 @@ jr_05f_62d7:
     ret
 
 
-Call_05f_62e5:
-    call Call_05f_633d
+CallFldUI_62e5:
+    call ClrFldUI_633d
     ld a, [$db4c]
     ld hl, $dc44
     add l
@@ -6355,9 +6351,9 @@ Call_05f_62e5:
     ld a, $00
     adc h
     ld h, a
-    call Call_05f_6348
+    call FuncFldUI_6348
     ld hl, $643a
-    call Call_05f_6360
+    call LoadFldUI_6360
     ld a, [$db4c]
     ld hl, $dc54
     add l
@@ -6365,9 +6361,9 @@ Call_05f_62e5:
     ld a, $00
     adc h
     ld h, a
-    call Call_05f_6348
+    call FuncFldUI_6348
     ld hl, $6440
-    call Call_05f_6360
+    call LoadFldUI_6360
     ld a, [$db4c]
     ld hl, $dc4c
     add l
@@ -6375,9 +6371,9 @@ Call_05f_62e5:
     ld a, $00
     adc h
     ld h, a
-    call Call_05f_6348
+    call FuncFldUI_6348
     ld hl, $6446
-    call Call_05f_6360
+    call LoadFldUI_6360
     ld a, [$db4c]
     ld hl, $dc5c
     add l
@@ -6385,13 +6381,13 @@ Call_05f_62e5:
     ld a, $00
     adc h
     ld h, a
-    call Call_05f_6348
+    call FuncFldUI_6348
     ld hl, $644c
-    call Call_05f_6360
+    call LoadFldUI_6360
     ret
 
 
-Call_05f_633d:
+ClrFldUI_633d:
     xor a
     ld hl, $db4f
     ld bc, $0003
@@ -6399,7 +6395,7 @@ Call_05f_633d:
     ret
 
 
-Call_05f_6348:
+FuncFldUI_6348:
     ld b, [hl]
     ld a, $64
     call Div8x8
@@ -6414,7 +6410,7 @@ Call_05f_6348:
     ret
 
 
-Call_05f_6360:
+LoadFldUI_6360:
     ld a, [$db4c]
     and $03
     add a

@@ -235,11 +235,11 @@ labelb_40ce:
     bit 7, a
     jr nz, jr_00b_4134
 
-    call Call_00b_4239
+    call LoadRoom_4239
     ld hl, $c300
     call WaitLCDTransfer
     ld de, $c300
-    call Call_00b_4309
+    call LoadRoom_4309
     ld hl, $1701
     rst $10
 
@@ -415,11 +415,11 @@ RoomEntry3_NPCDispatch:
 labelb_4213:
     ld hl, $1700
     rst $10
-    call Call_00b_4239
+    call LoadRoom_4239
     ld hl, $c500
     call WaitLCDTransfer
     ld de, $c500
-    call Call_00b_4309
+    call LoadRoom_4309
     ld hl, $1701
     rst $10
     ld a, [wScreenIndex]
@@ -450,7 +450,7 @@ labelb_4213:
 ; outside bank $0B. This is the key architectural constraint.
 ; -----------------------------------------------------------------------------
 ReadStepBlock:
-Call_00b_4239:
+LoadRoom_4239:
     ld a, [wInGateworld]            ; gate rooms use different path
     or a
     jr z, jr_00b_4244
@@ -581,7 +581,7 @@ jr_00b_42b7:
     ld bc, $ff06
     rst $38
 
-Call_00b_4309:
+LoadRoom_4309:
     ld a, [wInGateworld]
     or a
     ret z
@@ -617,12 +617,12 @@ labelb_4332:
     ld a, $00
     ldh [$d6], a
     ld hl, $d7d2
-    call Call_00b_433f
+    call ReadRoom_433f
     ldh [$d5], a
     ret
 
 
-Call_00b_433f:
+ReadRoom_433f:
 jr_00b_433f:
     ld a, [hl]
     cp $ff
@@ -631,7 +631,7 @@ jr_00b_433f:
     bit 6, a
     jr nz, jr_00b_4357
 
-    call Call_00b_43e5
+    call SaveRoom_43e5
     jr nz, jr_00b_4357
 
     ld a, l
@@ -794,7 +794,7 @@ jr_00b_43e2:
     ret
 
 
-Call_00b_43e5:
+SaveRoom_43e5:
     push hl
     push bc
     push de
@@ -1391,7 +1391,7 @@ Jump_00b_46a7:
     ld [wWarpGateId], a
     ld a, $80
     ld [wWarpFlag], a
-    call Call_00b_46da
+    call LoadRoom_46da
     ld hl, wGameState
     set 5, [hl]
     xor a
@@ -1403,7 +1403,7 @@ jr_00b_46d5:
     ret
 
 
-Call_00b_46da:
+LoadRoom_46da:
     ld a, [wInGateworld]
     or a
     ret z
@@ -1482,7 +1482,7 @@ jr_00b_471b:
     ld bc, $0101
     ld a, $00
     call FillNBytesWithRegA
-    call Call_00b_482b
+    call SetRoom_482b
     ld a, $ff
     ld [$d7d2], a
     call GetRoomDataPtr
@@ -1500,7 +1500,7 @@ jr_00b_471b:
     ld [wScreenIndex], a
     ld a, b
     ld [$c926], a
-    call Call_00b_477e
+    call SetRoom_477e
     ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
@@ -1526,7 +1526,7 @@ jr_00b_471b:
     ret
 
 
-Call_00b_477e:
+SetRoom_477e:
 jr_00b_477e:
     ld de, $d7d2
 
@@ -1605,7 +1605,7 @@ jr_00b_479a:
     ld a, [hl+]
     ld [de], a
     push hl
-    call Call_00b_4839
+    call CmpRoom_4839
     pop hl
     push af
     ldh a, [$d5]
@@ -1663,7 +1663,7 @@ jr_00b_479a:
     jp Jump_00b_4781
 
 
-Call_00b_482b:
+SetRoom_482b:
     ld hl, $d7be
     ld b, $06
 
@@ -1678,7 +1678,7 @@ jr_00b_4830:
     ret
 
 
-Call_00b_4839:
+CmpRoom_4839:
     cp $ff
     ret z
 

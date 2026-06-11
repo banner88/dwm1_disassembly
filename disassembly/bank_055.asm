@@ -5,37 +5,30 @@
 
 SECTION "ROM Bank $055", ROMX[$4000], BANK[$55]
 
-    ld d, l
-    rra
-    ld b, b
-    ld h, $40
-    dec [hl]
-    ld b, b
-    inc a
-    ld b, b
-    ld b, e
-    ld b, b
-    ld [hl], h
-    ld b, a
-    sbc e
-    ld b, a
-    xor a
-    ld b, a
-    jp $d747
+    db $55 ; Bank number
 
+    ; Cross-bank dispatch table (15 entries)
+    ; Called via: ld hl, $55XX / rst $10
+    dw $401F                          ; Entry 0
+    dw $4026                          ; Entry 1
+    dw $4035                          ; Entry 2
+    dw $403C                          ; Entry 3
+    dw $4043                          ; Entry 4
+    dw $4774                          ; Entry 5
+    dw $479B                          ; Entry 6
+    dw $47AF                          ; Entry 7
+    dw $47C3                          ; Entry 8
+    dw $47D7                          ; Entry 9
+    dw $47EB                          ; Entry 10
+    dw $47FF                          ; Entry 11
+    dw $4813                          ; Entry 12
+    dw $4936                          ; Entry 13
+    dw $4B4A                          ; Entry 14
 
-    ld b, a
-    db $eb
-    ld b, a
-    rst $38
-    ld b, a
-    inc de
-    ld c, b
-    ld [hl], $49
-    ld c, d
-    ld c, e
+; --- Dispatch entry 0 ($401F) ---
+DispatchEntry_55_0:
     ld hl, $4070
-    call Call_055_404a
+    call LoadB55_404a
     ret
 
 
@@ -45,26 +38,26 @@ SECTION "ROM Bank $055", ROMX[$4000], BANK[$55]
     ret nz
 
     ld hl, $4074
-    call Call_055_404a
+    call LoadB55_404a
     ret
 
 
     ld hl, $4078
-    call Call_055_404a
+    call LoadB55_404a
     ret
 
 
     ld hl, $407c
-    call Call_055_404a
+    call LoadB55_404a
     ret
 
 
     ld hl, $4080
-    call Call_055_404a
+    call LoadB55_404a
     ret
 
 
-Call_055_404a:
+LoadB55_404a:
     ld a, [$c863]
     and $02
     ld b, a
@@ -1894,14 +1887,14 @@ Jump_055_43c3:
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_055_4823
+    call LoadB55_4823
     ld hl, $8800
     ld de, $0c01
     ld a, $09
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_055_4823
+    call LoadB55_4823
     ret
 
 
@@ -1911,7 +1904,7 @@ Jump_055_43c3:
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_055_4823
+    call LoadB55_4823
     ret
 
 
@@ -1921,7 +1914,7 @@ Jump_055_43c3:
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_055_4823
+    call LoadB55_4823
     ret
 
 
@@ -1931,7 +1924,7 @@ Jump_055_43c3:
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_055_4823
+    call LoadB55_4823
     ret
 
 
@@ -1941,7 +1934,7 @@ Jump_055_43c3:
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_055_4823
+    call LoadB55_4823
     ret
 
 
@@ -1951,7 +1944,7 @@ Jump_055_43c3:
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_055_4823
+    call LoadB55_4823
     ret
 
 
@@ -1961,7 +1954,7 @@ Jump_055_43c3:
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_055_4823
+    call LoadB55_4823
     ret
 
 
@@ -1972,7 +1965,7 @@ Jump_055_43c3:
     ld a, $03
     ld [$c822], a
 
-Call_055_4823:
+LoadB55_4823:
     ld a, [$c827]
     ld c, a
     ld a, [$c828]
@@ -1991,7 +1984,7 @@ Call_055_4823:
     ld [$c829], a
     ld a, d
     ld [$c82a], a
-    call Call_055_4863
+    call SetB55_4863
     pop de
     pop hl
     ld a, l
@@ -2018,14 +2011,14 @@ jr_055_484f:
     ld d, b
     adc b
 
-Call_055_4863:
+SetB55_4863:
     ld de, $48a9
-    call Call_055_486d
+    call SaveB55_486d
     call RequestScreenUpdate
     ret
 
 
-Call_055_486d:
+SaveB55_486d:
     push de
     ld a, [$c827]
     ld l, a
@@ -2040,7 +2033,7 @@ Call_055_486d:
     ld a, h
     ld [$c830], a
     pop de
-    call Call_055_4924
+    call LoadB55_4924
     ld a, e
     ld [$c82d], a
     ld a, d
@@ -2159,7 +2152,7 @@ jr_055_48fb:
     ld [hl-], a
     ld l, $f0
 
-Call_055_4924:
+LoadB55_4924:
     ld a, [$4000]
     ld [$c824], a
     ld a, [$c823]
@@ -2188,7 +2181,7 @@ Call_055_4924:
     call FillNBytesWithRegA
     xor a
     ld [wMenu_selection], a
-    call Call_055_496c
+    call LoadB55_496c
     ld a, $00
     call SetBGM
     ld a, $03
@@ -2197,7 +2190,7 @@ Call_055_4924:
     jp Jump_000_11cb
 
 
-Call_055_496c:
+LoadB55_496c:
     ld a, [$c88b]
     rst $00
     ld a, h
@@ -2220,7 +2213,7 @@ Call_055_496c:
     ld hl, $8800
     ld a, $03
     ld [$c823], a
-    call Call_055_4b22
+    call LoadB55_4b22
     ld hl, $98a3
     ld bc, $1002
     ld a, $80			;load the ID of the first tile of "[ DEBUG MODE SELECT ]" into a
@@ -2237,11 +2230,11 @@ Call_055_496c:
     ld de, $1006
     ld a, $07
     ld [$c823], a
-    call Call_055_4b1a
+    call LoadB55_4b1a
     ld hl, $8800
     ld a, $08
     ld [$c823], a
-    call Call_055_4b22
+    call LoadB55_4b22
     ld hl, wDebug_main_menu_option
     ld a, [$c8ad]
     ld [hl+], a
@@ -2273,33 +2266,33 @@ Call_055_496c:
     ld hl, $9887
     ld a, $80
     ld b, $06
-    call Call_055_4a47
+    call CallB55_4a47
     ld hl, $98a7
     ld b, $06
-    call Call_055_4a47
+    call CallB55_4a47
     ld hl, $98c7
     ld b, $06
-    call Call_055_4a47
+    call CallB55_4a47
     ld hl, $98e7
     ld b, $06
-    call Call_055_4a47
+    call CallB55_4a47
     ld hl, $9907
     ld b, $06
-    call Call_055_4a47
+    call CallB55_4a47
     ld hl, $9927
     ld b, $06
-    call Call_055_4a47
+    call CallB55_4a47
     ld hl, $9967
     ld a, $a4
     ld b, $09
-    call Call_055_4a47
+    call CallB55_4a47
     xor a
     ld [wMenu_selection], a
-    call Call_055_4d44
+    call LoadB55_4d44
     ret
 
 
-Call_055_4a47:
+CallB55_4a47:
 jr_055_4a47:
     call Write_gfx_tile_and_inc_HL
     inc a
@@ -2319,7 +2312,7 @@ jr_055_4a47:
     ld de, $0a0a
     ld a, $04
     ld [$c823], a
-    call Call_055_4b1a
+    call LoadB55_4b1a
     ld hl, wDebug_main_menu_option
     ld a, [wInGateworld]
     ld [hl+], a
@@ -2342,7 +2335,7 @@ jr_055_4a47:
     ld hl, $9885
     ld bc, $0a0a
     ld a, $12
-    call Call_055_4b33
+    call SaveB55_4b33
     jp Jump_055_4ed3
 
 
@@ -2356,7 +2349,7 @@ jr_055_4a47:
     ld de, $1006
     ld a, $06
     ld [$c823], a
-    call Call_055_4b1a
+    call LoadB55_4b1a
     xor a
     ld [wDebug_main_menu_option], a
     ld [$c0a1], a
@@ -2376,7 +2369,7 @@ jr_055_4a47:
     ld de, $0a0a
     ld a, $09
     ld [$c823], a
-    call Call_055_4b1a
+    call LoadB55_4b1a
     ld hl, wDebug_main_menu_option
     ld a, [$da02]
     ld [hl+], a
@@ -2399,17 +2392,17 @@ jr_055_4a47:
     ld hl, $9885
     ld bc, $0a0a
     ld a, $12
-    call Call_055_4b33
+    call SaveB55_4b33
     jp Jump_055_5232
 
 
-Call_055_4b1a:
+LoadB55_4b1a:
     ld a, e
     ld [$c829], a
     ld a, d
     ld [$c82a], a
 
-Call_055_4b22:
+LoadB55_4b22:
     ld a, l
     ld [$c827], a
     ld a, h
@@ -2421,7 +2414,7 @@ Call_055_4b22:
     ret
 
 
-Call_055_4b33:
+SaveB55_4b33:
 Jump_055_4b33:
 jr_055_4b33:
     push hl
@@ -2736,7 +2729,7 @@ jr_055_4cfa:
     ld a, [wMenu_selection]
     ld b, $01
     ld c, $00
-    call Call_055_5326
+    call CmpB55_5326
     ld a, [wJoypad_current_frame]
     and $02
     jr z, jr_055_4d24
@@ -2772,7 +2765,7 @@ jr_055_4d3c:
     ld a, $59
     call PlaySoundEffect
 
-Call_055_4d44:
+LoadB55_4d44:
     ld a, [wMenu_selection]
     ld l, a
     ld h, $00
@@ -2932,22 +2925,22 @@ jr_055_4e53:
     ld a, [wMenu_selection]
     ld b, $02
     cp $00
-    call z, Call_055_4ed3
+    call z, SaveB55_4ed3
     ld b, $60
     cp $01
-    call z, Call_055_4ed3
+    call z, SaveB55_4ed3
     ld b, $04
     cp $02
-    call z, Call_055_4ed3
+    call z, SaveB55_4ed3
     ld b, $0a
     cp $03
-    call z, Call_055_4ed3
+    call z, SaveB55_4ed3
     ld b, $0a
     cp $04
-    call z, Call_055_4ed3
+    call z, SaveB55_4ed3
     ld b, $0a
     cp $05
-    call z, Call_055_4ed3
+    call z, SaveB55_4ed3
 
 jr_055_4e85:
     ld a, [wJoypad_current_frame]
@@ -2988,7 +2981,7 @@ jr_055_4ebb:
     ld a, [de]
     ld b, $01
     ld c, $00
-    call Call_055_5366
+    call CalcB55_5366
 
 jr_055_4ec3:
     pop bc
@@ -3007,7 +3000,7 @@ jr_055_4ec3:
     ret
 
 
-Call_055_4ed3:
+SaveB55_4ed3:
 Jump_055_4ed3:
     push af
     ld a, [wMenu_selection]
@@ -3042,7 +3035,7 @@ jr_055_4eed:
     ld a, h
     ld [$c82a], a
     ld hl, $8800
-    call Call_055_4f8f
+    call LoadB55_4f8f
     ld a, [wDebug_main_menu_option]
     cp $00
     jr z, jr_055_4f14
@@ -3064,42 +3057,42 @@ jr_055_4f19:
     ld a, h
     ld [$c82a], a
     ld hl, $8870
-    call Call_055_4f8f
+    call LoadB55_4f8f
     ld a, $04
     ld [$c822], a
     ld a, [$c0a3]
     ld [$c823], a
     ld hl, $88e0
-    call Call_055_4f8f
+    call LoadB55_4f8f
     ld a, [$c0a4]
     ld [$c823], a
     ld hl, $8950
-    call Call_055_4f8f
+    call LoadB55_4f8f
     ld a, [$c0a5]
     ld [$c823], a
     ld hl, $89c0
-    call Call_055_4f8f
+    call LoadB55_4f8f
     ld hl, $98d0
     ld a, $80
     ld b, $07
-    call Call_055_4f87
+    call CallB55_4f87
     ld hl, $98f0
     ld b, $07
-    call Call_055_4f87
+    call CallB55_4f87
     ld hl, $9930
     ld b, $07
-    call Call_055_4f87
+    call CallB55_4f87
     ld hl, $9950
     ld b, $07
-    call Call_055_4f87
+    call CallB55_4f87
     ld hl, $9970
     ld b, $07
-    call Call_055_4f87
+    call CallB55_4f87
     pop af
     ret
 
 
-Call_055_4f87:
+CallB55_4f87:
 jr_055_4f87:
     call Write_gfx_tile_and_inc_HL
     inc a
@@ -3109,7 +3102,7 @@ jr_055_4f87:
     ret
 
 
-Call_055_4f8f:
+LoadB55_4f8f:
     ld a, l
     ld [$c827], a
     ld a, h
@@ -3215,10 +3208,10 @@ jr_055_501b:
     ld a, [wMenu_selection]
     ld b, $20
     cp $00
-    call z, Call_055_5098
+    call z, SaveB55_5098
     ld b, $40
     cp $01
-    call z, Call_055_5098
+    call z, SaveB55_5098
 
 jr_055_5031:
     ld a, [wJoypad_current_frame]
@@ -3299,7 +3292,7 @@ jr_055_507c:
     ret
 
 
-Call_055_5098:
+SaveB55_5098:
     push af
     ld a, [wMenu_selection]
     ld hl, wDebug_main_menu_option
@@ -3440,7 +3433,7 @@ SE_IDS:
     ld [wGameMode], a
     ld a, $00
     ld [$c88b], a
-    call Call_055_5379
+    call SetDefaultJapaneseName
     ld a, [$ca8d]
     or a
     jr nz, jr_055_5139
@@ -3530,25 +3523,25 @@ jr_055_51ab:
     ld a, [wMenu_selection]
     ld b, $03
     cp $00
-    call z, Call_055_5232
+    call z, SaveB55_5232
     ld b, $00
     cp $01
-    call z, Call_055_5232
+    call z, SaveB55_5232
     ld b, $02
     cp $02
-    call z, Call_055_5232
+    call z, SaveB55_5232
     ld b, $00
     cp $03
-    call z, Call_055_5232
+    call z, SaveB55_5232
     ld b, $02
     cp $04
-    call z, Call_055_5232
+    call z, SaveB55_5232
     ld b, $00
     cp $05
-    call z, Call_055_5232
+    call z, SaveB55_5232
     ld b, $02
     cp $06
-    call z, Call_055_5232
+    call z, SaveB55_5232
 
 jr_055_51e4:
     ld a, [wJoypad_current_frame]
@@ -3589,7 +3582,7 @@ jr_055_521a:
     ld a, [de]
     ld b, $01
     ld c, $00
-    call Call_055_5366
+    call CalcB55_5366
 
 jr_055_5222:
     pop bc
@@ -3608,7 +3601,7 @@ jr_055_5222:
     ret
 
 
-Call_055_5232:
+SaveB55_5232:
 Jump_055_5232:
     push af
     ld a, [wMenu_selection]
@@ -3665,7 +3658,7 @@ jr_055_524c:
     ld a, [$da18]
     ld [$c823], a
     ld hl, $8800
-    call Call_055_5304
+    call LoadB55_5304
     ld a, [$da05]
     ld l, a
     ld a, [$da06]
@@ -3681,7 +3674,7 @@ Jump_055_52ad:
     ld a, [$da18]
     ld [$c823], a
     ld hl, $8890
-    call Call_055_5304
+    call LoadB55_5304
     ld a, [$da07]
     ld l, a
     ld a, [$da08]
@@ -3695,22 +3688,22 @@ Jump_055_52ad:
     ld a, [$da18]
     ld [$c823], a
     ld hl, $8920
-    call Call_055_5304
+    call LoadB55_5304
     ld hl, $98ef
     ld a, $80
     ld b, $09
-    call Call_055_52fc
+    call CallB55_52fc
     ld hl, $992f
     ld b, $09
-    call Call_055_52fc
+    call CallB55_52fc
     ld hl, $996f
     ld b, $09
-    call Call_055_52fc
+    call CallB55_52fc
     pop af
     ret
 
 
-Call_055_52fc:
+CallB55_52fc:
 jr_055_52fc:
     call Write_gfx_tile_and_inc_HL
     inc a
@@ -3720,7 +3713,7 @@ jr_055_52fc:
     ret
 
 
-Call_055_5304:
+LoadB55_5304:
     ld a, l
     ld [$c827], a
     ld a, h
@@ -3745,38 +3738,38 @@ DrawDebugIndexNumber:
     ret
 
 
-Call_055_5326:
+CmpB55_5326:
     cp $64
     jr nc, jr_055_5338
 
-    call Call_055_535f
+    call SaveB55_535f
     inc hl
     cp $0a
     jr nc, jr_055_5341
 
-    call Call_055_535f
+    call SaveB55_535f
     inc hl
     jr jr_055_534a
 
 jr_055_5338:
     ld e, $64
-    call Call_055_534f
-    call Call_055_5357
+    call FuncB55_534f
+    call SaveB55_5357
     inc hl
 
 jr_055_5341:
     ld e, $0a
-    call Call_055_534f
-    call Call_055_5357
+    call FuncB55_534f
+    call SaveB55_5357
     inc hl
 
 jr_055_534a:
     ld d, a
-    call Call_055_5357
+    call SaveB55_5357
     ret
 
 
-Call_055_534f:
+FuncB55_534f:
     ld d, $ff
 
 jr_055_5351:
@@ -3788,7 +3781,7 @@ jr_055_5351:
     ret
 
 
-Call_055_5357:
+SaveB55_5357:
     push af
     ld a, d
     add b
@@ -3797,7 +3790,7 @@ Call_055_5357:
     ret
 
 
-Call_055_535f:
+SaveB55_535f:
     push af
     ld a, c
     call Write_gfx_tile
@@ -3805,22 +3798,22 @@ Call_055_535f:
     ret
 
 
-Call_055_5366:
+CalcB55_5366:
     inc hl
     push af
     swap a
     and $0f
     ld d, a
-    call Call_055_5357
+    call SaveB55_5357
     inc hl
     pop af
     and $0f
     ld d, a
-    call Call_055_5357
+    call SaveB55_5357
     ret
 
 
-Call_055_5379:  ;set name to default Japanese name
+SetDefaultJapaneseName:  ;set name to default Japanese name
     ld a, $6e
     ld [$ca42], a
     ld a, $86
@@ -3849,7 +3842,7 @@ Call_055_5379:  ;set name to default Japanese name
 jr_055_53a5:
     push bc
     ld a, c
-    call Call_055_53f6
+    call SaveB55_53f6
     pop bc
     inc c
     dec b
@@ -3886,7 +3879,7 @@ jr_055_53a5:
     ret
 
 
-Call_055_53f6:
+SaveB55_53f6:
     push af
     ld [$da14], a
     call GenerateRNG
@@ -3906,7 +3899,7 @@ Call_055_53f6:
     ld hl, $cad6
     ld c, a
     pop af
-    call Call_055_549c
+    call SaveB55_549c
     push af
     pop af
     push af
@@ -3916,7 +3909,7 @@ Call_055_53f6:
     ld hl, $cad7
     ld c, a
     pop af
-    call Call_055_549c
+    call SaveB55_549c
     push af
     pop af
     push af
@@ -3926,7 +3919,7 @@ Call_055_53f6:
     ld c, a
     pop af
     ld hl, $cac2
-    call Call_055_54ac
+    call SaveB55_54ac
     push af
     call GenerateRNG
     ld a, [wRNG1]
@@ -3934,7 +3927,7 @@ Call_055_53f6:
     ld c, a
     pop af
     ld hl, $cad8
-    call Call_055_54ac
+    call SaveB55_54ac
     push af
     call GenerateRNG
     ld a, [wRNG1]
@@ -3942,7 +3935,7 @@ Call_055_53f6:
     ld c, a
     pop af
     ld hl, $cae1
-    call Call_055_54ac
+    call SaveB55_54ac
     push af
     ld hl, $cad6
     call GetMonsterDataPtr
@@ -3954,7 +3947,7 @@ Call_055_53f6:
     ld c, a
     pop af
     ld hl, $cb44
-    call Call_055_54ac
+    call SaveB55_54ac
     push af
     ld hl, $cad7
     call GetMonsterDataPtr
@@ -3966,11 +3959,11 @@ Call_055_53f6:
     ld c, a
     pop af
     ld hl, $cb4d
-    call Call_055_54ac
+    call SaveB55_54ac
     ret
 
 
-Call_055_549c:
+SaveB55_549c:
     push af
     call GetMonsterDataPtr
     ld [hl], c
@@ -3987,7 +3980,7 @@ Call_055_549c:
     ret
 
 
-Call_055_54ac:
+SaveB55_54ac:
     push af
     push bc
     call GetMonsterDataPtr
@@ -4021,7 +4014,7 @@ Call_055_54ac:
     or b
     ld b, b
     dec l
-    call Call_055_6484
+    call IntB55_6484
     rst $38
     nop
     rst $38
@@ -4405,7 +4398,7 @@ jr_055_55fd:
     ld h, d
     ld c, c
     or [hl]
-    call Call_000_063e
+    call WriteBankSwitch4100
     ld a, [$0fff]
     rst $30
     adc e
@@ -4783,7 +4776,7 @@ jr_055_57d1:
     adc d
     sub d
     ld h, d
-    call Call_055_7fff
+    call DataB55_7fff
     cp a
     ld a, a
     rlca
@@ -5245,7 +5238,7 @@ jr_055_59ab:
     rst $38
     adc l
     nop
-    call nc, Call_055_60da
+    call nc, DataB55_60da
     or a
     pop af
     xor $f0
@@ -6357,7 +6350,7 @@ jr_055_5cc6:
     call $cdca
     jp z, $cacd
 
-    call Call_055_5faf
+    call DispB55_5faf
     xor a
     ld e, a
     xor a
@@ -6499,7 +6492,7 @@ jr_055_5cc6:
     push af
     rst $18
 
-Call_055_5faf:
+DispB55_5faf:
     rst $28
     ld a, a
     ccf
@@ -6690,7 +6683,7 @@ jr_055_604a:
     rst $10
     cp h
     or h
-    call nc, Call_000_083b
+    call nc, IncrementA
     rst $38
     adc b
     ld a, [hl]
@@ -6768,7 +6761,7 @@ jr_055_604a:
     inc b
     nop
 
-Call_055_60da:
+DataB55_60da:
     db $10
     rst $38
     add c
@@ -7595,7 +7588,7 @@ jr_055_63cb:
     dec c
     ld a, l
 
-Call_055_6484:
+IntB55_6484:
     di
     rst $38
     di
@@ -9192,7 +9185,7 @@ jr_055_6abe:
     rst $18
     cp l
     ld a, h
-    call z, Call_000_068f
+    call z, ClearJoypadState
     ld c, $9c
     ld hl, sp-$08
     pop af
@@ -10735,7 +10728,7 @@ jr_055_7142:
     call $cdca
     jp z, $cacd
 
-    call Call_055_5faf
+    call DispB55_5faf
     xor a
     ld e, a
     xor a
@@ -11502,7 +11495,7 @@ jr_055_7481:
     ld a, a
     cp h
     ld [hl], e
-    call c, Call_055_7db1
+    call c, DataB55_7db1
     sbc [hl]
     ld l, a
     inc bc
@@ -13590,7 +13583,7 @@ jr_055_797a:
     nop
     nop
 
-Call_055_7db1:
+DataB55_7db1:
     nop
     nop
     nop
@@ -14182,5 +14175,5 @@ Call_055_7db1:
     nop
     nop
 
-Call_055_7fff:
+DataB55_7fff:
     nop

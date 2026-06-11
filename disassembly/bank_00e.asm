@@ -7,7 +7,7 @@ SECTION "ROM Bank $00e", ROMX[$4000], BANK[$e]
 
     db $0e ;ROM BANK
 
-    dw Call_00e_4007
+    dw LoadBe_4007
     dw labele_402f
     dw labele_4110
 
@@ -17,7 +17,7 @@ SECTION "ROM Bank $00e", ROMX[$4000], BANK[$e]
 ; $D8D4 (script_id) → per-NPC data pointer
 ; $D8D5/$D8D6 (counter) → BC command pair
 ; ---------------------------------------------------------------------------
-Call_00e_4007:
+LoadBe_4007:
     ld a, [wScriptMapType]
     ld l, a
     ld h, $00
@@ -84,12 +84,12 @@ labele_402f:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_00e_4007
+    call LoadBe_4007
     push bc
-    call Call_00e_40e7
+    call LoadBe_40e7
     pop bc
 
-Call_00e_4075:
+LoadBe_4075:
     ld a, [bc]
     ld l, a
     inc bc
@@ -119,7 +119,7 @@ Call_00e_4075:
     ld b, a
 
 jr_00e_409a:
-    call Call_00e_40da
+    call LoadBe_40da
     dec b
     jr nz, jr_00e_409a
 
@@ -161,10 +161,10 @@ jr_00e_40a9:
 
 jr_00e_40d2:
     call Write_gfx_tile
-    call Call_00e_40da
+    call LoadBe_40da
     jr jr_00e_40a9
 
-Call_00e_40da:
+LoadBe_40da:
     ld a, l
     and $e0
     push af
@@ -178,7 +178,7 @@ Call_00e_40da:
     ret
 
 
-Call_00e_40e7:
+LoadBe_40e7:
     ld a, [bc]
     ld l, a
     inc bc
@@ -258,9 +258,9 @@ labele_4110:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    call Call_00e_4007
+    call LoadBe_4007
     push bc
-    call Call_00e_4171
+    call LoadBe_4171
     pop bc
     ld a, [wIsGBC]
     or a
@@ -271,7 +271,7 @@ labele_4110:
     ld a, $01
     ldh [rVBK], a
     ei
-    call Call_00e_4075
+    call LoadBe_4075
     di
     call WaitVRAM
     ld a, $00
@@ -280,7 +280,7 @@ labele_4110:
     ret
 
 
-Call_00e_4171:
+LoadBe_4171:
     ld a, [bc]
     ld l, a
     inc bc
@@ -310,7 +310,7 @@ jr_00e_4178:
     jr jr_00e_4177
 
 jr_00e_418d:
-    call Call_00e_4195
+    call SaveBe_4195
     inc hl
     jr jr_00e_4178
 
@@ -319,7 +319,7 @@ jr_00e_4193:
     ret
 
 
-Call_00e_4195:
+SaveBe_4195:
     push hl
     srl h
     rr l

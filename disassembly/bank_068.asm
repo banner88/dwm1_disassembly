@@ -161,7 +161,7 @@ jr_068_408a:
     ld [hl], a
     ld a, a
     rst $38
-    call z, Call_000_3318
+    call z, AudioWaveData_3318
     ld l, h
     db $d3
     db $fc
@@ -385,7 +385,7 @@ jr_068_4160:
     nop
     call z, $c004
     add a
-    call z, Call_068_6f6c
+    call z, DataB68_6f6c
     dec de
     dec de
     di
@@ -628,7 +628,7 @@ jr_068_424f:
     rst $30
     ld a, a
     rst $38
-    call z, Call_068_473c
+    call z, CalcB68_473c
     cp a
     rst $38
     rst $38
@@ -1694,7 +1694,7 @@ jr_068_4731:
 
     and b
 
-Call_068_473c:
+CalcB68_473c:
     inc bc
     ld d, b
     adc e
@@ -11791,7 +11791,7 @@ jr_068_4cfc:
     nop
     nop
 
-Call_068_6f6c:
+DataB68_6f6c:
     nop
     nop
     nop

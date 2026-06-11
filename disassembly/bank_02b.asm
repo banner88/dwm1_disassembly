@@ -5,146 +5,85 @@
 
 SECTION "ROM Bank $02b", ROMX[$4000], BANK[$2b]
 
-    dec hl
-    sub c
-    ld b, b
-    sub a
-    ld b, c
-    and l
-    ld b, d
-    or c
-    ld b, e
-    cp b
-    ld b, h
-    or l
-    ld b, l
-    or h
-    ld b, [hl]
-    sbc e
-    ld b, a
-    ld e, e
-    ld c, b
-    ld c, e
-    ld c, c
-    ld d, a
-    ld c, d
-    ld b, e
-    ld c, e
-    inc hl
-    ld c, h
-    dec d
-    ld c, l
-    db $eb
-    ld c, l
-    db $ec
-    ld c, [hl]
-    or [hl]
-    ld c, a
-    cp d
-    ld d, b
-    ret nz
+    db $2B ; Bank number
 
-    ld d, c
-    and l
-    ld d, d
-    sbc a
-    ld d, e
-    ld b, c
-    ld d, h
-    dec de
-    ld d, l
-    dec b
-    ld d, [hl]
-    cp $56
-    nop
-    ld e, b
-    push de
-    ld e, b
-    pop bc
-    ld e, c
-    or a
-    ld e, d
-    or h
-    ld e, e
-    ld e, a
-    ld e, h
-    inc sp
-    ld e, l
-    dec e
-    ld e, [hl]
-    or $5e
-    jp hl
+    ; Cross-bank dispatch table (72 entries)
+    ; Called via: ld hl, $2BXX / rst $10
+    dw $4091                          ; Entry 0
+    dw $4197                          ; Entry 1
+    dw $42A5                          ; Entry 2
+    dw $43B1                          ; Entry 3
+    dw $44B8                          ; Entry 4
+    dw $45B5                          ; Entry 5
+    dw $46B4                          ; Entry 6
+    dw $479B                          ; Entry 7
+    dw $485B                          ; Entry 8
+    dw $494B                          ; Entry 9
+    dw $4A57                          ; Entry 10
+    dw $4B43                          ; Entry 11
+    dw $4C23                          ; Entry 12
+    dw $4D15                          ; Entry 13
+    dw $4DEB                          ; Entry 14
+    dw $4EEC                          ; Entry 15
+    dw $4FB6                          ; Entry 16
+    dw $50BA                          ; Entry 17
+    dw $51C0                          ; Entry 18
+    dw $52A5                          ; Entry 19
+    dw $539F                          ; Entry 20
+    dw $5441                          ; Entry 21
+    dw $551B                          ; Entry 22
+    dw $5605                          ; Entry 23
+    dw $56FE                          ; Entry 24
+    dw $5800                          ; Entry 25
+    dw $58D5                          ; Entry 26
+    dw $59C1                          ; Entry 27
+    dw $5AB7                          ; Entry 28
+    dw $5BB4                          ; Entry 29
+    dw $5C5F                          ; Entry 30
+    dw $5D33                          ; Entry 31
+    dw $5E1D                          ; Entry 32
+    dw $5EF6                          ; Entry 33
+    dw $5FE9                          ; Entry 34
+    dw $60D0                          ; Entry 35
+    dw $61B8                          ; Entry 36
+    dw $6247                          ; Entry 37
+    dw $6305                          ; Entry 38
+    dw $63EF                          ; Entry 39
+    dw $64B9                          ; Entry 40
+    dw $6562                          ; Entry 41
+    dw $663F                          ; Entry 42
+    dw $66E1                          ; Entry 43
+    dw $679B                          ; Entry 44
+    dw $6853                          ; Entry 45
+    dw $6945                          ; Entry 46
+    dw $6A0E                          ; Entry 47
+    dw $6AF8                          ; Entry 48
+    dw $6BA5                          ; Entry 49
+    dw $6C4A                          ; Entry 50
+    dw $6D31                          ; Entry 51
+    dw $6E32                          ; Entry 52
+    dw $6F26                          ; Entry 53
+    dw $7019                          ; Entry 54
+    dw $70B0                          ; Entry 55
+    dw $717E                          ; Entry 56
+    dw $725F                          ; Entry 57
+    dw $7341                          ; Entry 58
+    dw $742C                          ; Entry 59
+    dw $74FA                          ; Entry 60
+    dw $75E9                          ; Entry 61
+    dw $768B                          ; Entry 62
+    dw $773A                          ; Entry 63
+    dw $7820                          ; Entry 64
+    dw $7902                          ; Entry 65
+    dw $79E7                          ; Entry 66
+    dw $7A86                          ; Entry 67
+    dw $7B75                          ; Entry 68
+    dw $7C4E                          ; Entry 69
+    dw $7D1F                          ; Entry 70
+    dw jr_02b_7d7f                    ; Entry 71
 
-
-    ld e, a
-    ret nc
-
-    ld h, b
-    cp b
-    ld h, c
-    ld b, a
-    ld h, d
-    dec b
-    ld h, e
-    rst $28
-    ld h, e
-    cp c
-    ld h, h
-    ld h, d
-    ld h, l
-    ccf
-    ld h, [hl]
-    pop hl
-    ld h, [hl]
-    sbc e
-    ld h, a
-    ld d, e
-    ld l, b
-    ld b, l
-    ld l, c
-    ld c, $6a
-    ld hl, sp+$6a
-    and l
-    ld l, e
-    ld c, d
-    ld l, h
-    ld sp, $326d
-    ld l, [hl]
-    ld h, $6f
-    add hl, de
-    ld [hl], b
-    or b
-    ld [hl], b
-    ld a, [hl]
-    ld [hl], c
-    ld e, a
-    ld [hl], d
-    ld b, c
-    ld [hl], e
-    inc l
-    ld [hl], h
-    ld a, [$e974]
-    ld [hl], l
-    adc e
-    db $76
-    ld a, [hl-]
-    ld [hl], a
-    jr nz, jr_02b_40fb
-
-    ld [bc], a
-    ld a, c
-    rst $20
-    ld a, c
-    add [hl]
-    ld a, d
-    ld [hl], l
-    ld a, e
-    ld c, [hl]
-    ld a, h
-    rra
-    ld a, l
-    ld a, a
-    ld a, l
+; --- Dispatch entry 0 ($4091) ---
+DispatchEntry_2B_0:
     nop
     ld [bc], a
     inc c
@@ -3245,7 +3184,7 @@ jr_02b_4e6f:
     inc b
     dec b
     inc a
-    call z, Call_000_3c00
+    call z, ScreenTransC
     add $00
     inc a
     call nc, $100a
@@ -8505,7 +8444,7 @@ jr_02b_6590:
     jr nc, jr_02b_660b
 
     inc c
-    call nc, Call_000_3a0a
+    call nc, AudioSetTranspose
     dec sp
     inc c
     ld [$0c02], a
@@ -12822,7 +12761,7 @@ jr_02b_7886:
     adc b
     nop
     inc c
-    call nz, Call_000_3800
+    call nz, AudioBranchNC_3800
     add hl, sp
     inc c
     ld d, d
@@ -13780,7 +13719,7 @@ jr_02b_7ca4:
     ld a, [bc]
     ld [bc], a
     inc c
-    call nc, Call_000_3a0e
+    call nc, AudioLookupTable
     dec sp
     ld a, [hl-]
 

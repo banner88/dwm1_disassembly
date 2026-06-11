@@ -7,7 +7,7 @@ SECTION "ROM Bank $061", ROMX[$4000], BANK[$61]
 
     ld hl, $400a
     ld bc, $9c00
-    call Call_000_1f94
+    call CoordClampLow
     ret
 
 

@@ -5,78 +5,53 @@
 
 SECTION "ROM Bank $034", ROMX[$4000], BANK[$34]
 
-    inc [hl]
-    ld d, c
-    ld b, b
-    rst $28
-    ld b, b
-    ld a, [de]
-    ld b, d
-    ld bc, $cd43
-    ld b, e
-    rra
-    ld b, l
-    jr c, jr_034_4055
+    db $34 ; Bank number
 
-    ld e, a
-    ld b, a
-    cp c
-    ld c, b
-    ld bc, $894a
-    ld c, e
-    inc sp
-    ld c, l
-    daa
-    ld c, [hl]
-    db $f4
-    ld c, a
-    ld l, d
-    ld d, c
-    ld a, c
-    ld d, d
-    ld [hl], a
-    ld d, e
-    ld c, [hl]
-    ld d, h
-    sbc a
-    ld d, l
-    ld l, l
-    ld d, a
-    sbc [hl]
-    ld e, b
-    ld [hl], e
-    ld e, c
-    ld a, c
-    ld e, d
-    ld a, h
-    ld e, h
-    ld hl, $895e
-    ld e, a
-    ld d, e
-    ld h, c
-    cpl
-    ld h, e
-    rst $38
-    ld h, h
-    ldh [$66], a
-    db $dd
-    ld l, b
-    cp b
-    ld l, d
-    pop bc
-    ld l, h
-    ld h, c
-    ld l, [hl]
-    add hl, hl
-    ld [hl], b
-    ld [$b872], sp
-    ld [hl], e
-    sub l
-    ld [hl], h
-    sbc e
-    db $76
-    ld e, d
-    ld [hl], a
+    ; Cross-bank dispatch table (40 entries)
+    ; Called via: ld hl, $34XX / rst $10
+    dw $4051                          ; Entry 0
+    dw $40EF                          ; Entry 1
+    dw $421A                          ; Entry 2
+    dw $4301                          ; Entry 3
+    dw $43CD                          ; Entry 4
+    dw $451F                          ; Entry 5
+    dw $4638                          ; Entry 6
+    dw $475F                          ; Entry 7
+    dw $48B9                          ; Entry 8
+    dw $4A01                          ; Entry 9
+    dw $4B89                          ; Entry 10
+    dw $4D33                          ; Entry 11
+    dw $4E27                          ; Entry 12
+    dw $4FF4                          ; Entry 13
+    dw $516A                          ; Entry 14
+    dw $5279                          ; Entry 15
+    dw $5377                          ; Entry 16
+    dw $544E                          ; Entry 17
+    dw $559F                          ; Entry 18
+    dw $576D                          ; Entry 19
+    dw $589E                          ; Entry 20
+    dw $5973                          ; Entry 21
+    dw $5A79                          ; Entry 22
+    dw $5C7C                          ; Entry 23
+    dw $5E21                          ; Entry 24
+    dw $5F89                          ; Entry 25
+    dw $6153                          ; Entry 26
+    dw $632F                          ; Entry 27
+    dw $64FF                          ; Entry 28
+    dw $66E0                          ; Entry 29
+    dw $68DD                          ; Entry 30
+    dw $6AB8                          ; Entry 31
+    dw $6CC1                          ; Entry 32
+    dw $6E61                          ; Entry 33
+    dw $7029                          ; Entry 34
+    dw $7208                          ; Entry 35
+    dw $73B8                          ; Entry 36
+    dw $7495                          ; Entry 37
+    dw $769B                          ; Entry 38
+    dw $775A                          ; Entry 39
+
+; --- Dispatch entry 0 ($4051) ---
+DispatchEntry_34_0:
     ld b, b
     ld [bc], a
     dec b
@@ -400,7 +375,7 @@ jr_034_4194:
 
     xor $11
     adc $31
-    call nz, Call_034_603b
+    call nz, ShiftB34_603b
     sub e
     jr nc, jr_034_4205
 
@@ -913,7 +888,7 @@ Jump_034_43cf:
     rla
     db $fd
 
-Call_034_43fd:
+FuncB34_43fd:
     ld l, [hl]
     or a
     db $da, $ff, $00
@@ -1096,7 +1071,7 @@ jr_034_449e:
 
     cp $a4
 
-Call_034_44c7:
+DispB34_44c7:
     rst $38
     ld hl, sp+$7f
     ldh a, [$9f]
@@ -1310,7 +1285,7 @@ jr_034_4589:
     rst $38
     inc bc
 
-Call_034_45c4:
+FuncB34_45c4:
     ld [$007a], sp
     cp $03
     cp $03
@@ -1399,7 +1374,7 @@ Call_034_45c4:
     rst $38
     xor b
     rst $38
-    call nc, Call_000_2cff
+    call nc, TilemapNextTile
     ld [$220a], sp
     ld [$0c1a], sp
     ld b, b
@@ -1596,7 +1571,7 @@ jr_034_4699:
 
     add h
     rst $10
-    call nc, Call_034_44c7
+    call nc, DispB34_44c7
     rst $10
     ld d, h
     db $e3
@@ -1742,7 +1717,7 @@ jr_034_47ae:
     ld l, $c7
     inc a
     ccf
-    call nz, Call_034_788f
+    call nz, DataB34_788f
     ld a, a
     sub b
     ccf
@@ -1854,7 +1829,7 @@ jr_034_481a:
     ld [hl], a
     ld e, c
     ld a, e
-    call nc, Call_000_2a3d
+    call nc, DataTable_2A3D
     add hl, bc
     add b
     dec bc
@@ -2161,7 +2136,7 @@ jr_034_48c7:
     add hl, sp
     cp c
     inc e
-    call c, Call_034_6a0a
+    call c, DataB34_6a0a
     dec c
     dec l
     rlca
@@ -2169,7 +2144,7 @@ jr_034_48c7:
     ld b, $06
     ld a, a
     rst $18
-    call nc, Call_000_38f4
+    call nc, AudioSetEffect
     dec sp
     ld [hl], b
     db $76
@@ -2228,7 +2203,7 @@ jr_034_49ae:
     pop bc
     rst $00
 
-Call_034_49df:
+CalcB34_49df:
     add hl, bc
     ld a, [$a012]
     and b
@@ -2328,7 +2303,7 @@ Call_034_49df:
     ld b, b
     ld a, a
 
-Call_034_4a4b:
+FuncB34_4a4b:
     ld b, b
     ld a, a
     ret nz
@@ -2836,7 +2811,7 @@ jr_034_4c4f:
     rla
     ccf
     cpl
-    call c, Call_000_39fc
+    call c, AudioSetLoop
     add hl, sp
     ld a, [de]
     ld a, [de]
@@ -2870,7 +2845,7 @@ jr_034_4c4f:
     db $eb
     inc h
     rst $28
-    call nc, Call_034_49df
+    call nc, CalcB34_49df
     ret
 
 
@@ -3111,7 +3086,7 @@ jr_034_4d4a:
     ld a, e
     ld c, l
     ei
-    call nz, Call_034_43fd
+    call nz, FuncB34_43fd
     jp $8786
 
 
@@ -3372,7 +3347,7 @@ jr_034_4e8a:
     jp nz, $c267
 
     ld h, a
-    call nz, Call_034_6567
+    call nz, LoadB34_6567
     ld a, [hl]
     ld b, e
     ld [hl], a
@@ -5010,7 +4985,7 @@ jr_034_55ad:
     rst $38
     sbc d
     db $fd
-    call nc, Call_034_78fb
+    call nc, DataB34_78fb
     and c
     add $d6
     rst $38
@@ -5352,7 +5327,7 @@ jr_034_56f4:
     rrca
     di
     ld [hl], $c7
-    call c, Call_034_780f
+    call c, DispB34_780f
     ld [$0300], sp
     add b
     ld [$0f00], sp
@@ -5935,7 +5910,7 @@ jr_034_596e:
     db $d3
     ld h, h
     and l
-    call nz, Call_000_2bc4
+    call nz, TilemapScrollCalc
     dec hl
     db $e4
     rst $28
@@ -5981,7 +5956,7 @@ jr_034_596e:
     ld b, a
     rst $38
     push de
-    call Call_034_45c4
+    call FuncB34_45c4
     and $27
     cp $03
     inc b
@@ -7245,7 +7220,7 @@ jr_034_5f54:
     sbc c
     rst $38
 
-Call_034_603b:
+ShiftB34_603b:
     rlca
     db $fc
     rla
@@ -8158,7 +8133,7 @@ jr_034_6463:
     nop
     ret nz
 
-Call_034_6467:
+FuncB34_6467:
     ret nz
 
     ldh [rNR41], a
@@ -8384,7 +8359,7 @@ jr_034_649e:
     db $d3
     ld e, d
 
-Call_034_6567:
+LoadB34_6567:
     ld a, e
     ld h, l
     db $fd
@@ -8482,7 +8457,7 @@ Call_034_6567:
     ld a, a
     add $ff
     adc $f7
-    call c, Call_034_4a4b
+    call c, FuncB34_4a4b
     ld d, e
     ld d, d
     or e
@@ -8622,7 +8597,7 @@ Call_034_6567:
     ld [hl-], a
     rst $08
     db $cc, $f3, $0f
-    call nz, Call_000_063c
+    call nz, SetROMBankHighMask
     cp $0b
     db $fd
     add hl, de
@@ -8877,7 +8852,7 @@ jr_034_6777:
     ld [$f1bf], a
     rst $30
     ld sp, $12b7
-    call nc, Call_000_2800
+    call nc, DataTable_2800
     xor e
     inc b
     dec b
@@ -9379,7 +9354,7 @@ jr_034_68ca:
     ld a, l
     ld a, l
 
-Call_034_6a0a:
+DataB34_6a0a:
     db $fd
     db $dd
     cp l
@@ -9457,7 +9432,7 @@ Call_034_6a0a:
     and a
     cp [hl]
     rst $18
-    call c, Call_034_6467
+    call c, FuncB34_6467
     ccf
     jr c, @+$41
 
@@ -10192,7 +10167,7 @@ jr_034_6d8c:
     adc e
     rst $38
     rrca
-    call z, Call_000_3c37
+    call z, RetNop_3C37
     rst $00
     cp $0f
     ld sp, hl
@@ -10446,7 +10421,7 @@ Jump_034_6e7d:
     ld l, h
     sbc l
     dec l
-    call c, Call_000_087f
+    call c, RetNop_087F
     ld [bc], a
     or b
     nop
@@ -10519,7 +10494,7 @@ Jump_034_6e7d:
     db $fc
     sub e
     ldh a, [$b9]
-    call c, Call_034_7cda
+    call c, DataB34_7cda
     xor $7c
     sub $6f
     jp z, $fff7
@@ -12507,7 +12482,7 @@ jr_034_77cc:
     ld hl, sp+$0f
     ld a, h
 
-Call_034_780f:
+DispB34_780f:
     rst $08
     db $fc
     ld c, e
@@ -12619,7 +12594,7 @@ Call_034_780f:
     nop
     nop
 
-Call_034_788f:
+DataB34_788f:
     nop
     nop
     nop
@@ -12729,7 +12704,7 @@ Call_034_788f:
     nop
     nop
 
-Call_034_78fb:
+DataB34_78fb:
     nop
     nop
     nop
@@ -13722,7 +13697,7 @@ Call_034_78fb:
     nop
     nop
 
-Call_034_7cda:
+DataB34_7cda:
     nop
     nop
     nop

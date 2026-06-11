@@ -23,7 +23,7 @@ label400d:
     or a
     jr z, jr_002_401e
 
-    call Call_002_4028
+    call AdvanceDialoguePtr
     jr jr_002_4027
 
 jr_002_401e:
@@ -32,13 +32,13 @@ jr_002_401e:
     inc hl
     inc hl
     ld [hl], $00
-    call Call_002_404e
+    call ProcessDialogueStep
 
 jr_002_4027:
     ret
 
 
-Call_002_4028:
+AdvanceDialoguePtr:
     ld a, [$d7b4]
     add $05
     ld l, a
@@ -69,8 +69,8 @@ jr_002_4041:
     ld h, a
     inc [hl]
 
-Call_002_404e:
-    call Call_002_40b3
+ProcessDialogueStep:
+    call ReadDialogueState
     ld a, b
     and c
     cp $ff
@@ -154,7 +154,7 @@ Jump_002_4095:
     jp Jump_002_4095
 
 
-Call_002_40b3:
+ReadDialogueState:
     ld a, [$d7b4]
     ld c, a
     ld a, [$d7b5]
@@ -3220,10 +3220,10 @@ label4e9f:
     call WaitLCDTransfer
     ld de, $6df0
     ld hl, $9800
-    call Call_002_5c6d
+    call ReadScreenDataDE
     ld de, $7092
     ld hl, $9c00
-    call Call_002_5c6d
+    call ReadScreenDataDE
     xor a
     ld hl, $c0d8
     ld bc, $0028
@@ -3281,10 +3281,10 @@ label4e9f:
     ld de, $ff00
     ld hl, $8ff0
     ld bc, $0008
-    call Call_002_6a5b
+    call WriteLayerDEPair
     ld de, $720e
     ld hl, $9800
-    call Call_002_5c6d
+    call ReadScreenDataDE
     ld a, $ff
     ld hl, $9c00
     ld bc, $0040
@@ -3339,10 +3339,10 @@ label4e9f:
     ld de, $ff00
     ld hl, $8ff0
     ld bc, $0008
-    call Call_002_6a5b
+    call WriteLayerDEPair
     ld de, $720e
     ld hl, $9800
-    call Call_002_5c6d
+    call ReadScreenDataDE
     ld a, $ff
     ld hl, $9c00
     ld bc, $0040
@@ -3397,10 +3397,10 @@ label4e9f:
     ld de, $ff00
     ld hl, $8ff0
     ld bc, $0008
-    call Call_002_6a5b
+    call WriteLayerDEPair
     ld de, $74b0
     ld hl, $9800
-    call Call_002_5c6d
+    call ReadScreenDataDE
     ld a, $ff
     ld hl, $9c00
     ld bc, $0040
@@ -3454,8 +3454,8 @@ label512c:
     ld e, [hl]
     ld [hl], b
     ld e, a
-    call Call_002_5ca2
-    call Call_002_517e
+    call IncrementScreenStep
+    call CheckScreenMode
     ld a, [$c0fc]
     rst $00
     ld c, b
@@ -3514,7 +3514,7 @@ label512c:
     push de
     ld e, e
 
-Call_002_517e:
+CheckScreenMode:
     ld a, [$c0fc]
     cp $00
 
@@ -3685,14 +3685,14 @@ jr_002_51b0:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $e0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -3700,7 +3700,7 @@ jr_002_51b0:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $40
     jr nz, jr_002_52d7
@@ -3765,14 +3765,14 @@ jr_002_52d7:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $e0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -3780,7 +3780,7 @@ jr_002_52d7:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $10
     jr nz, jr_002_537e
@@ -3845,14 +3845,14 @@ jr_002_537e:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $28
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -3860,7 +3860,7 @@ jr_002_537e:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $70
     jr nz, jr_002_5425
@@ -3925,14 +3925,14 @@ jr_002_5425:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $e0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -3940,7 +3940,7 @@ jr_002_5425:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $60
     jr nz, jr_002_54cc
@@ -4005,14 +4005,14 @@ jr_002_54cc:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $e0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -4020,7 +4020,7 @@ jr_002_54cc:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $10
     jr nz, jr_002_5573
@@ -4093,14 +4093,14 @@ jr_002_557e:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $28
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -4108,7 +4108,7 @@ jr_002_557e:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $70
     jr nz, jr_002_5625
@@ -4181,14 +4181,14 @@ jr_002_5631:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $e0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -4196,7 +4196,7 @@ jr_002_5631:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $10
     jr nz, jr_002_56d8
@@ -4261,14 +4261,14 @@ jr_002_56d8:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $e0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -4276,7 +4276,7 @@ jr_002_56d8:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $20
     jr nz, jr_002_577f
@@ -4377,7 +4377,7 @@ jr_002_577f:
 
 jr_002_583f:
     ld hl, $c0e6
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0e7
     dec [hl]
     ld hl, $c0e8
@@ -4389,7 +4389,7 @@ jr_002_583f:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0ed
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0e7]
     cp $10
     jr nz, jr_002_586b
@@ -4405,14 +4405,14 @@ jr_002_586b:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $28
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -4420,7 +4420,7 @@ jr_002_586b:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $70
     jr nz, jr_002_58b0
@@ -4489,14 +4489,14 @@ jr_002_58b0:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $e0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -4504,7 +4504,7 @@ jr_002_58b0:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $40
     jr nz, jr_002_595c
@@ -4569,14 +4569,14 @@ jr_002_595c:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $e0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -4584,7 +4584,7 @@ jr_002_595c:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $10
     jr nz, jr_002_5a03
@@ -4649,14 +4649,14 @@ jr_002_5a03:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0d9
     dec [hl]
     ld hl, $c0da
     inc [hl]
     ld a, [$c0d9]
     cp $28
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $64
@@ -4664,7 +4664,7 @@ jr_002_5a03:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0df
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     cp $70
     jr nz, jr_002_5aaa
@@ -4713,7 +4713,7 @@ jr_002_5aaa:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $78
     jr c, jr_002_5b30
@@ -4754,7 +4754,7 @@ jr_002_5b30:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $78
     jr c, jr_002_5b7b
@@ -4802,7 +4802,7 @@ jr_002_5b7b:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $24
     jr c, jr_002_5bb1
@@ -4943,7 +4943,7 @@ jr_002_5c68:
     ret
 
 
-Call_002_5c6d:
+ReadScreenDataDE:
     ld a, [de]
     inc de
     ld c, a
@@ -4985,7 +4985,7 @@ jr_002_5c88:
     ld [$c0ff], a
     jr jr_002_5c7c
 
-Call_002_5ca2:
+IncrementScreenStep:
     ld hl, $c0fb
     inc [hl]
     ld a, [$c0fb]
@@ -5006,7 +5006,7 @@ Call_002_5ca2:
 jr_002_5cbf:
     ld hl, $5cfc
     ld a, [$c0fa]
-    call Call_002_6aff
+    call CalcLayerTableIdx
     ld e, l
     ld d, h
     ld a, $10
@@ -5058,7 +5058,7 @@ jr_002_5cd4:
     ldh [$91], a
     nop
     sub d
-    call Call_002_5df7
+    call IncrementRenderStep
     ld a, [$c0fc]
     rst $00
     rla
@@ -5205,7 +5205,7 @@ jr_002_5d75:
     ret
 
 
-Call_002_5df7:
+IncrementRenderStep:
     ld hl, $c0f9
     inc [hl]
     ld a, [$c0f9]
@@ -5223,7 +5223,7 @@ Call_002_5df7:
 jr_002_5e0d:
     ld a, [$c0fa]
     ld hl, $5e8c
-    call Call_002_6aff
+    call CalcLayerTableIdx
     ld e, l
     ld d, h
     ld a, $10
@@ -5270,7 +5270,7 @@ jr_002_5e45:
 jr_002_5e49:
     ld a, [$c0fa]
     ld hl, $5e90
-    call Call_002_6aff
+    call CalcLayerTableIdx
     ld e, l
     ld d, h
     ld a, $20
@@ -5325,7 +5325,7 @@ jr_002_5e5e:
 
     jr nc, jr_002_5e22
 
-    call Call_002_5df7
+    call IncrementRenderStep
     ld a, [$c0fc]
     rst $00
     xor c
@@ -5513,7 +5513,7 @@ jr_002_5f66:
     ret
 
 
-Call_002_5fa7:
+LoadScreenTilesDMA:
     ld de, $5b18
     ld hl, $8700
     call WaitDMATransfer
@@ -5524,12 +5524,12 @@ Call_002_5fa7:
     ld hl, $c0d8
     ld bc, $0028
     call FillNBytesWithRegA
-    call Call_002_6a37
-    call Call_002_6a3d
-    call Call_002_6a43
-    call Call_002_6a49
-    call Call_002_6a4f
-    call Call_002_6a55
+    call SetLayer0Flag
+    call SetLayer1Flag
+    call SetLayer2Flag
+    call SetLayer3Flag
+    call SetLayer4Flag
+    call SetLayer5Flag
     ret
 
 label5fd6:
@@ -5565,7 +5565,7 @@ label5fd6:
     ld b, a
     ld a, [$c0d8]
     or b
-    call z, Call_002_5fa7
+    call z, LoadScreenTilesDMA
     ld hl, $c0fd
     inc [hl]
     ld a, [$c0fd]
@@ -5606,9 +5606,9 @@ jr_002_601d:
     ld hl, $c0fc
     inc [hl]
     ld hl, $c0d8
-    call Call_002_68a1
+    call InitLayer_8000
     ld hl, $c0de
-    call Call_002_68eb
+    call InitLayer_7001
     ret
 
 
@@ -5619,7 +5619,7 @@ jr_002_601d:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     sub $02
     ld [$c0d9], a
@@ -5628,10 +5628,10 @@ jr_002_601d:
     ld [$c0da], a
     ld a, [$c0d9]
     cp $60
-    call z, Call_002_6a19
+    call z, ClearLayer1Flag
     ld a, [$c0d9]
     or a
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -5639,7 +5639,7 @@ jr_002_601d:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0fd
     inc [hl]
     ld a, [$c0fd]
@@ -5651,7 +5651,7 @@ jr_002_601d:
     ld hl, $c0fc
     inc [hl]
     ld hl, $c0d8
-    call Call_002_6937
+    call InitLayer_4000
     ret
 
 
@@ -5662,7 +5662,7 @@ jr_002_601d:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     sub $02
     ld [$c0d9], a
@@ -5671,10 +5671,10 @@ jr_002_601d:
     ld [$c0da], a
     ld a, [$c0d9]
     cp $10
-    call z, Call_002_6a19
+    call z, ClearLayer1Flag
     ld a, [$c0d9]
     or a
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -5682,7 +5682,7 @@ jr_002_601d:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0fd
     inc [hl]
     ld a, [$c0fd]
@@ -5694,7 +5694,7 @@ jr_002_601d:
     ld hl, $c0fc
     inc [hl]
     ld hl, $c0d8
-    call Call_002_6981
+    call InitLayer_A000
     ret
 
 
@@ -5705,7 +5705,7 @@ jr_002_601d:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     sub $02
     ld [$c0d9], a
@@ -5714,10 +5714,10 @@ jr_002_601d:
     ld [$c0da], a
     ld a, [$c0d9]
     cp $70
-    call z, Call_002_6a19
+    call z, ClearLayer1Flag
     ld a, [$c0d9]
     or a
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -5725,7 +5725,7 @@ jr_002_601d:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld hl, $c0fd
     inc [hl]
     ld a, [$c0fd]
@@ -5737,10 +5737,10 @@ jr_002_601d:
     ld hl, $c0fc
     inc [hl]
     ld hl, $c0d8
-    call Call_002_6937
+    call InitLayer_4000
     ld hl, $c0e4
-    call Call_002_6981
-    call Call_002_6a43
+    call InitLayer_A000
+    call SetLayer2Flag
     ret
 
 
@@ -5751,7 +5751,7 @@ jr_002_601d:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     sub $02
     ld [$c0d9], a
@@ -5760,10 +5760,10 @@ jr_002_601d:
     ld [$c0da], a
     ld a, [$c0d9]
     cp $10
-    call z, Call_002_6a19
+    call z, ClearLayer1Flag
     ld a, [$c0d9]
     or a
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -5771,14 +5771,14 @@ jr_002_601d:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $10
     jr c, jr_002_61fc
 
     jr nz, jr_002_61b9
 
-    call Call_002_6a1f
+    call ClearLayer2Flag
 
 jr_002_61b9:
     ld a, $00
@@ -5788,7 +5788,7 @@ jr_002_61b9:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0e4
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0e5]
     sub $02
     ld [$c0e5], a
@@ -5797,10 +5797,10 @@ jr_002_61b9:
     ld [$c0e6], a
     ld a, [$c0e5]
     cp $70
-    call z, Call_002_6a25
+    call z, ClearLayer3Flag
     ld a, [$c0e5]
     or a
-    call z, Call_002_6a43
+    call z, SetLayer2Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -5808,7 +5808,7 @@ jr_002_61b9:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0ea
-    call Call_002_6a80
+    call SetScreenPointerHL
 
 jr_002_61fc:
     ld hl, $c0fd
@@ -5822,16 +5822,16 @@ jr_002_61fc:
     ld hl, $c0fc
     inc [hl]
     ld hl, $c0d8
-    call Call_002_6937
+    call InitLayer_4000
     ld hl, $c0e4
-    call Call_002_68a1
+    call InitLayer_8000
     ld hl, $c0ea
-    call Call_002_68eb
+    call InitLayer_7001
     ld hl, $c0f0
-    call Call_002_6981
-    call Call_002_6a43
-    call Call_002_6a4f
-    call Call_002_6a13
+    call InitLayer_A000
+    call SetLayer2Flag
+    call SetLayer4Flag
+    call ClearLayer0Flag
     ld hl, $d9cb
     inc [hl]
     xor a
@@ -5843,43 +5843,43 @@ jr_002_61fc:
     ld a, [$c0fd]
     cp $40
     ld hl, $c0d8
-    call z, Call_002_6937
+    call z, InitLayer_4000
     ld a, [$c0fd]
     cp $60
     ld hl, $c0e4
-    call z, Call_002_6981
+    call z, InitLayer_A000
     ld a, [$c0fd]
     cp $70
     ld hl, $c0f0
-    call z, Call_002_68a1
+    call z, InitLayer_8000
     ld a, [$c0fd]
     cp $70
     ld hl, $c0f6
-    call z, Call_002_6911
+    call z, InitLayer_3001
     ld a, [$c0fd]
     cp $40
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, [$c0fd]
     cp $60
-    call z, Call_002_6a43
+    call z, SetLayer2Flag
     ld a, [$c0fd]
     cp $70
-    call z, Call_002_6a4f
+    call z, SetLayer4Flag
     ld a, [$c0fd]
     cp $10
-    call z, Call_002_6a1f
+    call z, ClearLayer2Flag
     ld a, [$c0fd]
     cp $20
-    call z, Call_002_6a2b
+    call z, ClearLayer4Flag
     ld a, [$c0fd]
     cp $40
-    call z, Call_002_6a13
+    call z, ClearLayer0Flag
     ld a, [$c0fd]
     cp $60
-    call z, Call_002_6a1f
+    call z, ClearLayer2Flag
     ld a, [$c0fd]
     cp $70
-    call z, Call_002_6a2b
+    call z, ClearLayer4Flag
     ld a, [$c0fd]
     cp $80
     jp nc, Jump_002_63eb
@@ -5900,7 +5900,7 @@ jr_002_61fc:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     sub $02
     ld [$c0d9], a
@@ -5909,10 +5909,10 @@ jr_002_61fc:
     ld [$c0da], a
     ld a, [$c0d9]
     cp $10
-    call z, Call_002_6a19
+    call z, ClearLayer1Flag
     ld a, [$c0d9]
     or a
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -5920,7 +5920,7 @@ jr_002_61fc:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $10
     jp c, Jump_002_6479
@@ -5933,7 +5933,7 @@ Jump_002_6309:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0e4
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0e5]
     sub $02
     ld [$c0e5], a
@@ -5942,10 +5942,10 @@ Jump_002_6309:
     ld [$c0e6], a
     ld a, [$c0e5]
     cp $60
-    call z, Call_002_6a25
+    call z, ClearLayer3Flag
     ld a, [$c0e5]
     or a
-    call z, Call_002_6a43
+    call z, SetLayer2Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -5953,7 +5953,7 @@ Jump_002_6309:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0ea
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $20
     jp c, Jump_002_6479
@@ -5966,7 +5966,7 @@ Jump_002_6354:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0f0
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0f1]
     sub $02
     ld [$c0f1], a
@@ -5975,10 +5975,10 @@ Jump_002_6354:
     ld [$c0f2], a
     ld a, [$c0f1]
     cp $70
-    call z, Call_002_6a31
+    call z, ClearLayer5Flag
     ld a, [$c0f1]
     cp $30
-    call z, Call_002_6a4f
+    call z, SetLayer4Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -5986,7 +5986,7 @@ Jump_002_6354:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0f6
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $30
     jp c, Jump_002_6479
@@ -5999,7 +5999,7 @@ Jump_002_63a0:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     sub $02
     ld [$c0d9], a
@@ -6008,10 +6008,10 @@ Jump_002_63a0:
     ld [$c0da], a
     ld a, [$c0d9]
     cp $10
-    call z, Call_002_6a19
+    call z, ClearLayer1Flag
     ld a, [$c0d9]
     or a
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -6019,7 +6019,7 @@ Jump_002_63a0:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $50
     jp c, Jump_002_6479
@@ -6032,7 +6032,7 @@ Jump_002_63eb:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0e4
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0e5]
     sub $02
     ld [$c0e5], a
@@ -6041,10 +6041,10 @@ Jump_002_63eb:
     ld [$c0e6], a
     ld a, [$c0e5]
     cp $70
-    call z, Call_002_6a25
+    call z, ClearLayer3Flag
     ld a, [$c0e5]
     cp $30
-    call z, Call_002_6a43
+    call z, SetLayer2Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -6052,7 +6052,7 @@ Jump_002_63eb:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0ea
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $60
     jr c, jr_002_6479
@@ -6064,7 +6064,7 @@ Jump_002_63eb:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0f0
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0f1]
     sub $02
     ld [$c0f1], a
@@ -6073,10 +6073,10 @@ Jump_002_63eb:
     ld [$c0f2], a
     ld a, [$c0e5]
     cp $20
-    call z, Call_002_6a31
+    call z, ClearLayer5Flag
     ld a, [$c0f1]
     or a
-    call z, Call_002_6a4f
+    call z, SetLayer4Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -6084,7 +6084,7 @@ Jump_002_63eb:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0f6
-    call Call_002_6a80
+    call SetScreenPointerHL
 
 Jump_002_6479:
 jr_002_6479:
@@ -6171,45 +6171,45 @@ jr_002_6479:
     ld hl, $c0fc
     inc [hl]
     ld hl, $c0d8
-    call Call_002_695c
+    call InitLayer_6000
     ld hl, $c0e4
-    call Call_002_6937
-    call Call_002_6a43
-    call Call_002_6a13
+    call InitLayer_4000
+    call SetLayer2Flag
+    call ClearLayer0Flag
     ret
 
 
     ld a, [$c0fd]
     cp $30
     ld hl, $c0d8
-    call z, Call_002_68c6
+    call z, InitLayer_2000
     ld a, [$c0fd]
     cp $40
     ld hl, $c0e4
-    call z, Call_002_68a1
+    call z, InitLayer_8000
     ld a, [$c0fd]
     cp $30
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, [$c0fd]
     cp $40
-    call z, Call_002_6a43
+    call z, SetLayer2Flag
     ld a, [$c0fd]
     cp $30
     ld hl, $c0de
-    call z, Call_002_6924
+    call z, InitLayer_7001b
     ld a, [$c0fd]
     cp $40
     ld hl, $c0ea
-    call z, Call_002_6911
+    call z, InitLayer_3001
     ld a, [$c0fd]
     cp $10
-    call z, Call_002_6a1f
+    call z, ClearLayer2Flag
     ld a, [$c0fd]
     cp $30
-    call z, Call_002_6a13
+    call z, ClearLayer0Flag
     ld a, [$c0fd]
     cp $40
-    call z, Call_002_6a1f
+    call z, ClearLayer2Flag
     ld a, [$c0fd]
     cp $40
     jp nc, Jump_002_6604
@@ -6224,7 +6224,7 @@ jr_002_6479:
     ld a, $22
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     add $02
     ld [$c0d9], a
@@ -6233,10 +6233,10 @@ jr_002_6479:
     ld [$c0da], a
     ld a, [$c0d9]
     cp $90
-    call z, Call_002_6a19
+    call z, ClearLayer1Flag
     ld a, [$c0d9]
     cp $b0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -6244,7 +6244,7 @@ jr_002_6479:
     ld a, $22
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $10
     jp c, Jump_002_6692
@@ -6257,7 +6257,7 @@ jr_002_65b9:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0e4
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0e5]
     sub $02
     ld [$c0e5], a
@@ -6266,10 +6266,10 @@ jr_002_65b9:
     ld [$c0e6], a
     ld a, [$c0e5]
     cp $10
-    call z, Call_002_6a25
+    call z, ClearLayer3Flag
     ld a, [$c0e5]
     or a
-    call z, Call_002_6a43
+    call z, SetLayer2Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -6277,7 +6277,7 @@ jr_002_65b9:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0ea
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $30
     jp c, Jump_002_6692
@@ -6290,7 +6290,7 @@ Jump_002_6604:
     ld a, $22
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0d9]
     add $02
     ld [$c0d9], a
@@ -6299,10 +6299,10 @@ Jump_002_6604:
     ld [$c0da], a
     ld a, [$c0d9]
     cp $80
-    call z, Call_002_6a19
+    call z, ClearLayer1Flag
     ld a, [$c0d9]
     cp $b0
-    call z, Call_002_6a37
+    call z, SetLayer0Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -6310,7 +6310,7 @@ Jump_002_6604:
     ld a, $22
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0fd]
     cp $40
     jr c, jr_002_6692
@@ -6322,7 +6322,7 @@ Jump_002_6604:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0e4
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0e5]
     sub $02
     ld [$c0e5], a
@@ -6331,10 +6331,10 @@ Jump_002_6604:
     ld [$c0e6], a
     ld a, [$c0e5]
     cp $20
-    call z, Call_002_6a25
+    call z, ClearLayer3Flag
     ld a, [$c0e5]
     or a
-    call z, Call_002_6a43
+    call z, SetLayer2Flag
     ld a, $01
     ldh [$c7], a
     ld a, $74
@@ -6342,7 +6342,7 @@ Jump_002_6604:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0ea
-    call Call_002_6a80
+    call SetScreenPointerHL
 
 Jump_002_6692:
 jr_002_6692:
@@ -6357,7 +6357,7 @@ jr_002_6692:
     ld hl, $c0fc
     inc [hl]
     ld hl, $c0d8
-    call Call_002_69a6
+    call InitLayer_0801
     ret
 
 
@@ -6372,7 +6372,7 @@ jr_002_6692:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0de
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0e0]
     sub $02
     ld [$c0e0], a
@@ -6380,14 +6380,14 @@ jr_002_6692:
     cp $14
     jr nz, jr_002_66d5
 
-    call Call_002_6a31
+    call ClearLayer5Flag
 
 jr_002_66d5:
     ld a, [$c0e0]
     cp $f0
     jr c, jr_002_66df
 
-    call Call_002_6a3d
+    call SetLayer1Flag
 
 jr_002_66df:
     ld a, [$c0f6]
@@ -6401,7 +6401,7 @@ jr_002_66df:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0f6
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0f8]
     sub $02
     ld [$c0f8], a
@@ -6409,14 +6409,14 @@ jr_002_66df:
     cp $28
     jr nz, jr_002_6709
 
-    call Call_002_6a25
+    call ClearLayer3Flag
 
 jr_002_6709:
     ld a, [$c0f8]
     cp $f0
     jr c, jr_002_6713
 
-    call Call_002_6a55
+    call SetLayer5Flag
 
 jr_002_6713:
     ld a, [$c0ea]
@@ -6430,7 +6430,7 @@ jr_002_6713:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0ea
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0ec]
     sub $02
     ld [$c0ec], a
@@ -6438,14 +6438,14 @@ jr_002_6713:
     cp $3c
     jr nz, jr_002_673d
 
-    call Call_002_6a1f
+    call ClearLayer2Flag
 
 jr_002_673d:
     ld a, [$c0ec]
     cp $f0
     jr c, jr_002_6747
 
-    call Call_002_6a49
+    call SetLayer3Flag
 
 jr_002_6747:
     ld a, [$c0e4]
@@ -6459,7 +6459,7 @@ jr_002_6747:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0e4
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0e6]
     sub $02
     ld [$c0e6], a
@@ -6467,14 +6467,14 @@ jr_002_6747:
     cp $50
     jr nz, jr_002_6771
 
-    call Call_002_6a2b
+    call ClearLayer4Flag
 
 jr_002_6771:
     ld a, [$c0e6]
     cp $f0
     jr c, jr_002_677b
 
-    call Call_002_6a43
+    call SetLayer2Flag
 
 jr_002_677b:
     ld a, [$c0f0]
@@ -6488,7 +6488,7 @@ jr_002_677b:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0f0
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0f2]
     sub $02
     ld [$c0f2], a
@@ -6496,14 +6496,14 @@ jr_002_677b:
     cp $64
     jr nz, jr_002_67a5
 
-    call Call_002_6a13
+    call ClearLayer0Flag
 
 jr_002_67a5:
     ld a, [$c0f2]
     cp $f0
     jr c, jr_002_67af
 
-    call Call_002_6a4f
+    call SetLayer4Flag
 
 jr_002_67af:
     ld a, [$c0d8]
@@ -6517,7 +6517,7 @@ jr_002_67af:
     ld a, $02
     ldh [$ca], a
     ld hl, $c0d8
-    call Call_002_6a80
+    call SetScreenPointerHL
     ld a, [$c0da]
     sub $02
     ld [$c0da], a
@@ -6525,7 +6525,7 @@ jr_002_67af:
     cp $f0
     jr c, jr_002_67d9
 
-    call Call_002_6a37
+    call SetLayer0Flag
 
 jr_002_67d9:
     ld hl, $c0fd
@@ -6641,7 +6641,7 @@ jr_002_67d9:
     ret
 
 
-Call_002_68a1:
+InitLayer_8000:
     ld a, $00
     ld [hl+], a
     ld a, $80
@@ -6669,7 +6669,7 @@ Call_002_68a1:
     ret
 
 
-Call_002_68c6:
+InitLayer_2000:
     ld a, $00
     ld [hl+], a
     ld a, $20
@@ -6697,7 +6697,7 @@ Call_002_68c6:
     ret
 
 
-Call_002_68eb:
+InitLayer_7001:
     ld a, $01
     ld [hl+], a
     ld a, $70
@@ -6728,7 +6728,7 @@ Call_002_68eb:
     ret
 
 
-Call_002_6911:
+InitLayer_3001:
     ld a, $01
     ld [hl+], a
     ld a, $30
@@ -6744,7 +6744,7 @@ Call_002_6911:
     ret
 
 
-Call_002_6924:
+InitLayer_7001b:
     ld a, $01
     ld [hl+], a
     ld a, $70
@@ -6760,7 +6760,7 @@ Call_002_6924:
     ret
 
 
-Call_002_6937:
+InitLayer_4000:
     ld a, $00
     ld [hl+], a
     ld a, $40
@@ -6788,7 +6788,7 @@ Call_002_6937:
     ret
 
 
-Call_002_695c:
+InitLayer_6000:
     ld a, $00
     ld [hl+], a
     ld a, $60
@@ -6816,7 +6816,7 @@ Call_002_695c:
     ret
 
 
-Call_002_6981:
+InitLayer_A000:
     ld a, $00
     ld [hl+], a
     ld a, $a0
@@ -6844,7 +6844,7 @@ Call_002_6981:
     ret
 
 
-Call_002_69a6:
+InitLayer_0801:
     ld a, $01
     ld [hl+], a
     ld a, $08
@@ -6920,79 +6920,79 @@ Call_002_69a6:
     ret
 
 
-Call_002_6a13:
+ClearLayer0Flag:
     ld a, $00
     ld [$c0d8], a
     ret
 
 
-Call_002_6a19:
+ClearLayer1Flag:
     ld a, $00
     ld [$c0de], a
     ret
 
 
-Call_002_6a1f:
+ClearLayer2Flag:
     ld a, $00
     ld [$c0e4], a
     ret
 
 
-Call_002_6a25:
+ClearLayer3Flag:
     ld a, $00
     ld [$c0ea], a
     ret
 
 
-Call_002_6a2b:
+ClearLayer4Flag:
     ld a, $00
     ld [$c0f0], a
     ret
 
 
-Call_002_6a31:
+ClearLayer5Flag:
     ld a, $00
     ld [$c0f6], a
     ret
 
 
-Call_002_6a37:
+SetLayer0Flag:
     ld a, $01
     ld [$c0d8], a
     ret
 
 
-Call_002_6a3d:
+SetLayer1Flag:
     ld a, $01
     ld [$c0de], a
     ret
 
 
-Call_002_6a43:
+SetLayer2Flag:
     ld a, $01
     ld [$c0e4], a
     ret
 
 
-Call_002_6a49:
+SetLayer3Flag:
     ld a, $01
     ld [$c0ea], a
     ret
 
 
-Call_002_6a4f:
+SetLayer4Flag:
     ld a, $01
     ld [$c0f0], a
     ret
 
 
-Call_002_6a55:
+SetLayer5Flag:
     ld a, $01
     ld [$c0f6], a
     ret
 
 
-Call_002_6a5b:
+WriteLayerDEPair:
 jr_002_6a5b:
     ld a, d
     ld [hl+], a
@@ -7006,7 +7006,7 @@ jr_002_6a5b:
     ret
 
 
-Call_002_6a65:
+LoadDefaultText:
     ld de, $6a6c
     call $0d91
     ret
@@ -7031,7 +7031,7 @@ label6a78:
     ld a, [$c0fd]
     ld h, a
 
-Call_002_6a80:
+SetScreenPointerHL:
     ld a, l
     ld [$c0fe], a
     ld a, h
@@ -7050,7 +7050,7 @@ Call_002_6a80:
     ldh [$c5], a
     ld a, [hl+]
     ldh [$c8], a
-    call Call_002_6a65
+    call LoadDefaultText
     ld a, [$c0fe]
     ld l, a
     ld a, [$c0ff]
@@ -7075,7 +7075,7 @@ Call_002_6a80:
     ld [de], a
     ld hl, $4e17
     ldh a, [$c7]
-    call Call_002_6aff
+    call CalcLayerTableIdx
     ld a, [de]
     dec de
     add a
@@ -7113,7 +7113,7 @@ jr_002_6ada:
 jr_002_6ae6:
     ld hl, $4e17
     ldh a, [$c7]
-    call Call_002_6aff
+    call CalcLayerTableIdx
     xor a
     add a
     add l
@@ -7132,7 +7132,7 @@ jr_002_6ae6:
     ret
 
 
-Call_002_6aff:
+CalcLayerTableIdx:
     add a
     add l
     ld l, a
@@ -10142,7 +10142,7 @@ jr_002_7990:
 
 jr_002_7992:
     ldh a, [$d8]
-    call Call_002_79a3
+    call WriteToDE_IncE
     ret c
 
     dec b
@@ -10151,12 +10151,12 @@ jr_002_7992:
     jr jr_002_7973
 
 jr_002_799d:
-    call Call_002_79a3
+    call WriteToDE_IncE
     ret c
 
     jr jr_002_7973
 
-Call_002_79a3:
+WriteToDE_IncE:
     ld [de], a
     inc e
     ld a, e
@@ -10195,7 +10195,7 @@ Call_002_79a3:
     jp Jump_CallTextRenderer
 
 
-    call Call_002_7a1f
+    call ScreenStateMachine1
     ld bc, $001a
     call $058e
     call $05a2
@@ -10217,7 +10217,7 @@ Jump_002_79e6:
     ld a, $00
     call $06a4
     ld a, $1b
-    call z, Call_000_0515
+    call z, BankTrampolineTable
 
 Jump_002_79ff:
     rst $10
@@ -10228,7 +10228,7 @@ Jump_002_79ff:
     jp $05b4
 
 
-    call Call_002_7a1f
+    call ScreenStateMachine1
     ld bc, $001a
     call $058e
     ld l, $0f
@@ -10237,12 +10237,12 @@ Jump_002_79ff:
     ret c
 
     ld [hl], $90
-    call Call_000_05c3
+    call StoreMapPointerRegs
     xor a
     jp $07d8
 
 
-Call_002_7a1f:
+ScreenStateMachine1:
     call CheckState_C82d_0838
     ld bc, $79ed
     jp z, $0298
@@ -10280,13 +10280,13 @@ jr_002_7a49:
     call $02be
     call $0683
     ld a, $3d
-    call Call_000_0515
+    call BankTrampolineTable
     rst $38
     ld bc, $ff60
     call $0552
     ld bc, $fcc0
     call CallTextRenderer
-    call Call_000_0648
+    call CheckTilemapBit5
     call SetupTextBankSwitch
     ret z
 
@@ -10294,7 +10294,7 @@ jr_002_7a49:
     jp $05ea
 
 
-    call Call_002_7a9d
+    call ScreenStateMachine2
     ld bc, $0016
     call $058e
     call $05a2
@@ -10312,12 +10312,12 @@ jr_002_7a49:
     jp Jump_002_79ff
 
 
-    call Call_002_7a9d
+    call ScreenStateMachine2
     ld bc, $0016
     jp $058e
 
 
-Call_002_7a9d:
+ScreenStateMachine2:
     ld bc, $7a89
     call $0298
     call CheckState_C82d_0838
@@ -10339,15 +10339,15 @@ Call_002_7a9d:
     jp z, Jump_002_7ea3
 
     ld bc, $9a00
-    call Call_002_7bc8
+    call LoadMenuTemplate
     ld bc, $9a07
-    call Call_002_7bc8
+    call LoadMenuTemplate
     ld d, $cc
     ld bc, $7c40
     call $02be
     ld l, $07
     ld [hl], $a1
-    call Call_000_0784
+    call CheckInputMasked
     ld bc, $0128
     call $0552
     ld bc, $d448
@@ -10357,10 +10357,10 @@ Call_002_7a9d:
     ld l, $00
     ld [hl], $69
     ld bc, $7c37
-    call Call_000_067e
-    call Call_000_0784
+    call WaitForJoypadInput
+    call CheckInputMasked
     dec d
-    call Call_002_7bbe
+    call SetupMenuCoords
     ld bc, $032f
     jp $1196
 
@@ -10379,9 +10379,9 @@ Call_002_7a9d:
     cp $35
     jp z, Jump_002_7ea7
 
-    call Call_002_7bab
+    call CheckBattleMenuBit3
     call $0898
-    call Call_002_7bde
+    call CheckScreenBit0
     ld e, $01
     ld a, [de]
     rst $00
@@ -10445,11 +10445,11 @@ jr_002_7b5f:
     call $05e2
     ld l, $00
     ld [hl], $6a
-    call Call_000_0784
+    call CheckInputMasked
     ld a, $66
     rst $20
     ld a, $91
-    call Call_000_068f
+    call ClearJoypadState
     ld a, d
     sub $ce
     ld hl, $7b8a
@@ -10477,7 +10477,7 @@ jr_002_7b5f:
     cp $d0
     ret nc
 
-    call Call_000_0426
+    call ReadJoypad
     xor a
     ld [hl], a
     ld [$ca96], a
@@ -10487,7 +10487,7 @@ jr_002_7b5f:
     jp Jump_000_0730
 
 
-Call_002_7bab:
+CheckBattleMenuBit3:
     ld a, [$c982]
     bit 3, a
     ld a, $48
@@ -10501,7 +10501,7 @@ jr_002_7bb5:
     ld bc, $7c40
     call $0298
 
-Call_002_7bbe:
+SetupMenuCoords:
     ld h, d
     ld a, $34
     ld l, $14
@@ -10510,7 +10510,7 @@ Call_002_7bbe:
     ret
 
 
-Call_002_7bc8:
+LoadMenuTemplate:
     ld hl, $7c45
     ld d, $0c
 
@@ -10532,7 +10532,7 @@ jr_002_7bcf:
     ret
 
 
-Call_002_7bde:
+CheckScreenBit0:
     ld hl, $c006
     bit 0, [hl]
     ret z
@@ -10576,13 +10576,13 @@ Jump_002_7c11:
 
     call GameStateUpdate_036F
     call $0898
-    call Call_002_7bde
+    call CheckScreenBit0
     ld h, $cc
     call $05f7
     call $05e2
     ld a, [$cc07]
     res 7, a
-    call Call_000_068f
+    call ClearJoypadState
     ld bc, $7c37
     jp $0298
 
@@ -10717,8 +10717,8 @@ Jump_002_7cbb:
     ld [hl], $04
     ld a, $0b
     ld [$c9c1], a
-    call Call_000_3f98
-    call Call_000_3fa3
+    call PartyMenuSelect
+    call PartyMenuConfirm
     ld a, $04
     ld [$c9c1], a
     ld a, $20
@@ -10726,9 +10726,9 @@ Jump_002_7cbb:
 
 
 Jump_002_7cde:
-    call Call_000_0912
+    call StoreMapPointerHL
     call $0898
-    call Call_002_7e2e
+    call CheckPartyDisplayFlag
     ld e, $01
     ld a, [de]
     rst $00
@@ -10782,7 +10782,7 @@ Jump_002_7cde:
     ld bc, $7d2d
     call $02be
     ld a, $4a
-    call Call_000_0515
+    call BankTrampolineTable
     jp $05b4
 
 
@@ -10811,7 +10811,7 @@ jr_002_7d47:
     rst $38
 
 Jump_002_7d52:
-    call Call_000_05c3
+    call StoreMapPointerRegs
     ld bc, $7e89
     jp $02be
 
@@ -10826,7 +10826,7 @@ Jump_002_7d52:
     cp $09
     jp nz, Jump_002_7e5f
 
-    call Call_000_07e8
+    call ScreenProcessB
     ld a, $0e
     call $07d8
     ld bc, $7d83
@@ -10850,11 +10850,11 @@ Jump_002_7d52:
 
 jr_002_7d9a:
     ld a, $39
-    call z, Call_000_0515
+    call z, BankTrampolineTable
     ld a, $02
     call $06a4
     ld a, $39
-    call z, Call_000_0515
+    call z, BankTrampolineTable
     ld h, d
     ld l, $04
     bit 7, [hl]
@@ -10879,14 +10879,14 @@ jr_002_7db6:
     rst $10
     ret nz
 
-    call Call_002_7e5f
+    call ScreenTransition
     ld a, $01
     jp $07d8
 
 
     ld hl, $cac0
     set 0, [hl]
-    call Call_002_7e10
+    call RunMenuStateMachine
     ld l, $08
     ld a, [hl]
     cp $6b
@@ -10925,14 +10925,14 @@ jr_002_7df1:
     jp $07d3
 
 
-Call_002_7e10:
+RunMenuStateMachine:
     ld bc, $7d2d
     call $0298
     ld bc, $000e
     jp $058e
 
 
-    call Call_002_7e10
+    call RunMenuStateMachine
     ld bc, $0017
     call $07a9
     ret z
@@ -10942,7 +10942,7 @@ Call_002_7e10:
     jp Jump_002_7d52
 
 
-Call_002_7e2e:
+CheckPartyDisplayFlag:
     ld a, [$cac0]
     and a
     ret z
@@ -10958,8 +10958,8 @@ Call_002_7e2e:
     ld d, $c0
     ld [de], a
     call CallBank56Entry5_05B7
-    call Call_000_06d3
-    call Call_000_2fff
+    call DrawMenuRowTilemap
+    call MenuEndDraw
     ld d, $cc
     jr nz, jr_002_7e59
 
@@ -10976,13 +10976,13 @@ jr_002_7e59:
     ret
 
 
-Call_002_7e5f:
+ScreenTransition:
 Jump_002_7e5f:
     rst $38
     ld bc, $7e89
-    call Call_000_067e
+    call WaitForJoypadInput
     ld bc, $fd80
-    call Call_000_056c
+    call CrossBankCallRst10
     ld bc, $ff40
     call CallBank59Entry3_055A
     ld bc, $7030
@@ -11057,7 +11057,7 @@ Jump_002_7ea7:
     bit 0, a
     ret z
 
-    call Call_000_0382
+    call ScreenRefreshVBlank
     ret nc
 
     ld hl, $cc09
@@ -11070,20 +11070,20 @@ Jump_002_7ea7:
     ld a, $10
     call $07d8
     xor a
-    call Call_000_07dd
-    call Call_002_7ef7
+    call ScreenProcessA
+    call DrawBattleUI
     ld e, $07
     ld a, [de]
     ld d, $c0
     ld [de], a
-    call Call_000_063b
+    call SetROMBankHigh
     ld hl, $c006
     set 7, [hl]
     ld d, $cd
     ret
 
 
-Call_002_7ef7:
+DrawBattleUI:
 Jump_002_7ef7:
     ld bc, $1218
     call $0612
@@ -11093,11 +11093,11 @@ Jump_002_7ef7:
 
     ld bc, $98cc
     ld hl, $7f43
-    call Call_000_0aea
+    call TextIdDispatch
     ld c, $cf
     call $0af8
     ld c, $f1
-    call Call_000_0aea
+    call TextIdDispatch
 
 jr_002_7f15:
     ld a, $54
@@ -11111,15 +11111,15 @@ jr_002_7f21:
     call LookupDoublePtrTable
     ret nz
 
-    call Call_000_1377
+    call WaitForJoypadRelease
     jp $15f7
 
 
     ld bc, $98ec
     ld hl, $7f4d
-    call Call_000_0aea
+    call TextIdDispatch
     ld bc, $98ef
-    call Call_000_0aea
+    call TextIdDispatch
     ld a, $7f
     ld c, $12
     jr jr_002_7f21

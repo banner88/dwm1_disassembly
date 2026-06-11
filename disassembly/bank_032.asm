@@ -5,43 +5,33 @@
 
 SECTION "ROM Bank $032", ROMX[$4000], BANK[$32]
 
-    ld [hl-], a
-    add hl, hl
-    ld b, b
-    ld e, e
-    ld b, d
-    dec bc
-    ld b, h
-    pop af
-    ld b, l
-    and b
-    ld b, a
-    cp b
-    ld c, c
-    ld h, c
-    ld c, e
-    ld d, d
-    ld c, l
-    add b
-    ld c, a
-    ld l, l
-    ld d, c
-    rst $28
-    ld d, d
-    jr nz, jr_032_406e
+    db $32 ; Bank number
 
-    ld de, $7c57
-    ld e, b
-    xor h
-    ld e, d
-    ld d, l
-    ld e, h
-    cp $5d
-    sbc e
-    ld e, a
-    sbc e
-    ld l, a
-    jr jr_032_409c
+    ; Cross-bank dispatch table (20 entries)
+    ; Called via: ld hl, $32XX / rst $10
+    dw $4029                          ; Entry 0
+    dw $425B                          ; Entry 1
+    dw $440B                          ; Entry 2
+    dw $45F1                          ; Entry 3
+    dw $47A0                          ; Entry 4
+    dw $49B8                          ; Entry 5
+    dw $4B61                          ; Entry 6
+    dw $4D52                          ; Entry 7
+    dw $4F80                          ; Entry 8
+    dw $516D                          ; Entry 9
+    dw $52EF                          ; Entry 10
+    dw $5520                          ; Entry 11
+    dw $5711                          ; Entry 12
+    dw $587C                          ; Entry 13
+    dw $5AAC                          ; Entry 14
+    dw $5C55                          ; Entry 15
+    dw $5DFE                          ; Entry 16
+    dw $5F9B                          ; Entry 17
+    dw $6F9B                          ; Entry 18
+    dw $7318                          ; Entry 19
+
+; --- Dispatch entry 0 ($4029) ---
+DispatchEntry_32_0:
 
     ld b, b
     ld [bc], a
@@ -119,7 +109,7 @@ jr_032_406e:
     ldh a, [$8f]
     ld a, b
 
-Call_032_407f:
+FuncB32_407f:
     ccf
     ld hl, sp+$4f
     cp $93
@@ -180,7 +170,7 @@ jr_032_409c:
 
     ccf
     di
-    call c, Call_032_5bfc
+    call c, JmpB32_5bfc
     db $eb
     ld a, [hl]
     rst $00
@@ -791,7 +781,7 @@ jr_032_4355:
     rst $30
     jr nc, jr_032_434f
 
-Call_032_4390:
+JmpB32_4390:
     jr nz, jr_032_4341
 
     jr nz, jr_032_4353
@@ -807,7 +797,7 @@ Call_032_4390:
     rst $38
     ret nz
 
-Call_032_439d:
+DispB32_439d:
     rst $18
     and b
     and [hl]
@@ -1657,7 +1647,7 @@ Jump_032_4701:
     ld a, a
     ld a, l
     rst $38
-    call nc, Call_032_407f
+    call nc, FuncB32_407f
     jp hl
 
 
@@ -2005,7 +1995,7 @@ jr_032_480d:
 
     ld [$fd5d], a
     inc d
-    call c, Call_000_363e
+    call c, AudioNegate
     or $fe
     cp [hl]
     cp $f1
@@ -2212,7 +2202,7 @@ jr_032_4988:
 
 jr_032_49ab:
     sbc a
-    call nc, Call_032_74ff
+    call nc, SetB32_74ff
     rst $30
     ld e, h
     rst $38
@@ -2414,7 +2404,7 @@ Jump_032_4a4b:
     ld c, e
     db $fc
     cp a
-    call nc, Call_000_2cfb
+    call nc, TilemapWriteByte
     ld [hl], a
     ld e, b
     xor [hl]
@@ -2924,7 +2914,7 @@ jr_032_4b24:
     sub e
     sbc [hl]
 
-Call_032_4cee:
+SetB32_4cee:
     ld de, $10d6
     ld c, e
     adc $4b
@@ -3044,7 +3034,7 @@ jr_032_4d67:
     rst $00
     dec sp
     rst $38
-    call Call_000_27fe
+    call DataTable_27FE
     push af
     di
     dec de
@@ -3150,7 +3140,7 @@ jr_032_4d8f:
     adc e
     adc a
     ld c, a
-    call z, Call_000_303f
+    call z, CheckSaveSlot
     rra
     jr nc, @+$11
 
@@ -3180,7 +3170,7 @@ jr_032_4d8f:
     or b
     ldh [$a0], a
     db $f4
-    call nc, Call_032_6fef
+    call nc, DataB32_6fef
     jp Jump_032_70ff
 
 
@@ -3386,7 +3376,7 @@ jr_032_4ecb:
     inc b
     rst $38
     rlca
-    call nc, Call_000_3bf5
+    call nc, ScreenTransA
     ei
     ld [hl], b
     ld [hl], e
@@ -4498,7 +4488,7 @@ Jump_032_53a9:
     ret
 
 
-    call Call_000_3d39
+    call MenuInputCheck
     ret
 
 
@@ -4598,7 +4588,7 @@ jr_032_5418:
 
     rst $38
 
-Call_032_5424:
+CallB32_5424:
     call c, $01df
     rrca
     ld c, $1e
@@ -5185,7 +5175,7 @@ jr_032_5649:
     ld e, a
     ld [hl], b
     dec bc
-    call nc, Call_032_7f10
+    call nc, DataB32_7f10
     ld h, b
     rst $38
     ldh [rIE], a
@@ -5474,7 +5464,7 @@ jr_032_57e6:
     add [hl]
     sub a
     ld c, [hl]
-    call Call_032_5424
+    call CallB32_5424
     sub h
     db $ec
     inc a
@@ -5552,7 +5542,7 @@ jr_032_582c:
     or h
     inc a
     ld a, h
-    call c, Call_032_5a7e
+    call c, DispB32_5a7e
     cp a
     ret z
 
@@ -6044,7 +6034,7 @@ jr_032_5a0e:
     nop
     jr z, jr_032_5ab6
 
-Call_032_5a7e:
+DispB32_5a7e:
     rst $20
     rst $30
     db $e3
@@ -6382,7 +6372,7 @@ jr_032_5bf6:
     sbc $de
     sub $f7
 
-Call_032_5bfc:
+JmpB32_5bfc:
     jp c, $eef3
 
     ld a, [hl+]
@@ -6486,7 +6476,7 @@ jr_032_5c6a:
     ld bc, $0006
     inc bc
 
-Call_032_5c7b:
+WriteB32_5c7b:
     ld [hl], $d5
     push de
     rst $10
@@ -6951,7 +6941,7 @@ jr_032_5e02:
 
 
     ld e, h
-    call c, Call_032_6fae
+    call c, CalcB32_6fae
     cp c
     ld a, c
     rst $10
@@ -7177,7 +7167,7 @@ jr_032_5f12:
     rst $28
     db $ed
     rst $38
-    call nc, Call_032_4cee
+    call nc, SetB32_4cee
     jp c, $bd9a
 
     adc c
@@ -7402,7 +7392,7 @@ Jump_032_6094:
     nop
     nop
 
-Call_032_609c:
+DataB32_609c:
     nop
     nop
     nop
@@ -8797,7 +8787,7 @@ Jump_032_6656:
     ei
     rst $20
     push af
-    call z, Call_000_389a
+    call z, AudioWriteNR51
     rst $38
     rst $38
     rst $38
@@ -8900,7 +8890,7 @@ Jump_032_6656:
 
     rst $38
     cp $fe
-    call z, Call_000_2dc8
+    call z, MenuBorderDraw
     ld h, c
     ei
     add b
@@ -9199,7 +9189,7 @@ jr_032_6803:
     rst $28
     ld c, $7a
     ld [bc], a
-    call Call_000_360d
+    call AudioProcessNote
     or b
     cp c
     ld b, a
@@ -9479,7 +9469,7 @@ jr_032_6933:
     db $10
     jr @+$16
 
-    call z, Call_032_609c
+    call z, DataB32_609c
     ld d, e
     nop
     nop
@@ -10035,7 +10025,7 @@ jr_032_6bde:
 
     ld d, d
     ld d, e
-    call Call_032_7fe0
+    call DataB32_7fe0
     cp h
     inc bc
     ld c, a
@@ -10905,7 +10895,7 @@ jr_032_6e63:
     dec bc
     rrca
 
-Call_032_6fae:
+CalcB32_6fae:
     inc b
     or l
     db $10
@@ -10968,7 +10958,7 @@ Call_032_6fae:
     ret
 
 
-Call_032_6fef:
+DataB32_6fef:
     db $10
     jp z, $cb10
 
@@ -12236,7 +12226,7 @@ jr_032_74f1:
     ld bc, $0b41
     inc [hl]
 
-Call_032_74ff:
+SetB32_74ff:
     ld bc, $f641
     inc [hl]
     adc e
@@ -12863,7 +12853,7 @@ jr_032_7718:
 
 jr_032_7731:
     ld a, $0a
-    call Call_032_4390
+    call JmpB32_4390
     jp Jump_000_3a6b
 
 
@@ -12900,7 +12890,7 @@ jr_032_7749:
 
 jr_032_7763:
     ld a, $0a
-    call Call_032_4390
+    call JmpB32_4390
     jp Jump_000_3a78
 
 
@@ -12918,7 +12908,7 @@ jr_032_7763:
     or $00
     ld [hl-], a
     ld a, $0a
-    call Call_032_4390
+    call JmpB32_4390
     jp Jump_000_3a85
 
 
@@ -13120,7 +13110,7 @@ jr_032_7826:
     ld a, c
     ld a, [bc]
     ld a, l
-    call Call_032_5c7b
+    call WriteB32_5c7b
     ld a, e
     ld h, h
     ld a, e
@@ -13291,7 +13281,7 @@ jr_032_7923:
 
 
     ld a, $04
-    call Call_032_439d
+    call DispB32_439d
     jp $39b5
 
 
@@ -13363,7 +13353,7 @@ jr_032_799d:
     ld bc, $4842
 
 jr_032_79a0:
-    call Call_000_37c1
+    call AudioNoteEnd
     ld hl, $ff96
 
 jr_032_79a6:
@@ -13414,7 +13404,7 @@ jr_032_79c3:
 
 jr_032_79da:
     ld a, $0d
-    call Call_032_439d
+    call DispB32_439d
     ld c, $2a
     ld a, [$c65f]
     add c
@@ -13494,7 +13484,7 @@ jr_032_7a31:
     sub $07
     jr nc, jr_032_7a4e
 
-    call Call_000_13f5
+    call TextCursorSetup
     and $0f
     jr z, jr_032_7a79
 
@@ -13657,7 +13647,7 @@ jr_032_7b0c:
     or $00
     ld [hl-], a
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     ld hl, $ff98
     ld a, [hl]
     and a
@@ -13691,7 +13681,7 @@ jr_032_7b3c:
     or $00
     ld [hl-], a
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     ld hl, $ff98
     ld a, [hl]
     and a
@@ -13753,7 +13743,7 @@ jr_032_7b74:
 
 jr_032_7b9e:
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     ld hl, $ff96
     dec [hl]
     jp nz, Jump_000_39f6
@@ -13772,7 +13762,7 @@ jr_032_7b9e:
     ld a, $07
     ldh [$96], a
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     ld hl, $ff96
     dec [hl]
     jp nz, Jump_000_3a03
@@ -13930,7 +13920,7 @@ jr_032_7c69:
     ld a, $01
     ld [hl-], a
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     jp Jump_000_3a51
 
 
@@ -13945,7 +13935,7 @@ jr_032_7c69:
     ld a, $01
     ld [hl-], a
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     jp Jump_000_3a5e
 
 
@@ -13981,7 +13971,7 @@ jr_032_7cb7:
 
 jr_032_7cd0:
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     jp Jump_000_3a6b
 
 
@@ -14018,7 +14008,7 @@ jr_032_7ce8:
 
 jr_032_7d02:
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     jp Jump_000_3a78
 
 
@@ -14036,7 +14026,7 @@ jr_032_7d02:
     or $00
     ld [hl-], a
     ld a, $0c
-    call Call_032_4390
+    call JmpB32_4390
     jp Jump_000_3a85
 
 
@@ -14514,7 +14504,7 @@ jr_032_7d92:
     nop
     nop
 
-Call_032_7f10:
+DataB32_7f10:
     nop
     nop
     nop
@@ -14724,7 +14714,7 @@ Call_032_7f10:
     nop
     nop
 
-Call_032_7fe0:
+DataB32_7fe0:
     nop
     nop
     nop

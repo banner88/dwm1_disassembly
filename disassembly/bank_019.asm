@@ -65,7 +65,7 @@ jr_019_4015:
     ld a, [de]
 
 jr_019_4047:
-    call Call_019_4492
+    call SaveFld19_4492
     pop bc
     inc c
     dec b
@@ -118,7 +118,7 @@ jr_019_4080:
     jr jr_019_40e8
 
 jr_019_408a:
-    call Call_019_4269
+    call HramFld19_4269
     push af
     ld hl, $ffc3
     ld a, $88
@@ -229,7 +229,7 @@ jr_019_40e8:
     ld a, b
     sbc $00
     ld b, a
-    call Call_019_4221
+    call ShiftFld19_4221
     ld hl, $0400
     rst $10
 
@@ -380,7 +380,7 @@ jr_019_4220:
     ret
 
 
-Call_019_4221:
+ShiftFld19_4221:
     srl d
     rr e
     srl d
@@ -409,7 +409,7 @@ Call_019_4221:
     ret
 
 
-    call Call_019_4426
+    call SetFld19_4426
     ldh a, [$bf]
     ld l, a
     ldh a, [$c0]
@@ -431,7 +431,7 @@ Call_019_4221:
     ret
 
 
-Call_019_4269:
+HramFld19_4269:
     ldh a, [$95]
     ld l, a
     ldh a, [$96]
@@ -632,7 +632,7 @@ jr_019_4343:
     cp h
     cp [hl]
 
-Call_019_4357:
+ReadFld19_4357:
     ld a, [hl]
     add $04
     ld [hl+], a
@@ -652,9 +652,9 @@ Call_019_4357:
     ldh [$bb], a
     ldh [$bc], a
     ld hl, $ffb7
-    call Call_019_4357
+    call ReadFld19_4357
     ld hl, $ffbb
-    call Call_019_4357
+    call ReadFld19_4357
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -744,7 +744,7 @@ Call_019_4357:
     ldh [$bb], a
     ld a, h
     ldh [$bc], a
-    call Call_019_4426
+    call SetFld19_4426
     ld hl, $170a
     rst $10
     ld hl, $c905
@@ -752,7 +752,7 @@ Call_019_4357:
     ret
 
 
-Call_019_4426:
+SetFld19_4426:
     ld hl, $9800
     ld b, $00
 
@@ -783,7 +783,7 @@ jr_019_442b:
     ret
 
 
-Call_019_4458:
+SaveFld19_4458:
     push af
     ld a, l
     and $e0
@@ -799,7 +799,7 @@ Call_019_4458:
     ret
 
 
-Call_019_4467:
+LoadFld19_4467:
     ld a, [$c909]
     add l
     ld l, a
@@ -814,13 +814,13 @@ Call_019_4467:
     ret
 
 
-Call_019_447b:
+SaveFld19_447b:
     push bc
     ld b, l
     ld a, l
     and $e0
     ld l, a
-    call Call_019_4467
+    call LoadFld19_4467
     ld a, b
     and $1f
     jr z, jr_019_4490
@@ -828,7 +828,7 @@ Call_019_447b:
     ld b, a
 
 jr_019_448a:
-    call Call_019_4458
+    call SaveFld19_4458
     dec b
     jr nz, jr_019_448a
 
@@ -837,7 +837,7 @@ jr_019_4490:
     ret
 
 
-Call_019_4492:
+SaveFld19_4492:
     push hl
     push af
     swap a
@@ -865,21 +865,21 @@ jr_019_44a8:
     ld e, l
     ld d, h
     pop hl
-    call Call_019_447b
+    call SaveFld19_447b
     ld a, l
     ldh [$d5], a
     ld a, h
     ldh [$d6], a
-    call Call_019_44cb
-    call Call_019_44cb
-    call Call_019_44cb
+    call CallFld19_44cb
+    call CallFld19_44cb
+    call CallFld19_44cb
 
-Call_019_44cb:
-    call Call_019_44f5
-    call Call_019_44f5
-    call Call_019_44f5
-    call Call_019_44f5
-    call Call_019_44f5
+CallFld19_44cb:
+    call LoadFld19_44f5
+    call LoadFld19_44f5
+    call LoadFld19_44f5
+    call LoadFld19_44f5
+    call LoadFld19_44f5
     ldh a, [$d5]
     ld l, a
     ldh a, [$d6]
@@ -901,12 +901,12 @@ Call_019_44cb:
     ret
 
 
-Call_019_44f5:
+LoadFld19_44f5:
     ld a, [de]
     or $80
     inc de
     call Write_gfx_tile
-    call Call_019_4458
+    call SaveFld19_4458
     ret
 
 

@@ -5,26 +5,22 @@
 
 SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
 
-    ld e, c
-    inc de
-    ld b, b
-    rst $28
-    ld b, b
-    adc a
-    ld b, l
-    add b
-    ld b, [hl]
-    inc h
-    ld c, b
-    ret nc
+    db $59 ; Bank number
 
-    ld c, b
-    db $e4
-    ld d, d
-    db $eb
-    ld d, d
-    ld a, [c]
-    ld d, d
+    ; Cross-bank dispatch table (9 entries)
+    ; Called via: ld hl, $59XX / rst $10
+    dw $4013                          ; Entry 0
+    dw $40EF                          ; Entry 1
+    dw $458F                          ; Entry 2
+    dw $4680                          ; Entry 3
+    dw $4824                          ; Entry 4
+    dw $48D0                          ; Entry 5
+    dw SetB59_52e4                  ; Entry 6
+    dw $52EB                          ; Entry 7
+    dw CallB59_52f2                  ; Entry 8
+
+; --- Dispatch entry 0 ($4013) ---
+DispatchEntry_59_0:
     xor a
     ld hl, $c0d8
     ld bc, $0028
@@ -59,7 +55,7 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     ld hl, $9700
     ld de, $0901
     call SetupVRAMCopy
-    call Call_059_42c0
+    call LoadB59_42c0
     ld hl, $8800
     ld de, $0601
     call SetupVRAMCopy
@@ -67,7 +63,7 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     ld [$c823], a
     ld a, $03
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $9700
     ld de, $0901
     ld a, l
@@ -88,12 +84,12 @@ SECTION "ROM Bank $059", ROMX[$4000], BANK[$59]
     ld [$d9f9], a
     ld hl, $c500
     ld de, $4511
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld hl, $c500
     ld de, $4546
-    call Call_059_5cd2
-    call Call_059_42ec
-    call Call_059_432d
+    call LoadB59_5cd2
+    call LoadB59_42ec
+    call SetB59_432d
     ld a, $fc
     call SetGBCPalette
     ld a, $07
@@ -147,7 +143,7 @@ jr_059_4104:
     ld b, d
     ld h, b
     ld b, d
-    call Call_059_4276
+    call SetB59_4276
     ld a, [$c76d]
     and $01
     jr nz, jr_059_413c
@@ -167,7 +163,7 @@ jr_059_4130:
     ld a, [wMenu_selection]
     xor $01
     ld [wMenu_selection], a
-    call Call_059_432d
+    call SetB59_432d
     ret
 
 
@@ -175,7 +171,7 @@ jr_059_413c:
     ld a, [wMenu_selection]
     set 7, a
     ld [wMenu_selection], a
-    call Call_059_432d
+    call SetB59_432d
     ld a, [wMenu_selection]
     and $01
     add $03
@@ -193,17 +189,17 @@ jr_059_4152:
 
     ld hl, $c0d8
     inc [hl]
-    call Call_059_42c0
+    call LoadB59_42c0
     ret
 
 
     ld a, $04
     ld [$c0d8], a
-    call Call_059_42ec
+    call LoadB59_42ec
     ret
 
 
-    call Call_059_4276
+    call SetB59_4276
     ld a, [$c842]
     and $40
     jr nz, jr_059_419c
@@ -291,7 +287,7 @@ jr_059_41fa:
     ld a, [wMenu_selection]
     res 7, a
     ld [wMenu_selection], a
-    call Call_059_432d
+    call SetB59_432d
     xor a
     ld [$c0d8], a
     ret
@@ -301,7 +297,7 @@ jr_059_41fa:
     and $01
     jr nz, jr_059_424a
 
-    call Call_059_4276
+    call SetB59_4276
     ld a, [$c76d]
     and $02
     jr nz, jr_059_4250
@@ -327,7 +323,7 @@ jr_059_422a:
 jr_059_4232:
     dec a
     ld [wPLAN_selection], a
-    call Call_059_42ec
+    call LoadB59_42ec
     ret
 
 
@@ -341,7 +337,7 @@ jr_059_423a:
 
 jr_059_4243:
     ld [wPLAN_selection], a
-    call Call_059_42ec
+    call LoadB59_42ec
     ret
 
 
@@ -355,7 +351,7 @@ jr_059_4250:
     ld a, [wMenu_selection]
     res 7, a
     ld [wMenu_selection], a
-    call Call_059_432d
+    call SetB59_432d
     xor a
     ld [$c0d8], a
     ret
@@ -374,7 +370,7 @@ jr_059_4250:
     ret
 
 
-Call_059_4276:
+SetB59_4276:
     ld hl, $ffc3
     ld a, $50
     ld [hl+], a
@@ -419,7 +415,7 @@ Call_059_4276:
     ret
 
 
-Call_059_42c0:
+LoadB59_42c0:
     ld a, [wPLAN_selection]
     ld l, a
     ld [$c0e0], a
@@ -446,7 +442,7 @@ Call_059_42c0:
     ret
 
 
-Call_059_42ec:
+LoadB59_42ec:
     ld a, [$c0e0]
     ld l, a
     ld h, $00
@@ -480,10 +476,10 @@ Call_059_42ec:
     ret
 
 
-Call_059_432d:
+SetB59_432d:
     ld hl, $c500
     ld de, $457f
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld a, [wMenu_selection]
     ld hl, $458b
     and $01
@@ -1107,7 +1103,7 @@ jr_059_453f:
     ld [$dd60], a
     xor a
     ld [$c8ec], a
-    call Call_059_5d0f
+    call LoadB59_5d0f
     ld de, $2e00
     ld hl, $8d00
     call WaitLCDTransfer
@@ -1118,7 +1114,7 @@ jr_059_453f:
     ld [$c823], a
     ld a, $01
     ld [$c822], a
-    call Call_059_52f2
+    call CallB59_52f2
     ld hl, $96c0
     ld de, $0401
     call SetupVRAMCopy
@@ -1149,10 +1145,10 @@ jr_059_453f:
     ld hl, $8b00
     ld de, $1202
     call SetupVRAMCopy
-    call Call_059_5d27
+    call CallB59_5d27
     ld de, $5e2f
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld a, $fc
     call SetGBCPalette
     ld hl, $9800
@@ -1262,7 +1258,7 @@ jr_059_453f:
     db $fc
     ld b, a
     ld b, $48
-    call Call_059_5cf7
+    call SetB59_5cf7
     ret nz
 
     ld hl, $c0d9
@@ -1270,14 +1266,14 @@ jr_059_453f:
     ret
 
 
-    call Call_059_5d03
+    call SetB59_5d03
     ret nz
 
     ld a, $01
     ld [$c823], a
     ld a, $01
     ld [$c822], a
-    call Call_059_52f2
+    call CallB59_52f2
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1301,7 +1297,7 @@ jr_059_453f:
     ret
 
 
-    call Call_059_5ca0
+    call SetB59_5ca0
     ld hl, $c0da
     inc [hl]
     ld a, [$c0da]
@@ -1315,7 +1311,7 @@ jr_059_453f:
     ret
 
 
-    call Call_059_5ca0
+    call SetB59_5ca0
     ld hl, $c0da
     inc [hl]
     ld a, [$c0da]
@@ -1333,7 +1329,7 @@ jr_059_453f:
     ld [$c823], a
     ld a, $01
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1347,11 +1343,11 @@ jr_059_453f:
     ld [$c823], a
     ld a, $01
     ld [$c822], a
-    call Call_059_52f2
-    call Call_059_5d27
+    call CallB59_52f2
+    call CallB59_5d27
     ld de, $5e9a
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld hl, $c621
     ld [hl], $e8
     ld a, l
@@ -1371,7 +1367,7 @@ jr_059_453f:
     ld [$c823], a
     xor a
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1381,7 +1377,7 @@ jr_059_453f:
     ld [$c823], a
     xor a
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1391,7 +1387,7 @@ jr_059_453f:
     ld [$c823], a
     xor a
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1401,7 +1397,7 @@ jr_059_453f:
     ld [$c823], a
     xor a
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1411,7 +1407,7 @@ jr_059_453f:
     ld [$c823], a
     xor a
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1421,7 +1417,7 @@ jr_059_453f:
     ld [$c823], a
     xor a
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1431,7 +1427,7 @@ jr_059_453f:
     ld [$c823], a
     xor a
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1506,13 +1502,13 @@ jr_059_453f:
     ld [$dd60], a
     xor a
     ld [$c8ec], a
-    call Call_059_5d0f
-    call Call_059_513c
+    call LoadB59_5d0f
+    call LoadB59_513c
     ld de, $2e00
     ld hl, $8d00
     call WaitLCDTransfer
-    call Call_059_4ec6
-    call Call_059_5087
+    call LoadB59_4ec6
+    call SetB59_5087
     ld a, $fc
     call SetGBCPalette
     ld a, $07
@@ -1584,7 +1580,7 @@ jr_059_48e5:
     ld [$c8df], a
 
 jr_059_4912:
-    call Call_059_5279
+    call LoadB59_5279
     ld a, [$c76d]
     and $01
     jr nz, jr_059_4933
@@ -1618,7 +1614,7 @@ jr_059_4933:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld a, $01
     ld [$c0d8], a
     ret
@@ -1638,7 +1634,7 @@ jr_059_495a:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1656,7 +1652,7 @@ jr_059_497b:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1671,7 +1667,7 @@ Jump_059_499c:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     xor a
     ld [$c0d9], a
     ld a, $04
@@ -1694,7 +1690,7 @@ Jump_059_499c:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1705,7 +1701,7 @@ Jump_059_499c:
     ld [$c823], a
     ld a, $02
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1733,7 +1729,7 @@ Jump_059_499c:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1752,7 +1748,7 @@ jr_059_4a1e:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1767,7 +1763,7 @@ jr_059_4a3f:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1796,7 +1792,7 @@ jr_059_4a59:
     ld [$c8df], a
 
 jr_059_4a7e:
-    call Call_059_5279
+    call LoadB59_5279
     ld a, [$c76d]
     and $01
     jr nz, jr_059_4aa0
@@ -1830,7 +1826,7 @@ jr_059_4aa0:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld a, $03
     ld [$c0d8], a
     ret
@@ -1859,7 +1855,7 @@ jr_059_4ade:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1886,7 +1882,7 @@ jr_059_4b05:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1910,7 +1906,7 @@ Jump_059_4b15:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld a, $05
     ld [$c0d8], a
     xor a
@@ -1929,7 +1925,7 @@ jr_059_4b4a:
     ld [$d9f6], a
     ld [$d9f5], a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1948,7 +1944,7 @@ jr_059_4b4a:
     ld [$c823], a
     ld a, $02
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -1974,7 +1970,7 @@ jr_059_4b4a:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -1988,7 +1984,7 @@ jr_059_4bb6:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -2008,12 +2004,12 @@ jr_059_4bb6:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld a, $08
     ld [$c823], a
     ld a, $02
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -2033,7 +2029,7 @@ jr_059_4bb6:
     ld [$c8df], a
 
 jr_059_4c15:
-    call Call_059_5279
+    call LoadB59_5279
     ld a, [$c76d]
     and $01
     jr nz, jr_059_4c2e
@@ -2065,7 +2061,7 @@ jr_059_4c2e:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld hl, $c0d9
     inc [hl]
     ret
@@ -2087,7 +2083,7 @@ jr_059_4c59:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -2104,7 +2100,7 @@ jr_059_4c7f:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     xor a
     ld [$c0d8], a
     xor a
@@ -2154,7 +2150,7 @@ jr_059_4c7f:
     ld [$c8df], a
 
 jr_059_4ce6:
-    call Call_059_5279
+    call LoadB59_5279
     ld a, [$c76d]
     and $01
     jr nz, jr_059_4cff
@@ -2184,7 +2180,7 @@ jr_059_4cff:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld a, $07
     ld [$c0d8], a
     ret
@@ -2204,7 +2200,7 @@ jr_059_4d26:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -2224,7 +2220,7 @@ jr_059_4d47:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     xor a
     ld [$c0d8], a
     xor a
@@ -2246,7 +2242,7 @@ jr_059_4d47:
     ld [$c8df], a
 
 jr_059_4d87:
-    call Call_059_5279
+    call LoadB59_5279
     ld a, [$c76d]
     and $01
     jr nz, jr_059_4da7
@@ -2280,7 +2276,7 @@ jr_059_4da7:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld a, $08
     ld [$c0d8], a
     ret
@@ -2309,7 +2305,7 @@ jr_059_4de5:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -2333,7 +2329,7 @@ jr_059_4e0a:
     ld [$d9f6], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -2350,7 +2346,7 @@ jr_059_4e1a:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ld a, $02
     ld [$c0d8], a
     xor a
@@ -2373,7 +2369,7 @@ jr_059_4e1a:
     ld [$c823], a
     ld a, $02
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -2392,7 +2388,7 @@ jr_059_4e1a:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
@@ -2411,7 +2407,7 @@ jr_059_4e1a:
     ld [$c823], a
     ld a, $02
     ld [$c822], a
-    call Call_059_52e4
+    call SetB59_52e4
     ld hl, $c0d9
     inc [hl]
     ret
@@ -2433,11 +2429,11 @@ jr_059_4e1a:
     ld [$d9f5], a
     xor a
     ld [wEventStateMachineIndex], a
-    call Call_059_4ec6
+    call LoadB59_4ec6
     ret
 
 
-Call_059_4ec6:
+LoadB59_4ec6:
     ld a, [wEventStateMachineIndex]
     or a
     ret nz
@@ -2466,15 +2462,15 @@ Call_059_4ec6:
     ld c, [hl]
     db $eb
     ld c, [hl]
-    call Call_059_5d4f
-    call Call_059_5060
+    call LoadB59_5d4f
+    call LoadB59_5060
     ld de, $608f
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld a, [wMenu_selection]
     and $0f
     ld hl, $52d0
-    call Call_059_5bf1
+    call CalcB59_5bf1
     ld a, l
     add $00
     ld l, a
@@ -2498,11 +2494,11 @@ jr_059_4f1b:
     jp Jump_059_504d
 
 
-    call Call_059_5d4f
-    call Call_059_5060
+    call LoadB59_5d4f
+    call LoadB59_5060
     ld de, $5dc4
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     jp Jump_059_504d
 
 
@@ -2514,15 +2510,15 @@ jr_059_4f1b:
     ld c, a
     ld b, d
     ld c, a
-    call Call_059_5d4f
-    call Call_059_5060
+    call LoadB59_5d4f
+    call LoadB59_5060
     ld de, $611d
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld a, [wOPTN_and_Item_selection]
     and $0f
     ld hl, $52d8
-    call Call_059_5bf1
+    call CalcB59_5bf1
     ld a, l
     add $00
     ld l, a
@@ -2552,18 +2548,18 @@ jr_059_4f72:
     ld c, a
     adc [hl]
     ld c, a
-    call Call_059_5d4f
-    call Call_059_5060
+    call LoadB59_5d4f
+    call LoadB59_5060
     ld de, $5dc4
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld de, $5f1c
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld a, [$c8e2]
     and $0f
     ld hl, $52e0
-    call Call_059_5bf1
+    call CalcB59_5bf1
     ld a, l
     add $00
     ld l, a
@@ -2598,16 +2594,16 @@ jr_059_4fbf:
     ld c, a
     rst $10
     ld c, a
-    call Call_059_5d4f
-    call Call_059_5060
+    call LoadB59_5d4f
+    call LoadB59_5060
     ld de, $60d7
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld a, [$c8e3]
     and $0f
     add $02
     ld hl, $52d8
-    call Call_059_5bf1
+    call CalcB59_5bf1
     ld a, l
     add $00
     ld l, a
@@ -2635,16 +2631,16 @@ jr_059_5008:
     ld d, b
     ld a, [de]
     ld d, b
-    call Call_059_5d4f
-    call Call_059_5060
+    call LoadB59_5d4f
+    call LoadB59_5060
     ld de, $5f41
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld a, [$c8e4]
     and $0f
     add $01
     ld hl, $52d8
-    call Call_059_5bf1
+    call CalcB59_5bf1
     ld a, l
     add $00
     ld l, a
@@ -2679,29 +2675,29 @@ Jump_059_5056:
     ret
 
 
-Call_059_5060:
+LoadB59_5060:
     ld a, [$ca8d]
     or a
     jr z, jr_059_507d
 
     ld hl, $52c2
     ld a, [$ca8d]
-    call Call_059_5bf1
+    call CalcB59_5bf1
     ld d, h
     ld e, l
     ld hl, $c500
-    call Call_059_5cd2
-    call Call_059_51a8
-    call Call_059_5240
+    call LoadB59_5cd2
+    call ClrB59_51a8
+    call ClrB59_5240
 
 jr_059_507d:
     ld de, $5d98
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ret
 
 
-Call_059_5087:
+SetB59_5087:
     ld hl, $96c0
     ld de, $0401
     ld a, l
@@ -2785,7 +2781,7 @@ Call_059_5087:
     ret
 
 
-Call_059_513c:
+LoadB59_513c:
     ld a, [$ca8d]
     or a
     ret z
@@ -2812,7 +2808,7 @@ jr_059_515b:
     adc h
     ld h, a
     ld a, [hl]
-    call Call_059_521e
+    call FuncB59_521e
     ld hl, $c0eb
     inc [hl]
     ld a, [$c827]
@@ -2848,7 +2844,7 @@ jr_059_515b:
     ret
 
 
-Call_059_51a8:
+ClrB59_51a8:
     xor a
     ld [$c0eb], a
 
@@ -2861,7 +2857,7 @@ jr_059_51ac:
     adc h
     ld h, a
     ld a, [hl]
-    call Call_059_51cb
+    call FuncB59_51cb
     ld hl, $c0eb
     inc [hl]
     ld a, [$c0eb]
@@ -2873,30 +2869,30 @@ jr_059_51ac:
     ret
 
 
-Call_059_51cb:
+FuncB59_51cb:
     ld c, $95
     ld b, $00
-    call Call_059_5d5b
+    call MaskB59_5d5b
     push bc
     ld hl, $cb11
-    call Call_059_5bec
+    call CalcB59_5bec
     call $5ba7
     ld a, [$c0eb]
     ld hl, $52b0
-    call Call_059_5bf1
-    call Call_059_51ff
+    call CalcB59_5bf1
+    call LoadB59_51ff
     pop bc
     ld hl, $cb15
-    call Call_059_5bec
+    call CalcB59_5bec
     call $5ba7
     ld a, [$c0eb]
     ld hl, $52b6
-    call Call_059_5bf1
-    call Call_059_51ff
+    call CalcB59_5bf1
+    call LoadB59_51ff
     ret
 
 
-Call_059_51ff:
+LoadB59_51ff:
     ld a, [$c0e8]
     ld e, a
     or a
@@ -2923,10 +2919,10 @@ jr_059_5216:
     ret
 
 
-Call_059_521e:
+FuncB59_521e:
     ld c, $95
     ld b, $00
-    call Call_059_5d5b
+    call MaskB59_5d5b
     ld hl, $cac2
     add hl, bc
     ld d, h
@@ -2942,20 +2938,20 @@ Call_059_521e:
     ret
 
 
-Call_059_5240:
+ClrB59_5240:
     xor a
     ld [$c0eb], a
-    call Call_059_5248
+    call SetB59_5248
     ret
 
 
-Call_059_5248:
+SetB59_5248:
     ld hl, $c180
     ld a, $f0
     ld [hl], a
     ld a, [$c0eb]
     ld hl, $52ca
-    call Call_059_5bf1
+    call CalcB59_5bf1
     ld a, l
     ld [$c827], a
     ld a, h
@@ -2974,7 +2970,7 @@ Call_059_5248:
     ret
 
 
-Call_059_5279:
+LoadB59_5279:
     ld a, [$c8e1]
     or a
     ret nz
@@ -3059,7 +3055,7 @@ jr_059_529d:
     cpl
     ld bc, $016f
 
-Call_059_52e4:
+SetB59_52e4:
     ld de, $52f9
     call CallTextEngine
     ret
@@ -3070,8 +3066,8 @@ Call_059_52e4:
     ret
 
 
-Call_059_52f2:
-    call Call_059_52e4
+CallB59_52f2:
+    call SetB59_52e4
     call RequestScreenUpdate
     ret
 
@@ -5029,7 +5025,7 @@ jr_059_5bcc:
     ret
 
 
-Call_059_5bec:
+CalcB59_5bec:
     add hl, bc
     ld a, [hl+]
     ld h, [hl]
@@ -5037,7 +5033,7 @@ Call_059_5bec:
     ret
 
 
-Call_059_5bf1:
+CalcB59_5bf1:
     add a
     add l
     ld l, a
@@ -5134,7 +5130,7 @@ Call_059_5bf1:
     ret
 
 
-Call_059_5ca0:
+SetB59_5ca0:
     ld hl, $c0db
     inc [hl]
     ld a, [$c0db]
@@ -5171,7 +5167,7 @@ jr_059_5cbf:
     ret
 
 
-Call_059_5cd2:
+LoadB59_5cd2:
     ld a, [de]
     inc de
     ld c, a
@@ -5211,7 +5207,7 @@ jr_059_5cf5:
     ret
 
 
-Call_059_5cf7:
+SetB59_5cf7:
     ld hl, $ffbb
     inc [hl]
     call ApplyScrollRegisters
@@ -5220,7 +5216,7 @@ Call_059_5cf7:
     ret
 
 
-Call_059_5d03:
+SetB59_5d03:
     ld hl, $ffbb
     dec [hl]
     call ApplyScrollRegisters
@@ -5229,7 +5225,7 @@ Call_059_5d03:
     ret
 
 
-Call_059_5d0f:
+LoadB59_5d0f:
     ld a, $aa
     ld l, a
     ld h, $00
@@ -5248,24 +5244,24 @@ Call_059_5d0f:
     ret
 
 
-Call_059_5d27:
-    call Call_059_5d4f
+CallB59_5d27:
+    call LoadB59_5d4f
     ld de, $5ee2
     ld hl, $9b60
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld de, $5f11
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld de, $5d6c
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ld de, $5dc4
     ld hl, $c500
-    call Call_059_5cd2
+    call LoadB59_5cd2
     ret
 
 
-Call_059_5d4f:
+LoadB59_5d4f:
     ld a, $e0
     ld hl, $c500
     ld bc, $0240
@@ -5273,7 +5269,7 @@ Call_059_5d4f:
     ret
 
 
-Call_059_5d5b:
+MaskB59_5d5b:
     or a
     jr z, jr_059_5d68
 

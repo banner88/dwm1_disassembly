@@ -5,40 +5,31 @@
 
 SECTION "ROM Bank $053", ROMX[$4000], BANK[$53]
 
-    ld d, e
-    jp z, $eb44
+    db $53 ; Bank number
 
-    ld c, e
-    ld d, b
-    ld c, h
-    ld a, [hl]
-    ld c, l
-    ld c, h
-    ld c, a
-    add sp, $51
-    cp h
-    ld e, h
-    ld [hl+], a
-    ld e, l
-    ld [hl+], a
-    ld e, l
-    dec [hl]
-    ld e, [hl]
-    inc e
-    ld h, b
-    or e
-    ld h, b
-    xor h
-    ld h, l
-    ld c, $67
-    sbc e
-    ld l, d
-    ld [c], a
-    ld l, e
-    xor d
-    ld d, c
-    dec d
-    ld e, a
+    ; Cross-bank dispatch table (18 entries)
+    ; Called via: ld hl, $53XX / rst $10
+    dw $44CA                          ; Entry 0
+    dw jr_053_4beb                    ; Entry 1
+    dw LoadBtlC_4c50                  ; Entry 2
+    dw jr_053_4d7e                    ; Entry 3
+    dw $4F4C                          ; Entry 4
+    dw $51E8                          ; Entry 5
+    dw LoadBtlC_5cbc                  ; Entry 6
+    dw $5D22                          ; Entry 7
+    dw $5D22                          ; Entry 8
+    dw $5E35                          ; Entry 9
+    dw $601C                          ; Entry 10
+    dw $60B3                          ; Entry 11
+    dw $65AC                          ; Entry 12
+    dw $670E                          ; Entry 13
+    dw $6A9B                          ; Entry 14
+    dw jr_053_6be2                    ; Entry 15
+    dw LoadBtlC_51aa                  ; Entry 16
+    dw $5F15                          ; Entry 17
+
+; --- Dispatch entry 0 ($44CA) ---
+DispatchEntry_53_0:
     ld [bc], a
     ld [bc], a
     ld [bc], a
@@ -656,11 +647,11 @@ SECTION "ROM Bank $053", ROMX[$4000], BANK[$53]
     nop
     nop
 
-Call_053_43c5:
+CmpBtlC_43c5:
     cp $03
     jr nc, jr_053_43e3
 
-Call_053_43c9:
+SaveBtlC_43c9:
 jr_053_43c9:
     push hl
     ld hl, $cac2
@@ -722,14 +713,14 @@ jr_053_4409:
 
 jr_053_440c:
     push af
-    call Call_053_4416
+    call FuncBtlC_4416
     pop af
     ld hl, $5104
     rst $10
     ret
 
 
-Call_053_4416:
+FuncBtlC_4416:
     ld [$db60], a
     push hl
     ld hl, $dc3c
@@ -751,7 +742,7 @@ Call_053_4416:
 
 
 jr_053_4434:
-    call Call_053_43c9
+    call SaveBtlC_43c9
     ld a, $2f
     ld [hl+], a
     ld a, $46
@@ -848,7 +839,7 @@ jr_053_4495:
     ld hl, $c1a0
     jr jr_053_44a3
 
-Call_053_44a0:
+SetBtlC_44a0:
     ld hl, $c180
 
 jr_053_44a3:
@@ -858,11 +849,11 @@ jr_053_44a3:
     ld [$db4f], a
     ld a, [wBattleTargetIdx]
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ret
 
 
-Call_053_44b5:
+SetBtlC_44b5:
     ld hl, $c180
     ld a, l
     ld [$db4e], a
@@ -870,7 +861,7 @@ Call_053_44b5:
     ld [$db4f], a
     ld a, [wBattleAttackerIdx]
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ret
 
 
@@ -938,7 +929,7 @@ jr_053_451e:
     jp z, Jump_053_4640
 
     ld hl, $db79
-    call Call_053_4be3
+    call CalcBtlC_4be3
     cp $10
     jr nz, jr_053_4546
 
@@ -955,7 +946,7 @@ jr_053_4546:
 jr_053_454f:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd13
-    call Call_053_4be3
+    call CalcBtlC_4be3
     cp $02
     jp nz, Jump_053_463b
 
@@ -990,7 +981,7 @@ jr_053_4587:
     bit 7, [hl]
     jr z, jr_053_4591
 
-    call Call_053_4aeb
+    call ReadBtlC_4aeb
     jp Jump_053_462c
 
 
@@ -1046,7 +1037,7 @@ jr_053_45c2:
     jr jr_053_462c
 
 jr_053_45ca:
-    call Call_053_4e33
+    call LoadBtlC_4e33
     ld a, [$db61]
     ld l, a
     ld a, [$db62]
@@ -1058,7 +1049,7 @@ jr_053_45ca:
     cp $40
     jr nc, jr_053_45f9
 
-    call Call_053_4c50
+    call LoadBtlC_4c50
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleHP
     add a
@@ -1080,7 +1071,7 @@ jr_053_45f9:
     bit 4, [hl]
     jr z, jr_053_4621
 
-    call Call_053_44b5
+    call SetBtlC_44b5
     ld a, $10
     ld [$c823], a
     xor a
@@ -1101,7 +1092,7 @@ jr_053_45f9:
 
 
 jr_053_4621:
-    call Call_053_4e63
+    call LoadBtlC_4e63
     jr c, jr_053_464c
 
     ld hl, $d9ee
@@ -1113,7 +1104,7 @@ jr_053_462c:
     ld [$db4c], a
     ld hl, $5007
     rst $10
-    call Call_053_4b39
+    call SaveBtlC_4b39
     ld a, $07
     ld [$d9ee], a
 
@@ -1133,14 +1124,14 @@ Jump_053_4640:
 
 
 jr_053_464c:
-    call Call_053_49dc
+    call LoadBtlC_49dc
     jr nz, jr_053_4657
 
     ld hl, $d9ee
     inc [hl]
     jr jr_053_467c
 
-Call_053_4657:
+LoadBtlC_4657:
 jr_053_4657:
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
@@ -1159,7 +1150,7 @@ jr_053_4657:
     adc h
     ld h, a
     ld [hl], $00
-    call Call_053_4799
+    call LoadBtlC_4799
     ld a, $01
     ld [$c1d5], a
 
@@ -1204,11 +1195,11 @@ jr_053_46a8:
 
     ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
-    call Call_053_4be3
+    call CalcBtlC_4be3
     cp $02
     jr nz, jr_053_4733
 
-    call Call_053_4e01
+    call LoadBtlC_4e01
     jr z, jr_053_4733
 
     ld a, [wBattleAttackerIdx]
@@ -1281,7 +1272,7 @@ jr_053_4733:
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
-    call Call_053_4be3
+    call CalcBtlC_4be3
     ld [$db8a], a
     inc hl
     ld a, [hl]
@@ -1320,7 +1311,7 @@ jr_053_475e:
 
     ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
-    call Call_053_4be3
+    call CalcBtlC_4be3
     or a
     ret z
 
@@ -1341,7 +1332,7 @@ jr_053_475e:
     cp $03
     ret z
 
-Call_053_4799:
+LoadBtlC_4799:
 jr_053_4799:
     ld a, [wBattleAttackerIdx]
     ld hl, $dced
@@ -1374,11 +1365,11 @@ jr_053_47b2:
     and $01
     jr z, jr_053_47e8
 
-    call Call_053_49dc
+    call LoadBtlC_49dc
     or a
     ret z
 
-    call Call_053_4e01
+    call LoadBtlC_4e01
     ret z
 
 jr_053_47d1:
@@ -1462,11 +1453,11 @@ jr_053_4809:
     sbc b
     jr nc, jr_053_4871
 
-    call Call_053_493d
+    call LoadBtlC_493d
     jr c, jr_053_4871
 
-    call Call_053_49dc
-    call z, Call_053_490a
+    call LoadBtlC_49dc
+    call z, LoadBtlC_490a
     ld a, [$dcfd]
     bit 6, a
     jr z, jr_053_485b
@@ -1492,7 +1483,7 @@ jr_053_4864:
 
 
 jr_053_486d:
-    call Call_053_4963
+    call SetBtlC_4963
     ret
 
 
@@ -1515,9 +1506,9 @@ jr_053_4871:
     bit 3, [hl]
     jr z, jr_053_4899
 
-    call Call_053_49dc
-    call z, Call_053_490a
-    call Call_053_4b4f
+    call LoadBtlC_49dc
+    call z, LoadBtlC_490a
+    call SaveBtlC_4b4f
     ld a, $1f
     jr jr_053_48e0
 
@@ -1528,8 +1519,8 @@ jr_053_4899:
     bit 0, [hl]
     ret z
 
-    call Call_053_49dc
-    call z, Call_053_490a
+    call LoadBtlC_49dc
+    call z, LoadBtlC_490a
     ld a, $1e
     jr jr_053_48e0
 
@@ -1543,8 +1534,8 @@ jr_053_48af:
     bit 6, [hl]
     ret z
 
-    call Call_053_49dc
-    call z, Call_053_490a
+    call LoadBtlC_49dc
+    call z, LoadBtlC_490a
     ld a, $21
     jr jr_053_48e0
 
@@ -1558,13 +1549,13 @@ jr_053_48c9:
     bit 7, [hl]
     ret z
 
-    call Call_053_49dc
-    call z, Call_053_490a
+    call LoadBtlC_49dc
+    call z, LoadBtlC_490a
     ld a, $20
 
 jr_053_48e0:
     push af
-    call Call_053_4a04
+    call LoadBtlC_4a04
     pop af
 
 Jump_053_48e5:
@@ -1594,7 +1585,7 @@ jr_053_48fb:
     ret
 
 
-Call_053_490a:
+LoadBtlC_490a:
     ld a, [$dd6c]
     or a
     ret nz
@@ -1609,7 +1600,7 @@ Call_053_490a:
     or a
     ret nz
 
-    call Call_053_4e01
+    call LoadBtlC_4e01
     ret z
 
     ld a, $16
@@ -1628,7 +1619,7 @@ Call_053_490a:
     ret
 
 
-Call_053_493d:
+LoadBtlC_493d:
     ld a, [wBattleAttackerIdx]
     ld hl, $db06
     call HL_AddA_x8
@@ -1661,7 +1652,7 @@ jr_053_4961:
     ret
 
 
-Call_053_4963:
+SetBtlC_4963:
     ld hl, $c180
     ld a, l
     ld [$db4e], a
@@ -1669,7 +1660,7 @@ Call_053_4963:
     ld [$db4f], a
     ld a, [wBattleAttackerIdx]
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld hl, $c190
     ld a, l
     ld [$db4e], a
@@ -1677,7 +1668,7 @@ Call_053_4963:
     ld [$db4f], a
     ld a, [wBattleTargetIdx]
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, [$db8a]
     cp $42
     jr z, jr_053_49b3
@@ -1743,25 +1734,25 @@ jr_053_49cd:
     jp Jump_053_48ec
 
 
-Call_053_49dc:
+LoadBtlC_49dc:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
-    call Call_053_4be3
+    call CalcBtlC_4be3
     cp $02
     ret
 
 
-    call Call_053_49dc
+    call LoadBtlC_49dc
     jr nz, jr_053_49fc
 
-    call Call_053_4e63
+    call LoadBtlC_4e63
     jr nc, jr_053_49fc
 
     ld a, [$c1d5]
     or a
     jr nz, jr_053_49fc
 
-    call Call_053_4657
+    call LoadBtlC_4657
     ret
 
 
@@ -1771,7 +1762,7 @@ jr_053_49fc:
     xor a
     ld [$d9ee], a
 
-Call_053_4a04:
+LoadBtlC_4a04:
     ld a, [wBattleAttackerIdx]
     ld hl, $db42
     add l
@@ -1784,7 +1775,7 @@ Call_053_4a04:
 
     ld a, [$db8a]
     ld [$db4c], a
-    call Call_053_4b92
+    call CmpBtlC_4b92
     ret c
 
     xor a
@@ -1844,7 +1835,7 @@ Call_053_4a04:
 
 
 jr_053_4a6c:
-    call Call_053_44b5
+    call SetBtlC_44b5
     ld a, [wBattleAttackerIdx]
     ld b, a
     and $03
@@ -1882,7 +1873,7 @@ jr_053_4a99:
     adc h
     ld h, a
     ld [hl], $01
-    call Call_053_6c59
+    call LoadBtlC_6c59
     jr c, jr_053_4aae
 
     ld a, $e7
@@ -1929,7 +1920,7 @@ jr_053_4ab0:
     ret
 
 
-Call_053_4aeb:
+ReadBtlC_4aeb:
     ld a, [hl]
     and $0c
     jr z, jr_053_4b04
@@ -1999,7 +1990,7 @@ jr_053_4b28:
     ret
 
 
-Call_053_4b39:
+SaveBtlC_4b39:
     push af
     push bc
     push de
@@ -2017,7 +2008,7 @@ Call_053_4b39:
     ret
 
 
-Call_053_4b4f:
+SaveBtlC_4b4f:
     push af
     push bc
     push de
@@ -2067,7 +2058,7 @@ jr_053_4b87:
     ret
 
 
-Call_053_4b92:
+CmpBtlC_4b92:
     cp $32
     jr z, jr_053_4bd1
 
@@ -2128,7 +2119,7 @@ jr_053_4be1:
     ret
 
 
-Call_053_4be3:
+CalcBtlC_4be3:
     add l
     ld l, a
     ld a, $00
@@ -2139,7 +2130,7 @@ Call_053_4be3:
 
 
 jr_053_4beb:
-    call Call_053_4e33
+    call LoadBtlC_4e33
     ld a, [wRNG1]
     bit 1, a
     jr nz, jr_053_4c1b
@@ -2208,12 +2199,12 @@ jr_053_4c32:
     ret
 
 
-Call_053_4c50:
+LoadBtlC_4c50:
     ld a, [wBattleTargetIdx]
     push af
     ld a, [wBattleAttackerIdx]
     ld [wBattleTargetIdx], a
-    call Call_053_44a0
+    call SetBtlC_44a0
     pop af
     ld [wBattleTargetIdx], a
     ld a, [wRNG2]
@@ -2250,11 +2241,11 @@ jr_053_4c97:
     ld [$d9ee], a
     ld a, [wBattleAttackerIdx]
     ld de, wBattleHP
-    call Call_053_4ce5
+    call SaveBtlC_4ce5
     ret z
 
     ld a, [wBattleAttackerIdx]
-    call Call_053_4cec
+    call CalcBtlC_4cec
     jr nc, jr_053_4cb2
 
     xor a
@@ -2270,7 +2261,7 @@ jr_053_4cb2:
 jr_053_4cb9:
     ld a, $05
     ld [$d9ee], a
-    call Call_053_4d1d
+    call LoadBtlC_4d1d
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -2283,7 +2274,7 @@ jr_053_4cb9:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_053_4ffd
+    call SetBtlC_4ffd
     ld a, $1c
     ld [$c823], a
 
@@ -2295,7 +2286,7 @@ jr_053_4cdc:
     ret
 
 
-Call_053_4ce5:
+SaveBtlC_4ce5:
     push hl
     ld h, d
     ld l, e
@@ -2305,7 +2296,7 @@ Call_053_4ce5:
     ret
 
 
-Call_053_4cec:
+CalcBtlC_4cec:
     add a
     add e
     ld e, a
@@ -2331,7 +2322,7 @@ Call_053_4cec:
     ld a, h
     ld [$db57], a
     push hl
-    call Call_053_4ffd
+    call SetBtlC_4ffd
     pop hl
     pop de
     ld a, [de]
@@ -2344,7 +2335,7 @@ Call_053_4cec:
     ret
 
 
-Call_053_4d1d:
+LoadBtlC_4d1d:
     ld a, [wBattleAttackerIdx]
     call GetCombatantMaxMP
     or h
@@ -2413,7 +2404,7 @@ jr_053_4d75:
 
 
 jr_053_4d7e:
-    call Call_053_4e33
+    call LoadBtlC_4e33
     ld a, [wRNG1]
     and $0f
     or a
@@ -2495,7 +2486,7 @@ jr_053_4dcf:
     ret
 
 
-Call_053_4e01:
+LoadBtlC_4e01:
     ld a, [$dd72]
     or a
     ret nz
@@ -2534,7 +2525,7 @@ jr_053_4e30:
     ret
 
 
-Call_053_4e33:
+LoadBtlC_4e33:
     ld a, [$c86c]
     or a
     jr nz, jr_053_4e3d
@@ -2566,7 +2557,7 @@ jr_053_4e3d:
     ret
 
 
-Call_053_4e63:
+LoadBtlC_4e63:
     ld a, [$c86c]
     or a
     jr nz, jr_053_4eae
@@ -2620,7 +2611,7 @@ jr_053_4e99:
     jr jr_053_4eae
 
 jr_053_4ea7:
-    call Call_053_4eb1
+    call SaveBtlC_4eb1
     jr nz, jr_053_4e99
 
     scf
@@ -2633,7 +2624,7 @@ jr_053_4eae:
     ret
 
 
-Call_053_4eb1:
+SaveBtlC_4eb1:
     push hl
     push bc
     ld hl, $dcec
@@ -2657,7 +2648,7 @@ Call_053_4eb1:
     cp c
     jr nz, jr_053_4ed3
 
-    call Call_053_4ed6
+    call SetBtlC_4ed6
 
 jr_053_4ed3:
     pop bc
@@ -2665,7 +2656,7 @@ jr_053_4ed3:
     ret
 
 
-Call_053_4ed6:
+SetBtlC_4ed6:
     ld hl, $4ee4
 
 jr_053_4ed9:
@@ -2891,14 +2882,14 @@ Jump_053_4fd6:
     ret
 
 
-Call_053_4ff3:
-    call Call_053_44a0
-    call Call_053_4ffd
-    call Call_053_500c
+CallBtlC_4ff3:
+    call SetBtlC_44a0
+    call SetBtlC_4ffd
+    call SetBtlC_500c
     ret
 
 
-Call_053_4ffd:
+SetBtlC_4ffd:
     ld hl, $c190
     ld a, [$db56]
     ld c, a
@@ -2908,7 +2899,7 @@ Call_053_4ffd:
     ret
 
 
-Call_053_500c:
+SetBtlC_500c:
     ld hl, $c1a0
     ld a, l
     ld [$db4e], a
@@ -2916,7 +2907,7 @@ Call_053_500c:
     ld [$db4f], a
     ld a, [wBattleAttackerIdx]
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ret
 
 
@@ -2937,12 +2928,12 @@ jr_053_5030:
     and $04
     xor $04
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jp nc, Jump_053_5140
 
     inc e
     ld a, e
-    call Call_053_5192
+    call CallBtlC_5192
     jp nc, Jump_053_5140
 
     inc e
@@ -2960,13 +2951,13 @@ jr_053_5048:
     ld c, a
     or d
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jp nc, Jump_053_5140
 
     ld a, e
     xor $02
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jp nc, Jump_053_5140
 
     inc d
@@ -2986,7 +2977,7 @@ jr_053_506b:
     ld c, a
     add d
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jp nc, Jump_053_5140
 
     ld a, d
@@ -2995,14 +2986,14 @@ jr_053_506b:
     ld a, c
     sub d
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jp nc, Jump_053_5140
 
     ld e, c
     jp Jump_053_5140
 
 
-Call_053_5091:
+ClrBtlC_5091:
 Jump_053_5091:
     xor a
     ld [$db61], a
@@ -3012,7 +3003,7 @@ Jump_053_5091:
 
     ld a, [wBattleTargetIdx]
     ld c, a
-    call Call_053_4e33
+    call LoadBtlC_4e33
     ld a, [wRNG1]
     cp $33
     jr c, jr_053_5112
@@ -3046,7 +3037,7 @@ Jump_053_5091:
 jr_053_50ce:
     or b
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jr nc, jr_053_5140
 
     ld a, d
@@ -3059,7 +3050,7 @@ jr_053_50ce:
 jr_053_50de:
     or b
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jr nc, jr_053_5140
 
     ld e, c
@@ -3078,13 +3069,13 @@ jr_053_50ec:
     ld a, c
     inc a
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jr nc, jr_053_5140
 
     ld a, c
     dec a
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jr nc, jr_053_5140
 
     jr jr_053_5130
@@ -3093,13 +3084,13 @@ jr_053_5102:
     ld a, c
     dec a
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jr nc, jr_053_5140
 
     ld a, c
     inc a
     ld e, a
-    call Call_053_5192
+    call CallBtlC_5192
     jr nc, jr_053_5140
 
 jr_053_5112:
@@ -3164,7 +3155,7 @@ jr_053_516e:
     ld a, [$c823]
     push af
     ld a, [$db4c]
-    call Call_053_43c5
+    call CmpBtlC_43c5
     pop af
     ld [$c823], a
     ld a, [$dd72]
@@ -3180,7 +3171,7 @@ jr_053_516e:
     ret
 
 
-Call_053_5192:
+CallBtlC_5192:
     call CheckMonsterSlot
     jr c, jr_053_51a8
 
@@ -3203,7 +3194,7 @@ jr_053_51a8:
     ret
 
 
-Call_053_51aa:
+LoadBtlC_51aa:
     ld a, [$c86c]
     or a
     jr nz, jr_053_51dd
@@ -3333,7 +3324,7 @@ jr_053_5242:
     jr z, jr_053_527a
 
     push af
-    call Call_053_44b5
+    call SetBtlC_44b5
     pop af
     bit 6, a
     jr nz, jr_053_526c
@@ -3493,7 +3484,7 @@ jr_053_5313:
     jr z, jr_053_535e
 
     push af
-    call Call_053_44b5
+    call SetBtlC_44b5
     pop af
     bit 1, a
     jr z, jr_053_5349
@@ -3601,15 +3592,15 @@ jr_053_53a9:
 
     ld a, [hl]
     ld [$dd72], a
-    call Call_053_5091
+    call ClrBtlC_5091
     ld a, [$c1c8]
     ld hl, $c180
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, [wBattleTargetIdx]
     ld hl, $c190
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, $6c
     ld [$c823], a
     xor a
@@ -3631,7 +3622,7 @@ jr_053_5411:
 
     ld hl, $5402
     rst $10
-    call Call_053_4e33
+    call LoadBtlC_4e33
     ld a, [wBattleTargetIdx]
     ld hl, $db06
     call HL_AddA_x8
@@ -3647,7 +3638,7 @@ jr_053_5411:
     ld [$d9ed], a
     xor a
     ld [$d9ee], a
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, $c1
     ld [$c823], a
     xor a
@@ -3725,8 +3716,8 @@ jr_053_5458:
     ld a, c
     ld [wBattleTargetIdx], a
     ld b, $02
-    call Call_053_5ece
-    call Call_053_44a0
+    call SaveBtlC_5ece
+    call SetBtlC_44a0
     ld a, $81
     ld [$c823], a
     xor a
@@ -3761,17 +3752,17 @@ Jump_053_54d6:
     call GetMonsterSlotInfo
     jr c, jr_053_5544
 
-Call_053_5504:
+LoadBtlC_5504:
     ld a, b
     ld hl, $c180
     push bc
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, [wBattleTargetIdx]
     ld [$c1c8], a
     ld hl, $c190
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     pop bc
     ld a, b
     ld [wBattleTargetIdx], a
@@ -3833,7 +3824,7 @@ jr_053_557a:
     ld [$dd72], a
     ld a, [wBattleTargetIdx]
     ld [$c1c8], a
-    call Call_053_5091
+    call ClrBtlC_5091
     ld a, [$db61]
     or a
     jp z, Jump_053_5622
@@ -3852,13 +3843,13 @@ jr_053_5594:
     or a
     jp nz, Jump_053_5622
 
-    call Call_053_5ca1
+    call LoadBtlC_5ca1
     jr z, jr_053_55ca
 
     res 6, [hl]
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, $01
-    call Call_053_5e38
+    call CallBtlC_5e38
     ld a, $02
     ld [$dd6d], a
     ld a, $02
@@ -3918,7 +3909,7 @@ jr_053_5605:
     ld hl, $4c00
     rst $10
     ld a, $04
-    call Call_053_5e38
+    call CallBtlC_5e38
     ld a, $02
     ld [$dd6e], a
     ret
@@ -3966,14 +3957,14 @@ jr_053_563c:
     bit 7, [hl]
     jr z, jr_053_56a8
 
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, $6e
     ld [$c823], a
     xor a
     ld [$c822], a
     ld hl, $4c00
     rst $10
-    call Call_053_583a
+    call LoadBtlC_583a
     ld a, $6f
     call PlaySoundEffect
     ret
@@ -4000,7 +3991,7 @@ jr_053_5678:
     call GetMonsterSlotInfo
     jr c, jr_053_563c
 
-    call Call_053_5504
+    call LoadBtlC_5504
     ld hl, $dd6e
     inc [hl]
     ret
@@ -4060,7 +4051,7 @@ jr_053_56e1:
     bit 2, a
     jr z, jr_053_5747
 
-    call Call_053_5844
+    call LoadBtlC_5844
     jr z, jr_053_5747
 
     ld a, [$db8a]
@@ -4074,7 +4065,7 @@ jr_053_56e1:
     jr z, jr_053_5746
 
 jr_053_570e:
-    call Call_053_583a
+    call LoadBtlC_583a
     ld a, $ba
     jr jr_053_5731
 
@@ -4095,7 +4086,7 @@ jr_053_5715:
 
 jr_053_5731:
     push af
-    call Call_053_44a0
+    call SetBtlC_44a0
     pop af
     ld [$c823], a
     xor a
@@ -4120,13 +4111,13 @@ jr_053_5747:
     bit 2, [hl]
     jr z, jr_053_5763
 
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, $c1
     jp Jump_053_582a
 
 
 jr_053_5763:
-    call Call_053_4e33
+    call LoadBtlC_4e33
     ld a, [$dcfd]
     bit 1, a
     jr z, jr_053_579e
@@ -4141,7 +4132,7 @@ jr_053_5763:
     cp $a0
     jr nc, jr_053_5785
 
-    call Call_053_5810
+    call CallBtlC_5810
     ret
 
 
@@ -4157,7 +4148,7 @@ jr_053_5785:
     cp $60
     jr nc, jr_053_579e
 
-    call Call_053_5810
+    call CallBtlC_5810
     ret
 
 
@@ -4170,7 +4161,7 @@ jr_053_579e:
     call GetMonsterSlotInfo
     jr c, jr_053_57f5
 
-    call Call_053_5857
+    call LoadBtlC_5857
     jr z, jr_053_57f5
 
     ld a, [wBattleTargetIdx]
@@ -4187,7 +4178,7 @@ jr_053_579e:
 jr_053_57c8:
     ld a, [wBattleTargetIdx]
     ld hl, wBattleAGL
-    call Call_053_5d68
+    call CalcBtlC_5d68
     ld bc, $01c0
     call CmpHLvsBC
     jr nc, jr_053_57e5
@@ -4212,29 +4203,29 @@ jr_053_57eb:
     jr nc, jr_053_57f5
 
 Jump_053_57f1:
-    call Call_053_57f7
+    call CallBtlC_57f7
     ret
 
 
 jr_053_57f5:
     jr jr_053_586a
 
-Call_053_57f7:
-    call Call_053_44a0
+CallBtlC_57f7:
+    call SetBtlC_44a0
     ld a, $78
     ld [$c823], a
     xor a
     ld [$c822], a
     ld hl, $4c00
     rst $10
-    call Call_053_583a
+    call LoadBtlC_583a
     ld a, $6f
     call PlaySoundEffect
     ret
 
 
-Call_053_5810:
-    call Call_053_44a0
+CallBtlC_5810:
+    call SetBtlC_44a0
     ld a, [$c863]
     bit 1, a
     ld a, [wBattleTargetIdx]
@@ -4262,7 +4253,7 @@ jr_053_582a:
     ld a, $6f
     call PlaySoundEffect
 
-Call_053_583a:
+LoadBtlC_583a:
     ld a, $05
     ld [$d9ed], a
     xor a
@@ -4270,7 +4261,7 @@ Call_053_583a:
     ret
 
 
-Call_053_5844:
+LoadBtlC_5844:
     ld a, [$db8a]
     cp $42
     ret nz
@@ -4283,7 +4274,7 @@ Call_053_5844:
     ret
 
 
-Call_053_5857:
+LoadBtlC_5857:
     ld a, [$db8a]
     cp $41
     ret nz
@@ -4336,8 +4327,8 @@ jr_053_588b:
     bit 3, [hl]
     jr nz, jr_053_58b4
 
-    call Call_053_4e33
-    call Call_053_5ed9
+    call LoadBtlC_4e33
+    call LoadBtlC_5ed9
     jr nc, jr_053_58ea
 
 jr_053_58b4:
@@ -4442,15 +4433,15 @@ jr_053_5941:
     call GetCombatantATK
     ld a, [$db8a]
     cp $51
-    call z, Call_053_5973
-    call Call_053_5d73
+    call z, FuncBtlC_5973
+    call SaveBtlC_5d73
     ld a, l
     ld [$db56], a
     ld a, h
     ld [$db57], a
     jr jr_053_59c3
 
-Call_053_5973:
+FuncBtlC_5973:
     srl h
     rr l
     ret
@@ -4470,7 +4461,7 @@ jr_053_5978:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_053_5db1
+    call SaveBtlC_5db1
     ld a, l
     ld [$db56], a
     ld a, h
@@ -4496,7 +4487,7 @@ jr_053_599a:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_053_5db1
+    call SaveBtlC_5db1
     ld a, l
     ld [$db56], a
     ld a, h
@@ -4630,7 +4621,7 @@ jr_053_5a6f:
     bit 7, a
     ret z
 
-    call Call_053_4ff3
+    call CallBtlC_4ff3
     ld a, [$dd70]
     ld l, a
     ld a, [$dd71]
@@ -4732,17 +4723,17 @@ jr_053_5b17:
     bit 4, a
     jr z, jr_053_5b4c
 
-    call Call_053_5cbc
+    call LoadBtlC_5cbc
     ld a, [$dd70]
     ld [$c823], a
     ld a, [$dd6f]
     bit 3, a
     jr z, jr_053_5b3a
 
-    call Call_053_5c8d
+    call LoadBtlC_5c8d
     jr nc, jr_053_5b3a
 
-    call Call_053_5bc6
+    call LoadBtlC_5bc6
 
 jr_053_5b3a:
     xor a
@@ -4778,7 +4769,7 @@ jr_053_5b6f:
     bit 3, a
     jr z, jr_053_5b79
 
-    call Call_053_5c07
+    call LoadBtlC_5c07
 
 jr_053_5b79:
     ld a, [$c822]
@@ -4786,7 +4777,7 @@ jr_053_5b79:
     ld a, [$c823]
     ld h, a
     push hl
-    call Call_053_4ff3
+    call CallBtlC_4ff3
     pop hl
     ld a, l
     ld [$c822], a
@@ -4794,7 +4785,7 @@ jr_053_5b79:
     ld [$c823], a
     ld a, [$db8a]
     cp $24
-    call z, Call_053_5bad
+    call z, LoadBtlC_5bad
     ld a, [$c823]
     cp $29
     jr nz, jr_053_5ba8
@@ -4812,7 +4803,7 @@ jr_053_5ba8:
     ret
 
 
-Call_053_5bad:
+LoadBtlC_5bad:
     ld a, [$dd72]
     cp $01
     ret nz
@@ -4837,7 +4828,7 @@ jr_053_5bbe:
     ret
 
 
-Call_053_5bc6:
+LoadBtlC_5bc6:
     ld a, [$c823]
     cp $82
     jr z, jr_053_5bf6
@@ -4893,7 +4884,7 @@ jr_053_5c01:
     ret
 
 
-Call_053_5c07:
+LoadBtlC_5c07:
     ld a, [$c823]
     cp $ca
     jr z, jr_053_5c1f
@@ -4914,7 +4905,7 @@ Call_053_5c07:
 
 
 jr_053_5c1f:
-    call Call_053_5c8d
+    call LoadBtlC_5c8d
     ret nc
 
     ld a, [$db8a]
@@ -4927,7 +4918,7 @@ jr_053_5c1f:
 
 
 jr_053_5c30:
-    call Call_053_5c8d
+    call LoadBtlC_5c8d
     ret c
 
     ld a, $b8
@@ -4936,7 +4927,7 @@ jr_053_5c30:
 
 
 jr_053_5c3a:
-    call Call_053_5c8d
+    call LoadBtlC_5c8d
     ret nc
 
     ld a, $b7
@@ -4945,7 +4936,7 @@ jr_053_5c3a:
 
 
 jr_053_5c44:
-    call Call_053_5c8d
+    call LoadBtlC_5c8d
     ret nc
 
     ld a, [$db8a]
@@ -5009,7 +5000,7 @@ jr_053_5c7a:
     ret
 
 
-Call_053_5c8d:
+LoadBtlC_5c8d:
     ld a, [$c863]
     bit 1, a
     jr nz, jr_053_5c9a
@@ -5026,7 +5017,7 @@ jr_053_5c9a:
     ret
 
 
-Call_053_5ca1:
+LoadBtlC_5ca1:
     ld a, [$dcfd]
     bit 4, a
     ret z
@@ -5045,7 +5036,7 @@ Call_053_5ca1:
     ret
 
 
-Call_053_5cbc:
+LoadBtlC_5cbc:
     ld a, [wBattleTargetIdx]
     ld hl, $db04
     call HL_AddA_x8
@@ -5112,7 +5103,7 @@ jr_053_5d16:
     ret
 
 
-    call Call_053_5cbc
+    call LoadBtlC_5cbc
     ld a, [$d9f2]
     ld c, a
     ld a, [$d9f3]
@@ -5140,7 +5131,7 @@ jr_053_5d16:
     ld [$db4f], a
     ld a, [wBattleTargetIdx]
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, $8d
     ld [$c823], a
     xor a
@@ -5150,7 +5141,7 @@ jr_053_5d16:
     ret
 
 
-Call_053_5d68:
+CalcBtlC_5d68:
     add a
     add l
     ld l, a
@@ -5163,7 +5154,7 @@ Call_053_5d68:
     ret
 
 
-Call_053_5d73:
+SaveBtlC_5d73:
     push hl
     ld a, $0a
     call Div16x8To16
@@ -5223,12 +5214,12 @@ jr_053_5db0:
     ret
 
 
-Call_053_5db1:
+SaveBtlC_5db1:
     push af
     push bc
     push de
     push hl
-    call Call_053_4e33
+    call LoadBtlC_4e33
     pop hl
     pop de
     pop bc
@@ -5272,7 +5263,7 @@ jr_053_5dde:
     ret
 
 
-Call_053_5de7:
+FuncBtlC_5de7:
     ld [$dd6c], a
     ld hl, $c1c0
     ld a, [wBattleAttackerIdx]
@@ -5329,8 +5320,8 @@ Call_053_5de7:
 
     ld a, [$db4c]
 
-Call_053_5e38:
-    call Call_053_5de7
+CallBtlC_5e38:
+    call FuncBtlC_5de7
     ld a, [wBattleTargetIdx]
     ld [wBattleAttackerIdx], a
     ld a, [$dcfc]
@@ -5384,7 +5375,7 @@ jr_053_5e7e:
     ret z
 
     cp $01
-    call z, Call_053_5ea0
+    call z, LoadBtlC_5ea0
     ld a, $01
     ld hl, $d9ed
     ld [hl+], a
@@ -5393,7 +5384,7 @@ jr_053_5e7e:
     ret
 
 
-Call_053_5ea0:
+LoadBtlC_5ea0:
     ld a, [wBattleAttackerIdx]
     rrca
     rrca
@@ -5428,17 +5419,17 @@ jr_053_5ec0:
     ret
 
 
-Call_053_5ece:
+SaveBtlC_5ece:
     push bc
     ld a, b
-    call Call_053_5de7
+    call FuncBtlC_5de7
     pop bc
     ld a, c
     ld [wBattleTargetIdx], a
     ret
 
 
-Call_053_5ed9:
+LoadBtlC_5ed9:
     ld a, [$c86c]
     or a
     jr nz, jr_053_5eeb
@@ -5496,7 +5487,7 @@ jr_053_5f0f:
     ld hl, $d9f2
     ld a, [hl+]
     or [hl]
-    call nz, Call_053_5ffa
+    call nz, LoadBtlC_5ffa
     ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
@@ -5508,7 +5499,7 @@ jr_053_5f0f:
     bit 3, a
     jr z, jr_053_5f66
 
-    call Call_053_4e33
+    call LoadBtlC_4e33
     ld a, [$c86c]
     or a
     jr nz, jr_053_5f52
@@ -5565,7 +5556,7 @@ jr_053_5f6e:
     ld [$db4f], a
     ld a, [wBattleTargetIdx]
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, $db
     ld [$c823], a
     xor a
@@ -5573,7 +5564,7 @@ jr_053_5f6e:
     ld hl, $4c00
     rst $10
 
-Call_053_5fa7:
+LoadBtlC_5fa7:
     ld a, [wBattleTargetIdx]
     ld hl, $dd13
     add l
@@ -5603,14 +5594,14 @@ Call_053_5fa7:
     ld [$db4f], a
     ld a, [wBattleTargetIdx]
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, $dc
     ld [$c823], a
     xor a
     ld [$c822], a
     ld hl, $4c00
     rst $10
-    call Call_053_5fa7
+    call LoadBtlC_5fa7
     ret
 
 
@@ -5623,7 +5614,7 @@ jr_053_5ff0:
     ret
 
 
-Call_053_5ffa:
+LoadBtlC_5ffa:
     ld a, [$dd6c]
     or a
     ret nz
@@ -5652,7 +5643,7 @@ Call_053_5ffa:
     call HL_AddA_x8
     ld a, [hl]
     and $90
-    call nz, Call_053_60a2
+    call nz, SaveBtlC_60a2
     xor a
     ld [hl+], a
     ld a, [hl]
@@ -5731,7 +5722,7 @@ jr_053_6071:
     ret
 
 
-Call_053_60a2:
+SaveBtlC_60a2:
     push hl
     ld a, [wBattleTargetIdx]
     ld hl, $dd13
@@ -5821,7 +5812,7 @@ jr_053_610f:
     ld a, [wBattleTargetIdx]
     ld hl, $c180
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, $ac
     ld [$c823], a
     xor a
@@ -5859,7 +5850,7 @@ jr_053_610f:
     or a
     jr nz, jr_053_616b
 
-    call Call_053_647c
+    call LoadBtlC_647c
     ld hl, $d9ee
     inc [hl]
     ret
@@ -5867,7 +5858,7 @@ jr_053_610f:
 
 jr_053_616b:
     ld [hl], $00
-    call Call_053_626b
+    call LoadBtlC_626b
     ld a, $ad
     ld [$c823], a
     xor a
@@ -5888,7 +5879,7 @@ jr_053_616b:
     adc h
     ld h, a
     ld c, [hl]
-    call Call_053_654f
+    call CallBtlC_654f
     ld a, [wBattleTargetIdx]
     ld hl, $c1cd
     add l
@@ -5948,11 +5939,11 @@ jr_053_61d4:
     call CheckMonsterSlot
     ret c
 
-    call Call_053_650c
+    call LoadBtlC_650c
     ld a, [wBattleTargetIdx]
     ld hl, $c180
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, $d8
     ld [$c823], a
     xor a
@@ -6024,7 +6015,7 @@ jr_053_6234:
     ret
 
 
-Call_053_626b:
+LoadBtlC_626b:
     ld a, [wBattleTargetIdx]
     ld [$db4c], a
     ld hl, $510a
@@ -6037,49 +6028,49 @@ Call_053_626b:
     cp $04
     jr c, jr_053_6287
 
-    call Call_053_63c7
+    call CalcBtlC_63c7
     jr jr_053_628a
 
 jr_053_6287:
-    call Call_053_62f1
+    call LoadBtlC_62f1
 
 jr_053_628a:
     ld a, [wBattleTargetIdx]
     ld hl, wBattleHP
-    call Call_053_62cf
+    call CalcBtlC_62cf
     push hl
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMaxHP
-    call Call_053_62cf
+    call CalcBtlC_62cf
     pop bc
     call CmpHLvsBC
     jr nc, jr_053_62ac
 
     ld a, [wBattleTargetIdx]
     ld hl, wBattleHP
-    call Call_053_62da
+    call CalcBtlC_62da
 
 jr_053_62ac:
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMP
-    call Call_053_62cf
+    call CalcBtlC_62cf
     push hl
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMaxMP
-    call Call_053_62cf
+    call CalcBtlC_62cf
     pop bc
     call CmpHLvsBC
     jr nc, jr_053_62ce
 
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMP
-    call Call_053_62da
+    call CalcBtlC_62da
 
 jr_053_62ce:
     ret
 
 
-Call_053_62cf:
+CalcBtlC_62cf:
     add a
     add l
     ld l, a
@@ -6092,7 +6083,7 @@ Call_053_62cf:
     ret
 
 
-Call_053_62da:
+CalcBtlC_62da:
     add a
     add l
     ld l, a
@@ -6115,7 +6106,7 @@ Call_053_62da:
     ret
 
 
-Call_053_62f1:
+LoadBtlC_62f1:
     ld a, [wBattleTargetIdx]
     and $03
     cp $03
@@ -6126,80 +6117,80 @@ Call_053_62f1:
     call ReadMonsterWord
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMaxHP
-    call Call_053_653b
+    call CalcBtlC_653b
     ld a, [wBattleTargetIdx]
     ld hl, $cb17
     call ReadMonsterWord
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMaxMP
-    call Call_053_653b
+    call CalcBtlC_653b
     ld a, [wBattleTargetIdx]
     ld hl, $cb19
     call ReadMonsterWord
     ld a, [wBattleTargetIdx]
     ld hl, wBattleATK
-    call Call_053_653b
+    call CalcBtlC_653b
     ld a, [wBattleTargetIdx]
     ld hl, $cb1b
     call ReadMonsterWord
     ld a, [wBattleTargetIdx]
     ld hl, wBattleDEF
-    call Call_053_653b
+    call CalcBtlC_653b
     ld a, [wBattleTargetIdx]
     ld hl, $cb1d
     call ReadMonsterWord
     ld a, [wBattleTargetIdx]
     ld hl, wBattleAGL
-    call Call_053_653b
+    call CalcBtlC_653b
     ld a, [wBattleTargetIdx]
     ld hl, $cb1f
     call ReadMonsterWord
     ld a, [wBattleTargetIdx]
     ld hl, wBattleINT
-    call Call_053_653b
+    call CalcBtlC_653b
     ld a, [wBattleTargetIdx]
     ld hl, $cb0c
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $db9b
-    call Call_053_6546
+    call CalcBtlC_6546
     ld a, [wBattleTargetIdx]
     ld hl, $cb25
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $dc44
-    call Call_053_6546
+    call CalcBtlC_6546
     ld a, [wBattleTargetIdx]
     ld hl, $cb26
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $dc54
-    call Call_053_6546
+    call CalcBtlC_6546
     ld a, [wBattleTargetIdx]
     ld hl, $cb28
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $dc4c
-    call Call_053_6546
+    call CalcBtlC_6546
     ld a, [wBattleTargetIdx]
     ld hl, $cb27
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $dc5c
-    call Call_053_6546
+    call CalcBtlC_6546
     ret
 
 
-Call_053_63c7:
+CalcBtlC_63c7:
 Jump_053_63c7:
     sub $04
     ld hl, wTempEnemyId1
-    call Call_053_5d68
+    call CalcBtlC_5d68
     ld a, l
     ld [wTempEnemyStatsId], a
     ld a, h
@@ -6330,7 +6321,7 @@ Jump_053_63c7:
     ret
 
 
-Call_053_647c:
+LoadBtlC_647c:
     ld a, [$c86c]
     or a
     jr nz, jr_053_648d
@@ -6339,7 +6330,7 @@ Call_053_647c:
     cp $03
     jr c, jr_053_648d
 
-    call Call_053_64ba
+    call LoadBtlC_64ba
     ret
 
 
@@ -6354,24 +6345,24 @@ jr_053_648d:
     call ReadMonsterWord
     ld a, [wBattleTargetIdx]
     ld hl, wBattleDEF
-    call Call_053_653b
+    call CalcBtlC_653b
     ld a, [wBattleTargetIdx]
     ld hl, $cb1d
     call ReadMonsterWord
     ld a, [wBattleTargetIdx]
     ld hl, wBattleAGL
-    call Call_053_653b
+    call CalcBtlC_653b
     ret
 
 
-Call_053_64ba:
+LoadBtlC_64ba:
     ld a, [wBattleTargetIdx]
     and $03
     cp $03
     ret z
 
     ld hl, wTempEnemyId1
-    call Call_053_5d68
+    call CalcBtlC_5d68
     ld a, l
     ld [wTempEnemyStatsId], a
     ld a, h
@@ -6415,7 +6406,7 @@ Call_053_64ba:
     ret
 
 
-Call_053_650c:
+LoadBtlC_650c:
     ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
@@ -6447,7 +6438,7 @@ Call_053_650c:
     ret
 
 
-Call_053_653b:
+CalcBtlC_653b:
     add a
     add l
     ld l, a
@@ -6460,7 +6451,7 @@ Call_053_653b:
     ret
 
 
-Call_053_6546:
+CalcBtlC_6546:
     add a
     add l
     ld l, a
@@ -6471,8 +6462,8 @@ Call_053_6546:
     ret
 
 
-Call_053_654f:
-    call Call_053_6593
+CallBtlC_654f:
+    call LoadBtlC_6593
     ld a, [$c863]
     bit 1, a
     ld a, b
@@ -6523,7 +6514,7 @@ jr_053_6592:
     ret
 
 
-Call_053_6593:
+LoadBtlC_6593:
     ld a, [wIsGBC]
     or a
     ret z
@@ -6567,7 +6558,7 @@ Call_053_6593:
     ld b, a
     srl b
     rr c
-    call Call_053_66e1
+    call LoadBtlC_66e1
     ld a, [wBattleTargetIdx]
     ld hl, wBattleDEF
     add a
@@ -6576,12 +6567,12 @@ Call_053_6593:
     ld a, $00
     adc h
     ld h, a
-    call Call_053_66e8
+    call ReadBtlC_66e8
     ld a, c
     ld [$db56], a
     ld a, b
     ld [$db57], a
-    call Call_053_66d6
+    call ReadBtlC_66d6
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6590,10 +6581,10 @@ Call_053_6593:
     or l
     jr z, jr_053_661a
 
-    call Call_053_4ff3
+    call CallBtlC_4ff3
     ld a, $86
     ld [$c823], a
-    call Call_053_66fa
+    call LoadBtlC_66fa
     ld a, $72
     call PlaySoundEffect
     ld a, [wBattleTargetIdx]
@@ -6619,7 +6610,7 @@ jr_053_661a:
     ld b, a
     srl b
     rr c
-    call Call_053_66e1
+    call LoadBtlC_66e1
     ld a, [wBattleTargetIdx]
     ld hl, wBattleAGL
     add a
@@ -6628,12 +6619,12 @@ jr_053_661a:
     ld a, $00
     adc h
     ld h, a
-    call Call_053_66e8
+    call ReadBtlC_66e8
     ld a, c
     ld [$db56], a
     ld a, b
     ld [$db57], a
-    call Call_053_66d6
+    call ReadBtlC_66d6
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6642,10 +6633,10 @@ jr_053_661a:
     or l
     jr z, jr_053_667b
 
-    call Call_053_4ff3
+    call CallBtlC_4ff3
     ld a, $95
     ld [$c823], a
-    call Call_053_66fa
+    call LoadBtlC_66fa
     ld a, $72
     call PlaySoundEffect
     ld a, [wBattleTargetIdx]
@@ -6668,7 +6659,7 @@ jr_053_667b:
     jr nz, jr_053_66a5
 
     set 1, [hl]
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, $98
     ld [$c823], a
     xor a
@@ -6712,7 +6703,7 @@ jr_053_66a5:
     ret
 
 
-Call_053_66d6:
+ReadBtlC_66d6:
     ld a, [hl]
     sub c
     ld [hl+], a
@@ -6727,7 +6718,7 @@ Call_053_66d6:
     ret
 
 
-Call_053_66e1:
+LoadBtlC_66e1:
     ld a, b
     or c
     ret nz
@@ -6736,7 +6727,7 @@ Call_053_66e1:
     ret
 
 
-Call_053_66e8:
+ReadBtlC_66e8:
     ld a, [hl+]
     sub c
     ld e, a
@@ -6759,7 +6750,7 @@ jr_053_66f4:
     ret
 
 
-Call_053_66fa:
+LoadBtlC_66fa:
     ld a, [wBattleTargetIdx]
     cp $04
     jr nc, jr_053_6705
@@ -6804,7 +6795,7 @@ jr_053_6705:
     and $c0
     jr z, jr_053_6752
 
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, $ba
     ld [$c823], a
     ld a, $00
@@ -6838,12 +6829,12 @@ jr_053_6752:
     ld hl, $c180
     push bc
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     ld a, [wBattleTargetIdx]
     ld [$c1c8], a
     ld hl, $c190
     ld [$db50], a
-    call Call_053_43c5
+    call CmpBtlC_43c5
     pop bc
     ld a, b
     ld [wBattleTargetIdx], a
@@ -6871,11 +6862,11 @@ jr_053_67a8:
 
     ld hl, $d9ee
     inc [hl]
-    call Call_053_51aa
+    call LoadBtlC_51aa
     or a
     jp z, Jump_053_6858
 
-    call Call_053_4e33
+    call LoadBtlC_4e33
     ld a, [wBattleTargetIdx]
     ld hl, $dd2b
     ld b, a
@@ -6901,7 +6892,7 @@ jr_053_67a8:
     jr nc, jr_053_6858
 
 jr_053_67db:
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, [wBattleTargetIdx]
     call GetCombatantHP
     ld a, l
@@ -6942,10 +6933,10 @@ jr_053_67ff:
     ld [$db56], a
     ld a, b
     ld [$db57], a
-    call Call_053_4ffd
+    call SetBtlC_4ffd
     ld a, $82
     ld [$c823], a
-    call Call_053_6c48
+    call LoadBtlC_6c48
     jr nc, jr_053_6846
 
     ld hl, $c823
@@ -6957,7 +6948,7 @@ jr_053_6832:
     ld [$c823], a
     ld a, $9c
     ld [$dd73], a
-    call Call_053_6c48
+    call LoadBtlC_6c48
     jr nc, jr_053_6846
 
     ld a, $e3
@@ -6980,7 +6971,7 @@ Jump_053_6858:
 jr_053_6858:
     ld hl, $d9ee
     inc [hl]
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, $b8
     ld [$c823], a
     jr jr_053_6846
@@ -7014,7 +7005,7 @@ jr_053_6858:
     ld [$d9f0], a
     ld hl, $5103
     rst $10
-    call Call_053_6c48
+    call LoadBtlC_6c48
     jr c, jr_053_68af
 
     ld hl, $5801
@@ -7067,7 +7058,7 @@ jr_053_68df:
     ld hl, $d9ee
     inc [hl]
 
-Call_053_68e9:
+LoadBtlC_68e9:
     ld a, [wBattleTargetIdx]
     and $03
     cp $02
@@ -7075,7 +7066,7 @@ Call_053_68e9:
 
     ld hl, wBattleTargetIdx
     inc [hl]
-    call Call_053_690e
+    call LoadBtlC_690e
     xor a
     ld [$d9ee], a
     ret
@@ -7084,7 +7075,7 @@ Call_053_68e9:
 jr_053_68fd:
     ld hl, $5207
     rst $10
-    call Call_053_68e9
+    call LoadBtlC_68e9
     ret
 
 
@@ -7095,7 +7086,7 @@ jr_053_68fd:
     ret
 
 
-Call_053_690e:
+LoadBtlC_690e:
     ld a, [$dcfe]
     bit 0, a
     ret z
@@ -7140,7 +7131,7 @@ jr_053_6944:
     ld hl, $4c00
     rst $10
     ld a, $04
-    call Call_053_5e38
+    call CallBtlC_5e38
     ld a, $02
     ld [$dd6e], a
     ld a, $03
@@ -7158,8 +7149,8 @@ jr_053_6944:
     call CheckMonsterSlot
     ret c
 
-    call Call_053_4e33
-    call Call_053_44b5
+    call LoadBtlC_4e33
+    call SetBtlC_44b5
     ld a, [wBattleAttackerIdx]
     call GetCombatantHP
     ld a, l
@@ -7196,7 +7187,7 @@ jr_053_69a3:
     ld [$db56], a
     ld a, b
     ld [$db57], a
-    call Call_053_4ffd
+    call SetBtlC_4ffd
     ld a, $85
     ld [$c823], a
     ld a, $ff
@@ -7219,7 +7210,7 @@ jr_053_69d7:
     ld [$dd73], a
     ld a, $e7
     ld [$c823], a
-    call Call_053_6c59
+    call LoadBtlC_6c59
     jr nc, jr_053_69f2
 
     ld a, $ea
@@ -7285,7 +7276,7 @@ jr_053_6a39:
     push af
     ld a, [wBattleAttackerIdx]
     ld [wBattleTargetIdx], a
-    call Call_053_6c59
+    call LoadBtlC_6c59
     jr c, jr_053_6a70
 
     ld a, [$d9ed]
@@ -7391,7 +7382,7 @@ jr_053_6ad4:
     inc [hl]
     ld a, $9e
     ld [$dd73], a
-    call Call_053_6bc1
+    call LoadBtlC_6bc1
     ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
@@ -7435,7 +7426,7 @@ jr_053_6b22:
     adc h
     ld h, a
     ld c, [hl]
-    call Call_053_654f
+    call CallBtlC_654f
     jr jr_053_6b42
 
 jr_053_6b31:
@@ -7454,7 +7445,7 @@ jr_053_6b42:
     ld [$dd73], a
     ld a, $ff
     ld [$db5c], a
-    call Call_053_44a0
+    call SetBtlC_44a0
     ret
 
 
@@ -7465,17 +7456,17 @@ jr_053_6b42:
 
 
     inc [hl]
-    call Call_053_6bc1
+    call LoadBtlC_6bc1
     ld hl, $5f06
     rst $10
     ld a, $84
     ld [$dd73], a
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, [$c86c]
     or a
     jr z, jr_053_6b72
 
-    call Call_053_6c59
+    call LoadBtlC_6c59
     ret nc
 
     jr jr_053_6b78
@@ -7532,7 +7523,7 @@ jr_053_6bb0:
     ret
 
 
-Call_053_6bc1:
+LoadBtlC_6bc1:
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMaxHP
     add a
@@ -7598,7 +7589,7 @@ jr_053_6c1b:
     jr c, jr_053_6c38
 
     ld a, [wBattleTargetIdx]
-    call Call_053_44a0
+    call SetBtlC_44a0
     ld a, $aa
     ld [$c823], a
     xor a
@@ -7623,7 +7614,7 @@ jr_053_6c3e:
     ret
 
 
-Call_053_6c48:
+LoadBtlC_6c48:
     ld a, [$c863]
     bit 1, a
     ld a, [wBattleTargetIdx]
@@ -7639,7 +7630,7 @@ jr_053_6c55:
     ret
 
 
-Call_053_6c59:
+LoadBtlC_6c59:
     ld a, [$c863]
     bit 1, a
     ld a, [wBattleAttackerIdx]

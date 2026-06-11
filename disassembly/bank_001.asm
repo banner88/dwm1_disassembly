@@ -28,36 +28,36 @@ SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
     db $01
 
     ; Bank $01 jump table (14 entries, called via rst $10 with H=$01)
-    dw label1_401d
+    dw GameInit
     ; Entry 0: Game initialization
-    dw label1_4dd3
+    dw MainFieldLoop
     ; Entry 1: Main game loop / field update
-    dw Call_001_421c
+    dw ClearAnimationState
     ; Entry 2
-    dw Call_001_484e
+    dw SetupPartyBattleData
     ; Entry 3: Battle encounter data setup
     dw label1_4845
     ; Entry 4: Pre-battle preparation
-    dw Call_001_46f6
+    dw ReadPartySlotInfo
     ; Entry 5
-    dw jr_001_4686
+    dw ScanPartySlotTable
     ; Entry 6
-    dw label1_4c58
+    dw GetMonsterSkillDataPtr
     ; Entry 7
-    dw label1_5a72
+    dw CheckFieldMovementAllowed
     ; Entry 8
-    dw label1_4bc1
+    dw IteratePartySlots20
     ; Entry 9
-    dw Call_001_5d6d
+    dw CheckNPCInteraction
     ; Entry 10: Unknown — possibly NPC text?
     dw label1_683e
     ; Entry 11: Random encounter monster selection ($683E)
-    dw label1_69c8
+    dw LoadFloorAndEncounterData
     ; Entry 12
     dw LoadNextDungeonFloor
     ; Entry 13: Load next dungeon floor ($69E1)
 
-label1_401d:
+GameInit:
     ld hl, sp+$00
     ld a, l
     ld [$da7b], a
@@ -72,15 +72,15 @@ label1_401d:
     ld [wCurrPlayingBGM], a
     xor a
     ld [$c88f], a
-    call Call_001_43e3
+    call SaveMapStateToHRAM
     call SetColorMode
-    call Call_001_431a
+    call LoadMapMetadata
     ld hl, $8b00
     ld de, $1202
     call SetupVRAMCopy
     ld a, $fc
     call SetGBCPalette
-    call Call_001_4074
+    call InitFieldState
     ld a, $07
     ldh [$b5], a
     ld a, $ff
@@ -96,22 +96,22 @@ label1_401d:
     jp Jump_000_11cb
 
 
-Call_001_4074:
-    call Call_001_421c
-    call Call_001_42e4
-    call Call_001_4429
+InitFieldState:
+    call ClearAnimationState
+    call CheckScreenLock
+    call LoadFieldTilesDMA
     ld hl, $1702
     rst $10
     ld a, [$c8ab]
     or a
-    call nz, Call_001_4c95
-    call Call_001_46f6
-    call Call_001_484e
+    call nz, ClearFieldAnimFlag
+    call ReadPartySlotInfo
+    call SetupPartyBattleData
     ld hl, $0b02
     rst $10
     ld hl, $0b07
     rst $10
-    call Call_001_4c10
+    call CheckBattleModeFlag
     ld a, [$c8a6]
     push af
     xor a
@@ -201,7 +201,7 @@ Jump_001_4139:
     or a
     ret nz
 
-    call Call_001_43e3
+    call SaveMapStateToHRAM
     ld b, a
     ld a, [$c81b]
     cp b
@@ -229,7 +229,7 @@ jr_001_4161:
     dec b
     jr nz, jr_001_4161
 
-    call Call_001_4074
+    call InitFieldState
     call ApplyScrollRegisters
     ld a, [$c817]
     ld l, a
@@ -275,7 +275,7 @@ jr_001_4161:
     xor a
     ld [$c848], a
     ld [$c849], a
-    call Call_001_4dda
+    call ProcessFieldInput
     ld a, $02
     ld [$c88f], a
     ret
@@ -291,7 +291,7 @@ Jump_001_41dc:
     xor a
     ld [$c848], a
     ld [$c849], a
-    call Call_001_4dda
+    call ProcessFieldInput
     xor a
     ld [$c88f], a
     ld hl, wBGPalette
@@ -314,7 +314,7 @@ Jump_001_41dc:
     ret
 
 
-Call_001_421c:
+ClearAnimationState:
     xor a
     ld [$c8aa], a
     xor a
@@ -415,7 +415,7 @@ jr_001_42dd:
     ret
 
 
-Call_001_42e4:
+CheckScreenLock:
     ld a, [$c88e]
     or a
     jr nz, jr_001_42f6
@@ -449,7 +449,7 @@ jr_001_42f6:
     ret
 
 
-Call_001_431a:
+LoadMapMetadata:
     ld hl, $2add
     ld a, [hl]
     ld [$c817], a
@@ -626,7 +626,7 @@ jr_001_43dc:
     inc [hl]
     inc [hl]
 
-Call_001_43e3:
+SaveMapStateToHRAM:
     ld a, [wMapID]
     ldh [$d5], a
     ld a, [wInGateworld]
@@ -685,7 +685,7 @@ jr_001_4425:
     ret
 
 
-Call_001_4429:
+LoadFieldTilesDMA:
     ld de, $2f00
     ld hl, $8000
     call WaitDMATransfer
@@ -1268,9 +1268,9 @@ jr_001_467e:
 jr_001_4682:
     ld c, b
     nop
-    jr c, jr_001_4686
+    jr c, ScanPartySlotTable
 
-jr_001_4686:
+ScanPartySlotTable:
     ld hl, $cac1
     ld b, $00
 
@@ -1281,7 +1281,7 @@ jr_001_468b:
 
     push hl
     push bc
-    call Call_001_46a5
+    call GetPartySlotByIndex
     pop bc
     pop hl
 
@@ -1300,7 +1300,7 @@ jr_001_4696:
     ret
 
 
-Call_001_46a5:
+GetPartySlotByIndex:
     push bc
     ld a, b
     ld hl, $caea
@@ -1313,7 +1313,7 @@ jr_001_46b0:
     cp $ff
     push hl
     push bc
-    call nz, Call_001_46be
+    call nz, PreparePartyDataRead
     pop bc
     pop hl
     dec c
@@ -1322,7 +1322,7 @@ jr_001_46b0:
     ret
 
 
-Call_001_46be:
+PreparePartyDataRead:
     ld d, a
     push de
     ld a, b
@@ -1377,7 +1377,7 @@ jr_001_46f1:
     ret
 
 
-Call_001_46f6:
+ReadPartySlotInfo:
     ld a, [$ca8e]
     cp $ff
     jr z, jr_001_470c
@@ -1441,11 +1441,11 @@ jr_001_4743:
     jr nz, jr_001_473d
 
     ld a, [$ca8e]
-    call Call_001_480d
+    call RetIfSlotInvalid
     ld a, [$ca8f]
-    call Call_001_480d
+    call RetIfSlotInvalid
     ld a, [$ca90]
-    call Call_001_480d
+    call RetIfSlotInvalid
     ld a, [$ca8e]
     cp $ff
     jr nz, jr_001_4774
@@ -1517,7 +1517,7 @@ jr_001_47c1:
 jr_001_47c6:
     ld a, [hl]
     or a
-    call z, Call_001_4819
+    call z, SaveRegsAndSetupDE
     ld a, l
     add $95
     ld l, a
@@ -1531,13 +1531,13 @@ jr_001_47c6:
     jr nz, jr_001_47c1
 
     ld a, [$ca8e]
-    call Call_001_4837
+    call RetIfSlotInvalid2
     ld [$ca8e], a
     ld a, [$ca8f]
-    call Call_001_4837
+    call RetIfSlotInvalid2
     ld [$ca8f], a
     ld a, [$ca90]
-    call Call_001_4837
+    call RetIfSlotInvalid2
     ld [$ca90], a
     ld hl, $ca8e
     ld b, $03
@@ -1561,7 +1561,7 @@ jr_001_4801:
     ret
 
 
-Call_001_480d:
+RetIfSlotInvalid:
     cp $ff
     ret z
 
@@ -1571,7 +1571,7 @@ Call_001_480d:
     ret
 
 
-Call_001_4819:
+SaveRegsAndSetupDE:
     push bc
     push hl
     ld e, l
@@ -1604,7 +1604,7 @@ jr_001_4834:
     ret
 
 
-Call_001_4837:
+RetIfSlotInvalid2:
     cp $ff
     ret z
 
@@ -1627,7 +1627,7 @@ label1_4845:
     ret
 
 
-Call_001_484e:
+SetupPartyBattleData:
     ld a, [$ca8d]
     or a
     jr nz, jr_001_4862
@@ -1646,12 +1646,12 @@ jr_001_4859:
 
 
 jr_001_4862:
-    call Call_001_4869
-    call Call_001_4942
+    call SetupMenuOptions
+    call LoadPartySpriteVRAM
     ret
 
 
-Call_001_4869:
+SetupMenuOptions:
 jr_001_4869:
     ld hl, wDebug_main_menu_option
     ld bc, $0004
@@ -1781,7 +1781,7 @@ jr_001_492f:
     ret
 
 
-Call_001_4942:
+LoadPartySpriteVRAM:
     ld hl, $8da0
     ld b, $18
 
@@ -1799,7 +1799,7 @@ jr_001_4947:
 
     ld a, $00
     ld [$cac0], a
-    call Call_001_4986
+    call GetActiveMonsterStatus
     ld [$ca91], a
     ld a, [$ca8d]
     cp $01
@@ -1807,7 +1807,7 @@ jr_001_4947:
 
     ld a, $01
     ld [$cac0], a
-    call Call_001_4986
+    call GetActiveMonsterStatus
     ld [$ca92], a
     ld a, [$ca8d]
     cp $02
@@ -1815,12 +1815,12 @@ jr_001_4947:
 
     ld a, $02
     ld [$cac0], a
-    call Call_001_4986
+    call GetActiveMonsterStatus
     ld [$ca93], a
     ret
 
 
-Call_001_4986:
+GetActiveMonsterStatus:
     ld hl, $cac1
     call ReadActiveMonsterByte
     or a
@@ -2368,7 +2368,7 @@ jr_001_4bab:
     ld l, $0c
     db $2e
 
-label1_4bc1:
+IteratePartySlots20:
     ld hl, $cac1
     ld b, $14
 jr_001_4bc6:
@@ -2438,7 +2438,7 @@ jr_001_4c03:
     ret
 
 
-Call_001_4c10:
+CheckBattleModeFlag:
     ld a, [$c8ea]
     cp $80
     ret z
@@ -2489,13 +2489,13 @@ jr_001_4c49:
     rst $10
     ret
 
-label1_4c58:
+GetMonsterSkillDataPtr:
     ld a, d
     ld hl, $cb25
     call GetMonsterDataPtr
     ld e, l
     ld d, h
-    call Call_001_4c89
+    call ClassifyMonsterTier
     ld a, $09
     call Mul8x8To16
     ld b, l
@@ -2505,7 +2505,7 @@ label1_4c58:
     ld a, d
     adc $00
     ld d, a
-    call Call_001_4c89
+    call ClassifyMonsterTier
     ld a, c
     add a
     add c
@@ -2517,14 +2517,14 @@ label1_4c58:
     ld a, d
     adc $00
     ld d, a
-    call Call_001_4c89
+    call ClassifyMonsterTier
     ld a, c
     add b
     ld d, a
     ret
 
 
-Call_001_4c89:
+ClassifyMonsterTier:
     ld a, [de]
     ld c, $00
     cp $c0
@@ -2538,7 +2538,7 @@ Call_001_4c89:
     ret
 
 
-Call_001_4c95:
+ClearFieldAnimFlag:
     xor a
     ld [$c8ab], a
 
@@ -2567,7 +2567,7 @@ Call_001_4c95:
 jr_001_4cc0:
     push bc
     ld a, c
-    call Call_001_4d02
+    call RollRandomEncounter
     pop bc
     inc c
     dec b
@@ -2598,7 +2598,7 @@ jr_001_4cc0:
     ret
 
 
-Call_001_4d02:
+RollRandomEncounter:
     push af
     ld [$da14], a
     call GenerateRNG
@@ -2618,7 +2618,7 @@ Call_001_4d02:
     ld hl, $cad6
     ld c, a
     pop af
-    call Call_001_4da8
+    call WriteMonsterDataByte
     push af
     pop af
     push af
@@ -2628,7 +2628,7 @@ Call_001_4d02:
     ld hl, $cad7
     ld c, a
     pop af
-    call Call_001_4da8
+    call WriteMonsterDataByte
     push af
     pop af
     push af
@@ -2638,7 +2638,7 @@ Call_001_4d02:
     ld c, a
     pop af
     ld hl, $cac2
-    call Call_001_4db8
+    call GetMonsterDataForParty
     push af
     call GenerateRNG
     ld a, [wRNG1]
@@ -2646,7 +2646,7 @@ Call_001_4d02:
     ld c, a
     pop af
     ld hl, $cad8
-    call Call_001_4db8
+    call GetMonsterDataForParty
     push af
     call GenerateRNG
     ld a, [wRNG1]
@@ -2654,7 +2654,7 @@ Call_001_4d02:
     ld c, a
     pop af
     ld hl, $cae1
-    call Call_001_4db8
+    call GetMonsterDataForParty
     push af
     ld hl, $cad6
     call GetMonsterDataPtr
@@ -2666,7 +2666,7 @@ Call_001_4d02:
     ld c, a
     pop af
     ld hl, $cb44
-    call Call_001_4db8
+    call GetMonsterDataForParty
     push af
     ld hl, $cad7
     call GetMonsterDataPtr
@@ -2678,11 +2678,11 @@ Call_001_4d02:
     ld c, a
     pop af
     ld hl, $cb4d
-    call Call_001_4db8
+    call GetMonsterDataForParty
     ret
 
 
-Call_001_4da8:
+WriteMonsterDataByte:
     push af
     call GetMonsterDataPtr
     ld [hl], c
@@ -2699,7 +2699,7 @@ Call_001_4da8:
     ret
 
 
-Call_001_4db8:
+GetMonsterDataForParty:
     push af
     push bc
     call GetMonsterDataPtr
@@ -2717,12 +2717,12 @@ Call_001_4db8:
     pop af
     ret
 
-label1_4dd3:
+MainFieldLoop:
     ld a, [$c88f]
     or a
     jp nz, Jump_001_4139
 
-Call_001_4dda:
+ProcessFieldInput:
     jr jr_001_4dfc
 
     ld a, [wJoypad_current_frame]
@@ -2750,25 +2750,25 @@ jr_001_4dfc:
     or a
     jr nz, jr_001_4e0b
 
-    call Call_001_60e7
-    call Call_001_4eaa
-    call Call_001_4efa
+    call VisualEffectsDispatch
+    call IncrementVisualStep
+    call CheckScriptActive
 
 jr_001_4e0b:
     ld hl, $0404
     rst $10
     ld hl, $0606
     rst $10
-    call Call_001_565e
+    call CheckScriptBeforeAction
     ld hl, $0601
     rst $10
-    call Call_001_5f8b
-    call Call_001_6611
+    call CheckFieldEventFlag
+    call CheckPaletteAnimActive
     ld a, [$c8aa]
     or a
     jr nz, jr_001_4e29
 
-    call Call_001_67f8
+    call IncrementEncounterCounter
 
 jr_001_4e29:
     ret
@@ -2806,7 +2806,7 @@ jr_001_4e5b:
     sub b
     ld c, a
     ld b, $00
-    call Call_000_20a1
+    call ExtractHundreds
     ld hl, $ffc3
     ld a, $80
     ld [hl+], a
@@ -2822,7 +2822,7 @@ jr_001_4e5b:
     ld [hl+], a
     ld a, $00
 
-Call_001_4e82:
+WriteFieldDataBytes:
     ld [hl+], a
     ld a, $00
     ld [hl+], a
@@ -2837,7 +2837,7 @@ Call_001_4e82:
     ld hl, $0401
     rst $10
 
-Call_001_4e9c:
+SetTimerHRAM90:
 Jump_001_4e9c:
     ld a, $90
     ldh [$c3], a
@@ -2848,7 +2848,7 @@ Jump_001_4e9c:
     ret
 
 
-Call_001_4eaa:
+IncrementVisualStep:
     ld a, [$c8a6]
     add $01
     ld [$c8a6], a
@@ -2887,20 +2887,20 @@ jr_001_4ed2:
     or a
     jr nz, jr_001_4ef3
 
-    call Call_001_4f70
-    call Call_001_5277
+    call CheckGameStateBit2
+    call CheckGameStateThenCoords
     ld hl, $0602
     rst $10
 
 jr_001_4ef3:
-    call Call_001_5798
-    call Call_001_53cf
+    call CallBank06AndProcess
+    call CompareScreenPosition
 
 jr_001_4ef9:
     ret
 
 
-Call_001_4efa:
+CheckScriptActive:
     ld a, [wScriptStateFlags]
     or a
     ret nz
@@ -2993,7 +2993,7 @@ jr_001_4f6f:
     ret
 
 
-Call_001_4f70:
+CheckGameStateBit2:
     ld a, [wGameState]
     bit 2, a
     jp nz, Jump_001_5253
@@ -3073,7 +3073,7 @@ Call_001_4f70:
     ldh [$8d], a
     ld a, $01
     ldh [$8f], a
-    call Call_001_5254
+    call RetIfInGateworld
     ldh a, [$8e]
     push af
     ld a, $03
@@ -3127,7 +3127,7 @@ jr_001_5046:
     xor a
     ldh [$a1], a
     ldh [$a2], a
-    call Call_001_5487
+    call GetScrollPositionHL
     ld hl, $ff90
     set 4, [hl]
     jp Jump_001_51b2
@@ -3150,7 +3150,7 @@ jr_001_5056:
     ldh [$8d], a
     ld a, $01
     ldh [$8f], a
-    call Call_001_5254
+    call RetIfInGateworld
     ldh a, [$8e]
     push af
     ld a, $01
@@ -3204,7 +3204,7 @@ jr_001_50bf:
     xor a
     ldh [$a1], a
     ldh [$a2], a
-    call Call_001_546d
+    call RetIfScreenBusy
     ld hl, $ff90
     set 4, [hl]
     jp Jump_001_51b2
@@ -3220,7 +3220,7 @@ jr_001_50cf:
     ldh [$8d], a
     ld a, $00
     ldh [$8f], a
-    call Call_001_5254
+    call RetIfInGateworld
     ldh a, [$8e]
     push af
     ld a, $00
@@ -3277,7 +3277,7 @@ jr_001_50fe:
     xor a
     ldh [$a3], a
     ldh [$a4], a
-    call Call_001_54c6
+    call GetScrollPosition2
     ld hl, $ff90
     set 4, [hl]
     jr jr_001_51b2
@@ -3346,7 +3346,7 @@ jr_001_5178:
     xor a
     ldh [$a3], a
     ldh [$a4], a
-    call Call_001_54ac
+    call RetIfScrollActive
     ld hl, $ff90
     set 4, [hl]
     jr jr_001_51b2
@@ -3454,7 +3454,7 @@ jr_001_5253:
     ret
 
 
-Call_001_5254:
+RetIfInGateworld:
     ld a, [wInGateworld]
     or a
     ret nz
@@ -3482,16 +3482,16 @@ Call_001_5254:
     ret
 
 
-Call_001_5277:
+CheckGameStateThenCoords:
     ld a, [wGameState]
     bit 2, a
     jr z, jr_001_5287
 
-    call Call_001_5629
-    call Call_001_5629
-    call Call_001_5287
+    call CalcGateDataOffset
+    call CalcGateDataOffset
+    call ReadPlayerCoords
 
-Call_001_5287:
+ReadPlayerCoords:
 jr_001_5287:
     ld hl, $ffa1
     ld a, [hl+]
@@ -3709,24 +3709,24 @@ jr_001_53a9:
     ldh [$97], a
     ld a, c
     ldh [$98], a
-    call Call_001_5a66
-    call Call_001_5a29
-    call Call_001_5a4d
+    call CopyPlayerCoordsToHRAM
+    call RetIfNotGateworld2
+    call RetIfNotGateworld3
     ld hl, $0b06
     rst $10
     call CopyPlayerCoordsAndGetNextRoom
-    call Call_001_5510
-    call Call_001_5c65
-    call Call_001_5e19
-    call Call_001_5ea9
-    call Call_001_5d6d
+    call CheckGateworldField
+    call CheckOverworldVsGate
+    call CheckGateworldForSpawn
+    call InitNPCMovementZero
+    call CheckNPCInteraction
 
 Jump_001_53ce:
 jr_001_53ce:
     ret
 
 
-Call_001_53cf:
+CompareScreenPosition:
     ld hl, $ff99
     ldh a, [$92]
     cp [hl]
@@ -3748,7 +3748,7 @@ Call_001_53cf:
     jr z, jr_001_53ec
 
 jr_001_53e9:
-    call Call_001_5629
+    call CalcGateDataOffset
 
 jr_001_53ec:
     ldh a, [$92]
@@ -3759,7 +3759,7 @@ jr_001_53ec:
     ldh [$9b], a
     ldh a, [$96]
     ldh [$9c], a
-    call Call_001_5440
+    call LoadNPCDataTable
     ld a, [$d7b8]
     cp $03
     jr z, jr_001_540f
@@ -3812,7 +3812,7 @@ jr_001_5425:
     ret
 
 
-Call_001_5440:
+LoadNPCDataTable:
     ld hl, $d7d2
 
 jr_001_5443:
@@ -3856,7 +3856,7 @@ jr_001_5443:
     ret
 
 
-Call_001_546d:
+RetIfScreenBusy:
     ldh a, [$93]
     or a
     ret nz
@@ -3876,7 +3876,7 @@ Call_001_546d:
     ret
 
 
-Call_001_5487:
+GetScrollPositionHL:
     ldh a, [$9d]
     ld l, a
     ldh a, [$9e]
@@ -3906,7 +3906,7 @@ Call_001_5487:
     ret
 
 
-Call_001_54ac:
+RetIfScrollActive:
     ldh a, [$96]
     or a
     ret nz
@@ -3926,7 +3926,7 @@ Call_001_54ac:
     ret
 
 
-Call_001_54c6:
+GetScrollPosition2:
     ldh a, [$9f]
     ld l, a
     ldh a, [$a0]
@@ -3956,7 +3956,7 @@ Call_001_54c6:
     ret
 
 
-Call_001_54eb:
+CheckSpecialMapExits:
     ld a, [wMapID]
     cp MAP_MAZEWOD
     ret z
@@ -3994,12 +3994,12 @@ Call_001_54eb:
     ret
 
 
-Call_001_5510:
+CheckGateworldField:
     ld a, [wInGateworld]
     or a
     jr nz, jr_001_551a
 
-    call Call_001_54eb
+    call CheckSpecialMapExits
     ret nz
 
 jr_001_551a:
@@ -4036,11 +4036,11 @@ jr_001_551a:
     ld a, h
     ld [$ca3c], a
     ld a, [$ca8e]
-    call Call_001_558c
+    call RetIfInvalidFF
     ld a, [$ca8f]
-    call Call_001_558c
+    call RetIfInvalidFF
     ld a, [$ca90]
-    call Call_001_558c
+    call RetIfInvalidFF
 
 jr_001_555d:
     ld a, [$ca3d]
@@ -4067,7 +4067,7 @@ jr_001_555d:
 jr_001_5581:
     push bc
     ld a, c
-    call Call_001_55b1
+    call RetIfInvalidFF_2
     pop bc
     inc c
     dec b
@@ -4077,7 +4077,7 @@ jr_001_558b:
     ret
 
 
-Call_001_558c:
+RetIfInvalidFF:
     cp $ff
     ret z
 
@@ -4110,7 +4110,7 @@ Call_001_558c:
     ret
 
 
-Call_001_55b1:
+RetIfInvalidFF_2:
     cp $ff
     ret z
 
@@ -4210,7 +4210,7 @@ CopyPlayerCoordsAndGetNextRoom:
     ret
 
 
-Call_001_5629:
+CalcGateDataOffset:
     ld a, [$ca37]
     ld l, a
     ld h, $00
@@ -4248,7 +4248,7 @@ Call_001_5629:
     ret
 
 
-Call_001_565e:
+CheckScriptBeforeAction:
     ld a, [wScriptStateFlags]
     or a
     jr nz, jr_001_5690
@@ -4351,7 +4351,7 @@ jr_001_56df:
     ld b, $10
     ld a, [$c8ed]
     bit 1, a
-    call z, Call_001_572b
+    call z, AdjustGateFloorIndex
     ld a, [$ca8d]
     cp $01
     ret z
@@ -4363,7 +4363,7 @@ jr_001_56df:
     ld b, $20
     ld a, [$c8ed]
     bit 2, a
-    call z, Call_001_572b
+    call z, AdjustGateFloorIndex
     ld a, [$ca8d]
     cp $02
     ret z
@@ -4375,11 +4375,11 @@ jr_001_56df:
     ld b, $30
     ld a, [$c8ed]
     bit 3, a
-    call z, Call_001_572b
+    call z, AdjustGateFloorIndex
     ret
 
 
-Call_001_572b:
+AdjustGateFloorIndex:
     ld a, [$ca37]
     sub b
     jr nc, jr_001_5733
@@ -4427,13 +4427,13 @@ jr_001_5733:
     and $f0
     ld [hl+], a
     inc de
-    call Call_001_576f
+    call CheckNPCMovement
     ld hl, $0402
     rst $10
     ret
 
 
-Call_001_576f:
+CheckNPCMovement:
     ld a, [$d7b8]
     cp $00
     jr z, jr_001_578b
@@ -4467,10 +4467,10 @@ jr_001_578b:
     ret
 
 
-Call_001_5798:
+CallBank06AndProcess:
     ld hl, $0600
     rst $10
-    call Call_001_59c4
+    call RetIfNotGateworld
     ld hl, $ff90
     bit 5, [hl]
     jr nz, jr_001_57ab
@@ -4737,11 +4737,11 @@ Jump_001_5921:
     ldh [$95], a
     ldh a, [$9c]
     ldh [$96], a
-    call Call_001_5935
+    call LoadNPCDataTable2
     ret
 
 
-Call_001_5935:
+LoadNPCDataTable2:
     ld hl, $d7d2
 
 jr_001_5938:
@@ -4749,7 +4749,7 @@ jr_001_5938:
     cp $ff
     ret z
 
-    call Call_001_594a
+    call AdvanceNPCPointer
     ld a, l
     add $20
     ld l, a
@@ -4761,7 +4761,7 @@ jr_001_5938:
     ret
 
 
-Call_001_594a:
+AdvanceNPCPointer:
     push hl
     ld a, l
     add $05
@@ -4854,7 +4854,7 @@ jr_001_599c:
     ret
 
 
-Call_001_59c4:
+RetIfNotGateworld:
     ld a, [wInGateworld]
     or a
     ret z
@@ -4876,12 +4876,12 @@ jr_001_59cc:
     inc hl
     inc hl
     ld de, $ff92
-    call Call_001_59fe
+    call SwapNibbles
     jr nc, jr_001_59f3
 
     inc hl
     ld de, $ff95
-    call Call_001_59fe
+    call SwapNibbles
     jr nc, jr_001_59f3
 
     pop hl
@@ -4900,7 +4900,7 @@ jr_001_59f3:
     ld h, a
     jr jr_001_59cc
 
-Call_001_59fe:
+SwapNibbles:
     ld a, [hl]
     swap a
     ld b, a
@@ -4939,7 +4939,7 @@ jr_001_5a20:
     ret
 
 
-Call_001_5a29:
+RetIfNotGateworld2:
     ld a, [wInGateworld]
     or a
     ret z
@@ -4969,7 +4969,7 @@ jr_001_5a37:
     ret
 
 
-Call_001_5a4d:
+RetIfNotGateworld3:
     ld a, [wInGateworld]
     or a
     ret z
@@ -4987,7 +4987,7 @@ Call_001_5a4d:
     ret
 
 
-Call_001_5a66:
+CopyPlayerCoordsToHRAM:
     ldh a, [$97]
     ldh [$db], a
     ldh a, [$98]
@@ -4995,7 +4995,7 @@ Call_001_5a66:
     xor a
     ld [$d78f], a
 
-label1_5a72:
+CheckFieldMovementAllowed:
     ld a, [$c850]
     or a
     ret nz
@@ -5314,12 +5314,12 @@ jr_001_5c39:
     ret
 
 
-Call_001_5c65:
+CheckOverworldVsGate:
     ld a, [wInGateworld]
     or a
     jr nz, jr_001_5c6f
 
-    call Call_001_54eb
+    call CheckSpecialMapExits
     ret nz
 
 jr_001_5c6f:
@@ -5351,11 +5351,11 @@ jr_001_5c6f:
 
     ld hl, $0001
     ld a, $00
-    call Call_001_5cd3
+    call ComparePartySlotCount
     ld a, $01
-    call Call_001_5cd3
+    call ComparePartySlotCount
     ld a, $02
-    call Call_001_5cd3
+    call ComparePartySlotCount
     call UpdateOAMSprites
     call GetBGMapAddress
 
@@ -5370,11 +5370,11 @@ jr_001_5cac:
     jr nz, jr_001_5cd2
 
     ld a, $00
-    call Call_001_5d33
+    call CheckInteractionBit
     ld a, $01
-    call Call_001_5d33
+    call CheckInteractionBit
     ld a, $02
-    call Call_001_5d33
+    call CheckInteractionBit
     call UpdateOAMSprites
     call GetBGMapAddress
 
@@ -5382,7 +5382,7 @@ jr_001_5cd2:
     ret
 
 
-Call_001_5cd3:
+ComparePartySlotCount:
     ld b, a
     ld a, [$ca8d]
     cp b
@@ -5407,7 +5407,7 @@ Call_001_5cd3:
 
     ld a, b
     ld hl, $0001
-    call Call_000_22d2
+    call GetMonsterSlotAndPush
     ret
 
 
@@ -5439,7 +5439,7 @@ Call_001_5cd3:
 
     ld a, b
     ld hl, $0001
-    call Call_000_22f0
+    call GetMonsterHPContext
     ld a, $6c
     call PlaySoundEffect
     ld a, $08
@@ -5449,7 +5449,7 @@ Call_001_5cd3:
     ret
 
 
-Call_001_5d33:
+CheckInteractionBit:
     ld b, a
     ldh a, [$90]
     bit 1, a
@@ -5478,7 +5478,7 @@ Call_001_5d33:
 
     ld a, b
     ld hl, $0001
-    call Call_000_22be
+    call GetMonsterLevelPtr
     ld a, $6c
     call PlaySoundEffect
     ld a, $08
@@ -5488,7 +5488,7 @@ Call_001_5d33:
     ret
 
 
-Call_001_5d6d:
+CheckNPCInteraction:
     ldh a, [$90]
     bit 7, a
     ret nz
@@ -5498,7 +5498,7 @@ Call_001_5d6d:
 
     ld hl, $ff90
     res 1, [hl]
-    call Call_001_5d9c
+    call CheckGateworldForNPC
     ldh a, [$90]
     bit 1, a
     ret nz
@@ -5518,7 +5518,7 @@ Call_001_5d6d:
     ret
 
 
-Call_001_5d9c:
+CheckGateworldForNPC:
 jr_001_5d9c:
     ld a, [wInGateworld]
     or a
@@ -5544,7 +5544,7 @@ jr_001_5d9c:
     bit 0, a
     ret nz
 
-    call Call_001_54eb
+    call CheckSpecialMapExits
     ret nz
 
     ldh a, [$aa]
@@ -5613,12 +5613,12 @@ jr_001_5e08:
     ret
 
 
-Call_001_5e19:
+CheckGateworldForSpawn:
     ld a, [wInGateworld]
     or a
     jr nz, jr_001_5e23
 
-    call Call_001_54eb
+    call CheckSpecialMapExits
     ret nz
 
 jr_001_5e23:
@@ -5661,11 +5661,11 @@ jr_001_5e23:
     ld l, a
     ld h, $00
     ld a, $00
-    call Call_001_5e8d
+    call ComparePartySlotCount2
     ld a, $01
-    call Call_001_5e8d
+    call ComparePartySlotCount2
     ld a, $02
-    call Call_001_5e8d
+    call ComparePartySlotCount2
     ld a, $6c
     call PlaySoundEffect
     ld a, $08
@@ -5698,7 +5698,7 @@ jr_001_5e7c:
 Jump_001_5e8c:
     nop
 
-Call_001_5e8d:
+ComparePartySlotCount2:
     ld b, a
     ld a, [$ca8d]
     cp b
@@ -5718,19 +5718,19 @@ Call_001_5e8d:
 
     push hl
     ld a, b
-    call Call_000_22be
+    call GetMonsterLevelPtr
     pop hl
     ret
 
 
-Call_001_5ea9:
+InitNPCMovementZero:
     ld c, $00
     ld a, $00
-    call Call_001_5f25
+    call ComparePartySlotCount3
     ld a, $01
-    call Call_001_5f25
+    call ComparePartySlotCount3
     ld a, $02
-    call Call_001_5f25
+    call ComparePartySlotCount3
     ld a, c
     or a
     ret z
@@ -5738,17 +5738,17 @@ Call_001_5ea9:
     push bc
     ld c, $00
     ld a, $00
-    call Call_001_5f76
+    call ProcessNPCSpriteData
     ld a, $01
-    call Call_001_5f76
+    call ProcessNPCSpriteData
     ld a, $02
-    call Call_001_5f76
+    call ProcessNPCSpriteData
     ld a, [$ca8d]
     cp c
     pop bc
     jr nz, jr_001_5f01
 
-    call Call_001_484e
+    call SetupPartyBattleData
     call UpdateOAMSprites
     call GetBGMapAddress
     ld hl, $ff90
@@ -5782,13 +5782,13 @@ jr_001_5f01:
     xor a
     ld [$c915], a
     ld [$c916], a
-    call Call_001_484e
+    call SetupPartyBattleData
     call UpdateOAMSprites
     call GetBGMapAddress
     ret
 
 
-Call_001_5f25:
+ComparePartySlotCount3:
     ld b, a
     ld a, [$ca8d]
     cp b
@@ -5848,7 +5848,7 @@ jr_001_5f74:
     ret
 
 
-Call_001_5f76:
+ProcessNPCSpriteData:
     ld b, a
     ld a, [$ca8d]
     cp b
@@ -5868,7 +5868,7 @@ Call_001_5f76:
     ret
 
 
-Call_001_5f8b:
+CheckFieldEventFlag:
     ld a, [$c8ec]
     or a
     ret nz
@@ -5903,7 +5903,7 @@ jr_001_5fae:
     ret z
 
     push de
-    call Call_001_5fc1
+    call CheckDirectionBit7
     pop de
     ld a, e
     add $04
@@ -5913,7 +5913,7 @@ jr_001_5fae:
     ld d, a
     jr jr_001_5fae
 
-Call_001_5fc1:
+CheckDirectionBit7:
     bit 7, a
     jr z, jr_001_5fde
 
@@ -6203,7 +6203,7 @@ jr_001_606f:
 ; to a per-room handler via rst $00 indexed by wMapID.
 ; NOT the NPC text system — handlers do palette animation and tile swaps.
 PerRoomVRAMDispatch:
-Call_001_60e7:  ; original label
+VisualEffectsDispatch:  ; original label
     ld a, [$c850]
     or a
     ret nz
@@ -6368,13 +6368,13 @@ jr_001_6115:  ; original label
 Handler_Castle:
 label1_61f9:  ; original label
     ld hl, $94d0
-    call Call_001_65e0
+    call CheckVisualEffectType
     ret
 
 ; GreatTree ($01): CALL $659F — story event visual effect
 Handler_GreatTree:
 label1_6200:  ; original label
-    call Call_001_659f
+    call GetVisualEffectMask
     ret
 
 ; Bazaar ($02): RET — no visual update
@@ -6384,16 +6384,16 @@ label1_6204:  ; original label
 
 
     ld hl, $9210
-    call Call_001_6636
+    call VRAMRotateRight
     ld hl, $93f0
-    call Call_001_6636
+    call VRAMRotateRight
     ret
 
 
     ld hl, $9210
-    call Call_001_668f
+    call VRAMRotateLeft
     ld hl, $93f0
-    call Call_001_668f
+    call VRAMRotateLeft
     ret
 
 ; GateHub ($03-$07): RET — no visual update
@@ -6488,7 +6488,7 @@ label1_62b2:  ; original label
 ; SecretPassage ($0A): CALL $659F
 Handler_SecretPassage:
 label1_62b3:  ; original label
-    call Call_001_659f
+    call GetVisualEffectMask
     ret
 
 ; $0B-$0F: RET
@@ -6513,7 +6513,7 @@ label1_62b9:  ; original label
     ld hl, $9320
     ld de, $93d0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_62cd:
@@ -6528,7 +6528,7 @@ label1_62ce:
     ld hl, $9240
     ld de, $92c0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_62e2:
@@ -6554,7 +6554,7 @@ label1_62e5:  ; original label
     ld hl, $9320
     ld de, $9380
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_62f9:
@@ -6569,7 +6569,7 @@ label1_62fa:
     ld hl, $9130
     ld de, $9190
     ld b, $40
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_630e:
@@ -6580,7 +6580,7 @@ label1_630f:
 
 label1_6310:
     ld hl, $9240
-    call Call_001_65e0
+    call CheckVisualEffectType
     ld a, [$c8a6]
     and $1f
     cp $03
@@ -6589,11 +6589,11 @@ label1_6310:
     ld hl, $9060
     ld de, $9200
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $9160
     ld de, $9220
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_6335:
@@ -6601,12 +6601,12 @@ label1_6335:
 
 label1_6336:
     ld hl, $9250
-    call Call_001_65e0
+    call CheckVisualEffectType
     ret
 
 label1_633d:
     ld hl, $90a0
-    call Call_001_65e0
+    call CheckVisualEffectType
     ld a, [$c8a6]
     and $1f
     cp $03
@@ -6615,11 +6615,11 @@ label1_633d:
     ld hl, $9060
     ld de, $90c0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $9160
     ld de, $90e0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_6362:
@@ -6631,7 +6631,7 @@ label1_6362:
     ld hl, $9060
     ld de, $91a0
     ld b, $40
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_6376:
@@ -6639,7 +6639,7 @@ label1_6376:
 
 label1_6377:
     ld hl, $9180
-    call Call_001_65e0
+    call CheckVisualEffectType
     ret
 
 label1_637e:
@@ -6651,11 +6651,11 @@ label1_637e:
     ld hl, $9060
     ld de, $9200
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $9160
     ld de, $9220
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_639d:
@@ -6667,12 +6667,12 @@ label1_639d:
     ld hl, $94e0
     ld de, $94f0
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_63b1:
     ld hl, $91e0
-    call Call_001_65e0
+    call CheckVisualEffectType
     ret
 
 label1_63b8:
@@ -6702,7 +6702,7 @@ label1_63be:
     ld hl, $9230
     ld de, $9240
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_63d2:
@@ -6719,12 +6719,12 @@ label1_63d5:
 
 label1_63d6:
     ld hl, $9560
-    call Call_001_65e0
+    call CheckVisualEffectType
     ret
 
 label1_63dd:
     ld hl, $90a0
-    call Call_001_65e0
+    call CheckVisualEffectType
     ret
 
 label1_63e4:
@@ -6736,7 +6736,7 @@ label1_63e4:
     ld hl, $9380
     ld de, $93c0
     ld b, $40
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_63f8:
@@ -6758,7 +6758,7 @@ label1_63fc:
     ld hl, $90e0
     ld de, $90f0
     ld b, $10
-    call z, Call_001_6602
+    call z, VRAMCopyTile
     ld a, [$c8a6]
     and $3f
     cp $23
@@ -6767,7 +6767,7 @@ label1_63fc:
     ld hl, $91e0
     ld de, $91f0
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_6422:
@@ -6775,7 +6775,7 @@ label1_6422:
 
 label1_6423:
     ld hl, $9460
-    call Call_001_65e0
+    call CheckVisualEffectType
     ret
 
 label1_642a:
@@ -6787,11 +6787,11 @@ label1_642a:
     ld hl, $94c0
     ld de, $95a0
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $94e0
     ld de, $95b0
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_6449:
@@ -6803,14 +6803,14 @@ label1_6449:
     ld hl, $9190
     ld de, $91a0
 
-Call_001_6457:
+VRAMCopyTile16:
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_645d:
     ld hl, $9310
-    call Call_001_65e0
+    call CheckVisualEffectType
     ld a, [$c8a6]
     and $1f
     cp $03
@@ -6819,17 +6819,17 @@ label1_645d:
     ld hl, $92a0
     ld de, $92c0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $93a0
     ld de, $93c0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $9400
     ld de, $9420
     ld b, $20
 
-Call_001_6489:
-    call Call_001_6602
+VRAMCopyTileAndRet:
+    call VRAMCopyTile
     ret
 
 label1_648d:
@@ -6842,7 +6842,7 @@ label1_648e:
     ld hl, $90c0
     ld de, $90d0
     ld b, $10
-    call z, Call_001_6602
+    call z, VRAMCopyTile
     ld a, [$c8a6]
     and $1f
     cp $13
@@ -6851,7 +6851,7 @@ label1_648e:
     ld hl, $90e0
     ld de, $90f0
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_64b4:
@@ -6859,7 +6859,7 @@ label1_64b4:
 
 label1_64b5:
     ld hl, $9340
-    call Call_001_65e0
+    call CheckVisualEffectType
     ld a, [$c8a6]
     and $1f
     cp $03
@@ -6868,11 +6868,11 @@ label1_64b5:
     ld hl, $90a0
     ld de, $90c0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $9200
     ld de, $9220
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_64da:
@@ -6887,7 +6887,7 @@ label1_64db:
     ld hl, $95c0
     ld de, $95e0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ret
 
 label1_64ef:
@@ -6912,11 +6912,11 @@ label1_64f0:
     ld hl, $91b0
     ld de, $90d0
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $91c0
     ld de, $91d0
     ld b, $10
-    call Call_001_6602
+    call VRAMCopyTile
 
 jr_001_651e:
     ld a, [$c8a6]
@@ -6937,7 +6937,7 @@ jr_001_651e:
     ld hl, $9200
     ld de, $9220
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
 
 jr_001_6541:
     ret
@@ -6960,7 +6960,7 @@ label1_6543:
     ld hl, $93c0
     ld de, $9440
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
 
 jr_001_6560:
     ld a, [$c8a6]
@@ -6974,11 +6974,11 @@ jr_001_6560:
     ld hl, $93e0
     ld de, $9460
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
     ld hl, $9520
     ld de, $94a0
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
 
 jr_001_6584:
     ld a, [$c8a6]
@@ -6992,7 +6992,7 @@ jr_001_6584:
     ld hl, $9500
     ld de, $9480
     ld b, $20
-    call Call_001_6602
+    call VRAMCopyTile
 
 jr_001_659d:
     ret
@@ -7006,7 +7006,7 @@ label1_659e:
 ; Different paths for different interaction states
 ; Reads from $9400, calls $65D4, $66BC, $668F
 TextHelper_659F:
-Call_001_659f:  ; original label
+GetVisualEffectMask:  ; original label
     ld a, [$c8a6]
     and $1f
     cp $05
@@ -7021,27 +7021,27 @@ jr_001_65a9:
     jr z, jr_001_65c8
 
     ld hl, $9400
-    call Call_001_65d4
-    call Call_001_65bc
-    call Call_001_65d4
+    call VRAMEffectStep
+    call VRAMEffectSetup
+    call VRAMEffectStep
 
-Call_001_65bc:
-    call Call_001_668f
-    call Call_001_668f
-    call Call_001_668f
+VRAMEffectSetup:
+    call VRAMRotateLeft
+    call VRAMRotateLeft
+    call VRAMRotateLeft
     jp Jump_001_668f
 
 
 jr_001_65c8:
     ld hl, $9400
-    call Call_001_65bc
-    call Call_001_65d4
-    call Call_001_65bc
+    call VRAMEffectSetup
+    call VRAMEffectStep
+    call VRAMEffectSetup
 
-Call_001_65d4:
-    call Call_001_6636
-    call Call_001_6636
-    call Call_001_6636
+VRAMEffectStep:
+    call VRAMRotateRight
+    call VRAMRotateRight
+    call VRAMRotateRight
     jp Jump_001_6636
 
 
@@ -7049,7 +7049,7 @@ Call_001_65d4:
 ; Checks $C8A6 AND $7F against values $07, $27, $47, $67
 ; Different VRAM copy operations for each
 TextHelper_65E0:
-Call_001_65e0:  ; original label
+CheckVisualEffectType:  ; original label
     ld a, [$c8a6]
     and $7f
     cp $07
@@ -7068,12 +7068,12 @@ Call_001_65e0:  ; original label
 
 
 jr_001_65f6:
-    call Call_001_6636
+    call VRAMRotateRight
     jp Jump_001_6636
 
 
 jr_001_65fc:
-    call Call_001_668f
+    call VRAMRotateLeft
     jp Jump_001_668f
 
 
@@ -7081,7 +7081,7 @@ jr_001_65fc:
 ; DI; copies B bytes between [HL] and [DE] (swap, not just copy)
 ; Used by room handlers for animated tile effects
 VRAMTileSwap_6602:
-Call_001_6602:  ; original label
+VRAMCopyTile:  ; original label
 jr_001_6602:
     di
     call WaitVRAM
@@ -7098,7 +7098,7 @@ jr_001_6602:
     ret
 
 
-Call_001_6611:
+CheckPaletteAnimActive:
     ld a, [$c850]
     or a
     ret nz
@@ -7131,7 +7131,7 @@ Call_001_6611:
 ; VRAM tile copy routine (one-way)
 ; DI; copies tiles from [HL] area using VRAM-safe timing
 VRAMTileCopy_6636:
-Call_001_6636:  ; original label
+VRAMRotateRight:  ; original label
 Jump_001_6636:
     di
     call WaitVRAM
@@ -7192,7 +7192,7 @@ Jump_001_6636:
     ret
 
 
-Call_001_668f:
+VRAMRotateLeft:
 Jump_001_668f:
     di
     call WaitVRAM
@@ -7465,7 +7465,7 @@ Jump_001_668f:
     ret
 
 
-Call_001_67f8:
+IncrementEncounterCounter:
     ld a, [$cab5]
     inc a
     ld [$cab5], a
@@ -7538,11 +7538,11 @@ label1_683e:  ; original label
     ld h, a
     ld b, $00
     ld de, $c0d8
-    call Call_001_69ad
-    call Call_001_69ad
-    call Call_001_69ad
+    call LookupEncounterEntry
+    call LookupEncounterEntry
+    call LookupEncounterEntry
     ld hl, $c0d8
-    call Call_001_6989
+    call CalcEncounterPoolIdx
     ld [$da02], a
     ld a, [wEncounterPoolIndex]
     ld bc, $001a
@@ -7554,11 +7554,11 @@ label1_683e:  ; original label
     adc $6a
     ld h, a
     ld de, $c0d8
-    call Call_001_69ad
-    call Call_001_69ad
-    call Call_001_69ad
-    call Call_001_69ad
-    call Call_001_69ad
+    call LookupEncounterEntry
+    call LookupEncounterEntry
+    call LookupEncounterEntry
+    call LookupEncounterEntry
+    call LookupEncounterEntry
 
     ;initialize enemy monster slots
     ld a, $ff
@@ -7566,9 +7566,9 @@ label1_683e:  ; original label
     ld [$da05], a
     ld [$da07], a
     ld hl, $c0d8
-    call Call_001_6989
+    call CalcEncounterPoolIdx
     ld [wTempEnemyId1], a
-    call Call_001_696c
+    call SaveRegsForEncounter
     cp $01
     jr z, jr_001_68d8
 
@@ -7578,9 +7578,9 @@ label1_683e:  ; original label
 
 jr_001_68ad:
     ld hl, $c0d8
-    call Call_001_6989
+    call CalcEncounterPoolIdx
     ld [$da05], a
-    call Call_001_6941
+    call SetupEncounterCalc
     jr c, jr_001_68ad
 
     cp $01
@@ -7592,9 +7592,9 @@ jr_001_68ad:
 
 jr_001_68c6:
     ld hl, $c0d8
-    call Call_001_6989
+    call CalcEncounterPoolIdx
     ld [$da07], a
-    call Call_001_6941
+    call SetupEncounterCalc
     jr c, jr_001_68c6
 
     cp $01
@@ -7669,7 +7669,7 @@ jr_001_6940:
     ret
 
 
-Call_001_6941:
+SetupEncounterCalc:
     ld b, $00
     push af
     ld c, a
@@ -7704,12 +7704,12 @@ jr_001_695b:
 
 jr_001_6966:
     pop af
-    call Call_001_696c
+    call SaveRegsForEncounter
     cp b
     ret
 
 
-Call_001_696c:
+SaveRegsForEncounter:
     push af
     push bc
     ld a, [wEncounterPoolIndex]
@@ -7732,7 +7732,7 @@ Call_001_696c:
     ret
 
 
-Call_001_6989:
+CalcEncounterPoolIdx:
     push hl
     call GenerateRNG
     ld a, [wRNG1]
@@ -7763,7 +7763,7 @@ jr_001_69ab:
     ret
 
 
-Call_001_69ad:
+LookupEncounterEntry:
     ld a, [hl]
     push hl
     ld hl, $69c0
@@ -7791,7 +7791,7 @@ Call_001_69ad:
     ld h, h
 
 
-label1_69c8:
+LoadFloorAndEncounterData:
     call LoadNextDungeonFloor
     ld a, [wEncounterPoolIndex]
     ld bc, $001a
@@ -8580,7 +8580,7 @@ EncounterPool_091:
 EncounterPool_092:
     ; Header
     db $04
-Call_001_7407:
+EncounterDataTable_1:
     db $03, $00, $00, $07, $03, $03, $02, $02, $00
     dw 145, 163, 169, 189, 0  ; EIDs
     db 3, 3, 3, 3, 0  ; Weights
@@ -8589,7 +8589,7 @@ Call_001_7407:
 ; --- Pool 93 ($7420): Gate of Demolition (Sidoh) ---
 EncounterPool_093:
     ; Header
-Call_001_7420:
+EncounterDataTable_2:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00
     dw 4, 14, 21, 34, 0  ; EIDs
     db 3, 3, 3, 3, 0  ; Weights
@@ -8614,7 +8614,7 @@ EncounterPool_096:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     ; EIDs (split by label)
     db $90, $00, $A2
-Call_001_747b:
+EncounterWeightTable:
     db $00, $C5, $00, $C6, $00, $00, $00
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
@@ -8904,14 +8904,14 @@ jr_001_77eb:
     and a
     ret nz
 
-    call Call_000_0382
+    call ScreenRefreshVBlank
     jr c, jr_001_7827
 
     ld a, [$cc08]
     ldh [$d8], a
     ld a, $61
     rst $20
-    call Call_000_0382
+    call ScreenRefreshVBlank
     ldh a, [$d8]
     rst $20
     ret nc
@@ -8976,7 +8976,7 @@ jr_001_7851:
     call $07b8
     ld [hl], $64
     pop bc
-    call Call_000_05e3
+    call TriggerMapRedraw
     ld d, $d0
     call GameStateBit_0686
     ld a, $1f
@@ -9020,12 +9020,12 @@ jr_001_78a5:
 
     ld [hl], $28
     ld bc, $0100
-    call Call_000_056c
+    call CrossBankCallRst10
     jp $057c
 
 
 jr_001_78bf:
-    call Call_000_05c3
+    call StoreMapPointerRegs
     rst $38
     ld a, $80
     jp Jump_ShowTextAndWait
@@ -9059,7 +9059,7 @@ jr_001_78c8:
 
     rst $38
     ld bc, $78fd
-    call Call_000_067e
+    call WaitForJoypadInput
     ld bc, $f010
     call $05e2
     ld bc, $0280
@@ -9090,7 +9090,7 @@ jr_001_78c8:
 
     ld a, $01
     call $07d8
-    call Call_000_063b
+    call SetROMBankHigh
     ld bc, $1000
     call $0612
     call $05e2
@@ -9141,7 +9141,7 @@ jr_001_7948:
     and a
     jr nz, jr_001_7983
 
-    call Call_001_7b0c
+    call LookupGateThreshold
     ld a, [$ca86]
     cp $03
     ret nz
@@ -9161,14 +9161,14 @@ jr_001_7983:
 
 
 label7992:
-    call Call_001_7b0c
+    call LookupGateThreshold
     rst $10
     ret nz
 
     ld [hl], $20
     rst $38
     ld a, $3e
-    call Call_000_0515
+    call BankTrampolineTable
     call SetViewportParams
     ld hl, $c014
     add [hl]
@@ -9184,7 +9184,7 @@ label7992:
 
     ld a, $09
     ld bc, $7454
-    call Call_001_79d1
+    call WriteNPCField1C
     ld hl, $7ba8
     jp $091e
 
@@ -9192,12 +9192,12 @@ label7992:
 jr_001_79c3:
     ld a, $0b
     ld bc, $7464
-    call Call_001_79d1
+    call WriteNPCField1C
     ld hl, $7b8f
     jp $091e
 
 
-Call_001_79d1:
+WriteNPCField1C:
     ld e, $1c
     ld [de], a
     push bc
@@ -9210,14 +9210,14 @@ Call_001_79d1:
     ld a, $5b
     rst $20
     call CheckState_C83c_068A
-    call Call_000_07e8
+    call ScreenProcessB
     ld bc, $fe00
     call $0552
     db $cd, $cf, $01
     ld b, h
     ld c, l
     ld hl, $c0c0
-    call Call_000_0aea
+    call TextIdDispatch
     ld d, $cc
     jp $07d3
 
@@ -9235,7 +9235,7 @@ label79fc:
     jp nc, $07d8
 
     ld hl, $8f8e
-    call Call_001_7b1d
+    call CallAudioSetup
     rst $38
     ld h, d
     ld l, $1c
@@ -9254,7 +9254,7 @@ label7a1c:
     sub [hl]
     call ShowTextAndWait
     ld hl, $8e8f
-    call Call_001_7b1d
+    call CallAudioSetup
     ld a, $01
     jp $07d8
 
@@ -9297,11 +9297,11 @@ label7a4e:
 
 
 label7a69:
-    call Call_001_6489
+    call VRAMCopyTileAndRet
     ret z
 
     ld d, $c0
-    call Call_000_307f
+    call CheckFieldStateDD20
     ld d, $cc
     jr z, jr_001_7a90
 
@@ -9311,7 +9311,7 @@ label7a69:
     jr nc, jr_001_7abf
 
     ld d, $c0
-    call Call_000_2fff
+    call MenuEndDraw
     ld d, $cc
     jr nz, jr_001_7abf
 
@@ -9325,17 +9325,17 @@ jr_001_7a90:
     call $6461
     ld bc, $e4fc
     ld hl, $7bd4
-    call Call_001_6457
+    call VRAMCopyTile16
     ld bc, $04fc
     ld hl, $7be0
-    call Call_001_6457
+    call VRAMCopyTile16
     call $6583
     ret c
 
     ld a, $1a
-    call Call_000_0515
+    call BankTrampolineTable
     ld a, $20
-    call Call_000_08e6
+    call SubtractTileOffset16
     rst $38
     ld a, $40
     jp Jump_ShowTextAndWait
@@ -9364,13 +9364,13 @@ jr_001_7ad6:
     and a
     ret nz
 
-    call Call_000_0426
+    call ReadJoypad
     ld a, $ac
     ld [hl], a
     ld [$ca96], a
     ld hl, $cac0
     res 0, [hl]
-    call Call_000_0730
+    call TilemapRecombineAddr
     jp Jump_001_5e8c
 
 
@@ -9390,7 +9390,7 @@ jr_001_7ad6:
     jp Jump_CallTextRenderer
 
 
-Call_001_7b0c:
+LookupGateThreshold:
     ld hl, $7b65
     ld a, [$c982]
     bit 3, a
@@ -9400,7 +9400,7 @@ Call_001_7b0c:
     jp $091e
 
 
-Call_001_7b1d:
+CallAudioSetup:
     push hl
     call $372a
     ld e, $02
@@ -9409,8 +9409,8 @@ Call_001_7b1d:
     jr c, jr_001_7b46
 
     xor a
-    call Call_001_7b59
-    call Call_000_3722
+    call LoadGateEncounterRates
+    call AudioJumpToFreqCalc
     ld e, $01
     ld a, [de]
     cp $03
@@ -9425,7 +9425,7 @@ Call_001_7b1d:
     ld e, $1c
     ld [de], a
     ld a, $8e
-    call Call_001_7b59
+    call LoadGateEncounterRates
 
 jr_001_7b46:
     pop hl
@@ -9435,18 +9435,18 @@ jr_001_7b46:
 
 jr_001_7b4b:
     ld a, h
-    call Call_001_7b59
+    call LoadGateEncounterRates
     dec e
     ret z
 
     ld a, l
-    call Call_001_7b59
+    call LoadGateEncounterRates
     dec e
     ret z
 
     jr jr_001_7b4b
 
-Call_001_7b59:
+LoadGateEncounterRates:
     call RunScriptEngine
     dec c
     call RunScriptEngine
@@ -9581,7 +9581,7 @@ Call_001_7b59:
     ld [hl], h
     ld [hl], h
 
-Call_001_7bec:
+CalcGateMonsterLevel:
     call CallTextRenderer
     ld bc, $0200
     call $0552
@@ -9609,7 +9609,7 @@ Call_001_7bec:
     and a
     jr nz, jr_001_7c23
 
-    call Call_000_068d
+    call SetJoypadResult
     rst $38
     ld bc, $7d53
     call $02be
@@ -9645,7 +9645,7 @@ jr_001_7c23:
 
     ld b, b
     ld a, l
-    call Call_001_4e82
+    call WriteFieldDataBytes
     call $0547
     call $23f5
     call GameStateBit_0686
@@ -9659,11 +9659,11 @@ jr_001_7c23:
     jp nz, $4e8d
 
     ld bc, $ffa0
-    call Call_000_056c
+    call CrossBankCallRst10
     ld a, $52
     rst $20
     ld a, $21
-    call Call_000_0515
+    call BankTrampolineTable
     jp Jump_000_3ce8
 
 
@@ -9677,7 +9677,7 @@ jr_001_7c23:
     jp Jump_000_3ce8
 
 
-    call Call_001_4e9c
+    call SetTimerHRAM90
     cp $05
     ret nz
 
@@ -9690,22 +9690,22 @@ jr_001_7c23:
     jp Jump_000_3ce8
 
 
-    call Call_001_4e9c
-    call Call_000_06b4
+    call SetTimerHRAM90
+    call CheckCursorInput
     ld bc, $7d4e
     jp nz, $0298
 
     ld d, $cc
     ld bc, $ff40
-    call Call_001_7bec
+    call CalcGateMonsterLevel
     ld bc, $0000
-    call Call_001_7bec
+    call CalcGateMonsterLevel
     ld bc, $00c0
-    call Call_001_7bec
+    call CalcGateMonsterLevel
     ld a, $44
 
 jr_001_7cbf:
-    call Call_000_0515
+    call BankTrampolineTable
     jp Jump_000_3ce8
 
 
@@ -9717,7 +9717,7 @@ jr_001_7cbf:
     jp Jump_000_3ce5
 
 
-    call Call_001_4e9c
+    call SetTimerHRAM90
     ld a, [$c982]
     and $07
     ret nz
@@ -9744,7 +9744,7 @@ jr_001_7cf9:
     ld a, $52
     rst $20
     ld bc, $0038
-    call Call_000_056c
+    call CrossBankCallRst10
     ld d, $c1
     ld bc, $f820
     call $08ba
@@ -9789,15 +9789,15 @@ jr_001_7cf9:
     ld d, a
     ld [$ff58], sp
     ld bc, $9982
-    call Call_001_747b
+    call EncounterWeightTable
     ld hl, $1f76
     call ReadHRAM_d6_2042
     xor a
     ld [$c995], a
     ld de, $4f00
-    call Call_000_1e65
+    call SubHLFromHRAM_A5
     call GetSpriteAddress
-    call Call_001_7da9
+    call ReadMenuDisplayData
     jp $15f7
 
 
@@ -9832,7 +9832,7 @@ jr_001_7d9c:
     res 2, a
     ld [$cdaa], a
 
-Call_001_7da9:
+ReadMenuDisplayData:
 jr_001_7da9:
     ld hl, $cda5
     ld a, [hl]
@@ -9843,30 +9843,30 @@ jr_001_7da9:
 
 jr_001_7db4:
     xor a
-    call Call_000_15f4
+    call TextEndOfLine
     jr jr_001_7da9
 
 label7dba:
-    call Call_001_7dd5
+    call LoadEncounterTable
 
 jr_001_7dbd:
-    call Call_001_7407
+    call EncounterDataTable_1
     ld bc, $98a3
     jp Jump_000_0aea
 
 label7dc6:
-    call Call_000_1e74
+    call SubHLFromHRAM_A7
     ld de, $576f
     ld bc, $9912
 
-Call_001_7dcf:
+ProcessEncounterSetup:
 jr_001_7dcf:
-    call Call_001_7dd5
+    call LoadEncounterTable
     jp Jump_RunScriptEngine
 
 
-Call_001_7dd5:
-    call Call_001_7420
+LoadEncounterTable:
+    call EncounterDataTable_2
     ld hl, $c981
     ld [hl], $04
     ret
@@ -9879,13 +9879,13 @@ label7dde:
 label7de6:
     ld de, $5546
     ld bc, $98ef
-    call Call_001_7dcf
+    call ProcessEncounterSetup
     inc a
     inc c
     jp Jump_RunScriptEngine
 
 
-    call Call_001_7420
+    call EncounterDataTable_2
     jr jr_001_7dbd
 
     xor a
@@ -9905,10 +9905,10 @@ label7de6:
     rra
     ld b, $ab
     call $2043
-    call Call_000_1e74
+    call SubHLFromHRAM_A7
     ld bc, $1148
     call EnableLCD
-    call Call_001_7e4f
+    call LoadSpriteSheetData
     ld a, [$cda5]
     cp $04
     jr z, jr_001_7e38
@@ -9939,17 +9939,17 @@ jr_001_7e38:
     ld e, $50
     jr jr_001_7e30
 
-Call_001_7e4f:
+LoadSpriteSheetData:
     ld d, $c0
     ld hl, $7e6d
     ld a, [$cda5]
     add a
     add a
     rst $28
-    call Call_001_7e5e
+    call IterateTableEntry
     inc d
 
-Call_001_7e5e:
+IterateTableEntry:
     ld c, [hl]
     inc hl
     ld b, [hl]
@@ -10018,12 +10018,12 @@ Call_001_7e5e:
     ld [bc], a
     ld a, [$cda5]
     cp $04
-    call z, Call_001_7ec4
+    call z, CalcCoordJumpMath
     ld a, $f0
     jp Jump_000_3ce5
 
 
-Call_001_7ec4:
+CalcCoordJumpMath:
     ld de, $4f70
     jp Jump_000_1e65
 
@@ -10031,7 +10031,7 @@ Call_001_7ec4:
     call CallScriptByType
     ret nz
 
-    call Call_000_1e80
+    call AddHLToHRAM
     call CrossBankCallRet
     ld hl, $cda5
     ld a, [hl]

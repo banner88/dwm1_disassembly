@@ -5,221 +5,129 @@
 
 SECTION "ROM Bank $042", ROMX[$4000], BANK[$42]
 
-    ld b, d
-    db $eb
-    ld b, b
-    ld [$2541], sp
-    ld b, c
-    add hl, bc
-    ld b, b
-    ld b, d
-    ld b, c
-    ld b, h
-    ld b, d
-    ld e, c
-    ld b, d
-    ret nc
+    db $42 ; Bank number
 
-    ld b, d
-    inc hl
-    ld b, e
-    or b
-    ld b, e
-    ld sp, $7344
-    ld b, h
-    cp d
-    ld b, h
-    sub b
-    ld b, l
-    pop bc
-    ld b, l
-    ld l, d
-    ld b, a
-    cp a
-    ld b, a
-    ei
-    ld b, a
-    dec sp
-    ld c, b
-    or d
-    ld c, b
-    rst $08
-    ld c, c
-    ld a, $4a
-    ld [hl], a
-    ld c, d
-    xor h
-    ld c, d
-    ldh [rWY], a
-    ld b, $4b
-    sbc h
-    ld c, e
-    rst $10
-    ld c, e
-    rst $30
-    ld c, e
-    ld [hl+], a
-    ld c, h
-    ccf
-    ld c, h
-    ld d, b
-    ld c, h
-    ld l, [hl]
-    ld c, h
-    add l
-    ld c, h
-    ld [$084c], a
-    ld c, l
-    inc [hl]
-    ld c, l
-    sub c
-    ld c, l
-    ld a, e
-    ld d, c
-    db $db
-    ld d, c
-    inc l
-    ld d, d
-    add l
-    ld d, d
-    pop af
-    ld d, e
-    ld e, $54
-    ld [hl], h
-    ld d, h
-    rst $10
-    ld d, l
-    ld [$7756], sp
-    ld d, [hl]
-    db $fd
-    ld d, [hl]
-    or d
-    ld e, b
-    db $ec
-    ld e, b
-    ld d, e
-    ld e, d
-    nop
-    ld e, e
-    inc a
-    ld e, e
-    sbc c
-    ld e, e
-    ld d, h
-    ld e, h
-    ld a, d
-    ld e, h
-    jp nz, $e65c
+    ; Cross-bank dispatch table (117 entries)
+    ; Called via: ld hl, $42XX / rst $10
+    dw LoadB42_40eb                  ; Entry 0
+    dw $4108                          ; Entry 1
+    dw $4125                          ; Entry 2
+    dw $4009                          ; Entry 3
+    dw $4142                          ; Entry 4
+    dw $4244                          ; Entry 5
+    dw $4259                          ; Entry 6
+    dw $42D0                          ; Entry 7
+    dw $4323                          ; Entry 8
+    dw $43B0                          ; Entry 9
+    dw $4431                          ; Entry 10
+    dw $4473                          ; Entry 11
+    dw $44BA                          ; Entry 12
+    dw $4590                          ; Entry 13
+    dw $45C1                          ; Entry 14
+    dw $476A                          ; Entry 15
+    dw $47BF                          ; Entry 16
+    dw $47FB                          ; Entry 17
+    dw $483B                          ; Entry 18
+    dw $48B2                          ; Entry 19
+    dw $49CF                          ; Entry 20
+    dw $4A3E                          ; Entry 21
+    dw $4A77                          ; Entry 22
+    dw $4AAC                          ; Entry 23
+    dw $4AE0                          ; Entry 24
+    dw $4B06                          ; Entry 25
+    dw $4B9C                          ; Entry 26
+    dw $4BD7                          ; Entry 27
+    dw $4BF7                          ; Entry 28
+    dw $4C22                          ; Entry 29
+    dw $4C3F                          ; Entry 30
+    dw $4C50                          ; Entry 31
+    dw $4C6E                          ; Entry 32
+    dw $4C85                          ; Entry 33
+    dw $4CEA                          ; Entry 34
+    dw $4D08                          ; Entry 35
+    dw $4D34                          ; Entry 36
+    dw $4D91                          ; Entry 37
+    dw $517B                          ; Entry 38
+    dw $51DB                          ; Entry 39
+    dw $522C                          ; Entry 40
+    dw $5285                          ; Entry 41
+    dw $53F1                          ; Entry 42
+    dw $541E                          ; Entry 43
+    dw $5474                          ; Entry 44
+    dw $55D7                          ; Entry 45
+    dw $5608                          ; Entry 46
+    dw $5677                          ; Entry 47
+    dw $56FD                          ; Entry 48
+    dw $58B2                          ; Entry 49
+    dw $58EC                          ; Entry 50
+    dw $5A53                          ; Entry 51
+    dw $5B00                          ; Entry 52
+    dw $5B3C                          ; Entry 53
+    dw $5B99                          ; Entry 54
+    dw $5C54                          ; Entry 55
+    dw $5C7A                          ; Entry 56
+    dw $5CC2                          ; Entry 57
+    dw $5CE6                          ; Entry 58
+    dw $5D55                          ; Entry 59
+    dw $5E08                          ; Entry 60
+    dw $5E3E                          ; Entry 61
+    dw $5ED1                          ; Entry 62
+    dw $5EEB                          ; Entry 63
+    dw $5F28                          ; Entry 64
+    dw $5F5F                          ; Entry 65
+    dw $6007                          ; Entry 66
+    dw $602C                          ; Entry 67
+    dw $6159                          ; Entry 68
+    dw $61BD                          ; Entry 69
+    dw $6437                          ; Entry 70
+    dw $6466                          ; Entry 71
+    dw $6492                          ; Entry 72
+    dw $64B4                          ; Entry 73
+    dw $65B6                          ; Entry 74
+    dw $65E5                          ; Entry 75
+    dw $6612                          ; Entry 76
+    dw $6651                          ; Entry 77
+    dw $66CC                          ; Entry 78
+    dw $6791                          ; Entry 79
+    dw $67D1                          ; Entry 80
+    dw $68DF                          ; Entry 81
+    dw $6966                          ; Entry 82
+    dw $69A4                          ; Entry 83
+    dw $6ABA                          ; Entry 84
+    dw $6B5B                          ; Entry 85
+    dw $6BA3                          ; Entry 86
+    dw $6BD9                          ; Entry 87
+    dw $6DC6                          ; Entry 88
+    dw $6E72                          ; Entry 89
+    dw $6F1C                          ; Entry 90
+    dw $6F60                          ; Entry 91
+    dw $6FFE                          ; Entry 92
+    dw $7092                          ; Entry 93
+    dw $70BB                          ; Entry 94
+    dw $71FE                          ; Entry 95
+    dw $7236                          ; Entry 96
+    dw $7314                          ; Entry 97
+    dw $736B                          ; Entry 98
+    dw $73FE                          ; Entry 99
+    dw $7430                          ; Entry 100
+    dw $749A                          ; Entry 101
+    dw $74CA                          ; Entry 102
+    dw $7527                          ; Entry 103
+    dw $756F                          ; Entry 104
+    dw $75F1                          ; Entry 105
+    dw $7779                          ; Entry 106
+    dw $77B7                          ; Entry 107
+    dw $78FC                          ; Entry 108
+    dw $7A31                          ; Entry 109
+    dw $7A53                          ; Entry 110
+    dw $7A6A                          ; Entry 111
+    dw $7AAF                          ; Entry 112
+    dw $7B2F                          ; Entry 113
+    dw $7C00                          ; Entry 114
+    dw $7C16                          ; Entry 115
+    dw $7CC6                          ; Entry 116
 
-    ld e, h
-    ld d, l
-    ld e, l
-    ld [$3e5e], sp
-    ld e, [hl]
-    pop de
-    ld e, [hl]
-    db $eb
-    ld e, [hl]
-    jr z, jr_042_40e2
-
-    ld e, a
-    ld e, a
-    rlca
-    ld h, b
-    inc l
-    ld h, b
-    ld e, c
-    ld h, c
-    cp l
-    ld h, c
-    scf
-    ld h, h
-    ld h, [hl]
-    ld h, h
-    sub d
-    ld h, h
-    or h
-    ld h, h
-    or [hl]
-    ld h, l
-    push hl
-    ld h, l
-    ld [de], a
-    ld h, [hl]
-    ld d, c
-    ld h, [hl]
-    call z, $9166
-    ld h, a
-    pop de
-    ld h, a
-    rst $18
-    ld l, b
-    ld h, [hl]
-    ld l, c
-    and h
-    ld l, c
-    cp d
-    ld l, d
-    ld e, e
-    ld l, e
-    and e
-    ld l, e
-    reti
-
-
-    ld l, e
-    add $6d
-    ld [hl], d
-    ld l, [hl]
-    inc e
-    ld l, a
-    ld h, b
-    ld l, a
-    cp $6f
-    sub d
-    ld [hl], b
-    cp e
-    ld [hl], b
-    cp $71
-    ld [hl], $72
-    inc d
-    ld [hl], e
-    ld l, e
-    ld [hl], e
-    cp $73
-    jr nc, @+$76
-
-    sbc d
-    ld [hl], h
-    jp z, $2774
-
-    ld [hl], l
-    ld l, a
-    ld [hl], l
-    pop af
-    ld [hl], l
-    ld a, c
-    ld [hl], a
-    or a
-    ld [hl], a
-    db $fc
-    ld a, b
-    ld sp, $537a
-    ld a, d
-    ld l, d
-    ld a, d
-    xor a
-
-jr_042_40e2:
-    ld a, d
-    cpl
-    ld a, e
-    nop
-    ld a, h
-    ld d, $7c
-    add $7c
-
-Call_042_40eb:
+LoadB42_40eb:
     ld a, [$c823]
     cp $71
     jr c, jr_042_4101
@@ -272,7 +180,7 @@ jr_042_411e:
 
 
 jr_042_413b:
-    call Call_042_40eb
+    call LoadB42_40eb
     call RequestScreenUpdate
     ret
 

@@ -126,7 +126,7 @@ JoypadTransitionInterrupt::
     inc a
     ld [$c984], a
     call $ff90
-    call Call_000_0ef7
+    call LoadCAndHRAM_CE
     add b
     ld b, $0a
     ld hl, $008e
@@ -170,7 +170,7 @@ jr_000_00ab:
     ld a, [$c999]
     ldh [rIE], a
     ei
-    call Call_000_04ed
+    call LoadTileFromHL
     pop hl
     pop de
     pop bc
@@ -271,7 +271,7 @@ BootMain:
 InitGameData:
     ld sp, $dfff
     call ClearInterruptFlags
-    call Call_000_1288
+    call ClearAllWRAM
     call $0080
 
     ld hl, $8000
@@ -320,7 +320,7 @@ InitGameData:
     ldh [rRP], a
 
 jr_000_01c6:
-    call Call_000_1024
+    call InitAudioAndJoypadCheck
     jr c, jr_000_01d2
 
     xor a
@@ -434,7 +434,7 @@ Jump_000_028b:
     ld [$c8c8], a
     ld [$c8c9], a
     ld [$df0e], a
-    call Call_000_030f
+    call GameModeDispatch
 
     xor a
     ld [$c88e], a
@@ -484,7 +484,7 @@ jr_000_02f2:
     call DisableSRAM
     jp Jump_000_028b
 
-Call_000_030f:
+GameModeDispatch:
     ld a, [wGameMode]
     rst $00
 
@@ -583,12 +583,12 @@ GameStateUpdate_036F:
 
     set 0, [hl]
     call $ff80
-    call Call_000_05ad
+    call CheckScreenTransition
 
-Call_000_0382:
+ScreenRefreshVBlank:
     call LoadGBCPalettes
     call ApplyScrollRegisters
-    call Call_000_056e
+    call CheckSoundQueueState
     call WaitVRAMAccess
     ld a, [$c86c]
     or a
@@ -596,7 +596,7 @@ Call_000_0382:
 
     ld a, [$c8b9]
     or a
-    call z, Call_000_3473
+    call z, SaveBankAndAudioState
 
 jr_000_039b:
     ei
@@ -608,13 +608,13 @@ jr_000_039b:
     call UpdateJoypadState
     ld hl, $c8b9
     inc [hl]
-    call Call_000_3473
+    call SaveBankAndAudioState
     xor a
     ld [$c8b9], a
 
 jr_000_03b3:
     call ProcessBGMQueue
-    call Call_000_046b
+    call ProcessFrameUpdate
     ld a, [$c86c]
     or a
     jr nz, SoftReset
@@ -675,7 +675,7 @@ jr_000_041f:
     bit 3, a
     jr z, jr_000_044d
 
-Call_000_0426:
+ReadJoypad:
     ld a, [wJoypad_current_frame]
     bit 2, a
     jr z, jr_000_044d
@@ -716,16 +716,16 @@ Jump_000_045c:
     or a
     jr nz, jr_000_0468
 
-    call Call_000_3473
+    call SaveBankAndAudioState
 
 jr_000_0468:
     ei
     jr jr_000_0452
 
-Call_000_046b:
+ProcessFrameUpdate:
     xor a
     ldh [$cb], a
-    call Call_000_04fb
+    call CheckAnimLockAndProcess
     ld a, [$c850]
     or a
     jr z, jr_000_047a
@@ -734,7 +734,7 @@ Call_000_046b:
     ret z
 
 jr_000_047a:
-    call Call_000_1424
+    call CheckVRAMTileCount
     ret
 
 
@@ -783,7 +783,7 @@ jr_000_04c7:
     or [hl]
     jr z, jr_000_04f1
 
-Call_000_04ce:
+GetStoredPointerHL:
     ld a, [$c874]
     ld l, a
     ld a, [$c875]
@@ -799,7 +799,7 @@ Call_000_04ce:
     ld a, $00
     ld [$c866], a
 
-Call_000_04ed:
+LoadTileFromHL:
     ld a, [hl]
     jp Jump_000_126b
 
@@ -811,7 +811,7 @@ jr_000_04f1:
     jp Jump_000_126b
 
 
-Call_000_04fb:
+CheckAnimLockAndProcess:
     ld a, [$c88e]
     or a
     ret nz
@@ -835,7 +835,7 @@ jr_000_050f:
     dec l
     dec b
 
-Call_000_0515:
+BankTrampolineTable:
 Jump_000_0515:
     ld [hl-], a
     dec b
@@ -934,14 +934,14 @@ Jump_CallTextRenderer:
 CallBank56Entry8_0569:
     ld hl, $5608
 
-Call_000_056c:
+CrossBankCallRst10:
     rst $10
 
 Jump_000_056d:
     ret
 
 
-Call_000_056e:
+CheckSoundQueueState:
 Jump_000_056e:
     ld a, [$c8b1]
     or a
@@ -993,12 +993,12 @@ jr_000_05ac:
     ret
 
 
-Call_000_05ad:
+CheckScreenTransition:
     ld a, [$c8a3]
     or a
     ret z
 
-    call Call_000_143c
+    call GetSpritePointerDE
     ret
 
 
@@ -1015,22 +1015,22 @@ Jump_000_05be:
     ld a, [$c828]
     ld h, a
 
-Call_000_05c3:
+StoreMapPointerRegs:
 Jump_000_05c3:
     ld a, l
     ld [$c82b], a
     ld a, h
     ld [$c82c], a
 
-Call_000_05cb:
+StoreScreenPointerHL:
     ld a, l
 
-Call_000_05cc:
+StoreScreenPointer:
     ld [$c82f], a
     ld a, h
     ld [$c830], a
     pop de
-    call Call_000_092f
+    call SaveBankAndSwitch
     ld a, e
     ld [$c82d], a
     ld a, d
@@ -1038,7 +1038,7 @@ Call_000_05cc:
     ld a, e
     ld [$c831], a
 
-Call_000_05e3:
+TriggerMapRedraw:
 Jump_000_05e3:
     ld a, d
     ld [$c832], a
@@ -1052,7 +1052,7 @@ Jump_000_05e3:
 
 
 RunTextHandler:
-    call Call_000_092f
+    call SaveBankAndSwitch
 
 Jump_000_05f9:
     ld a, [$c837]
@@ -1077,7 +1077,7 @@ Jump_000_0604:
     cp $f0
     jr nz, jr_000_0601
 
-Call_000_0608:
+RetUnused:
     ret
 
 
@@ -1085,7 +1085,7 @@ RequestScreenUpdate:
 Jump_000_0609:
     ld hl, $c825
 
-Call_000_060c:
+SetScreenUpdateFlag:
     set 1, [hl]
 
 jr_000_060e:
@@ -1100,16 +1100,16 @@ jr_000_060e:
 CheckState_C826_0618:
     ld a, [$c826]
 
-Call_000_061b:
+CheckScreenUpdateBit7:
     bit 7, a
     jr z, jr_000_062f
 
 jr_000_061f:
     ld hl, $c825
 
-Call_000_0622:
+WaitScreenUpdateLoop:
     set 1, [hl]
-    call Call_000_062f
+    call SaveBankForTextDisplay
     ld a, [$c826]
     bit 7, a
     jr nz, jr_000_061f
@@ -1117,7 +1117,7 @@ Call_000_0622:
     ret
 
 
-Call_000_062f:
+SaveBankForTextDisplay:
 jr_000_062f:
     ld a, [$4000]
 
@@ -1127,20 +1127,20 @@ SetupTextBankSwitch:
     ld [$2100], a
     swap a
 
-Call_000_063b:
+SetROMBankHigh:
 Jump_000_063b:
     rra
 
-Call_000_063c:
+SetROMBankHighMask:
     and $03
 
-Call_000_063e:
+WriteBankSwitch4100:
     ld [$4100], a
     ld a, [$c825]
     or a
     jp z, Jump_000_0853
 
-Call_000_0648:
+CheckTilemapBit5:
 Jump_000_0648:
     bit 5, a
     jr z, jr_000_0666
@@ -1155,11 +1155,11 @@ Jump_000_0648:
 jr_000_0657:
     ld hl, $0060
 
-Call_000_065a:
+SetupTilemapRow:
     call AdjustTilemapOffset
     ld b, $09
 
-Call_000_065f:
+DrawTilemapColumn:
     call TilemapAdvanceColumns
     ld a, c
     call Write_gfx_tile
@@ -1178,7 +1178,7 @@ jr_000_0666:
     cp $ff
     jp nz, Jump_000_0753
 
-Call_000_067e:
+WaitForJoypadInput:
 Jump_000_067e:
     ld a, [wJoypad_current_frame]
     ld b, a
@@ -1189,26 +1189,26 @@ GameStateBit_0686:
 Jump_000_0686:
     bit 6, a
 
-Call_000_0688:
+CheckJoypadMask:
     jr z, jr_000_0698
 
 CheckState_C83c_068A:
 Jump_000_068a:
     ld a, [$c83c]
 
-Call_000_068d:
+SetJoypadResult:
     cp $00
 
-Call_000_068f:
+ClearJoypadState:
     jr z, jr_000_06a8
 
     ld a, $00
 
-Call_000_0693:
+SetJoypadAction:
     ld [$c83c], a
     jr jr_000_06a8
 
-Call_000_0698:
+JoypadActionDone:
 jr_000_0698:
     bit 7, a
     jr z, jr_000_06a8
@@ -1231,14 +1231,14 @@ Jump_000_06ac:
 
     ld c, $e0
 
-Call_000_06b4:
+CheckCursorInput:
     ld b, $e8
 
 jr_000_06b6:
     ld a, [$c8a4]
     bit 4, a
 
-Call_000_06bb:
+InputBranchZero:
     jr z, jr_000_06c1
 
     ld c, $e0
@@ -1260,14 +1260,14 @@ Jump_ShowTextAndWait:
     call Write_gfx_tile
     push bc
 
-Call_000_06d3:
+DrawMenuRowTilemap:
     ld hl, $0160
     call GetTilemapRowAddr
     ld b, $0f
     call TilemapAdvanceColumns
     pop bc
 
-Call_000_06df:
+ProcessJoypadRepeat:
     ld a, b
     call Write_gfx_tile
     ld a, [wJoypad_current_frame]
@@ -1283,7 +1283,7 @@ Call_000_06df:
 
     ld a, [$c83a]
 
-Call_000_06f8:
+CheckTileE6:
 Jump_000_06f8:
     cp $e6
     jp z, Jump_000_070e
@@ -1291,7 +1291,7 @@ Jump_000_06f8:
 Jump_000_06fd:
     ld a, $59
 
-Call_000_06ff:
+PlaySoundAndJump:
 Jump_000_06ff:
     call PlaySoundEffect
     jr jr_000_070e
@@ -1314,7 +1314,7 @@ jr_000_070e:
     ld de, $c500
     ld c, $12
 
-Call_000_0720:
+TilemapFillRow:
 jr_000_0720:
     ld b, $20
     push hl
@@ -1324,17 +1324,17 @@ jr_000_0723:
     call Write_gfx_tile
     ld a, l
 
-Call_000_0728:
+TilemapMaskHighBits:
     and $e0
     push af
     ld a, l
 
-Call_000_072c:
+TilemapWrapX:
     inc a
     and $1f
     ld l, a
 
-Call_000_0730:
+TilemapRecombineAddr:
 Jump_000_0730:
     pop af
     or l
@@ -1365,7 +1365,7 @@ Jump_000_0744:
 
     ld de, $560b
 
-Call_000_074a:
+CheckJoypadAB:
     ld hl, $8e50
     call WaitDMATransfer
     jp Jump_000_0853
@@ -1378,7 +1378,7 @@ Jump_000_0753:
     or b
     and $f7
 
-Call_000_075d:
+CheckJoypadDPad:
 Jump_000_075d:
     jp z, Jump_000_0853
 
@@ -1404,7 +1404,7 @@ Jump_000_076d:
     ld a, [$c84a]
     or b
 
-Call_000_0784:
+CheckInputMasked:
 Jump_000_0784:
     and $f7
     jp z, Jump_000_0853
@@ -1442,7 +1442,7 @@ HandleTextCharacter:
 
     cp $8e
 
-Call_000_07bb:
+JoypadAutoRepeat:
     jp z, Jump_000_0822
 
     cp $e0			;e0 brings up the YES NO box.
@@ -1455,11 +1455,11 @@ Call_000_07bb:
     ld a, [wJoypad_current_frame]
     ld b, a
 
-Call_000_07ce:
+SetButtonFlags:
     ld a, [$c84a]
     or b
 
-Call_000_07d2:
+SetRefreshOnInput:
     and $f7
     jr z, jr_000_07db
 
@@ -1469,7 +1469,7 @@ Call_000_07d2:
 jr_000_07db:
     ld a, $02
 
-Call_000_07dd:
+ScreenProcessA:
 Jump_000_07dd:
     ld b, a
     ld a, [$c825]
@@ -1478,7 +1478,7 @@ Jump_000_07dd:
 
     ld a, [$c833]
 
-Call_000_07e8:
+ScreenProcessB:
     ld b, a
 
 jr_000_07e9:
@@ -1498,24 +1498,24 @@ Jump_000_07f9:
 Jump_000_07fc:
     ld a, [hl]
 
-Call_000_07fd:
+CheckTileE0:
     cp $e0
 
-Call_000_07ff:
+ScreenBranchNC:
     jp nc, Jump_000_0838
 
-    call Call_000_0880
+    call LoadTileBankAware
     ld a, [$c826]
     bit 0, a
 
 Jump_000_080a:
     jr z, jr_000_0853
 
-Call_000_080c:
+CheckTile90:
     ld a, b
     cp $90
 
-Call_000_080f:
+ScreenBranchZ:
     jr z, jr_000_0853
 
 Jump_000_0811:
@@ -1537,23 +1537,23 @@ Jump_000_0822:
 Jump_000_082d:
     adc $00
 
-Call_000_082f:
+SetScreenStateA:
     ld [$c82e], a
 
-Call_000_0832:
+ProcessScreenState:
 Jump_000_0832:
     ld a, [hl]
-    call Call_000_08c1
+    call LoadTileBankAware2
     jr jr_000_0853
 
 CheckState_C82d_0838:
 Jump_000_0838:
     ld a, [$c82d]
 
-Call_000_083b:
+IncrementA:
     add $01
 
-Call_000_083d:
+IncrementScreenCounter:
     ld [$c82d], a
     ld a, [$c82e]
     adc $00
@@ -1569,7 +1569,7 @@ Jump_000_0853:
 jr_000_0853:
     ld hl, $c839
 
-Call_000_0856:
+IncrementHLAndPop:
     inc [hl]
     pop af
     ld [$2100], a
@@ -1594,11 +1594,11 @@ HandleScreenRefresh:
     ld a, $ee
     call Write_gfx_tile
 
-Call_000_087f:
+RetNop_087F:
     ret
 
 
-Call_000_0880:
+LoadTileBankAware:
     ld l, a
     ld a, [$4000]
     push af
@@ -1608,7 +1608,7 @@ Call_000_0880:
     rra
     and $03
     ld [$4100], a
-    call Call_000_08a2
+    call LoadTile8Bytes
     pop af
     ld [$2100], a
     swap a
@@ -1618,7 +1618,7 @@ Call_000_0880:
     ret
 
 
-Call_000_08a2:
+LoadTile8Bytes:
     call ComputeTileDataAddr
     ld c, $08
 
@@ -1648,7 +1648,7 @@ Jump_000_08ae:
     ret
 
 
-Call_000_08c1:
+LoadTileBankAware2:
     ld l, a
     ld a, [$4000]
     push af
@@ -1658,7 +1658,7 @@ Call_000_08c1:
     rra
     and $03
     ld [$4100], a
-    call Call_000_08e3
+    call ComputeAndLoadTile
 
 Jump_000_08d6:
     pop af
@@ -1670,10 +1670,10 @@ Jump_000_08d6:
     ret
 
 
-Call_000_08e3:
+ComputeAndLoadTile:
     call ComputeTileDataAddr
 
-Call_000_08e6:
+SubtractTileOffset16:
     ld a, l
     sub $10
     ld l, a
@@ -1716,7 +1716,7 @@ jr_000_090c:
 
     ld a, l
 
-Call_000_0912:
+StoreMapPointerHL:
     ld [$c82b], a
     ld a, h
     ld [$c82c], a
@@ -1742,7 +1742,7 @@ MultiplyHL_091F:
     ret
 
 
-Call_000_092f:
+SaveBankAndSwitch:
     ld a, [$4000]
     push af
     ld a, [$4000]
@@ -1775,7 +1775,7 @@ TextHandler_0940:
 GetTilemapByte:
     ld a, [$c82d]
 
-Call_000_0957:
+ReadScreenState:
     ld l, a
     ld a, [$c82e]
     ld h, a
@@ -1839,11 +1839,11 @@ ExtractDigits:
 
 jr_000_09ae:
     ld e, $64
-    call Call_000_09bd
+    call SetDMinusOne
 
 jr_000_09b3:
     ld e, $0a
-    call Call_000_09bd
+    call SetDMinusOne
 
 jr_000_09b8:
     ld [hl+], a
@@ -1852,13 +1852,13 @@ jr_000_09b8:
     ret
 
 
-Call_000_09bd:
+SetDMinusOne:
     ld d, $ff
 
 jr_000_09bf:
     inc d
 
-Call_000_09c0:
+SubtractWithFloor:
     sub e
     jr nc, jr_000_09bf
     add e
@@ -2087,7 +2087,7 @@ TextBankDispatch:
 ; Idx: 0→$42/$43, 1→$43/$44, 2→$44/$45, 3→$46/$47, 4→$47/$48,
 ; 5→$48/$49/$4A, 6→$4A, 7→$4A/$4B, 8→$4B/$4E, 9→$4E
 TextDispatchJumpTable:
-Call_000_0aea:
+TextIdDispatch:
 Jump_000_0aea:
     dec bc
     inc de
@@ -2269,7 +2269,7 @@ jr_000_0bae:
     ld [$c823], a
     ld hl, $4800
 
-Call_000_0bbc:
+CrossBankCallRet_0BBC:
     rst $10
     ret
 
@@ -2339,7 +2339,7 @@ jr_000_0bed:
     ret
 
 
-Call_000_0c13:
+LoadEtoA:
 Jump_000_0c13:
     ld a, e
     sub $00
@@ -2459,17 +2459,17 @@ jr_000_0c9c:
     ret
 
 
-Call_000_0ca0:
+StoreCursorPos:
     ld a, l
     ld [$c83e], a
     ld a, h
     ld [$c83f], a
 
-Call_000_0ca8:
+GetScrollPixelPosition:
     ld a, [$c827]
     ld e, a
 
-Call_000_0cac:
+GetScrollTilePosition:
     ld a, [$c828]
     ld d, a
     srl d
@@ -2477,7 +2477,7 @@ Call_000_0cac:
     srl d
     rr e
 
-Call_000_0cb8:
+PixelToTileCoord:
 Jump_000_0cb8:
     srl d
     rr e
@@ -2588,7 +2588,7 @@ Jump_000_0d19:
     ret
 
 
-Call_000_0d34:
+LoadTileE0:
 jr_000_0d34:
     ld a, $e0
     call Write_gfx_tile
@@ -2599,7 +2599,7 @@ jr_000_0d34:
     ret
 
 
-Call_000_0d40:
+PushHLSetupL:
     push hl
     ld l, a
     ld de, $4010
@@ -2963,7 +2963,7 @@ jr_000_0ef4:
     ldh a, [$cd]
     add c
 
-Call_000_0ef7:
+LoadCAndHRAM_CE:
     ld c, a
     ldh a, [$ce]
     adc b
@@ -3040,7 +3040,7 @@ jr_000_0f3d:
 jr_000_0f44:
     ld a, c
     ld [de], a
-    call Call_000_0fdd
+    call SaveHLBC
     jr nc, jr_000_0f3d
 
     inc e
@@ -3155,7 +3155,7 @@ jr_000_0fb7:
 jr_000_0fbe:
     ld a, c
     ld [de], a
-    call Call_000_0fdd
+    call SaveHLBC
     jr nc, jr_000_0fb7
 
     inc e
@@ -3179,7 +3179,7 @@ jr_000_0fbe:
     ret
 
 
-Call_000_0fdd:
+SaveHLBC:
     push hl
     push bc
     ldh a, [$bb]
@@ -3248,7 +3248,7 @@ jr_000_101b:		;may just be a .wait?
     ret
 
 
-Call_000_1024:
+InitAudioAndJoypadCheck:
     ld a, $0b
     ld [$c774], a
     ld hl, $0800
@@ -3346,7 +3346,7 @@ jr_000_108d:
     ld a, [hl+]
     xor d
 
-Call_000_10c2:
+SGBTransferByte:
     and d
     ld [hl-], a
     ld a, d
@@ -3545,12 +3545,12 @@ Jump_000_11cb:
     or a
     jr z, jr_000_11d5
 
-    call Call_000_1d45
+    call CheckScreenModeC86C
 
 jr_000_11d5:
-    call Call_000_11fb
+    call EnableLCDScreen
     pop af
-    call Call_000_1227
+    call SetInterruptEnable
     ei
     ret
 
@@ -3578,7 +3578,7 @@ TurnOffLCD:		;check the LCD status
     ret
 
 
-Call_000_11fb:
+EnableLCDScreen:
     ld hl, $c8a1
     set 7, [hl]
     ld a, [hl]
@@ -3616,7 +3616,7 @@ WaitForSerialTransferEnd:
     ret
 
 
-Call_000_1227:
+SetInterruptEnable:
     ld b, a
     xor a
     ldh [rIF], a
@@ -3675,7 +3675,7 @@ ClearSTATMode:
     ret
 
 
-Call_000_126b:
+StartSerialTransfer:
 Jump_000_126b:
     di
     call SerialTransferStart
@@ -3709,7 +3709,7 @@ SetSerialByte:
     ret
 
 
-Call_000_1288:
+ClearAllWRAM:
     ld a, [wIsGBC]
     push af
     ld hl, $c000
@@ -3717,7 +3717,7 @@ Call_000_1288:
     xor a
     call FillNBytesWithRegA
 
-Call_000_1296:
+ClearHRAMRegion:
     ld hl, $ff8a
     ld bc, $0074
     xor a
@@ -3803,7 +3803,7 @@ UpdateSGBJoypad:
 jr_000_1310:
     xor a
     ld [$c841], a
-    call Call_000_1338
+    call ReadJoypadButtons
     ld a, [$c842]
     ld [$c843], a
     ld a, b
@@ -3812,7 +3812,7 @@ jr_000_1310:
     ldh [rP1], a
     ret
 
-    call Call_000_1338
+    call ReadJoypadButtons
     ld a, [$c844]
     ld [$c845], a
     ld a, b
@@ -3822,7 +3822,7 @@ jr_000_1310:
     ret
 
 
-Call_000_1338:
+ReadJoypadButtons:
     ld a, $20
     ldh [rP1], a
     ldh a, [rP1]
@@ -3865,7 +3865,7 @@ UpdateJoypadState:
     ld [$c844], a
     ld [$c845], a
 
-Call_000_1377:
+WaitForJoypadRelease:
 jr_000_1377:
     xor a
     ld [wJoypad_Current], a
@@ -3873,7 +3873,7 @@ jr_000_1377:
     ld a, [hl]
     inc hl
 
-Call_000_1380:
+JoypadDebounce:
     xor [hl]
     dec hl
     and [hl]
@@ -3967,7 +3967,7 @@ SetDefaultPalette:
     ld a, $d2
     ld [hl+], a
 
-Call_000_13f5:
+TextCursorSetup:
     ld a, $d2
     ld [hl+], a
     ld a, $e2
@@ -3985,9 +3985,9 @@ Call_000_13f5:
 ClearHRAMTimers:
     xor a
     ld hl, $ffb7
-    call Call_000_1412
+    call TextCursorAdvance
 
-Call_000_1412:
+TextCursorAdvance:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
@@ -4004,7 +4004,7 @@ ClearOAMBuffer:
     ret
 
 
-Call_000_1424:
+CheckVRAMTileCount:
     ldh a, [$cb]
     cp $28
     ret z
@@ -4028,7 +4028,7 @@ jr_000_1434:
     ret
 
 
-Call_000_143c:
+GetSpritePointerDE:
     ld a, [$c740]
     ld e, a
     ld a, [$c741]
@@ -4152,13 +4152,13 @@ jr_000_14cf:
 
     inc a
     ld [$da78], a
-    call Call_000_14e1
+    call LoadSpriteFrame
     xor a
     ld [$da78], a
     ret
 
 
-Call_000_14e1:
+LoadSpriteFrame:
     ld a, [$4000]
     push af
     call DecompressTileLayout
@@ -4187,7 +4187,7 @@ jr_000_14fc:
     pop hl
     ld a, [de]
 
-Call_000_14fe:
+LoadSpriteCoords:
     ldh [$b0], a
     inc de
     ld a, [de]
@@ -4306,13 +4306,13 @@ jr_000_1577:
 
     inc a
     ld [$da78], a
-    call Call_000_1589
+    call TextScrollWindow
     xor a
     ld [$da78], a
     ret
 
 
-Call_000_1589:
+TextScrollWindow:
     ld a, [$4000]
     push af
     call DecompressTileLayout
@@ -4393,7 +4393,7 @@ jr_000_15dd:
 jr_000_15e4:
     ld a, $f0
 
-Call_000_15e6:
+TextWaitInput:
 Jump_000_15e6:
     add d
     ld d, a
@@ -4409,7 +4409,7 @@ jr_000_15f1:
     ldh a, [$b3]
     cp e
 
-Call_000_15f4:
+TextEndOfLine:
 Jump_000_15f4:
     jr z, jr_000_15ff
 
@@ -4433,7 +4433,7 @@ jr_000_1605:
     inc de
     dec bc
 
-Call_000_160a:
+TextNewLine:
     ld a, b
     or c
     jr z, jr_000_1619
@@ -4458,7 +4458,7 @@ Jump_000_161a:
     rra
     and $03
 
-Call_000_1623:
+WriteBankReg4100:
     ld [$4100], a
     ret
 
@@ -4466,12 +4466,12 @@ Call_000_1623:
 DecompressTileLayout:
     ld a, d
 
-Call_000_1628:
+TextWriteBank:
     ld [$2100], a
     swap a
     rra
 
-Call_000_162e:
+TextSetBank:
     and $03
     ld [$4100], a
     push hl
@@ -4485,7 +4485,7 @@ Call_000_162e:
     ld d, [hl]
     pop hl
 
-Call_000_1640:
+ReadDEMetadata3B:
     ld a, [de]
     ld c, a
     inc de
@@ -4764,7 +4764,7 @@ CheckState_C850_17EC:
     ret z
 
     bit 7, a
-    call z, Call_000_1c18
+    call z, CheckAnimBusyAndProcess
     ld a, [wIsGBC]
     or a
     jp nz, Jump_000_1964
@@ -4840,12 +4840,12 @@ CheckState_C852_185F:
     bit 0, a
     ld a, $00
     ld [$c85a], a
-    call nz, Call_000_18dc
+    call nz, AdvanceAnimState3x
     ld a, [$c852]
     bit 1, a
     ld a, $08
     ld [$c85a], a
-    call nz, Call_000_18dc
+    call nz, AdvanceAnimState3x
     ld a, [$c852]
     bit 4, a
     jr z, jr_000_189a
@@ -4854,12 +4854,12 @@ CheckState_C852_185F:
     bit 2, a
     ld a, $10
     ld [$c85a], a
-    call nz, Call_000_18dc
+    call nz, AdvanceAnimState3x
     ld a, [$c852]
     bit 3, a
     ld a, $18
     ld [$c85a], a
-    call nz, Call_000_18dc
+    call nz, AdvanceAnimState3x
 
 jr_000_189a:
     call ClearPaletteBuffer
@@ -4909,8 +4909,8 @@ jr_000_18cc:
     ret
 
 
-Call_000_18dc:
-    call Call_000_18ed
+AdvanceAnimState3x:
+    call GetAnimFrameByIndex
     call CheckState_C85a_18E5
     call CheckState_C85a_18E5
 
@@ -4919,7 +4919,7 @@ CheckState_C85a_18E5:
     add $02
     ld [$c85a], a
 
-Call_000_18ed:
+GetAnimFrameByIndex:
     ld hl, $c7f7
     ld a, [$c85a]
     add l
@@ -4935,7 +4935,7 @@ Call_000_18ed:
     ld a, [$c856]
     ld b, a
     ld a, e
-    call Call_000_1948
+    call CheckBit7_C851
     ld l, a
     sla e
     rl d
@@ -4944,7 +4944,7 @@ Call_000_18ed:
     sla e
     rl d
     ld a, d
-    call Call_000_1948
+    call CheckBit7_C851
     ld d, a
     ld e, $00
     srl d
@@ -4958,7 +4958,7 @@ Call_000_18ed:
     ld a, d
     srl a
     srl a
-    call Call_000_1948
+    call CheckBit7_C851
     sla a
     sla a
     add h
@@ -4976,7 +4976,7 @@ Call_000_18ed:
     ret
 
 
-Call_000_1948:
+CheckBit7_C851:
     push af
     ld a, [$c851]
     ld c, a
@@ -5068,12 +5068,12 @@ ApplyPaletteBuffer_BG:
     bit 0, a
     ld a, [$c853]
     ld hl, wBGPalette
-    call nz, Call_000_19e0
+    call nz, CoordCalcSetup
     ld a, [$c851]
     bit 1, a
     ld a, [$c854]
     inc hl
-    call nz, Call_000_19e0
+    call nz, CoordCalcSetup
     ld a, [$c851]
     bit 2, a
     ld a, [$c855]
@@ -5083,14 +5083,14 @@ ApplyPaletteBuffer_BG:
     ret
 
 
-Call_000_19e0:
+CoordCalcSetup:
 jr_000_19e0:
     ld d, a
     ld a, [$c856]
     ld b, a
     ld c, $00
     ld a, d
-    call Call_000_19fb
+    call CoordCalcApply
     call PaletteRotateSub
     call PaletteRotateSub
     call PaletteRotateSub
@@ -5103,7 +5103,7 @@ PaletteRotateSub:
     rrc d
     ld a, d
 
-Call_000_19fb:
+CoordCalcApply:
     and $03
     sub b
     jr nc, jr_000_1a01
@@ -5173,12 +5173,12 @@ ApplyPaletteBuffer_OBJ:
     bit 0, a
     ld a, [$c853]
     ld hl, wBGPalette
-    call nz, Call_000_1a76
+    call nz, PaletteAnimStep
     ld a, [$c851]
     bit 1, a
     ld a, [$c854]
     inc hl
-    call nz, Call_000_1a76
+    call nz, PaletteAnimStep
     ld a, [$c851]
     bit 2, a
     ld a, [$c855]
@@ -5188,14 +5188,14 @@ ApplyPaletteBuffer_OBJ:
     ret
 
 
-Call_000_1a76:
+PaletteAnimStep:
 jr_000_1a76:
     ld d, a
     ld a, [$c856]
     ld b, a
     ld c, $00
     ld a, d
-    call Call_000_1a91
+    call ClampPaletteIndex3
     call PaletteRotateAdd
     call PaletteRotateAdd
     call PaletteRotateAdd
@@ -5208,7 +5208,7 @@ PaletteRotateAdd:
     rrc d
     ld a, d
 
-Call_000_1a91:
+ClampPaletteIndex3:
     and $03
     add b
     cp $03
@@ -5221,7 +5221,7 @@ jr_000_1a9a:
     ld c, a
     rrc c
 
-Call_000_1a9e:
+RotateRegC:
     rrc c
     ret
 
@@ -5274,7 +5274,7 @@ Write_gfx_tile_and_inc_HL:			;called by debug menu. Probably other things too
     ret
 
 
-Call_000_1ac5:
+GBCOnlyGuard:
     push af
     ld a, [wIsGBC]
     or a
@@ -5352,7 +5352,7 @@ InitBGM:
 
 
 jr_000_1b22:
-    call Call_000_33c9
+    call AudioUpdate3x
     ei
     ret
 
@@ -5553,7 +5553,7 @@ jr_000_1c13:
     ret
 
 
-Call_000_1c18:
+CheckAnimBusyAndProcess:
     ld a, [$c88f]
     or a
     jr nz, jr_000_1c84
@@ -5739,13 +5739,13 @@ jr_000_1d37:
     ret
 
 
-Call_000_1d45:
+CheckScreenModeC86C:
     ld a, [$c86c]
     or a
     jr z, jr_000_1d94
 
     ld a, $08
-    call Call_000_1227
+    call SetInterruptEnable
     ld a, [$c864]
     set 7, a
     res 6, a
@@ -5764,11 +5764,11 @@ jr_000_1d64:
 
 jr_000_1d69:
     ei
-    call Call_000_1da2
+    call LinkCableTransfer
     call WaitForSerialTransferEnd
     ldh a, [rSB]
     cp $f5
-    call nz, Call_000_1da2
+    call nz, LinkCableTransfer
     di
     ld a, [$c864]
     res 7, a
@@ -5796,7 +5796,7 @@ jr_000_1d9d:
     ret
 
 
-Call_000_1da2:
+LinkCableTransfer:
     ld a, [$c863]
     bit 1, a
     ld a, $f5
@@ -5804,7 +5804,7 @@ Call_000_1da2:
     ld a, [$c863]
     bit 1, a
     ld a, $f5
-    call z, Call_000_126b
+    call z, StartSerialTransfer
 
 jr_000_1db6:
     ld a, [$c864]
@@ -5819,9 +5819,9 @@ Mul8x8To16:
     ld b, $00
     ld h, b
     ld l, b
-    call Call_000_1dc5
+    call CoordSubtract16
 
-Call_000_1dc5:
+CoordSubtract16:
     rrca
     jr nc, jr_000_1dc9
 
@@ -5871,7 +5871,7 @@ Mul16x8To24:
     call Mul8x8To16
     pop bc
 
-Call_000_1df3:
+CoordMultiply:
     ld a, c
     add h
     ld h, a
@@ -5994,7 +5994,7 @@ WaitInputRelease:
     ldh a, [$a5]
     sub [hl]
 
-Call_000_1e65:
+SubHLFromHRAM_A5:
 Jump_000_1e65:
     ldh [$a5], a
     ld b, a
@@ -6009,7 +6009,7 @@ Jump_000_1e65:
     cp $a0
     ret nc
 
-Call_000_1e74:
+SubHLFromHRAM_A7:
     ld hl, $ffbb
     ldh a, [$a7]
     sub [hl]
@@ -6018,7 +6018,7 @@ Call_000_1e74:
     inc hl
     ldh a, [$a8]
 
-Call_000_1e80:
+AddHLToHRAM:
     sbc [hl]
     ldh [$a8], a
     or a
@@ -6087,7 +6087,7 @@ jr_000_1ed1:
     ret
 
 
-Call_000_1ed5:
+ScrollCalcDelta:
     ld hl, $c777
     ld bc, $0020
     xor a
@@ -6145,7 +6145,7 @@ Call_000_1ed5:
     ret
 
 
-Call_000_1f27:
+DataTable_1F27:
     ld e, a
     add a
     add a
@@ -6188,7 +6188,7 @@ Call_000_1f27:
     ret
 
 
-Call_000_1f59:
+CheckSGBFlag:
     ld a, [$c778]
     or a
     ret z
@@ -6222,11 +6222,11 @@ Call_000_1f59:
     ret
 
 
-Call_000_1f90:
+CoordBoundsCheck:
     ld a, $0f
     ldh [$db], a
 
-Call_000_1f94:
+CoordClampLow:
     ld e, $40
     ld d, $42
     call ReadHRAM_d5_2012
@@ -6236,7 +6236,7 @@ Call_000_1f94:
     call WriteBlankTile
     call PrintDigit
 
-Call_000_1fa5:
+CoordClampHigh:
     ld a, $01
     ldh [$db], a
     ld e, $a0
@@ -6244,7 +6244,7 @@ Call_000_1fa5:
     call ReadHRAM_d5_2012
     or a
 
-Call_000_1fb1:
+CoordApplyDelta:
     jr nz, jr_000_1fe7
 
     call WriteBlankTile
@@ -6286,7 +6286,7 @@ jr_000_1fe7:
     call WriteDigitTile
     call PrintDigit
 
-Call_000_1ff8:
+InitNumberFormat:
 jr_000_1ff8:
     ld a, $00
     ldh [$db], a
@@ -6297,24 +6297,24 @@ jr_000_1ff8:
 Jump_000_2003:
     call WriteDigitTile
 
-Call_000_2006:
+PrintAndAdvance:
     call PrintDigit
 
-Call_000_2009:
+GetDigitFromHRAM:
 Jump_000_2009:
     ldh a, [$d5]
 
-Call_000_200b:
+StoreDigitC:
     ld c, a
 
-Call_000_200c:
+GetUpperDigit:
 Jump_000_200c:
     ldh a, [$d6]
 
-Call_000_200e:
+StoreDigitB:
     ld b, a
 
-Call_000_200f:
+JumpToPrintLoop:
     jp Jump_000_2095
 
 
@@ -6334,7 +6334,7 @@ Jump_000_2024:
     ld a, [$c0a1]
     ldh [$d6], a
 
-Call_000_202f:
+SavePrintContext:
     ld a, [$c0a2]
     ldh [$d7], a
     pop af
@@ -6349,12 +6349,12 @@ GetHRAMPointerB:
 Jump_000_203a:
     ld h, $ff
 
-Call_000_203c:
+AdvancePrintRow:
 jr_000_203c:
     inc h
     ldh a, [$d5]
 
-Call_000_203f:
+SubtractDigitValue:
     sub e
     ldh [$d5], a
 
@@ -6397,14 +6397,14 @@ FillMemory:
     push bc
     call ExtractDigit16
 
-Call_000_2078:
+CheckLeadingZero:
     pop bc
     or a
     jr nz, jr_000_20a1
 
     call WriteBlankTile
 
-Call_000_207f:
+PrintDigitAndCopy:
     call PrintDigit
 
 CopyHLtoDE:
@@ -6426,7 +6426,7 @@ jr_000_2095:
     call WriteDigitTile
     call PrintDigit
 
-Call_000_20a1:
+ExtractHundreds:
 jr_000_20a1:
     ld de, $0064
     call ExtractDigit16
@@ -6450,7 +6450,7 @@ ExtractDigit16:
     push hl
     ld h, $ff
 
-Call_000_20c1:
+DigitExtractLoop:
 jr_000_20c1:
     inc h
     ld a, c
@@ -6458,13 +6458,13 @@ jr_000_20c1:
 Jump_000_20c3:
     sub e
 
-Call_000_20c4:
+DigitSubtractStep:
     ld c, a
     ld a, b
     sbc d
     ld b, a
 
-Call_000_20c8:
+DigitCheckBorrow:
     jr nc, jr_000_20c1
 
     ld a, c
@@ -6473,7 +6473,7 @@ Call_000_20c8:
     ld a, b
     adc d
 
-Call_000_20cf:
+DigitLoopCleanup:
     ld b, a
     ld a, h
     pop hl
@@ -6509,7 +6509,7 @@ PrintDigit:
     inc a
     and $1f
 
-Call_000_20e8:
+ReformatDigitResult:
     ld l, a
     pop af
     or l
@@ -6532,10 +6532,10 @@ EnableSRAM:
     ret
 
 
-Call_000_20fe:
+DisableIntAndPush:
     di
 
-Call_000_20ff:
+PushAFSafe:
 Jump_000_20ff:
     push af
 
@@ -6599,11 +6599,11 @@ Jump_000_214f:
 Jump_000_2158:
     ld hl, $a002
 
-Call_000_215b:
+GetMonsterField1:
     ld a, $01
     push af
 
-Call_000_215e:
+GetMonsterField2:
     ld a, $0a
     ld [$0100], a
     pop af
@@ -6646,7 +6646,7 @@ jr_000_2189:
 SavePartyToSRAM:
     ld hl, $cac1
 
-Call_000_219a:
+GetMonsterStatPtr:
     ld de, $a1fb
     ld bc, $0ba4
     call CopySRAMBlock
@@ -6704,7 +6704,7 @@ Jump_000_21fe:
     ld a, b
     or c
 
-Call_000_2200:
+BranchIfNonZero:
 Jump_000_2200:
     jr nz, jr_000_21fa
 
@@ -6720,7 +6720,7 @@ GetMonsterSlotContext:
     push bc
     ld b, a
 
-Call_000_220a:
+CheckScreenActiveC86C:
     ld a, [$c86c]
     or a
     jr z, jr_000_221a
@@ -6761,7 +6761,7 @@ GetCurrentMonsterPtr:
     ld c, $95
     call Mul8x8To16
 
-Call_000_2235:
+AddBCToHL:
 Jump_000_2235:
     pop bc
     add hl, bc
@@ -6780,14 +6780,14 @@ GetMonsterDataPtr:
     push de
     push hl
 
-Call_000_223e:
+MonsterFieldCalc:
     ld c, $95
     and $7f
 
 Jump_000_2242:
     call Mul8x8To16
 
-Call_000_2245:
+MonsterFieldWrite:
     pop bc
     add hl, bc
     pop de
@@ -6848,7 +6848,7 @@ GetActiveMonsterPtr:
     pop bc
     add hl, bc
 
-Call_000_2280:
+RestoreRegisters3:
     pop de
     pop bc
     pop af
@@ -6908,13 +6908,13 @@ Wrapper_22BA:
     ret
 
 
-Call_000_22be:
+GetMonsterLevelPtr:
     push hl
     call GetMonsterSlotContext
     pop hl
     push hl
 
-Call_000_22c4:
+ClearMonsterLevel:
     ld hl, $cb11
     call GetMonsterDataPtr
     pop de
@@ -6923,7 +6923,7 @@ Call_000_22c4:
     ret
 
 
-Call_000_22d2:
+GetMonsterSlotAndPush:
     push hl
     call GetMonsterSlotContext
     pop hl
@@ -6944,12 +6944,12 @@ Call_000_22d2:
     ret
 
 
-Call_000_22f0:
+GetMonsterHPContext:
     push hl
     call GetMonsterSlotContext
     pop hl
 
-Call_000_22f5:
+ClearMonsterMaxHP:
     push hl
     ld hl, $cb15
     call GetMonsterDataPtr
@@ -6959,34 +6959,34 @@ Call_000_22f5:
     ret
 
 
-Call_000_2304:
+SetATKMax999:
     call MonsterStatAddContext
 
-Call_000_2307:
+AddMonsterATK:
     ld de, $cb19
 
-Call_000_230a:
+AddStatMax999:
     ld bc, $03e7
     call MonsterStatAdd
 
-Call_000_2310:
+RetStatAddDone:
 Jump_000_2310:
     ret
 
 
     call MonsterStatSubContext
 
-Call_000_2314:
+SubMonsterATK:
     ld de, $cb19
     ld bc, $0001
     call MonsterStatSubtract
     ret
 
 
-Call_000_231e:
+SubMonsterATK_Alt:
     call MonsterStatAddContext
 
-Call_000_2321:
+AddMonsterDEF:
     ld de, $cb1b
     ld bc, $03e7
     call MonsterStatAdd
@@ -6995,7 +6995,7 @@ Call_000_2321:
 
     call MonsterStatSubContext
 
-Call_000_232e:
+SubMonsterDEF:
     ld de, $cb1b
 
 MonsterStatDecrement:
@@ -7004,10 +7004,10 @@ MonsterStatDecrement:
     ret
 
 
-Call_000_2338:
+MonsterStatDecLoop:
     call MonsterStatAddContext
 
-Call_000_233b:
+AddMonsterAGL:
     ld de, $cb1d
     ld bc, $01ff
     call MonsterStatAdd
@@ -7016,17 +7016,17 @@ Call_000_233b:
 
     call MonsterStatSubContext
 
-Call_000_2348:
+SubMonsterAGL:
     ld de, $cb1d
     ld bc, $0001
     call MonsterStatSubtract
     ret
 
 
-Call_000_2352:
+AddMonsterINT_Alt:
     call MonsterStatAddContext
 
-Call_000_2355:
+AddMonsterINT:
     ld de, $cb1f
     ld bc, $00ff
 
@@ -7037,7 +7037,7 @@ Jump_000_235b:
 
     call MonsterStatSubContext
 
-Call_000_2362:
+SubMonsterINT:
     ld de, $cb1f
     ld bc, $0001
     call MonsterStatSubtract
@@ -7051,7 +7051,7 @@ Call_000_2362:
     ret
 
 
-Call_000_2379:
+ClearMonsterAGL:
     call MonsterStatSubContext
     ld de, $cb21
     ld bc, $0000
@@ -7059,7 +7059,7 @@ Call_000_2379:
     ret
 
 
-Call_000_2386:
+SetMonsterSkill1:
     call MonsterStatAddContext
     ld de, $cb25
     ld c, $ff
@@ -7067,17 +7067,17 @@ Call_000_2386:
     ret
 
 
-Call_000_2392:
+ClearMonsterSkill1:
     call MonsterStatSubContext
     ld de, $cb25
 
-Call_000_2398:
+ClearSkillSlot:
     ld c, $00
     call MonsterStatCopyOut
     ret
 
 
-Call_000_239e:
+SetMonsterSkill3:
     call MonsterStatAddContext
     ld de, $cb28
     ld c, $ff
@@ -7085,7 +7085,7 @@ Call_000_239e:
     ret
 
 
-Call_000_23aa:
+ClearMonsterSkill3:
     call MonsterStatSubContext
     ld de, $cb28
     ld c, $00
@@ -7109,7 +7109,7 @@ Jump_000_23ca:
     ret
 
 
-Call_000_23ce:
+SetMonsterSkill2:
     call MonsterStatAddContext
     ld de, $cb26
     ld c, $ff
@@ -7117,7 +7117,7 @@ Call_000_23ce:
     ret
 
 
-Call_000_23da:
+ClearMonsterSkill2:
     call MonsterStatSubContext
     ld de, $cb26
     ld c, $00
@@ -7125,10 +7125,10 @@ Call_000_23da:
     ret
 
 
-Call_000_23e6:
+AddMonsterHP_Setup:
     call MonsterStatAddContext
 
-Call_000_23e9:
+AddMonsterHP:
     ld de, $cb13
     ld bc, $03e7
     call MonsterStatAdd
@@ -7137,7 +7137,7 @@ Call_000_23e9:
 
     call MonsterStatSubContext
 
-Call_000_23f6:
+SubMonsterHP:
     ld de, $cb13
     ld bc, $0001
 
@@ -7146,11 +7146,11 @@ Wrapper_23FC:
     ret
 
 
-Call_000_2400:
+MonsterStatAddWrap:
 Jump_000_2400:
     call MonsterStatAddContext
 
-Call_000_2403:
+AddMonsterMP:
 Jump_000_2403:
     ld de, $cb17
     ld bc, $03e7
@@ -7160,7 +7160,7 @@ Jump_000_2403:
 
     call MonsterStatSubContext
 
-Call_000_2410:
+DecrementMonsterMP:
 Jump_000_2410:
     ld de, $cb17
     ld bc, $0001
@@ -7175,7 +7175,7 @@ CompareGold:
     ld hl, wCurrGoldLo
 
 Wrapper_2420:
-    call Call_000_24c3
+    call WriteStatAndRet
     ret
 
 
@@ -7184,22 +7184,22 @@ AddGold:
     ld d, h
     ld e, l
 
-Call_000_2427:
+CheckGoldAmount:
     ld hl, wCurrGoldLo
     call CompareGoldHL
     ret
 
 
-Call_000_242e:
+CompareGoldAndSub:
     ld c, e
     ld d, h
     ld e, l
     ld hl, $ca4e
-    call Call_000_24e4
+    call StatMultiply
     ret
 
 
-Call_000_2438:
+SubtractGold:
     ld c, e
     ld d, h
     ld e, l
@@ -7238,7 +7238,7 @@ MonsterStatCopyIn:
     call GetMonsterDataPtr
     pop de
     pop bc
-    call Call_000_24af
+    call StatAddClamped
     ret
 
 
@@ -7264,7 +7264,7 @@ Jump_000_246b:
     pop bc
     call SaturatingSubtract16
 
-Call_000_2474:
+RetNop_2474:
     ret
 
 
@@ -7276,7 +7276,7 @@ MonsterStatCopyOut:
     call GetMonsterDataPtr
     pop de
     pop bc
-    call Call_000_24b9
+    call StatSubClamped
     ret
 
 
@@ -7336,7 +7336,7 @@ jr_000_24aa:
     ret
 
 
-Call_000_24af:
+StatAddClamped:
     ld a, [hl]
     add e
     jr c, jr_000_24b6
@@ -7352,7 +7352,7 @@ jr_000_24b7:
     ret
 
 
-Call_000_24b9:
+StatSubClamped:
     ld a, [hl]
     sub e
     jr c, jr_000_24c0
@@ -7363,18 +7363,18 @@ Call_000_24b9:
 jr_000_24c0:
     ld a, c
 
-Call_000_24c1:
+WriteHLAndRet:
 jr_000_24c1:
     ld [hl], a
     ret
 
 
-Call_000_24c3:
+WriteStatAndRet:
     push hl
     ld a, [hl+]
     add e
 
-Call_000_24c6:
+StatBoundsCheck:
     ld e, a
     ld a, [hl+]
     adc d
@@ -7405,7 +7405,7 @@ jr_000_24dd:
     ret
 
 
-Call_000_24e4:
+StatMultiply:
     push hl
     ld a, [hl+]
     add e
@@ -7428,7 +7428,7 @@ Jump_000_24f2:
 
     ld de, $423f
 
-Call_000_24fc:
+StatDivide:
     ld c, $0f
     jr jr_000_24dd
 
@@ -7474,14 +7474,14 @@ UpdateOAMSprites:
 jr_000_252a:
     ld hl, $c1c0
 
-Call_000_252d:
+SetCountBC64:
     ld bc, $0040
 
 Jump_000_2530:
     ld a, $e0
     call FillNBytesWithRegA
 
-Call_000_2535:
+CheckPartyData:
 Jump_000_2535:
     ld a, [$ca8d]
     or a
@@ -7493,7 +7493,7 @@ Jump_000_253d:
     ld a, $00
 
 Jump_000_253f:
-    call Call_000_255f
+    call SetupStatDisplay
 
 Jump_000_2542:
     ld a, [$ca8d]
@@ -7502,18 +7502,18 @@ Jump_000_2542:
 
     ld hl, $c1c7
     ld a, $01
-    call Call_000_255f
+    call SetupStatDisplay
     ld a, [$ca8d]
     cp $02
     ret z
 
     ld hl, $c1ce
     ld a, $02
-    call Call_000_255f
+    call SetupStatDisplay
     ret
 
 
-Call_000_255f:
+SetupStatDisplay:
     ldh [$d5], a
     ld a, [wMonsterInfoToggle]
     or a
@@ -7534,7 +7534,7 @@ Call_000_255f:
     pop hl
     call FillMemory
 
-Call_000_2580:
+AdvanceTilemapRow:
     pop hl
     ld a, l
     add $20
@@ -7646,7 +7646,7 @@ Jump_000_25ff:
     ld l, a
     ld a, $00
 
-Call_000_260c:
+AddCarryToH:
     adc h
     ld h, a
 
@@ -7671,13 +7671,13 @@ jr_000_2620:
     ld a, [de]
     call Write_gfx_tile
     ld a, $07
-    call Call_000_1ac5
+    call GBCOnlyGuard
     ld a, l
     and $e0
     push af
     ld a, l
 
-Call_000_262e:
+TilemapWrapX_2:
     inc a
     and $1f
     ld l, a
@@ -7690,7 +7690,7 @@ Call_000_262e:
 
     pop hl
 
-Call_000_263a:
+AdvanceStatOffset12:
     ld a, e
     add $0c
     ld e, a
@@ -7698,7 +7698,7 @@ Call_000_263a:
 Jump_000_263e:
     ld a, d
 
-Call_000_263f:
+AddCarryToD:
     adc $00
     ld d, a
     push bc
@@ -7753,7 +7753,7 @@ SetBitInArray:
     xor $ff
     and [hl]
 
-Call_000_267c:
+WriteHLAndRet2:
     ld [hl], a
     ret
 
@@ -7874,7 +7874,7 @@ ComputeFlagAddress:
 
     add b
 
-Call_000_26d6:
+DataTable_26D6:
     ld b, b
     jr nz, @+$12
 
@@ -7915,7 +7915,7 @@ Jump_000_2706:
     ldh [rSB], a
     add b
 
-Call_000_270a:
+DataTable_270A:
     nop
     ld d, b
     nop
@@ -7956,13 +7956,13 @@ jr_000_272d:
     add hl, hl
     ld b, b
 
-Call_000_2730:
+SetCountBC128:
 Jump_000_2730:
 jr_000_2730:
     ld bc, $0080
     jr jr_000_2735
 
-Call_000_2735:
+TilemapPadding:
 jr_000_2735:
     nop
 
@@ -8037,13 +8037,13 @@ jr_000_2770:
     ld a, [bc]
     jr nc, @-$5e
 
-Call_000_2778:
+DataTable_2778:
     nop
     add b
     nop
     ld b, b
 
-Call_000_277c:
+DataTable_277C:
     nop
     nop
     ld a, [hl+]
@@ -8167,11 +8167,11 @@ jr_000_27dd:
 jr_000_27fd:
     inc b
 
-Call_000_27fe:
+DataTable_27FE:
     dec l
     and b
 
-Call_000_2800:
+DataTable_2800:
     nop
     add b
     nop
@@ -8181,7 +8181,7 @@ jr_000_2805:
     ld b, $2d
     and b
 
-Call_000_2808:
+DataTable_2808:
     nop
     add b
     nop
@@ -8198,7 +8198,7 @@ Jump_000_2812:
     nop
     jr nc, jr_000_2815
 
-Call_000_2815:
+ReadByteFromBC:
 Jump_000_2815:
 jr_000_2815:
     ld a, [bc]
@@ -8230,7 +8230,7 @@ jr_000_282d:
     db $10
     dec l
 
-Call_000_282f:
+DataTable_282F:
     and b
 
 Jump_000_2830:
@@ -8273,7 +8273,7 @@ jr_000_284d:
     add b
     nop
 
-Call_000_2853:
+DataTable_2853:
 Jump_000_2853:
     jr z, jr_000_2855
 
@@ -8286,7 +8286,7 @@ jr_000_2855:
     nop
     inc c
 
-Call_000_285e:
+DataTable_285E:
     ld h, $a0
     nop
     add b
@@ -8311,7 +8311,7 @@ Call_000_285e:
 jr_000_2875:
     ld [de], a
 
-Call_000_2876:
+DataTable_2876:
     ld h, $a0
     nop
     add b
@@ -8398,7 +8398,7 @@ Jump_000_28c7:
     add b
     nop
 
-Call_000_28cb:
+DataTable_28CB:
     stop
     ld [$a025], sp
     nop
@@ -8448,11 +8448,11 @@ Jump_000_28e4:
     nop
     ld b, b
 
-Call_000_28fc:
+DataTable_28FC:
     nop
     jr jr_000_2923
 
-Call_000_28ff:
+DataTable_28FF:
     and b
 
 Jump_000_2900:
@@ -8492,7 +8492,7 @@ Jump_000_2915:
     inc h
     and b
 
-Call_000_2920:
+DataTable_2920:
 Jump_000_2920:
     nop
     add b
@@ -8506,7 +8506,7 @@ jr_000_2923:
     and b
     nop
 
-Call_000_2929:
+DataTable_2929:
     add b
     nop
     ld d, b
@@ -8680,7 +8680,7 @@ jr_000_29d6:
 jr_000_29dd:
     ld [de], a
 
-Call_000_29de:
+DataTable_29DE:
     inc h
     and b
 
@@ -8738,7 +8738,7 @@ jr_000_2a05:
     inc h
     and b
 
-Call_000_2a08:
+DataTable_2A08:
 jr_000_2a08:
     nop
     add b
@@ -8750,7 +8750,7 @@ jr_000_2a0a:
     ld [de], a
     inc h
 
-Call_000_2a0f:
+DataTable_2A0F:
     and b
     nop
     add b
@@ -8815,7 +8815,7 @@ jr_000_2a38:
     ld d, b
     nop
 
-Call_000_2a3d:
+DataTable_2A3D:
     ld [de], a
     inc h
     and b
@@ -8847,7 +8847,7 @@ jr_000_2a48:
     nop
     ld [de], a
 
-Call_000_2a56:
+DataTable_2A56:
     inc h
     and b
 
@@ -8914,7 +8914,7 @@ jr_000_2a8d:
     ld b, $28
     add b
 
-Call_000_2a90:
+DataTable_2A90:
     ld [bc], a
     nop
     ld [bc], a
@@ -8944,7 +8944,7 @@ jr_000_2aa5:
     nop
     ld [bc], a
 
-Call_000_2aab:
+DataTable_2AAB:
     jr nc, jr_000_2aad
 
 jr_000_2aad:
@@ -9026,7 +9026,7 @@ Jump_000_2b01:
     ld sp, $3113
     inc d
 
-Call_000_2b08:
+DataTable_2B08:
 Jump_000_2b08:
     ld sp, $3115
     ld d, $31
@@ -9158,7 +9158,7 @@ jr_000_2bbc:
     cpl
     inc hl
 
-Call_000_2bc4:
+TilemapScrollCalc:
     cpl
     inc h
     cpl
@@ -9167,7 +9167,7 @@ Call_000_2bc4:
     ld h, $2f
     daa
 
-Call_000_2bcc:
+BitComplementAndBranch:
     cpl
     jr z, jr_000_2bfe
 
@@ -9185,7 +9185,7 @@ Call_000_2bcc:
     cpl
     cpl
 
-Call_000_2bdd:
+TilemapDrawRegion:
     jr nc, jr_000_2c0e
 
     ld sp, $322f
@@ -9199,7 +9199,7 @@ Call_000_2bdd:
     ld [hl], $2f
     scf
 
-Call_000_2bec:
+TilemapFillRegion:
     cpl
     nop
 
@@ -9214,7 +9214,7 @@ Jump_000_2bf0:
     ld [hl], $06
     ld [hl], $07
 
-Call_000_2bfc:
+TilemapClearLine:
     ld [hl], $08
 
 jr_000_2bfe:
@@ -9222,7 +9222,7 @@ jr_000_2bfe:
     ld [hl], $0a
     ld [hl], $0b
 
-Call_000_2c04:
+WriteTileSequence:
     ld [hl], $0c
     ld [hl], $0d
     ld [hl], $0e
@@ -9428,15 +9428,15 @@ jr_000_2cf3:
     inc sp
     ld c, $33
 
-Call_000_2cfb:
+TilemapWriteByte:
     rrca
 
-Call_000_2cfc:
+TilemapWriteByte2:
     inc sp
     db $10
     inc sp
 
-Call_000_2cff:
+TilemapNextTile:
     ld de, $1233
     inc sp
 
@@ -9520,12 +9520,12 @@ jr_000_2d42:
 jr_000_2d52:
     ld [hl-], a
 
-Call_000_2d53:
+TilemapRotateWrite:
     rrca
     ld [hl-], a
     rrca
 
-Call_000_2d56:
+WriteRotatedBytesDown:
     ld [hl-], a
     rrca
     ld [hl-], a
@@ -9540,7 +9540,7 @@ Call_000_2d56:
     rrca
     ld [hl-], a
 
-Call_000_2d63:
+TilemapRotateCont:
     rrca
     ld [hl-], a
     rrca
@@ -9639,7 +9639,7 @@ jr_000_2da8:
     nop
     nop
 
-Call_000_2dc8:
+MenuBorderDraw:
     nop
     nop
     ld bc, $00a0
@@ -9661,7 +9661,7 @@ Call_000_2dc8:
     nop
     inc d
 
-Call_000_2dec:
+MenuBorderTop:
     nop
     ld e, $00
     nop
@@ -9674,7 +9674,7 @@ Call_000_2dec:
     db $10
     inc d
 
-Call_000_2dfc:
+MenuBorderSide:
     db $10
     ld e, $10
     nop
@@ -9682,10 +9682,10 @@ Call_000_2dfc:
 
     jr jr_000_2e18
 
-Call_000_2e04:
+MenuBorderBottom:
     jr jr_000_2e24
 
-Call_000_2e06:
+MenuBorderCorner:
 Jump_000_2e06:
     jr jr_000_2da8
 
@@ -9701,7 +9701,7 @@ jr_000_2e0c:
 Jump_000_2e10:
     rst $28
 
-Call_000_2e11:
+MenuBorderFill:
     rst $28
     rst $28
     rst $28
@@ -9750,7 +9750,7 @@ jr_000_2e24:
     ldh [$e0], a
     ldh [$e0], a
 
-Call_000_2e41:
+WriteHRAMMultiple:
     ldh [$e0], a
     ldh [$e0], a
     ldh [rIE], a
@@ -9793,7 +9793,7 @@ Call_000_2e41:
     nop
     nop
 
-Call_000_2e74:
+DataTable_2E74:
     ld a, [$efef]
     rst $28
     rst $28
@@ -9912,7 +9912,7 @@ Jump_000_2eea:
 Jump_000_2ef3:
     cpl
 
-Call_000_2ef4:
+MenuClearContents:
     ld a, [$082e]
     cpl
     inc h
@@ -10017,7 +10017,7 @@ jr_000_2f66:
     add hl, bc
     ld b, h
 
-Call_000_2f68:
+MenuCalcPosition:
     ld c, l
     ld h, d
     ld l, e
@@ -10066,13 +10066,13 @@ GetMonsterSlotInfo:
     and $3f
     jr nz, jr_000_2fa0
 
-Call_000_2f97:
+MenuCalcWidth:
     inc hl
 
 Jump_000_2f98:
     ld a, [hl]
 
-Call_000_2f99:
+MenuCalcHeight:
     and $c0
     jr nz, jr_000_2fa0
 
@@ -10174,12 +10174,12 @@ IndexPtrTable:
     ld a, $00
     adc h
 
-Call_000_2ffc:
+MenuDrawComplete:
     ld h, a
     ld a, [hl+]
     ld h, [hl]
 
-Call_000_2fff:
+MenuEndDraw:
     ld l, a
 
 NopReturn:
@@ -10187,16 +10187,16 @@ Jump_NopReturn:
     ret
 
 
-Call_000_3001:
+ReadBattleStateDA80:
 Jump_000_3001:
     ld a, [$da80]
 
-Call_000_3004:
+RetIfZeroA:
 Jump_000_3004:
     or a
     ret z
 
-Call_000_3006:
+InitBattleState:
     ld a, [$c863]
     and $02
     sla a
@@ -10219,10 +10219,10 @@ Jump_000_3020:
     ld [$dd60], a
     ld a, $00
 
-Call_000_3025:
+StoreBattleDD62:
     ld [$dd62], a
 
-Call_000_3028:
+RetNop_3028:
     ret
 
 
@@ -10244,7 +10244,7 @@ Jump_000_3030:
     cp $21
     jr c, jr_000_304d
 
-Call_000_303f:
+CheckSaveSlot:
 Jump_000_303f:
     cp $2c
     jr z, jr_000_3059
@@ -10301,7 +10301,7 @@ jr_000_307b:
     ld hl, $5e00
     rst $10
 
-Call_000_307f:
+CheckFieldStateDD20:
 jr_000_307f:
     ld a, [$dd20]
     or a
@@ -10392,7 +10392,7 @@ jr_000_30e9:
 
     ld a, $68
 
-Call_000_30f0:
+AudioGetTimerHRAM:
     ldh [$c3], a
     ld a, [$da81]
     cp $15
@@ -10415,7 +10415,7 @@ CallBank5FEntry7_3103:
     ld a, [$da81]
     cp $ff
 
-Call_000_310c:
+RetIfZero:
     ret z
 
     ld hl, wBGPalette
@@ -10437,7 +10437,7 @@ Jump_000_3110:
     ld [wObj1Palette], a
     ld a, [$da81]
 
-Call_000_312a:
+CheckBankIndexRange:
     cp $0e
     jr c, jr_000_3137
 
@@ -10448,7 +10448,7 @@ CallBank5EEntry1_3130:
 
     ld hl, $5e01
 
-Call_000_3135:
+CrossBankCallAndRet2:
     rst $10
     ret
 
@@ -10616,7 +10616,7 @@ Jump_000_31ce:
     ld sp, $ff10
     rst $38
 
-Call_000_3200:
+AudioWaveData_3200:
     rst $38
     rst $38
     rst $38
@@ -10677,7 +10677,7 @@ Jump_000_3225:
     ld d, l
     ld [hl], a
 
-Call_000_3235:
+AudioWaveData_3235:
     sbc c
     ld d, l
 
@@ -10718,7 +10718,7 @@ Jump_000_3237:
     ld [hl+], a
     ld [hl+], a
 
-Call_000_3268:
+Fill6BytesHL:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
@@ -10730,7 +10730,7 @@ Call_000_3268:
     pop af
     ret nc
 
-Call_000_3272:
+AudioWaveData_3272:
     or b
     sub b
     ld [hl], b
@@ -10822,10 +10822,10 @@ jr_000_32ac:
     ld d, b
     dec [hl]
 
-Call_000_32c0:
+AudioWaveData_32C0:
     db $db
 
-Call_000_32c1:
+AudioWaveData_32C1:
 jr_000_32c1:
     di
     ret nc
@@ -10840,7 +10840,7 @@ Jump_000_32c3:
     ld b, b
     jr nc, jr_000_32ec
 
-Call_000_32cc:
+AudioWaveData_32CC:
 Jump_000_32cc:
     dec d
     dec d
@@ -10893,10 +10893,10 @@ jr_000_32ec:
     dec d
     dec d
 
-Call_000_32fc:
+AudioWaveData_32FC:
     dec d
 
-Call_000_32fd:
+AudioWaveData_32FD:
     dec d
 
 jr_000_32fe:
@@ -10905,18 +10905,18 @@ jr_000_32fe:
 Jump_000_32ff:
     dec b
 
-Call_000_3300:
+AudioWaveData_3300:
     pop af
     or b
     ld [hl], b
 
-Call_000_3303:
+AudioWaveData_3303:
     ld d, b
     jr nc, jr_000_3316
 
     ld d, c
 
-Call_000_3307:
+AudioWaveData_3307:
     ld b, b
     jr nc, jr_000_332a
 
@@ -10943,7 +10943,7 @@ Jump_000_3311:
 jr_000_3316:
     jr nc, jr_000_3328
 
-Call_000_3318:
+AudioWaveData_3318:
     ld d, c
     ld b, b
     jr nc, jr_000_333c
@@ -10980,7 +10980,7 @@ jr_000_332a:
 
 InitAudioSystem:
     ld bc, $0000
-    call Call_000_336d
+    call AudioSetChannelDE26
     ld a, $80
     ldh [rNR52], a
     xor a
@@ -11024,7 +11024,7 @@ Jump_000_335e:
     ret
 
 
-Call_000_336d:
+AudioSetChannelDE26:
 jr_000_336d:
     ld a, b
     ld [$de26], a
@@ -11035,7 +11035,7 @@ jr_000_336d:
     ret
 
 
-Call_000_337a:
+AudioSetupChannel:
     ld a, [$de23]
     inc a
     ld b, a
@@ -11056,7 +11056,7 @@ jr_000_3387:
     ret
 
 
-Call_000_3390:
+AudioInitRegisters:
     ld a, [$de28]
     ld hl, $de26
     and [hl]
@@ -11099,7 +11099,7 @@ jr_000_33c4:
     ret
 
 
-Call_000_33c9:
+AudioUpdate3x:
     call AudioProcess
 
 AudioUpdate2x:
@@ -11121,7 +11121,7 @@ jr_000_33db:
 
     inc hl
 
-Call_000_33df:
+AudioLoadWaveRAM:
     inc hl
     inc hl
     inc hl
@@ -11139,7 +11139,7 @@ jr_000_33e4:
     ld [$4100], a
     ld a, [hl-]
 
-Call_000_33f6:
+AudioResetChannel:
     ld d, a
 
 Jump_000_33f7:
@@ -11155,18 +11155,18 @@ Jump_000_3400:
     add hl, hl
     add hl, hl
 
-Call_000_3402:
+AudioAddHLDE:
 Jump_000_3402:
     add hl, de
     push hl
 
-Call_000_3404:
+AudioPopDE:
     pop de
 
-Call_000_3405:
+AudioReadDE:
     ld a, [de]
 
-Call_000_3406:
+AudioNextByte:
     inc de
     ld c, a
     ld b, $00
@@ -11238,7 +11238,7 @@ Jump_000_3440:
     ld a, $ff
     ld [hl], a
 
-Call_000_3448:
+AudioPopHLAdvance21:
     pop hl
     ld de, $0015
     add hl, de
@@ -11267,14 +11267,14 @@ Jump_000_344f:
     dec e
     scf
 
-Call_000_346f:
+AudioSetBC1E40:
     ld bc, $1e40
     rst $38
 
-Call_000_3473:
+SaveBankAndAudioState:
     ld a, [$4000]
 
-Call_000_3476:
+SaveAudioBankState:
     push af
     ld a, [$de29]
     ld [$de23], a
@@ -11323,7 +11323,7 @@ jr_000_348e:
     ld a, [hl]
     ld [de], a
 
-Call_000_34ae:
+AudioGetChannelMask:
     ldh a, [$e5]
     and $03
     ld [$de1e], a
@@ -11360,12 +11360,12 @@ jr_000_34bf:
     and a
     jp z, Jump_000_357f
 
-    call Call_000_3905
-    call Call_000_3974
+    call AudioProcessChannel
+    call AudioNoteOn
     ldh a, [$f1]
     ld b, a
 
-Call_000_34f1:
+AudioGetFrequency:
     ldh a, [$f2]
 
 Jump_000_34f3:
@@ -11385,7 +11385,7 @@ Jump_000_34ff:
     add [hl]
     cp $10
 
-Call_000_3504:
+AudioCheckCarry:
     jr c, jr_000_350b
 
     sub $10
@@ -11394,14 +11394,14 @@ Call_000_3504:
 
 jr_000_350b:
     ld [hl], a
-    call Call_000_38c6
+    call AudioSetVolume
     ldh a, [$fb]
     and a
     jr z, jr_000_3517
 
     dec a
 
-Call_000_3515:
+AudioSetRegFB:
 Jump_000_3515:
     ldh [$fb], a
 
@@ -11410,12 +11410,12 @@ jr_000_3517:
     dec [hl]
     jr nz, jr_000_3527
 
-    call Call_000_337a
+    call AudioSetupChannel
 
 Jump_000_3520:
     ldh a, [$fa]
     ldh [$fb], a
-    call Call_000_35ea
+    call AudioGetEnvelope
 
 jr_000_3527:
     ld a, [$de1f]
@@ -11490,7 +11490,7 @@ Jump_000_3559:
     rra
     and $03
     ld [$4100], a
-    call Call_000_3390
+    call AudioInitRegisters
     ret
 
 
@@ -11579,7 +11579,7 @@ jr_000_35e2:
 
     jr jr_000_35aa
 
-Call_000_35ea:
+AudioGetEnvelope:
 Jump_000_35ea:
     ldh a, [$e4]
     ld l, a
@@ -11591,7 +11591,7 @@ Jump_000_35ea:
     ldh a, [$e7]
     ld d, a
 
-Call_000_35f7:
+AudioAddOffset:
     add hl, de
 
 Jump_000_35f8:
@@ -11611,7 +11611,7 @@ Jump_000_3600:
     cp $b0
     jr nc, jr_000_366e
 
-Call_000_360d:
+AudioProcessNote:
     cp $a0
 
 Jump_000_360f:
@@ -11640,7 +11640,7 @@ jr_000_3624:
 
     ldh [$e4], a
     ldh [$fd], a
-    call Call_000_3a38
+    call AudioSetSweep
     ret
 
 
@@ -11657,7 +11657,7 @@ jr_000_3630:
 jr_000_363c:
     and $0f
 
-Call_000_363e:
+AudioNegate:
     cpl
     inc a
 
@@ -11665,7 +11665,7 @@ jr_000_3640:
     ld b, a
     ld a, [$de1e]
 
-Call_000_3644:
+AudioCheckChannel2:
     cp $02
     jr z, jr_000_3650
 
@@ -11736,7 +11736,7 @@ jr_000_368b:
 
     ld a, e
 
-Call_000_3697:
+ProcessTextCharLoop:
     ldh [$ef], a
 
 jr_000_3699:
@@ -11793,7 +11793,7 @@ Jump_000_36cb:
     and b
     jp nz, Jump_000_35f8
 
-    call Call_000_393c
+    call AudioCommandHandler
     jp Jump_000_35f8
 
 
@@ -11819,13 +11819,13 @@ jr_000_36f6:
     ld a, [hl+]
     ld e, a
 
-Call_000_36fc:
+AudioGetNoteLength:
     ldh [$ed], a
     ld a, [$de1f]
     ld b, a
     ld a, [$de1c]
 
-Call_000_3705:
+AudioCheckAndBranch:
     and b
     jr z, jr_000_370b
 
@@ -11854,7 +11854,7 @@ jr_000_371b:
 
     pop hl
 
-Call_000_3722:
+AudioJumpToFreqCalc:
 Jump_000_3722:
     jp Jump_000_35f8
 
@@ -11866,14 +11866,14 @@ jr_000_3725:
     ld a, [$de1e]
     cp $02
 
-Call_000_372e:
+AudioBranchIfZero:
     jr z, jr_000_3740
 
 Jump_000_3730:
     ld a, [hl+]
     rrca
 
-Call_000_3732:
+AudioExtractBits:
     rrca
     and $c0
     ld d, a
@@ -11909,7 +11909,7 @@ jr_000_3746:
     ld a, b
     and $70
 
-Call_000_375a:
+AudioLoadChannelState:
     ld e, a
     ldh a, [$e5]
     and $0f
@@ -11998,7 +11998,7 @@ jr_000_37af:
     jp Jump_000_35f8
 
 
-Call_000_37c1:
+AudioNoteEnd:
 Jump_000_37c1:
 jr_000_37c1:
     inc hl
@@ -12020,7 +12020,7 @@ jr_000_37c1:
     ld d, e
     ld h, d
 
-Call_000_37d5:
+AudioClearChannel:
 Jump_000_37d5:
 jr_000_37d5:
     xor a
@@ -12031,7 +12031,7 @@ jr_000_37d5:
     cp $02
     jr z, jr_000_37e7
 
-    call Call_000_3a30
+    call AudioSetDuty
     ret
 
 
@@ -12053,14 +12053,14 @@ Jump_000_37ee:
     ld a, b
     cp $1f
 
-Call_000_37fc:
+AudioBranchZ_37FC:
 Jump_000_37fc:
     jr z, jr_000_37d5
 
-Call_000_37fe:
+AudioCheckRange16:
     cp $10
 
-Call_000_3800:
+AudioBranchNC_3800:
 Jump_000_3800:
     jr nc, jr_000_3810
 
@@ -12071,7 +12071,7 @@ Jump_000_3805:
     ld l, a
     ld a, h
 
-Call_000_3808:
+AudioCarryToH:
     adc $00
     ld h, a
     ld l, [hl]
@@ -12088,7 +12088,7 @@ jr_000_3815:
     ld a, b
     and $0f
 
-Call_000_3818:
+AudioCheckRange12:
     cp $0c
     jr nc, jr_000_37d5
 
@@ -12099,7 +12099,7 @@ Call_000_3818:
 Jump_000_3820:
     and $10
 
-Call_000_3822:
+AudioBranchZ_3822:
     jr z, jr_000_3828
 
     ld a, e
@@ -12113,14 +12113,14 @@ jr_000_3828:
     ld a, [hl+]
     ld h, [hl]
 
-Call_000_3830:
+AudioLoadLA:
     ld l, a
     ld a, b
     swap a
     and $0f
     jr z, jr_000_3840
 
-Call_000_3838:
+AudioStoreBfromA:
     ld b, a
 
 jr_000_3839:
@@ -12133,7 +12133,7 @@ jr_000_3840:
     ld a, $00
     sub l
 
-Call_000_3843:
+AudioSetLength8:
     ld l, a
     ld a, $08
     sbc h
@@ -12143,19 +12143,19 @@ jr_000_3848:
     xor a
     ldh [$f2], a
 
-Call_000_384b:
+AudioSetNoteParams:
     call CheckAudioFlag
     ld a, [$de1e]
     cp $02
     jr nz, jr_000_385c
 
-    call Call_000_3c03
+    call ScreenTransE
     ld a, $80
     ldh [rNR30], a
 
 jr_000_385c:
     push hl
-    call Call_000_392e
+    call AudioLoadInstrument
     pop hl
     ld a, [$de1e]
     and a
@@ -12196,10 +12196,10 @@ jr_000_3881:
 jr_000_3899:
     ld a, h
 
-Call_000_389a:
+AudioWriteNR51:
     and $07
 
-Call_000_389c:
+AudioSetPanning:
     or $80
 
 jr_000_389e:
@@ -12232,15 +12232,15 @@ jr_000_38b8:
     ld a, h
     and $07
 
-Call_000_38c4:
+AudioWriteNR50:
     jr jr_000_389e
 
-Call_000_38c6:
+AudioSetVolume:
     ld a, [$de1e]
     cp $02
     ret z
 
-Call_000_38cc:
+CheckDMAState:
     ldh a, [$f3]
     and a
     ret z
@@ -12273,7 +12273,7 @@ Jump_000_38e1:
     ldh a, [$eb]
     add $10
 
-Call_000_38f4:
+AudioSetEffect:
     ldh [$eb], a
     jp Jump_000_393c
 
@@ -12283,18 +12283,18 @@ jr_000_38f9:
     ld a, b
     and a
 
-Call_000_38fc:
+AudioWriteChannelReg:
     ret z
 
-Call_000_38fd:
+AudioSetEffectAlt:
     ldh a, [$eb]
 
-Call_000_38ff:
+AudioChannelUpdate:
     sub $10
     ldh [$eb], a
     jr jr_000_393c
 
-Call_000_3905:
+AudioProcessChannel:
 Jump_000_3905:
     call CheckAudioFlag
 
@@ -12330,12 +12330,12 @@ Jump_000_3920:
     ld c, $13
     jr jr_000_3954
 
-Call_000_392e:
+AudioLoadInstrument:
     ld a, [$de1e]
     cp $02
     jr z, jr_000_395d
 
-Call_000_3935:
+AudioGetPanning:
 Jump_000_3935:
     ldh a, [$f0]
     and a
@@ -12343,7 +12343,7 @@ Jump_000_3935:
 
     ldh a, [$eb]
 
-Call_000_393c:
+AudioCommandHandler:
 Jump_000_393c:
 jr_000_393c:
     ld b, a
@@ -12400,7 +12400,7 @@ jr_000_3963:
     ret
 
 
-Call_000_3974:
+AudioNoteOn:
     call CheckAudioFlag
     ldh a, [$f6]
     and a
@@ -12453,7 +12453,7 @@ jr_000_399e:
     push de
     ldh a, [$fc]
 
-Call_000_39b4:
+AudioNoteOff:
     ld de, $326e
     sla a
     add e
@@ -12491,7 +12491,7 @@ Jump_000_39cf:
 
     inc b
 
-Call_000_39dd:
+AudioSetTempo:
     ld a, c
     swap a
     and $0f
@@ -12519,14 +12519,14 @@ Jump_000_39f6:
 jr_000_39fa:
     ld b, $00
 
-Call_000_39fc:
+AudioSetLoop:
 jr_000_39fc:
     bit 1, h
 
 Jump_000_39fe:
     jr z, jr_000_3a05
 
-Call_000_3a00:
+AudioEndLoop:
     ld a, b
     jr z, jr_000_3a05
 
@@ -12541,13 +12541,13 @@ Jump_000_3a08:
     or b
     ld b, a
 
-Call_000_3a0a:
+AudioSetTranspose:
     bit 0, h
 
 Jump_000_3a0c:
     jr z, jr_000_3a17
 
-Call_000_3a0e:
+AudioLookupTable:
     ld hl, $3a83
     add hl, de
     ld a, [hl]
@@ -12577,14 +12577,14 @@ Jump_000_3a2a:
     jp Jump_000_393c
 
 
-Call_000_3a30:
+AudioSetDuty:
 Jump_000_3a30:
     call CheckAudioFlag
     ld a, $00
     jp Jump_000_393c
 
 
-Call_000_3a38:
+AudioSetSweep:
     call CheckAudioFlag
     ld a, [$de1f]
     cpl
@@ -12617,7 +12617,7 @@ Jump_000_3a51:
     ld sp, hl
     ld b, $95
 
-Call_000_3a5a:
+AudioSetEnvelope2:
     ld b, $37
     ld b, $dd
 
@@ -12634,7 +12634,7 @@ Jump_000_3a66:
     inc b
     ld h, l
 
-Call_000_3a68:
+AudioVibratoSetup:
     inc b
     ld h, $04
 
@@ -12700,7 +12700,7 @@ Jump_000_3a85:
     db $10
     db $10
 
-Call_000_3aac:
+AudioVibratoProcess:
     db $10
     db $10
     db $10
@@ -12711,13 +12711,13 @@ Call_000_3aac:
     nop
     nop
 
-Call_000_3ab5:
+AudioVibratoStep:
     nop
     db $10
     db $10
     db $10
 
-Call_000_3ab9:
+AudioVibratoApply:
     db $10
     db $10
     jr nz, @+$22
@@ -12732,7 +12732,7 @@ Call_000_3ab9:
     nop
     db $10
 
-Call_000_3ac6:
+AudioPortamento:
     db $10
     db $10
     db $10
@@ -12748,7 +12748,7 @@ jr_000_3ad1:
     ld b, b
     ld b, b
 
-Call_000_3ad3:
+AudioPortaStep:
 jr_000_3ad3:
     nop
     nop
@@ -12783,7 +12783,7 @@ jr_000_3aeb:
 jr_000_3aed:
     ld b, b
 
-Call_000_3aee:
+AudioUpdateFreq:
     ld b, b
     ld d, b
     ld d, b
@@ -12814,7 +12814,7 @@ jr_000_3b01:
     ld [hl], b
     ld [hl], b
 
-Call_000_3b03:
+AudioWriteFreqRegs:
     nop
     db $10
     db $10
@@ -12876,7 +12876,7 @@ jr_000_3b2d:
     sub b
     sub b
 
-Call_000_3b32:
+AudioStopChannel:
     and b
     nop
     db $10
@@ -12966,7 +12966,7 @@ Jump_000_3b72:
     ld h, b
     ld [hl], b
 
-Call_000_3b7b:
+DataTable_3B7B:
     add b
 
 Jump_000_3b7c:
@@ -13029,7 +13029,7 @@ jr_000_3ba7:
     cp $fe
     rst $38
 
-Call_000_3bc2:
+AudioWavePatternData:
     rst $38
     rst $38
     rst $38
@@ -13062,14 +13062,14 @@ Call_000_3bc2:
     ld bc, $0101
     ld bc, $0202
 
-Call_000_3bf5:
+ScreenTransA:
     ld [bc], a
     ld [bc], a
     ld [bc], a
     ld [bc], a
     ld [bc], a
 
-Call_000_3bfa:
+ScreenTransB:
     ld [bc], a
     ld [bc], a
     ld [bc], a
@@ -13077,22 +13077,22 @@ Call_000_3bfa:
     ld [bc], a
     ld [bc], a
 
-Call_000_3c00:
+ScreenTransC:
 Jump_000_3c00:
     ld [bc], a
 
-Call_000_3c01:
+ScreenTransD:
     ld [bc], a
     ld [bc], a
 
-Call_000_3c03:
+ScreenTransE:
     ld a, [$de2b]
     ld b, a
 
-Call_000_3c07:
+AudioGetNoteLenAlt:
     ldh a, [$ed]
 
-Call_000_3c09:
+ScreenTransF:
     cp b
     ret z
 
@@ -13132,7 +13132,7 @@ jr_000_3c1e:
     ld [hl], a
     bit 7, [hl]
 
-Call_000_3c34:
+RetNop_3C34:
     ret
 
 
@@ -13140,14 +13140,14 @@ jr_000_3c35:
     xor a
     ld [hl], a
 
-Call_000_3c37:
+RetNop_3C37:
     ret
 
 
     call DispatchCD90
     ld b, e
 
-Call_000_3c3c:
+ScreenFadeStep:
 Jump_000_3c3c:
     inc a
     ld c, d
@@ -13166,15 +13166,15 @@ Jump_000_3c3c:
     ld hl, $53b0
 
 Jump_000_3c52:
-    call Call_000_0957
+    call ReadScreenState
     ld a, [$c9c1]
     cp $03
-    call z, Call_000_3c63
+    call z, CheckAndTriggerEvent
     call $3bf0
     jp Jump_000_3ce8
 
 
-Call_000_3c63:
+CheckAndTriggerEvent:
     ld hl, $cda1
     ld a, [hl]
     ld [hl], $01
@@ -13195,7 +13195,7 @@ jr_000_3c73:
     jp Jump_000_3ced
 
 
-    call Call_000_3b7b
+    call DataTable_3B7B
     jp z, Jump_000_3ce8
 
     ld a, [$c9c1]
@@ -13217,7 +13217,7 @@ jr_000_3ca1:
     call $3dab
     ld hl, $3cbc
 
-Call_000_3ca7:
+PushHLAndProcess:
 Jump_000_3ca7:
     push hl
     call $3c13
@@ -13236,7 +13236,7 @@ Jump_000_3ca7:
     ret
 
 
-Call_000_3cbc:
+DataTable_3CBC:
     ld d, b
     ld d, c
     ld d, b
@@ -13256,7 +13256,7 @@ Jump_000_3cc3:
     call nc, $da3c
     inc a
 
-Call_000_3cd2:
+PaletteSetup:
     call nc, $3e3c
     dec b
     ld [$c9c0], a
@@ -13264,7 +13264,7 @@ Call_000_3cd2:
 
 
     call $12ff
-    call Call_000_203c
+    call AdvancePrintRow
     xor a
     ld [$c9c0], a
     ret
@@ -13273,7 +13273,7 @@ Call_000_3cd2:
 Jump_000_3ce5:
     ld [$cd80], a
 
-Call_000_3ce8:
+PaletteApply:
 Jump_000_3ce8:
     ld hl, $cd90
     inc [hl]
@@ -13305,7 +13305,7 @@ Jump_000_3d00:
 Jump_000_3d01:
     sbc h
 
-Call_000_3d02:
+CheckPartyFlags:
     ld a, [$c98b]
     bit 0, a
     jp nz, Jump_000_1aab
@@ -13334,7 +13334,7 @@ Call_000_3d02:
     jp Jump_000_3c52
 
 
-    call Call_000_3b7b
+    call DataTable_3B7B
     jp z, Jump_000_3ce8
 
     call $3dab
@@ -13344,8 +13344,8 @@ Call_000_3d02:
 
     ld d, $cc
 
-Call_000_3d39:
-    call Call_000_0730
+MenuInputCheck:
+    call TilemapRecombineAddr
 
 Jump_000_3d3c:
     ld a, $20
@@ -13364,23 +13364,23 @@ Jump_000_3d3c:
     bit 0, a
     jp nz, Jump_000_1aab
 
-    call Call_000_1296
+    call ClearHRAMRegion
     call CopyDE2HL_354A
 
-Call_000_3d5f:
+MenuCursorUpdate:
     call $128a
-    call Call_000_2398
+    call ClearSkillSlot
     call $6dc8
     call $71f7
     call $747b
     call SetSerialByte
-    call Call_000_3d7d
+    call MenuCursorDraw
     call $420e
     call TextHandler_0BCD
     jp $17ba
 
 
-Call_000_3d7d:
+MenuCursorDraw:
     ld d, $c0
     ld a, [$c9c1]
     rst $00
@@ -13417,21 +13417,21 @@ Call_000_3d7d:
     dec bc
     ld a, $1c
     ld a, $cd
-    call c, Call_000_1623
+    call c, WriteBankReg4100
     ret nz
 
     call $0557
     xor a
 
-Call_000_3db4:
+SetMenuPosition:
     ld [$cd99], a
-    call Call_000_1a9e
+    call RotateRegC
     push bc
     ld a, [$cd9a]
     ld [hl-], a
     ld a, [$cd99]
 
-Call_000_3dc2:
+MenuPositionCalc:
     ld [hl], a
     call $17b0
     xor a
@@ -13466,7 +13466,7 @@ jr_000_3de3:
     jp $420e
 
 
-    call Call_000_3b7b
+    call DataTable_3B7B
     jp z, Jump_000_3ce8
 
     call $3dab
@@ -13486,11 +13486,11 @@ Jump_000_3e02:
     ld d, c
     ld l, a
 
-Call_000_3e0a:
+MenuDrawText:
     ld h, a
     ld a, $10
     ld [$cd9a], a
-    call Call_000_3db4
+    call SetMenuPosition
     ld a, [$c00f]
     cp $34
     ret nc
@@ -13509,16 +13509,16 @@ Call_000_3e0a:
     push hl
     dec a
 
-Call_000_3e31:
+MenuStoreResult:
     ld a, [c]
     dec a
     ld d, e
     ld a, $3e
 
-Call_000_3e36:
+StoreAndCallMenu:
     ld [de], a
     ld [$cd9a], a
-    call Call_000_3db4
+    call SetMenuPosition
     ld a, [$c001]
     cp $01
     ret nz
@@ -13527,7 +13527,7 @@ Call_000_3e36:
     call $0557
     ld a, $01
     ld [$cd9a], a
-    call Call_000_3db4
+    call SetMenuPosition
     jp Jump_000_3ce8
 
 
@@ -13561,7 +13561,7 @@ jr_000_3e5d:
     jr jr_000_3e58
 
     ld b, $03
-    call Call_000_2e41
+    call WriteHRAMMultiple
     jr nz, @+$13
 
     call SetSerialByte
@@ -13601,23 +13601,23 @@ jr_000_3e5d:
     ccf
     ld e, d
     ccf
-    call Call_000_3b7b
+    call DataTable_3B7B
     ld a, [$cd98]
     cp $03
     ret nz
 
-Call_000_3ebd:
+NPCAnimFrame:
     inc a
     ld [$cd98], a
     xor a
 
-Call_000_3ec2:
+SetMenuDimensions:
     ld [$cd81], a
     ld bc, $020b
     jp Jump_000_3f77
 
 
-    call Call_000_3f66
+    call PartyMenuSetup
     ret nz
 
     xor a
@@ -13633,14 +13633,14 @@ Jump_000_3ed3:
     scf
     jr c, @+$3b
 
-Call_000_3ede:
+DataTable_3EDE:
     nop
     nop
     nop
     inc hl
     inc h
     rst $38
-    call Call_000_3f85
+    call PartyMenuDraw
     ld a, [$ccb7]
     and a
     jr z, jr_000_3efe
@@ -13657,7 +13657,7 @@ Call_000_3ede:
 jr_000_3efe:
     ld hl, $c9f5
 
-Call_000_3f01:
+CheckPartySize:
     ld a, [hl]
     cp $05
     jr c, jr_000_3f18
@@ -13680,7 +13680,7 @@ jr_000_3f18:
     sbc h
     ld l, e
     sbc h
-    call Call_000_3f66
+    call PartyMenuSetup
     ret nz
 
     ld bc, $0d0c
@@ -13720,7 +13720,7 @@ jr_000_3f48:
     jp Jump_000_3f77
 
 
-    call Call_000_3b7b
+    call DataTable_3B7B
     ret nz
 
     ld b, $ec
@@ -13728,15 +13728,15 @@ jr_000_3f48:
     jp Jump_000_3e5d
 
 
-Call_000_3f66:
+PartyMenuSetup:
     call LookupDoublePtrTable
     push af
     ld hl, $3e01
-    call Call_000_3ca7
+    call PushHLAndProcess
     pop af
     ret nz
 
-    call Call_000_3ce8
+    call PaletteApply
     xor a
     ret
 
@@ -13750,7 +13750,7 @@ Jump_000_3f77:
     jp Jump_000_0b98
 
 
-Call_000_3f85:
+PartyMenuDraw:
     ld hl, $3f1e
     call CallBank5FEntry1_0541
     ld a, $0f
@@ -13762,7 +13762,7 @@ Call_000_3f85:
     ret
 
 
-Call_000_3f98:
+PartyMenuSelect:
     ld a, $0a
     ld [$c9c0], a
     ld hl, $c98b
@@ -13770,12 +13770,12 @@ Call_000_3f98:
     ret
 
 
-Call_000_3fa3:
+PartyMenuConfirm:
     ld a, $06
     ld [$cd82], a
     push de
     ld hl, $55ce
-    call Call_000_0957
+    call ReadScreenState
     pop de
     jp $3bf0
 
@@ -13812,7 +13812,7 @@ jr_000_3fd9:
 
     ld [de], a
     ld a, b
-    call Call_000_1640
+    call ReadDEMetadata3B
     jr jr_000_3fd9
 
     rst $38

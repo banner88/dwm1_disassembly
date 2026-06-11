@@ -111,7 +111,7 @@ label15_4009:
     call FillNBytesWithRegA
     ld a, $04
     ld [wTextSpeed], a
-    call Call_015_60df
+    call LoadMap_60df
     ld de, $2e1e
     ld hl, $9000
     call WaitLCDTransfer
@@ -185,7 +185,7 @@ Jump_015_413e:
     call SetGBCPalette
     ld a, $04
     ld [wTextSpeed], a
-    call Call_015_60df
+    call LoadMap_60df
     ld de, $2e1e
     ld hl, $9000
     call WaitLCDTransfer
@@ -254,7 +254,7 @@ Jump_015_413e:
     call SetGBCPalette
     ld a, $04
     ld [wTextSpeed], a
-    call Call_015_60df
+    call LoadMap_60df
     ld de, $2e1e
     ld hl, $9000
     call WaitLCDTransfer
@@ -330,7 +330,7 @@ label15_42b3:
     ret
 
 
-    call Call_015_42f1
+    call LoadMap_42f1
     di
     ld a, [$c86d]
     or a
@@ -345,7 +345,7 @@ label15_42b3:
     jr nz, jr_015_42ef
 
     ld a, b
-    call Call_000_126b
+    call StartSerialTransfer
 
 jr_015_42e6:
     ld a, [$c864]
@@ -358,7 +358,7 @@ jr_015_42ef:
     ret
 
 
-Call_015_42f1:
+LoadMap_42f1:
     ld a, [$c8d2]
     rst $00
     ld bc, $4243
@@ -372,7 +372,7 @@ Call_015_42f1:
     ld [hl], $44
     ld a, $f4
     call SerialTransfer
-    call Call_015_5e7c
+    call SetMap_5e7c
     ld de, $6454
     ld hl, $a002
     call EnableSRAM
@@ -382,8 +382,8 @@ Call_015_42f1:
     ld de, $647d
 
 jr_015_4318:
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $43b2
     ld hl, $a002
     call EnableSRAM
@@ -397,8 +397,8 @@ jr_015_432d:
     ld [$c8df], a
     ld a, [wMenu_selection]
     ld [$c8e0], a
-    call Call_015_60a2
-    call Call_015_5dc0
+    call FuncMap_60a2
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
@@ -424,7 +424,7 @@ jr_015_435f:
     ld hl, wMenu_selection
     ld a, [$c8e0]
     ld [wMenu_selection], a
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wMenu_selection]
     ld [$c8e0], a
     ld de, $43b6
@@ -531,8 +531,8 @@ jr_015_43d5:
     ld hl, $0270
     call SetupTilemapTransfer
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5dc0
+    call LoadMap_5d8f
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
@@ -542,8 +542,8 @@ jr_015_4422:
     ld hl, $021b
     call SetupTilemapTransfer
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5dc0
+    call LoadMap_5d8f
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
@@ -658,21 +658,21 @@ jr_015_44ee:
     rst $10
     ld de, $ca42
     ld hl, $9000
-    call Call_015_5e2e
-    call Call_015_45ae
+    call SaveMap_5e2e
+    call SetMap_45ae
     ld de, $673b
-    call Call_015_5d8f
+    call LoadMap_5d8f
     ld a, [$cab8]
     ld c, a
     ld b, $00
     ld hl, HeaderComplementCheck
-    call Call_015_5d33
+    call LoadMap_5d33
     call PrintNumber
     ld a, [$cab7]
     ld c, a
     ld b, $00
     ld hl, $0150
-    call Call_015_5d33
+    call LoadMap_5d33
     call PrintNumber
     ld a, [$ca8d]
     or a
@@ -684,7 +684,7 @@ jr_015_44ee:
     ld c, a
     ld b, $00
     ld hl, $01a4
-    call Call_015_5d33
+    call LoadMap_5d33
     call CopyHLtoDE
     ld a, [$ca8d]
     cp $01
@@ -696,7 +696,7 @@ jr_015_44ee:
     ld c, a
     ld b, $00
     ld hl, $01aa
-    call Call_015_5d33
+    call LoadMap_5d33
     call CopyHLtoDE
     ld a, [$ca8d]
     cp $02
@@ -708,32 +708,32 @@ jr_015_44ee:
     ld c, a
     ld b, $00
     ld hl, $01b0
-    call Call_015_5d33
+    call LoadMap_5d33
     call CopyHLtoDE
     jr jr_015_458a
 
 jr_015_4578:
     ld hl, $0181
-    call Call_015_4592
+    call SaveMap_4592
 
 jr_015_457e:
     ld hl, $0187
-    call Call_015_4592
+    call SaveMap_4592
 
 jr_015_4584:
     ld hl, $018d
-    call Call_015_4592
+    call SaveMap_4592
 
 jr_015_458a:
-    call Call_015_5dc0
+    call LoadMap_5dc0
     ld hl, $c8d3
     inc [hl]
     ret
 
 
-Call_015_4592:
+SaveMap_4592:
     push hl
-    call Call_015_5d33
+    call LoadMap_5d33
     ld a, $e0
     ld [hl+], a
     ld [hl+], a
@@ -747,14 +747,14 @@ Call_015_4592:
     ld a, h
     adc $00
     ld h, a
-    call Call_015_5d33
+    call LoadMap_5d33
     ld a, $e0
     ld [hl+], a
     ld [hl], a
     ret
 
 
-Call_015_45ae:
+SetMap_45ae:
     ld hl, $cac2
     ld a, $00
     call GetCurrentMonsterPtr
@@ -762,7 +762,7 @@ Call_015_45ae:
     ld d, h
     ld hl, $9040
     ld a, $01
-    call Call_015_45e5
+    call FuncMap_45e5
     ld hl, $cac2
     ld a, $01
     call GetCurrentMonsterPtr
@@ -770,7 +770,7 @@ Call_015_45ae:
     ld d, h
     ld hl, $9080
     ld a, $02
-    call Call_015_45e5
+    call FuncMap_45e5
     ld hl, $cac2
     ld a, $02
     call GetCurrentMonsterPtr
@@ -778,11 +778,11 @@ Call_015_45ae:
     ld d, h
     ld hl, $90c0
     ld a, $03
-    call Call_015_45e5
+    call FuncMap_45e5
     ret
 
 
-Call_015_45e5:
+FuncMap_45e5:
     ld b, a
     ld a, [$ca8d]
     cp b
@@ -925,8 +925,8 @@ jr_015_46aa:
 
 
 jr_015_46cc:
-    call Call_015_53b2
-    call Call_015_53ee
+    call LoadMap_53b2
+    call LoadMap_53ee
     ld hl, $1702
     rst $10
     ret
@@ -1008,14 +1008,14 @@ label15_46d7:
     ld d, e
     ld e, h
     ld d, e
-    call Call_015_4730
-    call Call_015_476f
+    call SetMap_4730
+    call SetMap_476f
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_4730:
+SetMap_4730:
     ld de, $cac1
     ld b, $00
     ld c, $00
@@ -1072,7 +1072,7 @@ jr_015_4761:
     ret
 
 
-Call_015_476f:
+SetMap_476f:
     ld hl, $c0d8
     ld bc, $0014
     ld a, $ff
@@ -1134,12 +1134,12 @@ jr_015_47a9:
 
     ld hl, $5605
     rst $10
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_480b
-    call Call_015_47dd
-    call Call_015_4afb
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_480b
+    call SetMap_47dd
+    call SetMap_4afb
+    call LoadMap_5dc0
     ld hl, $0225
     call SetupTilemapTransfer
     ld hl, $c8d2
@@ -1147,27 +1147,27 @@ jr_015_47a9:
     ret
 
 
-Call_015_47dd:
+SetMap_47dd:
     ld de, $6928
-    call Call_015_5d8f
-    call Call_015_48e5
+    call LoadMap_5d8f
+    call LoadMap_48e5
     ld de, $67b5
-    call Call_015_5d8f
+    call LoadMap_5d8f
     ld de, $680f
-    call Call_015_5d8f
+    call LoadMap_5d8f
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $4a03
     ld b, $04
     ld a, [$c8d8]
     ld c, a
     ld hl, wMenu_selection
-    call Call_015_6080
+    call ReadMap_6080
     ret
 
 
-Call_015_480b:
+LoadMap_480b:
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
@@ -1178,11 +1178,11 @@ Call_015_480b:
     adc d
     ld d, a
     ld hl, $9100
-    call Call_015_4825
-    call Call_015_4825
-    call Call_015_4825
+    call SaveMap_4825
+    call SaveMap_4825
+    call SaveMap_4825
 
-Call_015_4825:
+SaveMap_4825:
     push de
     push hl
     ld a, [de]
@@ -1196,7 +1196,7 @@ Call_015_4825:
     ld d, h
     pop hl
     push hl
-    call Call_015_5e2e
+    call SaveMap_5e2e
     pop hl
     ld a, l
     add $40
@@ -1232,7 +1232,7 @@ jr_015_4848:
     ret
 
 
-Call_015_4860:
+LoadMap_4860:
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
@@ -1256,7 +1256,7 @@ Call_015_4860:
     ld e, l
     ld d, h
     ld hl, $9000
-    call Call_015_5e2e
+    call SaveMap_5e2e
     pop af
     ld hl, $cacc
     call GetMonsterDataPtr
@@ -1305,7 +1305,7 @@ Call_015_4860:
     ret
 
 
-Call_015_48e5:
+LoadMap_48e5:
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
@@ -1329,14 +1329,14 @@ Call_015_48e5:
     ld c, [hl]
     ld b, $00
     ld hl, $0161
-    call Call_015_5d33
+    call LoadMap_5d33
     ld a, $de
     ld [hl+], a
     ld a, $e0
     ld [hl+], a
     ld a, $e0
     ld [hl-], a
-    call Call_015_6135
+    call SetMap_6135
     pop af
     push af
     ld hl, $cac1
@@ -1347,14 +1347,14 @@ Call_015_48e5:
     cp $02
     jr z, jr_015_4930
 
-    call Call_015_4f14
+    call SetMap_4f14
     jr nz, jr_015_4930
 
     jr jr_015_493a
 
 jr_015_4930:
     ld hl, $0169
-    call Call_015_5d33
+    call LoadMap_5d33
     ld a, $e3
     ld [hl], a
     ret
@@ -1362,7 +1362,7 @@ jr_015_4930:
 
 jr_015_493a:
     ld hl, $0169
-    call Call_015_5d33
+    call LoadMap_5d33
     ld a, $e0
     ld [hl], a
     ret
@@ -1376,7 +1376,7 @@ jr_015_493a:
     or a
     ret nz
 
-    call Call_015_5391
+    call LoadMap_5391
     ret z
 
     ld de, $4a03
@@ -1389,15 +1389,15 @@ jr_015_493a:
     push af
     ld a, [hl]
     push af
-    call Call_015_5efc
+    call LoadMap_5efc
     pop af
     ld hl, wMenu_selection
     cp [hl]
     jr z, jr_015_4976
 
-    call Call_015_4860
-    call Call_015_48e5
-    call Call_015_5dc0
+    call LoadMap_4860
+    call LoadMap_48e5
+    call LoadMap_5dc0
 
 jr_015_4976:
     pop af
@@ -1405,10 +1405,10 @@ jr_015_4976:
     cp [hl]
     jr z, jr_015_4989
 
-    call Call_015_480b
-    call Call_015_4860
-    call Call_015_48e5
-    call Call_015_5dc0
+    call LoadMap_480b
+    call LoadMap_4860
+    call LoadMap_48e5
+    call LoadMap_5dc0
 
 jr_015_4989:
     ld a, [wJoypad_current_frame]
@@ -1441,7 +1441,7 @@ jr_015_49ac:
     ld [$c0ec], a
 
 jr_015_49b8:
-    call Call_015_4afb
+    call SetMap_4afb
     ld a, $00
     ld [$c8d2], a
     jr jr_015_4a02
@@ -1504,41 +1504,41 @@ jr_015_4a02:
     or a
     ret nz
 
-    call Call_015_5e7c
-    call Call_015_4a27
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call CallMap_4a27
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_4a27:
-    call Call_015_47dd
+CallMap_4a27:
+    call SetMap_47dd
     ld de, $6849
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $4af5
     ld a, [wPLAN_selection]
-    call Call_015_60a2
+    call FuncMap_60a2
     ret
 
 
-    call Call_015_5391
+    call LoadMap_5391
     ret z
 
     ld de, $4af5
     ld hl, wPLAN_selection
     ld b, $02
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_015_4a71
 
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_480b
-    call Call_015_47dd
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_480b
+    call SetMap_47dd
+    call LoadMap_5dc0
     ld hl, $c8d2
     dec [hl]
     ld hl, $c8d2
@@ -1588,7 +1588,7 @@ jr_015_4aa2:
 jr_015_4ab1:
     ld a, [$cac0]
     ld [$c0ee], a
-    call Call_015_4afb
+    call SetMap_4afb
     ld hl, $c8d2
     inc [hl]
     ld hl, $c8d2
@@ -1605,14 +1605,14 @@ jr_015_4ab1:
 
 
 jr_015_4ad3:
-    call Call_015_4afb
+    call SetMap_4afb
     ld hl, $c8d2
     inc [hl]
     ld hl, $c8d2
     inc [hl]
     ld hl, $c8d2
     inc [hl]
-    call Call_015_4730
+    call SetMap_4730
     or a
     jr nz, jr_015_4af4
 
@@ -1634,12 +1634,12 @@ jr_015_4af4:
     rst $38
     rst $38
 
-Call_015_4afb:
+SetMap_4afb:
     ld de, $c0ec
     ld hl, $9040
-    call Call_015_4825
-    call Call_015_4825
-    call Call_015_4825
+    call SaveMap_4825
+    call SaveMap_4825
+    call SaveMap_4825
     ret
 
 
@@ -1667,21 +1667,21 @@ Call_015_4afb:
     ld hl, $0225
     call SetupTilemapTransfer
     call RequestScreenUpdate
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_480b
-    call Call_015_47dd
-    call Call_015_4a27
-    call Call_015_4afb
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_480b
+    call SetMap_47dd
+    call CallMap_4a27
+    call SetMap_4afb
+    call LoadMap_5dc0
     ld a, $05
     ld [$c8d2], a
     ret
 
 
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5dc0
+    call LoadMap_5d8f
+    call LoadMap_5dc0
     ld hl, $0227
     call SetupTilemapTransfer
     ld hl, $c8d2
@@ -1695,30 +1695,30 @@ Call_015_4afb:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_015_4b80
-    call Call_015_5dc0
+    call SetMap_4b80
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_4b80:
+SetMap_4b80:
     ld de, $6873
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $4be3
     ld a, [$c8dd]
-    call Call_015_60a2
+    call FuncMap_60a2
     ret
 
 
-    call Call_015_5391
+    call LoadMap_5391
     ret z
 
     ld de, $4be3
     ld hl, $c8dd
     ld b, $02
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_015_4bb0
@@ -1740,11 +1740,11 @@ jr_015_4bb0:
     cp $81
     jr z, jr_015_4ba9
 
-    call Call_015_4730
-    call Call_015_476f
-    call Call_015_4860
-    call Call_015_480b
-    call Call_015_47dd
+    call SetMap_4730
+    call SetMap_476f
+    call LoadMap_4860
+    call LoadMap_480b
+    call SetMap_47dd
     ld a, $01
     ld [$c8d2], a
     xor a
@@ -1762,8 +1762,8 @@ Jump_015_4be2:
     rst $38
     rst $38
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5dc0
+    call LoadMap_5d8f
+    call LoadMap_5dc0
     ld hl, $0228
     call SetupTilemapTransfer
     ld hl, $c8d2
@@ -1777,38 +1777,38 @@ Jump_015_4be2:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_015_4c12
-    call Call_015_5dc0
+    call SetMap_4c12
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_4c12:
+SetMap_4c12:
     ld de, $6873
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $4c8e
     ld a, [$c8de]
-    call Call_015_60a2
+    call FuncMap_60a2
     ret
 
 
-    call Call_015_5391
+    call LoadMap_5391
     ret z
 
     ld de, $4c8e
     ld hl, $c8de
     ld b, $02
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_015_4c5c
 
 jr_015_4c3b:
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5dc0
+    call LoadMap_5d8f
+    call LoadMap_5dc0
     ld hl, $0229
     call SetupTilemapTransfer
     ld a, $14
@@ -1831,11 +1831,11 @@ jr_015_4c5c:
     cp $81
     jr z, jr_015_4c3b
 
-    call Call_015_4cc2
-    call Call_015_4cec
-    call Call_015_4860
-    call Call_015_480b
-    call Call_015_47dd
+    call SetMap_4cc2
+    call SetMap_4cec
+    call LoadMap_4860
+    call LoadMap_480b
+    call SetMap_47dd
     xor a
     ld [wMenu_selection], a
     ld [wOPTN_and_Item_selection], a
@@ -1852,8 +1852,8 @@ Jump_015_4c8d:
     ld bc, $020f
     rst $38
     rst $38
-    call Call_015_4cc2
-    call Call_015_4cec
+    call SetMap_4cc2
+    call SetMap_4cec
     ld hl, $c8d2
     inc [hl]
     ld a, [$c8d8]
@@ -1861,8 +1861,8 @@ Jump_015_4c8d:
     ret nz
 
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5dc0
+    call LoadMap_5d8f
+    call LoadMap_5dc0
     ld hl, $0229
     call SetupTilemapTransfer
     ld a, $14
@@ -1874,7 +1874,7 @@ Jump_015_4c8d:
     ret
 
 
-Call_015_4cc2:
+SetMap_4cc2:
     ld de, $cac1
     ld b, $14
     ld c, $00
@@ -1913,7 +1913,7 @@ jr_015_4cdb:
     ret
 
 
-Call_015_4cec:
+SetMap_4cec:
     ld hl, $c0d8
     ld bc, $0014
     ld a, $ff
@@ -1963,11 +1963,11 @@ jr_015_4d14:
 
     ld hl, $5605
     rst $10
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_4d73
-    call Call_015_4d45
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_4d73
+    call SetMap_4d45
+    call LoadMap_5dc0
     ld hl, $022a
     call SetupTilemapTransfer
     ld hl, $c8d2
@@ -1975,27 +1975,27 @@ jr_015_4d14:
     ret
 
 
-Call_015_4d45:
+SetMap_4d45:
     ld de, $6928
-    call Call_015_5d8f
-    call Call_015_48e5
+    call LoadMap_5d8f
+    call LoadMap_48e5
     ld de, $67b5
-    call Call_015_5d8f
+    call LoadMap_5d8f
     ld de, $680f
-    call Call_015_5d8f
+    call LoadMap_5d8f
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $4e4d
     ld b, $04
     ld a, [$c8d8]
     ld c, a
     ld hl, wMenu_selection
-    call Call_015_6080
+    call ReadMap_6080
     ret
 
 
-Call_015_4d73:
+LoadMap_4d73:
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
@@ -2006,11 +2006,11 @@ Call_015_4d73:
     adc d
     ld d, a
     ld hl, $9100
-    call Call_015_4d8d
-    call Call_015_4d8d
-    call Call_015_4d8d
+    call SaveMap_4d8d
+    call SaveMap_4d8d
+    call SaveMap_4d8d
 
-Call_015_4d8d:
+SaveMap_4d8d:
     push de
     push hl
     ld a, [de]
@@ -2024,7 +2024,7 @@ Call_015_4d8d:
     ld d, h
     pop hl
     push hl
-    call Call_015_5e2e
+    call SaveMap_5e2e
     pop hl
     ld a, l
     add $40
@@ -2068,7 +2068,7 @@ jr_015_4db0:
     or a
     ret nz
 
-    call Call_015_5391
+    call LoadMap_5391
     ret z
 
     ld de, $4e4d
@@ -2081,15 +2081,15 @@ jr_015_4db0:
     push af
     ld a, [hl]
     push af
-    call Call_015_5efc
+    call LoadMap_5efc
     pop af
     ld hl, wMenu_selection
     cp [hl]
     jr z, jr_015_4dfa
 
-    call Call_015_4860
-    call Call_015_48e5
-    call Call_015_5dc0
+    call LoadMap_4860
+    call LoadMap_48e5
+    call LoadMap_5dc0
 
 jr_015_4dfa:
     pop af
@@ -2097,10 +2097,10 @@ jr_015_4dfa:
     cp [hl]
     jr z, jr_015_4e0d
 
-    call Call_015_4d73
-    call Call_015_4860
-    call Call_015_48e5
-    call Call_015_5dc0
+    call LoadMap_4d73
+    call LoadMap_4860
+    call LoadMap_48e5
+    call LoadMap_5dc0
 
 jr_015_4e0d:
     ld a, [wJoypad_current_frame]
@@ -2161,41 +2161,41 @@ jr_015_4e4c:
     or a
     ret nz
 
-    call Call_015_5e7c
-    call Call_015_4e71
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call CallMap_4e71
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_4e71:
-    call Call_015_4d45
+CallMap_4e71:
+    call SetMap_4d45
     ld de, $6849
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $4f0e
     ld a, [wPLAN_selection]
-    call Call_015_60a2
+    call FuncMap_60a2
     ret
 
 
-    call Call_015_5391
+    call LoadMap_5391
     ret z
 
     ld de, $4f0e
     ld hl, wPLAN_selection
     ld b, $02
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_015_4ebb
 
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_4d73
-    call Call_015_4d45
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_4d73
+    call SetMap_4d45
+    call LoadMap_5dc0
     ld hl, $c8d2
     dec [hl]
     ld hl, $c8d2
@@ -2233,7 +2233,7 @@ jr_015_4edd:
     inc [hl]
     ld a, [$cac0]
     ld b, a
-    call Call_015_4f14
+    call SetMap_4f14
     jr nz, jr_015_4f00
 
     ld a, [$cac0]
@@ -2261,7 +2261,7 @@ jr_015_4f0d:
     rst $38
     rst $38
 
-Call_015_4f14:
+SetMap_4f14:
     ld hl, $a1c7
     call EnableSRAM
     or a
@@ -2332,13 +2332,13 @@ jr_015_4f57:
     ld hl, $022a
     call SetupTilemapTransfer
     call RequestScreenUpdate
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_4d73
-    call Call_015_4d45
-    call Call_015_4e71
-    call Call_015_4afb
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_4d73
+    call SetMap_4d45
+    call CallMap_4e71
+    call SetMap_4afb
+    call LoadMap_5dc0
     ld a, $12
     ld [$c8d2], a
     ret
@@ -2353,7 +2353,7 @@ jr_015_4f57:
     ret
 
 
-    call Call_015_5391
+    call LoadMap_5391
     ret z
 
     ld a, [$c86e]
@@ -2416,9 +2416,9 @@ jr_015_4f57:
     or a
     ret nz
 
-    call Call_015_5e7c
-    call Call_015_5037
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call CallMap_5037
+    call LoadMap_5dc0
     xor a
     ld [$c8dd], a
     ld hl, $c8d2
@@ -2426,14 +2426,14 @@ jr_015_4f57:
     ret
 
 
-Call_015_5037:
-    call Call_015_4d45
+CallMap_5037:
+    call SetMap_4d45
     ld de, $6898
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $50db
     ld a, [$c8dd]
-    call Call_015_60a2
+    call FuncMap_60a2
     ret
 
 
@@ -2454,7 +2454,7 @@ jr_015_5067:
     ld de, $50db
     ld hl, $c8dd
     ld b, $03
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_015_508c
@@ -2553,13 +2553,13 @@ Jump_015_50da:
     ld hl, $022b
     call SetupTilemapTransfer
     call RequestScreenUpdate
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_4d73
-    call Call_015_4d45
-    call Call_015_4afb
-    call Call_015_5037
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_4d73
+    call SetMap_4d45
+    call SetMap_4afb
+    call CallMap_5037
+    call LoadMap_5dc0
     ld a, $1a
     ld [$c8d2], a
     ret
@@ -2656,13 +2656,13 @@ jr_015_51d4:
 
     ld a, [$c0ec]
     ld de, $c300
-    call Call_015_5287
+    call MaskMap_5287
     ld a, [$c0ed]
     ld de, $c395
-    call Call_015_5287
+    call MaskMap_5287
     ld a, [$c0ee]
     ld de, $c42a
-    call Call_015_5287
+    call MaskMap_5287
     ld hl, $c300
     ld de, $cac1
     ld b, $95
@@ -2747,7 +2747,7 @@ Jump_015_5286:
     ret
 
 
-Call_015_5287:
+MaskMap_5287:
     and $7f
     cp $7f
     jr nz, jr_015_5290
@@ -2876,11 +2876,11 @@ jr_015_5317:
     or a
     ret nz
 
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_4d73
-    call Call_015_4d45
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_4d73
+    call SetMap_4d45
+    call LoadMap_5dc0
     ld hl, $022a
     call SetupTilemapTransfer
     ld a, $10
@@ -2915,7 +2915,7 @@ jr_015_5317:
     ret
 
 
-Call_015_5391:
+LoadMap_5391:
     ld a, [$c86e]
     cp $fd
     ret nz
@@ -2923,8 +2923,8 @@ Call_015_5391:
     ld hl, $022e
     call SetupTilemapTransfer
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5dc0
+    call LoadMap_5d8f
+    call LoadMap_5dc0
     ld a, $24
     ld [$c8d2], a
     ld a, $fd
@@ -2933,7 +2933,7 @@ Call_015_5391:
     ret
 
 
-Call_015_53b2:
+LoadMap_53b2:
     ld a, [$c90e]
     cp $05
     ret nz
@@ -2974,7 +2974,7 @@ jr_015_53e1:
     ret
 
 
-Call_015_53ee:
+LoadMap_53ee:
     ld a, [$c90e]
     cp $09
     ret nz
@@ -3063,8 +3063,8 @@ jr_015_5455:
 
 
 jr_015_5471:
-    call Call_015_5c60
-    call Call_015_5c9c
+    call LoadMap_5c60
+    call LoadMap_5c9c
     ld hl, $1702
     rst $10
     ret
@@ -3118,7 +3118,7 @@ label15_547c:
     ld e, c
     rrca
 
-Call_015_54ab:
+FuncMap_54ab:
     ld e, d
     ld a, e
     ld e, d
@@ -3128,14 +3128,14 @@ Call_015_54ab:
     ld e, d
     ld a, [bc]
     ld e, h
-    call Call_015_54bf
-    call Call_015_54e9
+    call SetMap_54bf
+    call SetMap_54e9
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_54bf:
+SetMap_54bf:
     ld de, $cac1
     ld b, $14
     ld c, $00
@@ -3174,7 +3174,7 @@ jr_015_54d8:
     ret
 
 
-Call_015_54e9:
+SetMap_54e9:
     ld hl, $c0d8
     ld bc, $0014
     ld a, $ff
@@ -3224,11 +3224,11 @@ jr_015_5511:
 
     ld hl, $5605
     rst $10
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_556a
-    call Call_015_5542
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_556a
+    call SetMap_5542
+    call LoadMap_5dc0
     ld hl, $021c
     call SetupTilemapTransfer
     ld hl, $c8d2
@@ -3236,25 +3236,25 @@ jr_015_5511:
     ret
 
 
-Call_015_5542:
+SetMap_5542:
     ld de, $6928
-    call Call_015_5d8f
-    call Call_015_48e5
+    call LoadMap_5d8f
+    call LoadMap_48e5
     ld de, $67b5
-    call Call_015_5d8f
+    call LoadMap_5d8f
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $564d
     ld b, $04
     ld a, [$c8d8]
     ld c, a
     ld hl, wMenu_selection
-    call Call_015_6080
+    call ReadMap_6080
     ret
 
 
-Call_015_556a:
+LoadMap_556a:
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
@@ -3265,11 +3265,11 @@ Call_015_556a:
     adc d
     ld d, a
     ld hl, $9100
-    call Call_015_5584
-    call Call_015_5584
-    call Call_015_5584
+    call SaveMap_5584
+    call SaveMap_5584
+    call SaveMap_5584
 
-Call_015_5584:
+SaveMap_5584:
     push de
     push hl
     ld a, [de]
@@ -3283,7 +3283,7 @@ Call_015_5584:
     ld d, h
     pop hl
     push hl
-    call Call_015_5e2e
+    call SaveMap_5e2e
     pop hl
     ld a, l
     add $40
@@ -3327,7 +3327,7 @@ jr_015_55a7:
     or a
     ret nz
 
-    call Call_015_5c3f
+    call LoadMap_5c3f
     ret z
 
     ld de, $564d
@@ -3340,15 +3340,15 @@ jr_015_55a7:
     push af
     ld a, [hl]
     push af
-    call Call_015_5efc
+    call LoadMap_5efc
     pop af
     ld hl, wMenu_selection
     cp [hl]
     jr z, jr_015_55f1
 
-    call Call_015_4860
-    call Call_015_48e5
-    call Call_015_5dc0
+    call LoadMap_4860
+    call LoadMap_48e5
+    call LoadMap_5dc0
 
 jr_015_55f1:
     pop af
@@ -3356,10 +3356,10 @@ jr_015_55f1:
     cp [hl]
     jr z, jr_015_5604
 
-    call Call_015_556a
-    call Call_015_4860
-    call Call_015_48e5
-    call Call_015_5dc0
+    call LoadMap_556a
+    call LoadMap_4860
+    call LoadMap_48e5
+    call LoadMap_5dc0
 
 jr_015_5604:
     ld a, [wJoypad_current_frame]
@@ -3423,41 +3423,41 @@ jr_015_564c:
     or a
     ret nz
 
-    call Call_015_5e7c
-    call Call_015_5671
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call CallMap_5671
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_5671:
-    call Call_015_5542
+CallMap_5671:
+    call SetMap_5542
     ld de, $6849
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $5729
     ld a, [wPLAN_selection]
-    call Call_015_60a2
+    call FuncMap_60a2
     ret
 
 
-    call Call_015_5c3f
+    call LoadMap_5c3f
     ret z
 
     ld de, $5729
     ld hl, wPLAN_selection
     ld b, $02
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_015_56bb
 
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_556a
-    call Call_015_5542
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_556a
+    call SetMap_5542
+    call LoadMap_5dc0
     ld hl, $c8d2
     dec [hl]
     ld hl, $c8d2
@@ -3489,7 +3489,7 @@ jr_015_56bb:
 jr_015_56dd:
     ld a, [$cac0]
     ld b, a
-    call Call_015_4f14
+    call SetMap_4f14
     jr nz, jr_015_56f4
 
     ld a, [$cac0]
@@ -3562,11 +3562,11 @@ jr_015_5728:
     ld hl, $021c
     call SetupTilemapTransfer
     call RequestScreenUpdate
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_556a
-    call Call_015_5671
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_556a
+    call CallMap_5671
+    call LoadMap_5dc0
     ld a, $05
     ld [$c8d2], a
     ret
@@ -3581,7 +3581,7 @@ jr_015_5728:
     ret
 
 
-    call Call_015_5c3f
+    call LoadMap_5c3f
     ret z
 
     ld a, [$c86e]
@@ -3692,22 +3692,22 @@ jr_015_582e:
     or a
     ret nz
 
-    call Call_015_5e7c
-    call Call_015_584d
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call CallMap_584d
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_584d:
-    call Call_015_5542
+CallMap_584d:
+    call SetMap_5542
     ld de, $68e0
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $58e1
     ld a, [$c8dd]
-    call Call_015_60a2
+    call FuncMap_60a2
     ret
 
 
@@ -3728,7 +3728,7 @@ jr_015_587d:
     ld de, $58e1
     ld hl, $c8dd
     ld b, $03
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_015_58a2
@@ -3817,11 +3817,11 @@ Jump_015_58e0:
     ld hl, $0220
     call SetupTilemapTransfer
     call RequestScreenUpdate
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_556a
-    call Call_015_584d
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_556a
+    call CallMap_584d
+    call LoadMap_5dc0
     ld a, $0d
     ld [$c8d2], a
     ret
@@ -3836,11 +3836,11 @@ Jump_015_58e0:
     ld hl, $021c
     call SetupTilemapTransfer
     call RequestScreenUpdate
-    call Call_015_5e7c
-    call Call_015_4860
-    call Call_015_556a
-    call Call_015_5542
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_4860
+    call LoadMap_556a
+    call SetMap_5542
+    call LoadMap_5dc0
     ld a, $02
     ld [$c8d2], a
     ret
@@ -3923,22 +3923,22 @@ Jump_015_58e0:
 
     ld a, $5c
     call PlaySoundEffect
-    call Call_015_5e7c
-    call Call_015_59f9
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call CallMap_59f9
+    call LoadMap_5dc0
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_015_59f9:
-    call Call_015_584d
+CallMap_59f9:
+    call CallMap_584d
     ld de, $6716
-    call Call_015_5d8f
-    call Call_015_5fe3
+    call LoadMap_5d8f
+    call ClrMap_5fe3
     ld de, $5a75
     ld a, [$c8de]
-    call Call_015_60a2
+    call FuncMap_60a2
     ret
 
 
@@ -3959,15 +3959,15 @@ jr_015_5a29:
     ld de, $5a75
     ld hl, $c8de
     ld b, $02
-    call Call_015_5f85
+    call FuncMap_5f85
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_015_5a52
 
 jr_015_5a3b:
-    call Call_015_5e7c
-    call Call_015_584d
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call CallMap_584d
+    call LoadMap_5dc0
     ld hl, $0220
     call SetupTilemapTransfer
     ld a, $0c
@@ -4229,7 +4229,7 @@ jr_015_5b93:
     ret
 
 
-Call_015_5c3f:
+LoadMap_5c3f:
     ld a, [$c86e]
     cp $fd
     ret nz
@@ -4237,8 +4237,8 @@ Call_015_5c3f:
     ld hl, $0222
     call SetupTilemapTransfer
     ld de, $2e07
-    call Call_015_5d8f
-    call Call_015_5dc0
+    call LoadMap_5d8f
+    call LoadMap_5dc0
     ld a, $19
     ld [$c8d2], a
     ld a, $fd
@@ -4247,7 +4247,7 @@ Call_015_5c3f:
     ret
 
 
-Call_015_5c60:
+LoadMap_5c60:
     ld a, [$c90e]
     cp $05
     ret nz
@@ -4288,7 +4288,7 @@ jr_015_5c8f:
     ret
 
 
-Call_015_5c9c:
+LoadMap_5c9c:
     ld a, [$c90e]
     cp $09
     ret nz
@@ -4365,7 +4365,7 @@ jr_015_5d03:
     ret
 
 
-Call_015_5d10:
+SaveMap_5d10:
     push af
     ld a, l
     and $e0
@@ -4381,7 +4381,7 @@ Call_015_5d10:
     ret
 
 
-Call_015_5d1f:
+LoadMap_5d1f:
     ld a, [$c8d6]
     add l
     ld l, a
@@ -4396,7 +4396,7 @@ Call_015_5d1f:
     ret
 
 
-Call_015_5d33:
+LoadMap_5d33:
     ld a, l
     add $00
     ld l, a
@@ -4406,13 +4406,13 @@ Call_015_5d33:
     ret
 
 
-Call_015_5d3c:
+SaveMap_5d3c:
     push bc
     ld b, l
     ld a, l
     and $e0
     ld l, a
-    call Call_015_5d1f
+    call LoadMap_5d1f
     ld a, b
     and $1f
     jr z, jr_015_5d51
@@ -4420,7 +4420,7 @@ Call_015_5d3c:
     ld b, a
 
 jr_015_5d4b:
-    call Call_015_5d10
+    call SaveMap_5d10
     dec b
     jr nz, jr_015_5d4b
 
@@ -4435,7 +4435,7 @@ jr_015_5d51:
     ld a, [de]
     ld h, a
     inc de
-    call Call_015_5d3c
+    call SaveMap_5d3c
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -4472,17 +4472,17 @@ jr_015_5d62:
 
 jr_015_5d87:
     call Write_gfx_tile
-    call Call_015_5d10
+    call SaveMap_5d10
     jr jr_015_5d62
 
-Call_015_5d8f:
+LoadMap_5d8f:
     ld a, [de]
     ld l, a
     inc de
     ld a, [de]
     ld h, a
     inc de
-    call Call_015_5d33
+    call LoadMap_5d33
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -4517,7 +4517,7 @@ jr_015_5dbd:
     ld [hl+], a
     jr jr_015_5d9e
 
-Call_015_5dc0:
+LoadMap_5dc0:
     ld a, [$c8d6]
     ld l, a
     ld a, [$c8d7]
@@ -4594,7 +4594,7 @@ jr_015_5dd0:
     ret
 
 
-Call_015_5e2e:
+SaveMap_5e2e:
 Jump_015_5e2e:
     push hl
     ld hl, $c180
@@ -4638,7 +4638,7 @@ Jump_015_5e2e:
     ret
 
 
-Call_015_5e7c:
+SetMap_5e7c:
     ld hl, $c500
     ld bc, $0240
 
@@ -4694,19 +4694,19 @@ jr_015_5e91:
     ld [$c8d6], a
     ld a, h
     ld [$c8d7], a
-    call Call_015_5e7c
+    call SetMap_5e7c
     call DrawWhiteScreen
     ld de, $2e0d
     ld hl, $9000
     call WaitDMATransfer
-    call Call_015_5fe3
+    call ClrMap_5fe3
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-    call Call_015_5e7c
-    call Call_015_5dc0
+    call SetMap_5e7c
+    call LoadMap_5dc0
     ld hl, $0b01
     rst $10
     ld hl, $0b02
@@ -4720,7 +4720,7 @@ jr_015_5e91:
     ret
 
 
-Call_015_5efc:
+LoadMap_5efc:
     ld a, c
     ld [$c8e1], a
     inc de
@@ -4812,7 +4812,7 @@ jr_015_5f63:
     push bc
     push de
     push hl
-    call Call_015_6047
+    call LoadMap_6047
     pop hl
     pop de
     pop bc
@@ -4836,7 +4836,7 @@ jr_015_5f63:
     inc a
     ld b, a
 
-Call_015_5f85:
+FuncMap_5f85:
 jr_015_5f85:
     res 7, [hl]
     ld a, b
@@ -4888,7 +4888,7 @@ jr_015_5fb3:
 
 jr_015_5fbc:
     ld a, [hl]
-    call Call_015_5fe8
+    call FuncMap_5fe8
     ret
 
 
@@ -4919,13 +4919,13 @@ jr_015_5fd3:
     ld a, $00
     jr jr_015_5faa
 
-Call_015_5fe3:
+ClrMap_5fe3:
     xor a
     ld [$c8d9], a
     ret
 
 
-Call_015_5fe8:
+FuncMap_5fe8:
     ld c, a
     bit 7, a
     jr nz, jr_015_5ffd
@@ -4961,7 +4961,7 @@ jr_015_6000:
     ldh [$d6], a
     push de
     push bc
-    call Call_015_5d3c
+    call SaveMap_5d3c
     pop bc
     pop de
     ld a, c
@@ -4999,7 +4999,7 @@ jr_015_6030:
     inc b
     jr jr_015_6000
 
-Call_015_6047:
+LoadMap_6047:
     ld a, b
     cp c
     ret nc
@@ -5025,7 +5025,7 @@ Call_015_6047:
     ldh [$d6], a
     push de
     push bc
-    call Call_015_5d3c
+    call SaveMap_5d3c
     pop bc
     pop de
     ld a, c
@@ -5048,7 +5048,7 @@ Call_015_6047:
     ret
 
 
-Call_015_6080:
+ReadMap_6080:
     ld a, [hl+]
     push af
     push hl
@@ -5083,7 +5083,7 @@ jr_015_6099:
 jr_015_60a1:
     pop af
 
-Call_015_60a2:
+FuncMap_60a2:
     ld c, a
     add a
     add e
@@ -5102,7 +5102,7 @@ Call_015_60a2:
     ldh [$d6], a
     push de
     push bc
-    call Call_015_5d3c
+    call SaveMap_5d3c
     pop bc
     pop de
     ld a, $e9
@@ -5133,7 +5133,7 @@ jr_015_60cd:
     ret
 
 
-Call_015_60df:
+LoadMap_60df:
     ld a, $0a
     ld [$0100], a
     ld a, [$a002]
@@ -5164,7 +5164,7 @@ jr_015_610a:
     ld bc, $1ffe
     push hl
     push bc
-    call Call_015_612d
+    call ClrMap_612d
     pop bc
     pop hl
     call SRAMWriteBlock
@@ -5181,7 +5181,7 @@ jr_015_6127:
     ret
 
 
-Call_015_612d:
+ClrMap_612d:
 jr_015_612d:
     xor a
     ld [hl+], a
@@ -5193,26 +5193,26 @@ jr_015_612d:
     ret
 
 
-Call_015_6135:
+SetMap_6135:
     ld de, $000a
     push bc
-    call Call_015_6151
+    call SaveMap_6151
     pop bc
     or a
     jr z, jr_015_614c
 
     ld de, $000a
-    call Call_015_6151
-    call Call_015_6166
-    call Call_015_616c
+    call SaveMap_6151
+    call CalcMap_6166
+    call SaveMap_616c
 
 jr_015_614c:
     ld a, c
-    call Call_015_6166
+    call CalcMap_6166
     ret
 
 
-Call_015_6151:
+SaveMap_6151:
     push hl
     ld h, $ff
 
@@ -5237,13 +5237,13 @@ jr_015_6154:
     ret
 
 
-Call_015_6166:
+CalcMap_6166:
     add $f0
     call Write_gfx_tile
     ret
 
 
-Call_015_616c:
+SaveMap_616c:
     push af
     ld a, l
     and $e0
@@ -8683,7 +8683,7 @@ jr_015_71fc:
     ld a, b
     rlca
     ld hl, sp+$2b
-    call nc, Call_015_54ab
+    call nc, FuncMap_54ab
     ld [de], a
     db $ed
     add l

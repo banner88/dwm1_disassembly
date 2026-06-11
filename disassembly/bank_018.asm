@@ -9,7 +9,7 @@ SECTION "ROM Bank $018", ROMX[$4000], BANK[$18]
 
     dw label18_400b
     dw label18_42de
-    dw Call_018_567f
+    dw SetAud_567f
     dw label18_5686
     dw label18_568d
 
@@ -66,7 +66,7 @@ label18_400b:
     ld [$ca8f], a
     ld a, [$c8c6]
     ld [$ca90], a
-    call Call_018_42d1
+    call LoadAud_42d1
     cp $ff
     jr z, jr_018_40d0
 
@@ -78,7 +78,7 @@ label18_400b:
 
     ld de, $313f
     push de
-    call Call_018_42d1
+    call LoadAud_42d1
     ld hl, $cb24
     call GetMonsterDataPtr
     pop de
@@ -86,7 +86,7 @@ label18_400b:
     or a
     jr nz, jr_018_40ca
 
-    call Call_018_42d1
+    call LoadAud_42d1
     ld hl, $caca
     call GetMonsterDataPtr
     ld l, [hl]
@@ -120,8 +120,8 @@ jr_018_40d0:
     ld hl, $cac1
     ld de, $a1fb
     ld bc, $0ba4
-    call Call_018_4604
-    call Call_018_5340
+    call LoadAud_4604
+    call LoadAud_5340
     ld a, $07
     ldh [$b5], a
     ld a, $ff
@@ -155,7 +155,7 @@ jr_018_40d0:
     ld b, $2f
     rlca
     cpl
-    ld [Call_000_092f], sp
+    ld [SaveBankAndSwitch], sp
     cpl
     ld a, [bc]
     cpl
@@ -606,7 +606,7 @@ jr_018_427e:
 jr_018_42cf:
     ld [hl], $3a
 
-Call_018_42d1:
+LoadAud_42d1:
     ld a, [wBattlePostFlag]
     or a
     jr nz, jr_018_42da
@@ -620,7 +620,7 @@ jr_018_42da:
     ret
 
 label18_42de:
-    call Call_018_4dda
+    call CallAud_4dda
     ld a, [$c8d2]
     rst $00
     dec h
@@ -695,13 +695,13 @@ jr_018_42ff:
     ld [$c823], a
     ld hl, $96c0
     ld de, $1001
-    call Call_018_503b
-    call Call_018_5142
-    call Call_018_5390
+    call LoadAud_503b
+    call SetAud_5142
+    call LoadAud_5390
     ld de, $2e07
-    call Call_018_4fd5
-    call Call_018_5006
-    call Call_018_5244
+    call LoadAud_4fd5
+    call LoadAud_5006
+    call ClrAud_5244
     ld hl, $c8d2
     inc [hl]
     ret
@@ -746,9 +746,9 @@ jr_018_4378:
     ret nz
 
     ld a, $00
-    call Call_018_4e8f
+    call SaveAud_4e8f
     ld a, $07
-    call Call_018_4e8f
+    call SaveAud_4e8f
     ld hl, $c8d2
     inc [hl]
     ld a, $0c
@@ -762,9 +762,9 @@ jr_018_4378:
     ret nz
 
     ld a, $01
-    call Call_018_4e8f
+    call SaveAud_4e8f
     ld a, $06
-    call Call_018_4e8f
+    call SaveAud_4e8f
     ld hl, $c8d2
     inc [hl]
     ld a, $0c
@@ -778,9 +778,9 @@ jr_018_4378:
     ret nz
 
     ld a, $02
-    call Call_018_4e8f
+    call SaveAud_4e8f
     ld a, $05
-    call Call_018_4e8f
+    call SaveAud_4e8f
     ld hl, $c8d2
     inc [hl]
     ld a, $0c
@@ -794,16 +794,16 @@ jr_018_4378:
     ret nz
 
     ld a, $03
-    call Call_018_4e8f
+    call SaveAud_4e8f
     ld a, $04
-    call Call_018_4e8f
+    call SaveAud_4e8f
     ld hl, $c8d2
     inc [hl]
     ld a, $20
     ld [$c8da], a
     ld a, $00
     ld [$c8db], a
-    call Call_018_42d1
+    call LoadAud_42d1
     cp $ff
     jr z, jr_018_43ff
 
@@ -834,7 +834,7 @@ jr_018_43ff:
     ld a, $00
     adc h
     ld h, a
-    call Call_018_4455
+    call FuncAud_4455
     ld hl, $98d3
     ld a, [$c8db]
     ld b, a
@@ -844,7 +844,7 @@ jr_018_43ff:
     ld a, h
     sbc $00
     ld h, a
-    call Call_018_4455
+    call FuncAud_4455
     ld a, $04
     ld [$c8da], a
     ld a, [$c8db]
@@ -866,7 +866,7 @@ jr_018_43ff:
     ret
 
 
-Call_018_4455:
+FuncAud_4455:
     ld b, $06
 
 jr_018_4457:
@@ -894,11 +894,11 @@ jr_018_4457:
     ld a, [$c8da]
     dec a
     ld [$c8da], a
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ld a, [$c8db]
     dec a
     ld [$c8db], a
-    call Call_018_4e2c
+    call FuncAud_4e2c
     ld a, [$c8da]
     cp $60
     ret nz
@@ -913,11 +913,11 @@ jr_018_4457:
 Jump_018_449a:
 jr_018_449a:
     ld a, [$c8da]
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ld a, [$c8db]
-    call Call_018_4e2c
+    call FuncAud_4e2c
     ld a, [$c8dc]
-    call Call_018_4e00
+    call FuncAud_4e00
     ret
 
 
@@ -929,13 +929,13 @@ jr_018_449a:
     ld a, $01
     ld [$c8dd], a
     ld a, [$c8da]
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ld a, [$c8dc]
-    call Call_018_4e00
+    call FuncAud_4e00
     ld a, [$c8db]
     dec a
     ld [$c8db], a
-    call Call_018_4e2c
+    call FuncAud_4e2c
     ld a, [$c8db]
     cp $50
     ret nz
@@ -955,13 +955,13 @@ jr_018_449a:
     ld a, $01
     ld [$c8dd], a
     ld a, [$c8da]
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ld a, [$c8db]
-    call Call_018_4e2c
+    call FuncAud_4e2c
     ld a, [$c8dc]
     inc a
     ld [$c8dc], a
-    call Call_018_4e00
+    call FuncAud_4e00
     ld a, [$c8dc]
     cp $40
     ret nz
@@ -988,15 +988,15 @@ jr_018_4525:
     ld a, $01
     ld [$c8dd], a
     ld a, [$c8da]
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ld a, [$c8dc]
     dec a
     ld [$c8dc], a
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ld a, [$c8db]
     dec a
     ld [$c8db], a
-    call Call_018_4e2c
+    call FuncAud_4e2c
     ld a, [$c8db]
     cp $fe
     ret nz
@@ -1006,7 +1006,7 @@ jr_018_4525:
     ld de, $c8bb
     ld hl, $c180
     call Copy4Bytes
-    call Call_018_42d1
+    call LoadAud_42d1
     ld hl, $cac2
     call GetMonsterDataPtr
     ld e, l
@@ -1027,11 +1027,11 @@ jr_018_4574:
 
 jr_018_4578:
     ld a, [$c8da]
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ld a, [$c8db]
-    call Call_018_4e2c
+    call FuncAud_4e2c
     ld a, [$c8dc]
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ret
 
 
@@ -1085,11 +1085,11 @@ jr_018_45c0:
     ld hl, $ca8d
     ld de, $a1c7
     ld bc, $0007
-    call Call_018_4604
+    call LoadAud_4604
     ld hl, $ca94
     ld de, $a1ce
     ld bc, $0020
-    call Call_018_4604
+    call LoadAud_4604
     ei
     ld hl, $ca94
     ld a, [$d703]
@@ -1100,7 +1100,7 @@ jr_018_45c0:
     ld hl, $ca94
     ld de, $a1ce
     ld bc, $0020
-    call Call_018_4617
+    call LoadAud_4617
     call SavePartyToSRAM
     ei
 
@@ -1110,7 +1110,7 @@ jr_018_45fe:
     ret
 
 
-Call_018_4604:
+LoadAud_4604:
     ld a, $0a
     ld [$0100], a
 
@@ -1128,7 +1128,7 @@ jr_018_4609:
     ret
 
 
-Call_018_4617:
+LoadAud_4617:
     ld a, $0a
     ld [$0100], a
 
@@ -1150,31 +1150,31 @@ jr_018_461c:
     or a
     ret nz
 
-    call Call_018_5142
-    call Call_018_463d
-    call Call_018_5006
+    call SetAud_5142
+    call CallAud_463d
+    call LoadAud_5006
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_018_463d:
-    call Call_018_4eee
+CallAud_463d:
+    call LoadAud_4eee
     ld de, $2e07
-    call Call_018_4fd5
+    call LoadAud_4fd5
     ld de, $547a
-    call Call_018_4fd5
-    call Call_018_5244
+    call LoadAud_4fd5
+    call ClrAud_5244
     ld de, $4690
     ld a, [$c8de]
-    call Call_018_5303
+    call FuncAud_5303
     ret
 
 
     ld de, $4690
     ld hl, $c8de
     ld b, $02
-    call Call_018_51eb
+    call FuncAud_51eb
     ld a, [$c846]
     bit 1, a
     jr z, jr_018_4672
@@ -1225,7 +1225,7 @@ Jump_018_468f:
     ret
 
 
-    call Call_018_46d6
+    call SetAud_46d6
     or a
     jr nz, jr_018_46be
 
@@ -1237,7 +1237,7 @@ Jump_018_468f:
 
 
 jr_018_46be:
-    call Call_018_471e
+    call SetAud_471e
     ld hl, $024d
     ld a, [$c8e0]
     and $01
@@ -1252,7 +1252,7 @@ jr_018_46ce:
     ret
 
 
-Call_018_46d6:
+SetAud_46d6:
     ld de, $cac1
     ld b, $00
     ld c, $00
@@ -1269,7 +1269,7 @@ jr_018_46dd:
     push bc
     push de
     push hl
-    call Call_018_4774
+    call SetAud_4774
     pop hl
     pop de
     pop bc
@@ -1312,7 +1312,7 @@ jr_018_470a:
     ret
 
 
-Call_018_471e:
+SetAud_471e:
     ld hl, $c0d8
     ld bc, $0014
     ld a, $ff
@@ -1334,7 +1334,7 @@ jr_018_4733:
     push bc
     push de
     push hl
-    call Call_018_4774
+    call SetAud_4774
     pop hl
     pop de
     pop bc
@@ -1379,7 +1379,7 @@ jr_018_4763:
     ret
 
 
-Call_018_4774:
+SetAud_4774:
     ld hl, $a1c7
     call EnableSRAM
     or a
@@ -1430,31 +1430,31 @@ jr_018_47b7:
     or a
     ret nz
 
-    call Call_018_5142
-    call Call_018_4970
-    call Call_018_480d
-    call Call_018_47d4
-    call Call_018_5006
+    call SetAud_5142
+    call LoadAud_4970
+    call LoadAud_480d
+    call CallAud_47d4
+    call LoadAud_5006
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_018_47d4:
-    call Call_018_4d38
+CallAud_47d4:
+    call CallAud_4d38
     ld de, $5577
     ld a, [$c8e0]
     and $01
     jr nz, jr_018_47ed
 
     ld de, $55f7
-    call Call_018_4fd5
-    call Call_018_49f8
+    call LoadAud_4fd5
+    call LoadAud_49f8
     ld de, $549f
 
 jr_018_47ed:
-    call Call_018_4fd5
-    call Call_018_5244
+    call LoadAud_4fd5
+    call ClrAud_5244
     ld de, $4aec
     ld a, [$c8e0]
     and $01
@@ -1467,11 +1467,11 @@ jr_018_4800:
     ld a, [$c8d8]
     ld c, a
     ld hl, $c8e2
-    call Call_018_52e1
+    call ReadAud_52e1
     ret
 
 
-Call_018_480d:
+LoadAud_480d:
     ld a, [$c8e3]
     add a
     add a
@@ -1486,11 +1486,11 @@ Call_018_480d:
     jr nz, jr_018_4869
 
     ld hl, $9000
-    call Call_018_482e
-    call Call_018_482e
-    call Call_018_482e
+    call SaveAud_482e
+    call SaveAud_482e
+    call SaveAud_482e
 
-Call_018_482e:
+SaveAud_482e:
     push de
     push hl
     ld a, [de]
@@ -1504,7 +1504,7 @@ Call_018_482e:
     ld d, h
     pop hl
     push hl
-    call Call_018_5074
+    call SaveAud_5074
     pop hl
     ld a, l
     add $40
@@ -1542,15 +1542,15 @@ jr_018_4851:
 
 jr_018_4869:
     ld hl, $9000
-    call Call_018_487c
-    call Call_018_487c
-    call Call_018_487c
-    call Call_018_487c
-    call Call_018_48c0
+    call SaveAud_487c
+    call SaveAud_487c
+    call SaveAud_487c
+    call SaveAud_487c
+    call LoadAud_48c0
     ret
 
 
-Call_018_487c:
+SaveAud_487c:
     push de
     push hl
     ld a, [de]
@@ -1566,7 +1566,7 @@ Call_018_487c:
     ld de, jr_000_0901
     pop hl
     push hl
-    call Call_018_503b
+    call LoadAud_503b
     pop hl
     ld a, l
     add $90
@@ -1602,7 +1602,7 @@ jr_018_48a8:
     ret
 
 
-Call_018_48c0:
+LoadAud_48c0:
     ld a, [$c8e3]
     add a
     add a
@@ -1613,11 +1613,11 @@ Call_018_48c0:
     adc d
     ld d, a
     ld hl, $9240
-    call Call_018_48da
-    call Call_018_48da
-    call Call_018_48da
+    call SaveAud_48da
+    call SaveAud_48da
+    call SaveAud_48da
 
-Call_018_48da:
+SaveAud_48da:
     push de
     push hl
     ld a, [de]
@@ -1717,7 +1717,7 @@ jr_018_4958:
     ret
 
 
-Call_018_4970:
+LoadAud_4970:
     ld a, [$c8e0]
     and $01
     ret nz
@@ -1742,7 +1742,7 @@ Call_018_4970:
     ld e, l
     ld d, h
     ld hl, $9100
-    call Call_018_5074
+    call SaveAud_5074
     pop af
     ld hl, $cacc
     call GetMonsterDataPtr
@@ -1791,7 +1791,7 @@ Call_018_4970:
     ret
 
 
-Call_018_49f8:
+LoadAud_49f8:
     ld a, [$c8e0]
     and $01
     ret nz
@@ -1816,14 +1816,14 @@ Call_018_49f8:
     ld c, [hl]
     ld b, $00
     ld hl, $0161
-    call Call_018_4f79
+    call LoadAud_4f79
     ld a, $de
     ld [hl+], a
     ld a, $e0
     ld [hl+], a
     ld a, $e0
     ld [hl-], a
-    call Call_018_5434
+    call SetAud_5434
     pop af
     push af
     ld hl, $cac1
@@ -1834,14 +1834,14 @@ Call_018_49f8:
     cp $02
     jr z, jr_018_4a46
 
-    call Call_018_4774
+    call SetAud_4774
     jr nz, jr_018_4a46
 
     jr jr_018_4a50
 
 jr_018_4a46:
     ld hl, $0169
-    call Call_018_4f79
+    call LoadAud_4f79
     ld a, $e3
     ld [hl], a
     ret
@@ -1849,7 +1849,7 @@ jr_018_4a46:
 
 jr_018_4a50:
     ld hl, $0169
-    call Call_018_4f79
+    call LoadAud_4f79
     ld a, $e0
     ld [hl], a
     ret
@@ -1876,15 +1876,15 @@ jr_018_4a6c:
     push af
     ld a, [hl]
     push af
-    call Call_018_5162
+    call LoadAud_5162
     pop af
     ld hl, $c8e2
     cp [hl]
     jr z, jr_018_4a8d
 
-    call Call_018_4970
-    call Call_018_49f8
-    call Call_018_5006
+    call LoadAud_4970
+    call LoadAud_49f8
+    call LoadAud_5006
 
 jr_018_4a8d:
     pop af
@@ -1892,10 +1892,10 @@ jr_018_4a8d:
     cp [hl]
     jr z, jr_018_4aa0
 
-    call Call_018_480d
-    call Call_018_4970
-    call Call_018_49f8
-    call Call_018_5006
+    call LoadAud_480d
+    call LoadAud_4970
+    call LoadAud_49f8
+    call LoadAud_5006
 
 jr_018_4aa0:
     ld a, [$c846]
@@ -1904,9 +1904,9 @@ jr_018_4aa0:
 
     ld hl, $0251
     call SetupTilemapTransfer
-    call Call_018_5142
-    call Call_018_4d38
-    call Call_018_5006
+    call SetAud_5142
+    call CallAud_4d38
+    call LoadAud_5006
     ld a, $1d
     ld [$c8d2], a
     jr jr_018_4aeb
@@ -1970,16 +1970,16 @@ jr_018_4aeb:
     or a
     ret nz
 
-    call Call_018_5142
-    call Call_018_4b1c
-    call Call_018_5006
+    call SetAud_5142
+    call CallAud_4b1c
+    call LoadAud_5006
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_018_4b1c:
-    call Call_018_47d4
+CallAud_4b1c:
+    call CallAud_47d4
     ld de, $54f9
     ld a, [$c8e0]
     and $01
@@ -1988,8 +1988,8 @@ Call_018_4b1c:
     ld de, $5523
 
 jr_018_4b2c:
-    call Call_018_4fd5
-    call Call_018_5244
+    call LoadAud_4fd5
+    call ClrAud_5244
     ld de, $4bb8
     ld a, [$c8e0]
     and $01
@@ -1999,7 +1999,7 @@ jr_018_4b2c:
 
 jr_018_4b3f:
     ld a, [$c8df]
-    call Call_018_5303
+    call FuncAud_5303
     ret
 
 
@@ -2013,16 +2013,16 @@ jr_018_4b3f:
 jr_018_4b53:
     ld hl, $c8df
     ld b, $02
-    call Call_018_51eb
+    call FuncAud_51eb
     ld a, [$c846]
     bit 1, a
     jr z, jr_018_4b80
 
-    call Call_018_5142
-    call Call_018_4970
-    call Call_018_480d
-    call Call_018_47d4
-    call Call_018_5006
+    call SetAud_5142
+    call LoadAud_4970
+    call LoadAud_480d
+    call CallAud_47d4
+    call LoadAud_5006
     ld hl, $c8d2
     dec [hl]
     ld hl, $c8d2
@@ -2133,7 +2133,7 @@ jr_018_4bb7:
     ld [$c823], a
     ld hl, $96c0
     ld de, $1001
-    call Call_018_503b
+    call LoadAud_503b
     ld hl, $024d
     ld a, [$c8e0]
     and $01
@@ -2144,9 +2144,9 @@ jr_018_4bb7:
 jr_018_4c34:
     call SetupTilemapTransfer
     call Jump_000_0609
-    call Call_018_5142
-    call Call_018_4970
-    call Call_018_480d
+    call SetAud_5142
+    call LoadAud_4970
+    call LoadAud_480d
     ld a, $14
     ld [$c8d2], a
     ret
@@ -2185,11 +2185,11 @@ jr_018_4c76:
     ld hl, $ca8d
     ld de, $a1c7
     ld bc, $0007
-    call Call_018_4604
+    call LoadAud_4604
     ld hl, $ca94
     ld de, $a1ce
     ld bc, $0020
-    call Call_018_4604
+    call LoadAud_4604
     ei
     ld hl, $ca94
     ld a, [$d703]
@@ -2218,7 +2218,7 @@ jr_018_4cb0:
     ld hl, $ca94
     ld de, $a1ce
     ld bc, $0020
-    call Call_018_4617
+    call LoadAud_4617
     call SavePartyToSRAM
     ei
     ld a, [$c8e0]
@@ -2278,38 +2278,38 @@ jr_018_4cd8:
     or a
     ret nz
 
-    call Call_018_5142
-    call Call_018_4d38
-    call Call_018_5006
+    call SetAud_5142
+    call CallAud_4d38
+    call LoadAud_5006
     ld hl, $c8d2
     inc [hl]
     ret
 
 
-Call_018_4d38:
-    call Call_018_463d
+CallAud_4d38:
+    call CallAud_463d
     ld de, $5552
-    call Call_018_4fd5
-    call Call_018_5244
+    call LoadAud_4fd5
+    call ClrAud_5244
     ld de, $4d90
     ld a, [$c8e0]
-    call Call_018_5303
+    call FuncAud_5303
     ret
 
 
     ld de, $4d90
     ld hl, $c8e0
     ld b, $02
-    call Call_018_51eb
+    call FuncAud_51eb
     ld a, [$c846]
     bit 1, a
     jr z, jr_018_4d76
 
     ld hl, $024f
     call SetupTilemapTransfer
-    call Call_018_5142
-    call Call_018_463d
-    call Call_018_5006
+    call SetAud_5142
+    call CallAud_463d
+    call LoadAud_5006
     ld a, $0e
     ld [$c8d2], a
     jr jr_018_4d8f
@@ -2344,9 +2344,9 @@ jr_018_4d8f:
 
     ld hl, $0251
     call SetupTilemapTransfer
-    call Call_018_5142
-    call Call_018_4d38
-    call Call_018_5006
+    call SetAud_5142
+    call CallAud_4d38
+    call LoadAud_5006
     ld a, $1d
     ld [$c8d2], a
     ret
@@ -2356,11 +2356,11 @@ jr_018_4d8f:
     or a
     ret nz
 
-    call Call_018_5142
-    call Call_018_4970
-    call Call_018_480d
-    call Call_018_47d4
-    call Call_018_5006
+    call SetAud_5142
+    call LoadAud_4970
+    call LoadAud_480d
+    call CallAud_47d4
+    call LoadAud_5006
     ld hl, $024d
     ld a, [$c8e0]
     and $01
@@ -2375,8 +2375,8 @@ jr_018_4dd1:
     ret
 
 
-Call_018_4dda:
-    call Call_018_42d1
+CallAud_4dda:
+    call LoadAud_42d1
     cp $ff
     ret z
 
@@ -2397,15 +2397,15 @@ Call_018_4dda:
     ret z
 
     ld a, [$c8da]
-    call Call_018_4dfc
+    call FuncAud_4dfc
     ret
 
 
-Call_018_4dfc:
+FuncAud_4dfc:
     ld c, $20
     jr jr_018_4e02
 
-Call_018_4e00:
+FuncAud_4e00:
     ld c, $00
 
 jr_018_4e02:
@@ -2441,7 +2441,7 @@ jr_018_4e20:
     ret
 
 
-Call_018_4e2c:
+FuncAud_4e2c:
     ld c, $20
     jr jr_018_4e32
 
@@ -2462,7 +2462,7 @@ jr_018_4e32:
     push bc
     push de
     push hl
-    call Call_018_42d1
+    call LoadAud_42d1
     ld hl, $cb24
     call GetMonsterDataPtr
     ld a, [hl]
@@ -2475,7 +2475,7 @@ jr_018_4e32:
     push bc
     push de
     push hl
-    call Call_018_42d1
+    call LoadAud_42d1
     ld hl, $caca
     call GetMonsterDataPtr
     ld a, [hl]
@@ -2517,7 +2517,7 @@ jr_018_4e7f:
     ret
 
 
-Call_018_4e8f:
+SaveAud_4e8f:
     push af
     ld de, $4f46
     ld a, [wBattlePostFlag]
@@ -2547,10 +2547,10 @@ jr_018_4e9c:
     ret z
 
     add $80
-    call Call_018_4ed1
+    call SaveAud_4ed1
     inc hl
     inc a
-    call Call_018_4ed1
+    call SaveAud_4ed1
     push af
     ld a, l
     add $1f
@@ -2560,14 +2560,14 @@ jr_018_4e9c:
     ld h, a
     pop af
     inc a
-    call Call_018_4ed1
+    call SaveAud_4ed1
     inc hl
     inc a
-    call Call_018_4ed1
+    call SaveAud_4ed1
     ret
 
 
-Call_018_4ed1:
+SaveAud_4ed1:
     push hl
     push af
     ld a, l
@@ -2593,22 +2593,22 @@ Call_018_4ed1:
     ret
 
 
-Call_018_4eee:
+LoadAud_4eee:
     ld a, $00
-    call Call_018_4f0e
+    call SaveAud_4f0e
     ld a, $01
-    call Call_018_4f0e
+    call SaveAud_4f0e
     ld a, $02
-    call Call_018_4f0e
+    call SaveAud_4f0e
     ld a, $04
-    call Call_018_4f0e
+    call SaveAud_4f0e
     ld a, $05
-    call Call_018_4f0e
+    call SaveAud_4f0e
     ld a, $06
-    call Call_018_4f0e
+    call SaveAud_4f0e
     ld a, $07
 
-Call_018_4f0e:
+SaveAud_4f0e:
     push af
     ld de, $4f46
     ld a, [wBattlePostFlag]
@@ -2669,7 +2669,7 @@ jr_018_4f4f:
     inc b
     jr nz, jr_018_4f7a
 
-Call_018_4f56:
+SaveAud_4f56:
     push af
     ld a, l
     and $e0
@@ -2685,7 +2685,7 @@ Call_018_4f56:
     ret
 
 
-Call_018_4f65:
+LoadAud_4f65:
     ld a, [$c8d6]
     add l
     ld l, a
@@ -2700,7 +2700,7 @@ Call_018_4f65:
     ret
 
 
-Call_018_4f79:
+LoadAud_4f79:
     ld a, l
 
 jr_018_4f7a:
@@ -2712,13 +2712,13 @@ jr_018_4f7a:
     ret
 
 
-Call_018_4f82:
+SaveAud_4f82:
     push bc
     ld b, l
     ld a, l
     and $e0
     ld l, a
-    call Call_018_4f65
+    call LoadAud_4f65
     ld a, b
     and $1f
     jr z, jr_018_4f97
@@ -2726,7 +2726,7 @@ Call_018_4f82:
     ld b, a
 
 jr_018_4f91:
-    call Call_018_4f56
+    call SaveAud_4f56
     dec b
     jr nz, jr_018_4f91
 
@@ -2741,7 +2741,7 @@ jr_018_4f97:
     ld a, [de]
     ld h, a
     inc de
-    call Call_018_4f82
+    call SaveAud_4f82
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -2778,17 +2778,17 @@ jr_018_4fa8:
 
 jr_018_4fcd:
     call Write_gfx_tile
-    call Call_018_4f56
+    call SaveAud_4f56
     jr jr_018_4fa8
 
-Call_018_4fd5:
+LoadAud_4fd5:
     ld a, [de]
     ld l, a
     inc de
     ld a, [de]
     ld h, a
     inc de
-    call Call_018_4f79
+    call LoadAud_4f79
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -2823,7 +2823,7 @@ jr_018_5003:
     ld [hl+], a
     jr jr_018_4fe4
 
-Call_018_5006:
+LoadAud_5006:
     ld a, [$c8d6]
     ld l, a
     ld a, [$c8d7]
@@ -2867,7 +2867,7 @@ jr_018_5016:
     ret
 
 
-Call_018_503b:
+LoadAud_503b:
     ld a, [$c827]
     ld c, a
     ld a, [$c828]
@@ -2901,7 +2901,7 @@ Call_018_503b:
     ret
 
 
-Call_018_5074:
+SaveAud_5074:
     push hl
     ld hl, $c180
     call Copy4Bytes
@@ -3029,7 +3029,7 @@ jr_018_5128:
     ret
 
 
-Call_018_5142:
+SetAud_5142:
     ld hl, $c500
     ld bc, $0240
 
@@ -3058,7 +3058,7 @@ jr_018_5157:
     ret
 
 
-Call_018_5162:
+LoadAud_5162:
     ld a, c
     ld [$c8e1], a
     inc de
@@ -3150,7 +3150,7 @@ jr_018_51c9:
     push bc
     push de
     push hl
-    call Call_018_52a8
+    call LoadAud_52a8
     pop hl
     pop de
     pop bc
@@ -3174,7 +3174,7 @@ jr_018_51c9:
     inc a
     ld b, a
 
-Call_018_51eb:
+FuncAud_51eb:
 jr_018_51eb:
     res 7, [hl]
     ld a, [$c847]
@@ -3222,7 +3222,7 @@ jr_018_5214:
 
 jr_018_521d:
     ld a, [hl]
-    call Call_018_5249
+    call FuncAud_5249
     ret
 
 
@@ -3253,13 +3253,13 @@ jr_018_5234:
     ld a, $00
     jr jr_018_520b
 
-Call_018_5244:
+ClrAud_5244:
     xor a
     ld [$c8d9], a
     ret
 
 
-Call_018_5249:
+FuncAud_5249:
     ld c, a
     bit 7, a
     jr nz, jr_018_525e
@@ -3295,7 +3295,7 @@ jr_018_5261:
     ldh [$d6], a
     push de
     push bc
-    call Call_018_4f82
+    call SaveAud_4f82
     pop bc
     pop de
     ld a, c
@@ -3333,7 +3333,7 @@ jr_018_5291:
     inc b
     jr jr_018_5261
 
-Call_018_52a8:
+LoadAud_52a8:
     ld a, b
     cp c
     ret nc
@@ -3359,7 +3359,7 @@ Call_018_52a8:
     ldh [$d6], a
     push de
     push bc
-    call Call_018_4f82
+    call SaveAud_4f82
     pop bc
     pop de
     ld a, c
@@ -3382,7 +3382,7 @@ Call_018_52a8:
     ret
 
 
-Call_018_52e1:
+ReadAud_52e1:
     ld a, [hl+]
     push af
     push hl
@@ -3417,7 +3417,7 @@ jr_018_52fa:
 jr_018_5302:
     pop af
 
-Call_018_5303:
+FuncAud_5303:
     ld c, a
     add a
     add e
@@ -3436,7 +3436,7 @@ Call_018_5303:
     ldh [$d6], a
     push de
     push bc
-    call Call_018_4f82
+    call SaveAud_4f82
     pop bc
     pop de
     ld a, $e9
@@ -3467,7 +3467,7 @@ jr_018_532e:
     ret
 
 
-Call_018_5340:
+LoadAud_5340:
     ld a, [$ca8d]
     or a
     ret z
@@ -3476,7 +3476,7 @@ Call_018_5340:
     ld hl, $caca
     call ReadMonsterByte
     ld hl, $9000
-    call Call_018_5378
+    call CmpAud_5378
     ld a, [$ca8d]
     cp $01
     ret z
@@ -3485,7 +3485,7 @@ Call_018_5340:
     ld hl, $caca
     call ReadMonsterByte
     ld hl, $9240
-    call Call_018_5378
+    call CmpAud_5378
     ld a, [$ca8d]
     cp $02
     ret z
@@ -3495,7 +3495,7 @@ Call_018_5340:
     call ReadMonsterByte
     ld hl, $9480
 
-Call_018_5378:
+CmpAud_5378:
     cp $ff
     ret z
 
@@ -3517,7 +3517,7 @@ Call_018_5378:
     ret
 
 
-Call_018_5390:
+LoadAud_5390:
     ld a, [$ca8d]
     cp $03
     jr z, jr_018_53cb
@@ -3527,55 +3527,55 @@ Call_018_5390:
 
     ld a, $00
     ld hl, $00c7
-    call Call_018_53f8
+    call FuncAud_53f8
     ld a, $00
     ld hl, $00c7
-    call Call_018_5410
+    call SaveAud_5410
     ret
 
 
 jr_018_53ac:
     ld a, $00
     ld hl, $00c4
-    call Call_018_53f8
+    call FuncAud_53f8
     ld hl, $00ca
-    call Call_018_53f8
+    call FuncAud_53f8
     ld a, $00
     ld hl, $00c4
-    call Call_018_5410
+    call SaveAud_5410
     ld a, $01
     ld hl, $00ca
-    call Call_018_5410
+    call SaveAud_5410
     ret
 
 
 jr_018_53cb:
     ld a, $00
     ld hl, $00c1
-    call Call_018_53f8
+    call FuncAud_53f8
     ld hl, $00c7
-    call Call_018_53f8
+    call FuncAud_53f8
     ld hl, $00cd
-    call Call_018_53f8
+    call FuncAud_53f8
     ld a, $00
     ld hl, $00c1
-    call Call_018_5410
+    call SaveAud_5410
     ld a, $01
     ld hl, $00c7
-    call Call_018_5410
+    call SaveAud_5410
     ld a, $02
     ld hl, $00cd
-    call Call_018_5410
+    call SaveAud_5410
     ret
 
 
-Call_018_53f8:
+FuncAud_53f8:
     ld c, $06
 
 jr_018_53fa:
     push hl
     push af
-    call Call_018_4f79
+    call LoadAud_4f79
     pop af
     ld b, $06
 
@@ -3594,7 +3594,7 @@ jr_018_5402:
     ret
 
 
-Call_018_5410:
+SaveAud_5410:
     push af
     ld a, l
     ld [$c820], a
@@ -3616,26 +3616,26 @@ Call_018_5410:
     ret
 
 
-Call_018_5434:
+SetAud_5434:
     ld de, $000a
     push bc
-    call Call_018_5450
+    call SaveAud_5450
     pop bc
     or a
     jr z, jr_018_544b
 
     ld de, $000a
-    call Call_018_5450
-    call Call_018_5465
-    call Call_018_546b
+    call SaveAud_5450
+    call CalcAud_5465
+    call SaveAud_546b
 
 jr_018_544b:
     ld a, c
-    call Call_018_5465
+    call CalcAud_5465
     ret
 
 
-Call_018_5450:
+SaveAud_5450:
     push hl
     ld h, $ff
 
@@ -3660,13 +3660,13 @@ jr_018_5453:
     ret
 
 
-Call_018_5465:
+CalcAud_5465:
     add $f0
     call Write_gfx_tile
     ret
 
 
-Call_018_546b:
+SaveAud_546b:
     push af
     ld a, l
     and $e0
@@ -4123,7 +4123,7 @@ jr_018_5605:
     ld sp, $4e6f
     ld l, a
 
-Call_018_567f:
+SetAud_567f:
     ld de, $561d
     call CallTextEngine
     ret
@@ -4134,7 +4134,7 @@ label18_5686:
     ret
 
 label18_568d:
-    call Call_018_567f
+    call SetAud_567f
     call Jump_000_0609
     ret
 

@@ -5,151 +5,92 @@
 
 SECTION "ROM Bank $027", ROMX[$4000], BANK[$27]
 
-    daa
-    sbc a
-    ld b, b
-    ld d, a
-    ld b, c
-    scf
-    ld b, d
-    ld a, [hl-]
-    ld b, e
-    ei
-    ld b, e
-    rlca
-    ld b, l
-    xor $45
-    call c, $9546
-    ld b, a
-    ld h, a
-    ld c, b
-    ld h, c
-    ld c, c
-    call $a049
-    ld c, d
-    add h
-    ld c, e
-    ld b, d
-    ld c, h
-    reti
+    db $27 ; Bank number
 
+    ; Cross-bank dispatch table (79 entries)
+    ; Called via: ld hl, $27XX / rst $10
+    dw $409F                          ; Entry 0
+    dw $4157                          ; Entry 1
+    dw $4237                          ; Entry 2
+    dw $433A                          ; Entry 3
+    dw $43FB                          ; Entry 4
+    dw $4507                          ; Entry 5
+    dw $45EE                          ; Entry 6
+    dw $46DC                          ; Entry 7
+    dw $4795                          ; Entry 8
+    dw $4867                          ; Entry 9
+    dw $4961                          ; Entry 10
+    dw $49CD                          ; Entry 11
+    dw $4AA0                          ; Entry 12
+    dw $4B84                          ; Entry 13
+    dw $4C42                          ; Entry 14
+    dw $4CD9                          ; Entry 15
+    dw $4DAD                          ; Entry 16
+    dw $4E8E                          ; Entry 17
+    dw $4F87                          ; Entry 18
+    dw $4FD5                          ; Entry 19
+    dw $5080                          ; Entry 20
+    dw $5159                          ; Entry 21
+    dw $5242                          ; Entry 22
+    dw $532B                          ; Entry 23
+    dw $53BF                          ; Entry 24
+    dw $5427                          ; Entry 25
+    dw $54EB                          ; Entry 26
+    dw $55B4                          ; Entry 27
+    dw $5683                          ; Entry 28
+    dw $5754                          ; Entry 29
+    dw $5824                          ; Entry 30
+    dw $58BD                          ; Entry 31
+    dw $5991                          ; Entry 32
+    dw $5A64                          ; Entry 33
+    dw $5B47                          ; Entry 34
+    dw $5BF7                          ; Entry 35
+    dw $5CC9                          ; Entry 36
+    dw $5D3E                          ; Entry 37
+    dw $5E09                          ; Entry 38
+    dw $5EEF                          ; Entry 39
+    dw $5FD0                          ; Entry 40
+    dw $60BA                          ; Entry 41
+    dw $61B9                          ; Entry 42
+    dw $6235                          ; Entry 43
+    dw $6323                          ; Entry 44
+    dw $6400                          ; Entry 45
+    dw $64F0                          ; Entry 46
+    dw $65D3                          ; Entry 47
+    dw $66CD                          ; Entry 48
+    dw $67AC                          ; Entry 49
+    dw $67EA                          ; Entry 50
+    dw $687E                          ; Entry 51
+    dw $694A                          ; Entry 52
+    dw $69CB                          ; Entry 53
+    dw $6A81                          ; Entry 54
+    dw $6B29                          ; Entry 55
+    dw $6B7E                          ; Entry 56
+    dw $6C4E                          ; Entry 57
+    dw $6CDC                          ; Entry 58
+    dw $6DA6                          ; Entry 59
+    dw $6E88                          ; Entry 60
+    dw $6EF1                          ; Entry 61
+    dw $6F52                          ; Entry 62
+    dw $6FF8                          ; Entry 63
+    dw $70C2                          ; Entry 64
+    dw $7193                          ; Entry 65
+    dw $7221                          ; Entry 66
+    dw $72AD                          ; Entry 67
+    dw $72FF                          ; Entry 68
+    dw $73BE                          ; Entry 69
+    dw $74A2                          ; Entry 70
+    dw $7555                          ; Entry 71
+    dw $7628                          ; Entry 72
+    dw $76D6                          ; Entry 73
+    dw $7742                          ; Entry 74
+    dw $77EC                          ; Entry 75
+    dw $78B6                          ; Entry 76
+    dw $7994                          ; Entry 77
+    dw $7A42                          ; Entry 78
 
-    ld c, h
-    xor l
-    ld c, l
-    adc [hl]
-    ld c, [hl]
-    add a
-    ld c, a
-    push de
-    ld c, a
-    add b
-    ld d, b
-    ld e, c
-    ld d, c
-    ld b, d
-    ld d, d
-    dec hl
-    ld d, e
-    cp a
-    ld d, e
-    daa
-    ld d, h
-    db $eb
-    ld d, h
-    or h
-    ld d, l
-    add e
-    ld d, [hl]
-    ld d, h
-    ld d, a
-    inc h
-    ld e, b
-    cp l
-    ld e, b
-    sub c
-    ld e, c
-    ld h, h
-    ld e, d
-    ld b, a
-    ld e, e
-    rst $30
-    ld e, e
-    ret
-
-
-    ld e, h
-    ld a, $5d
-    add hl, bc
-    ld e, [hl]
-    rst $28
-    ld e, [hl]
-    ret nc
-
-    ld e, a
-    cp d
-    ld h, b
-    cp c
-    ld h, c
-    dec [hl]
-    ld h, d
-    inc hl
-    ld h, e
-    nop
-    ld h, h
-    ldh a, [$64]
-    db $d3
-    ld h, l
-    call $ac66
-    ld h, a
-    ld [$7e67], a
-    ld l, b
-    ld c, d
-    ld l, c
-    bit 5, c
-    add c
-    ld l, d
-    add hl, hl
-    ld l, e
-    ld a, [hl]
-    ld l, e
-    ld c, [hl]
-    ld l, h
-    call c, $a66c
-    ld l, l
-    adc b
-    ld l, [hl]
-    pop af
-    ld l, [hl]
-    ld d, d
-    ld l, a
-    ld hl, sp+$6f
-    jp nz, $9370
-
-    ld [hl], c
-    ld hl, $ad72
-    ld [hl], d
-    rst $38
-    ld [hl], d
-    cp [hl]
-    ld [hl], e
-    and d
-    ld [hl], h
-    ld d, l
-    ld [hl], l
-    jr z, @+$78
-
-    sub $76
-    ld b, d
-    ld [hl], a
-    db $ec
-    ld [hl], a
-    or [hl]
-    ld a, b
-    sub h
-    ld a, c
-    ld b, d
-    ld a, d
+; --- Dispatch entry 0 ($409F) ---
+DispatchEntry_27_0:
     nop
     ld [bc], a
     nop
@@ -1277,7 +1218,7 @@ jr_027_4565:
     jr c, jr_027_45b2
 
     inc c
-    call nz, Call_000_3406
+    call nz, AudioNextByte
     dec [hl]
     jr nc, jr_027_45b1
 
@@ -3546,7 +3487,7 @@ jr_027_4ef3:
     ld [bc], a
     db $10
     inc c
-    call nc, Call_000_260c
+    call nc, AddCarryToH
     daa
     ld [de], a
     inc de
@@ -4725,7 +4666,7 @@ jr_027_5486:
     ld a, [bc]
     db $f4
     ld c, $0a
-    call nz, Call_000_3006
+    call nz, InitBattleState
     ld sp, $0100
     ld a, [bc]
     inc d
@@ -5603,7 +5544,7 @@ jr_027_5861:
     rrca
     inc bc
     nop
-    call nz, Call_000_3800
+    call nz, AudioBranchNC_3800
     add hl, sp
     jr c, jr_027_58ae
 
@@ -6089,7 +6030,7 @@ jr_027_5ac5:
     nop
     ld [de], a
     inc c
-    call nc, Call_000_260c
+    call nc, AddCarryToH
     daa
     inc c
     jr nz, jr_027_5aed
@@ -12624,7 +12565,7 @@ jr_027_7704:
     jr nc, jr_027_7737
 
     nop
-    call nz, Call_000_3406
+    call nz, AudioNextByte
     dec [hl]
     inc [hl]
     dec [hl]
@@ -12753,7 +12694,7 @@ jr_027_7780:
     inc b
     ld [hl], h
     ld c, $04
-    call nz, Call_000_3004
+    call nz, RetIfZeroA
     ld sp, $ce04
     nop
     inc b

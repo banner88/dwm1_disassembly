@@ -5,21 +5,24 @@
 
 SECTION "ROM Bank $05d", ROMX[$4000], BANK[$5d]
 ;All invalid calls to external banks removed. 
-Call_05d_4000:
-    ld e, l
-    dec b
-    ld b, b
+DataB5d_4000:
+    db $5D ; Bank number
 
-Call_05d_4003:
+    ; Cross-bank dispatch table (2 entries)
+    ; Called via: ld hl, $5DXX / rst $10
+    dw $4005                          ; Entry 0
+FuncB5d_4003:
 Jump_05d_4003:
-    or e
-    ld b, b
+    dw $40B3                          ; Entry 1
+
+; --- Dispatch entry 0 ($4005) ---
+DispatchEntry_5D_0:
     ld a, [$dd60]
     or a
     ret z
 
     ld de, $4071
-    call Call_05d_4122
+    call HramB5d_4122
     ld a, [$dd68]
     or a
     jr z, jr_05d_4021
@@ -233,7 +236,7 @@ jr_05d_411e:
     add b
     nop
 
-Call_05d_4122:
+HramB5d_4122:
     ldh a, [$cb]
     cp $28
     jr nc, jr_05d_4172
@@ -394,7 +397,7 @@ jr_05d_4172:
     call nc, $03c8
     nop
     db $f4
-    call nc, Call_05d_4003
+    call nc, FuncB5d_4003
     push af
     jp nz, Jump_05d_4003
 
@@ -7503,7 +7506,7 @@ jr_05d_61e2:
     ld h, b
     ret c
 
-    call nz, Call_05d_4000
+    call nz, DataB5d_4000
     add sp, -$1e
     inc bc
     jr nz, jr_05d_61e2

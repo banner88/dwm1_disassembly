@@ -5,72 +5,47 @@
 
 SECTION "ROM Bank $05b", ROMX[$4000], BANK[$5b]
 
-    ld e, e
-    ld b, l
-    ld b, b
-    ret z
+    db $5B ; Bank number
 
-    ld b, b
-    push af
-    ld b, b
-    db $fc
-    ld b, b
-    rrca
-    ld b, c
-    ld [hl+], a
-    ld b, c
-    dec [hl]
-    ld b, c
-    ld c, b
-    ld b, c
-    ld e, c
-    ld b, c
-    ld l, h
-    ld b, c
-    ld a, a
-    ld b, c
-    rst $08
-    ld b, e
-    pop de
-    ld b, [hl]
-    ld c, c
-    ld c, b
-    ld a, [de]
-    ld c, d
-    ld d, $4b
-    ld [hl], $4c
-    rlca
-    ld c, a
-    xor a
-    ld d, c
-    ld a, [hl-]
-    ld d, h
-    ret nz
+    ; Cross-bank dispatch table (34 entries)
+    ; Called via: ld hl, $5BXX / rst $10
+    dw $4045                          ; Entry 0
+    dw $40C8                          ; Entry 1
+    dw $40F5                          ; Entry 2
+    dw $40FC                          ; Entry 3
+    dw $410F                          ; Entry 4
+    dw $4122                          ; Entry 5
+    dw $4135                          ; Entry 6
+    dw $4148                          ; Entry 7
+    dw jr_05b_4159                    ; Entry 8
+    dw $416C                          ; Entry 9
+    dw $417F                          ; Entry 10
+    dw $43CF                          ; Entry 11
+    dw $46D1                          ; Entry 12
+    dw $4849                          ; Entry 13
+    dw $4A1A                          ; Entry 14
+    dw $4B16                          ; Entry 15
+    dw $4C36                          ; Entry 16
+    dw $4F07                          ; Entry 17
+    dw $51AF                          ; Entry 18
+    dw $543A                          ; Entry 19
+    dw $56C0                          ; Entry 20
+    dw jr_05b_591a                    ; Entry 21
+    dw $5B55                          ; Entry 22
+    dw $5BDA                          ; Entry 23
+    dw $5E23                          ; Entry 24
+    dw $5E5D                          ; Entry 25
+    dw $5E78                          ; Entry 26
+    dw $5EF4                          ; Entry 27
+    dw $6521                          ; Entry 28
+    dw $67A5                          ; Entry 29
+    dw $6EC1                          ; Entry 30
+    dw $7146                          ; Entry 31
+    dw $7455                          ; Entry 32
+    dw $7A8D                          ; Entry 33
 
-    ld d, [hl]
-    ld a, [de]
-    ld e, c
-    ld d, l
-    ld e, e
-    jp c, Jump_000_235b
-
-    ld e, [hl]
-    ld e, l
-    ld e, [hl]
-    ld a, b
-    ld e, [hl]
-    db $f4
-    ld e, [hl]
-    ld hl, $a565
-    ld h, a
-    pop bc
-    ld l, [hl]
-    ld b, [hl]
-    ld [hl], c
-    ld d, l
-    ld [hl], h
-    adc l
-    ld a, d
+; --- Dispatch entry 0 ($4045) ---
+DispatchEntry_5B_0:
     nop
     ld [bc], a
     ld bc, $a001
@@ -908,7 +883,7 @@ jr_05b_43d7:
     ld [bc], a
     adc h
     ld [bc], a
-    call nz, Call_05b_6202
+    call nz, FuncB5b_6202
     ld bc, $ff0a
     pop af
     add b
@@ -1131,7 +1106,7 @@ jr_05b_44f5:
     ld [de], a
     ld b, $09
 
-Call_05b_44fc:
+FuncB5b_44fc:
     ld [bc], a
     dec b
     nop
@@ -1157,7 +1132,7 @@ jr_05b_44ff:
     ei
     inc [hl]
 
-Call_05b_4511:
+CalcB5b_4511:
     dec bc
     ld l, $91
     ld l, $d1
@@ -3132,7 +3107,7 @@ jr_05b_4d63:
     ld de, $2b44
     add h
     inc de
-    call nz, Call_05b_600f
+    call nz, DataB5b_600f
 
 jr_05b_4d6c:
     ld b, a
@@ -3396,7 +3371,7 @@ jr_05b_4e78:
 
     ld h, $59
     inc sp
-    call z, Call_05b_649b
+    call z, CalcB5b_649b
     db $dd
     ld [hl+], a
     rst $38
@@ -3998,7 +3973,7 @@ jr_05b_5095:
     ld e, d
     ld de, $14c8
     dec sp
-    call nz, Call_05b_704f
+    call nz, ClrB5b_704f
     rst $20
     ld hl, sp+$1f
     ldh [rNR11], a
@@ -4214,7 +4189,7 @@ jr_05b_522c:
     ld e, $e1
     db $fc
     ld [bc], a
-    call z, Call_000_0832
+    call z, ProcessScreenState
     call nc, $2418
     jr nc, jr_05b_52ac
 
@@ -4476,7 +4451,7 @@ jr_05b_5359:
     inc d
     inc b
     db $10
-    call nz, Call_05b_44fc
+    call nz, FuncB5b_44fc
     ld a, h
     inc d
     ld [hl-], a
@@ -4795,7 +4770,7 @@ jr_05b_549e:
     ld b, b
     ld b, d
     ld b, d
-    call z, Call_000_38cc
+    call z, CheckDMAState
     ld hl, sp+$10
     ldh a, [$96]
     db $76
@@ -4872,7 +4847,7 @@ jr_05b_54e9:
     rst $20
     rra
 
-Call_05b_5511:
+LoadB5b_5511:
     ld a, [c]
     ld c, $e4
     inc e
@@ -5916,7 +5891,7 @@ jr_05b_591a:
     ld a, a
     ld [hl], e
     db $fc
-    call z, Call_000_30f0
+    call z, AudioGetTimerHRAM
     nop
     nop
     inc bc
@@ -7427,7 +7402,7 @@ jr_05b_6004:
     dec b
     ld b, [hl]
 
-Call_05b_600f:
+DataB5b_600f:
     db $10
     rst $30
     rst $30
@@ -7898,7 +7873,7 @@ jr_05b_61d2:
     add l
     add l
 
-Call_05b_6202:
+FuncB5b_6202:
     set 1, e
     pop bc
     pop bc
@@ -8347,7 +8322,7 @@ jr_05b_63a3:
     cp h
     cp h
     ld a, [$d4fa]
-    call nc, Call_000_2929
+    call nc, DataTable_2929
     ld d, c
     ld d, c
     rrca
@@ -8584,7 +8559,7 @@ jr_05b_6487:
     ld sp, hl
     ldh a, [$f1]
 
-Call_05b_649b:
+CalcB5b_649b:
     dec b
     inc b
     nop
@@ -9097,7 +9072,7 @@ jr_05b_6556:
     db $eb
     db $eb
 
-Call_05b_66cd:
+IntB5b_66cd:
     ei
     ei
     ld [bc], a
@@ -11100,7 +11075,7 @@ jr_05b_6f06:
     di
     ld c, l
     ld c, l
-    call Call_05b_66cd
+    call IntB5b_66cd
     ld h, [hl]
     pop bc
     pop bc
@@ -11374,7 +11349,7 @@ jr_05b_7048:
     add d
     add hl, bc
 
-Call_05b_704f:
+ClrB5b_704f:
     xor h
     nop
     nop
@@ -11570,7 +11545,7 @@ jr_05b_70fe:
     ldh [$7f], a
     ld h, b
     add hl, bc
-    call z, Call_05b_4511
+    call z, CalcB5b_4511
     nop
     jr z, jr_05b_7121
 
@@ -11594,7 +11569,7 @@ jr_05b_7121:
 
 jr_05b_7133:
     add hl, bc
-    call z, Call_05b_5511
+    call z, LoadB5b_5511
     nop
     ld a, [bc]
     nop
@@ -12951,7 +12926,7 @@ jr_05b_76c6:
     add d
     db $fd
     ld [hl-], a
-    call Call_000_220a
+    call CheckScreenActiveC86C
     inc [hl]
     ld a, [bc]
     ld [c], a

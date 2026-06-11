@@ -11,13 +11,13 @@ SECTION "ROM Bank $011", ROMX[$4000], BANK[$11]
     dw label11_400f
 
 label11_4005:
-    call Call_011_406e
+    call HramUnk11_406e
     ld de, $407f
     call $0d91
     ret
 
 label11_400f:
-    call Call_011_406e
+    call HramUnk11_406e
     ld de, $407f
     push af
     push bc
@@ -93,7 +93,7 @@ jr_011_4069:
     ret
 
 
-Call_011_406e:
+HramUnk11_406e:
     ldh a, [$c7]
     ld hl, $412d
     add l
@@ -128,7 +128,7 @@ Call_011_406e:
     ld hl, sp+$45
     ld l, d
     ld b, [hl]
-    call c, Call_011_4e46
+    call c, DataUnk11_4e46
     ld b, a
     ret nz
 
@@ -260,7 +260,7 @@ jr_011_4102:
     ld hl, sp+$65
     ld l, d
     ld h, [hl]
-    call c, Call_011_4e66
+    call c, DispUnk11_4e66
     ld h, a
     ret nz
 
@@ -2961,7 +2961,7 @@ jr_011_4e16:
     ld hl, sp-$08
     ld a, [bc]
 
-Call_011_4e46:
+DataUnk11_4e46:
     nop
     ld hl, sp+$00
     dec bc
@@ -2991,7 +2991,7 @@ jr_011_4e60:
     dec c
     jr nz, @-$06
 
-Call_011_4e66:
+DispUnk11_4e66:
     rst $38
     ld c, $20
     ld hl, sp-$09
@@ -9947,7 +9947,7 @@ jr_011_6e8a:
     ld e, $ef
     ld l, h
     rst $10
-    call nc, Call_000_282f
+    call nc, DataTable_282F
     rra
     jr jr_011_6ec3
 

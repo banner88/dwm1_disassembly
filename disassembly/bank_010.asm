@@ -11,13 +11,13 @@ SECTION "ROM Bank $010", ROMX[$4000], BANK[$10]
     dw label10_400f
 
 label10_4005:
-    call Call_010_406e
+    call HramScr2_406e
     ld de, $407f
     call $0d91
     ret
 
 label10_400f:
-    call Call_010_406e
+    call HramScr2_406e
     ld de, $407f
     push af
     push bc
@@ -93,7 +93,7 @@ jr_010_4069:
     ret
 
 
-Call_010_406e:
+HramScr2_406e:
     ldh a, [$c7]
     ld hl, $417f
     add l

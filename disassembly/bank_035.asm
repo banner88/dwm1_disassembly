@@ -5,73 +5,53 @@
 
 SECTION "ROM Bank $035", ROMX[$4000], BANK[$35]
 
-    dec [hl]
-    ld d, c
-    ld b, b
-    ld bc, $1f42
-    ld b, e
-    xor h
-    ld b, h
-    ld h, $46
-    call c, $9f47
-    ld c, c
-    ld h, l
-    ld c, e
-    ld [hl+], a
-    ld c, l
-    ldh a, [$4e]
-    ld l, [hl]
-    ld d, b
-    ld l, b
-    ld d, d
-    and [hl]
-    ld d, e
-    ld de, $f555
-    ld d, [hl]
-    ld e, l
-    ld e, b
-    or l
-    ld e, c
-    call nz, $d25a
-    ld e, e
-    ld h, b
-    ld e, l
-    or b
-    ld e, [hl]
-    db $ed
-    ld e, a
-    dec d
-    ld h, c
-    sub e
-    ld h, d
-    ld c, e
-    ld h, h
-    rst $30
-    ld h, l
-    inc sp
-    ld h, a
-    dec h
-    ld l, b
-    and h
-    ld l, c
-    dec d
-    ld l, e
-    ld h, $6d
-    ld l, $6e
-    jr z, jr_035_40b2
+    db $35 ; Bank number
 
-    ld [de], a
+    ; Cross-bank dispatch table (40 entries)
+    ; Called via: ld hl, $35XX / rst $10
+    dw $4051                          ; Entry 0
+    dw $4201                          ; Entry 1
+    dw $431F                          ; Entry 2
+    dw $44AC                          ; Entry 3
+    dw $4626                          ; Entry 4
+    dw $47DC                          ; Entry 5
+    dw $499F                          ; Entry 6
+    dw $4B65                          ; Entry 7
+    dw $4D22                          ; Entry 8
+    dw $4EF0                          ; Entry 9
+    dw $506E                          ; Entry 10
+    dw $5268                          ; Entry 11
+    dw $53A6                          ; Entry 12
+    dw $5511                          ; Entry 13
+    dw $56F5                          ; Entry 14
+    dw $585D                          ; Entry 15
+    dw $59B5                          ; Entry 16
+    dw $5AC4                          ; Entry 17
+    dw $5BD2                          ; Entry 18
+    dw $5D60                          ; Entry 19
+    dw $5EB0                          ; Entry 20
+    dw $5FED                          ; Entry 21
+    dw $6115                          ; Entry 22
+    dw $6293                          ; Entry 23
+    dw $644B                          ; Entry 24
+    dw $65F7                          ; Entry 25
+    dw $6733                          ; Entry 26
+    dw $6825                          ; Entry 27
+    dw $69A4                          ; Entry 28
+    dw $6B15                          ; Entry 29
+    dw $6D26                          ; Entry 30
+    dw $6E2E                          ; Entry 31
+    dw $6F28                          ; Entry 32
+    db $12                            ; Entry 33 low ($7012)
+DataB35_4044:
+    db $70                            ; Entry 33 high
+    dw $70C0                          ; Entry 34
+    dw $71CC                          ; Entry 35
+    dw $72EC                          ; Entry 36
+    dw $73EC                          ; Entry 37
+    dw $74C6                          ; Entry 38
+    ; NOTE: last 1 entry/entries (2B) merged into following instruction
 
-Call_035_4044:
-    ld [hl], b
-    ret nz
-
-    ld [hl], b
-    call z, $ec71
-    ld [hl], d
-    db $ec
-    ld [hl], e
-    add $74
     jp Jump_035_4075
 
 
@@ -118,13 +98,13 @@ jr_035_4078:
     ld b, d
     rst $28
 
-Call_035_407b:
+JmpB35_407b:
     jr nc, jr_035_4078
 
     inc e
     db $fc
 
-Call_035_407f:
+CalcB35_407f:
     dec h
     rst $18
     ld h, b
@@ -400,7 +380,7 @@ jr_035_419d:
     rra
     call c, $3227
     rst $00
-    call nz, Call_035_5c5f
+    call nz, IntB35_5c5f
     daa
     ld [hl+], a
     adc a
@@ -1122,7 +1102,7 @@ jr_035_44b1:
     ret
 
 
-    call Call_000_3b32
+    call AudioStopChannel
     ret nc
 
     dec de
@@ -1151,7 +1131,7 @@ jr_035_44f9:
     rrca
     dec d
 
-Call_035_44fd:
+ShiftB35_44fd:
     rlca
     ei
     inc c
@@ -1254,7 +1234,7 @@ jr_035_4560:
 
     cp $a4
     inc h
-    call nz, Call_035_4044
+    call nz, DataB35_4044
     ret nz
 
     jp nz, $81c2
@@ -2394,7 +2374,7 @@ Jump_035_4a4b:
     ld c, e
     db $fc
     rlca
-    call nc, Call_035_5605
+    call nc, DispB35_5605
     add c
     ld hl, sp-$7d
     cp d
@@ -2983,7 +2963,7 @@ jr_035_4ca8:
     nop
     ld [$0db8], sp
 
-Call_035_4d1f:
+FuncB35_4d1f:
     ld [$1b11], sp
     ld b, b
     ld [bc], a
@@ -3969,7 +3949,7 @@ jr_035_5130:
     and a
     and h
     rst $10
-    call nc, Call_035_5253
+    call nc, DispB35_5253
     xor a
     xor h
     xor a
@@ -4173,7 +4153,7 @@ jr_035_51f0:
     ld l, a
     rst $38
 
-Call_035_5253:
+DispB35_5253:
     rst $18
     or h
     ld e, a
@@ -4987,7 +4967,7 @@ jr_035_54ee:
     db $eb
     ccf
 
-Call_035_5605:
+DispB35_5605:
     rst $28
     inc a
     rst $08
@@ -5286,7 +5266,7 @@ jr_035_56f1:
     rst $30
     rst $38
     ei
-    call c, Call_035_44fd
+    call c, ShiftB35_44fd
     push af
     ld [$08ba], sp
     cp $00
@@ -5889,7 +5869,7 @@ jr_035_5997:
     rrca
     adc b
     dec bc
-    call z, Call_000_2e06
+    call z, MenuBorderCorner
     rrca
     dec c
     ret nz
@@ -6206,7 +6186,7 @@ jr_035_5b50:
     ret nz
 
     ld a, e
-    call nz, Call_035_407b
+    call nz, JmpB35_407b
     ld a, [$3f80]
     ldh [rIE], a
     ret nz
@@ -6402,7 +6382,7 @@ jr_035_5c0b:
     add b
     cp h
 
-Call_035_5c5f:
+IntB35_5c5f:
     di
     ld [hl], e
     ld c, a
@@ -6431,7 +6411,7 @@ Call_035_5c5f:
     ld c, a
     db $e4
     ld e, [hl]
-    call z, Call_035_407f
+    call z, CalcB35_407f
     sbc $87
     rst $38
     jr @+$01
@@ -6825,7 +6805,7 @@ jr_035_5dd7:
     ccf
     inc h
     ld a, $95
-    call nc, Call_035_7e1d
+    call nc, DataB35_7e1d
     ld l, [hl]
     ld a, a
     sub a
@@ -7216,7 +7196,7 @@ jr_035_5f6e:
     ld [bc], a
     ld sp, $0e0f
 
-Call_035_6004:
+CmpB35_6004:
     cp $03
     cp $03
     rst $38
@@ -7602,7 +7582,7 @@ jr_035_613d:
     rst $10
     cp $fb
 
-Call_035_61bf:
+CalcB35_61bf:
     sub a
     rst $38
     ld l, h
@@ -7870,7 +7850,7 @@ jr_035_621b:
     inc h
     sub $56
 
-Call_035_62de:
+CalcB35_62de:
     add a
     add a
     and e
@@ -8985,7 +8965,7 @@ Jump_035_667f:
     add $bf
     ld a, [hl-]
     rst $28
-    call nz, Call_000_38ff
+    call nz, AudioChannelUpdate
     rst $38
     nop
     rst $38
@@ -9390,7 +9370,7 @@ jr_035_694b:
 
 jr_035_6979:
     cp $ff
-    call c, Call_035_61bf
+    call c, CalcB35_61bf
     cp $c3
     add hl, bc
     ret z
@@ -10116,7 +10096,7 @@ jr_035_6c87:
     ei
     sub l
     or l
-    call c, Call_035_62de
+    call c, CalcB35_62de
     ld h, [hl]
     ld d, e
     ld d, a
@@ -11244,7 +11224,7 @@ jr_035_7175:
     rst $38
     db $e3
     cp $5f
-    call c, Call_035_7427
+    call c, DispB35_7427
     ld c, a
     ld hl, sp-$79
     dec b
@@ -11275,7 +11255,7 @@ jr_035_7175:
     adc [hl]
     rlca
     dec b
-    call Call_035_4d1f
+    call FuncB35_4d1f
     dec b
     rst $18
     dec e
@@ -11823,7 +11803,7 @@ jr_035_7411:
 
     ld a, $f0
 
-Call_035_7427:
+DispB35_7427:
     rst $10
     ldh a, [$b1]
     ld hl, sp+$68
@@ -12100,7 +12080,7 @@ jr_035_754f:
     rst $08
     di
     di
-    call z, Call_000_33cc
+    call z, AudioUpdate2x
     di
     adc h
     db $fc
@@ -12307,7 +12287,7 @@ jr_035_75a6:
 
     db $10
     rst $30
-    call c, Call_035_6004
+    call c, CmpB35_6004
     ld [de], a
     inc b
     sbc $0b
@@ -14297,7 +14277,7 @@ Jump_035_7ab3:
     nop
     nop
 
-Call_035_7e1d:
+DataB35_7e1d:
     nop
     nop
     nop

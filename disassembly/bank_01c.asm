@@ -113,7 +113,7 @@ jr_01c_406f:
     ld l, l
     inc [hl]
     nop
-    call nc, Call_01c_4e6e
+    call nc, FuncB1c_4e6e
     ld bc, $7115
     ld l, b
     ld [bc], a
@@ -305,7 +305,7 @@ jr_01c_412c:
     inc c
     ld sp, $310c
     inc c
-    call nz, Call_000_3268
+    call nz, Fill6BytesHL
     jr nc, @+$2b
 
     jr @+$2b
@@ -398,7 +398,7 @@ jr_01c_4189:
 jr_01c_418e:
     ld [hl-], a
     inc c
-    call nz, Call_000_3268
+    call nz, Fill6BytesHL
     jr nc, jr_01c_41c9
 
     jr nc, jr_01c_41c0
@@ -577,7 +577,7 @@ jr_01c_4214:
     inc c
     ld sp, $310c
     inc c
-    call nz, Call_000_3268
+    call nz, Fill6BytesHL
     jr nc, jr_01c_4258
 
     jr jr_01c_4263
@@ -654,7 +654,7 @@ jr_01c_426b:
 
     ld [hl-], a
     inc c
-    call nz, Call_000_3268
+    call nz, Fill6BytesHL
     jr nc, jr_01c_42ab
 
     jr nc, jr_01c_42a2
@@ -704,7 +704,7 @@ jr_01c_4297:
     cpl
     dec h
     ld a, [de]
-    call nz, Call_000_2730
+    call nz, SetCountBC128
     ld a, [de]
 
 jr_01c_42a2:
@@ -1111,7 +1111,7 @@ jr_01c_4417:
     inc c
     dec [hl]
     inc c
-    call nz, Call_000_3a68
+    call nz, AudioVibratoSetup
     jr nc, jr_01c_4459
 
     jr nc, @+$37
@@ -1421,7 +1421,7 @@ jr_01c_452f:
     inc c
 
 jr_01c_4533:
-    call nz, Call_000_3a68
+    call nz, AudioVibratoSetup
     jr nc, @+$3b
 
     jr nc, @+$37
@@ -3685,7 +3685,7 @@ jr_01c_4e64:
     ld [$02a0], sp
     and c
 
-Call_01c_4e6e:
+FuncB1c_4e6e:
     ld [bc], a
     and d
     inc b
@@ -8296,7 +8296,7 @@ jr_01c_60ee:
     jr nz, jr_01c_6129
 
     ld [$01a2], sp
-    call nz, Call_000_2920
+    call nz, DataTable_2920
     ld [$06c4], sp
     add hl, hl
     ld [$0829], sp
@@ -8572,7 +8572,7 @@ jr_01c_62a3:
     ld [bc], a
 
 jr_01c_62b9:
-    call nz, Call_000_3515
+    call nz, AudioSetRegFB
     inc b
     scf
     inc b
@@ -8605,7 +8605,7 @@ jr_01c_62b9:
     ld [$15c2], sp
     inc sp
     ld [$0830], sp
-    call nz, Call_000_3515
+    call nz, AudioSetRegFB
     ld [$0ca0], sp
     jp nz, Jump_000_3515
 
@@ -10091,7 +10091,7 @@ jr_01c_6a24:
 
 jr_01c_6a29:
     ld [bc], a
-    call nz, Call_000_230a
+    call nz, AddStatMax999
     inc c
     or a
     db $fc
@@ -10190,9 +10190,9 @@ jr_01c_6a86:
     inc b
     dec hl
     inc b
-    call nz, Call_000_3025
+    call nz, StoreBattleDD62
     inc c
-    call nz, Call_000_2245
+    call nz, MonsterFieldWrite
     inc b
     daa
     inc b
@@ -10202,7 +10202,7 @@ jr_01c_6a86:
     inc c
 
 jr_01c_6aa0:
-    call nz, Call_000_2245
+    call nz, MonsterFieldWrite
     inc b
     daa
     inc b
@@ -10263,7 +10263,7 @@ jr_01c_6aa0:
     ld [bc], a
     call nz, $4020
     inc c
-    call nz, Call_000_2815
+    call nz, ReadByteFromBC
     inc c
     or c
     db $fc
@@ -10364,7 +10364,7 @@ jr_01c_6b30:
     ld bc, $0123
     ld [hl+], a
     ld bc, $0123
-    call nz, Call_000_2310
+    call nz, RetStatAddDone
     inc c
     or a
     db $fc
@@ -10385,7 +10385,7 @@ jr_01c_6b30:
 
 jr_01c_6b90:
     nop
-    call nz, Call_000_270a
+    call nz, DataTable_270A
     inc c
     or a
     db $fc
@@ -10650,7 +10650,7 @@ jr_01c_6c97:
     inc b
     and b
     rrca
-    call nz, Call_000_2a0f
+    call nz, DataTable_2A0F
     inc b
     or c
     db $fc
@@ -11249,7 +11249,7 @@ jr_01c_6ed3:
 jr_01c_6edc:
     rra
     db $10
-    call nz, Call_000_3405
+    call nz, AudioReadDE
     ld [$0834], sp
     inc [hl]
     ld [$0830], sp
@@ -11328,7 +11328,7 @@ jr_01c_6f42:
 
     ld b, $34
     ld [$0ba0], sp
-    call nz, Call_000_3135
+    call nz, CrossBankCallAndRet2
     ld [$0832], sp
     inc [hl]
     ld [$0835], sp
@@ -11367,7 +11367,7 @@ jr_01c_6f81:
     db $10
     and b
     dec bc
-    call nz, Call_000_3405
+    call nz, AudioReadDE
     ld [$0834], sp
     inc [hl]
     ld [$0830], sp
@@ -11450,7 +11450,7 @@ jr_01c_6fea:
 
     ld b, $34
     ld [$0ba0], sp
-    call nz, Call_000_3135
+    call nz, CrossBankCallAndRet2
     ld [$0832], sp
     inc [hl]
     ld [$0835], sp
@@ -11502,7 +11502,7 @@ jr_01c_7038:
     ld bc, $0aa0
 
 jr_01c_7042:
-    call nz, Call_000_2735
+    call nz, TilemapPadding
     ld [$02a2], sp
     and e
     ld [bc], a
@@ -11677,7 +11677,7 @@ jr_01c_7118:
 
 
     db $10
-    call nz, Call_000_3705
+    call nz, AudioCheckAndBranch
     ld [$0837], sp
     scf
     ld [$0834], sp
@@ -11729,7 +11729,7 @@ jr_01c_7118:
 
     ld b, $39
     ld [$0da0], sp
-    call nz, Call_000_3935
+    call nz, AudioGetPanning
     ld [$083b], sp
     ld b, b
     ld [$0842], sp
@@ -11784,7 +11784,7 @@ jr_01c_7187:
     ld [$30c3], sp
     daa
     db $10
-    call nz, Call_000_3705
+    call nz, AudioCheckAndBranch
     ld [$0837], sp
 
 jr_01c_71d3:
@@ -11842,7 +11842,7 @@ jr_01c_71fa:
 
     ld b, $39
     ld [$0da0], sp
-    call nz, Call_000_3935
+    call nz, AudioGetPanning
     ld [$083b], sp
     ld b, b
     ld [$0842], sp
@@ -11885,7 +11885,7 @@ jr_01c_71fa:
     db $10
     inc [hl]
     db $10
-    call nz, Call_000_3235
+    call nz, AudioWaveData_3235
     ld [$0830], sp
     dec hl
     ld [$0830], sp

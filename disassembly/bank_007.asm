@@ -10,7 +10,7 @@ SECTION "ROM Bank $007", ROMX[$4000], BANK[$7]
     dw label7_4009
     dw label7_6456
     dw label7_6468
-    dw Call_007_56e8
+    dw LoadFld_56e8
 
 label7_4009:
     ld a, [$c90d]
@@ -25,19 +25,19 @@ label7_4009:
 label7_4017:
     ld hl, $c90d
     inc [hl]
-    call Call_007_6a8f
-    call Call_007_402b
-    call Call_007_690d
-    call Call_007_405c
-    call Call_007_690d
+    call SetFld_6a8f
+    call SetFld_402b
+    call LoadFld_690d
+    call LoadFld_405c
+    call LoadFld_690d
     ret
 
 
-Call_007_402b:
+SetFld_402b:
     ld de, $704d
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7090
-    call Call_007_68dc
+    call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
     ld a, [wCurrGoldMid]
@@ -45,16 +45,16 @@ Call_007_402b:
     ld a, [wCurrGoldHi]
     ldh [$d7], a
     ld hl, $002e
-    call Call_007_6880
+    call LoadFld_6880
     call ConvertNumberToText
-    call Call_007_6c8f
+    call ClrFld_6c8f
     ld de, $44b4
     ld a, [wMenu_selection]
-    call Call_007_6d4e
+    call FuncFld_6d4e
     ret
 
 
-Call_007_405c:
+LoadFld_405c:
     ld a, [$ca8d]
     or a
     jr z, jr_007_40c4
@@ -63,12 +63,12 @@ Call_007_405c:
     ld hl, $caca
     call ReadMonsterByte
     ld hl, $95c0
-    call Call_007_43ab
+    call CmpFld_43ab
     ld a, $00
     ld hl, $caca
     call ReadMonsterByte
     ld hl, $8500
-    call Call_007_66b1
+    call SaveFld_66b1
     ld a, [$ca8d]
     cp $01
     jr z, jr_007_40c4
@@ -77,12 +77,12 @@ Call_007_405c:
     ld hl, $caca
     call ReadMonsterByte
     ld hl, $8800
-    call Call_007_43ab
+    call CmpFld_43ab
     ld a, $01
     ld hl, $caca
     call ReadMonsterByte
     ld hl, $8600
-    call Call_007_66b1
+    call SaveFld_66b1
     ld a, [$ca8d]
     cp $02
     jr z, jr_007_40c4
@@ -91,77 +91,77 @@ Call_007_405c:
     ld hl, $caca
     call ReadMonsterByte
     ld hl, $8a40
-    call Call_007_43ab
+    call CmpFld_43ab
     ld a, $02
     ld hl, $caca
     call ReadMonsterByte
     ld hl, $8700
-    call Call_007_66b1
+    call SaveFld_66b1
 
 jr_007_40c4:
-    call Call_007_4469
-    call Call_007_4226
+    call SetFld_4469
+    call LoadFld_4226
     ld a, [$ca8d]
     or a
     ret z
 
     ld a, $5c
     ld hl, $00e1
-    call Call_007_4154
+    call FuncFld_4154
     ld a, $20
     ld hl, $01c1
-    call Call_007_4173
+    call SaveFld_4173
     ld hl, $00e1
     ld a, $00
-    call Call_007_4181
+    call SaveFld_4181
     ld a, $00
     ld hl, $9590
-    call Call_007_41aa
+    call SaveFld_41aa
     ld hl, $01e1
     ld a, $00
-    call Call_007_41b7
+    call SaveFld_41b7
     ld a, [$ca8d]
     cp $01
     ret z
 
     ld a, $80
     ld hl, $00e7
-    call Call_007_4154
+    call FuncFld_4154
     ld a, $24
     ld hl, $01c7
-    call Call_007_4173
+    call SaveFld_4173
     ld hl, $00e7
     ld a, $01
-    call Call_007_4181
+    call SaveFld_4181
     ld a, $01
     ld hl, $95a0
-    call Call_007_41aa
+    call SaveFld_41aa
     ld hl, $01e7
     ld a, $01
-    call Call_007_41b7
+    call SaveFld_41b7
     ld a, [$ca8d]
     cp $02
     ret z
 
     ld a, $a4
     ld hl, $00ed
-    call Call_007_4154
+    call FuncFld_4154
     ld a, $28
     ld hl, $01cd
-    call Call_007_4173
+    call SaveFld_4173
     ld hl, $00ed
     ld a, $02
-    call Call_007_4181
+    call SaveFld_4181
     ld a, $02
     ld hl, $95b0
-    call Call_007_41aa
+    call SaveFld_41aa
     ld hl, $01ed
     ld a, $02
-    call Call_007_41b7
+    call SaveFld_41b7
     ret
 
 
-Call_007_4154:
+FuncFld_4154:
     ld c, a
     ld a, [$c92f]
     or a
@@ -173,7 +173,7 @@ Call_007_4154:
 jr_007_415d:
     push hl
     push af
-    call Call_007_6880
+    call LoadFld_6880
     pop af
     ld b, $06
 
@@ -192,9 +192,9 @@ jr_007_4165:
     ret
 
 
-Call_007_4173:
+SaveFld_4173:
     push af
-    call Call_007_6880
+    call LoadFld_6880
     pop af
     ld [hl+], a
     inc a
@@ -207,7 +207,7 @@ Call_007_4173:
     ret
 
 
-Call_007_4181:
+SaveFld_4181:
     push af
     ld a, l
     ld [$c820], a
@@ -233,20 +233,20 @@ Call_007_4181:
     ret
 
 
-Call_007_41aa:
+SaveFld_41aa:
     push hl
     ld hl, $cacc
     call GetCurrentMonsterPtr
     ld a, [hl]
     pop hl
-    call Call_007_6a3d
+    call MaskFld_6a3d
     ret
 
 
-Call_007_41b7:
+SaveFld_41b7:
     push hl
     ldh [$d5], a
-    call Call_007_6880
+    call LoadFld_6880
     ld a, $de
     ld [hl+], a
     ld a, $df
@@ -266,7 +266,7 @@ Call_007_41b7:
     pop hl
     ld c, a
     ld b, $00
-    call Call_007_7007
+    call SetFld_7007
     pop hl
     ld a, l
     add $20
@@ -275,7 +275,7 @@ Call_007_41b7:
     adc $00
     ld h, a
     push hl
-    call Call_007_6880
+    call LoadFld_6880
     ld a, $e0
     ld [hl+], a
     ld a, $e1
@@ -287,7 +287,7 @@ Call_007_41b7:
     ldh a, [$d5]
     call ReadMonsterWord
     pop hl
-    call Call_007_6fe2
+    call SetFld_6fe2
     pop hl
     ld a, l
     add $20
@@ -296,7 +296,7 @@ Call_007_41b7:
     adc $00
     ld h, a
     push hl
-    call Call_007_6880
+    call LoadFld_6880
     ld a, $e0
     ld [hl+], a
     ld a, $e2
@@ -308,12 +308,12 @@ Call_007_41b7:
     ldh a, [$d5]
     call ReadMonsterWord
     pop hl
-    call Call_007_6fe2
+    call SetFld_6fe2
     pop hl
     ret
 
 
-Call_007_4226:
+LoadFld_4226:
     ld a, [$c92f]
     or a
     ret z
@@ -324,12 +324,12 @@ Call_007_4226:
     ld [$c822], a
     ld hl, $95c0
     ld de, $1401
-    call Call_007_69b6
+    call LoadFld_69b6
     ld de, $ca42
     ld hl, $93c0
-    call Call_007_69ef
+    call SaveFld_69ef
     ld de, $7cee
-    call Call_007_68dc
+    call LoadFld_68dc
     ld b, $00
     ld c, $00
 
@@ -351,25 +351,25 @@ jr_007_425d:
 
     ld b, $00
     ld hl, $0110
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ld a, [$cab8]
     ld c, a
     ld b, $00
     ld hl, $00ae
-    call Call_007_6880
+    call LoadFld_6880
     call PrintNumber
     ld a, [$cab7]
     ld c, a
     ld b, $00
     ld hl, $00b1
-    call Call_007_6880
+    call LoadFld_6880
     call PrintNumber
-    call Call_007_42b4
+    call SetFld_42b4
     ret
 
 
-Call_007_4290:
+LoadFld_4290:
     ld a, [$c92f]
     or a
     ret z
@@ -378,31 +378,31 @@ Call_007_4290:
     ld c, a
     ld b, $00
     ld hl, $00ae
-    call Call_007_6889
+    call SaveFld_6889
     call PrintNumber
     ld a, [$cab7]
     ld c, a
     ld b, $00
     ld hl, $00b1
-    call Call_007_6889
+    call SaveFld_6889
     call PrintNumber
     ret
 
 
-Call_007_42b4:
+SetFld_42b4:
     ld hl, HeaderOldLicenseeCode
-    call Call_007_42cd
+    call CallFld_42cd
     ld hl, $0151
-    call Call_007_4301
+    call CallFld_4301
     ld hl, $016b
-    call Call_007_4331
+    call CallFld_4331
     ld hl, $0171
-    call Call_007_436e
+    call CallFld_436e
     ret
 
 
-Call_007_42cd:
-    call Call_007_6880
+CallFld_42cd:
+    call LoadFld_6880
     push hl
     ld de, $cac1
     ld b, $14
@@ -446,8 +446,8 @@ jr_007_42ee:
     ret
 
 
-Call_007_4301:
-    call Call_007_6880
+CallFld_4301:
+    call LoadFld_6880
     push hl
     ld de, $cac1
     ld b, $14
@@ -488,8 +488,8 @@ jr_007_431e:
     ret
 
 
-Call_007_4331:
-    call Call_007_6880
+CallFld_4331:
+    call LoadFld_6880
     ld c, $00
     ld a, [$ca41]
     bit 7, a
@@ -537,8 +537,8 @@ jr_007_4368:
     ret
 
 
-Call_007_436e:
-    call Call_007_6880
+CallFld_436e:
+    call LoadFld_6880
     ld c, $00
     ld a, [$ca41]
     bit 7, a
@@ -586,7 +586,7 @@ jr_007_43a5:
     ret
 
 
-Call_007_43ab:
+CmpFld_43ab:
     cp $ff
     ret z
 
@@ -612,7 +612,7 @@ Call_007_43ab:
     ret
 
 label7_43c8:
-    call Call_007_4290
+    call LoadFld_4290
     ld hl, wMenu_selection
     res 7, [hl]
     ld a, [wJoypad_current_frame]
@@ -650,9 +650,9 @@ jr_007_43f6:
     ld bc, $0100
     ld a, $e0
     call FillNBytesWithRegA
-    call Call_007_690d
-    call Call_007_405c
-    call Call_007_690d
+    call LoadFld_690d
+    call LoadFld_405c
+    call LoadFld_690d
     jr jr_007_445c
 
 jr_007_441b:
@@ -675,9 +675,9 @@ jr_007_442c:
     call PlaySoundEffect
     ld hl, $c90d
     inc [hl]
-    call Call_007_6a8f
-    call Call_007_402b
-    call Call_007_690d
+    call SetFld_6a8f
+    call SetFld_402b
+    call LoadFld_690d
     xor a
     ld [$c90e], a
     ld hl, wMenu_selection
@@ -686,30 +686,30 @@ jr_007_442c:
     ld bc, $0007
     ld a, $00
     call FillNBytesWithRegA
-    call Call_007_4469
+    call SetFld_4469
 
 jr_007_445c:
     ld de, $44b4
     ld a, [wMenu_selection]
-    call Call_007_6c94
-    call Call_007_6779
+    call FuncFld_6c94
+    call LoadFld_6779
     ret
 
 
-Call_007_4469:
+SetFld_4469:
     ld hl, $9200
     ld a, $01
-    call Call_007_4482
+    call FuncFld_4482
     ld hl, $9240
     ld a, $02
-    call Call_007_4482
+    call FuncFld_4482
     ld hl, $9280
     ld a, $03
-    call Call_007_4482
+    call FuncFld_4482
     ret
 
 
-Call_007_4482:
+FuncFld_4482:
     ld b, a
     ld a, [$ca8d]
     cp b
@@ -737,7 +737,7 @@ jr_007_4498:
     ld e, l
     ld d, h
     pop hl
-    call Call_007_69ef
+    call SaveFld_69ef
     ret
 
 label7_44a8:
@@ -790,27 +790,27 @@ label7_44a8:
     ld c, d
     ld a, b
     ld c, d
-    call Call_007_4469
+    call SetFld_4469
 
-Call_007_44e3:
+SetFld_44e3:
     ld de, $70ad
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $70f7
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $71af
-    call Call_007_68dc
+    call LoadFld_68dc
     ld a, [wOPTN_and_Item_selection]
     ld [$cac0], a
-    call Call_007_466d
-    call Call_007_4689
+    call SetFld_466d
+    call SetFld_4689
     ld de, $724f
-    call Call_007_68dc
-    call Call_007_451e
-    call Call_007_6c8f
+    call LoadFld_68dc
+    call CallFld_451e
+    call ClrFld_6c8f
     ld de, $4632
     ld a, [wOPTN_and_Item_selection]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld hl, $c90e
 
 jr_007_451c:
@@ -818,23 +818,23 @@ jr_007_451c:
     ret
 
 
-Call_007_451e:
-    call Call_007_45ee
+CallFld_451e:
+    call LoadFld_45ee
     ld hl, $cac2
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $93c0
-    call Call_007_69ef
+    call SaveFld_69ef
     ld hl, $cacc
-    call Call_007_6dba
+    call LoadFld_6dba
     ld hl, $9300
-    call Call_007_6a3d
+    call MaskFld_6a3d
     ld hl, $cb0c
-    call Call_007_6dba
+    call LoadFld_6dba
     push af
     ld hl, $cb0d
-    call Call_007_6da8
+    call LoadFld_6da8
     pop af
     cp [hl]
     ld a, $90
@@ -844,46 +844,46 @@ Call_007_451e:
 
 jr_007_4550:
     ld hl, $8800
-    call Call_007_6a41
+    call FuncFld_6a41
     ld hl, $cb0c
-    call Call_007_6dba
+    call LoadFld_6dba
     ld c, a
     ld b, $00
     ld hl, $0031
-    call Call_007_6880
+    call LoadFld_6880
     call CopyHLtoDE
     ld hl, $cb19
     ld de, $0070
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb1b
     ld de, $00b0
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb1d
     ld de, $00f0
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb1f
     ld de, $0130
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb21
     ld de, $0170
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb11
     ld de, $01cc
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb13
     ld de, $01d0
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb15
     ld de, $020c
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb17
     ld de, $0210
-    call Call_007_45e2
+    call SaveFld_45e2
     ld hl, $cb0b
-    call Call_007_6dba
+    call LoadFld_6dba
     ld b, a
     ld hl, $01f0
-    call Call_007_6880
+    call LoadFld_6880
     bit 0, b
     ld a, $e0
     jr z, jr_007_45ce
@@ -911,16 +911,16 @@ jr_007_45e0:
     ret
 
 
-Call_007_45e2:
+SaveFld_45e2:
     push de
-    call Call_007_6dcd
+    call LoadFld_6dcd
     pop hl
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ret
 
 
-Call_007_45ee:
+LoadFld_45ee:
     ld a, [wGameState]
     bit 1, a
     ret z
@@ -930,21 +930,21 @@ Call_007_45ee:
     ret
 
 
-    call Call_007_463a
+    call SetFld_463a
     jr z, jr_007_460f
 
-    call Call_007_45ee
-    call Call_007_451e
-    call Call_007_690d
-    call Call_007_466d
-    call Call_007_4689
+    call LoadFld_45ee
+    call CallFld_451e
+    call LoadFld_690d
+    call SetFld_466d
+    call SetFld_4689
 
 jr_007_460f:
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_4620
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     jr jr_007_4631
@@ -973,14 +973,14 @@ jr_007_4631:
     rst $38
     rst $38
 
-Call_007_463a:
+SetFld_463a:
     ld de, $4632
     ld hl, wOPTN_and_Item_selection
     ld a, [$ca8d]
     ld b, a
     ld a, [hl]
     push af
-    call Call_007_6c3f
+    call FuncFld_6c3f
     pop af
     ld hl, wOPTN_and_Item_selection
     and $7f
@@ -991,12 +991,12 @@ Call_007_463a:
     ret
 
 
-Call_007_4655:
-    call Call_007_466d
-    call Call_007_4689
+CallFld_4655:
+    call SetFld_466d
+    call SetFld_4689
     ld de, $724f
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     xor a
@@ -1004,9 +1004,9 @@ Call_007_4655:
     ret
 
 
-Call_007_466d:
+SetFld_466d:
     ld hl, $caca
-    call Call_007_6dba
+    call LoadFld_6dba
     ld l, a
     ld h, $00
     add hl, hl
@@ -1024,14 +1024,14 @@ Call_007_466d:
     ret
 
 
-Call_007_4689:
+SetFld_4689:
     ld hl, $0141
     ld a, l
     ld [$c820], a
     ld a, h
     ld [$c821], a
     ld hl, $caca
-    call Call_007_6dba
+    call LoadFld_6dba
     ld [$c81e], a
     ld a, $04
     ld [$c81f], a
@@ -1065,30 +1065,30 @@ Call_007_4689:
     ret
 
 
-Call_007_46ca:
-    call Call_007_46d2
+CallFld_46ca:
+    call CallFld_46d2
     ld hl, $c90e
     inc [hl]
     ret
 
 
-Call_007_46d2:
-    call Call_007_45ee
+CallFld_46d2:
+    call LoadFld_45ee
     ld hl, $cac2
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $93c0
-    call Call_007_69ef
+    call SaveFld_69ef
     ld hl, $cacc
-    call Call_007_6dba
+    call LoadFld_6dba
     ld hl, $9300
-    call Call_007_6a3d
+    call MaskFld_6a3d
     ld hl, $cb0c
-    call Call_007_6dba
+    call LoadFld_6dba
     push af
     ld hl, $cb0d
-    call Call_007_6da8
+    call LoadFld_6da8
     pop af
     cp [hl]
     ld a, $90
@@ -1098,8 +1098,8 @@ Call_007_46d2:
 
 jr_007_4704:
     ld hl, $8800
-    call Call_007_6a41
-    call Call_007_6d8b
+    call FuncFld_6a41
+    call LoadFld_6d8b
     ld d, a
     ld hl, $0107
     rst $10
@@ -1109,43 +1109,43 @@ jr_007_4704:
     ld [$c822], a
     ld hl, $9330
     ld de, $0901
-    call Call_007_69b6
+    call LoadFld_69b6
     ld hl, $cacb
-    call Call_007_6dba
+    call LoadFld_6dba
     ld c, a
     push bc
     ld hl, $cb23
-    call Call_007_6dba
+    call LoadFld_6dba
     ld hl, $95b0
     pop bc
-    call Call_007_6942
+    call FuncFld_6942
     ld hl, $caca
-    call Call_007_6dba
+    call LoadFld_6dba
     ld [$c823], a
     ld a, $05
     ld [$c822], a
     ld hl, $94c0
     ld de, $0901
-    call Call_007_69b6
+    call LoadFld_69b6
     ld hl, $cacd
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $9550
-    call Call_007_69ef
+    call SaveFld_69ef
     ld de, $727b
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7333
-    call Call_007_68dc
+    call LoadFld_68dc
     ld hl, $cb0c
-    call Call_007_6dba
+    call LoadFld_6dba
     ld c, a
     ld b, $00
     ld hl, $0031
-    call Call_007_6880
+    call LoadFld_6880
     call CopyHLtoDE
     ld hl, $cb0e
-    call Call_007_6da8
+    call LoadFld_6da8
     ld a, [hl+]
     ldh [$d5], a
     ld a, [hl+]
@@ -1153,10 +1153,10 @@ jr_007_4704:
     ld a, [hl]
     ldh [$d7], a
     ld hl, $016b
-    call Call_007_6880
-    call Call_000_1f90
+    call LoadFld_6880
+    call CoordBoundsCheck
     ld hl, $cb0e
-    call Call_007_6da8
+    call LoadFld_6da8
     ld a, [hl+]
     ldh [$d5], a
     ld a, [hl+]
@@ -1165,7 +1165,7 @@ jr_007_4704:
     ldh [$d7], a
     ld a, [$cac0]
     push af
-    call Call_007_6d8b
+    call LoadFld_6d8b
     ld [$cac0], a
     ld hl, $cb0c
     call GetMonsterDataPtr
@@ -1188,7 +1188,7 @@ jr_007_47ca:
     pop af
     ld [$cac0], a
     ld hl, $cb0e
-    call Call_007_6da8
+    call LoadFld_6da8
     ldh a, [$d5]
     sub [hl]
     inc hl
@@ -1201,17 +1201,17 @@ jr_007_47ca:
     sbc [hl]
     ldh [$d7], a
     ld hl, $020b
-    call Call_007_6880
-    call Call_000_1f90
-    call Call_007_690d
+    call LoadFld_6880
+    call CoordBoundsCheck
+    call LoadFld_690d
     ld hl, $caca
-    call Call_007_6dba
+    call LoadFld_6dba
     ld hl, $8500
-    call Call_007_66b1
+    call SaveFld_66b1
     ret
 
 
-    call Call_007_463a
+    call SetFld_463a
     jr z, jr_007_480a
 
     ld a, $0d
@@ -1223,7 +1223,7 @@ jr_007_480a:
     bit 1, a
     jr z, jr_007_481b
 
-    call Call_007_44e3
+    call SetFld_44e3
     ld a, $01
     ld [$c90e], a
     jr jr_007_482f
@@ -1239,20 +1239,20 @@ jr_007_481b:
     inc [hl]
 
 Jump_007_482c:
-    call Call_007_66c8
+    call LoadFld_66c8
 
 jr_007_482f:
     ret
 
 
     ld de, $71f7
-    call Call_007_68a0
-    call Call_007_486b
+    call LoadFld_68a0
+    call SetFld_486b
     ld de, $737b
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld hl, $caca
-    call Call_007_6dba
+    call LoadFld_6dba
     ld l, a
     ld h, $00
     add hl, hl
@@ -1268,29 +1268,29 @@ jr_007_482f:
     ld hl, $8b00
     call WaitDMATransfer
     ld de, $724f
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
 
 
-Call_007_486b:
+SetFld_486b:
     ld hl, $caea
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $9650
-    call Call_007_488e
-    call Call_007_488e
-    call Call_007_488e
+    call SaveFld_488e
+    call SaveFld_488e
+    call SaveFld_488e
     ld hl, $8830
-    call Call_007_488e
-    call Call_007_488e
-    call Call_007_488e
-    call Call_007_488e
+    call SaveFld_488e
+    call SaveFld_488e
+    call SaveFld_488e
+    call SaveFld_488e
 
-Call_007_488e:
+SaveFld_488e:
     push de
     push hl
     ld a, [de]
@@ -1298,7 +1298,7 @@ Call_007_488e:
     ld a, $06
     ld [$c822], a
     ld de, $0901
-    call Call_007_69b6
+    call LoadFld_69b6
     pop hl
     ld a, l
     add $90
@@ -1311,16 +1311,16 @@ Call_007_488e:
     ret
 
 
-    call Call_007_463a
+    call SetFld_463a
     jr z, jr_007_48bf
 
-    call Call_007_45ee
-    call Call_007_486b
-    call Call_007_690d
-    call Call_007_466d
-    call Call_007_4689
+    call LoadFld_45ee
+    call SetFld_486b
+    call LoadFld_690d
+    call SetFld_466d
+    call SetFld_4689
 
-Call_007_48bf:
+LoadFld_48bf:
 jr_007_48bf:
     ld a, [wJoypad_current_frame]
     bit 1, a
@@ -1349,31 +1349,31 @@ jr_007_48e5:
     ret
 
 
-Call_007_48e6:
+SetFld_48e6:
     ld de, $746b
-    call Call_007_68dc
-    call Call_007_690d
-    call Call_007_48f7
+    call LoadFld_68dc
+    call LoadFld_690d
+    call SetFld_48f7
     ld hl, $c90e
     inc [hl]
     ret
 
 
-Call_007_48f7:
+SetFld_48f7:
     ld hl, $cb44
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $88c0
-    call Call_007_69ef
+    call SaveFld_69ef
     ld hl, $cad8
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $8900
-    call Call_007_69ef
+    call SaveFld_69ef
     ld hl, $cad6
-    call Call_007_6dba
+    call LoadFld_6dba
     cp $ff
     jr z, jr_007_4927
 
@@ -1386,32 +1386,32 @@ jr_007_4927:
     ld c, a
     push bc
     ld hl, $cb4c
-    call Call_007_6dba
+    call LoadFld_6dba
     ld hl, $95e0
     pop bc
-    call Call_007_6942
+    call FuncFld_6942
     ld hl, $cad6
-    call Call_007_6dba
+    call LoadFld_6dba
     ld [$c823], a
     ld a, $05
     ld [$c822], a
     ld hl, $94c0
     ld de, $0901
-    call Call_007_69a5
+    call LoadFld_69a5
     ld hl, $cb4d
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $8940
-    call Call_007_69ef
+    call SaveFld_69ef
     ld hl, $cae1
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $8980
-    call Call_007_69ef
+    call SaveFld_69ef
     ld hl, $cad7
-    call Call_007_6dba
+    call LoadFld_6dba
     cp $ff
     jr z, jr_007_497d
 
@@ -1424,31 +1424,31 @@ jr_007_497d:
     ld c, a
     push bc
     ld hl, $cb55
-    call Call_007_6dba
+    call LoadFld_6dba
     ld hl, $9660
     pop bc
-    call Call_007_6942
+    call FuncFld_6942
     ld hl, $cad7
-    call Call_007_6dba
+    call LoadFld_6dba
     ld [$c823], a
     ld a, $05
     ld [$c822], a
     ld hl, $9550
     ld de, $0901
-    call Call_007_69a5
+    call LoadFld_69a5
     ld de, $755b
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $75db
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld hl, $cad7
-    call Call_007_6dba
+    call LoadFld_6dba
     cp $ff
     jr nz, jr_007_49c6
 
     ld de, $7223
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ret
 
 
@@ -1466,12 +1466,12 @@ jr_007_49c6:
     inc hl
     ld d, [hl]
     ld de, $724f
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $765b
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld hl, $cad6
-    call Call_007_6dba
+    call LoadFld_6dba
     ld l, a
     ld h, $00
     add hl, hl
@@ -1485,24 +1485,24 @@ jr_007_49c6:
     inc hl
     ld d, [hl]
     ld hl, $cad6
-    call Call_007_6dba
+    call LoadFld_6dba
     ld hl, $8600
-    call Call_007_66b1
+    call SaveFld_66b1
     ld hl, $cad7
-    call Call_007_6dba
+    call LoadFld_6dba
     ld hl, $8700
-    call Call_007_66b1
+    call SaveFld_66b1
     ret
 
 
-    call Call_007_463a
+    call SetFld_463a
     jr z, jr_007_4a1e
 
     ld a, $0e
     ld [$c90e], a
     jr jr_007_4a59
 
-Call_007_4a1e:
+LoadFld_4a1e:
 jr_007_4a1e:
     ld a, [wJoypad_current_frame]
     bit 1, a
@@ -1515,11 +1515,11 @@ jr_007_4a1e:
     ld hl, $c90e
     dec [hl]
     ld de, $71f7
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld de, $746b
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     jr jr_007_4a59
 
 jr_007_4a45:
@@ -1533,32 +1533,32 @@ jr_007_4a45:
     inc [hl]
 
 Jump_007_4a56:
-    call Call_007_670e
+    call LoadFld_670e
 
 jr_007_4a59:
     ret
 
 
-    call Call_007_6a8f
-    call Call_007_690d
+    call SetFld_6a8f
+    call LoadFld_690d
     ld a, $01
     ld [$c90d], a
     ret
 
 
-    call Call_007_45ee
-    call Call_007_46d2
-    call Call_007_466d
-    call Call_007_4689
+    call LoadFld_45ee
+    call CallFld_46d2
+    call SetFld_466d
+    call SetFld_4689
     ld a, $07
     ld [$c90e], a
     ret
 
 
-    call Call_007_45ee
-    call Call_007_48f7
-    call Call_007_466d
-    call Call_007_4689
+    call LoadFld_45ee
+    call SetFld_48f7
+    call SetFld_466d
+    call SetFld_4689
     ld a, $0b
     ld [$c90e], a
     ret
@@ -1601,11 +1601,11 @@ jr_007_4a59:
     ld d, d
     scf
     ld d, e
-    call Call_007_4b69
-    call Call_007_4b21
+    call SetFld_4b69
+    call SetFld_4b21
     ld hl, $c90e
     inc [hl]
-    call Call_007_4b99
+    call FindFirstEmptyInvSlot
     ld a, [$c90f]	;load number of filled inv slots into a
     or a
     ret nz		;check to see if it's 0
@@ -1615,16 +1615,16 @@ jr_007_4a59:
     ret
 
 
-    call Call_007_4b99
-    call Call_007_6a8f
+    call FindFirstEmptyInvSlot
+    call SetFld_6a8f
     ld de, $704d
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7090
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7748
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $77d9
-    call Call_007_68dc
+    call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
     ld a, [wCurrGoldMid]
@@ -1632,25 +1632,25 @@ jr_007_4a59:
     ld a, [wCurrGoldHi]
     ldh [$d7], a
     ld hl, $002e
-    call Call_007_6880
+    call LoadFld_6880
     call ConvertNumberToText
-    call Call_007_6c8f
+    call ClrFld_6c8f
     ld de, $44b4
     ld a, [wMenu_selection]
-    call Call_007_6d4e
+    call FuncFld_6d4e
     ld de, $4c53
     ld b, $05
     ld a, [$c90f]
     ld c, a
     ld hl, wOPTN_and_Item_selection
-    call Call_007_6d2c
-    call Call_007_690d
+    call ReadFld_6d2c
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
 
 
-Call_007_4b21:
+SetFld_4b21:
     ld de, wInventory
     ld a, [wPLAN_selection]
     ld b, a
@@ -1663,14 +1663,14 @@ Call_007_4b21:
     adc d
     ld d, a
     ld hl, $9700
-    call Call_007_4b46
+    call SaveFld_4b46
     ld hl, $8800
-    call Call_007_4b46
-    call Call_007_4b46
-    call Call_007_4b46
-    call Call_007_4b46
+    call SaveFld_4b46
+    call SaveFld_4b46
+    call SaveFld_4b46
+    call SaveFld_4b46
 
-Call_007_4b46:
+SaveFld_4b46:
     push de
     push hl
     ld a, [de]		;load item ID into a and check if the slot is empty
@@ -1684,7 +1684,7 @@ jr_007_4b4f:
     ld a, $08
     ld [$c822], a
     ld de, $0901
-    call Call_007_69b6
+    call LoadFld_69b6
     pop hl
     ld a, l
     add $90
@@ -1697,7 +1697,7 @@ jr_007_4b4f:
     ret
 
 
-Call_007_4b69:
+SetFld_4b69:
     ld hl, wInventory
     ld a, [wPLAN_selection]
     ld b, a
@@ -1725,11 +1725,11 @@ jr_007_4b87:
     ld [$c822], a
     ld hl, $94c0
     ld de, $1202
-    call Call_007_69b6
+    call LoadFld_69b6
     ret
 
 ;Possible name: CountFilledInvSlots
-Call_007_4b99:			;checks for first empty inventory slot. Places the number of full slots in reg c
+FindFirstEmptyInvSlot:			;checks for first empty inventory slot. Places the number of full slots in reg c
     ld hl, wInventory
     ld b, $14			;num inventroy slots
     ld c, $00			;number of filled inv slots
@@ -1762,7 +1762,7 @@ jr_007_4bad:
     push af
     ld a, [hl]
     push af
-    call Call_007_6b7f
+    call LoadFld_6b7f
     pop af
     ld hl, wOPTN_and_Item_selection
     and $7f
@@ -1772,7 +1772,7 @@ jr_007_4bad:
     cp b
     jr z, jr_007_4bd6
 
-    call Call_007_4b69
+    call SetFld_4b69
 
 jr_007_4bd6:
     pop af
@@ -1780,15 +1780,15 @@ jr_007_4bd6:
     cp [hl]
     jr z, jr_007_4be3
 
-    call Call_007_4b21
-    call Call_007_4b69
+    call SetFld_4b21
+    call SetFld_4b69
 
 jr_007_4be3:
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_4bf4
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     jr jr_007_4c27
@@ -1811,7 +1811,7 @@ Jump_007_4c07:
 
     ld a, $59
     call PlaySoundEffect
-    call Call_007_4c28
+    call SetFld_4c28
     xor a
     ld [wOPTN_and_Item_selection], a
     ld [wPLAN_selection], a
@@ -1827,7 +1827,7 @@ jr_007_4c27:
     ret
 
 
-Call_007_4c28:
+SetFld_4c28:
     ld hl, wInventory
     ld b, $14
 
@@ -1885,15 +1885,15 @@ jr_007_4c4a:
     ld bc, $0169
     rst $38
     rst $38
-    call Call_007_6a8f
-    call Call_007_6c8f
+    call SetFld_6a8f
+    call ClrFld_6c8f
     ld de, $704d
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $44b4
     ld a, [wMenu_selection]
-    call Call_007_6d4e
+    call FuncFld_6d4e
     ld de, $7090
-    call Call_007_68dc
+    call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
     ld a, [wCurrGoldMid]
@@ -1901,24 +1901,24 @@ jr_007_4c4a:
     ld a, [wCurrGoldHi]
     ldh [$d7], a
     ld hl, $002e
-    call Call_007_6880
+    call LoadFld_6880
     call ConvertNumberToText
     ld de, $7748
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $4c53
     ld b, $05
     ld a, [$c90f]
     ld c, a
     ld hl, wOPTN_and_Item_selection
-    call Call_007_6d2c
+    call ReadFld_6d2c
     ld de, $77d9
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $798b
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $4d4b
     ld a, [$c8dd]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld de, $560b
     ld hl, $8e50
     call WaitDMATransfer
@@ -1930,7 +1930,7 @@ jr_007_4c4a:
     ld de, $4d4b
     ld hl, $c8dd
     ld b, $02
-    call Call_007_6c08
+    call FuncFld_6c08
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_4cef
@@ -2028,27 +2028,27 @@ jr_007_4d6b:
 
 jr_007_4d74:
     ld de, $7748
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $4c53
     ld b, $05
     ld a, [$c90f]
     ld c, a
     ld hl, wOPTN_and_Item_selection
-    call Call_007_6d2c
+    call ReadFld_6d2c
     ld de, $79be
-    call Call_007_68dc
-    call Call_007_4da6
-    call Call_007_6c8f
+    call LoadFld_68dc
+    call LoadFld_4da6
+    call ClrFld_6c8f
     ld de, $4ef5
     ld a, [$c8de]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
 
 
-Call_007_4da6:
+LoadFld_4da6:
     ld a, [wPLAN_selection]
     ld b, a
     add a
@@ -2130,35 +2130,35 @@ Call_007_4da6:
     jp z, Jump_007_4eab
 
     ld de, $7957
-    call Call_007_68dc
+    call LoadFld_68dc
     ld hl, $cb11
     ld a, [$c8de]
     call ReadMonsterWord
     ld hl, $0201
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ld hl, $cb13
     ld a, [$c8de]
     call ReadMonsterWord
     ld hl, $0205
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     jr jr_007_4e80
 
 Jump_007_4e56:
     ld de, $7a08
-    call Call_007_68dc
+    call LoadFld_68dc
     ld hl, $cb15
     ld a, [$c8de]
     call ReadMonsterWord
     ld hl, $0201
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ld hl, $cb17
     ld a, [$c8de]
     call ReadMonsterWord
     ld hl, $0205
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
 
 jr_007_4e80:
@@ -2167,7 +2167,7 @@ jr_007_4e80:
     call ReadMonsterByte
     ld b, a
     ld hl, $01c5
-    call Call_007_6880
+    call LoadFld_6880
     bit 0, b
     ld a, $e0
     jr z, jr_007_4e98
@@ -2203,7 +2203,7 @@ Jump_007_4eab:
     ld b, a
     ld a, [hl]
     push af
-    call Call_007_6c08
+    call FuncFld_6c08
     pop af
     ld hl, $c8de
     and $7f
@@ -2213,8 +2213,8 @@ Jump_007_4eab:
     cp b
     jr z, jr_007_4ece
 
-    call Call_007_4da6
-    call Call_007_690d
+    call LoadFld_4da6
+    call LoadFld_690d
 
 jr_007_4ece:
     ld a, [wJoypad_current_frame]
@@ -2306,8 +2306,8 @@ jr_007_4f55:
 
 jr_007_4f68:
     ld de, $2e07
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ld a, [$da5e]
@@ -2407,7 +2407,7 @@ jr_007_5002:
     bit 6, a
     ret nz
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     ret
@@ -2530,7 +2530,7 @@ Jump_007_5077:
     ldh [$bc], a
 
 jr_007_50df:
-    call Call_007_5160
+    call CallFld_5160
     ld a, [wScreenIndex]
     add a
     add a
@@ -2562,7 +2562,7 @@ jr_007_50df:
     ldh a, [$a8]
     adc [hl]
     ld [hl], a
-    call Call_007_51b1
+    call SetFld_51b1
     jr z, jr_007_50df
 
     pop hl
@@ -2612,7 +2612,7 @@ jr_007_512a:
     ret
 
 
-Call_007_5160:
+CallFld_5160:
 jr_007_5160:
     call GenerateRNG
     ld a, [wRNG1]
@@ -2662,7 +2662,7 @@ jr_007_5160:
 
     jr jr_007_5160
 
-Call_007_51b1:
+SetFld_51b1:
     ld hl, $d793
 
 jr_007_51b4:
@@ -2679,7 +2679,7 @@ jr_007_51bb:
     jr nz, jr_007_51c5
 
     push hl
-    call Call_007_51cb
+    call CalcFld_51cb
     pop hl
     ret z
 
@@ -2690,7 +2690,7 @@ jr_007_51c5:
     inc hl
     jr jr_007_51b4
 
-Call_007_51cb:
+CalcFld_51cb:
     inc hl
     inc hl
     ld a, [hl+]
@@ -2744,7 +2744,7 @@ Call_007_51cb:
     or a
     ret nz
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     ret
@@ -2759,11 +2759,11 @@ Call_007_51cb:
     ld [$c823], a
     ld hl, $9700
     ld de, $0901
-    call Call_007_69b6
+    call LoadFld_69b6
     ld de, $704d
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7090
-    call Call_007_68dc
+    call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
     ld a, [wCurrGoldMid]
@@ -2771,15 +2771,15 @@ Call_007_51cb:
     ld a, [wCurrGoldHi]
     ldh [$d7], a
     ld hl, $002e
-    call Call_007_6880
+    call LoadFld_6880
     call ConvertNumberToText
-    call Call_007_6c8f
+    call ClrFld_6c8f
     ld de, $7748
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $44b4
     ld a, [wMenu_selection]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
@@ -2791,7 +2791,7 @@ Call_007_51cb:
 
     ld a, $59
     call PlaySoundEffect
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
 
@@ -2823,14 +2823,14 @@ jr_007_5279:
     ld a, $5c
     call PlaySoundEffect
     ld de, $2e07
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7a3c
-    call Call_007_68dc
-    call Call_007_6c8f
+    call LoadFld_68dc
+    call ClrFld_6c8f
     ld de, $5331
     ld a, [$c8df]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
@@ -2839,7 +2839,7 @@ jr_007_5279:
     ld de, $5331
     ld hl, $c8df
     ld b, $02
-    call Call_007_6c08
+    call FuncFld_6c08
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_5309
@@ -2919,7 +2919,7 @@ jr_007_5330:
     ld [hl], $ff
     ld hl, $0305
     rst $10
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     ret
@@ -2937,7 +2937,7 @@ jr_007_5330:
 
 
     ld d, l
-    call z, Call_007_7f58
+    call z, DispFld_7f58
     ld e, c
     ld l, $5a
     ld l, [hl]
@@ -2958,18 +2958,18 @@ jr_007_5330:
     ld e, h
     ld a, [wOPTN_and_Item_selection]
     ld [$cac0], a
-    call Call_007_5572
-    call Call_007_5456
+    call SetFld_5572
+    call LoadFld_5456
     ld hl, $c90e
     inc [hl]
     ret
 
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld de, $704d
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7090
-    call Call_007_68dc
+    call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
     ld a, [wCurrGoldMid]
@@ -2977,18 +2977,18 @@ jr_007_5330:
     ld a, [wCurrGoldHi]
     ldh [$d7], a
     ld hl, $002e
-    call Call_007_6880
+    call LoadFld_6880
     call ConvertNumberToText
     ld de, $76d1
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7687
-    call Call_007_68dc
-    call Call_007_6c8f
+    call LoadFld_68dc
+    call ClrFld_6c8f
     ld de, $544e
     ld a, [wOPTN_and_Item_selection]
-    call Call_007_6d4e
-    call Call_007_690d
-    call Call_007_5456
+    call FuncFld_6d4e
+    call LoadFld_690d
+    call LoadFld_5456
     ld hl, $c90e
     inc [hl]
     ret
@@ -3000,7 +3000,7 @@ jr_007_5330:
     ld b, a
     ld a, [hl]
     push af
-    call Call_007_6c08
+    call FuncFld_6c08
     pop af
     ld hl, wOPTN_and_Item_selection
     and $7f
@@ -3012,15 +3012,15 @@ jr_007_5330:
 
     ld a, [wOPTN_and_Item_selection]
     ld [$cac0], a
-    call Call_007_5572
-    call Call_007_5456
+    call SetFld_5572
+    call LoadFld_5456
 
 jr_007_5409:
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_541a
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     jr jr_007_5441
@@ -3066,7 +3066,7 @@ jr_007_5442:
     ld hl, $ff01
     rst $38
 
-Call_007_5456:
+LoadFld_5456:
     ld a, [$c90f]
     or a
     jr nz, jr_007_549f
@@ -3077,23 +3077,23 @@ Call_007_5456:
     ld [$c823], a
     ld hl, $8800
     ld de, $0901
-    call Call_007_69b6
+    call LoadFld_69b6
     ld hl, $8890
     ld b, $48
-    call Call_007_5492
+    call LoadFld_5492
     ld b, $48
-    call Call_007_5492
+    call LoadFld_5492
     ld b, $48
-    call Call_007_5492
+    call LoadFld_5492
     ld b, $48
-    call Call_007_5492
+    call LoadFld_5492
     ld b, $48
-    call Call_007_5492
+    call LoadFld_5492
     ld b, $48
-    call Call_007_5492
+    call LoadFld_5492
     ld b, $48
 
-Call_007_5492:
+LoadFld_5492:
 jr_007_5492:
     ld a, $ff
     call Write_gfx_tile_and_inc_HL
@@ -3105,7 +3105,7 @@ jr_007_5492:
     ret
 
 
-Call_007_549f:
+LoadFld_549f:
 jr_007_549f:
     ld a, [$c8dd]
     cp $00
@@ -3118,44 +3118,44 @@ jr_007_54ab:
     ld hl, $caea
 
 jr_007_54ae:
-    call Call_007_6da8
+    call LoadFld_6da8
     ld e, l
     ld d, h
     ld hl, $8800
-    call Call_007_488e
-    call Call_007_488e
-    call Call_007_488e
-    call Call_007_488e
+    call SaveFld_488e
+    call SaveFld_488e
+    call SaveFld_488e
+    call SaveFld_488e
     ret
 
 
-    call Call_007_5504
+    call LoadFld_5504
     ld de, $7844
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $78d9
-    call Call_007_68dc
-    call Call_007_558d
+    call LoadFld_68dc
+    call LoadFld_558d
     ld hl, $cb15
     ld a, [wOPTN_and_Item_selection]
     call ReadMonsterWord
     ld hl, $0125
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
-    call Call_007_6c8f
+    call ClrFld_6c8f
     ld de, $56a4
     ld a, [wPLAN_selection]
     ld b, $04
     ld hl, wPLAN_selection
     ld a, [$c90f]
     ld c, a
-    call Call_007_6d2c
-    call Call_007_690d
+    call ReadFld_6d2c
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
 
 
-Call_007_5504:
+LoadFld_5504:
     ld a, [$c8dd]
     cp $00
     jr z, jr_007_5510
@@ -3221,7 +3221,7 @@ jr_007_552b:
     ret
 
 
-Call_007_5572:
+SetFld_5572:
     ld hl, $caea
     ld a, [wOPTN_and_Item_selection]
     call GetCurrentMonsterPtr
@@ -3243,7 +3243,7 @@ jr_007_5588:
     ret
 
 
-Call_007_558d:
+LoadFld_558d:
     ld a, [$c8dd]
     cp $00
     jr z, jr_007_5599
@@ -3266,7 +3266,7 @@ jr_007_559c:
     ld h, a
     ld e, [hl]
     ld d, $00
-    call Call_007_56e8
+    call LoadFld_56e8
     ld c, e
     ld b, d
     ld a, e
@@ -3280,7 +3280,7 @@ jr_007_559c:
     jr z, jr_007_55cb
 
     ld hl, $0121
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ret
 
@@ -3290,7 +3290,7 @@ jr_007_55cb:
     ld a, [wOPTN_and_Item_selection]
     call ReadMonsterWord
     ld hl, $0121
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ret
 
@@ -3305,7 +3305,7 @@ jr_007_55cb:
     push af
     ld a, [hl]
     push af
-    call Call_007_6b7f
+    call LoadFld_6b7f
     pop af
     ld hl, wPLAN_selection
     and $7f
@@ -3315,9 +3315,9 @@ jr_007_55cb:
     cp b
     jr z, jr_007_5608
 
-    call Call_007_558d
-    call Call_007_690d
-    call Call_007_5504
+    call LoadFld_558d
+    call LoadFld_690d
+    call LoadFld_5504
 
 jr_007_5608:
     pop af
@@ -3325,10 +3325,10 @@ jr_007_5608:
     cp [hl]
     jr z, jr_007_561b
 
-    call Call_007_549f
-    call Call_007_558d
-    call Call_007_690d
-    call Call_007_5504
+    call LoadFld_549f
+    call LoadFld_558d
+    call LoadFld_690d
+    call LoadFld_5504
 
 jr_007_561b:
     ld a, [wJoypad_current_frame]
@@ -3432,7 +3432,7 @@ jr_007_56a3:
     add hl, hl
     ld bc, $ffff
     ld hl, $0150
-    call Call_007_6889
+    call SaveFld_6889
     ld a, [$c8dd]
     and $01
     add $f1
@@ -3448,7 +3448,7 @@ jr_007_56a3:
     pop af
     ld [hl], a
     ld hl, $0151
-    call Call_007_6889
+    call SaveFld_6889
     ld a, $e7
     call Write_gfx_tile
     push af
@@ -3464,13 +3464,13 @@ jr_007_56a3:
     ret
 
 
-Call_007_56e8:
+LoadFld_56e8:
     ld a, e
     cp $70
     jr nz, jr_007_56fd
 
     ld hl, $cacc
-    call Call_007_6dba
+    call LoadFld_6dba
     and $01
     cp $00
     jr nz, jr_007_56fd
@@ -3939,24 +3939,24 @@ jr_007_56fd:
 
 jr_007_58f4:
     ld de, $76d1
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $790d
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7957
-    call Call_007_68dc
-    call Call_007_59de
-    call Call_007_6c8f
+    call LoadFld_68dc
+    call SetFld_59de
+    call ClrFld_6c8f
     ld de, $544e
     ld a, [$c8dd]
-    call Call_007_6d4e
+    call FuncFld_6d4e
     ld de, $56a4
     ld a, [wPLAN_selection]
     ld b, $04
     ld hl, wPLAN_selection
     ld a, [$c90f]
     ld c, a
-    call Call_007_6d2c
-    call Call_007_690d
+    call ReadFld_6d2c
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
@@ -3966,20 +3966,20 @@ jr_007_58f4:
     ld a, [$c8dd]
     call ReadMonsterWord
     ld hl, $0201
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ld hl, $cb13
     ld a, [$c8dd]
     call ReadMonsterWord
     ld hl, $0205
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ld hl, $cb0b
     ld a, [$c8dd]
     call ReadMonsterByte
     ld b, a
     ld hl, $01c5
-    call Call_007_6880
+    call LoadFld_6880
     bit 0, b
     ld a, $e0
     jr z, jr_007_596b
@@ -4013,7 +4013,7 @@ jr_007_597d:
     ld b, a
     ld a, [hl]
     push af
-    call Call_007_6c08
+    call FuncFld_6c08
     pop af
     and $7f
     ld b, a
@@ -4023,8 +4023,8 @@ jr_007_597d:
     cp b
     jr z, jr_007_59a1
 
-    call Call_007_59de
-    call Call_007_690d
+    call SetFld_59de
+    call LoadFld_690d
 
 jr_007_59a1:
     ld a, [wJoypad_current_frame]
@@ -4063,25 +4063,25 @@ jr_007_59dd:
     ret
 
 
-Call_007_59de:
+SetFld_59de:
     ld hl, $cb11
     ld a, [$c8de]
     call ReadMonsterWord
     ld hl, $0201
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ld hl, $cb13
     ld a, [$c8de]
     call ReadMonsterWord
     ld hl, $0205
-    call Call_007_6880
+    call LoadFld_6880
     call FillMemory
     ld hl, $cb0b
     ld a, [$c8de]
     call ReadMonsterByte
     ld b, a
     ld hl, $01c5
-    call Call_007_6880
+    call LoadFld_6880
     bit 0, b
     ld a, $e0
     jr z, jr_007_5a1a
@@ -4131,8 +4131,8 @@ jr_007_5a2c:
 jr_007_5a58:
     call SetupTilemapTransfer
     ld de, $2e07
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ld a, $65
@@ -4237,7 +4237,7 @@ jr_007_5afb:
 jr_007_5afe:
     ld hl, $c90e
     inc [hl]
-    call Call_007_5b1e
+    call SetFld_5b1e
     ret
 
 
@@ -4262,7 +4262,7 @@ jr_007_5b16:
     ret
 
 
-Call_007_5b1e:
+SetFld_5b1e:
     ld hl, $1405
     rst $10
     ld hl, $0103
@@ -4318,15 +4318,15 @@ jr_007_5b38:
     or a
     ret nz
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     ret
 
 
     ld de, $2e07
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
@@ -4336,7 +4336,7 @@ jr_007_5b38:
     or a
     ret nz
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     ret
@@ -4380,8 +4380,8 @@ jr_007_5b38:
     ld hl, $0e03
     call SetupTilemapTransfer
     ld de, $2e07
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
 
 jr_007_5be0:
     ld hl, $c90e
@@ -4489,8 +4489,8 @@ jr_007_5c7e:
     or a
     ret nz
 
-    call Call_007_5b1e
-    call Call_007_6a8f
+    call SetFld_5b1e
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     ret
@@ -4525,11 +4525,11 @@ jr_007_5c7e:
     nop
     sub b
     call WaitDMATransfer
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld de, $704d
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7090
-    call Call_007_68dc
+    call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
     ld a, [wCurrGoldMid]
@@ -4537,15 +4537,15 @@ jr_007_5c7e:
     ld a, [wCurrGoldHi]
     ldh [$d7], a
     ld hl, $002e
-    call Call_007_6880
+    call LoadFld_6880
     call ConvertNumberToText
     ld de, $7a61
-    call Call_007_68dc
-    call Call_007_6c8f
+    call LoadFld_68dc
+    call ClrFld_6c8f
     ld de, $5d43
     ld a, [wOPTN_and_Item_selection]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
@@ -4554,12 +4554,12 @@ jr_007_5c7e:
     ld de, $5d43
     ld hl, wOPTN_and_Item_selection
     ld b, $04
-    call Call_007_6c08
+    call FuncFld_6c08
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_5d16
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     jr jr_007_5d42
@@ -4606,14 +4606,14 @@ jr_007_5d42:
     rst $38
     rst $38
     ld de, $7ae7
-    call Call_007_68dc
-    call Call_007_6c8f
+    call LoadFld_68dc
+    call ClrFld_6c8f
     ld de, $5dab
     ld a, [wTextSpeed]
     ld [wPLAN_selection], a
     ld a, [wPLAN_selection]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
@@ -4622,7 +4622,7 @@ jr_007_5d42:
     ld de, $5dab
     ld hl, wPLAN_selection
     ld b, $08
-    call Call_007_6c6d
+    call FuncFld_6c6d
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_5d8d
@@ -4645,7 +4645,7 @@ jr_007_5d8d:
     ld [wTextSpeed], a   ;c8ee current text speed
     ld a, $59
     call PlaySoundEffect
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
 
@@ -4666,7 +4666,7 @@ jr_007_5daa:
     ld bc, $01d1
     rst $38
     rst $38
-    call Call_007_4469
+    call SetFld_4469
     ld b, $00
     ld a, $00
     push bc
@@ -4743,21 +4743,21 @@ jr_007_5e1f:
     xor a
     ld [$c913], a
     ld de, $7b48
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7b89
-    call Call_007_68dc
-    call Call_007_5e51
-    call Call_007_6c8f
+    call LoadFld_68dc
+    call LoadFld_5e51
+    call ClrFld_6c8f
     ld de, $6045
     ld a, [$c8dd]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
 
 
-Call_007_5e51:
+LoadFld_5e51:
     ld a, [wDebug_main_menu_option]
     cp $ff
     jr z, jr_007_5e61
@@ -4784,35 +4784,35 @@ jr_007_5e72:
     add $f1
     ld b, a
     ld a, [wDebug_main_menu_option]
-    call Call_007_5ec1
+    call CmpFld_5ec1
     ld hl, $c6c5
     ld a, [$c0a1]
     add $f1
     ld b, a
     ld a, [$c0a1]
-    call Call_007_5ec1
+    call CmpFld_5ec1
     ld hl, $c705
     ld a, [$c0a2]
     add $f1
     ld b, a
     ld a, [$c0a2]
-    call Call_007_5ec1
+    call CmpFld_5ec1
     ld hl, $c68d
     ld b, $f1
     ld a, [$c0a3]
-    call Call_007_5ec1
+    call CmpFld_5ec1
     ld hl, $c6cd
     ld b, $f2
     ld a, [$c0a4]
-    call Call_007_5ec1
+    call CmpFld_5ec1
     ld hl, $c70d
     ld b, $f3
     ld a, [$c0a5]
-    call Call_007_5ec1
+    call CmpFld_5ec1
     ret
 
 
-Call_007_5ec1:
+CmpFld_5ec1:
     cp $ff
     jr z, jr_007_5ed4
 
@@ -4856,7 +4856,7 @@ jr_007_5ed4:
     ld a, c
     sub b
     ld b, a
-    call Call_007_6c08
+    call FuncFld_6c08
 
 jr_007_5ef7:
     ld a, [$c8dd]
@@ -4881,22 +4881,22 @@ jr_007_5ef7:
     ld [hl], $ff
     ld [$c0a2], a
     ld hl, wDebug_main_menu_option
-    call Call_007_5f45
-    call Call_007_5f45
+    call ReadFld_5f45
+    call ReadFld_5f45
     ld hl, wDebug_main_menu_option
-    call Call_007_5f45
-    call Call_007_5f45
+    call ReadFld_5f45
+    call ReadFld_5f45
     ld hl, wDebug_main_menu_option
-    call Call_007_5f45
-    call Call_007_5f45
-    call Call_007_5e51
-    call Call_007_690d
+    call ReadFld_5f45
+    call ReadFld_5f45
+    call LoadFld_5e51
+    call LoadFld_690d
     ld hl, $c913
     dec [hl]
     jp Jump_007_6044
 
 
-Call_007_5f45:
+ReadFld_5f45:
     ld a, [hl+]
     ld b, [hl]
     cp b
@@ -4960,7 +4960,7 @@ jr_007_5f64:
     jr nz, jr_007_5fa8
 
     ld de, $7b48
-    call Call_007_68dc
+    call LoadFld_68dc
     jr jr_007_5fbc
 
 jr_007_5fa8:
@@ -4975,11 +4975,11 @@ jr_007_5fa8:
     dec a
     ld [$c8dd], a
     ld de, $6045
-    call Call_007_6ca9
+    call FuncFld_6ca9
 
 jr_007_5fbc:
-    call Call_007_5e51
-    call Call_007_690d
+    call LoadFld_5e51
+    call LoadFld_690d
     ld hl, $c913
     inc [hl]
     jp Jump_007_6044
@@ -4987,13 +4987,13 @@ jr_007_5fbc:
 
 jr_007_5fc9:
     ld a, [$c0a3]
-    call Call_007_604d
+    call CmpFld_604d
     ld [wDebug_main_menu_option], a
     ld a, [$c0a4]
-    call Call_007_604d
+    call CmpFld_604d
     ld [$c0a1], a
     ld a, [$c0a5]
-    call Call_007_604d
+    call CmpFld_604d
     ld [$c0a2], a
     ld a, [wDebug_main_menu_option]
     ld [$ca8e], a
@@ -5046,7 +5046,7 @@ jr_007_6036:
 
 jr_007_6039:
     call UpdateOAMSprites
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
 
@@ -5060,7 +5060,7 @@ Jump_007_6044:
     rst $38
     rst $38
 
-Call_007_604d:
+CmpFld_604d:
     cp $ff
     ret z
 
@@ -5116,8 +5116,8 @@ jr_007_6090:
     ld hl, $0243
     call SetupTilemapTransfer
     ld de, $2e07
-    call Call_007_68dc
-    call Call_007_690d
+    call LoadFld_68dc
+    call LoadFld_690d
     ld a, $09
     ld [$c90e], a
     ret
@@ -5127,38 +5127,38 @@ jr_007_60a5:
     ld a, $5c
     call PlaySoundEffect
     ld de, $7bca
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7c44
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $2e07
-    call Call_007_68dc
+    call LoadFld_68dc
     ld hl, $a002
     call EnableSRAM
     or a
     jr nz, jr_007_6122
 
     ld hl, $0021
-    call Call_007_6880
+    call LoadFld_6880
     ld bc, $0011
     ld a, $e0
     call FillNBytesWithRegA
     ld hl, $0041
-    call Call_007_6880
+    call LoadFld_6880
     ld bc, $0011
     ld a, $e0
     call FillNBytesWithRegA
     ld hl, $0061
-    call Call_007_6880
+    call LoadFld_6880
     ld bc, $0011
     ld a, $e0
     call FillNBytesWithRegA
     ld hl, $0081
-    call Call_007_6880
+    call LoadFld_6880
     ld bc, $0011
     ld a, $e0
     call FillNBytesWithRegA
     ld hl, $0044
-    call Call_007_6880
+    call LoadFld_6880
     ld b, $0a
     ld a, $40
 
@@ -5174,7 +5174,7 @@ jr_007_6107:
     ld [$c822], a
     ld hl, $9400
     ld de, $0a01
-    call Call_007_69b6
+    call LoadFld_69b6
     jp Jump_007_61de
 
 
@@ -5184,9 +5184,9 @@ jr_007_6122:
     ld [$0100], a
     ld de, $a17c
     ld hl, $93c0
-    call Call_007_69ef
+    call SaveFld_69ef
     ei
-    call Call_007_61fd
+    call SetFld_61fd
     ld hl, $a1c7
     call EnableSRAM
     or a
@@ -5202,7 +5202,7 @@ jr_007_6122:
     ei
     ld b, $00
     ld hl, $0084
-    call Call_007_6880
+    call LoadFld_6880
     call CopyHLtoDE
     ld hl, $a1c7
     call EnableSRAM
@@ -5219,7 +5219,7 @@ jr_007_6122:
     ei
     ld b, $00
     ld hl, $008a
-    call Call_007_6880
+    call LoadFld_6880
     call CopyHLtoDE
     ld hl, $a1c7
     call EnableSRAM
@@ -5236,7 +5236,7 @@ jr_007_6122:
     ei
     ld b, $00
     ld hl, $0090
-    call Call_007_6880
+    call LoadFld_6880
     call CopyHLtoDE
     jr jr_007_61ba
 
@@ -5258,14 +5258,14 @@ jr_007_61ba:
     ld c, a
     ld b, $00
     ld hl, $002d
-    call Call_007_6880
+    call LoadFld_6880
     call PrintNumber
     ld hl, $a1f1
     call EnableSRAM
     ld c, a
     ld b, $00
     ld hl, $0030
-    call Call_007_6880
+    call LoadFld_6880
     call PrintNumber
 
 Jump_007_61de:
@@ -5273,20 +5273,20 @@ Jump_007_61de:
     ld [$0100], a
     ld hl, $0207
     call SetupTilemapTransfer
-    call Call_007_6c8f
+    call ClrFld_6c8f
     ld de, $6330
     ld a, [$c8de]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ld hl, $c90e
     inc [hl]
     ret
 
 
-Call_007_61fd:
+SetFld_61fd:
     ld hl, $8da0
     ld b, $18
-    call Call_007_6264
+    call LoadFld_6264
     di
     ld a, $0a
     ld [$0100], a
@@ -5298,7 +5298,7 @@ Call_007_61fd:
     ld d, h
     ld hl, $9400
     ld a, $01
-    call Call_007_6254
+    call FuncFld_6254
     di
     ld a, $0a
     ld [$0100], a
@@ -5310,7 +5310,7 @@ Call_007_61fd:
     ld d, h
     ld hl, $9440
     ld a, $02
-    call Call_007_6254
+    call FuncFld_6254
     di
     ld a, $0a
     ld [$0100], a
@@ -5322,11 +5322,11 @@ Call_007_61fd:
     ld d, h
     ld hl, $9480
     ld a, $03
-    call Call_007_6254
+    call FuncFld_6254
     ret
 
 
-Call_007_6254:
+FuncFld_6254:
     ld b, a
     di
     ld a, $0a
@@ -5338,7 +5338,7 @@ Call_007_6254:
 
     ld b, $20
 
-Call_007_6264:
+LoadFld_6264:
 jr_007_6264:
     ld a, $ff
     call Write_gfx_tile_and_inc_HL
@@ -5352,7 +5352,7 @@ jr_007_6264:
 
 jr_007_6271:
     push bc
-    call Call_007_69ef
+    call SaveFld_69ef
     pop bc
     dec b
     push bc
@@ -5402,7 +5402,7 @@ jr_007_6271:
     ld l, $0b
     ld l, $0c
     ld l, $e5
-    call Call_007_6880
+    call LoadFld_6880
     ld a, $e0
     ld [hl+], a
     ld [hl+], a
@@ -5416,7 +5416,7 @@ jr_007_6271:
     ld a, h
     adc $00
     ld h, a
-    call Call_007_6880
+    call LoadFld_6880
     ld a, $e0
     ld [hl+], a
     ld [hl], a
@@ -5426,7 +5426,7 @@ jr_007_6271:
     ld de, $6330
     ld hl, $c8de
     ld b, $02
-    call Call_007_6c08
+    call FuncFld_6c08
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_630b
@@ -5490,7 +5490,7 @@ jr_007_632f:
     or a
     ret nz
 
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $01
     ld [$c90d], a
     ret
@@ -5519,31 +5519,31 @@ jr_007_6358:
     jr jr_007_637c
 
 jr_007_6374:
-    call Call_007_6385
+    call SetFld_6385
     ld hl, $c90e
     inc [hl]
     ret
 
 
 jr_007_637c:
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $00
     ld [$c90e], a
     ret
 
 
-Call_007_6385:
+SetFld_6385:
     ld hl, $cac2
     ld a, [$c8e0]
     call GetCurrentMonsterPtr
     ld e, l
     ld d, h
     ld hl, $93c0
-    call Call_007_69ef
+    call SaveFld_69ef
     ld de, $7c69
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $7cd7
-    call Call_007_68dc
+    call LoadFld_68dc
     ld hl, $cacc
     ld a, [$c8e0]
     call GetCurrentMonsterPtr
@@ -5551,18 +5551,18 @@ Call_007_6385:
     swap a
     and $03
     ld [$c8df], a
-    call Call_007_6c8f
+    call ClrFld_6c8f
     ld de, $644c
     ld a, [$c8df]
-    call Call_007_6d4e
-    call Call_007_690d
+    call FuncFld_6d4e
+    call LoadFld_690d
     ret
 
 
     ld de, $644c
     ld hl, $c8df
     ld b, $04
-    call Call_007_6c08
+    call FuncFld_6c08
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_007_63fc
@@ -5585,7 +5585,7 @@ jr_007_63d5:
     jr jr_007_644b
 
 jr_007_63f2:
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $00
     ld [$c90e], a
     jr jr_007_644b
@@ -5631,7 +5631,7 @@ jr_007_6420:
     jr jr_007_644b
 
 jr_007_6441:
-    call Call_007_6a8f
+    call SetFld_6a8f
     ld a, $00
     ld [$c90e], a
     jr jr_007_644b
@@ -5712,7 +5712,7 @@ label7_6468:
     ret
 
 
-    call Call_007_6aba
+    call SetFld_6aba
     ld hl, $c90e
     inc [hl]
     ld a, [$cac0]
@@ -5722,26 +5722,26 @@ label7_6468:
     or a
     ret z
 
-    call Call_007_4655
+    call CallFld_4655
     ld a, $08
     ld [$c90e], a
     ret
 
 
-Call_007_64c9:
+SetFld_64c9:
     ld de, $70f7
-    call Call_007_68dc
+    call LoadFld_68dc
     ld de, $71af
-    call Call_007_68dc
-    call Call_007_451e
-    call Call_007_4655
+    call LoadFld_68dc
+    call CallFld_451e
+    call CallFld_4655
     ret
 
 
-    call Call_007_6504
+    call LoadFld_6504
     jr z, jr_007_64e8
 
-    call Call_007_64c9
+    call SetFld_64c9
     ld hl, $c90e
     dec [hl]
 
@@ -5767,7 +5767,7 @@ Jump_007_6503:
     ret
 
 
-Call_007_6504:
+LoadFld_6504:
     ld a, [$c934]
     push af
     ld a, [$c933]
@@ -5826,11 +5826,11 @@ jr_007_654b:
     ret
 
 
-    call Call_007_46ca
+    call CallFld_46ca
     ret
 
 
-    call Call_007_6504
+    call LoadFld_6504
     jr z, jr_007_655e
 
     ld a, $0c
@@ -5861,13 +5861,13 @@ jr_007_6573:
     inc [hl]
 
 Jump_007_6584:
-    call Call_007_66c8
+    call LoadFld_66c8
 
 jr_007_6587:
     ret
 
 
-Call_007_6588:
+LoadFld_6588:
     ld a, [$cac0]
     ld hl, $cb24
     call GetMonsterDataPtr
@@ -5875,34 +5875,34 @@ Call_007_6588:
     or a
     jr nz, jr_007_65f9
 
-    call Call_007_486b
+    call SetFld_486b
     ld de, $737b
-    call Call_007_68dc
-    call Call_007_690d
-    call Call_007_466d
-    call Call_007_4689
+    call LoadFld_68dc
+    call LoadFld_690d
+    call SetFld_466d
+    call SetFld_4689
     ld hl, $c90e
     inc [hl]
     ret
 
 
-    call Call_007_6504
+    call LoadFld_6504
     jr z, jr_007_65b8
 
-    call Call_007_6588
+    call LoadFld_6588
     ld hl, $c90e
     dec [hl]
 
 jr_007_65b8:
-    call Call_007_48bf
+    call LoadFld_48bf
     ret
 
 
-    call Call_007_48e6
+    call SetFld_48e6
     ret
 
 
-    call Call_007_6504
+    call LoadFld_6504
     jr z, jr_007_65cc
 
     ld a, $0d
@@ -5910,7 +5910,7 @@ jr_007_65b8:
     jr jr_007_65cf
 
 jr_007_65cc:
-    call Call_007_4a1e
+    call LoadFld_4a1e
 
 jr_007_65cf:
     ret
@@ -5921,19 +5921,19 @@ jr_007_65cf:
     ret
 
 
-    call Call_007_45ee
-    call Call_007_46d2
-    call Call_007_466d
-    call Call_007_4689
+    call LoadFld_45ee
+    call CallFld_46d2
+    call SetFld_466d
+    call SetFld_4689
     ld a, $05
     ld [$c90e], a
     ret
 
 
-    call Call_007_45ee
-    call Call_007_48f7
-    call Call_007_466d
-    call Call_007_4689
+    call LoadFld_45ee
+    call SetFld_48f7
+    call SetFld_466d
+    call SetFld_4689
     ld a, $09
     ld [$c90e], a
     ret
@@ -5941,9 +5941,9 @@ jr_007_65cf:
 
 Jump_007_65f9:
 jr_007_65f9:
-    call Call_007_6a8f
-    call Call_007_690d
-    call Call_007_6a9e
+    call SetFld_6a8f
+    call LoadFld_690d
+    call SetFld_6a9e
     ld a, [wGameMode]
     or a
     jr z, jr_007_661b
@@ -5954,7 +5954,7 @@ jr_007_65f9:
     rst $10
     ld hl, $1708
     rst $10
-    call Call_007_6625
+    call LoadFld_6625
     ld hl, $0604
     rst $10
 
@@ -5966,7 +5966,7 @@ jr_007_661b:
     ret
 
 
-Call_007_6625:
+LoadFld_6625:
     ld a, [wIsGBC]
     or a
     ret z
@@ -6062,7 +6062,7 @@ jr_007_6658:
     ret
 
 
-Call_007_66a4:
+ReadFld_66a4:
     ld a, [hl]
     add $04
     ld [hl+], a
@@ -6075,7 +6075,7 @@ Call_007_66a4:
     ret
 
 
-Call_007_66b1:
+SaveFld_66b1:
     push hl
     add $10
     ld l, a
@@ -6095,13 +6095,13 @@ Call_007_66b1:
     ret
 
 
-Call_007_66c8:
+LoadFld_66c8:
     ld a, [wGameMode]
     or a
     ret z
 
     ld hl, $caca
-    call Call_007_6dba
+    call LoadFld_6dba
     push af
     ld hl, $ffc3
     ld a, $90
@@ -6119,7 +6119,7 @@ Call_007_66c8:
     push bc
     push hl
     ld hl, $cb0b
-    call Call_007_6dba
+    call LoadFld_6dba
     ld a, [hl]
     pop hl
     pop bc
@@ -6144,13 +6144,13 @@ jr_007_6701:
     ret
 
 
-Call_007_670e:
+LoadFld_670e:
     ld a, [wGameMode]
     or a
     ret z
 
     ld hl, $cad6
-    call Call_007_6dba
+    call LoadFld_6dba
     cp $ff
     ret z
 
@@ -6184,7 +6184,7 @@ jr_007_673b:
     ld hl, $0403
     rst $10
     ld hl, $cad7
-    call Call_007_6dba
+    call LoadFld_6dba
     push af
     ld hl, $ffc3
     ld a, $90
@@ -6217,7 +6217,7 @@ jr_007_676c:
     ret
 
 
-Call_007_6779:
+LoadFld_6779:
     ld a, [$c90d]
     cp $02
     ret nz
@@ -6366,7 +6366,7 @@ jr_007_6850:
     ret
 
 
-Call_007_685d:
+SaveFld_685d:
     push af
     ld a, l
     and $e0
@@ -6382,7 +6382,7 @@ Call_007_685d:
     ret
 
 
-Call_007_686c:
+LoadFld_686c:
     ld a, [$c911]
     add l
     ld l, a
@@ -6397,7 +6397,7 @@ Call_007_686c:
     ret
 
 
-Call_007_6880:
+LoadFld_6880:
     ld a, l
     add $00
     ld l, a
@@ -6407,13 +6407,13 @@ Call_007_6880:
     ret
 
 
-Call_007_6889:
+SaveFld_6889:
     push bc
     ld b, l
     ld a, l
     and $e0
     ld l, a
-    call Call_007_686c
+    call LoadFld_686c
     ld a, b
     and $1f
     jr z, jr_007_689e
@@ -6421,7 +6421,7 @@ Call_007_6889:
     ld b, a
 
 jr_007_6898:
-    call Call_007_685d
+    call SaveFld_685d
     dec b
     jr nz, jr_007_6898
 
@@ -6430,14 +6430,14 @@ jr_007_689e:
     ret
 
 
-Call_007_68a0:
+LoadFld_68a0:
     ld a, [de]
     ld l, a
     inc de
     ld a, [de]
     ld h, a
     inc de
-    call Call_007_6889
+    call SaveFld_6889
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -6474,17 +6474,17 @@ jr_007_68af:
 
 jr_007_68d4:
     call Write_gfx_tile
-    call Call_007_685d
+    call SaveFld_685d
     jr jr_007_68af
 
-Call_007_68dc:
+LoadFld_68dc:
     ld a, [de]
     ld l, a
     inc de
     ld a, [de]
     ld h, a
     inc de
-    call Call_007_6880
+    call LoadFld_6880
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -6519,7 +6519,7 @@ jr_007_690a:
     ld [hl+], a
     jr jr_007_68eb
 
-Call_007_690d:
+LoadFld_690d:
     ld a, [$c911]
     ld l, a
     ld a, [$c912]
@@ -6563,7 +6563,7 @@ jr_007_691d:
     ret
 
 
-Call_007_6942:
+FuncFld_6942:
     ld b, a
     ld de, $0801
     ld a, c
@@ -6579,7 +6579,7 @@ Call_007_6942:
     call SetupVRAMParams
     pop af
     ld de, $c180
-    call Call_007_6de2
+    call SaveFld_6de2
     pop hl
     ld a, [$c827]
     ld c, a
@@ -6619,7 +6619,7 @@ Call_007_6942:
     ret
 
 
-Call_007_69a5:
+LoadFld_69a5:
     ld a, [$c823]
     cp $ff
     jr nz, jr_007_69b6
@@ -6630,7 +6630,7 @@ jr_007_69ac:
     ld a, $04
     ld [$c822], a
 
-Call_007_69b6:
+LoadFld_69b6:
 jr_007_69b6:
     ld a, [$c827]
     ld c, a
@@ -6665,7 +6665,7 @@ jr_007_69b6:
     ret
 
 
-Call_007_69ef:
+SaveFld_69ef:
     push hl
     ld hl, $c180
     call Copy4Bytes
@@ -6708,11 +6708,11 @@ Call_007_69ef:
     ret
 
 
-Call_007_6a3d:
+MaskFld_6a3d:
     and $01
     add $a7
 
-Call_007_6a41:
+FuncFld_6a41:
     ld [$c180], a
     ld a, $f0
     ld [$c181], a
@@ -6754,7 +6754,7 @@ Call_007_6a41:
     ret
 
 
-Call_007_6a8f:
+SetFld_6a8f:
     ld hl, $c500
     ld bc, $0240
 
@@ -6769,7 +6769,7 @@ jr_007_6a95:
     ret
 
 
-Call_007_6a9e:
+SetFld_6a9e:
     ld hl, $9800
     ld bc, $0400
 
@@ -6789,11 +6789,11 @@ label7_6aaf:
     ld a, $00
     call FillNBytesWithRegA
 
-Call_007_6aba:
+SetFld_6aba:
     ld hl, $ffb7
-    call Call_007_66a4
+    call ReadFld_66a4
     ld hl, $ffbb
-    call Call_007_66a4
+    call ReadFld_66a4
     ldh a, [$bb]
     ld l, a
     ld h, $00
@@ -6816,13 +6816,13 @@ Call_007_6aba:
     ld [$c911], a
     ld a, h
     ld [$c912], a
-    call Call_007_6a8f
-    call Call_007_690d
-    call Call_007_6a9e
+    call SetFld_6a8f
+    call LoadFld_690d
+    call SetFld_6a9e
     ld de, $2e0d
     ld hl, $9000
     call WaitDMATransfer
-    call Call_007_6c8f
+    call ClrFld_6c8f
     ld hl, $170a
     rst $10
     ld hl, $c90d
@@ -6830,8 +6830,8 @@ Call_007_6aba:
     ret
 
 label7_6b04:
-    call Call_007_6a8f
-    call Call_007_690d
+    call SetFld_6a8f
+    call LoadFld_690d
     ld hl, $170a
     rst $10
     ld hl, $0103
@@ -6881,7 +6881,7 @@ label7_6b04:
     ret
 
 
-Call_007_6b7f:
+LoadFld_6b7f:
     ld a, c
     ld [$c8e1], a
     inc de
@@ -6973,7 +6973,7 @@ jr_007_6be6:
     push bc
     push de
     push hl
-    call Call_007_6cf3
+    call LoadFld_6cf3
     pop hl
     pop de
     pop bc
@@ -6997,7 +6997,7 @@ jr_007_6be6:
     inc a
     ld b, a
 
-Call_007_6c08:
+FuncFld_6c08:
 jr_007_6c08:
     res 7, [hl]
     ld a, [wJoypad_Current]
@@ -7045,11 +7045,11 @@ jr_007_6c31:
 
 jr_007_6c3a:
     ld a, [hl]
-    call Call_007_6c94
+    call FuncFld_6c94
     ret
 
 
-Call_007_6c3f:
+FuncFld_6c3f:
     res 7, [hl]
     ld a, [wJoypad_Current]
     bit 6, a
@@ -7087,11 +7087,11 @@ jr_007_6c5f:
 
 jr_007_6c68:
     ld a, [hl]
-    call Call_007_6c94
+    call FuncFld_6c94
     ret
 
 
-Call_007_6c6d:
+FuncFld_6c6d:
     res 7, [hl]
     ld a, [wJoypad_Current]
     bit 5, a
@@ -7119,13 +7119,13 @@ jr_007_6c7f:
     ld a, $00
     jr jr_007_6c28
 
-Call_007_6c8f:
+ClrFld_6c8f:
     xor a
     ld [$c914], a
     ret
 
 
-Call_007_6c94:
+FuncFld_6c94:
     ld c, a
     bit 7, a
     jr nz, jr_007_6ca9
@@ -7140,7 +7140,7 @@ Call_007_6c94:
     ld a, c
     ret nz
 
-Call_007_6ca9:
+FuncFld_6ca9:
 jr_007_6ca9:
     ld c, a
     ld b, $00
@@ -7162,7 +7162,7 @@ jr_007_6cac:
     ldh [$d6], a
     push de
     push bc
-    call Call_007_6889
+    call SaveFld_6889
     pop bc
     pop de
     ld a, c
@@ -7200,7 +7200,7 @@ jr_007_6cdc:
     inc b
     jr jr_007_6cac
 
-Call_007_6cf3:
+LoadFld_6cf3:
     ld a, b
     cp c
     ret nc
@@ -7226,7 +7226,7 @@ Call_007_6cf3:
     ldh [$d6], a
     push de
     push bc
-    call Call_007_6889
+    call SaveFld_6889
     pop bc
     pop de
     ld a, c
@@ -7249,7 +7249,7 @@ Call_007_6cf3:
     ret
 
 
-Call_007_6d2c:
+ReadFld_6d2c:
     ld a, [hl+]
     push af
     push hl
@@ -7284,7 +7284,7 @@ jr_007_6d45:
 jr_007_6d4d:
     pop af
 
-Call_007_6d4e:
+FuncFld_6d4e:
     ld c, a
     add a
     add e
@@ -7303,7 +7303,7 @@ Call_007_6d4e:
     ldh [$d6], a
     push de
     push bc
-    call Call_007_6889
+    call SaveFld_6889
     pop bc
     pop de
     ld a, $e9
@@ -7334,7 +7334,7 @@ jr_007_6d79:
     ret
 
 
-Call_007_6d8b:
+LoadFld_6d8b:
     ld a, [wGameState]
     bit 1, a
     jr z, jr_007_6da2
@@ -7357,7 +7357,7 @@ jr_007_6da2:
     ret
 
 
-Call_007_6da8:
+LoadFld_6da8:
     ld a, [wGameState]
     bit 1, a
     jr z, jr_007_6db3
@@ -7372,7 +7372,7 @@ jr_007_6db3:
     ret
 
 
-Call_007_6dba:
+LoadFld_6dba:
     ld a, [wGameState]
     bit 1, a
     jr z, jr_007_6dc5
@@ -7388,7 +7388,7 @@ jr_007_6dc5:
     ret
 
 
-Call_007_6dcd:
+LoadFld_6dcd:
     ld a, [wGameState]
     bit 1, a
     jr z, jr_007_6dd8
@@ -7406,7 +7406,7 @@ jr_007_6dd8:
     ret
 
 
-Call_007_6de2:
+SaveFld_6de2:
     push af
 
 jr_007_6de3:
@@ -7933,10 +7933,10 @@ jr_007_6f8f:
 jr_007_6fe0:
     ld [hl], $3a
 
-Call_007_6fe2:
+SetFld_6fe2:
     ld de, $0064
     push bc
-    call Call_007_7023
+    call SaveFld_7023
     pop bc
     or a
     jr z, jr_007_7007
@@ -7944,20 +7944,20 @@ Call_007_6fe2:
     ld de, $0064
 
 jr_007_6ff0:
-    call Call_007_7023
-    call Call_007_7038
-    call Call_007_703e
+    call SaveFld_7023
+    call CalcFld_7038
+    call SaveFld_703e
     ld de, $000a
-    call Call_007_7023
-    call Call_007_7038
-    call Call_007_703e
+    call SaveFld_7023
+    call CalcFld_7038
+    call SaveFld_703e
     jr jr_007_701e
 
-Call_007_7007:
+SetFld_7007:
 jr_007_7007:
     ld de, $000a
     push bc
-    call Call_007_7023
+    call SaveFld_7023
     pop bc
     or a
 
@@ -7965,17 +7965,17 @@ jr_007_7010:
     jr z, jr_007_701e
 
     ld de, $000a
-    call Call_007_7023
-    call Call_007_7038
-    call Call_007_703e
+    call SaveFld_7023
+    call CalcFld_7038
+    call SaveFld_703e
 
 jr_007_701e:
     ld a, c
-    call Call_007_7038
+    call CalcFld_7038
     ret
 
 
-Call_007_7023:
+SaveFld_7023:
     push hl
     ld h, $ff
 
@@ -8000,13 +8000,13 @@ jr_007_7026:
     ret
 
 
-Call_007_7038:
+CalcFld_7038:
     add $f0
     call Write_gfx_tile
     ret
 
 
-Call_007_703e:
+SaveFld_703e:
     push af
     ld a, l
     and $e0
@@ -11117,7 +11117,7 @@ jr_007_7ea0:
     add b
     ld [bc], a
 
-Call_007_7f58:
+DispFld_7f58:
     rst $38
     rst $38
     rst $38

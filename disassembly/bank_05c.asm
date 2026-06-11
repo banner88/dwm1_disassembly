@@ -5,24 +5,28 @@
 
 SECTION "ROM Bank $05c", ROMX[$4000], BANK[$5c]
 
-    ld e, h
-    dec b
-    ld b, b
-    adc l
-    ld b, b
+    db $5C ; Bank number
+
+    ; Cross-bank dispatch table (2 entries)
+    ; Called via: ld hl, $5CXX / rst $10
+    dw $4005                          ; Entry 0
+    dw $408D                          ; Entry 1
+
+; --- Dispatch entry 0 ($4005) ---
+DispatchEntry_5C_0:
     ld a, [$dd60]
     or a
     ret z
 
     ld de, $4071
-    call Call_05c_40fc
+    call HramB5c_40fc
     ld a, [$dd68]
     or a
     jr z, jr_05c_4021
 
     ld a, [$daa4]
 
-Call_05c_4019:
+CmpB5c_4019:
     cp $03
     jr z, jr_05c_4021
 
@@ -194,7 +198,7 @@ jr_05c_40f8:
     add b
     nop
 
-Call_05c_40fc:
+HramB5c_40fc:
     ldh a, [$cb]
     cp $28
     jr nc, jr_05c_414c
@@ -4207,7 +4211,7 @@ jr_05c_5383:
     dec de
     jr nz, @-$16
 
-    call z, Call_05c_601b
+    call z, JmpB5c_601b
     add sp, $2c
     dec de
     ld b, b
@@ -4472,7 +4476,7 @@ jr_05c_547e:
     db $d4, $d4, $19
     nop
     db $f4
-    call nc, Call_05c_4019
+    call nc, CmpB5c_4019
     db $d4, $24, $19
 
 jr_05c_54b0:
@@ -6181,13 +6185,13 @@ jr_05c_5c29:
     call nc, $6007
     ret c
 
-    call z, Call_05c_6008
+    call z, HramB5c_6008
     ret nc
 
     call nc, $6009
     ret nc
 
-    call z, Call_05c_600a
+    call z, SetB5c_600a
     ldh a, [$eb]
     rlca
     ld h, b
@@ -6691,7 +6695,7 @@ jr_05c_5d41:
     ld e, a
     ld l, e
     ld e, a
-    call nz, Call_000_3d5f
+    call nz, MenuCursorUpdate
     ld h, b
     xor [hl]
     ld h, b
@@ -6971,10 +6975,10 @@ jr_05c_5fe9:
     ldh a, [rP1]
     stop
 
-Call_05c_6008:
+HramB5c_6008:
     ldh a, [$08]
 
-Call_05c_600a:
+SetB5c_600a:
     ld de, $d000
 
 Jump_05c_600d:
@@ -6996,7 +7000,7 @@ Jump_05c_600e:
     rst $30
     ld a, [de]
 
-Call_05c_601b:
+JmpB5c_601b:
     jr nz, @-$2e
 
 jr_05c_601d:
@@ -11596,7 +11600,7 @@ jr_05c_74b2:
     ld [de], a
     jr nz, @-$16
 
-    call nz, Call_000_200e
+    call nz, StoreDigitB
     add sp, -$44
     rrca
     jr nz, @-$0e
@@ -11659,7 +11663,7 @@ jr_05c_7508:
     ld [de], a
     jr nz, jr_05c_7508
 
-    call z, Call_000_200e
+    call z, StoreDigitB
     add sp, -$3c
     rrca
     nop
@@ -11789,13 +11793,13 @@ jr_05c_75ae:
     jr nz, jr_05c_75ae
 
 jr_05c_75be:
-    call nc, Call_000_2006
+    call nc, PrintAndAdvance
     ldh a, [$cc]
     rlca
     jr nz, jr_05c_75be
 
 jr_05c_75c6:
-    call nz, Call_000_200b
+    call nz, StoreDigitC
     ld hl, sp-$44
     inc c
     jr nz, jr_05c_75c6
@@ -11907,7 +11911,7 @@ jr_05c_7638:
     rla
     jr nz, @-$06
 
-    call nc, Call_000_200c
+    call nc, GetUpperDigit
     ld hl, sp+$0c
     add hl, de
     nop
@@ -11915,7 +11919,7 @@ jr_05c_7638:
     dec de
     jr nz, @-$06
 
-    call z, Call_000_200b
+    call z, StoreDigitC
     add b
     ld hl, sp-$28
     inc c
@@ -12042,7 +12046,7 @@ jr_05c_76ea:
     dec c
     jr nz, jr_05c_76ea
 
-    call c, Call_000_200e
+    call c, StoreDigitB
     add b
     ld hl, sp+$20
     inc d

@@ -86,10 +86,10 @@ labelf_402f:
     ld [$d8d6], a
     call LoadScriptRoomData
     push bc
-    call Call_00f_40e7
+    call LoadBf_40e7
     pop bc
 
-Call_00f_4075:
+LoadBf_4075:
     ld a, [bc]
     ld l, a
     inc bc
@@ -119,7 +119,7 @@ Call_00f_4075:
     ld b, a
 
 jr_00f_409a:
-    call Call_00f_40da
+    call LoadBf_40da
     dec b
     jr nz, jr_00f_409a
 
@@ -161,10 +161,10 @@ jr_00f_40a9:
 
 jr_00f_40d2:
     call Write_gfx_tile
-    call Call_00f_40da
+    call LoadBf_40da
     jr jr_00f_40a9
 
-Call_00f_40da:
+LoadBf_40da:
     ld a, l
     and $e0
     push af
@@ -178,7 +178,7 @@ Call_00f_40da:
     ret
 
 
-Call_00f_40e7:
+LoadBf_40e7:
     ld a, [bc]
     ld l, a
     inc bc
@@ -260,7 +260,7 @@ labelf_4110:
     ld [$d8d6], a
     call LoadScriptRoomData
     push bc
-    call Call_00f_4171
+    call LoadBf_4171
     pop bc
     ld a, [wIsGBC]
     or a
@@ -271,7 +271,7 @@ labelf_4110:
     ld a, $01
     ldh [rVBK], a
     ei
-    call Call_00f_4075
+    call LoadBf_4075
     di
     call WaitVRAM
     ld a, $00
@@ -280,7 +280,7 @@ labelf_4110:
     ret
 
 
-Call_00f_4171:
+LoadBf_4171:
     ld a, [bc]
     ld l, a
     inc bc
@@ -310,7 +310,7 @@ jr_00f_4178:
     jr jr_00f_4177
 
 jr_00f_418d:
-    call Call_00f_4195
+    call SaveBf_4195
     inc hl
     jr jr_00f_4178
 
@@ -319,7 +319,7 @@ jr_00f_4193:
     ret
 
 
-Call_00f_4195:
+SaveBf_4195:
     push hl
     srl h
     rr l

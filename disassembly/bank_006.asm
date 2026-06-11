@@ -49,7 +49,7 @@ jr_006_402b:
     dec hl
     cp $ff
     push hl
-    call nz, Call_006_4043
+    call nz, LoadMapS_4043
     pop hl
     ld a, l
     add $20
@@ -59,7 +59,7 @@ jr_006_402b:
     ld h, a
     jr jr_006_402b
 
-Call_006_4043:
+LoadMapS_4043:
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -179,7 +179,7 @@ jr_006_40ae:
     jp nz, Jump_006_40fd
 
     set 0, [hl]
-    call Call_006_4100
+    call HramMapS_4100
     ld a, c
     sub e
     ld c, a
@@ -207,7 +207,7 @@ jr_006_40fd:
     jp Jump_006_4a48
 
 
-Call_006_4100:
+HramMapS_4100:
     ldh a, [$d5]
     add $08
     ld l, a
@@ -256,7 +256,7 @@ Call_006_4100:
     jp nz, Jump_006_416a
 
     set 0, [hl]
-    call Call_006_416d
+    call HramMapS_416d
     ld a, c
     sub e
     ld c, a
@@ -284,7 +284,7 @@ jr_006_416a:
     jp Jump_006_4a48
 
 
-Call_006_416d:
+HramMapS_416d:
     ldh a, [$d5]
     add $08
     ld l, a
@@ -356,7 +356,7 @@ Jump_006_41c3:
     jp nz, Jump_006_41f7
 
     set 0, [hl]
-    call Call_006_41fa
+    call HramMapS_41fa
     ld a, c
     sub e
     ld c, a
@@ -384,7 +384,7 @@ jr_006_41f7:
     jp Jump_006_4a48
 
 
-Call_006_41fa:
+HramMapS_41fa:
     ldh a, [$d5]
     add $08
     ld l, a
@@ -481,7 +481,7 @@ Call_006_41fa:
     jp nz, Jump_006_42b2
 
     set 0, [hl]
-    call Call_006_42b5
+    call HramMapS_42b5
     ld a, c
     sub e
     ld c, a
@@ -509,7 +509,7 @@ jr_006_42b2:
     jp Jump_006_4a48
 
 
-Call_006_42b5:
+HramMapS_42b5:
     ldh a, [$d5]
     add $08
     ld l, a
@@ -632,7 +632,7 @@ jr_006_433c:
     jp nz, Jump_006_438b
 
     set 0, [hl]
-    call Call_006_438e
+    call HramMapS_438e
     ld a, c
     sub e
     ld c, a
@@ -660,7 +660,7 @@ jr_006_438b:
     jp Jump_006_4a48
 
 
-Call_006_438e:
+HramMapS_438e:
     ldh a, [$d5]
     add $08
     ld l, a
@@ -711,7 +711,7 @@ Call_006_438e:
     jp nz, Jump_006_43fa
 
     set 0, [hl]
-    call Call_006_43fd
+    call HramMapS_43fd
     ld a, c
     sub e
     ld c, a
@@ -739,7 +739,7 @@ jr_006_43fa:
     jp Jump_006_4a48
 
 
-Call_006_43fd:
+HramMapS_43fd:
     ldh a, [$d5]
     add $08
     ld l, a
@@ -789,7 +789,7 @@ Call_006_43fd:
     jp nz, Jump_006_446a
 
     set 0, [hl]
-    call Call_006_446d
+    call HramMapS_446d
     ld a, c
     sub e
     ld c, a
@@ -816,7 +816,7 @@ jr_006_446a:
     jp Jump_006_4a48
 
 
-Call_006_446d:
+HramMapS_446d:
     ldh a, [$d5]
     add $08
     ld l, a
@@ -920,14 +920,14 @@ Jump_006_448f:
     jp nz, Jump_006_4540
 
     set 0, [hl]
-    call Call_006_4543
+    call HramMapS_4543
     cp $00
     jr z, jr_006_4540
 
     cp $02
     jr z, jr_006_4524
 
-    call Call_006_457d
+    call HramMapS_457d
     ldh a, [$d5]
     add $07
     ld l, a
@@ -962,7 +962,7 @@ jr_006_4540:
     jp Jump_006_4a48
 
 
-Call_006_4543:
+HramMapS_4543:
     ldh a, [$d5]
     add $06
     ld l, a
@@ -1000,7 +1000,7 @@ Call_006_4543:
     jp Jump_006_472e
 
 
-Call_006_457d:
+HramMapS_457d:
     ldh a, [$d5]
     add $18
     ld l, a
@@ -1012,7 +1012,7 @@ Call_006_457d:
     ld e, a
     ldh a, [$93]
     ld d, a
-    call Call_006_467c
+    call ReadMapS_467c
     jr nz, jr_006_45ae
 
     ldh a, [$d5]
@@ -1026,7 +1026,7 @@ Call_006_457d:
     ld e, a
     ldh a, [$96]
     ld d, a
-    call Call_006_467c
+    call ReadMapS_467c
     jp z, Jump_006_463f
 
 jr_006_45ae:
@@ -1041,7 +1041,7 @@ jr_006_45ae:
     ld e, a
     ldh a, [$93]
     ld d, a
-    call Call_006_467c
+    call ReadMapS_467c
     jr nz, jr_006_45de
 
     ldh a, [$d5]
@@ -1055,7 +1055,7 @@ jr_006_45ae:
     ld e, a
     ldh a, [$96]
     ld d, a
-    call Call_006_467c
+    call ReadMapS_467c
     jr z, jr_006_463f
 
 jr_006_45de:
@@ -1070,7 +1070,7 @@ jr_006_45de:
     ld e, a
     ldh a, [$93]
     ld d, a
-    call Call_006_467c
+    call ReadMapS_467c
     jr nz, jr_006_460e
 
     ldh a, [$d5]
@@ -1084,7 +1084,7 @@ jr_006_45de:
     ld e, a
     ldh a, [$96]
     ld d, a
-    call Call_006_467c
+    call ReadMapS_467c
     jr z, jr_006_463f
 
 jr_006_460e:
@@ -1099,7 +1099,7 @@ jr_006_460e:
     ld e, a
     ldh a, [$93]
     ld d, a
-    call Call_006_467c
+    call ReadMapS_467c
     jr nz, jr_006_463e
 
     ldh a, [$d5]
@@ -1113,7 +1113,7 @@ jr_006_460e:
     ld e, a
     ldh a, [$96]
     ld d, a
-    call Call_006_467c
+    call ReadMapS_467c
     jr z, jr_006_463f
 
 jr_006_463e:
@@ -1157,7 +1157,7 @@ jr_006_463f:
     ret
 
 
-Call_006_467c:
+ReadMapS_467c:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -1217,7 +1217,7 @@ Call_006_467c:
     jp nz, Jump_006_46f1
 
     set 0, [hl]
-    call Call_006_46f4
+    call HramMapS_46f4
     cp $00
     jr z, jr_006_46f1
 
@@ -1244,7 +1244,7 @@ jr_006_46f1:
     jp Jump_006_4a48
 
 
-Call_006_46f4:
+HramMapS_46f4:
     ldh a, [$d5]
     add $06
     ld l, a
@@ -2068,11 +2068,11 @@ jr_006_4b40:
     ld [hl+], a
     ldh a, [$96]
     ld [hl+], a
-    call Call_006_4b58
+    call HramMapS_4b58
     ret
 
 
-Call_006_4b58:
+HramMapS_4b58:
     ldh a, [$db]
     and $0f
     cp $08
@@ -2083,7 +2083,7 @@ Call_006_4b58:
     cp $08
     jr nz, jr_006_4b89
 
-    call Call_006_4ba6
+    call HramMapS_4ba6
     ret
 
 
@@ -2095,7 +2095,7 @@ jr_006_4b6c:
     ld a, [hl]
     adc $00
     ld [hl], a
-    call Call_006_4ba6
+    call HramMapS_4ba6
     ld hl, $ffdb
     ld a, [hl]
     sub $10
@@ -2103,7 +2103,7 @@ jr_006_4b6c:
     ld a, [hl]
     sbc $00
     ld [hl], a
-    call Call_006_4ba6
+    call HramMapS_4ba6
     ret
 
 
@@ -2115,7 +2115,7 @@ jr_006_4b89:
     ld a, [hl]
     adc $00
     ld [hl], a
-    call Call_006_4ba6
+    call HramMapS_4ba6
     ld hl, $ffdd
     ld a, [hl]
     sub $10
@@ -2123,11 +2123,11 @@ jr_006_4b89:
     ld a, [hl]
     sbc $00
     ld [hl], a
-    call Call_006_4ba6
+    call HramMapS_4ba6
     ret
 
 
-Call_006_4ba6:
+HramMapS_4ba6:
     ldh a, [$db]
     ld l, a
     ldh a, [$dc]
@@ -2170,7 +2170,7 @@ jr_006_4bd3:
     cp $4d
     jr z, jr_006_4be4
 
-    call Call_006_4bf0
+    call SaveMapS_4bf0
 
 jr_006_4be4:
     ld a, l
@@ -2185,7 +2185,7 @@ jr_006_4be4:
     ret
 
 
-Call_006_4bf0:
+SaveMapS_4bf0:
     push hl
     push bc
     push de
@@ -2212,7 +2212,7 @@ Call_006_4bf0:
     cp $08
     jr nz, jr_006_4c37
 
-    call Call_006_4c72
+    call SwapMapS_4c72
     jr nz, jr_006_4c6e
 
     jr jr_006_4c55
@@ -2226,7 +2226,7 @@ jr_006_4c17:
     ld a, d
     adc $00
     ld d, a
-    call Call_006_4c72
+    call SwapMapS_4c72
     pop de
     pop hl
     jr z, jr_006_4c55
@@ -2237,7 +2237,7 @@ jr_006_4c17:
     ld a, d
     adc $ff
     ld d, a
-    call Call_006_4c72
+    call SwapMapS_4c72
     jr nz, jr_006_4c6e
 
     jr jr_006_4c55
@@ -2251,7 +2251,7 @@ jr_006_4c37:
     ld a, h
     adc $00
     ld h, a
-    call Call_006_4c72
+    call SwapMapS_4c72
     pop de
     pop hl
     jr z, jr_006_4c55
@@ -2262,7 +2262,7 @@ jr_006_4c37:
     ld a, h
     adc $ff
     ld h, a
-    call Call_006_4c72
+    call SwapMapS_4c72
     jr nz, jr_006_4c6e
 
 jr_006_4c55:
@@ -2292,7 +2292,7 @@ jr_006_4c6e:
     ret
 
 
-Call_006_4c72:
+SwapMapS_4c72:
     swap d
     swap e
     ld a, d
@@ -2401,7 +2401,7 @@ jr_006_4ced:
     dec de
     cp $ff
     push de
-    call nz, Call_006_4d0a
+    call nz, SaveMapS_4d0a
     pop de
 
 jr_006_4cff:
@@ -2416,7 +2416,7 @@ jr_006_4cff:
     ret
 
 
-Call_006_4d0a:
+SaveMapS_4d0a:
     push bc
     push de
     ld a, e
@@ -3086,7 +3086,7 @@ Jump_006_4faa:
     push hl
     push bc
     push de
-    call Call_006_50d2
+    call SetMapS_50d2
     pop de
     jp z, Jump_006_507c
 
@@ -3221,35 +3221,35 @@ jr_006_5031:
     cp $ff
     jr z, jr_006_507c
 
-    call Call_006_50c0
+    call SaveMapS_50c0
     jr nz, jr_006_507c
 
     ld a, [hl]
     cp $ff
     jp z, Jump_006_50a6
 
-    call Call_006_50c0
+    call SaveMapS_50c0
     jr nz, jr_006_507c
 
     ld a, [hl]
     cp $ff
     jp z, Jump_006_50b5
 
-    call Call_006_50c0
+    call SaveMapS_50c0
     jr nz, jr_006_507c
 
     ld a, [hl]
     cp $ff
     jp z, Jump_006_50b5
 
-    call Call_006_50c0
+    call SaveMapS_50c0
     jr nz, jr_006_507c
 
     ld a, [hl]
     cp $ff
     jp z, Jump_006_50b5
 
-    call Call_006_50c0
+    call SaveMapS_50c0
     jr nz, jr_006_507c
 
     jp Jump_006_50b5
@@ -3317,15 +3317,15 @@ Jump_006_50b5:
     ret
 
 
-Call_006_50c0:
+SaveMapS_50c0:
     push de
-    call Call_006_50c7
+    call FuncMapS_50c7
     pop de
     inc hl
     ret
 
 
-Call_006_50c7:
+FuncMapS_50c7:
     ld b, $08
 
 jr_006_50c9:
@@ -3341,7 +3341,7 @@ jr_006_50c9:
     ret
 
 
-Call_006_50d2:
+SetMapS_50d2:
     ld de, $c0d8
     ld b, $28
 
@@ -4726,7 +4726,7 @@ jr_006_5657:
     rst $38
     rst $38
 
-Call_006_566b:
+DispMapS_566b:
     rst $38
     rst $38
     rst $38
@@ -7334,7 +7334,7 @@ jr_006_60e7:
     ldh [$c1], a
     ld a, h
     ldh [$c2], a
-    call Call_006_62b7
+    call LoadMapS_62b7
     ld a, $59
     call PlaySoundEffect
     jp Jump_006_6284
@@ -7583,14 +7583,14 @@ jr_006_6284:
     nop
 
 Jump_006_6295:
-    call Call_006_62a0
+    call SetMapS_62a0
     ld hl, $0901
     rst $10
-    call Call_006_62a0
+    call SetMapS_62a0
     ret
 
 
-Call_006_62a0:
+SetMapS_62a0:
     ld hl, $c905
     ld de, $c876
     ld b, $08
@@ -7614,7 +7614,7 @@ Jump_006_62b2:
     ret
 
 
-Call_006_62b7:
+LoadMapS_62b7:
     ld a, $80
     ldh [$b6], a
     ld hl, $9c00
@@ -7691,7 +7691,7 @@ Jump_006_62f6:
     ld a, [wScreenIndex]
     dec a
     ld [wScreenIndex], a
-    call Call_006_66e5
+    call LoadMapS_66e5
     ld hl, $0b03
     rst $10
     ld a, $13
@@ -7777,7 +7777,7 @@ jr_006_638d:
     ld e, a
     ld a, d
 
-Call_006_6398:
+FuncMapS_6398:
     adc $00
     ld d, a
     dec b
@@ -7841,7 +7841,7 @@ jr_006_63e0:
 
     ld hl, wGameState
     res 2, [hl]
-    call Call_006_66f0
+    call LoadMapS_66f0
     ld b, $31
 
 jr_006_63f2:
@@ -7915,7 +7915,7 @@ jr_006_6427:
     ld a, [wScreenIndex]
     inc a
     ld [wScreenIndex], a
-    call Call_006_66e5
+    call LoadMapS_66e5
     ld hl, $0b03
     rst $10
     xor a
@@ -8063,7 +8063,7 @@ jr_006_64f3:
     ld a, [wScreenIndex]
     sub $04
     ld [wScreenIndex], a
-    call Call_006_66e5
+    call LoadMapS_66e5
     ld hl, $0b03
     rst $10
     ld a, $0f
@@ -8206,7 +8206,7 @@ jr_006_65b4:
     ld a, [wScreenIndex]
     add $04
     ld [wScreenIndex], a
-    call Call_006_66e5
+    call LoadMapS_66e5
     ld hl, $0b03
     rst $10
     xor a
@@ -8367,15 +8367,15 @@ jr_006_66c2:
     ret
 
 
-Call_006_66e5:
+LoadMapS_66e5:
     ld a, $80
     ldh [$b6], a
     ld hl, $9c00
-    call Call_006_671f
+    call SaveMapS_671f
     ret
 
 
-Call_006_66f0:
+LoadMapS_66f0:
     ld a, $ff
     ldh [$b6], a
     ldh a, [$bb]
@@ -8406,13 +8406,13 @@ Call_006_66f0:
     adc $02
     ld h, a
     res 2, h
-    call Call_006_671f
+    call SaveMapS_671f
     ret
 
 
-Call_006_671f:
+SaveMapS_671f:
     push hl
-    call Call_006_6771
+    call SetMapS_6771
     pop hl
     ld a, [wIsGBC]
     or a
@@ -8475,7 +8475,7 @@ jr_006_6737:
     ret
 
 
-Call_006_6771:
+SetMapS_6771:
     ld de, $c1c0
     ld c, $02
 
@@ -8526,14 +8526,14 @@ jr_006_6779:
 
 Jump_006_67a9:
     ld hl, $ffb7
-    call Call_006_67e3
+    call ReadMapS_67e3
     ld hl, $ffbb
-    call Call_006_67e3
+    call ReadMapS_67e3
     ld a, [$c915]
     rst $00
     ld b, e
     ld l, b
-    call nc, Call_000_2f68
+    call nc, MenuCalcPosition
     ld l, c
     ld a, [hl+]
     ld l, b
@@ -8572,7 +8572,7 @@ Jump_006_67a9:
     ld a, l
     ld l, e
 
-Call_006_67e3:
+ReadMapS_67e3:
     ld a, [hl]
     add $04
     ld [hl+], a
@@ -8585,7 +8585,7 @@ Call_006_67e3:
     ret
 
 
-Call_006_67f0:
+SaveMapS_67f0:
     push af
     ld a, l
     and $e0
@@ -8620,9 +8620,9 @@ jr_006_6819:
     ld hl, $c915
     inc [hl]
     ld hl, $0020
-    call Call_006_682f
-    call Call_006_67f0
-    call Call_000_0ca0
+    call LoadMapS_682f
+    call SaveMapS_67f0
+    call StoreCursorPos
     ret
 
 
@@ -8631,7 +8631,7 @@ jr_006_6819:
     ret
 
 
-Call_006_682f:
+LoadMapS_682f:
     ld a, [$c919]
     add l
     ld l, a
@@ -8712,9 +8712,9 @@ jr_006_68a4:
 
 jr_006_68a7:
     ld hl, $ffb7
-    call Call_006_6957
+    call ReadMapS_6957
     ld hl, $ffbb
-    call Call_006_6957
+    call ReadMapS_6957
     ldh a, [$bb]
     ld l, a
     ld h, $00
@@ -8746,20 +8746,20 @@ jr_006_68a7:
     ld h, a
     ld bc, $0000
     ld de, $c100
-    call Call_006_690a
+    call LoadMapS_690a
     ld bc, $0020
     ld de, $c114
-    call Call_006_690a
+    call LoadMapS_690a
     ld bc, $0040
     ld de, $c128
-    call Call_006_690a
+    call LoadMapS_690a
     ld bc, $0060
     ld de, $c13c
-    call Call_006_690a
+    call LoadMapS_690a
     ld bc, $0080
     ld de, $c150
 
-Call_006_690a:
+LoadMapS_690a:
     ld a, [$c919]
     ld l, a
     ld a, [$c91a]
@@ -8781,7 +8781,7 @@ jr_006_6920:
     ei
     ld [de], a
     inc de
-    call Call_006_67f0
+    call SaveMapS_67f0
     dec b
     jr nz, jr_006_6920
 
@@ -8791,31 +8791,31 @@ jr_006_6920:
     ld hl, $c915
     inc [hl]
     ld hl, $0040
-    call Call_006_682f
+    call LoadMapS_682f
 
-Call_006_6939:
+LoadMapS_6939:
 jr_006_6939:
     ld a, $fe
     call Write_gfx_tile
-    call Call_006_67f0
+    call SaveMapS_67f0
     ld b, $12
     ld a, $e0
-    call Call_006_694d
+    call CallMapS_694d
     ld a, $ff
     jp Write_gfx_tile
 
 
-Call_006_694d:
+CallMapS_694d:
 jr_006_694d:
     call Write_gfx_tile
-    call Call_006_67f0
+    call SaveMapS_67f0
     dec b
     jr nz, jr_006_694d
 
     ret
 
 
-Call_006_6957:
+ReadMapS_6957:
     ld a, [hl]
     add $04
     ld [hl+], a
@@ -8831,10 +8831,10 @@ Call_006_6957:
     ld hl, $c915
     inc [hl]
     ld hl, $0020
-    call Call_006_682f
-    call Call_006_6939
+    call LoadMapS_682f
+    call LoadMapS_6939
     ld hl, $0060
-    call Call_006_682f
+    call LoadMapS_682f
     jr jr_006_6939
 
     ld hl, $c915
@@ -8845,23 +8845,23 @@ Call_006_6957:
     ld h, a
     ld a, $fa
     call Write_gfx_tile
-    call Call_006_67f0
+    call SaveMapS_67f0
     ld b, $12
     ld a, $ef
-    call Call_006_694d
+    call CallMapS_694d
     ld a, $fb
     call Write_gfx_tile
     ld hl, $0080
-    call Call_006_682f
+    call LoadMapS_682f
     ld a, $fc
     call Write_gfx_tile
-    call Call_006_67f0
+    call SaveMapS_67f0
     ld b, $12
     ld a, $ee
-    call Call_006_694d
+    call CallMapS_694d
     ld a, $fd
     call Write_gfx_tile
-    call Call_000_1ed5
+    call ScrollCalcDelta
     ld hl, $0000
     ldh a, [$d3]
     cp $02
@@ -8873,8 +8873,8 @@ jr_006_69c2:
     ld a, $00
     ld bc, $1304
     ld d, $01
-    call Call_000_1f27
-    call Call_000_1f59
+    call DataTable_1F27
+    call CheckSGBFlag
     ret
 
 
@@ -8924,7 +8924,7 @@ jr_006_6a02:
     cp $11
     jr nz, jr_006_6a1a
 
-    call Call_006_6ac2
+    call SetMapS_6ac2
     ld a, [$c917]
     cp $17
     jr nz, jr_006_6a1a
@@ -8934,7 +8934,7 @@ jr_006_6a1a:
     cp $17
     jr nz, jr_006_6a25
 
-    call Call_006_6ad7
+    call SetMapS_6ad7
     ret
 
 
@@ -9029,7 +9029,7 @@ Jump_006_6ab9:
     ret
 
 
-Call_006_6ac2:
+SetMapS_6ac2:
     ld de, $d793
 
 jr_006_6ac5:
@@ -9048,7 +9048,7 @@ jr_006_6ac5:
     ld d, a
     jr jr_006_6ac5
 
-Call_006_6ad7:
+SetMapS_6ad7:
     ld hl, wGameState
     res 0, [hl]
     xor a
@@ -9097,18 +9097,18 @@ Call_006_6ad7:
     ld h, a
     ld de, $c100
     ld b, $14
-    call Call_006_6b3d
+    call LoadMapS_6b3d
     ld hl, $0080
-    call Call_006_682f
+    call LoadMapS_682f
     ld de, $c150
     ld b, $14
 
-Call_006_6b3d:
+LoadMapS_6b3d:
 jr_006_6b3d:
     ld a, [de]
     call Write_gfx_tile
     inc de
-    call Call_006_67f0
+    call SaveMapS_67f0
     dec b
     jr nz, jr_006_6b3d
 
@@ -9120,12 +9120,12 @@ jr_006_6b3d:
     ld hl, $c915
     inc [hl]
     ld hl, $0020
-    call Call_006_682f
+    call LoadMapS_682f
     ld de, $c114
     ld b, $14
-    call Call_006_6b3d
+    call LoadMapS_6b3d
     ld hl, $0060
-    call Call_006_682f
+    call LoadMapS_682f
     ld de, $c13c
     ld b, $14
     jr jr_006_6b3d
@@ -9133,7 +9133,7 @@ jr_006_6b3d:
     ld hl, $c915
     inc [hl]
     ld hl, $0040
-    call Call_006_682f
+    call LoadMapS_682f
     ld de, $c128
     ld b, $14
     jr jr_006_6b3d
@@ -9171,7 +9171,7 @@ jr_006_6ba2:
 jr_006_6ba7:
     ld a, [$c905]
     rst $00
-    call c, Call_006_566b
+    call c, DispMapS_566b
     ld l, h
     ld a, e
     ld l, h
@@ -9226,9 +9226,9 @@ jr_006_6ba7:
     ld a, $52
     call PlaySoundEffect
     ld hl, $ffb7
-    call Call_006_6e4f
+    call ReadMapS_6e4f
     ld hl, $ffbb
-    call Call_006_6e4f
+    call ReadMapS_6e4f
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -9266,7 +9266,7 @@ jr_006_6c25:
 jr_006_6c29:
     push bc
     push hl
-    call Call_006_6e7f
+    call CallMapS_6e7f
     pop hl
     inc hl
     pop bc
@@ -9343,7 +9343,7 @@ jr_006_6c4a:
     xor a
     ld [$c908], a
 
-Call_006_6ca3:
+LoadMapS_6ca3:
 Jump_006_6ca3:
 jr_006_6ca3:
     ld a, [$c907]
@@ -9467,7 +9467,7 @@ jr_006_6d3a:
     ld h, a
     ld a, [hl]
     ld [wBGPalette], a
-    call Call_006_6ca3
+    call LoadMapS_6ca3
     ret
 
 
@@ -9564,7 +9564,7 @@ jr_006_6dd5:
     ld h, a
     ld a, [hl]
     ld [wBGPalette], a
-    call Call_006_6ca3
+    call LoadMapS_6ca3
     ret
 
 
@@ -9633,7 +9633,7 @@ jr_006_6e26:
     ret
 
 
-Call_006_6e4f:
+ReadMapS_6e4f:
     ld a, [hl]
     add $04
     ld [hl+], a
@@ -9646,7 +9646,7 @@ Call_006_6e4f:
     ret
 
 
-Call_006_6e5c:
+SaveMapS_6e5c:
     push af
     ld a, l
     and $e0
@@ -9662,7 +9662,7 @@ Call_006_6e5c:
     ret
 
 
-Call_006_6e6b:
+LoadMapS_6e6b:
     ld a, [$c90b]
     add l
     ld l, a
@@ -9677,20 +9677,20 @@ Call_006_6e6b:
     ret
 
 
-Call_006_6e7f:
-    call Call_006_6e88
+CallMapS_6e7f:
+    call SaveMapS_6e88
     ld a, $e0
     call Write_gfx_tile
     ret
 
 
-Call_006_6e88:
+SaveMapS_6e88:
     push bc
     ld b, l
     ld a, l
     and $e0
     ld l, a
-    call Call_006_6e6b
+    call LoadMapS_6e6b
     ld a, b
     and $1f
     jr z, jr_006_6e9d
@@ -9698,7 +9698,7 @@ Call_006_6e88:
     ld b, a
 
 jr_006_6e97:
-    call Call_006_6e5c
+    call SaveMapS_6e5c
     dec b
     jr nz, jr_006_6e97
 
@@ -9710,9 +9710,9 @@ jr_006_6e9d:
     ld a, $55
     call PlaySoundEffect
     ld hl, $ffb7
-    call Call_006_6e4f
+    call ReadMapS_6e4f
     ld hl, $ffbb
-    call Call_006_6e4f
+    call ReadMapS_6e4f
     ld hl, wMenu_selection
     ld bc, $0008
     ld a, $00
@@ -9750,7 +9750,7 @@ jr_006_6ee0:
 jr_006_6ee4:
     push bc
     push hl
-    call Call_006_6e7f
+    call CallMapS_6e7f
     pop hl
     inc hl
     pop bc
@@ -9781,7 +9781,7 @@ jr_006_6f05:
 
     ld a, $1e
     ld [$c906], a
-    call Call_006_7031
+    call LoadMapS_7031
     ret
 
 
@@ -9907,7 +9907,7 @@ jr_006_6fbe:
     ld a, $00
     adc h
     ld h, a
-    call Call_006_6e88
+    call SaveMapS_6e88
     ld b, $10
 
 jr_006_6fd8:
@@ -9931,7 +9931,7 @@ jr_006_6fd8:
     ld a, h
     sbc $00
     ld h, a
-    call Call_006_6e88
+    call SaveMapS_6e88
     ld b, $10
 
 jr_006_6ffb:
@@ -9969,12 +9969,12 @@ jr_006_6ffb:
     ret
 
 
-Call_006_7031:
+LoadMapS_7031:
     ld a, $80
     ldh [$b6], a
     ld hl, $9c00
     push hl
-    call Call_006_708a
+    call SetMapS_708a
     pop hl
     ld a, [wIsGBC]
     or a
@@ -10037,7 +10037,7 @@ jr_006_7050:
     ret
 
 
-Call_006_708a:
+SetMapS_708a:
     ld de, $c1c0
     ld c, $02
 
@@ -10429,7 +10429,7 @@ jr_006_7092:
     ldh a, [rNR41]
     ld hl, sp-$68
     ld h, h
-    call c, Call_000_34ae
+    call c, AudioGetChannelMask
     jr nz, @+$01
 
     ld [hl+], a
@@ -10451,7 +10451,7 @@ jr_006_7092:
     ld [hl+], a
     ld a, a
 
-Call_006_727e:
+WriteMapS_727e:
     ld [hl+], a
     ei
     ccf
@@ -10591,7 +10591,7 @@ jr_006_729f:
     sbc b
     rst $38
     db $fc
-    call nz, Call_006_727e
+    call nz, WriteMapS_727e
     cp [hl]
     ld a, [hl-]
     adc $76
@@ -10956,7 +10956,7 @@ jr_006_7464:
     jr nz, jr_006_74aa
 
     ldh a, [$32]
-    call z, Call_006_6398
+    call z, FuncMapS_6398
     adc l
     ld [bc], a
     ld b, b
@@ -12460,23 +12460,23 @@ jr_006_7a50:
     ld bc, $2080
     nop
     ld hl, $7a2e
-    call Call_000_2280
+    call RestoreRegisters3
     call TileBuffer_1E96
     ld de, $0020
-    call Call_000_1e65
+    call SubHLFromHRAM_A5
     ld hl, $7bab
-    call Call_000_1df3
+    call CoordMultiply
     ld de, $9400
     ld hl, $d800
     ld bc, $0058
-    call Call_006_7b9c
+    call ReadMapS_7b9c
     ld bc, $0018
-    call Call_006_7b8d
+    call ClrMapS_7b8d
     ld bc, $0018
-    call Call_006_7b9c
+    call ReadMapS_7b9c
     ld bc, $0108
 
-Call_006_7b8d:
+ClrMapS_7b8d:
 jr_006_7b8d:
     xor a
     call $04a7
@@ -12493,7 +12493,7 @@ jr_006_7b8d:
     ret
 
 
-Call_006_7b9c:
+ReadMapS_7b9c:
 jr_006_7b9c:
     ld a, [hl+]
     call $04a7
@@ -12616,7 +12616,7 @@ jr_006_7b9c:
 
     ld a, h
 
-Call_006_7c18:
+PopMapS_7c18:
     pop de
     ld hl, $c991
     ld a, [$c982]
@@ -12629,7 +12629,7 @@ Call_006_7c18:
     ret
 
 
-Call_006_7c26:
+CallMapS_7c26:
     call $1670
     call SetViewportEnd
     jp Jump_CopySRAMBlock
@@ -12637,12 +12637,12 @@ Call_006_7c26:
 
     ld a, $4e
     call $0510
-    call Call_006_7c26
+    call CallMapS_7c26
     ld hl, $7cff
     jp Jump_006_7c54
 
 
-    call Call_006_7c18
+    call PopMapS_7c18
     cp $00
     ret nz
 
@@ -12652,7 +12652,7 @@ Call_006_7c26:
 
     ld a, $63
     call $0510
-    call Call_006_7c26
+    call CallMapS_7c26
     ld hl, $7d06
 
 Jump_006_7c54:
@@ -12667,7 +12667,7 @@ Jump_006_7c56:
     jp Jump_000_15f4
 
 
-    call Call_006_7c18
+    call PopMapS_7c18
     cp $40
     ret nz
 
@@ -12689,7 +12689,7 @@ jr_006_7c7f:
     jp $15f7
 
 
-    call Call_006_7c18
+    call PopMapS_7c18
     cp $f0
     ret nz
 
@@ -12699,28 +12699,28 @@ jr_006_7c93:
     call ComputeTileDataAddr
     jr jr_006_7c7f
 
-    call Call_006_7c18
+    call PopMapS_7c18
     cp $b0
     ret nz
 
     ld hl, $7d47
     jr jr_006_7c93
 
-    call Call_006_7c18
+    call PopMapS_7c18
     cp $c0
     ret nz
 
     ld hl, $7d65
     jr jr_006_7c93
 
-    call Call_006_7c18
+    call PopMapS_7c18
     cp $f0
     ret nz
 
     ld hl, $7d8e
     jr jr_006_7c93
 
-    call Call_006_7c18
+    call PopMapS_7c18
     cp $78
     ret nz
 
@@ -12728,7 +12728,7 @@ jr_006_7c93:
     jp Jump_000_15f4
 
 
-    call Call_006_7c18
+    call PopMapS_7c18
     cp $b0
     ret nz
 
@@ -12986,37 +12986,37 @@ jr_006_7c93:
     ld bc, $9800
     ld de, $9a0b
     ld h, $08
-    call Call_006_7ef8
+    call CallMapS_7ef8
     ld bc, $984a
     ld de, $9a16
     ld h, $0a
-    call Call_006_7ef8
+    call CallMapS_7ef8
     ld hl, $492e
     ld de, $9960
     call JoypadBitReformat
     ld bc, $9808
     ld de, $9973
-    call Call_006_7ed2
+    call FuncMapS_7ed2
     ld bc, $9848
     ld de, $9993
-    call Call_006_7ed2
+    call FuncMapS_7ed2
     ld bc, $9849
     ld de, $9960
-    call Call_006_7ed2
+    call FuncMapS_7ed2
     ld bc, $9889
     ld de, $9980
-    call Call_006_7ed2
+    call FuncMapS_7ed2
     ld bc, $98ca
     ld hl, $7f0e
-    call Call_000_0aea
+    call TextIdDispatch
     ld c, $d2
-    call Call_000_0aea
+    call TextIdDispatch
     ld c, $cf
     call $0af8
     ld c, $ec
     call $0af8
     ld bc, $98f1
-    call Call_000_0aea
+    call TextIdDispatch
     ld bc, $0450
     call EnableLCD
     jp $15f7
@@ -13028,30 +13028,30 @@ jr_006_7c93:
     ld a, $00
     ld [$c9c2], a
     call SetViewportEnd
-    call Call_000_1380
+    call JoypadDebounce
     ld hl, $492e
     ld de, $9821
     call JoypadBitReformat
     ld bc, $9801
     ld de, $9821
     ld h, $06
-    call Call_006_7ed8
+    call FuncMapS_7ed8
     ld bc, $9807
     ld de, $9834
-    call Call_006_7ed2
+    call FuncMapS_7ed2
     ld bc, $9847
     ld de, $9854
-    call Call_006_7ed2
+    call FuncMapS_7ed2
     ld bc, $9828
     ld de, $1907
     call $0b0c
     call CrossBankCallRet
     ld bc, $9941
     ld de, $9801
-    call Call_006_7ed6
+    call FuncMapS_7ed6
     ld bc, $9961
     ld de, $9861
-    call Call_006_7ed6
+    call FuncMapS_7ed6
     ld b, $80
     call $2043
     ld d, $c0
@@ -13067,14 +13067,14 @@ jr_006_7c93:
     jp $15f7
 
 
-Call_006_7ed2:
+FuncMapS_7ed2:
     ld h, $01
     jr jr_006_7ed8
 
-Call_006_7ed6:
+FuncMapS_7ed6:
     ld h, $07
 
-Call_006_7ed8:
+FuncMapS_7ed8:
 jr_006_7ed8:
     ld l, $06
 
@@ -13098,7 +13098,7 @@ jr_006_7edd:
     pop de
     pop bc
     ld a, $20
-    call Call_000_1640
+    call ReadDEMetadata3B
     ld a, $20
     rst $18
     dec l
@@ -13107,11 +13107,11 @@ jr_006_7edd:
     ret
 
 
-Call_006_7ef8:
-    call Call_006_7efe
-    call Call_006_7ed8
+CallMapS_7ef8:
+    call SaveMapS_7efe
+    call FuncMapS_7ed8
 
-Call_006_7efe:
+SaveMapS_7efe:
     push bc
     push hl
     ld a, $df

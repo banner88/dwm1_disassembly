@@ -23,7 +23,7 @@ SECTION "ROM Bank $01e", ROMX[$4000], BANK[$1e]
     ld bc, $42a3
     inc [hl]
     nop
-    call nz, Call_01e_4e42
+    call nz, SetB1e_4e42
     ld bc, $43e1
     ld l, b
     ld [bc], a
@@ -135,7 +135,7 @@ jr_01e_407f:
     ld c, d
     inc [hl]
     nop
-    call nz, Call_01e_4e4a
+    call nz, SetB1e_4e4a
     ld bc, $4b0b
     nop
     nop
@@ -2988,13 +2988,13 @@ jr_01e_4e10:
     ld bc, $0156
     ld d, l
 
-Call_01e_4e42:
+SetB1e_4e42:
     ld bc, $0154
     ld d, e
     ld bc, $0152
     ld d, c
 
-Call_01e_4e4a:
+SetB1e_4e4a:
     ld bc, $0150
     ld c, e
     ld bc, HeaderDestinationCode
@@ -5688,7 +5688,7 @@ jr_01e_59fb:
     dec d
     and b
     rrca
-    call z, Call_01e_6030
+    call z, JmpB1e_6030
     dec h
     pop bc
 
@@ -5765,7 +5765,7 @@ jr_01e_5a43:
     nop
     and l
     rrca
-    call z, Call_01e_6110
+    call z, CalcB1e_6110
     dec d
     and b
 
@@ -5849,7 +5849,7 @@ jr_01e_5ab1:
     dec d
     and b
     inc c
-    call z, Call_01e_6030
+    call z, JmpB1e_6030
     dec d
     pop bc
     jr nz, jr_01e_5b5f
@@ -5859,7 +5859,7 @@ jr_01e_5ab1:
     jr nz, jr_01e_5ab1
 
     nop
-    call z, Call_01e_6110
+    call z, CalcB1e_6110
     dec d
     and b
     dec c
@@ -5956,11 +5956,11 @@ jr_01e_5b5f:
     db $10
     and l
     rrca
-    call z, Call_01e_6010
+    call z, CalcB1e_6010
     dec d
     and b
     rrca
-    call z, Call_01e_6030
+    call z, JmpB1e_6030
     dec h
     pop bc
     jr nc, jr_01e_5bd7
@@ -5968,7 +5968,7 @@ jr_01e_5b5f:
     ld b, b
     and b
     ld [$241f], sp
-    call z, Call_01e_6030
+    call z, JmpB1e_6030
     jr nz, jr_01e_5b42
 
     ld d, b
@@ -6065,11 +6065,11 @@ jr_01e_5bd7:
     db $10
     and l
     rrca
-    call z, Call_01e_6010
+    call z, CalcB1e_6010
     dec d
     and b
     inc c
-    call z, Call_01e_6030
+    call z, JmpB1e_6030
     dec d
     pop bc
     jr nz, jr_01e_5c55
@@ -6079,7 +6079,7 @@ jr_01e_5bd7:
     jr nz, jr_01e_5ba7
 
     nop
-    call z, Call_01e_6110
+    call z, CalcB1e_6110
     dec d
     and b
     dec c
@@ -7092,7 +7092,7 @@ jr_01e_6004:
     ld [$1233], sp
     and b
 
-Call_01e_6010:
+CalcB1e_6010:
     dec c
     ld [hl-], a
     ld b, $30
@@ -7124,7 +7124,7 @@ jr_01e_6018:
 
     cp $35
 
-Call_01e_6030:
+JmpB1e_6030:
     jr jr_01e_5fd2
 
     ld [$1235], sp
@@ -7335,7 +7335,7 @@ jr_01e_6107:
 
     ld [hl-], a
 
-Call_01e_6110:
+CalcB1e_6110:
     inc bc
     jr nc, @+$05
 

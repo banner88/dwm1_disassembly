@@ -159,7 +159,7 @@ jr_078_4069:
     nop
     sbc b
     rst $38
-    call nz, Call_078_7f7f
+    call nz, DataB78_7f7f
     ld b, c
     ld a, a
     ld c, a
@@ -928,7 +928,7 @@ jr_078_4401:
     cp [hl]
     ld a, [hl]
 
-Call_078_443f:
+ClrB78_443f:
     xor $c6
     add $86
     add [hl]
@@ -1612,7 +1612,7 @@ jr_078_4704:
     ld h, b
     jr jr_078_4741
 
-Call_078_473a:
+SetB78_473a:
     ld bc, $38c3
     rlca
     add hl, de
@@ -1971,7 +1971,7 @@ jr_078_489f:
     rst $38
     sbc [hl]
 
-Call_078_48b7:
+FuncB78_48b7:
     ret z
 
     rst $38
@@ -1996,7 +1996,7 @@ Call_078_48b7:
     dec e
     ccf
     ld c, [hl]
-    call nc, Call_078_7fce
+    call nc, DataB78_7fce
     rst $38
     rst $38
     cp a
@@ -2802,7 +2802,7 @@ jr_078_4c41:
     ld e, $d7
     db $eb
     dec sp
-    call c, Call_078_473a
+    call c, SetB78_473a
     sbc a
     cp a
     ld bc, $0f01
@@ -2918,7 +2918,7 @@ jr_078_4ccd:
     nop
     ld bc, $0602
     ld [$7830], sp
-    call Call_078_48b7
+    call FuncB78_48b7
     rst $28
     and $b6
     ld e, a
@@ -3525,7 +3525,7 @@ jr_078_4f51:
     ccf
     rst $38
 
-Call_078_4f7f:
+HramB78_4f7f:
     ldh a, [rNR41]
     ld b, b
     add b
@@ -3911,7 +3911,7 @@ jr_078_5082:
     ld a, l
     cp d
     or d
-    call nz, Call_078_68f8
+    call nz, CalcB78_68f8
     jr z, jr_078_516c
 
     inc a
@@ -4099,7 +4099,7 @@ jr_078_516c:
     ei
     rst $10
     cp e
-    call Call_078_4f7f
+    call HramB78_4f7f
     ld [hl], $2a
     ld d, $0d
     inc bc
@@ -7350,7 +7350,7 @@ jr_078_6008:
 
     ldh [$a0], a
 
-Call_078_6018:
+FuncB78_6018:
     ld l, b
     pop bc
     ld b, b
@@ -7643,7 +7643,7 @@ jr_078_614a:
     nop
     add a
     ld a, [$f4f2]
-    call nz, Call_078_6018
+    call nz, FuncB78_6018
     add b
     dec bc
     nop
@@ -8687,7 +8687,7 @@ jr_078_65d3:
     ld b, $08
     nop
     add l
-    call nz, Call_078_7ff8
+    call nz, DataB78_7ff8
     ld b, h
     rst $38
     dec bc
@@ -9386,7 +9386,7 @@ jr_078_687f:
     rst $38
     ld a, e
 
-Call_078_68f8:
+CalcB78_68f8:
     inc b
     ld [$0909], sp
 
@@ -11950,7 +11950,7 @@ jr_078_7401:
     rst $10
     rst $38
     ei
-    call Call_078_7dff
+    call DataB78_7dff
     add d
     ld b, d
     rlca
@@ -13381,7 +13381,7 @@ jr_078_7a11:
     rst $10
     rst $38
     ei
-    call Call_078_7dff
+    call DataB78_7dff
     add d
     ld b, d
     ld [bc], a
@@ -13713,7 +13713,7 @@ jr_078_7b64:
     rra
     ccf
     ld c, [hl]
-    call nc, Call_078_7fce
+    call nc, DataB78_7fce
     rst $38
     rst $38
     cp a
@@ -14057,7 +14057,7 @@ jr_078_7cd1:
     ld sp, hl
     rst $38
     and $c4
-    call nz, Call_078_443f
+    call nz, ClrB78_443f
     ld h, $3f
     ld a, a
     ld a, a
@@ -14268,7 +14268,7 @@ jr_078_7dca:
     nop
     nop
 
-Call_078_7dff:
+DataB78_7dff:
     nop
     nop
     nop
@@ -14656,7 +14656,7 @@ Jump_078_7ee7:
     nop
     nop
 
-Call_078_7f7f:
+DataB78_7f7f:
     nop
     nop
     nop
@@ -14739,7 +14739,7 @@ Jump_078_7fc7:
     nop
     nop
 
-Call_078_7fce:
+DataB78_7fce:
     nop
     nop
     nop
@@ -14783,7 +14783,7 @@ Call_078_7fce:
     nop
     nop
 
-Call_078_7ff8:
+DataB78_7ff8:
     nop
     nop
     nop

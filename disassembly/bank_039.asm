@@ -5,139 +5,85 @@
 
 SECTION "ROM Bank $039", ROMX[$4000], BANK[$39]
 
-    add hl, sp
-    sub c
-    ld b, b
-    db $76
-    ld b, c
-    ld c, b
-    ld b, d
-    inc h
-    ld b, e
-    dec de
-    ld b, h
-    call nz, $9f44
-    ld b, l
-    add a
-    ld b, [hl]
-    ld sp, $ec47
-    ld b, a
-    db $e3
-    ld c, b
-    jp $a849
+    db $39 ; Bank number
 
+    ; Cross-bank dispatch table (72 entries)
+    ; Called via: ld hl, $39XX / rst $10
+    dw $4091                          ; Entry 0
+    dw $4176                          ; Entry 1
+    dw $4248                          ; Entry 2
+    dw $4324                          ; Entry 3
+    dw $441B                          ; Entry 4
+    dw $44C4                          ; Entry 5
+    dw $459F                          ; Entry 6
+    dw $4687                          ; Entry 7
+    dw $4731                          ; Entry 8
+    dw $47EC                          ; Entry 9
+    dw $48E3                          ; Entry 10
+    dw $49C3                          ; Entry 11
+    dw $4AA8                          ; Entry 12
+    dw $4B88                          ; Entry 13
+    dw $4C33                          ; Entry 14
+    dw $4CE6                          ; Entry 15
+    dw $4DA6                          ; Entry 16
+    dw $4E9A                          ; Entry 17
+    dw $4F53                          ; Entry 18
+    dw $504B                          ; Entry 19
+    dw $50F6                          ; Entry 20
+    dw $51D3                          ; Entry 21
+    dw $52CC                          ; Entry 22
+    dw $53B2                          ; Entry 23
+    dw $54A6                          ; Entry 24
+    dw $5561                          ; Entry 25
+    dw $561C                          ; Entry 26
+    dw jr_039_56bc                    ; Entry 27
+    dw $5790                          ; Entry 28
+    dw $5882                          ; Entry 29
+    dw $5958                          ; Entry 30
+    dw $5A1F                          ; Entry 31
+    dw $5AD4                          ; Entry 32
+    dw $5BB4                          ; Entry 33
+    dw $5C89                          ; Entry 34
+    dw $5D76                          ; Entry 35
+    dw $5E45                          ; Entry 36
+    dw $5F18                          ; Entry 37
+    dw $5FE3                          ; Entry 38
+    dw $60BF                          ; Entry 39
+    dw $6178                          ; Entry 40
+    dw $626E                          ; Entry 41
+    dw $6361                          ; Entry 42
+    dw $641C                          ; Entry 43
+    dw $6508                          ; Entry 44
+    dw $65E8                          ; Entry 45
+    dw $66B1                          ; Entry 46
+    dw $6776                          ; Entry 47
+    dw $6840                          ; Entry 48
+    dw $6910                          ; Entry 49
+    dw $6A11                          ; Entry 50
+    dw $6AEC                          ; Entry 51
+    dw $6B9A                          ; Entry 52
+    dw $6C87                          ; Entry 53
+    dw $6D85                          ; Entry 54
+    dw $6E66                          ; Entry 55
+    dw $6F64                          ; Entry 56
+    dw $704D                          ; Entry 57
+    dw $7128                          ; Entry 58
+    dw $7210                          ; Entry 59
+    dw $72EC                          ; Entry 60
+    dw $73EC                          ; Entry 61
+    dw $74E7                          ; Entry 62
+    dw $75D8                          ; Entry 63
+    dw $76D0                          ; Entry 64
+    dw $77AE                          ; Entry 65
+    dw $78A2                          ; Entry 66
+    dw $79A1                          ; Entry 67
+    dw $7A66                          ; Entry 68
+    dw $7B67                          ; Entry 69
+    dw $7C48                          ; Entry 70
+    dw $7D2D                          ; Entry 71
 
-    ld c, d
-    adc b
-    ld c, e
-    inc sp
-    ld c, h
-    and $4c
-    and [hl]
-    ld c, l
-    sbc d
-    ld c, [hl]
-    ld d, e
-    ld c, a
-    ld c, e
-    ld d, b
-    or $50
-    db $d3
-    ld d, c
-    call z, $b252
-    ld d, e
-    and [hl]
-    ld d, h
-    ld h, c
-    ld d, l
-    inc e
-    ld d, [hl]
-    cp h
-    ld d, [hl]
-    sub b
-    ld d, a
-    add d
-    ld e, b
-    ld e, b
-    ld e, c
-    rra
-    ld e, d
-    call nc, $b45a
-    ld e, e
-    adc c
-    ld e, h
-    db $76
-    ld e, l
-    ld b, l
-    ld e, [hl]
-    jr jr_039_40ac
-
-    db $e3
-    ld e, a
-    cp a
-    ld h, b
-    ld a, b
-    ld h, c
-    ld l, [hl]
-    ld h, d
-    ld h, c
-    ld h, e
-    inc e
-    ld h, h
-    ld [$e865], sp
-    ld h, l
-    or c
-    ld h, [hl]
-    db $76
-    ld h, a
-    ld b, b
-    ld l, b
-    db $10
-    ld l, c
-    ld de, $ec6a
-    ld l, d
-    sbc d
-    ld l, e
-    add a
-    ld l, h
-    add l
-    ld l, l
-    ld h, [hl]
-    ld l, [hl]
-    ld h, h
-    ld l, a
-    ld c, l
-    ld [hl], b
-    jr z, jr_039_40e8
-
-    db $10
-    ld [hl], d
-    db $ec
-    ld [hl], d
-    db $ec
-    ld [hl], e
-    rst $20
-    ld [hl], h
-    ret c
-
-    ld [hl], l
-    ret nc
-
-    db $76
-    xor [hl]
-    ld [hl], a
-    and d
-    ld a, b
-    and c
-    ld a, c
-    ld h, [hl]
-    ld a, d
-    ld h, a
-    ld a, e
-    ld c, b
-    ld a, h
-    dec l
-    ld a, l
+; --- Dispatch entry 0 ($4091) ---
+DispatchEntry_39_0:
     nop
     ld bc, $020d
     ld [bc], a
@@ -206,7 +152,7 @@ jr_039_40ac:
     ld a, c
     ld a, c
 
-Call_039_40dc:
+FuncB39_40dc:
     ld b, a
     ld a, a
     ld [hl+], a
@@ -522,7 +468,7 @@ jr_039_41cd:
     ld sp, hl
     cp [hl]
     ei
-    call nc, Call_039_54df
+    call nc, ShiftB39_54df
     ld e, a
     ld [bc], a
     ld a, [de]
@@ -1381,7 +1327,7 @@ jr_039_4609:
     rra
     inc a
     db $fc
-    call nz, Call_039_7301
+    call nz, SetB39_7301
     ld bc, $fcbc
     db $fc
     db $fc
@@ -2204,7 +2150,7 @@ jr_039_49d2:
     ld a, a
     and h
     rst $20
-    call c, Call_039_74df
+    call c, FuncB39_74df
     ld [hl], a
     ld a, h
     ld c, a
@@ -2629,14 +2575,14 @@ jr_039_4b74:
     db $ec
     db $f4
     db $fc
-    call nz, Call_039_7878
+    call nz, DispB39_7878
     ld b, b
     ld a, a
     scf
     ccf
     rrca
 
-Call_039_4bff:
+CalcB39_4bff:
     inc c
     rlca
     inc b
@@ -2697,7 +2643,7 @@ Call_039_4bff:
     db $fc
     sbc b
     ld hl, sp+$3c
-    call c, Call_039_7d47
+    call c, JmpB39_7d47
     cp a
     rst $38
     rst $08
@@ -2896,7 +2842,7 @@ jr_039_4cd9:
     add b
     ld bc, $0016
     ld bc, $001c
-    call nc, Call_039_4ef7
+    call nc, DataB39_4ef7
     ld a, a
     daa
     ccf
@@ -3067,7 +3013,7 @@ jr_039_4df9:
     ld a, [de]
     nop
     cp h
-    call nz, Call_039_7c7c
+    call nz, CalcB39_7c7c
     rlca
     rlca
     rra
@@ -3210,7 +3156,7 @@ jr_039_4e33:
     rst $10
     ld a, [hl]
     ld a, [$fe36]
-    call c, Call_000_15f4
+    call c, TextEndOfLine
     ld e, $17
     dec e
     rla
@@ -3261,7 +3207,7 @@ jr_039_4e33:
     inc bc
     ld bc, $0501
 
-Call_039_4ef7:
+DataB39_4ef7:
     db $fc
     ld a, [c]
     ld d, $fa
@@ -3270,7 +3216,7 @@ Call_039_4ef7:
     ld d, $fa
     inc c
     db $fc
-    call nz, Call_000_38fc
+    call nz, AudioWriteChannelReg
     jr c, jr_039_4f08
 
 jr_039_4f08:
@@ -3397,7 +3343,7 @@ jr_039_4f7a:
 
     ld a, b
     add sp, -$04
-    call nc, Call_039_54fc
+    call nc, FuncB39_54fc
     xor $aa
     rst $38
     sbc c
@@ -3486,7 +3432,7 @@ jr_039_4f7a:
     rst $38
     db $fd
 
-Call_039_4fff:
+PopB39_4fff:
     pop hl
     cp a
     ld [$fe7e], a
@@ -3670,7 +3616,7 @@ jr_039_50af:
     ccf
     ld hl, $c3ff
     rst $38
-    call Call_039_58f8
+    call LoadB39_58f8
     cp $46
     rst $38
     pop hl
@@ -3836,7 +3782,7 @@ jr_039_5175:
     jr jr_039_5175
 
     inc [hl]
-    call z, Call_039_7c8c
+    call z, SetB39_7c8c
     jp nc, Jump_039_6ebe
 
     ld [hl], a
@@ -4506,7 +4452,7 @@ jr_039_5363:
     ld e, a
     cpl
     cpl
-    call c, Call_039_5cf4
+    call c, LoadB39_5cf4
     db $f4
     ld e, b
     ld hl, sp-$64
@@ -4569,7 +4515,7 @@ jr_039_54b1:
     nop
     nop
 
-Call_039_54df:
+ShiftB39_54df:
     rlca
     rlca
     rrca
@@ -4594,7 +4540,7 @@ Call_039_54df:
     ld hl, sp-$78
     rrca
 
-Call_039_54fc:
+FuncB39_54fc:
     ld c, $0f
     dec bc
     rrca
@@ -5075,7 +5021,7 @@ jr_039_56bc:
     ld c, a
     db $fc
     inc h
-    call c, Call_039_40dc
+    call c, FuncB39_40dc
     ret nz
 
     add hl, bc
@@ -5232,7 +5178,7 @@ jr_039_57e5:
     dec b
     nop
     inc b
-    call c, Call_039_6bfc
+    call c, FuncB39_6bfc
     rst $30
     ld e, c
 
@@ -5461,7 +5407,7 @@ jr_039_58d1:
     ld a, a
     ld b, a
 
-Call_039_58f8:
+LoadB39_58f8:
     ld a, a
     adc d
     cp $9f
@@ -6215,7 +6161,7 @@ jr_039_5c51:
     ld [hl], e
     inc bc
 
-Call_039_5c54:
+DataB39_5c54:
     db $e3
     rst $38
     ld a, $3e
@@ -6370,7 +6316,7 @@ jr_039_5cc0:
     nop
     adc [hl]
 
-Call_039_5cf4:
+LoadB39_5cf4:
     ld a, [$fe7e]
     ld c, c
     rst $38
@@ -6828,7 +6774,7 @@ jr_039_5eed:
     ld a, [$f97f]
     ld a, a
     rst $38
-    call c, Call_039_7ee4
+    call c, DataB39_7ee4
     ld a, [hl]
     nop
     ld bc, $2001
@@ -6945,7 +6891,7 @@ jr_039_5f96:
     ld d, h
     ld bc, $0547
     ld bc, $0480
-    call nz, Call_039_64fc
+    call nz, DispB39_64fc
     cp h
     ret c
 
@@ -7052,7 +6998,7 @@ jr_039_600f:
     ld hl, sp-$69
     or e
     db $fc
-    call z, Call_000_05cb
+    call z, StoreScreenPointerHL
     rlca
     ld [$001c], sp
     ld b, $06
@@ -7543,10 +7489,10 @@ jr_039_621e:
     ld hl, sp-$01
     rst $10
     rst $38
-    call c, Call_039_4bff
+    call c, CalcB39_4bff
     ld a, e
     ldh a, [$f0]
-    call c, Call_000_2cfc
+    call c, TilemapWriteByte2
     db $fc
     db $f4
     db $fc
@@ -8119,7 +8065,7 @@ jr_039_649e:
     push de
     xor e
 
-Call_039_64fc:
+DispB39_64fc:
     rst $38
     sub c
     rst $38
@@ -8824,7 +8770,7 @@ jr_039_67f4:
     nop
     ld de, $0d1f
 
-Call_039_67ff:
+ShiftB39_67ff:
     rrca
     inc b
     rlca
@@ -9115,7 +9061,7 @@ jr_039_680d:
     ld a, a
     db $e3
     db $fc
-    call z, Call_000_223e
+    call z, MonsterFieldCalc
     ld e, $1e
     rrca
     rrca
@@ -9693,7 +9639,7 @@ jr_039_6bac:
     ld c, [hl]
     ld a, a
 
-Call_039_6bfc:
+FuncB39_6bfc:
     sbc a
     rst $38
     ld [bc], a
@@ -10735,7 +10681,7 @@ jr_039_708b:
     dec b
     inc bc
     inc bc
-    call nz, Call_039_7c7c
+    call nz, CalcB39_7c7c
 
 jr_039_70c7:
     cp h
@@ -11202,7 +11148,7 @@ Jump_039_72b3:
     cp $fe
     db $fc
     db $fc
-    call nz, Call_000_38fc
+    call nz, AudioWriteChannelReg
     jr c, jr_039_72dc
 
     ret nz
@@ -11238,7 +11184,7 @@ jr_039_72dc:
 
     rst $38
 
-Call_039_7301:
+SetB39_7301:
     ld hl, sp-$01
     rst $20
     rst $38
@@ -11433,7 +11379,7 @@ jr_039_733b:
     ld bc, $3104
     ld sp, $5171
     res 7, e
-    call Call_039_7cbf
+    call DataB39_7cbf
     ld e, a
     ld l, $3f
     ld l, e
@@ -11582,7 +11528,7 @@ jr_039_7476:
     rst $38
     rst $38
     add sp, -$01
-    call z, Call_039_67ff
+    call z, ShiftB39_67ff
     ld a, a
     ld h, h
     ld e, h
@@ -11616,7 +11562,7 @@ jr_039_7476:
     xor h
     ld b, $c8
     rst $38
-    call c, Call_039_4fff
+    call c, PopB39_4fff
     ld a, a
     inc a
     inc a
@@ -11630,7 +11576,7 @@ jr_039_7476:
     cp $2c
     db $fc
 
-Call_039_74df:
+FuncB39_74df:
     ld h, h
     db $fc
     call z, $4cfc
@@ -12431,7 +12377,7 @@ jr_039_7843:
     rst $38
     xor d
 
-Call_039_7878:
+DispB39_7878:
     rst $38
     xor l
     rst $38
@@ -13033,7 +12979,7 @@ jr_039_7b2c:
 
     ret z
 
-    call c, Call_039_5c54
+    call c, DataB39_5c54
     call nc, $eafe
     cp [hl]
     ld l, d
@@ -13246,7 +13192,7 @@ jr_039_7c38:
 
     jr jr_039_7c38
 
-    call nz, Call_000_28fc
+    call nz, DataTable_28FC
     ld hl, sp+$54
     db $fc
     adc b
@@ -13305,7 +13251,7 @@ jr_039_7c75:
     add b
     add b
 
-Call_039_7c7c:
+CalcB39_7c7c:
 Jump_039_7c7c:
     add b
     ld b, b
@@ -13322,7 +13268,7 @@ Jump_039_7c7c:
     ld e, $1e
     ld bc, $0101
 
-Call_039_7c8c:
+SetB39_7c8c:
     ld bc, $0f0e
     dec sp
     dec sp
@@ -13365,7 +13311,7 @@ jr_039_7cb6:
     ld a, b
     ret c
 
-Call_039_7cbf:
+DataB39_7cbf:
     db $ec
     ld [hl], h
     sbc $e2
@@ -13486,7 +13432,7 @@ jr_039_7d39:
     or b
     ret z
 
-Call_039_7d47:
+JmpB39_7d47:
     jr c, @-$6a
 
     ld l, h
@@ -13859,7 +13805,7 @@ jr_039_7df6:
     nop
     nop
 
-Call_039_7ee4:
+DataB39_7ee4:
     nop
     nop
     nop

@@ -5,83 +5,53 @@
 
 SECTION "ROM Bank $036", ROMX[$4000], BANK[$36]
 
-    ld [hl], $51
-    ld b, b
-    jr nc, jr_036_4047
+    db $36 ; Bank number
 
-    ei
-    ld b, e
-    cp h
-    ld b, l
-    ld e, h
-    ld b, a
-    ld sp, $0749
-    ld c, e
-    cpl
-    ld c, h
-    dec c
-    ld c, l
-    sbc h
-    ld c, [hl]
-    ld h, b
-    ld c, a
-    ld a, [hl]
-    ld d, b
-    dec sp
-    ld d, d
-    ld c, l
-    ld d, e
-    and $54
-    jr z, jr_036_4077
+    ; Cross-bank dispatch table (40 entries)
+    ; Called via: ld hl, $36XX / rst $10
+    dw $4051                          ; Entry 0
+    dw $4230                          ; Entry 1
+    dw $43FB                          ; Entry 2
+    dw $45BC                          ; Entry 3
+    dw $475C                          ; Entry 4
+    dw $4931                          ; Entry 5
+    dw $4B07                          ; Entry 6
+    dw $4C2F                          ; Entry 7
+    dw $4D0D                          ; Entry 8
+    dw $4E9C                          ; Entry 9
+    dw $4F60                          ; Entry 10
+    dw $507E                          ; Entry 11
+    dw $523B                          ; Entry 12
+    dw $534D                          ; Entry 13
+    dw $54E6                          ; Entry 14
+    dw $5628                          ; Entry 15
+    dw $573A                          ; Entry 16
+    dw $58DC                          ; Entry 17
+    dw $59F5                          ; Entry 18
+    dw $5B33                          ; Entry 19
+    dw $5CBC                          ; Entry 20
+    dw $5E8E                          ; Entry 21
+    dw $5F76                          ; Entry 22
+    dw $606A                          ; Entry 23
+    dw $620D                          ; Entry 24
+    dw $6312                          ; Entry 25
+    dw $6496                          ; Entry 26
+    dw $667E                          ; Entry 27
+    dw $68B0                          ; Entry 28
+    dw $6A8E                          ; Entry 29
+    dw $6BF9                          ; Entry 30
+    dw $6DB5                          ; Entry 31
+    dw $6F29                          ; Entry 32
+    dw $705F                          ; Entry 33
+    dw jr_036_71b5                    ; Entry 34
+    dw $7314                          ; Entry 35
+    dw $7509                          ; Entry 36
+    dw $761C                          ; Entry 37
+    dw $771F                          ; Entry 38
+    dw $77FC                          ; Entry 39
 
-    ld a, [hl-]
-    ld d, a
-    call c, $f558
-    ld e, c
-    inc sp
-    ld e, e
-    cp h
-    ld e, h
-    adc [hl]
-    ld e, [hl]
-    db $76
-    ld e, a
-    ld l, d
-    ld h, b
-    dec c
-    ld h, d
-    ld [de], a
-    ld h, e
-    sub [hl]
-    ld h, h
-    ld a, [hl]
-    ld h, [hl]
-    or b
-    ld l, b
-    adc [hl]
-    ld l, d
-    ld sp, hl
-    ld l, e
-    or l
-    ld l, l
-    add hl, hl
-    ld l, a
-    ld e, a
-    ld [hl], b
-    or l
-    ld [hl], c
-
-jr_036_4047:
-    inc d
-    ld [hl], e
-    add hl, bc
-    ld [hl], l
-    inc e
-    db $76
-    rra
-    ld [hl], a
-    db $fc
-    ld [hl], a
+; --- Dispatch entry 0 ($4051) ---
+DispatchEntry_36_0:
     ld b, b
     ld [bc], a
     ld [bc], a
@@ -413,7 +383,7 @@ jr_036_4168:
     or $83
     ld a, [hl]
     inc h
-    call c, Call_036_7d86
+    call c, DataB36_7d86
     dec bc
     ld hl, sp-$0b
     dec c
@@ -558,7 +528,7 @@ jr_036_420e:
     ld [bc], a
     ld a, a
 
-Call_036_427f:
+FuncB36_427f:
     ld b, b
     rst $38
     add b
@@ -736,7 +706,7 @@ jr_036_4322:
     rst $38
     nop
 
-Call_036_4344:
+DispB36_4344:
     rst $38
     db $10
     rst $38
@@ -1188,7 +1158,7 @@ jr_036_4521:
     ld hl, sp+$7f
     db $fc
     rst $38
-    call nc, Call_000_080f
+    call nc, ScreenBranchZ
     cp a
     db $10
     rst $38
@@ -1528,7 +1498,7 @@ jr_036_4652:
     ld a, a
     ld a, b
     rrca
-    call nz, Call_000_3c07
+    call nz, AudioGetNoteLenAlt
     rlca
     jp nz, $1f23
 
@@ -1894,7 +1864,7 @@ jr_036_476d:
     ld a, [hl]
     db $e3
     rst $38
-    call c, Call_036_4bdf
+    call c, ClrB36_4bdf
     ret
 
 
@@ -2395,7 +2365,7 @@ jr_036_497b:
     ld a, l
     rst $38
     cp e
-    call Call_036_7eef
+    call DataB36_7eef
     ld a, a
     jp c, Jump_036_7fa7
 
@@ -2651,7 +2621,7 @@ jr_036_4b22:
     ld bc, $00ff
     cp $00
     xor $00
-    call z, Call_036_680f
+    call z, DispB36_680f
     rrca
     ld a, b
     adc [hl]
@@ -2664,7 +2634,7 @@ jr_036_4b22:
     push de
     call nc, $affc
 
-Call_036_4bdf:
+ClrB36_4bdf:
     xor a
     dec b
     ld [hl], d
@@ -3065,7 +3035,7 @@ jr_036_4d63:
     ccf
     db $ec
     ccf
-    call nc, Call_000_23fc
+    call nc, Wrapper_23FC
     rst $38
     ld [hl+], a
     ld a, [$c4c4]
@@ -3141,7 +3111,7 @@ jr_036_4df6:
     cp a
     ld b, b
     rst $18
-    call nz, Call_036_4344
+    call nz, DispB36_4344
     db $db
     add c
     cp l
@@ -3466,7 +3436,7 @@ jr_036_4ee0:
     cp $23
     call c, $dd77
     ld [hl], a
-    call Call_036_6aff
+    call ShiftB36_6aff
     rst $38
     ld l, d
     rst $38
@@ -4605,7 +4575,7 @@ jr_036_5471:
     rst $38
     db $fc
     ccf
-    call nz, Call_000_20ff
+    call nz, PushAFSafe
     cp a
     ld h, b
     rst $38
@@ -5011,7 +4981,7 @@ jr_036_5632:
     rst $38
     cp b
     rst $38
-    call nz, Call_036_427f
+    call nz, FuncB36_427f
     ld a, a
     ld b, d
     ld a, a
@@ -5046,7 +5016,7 @@ jr_036_5632:
     ld [bc], a
     db $e3
     dec e
-    call Call_036_7d4b
+    call DataB36_7d4b
     cp h
     nop
     nop
@@ -5876,7 +5846,7 @@ jr_036_5a3a:
     xor b
     db $ec
     adc b
-    call c, Call_000_2e04
+    call c, MenuBorderBottom
     call nz, $c46e
     ld l, [hl]
     jp nz, $a056
@@ -6754,7 +6724,7 @@ jr_036_5e67:
     di
     ld a, [c]
     ld a, a
-    call z, Call_000_207f
+    call z, PrintDigitAndCopy
     add hl, bc
     ld [hl], b
     ld bc, $0b09
@@ -8862,7 +8832,7 @@ jr_036_67f5:
     add e
     ld a, b
 
-Call_036_680f:
+DispB36_680f:
     rst $00
     jr nz, @+$01
 
@@ -9354,7 +9324,7 @@ Jump_036_6a0a:
     rst $18
     add l
     sub e
-    call Call_000_37fe
+    call AudioCheckRange16
     cp b
     ld a, a
     add b
@@ -9558,7 +9528,7 @@ jr_036_6a8c:
     rlca
     nop
 
-Call_036_6aff:
+ShiftB36_6aff:
     rlca
     add b
     add l
@@ -11101,7 +11071,7 @@ jr_036_71c4:
     jr nz, jr_036_7192
 
     db $10
-    call nc, Call_000_203f
+    call nc, SubtractDigitValue
     ccf
     jr nz, @+$21
 
@@ -12382,7 +12352,7 @@ jr_036_778e:
     add hl, bc
     ld [hl], b
     inc b
-    call nc, Call_000_3c09
+    call nc, ScreenTransF
     inc bc
     ld a, l
     ld [bc], a
@@ -13783,7 +13753,7 @@ Jump_036_7c0d:
     nop
     nop
 
-Call_036_7d4b:
+DataB36_7d4b:
     nop
     nop
     nop
@@ -13844,7 +13814,7 @@ Call_036_7d4b:
     nop
     nop
 
-Call_036_7d86:
+DataB36_7d86:
     nop
     nop
     nop
@@ -14207,7 +14177,7 @@ Call_036_7d86:
     nop
     nop
 
-Call_036_7eef:
+DataB36_7eef:
     nop
     nop
     nop

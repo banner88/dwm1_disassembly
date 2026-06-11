@@ -282,7 +282,7 @@ jr_01d_4104:
     db $fc
     ld h, e
     nop
-    call nz, Call_000_2410
+    call nz, DecrementMonsterMP
     inc bc
     daa
     inc bc
@@ -426,7 +426,7 @@ jr_01d_4198:
     db $fc
     and l
     nop
-    call nz, Call_000_2410
+    call nz, DecrementMonsterMP
     inc bc
     daa
     inc bc
@@ -1298,7 +1298,7 @@ jr_01d_4531:
     inc c
     and e
     ld [bc], a
-    call nz, Call_000_2920
+    call nz, DataTable_2920
     add hl, bc
     and b
     ld b, $c1
@@ -1686,7 +1686,7 @@ jr_01d_46db:
     rrca
     and e
     inc bc
-    call nz, Call_000_2920
+    call nz, DataTable_2920
     add hl, bc
     pop bc
     jr nz, jr_01d_4693

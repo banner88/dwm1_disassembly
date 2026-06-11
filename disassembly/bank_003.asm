@@ -51,13 +51,13 @@ SECTION "ROM Bank $003", ROMX[$4000], BANK[$3]
     ; Bank $03 jump table (9 entries, called via rst $10 with H=$03)
     dw label4013             ; Entry 0: Serial/link communication
     dw label443f             ; Entry 1: MonsterInfoLoad → $DA33
-    dw Call_003_6980         ; Entry 2
+    dw SetMon_6980         ; Entry 2
     dw label69a2             ; Entry 3
     dw label6e24             ; Entry 4
-    dw Call_003_7160         ; Entry 5
+    dw SetMon_7160         ; Entry 5
     dw label7190             ; Entry 6
     dw label71b6             ; Entry 7
-    dw Call_003_7134         ; Entry 8
+    dw CallMon_7134         ; Entry 8
 
 label4013:
     ld a, [$c864]
@@ -265,31 +265,31 @@ Jump_003_4142:
     bit 0, a
     jr z, jr_003_415d
 
-    call Call_003_415e
+    call LoadMon_415e
 
 jr_003_415d:
     ret
 
 
-Call_003_415e:
+LoadMon_415e:
     ld a, [$c866]
     rst $00
     ld h, [hl]
     ld b, c
     ld l, d
     ld b, c
-    call Call_003_42d5
+    call LoadMon_42d5
     ret
 
 
-    call Call_003_4387
+    call LoadMon_4387
     ld hl, $c8a2
     bit 7, [hl]
     res 7, [hl]
     ret nz
 
-Call_003_4175:
-    call Call_003_441b
+CallMon_4175:
+    call LoadMon_441b
     ld hl, $5002
     rst $10
     ld hl, $c8a2
@@ -305,30 +305,30 @@ Call_003_4175:
     bit 0, a
     jr z, jr_003_4192
 
-    call Call_003_4193
+    call LoadMon_4193
 
 jr_003_4192:
     ret
 
 
-Call_003_4193:
+LoadMon_4193:
     ld a, [$c866]
     rst $00
     sbc e
     ld b, c
     sbc a
     ld b, c
-    call Call_003_42d5
+    call LoadMon_42d5
     ret
 
 
-    call Call_003_4387
+    call LoadMon_4387
     ld hl, $c8a2
     bit 7, [hl]
     res 7, [hl]
     ret nz
 
-    call Call_003_441b
+    call LoadMon_441b
     ld hl, $1502
     rst $10
     ld hl, $c8a2
@@ -344,13 +344,13 @@ Call_003_4193:
     bit 0, a
     jr z, jr_003_41c7
 
-    call Call_003_41c8
+    call LoadMon_41c8
 
 jr_003_41c7:
     ret
 
 
-Call_003_41c8:
+LoadMon_41c8:
     ld a, [$c866]
     rst $00
     ret nc
@@ -362,13 +362,13 @@ Call_003_41c8:
     ret
 
 
-    call Call_003_4387
+    call LoadMon_4387
     ld hl, $c8a2
     bit 7, [hl]
     res 7, [hl]
     ret nz
 
-    call Call_003_441b
+    call LoadMon_441b
     ld hl, $1503
     rst $10
     ld hl, $c8a2
@@ -448,7 +448,7 @@ jr_003_4258:
     ld a, [$c86a]
     ld [$c844], a
     call UpdateJoypadState
-    call Call_003_441b
+    call LoadMon_441b
     xor a
     ld [$c866], a
     ld hl, $c8a2
@@ -490,7 +490,7 @@ jr_003_42a6:
     ld [$c866], a
     ld a, $fa
     call SerialTransfer
-    call Call_003_441b
+    call LoadMon_441b
     ld hl, $c8a2
     res 1, [hl]
     ret
@@ -509,7 +509,7 @@ jr_003_42c1:
     ret
 
 
-Call_003_42d5:
+LoadMon_42d5:
     ld a, [$c863]
     bit 1, a
     jr nz, jr_003_42e6
@@ -598,7 +598,7 @@ jr_003_436c:
     jp Jump_000_126b
 
 
-Call_003_4387:
+LoadMon_4387:
     ld a, [$c863]
     bit 1, a
     jr nz, jr_003_4407
@@ -685,7 +685,7 @@ jr_003_4407:
     ret
 
 
-Call_003_441b:
+LoadMon_441b:
     ld a, [$c825]
     or a
     jr z, jr_003_4424
@@ -710,14 +710,14 @@ jr_003_4424:
 ; Output: 43 bytes copied to $DA33-$DA5D
 label443f:
     ld de, $da33             ; destination = WRAM $DA33
-    call Call_003_4446
+    call SaveMon_4446
     ret
 
 
 ; MonsterInfoCopy — Calculate table address and copy 43 bytes
 ; Input: $DA31 = species ID, DE = destination
 ; Calculates: $4461 + species_id × 43($2B)
-Call_003_4446:
+SaveMon_4446:
     push de
     ld a, [wTempSpeciesId]            ; species ID
     ld c, $2b                ; 43 = entry size
@@ -2423,7 +2423,7 @@ MonsterInfo_127_HornBeet:
     db 21, 19, 23, 20, 12, 14  ; Growth: HP, MP, ATK, DEF, AGL, INT
     ; Resist A-N: Fire..AglDown
     db 2, 2, 2, 0, 0, 2, 0, 2, 1, 0, 0
-Call_003_59d0:
+DataMon_59d0:
     db 2, 0, 0
     db 1, 0, 2, 2, 2, 3, 2, 0, 0, 0, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
     db 6  ; Tier/rank
@@ -3087,7 +3087,7 @@ MonsterInfo_178_CoilBird:
     db 0, 0  ; Can fly: no, Metal: no
     ; Skills: NumbOff, DeChaos, SuckAll
     db 52
-Call_003_624e:
+DataMon_624e:
     db 53, 143
     db 16, 13, 5, 14, 14, 7  ; Growth: HP, MP, ATK, DEF, AGL, INT
     db 0, 0, 0, 1, 1, 2, 0, 0, 2, 0, 0, 0, 0, 0  ; Resist A-N: Fire..AglDown
@@ -3651,13 +3651,13 @@ MonsterInfo_220_Unused_220:
     db 1, 0, 3, 3, 2, 3, 2, 2, 1, 1, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
     db 7  ; Tier/rank
 
-Call_003_6980:
+SetMon_6980:
     ld de, $da62
-    call Call_003_6987
+    call SaveMon_6987
     ret
 
 
-Call_003_6987:
+SaveMon_6987:
     push de
     ld a, [$da5e]
     ld c, $0c
@@ -3721,7 +3721,7 @@ Jump_003_69ac:
     db $e4
     ld l, e
 
-Call_003_69ca:
+SetMon_69ca:
     ld hl, sp+$6b
     inc c
     ld l, h
@@ -3776,7 +3776,7 @@ Call_003_69ca:
     rst $18
     ld l, l
     ld [wWarpGateId], a
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -3898,18 +3898,18 @@ jr_003_6ab9:
 jr_003_6abf:
     ld d, $00
     ld a, $00
-    call Call_003_6ad7
+    call FuncMon_6ad7
     ld a, $01
-    call Call_003_6ad7
+    call FuncMon_6ad7
     ld a, $02
-    call Call_003_6ad7
+    call FuncMon_6ad7
     ld a, $26
     add d
     ld [$da6a], a
     ret
 
 
-Call_003_6ad7:
+FuncMon_6ad7:
     ld [$da60], a
     ld hl, $ca8d
     cp [hl]
@@ -3964,7 +3964,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -3990,7 +3990,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4004,7 +4004,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4018,7 +4018,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4032,7 +4032,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4046,7 +4046,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4071,79 +4071,79 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
     ld hl, $cb13
     call ReadMonsterWord
     ld hl, $03e7
-    call Call_003_7110
+    call LoadMon_7110
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
     ld hl, $cb17
     call ReadMonsterWord
     ld hl, $03e7
-    call Call_003_7110
+    call LoadMon_7110
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
     ld hl, $cb19
     call ReadMonsterWord
     ld hl, $03e7
-    call Call_003_7110
+    call LoadMon_7110
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
     ld hl, $cb1b
     call ReadMonsterWord
     ld hl, $03e7
-    call Call_003_7110
+    call LoadMon_7110
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
     ld hl, $cb1d
     call ReadMonsterWord
     ld hl, $01ff
-    call Call_003_7110
+    call LoadMon_7110
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
     ld hl, $cb1f
     call ReadMonsterWord
     ld hl, $00ff
-    call Call_003_7110
+    call LoadMon_7110
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4157,7 +4157,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4171,7 +4171,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4185,7 +4185,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4199,7 +4199,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4213,7 +4213,7 @@ Call_003_6ad7:
     ret
 
 
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4494,7 +4494,7 @@ jr_003_6e0b:
     ret
 
 
-Call_003_6e11:
+LoadMon_6e11:
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
@@ -4511,7 +4511,7 @@ label6e24:
     cp $ff
     ret z
 
-    call Call_003_6980
+    call SetMon_6980
     ld a, [$da5e]
     rst $00
     adc c
@@ -4614,24 +4614,24 @@ label6e24:
     ld h, $00
     ld a, [$da60]
     call GetMonsterSkillData
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
     ld a, $00
     ld [$da60], a
-    call Call_003_6ec4
+    call CallMon_6ec4
     ld a, $01
     ld [$da60], a
-    call Call_003_6ec4
+    call CallMon_6ec4
     ld a, $02
     ld [$da60], a
-    call Call_003_6ec4
-    call Call_003_7134
+    call CallMon_6ec4
+    call CallMon_7134
     ret
 
 
-Call_003_6ec4:
+CallMon_6ec4:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -4648,22 +4648,22 @@ Call_003_6ec4:
 
 
     ld a, $00
-    call Call_003_6ef2
+    call SetMon_6ef2
     ld a, $01
-    call Call_003_6ef2
+    call SetMon_6ef2
     ld a, $02
-    call Call_003_6ef2
-    call Call_003_7134
+    call SetMon_6ef2
+    call CallMon_7134
     ret
 
 
-Call_003_6ef2:
+SetMon_6ef2:
     ld hl, $ca8d
     cp [hl]
     ret nc
 
     ld [$da60], a
-    call Call_003_6e11
+    call LoadMon_6e11
     ret nz
 
     ld a, [$da60]
@@ -4686,8 +4686,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_22d2
-    call Call_003_7134
+    call GetMonsterSlotAndPush
+    call CallMon_7134
     ret
 
 
@@ -4697,7 +4697,7 @@ Call_003_6ef2:
     ld a, [$da60]
     ld hl, $cb15
     call WriteMonsterWord
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4705,7 +4705,7 @@ Call_003_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 2, [hl]
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4713,7 +4713,7 @@ Call_003_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 3, [hl]
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4721,7 +4721,7 @@ Call_003_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 4, [hl]
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4729,7 +4729,7 @@ Call_003_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 0, [hl]
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4737,7 +4737,7 @@ Call_003_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 1, [hl]
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4753,7 +4753,7 @@ Call_003_6ef2:
     call WriteMonsterWord
     ld hl, $0103
     rst $10
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4761,8 +4761,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_23e6
-    call Call_003_7134
+    call AddMonsterHP_Setup
+    call CallMon_7134
     ret
 
 
@@ -4770,8 +4770,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2400
-    call Call_003_7134
+    call MonsterStatAddWrap
+    call CallMon_7134
     ret
 
 
@@ -4779,8 +4779,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2304
-    call Call_003_7134
+    call SetATKMax999
+    call CallMon_7134
     ret
 
 
@@ -4788,8 +4788,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_231e
-    call Call_003_7134
+    call SubMonsterATK_Alt
+    call CallMon_7134
     ret
 
 
@@ -4797,8 +4797,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2338
-    call Call_003_7134
+    call MonsterStatDecLoop
+    call CallMon_7134
     ret
 
 
@@ -4806,8 +4806,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2352
-    call Call_003_7134
+    call AddMonsterINT_Alt
+    call CallMon_7134
     ret
 
 
@@ -4815,8 +4815,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2379
-    call Call_003_7134
+    call ClearMonsterAGL
+    call CallMon_7134
     ret
 
 
@@ -4824,12 +4824,12 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2379
+    call ClearMonsterAGL
     ld a, [$da60]
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     set 2, [hl]
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4837,8 +4837,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2379
-    call Call_003_7134
+    call ClearMonsterAGL
+    call CallMon_7134
     ret
 
 
@@ -4857,7 +4857,7 @@ Call_003_6ef2:
     ret
 
 
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4868,8 +4868,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2386
-    call Call_003_7134
+    call SetMonsterSkill1
+    call CallMon_7134
     ret
 
 
@@ -4877,8 +4877,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_2392
-    call Call_003_7134
+    call ClearMonsterSkill1
+    call CallMon_7134
     ret
 
 
@@ -4886,8 +4886,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_23ce
-    call Call_003_7134
+    call SetMonsterSkill2
+    call CallMon_7134
     ret
 
 
@@ -4895,8 +4895,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_23da
-    call Call_003_7134
+    call ClearMonsterSkill2
+    call CallMon_7134
     ret
 
 
@@ -4904,8 +4904,8 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_239e
-    call Call_003_7134
+    call SetMonsterSkill3
+    call CallMon_7134
     ret
 
 
@@ -4913,25 +4913,25 @@ Call_003_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call Call_000_23aa
-    call Call_003_7134
+    call ClearMonsterSkill3
+    call CallMon_7134
     ret
 
 
     ret
 
 
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
     ld hl, $c93e
     set 1, [hl]
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4945,7 +4945,7 @@ Call_003_6ef2:
     ld [$da09], a
     ld hl, $c90d
     inc [hl]
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4953,7 +4953,7 @@ Call_003_6ef2:
     ld bc, $0010
     ld a, $01
     call FillNBytesWithRegA
-    call Call_003_7134
+    call CallMon_7134
     ret
 
 
@@ -4961,7 +4961,7 @@ Call_003_6ef2:
     or a
     jr nz, jr_003_710f
 
-    call Call_003_7134
+    call CallMon_7134
     di
     call SaveGameState
     ei
@@ -4975,7 +4975,7 @@ jr_003_710f:
     ret
 
 
-Call_003_7110:
+LoadMon_7110:
     ld a, l
     sub c
     ld l, a
@@ -5010,7 +5010,7 @@ jr_003_712e:
     ret
 
 
-Call_003_7134:
+CallMon_7134:
     call GenerateRNG
     ld a, [wRNG1]
     ld l, a
@@ -5032,11 +5032,11 @@ Call_003_7134:
     adc h
     ld h, a
     ld [hl], $ff
-    call Call_003_7160
+    call SetMon_7160
     ret
 
 
-Call_003_7160:
+SetMon_7160:
     ld hl, $c0d8
     ld de, wInventory
     ld b, $14
@@ -5133,7 +5133,7 @@ jr_003_71c4:
 
 jr_003_71d4:
     ld [hl], $ff
-    call Call_003_7160
+    call SetMon_7160
     ret
 
 
@@ -5590,7 +5590,7 @@ jr_003_7327:
     inc b
     xor a
     ld [$cdc7], a
-    call Call_003_7409
+    call LoadMon_7409
     ld hl, $cdc1
     ld b, $05
 
@@ -5609,7 +5609,7 @@ jr_003_73f6:
     ret
 
 
-Call_003_7409:
+LoadMon_7409:
     ld a, [$cdc0]
     rst $00
     dec d
@@ -5620,11 +5620,11 @@ Call_003_7409:
     dec a
     ld [hl], h
 
-Call_003_7415:
+SetMon_7415:
     ld hl, $cb08
     ld de, $cdc1
 
-Call_003_741b:
+FuncMon_741b:
 Jump_003_741b:
     ld c, [hl]
     dec h
@@ -5638,31 +5638,31 @@ Jump_003_741b:
     dec h
     ld a, [hl]
 
-Call_003_7426:
+CallMon_7426:
 Jump_003_7426:
-    call Call_003_745a
+    call CmpMon_745a
     sub $52
     ld [de], a
     inc e
     ret
 
 
-Call_003_742e:
-    call Call_003_7415
+CallMon_742e:
+    call SetMon_7415
     ld hl, $ca08
-    call Call_003_741b
+    call FuncMon_741b
     ld hl, $cc08
     jp Jump_003_741b
 
 
-    call Call_003_742e
+    call CallMon_742e
     ld hl, $cc08
     ld c, [hl]
     ld h, $c7
     ld b, [hl]
     ld h, $c2
     ld a, [hl]
-    call Call_003_7426
+    call CallMon_7426
     ld hl, $ca08
     ld c, [hl]
     ld h, $c7
@@ -5672,7 +5672,7 @@ Call_003_742e:
     jp Jump_003_7426
 
 
-Call_003_745a:
+CmpMon_745a:
     cp b
     jr nz, jr_003_7461
 
@@ -5703,7 +5703,7 @@ jr_003_746e:
     ret
 
 
-Call_003_7471:
+LoadMon_7471:
     ld a, [$c982]
     bit 4, a
     jr nz, jr_003_747b
@@ -5727,9 +5727,9 @@ jr_003_7483:
 jr_003_748a:
     push hl
     push af
-    call Call_003_7471
+    call LoadMon_7471
     pop af
-    call Call_003_74c7
+    call CalcMon_74c7
     pop hl
     ld a, [$cdc7]
     cp $03
@@ -5763,7 +5763,7 @@ Jump_003_749d:
     ld hl, $d938
     jr jr_003_748a
 
-Call_003_74c7:
+CalcMon_74c7:
     dec a
     ld b, a
     ld a, [$cdc7]
@@ -5793,9 +5793,9 @@ Call_003_74c7:
     rst $20
     ld bc, $101a
     call $05e2
-    call Call_000_0693
+    call SetJoypadAction
     ld a, $27
-    call Call_000_0515
+    call BankTrampolineTable
     ld a, $80
 
 Jump_003_74fd:
@@ -5831,7 +5831,7 @@ jr_003_7510:
     sub $01
     daa
     ld [hl], a
-    call Call_000_0cb8
+    call PixelToTileCoord
     xor a
     inc a
 
@@ -5869,7 +5869,7 @@ jr_003_753f:
 
 
     ld a, $08
-    call Call_000_0515
+    call BankTrampolineTable
     ld bc, $9c85
     jp Jump_000_0c3a
 
@@ -5881,10 +5881,10 @@ jr_003_755e:
     push hl
     push bc
     ld b, $01
-    call Call_000_0cac
+    call GetScrollTilePosition
     pop bc
     pop hl
-    call Call_000_0cb8
+    call PixelToTileCoord
     ld a, $14
     jp Jump_000_0515
 
@@ -5946,7 +5946,7 @@ jr_003_755e:
     ret z
 
     ld [hl], l
-    call nc, Call_003_4175
+    call nc, CallMon_4175
     sbc b
     add hl, de
     inc e
@@ -5996,7 +5996,7 @@ jr_003_755e:
     jp $68c1
 
 
-    call Call_003_69ca
+    call SetMon_69ca
     ld hl, $6f79
     jp z, $68f1
 
@@ -6008,7 +6008,7 @@ jr_003_755e:
     xor a
     ld [$ccb7], a
     ld a, $21
-    call Call_000_0515
+    call BankTrampolineTable
     jp $68c1
 
 
@@ -6065,17 +6065,17 @@ Jump_003_765f:
     ld a, $20
     ld hl, $cd80
     ld [hl], a
-    call Call_003_7a6c
+    call SetMon_7a6c
     xor a
     ld hl, $cdc1
     ld [hl], a
-    call Call_003_7a8f
+    call SetMon_7a8f
     ld d, $c0
     ld bc, $407c
     call $05e2
     xor a
     call ShowTextAndWait
-    call Call_003_7939
+    call LoadMon_7939
     call GameStateBit_0686
     ld d, $cc
     ld c, $06
@@ -6085,24 +6085,24 @@ jr_003_7693:
     ld a, $5e
     rst $20
     ld a, $81
-    call Call_000_068f
+    call ClearJoypadState
     inc d
     dec c
     jr nz, jr_003_7693
 
     ld d, $cc
     ld c, $50
-    call Call_003_76bb
+    call FuncMon_76bb
     ld c, $90
-    call Call_003_76bb
+    call FuncMon_76bb
     xor a
-    call Call_003_7aa1
+    call SetMon_7aa1
     call $1185
     call GetSpriteAddress
     jp $68c1
 
 
-Call_003_76bb:
+FuncMon_76bb:
     ld e, $03
     ld b, $24
 
@@ -6118,7 +6118,7 @@ jr_003_76bf:
     ret
 
 
-    call Call_003_7a9c
+    call LoadMon_7a9c
     ret nz
 
     ld a, $58
@@ -6126,10 +6126,10 @@ jr_003_76bf:
     jp $68c1
 
 
-    call Call_003_78b1
-    call Call_003_794b
-    call Call_003_7984
-    call Call_003_7a48
+    call FuncMon_78b1
+    call LoadMon_794b
+    call FuncMon_7984
+    call SetMon_7a48
     ld a, [hl]
     or a
     ret nz
@@ -6140,11 +6140,11 @@ jr_003_76bf:
     ld a, $e0
     ld [$c00f], a
     ld a, $01
-    call Call_003_7aa1
+    call SetMon_7aa1
     jp $68c1
 
 
-    call Call_003_7a9c
+    call LoadMon_7a9c
     ld hl, $cd98
     ld a, [hl]
     cp $04
@@ -6152,12 +6152,12 @@ jr_003_76bf:
 
     inc [hl]
     ld a, $10
-    call Call_000_0515
+    call BankTrampolineTable
     ld hl, $cdc1
     ld bc, $9c85
-    call Call_003_7a92
+    call CallMon_7a92
     ld a, $03
-    call Call_003_7aa1
+    call SetMon_7aa1
     jp $68c1
 
 
@@ -6197,12 +6197,12 @@ jr_003_7743:
     call LookupDoublePtrTable
     ret nz
 
-    call Call_003_7756
-    call Call_003_784a
+    call LoadMon_7756
+    call LoadMon_784a
     jp $68c1
 
 
-Call_003_7756:
+LoadMon_7756:
     ld a, [$cdc5]
     rst $00
     sub b
@@ -6215,7 +6215,7 @@ Call_003_7756:
     ld [hl], a
     ld a, [$c9c4]
     add $60
-    call Call_003_7a30
+    call CallMon_7a30
     ld b, $01
     ld a, [$cdc1]
     sub $30
@@ -6235,10 +6235,10 @@ jr_003_777d:
     ld hl, $ccb9
     ld [hl], b
     ld bc, $9c66
-    call Call_003_7a3e
+    call SaveMon_7a3e
     ld bc, $9c6d
     ld hl, $c9c3
-    call Call_003_7a3e
+    call SaveMon_7a3e
     ret
 
 
@@ -6250,10 +6250,10 @@ jr_003_7793:
     push hl
     ld a, [$c9c4]
     add $35
-    call Call_003_7a30
+    call CallMon_7a30
     pop hl
     ld bc, $9c66
-    call Call_003_7a3e
+    call SaveMon_7a3e
     ld bc, $9c6d
     call $04d0
     jp Jump_003_7a3e
@@ -6296,7 +6296,7 @@ jr_003_77de:
     jp $68be
 
 
-    call Call_003_784a
+    call LoadMon_784a
     call $0be2
     ld bc, $9c6e
     call $0bf3
@@ -6319,14 +6319,14 @@ Jump_003_77ef:
     cp $99
     jr z, jr_003_77de
 
-    call Call_003_784a
+    call LoadMon_784a
     ld b, $01
     ld a, [$c9c4]
-    call Call_000_0ca8
+    call GetScrollPixelPosition
     ld bc, $9c6e
-    call Call_000_0cb8
+    call PixelToTileCoord
     ld a, $14
-    call Call_000_0515
+    call BankTrampolineTable
     jp Jump_003_77ef
 
 
@@ -6335,9 +6335,9 @@ Jump_003_77ef:
     cp [hl]
     jp z, Jump_003_6d40
 
-    call Call_003_784a
+    call LoadMon_784a
     ld a, $15
-    call Call_000_0515
+    call BankTrampolineTable
     ld a, $01
     call AdjustTilemapOffset
     ld bc, $9c6a
@@ -6348,7 +6348,7 @@ Jump_003_77ef:
     jp Jump_003_77de
 
 
-Call_003_784a:
+LoadMon_784a:
     ld a, $20
     jp Jump_000_0ba1
 
@@ -6359,7 +6359,7 @@ Call_003_784a:
     call $16a0
     call CrossBankCallRet
     ld a, $02
-    call Call_003_7aa1
+    call SetMon_7aa1
     jp $68c1
 
 
@@ -6375,7 +6375,7 @@ Call_003_784a:
     jp $68c1
 
 
-    call Call_003_69ca
+    call SetMon_69ca
     ld hl, $7aaf
     jp z, $68f1
 
@@ -6387,7 +6387,7 @@ Call_003_784a:
 
     ld bc, $9c90
     ld a, [$ccb5]
-    call Call_000_0c13
+    call LoadEtoA
     jr c, jr_003_78a2
 
     call CrossBankCallRet
@@ -6397,39 +6397,39 @@ Call_003_784a:
 
 
 jr_003_78a2:
-    call Call_003_78ae
+    call JmpMon_78ae
     jp Jump_003_69ac
 
 
 Jump_003_78a8:
-    call Call_003_78ae
+    call JmpMon_78ae
     jp Jump_003_68ab
 
 
-Call_003_78ae:
+JmpMon_78ae:
     jp $3bf0
 
 
-Call_003_78b1:
+FuncMon_78b1:
     ld d, $c0
-    call Call_003_792b
+    call DispMon_792b
     ld e, $14
     call BankSwitch_1616
-    call nz, Call_003_78d9
+    call nz, CallMon_78d9
     call $161c
-    call nz, Call_003_78f4
+    call nz, CallMon_78f4
     ld e, $0f
     call $1622
-    call nz, Call_003_790f
-    call Call_000_1628
-    call nz, Call_003_7918
+    call nz, LoadMon_790f
+    call TextWriteBank
+    call nz, LoadMon_7918
     call CallBank5FEntry1_0541
-    call nz, Call_003_791c
+    call nz, LoadMon_791c
     ret
 
 
-Call_003_78d9:
-    call Call_003_7941
+CallMon_78d9:
+    call SaveMon_7941
     ld a, [de]
     cp $70
     ret z
@@ -6442,13 +6442,13 @@ Call_003_78d9:
 
 
 jr_003_78eb:
-    call Call_000_063b
+    call SetROMBankHigh
     ld bc, $0800
     jp $05ea
 
 
-Call_003_78f4:
-    call Call_003_7941
+CallMon_78f4:
+    call SaveMon_7941
     ld a, [de]
     cp $38
     ret z
@@ -6461,27 +6461,27 @@ Call_003_78f4:
 
 
 jr_003_7906:
-    call Call_000_063b
+    call SetROMBankHigh
     ld bc, $f800
     jp $05ea
 
 
-Call_003_790f:
+LoadMon_790f:
     ld a, $3c
 
 jr_003_7911:
     push af
-    call Call_003_7941
+    call SaveMon_7941
     pop af
     ld [de], a
     ret
 
 
-Call_003_7918:
+LoadMon_7918:
     ld a, $7c
     jr jr_003_7911
 
-Call_003_791c:
+LoadMon_791c:
     ld a, [$c018]
     or a
     ret nz
@@ -6493,7 +6493,7 @@ Call_003_791c:
     ret
 
 
-Call_003_792b:
+DispMon_792b:
     rst $10
     ret nz
 
@@ -6504,7 +6504,7 @@ Call_003_792b:
     ld a, $08
     call ShowTextAndWait
 
-Call_003_7939:
+LoadMon_7939:
 jr_003_7939:
     ld a, [$c9c4]
     add a
@@ -6513,16 +6513,16 @@ jr_003_7939:
     ret
 
 
-Call_003_7941:
+SaveMon_7941:
     push de
     xor a
     call ShowTextAndWait
-    call Call_003_7939
+    call LoadMon_7939
     pop de
     ret
 
 
-Call_003_794b:
+LoadMon_794b:
     ld a, [$cdc2]
     ld hl, $cdc3
     cp [hl]
@@ -6560,14 +6560,14 @@ jr_003_797d:
     jp $07d3
 
 
-Call_003_7984:
+FuncMon_7984:
     ld d, $cc
 
 jr_003_7986:
-    call Call_000_065a
-    call Call_000_06d3
-    call Call_003_7999
-    call Call_003_79f2
+    call SetupTilemapRow
+    call DrawMenuRowTilemap
+    call FuncMon_7999
+    call FuncMon_79f2
     inc d
     ld a, d
     cp $d2
@@ -6575,7 +6575,7 @@ jr_003_7986:
 
     jr jr_003_7986
 
-Call_003_7999:
+FuncMon_7999:
     ld e, $02
     ld a, [de]
     rst $00
@@ -6588,11 +6588,11 @@ Call_003_7999:
     call z, $e179
     ld a, c
     call z, $c979
-    call Call_003_79ec
+    call FuncMon_79ec
     or a
     ret nz
 
-    call Call_000_05cc
+    call StoreScreenPointer
     call SetViewportParams
     and $1f
     ld hl, $cd80
@@ -6609,7 +6609,7 @@ Call_003_7999:
     jp $07d3
 
 
-    call Call_003_79ec
+    call FuncMon_79ec
     cp $10
     ret c
 
@@ -6631,14 +6631,14 @@ Call_003_7999:
     jp $07d3
 
 
-Call_003_79ec:
+FuncMon_79ec:
     ld e, $0f
     ld a, [de]
     and $3f
     ret
 
 
-Call_003_79f2:
+FuncMon_79f2:
     ld e, $02
     ld a, [de]
     cp $04
@@ -6664,8 +6664,8 @@ Call_003_79f2:
     cp $06
     ret nc
 
-    call Call_000_05cc
-    call Call_003_7a7b
+    call StoreScreenPointer
+    call FuncMon_7a7b
     ld h, d
     ld l, $08
     inc [hl]
@@ -6675,14 +6675,14 @@ Call_003_79f2:
     jp Jump_000_07dd
 
 
-Call_003_7a26:
+FuncMon_7a26:
     ld [$cdc6], a
     ld d, $c2
     ld bc, $2820
     jr jr_003_7a37
 
-Call_003_7a30:
-    call Call_003_7a26
+CallMon_7a30:
+    call FuncMon_7a26
     inc d
     ld bc, $6020
 
@@ -6692,7 +6692,7 @@ jr_003_7a37:
     jp Jump_000_068a
 
 
-Call_003_7a3e:
+SaveMon_7a3e:
 Jump_003_7a3e:
     push hl
     ld a, $2e
@@ -6701,7 +6701,7 @@ Jump_003_7a3e:
     jp Jump_000_0cb8
 
 
-Call_003_7a48:
+SetMon_7a48:
     ld hl, $c983
     inc [hl]
     ld a, [hl]
@@ -6728,7 +6728,7 @@ Call_003_7a48:
     pop hl
     ld [$cdc4], a
 
-Call_003_7a6c:
+SetMon_7a6c:
 jr_003_7a6c:
     ld bc, $9825
     jp Jump_000_0cb8
@@ -6736,18 +6736,18 @@ jr_003_7a6c:
 
 jr_003_7a72:
     ld a, $2a
-    call Call_000_0515
+    call BankTrampolineTable
     ld a, $01
     jr jr_003_7a89
 
-Call_003_7a7b:
+FuncMon_7a7b:
     ld e, $08
     ld a, [de]
     cp $5e
     jr z, jr_003_7a72
 
     ld a, $2b
-    call Call_000_0515
+    call BankTrampolineTable
     ld a, $05
 
 jr_003_7a89:
@@ -6756,23 +6756,23 @@ jr_003_7a89:
     daa
     ld [hl], a
 
-Call_003_7a8f:
+SetMon_7a8f:
     ld bc, $982c
 
-Call_003_7a92:
-    call Call_000_0cb8
+CallMon_7a92:
+    call PixelToTileCoord
     inc c
     inc c
     ld a, $01
     jp Jump_RunScriptEngine
 
 
-Call_003_7a9c:
+LoadMon_7a9c:
     ld a, $ff
     jp Jump_000_3b7c
 
 
-Call_003_7aa1:
+SetMon_7aa1:
     ld hl, $5945
     jp $095a
 
@@ -6814,13 +6814,13 @@ jr_003_7aaa:
 
     ld hl, $c9a3
     inc [hl]
-    call Call_003_7ad7
+    call SetMon_7ad7
     ld a, h
     ld [$c9a2], a
     ret
 
 
-Call_003_7ad7:
+SetMon_7ad7:
 jr_003_7ad7:
     ld hl, $7ae6
     ld a, [$c9a3]
@@ -6845,11 +6845,11 @@ jr_003_7ad7:
     ld de, $0019
     rst $38
 
-Call_003_7b04:
+FuncMon_7b04:
     ld d, $04
 
 jr_003_7b06:
-    call Call_003_7b10
+    call SaveMon_7b10
     ld a, $04
     rst $18
     dec d
@@ -6858,25 +6858,25 @@ jr_003_7b06:
     ret
 
 
-Call_003_7b10:
+SaveMon_7b10:
     push bc
     ld hl, $7b2c
-    call Call_003_7b1f
+    call SaveMon_7b1f
     ld a, $3e
     rst $18
-    call Call_003_7b1f
+    call SaveMon_7b1f
     pop bc
     ret
 
 
-Call_003_7b1f:
+SaveMon_7b1f:
     push bc
-    call Call_000_0aea
+    call TextIdDispatch
     pop bc
     inc bc
     inc bc
     push bc
-    call Call_000_0aea
+    call TextIdDispatch
     pop bc
     ret
 
@@ -6905,17 +6905,17 @@ Call_003_7b1f:
     ld a, e
     xor a
     ld [$ddc4], a
-    call Call_000_1e74
+    call SubHLFromHRAM_A7
     ld bc, $9a42
-    call Call_003_7b04
+    call FuncMon_7b04
     ld bc, $1b6f
     call EnableLCD
     call $15f7
 
-Call_003_7b5c:
+FuncMon_7b5c:
     ld c, $7f
 
-Call_003_7b5e:
+SetMon_7b5e:
     ld hl, $7b75
     ld de, $c014
     ld b, $04
@@ -6923,7 +6923,7 @@ Call_003_7b5e:
 jr_003_7b66:
     ld a, [hl+]
     push hl
-    call Call_000_0693
+    call SetJoypadAction
     ld l, $0f
     ld [hl], c
     pop hl
@@ -6945,20 +6945,20 @@ jr_003_7b66:
     cp $20
     ret nz
 
-Call_003_7b81:
+FuncMon_7b81:
     ld d, $c4
     ld bc, $2080
     call $05e2
-    call Call_000_0693
+    call SetJoypadAction
     ld a, $3d
     rst $20
     jp $15f7
 
 
-    call Call_000_162e
+    call TextSetBank
     jp nz, $139e
 
-    call Call_000_160a
+    call TextNewLine
     jp nz, Jump_003_7bf4
 
     ld a, [$cd80]
@@ -6974,17 +6974,17 @@ Call_003_7b81:
     ret z
 
     ld a, $15
-    call Call_000_0515
+    call BankTrampolineTable
     ld e, $00
     ld a, [$c987]
     and $0c
     rrca
     rrca
     and $01
-    call Call_003_7be9
+    call LoadMon_7be9
     ld a, [de]
 
-Call_003_7bc7:
+SetMon_7bc7:
     ld hl, $7bce
     rst $28
     ld a, [hl]
@@ -6998,10 +6998,10 @@ Call_003_7bc7:
 
 Jump_003_7bd2:
     ld a, $0f
-    call Call_000_0515
+    call BankTrampolineTable
     ld de, $cd80
     call BankSwitch_1616
-    call Call_003_7be9
+    call LoadMon_7be9
     ld hl, $7b75
     rst $28
     ld a, [hl]
@@ -7009,7 +7009,7 @@ Jump_003_7bd2:
     ret
 
 
-Call_003_7be9:
+LoadMon_7be9:
     ld a, [de]
     jr z, jr_003_7bf1
 
@@ -7082,13 +7082,13 @@ jr_003_7c27:
     call ReadJoypadRaw
     call $0ce9
     call $20b7
-    call Call_000_20c8
-    call Call_003_59d0
+    call DigitCheckBorrow
+    call DataMon_59d0
     pop bc
     ld a, $0d
 
 jr_003_7c4d:
-    call Call_000_15e6
+    call TextWaitInput
     ld a, $50
     ld [$c9f4], a
     ld a, c
@@ -7102,7 +7102,7 @@ jr_003_7c5b:
     sra a
     inc a
     push af
-    call Call_003_624e
+    call DataMon_624e
     pop af
     ld [$c9c1], a
     jr nc, jr_003_7c79
@@ -7196,19 +7196,19 @@ Jump_003_7c8b:
     ld [$c988], a
     call SetViewportEnd
     ld de, $0760
-    call Call_000_1e65
+    call SubHLFromHRAM_A5
     ld a, $54
     call $0510
     call $1e43
-    call Call_000_219a
+    call GetMonsterStatPtr
     ld hl, $7e06
-    call Call_000_14fe
+    call LoadSpriteCoords
     ld hl, $7de4
     call $091e
     ld bc, $99a2
-    call Call_003_7b04
+    call FuncMon_7b04
     ld c, $77
-    call Call_003_7b5e
+    call SetMon_7b5e
     xor a
     ld [$c991], a
     ld bc, $1a00
@@ -7230,7 +7230,7 @@ Jump_003_7c8b:
     ld d, $c4
     ld bc, $7d3f
     call $02be
-    call Call_000_0698
+    call JoypadActionDone
     ld bc, $b058
     call $05e2
     ld bc, $ff90
@@ -7241,7 +7241,7 @@ Jump_003_7c8b:
     ld [$083e], sp
     ccf
     cp $16
-    call nz, Call_000_3f01
+    call nz, CheckPartySize
     ld a, l
     call $0298
     db $cd, $da, $08
@@ -7270,7 +7270,7 @@ jr_003_7d5e:
 
     call $150b
     ld hl, $7e06
-    call Call_000_14fe
+    call LoadSpriteCoords
     ld a, [$c987]
     and $90
     ret z
@@ -7283,7 +7283,7 @@ jr_003_7d5e:
     xor a
     rst $08
     push hl
-    call Call_003_624e
+    call DataMon_624e
     pop bc
     ld hl, $c9c1
     ld [hl], c
@@ -7314,7 +7314,7 @@ jr_003_7da9:
 jr_003_7dad:
     ldh a, [$d8]
     and $03
-    call Call_003_7bc7
+    call SetMon_7bc7
     ldh a, [$d8]
     rrca
     rrca
@@ -7404,7 +7404,7 @@ jr_003_7dcd:
     cp $20
     ret nz
 
-    call Call_003_7b81
+    call FuncMon_7b81
     ld a, $0c
     ld hl, $c980
     ld [hl+], a
@@ -7440,7 +7440,7 @@ jr_003_7dcd:
     xor d
     rst $38
 
-Call_003_7e49:
+LoadMon_7e49:
     ld a, [$cac0]
     ld bc, $9b6a
     and $f0
@@ -7457,7 +7457,7 @@ Call_003_7e49:
     call $1670
     ld hl, $7e36
     call $091e
-    call Call_003_7e49
+    call LoadMon_7e49
     jp $15f7
 
 
@@ -7472,11 +7472,11 @@ Call_003_7e49:
 
 jr_003_7e7d:
     call $050b
-    call Call_003_7b5c
+    call FuncMon_7b5c
     jp $15f7
 
 
-    call Call_000_162e
+    call TextSetBank
     jr nz, jr_003_7e7d
 
     ld a, [$c987]
@@ -7495,13 +7495,13 @@ jr_003_7e9d:
     and $20
     jp nz, $050b
 
-    call Call_003_7e49
+    call LoadMon_7e49
     ld a, [$c987]
     and $04
     jr z, jr_003_7ec1
 
     ld a, $0f
-    call Call_000_0515
+    call BankTrampolineTable
     ld a, [$cac0]
     cp $16
     ret z
@@ -7513,13 +7513,13 @@ jr_003_7e9d:
 
 
 jr_003_7ec1:
-    call Call_003_7e49
+    call LoadMon_7e49
     ld a, [$c987]
     and $08
     ret z
 
     ld a, $0f
-    call Call_000_0515
+    call BankTrampolineTable
     ld a, [$cac0]
     cp $00
     ret z
@@ -7554,7 +7554,7 @@ jr_003_7ec1:
     ld d, [hl]
     ld e, b
 
-Call_003_7ef3:
+SetMon_7ef3:
     ld hl, $cd80
     inc [hl]
     ld a, [hl]
@@ -7562,8 +7562,8 @@ Call_003_7ef3:
     ret
 
 
-Call_003_7efb:
-    call Call_003_7ef3
+CallMon_7efb:
+    call SetMon_7ef3
     cp $40
     ret c
 
@@ -7573,21 +7573,21 @@ Call_003_7efb:
 
     ld hl, $7fbb
 
-Call_003_7f0b:
+SetMon_7f0b:
 Jump_003_7f0b:
 jr_003_7f0b:
     ld bc, $98c9
     jp Jump_000_0aea
 
 
-    call Call_003_7efb
+    call CallMon_7efb
     call $3c0d
     ld hl, $7fb7
     jr nz, jr_003_7f1f
 
     ld hl, $7faf
 
-Call_003_7f1f:
+SetMon_7f1f:
 jr_003_7f1f:
     ld bc, $9909
     jp Jump_000_0aea
@@ -7618,7 +7618,7 @@ jr_003_7f28:
     ld a, $5b
     call $0510
     ld hl, $7fb3
-    call Call_003_7f0b
+    call SetMon_7f0b
     call $15f7
     ld a, $07
     jr jr_003_7f7d
@@ -7642,11 +7642,11 @@ jr_003_7f6d:
     jr jr_003_7f5d
 
     ld hl, $7fbf
-    call Call_003_7f0b
+    call SetMon_7f0b
     call $15f7
     ld a, $08
 
-Call_003_7f7d:
+SetMon_7f7d:
 jr_003_7f7d:
     ld hl, $4e58
     jp $095a
@@ -7655,9 +7655,9 @@ jr_003_7f7d:
     ld a, $10
     call $65b0
 
-Call_003_7f88:
+LoadMon_7f88:
     ld a, $09
-    call Call_003_7f7d
+    call SetMon_7f7d
     ld a, $02
     ld hl, $cd83
     ld [hl+], a
@@ -7668,7 +7668,7 @@ Call_003_7f88:
     call LookupDoublePtrTable
     jr nz, jr_003_7f6d
 
-    call Call_003_7f88
+    call LoadMon_7f88
     call CallScriptByType
     jp z, $63fb
 
@@ -7676,7 +7676,7 @@ Call_003_7f88:
     ret nz
 
     ld hl, $7fb7
-    call Call_003_7f1f
+    call SetMon_7f1f
     jp Jump_003_7f0b
 
 

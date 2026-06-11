@@ -9,13 +9,13 @@
 ;   - Resistance inheritance (Call_016_4360/$4373)
 ;
 ; BREEDING ALGORITHM (Call_016_456e):
-;   1. Call_016_4653 — Compute offspring "plus" value from parents
+;   1. LoadBrd_4653 — Compute offspring "plus" value from parents
 ;      Then search SPECIAL RECIPE TABLE at $4B30 (825 entries × 5 bytes)
 ;      Format: [parent1_match, parent2_match, min_plus, result_species, plus_mod]
 ;      Matches: specific species OR family code ($F0-$F9)
 ;      Checked FIRST — takes priority over family table
 ;
-;   2. Call_016_45d5 → Call_016_45ff — Search FAMILY RECIPE TABLE at $4974
+;   2. LoadBrd_45d5 → LoadBrd_45ff — Search FAMILY RECIPE TABLE at $4974
 ;      Format: 2-byte pairs [B, C] with $FFFF separators between result species
 ;      D (result species index) increments at EVERY entry
 ;      EXACT species match: returns immediately
@@ -58,12 +58,12 @@ SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
     ; Bank $16 jump table (10 entries)
     dw label16_4015          ; Entry 0: BreedingInit — find empty slot, init offspring
     dw label16_485c          ; Entry 1: Unknown
-    dw Call_016_456e          ; Entry 2: BreedingResolve — determine offspring species
+    dw LoadBrd_456e          ; Entry 2: BreedingResolve — determine offspring species
     dw label16_45a3          ; Entry 3: BreedingResolve alt (no mutation step)
     dw label16_474a          ; Entry 4: Skill/stat inheritance
     dw label16_5b4e          ; Entry 5
     dw label16_5fe4          ; Entry 6
-    dw Call_016_6db0          ; Entry 7
+    dw SetBrd_6db0          ; Entry 7
     dw label16_6f05          ; Entry 8
     dw LoadFloorDataPointer          ; Entry 9
 
@@ -95,22 +95,22 @@ jr_016_402d:
     ld [$cac0], a
     ld [$ca40], a
     ld hl, $cac1
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld bc, $0095
     xor a
     call FillNBytesWithRegA
     ld hl, $caea
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld bc, $0008
     ld a, $ff
     call FillNBytesWithRegA
     ld hl, $caf2
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld bc, $0019
     ld a, $ff
     call FillNBytesWithRegA
     ld hl, $cac1
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld [hl], $01
     ld a, [$d66e]
     ld [$da6f], a
@@ -120,9 +120,9 @@ jr_016_402d:
     ld [$da75], a
     ld a, $15
     ld [$da76], a
-    call Call_016_456e
+    call LoadBrd_456e
     ld hl, $caca
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$da71]
     ld [hl], a
     ld [wTempSpeciesId], a
@@ -132,13 +132,13 @@ jr_016_402d:
     ld hl, $ca94
     call SetBitInArray
     ld hl, $cacb
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$da33]
     ld [hl], a
     ld a, [$da77]
     push af
     ld hl, $cb23
-    call Call_016_41b1
+    call LoadBrd_41b1
     pop af
     cp $63
     jr c, jr_016_40b3
@@ -148,7 +148,7 @@ jr_016_402d:
 jr_016_40b3:
     ld [hl], a
     ld hl, $cb23
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [hl]
     ld l, a
     ld h, $00
@@ -179,51 +179,51 @@ jr_016_40d7:
 jr_016_40d9:
     push af
     ld hl, $cb0d
-    call Call_016_41b1
+    call LoadBrd_41b1
     pop af
     ld [hl], a
     ld hl, $cb0c
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld [hl], $01
     ld hl, $cb13
-    call Call_016_41b8
+    call SaveBrd_41b8
     push bc
     ld hl, $cb11
-    call Call_016_41b1
+    call LoadBrd_41b1
     pop bc
     ld a, c
     ld [hl+], a
     ld [hl], b
     ld hl, $cb17
-    call Call_016_41b8
+    call SaveBrd_41b8
     push bc
     ld hl, $cb15
-    call Call_016_41b1
+    call LoadBrd_41b1
     pop bc
     ld a, c
     ld [hl+], a
     ld [hl], b
     ld hl, $cb19
-    call Call_016_41b8
+    call SaveBrd_41b8
     ld hl, $cb1b
-    call Call_016_41b8
+    call SaveBrd_41b8
     ld hl, $cb1d
-    call Call_016_41b8
+    call SaveBrd_41b8
     ld hl, $cb1f
-    call Call_016_41b8
+    call SaveBrd_41b8
     ld hl, $cb25
-    call Call_016_41ff
+    call SaveBrd_41ff
     ld hl, $cb26
-    call Call_016_41ff
+    call SaveBrd_41ff
     ld hl, $cb28
-    call Call_016_41ff
+    call SaveBrd_41ff
     ld hl, $cb27
-    call Call_016_41ff
+    call SaveBrd_41ff
     ld hl, $cb29
     ld de, $da42
     ld b, $1b
-    call Call_016_4227
-    call Call_016_4360
+    call SaveBrd_4227
+    call ClrBrd_4360
     call GenerateRNG
     ld hl, $44cc
     ld a, [$da36]
@@ -239,47 +239,47 @@ jr_016_40d9:
     jr nc, jr_016_4169
 
     ld hl, $cacc
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld [hl], $01
 
 jr_016_4169:
     ld hl, $cb24
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld [hl], $01
-    call Call_016_4238
+    call LoadBrd_4238
     ld de, $da39
     ld b, $03
-    call Call_016_4496
+    call LoadBrd_4496
     ld a, [$d66e]
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
     ld b, $03
-    call Call_016_4496
+    call LoadBrd_4496
     ld a, [$d703]
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
     ld b, $03
-    call Call_016_4496
+    call LoadBrd_4496
     ld de, $d68e
     ld b, $08
-    call Call_016_4496
+    call LoadBrd_4496
     ld de, $d723
     ld b, $08
-    call Call_016_4496
+    call LoadBrd_4496
     ret
 
 
-Call_016_41b1:
+LoadBrd_41b1:
     ld a, [$cac0]
     call GetMonsterDataPtr
     ret
 
 
-Call_016_41b8:
+SaveBrd_41b8:
     push hl
     ld a, l
     add $a4
@@ -308,12 +308,12 @@ Call_016_41b8:
     rr c
     pop hl
     push bc
-    call Call_016_41b1
+    call LoadBrd_41b1
     pop bc
     push hl
     push bc
     push bc
-    call Call_016_4313
+    call FuncBrd_4313
     pop bc
     call Mul16x8To24
     ld a, $32
@@ -336,7 +336,7 @@ jr_016_41fa:
     ret
 
 
-Call_016_41ff:
+SaveBrd_41ff:
     push hl
     ld a, l
     add $a4
@@ -363,13 +363,13 @@ Call_016_41ff:
     rr c
     pop hl
     push bc
-    call Call_016_41b1
+    call LoadBrd_41b1
     pop bc
     ld [hl], c
     ret
 
 
-Call_016_4227:
+SaveBrd_4227:
     push bc
     push de
     ld a, [$cac0]
@@ -387,50 +387,50 @@ jr_016_4231:
     ret
 
 
-Call_016_4238:
+LoadBrd_4238:
     ld a, [$d670]
     and $01
     or a
     jp nz, Jump_016_42aa
 
     ld hl, $cad6
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$d66e]
     ld [hl], a
     ld hl, $cad8
     ld de, $d671
     ld b, $08
-    call Call_016_4227
+    call SaveBrd_4227
     ld hl, $cae0
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$ca4a]
     ld [hl], a
     ld hl, $cb44
     ld de, $d666
     ld b, $08
-    call Call_016_4227
+    call SaveBrd_4227
     ld hl, $cb4c
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$d6c7]
     ld [hl], a
     ld hl, $cad7
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$d703]
     ld [hl], a
     ld hl, $cae1
     ld de, $d706
     ld b, $08
-    call Call_016_4227
+    call SaveBrd_4227
     ld hl, $cae9
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$ca4a]
     ld [hl], a
     ld hl, $cb4d
     ld de, $d6fb
     ld b, $08
-    call Call_016_4227
+    call SaveBrd_4227
     ld hl, $cb55
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$d75c]
     ld [hl], a
     ret
@@ -438,75 +438,75 @@ Call_016_4238:
 
 Jump_016_42aa:
     ld hl, $cad6
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$d703]
     ld [hl], a
     ld hl, $cad8
     ld de, $d706
     ld b, $08
-    call Call_016_4227
+    call SaveBrd_4227
     ld hl, $cae0
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$ca4a]
     ld [hl], a
     ld hl, $cb44
     ld de, $d6fb
     ld b, $08
-    call Call_016_4227
+    call SaveBrd_4227
     ld hl, $cb4c
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$d75c]
     ld [hl], a
     ld hl, $cad7
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$d66e]
     ld [hl], a
     ld hl, $cae1
     ld de, $d671
     ld b, $08
-    call Call_016_4227
+    call SaveBrd_4227
     ld hl, $cae9
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$ca4a]
     ld [hl], a
     ld hl, $cb4d
     ld de, $d666
     ld b, $08
-    call Call_016_4227
+    call SaveBrd_4227
     ld hl, $cb55
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [$d6c7]
     ld [hl], a
     ret
 
 
-Call_016_4313:
+FuncBrd_4313:
     ld c, $00
     ld hl, $d671
-    call Call_016_434f
+    call SetBrd_434f
     ld a, [$d67a]
     cp $ff
     ld hl, $d6e8
-    call nz, Call_016_434f
+    call nz, SetBrd_434f
     ld a, [$d67b]
     cp $ff
     ld hl, $d6f1
-    call nz, Call_016_434f
+    call nz, SetBrd_434f
     ld hl, $d706
-    call Call_016_434f
+    call SetBrd_434f
     ld a, [$d70f]
     cp $ff
     ld hl, $d77d
-    call nz, Call_016_434f
+    call nz, SetBrd_434f
     ld a, [$d710]
     cp $ff
     ld hl, $d786
-    call nz, Call_016_434f
+    call nz, SetBrd_434f
     ld a, c
     ret
 
 
-Call_016_434f:
+SetBrd_434f:
     ld de, $ca42
     ld b, $09
 
@@ -528,14 +528,14 @@ jr_016_435a:
     ret
 
 
-Call_016_4360:
+ClrBrd_4360:
     xor a
     ld [$da72], a
     ld b, $1b
 
 jr_016_4366:
     push bc
-    call Call_016_4373
+    call LoadBrd_4373
     ld hl, $da72
     inc [hl]
     pop bc
@@ -545,7 +545,7 @@ jr_016_4366:
     ret
 
 
-Call_016_4373:
+LoadBrd_4373:
     ld a, [$da72]
     ld hl, $cb29
     add l
@@ -553,7 +553,7 @@ Call_016_4373:
     ld a, $00
     adc h
     ld h, a
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [hl]
     cp $03
     ret z
@@ -600,38 +600,38 @@ Call_016_4373:
     ld a, [$da77]
     ld b, a
     ld a, $64
-    call Call_016_4444
-    call c, Call_016_4481
+    call SaveBrd_4444
+    call c, LoadBrd_4481
     ret
 
 
     ld a, [$da77]
     ld b, a
     ld a, $1e
-    call Call_016_4444
-    call c, Call_016_4481
+    call SaveBrd_4444
+    call c, LoadBrd_4481
     ret
 
 
     ld a, [$da77]
     ld b, a
     ld a, $0a
-    call Call_016_4444
-    call c, Call_016_4481
+    call SaveBrd_4444
+    call c, LoadBrd_4481
     ld a, [$da77]
     ld b, a
     ld a, $1e
-    call Call_016_4444
-    call c, Call_016_4481
+    call SaveBrd_4444
+    call c, LoadBrd_4481
     ret
 
 
-    call Call_016_4481
+    call LoadBrd_4481
     ld a, [$da77]
     ld b, a
     ld a, $14
-    call Call_016_4444
-    call c, Call_016_4481
+    call SaveBrd_4444
+    call c, LoadBrd_4481
     ret
 
 
@@ -648,7 +648,7 @@ Jump_016_43fc:
     ld a, [$da72]
     ld hl, $d762
 
-Call_016_4410:
+CalcBrd_4410:
     add l
     ld l, a
     ld a, $00
@@ -678,20 +678,20 @@ Call_016_4410:
     ld a, [$da77]
     ld b, a
     ld a, $c8
-    call Call_016_4444
-    call c, Call_016_446c
+    call SaveBrd_4444
+    call c, LoadBrd_446c
     ret
 
 
     ld a, [$da77]
     ld b, a
     ld a, $28
-    call Call_016_4444
-    call c, Call_016_446c
+    call SaveBrd_4444
+    call c, LoadBrd_446c
     ret
 
 
-Call_016_4444:
+SaveBrd_4444:
     push bc
     push af
     call GenerateRNG
@@ -713,7 +713,7 @@ Call_016_4444:
     ld a, $00
     adc h
     ld h, a
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [hl]
     or a
     ret z
@@ -722,7 +722,7 @@ Call_016_4444:
     ret
 
 
-Call_016_446c:
+LoadBrd_446c:
     ld a, [$da72]
     ld hl, $cb29
     add l
@@ -730,7 +730,7 @@ Call_016_446c:
     ld a, $00
     adc h
     ld h, a
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [hl]
     cp $03
     ret z
@@ -739,7 +739,7 @@ Call_016_446c:
     ret
 
 
-Call_016_4481:
+LoadBrd_4481:
     ld a, [$da72]
     ld hl, $cb29
     add l
@@ -747,7 +747,7 @@ Call_016_4481:
     ld a, $00
     adc h
     ld h, a
-    call Call_016_41b1
+    call LoadBrd_41b1
     ld a, [hl]
     cp $02
     ret z
@@ -756,13 +756,13 @@ Call_016_4481:
     ret
 
 
-Call_016_4496:
+LoadBrd_4496:
 jr_016_4496:
     ld a, [de]
     inc de
     push bc
     push de
-    call Call_016_44a3
+    call CmpBrd_44a3
     pop de
     pop bc
     dec b
@@ -771,7 +771,7 @@ jr_016_4496:
     ret
 
 
-Call_016_44a3:
+CmpBrd_44a3:
     cp $ff
     ret z
 
@@ -787,7 +787,7 @@ Call_016_44a3:
 
     push af
     ld hl, $caf2
-    call Call_016_41b1
+    call LoadBrd_41b1
     pop af
     ld b, $19
     ld c, a
@@ -834,7 +834,7 @@ jr_016_44c7:
 
     ld b, $c8
     ld d, $d7
-    call Call_016_453d
+    call FuncBrd_453d
     ld a, [wRNG2]
     ld b, a
     ld a, c
@@ -845,7 +845,7 @@ jr_016_44c7:
     ld b, $c8
     ld d, $d7
     ld e, a
-    call Call_016_4553
+    call FuncBrd_4553
     ld a, b
     ld [$da71], a
     ld hl, $d9e6
@@ -864,7 +864,7 @@ jr_016_450f:
 
     ld b, $00
     ld d, $c8
-    call Call_016_453d
+    call FuncBrd_453d
     ld a, [wRNG2]
     ld b, a
     ld a, c
@@ -875,7 +875,7 @@ jr_016_450f:
     ld b, $00
     ld d, $c8
     ld e, a
-    call Call_016_4553
+    call FuncBrd_4553
     ld a, b
     ld [$da71], a
     cp $ff
@@ -886,7 +886,7 @@ jr_016_450f:
     ret
 
 
-Call_016_453d:
+FuncBrd_453d:
     ld c, $00
 
 jr_016_453f:
@@ -910,7 +910,7 @@ jr_016_454d:
     ret
 
 
-Call_016_4553:
+FuncBrd_4553:
     ld c, $00
 
 jr_016_4555:
@@ -943,7 +943,7 @@ jr_016_4566:
 ; Input: $DA6F = parent 1 species, $DA70 = parent 2 species
 ;        $DA75/$DA76 = parent party slot indices
 ; Output: $DA71 = result species, $DA77 = offspring plus value
-Call_016_456e:
+LoadBrd_456e:
     ld a, $ff
     ld [$da71], a            ; result = not found
     ld a, $ff
@@ -954,12 +954,12 @@ Call_016_456e:
     ld [$da74], a
     ld a, $ff
     ld [$da77], a
-    call Call_016_4653        ; Step 1: compute plus, search special table ($4B30)
+    call LoadBrd_4653        ; Step 1: compute plus, search special table ($4B30)
     ld a, [$da71]
     cp $ff
     ret nz                   ; if special table found a result, done
 
-    call Call_016_45d5        ; Step 2: search family table ($4974)
+    call LoadBrd_45d5        ; Step 2: search family table ($4974)
     call $44d0                ; Step 3: clear utility (checks $C86C link flag)
     ld a, [$da71]
     cp $ff
@@ -980,12 +980,12 @@ label16_45a3:
     ld [$da74], a
     ld a, $ff
     ld [$da77], a
-    call Call_016_4653
+    call LoadBrd_4653
     ld a, [$da71]
     cp $ff
     ret nz
 
-    call Call_016_45d5
+    call LoadBrd_45d5
     ld a, [$da71]
     cp $ff
     ret nz
@@ -998,14 +998,14 @@ label16_45a3:
 ; BreedingFamilySearch — Search family recipe table with parent swap
 ; First pass: parent1 specific + parent2 specific → exact matches only
 ; If no match: convert parent2 to family code, search again
-Call_016_45d5:
+LoadBrd_45d5:
     ld a, [$da70]            ; parent 2
     cp $f0
     jr nc, jr_016_45ff       ; if already family-coded, skip first pass
 
     ld a, [$da6f]            ; save parent 1
     push af
-    call Call_016_45ff        ; first pass: parent2 still specific
+    call LoadBrd_45ff        ; first pass: parent2 still specific
     pop af
     ld [$da6f], a            ; restore parent 1
     ld a, [$da71]
@@ -1022,7 +1022,7 @@ Call_016_45d5:
 
 ; BreedingTableScan — Search family recipe table at $4974
 ; Converts parent 1 to family code, then scans all entries
-Call_016_45ff:
+LoadBrd_45ff:
 jr_016_45ff:
     ld a, [$da6f]            ; parent 1
     cp $f0
@@ -1101,7 +1101,7 @@ jr_016_464e:
 ; Computes offspring plus from parents' plus values and levels
 ; Then converts parent species to family codes ($DA73/$DA74)
 ; Finally searches the 825-entry special recipe table
-Call_016_4653:
+LoadBrd_4653:
     ld a, [$da75]
     ld hl, $cb23
     call GetMonsterDataPtr
@@ -1204,7 +1204,7 @@ jr_016_46f5:
     jr z, jr_016_4710
 
     push hl
-    call Call_016_471c        ; check this entry against parents
+    call LoadBrd_471c        ; check this entry against parents
     pop hl
     ld a, [$da71]
     cp $ff
@@ -1232,7 +1232,7 @@ jr_016_4710:
 ; Format: [parent1_match, parent2_match, min_plus, result_species, plus_mod]
 ; Matches parent species (specific) or family code ($DA73/$DA74)
 ; Plus threshold: offspring plus ($DA77) must be >= entry byte 2
-Call_016_471c:
+LoadBrd_471c:
     ld a, [$da6f]            ; parent 1 species (specific)
     cp [hl]
     jr z, jr_016_4728        ; exact parent 1 match
@@ -1271,16 +1271,16 @@ jr_016_4749:
 
 label16_474a:
     ld hl, $cb21
-    call Call_016_47e0
+    call LoadBrd_47e0
     xor a
     ld [hl+], a
     ld [hl], a
     ld hl, $cacd
     ld de, $ca42
     ld b, $08
-    call Call_016_47e7
+    call SaveBrd_47e7
     ld hl, $cad5
-    call Call_016_47e0
+    call LoadBrd_47e0
     ld a, [$ca4a]
     ld [hl], a
     ld hl, $c0d8
@@ -1288,16 +1288,16 @@ label16_474a:
     ld a, $ff
     call FillNBytesWithRegA
     ld hl, $caca
-    call Call_016_47e0
+    call LoadBrd_47e0
     ld a, [hl]
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
     ld b, $03
-    call Call_016_47f8
+    call LoadBrd_47f8
     ld hl, $cad6
-    call Call_016_47e0
+    call LoadBrd_47e0
     ld a, [hl]
     cp $ff
     jr z, jr_016_47b9
@@ -1307,26 +1307,26 @@ label16_474a:
     rst $10
     ld de, $da39
     ld b, $03
-    call Call_016_47f8
+    call LoadBrd_47f8
     ld hl, $cad7
-    call Call_016_47e0
+    call LoadBrd_47e0
     ld a, [hl]
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
     ld b, $03
-    call Call_016_47f8
+    call LoadBrd_47f8
 
 jr_016_47b9:
     ld hl, $caf2
-    call Call_016_47e0
+    call LoadBrd_47e0
     ld e, l
     ld d, h
     ld b, $19
-    call Call_016_4805
+    call SaveBrd_4805
     ld hl, $caf2
-    call Call_016_47e0
+    call LoadBrd_47e0
     ld de, $c0d8
     ld b, $19
 
@@ -1338,18 +1338,18 @@ jr_016_47d1:
     jr nz, jr_016_47d1
 
     ld hl, $cb24
-    call Call_016_47e0
+    call LoadBrd_47e0
     ld [hl], $00
     ret
 
 
-Call_016_47e0:
+LoadBrd_47e0:
     ld a, [$cac0]
     call GetMonsterDataPtr
     ret
 
 
-Call_016_47e7:
+SaveBrd_47e7:
     push bc
     push de
     ld a, [$cac0]
@@ -1367,13 +1367,13 @@ jr_016_47f1:
     ret
 
 
-Call_016_47f8:
+LoadBrd_47f8:
 jr_016_47f8:
     ld a, [de]
     inc de
     push bc
     push de
-    call Call_016_4838
+    call CmpBrd_4838
     pop de
     pop bc
     dec b
@@ -1382,7 +1382,7 @@ jr_016_47f8:
     ret
 
 
-Call_016_4805:
+SaveBrd_4805:
 jr_016_4805:
     push bc
     push de
@@ -1396,7 +1396,7 @@ jr_016_4805:
     ld b, a
     push bc
     ld hl, $cb23
-    call Call_016_47e0
+    call LoadBrd_47e0
     pop bc
     ld a, [hl]
     cp b
@@ -1416,7 +1416,7 @@ jr_016_482b:
     inc de
     push bc
     push de
-    call Call_016_4838
+    call CmpBrd_4838
     pop de
     pop bc
     dec b
@@ -1425,7 +1425,7 @@ jr_016_482b:
     ret
 
 
-Call_016_4838:
+CmpBrd_4838:
     cp $ff
     ret z
 
@@ -1947,9 +1947,9 @@ jr_016_5c1c:
     ld e, [hl]
     ld c, h
     ld e, a
-    call Call_016_6db0
+    call SetBrd_6db0
 
-Call_016_5c45:
+LoadBrd_5c45:
     ld a, [wRNG1]
     ld b, a
     ld a, $03
@@ -2017,8 +2017,8 @@ jr_016_5c98:
     ld bc, $0008
     ld a, $ff
     call FillNBytesWithRegA
-    call Call_016_6ddb
-    call Call_016_5c45
+    call CallBrd_6ddb
+    call LoadBrd_5c45
     ret
 
 
@@ -2076,7 +2076,7 @@ jr_016_5c98:
     xor a
     ld [$d9cf], a
     ld [$d9d0], a
-    call Call_016_5e38
+    call SetBrd_5e38
     ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
@@ -2101,7 +2101,7 @@ jr_016_5c98:
     ld [$d9d5], a
     ld a, h
     ld [$d9d6], a
-    call Call_016_5e38
+    call SetBrd_5e38
     ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
@@ -2126,9 +2126,9 @@ jr_016_5c98:
     ld [$d9dd], a
     ld a, h
     ld [$d9de], a
-    call Call_016_5e38
+    call SetBrd_5e38
     ld hl, $d7ca
-    call Call_016_5dc6
+    call SaveBrd_5dc6
     ld a, $52
     ld [wMapID], a
     ld a, $00
@@ -2147,7 +2147,7 @@ jr_016_5c98:
     ret
 
 
-Call_016_5dc6:
+SaveBrd_5dc6:
     push hl
     ld a, $ff
     ld [hl+], a
@@ -2171,7 +2171,7 @@ Call_016_5dc6:
     ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
-    call Call_016_5e2e
+    call SetBrd_5e2e
     pop hl
     ld [hl+], a
     ld a, $01
@@ -2189,7 +2189,7 @@ Call_016_5dc6:
     ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
-    call Call_016_5e2e
+    call SetBrd_5e2e
     pop hl
     ld [hl+], a
     ld a, $01
@@ -2207,7 +2207,7 @@ Call_016_5dc6:
     ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
-    call Call_016_5e2e
+    call SetBrd_5e2e
     pop hl
     ld [hl+], a
     ld a, $01
@@ -2215,7 +2215,7 @@ Call_016_5dc6:
     ret
 
 
-Call_016_5e2e:
+SetBrd_5e2e:
     ld hl, $1401
     rst $10
     ld a, [$da18]
@@ -2223,15 +2223,15 @@ Call_016_5e2e:
     ret
 
 
-Call_016_5e38:
+SetBrd_5e38:
     ld hl, $0000
     ld c, $00
     ld a, [$ca8e]
-    call Call_016_5e91
+    call CmpBrd_5e91
     ld a, [$ca8f]
-    call Call_016_5e91
+    call CmpBrd_5e91
     ld a, [$ca90]
-    call Call_016_5e91
+    call CmpBrd_5e91
     ld a, c
     call Div16x8To16
     ld a, l
@@ -2270,7 +2270,7 @@ Call_016_5e38:
     ld hl, $b512
     jr jr_016_5ea7
 
-Call_016_5e91:
+CmpBrd_5e91:
     cp $ff
     ret z
 
@@ -2293,11 +2293,11 @@ Call_016_5e91:
 jr_016_5ea7:
     ld a, $02
     ld [$da02], a
-    call Call_016_5ec9
+    call SaveBrd_5ec9
     ld [wTempEnemyId1], a
-    call Call_016_5ec9
+    call SaveBrd_5ec9
     ld [$da05], a
-    call Call_016_5ec9
+    call SaveBrd_5ec9
     ld [$da07], a
     xor a
     ld [$da04], a
@@ -2306,7 +2306,7 @@ jr_016_5ea7:
     ret
 
 
-Call_016_5ec9:
+SaveBrd_5ec9:
     push hl
     call GenerateRNG
     ld a, [wRNG1]
@@ -2611,7 +2611,7 @@ jr_016_60d1:
 
 jr_016_60d8:
     push bc
-    call Call_016_6800
+    call SetBrd_6800
     pop bc
     cp $0f
     jr z, jr_016_60d8
@@ -2636,13 +2636,13 @@ jr_016_60f2:
     ld a, [hl]
     ld c, a
     push bc
-    call Call_016_6744
+    call SetBrd_6744
     ld a, b
     or a
     ld a, $ff
     jr z, jr_016_6102
 
-    call Call_016_6800
+    call SetBrd_6800
 
 jr_016_6102:
     pop bc
@@ -2672,7 +2672,7 @@ jr_016_611a:
 
     ld c, a
     push bc
-    call Call_016_6744
+    call SetBrd_6744
     ld a, b
     or a
     ld a, $0f
@@ -2681,7 +2681,7 @@ jr_016_611a:
     ld a, b
     xor $0f
     ld c, a
-    call Call_016_6800
+    call SetBrd_6800
 
 jr_016_6132:
     pop bc
@@ -2740,7 +2740,7 @@ jr_016_6171:
     ld [$c0a9], a
     jp z, $605b
 
-    call Call_016_66ae
+    call CallBrd_66ae
     ld a, [wScreenIndex]
     ld [$c960], a
     ldh a, [$a5]
@@ -2751,7 +2751,7 @@ jr_016_6171:
     ld [$c0a7], a
     ldh a, [$a8]
     ld [$c0a8], a
-    call Call_016_6afb
+    call LoadBrd_6afb
     jr z, jr_016_6171
 
     ld a, [$c0a7]
@@ -2818,7 +2818,7 @@ jr_016_620a:
     ld [$c0a9], a
     jp z, $605b
 
-    call Call_016_6585
+    call CallBrd_6585
     ld a, [$c960]
     ld b, a
     ld a, [wScreenIndex]
@@ -2943,18 +2943,18 @@ jr_016_62d8:
     ld [$c0a9], a
     jp z, $605b
 
-    call Call_016_661b
+    call CallBrd_661b
     ld hl, $c960
     ld a, [wScreenIndex]
     cp [hl]
     jr nz, jr_016_62f1
 
-    call Call_016_661b
+    call CallBrd_661b
 
 jr_016_62f1:
     ld a, [wScreenIndex]
     ld [$c0af], a
-    call Call_016_68c6
+    call SetBrd_68c6
     jp z, Jump_016_62d8
 
     ld a, [$c926]
@@ -3066,7 +3066,7 @@ jr_016_639b:
 jr_016_63a2:
     push bc
     ld [hl], $ff
-    call Call_016_6432
+    call SaveBrd_6432
     pop bc
     dec b
     jr nz, jr_016_63a2
@@ -3076,7 +3076,7 @@ jr_016_63ac:
     ret
 
 
-Call_016_63af:
+CallBrd_63af:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3157,7 +3157,7 @@ jr_016_63e1:
 
     jr jr_016_63e1
 
-Call_016_6432:
+SaveBrd_6432:
     push hl
     ld a, $10
     ld [$c0a9], a
@@ -3204,14 +3204,14 @@ jr_016_646d:
 
 
 jr_016_6478:
-    call Call_016_63af
+    call CallBrd_63af
     ld a, [wScreenIndex]
     ld b, a
     ld a, [$c960]
     cp b
     jr nz, jr_016_6488
 
-    call Call_016_63af
+    call CallBrd_63af
 
 jr_016_6488:
     ld a, [wScreenIndex]
@@ -3220,7 +3220,7 @@ jr_016_6488:
     cp b
     jr nz, jr_016_6495
 
-    call Call_016_63af
+    call CallBrd_63af
 
 jr_016_6495:
     ld a, [wScreenIndex]
@@ -3234,7 +3234,7 @@ jr_016_6495:
     or a
     jr z, jr_016_64a8
 
-    call Call_016_63af
+    call CallBrd_63af
 
 jr_016_64a8:
     ldh a, [$a5]
@@ -3245,7 +3245,7 @@ jr_016_64a8:
     ld [$c0ac], a
     ldh a, [$a8]
     ld [$c0ad], a
-    call Call_016_6955
+    call LoadBrd_6955
     jr z, jr_016_646d
 
     ld a, [$c0aa]
@@ -3256,13 +3256,13 @@ jr_016_64a8:
     ldh [$a7], a
     ld a, [$c0ad]
     ldh [$a8], a
-    call Call_016_68c6
+    call SetBrd_68c6
     jr z, jr_016_646d
 
-    call Call_016_68ea
+    call SetBrd_68ea
     jr z, jr_016_646d
 
-    call Call_016_690e
+    call SetBrd_690e
     jr z, jr_016_646d
 
     ld a, [wScreenIndex]
@@ -3373,7 +3373,7 @@ jr_016_6564:
     ret
 
 
-Call_016_6585:
+CallBrd_6585:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3468,7 +3468,7 @@ jr_016_65bb:
     jp Jump_016_658c
 
 
-Call_016_661b:
+CallBrd_661b:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3560,7 +3560,7 @@ jr_016_6651:
     jp Jump_016_6622
 
 
-Call_016_66ae:
+CallBrd_66ae:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3655,7 +3655,7 @@ jr_016_66e4:
     jp Jump_016_66b5
 
 
-Call_016_6744:
+SetBrd_6744:
     ld bc, $0000
     ld d, a
     sub $04
@@ -3810,7 +3810,7 @@ jr_016_67ff:
     ret
 
 
-Call_016_6800:
+SetBrd_6800:
     ld de, $c500
     ld hl, $7055
 
@@ -3960,7 +3960,7 @@ jr_016_68c5:
     ret
 
 
-Call_016_68c6:
+SetBrd_68c6:
     ld hl, $c960
     ld a, [wScreenIndex]
     cp [hl]
@@ -3987,7 +3987,7 @@ Call_016_68c6:
     ret
 
 
-Call_016_68ea:
+SetBrd_68ea:
     ld hl, $c0a0
     ld a, [wScreenIndex]
     cp [hl]
@@ -4014,7 +4014,7 @@ Call_016_68ea:
     ret
 
 
-Call_016_690e:
+SetBrd_690e:
     ld hl, $d793
 
 jr_016_6911:
@@ -4028,7 +4028,7 @@ jr_016_6911:
 
 jr_016_6918:
     push hl
-    call Call_016_6924
+    call CalcBrd_6924
     pop hl
     ret z
 
@@ -4038,7 +4038,7 @@ jr_016_6918:
     inc hl
     jr jr_016_6911
 
-Call_016_6924:
+CalcBrd_6924:
     inc hl
     inc hl
     ld b, [hl]
@@ -4072,7 +4072,7 @@ Call_016_6924:
     ret
 
 
-Call_016_6955:
+LoadBrd_6955:
     ld a, [$c0ae]
     and $f0
     jp z, Jump_016_6d93
@@ -4105,7 +4105,7 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b0], a
     ld a, [$c0aa]
@@ -4130,7 +4130,7 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b1], a
     ld a, [$c0aa]
@@ -4161,7 +4161,7 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b2], a
     ld a, [$c0aa]
@@ -4186,7 +4186,7 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b3], a
     ld a, [$c0aa]
@@ -4205,7 +4205,7 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b4], a
     ld a, [$c0aa]
@@ -4230,7 +4230,7 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b5], a
     ld a, [$c0aa]
@@ -4261,7 +4261,7 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b6], a
     ld a, [$c0aa]
@@ -4286,7 +4286,7 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b7], a
     ld a, [$c0aa]
@@ -4317,13 +4317,13 @@ Call_016_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b8], a
     jp Jump_016_6c96
 
 
-Call_016_6afb:
+LoadBrd_6afb:
     ld a, [$c0a5]
     ld l, a
     ld a, [$c0a6]
@@ -4352,7 +4352,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b0], a
     ld a, [$c0a5]
@@ -4377,7 +4377,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b1], a
     ld a, [$c0a5]
@@ -4408,7 +4408,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b2], a
     ld a, [$c0a5]
@@ -4433,7 +4433,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b3], a
     ld a, [$c0a5]
@@ -4452,7 +4452,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b4], a
     ld a, [$c0a5]
@@ -4477,7 +4477,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b5], a
     ld a, [$c0a5]
@@ -4508,7 +4508,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b6], a
     ld a, [$c0a5]
@@ -4533,7 +4533,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b7], a
     ld a, [$c0a5]
@@ -4564,7 +4564,7 @@ Call_016_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call Call_016_6d99
+    call CallBrd_6d99
     ld a, b
     ld [$c0b8], a
 
@@ -4757,7 +4757,7 @@ jr_016_6d97:
     ret
 
 
-Call_016_6d99:
+CallBrd_6d99:
     call WaitInputRelease
     ld b, $00
     ldh a, [$aa]
@@ -4776,14 +4776,14 @@ Call_016_6d99:
     ret
 
 
-Call_016_6db0:
+SetBrd_6db0:
     ld hl, $d9cf
     ld b, $08
 
 jr_016_6db5:
     push bc
     push hl
-    call Call_016_6dc1
+    call LoadBrd_6dc1
     pop hl
     pop bc
     ld [hl+], a
@@ -4793,7 +4793,7 @@ jr_016_6db5:
     ret
 
 
-Call_016_6dc1:
+LoadBrd_6dc1:
     ld a, [wFloorType3]
     ld l, a
     ld h, $00
@@ -4815,7 +4815,7 @@ Call_016_6dc1:
     ret
 
 
-Call_016_6ddb:
+CallBrd_6ddb:
     call GenerateRNG
     ld a, [wRNG1]
     and $03
@@ -4990,22 +4990,22 @@ jr_016_6f39:
     srl a
     srl a
     cp $0c
-    jr z, jr_016_6f5f
+    jr z, CheckRandomEncounterThreshold
 
     inc hl
     inc hl
     cp $0d
-    jr z, jr_016_6f5f
+    jr z, CheckRandomEncounterThreshold
 
     inc hl
     inc hl
     cp $0e
-    jr z, jr_016_6f5f
+    jr z, CheckRandomEncounterThreshold
 
     ret
 
 
-jr_016_6f5f:
+CheckRandomEncounterThreshold:
     ld a, [hl+]
     ld b, [hl]
     ld c, a
@@ -5245,7 +5245,7 @@ FloorTypeSelectionTable2:
 ; ---------------------------------------------------------------
 ; FloorTypeSelectionTable3 — 17 entries × 16 bytes
 ; Third floor type probability table.
-; Used by Call_016_6432 with index from GateFloorDataTable byte 2.
+; Used by SaveBrd_6432 with index from GateFloorDataTable byte 2.
 ; ---------------------------------------------------------------
 FloorTypeSelectionTable3:
     db $64, $00, $00, $00, $00, $00, $00, $00, $00, $02, $02, $00, $00, $00, $00, $00 ; type 0

@@ -5,141 +5,83 @@
 
 SECTION "ROM Bank $04b", ROMX[$4000], BANK[$4b]
 
-    ld c, e
-    adc c
-    ld b, b
-    and c
-    ld b, b
-    cp c
-    ld b, b
-    add hl, bc
-    ld b, b
-    pop de
-    ld b, b
-    ld c, $42
-    ret nz
+    db $4B ; Bank number
 
-    ld b, d
-    jr z, jr_04b_4054
+    ; Cross-bank dispatch table (68 entries)
+    ; Called via: ld hl, $4BXX / rst $10
+    dw LoadB4b_4089                  ; Entry 0
+    dw $40A1                          ; Entry 1
+    dw $40B9                          ; Entry 2
+    dw $4009                          ; Entry 3
+    dw $40D1                          ; Entry 4
+    dw $420E                          ; Entry 5
+    dw $42C0                          ; Entry 6
+    dw $4328                          ; Entry 7
+    dw $4365                          ; Entry 8
+FuncB4b_4013:
+    dw $43CD                          ; Entry 9
+    dw $44AF                          ; Entry 10
+    dw $44EA                          ; Entry 11
+    dw $45C8                          ; Entry 12
+    dw $45DE                          ; Entry 13
+    dw $4617                          ; Entry 14
+    dw $464A                          ; Entry 15
+    dw $4668                          ; Entry 16
+    dw $46A6                          ; Entry 17
+    dw $46F0                          ; Entry 18
+    dw $479B                          ; Entry 19
+    dw $4818                          ; Entry 20
+    dw $48BB                          ; Entry 21
+    dw $49AA                          ; Entry 22
+    dw $4A49                          ; Entry 23
+    db $8D                            ; Entry 24 low ($4A8D)
+DataB4b_4032:
+    db $4A                            ; Entry 24 high
+    dw $4ABB                          ; Entry 25
+    dw $4B2F                          ; Entry 26
+    dw $4B9F                          ; Entry 27
+    dw $4D0E                          ; Entry 28
+    dw $4E00                          ; Entry 29
+    dw $4E24                          ; Entry 30
+    dw $4E3C                          ; Entry 31
+    dw $4EB3                          ; Entry 32
+    dw $4EF8                          ; Entry 33
+    dw $4F53                          ; Entry 34
+    dw $5039                          ; Entry 35
+    dw $5119                          ; Entry 36
+    dw $5191                          ; Entry 37
+    dw $5268                          ; Entry 38
+    dw $528D                          ; Entry 39
+    dw $52D0                          ; Entry 40
+    dw $5315                          ; Entry 41
+    dw $53B9                          ; Entry 42
+    dw $5490                          ; Entry 43
+    dw $54E0                          ; Entry 44
+    dw $5510                          ; Entry 45
+    dw $5574                          ; Entry 46
+    dw $55A4                          ; Entry 47
+    dw $5606                          ; Entry 48
+    dw $569A                          ; Entry 49
+    dw $579C                          ; Entry 50
+    dw $5835                          ; Entry 51
+    dw $59B7                          ; Entry 52
+    dw $5B94                          ; Entry 53
+    dw $5CAD                          ; Entry 54
+    dw $5D46                          ; Entry 55
+    dw $5E00                          ; Entry 56
+    dw $5E7A                          ; Entry 57
+    dw $5F0C                          ; Entry 58
+    dw $6088                          ; Entry 59
+    dw $60EE                          ; Entry 60
+    dw $61BA                          ; Entry 61
+    dw $6207                          ; Entry 62
+    dw $626B                          ; Entry 63
+    dw $62DD                          ; Entry 64
+    dw $6308                          ; Entry 65
+    dw $6352                          ; Entry 66
+    dw $6419                          ; Entry 67
 
-    ld h, l
-    ld b, e
-
-Call_04b_4013:
-    call $af43
-    ld b, h
-    ld [$c844], a
-    ld b, l
-    sbc $45
-    rla
-    ld b, [hl]
-    ld c, d
-    ld b, [hl]
-    ld l, b
-    ld b, [hl]
-    and [hl]
-    ld b, [hl]
-    ldh a, [rDMA]
-    sbc e
-    ld b, a
-    jr jr_04b_4073
-
-    cp e
-    ld c, b
-    xor d
-    ld c, c
-    ld c, c
-    ld c, d
-    adc l
-
-Call_04b_4032:
-    ld c, d
-    cp e
-    ld c, d
-    cpl
-    ld c, e
-    sbc a
-    ld c, e
-    ld c, $4d
-    nop
-    ld c, [hl]
-    inc h
-    ld c, [hl]
-    inc a
-    ld c, [hl]
-    or e
-    ld c, [hl]
-    ld hl, sp+$4e
-    ld d, e
-    ld c, a
-    add hl, sp
-    ld d, b
-    add hl, de
-    ld d, c
-    sub c
-    ld d, c
-    ld l, b
-    ld d, d
-    adc l
-    ld d, d
-    ret nc
-
-    ld d, d
-    dec d
-
-jr_04b_4054:
-    ld d, e
-    cp c
-    ld d, e
-    sub b
-    ld d, h
-    ldh [rHDMA4], a
-    db $10
-    ld d, l
-    ld [hl], h
-    ld d, l
-    and h
-    ld d, l
-    ld b, $56
-    sbc d
-    ld d, [hl]
-    sbc h
-    ld d, a
-    dec [hl]
-    ld e, b
-    or a
-    ld e, c
-    sub h
-    ld e, e
-    xor l
-    ld e, h
-    ld b, [hl]
-    ld e, l
-    nop
-    ld e, [hl]
-
-jr_04b_4073:
-    ld a, d
-    ld e, [hl]
-    inc c
-    ld e, a
-    adc b
-    ld h, b
-    xor $60
-    cp d
-    ld h, c
-    rlca
-    ld h, d
-    ld l, e
-    ld h, d
-    db $dd
-    ld h, d
-    ld [$5263], sp
-    ld h, e
-    add hl, de
-    ld h, h
-
-Call_04b_4089:
+LoadB4b_4089:
     ld a, [$c822]
     cp $01
     jr nz, jr_04b_409a
@@ -186,7 +128,7 @@ jr_04b_40b2:
 
 
 jr_04b_40ca:
-    call Call_04b_4089
+    call LoadB4b_4089
     call RequestScreenUpdate
     ret
 
@@ -8790,7 +8732,7 @@ jr_04b_647b:
     or d
     ld b, h
     or d
-    call nz, Call_04b_4032
+    call nz, DataB4b_4032
     or [hl]
     ld b, b
     nop
@@ -8844,7 +8786,7 @@ jr_04b_647b:
     or d
     ld b, h
     or d
-    call nz, Call_04b_4032
+    call nz, DataB4b_4032
     or [hl]
     ld b, b
     nop
@@ -8898,7 +8840,7 @@ jr_04b_647b:
     or d
     ld b, h
     or d
-    call nz, Call_04b_4032
+    call nz, DataB4b_4032
     or [hl]
     ld b, b
     nop
@@ -8954,7 +8896,7 @@ jr_04b_68c9:
     or d
     ld b, h
     or d
-    call nz, Call_04b_4032
+    call nz, DataB4b_4032
     or [hl]
     ld b, b
     nop
@@ -9239,7 +9181,7 @@ jr_04b_6a18:
     db $e3
     ld [hl], b
 
-Call_04b_6a23:
+FuncB4b_6a23:
     adc a
     ldh [$1f], a
     ld [hl], b
@@ -9248,7 +9190,7 @@ Call_04b_6a23:
 
     add e
 
-Call_04b_6a2b:
+LoadB4b_6a2b:
     ld a, h
     rlca
     ld hl, sp-$3f
@@ -13432,7 +13374,7 @@ jr_04b_7a63:
     add h
     or h
     ld b, d
-    call nc, Call_04b_6a2b
+    call nc, LoadB4b_6a2b
     dec d
     cp l
     ld [bc], a
@@ -13446,7 +13388,7 @@ jr_04b_7a63:
     dec e
     jp nz, $8040
 
-    call z, Call_04b_4013
+    call z, FuncB4b_4013
     add b
     add b
     ld [hl], b
@@ -13565,7 +13507,7 @@ jr_04b_7c52:
     ret nz
 
     nop
-    call z, Call_04b_4013
+    call z, FuncB4b_4013
     add b
     and b
     ld d, b
@@ -14164,7 +14106,7 @@ jr_04b_7f18:
     ld b, l
     cp d
     ld b, l
-    call c, Call_04b_6a23
+    call c, FuncB4b_6a23
     sub l
     ld l, [hl]
     sub c
@@ -14265,7 +14207,7 @@ jr_04b_7f18:
     ld b, l
     cp d
     ld b, l
-    call c, Call_04b_6a23
+    call c, FuncB4b_6a23
     sub l
     ld l, [hl]
     sub c

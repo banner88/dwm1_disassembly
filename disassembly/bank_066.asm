@@ -1051,7 +1051,7 @@ jr_066_4479:
     rst $38
     add b
     rst $38
-    call z, Call_066_5eb3
+    call z, WriteB66_5eb3
     pop hl
     ld a, a
     ret nz
@@ -1203,7 +1203,7 @@ jr_066_451d:
     ldh [$60], a
     ld hl, sp+$58
     cp h
-    call nc, Call_000_3aee
+    call nc, AudioUpdateFreq
     rst $38
     dec b
     ccf
@@ -2063,7 +2063,7 @@ jr_066_48a4:
     call c, $b8d0
     ld hl, sp-$54
     xor b
-    call c, Call_066_7870
+    call c, DataB66_7870
     ldh [$f0], a
     ld h, b
     ldh a, [$c0]
@@ -2853,7 +2853,7 @@ jr_066_4c34:
     ld e, $dc
     cp $dc
     ld a, [hl]
-    call c, Call_066_5c7e
+    call c, DispB66_5c7e
     cp $7c
     sbc $fc
     sbc $dc
@@ -5051,7 +5051,7 @@ jr_066_4cd9:
     nop
     nop
 
-Call_066_5500:
+DataB66_5500:
     nop
     nop
     nop
@@ -6235,7 +6235,7 @@ jr_066_5952:
     ld c, h
     bit 7, h
     bit 7, h
-    call nz, Call_066_7cfb
+    call nz, DataB66_7cfb
     jp $ff3c
 
 
@@ -6840,7 +6840,7 @@ jr_066_5b86:
     rst $38
     ld [c], a
 
-Call_066_5c7e:
+DispB66_5c7e:
     rst $38
     sub d
     rst $38
@@ -6877,7 +6877,7 @@ Call_066_5c7e:
     add d
     cp l
     add $bf
-    call nz, Call_066_5500
+    call nz, DataB66_5500
     ld a, b
     ld a, d
     or a
@@ -7185,7 +7185,7 @@ jr_066_5dcd:
     nop
     nop
     or e
-    call nz, Call_066_69d6
+    call nz, DataB66_69d6
     cp l
     jp $f6ea
 
@@ -7363,7 +7363,7 @@ jr_066_5e8c:
     ld d, b
     ld [hl], e
 
-Call_066_5eb3:
+WriteB66_5eb3:
     ld [hl], h
     ld [$82ff], sp
     nop
@@ -7375,7 +7375,7 @@ Call_066_5eb3:
     rst $38
     nop
     ld [$88ff], sp
-    call c, Call_066_7fe4
+    call c, DataB66_7fe4
     add a
     rst $18
     jr nz, jr_066_5e58
@@ -10182,7 +10182,7 @@ jr_066_60c0:
     nop
     nop
 
-Call_066_69d6:
+DataB66_69d6:
     nop
     nop
     nop
@@ -13922,7 +13922,7 @@ Call_066_69d6:
     nop
     nop
 
-Call_066_7870:
+DataB66_7870:
     nop
     nop
     nop
@@ -15087,7 +15087,7 @@ Call_066_7870:
     nop
     nop
 
-Call_066_7cfb:
+DataB66_7cfb:
     nop
     nop
     nop
@@ -15834,7 +15834,7 @@ Call_066_7cfb:
     nop
     nop
 
-Call_066_7fe4:
+DataB66_7fe4:
     nop
     nop
     nop

@@ -93,8 +93,8 @@ SECTION "ROM Bank $050", ROMX[$4000], BANK[$50]
     dw $5DC9                    ; Entry 0
     dw $5E21                    ; Entry 1
     dw $5E49                    ; Entry 2
-    dw Call_050_6053            ; Entry 3
-    dw Call_050_7c4d            ; Entry 4
+    dw BattleDispatchEntry3            ; Entry 3
+    dw BattleDispatchEntry4            ; Entry 4
     dw ClearTileBuffer            ; Entry 5
     dw $79EB                    ; Entry 6
     dw $59EB                    ; Entry 7
@@ -108,7 +108,7 @@ SECTION "ROM Bank $050", ROMX[$4000], BANK[$50]
 ; Reads $D9F4 (current event state) and dispatches to the appropriate
 ; handler via rst $00 jump table.
 ; ---------------------------------------------------------------------------
-Call_050_4017:
+LoadBtl_4017:
     ld a, [wEventStateMachineIndex]            ; Current event state (0-10)
     rst $00                  ; Dispatch via jump table below
 
@@ -160,7 +160,7 @@ jr_050_4062:
 
 jr_050_4064:
     ld a, c
-    call Call_050_5b07
+    call SaveBtl_5b07
     jr c, jr_050_4081
 
     ld a, c
@@ -278,10 +278,10 @@ Jump_050_40ed:
     call UpdateBattleSprites
     ld de, $6ed2
     call LoadPaletteFromDE
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $419b
     ld a, [wMenu_selection]
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, wEventStateMachineIndex
     inc [hl]
@@ -304,14 +304,14 @@ jr_050_4124:
 
 jr_050_4126:
     ld [$d9f3], a
-    call Call_050_7a87
+    call CmpBtl_7a87
     ret
 
 
 jr_050_412d:
     ld de, $419b
     ld hl, wMenu_selection
-    call Call_050_782e
+    call BtlFunc_782e
     ld a, [wJoypad_current_frame]
     bit 0, a
     jr z, jr_050_419a
@@ -345,7 +345,7 @@ jr_050_412d:
     ld [$c8dd], a
 
 jr_050_4176:
-    call Call_050_41a5
+    call LoadBtl_41a5
     jr nc, jr_050_41b9
 
     ld a, [$c1c0]
@@ -354,7 +354,7 @@ jr_050_4176:
     inc [hl]
     ld hl, $d9f5
     inc [hl]
-    call Call_050_5708
+    call RefreshBattleGraphics
     ld hl, $d9f5
     inc [hl]
     ld a, $81
@@ -373,14 +373,14 @@ jr_050_419a:
     rst $38
     rst $38
 
-Call_050_41a5:
+LoadBtl_41a5:
     ld a, [$c8dd]
     ld c, a
     ld b, $03
 
 jr_050_41ab:
     ld a, c
-    call Call_050_5b07
+    call SaveBtl_5b07
     jr nc, jr_050_41b7
 
     inc c
@@ -441,7 +441,7 @@ jr_050_41fe:
 
 jr_050_4200:
     ld [$d9f3], a
-    call Call_050_7a87
+    call CmpBtl_7a87
     ret
 
 
@@ -465,7 +465,7 @@ jr_050_4207:
 
     ld a, $03
     ld [$d9f3], a
-    call Call_050_7b8f
+    call LoadBtl_7b8f
     ret
 
 
@@ -487,10 +487,10 @@ jr_050_423c:
     ld hl, $c180
     call Copy4Bytes
     ld a, $f6
-    call Call_050_6aa0
+    call SetTextIdParam
     call ClearSpriteBuffer
     call LoadBattleGraphics
-    call Call_050_79ae
+    call SetBtl_79ae
     ld de, $2e07
     call LoadPaletteFromDE
     call ClearTileBuffer
@@ -726,7 +726,7 @@ jr_050_43a2:
     rst $10
     call ClearSpriteBuffer
     call LoadBattleGraphics
-    call Call_050_79ae
+    call SetBtl_79ae
     call ClearTileBuffer
     xor a
     ld [wBattleAttackerIdx], a
@@ -838,12 +838,12 @@ jr_050_4401:
 
     ld de, $6f1a
     call LoadPaletteFromDE
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $44aa
     ld a, [$d9fc]
     set 7, a
     ld [wOPTN_and_Item_selection], a
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
@@ -853,7 +853,7 @@ jr_050_4401:
     ld de, $44aa
     ld hl, wOPTN_and_Item_selection
     ld b, $02
-    call Call_050_77f7
+    call BtlFunc_77f7
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_050_4487
@@ -876,7 +876,7 @@ jr_050_4487:
     inc [hl]
     ld a, [$db61]
     ld [$c8dd], a
-    call Call_050_5708
+    call RefreshBattleGraphics
 
 Jump_050_44a9:
 jr_050_44a9:
@@ -894,7 +894,7 @@ Jump_050_44b0:
     call UpdateBattleSprites
     ld hl, $cac2
     ld a, [$c8dd]
-    call Call_050_5b07
+    call SaveBtl_5b07
     jr c, jr_050_453c
 
     ld a, [$c8dd]
@@ -902,7 +902,7 @@ Jump_050_44b0:
     ld e, l
     ld d, h
     ld hl, $96c0
-    call Call_050_7700
+    call SaveBtl_7700
     ld de, $74a3
     ld a, [wOPTN_and_Item_selection]
     cp $81
@@ -911,7 +911,7 @@ Jump_050_44b0:
     call LoadPaletteFromDE
     ld a, [$db73]
     cp $02
-    call z, Call_050_4550
+    call z, LoadBtl_4550
     ld a, [$d9fc]
     or a
     jr z, jr_050_4507
@@ -949,10 +949,10 @@ jr_050_451b:
 jr_050_4523:
     set 7, a
     ld [wPLAN_selection], a
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $4715
     ld a, [wPLAN_selection]
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
@@ -973,13 +973,13 @@ jr_050_453c:
     ret
 
 
-Call_050_4550:
+LoadBtl_4550:
     ld a, [$c86c]
     or a
     ret nz
 
     ld hl, $0202
-    call Call_050_758e
+    call AdjustBattlePointerHL
     ld de, $4567
     ld b, $08
 
@@ -1002,7 +1002,7 @@ jr_050_4560:
     ld de, $4715
     ld hl, wPLAN_selection
     ld b, $04
-    call Call_050_77f7
+    call BtlFunc_77f7
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_050_45f5
@@ -1026,7 +1026,7 @@ jr_050_4581:
     ld a, [$c8dd]
     dec a
     ld [$c8dd], a
-    call Call_050_5b07
+    call SaveBtl_5b07
     jr c, jr_050_4581
 
     ld a, [$c8dd]
@@ -1061,7 +1061,7 @@ jr_050_4581:
 
 
 jr_050_45d6:
-    call Call_050_4f6e
+    call LoadBtl_4f6e
     ld hl, $d9f5
     dec [hl]
     dec [hl]
@@ -1073,7 +1073,7 @@ jr_050_45d6:
     ld [$d9f5], a
     ld a, $01
     ld [wEventStateMachineIndex], a
-    call Call_050_5708
+    call RefreshBattleGraphics
     jp Jump_050_40ed
 
 
@@ -1104,7 +1104,7 @@ jr_050_45f5:
     cp $80
     jr z, jr_050_466d
 
-Call_050_4620:
+LoadBtl_4620:
 Jump_050_4620:
     ld a, [$c8dd]
     ld de, $dd13
@@ -1126,7 +1126,7 @@ Jump_050_4620:
     ld [hl], a
     res 7, [hl]
     ld a, [hl]
-    call Call_050_473d
+    call CmpBtl_473d
     ld a, [$c8dd]
     inc a
     ld [$c8dd], a
@@ -1213,14 +1213,14 @@ jr_050_469c:
     res 7, a
     ld [hl], a
     ld a, [hl]
-    call Call_050_473d
+    call CmpBtl_473d
 
 jr_050_46c2:
     inc c
     dec b
     jr nz, jr_050_467c
 
-Call_050_46c6:
+SetBtl_46c6:
 jr_050_46c6:
     ld hl, $d9f5
     inc [hl]
@@ -1260,7 +1260,7 @@ jr_050_46d6:
     jr z, jr_050_4701
 
 jr_050_46fe:
-    call Call_050_4707
+    call LoadBtl_4707
 
 jr_050_4701:
     inc c
@@ -1269,7 +1269,7 @@ jr_050_4701:
 
     jr jr_050_4714
 
-Call_050_4707:
+LoadBtl_4707:
     ld a, c
     ld hl, $dd13
     add l
@@ -1294,14 +1294,14 @@ jr_050_4714:
     rst $38
 
 Jump_050_471f:
-    call Call_050_5c2f
+    call LoadBtl_5c2f
     jp z, Jump_050_4620
 
     ld a, $04
     ld [wMenu_selection], a
     xor a
     ld [$d9f7], a
-    call Call_050_47be
+    call LoadBtl_47be
     ld a, [wBattleAttackerIdx]
     cp $01
     ret z
@@ -1311,7 +1311,7 @@ Jump_050_471f:
     ret
 
 
-Call_050_473d:
+CmpBtl_473d:
     cp $03
     jr z, jr_050_4750
 
@@ -1330,7 +1330,7 @@ jr_050_4750:
     ret
 
 
-    call Call_050_4764
+    call LoadBtl_4764
     call ClearSpriteBuffer
     ld hl, wEventStateMachineIndex
     inc [hl]
@@ -1340,7 +1340,7 @@ jr_050_4750:
     ret
 
 
-Call_050_4764:
+LoadBtl_4764:
     ld a, [$c86c]
     or a
     jr z, jr_050_4775
@@ -1415,7 +1415,7 @@ jr_050_47b0:
     cp $03
     jp z, Jump_050_4f36
 
-Call_050_47be:
+LoadBtl_47be:
     ld a, [$c8dd]
     call GetMonsterSlotInfo
     jr c, jr_050_47b0
@@ -1482,7 +1482,7 @@ Jump_050_4816:
     ld e, l
     ld d, h
     ld hl, $96c0
-    call Call_050_7700
+    call SaveBtl_7700
 
 jr_050_4836:
     ld de, $6f49
@@ -1490,12 +1490,12 @@ jr_050_4836:
     call LoadPaletteFromDE
     ld de, $74ba
     call LoadPaletteFromDE
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $496d
     ld a, [$c8de]
     set 7, a
     ld [$c8de], a
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, $d9f7
     inc [hl]
@@ -1505,7 +1505,7 @@ jr_050_4836:
     ld de, $496d
     ld hl, $c8de
     ld b, $03
-    call Call_050_77f7
+    call BtlFunc_77f7
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_050_48d5
@@ -1523,7 +1523,7 @@ jr_050_4870:
     ld a, [$c8dd]
     dec a
     ld [$c8dd], a
-    call Call_050_5b07
+    call SaveBtl_5b07
     jr c, jr_050_4870
 
     ld a, [$c8dd]
@@ -1547,8 +1547,8 @@ jr_050_4870:
     ld [hl], a
     xor a
     ld [$d9f7], a
-    call Call_050_4f6e
-    call Call_050_47be
+    call LoadBtl_4f6e
+    call LoadBtl_47be
     ret
 
 
@@ -1604,8 +1604,8 @@ jr_050_48d5:
     ld c, a
 
 jr_050_490c:
-    call Call_050_4f80
-    call Call_050_4f45
+    call CallBtl_4f80
+    call GetBattleModeData
     ld a, $0b
     ld [$d9f7], a
     ret
@@ -1617,20 +1617,20 @@ jr_050_4918:
     ld a, [$c8dd]
     and $04
     xor $04
-    call Call_050_4fa4
+    call SaveBtl_4fa4
     ld a, b
     ld b, $3a
     cp $01
     jr z, jr_050_490c
 
-    call Call_050_4f86
+    call LoadBtl_4f86
     ld a, $07
     ld [$d9f7], a
     ret
 
 
 jr_050_4937:
-    call Call_050_4975
+    call LoadBtl_4975
     ld a, [wBattlePostFlag]
     or a
     jr z, jr_050_4945
@@ -1668,7 +1668,7 @@ Jump_050_496c:
     ld bc, $ff02
     rst $38
 
-Call_050_4975:
+LoadBtl_4975:
     ld a, [$c8dd]
     ld hl, $dc64
     swap a
@@ -1712,26 +1712,26 @@ jr_050_49a7:
     ret
 
 
-    call Call_050_49d8
+    call LoadBtl_49d8
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld de, $74f4
     call LoadPaletteFromDE
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $4cca
     ld b, $04
     ld a, [$d9f6]
     ld c, a
     ld hl, $c8df
-    call Call_050_78e9
+    call ReadBtl_78e9
     call ClearTileBuffer
     ld hl, $d9f7
     inc [hl]
     ret
 
 
-Call_050_49d8:
+LoadBtl_49d8:
     ld a, [$c8dd]
     swap a
     ld de, $dc65
@@ -1750,11 +1750,11 @@ Call_050_49d8:
     adc d
     ld d, a
     ld hl, $88c0
-    call Call_050_49fe
-    call Call_050_49fe
-    call Call_050_49fe
+    call SaveBtl_49fe
+    call SaveBtl_49fe
+    call SaveBtl_49fe
 
-Call_050_49fe:
+SaveBtl_49fe:
     push de
     push hl
     ld a, [de]
@@ -1774,7 +1774,7 @@ jr_050_4a11:
 
 jr_050_4a19:
     ld de, $0901
-    call Call_050_76c7
+    call LoadBtl_76c7
     pop hl
     ld a, l
     add $90
@@ -1796,13 +1796,13 @@ jr_050_4a19:
     inc hl
     ld a, [hl-]
     push af
-    call Call_050_776e
+    call LoadBtl_776e
     pop af
     ld hl, $c8e0
     cp [hl]
     jr z, jr_050_4a48
 
-    call Call_050_49d8
+    call LoadBtl_49d8
 
 jr_050_4a48:
     ld a, [wJoypad_current_frame]
@@ -1816,13 +1816,13 @@ jr_050_4a48:
 
 jr_050_4a57:
     ld hl, $0302
-    call Call_050_4ca4
+    call SaveBtl_4ca4
     ret
 
 
 jr_050_4a5e:
     ld hl, $0402
-    call Call_050_4ca4
+    call SaveBtl_4ca4
     ret
 
 
@@ -1855,13 +1855,13 @@ jr_050_4a65:
     adc h
     ld h, a
     ld b, [hl]
-    call Call_050_4b98
+    call LoadBtl_4b98
     jr z, jr_050_4a57
 
-    call Call_050_4ba4
+    call SaveBtl_4ba4
     jr c, jr_050_4a5e
 
-    call Call_050_4f86
+    call LoadBtl_4f86
     ld a, [hl]
     ld [$db4c], a
     ld [$db8a], a
@@ -1885,8 +1885,8 @@ jr_050_4a65:
     ld [$db4e], a
     ld hl, $5400
     rst $10
-    call Call_050_56eb
-    call Call_050_4bd1
+    call RefreshBattleScreen
+    call LoadBtl_4bd1
     ret c
 
     ld a, [$db4c]
@@ -1913,7 +1913,7 @@ jr_050_4af0:
     and $04
 
 jr_050_4afe:
-    call Call_050_4fa4
+    call SaveBtl_4fa4
     ld a, b
     cp $01
     ret nz
@@ -1928,21 +1928,21 @@ jr_050_4afe:
     cp $88
     jr z, jr_050_4b20
 
-    call Call_050_4f95
-    call Call_050_4f45
+    call LoadBtl_4f95
+    call GetBattleModeData
     ld a, $0b
     ld [$d9f7], a
     ret
 
 
 jr_050_4b20:
-    call Call_050_4b26
+    call LoadBtl_4b26
     jr z, jr_050_4b4d
 
     ret
 
 
-Call_050_4b26:
+LoadBtl_4b26:
     ld a, [$c863]
     bit 1, a
     jr z, jr_050_4b34
@@ -1979,31 +1979,31 @@ jr_050_4b45:
     ret
 
 
-Call_050_4b4d:
+SetBtl_4b4d:
 jr_050_4b4d:
     ld hl, $fb00
-    call Call_050_4ca4
+    call SaveBtl_4ca4
     ret
 
 
 jr_050_4b54:
     ld a, [$c8dd]
     ld c, a
-    call Call_050_4f95
-    call Call_050_4f45
+    call LoadBtl_4f95
+    call GetBattleModeData
     ld a, $0b
     ld [$d9f7], a
-    call Call_050_56eb
+    call RefreshBattleScreen
     ld hl, $5506
     rst $10
     ret
 
 
 Jump_050_4b6b:
-    call Call_050_4f45
+    call GetBattleModeData
     ld a, $0b
     ld [$d9f7], a
-    call Call_050_56eb
+    call RefreshBattleScreen
     ld hl, $5506
     rst $10
     ld a, [$c8dd]
@@ -2030,7 +2030,7 @@ Jump_050_4b97:
     ret
 
 
-Call_050_4b98:
+LoadBtl_4b98:
     ld a, b
     cp $37
     jr z, jr_050_4ba3
@@ -2044,7 +2044,7 @@ jr_050_4ba3:
     ret
 
 
-Call_050_4ba4:
+SaveBtl_4ba4:
     push bc
     ld a, b
     ld [$db4c], a
@@ -2073,7 +2073,7 @@ Call_050_4ba4:
     ret
 
 
-Call_050_4bd1:
+LoadBtl_4bd1:
     ld a, [$db4f]
     cp $14
     jr z, jr_050_4c21
@@ -2143,10 +2143,10 @@ jr_050_4c21:
     jr jr_050_4c96
 
 jr_050_4c2a:
-    call Call_050_4b26
+    call LoadBtl_4b26
     jr nz, jr_050_4c34
 
-    call Call_050_4b4d
+    call SetBtl_4b4d
     pop hl
     ret
 
@@ -2210,17 +2210,17 @@ jr_050_4c72:
 
 jr_050_4c96:
     ld c, a
-    call Call_050_4f95
+    call LoadBtl_4f95
 
 jr_050_4c9a:
-    call Call_050_4f45
+    call GetBattleModeData
     ld a, $0b
     ld [$d9f7], a
     scf
     ret
 
 
-Call_050_4ca4:
+SaveBtl_4ca4:
     push hl
     call ClearSpriteBuffer
     call LoadBattleGraphics
@@ -2259,8 +2259,8 @@ Call_050_4ca4:
     call UpdateBattleSprites
     ld de, $70c9
     call LoadPaletteFromDE
-    call Call_050_5bd7
-    call Call_050_7848
+    call LoadBtl_5bd7
+    call ClearBattleTurnFlag
     ld de, $5339
     ld a, [$c863]
     rlca
@@ -2281,7 +2281,7 @@ jr_050_4d10:
     set 7, b
     ld a, b
     ld [$dd72], a
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, $d9f7
     inc [hl]
@@ -2306,7 +2306,7 @@ jr_050_4d38:
     rlca
     and $04
     ld c, a
-    call Call_050_5b7a
+    call BtlFunc_5b7a
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_050_4d51
@@ -2350,13 +2350,13 @@ jr_050_4d68:
     jr nz, jr_050_4d9c
 
 jr_050_4d84:
-    call Call_050_4f95
+    call LoadBtl_4f95
     ld a, $59
     call PlaySoundEffect
-    call Call_050_4f45
+    call GetBattleModeData
     ld a, $0b
     ld [$d9f7], a
-    call Call_050_56eb
+    call RefreshBattleScreen
     ld hl, $5506
     rst $10
 
@@ -2370,7 +2370,7 @@ jr_050_4d9c:
     ld a, c
     ld hl, $c180
     ld [$db50], a
-    call Call_050_7d2e
+    call CheckSlotUnder3
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
@@ -2393,13 +2393,13 @@ jr_050_4d9c:
     ld [$dd76], a
     ld a, a
     ld [$c1c2], a
-    call Call_050_53dc
+    call LoadBtl_53dc
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld de, $7113
     call LoadPaletteFromDE
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $5664
     ld a, [$c863]
     rlca
@@ -2421,7 +2421,7 @@ jr_050_4e05:
     set 7, b
     ld a, b
     ld [$dd72], a
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, $d9f7
     inc [hl]
@@ -2447,7 +2447,7 @@ jr_050_4e2d:
     and $04
     xor $04
     ld c, a
-    call Call_050_5b7a
+    call BtlFunc_5b7a
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_050_4e54
@@ -2461,7 +2461,7 @@ jr_050_4e2d:
 
 jr_050_4e4c:
     ld [$d9f7], a
-    call Call_050_56eb
+    call RefreshBattleScreen
     jr jr_050_4e89
 
 jr_050_4e54:
@@ -2483,13 +2483,13 @@ jr_050_4e6b:
     call CheckMonsterSlot
     jp c, Jump_050_4d9c
 
-    call Call_050_4f95
+    call LoadBtl_4f95
     ld a, $59
     call PlaySoundEffect
-    call Call_050_4f45
+    call GetBattleModeData
     ld a, $0b
     ld [$d9f7], a
-    call Call_050_56eb
+    call RefreshBattleScreen
     ld hl, $5506
     rst $10
 
@@ -2529,8 +2529,8 @@ jr_050_4e89:
     ld [wMenu_selection], a
     ld a, $04
     ld [$d9f5], a
-    call Call_050_4620
-    call Call_050_56eb
+    call LoadBtl_4620
+    call RefreshBattleScreen
     ld hl, $5506
     rst $10
     jp Jump_050_4f61
@@ -2617,10 +2617,10 @@ jr_050_4f36:
     ld [wMenu_selection], a
     ld a, $04
     ld [$d9f5], a
-    call Call_050_46c6
+    call SetBtl_46c6
     jr jr_050_4f61
 
-Call_050_4f45:
+GetBattleModeData:
     ld a, [$c8dd]
     ld hl, $dd13
     add l
@@ -2655,7 +2655,7 @@ jr_050_4f61:
     ret
 
 
-Call_050_4f6e:
+LoadBtl_4f6e:
     ld a, [$c8dd]
     ld hl, $dcec
     add a
@@ -2670,14 +2670,14 @@ Call_050_4f6e:
     ret
 
 
-Call_050_4f80:
-    call Call_050_4f86
+CallBtl_4f80:
+    call LoadBtl_4f86
     inc hl
     ld [hl], c
     ret
 
 
-Call_050_4f86:
+LoadBtl_4f86:
     ld a, [$c8dd]
     ld hl, $dcec
     add a
@@ -2690,7 +2690,7 @@ Call_050_4f86:
     ret
 
 
-Call_050_4f95:
+LoadBtl_4f95:
     ld a, [$c8dd]
     ld hl, $dced
     add a
@@ -2703,7 +2703,7 @@ Call_050_4f95:
     ret
 
 
-Call_050_4fa4:
+SaveBtl_4fa4:
     push de
     ld c, a
     ld b, $03
@@ -2809,7 +2809,7 @@ jr_050_5020:
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld hl, $f300
-    call Call_050_51aa
+    call LoadBtl_51aa
     ld a, $0b
     ld [$d9f5], a
     ret
@@ -2823,31 +2823,31 @@ jr_050_5035:
 
 jr_050_503a:
     ld a, $f4
-    call Call_050_5ae5
+    call SaveBtl_5ae5
     ret
 
 
-    call Call_050_50ac
-    call Call_050_506f
+    call SetBtl_50ac
+    call SetBtl_506f
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld de, $6fce
     call LoadPaletteFromDE
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $51c0
     ld b, $04
     ld a, [$d9f6]
     ld c, a
     ld hl, wOPTN_and_Item_selection
-    call Call_050_78e9
+    call ReadBtl_78e9
     call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
 
 
-Call_050_506f:
+SetBtl_506f:
     ld de, wInventory
     ld a, [wPLAN_selection]
     add a
@@ -2858,11 +2858,11 @@ Call_050_506f:
     adc d
     ld d, a
     ld hl, $88c0
-    call Call_050_5089
-    call Call_050_5089
-    call Call_050_5089
+    call SaveBtl_5089
+    call SaveBtl_5089
+    call SaveBtl_5089
 
-Call_050_5089:
+SaveBtl_5089:
     push de
     push hl
     ld a, [de]
@@ -2876,7 +2876,7 @@ jr_050_5092:
     ld a, $08
     ld [$c822], a
     ld de, $0901
-    call Call_050_76c7
+    call LoadBtl_76c7
     pop hl
     ld a, l
     add $90
@@ -2889,7 +2889,7 @@ jr_050_5092:
     ret
 
 
-Call_050_50ac:
+SetBtl_50ac:
     ld hl, wInventory
     ld b, $14
     ld c, $00
@@ -2920,13 +2920,13 @@ jr_050_50c0:
     inc hl
     ld a, [hl-]
     push af
-    call Call_050_776e
+    call LoadBtl_776e
     pop af
     ld hl, wPLAN_selection
     cp [hl]
     jr z, jr_050_50e1
 
-    call Call_050_506f
+    call SetBtl_506f
 
 jr_050_50e1:
     ld a, [wJoypad_current_frame]
@@ -2992,10 +2992,10 @@ jr_050_50f4:
     jr jr_050_517a
 
 jr_050_514e:
-    call Call_050_517b
+    call SetBtl_517b
     jr z, jr_050_5175
 
-    call Call_050_56eb
+    call RefreshBattleScreen
     ld a, $07
     ld [$d9f5], a
     jr jr_050_517a
@@ -3025,7 +3025,7 @@ jr_050_517a:
     ret
 
 
-Call_050_517b:
+SetBtl_517b:
     ld hl, $dd1f
     ld a, [$db75]
     ld b, a
@@ -3062,7 +3062,7 @@ jr_050_5199:
     ld a, $0a
     ld [$d9f5], a
 
-Call_050_51aa:
+LoadBtl_51aa:
     ld a, l
     ld [$c822], a
     ld a, h
@@ -3088,7 +3088,7 @@ Call_050_51aa:
     call UpdateBattleSprites
     ld de, $7045
     call LoadPaletteFromDE
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $5288
     xor a
     ld [$c8dd], a
@@ -3107,7 +3107,7 @@ Call_050_51aa:
 
 jr_050_51fb:
     ld a, b
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
@@ -3117,7 +3117,7 @@ jr_050_51fb:
     ld de, $5288
     ld hl, $c8dd
     ld b, $02
-    call Call_050_77f7
+    call BtlFunc_77f7
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_050_5227
@@ -3205,8 +3205,8 @@ jr_050_5287:
     call UpdateBattleSprites
     ld de, $707f
     call LoadPaletteFromDE
-    call Call_050_5bd7
-    call Call_050_7848
+    call LoadBtl_5bd7
+    call ClearBattleTurnFlag
     ld de, $5339
     ld a, [$c863]
     rlca
@@ -3227,7 +3227,7 @@ jr_050_52c4:
     set 7, b
     ld a, b
     ld [$c8de], a
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
@@ -3242,7 +3242,7 @@ jr_050_52c4:
     rlca
     and $04
     ld c, a
-    call Call_050_5b7a
+    call BtlFunc_5b7a
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_050_5309
@@ -3302,7 +3302,7 @@ jr_050_5341:
     ld a, c
     ld hl, $c180
     ld [$db50], a
-    call Call_050_7d2e
+    call CheckSlotUnder3
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
@@ -3325,13 +3325,13 @@ jr_050_5341:
     ld [$dd76], a
     ld a, a
     ld [$c1c2], a
-    call Call_050_53dc
+    call LoadBtl_53dc
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld de, $7113
     call LoadPaletteFromDE
-    call Call_050_7848
+    call ClearBattleTurnFlag
     ld de, $5664
     ld a, [$c863]
     rlca
@@ -3353,14 +3353,14 @@ jr_050_53aa:
     set 7, b
     ld a, b
     ld [$c8de], a
-    call Call_050_790b
+    call CalcBattleTableIndex
     call ClearTileBuffer
     ld hl, $d9f5
     inc [hl]
     ret
 
 
-Call_050_53bd:
+LoadBtl_53bd:
     ld a, [$c863]
     rlca
     and $04
@@ -3369,7 +3369,7 @@ Call_050_53bd:
     ret
 
 
-Call_050_53c9:
+CheckBattlePhase:
     ld a, [$dd76]
     cp $30
     jr z, jr_050_53da
@@ -3389,14 +3389,14 @@ jr_050_53da:
     ret
 
 
-Call_050_53dc:
+LoadBtl_53dc:
     ld a, [$c86c]
     or a
     jp nz, Jump_050_549e
 
-    call Call_050_53bd
+    call LoadBtl_53bd
     call CheckMonsterSlot
-    call c, Call_050_53c9
+    call c, CheckBattlePhase
     jr c, jr_050_53fe
 
     xor a
@@ -3405,18 +3405,18 @@ Call_050_53dc:
     cp $ff
     jr z, jr_050_5403
 
-    call Call_050_5530
+    call CallBtl_5530
     jr jr_050_540e
 
 jr_050_53fe:
-    call Call_050_547e
+    call SetBtl_547e
     jr jr_050_540e
 
 jr_050_5403:
-    call Call_050_547e
+    call SetBtl_547e
     ld a, $01
     ld [$db4e], a
-    call Call_050_5530
+    call CallBtl_5530
 
 jr_050_540e:
     xor a
@@ -3425,7 +3425,7 @@ jr_050_540e:
     cp $00
     jr nz, jr_050_541e
 
-    call Call_050_5485
+    call SetBtl_5485
     jr jr_050_548c
 
 jr_050_541e:
@@ -3433,25 +3433,25 @@ jr_050_541e:
     inc a
     ld [$dd73], a
     call CheckMonsterSlot
-    call c, Call_050_53c9
+    call c, CheckBattlePhase
     jr c, jr_050_5439
 
     ld a, [$c1cb]
     cp $ff
     jr z, jr_050_543e
 
-    call Call_050_553d
+    call CallBtl_553d
     jr jr_050_5449
 
 jr_050_5439:
-    call Call_050_5485
+    call SetBtl_5485
     jr jr_050_5449
 
 jr_050_543e:
-    call Call_050_5485
+    call SetBtl_5485
     ld a, $01
     ld [$db4e], a
-    call Call_050_553d
+    call CallBtl_553d
 
 jr_050_5449:
     xor a
@@ -3467,14 +3467,14 @@ jr_050_5456:
     inc a
     ld [$dd73], a
     call CheckMonsterSlot
-    call c, Call_050_53c9
+    call c, CheckBattlePhase
     jr c, jr_050_5470
 
     ld a, [$c1cc]
     cp $ff
     jr z, jr_050_5472
 
-    call Call_050_554a
+    call CallBtl_554a
     ret
 
 
@@ -3482,30 +3482,30 @@ jr_050_5470:
     jr jr_050_548c
 
 jr_050_5472:
-    call Call_050_548c
+    call SetBtl_548c
     ld a, $01
     ld [$db4e], a
-    call Call_050_554a
+    call CallBtl_554a
     ret
 
 
-Call_050_547e:
+SetBtl_547e:
     ld hl, $88c0
     ld b, $a0
     jr jr_050_5491
 
-Call_050_5485:
+SetBtl_5485:
     ld hl, $8960
     ld b, $a0
     jr jr_050_5491
 
-Call_050_548c:
+SetBtl_548c:
 Jump_050_548c:
 jr_050_548c:
     ld hl, $8a00
     ld b, $a0
 
-Call_050_5491:
+LoadBtl_5491:
 jr_050_5491:
     ld a, $ff
     call Write_gfx_tile_and_inc_HL
@@ -3534,25 +3534,25 @@ Jump_050_549e:
 jr_050_54ba:
     ld a, [$c1d7]
     call CheckMonsterSlot
-    call c, Call_050_53c9
+    call c, CheckBattlePhase
     jr nc, jr_050_54ca
 
-    call Call_050_547e
+    call SetBtl_547e
     jr jr_050_54d9
 
 jr_050_54ca:
     ld a, [$c1d7]
-    call Call_050_55f9
+    call GetCurrentMonsterData
     ld a, [$c1d7]
     ld hl, $88c0
-    call Call_050_5557
+    call SaveBtl_5557
 
 jr_050_54d9:
     ld a, [$c1d8]
     cp $01
     jr nz, jr_050_54e5
 
-    call Call_050_5485
+    call SetBtl_5485
     jr jr_050_548c
 
 jr_050_54e5:
@@ -3560,18 +3560,18 @@ jr_050_54e5:
     inc [hl]
     ld a, [hl]
     call CheckMonsterSlot
-    call c, Call_050_53c9
+    call c, CheckBattlePhase
     jr nc, jr_050_54f7
 
-    call Call_050_5485
+    call SetBtl_5485
     jr jr_050_5506
 
 jr_050_54f7:
     ld a, [$c1d7]
-    call Call_050_55f9
+    call GetCurrentMonsterData
     ld a, [$c1d7]
     ld hl, $8960
-    call Call_050_5557
+    call SaveBtl_5557
 
 jr_050_5506:
     ld a, [$c1d8]
@@ -3586,7 +3586,7 @@ jr_050_5510:
     inc [hl]
     ld a, [hl]
     call CheckMonsterSlot
-    call c, Call_050_53c9
+    call c, CheckBattlePhase
     jr nc, jr_050_5520
 
     jp Jump_050_548c
@@ -3594,37 +3594,37 @@ jr_050_5510:
 
 jr_050_5520:
     ld a, [$c1d7]
-    call Call_050_55f9
+    call GetCurrentMonsterData
     ld a, [$c1d7]
     ld hl, $8a00
-    call Call_050_5557
+    call SaveBtl_5557
     ret
 
 
-Call_050_5530:
-    call Call_050_55f9
+CallBtl_5530:
+    call GetCurrentMonsterData
     ld hl, $88c0
     ld a, $00
     ld [$db4c], a
     jr jr_050_556a
 
-Call_050_553d:
-    call Call_050_55f9
+CallBtl_553d:
+    call GetCurrentMonsterData
     ld hl, $8960
     ld a, $01
     ld [$db4c], a
     jr jr_050_556a
 
-Call_050_554a:
-    call Call_050_55f9
+CallBtl_554a:
+    call GetCurrentMonsterData
     ld hl, $8a00
     ld a, $02
     ld [$db4c], a
     jr jr_050_556a
 
-Call_050_5557:
+SaveBtl_5557:
     push hl
-    call Call_050_7700
+    call SaveBtl_7700
     pop hl
     ld a, l
     add $40
@@ -3633,7 +3633,7 @@ Call_050_5557:
     adc $00
     ld h, a
     ld b, $30
-    call Call_050_5491
+    call LoadBtl_5491
     ret
 
 
@@ -3644,7 +3644,7 @@ jr_050_556a:
     add $04
     ld [$db50], a
     ld hl, $c180
-    call Call_050_7d2e
+    call CheckSlotUnder3
     pop hl
     ld a, [$c827]
     ld c, a
@@ -3725,11 +3725,11 @@ jr_050_55e3:
     ld b, $10
 
 jr_050_55f5:
-    call Call_050_5491
+    call LoadBtl_5491
     ret
 
 
-Call_050_55f9:
+GetCurrentMonsterData:
     ld hl, $cac2
     call GetCurrentMonsterPtr
     ld e, l
@@ -3747,7 +3747,7 @@ Call_050_55f9:
     and $04
     xor $04
     ld c, a
-    call Call_050_5b7a
+    call BtlFunc_5b7a
     ld a, [wJoypad_current_frame]
     bit 1, a
     jr z, jr_050_563a
@@ -3762,7 +3762,7 @@ Call_050_55f9:
     jr jr_050_5663
 
 jr_050_5630:
-    call Call_050_56eb
+    call RefreshBattleScreen
     ld a, $01
     ld [$d9f5], a
     jr jr_050_5663
@@ -3805,8 +3805,8 @@ jr_050_566c:
     ld a, c
     ld hl, $c180
     ld [$db50], a
-    call Call_050_7d2e
-    call Call_050_5708
+    call CheckSlotUnder3
+    call RefreshBattleGraphics
     ld hl, $fa00
     ld a, $0d
     ld [$d9f5], a
@@ -3883,11 +3883,11 @@ jr_050_56a0:
     ld hl, $5506
     rst $10
 
-Call_050_56eb:
-    call Call_050_5708
+RefreshBattleScreen:
+    call RefreshBattleGraphics
     ld hl, $88c0
 
-Call_050_56f1:
+BtlFunc_56f1:
     ld c, $02
 
 jr_050_56f3:
@@ -3908,7 +3908,7 @@ jr_050_56f5:
     ret
 
 
-Call_050_5708:
+RefreshBattleGraphics:
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
@@ -3933,7 +3933,7 @@ Call_050_5708:
     cp $5d
     jr nz, jr_050_576c
 
-    call Call_050_5772
+    call BattleGfx_5772
     ld a, $01
     ld [$c1d5], a
     ret
@@ -3947,7 +3947,7 @@ jr_050_5738:
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld a, $2a
-    call Call_050_6aa0
+    call SetTextIdParam
     ld de, $2e07
     call LoadPaletteFromDE
     call ClearTileBuffer
@@ -3964,11 +3964,11 @@ jr_050_5738:
 
 jr_050_576c:
     ld a, $f5
-    call Call_050_5ae5
+    call SaveBtl_5ae5
     ret
 
 
-Call_050_5772:
+BattleGfx_5772:
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
@@ -4028,10 +4028,10 @@ jr_050_57cf:
     cp b
     jr c, jr_050_5808
 
-    call Call_050_58a6
+    call SetBtl_58a6
     jr c, jr_050_5808
 
-    call Call_050_58d0
+    call SetBtl_58d0
     jr c, jr_050_5808
 
     ld hl, $dd13
@@ -4048,7 +4048,7 @@ jr_050_57e8:
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld a, $b9
-    call Call_050_6aa0
+    call SetTextIdParam
     ld de, $2e07
     call LoadPaletteFromDE
     call ClearTileBuffer
@@ -4072,7 +4072,7 @@ jr_050_5808:
     ld [hl], a
     ld a, $02
     ld [wBattlePostFlag], a
-    call Call_050_590c
+    call SetBtl_590c
     ld a, [$db73]
     or a
     ret z
@@ -4094,7 +4094,7 @@ jr_050_5808:
     ld de, $58a0
     ld hl, $c1d5
     ld b, $02
-    call Call_050_77f7
+    call BtlFunc_77f7
     ld a, [wJoypad_current_frame]
     bit 0, a
     jr z, jr_050_5892
@@ -4146,7 +4146,7 @@ jr_050_5895:
     rst $38
     rst $38
 
-Call_050_58a6:
+SetBtl_58a6:
     ld bc, $0304
 
 jr_050_58a9:
@@ -4186,7 +4186,7 @@ jr_050_58ce:
     ret
 
 
-Call_050_58d0:
+SetBtl_58d0:
     ld bc, $0300
     ld de, $0000
 
@@ -4195,7 +4195,7 @@ jr_050_58d6:
     call CheckMonsterSlot
     jr c, jr_050_58e3
 
-    call Call_050_5900
+    call LoadBtl_5900
     cp d
     jr c, jr_050_58e3
 
@@ -4213,7 +4213,7 @@ jr_050_58ea:
     call CheckMonsterSlot
     jr c, jr_050_58f7
 
-    call Call_050_5900
+    call LoadBtl_5900
     cp e
     jr c, jr_050_58f7
 
@@ -4230,7 +4230,7 @@ jr_050_58f7:
     ret
 
 
-Call_050_5900:
+LoadBtl_5900:
     ld a, c
     ld hl, $db9b
     add l
@@ -4242,7 +4242,7 @@ Call_050_5900:
     ret
 
 
-Call_050_590c:
+SetBtl_590c:
     ld bc, $0300
 
 Jump_050_590f:
@@ -4313,7 +4313,7 @@ jr_050_595a:
     ld a, $00
     adc b
     ld b, a
-    call Call_050_599f
+    call BitBtl_599f
     inc hl
     ld a, $08
     add c
@@ -4321,7 +4321,7 @@ jr_050_595a:
     ld a, $00
     adc b
     ld b, a
-    call Call_050_599f
+    call BitBtl_599f
     inc hl
     ld a, $08
     add c
@@ -4329,7 +4329,7 @@ jr_050_595a:
     ld a, $00
     adc b
     ld b, a
-    call Call_050_599f
+    call BitBtl_599f
     inc hl
     ld a, $08
     add c
@@ -4337,7 +4337,7 @@ jr_050_595a:
     ld a, $00
     adc b
     ld b, a
-    call Call_050_599f
+    call BitBtl_599f
 
 jr_050_5991:
     ld a, [$db4c]
@@ -4351,7 +4351,7 @@ jr_050_5991:
     ret
 
 
-Call_050_599f:
+BitBtl_599f:
     bit 7, [hl]
     jr nz, jr_050_59ab
 
@@ -4394,12 +4394,12 @@ PersonalityRunTable:
     db $fc, $00, $00, $fb ; motiv>=151, lv 20-29: charge -4,           motiv  -5
     db $fe, $00, $00, $fd ; motiv>=151, lv>=30: charge -2,             motiv  -3
 
-    call Call_050_5708
+    call RefreshBattleGraphics
     ld a, [$db58]
     ld l, a
     ld a, [$db59]
     ld h, a
-    call Call_050_56f1
+    call BtlFunc_56f1
     ld a, [$db5a]
     ld [wEventStateMachineIndex], a
     ret
@@ -4408,7 +4408,7 @@ PersonalityRunTable:
     ld a, [wBattleAttackerIdx]
     ld hl, $c180
     ld [$db50], a
-    call Call_050_7d2e
+    call CheckSlotUnder3
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
@@ -4427,14 +4427,14 @@ PersonalityRunTable:
     cp $ac
     jr z, jr_050_5a19
 
-    call Call_050_5a53
+    call ReadBtl_5a53
     jr jr_050_5a1c
 
 jr_050_5a16:
-    call Call_050_5a5e
+    call ReadBtl_5a5e
 
 jr_050_5a19:
-    call Call_050_5a71
+    call ReadBtl_5a71
 
 jr_050_5a1c:
     ld a, [wBattleAttackerIdx]
@@ -4447,9 +4447,9 @@ jr_050_5a1c:
     ld h, a
     ld a, [hl]
     cp $ff
-    call z, Call_050_5a50
+    call z, LoadBtl_5a50
     cp $da
-    call nc, Call_050_5ad2
+    call nc, SaveBtl_5ad2
     ld l, a
     ld h, $06
     ld de, $c190
@@ -4466,20 +4466,20 @@ jr_050_5a1c:
     ret
 
 
-Call_050_5a50:
+LoadBtl_5a50:
     ld a, $3a
     ret
 
 
-Call_050_5a53:
+ReadBtl_5a53:
     ld a, [hl]
     ld hl, $c1a0
     ld [$db50], a
-    call Call_050_7d2e
+    call CheckSlotUnder3
     ret
 
 
-Call_050_5a5e:
+ReadBtl_5a5e:
     ld a, [hl]
     ld [wBattleTargetIdx], a
     ld hl, $5802
@@ -4491,7 +4491,7 @@ Call_050_5a5e:
     ld hl, $c180
     jr jr_050_5a89
 
-Call_050_5a71:
+ReadBtl_5a71:
     ld a, [hl]
     ld [wBattleTargetIdx], a
     ld hl, $5802
@@ -4503,7 +4503,7 @@ Call_050_5a71:
     cp $01
     jr nz, jr_050_5a9c
 
-    call Call_050_5ac5
+    call BattleTarget_5ac5
     ld hl, $c1a0
 
 jr_050_5a89:
@@ -4536,7 +4536,7 @@ jr_050_5a9c:
     cp $04
     jr nc, jr_050_5aad
 
-    call Call_050_5ac5
+    call BattleTarget_5ac5
     ret
 
 
@@ -4558,16 +4558,16 @@ jr_050_5aad:
     ret
 
 
-Call_050_5ac5:
+BattleTarget_5ac5:
 jr_050_5ac5:
     ld a, [wBattleTargetIdx]
     ld hl, $c1a0
     ld [$db50], a
-    call Call_050_7d2e
+    call CheckSlotUnder3
     ret
 
 
-Call_050_5ad2:
+SaveBtl_5ad2:
     push hl
     sub $da
     ld hl, $5ae1
@@ -4586,13 +4586,13 @@ Call_050_5ad2:
     ld a, [hl+]
     ld [hl], b
 
-Call_050_5ae5:
+SaveBtl_5ae5:
     push af
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
     pop af
-    call Call_050_6aa0
+    call SetTextIdParam
     ld de, $2e07
     call LoadPaletteFromDE
     call ClearTileBuffer
@@ -4603,7 +4603,7 @@ Call_050_5ae5:
     ret
 
 
-Call_050_5b07:
+SaveBtl_5b07:
     push bc
     ld [$dd72], a
     ld b, a
@@ -4674,7 +4674,7 @@ jr_050_5b56:
     call LoadBattleGraphics
     call UpdateBattleSprites
     ld a, $e0
-    call Call_050_6aa0
+    call SetTextIdParam
     ld de, $2e07
     call LoadPaletteFromDE
     call ClearTileBuffer
@@ -4685,7 +4685,7 @@ jr_050_5b56:
     ret
 
 
-Call_050_5b7a:
+BtlFunc_5b7a:
     res 7, [hl]
     ld a, [wJoypad_Current]
     and $40
@@ -4695,11 +4695,11 @@ jr_050_5b84:
     ld a, [hl]
     dec a
     bit 7, a
-    call nz, Call_050_5bb7
-    call Call_050_5bbc
+    call nz, LoadBtl_5bb7
+    call SaveBtl_5bbc
     jp nc, Jump_050_7817
 
-    call Call_050_5bc5
+    call SaveBtl_5bc5
     ld [hl], a
     jr nz, jr_050_5b84
 
@@ -4715,29 +4715,29 @@ jr_050_5ba2:
     ld a, [hl]
     inc a
     cp b
-    call nc, Call_050_5bba
-    call Call_050_5bbc
+    call nc, ClrBtl_5bba
+    call SaveBtl_5bbc
     jp nc, Jump_050_7817
 
-    call Call_050_5bc5
+    call SaveBtl_5bc5
     ld [hl], a
     jr nz, jr_050_5ba2
 
     jp Jump_050_7817
 
 
-Call_050_5bb7:
+LoadBtl_5bb7:
     ld a, b
     dec a
     ret
 
 
-Call_050_5bba:
+ClrBtl_5bba:
     xor a
     ret
 
 
-Call_050_5bbc:
+SaveBtl_5bbc:
     push bc
     ld b, a
     or c
@@ -4747,7 +4747,7 @@ Call_050_5bbc:
     ret
 
 
-Call_050_5bc5:
+SaveBtl_5bc5:
     push bc
     ld b, a
     ld a, [$c1c2]
@@ -4765,7 +4765,7 @@ jr_050_5bd4:
     ret
 
 
-Call_050_5bd7:
+LoadBtl_5bd7:
     ld a, [$c863]
     rlca
     and $04
@@ -4789,7 +4789,7 @@ jr_050_5be0:
 
     ld a, c
     res 2, a
-    call Call_050_5c00
+    call SaveBtl_5c00
 
 jr_050_5bfb:
     inc c
@@ -4799,7 +4799,7 @@ jr_050_5bfb:
     ret
 
 
-Call_050_5c00:
+SaveBtl_5c00:
     push bc
     ld hl, $0060
 
@@ -4824,7 +4824,7 @@ jr_050_5c14:
     ld a, h
     adc $01
     ld h, a
-    call Call_050_758e
+    call AdjustBattlePointerHL
 
 jr_050_5c1f:
     ld a, [hl]
@@ -4845,7 +4845,7 @@ jr_050_5c2d:
     ret
 
 
-Call_050_5c2f:
+LoadBtl_5c2f:
     ld a, [wPLAN_selection]
     cp $83
     ret nz
@@ -4859,7 +4859,7 @@ Call_050_5c2f:
     ret
 
 
-Call_050_5c40:
+LoadBtl_5c40:
     ld a, $00
     ld [$dd23], a
     ld a, $00
@@ -4909,8 +4909,8 @@ jr_050_5c74:
     or a
     jr nz, jr_050_5cb4
 
-    call Call_050_6974
-    call Call_050_6a65
+    call LoadBtl_6974
+    call SetupBattleAction
     ld bc, $0304
     ld de, $0000
 
@@ -4949,7 +4949,7 @@ jr_050_5ca4:
 jr_050_5cad:
     add e
     add $ec
-    call Call_050_6aa0
+    call SetTextIdParam
     ret
 
 
@@ -4985,11 +4985,11 @@ jr_050_5cd4:
     bit 1, a
     jr z, jr_050_5ce4
 
-    call Call_050_5d1f
+    call SetBtl_5d1f
     jr jr_050_5ce7
 
 jr_050_5ce4:
-    call Call_050_5d1a
+    call SetBtl_5d1a
 
 jr_050_5ce7:
     ld a, $4f
@@ -5004,11 +5004,11 @@ jr_050_5cf5:
     bit 1, a
     jr z, jr_050_5d01
 
-    call Call_050_5d1a
+    call SetBtl_5d1a
     jr jr_050_5d04
 
 jr_050_5d01:
-    call Call_050_5d1f
+    call SetBtl_5d1f
 
 jr_050_5d04:
     ld a, $69
@@ -5016,7 +5016,7 @@ jr_050_5d04:
     ld a, $ed
 
 jr_050_5d0b:
-    call Call_050_6aa0
+    call SetTextIdParam
     ld a, $02
     call SetBGM
     ld a, [$dd72]
@@ -5024,11 +5024,11 @@ jr_050_5d0b:
     ret
 
 
-Call_050_5d1a:
+SetBtl_5d1a:
     ld de, $cacd
     jr jr_050_5d22
 
-Call_050_5d1f:
+SetBtl_5d1f:
     ld de, $cd21
 
 jr_050_5d22:
@@ -5037,7 +5037,7 @@ jr_050_5d22:
     ret
 
 
-Call_050_5d29:
+LoadBtl_5d29:
     ld a, $02
     ld [wBattlePostFlag], a
     ld a, [$db73]
@@ -5063,7 +5063,7 @@ jr_050_5d46:
 jr_050_5d4c:
     ld hl, $d9ec
     inc [hl]
-    call Call_050_696d
+    call CallBtl_696d
     ld a, [$db4c]
     cp $02
     jr c, jr_050_5d5c
@@ -5079,7 +5079,7 @@ jr_050_5d5c:
     add b
     add c
     add $03
-    call Call_050_6aa0
+    call SetTextIdParam
     ld a, $00
     ld [wBattlePostFlag], a
     ret
@@ -5090,7 +5090,7 @@ jr_050_5d71:
     inc [hl]
     ld hl, $d9ec
     inc [hl]
-    call Call_050_696d
+    call CallBtl_696d
     ld a, $04
     ld [wBattleAttackerIdx], a
     ld a, [$db4c]
@@ -5108,13 +5108,13 @@ jr_050_5d8a:
     add b
     add c
     add $09
-    call Call_050_6aa0
+    call SetTextIdParam
     ld a, $01
     ld [wBattlePostFlag], a
     ret
 
 
-Call_050_5d9f:
+LoadBtl_5d9f:
     ld a, $ff
     ld hl, $db79
     ld bc, $000a
@@ -5201,7 +5201,7 @@ jr_050_5dc8:
     or a
     ret nz
 
-    call Call_000_3001
+    call ReadBattleStateDA80
     ld a, [$dd62]
     or a
     ret z
@@ -5218,8 +5218,8 @@ jr_050_5e3e:
     or a
     ret nz
 
-    call Call_000_3001
-    call Call_050_6d78
+    call ReadBattleStateDA80
+    call LoadBtl_6d78
     ld a, [$c850]
     or a
     ret nz
@@ -5462,7 +5462,7 @@ jr_050_5f5e:
 
 
 jr_050_5f86:
-    call Call_050_6974
+    call LoadBtl_6974
     ld a, $05
     ld [$da33], a
     ld hl, $d9ec
@@ -5488,12 +5488,12 @@ jr_050_5fa3:
     or a
     jp z, Jump_050_640a
 
-    call Call_050_69c4
+    call LoadBtl_69c4
     ret
 
 
-    call Call_050_5d29
-    call Call_050_68fc
+    call LoadBtl_5d29
+    call LoadBtl_68fc
     ld hl, $d9ec
     inc [hl]
     xor a
@@ -5507,8 +5507,8 @@ jr_050_5fa3:
     inc [hl]
     xor a
     ld [wMenu_selection], a
-    call Call_050_5d9f
-    call Call_050_600d
+    call LoadBtl_5d9f
+    call SetBtl_600d
     ld hl, $db42
     ld bc, $0008
     xor a
@@ -5517,7 +5517,7 @@ jr_050_5fa3:
     ld b, a
     ld c, $00
     ld hl, $dd03
-    call Call_050_5ff8
+    call LoadBtl_5ff8
     ld a, [$c863]
     bit 1, a
     ret z
@@ -5526,11 +5526,11 @@ jr_050_5fa3:
     ld b, a
     ld c, $04
     ld hl, $dd07
-    call Call_050_5ff8
+    call LoadBtl_5ff8
     ret
 
 
-Call_050_5ff8:
+LoadBtl_5ff8:
 jr_050_5ff8:
     ld a, c
     call CheckMonsterSlot
@@ -5554,7 +5554,7 @@ jr_050_6008:
     ret
 
 
-Call_050_600d:
+SetBtl_600d:
     ld de, $dcec
     ld bc, $0800
 
@@ -5611,14 +5611,14 @@ jr_050_604b:
 
     jr jr_050_6067
 
-Call_050_6053:
+BattleDispatchEntry3:
     call ClearSpriteBuffer
     call LoadBattleGraphics
     ld a, [$da88]
     or a
     jr nz, jr_050_6063
 
-    call Call_050_79ae
+    call SetBtl_79ae
     ret
 
 
@@ -5628,7 +5628,7 @@ jr_050_6063:
 
 
 jr_050_6067:
-    call Call_050_4017
+    call LoadBtl_4017
     xor a
     ld [$d9ed], a
     ret
@@ -5677,7 +5677,7 @@ jr_050_60b6:
     ld hl, $5200
     rst $10
     call UpdateBattleSprites
-    call Call_050_7627
+    call LoadBtl_7627
     ld a, [$d9ec]
     cp $08
     ret nz
@@ -5701,7 +5701,7 @@ jr_050_60d6:
     ld [$db4d], a
     ld [$db4e], a
     ld [$d9ed], a
-    call Call_050_6053
+    call BattleDispatchEntry3
     jp Jump_050_6aac
 
 
@@ -5740,7 +5740,7 @@ jr_050_6112:
 
 jr_050_611d:
     call ClearSpriteBuffer
-    call Call_050_79ae
+    call SetBtl_79ae
     call ClearTileBuffer
     ld a, [$c86c]
     or a
@@ -5754,7 +5754,7 @@ jr_050_611d:
 
 
 jr_050_6139:
-    call Call_050_5c40
+    call LoadBtl_5c40
     ld hl, $5102
     rst $10
     ld a, [wBattlePostFlag]
@@ -5775,10 +5775,10 @@ jr_050_6150:
     or [hl]
     jr z, jr_050_6192
 
-    call Call_050_61e2
+    call CallBtl_61e2
     ld hl, $0106
     rst $10
-    call Call_050_6197
+    call CallBtl_6197
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -5787,7 +5787,7 @@ jr_050_6150:
     ldh [$d7], a
     ld hl, $c180
     call FormatLargeNumber
-    call Call_050_61cd
+    call BtlFunc_61cd
     ld a, b
     ld hl, $0b0e
     cp $01
@@ -5814,8 +5814,8 @@ jr_050_6196:
     ret
 
 
-Call_050_6197:
-    call Call_050_61cd
+CallBtl_6197:
+    call BtlFunc_61cd
     ld a, [$dd23]
     ld l, a
     ld a, [$dd24]
@@ -5857,19 +5857,19 @@ jr_050_61c0:
     ret
 
 
-Call_050_61cd:
+BtlFunc_61cd:
     ld b, $00
     ld a, [$ca8e]
-    call Call_050_62dd
+    call CmpBtl_62dd
     ld a, [$ca8f]
-    call Call_050_62dd
+    call CmpBtl_62dd
     ld a, [$ca90]
-    call Call_050_62dd
+    call CmpBtl_62dd
     ret
 
 
-Call_050_61e2:
-    call Call_050_6197
+CallBtl_61e2:
+    call CallBtl_6197
     ld a, l
     ldh [$d8], a
     ld a, h
@@ -6040,7 +6040,7 @@ jr_050_62c4:
     pop hl
     push bc
     push hl
-    call Call_050_689e
+    call ReadBtl_689e
     ld hl, $cac0
     inc [hl]
     pop hl
@@ -6057,7 +6057,7 @@ jr_050_62c4:
     ret
 
 
-Call_050_62dd:
+CmpBtl_62dd:
     cp $ff
     ret z
 
@@ -6080,15 +6080,15 @@ Call_050_62dd:
     ret nz
 
     ld a, [$ca8e]
-    call Call_050_6383
+    call CmpBtl_6383
     jr nc, jr_050_630d
 
     ld a, [$ca8f]
-    call Call_050_6383
+    call CmpBtl_6383
     jr nc, jr_050_630d
 
     ld a, [$ca90]
-    call Call_050_6383
+    call CmpBtl_6383
     jr c, jr_050_6316
 
 jr_050_630d:
@@ -6105,7 +6105,7 @@ jr_050_6316:
 jr_050_6318:
     push bc
     ld a, b
-    call Call_050_6383
+    call CmpBtl_6383
     pop bc
     jr nc, jr_050_6337
 
@@ -6173,7 +6173,7 @@ jr_050_6337:
     ret
 
 
-Call_050_6383:
+CmpBtl_6383:
     cp $ff
     jr z, jr_050_63a2
 
@@ -6390,7 +6390,7 @@ Jump_050_64e0:
     cp $52
     jr nz, jr_050_64f5
 
-    call Call_050_67ae
+    call SetBtl_67ae
     xor a
     ld [wScriptStateFlags], a
     ld hl, $c8ea
@@ -6409,11 +6409,11 @@ jr_050_64f5:
     ld b, $00
     ld c, $00
     ld a, [$ca8e]
-    call Call_050_6535
+    call CmpBtl_6535
     ld a, [$ca8f]
-    call Call_050_6535
+    call CmpBtl_6535
     ld a, [$ca90]
-    call Call_050_6535
+    call CmpBtl_6535
     ld a, b
     cp c
     ret nz
@@ -6431,7 +6431,7 @@ jr_050_64f5:
     ret
 
 
-Call_050_6535:
+CmpBtl_6535:
     cp $ff
     ret z
 
@@ -6558,7 +6558,7 @@ jr_050_65c7:
 jr_050_65f9:
     ld de, $c8bb
     ld b, $08
-    call Call_050_66cc
+    call ReadBtl_66cc
     ld a, [$c8ba]
     cp $ff
     jr z, jr_050_6663
@@ -6571,14 +6571,14 @@ jr_050_65f9:
     ld hl, $cac1
     ld de, $a1fb
     ld bc, $0ba4
-    call Call_050_66b9
+    call LoadBtl_66b9
     ei
     ld a, [$c8ba]
     ld hl, $cac1
     call GetMonsterDataPtr
     ld de, $d665
     ld b, $95
-    call Call_050_66cc
+    call ReadBtl_66cc
     ld a, [$c8ba]
     ld hl, $cac1
     call GetMonsterDataPtr
@@ -6587,7 +6587,7 @@ jr_050_65f9:
     ld hl, $ca8d
     ld de, $a1c7
     ld bc, $0007
-    call Call_050_66b9
+    call LoadBtl_66b9
     ei
     ld hl, $0105
     rst $10
@@ -6595,11 +6595,11 @@ jr_050_65f9:
     call SavePartyToSRAM
     ei
     ld a, $00
-    call Call_050_669f
+    call BtlFunc_669f
     ld a, $01
-    call Call_050_669f
+    call BtlFunc_669f
     ld a, $02
-    call Call_050_669f
+    call BtlFunc_669f
     ld a, $14
     ld [$c8ba], a
 
@@ -6633,7 +6633,7 @@ jr_050_6663:
     ret
 
 
-Call_050_669f:
+BtlFunc_669f:
     ld c, a
     ld hl, $c8c4
     add l
@@ -6660,7 +6660,7 @@ jr_050_66b6:
     ret
 
 
-Call_050_66b9:
+LoadBtl_66b9:
     ld a, $0a
     ld [$0100], a
 
@@ -6678,7 +6678,7 @@ jr_050_66be:
     ret
 
 
-Call_050_66cc:
+ReadBtl_66cc:
 jr_050_66cc:
     ld a, [hl+]
     ld [de], a
@@ -6748,7 +6748,7 @@ LoadArenaEnemyStats:
     ld l, a
     ld a, [$da04]
     ld h, a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7ce], a
     ld a, $01
     ld [$d7cf], a
@@ -6756,7 +6756,7 @@ LoadArenaEnemyStats:
     ld l, a
     ld a, [$da06]
     ld h, a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7cc], a
     ld a, $01
     ld [$d7cd], a
@@ -6764,14 +6764,14 @@ LoadArenaEnemyStats:
     ld l, a
     ld a, [$da08]
     ld h, a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7d0], a
     ld a, $01
     ld [$d7d1], a
     ret
 
 
-Call_050_6766:
+SetTempEnemyStatsId:
     ld a, l
     ld [wTempEnemyStatsId], a
     ld a, h
@@ -6835,7 +6835,7 @@ Call_050_6766:
     inc d
     nop
 
-Call_050_67ae:
+SetBtl_67ae:
     ld hl, $d7ca
     ld a, $ff
     ld [hl+], a
@@ -6865,7 +6865,7 @@ Call_050_67ae:
     ld [wTempEnemyId1], a
     ld a, h
     ld [$da04], a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7ca], a
     ld a, $01
     ld [$d7cb], a
@@ -6881,7 +6881,7 @@ Call_050_67ae:
     ld [$da05], a
     ld a, h
     ld [$da06], a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7cc], a
     ld a, $01
     ld [$d7cd], a
@@ -6897,7 +6897,7 @@ Call_050_67ae:
     ld [$da07], a
     ld a, h
     ld [$da08], a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7ce], a
     ld a, $01
     ld [$d7cf], a
@@ -6920,7 +6920,7 @@ jr_050_682d:
     ld [wTempEnemyId1], a
     ld a, h
     ld [$da04], a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7ca], a
     ld a, $01
     ld [$d7cb], a
@@ -6936,7 +6936,7 @@ jr_050_682d:
     ld [$da05], a
     ld a, h
     ld [$da06], a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7cc], a
     ld a, $01
     ld [$d7cd], a
@@ -6952,7 +6952,7 @@ jr_050_682d:
     ld [$da07], a
     ld a, h
     ld [$da08], a
-    call Call_050_6766
+    call SetTempEnemyStatsId
     ld [$d7ce], a
     ld a, $01
     ld [$d7cf], a
@@ -6965,7 +6965,7 @@ jr_050_6898:
     ret
 
 
-Call_050_689e:
+ReadBtl_689e:
     ld a, [hl]
     or a
     ret z
@@ -7017,7 +7017,7 @@ Call_050_689e:
     push bc
     push hl
     ld a, [$cac0]
-    call Call_050_6383
+    call CmpBtl_6383
     pop hl
     pop bc
     ld [hl], b
@@ -7043,7 +7043,7 @@ jr_050_68fb:
     ret
 
 
-Call_050_68fc:
+LoadBtl_68fc:
     ld a, [wBattlePostFlag]
     cp $02
     jr z, jr_050_6913
@@ -7137,13 +7137,13 @@ jr_050_695f:
     jp Jump_050_6a4f
 
 
-Call_050_696d:
-    call Call_050_6974
-    call Call_050_6a65
+CallBtl_696d:
+    call LoadBtl_6974
+    call SetupBattleAction
     ret
 
 
-Call_050_6974:
+LoadBtl_6974:
     ld a, [$c86c]
     or a
     jr nz, jr_050_6952
@@ -7203,14 +7203,14 @@ jr_050_69bb:
     ret
 
 
-Call_050_69c4:
+LoadBtl_69c4:
     ld a, $00
     ld [$c822], a
     ld a, [$db4d]
     or a
     jr z, jr_050_69d3
 
-    call Call_050_6a26
+    call LoadBtl_6a26
     ret
 
 
@@ -7231,42 +7231,42 @@ jr_050_69d3:
     cp $01
     jr z, jr_050_69f4
 
-    call Call_050_6a65
+    call SetupBattleAction
     ld a, $00
     ld [$c823], a
     jr jr_050_6a4f
 
 jr_050_69f4:
-    call Call_050_6a65
+    call SetupBattleAction
     ld a, $01
     ld [$c823], a
     jr jr_050_6a4f
 
 jr_050_69fe:
-    call Call_050_6a71
+    call LoadBtl_6a71
     ld a, $02
     ld [$c823], a
     jr jr_050_6a4f
 
 jr_050_6a08:
-    call Call_050_6a65
+    call SetupBattleAction
     ld a, $01
     ld [$c823], a
     jr jr_050_6a57
 
 jr_050_6a12:
-    call Call_050_6a65
+    call SetupBattleAction
     ld a, $00
     ld [$c823], a
     jr jr_050_6a57
 
 jr_050_6a1c:
-    call Call_050_6a71
+    call LoadBtl_6a71
     ld a, $02
     ld [$c823], a
     jr jr_050_6a57
 
-Call_050_6a26:
+LoadBtl_6a26:
     ld a, [$db4c]
     cp $05
     jr z, jr_050_6a45
@@ -7274,33 +7274,33 @@ Call_050_6a26:
     cp $04
     jr z, jr_050_6a3b
 
-    call Call_050_6a94
+    call LoadBtl_6a94
     ld a, $00
     ld [$c823], a
     jr jr_050_6a4f
 
 jr_050_6a3b:
-    call Call_050_6a88
+    call LoadBtl_6a88
     ld a, $01
     ld [$c823], a
     jr jr_050_6a4f
 
 jr_050_6a45:
-    call Call_050_6a94
+    call LoadBtl_6a94
     ld a, $00
     ld [$c823], a
     jr jr_050_6a4f
 
 Jump_050_6a4f:
 jr_050_6a4f:
-    call Call_050_6aa3
+    call ClrBtl_6aa3
     ld hl, $d9ec
     inc [hl]
     ret
 
 
 jr_050_6a57:
-    call Call_050_6aa3
+    call ClrBtl_6aa3
     ld a, $01
     ld [$db4d], a
     ld a, $05
@@ -7308,46 +7308,46 @@ jr_050_6a57:
     ret
 
 
-Call_050_6a65:
+SetupBattleAction:
     ld a, $04
     ld hl, $c180
     ld [$db50], a
-    call Call_050_7d7f
+    call SetBattleTargetData
     ret
 
 
-Call_050_6a71:
+LoadBtl_6a71:
     ld a, $04
     ld hl, $c180
     ld [$db50], a
-    call Call_050_7d7f
+    call SetBattleTargetData
     ld a, $05
     ld hl, $c190
     ld [$db50], a
-    call Call_050_7d7f
+    call SetBattleTargetData
     ret
 
 
-Call_050_6a88:
+LoadBtl_6a88:
     ld a, $05
     ld hl, $c180
     ld [$db50], a
-    call Call_050_7d7f
+    call SetBattleTargetData
     ret
 
 
-Call_050_6a94:
+LoadBtl_6a94:
     ld a, $06
     ld hl, $c180
     ld [$db50], a
-    call Call_050_7d7f
+    call SetBattleTargetData
     ret
 
 
-Call_050_6aa0:
+SetTextIdParam:
     ld [$c823], a
 
-Call_050_6aa3:
+ClrBtl_6aa3:
     xor a
     ld [$c822], a
     ld hl, $4c00
@@ -7389,7 +7389,7 @@ jr_050_6acb:
     ld [hl+], a
     ld a, [hl]
     and $30
-    call nz, Call_050_6b06
+    call nz, ReadBtl_6b06
     inc hl
     ld a, [hl]
     and $c0
@@ -7424,7 +7424,7 @@ jr_050_6ae9:
     ret
 
 
-Call_050_6b06:
+ReadBtl_6b06:
     ld a, [hl]
     and $cf
     ld e, a
@@ -7468,9 +7468,9 @@ jr_050_6b25:
     sub $40
     jr nz, jr_050_6b4f
 
-    call Call_050_7e1e
+    call SetBtl_7e1e
     ld a, $dd
-    call Call_050_6aa0
+    call SetTextIdParam
     xor a
     ld b, $01
 
@@ -7527,13 +7527,13 @@ jr_050_6b88:
     ld hl, $0001
 
 jr_050_6b99:
-    call Call_050_6bc4
+    call LoadBtl_6bc4
     ld a, l
     ld [$db56], a
     ld a, h
     ld [$db57], a
     ld a, [wBattleAttackerIdx]
-    call Call_050_7e1e
+    call SetBtl_7e1e
     ld hl, $c190
     ld a, [$db56]
     ld c, a
@@ -7541,13 +7541,13 @@ jr_050_6b99:
     ld b, a
     call FormatDecimalDigits
     ld a, [$db4c]
-    call Call_050_6aa0
+    call SetTextIdParam
     ld a, $05
     ld [$da33], a
     ret
 
 
-Call_050_6bc4:
+LoadBtl_6bc4:
     ld a, [$db4c]
     cp $e1
     jr z, jr_050_6be7
@@ -7596,7 +7596,7 @@ jr_050_6c01:
     ret nz
 
     ld a, $fd
-    call Call_050_6aa0
+    call SetTextIdParam
     ret
 
 
@@ -7645,7 +7645,7 @@ jr_050_6c43:
     jr z, jr_050_6c59
 
     call UpdateBattleSprites
-    call Call_050_7627
+    call LoadBtl_7627
     ld a, $05
     ld [$d9ed], a
     jp Jump_050_6d0c
@@ -7660,15 +7660,15 @@ jr_050_6c59:
     ld [$db4c], a
     ld hl, $5103
     rst $10
-    call Call_050_7c4d
+    call BattleDispatchEntry4
     ld a, $04
     ld [$d9ed], a
     ld a, [wBattleAttackerIdx]
-    call Call_050_7e1e
+    call SetBtl_7e1e
     ld a, $ea
-    call Call_050_6aa0
+    call SetTextIdParam
     call UpdateBattleSprites
-    call Call_050_7627
+    call LoadBtl_7627
     ld a, [$c86c]
     or a
     ret nz
@@ -7852,7 +7852,7 @@ jr_050_6d68:
     ret
 
 
-Call_050_6d78:
+LoadBtl_6d78:
     ld a, [$cab5]
     inc a
     ld [$cab5], a
@@ -9558,7 +9558,7 @@ Jump_050_74e0:
     reti
 
 
-Call_050_756b:
+SaveBtl_756b:
     push af
     ld a, l
     and $e0
@@ -9574,7 +9574,7 @@ Call_050_756b:
     ret
 
 
-Call_050_757a:
+LoadBtl_757a:
     ld a, [$d9f8]
     add l
     ld l, a
@@ -9589,7 +9589,7 @@ Call_050_757a:
     ret
 
 
-Call_050_758e:
+AdjustBattlePointerHL:
     ld a, l
     add $00
     ld l, a
@@ -9599,13 +9599,13 @@ Call_050_758e:
     ret
 
 
-Call_050_7597:
+SaveBtl_7597:
     push bc
     ld b, l
     ld a, l
     and $e0
     ld l, a
-    call Call_050_757a
+    call LoadBtl_757a
     ld a, b
     and $1f
     jr z, jr_050_75ac
@@ -9613,7 +9613,7 @@ Call_050_7597:
     ld b, a
 
 jr_050_75a6:
-    call Call_050_756b
+    call SaveBtl_756b
     dec b
     jr nz, jr_050_75a6
 
@@ -9628,7 +9628,7 @@ jr_050_75ac:
     ld a, [de]
     ld h, a
     inc de
-    call Call_050_7597
+    call SaveBtl_7597
     ld a, l
     ld [$d9ea], a
     ld a, h
@@ -9665,7 +9665,7 @@ jr_050_75bf:
 
 jr_050_75e8:
     call Write_gfx_tile
-    call Call_050_756b
+    call SaveBtl_756b
     jr jr_050_75bf
 
 LoadPaletteFromDE:
@@ -9675,7 +9675,7 @@ LoadPaletteFromDE:
     ld a, [de]
     ld h, a
     inc de
-    call Call_050_758e
+    call AdjustBattlePointerHL
     ld a, l
     ld [$d9ea], a
     ld a, h
@@ -9710,7 +9710,7 @@ jr_050_7624:
     ld [hl+], a
     jr jr_050_7601
 
-Call_050_7627:
+LoadBtl_7627:
     ld a, [$db74]
     ld c, a
     ld a, [$c863]
@@ -9724,7 +9724,7 @@ jr_050_7636:
     push bc
     ld b, $25
     ld c, $62
-    call Call_050_7656
+    call BtlFunc_7656
     pop bc
     dec c
     ret z
@@ -9732,7 +9732,7 @@ jr_050_7636:
     push bc
     ld b, $2b
     ld c, $68
-    call Call_050_7656
+    call BtlFunc_7656
     pop bc
     dec c
     ret z
@@ -9740,12 +9740,12 @@ jr_050_7636:
     push bc
     ld b, $31
     ld c, $6e
-    call Call_050_7656
+    call BtlFunc_7656
     pop bc
     ret
 
 
-Call_050_7656:
+BtlFunc_7656:
     ld l, b
     ld h, $98
     ld a, b
@@ -9767,7 +9767,7 @@ Call_050_7656:
     ld a, $00
     adc d
     ld d, a
-    call Call_050_76b2
+    call LoadBtl_76b2
     ld b, $03
     ld a, c
     add $20
@@ -9779,7 +9779,7 @@ Call_050_7656:
     ld a, $00
     adc d
     ld d, a
-    call Call_050_76b2
+    call LoadBtl_76b2
     ret
 
 
@@ -9794,7 +9794,7 @@ ClearTileBuffer:
 jr_050_769b:
     ld b, $20
     push hl
-    call Call_050_76b2
+    call LoadBtl_76b2
     pop hl
     push bc
     ld bc, $0020
@@ -9810,7 +9810,7 @@ jr_050_769b:
     ret
 
 
-Call_050_76b2:
+LoadBtl_76b2:
 jr_050_76b2:
     ld a, [de]
     call Write_gfx_tile
@@ -9831,7 +9831,7 @@ jr_050_76b2:
     ret
 
 
-Call_050_76c7:
+LoadBtl_76c7:
     ld a, [$c827]
     ld c, a
     ld a, [$c828]
@@ -9865,7 +9865,7 @@ Call_050_76c7:
     ret
 
 
-Call_050_7700:
+SaveBtl_7700:
     push hl
     ld hl, $c180
     call Copy4Bytes
@@ -9937,7 +9937,7 @@ jr_050_7763:
     ret
 
 
-Call_050_776e:
+LoadBtl_776e:
     ld a, c
     ld [$c8e1], a
     inc de
@@ -10029,7 +10029,7 @@ jr_050_77d5:
     push bc
     push de
     push hl
-    call Call_050_78b0
+    call LoadBtl_78b0
     pop hl
     pop de
     pop bc
@@ -10053,7 +10053,7 @@ jr_050_77d5:
     inc a
     ld b, a
 
-Call_050_77f7:
+BtlFunc_77f7:
 jr_050_77f7:
     res 7, [hl]
     ld a, [wJoypad_Current]
@@ -10103,11 +10103,11 @@ jr_050_7820:
 
 jr_050_7829:
     ld a, [hl]
-    call Call_050_784d
+    call BtlFunc_784d
     ret
 
 
-Call_050_782e:
+BtlFunc_782e:
     res 7, [hl]
     ld a, [wJoypad_Current]
     and $c0
@@ -10126,13 +10126,13 @@ jr_050_783c:
     xor $02
     jr jr_050_7817
 
-Call_050_7848:
+ClearBattleTurnFlag:
     xor a
     ld [$d9fb], a
     ret
 
 
-Call_050_784d:
+BtlFunc_784d:
     ld c, a
     bit 7, a
     jr nz, jr_050_7862
@@ -10168,7 +10168,7 @@ jr_050_7865:
     ld [$d9eb], a
     push de
     push bc
-    call Call_050_7597
+    call SaveBtl_7597
     pop bc
     pop de
     ld a, c
@@ -10206,7 +10206,7 @@ jr_050_7897:
     inc b
     jr jr_050_7865
 
-Call_050_78b0:
+LoadBtl_78b0:
     ld a, b
     cp c
     ret nc
@@ -10232,7 +10232,7 @@ Call_050_78b0:
     ldh [$d6], a
     push de
     push bc
-    call Call_050_7597
+    call SaveBtl_7597
     pop bc
     pop de
     ld a, c
@@ -10255,7 +10255,7 @@ Call_050_78b0:
     ret
 
 
-Call_050_78e9:
+ReadBtl_78e9:
     ld a, [hl+]
     push af
     push hl
@@ -10290,7 +10290,7 @@ jr_050_7902:
 jr_050_790a:
     pop af
 
-Call_050_790b:
+CalcBattleTableIndex:
     ld c, a
     add a
     add e
@@ -10309,7 +10309,7 @@ Call_050_790b:
     ld [$d9eb], a
     push de
     push bc
-    call Call_050_7597
+    call SaveBtl_7597
     pop bc
     pop de
     ld a, $e9
@@ -10364,37 +10364,37 @@ jr_050_7961:
 
     ld a, $00
     ld hl, $00c7
-    call Call_050_7996
+    call ProcessBattleSpriteRow
     ret
 
 
 jr_050_7972:
     ld a, $00
     ld hl, $00c4
-    call Call_050_7996
+    call ProcessBattleSpriteRow
     ld hl, $00ca
-    call Call_050_7996
+    call ProcessBattleSpriteRow
     ret
 
 
 jr_050_7981:
     ld a, $00
     ld hl, $00c1
-    call Call_050_7996
+    call ProcessBattleSpriteRow
     ld hl, $00c7
-    call Call_050_7996
+    call ProcessBattleSpriteRow
     ld hl, $00cd
-    call Call_050_7996
+    call ProcessBattleSpriteRow
     ret
 
 
-Call_050_7996:
+ProcessBattleSpriteRow:
     ld c, $06
 
 jr_050_7998:
     push hl
     push af
-    call Call_050_758e
+    call AdjustBattlePointerHL
     pop af
     ld b, $06
 
@@ -10413,7 +10413,7 @@ jr_050_79a0:
     ret
 
 
-Call_050_79ae:
+SetBtl_79ae:
     ld de, $2e07
     call LoadPaletteFromDE
 
@@ -10422,7 +10422,7 @@ UpdateBattleSprites:
     or a
     jp nz, Jump_050_7a87
 
-Call_050_79bb:
+LoadBtl_79bb:
     ld a, [$c86c]
     or a
     jr nz, jr_050_79c6
@@ -10432,10 +10432,10 @@ Call_050_79bb:
     ret z
 
 jr_050_79c6:
-    call Call_050_79cb
+    call SetBtl_79cb
     jr jr_050_79eb
 
-Call_050_79cb:
+SetBtl_79cb:
     ld hl, $7a7f
     ld a, [$c863]
     bit 1, a
@@ -10477,7 +10477,7 @@ jr_050_79f8:
     ld b, [hl]
     ld c, a
     ld hl, $0062
-    call Call_050_758e
+    call AdjustBattlePointerHL
     call FillMemory
     pop hl
     ld bc, $0020
@@ -10486,7 +10486,7 @@ jr_050_79f8:
     ld b, [hl]
     ld c, a
     ld hl, $0082
-    call Call_050_758e
+    call AdjustBattlePointerHL
     call FillMemory
     ld a, [$c1d9]
     cp $01
@@ -10505,7 +10505,7 @@ jr_050_7a29:
     ld b, [hl]
     ld c, a
     ld hl, $0068
-    call Call_050_758e
+    call AdjustBattlePointerHL
     call FillMemory
     pop hl
     ld bc, $0020
@@ -10514,7 +10514,7 @@ jr_050_7a29:
     ld b, [hl]
     ld c, a
     ld hl, $0088
-    call Call_050_758e
+    call AdjustBattlePointerHL
     call FillMemory
     ld a, [$c1d9]
     cp $02
@@ -10533,7 +10533,7 @@ jr_050_7a5a:
     ld b, [hl]
     ld c, a
     ld hl, $006e
-    call Call_050_758e
+    call AdjustBattlePointerHL
     call FillMemory
     pop hl
     ld bc, $0020
@@ -10542,7 +10542,7 @@ jr_050_7a5a:
     ld b, [hl]
     ld c, a
     ld hl, $008e
-    call Call_050_758e
+    call AdjustBattlePointerHL
     call FillMemory
     ret
 
@@ -10560,12 +10560,12 @@ jr_050_7a5a:
     cp [hl]
     ld l, l
 
-Call_050_7a87:
+CmpBtl_7a87:
 Jump_050_7a87:
     cp $03
     jp z, Jump_050_7b8f
 
-    call Call_050_79cb
+    call SetBtl_79cb
     ld hl, $9800
     ld a, l
     ld [$d9f8], a
@@ -10625,16 +10625,16 @@ jr_050_7abc:
     call ClearTileBuffer
     ld hl, $8da0
     ld a, $02
-    call Call_050_7c2a
+    call SaveBtl_7c2a
     ld hl, $8db0
     ld a, $04
-    call Call_050_7c2a
+    call SaveBtl_7c2a
     ld hl, $8dc0
     ld a, $06
-    call Call_050_7c2a
+    call SaveBtl_7c2a
     ld hl, $8dd0
     ld a, $03
-    call Call_050_7c2a
+    call SaveBtl_7c2a
     ld hl, $d9f3
     inc [hl]
 
@@ -10685,7 +10685,7 @@ jr_050_7b19:
     jr z, jr_050_7b56
 
     ld a, $00
-    call Call_050_7c1c
+    call LookupBattleTable
 
 jr_050_7b56:
     inc de
@@ -10693,7 +10693,7 @@ jr_050_7b56:
     jr z, jr_050_7b60
 
     ld a, $01
-    call Call_050_7c1c
+    call LookupBattleTable
 
 jr_050_7b60:
     inc de
@@ -10701,7 +10701,7 @@ jr_050_7b60:
     jr z, jr_050_7b6a
 
     ld a, $02
-    call Call_050_7c1c
+    call LookupBattleTable
 
 jr_050_7b6a:
     inc de
@@ -10709,7 +10709,7 @@ jr_050_7b6a:
     jr z, jr_050_7b74
 
     ld a, $03
-    call Call_050_7c1c
+    call LookupBattleTable
 
 jr_050_7b74:
     inc de
@@ -10717,14 +10717,14 @@ jr_050_7b74:
     jr z, jr_050_7b7e
 
     ld a, $04
-    call Call_050_7c1c
+    call LookupBattleTable
 
 jr_050_7b7e:
     bit 0, [hl]
     jr z, jr_050_7b87
 
     ld a, $05
-    call Call_050_7c1c
+    call LookupBattleTable
 
 jr_050_7b87:
     inc c
@@ -10735,7 +10735,7 @@ jr_050_7b87:
     ret
 
 
-Call_050_7b8f:
+LoadBtl_7b8f:
 Jump_050_7b8f:
     ld a, [$c1d9]
     ld b, a
@@ -10782,7 +10782,7 @@ jr_050_7b9e:
     adc h
     ld h, a
     ld [hl], $ff
-    call Call_050_7c4d
+    call BattleDispatchEntry4
     pop hl
     pop de
     pop bc
@@ -10793,7 +10793,7 @@ jr_050_7b9e:
 
     xor a
     ld [$d9f3], a
-    call Call_050_79bb
+    call LoadBtl_79bb
     call ClearTileBuffer
     ret
 
@@ -10837,7 +10837,7 @@ jr_050_7b9e:
     ret
 
 
-Call_050_7c1c:
+LookupBattleTable:
     push hl
     ld hl, $7c00
     add l
@@ -10851,7 +10851,7 @@ Call_050_7c1c:
     ret
 
 
-Call_050_7c2a:
+SaveBtl_7c2a:
     push hl
     ld hl, $7c3d
     add a
@@ -10882,7 +10882,7 @@ Call_050_7c2a:
     ld [$095b], sp
     ld e, e
 
-Call_050_7c4d:
+BattleDispatchEntry4:
     ld a, [$c86c]
     or a
     jr z, jr_050_7c73
@@ -11006,14 +11006,14 @@ jr_050_7cd6:
     ld d, [hl]
     pop af
     cp d
-    call nz, Call_050_7ced
+    call nz, WriteBtl_7ced
     pop hl
-    call nz, Call_050_7c2a
+    call nz, SaveBtl_7c2a
     pop de
     ret
 
 
-Call_050_7ced:
+WriteBtl_7ced:
     ld [hl], a
     ret
 
@@ -11067,11 +11067,11 @@ jr_050_7d05:
     ret
 
 
-Call_050_7d2e:
+CheckSlotUnder3:
     cp $03
     jr nc, jr_050_7d4c
 
-Call_050_7d32:
+SaveBtl_7d32:
 jr_050_7d32:
     push hl
     ld hl, $cac2
@@ -11133,14 +11133,14 @@ jr_050_7d72:
 
 jr_050_7d75:
     push af
-    call Call_050_7d7f
+    call SetBattleTargetData
     pop af
     ld hl, $5104
     rst $10
     ret
 
 
-Call_050_7d7f:
+SetBattleTargetData:
     ld [$db60], a
     push hl
     ld hl, $dc3c
@@ -11162,7 +11162,7 @@ Call_050_7d7f:
 
 
 jr_050_7d9d:
-    call Call_050_7d32
+    call SaveBtl_7d32
     ld a, $2f
     ld [hl+], a
     ld a, $46
@@ -11268,11 +11268,11 @@ jr_050_7e0c:
     ld [$db4f], a
     ld a, [wBattleTargetIdx]
     ld [$db50], a
-    call Call_050_7d2e
+    call CheckSlotUnder3
     ret
 
 
-Call_050_7e1e:
+SetBtl_7e1e:
     ld hl, $c180
     ld a, l
     ld [$db4e], a
@@ -11280,7 +11280,7 @@ Call_050_7e1e:
     ld [$db4f], a
     ld a, [wBattleAttackerIdx]
     ld [$db50], a
-    call Call_050_7d2e
+    call CheckSlotUnder3
     ret
 
 

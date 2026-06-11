@@ -38,7 +38,7 @@ SECTION "ROM Bank $040", ROMX[$4000], BANK[$40]
     db $cd, $b1, $1f
     db $cd, $73, $12
     db $cd, $70, $17
-    call Call_040_5197
+    call HramB40_5197
     ld a, $40
     ld [$c6a1], a
     ld hl, $4271
@@ -64,18 +64,18 @@ SECTION "ROM Bank $040", ROMX[$4000], BANK[$40]
     jr z, jr_040_406a
 
     ld a, $01
-    call Call_000_312a
+    call CheckBankIndexRange
 
 jr_040_406a:
     ldh a, [$fe]
     and a
     jr nz, jr_040_4074
 
-    call Call_040_51ad
+    call SetB40_51ad
     jr jr_040_4077
 
 jr_040_4074:
-    call Call_040_51bc
+    call CallB40_51bc
 
 jr_040_4077:
     call $1d1e
@@ -109,11 +109,11 @@ jr_040_4096:
     ret
 
 
-    call Call_000_1fb1
-    call Call_040_5197
+    call CoordApplyDelta
+    call HramB40_5197
     xor a
     ld [$c625], a
-    call Call_040_51ce
+    call SetB40_51ce
     ld hl, $cbc0
     xor a
     ld [hl+], a
@@ -151,13 +151,13 @@ jr_040_4096:
 
 
 jr_040_40e1:
-    call Call_040_40eb
-    call Call_040_423f
+    call LoadB40_40eb
+    call LoadB40_423f
     db $cd, $1d, $1a
     ret
 
 
-Call_040_40eb:
+LoadB40_40eb:
     ld a, [$c60c]
     bit 6, a
     jr nz, jr_040_40fb
@@ -212,11 +212,11 @@ jr_040_4124:
 
 
     db $cd, $b1, $1f
-    call Call_040_5197
+    call HramB40_5197
     db $cd, $70, $17
     xor a
     ld [$c625], a
-    call Call_040_51ec
+    call SetB40_51ec
     ld hl, $cbc0
     xor a
     ld [hl+], a
@@ -254,13 +254,13 @@ jr_040_4124:
 
 
 jr_040_416d:
-    call Call_040_4177
-    call Call_040_423f
+    call LoadB40_4177
+    call LoadB40_423f
     db $cd, $1d, $1a		;this might be actual code? I'm unsure. 
     ret
 
 
-Call_040_4177:
+LoadB40_4177:
     ld a, [$c60c]
     bit 6, a
     jr nz, jr_040_4187
@@ -362,12 +362,12 @@ jr_040_4218:
     ret
 
 
-    call Call_000_1fb1
-    call Call_040_5197
+    call CoordApplyDelta
+    call HramB40_5197
     db $cd, $70, $17
     xor a
     ld [$c625], a
-    call Call_040_51dd
+    call SetB40_51dd
     call $1d1e
     ld a, $87
     ldh [rLCDC], a
@@ -381,7 +381,7 @@ jr_040_4218:
     ret
 
 
-Call_040_423f:
+LoadB40_423f:
     ld a, [$c626]
     and $0f
     cp $08
@@ -408,7 +408,7 @@ jr_040_424f:
     ldh [$b5], a
     ld a, [$c600]
     ldh [$b1], a
-    call Call_000_04ce
+    call GetStoredPointerHL
     ldh a, [$b1]
     ld [$c600], a
     ret
@@ -737,7 +737,7 @@ jr_040_42f1:
     ld d, l
     xor $55
     xor $ab
-    call c, Call_040_7fa5
+    call c, DataB40_7fa5
     dec h
     rst $38
     db $fc
@@ -3683,7 +3683,7 @@ jr_040_50cc:
     ld bc, $0040
     ld b, b
 
-Call_040_5197:
+HramB40_5197:
     ldh a, [$fe]
     and a
     ret z
@@ -3691,55 +3691,55 @@ Call_040_5197:
     ld a, $40
     ld [$c6a1], a
     ld hl, $5104
-    call Call_000_2d56
+    call WriteRotatedBytesDown
     ld hl, $5144
     call $2df1
     ret
 
 
-Call_040_51ad:
+SetB40_51ad:
     ld hl, $4df9
     ld bc, $9800
     ld a, $40
     ld [$c6a1], a
-    call Call_000_2bcc
+    call BitComplementAndBranch
     ret
 
 
-Call_040_51bc:
-    call Call_000_2f97
+CallB40_51bc:
+    call MenuCalcWidth
     ld hl, $4ea1
     ld bc, $9800
     ld a, $40
     ld [$c6a1], a
-    call Call_000_2bcc
+    call BitComplementAndBranch
     ret
 
 
-Call_040_51ce:
+SetB40_51ce:
     ld hl, $4f59
     ld bc, $9800
     ld a, $40
     ld [$c6a1], a
-    call Call_000_2bcc
+    call BitComplementAndBranch
     ret
 
 
-Call_040_51dd:
+SetB40_51dd:
     ld hl, $4fe6
     ld bc, $9800
     ld a, $40
     ld [$c6a1], a
-    call Call_000_2bcc
+    call BitComplementAndBranch
     ret
 
 
-Call_040_51ec:
+SetB40_51ec:
     ld hl, $5061
     ld bc, $9800
     ld a, $40
     ld [$c6a1], a
-    call Call_000_2bcc
+    call BitComplementAndBranch
     ret
 
 
@@ -15434,7 +15434,7 @@ Call_040_51ec:
     nop
     nop
 
-Call_040_7fa5:
+DataB40_7fa5:
     nop
     nop
     nop

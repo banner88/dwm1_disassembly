@@ -190,18 +190,18 @@ Jump_014_4158:
 jr_014_4158:
     ld hl, $caca
     ld de, $da18
-    call Call_014_4793
+    call SaveEnem_4793
     ld hl, $caea
     ld de, $da2d
-    call Call_014_47a8
+    call FuncEnem_47a8
     ld hl, $cb0c
     ld de, $da1c
-    call Call_014_4793
+    call SaveEnem_4793
     ld hl, $cb13
     ld de, $da1d
-    call Call_014_479e
+    call FuncEnem_479e
     ld hl, $cb13
-    call Call_014_4821
+    call SaveEnem_4821
     ld hl, $cb13
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -218,9 +218,9 @@ jr_014_4158:
     ld [hl], b
     ld hl, $cb17
     ld de, $da1f
-    call Call_014_479e
+    call FuncEnem_479e
     ld hl, $cb17
-    call Call_014_4821
+    call SaveEnem_4821
     ld hl, $cb17
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -237,42 +237,42 @@ jr_014_4158:
     ld [hl], b
     ld hl, $cb19
     ld de, $da21
-    call Call_014_479e
+    call FuncEnem_479e
     ld hl, $cb19
-    call Call_014_4821
+    call SaveEnem_4821
     ld hl, $cb1b
     ld de, $da23
-    call Call_014_479e
+    call FuncEnem_479e
     ld hl, $cb1b
-    call Call_014_4821
+    call SaveEnem_4821
     ld hl, $cb1d
     ld de, $da25
-    call Call_014_479e
+    call FuncEnem_479e
     ld hl, $cb1f
     ld de, $da27
-    call Call_014_479e
+    call FuncEnem_479e
     ld hl, $cb1f
-    call Call_014_4821
+    call SaveEnem_4821
     ld hl, $cb25
     ld de, $da29
-    call Call_014_4793
+    call SaveEnem_4793
     ld hl, $cb25
-    call Call_014_47fd
+    call SaveEnem_47fd
     ld hl, $cb26
     ld de, $da2a
-    call Call_014_4793
+    call SaveEnem_4793
     ld hl, $cb26
-    call Call_014_47fd
+    call SaveEnem_47fd
     ld hl, $cb27
     ld de, $da2c
-    call Call_014_4793
+    call SaveEnem_4793
     ld hl, $cb27
-    call Call_014_47fd
+    call SaveEnem_47fd
     ld hl, $cb28
     ld de, $da2b
-    call Call_014_4793
+    call SaveEnem_4793
     ld hl, $cb28
-    call Call_014_47fd
+    call SaveEnem_47fd
     ld hl, $cb0c
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -314,7 +314,7 @@ jr_014_4264:
     rst $10
     ld hl, $cacb
     ld de, $da33
-    call Call_014_4793
+    call SaveEnem_4793
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -338,7 +338,7 @@ jr_014_4264:
     ld de, $da39
     ld b, $03
     call $4782
-    call Call_014_47ad
+    call SetEnem_47ad
     ld hl, $cacc
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -1088,7 +1088,7 @@ jr_014_478c:
     ret
 
 
-Call_014_4793:
+SaveEnem_4793:
     push de
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -1098,7 +1098,7 @@ Call_014_4793:
     ret
 
 
-Call_014_479e:
+FuncEnem_479e:
 jr_014_479e:
     ld b, $02
     jp $4782
@@ -1108,12 +1108,12 @@ jr_014_479e:
     jp $4782
 
 
-Call_014_47a8:
+FuncEnem_47a8:
     ld b, $04
     jp $4782
 
 
-Call_014_47ad:
+SetEnem_47ad:
     ld hl, $caea
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -1125,7 +1125,7 @@ jr_014_47ba:
     ld a, [de]
     push bc
     push de
-    call Call_014_47c7
+    call CmpEnem_47c7
     pop de
     pop bc
     inc de
@@ -1135,7 +1135,7 @@ jr_014_47ba:
     ret
 
 
-Call_014_47c7:
+CmpEnem_47c7:
     cp $ff
     ret z
 
@@ -1186,7 +1186,7 @@ jr_014_47f8:
     ret
 
 
-Call_014_47fd:
+SaveEnem_47fd:
     push hl
     call GenerateRNG
     ld a, [wRNG1]
@@ -1211,7 +1211,7 @@ Call_014_47fd:
     ret
 
 
-Call_014_4821:
+SaveEnem_4821:
     push hl
     call GenerateRNG
     ld a, [wRNG1]
@@ -6362,14 +6362,14 @@ label14_7bac:
 
 
 Jump_014_7bf4:
-    call Call_014_7d00
+    call LoadEnem_7d00
     ret nz
 
     ld a, [$da60]
     ld hl, $cb13
     call ReadMonsterWord
 
-Call_014_7c01:
+SaveEnem_7c01:
     push bc
     ld a, [$da60]
     ld hl, $cb11
@@ -6396,7 +6396,7 @@ Jump_014_7c1b:
     jr z, jr_014_7c95
 
     ld a, $00
-    call Call_014_7d03
+    call SetEnem_7d03
     jr nz, jr_014_7c4a
 
     ld a, $00
@@ -6423,7 +6423,7 @@ Jump_014_7c1b:
 
 jr_014_7c4a:
     ld a, $01
-    call Call_014_7d03
+    call SetEnem_7d03
     jr nz, jr_014_7c73
 
     ld a, $01
@@ -6450,7 +6450,7 @@ jr_014_7c4a:
 
 jr_014_7c73:
     ld a, $02
-    call Call_014_7d03
+    call SetEnem_7d03
     jr nz, jr_014_7c95
 
     ld a, $02
@@ -6490,7 +6490,7 @@ Jump_014_7c9b:
 
 
 Jump_014_7cad:
-    call Call_014_7d00
+    call LoadEnem_7d00
     ret nz
 
     ld a, [$da60]
@@ -6505,7 +6505,7 @@ Jump_014_7cad:
 
 
 Jump_014_7cc3:
-    call Call_014_7d00
+    call LoadEnem_7d00
     ret nz
 
     ld a, [$da60]
@@ -6555,10 +6555,10 @@ Jump_014_7cf5:
     ret
 
 
-Call_014_7d00:
+LoadEnem_7d00:
     ld a, [$da60]
 
-Call_014_7d03:
+SetEnem_7d03:
     ld hl, $cb0b
     call ReadMonsterByte
     bit 7, a
@@ -6654,19 +6654,19 @@ Jump_014_7d98:
     ld a, $00
     ld [$da60], a
     ld a, $00
-    call Call_014_7db7
+    call SetEnem_7db7
     ld a, $01
     ld [$da60], a
     ld a, $01
-    call Call_014_7db7
+    call SetEnem_7db7
     ld a, $02
     ld [$da60], a
     ld a, $02
-    call Call_014_7db7
+    call SetEnem_7db7
     ret
 
 
-Call_014_7db7:
+SetEnem_7db7:
     ld hl, $cb0b
     call ReadMonsterByte
     bit 7, a
@@ -6687,7 +6687,7 @@ Call_014_7db7:
 
 Jump_014_7dd8:
     ld a, $00
-    call Call_014_7d03
+    call SetEnem_7d03
     jr nz, jr_014_7def
 
     ld a, $00
@@ -6699,7 +6699,7 @@ Jump_014_7dd8:
 
 jr_014_7def:
     ld a, $01
-    call Call_014_7d03
+    call SetEnem_7d03
     jr nz, jr_014_7e06
 
     ld a, $01
@@ -6711,7 +6711,7 @@ jr_014_7def:
 
 jr_014_7e06:
     ld a, $02
-    call Call_014_7d03
+    call SetEnem_7d03
     jr nz, jr_014_7e1d
 
     ld a, $02

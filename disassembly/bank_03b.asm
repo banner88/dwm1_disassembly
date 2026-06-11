@@ -5,71 +5,51 @@
 
 SECTION "ROM Bank $03b", ROMX[$4000], BANK[$3b]
 
-    dec sp
-    ld c, l
-    ld b, b
-    rst $30
-    ld b, b
-    ld a, a
-    ld b, c
-    ld d, $42
-    ret z
+    db $3B ; Bank number
 
-    ld b, d
-    ld hl, $c143
-    ld b, e
-    ld d, l
-    ld b, h
-    inc bc
-    ld b, l
-    add $45
-    ld a, [de]
-    ld b, [hl]
-    ld a, [c]
-    ld b, [hl]
-    adc [hl]
-    ld b, a
-    ld a, [hl-]
-    ld c, b
-    call c, Call_03b_6c48
-    ld c, c
-    ld [$6049], a
-    ld c, d
-    rla
-    ld c, e
-    rst $10
-    ld c, e
-    jr c, @+$4e
+    ; Cross-bank dispatch table (38 entries)
+    ; Called via: ld hl, $3BXX / rst $10
+    dw $404D                          ; Entry 0
+    dw $40F7                          ; Entry 1
+    dw $417F                          ; Entry 2
+    dw $4216                          ; Entry 3
+    dw $42C8                          ; Entry 4
+    dw $4321                          ; Entry 5
+    dw $43C1                          ; Entry 6
+    dw $4455                          ; Entry 7
+    dw $4503                          ; Entry 8
+    dw $45C6                          ; Entry 9
+    dw $461A                          ; Entry 10
+    dw $46F2                          ; Entry 11
+    dw $478E                          ; Entry 12
+    dw $483A                          ; Entry 13
+    dw $48DC                          ; Entry 14
+    dw $496C                          ; Entry 15
+    dw $49EA                          ; Entry 16
+    dw $4A60                          ; Entry 17
+    dw $4B17                          ; Entry 18
+    dw $4BD7                          ; Entry 19
+    dw $4C38                          ; Entry 20
+    dw $4CCA                          ; Entry 21
+    dw $4D80                          ; Entry 22
+    dw $4E10                          ; Entry 23
+    dw $4ED2                          ; Entry 24
+    dw $4F59                          ; Entry 25
+    dw $5005                          ; Entry 26
+    dw $50B5                          ; Entry 27
+    dw $5109                          ; Entry 28
+    dw $515F                          ; Entry 29
+    dw $51DA                          ; Entry 30
+    dw $5257                          ; Entry 31
+    dw $52C0                          ; Entry 32
+    dw $537B                          ; Entry 33
+    dw $53E0                          ; Entry 34
+    dw $54A2                          ; Entry 35
+    dw $5511                          ; Entry 36
+    dw $55A0                          ; Entry 37
 
-    jp z, $804c
-
-    ld c, l
-    db $10
-    ld c, [hl]
-    jp nc, Jump_03b_594e
-
-    ld c, a
-    dec b
-    ld d, b
-    or l
-    ld d, b
-    add hl, bc
-    ld d, c
-    ld e, a
-    ld d, c
-    jp c, Jump_03b_5751
-
-    ld d, d
-    ret nz
-
-    ld d, d
-    ld a, e
-    ld d, e
-    ldh [rHDMA3], a
-    and d
-    ld d, h
-    ld de, $a055
-    ld d, l
+; --- Dispatch entry 0 ($404D) ---
+DispatchEntry_3B_0:
     nop
     ld [bc], a
     nop
@@ -10654,7 +10634,7 @@ Jump_03b_594e:
     nop
     nop
 
-Call_03b_6c48:
+DataB3b_6c48:
     nop
     nop
     nop

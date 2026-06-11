@@ -52,7 +52,7 @@ SECTION "ROM Bank $065", ROMX[$4000], BANK[$65]
     sub $67
     ld [hl], a
     adc l
-    call c, Call_065_7674
+    call c, DataB65_7674
     ldh a, [$fc]
     cp $03
     rst $38
@@ -1738,7 +1738,7 @@ jr_065_46fa:
 
 
     rst $08
-    call nz, Call_065_61e2
+    call nz, DataB65_61e2
     pop hl
     ldh a, [$be]
     ei
@@ -2184,7 +2184,7 @@ jr_065_498f:
     xor $dc
     inc a
     cp b
-    call c, Call_065_6eec
+    call c, DataB65_6eec
     rra
     ld a, a
     ld [hl], b
@@ -8257,7 +8257,7 @@ jr_065_5089:
     nop
     nop
 
-Call_065_61e2:
+DataB65_61e2:
     nop
     nop
     nop
@@ -11599,7 +11599,7 @@ Jump_065_62bd:
     nop
     nop
 
-Call_065_6eec:
+DataB65_6eec:
     nop
     nop
     nop
@@ -13529,7 +13529,7 @@ Call_065_6eec:
     nop
     nop
 
-Call_065_7674:
+DataB65_7674:
     nop
     nop
     nop

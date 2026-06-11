@@ -83,7 +83,7 @@ jr_020_406f:
     ldh a, [$a6]
     and $f0
     ld [$c6e7], a
-    call Call_020_473b
+    call SetUnk20_473b
     and $0f
     jp z, Jump_020_410f
 
@@ -172,7 +172,7 @@ jr_020_40eb:
     ldh a, [$a6]
     and $f0
     ld [$c6e7], a
-    call Call_020_473b
+    call SetUnk20_473b
     and $0f
     jr z, jr_020_410f
 
@@ -188,7 +188,7 @@ Jump_020_4101:
 jr_020_4101:
     ld a, $01
     ld [$c680], a
-    call Call_020_474b
+    call SetUnk20_474b
     ld a, $01
     ld [$c65a], a
     ret
@@ -209,7 +209,7 @@ jr_020_410f:
 
     ld a, $01
     ld [$c680], a
-    call Call_020_474b
+    call SetUnk20_474b
     ld b, a
     and $0f
     ret z
@@ -260,7 +260,7 @@ jr_020_410f:
 
 jr_020_4174:
     ld b, $02
-    call Call_000_2a90
+    call DataTable_2A90
     jr jr_020_4184
 
 jr_020_417b:
@@ -374,7 +374,7 @@ jr_020_41f3:
     ld [de], a
 
 jr_020_420f:
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret nz
 
@@ -404,7 +404,7 @@ jr_020_422f:
     ld [$c680], a
 
 jr_020_4234:
-    call Call_020_4727
+    call SetUnk20_4727
     and a
     ret z
 
@@ -439,7 +439,7 @@ jr_020_425a:
     ld [$c680], a
 
 jr_020_425f:
-    call Call_020_4731
+    call SetUnk20_4731
     and a
     ret z
 
@@ -504,13 +504,13 @@ jr_020_4298:
     ld [de], a
 
 jr_020_42b4:
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret nz
 
     ld a, $01
     ld [$c680], a
-    call Call_020_4727
+    call SetUnk20_4727
     ret
 
 
@@ -563,13 +563,13 @@ jr_020_42e4:
     ld [de], a
 
 jr_020_4300:
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret nz
 
     ld a, $01
     ld [$c680], a
-    call Call_020_4731
+    call SetUnk20_4731
     ret
 
 
@@ -604,7 +604,7 @@ Jump_020_430e:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret nz
 
@@ -632,7 +632,7 @@ Jump_020_430e:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     ret
 
 
@@ -666,7 +666,7 @@ Jump_020_4369:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret nz
 
@@ -695,7 +695,7 @@ Jump_020_4369:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     ret
 
 
@@ -731,7 +731,7 @@ Jump_020_43c3:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     jr nz, jr_020_442a
 
@@ -762,7 +762,7 @@ Jump_020_43c3:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret z
 
@@ -804,7 +804,7 @@ Jump_020_4432:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     jr nz, jr_020_4496
 
@@ -835,7 +835,7 @@ Jump_020_4432:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret z
 
@@ -872,7 +872,7 @@ jr_020_4496:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret nz
 
@@ -889,7 +889,7 @@ jr_020_4496:
 
 
 jr_020_44d8:
-    call Call_020_4727
+    call SetUnk20_4727
     and a
     ret z
 
@@ -902,7 +902,7 @@ jr_020_44d8:
 
 
 jr_020_44e9:
-    call Call_020_4731
+    call SetUnk20_4731
     and a
     ret z
 
@@ -935,13 +935,13 @@ jr_020_44fa:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret nz
 
     ld a, $01
     ld [$c680], a
-    call Call_020_4727
+    call SetUnk20_4727
     ret
 
 
@@ -966,17 +966,17 @@ Jump_020_4524:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4719
+    call SetUnk20_4719
     and a
     ret nz
 
     ld a, $01
     ld [$c680], a
-    call Call_020_4731
+    call SetUnk20_4731
     ret
 
 
-Call_020_454e:
+ClrUnk20_454e:
     xor a
     ld [$c687], a
     ld [$c732], a
@@ -1003,11 +1003,11 @@ jr_020_4560:
     inc de
     ld a, [hl]
     ld [de], a
-    call Call_020_46eb
+    call SetUnk20_46eb
     ret
 
 
-Call_020_457a:
+ClrUnk20_457a:
     xor a
     ld [$c687], a
     ld [$c732], a
@@ -1026,11 +1026,11 @@ Call_020_457a:
     inc de
     ld a, [hl]
     ld [de], a
-    call Call_020_46d9
+    call ClrUnk20_46d9
     ret
 
 
-    call Call_020_457a
+    call ClrUnk20_457a
     and a
     ret nz
 
@@ -1059,7 +1059,7 @@ Call_020_457a:
     dec de
     ld a, [hl]
     ld [de], a
-    call Call_020_46f9
+    call ClrUnk20_46f9
     and a
     ret nz
 
@@ -1086,7 +1086,7 @@ Call_020_457a:
     dec de
     ld a, [hl]
     ld [de], a
-    call Call_020_46f9
+    call ClrUnk20_46f9
     and a
     ret nz
 
@@ -1108,7 +1108,7 @@ Call_020_457a:
 
     xor a
     ld [$c672], a
-    call Call_020_454e
+    call ClrUnk20_454e
     and a
     ret nz
 
@@ -1145,7 +1145,7 @@ jr_020_462e:
     dec de
     ld a, [hl]
     ld [de], a
-    call Call_020_470b
+    call SetUnk20_470b
     and a
     ret nz
 
@@ -1189,7 +1189,7 @@ jr_020_4670:
     dec de
     ld a, [hl]
     ld [de], a
-    call Call_020_470b
+    call SetUnk20_470b
     and a
     ret nz
 
@@ -1223,7 +1223,7 @@ jr_020_4670:
     ld a, [hl]
     sbc $00
     ld [de], a
-    call Call_020_4763
+    call SetUnk20_4763
     ld a, [$c672]
     ret
 
@@ -1234,11 +1234,11 @@ jr_020_4670:
     ld [$c726], a
     ld a, $01
     ld [$c689], a
-    call Call_020_4763
+    call SetUnk20_4763
     ret
 
 
-Call_020_46d9:
+ClrUnk20_46d9:
     xor a
     ld [$c698], a
     ld hl, $ffa5
@@ -1248,7 +1248,7 @@ Call_020_46d9:
     jp Jump_020_4778
 
 
-Call_020_46eb:
+SetUnk20_46eb:
     ld hl, $ffa5
     call $2353
     ld a, $02
@@ -1256,7 +1256,7 @@ Call_020_46eb:
     jp Jump_020_4778
 
 
-Call_020_46f9:
+ClrUnk20_46f9:
     xor a
     ld [$c698], a
     ld hl, $ffa5
@@ -1266,7 +1266,7 @@ Call_020_46f9:
     jp Jump_020_4778
 
 
-Call_020_470b:
+SetUnk20_470b:
     ld hl, $ffa5
     call $2353
     ld a, $40
@@ -1274,7 +1274,7 @@ Call_020_470b:
     jp Jump_020_4778
 
 
-Call_020_4719:
+SetUnk20_4719:
     ld hl, $ffa5
     call $2353
     ld a, $08
@@ -1282,7 +1282,7 @@ Call_020_4719:
     jp Jump_020_4778
 
 
-Call_020_4727:
+SetUnk20_4727:
     ld hl, $c645
     dec [hl]
     ld a, [hl-]
@@ -1291,7 +1291,7 @@ Call_020_4727:
     jp Jump_020_4778
 
 
-Call_020_4731:
+SetUnk20_4731:
     ld hl, $c645
     inc [hl]
     ld a, [hl-]
@@ -1300,19 +1300,19 @@ Call_020_4731:
     jp Jump_020_4778
 
 
-Call_020_473b:
+SetUnk20_473b:
     ld hl, $ffa5
     call $2353
     ld a, $10
     ld [$c671], a
 
 jr_020_4746:
-    call Call_020_4778
+    call ClrUnk20_4778
     ld b, a
     ret
 
 
-Call_020_474b:
+SetUnk20_474b:
     ld hl, $c644
     dec [hl]
     ld a, [hl]
@@ -1331,7 +1331,7 @@ jr_020_475e:
     ld h, a
     jr jr_020_4746
 
-Call_020_4763:
+SetUnk20_4763:
     ld hl, $ffa5
     call $2353
     xor a
@@ -1342,7 +1342,7 @@ Call_020_4763:
     jp Jump_020_4778
 
 
-Call_020_4778:
+ClrUnk20_4778:
 Jump_020_4778:
     xor a
     ld [$c6e8], a
@@ -1968,7 +1968,7 @@ jr_020_4b36:
     push hl
     call MonsterStatDecrement
     pop hl
-    call Call_020_4dda
+    call HramUnk20_4dda
     jp Jump_020_47bc
 
 
@@ -2207,7 +2207,7 @@ jr_020_4c9e:
     push hl
     call MonsterStatDecrement
     pop hl
-    call Call_020_4dda
+    call HramUnk20_4dda
     ld a, [$c688]
     and a
     jp nz, Jump_020_47ab
@@ -2241,7 +2241,7 @@ jr_020_4cd1:
     push hl
     call MonsterStatDecrement
     pop hl
-    call Call_020_4dda
+    call HramUnk20_4dda
     jp Jump_020_47ab
 
 
@@ -2411,7 +2411,7 @@ jr_020_4db3:
     bit 1, a
     jr z, jr_020_4dcf
 
-    call Call_020_4dda
+    call HramUnk20_4dda
     jp Jump_020_47ab
 
 
@@ -2423,7 +2423,7 @@ jr_020_4dcf:
     jp Jump_020_47ab
 
 
-Call_020_4dda:
+HramUnk20_4dda:
     ldh a, [$a5]
     ld [$c617], a
     ldh a, [$a6]
@@ -2433,7 +2433,7 @@ Call_020_4dda:
     ldh a, [$a8]
     ld [$c61a], a
     ld b, $01
-    call Call_000_10c2
+    call SGBTransferByte
     ld a, [$c690]
     and a
     jr nz, jr_020_4e14
@@ -2452,7 +2452,7 @@ Call_020_4dda:
     ldh [$86], a
     ld a, [hl+]
     ldh [$85], a
-    call Call_000_37d5
+    call AudioClearChannel
 
 jr_020_4e14:
     ld a, [$c617]
@@ -2499,7 +2499,7 @@ jr_020_4e3f:
     push hl
     call MonsterStatDecrement
     pop hl
-    call Call_000_2778
+    call DataTable_2778
 
 jr_020_4e58:
     jp Jump_020_47ab
@@ -2538,7 +2538,7 @@ jr_020_4e71:
     push hl
     call MonsterStatDecrement
     pop hl
-    call Call_000_2778
+    call DataTable_2778
 
 Jump_020_4e8a:
 jr_020_4e8a:
@@ -2779,7 +2779,7 @@ jr_020_4f2a:
     ld a, $5d
     ldh [$ac], a
     ld b, $10
-    call Call_000_2853
+    call DataTable_2853
     jp Jump_020_47bc
 
 
@@ -2797,7 +2797,7 @@ jr_020_4f2a:
 
     ld a, $01
     ld [$c726], a
-    call Call_020_5084
+    call LoadUnk20_5084
 
 jr_020_5055:
     xor a
@@ -2820,7 +2820,7 @@ jr_020_5055:
 
     ld a, $02
     ld [$c726], a
-    call Call_020_5084
+    call LoadUnk20_5084
 
 jr_020_507a:
     xor a
@@ -2829,7 +2829,7 @@ jr_020_507a:
     jp Jump_020_47ab
 
 
-Call_020_5084:
+LoadUnk20_5084:
     ld a, [$c6bb]
     and a
     ret nz
@@ -2917,7 +2917,7 @@ jr_020_50ef:
 jr_020_50f4:
     ld a, $01
     ld [$c731], a
-    call Call_000_07ff
+    call ScreenBranchNC
 
 jr_020_50fc:
     jp Jump_020_47bc
@@ -2969,7 +2969,7 @@ jr_020_50fc:
 
     ld a, $02
     ld [$c698], a
-    call Call_020_5173
+    call LoadUnk20_5173
     jp Jump_020_47bc
 
 
@@ -2983,11 +2983,11 @@ jr_020_50fc:
 
     ld a, $01
     ld [$c698], a
-    call Call_020_5173
+    call LoadUnk20_5173
     jp Jump_020_47bc
 
 
-Call_020_5173:
+LoadUnk20_5173:
     ld a, [$c699]
     and a
     ret nz
@@ -3089,7 +3089,7 @@ jr_020_5208:
     and a
     jr nz, jr_020_521c
 
-    call Call_000_2535
+    call CheckPartyData
     jp Jump_020_47bc
 
 
@@ -3101,12 +3101,12 @@ jr_020_521c:
 
 
 jr_020_5223:
-    call Call_000_2876
+    call DataTable_2876
     ld a, $25
     ld [$c69c], a
     ld a, $35
     ld [$c69d], a
-    call Call_000_263a
+    call AdvanceStatOffset12
     jp Jump_020_47bc
 
 
@@ -3174,7 +3174,7 @@ jr_020_5298:
     and a
     jr nz, jr_020_52ac
 
-    call Call_000_2535
+    call CheckPartyData
     jp Jump_020_47ab
 
 
@@ -3186,12 +3186,12 @@ jr_020_52ac:
 
 
 jr_020_52b3:
-    call Call_000_2876
+    call DataTable_2876
     ld a, $25
     ld [$c69c], a
     ld a, $35
     ld [$c69d], a
-    call Call_000_263a
+    call AdvanceStatOffset12
     jp Jump_020_47ab
 
 
@@ -3249,7 +3249,7 @@ jr_020_5316:
     and a
     jr nz, jr_020_532a
 
-    call Call_000_09c0
+    call SubtractWithFloor
     jp Jump_020_4e8a
 
 
@@ -3261,12 +3261,12 @@ jr_020_532a:
 
 
 jr_020_5331:
-    call Call_000_2876
+    call DataTable_2876
     ld a, $09
     ld [$c69c], a
     ld a, $c0
     ld [$c69d], a
-    call Call_000_263a
+    call AdvanceStatOffset12
     jp Jump_020_4e8a
 
 
@@ -3324,7 +3324,7 @@ jr_020_5394:
     ld bc, $4c63
 
 jr_020_5397:
-    call Call_000_37d5
+    call AudioClearChannel
     ld a, [$c617]
     ldh [$a5], a
     ld a, [$c618]
@@ -3351,11 +3351,11 @@ jr_020_53b8:
     and a
     jp z, Jump_020_47ab
 
-    call Call_020_53cf
+    call LoadUnk20_53cf
     jp Jump_020_47ab
 
 
-Call_020_53cf:
+LoadUnk20_53cf:
     ld a, $c3
     ld [$c750], a
     ld a, $62

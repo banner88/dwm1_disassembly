@@ -5,100 +5,63 @@
 
 SECTION "ROM Bank $02c", ROMX[$4000], BANK[$2c]
 
-    inc l
-    ld h, e
-    ld b, b
-    ld h, e
-    ld d, b
-    ld h, e
-    ld h, b
-    inc hl
-    ld h, c
-    ld l, a
-    ld h, c
-    dec h
-    ld h, d
-    push hl
-    ld h, d
-    sbc d
-    ld h, e
-    ld h, [hl]
-    ld h, h
-    ld b, b
-    ld h, l
-    sub [hl]
-    ld h, l
-    ld [hl], b
-    ld h, [hl]
-    ld c, c
-    ld h, a
-    dec d
-    ld l, b
-    xor $68
-    ret
+    db $2C ; Bank number
 
-
-    ld l, c
-    ld hl, $d26a
-    ld l, d
-    ld d, l
-    ld l, e
-    ld b, d
-    ld l, h
-    add hl, de
-    ld l, l
-    and a
-    ld l, l
-    ld e, $6e
-    and b
-    ld l, [hl]
-    inc c
-    ld l, a
-    ld a, [hl]
-    ld l, a
-    call z, Call_000_346f
-    ld [hl], b
-    sbc d
-    ld [hl], b
-    rrca
-    ld [hl], c
-    adc e
-    ld [hl], c
-    ret
-
-
-    ld [hl], c
-
+    ; Cross-bank dispatch table (49 entries)
+    ; Called via: ld hl, $2CXX / rst $10
+    dw $4063                          ; Entry 0
+    dw jr_02c_5063                    ; Entry 1
+    dw $6063                          ; Entry 2
+    dw $6123                          ; Entry 3
+    dw $616F                          ; Entry 4
+    dw $6225                          ; Entry 5
+    dw $62E5                          ; Entry 6
+    dw $639A                          ; Entry 7
+    dw $6466                          ; Entry 8
+    dw $6540                          ; Entry 9
+    dw $6596                          ; Entry 10
+    dw $6670                          ; Entry 11
+    dw $6749                          ; Entry 12
+    dw $6815                          ; Entry 13
+    dw $68EE                          ; Entry 14
+    dw $69C9                          ; Entry 15
+    dw $6A21                          ; Entry 16
+    dw $6AD2                          ; Entry 17
+    dw $6B55                          ; Entry 18
+    dw $6C42                          ; Entry 19
+    dw $6D19                          ; Entry 20
+    dw $6DA7                          ; Entry 21
+    dw $6E1E                          ; Entry 22
+    dw $6EA0                          ; Entry 23
+    dw $6F0C                          ; Entry 24
+    dw $6F7E                          ; Entry 25
+    dw $6FCC                          ; Entry 26
+    dw $7034                          ; Entry 27
+    dw $709A                          ; Entry 28
+    dw $710F                          ; Entry 29
+    dw $718B                          ; Entry 30
+    dw $71C9                          ; Entry 31
 Jump_02c_4041:
-    ld e, $72
-    ld l, c
-    ld [hl], d
-    cp e
-    ld [hl], d
-    rrca
-    ld [hl], e
-    or d
-    ld [hl], e
-    ld h, [hl]
-    ld [hl], h
-    db $10
-    ld [hl], l
-    call c, $8c75
-    db $76
-    pop de
-    db $76
-    ld [hl], d
-    ld [hl], a
-    rla
-    ld a, b
-    sbc d
-    ld a, b
-    jp z, $b578
+    dw $721E                          ; Entry 32
+    dw $7269                          ; Entry 33
+    dw $72BB                          ; Entry 34
+    dw $730F                          ; Entry 35
+    dw $73B2                          ; Entry 36
+    dw $7466                          ; Entry 37
+    dw $7510                          ; Entry 38
+    dw $75DC                          ; Entry 39
+    dw $768C                          ; Entry 40
+    dw $76D1                          ; Entry 41
+    dw $7772                          ; Entry 42
+    dw $7817                          ; Entry 43
+    dw $789A                          ; Entry 44
+    dw $78CA                          ; Entry 45
+    dw $79B5                          ; Entry 46
+    dw $7A65                          ; Entry 47
+    dw $7AF8                          ; Entry 48
 
-    ld a, c
-    ld h, l
-    ld a, d
-    ld hl, sp+$7a
+; --- Dispatch entry 0 ($4063) ---
+DispatchEntry_2C_0:
     nop
     rst $38
     nop
@@ -384,7 +347,7 @@ jr_02c_4127:
     adc e
     ld [hl], h
     inc sp
-    call z, Call_000_3dc2
+    call z, MenuPositionCalc
     jp nz, $c2fd
 
     db $fd
@@ -2985,7 +2948,7 @@ jr_02c_4b8d:
     ld a, a
     rst $38
 
-Call_02c_4d0f:
+CalcB2c_4d0f:
     add b
     ld a, a
     ld a, a
@@ -3395,7 +3358,7 @@ jr_02c_4ea2:
     nop
     ld a, a
     cp a
-    call nc, Call_000_384b
+    call nc, AudioSetNoteParams
     and a
     ld e, l
     jp nz, $e47b
@@ -3706,7 +3669,7 @@ jr_02c_4fd9:
     cp a
     nop
 
-Call_02c_5032:
+DispB2c_5032:
     rst $38
     nop
     ld b, b
@@ -5306,7 +5269,7 @@ jr_02c_567c:
     rst $38
     nop
     or $79
-    call Call_02c_7a0c
+    call FuncB2c_7a0c
     cp c
     ld [hl], h
     ld [hl], b
@@ -5649,7 +5612,7 @@ jr_02c_584f:
     adc b
     db $ec
     nop
-    call nc, Call_000_3cd2
+    call nc, PaletteSetup
     pop de
     jr c, @+$49
 
@@ -5712,7 +5675,7 @@ jr_02c_58b5:
 jr_02c_58d3:
     ld hl, sp-$01
     ldh [rIE], a
-    call nz, Call_02c_5efb
+    call nz, MaskB2c_5efb
     pop hl
     ld e, $e1
     rrca
@@ -6656,7 +6619,7 @@ jr_02c_5c6d:
 
     db $f4
     sbc a
-    call nc, Call_02c_5032
+    call nc, DispB2c_5032
     ld a, a
     ld e, l
     ld a, a
@@ -7134,7 +7097,7 @@ jr_02c_5e59:
     and [hl]
     ld b, e
 
-Call_02c_5efb:
+MaskB2c_5efb:
     and e
     ld b, a
     and e
@@ -7151,7 +7114,7 @@ Call_02c_5efb:
 
 
     adc l
-    call Call_000_2f99
+    call MenuCalcHeight
     dec a
     ld h, c
     pop hl
@@ -11667,7 +11630,7 @@ jr_02c_724c:
     nop
 
 jr_02c_725e:
-    call z, Call_02c_4d0f
+    call z, CalcB2c_4d0f
     nop
     inc l
     rra
@@ -13407,7 +13370,7 @@ jr_02c_79fd:
     dec bc
     ld d, $17
 
-Call_02c_7a0c:
+FuncB2c_7a0c:
     ld [bc], a
     inc [hl]
     ld a, [bc]

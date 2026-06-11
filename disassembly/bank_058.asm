@@ -5,440 +5,261 @@
 
 SECTION "ROM Bank $058", ROMX[$4000], BANK[$58]
 
-    ld e, b
-    rst $08
-    ld d, e
-    ld c, c
-    ld d, a
-    ld d, l
-    ld e, c
-    call c, Call_058_7959
-    ld h, e
-    inc l
-    ld h, h
-    push bc
-    ld d, a
-    and h
-    ld d, a
-    sbc b
-    ld d, h
-    ld e, $59
-    jp hl
+    db $58 ; Bank number
 
+    ; Cross-bank dispatch table (245 entries)
+    ; Called via: ld hl, $58XX / rst $10
+    dw $53CF                          ; Entry 0
+    dw $5749                          ; Entry 1
+    dw ClrBtlFX_5955                  ; Entry 2
+    dw $59DC                          ; Entry 3
+    dw $6379                          ; Entry 4
+    dw LoadBtlFX_642c                  ; Entry 5
+    dw $57C5                          ; Entry 6
+    dw $57A4                          ; Entry 7
+    dw LoadBtlFX_5498                  ; Entry 8
+    dw $591E                          ; Entry 9
+    dw $41E9                          ; Entry 10
+    dw $67BA                          ; Entry 11
+    dw $5C48                          ; Entry 12
+    dw $6737                          ; Entry 13
+    dw $5069                          ; Entry 14
+    dw $5069                          ; Entry 15
+    dw $5069                          ; Entry 16
+    dw Jump_058_62bf                  ; Entry 17
+    dw Jump_058_62bf                  ; Entry 18
+    dw Jump_058_62bf                  ; Entry 19
+    dw Jump_058_62bf                  ; Entry 20
+    dw Jump_058_62bf                  ; Entry 21
+    dw Jump_058_62bf                  ; Entry 22
+    dw Jump_058_62bf                  ; Entry 23
+    dw Jump_058_62bf                  ; Entry 24
+    dw Jump_058_62bf                  ; Entry 25
+    dw Jump_058_62bf                  ; Entry 26
+    dw Jump_058_62bf                  ; Entry 27
+    dw Jump_058_62bf                  ; Entry 28
+    dw Jump_058_62bf                  ; Entry 29
+    dw Jump_058_62bf                  ; Entry 30
+    dw Jump_058_62bf                  ; Entry 31
+    dw $4FD2                          ; Entry 32
+    dw Jump_058_62bf                  ; Entry 33
+    dw Jump_058_62bf                  ; Entry 34
+    dw $5211                          ; Entry 35
+    dw Jump_058_62bf                  ; Entry 36
+    dw Jump_058_62bf                  ; Entry 37
+    dw Jump_058_62bf                  ; Entry 38
+    dw Jump_058_62bf                  ; Entry 39
+    dw $52A9                          ; Entry 40
+    dw $6367                          ; Entry 41
+    dw $4854                          ; Entry 42
+    dw Jump_058_62bf                  ; Entry 43
+    dw $474B                          ; Entry 44
+    dw $62CD                          ; Entry 45
+    dw $48AB                          ; Entry 46
+    dw Jump_058_62bf                  ; Entry 47
+    dw $490E                          ; Entry 48
+    dw $62CD                          ; Entry 49
+    dw $62CD                          ; Entry 50
+    dw $470B                          ; Entry 51
+    dw $62CD                          ; Entry 52
+    dw $6367                          ; Entry 53
+    dw $6367                          ; Entry 54
+    dw $4ED8                          ; Entry 55
+    dw $62CD                          ; Entry 56
+    dw $44F7                          ; Entry 57
+    dw $44F7                          ; Entry 58
+    dw $44F7                          ; Entry 59
+    dw $62CD                          ; Entry 60
+    dw $62CD                          ; Entry 61
+    dw $469E                          ; Entry 62
+    dw $469E                          ; Entry 63
+    dw $635F                          ; Entry 64
+    dw $46C7                          ; Entry 65
+    dw $62CD                          ; Entry 66
+    dw $62CD                          ; Entry 67
+    dw $62CD                          ; Entry 68
+    dw $41E9                          ; Entry 69
+    dw $41E9                          ; Entry 70
+    dw $63D6                          ; Entry 71
+    dw $41E9                          ; Entry 72
+    dw $41E9                          ; Entry 73
+    dw $5100                          ; Entry 74
+    dw $41E9                          ; Entry 75
+    dw $5100                          ; Entry 76
+    dw $6379                          ; Entry 77
+    dw $41E9                          ; Entry 78
+    dw $6367                          ; Entry 79
+    dw LoadBtlFX_642c                  ; Entry 80
+    dw $6367                          ; Entry 81
+    dw $5339                          ; Entry 82
+    dw $5352                          ; Entry 83
+    dw $536B                          ; Entry 84
+    dw $5384                          ; Entry 85
+    dw $4D1A                          ; Entry 86
+    dw $4D5D                          ; Entry 87
+    dw $4D6D                          ; Entry 88
+    dw $4D7D                          ; Entry 89
+    dw $4D8D                          ; Entry 90
+    dw $4D9D                          ; Entry 91
+    dw $4DAD                          ; Entry 92
+    dw Jump_058_62bf                  ; Entry 93
+    dw $41E9                          ; Entry 94
+    dw LoadBtlFX_642c                  ; Entry 95
+    dw LoadBtlFX_642c                  ; Entry 96
+    dw LoadBtlFX_642c                  ; Entry 97
+    dw $63D6                          ; Entry 98
+    dw $41E9                          ; Entry 99
+    dw $41E9                          ; Entry 100
+    dw Jump_058_62bf                  ; Entry 101
+    dw $539D                          ; Entry 102
+    dw Jump_058_62bf                  ; Entry 103
+    dw Jump_058_62bf                  ; Entry 104
+    dw Jump_058_62bf                  ; Entry 105
+    dw Jump_058_62bf                  ; Entry 106
+    dw Jump_058_62bf                  ; Entry 107
+    dw Jump_058_62bf                  ; Entry 108
+    dw Jump_058_62bf                  ; Entry 109
+    dw Jump_058_62bf                  ; Entry 110
+    dw Jump_058_62bf                  ; Entry 111
+    dw Jump_058_62bf                  ; Entry 112
+    dw Jump_058_62bf                  ; Entry 113
+    dw Jump_058_62bf                  ; Entry 114
+    dw Jump_058_62bf                  ; Entry 115
+    dw Jump_058_62bf                  ; Entry 116
+    dw $4DED                          ; Entry 117
+    dw $4C85                          ; Entry 118
+    dw $4E39                          ; Entry 119
+    dw Jump_058_62bf                  ; Entry 120
+    dw Jump_058_62bf                  ; Entry 121
+    dw Jump_058_62bf                  ; Entry 122
+    dw Jump_058_62bf                  ; Entry 123
+    dw Jump_058_62bf                  ; Entry 124
+    dw Jump_058_62bf                  ; Entry 125
+    dw $4E85                          ; Entry 126
+    dw Jump_058_62bf                  ; Entry 127
+    dw Jump_058_62bf                  ; Entry 128
+    dw Jump_058_62bf                  ; Entry 129
+    dw Jump_058_62bf                  ; Entry 130
+    dw $4CD1                          ; Entry 131
+    dw $4CD1                          ; Entry 132
+    dw $6367                          ; Entry 133
+    dw Jump_058_62bf                  ; Entry 134
+    dw $4E85                          ; Entry 135
+    dw $4B74                          ; Entry 136
+    dw $4C24                          ; Entry 137
+    dw Jump_058_62bf                  ; Entry 138
+    dw Jump_058_62bf                  ; Entry 139
+    dw $41E9                          ; Entry 140
+    dw $6367                          ; Entry 141
+    dw Jump_058_62bf                  ; Entry 142
+    dw $62CD                          ; Entry 143
+    dw $4A21                          ; Entry 144
+    dw $62FD                          ; Entry 145
+    dw $63D6                          ; Entry 146
+    dw $63D6                          ; Entry 147
+    dw $63D6                          ; Entry 148
+    dw $63D6                          ; Entry 149
+    dw $4ABA                          ; Entry 150
+    dw $62CD                          ; Entry 151
+    dw $6367                          ; Entry 152
+    dw $62CD                          ; Entry 153
+    dw $6367                          ; Entry 154
+    dw $6367                          ; Entry 155
+    dw $6367                          ; Entry 156
+    dw $62CD                          ; Entry 157
+    dw $6367                          ; Entry 158
+    dw Jump_058_62bf                  ; Entry 159
+    dw $4B26                          ; Entry 160
+    dw $6367                          ; Entry 161
+    dw $62CD                          ; Entry 162
+    dw $635F                          ; Entry 163
+    dw $635F                          ; Entry 164
+    dw $6367                          ; Entry 165
+    dw $6367                          ; Entry 166
+    dw LoadBtlFX_6479                  ; Entry 167
+    dw LoadBtlFX_642c                  ; Entry 168
+    dw $6367                          ; Entry 169
+    dw $6367                          ; Entry 170
+    dw $6367                          ; Entry 171
+    dw LoadBtlFX_642c                  ; Entry 172
+    dw $6367                          ; Entry 173
+    dw $6367                          ; Entry 174
+    dw $6367                          ; Entry 175
+    dw $62FD                          ; Entry 176
+    dw $62CD                          ; Entry 177
+    dw Jump_058_62bf                  ; Entry 178
+    dw $62FD                          ; Entry 179
+    dw $62CD                          ; Entry 180
+    dw Jump_058_62bf                  ; Entry 181
+    dw Jump_058_62bf                  ; Entry 182
+    dw $6367                          ; Entry 183
+    dw $6367                          ; Entry 184
+    dw Jump_058_62bf                  ; Entry 185
+    dw Jump_058_62bf                  ; Entry 186
+    dw $635F                          ; Entry 187
+    dw $62CD                          ; Entry 188
+    dw Jump_058_62bf                  ; Entry 189
+    dw $63D6                          ; Entry 190
+    dw $63D6                          ; Entry 191
+    dw $63D6                          ; Entry 192
+    dw $63D6                          ; Entry 193
+    dw $63D6                          ; Entry 194
+    dw $63D6                          ; Entry 195
+    dw $63D6                          ; Entry 196
+    dw $63D6                          ; Entry 197
+    dw $63D6                          ; Entry 198
+    dw $63D6                          ; Entry 199
+    dw $63D6                          ; Entry 200
+    dw $63D6                          ; Entry 201
+    dw $63D6                          ; Entry 202
+    dw $63D6                          ; Entry 203
+    dw $63D6                          ; Entry 204
+    dw $63D6                          ; Entry 205
+    dw $63D6                          ; Entry 206
+    dw $63D6                          ; Entry 207
+    dw $63D6                          ; Entry 208
+    dw $63D6                          ; Entry 209
+    dw $63D6                          ; Entry 210
+    dw $63D6                          ; Entry 211
+    dw $63D6                          ; Entry 212
+    dw $63D6                          ; Entry 213
+    dw $63D6                          ; Entry 214
+    dw $63D6                          ; Entry 215
+    dw $63D6                          ; Entry 216
+    dw $63D6                          ; Entry 217
+    dw $63D6                          ; Entry 218
+    dw $63D6                          ; Entry 219
+    dw $63D6                          ; Entry 220
+    dw $63D6                          ; Entry 221
+    dw $63D6                          ; Entry 222
+    dw $63D6                          ; Entry 223
+    dw $63D6                          ; Entry 224
+    dw $63D6                          ; Entry 225
+    dw $63D6                          ; Entry 226
+    dw $6367                          ; Entry 227
+    dw $4DBD                          ; Entry 228
+    dw $4DCD                          ; Entry 229
+    dw $4DDD                          ; Entry 230
+    dw $53B6                          ; Entry 231
+    dw $5164                          ; Entry 232
+    dw $6367                          ; Entry 233
+    dw $6367                          ; Entry 234
+    dw $41E9                          ; Entry 235
+    dw $6367                          ; Entry 236
+    dw $6367                          ; Entry 237
+    dw $6367                          ; Entry 238
+    dw $6367                          ; Entry 239
+    dw $6367                          ; Entry 240
+    dw $6367                          ; Entry 241
+    dw $6367                          ; Entry 242
+    dw $6367                          ; Entry 243
+    ; NOTE: last 1 entry/entries (2B) merged into following instruction
 
-    ld b, c
-    cp d
-    ld h, a
-    ld c, b
-    ld e, h
-    scf
-    ld h, a
-    ld l, c
-    ld d, b
-    ld l, c
-    ld d, b
-    ld l, c
-    ld d, b
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    jp nc, $bf4f
-
-    ld h, d
-    cp a
-    ld h, d
-    ld de, $bf52
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    xor c
-    ld d, d
-    ld h, a
-    ld h, e
-    ld d, h
-    ld c, b
-    cp a
-    ld h, d
-    ld c, e
-    ld b, a
-    call $ab62
-    ld c, b
-    cp a
-    ld h, d
-    ld c, $49
-    call $cd62
-    ld h, d
-    dec bc
-    ld b, a
-    call Call_058_6762
-    ld h, e
-    ld h, a
-    ld h, e
-    ret c
-
-    ld c, [hl]
-    call $f762
-    ld b, h
-    rst $30
-    ld b, h
-    rst $30
-    ld b, h
-    call $cd62
-    ld h, d
-    sbc [hl]
-    ld b, [hl]
-    sbc [hl]
-    ld b, [hl]
-    ld e, a
-    ld h, e
-    rst $00
-    ld b, [hl]
-    call $cd62
-    ld h, d
-    call $e962
-    ld b, c
-    jp hl
-
-
-    ld b, c
-    sub $63
-    jp hl
-
-
-    ld b, c
-    jp hl
-
-
-    ld b, c
-    nop
-    ld d, c
-    jp hl
-
-
-    ld b, c
-    nop
-    ld d, c
-    ld a, c
-    ld h, e
-    jp hl
-
-
-    ld b, c
-    ld h, a
-    ld h, e
-    inc l
-    ld h, h
-    ld h, a
-    ld h, e
-    add hl, sp
-    ld d, e
-    ld d, d
-    ld d, e
-    ld l, e
-    ld d, e
-    add h
-    ld d, e
-    ld a, [de]
-    ld c, l
-    ld e, l
-    ld c, l
-    ld l, l
-    ld c, l
-    ld a, l
-    ld c, l
-    adc l
-    ld c, l
-    sbc l
-    ld c, l
-    xor l
-    ld c, l
-    cp a
-    ld h, d
-    jp hl
-
-
-    ld b, c
-    inc l
-    ld h, h
-    inc l
-    ld h, h
-    inc l
-    ld h, h
-    sub $63
-    jp hl
-
-
-    ld b, c
-    jp hl
-
-
-    ld b, c
-    cp a
-    ld h, d
-    sbc l
-    ld d, e
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    db $ed
-    ld c, l
-    add l
-    ld c, h
-    add hl, sp
-    ld c, [hl]
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    add l
-    ld c, [hl]
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    pop de
-    ld c, h
-    pop de
-    ld c, h
-    ld h, a
-    ld h, e
-    cp a
-    ld h, d
-    add l
-    ld c, [hl]
-    ld [hl], h
-    ld c, e
-    inc h
-    ld c, h
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    jp hl
-
-
-    ld b, c
-    ld h, a
-    ld h, e
-    cp a
-    ld h, d
-    call $2162
-    ld c, d
-    db $fd
-    ld h, d
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    cp d
-    ld c, d
-    call Call_058_6762
-    ld h, e
-    call Call_058_6762
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    call Call_058_6762
-    ld h, e
-    cp a
-    ld h, d
-    ld h, $4b
-    ld h, a
-    ld h, e
-    call $5f62
-    ld h, e
-    ld e, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld a, c
-    ld h, h
-    inc l
-    ld h, h
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    inc l
-    ld h, h
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    db $fd
-    ld h, d
-    call $bf62
-    ld h, d
-    db $fd
-    ld h, d
-    call $bf62
-    ld h, d
-    cp a
-    ld h, d
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    cp a
-    ld h, d
-    cp a
-    ld h, d
-    ld e, a
-    ld h, e
-    call $bf62
-    ld h, d
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    sub $63
-    ld h, a
-    ld h, e
-    cp l
-    ld c, l
-    call $dd4d
-    ld c, l
-    or [hl]
-    ld d, e
-    ld h, h
-    ld d, c
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    jp hl
-
-
-    ld b, c
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
-    ld h, a
-    ld h, e
     ld hl, $db56
     ld bc, $0008
     xor a
     call FillNBytesWithRegA
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
     ld a, [$c86c]
@@ -462,7 +283,7 @@ jr_058_4213:
     call CheckMonsterSlot
     jr c, jr_058_421e
 
-    call Call_058_660d
+    call SaveBtlFX_660d
     jr c, jr_058_4228
 
 jr_058_421e:
@@ -470,7 +291,7 @@ jr_058_421e:
     dec b
     jr nz, jr_058_4213
 
-    call Call_058_432c
+    call LoadBtlFX_432c
     jp Jump_058_431a
 
 
@@ -484,7 +305,7 @@ jr_058_422e:
     call CheckMonsterSlot
     jr c, jr_058_4239
 
-    call Call_058_43ea
+    call SetBtlFX_43ea
     jr z, jr_058_4243
 
 jr_058_4239:
@@ -492,7 +313,7 @@ jr_058_4239:
     dec b
     jr nz, jr_058_422e
 
-    call Call_058_4384
+    call LoadBtlFX_4384
     jp Jump_058_431a
 
 
@@ -514,7 +335,7 @@ jr_058_4243:
 
 jr_058_425a:
     ld a, c
-    call Call_058_43ea
+    call SetBtlFX_43ea
     jr nz, jr_058_4266
 
     ld a, c
@@ -526,7 +347,7 @@ jr_058_4266:
     dec b
     jr nz, jr_058_425a
 
-    call Call_058_4384
+    call LoadBtlFX_4384
     jp Jump_058_431a
 
 
@@ -541,10 +362,10 @@ jr_058_4276:
     call CheckMonsterSlot
     jr c, jr_058_42a6
 
-    call Call_058_43ea
+    call SetBtlFX_43ea
     jr nz, jr_058_42a6
 
-    call Call_058_43ff
+    call SaveBtlFX_43ff
     ld a, c
     call GetCombatantHP
     ld a, [$db56]
@@ -575,17 +396,17 @@ jr_058_42a6:
 
 jr_058_42ae:
     pop bc
-    call Call_058_4fa7
+    call LoadBtlFX_4fa7
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_058_43d7
+    call LoadBtlFX_43d7
     inc c
     dec b
     jr nz, jr_058_4276
 
-    call Call_058_433e
+    call LoadBtlFX_433e
     jr jr_058_431a
 
 jr_058_42c6:
@@ -599,10 +420,10 @@ jr_058_42cc:
     call GetMonsterSlotInfo
     jr c, jr_058_42fc
 
-    call Call_058_43ea
+    call SetBtlFX_43ea
     jr nz, jr_058_42fc
 
-    call Call_058_43ff
+    call SaveBtlFX_43ff
     ld a, c
     call GetCombatantHP
     ld a, [$db56]
@@ -633,17 +454,17 @@ jr_058_42fc:
 
 jr_058_4304:
     pop bc
-    call Call_058_4fa7
+    call LoadBtlFX_4fa7
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
     ld h, a
-    call Call_058_43d7
+    call LoadBtlFX_43d7
     inc c
     dec b
     jr nz, jr_058_42cc
 
-    call Call_058_433e
+    call LoadBtlFX_433e
 
 Jump_058_431a:
 jr_058_431a:
@@ -660,7 +481,7 @@ jr_058_431a:
     ret
 
 
-Call_058_432c:
+LoadBtlFX_432c:
     ld a, $00
     ld [$db63], a
     ld b, $03
@@ -668,12 +489,12 @@ Call_058_432c:
     ld c, a
 
 jr_058_4337:
-    call Call_058_43aa
+    call LoadBtlFX_43aa
     inc c
     dec b
     jr nz, jr_058_4337
 
-Call_058_433e:
+LoadBtlFX_433e:
     ld a, $00
     ld [$db61], a
     ld a, [$db58]
@@ -707,7 +528,7 @@ jr_058_4363:
     jr jr_058_4375
 
 jr_058_436b:
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     ld a, [wRNG1]
     bit 1, a
     jr z, jr_058_4363
@@ -724,7 +545,7 @@ jr_058_4375:
     ret
 
 
-Call_058_4384:
+LoadBtlFX_4384:
     ld a, $01
     ld [$db63], a
     ld b, $03
@@ -738,22 +559,22 @@ jr_058_438f:
     bit 2, [hl]
     jr nz, jr_058_439f
 
-    call Call_058_43aa
+    call LoadBtlFX_43aa
     jr jr_058_43a2
 
 jr_058_439f:
-    call Call_058_43d4
+    call SetBtlFX_43d4
 
 jr_058_43a2:
     inc c
     dec b
     jr nz, jr_058_438f
 
-    call Call_058_433e
+    call LoadBtlFX_433e
     ret
 
 
-Call_058_43aa:
+LoadBtlFX_43aa:
     ld a, c
     call CheckMonsterSlot
     jr c, jr_058_43d4
@@ -783,11 +604,11 @@ jr_058_43d0:
     add hl, de
     jr jr_058_43d7
 
-Call_058_43d4:
+SetBtlFX_43d4:
 jr_058_43d4:
     ld hl, $ffff
 
-Call_058_43d7:
+LoadBtlFX_43d7:
 jr_058_43d7:
     ld a, c
     and $03
@@ -806,7 +627,7 @@ jr_058_43d7:
     ret
 
 
-Call_058_43ea:
+SetBtlFX_43ea:
     ld hl, $db06
     call HL_AddA_x8
     bit 2, [hl]
@@ -825,7 +646,7 @@ jr_058_43fe:
     ret
 
 
-Call_058_43ff:
+SaveBtlFX_43ff:
     push bc
     ld a, [$db8a]
     cp $37
@@ -850,9 +671,9 @@ jr_058_4419:
     ret
 
 
-Call_058_441b:
+CallBtlFX_441b:
 Jump_058_441b:
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -866,10 +687,10 @@ Jump_058_441b:
     cp $02
     jr z, jr_058_448a
 
-    call Call_058_5e5b
-    call Call_058_5e75
+    call CallBtlFX_5e5b
+    call SetBtlFX_5e75
 
-Call_058_4436:
+ClrBtlFX_4436:
     xor a
     ld [wBattleTargetIdx], a
 
@@ -884,7 +705,7 @@ jr_058_443a:
     ld b, e
     ld b, h
     push bc
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop bc
     ld a, [wRNG1]
     cp $80
@@ -893,7 +714,7 @@ jr_058_443a:
     ld hl, wBattleTargetIdx
     inc [hl]
     push bc
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop bc
     ld a, [wRNG1]
     cp $aa
@@ -929,7 +750,7 @@ jr_058_4463:
 
 
 jr_058_448a:
-    call Call_058_5e19
+    call SetBtlFX_5e19
 
 jr_058_448d:
     ld a, c
@@ -978,8 +799,8 @@ jr_058_44b5:
     dec b
     jr nz, jr_058_448d
 
-    call Call_058_5e5b
-    call Call_058_5e75
+    call CallBtlFX_5e5b
+    call SetBtlFX_5e75
     ld a, d
     cp $02
     jr c, jr_058_44f3
@@ -988,7 +809,7 @@ jr_058_44b5:
     push bc
     push de
     push hl
-    call Call_058_5e81
+    call ClrBtlFX_5e81
     pop hl
     pop de
     pop bc
@@ -1001,18 +822,18 @@ jr_058_44b5:
     push bc
     push de
     push hl
-    call Call_058_5ebf
+    call CallBtlFX_5ebf
     pop hl
     pop de
     pop bc
     pop af
 
 jr_058_44f3:
-    call Call_058_4436
+    call ClrBtlFX_4436
     ret
 
 
-    call Call_058_6556
+    call CallBtlFX_6556
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -1113,7 +934,7 @@ jr_058_454d:
     dec d
     jr nz, jr_058_4515
 
-    call Call_058_665a
+    call LoadBtlFX_665a
     ret
 
 
@@ -1243,7 +1064,7 @@ jr_058_461a:
     jr jr_058_466e
 
 jr_058_465e:
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     ld a, [wRNG1]
     cp $80
     jr c, jr_058_466e
@@ -1319,7 +1140,7 @@ jr_058_46b8:
     ret
 
 
-    call Call_058_6556
+    call CallBtlFX_6556
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -1368,10 +1189,10 @@ jr_058_46fc:
     ret
 
 
-    call Call_058_6556
+    call CallBtlFX_6556
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, c
     xor $04
     ld c, a
@@ -1405,17 +1226,17 @@ jr_058_473a:
     ld de, $0000
 
 jr_058_473d:
-    call Call_058_6292
+    call LoadBtlFX_6292
     inc c
     dec b
     jr nz, jr_058_4716
 
-    call Call_058_619a
-    call Call_058_6188
+    call SetBtlFX_619a
+    call LoadBtlFX_6188
     ret
 
 
-    call Call_058_6556
+    call CallBtlFX_6556
     ret z
 
     ld hl, $db61
@@ -1435,7 +1256,7 @@ jr_058_4764:
     jr c, jr_058_47ad
 
     ld a, [$db4e]
-    call Call_058_5c96
+    call SaveBtlFX_5c96
     ld a, [$db4e]
     call GetCombatantDEF
     ld a, [$c86c]
@@ -1530,7 +1351,7 @@ jr_058_47f0:
     push bc
     push de
     push hl
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop hl
     pop de
     pop bc
@@ -1579,10 +1400,10 @@ jr_058_481c:
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_485b:
     push bc
@@ -1632,20 +1453,20 @@ jr_058_489c:
     ld de, $0000
 
 jr_058_489f:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_485b
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_48b2:
     push bc
@@ -1706,17 +1527,17 @@ jr_058_48ff:
     ld de, $0000
 
 jr_058_4902:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_48b2
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_6556
+    call CallBtlFX_6556
     ret z
 
     ld hl, $db61
@@ -1736,7 +1557,7 @@ jr_058_4927:
     jr c, jr_058_497a
 
     ld a, [$db4e]
-    call Call_058_60f3
+    call SaveBtlFX_60f3
     ld a, [$db4e]
     ld hl, wBattleAGL
     add a
@@ -1841,7 +1662,7 @@ jr_058_49bd:
     push bc
     push de
     push hl
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop hl
     pop de
     pop bc
@@ -1890,7 +1711,7 @@ jr_058_49e9:
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -1921,12 +1742,12 @@ jr_058_4a37:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call Call_058_60e0
+    call LoadBtlFX_60e0
     jr c, jr_058_4a7c
 
     ld a, c
     call GetCombatantDEF
-    call Call_058_60e0
+    call LoadBtlFX_60e0
     jr c, jr_058_4a7c
 
     push bc
@@ -1994,11 +1815,11 @@ jr_058_4a9c:
     ld [$db4d], a
     inc c
     dec b
-    call Call_058_5f0c
+    call LoadBtlFX_5f0c
     ret
 
 
-    call Call_058_6556
+    call CallBtlFX_6556
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -2058,7 +1879,7 @@ jr_058_4af3:
     dec b
     jr nz, jr_058_4ac9
 
-    call Call_058_6224
+    call LoadBtlFX_6224
     ld a, [wBattleAttackerIdx]
     ld hl, $dced
     add a
@@ -2078,10 +1899,10 @@ jr_058_4af3:
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_4b2d:
     push bc
@@ -2091,7 +1912,7 @@ jr_058_4b2d:
 
     ld de, $0001
     ld a, c
-    call Call_058_656e
+    call SetBtlFX_656e
     jr nc, jr_058_4b68
 
     ld a, c
@@ -2120,17 +1941,17 @@ jr_058_4b65:
     ld de, $0000
 
 jr_058_4b68:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_4b2d
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -2253,14 +2074,14 @@ jr_058_4c07:
     ld h, a
     ld a, [hl]
     ld [$db4d], a
-    call Call_058_5f0c
+    call LoadBtlFX_5f0c
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_4c2b:
     push bc
@@ -2313,23 +2134,23 @@ jr_058_4c76:
     ld de, $0000
 
 jr_058_4c79:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_4c2b
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_4c90:
     push bc
@@ -2364,20 +2185,20 @@ jr_058_4cc2:
     ld de, $0000
 
 jr_058_4cc5:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_4c90
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_4cd8:
     push bc
@@ -2417,20 +2238,20 @@ jr_058_4d0b:
     ld de, $0000
 
 jr_058_4d0e:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_4cd8
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_4d21:
     push bc
@@ -2469,113 +2290,113 @@ jr_058_4d4e:
     ld de, $0000
 
 jr_058_4d51:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_4d21
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $01
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $02
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $03
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $06
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $07
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $08
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $00
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $05
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
     ld a, $04
     ld [$db4c], a
-    call Call_058_64fc
+    call SaveBtlFX_64fc
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_4df8:
     push bc
@@ -2610,23 +2431,23 @@ jr_058_4e2a:
     ld de, $0000
 
 jr_058_4e2d:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_4df8
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_4e44:
     push bc
@@ -2661,23 +2482,23 @@ jr_058_4e76:
     ld de, $0000
 
 jr_058_4e79:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_4e44
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_627c
+    call SetBtlFX_627c
 
 jr_058_4e90:
     push bc
@@ -2718,17 +2539,17 @@ jr_058_4ec9:
     ld de, $0000
 
 jr_058_4ecc:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_4e90
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -2765,7 +2586,7 @@ jr_058_4ecc:
     ld a, [hl+]
     ld d, [hl]
     ld e, a
-    call Call_058_5f01
+    call LoadBtlFX_5f01
     jr jr_058_4f21
 
 jr_058_4f1c:
@@ -2808,7 +2629,7 @@ Jump_058_4f2a:
     ld a, [hl+]
     ld d, [hl]
     ld e, a
-    call Call_058_5f01
+    call LoadBtlFX_5f01
     jr jr_058_4f5c
 
 jr_058_4f57:
@@ -2870,7 +2691,7 @@ jr_058_4f80:
     ret
 
 
-Call_058_4fa7:
+LoadBtlFX_4fa7:
     ld a, c
     ld hl, $db8b
     add l
@@ -2902,13 +2723,13 @@ Call_058_4fa7:
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
 
 Jump_058_4fdd:
     push bc
@@ -2936,7 +2757,7 @@ Jump_058_4fdd:
     and $30
     ld [de], a
     push de
-    call Call_058_5e2f
+    call LoadBtlFX_5e2f
     pop hl
     jr z, jr_058_500e
 
@@ -2995,18 +2816,18 @@ jr_058_5030:
     dec b
     jp nz, Jump_058_4fdd
 
-    call Call_058_5d86
-    call Call_058_5e3a
+    call SetBtlFX_5d86
+    call LoadBtlFX_5e3a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
 
 Jump_058_5074:
     push bc
@@ -3034,7 +2855,7 @@ Jump_058_5074:
     and $30
     ld [de], a
     push de
-    call Call_058_5e2f
+    call LoadBtlFX_5e2f
     pop hl
     jr z, jr_058_50a5
 
@@ -3093,18 +2914,18 @@ jr_058_50c7:
     dec b
     jp nz, Jump_058_5074
 
-    call Call_058_5cef
-    call Call_058_5e3a
+    call SetBtlFX_5cef
+    call LoadBtlFX_5e3a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
     xor a
     ld [$db50], a
     ld [$db51], a
@@ -3161,15 +2982,15 @@ jr_058_5145:
     dec b
     jr nz, jr_058_5118
 
-    call Call_058_5d86
-    call Call_058_5e3a
+    call SetBtlFX_5d86
+    call LoadBtlFX_5e3a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
     ld a, [$c86c]
@@ -3180,7 +3001,7 @@ jr_058_5145:
     cp $04
     jp c, Jump_058_62bf
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
     ld a, c
     ld [$db60], a
     ld a, c
@@ -3260,7 +3081,7 @@ jr_058_51e5:
     push bc
     push de
     push hl
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop hl
     pop de
     pop bc
@@ -3280,14 +3101,14 @@ jr_058_5208:
     dec b
     jp nz, Jump_058_51b8
 
-    call Call_058_5e3a
+    call LoadBtlFX_5e3a
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -3388,11 +3209,11 @@ jr_058_528d:
     ld h, a
     ld a, [hl]
     ld [$db4d], a
-    call Call_058_5f0c
+    call LoadBtlFX_5f0c
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
     ld a, [wBattleAttackerIdx]
@@ -3489,97 +3310,97 @@ jr_058_531d:
     ld h, a
     ld a, [hl]
     ld [$db4d], a
-    call Call_058_5f0c
+    call LoadBtlFX_5f0c
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
     ld a, $00
     ld [$db4e], a
     ld a, $c0
     ld [$db4f], a
-    call Call_058_5fa6
+    call LoadBtlFX_5fa6
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
     ld a, $01
     ld [$db4e], a
     ld a, $30
     ld [$db4f], a
-    call Call_058_5fa6
+    call LoadBtlFX_5fa6
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
     ld a, $01
     ld [$db4e], a
     ld a, $c0
     ld [$db4f], a
-    call Call_058_5fa6
+    call LoadBtlFX_5fa6
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
     ld a, $01
     ld [$db4e], a
     ld a, $0c
     ld [$db4f], a
-    call Call_058_5fa6
+    call LoadBtlFX_5fa6
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
     ld a, $01
     ld [$db4e], a
     ld a, $c0
     ld [$db4f], a
-    call Call_058_6043
+    call LoadBtlFX_6043
     ret
 
 
-    call Call_058_654d
+    call CallBtlFX_654d
     ret z
 
-    call Call_058_6629
+    call LoadBtlFX_6629
     ret z
 
-    call Call_058_5e19
+    call SetBtlFX_5e19
     ld a, $06
     ld [$db4e], a
     ld a, $0c
     ld [$db4f], a
-    call Call_058_6043
+    call LoadBtlFX_6043
     ret
 
 
@@ -3599,7 +3420,7 @@ jr_058_531d:
 Jump_058_53df:
     ld a, [$c86c]
     or a
-    call nz, Call_058_5c18
+    call nz, SaveBtlFX_5c18
     ld a, [wBattleAttackerIdx]
     cp $08
     jr z, jr_058_5411
@@ -3687,7 +3508,7 @@ jr_058_541d:
 jr_058_545b:
     ld a, [$c88b]
     or a
-    call nz, Call_058_5a20
+    call nz, CallBtlFX_5a20
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
@@ -3698,12 +3519,12 @@ jr_058_545b:
     ld h, a
     ld a, [hl]
     cp $ff
-    call z, Call_058_54ce
-    call Call_058_5498
+    call z, WriteBtlFX_54ce
+    call LoadBtlFX_5498
 
 jr_058_5478:
-    call Call_058_5a40
-    call Call_058_5ba1
+    call LoadBtlFX_5a40
+    call LoadBtlFX_5ba1
     ld a, [wBattleAttackerIdx]
     ld hl, $dd13
     add l
@@ -3720,7 +3541,7 @@ jr_058_5478:
     jp Jump_058_53df
 
 
-Call_058_5498:
+LoadBtlFX_5498:
     ld a, [$d9ed]
     cp $16
     jr c, jr_058_54b1
@@ -3759,7 +3580,7 @@ jr_058_54be:
     ret
 
 
-Call_058_54ce:
+WriteBtlFX_54ce:
     ld [hl], $3a
     ret
 
@@ -3790,7 +3611,7 @@ Jump_058_5507:
     push de
     ld a, [$c86c]
     or a
-    call nz, Call_058_5c18
+    call nz, SaveBtlFX_5c18
     pop de
     ld a, e
     call CheckMonsterSlot
@@ -3819,7 +3640,7 @@ Jump_058_5507:
     ld b, [hl]
     ld c, a
     ld a, e
-    call Call_058_5662
+    call SaveBtlFX_5662
     ld a, b
     or a
     jr nz, jr_058_5543
@@ -3832,7 +3653,7 @@ Jump_058_5507:
 
 jr_058_5543:
     ld a, e
-    call Call_058_56cf
+    call SetBtlFX_56cf
     jr c, jr_058_5561
 
     ld a, e
@@ -3845,9 +3666,9 @@ jr_058_5543:
     ld h, a
     ld a, [hl]
     cp $55
-    call z, Call_058_55b9
+    call z, LoadBtlFX_55b9
     cp $56
-    call z, Call_058_55be
+    call z, SetBtlFX_55be
     jr jr_058_5565
 
 jr_058_5561:
@@ -3913,14 +3734,14 @@ jr_058_55b3:
     inc [hl]
     jr jr_058_55c2
 
-Call_058_55b9:
+LoadBtlFX_55b9:
     ld a, b
     add $02
     ld b, a
     ret
 
 
-Call_058_55be:
+SetBtlFX_55be:
     ld bc, $0001
     ret
 
@@ -4037,12 +3858,12 @@ jr_058_5656:
     jp Jump_058_5707
 
 
-Call_058_5662:
+SaveBtlFX_5662:
     push hl
     push de
     push af
     push bc
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     ld hl, $0001
     pop bc
     ld a, b
@@ -4128,7 +3949,7 @@ jr_058_56cc:
     ret
 
 
-Call_058_56cf:
+SetBtlFX_56cf:
     ld hl, $dcec
     add a
     add l
@@ -4311,7 +4132,7 @@ jr_058_578b:
     cp $04
     jr nc, jr_058_57c2
 
-    call Call_058_59cf
+    call LoadBtlFX_59cf
     jp Jump_058_58f8
 
 
@@ -4596,7 +4417,7 @@ Jump_058_58e8:
     push af
     ld a, $04
     ld [wBattleTargetIdx], a
-    call Call_058_5955
+    call ClrBtlFX_5955
     pop af
     ld [wBattleTargetIdx], a
 
@@ -4628,7 +4449,7 @@ jr_058_5907:
     dec bc
     ld e, h
     cp $04
-    call nc, Call_058_593d
+    call nc, SetBtlFX_593d
     ld a, [$dd72]
     ld hl, $5937
     add l
@@ -4647,11 +4468,11 @@ jr_058_5907:
     inc b
     ld b, $08
 
-Call_058_593d:
+SetBtlFX_593d:
     ld hl, $c180
     jr jr_058_5945
 
-Call_058_5942:
+SetBtlFX_5942:
     ld hl, $c1a0
 
 jr_058_5945:
@@ -4672,7 +4493,7 @@ jr_058_594d:
     ret
 
 
-Call_058_5955:
+ClrBtlFX_5955:
     xor a
     ld [$dd72], a
     ld [$dd73], a
@@ -4765,13 +4586,13 @@ jr_058_59b9:
     ld a, $02
     jr jr_058_59d8
 
-Call_058_59cf:
+LoadBtlFX_59cf:
 jr_058_59cf:
     ld a, $00
     jr jr_058_59d8
 
 jr_058_59d3:
-    call Call_058_5942
+    call SetBtlFX_5942
     ld a, $01
 
 jr_058_59d8:
@@ -4788,7 +4609,7 @@ jr_058_59d8:
     cp $03
     jr c, jr_058_59f1
 
-    call Call_058_5a02
+    call FuncBtlFX_5a02
     jr jr_058_59fe
 
 jr_058_59f1:
@@ -4801,11 +4622,11 @@ jr_058_59f1:
     call Copy4Bytes
 
 jr_058_59fe:
-    call Call_058_5955
+    call ClrBtlFX_5955
     ret
 
 
-Call_058_5a02:
+FuncBtlFX_5a02:
     ld [$db60], a
     push hl
     ld hl, $dc3c
@@ -4826,8 +4647,8 @@ Call_058_5a02:
     ret
 
 
-Call_058_5a20:
-    call Call_058_5c3e
+CallBtlFX_5a20:
+    call LoadBtlFX_5c3e
     ld a, [$c88c]
     or a
     jr z, jr_058_5a2e
@@ -4850,7 +4671,7 @@ jr_058_5a2e:
     ret
 
 
-Call_058_5a40:
+LoadBtlFX_5a40:
     ld a, [wBattleAttackerIdx]
     call GetMonsterSlotInfo
     ret c
@@ -4859,7 +4680,7 @@ Call_058_5a40:
     or a
     jr z, jr_058_5a5a
 
-    call Call_058_5c18
+    call SaveBtlFX_5c18
     ld a, [wBattleAttackerIdx]
     and $03
     cp $03
@@ -4872,7 +4693,7 @@ jr_058_5a5a:
     cp $03
     ret nc
 
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
 
 jr_058_5a63:
     ld a, [wBattleAttackerIdx]
@@ -4999,7 +4820,7 @@ jr_058_5afb:
     ld d, $04
     jr jr_058_5b25
 
-Call_058_5b02:
+SetBtlFX_5b02:
     ld hl, $dc4c
     ld d, $08
     jr jr_058_5b63
@@ -5014,7 +4835,7 @@ jr_058_5b10:
     ld d, $20
     jr jr_058_5b63
 
-Call_058_5b17:
+SetBtlFX_5b17:
     ld hl, $dc5c
     ld d, $40
     jr jr_058_5b25
@@ -5135,7 +4956,7 @@ jr_058_5b8c:
     ret
 
 
-Call_058_5ba1:
+LoadBtlFX_5ba1:
     ld a, [wBattleAttackerIdx]
     call GetMonsterSlotInfo
     ret c
@@ -5144,7 +4965,7 @@ Call_058_5ba1:
     or a
     jr z, jr_058_5bbb
 
-    call Call_058_5c18
+    call SaveBtlFX_5c18
     ld a, [wBattleAttackerIdx]
     and $03
     cp $03
@@ -5157,7 +4978,7 @@ jr_058_5bbb:
     cp $03
     ret nc
 
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
 
 jr_058_5bc4:
     ld a, [wBattleAttackerIdx]
@@ -5208,12 +5029,12 @@ jr_058_5bc4:
     ret nc
 
 jr_058_5c03:
-    call Call_058_5b17
+    call SetBtlFX_5b17
     ret
 
 
 jr_058_5c07:
-    call Call_058_5b02
+    call SetBtlFX_5b02
     ret
 
 
@@ -5226,7 +5047,7 @@ jr_058_5c07:
     ret
 
 
-Call_058_5c18:
+SaveBtlFX_5c18:
 jr_058_5c18:
     push hl
     ld a, [$c1ed]
@@ -5250,7 +5071,7 @@ jr_058_5c18:
     ret
 
 
-Call_058_5c3e:
+LoadBtlFX_5c3e:
     ld a, [$c86c]
     or a
     jr nz, jr_058_5c18
@@ -5259,7 +5080,7 @@ Call_058_5c3e:
     ret
 
 
-    call Call_058_5498
+    call LoadBtlFX_5498
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
@@ -5309,7 +5130,7 @@ jr_058_5c73:
     ret
 
 
-Call_058_5c96:
+SaveBtlFX_5c96:
     push hl
     ld b, a
     ld a, [$c86c]
@@ -5378,7 +5199,7 @@ jr_058_5ced:
     ret
 
 
-Call_058_5cef:
+SetBtlFX_5cef:
     ld hl, $db58
     ld a, l
     ld [$db5e], a
@@ -5396,7 +5217,7 @@ jr_058_5d08:
     push hl
     push de
     push bc
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     ld a, [$db60]
     ld hl, $db50
     and $03
@@ -5479,7 +5300,7 @@ jr_058_5d61:
     ret
 
 
-Call_058_5d86:
+SetBtlFX_5d86:
     ld hl, $db58
     ld a, l
     ld [$db5e], a
@@ -5497,7 +5318,7 @@ jr_058_5d9f:
     push hl
     push de
     push bc
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     ld a, [$db60]
     ld hl, $db50
     add l
@@ -5578,7 +5399,7 @@ jr_058_5df4:
     ret
 
 
-Call_058_5e19:
+SetBtlFX_5e19:
     ld hl, $db56
     ld a, l
     ld [$db5e], a
@@ -5592,7 +5413,7 @@ Call_058_5e19:
     ret
 
 
-Call_058_5e2f:
+LoadBtlFX_5e2f:
     ld a, c
     ld hl, $db04
     call HL_AddA_x8
@@ -5601,7 +5422,7 @@ Call_058_5e2f:
     ret
 
 
-Call_058_5e3a:
+LoadBtlFX_5e3a:
     ld a, [$db60]
     ld c, a
     ld a, [wBattleAttackerIdx]
@@ -5622,8 +5443,8 @@ Call_058_5e3a:
     ret
 
 
-Call_058_5e5b:
-    call Call_058_5e75
+CallBtlFX_5e5b:
+    call SetBtlFX_5e75
     ld b, $03
     ld d, $00
 
@@ -5638,7 +5459,7 @@ jr_058_5e62:
     jr jr_058_5e70
 
 jr_058_5e6d:
-    call Call_058_66e7
+    call SaveBtlFX_66e7
 
 jr_058_5e70:
     inc c
@@ -5648,7 +5469,7 @@ jr_058_5e70:
     ret
 
 
-Call_058_5e75:
+SetBtlFX_5e75:
     ld hl, $db4c
     ld a, [wBattleAttackerIdx]
     and $04
@@ -5657,13 +5478,13 @@ Call_058_5e75:
     ret
 
 
-Call_058_5e81:
+ClrBtlFX_5e81:
     xor a
     ld hl, $db50
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    call Call_058_5cef
+    call SetBtlFX_5cef
     ld a, [$db60]
     ld hl, $db4c
     ld de, $db4c
@@ -5704,8 +5525,8 @@ Call_058_5e81:
     ret
 
 
-Call_058_5ebf:
-    call Call_058_5d86
+CallBtlFX_5ebf:
+    call SetBtlFX_5d86
     ld a, [$db60]
     ld hl, $db4e
     ld de, $db4c
@@ -5758,7 +5579,7 @@ Call_058_5ebf:
     ret
 
 
-Call_058_5f01:
+LoadBtlFX_5f01:
     ld a, c
     add e
     ld c, a
@@ -5771,7 +5592,7 @@ Call_058_5f01:
     ret
 
 
-Call_058_5f0c:
+LoadBtlFX_5f0c:
 jr_058_5f0c:
     ld a, c
     and $03
@@ -5792,7 +5613,7 @@ jr_058_5f0c:
     push bc
     push de
     push hl
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop hl
     pop de
     pop bc
@@ -5827,7 +5648,7 @@ jr_058_5f3b:
     ret
 
 
-Call_058_5f57:
+SaveBtlFX_5f57:
     push hl
     push bc
     ld a, c
@@ -5867,7 +5688,7 @@ jr_058_5f7f:
     ret
 
 
-Call_058_5f83:
+SaveBtlFX_5f83:
     push hl
     push bc
     ld a, c
@@ -5898,7 +5719,7 @@ jr_058_5fa4:
     ret
 
 
-Call_058_5fa6:
+LoadBtlFX_5fa6:
     ld a, c
     ld [$db60], a
     push bc
@@ -5909,7 +5730,7 @@ Call_058_5fa6:
     ld hl, $5206
     rst $10
     pop bc
-    call Call_058_5f57
+    call SaveBtlFX_5f57
     ld a, [$db4c]
     ld hl, $db4f
     and [hl]
@@ -5930,7 +5751,7 @@ jr_058_5fcf:
     ld hl, $5206
     rst $10
     pop bc
-    call Call_058_5f57
+    call SaveBtlFX_5f57
     ld a, [$db4c]
     ld hl, $db4f
     and [hl]
@@ -5958,7 +5779,7 @@ jr_058_5fcf:
     push bc
     push de
     push hl
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop hl
     pop de
     pop bc
@@ -5999,7 +5820,7 @@ jr_058_6027:
     ret
 
 
-Call_058_6043:
+LoadBtlFX_6043:
     ld a, c
     ld [$db60], a
     push bc
@@ -6010,7 +5831,7 @@ Call_058_6043:
     ld hl, $5206
     rst $10
     pop bc
-    call Call_058_5f83
+    call SaveBtlFX_5f83
     ld a, [$db4c]
     ld hl, $db4f
     and [hl]
@@ -6031,7 +5852,7 @@ jr_058_606c:
     ld hl, $5206
     rst $10
     pop bc
-    call Call_058_5f83
+    call SaveBtlFX_5f83
     ld a, [$db4c]
     ld hl, $db4f
     and [hl]
@@ -6059,7 +5880,7 @@ jr_058_606c:
     push bc
     push de
     push hl
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop hl
     pop de
     pop bc
@@ -6100,7 +5921,7 @@ jr_058_60c4:
     ret
 
 
-Call_058_60e0:
+LoadBtlFX_60e0:
     ld a, h
     or a
     jr nz, jr_058_60ee
@@ -6123,7 +5944,7 @@ jr_058_60ee:
     ret
 
 
-Call_058_60f3:
+SaveBtlFX_60f3:
     push hl
     ld b, a
     ld a, [$c86c]
@@ -6238,7 +6059,7 @@ jr_058_6178:
     ret
 
 
-Call_058_6188:
+LoadBtlFX_6188:
     ld a, [wBattleAttackerIdx]
     ld hl, $dced
     add a
@@ -6253,7 +6074,7 @@ Call_058_6188:
     ret
 
 
-Call_058_619a:
+SetBtlFX_619a:
     ld hl, $db58
     ld a, l
     ld [$db5e], a
@@ -6286,7 +6107,7 @@ jr_058_61b3:
     push bc
     push de
     push hl
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     pop hl
     pop de
     pop bc
@@ -6338,7 +6159,7 @@ jr_058_61df:
     ret
 
 
-Call_058_6224:
+LoadBtlFX_6224:
     ld a, $00
     ld [$db60], a
     ld a, [$db58]
@@ -6390,7 +6211,7 @@ jr_058_625d:
     ret
 
 
-Call_058_627c:
+SetBtlFX_627c:
     ld hl, $db56
     ld a, l
     ld [$db5e], a
@@ -6404,7 +6225,7 @@ Call_058_627c:
     ret
 
 
-Call_058_6292:
+LoadBtlFX_6292:
     ld a, [$db5e]
     ld l, a
     ld a, [$db5f]
@@ -6433,18 +6254,18 @@ Jump_058_62bf:
     and $04
     xor $04
     ld [$db4c], a
-    call Call_058_62d9
+    call LoadBtlFX_62d9
     ret
 
 
     ld a, [wBattleAttackerIdx]
     and $04
     ld [$db4c], a
-    call Call_058_62d9
+    call LoadBtlFX_62d9
     ret
 
 
-Call_058_62d9:
+LoadBtlFX_62d9:
     ld a, [$db4c]
     ld c, a
     ld b, $03
@@ -6660,7 +6481,7 @@ jr_058_63c0:
     ret
 
 
-Call_058_63ec:
+FuncBtlFX_63ec:
     ld c, e
     ld b, $03
     ld d, $00
@@ -6680,8 +6501,8 @@ jr_058_63f8:
     ret
 
 
-Call_058_63fd:
-    call Call_058_5c3e
+CallBtlFX_63fd:
+    call LoadBtlFX_5c3e
     ld a, [wRNG1]
     ld b, a
     ld a, d
@@ -6719,17 +6540,17 @@ jr_058_6415:
     ret
 
 
-Call_058_642c:
+LoadBtlFX_642c:
     ld a, [wBattleAttackerIdx]
     and $04
     xor $04
     ld e, a
-    call Call_058_63ec
-    call Call_058_63fd
+    call FuncBtlFX_63ec
+    call CallBtlFX_63fd
     ret
 
 
-    call Call_058_5c3e
+    call LoadBtlFX_5c3e
     ld a, [wBattleAttackerIdx]
     and $04
     xor $04
@@ -6777,12 +6598,12 @@ jr_058_6462:
     ret
 
 
-Call_058_6479:
+LoadBtlFX_6479:
     ld a, [wBattleAttackerIdx]
     and $04
     ld e, a
-    call Call_058_63ec
-    call Call_058_63fd
+    call FuncBtlFX_63ec
+    call CallBtlFX_63fd
     ret
 
 
@@ -6876,14 +6697,14 @@ jr_058_64e1:
     ret
 
 
-Call_058_64fc:
+SaveBtlFX_64fc:
 jr_058_64fc:
     push bc
     ld a, c
     call CheckMonsterSlot
     jr c, jr_058_651f
 
-    call Call_058_6533
+    call LoadBtlFX_6533
     jr nz, jr_058_6524
 
     pop bc
@@ -6912,17 +6733,17 @@ jr_058_6524:
     ld de, $0001
 
 jr_058_6527:
-    call Call_058_6292
+    call LoadBtlFX_6292
     pop bc
     inc c
     dec b
     jr nz, jr_058_64fc
 
-    call Call_058_619a
+    call SetBtlFX_619a
     ret
 
 
-Call_058_6533:
+LoadBtlFX_6533:
     ld a, c
     ld hl, $dc3c
     add l
@@ -6940,25 +6761,25 @@ Call_058_6533:
     ret
 
 
-Call_058_654d:
-    call Call_058_655f
+CallBtlFX_654d:
+    call LoadBtlFX_655f
     ret nz
 
-    call Call_058_642c
+    call LoadBtlFX_642c
     xor a
     ret
 
 
-Call_058_6556:
-    call Call_058_655f
+CallBtlFX_6556:
+    call LoadBtlFX_655f
     ret nz
 
-    call Call_058_6479
+    call LoadBtlFX_6479
     xor a
     ret
 
 
-Call_058_655f:
+LoadBtlFX_655f:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
     add l
@@ -6971,7 +6792,7 @@ Call_058_655f:
     ret
 
 
-Call_058_656e:
+SetBtlFX_656e:
     ld hl, $dc65
     swap a
     add l
@@ -7110,7 +6931,7 @@ jr_058_660b:
     ret
 
 
-Call_058_660d:
+SaveBtlFX_660d:
     push hl
     ld a, c
     call CheckMonsterSlot
@@ -7135,7 +6956,7 @@ jr_058_6627:
     ret
 
 
-Call_058_6629:
+LoadBtlFX_6629:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd0b
     add l
@@ -7161,7 +6982,7 @@ Call_058_6629:
     jr c, jr_058_6656
 
 jr_058_6650:
-    call Call_058_441b
+    call CallBtlFX_441b
     xor a
     or a
     ret
@@ -7173,7 +6994,7 @@ jr_058_6656:
     ret
 
 
-Call_058_665a:
+LoadBtlFX_665a:
     ld a, $00
     ld [$db5e], a
     ld a, $01
@@ -7265,7 +7086,7 @@ jr_058_66bb:
     ret
 
 
-Call_058_66e7:
+SaveBtlFX_66e7:
     push hl
     push de
     ld a, c
@@ -7330,7 +7151,7 @@ jr_058_6734:
     ld h, a
     ld a, [hl+]
     ld [$db4c], a
-    call Call_058_6794
+    call LoadBtlFX_6794
     ret
 
 
@@ -7347,7 +7168,7 @@ jr_058_6750:
     ld a, [hl]
     cp $04
 
-Call_058_6762:
+FuncBtlFX_6762:
     ret c
 
     and $04
@@ -7375,7 +7196,7 @@ jr_058_6770:
 jr_058_677b:
     ld a, d
     cp $ff
-    call z, Call_058_6792
+    call z, FuncBtlFX_6792
     ld a, c
     ld hl, $db07
     call HL_AddA_x8
@@ -7389,12 +7210,12 @@ jr_058_678d:
     ret
 
 
-Call_058_6792:
+FuncBtlFX_6792:
     ld d, c
     ret
 
 
-Call_058_6794:
+LoadBtlFX_6794:
 jr_058_6794:
     ld a, $00
     ld [$db4d], a
@@ -7424,7 +7245,7 @@ jr_058_67ac:
 
     ld a, $14
     ld [$dd26], a
-    call Call_058_68a5
+    call LoadBtlFX_68a5
     ld a, [wBattleAttackerIdx]
     call GetCombatantATK
     ld a, [$db56]
@@ -7436,7 +7257,7 @@ jr_058_67ac:
 
     ld hl, $dd26
     ld b, $0a
-    call Call_058_6918
+    call ReadBtlFX_6918
     ld a, [$db56]
     ld c, a
     ld a, [$db57]
@@ -7457,7 +7278,7 @@ jr_058_67ac:
 
     ld hl, $dd26
     ld b, $0a
-    call Call_058_6918
+    call ReadBtlFX_6918
     ld a, [$db56]
     ld c, a
     ld a, [$db57]
@@ -7476,7 +7297,7 @@ jr_058_67ac:
 
     ld hl, $dd26
     ld b, $0a
-    call Call_058_6918
+    call ReadBtlFX_6918
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -7498,7 +7319,7 @@ jr_058_67ac:
 
     ld hl, $dd26
     ld b, $0a
-    call Call_058_6918
+    call ReadBtlFX_6918
 
 Jump_058_6859:
 jr_058_6859:
@@ -7518,7 +7339,7 @@ jr_058_6859:
 jr_058_686e:
     ld hl, $dd26
     ld b, $1e
-    call Call_058_6918
+    call ReadBtlFX_6918
 
 jr_058_6876:
     ld a, [wBattleAttackerIdx]
@@ -7557,7 +7378,7 @@ jr_058_689b:
     ret
 
 
-Call_058_68a5:
+LoadBtlFX_68a5:
     ld a, [wBattleAttackerIdx]
     and $04
     xor $04
@@ -7639,7 +7460,7 @@ jr_058_6903:
     ret
 
 
-Call_058_6918:
+ReadBtlFX_6918:
     ld a, [hl]
     add b
     ld [hl], a
@@ -11804,7 +11625,7 @@ Call_058_6918:
     nop
     nop
 
-Call_058_7959:
+DataBtlFX_7959:
     nop
     nop
     nop

@@ -6,21 +6,25 @@
 SECTION "ROM Bank $05e", ROMX[$4000], BANK[$5e]
 ;All invalid jumps to external banks removed.
 Jump_05e_4000:
-    ld e, [hl]
-    dec b
-    ld b, b
-    bit 0, b
+    db $5E ; Bank number
+
+    ; Cross-bank dispatch table (2 entries)
+    ; Called via: ld hl, $5EXX / rst $10
+    dw DispatchEntry_5E_0             ; Entry 0
+    dw $40CB                          ; Entry 1
+
+DispatchEntry_5E_0:
     ld a, [$dd60]
     or a
     ret z
 
 Jump_05e_400a:
     ld de, $4071
-    call Call_05e_413a
+    call HramB5e_413a
     ld a, [$dd68]
     or a
 
-Call_05e_4014:
+JmpB5e_4014:
     jr z, jr_05e_4021
 
     ld a, [$daa4]
@@ -254,7 +258,7 @@ jr_05e_4136:
     add b
     nop
 
-Call_05e_413a:
+HramB5e_413a:
     ldh a, [$cb]
     cp $28
     jr nc, jr_05e_418a
@@ -6783,7 +6787,7 @@ jr_05e_5e13:
 
 jr_05e_5e63:
     ld h, [hl]
-    call c, Call_05e_7d66
+    call c, DataB5e_7d66
     ld h, a
     ld c, $68
     sbc e
@@ -10216,7 +10220,7 @@ jr_05e_6c9c:
     stop
     ret c
 
-    call c, Call_05e_4014
+    call c, JmpB5e_4014
     ret c
 
     db $e4
@@ -14360,7 +14364,7 @@ jr_05e_7140:
     nop
     nop
 
-Call_05e_7d66:
+DataB5e_7d66:
     nop
     nop
     nop

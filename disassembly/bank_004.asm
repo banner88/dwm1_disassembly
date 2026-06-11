@@ -49,7 +49,7 @@ SECTION "ROM Bank $004", ROMX[$4000], BANK[$4]
 
 ; Jump table: 7 entry points called via rst $10 with H=$04
     dw NPCSpriteLoad         ; Entry 0 ($400F): NPC sprite dispatch (via $0D91)
-    dw NPCSpriteLoadAlt      ; Entry 1 ($4016): NPC sprite dispatch variant (via Call_004_40cd)
+    dw NPCSpriteLoadAlt      ; Entry 1 ($4016): NPC sprite dispatch variant (via SaveScr_40cd)
     dw NPCInteractDispatch   ; Entry 2 ($4081): NPC interaction routing by $FFC7
     dw NPCInteractDispatchB  ; Entry 3 ($40A7): NPC interaction routing variant
     dw NPCFrameUpdate        ; Entry 4 ($4167): Per-frame NPC state machine (MAIN ENTRY)
@@ -69,12 +69,12 @@ label400f:
 
 ; ---------------------------------------------------------------------------
 ; Entry 1: NPCSpriteLoadAlt
-; Variant of entry 0, uses Call_004_40cd instead of $0D91.
+; Variant of entry 0, uses SaveScr_40cd instead of $0D91.
 ; ---------------------------------------------------------------------------
 NPCSpriteLoadAlt:
 label4016:
     ld de, $401d
-    call Call_004_40cd
+    call SaveScr_40cd
     ret
 
     db $23, $40, $2a, $40, $3d, $40, $25, $40, $00, $00, $00, $00, $80, $2c, $40, $00
@@ -89,7 +89,7 @@ label4016:
 ; ---------------------------------------------------------------------------
 ; Entry 2: NPCInteractDispatch
 ; Routes NPC interactions based on $FFC7 (NPC interaction index).
-; $FFC7 < $10:  local handler via Call_004_4126 + sprite table
+; $FFC7 < $10:  local handler via HramScr_4126 + sprite table
 ; $FFC7 $10-$8F: bank $10 entry 0 (rst $10 → $10:fn0)
 ; $FFC7 >= $90:  bank $11 entry 0 (rst $10 → $11:fn0)
 ; ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ label4081:
     cp $10              ; compare $10 to a(ffc7)
     jr nc, jr_004_4095  ; jump if a(ffc7) >= $10
 
-    call Call_004_4126
+    call HramScr_4126
     ld de, $4137        ; load 4137 into de
     call $0d91
     ret
@@ -125,7 +125,7 @@ jr_004_409e:
 
 ; ---------------------------------------------------------------------------
 ; Entry 3: NPCInteractDispatchB
-; Same routing as entry 2 but uses Call_004_40cd instead of $0D91.
+; Same routing as entry 2 but uses SaveScr_40cd instead of $0D91.
 ; ---------------------------------------------------------------------------
 NPCInteractDispatchB:
 label40a7:
@@ -136,9 +136,9 @@ label40a7:
     cp $10             ; compare $10 to a(ffc7)
     jr nc, jr_004_40bb ; jump if a(ffc7) >= $10
 
-    call Call_004_4126
+    call HramScr_4126
     ld de, $4137       ;  load 4137 into de
-    call Call_004_40cd
+    call SaveScr_40cd
     ret
 
 
@@ -158,7 +158,7 @@ jr_004_40c4:
     ret
 
 
-Call_004_40cd:
+SaveScr_40cd:
     push af
     push bc
     push de
@@ -233,7 +233,7 @@ jr_004_4121:
     ret
 
 
-Call_004_4126:
+HramScr_4126:
     ldh a, [$c7]
     ld hl, $4157
     add l
@@ -266,10 +266,10 @@ data_4157:
 ;    - If set, check bit 1 (text queued):
 ;      * If text queued → return (wait for text display to finish)
 ; 3. Handle pending operations:
-;    - Bit 4/6: NPC position updates via Call_004_43ec
+;    - Bit 4/6: NPC position updates via LoadScr_43ec
 ;    - Bit 2: Delay countdown ($D8DB)
 ;    - Bit 3: NPC walk-toward via Jump_004_41e0 → Jump_004_42cd
-; 4. If none pending: call Call_004_55f5 to execute next script command
+; 4. If none pending: call LoadScr_55f5 to execute next script command
 ; ---------------------------------------------------------------------------
 NPCFrameUpdate:
 label4167:
@@ -315,10 +315,10 @@ jr_004_4189:
 
     ld a, [wScriptStateFlags]
     bit 4, a                 ; Bit 4: NPC position update pending (group A)
-    call nz, Call_004_43ec
+    call nz, LoadScr_43ec
     ld a, [wScriptStateFlags]
     bit 6, a                 ; Bit 6: NPC position update pending (group B)
-    call nz, Call_004_43ec
+    call nz, LoadScr_43ec
     ld a, [wScriptStateFlags]
     bit 2, a                 ; Bit 2: delay/wait active
     jr nz, jr_004_41c8
@@ -332,7 +332,7 @@ jr_004_41bc:
     jp nz, Jump_004_43db
 
 jr_004_41c4:
-    call Call_004_55f5       ; → ScriptExecContinue: run next script command
+    call LoadScr_55f5       ; → ScriptExecContinue: run next script command
 
 Jump_004_41c7:
     ret
@@ -485,7 +485,7 @@ jr_004_4293:
 
 Jump_004_42ba:
 jr_004_42ba:
-    call Call_004_454b
+    call LoadScr_454b
     jp Jump_004_43d8
 
 
@@ -724,45 +724,45 @@ jr_004_43e9:
 ; If all NPCs have finished moving (result is zero), clears bits 4 and 6
 ; of $D8D7 (position update pending flags).
 ; ---------------------------------------------------------------------------
-Call_004_43ec:
+LoadScr_43ec:
     ld a, [$d8e9]
     push af
-    call Call_004_443d
+    call LoadScr_443d
     pop af
     ld hl, $d8f1
     or [hl]
     push af
-    call Call_004_4584
+    call ReadScr_4584
     pop af
     ld hl, $d8f9
     or [hl]
     push af
-    call Call_004_4584
+    call ReadScr_4584
     pop af
     ld hl, $d901
     or [hl]
     push af
-    call Call_004_4584
+    call ReadScr_4584
     pop af
     ld hl, $d909
     or [hl]
     push af
-    call Call_004_4584
+    call ReadScr_4584
     pop af
     ld hl, $d911
     or [hl]
     push af
-    call Call_004_4584
+    call ReadScr_4584
     pop af
     ld hl, $d919
     or [hl]
     push af
-    call Call_004_4584
+    call ReadScr_4584
     pop af
     ld hl, $d921
     or [hl]
     push af
-    call Call_004_4584
+    call ReadScr_4584
     pop af
     or a
     ret nz
@@ -773,7 +773,7 @@ Call_004_43ec:
     ret
 
 
-Call_004_443d:
+LoadScr_443d:
     ld a, [$d8e9]
     or a
     ret z
@@ -929,7 +929,7 @@ jr_004_4524:
 ;   Dir 2 (right): $8D=$00, $8F=$02
 ;   Dir 3 (left):  $8D=$00, $8F=$01
 ; ---------------------------------------------------------------------------
-Call_004_454b:
+LoadScr_454b:
 Jump_004_454b:
 jr_004_454b:
     ld a, $00
@@ -971,7 +971,7 @@ Jump_004_457a:
     ret
 
 
-Call_004_4584:
+ReadScr_4584:
     ld a, [hl]
     or a
     ret z
@@ -1304,7 +1304,7 @@ jr_004_472d:
 Jump_004_4742:
     ld bc, $4770
 
-Call_004_4745:
+HramScr_4745:
 Jump_004_4745:
     ldh a, [$d7]
     add $01
@@ -1360,7 +1360,7 @@ Jump_004_478a:
 
 Jump_004_47be:
     ld bc, $47d9
-    call Call_004_4745
+    call HramScr_4745
     ld a, [$c850]
     or a
     ret nz
@@ -1396,7 +1396,7 @@ Jump_004_4857:
 
 Jump_004_487f:
     ld bc, $4892
-    call Call_004_4745
+    call HramScr_4745
     ldh a, [$d5]
     add $18
     ld l, a
@@ -1475,7 +1475,7 @@ jr_004_48fc:
 
 Jump_004_4931:
     ld bc, $494c
-    call Call_004_4745
+    call HramScr_4745
     ldh a, [$92]
     ld l, a
     ldh a, [$93]
@@ -1557,7 +1557,7 @@ jr_004_49ca:
 
 Jump_004_49d2:
     ld bc, $4a0a
-    call Call_004_4745
+    call HramScr_4745
     ld a, [$c850]
     or a
     ret nz
@@ -1616,7 +1616,7 @@ Jump_004_4a52:
 
 Jump_004_4aa2:
     ld bc, $4ab5
-    call Call_004_4745
+    call HramScr_4745
     ldh a, [$d5]
     add $18
     ld l, a
@@ -1764,7 +1764,7 @@ Jump_004_4c9f:
     db $80, $80
 
 Jump_004_4d27:
-    call Call_004_4d5c
+    call LoadScr_4d5c
     ld a, [$c850]
     or a
     ret nz
@@ -1798,7 +1798,7 @@ Jump_004_4d27:
     jp Jump_004_454b
 
 
-Call_004_4d5c:
+LoadScr_4d5c:
     ld a, [$c8a6]
     and $01
     ret nz
@@ -1897,7 +1897,7 @@ jr_004_4dc2:
     ld bc, $4fd9
 
 jr_004_4ddd:
-    call Call_004_4745
+    call HramScr_4745
     ldh a, [$d5]
     add $18
     ld l, a
@@ -1995,7 +1995,7 @@ jr_004_5095:
     ld bc, $4fd9
 
 jr_004_50b0:
-    call Call_004_4745
+    call HramScr_4745
     ldh a, [$d5]
     add $18
     ld l, a
@@ -2251,7 +2251,7 @@ jr_004_550d:
 
 Jump_004_5546:
     ld bc, $5559
-    call Call_004_4745
+    call HramScr_4745
     ldh a, [$d5]
     add $18
     ld l, a
@@ -2271,7 +2271,7 @@ Jump_004_5546:
 
 Jump_004_55a9:
     ld bc, $55ca
-    call Call_004_4745
+    call HramScr_4745
     ld a, [$c850]
     or a
     ret nz
@@ -2314,7 +2314,7 @@ label55ec:
 ; and no text/delay is pending. Increments the event counter then runs
 ; the next command.
 ; ---------------------------------------------------------------------------
-Call_004_55f5:
+LoadScr_55f5:
 Jump_004_55f5:
     ld a, [wScriptCounter]
     add $01
@@ -3332,11 +3332,11 @@ jr_004_5bed:
     ld hl, $9380
     ld de, $9360
     ld b, $20
-    call Call_004_5c05
+    call IntScr_5c05
     ld hl, $9600
     ld de, $9620
     ld b, $20
-    call Call_004_5c05
+    call IntScr_5c05
     ret
 
 
@@ -3344,7 +3344,7 @@ jr_004_5c04:
     ret
 
 
-Call_004_5c05:
+IntScr_5c05:
 jr_004_5c05:
     di
     call WaitVRAM
@@ -3640,7 +3640,7 @@ jr_004_5db9:
     ld l, a
     ld a, [$da04]
     ld h, a
-    call Call_004_5e10
+    call LoadScr_5e10
     ld [$d7ce], a
     ld a, $01
     ld [$d7cf], a
@@ -3648,7 +3648,7 @@ jr_004_5db9:
     ld l, a
     ld a, [$da06]
     ld h, a
-    call Call_004_5e10
+    call LoadScr_5e10
     ld [$d7cc], a
     ld a, $01
     ld [$d7cd], a
@@ -3656,14 +3656,14 @@ jr_004_5db9:
     ld l, a
     ld a, [$da08]
     ld h, a
-    call Call_004_5e10
+    call LoadScr_5e10
     ld [$d7d0], a
     ld a, $01
     ld [$d7d1], a
     ret
 
 
-Call_004_5e10:
+LoadScr_5e10:
     ld a, l
     ld [wTempEnemyStatsId], a
     ld a, h
@@ -4737,13 +4737,13 @@ label4_64c2:
     call GetMonsterDataPtr
     ld a, [hl]
     ld de, $c190
-    call Call_004_6583
+    call MaskScr_6583
     ld a, [$cac0]
     ld hl, $cacc
     call GetMonsterDataPtr
     ld a, [hl]
     ld de, $c190
-    call Call_004_6598
+    call SaveScr_6598
     ld a, [$cac0]
     ld hl, $caca
     call GetMonsterDataPtr
@@ -4797,7 +4797,7 @@ label4_64c2:
     ret
 
 
-Call_004_6583:
+MaskScr_6583:
     or a
     ret z
 
@@ -4820,7 +4820,7 @@ jr_004_6586:
     ret
 
 
-Call_004_6598:
+SaveScr_6598:
     push af
 
 jr_004_6599:
@@ -5090,7 +5090,7 @@ label4_6723:
 label4_676f:
     ld a, [$c901]
     ldh [$8e], a
-    call Call_004_454b
+    call LoadScr_454b
     ld a, [$c902]
     dec a
     swap a
@@ -5143,11 +5143,11 @@ label4_67b1:
     ld a, [hl+]
     ld [$ca93], a
     ld a, [$ca8e]
-    call Call_004_67f1
+    call CmpScr_67f1
     ld a, [$ca8f]
-    call Call_004_67f1
+    call CmpScr_67f1
     ld a, [$ca90]
-    call Call_004_67f1
+    call CmpScr_67f1
     ld hl, $0105
     rst $10
     ld hl, $0109
@@ -5157,7 +5157,7 @@ label4_67b1:
     jp Jump_004_55f5
 
 
-Call_004_67f1:
+CmpScr_67f1:
     cp $ff
     ret z
 
@@ -5362,7 +5362,7 @@ label4_690b:
 label4_6957:
     ld a, [$c901]
     ldh [$8e], a
-    call Call_004_454b
+    call LoadScr_454b
     ld hl, $d7f8
     ldh a, [$8e]
     add $02
@@ -5616,7 +5616,7 @@ jr_004_6ab9:
 
 jr_004_6abc:
     ldh [$8e], a
-    call Call_004_454b
+    call LoadScr_454b
     ld hl, $d7d8
     ldh a, [$8e]
     add $02
@@ -5836,28 +5836,28 @@ label4_6bdf:
     ld d, [hl]
     ld e, a
     ld hl, $cb17
-    call Call_004_6d40
+    call CallScr_6d40
     jr c, jr_004_6c47
 
     ld hl, $cb19
-    call Call_004_6d40
+    call CallScr_6d40
     jr c, jr_004_6c47
 
     ld hl, $cb1b
-    call Call_004_6d40
+    call CallScr_6d40
     jr c, jr_004_6c47
 
     ld hl, $cb1d
-    call Call_004_6d35
+    call CallScr_6d35
     jr c, jr_004_6c47
 
     ld hl, $cb1f
-    call Call_004_6d29
+    call CallScr_6d29
     jr c, jr_004_6c47
 
     ld hl, $0014
     ld a, [$cac0]
-    call Call_000_23e9
+    call AddMonsterHP
     ld a, $00
     jp Jump_004_6d0a
 
@@ -5870,24 +5870,24 @@ jr_004_6c47:
     ld d, [hl]
     ld e, a
     ld hl, $cb19
-    call Call_004_6d40
+    call CallScr_6d40
     jr c, jr_004_6c81
 
     ld hl, $cb1b
-    call Call_004_6d40
+    call CallScr_6d40
     jr c, jr_004_6c81
 
     ld hl, $cb1d
-    call Call_004_6d35
+    call CallScr_6d35
     jr c, jr_004_6c81
 
     ld hl, $cb1f
-    call Call_004_6d29
+    call CallScr_6d29
     jr c, jr_004_6c81
 
     ld hl, $0014
     ld a, [$cac0]
-    call Call_000_2403
+    call AddMonsterMP
     ld a, $01
     jp Jump_004_6d0a
 
@@ -5900,20 +5900,20 @@ jr_004_6c81:
     ld d, [hl]
     ld e, a
     ld hl, $cb1b
-    call Call_004_6d40
+    call CallScr_6d40
     jr c, jr_004_6cb2
 
     ld hl, $cb1d
-    call Call_004_6d35
+    call CallScr_6d35
     jr c, jr_004_6cb2
 
     ld hl, $cb1f
-    call Call_004_6d29
+    call CallScr_6d29
     jr c, jr_004_6cb2
 
     ld hl, $0014
     ld a, [$cac0]
-    call Call_000_2307
+    call AddMonsterATK
     ld a, $02
     jr jr_004_6d0a
 
@@ -5925,16 +5925,16 @@ jr_004_6cb2:
     ld d, [hl]
     ld e, a
     ld hl, $cb1d
-    call Call_004_6d35
+    call CallScr_6d35
     jr c, jr_004_6cdb
 
     ld hl, $cb1f
-    call Call_004_6d29
+    call CallScr_6d29
     jr c, jr_004_6cdb
 
     ld hl, $0014
     ld a, [$cac0]
-    call Call_000_2321
+    call AddMonsterDEF
     ld a, $03
     jr jr_004_6d0a
 
@@ -5949,19 +5949,19 @@ jr_004_6cdb:
     ld e, l
     ld d, h
     ld hl, $cb1f
-    call Call_004_6d29
+    call CallScr_6d29
     jr c, jr_004_6cff
 
     ld hl, $0014
     ld a, [$cac0]
-    call Call_000_233b
+    call AddMonsterAGL
     ld a, $04
     jr jr_004_6d0a
 
 jr_004_6cff:
     ld hl, $0014
     ld a, [$cac0]
-    call Call_000_2355
+    call AddMonsterINT
     ld a, $05
 
 Jump_004_6d0a:
@@ -5981,8 +5981,8 @@ jr_004_6d0a:
     jp Jump_004_55f5
 
 
-Call_004_6d29:
-    call Call_004_6d4a
+CallScr_6d29:
+    call SaveScr_6d4a
     add hl, hl
     add hl, hl
     ld a, l
@@ -5994,8 +5994,8 @@ Call_004_6d29:
     ret
 
 
-Call_004_6d35:
-    call Call_004_6d4a
+CallScr_6d35:
+    call SaveScr_6d4a
     add hl, hl
     ld a, l
     sub e
@@ -6006,8 +6006,8 @@ Call_004_6d35:
     ret
 
 
-Call_004_6d40:
-    call Call_004_6d4a
+CallScr_6d40:
+    call SaveScr_6d4a
     ld a, l
     sub e
     ld l, a
@@ -6017,7 +6017,7 @@ Call_004_6d40:
     ret
 
 
-Call_004_6d4a:
+SaveScr_6d4a:
     push de
     ld a, [$cac0]
     call GetMonsterDataPtr
@@ -6070,7 +6070,7 @@ ColiseumInitPrize:
     inc [hl]
 
 jr_004_6d9e:
-    call Call_004_6eb3
+    call FuncScr_6eb3
     ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
@@ -6095,7 +6095,7 @@ jr_004_6d9e:
     ld [$d9d5], a
     ld a, h
     ld [$d9d6], a
-    call Call_004_6eb3
+    call FuncScr_6eb3
     ld a, [wTempEnemyId1]
     ld l, a
     ld a, [$da04]
@@ -6120,9 +6120,9 @@ jr_004_6d9e:
     ld [$d9dd], a
     ld a, h
     ld [$d9de], a
-    call Call_004_6eb3
+    call FuncScr_6eb3
     ld hl, $d7ca
-    call Call_004_6e41
+    call SaveScr_6e41
     ld hl, $6f44
     ld a, [$d9cf]
     cp $09
@@ -6153,7 +6153,7 @@ jr_004_6e1a:
     jp Jump_004_55f5
 
 
-Call_004_6e41:
+SaveScr_6e41:
     push hl
     ld a, $ff
     ld [hl+], a
@@ -6177,7 +6177,7 @@ Call_004_6e41:
     ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
-    call Call_004_6ea9
+    call SetScr_6ea9
     pop hl
     ld [hl+], a
     ld a, $01
@@ -6195,7 +6195,7 @@ Call_004_6e41:
     ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
-    call Call_004_6ea9
+    call SetScr_6ea9
     pop hl
     ld [hl+], a
     ld a, $01
@@ -6213,7 +6213,7 @@ Call_004_6e41:
     ld [wTempEnemyStatsId], a
     ld a, h
     ld [$da13], a
-    call Call_004_6ea9
+    call SetScr_6ea9
     pop hl
     ld [hl+], a
     ld a, $01
@@ -6221,7 +6221,7 @@ Call_004_6e41:
     ret
 
 
-Call_004_6ea9:
+SetScr_6ea9:
     ld hl, $1401
     rst $10
     ld a, [$da18]
@@ -6229,14 +6229,14 @@ Call_004_6ea9:
     ret
 
 
-Call_004_6eb3:
+FuncScr_6eb3:
     ld b, $00
     ld a, [$ca8e]
-    call Call_004_6f05
+    call CmpScr_6f05
     ld a, [$ca8f]
-    call Call_004_6f05
+    call CmpScr_6f05
     ld a, [$ca90]
-    call Call_004_6f05
+    call CmpScr_6f05
     ld a, b
     ld hl, $0209
     cp $04
@@ -6273,7 +6273,7 @@ Call_004_6eb3:
     ld hl, $b512
     jr jr_004_6f13
 
-Call_004_6f05:
+CmpScr_6f05:
     cp $ff
     ret z
 
@@ -6290,11 +6290,11 @@ Call_004_6f05:
 jr_004_6f13:
     ld a, $02
     ld [$da02], a
-    call Call_004_6f35
+    call SaveScr_6f35
     ld [wTempEnemyId1], a
-    call Call_004_6f35
+    call SaveScr_6f35
     ld [$da05], a
-    call Call_004_6f35
+    call SaveScr_6f35
     ld [$da07], a
     xor a
     ld [$da04], a
@@ -6303,7 +6303,7 @@ jr_004_6f13:
     ret
 
 
-Call_004_6f35:
+SaveScr_6f35:
     push hl
     call GenerateRNG
     ld a, [wRNG1]
@@ -8570,7 +8570,7 @@ jr_004_79d4:
     ld [de], a
     nop
     ld a, a
-    call nz, Call_000_3818
+    call nz, AudioCheckRange12
     ld c, b
     adc b
     add hl, bc
@@ -8900,7 +8900,7 @@ jr_004_7b3e:
     adc b
     ret nc
 
-    call nz, Call_000_20e8
+    call nz, ReformatDigitResult
     ret nz
 
     add b

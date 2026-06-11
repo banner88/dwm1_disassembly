@@ -11,13 +11,13 @@ SECTION "ROM Bank $005", ROMX[$4000], BANK[$5]
     dw label5_400f
 
 label5_4005:
-    call Call_005_406e
+    call HramAudE_406e
     ld de, $407f
     call $0d91
     ret
 
 label5_400f:
-    call Call_005_406e
+    call HramAudE_406e
     ld de, $407f
     push af
     push bc
@@ -93,7 +93,7 @@ jr_005_4069:
     ret
 
 
-Call_005_406e:
+HramAudE_406e:
     ldh a, [$c7]
     ld hl, $4152
     add l
@@ -243,7 +243,7 @@ jr_005_40fb:
     ldh a, [rOCPS]
     ld h, d
     ld l, e
-    call nc, Call_005_466b
+    call nc, CalcAudE_466b
     ld l, h
     cp b
     ld l, h
@@ -1333,7 +1333,7 @@ jr_005_4618:
     ld [$f000], sp
     nop
 
-Call_005_466b:
+CalcAudE_466b:
     add hl, bc
     nop
     ld hl, sp-$08
@@ -11190,7 +11190,7 @@ Jump_005_74e6:
     inc bc
     and $1f
     ei
-    call c, Call_000_063e
+    call c, WriteBankSwitch4100
     dec c
     ld d, $39
     dec h
@@ -12778,7 +12778,7 @@ jr_005_7be7:
     ccf
     rrca
 
-Call_005_7bf2:
+ShiftAudE_7bf2:
     rra
     nop
     ld bc, $eef8
@@ -13586,7 +13586,7 @@ jr_005_7ed3:
     db $fd
     add d
     rrca
-    call Call_005_7bf2
+    call ShiftAudE_7bf2
     add h
     ld b, [hl]
     dec b
