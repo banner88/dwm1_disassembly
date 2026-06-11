@@ -6067,7 +6067,7 @@ TileBuffer_1E96:
     ld de, $2a63
 
 UseGateWorldTable:
-    ld a, [wMapID]
+    call MapIDClampForPalette       ; ROM0: A=mapID or $16 for custom rooms
     ld l, a
     ld h, $00
     add hl, hl
@@ -13815,27 +13815,31 @@ MenuCheckEnd:
     call ReadDEMetadata3B
     jr MenuCheckEnd
 
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; =============================================================================
+; MapIDClampForDispatch — ROM0 helper for bank $01 per-room VRAM dispatch
+; =============================================================================
+; Returns A = wMapID if < CUSTOM_ROOM_START, else A = 0 (falls through to
+; Castle's VRAM handler, which is harmless — just a VRAM update to $94D0).
+; Called from bank $01 instead of `ld a, [wMapID]` before rst $00.
+; 8 bytes, fits in ROM0 free space at $3FE8.
+; =============================================================================
+MapIDClampForDispatch::
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c
+    xor a                   ; A=0 → Castle handler (maintains VRAM state)
+    ret
+
+; Also used by bank $17 palette lookup — returns safe mapID for AttrPtrTable
+MapIDClampForPalette::
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c
+    cp $6C                      ; room $6C+ = Castle source
+    jr nc, .useCastle
+    ld a, $16                   ; room $6B = MedalMan source
+    ret
+.useCastle:
+    xor a                       ; A = $00 (Castle)
+    ret
     rst $38

@@ -1,3 +1,5 @@
+> **NOTE:** The files described here are EDITOR PATCHES, not repo changes. The repo always builds to the original MD5. The editor applies these patches at build time.
+
 # Session Handoff — Cross-Bank Room POC (June 2026)
 
 ## What This Session Accomplished

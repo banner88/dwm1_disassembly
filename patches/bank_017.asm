@@ -33,7 +33,7 @@ label17_401d:
     jp nz, Jump_017_4064
 
     ld hl, AttrPtrTable
-    ld a, [wMapID]
+    call MapIDClampForPalette   ; ROM0 helper: clamps mapID for custom rooms
     add a
     add l
     ld l, a
@@ -124,7 +124,7 @@ label17_409e:
     jp nz, Jump_017_40da
 
     ld hl, AttrPtrTable
-    ld a, [wMapID]
+    call MapIDClampForPalette   ; ROM0 helper: clamps mapID for custom rooms
     add a
     add l
     ld l, a

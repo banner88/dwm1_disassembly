@@ -199,7 +199,17 @@ section "WRAM Bank1", wramx[$D000], bank[1]
 
 wram1Start:: db
 
-    ds $790
+    ds $377
+
+; Custom room overflow system ($D378-$D477)
+; Used to buffer NPC/exit data from overflow banks ($60+) for cross-bank rooms.
+; The flag is checked by patched readers in bank $0B.
+CUSTOM_ROOM_START EQU $6B ; first custom map type (107 = one past last original)
+wCustomRoomFlag:: db ;d378 — $00=normal room, $01=custom room active
+wCustomNPCBuffer:: ds 128 ;d379 — NPC interact data copied from overflow bank ($FF terminated)
+wCustomExitBuffer:: ds 127 ;d3f9 — exit data copied from overflow bank ($FF terminated)
+
+    ds $319
 
 wGroundItemData:: db ;d791
 
