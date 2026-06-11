@@ -2493,7 +2493,7 @@ jr_05d_4a86:
     ret nc
 
 jr_05d_4a92:
-    ld bc, $2006
+    ld bc, PrintAndAdvance
     ret nc
 
 jr_05d_4a96:
@@ -2824,7 +2824,7 @@ jr_05d_4bd5:
     ld a, [bc]
     jr nz, @-$26
 
-    ld bc, $200b
+    ld bc, StoreDigitC
     ld hl, sp+$0f
     ld e, $00
     ld hl, sp+$17
@@ -10912,7 +10912,7 @@ jr_05d_7184:
     jr nz, jr_05d_716b
 
 jr_05d_718b:
-    ld bc, $2006
+    ld bc, PrintAndAdvance
     ldh [$f9], a
     rlca
     jr nz, @-$1e
@@ -11805,7 +11805,7 @@ jr_05d_75a0:
     ret nc
 
 jr_05d_75aa:
-    ld bc, $2006
+    ld bc, PrintAndAdvance
     ret nc
 
 jr_05d_75ae:
@@ -12137,7 +12137,7 @@ jr_05d_76ed:
     ld a, [bc]
     jr nz, @-$26
 
-    ld bc, $200b
+    ld bc, StoreDigitC
     ld hl, sp+$0f
     ld e, $00
     ld hl, sp+$17

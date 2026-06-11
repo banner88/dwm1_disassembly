@@ -340,7 +340,7 @@ jr_011_4176:
     inc b
     ld b, $01
     inc bc
-    ld bc, $0100
+    ld bc, Boot
     inc b
 
 jr_011_4181:
@@ -1373,7 +1373,7 @@ jr_011_465c:
     dec bc
     nop
     rst $30
-    ld bc, $200c
+    ld bc, GetUpperDigit
     rst $30
     ld sp, hl
     dec c
@@ -2470,7 +2470,7 @@ jr_011_4bb4:
     rst $18
     ld c, e
     ldh a, [rWX]
-    ld bc, $124c
+    ld bc, LoadGBCPalettes
     ld c, h
     inc hl
     ld c, h
@@ -8818,7 +8818,7 @@ jr_011_6997:
     ldh [$fc], a
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     inc bc
     nop

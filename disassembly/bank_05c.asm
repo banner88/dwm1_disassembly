@@ -6503,10 +6503,10 @@ jr_05c_5d41:
     db $da, $f1, $04
 
     nop
-    jp c, Jump_000_05f9
+    jp c, LoadDestFromC837
 
     nop
-    jp c, Jump_000_0601
+    jp c, CopyDEtoHLByteAlias
 
     nop
     ld [c], a
@@ -8211,7 +8211,7 @@ jr_05c_6541:
 
     db $ec
     ld [$f820], sp
-    ld de, $2012
+    ld de, ReadHRAM_d5_2012
     add b
     xor c
     ld h, l

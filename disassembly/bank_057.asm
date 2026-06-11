@@ -2930,7 +2930,7 @@ jr_057_4fbd:
     ld b, $03
     ld hl, $db02
     call HL_AddA_x8
-    ld de, $200f
+    ld de, JumpToPrintLoop
     call LoadBtlAI_44d8
     ret
 

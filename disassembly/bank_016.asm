@@ -1036,7 +1036,7 @@ jr_016_45ff:
     ld [$da72], a            ; parent 1 family code
 
 jr_016_4615:
-    ld hl, $4974             ; family recipe table base
+    ld hl, FamilyRecipeTable             ; family recipe table base
     ld d, $ff                ; D = result species index (starts at $FF, first inc → 0)
 
 ; Family table scan loop
@@ -1195,7 +1195,7 @@ jr_016_46dc:
     ld [$da74], a
 
 jr_016_46f2:
-    ld hl, $4b30             ; special recipe table base (825 entries × 5 bytes)
+    ld hl, SpecialRecipeTable             ; special recipe table base (825 entries × 5 bytes)
 
 ; Special table scan loop
 jr_016_46f5:
@@ -1468,10 +1468,10 @@ label16_485c:
     ld h, $00
     add hl, hl
     ld a, l
-    add $74
+    add LOW(FamilyRecipeTable)
     ld l, a
     ld a, h
-    adc $49
+    adc HIGH(FamilyRecipeTable)
     ld h, a
     ld a, [hl+]
     ld [$da71], a
@@ -1503,6 +1503,7 @@ UnevolvedSkillMap:
     db $ff, $ff, $ff, $ff, $ff, $d5, $d6, $d7, $d8, $d9, $ff, $ff, $ff, $ff, $ff, $ff
     db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
     db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
+FamilyRecipeTable:
     db $f0, $f1, $f0, $f2, $f0, $f3, $f0, $f4, $f0, $f5, $f0, $f6, $f0, $f7, $f0, $f8
     db $ff, $ff, $f0, $5a, $f0, $2e, $f0, $c6, $f0, $bd, $f0, $33, $ff, $ff, $f0, $f9
     db $f0, $b9, $10, $10, $11, $11, $12, $12, $f1, $f0, $f1, $f2, $f1, $f3, $f1, $f4
@@ -1530,7 +1531,9 @@ UnevolvedSkillMap:
     db $b9, $83, $bd, $42, $f8, $07, $b7, $b7, $c3, $c3, $c4, $c4, $b4, $b4, $c1, $c0
     db $ad, $25, $c8, $2c, $aa, $12, $99, $6c, $ca, $29, $c8, $cb, $9a, $2c, $ce, $42
     db $cf, $13, $d0, $24, $cc, $43, $cd, $d0, $d3, $80, $d4, $d2, $d5, $6d, $ff, $ff
-    db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $1b, $00, $0c
+    db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $00, $00
+SpecialRecipeTable:  ; $4B30 — 825 entries x 5 bytes, $FF terminated
+    db $00, $1b, $00, $0c
     db $00, $00, $24, $00, $0c, $00, $00, $25, $00, $0c, $00, $00, $2a, $00, $0c, $00
     db $00, $2b, $00, $0c, $00, $05, $1b, $00, $0c, $00, $05, $24, $00, $0c, $00, $05
     db $25, $00, $0c, $00, $05, $2a, $00, $0c, $00, $05, $2b, $00, $0c, $00, $0b, $1b
@@ -2247,7 +2250,7 @@ SetBrd_5e38:
     cp $10
     jr c, jr_016_5ea7
 
-    ld hl, $3912
+    ld hl, AudioReadE5Bit7
     cp $16
     jr c, jr_016_5ea7
 
@@ -2503,7 +2506,7 @@ jr_016_6002:
     ld de, $2e17
     ld hl, $8580
     call WaitDMATransfer
-    ld de, $2e18
+    ld de, MenuBorderFillLeft
     ld hl, $85c0
     call WaitDMATransfer
     ld de, $2e19
@@ -2566,10 +2569,10 @@ label16_605b:
     add hl, hl
     add hl, hl
     ld a, l
-    add $36
+    add LOW(FloorTilePatterns)
     ld l, a
     ld a, h
-    adc $77
+    adc HIGH(FloorTilePatterns)
     ld h, a
     ld de, $c940
     ld b, $10
@@ -2585,7 +2588,7 @@ jr_016_60b0:
 
 
 jr_016_60b9:
-    ld hl, $7096
+    ld hl, FloorTypeOrderTable
     ld a, [$c93d]
     inc a
     ld b, a
@@ -2661,7 +2664,7 @@ jr_016_6102:
     dec b
     jr nz, jr_016_60f2
 
-    ld hl, $7096
+    ld hl, FloorTypeOrderTable
     ld b, $10
 
 jr_016_611a:
@@ -3342,10 +3345,10 @@ jr_016_64a8:
     add hl, hl
     add hl, de
     ld a, l
-    add $36
+    add LOW(FloorLayoutData)
     ld l, a
     ld a, h
-    adc $74
+    adc HIGH(FloorLayoutData)
     ld h, a
     call SelectFloorType
 
@@ -3673,7 +3676,7 @@ SetBrd_6744:
 
     add a
     add a
-    ld hl, $7055
+    ld hl, FloorTypeSortData
     add l
     ld l, a
     ld a, $00
@@ -3710,7 +3713,7 @@ jr_016_6773:
 
     add a
     add a
-    ld hl, $7055
+    ld hl, FloorTypeSortData
     add l
     ld l, a
     ld a, $00
@@ -3748,7 +3751,7 @@ jr_016_67a1:
 
     add a
     add a
-    ld hl, $7055
+    ld hl, FloorTypeSortData
     add l
     ld l, a
     ld a, $00
@@ -3787,7 +3790,7 @@ jr_016_67cf:
 
     add a
     add a
-    ld hl, $7055
+    ld hl, FloorTypeSortData
     add l
     ld l, a
     ld a, $00
@@ -3812,7 +3815,7 @@ jr_016_67ff:
 
 SetBrd_6800:
     ld de, $c500
-    ld hl, $7055
+    ld hl, FloorTypeSortData
 
 jr_016_6806:
     ld a, [hl]
@@ -4806,10 +4809,10 @@ LoadBrd_6dc1:
     add hl, hl
     add hl, de
     ld a, l
-    add $36
+    add LOW(FloorLayoutData)
     ld l, a
     ld a, h
-    adc $74
+    adc HIGH(FloorLayoutData)
     ld h, a
     call SelectFloorType
     ret
@@ -4976,7 +4979,7 @@ label16_6f05:
     jr jr_016_6f62
 
 jr_016_6f39:
-    ld hl, $6fab
+    ld hl, EncounterRateData
     ld a, [wMapID]
     add a
     add a
@@ -5320,6 +5323,7 @@ FloorLayoutData:
     db $00, $00, $0f, $00, $14, $00, $18, $1a, $1c, $1e, $20, $22, $23, $24, $25, $26 ; $7706
     db $27, $28, $29, $00, $00, $45, $47, $4c, $00, $00, $4d, $00, $50, $54, $55, $00 ; $7716
     db $00, $00, $00, $00, $00, $00, $00, $5d, $5f, $00, $64, $00, $00, $00, $00, $00 ; $7726
+FloorTilePatterns:  ; $7736 — within FloorLayoutData
     db $60, $10, $10, $70, $30, $00, $00, $40, $30, $00, $00, $40, $80, $20, $20, $90 ; $7736
     db $60, $70, $60, $70, $30, $40, $30, $40, $30, $40, $30, $40, $80, $22, $23, $90 ; $7746
     db $60, $70, $60, $70, $80, $0c, $0d, $90, $60, $0b, $0a, $70, $80, $90, $80, $90 ; $7756

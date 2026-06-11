@@ -2690,7 +2690,7 @@ jr_078_4b88:
 
 jr_078_4bd6:
     ld [bc], a
-    ld bc, $0100
+    ld bc, Boot
     ld [bc], a
     inc bc
     ld bc, $0102
@@ -2759,7 +2759,7 @@ jr_078_4bd6:
     add hl, sp
     ld e, $3f
     cpl
-    ld hl, $1e11
+    ld hl, Div16Loop
     nop
     jp $3ce7
 
@@ -3323,7 +3323,7 @@ jr_078_4e76:
     cp $c6
     inc bc
     inc bc
-    ld bc, $0100
+    ld bc, Boot
     inc bc
     inc bc
     ld bc, $0103
@@ -3391,7 +3391,7 @@ jr_078_4e76:
 
     ld a, a
     ccf
-    ld de, $3020
+    ld de, StoreBattleState
     ccf
     rra
     rra
@@ -5241,7 +5241,7 @@ jr_078_56a5:
     ld de, $0819
     ld [$1210], sp
     inc d
-    ld de, $1816
+    ld de, FadeInStepSGB
     ld [$8900], sp
     add b
     nop
@@ -8917,7 +8917,7 @@ jr_078_6668:
     rlca
     nop
     sbc a
-    ld bc, $241a
+    ld bc, CompareGold
     inc h
     ld l, d
     sub b
@@ -9307,7 +9307,7 @@ jr_078_687f:
     inc bc
     rst $38
     add d
-    ld bc, $0901
+    ld bc, WaitSTATForOverlayB
     nop
     adc b
     ldh a, [$f8]
@@ -9851,7 +9851,7 @@ jr_078_6ada:
     dec b
     dec b
     inc bc
-    ld bc, $3800
+    ld bc, AudioBranchNC_3800
     db $f4
     cp $ff
     adc a

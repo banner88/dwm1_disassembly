@@ -83,7 +83,7 @@ label15_4009:
     ld a, $03
     ld [$c8a1], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, $02
@@ -172,7 +172,7 @@ Jump_015_413e:
     ld a, $03
     ld [$c8a1], a
     ld a, $09
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld hl, $c817
@@ -241,7 +241,7 @@ Jump_015_413e:
     ld a, $03
     ld [$c8a1], a
     ld a, $09
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld hl, $c817
@@ -306,7 +306,7 @@ Jump_015_413e:
     ld a, $03
     ld [$c8a1], a
     ld a, $09
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
 label15_42b3:
@@ -671,7 +671,7 @@ jr_015_44ee:
     ld a, [$cab7]
     ld c, a
     ld b, $00
-    ld hl, $0150
+    ld hl, BootMain
     call LoadMap_5d33
     call PrintNumber
     ld a, [$ca8d]
@@ -3093,7 +3093,7 @@ label15_547c:
     ld d, a
     add l
     ld d, a
-    jp Jump_000_2f57
+    jp Div16x16CheckHigh
 
 
     ld e, b
@@ -3656,10 +3656,10 @@ jr_015_57ef:
     adc h
     ld h, a
     ld a, l
-    add $7b
+    add LOW(TransitionLookupTable)
     ld l, a
     ld a, h
-    adc $61
+    adc HIGH(TransitionLookupTable)
     ld h, a
     ld a, [hl]
     or a
@@ -5259,22 +5259,23 @@ SaveMap_616c:
     ret
 
 
+TransitionLookupTable:
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     ld bc, $0101
     ld bc, $0101
     ld bc, $0001
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     nop
     nop
     nop
     ld bc, $0101
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
@@ -5283,9 +5284,9 @@ SaveMap_616c:
     ld bc, $0000
     ld bc, $0101
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0001
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
@@ -5301,7 +5302,7 @@ SaveMap_616c:
     ld bc, $0000
     ld bc, $0000
     ld bc, $0000
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0000
     nop
     ld bc, $0001
@@ -5362,14 +5363,14 @@ SaveMap_616c:
     ld bc, $0101
     ld bc, $0001
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     ld bc, $0101
     ld bc, $0001
     ld bc, $0001
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     ld bc, $0000
     ld bc, $0101
@@ -5385,180 +5386,180 @@ SaveMap_616c:
     ld bc, $0101
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     ld bc, $0101
     ld bc, $0001
     ld bc, $0101
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
     nop
     ld bc, $0001
     nop
-    ld bc, $0101
-    ld bc, $0001
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0100
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0100
-    ld bc, $0100
-    ld bc, $0000
-    nop
-    ld bc, $0000
-    nop
-    ld bc, $0100
-    ld bc, $0101
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0000
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0100
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    ld bc, $0000
-    ld bc, $0100
-    ld bc, $0000
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0100
-    ld bc, $0101
-    ld bc, $0001
-    nop
-    ld bc, $0001
-    nop
-    ld bc, $0000
-    nop
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0000
-    ld bc, $0000
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    ld bc, $0001
-    ld bc, $0101
-    ld bc, $0000
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0001
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0100
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0100
-    ld bc, $0001
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0100
-    ld bc, $0100
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0001
-    ld bc, $0001
-    ld bc, $0101
-    ld bc, $0100
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0001
-    ld bc, $0101
     ld bc, $0101
     ld bc, $0001
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
+    ld bc, $0101
+    ld bc, Boot
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, Boot
+    ld bc, Boot
+    ld bc, $0000
+    nop
+    ld bc, $0000
+    nop
+    ld bc, Boot
+    ld bc, $0101
+    nop
+    nop
+    nop
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0000
+    ld bc, $0101
+    nop
+    nop
+    ld bc, $0000
+    ld bc, Boot
+    ld bc, $0101
+    ld bc, $0000
+    nop
+    ld bc, $0000
+    ld bc, Boot
+    ld bc, $0000
+    ld bc, $0101
+    ld bc, $0000
+    nop
+    nop
+    ld bc, $0000
+    ld bc, $0001
+    nop
+    nop
+    nop
+    nop
+    ld bc, $0000
+    ld bc, $0101
+    ld bc, $0000
+    nop
+    ld bc, $0001
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    ld bc, $0101
+    nop
+    nop
+    nop
+    nop
+    nop
+    ld bc, Boot
+    ld bc, $0101
+    ld bc, $0001
+    nop
+    ld bc, $0001
+    nop
+    ld bc, $0000
+    nop
+    ld bc, $0101
+    ld bc, $0000
+    nop
+    nop
+    nop
+    ld bc, $0000
+    ld bc, $0000
+    ld bc, $0000
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    nop
+    ld bc, $0001
+    ld bc, $0101
+    ld bc, $0000
+    ld bc, $0101
+    ld bc, $0000
+    nop
+    nop
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0001
+    ld bc, $0101
+    nop
+    nop
+    ld bc, $0000
+    ld bc, $0101
+    ld bc, $0101
+    nop
+    nop
+    ld bc, Boot
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, Boot
+    ld bc, $0001
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, Boot
+    ld bc, Boot
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0001
+    ld bc, $0001
+    ld bc, $0101
+    ld bc, Boot
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0001
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0001
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
+    ld bc, $0101
     ld bc, $0001
     ld bc, $0000
     nop
     nop
     nop
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     nop
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     ld bc, $0101
     ld bc, $0000
@@ -5579,7 +5580,7 @@ SaveMap_616c:
     nop
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     ld bc, $0001
     nop
@@ -8222,7 +8223,7 @@ jr_015_6fc1:
     dec sp
     ld b, a
     cp a
-    jp Jump_000_30df
+    jp CallBank5D_Fallback
 
 
     ld d, a
@@ -10155,7 +10156,7 @@ jr_015_77ce:
     cp l
     db $db
     cp l
-    jp Jump_000_05a5
+    jp InvertShakeX
 
 
     rst $38

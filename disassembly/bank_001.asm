@@ -93,7 +93,7 @@ GameInit:
     ld [$c892], a
     call EnableLYCInterrupt
     ld a, $03
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
 InitFieldState:
@@ -734,10 +734,10 @@ jr_001_4464:
     add hl, hl
     add hl, hl
     ld a, l
-    add $06
+    add LOW(NPCWalkDataTable)
     ld l, a
     ld a, h
-    adc $45
+    adc HIGH(NPCWalkDataTable)
     ld h, a
     ld a, [hl+]
     ldh [$92], a
@@ -821,6 +821,7 @@ Jump_001_44ba:
     ret
 
 
+NPCWalkDataTable:
     ld hl, sp+$00
     ret c
 
@@ -1842,10 +1843,10 @@ jr_001_49a2:
     ld h, $00
     add hl, hl
     ld a, l
-    add $df
+    add LOW(ScreenTransDataTable)
     ld l, a
     ld a, h
-    adc $49
+    adc HIGH(ScreenTransDataTable)
     ld h, a
     ld e, [hl]
     inc hl
@@ -1877,6 +1878,7 @@ jr_001_49a2:
     ret
 
 
+ScreenTransDataTable:
     nop
     cpl
     ld b, b
@@ -5566,7 +5568,7 @@ jr_001_5d9c:
 
 
 jr_001_5dd5:
-    ld hl, $0100
+    ld hl, Boot
     ld a, l
     ldh [$a1], a
     ld a, h
@@ -5590,7 +5592,7 @@ jr_001_5de6:
 
 
 jr_001_5df7:
-    ld hl, $0100
+    ld hl, Boot
     ld a, l
     ldh [$a3], a
     ld a, h
@@ -6160,7 +6162,7 @@ jr_001_606f:
     nop
     rlca
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0001
     nop
     ld [bc], a
@@ -7531,10 +7533,10 @@ label1_683e:  ; original label
     ld bc, $001a
     call Mul16x8To24
     ld a, l
-    add $b0
+    add LOW(EncounterPoolData + 2)
     ld l, a
     ld a, h
-    adc $6a
+    adc HIGH(EncounterPoolData + 2)
     ld h, a
     ld b, $00
     ld de, $c0d8
@@ -7548,10 +7550,10 @@ label1_683e:  ; original label
     ld bc, $001a
     call Mul16x8To24
     ld a, l
-    add $b3
+    add LOW(EncounterPoolData + 5)
     ld l, a
     ld a, h
-    adc $6a
+    adc HIGH(EncounterPoolData + 5)
     ld h, a
     ld de, $c0d8
     call LookupEncounterEntry
@@ -7605,10 +7607,10 @@ jr_001_68d8:
     ld bc, $001a
     call Mul16x8To24
     ld a, l
-    add $b8
+    add LOW(EncounterPoolData + 10)
     ld l, a
     ld a, h
-    adc $6a
+    adc HIGH(EncounterPoolData + 10)
     ld h, a
     ld a, [wTempEnemyId1]
     cp $ff
@@ -7716,10 +7718,10 @@ SaveRegsForEncounter:
     ld bc, $001a
     call Mul16x8To24
     ld a, l
-    add $c2
+    add LOW(EncounterPoolData + 20)
     ld l, a
     ld a, h
-    adc $6a
+    adc HIGH(EncounterPoolData + 20)
     ld h, a
     pop bc
     pop af
@@ -7797,10 +7799,10 @@ LoadFloorAndEncounterData:
     ld bc, $001a
     call Mul16x8To24
     ld a, l
-    add $c7
+    add LOW(EncounterPoolData + 25)
     ld l, a
     ld a, h
-    adc $6a
+    adc HIGH(EncounterPoolData + 25)
     ld h, a
     ld a, [hl]
     ld [$c93d], a
@@ -7818,7 +7820,7 @@ LoadFloorAndEncounterData:
 ;   5. Calculate pool data address = $6AAE + pool_index × 26($1A)
 LoadNextDungeonFloor:
     ld a, [wGateID]
-    ld hl, $6a22             ; per-gate base pool index table
+    ld hl, GateBasePoolIndex             ; per-gate base pool index table
     add l
     ld l, a
     ld a, $00
@@ -7828,7 +7830,7 @@ LoadNextDungeonFloor:
     push af
     ld a, [wGateID]
     add a                    ; × 2 for pointer table
-    ld hl, $6a42             ; per-gate floor breakpoint pointer table
+    ld hl, GateFloorBreakpoints             ; per-gate floor breakpoint pointer table
     add l
     ld l, a
     ld a, $00
@@ -7853,10 +7855,10 @@ jr_001_6a01:
     ld bc, $001a
     call Mul16x8To24
     ld a, l
-    add $ae
+    add LOW(EncounterPoolData)
     ld l, a
     ld a, h
-    adc $6a
+    adc HIGH(EncounterPoolData)
     ld h, a
     ld a, [hl]
     ld [$c8a9], a
@@ -8981,7 +8983,7 @@ jr_001_7851:
     call GameStateBit_0686
     ld a, $1f
     rst $20
-    ld bc, $0100
+    ld bc, Boot
     call $0552
     ld bc, $fe00
     call CallTextRenderer
@@ -9019,7 +9021,7 @@ jr_001_78a5:
     ret nz
 
     ld [hl], $28
-    ld bc, $0100
+    ld bc, Boot
     call CrossBankCallRst10
     jp $057c
 
@@ -9037,14 +9039,14 @@ jr_001_78c8:
 
     ld a, $03
     ld [$c9c0], a
-    jp Jump_000_0733
+    jp NextTilemapByte
 
 
     ld bc, $000c
     jp $058e
 
 
-    jp Jump_000_0784
+    jp CheckInputMaskedJP
 
 
     call $0043
@@ -9110,7 +9112,7 @@ jr_001_78c8:
 
 jr_001_7948:
     ld bc, $0080
-    jp Jump_000_054a
+    jp RetStub054A
 
 
     ret
@@ -9183,7 +9185,7 @@ label7992:
     jr nc, jr_001_79c3
 
     ld a, $09
-    ld bc, $7454
+    ld bc, EncounterPool_095
     call WriteNPCField1C
     ld hl, $7ba8
     jp $091e
@@ -9377,7 +9379,7 @@ jr_001_7ad6:
     ld e, $01
     ld a, [de]
     and a
-    jp nz, Jump_000_08ae
+    jp nz, WriteTileBytePair
 
     ld bc, $fffc
     call $0598
@@ -9386,7 +9388,7 @@ jr_001_7ad6:
 
     rst $38
     call $05c6
-    ld bc, $0100
+    ld bc, Boot
     jp Jump_CallTextRenderer
 
 
@@ -9601,7 +9603,7 @@ CalcGateMonsterLevel:
     cp $98
     ret c
 
-    jp Jump_000_0733
+    jp NextTilemapByte
 
 
     ld e, $01
@@ -9622,7 +9624,7 @@ jr_001_7c23:
     call $06b1
     ret nz
 
-    jp Jump_000_0733
+    jp NextTilemapByte
 
 
     call DispatchCD90
@@ -9652,7 +9654,7 @@ jr_001_7c23:
     ld a, $61
     call $0510
     ld a, $60
-    jp Jump_000_3ce5
+    jp PaletteStoreCD80
 
 
     call CallScriptByType
@@ -9664,17 +9666,17 @@ jr_001_7c23:
     rst $20
     ld a, $21
     call BankTrampolineTable
-    jp Jump_000_3ce8
+    jp PaletteStoreCD80Alt
 
 
     ld a, [$c00f]
     cp $38
-    jp nz, Jump_000_08d6
+    jp nz, RestoreBankAfterTile
 
     ld [$c01a], a
     ld a, $c0
     ld [$ca80], a
-    jp Jump_000_3ce8
+    jp PaletteStoreCD80Alt
 
 
     call SetTimerHRAM90
@@ -9687,7 +9689,7 @@ jr_001_7c23:
     ld bc, $9c1c
     call $05e2
     call $23f5
-    jp Jump_000_3ce8
+    jp PaletteStoreCD80Alt
 
 
     call SetTimerHRAM90
@@ -9706,7 +9708,7 @@ jr_001_7c23:
 
 jr_001_7cbf:
     call BankTrampolineTable
-    jp Jump_000_3ce8
+    jp PaletteStoreCD80Alt
 
 
     ld a, [$cc00]
@@ -9714,7 +9716,7 @@ jr_001_7cbf:
     jp nz, Jump_001_4e9c
 
     ld a, $20
-    jp Jump_000_3ce5
+    jp PaletteStoreCD80
 
 
     call SetTimerHRAM90
@@ -9762,16 +9764,16 @@ jr_001_7cf9:
     ld de, $0107
     call $0b0c
     call CrossBankCallRet
-    jp Jump_000_3ce8
+    jp PaletteStoreCD80Alt
 
 
     ld a, [$c00f]
     cp $57
-    jp nz, Jump_000_2edc
+    jp nz, SerialTransferEpilogue
 
     ld [$c01a], a
     ld a, $c0
-    jp Jump_000_3ce5
+    jp PaletteStoreCD80
 
 
     call CallScriptByType
@@ -9856,7 +9858,7 @@ jr_001_7dbd:
 
 label7dc6:
     call SubHLFromHRAM_A7
-    ld de, $576f
+    ld de, CheckNPCMovement
     ld bc, $9912
 
 ProcessEncounterSetup:
@@ -9924,7 +9926,7 @@ jr_001_7e2b:
 jr_001_7e30:
     ld d, $68
     call $1e99
-    jp Jump_000_3ce8
+    jp PaletteStoreCD80Alt
 
 
 jr_001_7e38:
@@ -10020,11 +10022,11 @@ IterateTableEntry:
     cp $04
     call z, CalcCoordJumpMath
     ld a, $f0
-    jp Jump_000_3ce5
+    jp PaletteStoreCD80
 
 
 CalcCoordJumpMath:
-    ld de, $4f70
+    ld de, CheckGameStateBit2
     jp Jump_000_1e65
 
 
@@ -10037,7 +10039,7 @@ CalcCoordJumpMath:
     ld a, [hl]
     inc [hl]
     cp $07
-    jp nz, Jump_000_3ced
+    jp nz, PaletteClearCD90
 
     xor a
     db $cd, $2b, $05
@@ -10122,7 +10124,7 @@ jr_001_7f39:
 
     inc d
     nop
-    ld de, $1616
+    ld de, BankSwitch_1616
     inc hl
     cp $78
     sbc b

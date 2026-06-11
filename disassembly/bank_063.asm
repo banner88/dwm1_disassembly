@@ -2677,7 +2677,7 @@ jr_063_4b53:
 
 jr_063_4b8e:
     sbc b
-    ld bc, $2331
+    ld bc, MonsterStatDecrement
     inc sp
     ccf
     dec a
@@ -3722,7 +3722,7 @@ jr_063_5007:
     ld e, b
     ld c, h
     dec h
-    ld de, $0709
+    ld de, SetCancelFlag
     ld bc, $0003
     add h
     db $10
@@ -5305,7 +5305,7 @@ jr_063_56d4:
     inc bc
     inc bc
     adc l
-    ld bc, $0100
+    ld bc, Boot
     nop
     db $f4
     xor $3f
@@ -6265,7 +6265,7 @@ jr_063_5b20:
     adc d
     xor e
     ld d, l
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     nop
     adc b
     sbc h
@@ -6620,7 +6620,7 @@ jr_063_5ca3:
     cp $04
     nop
     add [hl]
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     rrca
     dec c
     ld c, $05
@@ -7796,7 +7796,7 @@ jr_063_61db:
     inc bc
     nop
     adc b
-    ld bc, $1e07
+    ld bc, Div8Subtract
     ccf
     ld a, a
     ld a, a
@@ -8270,7 +8270,7 @@ jr_063_640c:
     ld a, a
     ccf
     rrca
-    ld bc, $3c03
+    ld bc, ScreenTransE
     dec a
     add hl, de
     ld [bc], a
@@ -8378,7 +8378,7 @@ jr_063_648f:
     rra
     inc bc
     inc bc
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     nop
     adc b
     ld a, a
@@ -10989,7 +10989,7 @@ jr_063_6ee3:
     rra
     rrca
     rlca
-    ld bc, $3c00
+    ld bc, ScreenTransC
     jr jr_063_7037
 
     inc a

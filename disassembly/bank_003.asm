@@ -723,10 +723,10 @@ SaveMon_4446:
     ld c, $2b                ; 43 = entry size
     call Mul8x8To16       ; HL = species_id × 43
     ld a, l
-    add $61                  ; HL += $4461 (monster info table base)
+    add LOW(MonsterInfoTable)   ; HL += MonsterInfoTable base address
     ld l, a
     ld a, h
-    adc $44
+    adc HIGH(MonsterInfoTable)
     ld h, a
     pop de
     ld b, $2b                ; copy 43 bytes
@@ -3663,10 +3663,10 @@ SaveMon_6987:
     ld c, $0c
     call Mul8x8To16
     ld a, l
-    add $da
+    add LOW(SpriteFrameDataTable)
     ld l, a
     ld a, h
-    adc $71
+    adc HIGH(SpriteFrameDataTable)
     ld h, a
     pop de
     ld b, $0c
@@ -5137,6 +5137,7 @@ jr_003_71d4:
     ret
 
 
+SpriteFrameDataTable:
     nop
     nop
     nop
@@ -5535,8 +5536,8 @@ jr_003_7327:
     nop
     rlca
     sub b
-    ld bc, $0100
-    ld bc, $1e07
+    ld bc, Boot
+    ld bc, Div8Subtract
     ld a, [hl+]
     nop
     nop
@@ -5871,7 +5872,7 @@ jr_003_753f:
     ld a, $08
     call BankTrampolineTable
     ld bc, $9c85
-    jp Jump_000_0c3a
+    jp CallBank4B
 
 
     ld hl, $c9f1
@@ -6437,7 +6438,7 @@ CallMon_78d9:
     call SetupTextBankSwitch
     jr nz, jr_003_78eb
 
-    ld bc, $3000
+    ld bc, NopReturn
     jp $05ea
 
 
@@ -6626,7 +6627,7 @@ FuncMon_7999:
     rst $10
     ret nz
 
-    ld bc, $0100
+    ld bc, Boot
     call CallTextRenderer
     jp $07d3
 
@@ -6769,7 +6770,7 @@ CallMon_7a92:
 
 LoadMon_7a9c:
     ld a, $ff
-    jp Jump_000_3b7c
+    jp DataLookup_3B7C
 
 
 SetMon_7aa1:

@@ -2518,7 +2518,7 @@ jr_02c_4af2:
     nop
     ldh a, [rIE]
     ldh a, [rNR34]
-    ld bc, $033c
+    ld bc, Goto_EvtDemo
     jr c, jr_02c_4af2
 
     ld a, b
@@ -3847,7 +3847,7 @@ jr_02c_5063:
     add a
     db $e3
     push hl
-    ld de, $06fd
+    ld de, PlayConfirmSound
 
 jr_02c_50f1:
     call $ff33
@@ -3863,7 +3863,7 @@ jr_02c_50f1:
     dec bc
     rlca
     ld [bc], a
-    ld bc, $3030
+    ld bc, CheckFFReturn
     rst $38
     rst $38
     rst $38
@@ -5660,7 +5660,7 @@ jr_02c_58b5:
     reti
 
 
-    ld bc, $05a5
+    ld bc, InvertShakeX
     add a
     add e
     ld d, a
@@ -6098,7 +6098,7 @@ jr_02c_5aa4:
 
 jr_02c_5aa8:
     inc d
-    jp c, Jump_000_3a08
+    jp c, AudioOrBSetup
 
     jr z, jr_02c_5aa8
 
@@ -6506,7 +6506,7 @@ jr_02c_5c50:
     inc c
     dec b
     ld [bc], a
-    jp Jump_000_2900
+    jp DataLookup_2900
 
 
     ld [$8564], sp
@@ -7899,7 +7899,7 @@ jr_02c_6241:
     ld h, $27
     ld b, $34
     rrca
-    ld bc, $3130
+    ld bc, CallBank5EEntry1_3130
     inc [hl]
     dec [hl]
     jr nc, @+$33
@@ -7925,7 +7925,7 @@ jr_02c_6241:
     rrca
     add hl, bc
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     ld b, $b0
     rrca
     inc bc
@@ -9172,7 +9172,7 @@ jr_02c_67dd:
     inc sp
     ld [hl], $37
     db $10
-    ld de, $2c0e
+    ld de, WriteTileBorderBot
     rrca
     inc bc
     ld c, $00
@@ -10024,7 +10024,7 @@ jr_02c_6b6e:
     ld h, $27
     inc b
     ld l, $0f
-    ld bc, $3130
+    ld bc, CallBank5EEntry1_3130
     jr nc, jr_02c_6bb7
 
     inc [hl]
@@ -10884,7 +10884,7 @@ jr_02c_6f4b:
     nop
     inc c
     rrca
-    ld bc, $2800
+    ld bc, DataTable_2800
     nop
     nop
 
@@ -11022,7 +11022,7 @@ jr_02c_6fac:
     ld b, $04
     ld [hl], h
     rrca
-    ld bc, $3130
+    ld bc, CallBank5EEntry1_3130
     inc b
     ret z
 
@@ -11360,7 +11360,7 @@ jr_02c_714e:
     nop
     inc c
     rrca
-    ld bc, $2800
+    ld bc, DataTable_2800
     nop
     nop
 
@@ -13021,7 +13021,7 @@ jr_02c_784f:
     ld [bc], a
     ld [hl], b
     ld c, $02
-    jp nz, Jump_000_2d0f
+    jp nz, TileAddDE
 
     ld [bc], a
     add d
@@ -13426,7 +13426,7 @@ jr_02c_7a21:
     ld h, d
     nop
     db $10
-    ld de, $3402
+    ld de, AudioData_3402
     rra
     ld bc, $4602
     ld d, $02

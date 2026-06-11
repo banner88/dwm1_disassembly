@@ -439,7 +439,7 @@ jr_03a_420f:
     rst $38
     dec b
     ld [hl], b
-    ld bc, $3818
+    ld bc, AudioCheckRange12
     ret z
 
     cp $fe
@@ -502,7 +502,7 @@ jr_03a_420f:
     ld [bc], a
     db $10
     ld b, $01
-    ld bc, $0100
+    ld bc, Boot
     db $fc
     db $fc
     ld a, $3e
@@ -1142,7 +1142,7 @@ jr_03a_456a:
     rlca
     ld e, $1f
     rra
-    ld de, $203f
+    ld de, SubtractDigitValue
     dec sp
     ld h, $2c
     scf
@@ -1383,7 +1383,7 @@ jr_03a_456a:
     ldh [$e0], a
     inc a
     db $fc
-    jp c, Jump_000_21fe
+    jp c, CheckCopyDone
 
     rst $38
     pop hl
@@ -2308,7 +2308,7 @@ jr_03a_4ab1:
     cp $7c
     ld a, h
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $3e3f
     ld e, h
     ld h, a
@@ -2384,7 +2384,7 @@ jr_03a_4ab1:
     rst $38
     ld l, a
     ld l, a
-    ld de, $0f1f
+    ld de, SpriteGBCSkipEntry2
     rrca
     cp $fa
     cp [hl]
@@ -4484,7 +4484,7 @@ jr_03a_54e1:
     inc a
     ld hl, sp+$38
     nop
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     ld b, $05
     rlca
     ld e, $1f
@@ -4665,7 +4665,7 @@ jr_03a_5547:
     ld b, [hl]
     dec hl
     dec a
-    ld de, $091f
+    ld de, MultiplyHL_091F
     rrca
     ld [hl], a
     ld a, a
@@ -4756,7 +4756,7 @@ jr_03a_5547:
     ret c
 
     ld hl, sp-$08
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     sbc h
     rst $28
     adc a
@@ -4801,7 +4801,7 @@ jr_03a_5547:
     rst $28
     ld d, e
     ld a, a
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     ld a, e
     ld a, a
     db $fd
@@ -5295,7 +5295,7 @@ JmpB3a_5877:
     rst $38
     sub a
     rst $38
-    jp nz, Jump_000_2ec2
+    jp nz, DataLookup_2EC2
 
     xor $92
     cp $e9
@@ -5348,7 +5348,7 @@ JmpB3a_5877:
 
 
     rst $38
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     dec bc
     ld c, $0f
     dec bc
@@ -6301,7 +6301,7 @@ jr_03a_5d44:
 
 jr_03a_5d71:
     ccf
-    ld hl, $1e1e
+    ld hl, Div24x8To16
     ld bc, $f6f6
     rlca
     rlca
@@ -6612,7 +6612,7 @@ jr_03a_5e1d:
     ld [hl], e
     ld a, a
     ld bc, $0224
-    jp nz, Jump_000_2b01
+    jp nz, DataLookup_2B01
 
     ld bc, $fe26
     ld [c], a
@@ -7163,7 +7163,7 @@ jr_03a_612f:
     sub $fe
     adc $01
     dec sp
-    ld bc, $0100
+    ld bc, Boot
     nop
     ld h, a
     ld h, a
@@ -8997,7 +8997,7 @@ jr_03a_696d:
 
 jr_03a_69aa:
     ccf
-    ld hl, $203f
+    ld hl, SubtractDigitValue
     ccf
     ld hl, $903f
     sub b
@@ -9071,7 +9071,7 @@ jr_03a_69d0:
     add b
     rst $38
     add b
-    ld bc, $030f
+    ld bc, GameModeDispatch
     xor c
     rst $28
     ld a, c
@@ -10149,7 +10149,7 @@ jr_03a_6ebd:
     nop
     ld [hl-], a
     ld c, $00
-    jp nz, Jump_000_3400
+    jp nz, AudioData_3400
 
 jr_03a_6ed4:
     dec [hl]
@@ -11106,7 +11106,7 @@ jr_03a_72d5:
     nop
     db $10
     rra
-    ld bc, $2200
+    ld bc, RetFromSRAMCopy
     inc d
     nop
     and d
@@ -11212,7 +11212,7 @@ jr_03a_7360:
     rrca
     dec bc
     db $10
-    ld de, $3404
+    ld de, AudioPopDE
     rrca
     add hl, sp
     ld [bc], a
@@ -11420,7 +11420,7 @@ jr_03a_7450:
     ld [bc], a
     inc bc
     inc c
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     inc c
@@ -11565,7 +11565,7 @@ jr_03a_74f3:
     nop
     ld d, b
     rra
-    ld bc, $2400
+    ld bc, MonsterStatAddWrap
     jr jr_03a_7518
 
 jr_03a_7518:
@@ -11702,7 +11702,7 @@ jr_03a_758b:
     rrca
     dec bc
     db $10
-    ld de, $3402
+    ld de, AudioData_3402
     rrca
     dec b
     ld [bc], a
@@ -11824,7 +11824,7 @@ jr_03a_7646:
     ld [hl], $37
     ld b, $74
     ld c, $06
-    jp z, Jump_000_0604
+    jp z, CheckTextTerminator
 
     ld c, d
     ld [bc], a
@@ -11943,7 +11943,7 @@ jr_03a_76c6:
     rrca
     dec bc
     db $10
-    ld de, $340a
+    ld de, AudioSetHLToDD80
 
 jr_03a_76ea:
     rrca
@@ -11960,7 +11960,7 @@ jr_03a_76ea:
     ld c, [hl]
     ld [de], a
     ld a, [bc]
-    jp nz, Jump_000_2810
+    jp nz, DataLookup_2810
 
     add hl, hl
     ld a, [bc]
@@ -12808,7 +12808,7 @@ jr_03a_7a75:
     nop
     add b
     ld d, $00
-    jp nz, Jump_000_3400
+    jp nz, AudioData_3400
 
     dec [hl]
     nop
@@ -13248,7 +13248,7 @@ jr_03a_7c96:
     inc b
     ld l, $00
     db $10
-    ld de, $3404
+    ld de, AudioPopDE
     inc c
     inc b
     ld c, b
@@ -13272,7 +13272,7 @@ jr_03a_7c96:
     ld [bc], a
     inc bc
     inc b
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     inc b
@@ -13376,7 +13376,7 @@ jr_03a_7d2d:
     rrca
     dec bc
     db $10
-    ld de, $3404
+    ld de, AudioPopDE
     rrca
     add hl, sp
     jr z, jr_03a_7d81
@@ -13384,7 +13384,7 @@ jr_03a_7d2d:
     ld [bc], a
     inc bc
     inc b
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     inc b

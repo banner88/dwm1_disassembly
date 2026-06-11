@@ -1015,9 +1015,9 @@ LoadFld19_44f5:
     ld bc, $0000
     rlca
     dec bc
-    ld bc, $0704
+    ld bc, CheckBButton
     ld b, $03
-    ld bc, $060c
+    ld bc, SetScreenUpdateFlag
     nop
     nop
     ld bc, $0000
@@ -1156,7 +1156,7 @@ LoadFld19_44f5:
     ld bc, $0101
     rlca
     ld b, $01
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     nop
     ld b, $01
     ld b, $00
@@ -1169,7 +1169,7 @@ LoadFld19_44f5:
     ld b, $01
     ld b, $0d
     ld b, $00
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     nop
     nop
     ld bc, $0000
@@ -1320,7 +1320,7 @@ LoadFld19_44f5:
     ld a, [bc]
     ld bc, $0d01
     ld b, $09
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     ld [bc], a
     ld bc, $0306
@@ -1531,7 +1531,7 @@ LoadFld19_44f5:
     ld bc, $0d01
     nop
     nop
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     nop
     ld bc, $0306
@@ -1980,7 +1980,7 @@ LoadFld19_44f5:
     inc b
     inc bc
     add hl, bc
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     nop
     ld [bc], a
     ld b, $06
@@ -2088,7 +2088,7 @@ LoadFld19_44f5:
     ld bc, $0701
     rlca
     add hl, bc
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     ld b, $00
     nop
     ld bc, $0000
@@ -2171,7 +2171,7 @@ LoadFld19_44f5:
     add hl, bc
     ld bc, $000d
     add hl, bc
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     ld [bc], a
     ld bc, $0003
@@ -2195,7 +2195,7 @@ LoadFld19_44f5:
     nop
     nop
     add hl, bc
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     dec c
     add hl, bc
     ld bc, $000b
@@ -2492,7 +2492,7 @@ LoadFld19_44f5:
     nop
     ld bc, $0400
     add hl, bc
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     ld b, $02
     ld b, $06
     nop
@@ -2563,7 +2563,7 @@ LoadFld19_44f5:
     ld bc, $0008
     inc b
     add hl, bc
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     ld b, $02
     ld b, $02
     nop
@@ -2693,7 +2693,7 @@ LoadFld19_44f5:
     ld bc, $0000
     inc c
     ld b, $06
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     nop
     nop
     ld bc, $0005
@@ -3397,7 +3397,7 @@ LoadFld19_44f5:
     rlca
     rlca
     inc c
-    ld bc, $0608
+    ld bc, RetUnused
     ld b, $01
     ld bc, $0008
     nop
@@ -3696,7 +3696,7 @@ LoadFld19_44f5:
     nop
     add hl, bc
     dec bc
-    ld bc, $0704
+    ld bc, CheckBButton
     add hl, bc
     ld [$0901], sp
     ld b, $00
@@ -4009,7 +4009,7 @@ LoadFld19_44f5:
     ld bc, $0101
     ld bc, $0101
     ld bc, $010a
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     rlca
     rlca
     ld bc, $0707
@@ -4067,7 +4067,7 @@ LoadFld19_44f5:
     ld bc, $0101
     ld bc, $0a01
     ld bc, $0101
-    ld bc, $0704
+    ld bc, CheckBButton
     ld bc, $0707
     inc c
     ld bc, $0101
@@ -4169,7 +4169,7 @@ LoadFld19_44f5:
     ld bc, $0101
     ld bc, $0101
     ld bc, $010a
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
@@ -4335,7 +4335,7 @@ LoadFld19_44f5:
     ld [$0101], sp
     ld bc, $0801
     ld bc, $0101
-    ld bc, $0608
+    ld bc, RetUnused
     ld b, $01
     ld b, $03
     inc c
@@ -4403,7 +4403,7 @@ LoadFld19_44f5:
     ld bc, $0101
     add hl, bc
     ld bc, $0101
-    ld bc, $0704
+    ld bc, CheckBButton
     rlca
     rlca
     dec b
@@ -4595,7 +4595,7 @@ LoadFld19_44f5:
     ld [$0101], sp
     ld bc, $0801
     ld bc, $0101
-    ld bc, $0608
+    ld bc, RetUnused
     ld b, $06
     ld b, $03
     add hl, bc

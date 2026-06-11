@@ -771,3 +771,106 @@ $3C-$3E: Attribute/palette map data (78-239 entries).
 | `SCRIPT_TOOLS.md` | How to use gen_script_banks.py and decompile_script.py |
 | `FIRST_5MIN_TRACE.md` | SameBoy trace guide for game opening |
 | `known_ROM_map.md` | Community ROM map (source for much of this work) |
+
+---
+
+## Session Progress: Jump_/jr_ Label Naming
+
+### Bank $00 — Complete (761 labels named this session)
+All 838 auto-labels (316 `Jump_000_`, 522 `jr_000_`) processed:
+- **761 renamed** with descriptive names
+- **77 already aliased** (had named labels at same address)
+- **0 unaliased auto-labels remain**
+
+**Key naming categories applied:**
+- Interrupt handlers: VBlankSaveAF, VBlankEnableInt, VBlankProcessAudio, VBlankFinish, VBlankReturn, VBlankReentry
+- Boot/Init: AfterGBCInit, InitSGBBorders, InitDisplayAndRun, MainWaitLoop, ExitWaitReinit
+- Screen update system: WaitScreenUpdateDone, SetArrowTiles, DrawTextArrow, ClearTextBitsRedraw, FillTilemapRowLoop
+- Text engine: LoadTextPointerHL, CopyDEtoHLByte, CheckTextTerminator, AdvanceTextPointer, HandleControlCode, RestoreBankAndReturn
+- Sprite/OAM processing: SpriteCheckYBounds, SpriteWriteYCoord, SpriteFlippedWriteX, SpriteGBCMode (and 30+ related)
+- Number formatting: ExtractHundredsDigit, WriteThousandsDigit, DivBCbyDELoop, FormatMillions
+- Text dispatch cascade: DispatchBank42Rst through DispatchBank4E (10 labels)
+- Palette/fade system: SetFadeOutSGB, FadeInStepDMG, FadeOutStepSGB, FadeDone (20+ labels)
+- Audio engine: 100+ labels for note processing, channel management, frequency calculation
+- Math utilities: Div8Loop/Subtract/NextBit, Div16Loop, Div24Loop, MulShiftBit1-4
+- Joypad: ReadJoypadDMG, CheckAutoRepeat, SetNewJoypadState, ClearJoypad2State
+- Monster data: ComputeMonsterOffset, SubtractFromMonster, CheckBattleContext
+- Stat operations: SatAddCapBC, ClampedAddLow, SetMinValue1
+- SRAM: EnableSRAMAccess, SavePartyData, CopySRAMLoop, CopyFromSRAMLoop
+- Data tables ($26D6-$2B5F): Labeled as DataLookup_XXXX / Data_XXXX (misassembled — conversion to db/dw is Priority 3)
+- Audio wave data ($3200-$33FF): Labeled as AudioWave_XXXX / AudioWaveEntry_XXXX (misassembled)
+
+**Cross-bank impact:** 197 labels in bank $00 are referenced from other banks. All renames applied across all 105 bank files.
+
+### Overall Project Status After This Work
+- Bank $00: **0** unaliased auto-labels remaining (was 838) — 761 renamed
+- Bank $04: **0** unaliased auto-labels remaining (was 253) — 253 renamed  
+- Project total: ~18,039 auto-labels remaining (was 19,053)
+- Dynamic repointing: **34 of 36** hardcoded address patterns converted to LOW/HIGH(Label)
+- Cross-bank references: **944** `ld reg, $XXXX` → `ld reg, Label` conversions
+- RoomPtrTable: **fully label-based** (gen_room_data_db.py modified)
+- New data table labels: **19** (see SESSION_HANDOFF.md for full list)
+- SpecialRecipeTable ($16:$4B30): label created for breeding special recipes
+
+---
+
+## Dynamic Repointing Status (Critical for Editor)
+
+### What This Means
+When a pointer table uses **labels** (`dw RoomSub_Castle`) instead of **hardcoded addresses** (`dw $4C13`), the assembler automatically resolves pointers when data moves. This is what makes it possible to add/remove/reorder data and rebuild a working ROM.
+
+### Fully Repointable Systems (label-based pointers) ✓
+
+| System | Bank | Tables | Status |
+|--------|------|--------|--------|
+| **Scripts** | $0C-$0F | Master tables, per-map tables, branch targets | ✓ Already labeled |
+| **Room data** | $0B | RoomPtrTable (107 entries) | ✓ **FIXED this session** — gen_room_data_db.py modified |
+| **Monster names** | $41 | MonsterNamePtrTable (256 entries) | ✓ Already labeled |
+| **Skill names** | $41 | SkillNamePtrTable (256 entries) | ✓ Already labeled |
+| **Item/desc names** | $41 | ItemNamePtrTable, ItemDescPtrTable | ✓ Already labeled |
+| **Skill functions** | $52 | SkillFunctionTable (222 entries) | ✓ Already labeled |
+| **Palette attributes** | $17 | AttrPtrTable (107 entries) | ✓ Already labeled |
+
+### Hardcoded Offset Calculations Fixed This Session
+
+These `add LOW_BYTE / adc HIGH_BYTE` patterns compute table addresses at runtime.
+Each was converted to `add LOW(Label) / adc HIGH(Label)` so the table can move.
+
+| Bank | Address | Label | Purpose |
+|------|---------|-------|---------|
+| $03 | $4461 | `MonsterInfoTable` | Monster info (221×43B) |
+| $14 | $4C1D | `EnemyStatsTable` | Enemy stats (487×25B) |
+| $13 | $41E6 | `ExpCurveTables` | EXP curves (32×99×3B) |
+| $13 | $6706 | `StatGrowthTables` | Growth curves (32×99×1B) |
+| $01 | $6AAE | `EncounterPoolData` | Encounter pools (128×26B) — 6 refs fixed |
+| $16 | $7436 | `FloorLayoutData` | Floor layouts (1120B) — 2 refs fixed |
+| $16 | $4974 | `FamilyRecipeTable` | Breeding family recipes — label created + 2 refs fixed |
+| $16 | $7736 | `FloorTilePatterns` | Floor tile sub-table — label created |
+| $08 | $447E | `label8_447e` | Audio instrument data |
+
+### Remaining Hardcoded Offset References (3 total — need Priority 3 data conversion)
+
+These still use `add $XX / adc $YY` with raw bytes. Each needs a label at the target
+address and conversion to `LOW(Label)/HIGH(Label)`. Many targets fall mid-line in
+`db` data, requiring line splitting.
+
+| Bank | Target | Issue |
+|------|--------|-------|
+| $08 | $7751 | Audio waveform data — misassembled as instructions |
+| $0B | $4974 | Code/data hybrid — jr offsets form lookup table |
+| $32 | $5A5F | Tile animation data — misassembled as instructions |
+
+**All other 19 targets from the original 22 have been fixed** with proper labels
+and LOW/HIGH conversions. New labels created: NPCWalkDataTable, ScreenTransDataTable,
+SpriteFrameDataTable, MapNPCPosDataTable, TilesetLookupTable (×3), TileRefLookupTable,
+FieldPtrLookupTable, ItemSlotPtrTable, EnemyGroupTable, TransitionLookupTable,
+RoomAttrDataBlocks, PaletteColorData, AttrMapData, AttrMapDataB, TextDataPtrLookup,
+BattleHPLookupTable, SaveSlotPtrTable.
+
+### Modified Generator Tool
+
+`gen_room_data_db.py` now outputs label-based pointers in `RoomPtrTable`:
+- Non-overlapping sub-tables: `dw RoomSub_Castle` instead of `dw $4C13`
+- Overlapping sub-table (Castle): inline label at overlap position
+- All 92 unique room data blocks are now label-referenced
+- Rebuild with `python3 tools/gen_room_data_db.py > output.asm` and replace data section

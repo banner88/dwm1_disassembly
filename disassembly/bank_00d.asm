@@ -22,7 +22,7 @@ LoadBd_4007:
     ld l, a
     ld h, $00
     add hl, hl
-    ld de, $41ba
+    ld de, Bank0D_ScriptMasterTable
     add hl, de
     ld e, [hl]
     inc hl

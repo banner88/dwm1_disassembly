@@ -374,7 +374,7 @@ jr_01c_4175:
 jr_01c_417a:
     add hl, sp
     inc c
-    jp Jump_000_3a30
+    jp AudioBitManipHL
 
 
     jr @-$5b
@@ -630,7 +630,7 @@ jr_01c_4258:
     inc c
     add hl, sp
     inc c
-    jp Jump_000_3a30
+    jp AudioBitManipHL
 
 
     jr jr_01c_4206
@@ -1729,7 +1729,7 @@ jr_01c_463a:
     ld [$0822], sp
 
 jr_01c_4642:
-    ld hl, $2208
+    ld hl, GetMonsterSlotContext
     ld [$0819], sp
 
 jr_01c_4648:
@@ -1839,7 +1839,7 @@ jr_01c_46da:
 
     add hl, hl
     ld [$0822], sp
-    ld hl, $2208
+    ld hl, GetMonsterSlotContext
     ld [$0824], sp
     inc hl
     ld [$0824], sp
@@ -2177,7 +2177,7 @@ jr_01c_4850:
     and b
     dec b
     rra
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     and b
     inc c
     jr nz, jr_01c_488b
@@ -2433,7 +2433,7 @@ jr_01c_4954:
     and b
     dec b
     rra
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     and b
     inc c
     ld h, $20
@@ -2493,7 +2493,7 @@ jr_01c_49a2:
     and b
     dec b
     rra
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     and b
     inc c
     add hl, de
@@ -4251,7 +4251,7 @@ jr_01c_511a:
     ld h, h
     and b
     dec c
-    jp Jump_000_2950
+    jp DataLookup_2950
 
 
     rra
@@ -4263,7 +4263,7 @@ jr_01c_511a:
     dec e
     and b
     add hl, bc
-    jp Jump_000_2750
+    jp SetCount256Alias
 
 
     ld b, [hl]
@@ -4489,13 +4489,13 @@ jr_01c_5223:
     dec e
     and e
     ld [bc], a
-    jp Jump_000_2736
+    jp DataLookup_2736
 
 
     ld h, h
     and b
     dec c
-    jp Jump_000_2950
+    jp DataLookup_2950
 
 
     rra
@@ -4507,7 +4507,7 @@ jr_01c_5223:
     dec e
     and b
     ld a, [bc]
-    jp Jump_000_2750
+    jp SetCount256Alias
 
 
     ld b, [hl]
@@ -4549,7 +4549,7 @@ jr_01c_5263:
     inc d
     and b
     rlca
-    jp Jump_000_3545
+    jp AudioCopyDEtoHL2
 
 
     ld a, [bc]
@@ -4583,7 +4583,7 @@ jr_01c_527e:
     jr z, jr_01c_5223
 
     rlca
-    jp Jump_000_3945
+    jp AudioReadDE21Alias
 
 
     inc d
@@ -4990,7 +4990,7 @@ jr_01c_5405:
     ld h, h
     and e
     nop
-    jp Jump_000_3060
+    jp CheckFieldMode2
 
 
     rra
@@ -5190,7 +5190,7 @@ jr_01c_54bf:
     ld h, h
     and e
     nop
-    jp Jump_000_3060
+    jp CheckFieldMode2
 
 
     rra
@@ -6301,7 +6301,7 @@ jr_01c_5942:
 
 jr_01c_5948:
     dec c
-    jp nz, Jump_000_377f
+    jp nz, AudioCheckA6Alias
 
     jr @+$37
 
@@ -6339,7 +6339,7 @@ jr_01c_5948:
     inc c
     add hl, sp
     inc c
-    jp nz, Jump_000_357f
+    jp nz, AudioReadE6
 
     jr jr_01c_5937
 
@@ -7119,7 +7119,7 @@ jr_01c_5c27:
     inc c
     and b
     inc c
-    jp nz, Jump_000_2210
+    jp nz, CheckBattleContext
 
     inc b
     ld [hl+], a
@@ -8394,7 +8394,7 @@ jr_01c_6129:
     ld [$40c1], sp
     jr nz, @+$0a
 
-    jp nz, Jump_000_2810
+    jp nz, DataLookup_2810
 
     ld [$0827], sp
     dec h
@@ -8431,7 +8431,7 @@ jr_01c_61d5:
     ld [$40c1], sp
     jr nz, jr_01c_61ed
 
-    jp nz, Jump_000_2210
+    jp nz, CheckBattleContext
 
     ld [$0825], sp
     jr z, @+$0a
@@ -8514,7 +8514,7 @@ jr_01c_625b:
 
 
     rlca
-    jp nz, Jump_000_3715
+    jp nz, AudioLoadWaveData
 
     ld [$0833], sp
     jp $a340
@@ -8526,7 +8526,7 @@ jr_01c_625b:
     ld [bc], a
     jr nc, @+$0a
 
-    jp nz, Jump_000_3215
+    jp nz, AudioWave_3215
 
     ld [$0833], sp
     call nz, $3525
@@ -8588,7 +8588,7 @@ jr_01c_62b9:
     ld [$15c2], sp
     ld a, [hl-]
     ld [$0838], sp
-    jp Jump_000_3805
+    jp AudioAddLOffset
 
 
     ld [$15c2], sp
@@ -8607,7 +8607,7 @@ jr_01c_62b9:
     ld [$0830], sp
     call nz, AudioSetRegFB
     ld [$0ca0], sp
-    jp nz, Jump_000_3515
+    jp nz, AudioData_3515
 
     ld [$0fa0], sp
     dec [hl]
@@ -9162,7 +9162,7 @@ jr_01c_65e3:
     db $fd
     cp $a3
     dec b
-    jp Jump_000_2920
+    jp DataLookup_2920
 
 
     adc e
@@ -9230,7 +9230,7 @@ jr_01c_6628:
     jr c, jr_01c_65e1
 
     dec b
-    jp Jump_000_3020
+    jp StoreBattleState
 
 
     ld c, $c2
@@ -9273,7 +9273,7 @@ jr_01c_6628:
     inc e
     and e
     dec b
-    jp Jump_000_3020
+    jp StoreBattleState
 
 
     ld c, $c2
@@ -9323,7 +9323,7 @@ jr_01c_66ab:
     ld bc, $0fa0
     and e
     dec b
-    jp Jump_000_2940
+    jp DataLookup_2940
 
 
     adc h
@@ -9420,7 +9420,7 @@ jr_01c_6716:
     rlca
     and b
     rrca
-    jp Jump_000_3740
+    jp AudioStoreF1Alias
 
 
     ld c, $c2
@@ -9444,7 +9444,7 @@ jr_01c_673b:
     ld [$0e27], sp
     jr nc, @+$10
 
-    jp nz, Jump_000_320f
+    jp nz, AudioWave_320F
 
     ld c, $34
     ld c, $c3
@@ -10251,7 +10251,7 @@ jr_01c_6aa0:
     ld [hl-], a
     inc b
     and d
-    ld bc, $0ca0
+    ld bc, StoreCursorPos
     call nz, MultiplyHL_2715
     inc c
     inc hl
@@ -10538,7 +10538,7 @@ jr_01c_6c0b:
     ld [bc], a
 
 jr_01c_6c3b:
-    jp Jump_000_3740
+    jp AudioStoreF1Alias
 
 
     inc a
@@ -10578,7 +10578,7 @@ jr_01c_6c57:
     rrca
     and e
     inc bc
-    jp Jump_000_3310
+    jp AudioWave_3310
 
 
     inc b
@@ -10588,10 +10588,10 @@ jr_01c_6c57:
     inc b
     and b
     rrca
-    jp nz, Jump_000_3012
+    jp nz, CheckBattleIndex4
 
     inc b
-    jp Jump_000_3001
+    jp DataLookup_3001
 
 
     inc c
@@ -10621,7 +10621,7 @@ jr_01c_6c97:
     db $fc
     ld [hl], d
     nop
-    jp Jump_000_3210
+    jp AudioWave_3210
 
 
     inc b
@@ -10631,10 +10631,10 @@ jr_01c_6c97:
     inc b
     and b
     rrca
-    jp nz, Jump_000_2a12
+    jp nz, DataLookup_2A12Alias
 
     inc b
-    jp Jump_000_2a01
+    jp DataLookup_2A01
 
 
     inc c
@@ -10666,7 +10666,7 @@ jr_01c_6c97:
 
     and b
     rrca
-    jp nz, Jump_000_2712
+    jp nz, TestFlagSetup
 
     inc b
     jp $2701
@@ -11288,7 +11288,7 @@ jr_01c_6efc:
     ld [$0832], sp
     ld [hl-], a
     ld [$082b], sp
-    jp Jump_000_3030
+    jp CheckFFReturn
 
 
     ld [$06a0], sp
@@ -11408,7 +11408,7 @@ jr_01c_6fa4:
     ld [$0832], sp
     ld [hl-], a
     ld [$082b], sp
-    jp Jump_000_3030
+    jp CheckFFReturn
 
 
     ld [$06a0], sp
@@ -11473,7 +11473,7 @@ jr_01c_6fea:
     dec bc
     call nz, $252f
     db $10
-    jp Jump_000_2530
+    jp ClearUnusedOAM
 
 
     jr nz, jr_01c_704b
@@ -11484,7 +11484,7 @@ jr_01c_7029:
     jr nc, jr_01c_704f
 
     db $10
-    jp Jump_000_2830
+    jp DataLookup_2830
 
 
     jr nz, jr_01c_6fd3
@@ -11618,7 +11618,7 @@ jr_01c_70ae:
     ld b, $33
     ld [bc], a
     dec [hl]
-    ld bc, $0832
+    ld bc, ProcessScreenState
     jr nc, jr_01c_70e8
 
     jr nc, @+$0a
@@ -11710,7 +11710,7 @@ jr_01c_7118:
     ld [$0835], sp
     dec [hl]
     ld [$0832], sp
-    jp Jump_000_3430
+    jp AudioClearHLAlias
 
 
     ld [$06a0], sp
@@ -11768,7 +11768,7 @@ jr_01c_7187:
     db $10
     and b
     dec c
-    jp Jump_000_2945
+    jp DataLookup_2945
 
 
     db $10
@@ -11823,7 +11823,7 @@ jr_01c_71fa:
     ld [$0835], sp
     dec [hl]
     ld [$0832], sp
-    jp Jump_000_3430
+    jp AudioClearHLAlias
 
 
     ld [$06a0], sp
@@ -11893,7 +11893,7 @@ jr_01c_71fa:
     db $fc
     xor e
     nop
-    jp Jump_000_3225
+    jp AudioWave_3225
 
 
     jr @-$3d
@@ -12041,7 +12041,7 @@ jr_01c_7315:
     ld [$0838], sp
     and e
     inc c
-    jp Jump_000_3730
+    jp AudioRotateAndStore
 
 
     ld h, b

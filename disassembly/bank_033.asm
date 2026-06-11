@@ -426,7 +426,7 @@ jr_033_41a9:
     and [hl]
     ld b, c
     push bc
-    jp Jump_000_28c7
+    jp DataLookup_28C7
 
 
     add hl, bc
@@ -501,7 +501,7 @@ jr_033_41a9:
     ld b, c
     and c
     ld hl, $21e1
-    ld hl, $30e5
+    ld hl, CallBank5E_Final
     or $48
     ei
     add h
@@ -882,7 +882,7 @@ jr_033_4302:
     inc b
     dec h
     db $10
-    ld bc, $06ff
+    ld bc, PlaySoundAndJump
     ei
     ld c, $f9
     rrca
@@ -1031,7 +1031,7 @@ DataB33_4491:
 
     inc b
     adc b
-    ld bc, $0704
+    ld bc, CheckBButton
     rrca
 
 jr_033_44b1:
@@ -1482,7 +1482,7 @@ jr_033_4667:
 
 jr_033_46a2:
     db $fc
-    ld bc, $05fc
+    ld bc, LoadDestLow
     rst $38
     pop af
     cp $00
@@ -2999,7 +2999,7 @@ FuncB33_4d07:
     rst $28
     push af
     rst $20
-    jp nc, Jump_000_39fe
+    jp nc, AudioCheckZero
 
     ccf
     call nc, AudioLoadWaveRAM
@@ -3083,7 +3083,7 @@ FuncB33_4d07:
     adc b
     cp $4a
     ld a, e
-    jp nc, Jump_000_24f2
+    jp nc, SubtractGoldHigh
 
     db $e4
     xor b
@@ -3200,7 +3200,7 @@ jr_033_4ddb:
     dec bc
     rst $38
     db $f4
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     cp $03
 
 jr_033_4e22:
@@ -3892,7 +3892,7 @@ jr_033_5116:
     ld a, [hl]
     ld b, e
     rst $38
-    jp Jump_000_07fc
+    jp ReadCharFromHL
 
 
     cp $09
@@ -4770,7 +4770,7 @@ jr_033_5468:
     rrca
     inc d
     dec b
-    ld de, $050f
+    ld de, DispatchByGameMode
     rrca
     db $e3
     ld a, a
@@ -5563,7 +5563,7 @@ DispB33_5850:
     rst $38
     inc e
     rst $38
-    ld bc, $06ff
+    ld bc, PlaySoundAndJump
     rst $38
     ld bc, $04ff
     rst $38
@@ -7453,7 +7453,7 @@ jr_033_6064:
     rst $38
     add hl, bc
     rst $38
-    ld de, $19f6
+    ld de, PaletteRotateSub
 
 jr_033_613d:
     db $fc
@@ -7697,7 +7697,7 @@ jr_033_6236:
     rlca
     add hl, bc
     rlca
-    ld bc, $2009
+    ld bc, GetDigitFromHRAM
     dec bc
     add hl, bc
     rst $38
@@ -8287,7 +8287,7 @@ jr_033_64a5:
     ld b, $fb
     ld a, [de]
     ld sp, hl
-    ld hl, $3805
+    ld hl, AudioAddLOffset
     rrca
     ld c, $1f
     db $fc
@@ -8354,7 +8354,7 @@ jr_033_64f5:
     cp $03
     cp $03
     rst $38
-    ld bc, $3805
+    ld bc, AudioAddLOffset
     inc b
     scf
 
@@ -8581,7 +8581,7 @@ jr_033_65c6:
     sub e
     or $0c
     db $10
-    ld bc, $0c80
+    ld bc, Copy4Bytes
     or h
     ld bc, $110c
     ld bc, $b0df
@@ -9099,7 +9099,7 @@ jr_033_6742:
     dec de
     rrca
     rlca
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     rst $38
     ld [$1a02], sp
     dec b
@@ -10762,7 +10762,7 @@ jr_033_6f42:
     nop
     db $fc
     db $fc
-    ld bc, $06ff
+    ld bc, PlaySoundAndJump
     cp $f8
     ld hl, sp+$13
     di
@@ -10811,7 +10811,7 @@ jr_033_6f42:
     add hl, bc
     rst $38
     rst $38
-    ld hl, $0901
+    ld hl, WaitSTATForOverlayB
     inc [hl]
     inc bc
     add hl, bc
@@ -13236,7 +13236,7 @@ jr_033_7af1:
     ld a, $46
     ldh [$ac], a
     ld b, $20
-    jp Jump_000_2853
+    jp DataLookup_2853
 
 
     call SetB33_7e7e
@@ -13483,7 +13483,7 @@ jr_033_7c3b:
     dec l
     xor a
     ld [hl-], a
-    jp Jump_000_3a85
+    jp AudioNOPBlock
 
 
     ld hl, $ff9b
@@ -13509,7 +13509,7 @@ jr_033_7c3b:
     ld hl, $ff98
     ld a, [hl]
     and a
-    jp nz, Jump_000_39c2
+    jp nz, AudioShiftH
 
     ld a, $01
     ldh [$9b], a
@@ -13521,7 +13521,7 @@ jr_033_7c3b:
     ld hl, $ff98
     ld a, [hl]
     and a
-    jp nz, Jump_000_39cf
+    jp nz, AudioSwapToE
 
     ld a, $01
     ldh [$9b], a
@@ -13538,7 +13538,7 @@ jr_033_7c3b:
     ld [hl-], a
     ld a, $01
     ld [hl-], a
-    jp Jump_000_3a51
+    jp AudioPopAndRet
 
 
     ld hl, $ff9b
@@ -13551,7 +13551,7 @@ jr_033_7c3b:
     ld [hl-], a
     ld a, $01
     ld [hl-], a
-    jp Jump_000_3a5e
+    jp AudioDecBADCC
 
 
 jr_033_7caa:
@@ -13563,7 +13563,7 @@ jr_033_7caa:
     and a
     jr nz, jr_033_7cbc
 
-    jp Jump_000_3a78
+    jp AudioDecBDecD
 
 
 jr_033_7cbc:
@@ -13575,7 +13575,7 @@ jr_033_7cbc:
     and a
     jr z, jr_033_7caa
 
-    jp Jump_000_3a6b
+    jp AudioSBCHRLCA
 
 
     call AudioPortamento
@@ -13852,9 +13852,9 @@ jr_033_7e00:
 jr_033_7e03:
     ldh a, [$9a]
     rlca
-    jp c, Jump_000_3a44
+    jp c, AudioStoreDE1D
 
-    jp Jump_000_3a2a
+    jp AudioLookupAndLoad
 
 
 Jump_033_7e0c:
@@ -13892,7 +13892,7 @@ ClrB33_7e1e:
     ld hl, $ff96
     ld a, [hl]
     and a
-    jp z, Jump_000_3a44
+    jp z, AudioStoreDE1D
 
     dec [hl]
     cp $28

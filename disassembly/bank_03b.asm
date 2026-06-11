@@ -666,7 +666,7 @@ jr_03b_42f1:
     rrca
     dec bc
     db $10
-    ld de, $3402
+    ld de, AudioData_3402
     rrca
     add hl, sp
     inc b
@@ -1342,7 +1342,7 @@ jr_03b_45e5:
     rrca
     dec bc
     db $10
-    ld de, $3404
+    ld de, AudioPopDE
     rrca
     add hl, sp
     ld [bc], a
@@ -2142,7 +2142,7 @@ jr_03b_49aa:
     jr nc, jr_03b_49e4
 
     nop
-    jp nz, Jump_000_3004
+    jp nz, DataLookup_3004
 
     ld sp, $3130
     nop
@@ -2278,7 +2278,7 @@ jr_03b_4a4a:
     db $10
 
 jr_03b_4a57:
-    ld de, $3402
+    ld de, AudioData_3402
     rrca
     dec sp
     ld [bc], a
@@ -3223,7 +3223,7 @@ jr_03b_4e48:
     nop
     inc c
     rra
-    ld bc, $1514
+    ld bc, StoreRunLength
     nop
     ld [hl+], a
     nop
@@ -3259,7 +3259,7 @@ jr_03b_4eb3:
     ld [bc], a
     inc bc
     nop
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     nop
@@ -3382,7 +3382,7 @@ jr_03b_4f12:
     ld [bc], a
     inc bc
     nop
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     nop
@@ -4069,7 +4069,7 @@ jr_03b_5241:
     ld [bc], a
     inc bc
     nop
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     nop
@@ -4162,7 +4162,7 @@ jr_03b_5297:
     ld [bc], a
     inc bc
     nop
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     nop
@@ -4319,7 +4319,7 @@ jr_03b_5342:
     nop
     sub b
     rrca
-    ld bc, $2400
+    ld bc, MonsterStatAddWrap
     inc d
     nop
     xor h
@@ -4702,7 +4702,7 @@ jr_03b_54f3:
     ld [bc], a
     inc bc
     nop
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     nop
@@ -4789,7 +4789,7 @@ jr_03b_553c:
     nop
     ld [hl], b
     rrca
-    ld bc, $3130
+    ld bc, CallBank5EEntry1_3130
     nop
     adc b
 
@@ -4908,7 +4908,7 @@ jr_03b_55cd:
     rrca
     dec bc
     db $10
-    ld de, $3404
+    ld de, AudioPopDE
 
 jr_03b_55f1:
     rrca
@@ -4918,7 +4918,7 @@ jr_03b_55f1:
     ld [bc], a
     inc bc
     inc b
-    jp nz, Jump_000_281a
+    jp nz, DataLookup_281A
 
     add hl, hl
     inc b

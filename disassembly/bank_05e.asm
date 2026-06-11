@@ -3686,7 +3686,7 @@ jr_05e_5112:
     jr nz, jr_05e_5112
 
 jr_05e_5122:
-    ld de, $200b
+    ld de, StoreDigitC
     ld hl, sp+$1f
     inc c
     jr nz, jr_05e_5122
@@ -5440,7 +5440,7 @@ jr_05e_5879:
     rst $20
     ld de, $2001
     rst $28
-    ld de, $2003
+    ld de, WriteDigitAndPrint
 
 jr_05e_5889:
     rst $28
@@ -5466,7 +5466,7 @@ jr_05e_5889:
     ld [bc], a
     jr nz, jr_05e_5889
 
-    ld bc, $2003
+    ld bc, WriteDigitAndPrint
     rst $30
     daa
     ld [bc], a

@@ -1344,7 +1344,7 @@ jr_07d_45cb:
     inc b
     nop
     call z, CalcB7d_6080
-    ld de, $0c13
+    ld de, LoadEtoA
     jr z, jr_07d_4668
 
     db $d3
@@ -2059,7 +2059,7 @@ jr_07d_48f1:
     ld [hl-], a
     inc b
     inc d
-    jp nz, Jump_000_0832
+    jp nz, LoadAndProcessTile
 
     db $fc
     ld [$0827], sp
@@ -2247,7 +2247,7 @@ jr_07d_49c3:
 
     inc b
     inc d
-    jp nz, Jump_000_0822
+    jp nz, AdvanceTextPointer
 
     call c, $2708
     nop
@@ -3523,7 +3523,7 @@ jr_07d_4f3a:
     ld a, $2f
     daa
     ld de, $020c
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     nop
     adc h
     add b
@@ -3670,7 +3670,7 @@ jr_07d_4fe7:
     cp $ff
     ld e, l
     add hl, hl
-    ld hl, $1e22
+    ld hl, Div24Loop
     ld [hl+], a
     ld c, l
     sbc e
@@ -3711,7 +3711,7 @@ jr_07d_4fe7:
     dec sp
     ld e, $0f
     inc bc
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     nop
     adc b
     add b
@@ -4395,7 +4395,7 @@ jr_07d_52e0:
     db $10
     db $10
     ld [$0204], sp
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     rst $38
     ld [$8200], sp
     add c
@@ -4664,7 +4664,7 @@ jr_07d_53f6:
 
 jr_07d_5422:
     dec l
-    ld de, $161a
+    ld de, RestoreBankFromText
     ld d, $0c
     nop
     ld c, $fe
@@ -4738,7 +4738,7 @@ jr_07d_5457:
     dec e
     nop
     add a
-    ld bc, $1e07
+    ld bc, Div8Subtract
     ld a, b
     add a
     ld a, a
@@ -5455,7 +5455,7 @@ jr_07d_578e:
     or b
     add sp, -$08
     inc e
-    jp z, Jump_000_36ec
+    jp z, AudioCheckWaveRAM
 
     or l
     xor $ee
@@ -5482,7 +5482,7 @@ jr_07d_578e:
     or b
     add sp, -$08
     inc e
-    jp z, Jump_000_36ec
+    jp z, AudioCheckWaveRAM
 
     or l
     or $e7
@@ -8122,7 +8122,7 @@ jr_07d_6335:
     db $ec
     ld a, [hl]
     ld c, $07
-    jp Jump_000_38e1
+    jp AudioStoreF5
 
 
     sbc $3b
@@ -8622,7 +8622,7 @@ jr_07d_650f:
     add b
     sub b
     rst $38
-    ld bc, $0901
+    ld bc, WaitSTATForOverlayB
     ld de, $0101
     ld h, c
     rst $38
@@ -8894,7 +8894,7 @@ jr_07d_66a2:
     ld hl, $36db
     sub $e6
     ld [bc], a
-    jp nz, Jump_000_3237
+    jp nz, AudioWave_3237
 
     nop
     nop

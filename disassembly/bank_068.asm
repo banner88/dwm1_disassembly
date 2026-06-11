@@ -1005,7 +1005,7 @@ jr_068_4441:
 jr_068_4452:
     rst $38
     rst $38
-    jp c, Jump_000_29ad
+    jp c, DataLookup_29AD
 
     rst $38
     cp $1c
@@ -1764,7 +1764,7 @@ CalcB68_473c:
     ld a, b
     ld d, b
     or $93
-    ld de, $0709
+    ld de, SetCancelFlag
     db $10
     ldh [$0c], a
     inc b
@@ -2524,7 +2524,7 @@ jr_068_4ab0:
     ld h, b
     add b
     rst $38
-    jp c, Jump_000_29ad
+    jp c, DataLookup_29AD
 
     rst $38
     ld [bc], a

@@ -277,12 +277,12 @@ jr_03c_41e9:
     inc sp
     inc sp
     ld [hl-], a
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     rrca
     ld bc, $0562
     ld bc, $0bc2
     ld bc, $0c01
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     ld bc, $2201
     ld bc, $0500
@@ -307,12 +307,12 @@ jr_03c_41e9:
     inc sp
     inc sp
     ld [hl-], a
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     rrca
     ld bc, $0562
     ld bc, $0bc2
     ld bc, $0c01
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     ld bc, $2201
     ld bc, $0500
@@ -337,12 +337,12 @@ jr_03c_41e9:
     inc sp
     inc sp
     ld [hl-], a
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     rrca
     ld bc, $0562
     ld bc, $0bc2
     ld bc, $0c01
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     ld bc, $2201
     ld bc, $0500
@@ -367,12 +367,12 @@ jr_03c_41e9:
     inc sp
     inc sp
     ld [hl-], a
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     rrca
     ld bc, $0562
     ld bc, $0bc2
     ld bc, $0c01
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     ld bc, $2201
     ld bc, $0500
@@ -443,7 +443,7 @@ jr_03c_41e9:
     ld bc, $f3fd
     ld bc, $fffd
     ld c, l
-    ld bc, $0f1d
+    ld bc, SpriteGBCStoreByte
     ld bc, $1111
     ld de, $3333
     ld de, $1111
@@ -513,7 +513,7 @@ jr_03c_43a8:
     inc sp
     ld bc, $0f47
     ld c, l
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     ld [hl], $00
     ld bc, $0101
     and b
@@ -846,7 +846,7 @@ jr_03c_44d3:
     ld [bc], a
     nop
     ld de, $0110
-    ld de, $0100
+    ld de, Boot
     ld [bc], a
     ld a, [hl+]
     dec b
@@ -1255,10 +1255,10 @@ jr_03c_44d3:
     ld bc, $0361
     ld bc, $0f59
     dec c
-    ld bc, $0468
+    ld bc, VBlankReentryDone
     ld bc, $0f81
     dec e
-    ld bc, $025f
+    ld bc, TransferSGBFinal
     ld bc, $f8ff
     ld bc, $0cc3
     ld bc, $0fe2
@@ -1286,7 +1286,7 @@ jr_03c_44d3:
     ld bc, $0445
     ld bc, $0f81
     dec e
-    ld bc, $025f
+    ld bc, TransferSGBFinal
     ld bc, $f8ff
     ld bc, $0cc3
     ld bc, $0fe2
@@ -1307,7 +1307,7 @@ jr_03c_44d3:
     ld bc, $0435
     ld bc, $0f81
     dec e
-    ld bc, $025f
+    ld bc, TransferSGBFinal
     ld bc, $0a28
     ld bc, $0a34
     ld bc, $0fe2
@@ -1329,7 +1329,7 @@ jr_03c_44d3:
     ld bc, $0435
     ld bc, $0f81
     dec e
-    ld bc, $025f
+    ld bc, TransferSGBFinal
     ld bc, $0a28
     ld bc, $0c34
     ld bc, $0fe4
@@ -1443,10 +1443,10 @@ jr_03c_44d3:
     ld bc, $0361
     ld bc, $0f59
     dec c
-    ld bc, $0468
+    ld bc, VBlankReentryDone
     ld bc, $0f81
     dec e
-    ld bc, $025f
+    ld bc, TransferSGBFinal
     ld bc, $f8ff
     ld bc, $0cc3
     ld bc, $0fe2
@@ -1474,7 +1474,7 @@ jr_03c_44d3:
     ld bc, $0445
     ld bc, $0f81
     dec e
-    ld bc, $025f
+    ld bc, TransferSGBFinal
     ld bc, $f8ff
     ld bc, $0cc3
     ld bc, $0fe2
@@ -1501,7 +1501,7 @@ jr_03c_44d3:
     ld bc, $0445
     ld bc, $0f81
     dec e
-    ld bc, $025f
+    ld bc, TransferSGBFinal
     ld bc, $0a38
     ld bc, $0a44
     ld bc, $0fe2
@@ -1523,7 +1523,7 @@ jr_03c_44d3:
     ld bc, $0435
     ld bc, $0f81
     dec e
-    ld bc, $025f
+    ld bc, TransferSGBFinal
     ld bc, $0a28
     ld bc, $0c34
     ld bc, $0fe4
@@ -1585,18 +1585,18 @@ jr_03c_44d3:
     ld de, $0111
     ld a, [$30f9]
     ld bc, $0a68
-    ld bc, $0468
+    ld bc, VBlankReentryDone
     ld bc, $f3fe
     ld bc, $0577
     ld bc, $f2fe
-    ld bc, $0686
+    ld bc, GameStateBit_0686
     ld bc, $f0fe
     jr nc, jr_03c_4af1
 
 jr_03c_4af1:
     ld bc, $0ba4
     ld bc, $07a5
-    ld bc, $0fbe
+    ld bc, SpriteGBCFlipWriteX
     rra
     nop
     ld bc, $3301
@@ -1710,7 +1710,7 @@ jr_03c_4bae:
     ld bc, $f0fd
     ld bc, $0547
     ld bc, $f5f7
-    ld bc, $0aa8
+    ld bc, WriteHundredsDigit
     ld de, $0011
     inc bc
     ld bc, $0bba
@@ -1727,7 +1727,7 @@ jr_03c_4bae:
     jr nc, jr_03c_4bf8
 
 jr_03c_4bf8:
-    ld bc, $0b03
+    ld bc, DispatchAboveE2
     ld [hl+], a
     ld bc, $faf3
     ld bc, $0d21
@@ -1736,7 +1736,7 @@ jr_03c_4bf8:
     ld bc, $0f03
     dec bc
     ld bc, $0101
-    ld bc, $0622
+    ld bc, WaitScreenUpdateLoop
     ld bc, $0f80
     nop
     nop
@@ -1794,7 +1794,7 @@ jr_03c_4bf8:
     ld bc, $00a6
     ld bc, $09b9
     inc sp
-    ld bc, $05b7
+    ld bc, CallBank56Entry5_05B7
     ld bc, $003f
     ld bc, $00c6
     ld bc, $0738
@@ -1819,7 +1819,7 @@ jr_03c_4bf8:
     dec c
     ld bc, $0742
     ld bc, $0c84
-    ld bc, $0f44
+    ld bc, SpriteGBCWriteAndCheck
     ld a, [bc]
     ld de, $2101
     nop
@@ -1848,7 +1848,7 @@ jr_03c_4bf8:
     db $10
     ld bc, $0742
     ld bc, $0c84
-    ld bc, $0f44
+    ld bc, SpriteGBCWriteAndCheck
     ld a, [bc]
     ld de, $c101
     inc bc
@@ -1875,7 +1875,7 @@ jr_03c_4bf8:
     ld bc, $ffe0
     ld c, $01
     ld hl, $100f
-    ld bc, $0f24
+    ld bc, SpriteGBCWriteByte
     ld a, [bc]
     ld bc, $0f01
     inc c
@@ -1894,7 +1894,7 @@ jr_03c_4bf8:
     dec b
     ld bc, $0420
     ld [hl+], a
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     dec h
     ld bc, $05e0
     ld bc, $0fda
@@ -1943,7 +1943,7 @@ jr_03c_4bf8:
     ld [bc], a
     rst $38
     ld hl, sp+$11
-    ld de, $3402
+    ld de, AudioData_3402
     add hl, bc
     ld bc, $4302
     rrca
@@ -2033,7 +2033,7 @@ jr_03c_4bf8:
 jr_03c_4e41:
     or $33
     ld bc, $0044
-    ld bc, $0735
+    ld bc, FillColumnContinue
     ld bc, $0263
     ld bc, $0658
     ld bc, $0263
@@ -2042,7 +2042,7 @@ jr_03c_4e41:
 
     ld bc, $0a83
     ld bc, $0284
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     ld b, [hl]
     nop
     ld bc, $0101
@@ -2152,7 +2152,7 @@ jr_03c_4e41:
     nop
     ld de, $8201
     nop
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     rlca
     ld bc, $03c0
     ld bc, $0fba
@@ -2189,7 +2189,7 @@ jr_03c_4e41:
     nop
     ld de, $8201
     nop
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     rlca
     ld bc, $03c0
     ld bc, $0fba
@@ -2204,7 +2204,7 @@ jr_03c_4e41:
     ld de, $0011
     nop
     ld [hl+], a
-    ld bc, $0735
+    ld bc, FillColumnContinue
     ld bc, $0c41
     ld bc, $0045
     ld bc, $0745
@@ -2456,7 +2456,7 @@ jr_03c_5047:
     ld de, $1111
     ld bc, $0fba
     dec bc
-    ld bc, $0cb8
+    ld bc, PixelToTileCoord
     ld bc, $0467
     nop
     ld bc, $0101
@@ -2479,7 +2479,7 @@ jr_03c_5047:
     ld de, $1111
     ld bc, $0f04
     dec e
-    ld bc, $0912
+    ld bc, StoreMapPointerHL
     ld bc, $0c41
     inc sp
     inc sp
@@ -2579,7 +2579,7 @@ jr_03c_51d5:
     nop
     ld de, $0011
     nop
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     ld [$1401], sp
     rrca
     nop
@@ -2603,7 +2603,7 @@ jr_03c_51d5:
     ld bc, $0633
     ld bc, $0ea1
     ld bc, $0041
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     rlca
     ld bc, $0010
     ld bc, $0c04
@@ -2615,7 +2615,7 @@ jr_03c_51d5:
     nop
     ld de, $0011
     nop
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     ld [$1401], sp
     rrca
     nop
@@ -2658,7 +2658,7 @@ jr_03c_51d5:
     ld [hl+], a
     ld de, $1122
     ld bc, $002f
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld [hl+], a
     ld [hl+], a
     ld de, $1111
@@ -2716,7 +2716,7 @@ jr_03c_52d5:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0114
     ld bc, $0538
     ld de, $5101
@@ -2963,7 +2963,7 @@ jr_03c_54d2:
     nop
     ld bc, $085a
     ld bc, $00a2
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     rlca
     ld bc, $02c1
     ld bc, $0fb9
@@ -2980,7 +2980,7 @@ jr_03c_54d2:
     inc sp
     ld bc, $f8ff
     inc sp
-    ld bc, $0e24
+    ld bc, SpriteSkipEntry
     ld bc, $0925
     ld bc, $0b43
     inc sp
@@ -2992,7 +2992,7 @@ jr_03c_54d2:
     rrca
     dec c
     ld bc, $02a1
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     dec h
     ld bc, $0110
     ld bc, $0c05
@@ -3092,7 +3092,7 @@ jr_03c_5535:
     inc c
     ld bc, $0f62
     dec e
-    ld de, $0100
+    ld de, Boot
     and d
     ld [bc], a
     ld bc, $0f9a
@@ -3209,7 +3209,7 @@ jr_03c_55b2:
     ld bc, $0f42
     dec c
     ld bc, $03a1
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     ld b, $01
     ccf
     nop
@@ -3315,7 +3315,7 @@ jr_03c_55b2:
     ld bc, $0f78
     rlca
     ld bc, $03a1
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     dec h
     ld bc, $015e
     ld bc, $0b46
@@ -3379,7 +3379,7 @@ jr_03c_55b2:
     cpl
     ld de, $1100
     ld de, $1133
-    ld bc, $0838
+    ld bc, CheckState_C82d_0838
     inc sp
     inc sp
     inc sp
@@ -3473,7 +3473,7 @@ jr_03c_5871:
     nop
     inc sp
     ld bc, $0e06
-    ld bc, $0515
+    ld bc, BankTrampolineTable
     ld bc, $0e21
     ld bc, $0241
     ld bc, $0f39
@@ -3781,7 +3781,7 @@ jr_03c_58a7:
     ld bc, $0628
     ld bc, $0028
     ld bc, $0828
-    ld bc, $0c82
+    ld bc, CopyByteCheckCtrl
     ld bc, $0f4a
     dec h
     ld bc, $0fd9
@@ -3798,12 +3798,12 @@ jr_03c_58a7:
     ld [$0801], sp
     rrca
     ld a, [bc]
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     ld bc, $0908
     ld bc, $0965
     ld bc, $0008
     ld bc, $0808
-    ld bc, $0c82
+    ld bc, CopyByteCheckCtrl
     ld bc, $ffea
     ld de, $7801
     ld a, [bc]
@@ -3909,7 +3909,7 @@ jr_03c_58a7:
     ld c, $01
     ld l, h
     dec b
-    ld bc, $0fbe
+    ld bc, SpriteGBCFlipWriteX
     nop
     ld bc, $05e0
     ld bc, $0fda
@@ -4028,7 +4028,7 @@ jr_03c_58a7:
     nop
     nop
     inc sp
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     rlca
     ld bc, $0208
     ld bc, $0fb9
@@ -4214,7 +4214,7 @@ jr_03c_5d7c:
     inc hl
     ld bc, $011f
     inc sp
-    ld bc, $0657
+    ld bc, UseAlternateArrowTile
     ld bc, $0d60
     ld bc, $021e
     ld bc, $faf8
@@ -4254,7 +4254,7 @@ jr_03c_5d7c:
     ld bc, $0109
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0fa2
     ld c, $33
     inc sp
@@ -4288,7 +4288,7 @@ jr_03c_5d7c:
     ld bc, $0109
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0fa2
     ld c, $33
     inc sp
@@ -4324,7 +4324,7 @@ jr_03c_5d7c:
     ld bc, $0109
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0fa2
     ld c, $33
     inc sp
@@ -4373,7 +4373,7 @@ jr_03c_5d7c:
     ld bc, $0da1
     ld [hl+], a
     ld bc, $0083
-    ld bc, $06a8
+    ld bc, SetArrowTiles
     ld bc, $0ec1
     ld [hl+], a
     ld bc, $02e0
@@ -4505,7 +4505,7 @@ jr_03c_5fe2:
     ld bc, $f1ff
     ld [hl+], a
     ld bc, $010e
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0c35
     ld bc, $0133
     ld bc, $0c28
@@ -4588,11 +4588,11 @@ jr_03c_605b:
     ld bc, $1101
     ld bc, $0500
     ld bc, $f3fa
-    ld bc, $070e
+    ld bc, ClearTextBitsRedrawJR
     ld bc, $0f0c
     ld c, l
     ld bc, $031c
-    ld bc, $097a
+    ld bc, SetupVRAMParams
     ld bc, $0f80
     ld a, $01
     ld bc, $010c
@@ -4673,7 +4673,7 @@ jr_03c_605b:
     inc h
     ld [hl+], a
     ld bc, $0109
-    ld de, $0100
+    ld de, Boot
     add hl, sp
     rrca
     daa
@@ -4685,7 +4685,7 @@ jr_03c_6151:
     ld bc, $0f7e
     nop
     ld bc, $f2fa
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     dec e
     ld bc, $059e
     ld bc, $0f00
@@ -4698,7 +4698,7 @@ jr_03c_6151:
     inc h
     ld [hl+], a
     ld bc, $0109
-    ld de, $0100
+    ld de, Boot
     add hl, sp
     rrca
     daa
@@ -4710,11 +4710,11 @@ jr_03c_6151:
     nop
     inc sp
     ld bc, $f0fc
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     ld [$fb01], sp
     pop af
     ld bc, $0cb7
-    ld bc, $05be
+    ld bc, LoadTextPointerHL
     ld bc, $0f00
     ld b, $10
     ld bc, $f2a0
@@ -4795,7 +4795,7 @@ jr_03c_6151:
     ld bc, $2122
     ld bc, $0409
     ld bc, $0b61
-    ld bc, $0648
+    ld bc, CheckTilemapBit5
     ld bc, $0f7a
     dec b
     ld bc, $0262
@@ -4805,7 +4805,7 @@ jr_03c_6151:
     inc b
     ld bc, $f2fc
     ld bc, $02c2
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0cd2
     ld de, $c301
     nop
@@ -4830,7 +4830,7 @@ jr_03c_6151:
     ld bc, $2122
     ld bc, $0409
     ld bc, $0b61
-    ld bc, $0648
+    ld bc, CheckTilemapBit5
     ld bc, $0f7a
     dec b
     ld [hl+], a
@@ -4844,7 +4844,7 @@ jr_03c_6151:
     ld bc, $04be
     ld bc, $f2fc
     ld bc, $02c2
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0cd2
     ld de, $c301
     nop
@@ -5003,7 +5003,7 @@ jr_03c_6151:
     ld de, $0020
     nop
     ld [bc], a
-    ld de, $0100
+    ld de, Boot
     add hl, bc
     rrca
     rlca
@@ -5014,7 +5014,7 @@ jr_03c_6151:
     ld bc, $0801
     rlca
     ld bc, $0142
-    ld bc, $0618
+    ld bc, CheckState_C826_0618
     nop
     nop
     jr nz, @+$04
@@ -5042,7 +5042,7 @@ jr_03c_6151:
     ld de, $0020
     nop
     ld [bc], a
-    ld de, $0100
+    ld de, Boot
     add hl, bc
     rlca
     inc sp
@@ -5057,7 +5057,7 @@ jr_03c_6151:
     ld bc, $0801
     rlca
     ld bc, $0142
-    ld bc, $0618
+    ld bc, CheckState_C826_0618
     nop
     nop
     jr nz, @+$04
@@ -5090,7 +5090,7 @@ jr_03c_6151:
     ld [hl+], a
     ld bc, $0f3a
     inc bc
-    ld de, $3f01
+    ld de, CheckPartySize
     nop
     ld bc, $0047
     ld bc, $0409
@@ -5121,7 +5121,7 @@ jr_03c_6151:
     ld [hl+], a
     ld bc, $0f3a
     inc bc
-    ld de, $3f01
+    ld de, CheckPartySize
     nop
     ld bc, $0047
     ld bc, $0409
@@ -5312,7 +5312,7 @@ jr_03c_6151:
     and b
     rst $38
     ld c, l
-    ld bc, $0f24
+    ld bc, SpriteGBCWriteByte
     ld de, $0133
     ld [hl], l
     rrca
@@ -5412,7 +5412,7 @@ jr_03c_66cc:
     dec bc
     ld [bc], a
     call nz, $0b0f
-    ld de, $2210
+    ld de, CheckBattleContext
     ld [bc], a
     rra
     ld bc, $a002
@@ -5449,7 +5449,7 @@ jr_03c_66cc:
     dec bc
     ld [bc], a
     call nz, $0b0f
-    ld de, $2210
+    ld de, CheckBattleContext
     ld [bc], a
     rra
     ld bc, $a002
@@ -5475,7 +5475,7 @@ jr_03c_66cc:
     ld b, $00
     ld [bc], a
     ld [bc], a
-    ld bc, $3e02
+    ld bc, MenuDispatchData
     ld [bc], a
     ld [bc], a
     dec a
@@ -5726,7 +5726,7 @@ jr_03c_6813:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     ld [$0000], sp
     ld bc, $0f56
@@ -5769,8 +5769,8 @@ jr_03c_6813:
     dec d
     ld [hl+], a
     ld bc, $0132
-    ld bc, $0608
-    ld bc, $0341
+    ld bc, RetUnused
+    ld bc, Goto_Staff
     ld bc, $0309
     ld [hl+], a
     ld bc, $0441
@@ -5796,7 +5796,7 @@ jr_03c_6813:
     ld bc, $fffa
     inc sp
     ld [hl+], a
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     inc sp
     ld bc, $0f51
     inc c
@@ -5823,7 +5823,7 @@ jr_03c_6813:
     ld bc, $0231
     ld bc, $0508
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0c39
     ld [hl+], a
     ld bc, $0b3a
@@ -5856,7 +5856,7 @@ jr_03c_6813:
     inc c
     ld [hl+], a
     ld [hl+], a
-    ld de, $3001
+    ld de, DataLookup_3001
     nop
     ld [hl+], a
     ld [hl+], a
@@ -5942,7 +5942,7 @@ jr_03c_6813:
     ld [bc], a
     ld de, $1111
     inc sp
-    ld de, $3f01
+    ld de, CheckPartySize
     ld bc, $5a01
     rrca
     inc bc
@@ -6138,7 +6138,7 @@ jr_03c_6b61:
     ld a, [$03ff]
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     dec bc
     inc sp
     inc sp
@@ -6190,7 +6190,7 @@ jr_03c_6b61:
     ld bc, $0f77
     ld [$5a01], sp
     inc bc
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     inc h
     ld de, $e001
     dec b
@@ -6236,7 +6236,7 @@ jr_03c_6b61:
     dec bc
     ld bc, $0242
     ld bc, $0644
-    ld bc, $0c80
+    ld bc, Copy4Bytes
     ld bc, $ffe0
     dec l
     ld bc, $0f00
@@ -6304,7 +6304,7 @@ jr_03c_6c90:
     ld bc, $0fbc
     dec b
     ld bc, $0061
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0ae2
     nop
     ld bc, $1101
@@ -6347,7 +6347,7 @@ jr_03c_6c90:
     inc bc
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     dec bc
     inc sp
     inc sp
@@ -6362,12 +6362,12 @@ jr_03c_6c90:
     ld bc, $0f75
     dec bc
     ld bc, $0045
-    ld bc, $0f97
+    ld bc, SpriteGBCFlipStore
     add hl, bc
     ld de, $be01
     inc b
     ld bc, $0fbc
-    ld hl, $0100
+    ld hl, Boot
     ld bc, $0011
     inc sp
     ld bc, $0102
@@ -6417,13 +6417,13 @@ jr_03c_6c90:
     ld [hl+], a
     ld [hl+], a
     ld bc, $0a38
-    ld bc, $0c80
+    ld bc, Copy4Bytes
     ld bc, $f2fa
     ld bc, $0002
     ld bc, $0f9a
     inc bc
     ld bc, $0102
-    ld bc, $0b9b
+    ld bc, CallScriptByType
     ld bc, $08a9
     ld bc, $0060
     ld bc, $02e0
@@ -6435,7 +6435,7 @@ jr_03c_6c90:
     ld bc, $f4fe
     ld bc, $fffc
     ld bc, $2222
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     dec bc
     ld bc, $001d
     ld bc, $0f34
@@ -6574,7 +6574,7 @@ jr_03c_6c90:
     ld bc, $0f59
     inc b
     ld bc, $0302
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     ld h, $00
     ld bc, $1101
     nop
@@ -6605,7 +6605,7 @@ jr_03c_6c90:
     db $fc
     ld bc, $fbf7
     inc sp
-    ld bc, $0b07
+    ld bc, RunScriptEngine
     ld bc, $0c66
     ld bc, $0f46
     rlca
@@ -6625,7 +6625,7 @@ jr_03c_6c90:
     ld bc, $f5f7
     ld bc, $0f39
     inc b
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0004
     ld bc, $0f59
     inc b
@@ -6701,19 +6701,19 @@ jr_03c_6c90:
     inc sp
     ld de, $0133
     ld b, $09
-    ld bc, $0f63
+    ld bc, SpriteGBCFlippedRead
     nop
     ld bc, $0626
-    ld bc, $0c80
+    ld bc, Copy4Bytes
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
     ld bc, $0943
-    ld bc, $0ca0
+    ld bc, StoreCursorPos
     ld bc, $0240
     ld bc, $0606
     ld bc, $0cc0
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0fd5
     ld [$0100], sp
     ld bc, $0111
@@ -6751,7 +6751,7 @@ jr_03c_6c90:
     ld b, h
     ld bc, $4101
     nop
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     inc b
     ld bc, $0462
     ld bc, $0fb8
@@ -6780,7 +6780,7 @@ jr_03c_6c90:
     inc sp
     inc sp
     ld bc, $0003
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0b82
     ld bc, HeaderLogo
     ld [hl+], a
@@ -6819,7 +6819,7 @@ jr_03c_6c90:
     ld bc, $0c60
     ld bc, $0300
     ld bc, $0b27
-    ld bc, $0686
+    ld bc, GameStateBit_0686
     ld bc, $0026
     ld de, $1133
     ld bc, $0947
@@ -6862,7 +6862,7 @@ jr_03c_6c90:
     ld [hl+], a
     ld de, $2233
     ld [hl+], a
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     ld [$1133], sp
     ld bc, $0041
     ld bc, $0fba
@@ -6884,7 +6884,7 @@ jr_03c_6c90:
     ld [hl+], a
     ld bc, $0f1a
     ld [$0122], sp
-    ld bc, $0100
+    ld bc, Boot
     ld a, [hl-]
     rrca
     ld [$0201], sp
@@ -6934,8 +6934,8 @@ jr_03c_71a0:
     ld bc, $0f3a
     inc bc
     ld bc, $0006
-    ld bc, $0100
-    ld bc, $0609
+    ld bc, Boot
+    ld bc, RequestScreenUpdate
     ld bc, $0963
     ld [hl+], a
     ld bc, $0280
@@ -6963,7 +6963,7 @@ jr_03c_71a0:
     ld [hl+], a
     ld [hl+], a
     ld de, $0133
-    ld hl, $0100
+    ld hl, Boot
     add hl, de
     rrca
     inc b
@@ -6989,7 +6989,7 @@ jr_03c_71a0:
     ld [hl+], a
     inc sp
     ld bc, $00a4
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     inc b
     ld bc, $01a4
     ld bc, $0fb5
@@ -7072,7 +7072,7 @@ jr_03c_71a0:
     ld bc, $0065
     ld bc, $0fba
     dec b
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0fd7
     ld b, $00
     ld bc, $1101
@@ -7263,7 +7263,7 @@ jr_03c_740f:
     inc bc
     nop
     ld bc, $1101
-    ld bc, $0100
+    ld bc, Boot
     inc sp
     ld de, $1133
     ld bc, $fffa
@@ -7369,9 +7369,9 @@ jr_03c_740f:
     ld bc, $0607
     ld bc, $0d61
     ld [hl+], a
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0638
-    ld bc, $0c82
+    ld bc, CopyByteCheckCtrl
     inc sp
     ld bc, $0021
     ld [hl+], a
@@ -7423,7 +7423,7 @@ jr_03c_740f:
     ld [hl+], a
     ld bc, $0fb6
     add hl, bc
-    ld bc, $0382
+    ld bc, ScreenRefreshVBlank
     ld bc, $0fd9
     inc b
     nop
@@ -7634,12 +7634,12 @@ jr_03c_740f:
     ld bc, $0120
     ld [hl+], a
     ld bc, $0428
-    ld bc, $0c80
+    ld bc, Copy4Bytes
     ld [hl+], a
     ld [hl+], a
     ld bc, $0140
     ld bc, $0547
-    ld bc, $0ca0
+    ld bc, StoreCursorPos
     ld bc, $0105
     ld bc, $0160
     ld bc, $0fba
@@ -7680,7 +7680,7 @@ jr_03c_740f:
     inc sp
     ld bc, $0024
     ld bc, $00a2
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     inc b
     ld bc, $0243
     ld bc, $0756

@@ -158,7 +158,7 @@ jr_061_4085:
     inc b
     jr nz, jr_061_401b
 
-    jp nz, Jump_000_2c67
+    jp nz, TileSequenceMid
 
     reti
 

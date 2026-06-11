@@ -310,7 +310,7 @@ jr_02b_418e:
     ld [hl-], a
     inc sp
     db $10
-    ld de, $2e0c
+    ld de, MenuBorderLeftEdge
     ld c, $00
     ld [bc], a
     inc c
@@ -440,7 +440,7 @@ jr_02b_4228:
 
 jr_02b_422d:
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
     jr z, jr_02b_4234
 
@@ -494,7 +494,7 @@ jr_02b_424c:
     ld de, $340c
     ld a, [bc]
     inc c
-    jp z, Jump_000_3402
+    jp z, AudioData_3402
 
     dec [hl]
     inc c
@@ -740,7 +740,7 @@ jr_02b_436e:
     rrca
     rlca
     db $10
-    ld de, $260e
+    ld de, CalcAddressLow
     db $10
     ld c, $32
     ld a, [bc]
@@ -959,7 +959,7 @@ jr_02b_449f:
 
 jr_02b_44a4:
     rra
-    ld bc, $060c
+    ld bc, SetScreenUpdateFlag
     ld [de], a
     inc c
     ld b, b
@@ -1041,7 +1041,7 @@ jr_02b_44e1:
     ld [hl-], a
     inc sp
     db $10
-    ld de, $200c
+    ld de, GetUpperDigit
     ld [bc], a
     inc c
     ld [hl-], a
@@ -1112,7 +1112,7 @@ jr_02b_4543:
     or h
     inc c
     inc c
-    jp nz, Jump_000_3004
+    jp nz, DataLookup_3004
 
     ld sp, $3534
     inc c
@@ -1180,7 +1180,7 @@ jr_02b_455f:
     inc c
     ld [hl], h
     rra
-    ld bc, $080c
+    ld bc, CheckTile90
     nop
     nop
     ld bc, $400c
@@ -1331,7 +1331,7 @@ jr_02b_4648:
     and [hl]
     ld [bc], a
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     ld a, [hl-]
     dec sp
     ld a, [hl-]
@@ -1523,7 +1523,7 @@ jr_02b_46f5:
     and h
     inc b
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
 
 jr_02b_4725:
@@ -1885,7 +1885,7 @@ jr_02b_48c7:
     db $10
 
 jr_02b_48c9:
-    ld de, $1514
+    ld de, StoreRunLength
     ld [hl], $37
     inc c
     and h
@@ -2625,7 +2625,7 @@ jr_02b_4c07:
     jr nz, jr_02b_4c26
 
     rrca
-    ld bc, $1514
+    ld bc, StoreRunLength
     ld [hl], $37
 
 jr_02b_4c1a:
@@ -3806,7 +3806,7 @@ jr_02b_511e:
     ld a, [hl-]
     dec sp
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     inc a
     db $e4
     nop
@@ -3860,7 +3860,7 @@ jr_02b_516d:
     ld [bc], a
     inc bc
     inc a
-    jp z, Jump_000_3c00
+    jp z, ScreenTransitionSetup
 
     ld [$3c00], sp
     ld [$3800], sp
@@ -4320,7 +4320,7 @@ jr_02b_5378:
     inc c
     inc c
     rrca
-    ld bc, $260c
+    ld bc, AddCarryToH
     ld [bc], a
     inc c
     ld l, b
@@ -5440,7 +5440,7 @@ jr_02b_5856:
     ld l, b
     nop
     db $10
-    ld de, $200c
+    ld de, GetUpperDigit
     ld [bc], a
 
 jr_02b_5864:
@@ -5749,7 +5749,7 @@ jr_02b_59a3:
     ld c, $28
     add hl, hl
     ld a, [bc]
-    jp z, Jump_000_3004
+    jp z, DataLookup_3004
 
     ld sp, $0100
     ld a, [bc]
@@ -6100,7 +6100,7 @@ jr_02b_5b15:
     ld c, $28
     nop
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     ld c, $a6
     nop
     ld c, $e4
@@ -6646,7 +6646,7 @@ jr_02b_5d83:
     ld a, [bc]
     db $10
     inc a
-    jp nc, Jump_000_320c
+    jp nc, AudioWave_320C
 
     inc sp
     ld e, $1f
@@ -6686,7 +6686,7 @@ jr_02b_5dba:
 jr_02b_5dd6:
     dec [hl]
     nop
-    ld bc, $143c
+    ld bc, GetSpritePointerDE
     ld [$1514], sp
     ld [hl], $37
 
@@ -6704,7 +6704,7 @@ jr_02b_5de6:
     inc sp
     ld [hl], $37
     db $10
-    ld de, $143c
+    ld de, GetSpritePointerDE
     ld [$2d2c], sp
     inc a
     ld a, [bc]
@@ -6844,7 +6844,7 @@ jr_02b_5e4b:
     nop
     inc c
     call nc, $100a
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
     ldh [rSC], a
     inc c
@@ -7028,7 +7028,7 @@ jr_02b_5f5d:
     ld [hl-], a
     inc sp
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
     and [hl]
     nop
@@ -7582,7 +7582,7 @@ jr_02b_61f5:
     inc b
     ld l, $12
     db $10
-    ld de, $3404
+    ld de, AudioPopDE
     ld c, $04
     inc c
     inc d
@@ -7784,7 +7784,7 @@ jr_02b_62cf:
     xor b
     db $10
     db $10
-    ld de, $2e0c
+    ld de, MenuBorderLeftEdge
     ld c, $00
     ld [bc], a
     inc c
@@ -8088,7 +8088,7 @@ jr_02b_642c:
     db $e4
     ld [bc], a
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     ld [hl], $37
     ld [hl-], a
     inc sp
@@ -8278,7 +8278,7 @@ jr_02b_64fa:
     rrca
     add hl, bc
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
     ldh a, [rIF]
     add hl, bc
@@ -8449,7 +8449,7 @@ jr_02b_6590:
     inc c
     ld [$0c02], a
     ld [$1000], a
-    ld de, $1514
+    ld de, StoreRunLength
     ld [hl-], a
     inc sp
     inc c
@@ -8856,7 +8856,7 @@ jr_02b_67d8:
     ld [hl], $37
     ld b, $6c
     rrca
-    ld bc, $3130
+    ld bc, CallBank5EEntry1_3130
     ld b, $c0
     nop
     nop
@@ -8869,7 +8869,7 @@ jr_02b_67d8:
     ld b, $e0
     nop
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     ld [hl-], a
     inc sp
     ld b, $ac
@@ -9613,7 +9613,7 @@ jr_02b_6b37:
     nop
     ld [hl], h
     rrca
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     ld [bc], a
     jr nc, jr_02b_6b89
 
@@ -10180,7 +10180,7 @@ jr_02b_6d9f:
     dec b
     inc c
     ld [$2000], sp
-    ld hl, $3130
+    ld hl, CallBank5EEntry1_3130
     inc c
     sub h
     ld a, [bc]
@@ -10438,7 +10438,7 @@ jr_02b_6e99:
     nop
     ld [bc], a
     stop
-    jp nc, Jump_000_3a0c
+    jp nc, AudioCheckZero2
 
     dec sp
     inc e
@@ -11576,7 +11576,7 @@ jr_02b_7380:
     dec de
     ld [hl], $37
     db $10
-    ld de, $200c
+    ld de, GetUpperDigit
     ld [bc], a
     inc c
     ld [hl-], a
@@ -11825,7 +11825,7 @@ jr_02b_7483:
     inc c
     inc l
     rrca
-    ld bc, $080c
+    ld bc, CheckTile90
     nop
     nop
     ld bc, $0302
@@ -12768,7 +12768,7 @@ jr_02b_7886:
     inc c
     ld [hl], $37
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
     xor b
     nop
@@ -12934,7 +12934,7 @@ jr_02b_7957:
 
 jr_02b_795a:
     db $10
-    ld de, $200c
+    ld de, GetUpperDigit
     ld [bc], a
     inc c
     ld [hl], d
@@ -13741,7 +13741,7 @@ jr_02b_7cd8:
     inc c
     db $10
     rrca
-    ld bc, $260c
+    ld bc, AddCarryToH
     nop
     inc c
     db $ec
@@ -14017,7 +14017,7 @@ jr_02b_7e19:
     nop
     ld c, $b0
     rrca
-    ld bc, $0100
+    ld bc, Boot
     jr z, jr_02b_7e5a
 
     inc b

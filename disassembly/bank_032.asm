@@ -118,7 +118,7 @@ FuncB32_407f:
     rst $38
     ldh a, [$bf]
     add sp, -$01
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     ld hl, sp+$0f
     pop af
     rra
@@ -1164,7 +1164,7 @@ jr_032_44ac:
 
     ld [hl], b
     ldh [rIE], a
-    ld hl, $20ee
+    ld hl, EnableSRAM
     pop af
     and h
     ld [$e4a3], a
@@ -1924,7 +1924,7 @@ jr_032_480d:
     rst $38
     and d
     rst $38
-    jp z, Jump_000_32ff
+    jp z, AudioWave_32FF
 
     sub $e9
     db $eb
@@ -2254,7 +2254,7 @@ jr_032_49c8:
     ret nz
 
     cp a
-    ld hl, $27fe
+    ld hl, DataTable_27FE
     jr c, jr_032_49ab
 
     or b
@@ -3581,7 +3581,7 @@ jr_032_4fb7:
     ld c, a
     cp $02
     rst $38
-    ld bc, $2009
+    ld bc, GetDigitFromHRAM
     inc bc
     ld hl, sp+$07
     rst $38
@@ -5915,7 +5915,7 @@ jr_032_587d:
     ret nz
 
     ld e, [hl]
-    add $5f
+    add $5f  ; FALSE POSITIVE: data bytes, not an address computation
     rst $08
     ld e, e
     adc $5a
@@ -9891,7 +9891,7 @@ jr_032_6b22:
     ld hl, sp+$40
     inc e
     inc bc
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     nop
@@ -10974,7 +10974,7 @@ DataB32_6fef:
     ld d, b
     jr nz, jr_032_7014
 
-    ld hl, $2210
+    ld hl, CheckBattleContext
     inc d
     inc hl
     inc d
@@ -11873,7 +11873,7 @@ jr_032_7388:
     db $10
     inc [hl]
     ld b, $00
-    ld hl, $2210
+    ld hl, CheckBattleContext
     db $10
     inc [hl]
     add d
@@ -11920,7 +11920,7 @@ jr_032_7388:
     rst $28
     inc [hl]
     dec bc
-    ld de, $1434
+    ld de, ClearOAMLoop
     db $10
     rst $28
     ld d, b
@@ -12854,7 +12854,7 @@ jr_032_7718:
 jr_032_7731:
     ld a, $0a
     call JmpB32_4390
-    jp Jump_000_3a6b
+    jp AudioSBCHRLCA
 
 
 jr_032_7739:
@@ -12891,7 +12891,7 @@ jr_032_7749:
 jr_032_7763:
     ld a, $0a
     call JmpB32_4390
-    jp Jump_000_3a78
+    jp AudioDecBDecD
 
 
     ld hl, $ff9c
@@ -12909,7 +12909,7 @@ jr_032_7763:
     ld [hl-], a
     ld a, $0a
     call JmpB32_4390
-    jp Jump_000_3a85
+    jp AudioNOPBlock
 
 
     ld hl, $ff94
@@ -13651,7 +13651,7 @@ jr_032_7b0c:
     ld hl, $ff98
     ld a, [hl]
     and a
-    jp nz, Jump_000_39c2
+    jp nz, AudioShiftH
 
     ld a, $0f
     ldh [$9b], a
@@ -13685,7 +13685,7 @@ jr_032_7b3c:
     ld hl, $ff98
     ld a, [hl]
     and a
-    jp nz, Jump_000_39cf
+    jp nz, AudioSwapToE
 
     ld a, $0f
     ldh [$9b], a
@@ -13746,7 +13746,7 @@ jr_032_7b9e:
     call JmpB32_4390
     ld hl, $ff96
     dec [hl]
-    jp nz, Jump_000_39f6
+    jp nz, AudioCompare8
 
     ld a, $10
     ldh [$9b], a
@@ -13765,7 +13765,7 @@ jr_032_7b9e:
     call JmpB32_4390
     ld hl, $ff96
     dec [hl]
-    jp nz, Jump_000_3a03
+    jp nz, AudioShiftB
 
     ld a, $00
     ldh [$9b], a
@@ -13921,7 +13921,7 @@ jr_032_7c69:
     ld [hl-], a
     ld a, $0c
     call JmpB32_4390
-    jp Jump_000_3a51
+    jp AudioPopAndRet
 
 
     ld hl, $ff9b
@@ -13936,7 +13936,7 @@ jr_032_7c69:
     ld [hl-], a
     ld a, $0c
     call JmpB32_4390
-    jp Jump_000_3a5e
+    jp AudioDecBADCC
 
 
 Jump_032_7ca7:
@@ -13972,7 +13972,7 @@ jr_032_7cb7:
 jr_032_7cd0:
     ld a, $0c
     call JmpB32_4390
-    jp Jump_000_3a6b
+    jp AudioSBCHRLCA
 
 
 jr_032_7cd8:
@@ -14009,7 +14009,7 @@ jr_032_7ce8:
 jr_032_7d02:
     ld a, $0c
     call JmpB32_4390
-    jp Jump_000_3a78
+    jp AudioDecBDecD
 
 
     ld hl, $ff9c
@@ -14027,7 +14027,7 @@ jr_032_7d02:
     ld [hl-], a
     ld a, $0c
     call JmpB32_4390
-    jp Jump_000_3a85
+    jp AudioNOPBlock
 
 
     ld hl, $ff85

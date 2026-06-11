@@ -51,7 +51,7 @@ DispatchEntry_5F_0:
     call WaitLCDTransfer
     ld de, $66b3
     ld hl, $9800
-    ld bc, $1412
+    ld bc, TextCursorAdvance
     call SaveFldUI_424a
     xor a
     ld hl, $c0d8
@@ -77,7 +77,7 @@ jr_05f_4067:
     ld a, $11
     ld [$c8a1], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     xor a
@@ -113,7 +113,7 @@ jr_05f_4067:
     ld a, $01
     ld [$c8a1], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
 WriteFldUI_40eb:
@@ -658,7 +658,7 @@ LoadFldUI_43ba:
     ld [$1b11], sp
     ld l, b
     ld hl, $9800
-    ld bc, $140b
+    ld bc, ClearHRAMTimers
     call SaveFldUI_424a
     ret
 
@@ -2460,7 +2460,7 @@ LoadFldUI_4ed5:
     inc d
     ld c, a
     ld l, $4f
-    ld hl, $394f
+    ld hl, AudioWritePort
     ld c, a
     ld a, $04
     ldh [$bb], a
@@ -5203,7 +5203,7 @@ jr_05f_5bb0:
     ld [$c8a1], a
     call EnableLYCInterrupt
     ld a, $03
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, [$da83]
@@ -7182,7 +7182,7 @@ jr_05f_64d6:
 
 
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld [bc], a
     inc bc
 

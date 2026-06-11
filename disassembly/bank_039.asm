@@ -272,7 +272,7 @@ jr_039_4130:
     ld b, b
     ld a, a
     dec c
-    jp nc, Jump_000_2100
+    jp nc, EnableSRAMAccess
 
     ccf
     rra
@@ -536,7 +536,7 @@ jr_039_425d:
     ld de, $0e0e
     nop
     nop
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     rlca
     ret z
 
@@ -865,7 +865,7 @@ jr_039_43ed:
     sbc h
     sbc h
     nop
-    ld bc, $0901
+    ld bc, WaitSTATForOverlayB
     add hl, bc
     ld d, $1f
     add hl, de
@@ -885,7 +885,7 @@ jr_039_43ed:
     ld e, a
     ld [de], a
     rra
-    ld hl, $263f
+    ld hl, AddCarryToD
     ccf
     ld a, [de]
     rra
@@ -1157,7 +1157,7 @@ jr_039_4548:
     cp [hl]
     ld [hl], c
     rst $38
-    ld hl, $4fff
+    ld hl, PopB39_4fff
     rst $38
     add hl, de
     ld sp, hl
@@ -1417,7 +1417,7 @@ jr_039_4609:
     db $fc
     inc b
     db $fc
-    jp c, Jump_000_05be
+    jp c, LoadTextPointerHL
 
     nop
     ld a, [bc]
@@ -1699,7 +1699,7 @@ jr_039_47ca:
     ld bc, $0001
     nop
     ld a, $3e
-    ld hl, $203f
+    ld hl, SubtractDigitValue
     ccf
     ld de, $3e1f
     ccf
@@ -3427,7 +3427,7 @@ jr_039_4f7a:
     ld de, $0e0e
     ld bc, $0101
     ld bc, $6606
-    ld bc, $0704
+    ld bc, CheckBButton
     rlca
     rst $38
     db $fd
@@ -3648,7 +3648,7 @@ jr_039_50af:
     rst $38
     dec c
     nop
-    ld bc, $3001
+    ld bc, DataLookup_3001
     jr nc, jr_039_5144
 
     ld a, b
@@ -3812,7 +3812,7 @@ jr_039_5175:
     rst $30
     or e
     or e
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     or l
     ld [$4e71], a
     ld d, [hl]
@@ -4300,7 +4300,7 @@ jr_039_5363:
     db $fc
     ld [bc], a
     cp $f2
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     rlca
     add hl, bc
     rrca
@@ -4675,7 +4675,7 @@ jr_039_5580:
     ld [bc], a
     db $fc
     or $01
-    ld bc, $7878
+    ld bc, DispB39_7878
     add a
     rst $38
     add b
@@ -5852,7 +5852,7 @@ jr_039_5a92:
     dec bc
 
 jr_039_5b06:
-    ld bc, $303f
+    ld bc, DataLookup_303F
     ld e, a
     ld [hl], c
     ccf
@@ -6515,7 +6515,7 @@ jr_039_5d0c:
     dec [hl]
     dec hl
     ld e, $1f
-    ld hl, $263f
+    ld hl, AddCarryToD
     ld a, $1a
     ld a, [de]
     ld a, [bc]
@@ -11995,7 +11995,7 @@ jr_039_75e9:
     rst $38
     db $e3
     ld b, $3b
-    ld bc, $0100
+    ld bc, Boot
     nop
     jr jr_039_76ed
 
@@ -13409,7 +13409,7 @@ jr_039_7cfc:
     cp $6a
     inc b
     ld e, e
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0000
     rlca
     rlca
@@ -13568,7 +13568,7 @@ jr_039_7dd2:
     db $76
     ld d, [hl]
     ld a, c
-    ld bc, $0468
+    ld bc, VBlankReentryDone
     db $ec
     ld a, h
     ld e, $fa

@@ -1552,7 +1552,7 @@ jr_040_47dc:
     db $dd
     ld a, $ff
     nop
-    jp Jump_000_3d3c
+    jp MenuCheckAndCall
 
 
     cp $c2
@@ -1810,7 +1810,7 @@ jr_040_492d:
     ld e, l
     cp $6a
     rst $38
-    jp nz, Jump_000_25ff
+    jp nz, AddBGMapOffset
 
     cp $ab
     ld [hl], h

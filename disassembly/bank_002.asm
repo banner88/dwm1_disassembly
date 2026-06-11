@@ -846,12 +846,12 @@ jr_002_4216:
     ld c, $01
     dec bc
     ld [bc], a
-    ld de, $0b03
+    ld de, DispatchAboveE2
     inc b
     ld c, $03
     dec bc
     ld [bc], a
-    ld de, $0b01
+    ld de, DispatchBank42Rst
     rst $38
     rst $38
     pop bc
@@ -3099,7 +3099,7 @@ jr_002_4bf3:
     nop
     inc b
     ld b, $01
-    ld bc, $0604
+    ld bc, CheckTextTerminator
     ld bc, $0401
     ld b, $01
     ld [bc], a
@@ -3215,7 +3215,7 @@ label4e9f:
     ld de, $310e
     ld hl, $8b00
     call WaitLCDTransfer
-    ld de, $3110
+    ld de, AdvanceHLAndSetup
     ld hl, $8c00
     call WaitLCDTransfer
     ld de, $6df0
@@ -3267,7 +3267,7 @@ label4e9f:
     call ClearOAMBuffer
     call $ff80
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, $fc
@@ -3325,7 +3325,7 @@ label4e9f:
     xor a
     ld [$c892], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, $fc
@@ -3383,7 +3383,7 @@ label4e9f:
     xor a
     ld [$c892], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, $fc
@@ -3441,7 +3441,7 @@ label4e9f:
     xor a
     ld [$c892], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 label512c:
     ld a, [$c88b]
@@ -7320,7 +7320,7 @@ jr_002_6bcd:
     jr nz, @-$0e
 
 jr_002_6be9:
-    ld bc, $3000
+    ld bc, NopReturn
     ldh a, [rSC]
     nop
     ld h, $f3
@@ -7369,7 +7369,7 @@ jr_002_6c22:
     ld [bc], a
 
 jr_002_6c2a:
-    ld bc, $2800
+    ld bc, DataTable_2800
     ld [$0002], sp
     jr c, jr_002_6c3a
 
@@ -8105,7 +8105,7 @@ jr_002_6f4d:
 
     ld c, $04
     db $10
-    ld de, $1310
+    ld de, ReadJoypadDMG
     ld d, $17
     ld d, $17
     ld d, $17
@@ -9924,7 +9924,7 @@ jr_002_7866:
     ld [hl+], a
     nop
     rrca
-    ld bc, $032d
+    ld bc, Goto_Title
     ld [bc], a
     inc de
     ld [$0600], sp
@@ -10484,7 +10484,7 @@ jr_002_7b5f:
     call $23e4
     ld bc, $017e
     call $1196
-    jp Jump_000_0730
+    jp RecombineTilemapAddr
 
 
 CheckBattleMenuBit3:
@@ -10572,7 +10572,7 @@ jr_002_7c05:
 Jump_002_7c11:
     ld a, [$cc00]
     and a
-    jp z, Jump_000_0733
+    jp z, NextTilemapByte
 
     call GameStateUpdate_036F
     call $0898

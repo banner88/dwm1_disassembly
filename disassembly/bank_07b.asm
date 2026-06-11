@@ -460,7 +460,7 @@ jr_07b_4211:
     inc h
     inc bc
     inc b
-    jp z, Jump_000_3e02
+    jp z, MenuDispatchData
 
     ld [bc], a
 
@@ -539,7 +539,7 @@ jr_07b_4225:
     rra
     rlca
     inc bc
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     add hl, bc
     rst $38
@@ -775,7 +775,7 @@ jr_07b_434a:
     ld e, b
     ld e, c
     rst $38
-    ld bc, $05fd
+    ld bc, LoadDestHigh
     dec [hl]
     push af
     dec h
@@ -786,7 +786,7 @@ jr_07b_434a:
     ldh [rIE], a
     ld hl, sp-$01
     cp $ff
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     rst $38
     rra
     rst $38
@@ -1085,7 +1085,7 @@ jr_07b_4488:
     or c
     and c
     rst $38
-    jp nz, Jump_000_2242
+    jp nz, ComputeMonsterOffset
 
     ld hl, $0c90
     inc hl
@@ -1453,7 +1453,7 @@ jr_07b_467a:
 
 jr_07b_467e:
     inc b
-    jp z, Jump_000_3e02
+    jp z, MenuDispatchData
 
     ld [bc], a
     add hl, sp
@@ -1528,7 +1528,7 @@ jr_07b_467e:
     rra
     rlca
     inc bc
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     add hl, bc
     rst $38
@@ -2507,7 +2507,7 @@ jr_07b_4af0:
 
 
     db $db
-    jp Jump_000_06bf
+    jp SetBlankArrowTile
 
 
     rst $38
@@ -3039,7 +3039,7 @@ jr_07b_4d56:
     inc h
     inc bc
     inc b
-    jp z, Jump_000_3e02
+    jp z, MenuDispatchData
 
     ld [bc], a
     add hl, sp
@@ -3123,7 +3123,7 @@ jr_07b_4d70:
     rra
     rlca
     inc bc
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     dec bc
     rst $38
@@ -3770,7 +3770,7 @@ jr_07b_5040:
 
     ldh a, [$0c]
     ld b, $03
-    ld bc, $3600
+    ld bc, AudioAdvanceHigh
     ld e, e
     ld [hl], b
     nop
@@ -3971,7 +3971,7 @@ jr_07b_50fe:
     add b
     ld b, l
     ld a, d
-    ld bc, $080c
+    ld bc, CheckTile90
     dec bc
     ld e, a
     cp a

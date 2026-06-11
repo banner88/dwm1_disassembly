@@ -53,11 +53,11 @@ DispatchEntry_59_0:
     xor a
     ld [$c8ec], a
     ld hl, $9700
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call SetupVRAMCopy
     call LoadB59_42c0
     ld hl, $8800
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call SetupVRAMCopy
     xor a
     ld [$c823], a
@@ -65,7 +65,7 @@ DispatchEntry_59_0:
     ld [$c822], a
     call SetB59_52e4
     ld hl, $9700
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     ld a, l
     ld [$c827], a
     ld a, h
@@ -110,7 +110,7 @@ DispatchEntry_59_0:
     ld [$c8a1], a
     call EnableLYCInterrupt
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, [$c850]
@@ -422,10 +422,10 @@ LoadB59_42c0:
     ld h, $00
     add hl, hl
     ld a, l
-    add $63
+    add LOW(SaveSlotPtrTable)
     ld l, a
     ld a, h
-    adc $43
+    adc HIGH(SaveSlotPtrTable)
     ld h, a
     ld e, [hl]
     inc hl
@@ -515,6 +515,7 @@ jr_059_435d:
     ret
 
 
+SaveSlotPtrTable:
     ld bc, $022f
     cpl
     inc bc
@@ -1176,7 +1177,7 @@ jr_059_453f:
     ld [$c8a1], a
     call EnableLYCInterrupt
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, [$c0d9]
@@ -1529,7 +1530,7 @@ jr_059_453f:
     ld [$c8a1], a
     call EnableLYCInterrupt
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, [$c850]

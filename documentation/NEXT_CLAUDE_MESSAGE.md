@@ -10,9 +10,11 @@ with auto-generated labels. Our job is converting those labels into meaningful n
 identifying data structures, and annotating the code so the game can eventually be
 fully modded with a GUI editor.
 
-**Current state: 40% named** — 7,881 properly named labels, 19,053 auto-labels remaining.
-All 2,404 function entry points (`Call_` labels) are named. Remaining auto-labels are
-internal branch targets (`Jump_`, `jr_`, `label`).
+**Current state: ~45% named** — ~8,900 properly named labels, ~18,000 auto-labels remaining.
+All 2,404 function entry points (`Call_` labels) are named.
+Bank $00: ALL 761 internal labels named (0 unaliased remain).
+Bank $04: ALL 253 internal labels named (0 unaliased remain).
+Remaining auto-labels are internal branch targets in other banks.
 
 ## 2. The User
 
@@ -73,6 +75,22 @@ md5sum game.gbc
 - Remaining banks pattern-named with category prefix + unique address suffix
   (e.g. `LoadBtl_7848`, `CallFld_5629`, `SetBrd_45a3`)
 
+
+### Dynamic Repointing (this session — CRITICAL)
+- **Room data pointer table converted to labels** — gen_room_data_db.py modified
+  to output `dw RoomSub_Castle` instead of `dw $4C13`. All 92 unique room data
+  blocks are now label-referenced. ROM still matches MD5.
+- **14 hardcoded address calculations converted** — `add $XX / adc $YY` patterns
+  converted to `add LOW(Label) / adc HIGH(Label)` for: MonsterInfoTable, 
+  EnemyStatsTable, ExpCurveTables, StatGrowthTables, EncounterPoolData (6 refs),
+  FloorLayoutData (2 refs), FamilyRecipeTable (new label + 2 refs), 
+  FloorTilePatterns (new label), label8_447e.
+- **22 hardcoded refs remain** — documented in DATA_STRUCTURES.md with target
+  addresses and likely purposes. Bank $17 palette refs need db line splitting.
+
+### Label Naming (this session)
+- **Bank $00: 761 labels renamed** — ALL auto-labels now named or aliased
+- **Bank $04: 253 labels renamed** — ALL auto-labels now named or aliased
 ### Infrastructure (this session)
 - **47 dispatch table headers fixed** — misassembled instructions → proper `db`/`dw`
 - **1,028 cross-bank calls traced** — complete `rst $10` call graph
@@ -96,12 +114,22 @@ md5sum game.gbc
 
 ## 6. What's NOT Done — Priority for Next Session
 
-### Priority 1: Jump_/jr_ Naming in Core Banks
-19,053 auto-labels remain (1,072 `Jump_`, 17,975 `jr_`, 410 `label`).
-These are internal branch targets within functions. Most impactful banks:
-- Bank $00 (~1,200 auto): engine core — most referenced code
-- Banks $50-$58 (~3,000 auto): battle system
-- Bank $04 (~250 auto): script VM
+### Priority 1: Practical Editor Workflow Documentation
+ALL major data tables are now dynamically repointable. Next step is creating
+step-by-step guides: "How to add a custom room", "How to modify breeding",
+"How to add new scripts". The tools exist, the data is labeled — glue is needed.
+
+### Priority 2: WRAM Symbol Definitions
+Key WRAM regions still use raw addresses ($C8xx, $CAxx, $CBxx, $DBxx).
+Define these as named symbols in a shared `.inc` file.
+
+### Priority 3: Jump_/jr_ Naming in Battle Banks
+~18,000 auto-labels remain. Banks $00 and $04 are DONE.
+Most impactful remaining: Banks $50-$58 (~3,000 auto) for battle system.
+
+### Priority 4: Data Table Conversion (3 misassembled regions)
+Bank $0B ($4940-$49A0), Bank $08 ($7740-$7780), Bank $32 ($5A50-$5A70).
+These are data bytes misassembled as instructions by mgbdis.
 
 ### Priority 2: WRAM Symbol Definitions
 Key WRAM regions still use raw addresses in code:

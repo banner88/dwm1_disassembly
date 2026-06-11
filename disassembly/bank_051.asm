@@ -108,7 +108,7 @@ jr_051_408b:
     ld [$c8a1], a
     call EnableLYCInterrupt
     ld a, $0b
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
 LoadBtlS_40d1:
@@ -3887,7 +3887,7 @@ jr_051_55b7:
     call ExtractDigits
     ld a, $47
     call SetBGM
-    ld hl, $0b01
+    ld hl, DispatchBank42Rst
     call SetupTilemapTransfer
     ld hl, $1302
     rst $10
@@ -4112,7 +4112,7 @@ jr_051_5754:
     ld h, $06
     ld de, $c1b0
     call SetupVRAMParams
-    ld hl, $0b03
+    ld hl, DispatchAboveE2
     ldh a, [$da]
     ld c, a
 
@@ -4373,7 +4373,7 @@ SaveBtlS_590d:
     ld [$c823], a
     ld a, $06
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadBtlS_73a3
     pop hl
     ld a, l
@@ -4563,7 +4563,7 @@ jr_051_59d6:
     jr z, jr_051_5a72
 
 jr_051_5a65:
-    ld hl, $0b07
+    ld hl, RunScriptEngine
     call SetupTilemapTransfer
     ld a, $0b
     ld [wEventStateMachineIndex], a
@@ -4648,7 +4648,7 @@ jr_051_5ae0:
     cp $09
     jr c, jr_051_5b04
 
-    ld hl, $0b07
+    ld hl, RunScriptEngine
     call SetupTilemapTransfer
     ld a, $0b
     ld [wEventStateMachineIndex], a
@@ -5478,7 +5478,7 @@ SaveBtlS_605b:
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     pop hl
     push hl
     call LoadBtlS_73a3

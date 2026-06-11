@@ -894,7 +894,7 @@ FuncB34_43fd:
     db $da, $ff, $00
 
     rst $38
-    ld bc, $06ff
+    ld bc, PlaySoundAndJump
     rst $38
     add hl, de
     rst $38
@@ -1665,7 +1665,7 @@ jr_034_471c:
     ld c, $07
     add hl, bc
     ld hl, $090f
-    ld bc, $06ff
+    ld bc, PlaySoundAndJump
     ei
     dec c
     rst $30
@@ -1867,7 +1867,7 @@ jr_034_481a:
     di
     add b
     di
-    ld bc, $3ce5
+    ld bc, PaletteStoreCD80
     ld l, e
     dec a
     ld h, $2d
@@ -3074,7 +3074,7 @@ jr_034_4d4a:
     add e
     add h
     add a
-    jp Jump_000_20c3
+    jp SubDigitValue
 
 
     and b
@@ -4505,7 +4505,7 @@ jr_034_536a:
     inc e
     rrca
     ld [de], a
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     ei
     ld c, $fb
     ld c, $ff
@@ -4946,7 +4946,7 @@ jr_034_55ad:
     cp $02
     rst $38
     ld bc, $3a04
-    ld bc, $2304
+    ld bc, SetATKMax999
     ld bc, $c07f
     ccf
     ldh [$1f], a
@@ -6562,7 +6562,7 @@ jr_034_5d26:
     dec bc
     inc c
     rst $38
-    jp nz, Jump_000_2ef3
+    jp nz, LCDCHandlerBody
 
     rst $28
     ld a, $f2
@@ -7112,7 +7112,7 @@ jr_034_5f54:
     ldh [$df], a
     ld [hl], b
     ld [$0b16], sp
-    ld bc, $06ff
+    ld bc, PlaySoundAndJump
     db $fd
     ld a, a
     rst $38
@@ -8622,7 +8622,7 @@ LoadB34_6567:
     db $10
     rst $38
     ldh a, [rIE]
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     ld hl, sp+$0a
     ei
     rrca
@@ -9482,7 +9482,7 @@ jr_034_6a95:
     ld hl, sp+$78
     rst $38
     rlca
-    ld bc, $200e
+    ld bc, StoreDigitB
     ccf
     jr nz, @+$01
 
@@ -10032,7 +10032,7 @@ jr_034_6b43:
     ldh a, [rIE]
     sbc h
     cp a
-    jp z, Jump_000_21df
+    jp z, LoadExtraFromSRAM
 
     ld d, a
     cp c
@@ -10040,7 +10040,7 @@ jr_034_6b43:
     db $fd
     add a
     cp a
-    ld de, $087f
+    ld de, RetNop_087F
     jr nc, @+$09
 
     add b
@@ -10230,7 +10230,7 @@ jr_034_6dde:
     nop
     rlca
     nop
-    ld bc, $1310
+    ld bc, ReadJoypadDMG
     rst $28
     ldh a, [rNR34]
     pop af
@@ -11227,7 +11227,7 @@ jr_034_720e:
     rst $38
     ld d, a
     cp b
-    ld hl, $20ee
+    ld hl, EnableSRAM
     jr nz, @+$01
 
     rst $38

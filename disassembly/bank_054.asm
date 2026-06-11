@@ -610,7 +610,7 @@ jr_054_4325:
     nop
     rlca
     inc de
-    ld de, $0100
+    ld de, Boot
     rrca
     ld bc, $0740
     ld [bc], a
@@ -1133,7 +1133,7 @@ jr_054_455b:
     nop
     dec de
     inc sp
-    ld hl, $0100
+    ld hl, Boot
     nop
     nop
     ld b, b
@@ -1307,7 +1307,7 @@ jr_054_455b:
     nop
     dec h
     inc de
-    ld de, $0100
+    ld de, Boot
     rrca
     inc b
     add e
@@ -1340,7 +1340,7 @@ jr_054_455b:
     nop
     daa
     inc de
-    ld de, $0100
+    ld de, Boot
     rrca
     inc b
     add d
@@ -1651,7 +1651,7 @@ jr_054_47c1:
     nop
     add hl, sp
     inc de
-    ld de, $060e
+    ld de, WaitScreenUpdateDone
     nop
     nop
     add e
@@ -1670,7 +1670,7 @@ jr_054_47c1:
     ld de, $040c
     add hl, de
     inc b
-    ld bc, $3a0e
+    ld bc, AudioLookupTable
     ld [bc], a
     nop
     nop
@@ -1685,7 +1685,7 @@ jr_054_47c1:
     ld de, $080e
     add hl, de
     inc b
-    ld bc, $3a0e
+    ld bc, AudioLookupTable
     ld [bc], a
     nop
     nop
@@ -2808,7 +2808,7 @@ jr_054_4cd8:
     nop
     ld l, l
     inc sp
-    ld hl, $0100
+    ld hl, Boot
     nop
     nop
     jr nz, jr_054_4cfe
@@ -3871,7 +3871,7 @@ jr_054_4cfe:
     rst $38
     add h
     ld de, $0000
-    ld bc, $0100
+    ld bc, Boot
     ld b, $23
     ld [bc], a
     adc h

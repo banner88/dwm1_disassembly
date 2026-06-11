@@ -903,7 +903,7 @@ AddCursorOffset:
     ld a, h
     ld [$c90a], a
     call SetItem_41ef
-    ld de, $2e10
+    ld de, MenuBorderRightEdge
     ld hl, $8800
     call WaitDMATransfer
     ld a, $02
@@ -918,7 +918,7 @@ AddCursorOffset:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     call ClrItem_4323
     ld a, $60
@@ -1138,7 +1138,7 @@ jr_012_45ec:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $06e1
     call TextBankDispatch
@@ -1367,7 +1367,7 @@ jr_012_4772:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -1506,7 +1506,7 @@ jr_012_483a:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -1538,7 +1538,7 @@ jr_012_483a:
     ld a, [$c934]
     or b
     ld [wOPTN_and_Item_selection], a
-    ld de, $2e10
+    ld de, MenuBorderRightEdge
     ld hl, $8800
     call WaitDMATransfer
     ld a, $02
@@ -1553,7 +1553,7 @@ jr_012_483a:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     call LoadItem_4682
     call SetItem_4643
@@ -1619,7 +1619,7 @@ jr_012_4954:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -1925,7 +1925,7 @@ jr_012_4b17:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -1968,7 +1968,7 @@ jr_012_4b17:
     srl a
     srl a
     ld [$c8e3], a
-    ld de, $2e10
+    ld de, MenuBorderRightEdge
     ld hl, $8800
     call WaitDMATransfer
     ld a, $02
@@ -1983,7 +1983,7 @@ jr_012_4b17:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     call SetItem_4cb7
     call SetItem_4ce5
@@ -2068,7 +2068,7 @@ jr_012_4b17:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     call SetItem_4cb7
     or a
@@ -2333,7 +2333,7 @@ jr_012_4ded:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -2503,7 +2503,7 @@ jr_012_4eef:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -2546,7 +2546,7 @@ jr_012_4eef:
     srl a
     srl a
     ld [$c8e3], a
-    ld de, $2e10
+    ld de, MenuBorderRightEdge
     ld hl, $8800
     call WaitDMATransfer
     ld a, $02
@@ -2561,7 +2561,7 @@ jr_012_4eef:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     call LoadItem_49e5
     call LoadItem_4d5d
@@ -2627,7 +2627,7 @@ jr_012_501f:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -2906,7 +2906,7 @@ jr_012_51a4:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -2949,7 +2949,7 @@ jr_012_51a4:
     srl a
     srl a
     ld [$c8e3], a
-    ld de, $2e10
+    ld de, MenuBorderRightEdge
     ld hl, $8800
     call WaitDMATransfer
     ld a, $02
@@ -2964,7 +2964,7 @@ jr_012_51a4:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     call SetItem_4ce5
     call LoadItem_49e5
@@ -3208,7 +3208,7 @@ jr_012_5426:
     ld a, [$c934]
     or b
     ld [$c8de], a
-    ld de, $2e10
+    ld de, MenuBorderRightEdge
     ld hl, $8800
     call WaitDMATransfer
     ld a, $02
@@ -3223,7 +3223,7 @@ jr_012_5426:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     call LoadItem_5313
     call SetItem_4643
@@ -3505,7 +3505,7 @@ jr_012_55f5:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -3755,7 +3755,7 @@ SaveItem_578c:
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     pop hl
     push hl
     call LoadItem_411a
@@ -4046,7 +4046,7 @@ jr_012_5928:
     srl a
     srl a
     ld [$c8e3], a
-    ld de, $2e10
+    ld de, MenuBorderRightEdge
     ld hl, $8800
     call WaitDMATransfer
     ld a, $02
@@ -4078,7 +4078,7 @@ jr_012_5928:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -4162,7 +4162,7 @@ CallItem_5a07:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -4198,7 +4198,7 @@ LoadItem_5a75:
     add $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ret
 
@@ -4642,7 +4642,7 @@ jr_012_5d2c:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -4685,7 +4685,7 @@ jr_012_5d2c:
     srl a
     srl a
     ld [$c8e3], a
-    ld de, $2e10
+    ld de, MenuBorderRightEdge
     ld hl, $8800
     call WaitDMATransfer
     ld a, $02
@@ -4720,7 +4720,7 @@ jr_012_5d2c:
     ld e, [hl]
     add c
     ld e, [hl]
-    jp nc, Jump_000_295e
+    jp nc, DataLookup_295E
 
     ld e, a
     dec a
@@ -4832,7 +4832,7 @@ jr_012_5e93:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -4952,7 +4952,7 @@ jr_012_5f1d:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld bc, $0000
 
@@ -5073,7 +5073,7 @@ jr_012_5fec:
     ld a, $33
     ld [$c823], a
     ld hl, $8aa0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
     call AddCursorOffset
@@ -5559,7 +5559,7 @@ SaveItem_62ed:
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     pop hl
     push hl
     call LoadItem_411a
@@ -5706,7 +5706,7 @@ LoadItem_63d0:
     ld a, $05
     ld [$c822], a
     ld hl, $9140
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadItem_411a
     ld hl, $ca94
     ld a, [$cac0]
@@ -5817,7 +5817,7 @@ SaveItem_64a5:
     ld [$c823], a
     ld a, $06
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     pop hl
     push hl
     call LoadItem_411a
@@ -6010,10 +6010,10 @@ CmpItem_65cb:
     ld h, $00
     add hl, hl
     ld a, l
-    add $f2
+    add LOW(ItemSlotPtrTable)
     ld l, a
     ld a, h
-    adc $65
+    adc HIGH(ItemSlotPtrTable)
     ld h, a
     ld e, [hl]
     inc hl
@@ -6029,6 +6029,7 @@ jr_012_65ef:
     ret
 
 
+ItemSlotPtrTable:
     nop
     cpl
     ld b, b
@@ -6647,7 +6648,7 @@ jr_012_6835:
     ld a, h
     ld [$c90a], a
     call SetItem_41ef
-    ld de, $2e11
+    ld de, MenuBorderFill
     ld hl, $8800
     call WaitDMATransfer
     call ClrItem_4323

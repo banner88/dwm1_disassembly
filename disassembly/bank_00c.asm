@@ -50,7 +50,7 @@ LoadBc_4007:
     ld l, a
     ld h, $00
     add hl, hl               ; HL = map_type × 2
-    ld de, $41ba             ; Master script pointer table
+    ld de, Bank0C_ScriptMasterTable             ; Master script pointer table
     add hl, de               ; HL = $41BA + map_type × 2
     ld e, [hl]
     inc hl

@@ -2693,7 +2693,7 @@ SkillSmashed:
     cp $a4
     jr z, jr_052_4f28
 
-    ld hl, $2929
+    ld hl, DataTable_2929
 
 jr_052_4f28:
     call SetSkillAnimA
@@ -8212,7 +8212,7 @@ jr_052_6cc7:
     ld a, [$db8a]
     ld c, a
     ld b, $00
-    ld hl, $4011
+    ld hl, SkillFunctionTable
     add hl, bc
     add hl, bc
     call RST_08

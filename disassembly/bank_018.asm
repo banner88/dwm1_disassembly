@@ -93,10 +93,10 @@ label18_400b:
     ld h, $00
     add hl, hl
     ld a, l
-    add $23
+    add LOW(TextDataPtrLookup)
     ld l, a
     ld a, h
-    adc $41
+    adc HIGH(TextDataPtrLookup)
     ld h, a
     ld a, [hl+]
     ld d, [hl]
@@ -141,9 +141,10 @@ jr_018_40d0:
     ld a, $03
     ld [$c8a1], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
+TextDataPtrLookup:
     ld bc, $022f
     cpl
     inc bc
@@ -1563,7 +1564,7 @@ SaveAud_487c:
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    ld de, jr_000_0901
+    ld de, WaitSTATForOverlayB
     pop hl
     push hl
     call LoadAud_503b
@@ -3763,7 +3764,7 @@ SaveAud_546b:
     ret c
 
     cp $e0
-    ld [jr_000_0a09], sp
+    ld [FormatHundredThousands], sp
     dec bc
     rst $38
     ret c
@@ -5018,7 +5019,7 @@ jr_018_70e4:
     add e
     ld b, l
     add e
-    jp nc, Jump_000_0743
+    jp nc, RestoreRowCounter
 
     add e
     ld b, h
@@ -5626,7 +5627,7 @@ jr_018_7331:
     ld e, b
     add h
     or c
-    ld bc, jr_000_2a00
+    ld bc, Data_2A00
     ld [hl], e
     cp l
     nop
@@ -7032,7 +7033,7 @@ jr_018_790a:
     scf
     add d
     ld e, e
-    ld de, $4f82
+    ld de, SaveAud_4f82
     add d
     ld b, e
     add d
@@ -8025,7 +8026,7 @@ jr_018_7c67:
     nop
     add c
     or c
-    ld bc, $4e00
+    ld bc, FuncAud_4e00
     ld a, l
     cp l
     nop

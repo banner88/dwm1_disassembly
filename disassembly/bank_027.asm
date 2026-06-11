@@ -1664,7 +1664,7 @@ jr_027_4734:
     inc b
     add sp, $00
     db $10
-    ld de, $3404
+    ld de, AudioPopDE
     rrca
 
 jr_027_4770:
@@ -2055,7 +2055,7 @@ jr_027_48d0:
     ld l, $2f
     inc c
     ldh a, [rIF]
-    ld bc, $3130
+    ld bc, CallBank5EEntry1_3130
     ld c, $0f
     inc c
     ld b, d
@@ -2875,7 +2875,7 @@ jr_027_4c81:
     nop
     inc c
     rrca
-    ld bc, $2800
+    ld bc, DataTable_2800
     nop
     nop
 
@@ -3557,7 +3557,7 @@ jr_027_4f6b:
     ld [de], a
     inc c
     ld [$0000], sp
-    ld bc, $060c
+    ld bc, SetScreenUpdateFlag
     db $10
     inc c
     ld [de], a
@@ -3570,7 +3570,7 @@ jr_027_4f6b:
 
 jr_027_4f7f:
     db $10
-    ld de, $260c
+    ld de, AddCarryToH
     db $10
     inc c
     ld [hl-], a
@@ -4403,7 +4403,7 @@ jr_027_5359:
     jr @+$0e
 
     call nc, $100c
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
     jr nz, jr_027_538c
 
@@ -4504,7 +4504,7 @@ jr_027_538c:
     ld b, $04
     ld [hl], h
     rrca
-    ld bc, $3130
+    ld bc, CallBank5EEntry1_3130
     inc b
     ret z
 
@@ -6674,7 +6674,7 @@ jr_027_5dcf:
     ld [hl+], a
     ld a, [de]
     db $10
-    ld de, $3404
+    ld de, AudioPopDE
     inc e
     inc b
     ld b, d
@@ -6857,7 +6857,7 @@ jr_027_5e5f:
     inc b
     ld b, $02
     inc b
-    jp nc, Jump_000_3a0c
+    jp nc, AudioCheckZero2
 
     dec sp
 
@@ -6884,7 +6884,7 @@ jr_027_5ea2:
     inc b
     ld h, d
     ld b, $10
-    ld de, $3404
+    ld de, AudioPopDE
     ld e, $38
     add hl, sp
     inc b
@@ -7513,7 +7513,7 @@ jr_027_6151:
     sub h
     inc c
     db $10
-    ld de, $200c
+    ld de, GetUpperDigit
     ld [bc], a
     inc c
     inc h
@@ -7680,7 +7680,7 @@ jr_027_61f8:
     nop
     inc c
     rrca
-    ld bc, $2800
+    ld bc, DataTable_2800
     nop
     nop
 
@@ -8519,7 +8519,7 @@ jr_027_657a:
     inc c
     db $ca, $02, $0c
 
-    jp nc, Jump_000_320c
+    jp nc, AudioWave_320C
 
     inc sp
     inc c
@@ -11391,7 +11391,7 @@ jr_027_71a2:
     ld h, $27
     nop
     ld l, $0f
-    ld bc, $3130
+    ld bc, CallBank5EEntry1_3130
     nop
     add d
     inc b
@@ -11931,7 +11931,7 @@ jr_027_73ff:
 
 jr_027_7427:
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
     or b
     ld c, $34
@@ -12278,7 +12278,7 @@ jr_027_75c0:
     ld a, [hl-]
     dec sp
     db $10
-    ld de, $1514
+    ld de, StoreRunLength
     inc c
     or b
     ld c, $0c
@@ -12343,7 +12343,7 @@ jr_027_75ea:
     inc c
     adc h
     rrca
-    ld bc, $200c
+    ld bc, GetUpperDigit
     nop
     inc c
     ld h, d
@@ -12485,7 +12485,7 @@ jr_027_76a9:
     rrca
     inc bc
     inc b
-    jp nz, Jump_000_3402
+    jp nz, AudioData_3402
 
     dec [hl]
     inc b
@@ -12728,7 +12728,7 @@ jr_027_77a7:
     inc b
     ld [hl], h
     rrca
-    ld bc, $0100
+    ld bc, Boot
     ld [bc], a
     inc bc
     inc b

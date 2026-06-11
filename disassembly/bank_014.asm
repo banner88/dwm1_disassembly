@@ -347,10 +347,10 @@ jr_014_4264:
     ld a, [$da13]
     ld d, a
     ld a, e
-    add $1d
+    add LOW(EnemyGroupTable)
     ld e, a
     ld a, d
-    adc $4a
+    adc HIGH(EnemyGroupTable)
     ld d, a
     ld a, [de]
     ld [hl], a
@@ -1255,10 +1255,10 @@ LoadEnemyStats:
     ld a, $19                ; 25 = entry size
     call Mul16x8To24       ; HL = EID × 25
     ld a, l
-    add $1d                  ; HL += $4C1D (enemy stats table base)
+    add LOW(EnemyStatsTable)   ; HL += EnemyStatsTable base address
     ld l, a
     ld a, h
-    adc $4c
+    adc HIGH(EnemyStatsTable)
     ld h, a
     pop de
     ld b, $19                ; copy 25 bytes
@@ -1288,7 +1288,7 @@ LookupBossRedirect:
     ld c, a
     ld a, [$da13]            ; source EID high
     ld b, a                  ; BC = source EID
-    ld hl, $4893             ; redirect table base
+    ld hl, BossRedirectTable             ; redirect table base
 
 jr_014_4874:
     ld a, [hl+]              ; read match EID low
@@ -1391,7 +1391,9 @@ UnknownData_491F:
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49DF
     db $FF, $FF, $FF, $D5, $D6, $D7, $D8, $D9, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49EF
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49FF
-    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00  ; $4A0F
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+EnemyGroupTable:
+    db $FF, $00  ;  $4A0F
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF, $FF, $FF, $FF, $FF  ; $4A1F
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF  ; $4A2F
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $4A3F

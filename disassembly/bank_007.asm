@@ -647,7 +647,7 @@ jr_007_43f6:
     xor $01
     ld [$c92f], a
     ld hl, $c5a0
-    ld bc, $0100
+    ld bc, Boot
     ld a, $e0
     call FillNBytesWithRegA
     call LoadFld_690d
@@ -1108,7 +1108,7 @@ jr_007_4704:
     ld a, $0a
     ld [$c822], a
     ld hl, $9330
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld_69b6
     ld hl, $cacb
     call LoadFld_6dba
@@ -1125,7 +1125,7 @@ jr_007_4704:
     ld a, $05
     ld [$c822], a
     ld hl, $94c0
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld_69b6
     ld hl, $cacd
     call LoadFld_6da8
@@ -1297,7 +1297,7 @@ SaveFld_488e:
     ld [$c823], a
     ld a, $06
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld_69b6
     pop hl
     ld a, l
@@ -1396,7 +1396,7 @@ jr_007_4927:
     ld a, $05
     ld [$c822], a
     ld hl, $94c0
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld_69a5
     ld hl, $cb4d
     call LoadFld_6da8
@@ -1434,7 +1434,7 @@ jr_007_497d:
     ld a, $05
     ld [$c822], a
     ld hl, $9550
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld_69a5
     ld de, $755b
     call LoadFld_68dc
@@ -1683,7 +1683,7 @@ jr_007_4b4f:
     ld [$c823], a
     ld a, $08
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld_69b6
     pop hl
     ld a, l
@@ -2758,7 +2758,7 @@ CalcFld_51cb:
     ld a, $0d
     ld [$c823], a
     ld hl, $9700
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld_69b6
     ld de, $704d
     call LoadFld_68dc
@@ -3076,7 +3076,7 @@ LoadFld_5456:
     ld a, $0d
     ld [$c823], a
     ld hl, $8800
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld_69b6
     ld hl, $8890
     ld b, $48
@@ -3431,14 +3431,14 @@ jr_007_56a3:
     nop
     add hl, hl
     ld bc, $ffff
-    ld hl, $0150
+    ld hl, BootMain
     call SaveFld_6889
     ld a, [$c8dd]
     and $01
     add $f1
     call Write_gfx_tile
     push af
-    ld hl, $0150
+    ld hl, BootMain
     ld a, l
     add $00
     ld l, a
@@ -3485,10 +3485,10 @@ jr_007_56fd:
     ld h, d
     add hl, hl
     ld a, l
-    add $0c
+    add LOW(TilesetLookupTable)
     ld l, a
     ld a, h
-    adc $57
+    adc HIGH(TilesetLookupTable)
     ld h, a
     ld e, [hl]
     inc hl
@@ -3496,6 +3496,7 @@ jr_007_56fd:
     ret
 
 
+TilesetLookupTable:
     ld [bc], a
     nop
     inc b
@@ -3608,7 +3609,7 @@ jr_007_56fd:
     nop
     ld [bc], a
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     ld bc, $0300
     nop
@@ -3699,7 +3700,7 @@ jr_007_56fd:
     nop
     inc bc
     nop
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     nop
     ld [bc], a
     nop
@@ -4168,10 +4169,10 @@ jr_007_5a82:
     ld h, $00
     add hl, hl
     ld a, l
-    add $0c
+    add LOW(TilesetLookupTable)
     ld l, a
     ld a, h
-    adc $57
+    adc HIGH(TilesetLookupTable)
     ld h, a
     ld c, [hl]
     inc hl
@@ -4292,10 +4293,10 @@ jr_007_5b38:
     ld h, $00
     add hl, hl
     ld a, l
-    add $0c
+    add LOW(TilesetLookupTable)
     ld l, a
     ld a, h
-    adc $57
+    adc HIGH(TilesetLookupTable)
     ld h, a
     ld c, [hl]
     inc hl
@@ -5055,7 +5056,7 @@ Jump_007_6044:
 
 
     add [hl]
-    ld bc, $01c6
+    ld bc, AfterGBCInit
     ld b, $02
     rst $38
     rst $38
@@ -6082,10 +6083,10 @@ SaveFld_66b1:
     ld h, $00
     add hl, hl
     ld a, l
-    add $14
+    add LOW(TileRefLookupTable)
     ld l, a
     ld a, h
-    adc $6e
+    adc HIGH(TileRefLookupTable)
     ld h, a
     ld e, [hl]
     inc hl
@@ -6863,7 +6864,7 @@ label7_6b04:
     ld de, $2e17
     ld hl, $8580
     call WaitDMATransfer
-    ld de, $2e18
+    ld de, MenuBorderFillLeft
     ld hl, $85c0
     call WaitDMATransfer
     ld de, $2e19
@@ -7453,6 +7454,7 @@ jr_007_6df8:
     ret
 
 
+TileRefLookupTable:
     nop
     cpl
     ld b, b
@@ -10575,7 +10577,7 @@ jr_007_79fd:
     ret c
 
     cp $e0
-    ld bc, $0709
+    ld bc, SetCancelFlag
     rlca
     nop
     ld [$e002], sp
@@ -10757,7 +10759,7 @@ jr_007_79fd:
     dec c
     ld b, $ff
     ld sp, hl
-    jp z, Jump_000_0735
+    jp z, FillColumnContinue
 
     inc b
     db $fd

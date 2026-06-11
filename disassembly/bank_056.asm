@@ -34,7 +34,7 @@ jr_056_4046:
     ld a, $63
     ld [$c8a1], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
     ld a, [$c842]
@@ -1747,7 +1747,7 @@ SetB56_48a1:
     ld de, $560a
     ld hl, $8e50
     call WaitDMATransfer
-    ld hl, $0100
+    ld hl, Boot
     call GetTilemapRowAddr
     ld b, $0e
     call TilemapAdvanceColumns
@@ -1886,7 +1886,7 @@ CallB56_490f:
     ld a, $63
     ld [$c8a1], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
 SetB56_4996:
@@ -2617,7 +2617,7 @@ LoadB56_4dba:
 
     db $01
 
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0201
     db $01
 
@@ -4641,7 +4641,7 @@ jr_056_6c72:
     reti
 
 
-    ld bc, $1514
+    ld bc, StoreRunLength
     ldh a, [rIE]
     nop
     rst $38
@@ -4716,7 +4716,7 @@ jr_056_6c72:
     ld d, h
     rst $38
     ld c, h
-    ld bc, $033c
+    ld bc, Goto_EvtDemo
     jr c, @+$01
 
     ld b, h
@@ -4997,7 +4997,7 @@ jr_056_6e17:
     nop
     rst $38
     adc a
-    ld bc, $0144
+    ld bc, HeaderNewLicenseeCode
     adc a
     rst $38
     ld a, [bc]
@@ -5071,7 +5071,7 @@ jr_056_6ed5:
     rst $38
     adc b
     ld bc, $0502
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     and b
     rst $38
     sub b
@@ -5086,7 +5086,7 @@ jr_056_6ed5:
     ld bc, $0124
     ld hl, sp+$01
     inc b
-    ld bc, $0100
+    ld bc, Boot
     inc b
     ld bc, $0501
     nop
@@ -5484,7 +5484,7 @@ jr_056_705d:
     nop
     rst $38
     ld [$14ff], sp
-    ld bc, $0144
+    ld bc, HeaderNewLicenseeCode
     ld a, $01
     inc b
     ld bc, $ff00
@@ -5737,7 +5737,7 @@ jr_056_7217:
     rrca
     rst $38
     ld [$08ff], sp
-    ld bc, $0332
+    ld bc, Goto_Game
     rst $08
     rst $38
     nop
@@ -5763,7 +5763,7 @@ jr_056_7217:
     ld b, a
     rst $38
     ld c, b
-    ld bc, $0564
+    ld bc, CallTextRenderer
     ld b, a
     rst $38
     nop

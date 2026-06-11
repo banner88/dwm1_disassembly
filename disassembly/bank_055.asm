@@ -1882,7 +1882,7 @@ Jump_055_43c3:
     rst $38
     rst $38
     ld hl, $97c0
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     ld a, $01
     ld [$c823], a
     ld a, $03
@@ -1929,7 +1929,7 @@ Jump_055_43c3:
 
 
     ld hl, $8850
-    ld de, $0601
+    ld de, CopyDEtoHLByte
     ld a, $06
     ld [$c823], a
     ld a, $03
@@ -1939,7 +1939,7 @@ Jump_055_43c3:
 
 
     ld hl, $8800
-    ld de, $0b01
+    ld de, DispatchBank42Rst
     ld a, $02
     ld [$c823], a
     ld a, $03
@@ -2167,7 +2167,7 @@ LoadB55_4924:
 
 
     ld hl, $9000
-    ld de, $1007
+    ld de, WaitSTATCheck
     call SetupVRAMCopy
     ld hl, $1709
     rst $10
@@ -2187,7 +2187,7 @@ LoadB55_4924:
     ld a, $03
     ld [$c8a1], a
     ld a, $01
-    jp Jump_000_11cb
+    jp EnableLCDAndInterrupts
 
 
 LoadB55_496c:
@@ -2798,7 +2798,7 @@ LoadB55_4d44:
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    ld hl, $0901
+    ld hl, WaitSTATForOverlayB
     ld a, l
     ld [$c829], a
     ld a, h
@@ -3125,7 +3125,7 @@ LoadB55_4f8f:
     jr nz, jr_055_4fbe
 
     ld a, [wDebug_main_menu_option]
-    ld hl, $50b4
+    ld hl, BGM_IDS
     add l
     ld l, a
     ld a, $00
@@ -3139,7 +3139,7 @@ LoadB55_4f8f:
 jr_055_4fbe:
     call InitAudioSystem
     ld a, [$c0a1]
-    ld hl, $50d4
+    ld hl, SE_IDS
     add l
     ld l, a
     ld a, $00
@@ -3648,7 +3648,7 @@ jr_055_524c:
     ld [$da13], a
     ld hl, $1400
     rst $10
-    ld hl, $0901
+    ld hl, WaitSTATForOverlayB
     ld a, l
     ld [$c829], a
     ld a, h
@@ -5486,7 +5486,7 @@ jr_055_59ab:
 
 
     add e
-    jp Jump_000_0483
+    jp LinkFrameCounter
 
 
     inc bc
@@ -9901,7 +9901,7 @@ jr_055_6d70:
     rst $00
     ret nz
 
-    jp Jump_000_3905
+    jp AudioReadAndJP
 
 
     add e
@@ -9933,7 +9933,7 @@ jr_055_6d70:
     inc bc
     ld sp, hl
     add d
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     ret nz
 
     add c
@@ -11013,7 +11013,7 @@ jr_055_71f8:
     adc l
     inc bc
     db $fd
-    jp Jump_000_06fd
+    jp PlayConfirmSound
 
 
     cp $86

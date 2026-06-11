@@ -1314,7 +1314,7 @@ jr_036_45ce:
     db $e4
     push af
     rst $38
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     ei
     dec e
     rst $28
@@ -1466,7 +1466,7 @@ jr_036_4652:
     add hl, bc
     ldh a, [rNR21]
     pop af
-    ld de, $05fc
+    ld de, LoadDestLow
     ld a, [$e91e]
     ld l, e
     adc c
@@ -2646,7 +2646,7 @@ ClrB36_4bdf:
     inc bc
     ld c, $ff
     cp $ff
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     cp $0d
     rst $38
     rlca
@@ -2771,7 +2771,7 @@ jr_036_4c51:
     ei
     ld b, h
     ld a, [hl]
-    jp z, Jump_000_357f
+    jp z, AudioReadE6
 
     ld a, [hl]
     xor b
@@ -2939,7 +2939,7 @@ jr_036_4d2d:
     inc c
     add b
     rst $38
-    ld bc, $360d
+    ld bc, AudioProcessNote
     dec b
     inc bc
     db $fd
@@ -3681,7 +3681,7 @@ jr_036_4ee0:
     add b
     add hl, bc
     inc [hl]
-    ld bc, $09c0
+    ld bc, SubtractWithFloor
     nop
     add hl, bc
     add hl, bc
@@ -4571,7 +4571,7 @@ jr_036_5471:
     ld hl, sp-$01
     ld bc, $ce0f
     rst $38
-    ld bc, $0ef7
+    ld bc, LoadCAndHRAM_CE
     rst $38
     db $fc
     ccf
@@ -4711,7 +4711,7 @@ jr_036_5471:
     ldh [rIE], a
     ld b, b
     rst $38
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     cp $09
     rst $38
     rra
@@ -5773,7 +5773,7 @@ Jump_036_59e6:
     or h
     inc bc
     ld a, [c]
-    ld bc, $05f9
+    ld bc, LoadDestFromC837
     ret nc
 
     add hl, bc
@@ -6459,7 +6459,7 @@ jr_036_5ced:
     ld b, $fe
     inc bc
     rst $38
-    ld bc, $06ff
+    ld bc, PlaySoundAndJump
     rst $38
     inc b
     rst $38
@@ -6741,7 +6741,7 @@ jr_036_5e97:
     dec a
     rrca
     add hl, hl
-    ld bc, $05fc
+    ld bc, LoadDestLow
     dec a
     ld b, $70
     rst $38
@@ -7377,7 +7377,7 @@ jr_036_6106:
     ret c
 
     rst $38
-    jp Jump_000_253f
+    jp CallStatDisplay
 
 
     ccf
@@ -9237,7 +9237,7 @@ jr_036_69ad:
     cp h
     ret nc
 
-    jp nc, Jump_000_2cec
+    jp nc, TileDataBlock2
 
     di
     dec de
@@ -10228,7 +10228,7 @@ jr_036_6dcb:
     ld e, l
     xor c
     dec de
-    jp Jump_000_0811
+    jp CheckTile9A
 
 
     nop
@@ -10570,7 +10570,7 @@ jr_036_6f14:
     ld [bc], a
     rst $30
     dec e
-    jp c, Jump_000_21df
+    jp c, LoadExtraFromSRAM
 
     rst $28
     add a
@@ -10794,7 +10794,7 @@ jr_036_705d:
     ei
     rst $10
     rst $38
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     ld hl, sp+$1f
     ldh [$bf], a
     ld b, b
@@ -10912,7 +10912,7 @@ jr_036_705d:
     add b
     ld b, $e1
     ld bc, $f806
-    ld bc, $2cf3
+    ld bc, TileDataContinue
     ei
     inc l
     di

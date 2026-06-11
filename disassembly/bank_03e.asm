@@ -177,7 +177,7 @@ DispatchEntry_3E_0:
     nop
     ld bc, $02c2
     ld bc, $0fdc
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0133
     nop
     inc b
@@ -190,7 +190,7 @@ DispatchEntry_3E_0:
     ld bc, $f0fd
     ld bc, $0f39
     dec bc
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f5e
     ld [bc], a
     ld bc, $f3ff
@@ -221,7 +221,7 @@ DispatchEntry_3E_0:
     rrca
     inc c
     ld bc, $f3ff
-    ld bc, $0588
+    ld bc, ApplyShakeOffsetY
     ld bc, $0bc1
     ld [hl+], a
     ld [hl+], a
@@ -291,7 +291,7 @@ DispatchEntry_3E_0:
     ld h, h
     ld bc, $dc01
     rrca
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0133
     nop
     dec b
@@ -342,7 +342,7 @@ DispatchEntry_3E_0:
     ld bc, $0441
     ld bc, $0f3a
     inc bc
-    ld bc, $0541
+    ld bc, CallBank5FEntry1_0541
     ld bc, $0f59
     add hl, bc
     ld bc, $0322
@@ -444,7 +444,7 @@ DispatchEntry_3E_0:
     rlca
     ld bc, $0e7e
     ld [hl+], a
-    ld bc, $045c
+    ld bc, VBlankReentry
     ld bc, $0409
     ld bc, $0fa1
     nop
@@ -556,7 +556,7 @@ DispatchEntry_3E_0:
     inc sp
     inc sp
     ld bc, $0021
-    ld bc, $0f1d
+    ld bc, SpriteGBCStoreByte
     ld bc, $2401
     nop
     nop
@@ -625,7 +625,7 @@ DispatchEntry_3E_0:
     inc bc
     ld bc, $0828
     ld bc, $0ca4
-    ld bc, $0f24
+    ld bc, SpriteGBCWriteByte
     rrca
     inc sp
     inc sp
@@ -741,7 +741,7 @@ DispatchEntry_3E_0:
     ld bc, $f3fa
     ld bc, $0ca1
     ld bc, $0287
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     rlca
     ld [hl+], a
     ld bc, $04e1
@@ -860,7 +860,7 @@ DispatchEntry_3E_0:
     ld a, [bc]
     inc sp
     nop
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     inc c
     ld bc, $0f08
     ld a, [bc]
@@ -916,7 +916,7 @@ DispatchEntry_3E_0:
     ld bc, $fffa
     inc b
     nop
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     inc c
     inc sp
     ld bc, $0421
@@ -1034,7 +1034,7 @@ DispatchEntry_3E_0:
     inc sp
     nop
     nop
-    ld bc, $0144
+    ld bc, HeaderNewLicenseeCode
     ld bc, $0f5a
     inc b
     ld bc, $0043
@@ -1070,7 +1070,7 @@ DispatchEntry_3E_0:
     ld b, $01
     jr nz, jr_03e_4852
 
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
 
 jr_03e_4852:
     rlca
@@ -1145,7 +1145,7 @@ jr_03e_4852:
     dec bc
     inc sp
     nop
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f59
     dec b
     ld bc, $0460
@@ -1198,13 +1198,13 @@ jr_03e_4852:
     ld bc, $0f19
     ld b, $01
     ld hl, $0001
-    ld bc, $0618
+    ld bc, CheckState_C826_0618
     ld bc, $0b42
     ld bc, $0440
     ld bc, $0f59
     ld b, $01
     ld b, b
-    ld bc, $0100
+    ld bc, Boot
     ld a, b
     rrca
     ld [$0133], sp
@@ -1249,7 +1249,7 @@ jr_03e_4852:
     daa
     ld bc, $0f43
     inc c
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     dec bc
     ld [hl+], a
     ld bc, $0f01
@@ -1264,8 +1264,8 @@ jr_03e_4852:
     ld bc, $011d
     inc sp
     ld bc, $0120
-    ld bc, $0f1d
-    ld bc, $3f01
+    ld bc, SpriteGBCStoreByte
+    ld bc, CheckPartySize
     nop
     ld bc, $0f35
     add hl, bc
@@ -1473,7 +1473,7 @@ jr_03e_4852:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -1491,7 +1491,7 @@ jr_03e_4852:
     inc sp
     inc sp
     ld bc, $0022
-    ld bc, $0f1d
+    ld bc, SpriteGBCStoreByte
     ld bc, $0033
     inc sp
     ld bc, $0125
@@ -1557,7 +1557,7 @@ jr_03e_4852:
     ld bc, $0f58
     dec l
     inc sp
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     inc h
     ld [hl+], a
     ld [hl+], a
@@ -1568,7 +1568,7 @@ jr_03e_4852:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -1632,7 +1632,7 @@ jr_03e_4852:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -1661,7 +1661,7 @@ jr_03e_4852:
     ld bc, $0857
     ld bc, $0d83
     ld bc, $0120
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     add hl, bc
     ld bc, $0041
     ld bc, $0fb9
@@ -1744,7 +1744,7 @@ jr_03e_4852:
     rst $38
     inc b
     nop
-    ld bc, $0f12
+    ld bc, SpriteGBCCheckWidth
     inc c
     inc sp
     ld bc, $0321
@@ -1767,7 +1767,7 @@ jr_03e_4852:
     ld bc, $0b9a
     ld bc, $0519
     ld bc, $0165
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     rlca
     ld [hl+], a
     ld bc, $03e1
@@ -1794,7 +1794,7 @@ jr_03e_4852:
     inc h
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -1821,7 +1821,7 @@ jr_03e_4852:
     ld bc, $0185
     ld bc, $0f98
     add hl, bc
-    ld bc, $0f44
+    ld bc, SpriteGBCWriteAndCheck
     ld a, [bc]
     ld [hl+], a
     ld bc, $04e1
@@ -1884,7 +1884,7 @@ jr_03e_4852:
     dec b
     ld [hl+], a
     ld bc, $04e0
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -1907,7 +1907,7 @@ jr_03e_4852:
     ld [hl+], a
     ld bc, $0061
     ld bc, $005e
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0ca3
     ld bc, $0983
     ld bc, $0dc0
@@ -1937,7 +1937,7 @@ jr_03e_4852:
     ld de, $0122
     pop hl
     inc bc
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -1991,7 +1991,7 @@ jr_03e_4852:
     daa
     ld bc, $0263
     nop
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     add hl, bc
     ld bc, $0a45
     ld bc, $0fc3
@@ -2011,7 +2011,7 @@ jr_03e_4852:
     ld c, l
     ld bc, $0f79
     ld c, l
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     inc b
     nop
     ld bc, $1101
@@ -2082,11 +2082,11 @@ jr_03e_4852:
     ld a, [bc]
     inc sp
     ld bc, $0261
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     dec b
     ld bc, $0001
     ld bc, $057c
-    ld bc, $0fbe
+    ld bc, SpriteGBCFlipWriteX
     nop
     ld [hl+], a
     ld bc, $03e1
@@ -2109,7 +2109,7 @@ jr_03e_4852:
     ld b, l
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -2154,7 +2154,7 @@ jr_03e_4852:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -2182,7 +2182,7 @@ jr_03e_4852:
     ld bc, $0f78
     ld [$6201], sp
     ld [bc], a
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     ld [$6201], sp
     ld bc, $b901
     rrca
@@ -2997,7 +2997,7 @@ jr_03e_5468:
     rst $38
     inc hl
     ld e, d
-    ld bc, $2800
+    ld bc, DataTable_2800
     rst $38
     ld a, a
     ld a, [$1f7f]
@@ -3294,7 +3294,7 @@ jr_03e_558c:
     ld b, d
     sub c
     ld b, d
-    jp Jump_000_2542
+    jp CheckPartyCount
 
 
     ld b, l
@@ -3452,7 +3452,7 @@ jr_03e_55f1:
     rst $38
     inc hl
     ld e, d
-    ld bc, $2800
+    ld bc, DataTable_2800
     rst $38
     ld a, a
     rra
@@ -4373,7 +4373,7 @@ jr_03e_5a20:
     rst $38
     inc hl
     ld e, d
-    ld bc, $2800
+    ld bc, DataTable_2800
     rst $38
     ld a, a
     ldh [$7f], a
@@ -7470,7 +7470,7 @@ jr_03e_66bd:
     ld b, d
     sub c
     ld b, d
-    jp Jump_000_2542
+    jp CheckPartyCount
 
 
     ld b, l

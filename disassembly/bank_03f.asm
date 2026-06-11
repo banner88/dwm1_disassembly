@@ -360,7 +360,7 @@ jr_03f_410d:
     and $44
     rst $38
     ld c, $ff
-    ld de, $05f9
+    ld de, LoadDestFromC837
     ld d, e
     ld [de], a
     sub c

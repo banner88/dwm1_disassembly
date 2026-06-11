@@ -47,10 +47,10 @@ label13_4009:
     ld bc, $0129
     call Mul16x8To24
     ld a, l
-    add $e6
+    add LOW(ExpCurveTables)
     ld l, a
     ld a, h
-    adc $41
+    adc HIGH(ExpCurveTables)
     ld h, a
     push hl
     ld a, [$cac0]
@@ -100,10 +100,10 @@ label13_4050:
     ld bc, $0129
     call Mul16x8To24
     ld a, l
-    add $e6
+    add LOW(ExpCurveTables)
     ld l, a
     ld a, h
-    adc $41
+    adc HIGH(ExpCurveTables)
     ld h, a
     push hl
     ld a, [$cac0]
@@ -194,10 +194,10 @@ FuncExp_411e:
     ld c, $63
     call Mul8x8To16
     ld a, l
-    add $06
+    add LOW(StatGrowthTables)
     ld l, a
     ld a, h
-    adc $67
+    adc HIGH(StatGrowthTables)
     ld h, a
     push hl
     ld a, [$cac0]

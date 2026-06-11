@@ -59,7 +59,7 @@ DispatchEntry_53_0:
     ld bc, $0102
     ld bc, $0202
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld [bc], a
     ld bc, $0202
     ld bc, $0102
@@ -67,7 +67,7 @@ DispatchEntry_53_0:
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0201
     ld [bc], a
     inc bc
@@ -146,11 +146,11 @@ DispatchEntry_53_0:
     ld [bc], a
     ld bc, $0201
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     ld bc, $0000
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0000
     nop
     nop
@@ -174,13 +174,13 @@ DispatchEntry_53_0:
     nop
     ld bc, $0101
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     nop
     ld bc, $0101
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     nop
@@ -189,11 +189,11 @@ DispatchEntry_53_0:
     ld bc, $0000
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     ld bc, $0001
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     nop
     nop
@@ -201,7 +201,7 @@ DispatchEntry_53_0:
     nop
     nop
     ld bc, $0000
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0000
     ld bc, $0101
     ld bc, $0101
@@ -210,7 +210,7 @@ DispatchEntry_53_0:
     ld bc, $0001
     nop
     ld bc, $0001
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     nop
@@ -225,13 +225,13 @@ DispatchEntry_53_0:
     nop
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0001
     ld bc, $0101
     nop
     nop
     ld bc, $0001
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0000
     nop
     ld bc, $0101
@@ -255,9 +255,9 @@ DispatchEntry_53_0:
     nop
     nop
     ld bc, $0000
-    ld bc, $0100
+    ld bc, Boot
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     nop
     nop
@@ -286,6 +286,7 @@ DispatchEntry_53_0:
     nop
     nop
     nop
+BattleHPLookupTable:
     nop
     nop
     nop
@@ -2581,10 +2582,10 @@ LoadBtlC_4e63:
     ld h, [hl]
     ld l, a
     ld a, l
-    add $df
+    add LOW(BattleHPLookupTable)
     ld l, a
     ld a, h
-    adc $41
+    adc HIGH(BattleHPLookupTable)
     ld h, a
     ld a, [hl]
     or a
@@ -2772,7 +2773,7 @@ jr_053_4f32:
     jp nc, $d64f
 
     ld c, a
-    jp c, Jump_000_214f
+    jp c, SaveExtraData
 
     xor $d9
     inc [hl]
@@ -5442,7 +5443,7 @@ LoadBtlC_5ed9:
     jr jr_053_5eee
 
 jr_053_5eeb:
-    ld de, $4025
+    ld de, DispatchEntry_53_0
 
 jr_053_5eee:
     ld a, [wBattleAttackerIdx]

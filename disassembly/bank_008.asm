@@ -521,10 +521,10 @@ CalcAudP_426a:
     add hl, hl
     add hl, hl
     ld a, l
-    add $7e
+    add LOW(label8_447e)
     ld l, a
     ld a, h
-    adc $44
+    adc HIGH(label8_447e)
     ld h, a
     ld c, $08
 
@@ -595,7 +595,7 @@ jr_008_42b0:
     jr nz, jr_008_42c0
 
 jr_008_42c0:
-    ld hl, $2200
+    ld hl, RetFromSRAMCopy
     nop
     inc hl
     nop
@@ -1352,7 +1352,7 @@ jr_008_45b5:
     nop
     inc bc
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     nop
@@ -2856,7 +2856,7 @@ Jump_008_4b20:
     jr jr_008_4bf9
 
     ld b, $01
-    ld de, $3000
+    ld de, NopReturn
     nop
     ld h, b
 
@@ -3629,7 +3629,7 @@ jr_008_4f18:
     rst $38
     ld l, c
     rst $38
-    ld hl, $25ff
+    ld hl, AddBGMapOffset
     rst $38
     and [hl]
     rst $38
@@ -4212,7 +4212,7 @@ jr_008_51a6:
     inc bc
     rst $38
     nop
-    ld de, $2100
+    ld de, EnableSRAMAccess
     nop
     db $e3
     nop
@@ -5051,7 +5051,7 @@ jr_008_54b5:
     db $10
     inc de
     db $10
-    ld de, $3110
+    ld de, AdvanceHLAndSetup
     jr nc, jr_008_5566
 
 jr_008_5566:
@@ -5355,7 +5355,7 @@ jr_008_56a9:
     ld c, $00
     nop
     nop
-    ld bc, $063e
+    ld bc, WriteBankSwitch4100
     ld a, b
     inc a
     ret nz
@@ -6744,7 +6744,7 @@ jr_008_5c65:
     nop
     rlca
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     nop
@@ -6793,7 +6793,7 @@ jr_008_5ca5:
     nop
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     add hl, de
 
@@ -7054,11 +7054,11 @@ jr_008_5d8f:
     ei
     rst $38
     rst $38
-    ld bc, $0100
+    ld bc, Boot
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     ld bc, $0000
     nop
@@ -8381,7 +8381,7 @@ jr_008_6317:
     nop
     inc sp
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     nop
@@ -8793,7 +8793,7 @@ jr_008_64f2:
 jr_008_64fc:
     jr nz, @+$0d
 
-    ld bc, $1449
+    ld bc, ProcessSpriteTransfer
 
 jr_008_6501:
     ld c, d
@@ -8877,7 +8877,7 @@ jr_008_6551:
     inc b
     jr nz, @+$55
 
-    ld bc, $2006
+    ld bc, PrintAndAdvance
     dec bc
     ld bc, $9620
     ld [bc], a
@@ -8966,7 +8966,7 @@ jr_008_65a2:
     db $10
     jr nz, jr_008_65e0
 
-    ld de, $14fe
+    ld de, LoadSpriteCoords
     rlca
     jr nz, jr_008_6540
 
@@ -9231,7 +9231,7 @@ jr_008_6690:
 
     cpl
     rla
-    ld hl, $2210
+    ld hl, CheckBattleContext
     db $10
     inc hl
     db $10
@@ -10116,7 +10116,7 @@ jr_008_69e1:
     ld h, a
     ldh [$6f], a
     ldh [$59], a
-    add $51
+    add $51  ; FALSE POSITIVE: data bytes, not an address computation
     adc $77
     add sp, $7f
     rst $38
@@ -10507,7 +10507,7 @@ jr_008_6b4d:
     rrca
     inc bc
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     ld bc, $0000
     nop
@@ -12997,7 +12997,7 @@ jr_008_75d7:
     rra
     inc bc
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     nop

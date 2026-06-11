@@ -359,7 +359,7 @@ jr_005_416e:
     inc b
     nop
     rlca
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     dec b
     ld [bc], a
     ld bc, $0201
@@ -3338,7 +3338,7 @@ jr_005_500e:
     or $04
     jr nz, jr_005_4f97
 
-    ld hl, $3650
+    ld hl, AudioIncAndLoop
     ld d, b
     ld c, e
     ld d, b
@@ -10067,7 +10067,7 @@ jr_005_6fed:
     nop
     jr z, jr_005_6fed
 
-    ld bc, $3000
+    ld bc, NopReturn
     sbc $02
     nop
     jr nc, @-$18
@@ -11227,7 +11227,7 @@ Jump_005_74e6:
     jp $817e
 
 
-    jp Jump_000_3c3c
+    jp ScreenFadeInit
 
 
     rst $30
@@ -12387,7 +12387,7 @@ jr_005_7a1e:
     ld bc, $0003
 
 jr_005_7a3e:
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0203
     rlca
     dec b
@@ -13077,7 +13077,7 @@ jr_005_7c7e:
     and e
     dec sp
     add a
-    jp c, Jump_000_3311
+    jp c, AudioWave_3311
 
     rst $38
     adc a
@@ -13491,7 +13491,7 @@ jr_005_7ed3:
     cp $7c
     ld a, [hl+]
     stop
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     rrca
     rra
     ccf

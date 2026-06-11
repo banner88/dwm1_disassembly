@@ -2362,7 +2362,7 @@ Jump_035_4a4b:
     ld d, a
     ld e, h
     ld e, a
-    jp c, Jump_000_3ed3
+    jp c, MenuLoadDimensions
 
     ld a, [hl+]
     ld a, [hl-]
@@ -2487,7 +2487,7 @@ Jump_035_4a4b:
     dec e
     cp $02
     ld a, [$2e06]
-    jp c, Jump_000_2d35
+    jp c, TileStoreReverse
 
     or $fe
     call c, $bc6c
@@ -3180,7 +3180,7 @@ jr_035_4e08:
     xor a
     ld l, h
     sbc [hl]
-    jp nc, Jump_000_2137
+    jp nc, SavePartyData
 
     ei
     pop bc
@@ -5814,7 +5814,7 @@ jr_035_5997:
     ld b, $2f
     rrca
     dec de
-    ld bc, $2e06
+    ld bc, MenuBorderCorner
     inc bc
     jr c, jr_035_5996
 
@@ -6820,7 +6820,7 @@ jr_035_5dd7:
     db $fd
     db $ed
     db $fd
-    jp nc, Jump_000_21fe
+    jp nc, CheckCopyDone
 
     or a
     ld a, a
@@ -7379,9 +7379,9 @@ jr_035_6089:
     db $f4
     cp $ca
     rst $38
-    ld bc, $3d01
+    ld bc, PaletteRetSBC2
     cp $fe
-    jp nz, Jump_000_27c2
+    jp nz, DataLookup_27C2
 
     push hl
     ld e, $7a
@@ -9599,7 +9599,7 @@ jr_035_6a42:
     db $fc
     add a
     rst $38
-    jp Jump_000_303f
+    jp DataLookup_303F
 
 
     rst $08
@@ -9654,7 +9654,7 @@ jr_035_6a8e:
     xor c
     db $f4
     call nc, $1212
-    ld de, $0811
+    ld de, CheckTile9A
     ld [$0c0c], sp
     rra
     dec de
@@ -10992,7 +10992,7 @@ jr_035_7037:
     ld c, $ff
     inc b
     rst $38
-    ld bc, $07ff
+    ld bc, ScreenBranchNC
     rst $38
     add hl, bc
     rst $38

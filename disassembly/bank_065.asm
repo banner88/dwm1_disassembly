@@ -1931,7 +1931,7 @@ jr_065_47d3:
     rst $38
     ld a, c
     inc bc
-    ld bc, $0784
+    ld bc, CheckInputMaskedJP
     cp $fc
     db $fc
     inc bc
@@ -1958,7 +1958,7 @@ jr_065_47d3:
     inc bc
     rlca
     rlca
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     ld [$1f10], sp
     ccf
     ld a, a
@@ -2847,7 +2847,7 @@ jr_065_4c68:
     nop
     add e
     rst $38
-    ld bc, $05fd
+    ld bc, LoadDestHigh
     dec b
     stop
     sbc b

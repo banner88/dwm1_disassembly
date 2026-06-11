@@ -36,7 +36,7 @@ label9_4005:
     ld b, b
     di
     ld b, l
-    jp z, Jump_000_335e
+    jp z, ClearAudioState
 
     ld b, b
     jr nz, @+$63
@@ -1546,7 +1546,7 @@ jr_009_47f0:
     ld [$c823], a
     ld a, $08
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld9_412f
     pop hl
     ld a, l
@@ -4609,7 +4609,7 @@ jr_009_5b5e:
     ld a, h
     ld [$c90a], a
     call SetFld9_4204
-    ld de, $2e11
+    ld de, MenuBorderFill
     ld hl, $8800
     call WaitDMATransfer
     ld hl, $c905
@@ -5230,7 +5230,7 @@ SaveFld9_5fa2:
     ld [$c823], a
     ld a, $02
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld9_412f
     pop hl
     ld a, l
@@ -5341,7 +5341,7 @@ jr_009_6033:
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadFld9_412f
     pop hl
     ld a, l
@@ -5622,10 +5622,10 @@ jr_009_6155:
     ld h, $00
     add hl, hl
     ld a, l
-    add $10
+    add LOW(FieldPtrLookupTable)
     ld l, a
     ld a, h
-    adc $6b
+    adc HIGH(FieldPtrLookupTable)
     ld h, a
     ld e, [hl]
     inc hl
@@ -6544,7 +6544,7 @@ jr_009_6832:
     ld de, $2e17
     ld hl, $8580
     call WaitDMATransfer
-    ld de, $2e18
+    ld de, MenuBorderFillLeft
     ld hl, $85c0
     call WaitDMATransfer
     ld de, $2e19
@@ -7025,6 +7025,7 @@ jr_009_6aef:
     nop
     rst $38
     rst $38
+FieldPtrLookupTable:
     nop
     cpl
     ld b, b

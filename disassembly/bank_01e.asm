@@ -425,7 +425,7 @@ jr_01e_407f:
     dec c
     dec hl
     rrca
-    jp Jump_000_3440
+    jp AudioSkipTwoBytes
 
 
     inc b
@@ -816,7 +816,7 @@ jr_01e_4392:
     rrca
     dec [hl]
     db $10
-    jp Jump_000_3440
+    jp AudioSkipTwoBytes
 
 
     inc b
@@ -1266,7 +1266,7 @@ jr_01e_455f:
     rla
     ld de, $1120
     rla
-    ld de, $1220
+    ld de, WaitForSerialTransferEnd.wait
     rla
     ld [de], a
     jr nz, jr_01e_4590
@@ -1652,7 +1652,7 @@ jr_01e_4711:
     inc b
     ld a, [hl+]
     inc b
-    jp nz, Jump_000_2915
+    jp nz, DataLookup_2915
 
     ld [$0827], sp
     ld a, [hl+]
@@ -1674,7 +1674,7 @@ jr_01e_4748:
     inc b
     dec [hl]
     inc b
-    jp nz, Jump_000_3515
+    jp nz, AudioData_3515
 
     ld [$0833], sp
     scf
@@ -2326,11 +2326,11 @@ jr_01e_49fc:
     dec sp
     ld bc, $0140
     ld b, d
-    ld bc, $0144
+    ld bc, HeaderNewLicenseeCode
     ld b, [hl]
     ld bc, HeaderROMSize
     ld c, e
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderRAMSize
     ld b, a
@@ -2350,7 +2350,7 @@ jr_01e_49fc:
     and b
     inc b
     ld d, d
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderRAMSize
     ld b, a
@@ -2366,7 +2366,7 @@ jr_01e_49fc:
     and b
     ld [bc], a
     ld d, d
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderRAMSize
     ld b, a
@@ -2578,7 +2578,7 @@ jr_01e_4b6f:
     ret nz
 
     cp $60
-    ld bc, $0ca0
+    ld bc, StoreCursorPos
     ld h, c
     jr jr_01e_4b47
 
@@ -2654,17 +2654,17 @@ jr_01e_4b6f:
     rra
     ld [$0158], sp
     ld e, c
-    ld bc, $015a
+    ld bc, InitGameData
     ld e, e
     ld bc, $0160
     ld e, e
     ld bc, $0158
     ld e, c
-    ld bc, $015a
+    ld bc, InitGameData
     ld e, e
     ld bc, $0160
     ld e, e
-    ld bc, $015a
+    ld bc, InitGameData
     ld e, c
     ld bc, $0158
     ld d, a
@@ -2674,7 +2674,7 @@ jr_01e_4b6f:
     ld d, e
     ld bc, $0152
     ld d, c
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderDestinationCode
     ld c, c
@@ -2700,7 +2700,7 @@ jr_01e_4b6f:
     ld h, d
     ld bc, $0160
     ld e, e
-    ld bc, $015a
+    ld bc, InitGameData
     ld e, c
     ld bc, $0158
     ld d, a
@@ -2710,7 +2710,7 @@ jr_01e_4b6f:
     ld d, e
     ld bc, $0152
     ld d, c
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderDestinationCode
     ld c, c
@@ -2734,7 +2734,7 @@ jr_01e_4b6f:
     ld h, c
     ld bc, $015b
     ld e, b
-    ld bc, $0157
+    ld bc, BootMain.write_gb_type
     ld d, [hl]
     ld bc, $0155
     ld d, h
@@ -2765,13 +2765,13 @@ jr_01e_4b6f:
     ld d, h
     ld bc, $0155
     ld d, [hl]
-    ld bc, $0157
+    ld bc, BootMain.write_gb_type
     ld d, [hl]
     ld bc, $0155
     ld d, h
     ld bc, $0153
     ld d, d
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderDestinationCode
     ld c, c
@@ -2800,7 +2800,7 @@ jr_01e_4b6f:
     ld e, d
     ld bc, $0159
     ld e, b
-    ld bc, $0157
+    ld bc, BootMain.write_gb_type
     ld d, [hl]
     ld bc, $0155
     ld d, h
@@ -2843,7 +2843,7 @@ jr_01e_4b6f:
     ld e, d
     ld bc, $0159
     ld e, b
-    ld bc, $0157
+    ld bc, BootMain.write_gb_type
     ld d, [hl]
     ld bc, $0155
     ld d, h
@@ -2876,7 +2876,7 @@ jr_01e_4b6f:
     ld h, d
     ld bc, $0160
     ld e, e
-    ld bc, $015a
+    ld bc, InitGameData
     ld e, c
     ld bc, $0158
     ld d, a
@@ -2886,7 +2886,7 @@ jr_01e_4b6f:
     ld d, e
     ld bc, $0152
     ld d, c
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderDestinationCode
     ld c, c
@@ -2912,7 +2912,7 @@ jr_01e_4b6f:
     ld h, c
     ld bc, $015b
     ld e, b
-    ld bc, $0157
+    ld bc, BootMain.write_gb_type
     ld d, [hl]
     ld bc, $0155
     ld d, h
@@ -2945,13 +2945,13 @@ jr_01e_4b6f:
     ld d, h
     ld bc, $0155
     ld d, [hl]
-    ld bc, $0157
+    ld bc, BootMain.write_gb_type
     ld d, [hl]
     ld bc, $0155
     ld d, h
     ld bc, $0153
     ld d, d
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderDestinationCode
     ld c, c
@@ -2981,7 +2981,7 @@ jr_01e_4e10:
     ld h, b
     ld bc, $0160
     ld e, e
-    ld bc, $015a
+    ld bc, InitGameData
     ld e, c
     ld bc, $0158
     ld d, a
@@ -2995,7 +2995,7 @@ SetB1e_4e42:
     ld d, c
 
 SetB1e_4e4a:
-    ld bc, $0150
+    ld bc, BootMain
     ld c, e
     ld bc, HeaderDestinationCode
     ld c, c
@@ -3017,7 +3017,7 @@ SetB1e_4e4a:
     nop
     and e
     ld a, [hl-]
-    ld hl, $3060
+    ld hl, CheckFieldMode2
     ld h, b
 
 jr_01e_4e6e:
@@ -3495,7 +3495,7 @@ jr_01e_5057:
     inc sp
     inc bc
     rra
-    ld bc, $0ca0
+    ld bc, StoreCursorPos
     and c
     rra
     jr c, jr_01e_5065
@@ -4205,7 +4205,7 @@ jr_01e_5375:
     ld de, $4502
     inc bc
     dec d
-    ld bc, $0350
+    ld bc, Goto_Debug
     ld b, l
     inc bc
     ld d, $01
@@ -4283,7 +4283,7 @@ jr_01e_53ca:
     ld b, l
     inc bc
     dec d
-    ld bc, $0350
+    ld bc, Goto_Debug
     ld b, l
     inc bc
     ld d, $01
@@ -4330,7 +4330,7 @@ jr_01e_5407:
     nop
     rrca
     nop
-    jp Jump_000_2107
+    jp DisableSRAMAccess
 
 
     dec b
@@ -4548,7 +4548,7 @@ jr_01e_5524:
     ld b, l
     ld [bc], a
     ld de, $1f02
-    ld bc, $20c3
+    ld bc, SubDigitValue
     ld b, l
     db $10
     jr nc, jr_01e_554f
@@ -5130,7 +5130,7 @@ jr_01e_57a6:
     ld [$fec0], sp
     and b
     rrca
-    jp Jump_000_2107
+    jp DisableSRAMAccess
 
 
     dec b
@@ -5458,7 +5458,7 @@ jr_01e_58f2:
     rra
     ld bc, $0615
     rra
-    ld bc, $0912
+    ld bc, StoreMapPointerHL
     rra
     ld bc, $ffff
     nop
@@ -5649,7 +5649,7 @@ jr_01e_59fb:
     and b
     ld a, [bc]
     ld d, b
-    ld bc, $0ca0
+    ld bc, StoreCursorPos
     ld b, b
     ld [bc], a
     ld b, d
@@ -6732,7 +6732,7 @@ jr_01e_5e58:
     inc hl
     ld [$fcb3], sp
     ld a, [bc]
-    ld bc, $0822
+    ld bc, AdvanceTextPointer
     and b
     dec b
     ld [hl+], a

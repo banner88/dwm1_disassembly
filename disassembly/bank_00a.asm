@@ -897,7 +897,7 @@ label443b:
     ld a, h
     ld [$c90a], a
     call SetFldA_41ef
-    ld de, $2e11
+    ld de, MenuBorderFill
     ld hl, $8800
     call WaitDMATransfer
     call ClrFldA_4323
@@ -1928,7 +1928,7 @@ label4b46:
     srl a
     srl a
     ld [$c8e3], a
-    ld de, $2e11
+    ld de, MenuBorderFill
     ld hl, $8800
     call WaitDMATransfer
     call $46c9
@@ -2594,7 +2594,7 @@ jr_00a_4fa7:
     ld bc, $00a1
     pop hl
     nop
-    ld hl, $6101
+    ld hl, SetFldA_6101
     ld bc, $ffff
 
 label4fb4:
@@ -3087,7 +3087,7 @@ jr_00a_52dc:
     ld bc, $00a1
     pop hl
     nop
-    ld hl, $6101
+    ld hl, SetFldA_6101
     ld bc, $ffff
 
 label52e9:
@@ -3381,7 +3381,7 @@ jr_00a_54bf:
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
@@ -3402,9 +3402,9 @@ jr_00a_54bf:
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0101
     ld bc, $0101
     ld bc, $0101
@@ -3423,7 +3423,7 @@ jr_00a_54bf:
     nop
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     ld bc, $0000
@@ -3464,7 +3464,7 @@ label55d1:
     ret
 
 
-    ld hl, $6101
+    ld hl, SetFldA_6101
     ld bc, $ffff
 
 label55e0:
@@ -3533,7 +3533,7 @@ jr_00a_5658:
     ret
 
 
-    ld hl, $6101
+    ld hl, SetFldA_6101
     ld bc, $ffff
 
 label565f:
@@ -4042,7 +4042,7 @@ SaveFldA_59fd:
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     pop hl
     push hl
     call LoadFldA_411a
@@ -5367,7 +5367,7 @@ SaveFldA_62a4:
     ld [$c823], a
     ld a, $05
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     pop hl
     push hl
     call LoadFldA_411a
@@ -5972,7 +5972,7 @@ jr_00a_6652:
     ret
 
 
-    ld hl, $6101
+    ld hl, SetFldA_6101
     ld bc, $ffff
 
 label6659:
@@ -6331,7 +6331,7 @@ jr_00a_68a7:
     ret
 
 
-    ld hl, $6101
+    ld hl, SetFldA_6101
     ld bc, $ffff
 
 label68ae:
@@ -6993,7 +6993,7 @@ jr_00a_6cee:
     nop
     pop hl
     nop
-    ld hl, $6101
+    ld hl, SetFldA_6101
     ld bc, $ffff
     ld hl, $001a
     call LoadFldA_441f
@@ -9710,7 +9710,7 @@ jr_00a_6e52:
     jr nz, jr_00a_7a8f
 
     inc b
-    ld de, $1214
+    ld de, RetFromLCDEnable
     dec [hl]
     nop
     ld d, $2f
@@ -9750,7 +9750,7 @@ jr_00a_7a7f:
 jr_00a_7a8f:
     cpl
     inc b
-    ld de, $1310
+    ld de, ReadJoypadDMG
     ld bc, $1610
     cpl
     inc b
@@ -9770,7 +9770,7 @@ jr_00a_7a8f:
     ld d, b
     cpl
     inc b
-    ld de, $2321
+    ld de, AddMonsterDEF
     inc d
     nop
     ld c, l

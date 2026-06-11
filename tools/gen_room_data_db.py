@@ -385,6 +385,22 @@ def main():
     lines.append("; Exit entry: [trig_x, trig_y, dest_mt, gate_flag, screen, spawn_x, spawn_y]")
     lines.append("")
 
+    # ── Build ptr → label mapping for labeled pointer output ──
+    ptr_table_end_addr = TABLE_ADDR + NUM_ENTRIES * 2
+    ptr_to_label = {}  # ptr_value → label_name
+    # Labels for sub-tables that start AFTER the pointer table (clean case)
+    for sub_ptr, room in rooms.items():
+        if sub_ptr >= ptr_table_end_addr:
+            ptr_to_label[sub_ptr] = sub_labels[sub_ptr]
+    # Labels for sub-tables that overlap the pointer table
+    # Create an inline label at the overlap address
+    overlap_labels = {}  # addr_within_ptrtable → label_name
+    for sub_ptr, room in rooms.items():
+        if TABLE_ADDR <= sub_ptr < ptr_table_end_addr:
+            lbl = sub_labels[sub_ptr]
+            overlap_labels[sub_ptr] = lbl
+            ptr_to_label[sub_ptr] = lbl
+
     # ── Pointer table ──
     lines.append(f"RoomPtrTable:  ; {NUM_ENTRIES} entries × 2B, indexed by wMapID ($C968)")
 
@@ -396,6 +412,10 @@ def main():
         alias_str = ""
         if ptr in rooms and rooms[ptr]['primary_mt'] != mt:
             alias_str = f" (=mt${rooms[ptr]['primary_mt']:02X})"
+
+        # Check if an overlap label needs to be inserted at this address
+        if addr in overlap_labels:
+            lines.append(f"{overlap_labels[addr]}:  ; overlaps pointer table at ${addr:04X}")
 
         if addr in jr_labels:
             lo, hi = ptr & 0xFF, (ptr >> 8) & 0xFF
@@ -410,6 +430,8 @@ def main():
         else:
             if ptr == 0xFFFF:
                 lines.append(f"    dw $FFFF  ; ${mt:02X} {name} (unused)")
+            elif ptr in ptr_to_label:
+                lines.append(f"    dw {ptr_to_label[ptr]}  ; ${mt:02X} {name}{alias_str}")
             else:
                 lines.append(f"    dw ${ptr:04X}  ; ${mt:02X} {name}{alias_str}")
 

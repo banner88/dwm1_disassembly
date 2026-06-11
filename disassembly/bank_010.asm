@@ -177,7 +177,7 @@ HramScr2_406e:
     ld d, b
     ld d, c
     ld d, c
-    jp Jump_000_3551
+    jp AudioCopyLoop
 
 
     ld d, d
@@ -361,8 +361,8 @@ HramScr2_406e:
     ld a, c
     ld de, $037a
     inc bc
-    ld bc, $0704
-    ld bc, $0601
+    ld bc, CheckBButton
+    ld bc, CopyDEtoHLByte
     ld [bc], a
     ld [bc], a
     ld [bc], a
@@ -432,7 +432,7 @@ HramScr2_406e:
     rlca
     ld bc, $0004
     ld bc, $0200
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     inc b
 
 jr_010_41f1:
@@ -6100,7 +6100,7 @@ jr_010_5bed:
     db $10
     add b
     rst $28
-    ld bc, $3000
+    ld bc, NopReturn
     rst $28
     ld sp, hl
     ld bc, $f730
@@ -7796,7 +7796,7 @@ jr_010_63e7:
     rrca
     jr nz, jr_010_6375
 
-    ld bc, $1264
+    ld bc, ClearSTATMode
     ld h, h
     inc hl
     ld h, h

@@ -522,7 +522,7 @@ jr_05b_426e:
     sbc a
     dec bc
     sbc $01
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     dec bc
     jr nz, jr_05b_428e
 
@@ -864,7 +864,7 @@ jr_05b_43d7:
     nop
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     inc bc
     ld bc, $0102
@@ -947,7 +947,7 @@ jr_05b_4433:
     inc bc
     ld [bc], a
     inc c
-    ld bc, $200e
+    ld bc, StoreDigitB
     db $10
     db $10
     add hl, bc
@@ -1582,7 +1582,7 @@ jr_05b_46d0:
     nop
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     inc de
     ld [bc], a
@@ -2420,7 +2420,7 @@ jr_05b_4a71:
     xor d
     dec b
     inc e
-    ld bc, $056c
+    ld bc, CrossBankCallRst10
     ld b, $03
     nop
     nop
@@ -2655,7 +2655,7 @@ jr_05b_4b81:
     nop
     add b
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     inc bc
     nop
@@ -3946,7 +3946,7 @@ jr_05b_5095:
     jp c, $fdd6
 
     dec sp
-    ld de, $1284
+    ld de, SetSerialByte
     sbc h
     sub h
     call c, $da54
@@ -4125,7 +4125,7 @@ jr_05b_5201:
     di
     inc bc
     db $fc
-    ld bc, $14fe
+    ld bc, LoadSpriteCoords
     nop
     ld a, [bc]
     add a
@@ -5032,7 +5032,7 @@ jr_05b_55c3:
 
 jr_05b_55d7:
     cp $f6
-    ld bc, $0600
+    ld bc, CopyDE2HL_0600
     ld bc, $030c
     dec b
     ld [$0e20], sp
@@ -5385,7 +5385,7 @@ jr_05b_5746:
     dec b
     ld sp, hl
     db $f4
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     rlca
     jr jr_05b_576f
 
@@ -5505,7 +5505,7 @@ jr_05b_576f:
     jr nc, @+$07
 
     scf
-    ld de, $0704
+    ld de, CheckBButton
     ld [$100f], sp
     rra
     db $10
@@ -5876,7 +5876,7 @@ jr_05b_591a:
     rst $38
     inc c
     rst $38
-    ld hl, $06ff
+    ld hl, PlaySoundAndJump
     rst $38
     jr @+$01
 
@@ -6325,7 +6325,7 @@ jr_05b_5b42:
     ld a, a
     ld c, l
     dec bc
-    jp Jump_000_297f
+    jp DataLookup_297F
 
 
     nop
@@ -6669,7 +6669,7 @@ jr_05b_5cb8:
     inc [hl]
     or [hl]
     ld c, $4e
-    ld bc, $07f9
+    ld bc, GetNextTextByte
     scf
     rlca
     ld d, a
@@ -6695,7 +6695,7 @@ jr_05b_5cb8:
 
 jr_05b_5cef:
     ld c, $ce
-    ld bc, $07f9
+    ld bc, GetNextTextByte
     inc [hl]
     rlca
     ld d, h
@@ -7129,7 +7129,7 @@ jr_05b_5ed0:
     ld bc, $0700
     nop
     rrca
-    ld bc, $070e
+    ld bc, ClearTextBitsRedrawJR
     ld a, b
     rrca
     ldh a, [$1f]
@@ -8504,7 +8504,7 @@ jr_05b_6430:
     ld b, h
     ld bc, $0121
     ld h, c
-    ld bc, $0341
+    ld bc, Goto_Staff
     inc bc
     add hl, bc
     xor c
@@ -8630,7 +8630,7 @@ jr_05b_64d4:
     db $fd
     ld hl, sp-$07
     ld hl, sp-$07
-    ld de, $3331
+    ld de, InitAudioSystem
     ld [hl], e
     inc sp
     or e
@@ -8819,7 +8819,7 @@ jr_05b_6556:
     db $fd
     ld hl, sp-$07
     ld hl, sp-$07
-    ld de, $3331
+    ld de, InitAudioSystem
     ld [hl], e
     inc sp
     or e
@@ -8970,7 +8970,7 @@ jr_05b_6556:
     adc e
     inc bc
     db $d3
-    ld bc, $03e9
+    ld bc, AfterResetCheck
     di
     ld bc, $55e9
     ld d, l
@@ -10852,7 +10852,7 @@ jr_05b_6e37:
     ldh [$e0], a
     pop bc
     pop bc
-    jp Jump_000_3cc3
+    jp ScreenDispatchData
 
 
     inc a
@@ -11273,7 +11273,7 @@ jr_05b_6fd5:
     inc e
     add hl, bc
     ld d, h
-    ld de, $090c
+    ld de, OverlayTileNext
     ld e, d
     ld de, $6262
     ld [hl], e
@@ -11822,7 +11822,7 @@ jr_05b_723c:
     jr nz, jr_05b_7259
 
     ld b, $13
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
 
 jr_05b_7259:
     ld bc, $0502
@@ -12726,7 +12726,7 @@ jr_05b_75b0:
     ccf
     jr nz, jr_05b_766d
 
-    ld hl, $203c
+    ld hl, Div24Loop2
     jr c, jr_05b_7656
 
     inc sp
@@ -12778,7 +12778,7 @@ jr_05b_765f:
     ret nz
 
     ld h, e
-    jp Jump_000_340a
+    jp AudioSetHLToDD80
 
 
     inc de
@@ -14206,7 +14206,7 @@ jr_05b_7c68:
     db $fc
     rst $38
     ldh [rIE], a
-    ld bc, $06ff
+    ld bc, PlaySoundAndJump
     rst $38
     add hl, bc
     rst $38
@@ -14261,7 +14261,7 @@ jr_05b_7c68:
     dec b
     inc d
     ld hl, $fffe
-    ld bc, $3cff
+    ld bc, PaletteRetSBC
     rst $38
     ld h, [hl]
     rst $38
@@ -14615,7 +14615,7 @@ jr_05b_7e51:
     xor a
     inc hl
     dec b
-    jp c, Jump_000_3343
+    jp c, AudioWave_3343
 
     rst $38
     or e

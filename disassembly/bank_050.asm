@@ -1773,7 +1773,7 @@ jr_050_4a11:
     ld [$c822], a
 
 jr_050_4a19:
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadBtl_76c7
     pop hl
     ld a, l
@@ -2875,7 +2875,7 @@ jr_050_5092:
     ld [$c823], a
     ld a, $08
     ld [$c822], a
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
     call LoadBtl_76c7
     pop hl
     ld a, l
@@ -3668,7 +3668,7 @@ jr_050_556a:
     jr jr_050_55a3
 
 jr_050_55a0:
-    ld de, $0901
+    ld de, WaitSTATForOverlayB
 
 jr_050_55a3:
     ld a, e
@@ -6791,7 +6791,7 @@ SetTempEnemyStatsId:
     nop
     ld a, [bc]
     nop
-    jp c, Jump_000_0b01
+    jp c, DispatchBank42Rst
 
     nop
     ld a, [bc]

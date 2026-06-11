@@ -9631,7 +9631,7 @@ jr_04c_6993:
     ld c, d
     cp h
     ld e, d
-    ld bc, $0100
+    ld bc, Boot
     inc bc
     inc bc
     jp hl
@@ -9647,7 +9647,7 @@ jr_04c_6993:
     ld e, d
     ld bc, $0005
     sbc a
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     rra
     rra
     ld a, a
@@ -9683,7 +9683,7 @@ jr_04c_6993:
 
 jr_04c_6a0c:
     sub b
-    ld bc, $0f1f
+    ld bc, SpriteGBCSkipEntry2
     inc bc
     rrca
     rra
@@ -9841,7 +9841,7 @@ jr_04c_6a9d:
     ld c, e
     cp [hl]
     ld e, d
-    ld de, $2a01
+    ld de, DataLookup_2A01
     add a
     adc c
     ld d, h
@@ -10274,7 +10274,7 @@ jr_04c_6b42:
     rst $38
     rst $18
     ld a, l
-    ld bc, $0100
+    ld bc, Boot
     nop
     nop
     add hl, bc
@@ -10299,7 +10299,7 @@ jr_04c_6b42:
     add a
     rrca
     xor d
-    ld bc, $0100
+    ld bc, Boot
     ld d, b
     pop hl
     ldh a, [$e1]
@@ -10567,7 +10567,7 @@ jr_04c_6d62:
     inc h
     inc bc
     inc b
-    jp c, Jump_000_3e02
+    jp c, MenuDispatchData
 
     ld [bc], a
     add hl, sp
@@ -11577,7 +11577,7 @@ jr_04c_71af:
     sub l
     sbc l
     add hl, hl
-    jp Jump_000_2f57
+    jp Div16x16CheckHigh
 
 
     sbc a

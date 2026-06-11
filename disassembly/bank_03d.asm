@@ -231,7 +231,7 @@ DispatchEntry_3D_0:
     ld bc, $0f5a
     inc c
     ld bc, $f3f9
-    ld bc, $0c80
+    ld bc, Copy4Bytes
     ld [hl+], a
     ld bc, $0460
     ld [hl+], a
@@ -258,13 +258,13 @@ DispatchEntry_3D_0:
     ld [$0122], sp
     ld b, $0b
     ld bc, $0000
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0204
     ld bc, $0f39
     inc b
     inc sp
     ld bc, $0060
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0f5a
     inc b
     ld [hl+], a
@@ -340,7 +340,7 @@ DispatchEntry_3D_0:
     inc sp
     inc sp
     ld bc, $0041
-    ld bc, $055a
+    ld bc, CallBank59Entry3_055A
     ld bc, $0003
     ld bc, $0f67
     ld d, $22
@@ -365,7 +365,7 @@ DispatchEntry_3D_0:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -378,9 +378,9 @@ DispatchEntry_3D_0:
     inc sp
     inc sp
     inc sp
-    ld bc, $055a
+    ld bc, CallBank59Entry3_055A
     ld bc, $0200
-    ld bc, $0369
+    ld bc, Goto_Unnamed2
     ld bc, $f5fd
     ld bc, $0f79
     inc b
@@ -397,7 +397,7 @@ DispatchEntry_3D_0:
     ld [hl+], a
     nop
     ld bc, $0062
-    ld bc, $0709
+    ld bc, SetCancelFlag
     nop
     ld bc, $0f05
     jr jr_03d_42f9
@@ -462,7 +462,7 @@ jr_03d_42f9:
     inc b
     ld bc, $0005
     ld bc, $f7f5
-    ld bc, $0c80
+    ld bc, Copy4Bytes
     ld bc, $0124
     ld bc, $0069
     ld [hl+], a
@@ -517,7 +517,7 @@ jr_03d_42f9:
     inc sp
     ld bc, $0679
     ld bc, $0200
-    ld bc, $0369
+    ld bc, Goto_Unnamed2
     ld bc, $0065
     ld bc, $0101
     ld [hl+], a
@@ -528,7 +528,7 @@ jr_03d_42f9:
     ld bc, $0180
     ld bc, $f4fa
     ld bc, $02c2
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0064
     ld [hl+], a
     ld [hl+], a
@@ -617,7 +617,7 @@ jr_03d_42f9:
     ld [hl+], a
     ld bc, $f6fa
     ld bc, $01a4
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $017f
     ld bc, $0fb9
     ld [$3333], sp
@@ -644,7 +644,7 @@ jr_03d_44a9:
     inc b
     inc sp
     ld bc, $005f
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0f5a
     dec b
     ld bc, $005f
@@ -658,7 +658,7 @@ jr_03d_44a9:
     ld bc, $f6fa
     ld de, $8501
     nop
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0fb4
     dec c
     inc sp
@@ -740,7 +740,7 @@ jr_03d_44a9:
     ld [hl+], a
     ld bc, $f4fa
     ld bc, $02a2
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0fb2
     dec c
     ld bc, $00a0
@@ -755,7 +755,7 @@ jr_03d_44a9:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -858,7 +858,7 @@ jr_03d_44a9:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0844
     nop
     ld bc, $1101
@@ -925,7 +925,7 @@ jr_03d_46b9:
     ld a, [$01f5]
     and e
     ld [bc], a
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     nop
     ld bc, $00a3
     ld bc, HeaderManufacturerCode
@@ -937,7 +937,7 @@ jr_03d_46b9:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     ld bc, $0183
     ld bc, $f2a0
@@ -985,7 +985,7 @@ jr_03d_4721:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -996,7 +996,7 @@ jr_03d_4721:
     inc sp
     inc sp
     ld bc, $045a
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0667
     ld [hl+], a
     ld bc, $0b72
@@ -1087,21 +1087,21 @@ jr_03d_4721:
     ld bc, $0272
     inc sp
     ld bc, $0469
-    ld bc, $0100
-    ld bc, $0686
+    ld bc, Boot
+    ld bc, GameStateBit_0686
     ld [hl+], a
     ld de, $4001
     nop
     inc sp
-    ld de, $2200
+    ld de, RetFromSRAMCopy
     ld bc, $f5fa
     ld bc, $02a3
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0141
     ld bc, $0fb8
     ld [$0122], sp
     ld h, b
-    ld bc, $0901
+    ld bc, WaitSTATForOverlayB
     rlca
     ld bc, $0270
     ld bc, $f2a0
@@ -1177,11 +1177,11 @@ jr_03d_4721:
     inc b
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0382
+    ld bc, ScreenRefreshVBlank
     ld [hl+], a
     ld bc, $f5fa
     ld bc, $0264
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, HeaderCGBFlag
     nop
     ld bc, $0fb9
@@ -1192,7 +1192,7 @@ jr_03d_4721:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -1205,7 +1205,7 @@ jr_03d_4721:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     ld bc, $0441
@@ -1228,7 +1228,7 @@ jr_03d_4721:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -1249,7 +1249,7 @@ jr_03d_4721:
     ld de, $0122
     pop hl
     inc bc
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -1275,9 +1275,9 @@ jr_03d_4721:
     ld [hl+], a
     inc sp
     inc sp
-    ld bc, $065a
+    ld bc, SetupTilemapRow
     ld bc, $0200
-    ld bc, $035a
+    ld bc, Goto_No_More
     inc sp
     ld bc, $0f72
     dec bc
@@ -1354,7 +1354,7 @@ jr_03d_4721:
     ld [hl+], a
     inc sp
     inc sp
-    ld bc, $065a
+    ld bc, SetupTilemapRow
     ld bc, $0200
     ld bc, $0f6a
     inc de
@@ -1372,7 +1372,7 @@ jr_03d_4721:
     ld bc, $f3fa
     ld bc, $0064
     ld bc, $0063
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -1384,7 +1384,7 @@ jr_03d_4721:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -1407,7 +1407,7 @@ jr_03d_4721:
     ld de, $8301
     nop
     ld bc, $0083
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -1439,7 +1439,7 @@ jr_03d_4721:
     ld bc, $0481
     ld [hl+], a
     ld bc, $043a
-    ld bc, $0382
+    ld bc, ScreenRefreshVBlank
     ld bc, $0939
     ld bc, $0043
     ld bc, $0fba
@@ -1447,7 +1447,7 @@ jr_03d_4721:
     ld bc, $0062
     ld bc, $0162
     ld bc, $f6fa
-    ld bc, $0382
+    ld bc, ScreenRefreshVBlank
     ld bc, $01fa
     nop
     ld bc, $1101
@@ -1458,7 +1458,7 @@ jr_03d_4721:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -1471,7 +1471,7 @@ jr_03d_4721:
     inc sp
     inc sp
     inc sp
-    ld bc, $055a
+    ld bc, CallBank59Entry3_055A
     ld bc, $0200
     ld bc, $0469
     ld [hl+], a
@@ -1481,7 +1481,7 @@ jr_03d_4721:
     ld [hl+], a
     ld bc, $0469
     ld bc, $0000
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $f2fa
     ld bc, $0182
     ld bc, $0183
@@ -1516,7 +1516,7 @@ jr_03d_4721:
     ld de, $2222
     ld [hl+], a
     ld bc, $0071
-    ld bc, $035a
+    ld bc, Goto_No_More
     ld bc, $0000
     ld de, $8601
     ld b, $22
@@ -1524,7 +1524,7 @@ jr_03d_4721:
     ld [hl+], a
     ld bc, $f6fa
     ld bc, $0194
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0002
     ld bc, $0fb8
     dec bc
@@ -1546,7 +1546,7 @@ jr_03d_4721:
     ld [hl+], a
     ld bc, $0001
     ld bc, $075a
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0a6a
     inc sp
     ld bc, $0f79
@@ -1563,7 +1563,7 @@ jr_03d_4721:
     inc b
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -1582,7 +1582,7 @@ jr_03d_4721:
     inc sp
     inc sp
     nop
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld de, $4501
     rlca
     ld bc, $0105
@@ -1610,7 +1610,7 @@ jr_03d_4721:
     ld bc, $0065
     ld [hl+], a
     ld bc, $0bb6
-    ld bc, $0150
+    ld bc, BootMain
     ld bc, $f3fa
     ld [hl+], a
     ld [hl+], a
@@ -1638,7 +1638,7 @@ jr_03d_4721:
     nop
     inc sp
     inc sp
-    ld bc, $065a
+    ld bc, SetupTilemapRow
     ld bc, $0008
     ld bc, $0568
     inc sp
@@ -1675,7 +1675,7 @@ jr_03d_4721:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     dec c
     inc sp
@@ -1718,7 +1718,7 @@ jr_03d_4721:
     inc sp
     ld bc, $0f39
     add hl, bc
-    ld bc, $0144
+    ld bc, HeaderNewLicenseeCode
     ld bc, $0f5a
     rlca
     inc sp
@@ -1731,7 +1731,7 @@ jr_03d_4721:
     ld bc, $0b9a
     ld bc, $0909
     inc sp
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     inc c
     ld [hl+], a
     ld [hl+], a
@@ -1774,9 +1774,9 @@ jr_03d_4721:
     ld bc, $00a8
     ld bc, $0064
     ld bc, $f6fa
-    ld bc, $04ce
+    ld bc, GetStoredPointerHL
     ld bc, $fffc
-    ld de, $0100
+    ld de, Boot
     ld bc, $1111
     ld de, $3311
     inc sp
@@ -1892,7 +1892,7 @@ jr_03d_4721:
     ld [hl+], a
     inc sp
     inc sp
-    ld bc, $065a
+    ld bc, SetupTilemapRow
     ld bc, $0200
     ld bc, $f3fa
     nop
@@ -1968,7 +1968,7 @@ jr_03d_4721:
 
     ld bc, $0b06
     ld bc, $0000
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0204
     inc sp
     ld bc, $0f5a
@@ -1979,7 +1979,7 @@ jr_03d_4721:
     and l
     nop
     ld bc, $0b5a
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
 
 jr_03d_4f0f:
     ld [hl+], a
@@ -2000,7 +2000,7 @@ jr_03d_4f0f:
     inc sp
     inc sp
     inc sp
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld de, $4501
     inc c
     ld [hl+], a
@@ -2008,7 +2008,7 @@ jr_03d_4f0f:
     nop
     inc sp
     inc sp
-    ld bc, $074a
+    ld bc, CheckJoypadAB
     ld de, $0111
     ld h, a
     rrca
@@ -2124,7 +2124,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     ld bc, $0441
@@ -2165,7 +2165,7 @@ jr_03d_4f0f:
     ld bc, $0f55
     inc c
     ld bc, $0824
-    ld bc, $0c80
+    ld bc, Copy4Bytes
     ld [hl+], a
     ld bc, $0b61
     ld de, $a101
@@ -2208,7 +2208,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     ld bc, $0441
@@ -2330,7 +2330,7 @@ jr_03d_4f0f:
     inc sp
     ld bc, $0759
     ld bc, $0201
-    ld bc, $035a
+    ld bc, Goto_No_More
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
@@ -2340,9 +2340,9 @@ jr_03d_4f0f:
     ld bc, $0083
     ld de, $5e01
     nop
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0da4
-    ld bc, $0144
+    ld bc, HeaderNewLicenseeCode
     ld bc, $0fba
     rlca
     ld bc, $0162
@@ -2401,7 +2401,7 @@ jr_03d_4f0f:
     inc sp
     inc sp
     inc sp
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld de, $4501
     rlca
     ld bc, $0046
@@ -2449,7 +2449,7 @@ jr_03d_4f0f:
     ld bc, $0042
     ld [hl+], a
     ld bc, $0102
-    ld bc, $055a
+    ld bc, CallBank59Entry3_055A
     ld bc, $0300
     ld bc, $0f6a
     inc de
@@ -2565,7 +2565,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -2621,7 +2621,7 @@ jr_03d_4f0f:
     ld bc, $03a2
     ld bc, $0509
     ld bc, $0180
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     ld [$0122], sp
     ld [c], a
     ld [bc], a
@@ -2691,7 +2691,7 @@ jr_03d_4f0f:
     ld de, $2233
     ld bc, $f5fa
     ld bc, $02a3
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0142
     ld bc, $0fb8
     ld [$6201], sp
@@ -2851,7 +2851,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -2876,14 +2876,14 @@ jr_03d_4f0f:
     ld bc, $0469
     ld bc, $0000
     ld bc, $0090
-    ld bc, $0369
+    ld bc, Goto_Unnamed2
     ld [hl+], a
     ld bc, $0076
     inc sp
     ld bc, $0085
     ld bc, $f5fa
     ld bc, $02a3
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0fb3
     dec c
     ld [hl+], a
@@ -2954,7 +2954,7 @@ jr_03d_4f0f:
     ld de, $0122
     ld a, [$01f3]
     sub h
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     rlca
     ld bc, $0067
     ld bc, $0fb5
@@ -2986,7 +2986,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     ld b, $01
     ld a, [$33f2]
@@ -3009,7 +3009,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -3053,8 +3053,8 @@ jr_03d_4f0f:
     ld bc, $0063
     inc sp
     inc sp
-    ld bc, $055a
-    ld bc, $0100
+    ld bc, CallBank59Entry3_055A
+    ld bc, Boot
     ld bc, $0f68
     rla
     ld bc, $f2ff
@@ -3066,7 +3066,7 @@ jr_03d_4f0f:
     ld bc, $0042
     ld bc, $0fb6
     ld [$6501], sp
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     ld a, [bc]
     ld bc, $08c4
     nop
@@ -3111,7 +3111,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     ld b, $22
     ld bc, $0062
@@ -3119,7 +3119,7 @@ jr_03d_4f0f:
     inc sp
     inc sp
     ld bc, $043a
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0667
     ld bc, $f2ff
     ld bc, $0f77
@@ -3139,7 +3139,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $01a2
     ld bc, $0309
     nop
@@ -3160,7 +3160,7 @@ jr_03d_4f0f:
     ld bc, $0809
     inc sp
     inc sp
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     ld a, [bc]
     inc sp
     inc sp
@@ -3194,7 +3194,7 @@ jr_03d_4f0f:
     ld bc, $0122
     sbc d
     dec bc
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $01a5
     ld [hl+], a
     ld bc, $0ab9
@@ -3246,7 +3246,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0242
     ld bc, $f2a0
     nop
@@ -3369,7 +3369,7 @@ jr_03d_4f0f:
     ld bc, $f6fa
     ld bc, $0fa4
     dec e
-    ld bc, $0864
+    ld bc, HandleScreenRefresh
     ld bc, $0ce0
     nop
     ld bc, $1101
@@ -3410,7 +3410,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -3471,7 +3471,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld bc, $0062
     ld bc, $0757
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0f67
     ld d, $22
     ld bc, $f2ff
@@ -3486,7 +3486,7 @@ jr_03d_4f0f:
     ld [bc], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0270
     ld bc, $f2a0
     nop
@@ -3528,7 +3528,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -3551,7 +3551,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -3603,7 +3603,7 @@ jr_03d_4f0f:
     ld bc, $0aa7
     inc sp
     inc sp
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     ld a, [bc]
     inc sp
     ld bc, $0080
@@ -3635,7 +3635,7 @@ jr_03d_4f0f:
     ld bc, $0745
     ld [hl+], a
     ld bc, $0b91
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0fa5
     inc e
     ld bc, $0944
@@ -3666,7 +3666,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld [hl+], a
     ld bc, $0a74
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0567
     ld [hl+], a
     ld bc, $f1ff
@@ -3713,7 +3713,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -3806,7 +3806,7 @@ jr_03d_4f0f:
     dec b
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -3846,7 +3846,7 @@ jr_03d_4f0f:
     dec b
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0273
     ld bc, $f2a0
     nop
@@ -3897,7 +3897,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     add hl, bc
     ld [hl+], a
@@ -3930,7 +3930,7 @@ jr_03d_4f0f:
     dec b
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -3955,7 +3955,7 @@ jr_03d_4f0f:
     inc sp
     ld bc, $063a
     ld bc, $0106
-    ld bc, $0569
+    ld bc, CallBank56Entry8_0569
     ld [hl+], a
     ld bc, $0173
     ld bc, $0045
@@ -3976,7 +3976,7 @@ jr_03d_4f0f:
     dec b
     ld bc, $0064
     ld bc, $0064
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0292
     ld bc, $f2a0
     nop
@@ -4130,7 +4130,7 @@ jr_03d_4f0f:
     ld bc, $09c6
     ld [hl+], a
     ld bc, $01e3
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -4171,7 +4171,7 @@ jr_03d_4f0f:
     dec b
     ld [hl+], a
     ld bc, $03e0
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -4187,7 +4187,7 @@ jr_03d_4f0f:
     inc sp
     nop
     nop
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld de, $4501
     ld c, $33
     nop
@@ -4267,7 +4267,7 @@ jr_03d_4f0f:
     ld [bc], a
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -4307,7 +4307,7 @@ jr_03d_4f0f:
     dec b
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -4355,7 +4355,7 @@ jr_03d_4f0f:
     dec b
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0392
     ld bc, $01fa
     nop
@@ -4380,15 +4380,15 @@ jr_03d_4f0f:
     ld [hl+], a
     ld [hl+], a
     ld bc, $027d
-    ld bc, $0648
+    ld bc, CheckTilemapBit5
     ld bc, $0ca2
     ld bc, $00a0
     inc sp
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $015e
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
@@ -4423,13 +4423,13 @@ jr_03d_4f0f:
     inc sp
     nop
     ld bc, $0658
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0f67
     ld d, $22
     ld [hl+], a
     ld bc, $0200
     inc sp
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0fa4
     rra
     ld [hl+], a
@@ -4498,7 +4498,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld bc, $00e1
     ld bc, $0b46
-    ld bc, $0150
+    ld bc, BootMain
     ld bc, $f2a0
     nop
     ld bc, $1101
@@ -4513,7 +4513,7 @@ jr_03d_4f0f:
     inc sp
     inc sp
     inc sp
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld de, $4501
     rlca
     ld bc, $0105
@@ -4521,7 +4521,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld bc, $0a57
     ld bc, $0102
-    ld bc, $035a
+    ld bc, Goto_No_More
     ld bc, $0046
     ld bc, $0f75
     ld [$0122], sp
@@ -4532,7 +4532,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld bc, $01c3
     ld bc, $0849
-    ld bc, $0150
+    ld bc, BootMain
     ld bc, $0fca
     inc de
     nop
@@ -4548,7 +4548,7 @@ jr_03d_4f0f:
     inc sp
     inc sp
     nop
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld de, $4501
     rlca
     ld bc, $0105
@@ -4569,7 +4569,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld bc, $0409
     ld bc, $0080
-    ld bc, $0150
+    ld bc, BootMain
     ld bc, $0faa
     inc d
     ld bc, $01a5
@@ -4599,14 +4599,14 @@ jr_03d_4f0f:
     ld [hl+], a
     ld bc, $007f
     nop
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0da4
     ld bc, $007f
     ld bc, $0fb9
     ld [$a001], sp
     nop
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -4655,7 +4655,7 @@ jr_03d_4f0f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     ld b, $01
     ld a, [$01f2]
@@ -4665,7 +4665,7 @@ jr_03d_4f0f:
     nop
     ld bc, $0f77
     add hl, bc
-    ld bc, $0f63
+    ld bc, SpriteGBCFlippedRead
     inc c
     ld bc, $0f42
     inc c
@@ -4707,7 +4707,7 @@ jr_03d_4f0f:
     ld [hl+], a
     ld bc, $0a36
     ld bc, $0000
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0204
     ld bc, $0f78
     rlca
@@ -4747,7 +4747,7 @@ jr_03d_644f:
     ld bc, $0f96
     add hl, bc
     nop
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0fba
     inc b
     ld [hl+], a
@@ -4815,7 +4815,7 @@ jr_03d_644f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     ld b, $00
     ld [hl+], a
@@ -4859,7 +4859,7 @@ jr_03d_644f:
     ld [hl+], a
     ld [hl+], a
     ld bc, $0a77
-    ld bc, $0150
+    ld bc, BootMain
     ld bc, $0faa
     ld d, $01
     ld b, h
@@ -4879,7 +4879,7 @@ jr_03d_644f:
     inc sp
     inc sp
     inc sp
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld de, $4501
     inc c
     ld bc, $0044
@@ -4928,7 +4928,7 @@ jr_03d_644f:
     ld [hl+], a
     ld bc, $0509
     ld bc, $02c2
-    ld bc, $0608
+    ld bc, RetUnused
     ld [hl+], a
     ld [hl+], a
     inc sp
@@ -4946,7 +4946,7 @@ jr_03d_644f:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     ld b, $22
     ld [hl+], a
@@ -5007,7 +5007,7 @@ jr_03d_644f:
     nop
     ld [hl+], a
     ld bc, $0bb8
-    ld bc, $0b07
+    ld bc, RunScriptEngine
     ld bc, $0045
     ld bc, $fffa
     inc bc
@@ -5029,11 +5029,11 @@ jr_03d_644f:
     ld bc, $5901
     rrca
     ld c, b
-    ld bc, $0f44
+    ld bc, SpriteGBCWriteAndCheck
     ld a, [bc]
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02f0
     ld bc, $f2a0
     nop
@@ -5068,7 +5068,7 @@ jr_03d_644f:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0856
+    ld bc, IncrementHLAndPop
     ld bc, $0000
     ld bc, $0f66
     jr jr_03d_66bd
@@ -5100,7 +5100,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld [hl+], a
     ld bc, $0848
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0f69
     ld c, l
     ld bc, $0b79
@@ -5153,7 +5153,7 @@ jr_03d_66bd:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     add hl, bc
     ld [hl+], a
@@ -5169,7 +5169,7 @@ jr_03d_66bd:
     ld bc, $0000
     ld bc, $0e86
     nop
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     ld b, $33
     inc sp
     inc sp
@@ -5178,7 +5178,7 @@ jr_03d_66bd:
     inc b
     ld [hl+], a
     ld bc, $03e1
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $03a2
     ld bc, $01fa
     nop
@@ -5205,7 +5205,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld [hl+], a
     ld bc, $0145
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $02b0
     ld bc, $0faa
     inc sp
@@ -5234,7 +5234,7 @@ jr_03d_66bd:
     ld [$3300], sp
     ld bc, $0002
     nop
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     dec b
     ld bc, $0085
     inc sp
@@ -5247,7 +5247,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld bc, $00e2
     ld bc, $0a47
-    ld bc, $0150
+    ld bc, BootMain
     ld bc, $f2a0
     nop
     ld bc, $1101
@@ -5260,7 +5260,7 @@ jr_03d_66bd:
 
     ld bc, $0b06
     ld bc, $0000
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld bc, $0204
     ld bc, $0f59
     dec bc
@@ -5270,7 +5270,7 @@ jr_03d_66bd:
     dec b
     inc sp
     ld bc, $03a1
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     ld [$0122], sp
     call nz, Boot
     sbc c
@@ -5313,7 +5313,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld bc, $00a6
     ld bc, $0948
-    ld bc, $0150
+    ld bc, BootMain
     ld bc, $f2a0
     nop
     ld bc, $1101
@@ -5365,7 +5365,7 @@ jr_03d_66bd:
     ld de, $0022
     inc sp
     nop
-    ld bc, $0648
+    ld bc, CheckTilemapBit5
     ld bc, $0007
     ld bc, $07a6
     ld [hl+], a
@@ -5385,7 +5385,7 @@ jr_03d_66bd:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     ld c, l
     ld bc, $0f79
@@ -5398,7 +5398,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0606
@@ -5425,7 +5425,7 @@ jr_03d_66bd:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     dec h
     ld [hl+], a
@@ -5436,7 +5436,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     inc sp
     ld bc, $0a06
@@ -5454,13 +5454,13 @@ jr_03d_66bd:
     dec b
     ld [hl+], a
     ld bc, $0162
-    ld bc, $0648
+    ld bc, CheckTilemapBit5
     ld bc, $0304
     ld bc, $0f69
     dec de
     inc sp
     inc sp
-    ld bc, $0f99
+    ld bc, SpriteGBCFlipSkip
     ld b, $01
     ld b, c
     nop
@@ -5470,7 +5470,7 @@ jr_03d_66bd:
     inc sp
     inc sp
     ld de, $2222
-    ld bc, $0709
+    ld bc, SetCancelFlag
     inc sp
     ld bc, $0171
     ld bc, $f2a0
@@ -5619,7 +5619,7 @@ jr_03d_66bd:
     ld [$2222], sp
     ld bc, $0a76
     ld bc, $0140
-    ld bc, $0a09
+    ld bc, FormatHundredThousands
     ld bc, $0947
     ld bc, $0da4
     nop
@@ -5669,7 +5669,7 @@ jr_03d_66bd:
     inc sp
     inc sp
     ld bc, $033d
-    ld bc, $0f3d
+    ld bc, SpriteGBCSkipXEntry
     ld [bc], a
     inc sp
     ld bc, $0162
@@ -5685,7 +5685,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld bc, $0509
     ld bc, $0292
-    ld bc, $0608
+    ld bc, RetUnused
     ld bc, $0262
     ld bc, $0fb8
     rlca
@@ -5717,7 +5717,7 @@ jr_03d_66bd:
     ld bc, $0b61
     ld bc, $0040
     ld bc, $0ca4
-    ld bc, $0f44
+    ld bc, SpriteGBCWriteAndCheck
     add hl, bc
     ld de, $0122
     pop hl
@@ -5785,9 +5785,9 @@ jr_03d_66bd:
     ld bc, $0141
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0a58
+    ld bc, Div24SubtractLoop
     ld bc, $0073
-    ld bc, $035a
+    ld bc, Goto_No_More
     inc sp
     inc sp
     inc sp
@@ -5831,7 +5831,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld [hl+], a
     ld bc, $0162
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld bc, $0ea4
     inc sp
     ld [hl+], a
@@ -5855,7 +5855,7 @@ jr_03d_66bd:
     nop
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0a58
+    ld bc, Div24SubtractLoop
     ld de, $0111
     ld e, b
     dec b
@@ -5868,7 +5868,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld bc, $0192
     nop
-    ld bc, $0648
+    ld bc, CheckTilemapBit5
     ld bc, $0ca2
     ld bc, $00a1
     ld bc, $0f46
@@ -5965,7 +5965,7 @@ jr_03d_66bd:
     ld bc, $0fb8
     ld b, $01
     add l
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     rrca
     rlca
     nop
@@ -5974,7 +5974,7 @@ jr_03d_66bd:
     ld bc, $fffa
     inc h
     inc sp
-    ld bc, $0341
+    ld bc, Goto_Staff
     ld bc, $0f39
     inc b
     inc sp
@@ -5982,7 +5982,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld bc, $0062
     ld bc, $0757
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0c67
     ld [hl+], a
     ld [hl+], a
@@ -6038,7 +6038,7 @@ jr_03d_66bd:
     ld bc, $0b43
     ld de, $0122
     push bc
-    ld bc, $0901
+    ld bc, WaitSTATForOverlayB
     rrca
     inc b
     nop
@@ -6073,7 +6073,7 @@ jr_03d_66bd:
     ld bc, $0145
     ld bc, $0fb6
     ld [$a501], sp
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     rrca
     rlca
     nop
@@ -6165,7 +6165,7 @@ jr_03d_66bd:
     ld bc, $0c65
     ld [hl+], a
     ld [hl+], a
-    ld de, $0100
+    ld de, Boot
     ld l, c
     ld [$0701], sp
     nop
@@ -6206,7 +6206,7 @@ jr_03d_66bd:
     ld bc, $099a
     ld bc, $0607
     ld bc, $0267
-    ld bc, $0fb7
+    ld bc, SpriteGBCFlipSkipX
     rlca
     ld [hl+], a
     ld bc, $01e1
@@ -6239,7 +6239,7 @@ jr_03d_66bd:
     ld bc, $04a1
     ld bc, $fffa
     inc [hl]
-    ld bc, $0b01
+    ld bc, DispatchBank42Rst
     nop
     ld bc, $1101
     ld bc, $0500
@@ -6265,7 +6265,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld bc, $f6fa
     ld bc, $01a4
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld [hl+], a
     ld [hl+], a
     inc sp
@@ -6320,7 +6320,7 @@ jr_03d_66bd:
     ld bc, $0b8a
     ld [hl+], a
     ld bc, $0b8a
-    ld bc, $0609
+    ld bc, RequestScreenUpdate
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
@@ -6363,7 +6363,7 @@ jr_03d_66bd:
     inc sp
     inc sp
     ld bc, $0040
-    ld bc, $055a
+    ld bc, CallBank59Entry3_055A
     ld de, $6401
     ld a, [bc]
     ld bc, $0065
@@ -6379,7 +6379,7 @@ jr_03d_66bd:
     ld bc, $0009
     ld bc, $06b7
     ld bc, $0207
-    ld bc, $09c7
+    ld bc, FormatLargeNumber
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
@@ -6423,7 +6423,7 @@ jr_03d_66bd:
     ld bc, $00a5
     ld bc, $0808
     ld bc, $01b5
-    ld bc, $0709
+    ld bc, SetCancelFlag
     ld [hl+], a
     ld bc, $00c6
     ld bc, $0f09
@@ -6576,7 +6576,7 @@ jr_03d_66bd:
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
-    ld bc, $0864
+    ld bc, HandleScreenRefresh
     ld bc, $0000
     ld bc, $0fa4
     add hl, sp

@@ -322,10 +322,10 @@ label17_41d0:
     add hl, hl
     add hl, hl
     ld a, l
-    add $fd
+    add LOW(RoomAttrDataBlocks)
     ld l, a
     ld a, h
-    adc $62
+    adc HIGH(RoomAttrDataBlocks)
     ld h, a
     ld a, [$c81f]
     ld c, a
@@ -1200,10 +1200,10 @@ label17_4712:
     add hl, hl
     add hl, hl
     ld a, l
-    add $bd
+    add LOW(PaletteColorData)
     ld l, a
     ld a, h
-    adc $69
+    adc HIGH(PaletteColorData)
     ld h, a
     ld c, $00
     ld b, $08
@@ -1222,10 +1222,10 @@ label17_4733:
     add hl, hl
     add hl, hl
     ld a, l
-    add $fd
+    add LOW(AttrMapData)
     ld l, a
     ld a, h
-    adc $6a
+    adc HIGH(AttrMapData)
     ld h, a
     ld c, $00
     ld b, $01
@@ -1245,10 +1245,10 @@ label17_4751:
     add hl, hl
     add hl, hl
     ld a, l
-    add $0d
+    add LOW(AttrMapDataB)
     ld l, a
     ld a, h
-    adc $6b
+    adc HIGH(AttrMapDataB)
     ld h, a
     ld c, $00
     ld b, $01
@@ -2394,7 +2394,9 @@ GateAttrTable_B:  ; $5415 — 256 entries × 2B (attr_idx, attr_bank)
     db $40, $7D, $FF, $6B, $81, $7F, $00, $00, $F0, $00, $FF, $6B, $1A, $02, $00, $00
     db $A1, $01, $FF, $6B, $AA, $03, $00, $00, $EE, $04, $FF, $6B, $7A, $02, $00, $00
     db $CA, $4D, $FF, $6B, $B2, $76, $00, $00, $CA, $4D, $FF, $6B, $B2, $76, $00, $00
-    db $EE, $04, $FF, $6B, $7A, $02, $00, $00, $BD, $01, $FF, $6B, $5F, $03, $00, $00
+    db $EE, $04, $FF, $6B, $7A, $02, $00, $00
+RoomAttrDataBlocks:
+    db $BD, $01, $FF, $6B, $5F, $03, $00, $00
     db $BD, $01, $FF, $6B, $5F, $03, $00, $00, $00, $26, $FF, $6B, $80, $47, $00, $00
     db $34, $00, $FF, $6B, $B4, $78, $00, $00, $02, $06, $FF, $6B, $90, $03, $00, $00
     db $00, $7D, $FF, $6B, $40, $1B, $00, $00, $C1, $01, $FF, $6B, $6C, $03, $00, $00
@@ -2502,7 +2504,9 @@ GateAttrTable_B:  ; $5415 — 256 entries × 2B (attr_idx, attr_bank)
     db $17, $10, $FF, $6B, $3F, $49, $00, $00, $36, $01, $FF, $6B, $51, $03, $A3, $00
     db $53, $4C, $FF, $6B, $F9, $03, $02, $00, $17, $10, $FF, $6B, $5F, $59, $00, $08
     db $17, $10, $FF, $6B, $39, $75, $00, $08, $83, $55, $FF, $6B, $DD, $01, $00, $00
-    db $AA, $0D, $FF, $6B, $E0, $7E, $00, $00, $33, $46, $BE, $77, $F8, $5E, $44, $08
+    db $AA, $0D, $FF, $6B, $E0, $7E, $00, $00
+PaletteColorData:
+    db $33, $46, $BE, $77, $F8, $5E, $44, $08
     db $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C
     db $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C
     db $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C, $00, $7C
@@ -2522,8 +2526,12 @@ GateAttrTable_B:  ; $5415 — 256 entries × 2B (attr_idx, attr_bank)
     db $03, $01, $FF, $6B, $A2, $02, $00, $00, $0C, $05, $FF, $6B, $42, $02, $00, $00
     db $11, $01, $FF, $6B, $F9, $7F, $00, $00, $11, $01, $FF, $6B, $F9, $7F, $00, $00
     db $11, $01, $FF, $6B, $F9, $7F, $00, $00, $11, $01, $FF, $6B, $F9, $7F, $00, $00
-    db $28, $7F, $FF, $6B, $F9, $7F, $00, $00, $00, $00, $FF, $6B, $8F, $7F, $1F, $7C
-    db $10, $42, $1F, $7C, $1F, $7C, $1F, $7C, $00, $00, $FF, $02, $17, $00, $DF, $01
+    db $28, $7F, $FF, $6B, $F9, $7F, $00, $00
+AttrMapData:
+    db $00, $00, $FF, $6B, $8F, $7F, $1F, $7C
+    db $10, $42, $1F, $7C, $1F, $7C, $1F, $7C
+AttrMapDataB:
+    db $00, $00, $FF, $02, $17, $00, $DF, $01
     db $00, $00, $FF, $02, $17, $00, $DF, $01, $00, $00, $FF, $02, $17, $00, $DF, $01
     db $00, $00, $5F, $03, $1F, $00, $FF, $01, $00, $00, $5F, $03, $1F, $00, $FF, $01
     db $00, $00, $5F, $03, $1F, $00, $FF, $01, $00, $00, $FF, $7F, $FF, $4B, $FF, $02

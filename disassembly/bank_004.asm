@@ -97,18 +97,18 @@ NPCInteractDispatch:
 label4081:
     ldh a, [$c7]        ; load(h) the contents of ffc7 into a
     cp $90              ; compare $90 to a (ffc7)
-    jr nc, jr_004_409e  ; jump if a(ffc7) >= $90
+    jr nc, NPCDispatchBank11  ; jump if a(ffc7) >= $90
 
     cp $10              ; compare $10 to a(ffc7)
-    jr nc, jr_004_4095  ; jump if a(ffc7) >= $10
+    jr nc, NPCDispatchBank10  ; jump if a(ffc7) >= $10
 
     call HramScr_4126
-    ld de, $4137        ; load 4137 into de
+    ld de, data_4137        ; load 4137 into de
     call $0d91
     ret
 
 
-jr_004_4095:
+NPCDispatchBank10:
     sub $10            ; subreact $10 from a(ffc7)
     ldh [$c7], a       ; load(h) a(ffc7 -$10) into the contents of ffc7
     ld hl, $1000
@@ -116,7 +116,7 @@ jr_004_4095:
     ret
 
 
-jr_004_409e:
+NPCDispatchBank11:
     sub $90            ; subtract $90 from a(ffc7)
     ldh [$c7], a       ; load(h) a(ffc7 -$90) into the contents of ffc7
     ld hl, $1100       ; load 1100 into hl
@@ -131,18 +131,18 @@ NPCInteractDispatchB:
 label40a7:
     ldh a, [$c7]       ; load(h) the contents of ffc7 into a
     cp $90             ; compare $90 to a (ffc7)
-    jr nc, jr_004_40c4 ; jump if a(ffc7) >= $90
+    jr nc, NPCDispatchBBank11 ; jump if a(ffc7) >= $90
 
     cp $10             ; compare $10 to a(ffc7)
-    jr nc, jr_004_40bb ; jump if a(ffc7) >= $10
+    jr nc, NPCDispatchBBank10 ; jump if a(ffc7) >= $10
 
     call HramScr_4126
-    ld de, $4137       ;  load 4137 into de
+    ld de, data_4137       ;  load 4137 into de
     call SaveScr_40cd
     ret
 
 
-jr_004_40bb:
+NPCDispatchBBank10:
     sub $10            ; subreact $10 from a(ffc7)
     ldh [$c7], a       ; load(h) a(ffc7 -$10) into the contents of ffc7
     ld hl, $1001       ; load 1000 into hl
@@ -150,7 +150,7 @@ jr_004_40bb:
     ret
 
 
-jr_004_40c4:
+NPCDispatchBBank11:
     sub $90            ; subtract $90 from a(ffc7)
     ldh [$c7], a       ; load(h) a(ffc7 -$90) into the contents of ffc7
     ld hl, $1101       ; load 1100 into hl
@@ -165,7 +165,7 @@ SaveScr_40cd:
     push hl
     ldh a, [$cb]       ; load(h) the contents of ffcb into a
     cp $28             ; compare $28 to a
-    jr nc, jr_004_4121 ; jump if a(ffcb) >= $28
+    jr nc, SpriteLoadDone ; jump if a(ffcb) >= $28
 
     ldh a, [$c7]       ; load(h)ffc7 into a
     ld l, a            ; load a into l
@@ -189,11 +189,11 @@ SaveScr_40cd:
     ld l, a            ; load a((ffcbx2) x2) into a
     ld h, $c0          ; load $c0 into h
 
-jr_004_40f4:
+CopySpriteDataLoop:
     ld a, [de]         ; load the contents of de(hlx2+1) into a
     inc de             ; +1 to de
     cp $80             ; compare $80 to a
-    jr z, jr_004_4121  ; jump to 4121 if not 0
+    jr z, SpriteLoadDone  ; jump to 4121 if not 0
 
     ld b, a            ; load a(hlx2+1) into b
     ldh a, [$c5]       ; load(h) the contents of ffc5 into a
@@ -223,9 +223,9 @@ jr_004_40f4:
     inc a
     ldh [$cb], a
     cp $28
-    jr c, jr_004_40f4
+    jr c, CopySpriteDataLoop
 
-jr_004_4121:
+SpriteLoadDone:
     pop hl
     pop de
     pop bc
@@ -235,7 +235,7 @@ jr_004_4121:
 
 HramScr_4126:
     ldh a, [$c7]
-    ld hl, $4157
+    ld hl, data_4157
     add l
     ld l, a
     ld a, $00
@@ -268,7 +268,7 @@ data_4157:
 ; 3. Handle pending operations:
 ;    - Bit 4/6: NPC position updates via LoadScr_43ec
 ;    - Bit 2: Delay countdown ($D8DB)
-;    - Bit 3: NPC walk-toward via Jump_004_41e0 → Jump_004_42cd
+;    - Bit 3: NPC walk-toward via CheckPendingNPC → ResolveNPCIndex
 ; 4. If none pending: call LoadScr_55f5 to execute next script command
 ; ---------------------------------------------------------------------------
 NPCFrameUpdate:
@@ -281,23 +281,23 @@ label4167:
 
     ld a, [wGameState]
     bit 0, a
-    jr z, jr_004_417f
+    jr z, CheckDelayBit
 
     ld a, [$c915]
     cp $0b
     ret nz
 
-    jr jr_004_4189
+    jr CheckScriptBusy
 
-jr_004_417f:
+CheckDelayBit:
     bit 2, a
-    jr z, jr_004_4189
+    jr z, CheckScriptBusy
 
     ld a, [$c91e]
     cp $02
     ret nz
 
-jr_004_4189:
+CheckScriptBusy:
     ld a, [$c850]            ; System busy flag
     or a
     ret nz                   ; Return if system busy
@@ -308,10 +308,10 @@ jr_004_4189:
 
     ld a, [wScriptStateFlags]            ; Script state flags
     bit 0, a
-    jp z, Jump_004_41c7      ; Bit 0 clear = no script running → return
+    jp z, RetFromFrameUpdate      ; Bit 0 clear = no script running → return
 
     bit 1, a
-    jp nz, Jump_004_41c7     ; Bit 1 set = text queued, wait for display → return
+    jp nz, RetFromFrameUpdate     ; Bit 1 set = text queued, wait for display → return
 
     ld a, [wScriptStateFlags]
     bit 4, a                 ; Bit 4: NPC position update pending (group A)
@@ -321,38 +321,38 @@ jr_004_4189:
     call nz, LoadScr_43ec
     ld a, [wScriptStateFlags]
     bit 2, a                 ; Bit 2: delay/wait active
-    jr nz, jr_004_41c8
+    jr nz, CheckFrameCounter
 
     bit 3, a                 ; Bit 3: NPC walk-toward pending
-    jp nz, Jump_004_41e0
+    jp nz, CheckPendingNPC
 
-jr_004_41bc:
+CheckSecondaryDelay:
     ld a, [$d8d8]            ; Secondary state flags
     bit 2, a                 ; Bit 2: secondary delay active
-    jp nz, Jump_004_43db
+    jp nz, DecrementDelay
 
-jr_004_41c4:
+ContinueScript:
     call LoadScr_55f5       ; → ScriptExecContinue: run next script command
 
-Jump_004_41c7:
+RetFromFrameUpdate:
     ret
 
 
-jr_004_41c8:
+CheckFrameCounter:
     ld a, [$c8a4]
     and $07
-    jr nz, jr_004_41dd
+    jr nz, JumpToRetFromFrame
 
     ld a, [$d8db]
     dec a
     ld [$d8db], a
-    jr nz, jr_004_41dd
+    jr nz, JumpToRetFromFrame
 
     ld hl, wScriptStateFlags
     res 2, [hl]
 
-jr_004_41dd:
-    jp Jump_004_41c7
+JumpToRetFromFrame:
+    jp RetFromFrameUpdate
 
 
 ; ---------------------------------------------------------------------------
@@ -366,17 +366,17 @@ jr_004_41dd:
 ; Movement direction is written to $FF8E:
 ;   $00 = down, $01 = up, $02 = right, $03 = left
 ; ---------------------------------------------------------------------------
-Jump_004_41e0:
+CheckPendingNPC:
     ld a, [$d8dc]            ; NPC number for pending interaction
     or a
-    jp nz, Jump_004_42cd     ; If NPC specified → NPCIndexLookup
+    jp nz, ResolveNPCIndex     ; If NPC specified → NPCIndexLookup
 
     ld hl, $ff90
     set 0, [hl]              ; Mark NPC as moving
     ld a, [$c8a4]            ; Interaction type
     and $03
     cp $01
-    jp z, Jump_004_43d8      ; Type 1 → skip movement
+    jp z, RetToCallerAlias      ; Type 1 → skip movement
 
     ld a, [$d8dd]
     ld l, a
@@ -384,10 +384,10 @@ Jump_004_41e0:
     ld h, a
     ld a, h
     or l
-    jr z, jr_004_425a
+    jr z, ProcessNPCMoveYSetup
 
     bit 7, h
-    jr nz, jr_004_4231
+    jr nz, ProcessNPCMoveX
 
     ld a, [$d8dd]
     sub $01
@@ -403,14 +403,14 @@ Jump_004_41e0:
     ldh [$93], a
     ld a, [wScriptStateFlags]
     bit 5, a
-    jp nz, Jump_004_42ba
+    jp nz, CallWalkAndReturnAlias
 
     ld a, $03
     ldh [$8e], a
-    jp Jump_004_42ba
+    jp CallWalkAndReturnAlias
 
 
-jr_004_4231:
+ProcessNPCMoveX:
     ld a, [$d8dd]
     add $01
     ld [$d8dd], a
@@ -425,23 +425,23 @@ jr_004_4231:
     ldh [$93], a
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_42ba
+    jr nz, CallWalkAndReturn
 
     ld a, $01
     ldh [$8e], a
-    jr jr_004_42ba
+    jr CallWalkAndReturn
 
-jr_004_425a:
+ProcessNPCMoveYSetup:
     ld a, [$d8df]
     ld l, a
     ld a, [$d8e0]
     ld h, a
     ld a, h
     or l
-    jr z, jr_004_42c0
+    jr z, ClearMovementLock
 
     bit 7, h
-    jr nz, jr_004_4293
+    jr nz, ProcessNPCMoveY
 
     ld a, [$d8df]
     sub $01
@@ -457,13 +457,13 @@ jr_004_425a:
     ldh [$96], a
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_42ba
+    jr nz, CallWalkAndReturn
 
     ld a, $00
     ldh [$8e], a
-    jr jr_004_42ba
+    jr CallWalkAndReturn
 
-jr_004_4293:
+ProcessNPCMoveY:
     ld a, [$d8df]
     add $01
     ld [$d8df], a
@@ -478,23 +478,23 @@ jr_004_4293:
     ldh [$96], a
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_42ba
+    jr nz, CallWalkAndReturn
 
     ld a, $02
     ldh [$8e], a
 
-Jump_004_42ba:
-jr_004_42ba:
+CallWalkAndReturnAlias:
+CallWalkAndReturn:
     call LoadScr_454b
-    jp Jump_004_43d8
+    jp RetToCallerAlias
 
 
-jr_004_42c0:
+ClearMovementLock:
     ld hl, $ff90
     res 0, [hl]
     ld hl, wScriptStateFlags
     res 3, [hl]
-    jp Jump_004_43d8
+    jp RetToCallerAlias
 
 
 ; ---------------------------------------------------------------------------
@@ -509,7 +509,7 @@ jr_004_42c0:
 ;   == 1: just set flags and return
 ;   != 1: proceed to NPC movement/walk-toward logic using $D8DD/$D8DE
 ; ---------------------------------------------------------------------------
-Jump_004_42cd:
+ResolveNPCIndex:
     dec a                    ; NPC number 1-based → 0-based
     swap a                   ; × 16
     add a                    ; × 32 (total: 32 bytes per NPC)
@@ -534,7 +534,7 @@ Jump_004_42cd:
     ld a, [$c8a4]            ; Interaction type
     and $03
     cp $01                   ; Type 1 = simple talk (no walk-toward)
-    jp z, Jump_004_43d8      ; → return via main exit
+    jp z, RetToCallerAlias      ; → return via main exit
 
     ld a, [$d8dd]
     ld e, a
@@ -542,10 +542,10 @@ Jump_004_42cd:
     ld d, a
     ld a, d
     or e
-    jr z, jr_004_435f
+    jr z, SetupNPCMoveYDelta
 
     bit 7, d
-    jr nz, jr_004_4333
+    jr nz, AdvanceNPCMoveX
 
     ld a, [$d8dd]
     sub $01
@@ -556,11 +556,11 @@ Jump_004_42cd:
     inc hl
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_4320
+    jr nz, AddNPCXOffset
 
     ld [hl], $03
 
-jr_004_4320:
+AddNPCXOffset:
     ld a, l
     add $12
     ld l, a
@@ -575,10 +575,10 @@ jr_004_4320:
     ld [hl], e
     inc hl
     ld [hl], d
-    jp Jump_004_43d8
+    jp RetToCallerAlias
 
 
-jr_004_4333:
+AdvanceNPCMoveX:
     ld a, [$d8dd]
     add $01
     ld [$d8dd], a
@@ -588,11 +588,11 @@ jr_004_4333:
     inc hl
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_434d
+    jr nz, AddNPCYOffset
 
     ld [hl], $01
 
-jr_004_434d:
+AddNPCYOffset:
     ld a, l
     add $12
     ld l, a
@@ -607,19 +607,19 @@ jr_004_434d:
     ld [hl], e
     inc hl
     ld [hl], d
-    jr jr_004_43d8
+    jr RetToCaller
 
-jr_004_435f:
+SetupNPCMoveYDelta:
     ld a, [$d8df]
     ld e, a
     ld a, [$d8e0]
     ld d, a
     ld a, d
     or e
-    jr z, jr_004_43c7
+    jr z, CacheNPCPointer
 
     bit 7, d
-    jr nz, jr_004_439b
+    jr nz, AdvanceNPCMoveY
 
     ld a, [$d8df]
     sub $01
@@ -630,11 +630,11 @@ jr_004_435f:
     inc hl
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_4389
+    jr nz, AddNPCYOffsetB
 
     ld [hl], $00
 
-jr_004_4389:
+AddNPCYOffsetB:
     ld a, l
     add $14
     ld l, a
@@ -649,9 +649,9 @@ jr_004_4389:
     ld [hl], e
     inc hl
     ld [hl], d
-    jr jr_004_43d8
+    jr RetToCaller
 
-jr_004_439b:
+AdvanceNPCMoveY:
     ld a, [$d8df]
     add $01
     ld [$d8df], a
@@ -661,11 +661,11 @@ jr_004_439b:
     inc hl
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_43b5
+    jr nz, AddNPCYOffsetC
 
     ld [hl], $02
 
-jr_004_43b5:
+AddNPCYOffsetC:
     ld a, l
     add $14
     ld l, a
@@ -680,10 +680,10 @@ jr_004_43b5:
     ld [hl], e
     inc hl
     ld [hl], d
-    jr jr_004_43d8
+    jr RetToCaller
 
 ; Movement complete: clear NPC interaction flags
-jr_004_43c7:
+CacheNPCPointer:
     ldh a, [$d5]             ; Cached NPC pointer low
     add $05
     ld l, a
@@ -698,22 +698,22 @@ jr_004_43c7:
 ; ScriptReturn — Main exit point for entry 4
 ; All paths through entry 4 converge here via JP/JR.
 ; ---------------------------------------------------------------------------
-Jump_004_43d8:
-jr_004_43d8:
-    jp Jump_004_41c7         ; Return to caller
+RetToCallerAlias:
+RetToCaller:
+    jp RetFromFrameUpdate         ; Return to caller
 
 
-Jump_004_43db:
+DecrementDelay:
     ld a, [$d8db]
     dec a
     ld [$d8db], a
-    jr nz, jr_004_43e9
+    jr nz, JumpRetFromFrame2
 
     ld hl, $d8d8
     res 2, [hl]
 
-jr_004_43e9:
-    jp Jump_004_41c7
+JumpRetFromFrame2:
+    jp RetFromFrameUpdate
 
 
 ; ---------------------------------------------------------------------------
@@ -789,22 +789,22 @@ LoadScr_443d:
     ld a, [$d8eb]
     ld hl, $ff95
     cp $01
-    jp z, Jump_004_4742
+    jp z, SetupOpcodeTable
 
     cp $03
-    jp z, Jump_004_47be
+    jp z, OpcodeHandler0B
 
     cp $04
-    jp z, Jump_004_4857
+    jp z, OpcodeHandler1A
 
     cp $06
-    jp z, Jump_004_48e2
+    jp z, OpcodeHandlerAdvance
 
     cp $07
-    jp z, Jump_004_4931
+    jp z, OpcodeHandler0D
 
     cp $1a
-    jp z, Jump_004_55a9
+    jp z, OpcodeHandler2D
 
     ld hl, $ff90
     set 0, [hl]
@@ -819,10 +819,10 @@ LoadScr_443d:
     ld h, a
     ld a, h
     or l
-    jr z, jr_004_44ea
+    jr z, SetupWalkYDelta
 
     bit 7, h
-    jr nz, jr_004_44bf
+    jr nz, AdvanceWalkCounterX
 
     ld a, [$d8ed]
     sub $01
@@ -845,7 +845,7 @@ LoadScr_443d:
     jp Jump_004_454b
 
 
-jr_004_44bf:
+AdvanceWalkCounterX:
     ld a, [$d8ed]
     add $01
     ld [$d8ed], a
@@ -867,17 +867,17 @@ jr_004_44bf:
     jp Jump_004_454b
 
 
-jr_004_44ea:
+SetupWalkYDelta:
     ld a, [$d8ef]
     ld l, a
     ld a, [$d8f0]
     ld h, a
     ld a, h
     or l
-    jp z, Jump_004_457a
+    jp z, ClearMoveLockBit
 
     bit 7, h
-    jr nz, jr_004_4524
+    jr nz, AdvanceWalkCounterY
 
     ld a, [$d8ef]
     sub $01
@@ -893,13 +893,13 @@ jr_004_44ea:
     ldh [$96], a
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_454b
+    jr nz, ClearMovementFlags
 
     ld a, $00
     ldh [$8e], a
-    jr jr_004_454b
+    jr ClearMovementFlags
 
-jr_004_4524:
+AdvanceWalkCounterY:
     ld a, [$d8ef]
     add $01
     ld [$d8ef], a
@@ -914,7 +914,7 @@ jr_004_4524:
     ldh [$96], a
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_454b
+    jr nz, ClearMovementFlags
 
     ld a, $02
     ldh [$8e], a
@@ -931,7 +931,7 @@ jr_004_4524:
 ; ---------------------------------------------------------------------------
 LoadScr_454b:
 Jump_004_454b:
-jr_004_454b:
+ClearMovementFlags:
     ld a, $00
     ldh [$8d], a
     ld a, $00
@@ -963,7 +963,7 @@ jr_004_454b:
     ret
 
 
-Jump_004_457a:
+ClearMoveLockBit:
     ld hl, $ff90
     res 0, [hl]
     xor a
@@ -1016,70 +1016,70 @@ ReadScr_4584:
     ld h, a
     pop af
     cp $01
-    jp z, Jump_004_4742
+    jp z, SetupOpcodeTable
 
     cp $02
-    jp z, Jump_004_478a
+    jp z, OpcodeHandler0A
 
     cp $04
-    jp z, Jump_004_4857
+    jp z, OpcodeHandler1A
 
     cp $05
-    jp z, Jump_004_487f
+    jp z, OpcodeHandler1B
 
     cp $08
-    jp z, Jump_004_498c
+    jp z, OpcodeHandlerAdvance2
 
     cp $09
-    jp z, Jump_004_49d2
+    jp z, OpcodeHandler0E
 
     cp $0a
-    jp z, Jump_004_4a2c
+    jp z, OpcodeHandler12
 
     cp $0b
-    jp z, Jump_004_4a52
+    jp z, OpcodeHandler1C
 
     cp $0c
-    jp z, Jump_004_4aa2
+    jp z, OpcodeHandler47
 
     cp $0d
-    jp z, Jump_004_4b27
+    jp z, OpcodeHandlerAdvance3
 
     cp $0e
-    jp z, Jump_004_4b6d
+    jp z, OpcodeHandler48
 
     cp $0f
-    jp z, Jump_004_4b9b
+    jp z, OpcodeHandler49
 
     cp $10
-    jp z, Jump_004_4be7
+    jp z, OpcodeHandler14
 
     cp $11
-    jp z, Jump_004_4c33
+    jp z, OpcodeHandler15
 
     cp $12
-    jp z, Jump_004_4c65
+    jp z, OpcodeHandler16
 
     cp $13
-    jp z, Jump_004_4c9f
+    jp z, OpcodeHandler17
 
     cp $14
-    jp z, Jump_004_4d27
+    jp z, OpcodeHandler22
 
     cp $15
-    jp z, Jump_004_4da8
+    jp z, OpcodeHandlerAdvance4
 
     cp $16
-    jp z, Jump_004_507b
+    jp z, OpcodeHandlerAdvance5
 
     cp $17
-    jp z, Jump_004_50c6
+    jp z, OpcodeHandlerE3
 
     cp $18
-    jp z, Jump_004_54c8
+    jp z, OpcodeHandlerE3B
 
     cp $19
-    jp z, Jump_004_5546
+    jp z, OpcodeHandler2C
 
     ldh a, [$d5]
     add $05
@@ -1107,10 +1107,10 @@ ReadScr_4584:
     ld d, a
     ld a, d
     or e
-    jr z, jr_004_46ba
+    jr z, AddYAddrOffset
 
     bit 7, d
-    jr nz, jr_004_468c
+    jr nz, AddXAddrOffset
 
     ldh a, [$d7]
     add $04
@@ -1128,11 +1128,11 @@ ReadScr_4584:
     inc hl
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_467b
+    jr nz, AddXCoordOffset
 
     ld [hl], $03
 
-jr_004_467b:
+AddXCoordOffset:
     ld a, l
     add $12
     ld l, a
@@ -1150,7 +1150,7 @@ jr_004_467b:
     ret
 
 
-jr_004_468c:
+AddXAddrOffset:
     ldh a, [$d7]
     add $04
     ld c, a
@@ -1167,11 +1167,11 @@ jr_004_468c:
     inc hl
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_46a9
+    jr nz, AddYCoordOffset
 
     ld [hl], $01
 
-jr_004_46a9:
+AddYCoordOffset:
     ld a, l
     add $12
     ld l, a
@@ -1189,7 +1189,7 @@ jr_004_46a9:
     ret
 
 
-jr_004_46ba:
+AddYAddrOffset:
     ldh a, [$d7]
     add $06
     ld c, a
@@ -1203,10 +1203,10 @@ jr_004_46ba:
     ld d, a
     ld a, d
     or e
-    jr z, jr_004_472d
+    jr z, CacheNPCPtrLow
 
     bit 7, d
-    jr nz, jr_004_46ff
+    jr nz, AddYAddrOffsetB
 
     ldh a, [$d7]
     add $06
@@ -1224,11 +1224,11 @@ jr_004_46ba:
     inc hl
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_46ee
+    jr nz, AddXCoordOffsetB
 
     ld [hl], $00
 
-jr_004_46ee:
+AddXCoordOffsetB:
     ld a, l
     add $14
     ld l, a
@@ -1246,7 +1246,7 @@ jr_004_46ee:
     ret
 
 
-jr_004_46ff:
+AddYAddrOffsetB:
     ldh a, [$d7]
     add $06
     ld c, a
@@ -1263,11 +1263,11 @@ jr_004_46ff:
     inc hl
     ld a, [wScriptStateFlags]
     bit 5, a
-    jr nz, jr_004_471c
+    jr nz, AddYCoordOffsetB
 
     ld [hl], $02
 
-jr_004_471c:
+AddYCoordOffsetB:
     ld a, l
     add $14
     ld l, a
@@ -1285,7 +1285,7 @@ jr_004_471c:
     ret
 
 
-jr_004_472d:
+CacheNPCPtrLow:
     ldh a, [$d5]
     add $05
     ld l, a
@@ -1301,7 +1301,7 @@ jr_004_472d:
     ret
 
 
-Jump_004_4742:
+SetupOpcodeTable:
     ld bc, $4770
 
 HramScr_4745:
@@ -1325,7 +1325,7 @@ Jump_004_4745:
     ld b, a
     ld a, [bc]
     cp $80
-    jr z, jr_004_4767
+    jr z, ReadScriptWord
 
     add [hl]
     ld [hl+], a
@@ -1336,8 +1336,8 @@ Jump_004_4745:
     ret
 
 
-Jump_004_4767:
-jr_004_4767:
+ReadScriptWordAlias:
+ReadScriptWord:
     ldh a, [$d7]
     ld l, a
     ldh a, [$d8]
@@ -1349,7 +1349,7 @@ jr_004_4767:
     db $fd, $ff, $fd, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $00, $01, $00
     db $01, $00, $02, $00, $03, $00, $03, $00, $80, $80
 
-Jump_004_478a:
+OpcodeHandler0A:
     ld bc, $4790
     jp Jump_004_4745
 
@@ -1358,7 +1358,7 @@ Jump_004_478a:
     db $fd, $ff, $fe, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $00
     db $01, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00, $80, $80
 
-Jump_004_47be:
+OpcodeHandler0B:
     ld bc, $47d9
     call HramScr_4745
     ld a, [$c850]
@@ -1385,7 +1385,7 @@ Jump_004_47be:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $04, $00, $04, $00
     db $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $80, $80
 
-Jump_004_4857:
+OpcodeHandler1A:
     ld bc, $485d
     jp Jump_004_4745
 
@@ -1394,7 +1394,7 @@ Jump_004_4857:
     db $00, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00, $03, $00, $04, $00
     db $80, $80
 
-Jump_004_487f:
+OpcodeHandler1B:
     ld bc, $4892
     call HramScr_4745
     ldh a, [$d5]
@@ -1414,7 +1414,7 @@ Jump_004_487f:
     db $04, $00, $fa, $ff, $fc, $ff, $fd, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $00, $00
     db $00, $00, $01, $00, $01, $00, $02, $00, $03, $00, $04, $00, $06, $00, $80, $80
 
-Jump_004_48e2:
+OpcodeHandlerAdvance:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1425,7 +1425,7 @@ Jump_004_48e2:
     inc a
     ld [de], a
     cp $40
-    jr nz, jr_004_48fc
+    jr nz, ReadPartyMemberAddr
 
     ldh a, [$d7]
     ld l, a
@@ -1435,7 +1435,7 @@ Jump_004_48e2:
     ret
 
 
-jr_004_48fc:
+ReadPartyMemberAddr:
     ld a, [$ca37]
     ld l, a
     ld h, $00
@@ -1473,7 +1473,7 @@ jr_004_48fc:
     ret
 
 
-Jump_004_4931:
+OpcodeHandler0D:
     ld bc, $494c
     call HramScr_4745
     ldh a, [$92]
@@ -1498,7 +1498,7 @@ Jump_004_4931:
     db $00, $00, $00, $00, $00, $00, $01, $00, $01, $00, $01, $00, $01, $00, $02, $00
     db $02, $00, $02, $00, $02, $00, $03, $00, $03, $00, $04, $00, $04, $00, $80, $80
 
-Jump_004_498c:
+OpcodeHandlerAdvance2:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1509,7 +1509,7 @@ Jump_004_498c:
     inc a
     ld [de], a
     cp $ff
-    jr nz, jr_004_49ae
+    jr nz, PushAndCachePtr
 
     ldh a, [$d7]
     ld l, a
@@ -1524,7 +1524,7 @@ Jump_004_498c:
     ret
 
 
-jr_004_49ae:
+PushAndCachePtr:
     push af
     ldh a, [$d5]
     ld l, a
@@ -1533,19 +1533,19 @@ jr_004_49ae:
     pop af
     ld b, $0f
     cp $20
-    jr c, jr_004_49ca
+    jr c, CheckAndBranch
 
     ld b, $07
     cp $50
-    jr c, jr_004_49ca
+    jr c, CheckAndBranch
 
     ld b, $03
     cp $90
-    jr c, jr_004_49ca
+    jr c, CheckAndBranch
 
     ld b, $01
 
-jr_004_49ca:
+CheckAndBranch:
     and b
     or a
     ld [hl], $00
@@ -1555,7 +1555,7 @@ jr_004_49ca:
     ret
 
 
-Jump_004_49d2:
+OpcodeHandler0E:
     ld bc, $4a0a
     call HramScr_4745
     ld a, [$c850]
@@ -1595,7 +1595,7 @@ Jump_004_49d2:
     db $00, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00, $03, $00, $04, $00
     db $80, $80
 
-Jump_004_4a2c:
+OpcodeHandler12:
     ld bc, $4a32
     jp Jump_004_4745
 
@@ -1603,7 +1603,7 @@ Jump_004_4a2c:
     db $fb, $ff, $fb, $ff, $fc, $ff, $fc, $ff, $fc, $ff, $fd, $ff, $fd, $ff, $fd, $ff
     db $fe, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $00, $80, $80
 
-Jump_004_4a52:
+OpcodeHandler1C:
     ld bc, $4a58
     jp Jump_004_4745
 
@@ -1614,7 +1614,7 @@ Jump_004_4a52:
     db $fc, $ff, $fc, $ff, $fd, $ff, $fd, $ff, $fd, $ff, $fe, $ff, $fe, $ff, $ff, $ff
     db $ff, $ff, $ff, $ff, $00, $00, $00, $00, $80, $80
 
-Jump_004_4aa2:
+OpcodeHandler47:
     ld bc, $4ab5
     call HramScr_4745
     ldh a, [$d5]
@@ -1637,7 +1637,7 @@ Jump_004_4aa2:
     db $02, $00, $02, $00, $02, $00, $02, $00, $02, $00, $03, $00, $02, $00, $03, $00
     db $80, $80
 
-Jump_004_4b27:
+OpcodeHandlerAdvance3:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1648,7 +1648,7 @@ Jump_004_4b27:
     inc a
     ld [de], a
     cp $ff
-    jr nz, jr_004_4b49
+    jr nz, PushAndCachePtr2
 
     ldh a, [$d7]
     ld l, a
@@ -1663,7 +1663,7 @@ Jump_004_4b27:
     ret
 
 
-jr_004_4b49:
+PushAndCachePtr2:
     push af
     ldh a, [$d5]
     ld l, a
@@ -1672,19 +1672,19 @@ jr_004_4b49:
     pop af
     ld b, $0f
     cp $20
-    jr c, jr_004_4b65
+    jr c, CheckAndBranch2
 
     ld b, $07
     cp $50
-    jr c, jr_004_4b65
+    jr c, CheckAndBranch2
 
     ld b, $03
     cp $90
-    jr c, jr_004_4b65
+    jr c, CheckAndBranch2
 
     ld b, $01
 
-jr_004_4b65:
+CheckAndBranch2:
     and b
     or a
     ld [hl], $40
@@ -1694,7 +1694,7 @@ jr_004_4b65:
     ret
 
 
-Jump_004_4b6d:
+OpcodeHandler48:
     ld a, [$c8a6]
     and $03
     ret nz
@@ -1707,7 +1707,7 @@ Jump_004_4b6d:
     db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
     db $80, $80
 
-Jump_004_4b9b:
+OpcodeHandler49:
     ld bc, $4ba1
     jp Jump_004_4745
 
@@ -1718,7 +1718,7 @@ Jump_004_4b9b:
     db $00, $00, $00, $00, $01, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00
     db $03, $00, $03, $00, $80, $80
 
-Jump_004_4be7:
+OpcodeHandler14:
     ld bc, $4bed
     jp Jump_004_4745
 
@@ -1729,7 +1729,7 @@ Jump_004_4be7:
     db $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00
     db $04, $00, $04, $00, $80, $80
 
-Jump_004_4c33:
+OpcodeHandler15:
     ld bc, $4c39
     jp Jump_004_4745
 
@@ -1738,7 +1738,7 @@ Jump_004_4c33:
     db $03, $00, $03, $00, $03, $00, $03, $00, $03, $00, $03, $00, $03, $00, $03, $00
     db $03, $00, $03, $00, $03, $00, $03, $00, $04, $00, $80, $80
 
-Jump_004_4c65:
+OpcodeHandler16:
     ld bc, $4c6b
     jp Jump_004_4745
 
@@ -1748,7 +1748,7 @@ Jump_004_4c65:
     db $03, $00, $03, $00, $04, $00, $04, $00, $04, $00, $05, $00, $05, $00, $05, $00
     db $05, $00, $80, $80
 
-Jump_004_4c9f:
+OpcodeHandler17:
     ld bc, $4ca5
     jp Jump_004_4745
 
@@ -1763,7 +1763,7 @@ Jump_004_4c9f:
     db $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00
     db $80, $80
 
-Jump_004_4d27:
+OpcodeHandler22:
     call LoadScr_4d5c
     ld a, [$c850]
     or a
@@ -1813,7 +1813,7 @@ LoadScr_4d5c:
     inc a
     ld [de], a
     cp $ff
-    jr nz, jr_004_4d84
+    jr nz, PushAndCachePtr3
 
     ldh a, [$d7]
     ld l, a
@@ -1828,7 +1828,7 @@ LoadScr_4d5c:
     ret
 
 
-jr_004_4d84:
+PushAndCachePtr3:
     push af
     ldh a, [$d5]
     ld l, a
@@ -1837,19 +1837,19 @@ jr_004_4d84:
     pop af
     ld b, $0f
     cp $20
-    jr c, jr_004_4da0
+    jr c, CheckAndBranch3
 
     ld b, $07
     cp $50
-    jr c, jr_004_4da0
+    jr c, CheckAndBranch3
 
     ld b, $03
     cp $90
-    jr c, jr_004_4da0
+    jr c, CheckAndBranch3
 
     ld b, $01
 
-jr_004_4da0:
+CheckAndBranch3:
     and b
     or a
     ld [hl], $00
@@ -1859,7 +1859,7 @@ jr_004_4da0:
     ret
 
 
-Jump_004_4da8:
+OpcodeHandlerAdvance4:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1868,7 +1868,7 @@ Jump_004_4da8:
     ld d, a
     ld a, [de]
     or a
-    jr nz, jr_004_4dc2
+    jr nz, SetupBranchTable
 
     ld a, [$d8e3]
     ld c, a
@@ -1880,23 +1880,23 @@ Jump_004_4da8:
     inc a
     ld [de], a
 
-jr_004_4dc2:
+SetupBranchTable:
     ld a, [$d8e4]
     ld bc, $4df3
     cp $01
-    jr z, jr_004_4ddd
+    jr z, CallAndCachePtr
 
     ld bc, $4e95
     cp $02
-    jr z, jr_004_4ddd
+    jr z, CallAndCachePtr
 
     ld bc, $4f37
     cp $03
-    jr z, jr_004_4ddd
+    jr z, CallAndCachePtr
 
     ld bc, $4fd9
 
-jr_004_4ddd:
+CallAndCachePtr:
     call HramScr_4745
     ldh a, [$d5]
     add $18
@@ -1957,7 +1957,7 @@ jr_004_4ddd:
     db $02, $00, $03, $00, $02, $00, $02, $00, $03, $00, $02, $00, $03, $00, $04, $00
     db $03, $00, $04, $00, $04, $00, $80, $80
 
-Jump_004_507b:
+OpcodeHandlerAdvance5:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1966,7 +1966,7 @@ Jump_004_507b:
     ld d, a
     ld a, [de]
     or a
-    jr nz, jr_004_5095
+    jr nz, SetupBranchTable2
 
     ld a, [$d8e3]
     ld c, a
@@ -1978,23 +1978,23 @@ Jump_004_507b:
     inc a
     ld [de], a
 
-jr_004_5095:
+SetupBranchTable2:
     ld a, [$d8e4]
     ld bc, $4df3
     cp $01
-    jr z, jr_004_50b0
+    jr z, CallAndCachePtr2
 
     ld bc, $4e95
     cp $02
-    jr z, jr_004_50b0
+    jr z, CallAndCachePtr2
 
     ld bc, $4f37
     cp $03
-    jr z, jr_004_50b0
+    jr z, CallAndCachePtr2
 
     ld bc, $4fd9
 
-jr_004_50b0:
+CallAndCachePtr2:
     call HramScr_4745
     ldh a, [$d5]
     add $18
@@ -2013,47 +2013,47 @@ jr_004_50b0:
     ret
 
 
-Jump_004_50c6:
+OpcodeHandlerE3:
     ld a, [$d8e3]
     ld bc, $5144
     cp $01
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $5156
     cp $02
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $5178
     cp $03
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $51aa
     cp $04
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $51ec
     cp $05
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $523e
     cp $06
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $52a0
     cp $07
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $5312
     cp $08
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $5394
     cp $09
-    jr z, jr_004_510b
+    jr z, OpcodeAdvanceE3
 
     ld bc, $5426
 
-jr_004_510b:
+OpcodeAdvanceE3:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -2073,7 +2073,7 @@ jr_004_510b:
     ld b, a
     ld a, [bc]
     cp $80
-    jp z, Jump_004_4767
+    jp z, ReadScriptWordAlias
 
     ld d, a
     ld a, [hl]
@@ -2160,47 +2160,47 @@ jr_004_510b:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $80, $80
 
-Jump_004_54c8:
+OpcodeHandlerE3B:
     ld a, [$d8e3]
     ld bc, $5144
     cp $01
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $5156
     cp $02
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $5178
     cp $03
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $51aa
     cp $04
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $51ec
     cp $05
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $523e
     cp $06
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $52a0
     cp $07
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $5312
     cp $08
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $5394
     cp $09
-    jr z, jr_004_550d
+    jr z, OpcodeAdvanceE3B
 
     ld bc, $5426
 
-jr_004_550d:
+OpcodeAdvanceE3B:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -2220,7 +2220,7 @@ jr_004_550d:
     ld b, a
     ld a, [bc]
     cp $80
-    jp z, Jump_004_4767
+    jp z, ReadScriptWordAlias
 
     ld d, a
     ld a, [hl]
@@ -2249,7 +2249,7 @@ jr_004_550d:
     ret
 
 
-Jump_004_5546:
+OpcodeHandler2C:
     ld bc, $5559
     call HramScr_4745
     ldh a, [$d5]
@@ -2269,7 +2269,7 @@ Jump_004_5546:
     db $ff, $ff, $00, $00, $00, $00, $00, $00, $01, $00, $01, $00, $02, $00, $03, $00
     db $03, $00, $04, $00, $04, $00, $04, $00, $05, $00, $05, $00, $05, $00, $80, $80
 
-Jump_004_55a9:
+OpcodeHandler2D:
     ld bc, $55ca
     call HramScr_4745
     ld a, [$c850]
@@ -2305,7 +2305,7 @@ label55ec:
     xor a
     ld [wScriptCounter], a            ; Reset script counter low
     ld [$d8d6], a            ; Reset script counter high
-    jr jr_004_5605           ; → ScriptExecNext
+    jr ScriptExecLoop           ; → ScriptExecNext
 
 ; ---------------------------------------------------------------------------
 ; ScriptExecContinue — Advance counter and execute next script command
@@ -2335,20 +2335,20 @@ Jump_004_55f5:
 ;   B == $FF   → C is a script opcode (0-99). Dispatch via rst $00 to
 ;                the 100-entry ScriptCommandTable.
 ; ---------------------------------------------------------------------------
-Jump_004_5605:
-jr_004_5605:
+ScriptExecLoopAlias:
+ScriptExecLoop:
     call MapTypeDispatch       ; → ScriptDataRead: fetch next BC from script bank
     ld a, b
     and c
     cp $ff                   ; Check if BC == $FFFF
-    jr nz, jr_004_5613
+    jr nz, MarkScriptActive
 
     xor a
     ld [wScriptStateFlags], a            ; Script ended: clear all state flags
     ret
 
 
-jr_004_5613:
+MarkScriptActive:
     ld hl, wScriptStateFlags
     set 0, [hl]              ; Mark script as active (bit 0)
     ld a, b
@@ -2612,7 +2612,7 @@ label56fa:
     bit 1, a                 ; Text queued?
     ret z                    ; No → return
 
-jr_004_5700:
+ClearTextQueuedFlag:
     ld hl, wScriptStateFlags
     res 1, [hl]              ; Clear text-queued flag
     ld a, [wScriptQueuedTextId]
@@ -2646,7 +2646,7 @@ label4_5711:
     jp nz, Jump_004_55f5     ; True → continue script
 
     call MapTypeDispatch       ; Read branch target
-    jp Jump_004_7212         ; → ScriptBranch (jump to target)
+    jp ScriptReturnProcess         ; → ScriptBranch (jump to target)
 
 ; ---------------------------------------------------------------------------
 ; Script Command $01: ConditionalBranchZ
@@ -2670,7 +2670,7 @@ label4_5740:
     jp z, Jump_004_55f5
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 ; ---------------------------------------------------------------------------
 ; Script Command $02: ClearEventFlag
@@ -2899,7 +2899,7 @@ label4_58d0:
     call MapTypeDispatch
     ld a, c
     or a
-    jr nz, jr_004_5942
+    jr nz, TextOpcodeNPCIndex
 
     ld a, [wScriptCounter]
     add $01
@@ -2909,10 +2909,10 @@ label4_58d0:
     ld [$d8d6], a
     call MapTypeDispatch
 
-Jump_004_58fa:
+ScriptEndCheck:
     ld a, c
     or a
-    jr nz, jr_004_590d
+    jr nz, TextOpcodeCheck1
 
     ld a, $00
     ldh [$8d], a
@@ -2922,10 +2922,10 @@ Jump_004_58fa:
     ldh [$8e], a
     jp Jump_004_55f5
 
-label590d:
-jr_004_590d:
+TextOpcodeCheck1Alias:
+TextOpcodeCheck1:
     cp $01
-    jr nz, jr_004_5920
+    jr nz, TextOpcodeCheck2
 
     ld a, $20
     ldh [$8d], a
@@ -2935,10 +2935,10 @@ jr_004_590d:
     ldh [$8e], a
     jp Jump_004_55f5
 
-label5920:
-jr_004_5920:
+TextOpcodeCheck2Alias:
+TextOpcodeCheck2:
     cp $02
-    jr nz, jr_004_5933
+    jr nz, TextOpcodeCheck3
 
     ld a, $00
     ldh [$8d], a
@@ -2948,8 +2948,8 @@ jr_004_5920:
     ldh [$8e], a
     jp Jump_004_55f5
 
-label5933:
-jr_004_5933:
+TextOpcodeCheck3Alias:
+TextOpcodeCheck3:
     ld a, $00
     ldh [$8d], a
     ld a, $01
@@ -2958,8 +2958,8 @@ jr_004_5933:
     ldh [$8e], a
     jp Jump_004_55f5
 
-label5942:
-jr_004_5942:
+TextOpcodeNPCIndexAlias:
+TextOpcodeNPCIndex:
     dec a
     swap a
     add a
@@ -2991,7 +2991,7 @@ label4_5968:
     call MapTypeDispatch
     ld a, c
     or a
-    jr nz, jr_004_5996
+    jr nz, TextOpcodeNPCIndex2
 
     ld a, [wScriptCounter]
     add $01
@@ -3002,9 +3002,9 @@ label4_5968:
     call MapTypeDispatch
     ld l, c
     ld h, b
-    jr jr_004_59b9
+    jr TextReadScriptPtr
 
-jr_004_5996:
+TextOpcodeNPCIndex2:
     dec a
     swap a
     add a
@@ -3025,7 +3025,7 @@ jr_004_5996:
     pop hl
     add hl, bc
 
-jr_004_59b9:
+TextReadScriptPtr:
     push hl
     ld a, [wScriptCounter]
     add $01
@@ -3063,7 +3063,7 @@ label4_59d2:
     jp nz, Jump_004_55f5
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_5a02:
     ld a, [wScriptCounter]
@@ -3125,7 +3125,7 @@ label4_5a6f:
     ld [$d8dc], a
     ld hl, $ff92
     or a
-    jr z, jr_004_5a99
+    jr z, TextFollowPointer
 
     dec a
     swap a
@@ -3137,7 +3137,7 @@ label4_5a6f:
     adc h
     ld h, a
 
-jr_004_5a99:
+TextFollowPointer:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -3176,7 +3176,7 @@ label4_5ac5:
     ld [$d8dc], a
     ld hl, $ff95
     or a
-    jr z, jr_004_5aef
+    jr z, TextFollowPointer2
 
     dec a
     swap a
@@ -3188,7 +3188,7 @@ label4_5ac5:
     adc h
     ld h, a
 
-jr_004_5aef:
+TextFollowPointer2:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -3275,7 +3275,7 @@ label4_5b79:
     ld [$d8d6], a
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_5b8f:
     ld a, [wScriptCounter]       ; inc unknown counter
@@ -3309,7 +3309,7 @@ label4_5b8f:
     jp nz, Jump_004_55f5 ; jump if a >= c
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_5bd4:
     call UpdateOAMSprites
@@ -3319,16 +3319,16 @@ label4_5bd4:
 label4_5bdb:
     ld a, [wMapID]
     cp MAP_TERRYS
-    jr nz, jr_004_5c04
+    jr nz, RetFromArena
 
     ld a, [wScreenIndex]
     cp $04
-    jr z, jr_004_5bed
+    jr z, ArenaSetupTilemap
 
     cp $05
-    jr nz, jr_004_5c04
+    jr nz, RetFromArena
 
-jr_004_5bed:
+ArenaSetupTilemap:
     ld hl, $9380
     ld de, $9360
     ld b, $20
@@ -3340,7 +3340,7 @@ jr_004_5bed:
     ret
 
 
-jr_004_5c04:
+RetFromArena:
     ret
 
 
@@ -3376,10 +3376,10 @@ label4_5c14:
     ld b, $14
     ld c, $00
 
-jr_004_5c36:
+CheckEnemyData:
     ld a, [de]
     or a
-    jr z, jr_004_5c48
+    jr z, StoreEnemyID
 
     inc c
     ld a, e
@@ -3389,18 +3389,18 @@ jr_004_5c36:
     adc $00
     ld d, a
     dec b
-    jr nz, jr_004_5c36
+    jr nz, CheckEnemyData
 
     ld c, $13
 
-jr_004_5c48:
+StoreEnemyID:
     ld a, c
     ld [$da14], a
     ld hl, $1402
     rst $10   ;calls function at 14:4005
     ld a, [$ca8d]
     cp $03
-    jr z, jr_004_5c68
+    jr z, CallBank01ForArena
 
     ld hl, $ca8e
     add l
@@ -3413,7 +3413,7 @@ jr_004_5c48:
     ld hl, $ca8d
     inc [hl]
 
-jr_004_5c68:
+CallBank01ForArena:
     ld hl, $0103
     rst $10
     ret
@@ -3599,7 +3599,7 @@ label4_5d5b:
     ld [$da02], a
     ld a, [wArenaGroup]
     cp $09
-    jr nz, jr_004_5db9
+    jr nz, ReadArenaGroup
 
     ld hl, $01e1
     ld a, l
@@ -3617,7 +3617,7 @@ label4_5d5b:
     ld a, h
     ld [$da08], a
 
-jr_004_5db9:
+ReadArenaGroup:
     ld a, [wArenaGroup]  ;
     ld b, a
     add a
@@ -3683,7 +3683,7 @@ LoadScr_5e10:
     nop
     ld a, [bc]
     nop
-    jp c, Jump_000_0b01
+    jp c, DispatchBank42Rst
 
     nop
     ld a, [bc]
@@ -3785,48 +3785,48 @@ label4_5e8f:
     pop bc
     ld b, $08
 
-jr_004_5ec8:
+CheckItemSlot:
     ld a, [hl+]
     cp $00
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $01
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $02
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $03
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $04
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $05
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $44
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $5c
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $5d
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $5e
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     cp $5f
-    jr z, jr_004_5efb
+    jr z, StoreItemResult
 
     dec b
-    jr nz, jr_004_5ec8
+    jr nz, CheckItemSlot
 
     jp Jump_004_55f5
 
 
-jr_004_5efb:
+StoreItemResult:
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
@@ -3836,37 +3836,37 @@ jr_004_5efb:
     ld hl, $c180
     call Copy4Bytes
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_5f13:
     ld a, [wScriptMapType]
     cp $06
-    jr nc, jr_004_5f1f
+    jr nc, CheckMapType20
 
     ld hl, $0c01
     rst $10
     ret
 
 
-jr_004_5f1f:
+CheckMapType20:
     cp $20
-    jr nc, jr_004_5f28
+    jr nc, CheckMapType40
 
     ld hl, $0d01
     rst $10
     ret
 
 
-jr_004_5f28:
+CheckMapType40:
     cp $40
-    jr nc, jr_004_5f31
+    jr nc, CallBank0FForItem
 
     ld hl, $0e01
     rst $10
     ret
 
 
-jr_004_5f31:
+CallBank0FForItem:
     ld hl, $0f01
     rst $10
     ret
@@ -3915,10 +3915,10 @@ label4_5f67:
     ld b, $14
     ld c, $00
 
-jr_004_5f7e:
+CheckInventorySlot:
     ld a, [hl]
     or a
-    jr z, jr_004_5f8e
+    jr z, CheckItemCount14
 
     ld a, l
     add $95
@@ -3928,15 +3928,15 @@ jr_004_5f7e:
     ld h, a
     inc c
     dec b
-    jr nz, jr_004_5f7e
+    jr nz, CheckInventorySlot
 
-jr_004_5f8e:
+CheckItemCount14:
     ld a, c
     cp $14
     jp c, Jump_004_55f5
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 ; ---------------------------------------------------------------------------
 ; Script Command $29: AddMonsterToStorage
@@ -3960,10 +3960,10 @@ label4_5f9a:
     ld b, $14
     ld c, $00
 
-jr_004_5fbc:
+CheckItemData:
     ld a, [de]
     or a
-    jr z, jr_004_5fce
+    jr z, StoreItemID
 
     inc c
     ld a, e
@@ -3973,11 +3973,11 @@ jr_004_5fbc:
     adc $00
     ld d, a
     dec b
-    jr nz, jr_004_5fbc
+    jr nz, CheckItemData
 
-    jr jr_004_5fda
+    jr RetFromItem
 
-jr_004_5fce:
+StoreItemID:
     ld a, c
     ld [$da14], a
     ld hl, $1402
@@ -3985,7 +3985,7 @@ jr_004_5fce:
     ld hl, $0103
     rst $10
 
-jr_004_5fda:
+RetFromItem:
     ret
 
 ; ---------------------------------------------------------------------------
@@ -4005,22 +4005,22 @@ label4_5fdb:
     ld hl, wInventory
     ld b, $14
 
-jr_004_5ff3:
+CheckEmptySlot:
     ld a, [hl]
     or a
-    jr z, jr_004_6000
+    jr z, WriteItemToSlot
 
     cp $ff
-    jr z, jr_004_6000
+    jr z, WriteItemToSlot
 
     inc hl
     dec b
-    jr nz, jr_004_5ff3
+    jr nz, CheckEmptySlot
 
     ret
 
 
-jr_004_6000:
+WriteItemToSlot:
     ld [hl], c  ;loads item into empty inventory slot from treasure chest [MAY BE MORE]
     ret
 
@@ -4035,14 +4035,14 @@ label4_6002:
     ld b, $14
     ld c, $00
 
-jr_004_6019:
+PushAndReadSlot:
     push hl
     ld a, [hl]
     or a
-    jr z, jr_004_604c
+    jr z, PopAndAdvance
 
     cp $01
-    jr z, jr_004_604c
+    jr z, PopAndAdvance
 
     ld a, l
     add $4b
@@ -4052,7 +4052,7 @@ jr_004_6019:
     ld h, a
     ld a, [hl]
     cp $0a
-    jr c, jr_004_604c
+    jr c, PopAndAdvance
 
     ld a, l
     add $b6
@@ -4063,22 +4063,22 @@ jr_004_6019:
     ld de, $605c
     ld b, $08
 
-jr_004_603c:
+CompareItemSlots:
     ld a, [de]
     cp [hl]
-    jr nz, jr_004_604c
+    jr nz, PopAndAdvance
 
     inc de
     inc hl
     dec b
-    jr nz, jr_004_603c
+    jr nz, CompareItemSlots
 
     pop hl
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 
-jr_004_604c:
+PopAndAdvance:
     pop hl
     ld a, l
     add $95
@@ -4088,7 +4088,7 @@ jr_004_604c:
     ld h, a
     inc c
     dec b
-    jr nz, jr_004_6019
+    jr nz, PushAndReadSlot
 
     jp Jump_004_55f5
 
@@ -4112,25 +4112,25 @@ label4_6064:
     ld b, $14
     ld c, $00
 
-jr_004_607b:
+CheckNextSlot:
     ld a, [hl+]
     or a
-    jr z, jr_004_6087
+    jr z, CheckSlotCount14
 
     cp $ff
-    jr z, jr_004_6087
+    jr z, CheckSlotCount14
 
     inc c
     dec b
-    jr nz, jr_004_607b
+    jr nz, CheckNextSlot
 
-jr_004_6087:
+CheckSlotCount14:
     ld a, c
     cp $14
     jp c, Jump_004_55f5
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_6093:
     ld a, [wScriptCounter]
@@ -4160,7 +4160,7 @@ label4_6093:
     rst $10
     ld a, [$da33]
     add a
-    ld hl, $60f4
+    ld hl, FamilyTextPtrTable
     add l
     ld l, a
     ld a, $00
@@ -4412,7 +4412,7 @@ label4_6253:
     ld hl, $c180
     call Copy4Bytes
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_62ab:
     ld a, [wScriptCounter]
@@ -4424,28 +4424,28 @@ label4_62ab:
     ld b, $00
     ld c, $00
 
-jr_004_62bf:
+PushAndReadParty:
     push bc
     ld hl, $ca94
     ld a, b
     call TestBitInArray
     pop bc
-    jr z, jr_004_62cb
+    jr z, IncrementAndCheck
 
     inc c
 
-jr_004_62cb:
+IncrementAndCheck:
     inc b
     ld a, b
     cp $f0
-    jr nz, jr_004_62bf
+    jr nz, PushAndReadParty
 
     ld a, c
     cp $64
     jp c, Jump_004_55f5
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_62dd:
     ld a, [wScriptCounter]
@@ -4486,7 +4486,7 @@ label4_62dd:
     ld hl, $c180
     call Copy4Bytes
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_6332:
     ld a, [wScriptCounter]
@@ -4530,30 +4530,30 @@ label4_634f:
     pop bc
     ld b, $08
 
-jr_004_6388:
+CheckMonsterFamily:
     ld a, [hl+]
     cp $0f
-    jr z, jr_004_63a3
+    jr z, StoreMonsterResult
 
     cp $10
-    jr z, jr_004_63a3
+    jr z, StoreMonsterResult
 
     cp $45
-    jr z, jr_004_63a3
+    jr z, StoreMonsterResult
 
     cp $11
-    jr z, jr_004_63a3
+    jr z, StoreMonsterResult
 
     cp $5a
-    jr z, jr_004_63a3
+    jr z, StoreMonsterResult
 
     dec b
-    jr nz, jr_004_6388
+    jr nz, CheckMonsterFamily
 
     jp Jump_004_55f5
 
 
-jr_004_63a3:
+StoreMonsterResult:
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
@@ -4563,7 +4563,7 @@ jr_004_63a3:
     ld hl, $c180
     call Copy4Bytes
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_63bb:
     ld hl, $0109
@@ -4618,24 +4618,24 @@ label4_6401:
     ld hl, wInventory
     ld b, $14
 
-jr_004_6424:
+CheckMonsterSlotEmpty:
     ld a, [hl]
     or a
-    jr z, jr_004_6432
+    jr z, WriteMonsterToSlot
 
     cp $ff
-    jr z, jr_004_6432
+    jr z, WriteMonsterToSlot
 
     inc hl
     dec b
-    jr nz, jr_004_6424
+    jr nz, CheckMonsterSlotEmpty
 
-    jr jr_004_6433
+    jr SetupMonsterHL
 
-jr_004_6432:
+WriteMonsterToSlot:
     ld [hl], c
 
-jr_004_6433:
+SetupMonsterHL:
     ld l, c
     ld h, $08
     ld de, $c180
@@ -4670,27 +4670,27 @@ label4_643f:
     pop bc
     ld b, $08
 
-jr_004_6478:
+CheckSkillSlot:
     ld a, [hl+]
     cp $84
-    jr z, jr_004_648f
+    jr z, StoreSkillResult
 
     cp $85
-    jr z, jr_004_648f
+    jr z, StoreSkillResult
 
     cp $86
-    jr z, jr_004_648f
+    jr z, StoreSkillResult
 
     cp $87
-    jr z, jr_004_648f
+    jr z, StoreSkillResult
 
     dec b
-    jr nz, jr_004_6478
+    jr nz, CheckSkillSlot
 
     jp Jump_004_55f5
 
 
-jr_004_648f:
+StoreSkillResult:
     ld a, c
     ld [$d8e1], a
     ld hl, $cac2
@@ -4700,7 +4700,7 @@ jr_004_648f:
     ld hl, $c180
     call Copy4Bytes
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 label4_64a7:
     ld a, [wScriptCounter]
@@ -4803,11 +4803,11 @@ MaskScr_6583:
 
     push af
 
-jr_004_6586:
+MaskReadDE:
     ld a, [de]
     inc de
     cp $f0
-    jr nz, jr_004_6586
+    jr nz, MaskReadDE
 
     dec de
     ld a, $a2
@@ -4823,11 +4823,11 @@ jr_004_6586:
 SaveScr_6598:
     push af
 
-jr_004_6599:
+SaveReadDE:
     ld a, [de]
     inc de
     cp $f0
-    jr nz, jr_004_6599
+    jr nz, SaveReadDE
 
     dec de
     pop af
@@ -4938,14 +4938,14 @@ label4_6646:
     ld b, $14
     ld c, $00
 
-jr_004_6671:
+PushAndCheckHL:
     push hl
     ld a, [hl]
     or a
-    jr z, jr_004_668d
+    jr z, PopAndAdvanceL
 
     cp $01
-    jr z, jr_004_668d
+    jr z, PopAndAdvanceL
 
     ld a, l
     add $09
@@ -4955,14 +4955,14 @@ jr_004_6671:
     ld h, a
     ld a, [hl]
     cp d
-    jr nz, jr_004_668d
+    jr nz, PopAndAdvanceL
 
     pop hl
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 
-jr_004_668d:
+PopAndAdvanceL:
     pop hl
     ld a, l
     add $95
@@ -4972,7 +4972,7 @@ jr_004_668d:
     ld h, a
     inc c
     dec b
-    jr nz, jr_004_6671
+    jr nz, PushAndCheckHL
 
     jp Jump_004_55f5
 
@@ -5198,9 +5198,9 @@ label4_6822:
     ld a, c
     ld c, $02
 
-Jump_004_6838:
+CheckZeroJPEnd:
     or a
-    jp z, Jump_004_58fa
+    jp z, ScriptEndCheck
 
     dec a
     swap a
@@ -5225,7 +5225,7 @@ label4_684d:
     call MapTypeDispatch
     ld a, c
     ld c, $00
-    jp Jump_004_6838
+    jp CheckZeroJPEnd
 
 
 label4_6866:
@@ -5238,7 +5238,7 @@ label4_6866:
     call MapTypeDispatch
     ld a, c
     ld c, $01
-    jp Jump_004_6838
+    jp CheckZeroJPEnd
 
 
 label4_687f:
@@ -5251,7 +5251,7 @@ label4_687f:
     call MapTypeDispatch
     ld a, c
     ld c, $03
-    jp Jump_004_6838
+    jp CheckZeroJPEnd
 
 
 label4_6898:
@@ -5375,21 +5375,21 @@ label4_696c:
     ld b, $00
     ld c, $00
 
-jr_004_6970:
+PushAndScanParty:
     push bc
     ld hl, $ca94
     ld a, b
     call TestBitInArray
     pop bc
-    jr z, jr_004_697c
+    jr z, ScanPartyLoop
 
     inc c
 
-jr_004_697c:
+ScanPartyLoop:
     inc b
     ld a, b
     cp $f0
-    jr nz, jr_004_6970
+    jr nz, PushAndScanParty
 
     push bc
     ld a, c
@@ -5400,11 +5400,11 @@ jr_004_697c:
     ld a, c
     ld e, $ff
 
-jr_004_6991:
+CompareAndAdvance:
     cp [hl]
     inc hl
     inc e
-    jr nc, jr_004_6991
+    jr nc, CompareAndAdvance
 
     ld a, e
     ld [$d8e1], a
@@ -5439,11 +5439,11 @@ label4_69a9:
     call Div16x8To16
     ld a, l
     cp $07
-    jr c, jr_004_69cd
+    jr c, LookupOpcodeTable
 
     ld a, $07
 
-jr_004_69cd:
+LookupOpcodeTable:
     ld hl, $6a3c
     add a
     add l
@@ -5561,7 +5561,7 @@ label4_6a61:
     ld a, h
     or l
     pop hl
-    jr z, jr_004_6a8d
+    jr z, MaskA_F0
 
     ld a, l
     sub e
@@ -5570,12 +5570,12 @@ label4_6a61:
     sbc d
     ld h, a
     ld a, $00
-    jr c, jr_004_6abc
+    jr c, StoreAndClearMove
 
     ld a, $02
-    jr jr_004_6abc
+    jr StoreAndClearMove
 
-jr_004_6a8d:
+MaskA_F0:
     ldh a, [$92]
     and $f0
     ld l, a
@@ -5596,7 +5596,7 @@ jr_004_6a8d:
     ld a, h
     or l
     pop hl
-    jr z, jr_004_6ab9
+    jr z, JumpToScriptInit
 
     ld a, l
     sub e
@@ -5605,16 +5605,16 @@ jr_004_6a8d:
     sbc d
     ld h, a
     ld a, $03
-    jr c, jr_004_6abc
+    jr c, StoreAndClearMove
 
     ld a, $01
-    jr jr_004_6abc
+    jr StoreAndClearMove
 
-jr_004_6ab9:
+JumpToScriptInit:
     jp Jump_004_55f5
 
 
-jr_004_6abc:
+StoreAndClearMove:
     ldh [$8e], a
     call LoadScr_454b
     ld hl, $d7d8
@@ -5635,22 +5635,22 @@ label4_6ace:
     ld hl, wInventory
     ld b, $14
 
-jr_004_6ade:
+CheckSlotHL:
     ld a, [hl]
     or a
-    jr z, jr_004_6aed
+    jr z, WriteAndSetupHL
 
     cp $ff
-    jr z, jr_004_6aed
+    jr z, WriteAndSetupHL
 
     inc hl
     dec b
-    jr nz, jr_004_6ade
+    jr nz, CheckSlotHL
 
     jp Jump_004_55f5
 
 
-jr_004_6aed:
+WriteAndSetupHL:
     ld [hl], c
     ld l, c
     ld h, $08
@@ -5664,20 +5664,20 @@ label4_6afa:
     ld b, $14
     ld c, $00
 
-jr_004_6b01:
+CheckSlotHLAlt:
     ld a, [hl]
     or a
-    jr z, jr_004_6b0e
+    jr z, StoreScriptResult
 
     cp $ff
-    jr z, jr_004_6b0e
+    jr z, StoreScriptResult
 
     inc hl
     inc c
     dec b
-    jr nz, jr_004_6b01
+    jr nz, CheckSlotHLAlt
 
-jr_004_6b0e:
+StoreScriptResult:
     ld a, c
     ld [$d8e1], a
     or a
@@ -5748,22 +5748,22 @@ label4_6b73:
     ld hl, wInventory
     ld b, $14
 
-jr_004_6b84:
+CheckSlotHLB:
     ld a, [hl]
     or a
-    jr z, jr_004_6b93
+    jr z, WriteAndSetupHLB
 
     cp $ff
-    jr z, jr_004_6b93
+    jr z, WriteAndSetupHLB
 
     inc hl
     dec b
-    jr nz, jr_004_6b84
+    jr nz, CheckSlotHLB
 
     jp Jump_004_55f5
 
 
-jr_004_6b93:
+WriteAndSetupHLB:
     ld [hl], c
     ld l, c
     ld h, $08
@@ -5779,18 +5779,18 @@ label4_6ba0:
     ld b, a
     ld a, [wCurrentFloor]
     cp b
-    jr z, jr_004_6bb9
+    jr z, SetMapChangeFlag
 
     add $13
     ld [wCurrentFloor], a
     cp b
-    jr c, jr_004_6bb9
+    jr c, SetMapChangeFlag
 
     ld a, b
     dec a
     ld [wCurrentFloor], a
 
-jr_004_6bb9:
+SetMapChangeFlag:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld a, $00
@@ -5837,32 +5837,32 @@ label4_6bdf:
     ld e, a
     ld hl, $cb17
     call CallScr_6d40
-    jr c, jr_004_6c47
+    jr c, ReadATKStat
 
     ld hl, $cb19
     call CallScr_6d40
-    jr c, jr_004_6c47
+    jr c, ReadATKStat
 
     ld hl, $cb1b
     call CallScr_6d40
-    jr c, jr_004_6c47
+    jr c, ReadATKStat
 
     ld hl, $cb1d
     call CallScr_6d35
-    jr c, jr_004_6c47
+    jr c, ReadATKStat
 
     ld hl, $cb1f
     call CallScr_6d29
-    jr c, jr_004_6c47
+    jr c, ReadATKStat
 
     ld hl, $0014
     ld a, [$cac0]
     call AddMonsterHP
     ld a, $00
-    jp Jump_004_6d0a
+    jp CalcStatOffsetAlias
 
 
-jr_004_6c47:
+ReadATKStat:
     ld a, [$cac0]
     ld hl, $cb17
     call GetMonsterDataPtr
@@ -5871,28 +5871,28 @@ jr_004_6c47:
     ld e, a
     ld hl, $cb19
     call CallScr_6d40
-    jr c, jr_004_6c81
+    jr c, ReadDEFStat
 
     ld hl, $cb1b
     call CallScr_6d40
-    jr c, jr_004_6c81
+    jr c, ReadDEFStat
 
     ld hl, $cb1d
     call CallScr_6d35
-    jr c, jr_004_6c81
+    jr c, ReadDEFStat
 
     ld hl, $cb1f
     call CallScr_6d29
-    jr c, jr_004_6c81
+    jr c, ReadDEFStat
 
     ld hl, $0014
     ld a, [$cac0]
     call AddMonsterMP
     ld a, $01
-    jp Jump_004_6d0a
+    jp CalcStatOffsetAlias
 
 
-jr_004_6c81:
+ReadDEFStat:
     ld a, [$cac0]
     ld hl, $cb19
     call GetMonsterDataPtr
@@ -5901,23 +5901,23 @@ jr_004_6c81:
     ld e, a
     ld hl, $cb1b
     call CallScr_6d40
-    jr c, jr_004_6cb2
+    jr c, ReadAGLStat
 
     ld hl, $cb1d
     call CallScr_6d35
-    jr c, jr_004_6cb2
+    jr c, ReadAGLStat
 
     ld hl, $cb1f
     call CallScr_6d29
-    jr c, jr_004_6cb2
+    jr c, ReadAGLStat
 
     ld hl, $0014
     ld a, [$cac0]
     call AddMonsterATK
     ld a, $02
-    jr jr_004_6d0a
+    jr CalcStatOffset
 
-jr_004_6cb2:
+ReadAGLStat:
     ld a, [$cac0]
     ld hl, $cb1b
     call GetMonsterDataPtr
@@ -5926,19 +5926,19 @@ jr_004_6cb2:
     ld e, a
     ld hl, $cb1d
     call CallScr_6d35
-    jr c, jr_004_6cdb
+    jr c, ReadINTStat
 
     ld hl, $cb1f
     call CallScr_6d29
-    jr c, jr_004_6cdb
+    jr c, ReadINTStat
 
     ld hl, $0014
     ld a, [$cac0]
     call AddMonsterDEF
     ld a, $03
-    jr jr_004_6d0a
+    jr CalcStatOffset
 
-jr_004_6cdb:
+ReadINTStat:
     ld a, [$cac0]
     ld hl, $cb1d
     call GetMonsterDataPtr
@@ -5950,22 +5950,22 @@ jr_004_6cdb:
     ld d, h
     ld hl, $cb1f
     call CallScr_6d29
-    jr c, jr_004_6cff
+    jr c, ReadLevelStat
 
     ld hl, $0014
     ld a, [$cac0]
     call AddMonsterAGL
     ld a, $04
-    jr jr_004_6d0a
+    jr CalcStatOffset
 
-jr_004_6cff:
+ReadLevelStat:
     ld hl, $0014
     ld a, [$cac0]
     call AddMonsterINT
     ld a, $05
 
-Jump_004_6d0a:
-jr_004_6d0a:
+CalcStatOffsetAlias:
+CalcStatOffset:
     add $35
     ld l, a
     ld h, $02
@@ -6064,12 +6064,12 @@ label4_6d84:
 ColiseumInitPrize:
     ld a, [$d9cf]
     bit 7, a
-    jr nz, jr_004_6d9e
+    jr nz, ColiseumCallAndRead
 
     ld hl, $d9cf
     inc [hl]
 
-jr_004_6d9e:
+ColiseumCallAndRead:
     call FuncScr_6eb3
     ld a, [wTempEnemyId1]
     ld l, a
@@ -6126,11 +6126,11 @@ jr_004_6d9e:
     ld hl, $6f44
     ld a, [$d9cf]
     cp $09
-    jr c, jr_004_6e1a
+    jr c, ColiseumRNGPrize
 
     ld hl, $6f54
 
-jr_004_6e1a:
+ColiseumRNGPrize:
     push hl
     call GenerateRNG
     ld a, [wRNG1]
@@ -6240,38 +6240,38 @@ FuncScr_6eb3:
     ld a, b
     ld hl, $0209
     cp $04
-    jr c, jr_004_6f13
+    jr c, SetBattleMode2
 
     ld hl, $0d12
     cp $0a
-    jr c, jr_004_6f13
+    jr c, SetBattleMode2
 
     ld hl, $2112
     cp $10
-    jr c, jr_004_6f13
+    jr c, SetBattleMode2
 
-    ld hl, $3912
+    ld hl, AudioReadE5Bit7
     cp $16
-    jr c, jr_004_6f13
+    jr c, SetBattleMode2
 
     ld hl, $5112
     cp $1c
-    jr c, jr_004_6f13
+    jr c, SetBattleMode2
 
     ld hl, $6912
     cp $22
-    jr c, jr_004_6f13
+    jr c, SetBattleMode2
 
     ld hl, $8112
     cp $28
-    jr c, jr_004_6f13
+    jr c, SetBattleMode2
 
     ld hl, $9d12
     cp $2e
-    jr c, jr_004_6f13
+    jr c, SetBattleMode2
 
     ld hl, $b512
-    jr jr_004_6f13
+    jr SetBattleMode2
 
 CmpScr_6f05:
     cp $ff
@@ -6287,7 +6287,7 @@ CmpScr_6f05:
     ret
 
 
-jr_004_6f13:
+SetBattleMode2:
     ld a, $02
     ld [$da02], a
     call SaveScr_6f35
@@ -6335,7 +6335,7 @@ SaveScr_6f35:
     db $10
     ld de, $1e12
     rra
-    jr nz, jr_004_6f7f
+    jr nz, FindEmptySlotLoop
 
     ld [hl+], a
     inc hl
@@ -6353,24 +6353,24 @@ label4_6f64:
     ld hl, wInventory
     ld b, $14
 
-jr_004_6f75:
+FindEmptySlot:
     ld a, [hl]
     or a
-    jr z, jr_004_6f82
+    jr z, WriteToEmptySlot
 
     cp $ff
-    jr z, jr_004_6f82
+    jr z, WriteToEmptySlot
 
     inc hl
     dec b
 
-jr_004_6f7f:
-    jr nz, jr_004_6f75
+FindEmptySlotLoop:
+    jr nz, FindEmptySlot
 
     ret
 
 
-jr_004_6f82:
+WriteToEmptySlot:
     ld a, [$d9d0]
     ld [hl], a
     jp Jump_004_55f5
@@ -6433,7 +6433,7 @@ label4_6f9b:
     jp nc, Jump_004_55f5
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 
 label4_6ffb:
@@ -6456,13 +6456,13 @@ label4_6ffb:
     sbc h
     ld a, [wCurrGoldHi]
     sbc $00
-    jr nc, jr_004_7030
+    jr nc, AddGoldReward
 
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 
-jr_004_7030:
+AddGoldReward:
     ld e, $00
     call AddGold
     jp Jump_004_55f5
@@ -6471,32 +6471,32 @@ jr_004_7030:
 label4_7038:
     ld a, [wScriptMapType]
     cp $06
-    jr nc, jr_004_7044
+    jr nc, CheckGoldMapType20
 
     ld hl, $0c02
     rst $10
     ret
 
 
-jr_004_7044:
+CheckGoldMapType20:
     cp $20
-    jr nc, jr_004_704d
+    jr nc, CheckGoldMapType40
 
     ld hl, $0d02
     rst $10
     ret
 
 
-jr_004_704d:
+CheckGoldMapType40:
     cp $40
-    jr nc, jr_004_7056
+    jr nc, CallBank0F_Gold
 
     ld hl, $0e02
     rst $10
     ret
 
 
-jr_004_7056:
+CallBank0F_Gold:
     ld hl, $0f02
     rst $10
     ret
@@ -6507,22 +6507,22 @@ label4_705b:
     ld b, $10
     ld a, $ff
 
-jr_004_7062:
+WriteTileLoop:
     call Write_gfx_tile_and_inc_HL
     dec b
-    jr nz, jr_004_7062
+    jr nz, WriteTileLoop
 
     ld hl, $9800
     ld b, $00
     ld a, $da
 
-jr_004_706f:
+WriteTilePair:
     call Write_gfx_tile_and_inc_HL
     call Write_gfx_tile_and_inc_HL
     call Write_gfx_tile_and_inc_HL
     call Write_gfx_tile_and_inc_HL
     dec b
-    jr nz, jr_004_706f
+    jr nz, WriteTilePair
 
     ret
 
@@ -6552,11 +6552,11 @@ label4_707f:
     ld de, $c300
     ld c, $10
 
-jr_004_70a1:
+DrawRowSetup:
     ld b, $14
     push hl
 
-jr_004_70a4:
+DrawRowLoop:
     ld a, [de]
     call Write_gfx_tile
     ld a, l
@@ -6571,7 +6571,7 @@ jr_004_70a4:
     ld l, a
     inc de
     dec b
-    jr nz, jr_004_70a4
+    jr nz, DrawRowLoop
 
     pop hl
     ld a, e
@@ -6589,7 +6589,7 @@ jr_004_70a4:
     ld h, a
     pop bc
     dec c
-    jr nz, jr_004_70a1
+    jr nz, DrawRowSetup
 
     ld hl, $0103
     rst $10
@@ -6605,13 +6605,13 @@ label4_70d5:
     ld [$d8d6], a
     ld a, [$ca8d]
     or a
-    jp z, Jump_004_71c9
+    jp z, ScriptExecMapAlias
 
     ld a, $00
     ld hl, $cb0b
     call ReadMonsterByte
     or a
-    jp nz, Jump_004_71cf
+    jp nz, JumpToScriptInitAlias
 
     ld a, $00
     ld hl, $cb13
@@ -6629,7 +6629,7 @@ label4_70d5:
     ld h, a
     ld a, h
     or l
-    jp nz, Jump_004_71cf
+    jp nz, JumpToScriptInitAlias
 
     ld a, $00
     ld hl, $cb17
@@ -6647,17 +6647,17 @@ label4_70d5:
     ld h, a
     ld a, h
     or l
-    jp nz, Jump_004_71cf
+    jp nz, JumpToScriptInitAlias
 
     ld a, [$ca8d]
     cp $01
-    jp z, Jump_004_71c9
+    jp z, ScriptExecMapAlias
 
     ld a, $01
     ld hl, $cb0b
     call ReadMonsterByte
     or a
-    jp nz, Jump_004_71cf
+    jp nz, JumpToScriptInitAlias
 
     ld a, $01
     ld hl, $cb13
@@ -6675,7 +6675,7 @@ label4_70d5:
     ld h, a
     ld a, h
     or l
-    jr nz, jr_004_71cf
+    jr nz, JumpToScriptInitEntry
 
     ld a, $01
     ld hl, $cb17
@@ -6693,17 +6693,17 @@ label4_70d5:
     ld h, a
     ld a, h
     or l
-    jr nz, jr_004_71cf
+    jr nz, JumpToScriptInitEntry
 
     ld a, [$ca8d]
     cp $02
-    jr z, jr_004_71c9
+    jr z, ScriptExecMapDispatch
 
     ld a, $02
     ld hl, $cb0b
     call ReadMonsterByte
     or a
-    jp nz, Jump_004_71cf
+    jp nz, JumpToScriptInitAlias
 
     ld a, $02
     ld hl, $cb13
@@ -6721,7 +6721,7 @@ label4_70d5:
     ld h, a
     ld a, h
     or l
-    jr nz, jr_004_71cf
+    jr nz, JumpToScriptInitEntry
 
     ld a, $02
     ld hl, $cb17
@@ -6739,16 +6739,16 @@ label4_70d5:
     ld h, a
     ld a, h
     or l
-    jr nz, jr_004_71cf
+    jr nz, JumpToScriptInitEntry
 
-Jump_004_71c9:
-jr_004_71c9:
+ScriptExecMapAlias:
+ScriptExecMapDispatch:
     call MapTypeDispatch
-    jp Jump_004_7212
+    jp ScriptReturnProcess
 
 
-Jump_004_71cf:
-jr_004_71cf:
+JumpToScriptInitAlias:
+JumpToScriptInitEntry:
     jp Jump_004_55f5
 
 
@@ -6784,34 +6784,34 @@ label4_71d2:
 MapTypeDispatch:
     ld a, [wScriptMapType]            ; Map type copy
     cp $06
-    jr nc, jr_004_71fb
+    jr nc, DispatchCheckMap20
 
     ld hl, $0c00             ; Bank $0C entry 0
     rst $10
     ret
 
 
-jr_004_71fb:
+DispatchCheckMap20:
     cp $20
-    jr nc, jr_004_7204
+    jr nc, DispatchCheckMap40
 
     ld hl, $0d00             ; Bank $0D entry 0
     rst $10
 
-jr_004_7203:
+RetFromDispatch:
     ret
 
 
-jr_004_7204:
+DispatchCheckMap40:
     cp $40
-    jr nc, jr_004_720d
+    jr nc, DispatchBank0F
 
     ld hl, $0e00             ; Bank $0E entry 0
     rst $10
     ret
 
 
-jr_004_720d:
+DispatchBank0F:
     ld hl, $0f00             ; Bank $0F entry 0
     rst $10
     ret
@@ -6825,7 +6825,7 @@ jr_004_720d:
 ; ($D8D5/$D8D6), then loops back to ScriptExecNext.
 ; Used by conditional branch commands to skip or rewind script instructions.
 ; ---------------------------------------------------------------------------
-Jump_004_7212:
+ScriptReturnProcess:
     ld a, c
     sub l
     ld c, a
@@ -6849,7 +6849,7 @@ Jump_004_7212:
     ld [wScriptCounter], a
     ld a, h
     ld [$d8d6], a            ; Update script counter
-    jp Jump_004_5605          ; → ScriptExecNext (continue execution)
+    jp ScriptExecLoopAlias          ; → ScriptExecNext (continue execution)
 
 
     ld h, c
@@ -6918,7 +6918,7 @@ Jump_004_7212:
     nop
     ldh a, [rP1]
     inc bc
-    jr nz, jr_004_7203
+    jr nz, RetFromDispatch
 
     ldh a, [$f8]
     ld b, $00
@@ -7064,7 +7064,7 @@ Jump_004_7212:
     db $10
     ld h, $00
     ldh [$e0], a
-    jr nc, jr_004_7337
+    jr nc, OpcodeData_7337
 
     ldh [$e8], a
     ld sp, $e010
@@ -7077,7 +7077,7 @@ Jump_004_7212:
     inc [hl]
     db $10
 
-jr_004_7337:
+OpcodeData_7337:
     ldh [$08], a
     dec [hl]
     db $10
@@ -7194,7 +7194,7 @@ jr_004_7337:
     ldh [rNR41], a
     nop
     ldh [$e0], a
-    jr nc, jr_004_73dc
+    jr nc, OpcodeData_73DC
 
     add sp, -$20
     ld b, b
@@ -7210,7 +7210,7 @@ jr_004_7337:
     add sp, $07
     db $10
 
-jr_004_73dc:
+OpcodeData_73DC:
     ret z
 
     ldh a, [$08]
@@ -7286,7 +7286,7 @@ jr_004_73dc:
     scf
     db $10
     ldh [$f0], a
-    jr c, jr_004_7438
+    jr c, OpcodeData_7438
 
     ldh [$f8], a
     add hl, sp
@@ -7301,7 +7301,7 @@ jr_004_73dc:
     inc a
     db $10
 
-jr_004_7438:
+OpcodeData_7438:
     add sp, -$18
     ld b, a
     db $10
@@ -7399,7 +7399,7 @@ jr_004_7438:
     ldh [rNR41], a
     nop
     ldh [$e0], a
-    jr nc, jr_004_74c1
+    jr nc, OpcodeData_74C1
 
     add sp, -$20
     ld b, b
@@ -7415,7 +7415,7 @@ jr_004_7438:
     add sp, -$6f
     db $10
 
-jr_004_74c1:
+OpcodeData_74C1:
     ret nc
 
     ldh a, [$92]
@@ -7587,7 +7587,7 @@ jr_004_74c1:
     ldh [rNR41], a
     nop
     ldh [$e0], a
-    jr nc, jr_004_75aa
+    jr nc, OpcodeData_75AA
 
     add sp, -$20
     ld b, b
@@ -7603,7 +7603,7 @@ jr_004_74c1:
     add sp, -$79
     db $10
 
-jr_004_75aa:
+OpcodeData_75AA:
     ret z
 
     ldh a, [$88]
@@ -7784,7 +7784,7 @@ jr_004_75aa:
     ldh [rNR41], a
     db $10
     ldh [$e0], a
-    jr nc, jr_004_7693
+    jr nc, OpcodeData_7693
 
     add sp, -$20
     ld b, b
@@ -7800,7 +7800,7 @@ jr_004_75aa:
     add sp, -$79
     db $10
 
-jr_004_7693:
+OpcodeData_7693:
     ret z
 
     ldh a, [$88]
@@ -8005,7 +8005,7 @@ jr_004_7693:
     add hl, bc
     nop
 
-jr_004_7790:
+OpcodeData_7790:
     ld hl, sp-$08
     ld a, [bc]
     nop
@@ -8048,7 +8048,7 @@ jr_004_7790:
     ld a, a
     adc [hl]
     ld d, h
-    jr nz, jr_004_7790
+    jr nz, OpcodeData_7790
 
     ret
 
@@ -8056,9 +8056,9 @@ jr_004_7790:
     nop
     ld [de], a
     db $10
-    jr nc, jr_004_77e6
+    jr nc, OpcodeData_77E6
 
-    jr nz, jr_004_77ed
+    jr nz, OpcodeData_77ED
 
     ccf
     adc a
@@ -8090,7 +8090,7 @@ jr_004_7790:
     and $f4
     or [hl]
 
-jr_004_77e6:
+OpcodeData_77E6:
     sbc a
     db $fd
     ld c, a
@@ -8099,7 +8099,7 @@ jr_004_77e6:
     ld [hl], l
     push af
 
-jr_004_77ed:
+OpcodeData_77ED:
     db $eb
     ei
     push af
@@ -8109,10 +8109,10 @@ jr_004_77ed:
     ld b, b
     ccf
     cpl
-    jr nz, jr_004_7827
+    jr nz, OpcodeData_7827
 
     ccf
-    jr nz, jr_004_787a
+    jr nz, OpcodeData_787A
 
     nop
     rst $38
@@ -8127,7 +8127,7 @@ jr_004_77ed:
     ld d, c
     add d
     nop
-    ld bc, $5546
+    ld bc, OpcodeHandler2C
     sbc c
     ld bc, $f65f
     sbc $56
@@ -8144,7 +8144,7 @@ jr_004_77ed:
     rst $30
     db $e3
 
-jr_004_781e:
+OpcodeData_781E:
     cp c
     db $eb
     xor c
@@ -8157,24 +8157,24 @@ jr_004_781e:
     ld a, a
     add e
 
-jr_004_7827:
+OpcodeData_7827:
     ld a, a
     add b
     add b
     ld b, l
     sbc a
 
-jr_004_782c:
+OpcodeData_782C:
     add e
     rst $38
 
-jr_004_782e:
+OpcodeData_782E:
     nop
     nop
     ld b, l
     rst $38
 
-jr_004_7832:
+OpcodeData_7832:
     add e
     cp $01
     ld bc, $f945
@@ -8225,13 +8225,13 @@ jr_004_7832:
     add h
     dec bc
     inc c
-    jr nc, jr_004_782c
+    jr nc, OpcodeData_782C
 
     inc b
     adc b
     inc bc
     inc c
-    jr nc, jr_004_7832
+    jr nc, OpcodeData_7832
 
     inc bc
     inc c
@@ -8242,7 +8242,7 @@ jr_004_7832:
     ccf
     ld b, a
 
-jr_004_787a:
+OpcodeData_787A:
     ld b, b
     add c
     rst $38
@@ -8269,7 +8269,7 @@ jr_004_787a:
     ld b, $04
     inc c
     ld [$0818], sp
-    jr jr_004_781e
+    jr OpcodeData_781E
 
     ccf
     ld b, a
@@ -8281,19 +8281,19 @@ jr_004_787a:
     ld b, $08
     db $10
     ld b, e
-    jr nz, jr_004_782e
+    jr nz, OpcodeData_782E
 
     nop
     ld [$82e4], sp
     ld b, h
     add c
     ld c, b
-    jr nz, jr_004_78fb
+    jr nz, OpcodeData_78FB
 
     add c
     dec b
     or l
-    jr c, jr_004_78dc
+    jr c, OpcodeData_78DC
 
     ld [de], a
     nop
@@ -8301,7 +8301,7 @@ jr_004_787a:
     inc bc
     rrca
 
-jr_004_78bd:
+OpcodeData_78BD:
     inc a
     ld c, b
     sub b
@@ -8313,7 +8313,7 @@ jr_004_78bd:
     db $c4, $89, $00
     ret nz
 
-    jr nc, jr_004_78d9
+    jr nc, OpcodeData_78D9
 
     ld a, $c7
     add c
@@ -8325,11 +8325,11 @@ jr_004_78bd:
     ld [hl+], a
     cpl
 
-jr_004_78d9:
+OpcodeData_78D9:
     cp $e4
     add e
 
-jr_004_78dc:
+OpcodeData_78DC:
     inc b
     inc e
     add hl, hl
@@ -8356,7 +8356,7 @@ jr_004_78dc:
     add hl, de
     ld l, $28
 
-jr_004_78fb:
+OpcodeData_78FB:
     ld h, e
     xor h
     sub b
@@ -8366,7 +8366,7 @@ jr_004_78fb:
     add c
     ld bc, $433d
     rra
-    jr nz, jr_004_7941
+    jr nz, OpcodeData_7941
 
     jr c, @+$3e
 
@@ -8387,9 +8387,9 @@ jr_004_78fb:
     add b
     nop
     ld bc, $2002
-    jr jr_004_7943
+    jr OpcodeData_7943
 
-    jr nz, jr_004_78bd
+    jr nz, OpcodeData_78BD
 
     sub b
     adc a
@@ -8417,15 +8417,15 @@ jr_004_78fb:
     rst $38
     pop bc
 
-jr_004_7941:
+OpcodeData_7941:
     pop bc
     add b
 
-jr_004_7943:
+OpcodeData_7943:
     add b
     pop bc
     pop bc
-    jr nc, jr_004_7960
+    jr nc, OpcodeData_7960
 
     sbc b
     sbc b
@@ -8435,7 +8435,7 @@ jr_004_7943:
     inc b
     add l
     rrca
-    jr c, jr_004_799a
+    jr c, OpcodeData_799A
 
     sub b
     sub e
@@ -8448,9 +8448,9 @@ jr_004_7943:
     adc a
     ret nz
 
-    jr nc, jr_004_7968
+    jr nc, OpcodeData_7968
 
-jr_004_7960:
+OpcodeData_7960:
     ld b, $08
     db $10
     pop hl
@@ -8458,7 +8458,7 @@ jr_004_7960:
     ld c, $c4
     and [hl]
 
-jr_004_7968:
+OpcodeData_7968:
     add d
     inc sp
     ld c, l
@@ -8502,12 +8502,12 @@ jr_004_7968:
     inc c
     inc b
 
-jr_004_799a:
+OpcodeData_799A:
     nop
     ld bc, $fe3f
-    jr jr_004_79b8
+    jr OpcodeData_79B8
 
-    jr nc, jr_004_7a02
+    jr nc, OpcodeData_7A02
 
     ldh [$c0], a
     ret nz
@@ -8522,14 +8522,14 @@ jr_004_799a:
     ldh a, [rNR32]
     cpl
     ld b, a
-    jr nz, jr_004_79d4
+    jr nz, OpcodeData_79D4
 
     ld b, b
     ld b, c
     inc bc
     sub d
 
-jr_004_79b8:
+OpcodeData_79B8:
     rlca
     add hl, de
     dec hl
@@ -8543,7 +8543,7 @@ jr_004_79b8:
     ld l, a
     xor l
 
-jr_004_79c6:
+OpcodeData_79C6:
     or a
     cp a
     ld a, [hl]
@@ -8558,13 +8558,13 @@ jr_004_79c6:
     ld [bc], a
     inc bc
 
-jr_004_79d4:
+OpcodeData_79D4:
     inc b
     ld b, $04
     ld [bc], a
     ld [bc], a
     ld bc, $b006
-    jr jr_004_79f2
+    jr OpcodeData_79F2
 
     ld [de], a
     ld [de], a
@@ -8577,12 +8577,12 @@ jr_004_79d4:
     ld de, $0c0a
     rla
     ld a, [hl+]
-    jr z, jr_004_7a17
+    jr z, OpcodeData_7A17
 
     cpl
     cp $e4
 
-jr_004_79f2:
+OpcodeData_79F2:
     add e
     ld [hl], h
     xor b
@@ -8593,11 +8593,11 @@ jr_004_79f2:
     rla
     jr z, @+$2c
 
-    jr z, jr_004_7a2f
+    jr z, OpcodeData_7A2F
 
     cp $e4
 
-jr_004_7a02:
+OpcodeData_7A02:
     add e
     ld [hl], h
     adc b
@@ -8607,7 +8607,7 @@ jr_004_7a02:
     rla
     ld a, [bc]
     ld [$4318], sp
-    jr z, jr_004_79c6
+    jr z, OpcodeData_79C6
 
     cpl
     db $76
@@ -8618,7 +8618,7 @@ jr_004_7a02:
     adc c
     adc b
 
-jr_004_7a17:
+OpcodeData_7A17:
     ld [hl], b
     inc de
     ld d, $1c
@@ -8639,7 +8639,7 @@ jr_004_7a17:
     ld b, a
     inc a
 
-jr_004_7a2f:
+OpcodeData_7A2F:
     nop
     dec b
     ld a, l
@@ -8760,9 +8760,9 @@ jr_004_7a2f:
     rlca
     cp [hl]
     ld b, b
-    jr nz, jr_004_7ab6
+    jr nz, OpcodeData_7AB6
 
-jr_004_7ab6:
+OpcodeData_7AB6:
     ld b, b
     nop
     ld b, b
@@ -8805,7 +8805,7 @@ jr_004_7ab6:
     ld [bc], a
     ld bc, $0708
 
-jr_004_7ae9:
+OpcodeData_7AE9:
     dec b
     add hl, de
     inc hl
@@ -8818,7 +8818,7 @@ jr_004_7ae9:
     rlca
     ld b, d
     inc a
-    jr z, jr_004_7ae9
+    jr z, OpcodeData_7AE9
 
     db $f4
     ld hl, sp-$18
@@ -8861,7 +8861,7 @@ jr_004_7ae9:
     rrca
     rra
     rrca
-    jr jr_004_7b3e
+    jr OpcodeData_7B3E
 
     db $10
     add hl, bc
@@ -8879,7 +8879,7 @@ jr_004_7ae9:
     adc a
     rlca
 
-jr_004_7b3e:
+OpcodeData_7B3E:
     inc bc
     rlca
     rlca
@@ -8913,7 +8913,7 @@ jr_004_7b3e:
     rlca
     rrca
 
-jr_004_7b60:
+OpcodeData_7B60:
     inc c
     dec de
     ld d, $ff
@@ -8945,7 +8945,7 @@ jr_004_7b60:
     ld a, a
     db $d3
 
-jr_004_7b85:
+OpcodeData_7B85:
     dec sp
     add sp, -$68
     rst $38
@@ -8953,24 +8953,24 @@ jr_004_7b85:
     add sp, $18
     ret z
 
-    jr c, jr_004_7b60
+    jr c, OpcodeData_7B60
 
     cp b
     rst $38
-    jr nz, jr_004_7b85
+    jr nz, OpcodeData_7B85
 
     pop bc
     pop hl
     ld sp, hl
     ld a, a
 
-jr_004_7b98:
+OpcodeData_7B98:
     rst $20
     cp a
     db $fd
     and c
     db $fc
-    jr nc, jr_004_7b98
+    jr nc, OpcodeData_7B98
 
     daa
     ld a, [$a417]
@@ -9004,7 +9004,7 @@ jr_004_7b98:
     ei
     cp $fe
     xor $31
-    jr jr_004_7c02
+    jr OpcodeData_7C02
 
     jr c, @+$3e
 
@@ -9016,7 +9016,7 @@ jr_004_7b98:
     db $10
     ldh a, [rNR10]
 
-jr_004_7bd2:
+OpcodeData_7BD2:
     rst $38
     ldh a, [$5e]
     rst $38
@@ -9047,16 +9047,16 @@ jr_004_7bd2:
     jp c, $fb3e
 
     xor $1e
-    jr jr_004_7bff
+    jr OpcodeData_7BFF
 
     ret z
 
-jr_004_7bff:
-    jr c, jr_004_7bd2
+OpcodeData_7BFF:
+    jr c, OpcodeData_7BD2
 
     cp c
 
-jr_004_7c02:
+OpcodeData_7C02:
     ld hl, $f3cf
     jp $fae3
 
@@ -9077,7 +9077,7 @@ jr_004_7c02:
     dec a
     cp $ee
     ld sp, $3030
-    jr nc, jr_004_7c8e
+    jr nc, OpcodeData_7C8E
 
     ld h, b
     ld h, b
@@ -9106,7 +9106,7 @@ jr_004_7c02:
     rst $38
     ld l, b
 
-jr_004_7c3f:
+OpcodeData_7C3F:
     sbc b
     ld hl, sp+$0c
     rst $30
@@ -9146,7 +9146,7 @@ jr_004_7c3f:
     inc d
     inc e
     or e
-    jr jr_004_7c8a
+    jr OpcodeData_7C8A
 
     ld l, h
     inc bc
@@ -9166,17 +9166,17 @@ jr_004_7c3f:
     cp l
     nop
 
-jr_004_7c86:
+OpcodeData_7C86:
     xor $38
     inc b
     inc bc
 
-jr_004_7c8a:
+OpcodeData_7C8A:
     inc bc
     inc b
     xor $33
 
-jr_004_7c8e:
+OpcodeData_7C8E:
     add b
     rst $30
     ld h, b
@@ -9202,9 +9202,9 @@ jr_004_7c8e:
     db $c4, $05, $02
     nop
     ld bc, $ff20
-    jr jr_004_7cc0
+    jr OpcodeData_7CC0
 
-    jr z, jr_004_7d07
+    jr z, OpcodeData_7D07
 
     add hl, hl
     ld e, h
@@ -9212,11 +9212,11 @@ jr_004_7c8e:
     adc h
     rst $38
 
-jr_004_7cb6:
+OpcodeData_7CB6:
     ld [hl], h
     nop
     adc b
-    jr nz, jr_004_7c3f
+    jr nz, OpcodeData_7C3F
 
     nop
     and d
@@ -9224,17 +9224,17 @@ jr_004_7cb6:
     rst $38
     sbc c
 
-jr_004_7cc0:
-    jr z, jr_004_7c86
+OpcodeData_7CC0:
+    jr z, OpcodeData_7C86
 
     add b
     inc a
-    jr nc, jr_004_7d18
+    jr nc, OpcodeData_7D18
 
     jr nc, @+$01
 
     ld [de], a
-    jr z, jr_004_7cd2
+    jr z, OpcodeData_7CD2
 
     inc b
     jr c, @-$53
@@ -9244,7 +9244,7 @@ jr_004_7cc0:
     rst $38
     add e
 
-jr_004_7cd2:
+OpcodeData_7CD2:
     inc b
     nop
     ld [bc], a
@@ -9282,14 +9282,14 @@ jr_004_7cd2:
     ld hl, $101e
     ld h, c
 
-jr_004_7cfc:
+OpcodeData_7CFC:
     ld b, b
     add b
     ld [$00df], sp
     ld bc, $0288
     ld [$0590], sp
 
-jr_004_7d07:
+OpcodeData_7D07:
     ld bc, $5f08
     add hl, bc
     inc b
@@ -9298,12 +9298,12 @@ jr_004_7d07:
     ld b, h
     sbc a
     nop
-    jr z, jr_004_7cb6
+    jr z, OpcodeData_7CB6
 
-    ld bc, $6cff
-    jr z, jr_004_7d84
+    ld bc, ReadLevelStat
+    jr z, OpcodeData_7D84
 
-jr_004_7d18:
+OpcodeData_7D18:
     add hl, sp
     nop
     adc b
@@ -9371,7 +9371,7 @@ jr_004_7d18:
     jr nz, @+$01
 
     rra
-    jr nz, jr_004_7cfc
+    jr nz, OpcodeData_7CFC
 
     ld h, b
     ldh [rNR10], a
@@ -9380,7 +9380,7 @@ jr_004_7d18:
     rst $38
     add sp, $10
 
-jr_004_7d74:
+OpcodeData_7D74:
     db $f4
     ld [$8478], sp
     ld a, d
@@ -9389,14 +9389,14 @@ jr_004_7d74:
     ld a, h
     add d
     ld e, a
-    jr nz, jr_004_7db0
+    jr nz, OpcodeData_7DB0
 
     dec bc
     cp h
     ld b, d
     ld b, b
 
-jr_004_7d84:
+OpcodeData_7D84:
     dec bc
     rst $38
     ld e, a
@@ -9411,7 +9411,7 @@ jr_004_7d84:
     dec b
     ret nc
 
-    jr nz, jr_004_7d74
+    jr nz, OpcodeData_7D74
 
     db $10
     ldh [rNR10], a
@@ -9438,9 +9438,9 @@ jr_004_7d84:
     ld h, d
     rst $38
 
-jr_004_7db0:
+OpcodeData_7DB0:
     add hl, de
-    jr jr_004_7dd8
+    jr OpcodeData_7DD8
 
     ld b, c
     inc h
@@ -9448,7 +9448,7 @@ jr_004_7db0:
     ld b, d
     inc h
     rst $38
-    jp nz, Jump_000_2790
+    jp nz, DataLookup_2790
 
     add hl, bc
     ld b, $04
@@ -9474,7 +9474,7 @@ jr_004_7db0:
     ld c, a
     cpl
 
-jr_004_7dd8:
+OpcodeData_7DD8:
     ld b, $2f
     ld h, $16
     jr nz, @+$01
@@ -9487,16 +9487,16 @@ jr_004_7dd8:
     add [hl]
     add b
     rst $38
-    jr c, jr_004_7e09
+    jr c, OpcodeData_7E09
 
     ld b, b
 
-jr_004_7dea:
+OpcodeData_7DEA:
     db $10
     ld h, b
     ld l, b
 
-jr_004_7ded:
+OpcodeData_7DED:
     sub b
     ld [hl], h
     rst $38
@@ -9520,20 +9520,20 @@ jr_004_7ded:
     and h
     sbc $01
     nop
-    jr nz, jr_004_7e10
+    jr nz, OpcodeData_7E10
 
     db $10
 
-jr_004_7e09:
+OpcodeData_7E09:
     db $10
-    jr jr_004_7e4b
+    jr OpcodeData_7E4B
 
     ld e, d
     sbc c
-    jr jr_004_7dea
+    jr OpcodeData_7DEA
 
-jr_004_7e10:
-    jr jr_004_7ded
+OpcodeData_7E10:
+    jr OpcodeData_7DED
 
     add b
     nop
@@ -9580,7 +9580,7 @@ jr_004_7e10:
     or [hl]
     call $e79e
 
-jr_004_7e4b:
+OpcodeData_7E4B:
     ld e, [hl]
     rst $38
     rst $20
@@ -9592,7 +9592,7 @@ jr_004_7e4b:
     rlca
     rst $38
     rrca
-    jr c, jr_004_7ed5
+    jr c, OpcodeData_7ED5
 
     ld d, h
     xor $ba
@@ -9667,7 +9667,7 @@ jr_004_7e4b:
     daa
     nop
     nop
-    jr nz, jr_004_7edb
+    jr nz, OpcodeData_7EDB
 
     ld [hl+], a
     inc bc
@@ -9681,7 +9681,7 @@ jr_004_7e4b:
     nop
     dec h
     nop
-    jr z, jr_004_7ef1
+    jr z, OpcodeData_7EF1
 
     ld a, [hl+]
     ld l, l
@@ -9693,22 +9693,22 @@ jr_004_7e4b:
     ld l, a
     dec h
     ld h, $25
-    jr z, jr_004_7efe
+    jr z, OpcodeData_7EFE
 
-jr_004_7ed5:
+OpcodeData_7ED5:
     ld a, [hl+]
     ld l, [hl]
     dec h
     ld h, $27
     ld l, l
 
-jr_004_7edb:
+OpcodeData_7EDB:
     ld l, [hl]
     ld l, a
-    jr nc, jr_004_7f10
+    jr nc, OpcodeData_7F10
 
     ld l, [hl]
-    jr nc, jr_004_7f13
+    jr nc, OpcodeData_7F13
 
     ld l, a
     ld [hl], b
@@ -9725,7 +9725,7 @@ jr_004_7edb:
     ld [hl], e
     dec h
 
-jr_004_7ef1:
+OpcodeData_7EF1:
     ld h, $23
     inc hl
     ld h, $27
@@ -9737,7 +9737,7 @@ jr_004_7ef1:
     ld [hl], d
     adc l
 
-jr_004_7efe:
+OpcodeData_7EFE:
     ld [hl], e
     ld [hl-], a
     inc sp
@@ -9754,24 +9754,24 @@ jr_004_7efe:
     rlca
     adc d
     inc hl
-    jr z, jr_004_7f39
+    jr z, OpcodeData_7F39
 
-jr_004_7f10:
+OpcodeData_7F10:
     ld a, [hl+]
     nop
     daa
 
-jr_004_7f13:
+OpcodeData_7F13:
     nop
     dec h
     nop
     inc h
     inc bc
     adc h
-    jr nc, jr_004_7f4c
+    jr nc, OpcodeData_7F4C
 
     nop
-    jr nc, jr_004_7f4f
+    jr nc, OpcodeData_7F4F
 
     nop
     nop
@@ -9800,7 +9800,7 @@ jr_004_7f13:
     inc sp
     inc b
 
-jr_004_7f39:
+OpcodeData_7F39:
     add c
     inc hl
     ld a, [bc]
@@ -9821,12 +9821,12 @@ jr_004_7f39:
     nop
     sbc d
 
-jr_004_7f4c:
+OpcodeData_7F4C:
     inc hl
     add e
     ld h, h
 
-jr_004_7f4f:
+OpcodeData_7F4F:
     ld h, l
     ld h, [hl]
     inc bc

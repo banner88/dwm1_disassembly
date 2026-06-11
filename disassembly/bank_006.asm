@@ -2519,10 +2519,10 @@ jr_006_4d7a:
     ld h, $00
     add hl, hl
     ld a, l
-    add $cc
+    add LOW(MapNPCPosDataTable)
     ld l, a
     ld a, h
-    adc $4d
+    adc HIGH(MapNPCPosDataTable)
     ld h, a
 
 jr_006_4d86:
@@ -2590,6 +2590,7 @@ jr_006_4dc5:
     ret
 
 
+MapNPCPosDataTable:
     nop
     cpl
     ld b, b
@@ -9084,7 +9085,7 @@ SetMapS_6ad7:
     ld b, c
     ld bc, $0142
     ld b, e
-    ld bc, $0144
+    ld bc, HeaderNewLicenseeCode
     ld b, h
     ld bc, $1521
     ret
@@ -10543,7 +10544,7 @@ jr_006_729f:
 
     db $f4
     or c
-    ld de, $210e
+    ld de, SRAMWriteBlock
     inc b
     ld e, e
     nop
@@ -12140,7 +12141,7 @@ jr_006_79d0:
     jr nz, jr_006_79f7
 
     rst $28
-    ld bc, $0100
+    ld bc, Boot
     inc bc
     inc b
     ld [$fe3c], sp
@@ -12302,7 +12303,7 @@ jr_006_7a50:
     ld hl, sp+$58
     sub e
     nop
-    ld hl, $2100
+    ld hl, EnableSRAMAccess
     ld b, $01
     ld bc, $002c
     inc bc

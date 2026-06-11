@@ -1479,7 +1479,7 @@ jr_05a_465c:
     inc hl
     ld l, a
     ld bc, $2023
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $e801
     call c, $fc34
     ld [hl], $fa
@@ -1754,7 +1754,7 @@ jr_05a_471d:
     nop
     inc bc
     nop
-    ld bc, $0100
+    ld bc, Boot
     dec b
     cp $f9
     dec b
@@ -2848,7 +2848,7 @@ jr_05a_4c1f:
     inc c
     ld a, [bc]
     inc a
-    ld de, $2060
+    ld de, FormatThousands
     ld c, e
     jr nz, jr_05a_4c18
 
@@ -3493,7 +3493,7 @@ jr_05a_4ed7:
     nop
 
 jr_05a_4eed:
-    ld hl, $2100
+    ld hl, EnableSRAMAccess
     nop
     ld h, a
     nop
@@ -6696,7 +6696,7 @@ jr_05a_5cb8:
     nop
     nop
     nop
-    ld bc, $0100
+    ld bc, Boot
     nop
     inc bc
     ld bc, $0102
@@ -7511,7 +7511,7 @@ jr_05a_6010:
 jr_05a_602f:
     ld bc, $2f60
     ld c, l
-    ld bc, $2fc0
+    ld bc, InvalidSlotClear
     ld c, l
 
 jr_05a_6037:
@@ -7632,7 +7632,7 @@ jr_05a_60ba:
     nop
     ld [$0800], sp
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0202
     dec b
     ld [bc], a
@@ -8135,7 +8135,7 @@ jr_05a_62bc:
     nop
     ld [$0800], sp
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0202
     dec b
     ld [bc], a
@@ -8686,7 +8686,7 @@ jr_05a_6505:
     nop
     ld [$0800], sp
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0202
     dec b
     ld [bc], a
@@ -9209,7 +9209,7 @@ jr_05a_6722:
     inc [hl]
     inc bc
     inc e
-    ld bc, $3006
+    ld bc, InitBattleState
     ld c, [hl]
 
 jr_05a_6737:
@@ -9741,7 +9741,7 @@ jr_05a_6957:
     ld c, l
     ld bc, $1f45
     ld c, l
-    ld bc, $1fa5
+    ld bc, CoordClampHigh
     ld c, l
     ld bc, $2f05
     ld c, l
@@ -9751,7 +9751,7 @@ jr_05a_6957:
     ld c, l
     ld bc, $3f25
     ld c, l
-    ld bc, $3f85
+    ld bc, PartyMenuDraw
     ld c, l
     ld bc, $3fe5
     ld c, l
@@ -9985,7 +9985,7 @@ jr_05a_6a84:
     ld c, l
     ld bc, $2f8f
     ld c, l
-    ld bc, $2fef
+    ld bc, GetCombatantMP
     ld c, l
     ld bc, $3f4f
     ld c, l
@@ -10250,7 +10250,7 @@ jr_05a_6bbd:
     xor b
     ld bc, $0128
     ld bc, $0025
-    ld bc, $028b
+    ld bc, InitDisplayAndRun
     ld bc, $0685
     ld bc, $005f
     ld bc, $006b
@@ -11809,7 +11809,7 @@ jr_05a_7319:
     add b
     dec b
     ld hl, sp-$0c
-    ld bc, $0601
+    ld bc, CopyDEtoHLByte
     rlca
     jr jr_05a_7342
 
@@ -11926,7 +11926,7 @@ jr_05a_7342:
     jr nc, @+$07
 
     rst $30
-    ld bc, $0704
+    ld bc, CheckBButton
     ld [$100f], sp
     rra
     db $10
@@ -12114,7 +12114,7 @@ jr_05a_7465:
     inc b
     nop
     rrca
-    ld bc, $070e
+    ld bc, ClearTextBitsRedrawJR
     ld hl, sp+$00
     jr nc, jr_05a_749e
 
@@ -12476,7 +12476,7 @@ jr_05a_75d2:
     db $10
     rrca
     nop
-    ld bc, $3000
+    ld bc, NopReturn
     nop
     ld c, $cc
     inc sp
@@ -13501,7 +13501,7 @@ jr_05a_7a4c:
     nop
     dec de
     nop
-    ld de, $2200
+    ld de, RetFromSRAMCopy
     nop
     ld l, $28
 
@@ -13827,7 +13827,7 @@ jr_05a_7ba1:
     nop
     ld [$0800], sp
     nop
-    ld bc, $0100
+    ld bc, Boot
     ld bc, $0202
     dec b
     ld [bc], a
@@ -14245,7 +14245,7 @@ jr_05a_7d5f:
     jr nz, jr_05a_7d6b
 
 jr_05a_7d6b:
-    ld bc, $2200
+    ld bc, RetFromSRAMCopy
     nop
     ld h, $00
     inc l
