@@ -164,9 +164,9 @@ with open('game.gbc', 'r+b') as f:
 subsequent addresses and breaks branch targets. Only change VALUES.
 To add new content, use an empty bank (Method 3 in CUSTOM_CUTSCENES.md).
 
-### Method 3: Script Compiler (NOT YET BUILT)
-The next priority tool. Would take pseudo-code and produce `dw` assembly.
-This is the "write" side that completes the editing loop.
+### Method 3: Script Compiler ✅
+`tools/compile_script.py` — takes decompiler pseudo-code, produces `dw` assembly with RGBDS labels.
+All 100 opcodes supported. Run `--test` for built-in tests. See `compile_script.py --help`.
 
 ---
 

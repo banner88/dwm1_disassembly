@@ -1,0 +1,6894 @@
+{
+  "summary": {
+    "total_flags": 311,
+    "total_operations": 1164,
+    "used_range": [
+      2,
+      705
+    ],
+    "wram_range": [
+      "$D99B",
+      "$D9F3"
+    ]
+  },
+  "flags": {
+    "$0002": {
+      "flag_id": "$0002",
+      "byte": "$D99B",
+      "bit": 5,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Castle",
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script16",
+        "Castle_Script17",
+        "GreatTree_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0003": {
+      "flag_id": "$0003",
+      "byte": "$D99B",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Castle"
+      ],
+      "set_locations": [
+        "Castle_Script13"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13"
+      ],
+      "anomaly": null
+    },
+    "$0004": {
+      "flag_id": "$0004",
+      "byte": "$D99B",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script21"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0005": {
+      "flag_id": "$0005",
+      "byte": "$D99B",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [
+        "Farm_Script26"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script26"
+      ],
+      "anomaly": null
+    },
+    "$0006": {
+      "flag_id": "$0006",
+      "byte": "$D99B",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [
+        "Farm_Script27"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script27"
+      ],
+      "anomaly": null
+    },
+    "$0008": {
+      "flag_id": "$0008",
+      "byte": "$D99C",
+      "bit": 7,
+      "total_uses": 7,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 7,
+      "maps": [
+        "Castle"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script03",
+        "Castle_Script04",
+        "Castle_Script10",
+        "Castle_Script12",
+        "Castle_Script14",
+        "Castle_Script16",
+        "Castle_Script17"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0009": {
+      "flag_id": "$0009",
+      "byte": "$D99C",
+      "bit": 6,
+      "total_uses": 9,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 9,
+      "maps": [
+        "Castle",
+        "Farm",
+        "GateHub",
+        "Map_23"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script14",
+        "Castle_Script17",
+        "Castle_Script18",
+        "GateHub_Script08",
+        "Farm_Script08",
+        "Farm_Script21",
+        "Farm_Script23",
+        "Farm_Script26",
+        "Map_23_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$000B": {
+      "flag_id": "$000B",
+      "byte": "$D99C",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [
+        "GreatTree_Script08"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script08"
+      ],
+      "anomaly": null
+    },
+    "$000C": {
+      "flag_id": "$000C",
+      "byte": "$D99C",
+      "bit": 3,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script02",
+        "Farm_Script26",
+        "Farm_Script28"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$000D": {
+      "flag_id": "$000D",
+      "byte": "$D99C",
+      "bit": 2,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [
+        "Farm_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script02",
+        "Farm_Script02"
+      ],
+      "anomaly": null
+    },
+    "$000E": {
+      "flag_id": "$000E",
+      "byte": "$D99C",
+      "bit": 1,
+      "total_uses": 12,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 12,
+      "maps": [
+        "ArenaRooms",
+        "Map_19",
+        "Map_1E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script04",
+        "ArenaRooms_Script04",
+        "ArenaRooms_Script05",
+        "ArenaRooms_Script05",
+        "ArenaRooms_Script06",
+        "ArenaRooms_Script06",
+        "ArenaRooms_Script07",
+        "ArenaRooms_Script07",
+        "ArenaRooms_Script08",
+        "Map_19_Script01",
+        "Map_1E_Script02",
+        "Map_1E_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$000F": {
+      "flag_id": "$000F",
+      "byte": "$D99C",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [
+        "ArenaRooms_Script23"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script24"
+      ],
+      "anomaly": null
+    },
+    "$0010": {
+      "flag_id": "$0010",
+      "byte": "$D99D",
+      "bit": 7,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossBeginning",
+        "GateHub",
+        "Stable"
+      ],
+      "set_locations": [
+        "BossBeginning_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "GateHub_Script10",
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$0011": {
+      "flag_id": "$0011",
+      "byte": "$D99D",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossTalisman",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "BossTalisman_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0012": {
+      "flag_id": "$0012",
+      "byte": "$D99D",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossTalisman",
+        "Stable"
+      ],
+      "set_locations": [
+        "BossTalisman_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$0013": {
+      "flag_id": "$0013",
+      "byte": "$D99D",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossBewilder",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "BossBewilder_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0014": {
+      "flag_id": "$0014",
+      "byte": "$D99D",
+      "bit": 3,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossBewilder",
+        "Map_4C",
+        "Stable"
+      ],
+      "set_locations": [
+        "BossBewilder_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "Map_4C_Script01"
+      ],
+      "anomaly": null
+    },
+    "$0015": {
+      "flag_id": "$0015",
+      "byte": "$D99D",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_35",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_35_Script03"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$0016": {
+      "flag_id": "$0016",
+      "byte": "$D99D",
+      "bit": 1,
+      "total_uses": 8,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 8,
+      "maps": [
+        "BossBravery",
+        "BossPeace",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "BossPeace_Script01",
+        "BossPeace_Script02",
+        "BossPeace_Script03",
+        "BossPeace_Script04",
+        "BossPeace_Script06",
+        "BossPeace_Script07",
+        "BossBravery_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0017": {
+      "flag_id": "$0017",
+      "byte": "$D99D",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossBravery",
+        "Stable"
+      ],
+      "set_locations": [
+        "BossBravery_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$0018": {
+      "flag_id": "$0018",
+      "byte": "$D99E",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_38",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_38_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$0019": {
+      "flag_id": "$0019",
+      "byte": "$D99E",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$001A": {
+      "flag_id": "$001A",
+      "byte": "$D99E",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_3A",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_3A_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$001B": {
+      "flag_id": "$001B",
+      "byte": "$D99E",
+      "bit": 4,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "CopycatRoom",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "CopycatRoom_Script06",
+        "CopycatRoom_Script06"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$001C": {
+      "flag_id": "$001C",
+      "byte": "$D99E",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_3A",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "Map_3A_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$001D": {
+      "flag_id": "$001D",
+      "byte": "$D99E",
+      "bit": 2,
+      "total_uses": 50,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 50,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Bazaar",
+        "Castle",
+        "Farm",
+        "GateHub",
+        "GreatTree",
+        "Map_0D",
+        "Map_12",
+        "Map_1E",
+        "Map_1F",
+        "Map_27",
+        "MonsterShrine",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13",
+        "Castle_Script14",
+        "Castle_Script18",
+        "GreatTree_Script03",
+        "GreatTree_Script07",
+        "GreatTree_Script09",
+        "GreatTree_Script13",
+        "GreatTree_Script15",
+        "GreatTree_Script16",
+        "GreatTree_Script17",
+        "Bazaar_Script05",
+        "Bazaar_Script10",
+        "Bazaar_Script15",
+        "Bazaar_Script16",
+        "Bazaar_Script24",
+        "GateHub_Script04",
+        "GateHub_Script10",
+        "Farm_Script02",
+        "Farm_Script17",
+        "Farm_Script21",
+        "Farm_Script22",
+        "Farm_Script26",
+        "Stable_Script08",
+        "Stable_Script16",
+        "ArenaLobby_Script06",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script04",
+        "ArenaRooms_Script05",
+        "ArenaRooms_Script06",
+        "ArenaRooms_Script07",
+        "ArenaRooms_Script08",
+        "ArenaRooms_Script14",
+        "ArenaRooms_Script15",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script23",
+        "ArenaRooms_Script24",
+        "ArenaRooms_Script25",
+        "ArenaRooms_Script26",
+        "MonsterShrine_Script03",
+        "Map_0D_Script02",
+        "Map_0D_Script05",
+        "Map_0D_Script06",
+        "Map_12_Script13",
+        "Map_1E_Script01",
+        "Map_1F_Script02",
+        "Map_1F_Script03",
+        "Map_27_Script01",
+        "Map_27_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$001E": {
+      "flag_id": "$001E",
+      "byte": "$D99E",
+      "bit": 1,
+      "total_uses": 4,
+      "set_count": 2,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_3D",
+        "Map_4D",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_3D_Script01",
+        "Map_3D_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "Map_4D_Script01"
+      ],
+      "anomaly": null
+    },
+    "$001F": {
+      "flag_id": "$001F",
+      "byte": "$D99E",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0020": {
+      "flag_id": "$0020",
+      "byte": "$D99F",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0021": {
+      "flag_id": "$0021",
+      "byte": "$D99F",
+      "bit": 6,
+      "total_uses": 12,
+      "set_count": 3,
+      "clear_count": 0,
+      "check_count": 9,
+      "maps": [
+        "Map_0A",
+        "Map_40",
+        "Map_41",
+        "MonsterShrine",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_41_Script01",
+        "Map_41_Script02",
+        "Map_41_Script03"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "MonsterShrine_Script11",
+        "Map_0A_Script00",
+        "Map_40_Script03",
+        "Map_40_Script04",
+        "Map_40_Script05",
+        "Map_40_Script06",
+        "Map_40_Script07",
+        "Map_40_Script08"
+      ],
+      "anomaly": null
+    },
+    "$0022": {
+      "flag_id": "$0022",
+      "byte": "$D99F",
+      "bit": 5,
+      "total_uses": 11,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 10,
+      "maps": [
+        "GateHub",
+        "Map_42",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_42_Script17"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "GateHub_Script15",
+        "Stable_Script04",
+        "Stable_Script04",
+        "Stable_Script09",
+        "Stable_Script09",
+        "Stable_Script10",
+        "Stable_Script10",
+        "Stable_Script11",
+        "Stable_Script11",
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$0023": {
+      "flag_id": "$0023",
+      "byte": "$D99F",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_42",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "Map_42_Script17"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0024": {
+      "flag_id": "$0024",
+      "byte": "$D99F",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0025": {
+      "flag_id": "$0025",
+      "byte": "$D99F",
+      "bit": 2,
+      "total_uses": 60,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 60,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Bazaar",
+        "Castle",
+        "Farm",
+        "GateHub",
+        "GreatTree",
+        "Map_0D",
+        "Map_0F",
+        "Map_12",
+        "Map_1B",
+        "Map_1C",
+        "Map_1E",
+        "Map_2B",
+        "MedalMan",
+        "MonsterShrine",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script12",
+        "Castle_Script13",
+        "Castle_Script14",
+        "Castle_Script18",
+        "GreatTree_Script04",
+        "GreatTree_Script08",
+        "GreatTree_Script09",
+        "GreatTree_Script11",
+        "GreatTree_Script13",
+        "GreatTree_Script14",
+        "GreatTree_Script15",
+        "GreatTree_Script16",
+        "GreatTree_Script17",
+        "Bazaar_Script15",
+        "Bazaar_Script24",
+        "GateHub_Script04",
+        "GateHub_Script15",
+        "Farm_Script17",
+        "Farm_Script22",
+        "Farm_Script24",
+        "Farm_Script34",
+        "Farm_Script35",
+        "Stable_Script04",
+        "Stable_Script05",
+        "Stable_Script07",
+        "Stable_Script08",
+        "Stable_Script09",
+        "Stable_Script10",
+        "Stable_Script11",
+        "Stable_Script16",
+        "Stable_Script20",
+        "ArenaLobby_Script06",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script08",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "ArenaRooms_Script23",
+        "ArenaRooms_Script24",
+        "MonsterShrine_Script03",
+        "MonsterShrine_Script04",
+        "MonsterShrine_Script06",
+        "MonsterShrine_Script09",
+        "MonsterShrine_Script10",
+        "Map_0D_Script02",
+        "Map_0D_Script05",
+        "Map_0D_Script06",
+        "Map_0F_Script02",
+        "Map_12_Script13",
+        "MedalMan_Script03",
+        "Map_1B_Script02",
+        "Map_1C_Script02",
+        "Map_1C_Script03",
+        "Map_1C_Script05",
+        "Map_1C_Script05",
+        "Map_1C_Script06",
+        "Map_1E_Script04",
+        "Map_2B_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0026": {
+      "flag_id": "$0026",
+      "byte": "$D99F",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossAmbition",
+        "Stable"
+      ],
+      "set_locations": [
+        "BossAmbition_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$0027": {
+      "flag_id": "$0027",
+      "byte": "$D99F",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0028": {
+      "flag_id": "$0028",
+      "byte": "$D9A0",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossAmbition",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "BossAmbition_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0029": {
+      "flag_id": "$0029",
+      "byte": "$D9A0",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$002A": {
+      "flag_id": "$002A",
+      "byte": "$D9A0",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$002B": {
+      "flag_id": "$002B",
+      "byte": "$D9A0",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_4A",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_4A_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$002C": {
+      "flag_id": "$002C",
+      "byte": "$D9A0",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_4A",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "Map_4A_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$002D": {
+      "flag_id": "$002D",
+      "byte": "$D9A0",
+      "bit": 2,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_35",
+        "Map_4C",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_4C_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "Map_35_Script03"
+      ],
+      "anomaly": null
+    },
+    "$002E": {
+      "flag_id": "$002E",
+      "byte": "$D9A0",
+      "bit": 1,
+      "total_uses": 4,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Map_3D",
+        "Map_4D",
+        "Stable"
+      ],
+      "set_locations": [
+        "Map_4D_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "Map_3D_Script01",
+        "Map_3D_Script02"
+      ],
+      "anomaly": null
+    },
+    "$002F": {
+      "flag_id": "$002F",
+      "byte": "$D9A0",
+      "bit": 0,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Castle",
+        "GreatTree",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script14",
+        "GreatTree_Script16",
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0030": {
+      "flag_id": "$0030",
+      "byte": "$D9A1",
+      "bit": 7,
+      "total_uses": 16,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 16,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Castle",
+        "Farm",
+        "GateHub",
+        "Map_1D"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13",
+        "Castle_Script14",
+        "GateHub_Script10",
+        "Farm_Script17",
+        "Farm_Script28",
+        "ArenaLobby_Script06",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script25",
+        "Map_1D_Script03",
+        "Map_1D_Script04",
+        "Map_1D_Script05",
+        "Map_1D_Script06"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0031": {
+      "flag_id": "$0031",
+      "byte": "$D9A1",
+      "bit": 6,
+      "total_uses": 24,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 24,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Bazaar",
+        "Castle",
+        "Farm",
+        "GateHub",
+        "Map_1D",
+        "Map_1F",
+        "Well"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13",
+        "Castle_Script14",
+        "Bazaar_Script24",
+        "GateHub_Script10",
+        "Farm_Script01",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "ArenaRooms_Script25",
+        "Well_Script06",
+        "Well_Script07",
+        "Well_Script08",
+        "Map_1D_Script03",
+        "Map_1D_Script04",
+        "Map_1D_Script05",
+        "Map_1D_Script06",
+        "Map_1F_Script02",
+        "Map_1F_Script03",
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0032": {
+      "flag_id": "$0032",
+      "byte": "$D9A1",
+      "bit": 5,
+      "total_uses": 53,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 53,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Bazaar",
+        "Castle",
+        "Farm",
+        "GateHub",
+        "GreatTree",
+        "Map_12",
+        "Map_1E",
+        "Map_1F",
+        "MedalMan",
+        "Well"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script07",
+        "Castle_Script08",
+        "Castle_Script09",
+        "Castle_Script10",
+        "Castle_Script12",
+        "Castle_Script13",
+        "Castle_Script14",
+        "Castle_Script18",
+        "GreatTree_Script03",
+        "GreatTree_Script09",
+        "GreatTree_Script16",
+        "Bazaar_Script07",
+        "Bazaar_Script10",
+        "Bazaar_Script14",
+        "Bazaar_Script15",
+        "GateHub_Script04",
+        "GateHub_Script10",
+        "Farm_Script02",
+        "Farm_Script06",
+        "Farm_Script08",
+        "Farm_Script09",
+        "Farm_Script22",
+        "Farm_Script23",
+        "Farm_Script28",
+        "Farm_Script33",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script02",
+        "ArenaRooms_Script07",
+        "ArenaRooms_Script08",
+        "ArenaRooms_Script11",
+        "ArenaRooms_Script12",
+        "ArenaRooms_Script13",
+        "ArenaRooms_Script14",
+        "ArenaRooms_Script15",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "ArenaRooms_Script23",
+        "ArenaRooms_Script24",
+        "ArenaRooms_Script25",
+        "ArenaRooms_Script26",
+        "Map_12_Script13",
+        "MedalMan_Script03",
+        "Well_Script06",
+        "Well_Script07",
+        "Map_1E_Script01",
+        "Map_1E_Script02",
+        "Map_1E_Script03",
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0033": {
+      "flag_id": "$0033",
+      "byte": "$D9A1",
+      "bit": 4,
+      "total_uses": 26,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 26,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Castle",
+        "GateHub",
+        "GreatTree",
+        "Map_1D",
+        "Map_1E",
+        "Map_1F",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13",
+        "Castle_Script14",
+        "GreatTree_Script16",
+        "GateHub_Script04",
+        "GateHub_Script10",
+        "Stable_Script01",
+        "Stable_Script03",
+        "ArenaLobby_Script06",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script07",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "ArenaRooms_Script25",
+        "Map_1D_Script01",
+        "Map_1D_Script03",
+        "Map_1D_Script04",
+        "Map_1D_Script06",
+        "Map_1E_Script03",
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0034": {
+      "flag_id": "$0034",
+      "byte": "$D9A1",
+      "bit": 3,
+      "total_uses": 15,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 15,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Castle",
+        "GateHub",
+        "GreatTree",
+        "Map_1B",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13",
+        "Castle_Script18",
+        "GreatTree_Script16",
+        "GateHub_Script04",
+        "Stable_Script01",
+        "Stable_Script03",
+        "Stable_Script18",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "Map_1B_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0035": {
+      "flag_id": "$0035",
+      "byte": "$D9A1",
+      "bit": 2,
+      "total_uses": 56,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 56,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Bazaar",
+        "Castle",
+        "Farm",
+        "GateHub",
+        "GreatTree",
+        "Map_0D",
+        "Map_1D",
+        "Map_1E",
+        "MedalMan",
+        "MonsterShrine",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13",
+        "Castle_Script14",
+        "GreatTree_Script03",
+        "GreatTree_Script07",
+        "GreatTree_Script09",
+        "GreatTree_Script13",
+        "GreatTree_Script15",
+        "GreatTree_Script16",
+        "GreatTree_Script17",
+        "Bazaar_Script05",
+        "Bazaar_Script06",
+        "Bazaar_Script07",
+        "Bazaar_Script08",
+        "Bazaar_Script16",
+        "Bazaar_Script24",
+        "GateHub_Script04",
+        "GateHub_Script14",
+        "GateHub_Script15",
+        "Farm_Script02",
+        "Farm_Script03",
+        "Farm_Script08",
+        "Farm_Script09",
+        "Farm_Script24",
+        "Farm_Script34",
+        "Farm_Script35",
+        "Stable_Script12",
+        "Stable_Script13",
+        "Stable_Script15",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script02",
+        "ArenaRooms_Script07",
+        "ArenaRooms_Script11",
+        "ArenaRooms_Script12",
+        "ArenaRooms_Script13",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "ArenaRooms_Script23",
+        "ArenaRooms_Script24",
+        "ArenaRooms_Script25",
+        "MonsterShrine_Script04",
+        "MonsterShrine_Script06",
+        "MonsterShrine_Script09",
+        "MonsterShrine_Script10",
+        "Map_0D_Script02",
+        "Map_0D_Script06",
+        "MedalMan_Script03",
+        "Map_1D_Script03",
+        "Map_1D_Script04",
+        "Map_1D_Script05",
+        "Map_1D_Script06",
+        "Map_1E_Script01",
+        "Map_1E_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0036": {
+      "flag_id": "$0036",
+      "byte": "$D9A1",
+      "bit": 1,
+      "total_uses": 24,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 24,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Castle",
+        "GateHub",
+        "GreatTree",
+        "Map_12",
+        "Map_1C",
+        "Map_1D",
+        "Map_1E",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13",
+        "GreatTree_Script16",
+        "GateHub_Script14",
+        "GateHub_Script15",
+        "Stable_Script05",
+        "Stable_Script06",
+        "Stable_Script07",
+        "Stable_Script20",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script07",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "Map_12_Script00",
+        "Map_1C_Script05",
+        "Map_1C_Script05",
+        "Map_1C_Script06",
+        "Map_1D_Script02",
+        "Map_1E_Script01",
+        "Map_1E_Script02",
+        "Map_1E_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0037": {
+      "flag_id": "$0037",
+      "byte": "$D9A1",
+      "bit": 0,
+      "total_uses": 59,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 59,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Bazaar",
+        "Castle",
+        "Farm",
+        "GateHub",
+        "GreatTree",
+        "Map_1C",
+        "Map_1E",
+        "Map_1F",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script07",
+        "Castle_Script08",
+        "Castle_Script09",
+        "Castle_Script10",
+        "Castle_Script13",
+        "Castle_Script14",
+        "GreatTree_Script03",
+        "GreatTree_Script07",
+        "GreatTree_Script09",
+        "GreatTree_Script13",
+        "GreatTree_Script15",
+        "GreatTree_Script16",
+        "Bazaar_Script05",
+        "Bazaar_Script06",
+        "Bazaar_Script07",
+        "Bazaar_Script08",
+        "Bazaar_Script09",
+        "Bazaar_Script10",
+        "Bazaar_Script14",
+        "Bazaar_Script15",
+        "Bazaar_Script16",
+        "Bazaar_Script22",
+        "Bazaar_Script23",
+        "Bazaar_Script24",
+        "GateHub_Script04",
+        "GateHub_Script10",
+        "GateHub_Script14",
+        "GateHub_Script15",
+        "Farm_Script27",
+        "Farm_Script27",
+        "Stable_Script05",
+        "Stable_Script06",
+        "Stable_Script07",
+        "Stable_Script20",
+        "ArenaLobby_Script06",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script01",
+        "ArenaRooms_Script12",
+        "ArenaRooms_Script13",
+        "ArenaRooms_Script14",
+        "ArenaRooms_Script15",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "ArenaRooms_Script23",
+        "ArenaRooms_Script24",
+        "ArenaRooms_Script25",
+        "Map_1C_Script05",
+        "Map_1C_Script05",
+        "Map_1C_Script06",
+        "Map_1E_Script01",
+        "Map_1E_Script02",
+        "Map_1E_Script04",
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0038": {
+      "flag_id": "$0038",
+      "byte": "$D9A2",
+      "bit": 7,
+      "total_uses": 4,
+      "set_count": 2,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "MedalMan"
+      ],
+      "set_locations": [
+        "MedalMan_Script01",
+        "MedalMan_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "MedalMan_Script01",
+        "MedalMan_Script02"
+      ],
+      "anomaly": null
+    },
+    "$0039": {
+      "flag_id": "$0039",
+      "byte": "$D9A2",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 2,
+      "clear_count": 0,
+      "check_count": 0,
+      "maps": [
+        "Map_1D"
+      ],
+      "set_locations": [
+        "Map_1D_Script03",
+        "Map_1D_Script04"
+      ],
+      "clear_locations": [],
+      "check_locations": [],
+      "anomaly": "set_never_checked"
+    },
+    "$003A": {
+      "flag_id": "$003A",
+      "byte": "$D9A2",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Castle"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script03",
+        "Castle_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$003B": {
+      "flag_id": "$003B",
+      "byte": "$D9A2",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Castle"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script03",
+        "Castle_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$003C": {
+      "flag_id": "$003C",
+      "byte": "$D9A2",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [
+        "ArenaRooms_Script20"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script20"
+      ],
+      "anomaly": null
+    },
+    "$003D": {
+      "flag_id": "$003D",
+      "byte": "$D9A2",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossBeginning"
+      ],
+      "set_locations": [
+        "BossBeginning_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBeginning_Script01"
+      ],
+      "anomaly": null
+    },
+    "$003F": {
+      "flag_id": "$003F",
+      "byte": "$D9A2",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [
+        "Bazaar_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script01"
+      ],
+      "anomaly": null
+    },
+    "$0040": {
+      "flag_id": "$0040",
+      "byte": "$D9A3",
+      "bit": 7,
+      "total_uses": 4,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 4,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script22",
+        "Bazaar_Script22",
+        "Bazaar_Script23",
+        "Bazaar_Script23"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0041": {
+      "flag_id": "$0041",
+      "byte": "$D9A3",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_0F"
+      ],
+      "set_locations": [
+        "Map_0F_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_0F_Script01"
+      ],
+      "anomaly": null
+    },
+    "$0042": {
+      "flag_id": "$0042",
+      "byte": "$D9A3",
+      "bit": 5,
+      "total_uses": 5,
+      "set_count": 2,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Map_12"
+      ],
+      "set_locations": [
+        "Map_12_Script14",
+        "Map_12_Script15"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_12_Script00",
+        "Map_12_Script14",
+        "Map_12_Script15"
+      ],
+      "anomaly": null
+    },
+    "$0043": {
+      "flag_id": "$0043",
+      "byte": "$D9A3",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "MedalMan"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "MedalMan_Script03",
+        "MedalMan_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0045": {
+      "flag_id": "$0045",
+      "byte": "$D9A3",
+      "bit": 2,
+      "total_uses": 10,
+      "set_count": 2,
+      "clear_count": 0,
+      "check_count": 8,
+      "maps": [
+        "Bazaar",
+        "Farm",
+        "Map_1F",
+        "MonsterShrine"
+      ],
+      "set_locations": [
+        "MonsterShrine_Script05",
+        "MonsterShrine_Script07"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script24",
+        "Farm_Script01",
+        "MonsterShrine_Script05",
+        "MonsterShrine_Script07",
+        "Map_1F_Script02",
+        "Map_1F_Script03",
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": null
+    },
+    "$0046": {
+      "flag_id": "$0046",
+      "byte": "$D9A3",
+      "bit": 1,
+      "total_uses": 4,
+      "set_count": 2,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "GateTileset"
+      ],
+      "set_locations": [
+        "GateTileset_Script04",
+        "GateTileset_Script05"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "GateTileset_Script04",
+        "GateTileset_Script05"
+      ],
+      "anomaly": null
+    },
+    "$0047": {
+      "flag_id": "$0047",
+      "byte": "$D9A3",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_0D"
+      ],
+      "set_locations": [
+        "Map_0D_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_0D_Script01"
+      ],
+      "anomaly": null
+    },
+    "$0048": {
+      "flag_id": "$0048",
+      "byte": "$D9A4",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0049": {
+      "flag_id": "$0049",
+      "byte": "$D9A4",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Castle"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script14"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$004A": {
+      "flag_id": "$004A",
+      "byte": "$D9A4",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$004B": {
+      "flag_id": "$004B",
+      "byte": "$D9A4",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script07",
+        "Bazaar_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$004C": {
+      "flag_id": "$004C",
+      "byte": "$D9A4",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [
+        "Stable_Script16"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": null
+    },
+    "$004D": {
+      "flag_id": "$004D",
+      "byte": "$D9A4",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$004E": {
+      "flag_id": "$004E",
+      "byte": "$D9A4",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [
+        "Stable_Script14"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script14"
+      ],
+      "anomaly": null
+    },
+    "$004F": {
+      "flag_id": "$004F",
+      "byte": "$D9A4",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0050": {
+      "flag_id": "$0050",
+      "byte": "$D9A5",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "MedalMan"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "MedalMan_Script03",
+        "MedalMan_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0053": {
+      "flag_id": "$0053",
+      "byte": "$D9A5",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "MedalMan"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "MedalMan_Script01",
+        "MedalMan_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0058": {
+      "flag_id": "$0058",
+      "byte": "$D9A6",
+      "bit": 7,
+      "total_uses": 6,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 6,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaLobby_Script11",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0059": {
+      "flag_id": "$0059",
+      "byte": "$D9A6",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [
+        "ArenaLobby_Script06"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script06"
+      ],
+      "anomaly": null
+    },
+    "$005A": {
+      "flag_id": "$005A",
+      "byte": "$D9A6",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script06"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$005B": {
+      "flag_id": "$005B",
+      "byte": "$D9A6",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script24"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$005C": {
+      "flag_id": "$005C",
+      "byte": "$D9A6",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "MedalMan"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "MedalMan_Script03",
+        "MedalMan_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$005D": {
+      "flag_id": "$005D",
+      "byte": "$D9A6",
+      "bit": 2,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Well"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Well_Script06",
+        "Well_Script07",
+        "Well_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$005E": {
+      "flag_id": "$005E",
+      "byte": "$D9A6",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Well"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Well_Script06",
+        "Well_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$005F": {
+      "flag_id": "$005F",
+      "byte": "$D9A6",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1E_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0060": {
+      "flag_id": "$0060",
+      "byte": "$D9A7",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1E_Script03",
+        "Map_1E_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0061": {
+      "flag_id": "$0061",
+      "byte": "$D9A7",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 0,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [
+        "Map_1F_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [],
+      "anomaly": "set_never_checked"
+    },
+    "$0062": {
+      "flag_id": "$0062",
+      "byte": "$D9A7",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 0,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [
+        "Map_1F_Script03"
+      ],
+      "clear_locations": [],
+      "check_locations": [],
+      "anomaly": "set_never_checked"
+    },
+    "$0063": {
+      "flag_id": "$0063",
+      "byte": "$D9A7",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0064": {
+      "flag_id": "$0064",
+      "byte": "$D9A7",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0065": {
+      "flag_id": "$0065",
+      "byte": "$D9A7",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0066": {
+      "flag_id": "$0066",
+      "byte": "$D9A7",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0067": {
+      "flag_id": "$0067",
+      "byte": "$D9A7",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$006A": {
+      "flag_id": "$006A",
+      "byte": "$D9A8",
+      "bit": 5,
+      "total_uses": 4,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 4,
+      "maps": [
+        "Farm",
+        "Well"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script35",
+        "Well_Script06",
+        "Well_Script07",
+        "Well_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$006B": {
+      "flag_id": "$006B",
+      "byte": "$D9A8",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script12",
+        "ArenaRooms_Script13"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$006C": {
+      "flag_id": "$006C",
+      "byte": "$D9A8",
+      "bit": 3,
+      "total_uses": 4,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 4,
+      "maps": [
+        "Well"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Well_Script06",
+        "Well_Script06",
+        "Well_Script07",
+        "Well_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$006D": {
+      "flag_id": "$006D",
+      "byte": "$D9A8",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$006E": {
+      "flag_id": "$006E",
+      "byte": "$D9A8",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script04",
+        "Map_1F_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$006F": {
+      "flag_id": "$006F",
+      "byte": "$D9A8",
+      "bit": 0,
+      "total_uses": 9,
+      "set_count": 7,
+      "clear_count": 1,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [
+        "Map_3C_Script01",
+        "Map_3C_Script02",
+        "Map_3C_Script03",
+        "Map_3C_Script04",
+        "Map_3C_Script05",
+        "Map_3C_Script06",
+        "Map_3C_Script07"
+      ],
+      "clear_locations": [
+        "Map_3C_Script00"
+      ],
+      "check_locations": [
+        "Map_3C_Script08"
+      ],
+      "anomaly": null
+    },
+    "$0070": {
+      "flag_id": "$0070",
+      "byte": "$D9A9",
+      "bit": 7,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 1,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [
+        "Map_3C_Script01"
+      ],
+      "clear_locations": [
+        "Map_3C_Script00"
+      ],
+      "check_locations": [
+        "Map_3C_Script01"
+      ],
+      "anomaly": null
+    },
+    "$0071": {
+      "flag_id": "$0071",
+      "byte": "$D9A9",
+      "bit": 6,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 1,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [
+        "Map_3C_Script02"
+      ],
+      "clear_locations": [
+        "Map_3C_Script00"
+      ],
+      "check_locations": [
+        "Map_3C_Script02"
+      ],
+      "anomaly": null
+    },
+    "$0072": {
+      "flag_id": "$0072",
+      "byte": "$D9A9",
+      "bit": 5,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 1,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [
+        "Map_3C_Script03"
+      ],
+      "clear_locations": [
+        "Map_3C_Script00"
+      ],
+      "check_locations": [
+        "Map_3C_Script03"
+      ],
+      "anomaly": null
+    },
+    "$0073": {
+      "flag_id": "$0073",
+      "byte": "$D9A9",
+      "bit": 4,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 1,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [
+        "Map_3C_Script04"
+      ],
+      "clear_locations": [
+        "Map_3C_Script00"
+      ],
+      "check_locations": [
+        "Map_3C_Script04"
+      ],
+      "anomaly": null
+    },
+    "$0074": {
+      "flag_id": "$0074",
+      "byte": "$D9A9",
+      "bit": 3,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 1,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [
+        "Map_3C_Script05"
+      ],
+      "clear_locations": [
+        "Map_3C_Script00"
+      ],
+      "check_locations": [
+        "Map_3C_Script05"
+      ],
+      "anomaly": null
+    },
+    "$0075": {
+      "flag_id": "$0075",
+      "byte": "$D9A9",
+      "bit": 2,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 1,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [
+        "Map_3C_Script06"
+      ],
+      "clear_locations": [
+        "Map_3C_Script00"
+      ],
+      "check_locations": [
+        "Map_3C_Script06"
+      ],
+      "anomaly": null
+    },
+    "$0076": {
+      "flag_id": "$0076",
+      "byte": "$D9A9",
+      "bit": 1,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 1,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [
+        "Map_3C_Script07"
+      ],
+      "clear_locations": [
+        "Map_3C_Script00"
+      ],
+      "check_locations": [
+        "Map_3C_Script07"
+      ],
+      "anomaly": null
+    },
+    "$0077": {
+      "flag_id": "$0077",
+      "byte": "$D9A9",
+      "bit": 0,
+      "total_uses": 9,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 9,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_3C_Script00",
+        "Map_3C_Script01",
+        "Map_3C_Script02",
+        "Map_3C_Script03",
+        "Map_3C_Script04",
+        "Map_3C_Script05",
+        "Map_3C_Script06",
+        "Map_3C_Script07",
+        "Map_3C_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0078": {
+      "flag_id": "$0078",
+      "byte": "$D9AA",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_3C"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_3C_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0079": {
+      "flag_id": "$0079",
+      "byte": "$D9AA",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [
+        "Bazaar_Script09"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script09"
+      ],
+      "anomaly": null
+    },
+    "$007A": {
+      "flag_id": "$007A",
+      "byte": "$D9AA",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script10"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$007B": {
+      "flag_id": "$007B",
+      "byte": "$D9AA",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script21"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$007C": {
+      "flag_id": "$007C",
+      "byte": "$D9AA",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Farm",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script17",
+        "Stable_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$007D": {
+      "flag_id": "$007D",
+      "byte": "$D9AA",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script06"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$007E": {
+      "flag_id": "$007E",
+      "byte": "$D9AA",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$007F": {
+      "flag_id": "$007F",
+      "byte": "$D9AA",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script24"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0080": {
+      "flag_id": "$0080",
+      "byte": "$D9AB",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree",
+        "Map_0D"
+      ],
+      "set_locations": [
+        "GreatTree_Script10"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_0D_Script05"
+      ],
+      "anomaly": null
+    },
+    "$0081": {
+      "flag_id": "$0081",
+      "byte": "$D9AB",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "CopycatRoom"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "CopycatRoom_Script04",
+        "CopycatRoom_Script05"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0082": {
+      "flag_id": "$0082",
+      "byte": "$D9AB",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "CopycatRoom"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "CopycatRoom_Script06"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0083": {
+      "flag_id": "$0083",
+      "byte": "$D9AB",
+      "bit": 4,
+      "total_uses": 6,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 6,
+      "maps": [
+        "ArenaRooms",
+        "GreatTree",
+        "Map_19",
+        "Map_1A",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script17",
+        "Stable_Script08",
+        "Stable_Script08",
+        "ArenaRooms_Script08",
+        "Map_19_Script01",
+        "Map_1A_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0084": {
+      "flag_id": "$0084",
+      "byte": "$D9AB",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1E"
+      ],
+      "set_locations": [
+        "Map_1E_Script04"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1E_Script04"
+      ],
+      "anomaly": null
+    },
+    "$0085": {
+      "flag_id": "$0085",
+      "byte": "$D9AB",
+      "bit": 2,
+      "total_uses": 4,
+      "set_count": 1,
+      "clear_count": 1,
+      "check_count": 2,
+      "maps": [
+        "Map_1E"
+      ],
+      "set_locations": [
+        "Map_1E_Script04"
+      ],
+      "clear_locations": [
+        "Map_1E_Script04"
+      ],
+      "check_locations": [
+        "Map_1E_Script04",
+        "Map_1E_Script04"
+      ],
+      "anomaly": null
+    },
+    "$0086": {
+      "flag_id": "$0086",
+      "byte": "$D9AB",
+      "bit": 1,
+      "total_uses": 4,
+      "set_count": 2,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "anomaly": null
+    },
+    "$0087": {
+      "flag_id": "$0087",
+      "byte": "$D9AB",
+      "bit": 0,
+      "total_uses": 6,
+      "set_count": 2,
+      "clear_count": 2,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "clear_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "check_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "anomaly": null
+    },
+    "$0088": {
+      "flag_id": "$0088",
+      "byte": "$D9AC",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0089": {
+      "flag_id": "$0089",
+      "byte": "$D9AC",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$008A": {
+      "flag_id": "$008A",
+      "byte": "$D9AC",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$008B": {
+      "flag_id": "$008B",
+      "byte": "$D9AC",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$008D": {
+      "flag_id": "$008D",
+      "byte": "$D9AC",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [
+        "Stable_Script19"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script19"
+      ],
+      "anomaly": null
+    },
+    "$008E": {
+      "flag_id": "$008E",
+      "byte": "$D9AC",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script19"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0090": {
+      "flag_id": "$0090",
+      "byte": "$D9AD",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script15"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0091": {
+      "flag_id": "$0091",
+      "byte": "$D9AD",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script24"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0092": {
+      "flag_id": "$0092",
+      "byte": "$D9AD",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_12"
+      ],
+      "set_locations": [
+        "Map_12_Script17"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_12_Script00"
+      ],
+      "anomaly": null
+    },
+    "$0094": {
+      "flag_id": "$0094",
+      "byte": "$D9AD",
+      "bit": 3,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Farm",
+        "Map_1E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script04",
+        "Map_1E_Script04",
+        "Map_1E_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0095": {
+      "flag_id": "$0095",
+      "byte": "$D9AD",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0096": {
+      "flag_id": "$0096",
+      "byte": "$D9AD",
+      "bit": 1,
+      "total_uses": 4,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 4,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0097": {
+      "flag_id": "$0097",
+      "byte": "$D9AD",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1E_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0098": {
+      "flag_id": "$0098",
+      "byte": "$D9AE",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1E_Script04",
+        "Map_1E_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$009B": {
+      "flag_id": "$009B",
+      "byte": "$D9AE",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$009C": {
+      "flag_id": "$009C",
+      "byte": "$D9AE",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$009D": {
+      "flag_id": "$009D",
+      "byte": "$D9AE",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script14"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$009E": {
+      "flag_id": "$009E",
+      "byte": "$D9AE",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script22"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A0": {
+      "flag_id": "$00A0",
+      "byte": "$D9AF",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GateHub"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GateHub_Script14"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A1": {
+      "flag_id": "$00A1",
+      "byte": "$D9AF",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script27",
+        "Farm_Script27"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A2": {
+      "flag_id": "$00A2",
+      "byte": "$D9AF",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script27",
+        "Farm_Script27"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A3": {
+      "flag_id": "$00A3",
+      "byte": "$D9AF",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script27"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A4": {
+      "flag_id": "$00A4",
+      "byte": "$D9AF",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A5": {
+      "flag_id": "$00A5",
+      "byte": "$D9AF",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script24"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A6": {
+      "flag_id": "$00A6",
+      "byte": "$D9AF",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A7": {
+      "flag_id": "$00A7",
+      "byte": "$D9AF",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00A8": {
+      "flag_id": "$00A8",
+      "byte": "$D9B0",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script05",
+        "Map_1F_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00AA": {
+      "flag_id": "$00AA",
+      "byte": "$D9B0",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossBravery",
+        "Map_44"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBravery_Script02",
+        "Map_44_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00AC": {
+      "flag_id": "$00AC",
+      "byte": "$D9B0",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Castle"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script13"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00AD": {
+      "flag_id": "$00AD",
+      "byte": "$D9B0",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script15"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00AE": {
+      "flag_id": "$00AE",
+      "byte": "$D9B0",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00B0": {
+      "flag_id": "$00B0",
+      "byte": "$D9B1",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00B1": {
+      "flag_id": "$00B1",
+      "byte": "$D9B1",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script24"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00B2": {
+      "flag_id": "$00B2",
+      "byte": "$D9B1",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossVillager"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossVillager_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00B3": {
+      "flag_id": "$00B3",
+      "byte": "$D9B1",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossVillager"
+      ],
+      "set_locations": [
+        "BossVillager_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossVillager_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00B4": {
+      "flag_id": "$00B4",
+      "byte": "$D9B1",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossVillager"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossVillager_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00B5": {
+      "flag_id": "$00B5",
+      "byte": "$D9B1",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossVillager"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossVillager_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00B6": {
+      "flag_id": "$00B6",
+      "byte": "$D9B1",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossVillager"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossVillager_Script01",
+        "BossVillager_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00B7": {
+      "flag_id": "$00B7",
+      "byte": "$D9B1",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossVillager"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossVillager_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00B8": {
+      "flag_id": "$00B8",
+      "byte": "$D9B2",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossTalisman"
+      ],
+      "set_locations": [
+        "BossTalisman_Script00"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossTalisman_Script00"
+      ],
+      "anomaly": null
+    },
+    "$00B9": {
+      "flag_id": "$00B9",
+      "byte": "$D9B2",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 0,
+      "maps": [
+        "BossTalisman"
+      ],
+      "set_locations": [
+        "BossTalisman_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [],
+      "anomaly": "set_never_checked"
+    },
+    "$00BA": {
+      "flag_id": "$00BA",
+      "byte": "$D9B2",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossMemories"
+      ],
+      "set_locations": [
+        "BossMemories_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossMemories_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00BB": {
+      "flag_id": "$00BB",
+      "byte": "$D9B2",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossMemories"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossMemories_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00BC": {
+      "flag_id": "$00BC",
+      "byte": "$D9B2",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossMemories"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossMemories_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00BD": {
+      "flag_id": "$00BD",
+      "byte": "$D9B2",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossBewilder"
+      ],
+      "set_locations": [
+        "BossBewilder_Script03"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBewilder_Script03"
+      ],
+      "anomaly": null
+    },
+    "$00BE": {
+      "flag_id": "$00BE",
+      "byte": "$D9B2",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossBewilder"
+      ],
+      "set_locations": [
+        "BossBewilder_Script04"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBewilder_Script04"
+      ],
+      "anomaly": null
+    },
+    "$00BF": {
+      "flag_id": "$00BF",
+      "byte": "$D9B2",
+      "bit": 0,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossBewilder"
+      ],
+      "set_locations": [
+        "BossBewilder_Script05"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBewilder_Script05",
+        "BossBewilder_Script08"
+      ],
+      "anomaly": null
+    },
+    "$00C0": {
+      "flag_id": "$00C0",
+      "byte": "$D9B3",
+      "bit": 7,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossBewilder"
+      ],
+      "set_locations": [
+        "BossBewilder_Script06"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBewilder_Script06",
+        "BossBewilder_Script09"
+      ],
+      "anomaly": null
+    },
+    "$00C1": {
+      "flag_id": "$00C1",
+      "byte": "$D9B3",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossPeace"
+      ],
+      "set_locations": [
+        "BossPeace_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossPeace_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00C2": {
+      "flag_id": "$00C2",
+      "byte": "$D9B3",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossPeace"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossPeace_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00C3": {
+      "flag_id": "$00C3",
+      "byte": "$D9B3",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossPeace"
+      ],
+      "set_locations": [
+        "BossPeace_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossPeace_Script02"
+      ],
+      "anomaly": null
+    },
+    "$00C4": {
+      "flag_id": "$00C4",
+      "byte": "$D9B3",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossPeace"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossPeace_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00C5": {
+      "flag_id": "$00C5",
+      "byte": "$D9B3",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossPeace"
+      ],
+      "set_locations": [
+        "BossPeace_Script03"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossPeace_Script03"
+      ],
+      "anomaly": null
+    },
+    "$00C6": {
+      "flag_id": "$00C6",
+      "byte": "$D9B3",
+      "bit": 1,
+      "total_uses": 3,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "BossPeace"
+      ],
+      "set_locations": [
+        "BossPeace_Script04"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossPeace_Script04",
+        "BossPeace_Script08"
+      ],
+      "anomaly": null
+    },
+    "$00C7": {
+      "flag_id": "$00C7",
+      "byte": "$D9B3",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossPeace"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "BossPeace_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00C8": {
+      "flag_id": "$00C8",
+      "byte": "$D9B4",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossBravery"
+      ],
+      "set_locations": [
+        "BossBravery_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBravery_Script02"
+      ],
+      "anomaly": null
+    },
+    "$00C9": {
+      "flag_id": "$00C9",
+      "byte": "$D9B4",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossBravery"
+      ],
+      "set_locations": [
+        "BossBravery_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBravery_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00CA": {
+      "flag_id": "$00CA",
+      "byte": "$D9B4",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_38"
+      ],
+      "set_locations": [
+        "Map_38_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_38_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00CB": {
+      "flag_id": "$00CB",
+      "byte": "$D9B4",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_38"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_38_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00CC": {
+      "flag_id": "$00CC",
+      "byte": "$D9B4",
+      "bit": 3,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Map_39"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_39_Script03",
+        "Map_39_Script03",
+        "Map_39_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00CD": {
+      "flag_id": "$00CD",
+      "byte": "$D9B4",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_39"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_39_Script03",
+        "Map_39_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00CE": {
+      "flag_id": "$00CE",
+      "byte": "$D9B4",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_3B"
+      ],
+      "set_locations": [
+        "Map_3B_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_3B_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00CF": {
+      "flag_id": "$00CF",
+      "byte": "$D9B4",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_3B"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_3B_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00D0": {
+      "flag_id": "$00D0",
+      "byte": "$D9B5",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_3E"
+      ],
+      "set_locations": [
+        "Map_3E_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_3E_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00D1": {
+      "flag_id": "$00D1",
+      "byte": "$D9B5",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_3E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_3E_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00D2": {
+      "flag_id": "$00D2",
+      "byte": "$D9B5",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_3E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_3E_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00D3": {
+      "flag_id": "$00D3",
+      "byte": "$D9B5",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_3F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_3F_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00D4": {
+      "flag_id": "$00D4",
+      "byte": "$D9B5",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_42"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_42_Script18"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00D5": {
+      "flag_id": "$00D5",
+      "byte": "$D9B5",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_42"
+      ],
+      "set_locations": [
+        "Map_42_Script16"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_42_Script16"
+      ],
+      "anomaly": null
+    },
+    "$00D6": {
+      "flag_id": "$00D6",
+      "byte": "$D9B5",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_42"
+      ],
+      "set_locations": [
+        "Map_42_Script17"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_42_Script17"
+      ],
+      "anomaly": null
+    },
+    "$00D7": {
+      "flag_id": "$00D7",
+      "byte": "$D9B5",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_43"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_43_Script01",
+        "Map_43_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00D8": {
+      "flag_id": "$00D8",
+      "byte": "$D9B6",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_43"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_43_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00D9": {
+      "flag_id": "$00D9",
+      "byte": "$D9B6",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossAmbition"
+      ],
+      "set_locations": [
+        "BossAmbition_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossAmbition_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00DA": {
+      "flag_id": "$00DA",
+      "byte": "$D9B6",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_47"
+      ],
+      "set_locations": [
+        "Map_47_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_47_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00DB": {
+      "flag_id": "$00DB",
+      "byte": "$D9B6",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_47"
+      ],
+      "set_locations": [
+        "Map_47_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_47_Script02"
+      ],
+      "anomaly": null
+    },
+    "$00DC": {
+      "flag_id": "$00DC",
+      "byte": "$D9B6",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_48"
+      ],
+      "set_locations": [
+        "Map_48_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_48_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00DD": {
+      "flag_id": "$00DD",
+      "byte": "$D9B6",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_49"
+      ],
+      "set_locations": [
+        "Map_49_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_49_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00DE": {
+      "flag_id": "$00DE",
+      "byte": "$D9B6",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_4A"
+      ],
+      "set_locations": [
+        "Map_4A_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_4A_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00DF": {
+      "flag_id": "$00DF",
+      "byte": "$D9B6",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_4B"
+      ],
+      "set_locations": [
+        "Map_4B_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_4B_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00E0": {
+      "flag_id": "$00E0",
+      "byte": "$D9B7",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_4D"
+      ],
+      "set_locations": [
+        "Map_4D_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_4D_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00E1": {
+      "flag_id": "$00E1",
+      "byte": "$D9B7",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_4E"
+      ],
+      "set_locations": [
+        "Map_4E_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_4E_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00E2": {
+      "flag_id": "$00E2",
+      "byte": "$D9B7",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_4C"
+      ],
+      "set_locations": [
+        "Map_4C_Script01"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_4C_Script01"
+      ],
+      "anomaly": null
+    },
+    "$00E3": {
+      "flag_id": "$00E3",
+      "byte": "$D9B7",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [
+        "Farm_Script05"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script05"
+      ],
+      "anomaly": null
+    },
+    "$00E4": {
+      "flag_id": "$00E4",
+      "byte": "$D9B7",
+      "bit": 3,
+      "total_uses": 8,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 8,
+      "maps": [
+        "Bedroom",
+        "Farm"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script21",
+        "Farm_Script22",
+        "Farm_Script24",
+        "Farm_Script26",
+        "Farm_Script27",
+        "Farm_Script27",
+        "Bedroom_Script08",
+        "Bedroom_Script10"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00E6": {
+      "flag_id": "$00E6",
+      "byte": "$D9B7",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [
+        "Farm_Script11"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script11"
+      ],
+      "anomaly": null
+    },
+    "$00E7": {
+      "flag_id": "$00E7",
+      "byte": "$D9B7",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [
+        "Farm_Script19"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script19"
+      ],
+      "anomaly": null
+    },
+    "$00E8": {
+      "flag_id": "$00E8",
+      "byte": "$D9B8",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Farm"
+      ],
+      "set_locations": [
+        "Farm_Script36"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script36"
+      ],
+      "anomaly": null
+    },
+    "$00EB": {
+      "flag_id": "$00EB",
+      "byte": "$D9B8",
+      "bit": 4,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Bedroom"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bedroom_Script07",
+        "Bedroom_Script13",
+        "Bedroom_Script14"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00EC": {
+      "flag_id": "$00EC",
+      "byte": "$D9B8",
+      "bit": 3,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Bedroom"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bedroom_Script07",
+        "Bedroom_Script13",
+        "Bedroom_Script14"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00EE": {
+      "flag_id": "$00EE",
+      "byte": "$D9B8",
+      "bit": 1,
+      "total_uses": 6,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 6,
+      "maps": [
+        "Bedroom",
+        "Map_35",
+        "Map_41",
+        "MedalMan"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "MedalMan_Script03",
+        "Bedroom_Script07",
+        "Map_35_Script03",
+        "Map_41_Script01",
+        "Map_41_Script02",
+        "Map_41_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00F0": {
+      "flag_id": "$00F0",
+      "byte": "$D9B9",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bedroom"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bedroom_Script10"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00F1": {
+      "flag_id": "$00F1",
+      "byte": "$D9B9",
+      "bit": 6,
+      "total_uses": 125,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 125,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Bazaar",
+        "Castle",
+        "CopycatRoom",
+        "Farm",
+        "GateHub",
+        "GateTileset",
+        "GreatTree",
+        "Map_0D",
+        "Map_0F",
+        "Map_12",
+        "Map_1C",
+        "Map_1D",
+        "Map_1E",
+        "Map_1F",
+        "Map_27",
+        "Map_2B",
+        "MonsterShrine",
+        "Stable",
+        "Well"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script07",
+        "Castle_Script08",
+        "Castle_Script09",
+        "Castle_Script10",
+        "Castle_Script12",
+        "Castle_Script13",
+        "Castle_Script14",
+        "Castle_Script18",
+        "GreatTree_Script03",
+        "GreatTree_Script04",
+        "GreatTree_Script07",
+        "GreatTree_Script08",
+        "GreatTree_Script09",
+        "GreatTree_Script11",
+        "GreatTree_Script13",
+        "GreatTree_Script14",
+        "GreatTree_Script15",
+        "GreatTree_Script16",
+        "GreatTree_Script17",
+        "Bazaar_Script04",
+        "Bazaar_Script05",
+        "Bazaar_Script06",
+        "Bazaar_Script07",
+        "Bazaar_Script08",
+        "Bazaar_Script09",
+        "Bazaar_Script10",
+        "Bazaar_Script13",
+        "Bazaar_Script15",
+        "Bazaar_Script16",
+        "Bazaar_Script20",
+        "Bazaar_Script21",
+        "Bazaar_Script22",
+        "Bazaar_Script23",
+        "Bazaar_Script24",
+        "GateHub_Script04",
+        "GateHub_Script10",
+        "GateHub_Script14",
+        "Farm_Script02",
+        "Farm_Script03",
+        "Farm_Script06",
+        "Farm_Script08",
+        "Farm_Script09",
+        "Farm_Script17",
+        "Farm_Script21",
+        "Farm_Script22",
+        "Farm_Script24",
+        "Farm_Script26",
+        "Farm_Script27",
+        "Farm_Script34",
+        "Farm_Script35",
+        "Stable_Script04",
+        "Stable_Script05",
+        "Stable_Script06",
+        "Stable_Script07",
+        "Stable_Script08",
+        "Stable_Script09",
+        "Stable_Script10",
+        "Stable_Script11",
+        "Stable_Script12",
+        "Stable_Script13",
+        "Stable_Script15",
+        "Stable_Script16",
+        "Stable_Script18",
+        "Stable_Script20",
+        "ArenaLobby_Script06",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script02",
+        "ArenaRooms_Script07",
+        "ArenaRooms_Script08",
+        "ArenaRooms_Script11",
+        "ArenaRooms_Script12",
+        "ArenaRooms_Script13",
+        "ArenaRooms_Script14",
+        "ArenaRooms_Script15",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script17",
+        "ArenaRooms_Script18",
+        "ArenaRooms_Script23",
+        "ArenaRooms_Script24",
+        "ArenaRooms_Script25",
+        "ArenaRooms_Script26",
+        "MonsterShrine_Script03",
+        "MonsterShrine_Script04",
+        "MonsterShrine_Script05",
+        "MonsterShrine_Script06",
+        "MonsterShrine_Script07",
+        "MonsterShrine_Script08",
+        "MonsterShrine_Script09",
+        "MonsterShrine_Script10",
+        "GateTileset_Script04",
+        "GateTileset_Script05",
+        "Map_0D_Script02",
+        "Map_0D_Script05",
+        "Map_0D_Script06",
+        "Map_0D_Script07",
+        "Map_0F_Script02",
+        "CopycatRoom_Script06",
+        "Map_12_Script13",
+        "Map_12_Script14",
+        "Map_12_Script15",
+        "Well_Script06",
+        "Well_Script07",
+        "Well_Script08",
+        "Map_1C_Script02",
+        "Map_1C_Script03",
+        "Map_1C_Script05",
+        "Map_1C_Script06",
+        "Map_1D_Script01",
+        "Map_1D_Script02",
+        "Map_1D_Script03",
+        "Map_1D_Script04",
+        "Map_1D_Script05",
+        "Map_1D_Script06",
+        "Map_1E_Script01",
+        "Map_1E_Script02",
+        "Map_1E_Script04",
+        "Map_1E_Script04",
+        "Map_1F_Script01",
+        "Map_1F_Script02",
+        "Map_1F_Script03",
+        "Map_27_Script01",
+        "Map_27_Script02",
+        "Map_2B_Script01"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00F2": {
+      "flag_id": "$00F2",
+      "byte": "$D9B9",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script16",
+        "GreatTree_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00F3": {
+      "flag_id": "$00F3",
+      "byte": "$D9B9",
+      "bit": 4,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Bazaar",
+        "GreatTree",
+        "Map_0D"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script16",
+        "Bazaar_Script24",
+        "Map_0D_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00F4": {
+      "flag_id": "$00F4",
+      "byte": "$D9B9",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00F5": {
+      "flag_id": "$00F5",
+      "byte": "$D9B9",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script23"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00F6": {
+      "flag_id": "$00F6",
+      "byte": "$D9B9",
+      "bit": 1,
+      "total_uses": 4,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 4,
+      "maps": [
+        "Bazaar",
+        "Map_35"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script22",
+        "Bazaar_Script23",
+        "Map_35_Script03",
+        "Map_35_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00F8": {
+      "flag_id": "$00F8",
+      "byte": "$D9BA",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GateHub"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GateHub_Script10"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00FA": {
+      "flag_id": "$00FA",
+      "byte": "$D9BA",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GateHub"
+      ],
+      "set_locations": [
+        "GateHub_Script19"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "GateHub_Script19"
+      ],
+      "anomaly": null
+    },
+    "$00FB": {
+      "flag_id": "$00FB",
+      "byte": "$D9BA",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script16",
+        "Stable_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00FC": {
+      "flag_id": "$00FC",
+      "byte": "$D9BA",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaRooms",
+        "Farm"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Farm_Script24",
+        "ArenaRooms_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00FE": {
+      "flag_id": "$00FE",
+      "byte": "$D9BA",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$00FF": {
+      "flag_id": "$00FF",
+      "byte": "$D9BA",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0100": {
+      "flag_id": "$0100",
+      "byte": "$D9BB",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "ArenaRooms"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaRooms_Script24"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0101": {
+      "flag_id": "$0101",
+      "byte": "$D9BB",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "MonsterShrine"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "MonsterShrine_Script05",
+        "MonsterShrine_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0102": {
+      "flag_id": "$0102",
+      "byte": "$D9BB",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "MonsterShrine"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "MonsterShrine_Script05",
+        "MonsterShrine_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0103": {
+      "flag_id": "$0103",
+      "byte": "$D9BB",
+      "bit": 4,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "ArenaLobby",
+        "MonsterShrine"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script06",
+        "MonsterShrine_Script05",
+        "MonsterShrine_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0104": {
+      "flag_id": "$0104",
+      "byte": "$D9BB",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "GateTileset"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GateTileset_Script04",
+        "GateTileset_Script05"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0105": {
+      "flag_id": "$0105",
+      "byte": "$D9BB",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script16"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0106": {
+      "flag_id": "$0106",
+      "byte": "$D9BB",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "GreatTree",
+        "Map_0D"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script16",
+        "Map_0D_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0107": {
+      "flag_id": "$0107",
+      "byte": "$D9BB",
+      "bit": 0,
+      "total_uses": 4,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 4,
+      "maps": [
+        "GreatTree",
+        "Map_0D"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script16",
+        "Map_0D_Script07",
+        "Map_0D_Script08",
+        "Map_0D_Script09"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0108": {
+      "flag_id": "$0108",
+      "byte": "$D9BC",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "CopycatRoom"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "CopycatRoom_Script06"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0109": {
+      "flag_id": "$0109",
+      "byte": "$D9BC",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_12"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_12_Script13"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$010A": {
+      "flag_id": "$010A",
+      "byte": "$D9BC",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_12"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_12_Script14",
+        "Map_12_Script15"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$010B": {
+      "flag_id": "$010B",
+      "byte": "$D9BC",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1A"
+      ],
+      "set_locations": [
+        "Map_1A_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1A_Script02"
+      ],
+      "anomaly": null
+    },
+    "$010C": {
+      "flag_id": "$010C",
+      "byte": "$D9BC",
+      "bit": 3,
+      "total_uses": 5,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 5,
+      "maps": [
+        "Map_1A",
+        "Map_3D"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1A_Script01",
+        "Map_3D_Script01",
+        "Map_3D_Script01",
+        "Map_3D_Script02",
+        "Map_3D_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$010D": {
+      "flag_id": "$010D",
+      "byte": "$D9BC",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1D"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1D_Script03",
+        "Map_1D_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$010E": {
+      "flag_id": "$010E",
+      "byte": "$D9BC",
+      "bit": 1,
+      "total_uses": 4,
+      "set_count": 2,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [
+        "Map_1F_Script06",
+        "Map_1F_Script09"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script06",
+        "Map_1F_Script09"
+      ],
+      "anomaly": null
+    },
+    "$010F": {
+      "flag_id": "$010F",
+      "byte": "$D9BC",
+      "bit": 0,
+      "total_uses": 6,
+      "set_count": 2,
+      "clear_count": 2,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [
+        "Map_1F_Script06",
+        "Map_1F_Script09"
+      ],
+      "clear_locations": [
+        "Map_1F_Script06",
+        "Map_1F_Script09"
+      ],
+      "check_locations": [
+        "Map_1F_Script06",
+        "Map_1F_Script09"
+      ],
+      "anomaly": null
+    },
+    "$0110": {
+      "flag_id": "$0110",
+      "byte": "$D9BD",
+      "bit": 7,
+      "total_uses": 6,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 6,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "MonsterShrine"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script06",
+        "ArenaLobby_Script07",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script25",
+        "MonsterShrine_Script05",
+        "MonsterShrine_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0111": {
+      "flag_id": "$0111",
+      "byte": "$D9BD",
+      "bit": 6,
+      "total_uses": 9,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 9,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms",
+        "Castle",
+        "MonsterShrine"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script14",
+        "ArenaLobby_Script06",
+        "ArenaLobby_Script07",
+        "ArenaLobby_Script08",
+        "ArenaLobby_Script09",
+        "ArenaRooms_Script16",
+        "ArenaRooms_Script25",
+        "MonsterShrine_Script05",
+        "MonsterShrine_Script07"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0112": {
+      "flag_id": "$0112",
+      "byte": "$D9BD",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [
+        "Bazaar_Script04"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script04"
+      ],
+      "anomaly": null
+    },
+    "$0113": {
+      "flag_id": "$0113",
+      "byte": "$D9BD",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_0F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_0F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0114": {
+      "flag_id": "$0114",
+      "byte": "$D9BD",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "GreatTree"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "GreatTree_Script13"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0115": {
+      "flag_id": "$0115",
+      "byte": "$D9BD",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Bazaar"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Bazaar_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0117": {
+      "flag_id": "$0117",
+      "byte": "$D9BD",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "BossBewilder"
+      ],
+      "set_locations": [
+        "BossBewilder_Script02"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "BossBewilder_Script02"
+      ],
+      "anomaly": null
+    },
+    "$0118": {
+      "flag_id": "$0118",
+      "byte": "$D9BE",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Castle"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Castle_Script10"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0119": {
+      "flag_id": "$0119",
+      "byte": "$D9BE",
+      "bit": 6,
+      "total_uses": 4,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 4,
+      "maps": [
+        "ArenaLobby"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaLobby_Script11"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$011B": {
+      "flag_id": "$011B",
+      "byte": "$D9BE",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_42"
+      ],
+      "set_locations": [
+        "Map_42_Script18"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_42_Script18"
+      ],
+      "anomaly": null
+    },
+    "$011C": {
+      "flag_id": "$011C",
+      "byte": "$D9BE",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1E_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$011D": {
+      "flag_id": "$011D",
+      "byte": "$D9BE",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1E"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1E_Script04"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$011E": {
+      "flag_id": "$011E",
+      "byte": "$D9BE",
+      "bit": 1,
+      "total_uses": 6,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 6,
+      "maps": [
+        "Map_0A",
+        "MedalMan",
+        "MonsterShrine",
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script08",
+        "Stable_Script08",
+        "MonsterShrine_Script11",
+        "Map_0A_Script00",
+        "MedalMan_Script03",
+        "MedalMan_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$011F": {
+      "flag_id": "$011F",
+      "byte": "$D9BE",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 1,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_12"
+      ],
+      "set_locations": [
+        "Map_12_Script16"
+      ],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_12_Script16"
+      ],
+      "anomaly": null
+    },
+    "$0120": {
+      "flag_id": "$0120",
+      "byte": "$D9BF",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Stable"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Stable_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0121": {
+      "flag_id": "$0121",
+      "byte": "$D9BF",
+      "bit": 6,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "ArenaLobby",
+        "ArenaRooms"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "ArenaLobby_Script10",
+        "ArenaLobby_Script11",
+        "ArenaRooms_Script25"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0123": {
+      "flag_id": "$0123",
+      "byte": "$D9BF",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "MonsterShrine"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "MonsterShrine_Script09"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0124": {
+      "flag_id": "$0124",
+      "byte": "$D9BF",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_0F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_0F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0125": {
+      "flag_id": "$0125",
+      "byte": "$D9BF",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Well"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Well_Script08"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0126": {
+      "flag_id": "$0126",
+      "byte": "$D9BF",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0127": {
+      "flag_id": "$0127",
+      "byte": "$D9BF",
+      "bit": 0,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0128": {
+      "flag_id": "$0128",
+      "byte": "$D9C0",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0129": {
+      "flag_id": "$0129",
+      "byte": "$D9C0",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$012A": {
+      "flag_id": "$012A",
+      "byte": "$D9C0",
+      "bit": 5,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$012B": {
+      "flag_id": "$012B",
+      "byte": "$D9C0",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$012C": {
+      "flag_id": "$012C",
+      "byte": "$D9C0",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$012D": {
+      "flag_id": "$012D",
+      "byte": "$D9C0",
+      "bit": 2,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$012E": {
+      "flag_id": "$012E",
+      "byte": "$D9C0",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$012F": {
+      "flag_id": "$012F",
+      "byte": "$D9C0",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0130": {
+      "flag_id": "$0130",
+      "byte": "$D9C1",
+      "bit": 7,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0131": {
+      "flag_id": "$0131",
+      "byte": "$D9C1",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0132": {
+      "flag_id": "$0132",
+      "byte": "$D9C1",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0133": {
+      "flag_id": "$0133",
+      "byte": "$D9C1",
+      "bit": 4,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0134": {
+      "flag_id": "$0134",
+      "byte": "$D9C1",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0135": {
+      "flag_id": "$0135",
+      "byte": "$D9C1",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0136": {
+      "flag_id": "$0136",
+      "byte": "$D9C1",
+      "bit": 1,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0137": {
+      "flag_id": "$0137",
+      "byte": "$D9C1",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0138": {
+      "flag_id": "$0138",
+      "byte": "$D9C2",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0139": {
+      "flag_id": "$0139",
+      "byte": "$D9C2",
+      "bit": 6,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$013A": {
+      "flag_id": "$013A",
+      "byte": "$D9C2",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$013B": {
+      "flag_id": "$013B",
+      "byte": "$D9C2",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$013C": {
+      "flag_id": "$013C",
+      "byte": "$D9C2",
+      "bit": 3,
+      "total_uses": 2,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 2,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$013D": {
+      "flag_id": "$013D",
+      "byte": "$D9C2",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$013E": {
+      "flag_id": "$013E",
+      "byte": "$D9C2",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$013F": {
+      "flag_id": "$013F",
+      "byte": "$D9C2",
+      "bit": 0,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script02",
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0140": {
+      "flag_id": "$0140",
+      "byte": "$D9C3",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0141": {
+      "flag_id": "$0141",
+      "byte": "$D9C3",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0142": {
+      "flag_id": "$0142",
+      "byte": "$D9C3",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0143": {
+      "flag_id": "$0143",
+      "byte": "$D9C3",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0144": {
+      "flag_id": "$0144",
+      "byte": "$D9C3",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0145": {
+      "flag_id": "$0145",
+      "byte": "$D9C3",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0146": {
+      "flag_id": "$0146",
+      "byte": "$D9C3",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0147": {
+      "flag_id": "$0147",
+      "byte": "$D9C3",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0148": {
+      "flag_id": "$0148",
+      "byte": "$D9C4",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0149": {
+      "flag_id": "$0149",
+      "byte": "$D9C4",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$014A": {
+      "flag_id": "$014A",
+      "byte": "$D9C4",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$014B": {
+      "flag_id": "$014B",
+      "byte": "$D9C4",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$014C": {
+      "flag_id": "$014C",
+      "byte": "$D9C4",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$014D": {
+      "flag_id": "$014D",
+      "byte": "$D9C4",
+      "bit": 2,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$014E": {
+      "flag_id": "$014E",
+      "byte": "$D9C4",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$014F": {
+      "flag_id": "$014F",
+      "byte": "$D9C4",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0150": {
+      "flag_id": "$0150",
+      "byte": "$D9C5",
+      "bit": 7,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0151": {
+      "flag_id": "$0151",
+      "byte": "$D9C5",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0152": {
+      "flag_id": "$0152",
+      "byte": "$D9C5",
+      "bit": 5,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0153": {
+      "flag_id": "$0153",
+      "byte": "$D9C5",
+      "bit": 4,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0154": {
+      "flag_id": "$0154",
+      "byte": "$D9C5",
+      "bit": 3,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0155": {
+      "flag_id": "$0155",
+      "byte": "$D9C5",
+      "bit": 2,
+      "total_uses": 3,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 3,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02",
+        "Map_1F_Script06",
+        "Map_1F_Script09"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0156": {
+      "flag_id": "$0156",
+      "byte": "$D9C5",
+      "bit": 1,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script02"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$0157": {
+      "flag_id": "$0157",
+      "byte": "$D9C5",
+      "bit": 0,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_1F"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_1F_Script03"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    },
+    "$02C1": {
+      "flag_id": "$02C1",
+      "byte": "$D9F3",
+      "bit": 6,
+      "total_uses": 1,
+      "set_count": 0,
+      "clear_count": 0,
+      "check_count": 1,
+      "maps": [
+        "Map_13"
+      ],
+      "set_locations": [],
+      "clear_locations": [],
+      "check_locations": [
+        "Map_13_Script15"
+      ],
+      "anomaly": "checked_never_set_in_scripts"
+    }
+  },
+  "free_ranges": [
+    {
+      "start": "$0007",
+      "end": "$0007",
+      "count": 1
+    },
+    {
+      "start": "$000A",
+      "end": "$000A",
+      "count": 1
+    },
+    {
+      "start": "$003E",
+      "end": "$003E",
+      "count": 1
+    },
+    {
+      "start": "$0044",
+      "end": "$0044",
+      "count": 1
+    },
+    {
+      "start": "$0051",
+      "end": "$0052",
+      "count": 2
+    },
+    {
+      "start": "$0054",
+      "end": "$0057",
+      "count": 4
+    },
+    {
+      "start": "$0068",
+      "end": "$0069",
+      "count": 2
+    },
+    {
+      "start": "$008C",
+      "end": "$008C",
+      "count": 1
+    },
+    {
+      "start": "$008F",
+      "end": "$008F",
+      "count": 1
+    },
+    {
+      "start": "$0093",
+      "end": "$0093",
+      "count": 1
+    },
+    {
+      "start": "$0099",
+      "end": "$009A",
+      "count": 2
+    },
+    {
+      "start": "$009F",
+      "end": "$009F",
+      "count": 1
+    },
+    {
+      "start": "$00A9",
+      "end": "$00A9",
+      "count": 1
+    },
+    {
+      "start": "$00AB",
+      "end": "$00AB",
+      "count": 1
+    },
+    {
+      "start": "$00AF",
+      "end": "$00AF",
+      "count": 1
+    },
+    {
+      "start": "$00E5",
+      "end": "$00E5",
+      "count": 1
+    },
+    {
+      "start": "$00E9",
+      "end": "$00EA",
+      "count": 2
+    },
+    {
+      "start": "$00ED",
+      "end": "$00ED",
+      "count": 1
+    },
+    {
+      "start": "$00EF",
+      "end": "$00EF",
+      "count": 1
+    },
+    {
+      "start": "$00F7",
+      "end": "$00F7",
+      "count": 1
+    },
+    {
+      "start": "$00F9",
+      "end": "$00F9",
+      "count": 1
+    },
+    {
+      "start": "$00FD",
+      "end": "$00FD",
+      "count": 1
+    },
+    {
+      "start": "$0116",
+      "end": "$0116",
+      "count": 1
+    },
+    {
+      "start": "$011A",
+      "end": "$011A",
+      "count": 1
+    },
+    {
+      "start": "$0122",
+      "end": "$0122",
+      "count": 1
+    },
+    {
+      "start": "$0158",
+      "end": "$02C0",
+      "count": 361
+    },
+    {
+      "start": "$02C2",
+      "end": "$0327",
+      "count": 102
+    }
+  ]
+}

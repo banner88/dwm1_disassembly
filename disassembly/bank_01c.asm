@@ -1061,7 +1061,7 @@ jr_01c_43de:
     dec c
 
 jr_01c_43ef:
-    call nz, Call_000_3048
+    call nz, CallBank5CEntry0_3048
     jr @-$3b
 
     jr nc, jr_01c_4436
@@ -1371,7 +1371,7 @@ jr_01c_4500:
     dec c
 
 jr_01c_4507:
-    call nz, Call_000_3048
+    call nz, CallBank5CEntry0_3048
     jr @-$3b
 
     jr nc, jr_01c_454e
@@ -1437,7 +1437,7 @@ jr_01c_453c:
     rlca
     and b
     ld a, [bc]
-    call nz, Call_000_3078
+    call nz, CallBank5EEntry0_3078
     add hl, de
     ld b, b
     inc c
@@ -10252,7 +10252,7 @@ jr_01c_6aa0:
     inc b
     and d
     ld bc, $0ca0
-    call nz, Call_000_2715
+    call nz, MultiplyHL_2715
     inc c
     inc hl
     ld b, $30
@@ -11745,7 +11745,7 @@ jr_01c_7187:
 
     ld b, $37
     ld [$0da0], sp
-    call nz, Call_000_3435
+    call nz, CopyDE2HL_3435
     ld [$0835], sp
     scf
     ld [$0839], sp
@@ -11856,7 +11856,7 @@ jr_01c_71fa:
 
     ld b, $37
     ld [$0da0], sp
-    call nz, Call_000_3435
+    call nz, CopyDE2HL_3435
     ld [$0835], sp
     scf
     ld [$0839], sp

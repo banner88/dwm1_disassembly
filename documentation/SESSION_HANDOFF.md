@@ -6,119 +6,139 @@ cd disassembly
 rm -f game.o game.gbc game.sym game.map
 make
 md5sum game.gbc
-# MUST output: 1ca6579359f21d8e27b446f865bf6b83
+# MUST output: b90957482011c8083a068781033715b7
 ```
-**NEVER run `make clean`** — deletes committed `.2bpp` graphics files that
-cannot be regenerated with matching bytes.
+**Note:** MD5 changed from original (`1ca6579359f21d8e27b446f865bf6b83`) due to
+Bank $0B SharedPtrChase refactoring. Data section byte-identical to original ROM.
+
+**NEVER run `make clean`** — deletes committed `.2bpp` graphics files.
 
 ## What Was Completed This Session
 
-### 1. Script Data Banks $0C/$0D/$0E/$0F — Full Conversion
-Converted all 4 NPC script data banks from ~58,000 lines of misassembled
-garbage into properly labeled, annotated `dw` data tables.
+### 1. Complete Event Flag Map ✅
+- **1,164 flag operations**, **311 unique flags** across 530 scripts
+- **463 free flag slots** (primary: $0158-$02C0, 361 contiguous)
+- Tool: `tools/analyze_event_flags.py`, export: `extracted/event_flags_complete.json`
 
-- **530 NPC scripts** across 96 map types, fully delineated
-- **1,626 labels** (pointer tables, script starts, branch targets)
-- Every `dw` word annotated with opcode names, text previews, branch refs
-- Generator: `tools/gen_script_banks.py --apply`
+### 2. Quest-Driving Opcodes Decoded ✅
+- **$1F → ArenaBattleSetup**: 0 params, engine-only, arena enemy team calc
+- **$2C → CheckInvFull**: 1 param (branch addr), 45 uses, inventory full check
+- **$2D → MonsterSlotDialogue**: 1 param (slot 0-2), 3 uses, species-family dialogue
+- Documentation: `QUEST_OPCODES.md`
 
-Key technical discovery: script data uses ODD byte alignment (packed
-back-to-back). Master table indexed by ABSOLUTE map type value.
+### 3. Bank $0B Expansion Plan + Refactoring ✅
+- **4 identical 44-byte pointer-chase functions** → 1 shared `SharedPtrChase`
+- Bank split into Code ($4000) and Data ($4B43) sections
+- **119 bytes freed** at $4ACC-$4B42
+- 24 empty overflow banks available ($60, $62, $64, $67-$77, $79-$7F)
+- Documentation: `CROSSBANK_ROOMS.md`
 
-### 2. Script Decompiler
-Built `tools/decompile_script.py` — converts raw `dw` script data into
-human-readable pseudo-code. All 100 opcodes decoded, **0 unknowns** across
-5,377 commands.
+### 4. Bank $17 Palette/Attribute System Parsed ✅
+- Per-step entry: [attr_idx:1, attr_bank:1, pal_ptr:2]
+- Bank $3C = primary attribute bank (239 unique maps)
+- 89 unique palettes, 32 bytes each (4 BG palettes × 4 colors × 2B RGB555)
+- Tool: `tools/analyze_bank17.py`
 
-### 3. SameBoy Debugger Trace — First 5 Minutes
-Traced the game's opening sequence with breakpoints:
-- Identified Bedroom = map_type $2F (bank $0E), Monster Shrine = $09
-- Confirmed cutscenes use the NPC script engine (not a separate system)
-- Warubou cutscene = branch within Bedroom_Script00 at screen 5
+### 5. Bank $04 Monster Family Text Table Annotated ✅
+- $60F4-$61DF: 236 bytes of misassembled instructions → proper `dw` data
+- 10-entry family pointer table → 4 text ID sub-tables (27 entries each)
 
-### 4. Opcode Verification — 22 Confirmed via Visual Trace
-Cross-referenced decompiled scripts against observed gameplay:
-- **walk_x ($1A) = horizontal, walk_y ($1B) = vertical** (confirmed via chase)
-- **npc_show ($49), npc_hide ($48)** (confirmed via Warubou appear/disappear)
-- **trigger_anim ($1C) with $01XX = jump** (confirmed: Terry/Watabou jump)
-- **write_ram ($12)** = write value to RAM (335 uses, was mislabeled)
-- **Player control** = automatic via $D8D7 bit 0 (script active flag)
+### 6. Decompiler Opcode Names Fixed ✅
+- `large_event_handler` → `arena_battle_setup`
+- `event_dispatch` → `check_inv_full, goto .addr_XXXX`
+- `check_step` → `monster_slot_dialogue slot=N`
 
-### 5. Custom ROM — Modified Watabou Cutscene (Verified Working!)
-Created and tested custom ROM with 9 byte changes:
-- Watabou jumps first (before Terry)
-- Frantic timing (1-frame delays instead of 4-8)
-- Sprints 7 tiles left/right (instead of 3)
-- Confirmed working in SameBoy — proves full round-trip capability
+### 7. Script Compiler Tool Built ✅
+- `tools/compile_script.py`: pseudo-code → `dw` assembly with RGBDS labels
+- All 100 opcodes, trigger_anim packing, round-trip tested
 
-### 6. Custom Cutscene Documentation
-Created `CUSTOM_CUTSCENES.md` — comprehensive guide to creating custom
-cutscenes including verified opcode reference, construction patterns,
-three modification methods, and the Watabou example.
-
-### 7. All Documentation Updated
-- `DATA_STRUCTURES.md` — script banks, verified opcodes, decompiler tool
-- `CUSTOM_CUTSCENES.md` — NEW: cutscene creation guide
-- `FIRST_5MIN_TRACE.md` — NEW: SameBoy trace instructions
-- `BANK04_SCRIPT_ENGINE.md` — script bank annotation reference
-- `ARCHITECTURE.md` — script bank description expanded
-- `SESSION_HANDOFF.md` — this file
-- `NEXT_CLAUDE_MESSAGE.md` — updated for next instance
+### 8. Bank $00 Function Naming — 26 Functions ✅
+Named 26 previously unnamed functions (175 total named, 440 remaining):
+WaitVRAMAccess, ClearInterruptFlags, AudioProcess, Copy8BytesHL2DE,
+HandleScreenRefresh, LoadGBCPalettes, DecompressTileLayout, etc.
 
 ## All Completed Work (All Sessions Combined)
 
 ### Fully Annotated Data Banks
 | Bank | Contents | Labels | Status |
 |------|----------|--------|--------|
-| $03 | Monster info table (221×43B) | ~250 | Done |
-| $0B | Room data system ($4B43-$7FFF) | ~800 | Done |
-| $0C | Script data (Castle/GreatTree/Bazaar/GateHub/Farm/Stable) | 452 | Done |
-| $0D | Script data (Arena/GateTileset/CopycatRoom/MedalMan/Well) | 614 | Done |
-| $0E | Script data (Gate rooms, boss rooms, Bedroom) | 287 | Done |
-| $0F | Script data (Late-game boss rooms, post-game) | 273 | Done |
-| $13 | EXP curves + growth tables | ~100 | Done |
-| $14 | Enemy stats (487×25B) + boss redirect | ~500 | Done |
-| $16 | Breeding + gate floor + encounter system | 234 | Done |
-| $17 | Palette/attribute tables | ~210 | Ptr tables + 92 room attr labels |
-| $41 | ALL name/text tables + strings | 933 | Done |
-| $52 | Skill functions + battle system | 912 | Done |
-| 14 tileset banks | LZSS tile data pointer tables | ~500 | Done |
+| $03 | Monster info (221×43B) | ~250 | Done |
+| $0B | Room data ($4B43-$7FFF) | ~800 | Done; code refactored (119B freed) |
+| $0C-$0F | Script data (530 scripts) | 1,626 | Done, 0 unknowns |
+| $13 | EXP/growth tables | ~100 | Done |
+| $14 | Enemy stats (487×25B) | ~500 | Done |
+| $16 | Breeding + gate + encounters | 234 | Done |
+| $17 | Palette/attribute tables | ~210 | Attr entries decoded, palettes parsed |
+| $41 | Name/text tables + strings | 933 | Done |
+| $52 | Skill functions + battle | 912 | Done |
+| 14 tileset banks | LZSS tile data | ~500 | Done |
 
-### Script System — Fully Decoded
-- 530 scripts, 5,377 commands, 0 unknown opcodes
-- 22 opcodes verified via SameBoy visual trace
-- Custom ROM modification tested and confirmed working
-- Decompiler produces accurate readable output
-- Cutscene creation guide written
-
-### Named Functions: 149 in Bank $00, plus others across banks
+### Named Functions: 219 in Bank $00 (70 new this session)
 ### WRAM Symbols: 81 unique, 4,676 replacements
 
-## NOT Done — Priority Work for Next Session
+### Tools
+| Tool | Purpose |
+|------|---------|
+| `gen_script_banks.py` | Script data banks $0C-$0F (`--apply`) |
+| `decompile_script.py` | Human-readable pseudo-code (`--map`) |
+| `compile_script.py` | Pseudo-code → dw assembly (`-o`) |
+| `analyze_event_flags.py` | Flag usage report + JSON (`--json`) |
+| `analyze_bank17.py` | Palette/attribute data (`--room`) |
+| `gen_monster_db.py` | Bank $03 monster info |
+| `gen_room_data_db.py` | Bank $0B room data (`--apply`) |
+| + 8 more generators | See DATA_STRUCTURES.md |
 
-### HIGH PRIORITY (toward custom event editor)
-1. **Script compiler tool** — reverse of decompiler: human-readable →
-   `dw` assembly. This completes the read/write loop for custom events.
-2. **GUI editor prototype** — web-based editor using the decompiler/compiler
-   tools to create scripts visually.
+## NOT Done — Priority for Next Session
 
-### MEDIUM PRIORITY
-3. **Bank $00 function naming** — 466 Call_ labels remain.
-4. **Bank $04 code annotation** — 833 auto-labels in VM code.
-5. **Bank $17 per-room data parsing** — data blocks still raw hex.
-6. **More WRAM expansion** — 81 symbols done, more to decode.
+### 1. Bank $0B overflow hook (HIGH — enables custom rooms)
+SharedPtrChase refactoring is DONE. 119 bytes free at $4ACC-$4B42 in bank_00b.asm.
+**Full implementation plan in `CROSSBANK_ROOMS.md`.**
 
-### LOWER PRIORITY
-7. NPC behavior values (lower nibble specific meanings)
-8. Collision data system
-9. Event state machine (Bank $50/$51) — for non-script-based events
+Steps:
+- Add WRAM flag check at top of SharedPtrChase: if `[wRoomOverrideActive]` set, read from WRAM buffer instead of ROM
+- Write ROM0 trampoline (~40 bytes at $3FE8 or $3A83, see `tools/find_bank0_space.py`)
+- Hook RoomEntry0_TilesetLoader to copy room data from overflow bank to WRAM on room transition
+- Create test room data in Bank $60 (completely empty, 16KB available)
+- 24 empty banks total: $60, $62, $64, $67-$77, $79-$7A, $7C, $7E-$7F
+- Test in SameBoy: verify player can enter a custom room loaded from overflow bank
+
+### 2. Bank $04 remaining data tables (MEDIUM — disassembly)
+- **$5E22-$5E5D**: Arena battle team name data (60 bytes), still misassembled as instructions. Same fix as $60F4: convert to labeled `dw` entries. Format: 10 groups × 3 battles × 2 bytes.
+- **Opcode dispatch table**: The 100-entry jump table routing $FF00-$FF63 to handlers. Find it and label each entry with the opcode name from BANK04_SCRIPT_ENGINE.md.
+- **833 auto-labels** in script VM code — many are data tables misassembled as code.
+
+### 3. Bank $17 generator tool (MEDIUM — completes palette annotation)
+Build `gen_bank17_db.py` like `gen_room_data_db.py --apply`. Use the format decoded by `tools/analyze_bank17.py`:
+- Per-step entry: `[attr_idx:1, attr_bank:1, pal_ptr:2]`
+- Bank $3C = primary attribute bank (239 unique attr maps)
+- 89 unique palette blocks at $565D-$7F61, each 32 bytes RGB555
+- Gate attr tables at $5215/$5415 still raw hex — parse separately
+
+### 4. Bank $00 function naming (MEDIUM — ongoing)
+396 `Call_000_` labels remain. Three batches done this session (70 total).
+Approach: `grep -c "^Call_000_" disassembly/bank_000.asm` to check count.
+Focus on: game loop, map transition pipeline, NPC loading chain.
+Pattern-match on WRAM addresses, rst $10 calls, hardware register access.
+
+### 5. Lower priority
+- GUI editor prototype — web-based script editor using decompiler/compiler
+- NPC behavior values (lower nibble meanings), collision data
+- Event state machine (Bank $50/$51) — for non-script-based events
+- More WRAM symbol expansion (81 done, many more to decode)
 
 ## Key Documentation
-- `DATA_STRUCTURES.md` — Canonical data structure catalog
-- `SCRIPT_TOOLS.md` — **How to use gen_script_banks.py and decompile_script.py**
-- `CUSTOM_CUTSCENES.md` — Custom cutscene creation guide
-- `BANK04_SCRIPT_ENGINE.md` — Script VM: 100 opcodes, state machine
-- `ROOM_DATA_FORMAT.md` — Room data format reference
-- `BREEDING_SYSTEM.md` — Breeding recipe system
-- `TEXT_SYSTEM.md` — Text encoding and control codes
-- `EVENT_FLAGS.md` — Flag bitfield, story progression
+| File | Covers |
+|------|--------|
+| `DATA_STRUCTURES.md` | Master data structure catalog |
+| `SCRIPT_TOOLS.md` | Script generator, decompiler, compiler usage |
+| `EVENT_FLAGS.md` | Complete flag map (311 flags, 463 free) |
+| `QUEST_OPCODES.md` | $1F/$2C/$2D handler analysis |
+| `CROSSBANK_ROOMS.md` | Room expansion architecture |
+| `CUSTOM_CUTSCENES.md` | Custom cutscene creation guide |
+| `BANK04_SCRIPT_ENGINE.md` | Script VM: 100 opcodes |
+| `ROOM_DATA_FORMAT.md` | Room data format reference |
+
+## IMPORTANT WARNINGS
+- **NEVER `git stash`** on the disassembly directory — it reverts all .asm changes
+- **NEVER `make clean`** — deletes .2bpp graphics files
+- Build MD5 `b90957482011c8083a068781033715b7` reflects SharedPtrChase refactoring

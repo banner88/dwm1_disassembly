@@ -5196,7 +5196,7 @@ jr_050_5dc8:
     or a
     jr z, jr_050_5e3e
 
-    call Call_000_047e
+    call CheckState_C86c_047E
     ld a, [$c850]
     or a
     ret nz

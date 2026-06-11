@@ -2864,7 +2864,7 @@ jr_020_50aa:
     and a
     jr nz, jr_020_50b4
 
-    call Call_000_0940
+    call TextHandler_0940
     ret
 
 

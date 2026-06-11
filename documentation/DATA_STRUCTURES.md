@@ -167,7 +167,9 @@ PRNG mod 101 compared to threshold. Range: 1100-6000 steps. Last entry $FF=catch
 | Label | `RoomPtrTable` |
 | Entries | 107 map types × variable rooms |
 | Generator | `tools/gen_room_data_db.py --apply` |
-| Documentation | `ROOM_DATA_FORMAT.md` |
+| Documentation | `ROOM_DATA_FORMAT.md`, `CROSSBANK_ROOMS.md` |
+
+**Code section refactored:** 4 duplicated pointer-chase functions consolidated into `SharedPtrChase`. 119 bytes freed at $4ACC-$4B42. Data section pinned at $4B43 via separate SECTION directive.
 
 **Pointer chain:** `RoomPtrTable[mapID×2]` → sub-table → `[wram_ptr:2][step_ptr:2][room_entries...]`
 
@@ -187,7 +189,11 @@ Upper nibble of type: $9x=exit, $0x/$Fx=NPC. Documentation: `ROOM_DATA_FORMAT.md
 
 **Per-room structure:** AttrPtrTable[mapID] → screen table (pointer pairs per screen slot) → attribute entries `[wram_addr:2] + steps × [attr_idx:1, attr_bank:1, pal_ptr:2]`.
 
-Status: pointer tables labeled, 92 RoomAttr_* labels in data section, internal byte parsing NOT done.
+**Per-step attribute entry (4 bytes):** `[attr_idx:1, attr_bank:1, pal_ptr:2]`
+Bank $3C = primary attribute bank (239 unique maps). 89 unique palettes at $565D-$7F61.
+Palette format: 32 bytes raw GBC RGB555 → WRAM $C797+ (BG) via `Call_017_46a1`.
+
+**Parser:** `tools/analyze_bank17.py` (`--room`, `--palettes`)
 
 ---
 
@@ -618,7 +624,7 @@ Text ID → Display
 | $01 | ✅ | Partial | Encounters, gate thresholds done |
 | $03 | ✅ | — | Monster info fully annotated |
 | $04 | — | Partial | Script VM engine: see `BANK04_SCRIPT_ENGINE.md` |
-| $0B | ✅ | Partial | Room data done |
+| $0B | ✅ | Refactored | Room data done; SharedPtrChase freed 119B |
 | $0C | ✅ | Shared code | Script data: 129 scripts, 452 labels. 0 unknown opcodes. |
 | $0D | ✅ | Shared code | Script data: 168 scripts, 614 labels. 0 unknown opcodes. |
 | $0E | ✅ | Shared code | Script data: 130 scripts, 287 labels. 0 unknown opcodes. Bedroom ($2F) verified. |
@@ -626,7 +632,7 @@ Text ID → Display
 | $13 | ✅ | — | EXP/growth tables done |
 | $14 | ✅ | Partial | Enemy stats done |
 | $16 | ✅ | Partial | All data tables done this session |
-| $17 | Partial | Partial | Ptr tables + 92 room labels; byte parsing NOT done |
+| $17 | ✅ | Partial | Attr entries decoded; palette format parsed |
 | $41 | ✅ | ✅ | 100% annotated |
 | $50 | Partial | Partial | Personality Run table; battle event functions |
 | $51 | — | Partial | Battle init labeled |
@@ -642,6 +648,7 @@ Text ID → Display
 |------|--------|
 | `ARCHITECTURE.md` | Bank map, RST dispatch, RAM regions, free space |
 | `BANK04_SCRIPT_ENGINE.md` | Script VM: 100 opcodes, state machine, data flow |
+| `QUEST_OPCODES.md` | $1F/$2C/$2D handler code analysis (arena, inventory, monster dialogue) |
 | `BREEDING_SYSTEM.md` | Recipe tables, algorithm, mutation system |
 | `CROSSBANK_ROOMS.md` | Custom room creation technique |
 | `EVENT_FLAGS.md` | Flag bitfield, story progression flags, script commands |

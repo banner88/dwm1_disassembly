@@ -10243,7 +10243,7 @@ Jump_002_79ff:
 
 
 Call_002_7a1f:
-    call Call_000_0838
+    call CheckState_C82d_0838
     ld bc, $79ed
     jp z, $0298
 
@@ -10320,7 +10320,7 @@ jr_002_7a49:
 Call_002_7a9d:
     ld bc, $7a89
     call $0298
-    call Call_000_0838
+    call CheckState_C82d_0838
     ret z
 
     ld a, $04
@@ -10540,7 +10540,7 @@ Call_002_7bde:
     push hl
     inc l
     res 7, [hl]
-    call Call_000_036f
+    call GameStateUpdate_036F
     pop hl
     bit 7, [hl]
     ret z
@@ -10574,7 +10574,7 @@ Jump_002_7c11:
     and a
     jp z, Jump_000_0733
 
-    call Call_000_036f
+    call GameStateUpdate_036F
     call $0898
     call Call_002_7bde
     ld h, $cc
@@ -10710,7 +10710,7 @@ jr_002_7cb1:
 Jump_002_7cbb:
     ld a, $6f
     rst $20
-    call Call_000_0686
+    call GameStateBit_0686
     call $0788
     ld h, d
     ld l, $05
@@ -10915,7 +10915,7 @@ jr_002_7df1:
     call $05e2
     ld bc, $0300
     call $0573
-    call Call_000_05b7
+    call CallBank56Entry5_05B7
     ld d, $cc
     ld a, $73
     rst $20
@@ -10957,7 +10957,7 @@ Call_002_7e2e:
     add $14
     ld d, $c0
     ld [de], a
-    call Call_000_05b7
+    call CallBank56Entry5_05B7
     call Call_000_06d3
     call Call_000_2fff
     ld d, $cc
@@ -10984,7 +10984,7 @@ Jump_002_7e5f:
     ld bc, $fd80
     call Call_000_056c
     ld bc, $ff40
-    call Call_000_055a
+    call CallBank59Entry3_055A
     ld bc, $7030
     ld e, $01
     ld a, [de]

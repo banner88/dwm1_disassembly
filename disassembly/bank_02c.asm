@@ -8995,7 +8995,7 @@ jr_02c_66db:
     ld [hl-], a
     ld a, [bc]
     inc c
-    call z, Call_000_3400
+    call z, MultiplyHL_3400
     dec [hl]
     jr c, jr_02c_673a
 

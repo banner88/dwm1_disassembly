@@ -2460,7 +2460,7 @@ jr_007_5012:
     call SetGBCPalette
     ld hl, $c88f
     inc [hl]
-    call Call_000_2652
+    call CheckGateWorldMapType
     ret z
 
     ld hl, $0109

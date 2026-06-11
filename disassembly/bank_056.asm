@@ -1490,7 +1490,7 @@ jr_056_46e6:
     ld a, [$c825]
     res 4, a
     ld [$c825], a
-    call Call_000_0864
+    call HandleScreenRefresh
     ld a, [$c831]
     ld l, a
     ld a, [$c832]
@@ -1533,7 +1533,7 @@ Jump_056_4722:
     ret
 
 
-    call Call_000_0864
+    call HandleScreenRefresh
     call Call_056_4771
     call Call_056_4485
     ld a, [$c827]
@@ -3216,7 +3216,7 @@ Call_056_4dba:
     ld d, b
     and d
     ld d, b
-    call nc, Call_000_0550
+    call nc, CallBank55Entry14_0550
     ld d, c
     add hl, sp
     ld d, c

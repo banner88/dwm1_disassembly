@@ -4194,222 +4194,138 @@ label4_6093:
     ret
 
 
-    ld [$3e61], sp
-    ld h, c
-    ld [hl], h
-    ld h, c
-    ld a, $61
-    ld [$7461], sp
-    ld h, c
-    ld [hl], h
-    ld h, c
-    ld [$3e61], sp
-    ld h, c
-    xor d
-    ld h, c
-    ld [hl], l
-    nop
-    ld a, c
-    nop
-    ld a, l
-    nop
-    add c
-    nop
-    add l
-    nop
-    adc c
-    nop
-    adc l
-    nop
-    sub c
-    nop
-    sub l
-    nop
-    sbc c
-    nop
-    sbc l
-    nop
-    and c
-    nop
-    and l
-    nop
-    xor c
-    nop
-    xor l
-    nop
-    or c
-    nop
-    or l
-    nop
-    cp c
-    nop
-    cp l
-    nop
-    pop bc
-    nop
-    push bc
-    nop
-    ret
+; =============================================================================
+; MONSTER FAMILY TEXT TABLE ($60F4 - $61DF)
+; Used by opcode $2D (MonsterSlotDialogue) handler.
+; =============================================================================
 
+FamilyTextPtrTable:  ; $60F4 — 10 entries, indexed by family ID
+    dw FamilyTextGroup_A  ; 0 = Slime
+    dw FamilyTextGroup_B  ; 1 = Dragon
+    dw FamilyTextGroup_C  ; 2 = Beast
+    dw FamilyTextGroup_B  ; 3 = Bird
+    dw FamilyTextGroup_A  ; 4 = Plant
+    dw FamilyTextGroup_C  ; 5 = Bug
+    dw FamilyTextGroup_C  ; 6 = Devil
+    dw FamilyTextGroup_A  ; 7 = Zombie
+    dw FamilyTextGroup_B  ; 8 = Material
+    dw FamilyTextGroup_D  ; 9 = Boss
 
-    nop
-    call $d100
-    nop
-    push de
-    nop
-    reti
+FamilyTextGroup_A:  ; $6108 — Slime/Plant/Zombie
+    dw $0075
+    dw $0079
+    dw $007D
+    dw $0081
+    dw $0085
+    dw $0089
+    dw $008D
+    dw $0091
+    dw $0095
+    dw $0099
+    dw $009D
+    dw $00A1
+    dw $00A5
+    dw $00A9
+    dw $00AD
+    dw $00B1
+    dw $00B5
+    dw $00B9
+    dw $00BD
+    dw $00C1
+    dw $00C5
+    dw $00C9
+    dw $00CD
+    dw $00D1
+    dw $00D5
+    dw $00D9
+    dw $00DE
 
+FamilyTextGroup_B:  ; $613E — Dragon/Bird/Material
+    dw $0076
+    dw $007A
+    dw $007E
+    dw $0082
+    dw $0086
+    dw $008A
+    dw $008E
+    dw $0092
+    dw $0096
+    dw $009A
+    dw $009E
+    dw $00A2
+    dw $00A6
+    dw $00AA
+    dw $00AE
+    dw $00B2
+    dw $00B6
+    dw $00BA
+    dw $00BE
+    dw $00C2
+    dw $00C6
+    dw $00CA
+    dw $00CE
+    dw $00D2
+    dw $00D6
+    dw $00DA
+    dw $00DF
 
-    nop
-    sbc $00
-    halt
-    ld a, d
-    nop
-    ld a, [hl]
-    nop
-    add d
-    nop
-    add [hl]
-    nop
-    adc d
-    nop
-    adc [hl]
-    nop
-    sub d
-    nop
-    sub [hl]
-    nop
-    sbc d
-    nop
-    sbc [hl]
-    nop
-    and d
-    nop
-    and [hl]
-    nop
-    xor d
-    nop
-    xor [hl]
-    nop
-    or d
-    nop
-    or [hl]
-    nop
-    cp d
-    nop
-    cp [hl]
-    nop
-    jp nz, $c600
+FamilyTextGroup_C:  ; $6174 — Beast/Bug/Devil
+    dw $0077
+    dw $007B
+    dw $007F
+    dw $0083
+    dw $0087
+    dw $008B
+    dw $008F
+    dw $0093
+    dw $0097
+    dw $009B
+    dw $009F
+    dw $00A3
+    dw $00A7
+    dw $00AB
+    dw $00AF
+    dw $00B3
+    dw $00B7
+    dw $00BB
+    dw $00BF
+    dw $00C3
+    dw $00C7
+    dw $00CB
+    dw $00CF
+    dw $00D3
+    dw $00D7
+    dw $00DB
+    dw $00E0
 
-    nop
-    jp z, $ce00
-
-    nop
-    jp nc, $d600
-
-    nop
-    jp c, $df00
-
-    nop
-    ld [hl], a
-    nop
-    ld a, e
-    nop
-    ld a, a
-    nop
-    add e
-    nop
-    add a
-    nop
-    adc e
-    nop
-    adc a
-    nop
-    sub e
-    nop
-    sub a
-    nop
-    sbc e
-    nop
-    sbc a
-    nop
-    and e
-    nop
-    and a
-    nop
-    xor e
-    nop
-    xor a
-    nop
-    or e
-    nop
-    or a
-    nop
-    cp e
-    nop
-    cp a
-    nop
-    jp $c700
-
-
-    nop
-    rlc b
-    rst $08
-    nop
-    db $d3
-    nop
-    rst $10
-    nop
-    db $db
-    nop
-    ldh [rP1], a
-    ld a, b
-    nop
-    ld a, h
-    nop
-    add b
-    nop
-    add h
-    nop
-    adc b
-    nop
-    adc h
-    nop
-    sub b
-    nop
-    sub h
-    nop
-    sbc b
-    nop
-    sbc h
-    nop
-    and b
-    nop
-    and h
-    nop
-    xor b
-    nop
-    xor h
-    nop
-    or b
-    nop
-    or h
-    nop
-    cp b
-    nop
-    cp h
-    nop
-    ret nz
-
-    nop
-    call nz, $c800
-    nop
-    call z, $d000
-    nop
-    call nc, $d800
-    nop
-    call c, $e100
-    nop
+FamilyTextGroup_D:  ; $61AA — Boss
+    dw $0078
+    dw $007C
+    dw $0080
+    dw $0084
+    dw $0088
+    dw $008C
+    dw $0090
+    dw $0094
+    dw $0098
+    dw $009C
+    dw $00A0
+    dw $00A4
+    dw $00A8
+    dw $00AC
+    dw $00B0
+    dw $00B4
+    dw $00B8
+    dw $00BC
+    dw $00C0
+    dw $00C4
+    dw $00C8
+    dw $00CC
+    dw $00D0
+    dw $00D4
+    dw $00D8
+    dw $00DC
+    dw $00E1
 
 label4_61e0:
     ld a, [wScriptCounter]

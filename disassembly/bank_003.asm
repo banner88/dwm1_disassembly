@@ -193,7 +193,7 @@ Jump_003_40c8:
     ld a, $01
     ld [$c86c], a
     di
-    call Call_000_21b2
+    call SRAMAccess_21B2
     ei
     ld hl, $0109
     rst $10
@@ -226,7 +226,7 @@ Jump_003_4107:
     ld a, $01
     ld [$c86c], a
     di
-    call Call_000_21b2
+    call SRAMAccess_21B2
     ei
     ld hl, wGameMode
     ld a, $00
@@ -690,10 +690,10 @@ Call_003_441b:
     or a
     jr z, jr_003_4424
 
-    call Call_000_0618
+    call CheckState_C826_0618
 
 jr_003_4424:
-    call Call_000_17ec
+    call CheckState_C850_17EC
     ld a, [$c8a4]
     add $01
     ld [$c8a4], a
@@ -5906,7 +5906,7 @@ jr_003_755e:
     rst $08
     scf
     ccf
-    call Call_000_091f
+    call MultiplyHL_091F
     xor a
     ld [$cd07], a
     jp Jump_003_7500
@@ -6044,14 +6044,14 @@ jr_003_755e:
     ld a, b
     ld a, b
     call $23dc
-    call Call_000_1e96
+    call TileBuffer_1E96
     ld hl, $1f9f
-    call Call_000_2042
+    call ReadHRAM_d6_2042
     ld hl, $4768
     call $12d8
     ld hl, $47ac
     ld de, $9980
-    call Call_000_1340
+    call JoypadBitReformat
 
 Jump_003_765f:
     xor a
@@ -6076,7 +6076,7 @@ Jump_003_765f:
     xor a
     call ShowTextAndWait
     call Call_003_7939
-    call Call_000_0686
+    call GameStateBit_0686
     ld d, $cc
     ld c, $06
 
@@ -6341,7 +6341,7 @@ Jump_003_77ef:
     ld a, $01
     call AdjustTilemapOffset
     ld bc, $9c6a
-    call Call_000_0d19
+    call MultiplyHL_0D19
     ld bc, $9c63
     xor a
     call RunScriptEngine
@@ -6414,7 +6414,7 @@ Call_003_78b1:
     ld d, $c0
     call Call_003_792b
     ld e, $14
-    call Call_000_1616
+    call BankSwitch_1616
     call nz, Call_003_78d9
     call $161c
     call nz, Call_003_78f4
@@ -6423,7 +6423,7 @@ Call_003_78b1:
     call nz, Call_003_790f
     call Call_000_1628
     call nz, Call_003_7918
-    call Call_000_0541
+    call CallBank5FEntry1_0541
     call nz, Call_003_791c
     ret
 
@@ -6613,7 +6613,7 @@ Call_003_7999:
     cp $10
     ret c
 
-    call Call_000_0569
+    call CallBank56Entry8_0569
     xor a
     ld e, $0e
     ld [de], a
@@ -6696,7 +6696,7 @@ Call_003_7a3e:
 Jump_003_7a3e:
     push hl
     ld a, $2e
-    call Call_000_0b59
+    call TextHandler_0B59
     pop hl
     jp Jump_000_0cb8
 
@@ -6909,7 +6909,7 @@ Call_003_7b1f:
     ld bc, $9a42
     call Call_003_7b04
     ld bc, $1b6f
-    call Call_000_1193
+    call EnableLCD
     call $15f7
 
 Call_003_7b5c:
@@ -7000,7 +7000,7 @@ Jump_003_7bd2:
     ld a, $0f
     call Call_000_0515
     ld de, $cd80
-    call Call_000_1616
+    call BankSwitch_1616
     call Call_003_7be9
     ld hl, $7b75
     rst $28
@@ -7212,7 +7212,7 @@ Jump_003_7c8b:
     xor a
     ld [$c991], a
     ld bc, $1a00
-    call Call_000_1193
+    call EnableLCD
     call GetSpriteAddress
     jp $15f7
 
@@ -7234,7 +7234,7 @@ Jump_003_7c8b:
     ld bc, $b058
     call $05e2
     ld bc, $ff90
-    call Call_000_055a
+    call CallBank59Entry3_055A
     jp $15f7
 
 
@@ -7399,7 +7399,7 @@ jr_003_7dcd:
     cp $65
     sbc h
     ld bc, $21ff
-    call nz, Call_000_35dd
+    call nz, CopyBlock_35DD
     ld a, [hl]
     cp $20
     ret nz
@@ -7610,7 +7610,7 @@ jr_003_7f28:
     call $1cc6
     ld hl, $7fdf
     scf
-    call Call_000_091f
+    call MultiplyHL_091F
     ld a, $06
     jp $6514
 

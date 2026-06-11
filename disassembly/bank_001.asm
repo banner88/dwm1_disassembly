@@ -308,7 +308,7 @@ Jump_001_41dc:
     ld [hl+], a
     ld a, [wObj2Palette]
     ld [hl], a
-    call Call_000_1660
+    call CachePalettesToHRAM
     ld a, $fd
     call SetGBCPalette
     ret
@@ -8978,7 +8978,7 @@ jr_001_7851:
     pop bc
     call Call_000_05e3
     ld d, $d0
-    call Call_000_0686
+    call GameStateBit_0686
     ld a, $1f
     rst $20
     ld bc, $0100
@@ -9120,7 +9120,7 @@ jr_001_7948:
     ld a, [de]
     cp $08
     push af
-    call c, Call_000_036f
+    call c, GameStateUpdate_036F
     pop af
     rst $00
 
@@ -9209,7 +9209,7 @@ Call_001_79d1:
     ld d, h
     ld a, $5b
     rst $20
-    call Call_000_068a
+    call CheckState_C83c_068A
     call Call_000_07e8
     ld bc, $fe00
     call $0552
@@ -9381,7 +9381,7 @@ jr_001_7ad6:
 
     ld bc, $fffc
     call $0598
-    call Call_000_0838
+    call CheckState_C82d_0838
     ret z
 
     rst $38
@@ -9588,7 +9588,7 @@ Call_001_7bec:
     ld a, [$c00f]
     ld c, a
     ld b, $60
-    call Call_000_068a
+    call CheckState_C83c_068A
     ld l, $00
     ld [hl], $66
     ld a, $5a
@@ -9648,7 +9648,7 @@ jr_001_7c23:
     call Call_001_4e82
     call $0547
     call $23f5
-    call Call_000_0686
+    call GameStateBit_0686
     ld a, $61
     call $0510
     ld a, $60
@@ -9791,7 +9791,7 @@ jr_001_7cf9:
     ld bc, $9982
     call Call_001_747b
     ld hl, $1f76
-    call Call_000_2042
+    call ReadHRAM_d6_2042
     xor a
     ld [$c995], a
     ld de, $4f00
@@ -9907,7 +9907,7 @@ label7de6:
     call $2043
     call Call_000_1e74
     ld bc, $1148
-    call Call_000_1193
+    call EnableLCD
     call Call_001_7e4f
     ld a, [$cda5]
     cp $04
@@ -9931,7 +9931,7 @@ jr_001_7e38:
     inc d
     ld bc, $bc7c
     call $05e2
-    call Call_000_0686
+    call GameStateBit_0686
     ld a, $12
     rst $20
     ld bc, $1c2f

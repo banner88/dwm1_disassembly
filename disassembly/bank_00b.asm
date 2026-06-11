@@ -25,7 +25,7 @@
 ;          user reverse-engineering (ROUTING_DISCOVERIES.md, NPC_AND_ROUTING_HANDOFF.md)
 ; =============================================================================
 
-SECTION "ROM Bank $00b", ROMX[$4000], BANK[$b]
+SECTION "ROM Bank $00b Code", ROMX[$4000], BANK[$b]
     db $0b	; ROM bank ID
 
 ; -----------------------------------------------------------------------------
@@ -461,51 +461,10 @@ Call_00b_4239:
 
 
 jr_00b_4244:
-    ; === POINTER TABLE READ — shared pattern ===
-    ; Step 1: ptr_table[$4B43 + mapID * 2] → screen_ptr_block
-    ld hl, RoomPtrTable                    ; room pointer table (107 entries × 2 bytes)
-    ld a, [wMapID]                  ; current room map_type ($C968)
-    add a                           ; mapID × 2 (2 bytes per entry)
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a                         ; HL = &ptr_table[mapID]
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                         ; HL = *ptr_table[mapID] → screen_ptr_block
+    ; Shared pointer table read → HL = step_entry
+    call SharedPtrChase
 
-    ; Step 2: screen_ptr_block[$C925 * 2] → step_block
-    ld a, [wScreenIndex]                   ; screen_index (which screen of multi-screen room)
-    add a                           ; × 2 (pointer is 2 bytes)
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a                         ; HL = &screen_ptr_block[screen_index]
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                         ; HL = *screen_ptr_block[screen] → step_block
-
-    ; Step 3: step_block[0:2] = ram_flag_ptr, then index by step value
-    ; step_block format: [ram_flag_ptr:2][step0:6][step1:6]...[FF]
-    ld e, [hl]                      ; ram_flag_ptr low byte
-    inc hl
-    ld d, [hl]                      ; ram_flag_ptr high byte (DE = RAM address)
-    inc hl                          ; HL now points to first step entry
-    ld a, [de]                      ; read current step value from RAM
-    ; Index: step_value * 6 (each step entry is 6 bytes)
-    ld e, a
-    add a                           ; × 2
-    add e                           ; × 3
-    add a                           ; × 6
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a                         ; HL = &step_entries[step_value]
-
-    ; Step 4 (ReadStepBlock specific): return bytes 0-1 as DE
+    ; ReadStepBlock specific: return bytes 0-1 as DE
     ld e, [hl]                      ; step_id
     inc hl
     ld d, [hl]                      ; tileset byte
@@ -542,46 +501,8 @@ GetRoomDataPtr:
     or a
     jr nz, jr_00b_42ac       ; Gate world uses different lookup path
 
-    ; Level 1: map_type → screen_ptr_block
-    ld hl, RoomPtrTable             ; Room pointer table base
-    ld a, [wMapID]
-    add a                    ; × 2 (word-sized entries)
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a                  ; HL = $4B43 + wMapID × 2
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                  ; HL = screen_ptr_block
-
-    ; Level 2: screen → step_block
-    ld a, [wScreenIndex]            ; Current screen index
-    add a                    ; × 2
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                  ; HL = step_block
-
-    ; Level 3: read step_id from RAM
-    ld e, [hl]
-    inc hl
-    ld d, [hl]               ; DE = ram_flag_ptr
-    inc hl                   ; HL = step_block + 2 (step_entries start)
-    ld a, [de]               ; A = current step_id (from RAM)
-    ld e, a
-    add a                    ; × 2
-    add e                    ; × 3
-    add a                    ; × 6 (6 bytes per step_entry)
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a                  ; HL = step_entry for current step_id
+    ; Shared pointer table read → HL = step_entry
+    call SharedPtrChase
     inc hl
     inc hl                   ; Skip byte 0 (step_id) and byte 1 (tileset)
     ld a, [hl+]
@@ -1051,41 +972,8 @@ labelb_4488:
     or a
     ret nz
 
-    ld hl, RoomPtrTable
-    ld a, [wMapID]
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    ld a, [wScreenIndex]
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
-    inc hl
-    ld a, [de]
-    ld e, a
-    add a
-    add e
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
+    ; Shared pointer table read → HL = step_entry
+    call SharedPtrChase
     inc hl
     inc hl
     inc hl
@@ -1190,45 +1078,8 @@ labelb_451d:
     or a
     jp nz, Jump_00b_46a7            ; gate rooms use separate exit logic
 
-    ; === POINTER TABLE READ (same pattern as ReadStepBlock) ===
-    ; Reads exit_ptr (bytes 4-5 of step entry)
-    ld hl, RoomPtrTable                    ; room pointer table
-    ld a, [wMapID]
-    add a                           ; mapID × 2
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                         ; HL → screen_ptr_block
-
-    ld a, [wScreenIndex]                   ; screen_index
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                         ; HL → step_block
-
-    ld e, [hl]                      ; ram_flag_ptr
-    inc hl
-    ld d, [hl]
-    inc hl
-    ld a, [de]                      ; current step value
-    ld e, a
-    add a
-    add e
-    add a                           ; × 6
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a                         ; HL → current step entry
+    ; Shared pointer table read → HL = step_entry
+    call SharedPtrChase
 
     ; Skip step_id(1) + tileset(1) + interact_ptr(2) = 4 bytes → exit_ptr
     inc hl
@@ -1428,7 +1279,7 @@ jr_00b_4601:
     jr z, jr_00b_462c
 
 jr_00b_4627:
-    call Call_000_2652
+    call CheckGateWorldMapType
     jr z, jr_00b_465b
 
 jr_00b_462c:
@@ -1445,7 +1296,7 @@ jr_00b_462c:
     ld [wMapID], a
     ld a, h
     ld [wInGateworld], a
-    call Call_000_2652
+    call CheckGateWorldMapType
     pop hl
     push af
     ld a, l
@@ -2554,7 +2405,7 @@ jr_00b_4aef:
     ld e, $3a
     rra
     ld a, [hl-]
-    jr nz, jr_00b_4b50
+    db $20, $3a  ; data (not code)
 
     ld hl, $223a
     ld a, [hl-]
@@ -2567,7 +2418,7 @@ jr_00b_4aef:
     ld h, $3a
     daa
     ld a, [hl-]
-    jr z, jr_00b_4b60
+    db $28, $3a  ; data (not code)
 
     add hl, hl
     ld a, [hl-]
@@ -2582,7 +2433,7 @@ jr_00b_4aef:
     ld l, $3a
     cpl
     ld a, [hl-]
-    jr nc, jr_00b_4b70
+    db $30, $3a  ; data (not code)
 
     ld sp, $323a
     ld a, [hl-]
@@ -2596,6 +2447,52 @@ jr_00b_4aef:
 jr_00b_4b40:
     ld [hl], $3a
     rst $38
+
+
+; =============================================================================
+; SharedPtrChase — Shared room data pointer-chase function
+; =============================================================================
+; Called by ReadStepBlock, ReadInteractPtr, RoomEntry9, RoomEntry6.
+; Output: HL = pointer to start of current 6-byte step entry
+; Clobbers: A, DE
+; =============================================================================
+SharedPtrChase:
+    ld hl, RoomPtrTable
+    ld a, [wMapID]
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld a, [wScreenIndex]
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    inc hl
+    ld a, [de]
+    ld e, a
+    add a
+    add e
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ret
 
 ; =============================================================================
 ; ROOM DATA SECTION ($4B43 - $7FFF)
@@ -2613,6 +2510,8 @@ jr_00b_4b40:
 ;   type bit 6=non-interactable, bits 3-0=behavior
 ; Spawn entry: [type($8F/$90), param, x, y, source_mt]
 ; Exit entry: [trig_x, trig_y, dest_mt, gate_flag, screen, spawn_x, spawn_y]
+
+SECTION "ROM Bank $00b Data", ROMX[$4B43], BANK[$b]
 
 RoomPtrTable:  ; 107 entries × 2B, indexed by wMapID ($C968)
     dw $4C13  ; $00 Castle

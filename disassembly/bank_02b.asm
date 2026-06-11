@@ -3853,7 +3853,7 @@ jr_02b_511e:
     nop
     ld bc, $0504
     inc a
-    call nz, Call_000_3400
+    call nz, MultiplyHL_3400
     dec [hl]
     jr nc, jr_02b_516d
 
@@ -7980,7 +7980,7 @@ jr_02b_638c:
 jr_02b_638e:
     inc c
     inc c
-    call nz, Call_000_3400
+    call nz, MultiplyHL_3400
     dec [hl]
     ld b, $07
     ld [$0c09], sp
@@ -8160,7 +8160,7 @@ jr_02b_6456:
     ld c, $0a
 
 jr_02b_6458:
-    call nz, Call_000_3400
+    call nz, MultiplyHL_3400
     dec [hl]
     inc h
     dec h

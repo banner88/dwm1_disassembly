@@ -3755,7 +3755,7 @@ jr_05f_55bb:
     ret z
 
     call Call_05f_5696
-    call Call_000_3103
+    call CallBank5FEntry7_3103
     ld a, $01
     ld [$da80], a
     ret

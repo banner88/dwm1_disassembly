@@ -12461,7 +12461,7 @@ jr_006_7a50:
     nop
     ld hl, $7a2e
     call Call_000_2280
-    call Call_000_1e96
+    call TileBuffer_1E96
     ld de, $0020
     call Call_000_1e65
     ld hl, $7bab
@@ -12982,7 +12982,7 @@ jr_006_7c93:
     call $2121
     ld hl, $49f6
     ld de, $99c0
-    call Call_000_1340
+    call JoypadBitReformat
     ld bc, $9800
     ld de, $9a0b
     ld h, $08
@@ -12993,7 +12993,7 @@ jr_006_7c93:
     call Call_006_7ef8
     ld hl, $492e
     ld de, $9960
-    call Call_000_1340
+    call JoypadBitReformat
     ld bc, $9808
     ld de, $9973
     call Call_006_7ed2
@@ -13018,7 +13018,7 @@ jr_006_7c93:
     ld bc, $98f1
     call Call_000_0aea
     ld bc, $0450
-    call Call_000_1193
+    call EnableLCD
     jp $15f7
 
 
@@ -13031,7 +13031,7 @@ jr_006_7c93:
     call Call_000_1380
     ld hl, $492e
     ld de, $9821
-    call Call_000_1340
+    call JoypadBitReformat
     ld bc, $9801
     ld de, $9821
     ld h, $06
@@ -13117,7 +13117,7 @@ Call_006_7efe:
     ld a, $df
 
 jr_006_7f02:
-    call Call_000_0b59
+    call TextHandler_0B59
     dec h
     jr nz, jr_006_7f02
 

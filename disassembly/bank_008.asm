@@ -12075,7 +12075,7 @@ jr_008_717d:
     rst $08
     ld c, a
     sbc $5e
-    call c, Call_000_3c1c
+    call c, CopyBlock_3C1C
     dec a
     rst $38
     nop

@@ -90,7 +90,7 @@ Jump_01d_4015:
     add hl, bc
     and e
     ld [bc], a
-    call nz, Call_000_2420
+    call nz, Wrapper_2420
     inc bc
     daa
     inc bc
@@ -5003,7 +5003,7 @@ jr_01d_550a:
     ld h, $06
     and b
     inc c
-    call nz, Call_000_2715
+    call nz, MultiplyHL_2715
     inc c
     and b
     add hl, bc

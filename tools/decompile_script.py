@@ -127,7 +127,7 @@ def format_cmd(opcode, params):
     
     # Battle
     if opcode == 0x05: return f'battle enemy=${p[0]:04X}'
-    if opcode == 0x1F: return 'large_event_handler'
+    if opcode == 0x1F: return 'arena_battle_setup'
     if opcode == 0x20: return f'set_battle_mode ${p[0]:04X}'
     if opcode == 0x35: return 'boss_encounter_setup'
     if opcode == 0x36: return f'setup_boss ${p[0]:04X}'
@@ -141,8 +141,8 @@ def format_cmd(opcode, params):
     # State
     if opcode == 0x06: return 'inc_counter'
     if opcode == 0x07: return f'init_dialog ${p[0]:04X}'
-    if opcode == 0x2C: return f'event_dispatch ${p[0]:04X}'
-    if opcode == 0x2D: return f'check_step ${p[0]:04X}'
+    if opcode == 0x2C: return f'check_inv_full, goto .addr_{p[0]:04X}'
+    if opcode == 0x2D: return f'monster_slot_dialogue slot={p[0]:d}'
     if opcode == 0x3D: return 'toggle_render'
     
     # Monster/inventory

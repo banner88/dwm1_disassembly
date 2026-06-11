@@ -569,7 +569,7 @@ jr_015_4422:
     db $fc
     ld b, l
     di
-    call Call_000_21b2
+    call SRAMAccess_21B2
     ei
     ld hl, $1700
     rst $10
@@ -910,7 +910,7 @@ jr_015_46aa:
     ret
 
 
-    call Call_000_047e
+    call CheckState_C86c_047E
     ld a, [$c8d2]
     cp $06
     jr z, jr_015_46cc
@@ -3051,7 +3051,7 @@ jr_015_5455:
     ret
 
 
-    call Call_000_047e
+    call CheckState_C86c_047E
     ld a, [$c8d2]
     cp $06
     jr z, jr_015_5471
@@ -5142,7 +5142,7 @@ Call_015_60df:
 
     ld hl, $a002
     ld bc, $1ffe
-    call Call_000_210e
+    call SRAMWriteBlock
     ld a, $0a
     ld [$0100], a
     ld a, [$a000]
@@ -5167,7 +5167,7 @@ jr_015_610a:
     call Call_015_612d
     pop bc
     pop hl
-    call Call_000_210e
+    call SRAMWriteBlock
     ld a, $0a
     ld [$0100], a
     ld a, e
