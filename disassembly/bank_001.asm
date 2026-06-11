@@ -728,7 +728,7 @@ jr_001_4464:
     ldh [$8e], a
     ldh [$90], a
     ld [$d7bd], a
-    ld a, [wMapID]
+    call MapIDClampForPalette       ; ROM0: A=mapID or $16 for custom rooms
     ld l, a
     ld h, $00
     add hl, hl
@@ -2475,8 +2475,8 @@ CheckBattleModeFlag:
 
     ld a, $00
     ld [wScriptNPCId], a            ; script_id = $00 (room entry script)
-    ld a, [wMapID]
-    ld [wScriptMapType], a            ; map type = current map
+    call MapIDClampForPalette       ; ROM0: A=mapID or $16 for custom rooms
+    ld [wScriptMapType], a            ; map type = current map (or MedalMan for custom)
     ld hl, $0405             ; Bank $04 entry 5: ScriptInit
     rst $10
     ret
@@ -5648,7 +5648,7 @@ jr_001_5e23:
     cp $0e
     jr nz, jr_001_5e7c
 
-    ld a, [wMapID]
+    call MapIDClampForPalette       ; ROM0: A=mapID or $16 for custom rooms
     ld hl, $5e7d
     add l
     ld l, a
@@ -6248,7 +6248,7 @@ VisualEffectsDispatch:  ; original label
 ; Jump table follows (107 entries indexed by map_type)
 PerRoomDispatchEntry:
 jr_001_6115:  ; original label
-    ld a, [wMapID]
+    call MapIDClampForDispatch  ; ROM0 helper: clamps mapID for 107-entry table
     rst $00
 
     dw label1_61f9

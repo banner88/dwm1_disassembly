@@ -1,125 +1,97 @@
-# Session Handoff — Dynamic Repointing & Label Work
+# Session Handoff — Cross-Bank Room POC (June 2026)
 
 ## What This Session Accomplished
 
-### The Big Picture Change
-This session pivoted from cosmetic label naming to **structural work that enables the 
-custom editor**. The key insight: "full disassembly" isn't about naming 18,000 branch 
-labels — it's about making every data reference label-based so the assembler can 
-repoint automatically when data moves.
+### Cross-Bank Room System: PROVEN WORKING
 
-### 1. Dynamic Repointing (PRIMARY WORK)
+Custom rooms can now live in any free ROM bank ($60+) instead of the full bank $0B. This was the single biggest architectural blocker for the custom game editor.
 
-**36 hardcoded address computations** were found across the codebase. These are 
-`add $XX / adc $YY` patterns that compute table addresses at runtime using raw bytes.
-If any referenced table moves, the game breaks silently.
+**Tested and verified:**
+- Single-screen room (MedalMan clone, mapID $6B)
+- Multi-screen room (3-screen Castle clone, mapID $6C) with screen scrolling
+- Correct tileset graphics, palette, tile collision, NPC display
+- Entry/exit transitions between GreatTree, custom rooms, and between custom rooms
+- No corruption of existing game rooms
 
-**34 fixed**, 2 confirmed false positives (data bytes matching the pattern).
+### Implementation: Intercept + Redirect Pattern
 
-**New labels created at data table start addresses:**
+Small patches in banks $00, $01, $0B, $17 detect custom mapIDs (≥ $6B) and redirect data reads to bank $60 via:
+- `rst $10` calls (for functions returning DE/HL — bank $0B reader functions)
+- `call ROM0Helper` same-size replacements (for functions needing A — all other banks)
 
-| Label | Bank | Address | Purpose | Stride |
-|-------|------|---------|---------|--------|
-| MonsterInfoTable | $03 | $4461 | 221 monsters × 43B | species × 43 |
-| EnemyStatsTable | $14 | $4C1D | 487 enemies × 25B | eid × 25 |
-| EnemyGroupTable | $14 | $4A1D | Boss group data | eid × 25 |
-| ExpCurveTables | $13 | $41E6 | 32 EXP curves × 99 lvls | table × 297 |
-| StatGrowthTables | $13 | $6706 | 32 growth curves | table × 99 |
-| EncounterPoolData | $01 | $6AAE | 128 pools × 26B | pool × 26 |
-| NPCWalkDataTable | $01 | $4506 | NPC walk frame data | index × 4 |
-| ScreenTransDataTable | $01 | $49DF | Screen transition data | index × 2 |
-| FamilyRecipeTable | $16 | $4974 | Breeding family recipes | 2-byte pairs |
-| SpecialRecipeTable | $16 | $4B30 | Breeding special recipes | 5-byte entries |
-| FloorLayoutData | $16 | $7436 | Gate floor layouts | 1120B total |
-| FloorTilePatterns | $16 | $7736 | Floor tile sub-table | index × 16 |
-| TilesetLookupTable | $07 | $570C | Tileset pointer data | index × 2 |
-| TileRefLookupTable | $07 | $6E14 | Tile reference data | index × 2 |
-| RoomScreenPtrTable | $0B | $4974 | Screen index lookup | index × 2 |
-| RoomAttrDataBlocks | $17 | $62FD | Room attribute data | index × 8 |
-| PaletteColorData | $17 | $69BD | Palette color blocks | index × 16 |
-| AttrMapData | $17 | $6AFD | Attribute map data | index × 8 |
-| AttrMapDataB | $17 | $6B0D | Attribute map alt | index × 8 |
-| TextDataPtrLookup | $18 | $4123 | Text data pointers | index × 2 |
-| SpriteFrameDataTable | $03 | $71DA | Monster sprite frames | index × 12 |
-| MapNPCPosDataTable | $06 | $4DCC | Map NPC positions | index × 2 |
-| FieldPtrLookupTable | $09 | $6B10 | Field utility pointers | index × 2 |
-| ItemSlotPtrTable | $12 | $65F2 | Item slot pointers | index × 2 |
-| TransitionLookupTable | $15 | $617B | Map transition data | index × 8 |
-| BattleHPLookupTable | $53 | $41DF | Battle HP table | index × 2 |
-| SaveSlotPtrTable | $59 | $4363 | Save data pointers | index × 2 |
+**11 patch sites total across 4 banks. See CROSSBANK_ROOMS.md for complete list.**
 
-### 2. ld reg, $XXXX → ld reg, Label (944 conversions)
+### Files Modified
+| File | Changes | Bytes Changed |
+|------|---------|---------------|
+| bank_060.asm | NEW: custom room overflow bank | N/A (new) |
+| bank_000.asm | 2 ROM0 helpers + 1 collision patch | 20 bytes |
+| bank_001.asm | 4 same-size call replacements | 12 bytes |
+| bank_00b.asm | 6 intercept patches (code section) + 1 exit redirect (data) | ~100 code + 3 data |
+| bank_017.asm | 2 same-size call replacements | 6 bytes |
+| wram.asm | 3 new WRAM definitions | N/A (EQU only) |
+| game.asm | bank $60 include changed | 1 line |
 
-Every `ld hl/de/bc, $XXXX` where $XXXX matched a known label was converted.
-Most impactful: **884 ROM0 cross-bank references** — other banks referencing 
-bank $00 functions by raw address. Now if any bank $00 function moves, the 
-assembler handles it.
+### Key Architecture Decisions
 
-### 3. RoomPtrTable Label Conversion
+1. **Same-size replacements over byte insertion** — Banks $01 and $17 have raw embedded pointers in data sections. Inserting bytes breaks them. Same-size `call` replacements change exactly 3 bytes per site.
 
-Modified `gen_room_data_db.py` to output `dw RoomSub_Castle` instead of 
-`dw $4C13` in the 107-entry RoomPtrTable. All 92 unique room data blocks 
-are now label-referenced. This means rooms can be added/removed/reordered.
+2. **ROM0 helpers over rst $10 for A-returns** — rst $10 clobbers A via `pop af`. ROM0 helpers preserve A.
 
-### 4. Label Naming (Secondary)
+3. **Per-room source mapID** — Different custom rooms can reuse different existing rooms' tilesets. Computed in ROM0 via conditional logic.
 
-- Bank $00: 761 internal labels renamed (VBlank, text engine, math, audio, etc.)
-- Bank $04: 253 internal labels renamed (NPC frame update, script VM, opcode handlers)
+4. **$FFFF screen guard** — CustomPtrChase detects $FFFF sub-table entries and returns a safe DummyStepEntry with valid tileset data.
 
-## Free Space Available for Custom Content
+5. **WRAM copy buffers** — NPC and exit data copied from bank $60 to WRAM ($D378-$D477) so bank $0B code can read it after rst $10 returns and bank is restored.
 
-| Banks | Free Space | Purpose |
-|-------|-----------|---------|
-| $60-$7F (20 banks) | **~320 KB** | Completely empty — available for anything |
-| $40 | 11,781 B | Mostly empty |
-| $47 | 9,357 B | Mostly empty |
-| $54 | 10,550 B | Battle stat data — lots of room |
-| $0E, $0F | 3,821 + 4,238 B | Script data banks — room for new scripts |
-| $17 | 5,003 B | Palette data — room for new room palettes |
-| $0B | 119 B | SharedPtrChase freed space (small) |
+---
 
-**Total usable free space: ~350+ KB** across the ROM.
+## What Still Needs Work
 
-## What the Editor Needs Next
+### Priority 1: NPC Scripts for Custom Rooms
+Custom room NPCs with script_id ≠ $FF crash because bank $0F's master table has no entries for mapID ≥ $6B. Options:
+- Extend bank $0F's master table with entries for custom mapIDs
+- Add intercept in bank $04's MapTypeDispatch to route custom mapIDs to bank $60's script data
+- Use gen_script_banks.py to add script entries
 
-### Priority 1: Practical Workflow Documentation
-Create step-by-step guides:
-- "How to add a custom room with NPCs and a script"
-- "How to add a new gate floor"
-- "How to modify the breeding table"
-- "How to edit tilesets"
+### Priority 2: Custom Tilesets
+Currently custom rooms must reuse an existing room's tileset. For truly new room visuals:
+- Add entries to the $26DD tileset table in bank $00
+- Create new compressed tile layouts in a tileset bank
+- Create corresponding palette/attribute data in bank $17's AttrPtrTable
 
-The tools and data structures exist. What's missing is the glue.
+### Priority 3: MapIDClampForPalette Scaling
+Current implementation uses hardcoded conditionals for 2 rooms. For many rooms:
+- Option A: ROM0 lookup table (limited by ROM0 free space — only 1 byte left)
+- Option B: Move to bank $60 with WRAM caching, but ensure WRAM is set before Entry 0 runs
+- Option C: Expand ROM0 free space by finding more padding bytes
 
-### Priority 2: WRAM Symbol Definitions
-Key WRAM regions still use raw addresses ($C8xx, $CAxx, $CBxx, $DBxx).
-Define these as named symbols in a shared `.inc` file. This doesn't affect 
-the binary but massively improves code readability for editor development.
+### Priority 4: Text/Dialogue
+The text ID system has a hard 16-bit limit. Need to survey how many IDs are used vs available before adding NPC dialogue.
 
-### Priority 3: Data Table Conversion (3 remaining regions)
-Three misassembled data regions need conversion from instructions to `db`:
-- Bank $0B: code/data hybrid around $4940-$49A0 (jr offsets as lookup data)
-- Bank $08: audio waveform data around $7740-$7780
-- Bank $32: tile animation data around $5A50-$5A70
+### Priority 5: Step Progression
+CustomPtrChase always uses step 0. For rooms that change based on game progress, need step counter management in the custom room data.
 
-### Priority 4: Battle System Labels
-Banks $50-$58 have ~3,000 auto-labels. These are important for understanding
-battle mechanics but NOT blocking the editor.
+---
 
-## Systems Ready for Custom Content NOW
+## Build Instructions
 
-| System | Can Edit? | Tools | Notes |
-|--------|-----------|-------|-------|
-| **Scripts/cutscenes** | ✅ YES | compile_script.py, decompile_script.py | 530 scripts, 100 opcodes |
-| **Room data** | ✅ YES | gen_room_data_db.py | All pointers label-based |
-| **Monster stats** | ✅ YES | gen_monster_db.py | 221 × 43B, all labeled |
-| **Enemy stats** | ✅ YES | gen_enemy_stats_db.py | 487 × 25B, all labeled |
-| **Breeding recipes** | ✅ YES | Manual edit | FamilyRecipeTable + SpecialRecipeTable labeled |
-| **Encounter pools** | ✅ YES | gen_encounter_db.py | 128 pools, all labeled |
-| **Skill functions** | ✅ YES | gen_skill_table_db.py | 222 entries, all labeled |
-| **Names/text** | ✅ YES | gen_name_tables_db.py | All pointer tables labeled |
-| **EXP/growth curves** | ✅ YES | gen_growth_tables_db.py | 32 tables each |
-| **Palettes** | ✅ YES | analyze_bank17.py | Attr tables all labeled |
-| **Tile editing** | ⚠️ PARTIAL | decompress_tiles.py, render_rooms.py | Tools exist, workflow TBD |
-| **Gate floors** | ✅ YES | Manual edit | GateFloorDataTable labeled |
-| **Event flags** | ✅ YES | analyze_event_flags.py | 311 mapped, 463 free |
+```bash
+cd disassembly
+export PATH="$HOME/.local/bin:$PATH"  # if RGBDS installed locally
+make
+# Output: game.gbc
+# Original MD5: b90957482011c8083a068781033715b7
+```
+
+**NEVER run `make clean` or `git stash`** — these can destroy work.
+
+---
+
+## Critical Documentation
+
+Read these in order:
+1. **KEY_LESSONS.md** — Every bug encountered and why. Read BEFORE touching any code.
+2. **CROSSBANK_ROOMS.md** — Complete implementation reference with data flow diagrams.
+3. **ROOM_DATA_FORMAT.md** — Original room data structure (bank $0B).
+4. **DATA_STRUCTURES.md** — All game data tables and their formats.

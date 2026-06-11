@@ -80,8 +80,9 @@ jr_00b_4027:
     ld de, $2a5d                    ; tileset_table (gate rooms)
 
 jr_00b_4037:
-    ; Index into table: DE = tileset_table + wMapID * 8
-    ld a, [wMapID]
+    ; Index into table: DE = tileset_table + mapID * 8
+    ; For custom rooms, remap to source tileset's mapID
+    call MapIDClampForPalette   ; ROM0: returns A=mapID or $16 for custom rooms
     ld l, a
     ld h, $00
     add hl, hl                      ; × 2
@@ -148,7 +149,8 @@ labelb_4088:
     ld de, $2a5d
 
 jr_00b_4094:
-    ld a, [wMapID]
+    ; For custom rooms, remap to source tileset's mapID
+    call MapIDClampForPalette   ; ROM0: returns A=mapID or $16 for custom rooms
     ld l, a
     ld h, $00
     add hl, hl
@@ -461,6 +463,14 @@ LoadRoom_4239:
 
 
 jr_00b_4244:
+    ; Check for custom overflow room
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .normalStep
+    ld hl, $6000                ; rst $10: bank $60, entry 0 (CustomReadStep)
+    rst $10
+    ret
+.normalStep:
     ; Shared pointer table read → HL = step_entry
     call SharedPtrChase
 
@@ -501,6 +511,14 @@ GetRoomDataPtr:
     or a
     jr nz, jr_00b_42ac       ; Gate world uses different lookup path
 
+    ; Check for custom overflow room
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .normalInteract
+    ld hl, $6001                ; rst $10: bank $60, entry 1 (CustomReadInteract)
+    rst $10
+    ret
+.normalInteract:
     ; Shared pointer table read → HL = step_entry
     call SharedPtrChase
     inc hl
@@ -973,6 +991,14 @@ labelb_4488:
     ret nz
 
     ; Shared pointer table read → HL = step_entry
+    ; Check for custom overflow room
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .normalSpecial
+    ld hl, $6002                ; rst $10: bank $60, entry 2 (CustomExitCheck)
+    rst $10
+    jr .specialDataReady
+.normalSpecial:
     call SharedPtrChase
     inc hl
     inc hl
@@ -981,6 +1007,7 @@ labelb_4488:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
+.specialDataReady:
     ld bc, $2de7
     ld a, [wScreenIndex]
     add a
@@ -1079,6 +1106,14 @@ labelb_451d:
     jp nz, Jump_00b_46a7            ; gate rooms use separate exit logic
 
     ; Shared pointer table read → HL = step_entry
+    ; Check for custom overflow room
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .normalExit
+    ld hl, $6002                ; rst $10: bank $60, entry 2 (CustomExitCheck)
+    rst $10
+    jr .exitDataReady
+.normalExit:
     call SharedPtrChase
 
     ; Skip step_id(1) + tileset(1) + interact_ptr(2) = 4 bytes → exit_ptr
@@ -1089,6 +1124,8 @@ labelb_451d:
     ld a, [hl+]
     ld h, [hl]
     ld l, a                         ; HL → exit_block (list of 7-byte exit entries)
+
+.exitDataReady:
 
     ; Load screen offset from $2DE7 table for position comparison
     ld bc, $2de7                    ; screen position offset table (16 entries × 2)
@@ -3081,7 +3118,7 @@ Exit_GreatTree_s5:  ; $4FE5 — 0 exits
 
 Exit_GreatTree_s8:  ; $4FE6 — 2 exits
     db $05, $03, $12, $00, $04, $05, $07  ; exit (5,3)→mt$12 Library  scr=4 spawn(5,7)
-    db $04, $05, $18, $00, $00, $04, $00  ; exit (4,5)→mt$18 Well  scr=0 spawn(4,0)
+    db $04, $05, $6B, $00, $00, $02, $06  ; exit (4,5)→mt$6B CUSTOM ROOM  scr=0 spawn(2,6)
     db $FF  ; terminator
 
 Exit_GreatTree_s9:  ; $4FF5 — 2 exits
