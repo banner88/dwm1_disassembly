@@ -90,28 +90,40 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 - [~] Housekeeping deletions/moves per PROJECT_STATE. *(Postponed.)*
 
 ### Phase 1 — Remaining primitives (1 session each; ordered by editor impact)
-- [ ] **Script-driven teleport** — exit-based room transitions already
+- [x] **Script-driven teleport** — exit-based room transitions already
       work in all directions (vanilla↔custom, custom↔custom — proven in
-      v23). Remaining: opcode $0E from a custom script for cutscene-
-      style teleports (NPC talks, then warps player). Fallback: opcode
-      $12 writes to $C96D/$C96E/$C925 (transition executor $0B:$45AB
-      consumes these).
-      *Accept*: v2x ROM script-triggers a warp without the player
-      stepping on an exit tile.
+      v23). Opcode **$0F** (MapTransitionFull) **confirmed working** from
+      custom scripts — tested vanilla (Castle) and custom ($6B) destinations.
+      Note: $0E is BranchByScreen, NOT teleport (bank $04 inline comment
+      at $59D2 was wrong, fixed). $0F writes gate_id → $C96D, flag → $C96E,
+      spawn XY → $C96F-$C972, sets wIsPlayerChangingMaps=1.
+      Format: `$FF0F <gate_id:flag> <spawnX> <spawnY>` (3 word params).
 - [ ] **NPC show/hide by flag** — mechanism IS the step system
       (ROOM_DATA_FORMAT.md "Room State System"): multiple step entries
       per screen with different NPC lists, step counter set by opcode
-      $12 (WriteRAM $D9xx). Opcodes $48/$49 are runtime movement-based
-      show/hide (cutscene use only, not persistent). Remaining work:
-      test a custom room with ≥2 step entries where an NPC script
-      advances the step counter, then re-entering shows different NPCs.
+      $12 (WriteRAM $D9xx). **Confirmed in-game**: SameBoy test setting
+      Castle screen 5 step counter $D92C from 4→0 made a priest NPC
+      appear that wasn't there at step 4. Opcodes $48/$49 are runtime
+      movement-based show/hide (cutscene use only, not persistent).
+      Remaining work: build a custom room with ≥2 step entries where
+      an NPC script advances the step counter via WriteRAM opcode $12,
+      then re-entering shows different NPCs.
       *Accept*: NPC appears only after custom flag/step is set; verified
       after room re-entry and after scroll.
-- [ ] **BGM change** — opcode $41; table in known_RAM_map ($C8B5).
-      *Accept*: custom room plays a chosen track; reverts on exit.
-- [ ] **Monster give** — opcode $29; test party non-full AND full paths.
-      *Accept*: monster in party with correct species/level; defined
-      behavior when party full.
+- [x] **BGM change** — opcode $41 (SetBGM) **confirmed working**.
+      Saves current BGM to $C8B6, plays new track from param.
+      Track IDs in known_RAM_map ($C8B5). Tested: Arena ($1E) in
+      custom room; reverts on room exit.
+- [x] **Monster/egg give** — opcode $29 (AddMonster) **confirmed working**.
+      Takes 1 param (enemy_stats_id). Opcode $28 (CheckStorageFull)
+      branches when all 20 slots full. Egg give proven with SkyDragon
+      (EID 350, same as Farm event) — egg appears at farm, hatches
+      correctly (minor cosmetic glitch on hatch). Direct monster give
+      (EID 1) creates a withdrawable monster but species/stats don't
+      fully initialize without `$FF04 $000F` preamble. Egg path is
+      the practical choice for custom content.
+      AddMonsterWrapper needed in bank $04 padding (bare `ret` →
+      wrapper + `jp ScriptExecContinue`, same fix as GiveItem $2A).
 - [ ] **Custom tile LAYOUTS** (compressor done): place compressed layouts
       in a free bank, point step_entry byte 1 at it.
       *Accept*: custom room renders a layout that exists nowhere in the

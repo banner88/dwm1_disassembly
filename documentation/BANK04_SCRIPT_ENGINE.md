@@ -142,7 +142,7 @@ This means the script VM pauses for one or more frames while text is being displ
 |-----|---------|------|-------------|
 | $04 | $57A1 | GameActionDispatch | **Bank $09 dispatch via $C8EF. 0=shop, others=gate events. NOT give-item.** |
 | $19 | $5C6D | FadeEffect | Screen fade in/out |
-| $0F | $5A02 | SetScreenScroll | Configure screen scrolling |
+| $0F | $5A02 | **MapTransitionFull** | **Write gate_id→$C96D, flag→$C96E, spawn XY→$C96F-$C972, set wIsPlayerChangingMaps=1. Format: $FF0F gate:flag spawnX spawnY (3 params). This is the real teleport opcode.** |
 
 ### Battle
 | Cmd | Address | Name | Description |
@@ -173,7 +173,7 @@ This means the script VM pauses for one or more frames while text is being displ
 ### Map/Room Transitions
 | Cmd | Address | Name | Description |
 |-----|---------|------|-------------|
-| $0E | $59D2 | SetMapTransition | Write dest map/gate to $C96D/$C96E |
+| $0E | $59D2 | **BranchByScreen** | **Branch if wScreenIndex ($C925) == param. NOT a map transition (that is $0F). Format: $FF0E screen_id branch_target (2 params).** |
 | $42 | $66BD | SetReturnMap | Store current map for return, set dest |
 | $43 | $6723 | ExecuteReturn | Copy stored return map to transition vars |
 | $4E | $68D7 | MapTransition3 | Map transition variant |

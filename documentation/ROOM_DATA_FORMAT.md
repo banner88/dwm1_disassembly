@@ -92,6 +92,10 @@ present and there is no exit. After defeating the boss, a script sets
 `[$D977]=1` via opcode $12 (WriteRAM). On next room entry, step 1
 loads: the boss NPC is replaced, and an exit back to Castle appears.
 
+**Confirmed in-game (SameBoy):** Setting Castle screen 5 step counter
+$D92C from 4 to 0 made a priest NPC appear that wasn't there at step 4.
+Different step values load different NPC lists exactly as described above.
+
 ### How scripts control step counters
 
 Scripts use two opcodes to interact with step counters:

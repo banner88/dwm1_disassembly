@@ -156,3 +156,23 @@ This takes 30 seconds. Guessing takes hours.
 **Root cause**: Something outside bank $04 references bank $04 addresses by hardcoded value (not labels). Inserting 3 bytes shifted all subsequent addresses → global corruption.
 **Fix**: Use wrapper in padding area. Redirect jump table entry to wrapper. Zero bytes inserted in existing code. Original handler completely untouched.
 **Rule**: Add banks $04 to the "NEVER insert bytes" list alongside $01 and $17. Use same-size replacements or wrappers in free space only.
+
+---
+
+## Session 3 Lessons — Monster Give, Teleport, BGM
+
+### Opcode handlers that use bare `ret` freeze in custom scripts
+**Symptom**: Game freezes after opcode $29 (AddMonster) executes from a custom NPC script.
+**Root cause**: The script engine dispatches opcodes via `rst $00` → `jp hl` (NOT `call`). Handlers must end with `jp Jump_004_55f5` (ScriptExecContinue) to return to the script loop. Handlers ending with bare `ret` pop a stale return address and crash. Opcodes $29 (AddMonster) and $2A (GiveItem) both have this bug.
+**Fix**: Redirect jump table entry to a wrapper: `call original_handler; jp Jump_004_55f5`. GiveItem already had this fix. AddMonster now shares the `jp` via `SharedScriptContinue` to save space.
+**Rule**: Any new opcode used in custom scripts that ends with `ret` instead of `jp Jump_004_55f5` needs a wrapper. Check the handler's last instruction before using it.
+
+### Opcode $0E is NOT teleport — $0F is
+**Symptom**: Would have been "NPC talks, nothing happens" if anyone used $0E for teleport.
+**Root cause**: Bank $04 inline comment at $59D2 said "$0E = SetMapTransition". BANK04_SCRIPT_ENGINE.md also said $0E = SetMapTransition and $0F = SetScreenScroll. Both wrong. $0E = BranchByScreen (branches if wScreenIndex matches param). $0F = MapTransitionFull (the real teleport).
+**Fix**: Corrected all three docs (bank_004.asm comment, BANK04_SCRIPT_ENGINE.md, ROADMAP.md).
+**Rule**: Always verify opcode behavior against the HANDLER CODE, not against comments or doc labels. Comments have been wrong multiple times ($E7, $04, $29, $0E).
+
+### Bank $04 end-of-bank padding is exhausted
+**Space accounting**: Original ROM had 40 bytes free at $7FD8-$7FFF. After all patches: DispatchBank0F_Ext (10 bytes) + TextQueueCheck_Ext (19 bytes) + AddMonsterWrapper (3 bytes) + SharedScriptContinue (3 bytes) + GiveItemWrapper (3 bytes) + jr (2 bytes) = 40 bytes. Zero bytes remaining. Any future bank $04 wrapper needs space from elsewhere (optimize existing code, or use a different bank's padding).
+**Rule**: Track free space in bank $04 — it's a critical, shared resource.

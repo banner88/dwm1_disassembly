@@ -2518,7 +2518,7 @@ MarkScriptActive:
     dw label4_5f52
     dw label4_5f5c
     dw label4_5f67
-    dw label4_5f9a
+    dw AddMonsterWrapper         ; $29: redirected to wrapper in padding
     dw GiveItemWrapper           ; $2A: redirected to wrapper in padding
     dw label4_6002
     dw label4_6064
@@ -9937,25 +9937,21 @@ OpcodeData_7F4F:
 
 
 ; ===========================================================================
-; Extended handlers in padding area (39 bytes total, zero insertion elsewhere)
+; Extended handlers in padding area (40 bytes total, zero insertion elsewhere)
 ; ===========================================================================
 
-; DispatchBank0F_Ext (12 bytes) — optimized: shared rst $10 / ret
+; DispatchBank0F_Ext (10 bytes) — tail-calls existing DispatchBank0F for normal rooms
 DispatchBank0F_Ext:
     cp CUSTOM_ROOM_START
-    ld hl, $0f00                 ; default: bank $0F
-    jr c, .doCall                ; if < $6B, use bank $0F
-    ld hl, $6004                 ; else: bank $60 entry 4
-.doCall:
+    jp c, DispatchBank0F     ; if < $6B, tail-call original bank $0F dispatch
+    ld hl, $6004             ; else: bank $60 entry 4
     rst $10
     ret
 
-; TextQueueCheck_Ext (21 bytes) — optimized: jp instead of call+ret
+; TextQueueCheck_Ext (19 bytes) — jp c instead of jr nc + jp saves 2 bytes
 TextQueueCheck_Ext:
     cp $0a
-    jr nc, .customText
-    jp TextBankDispatch          ; normal: tail-call ROM0 cascade
-.customText:
+    jp c, TextBankDispatch   ; normal: tail-call ROM0 cascade
     sub $0a
     ld [$c822], a
     ld a, l
@@ -9964,8 +9960,12 @@ TextQueueCheck_Ext:
     rst $10
     ret
 
-; GiveItemWrapper (6 bytes) — calls original handler, then continues script
+; Script opcode wrappers — handlers use bare `ret`; wrappers add ScriptExecContinue
+; AddMonster + GiveItem share the `jp Jump_004_55f5` (11 bytes total)
+AddMonsterWrapper:
+    call label4_5f9a             ; original AddMonster (scans storage, adds monster)
+SharedScriptContinue:
+    jp Jump_004_55f5             ; ScriptExecContinue
 GiveItemWrapper:
     call label4_5fdb             ; original GiveItem (scans inventory, writes item)
-    jp Jump_004_55f5             ; ScriptExecContinue
-    inc b
+    jr SharedScriptContinue      ; jump back to shared continue

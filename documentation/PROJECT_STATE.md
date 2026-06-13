@@ -5,10 +5,11 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-13 (analyze_event_flags.py rewritten to use
-> branch-following data from all_scripts.json; flag coverage 92→298 sets;
-> event_flags_complete.json + EVENT_FLAGS.md regenerated;
-> story progression fully mapped: arena flags, mandatory gates, $00F1 post-game)
+> Last verified: 2026-06-13 (v24 test ROM: monster give $29+$28,
+> teleport $0F (not $0E — that's BranchByScreen), BGM change $41;
+> opcode $0E/$0F misidentification in bank_004.asm + BANK04_SCRIPT_ENGINE
+> fixed; $00/$01 naming confirmed correct; NPC show/hide step system
+> confirmed in-game via SameBoy)
 
 ---
 
@@ -57,6 +58,9 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
 | YES/NO choices with branching | ✅ working | $E7 $F0 + opcode $15 on $C83C |
 | Item give + inventory-full check | ✅ working | opcodes $2A (wrapped) / $2C |
+| Monster/egg give + storage-full check | ✅ working | opcodes $29 (wrapped) / $28; egg give proven with SkyDragon (EID 350) |
+| Script-driven teleport | ✅ working | opcode $0F (MapTransitionFull); vanilla + custom destinations |
+| BGM change | ✅ working | opcode $41 (SetBGM); track reverts on room exit |
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 used, 298 with sets, ~200 safe+persistent free |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
@@ -66,10 +70,10 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | Blocker |
 |--------|---------|
 | Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
-| Teleport/warp between maps | Exit-based transitions work all directions (v23). Script-driven teleport (opcode $0E) untested from custom scripts. |
-| BGM change | Opcode $41 untested (BGM table known) |
-| Monster give | Opcode $29 labeled, untested; party-full path unknown |
-| NPC show/hide by flag | Mechanism identified: step system (multiple step entries per screen, counter set by opcode $12). Opcodes $48/$49 are runtime movement animation, not structural show/hide. Needs in-game test with multi-step custom room. |
+| Teleport/warp between maps | ✅ Exit-based transitions work all directions (v23). Script-driven teleport via opcode **$0F** (MapTransitionFull) **confirmed working** from custom scripts — both vanilla destination (Castle) and custom room ($6B) tested. Note: $0E is BranchByScreen, NOT teleport (bank $04 comment was wrong, fixed). Format: `$FF0F <gate_id:flag> <spawnX> <spawnY>`. |
+| BGM change | ✅ Opcode $41 (SetBGM) **confirmed working** in custom scripts. Saves current BGM to $C8B6, plays new track. Tested with Arena music ($1E) in custom room. |
+| Monster give | ✅ Opcode $29 (AddMonster) **confirmed working** in custom scripts. Gives egg (enemy_stats_id=350 SkyDragon = proven, same as Farm event) or monster to storage. Opcode $28 (CheckStorageFull) also confirmed. Wrapper needed (bare `ret` → AddMonsterWrapper, same fix as GiveItem $2A). Note: without `$FF04 $000F` preamble, species/stats may not fully initialize — eggs work perfectly; direct monster give needs further investigation for stat initialization. |
+| NPC show/hide by flag | Mechanism confirmed in-game: step system (multiple step entries per screen, counter set by opcode $12). SameBoy test: setting Castle screen 5 step counter $D92C from 4→0 made a priest NPC appear. Remaining: test in a custom room with ≥2 step entries + WriteRAM opcode $12 to advance counter on room re-entry. |
 | Custom tilesets | Compressor done; needs PNG→tile pipeline + tileset GFX loading from custom bank |
 | Custom music | Sound engine unexplored |
 | Save-data audit | SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Only remaining: in-game save/load test of a custom flag in SameBoy. |
@@ -126,10 +130,12 @@ blocks direct editing of monsters/enemies/encounters/breeding in source.
   to $29 (AddMonster) instead of $2A (GiveItem). All three tools
   reconciled: decompile_script.py, compile_script.py,
   dump_all_scripts.py. all_scripts.json regenerated.
-- Opcodes $00 and $01 names may be swapped: "if_flag_clear" ($00) vs
-  "if_flag_set" ($01). Doesn't affect branch-following (both have target
-  at param[1]) or flag set/clear behavior (those use $02/$03), but needs
-  SameBoy verification of which opcode tests which flag state.
+- ~~Opcodes $00 and $01 names may be swapped~~ → **Confirmed correct
+  (no swap).** Verified from assembly: $00 handler does `jp nz, skip`
+  after `TestEventFlag`, so it branches when flag is CLEAR =
+  "if_flag_clear". $01 handler does `jp z, skip`, so it branches when
+  flag is SET = "if_flag_set". `TestEventFlag` returns Z=clear, NZ=set
+  via `and [hl]`. Definitively resolved from code; no SameBoy test needed.
 - ~~dump_all_scripts.py decoded linearly, missing ~45% of WriteRAM ops
   at branch targets~~ → Fixed. Work-queue follows 9 branch opcodes.
   810/866 unique WriteRAM ops found (93.5%); 56 in alternate dispatch
@@ -147,6 +153,12 @@ blocks direct editing of monsters/enemies/encounters/breeding in source.
   (flag $00F1 confirmed in unreached Castle script 0 branch at $0C:$46C4).
   Story progression fully mapped: arena-driven with mandatory Anger/
   Durran gate interludes.
+- ~~Bank $04 inline comment at $59D2 labeled opcode $0E as
+  "SetMapTransition"~~ → Fixed. $0E is **BranchByScreen** (branches
+  if `wScreenIndex == param`). The real map transition is opcode
+  **$0F** at $5A02 (MapTransitionFull: writes gate_id → $C96D, flag
+  → $C96E, spawn XY, sets wIsPlayerChangingMaps). ROADMAP also
+  corrected ($0E → $0F).
 
 ---
 

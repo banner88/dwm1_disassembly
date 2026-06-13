@@ -217,6 +217,8 @@ CustomScriptMasterTable:
 CustomRoom0_ScriptPtrTable:
     dw CustomRoom0_RoomEntry        ; [0] room entry
     dw CustomRoom0_NPC00            ; [1] MedalMan NPC — gives item
+    dw CustomRoom0_NPC01            ; [2] Monster NPC — gives Slime
+    dw CustomRoom0_NPC02            ; [3] BGM NPC — changes music
 
 CustomRoom0_RoomEntry:
     dw $FFFF
@@ -240,10 +242,47 @@ CustomRoom0_NPC00:
     dw $0A02                        ; "Maybe next time."
     dw $FFFF
 
+; --- Room 0 ($6B) NPC 2: gives a Slime (AddMonster opcode $29) ---
+CustomRoom0_NPC01:
+    dw $0A07                        ; "Want a SkyDragon egg?" [Y/N]
+    dw $FF15                        ; CheckAndBranch
+    dw $C83C                        ; check choice result
+    dw $0001                        ; compare to 1 (NO)
+    dw .declined                    ; branch if NO
+    dw $FF28                        ; CheckStorageFull
+    dw .storageFull                 ; branch if all 20 slots full
+    dw $FF29                        ; AddMonster (creates egg in storage)
+    dw $015E                        ; enemy_stats_id = 350 (SkyDragon — same as Farm event)
+    dw $0A08                        ; "Got a SkyDragon egg!"
+    dw $FFFF
+.storageFull:
+    dw $0A10                        ; "Monster storage is full!"
+    dw $FFFF
+.declined:
+    dw $0A09                        ; "Maybe another time."
+    dw $FFFF
+
+; --- Room 0 ($6B) NPC 3: BGM change (SetBGM opcode $41) ---
+CustomRoom0_NPC02:
+    dw $0A0D                        ; "Change the music?" [Y/N]
+    dw $FF15                        ; CheckAndBranch
+    dw $C83C                        ; check choice result
+    dw $0001                        ; compare to 1 (NO)
+    dw .declined                    ; branch if NO
+    dw $FF41                        ; SetBGM (opcode $41)
+    dw $001E                        ; track $1E = Arena music
+    dw $0A0E                        ; "Now playing Arena music!"
+    dw $FFFF
+.declined:
+    dw $0A0F                        ; "Keeping current music."
+    dw $FFFF
+
 ; --- Room 1 ($6C) scripts ---
 CustomRoom1_ScriptPtrTable:
     dw CustomRoom1_RoomEntry        ; [0] room entry
     dw CustomRoom1_NPC00            ; [1] throne room NPC — YES/NO demo
+    dw CustomRoom1_NPC01            ; [2] teleport to Castle (vanilla)
+    dw CustomRoom1_NPC02            ; [3] teleport to MedalMan room (custom $6B)
 
 CustomRoom1_RoomEntry:
     dw $FFFF
@@ -260,6 +299,38 @@ CustomRoom1_NPC00:
     dw $0A05                        ; NO → "Good to see you again."
     dw $FFFF
 
+; --- Room 1 ($6C) NPC 2: teleport to Castle (opcode $0F test — vanilla) ---
+CustomRoom1_NPC01:
+    dw $0A0A                        ; "Teleport to Castle?" [Y/N]
+    dw $FF15                        ; CheckAndBranch
+    dw $C83C                        ; check choice result
+    dw $0001                        ; compare to 1 (NO)
+    dw .declined                    ; branch if NO
+    dw $FF0F                        ; MapTransitionFull (opcode $0F)
+    dw $0000                        ; gate_id=$00 (Castle), flag=$00
+    dw $00E8                        ; spawn X = 232 pixels
+    dw $0078                        ; spawn Y = 120 pixels
+    dw $FFFF                        ; (transition fires before this)
+.declined:
+    dw $0A0B                        ; "Changed your mind."
+    dw $FFFF
+
+; --- Room 1 ($6C) NPC 3: teleport to custom room $6B (opcode $0F — custom) ---
+CustomRoom1_NPC02:
+    dw $0A0C                        ; "Teleport to MedalMan room?" [Y/N]
+    dw $FF15                        ; CheckAndBranch
+    dw $C83C                        ; check choice result
+    dw $0001                        ; compare to 1 (NO)
+    dw .declined                    ; branch if NO
+    dw $FF0F                        ; MapTransitionFull (opcode $0F)
+    dw $006B                        ; gate_id=$6B (custom room), flag=$00
+    dw $0028                        ; spawn X = 40 pixels (grid 2)
+    dw $0068                        ; spawn Y = 104 pixels (grid 6)
+    dw $FFFF
+.declined:
+    dw $0A0B                        ; "Changed your mind." (reuse)
+    dw $FFFF
+
 ; =============================================================================
 ; TEXT DATA — Two-level pointer table
 ; =============================================================================
@@ -274,6 +345,16 @@ CustomTextSection0:
     dw CustomText_04                ; $0A04: castle YES
     dw CustomText_05                ; $0A05: castle NO
     dw CustomText_06                ; $0A06: inventory full
+    dw CustomText_07                ; $0A07: monster offer [Y/N]
+    dw CustomText_08                ; $0A08: monster joined
+    dw CustomText_09                ; $0A09: monster declined
+    dw CustomText_0A                ; $0A0A: teleport Castle [Y/N]
+    dw CustomText_0B                ; $0A0B: teleport declined
+    dw CustomText_0C                ; $0A0C: teleport MedalMan [Y/N]
+    dw CustomText_0D                ; $0A0D: BGM change offer [Y/N]
+    dw CustomText_0E                ; $0A0E: BGM changed
+    dw CustomText_0F                ; $0A0F: BGM declined
+    dw CustomText_10                ; $0A10: monster storage full
 
 ; Room $6B NPC texts
 CustomText_00:
@@ -313,6 +394,63 @@ CustomText_06:
     db "Your inventory", $EF, $EE
     db "is full!", $F7, $F0
 
+; Monster NPC texts (Room $6B NPC 2)
+CustomText_07:
+    db $EA, $9F, $A3
+    db "Want a SkyDragon", $EF, $EE
+    db "egg?", $EF, $EE
+    db $E7, $F0
+
+CustomText_08:
+    db $EA, $9F, $A3
+    db "Got a SkyDragon", $EF, $EE
+    db "egg!", $F7, $F0
+
+CustomText_09:
+    db $EA, $9F, $A3
+    db "Maybe another", $EF, $EE
+    db "time then.", $F7, $F0
+
+; Teleport NPC texts (Room $6C NPCs 2-3)
+CustomText_0A:
+    db $EA, $9F, $A3
+    db "Teleport to", $EF, $EE
+    db "the Castle?", $EF, $EE
+    db $E7, $F0
+
+CustomText_0B:
+    db $EA, $9F, $A3
+    db "Changed your", $EF, $EE
+    db "mind.", $F7, $F0
+
+CustomText_0C:
+    db $EA, $9F, $A3
+    db "Teleport to", $EF, $EE
+    db "MedalMan room?", $EF, $EE
+    db $E7, $F0
+
+; BGM NPC texts (Room $6B NPC 3)
+CustomText_0D:
+    db $EA, $9F, $A3
+    db "Change the", $EF, $EE
+    db "music?", $EF, $EE
+    db $E7, $F0
+
+CustomText_0E:
+    db $EA, $9F, $A3
+    db "Now playing", $EF, $EE
+    db "Arena music!", $F7, $F0
+
+CustomText_0F:
+    db $EA, $9F, $A3
+    db "Keeping current", $EF, $EE
+    db "music.", $F7, $F0
+
+CustomText_10:
+    db $EA, $9F, $A3
+    db "Monster storage", $EF, $EE
+    db "is full!", $F7, $F0
+
 ; =============================================================================
 ; ROOM DATA — Restored from proven patches
 ; =============================================================================
@@ -339,7 +477,9 @@ CustomRoom0_Screen0:
 
 CustomRoom0_NPCs:
     db $8F, $FF, $02, $06, $01     ; spawn point
-    db $00, $0B, $02, $02, $01     ; NPC at (2,2), script_id=1 (not 0!)
+    db $00, $0B, $02, $02, $01     ; NPC at (2,2), script_id=1 — gives item
+    db $00, $0B, $03, $03, $02     ; NPC at (3,3), script_id=2 — gives monster
+    db $00, $0B, $01, $04, $03     ; NPC at (1,4), script_id=3 — BGM change
     db $FF
 
 CustomRoom0_Exits:
@@ -368,7 +508,9 @@ CustomRoom1_Screen0:
 
 CustomRoom1_S0_NPCs:
     db $8F, $FF, $09, $04, $01     ; spawn (from screen 1)
-    db $00, $0B, $05, $02, $01     ; NPC at (5,2), script_id=1 (not 0!)
+    db $00, $0B, $05, $02, $01     ; NPC at (5,2), script_id=1 — YES/NO demo
+    db $00, $0B, $02, $04, $02     ; NPC at (2,4), script_id=2 — teleport Castle
+    db $00, $0B, $07, $04, $03     ; NPC at (7,4), script_id=3 — teleport $6B
     db $FF
 
 CustomRoom1_S0_Exits:

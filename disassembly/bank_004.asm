@@ -3039,10 +3039,11 @@ TextReadScriptPtr:
     jp Jump_004_55f5
 
 ; ---------------------------------------------------------------------------
-; Script Command $0E: SetMapTransition
-; Reads destination map_type and gate_flag from script,
-; writes directly to $C96D/$C96E to trigger a room transition.
-; This is how cutscenes teleport the player (e.g., after story events).
+; Script Command $0E: BranchByScreen
+; Reads screen_index and branch_target from script.
+; If current wScreenIndex ($C925) == screen_index, branches to target.
+; Otherwise skips both params and continues.
+; NOTE: This is NOT a map transition (that is opcode $0F).
 ; ---------------------------------------------------------------------------
 label4_59d2:
     ld a, [wScriptCounter]
