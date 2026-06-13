@@ -258,6 +258,11 @@ All 4 banks share identical code ($4000–$41B9). Data begins at $41BA:
 | Per-map tables | Variable-size dw arrays: `script_id → script_data_ptr` |
 | Script data | Packed sequences of dw words, one per script + branch target blocks |
 
+**CRITICAL: Script index 0 = room entry script.** Bank $01 ($4C3D) runs
+`wScriptNPCId = 0` on every room enter and screen scroll. Script pointer tables
+MUST have a room entry script at index 0 (usually `dw $FFFF`). NPC scripts
+start at index 1+. NPC data byte 4 (script_id) must reference 1+, never 0.
+
 Master table indexing: the script engine reads `$41BA + $D8D3 × 2` where `$D8D3` is the raw map type. Banks $0E/$0F use offsets $40+ into the master table, not from offset 0.
 
 **Script data word format:**
@@ -275,22 +280,25 @@ Master table indexing: the script engine reads `$41BA + $D8D3 × 2` where `$D8D3
 
 **Cross-refs:** Script opcodes dispatch via bank $04's VM.
 
-**Verified Script Opcodes (22 confirmed via SameBoy + visual trace):**
+**Verified Script Opcodes (28 confirmed via SameBoy + visual trace + Session 2):**
 
 | Opcode | Params | Name | Description |
 |--------|--------|------|-------------|
-| $00 | 2 | if_flag_clear | Branch if event flag NOT set |
-| $01 | 2 | if_flag_set | Branch if event flag IS set |
+| $00 | 2 | if_flag_clear | Branch if event flag NOT set (NZ = flag byte is zero) |
+| $01 | 2 | if_flag_set | Branch if event flag IS set (Z = flag byte is nonzero) |
 | $02 | 1 | clear_flag | Clear event flag in $D99B+ |
 | $03 | 1 | set_flag | Set event flag in $D99B+ |
+| $04 | 2 | game_action | **GameActionDispatch via bank $09.** $C8EF=subcommand (0=shop). NOT give-item. Invalid indices crash. |
+| $05 | 1 | trigger_battle | Set enemy in $DA03, start fight |
 | $07 | 1 | init_dialog | Set dialogue mode, suppress input |
-| $08 | 0 | nop | No operation |
+| $08 | 0 | nop | No operation (just `ret`). NOT CheckInventoryFull. |
 | $09 | 1 | delay | Wait N frames (low byte) |
 | $0A | 2 | npc_move_x | Instant horizontal move |
 | $0B | 2 | npc_move_y | Instant vertical move |
 | $0D | 3 | npc_write | Write byte to NPC buffer |
 | $0E | 2 | branch_by_screen | Branch on screen index |
-| $12 | 2 | write_ram | Write value to RAM address (335 uses) |
+| $12 | 2 | **write_ram** | **Write value byte to RAM address.** Param1=addr, param2=value (low byte C written to [HL]). Label "ArenaGenerateBattles" is WRONG. |
+| $15 | 3 | **check_and_branch** | **Compare [addr] to value, branch if match.** Used for YES/NO: `$FF15, $C83C, $0001, branch_target` |
 | $19 | 0 | wait_movement | Pause until movement completes |
 | $1A | 2 | npc_walk_x | Animated horizontal walk |
 | $1B | 2 | npc_walk_y | Animated vertical walk |
@@ -298,6 +306,8 @@ Master table indexing: the script engine reads `$41BA + $D8D3 × 2` where `$D8D3
 | $1D | 0 | lock_movement | Suppress NPC facing |
 | $1E | 0 | unlock_movement | Restore NPC facing |
 | $22 | 0 | begin_walk | Start walk-toward sequence |
+| $2A | 1 | **give_item** | **Scan wInventory for first empty slot, write item. Needs wrapper (original uses `ret` not `jp ScriptExecContinue`).** |
+| $2C | 1 | **check_inv_full** | **Branch if inventory full (20 slots used). Param = branch target.** |
 | $47 | 1 | npc_set_state | Set NPC sprite state |
 | $48 | 1 | npc_hide | Hide NPC sprite |
 | $49 | 1 | npc_show | Show NPC sprite |
@@ -613,6 +623,47 @@ Text ID → Display
 | `gen_growth_tables_db.py` | Growth/EXP tables | $13 | Yes | — |
 | `gen_script_banks.py` | Script data tables | $0C/$0D/$0E/$0F | Yes | `--apply` |
 | `annotate_bank052.py` | Skill handler labels | $52 | **No** | one-time |
+
+---
+
+### WRAM — Text Rendering State (Session 2, verified)
+
+| Address | Size | Label | Purpose |
+|---------|------|-------|---------|
+| $C822 | 1 | — | Text section/page index (level 1 of pointer table) |
+| $C823 | 1 | — | Text entry index within section (level 2) |
+| $C824 | 1 | — | Text data bank number (async bank switching) |
+| $C825 | 1 | — | Rendering state bits: 0=active, 2=waiting input, 4=inserted text |
+| $C82D-$C82E | 2 | — | Text data read position (current) |
+| $C831-$C832 | 2 | — | Text data base position (for $F0 reset) |
+| $C83A | 1 | — | Last special control code ($FF = YES/NO active) |
+| $C83C | 1 | — | **YES/NO result: 0=YES, 1=NO** |
+
+### WRAM — Inventory ($CA51)
+
+| | |
+|-|-|
+| Address | $CA51 |
+| Label | `wInventory` |
+| Size | 20 bytes ($CA51-$CA64) |
+
+20 item slots. Empty slots = $00. Item IDs defined in `items.inc`.
+Game initializes slots 0-7 at start. Items found go to first empty via
+bank $09 function (not exposed as script opcode).
+
+**Script item manipulation:** Use opcode $12 (WriteRAM) to write item ID
+to a specific slot address. Proper "first empty slot" needs ROM0 helper (TODO).
+
+### Bank $56 — Text Control Code Jump Table (Session 2, verified)
+
+| | |
+|-|-|
+| Address | $56:$44CD (after `sub $E0` / `rst $00` at $44CB) |
+| Entries | 32 × 2-byte pointers (codes $E0-$FF) |
+
+Key handlers: $E7→$4511 (CHOICE), $EE→$45AD (NEWLINE), $EF→$4640 (PAGE),
+$F0→$46FE (SECTION), $F7→$47B4 (CLEAR), $F9→$47CE (CONTINUE), $FA→$481B (WAIT),
+$FF→$4855 (CHOICE2-no-flags).
 
 ---
 

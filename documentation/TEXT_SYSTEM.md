@@ -34,20 +34,52 @@ Single bytes expanding to common 2-character pairs:
 
 | Code | Name | Purpose |
 |------|------|---------|
-| $E7 | END | End of text string |
+| $E7 | **CHOICE** | **YES/NO box + continuation flags. NOT "END".** Sets $C83C, $C83A=$FF. Script checks result via opcode $15. |
 | $E8 | PAUSE | Brief pause |
 | $E9 | NUM | Insert number from variable |
-| $EA | BOX | Text box initialization (followed by 2 param bytes) |
-| $EB | ITEM | Item/context text marker |
+| $EA | BOX | Text box init (2 param bytes: $9F $A3 = standard NPC box) |
+| $EB | BOX2 | Alternate text box init (same params as $EA) |
 | $EC | NAME | Insert NPC/character name |
 | $ED | MONSTER | Insert monster name |
-| $EE | NEWLINE | Line break within text box |
-| $EF | PAGE | New text page (clear box, continue) |
-| $F0 | SECTION | Section separator (close box, open new) |
+| $EE | NEWLINE | Line break — **MUST be preceded by $EF** or overwrites line 1 |
+| $EF | PAGE | Advance rendering position. Use `$EF $EE` together for line breaks |
+| $F0 | SECTION | End text section. Stops rendering (unless bit 4 of $C825 set) |
 | $F6 | HERO | Insert player's name |
 | $F7 | CLEAR | Clear text box contents |
-| $FA | WAIT | Wait for button press |
-| $FF | CHOICE | Yes/No choice prompt |
+| $F9 | CONTINUE | Set continuation flag (bit 4 $C825), update base pointer |
+| $FA | WAIT | Wait for A button press |
+| $FF | CHOICE2 | YES/NO box only, does NOT set continuation flags |
+
+**Text strings terminate with `$F7 $F0` (CLEAR + SECTION), NOT `$E7`.**
+
+### Standard NPC Text Format (verified)
+```
+$EA $9F $A3 line1_text $EF $EE line2_text $F7 $F0
+```
+
+### YES/NO Choice (two-part system, verified)
+Text ends with `$EF $EE $E7 $F0`. Script then checks `$C83C` via opcode `$15`:
+```
+dw question_text_id       ; text ending in $E7 $F0
+dw $FF15                  ; CheckAndBranch
+dw $C83C                  ; 0=YES, 1=NO
+dw $0001                  ; branch if NO
+dw .no_target
+dw yes_text_id            ; shown if YES
+dw $FFFF
+.no_target:
+dw no_text_id             ; shown if NO
+dw $FFFF
+```
+
+### Custom Text Routing ($0A00+)
+IDs with high byte ≥ $0A intercepted in bank $04 TextQueueCheck before ROM0 cascade.
+Routed to bank $60 entry 5. Two-level pointer table required (see below).
+
+### Custom Text Pointer Table
+`SaveBankAndSwitch` (ROM0 $0940) does two-level indexing:
+`table[$C822*2]` → section, `section[$C823*2]` → text address.
+Flat tables crash.
 
 ## NPC → Dialogue Pipeline
 
@@ -59,10 +91,12 @@ Player presses A near NPC
     → Bank $04 ScriptInit ($55EC)
       → ScriptDataRead dispatches to bank $0C/$0D/$0E/$0F based on $D8D3:
           <$06→$0C, <$20→$0D, <$40→$0E, ≥$40→$0F
+          ≥$6B→$60 (CUSTOM ROOMS, added by bank $04 patch)
       → Triple-index lookup: map_type→script_id→BC command pairs
       → B≠$FF: BC is text ID → queued to $D8D9/$D8DA
       → B=$FF: C is script opcode (0-99) dispatched via rst $00
     → ROM0 TextDispatchCascade ($0AD9) routes text ID to handler bank
+      → Text IDs ≥$0A00: intercepted by bank $04 patch → bank $60 entry 5
 ```
 
 ## Text Storage
@@ -106,11 +140,18 @@ indexed by `wMapID` to the table at `$6119`. Each handler does room-specific vis
 
 | Address | Purpose |
 |---------|---------|
-| $C822/$C823 | Text ID (16-bit, high=page selector, low=index) |
-| $D8D3 | wMapID (used for script bank dispatch) |
-| $D8D4 | script_id (from NPC entry byte 4) |
-| $D8D5/$D8D6 | Script command counter |
-| $D8D9/$D8DA | Queued text ID from script |
+| $C822 | Text section/page index (level 1 of two-level pointer table) |
+| $C823 | Text entry index within section (level 2) |
+| $C824 | Text data bank number (for async bank switching) |
+| $C825 | Rendering state: bit 0=active, bit 2=waiting input, bit 4=inserted text |
+| $C82D/$C82E | Text data read position (current, auto-incremented) |
+| $C831/$C832 | Text data base position (for $F0 reset when bit 4 set) |
+| $C83A | Last special control code ($FF = YES/NO choice active) |
+| $C83C | **YES/NO result: 0=YES, 1=NO** (checked by script opcode $15) |
+| $D8D3 | wScriptMapType (set to wMapID directly by bank $01) |
+| $D8D4 | wScriptNPCId (script_id from NPC entry byte 4) |
+| $D8D5/$D8D6 | wScriptCounter (16-bit, indexes script data) |
+| $D8D9/$D8DA | Queued text ID from script (set when B≠$FF) |
 
 ## Data Files
 

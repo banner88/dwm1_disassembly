@@ -140,7 +140,7 @@ This means the script VM pauses for one or more frames while text is being displ
 ### Screen Effects
 | Cmd | Address | Name | Description |
 |-----|---------|------|-------------|
-| $04 | $57A1 | TriggerScreenEffect | Set effect type ($C8EF) + params ($C8F0/$C8F1) |
+| $04 | $57A1 | GameActionDispatch | **Bank $09 dispatch via $C8EF. 0=shop, others=gate events. NOT give-item.** |
 | $19 | $5C6D | FadeEffect | Screen fade in/out |
 | $0F | $5A02 | SetScreenScroll | Configure screen scrolling |
 
@@ -156,7 +156,7 @@ This means the script VM pauses for one or more frames while text is being displ
 ### Sound/Music
 | Cmd | Address | Name | Description |
 |-----|---------|------|-------------|
-| $15 | $5B8F | PlaySE | Play sound effect |
+| $15 | $5B8F | **CheckAndBranch** | **Compare [addr] to value, branch if match. Used for YES/NO ($C83C).** |
 | $23 | $5E8F | PlaySE2 | Sound effect variant |
 | $41 | $669D | SetBGM | Save current BGM, play new BGM |
 | $4C | $68A1 | RestoreBGM | Restore BGM from $C8B6 |
@@ -166,9 +166,9 @@ This means the script VM pauses for one or more frames while text is being displ
 |-----|---------|------|-------------|
 | $28 | $5F67 | CheckStorageFull | Branch if all 20 monster slots occupied |
 | $29 | $5F9A | AddMonster | Add monster to storage by enemy stats ID |
-| $2A | $5FDB | GiveItem | Add item to first empty inventory slot |
+| $2A | $5FDB | **GiveItem** | **Scan first empty slot, write item. Needs wrapper (uses `ret` not `jp ScriptExecContinue`). Patched via jump table redirect.** |
 | $2B | $6002 | CheckMonsterLevel | Check monster level thresholds |
-| $2C | $6064 | CheckInvFull | Branch if inventory full (20 items) |
+| $2C | $6064 | **CheckInvFull** | **Branch if inventory full. 1 param = branch target. Verified working.** |
 
 ### Map/Room Transitions
 | Cmd | Address | Name | Description |
@@ -242,18 +242,24 @@ new_counter = counter + offset
 
 This allows conditional and unconditional jumps within the script data.
 
-## How Custom Scripts Would Work
+## How Custom Scripts Work (Proven — Session 2)
 
-To add custom NPC dialogue or events:
+Custom rooms (mapID ≥ $6B) use bank $60 for scripts, text, and room data:
 
-1. **Assign text IDs** in unused range (e.g., $0A00+)
-2. **Add ROM0 dispatch entry** at $0AEA cascade for the new range
-3. **Add parallel entry** in bank $56's cascade
-4. **Create script data** in one of the script banks ($0C/$0D/$0E/$0F) OR redirect ScriptDataRead to a custom bank
-5. **Create text data** in an empty bank with game's text codec
-6. **Map NPC script_ids** to text IDs via the script data
+1. **MapTypeDispatch** (bank $04) patched: `cp CUSTOM_ROOM_START` before existing cascade → routes to bank $60 entry 4 (CustomScriptRead)
+2. **TextQueueCheck** (bank $04) patched: text IDs with high byte ≥ $0A intercepted before ROM0 cascade → routes to bank $60 entry 5 (CustomTextDisplay)
+3. **Script data** in bank $60: same triple-index format as banks $0C-$0F
+4. **Text data** in bank $60: two-level pointer table (required by SaveBankAndSwitch)
+5. **NO ROM0 changes needed** — all routing via bank $04 patches
 
-The key insight is that NPC script_id doesn't directly map to a text ID — it goes through the script VM which can do conditional logic, branching, and state-dependent behavior before emitting a text ID.
+**Critical rules:**
+- Script index 0 = room entry script (must be `dw $FFFF`). NPC scripts at index 1+.
+- Text format: `$EA $9F $A3` prefix, `$EF $EE` for line breaks, `$F7 $F0` to end.
+- YES/NO: text ends with `$E7 $F0`, script checks `$C83C` via opcode `$15`.
+- Item give: opcode `$2A` (GiveItem) via jump table wrapper. Check full first with opcode `$2C`.
+- **NEVER insert bytes in bank $04** — use same-size replacements or wrappers in padding.
+
+See `patches/bank_004.asm` and `patches/bank_060.asm` for implementation.
 
 ## Cross-References
 

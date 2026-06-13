@@ -48,7 +48,7 @@
 |-------|---------|
 | $C800-$C8FF | System state, UI, battle temp |
 | $C900-$C9FF | Room/map state, screen index, floor, gate |
-| $CA00-$CA50 | Inventory (items at $CA21, 20 slots) |
+| $CA51-$CA64 | Inventory (20 item slots, empty=$00) |
 | $CAC1-$D6B0 | Party/storage monsters (20 × $95 bytes) |
 | $D7D2+ | NPC RAM buffer (32 bytes per NPC) |
 | $D8D0-$D8DF | Script engine state |

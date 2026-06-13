@@ -1,101 +1,112 @@
-# DWM1 Disassembly Project — Complete Handoff
+# DWM1 Disassembly — Handoff for Next Session
 
-## READ FIRST — Critical Context
-
+## READ FIRST
 **The repo always builds to the original MD5: `b90957482011c8083a068781033715b7`.**
-
-The cross-bank room system is PROVEN WORKING but lives as **separate patch files**, not in the repo. The editor will apply these patches to the original ROM at build time. See `CROSSBANK_ROOMS.md` and `KEY_LESSONS.md`.
-
----
-
-## 1. What This Project Is
-
-**Dragon Warrior Monsters** (DWM1) — Game Boy Color RPG (1998, Enix/TOSE).
-Full ROM disassembly into buildable RGBDS assembly. Goal: custom game editor for rooms, scripts, breeding, NPCs, events.
-
-**Disassembly state:** ~45% labels named. All 2,404 function entry points named. Banks $00 and $04 fully named.
+Custom content lives as **patch files** in `patches/`. Applied on top of clean repo at build time.
 
 ---
 
-## 2. Critical Rules
+## Project State
 
-```bash
-cd disassembly && make
-# MUST output: b90957482011c8083a068781033715b7
+**Dragon Warrior Monsters** (GBC, 1998) full ROM disassembly into buildable RGBDS assembly.
+Goal: custom game editor for rooms, scripts, breeding, NPCs, events, and eventually custom stories.
+Disassembly: ~45% labels named, all 2,404 functions labeled, banks $00/$04 fully named.
+RGBDS v0.6.1 required. **NEVER `make clean`** (deletes .2bpp). **NEVER `git stash`**.
+
+---
+
+## What Works (All Proven In-Game, v23)
+
+| System | Status | Key Details |
+|--------|--------|-------------|
+| Cross-bank custom rooms | ✅ | mapID ≥ $6B → bank $60. Multi-screen scrolling, exits. |
+| NPC scripts | ✅ | MapTypeDispatch patched in bank $04. Script index 0 = room entry, NPCs at 1+. |
+| Custom text/dialogue | ✅ | TextQueueCheck patched. IDs $0A00+. Two-level pointer table. `$EF $EE` for line breaks. `$F7 $F0` to end. |
+| YES/NO choices | ✅ | Text ends with `$E7 $F0`. Script uses opcode `$15` to check `$C83C` (0=YES, 1=NO). |
+| Item give | ✅ | Opcode `$2A` (GiveItem) via jump table wrapper. Scans first empty inventory slot. |
+| Inventory full check | ✅ | Opcode `$2C` branches if all 20 slots used. |
+| Event flags | ✅ | Opcodes `$00`/`$01`/`$03`. 463 free flags. |
+| Room exits | ✅ | 7-byte format: trigX, trigY, mapID, flags, screen, destX, destY. |
+
+**Patch files (8 total):** bank_000, bank_001, bank_004 (NEW Session 2), bank_00b, bank_017, bank_060, wram, game.asm
+
+---
+
+## Critical Rules
+
+1. **NEVER insert bytes into banks $01, $04, or $17** — raw embedded pointers break. Use same-size replacements or wrappers in padding only.
+2. **rst $10 entry index:** L = entry NUMBER not byte offset. Entry 4 = `$XX04`. rst $10 does `add hl,hl` internally.
+3. **Script index 0 = room entry.** Runs on every room enter AND screen scroll. NPC scripts at index 1+.
+4. **Text terminates with `$F7 $F0`**, NOT `$E7`. `$E7` = YES/NO CHOICE. `$EE` needs `$EF` before it.
+5. **Text pointer table must be two-level.** SaveBankAndSwitch ($0940) indexes twice.
+6. **When in doubt: `grep` the ROM** for how the original game does it. Don't theorize.
+7. **Opcode $2A (GiveItem) needs wrapper.** Original `ret` breaks flow. Jump table redirects to wrapper that `call`s original then `jp ScriptExecContinue`.
+
+---
+
+## Documentation (Read Order)
+
+| File | When |
+|------|------|
+| KEY_LESSONS.md | BEFORE touching any code — every hard-won bug from 2 sessions |
+| DATA_STRUCTURES.md | Master reference — all tables, addresses, verified opcodes |
+| BANK04_SCRIPT_ENGINE.md | Script VM architecture + complete opcode reference |
+| TEXT_SYSTEM.md | Text control codes, format, YES/NO, custom routing |
+| CROSSBANK_ROOMS.md | Room system implementation |
+| SESSION2_CUSTOM_CONTENT.md | Supplementary: bank $56 jump table, BGM offsets |
+
+**Archived:** SESSION1_ARCHIVE.md (superseded). **Delete from repo:** old SESSION_HANDOFF.md if still present.
+
+---
+
+## Likely Next Steps
+
+### 1. Random Encounters in Custom Rooms
+Deferred from Session 2. `wInGateworld` ($C969) gates encounters but also changes script dispatch ($D8D3→$70) and enables floor generator. Needs decoupled encounter patch or investigation of actual battle trigger mechanism.
+
+### 2. Editor Architecture
+All content primitives work. Editor generates bank_060.asm with room data, script data, text data. Needs: text auto-wrap (18 char lines), patch application, build integration.
+
+### 3. Remaining Systems to Verify
+- **Teleport/warp** — opcode $0E (SetMapTransition), untested
+- **BGM change** — opcode $41, untested (BGM table in SESSION2_CUSTOM_CONTENT.md)
+- **Monster give** — opcode $29 (AddMonster) labeled in BANK04, untested
+- **NPC visibility** — flag-based show/hide, mechanism unknown
+- **Custom tilesets** — needs LZ compressor tool (~50 lines Python)
+
+---
+
+## Complete Item Give Pattern (Verified)
+```asm
+dw $FF2C                ; check_inv_full
+dw .invFull             ; branch if full
+dw $FF2A                ; GiveItem (first empty slot)
+dw ITEM_ID              ; item constant from items.inc
+dw text_received        ; "Received X!"
+dw $FFFF
+.invFull:
+dw text_full            ; "Inventory is full!"
+dw $FFFF
 ```
 
-- **NEVER `make clean`** — deletes .2bpp graphics
-- **NEVER `git stash`** — can revert all changes
-- **RGBDS v0.6.1** required
+## Complete YES/NO Pattern (Verified)
+```asm
+dw text_question        ; text ending with $E7 $F0
+dw $FF15                ; CheckAndBranch
+dw $C83C                ; choice result (0=YES, 1=NO)
+dw $0001                ; compare to NO
+dw .no_branch
+dw text_yes             ; YES response
+dw $FFFF
+.no_branch:
+dw text_no              ; NO response
+dw $FFFF
+```
 
----
-
-## 3. Cross-Bank Room Patches (SEPARATE from repo)
-
-The `patches/` directory contains 7 modified ASM files that enable custom rooms in bank $60+. These are applied by the editor on top of the clean repo, NOT committed to the repo.
-
-**To test patches:** copy all `patches/*.asm` into `disassembly/`, build. MD5 will be different (expected). Revert with `git checkout -- <files>`.
-
-**Read before touching patches:**
-- `KEY_LESSONS.md` — Every bug from 19 iterations
-- `CROSSBANK_ROOMS.md` — Complete implementation reference
-
-**Critical patch rules:**
-- NEVER insert bytes into bank $01 or $17 — raw embedded pointers break
-- rst $10 clobbers register A — use DE/HL or ROM0 calls
-- Every table indexed by mapID must be patched (11 found, all patched)
-
----
-
-## 4. What's DONE
-
-| System | Status |
-|--------|--------|
-| Cross-bank rooms | ✅ PROVEN (patches ready) |
-| All data tables labeled | ✅ |
-| Script system (530 scripts, 100 opcodes) | ✅ |
-| Event flags (311 mapped, 463 free) | ✅ |
-| Breeding/monsters/skills/EXP tables | ✅ |
-| Multi-screen room scrolling | ✅ |
-
----
-
-## 5. What's LEFT for the Custom Editor
-
-| Priority | Task | Difficulty | Blocking? |
-|----------|------|-----------|-----------|
-| 1 | **NPC scripts in custom rooms** — intercept bank $04 MapTypeDispatch for mapID ≥ $6B | Medium | Yes — no dialogue without this |
-| 2 | **Text/dialogue** — survey text ID capacity, add entries | Medium | Yes — NPCs need text |
-| 3 | **LZ compressor tool** — reverse of decompress_tiles.py (~50 lines Python) | Easy | No — can reuse existing layouts |
-| 4 | **Custom tilesets** — $26DD table + bank $17 extension | Hard | No — can reuse existing art |
-| 5 | **Story events** — custom scripts with event flags | Easy (after P1) | No |
-| 6 | **MapID scaling** — table-based source mapID for many rooms | Medium | No — works for small count |
-
-**Shortest path to playable custom content:** Priorities 1-2 unlock NPC dialogue. Everything else builds on that.
-
----
-
-## 6. Key Documentation
-
-| File | Read When |
-|------|-----------|
-| KEY_LESSONS.md | BEFORE touching cross-bank code |
-| CROSSBANK_ROOMS.md | Complete implementation reference |
-| ROOM_DATA_FORMAT.md | Room data structure |
-| BANK04_SCRIPT_ENGINE.md | Script routing (needed for Priority 1) |
-| DATA_STRUCTURES.md | All game data tables |
-| TEXT_SYSTEM.md | Text encoding (needed for Priority 2) |
-
----
-
-## 7. Patch Files (in `patches/` directory)
-
-| File | What It Patches |
-|------|----------------|
-| bank_060.asm | NEW: custom room data bank |
-| bank_000.asm | 2 ROM0 helpers + collision fix |
-| bank_001.asm | 4 same-size mapID patches |
-| bank_00b.asm | 6 intercept patches + exit redirect |
-| bank_017.asm | 2 same-size palette patches |
-| wram.asm | WRAM buffer definitions |
-| game.asm | Bank $60 include |
+## Build & Test
+```bash
+cd disassembly && make                    # Clean → MD5 b90957482011c8083a068781033715b7
+cp ../patches/*.asm . && make             # Patched → different MD5
+# Test: GreatTree → stairway → room $6B (BeefJerky NPC) → room $6C (YES/NO NPC)
+# Revert: git checkout -- bank_000.asm bank_001.asm bank_004.asm bank_00b.asm bank_017.asm wram.asm game.asm
+```

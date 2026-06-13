@@ -95,3 +95,64 @@ Every table lookup with mapID must be patched for custom rooms (mapID ≥ $6B).
 5. **Don't use byte-by-byte copy for NPC/exit data** — use entry-sized copies (5 or 7 bytes).
 
 6. **Don't guess screen bytes or spawn coordinates** — find an existing exit to the same destination and copy exactly.
+
+---
+
+## Session 2 Lessons — Custom NPC Scripts, Text & Items
+
+### rst $10 entry index: L = entry NUMBER, not byte offset
+**Symptom**: Every custom dispatch call crashed (white screen).
+**Root cause**: rst $10 does `add hl,hl` internally (ROM0 $0020). L is the entry NUMBER. Entry 4 = `$6004`, NOT `$6008`. Entry 5 = `$6005`, NOT `$600A`.
+**Rule**: Always use entry number for L. The ×2 multiplication happens inside rst $10.
+
+### Script index 0 = room entry script
+**Symptom**: Every screen scroll in custom Castle room froze the game.
+**Root cause**: Bank $01 ($4C3D) runs wScriptNPCId=0 on every room enter and scroll. Script table index 0 had NPC dialogue → text queued during scroll → freeze.
+**Fix**: Index 0 must be `dw $FFFF` (no-op). NPC scripts at index 1+. NPC data byte 4 must reference 1+.
+**Rule**: Script pointer table index 0 is RESERVED for room entry. Never put NPC dialogue there.
+
+### $E7 is CHOICE, not END
+**Symptom**: Text displayed but YES/NO boxes appeared after every message.
+**Root cause**: TEXT_SYSTEM.md documented $E7 as "END". It's actually the CHOICE control code (shows YES/NO box, sets $C83C). Text strings actually end with `$F7 $F0`.
+**Rule**: Don't trust documentation labels. Verify against ROM data. `grep` for the byte in actual text data before assuming.
+
+### $EE needs $EF before it
+**Symptom**: Second line overwrites first line instead of appearing below.
+**Root cause**: $EE (NEWLINE) alone resets cursor position. Must use `$EF $EE` (PAGE + NEWLINE) for proper line break.
+**Rule**: Line breaks = `$EF $EE`, never `$EE` alone.
+
+### YES/NO is two-part: text + script
+**Symptom**: YES/NO box appeared but no follow-up message regardless of choice.
+**Root cause**: Spent 6 iterations guessing at text-engine-internal mechanisms. The answer: original scripts use opcode $15 to check $C83C after text. Found immediately by `grep -rn "c83c" bank_0*.asm`.
+**Fix**: Text ends with `$E7 $F0`, script uses `$FF15 / $C83C / $0001 / branch_target`.
+**Rule**: When you don't know how something works, **grep for how the original game does it**. Don't theorize about engine internals.
+
+### Opcode $04 is NOT "give item"
+**Symptom**: White screen crash when trying to give Beef Jerky.
+**Root cause**: Opcode $04 is GameActionDispatch (dispatches through bank $09 jump table). Index $13 (Beef Jerky) was past the table bounds → jumped to garbage.
+**Fix**: Use opcode $12 (WriteRAM) to write item ID directly to inventory address.
+**Rule**: Always verify opcode behavior against actual handler code, not comment labels.
+
+### Text pointer table needs two levels
+**Symptom**: Text displayed garbage or crashed.
+**Root cause**: `SaveBankAndSwitch` (ROM0 $0940) does two-level indexing: `table[$C822*2]` → section, `section[$C823*2]` → text address. A flat pointer table causes the engine to read text bytes as pointers.
+**Rule**: Custom text pointer table structure must be: top-level table of section pointers, each section is a table of text data pointers.
+
+### Method: finding script patterns
+When implementing new behavior (YES/NO, item give, etc.):
+```bash
+# 1. Find the RAM variable involved
+grep -rn "c83c" disassembly/bank_0*.asm
+
+# 2. Find scripts that USE that variable
+grep "C83C" extracted/all_scripts.json
+
+# 3. Copy the exact opcode pattern from the original script
+```
+This takes 30 seconds. Guessing takes hours.
+
+### NEVER insert bytes into bank $04
+**Symptom**: Visual glitches EVERYWHERE (corrupted sprites, unreadable text, broken menus) even in unmodified areas of the game.
+**Root cause**: Something outside bank $04 references bank $04 addresses by hardcoded value (not labels). Inserting 3 bytes shifted all subsequent addresses → global corruption.
+**Fix**: Use wrapper in padding area. Redirect jump table entry to wrapper. Zero bytes inserted in existing code. Original handler completely untouched.
+**Rule**: Add banks $04 to the "NEVER insert bytes" list alongside $01 and $17. Use same-size replacements or wrappers in free space only.

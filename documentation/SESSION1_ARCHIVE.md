@@ -1,3 +1,5 @@
+> **ARCHIVED:** Superseded by NEXT_CLAUDE_MESSAGE.md. Priorities 1 & 4 completed in Session 2.
+
 > **NOTE:** The files described here are EDITOR PATCHES, not repo changes. The repo always builds to the original MD5. The editor applies these patches at build time.
 
 # Session Handoff — Cross-Bank Room POC (June 2026)
