@@ -354,7 +354,7 @@
     "addr": "$5213",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5215",
@@ -370,7 +370,7 @@
     "addr": "$5219",
     "type": "opcode",
     "opcode": 42,
-    "name": "check_level"
+    "name": "give_item"
    },
    {
     "addr": "$521B",
@@ -410,7 +410,7 @@
     "addr": "$5225",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5227",
@@ -426,7 +426,7 @@
     "addr": "$522B",
     "type": "opcode",
     "opcode": 42,
-    "name": "check_level"
+    "name": "give_item"
    },
    {
     "addr": "$522D",
@@ -511,7 +511,7 @@
     "addr": "$5243",
     "type": "opcode",
     "opcode": 39,
-    "name": "check_storage_full"
+    "name": "post_battle_check"
    },
    {
     "addr": "$5245",
@@ -624,7 +624,7 @@
     "addr": "$5243",
     "type": "opcode",
     "opcode": 39,
-    "name": "check_storage_full"
+    "name": "post_battle_check"
    },
    {
     "addr": "$5245",
@@ -1920,7 +1920,7 @@
     "addr": "$55EB",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$55ED",
@@ -1936,7 +1936,7 @@
     "addr": "$55F1",
     "type": "opcode",
     "opcode": 42,
-    "name": "check_level"
+    "name": "give_item"
    },
    {
     "addr": "$55F3",
@@ -4061,7 +4061,7 @@
     "addr": "$5E97",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5E99",
@@ -4088,7 +4088,7 @@
     "addr": "$5EA1",
     "type": "opcode",
     "opcode": 42,
-    "name": "check_level"
+    "name": "give_item"
    },
    {
     "addr": "$5EA3",
@@ -7727,7 +7727,7 @@
     "addr": "$6B47",
     "type": "opcode",
     "opcode": 40,
-    "name": "add_monster"
+    "name": "check_storage_full"
    },
    {
     "addr": "$6B49",
@@ -7802,7 +7802,7 @@
     "addr": "$6B63",
     "type": "opcode",
     "opcode": 41,
-    "name": "give_item"
+    "name": "add_monster"
    },
    {
     "addr": "$6B65",
@@ -12437,7 +12437,7 @@
     "addr": "$73E3",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$73E5",
@@ -12464,7 +12464,7 @@
     "addr": "$73ED",
     "type": "opcode",
     "opcode": 42,
-    "name": "check_level"
+    "name": "give_item"
    },
    {
     "addr": "$73EF",
@@ -16506,7 +16506,7 @@
     "addr": "$4F4E",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4F50",
@@ -16570,7 +16570,7 @@
     "addr": "$4F66",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$4F68",
@@ -16902,7 +16902,7 @@
     "addr": "$5068",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$506A",
@@ -16966,7 +16966,7 @@
     "addr": "$5080",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$5082",
@@ -17126,7 +17126,7 @@
     "addr": "$50BC",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$50BE",
@@ -17190,7 +17190,7 @@
     "addr": "$50D4",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$50D6",
@@ -17523,7 +17523,7 @@
     "addr": "$50BC",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$50BE",
@@ -17587,7 +17587,7 @@
     "addr": "$50D4",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$50D6",
@@ -19648,7 +19648,7 @@
     "addr": "$554A",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$554C",
@@ -19664,7 +19664,7 @@
     "addr": "$5550",
     "type": "opcode",
     "opcode": 42,
-    "name": "check_level"
+    "name": "give_item"
    },
    {
     "addr": "$5552",
@@ -21303,7 +21303,7 @@
     "addr": "$60F6",
     "type": "opcode",
     "opcode": 78,
-    "name": "restore_from_gate"
+    "name": "save_gate_info"
    },
    {
     "addr": "$60F8",
@@ -21599,7 +21599,7 @@
     "addr": "$60F6",
     "type": "opcode",
     "opcode": 78,
-    "name": "restore_from_gate"
+    "name": "save_gate_info"
    },
    {
     "addr": "$60F8",
@@ -22236,7 +22236,7 @@
     "addr": "$6238",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$623A",
@@ -22274,7 +22274,7 @@
     "addr": "$6246",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$6248",
@@ -22369,7 +22369,7 @@
     "addr": "$6238",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$623A",
@@ -22407,7 +22407,7 @@
     "addr": "$6246",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$6248",
@@ -22486,7 +22486,7 @@
     "addr": "$628E",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$6290",
@@ -22502,7 +22502,7 @@
     "addr": "$6294",
     "type": "opcode",
     "opcode": 42,
-    "name": "check_level"
+    "name": "give_item"
    },
    {
     "addr": "$6296",
@@ -26852,7 +26852,7 @@
     "addr": "$6B70",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6B72",
@@ -27229,7 +27229,7 @@
     "addr": "$6BF6",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6BF8",
@@ -27447,7 +27447,7 @@
     "addr": "$6C48",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6C4A",
@@ -27766,7 +27766,7 @@
     "addr": "$6C48",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6C4A",
@@ -28044,7 +28044,7 @@
     "addr": "$6CBE",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$6CC0",
@@ -28255,7 +28255,7 @@
     "addr": "$6D20",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6D22",
@@ -28629,7 +28629,7 @@
     "addr": "$6DB6",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6DB8",
@@ -28847,7 +28847,7 @@
     "addr": "$6E08",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6E0A",
@@ -29148,7 +29148,7 @@
     "addr": "$6E08",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6E0A",
@@ -32117,7 +32117,7 @@
     "addr": "$73E2",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$73E4",
@@ -32150,7 +32150,7 @@
     "addr": "$73EE",
     "type": "opcode",
     "opcode": 66,
-    "name": "restore_map"
+    "name": "save_map_return"
    },
    {
     "addr": "$73F0",
@@ -32193,7 +32193,7 @@
     "addr": "$73FE",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7400",
@@ -32572,7 +32572,7 @@
     "addr": "$74BC",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$74BE",
@@ -32636,7 +32636,7 @@
     "addr": "$74D4",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$74D6",
@@ -32700,7 +32700,7 @@
     "addr": "$74EC",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$74EE",
@@ -32764,7 +32764,7 @@
     "addr": "$7504",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$7506",
@@ -32828,7 +32828,7 @@
     "addr": "$751C",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$751E",
@@ -32892,7 +32892,7 @@
     "addr": "$7534",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$7536",
@@ -32956,7 +32956,7 @@
     "addr": "$754C",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$754E",
@@ -33068,7 +33068,7 @@
     "addr": "$7576",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$7578",
@@ -33132,7 +33132,7 @@
     "addr": "$758E",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$7590",
@@ -33196,7 +33196,7 @@
     "addr": "$75A6",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$75A8",
@@ -33260,7 +33260,7 @@
     "addr": "$75BE",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$75C0",
@@ -33324,7 +33324,7 @@
     "addr": "$75D6",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$75D8",
@@ -33420,7 +33420,7 @@
     "addr": "$75FA",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$75FC",
@@ -33484,7 +33484,7 @@
     "addr": "$7612",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$7614",
@@ -33548,7 +33548,7 @@
     "addr": "$762A",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$762C",
@@ -33612,7 +33612,7 @@
     "addr": "$7642",
     "type": "opcode",
     "opcode": 64,
-    "name": "set_bgm"
+    "name": "check_monster_bgm"
    },
    {
     "addr": "$7644",
@@ -34365,7 +34365,7 @@
     "addr": "$7B3A",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7B3C",
@@ -34424,7 +34424,7 @@
     "addr": "$7B50",
     "type": "opcode",
     "opcode": 66,
-    "name": "restore_map"
+    "name": "save_map_return"
    },
    {
     "addr": "$7B52",
@@ -34467,7 +34467,7 @@
     "addr": "$7B60",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7B62",
@@ -34569,7 +34569,7 @@
     "addr": "$7BF6",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7BF8",
@@ -34602,7 +34602,7 @@
     "addr": "$7C02",
     "type": "opcode",
     "opcode": 66,
-    "name": "restore_map"
+    "name": "save_map_return"
    },
    {
     "addr": "$7C04",
@@ -34645,7 +34645,7 @@
     "addr": "$7C12",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7C14",
@@ -35087,7 +35087,7 @@
     "addr": "$7B3A",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7B3C",
@@ -35146,7 +35146,7 @@
     "addr": "$7B50",
     "type": "opcode",
     "opcode": 66,
-    "name": "restore_map"
+    "name": "save_map_return"
    },
    {
     "addr": "$7B52",
@@ -35189,7 +35189,7 @@
     "addr": "$7B60",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7B62",
@@ -35304,7 +35304,7 @@
     "addr": "$7BF6",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7BF8",
@@ -35337,7 +35337,7 @@
     "addr": "$7C02",
     "type": "opcode",
     "opcode": 66,
-    "name": "restore_map"
+    "name": "save_map_return"
    },
    {
     "addr": "$7C04",
@@ -35380,7 +35380,7 @@
     "addr": "$7C12",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$7C14",
@@ -36634,7 +36634,7 @@
     "addr": "$4C16",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4C18",
@@ -36778,7 +36778,7 @@
     "addr": "$4C4A",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4C4C",
@@ -36866,7 +36866,7 @@
     "addr": "$4C6A",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4C6C",
@@ -36954,7 +36954,7 @@
     "addr": "$4C8A",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4C8C",
@@ -37019,7 +37019,7 @@
     "addr": "$4CA2",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$4CA4",
@@ -37514,7 +37514,7 @@
     "addr": "$4E92",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4E94",
@@ -37525,7 +37525,7 @@
     "addr": "$4E96",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4E98",
@@ -37536,7 +37536,7 @@
     "addr": "$4E9A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4E9C",
@@ -37558,7 +37558,7 @@
     "addr": "$4EA2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4EA4",
@@ -37580,7 +37580,7 @@
     "addr": "$4EAA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4EAC",
@@ -37602,7 +37602,7 @@
     "addr": "$4EB2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4EB4",
@@ -37652,7 +37652,7 @@
     "addr": "$4EC4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4EC6",
@@ -37663,7 +37663,7 @@
     "addr": "$4EC8",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4ECA",
@@ -37674,7 +37674,7 @@
     "addr": "$4ECC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4ECE",
@@ -37696,7 +37696,7 @@
     "addr": "$4ED4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4ED6",
@@ -37718,7 +37718,7 @@
     "addr": "$4EDC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4EDE",
@@ -37827,7 +37827,7 @@
     "addr": "$4F04",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$4F06",
@@ -38454,7 +38454,7 @@
     "addr": "$50C6",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$50C8",
@@ -38586,7 +38586,7 @@
     "addr": "$50F6",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$50F8",
@@ -38730,7 +38730,7 @@
     "addr": "$512A",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$512C",
@@ -39268,7 +39268,7 @@
     "addr": "$51C4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$51C6",
@@ -39290,7 +39290,7 @@
     "addr": "$51CC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$51CE",
@@ -39312,7 +39312,7 @@
     "addr": "$51D4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$51D6",
@@ -39334,7 +39334,7 @@
     "addr": "$51DC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$51DE",
@@ -39345,7 +39345,7 @@
     "addr": "$51E0",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$51E2",
@@ -39356,7 +39356,7 @@
     "addr": "$51E4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$51E6",
@@ -39411,7 +39411,7 @@
     "addr": "$51F8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$51FA",
@@ -39433,7 +39433,7 @@
     "addr": "$5200",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5202",
@@ -39455,7 +39455,7 @@
     "addr": "$5208",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$520A",
@@ -39466,7 +39466,7 @@
     "addr": "$520C",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$520E",
@@ -39596,7 +39596,7 @@
     "addr": "$523C",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$523E",
@@ -40085,7 +40085,7 @@
     "addr": "$539A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$539C",
@@ -40096,7 +40096,7 @@
     "addr": "$539E",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$53A0",
@@ -40107,7 +40107,7 @@
     "addr": "$53A2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$53A4",
@@ -40129,7 +40129,7 @@
     "addr": "$53AA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$53AC",
@@ -40151,7 +40151,7 @@
     "addr": "$53B2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$53B4",
@@ -40173,7 +40173,7 @@
     "addr": "$53BA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$53BC",
@@ -40223,7 +40223,7 @@
     "addr": "$53CC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$53CE",
@@ -40234,7 +40234,7 @@
     "addr": "$53D0",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$53D2",
@@ -40245,7 +40245,7 @@
     "addr": "$53D4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$53D6",
@@ -40267,7 +40267,7 @@
     "addr": "$53DC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$53DE",
@@ -40289,7 +40289,7 @@
     "addr": "$53E4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$53E6",
@@ -40430,7 +40430,7 @@
     "addr": "$5418",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$541A",
@@ -41317,7 +41317,7 @@
     "addr": "$5500",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5502",
@@ -41339,7 +41339,7 @@
     "addr": "$5508",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$550A",
@@ -41350,7 +41350,7 @@
     "addr": "$550C",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$550E",
@@ -41361,7 +41361,7 @@
     "addr": "$5510",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5512",
@@ -41383,7 +41383,7 @@
     "addr": "$5518",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$551A",
@@ -41405,7 +41405,7 @@
     "addr": "$5520",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5522",
@@ -41416,7 +41416,7 @@
     "addr": "$5524",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5526",
@@ -41455,7 +41455,7 @@
     "addr": "$5532",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5534",
@@ -41477,7 +41477,7 @@
     "addr": "$553A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$553C",
@@ -41488,7 +41488,7 @@
     "addr": "$553E",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5540",
@@ -41499,7 +41499,7 @@
     "addr": "$5542",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5544",
@@ -41521,7 +41521,7 @@
     "addr": "$554A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$554C",
@@ -41786,7 +41786,7 @@
     "addr": "$55AC",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$55AE",
@@ -42717,7 +42717,7 @@
     "addr": "$584C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$584E",
@@ -42739,7 +42739,7 @@
     "addr": "$5854",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5856",
@@ -42761,7 +42761,7 @@
     "addr": "$585C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$585E",
@@ -42783,7 +42783,7 @@
     "addr": "$5864",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5866",
@@ -42794,7 +42794,7 @@
     "addr": "$5868",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$586A",
@@ -42805,7 +42805,7 @@
     "addr": "$586C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$586E",
@@ -42855,7 +42855,7 @@
     "addr": "$587E",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5880",
@@ -42877,7 +42877,7 @@
     "addr": "$5886",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5888",
@@ -42899,7 +42899,7 @@
     "addr": "$588E",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5890",
@@ -42921,7 +42921,7 @@
     "addr": "$5896",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5898",
@@ -42932,7 +42932,7 @@
     "addr": "$589A",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$589C",
@@ -43062,7 +43062,7 @@
     "addr": "$58CA",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$58CC",
@@ -43239,7 +43239,7 @@
     "addr": "$58E6",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$58E8",
@@ -43261,7 +43261,7 @@
     "addr": "$58EE",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$58F0",
@@ -43451,7 +43451,7 @@
     "addr": "$5934",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5936",
@@ -44633,7 +44633,7 @@
     "addr": "$5B5A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5B5C",
@@ -44655,7 +44655,7 @@
     "addr": "$5B62",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5B64",
@@ -44666,7 +44666,7 @@
     "addr": "$5B66",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5B68",
@@ -44677,7 +44677,7 @@
     "addr": "$5B6A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5B6C",
@@ -44699,7 +44699,7 @@
     "addr": "$5B72",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5B74",
@@ -44721,7 +44721,7 @@
     "addr": "$5B7A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5B7C",
@@ -44732,7 +44732,7 @@
     "addr": "$5B7E",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5B80",
@@ -44771,7 +44771,7 @@
     "addr": "$5B8C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5B8E",
@@ -44793,7 +44793,7 @@
     "addr": "$5B94",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5B96",
@@ -44804,7 +44804,7 @@
     "addr": "$5B98",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5B9A",
@@ -44815,7 +44815,7 @@
     "addr": "$5B9C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5B9E",
@@ -44837,7 +44837,7 @@
     "addr": "$5BA4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5BA6",
@@ -44946,7 +44946,7 @@
     "addr": "$5BCC",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$5BCE",
@@ -52031,7 +52031,7 @@
     "addr": "$6042",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$6044",
@@ -52053,7 +52053,7 @@
     "addr": "$604A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$604C",
@@ -52064,7 +52064,7 @@
     "addr": "$604E",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6050",
@@ -52075,7 +52075,7 @@
     "addr": "$6052",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$6054",
@@ -52097,7 +52097,7 @@
     "addr": "$605A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$605C",
@@ -52119,7 +52119,7 @@
     "addr": "$6062",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$6064",
@@ -52130,7 +52130,7 @@
     "addr": "$6066",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6068",
@@ -52169,7 +52169,7 @@
     "addr": "$6074",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$6076",
@@ -52191,7 +52191,7 @@
     "addr": "$607C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$607E",
@@ -52202,7 +52202,7 @@
     "addr": "$6080",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$6082",
@@ -52213,7 +52213,7 @@
     "addr": "$6084",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$6086",
@@ -52235,7 +52235,7 @@
     "addr": "$608C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$608E",
@@ -52376,7 +52376,7 @@
     "addr": "$60C0",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$60C2",
@@ -54587,7 +54587,7 @@
     "addr": "$66FA",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$66FC",
@@ -55836,7 +55836,7 @@
     "addr": "$68CA",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$68CC",
@@ -56295,7 +56295,7 @@
     "addr": "$66AA",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$66AC",
@@ -56508,7 +56508,7 @@
     "addr": "$66FA",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$66FC",
@@ -57757,7 +57757,7 @@
     "addr": "$68CA",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$68CC",
@@ -57850,7 +57850,7 @@
     "addr": "$68E4",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$68E6",
@@ -58852,7 +58852,7 @@
     "addr": "$435C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$435E",
@@ -58874,7 +58874,7 @@
     "addr": "$4364",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4366",
@@ -58885,7 +58885,7 @@
     "addr": "$4368",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$436A",
@@ -58896,7 +58896,7 @@
     "addr": "$436C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$436E",
@@ -58918,7 +58918,7 @@
     "addr": "$4374",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4376",
@@ -58940,7 +58940,7 @@
     "addr": "$437C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$437E",
@@ -58951,7 +58951,7 @@
     "addr": "$4380",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4382",
@@ -58962,7 +58962,7 @@
     "addr": "$4384",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$4386",
@@ -58996,7 +58996,7 @@
     "addr": "$4390",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4392",
@@ -59018,7 +59018,7 @@
     "addr": "$4398",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$439A",
@@ -59029,7 +59029,7 @@
     "addr": "$439C",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$439E",
@@ -59040,7 +59040,7 @@
     "addr": "$43A0",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$43A2",
@@ -59062,7 +59062,7 @@
     "addr": "$43A8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$43AA",
@@ -59203,7 +59203,7 @@
     "addr": "$43DC",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$43DE",
@@ -59444,7 +59444,7 @@
     "addr": "$4410",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4412",
@@ -59466,7 +59466,7 @@
     "addr": "$4418",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$441A",
@@ -59477,7 +59477,7 @@
     "addr": "$441C",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$441E",
@@ -59488,7 +59488,7 @@
     "addr": "$4420",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4422",
@@ -59510,7 +59510,7 @@
     "addr": "$4428",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$442A",
@@ -59532,7 +59532,7 @@
     "addr": "$4430",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4432",
@@ -59543,7 +59543,7 @@
     "addr": "$4434",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4436",
@@ -59554,7 +59554,7 @@
     "addr": "$4438",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$443A",
@@ -59588,7 +59588,7 @@
     "addr": "$4444",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4446",
@@ -59610,7 +59610,7 @@
     "addr": "$444C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$444E",
@@ -59621,7 +59621,7 @@
     "addr": "$4450",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4452",
@@ -59632,7 +59632,7 @@
     "addr": "$4454",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4456",
@@ -59654,7 +59654,7 @@
     "addr": "$445C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$445E",
@@ -59795,7 +59795,7 @@
     "addr": "$4490",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$4492",
@@ -60036,7 +60036,7 @@
     "addr": "$44C4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$44C6",
@@ -60058,7 +60058,7 @@
     "addr": "$44CC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$44CE",
@@ -60069,7 +60069,7 @@
     "addr": "$44D0",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$44D2",
@@ -60080,7 +60080,7 @@
     "addr": "$44D4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$44D6",
@@ -60102,7 +60102,7 @@
     "addr": "$44DC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$44DE",
@@ -60124,7 +60124,7 @@
     "addr": "$44E4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$44E6",
@@ -60135,7 +60135,7 @@
     "addr": "$44E8",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$44EA",
@@ -60146,7 +60146,7 @@
     "addr": "$44EC",
     "type": "opcode",
     "opcode": 60,
-    "name": "clear_secondary_delay"
+    "name": "set_secondary_delay"
    },
    {
     "addr": "$44EE",
@@ -60180,7 +60180,7 @@
     "addr": "$44F8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$44FA",
@@ -60202,7 +60202,7 @@
     "addr": "$4500",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4502",
@@ -60213,7 +60213,7 @@
     "addr": "$4504",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4506",
@@ -60224,7 +60224,7 @@
     "addr": "$4508",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$450A",
@@ -60246,7 +60246,7 @@
     "addr": "$4510",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4512",
@@ -60387,7 +60387,7 @@
     "addr": "$4544",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$4546",
@@ -61332,7 +61332,7 @@
     "addr": "$461A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$461C",
@@ -61354,7 +61354,7 @@
     "addr": "$4622",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4624",
@@ -61376,7 +61376,7 @@
     "addr": "$462A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$462C",
@@ -61398,7 +61398,7 @@
     "addr": "$4632",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4634",
@@ -61409,7 +61409,7 @@
     "addr": "$4636",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4638",
@@ -61420,7 +61420,7 @@
     "addr": "$463A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$463C",
@@ -61470,7 +61470,7 @@
     "addr": "$464C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$464E",
@@ -61492,7 +61492,7 @@
     "addr": "$4654",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4656",
@@ -61514,7 +61514,7 @@
     "addr": "$465C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$465E",
@@ -61536,7 +61536,7 @@
     "addr": "$4664",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4666",
@@ -61547,7 +61547,7 @@
     "addr": "$4668",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$466A",
@@ -61677,7 +61677,7 @@
     "addr": "$4698",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$469A",
@@ -63464,7 +63464,7 @@
     "addr": "$4974",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4976",
@@ -63523,7 +63523,7 @@
     "addr": "$498A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$498C",
@@ -63582,7 +63582,7 @@
     "addr": "$49A0",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$49A2",
@@ -63641,7 +63641,7 @@
     "addr": "$49B6",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$49B8",
@@ -63700,7 +63700,7 @@
     "addr": "$49CC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$49CE",
@@ -63759,7 +63759,7 @@
     "addr": "$49E2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$49E4",
@@ -64253,7 +64253,7 @@
     "addr": "$4A9A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4A9C",
@@ -64264,7 +64264,7 @@
     "addr": "$4A9E",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4AA0",
@@ -64275,7 +64275,7 @@
     "addr": "$4AA2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4AA4",
@@ -64297,7 +64297,7 @@
     "addr": "$4AAA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4AAC",
@@ -64319,7 +64319,7 @@
     "addr": "$4AB2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4AB4",
@@ -64341,7 +64341,7 @@
     "addr": "$4ABA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4ABC",
@@ -64429,7 +64429,7 @@
     "addr": "$4ADA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4ADC",
@@ -64440,7 +64440,7 @@
     "addr": "$4ADE",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4AE0",
@@ -64451,7 +64451,7 @@
     "addr": "$4AE2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4AE4",
@@ -64473,7 +64473,7 @@
     "addr": "$4AEA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4AEC",
@@ -64495,7 +64495,7 @@
     "addr": "$4AF2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4AF4",
@@ -64604,7 +64604,7 @@
     "addr": "$4B1A",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$4B1C",
@@ -65186,7 +65186,7 @@
     "addr": "$50B0",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50B2",
@@ -65208,7 +65208,7 @@
     "addr": "$50B8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50BA",
@@ -65219,7 +65219,7 @@
     "addr": "$50BC",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$50BE",
@@ -65230,7 +65230,7 @@
     "addr": "$50C0",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50C2",
@@ -65252,7 +65252,7 @@
     "addr": "$50C8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50CA",
@@ -65274,7 +65274,7 @@
     "addr": "$50D0",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50D2",
@@ -65285,7 +65285,7 @@
     "addr": "$50D4",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$50D6",
@@ -65324,7 +65324,7 @@
     "addr": "$50E2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50E4",
@@ -65346,7 +65346,7 @@
     "addr": "$50EA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50EC",
@@ -65357,7 +65357,7 @@
     "addr": "$50EE",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$50F0",
@@ -65368,7 +65368,7 @@
     "addr": "$50F2",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50F4",
@@ -65390,7 +65390,7 @@
     "addr": "$50FA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$50FC",
@@ -65531,7 +65531,7 @@
     "addr": "$512E",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$5130",
@@ -66477,7 +66477,7 @@
     "addr": "$54F4",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$54F6",
@@ -66499,7 +66499,7 @@
     "addr": "$54FC",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$54FE",
@@ -66510,7 +66510,7 @@
     "addr": "$5500",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5502",
@@ -66521,7 +66521,7 @@
     "addr": "$5504",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5506",
@@ -66543,7 +66543,7 @@
     "addr": "$550C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$550E",
@@ -66565,7 +66565,7 @@
     "addr": "$5514",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5516",
@@ -66576,7 +66576,7 @@
     "addr": "$5518",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$551A",
@@ -66615,7 +66615,7 @@
     "addr": "$5526",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5528",
@@ -66637,7 +66637,7 @@
     "addr": "$552E",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5530",
@@ -66648,7 +66648,7 @@
     "addr": "$5532",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5534",
@@ -66659,7 +66659,7 @@
     "addr": "$5536",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5538",
@@ -66681,7 +66681,7 @@
     "addr": "$553E",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5540",
@@ -66822,7 +66822,7 @@
     "addr": "$5572",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$5574",
@@ -67407,7 +67407,7 @@
     "addr": "$56C8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$56CA",
@@ -67418,7 +67418,7 @@
     "addr": "$56CC",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$56CE",
@@ -67429,7 +67429,7 @@
     "addr": "$56D0",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$56D2",
@@ -67451,7 +67451,7 @@
     "addr": "$56D8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$56DA",
@@ -67473,7 +67473,7 @@
     "addr": "$56E0",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$56E2",
@@ -67495,7 +67495,7 @@
     "addr": "$56E8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$56EA",
@@ -67545,7 +67545,7 @@
     "addr": "$56FA",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$56FC",
@@ -67556,7 +67556,7 @@
     "addr": "$56FE",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$5700",
@@ -67567,7 +67567,7 @@
     "addr": "$5702",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5704",
@@ -67589,7 +67589,7 @@
     "addr": "$570A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$570C",
@@ -67611,7 +67611,7 @@
     "addr": "$5712",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5714",
@@ -67752,7 +67752,7 @@
     "addr": "$5746",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$5748",
@@ -68205,7 +68205,7 @@
     "addr": "$57BE",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$57C0",
@@ -68227,7 +68227,7 @@
     "addr": "$57C6",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$57C8",
@@ -68238,7 +68238,7 @@
     "addr": "$57CA",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$57CC",
@@ -68249,7 +68249,7 @@
     "addr": "$57CE",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$57D0",
@@ -68271,7 +68271,7 @@
     "addr": "$57D6",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$57D8",
@@ -68293,7 +68293,7 @@
     "addr": "$57DE",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$57E0",
@@ -68304,7 +68304,7 @@
     "addr": "$57E2",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$57E4",
@@ -68343,7 +68343,7 @@
     "addr": "$57F0",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$57F2",
@@ -68365,7 +68365,7 @@
     "addr": "$57F8",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$57FA",
@@ -68376,7 +68376,7 @@
     "addr": "$57FC",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$57FE",
@@ -68387,7 +68387,7 @@
     "addr": "$5800",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5802",
@@ -68409,7 +68409,7 @@
     "addr": "$5808",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$580A",
@@ -68550,7 +68550,7 @@
     "addr": "$583C",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$583E",
@@ -68979,7 +68979,7 @@
     "addr": "$5952",
     "type": "opcode",
     "opcode": 65,
-    "name": "save_map_return"
+    "name": "set_bgm"
    },
    {
     "addr": "$5954",
@@ -69043,7 +69043,7 @@
     "addr": "$596A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$596C",
@@ -69161,7 +69161,7 @@
     "addr": "$5996",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5998",
@@ -69356,7 +69356,7 @@
     "addr": "$5952",
     "type": "opcode",
     "opcode": 65,
-    "name": "save_map_return"
+    "name": "set_bgm"
    },
    {
     "addr": "$5954",
@@ -69420,7 +69420,7 @@
     "addr": "$596A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$596C",
@@ -69538,7 +69538,7 @@
     "addr": "$5996",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$5998",
@@ -70179,7 +70179,7 @@
     "addr": "$5AA8",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5AAA",
@@ -70329,7 +70329,7 @@
     "addr": "$5B04",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5B06",
@@ -70479,7 +70479,7 @@
     "addr": "$5B60",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5B62",
@@ -70629,7 +70629,7 @@
     "addr": "$5BBC",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5BBE",
@@ -70779,7 +70779,7 @@
     "addr": "$5C18",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5C1A",
@@ -70929,7 +70929,7 @@
     "addr": "$5C74",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5C76",
@@ -71115,7 +71115,7 @@
     "addr": "$5AA8",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5AAA",
@@ -71265,7 +71265,7 @@
     "addr": "$5B04",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5B06",
@@ -71415,7 +71415,7 @@
     "addr": "$5B60",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5B62",
@@ -71565,7 +71565,7 @@
     "addr": "$5BBC",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5BBE",
@@ -71715,7 +71715,7 @@
     "addr": "$5C18",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5C1A",
@@ -71865,7 +71865,7 @@
     "addr": "$5C74",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5C76",
@@ -72051,7 +72051,7 @@
     "addr": "$5AA8",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5AAA",
@@ -72201,7 +72201,7 @@
     "addr": "$5B04",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5B06",
@@ -72351,7 +72351,7 @@
     "addr": "$5B60",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5B62",
@@ -72501,7 +72501,7 @@
     "addr": "$5BBC",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5BBE",
@@ -72651,7 +72651,7 @@
     "addr": "$5C18",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5C1A",
@@ -72801,7 +72801,7 @@
     "addr": "$5C74",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5C76",
@@ -72969,7 +72969,7 @@
     "addr": "$5AA8",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5AAA",
@@ -73119,7 +73119,7 @@
     "addr": "$5B04",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5B06",
@@ -73269,7 +73269,7 @@
     "addr": "$5B60",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5B62",
@@ -73419,7 +73419,7 @@
     "addr": "$5BBC",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5BBE",
@@ -73569,7 +73569,7 @@
     "addr": "$5C18",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5C1A",
@@ -73719,7 +73719,7 @@
     "addr": "$5C74",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5C76",
@@ -73887,7 +73887,7 @@
     "addr": "$5CE0",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5CE2",
@@ -74037,7 +74037,7 @@
     "addr": "$5D3C",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5D3E",
@@ -74187,7 +74187,7 @@
     "addr": "$5D98",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5D9A",
@@ -74337,7 +74337,7 @@
     "addr": "$5DF4",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5DF6",
@@ -74487,7 +74487,7 @@
     "addr": "$5E50",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5E52",
@@ -74637,7 +74637,7 @@
     "addr": "$5EAC",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5EAE",
@@ -74805,7 +74805,7 @@
     "addr": "$5F1C",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5F1E",
@@ -74955,7 +74955,7 @@
     "addr": "$5F78",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5F7A",
@@ -75105,7 +75105,7 @@
     "addr": "$5FD4",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$5FD6",
@@ -75255,7 +75255,7 @@
     "addr": "$6030",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$6032",
@@ -75405,7 +75405,7 @@
     "addr": "$608C",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$608E",
@@ -75555,7 +75555,7 @@
     "addr": "$60E8",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$60EA",
@@ -75705,7 +75705,7 @@
     "addr": "$6144",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$6146",
@@ -75855,7 +75855,7 @@
     "addr": "$61A0",
     "type": "opcode",
     "opcode": 44,
-    "name": "check_inv_full2"
+    "name": "check_inv_full"
    },
    {
     "addr": "$61A2",
@@ -77145,7 +77145,7 @@
     "addr": "$461A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$461C",
@@ -77167,7 +77167,7 @@
     "addr": "$4622",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4624",
@@ -77189,7 +77189,7 @@
     "addr": "$462A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$462C",
@@ -77211,7 +77211,7 @@
     "addr": "$4632",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4634",
@@ -77222,7 +77222,7 @@
     "addr": "$4636",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4638",
@@ -77233,7 +77233,7 @@
     "addr": "$463A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$463C",
@@ -77283,7 +77283,7 @@
     "addr": "$464C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$464E",
@@ -77305,7 +77305,7 @@
     "addr": "$4654",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4656",
@@ -77327,7 +77327,7 @@
     "addr": "$465C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$465E",
@@ -77349,7 +77349,7 @@
     "addr": "$4664",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4666",
@@ -77360,7 +77360,7 @@
     "addr": "$4668",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$466A",
@@ -77490,7 +77490,7 @@
     "addr": "$4698",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$469A",
@@ -78806,7 +78806,7 @@
     "addr": "$461A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$461C",
@@ -78828,7 +78828,7 @@
     "addr": "$4622",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4624",
@@ -78850,7 +78850,7 @@
     "addr": "$462A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$462C",
@@ -78872,7 +78872,7 @@
     "addr": "$4632",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4634",
@@ -78883,7 +78883,7 @@
     "addr": "$4636",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4638",
@@ -78894,7 +78894,7 @@
     "addr": "$463A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$463C",
@@ -78944,7 +78944,7 @@
     "addr": "$464C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$464E",
@@ -78966,7 +78966,7 @@
     "addr": "$4654",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4656",
@@ -78988,7 +78988,7 @@
     "addr": "$465C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$465E",
@@ -79010,7 +79010,7 @@
     "addr": "$4664",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4666",
@@ -79021,7 +79021,7 @@
     "addr": "$4668",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$466A",
@@ -79151,7 +79151,7 @@
     "addr": "$4698",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$469A",
@@ -80171,7 +80171,7 @@
     "addr": "$461A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$461C",
@@ -80193,7 +80193,7 @@
     "addr": "$4622",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4624",
@@ -80215,7 +80215,7 @@
     "addr": "$462A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$462C",
@@ -80237,7 +80237,7 @@
     "addr": "$4632",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4634",
@@ -80248,7 +80248,7 @@
     "addr": "$4636",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4638",
@@ -80259,7 +80259,7 @@
     "addr": "$463A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$463C",
@@ -80309,7 +80309,7 @@
     "addr": "$464C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$464E",
@@ -80331,7 +80331,7 @@
     "addr": "$4654",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4656",
@@ -80353,7 +80353,7 @@
     "addr": "$465C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$465E",
@@ -80375,7 +80375,7 @@
     "addr": "$4664",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4666",
@@ -80386,7 +80386,7 @@
     "addr": "$4668",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$466A",
@@ -80516,7 +80516,7 @@
     "addr": "$4698",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$469A",
@@ -81536,7 +81536,7 @@
     "addr": "$461A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$461C",
@@ -81558,7 +81558,7 @@
     "addr": "$4622",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4624",
@@ -81580,7 +81580,7 @@
     "addr": "$462A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$462C",
@@ -81602,7 +81602,7 @@
     "addr": "$4632",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4634",
@@ -81613,7 +81613,7 @@
     "addr": "$4636",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4638",
@@ -81624,7 +81624,7 @@
     "addr": "$463A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$463C",
@@ -81674,7 +81674,7 @@
     "addr": "$464C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$464E",
@@ -81696,7 +81696,7 @@
     "addr": "$4654",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4656",
@@ -81718,7 +81718,7 @@
     "addr": "$465C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$465E",
@@ -81740,7 +81740,7 @@
     "addr": "$4664",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4666",
@@ -81751,7 +81751,7 @@
     "addr": "$4668",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$466A",
@@ -81881,7 +81881,7 @@
     "addr": "$4698",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$469A",
@@ -82901,7 +82901,7 @@
     "addr": "$461A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$461C",
@@ -82923,7 +82923,7 @@
     "addr": "$4622",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4624",
@@ -82945,7 +82945,7 @@
     "addr": "$462A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$462C",
@@ -82967,7 +82967,7 @@
     "addr": "$4632",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4634",
@@ -82978,7 +82978,7 @@
     "addr": "$4636",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4638",
@@ -82989,7 +82989,7 @@
     "addr": "$463A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$463C",
@@ -83039,7 +83039,7 @@
     "addr": "$464C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$464E",
@@ -83061,7 +83061,7 @@
     "addr": "$4654",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4656",
@@ -83083,7 +83083,7 @@
     "addr": "$465C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$465E",
@@ -83105,7 +83105,7 @@
     "addr": "$4664",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4666",
@@ -83116,7 +83116,7 @@
     "addr": "$4668",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$466A",
@@ -83246,7 +83246,7 @@
     "addr": "$4698",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$469A",
@@ -84266,7 +84266,7 @@
     "addr": "$461A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$461C",
@@ -84288,7 +84288,7 @@
     "addr": "$4622",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4624",
@@ -84310,7 +84310,7 @@
     "addr": "$462A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$462C",
@@ -84332,7 +84332,7 @@
     "addr": "$4632",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4634",
@@ -84343,7 +84343,7 @@
     "addr": "$4636",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4638",
@@ -84354,7 +84354,7 @@
     "addr": "$463A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$463C",
@@ -84404,7 +84404,7 @@
     "addr": "$464C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$464E",
@@ -84426,7 +84426,7 @@
     "addr": "$4654",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4656",
@@ -84448,7 +84448,7 @@
     "addr": "$465C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$465E",
@@ -84470,7 +84470,7 @@
     "addr": "$4664",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4666",
@@ -84481,7 +84481,7 @@
     "addr": "$4668",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$466A",
@@ -84611,7 +84611,7 @@
     "addr": "$4698",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$469A",
@@ -85631,7 +85631,7 @@
     "addr": "$461A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$461C",
@@ -85653,7 +85653,7 @@
     "addr": "$4622",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4624",
@@ -85675,7 +85675,7 @@
     "addr": "$462A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$462C",
@@ -85697,7 +85697,7 @@
     "addr": "$4632",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4634",
@@ -85708,7 +85708,7 @@
     "addr": "$4636",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$4638",
@@ -85719,7 +85719,7 @@
     "addr": "$463A",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$463C",
@@ -85769,7 +85769,7 @@
     "addr": "$464C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$464E",
@@ -85791,7 +85791,7 @@
     "addr": "$4654",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4656",
@@ -85813,7 +85813,7 @@
     "addr": "$465C",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$465E",
@@ -85835,7 +85835,7 @@
     "addr": "$4664",
     "type": "opcode",
     "opcode": 77,
-    "name": "save_gate_info"
+    "name": "set_long_delay"
    },
    {
     "addr": "$4666",
@@ -85846,7 +85846,7 @@
     "addr": "$4668",
     "type": "opcode",
     "opcode": 71,
-    "name": "npc_set_state"
+    "name": "npc_buffer_write"
    },
    {
     "addr": "$466A",
@@ -85976,7 +85976,7 @@
     "addr": "$4698",
     "type": "opcode",
     "opcode": 59,
-    "name": "set_secondary_delay"
+    "name": "map_transition_fade"
    },
    {
     "addr": "$469A",

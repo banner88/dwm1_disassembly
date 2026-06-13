@@ -101,8 +101,8 @@ def format_cmd(opcode, params):
     if opcode == 0x1E: return 'unlock_movement'
     if opcode == 0x22: return 'begin_walk'
     if opcode == 0x44: return 'npc_set_pos_and_face'
-    if opcode == 0x46: return f'npc_buffer_check npc#{lo[0]}'
-    if opcode == 0x47: return f'npc_set_state npc#{lo[0]}'
+    if opcode == 0x46: return f'check_dungeon_flags ${p[0]:04X}'
+    if opcode == 0x47: return f'npc_buffer_write npc#{lo[0]}'
     if opcode == 0x48: return f'npc_hide npc#{lo[0]}'
     if opcode == 0x49: return f'npc_show npc#{lo[0]}'
     
@@ -110,8 +110,8 @@ def format_cmd(opcode, params):
     if opcode == 0x09: return f'delay {lo[0]} frames'
     if opcode == 0x19: return 'wait_movement'
     if opcode == 0x4C: return f'long_delay {lo[0]} frames'
-    if opcode == 0x3B: return 'set_secondary_delay'
-    if opcode == 0x3C: return 'clear_secondary_delay'
+    if opcode == 0x3B: return 'map_transition_fade'
+    if opcode == 0x3C: return 'set_secondary_delay'
     
     # Screen/map
     if opcode == 0x04: return f'screen_effect ${p[0]:04X}, ${p[1]:04X}'
@@ -120,10 +120,10 @@ def format_cmd(opcode, params):
     if opcode == 0x18: return 'fade'
     if opcode == 0x26: return 'suppress_movement'
     if opcode == 0x3A: return f'gate_transition ${p[0]:04X}, ${p[1]:04X}, ${p[2]:04X}'
-    if opcode == 0x41: return f'save_map_return ${p[0]:04X}, ${p[1]:04X}'
-    if opcode == 0x42: return 'restore_map'
-    if opcode == 0x4D: return 'save_gate_info'
-    if opcode == 0x4E: return 'restore_from_gate'
+    if opcode == 0x41: return f'set_bgm ${p[0]:04X}, ${p[1]:04X}'
+    if opcode == 0x42: return 'save_map_return'
+    if opcode == 0x4D: return 'set_long_delay'
+    if opcode == 0x4E: return 'save_gate_info'
     
     # Battle
     if opcode == 0x05: return f'battle enemy=${p[0]:04X}'
@@ -134,7 +134,7 @@ def format_cmd(opcode, params):
     if opcode == 0x59: return f'battle3 ${p[0]:04X}'
     
     # Sound
-    if opcode == 0x40: return f'set_bgm ${p[0]:04X}'
+    if opcode == 0x40: return f'check_monster_bgm ${p[0]:04X}'
     if opcode == 0x4A: return 'read_saved_bgm'
     if opcode == 0x4B: return 'restore_bgm'
     
@@ -143,14 +143,14 @@ def format_cmd(opcode, params):
     if opcode == 0x07: return f'init_dialog ${p[0]:04X}'
     if opcode == 0x2C: return f'check_inv_full, goto .addr_{p[0]:04X}'
     if opcode == 0x2D: return f'monster_slot_dialogue slot={p[0]:d}'
-    if opcode == 0x3D: return 'toggle_render'
+    if opcode == 0x3D: return 'clear_secondary_delay'
     
     # Monster/inventory
-    if opcode == 0x27: return f'check_storage_full, goto .addr_{p[0]:04X}'
-    if opcode == 0x28: return f'add_monster enemy=${p[0]:04X}'
-    if opcode == 0x29: return f'give_item ${p[0]:04X}'
-    if opcode == 0x2A: return f'check_level ${p[0]:04X}'
-    if opcode == 0x2B: return f'check_inv_full, goto .addr_{p[0]:04X}'
+    if opcode == 0x27: return f'post_battle_check, goto .addr_{p[0]:04X}'
+    if opcode == 0x28: return f'check_storage_full, goto .addr_{p[0]:04X}'
+    if opcode == 0x29: return f'add_monster enemy=${p[0]:04X}'
+    if opcode == 0x2A: return f'give_item ${p[0]:04X}'
+    if opcode == 0x2B: return f'check_monster_level ${p[0]:04X}'
     
     if opcode == 0x12: return f'write_ram [${p[0]:04X}] = ${p[1]:04X}'
     if opcode == 0x13: return f'write_ram2 [${p[0]:04X}] = ${p[1]:04X}'

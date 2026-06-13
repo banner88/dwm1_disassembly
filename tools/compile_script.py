@@ -74,8 +74,6 @@ OPCODES = {
     'delay':            (0x09, 1),
     'wait_movement':    (0x19, 0),
     'long_delay':       (0x4C, 1),
-    'set_secondary_delay': (0x3B, 0),
-    'clear_secondary_delay': (0x3C, 0),
 
     # NPC movement
     'npc_move_x':       (0x0A, 2),
@@ -92,8 +90,8 @@ OPCODES = {
     'begin_walk':       (0x22, 0),
     'suppress_movement': (0x26, 0),
     'npc_set_pos_and_face': (0x44, 0),
-    'npc_buffer_check': (0x46, 1),
-    'npc_set_state':    (0x47, 1),
+    'check_dungeon_flags': (0x46, 1),
+    'npc_buffer_write': (0x47, 1),
     'npc_hide':         (0x48, 1),
     'npc_show':         (0x49, 1),
 
@@ -103,30 +101,32 @@ OPCODES = {
     'update_screen_vram': (0x24, 0),
 
     # Sound
-    'set_bgm':          (0x40, 1),
-    'read_saved_bgm':   (0x4A, 0),
+    'check_monster_bgm': (0x40, 1),
+    'set_bgm':          (0x41, 2),
     'restore_bgm':      (0x4B, 0),
 
     # Gate/map
     'gate_setup':       (0x17, 1),
     'gate_transition':  (0x3A, 3),
-    'save_map_return':  (0x41, 2),
-    'restore_map':      (0x42, 0),
-    'save_gate_info':   (0x4D, 0),
-    'restore_from_gate': (0x4E, 0),
+    'save_map_return':  (0x42, 0),
+    'set_long_delay':   (0x4D, 0),
+    'save_gate_info':   (0x4E, 0),
 
     # Monster/inventory
-    'check_storage_full': (0x27, 1),  # branch_addr
-    'add_monster':      (0x28, 1),
-    'give_item':        (0x29, 1),
-    'check_level':      (0x2A, 1),
-    'check_inv_full':   (0x2C, 1),  # branch_addr (was event_dispatch)
+    'post_battle_check': (0x27, 1),  # branch_addr
+    'check_storage_full': (0x28, 1),  # branch_addr
+    'add_monster':      (0x29, 1),
+    'give_item':        (0x2A, 1),
+    'check_monster_level': (0x2B, 1),
+    'check_inv_full':   (0x2C, 1),  # branch_addr
     'monster_slot_dialogue': (0x2D, 1),  # slot index (was check_step)
     'check_monster':    (0x2E, 1),
     'check_story_region': (0x37, 2),  # param, branch_addr
 
-    # State
-    'toggle_render':    (0x3D, 0),
+    # State/timer
+    'map_transition_fade': (0x3B, 0),
+    'set_secondary_delay': (0x3C, 0),
+    'clear_secondary_delay': (0x3D, 0),
 
     # Misc
     'skip_data':        (0x33, 2),
@@ -135,8 +135,9 @@ OPCODES = {
 # Opcodes where the LAST parameter is a branch target address
 BRANCH_OPCODES = {
     0x00, 0x01, 0x0E, 0x14, 0x15,  # flow control branches
-    0x27,  # check_storage_full
-    0x2C,  # check_inv_full (was event_dispatch)
+    0x27,  # post_battle_check
+    0x28,  # check_storage_full
+    0x2C,  # check_inv_full
     0x37,  # check_story_region
 }
 

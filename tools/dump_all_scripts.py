@@ -29,7 +29,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent))
 from decompile_script import MAP_NAMES, PARAM_COUNTS  # type: ignore
 
-# Simple opcode name table (extracted from format_cmd in decompile_script.py)
+# Simple opcode name table (reconciled with handler analysis 2026-06-13)
 OPCODE_NAMES = {
     0x00: "if_flag_clear", 0x01: "if_flag_set", 0x02: "clear_flag",
     0x03: "set_flag", 0x04: "screen_effect", 0x05: "battle",
@@ -44,18 +44,20 @@ OPCODE_NAMES = {
     0x1E: "unlock_movement", 0x1F: "arena_battle_setup",
     0x20: "set_battle_mode", 0x21: "screen_setup", 0x22: "begin_walk",
     0x24: "update_screen_vram", 0x26: "suppress_movement",
-    0x27: "check_storage_full", 0x28: "add_monster", 0x29: "give_item",
-    0x2A: "check_level", 0x2B: "check_inv_full", 0x2C: "check_inv_full2",
+    0x27: "post_battle_check", 0x28: "check_storage_full",
+    0x29: "add_monster", 0x2A: "give_item", 0x2B: "check_monster_level",
+    0x2C: "check_inv_full",
     0x2D: "monster_slot_dialogue", 0x31: "check_party_level",
     0x33: "skip_data", 0x35: "boss_encounter_setup", 0x36: "setup_boss",
     0x37: "check_story_region", 0x3A: "gate_transition",
-    0x3B: "set_secondary_delay", 0x3C: "clear_secondary_delay",
-    0x3D: "toggle_render", 0x40: "set_bgm", 0x41: "save_map_return",
-    0x42: "restore_map", 0x44: "npc_set_pos_and_face",
-    0x46: "npc_buffer_check", 0x47: "npc_set_state",
+    0x3B: "map_transition_fade", 0x3C: "set_secondary_delay",
+    0x3D: "clear_secondary_delay", 0x40: "check_monster_bgm",
+    0x41: "set_bgm", 0x42: "save_map_return",
+    0x44: "npc_set_pos_and_face",
+    0x46: "check_dungeon_flags", 0x47: "npc_buffer_write",
     0x48: "npc_hide", 0x49: "npc_show", 0x4A: "read_saved_bgm",
-    0x4B: "restore_bgm", 0x4C: "long_delay", 0x4D: "save_gate_info",
-    0x4E: "restore_from_gate", 0x51: "check_and_branch",
+    0x4B: "restore_bgm", 0x4C: "long_delay", 0x4D: "set_long_delay",
+    0x4E: "save_gate_info", 0x51: "check_and_branch",
     0x59: "battle3", 0x5A: "trigger_battle3", 0x61: "call_script_bank_e2",
 }
 

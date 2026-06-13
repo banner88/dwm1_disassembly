@@ -71,7 +71,7 @@ Castle_Script05:
     say $083B           ; NPC dialogue
     check_inv_full $521F ; if full → branch to $521F
     say $083C           ; gift given message
-    check_level $0017   ; level check
+    give_item $0017     ; give item ID $17
     end
 .addr_521F:
     say $083D           ; "Your items are full!" message

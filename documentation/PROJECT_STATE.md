@@ -116,6 +116,14 @@ blocks direct editing of monsters/enemies/encounters/breeding in source.
   show/hide for cutscenes. Full documentation added to
   ROOM_DATA_FORMAT.md "Room State System", ARCHITECTURE.md RAM map,
   known_RAM_map.md, and CUSTOM_CUTSCENES.md.
+- ~~Decompiler opcode names had systematic errors~~ → Fixed. Handler
+  code verified against ROM bytes for all critical opcodes. Key fixes:
+  $29 was "give_item" (actually AddMonster), $2A was "check_level"
+  (actually GiveItem — PROVEN in v23), $41 was "save_map_return"
+  (actually SetBGM). Compiler had same errors — "give_item" compiled
+  to $29 (AddMonster) instead of $2A (GiveItem). All three tools
+  reconciled: decompile_script.py, compile_script.py,
+  dump_all_scripts.py. all_scripts.json regenerated.
 
 ---
 

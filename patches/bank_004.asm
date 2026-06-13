@@ -2387,7 +2387,7 @@ MarkScriptActive:
 ; $0F  $5A02       Map          MapTransitionFull: write $C96D-$C96F, set $C88F
 ; $10  $5A6F       NPC          NPCMoveToPos: move NPC to position via $D7EA (47 lines)
 ; $11  $5AC5       NPC          NPCMoveToPos2: move NPC to position via $D7EC
-; $12  $5B1B       Flow         SkipScriptData: increment counter 2x (skip 2 params)
+; $12  $5B1B       RAM          WriteRAM: write value to RAM address (proven in v23)
 ; $13  $5B49       Flow         ReadScriptParams: read 2 params, store to RAM
 ; $14  $5B79       Flow         BranchAlways: unconditional branch via $7212
 ; $15  $5B8F       Flow         ConditionalBranch3: complex condition + branch
@@ -2444,9 +2444,9 @@ MarkScriptActive:
 ; $45  $67B1       Monster      FullMonsterOp: bank $01 entries 3/5/9
 ; $46  $67FD       Event        CheckDungeonFlags: check $DDB4/$DDCE/$DDE8
 ; $47  $6822       NPC          NPCBufferCheck: check NPC buffer $D7D8 area
-; $48  $684D       Flow         ReadAndContinue2: read params, continue
-; $49  $6866       Flow         ReadAndContinue3: read params, continue
-; $4A  $687F       Flow         ReadAndContinue4: read params, continue
+; $48  $684D       NPC          NpcHide: write 0 to NPC visibility byte (via CheckZeroJPEnd)
+; $49  $6866       NPC          NpcShow: write 1 to NPC visibility byte (via CheckZeroJPEnd)
+; $4A  $687F       NPC          NpcSetVis3: write 3 to NPC visibility byte (via CheckZeroJPEnd)
 ; $4B  $6898       Sound        ReadSavedBGM: read $C8B6 (prev BGM)
 ; $4C  $68A1       Sound        RestoreBGM: restore BGM from $C8B6
 ; $4D  $68BA       Timer        SetLongDelay: extended delay via $D8D8

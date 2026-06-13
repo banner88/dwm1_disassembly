@@ -42,7 +42,7 @@ Movement values are signed 16-bit: negative = left/up, positive = right/down.
 ```
 $49  npc_show    npc            Show NPC sprite
 $48  npc_hide    npc            Hide NPC sprite
-$47  npc_set_state npc          Set NPC sprite state/facing
+$47  npc_buffer_write npc        Write to NPC RAM buffer field
 $1C  trigger_anim  $XXYY        Play animation: XX=type (01=jump, 02=dresser-jump), YY=npc
 $0D  npc_write   npc, field, val Write byte to NPC RAM buffer
 ```
@@ -93,9 +93,9 @@ See `extracted/text_id_map.json` for 2,067 decoded text strings.
 ### Screen/Map
 ```
 $0F  map_transition  map, gate, param  Trigger room transition
-$40  set_bgm         param             Change background music
-$4B  restore_bgm                       Restore previous BGM
-$4A  read_saved_bgm                    Read saved BGM value
+$41  set_bgm         bgm_id, param     Save current BGM to $C8B6, play new
+$4B  restore_bgm                       Restore BGM saved by set_bgm
+$40  check_monster_bgm  param          Monster check + BGM (complex, rarely needed)
 $24  update_screen_vram                Call screen rendering update
 $21  screen_setup    param1, param2    Visual effect setup
 ```

@@ -308,7 +308,7 @@ Master table indexing: the script engine reads `$41BA + $D8D3 × 2` where `$D8D3
 | $22 | 0 | begin_walk | Start walk-toward sequence |
 | $2A | 1 | **give_item** | **Scan wInventory for first empty slot, write item. Needs wrapper (original uses `ret` not `jp ScriptExecContinue`).** |
 | $2C | 1 | **check_inv_full** | **Branch if inventory full (20 slots used). Param = branch target.** |
-| $47 | 1 | npc_set_state | Set NPC sprite state |
+| $47 | 1 | npc_buffer_write | Write to NPC RAM buffer |
 | $48 | 1 | npc_hide | Hide NPC sprite |
 | $49 | 1 | npc_show | Show NPC sprite |
 
