@@ -98,9 +98,22 @@
    1:D8DC   1    NPC number for pending walk-toward (1-based)
    1:D8DD   2    NPC X movement delta (signed 16-bit)
    1:D8DF   2    NPC Y movement delta (signed 16-bit)
+   1:D92A ~113   Room step counters ($D92A–$D99A). One byte per screen, value
+                 selects which step entry (NPC set + exit set + tile layout) is
+                 active. Set by script opcode $12 (WriteRAM). Full mapping in
+                 StepBlk_* labels in patches/bank_00b.asm. Key addresses:
+                   $D92A-$D92C  Castle screens 0/1/5
+                   $D92D-$D934  GreatTree (8 screens)
+                   $D935-$D93A  Bazaar (6 screens)
+                   $D93F-$D944  Farm (6 screens)
+                   $D977-$D97A  Boss rooms (Villager/Talisman/Memories/Bewilder)
+                   $D998        Shared by maze/conveyor/forest rooms
+                   $D99A        Last used (Room_5E)
+                 Custom rooms: $D95E (room $6B, shares with MedalManRoom),
+                 $D9A0-$D9A2 (room $6C, unique). See ROOM_DATA_FORMAT.md.
    1:D99B  ~32   Event flag bitfield. Flag BC → byte $D99B+(BC/8), bit (BC&7).
                  182 unique flags used. Set by cmd $03, cleared by $02, checked by $00/$01.
-   1:D988   1    Current step in Labyrinth
+   1:D988   1    Current step in Labyrinth (part of step counter range above)
                  From the initial room:
                    RIGHT (north one): Mimic
                    DOWN DOWN DOWN RIGHT (south one): Watabou doll

@@ -50,6 +50,13 @@ $0D  npc_write   npc, field, val Write byte to NPC RAM buffer
 NPC numbers are 0-based within the current room's NPC list.
 Field $0000 with value $00 = visible, $40 = hidden (in npc_write).
 
+**Note:** These opcodes control NPC visibility at runtime (during the
+current room visit). They reset on room re-entry because NPCs reload
+from the current step entry. For persistent NPC changes across room
+loads, use the **step system** — multiple step entries per screen with
+different NPC lists, advanced via opcode $12 (WriteRAM to step counter).
+See ROOM_DATA_FORMAT.md "Room State System" for details.
+
 ### Timing
 ```
 $09  delay       frames         Wait N frames (low byte of param)

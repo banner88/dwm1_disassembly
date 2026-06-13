@@ -5,7 +5,8 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-13 (full repo audit + rebuild from source)
+> Last verified: 2026-06-13 (full repo audit + rebuild from source;
+> step system documented as NPC state mechanism)
 
 ---
 
@@ -63,10 +64,10 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | Blocker |
 |--------|---------|
 | Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
-| Teleport/warp between maps | Opcode $0E untested from custom scripts |
+| Teleport/warp between maps | Exit-based transitions work all directions (v23). Script-driven teleport (opcode $0E) untested from custom scripts. |
 | BGM change | Opcode $41 untested (BGM table known) |
 | Monster give | Opcode $29 labeled, untested; party-full path unknown |
-| NPC show/hide by flag | Opcodes $48/$49 known, but flag→visibility-at-room-load mechanism untraced |
+| NPC show/hide by flag | Mechanism identified: step system (multiple step entries per screen, counter set by opcode $12). Opcodes $48/$49 are runtime movement animation, not structural show/hide. Needs in-game test with multi-step custom room. |
 | Custom tilesets | Compressor done; needs PNG→tile pipeline + tileset GFX loading from custom bank |
 | Custom music | Sound engine unexplored |
 | Save-data audit | Custom WRAM ($D378+) verified free of original code refs in code banks, but SRAM save layout not yet mapped — must confirm custom flags ($0158+) persist in saves |
@@ -108,6 +109,13 @@ blocks direct editing of monsters/enemies/encounters/breeding in source.
 - KEY_LESSONS.md claims "Bank $0B is safe for insertions" — true for the
   *patched* tree, but this is exactly the loophole that caused the
   byte-perfect drift. Insertions in $0B are allowed **in patches/ only**.
+- ~~ROADMAP "NPC show/hide" pointed at opcodes $48/$49 and claimed the
+  mechanism was "untraced"~~ → Fixed. The mechanism is the **step
+  system** (multiple step entries per screen, counter at $D92A–$D99A
+  set by opcode $12). Opcodes $48/$49 are runtime movement-based
+  show/hide for cutscenes. Full documentation added to
+  ROOM_DATA_FORMAT.md "Room State System", ARCHITECTURE.md RAM map,
+  known_RAM_map.md, and CUSTOM_CUTSCENES.md.
 
 ---
 

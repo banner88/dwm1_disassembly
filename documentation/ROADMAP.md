@@ -37,7 +37,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 ### Custom content primitives (proven in-game, v23)
 | Item | Evidence |
 |------|----------|
-| Custom rooms (mapID ≥ $6B) in bank $60: multi-screen, scroll, exits | v23 test rooms $6B/$6C reachable from GreatTree |
+| Custom rooms (mapID ≥ $6B) in bank $60: multi-screen, scroll, exits (vanilla↔custom AND custom↔custom via exit entries) | v23 test rooms $6B/$6C reachable from GreatTree; $6B exits to $6C and back |
 | Custom NPCs + scripts (bank $60 entry 4 dispatch) | BeefJerky NPC, room $6B |
 | Custom text IDs $0A00+, two-level table, multi-page | v23 dialogue |
 | YES/NO branching ($E7 $F0 + opcode $15 / $C83C) | room $6C NPC |
@@ -68,7 +68,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 - [x] **Fix `dump_map_table.py` swapped interact/exit labels**, regenerate
       map_table.json. *Accept*: JSON field names match ROOM_DATA_FORMAT;
       spot-check 3 rooms against bank_00b labels.
-- [ ] **Commit CI workflow** (`.github/workflows/verify.yml`, provided).
+- [x] **Commit CI workflow** (`.github/workflows/verify.yml`, provided).
       *Accept*: green run on GitHub on next push.
 - [x] **Reconcile dump_enemy_stats.py with its richer committed JSON**
       (port exp_reward/ai_weights/skills/joinability decode back into the
@@ -77,21 +77,29 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       dump_text_id_map.py, dump_all_scripts.py written and verified.
       breeding_complete, resistance_*, tile_registry reclassified as
       hand-authored reference (not frozen-source). See TOOLS_AND_DATA.md.
-- [ ] Move one-off investigation tools to tools/archive/ and delete
+- [~] Move one-off investigation tools to tools/archive/ and delete
       superseded data (monsters.json, event_flags.json, edits.json) per
-      TOOLS_AND_DATA.md.
-- [ ] Housekeeping deletions/moves per PROJECT_STATE.
+      TOOLS_AND_DATA.md. *(Postponed — low priority.)*
+- [~] Housekeeping deletions/moves per PROJECT_STATE. *(Postponed.)*
 
 ### Phase 1 — Remaining primitives (1 session each; ordered by editor impact)
-- [ ] **Teleport/warp** — opcode $0E from a custom script, custom↔custom
-      and custom↔original. Fallback: opcode $12 writes to $C96D/$C96E/$C925
-      (transition executor $0B:$45AB consumes these).
-      *Accept*: v2x ROM warps both directions without corruption.
-- [ ] **NPC show/hide by flag** — runtime ($48/$49) + spawn-time
-      conditional. Trace: grep original room-entry scripts (index 0)
-      pairing if_flag with npc_show/hide.
-      *Accept*: NPC visible only when custom flag set, after room re-entry
-      and after scroll.
+- [ ] **Script-driven teleport** — exit-based room transitions already
+      work in all directions (vanilla↔custom, custom↔custom — proven in
+      v23). Remaining: opcode $0E from a custom script for cutscene-
+      style teleports (NPC talks, then warps player). Fallback: opcode
+      $12 writes to $C96D/$C96E/$C925 (transition executor $0B:$45AB
+      consumes these).
+      *Accept*: v2x ROM script-triggers a warp without the player
+      stepping on an exit tile.
+- [ ] **NPC show/hide by flag** — mechanism IS the step system
+      (ROOM_DATA_FORMAT.md "Room State System"): multiple step entries
+      per screen with different NPC lists, step counter set by opcode
+      $12 (WriteRAM $D9xx). Opcodes $48/$49 are runtime movement-based
+      show/hide (cutscene use only, not persistent). Remaining work:
+      test a custom room with ≥2 step entries where an NPC script
+      advances the step counter, then re-entering shows different NPCs.
+      *Accept*: NPC appears only after custom flag/step is set; verified
+      after room re-entry and after scroll.
 - [ ] **BGM change** — opcode $41; table in known_RAM_map ($C8B5).
       *Accept*: custom room plays a chosen track; reverts on exit.
 - [ ] **Monster give** — opcode $29; test party non-full AND full paths.

@@ -54,7 +54,111 @@ is implicit — the step value from RAM indexes directly (step × 6).
 Invalid step values read garbage. Step validation uses the tileset_bank byte
 (must be > 0 and < $80).
 
+## Room State System (Step Counters)
+
+The step system is the game's primary mechanism for changing a room's
+appearance based on story progression. Each screen can have multiple
+**step entries**, each defining a different tile layout, NPC set, and exit
+set. A RAM **step counter** selects which entry is active. When the
+player enters a room, the engine reads the step counter to decide which
+NPCs to spawn and which exits to enable.
+
+### How it works
+
+```
+step_block:
+  [ram_counter_ptr : 2]      ← e.g. $D92B (Castle screen 1)
+  [step_entry_0    : 6]      ← active when [ram_counter_ptr] == 0
+  [step_entry_1    : 6]      ← active when [ram_counter_ptr] == 1
+  ...
+```
+
+The pointer-chase code (SharedPtrChase in bank $0B) reads the byte at
+the RAM counter address and multiplies by 6 to index into the step
+entries. Each step entry carries its own `interact_ptr` (NPC list) and
+`exit_ptr` (exit list), so different steps show different NPCs and
+different exits.
+
+### Concrete example: Boss Villager room
+
+```
+StepBlk_Boss_Villager_s0: RAM=$D977, 2 steps
+  Step 0: layout=$10  NPCs = [boss + decoration]   Exits = [none — trapped]
+  Step 1: layout=$11  NPCs = [defeated boss only]   Exits = [exit to Castle]
+```
+
+When the player enters with `[$D977]=0` (boss alive), the boss NPC is
+present and there is no exit. After defeating the boss, a script sets
+`[$D977]=1` via opcode $12 (WriteRAM). On next room entry, step 1
+loads: the boss NPC is replaced, and an exit back to Castle appears.
+
+### How scripts control step counters
+
+Scripts use two opcodes to interact with step counters:
+
+- **Opcode $12 (WriteRAM):** `$FF12 <addr> <value>` — sets the step
+  counter at `<addr>` to `<value>`. Example: `$FF12 $D977 $0001` sets
+  Boss Villager to step 1 (defeated). Often used in cutscene scripts
+  to advance multiple rooms at once (e.g., BossBeginning script 1 sets
+  `$D92B`, `$D968`, `$D976` in a single script).
+
+- **Opcode $15 (IfEqual / cond_branch):** `$FF15 <addr> <value>
+  <branch>` — checks if `[addr] == value` and branches. Room-entry
+  scripts (index 0) use this to decide which cutscene to play based on
+  current step.
+
+### Step counter RAM map
+
+Step counters occupy $D92A–$D99A (113 unique addresses). Each address
+corresponds to one screen of one room. Not all screens have multi-step
+data — 92 screens have 2+ steps (state-dependent content), while the
+rest have exactly 1. The full mapping is in the `StepBlk_*` labels in
+`patches/bank_00b.asm`.
+
+Key ranges:
+- $D92A–$D92C: Castle (screens 0, 1, 5)
+- $D92D–$D934: GreatTree (8 screens)
+- $D935–$D93A: Bazaar (6 screens)
+- $D93F–$D944: Farm (6 screens)
+- $D951: Gate_08 (9 steps — most of any single screen)
+- $D977–$D97A: Boss rooms (Villager, Talisman, Memories, Bewilder)
+- $D998: Shared by all maze/conveyor/forest rooms (1 step each)
+- $D99A: Last used address (Room_5E)
+
+Custom rooms use $D95E (room $6B, shared with MedalManRoom) and
+$D9A0–$D9A2 (room $6C screens, unique — beyond original range).
+
+### Runtime NPC show/hide (opcodes $48/$49)
+
+Separate from the step system, opcodes $48 and $49 provide **runtime**
+NPC visibility control within the current room visit:
+
+- **$48 (npc_hide):** Moves an NPC to offscreen coordinates (parameter =
+  NPC slot index). The NPC still exists in RAM but is not visible.
+- **$49 (npc_show):** Moves an NPC back onscreen with an animation curve.
+
+These are used for cutscene effects (boss intro animations, arena
+sequences) and interaction scripts (e.g., ArenaLobby script 10 hides
+NPC #1 then branches on flags). They are NOT persistent — on room
+re-entry, the NPC list reloads from the current step entry, resetting
+any runtime show/hide.
+
+### Summary: which mechanism to use
+
+| Need | Mechanism | Persistent? |
+|------|-----------|-------------|
+| Different NPCs/exits based on story progress | Step system (multiple step entries + opcode $12) | Yes (step counter in RAM, survives room re-entry) |
+| Hide/show NPC during a cutscene or interaction | Opcodes $48/$49 | No (resets on room re-entry) |
+| Conditional behavior within one NPC set | Room-entry script (index 0) with flag checks | Re-evaluated each entry |
+
+For the editor, the step system is the primary tool: define multiple
+step entries per screen, each with different NPC/exit data, and use
+opcode $12 in scripts to advance the step counter when quest conditions
+are met.
+
 ## Tile Layout System
+
+
 
 1. **Tileset graphics** loaded by Entry 0 from $00:$26DD (or $00:$2A5D for gates)
    - 8 bytes per map_type: [gfx_ptr:2][spawn_data:6]

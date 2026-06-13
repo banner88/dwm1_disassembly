@@ -52,6 +52,7 @@
 | $CAC1-$D6B0 | Party/storage monsters (20 × $95 bytes) |
 | $D7D2+ | NPC RAM buffer (32 bytes per NPC slot — verified: parser at $0B:477E advances with `add $20`) |
 | $D8D0-$D8DF | Script engine state |
+| $D92A-$D99A | Room step counters (113 addresses — one per screen; value selects which NPC/exit set loads; see ROOM_DATA_FORMAT.md "Room State System") |
 | $D99B+ | Event flag bitfield |
 | $D9F4 | Event state machine index |
 | $DA00-$DA7F | Temp: enemy stats, monster info copy, breeding vars |
