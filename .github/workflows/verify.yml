@@ -19,12 +19,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/rgbds-bin
-          key: rgbds-0.6.1
+          key: rgbds-0.6.1-v2
 
       - name: Build RGBDS 0.6.1
         if: steps.cache-rgbds.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update && sudo apt-get install -y bison
+          sudo apt-get update && sudo apt-get install -y bison libpng-dev
           git clone --branch v0.6.1 --depth 1 https://github.com/gbdev/rgbds.git /tmp/rgbds
           make -C /tmp/rgbds -j"$(nproc)"
           mkdir -p ~/rgbds-bin
