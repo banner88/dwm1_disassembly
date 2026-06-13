@@ -52,6 +52,10 @@
    CA39     2    Counter before random encounter
    CA4B     3    Gold
    CA51    20    Items
+   CAB9     1    Starry Night cutscene selector. Set by engine (bank $2D).
+                 Castle script 0 branches on values 1/2 to choose post-
+                 tournament path. Value determines which variant of the
+                 Starry Night victory cutscene plays (sets flag $00F1).
    CAC0     1    Current monster slot index (0-19, used by Call_000_223b)
    CAC1   149    Party monster slot 0 (base address; see Party Monster Structure below)
    CB56   149    Party monster slot 1 ($CAC1 + $95 × 1)
@@ -123,6 +127,10 @@
    1:D999   1    Current Arena Battle in Starry Night Tournament (00 01 02), or post-game battle against the King (04)
    1:D9CD   1    Current Coliseum Battle in Gates, and current Arena Battle (except Starry Night Tournament)
                  CAUTION: shares byte with event flag indices $0190-$0197
+   1:D9CE   1    Arena round counter (within a class). Arena Lobby script 0
+                 branches on values 0-7 to determine match progression.
+                 254 = arena unavailable (mandatory gate sequence active).
+                 CAUTION: shares byte with event flag indices $0198-$019F
    1:D9CF  ~8    Gate room reset counters ($D9CF-$D9D6). Written to 0 on gate
                  room entry. Shares bytes with flag indices $01A0-$01DF.
    1:D9E3   1    Story progression counter. Boss-defeat scripts set this to

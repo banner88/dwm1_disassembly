@@ -5,9 +5,10 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-13 (full repo audit + rebuild from source;
-> step system documented as NPC state mechanism;
-> dump_all_scripts.py branch-following added — 810 WriteRAM ops found vs 482 linear-only)
+> Last verified: 2026-06-13 (analyze_event_flags.py rewritten to use
+> branch-following data from all_scripts.json; flag coverage 92→298 sets;
+> event_flags_complete.json + EVENT_FLAGS.md regenerated;
+> story progression fully mapped: arena flags, mandatory gates, $00F1 post-game)
 
 ---
 
@@ -56,7 +57,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
 | YES/NO choices with branching | ✅ working | $E7 $F0 + opcode $15 on $C83C |
 | Item give + inventory-full check | ✅ working | opcodes $2A (wrapped) / $2C |
-| Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 463 free flags |
+| Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 used, 298 with sets, ~200 safe+persistent free |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 
@@ -137,6 +138,15 @@ blocks direct editing of monsters/enemies/encounters/breeding in source.
   all different)~~ → Fixed. Created `dwm/map_names.py` as single source
   of truth (97 entries from editor/editor.py). All 14 tools now import
   from it. Regenerated JSONs use canonical names.
+- ~~`analyze_event_flags.py` scanned scripts linearly, missing 70% of
+  set_flag operations behind branches~~ → Fixed. Tool now reads
+  `all_scripts.json` (branch-following data). Result: 298 flags with
+  sets (was 92); check-only anomalies dropped from 219 to 29.
+  `event_flags_complete.json` and `EVENT_FLAGS.md` regenerated.
+  The 29 remaining are in the 6.5% unreached script paths or engine-set
+  (flag $00F1 confirmed in unreached Castle script 0 branch at $0C:$46C4).
+  Story progression fully mapped: arena-driven with mandatory Anger/
+  Durran gate interludes.
 
 ---
 
@@ -155,6 +165,7 @@ documentation/
     EVENT_FLAGS.md   ROUTING.md  MONSTER_DATA.md  BREEDING_SYSTEM.md
     QUEST_OPCODES.md CUSTOM_CUTSCENES.md SCRIPT_TOOLS.md
     KEY_LESSONS.md   SAMEBOY_GUIDE.md    known_RAM_map.md  known_NOTES.md
+    SIDEQUEST_MAP.md
 disassembly/                   Byte-perfect source. NEVER refactored.
 patches/                       All custom-content modifications.
 extracted/                     Generated JSON (regenerable; note generator in file header)

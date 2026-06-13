@@ -23,6 +23,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | exit_table.json | dump_map_table.py | Regenerated with fixed semantics (trigger coords, dest_map_type, spawn). |
 | room_connections.json | dump_map_table.py | Regenerated with fixed connection graph. 262→361 connected rooms. |
 | all_scripts.json | dump_all_scripts.py | **BRANCH-FOLLOWING added this session.** Follows 9 branch opcodes ($00/$01/$0E/$14/$15/$27/$28/$2C/$37) via work-queue. 732 scripts, 810 unique WriteRAM locations (was 482 linear-only; ROM ground truth 866 after false positives = 93.5% coverage). 56 unreached WriteRAMs are in alternate dispatch paths (entry 1/2 tables). Canonical room names from editor/editor.py (96 entries). New `branch_targets` field per script. |
+| event_flags_complete.json | analyze_event_flags.py | **REWRITTEN this session.** Now reads all_scripts.json (branch-following) instead of linear ROM scan. 328 flags, 298 with sets (was 92). 29 check-only anomalies (was 219). Includes collision zones, SRAM boundary. |
 
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
 These are knowledge artifacts — human analysis in JSON form. No generator
@@ -51,7 +52,7 @@ was lost; they were intentionally curated. Treat as documentation.
 Everything else (all_text, all_transitions, transitions, npc_catalog,
 npc_with_text, npc_text_mapping, free_space, gate_names, orphan_pointers,
 pointer_tables, routing_table, screen_counts, sprite_reference,
-text_blobs, event_flags_complete): regenerable from named dumpers; not
+text_blobs): regenerable from named dumpers; not
 freshness-tested this session — verify before relying on one for the
 editor (snapshot → regen → diff).
 
