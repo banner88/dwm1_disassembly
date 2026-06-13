@@ -6,8 +6,11 @@ Each map_type should have an entry pointing to room data within Bank 0B.
 Usage:
     uv run python -m tools.investigate_npcs
 """
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dwm.rom import ROM, BANK_SIZE
+from dwm.map_names import MAP_NAMES  # canonical room names (97 entries)
 
 # Map pointer table location
 MAP_PTR_BANK = 0x0B
@@ -16,17 +19,6 @@ MAP_PTR_FLAT = MAP_PTR_BANK * BANK_SIZE + (MAP_PTR_ADDR - 0x4000)
 
 # Room loading table (8 bytes per map_type, Bank 0, $26DD)
 ROOM_LOAD_TABLE = 0x26DD
-
-# Known map_types for reference
-MAP_NAMES = {
-    0x00: "Castle", 0x01: "GreatTree", 0x02: "Bazaar", 0x03: "Gate Hub",
-    0x04: "Farm", 0x05: "Stable", 0x06: "Arena Lobby", 0x07: "Arena Rooms",
-    0x09: "Starry Shrine", 0x0A: "Secret Passage", 0x0C: "Renamer",
-    0x0D: "Old Man Gate Room", 0x0F: "Vault", 0x10: "Copycat House",
-    0x12: "Library", 0x16: "MedalMan", 0x18: "Well",
-    0x1D: "Monster School", 0x1E: "Restaurant", 0x1F: "Queen Room",
-    0x23: "Room of Beginning",
-}
 
 
 def flat_0b(addr):

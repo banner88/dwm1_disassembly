@@ -5,22 +5,14 @@ than the byte 2 value, the game reads out of bounds → crash.
 
 Usage: uv run python -m tools.analyze_screens
 """
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dwm.rom import ROM, BANK_SIZE
+from dwm.map_names import MAP_NAMES  # canonical room names (97 entries)
 
 BANK = 0x0B
 MAP_PTR_ADDR = 0x4B43
-
-MAP_NAMES = {
-    0x00: "Castle", 0x01: "GreatTree", 0x02: "Bazaar", 0x03: "Gate Hub",
-    0x04: "Farm", 0x05: "Stable", 0x06: "Arena Lobby", 0x07: "Arena Rooms",
-    0x08: "Gate(08)", 0x09: "Starry Shrine", 0x0A: "Secret Passage",
-    0x0C: "Egg Evaluator", 0x0D: "Old Man Gate Room", 0x0F: "Vault",
-    0x10: "Copycat House", 0x12: "Library", 0x13: "Map_13",
-    0x16: "MedalMan", 0x18: "Well", 0x1D: "Monster School",
-    0x1E: "Restaurant", 0x1F: "Queen Room", 0x23: "Room of Beginning",
-    0x30: "Boss: Beginning", 0x42: "Labyrinth", 0x4F: "Boss: Unused Gate",
-}
 
 # Known entry transitions with their byte 2 values
 ENTRY_BYTE2 = {

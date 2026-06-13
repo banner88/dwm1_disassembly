@@ -421,7 +421,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -436,7 +436,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -451,7 +451,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 0,
     "step": 2,
     "trigger_x": 4,
@@ -466,7 +466,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 0,
     "step": 2,
     "trigger_x": 5,
@@ -481,7 +481,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 0,
     "step": 3,
     "trigger_x": 4,
@@ -496,7 +496,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 0,
     "step": 3,
     "trigger_x": 5,
@@ -511,7 +511,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 1,
     "step": 0,
     "trigger_x": 3,
@@ -526,7 +526,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 4,
     "step": 0,
     "trigger_x": 4,
@@ -541,7 +541,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 4,
     "step": 0,
     "trigger_x": 5,
@@ -556,7 +556,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 4,
     "step": 1,
     "trigger_x": 4,
@@ -571,7 +571,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 4,
     "step": 1,
     "trigger_x": 5,
@@ -586,7 +586,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 4,
     "step": 2,
     "trigger_x": 4,
@@ -601,7 +601,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 4,
     "step": 2,
     "trigger_x": 5,
@@ -616,7 +616,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 4,
     "step": 3,
     "trigger_x": 4,
@@ -631,7 +631,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 4,
     "step": 3,
     "trigger_x": 5,
@@ -646,7 +646,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 8,
     "step": 0,
     "trigger_x": 5,
@@ -661,7 +661,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 8,
     "step": 0,
     "trigger_x": 4,
@@ -676,7 +676,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 8,
     "step": 1,
     "trigger_x": 5,
@@ -691,7 +691,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 8,
     "step": 1,
     "trigger_x": 4,
@@ -706,7 +706,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 8,
     "step": 2,
     "trigger_x": 5,
@@ -721,7 +721,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 8,
     "step": 2,
     "trigger_x": 4,
@@ -736,7 +736,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 9,
     "step": 0,
     "trigger_x": 5,
@@ -751,7 +751,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 0,
     "trigger_x": 4,
@@ -766,7 +766,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 0,
     "trigger_x": 5,
@@ -781,7 +781,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 0,
     "trigger_x": 4,
@@ -796,7 +796,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 1,
     "trigger_x": 4,
@@ -811,7 +811,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 1,
     "trigger_x": 5,
@@ -826,7 +826,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 1,
     "trigger_x": 4,
@@ -841,7 +841,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 2,
     "trigger_x": 4,
@@ -856,7 +856,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 2,
     "trigger_x": 5,
@@ -871,7 +871,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 2,
     "trigger_x": 4,
@@ -886,7 +886,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 3,
     "trigger_x": 4,
@@ -901,7 +901,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 3,
     "trigger_x": 5,
@@ -916,7 +916,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 12,
     "step": 3,
     "trigger_x": 4,
@@ -931,7 +931,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 13,
     "step": 0,
     "trigger_x": 2,
@@ -946,7 +946,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 13,
     "step": 1,
     "trigger_x": 2,
@@ -961,7 +961,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 13,
     "step": 1,
     "trigger_x": 1,
@@ -976,7 +976,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 13,
     "step": 2,
     "trigger_x": 2,
@@ -991,7 +991,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 13,
     "step": 2,
     "trigger_x": 1,
@@ -1006,7 +1006,7 @@
   },
   {
     "map_type": "0x01",
-    "map_name": "GreatTree Overworld",
+    "map_name": "GreatTree",
     "c925": 13,
     "step": 2,
     "trigger_x": 4,
@@ -1921,7 +1921,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 2,
     "step": 2,
     "trigger_x": 8,
@@ -1936,7 +1936,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 2,
     "step": 3,
     "trigger_x": 8,
@@ -1951,7 +1951,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 2,
     "step": 4,
     "trigger_x": 8,
@@ -1966,7 +1966,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 4,
     "step": 0,
     "trigger_x": 6,
@@ -1981,7 +1981,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 4,
     "step": 1,
     "trigger_x": 6,
@@ -1996,7 +1996,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 4,
     "step": 2,
     "trigger_x": 6,
@@ -2011,7 +2011,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 4,
     "step": 3,
     "trigger_x": 6,
@@ -2026,7 +2026,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 5,
     "step": 0,
     "trigger_x": 7,
@@ -2041,7 +2041,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 5,
     "step": 1,
     "trigger_x": 7,
@@ -2056,7 +2056,7 @@
   },
   {
     "map_type": "0x04",
-    "map_name": "Farm (top of GreatTree)",
+    "map_name": "Farm",
     "c925": 5,
     "step": 2,
     "trigger_x": 7,
@@ -2701,7 +2701,7 @@
   },
   {
     "map_type": "0x0A",
-    "map_name": "Secret Passage (Throne\u2192MedalMan)",
+    "map_name": "Secret Passage",
     "c925": 0,
     "step": 0,
     "trigger_x": 7,
@@ -2716,7 +2716,7 @@
   },
   {
     "map_type": "0x0A",
-    "map_name": "Secret Passage (Throne\u2192MedalMan)",
+    "map_name": "Secret Passage",
     "c925": 1,
     "step": 0,
     "trigger_x": 3,
@@ -2731,7 +2731,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 0,
     "trigger_x": 7,
@@ -2746,7 +2746,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 1,
     "trigger_x": 7,
@@ -2761,7 +2761,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 2,
     "trigger_x": 7,
@@ -2776,7 +2776,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 3,
     "trigger_x": 7,
@@ -2791,7 +2791,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 4,
     "trigger_x": 7,
@@ -2806,7 +2806,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 5,
     "trigger_x": 7,
@@ -2821,7 +2821,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 6,
     "trigger_x": 7,
@@ -2836,7 +2836,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 8,
     "trigger_x": 7,
@@ -2851,7 +2851,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 2,
@@ -2866,7 +2866,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 7,
@@ -2881,7 +2881,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 4,
@@ -2896,7 +2896,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 5,
@@ -2911,7 +2911,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 2,
@@ -2926,7 +2926,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 7,
@@ -2941,7 +2941,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 4,
@@ -2956,7 +2956,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 5,
@@ -2971,7 +2971,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 2,
@@ -2986,7 +2986,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 7,
@@ -3001,7 +3001,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 4,
@@ -3016,7 +3016,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 5,
@@ -3031,7 +3031,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 2,
@@ -3046,7 +3046,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 7,
@@ -3061,7 +3061,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 4,
@@ -3076,7 +3076,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 5,
@@ -3091,7 +3091,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 2,
@@ -3106,7 +3106,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 7,
@@ -3121,7 +3121,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 4,
@@ -3136,7 +3136,7 @@
   },
   {
     "map_type": "0x0B",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 5,
@@ -3151,7 +3151,7 @@
   },
   {
     "map_type": "0x0C",
-    "map_name": "Gate tileset",
+    "map_name": "Egg Evaluator",
     "c925": 0,
     "step": 0,
     "trigger_x": 2,
@@ -3226,7 +3226,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 0,
     "trigger_x": 7,
@@ -3241,7 +3241,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 1,
     "trigger_x": 7,
@@ -3256,7 +3256,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 2,
     "trigger_x": 7,
@@ -3271,7 +3271,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 3,
     "trigger_x": 7,
@@ -3286,7 +3286,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 4,
     "trigger_x": 7,
@@ -3301,7 +3301,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 5,
     "trigger_x": 7,
@@ -3316,7 +3316,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 6,
     "trigger_x": 7,
@@ -3331,7 +3331,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 8,
     "trigger_x": 7,
@@ -3346,7 +3346,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 2,
@@ -3361,7 +3361,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 7,
@@ -3376,7 +3376,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 4,
@@ -3391,7 +3391,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 5,
@@ -3406,7 +3406,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 2,
@@ -3421,7 +3421,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 7,
@@ -3436,7 +3436,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 4,
@@ -3451,7 +3451,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 5,
@@ -3466,7 +3466,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 2,
@@ -3481,7 +3481,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 7,
@@ -3496,7 +3496,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 4,
@@ -3511,7 +3511,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 5,
@@ -3526,7 +3526,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 2,
@@ -3541,7 +3541,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 7,
@@ -3556,7 +3556,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 4,
@@ -3571,7 +3571,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 5,
@@ -3586,7 +3586,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 2,
@@ -3601,7 +3601,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 7,
@@ -3616,7 +3616,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 4,
@@ -3631,7 +3631,7 @@
   },
   {
     "map_type": "0x0E",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 5,
@@ -3646,7 +3646,7 @@
   },
   {
     "map_type": "0x0F",
-    "map_name": "",
+    "map_name": "Vault",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -3661,7 +3661,7 @@
   },
   {
     "map_type": "0x10",
-    "map_name": "Copycat Room",
+    "map_name": "Copycat House",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -3676,7 +3676,7 @@
   },
   {
     "map_type": "0x10",
-    "map_name": "Copycat Room",
+    "map_name": "Copycat House",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -3691,7 +3691,7 @@
   },
   {
     "map_type": "0x10",
-    "map_name": "Copycat Room",
+    "map_name": "Copycat House",
     "c925": 0,
     "step": 1,
     "trigger_x": 8,
@@ -3706,7 +3706,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 0,
     "trigger_x": 7,
@@ -3721,7 +3721,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 1,
     "trigger_x": 7,
@@ -3736,7 +3736,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 2,
     "trigger_x": 7,
@@ -3751,7 +3751,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 3,
     "trigger_x": 7,
@@ -3766,7 +3766,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 4,
     "trigger_x": 7,
@@ -3781,7 +3781,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 5,
     "trigger_x": 7,
@@ -3796,7 +3796,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 6,
     "trigger_x": 7,
@@ -3811,7 +3811,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 8,
     "trigger_x": 7,
@@ -3826,7 +3826,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 2,
@@ -3841,7 +3841,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 7,
@@ -3856,7 +3856,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 4,
@@ -3871,7 +3871,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 5,
@@ -3886,7 +3886,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 2,
@@ -3901,7 +3901,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 7,
@@ -3916,7 +3916,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 4,
@@ -3931,7 +3931,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 5,
@@ -3946,7 +3946,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 2,
@@ -3961,7 +3961,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 7,
@@ -3976,7 +3976,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 4,
@@ -3991,7 +3991,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 5,
@@ -4006,7 +4006,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 2,
@@ -4021,7 +4021,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 7,
@@ -4036,7 +4036,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 4,
@@ -4051,7 +4051,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 5,
@@ -4066,7 +4066,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 2,
@@ -4081,7 +4081,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 7,
@@ -4096,7 +4096,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 4,
@@ -4111,7 +4111,7 @@
   },
   {
     "map_type": "0x11",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 5,
@@ -4186,7 +4186,7 @@
   },
   {
     "map_type": "0x13",
-    "map_name": "",
+    "map_name": "Library Gate Room",
     "c925": 0,
     "step": 0,
     "trigger_x": 6,
@@ -4201,7 +4201,7 @@
   },
   {
     "map_type": "0x13",
-    "map_name": "",
+    "map_name": "Library Gate Room",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -4216,7 +4216,7 @@
   },
   {
     "map_type": "0x13",
-    "map_name": "",
+    "map_name": "Library Gate Room",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -4231,7 +4231,7 @@
   },
   {
     "map_type": "0x13",
-    "map_name": "",
+    "map_name": "Library Gate Room",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -4246,7 +4246,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 0,
     "trigger_x": 7,
@@ -4261,7 +4261,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 1,
     "trigger_x": 7,
@@ -4276,7 +4276,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 2,
     "trigger_x": 7,
@@ -4291,7 +4291,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 3,
     "trigger_x": 7,
@@ -4306,7 +4306,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 4,
     "trigger_x": 7,
@@ -4321,7 +4321,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 5,
     "trigger_x": 7,
@@ -4336,7 +4336,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 6,
     "trigger_x": 7,
@@ -4351,7 +4351,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 8,
     "trigger_x": 7,
@@ -4366,7 +4366,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 2,
@@ -4381,7 +4381,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 7,
@@ -4396,7 +4396,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 4,
@@ -4411,7 +4411,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 5,
@@ -4426,7 +4426,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 2,
@@ -4441,7 +4441,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 7,
@@ -4456,7 +4456,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 4,
@@ -4471,7 +4471,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 5,
@@ -4486,7 +4486,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 2,
@@ -4501,7 +4501,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 7,
@@ -4516,7 +4516,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 4,
@@ -4531,7 +4531,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 5,
@@ -4546,7 +4546,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 2,
@@ -4561,7 +4561,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 7,
@@ -4576,7 +4576,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 4,
@@ -4591,7 +4591,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 5,
@@ -4606,7 +4606,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 2,
@@ -4621,7 +4621,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 7,
@@ -4636,7 +4636,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 4,
@@ -4651,7 +4651,7 @@
   },
   {
     "map_type": "0x14",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 5,
@@ -4666,7 +4666,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 0,
     "trigger_x": 7,
@@ -4681,7 +4681,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 1,
     "trigger_x": 7,
@@ -4696,7 +4696,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 2,
     "trigger_x": 7,
@@ -4711,7 +4711,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 3,
     "trigger_x": 7,
@@ -4726,7 +4726,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 4,
     "trigger_x": 7,
@@ -4741,7 +4741,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 5,
     "trigger_x": 7,
@@ -4756,7 +4756,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 6,
     "trigger_x": 7,
@@ -4771,7 +4771,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 1,
     "step": 8,
     "trigger_x": 7,
@@ -4786,7 +4786,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 2,
@@ -4801,7 +4801,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 7,
@@ -4816,7 +4816,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 4,
@@ -4831,7 +4831,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 0,
     "trigger_x": 5,
@@ -4846,7 +4846,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 2,
@@ -4861,7 +4861,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 7,
@@ -4876,7 +4876,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 4,
@@ -4891,7 +4891,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 1,
     "trigger_x": 5,
@@ -4906,7 +4906,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 2,
@@ -4921,7 +4921,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 7,
@@ -4936,7 +4936,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 4,
@@ -4951,7 +4951,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 2,
     "trigger_x": 5,
@@ -4966,7 +4966,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 2,
@@ -4981,7 +4981,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 7,
@@ -4996,7 +4996,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 4,
@@ -5011,7 +5011,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 3,
     "trigger_x": 5,
@@ -5026,7 +5026,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 2,
@@ -5041,7 +5041,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 7,
@@ -5056,7 +5056,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 4,
@@ -5071,7 +5071,7 @@
   },
   {
     "map_type": "0x15",
-    "map_name": "",
+    "map_name": "Castle: Chest Room (variant)",
     "c925": 5,
     "step": 4,
     "trigger_x": 5,
@@ -5086,7 +5086,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 0,
     "trigger_x": 3,
@@ -5101,7 +5101,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -5116,7 +5116,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -5131,7 +5131,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -5146,7 +5146,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 2,
     "trigger_x": 3,
@@ -5161,7 +5161,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 2,
     "trigger_x": 3,
@@ -5176,7 +5176,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 2,
     "trigger_x": 1,
@@ -5191,7 +5191,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 3,
     "trigger_x": 3,
@@ -5206,7 +5206,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 3,
     "trigger_x": 3,
@@ -5221,7 +5221,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 4,
     "trigger_x": 3,
@@ -5236,7 +5236,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 4,
     "trigger_x": 3,
@@ -5251,7 +5251,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 4,
     "trigger_x": 1,
@@ -5266,7 +5266,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 5,
     "trigger_x": 3,
@@ -5281,7 +5281,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 5,
     "trigger_x": 3,
@@ -5296,7 +5296,7 @@
   },
   {
     "map_type": "0x16",
-    "map_name": "MedalMan Room",
+    "map_name": "MedalMan",
     "c925": 0,
     "step": 5,
     "trigger_x": 1,
@@ -5311,7 +5311,7 @@
   },
   {
     "map_type": "0x17",
-    "map_name": "",
+    "map_name": "Copycat House (Glitched)",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -5326,7 +5326,7 @@
   },
   {
     "map_type": "0x17",
-    "map_name": "",
+    "map_name": "Copycat House (Glitched)",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -5341,7 +5341,7 @@
   },
   {
     "map_type": "0x17",
-    "map_name": "",
+    "map_name": "Copycat House (Glitched)",
     "c925": 0,
     "step": 1,
     "trigger_x": 8,
@@ -5401,7 +5401,7 @@
   },
   {
     "map_type": "0x19",
-    "map_name": "",
+    "map_name": "Goopy Room 1 (scr8)",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -5416,7 +5416,7 @@
   },
   {
     "map_type": "0x1A",
-    "map_name": "",
+    "map_name": "Goopy Room 2 (scr8)",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -5431,7 +5431,7 @@
   },
   {
     "map_type": "0x1B",
-    "map_name": "",
+    "map_name": "Stable: KingSlime Room",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -5446,7 +5446,7 @@
   },
   {
     "map_type": "0x1B",
-    "map_name": "",
+    "map_name": "Stable: KingSlime Room",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -5461,7 +5461,7 @@
   },
   {
     "map_type": "0x1B",
-    "map_name": "",
+    "map_name": "Stable: KingSlime Room",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -5476,7 +5476,7 @@
   },
   {
     "map_type": "0x1B",
-    "map_name": "",
+    "map_name": "Stable: KingSlime Room",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -5491,7 +5491,7 @@
   },
   {
     "map_type": "0x1B",
-    "map_name": "",
+    "map_name": "Stable: KingSlime Room",
     "c925": 0,
     "step": 2,
     "trigger_x": 4,
@@ -5506,7 +5506,7 @@
   },
   {
     "map_type": "0x1B",
-    "map_name": "",
+    "map_name": "Stable: KingSlime Room",
     "c925": 0,
     "step": 2,
     "trigger_x": 5,
@@ -5521,7 +5521,7 @@
   },
   {
     "map_type": "0x1C",
-    "map_name": "",
+    "map_name": "Stable: Coffin Room",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -5536,7 +5536,7 @@
   },
   {
     "map_type": "0x1C",
-    "map_name": "",
+    "map_name": "Stable: Coffin Room",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -5551,7 +5551,7 @@
   },
   {
     "map_type": "0x1C",
-    "map_name": "",
+    "map_name": "Stable: Coffin Room",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -5566,7 +5566,7 @@
   },
   {
     "map_type": "0x1C",
-    "map_name": "",
+    "map_name": "Stable: Coffin Room",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -5581,7 +5581,7 @@
   },
   {
     "map_type": "0x1D",
-    "map_name": "",
+    "map_name": "Monster School",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -5596,7 +5596,7 @@
   },
   {
     "map_type": "0x1E",
-    "map_name": "",
+    "map_name": "Restaurant",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -5611,7 +5611,7 @@
   },
   {
     "map_type": "0x1E",
-    "map_name": "",
+    "map_name": "Restaurant",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -5626,7 +5626,7 @@
   },
   {
     "map_type": "0x1F",
-    "map_name": "",
+    "map_name": "Queen Room",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -5641,7 +5641,7 @@
   },
   {
     "map_type": "0x1F",
-    "map_name": "",
+    "map_name": "Queen Room",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -5656,7 +5656,7 @@
   },
   {
     "map_type": "0x1F",
-    "map_name": "",
+    "map_name": "Queen Room",
     "c925": 0,
     "step": 2,
     "trigger_x": 5,
@@ -7021,7 +7021,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 0,
     "trigger_x": 6,
@@ -7036,7 +7036,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 0,
     "trigger_x": 2,
@@ -7051,7 +7051,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 0,
     "trigger_x": 2,
@@ -7066,7 +7066,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -7081,7 +7081,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -7096,7 +7096,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -7111,7 +7111,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 2,
     "trigger_x": 6,
@@ -7126,7 +7126,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 2,
     "trigger_x": 2,
@@ -7141,7 +7141,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 2,
     "trigger_x": 2,
@@ -7156,7 +7156,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 3,
     "trigger_x": 6,
@@ -7171,7 +7171,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 3,
     "trigger_x": 2,
@@ -7186,7 +7186,7 @@
   },
   {
     "map_type": "0x24",
-    "map_name": "Room of Villager & Talisman",
+    "map_name": "Room: Villager/Talisman",
     "c925": 0,
     "step": 3,
     "trigger_x": 2,
@@ -7201,7 +7201,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -7216,7 +7216,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -7231,7 +7231,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 0,
     "trigger_x": 7,
@@ -7246,7 +7246,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -7261,7 +7261,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -7276,7 +7276,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 1,
     "trigger_x": 7,
@@ -7291,7 +7291,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 2,
     "trigger_x": 1,
@@ -7306,7 +7306,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 2,
     "trigger_x": 5,
@@ -7321,7 +7321,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 2,
     "trigger_x": 7,
@@ -7336,7 +7336,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 3,
     "trigger_x": 1,
@@ -7351,7 +7351,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 3,
     "trigger_x": 5,
@@ -7366,7 +7366,7 @@
   },
   {
     "map_type": "0x25",
-    "map_name": "Room of Memories & Bewilder",
+    "map_name": "Room: Memories/Bewilder",
     "c925": 0,
     "step": 3,
     "trigger_x": 7,
@@ -7381,7 +7381,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -7396,7 +7396,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 0,
     "trigger_x": 3,
@@ -7411,7 +7411,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 0,
     "trigger_x": 6,
@@ -7426,7 +7426,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 1,
     "trigger_x": 8,
@@ -7441,7 +7441,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -7456,7 +7456,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -7471,7 +7471,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 2,
     "trigger_x": 8,
@@ -7486,7 +7486,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 2,
     "trigger_x": 3,
@@ -7501,7 +7501,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 2,
     "trigger_x": 6,
@@ -7516,7 +7516,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 3,
     "trigger_x": 8,
@@ -7531,7 +7531,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 3,
     "trigger_x": 3,
@@ -7546,7 +7546,7 @@
   },
   {
     "map_type": "0x26",
-    "map_name": "Room of Peace & Bravery",
+    "map_name": "Room: Peace/Bravery",
     "c925": 0,
     "step": 3,
     "trigger_x": 6,
@@ -7561,7 +7561,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -7576,7 +7576,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -7591,7 +7591,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 0,
     "trigger_x": 2,
@@ -7606,7 +7606,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 0,
     "trigger_x": 7,
@@ -7621,7 +7621,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -7636,7 +7636,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -7651,7 +7651,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -7666,7 +7666,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 1,
     "trigger_x": 7,
@@ -7681,7 +7681,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 2,
     "trigger_x": 4,
@@ -7696,7 +7696,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 2,
     "trigger_x": 5,
@@ -7711,7 +7711,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 2,
     "trigger_x": 2,
@@ -7726,7 +7726,7 @@
   },
   {
     "map_type": "0x27",
-    "map_name": "Room of Strength & Anger",
+    "map_name": "Room: Strength/Anger",
     "c925": 0,
     "step": 2,
     "trigger_x": 7,
@@ -7741,7 +7741,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -7756,7 +7756,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 0,
     "trigger_x": 3,
@@ -7771,7 +7771,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -7786,7 +7786,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -7801,7 +7801,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -7816,7 +7816,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -7831,7 +7831,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 2,
     "trigger_x": 4,
@@ -7846,7 +7846,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 2,
     "trigger_x": 3,
@@ -7861,7 +7861,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 2,
     "trigger_x": 5,
@@ -7876,7 +7876,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 3,
     "trigger_x": 4,
@@ -7891,7 +7891,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 3,
     "trigger_x": 3,
@@ -7906,7 +7906,7 @@
   },
   {
     "map_type": "0x28",
-    "map_name": "Room of Joy & Wisdom",
+    "map_name": "Room: Joy/Wisdom",
     "c925": 0,
     "step": 3,
     "trigger_x": 5,
@@ -7921,7 +7921,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -7936,7 +7936,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 0,
     "trigger_x": 3,
@@ -7951,7 +7951,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 0,
     "trigger_x": 6,
@@ -7966,7 +7966,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -7981,7 +7981,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -7996,7 +7996,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -8011,7 +8011,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 2,
     "trigger_x": 4,
@@ -8026,7 +8026,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 2,
     "trigger_x": 3,
@@ -8041,7 +8041,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 2,
     "trigger_x": 6,
@@ -8056,7 +8056,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 3,
     "trigger_x": 4,
@@ -8071,7 +8071,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 3,
     "trigger_x": 3,
@@ -8086,7 +8086,7 @@
   },
   {
     "map_type": "0x29",
-    "map_name": "Room of Happiness & Temptation",
+    "map_name": "Room: Happiness/Temptation",
     "c925": 0,
     "step": 3,
     "trigger_x": 6,
@@ -8101,7 +8101,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -8116,7 +8116,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 0,
     "trigger_x": 2,
@@ -8131,7 +8131,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 0,
     "trigger_x": 7,
@@ -8146,7 +8146,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -8161,7 +8161,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -8176,7 +8176,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 1,
     "trigger_x": 7,
@@ -8191,7 +8191,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 2,
     "trigger_x": 4,
@@ -8206,7 +8206,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 2,
     "trigger_x": 2,
@@ -8221,7 +8221,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 2,
     "trigger_x": 7,
@@ -8236,7 +8236,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 3,
     "trigger_x": 4,
@@ -8251,7 +8251,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 3,
     "trigger_x": 2,
@@ -8266,7 +8266,7 @@
   },
   {
     "map_type": "0x2A",
-    "map_name": "Room of Labyrinth & Judgment",
+    "map_name": "Room: Labyrinth/Judgment",
     "c925": 0,
     "step": 3,
     "trigger_x": 7,
@@ -8281,7 +8281,7 @@
   },
   {
     "map_type": "0x2B",
-    "map_name": "Room of Reflection",
+    "map_name": "Room: Reflection",
     "c925": 0,
     "step": 0,
     "trigger_x": 7,
@@ -8296,7 +8296,7 @@
   },
   {
     "map_type": "0x2B",
-    "map_name": "Room of Reflection",
+    "map_name": "Room: Reflection",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -8311,7 +8311,7 @@
   },
   {
     "map_type": "0x2B",
-    "map_name": "Room of Reflection",
+    "map_name": "Room: Reflection",
     "c925": 0,
     "step": 0,
     "trigger_x": 3,
@@ -8326,7 +8326,7 @@
   },
   {
     "map_type": "0x2B",
-    "map_name": "Room of Reflection",
+    "map_name": "Room: Reflection",
     "c925": 0,
     "step": 1,
     "trigger_x": 7,
@@ -8341,7 +8341,7 @@
   },
   {
     "map_type": "0x2B",
-    "map_name": "Room of Reflection",
+    "map_name": "Room: Reflection",
     "c925": 0,
     "step": 1,
     "trigger_x": 8,
@@ -8356,7 +8356,7 @@
   },
   {
     "map_type": "0x2B",
-    "map_name": "Room of Reflection",
+    "map_name": "Room: Reflection",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -8371,7 +8371,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -8386,7 +8386,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -8401,7 +8401,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 0,
     "trigger_x": 3,
@@ -8416,7 +8416,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 1,
     "trigger_x": 8,
@@ -8431,7 +8431,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -8446,7 +8446,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -8461,7 +8461,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 2,
     "trigger_x": 8,
@@ -8476,7 +8476,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 2,
     "trigger_x": 1,
@@ -8491,7 +8491,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 2,
     "trigger_x": 3,
@@ -8506,7 +8506,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 3,
     "trigger_x": 8,
@@ -8521,7 +8521,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 3,
     "trigger_x": 1,
@@ -8536,7 +8536,7 @@
   },
   {
     "map_type": "0x2C",
-    "map_name": "Room of Ambition & Demolition",
+    "map_name": "Room: Ambition/Demolition",
     "c925": 0,
     "step": 3,
     "trigger_x": 3,
@@ -8551,7 +8551,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 0,
     "trigger_x": 2,
@@ -8566,7 +8566,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 0,
     "trigger_x": 6,
@@ -8581,7 +8581,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 0,
     "trigger_x": 6,
@@ -8596,7 +8596,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -8611,7 +8611,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -8626,7 +8626,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -8641,7 +8641,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 2,
     "trigger_x": 2,
@@ -8656,7 +8656,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 2,
     "trigger_x": 6,
@@ -8671,7 +8671,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 2,
     "trigger_x": 6,
@@ -8686,7 +8686,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 3,
     "trigger_x": 2,
@@ -8701,7 +8701,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 3,
     "trigger_x": 6,
@@ -8716,7 +8716,7 @@
   },
   {
     "map_type": "0x2D",
-    "map_name": "Room of Mastermind & Control",
+    "map_name": "Room: Mastermind/Control",
     "c925": 0,
     "step": 3,
     "trigger_x": 6,
@@ -8731,7 +8731,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 0,
     "trigger_x": 6,
@@ -8746,7 +8746,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 0,
     "trigger_x": 7,
@@ -8761,7 +8761,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 0,
     "trigger_x": 2,
@@ -8776,7 +8776,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -8791,7 +8791,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -8806,7 +8806,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 1,
     "trigger_x": 7,
@@ -8821,7 +8821,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -8836,7 +8836,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -8851,7 +8851,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 2,
     "trigger_x": 6,
@@ -8866,7 +8866,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 2,
     "trigger_x": 7,
@@ -8881,7 +8881,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 2,
     "trigger_x": 2,
@@ -8896,7 +8896,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 2,
     "trigger_x": 4,
@@ -8911,7 +8911,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 3,
     "trigger_x": 6,
@@ -8926,7 +8926,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 3,
     "trigger_x": 7,
@@ -8941,7 +8941,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 3,
     "trigger_x": 2,
@@ -8956,7 +8956,7 @@
   },
   {
     "map_type": "0x2E",
-    "map_name": "Room of Extinction & Sleep",
+    "map_name": "Room: Extinction/Sleep",
     "c925": 0,
     "step": 3,
     "trigger_x": 4,
@@ -8971,7 +8971,7 @@
   },
   {
     "map_type": "0x30",
-    "map_name": "Boss Room - Gate of Beginning",
+    "map_name": "Boss: Beginning (Healer)",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -8986,7 +8986,7 @@
   },
   {
     "map_type": "0x31",
-    "map_name": "Boss Room - Gate of Villager",
+    "map_name": "Boss: Villager (Dragon)",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -9001,7 +9001,7 @@
   },
   {
     "map_type": "0x32",
-    "map_name": "Boss Room - Gate of Talisman",
+    "map_name": "Boss: Talisman (Golem)",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -9016,7 +9016,7 @@
   },
   {
     "map_type": "0x33",
-    "map_name": "Boss Room - Gate of Memories",
+    "map_name": "Boss: Memories (MadCat)",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -9031,7 +9031,7 @@
   },
   {
     "map_type": "0x34",
-    "map_name": "Boss Room - Gate of Bewilder",
+    "map_name": "Boss: Bewilder (FaceTree)",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -9046,7 +9046,7 @@
   },
   {
     "map_type": "0x35",
-    "map_name": "",
+    "map_name": "Boss: Bazaar (MadKnight)",
     "c925": 0,
     "step": 1,
     "trigger_x": 7,
@@ -9061,7 +9061,7 @@
   },
   {
     "map_type": "0x36",
-    "map_name": "Boss Room - Gate of Peace",
+    "map_name": "Boss: Peace (FangSlime)",
     "c925": 0,
     "step": 1,
     "trigger_x": 8,
@@ -9076,7 +9076,7 @@
   },
   {
     "map_type": "0x37",
-    "map_name": "Boss Room - Gate of Bravery",
+    "map_name": "Boss: Bravery (BigEye)",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -9091,7 +9091,7 @@
   },
   {
     "map_type": "0x38",
-    "map_name": "",
+    "map_name": "Boss: Well (Gigantes)",
     "c925": 0,
     "step": 1,
     "trigger_x": 8,
@@ -9106,7 +9106,7 @@
   },
   {
     "map_type": "0x39",
-    "map_name": "",
+    "map_name": "Boss: Strength (StoneMan)",
     "c925": 0,
     "step": 1,
     "trigger_x": 7,
@@ -9121,7 +9121,7 @@
   },
   {
     "map_type": "0x3A",
-    "map_name": "",
+    "map_name": "Boss: Wisdom (SkyDragon)",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -9136,7 +9136,7 @@
   },
   {
     "map_type": "0x3B",
-    "map_name": "",
+    "map_name": "Boss: Joy (FunkyBird)",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -9151,7 +9151,7 @@
   },
   {
     "map_type": "0x3C",
-    "map_name": "",
+    "map_name": "Boss: Anger (BattleRex)",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -9166,7 +9166,7 @@
   },
   {
     "map_type": "0x3C",
-    "map_name": "",
+    "map_name": "Boss: Anger (BattleRex)",
     "c925": 0,
     "step": 2,
     "trigger_x": 6,
@@ -9181,7 +9181,7 @@
   },
   {
     "map_type": "0x3E",
-    "map_name": "",
+    "map_name": "Boss: Happiness (Jamirus)",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -9196,7 +9196,7 @@
   },
   {
     "map_type": "0x3F",
-    "map_name": "",
+    "map_name": "Boss: Temptation (Servant)",
     "c925": 0,
     "step": 1,
     "trigger_x": 1,
@@ -9211,7 +9211,7 @@
   },
   {
     "map_type": "0x40",
-    "map_name": "",
+    "map_name": "KingSlime Decision Room (3 doors)",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -9226,7 +9226,7 @@
   },
   {
     "map_type": "0x40",
-    "map_name": "",
+    "map_name": "KingSlime Decision Room (3 doors)",
     "c925": 0,
     "step": 0,
     "trigger_x": 2,
@@ -9241,7 +9241,7 @@
   },
   {
     "map_type": "0x40",
-    "map_name": "",
+    "map_name": "KingSlime Decision Room (3 doors)",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -9256,7 +9256,7 @@
   },
   {
     "map_type": "0x40",
-    "map_name": "",
+    "map_name": "KingSlime Decision Room (3 doors)",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -9271,7 +9271,7 @@
   },
   {
     "map_type": "0x40",
-    "map_name": "",
+    "map_name": "KingSlime Decision Room (3 doors)",
     "c925": 0,
     "step": 0,
     "trigger_x": 7,
@@ -9286,7 +9286,7 @@
   },
   {
     "map_type": "0x40",
-    "map_name": "",
+    "map_name": "KingSlime Decision Room (3 doors)",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -9301,7 +9301,7 @@
   },
   {
     "map_type": "0x41",
-    "map_name": "",
+    "map_name": "Boss: Medal (Lipsy variant)",
     "c925": 0,
     "step": 3,
     "trigger_x": 1,
@@ -9316,7 +9316,7 @@
   },
   {
     "map_type": "0x41",
-    "map_name": "",
+    "map_name": "Boss: Medal (Lipsy variant)",
     "c925": 0,
     "step": 3,
     "trigger_x": 4,
@@ -9331,7 +9331,7 @@
   },
   {
     "map_type": "0x41",
-    "map_name": "",
+    "map_name": "Boss: Medal (Lipsy variant)",
     "c925": 0,
     "step": 3,
     "trigger_x": 7,
@@ -10096,7 +10096,7 @@
   },
   {
     "map_type": "0x43",
-    "map_name": "",
+    "map_name": "Boss: Judgment (Akubar)",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -10111,7 +10111,7 @@
   },
   {
     "map_type": "0x44",
-    "map_name": "",
+    "map_name": "Boss: Library (Orochi)",
     "c925": 0,
     "step": 1,
     "trigger_x": 6,
@@ -10126,7 +10126,7 @@
   },
   {
     "map_type": "0x45",
-    "map_name": "",
+    "map_name": "Boss: Reflection (Durran)",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -10141,7 +10141,7 @@
   },
   {
     "map_type": "0x46",
-    "map_name": "Boss Room - Gate of Ambition",
+    "map_name": "Boss: Ambition (DracoLord)",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -10156,7 +10156,7 @@
   },
   {
     "map_type": "0x47",
-    "map_name": "",
+    "map_name": "Boss: Demolition (Hargon/Sidoh)",
     "c925": 0,
     "step": 2,
     "trigger_x": 3,
@@ -10171,7 +10171,7 @@
   },
   {
     "map_type": "0x48",
-    "map_name": "",
+    "map_name": "Boss: Mastermind (Baramos)",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -10186,7 +10186,7 @@
   },
   {
     "map_type": "0x49",
-    "map_name": "",
+    "map_name": "Boss: Control (Zoma)",
     "c925": 0,
     "step": 1,
     "trigger_x": 2,
@@ -10201,7 +10201,7 @@
   },
   {
     "map_type": "0x4A",
-    "map_name": "",
+    "map_name": "Boss: Extinction (Pizzaro)",
     "c925": 0,
     "step": 1,
     "trigger_x": 5,
@@ -10216,7 +10216,7 @@
   },
   {
     "map_type": "0x4B",
-    "map_name": "",
+    "map_name": "Boss: Sleep (Esterk)",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -10231,7 +10231,7 @@
   },
   {
     "map_type": "0x4C",
-    "map_name": "",
+    "map_name": "Boss: Bazaar Edge (Mirudraas)",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -10246,7 +10246,7 @@
   },
   {
     "map_type": "0x4D",
-    "map_name": "Boss Room - Arena Right Gate",
+    "map_name": "Boss: Arena Right (Mudou)",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -10261,7 +10261,7 @@
   },
   {
     "map_type": "0x4E",
-    "map_name": "",
+    "map_name": "Boss: Grandpa's Gate (DeathMore)",
     "c925": 0,
     "step": 1,
     "trigger_x": 4,
@@ -10276,7 +10276,7 @@
   },
   {
     "map_type": "0x4F",
-    "map_name": "Boss Room - Unused Gate",
+    "map_name": "Boss: Unused (DarkDrium)",
     "c925": 0,
     "step": 1,
     "trigger_x": 3,
@@ -10291,7 +10291,7 @@
   },
   {
     "map_type": "0x50",
-    "map_name": "",
+    "map_name": "Gate Floor: Item Shop",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -10306,7 +10306,7 @@
   },
   {
     "map_type": "0x51",
-    "map_name": "",
+    "map_name": "Gate Floor: Priest",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -10321,7 +10321,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -10336,7 +10336,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -10351,7 +10351,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 1,
     "step": 0,
     "trigger_x": 1,
@@ -10366,7 +10366,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 1,
     "step": 0,
     "trigger_x": 8,
@@ -10381,7 +10381,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 1,
     "step": 0,
     "trigger_x": 1,
@@ -10396,7 +10396,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 2,
     "step": 0,
     "trigger_x": 1,
@@ -10411,7 +10411,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 2,
     "step": 0,
     "trigger_x": 8,
@@ -10426,7 +10426,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 3,
     "step": 0,
     "trigger_x": 8,
@@ -10441,7 +10441,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 3,
     "step": 0,
     "trigger_x": 1,
@@ -10456,7 +10456,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 3,
     "step": 0,
     "trigger_x": 4,
@@ -10471,7 +10471,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 3,
     "step": 0,
     "trigger_x": 1,
@@ -10486,7 +10486,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 4,
     "step": 0,
     "trigger_x": 4,
@@ -10501,7 +10501,7 @@
   },
   {
     "map_type": "0x53",
-    "map_name": "Special - Forest Maze",
+    "map_name": "Forest Maze",
     "c925": 4,
     "step": 0,
     "trigger_x": 4,
@@ -10516,7 +10516,7 @@
   },
   {
     "map_type": "0x54",
-    "map_name": "Special - Conveyor Belt 1",
+    "map_name": "Conveyor Maze 1",
     "c925": 10,
     "step": 0,
     "trigger_x": 8,
@@ -10531,7 +10531,7 @@
   },
   {
     "map_type": "0x55",
-    "map_name": "Special - Conveyor Belt 2",
+    "map_name": "Conveyor Maze 2",
     "c925": 8,
     "step": 0,
     "trigger_x": 6,
@@ -10546,7 +10546,7 @@
   },
   {
     "map_type": "0x56",
-    "map_name": "Special - Conveyor Belt 3",
+    "map_name": "Conveyor Maze 3",
     "c925": 2,
     "step": 0,
     "trigger_x": 3,
@@ -10561,7 +10561,7 @@
   },
   {
     "map_type": "0x57",
-    "map_name": "Special - Maze 1",
+    "map_name": "Maze 1",
     "c925": 8,
     "step": 0,
     "trigger_x": 1,
@@ -10576,7 +10576,7 @@
   },
   {
     "map_type": "0x58",
-    "map_name": "Special - Maze 2",
+    "map_name": "Maze 2",
     "c925": 9,
     "step": 0,
     "trigger_x": 3,
@@ -10591,7 +10591,7 @@
   },
   {
     "map_type": "0x59",
-    "map_name": "Special - Maze 3",
+    "map_name": "Maze 3",
     "c925": 10,
     "step": 0,
     "trigger_x": 8,
@@ -10606,7 +10606,7 @@
   },
   {
     "map_type": "0x5A",
-    "map_name": "Special - Treasure Chest 1",
+    "map_name": "Gate Floor: 6 Chests Diagonal",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -10621,7 +10621,7 @@
   },
   {
     "map_type": "0x5B",
-    "map_name": "",
+    "map_name": "Gate Floor: 6 Chests Rows",
     "c925": 0,
     "step": 0,
     "trigger_x": 5,
@@ -10636,7 +10636,7 @@
   },
   {
     "map_type": "0x5C",
-    "map_name": "Special - Treasure Chest 3",
+    "map_name": "Gate Floor: 8 Chests Rows",
     "c925": 0,
     "step": 0,
     "trigger_x": 3,
@@ -10666,7 +10666,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -10681,7 +10681,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -10696,7 +10696,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -10711,7 +10711,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 1,
     "step": 0,
     "trigger_x": 1,
@@ -10726,7 +10726,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 1,
     "step": 0,
     "trigger_x": 8,
@@ -10741,7 +10741,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 2,
     "step": 0,
     "trigger_x": 8,
@@ -10756,7 +10756,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 2,
     "step": 0,
     "trigger_x": 1,
@@ -10771,7 +10771,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 2,
     "step": 0,
     "trigger_x": 4,
@@ -10786,7 +10786,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 2,
     "step": 0,
     "trigger_x": 1,
@@ -10801,7 +10801,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 3,
     "step": 0,
     "trigger_x": 4,
@@ -10816,7 +10816,7 @@
   },
   {
     "map_type": "0x61",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 1",
     "c925": 3,
     "step": 0,
     "trigger_x": 4,
@@ -10831,7 +10831,7 @@
   },
   {
     "map_type": "0x62",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 2",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -10846,7 +10846,7 @@
   },
   {
     "map_type": "0x62",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 2",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -10861,7 +10861,7 @@
   },
   {
     "map_type": "0x62",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 2",
     "c925": 1,
     "step": 0,
     "trigger_x": 8,
@@ -10876,7 +10876,7 @@
   },
   {
     "map_type": "0x62",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 2",
     "c925": 1,
     "step": 0,
     "trigger_x": 1,
@@ -10891,7 +10891,7 @@
   },
   {
     "map_type": "0x62",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 2",
     "c925": 1,
     "step": 0,
     "trigger_x": 4,
@@ -10906,7 +10906,7 @@
   },
   {
     "map_type": "0x62",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 2",
     "c925": 1,
     "step": 0,
     "trigger_x": 1,
@@ -10921,7 +10921,7 @@
   },
   {
     "map_type": "0x62",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 2",
     "c925": 2,
     "step": 0,
     "trigger_x": 4,
@@ -10936,7 +10936,7 @@
   },
   {
     "map_type": "0x62",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 2",
     "c925": 2,
     "step": 0,
     "trigger_x": 4,
@@ -10951,7 +10951,7 @@
   },
   {
     "map_type": "0x63",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 3",
     "c925": 0,
     "step": 0,
     "trigger_x": 8,
@@ -10966,7 +10966,7 @@
   },
   {
     "map_type": "0x63",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 3",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -10981,7 +10981,7 @@
   },
   {
     "map_type": "0x63",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 3",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -10996,7 +10996,7 @@
   },
   {
     "map_type": "0x63",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 3",
     "c925": 0,
     "step": 0,
     "trigger_x": 1,
@@ -11011,7 +11011,7 @@
   },
   {
     "map_type": "0x63",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 3",
     "c925": 1,
     "step": 0,
     "trigger_x": 4,
@@ -11026,7 +11026,7 @@
   },
   {
     "map_type": "0x63",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 3",
     "c925": 1,
     "step": 0,
     "trigger_x": 4,
@@ -11041,7 +11041,7 @@
   },
   {
     "map_type": "0x64",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 4",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,
@@ -11056,7 +11056,7 @@
   },
   {
     "map_type": "0x64",
-    "map_name": "",
+    "map_name": "Forest Maze Gate Floor 4",
     "c925": 0,
     "step": 0,
     "trigger_x": 4,

@@ -21,14 +21,10 @@ BANK_SIZE = 0x4000
 TABLE_LOCAL = 0x41BA  # bank-local address of master routing table
 
 # Map type names for annotation
-MAP_TYPE_NAMES = {
-    0x00: "Castle", 0x01: "GreatTree", 0x02: "Bazaar", 0x03: "Gate Hub",
-    0x04: "Farm", 0x05: "Stable", 0x06: "Arena Lobby", 0x07: "Arena Rooms",
-    0x08: "Gate tileset", 0x09: "Starry Shrine", 0x0A: "Secret Passage",
-    0x0C: "Gate tileset 2", 0x0D: "Old Man Gate", 0x10: "Copycat Room",
-    0x12: "Library", 0x16: "MedalMan Room", 0x18: "Well",
-    0x42: "Labyrinth", 0x5D: "Arena Battle",
-}
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dwm.map_names import MAP_TYPE_NAMES  # canonical room names (97 entries)
 
 
 def flat(bank: int, local: int) -> int:

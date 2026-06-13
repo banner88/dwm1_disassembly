@@ -122,8 +122,25 @@
    1:D997   1    Current step (?) in Unused Gate
    1:D999   1    Current Arena Battle in Starry Night Tournament (00 01 02), or post-game battle against the King (04)
    1:D9CD   1    Current Coliseum Battle in Gates, and current Arena Battle (except Starry Night Tournament)
+                 CAUTION: shares byte with event flag indices $0190-$0197
+   1:D9CF  ~8    Gate room reset counters ($D9CF-$D9D6). Written to 0 on gate
+                 room entry. Shares bytes with flag indices $01A0-$01DF.
+   1:D9E3   1    Story progression counter. Boss-defeat scripts set this to
+                 increasing values:
+                   48 after first boss (Beginning/Healer)
+                   50 after second boss (Villager/Dragon)
+                   ... increasing with each boss defeated ...
+                   77+ late-game
+                 Room-entry scripts (script_id=0) for Castle, GreatTree, etc.
+                 branch on this value (via opcode $15 / cond_branch) to decide
+                 which cutscene to play and which step counters to advance.
+                 CAUTION: shares byte with event flag indices $0240-$0247.
+                 Editor must never allocate custom flags at those indices.
    1:D9E6   1    Breeding mutation flag
+                 CAUTION: shares byte with event flag indices $0258-$025F
    1:D9E9   1    Current step in multi-step screens
+                 CAUTION: shares byte with event flag indices $0270-$0277.
+                 Last byte included in SRAM save range ($C8EA-$D9E9).
    1:D9EC   1    Post-battle state machine index (15 states, dispatch at $50:$5F3A)
    1:D9F4   1    Event state machine index (11 states 0-10)
    1:DA03   1    Enemy 1 ID

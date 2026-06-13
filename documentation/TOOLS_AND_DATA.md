@@ -22,7 +22,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | map_table.json | dump_map_table.py | **REWRITTEN this session.** Fixed TWO bugs: (1) interact/exit label swap (DOC_AUDIT A.11), (2) screen enumerator stopped at first $FFFF hole, dropping a third of rooms (exits 541→812, NPCs 961→1320). Ground-truth verified (GreatTree→Well exit found). |
 | exit_table.json | dump_map_table.py | Regenerated with fixed semantics (trigger coords, dest_map_type, spawn). |
 | room_connections.json | dump_map_table.py | Regenerated with fixed connection graph. 262→361 connected rooms. |
-| all_scripts.json | dump_all_scripts.py | **NEW GENERATOR this session.** 732 scripts across 107 map types (vs 209/56 committed). 198/198 overlap entries match on (bank, data_addr). Loses 3 NPC-join fields (npc_count, sprites, screens) recoverable from npc_catalog.json; gains raw `words` field and complete coverage. |
+| all_scripts.json | dump_all_scripts.py | **BRANCH-FOLLOWING added this session.** Follows 9 branch opcodes ($00/$01/$0E/$14/$15/$27/$28/$2C/$37) via work-queue. 732 scripts, 810 unique WriteRAM locations (was 482 linear-only; ROM ground truth 866 after false positives = 93.5% coverage). 56 unreached WriteRAMs are in alternate dispatch paths (entry 1/2 tables). Canonical room names from editor/editor.py (96 entries). New `branch_targets` field per script. |
 
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
 These are knowledge artifacts — human analysis in JSON form. No generator

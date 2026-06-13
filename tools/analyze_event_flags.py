@@ -23,19 +23,10 @@ ROM_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data'
 TEXT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'extracted', 'text_id_map.json')
 OUTPUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'extracted', 'event_flags_complete.json')
 
-MAP_NAMES = {
-    0x00:'Castle',0x01:'GreatTree',0x02:'Bazaar',0x03:'GateHub',
-    0x04:'Farm',0x05:'Stable',0x06:'ArenaLobby',0x07:'ArenaRooms',
-    0x09:'MonsterShrine',0x0C:'GateTileset',0x10:'CopycatRoom',
-    0x16:'MedalMan',0x18:'Well',0x24:'RoomVillagerTalisman',
-    0x25:'RoomMemoriesBewilder',0x26:'RoomPeaceBravery',
-    0x28:'RoomJoyWisdom',0x29:'RoomHappinessTemptation',
-    0x2A:'RoomLabyrinthJudgment',0x2C:'RoomAmbitionDemolition',
-    0x2D:'RoomMastermindControl',0x2F:'Bedroom',
-    0x30:'BossBeginning',0x31:'BossVillager',0x32:'BossTalisman',
-    0x33:'BossMemories',0x34:'BossBewilder',0x36:'BossPeace',
-    0x37:'BossBravery',0x46:'BossAmbition',
-}
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dwm.map_names import MAP_NAMES  # canonical room names (97 entries)
 
 PARAM_COUNTS = {
     0x00:2, 0x01:2, 0x02:1, 0x03:1, 0x04:2, 0x05:1, 0x06:0, 0x07:1,

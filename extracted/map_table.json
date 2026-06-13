@@ -1772,7 +1772,7 @@
   {
     "map_type": 1,
     "map_type_hex": "0x01",
-    "name": "GreatTree Overworld",
+    "name": "GreatTree",
     "sub_table_ptr": "0x4E23",
     "sub_table_flat": "0x02CE23",
     "sub_rooms": [
@@ -6021,7 +6021,7 @@
   {
     "map_type": 4,
     "map_type_hex": "0x04",
-    "name": "Farm (top of GreatTree)",
+    "name": "Farm",
     "sub_table_ptr": "0x55AE",
     "sub_table_flat": "0x02D5AE",
     "sub_rooms": [
@@ -9939,7 +9939,7 @@
   {
     "map_type": 8,
     "map_type_hex": "0x08",
-    "name": "Gate tileset",
+    "name": "Starry Shrine Breeding Cutscene",
     "sub_table_ptr": "0x5C86",
     "sub_table_flat": "0x02DC86",
     "sub_rooms": [
@@ -10565,7 +10565,7 @@
   {
     "map_type": 10,
     "map_type_hex": "0x0A",
-    "name": "Secret Passage (Throne\u2192MedalMan)",
+    "name": "Secret Passage",
     "sub_table_ptr": "0x5E6A",
     "sub_table_flat": "0x02DE6A",
     "sub_rooms": [
@@ -10642,7 +10642,7 @@
   {
     "map_type": 11,
     "map_type_hex": "0x0B",
-    "name": "",
+    "name": "Castle: Chest Room (variant)",
     "sub_table_ptr": "0x4C13",
     "sub_table_flat": "0x02CC13",
     "sub_rooms": [
@@ -12412,7 +12412,7 @@
   {
     "map_type": 12,
     "map_type_hex": "0x0C",
-    "name": "Gate tileset",
+    "name": "Egg Evaluator",
     "sub_table_ptr": "0x5E94",
     "sub_table_flat": "0x02DE94",
     "sub_rooms": [
@@ -12820,7 +12820,7 @@
   {
     "map_type": 14,
     "map_type_hex": "0x0E",
-    "name": "",
+    "name": "Castle: Chest Room (variant)",
     "sub_table_ptr": "0x4C13",
     "sub_table_flat": "0x02CC13",
     "sub_rooms": [
@@ -14590,7 +14590,7 @@
   {
     "map_type": 15,
     "map_type_hex": "0x0F",
-    "name": "",
+    "name": "Vault",
     "sub_table_ptr": "0x5F4A",
     "sub_table_flat": "0x02DF4A",
     "sub_rooms": [
@@ -14676,7 +14676,7 @@
   {
     "map_type": 16,
     "map_type_hex": "0x10",
-    "name": "Copycat Room",
+    "name": "Copycat House",
     "sub_table_ptr": "0x5F71",
     "sub_table_flat": "0x02DF71",
     "sub_rooms": [
@@ -14893,7 +14893,7 @@
   {
     "map_type": 17,
     "map_type_hex": "0x11",
-    "name": "",
+    "name": "Castle: Chest Room (variant)",
     "sub_table_ptr": "0x4C13",
     "sub_table_flat": "0x02CC13",
     "sub_rooms": [
@@ -16997,7 +16997,7 @@
   {
     "map_type": 19,
     "map_type_hex": "0x13",
-    "name": "",
+    "name": "Library Gate Room",
     "sub_table_ptr": "0x607D",
     "sub_table_flat": "0x02E07D",
     "sub_rooms": [
@@ -17406,7 +17406,7 @@
   {
     "map_type": 20,
     "map_type_hex": "0x14",
-    "name": "",
+    "name": "Castle: Chest Room (variant)",
     "sub_table_ptr": "0x4C13",
     "sub_table_flat": "0x02CC13",
     "sub_rooms": [
@@ -19176,7 +19176,7 @@
   {
     "map_type": 21,
     "map_type_hex": "0x15",
-    "name": "",
+    "name": "Castle: Chest Room (variant)",
     "sub_table_ptr": "0x4C13",
     "sub_table_flat": "0x02CC13",
     "sub_rooms": [
@@ -20946,7 +20946,7 @@
   {
     "map_type": 22,
     "map_type_hex": "0x16",
-    "name": "MedalMan Room",
+    "name": "MedalMan",
     "sub_table_ptr": "0x6139",
     "sub_table_flat": "0x02E139",
     "sub_rooms": [
@@ -21451,7 +21451,7 @@
   {
     "map_type": 23,
     "map_type_hex": "0x17",
-    "name": "",
+    "name": "Copycat House (Glitched)",
     "sub_table_ptr": "0x5F71",
     "sub_table_flat": "0x02DF71",
     "sub_rooms": [
@@ -22051,7 +22051,7 @@
   {
     "map_type": 25,
     "map_type_hex": "0x19",
-    "name": "",
+    "name": "Goopy Room 1 (scr8)",
     "sub_table_ptr": "0x62BB",
     "sub_table_flat": "0x02E2BB",
     "sub_rooms": [
@@ -22136,7 +22136,7 @@
   {
     "map_type": 26,
     "map_type_hex": "0x1A",
-    "name": "",
+    "name": "Goopy Room 2 (scr8)",
     "sub_table_ptr": "0x62E2",
     "sub_table_flat": "0x02E2E2",
     "sub_rooms": [
@@ -22243,7 +22243,7 @@
   {
     "map_type": 27,
     "map_type_hex": "0x1B",
-    "name": "",
+    "name": "Stable: KingSlime Room",
     "sub_table_ptr": "0x6313",
     "sub_table_flat": "0x02E313",
     "sub_rooms": [
@@ -22455,7 +22455,7 @@
   {
     "map_type": 28,
     "map_type_hex": "0x1C",
-    "name": "",
+    "name": "Stable: Coffin Room",
     "sub_table_ptr": "0x635E",
     "sub_table_flat": "0x02E35E",
     "sub_rooms": [
@@ -22697,7 +22697,7 @@
   {
     "map_type": 29,
     "map_type_hex": "0x1D",
-    "name": "",
+    "name": "Monster School",
     "sub_table_ptr": "0x63C5",
     "sub_table_flat": "0x02E3C5",
     "sub_rooms": [
@@ -22804,7 +22804,7 @@
   {
     "map_type": 30,
     "map_type_hex": "0x1E",
-    "name": "",
+    "name": "Restaurant",
     "sub_table_ptr": "0x63F6",
     "sub_table_flat": "0x02E3F6",
     "sub_rooms": [
@@ -22960,7 +22960,7 @@
   {
     "map_type": 31,
     "map_type_hex": "0x1F",
-    "name": "",
+    "name": "Queen Room",
     "sub_table_ptr": "0x6438",
     "sub_table_flat": "0x02E438",
     "sub_rooms": [
@@ -28680,7 +28680,7 @@
   {
     "map_type": 36,
     "map_type_hex": "0x24",
-    "name": "Room of Villager & Talisman",
+    "name": "Room: Villager/Talisman",
     "sub_table_ptr": "0x64DB",
     "sub_table_flat": "0x02E4DB",
     "sub_rooms": [
@@ -28994,7 +28994,7 @@
   {
     "map_type": 37,
     "map_type_hex": "0x25",
-    "name": "Room of Memories & Bewilder",
+    "name": "Room: Memories/Bewilder",
     "sub_table_ptr": "0x6539",
     "sub_table_flat": "0x02E539",
     "sub_rooms": [
@@ -29308,7 +29308,7 @@
   {
     "map_type": 38,
     "map_type_hex": "0x26",
-    "name": "Room of Peace & Bravery",
+    "name": "Room: Peace/Bravery",
     "sub_table_ptr": "0x6597",
     "sub_table_flat": "0x02E597",
     "sub_rooms": [
@@ -29622,7 +29622,7 @@
   {
     "map_type": 39,
     "map_type_hex": "0x27",
-    "name": "Room of Strength & Anger",
+    "name": "Room: Strength/Anger",
     "sub_table_ptr": "0x65F5",
     "sub_table_flat": "0x02E5F5",
     "sub_rooms": [
@@ -29934,7 +29934,7 @@
   {
     "map_type": 40,
     "map_type_hex": "0x28",
-    "name": "Room of Joy & Wisdom",
+    "name": "Room: Joy/Wisdom",
     "sub_table_ptr": "0x6658",
     "sub_table_flat": "0x02E658",
     "sub_rooms": [
@@ -30248,7 +30248,7 @@
   {
     "map_type": 41,
     "map_type_hex": "0x29",
-    "name": "Room of Happiness & Temptation",
+    "name": "Room: Happiness/Temptation",
     "sub_table_ptr": "0x66B6",
     "sub_table_flat": "0x02E6B6",
     "sub_rooms": [
@@ -30562,7 +30562,7 @@
   {
     "map_type": 42,
     "map_type_hex": "0x2A",
-    "name": "Room of Labyrinth & Judgment",
+    "name": "Room: Labyrinth/Judgment",
     "sub_table_ptr": "0x6714",
     "sub_table_flat": "0x02E714",
     "sub_rooms": [
@@ -30876,7 +30876,7 @@
   {
     "map_type": 43,
     "map_type_hex": "0x2B",
-    "name": "Room of Reflection",
+    "name": "Room: Reflection",
     "sub_table_ptr": "0x6772",
     "sub_table_flat": "0x02E772",
     "sub_rooms": [
@@ -31031,7 +31031,7 @@
   {
     "map_type": 44,
     "map_type_hex": "0x2C",
-    "name": "Room of Ambition & Demolition",
+    "name": "Room: Ambition/Demolition",
     "sub_table_ptr": "0x67A9",
     "sub_table_flat": "0x02E7A9",
     "sub_rooms": [
@@ -31345,7 +31345,7 @@
   {
     "map_type": 45,
     "map_type_hex": "0x2D",
-    "name": "Room of Mastermind & Control",
+    "name": "Room: Mastermind/Control",
     "sub_table_ptr": "0x6807",
     "sub_table_flat": "0x02E807",
     "sub_rooms": [
@@ -31659,7 +31659,7 @@
   {
     "map_type": 46,
     "map_type_hex": "0x2E",
-    "name": "Room of Extinction & Sleep",
+    "name": "Room: Extinction/Sleep",
     "sub_table_ptr": "0x6865",
     "sub_table_flat": "0x02E865",
     "sub_rooms": [
@@ -32025,7 +32025,7 @@
   {
     "map_type": 47,
     "map_type_hex": "0x2F",
-    "name": "",
+    "name": "Intro Bedroom (2-screen, crashes)",
     "sub_table_ptr": "0x68CA",
     "sub_table_flat": "0x02E8CA",
     "sub_rooms": [
@@ -33122,7 +33122,7 @@
   {
     "map_type": 48,
     "map_type_hex": "0x30",
-    "name": "Boss Room - Gate of Beginning",
+    "name": "Boss: Beginning (Healer)",
     "sub_table_ptr": "0x6AAF",
     "sub_table_flat": "0x02EAAF",
     "sub_rooms": [
@@ -33199,7 +33199,7 @@
   {
     "map_type": 49,
     "map_type_hex": "0x31",
-    "name": "Boss Room - Gate of Villager",
+    "name": "Boss: Villager (Dragon)",
     "sub_table_ptr": "0x6AD4",
     "sub_table_flat": "0x02EAD4",
     "sub_rooms": [
@@ -33328,7 +33328,7 @@
   {
     "map_type": 50,
     "map_type_hex": "0x32",
-    "name": "Boss Room - Gate of Talisman",
+    "name": "Boss: Talisman (Golem)",
     "sub_table_ptr": "0x6B12",
     "sub_table_flat": "0x02EB12",
     "sub_rooms": [
@@ -33426,7 +33426,7 @@
   {
     "map_type": 51,
     "map_type_hex": "0x33",
-    "name": "Boss Room - Gate of Memories",
+    "name": "Boss: Memories (MadCat)",
     "sub_table_ptr": "0x6B41",
     "sub_table_flat": "0x02EB41",
     "sub_rooms": [
@@ -33503,7 +33503,7 @@
   {
     "map_type": 52,
     "map_type_hex": "0x34",
-    "name": "Boss Room - Gate of Bewilder",
+    "name": "Boss: Bewilder (FaceTree)",
     "sub_table_ptr": "0x6B66",
     "sub_table_flat": "0x02EB66",
     "sub_rooms": [
@@ -33694,7 +33694,7 @@
   {
     "map_type": 53,
     "map_type_hex": "0x35",
-    "name": "",
+    "name": "Boss: Bazaar (MadKnight)",
     "sub_table_ptr": "0x6BC2",
     "sub_table_flat": "0x02EBC2",
     "sub_rooms": [
@@ -33812,7 +33812,7 @@
   {
     "map_type": 54,
     "map_type_hex": "0x36",
-    "name": "Boss Room - Gate of Peace",
+    "name": "Boss: Peace (FangSlime)",
     "sub_table_ptr": "0x6BFB",
     "sub_table_flat": "0x02EBFB",
     "sub_rooms": [
@@ -34096,7 +34096,7 @@
   {
     "map_type": 55,
     "map_type_hex": "0x37",
-    "name": "Boss Room - Gate of Bravery",
+    "name": "Boss: Bravery (BigEye)",
     "sub_table_ptr": "0x6C84",
     "sub_table_flat": "0x02EC84",
     "sub_rooms": [
@@ -34403,7 +34403,7 @@
   {
     "map_type": 56,
     "map_type_hex": "0x38",
-    "name": "",
+    "name": "Boss: Well (Gigantes)",
     "sub_table_ptr": "0x6D17",
     "sub_table_flat": "0x02ED17",
     "sub_rooms": [
@@ -34870,7 +34870,7 @@
   {
     "map_type": 57,
     "map_type_hex": "0x39",
-    "name": "",
+    "name": "Boss: Strength (StoneMan)",
     "sub_table_ptr": "0x6DFA",
     "sub_table_flat": "0x02EDFA",
     "sub_rooms": [
@@ -34988,7 +34988,7 @@
   {
     "map_type": 58,
     "map_type_hex": "0x3A",
-    "name": "",
+    "name": "Boss: Wisdom (SkyDragon)",
     "sub_table_ptr": "0x6E33",
     "sub_table_flat": "0x02EE33",
     "sub_rooms": [
@@ -35534,7 +35534,7 @@
   {
     "map_type": 59,
     "map_type_hex": "0x3B",
-    "name": "",
+    "name": "Boss: Joy (FunkyBird)",
     "sub_table_ptr": "0x6F3E",
     "sub_table_flat": "0x02EF3E",
     "sub_rooms": [
@@ -35611,7 +35611,7 @@
   {
     "map_type": 60,
     "map_type_hex": "0x3C",
-    "name": "",
+    "name": "Boss: Anger (BattleRex)",
     "sub_table_ptr": "0x6F63",
     "sub_table_flat": "0x02EF63",
     "sub_rooms": [
@@ -36013,7 +36013,7 @@
   {
     "map_type": 61,
     "map_type_hex": "0x3D",
-    "name": "",
+    "name": "Boss: Arena Left (Digster)",
     "sub_table_ptr": "0x6FE3",
     "sub_table_flat": "0x02EFE3",
     "sub_rooms": [
@@ -36150,7 +36150,7 @@
   {
     "map_type": 62,
     "map_type_hex": "0x3E",
-    "name": "",
+    "name": "Boss: Happiness (Jamirus)",
     "sub_table_ptr": "0x7023",
     "sub_table_flat": "0x02F023",
     "sub_rooms": [
@@ -36249,7 +36249,7 @@
   {
     "map_type": 63,
     "map_type_hex": "0x3F",
-    "name": "",
+    "name": "Boss: Temptation (Servant)",
     "sub_table_ptr": "0x7052",
     "sub_table_flat": "0x02F052",
     "sub_rooms": [
@@ -36326,7 +36326,7 @@
   {
     "map_type": 64,
     "map_type_hex": "0x40",
-    "name": "",
+    "name": "KingSlime Decision Room (3 doors)",
     "sub_table_ptr": "0x7077",
     "sub_table_flat": "0x02F077",
     "sub_rooms": [
@@ -36548,7 +36548,7 @@
   {
     "map_type": 65,
     "map_type_hex": "0x41",
-    "name": "",
+    "name": "Boss: Medal (Lipsy variant)",
     "sub_table_ptr": "0x70E4",
     "sub_table_flat": "0x02F0E4",
     "sub_rooms": [
@@ -39160,7 +39160,7 @@
   {
     "map_type": 67,
     "map_type_hex": "0x43",
-    "name": "",
+    "name": "Boss: Judgment (Akubar)",
     "sub_table_ptr": "0x74DB",
     "sub_table_flat": "0x02F4DB",
     "sub_rooms": [
@@ -39300,7 +39300,7 @@
   {
     "map_type": 68,
     "map_type_hex": "0x44",
-    "name": "",
+    "name": "Boss: Library (Orochi)",
     "sub_table_ptr": "0x751E",
     "sub_table_flat": "0x02F51E",
     "sub_rooms": [
@@ -39443,7 +39443,7 @@
   {
     "map_type": 69,
     "map_type_hex": "0x45",
-    "name": "",
+    "name": "Boss: Reflection (Durran)",
     "sub_table_ptr": "0x7561",
     "sub_table_flat": "0x02F561",
     "sub_rooms": [
@@ -39664,7 +39664,7 @@
   {
     "map_type": 70,
     "map_type_hex": "0x46",
-    "name": "Boss Room - Gate of Ambition",
+    "name": "Boss: Ambition (DracoLord)",
     "sub_table_ptr": "0x75C9",
     "sub_table_flat": "0x02F5C9",
     "sub_rooms": [
@@ -39763,7 +39763,7 @@
   {
     "map_type": 71,
     "map_type_hex": "0x47",
-    "name": "",
+    "name": "Boss: Demolition (Hargon/Sidoh)",
     "sub_table_ptr": "0x75F8",
     "sub_table_flat": "0x02F5F8",
     "sub_rooms": [
@@ -39918,7 +39918,7 @@
   {
     "map_type": 72,
     "map_type_hex": "0x48",
-    "name": "",
+    "name": "Boss: Mastermind (Baramos)",
     "sub_table_ptr": "0x7643",
     "sub_table_flat": "0x02F643",
     "sub_rooms": [
@@ -40017,7 +40017,7 @@
   {
     "map_type": 73,
     "map_type_hex": "0x49",
-    "name": "",
+    "name": "Boss: Control (Zoma)",
     "sub_table_ptr": "0x7672",
     "sub_table_flat": "0x02F672",
     "sub_rooms": [
@@ -40116,7 +40116,7 @@
   {
     "map_type": 74,
     "map_type_hex": "0x4A",
-    "name": "",
+    "name": "Boss: Extinction (Pizzaro)",
     "sub_table_ptr": "0x76A1",
     "sub_table_flat": "0x02F6A1",
     "sub_rooms": [
@@ -40215,7 +40215,7 @@
   {
     "map_type": 75,
     "map_type_hex": "0x4B",
-    "name": "",
+    "name": "Boss: Sleep (Esterk)",
     "sub_table_ptr": "0x76D0",
     "sub_table_flat": "0x02F6D0",
     "sub_rooms": [
@@ -40314,7 +40314,7 @@
   {
     "map_type": 76,
     "map_type_hex": "0x4C",
-    "name": "",
+    "name": "Boss: Bazaar Edge (Mirudraas)",
     "sub_table_ptr": "0x76FF",
     "sub_table_flat": "0x02F6FF",
     "sub_rooms": [
@@ -40413,7 +40413,7 @@
   {
     "map_type": 77,
     "map_type_hex": "0x4D",
-    "name": "Boss Room - Arena Right Gate",
+    "name": "Boss: Arena Right (Mudou)",
     "sub_table_ptr": "0x772E",
     "sub_table_flat": "0x02F72E",
     "sub_rooms": [
@@ -40512,7 +40512,7 @@
   {
     "map_type": 78,
     "map_type_hex": "0x4E",
-    "name": "",
+    "name": "Boss: Grandpa's Gate (DeathMore)",
     "sub_table_ptr": "0x775D",
     "sub_table_flat": "0x02F75D",
     "sub_rooms": [
@@ -40642,7 +40642,7 @@
   {
     "map_type": 79,
     "map_type_hex": "0x4F",
-    "name": "Boss Room - Unused Gate",
+    "name": "Boss: Unused (DarkDrium)",
     "sub_table_ptr": "0x77A9",
     "sub_table_flat": "0x02F7A9",
     "sub_rooms": [
@@ -40750,7 +40750,7 @@
   {
     "map_type": 80,
     "map_type_hex": "0x50",
-    "name": "",
+    "name": "Gate Floor: Item Shop",
     "sub_table_ptr": "0x77DD",
     "sub_table_flat": "0x02F7DD",
     "sub_rooms": [
@@ -40815,7 +40815,7 @@
   {
     "map_type": 81,
     "map_type_hex": "0x51",
-    "name": "",
+    "name": "Gate Floor: Priest",
     "sub_table_ptr": "0x77FA",
     "sub_table_flat": "0x02F7FA",
     "sub_rooms": [
@@ -40880,7 +40880,7 @@
   {
     "map_type": 82,
     "map_type_hex": "0x52",
-    "name": "Special - Coliseum",
+    "name": "Gate Floor: Coliseum",
     "sub_table_ptr": "0x7817",
     "sub_table_flat": "0x02F817",
     "sub_rooms": [
@@ -40998,7 +40998,7 @@
   {
     "map_type": 83,
     "map_type_hex": "0x53",
-    "name": "Special - Forest Maze",
+    "name": "Forest Maze",
     "sub_table_ptr": "0x784B",
     "sub_table_flat": "0x02F84B",
     "sub_rooms": [
@@ -41359,7 +41359,7 @@
   {
     "map_type": 84,
     "map_type_hex": "0x54",
-    "name": "Special - Conveyor Belt 1",
+    "name": "Conveyor Maze 1",
     "sub_table_ptr": "0x7908",
     "sub_table_flat": "0x02F908",
     "sub_rooms": [
@@ -41562,7 +41562,7 @@
   {
     "map_type": 85,
     "map_type_hex": "0x55",
-    "name": "Special - Conveyor Belt 2",
+    "name": "Conveyor Maze 2",
     "sub_table_ptr": "0x7978",
     "sub_table_flat": "0x02F978",
     "sub_rooms": [
@@ -41765,7 +41765,7 @@
   {
     "map_type": 86,
     "map_type_hex": "0x56",
-    "name": "Special - Conveyor Belt 3",
+    "name": "Conveyor Maze 3",
     "sub_table_ptr": "0x79E8",
     "sub_table_flat": "0x02F9E8",
     "sub_rooms": [
@@ -41968,7 +41968,7 @@
   {
     "map_type": 87,
     "map_type_hex": "0x57",
-    "name": "Special - Maze 1",
+    "name": "Maze 1",
     "sub_table_ptr": "0x7A58",
     "sub_table_flat": "0x02FA58",
     "sub_rooms": [
@@ -42171,7 +42171,7 @@
   {
     "map_type": 88,
     "map_type_hex": "0x58",
-    "name": "Special - Maze 2",
+    "name": "Maze 2",
     "sub_table_ptr": "0x7AC8",
     "sub_table_flat": "0x02FAC8",
     "sub_rooms": [
@@ -42374,7 +42374,7 @@
   {
     "map_type": 89,
     "map_type_hex": "0x59",
-    "name": "Special - Maze 3",
+    "name": "Maze 3",
     "sub_table_ptr": "0x7B38",
     "sub_table_flat": "0x02FB38",
     "sub_rooms": [
@@ -42577,7 +42577,7 @@
   {
     "map_type": 90,
     "map_type_hex": "0x5A",
-    "name": "Special - Treasure Chest 1",
+    "name": "Gate Floor: 6 Chests Diagonal",
     "sub_table_ptr": "0x7BA8",
     "sub_table_flat": "0x02FBA8",
     "sub_rooms": [
@@ -42681,7 +42681,7 @@
   {
     "map_type": 91,
     "map_type_hex": "0x5B",
-    "name": "",
+    "name": "Gate Floor: 6 Chests Rows",
     "sub_table_ptr": "0x7BD9",
     "sub_table_flat": "0x02FBD9",
     "sub_rooms": [
@@ -42785,7 +42785,7 @@
   {
     "map_type": 92,
     "map_type_hex": "0x5C",
-    "name": "Special - Treasure Chest 3",
+    "name": "Gate Floor: 8 Chests Rows",
     "sub_table_ptr": "0x7C0A",
     "sub_table_flat": "0x02FC0A",
     "sub_rooms": [
@@ -42926,7 +42926,7 @@
   {
     "map_type": 94,
     "map_type_hex": "0x5E",
-    "name": "",
+    "name": "Arena Setup Room (white, 2 Terrys)",
     "sub_table_ptr": "0x7CE2",
     "sub_table_flat": "0x02FCE2",
     "sub_rooms": [
@@ -43008,7 +43008,7 @@
   {
     "map_type": 96,
     "map_type_hex": "0x60",
-    "name": "Labyrinth Final Room",
+    "name": "Labyrinth Final",
     "sub_table_ptr": "0x7144",
     "sub_table_flat": "0x02F144",
     "sub_rooms": [
@@ -43218,7 +43218,7 @@
   {
     "map_type": 97,
     "map_type_hex": "0x61",
-    "name": "",
+    "name": "Forest Maze Gate Floor 1",
     "sub_table_ptr": "0x784D",
     "sub_table_flat": "0x02F84D",
     "sub_rooms": [
@@ -43506,7 +43506,7 @@
   {
     "map_type": 98,
     "map_type_hex": "0x62",
-    "name": "",
+    "name": "Forest Maze Gate Floor 2",
     "sub_table_ptr": "0x784F",
     "sub_table_flat": "0x02F84F",
     "sub_rooms": [
@@ -43721,7 +43721,7 @@
   {
     "map_type": 99,
     "map_type_hex": "0x63",
-    "name": "",
+    "name": "Forest Maze Gate Floor 3",
     "sub_table_ptr": "0x7851",
     "sub_table_flat": "0x02F851",
     "sub_rooms": [
@@ -43876,7 +43876,7 @@
   {
     "map_type": 100,
     "map_type_hex": "0x64",
-    "name": "",
+    "name": "Forest Maze Gate Floor 4",
     "sub_table_ptr": "0x7853",
     "sub_table_flat": "0x02F853",
     "sub_rooms": [

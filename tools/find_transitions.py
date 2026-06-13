@@ -19,31 +19,10 @@ from pathlib import Path
 BANK_SIZE = 0x4000
 BANK_0B = 0x0B
 
-MAP_TYPE_NAMES = {
-    0x00: "Castle", 0x01: "GreatTree", 0x02: "Bazaar", 0x03: "Gate Hub",
-    0x04: "Farm", 0x05: "Stable", 0x06: "Arena Lobby", 0x07: "Arena Rooms",
-    0x08: "Gate tileset", 0x09: "Starry Shrine", 0x0A: "Secret Passage",
-    0x0C: "Gate tileset 2", 0x0D: "Old Man Gate", 0x0E: "Gate tileset 3",
-    0x0F: "Unknown 0F", 0x10: "Copycat Room", 0x12: "Library",
-    0x13: "Unknown 13", 0x16: "MedalMan Room", 0x18: "Well",
-    0x19: "Unknown 19", 0x1A: "Unknown 1A", 0x1B: "Unknown 1B",
-    0x1C: "Unknown 1C", 0x1D: "Unknown 1D", 0x1E: "Unknown 1E",
-    0x1F: "Unknown 1F", 0x23: "Room of Beginning",
-    0x24: "Room of Villager/Talisman", 0x25: "Room of Memories/Bewilder",
-    0x26: "Room of Peace/Bravery", 0x27: "Room of Strength/Anger",
-    0x28: "Room of Joy/Wisdom", 0x29: "Room of Happiness/Temptation",
-    0x2A: "Room of Labyrinth/Judgment", 0x2B: "Room of Reflection",
-    0x2C: "Room of Ambition/Demolition", 0x2D: "Room of Mastermind/Control",
-    0x2E: "Room of Extinction/Sleep",
-    0x30: "Boss: Beginning", 0x31: "Boss: Villager", 0x32: "Boss: Talisman",
-    0x33: "Boss: Memories", 0x34: "Boss: Bewilder", 0x36: "Boss: Peace",
-    0x37: "Boss: Bravery", 0x42: "Labyrinth", 0x46: "Boss: Ambition",
-    0x4D: "Boss: Arena Right", 0x4F: "Boss: Unused Gate",
-    0x52: "Coliseum", 0x53: "Forest Maze",
-    0x54: "Conveyor Belt 1", 0x55: "Conveyor Belt 2", 0x56: "Conveyor Belt 3",
-    0x57: "Maze 1", 0x58: "Maze 2", 0x59: "Maze 3",
-    0x5A: "Treasure Chest 1", 0x5C: "Treasure Chest 3", 0x5D: "Arena Battle",
-}
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dwm.map_names import MAP_TYPE_NAMES  # canonical room names (97 entries)
 
 
 def flat(bank, local):

@@ -21,15 +21,10 @@ from collections import defaultdict
 
 ROM_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'DWM-original.gbc')
 
-MAP_NAMES = {
-    0x00:'Castle',0x01:'GreatTree',0x02:'Bazaar',0x03:'GateHub',
-    0x04:'Farm',0x05:'Stable',0x06:'ArenaLobby',0x07:'ArenaRooms',
-    0x08:'TransitionScreen',0x09:'MonsterShrine',0x0A:'SecretPassage',
-    0x0C:'GateTileset',0x0D:'OldManGate',0x0F:'Room_0F',
-    0x10:'CopycatRoom',0x12:'Library',0x16:'MedalMan',
-    0x18:'Well',0x2F:'Bedroom',0x42:'Labyrinth',0x5D:'ArenaBattle',
-    0x60:'LabyrinthBoss',
-}
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dwm.map_names import MAP_NAMES  # canonical room names (97 entries)
 
 ATTR_PTR_TABLE = 0x476F
 BANK_0B_PTR_TABLE = 0x4B43

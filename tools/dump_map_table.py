@@ -42,60 +42,10 @@ RAM_LABELS = {
 }
 
 # Known map type IDs → names (from known_NOTES.md)
-MAP_TYPE_NAMES = {
-    0x00: "Castle",
-    0x01: "GreatTree Overworld",
-    0x02: "Bazaar",
-    0x03: "Gate Hub",
-    0x04: "Farm (top of GreatTree)",
-    0x05: "Stable",
-    0x06: "Arena Lobby",
-    0x07: "Arena Rooms",
-    0x08: "Gate tileset",
-    0x09: "Starry Shrine",
-    0x0A: "Secret Passage (Throne→MedalMan)",
-    0x0C: "Gate tileset",
-    0x0D: "Old Man Gate Room",
-    0x10: "Copycat Room",
-    0x12: "Library",
-    0x16: "MedalMan Room",
-    0x18: "Well",
-    0x23: "Room of Beginning",
-    0x24: "Room of Villager & Talisman",
-    0x25: "Room of Memories & Bewilder",
-    0x26: "Room of Peace & Bravery",
-    0x27: "Room of Strength & Anger",
-    0x28: "Room of Joy & Wisdom",
-    0x29: "Room of Happiness & Temptation",
-    0x2A: "Room of Labyrinth & Judgment",
-    0x2B: "Room of Reflection",
-    0x2C: "Room of Ambition & Demolition",
-    0x2D: "Room of Mastermind & Control",
-    0x2E: "Room of Extinction & Sleep",
-    0x30: "Boss Room - Gate of Beginning",
-    0x31: "Boss Room - Gate of Villager",
-    0x32: "Boss Room - Gate of Talisman",
-    0x33: "Boss Room - Gate of Memories",
-    0x34: "Boss Room - Gate of Bewilder",
-    0x36: "Boss Room - Gate of Peace",
-    0x37: "Boss Room - Gate of Bravery",
-    0x42: "Labyrinth",
-    0x46: "Boss Room - Gate of Ambition",
-    0x4D: "Boss Room - Arena Right Gate",
-    0x4F: "Boss Room - Unused Gate",
-    0x52: "Special - Coliseum",
-    0x53: "Special - Forest Maze",
-    0x54: "Special - Conveyor Belt 1",
-    0x55: "Special - Conveyor Belt 2",
-    0x56: "Special - Conveyor Belt 3",
-    0x57: "Special - Maze 1",
-    0x58: "Special - Maze 2",
-    0x59: "Special - Maze 3",
-    0x5A: "Special - Treasure Chest 1",
-    0x5C: "Special - Treasure Chest 3",
-    0x5D: "Arena Battle",
-    0x60: "Labyrinth Final Room",
-}
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dwm.map_names import MAP_TYPE_NAMES  # canonical room names (97 entries)
 
 
 def flat(bank: int, local: int) -> int:

@@ -1,10 +1,9 @@
 """Dump ALL NPC scripts from banks $0C-$0F into extracted/all_scripts.json.
 
-Replaces the previous frozen-source file, which was a PARTIAL dump
-(209 scripts over 56 map types, produced by lost in-session code with an
-NPC-data join). This tool dumps the complete set — every script reachable
-from every map type's pointer table — and its count is acceptance-tested
-against the asm label census (518 *_ScriptNN labels in bank_00c-00f.asm).
+Follows branch targets (opcodes $00, $01, $0E, $14, $15, $27, $28, $2C,
+$37) using a work-queue + visited-set to decode ALL reachable code per
+script.  Previous linear-only version missed ~45% of WriteRAM operations
+at branch targets (482 of 878 found by raw ROM scan).
 
 Routing (BANK04_SCRIPT_ENGINE.md / ARCHITECTURE.md):
   map_type < $06 -> bank $0C;  < $20 -> $0D;  < $40 -> $0E;  >= $40 -> $0F
@@ -13,7 +12,8 @@ Routing (BANK04_SCRIPT_ENGINE.md / ARCHITECTURE.md):
 
 Schema per entry:
   map_type, map_name, bank, script_id, ptr_table_addr, data_addr,
-  words (raw dw stream as hex), commands (decoded: opcode/text/param/end)
+  words (raw dw stream as hex, all reachable), commands (decoded, sorted
+  by address), branch_targets (addresses reached via branch opcodes)
 
 Usage:
   python3 -m tools.dump_all_scripts
@@ -24,12 +24,16 @@ from pathlib import Path
 ROM_PATH = Path("data/DWM-original.gbc")
 MASTER_TABLE = 0x41BA
 
-# import shared knowledge from the decompiler
+# Import script constants from the decompiler (single source of truth)
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from decompile_script import MAP_NAMES, PARAM_COUNTS  # type: ignore
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from decompile_script import (PARAM_COUNTS, BRANCH_TARGET_PARAM,  # type: ignore
+                               UNCONDITIONAL_JUMPS, TERMINATORS)
+from dwm.map_names import MAP_TYPE_NAMES   # canonical room names (97 entries)
 
-# Simple opcode name table (reconciled with handler analysis 2026-06-13)
+# Reconciled opcode names (handler analysis 2026-06-13).
+# NOTE: $00/$01 names may be swapped (known defect, see PROJECT_STATE.md).
 OPCODE_NAMES = {
     0x00: "if_flag_clear", 0x01: "if_flag_set", 0x02: "clear_flag",
     0x03: "set_flag", 0x04: "screen_effect", 0x05: "battle",
@@ -78,34 +82,107 @@ def rw(rom: bytes, bank: int, addr: int) -> int:
 
 
 def dump_script(rom: bytes, bank: int, start: int):
-    """Decode one script's dw stream until $FFFF (with safety cap)."""
-    words, commands = [], []
-    addr = start
-    pending_params = 0
-    for _ in range(512):
+    """Decode one script, following all branch targets.
+
+    Uses a work queue seeded with start; for each reachable address,
+    decodes linearly until $FFFF, return ($16), goto ($14), or an
+    already-visited address.  Branch target addresses are added to the
+    queue.  A visited set prevents infinite loops.
+
+    Returns (words_hex, commands, branch_targets_hex).
+    """
+    queue = [start]
+    visited = set()          # addresses (word-aligned) we've decoded
+    collected = []           # (addr, command_dict) tuples
+    word_pairs = []          # (addr, raw_word) tuples
+    branch_targets = set()   # addresses we queued from branch opcodes
+    total_words = 0
+    MAX_WORDS = 4096         # safety cap per script
+
+    while queue:
+        addr = queue.pop(0)
+        if addr in visited:
+            continue
         if not (0x4000 <= addr < 0x7FFF):
-            break
-        w = rw(rom, bank, addr)
-        words.append(f"${w:04X}")
-        if pending_params:
-            commands.append({"addr": f"${addr:04X}", "type": "param",
-                             "value": w})
-            pending_params -= 1
-        elif w == 0xFFFF:
-            commands.append({"addr": f"${addr:04X}", "type": "end"})
+            continue
+
+        # Linear decode from this address
+        pending_params = 0
+        current_opcode = None
+        param_list = []
+
+        while total_words < MAX_WORDS:
+            if addr in visited:
+                break
+            if not (0x4000 <= addr < 0x7FFF):
+                break
+
+            visited.add(addr)
+            w = rw(rom, bank, addr)
+            word_pairs.append((addr, w))
+            total_words += 1
+
+            if pending_params > 0:
+                # Reading params for current opcode
+                param_list.append(w)
+                collected.append((addr, {"addr": f"${addr:04X}", "type": "param",
+                                         "value": w}))
+                pending_params -= 1
+
+                if pending_params == 0 and current_opcode is not None:
+                    # All params collected — check for branch target
+                    tidx = BRANCH_TARGET_PARAM.get(current_opcode)
+                    if tidx is not None and tidx < len(param_list):
+                        target = param_list[tidx]
+                        if 0x4000 <= target < 0x8000:
+                            branch_targets.add(target)
+                            queue.append(target)
+
+                    # Unconditional jump: stop linear, target already queued
+                    if current_opcode in UNCONDITIONAL_JUMPS:
+                        current_opcode = None
+                        param_list = []
+                        addr += 2
+                        break
+
+                    current_opcode = None
+                    param_list = []
+
+            elif w == 0xFFFF:
+                collected.append((addr, {"addr": f"${addr:04X}", "type": "end"}))
+                addr += 2
+                break
+
+            elif (w >> 8) == 0xFF:
+                op = w & 0xFF
+                collected.append((addr, {"addr": f"${addr:04X}", "type": "opcode",
+                                         "opcode": op,
+                                         "name": OPCODE_NAMES.get(op, f"op_{op:02X}")}))
+                pending_params = PARAM_COUNTS.get(op, 0)
+                current_opcode = op
+                param_list = []
+
+                if pending_params == 0:
+                    # Zero-param opcode — check for terminator
+                    if op in TERMINATORS:
+                        addr += 2
+                        break
+                    current_opcode = None
+            else:
+                collected.append((addr, {"addr": f"${addr:04X}", "type": "text_or_param",
+                                         "value": w}))
+
             addr += 2
-            break
-        elif (w >> 8) == 0xFF:
-            op = w & 0xFF
-            commands.append({"addr": f"${addr:04X}", "type": "opcode",
-                             "opcode": op,
-                             "name": OPCODE_NAMES.get(op, f"op_{op:02X}")})
-            pending_params = PARAM_COUNTS.get(op, 0)
-        else:
-            commands.append({"addr": f"${addr:04X}", "type": "text_or_param",
-                             "value": w})
-        addr += 2
-    return words, commands
+
+    # Sort by address for deterministic output
+    collected.sort(key=lambda x: x[0])
+    word_pairs.sort(key=lambda x: x[0])
+
+    words_hex = [f"${w:04X}" for _, w in word_pairs]
+    commands = [cmd for _, cmd in collected]
+    targets_hex = sorted(f"${t:04X}" for t in branch_targets)
+
+    return words_hex, commands, targets_hex
 
 
 def main():
@@ -124,10 +201,10 @@ def main():
                 break
             ptrs.append(p)
             a += 2
-        name = MAP_NAMES.get(map_type, f"Map{map_type:02X}")
+        name = MAP_TYPE_NAMES.get(map_type, f"Map{map_type:02X}")
         for sid, ptr in enumerate(ptrs):
-            words, commands = dump_script(rom, bank, ptr)
-            out.append({
+            words, commands, targets = dump_script(rom, bank, ptr)
+            entry = {
                 "map_type": map_type,
                 "map_name": name,
                 "bank": bank,
@@ -137,11 +214,33 @@ def main():
                 "command_count": len(commands),
                 "words": words,
                 "commands": commands,
-            })
-    Path("extracted/all_scripts.json").write_text(json.dumps(out, indent=1))
+            }
+            if targets:
+                entry["branch_targets"] = targets
+            out.append(entry)
+
     n_maps = len({e["map_type"] for e in out})
+
+    # Acceptance stats
+    wr_count = sum(1 for e in out for c in e["commands"]
+                   if c.get("name") == "write_ram")
+    branching = sum(1 for e in out if e.get("branch_targets"))
+
+    result = {
+        "_generator": "tools/dump_all_scripts.py",
+        "_rom": "data/DWM-original.gbc (MD5 1ca6579359f21d8e27b446f865bf6b83)",
+        "_note": "Branch-following decoder: 9 branch opcodes via work-queue",
+        "script_count": len(out),
+        "map_type_count": n_maps,
+        "write_ram_count": wr_count,
+        "scripts": out,
+    }
+    Path("extracted/all_scripts.json").write_text(json.dumps(result, indent=1))
+
     print(f"Saved extracted/all_scripts.json: {len(out)} scripts "
           f"across {n_maps} map types")
+    print(f"  WriteRAM operations found: {wr_count}")
+    print(f"  Scripts with branch targets: {branching}")
     return out
 
 

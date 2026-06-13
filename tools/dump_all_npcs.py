@@ -5,30 +5,15 @@ Outputs a full NPC catalog with sprite IDs, positions, scripts, and ROM addresse
 Usage:
     uv run python -m tools.dump_all_npcs
 """
-import json
+import json, sys
 from pathlib import Path
 from collections import defaultdict
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dwm.rom import ROM, BANK_SIZE
+from dwm.map_names import MAP_NAMES  # canonical room names (97 entries)
 
 BANK = 0x0B
 MAP_PTR_ADDR = 0x4B43
-
-MAP_NAMES = {
-    0x00: "Castle", 0x01: "GreatTree", 0x02: "Bazaar", 0x03: "Gate Hub",
-    0x04: "Farm", 0x05: "Stable", 0x06: "Arena Lobby", 0x07: "Arena Rooms",
-    0x08: "Gate(08)", 0x09: "Starry Shrine", 0x0A: "Secret Passage",
-    0x0C: "Renamer", 0x0D: "Old Man Gate Room", 0x0F: "Vault",
-    0x10: "Copycat House", 0x12: "Library", 0x16: "MedalMan", 0x18: "Well",
-    0x1D: "Monster School", 0x1E: "Restaurant", 0x1F: "Queen Room",
-    0x23: "Room of Beginning", 0x24: "Villager/Talisman", 0x25: "Memories/Bewilder",
-    0x26: "Peace/Bravery", 0x27: "Strength/Anger", 0x28: "Joy/Wisdom",
-    0x29: "Happiness/Temptation", 0x2A: "Labyrinth/Judgment", 0x2B: "Reflection",
-    0x2C: "Ambition/Demolition", 0x2D: "Mastermind/Control",
-    0x2E: "Extinction/Sleep", 0x30: "Boss: Beginning", 0x42: "Labyrinth",
-    0x4E: "Boss(4E)", 0x4F: "Boss: Unused Gate",
-    0x52: "Coliseum", 0x53: "Forest Maze",
-    0x5D: "Arena Battle", 0x5E: "Arena Battle(5E)",
-}
 
 
 def flat(addr):

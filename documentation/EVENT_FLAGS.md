@@ -45,9 +45,29 @@ bit_mask     = bitmask_table[flag_index & 7]  ; $80,$40,$20,$10,$08,$04,$02,$01
 
 ## Free Flag Slots
 
-**Primary block: $0158-$02C0 (361 contiguous flags)** — WRAM $D9C6-$D9F3, completely unused.
+**Primary block: $0158-$02C0 (361 flag indices)** — WRAM $D9C6-$D9F3.
+
+**⚠ COLLISION WARNING**: Several bytes in this range are written directly by
+script opcode $12 (WriteRAM) as named variables. Allocating custom flags at
+these indices will corrupt game state:
+
+| Flag indices | WRAM byte | Variable | Effect if corrupted |
+|-------------|-----------|----------|---------------------|
+| $0180-$0187 | $D9CB | (unverified) | Unknown |
+| $0190-$0197 | $D9CD | Current Coliseum Battle | Arena/gate battles break |
+| $01A0-$01DF | $D9CF-$D9D6 | Gate room reset counters | Gate rooms stop resetting |
+| $0240-$0247 | $D9E3 | Story progression counter | Story progression breaks |
+| $0258-$025F | $D9E6 | Breeding mutation flag | Breeding mutations break |
+| $0270-$0277 | $D9E9 | Current step (multi-step) | Room state system breaks |
+
+**Safe contiguous block: $0158-$017F (40 flags guaranteed clean).**
+
+Broader safe ranges within $0158-$02C0 (excluding collision zones above):
+$0158-$017F, $0188-$018F, $0198-$019F, $01E0-$023F, $0248-$0257, $0260-$026F,
+$0278-$02C0 (but $0278+ is **outside SRAM save range** — will not persist).
+
 After range: $02C2-$0327 (102 flags). Plus ~30 scattered single-bit gaps.
-**Total: 463 free flags.**
+**Total available: ~400+ flags, but editor must skip collision ranges above.**
 
 ## Analysis Tool
 

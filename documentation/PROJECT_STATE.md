@@ -6,7 +6,8 @@
 > doc disagree, this file wins — and the session should fix the other doc.
 >
 > Last verified: 2026-06-13 (full repo audit + rebuild from source;
-> step system documented as NPC state mechanism)
+> step system documented as NPC state mechanism;
+> dump_all_scripts.py branch-following added — 810 WriteRAM ops found vs 482 linear-only)
 
 ---
 
@@ -70,7 +71,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | NPC show/hide by flag | Mechanism identified: step system (multiple step entries per screen, counter set by opcode $12). Opcodes $48/$49 are runtime movement animation, not structural show/hide. Needs in-game test with multi-step custom room. |
 | Custom tilesets | Compressor done; needs PNG→tile pipeline + tileset GFX loading from custom bank |
 | Custom music | Sound engine unexplored |
-| Save-data audit | Custom WRAM ($D378+) verified free of original code refs in code banks, but SRAM save layout not yet mapped — must confirm custom flags ($0158+) persist in saves |
+| Save-data audit | SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Only remaining: in-game save/load test of a custom flag in SameBoy. |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 
@@ -124,6 +125,18 @@ blocks direct editing of monsters/enemies/encounters/breeding in source.
   to $29 (AddMonster) instead of $2A (GiveItem). All three tools
   reconciled: decompile_script.py, compile_script.py,
   dump_all_scripts.py. all_scripts.json regenerated.
+- Opcodes $00 and $01 names may be swapped: "if_flag_clear" ($00) vs
+  "if_flag_set" ($01). Doesn't affect branch-following (both have target
+  at param[1]) or flag set/clear behavior (those use $02/$03), but needs
+  SameBoy verification of which opcode tests which flag state.
+- ~~dump_all_scripts.py decoded linearly, missing ~45% of WriteRAM ops
+  at branch targets~~ → Fixed. Work-queue follows 9 branch opcodes.
+  810/866 unique WriteRAM ops found (93.5%); 56 in alternate dispatch
+  paths remain. $D9E3 story progression counter documented.
+- ~~14 separate room-name dictionaries across tools (30–97 entries each,
+  all different)~~ → Fixed. Created `dwm/map_names.py` as single source
+  of truth (97 entries from editor/editor.py). All 14 tools now import
+  from it. Regenerated JSONs use canonical names.
 
 ---
 
@@ -146,7 +159,7 @@ disassembly/                   Byte-perfect source. NEVER refactored.
 patches/                       All custom-content modifications.
 extracted/                     Generated JSON (regenerable; note generator in file header)
 tools/                         Python tools incl. verify_integrity.py
-dwm/                           Python support package (single copy)
+dwm/                           Python support package (rom, text, map_names — single source of truth for room names)
 editor/  (legacy)              Frozen Streamlit editor — do not extend
 data/                          DWM-original.gbc (gitignored, user-provided)
 ```

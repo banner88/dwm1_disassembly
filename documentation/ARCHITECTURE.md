@@ -56,3 +56,38 @@
 | $D99B+ | Event flag bitfield |
 | $D9F4 | Event state machine index |
 | $DA00-$DA7F | Temp: enemy stats, monster info copy, breeding vars |
+
+## SRAM Save Layout
+
+SaveGameState (ROM0, bank_000.asm line 6577) copies game state to SRAM:
+
+| WRAM source | SRAM dest | Size | Contents |
+|-------------|-----------|------|----------|
+| $FF8A | $A003 | 33 B | HRAM (timer) |
+| $C8EA | $A024 | $1100 (4352 B) | Main game state (last byte: $D9E9) |
+| $C300 | $BCC8 | $0200 | Tile layout buffer |
+| $C200 | $BEC8 | $0100 | GBC attribute buffer |
+| $CAC1 | $A1FB | 2980 B | Party (separate SavePartyToSRAM path) |
+
+Checksum: $A002-$BFFF → stored at $A000-$A001. Valid flag: $A002 (1 = save exists).
+
+The main save range $C8EA-$D9E9 covers step counters ($D92A-$D99A), most event
+flags ($D99B-$D9E9), inventory, gold, and custom WRAM. **Flags at byte $D9EA+
+(indices $0278+) are OUTSIDE the save range and will NOT persist.**
+
+### Flag byte collisions
+
+Several named RAM variables share bytes with the event flag bitfield. The editor
+must skip these flag index ranges when allocating custom flags:
+
+| RAM addr | Flag indices | Variable |
+|----------|-------------|----------|
+| $D9CB | $0180-$0187 | (unverified name) |
+| $D9CD | $0190-$0197 | Current Coliseum Battle |
+| $D9CF-$D9D6 | $01A0-$01DF | Gate room reset counters |
+| $D9E3 | $0240-$0247 | Story progression counter |
+| $D9E6 | $0258-$025F | Breeding mutation flag |
+| $D9E9 | $0270-$0277 | Current step in multi-step screens |
+
+**Safe contiguous block for custom flags: $0158-$017F (40 flags guaranteed clean).**
+Broader safe range $0158-$0277 (288 flags) if collision ranges are excluded.

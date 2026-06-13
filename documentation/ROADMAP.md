@@ -27,7 +27,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 | Breeding tables $16:$4B30 (825×5) + $4974 | terminator at base+4125; extracted JSON |
 | Room system: ptr table $0B:$4B43, 107 rooms; step/interact/exit formats | 106 valid ptrs + $FFFF hole; interact/exit semantics SameBoy-confirmed (ROOM_DATA_FORMAT) |
 | NPC RAM: $D7D2, 32 B/slot | parser `add $20` at $0B:~$4820 (DOC_AUDIT A.3) |
-| Script engine: 100 opcodes, 518 scripts in $0C–$0F | label census 129+168+130+91; compile/decompile roundtrip |
+| Script engine: 100 opcodes, 518 scripts in $0C–$0F | label census 129+168+130+91; compile/decompile roundtrip; dump_all_scripts follows 9 branch opcodes via work-queue (810/866 WriteRAM = 93.5% coverage, was 55%) |
 | Text system: charmap, DTE, control codes, 2,067 IDs, routing cascade | text_id_map.json count; control codes proven in-game (v23) |
 | Event flags: fns $26A0/$26A6/$26AE, 311 used, 463 free | game.sym symbols; analyze_event_flags.py runs |
 | Encounter pool format: 32 gates → pools 0–127 | encounters.json structure audit |
@@ -58,13 +58,20 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 ## 2. NEEDS DOING
 
 ### Phase 0 — Foundation (finish before feature work)
-- [ ] **SRAM save audit** — top priority unknown. Confirm custom flags
-      ($0158–$02C0) and party changes persist across save/load, and that
-      $D378+ buffers don't collide with save/restore code.
-      *How*: trace SRAM-enable writes ($0000=$0A) and copy loops, or diff
-      .sav in SameBoy after setting a custom flag.
-      *Accept*: documented save map section in ARCHITECTURE.md + a v24
-      in-game save/load test of a custom flag.
+- [~] **SRAM save audit** — SRAM layout fully traced and documented in
+      ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 in save
+      range. Flag byte collisions mapped (D9CB/D9CD/D9CF-D9D6/D9E3/D9E6/D9E9).
+      Safe contiguous block: $0158-$017F (40 flags).
+      *Remaining*: in-game save/load test of a custom flag in SameBoy.
+      *Accept*: v24 save → reload → custom flag still set.
+- [x] **Fix `dump_all_scripts.py` branch-following** — linear decoder missed
+      ~45% of WriteRAM operations. Fixed: work-queue follows 9 branch opcodes
+      ($00/$01/$0E/$14/$15/$27/$28/$2C/$37). 810 unique WriteRAM found (was
+      482; ROM ground truth 866 = 93.5% coverage). 56 remaining are in
+      alternate dispatch paths (entry 1/2 tables). Canonical room names from
+      editor/editor.py (96 entries). New `branch_targets` field per script.
+      Castle script_id=0 now shows 69 branch targets, WriteRAM for D92B/D92C/
+      D92D/D92F/D93C. all_scripts.json regenerated.
 - [x] **Fix `dump_map_table.py` swapped interact/exit labels**, regenerate
       map_table.json. *Accept*: JSON field names match ROOM_DATA_FORMAT;
       spot-check 3 rooms against bank_00b labels.

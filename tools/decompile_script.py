@@ -12,19 +12,10 @@ import json, os, sys, argparse
 ROM_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'DWM-original.gbc')
 TEXT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'extracted', 'text_id_map.json')
 
-MAP_NAMES = {
-    0x00:'Castle',0x01:'GreatTree',0x02:'Bazaar',0x03:'GateHub',
-    0x04:'Farm',0x05:'Stable',0x06:'ArenaLobby',0x07:'ArenaRooms',
-    0x09:'MonsterShrine',0x0C:'GateTileset',0x10:'CopycatRoom',
-    0x16:'MedalMan',0x18:'Well',0x24:'RoomVillagerTalisman',
-    0x25:'RoomMemoriesBewilder',0x26:'RoomPeaceBravery',
-    0x28:'RoomJoyWisdom',0x29:'RoomHappinessTemptation',
-    0x2A:'RoomLabyrinthJudgment',0x2C:'RoomAmbitionDemolition',
-    0x2D:'RoomMastermindControl',0x2F:'Bedroom',
-    0x30:'BossBeginning',0x31:'BossVillager',0x32:'BossTalisman',
-    0x33:'BossMemories',0x34:'BossBewilder',0x36:'BossPeace',
-    0x37:'BossBravery',0x46:'BossAmbition',
-}
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dwm.map_names import MAP_NAMES  # canonical room names (97 entries)
 
 # Verified opcode parameter counts from handler analysis + empirical data
 PARAM_COUNTS = {
@@ -42,6 +33,23 @@ PARAM_COUNTS = {
     0x58:1, 0x59:1, 0x5A:0, 0x5B:0, 0x5C:0, 0x5D:2, 0x5E:1, 0x5F:0,
     0x60:0, 0x61:0, 0x62:1, 0x63:0,
 }
+
+# Branch opcodes: maps opcode -> index within params[] that holds the target.
+# Derived from format_cmd (every opcode whose output contains "goto .addr_").
+BRANCH_TARGET_PARAM = {
+    0x00: 1,   # if_flag_clear:       [flag_idx, target]
+    0x01: 1,   # if_flag_set:         [flag_idx, target]
+    0x0E: 1,   # branch_by_screen:    [screen, target]
+    0x14: 0,   # goto:                [target]           UNCONDITIONAL
+    0x15: 2,   # cond_branch:         [ram_addr, value, target]
+    0x27: 0,   # post_battle_check:   [target]
+    0x28: 0,   # check_storage_full:  [target]
+    0x2C: 0,   # check_inv_full:      [target]
+    0x37: 1,   # check_story_region:  [region, target]
+}
+
+UNCONDITIONAL_JUMPS = {0x14}  # goto — no fall-through
+TERMINATORS = {0x16}          # return — ends current execution path
 
 def _s16(v):
     """Format as signed 16-bit."""
@@ -169,64 +177,99 @@ def format_cmd(opcode, params):
 
 
 def decompile_script(rom, bank, start_addr, texts, label=None):
-    """Decompile a single script starting at addr."""
+    """Decompile a single script, following all branch targets.
+
+    Uses a work queue seeded with start_addr.  For each reachable address,
+    decodes linearly until $FFFF, return ($16), goto ($14), or an
+    already-visited address.  Branch target addresses are added to the queue.
+    """
     base = bank * 0x4000
+    branch_targets = set()  # addresses reached via branch opcodes
+    decoded = []            # (addr, line_str) tuples
+    visited = set()         # decoded addresses
+
+    queue = [start_addr]
+    total = 0
+    MAX_WORDS = 4096
+
+    while queue:
+        pos = queue.pop(0)
+        if pos in visited:
+            continue
+        if not (0x4000 <= pos < 0x7FFF):
+            continue
+
+        while total < MAX_WORDS:
+            if pos in visited:
+                break
+            if not (0x4000 <= pos < 0x7FFF):
+                break
+
+            off = base + (pos - 0x4000)
+            if off + 1 >= base + 0x4000:
+                break
+            val = rom[off] | (rom[off + 1] << 8)
+            visited.add(pos)
+            total += 1
+
+            if val == 0xFFFF:
+                decoded.append((pos, '    end'))
+                break
+
+            if is_opcode(val):
+                op = val & 0xFF
+                pc = PARAM_COUNTS.get(op, 0)
+                params = []
+                for i in range(pc):
+                    poff = off + (1 + i) * 2
+                    pv = rom[poff] | (rom[poff + 1] << 8)
+                    params.append(pv)
+                    visited.add(pos + (1 + i) * 2)
+                    total += 1
+
+                decoded.append((pos, f'    {format_cmd(op, params)}'))
+
+                # Check for branch target
+                tidx = BRANCH_TARGET_PARAM.get(op)
+                if tidx is not None and tidx < len(params):
+                    target = params[tidx]
+                    if 0x4000 <= target < 0x8000:
+                        branch_targets.add(target)
+                        queue.append(target)
+
+                pos += (1 + pc) * 2
+
+                # Unconditional jump or terminator: stop linear
+                if op in UNCONDITIONAL_JUMPS or op in TERMINATORS:
+                    break
+            else:
+                # Text ID
+                if val in texts:
+                    txt = texts[val].replace('\n', ' // ')[:45]
+                    decoded.append((pos, f'    say ${val:04X}  ; "{txt}"'))
+                else:
+                    decoded.append((pos, f'    say ${val:04X}'))
+                pos += 2
+
+    # Sort by address and build output
+    decoded.sort(key=lambda x: x[0])
+
     lines = []
-    branch_targets = set()
-    
     if label:
         lines.append(f'{label}:')
-    
-    # Pass 1: collect branch targets
-    pos = start_addr
-    for _ in range(500):
-        off = base + (pos - 0x4000)
-        if off + 1 >= base + 0x4000: break
-        val = rom[off] | (rom[off+1] << 8)
-        if val == 0xFFFF: break
-        if is_opcode(val):
-            op = val & 0xFF
-            pc = PARAM_COUNTS.get(op, 0)
-            for i in range(pc):
-                pv = rom[off + (1+i)*2] | (rom[off + (1+i)*2 + 1] << 8)
-                if 0x4000 <= pv <= 0x7FFF:
-                    branch_targets.add(pv)
-            pos += (1 + pc) * 2
-        else:
-            pos += 2
-    
-    # Pass 2: decompile
-    pos = start_addr
-    for _ in range(500):
-        off = base + (pos - 0x4000)
-        if off + 1 >= base + 0x4000: break
-        val = rom[off] | (rom[off+1] << 8)
-        
-        if pos in branch_targets:
-            lines.append(f'.addr_{pos:04X}:')
-        
-        if val == 0xFFFF:
-            lines.append('    end')
-            break
-        
-        if is_opcode(val):
-            op = val & 0xFF
-            pc = PARAM_COUNTS.get(op, 0)
-            params = []
-            for i in range(pc):
-                pv = rom[off + (1+i)*2] | (rom[off + (1+i)*2 + 1] << 8)
-                params.append(pv)
-            lines.append(f'    {format_cmd(op, params)}')
-            pos += (1 + pc) * 2
-        else:
-            # Text ID
-            if val in texts:
-                txt = texts[val].replace('\n', ' // ')[:45]
-                lines.append(f'    say ${val:04X}  ; "{txt}"')
-            else:
-                lines.append(f'    say ${val:04X}')
-            pos += 2
-    
+
+    prev_addr = None
+    for addr, line in decoded:
+        # Insert separator for non-contiguous blocks
+        if prev_addr is not None and addr > prev_addr + 2:
+            lines.append('')
+        # Insert label at branch targets
+        if addr in branch_targets:
+            lines.append(f'.addr_{addr:04X}:')
+        lines.append(line)
+        # Track end of this instruction (find its size from the line)
+        prev_addr = addr
+
     return '\n'.join(lines)
 
 

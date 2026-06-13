@@ -50,32 +50,10 @@ OPCODE_NAMES = {
     0x60:'Cmd60',0x61:'Cmd61',0x62:'Cmd62',0x63:'Cmd63',
 }
 
-MAP_NAMES = {
-    0x00:'Castle',0x01:'GreatTree',0x02:'Bazaar',0x03:'GateHub',
-    0x04:'Farm',0x05:'Stable',0x06:'ArenaLobby',0x07:'ArenaRooms',
-    0x08:'Map08',0x09:'Map09',0x0A:'Map0A',0x0B:'Map0B',
-    0x0C:'GateTileset',0x0D:'Map0D',0x0E:'Map0E',0x0F:'Map0F',
-    0x10:'CopycatRoom',0x11:'Map11',0x12:'Map12',0x13:'Map13',
-    0x14:'Map14',0x15:'Map15',0x16:'MedalMan',0x17:'Map17',
-    0x18:'Well',0x19:'Map19',0x1A:'Map1A',0x1B:'Map1B',
-    0x1C:'Map1C',0x1D:'Map1D',0x1E:'Map1E',0x1F:'Map1F',
-    0x20:'Map20',0x21:'Map21',0x22:'Map22',0x23:'Map23',
-    0x24:'RoomVillagerTalisman',0x25:'RoomMemoriesBewilder',
-    0x26:'RoomPeaceBravery',0x27:'Map27',
-    0x28:'RoomJoyWisdom',0x29:'RoomHappinessTemptation',
-    0x2A:'RoomLabyrinthJudgment',0x2B:'Map2B',
-    0x2C:'RoomAmbitionDemolition',0x2D:'RoomMastermindControl',
-    0x2E:'Map2E',0x2F:'Map2F',
-    0x30:'BossBeginning',0x31:'BossVillager',0x32:'BossTalisman',
-    0x33:'BossMemories',0x34:'BossBewilder',0x35:'Map35',
-    0x36:'BossPeace',0x37:'BossBravery',0x38:'Map38',0x39:'Map39',
-    0x3A:'Map3A',0x3B:'Map3B',0x3C:'Map3C',0x3D:'Map3D',
-    0x3E:'Map3E',0x3F:'Map3F',0x40:'Map40',0x41:'Map41',
-    0x42:'Map42',0x43:'Map43',0x44:'Map44',0x45:'Map45',
-    0x46:'BossAmbition',0x47:'Map47',0x48:'Map48',0x49:'Map49',
-    0x4A:'Map4A',0x4B:'Map4B',0x4C:'Map4C',0x4D:'Map4D',
-    0x4E:'Map4E',0x4F:'BossUnused',0x50:'Map50',0x51:'Map51',
-}
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dwm.map_names import MAP_NAMES  # canonical room names (97 entries)
 
 BANK_CONFIG = {
     0x0C: {'map_range': (0x00, 0x05), 'asm': 'bank_00c.asm'},
