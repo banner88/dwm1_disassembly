@@ -7,12 +7,12 @@ Traces the pointer chain:
     +0,+1  = RAM counter address (identifies room type)
     +2...  = array of 6-byte step entries:
                +0,+1 = unknown (possibly tilemap/config pointer)
-               +2,+3 = interact/NPC data pointer
+               +2,+3 = interact/NPC block ptr (5-byte entries), +4,+5 = exit checker ptr (7-byte entries)
                +4,+5 = exit checker data pointer
 
 Exit data: variable-length list terminated by 0xFF.
-  Type 0x9X entries: [type, ?, X, Y, next_room_id]
-NPC data:  7-byte entries terminated by 0xFF.
+  Interact block: 5-byte entries (NPCs + spawn/walk-on markers).
+Exit checker block: 7-byte entries (trigger, dest map_type, screen, spawn).
 
 Usage:
   python -m tools.dump_map_table
@@ -120,104 +120,88 @@ def local_to_flat(ptr: int) -> int:
     return flat(BANK, ptr)
 
 
-def decode_exit_entries(data: bytes, ptr_local: int, max_entries: int = 32) -> list:
-    """Decode exit entries from the exit data pointer.
+def decode_interact_entries(data: bytes, ptr_local: int, max_entries: int = 32) -> list:
+    """Decode the INTERACT block (step entry bytes +2,+3).
 
-    Exit data is a variable-length list terminated by 0xFF.
-    Type 0x9X entries appear to be: [type, flags, X, Y, next_room_id] (5 bytes)
-    Other types have varying formats.
+    5-byte entries, terminated by 0xFF as the FIRST byte of an entry only
+    (internal bytes may be 0xFF). Two entry classes by bit 7 of byte 0
+    (ROOM_DATA_FORMAT.md, SameBoy-verified):
+
+      bit7 SET  — spawn/exit markers: [type, param, x, y, map_type]
+                  type 0x8F = spawn point, 0x90 = walk-on exit marker
+      bit7 CLEAR — NPC: [type_facing, sprite_id, x, y, script_id]
+                  facing in bits 4-5 of byte 0 (0=down,1=left,2=up,3=right)
     """
-    exits = []
+    entries = []
     f = local_to_flat(ptr_local)
-
     if f < 0 or f >= len(data):
-        return exits
-
+        return entries
     pos = f
     for _ in range(max_entries):
-        if pos >= len(data):
+        if pos + 4 >= len(data):
             break
-        type_byte = data[pos]
-        if type_byte == 0xFF:
+        b0 = data[pos]
+        if b0 == 0xFF:
             break
-
-        entry = {"entry_flat": f"0x{pos:06X}", "type_byte": f"0x{type_byte:02X}"}
-
-        if type_byte & 0x80:
-            # Bit 7 set = coordinate-matched exit
-            top_nibble = type_byte & 0xF0
-            if top_nibble == 0x90 and pos + 4 < len(data):
-                # Standard coordinate exit: [type, param, X, Y, next_room_id]
-                entry["kind"] = "coord_exit"
-                entry["param"] = f"0x{data[pos+1]:02X}"
-                entry["x"] = data[pos + 2]
-                entry["y"] = data[pos + 3]
-                entry["next_room_id"] = data[pos + 4]
-                entry["next_room_id_flat"] = f"0x{pos + 4:06X}"  # patchable byte
-                entry["raw"] = data[pos:pos + 5].hex(" ")
-                exits.append(entry)
-                pos += 5
-            elif pos + 4 < len(data):
-                # Other bit-7-set type
-                entry["kind"] = f"exit_type_{top_nibble >> 4:X}X"
-                entry["raw"] = data[pos:pos + 5].hex(" ")
-                entry["next_room_id"] = data[pos + 4]
-                entry["next_room_id_flat"] = f"0x{pos + 4:06X}"
-                exits.append(entry)
-                pos += 5
-            else:
-                entry["kind"] = "truncated"
-                entry["raw"] = data[pos:min(pos + 5, len(data))].hex(" ")
-                exits.append(entry)
-                break
+        raw = data[pos:pos + 5]
+        entry = {"entry_flat": f"0x{pos:06X}", "raw": raw.hex(" ")}
+        if b0 & 0x80:
+            entry["kind"] = {0x8F: "spawn_point", 0x90: "walkon_exit"}.get(b0, f"marker_{b0:02X}")
+            entry["type"] = f"0x{b0:02X}"
+            entry["param"] = f"0x{raw[1]:02X}"
+            entry["x"] = raw[2]
+            entry["y"] = raw[3]
+            entry["map_type"] = raw[4]
         else:
-            # Bit 7 clear = different format (possibly warp or script trigger)
-            end = min(pos + 8, len(data))
-            chunk = data[pos:end]
-            entry["kind"] = "non_coord_entry"
-            entry["raw"] = chunk.hex(" ")
-            exits.append(entry)
-            # Without knowing the exact length, advance conservatively
-            # Look for next valid-looking type byte or 0xFF
-            pos += 1
-            while pos < len(data) and pos < f + 256:
-                b = data[pos]
-                if b == 0xFF or (b & 0x80):
-                    break
-                pos += 1
-
-    return exits
+            entry["kind"] = "npc"
+            entry["npc_type"] = f"0x{b0 & 0xCF:02X}"
+            entry["facing"] = ["down", "left", "up", "right"][(b0 >> 4) & 3]
+            entry["sprite_id"] = raw[1]
+            entry["x"] = raw[2]
+            entry["y"] = raw[3]
+            entry["script_id"] = raw[4]
+        entries.append(entry)
+        pos += 5
+    return entries
 
 
-def decode_npc_entries(data: bytes, ptr_local: int, max_entries: int = 32) -> list:
-    """Decode NPC/interaction entries (7 bytes each, terminated by 0xFF)."""
-    npcs = []
+def decode_exit_checker_entries(data: bytes, ptr_local: int, max_entries: int = 32) -> list:
+    """Decode the EXIT CHECKER block (step entry bytes +4,+5).
+
+    7-byte entries, 0xFF-terminated (first byte of entry only). Read by
+    RoomEntry6 every step (ROOM_DATA_FORMAT.md):
+      [trigger_x, trigger_y, dest_map_type, gate_flag,
+       screen_byte (low nibble=spawn screen, bit7=Y+8), spawn_x, spawn_y]
+    byte0 == 0x00 (arrival point) and 0x09 (special) are skipped by the
+    engine but still occupy 7 bytes.
+    """
+    entries = []
     f = local_to_flat(ptr_local)
-
     if f < 0 or f >= len(data):
-        return npcs
-
+        return entries
     pos = f
     for _ in range(max_entries):
         if pos + 6 >= len(data):
             break
-        first_byte = data[pos]
-        if first_byte == 0xFF:
+        b0 = data[pos]
+        if b0 == 0xFF:
             break
-
-        entry = {
-            "flat": f"0x{pos:06X}",
-            "raw": data[pos:pos + 7].hex(" "),
-            "npc_type": f"0x{first_byte:02X}",
-            "byte1": f"0x{data[pos+1]:02X}",
-            "x": data[pos + 2],
-            "y": data[pos + 3],
-            "bytes_4_5_6": data[pos + 4:pos + 7].hex(" "),
-        }
-        npcs.append(entry)
+        raw = data[pos:pos + 7]
+        entries.append({
+            "entry_flat": f"0x{pos:06X}",
+            "raw": raw.hex(" "),
+            "kind": {0x00: "arrival_point", 0x09: "special_marker"}.get(b0, "walkon_exit"),
+            "trigger_x": raw[0],
+            "trigger_y": raw[1],
+            "dest_map_type": raw[2],
+            "gate_flag": raw[3],
+            "screen_byte": f"0x{raw[4]:02X}",
+            "spawn_x": raw[5],
+            "spawn_y": raw[6],
+            "dest_map_type_flat": f"0x{pos + 2:06X}",
+        })
         pos += 7
-
-    return npcs
+    return entries
 
 
 def decode_step_entries(data: bytes, room_data_flat: int, max_steps: int = 16) -> list:
@@ -249,10 +233,10 @@ def decode_step_entries(data: bytes, room_data_flat: int, max_steps: int = 16) -
         }
 
         # Decode exits
-        entry["interact_data"] = decode_exit_entries(data, interact_ptr)
+        entry["interact_data"] = decode_interact_entries(data, interact_ptr)
 
         # Decode NPCs
-        entry["exit_data"] = decode_npc_entries(data, exit_ptr)
+        entry["exit_data"] = decode_exit_checker_entries(data, exit_ptr)
 
         steps.append(entry)
 
@@ -281,16 +265,33 @@ def dump_map_type(data: bytes, map_type: int, verbose: bool = False) -> dict | N
         "sub_rooms": [],
     }
 
-    # Determine how many sub-rooms by reading pointers until invalid
+    # Sub-table size (ROOM_DATA_FORMAT.md): the slot region extends from
+    # sub_table_ptr up to the LOWEST room_data pointer it contains ("the gap").
+    # $FFFF slots are HOLES (unused screens) — skip them, never stop on them.
+    # The old version broke at the first $FFFF and silently dropped screens
+    # (e.g. GreatTree screens 4+ behind holes at slots 2-3).
     sub_flat = local_to_flat(sub_table_ptr)
-    for c925 in range(32):  # reasonable max
+    min_target = float("inf")          # lowest valid room_data ptr seen
+    c925 = -1
+    while True:
+        c925 += 1
+        if c925 >= 64:                  # hard cap (LabyrinthFinal uses 32)
+            break
+        # Stop when the slot cursor reaches the start of room data (the gap)
+        if c925 > 0 and sub_table_ptr + c925 * 2 >= min_target:
+            break
         room_ptr_offset = sub_flat + c925 * 2
         if room_ptr_offset + 1 >= len(data):
             break
 
         room_data_ptr = read_u16(data, room_ptr_offset)
+        if room_data_ptr == 0xFFFF:
+            continue                     # hole — unused screen position
         if not is_valid_bank_ptr(room_data_ptr):
-            break
+            break                        # left the table entirely
+
+        if room_data_ptr >= sub_table_ptr:
+            min_target = min(min_target, room_data_ptr)
 
         room_flat = local_to_flat(room_data_ptr)
         if room_flat + 1 >= len(data):
@@ -301,7 +302,7 @@ def dump_map_type(data: bytes, map_type: int, verbose: bool = False) -> dict | N
 
         # Sanity check: RAM counter should be in WRAM range
         if not (0xC000 <= ram_counter <= 0xDFFF):
-            break
+            continue                     # garbage slot — skip, don't truncate
 
         ram_label = RAM_LABELS.get(ram_counter, "")
 
@@ -354,20 +355,21 @@ def print_summary(result: dict, verbose: bool = False):
             print(f"    step {step['step']}: "
                   f"bytes01={step['bytes_0_1']}  "
                   f"interact@{step['interact_ptr']}({n_interact})  "
-                  f"exits@{step['exit_ptr']}({n_interact})")
+                  f"exits@{step['exit_ptr']}({n_exits})")
 
-            for ex in step["interact_data"]:
-                kind = ex["kind"]
-                if kind == "coord_exit":
-                    print(f"      EXIT: ({ex['x']},{ex['y']}) → room {ex['next_room_id']}  "
-                          f"patch@{ex.get('next_room_id_flat','')}  [{ex['raw']}]")
+            for it in step["interact_data"]:
+                if it["kind"] == "npc":
+                    print(f"      NPC: type={it['npc_type']} {it['facing']:<5} "
+                          f"sprite={it['sprite_id']} pos=({it['x']},{it['y']}) "
+                          f"script={it['script_id']}  [{it['raw']}]")
                 else:
-                    nrid = ex.get("next_room_id", "?")
-                    print(f"      EXIT ({kind}): next={nrid}  [{ex['raw']}]")
+                    print(f"      {it['kind'].upper()}: pos=({it['x']},{it['y']}) "
+                          f"map_type={it['map_type']}  [{it['raw']}]")
 
-            for npc in step["exit_data"]:
-                print(f"      NPC: type={npc['npc_type']} "
-                      f"pos=({npc['x']},{npc['y']})  [{npc['raw']}]")
+            for ex in step["exit_data"]:
+                print(f"      EXITCHK ({ex['kind']}): trig=({ex['trigger_x']},{ex['trigger_y']}) "
+                      f"→ mt=0x{ex['dest_map_type']:02X} screen={ex['screen_byte']} "
+                      f"spawn=({ex['spawn_x']},{ex['spawn_y']})  patch@{ex['dest_map_type_flat']}")
 
 
 def build_connection_graph(all_results: list) -> dict:
@@ -381,15 +383,27 @@ def build_connection_graph(all_results: list) -> dict:
             for step in sr["steps"]:
                 key = f"0x{mt:02X}:c925={c925}:step={step['step']}"
                 dests = []
-                for ex in step["interact_data"]:
-                    nrid = ex.get("next_room_id")
-                    if nrid is not None and nrid != 0xFF:
+                # Real transitions come from the EXIT CHECKER block
+                for ex in step["exit_data"]:
+                    if ex["kind"] != "walkon_exit":
+                        continue
+                    dests.append({
+                        "dest_map_type": ex["dest_map_type"],
+                        "kind": "exit_checker",
+                        "trigger_x": ex["trigger_x"],
+                        "trigger_y": ex["trigger_y"],
+                        "screen_byte": ex["screen_byte"],
+                        "spawn_x": ex["spawn_x"],
+                        "spawn_y": ex["spawn_y"],
+                        "dest_map_type_flat": ex["dest_map_type_flat"],
+                    })
+                # Walk-on markers in the interact block also carry a map_type
+                for it in step["interact_data"]:
+                    if it["kind"] == "walkon_exit":
                         dests.append({
-                            "next_room_id": nrid,
-                            "kind": ex["kind"],
-                            "x": ex.get("x"),
-                            "y": ex.get("y"),
-                            "next_room_id_flat": ex.get("next_room_id_flat", ""),
+                            "dest_map_type": it["map_type"],
+                            "kind": "interact_marker",
+                            "x": it["x"], "y": it["y"],
                         })
                 if dests:
                     connections[key] = dests
@@ -467,7 +481,7 @@ def main():
             for key in sorted(conns.keys()):
                 dests = conns[key]
                 dest_str = ", ".join(
-                    f"({d.get('x','?')},{d.get('y','?')})→room {d['next_room_id']} @{d.get('next_room_id_flat','?')}"
+                    f"→mt=0x{d['dest_map_type']:02X} ({d['kind']})"
                     for d in dests
                 )
                 print(f"  {key}: {dest_str}")
@@ -479,12 +493,12 @@ def main():
             for r in all_results for sr in r["sub_rooms"]
         )
         total_exits = sum(
-            len(step["interact_data"])
+            len(step["exit_data"])
             for r in all_results for sr in r["sub_rooms"]
             for step in sr["steps"]
         )
         total_npcs = sum(
-            len(step["exit_data"])
+            sum(1 for it in step["interact_data"] if it["kind"] == "npc")
             for r in all_results for sr in r["sub_rooms"]
             for step in sr["steps"]
         )
@@ -517,21 +531,24 @@ def main():
         mt = result["map_type"]
         for sr in result["sub_rooms"]:
             for step in sr["steps"]:
-                for ex in step["interact_data"]:
-                    nrid = ex.get("next_room_id")
-                    if nrid is not None:
-                        exit_summary.append({
-                            "map_type": f"0x{mt:02X}",
-                            "map_name": result["name"],
-                            "c925": sr["c925"],
-                            "step": step["step"],
-                            "kind": ex["kind"],
-                            "x": ex.get("x"),
-                            "y": ex.get("y"),
-                            "next_room_id": nrid,
-                            "next_room_id_flat": ex.get("next_room_id_flat", ""),
-                            "raw": ex.get("raw", ""),
-                        })
+                for ex in step["exit_data"]:
+                    if ex["kind"] != "walkon_exit":
+                        continue
+                    exit_summary.append({
+                        "map_type": f"0x{mt:02X}",
+                        "map_name": result["name"],
+                        "c925": sr["c925"],
+                        "step": step["step"],
+                        "trigger_x": ex["trigger_x"],
+                        "trigger_y": ex["trigger_y"],
+                        "dest_map_type": ex["dest_map_type"],
+                        "gate_flag": ex["gate_flag"],
+                        "screen_byte": ex["screen_byte"],
+                        "spawn_x": ex["spawn_x"],
+                        "spawn_y": ex["spawn_y"],
+                        "dest_map_type_flat": ex["dest_map_type_flat"],
+                        "raw": ex["raw"],
+                    })
 
     exit_path = out_dir / "exit_table.json"
     exit_path.write_text(json.dumps(exit_summary, indent=2))

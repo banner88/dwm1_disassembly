@@ -14,7 +14,7 @@ bit_mask     = bitmask_table[flag_index & 7]  ; $80,$40,$20,$10,$08,$04,$02,$01
 |----------|---------|---------|
 | SetEventFlag | $00:$26A0 | Set a flag bit |
 | ClearEventFlag | $00:$26A6 | Clear a flag bit |
-| CheckEventFlag | $00:$26AE | Test a flag bit (Z=clear, NZ=set) |
+| TestEventFlag | $00:$26AE | Test a flag bit (Z=clear, NZ=set) |
 
 ### Script Opcodes
 | Opcode | Name | Purpose |
@@ -26,7 +26,8 @@ bit_mask     = bitmask_table[flag_index & 7]  ; $80,$40,$20,$10,$08,$04,$02,$01
 
 ## Complete Statistics
 
-- **1,164 total flag operations** across 530 NPC scripts
+- **~1,164 total flag operations** (derived with the old 530-script count;
+  re-run `tools/analyze_event_flags.py` to refresh — see DOC_AUDIT.md C) across 518 NPC scripts
 - **311 unique flags** referenced ($0002-$02C1, WRAM $D99B-$D9F3)
 - **219 flags** check-only in scripts (set by engine code)
 - **463 free flag slots** for custom use
@@ -58,4 +59,4 @@ python3 tools/analyze_event_flags.py --flag 0x00F1 # Single flag detail
 ```
 
 ---
-*Generated via static analysis of all 530 NPC scripts across banks $0C/$0D/$0E/$0F.*
+*Generated via static analysis of all 518 NPC scripts across banks $0C/$0D/$0E/$0F.*

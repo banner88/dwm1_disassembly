@@ -1,4 +1,22 @@
 ; =============================================================================
+; BYTE-PERFECT RESTORATION (June 2026 consolidation session)
+; =============================================================================
+; This file was restored from commit e78eb1d (the last byte-perfect version)
+; with one symbol rename (Call_000_2652 -> CheckGateWorldMapType) to match
+; the current bank_000.asm.
+;
+; WHY: Commits 2000e99/036dc06 refactored this bank's code (inline pointer
+; chases -> call SharedPtrChase, jp->jr shrinks), which changed ~2,282 bytes
+; in $0B:$4009-$4B42 and silently broke the byte-perfect guarantee. The
+; "original MD5" in the handoff doc was then rewritten to the drifted value.
+;
+; RULE (see SESSION_PROTOCOL.md): the clean disassembly is NEVER refactored
+; or "optimized". Space-saving rewrites belong in patches/ only.
+; Verify with: python3 tools/verify_integrity.py
+; Clean build MD5 must be: 1ca6579359f21d8e27b446f865bf6b83
+; =============================================================================
+
+; =============================================================================
 ; BANK $0B — ROOM SYSTEM
 ; =============================================================================
 ; This bank contains the entire room loading pipeline:
@@ -25,7 +43,7 @@
 ;          user reverse-engineering (ROUTING_DISCOVERIES.md, NPC_AND_ROUTING_HANDOFF.md)
 ; =============================================================================
 
-SECTION "ROM Bank $00b Code", ROMX[$4000], BANK[$b]
+SECTION "ROM Bank $00b", ROMX[$4000], BANK[$b]
     db $0b	; ROM bank ID
 
 ; -----------------------------------------------------------------------------
@@ -235,11 +253,11 @@ labelb_40ce:
     bit 7, a
     jr nz, jr_00b_4134
 
-    call LoadRoom_4239
+    call Call_00b_4239
     ld hl, $c300
     call WaitLCDTransfer
     ld de, $c300
-    call LoadRoom_4309
+    call Call_00b_4309
     ld hl, $1701
     rst $10
 
@@ -415,11 +433,11 @@ RoomEntry3_NPCDispatch:
 labelb_4213:
     ld hl, $1700
     rst $10
-    call LoadRoom_4239
+    call Call_00b_4239
     ld hl, $c500
     call WaitLCDTransfer
     ld de, $c500
-    call LoadRoom_4309
+    call Call_00b_4309
     ld hl, $1701
     rst $10
     ld a, [wScreenIndex]
@@ -450,7 +468,7 @@ labelb_4213:
 ; outside bank $0B. This is the key architectural constraint.
 ; -----------------------------------------------------------------------------
 ReadStepBlock:
-LoadRoom_4239:
+Call_00b_4239:
     ld a, [wInGateworld]            ; gate rooms use different path
     or a
     jr z, jr_00b_4244
@@ -461,10 +479,51 @@ LoadRoom_4239:
 
 
 jr_00b_4244:
-    ; Shared pointer table read → HL = step_entry
-    call SharedPtrChase
+    ; === POINTER TABLE READ — shared pattern ===
+    ; Step 1: ptr_table[$4B43 + mapID * 2] → screen_ptr_block
+    ld hl, RoomPtrTable                    ; room pointer table (107 entries × 2 bytes)
+    ld a, [wMapID]                  ; current room map_type ($C968)
+    add a                           ; mapID × 2 (2 bytes per entry)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                         ; HL = &ptr_table[mapID]
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                         ; HL = *ptr_table[mapID] → screen_ptr_block
 
-    ; ReadStepBlock specific: return bytes 0-1 as DE
+    ; Step 2: screen_ptr_block[$C925 * 2] → step_block
+    ld a, [wScreenIndex]                   ; screen_index (which screen of multi-screen room)
+    add a                           ; × 2 (pointer is 2 bytes)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                         ; HL = &screen_ptr_block[screen_index]
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                         ; HL = *screen_ptr_block[screen] → step_block
+
+    ; Step 3: step_block[0:2] = ram_flag_ptr, then index by step value
+    ; step_block format: [ram_flag_ptr:2][step0:6][step1:6]...[FF]
+    ld e, [hl]                      ; ram_flag_ptr low byte
+    inc hl
+    ld d, [hl]                      ; ram_flag_ptr high byte (DE = RAM address)
+    inc hl                          ; HL now points to first step entry
+    ld a, [de]                      ; read current step value from RAM
+    ; Index: step_value * 6 (each step entry is 6 bytes)
+    ld e, a
+    add a                           ; × 2
+    add e                           ; × 3
+    add a                           ; × 6
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                         ; HL = &step_entries[step_value]
+
+    ; Step 4 (ReadStepBlock specific): return bytes 0-1 as DE
     ld e, [hl]                      ; step_id
     inc hl
     ld d, [hl]                      ; tileset byte
@@ -501,8 +560,46 @@ GetRoomDataPtr:
     or a
     jr nz, jr_00b_42ac       ; Gate world uses different lookup path
 
-    ; Shared pointer table read → HL = step_entry
-    call SharedPtrChase
+    ; Level 1: map_type → screen_ptr_block
+    ld hl, RoomPtrTable             ; Room pointer table base
+    ld a, [wMapID]
+    add a                    ; × 2 (word-sized entries)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                  ; HL = $4B43 + wMapID × 2
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                  ; HL = screen_ptr_block
+
+    ; Level 2: screen → step_block
+    ld a, [wScreenIndex]            ; Current screen index
+    add a                    ; × 2
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                  ; HL = step_block
+
+    ; Level 3: read step_id from RAM
+    ld e, [hl]
+    inc hl
+    ld d, [hl]               ; DE = ram_flag_ptr
+    inc hl                   ; HL = step_block + 2 (step_entries start)
+    ld a, [de]               ; A = current step_id (from RAM)
+    ld e, a
+    add a                    ; × 2
+    add e                    ; × 3
+    add a                    ; × 6 (6 bytes per step_entry)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                  ; HL = step_entry for current step_id
     inc hl
     inc hl                   ; Skip byte 0 (step_id) and byte 1 (tileset)
     ld a, [hl+]
@@ -581,7 +678,7 @@ jr_00b_42b7:
     ld bc, $ff06
     rst $38
 
-LoadRoom_4309:
+Call_00b_4309:
     ld a, [wInGateworld]
     or a
     ret z
@@ -617,12 +714,12 @@ labelb_4332:
     ld a, $00
     ldh [$d6], a
     ld hl, $d7d2
-    call ReadRoom_433f
+    call Call_00b_433f
     ldh [$d5], a
     ret
 
 
-ReadRoom_433f:
+Call_00b_433f:
 jr_00b_433f:
     ld a, [hl]
     cp $ff
@@ -631,7 +728,7 @@ jr_00b_433f:
     bit 6, a
     jr nz, jr_00b_4357
 
-    call SaveRoom_43e5
+    call Call_00b_43e5
     jr nz, jr_00b_4357
 
     ld a, l
@@ -794,7 +891,7 @@ jr_00b_43e2:
     ret
 
 
-SaveRoom_43e5:
+Call_00b_43e5:
     push hl
     push bc
     push de
@@ -972,8 +1069,41 @@ labelb_4488:
     or a
     ret nz
 
-    ; Shared pointer table read → HL = step_entry
-    call SharedPtrChase
+    ld hl, RoomPtrTable
+    ld a, [wMapID]
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld a, [wScreenIndex]
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    inc hl
+    ld a, [de]
+    ld e, a
+    add a
+    add e
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
     inc hl
     inc hl
     inc hl
@@ -1078,8 +1208,45 @@ labelb_451d:
     or a
     jp nz, Jump_00b_46a7            ; gate rooms use separate exit logic
 
-    ; Shared pointer table read → HL = step_entry
-    call SharedPtrChase
+    ; === POINTER TABLE READ (same pattern as ReadStepBlock) ===
+    ; Reads exit_ptr (bytes 4-5 of step entry)
+    ld hl, RoomPtrTable                    ; room pointer table
+    ld a, [wMapID]
+    add a                           ; mapID × 2
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                         ; HL → screen_ptr_block
+
+    ld a, [wScreenIndex]                   ; screen_index
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                         ; HL → step_block
+
+    ld e, [hl]                      ; ram_flag_ptr
+    inc hl
+    ld d, [hl]
+    inc hl
+    ld a, [de]                      ; current step value
+    ld e, a
+    add a
+    add e
+    add a                           ; × 6
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                         ; HL → current step entry
 
     ; Skip step_id(1) + tileset(1) + interact_ptr(2) = 4 bytes → exit_ptr
     inc hl
@@ -1391,7 +1558,7 @@ Jump_00b_46a7:
     ld [wWarpGateId], a
     ld a, $80
     ld [wWarpFlag], a
-    call LoadRoom_46da
+    call Call_00b_46da
     ld hl, wGameState
     set 5, [hl]
     xor a
@@ -1403,7 +1570,7 @@ jr_00b_46d5:
     ret
 
 
-LoadRoom_46da:
+Call_00b_46da:
     ld a, [wInGateworld]
     or a
     ret z
@@ -1482,7 +1649,7 @@ jr_00b_471b:
     ld bc, $0101
     ld a, $00
     call FillNBytesWithRegA
-    call SetRoom_482b
+    call Call_00b_482b
     ld a, $ff
     ld [$d7d2], a
     call GetRoomDataPtr
@@ -1500,7 +1667,7 @@ jr_00b_471b:
     ld [wScreenIndex], a
     ld a, b
     ld [$c926], a
-    call SetRoom_477e
+    call Call_00b_477e
     ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
@@ -1526,7 +1693,7 @@ jr_00b_471b:
     ret
 
 
-SetRoom_477e:
+Call_00b_477e:
 jr_00b_477e:
     ld de, $d7d2
 
@@ -1605,7 +1772,7 @@ jr_00b_479a:
     ld a, [hl+]
     ld [de], a
     push hl
-    call CmpRoom_4839
+    call Call_00b_4839
     pop hl
     push af
     ldh a, [$d5]
@@ -1663,7 +1830,7 @@ jr_00b_479a:
     jp Jump_00b_4781
 
 
-SetRoom_482b:
+Call_00b_482b:
     ld hl, $d7be
     ld b, $06
 
@@ -1678,7 +1845,7 @@ jr_00b_4830:
     ret
 
 
-CmpRoom_4839:
+Call_00b_4839:
     cp $ff
     ret z
 
@@ -1872,10 +2039,10 @@ jr_00b_490b:
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(RoomScreenPtrTable)
+    add $74
     ld l, a
     ld a, h
-    adc HIGH(RoomScreenPtrTable)
+    adc $49
     ld h, a
 
 jr_00b_4917:
@@ -2124,11 +2291,11 @@ jr_00b_4a0f:
     jr c, jr_00b_4a45
 
 jr_00b_4a15:
-    db $38, $31         ; data (was: jr c, @+$33)
-    db $38              ; data (was: jr c, jr_00b_4a4b — opcode)
-RoomScreenPtrTable:     ; $4974 — screen index lookup table
-    db $32              ; data (offset byte)
-    db $38, $33         ; data (was: jr c, jr_00b_4a4e)
+    jr c, @+$33
+
+    jr c, jr_00b_4a4b
+
+    jr c, jr_00b_4a4e
 
 jr_00b_4a1b:
     jr c, @+$36
@@ -2405,7 +2572,7 @@ jr_00b_4aef:
     ld e, $3a
     rra
     ld a, [hl-]
-    db $20, $3a  ; data (not code)
+    jr nz, jr_00b_4b50
 
     ld hl, $223a
     ld a, [hl-]
@@ -2418,7 +2585,7 @@ jr_00b_4aef:
     ld h, $3a
     daa
     ld a, [hl-]
-    db $28, $3a  ; data (not code)
+    jr z, jr_00b_4b60
 
     add hl, hl
     ld a, [hl-]
@@ -2433,7 +2600,7 @@ jr_00b_4aef:
     ld l, $3a
     cpl
     ld a, [hl-]
-    db $30, $3a  ; data (not code)
+    jr nc, jr_00b_4b70
 
     ld sp, $323a
     ld a, [hl-]
@@ -2447,71 +2614,6 @@ jr_00b_4aef:
 jr_00b_4b40:
     ld [hl], $3a
     rst $38
-
-
-; =============================================================================
-; SharedPtrChase — Shared room data pointer-chase function
-; =============================================================================
-; Called by ReadStepBlock, ReadInteractPtr, RoomEntry9, RoomEntry6.
-; Output: HL = pointer to start of current 6-byte step entry
-; Clobbers: A, DE
-; =============================================================================
-SharedPtrChase:
-    ld hl, RoomPtrTable
-    ld a, [wMapID]
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    ld a, [wScreenIndex]
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
-    inc hl
-    ld a, [de]
-    ld e, a
-    add a
-    add e
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ret
-
-; =============================================================================
-; ROOM DATA SECTION ($4B43 - $7FFF)
-; Generated by tools/gen_room_data_db.py from ROM data
-; =============================================================================
-;
-; Pointer chain: RoomPtrTable[mapID×2] → sub_table → step_block
-;   Sub-table: 8 × dw screen_ptrs ($FFFF = unused screen)
-;   Step block: dw ram_counter + steps × [step_id, tileset_bank, dw interact, dw exit]
-;   Interact: 5-byte entries (NPC/spawn), $FF terminated
-;   Exit: 7-byte entries (walk-on triggers), $FF terminated
-;
-; NPC entry:  [type, sprite, x, y, script]
-;   type bits 5-4=facing (0=down,1=left,2=up,3=right)
-;   type bit 6=non-interactable, bits 3-0=behavior
-; Spawn entry: [type($8F/$90), param, x, y, source_mt]
-; Exit entry: [trig_x, trig_y, dest_mt, gate_flag, screen, spawn_x, spawn_y]
-
-SECTION "ROM Bank $00b Data", ROMX[$4B43], BANK[$b]
 
 ; =============================================================================
 ; ROOM DATA SECTION ($4B43 - $7FFF)
@@ -2531,117 +2633,116 @@ SECTION "ROM Bank $00b Data", ROMX[$4B43], BANK[$b]
 ; Exit entry: [trig_x, trig_y, dest_mt, gate_flag, screen, spawn_x, spawn_y]
 
 RoomPtrTable:  ; 107 entries × 2B, indexed by wMapID ($C968)
-    dw RoomSub_Castle  ; $00 Castle
-    dw RoomSub_GreatTree  ; $01 GreatTree
-    dw RoomSub_Bazaar  ; $02 Bazaar
-    dw RoomSub_GateHub  ; $03 GateHub
-    dw RoomSub_Farm  ; $04 Farm
-    dw RoomSub_Stable  ; $05 Stable
+    dw $4C13  ; $00 Castle
+    dw $4E23  ; $01 GreatTree
+    dw $505D  ; $02 Bazaar
+    dw $52F2  ; $03 GateHub
+    dw $55AE  ; $04 Farm
+    dw $583A  ; $05 Stable
     db $9E  ; $06 ArenaLobby ptr low
 jr_00b_4b50:
     db $59  ; $06 ArenaLobby ptr high → $599E
-    dw RoomSub_ArenaRooms  ; $07 ArenaRooms
-    dw RoomSub_Gate_08  ; $08 Gate_08
-    dw RoomSub_StarryShrine  ; $09 StarryShrine
-    dw RoomSub_SecretPassage  ; $0A SecretPassage
-    dw RoomSub_Castle  ; $0B Castle_0B (=mt$00)
-    dw RoomSub_Gate_0C  ; $0C Gate_0C
-    dw RoomSub_OldManGate  ; $0D OldManGate
+    dw $5A2B  ; $07 ArenaRooms
+    dw $5C86  ; $08 Gate_08
+    dw $5D45  ; $09 StarryShrine
+    dw $5E6A  ; $0A SecretPassage
+    dw $4C13  ; $0B Castle_0B (=mt$00)
+    dw $5E94  ; $0C Gate_0C
+    dw $5EC0  ; $0D OldManGate
     db $13  ; $0E Castle_0E ptr low
 jr_00b_4b60:
     db $4C  ; $0E Castle_0E ptr high → $4C13
-    dw RoomSub_Room_0F  ; $0F Room_0F
-    dw RoomSub_CopycatRoom  ; $10 CopycatRoom
-    dw RoomSub_Castle  ; $11 Castle_11 (=mt$00)
-    dw RoomSub_Library  ; $12 Library
-    dw RoomSub_Room_13  ; $13 Room_13
-    dw RoomSub_Castle  ; $14 Castle_14 (=mt$00)
-    dw RoomSub_Castle  ; $15 Castle_15 (=mt$00)
+    dw $5F4A  ; $0F Room_0F
+    dw $5F71  ; $10 CopycatRoom
+    dw $4C13  ; $11 Castle_11 (=mt$00)
+    dw $5FDB  ; $12 Library
+    dw $607D  ; $13 Room_13
+    dw $4C13  ; $14 Castle_14 (=mt$00)
+    dw $4C13  ; $15 Castle_15 (=mt$00)
     db $39  ; $16 MedalManRoom ptr low
 jr_00b_4b70:
     db $61  ; $16 MedalManRoom ptr high → $6139
-    dw RoomSub_CopycatRoom  ; $17 Copycat_17 (=mt$10)
-    dw RoomSub_Well  ; $18 Well
-    dw RoomSub_Room_19  ; $19 Room_19
-    dw RoomSub_Room_1A  ; $1A Room_1A
-    dw RoomSub_Room_1B  ; $1B Room_1B
-    dw RoomSub_Room_1C  ; $1C Room_1C
-    dw RoomSub_Room_1D  ; $1D Room_1D
-    dw RoomSub_Room_1E  ; $1E Room_1E
-    dw RoomSub_Room_1F  ; $1F Room_1F
-    dw RoomSub_Castle  ; $20 Castle_20 (=mt$00)
-    dw RoomSub_Castle  ; $21 Castle_21 (=mt$00)
-    dw RoomSub_Castle  ; $22 Castle_22 (=mt$00)
-    dw RoomSub_RoomOfBeginning  ; $23 RoomOfBeginning
-    dw RoomSub_RoomOfVillagerTalisman  ; $24 RoomOfVillagerTalisman
-    dw RoomSub_RoomOfMemoriesBewilder  ; $25 RoomOfMemoriesBewilder
-    dw RoomSub_RoomOfPeaceBravery  ; $26 RoomOfPeaceBravery
-    dw RoomSub_RoomOfStrengthAnger  ; $27 RoomOfStrengthAnger
-    dw RoomSub_RoomOfJoyWisdom  ; $28 RoomOfJoyWisdom
-    dw RoomSub_RoomOfHappinessTemptation  ; $29 RoomOfHappinessTemptation
-    dw RoomSub_RoomOfLabyrinthJudgment  ; $2A RoomOfLabyrinthJudgment
-    dw RoomSub_RoomOfReflection  ; $2B RoomOfReflection
-    dw RoomSub_RoomOfAmbitionDemolition  ; $2C RoomOfAmbitionDemolition
-    dw RoomSub_RoomOfMastermindControl  ; $2D RoomOfMastermindControl
-    dw RoomSub_RoomOfExtinctionSleep  ; $2E RoomOfExtinctionSleep
-    dw RoomSub_Room_2F  ; $2F Room_2F
-    dw RoomSub_Boss_Beginning  ; $30 Boss_Beginning
-    dw RoomSub_Boss_Villager  ; $31 Boss_Villager
-    dw RoomSub_Boss_Talisman  ; $32 Boss_Talisman
-    dw RoomSub_Boss_Memories  ; $33 Boss_Memories
-    dw RoomSub_Boss_Bewilder  ; $34 Boss_Bewilder
-    dw RoomSub_Room_35  ; $35 Room_35
-    dw RoomSub_Boss_Peace  ; $36 Boss_Peace
-    dw RoomSub_Boss_Bravery  ; $37 Boss_Bravery
-    dw RoomSub_Room_38  ; $38 Room_38
-    dw RoomSub_Room_39  ; $39 Room_39
-    dw RoomSub_Room_3A  ; $3A Room_3A
-    dw RoomSub_Room_3B  ; $3B Room_3B
-    dw RoomSub_Room_3C  ; $3C Room_3C
-    dw RoomSub_Room_3D  ; $3D Room_3D
-    dw RoomSub_Room_3E  ; $3E Room_3E
-    dw RoomSub_Room_3F  ; $3F Room_3F
-    dw RoomSub_Room_40  ; $40 Room_40
-    dw RoomSub_Room_41  ; $41 Room_41
-    dw RoomSub_Labyrinth  ; $42 Labyrinth
-    dw RoomSub_Room_43  ; $43 Room_43
-    dw RoomSub_Room_44  ; $44 Room_44
-    dw RoomSub_Room_45  ; $45 Room_45
-    dw RoomSub_Boss_Ambition  ; $46 Boss_Ambition
-    dw RoomSub_Room_47  ; $47 Room_47
-    dw RoomSub_Room_48  ; $48 Room_48
-    dw RoomSub_Room_49  ; $49 Room_49
-    dw RoomSub_Room_4A  ; $4A Room_4A
-    dw RoomSub_Room_4B  ; $4B Room_4B
-    dw RoomSub_Room_4C  ; $4C Room_4C
-    dw RoomSub_Boss_ArenaRight  ; $4D Boss_ArenaRight
-    dw RoomSub_Room_4E  ; $4E Room_4E
-    dw RoomSub_Boss_UnusedGate  ; $4F Boss_UnusedGate
-    dw RoomSub_Room_50  ; $50 Room_50
-    dw RoomSub_Room_51  ; $51 Room_51
-    dw RoomSub_Coliseum  ; $52 Coliseum
-    dw RoomSub_ForestMaze  ; $53 ForestMaze
-    dw RoomSub_ConveyorBelt1  ; $54 ConveyorBelt1
-    dw RoomSub_ConveyorBelt2  ; $55 ConveyorBelt2
-    dw RoomSub_ConveyorBelt3  ; $56 ConveyorBelt3
-    dw RoomSub_Maze1  ; $57 Maze1
-    dw RoomSub_Maze2  ; $58 Maze2
-    dw RoomSub_Maze3  ; $59 Maze3
-    dw RoomSub_TreasureChest1  ; $5A TreasureChest1
-    dw RoomSub_Room_5B  ; $5B Room_5B
-    dw RoomSub_TreasureChest3  ; $5C TreasureChest3
-    dw RoomSub_ArenaBattle  ; $5D ArenaBattle
-    dw RoomSub_Room_5E  ; $5E Room_5E
-    dw RoomSub_Room_50  ; $5F Room_5F (=mt$50)
-    dw RoomSub_LabyrinthFinal  ; $60 LabyrinthFinal
-    dw RoomSub_Room_61  ; $61 Room_61
-    dw RoomSub_Room_62  ; $62 Room_62
-    dw RoomSub_Room_63  ; $63 Room_63
-    dw RoomSub_Room_64  ; $64 Room_64
-    dw RoomSub_LabyrinthFinal  ; $65 Unused_65 (=mt$60)
-    dw RoomSub_LabyrinthFinal  ; $66 Unused_66 (=mt$60)
-    dw RoomSub_LabyrinthFinal  ; $67 Unused_67 (=mt$60)
-RoomSub_Castle:  ; overlaps pointer table at $4C13
+    dw $5F71  ; $17 Copycat_17 (=mt$10)
+    dw $61F8  ; $18 Well
+    dw $62BB  ; $19 Room_19
+    dw $62E2  ; $1A Room_1A
+    dw $6313  ; $1B Room_1B
+    dw $635E  ; $1C Room_1C
+    dw $63C5  ; $1D Room_1D
+    dw $63F6  ; $1E Room_1E
+    dw $6438  ; $1F Room_1F
+    dw $4C13  ; $20 Castle_20 (=mt$00)
+    dw $4C13  ; $21 Castle_21 (=mt$00)
+    dw $4C13  ; $22 Castle_22 (=mt$00)
+    dw $64A4  ; $23 RoomOfBeginning
+    dw $64DB  ; $24 RoomOfVillagerTalisman
+    dw $6539  ; $25 RoomOfMemoriesBewilder
+    dw $6597  ; $26 RoomOfPeaceBravery
+    dw $65F5  ; $27 RoomOfStrengthAnger
+    dw $6658  ; $28 RoomOfJoyWisdom
+    dw $66B6  ; $29 RoomOfHappinessTemptation
+    dw $6714  ; $2A RoomOfLabyrinthJudgment
+    dw $6772  ; $2B RoomOfReflection
+    dw $67A9  ; $2C RoomOfAmbitionDemolition
+    dw $6807  ; $2D RoomOfMastermindControl
+    dw $6865  ; $2E RoomOfExtinctionSleep
+    dw $68CA  ; $2F Room_2F
+    dw $6AAF  ; $30 Boss_Beginning
+    dw $6AD4  ; $31 Boss_Villager
+    dw $6B12  ; $32 Boss_Talisman
+    dw $6B41  ; $33 Boss_Memories
+    dw $6B66  ; $34 Boss_Bewilder
+    dw $6BC2  ; $35 Room_35
+    dw $6BFB  ; $36 Boss_Peace
+    dw $6C84  ; $37 Boss_Bravery
+    dw $6D17  ; $38 Room_38
+    dw $6DFA  ; $39 Room_39
+    dw $6E33  ; $3A Room_3A
+    dw $6F3E  ; $3B Room_3B
+    dw $6F63  ; $3C Room_3C
+    dw $6FE3  ; $3D Room_3D
+    dw $7023  ; $3E Room_3E
+    dw $7052  ; $3F Room_3F
+    dw $7077  ; $40 Room_40
+    dw $70E4  ; $41 Room_41
+    dw $7142  ; $42 Labyrinth
+    dw $74DB  ; $43 Room_43
+    dw $751E  ; $44 Room_44
+    dw $7561  ; $45 Room_45
+    dw $75C9  ; $46 Boss_Ambition
+    dw $75F8  ; $47 Room_47
+    dw $7643  ; $48 Room_48
+    dw $7672  ; $49 Room_49
+    dw $76A1  ; $4A Room_4A
+    dw $76D0  ; $4B Room_4B
+    dw $76FF  ; $4C Room_4C
+    dw $772E  ; $4D Boss_ArenaRight
+    dw $775D  ; $4E Room_4E
+    dw $77A9  ; $4F Boss_UnusedGate
+    dw $77DD  ; $50 Room_50
+    dw $77FA  ; $51 Room_51
+    dw $7817  ; $52 Coliseum
+    dw $784B  ; $53 ForestMaze
+    dw $7908  ; $54 ConveyorBelt1
+    dw $7978  ; $55 ConveyorBelt2
+    dw $79E8  ; $56 ConveyorBelt3
+    dw $7A58  ; $57 Maze1
+    dw $7AC8  ; $58 Maze2
+    dw $7B38  ; $59 Maze3
+    dw $7BA8  ; $5A TreasureChest1
+    dw $7BD9  ; $5B Room_5B
+    dw $7C0A  ; $5C TreasureChest3
+    dw $7C45  ; $5D ArenaBattle
+    dw $7CE2  ; $5E Room_5E
+    dw $77DD  ; $5F Room_5F (=mt$50)
+    dw $7144  ; $60 LabyrinthFinal
+    dw $784D  ; $61 Room_61
+    dw $784F  ; $62 Room_62
+    dw $7851  ; $63 Room_63
+    dw $7853  ; $64 Room_64
+    dw $7144  ; $65 Unused_65 (=mt$60)
+    dw $7144  ; $66 Unused_66 (=mt$60)
+    dw $7144  ; $67 Unused_67 (=mt$60)
     dw $4C23  ; $68 CastleOvl_68
     dw $4C3D  ; $69 CastleOvl_69
     dw $FFFF  ; $6A Unused_6A (unused)

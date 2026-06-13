@@ -91,7 +91,11 @@ Tileset banks used: $23, $24, $25, $26, $29, $2A, $2D, $30, $37
 | 4 | Script ID (for NPC script engine in bank $04, $FF = no script) |
 
 Parsed by Call_00b_477e during room init (Entry 7).
-Each NPC gets a 17-byte ($11) slot in NPC RAM at $D7D2.
+Each NPC gets a 32-byte ($20) slot in NPC RAM at $D7D2 (parser advances
+slots with `add $20`; fields written at +$00 type, +$01 sprite, +$02/+$03
+screen-adjusted X/Y, +$04 script_id area, +$11 facing-related, +$16, +$18).
+An earlier version of this doc said 17 bytes — that was the +$11 field
+offset misread as the stride. See DOC_AUDIT.md A.3.
 Spawn entries ($8F+) are skipped (don't consume NPC slots).
 
 ## Exit Checker Block (at bytes 4-5, "exit_ptr")

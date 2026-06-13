@@ -1,0 +1,55 @@
+# Place at .github/workflows/verify.yml
+#
+# Verifies on every push that the clean disassembly builds byte-perfect
+# (MD5 compare needs only the expected hash, not the original ROM) and
+# that the patch set assembles. Catches drift like the bank $0B incident
+# the moment it is pushed.
+name: verify-build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache RGBDS
+        id: cache-rgbds
+        uses: actions/cache@v4
+        with:
+          path: ~/rgbds-bin
+          key: rgbds-0.6.1
+
+      - name: Build RGBDS 0.6.1
+        if: steps.cache-rgbds.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update && sudo apt-get install -y bison
+          git clone --branch v0.6.1 --depth 1 https://github.com/gbdev/rgbds.git /tmp/rgbds
+          make -C /tmp/rgbds -j"$(nproc)"
+          mkdir -p ~/rgbds-bin
+          cp /tmp/rgbds/{rgbasm,rgblink,rgbfix,rgbgfx} ~/rgbds-bin/
+
+      - name: Install RGBDS
+        run: sudo cp ~/rgbds-bin/* /usr/local/bin/
+
+      - name: Clean build must be byte-perfect
+        run: |
+          cd disassembly
+          rm -f game.o game.gbc game.sym game.map
+          make
+          echo "1ca6579359f21d8e27b446f865bf6b83  game.gbc" | md5sum -c -
+
+      - name: Patched build must assemble with custom content
+        run: |
+          cd disassembly
+          cp ../patches/*.asm .
+          rm -f game.o game.gbc game.sym game.map
+          make
+          python3 - <<'EOF'
+          rom = open('game.gbc','rb').read()
+          bank60 = rom[0x60*0x4000:0x61*0x4000]
+          used = sum(1 for b in bank60 if b)
+          assert used > 16, f"bank $60 nearly empty ({used} bytes) - patches not applied"
+          print(f"patched OK, bank $60 holds {used} bytes")
+          EOF

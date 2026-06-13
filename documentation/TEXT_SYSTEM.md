@@ -157,3 +157,22 @@ indexed by `wMapID` to the table at `$6119`. Each handler does room-specific vis
 
 - `extracted/text_id_map.json` — 2067 text IDs → decoded English, exact bank/index
 - `extracted/decoded_text.json` — 1374 text strings organized by handler bank
+
+
+## Bank $56 Text Control Code Jump Table
+
+Located at `$56:$44CD` (after `sub $E0` / `rst $00` at `$44CB`).
+32 entries (2 bytes each) for control codes $E0-$FF:
+
+| Code | Handler | Code | Handler | Code | Handler | Code | Handler |
+|------|---------|------|---------|------|---------|------|---------|
+| $E0 | $450E | $E8 | $451F | $F0 | $46FE | $F8 | $47BF |
+| $E1 | $450E | $E9 | $4554 | $F1 | $472B | $F9 | $47CE |
+| $E2 | $450E | $EA | $455E | $F2 | $474F | $FA | $481B |
+| $E3 | $450E | $EB | $4569 | $F3 | $4758 | $FB | $4821 |
+| $E4 | $450E | $EC | $4574 | $F4 | $4771 | $FC | $4835 |
+| $E5 | $450E | $ED | $45A7 | $F5 | $477C | $FD | $4849 |
+| $E6 | $450E | $EE | $45AD | $F6 | $4782 | $FE | $484F |
+| $E7 | $4511 | $EF | $4640 | $F7 | $47B4 | $FF | $4855 |
+
+(Merged from SESSION2_CUSTOM_CONTENT.md, 2026-06-13.)

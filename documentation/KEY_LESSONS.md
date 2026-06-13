@@ -10,7 +10,7 @@ This document records every bug encountered and the root cause. Future implement
 **Symptom**: New game crashes, library has inverted colors, everything broken.
 **Root cause**: Banks $01 and $17 have data sections with raw `db` pointer bytes (e.g., `db $BD, $48` = pointer to $48BD). These are NOT labels. Inserting code bytes shifts data, breaking every embedded pointer. Bank $01 had 6,601 byte diffs. Bank $17 had 9,552.
 **Fix**: Use same-size `ld a,[wMapID]` → `call ROM0Helper` replacements (3 bytes each). Zero data shifting.
-**Rule**: NEVER insert bytes into banks without verifying all data pointers use labels. Bank $0B is safe (pinned SECTION). Banks $01, $17 are NOT.
+**Rule**: NEVER insert bytes into banks without verifying all data pointers use labels. Bank $0B tolerates insertions IN PATCHES ONLY (its data section is pinned at $4B43). Banks $01, $17 (and $04) are NOT safe anywhere. And `disassembly/` itself admits ZERO byte-changing edits of any kind — a bank-$0B 'safe' refactor there is what broke byte-perfection for several sessions (DOC_AUDIT.md A.9).
 
 ### v3: rst $10 clobbers register A
 **Symptom**: Tileset graphics completely scrambled (wrong tileset loaded).

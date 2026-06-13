@@ -80,7 +80,7 @@ Selected by monster info byte $02.
 | $17 | 1 | skill_3 |
 | $18 | 1 | $FF delimiter |
 
-**Boss redirect table** at `$14:$4893` (`LookupBossRedirect`): variable-length 2-byte ID pairs mapping current enemy → next enemy in scripted multi-monster fights. $FFFF terminated.
+**Boss redirect table** at `$14:$4893` (`LookupBossRedirect`): 2-byte EID pairs; the FIRST pair ($0004→$01E6) is a non-boss redirect, then the **boss table proper starts at `$14:$4897`: 32 gates × 4 bytes** `[fight_eid:2][join_eid:2]` (LE). `tools/dump_boss_table.py` reads from $4897. $FFFF terminated. (DOC_AUDIT.md A.5)
 
 ---
 
@@ -925,3 +925,21 @@ BattleHPLookupTable, SaveSlotPtrTable.
 - Overlapping sub-table (Castle): inline label at overlap position
 - All 92 unique room data blocks are now label-referenced
 - Rebuild with `python3 tools/gen_room_data_db.py > output.asm` and replace data section
+
+
+---
+
+## Opcode $2A (GiveItem) — Working Logic, Broken Flow
+
+Handler at `$04:$5FDB` correctly scans `wInventory` for first `$00`/`$FF` slot
+and writes item. Original uses `ret` not `jp ScriptExecContinue`, freezing scripts.
+
+**Fix (proven):** Redirect jump table entry to wrapper in padding:
+```asm
+GiveItemWrapper:
+    call label4_5fdb         ; original handler (ret returns here)
+    jp Jump_004_55f5         ; ScriptExecContinue
+```
+Zero insertion. Use with `$FF2C` (CheckInvFull) before `$FF2A` for full pattern.
+
+(Merged from SESSION2_CUSTOM_CONTENT.md, 2026-06-13.)

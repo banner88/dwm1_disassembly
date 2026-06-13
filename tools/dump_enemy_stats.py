@@ -66,11 +66,14 @@ while eid < max_entries:
         print(f"  EID {eid}: no 0xFF delimiter (got 0x{delimiter:02X}), stopping scan")
         break
 
-    flat = rom.addr(ENEMY_STATS_BANK, offset)
+    # Full 25-byte layout (verified 487/487 vs ROM, DOC_AUDIT/TOOLS_AND_DATA):
+    #   +0 species_id, +1..+2 exp_reward LE16, +3 joinability (0-7),
+    #   +4 level, +5..+16 hp/mp/atk/def/agl/int LE16, +17..+20 ai_weights[4],
+    #   +21..+24 skills[4] (skills[3] always $FF = table delimiter)
     entry = {
         "enemy_stats_id": eid,
         "species_id": species_id,
-        "species_name": MONSTER_NAMES.get(species_id, f"???#{species_id:02X}"),
+        "exp_reward": data[1] | (data[2] << 8),
         "level": level,
         "hp": hp,
         "mp": data[7] | (data[8] << 8),
@@ -78,7 +81,10 @@ while eid < max_entries:
         "def": data[11] | (data[12] << 8),
         "agl": data[13] | (data[14] << 8),
         "int": data[15] | (data[16] << 8),
-        "flat_offset": f"0x{flat:05X}",
+        "ai_weights": list(data[17:21]),
+        "skills": list(data[21:25]),
+        "species_name": MONSTER_NAMES.get(species_id, f"???#{species_id:02X}"),
+        "joinability": data[3],
     }
     entries.append(entry)
     eid += 1

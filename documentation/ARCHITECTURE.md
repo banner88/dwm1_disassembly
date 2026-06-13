@@ -9,7 +9,7 @@
 | $03 | Link/serial, monster info table ($4461) |
 | $04 | NPC script engine (100 opcodes) |
 | $0B | Room system: loading, exits, NPCs, transitions, pointer table $4B43 |
-| $0C-$0F | Script data banks: 530 NPC scripts across all map types. Identical code $4000-$41B9, data from $41BA. Master table indexed by absolute map_type. $0C=types<$06, $0D=$06-$1F, $0E=$20-$3F, $0F≥$40. Generator: `gen_script_banks.py` |
+| $0C-$0F | Script data banks: 518 NPC scripts across all map types ($0C=129, $0D=168, $0E=130, $0F=91). Identical code $4000-$41B9, data from $41BA. Master table indexed by absolute map_type. $0C=types<$06, $0D=$06-$1F, $0E=$20-$3F, $0F≥$40. Generator: `gen_script_banks.py` |
 | $13 | Level-up processing, stat growth tables |
 | $14 | Enemy stats table ($4C1D), boss redirect table ($4897) |
 | $16 | Breeding system: special table ($4B30), family table ($4974) |
@@ -31,7 +31,7 @@
 | Bank | Address | Bytes | Notes |
 |------|---------|-------|-------|
 | $00 | $3FE8 | 24 | Confirmed safe (FF fill at bank end) |
-| $01 | $7FE0 | 31 | FF fill at bank end |
+| $01 | $7FD5 | 42 | FF fill $7FD5-$7FFE; $7FFF=$01 (NOT free) |
 | $0B | — | ~2 | Essentially FULL |
 | $51 | $7B34 | 1,228 | 00 fill — large, investigate safety |
 | $54 | $7FC0 | 64 | 00 fill (24B used by join patch) |
@@ -50,7 +50,7 @@
 | $C900-$C9FF | Room/map state, screen index, floor, gate |
 | $CA51-$CA64 | Inventory (20 item slots, empty=$00) |
 | $CAC1-$D6B0 | Party/storage monsters (20 × $95 bytes) |
-| $D7D2+ | NPC RAM buffer (32 bytes per NPC) |
+| $D7D2+ | NPC RAM buffer (32 bytes per NPC slot — verified: parser at $0B:477E advances with `add $20`) |
 | $D8D0-$D8DF | Script engine state |
 | $D99B+ | Event flag bitfield |
 | $D9F4 | Event state machine index |
