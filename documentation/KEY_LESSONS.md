@@ -176,3 +176,28 @@ This takes 30 seconds. Guessing takes hours.
 ### Bank $04 end-of-bank padding is exhausted
 **Space accounting**: Original ROM had 40 bytes free at $7FD8-$7FFF. After all patches: DispatchBank0F_Ext (10 bytes) + TextQueueCheck_Ext (19 bytes) + AddMonsterWrapper (3 bytes) + SharedScriptContinue (3 bytes) + GiveItemWrapper (3 bytes) + jr (2 bytes) = 40 bytes. Zero bytes remaining. Any future bank $04 wrapper needs space from elsewhere (optimize existing code, or use a different bank's padding).
 **Rule**: Track free space in bank $04 — it's a critical, shared resource.
+
+---
+
+## Session 4 Lessons — Custom Tile Layouts
+
+### Player spawn comes from the SOURCE room's exit data, not the destination
+**Symptom**: Changing $8F NPC spawn marker and MapTransitionFull script coordinates in bank $60 had no effect on player spawn position.
+**Root cause**: The player enters Room $6B via `Exit_GreatTree_s8` in bank_00b.asm: `db $04, $05, $6B, $00, $00, $07, $06`. Bytes 5-6 of the exit data ($07, $06) are the spawn position in the DESTINATION room. The $8F marker in the destination room's NPC table and any teleport script coordinates are separate mechanisms — the exit data takes priority for normal room transitions.
+**Fix**: Change bytes 5-6 of `Exit_GreatTree_s8`'s Room $6B exit entry.
+**Rule**: To move the player spawn for Room $6B, edit the exit in `Exit_GreatTree_s8` (bank_00b.asm), not bank_060.asm. The source room's exit controls where the player appears.
+
+### MapIDClampForPalette is hardcoded in ROM0, not table-driven
+**Symptom**: Changing `CustomSourceMapTable` in bank $60 from $16 to $04 had no effect — room still loaded MedalMan tileset.
+**Root cause**: `MapIDClampForPalette` at ROM0 $3FE8 has a hardcoded `ld a, $XX` instruction per custom room. It does NOT read from `CustomSourceMapTable` in bank $60. The table in bank $60 is dead code for this purpose.
+**Fix**: Change the `ld a, $XX` byte directly in `patches/bank_000.asm`.
+**Rule**: To change which tileset a custom room uses, edit `MapIDClampForPalette` in `patches/bank_000.asm`. The `CustomSourceMapTable` in bank_060.asm is not wired to GFX/palette loading.
+
+### GBC palette attributes are per-position, causing color mismatches in custom layouts
+**Symptom**: Tiles placed at new positions in a custom layout show wrong colors (e.g., blue instead of brown). Tiles that happen to be at the same position as the source room look correct.
+**Root cause**: The GBC BG attribute map (256 bytes, loaded from bank $17 via the source mapID) assigns a palette to each SCREEN POSITION, not each tile index. When a custom layout moves tiles to different positions, the palette assignment doesn't follow.
+**Fix path (not yet implemented)**: Generate custom attribute data using the tile→palette mapping (75 bytes compressed, stored in bank $64 entry 1). Redirect bank $17's attribute lookup for custom rooms using the ~8KB free space at $60DB and unused mapID slot $65. Palette color data ($56DD) stays the same — only the position→palette mapping changes.
+**Rule**: Changing a tile layout without changing the attribute map produces palette mismatches. Full custom room support requires custom attribute data alongside the layout.
+
+### Bank $17 has ~8KB free space at $60DB-$7FF7
+Contrary to initial analysis ("bank $17 is full"), the LZSS attribute data ends well before the bank boundary. Addresses $60DB-$7FF7 are all nops — available for custom attribute entries, intercept code, and future expansion.

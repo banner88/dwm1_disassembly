@@ -5,11 +5,14 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-14 (v25 test ROM: step system confirmed in-game;
-> Gatekeeper NPC at step 0 replaced by Guard NPC at step 1 after
-> WriteRAM opcode $12 sets $D479=1 and room re-entry; CustomPtrChase
-> reads RAM step counter × 6; step counter addresses moved from event
-> flag collision zone $D9A0-$D9A2 to safe $D478-$D47B range)
+> Last verified: 2026-06-14 (v26 custom tile layout + tileset switch:
+> bank $64 holds Farm-tileset layout (user-designed via HTML editor);
+> MapIDClampForPalette in ROM0 changed from $16→$04 for Farm GFX;
+> GreatTree s8 exit spawn changed (2,6)→(7,6); in-game confirmed
+> layout renders with correct Farm tiles; palette attribute mismatch
+> identified — custom attr data generated but bank $17 intercept
+> not yet wired; tile_layout_compiler.py + standalone HTML editor
+> with 170 rooms / 85 tilesets delivered)
 
 ---
 
@@ -21,8 +24,9 @@
 | Clean build target | MUST equal the MD5 above, byte-perfect |
 | Assembler | RGBDS v0.6.1 exactly |
 | ROM size | 2 MB, 128 banks ($00–$7F) |
-| Custom content bank | $60 (~14.9 KB free as of v25 content, 1323 bytes used) |
-| Empty banks available | 23 banks = 368 KB: $60,$64,$67,$69–$77,$79–$7A,$7C,$7E–$7F |
+| Custom content bank | $60 (~14.9 KB free as of v25 content, 1322 bytes used) |
+| Custom layout bank | $64 (layout pointer table + LZSS data, 214 bytes used) |
+| Empty banks available | 21 banks = 336 KB: $67,$69–$77,$79–$7A,$7C,$7E–$7F |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -64,6 +68,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 used, 298 with sets, ~200 safe+persistent free |
 | NPC show/hide by step | ✅ working | CustomPtrChase reads RAM step counter × 6; 2+ step entries per screen; opcode $12 advances counter. Verified in-game v25. |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
+| Custom tile layouts | ✅ working | bank $64 pointer table + LZSS data; tile_layout_compiler.py; user-designed Farm-tileset room confirmed in-game. Tileset switching via MapIDClampForPalette in ROM0 (hardcoded per-room, not table-driven). |
+| Custom tileset selection | ✅ working | MapIDClampForPalette at ROM0 $3FE8; change `ld a, $XX` to switch source mapID for Room $6B. Currently $04 (Farm). |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
@@ -71,7 +77,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | Blocker |
 |--------|---------|
 | Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
-| Custom tilesets | Compressor done; needs PNG→tile pipeline + tileset GFX loading from custom bank |
+| Custom tile GRAPHICS | Layouts + tileset switching done. Next: palette attribute intercept (custom attr data in bank $64, redirect bank $17 via 8KB free at $60DB using unused mapID $65). Then: PNG→2bpp pipeline for custom tile art, tileset mashup tool. |
 | Custom music | Sound engine unexplored |
 | Save-data audit | SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Only remaining: in-game save/load test of a custom flag in SameBoy. |
 

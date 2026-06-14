@@ -13837,7 +13837,7 @@ MapIDClampForPalette::
     ret c
     cp $6C                      ; room $6C+ = Castle source
     jr nc, .useCastle
-    ld a, $16                   ; room $6B = MedalMan source
+    ld a, $04                   ; room $6B = Farm source
     ret
 .useCastle:
     xor a                       ; A = $00 (Castle)

@@ -181,6 +181,57 @@ are met.
 
 Tileset banks used: $23, $24, $25, $26, $29, $2A, $2D, $30, $37
 
+### Creating Custom Tile Layouts
+
+The engine's `DecompressTileLayout` at $1627 is completely bank-agnostic:
+it takes D=bank_number, E=entry_index from the step entry, switches to
+that bank, and reads from its $4001 pointer table. This means custom
+layouts work in ANY bank that has the right format:
+
+```
+$4000: bank self-ID byte (e.g. $64)
+$4001: pointer table — dw entries (step_id indexes these)
+  Each pointer → LZSS compressed layout (512 bytes decompressed)
+```
+
+**Pipeline (tools/tile_layout_compiler.py):**
+1. Design a 20×16 visible tile grid (JSON array of 16 rows × 20 cols)
+2. Tile indices must be valid for the loaded tileset graphics (same source
+   mapID → same GFX → same valid tile indices)
+3. Compiler pads to 32×16 ($FF in columns 20-31), LZSS compresses,
+   outputs ASM `db` statements with pointer table
+4. Step entry byte 0 = entry index in the new bank's pointer table
+5. Step entry byte 1 = new bank number
+
+**Bank $64** is the first custom layout bank. Room $6B uses entry 0
+(user-designed room with Farm tileset). Additional layouts add more `dw`
+entries to the pointer table and more compressed data blocks.
+
+**Tileset selection:** `MapIDClampForPalette` in ROM0 (patches/bank_000.asm)
+returns the source mapID for GFX/palette loading. Change `ld a, $XX` to
+switch tilesets. Currently $04 (Farm). This is hardcoded, not table-driven.
+
+**Spawn position:** Player spawn when entering Room $6B is set by
+`Exit_GreatTree_s8` in bank_00b.asm (bytes 5-6 of the exit entry).
+Currently (7,6).
+
+**Palette attribute caveat:** The GBC palette attributes are per-position,
+loaded from bank $17 for the source mapID. Custom layouts that rearrange
+tiles will have palette mismatches until custom attribute data is wired
+(see ROADMAP "Custom tile GRAPHICS" for fix path).
+
+**Editor integration:** `tile_layout_compiler.compile_layout(grid)` →
+compressed bytes; `to_asm_bank(layouts, bank)` → complete bank ASM.
+The editor's visual canvas produces the 20×16 grid, the compiler handles
+everything from there.
+
+**Tile index constraints:** The layout uses indices into whatever tileset
+GRAPHICS are loaded for the room. The GFX are loaded by Entry 0 from the
+$26DD table (indexed by the room's source mapID, set in
+CustomSourceMapTable). Changing the layout does NOT change which tiles
+are available — only where they're placed. For new tile graphics, see
+the "Custom tile GRAPHICS" roadmap item.
+
 ## Interact Block (at bytes 2-3, "interact_ptr")
 
 5-byte entries, $FF terminated. Entry type determined by bit 7 of first byte.

@@ -341,7 +341,7 @@ CustomRoom1_NPC02:
     dw .declined                    ; branch if NO
     dw $FF0F                        ; MapTransitionFull (opcode $0F)
     dw $006B                        ; gate_id=$6B (custom room), flag=$00
-    dw $0028                        ; spawn X = 40 pixels (grid 2)
+    dw $0078                        ; spawn X = 120 pixels (grid 7)
     dw $0068                        ; spawn Y = 104 pixels (grid 6)
     dw $FFFF
 .declined:
@@ -521,7 +521,7 @@ CustomText_14:
 ; ROOM DATA — Restored from proven patches
 ; =============================================================================
 CustomSourceMapTable:
-    db $16                      ; Room 0 ($6B) → MedalMan
+    db $04                      ; Room 0 ($6B) → Farm
     db $00                      ; Room 1 ($6C) → Castle
 
 CustomRoomPtrTable:
@@ -529,7 +529,7 @@ CustomRoomPtrTable:
     dw CustomRoom1_SubTable
 
 ; =============================================
-; Room 0 (mapID $6B) — MedalMan single-screen
+; Room 0 (mapID $6B) — Farm single-screen
 ; =============================================
 CustomRoom0_SubTable:
     dw CustomRoom0_Screen0
@@ -537,12 +537,12 @@ CustomRoom0_SubTable:
 
 CustomRoom0_Screen0:
     dw wCustomStep_Room6B_S0    ; $D478 — safe step counter (was $D95E/MedalMan)
-    db 13, $30
+    db 0, $64                   ; step_id=0 from bank $64 (custom layout: OpenHall)
     dw CustomRoom0_NPCs
     dw CustomRoom0_Exits
 
 CustomRoom0_NPCs:
-    db $8F, $FF, $02, $06, $01     ; spawn point
+    db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
     db $00, $0B, $02, $02, $01     ; NPC at (2,2), script_id=1 — gives item
     db $FF
 

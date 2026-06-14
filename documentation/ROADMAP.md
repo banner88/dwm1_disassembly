@@ -127,13 +127,29 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       the practical choice for custom content.
       AddMonsterWrapper needed in bank $04 padding (bare `ret` →
       wrapper + `jp ScriptExecContinue`, same fix as GiveItem $2A).
-- [ ] **Custom tile LAYOUTS** (compressor done): place compressed layouts
+- [x] **Custom tile LAYOUTS** (compressor done): place compressed layouts
       in a free bank, point step_entry byte 1 at it.
+      **Done.** `tools/tile_layout_compiler.py` compiles 20×16 visible
+      tile grid → 32×16 padded → LZSS compressed → ASM db statements.
+      Bank $64 holds custom layout data with pointer table at $4001.
+      Room $6B step entry uses `db 0,$64`. Tileset switching via
+      MapIDClampForPalette in ROM0 (currently $04=Farm). User-designed
+      layout confirmed in-game. Standalone HTML editor with 170 rooms
+      and 85 tilesets delivered (towards_editor/). Spawn position for
+      Room $6B is in Exit_GreatTree_s8 (bank_00b.asm), currently (7,6).
       *Accept*: custom room renders a layout that exists nowhere in the
-      original ROM.
+      original ROM. ✅ Confirmed in-game.
+      **Known issue**: palette attributes are per-position (loaded from
+      bank $17 for the source mapID), causing color mismatches when tiles
+      are placed at positions different from the source room. Fix path
+      identified: custom attr data in bank $64 entry 1 (75 bytes
+      compressed, roundtrip verified), redirect via bank $17 free space
+      at $60DB using unused mapID $65. This is the next sub-task.
 - [ ] **Custom tile GRAPHICS**: intercept Entry 0/1 GFX load (currently
       clamped to source room via $00:$26DD) for mapID ≥ $6B → custom GFX
-      ptr in bank $60. Needs PNG→2bpp pipeline (rgbgfx or PIL).
+      ptr in bank $60. Needs palette attribute intercept (see LAYOUTS
+      known issue above), then PNG→2bpp pipeline (rgbgfx or PIL), then
+      tileset mashup tool (cherry-pick tiles from multiple source tilesets).
       *Accept*: custom room shows tiles drawn by us.
 - [!] **Random encounters in custom rooms** — blocked on decoupling.
       `wInGateworld` ($C969) gates encounters AND script dispatch AND floor

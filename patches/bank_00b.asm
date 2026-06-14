@@ -3118,7 +3118,7 @@ Exit_GreatTree_s5:  ; $4FE5 — 0 exits
 
 Exit_GreatTree_s8:  ; $4FE6 — 2 exits
     db $05, $03, $12, $00, $04, $05, $07  ; exit (5,3)→mt$12 Library  scr=4 spawn(5,7)
-    db $04, $05, $6B, $00, $00, $02, $06  ; exit (4,5)→mt$6B CUSTOM ROOM  scr=0 spawn(2,6)
+    db $04, $05, $6B, $00, $00, $07, $06  ; exit (4,5)→mt$6B CUSTOM ROOM  scr=0 spawn(7,6)
     db $FF  ; terminator
 
 Exit_GreatTree_s9:  ; $4FF5 — 2 exits
