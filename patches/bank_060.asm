@@ -63,8 +63,23 @@ CustomPtrChase:
     ld hl, DummyStepEntry
     ret
 .validScreen:
+    ; Read RAM step counter and index into step entries
+    ; (matches original ReadStepBlock logic in bank $0B)
+    ld e, [hl]
     inc hl
-    inc hl
+    ld d, [hl]           ; DE = RAM counter address
+    inc hl                ; HL = first step entry
+    ld a, [de]            ; A = current step counter value
+    ; step_value × 6 (each step entry is 6 bytes)
+    ld e, a
+    add a                 ; ×2
+    add e                 ; ×3
+    add a                 ; ×6
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a               ; HL = &step_entries[step_value]
     ret
 
 DummyStepEntry:
@@ -283,6 +298,8 @@ CustomRoom1_ScriptPtrTable:
     dw CustomRoom1_NPC00            ; [1] throne room NPC — YES/NO demo
     dw CustomRoom1_NPC01            ; [2] teleport to Castle (vanilla)
     dw CustomRoom1_NPC02            ; [3] teleport to MedalMan room (custom $6B)
+    dw CustomRoom1_NPC03            ; [4] Gatekeeper — advances step counter
+    dw CustomRoom1_NPC04            ; [5] Guard — post-step greeting
 
 CustomRoom1_RoomEntry:
     dw $FFFF
@@ -331,6 +348,27 @@ CustomRoom1_NPC02:
     dw $0A0B                        ; "Changed your mind." (reuse)
     dw $FFFF
 
+; --- Room 1 ($6C) NPC 4: Gatekeeper — advances step counter (step system demo) ---
+CustomRoom1_NPC03:
+    dw $0A11                        ; "Open the gate?" [Y/N]
+    dw $FF15                        ; CheckAndBranch
+    dw $C83C                        ; check choice result
+    dw $0001                        ; compare to 1 (NO)
+    dw .declined                    ; branch if NO
+    dw $FF12                        ; WriteRAM (opcode $12)
+    dw wCustomStep_Room6C_S0        ; target = Room $6C screen 0 step counter
+    dw $0001                        ; set value = 1
+    dw $0A12                        ; "Gate opened! Leave and return."
+    dw $FFFF
+.declined:
+    dw $0A13                        ; "Gate stays closed."
+    dw $FFFF
+
+; --- Room 1 ($6C) NPC 5: Guard — appears at step 1 (proves step system) ---
+CustomRoom1_NPC04:
+    dw $0A14                        ; "The gate has been opened!"
+    dw $FFFF
+
 ; =============================================================================
 ; TEXT DATA — Two-level pointer table
 ; =============================================================================
@@ -355,6 +393,10 @@ CustomTextSection0:
     dw CustomText_0E                ; $0A0E: BGM changed
     dw CustomText_0F                ; $0A0F: BGM declined
     dw CustomText_10                ; $0A10: monster storage full
+    dw CustomText_11                ; $0A11: gatekeeper offer [Y/N]
+    dw CustomText_12                ; $0A12: gate opened
+    dw CustomText_13                ; $0A13: gate declined
+    dw CustomText_14                ; $0A14: guard greeting (post-step)
 
 ; Room $6B NPC texts
 CustomText_00:
@@ -451,6 +493,30 @@ CustomText_10:
     db "Monster storage", $EF, $EE
     db "is full!", $F7, $F0
 
+; Step system demo texts (Room $6C Gatekeeper/Guard)
+CustomText_11:
+    db $EA, $9F, $A3
+    db "Open the gate?", $EF, $EE
+    db "NPCs will change!", $EF, $EE
+    db $E7, $F0
+
+CustomText_12:
+    db $EA, $9F, $A3
+    db "Gate opened!", $EF, $EE
+    db "Leave and return", $EF, $EE
+    db "to see the change.", $F7, $F0
+
+CustomText_13:
+    db $EA, $9F, $A3
+    db "The gate stays", $EF, $EE
+    db "closed for now.", $F7, $F0
+
+CustomText_14:
+    db $EA, $9F, $A3
+    db "The gate has been", $EF, $EE
+    db "opened! I replaced", $EF, $EE
+    db "the Gatekeeper.", $F7, $F0
+
 ; =============================================================================
 ; ROOM DATA — Restored from proven patches
 ; =============================================================================
@@ -470,7 +536,7 @@ CustomRoom0_SubTable:
     dw $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF
 
 CustomRoom0_Screen0:
-    dw $D95E
+    dw wCustomStep_Room6B_S0    ; $D478 — safe step counter (was $D95E/MedalMan)
     db 13, $30
     dw CustomRoom0_NPCs
     dw CustomRoom0_Exits
@@ -478,8 +544,6 @@ CustomRoom0_Screen0:
 CustomRoom0_NPCs:
     db $8F, $FF, $02, $06, $01     ; spawn point
     db $00, $0B, $02, $02, $01     ; NPC at (2,2), script_id=1 — gives item
-    db $00, $0B, $03, $03, $02     ; NPC at (3,3), script_id=2 — gives monster
-    db $00, $0B, $01, $04, $03     ; NPC at (1,4), script_id=3 — BGM change
     db $FF
 
 CustomRoom0_Exits:
@@ -501,23 +565,35 @@ CustomRoom1_SubTable:
     dw $FFFF
 
 CustomRoom1_Screen0:
-    dw $D9A0
+    dw wCustomStep_Room6C_S0        ; $D479 — safe step counter (was $D9A0/event-flag collision)
+    ; --- Step 0: Castle layout, original NPCs + Gatekeeper ---
     db 1, $2A
-    dw CustomRoom1_S0_NPCs
-    dw CustomRoom1_S0_Exits
+    dw CustomRoom1_S0_Step0_NPCs
+    dw CustomRoom1_S0_Exits         ; shared exit data (no exits on this screen)
+    ; --- Step 1: Castle layout, original NPCs + Guard (replaces Gatekeeper) ---
+    db 1, $2A
+    dw CustomRoom1_S0_Step1_NPCs
+    dw CustomRoom1_S0_Exits         ; shared exit data
 
-CustomRoom1_S0_NPCs:
+CustomRoom1_S0_Step0_NPCs:
     db $8F, $FF, $09, $04, $01     ; spawn (from screen 1)
     db $00, $0B, $05, $02, $01     ; NPC at (5,2), script_id=1 — YES/NO demo
     db $00, $0B, $02, $04, $02     ; NPC at (2,4), script_id=2 — teleport Castle
-    db $00, $0B, $07, $04, $03     ; NPC at (7,4), script_id=3 — teleport $6B
+    db $00, $09, $07, $04, $04     ; NPC at (7,4), script_id=4 — Gatekeeper ★
+    db $FF
+
+CustomRoom1_S0_Step1_NPCs:
+    db $8F, $FF, $09, $04, $01     ; spawn (from screen 1)
+    db $00, $0B, $05, $02, $01     ; NPC at (5,2), script_id=1 — YES/NO demo
+    db $00, $0B, $02, $04, $02     ; NPC at (2,4), script_id=2 — teleport Castle
+    db $20, $07, $07, $04, $05     ; NPC at (7,4), script_id=5 — Guard ★ (different sprite+facing)
     db $FF
 
 CustomRoom1_S0_Exits:
     db $FF
 
 CustomRoom1_Screen1:
-    dw $D9A1
+    dw wCustomStep_Room6C_S1        ; $D47A — safe step counter (was $D9A1/event-flag collision)
     db 5, $2A
     dw CustomRoom1_S1_NPCs
     dw CustomRoom1_S1_Exits
@@ -531,7 +607,7 @@ CustomRoom1_S1_Exits:
     db $FF
 
 CustomRoom1_Screen5:
-    dw $D9A2
+    dw wCustomStep_Room6C_S5        ; $D47B — safe step counter (was $D9A2/event-flag collision)
     db 7, $2A
     dw CustomRoom1_S5_NPCs
     dw CustomRoom1_S5_Exits

@@ -209,7 +209,18 @@ wCustomRoomFlag:: db ;d378 — $00=normal room, $01=custom room active
 wCustomNPCBuffer:: ds 128 ;d379 — NPC interact data copied from overflow bank ($FF terminated)
 wCustomExitBuffer:: ds 127 ;d3f9 — exit data copied from overflow bank ($FF terminated)
 
-    ds $319
+; Custom room step counters ($D478-$D47B)
+; These replace the original $D95E (MedalMan collision) and $D9A0-$D9A2
+; (event flag collision — bytes 5-7 of wEventFlags held boss/story flags).
+; This range is verified unused by the original engine ($D478-$D790 gap).
+; NOTE: not in SRAM save range — step counters reset on power cycle.
+; For persistence, use event flags + room-entry script flag checks instead.
+wCustomStep_Room6B_S0:: db ;d478 — Room $6B screen 0 step counter
+wCustomStep_Room6C_S0:: db ;d479 — Room $6C screen 0 step counter
+wCustomStep_Room6C_S1:: db ;d47a — Room $6C screen 1 step counter
+wCustomStep_Room6C_S5:: db ;d47b — Room $6C screen 5 step counter
+
+    ds $315                         ; gap ($D47C-$D790)
 
 wGroundItemData:: db ;d791
 

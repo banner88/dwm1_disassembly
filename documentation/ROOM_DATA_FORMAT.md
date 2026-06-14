@@ -129,8 +129,13 @@ Key ranges:
 - $D998: Shared by all maze/conveyor/forest rooms (1 step each)
 - $D99A: Last used address (Room_5E)
 
-Custom rooms use $D95E (room $6B, shared with MedalManRoom) and
-$D9A0–$D9A2 (room $6C screens, unique — beyond original range).
+Custom rooms use $D478–$D47B (room $6B screen 0, room $6C screens
+0/1/5). These are in the verified-unused WRAM gap ($D478–$D790),
+avoiding the original step counter range ($D92A–$D99A) and the
+event flag range ($D99B–$D9BA). NOTE: $D478+ is NOT in the SRAM
+save range, so custom step counter values reset on power cycle.
+For save-persistent state changes, use event flags ($00/$01/$03)
+combined with room-entry script flag checks (opcode $15).
 
 ### Runtime NPC show/hide (opcodes $48/$49)
 

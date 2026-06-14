@@ -5,11 +5,11 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-13 (v24 test ROM: monster give $29+$28,
-> teleport $0F (not $0E — that's BranchByScreen), BGM change $41;
-> opcode $0E/$0F misidentification in bank_004.asm + BANK04_SCRIPT_ENGINE
-> fixed; $00/$01 naming confirmed correct; NPC show/hide step system
-> confirmed in-game via SameBoy)
+> Last verified: 2026-06-14 (v25 test ROM: step system confirmed in-game;
+> Gatekeeper NPC at step 0 replaced by Guard NPC at step 1 after
+> WriteRAM opcode $12 sets $D479=1 and room re-entry; CustomPtrChase
+> reads RAM step counter × 6; step counter addresses moved from event
+> flag collision zone $D9A0-$D9A2 to safe $D478-$D47B range)
 
 ---
 
@@ -21,7 +21,7 @@
 | Clean build target | MUST equal the MD5 above, byte-perfect |
 | Assembler | RGBDS v0.6.1 exactly |
 | ROM size | 2 MB, 128 banks ($00–$7F) |
-| Custom content bank | $60 (~15.3 KB free as of v23 content) |
+| Custom content bank | $60 (~14.9 KB free as of v25 content, 1323 bytes used) |
 | Empty banks available | 23 banks = 368 KB: $60,$64,$67,$69–$77,$79–$7A,$7C,$7E–$7F |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
@@ -49,7 +49,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 ## Status Dashboard
 
-### Custom content primitives (all proven in-game, ROM v23)
+### Custom content primitives (proven in-game: v23 base, v25 step system)
 
 | Primitive | Status | Where |
 |-----------|--------|-------|
@@ -62,6 +62,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Script-driven teleport | ✅ working | opcode $0F (MapTransitionFull); vanilla + custom destinations |
 | BGM change | ✅ working | opcode $41 (SetBGM); track reverts on room exit |
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 used, 298 with sets, ~200 safe+persistent free |
+| NPC show/hide by step | ✅ working | CustomPtrChase reads RAM step counter × 6; 2+ step entries per screen; opcode $12 advances counter. Verified in-game v25. |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 
@@ -70,10 +71,6 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | Blocker |
 |--------|---------|
 | Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
-| Teleport/warp between maps | ✅ Exit-based transitions work all directions (v23). Script-driven teleport via opcode **$0F** (MapTransitionFull) **confirmed working** from custom scripts — both vanilla destination (Castle) and custom room ($6B) tested. Note: $0E is BranchByScreen, NOT teleport (bank $04 comment was wrong, fixed). Format: `$FF0F <gate_id:flag> <spawnX> <spawnY>`. |
-| BGM change | ✅ Opcode $41 (SetBGM) **confirmed working** in custom scripts. Saves current BGM to $C8B6, plays new track. Tested with Arena music ($1E) in custom room. |
-| Monster give | ✅ Opcode $29 (AddMonster) **confirmed working** in custom scripts. Gives egg (enemy_stats_id=350 SkyDragon = proven, same as Farm event) or monster to storage. Opcode $28 (CheckStorageFull) also confirmed. Wrapper needed (bare `ret` → AddMonsterWrapper, same fix as GiveItem $2A). Note: without `$FF04 $000F` preamble, species/stats may not fully initialize — eggs work perfectly; direct monster give needs further investigation for stat initialization. |
-| NPC show/hide by flag | Mechanism confirmed in-game: step system (multiple step entries per screen, counter set by opcode $12). SameBoy test: setting Castle screen 5 step counter $D92C from 4→0 made a priest NPC appear. Remaining: test in a custom room with ≥2 step entries + WriteRAM opcode $12 to advance counter on room re-entry. |
 | Custom tilesets | Compressor done; needs PNG→tile pipeline + tileset GFX loading from custom bank |
 | Custom music | Sound engine unexplored |
 | Save-data audit | SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Only remaining: in-game save/load test of a custom flag in SameBoy. |
@@ -136,6 +133,19 @@ blocks direct editing of monsters/enemies/encounters/breeding in source.
   "if_flag_clear". $01 handler does `jp z, skip`, so it branches when
   flag is SET = "if_flag_set". `TestEventFlag` returns Z=clear, NZ=set
   via `and [hl]`. Definitively resolved from code; no SameBoy test needed.
+- ~~Room $6C step counter addresses $D9A0-$D9A2 collided with event flags~~
+  → **Fixed.** $D9A0 = byte 5 of wEventFlags (boss defeat flags $0028-
+  $002F: DracoLord, Zoma, Baramos, Pizzaro, Esterk, etc.), $D9A1 = byte 6
+  (story flags $0030-$0037 with up to 62 uses each), $D9A2 = byte 7
+  (MedalMan, Castle flags $0038-$003F). Writing step counter values there
+  would clobber critical game state. Never triggered in practice because
+  CustomPtrChase ignored step counters. Fixed by moving all custom step
+  counters to $D478-$D47B (verified-unused WRAM gap). Room $6B's $D95E
+  (shared with MedalMan original) also moved to $D478.
+- ~~Room $6B NPCs blocked exit to Room $6C~~ → **Fixed (v25).** Egg giver
+  at (3,3) and BGM changer at (1,4) removed; a prior session had moved
+  them into positions that blocked the walkable path to the (3,1) exit
+  without updating docs. Item giver at (2,2) retained.
 - ~~dump_all_scripts.py decoded linearly, missing ~45% of WriteRAM ops
   at branch targets~~ → Fixed. Work-queue follows 9 branch opcodes.
   810/866 unique WriteRAM ops found (93.5%); 56 in alternate dispatch

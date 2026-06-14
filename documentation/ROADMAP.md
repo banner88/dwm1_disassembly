@@ -98,18 +98,21 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       at $59D2 was wrong, fixed). $0F writes gate_id → $C96D, flag → $C96E,
       spawn XY → $C96F-$C972, sets wIsPlayerChangingMaps=1.
       Format: `$FF0F <gate_id:flag> <spawnX> <spawnY>` (3 word params).
-- [ ] **NPC show/hide by flag** — mechanism IS the step system
+- [x] **NPC show/hide by flag** — mechanism IS the step system
       (ROOM_DATA_FORMAT.md "Room State System"): multiple step entries
       per screen with different NPC lists, step counter set by opcode
-      $12 (WriteRAM $D9xx). **Confirmed in-game**: SameBoy test setting
-      Castle screen 5 step counter $D92C from 4→0 made a priest NPC
-      appear that wasn't there at step 4. Opcodes $48/$49 are runtime
-      movement-based show/hide (cutscene use only, not persistent).
-      Remaining work: build a custom room with ≥2 step entries where
-      an NPC script advances the step counter via WriteRAM opcode $12,
-      then re-entering shows different NPCs.
+      $12 (WriteRAM $D9xx). **Implemented and confirmed in-game (v25)**:
+      CustomPtrChase now reads RAM step counter and indexes by ×6
+      (was always returning step 0). Room $6C screen 0 has 2 step
+      entries — Gatekeeper NPC at step 0 (advances counter via opcode
+      $12) replaced by Guard NPC at step 1. Verified: NPC changes on
+      re-entry after WriteRAM sets counter. Step counter addresses
+      moved from event-flag collision zone ($D9A0-$D9A2 = flags
+      $0028-$003F) to safe range $D478-$D47B. Note: $D478+ not in
+      SRAM save range — step progress resets on power cycle; for
+      persistence, use event flags + room-entry flag checks.
       *Accept*: NPC appears only after custom flag/step is set; verified
-      after room re-entry and after scroll.
+      after room re-entry. ✅
 - [x] **BGM change** — opcode $41 (SetBGM) **confirmed working**.
       Saves current BGM to $C8B6, plays new track from param.
       Track IDs in known_RAM_map ($C8B5). Tested: Arena ($1E) in
