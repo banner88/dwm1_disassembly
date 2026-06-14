@@ -5,14 +5,13 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-14 (v26 custom tile layout + tileset switch:
-> bank $64 holds Farm-tileset layout (user-designed via HTML editor);
-> MapIDClampForPalette in ROM0 changed from $16→$04 for Farm GFX;
-> GreatTree s8 exit spawn changed (2,6)→(7,6); in-game confirmed
-> layout renders with correct Farm tiles; palette attribute mismatch
-> identified — custom attr data generated but bank $17 intercept
-> not yet wired; tile_layout_compiler.py + standalone HTML editor
-> with 170 rooms / 85 tilesets delivered)
+> Last verified: 2026-06-14 (v28 custom room with MedalMan tileset:
+> palette attribute intercept working — CustomAttrCheck at bank $17:$6C75
+> redirects Room $6B attr decompression to bank $64 entry 1; tileset
+> switching via MapIDClampForPalette $16 (MedalMan); generate_attr_map.py
+> builds tile→palette maps from ROM for all 85 tilesets; multi-tileset
+> HTML editor delivered with walkability overlay, variable stamps, marker
+> add/remove; collision threshold table confirmed at ROM0 $26E3 ×8 stride)
 
 ---
 
@@ -25,7 +24,7 @@
 | Assembler | RGBDS v0.6.1 exactly |
 | ROM size | 2 MB, 128 banks ($00–$7F) |
 | Custom content bank | $60 (~14.9 KB free as of v25 content, 1322 bytes used) |
-| Custom layout bank | $64 (layout pointer table + LZSS data, 214 bytes used) |
+| Custom layout bank | $64 (layout ptr table + LZSS layout + attr data, 309 bytes used) |
 | Empty banks available | 21 banks = 336 KB: $67,$69–$77,$79–$7A,$7C,$7E–$7F |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
@@ -68,8 +67,9 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 used, 298 with sets, ~200 safe+persistent free |
 | NPC show/hide by step | ✅ working | CustomPtrChase reads RAM step counter × 6; 2+ step entries per screen; opcode $12 advances counter. Verified in-game v25. |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
-| Custom tile layouts | ✅ working | bank $64 pointer table + LZSS data; tile_layout_compiler.py; user-designed Farm-tileset room confirmed in-game. Tileset switching via MapIDClampForPalette in ROM0 (hardcoded per-room, not table-driven). |
-| Custom tileset selection | ✅ working | MapIDClampForPalette at ROM0 $3FE8; change `ld a, $XX` to switch source mapID for Room $6B. Currently $04 (Farm). |
+| Custom tile layouts | ✅ working | bank $64 pointer table + LZSS data; tile_layout_compiler.py; MedalMan-tileset room confirmed in-game (v28). Tileset switching via MapIDClampForPalette in ROM0 (hardcoded per-room). Palette attributes fixed: CustomAttrCheck intercept in bank $17 free space ($6C75) decompresses custom nibble-packed attr data from bank $64 entry 1. |
+| Custom tileset selection | ✅ working | MapIDClampForPalette at ROM0 $3FE8; Room $6B currently $16 (MedalMan). |
+| Attr map generator | ✅ working | tools/generate_attr_map.py; builds tile→palette maps from all 85 tilesets, generates LZSS-compressed attr data. |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
@@ -77,7 +77,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | Blocker |
 |--------|---------|
 | Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
-| Custom tile GRAPHICS | Layouts + tileset switching done. Next: palette attribute intercept (custom attr data in bank $64, redirect bank $17 via 8KB free at $60DB using unused mapID $65). Then: PNG→2bpp pipeline for custom tile art, tileset mashup tool. |
+| Custom tile GRAPHICS | Palette attributes fixed (v28). Tileset switching works for single-tileset rooms. Next: combined tileset mashup backend — extract 2bpp tile data from multiple source tilesets, build merged tileset in free bank, intercept GFX loader, merge palette colors. Multi-tileset editor (towards_editor/) captures designs with full source mapping; backend needs to consume the export. |
 | Custom music | Sound engine unexplored |
 | Save-data audit | SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Only remaining: in-game save/load test of a custom flag in SameBoy. |
 

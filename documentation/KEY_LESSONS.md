@@ -201,3 +201,31 @@ This takes 30 seconds. Guessing takes hours.
 
 ### Bank $17 has ~8KB free space at $60DB-$7FF7
 Contrary to initial analysis ("bank $17 is full"), the LZSS attribute data ends well before the bank boundary. Addresses $60DB-$7FF7 are all nops — available for custom attribute entries, intercept code, and future expansion.
+
+---
+
+## Session 5 Lessons — Palette Attributes & Collision Thresholds
+
+### GBC palette attribute format is nibble-packed, not byte-per-tile
+**Symptom**: Initial attr data analysis assumed each byte was one tile's attribute (like standard GBC VRAM attribute bytes). Produced 512-byte maps that didn't match the game's 256-byte format.
+**Root cause**: The game uses a custom compressed format: 256 bytes = 8 rows × 32 bytes. Each row covers 2 tile rows. Each 32-byte row: [10 bytes for even row][6 padding][10 bytes for odd row][6 padding]. Each byte is nibble-packed: high nibble = left tile's palette (0-7), low nibble = right tile's palette (0-7). Total: 10×2 nibbles × 8 rows × 2 halves = 320 palette assignments = 20 cols × 16 rows.
+**Fix**: `tools/generate_attr_map.py` generates correct 256-byte nibble-packed format. Verified by decompressing vanilla Farm attr data and cross-referencing with tile layouts from the HTML editor.
+**Rule**: The attr map is NOT standard GBC VRAM attributes. It's a custom nibble-packed format decompressed to $C200, then the engine copies it to VRAM BG attributes.
+
+### Collision threshold table uses ×8 stride, not ×1
+**Symptom**: Reading ROM0 $26E3 as consecutive bytes gave threshold=0 for MedalMan (mapID $16), implying all tiles are walls — clearly wrong since the player walks in that room.
+**Root cause**: The code does `add hl,hl; add hl,hl; add hl,hl` (×8) before indexing. Each mapID's entry is 8 bytes apart, not 1. The first byte at each 8-byte entry is the threshold.
+**Fix**: Read `rom[$26E3 + mapID * 8]` instead of `rom[$26E3 + mapID]`. MedalMan's correct threshold is 64 (tiles <64 walkable, ≥64 wall).
+**Rule**: Collision table: ROM0 $26E3, stride 8 bytes per mapID. Threshold = first byte. Tile index < threshold = walkable. `jr c` after `cp [hl]` means tile < threshold → B=$FF (passable); tile ≥ threshold → B=$0F (blocked).
+
+### CustomAttrCheck must match exact mapID, not range
+**Symptom**: Room $6C (Castle tileset) showed scrambled palettes after the attr intercept was added.
+**Root cause**: `cp CUSTOM_ROOM_START / jr nc` caught ALL custom rooms (≥ $6B), including $6C. Room $6C got Room $6B's Farm attr data instead of its own Castle attrs.
+**Fix**: Changed to `cp $6B / jr z` — only exact match. Room $6C+ falls through to MapIDClampForPalette as before.
+**Rule**: Per-room intercepts must match exactly. When adding more custom rooms with custom attr data, extend with additional `cp $6C / jr z` etc., not a range check.
+
+### Bank $17 free space starts at $6C75, not $60DB
+**Symptom**: KEY_LESSONS.md previously stated "~8KB free space at $60DB-$7FF7".
+**Root cause**: The $60DB figure came from early analysis of the LZSS attribute data endpoint. Actual measurement: last non-zero byte is at offset $2C74 (addr $6C74), so free space starts at $6C75.
+**Fix**: CustomAttrCheck placed at $6C75 (22 bytes). Remaining free: ~4981 bytes at $6C8B-$7FFF.
+**Rule**: Always verify free space boundaries against the ROM, not previous documentation.

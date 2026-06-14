@@ -3,273 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DWM1 Tile Layout Editor</title>
+<title>DWM1 Multi-Tileset Editor</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0a0a0a;color:#ddd;font-family:'SF Mono','Menlo','Consolas',monospace;font-size:12px}
-.wrap{max-width:1100px;margin:0 auto;padding:12px 16px}
-.hdr{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.wrap{max-width:1400px;margin:0 auto;padding:8px 12px}
+.hdr{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .title{font-size:15px;font-weight:700;color:#f59e0b;letter-spacing:.02em}
 .sub{font-size:10px;color:#555}
-.toolbar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.toolbar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;align-items:center}
 .tbtn{padding:4px 10px;font-size:12px;font-weight:700;border-radius:4px;border:none;cursor:pointer;background:#333;color:#bbb;transition:all .15s;font-family:inherit}
 .tbtn.active{background:#f59e0b;color:#111}
 .tbtn:hover{background:#444}
 .sbtn{padding:3px 8px;font-size:11px;border-radius:4px;border:none;cursor:pointer;background:#333;color:#bbb;font-family:inherit}
 .sbtn:hover{background:#444}
 .sep{width:1px;height:18px;background:#222;margin:0 2px}
-.main{display:flex;gap:12px;flex-wrap:wrap}
-.side{min-width:200px}
-.canv-wrap{flex:1;min-width:0}
+.main{display:flex;gap:10px;flex-wrap:nowrap}
+.side{width:290px;flex-shrink:0}
+.canv-wrap{flex:1;min-width:0;overflow-x:auto}
 .lbl{font-size:10px;color:#555;margin-bottom:3px}
 .lbl span{color:#f59e0b;font-weight:700}
-canvas{image-rendering:pixelated;border:1px solid #282828;border-radius:4px;display:block}
-.markers{margin-top:10px}
+canvas{image-rendering:pixelated;display:block}
+.panel{background:#111;border:1px solid #222;border-radius:6px;padding:8px;margin-bottom:8px}
+.panel-hdr{font-size:11px;font-weight:700;color:#f59e0b;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.panel-sub{font-size:9px;color:#444}
+select{background:#1a1a1a;color:#ccc;border:1px solid #333;border-radius:4px;padding:3px 6px;font-size:11px;font-family:inherit;max-width:100%}
+.status{font-size:10px;color:#444;margin-top:6px;padding:4px 0;border-top:1px solid #181818}
+.ebox{background:#141414;border:1px solid #282828;border-radius:6px;padding:8px;margin-bottom:6px}
+.ebox textarea{width:100%;height:120px;background:#0a0a0a;color:#aaa;border:1px solid #282828;border-radius:4px;padding:6px;font-family:monospace;font-size:10px;resize:vertical}
+.grn{background:#1a3a1a!important;color:#6ee06e!important}
+.stamp-grid{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.stamp-item{background:#1a1a1a;border:1px solid #282828;border-radius:4px;padding:3px;cursor:pointer;position:relative}
+.stamp-item:hover{border-color:#f59e0b}
+.stamp-item.active{border-color:#f59e0b;background:#1a1500}
+.stamp-del{position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#c00;color:#fff;font-size:9px;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1}
+.stamp-item:hover .stamp-del{display:flex}
+.markers{margin-top:6px}
 .mrow{display:flex;align-items:center;gap:4px;margin-bottom:2px;font-size:10px}
 .mdot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
 .minp{width:32px;background:#141414;color:#aaa;border:1px solid #282828;border-radius:3px;padding:1px 3px;font-size:10px;text-align:center;font-family:inherit}
 .mkey{color:#444}
-select{background:#1a1a1a;color:#ccc;border:1px solid #333;border-radius:4px;padding:3px 6px;font-size:11px;font-family:inherit}
-.status{font-size:10px;color:#444;margin-top:6px;padding:4px 0;border-top:1px solid #181818}
-.ebox{background:#141414;border:1px solid #282828;border-radius:6px;padding:10px;margin-bottom:8px}
-.ebox textarea{width:100%;height:100px;background:#0a0a0a;color:#aaa;border:1px solid #282828;border-radius:4px;padding:6px;font-family:monospace;font-size:10px;resize:vertical}
-.grn{background:#1a3a1a!important;color:#6ee06e!important}
-.red{background:#3a1a1a!important;color:#e06e6e!important}
+.badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700}
 .cv-scroll{overflow-x:auto;border:1px solid #282828;border-radius:4px;display:inline-block}
 </style>
 </head>
 <body>
 <div class="wrap">
 <div class="hdr">
-  <span class="title">DWM1 Tile Layout Editor</span>
-  <span class="sub">Standalone · 170 rooms · 85 tilesets</span>
+  <span class="title">DWM1 Multi-Tileset Editor</span>
+  <span class="sub">Combine tiles from any tileset · 2×2 stamps · Full export</span>
 </div>
 <div class="toolbar">
-  <select id="roomSelect" onchange="loadRoom(this.value)" style="max-width:280px">
+  <select id="roomSelect" onchange="loadRoom(this.value)" style="max-width:220px">
     <option value="">— Load existing room —</option>
-    <option value="0_0">$00.0 Castle (scr 0)</option>
-    <option value="0_1">$00.1 Castle (scr 1)</option>
-    <option value="1_0">$01.0 GreatTree (scr 0)</option>
-    <option value="1_1">$01.1 GreatTree (scr 1)</option>
-    <option value="1_4">$01.4 GreatTree (scr 4)</option>
-    <option value="1_5">$01.5 GreatTree (scr 5)</option>
-    <option value="2_0">$02.0 Bazaar (scr 0)</option>
-    <option value="2_1">$02.1 Bazaar (scr 1)</option>
-    <option value="2_2">$02.2 Bazaar (scr 2)</option>
-    <option value="2_4">$02.4 Bazaar (scr 4)</option>
-    <option value="2_5">$02.5 Bazaar (scr 5)</option>
-    <option value="3_0">$03.0 Gate Hub (scr 0)</option>
-    <option value="3_1">$03.1 Gate Hub (scr 1)</option>
-    <option value="4_0">$04.0 Farm (scr 0)</option>
-    <option value="4_1">$04.1 Farm (scr 1)</option>
-    <option value="4_2">$04.2 Farm (scr 2)</option>
-    <option value="4_4">$04.4 Farm (scr 4)</option>
-    <option value="4_5">$04.5 Farm (scr 5)</option>
-    <option value="5_0">$05.0 Stable (scr 0)</option>
-    <option value="5_1">$05.1 Stable (scr 1)</option>
-    <option value="5_2">$05.2 Stable (scr 2)</option>
-    <option value="6_0">$06.0 Arena Lobby (scr 0)</option>
-    <option value="6_1">$06.1 Arena Lobby (scr 1)</option>
-    <option value="6_2">$06.2 Arena Lobby (scr 2)</option>
-    <option value="7_0">$07.0 Arena Rooms (scr 0)</option>
-    <option value="7_1">$07.1 Arena Rooms (scr 1)</option>
-    <option value="7_2">$07.2 Arena Rooms (scr 2)</option>
-    <option value="7_4">$07.4 Arena Rooms (scr 4)</option>
-    <option value="7_5">$07.5 Arena Rooms (scr 5)</option>
-    <option value="8_0">$08.0 Starry Shrine Breeding Cutscene</option>
-    <option value="9_1">$09.1 Starry Shrine (scr 1)</option>
-    <option value="10_0">$0A.0 Secret Passage (scr 0)</option>
-    <option value="10_1">$0A.1 Secret Passage (scr 1)</option>
-    <option value="11_0">$0B.0 Castle: Chest Room (variant) (scr 0)</option>
-    <option value="11_1">$0B.1 Castle: Chest Room (variant) (scr 1)</option>
-    <option value="12_0">$0C.0 Egg Evaluator</option>
-    <option value="13_0">$0D.0 Old Man Gate Room</option>
-    <option value="14_0">$0E.0 Castle: Chest Room (variant) (scr 0)</option>
-    <option value="14_1">$0E.1 Castle: Chest Room (variant) (scr 1)</option>
-    <option value="15_0">$0F.0 Vault</option>
-    <option value="16_0">$10.0 Copycat House</option>
-    <option value="17_0">$11.0 Castle: Chest Room (variant) (scr 0)</option>
-    <option value="17_1">$11.1 Castle: Chest Room (variant) (scr 1)</option>
-    <option value="18_0">$12.0 Library (scr 0)</option>
-    <option value="19_0">$13.0 Library Gate Room</option>
-    <option value="20_0">$14.0 Castle: Chest Room (variant) (scr 0)</option>
-    <option value="20_1">$14.1 Castle: Chest Room (variant) (scr 1)</option>
-    <option value="21_0">$15.0 Castle: Chest Room (variant) (scr 0)</option>
-    <option value="21_1">$15.1 Castle: Chest Room (variant) (scr 1)</option>
-    <option value="22_0">$16.0 MedalMan</option>
-    <option value="23_0">$17.0 Copycat House (Glitched)</option>
-    <option value="24_0">$18.0 Well (scr 0)</option>
-    <option value="25_0">$19.0 Goopy Room 1 (scr8)</option>
-    <option value="26_0">$1A.0 Goopy Room 2 (scr8)</option>
-    <option value="27_0">$1B.0 Stable: KingSlime Room</option>
-    <option value="28_0">$1C.0 Stable: Coffin Room</option>
-    <option value="29_0">$1D.0 Monster School</option>
-    <option value="30_0">$1E.0 Restaurant</option>
-    <option value="31_0">$1F.0 Queen Room</option>
-    <option value="35_0">$23.0 Room of Beginning</option>
-    <option value="36_0">$24.0 Room: Villager/Talisman</option>
-    <option value="37_0">$25.0 Room: Memories/Bewilder</option>
-    <option value="38_0">$26.0 Room: Peace/Bravery</option>
-    <option value="39_0">$27.0 Room: Strength/Anger</option>
-    <option value="40_0">$28.0 Room: Joy/Wisdom</option>
-    <option value="41_0">$29.0 Room: Happiness/Temptation</option>
-    <option value="42_0">$2A.0 Room: Labyrinth/Judgment</option>
-    <option value="43_0">$2B.0 Room: Reflection</option>
-    <option value="44_0">$2C.0 Room: Ambition/Demolition</option>
-    <option value="45_0">$2D.0 Room: Mastermind/Control</option>
-    <option value="46_0">$2E.0 Room: Extinction/Sleep</option>
-    <option value="48_0">$30.0 Boss: Beginning (Healer)</option>
-    <option value="49_0">$31.0 Boss: Villager (Dragon)</option>
-    <option value="50_0">$32.0 Boss: Talisman (Golem)</option>
-    <option value="51_0">$33.0 Boss: Memories (MadCat)</option>
-    <option value="52_0">$34.0 Boss: Bewilder (FaceTree)</option>
-    <option value="53_0">$35.0 Boss: Bazaar (MadKnight)</option>
-    <option value="54_0">$36.0 Boss: Peace (FangSlime)</option>
-    <option value="55_0">$37.0 Boss: Bravery (BigEye)</option>
-    <option value="56_0">$38.0 Boss: Well (Gigantes)</option>
-    <option value="57_0">$39.0 Boss: Strength (StoneMan)</option>
-    <option value="58_0">$3A.0 Boss: Wisdom (SkyDragon)</option>
-    <option value="59_0">$3B.0 Boss: Joy (FunkyBird)</option>
-    <option value="60_0">$3C.0 Boss: Anger (BattleRex)</option>
-    <option value="61_0">$3D.0 Boss: Arena Left (Digster)</option>
-    <option value="62_0">$3E.0 Boss: Happiness (Jamirus)</option>
-    <option value="63_0">$3F.0 Boss: Temptation (Servant)</option>
-    <option value="64_0">$40.0 KingSlime Decision Room (3 doors)</option>
-    <option value="65_0">$41.0 Boss: Medal (Lipsy variant)</option>
-    <option value="66_0">$42.0 Labyrinth (scr 0)</option>
-    <option value="66_1">$42.1 Labyrinth (scr 1)</option>
-    <option value="67_0">$43.0 Boss: Judgment (Akubar)</option>
-    <option value="68_0">$44.0 Boss: Library (Orochi)</option>
-    <option value="69_0">$45.0 Boss: Reflection (Durran)</option>
-    <option value="70_0">$46.0 Boss: Ambition (DracoLord)</option>
-    <option value="71_0">$47.0 Boss: Demolition (Hargon/Sidoh)</option>
-    <option value="72_0">$48.0 Boss: Mastermind (Baramos)</option>
-    <option value="73_0">$49.0 Boss: Control (Zoma)</option>
-    <option value="74_0">$4A.0 Boss: Extinction (Pizzaro)</option>
-    <option value="75_0">$4B.0 Boss: Sleep (Esterk)</option>
-    <option value="76_0">$4C.0 Boss: Bazaar Edge (Mirudraas)</option>
-    <option value="77_0">$4D.0 Boss: Arena Right (Mudou)</option>
-    <option value="78_0">$4E.0 Boss: Grandpa's Gate (DeathMore) (scr 0)</option>
-    <option value="79_0">$4F.0 Boss: Unused (DarkDrium)</option>
-    <option value="80_0">$50.0 Gate Floor: Item Shop</option>
-    <option value="81_0">$51.0 Gate Floor: Priest</option>
-    <option value="82_0">$52.0 Gate Floor: Coliseum</option>
-    <option value="83_0">$53.0 Forest Maze (scr 0)</option>
-    <option value="83_1">$53.1 Forest Maze (scr 1)</option>
-    <option value="83_2">$53.2 Forest Maze (scr 2)</option>
-    <option value="83_3">$53.3 Forest Maze (scr 3)</option>
-    <option value="83_4">$53.4 Forest Maze (scr 4)</option>
-    <option value="84_0">$54.0 Conveyor Maze 1 (scr 0)</option>
-    <option value="84_1">$54.1 Conveyor Maze 1 (scr 1)</option>
-    <option value="84_2">$54.2 Conveyor Maze 1 (scr 2)</option>
-    <option value="84_4">$54.4 Conveyor Maze 1 (scr 4)</option>
-    <option value="84_5">$54.5 Conveyor Maze 1 (scr 5)</option>
-    <option value="84_6">$54.6 Conveyor Maze 1 (scr 6)</option>
-    <option value="84_8">$54.8 Conveyor Maze 1 (scr 8)</option>
-    <option value="85_0">$55.0 Conveyor Maze 2 (scr 0)</option>
-    <option value="85_1">$55.1 Conveyor Maze 2 (scr 1)</option>
-    <option value="85_2">$55.2 Conveyor Maze 2 (scr 2)</option>
-    <option value="85_4">$55.4 Conveyor Maze 2 (scr 4)</option>
-    <option value="85_5">$55.5 Conveyor Maze 2 (scr 5)</option>
-    <option value="85_6">$55.6 Conveyor Maze 2 (scr 6)</option>
-    <option value="85_8">$55.8 Conveyor Maze 2 (scr 8)</option>
-    <option value="86_0">$56.0 Conveyor Maze 3 (scr 0)</option>
-    <option value="86_1">$56.1 Conveyor Maze 3 (scr 1)</option>
-    <option value="86_2">$56.2 Conveyor Maze 3 (scr 2)</option>
-    <option value="86_4">$56.4 Conveyor Maze 3 (scr 4)</option>
-    <option value="86_5">$56.5 Conveyor Maze 3 (scr 5)</option>
-    <option value="86_6">$56.6 Conveyor Maze 3 (scr 6)</option>
-    <option value="86_8">$56.8 Conveyor Maze 3 (scr 8)</option>
-    <option value="87_0">$57.0 Maze 1 (scr 0)</option>
-    <option value="87_1">$57.1 Maze 1 (scr 1)</option>
-    <option value="87_2">$57.2 Maze 1 (scr 2)</option>
-    <option value="87_4">$57.4 Maze 1 (scr 4)</option>
-    <option value="87_5">$57.5 Maze 1 (scr 5)</option>
-    <option value="87_6">$57.6 Maze 1 (scr 6)</option>
-    <option value="87_8">$57.8 Maze 1 (scr 8)</option>
-    <option value="88_0">$58.0 Maze 2 (scr 0)</option>
-    <option value="88_1">$58.1 Maze 2 (scr 1)</option>
-    <option value="88_2">$58.2 Maze 2 (scr 2)</option>
-    <option value="88_4">$58.4 Maze 2 (scr 4)</option>
-    <option value="88_5">$58.5 Maze 2 (scr 5)</option>
-    <option value="88_6">$58.6 Maze 2 (scr 6)</option>
-    <option value="88_8">$58.8 Maze 2 (scr 8)</option>
-    <option value="89_0">$59.0 Maze 3 (scr 0)</option>
-    <option value="89_1">$59.1 Maze 3 (scr 1)</option>
-    <option value="89_2">$59.2 Maze 3 (scr 2)</option>
-    <option value="89_4">$59.4 Maze 3 (scr 4)</option>
-    <option value="89_5">$59.5 Maze 3 (scr 5)</option>
-    <option value="89_6">$59.6 Maze 3 (scr 6)</option>
-    <option value="89_8">$59.8 Maze 3 (scr 8)</option>
-    <option value="90_0">$5A.0 Gate Floor: 6 Chests Diagonal</option>
-    <option value="91_0">$5B.0 Gate Floor: 6 Chests Rows</option>
-    <option value="92_0">$5C.0 Gate Floor: 8 Chests Rows</option>
-    <option value="93_0">$5D.0 Arena Battle</option>
-    <option value="94_0">$5E.0 Arena Setup Room (white, 2 Terrys)</option>
-    <option value="96_0">$60.0 Labyrinth Final</option>
-    <option value="97_0">$61.0 Forest Maze Gate Floor 1 (scr 0)</option>
-    <option value="97_1">$61.1 Forest Maze Gate Floor 1 (scr 1)</option>
-    <option value="97_2">$61.2 Forest Maze Gate Floor 1 (scr 2)</option>
-    <option value="97_3">$61.3 Forest Maze Gate Floor 1 (scr 3)</option>
-    <option value="98_0">$62.0 Forest Maze Gate Floor 2 (scr 0)</option>
-    <option value="98_1">$62.1 Forest Maze Gate Floor 2 (scr 1)</option>
-    <option value="98_2">$62.2 Forest Maze Gate Floor 2 (scr 2)</option>
-    <option value="99_0">$63.0 Forest Maze Gate Floor 3 (scr 0)</option>
-    <option value="99_1">$63.1 Forest Maze Gate Floor 3 (scr 1)</option>
-    <option value="100_0">$64.0 Forest Maze Gate Floor 4</option>
   </select>
-  <span class="sep"></span>
+  <div class="sep"></div>
   <button class="tbtn active" id="bt_paint" onclick="setTool('paint')">Paint</button>
+  <button class="tbtn" id="bt_stamp" onclick="setTool('stamp')">Stamp</button>
   <button class="tbtn" id="bt_erase" onclick="setTool('erase')">Erase</button>
   <button class="tbtn" id="bt_pick" onclick="setTool('pick')">Pick</button>
   <button class="tbtn" id="bt_fill" onclick="setTool('fill')">Fill</button>
-  <span class="sep"></span>
-  <button class="sbtn" onclick="doUndo()" title="Undo">↩</button>
-  <button class="sbtn" onclick="doRedo()" title="Redo">↪</button>
-  <span class="sep"></span>
-  <button class="sbtn" id="gridBtn" onclick="toggleGrid()">Grid ✓</button>
-  <button class="sbtn" id="markBtn" onclick="toggleMarkers()">Markers ✓</button>
-  <span class="sep"></span>
+  <div class="sep"></div>
+  <button class="tbtn" id="gridBtn" onclick="toggleGrid()">Grid ✓</button>
+  <button class="tbtn" id="markBtn" onclick="toggleMarkers()">Markers ✓</button>
+  <button class="tbtn" id="walkBtn" onclick="toggleWalk()">Walk ✗</button>
   <button class="sbtn" onclick="adjZoom(-1)">−</button>
-  <span id="zoomLbl" style="font-size:11px;color:#666">3×</span>
+  <span id="zoomLbl" style="font-size:10px;color:#666;width:24px;text-align:center">3×</span>
   <button class="sbtn" onclick="adjZoom(1)">+</button>
-  <span class="sep"></span>
-  <button class="sbtn grn" onclick="showExport()">Export JSON</button>
+  <div class="sep"></div>
+  <button class="sbtn" onclick="doUndo()">Undo</button>
+  <button class="sbtn" onclick="doRedo()">Redo</button>
+  <button class="sbtn" onclick="clearAll()">Clear</button>
+  <div class="sep"></div>
+  <button class="tbtn grn" onclick="showExport()">Export</button>
   <button class="sbtn" onclick="showImportBox()">Import</button>
-  <button class="sbtn red" onclick="clearAll()">Clear</button>
 </div>
-<div id="exportBox" class="ebox" style="display:none">
-  <div style="font-size:10px;color:#888;margin-bottom:4px">Select all (Cmd+A) then copy (Cmd+C):</div>
-  <textarea id="exportArea" readonly onclick="this.select()"></textarea>
-  <button class="sbtn" onclick="document.getElementById('exportBox').style.display='none'" style="margin-top:4px">Close</button>
-</div>
-<div id="importBox" class="ebox" style="display:none">
-  <div style="font-size:10px;color:#888;margin-bottom:4px">Paste layout JSON:</div>
-  <textarea id="importArea"></textarea>
-  <div style="display:flex;gap:6px;margin-top:4px">
-    <button class="sbtn" style="background:#3a2a0a;color:#f5c040" onclick="doImport()">Import</button>
-    <button class="sbtn" onclick="document.getElementById('importBox').style.display='none'">Cancel</button>
-  </div>
-</div>
+
 <div class="main">
-  <div class="side">
-    <div class="lbl">Tileset — selected: <span id="selLbl">$00</span> · <span id="tsName" style="color:#888"></span></div>
-    <canvas id="palCanvas" width="384" height="192" style="cursor:crosshair"></canvas>
-    <div class="markers">
-      <div class="lbl">Markers (x, y)</div>
-      <div id="markerList"></div>
-    </div>
+<div class="side">
+  <!-- Source tileset browser -->
+  <div class="panel">
+    <div class="panel-hdr">Source Tilesets <span class="panel-sub">click tile → add to palette</span></div>
+    <select id="srcTS" onchange="loadSrcTileset(this.value)" style="width:100%;margin-bottom:4px"></select>
+    <canvas id="srcCanvas" width="384" height="192" style="border:1px solid #282828;border-radius:4px;cursor:pointer;width:100%"></canvas>
   </div>
-  <div class="canv-wrap">
-    <div class="lbl">Canvas 20×16 <span id="hoverLbl"></span></div>
-    <div class="cv-scroll">
-      <canvas id="mainCanvas" style="cursor:pointer"></canvas>
-    </div>
+
+  <!-- Combined palette -->
+  <div class="panel">
+    <div class="panel-hdr">Custom Palette <span id="palCount" class="panel-sub">0/128</span></div>
+    <canvas id="palCanvas" width="384" height="192" style="border:1px solid #282828;border-radius:4px;cursor:pointer;width:100%"></canvas>
+    <div class="panel-sub" style="margin-top:2px">Selected: <span id="selLbl">—</span> · Right-click to remove</div>
+  </div>
+
+  <!-- 2×2 Stamps -->
+  <div class="panel">
+    <div class="panel-hdr">2×2 Stamps <button class="sbtn" onclick="newStamp()" style="font-size:9px;padding:2px 6px">+ New</button></div>
+    <div id="stampGrid" class="stamp-grid"></div>
+  </div>
+
+  <!-- Markers -->
+  <div class="panel">
+    <div class="panel-hdr">Markers <button class="sbtn" onclick="addMarker()" style="font-size:9px;padding:2px 6px">+ Add</button></div>
+    <div id="markerList" class="markers"></div>
   </div>
 </div>
-<div class="status" id="status">Select a room from the dropdown to load it, or start painting.</div>
+
+<div class="canv-wrap">
+  <div class="lbl"><span id="hoverLbl"></span></div>
+  <div class="cv-scroll">
+    <canvas id="mainCanvas"></canvas>
+  </div>
+  <div id="exportBox" class="ebox" style="display:none;margin-top:6px">
+    <div style="display:flex;gap:4px;margin-bottom:4px">
+      <button class="sbtn grn" onclick="copyExport()">Copy</button>
+      <button class="sbtn" onclick="document.getElementById('exportBox').style.display='none'">Close</button>
+    </div>
+    <textarea id="exportArea"></textarea>
+  </div>
+  <div id="importBox" class="ebox" style="display:none;margin-top:6px">
+    <div style="display:flex;gap:4px;margin-bottom:4px">
+      <button class="sbtn grn" onclick="doImport()">Import</button>
+      <button class="sbtn" onclick="document.getElementById('importBox').style.display='none'">Close</button>
+    </div>
+    <textarea id="importArea" placeholder="Paste exported JSON here"></textarea>
+  </div>
+  <div class="status" id="status">Ready</div>
+</div>
+</div>
 </div>
 <script>
+
 const TS = {
   "2A:00":"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",
   "2A:08":"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",
@@ -357,7 +220,6 @@ const TS = {
   "23:19":"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",
   "23:22":"iVBORw0KGgoAAAANSUhEUgAAAIAAAABACAYAAADS1n9/AAAAmElEQVR42u3SMREAIBAEsZdAiX9PWMDG4eA7GkixBnZSyUrXnkMPVwAAAAAAAAAAAAAAAAAAAAB8BcAEAIwAQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASArnUA2lwVH93/TOYAAAAASUVORK5CYII=",
 };
-
 const ROOMS = {
   "0_0":{"name":"Castle (scr 0)","mapid":0,"scr":0,"ts":"2A:00","layout":[[33, 33, 33, 33, 33, 33, 75, 33, 59, 75, 33, 33, 33, 33, 75, 59, 33, 33, 33, 33], [49, 65, 34, 35, 34, 35, 43, 41, 42, 40, 41, 43, 81, 40, 41, 42, 81, 43, 48, 49], [49, 65, 50, 51, 50, 51, 43, 57, 58, 56, 57, 81, 81, 56, 57, 58, 81, 43, 48, 49], [49, 65, 66, 67, 66, 67, 46, 73, 74, 72, 73, 43, 46, 72, 73, 74, 43, 46, 48, 49], [49, 65, 98, 99, 98, 99, 14, 15, 14, 15, 102, 103, 102, 103, 102, 103, 102, 103, 48, 49], [49, 65, 102, 103, 102, 103, 30, 31, 30, 31, 102, 103, 102, 103, 102, 103, 102, 103, 48, 49], [49, 65, 102, 103, 102, 103, 102, 103, 102, 103, 102, 103, 102, 103, 102, 103, 102, 103, 48, 49], [49, 65, 102, 103, 102, 103, 102, 103, 102, 103, 102, 103, 102, 103, 102, 103, 102, 103, 48, 49], [49, 65, 102, 103, 45, 44, 44, 44, 44, 44, 44, 44, 44, 45, 102, 103, 102, 103, 48, 49], [49, 65, 102, 103, 60, 75, 62, 75, 62, 62, 75, 62, 62, 60, 102, 103, 102, 103, 80, 81], [49, 65, 102, 103, 60, 77, 78, 77, 78, 77, 78, 77, 78, 60, 102, 103, 102, 103, 80, 43], [49, 65, 102, 103, 60, 78, 77, 78, 77, 78, 77, 78, 77, 60, 102, 103, 102, 103, 80, 46], [49, 65, 102, 103, 60, 77, 78, 77, 78, 77, 78, 77, 78, 60, 102, 103, 102, 103, 102, 103], [49, 65, 102, 103, 60, 78, 77, 78, 77, 78, 77, 78, 77, 60, 102, 103, 102, 103, 102, 103], [49, 49, 75, 33, 33, 33, 33, 33, 59, 75, 59, 33, 33, 33, 75, 33, 33, 33, 59, 33], [81, 81, 42, 81, 43, 43, 81, 43, 40, 41, 42, 81, 43, 40, 41, 42, 81, 81, 42, 81]]},
   "0_1":{"name":"Castle (scr 1)","mapid":0,"scr":1,"ts":"2A:00","layout":[[33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33], [49, 65, 36, 37, 36, 37, 36, 37, 36, 37, 36, 37, 36, 37, 36, 37, 36, 37, 48, 49], [49, 65, 52, 53, 52, 53, 52, 53, 52, 53, 52, 53, 52, 53, 52, 53, 52, 53, 48, 49], [49, 65, 68, 69, 68, 69, 68, 69, 68, 69, 68, 69, 68, 69, 68, 69, 68, 69, 48, 49], [49, 65, 102, 103, 87, 89, 0, 1, 2, 3, 4, 5, 6, 7, 89, 87, 102, 103, 48, 49], [49, 65, 102, 103, 87, 89, 16, 17, 18, 19, 20, 21, 22, 23, 89, 87, 102, 103, 48, 49], [49, 65, 102, 103, 87, 89, 8, 9, 108, 108, 108, 108, 11, 85, 89, 87, 102, 103, 48, 49], [49, 65, 102, 103, 87, 89, 24, 25, 109, 109, 109, 109, 27, 86, 89, 87, 102, 103, 48, 49], [49, 65, 102, 103, 87, 89, 89, 89, 89, 89, 89, 89, 89, 89, 89, 87, 102, 103, 48, 49], [81, 82, 102, 103, 104, 88, 88, 88, 105, 89, 89, 106, 88, 88, 88, 107, 102, 103, 48, 49], [43, 82, 102, 103, 102, 103, 102, 103, 87, 89, 89, 87, 102, 103, 102, 103, 102, 103, 48, 49], [81, 82, 102, 103, 102, 103, 102, 103, 87, 89, 89, 87, 102, 103, 102, 103, 102, 103, 48, 49], [102, 103, 102, 103, 102, 103, 102, 103, 87, 89, 89, 87, 102, 103, 102, 103, 102, 103, 48, 49], [102, 103, 102, 103, 102, 103, 102, 103, 87, 89, 89, 87, 102, 103, 102, 103, 102, 103, 48, 49], [33, 64, 102, 103, 102, 103, 102, 103, 87, 89, 89, 87, 102, 103, 102, 103, 102, 103, 48, 49], [49, 65, 102, 103, 102, 103, 102, 103, 87, 89, 89, 87, 102, 103, 102, 103, 102, 103, 48, 49]]},
@@ -530,96 +392,240 @@ const ROOMS = {
   "99_1":{"name":"Forest Maze Gate Floor 3 (scr 1)","mapid":99,"scr":1,"ts":"23:24","layout":[[40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 44, 45, 8, 9, 8, 9, 8, 9, 36, 37, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 46, 47, 24, 25, 24, 25, 24, 25, 38, 39, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 44, 45, 48, 49, 48, 49, 48, 49, 36, 37, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 46, 47, 50, 51, 50, 51, 50, 51, 38, 39, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 44, 45, 48, 49, 60, 61, 48, 49, 36, 37, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 46, 47, 50, 51, 62, 63, 50, 51, 38, 39, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 44, 45, 48, 49, 48, 49, 48, 49, 36, 37, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 46, 47, 50, 51, 50, 51, 50, 51, 38, 39, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 40, 41, 4, 5, 48, 49, 0, 1, 40, 41, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 42, 43, 20, 21, 50, 51, 16, 17, 42, 43, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 40, 41, 44, 45, 48, 49, 36, 37, 40, 41, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 42, 43, 46, 47, 50, 51, 38, 39, 42, 43, 42, 43, 42, 43, 42, 43]]},
   "100_0":{"name":"Forest Maze Gate Floor 4","mapid":100,"scr":0,"ts":"23:24","layout":[[40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 44, 45, 8, 9, 8, 9, 8, 9, 36, 37, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 46, 47, 24, 25, 24, 25, 24, 25, 38, 39, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 44, 45, 48, 49, 48, 49, 48, 49, 36, 37, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 46, 47, 50, 51, 50, 51, 50, 51, 38, 39, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 44, 45, 48, 49, 60, 61, 48, 49, 36, 37, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 46, 47, 50, 51, 62, 63, 50, 51, 38, 39, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 44, 45, 48, 49, 48, 49, 48, 49, 36, 37, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 46, 47, 50, 51, 50, 51, 50, 51, 38, 39, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 40, 41, 4, 5, 48, 49, 0, 1, 40, 41, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 42, 43, 20, 21, 50, 51, 16, 17, 42, 43, 42, 43, 42, 43, 42, 43], [40, 41, 40, 41, 40, 41, 44, 45, 48, 49, 36, 37, 40, 41, 40, 41, 40, 41, 40, 41], [42, 43, 42, 43, 42, 43, 46, 47, 50, 51, 38, 39, 42, 43, 42, 43, 42, 43, 42, 43]]},
 };
+const TILE_PAL = {"23:00":{"70":3,"71":3,"64":1,"65":1,"36":1,"37":1,"38":1,"39":1,"66":1,"46":1,"47":1,"52":1,"53":1,"54":1,"55":1,"67":1,"68":1,"0":2,"1":2,"2":2,"3":2,"4":2,"5":2,"6":2,"7":2,"69":1,"44":1,"45":1,"16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0,"40":1,"41":1,"60":1,"61":1,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"56":1,"57":1,"58":1,"59":1,"24":0,"25":0,"26":0,"27":0,"28":0,"29":0,"30":0,"31":0,"42":1,"43":1,"84":0,"85":0,"32":0,"33":0,"94":0,"95":0,"96":0,"97":0,"34":0,"35":0,"86":0,"87":0,"88":0,"48":0,"49":0,"98":0,"99":0,"100":0,"101":0,"50":0,"51":0,"89":0,"80":1,"81":1,"93":0,"82":1,"83":1,"90":0,"92":0,"91":0,"62":1,"63":1},"23:03":{"23":0,"10":0,"6":0,"4":0,"8":0,"20":0,"32":1,"33":1,"34":1,"35":1,"14":0,"9":0,"22":0,"36":1,"37":1,"0":2,"1":2,"15":0,"38":1,"39":1,"5":0,"7":0,"16":2,"17":2,"13":0,"11":0,"2":1,"3":1,"12":0,"18":1,"19":1,"21":0},"23:06":{"101":1,"0":1,"1":1,"2":1,"3":1,"32":1,"33":1,"4":1,"5":1,"38":1,"39":1,"42":1,"43":1,"16":1,"17":1,"18":1,"19":1,"48":1,"49":1,"20":1,"21":1,"54":1,"55":1,"58":1,"59":1,"6":1,"7":1,"15":1,"102":0,"103":0,"40":1,"41":1,"68":1,"69":1,"44":1,"45":1,"22":1,"23":1,"31":1,"104":0,"105":0,"56":1,"57":1,"60":1,"61":1,"12":1,"14":1,"72":2,"73":2,"79":1,"78":1,"47":1,"28":1,"30":1,"88":2,"89":2,"95":1,"94":1,"63":1,"13":1,"106":0,"107":0,"46":1,"29":1,"108":0,"109":0,"62":1,"10":1,"11":1,"8":1,"9":1,"64":1,"65":1,"66":1,"67":1,"26":1,"27":1,"24":1,"25":1,"110":0,"111":0,"80":1,"81":1,"82":1,"83":1,"112":0,"100":0,"76":2,"77":2,"113":0,"86":3,"87":3,"92":2,"93":2,"34":1,"35":1,"50":1,"51":1,"36":1,"37":1,"70":1,"71":1,"84":1,"85":1,"52":1,"53":1},"23:10":{"39":2,"0":0,"1":0,"2":1,"3":1,"4":1,"5":1,"6":1,"7":1,"8":0,"9":0,"16":0,"17":1,"18":1,"19":1,"20":1,"21":1,"22":1,"23":1,"24":1,"25":0,"10":0,"11":1,"12":1,"91":1,"15":1,"32":1,"33":0,"26":0,"27":1,"28":1,"92":1,"93":1,"31":1,"48":1,"49":0,"58":0,"34":0,"35":1,"74":0,"65":0,"64":0,"81":0,"59":0,"50":0,"51":1,"75":0,"70":0,"66":0,"82":0,"36":0,"37":1,"76":0,"68":0,"69":0,"78":0,"40":2,"41":2,"52":0,"53":1,"87":0,"88":0,"79":0,"56":2,"57":2,"62":2,"55":2,"72":0,"67":0,"89":0,"90":0,"54":2,"73":0,"71":0,"80":0,"83":0,"84":0,"85":0,"86":0,"60":0,"47":1,"46":1,"61":1,"77":0,"44":1,"45":1,"42":1,"43":1},"23:13":{"5":1,"14":1,"8":1,"12":1,"9":1,"11":1,"4":1,"6":1,"7":1,"10":1,"36":0,"37":0,"24":0,"25":0,"38":0,"39":0,"26":0,"27":0,"20":0,"21":0,"22":0,"23":0,"28":0,"29":0,"32":0,"33":0,"30":0,"31":0,"34":0,"35":0,"0":0,"1":0,"2":0,"3":0},"23:16":{"73":0,"62":0,"16":0,"17":0,"43":0,"27":0,"32":0,"78":0,"46":0,"84":0,"37":0,"38":0,"90":0,"0":0,"94":0,"53":0,"54":0,"77":0,"89":0,"5":0,"6":0,"59":0,"69":0,"70":0,"47":0,"79":0,"29":0,"14":0,"21":0,"22":0,"92":0,"28":0,"85":0,"86":0,"45":0,"13":0,"91":0,"34":0,"35":0,"95":0,"33":0,"93":0,"10":0,"23":0,"24":0,"25":0,"26":0,"9":0,"119":0,"120":0,"121":0,"122":0,"115":0,"116":0,"117":0,"118":0,"48":0,"49":0,"50":0,"51":0,"111":0,"112":0,"113":0,"114":0,"64":0,"65":0,"66":0,"67":0,"104":0,"109":0,"110":0,"123":0,"80":0,"81":0,"82":0,"83":0,"39":0,"40":0,"41":0,"42":0,"55":0,"56":0,"57":0,"58":0,"18":0,"71":0,"72":0,"74":0,"3":0,"7":0,"87":0,"88":0},"23:19":{"96":0,"97":0,"66":0,"67":0,"98":0,"99":0,"82":0,"83":0,"8":0,"9":0,"44":0,"45":0,"10":0,"11":0,"24":0,"25":0,"60":0,"61":0,"26":0,"27":0,"14":0,"15":0,"64":0,"65":0,"42":0,"43":0,"46":0,"47":0,"30":0,"31":0,"80":0,"81":0,"58":0,"59":0,"62":0,"63":0,"6":0,"7":2,"94":2,"4":2,"5":0,"18":2,"23":2,"95":1,"20":2,"21":2,"40":0,"41":0,"19":2,"102":1,"103":1,"104":2,"105":2,"22":2,"56":0,"57":0,"106":2,"107":2,"36":0,"37":0,"52":0,"53":0,"2":3,"3":3,"0":3,"1":3,"16":3,"17":3,"101":1},"23:22":{"0":1},"23:24":{"44":1,"45":1,"48":3,"49":3,"36":1,"37":1,"40":1,"41":1,"46":1,"47":1,"50":3,"51":3,"38":1,"39":1,"42":1,"43":1,"6":1,"7":1,"8":1,"9":1,"10":1,"11":1,"22":2,"23":2,"24":2,"25":2,"26":2,"27":2,"2":1,"3":1,"4":1,"5":1,"0":1,"1":1,"18":1,"19":1,"20":1,"21":1,"16":1,"17":1,"60":3,"61":3,"62":3,"63":3},"24:00":{"80":0,"50":0,"51":0,"87":0,"86":0,"89":0,"83":0,"52":0,"53":0,"56":2,"57":2,"54":0,"55":0,"0":0,"58":2,"59":2,"1":0,"2":0,"85":0,"82":0,"3":0,"4":0,"5":0,"84":0,"16":0,"17":0,"6":0,"7":0,"8":0,"18":0,"19":0,"20":0,"9":0,"10":0,"32":0,"33":0,"11":0,"22":0,"23":0,"24":0,"36":0,"37":0,"34":0,"35":0,"26":0,"27":0,"28":0,"12":0,"13":0,"38":0,"39":0,"81":0,"64":0,"65":0,"88":0,"46":0,"66":0,"67":0,"40":0,"41":0},"24:03":{"96":0,"97":0,"32":1,"24":1,"83":1,"78":1,"79":1,"74":1,"21":1,"48":1,"98":0,"99":0,"34":1,"16":1,"17":1,"26":1,"85":1,"80":1,"81":1,"76":1,"23":1,"50":1,"20":1,"18":1,"19":1,"33":1,"49":1,"25":1,"36":1,"22":1,"35":1,"5":0,"6":0,"7":0,"8":0,"9":0,"51":1,"27":1,"52":1,"37":1,"92":1,"93":1,"10":0,"104":0,"105":0,"12":0,"53":1,"38":1,"88":0,"89":0,"106":0,"107":0,"54":1,"39":1,"90":0,"91":0,"55":1,"64":1,"65":1,"68":1,"69":1,"66":1,"67":1,"13":0,"100":2,"101":2,"15":0,"41":1,"14":0,"102":2,"103":2,"57":1,"40":1,"56":1,"43":1,"59":1,"42":1,"45":1,"1":0,"0":0,"61":1,"58":1,"108":1,"109":1,"44":1,"75":1,"70":1,"71":1,"82":1,"60":1,"46":1,"77":1,"72":1,"73":1,"84":1,"62":1},"24:06":{"9":0,"85":2,"25":0,"10":2,"11":2,"81":2,"80":2,"83":2,"26":2,"27":2,"82":2,"84":2,"2":0,"3":0,"0":0,"1":0,"18":0,"19":0,"16":0,"17":0,"4":0,"5":0,"6":0,"7":0,"8":0,"20":0,"21":0,"22":0,"23":0,"24":0,"12":0,"13":0,"86":0,"87":0,"28":0,"29":0,"88":0,"89":0,"14":0,"15":0,"30":0,"31":0,"32":1,"33":1,"36":0,"37":0,"44":0,"45":0,"48":1,"49":1,"40":0,"41":0,"52":1,"53":1,"34":1,"35":1,"38":0,"39":0,"46":0,"47":0,"50":1,"51":1,"42":0,"43":0,"54":1,"55":1},"24:09":{"9":1,"10":1,"25":1,"26":1,"41":1,"47":1,"40":1,"43":1,"46":1,"39":1,"38":1,"42":1,"12":2,"13":2,"45":2,"11":2,"14":2,"44":2,"15":2,"31":2,"27":2,"30":2,"29":2,"80":0,"28":2,"34":1,"35":1,"2":2,"3":2,"0":2,"6":2,"1":2,"23":2,"18":2,"19":2,"16":2,"17":2,"4":2,"5":2,"7":2,"8":2,"20":2,"21":2,"24":2,"36":1,"37":1,"32":1,"33":1},"24:12":{"0":1,"25":2,"24":2,"84":2,"85":2,"86":2,"1":1,"22":0,"23":0,"87":2,"88":0,"89":2,"80":0,"81":0,"82":0,"83":0,"90":2,"91":2,"92":2,"2":1,"3":1,"4":1,"93":1,"94":1,"5":1,"95":1,"96":1,"6":0,"7":0,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"97":0,"98":0,"99":0,"100":0},"24:15":{"6":1,"7":1,"11":1,"12":1,"20":1,"21":1,"13":1,"16":1,"17":1,"9":1,"14":1,"22":1,"23":1,"15":1,"18":1,"19":1,"24":2,"25":2,"0":1,"88":0,"89":0,"84":0,"85":0,"80":0,"81":0,"1":1,"26":2,"27":2,"90":0,"91":0,"86":0,"87":0,"82":0,"83":0,"28":2,"29":2,"92":0,"93":0,"94":0,"95":0,"2":1,"3":1,"4":1,"96":1,"97":1,"32":2,"33":2,"34":2,"35":2,"98":1,"99":1,"36":2,"37":2,"38":2,"39":2,"40":2,"41":2,"42":2,"43":2,"44":2,"45":2,"46":2,"47":2,"100":2,"101":2,"102":2,"103":2,"10":1},"24:18":{"2":1,"1":1,"9":1,"80":0,"81":0,"4":1,"84":0,"85":0,"22":0,"23":0,"19":0,"82":0,"83":0,"16":0,"86":0,"87":0,"20":0,"17":0,"12":0,"21":0,"18":0,"10":1,"11":1,"27":1,"26":1,"0":1,"7":1,"3":1,"112":3,"113":3,"114":3,"115":3,"8":1,"28":2,"29":2,"30":2,"31":2,"32":3,"33":3,"34":3,"35":3},"24:21":{"42":0,"43":0,"46":2,"47":2,"0":1,"1":1,"44":0,"45":0,"49":2,"2":1,"3":1,"32":0,"33":0,"48":2,"4":1,"5":1,"22":1,"23":1,"6":1,"7":1,"24":1,"19":1,"8":1,"34":2,"35":2,"36":2,"37":2,"20":1,"9":1,"38":2,"39":2,"40":2,"41":2,"21":1,"10":1,"11":1,"14":1,"15":1,"16":1,"17":1,"12":1,"13":1,"18":1},"24:24":{"14":2,"27":2,"0":2,"1":2,"15":2,"26":2,"24":2,"12":2,"13":2,"16":2,"17":2,"29":2,"28":2,"34":0,"35":0,"36":0,"37":0,"38":0,"39":0,"50":0,"51":0,"52":0,"53":0,"54":0,"55":0,"6":0,"7":0,"32":0,"33":0,"8":0,"9":0,"10":2,"11":2,"22":0,"23":0,"48":0,"49":0,"25":0,"72":0,"73":0,"64":0,"68":0,"69":0,"74":0,"75":0,"65":0,"70":0,"71":0,"66":0,"47":0,"44":0,"45":0,"76":0,"77":0,"67":0,"63":0,"60":0,"61":0,"2":1,"3":1,"4":1,"5":1,"40":0,"41":0,"46":0,"18":2,"19":2,"20":2,"21":2,"56":0,"57":0,"62":0,"42":0,"43":0,"58":0,"59":0},"24:27":{"0":3,"1":3,"53":1,"89":1,"96":1,"26":1,"27":1,"88":1,"16":3,"17":3,"8":1,"9":1,"12":1,"13":1,"14":1,"15":1,"51":1,"52":1,"24":1,"25":1,"28":1,"29":1,"30":1,"31":1,"97":1,"98":1,"33":1,"34":1,"10":1,"11":1,"72":1,"73":1,"74":1,"75":1,"32":1,"49":1,"50":1,"44":2,"45":2,"46":2,"47":2,"64":2,"65":2,"66":2,"67":2,"48":1,"36":1,"37":1,"60":2,"61":2,"62":2,"63":2,"80":2,"81":2,"82":2,"83":2,"35":1,"38":0,"39":0,"76":2,"77":2,"68":2,"69":2,"101":2,"102":2,"103":2,"70":2,"71":2,"78":2,"79":2,"40":0,"41":0,"54":0,"55":0,"92":2,"93":2,"84":2,"85":2,"104":2,"86":2,"87":2,"94":2,"95":2,"56":0,"57":0,"42":0,"43":0,"105":2,"110":2,"111":2,"106":2,"58":0,"59":0,"100":1,"2":1,"3":1,"107":2,"109":2,"108":2,"6":1,"7":1,"18":1,"19":1,"112":0,"113":0,"22":1,"23":1,"4":1,"5":1,"114":0,"115":0,"20":1,"21":1,"99":1},"25:00":{"1":1,"6":1,"80":0,"81":0,"0":1,"8":1,"9":1,"82":0,"83":0,"16":1,"22":1,"7":1,"26":1,"10":1,"11":1,"27":1,"17":1,"23":1,"4":1,"19":1,"18":1,"12":1,"20":1,"24":1,"21":1},"25:03":{"16":3,"17":3,"13":3,"18":3,"19":3,"20":3,"21":3,"22":3,"28":3,"23":3,"0":0,"32":0,"33":0,"1":0,"2":0,"14":3,"24":3,"3":0,"34":0,"35":0,"4":0,"5":0,"25":3,"36":0,"37":0,"7":0,"8":0,"26":3,"83":2,"84":2,"81":2,"27":3,"86":2,"89":2,"85":2,"88":2,"90":2,"87":2,"29":1,"30":1,"31":1,"82":0,"80":0},"25:06":{"6":0,"7":0,"0":0,"1":0,"16":0,"23":0,"8":1,"9":1,"25":0,"17":0,"2":0,"3":0,"26":0,"30":0,"10":3,"11":3,"29":0,"32":2,"33":2,"52":2,"53":2,"34":2,"35":2,"54":2,"55":2,"27":0,"20":0,"21":0,"28":0,"24":0,"19":0,"18":0,"22":0,"48":2,"49":2,"50":2,"51":2,"4":0,"5":0,"36":2,"37":2,"38":2,"39":2,"44":2,"45":2,"40":2,"41":2,"46":2,"47":2,"42":2,"43":2},"25:08":{"19":1,"20":1,"0":0,"3":0,"1":0,"22":1,"16":0,"81":0,"17":0,"23":1,"80":0,"82":0,"83":0,"24":1,"35":2,"34":2,"84":0,"85":0,"4":0,"32":2,"33":2,"2":0,"5":0,"6":0,"7":0,"8":0,"9":0,"10":0,"11":0,"12":0,"25":1,"26":1,"27":1,"28":1,"29":1,"30":1,"31":1,"13":0,"14":0,"15":0},"25:11":{"38":1,"39":1,"0":1,"1":1,"2":1,"3":1,"33":1,"34":1,"54":1,"55":1,"40":1,"41":1,"4":1,"5":2,"6":1,"7":2,"8":2,"9":2,"10":2,"11":1,"56":1,"57":1,"20":2,"21":2,"22":2,"23":2,"24":2,"25":2,"26":2,"27":2,"42":2,"43":2,"12":2,"13":2,"70":2,"71":2,"73":2,"36":2,"37":2,"58":2,"59":2,"16":1,"17":1,"18":1,"19":1,"28":2,"29":2,"72":2,"52":2,"53":2,"48":1,"32":1,"46":1,"47":1,"84":0,"81":0,"64":2,"65":2,"88":1,"89":1,"90":1,"80":0,"86":0,"62":1,"63":1,"85":0,"83":0,"68":0,"69":0,"91":1,"92":1,"97":1,"93":1,"82":0,"87":0,"14":0,"15":0,"30":0,"31":0,"94":1,"96":1,"49":0,"50":0,"95":1,"98":1,"99":1},"25:14":{"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"38":1,"39":1,"40":1,"41":1,"42":1,"43":1,"44":1,"45":1,"20":0,"21":0,"54":1,"55":1,"56":1,"57":1,"58":1,"59":1,"60":1,"61":1,"6":0,"10":2,"11":2,"68":1,"69":1,"46":1,"47":1,"90":1,"91":1,"48":1,"49":1,"70":1,"32":2,"33":2,"7":0,"26":2,"27":2,"84":1,"85":1,"62":1,"63":1,"92":1,"50":1,"51":1,"86":1,"28":2,"29":2,"8":0,"64":0,"66":0,"89":1,"65":0,"67":0,"9":0,"22":0,"23":0,"80":0,"82":0,"71":1,"72":1,"87":1,"73":1,"88":1,"81":0,"83":0,"24":0,"25":0,"52":0,"53":0,"14":0,"15":0,"74":0,"75":0,"76":0,"30":0,"31":0,"77":0,"78":0,"79":0,"36":0,"37":0},"25:17":{"71":1,"69":1,"70":1,"75":1,"64":1,"65":1,"25":1,"66":1,"77":1,"73":1,"67":1,"68":1,"76":1,"72":1,"0":1,"1":1,"2":1,"3":0,"93":0,"4":0,"78":1,"112":0,"113":0,"81":1,"79":1,"114":0,"115":0,"82":1,"80":0,"94":0,"95":0,"83":0,"10":0,"5":0,"6":0,"96":2,"97":2,"7":0,"8":0,"47":1,"26":1,"16":0,"18":0,"30":0,"41":0,"42":0,"17":0,"84":1,"15":0,"12":0,"57":0,"58":0,"45":0,"31":1,"28":0,"43":0,"44":0,"61":1},"25:21":{"0":1,"1":1,"100":1,"2":1,"3":1,"5":1,"88":0,"89":0,"90":0,"91":0,"92":0,"93":0,"94":0,"95":0,"96":0,"97":0,"98":0,"99":0,"80":0,"81":0,"82":0,"83":0,"6":1,"8":1,"24":1,"25":1,"26":1,"27":1,"84":0,"85":0,"12":0,"13":0,"86":0,"87":0,"14":0,"15":0,"4":1,"7":1},"25:23":{"0":1,"1":1,"2":1,"3":1,"5":1,"10":1,"80":0,"81":0,"16":0,"17":0,"82":0,"83":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0,"12":0,"13":0,"14":0,"15":0,"4":1,"6":1,"7":1,"8":1},"25:26":{"9":0,"3":0,"5":0,"7":0,"35":2,"34":2,"84":2,"85":2,"86":2,"32":2,"33":2,"87":2,"88":2,"89":2,"4":0,"1":0,"2":0,"0":0,"90":2,"91":2,"92":2,"18":0,"19":0,"80":1,"81":1,"20":0,"24":0,"26":0,"99":1,"100":1,"101":1,"21":0,"23":0,"10":0,"11":0,"66":0,"68":0,"102":0,"64":0,"65":0,"14":0,"16":0,"69":0,"71":0,"67":0,"75":0,"77":0,"70":0,"73":0,"98":0,"72":0,"79":0,"93":1,"94":1,"95":1,"96":1,"82":1,"83":1,"97":1},"26:00":{"3":1,"4":1,"5":1,"22":1,"24":1,"20":1,"1":0,"2":0,"7":1,"17":0,"18":0,"9":0,"10":0,"32":3,"33":3,"25":0,"26":0,"0":2,"16":2,"14":2,"15":2,"34":3,"35":3,"30":2,"31":2,"11":0,"12":0,"13":0,"27":0,"28":0,"29":0,"36":3,"37":3,"38":3,"39":3,"23":1,"19":1,"21":1},"26:02":{"3":1,"4":1,"5":1,"22":1,"24":1,"20":1,"9":1,"10":1,"7":1,"11":1,"12":1,"13":1,"14":1,"32":3,"33":3,"44":3,"45":3,"34":3,"35":3,"46":3,"47":3,"0":0,"1":0,"2":0,"16":0,"17":0,"18":0,"36":2,"37":2,"38":2,"39":2,"40":2,"41":2,"23":1,"19":1,"21":1},"26:04":{"40":2,"41":2,"16":2,"17":2,"3":1,"4":1,"5":1,"36":2,"37":2,"32":2,"33":2,"22":1,"24":1,"20":1,"0":1,"1":1,"9":1,"10":1,"38":2,"39":2,"27":2,"28":2,"14":2,"15":2,"6":1,"25":1,"43":1,"26":1,"7":2,"8":2,"30":2,"31":2,"18":1,"2":1,"44":0,"45":0,"11":2,"12":2,"46":0,"47":0,"23":1,"19":1,"21":1},"26:06":{"0":1,"1":1,"2":1,"3":1,"4":1,"5":1,"16":1,"21":1,"6":1,"7":1,"8":1,"9":1,"10":1,"11":1,"14":1,"15":1,"22":1,"23":1,"24":1,"25":1,"27":1,"30":1,"31":1,"26":1,"48":2,"49":2,"59":3,"60":3,"55":3,"56":3,"63":3,"64":3,"52":2,"53":2,"61":3,"62":3,"57":3,"58":3,"65":3,"66":3,"67":3,"68":3,"69":3,"70":3,"43":1,"46":1,"47":1},"26:08":{"54":3,"0":1,"1":1,"2":1,"3":1,"4":1,"5":1,"16":1,"21":1,"6":1,"7":1,"8":1,"9":1,"10":1,"11":1,"14":1,"15":1,"22":1,"23":1,"24":1,"25":1,"27":1,"30":1,"31":1,"26":1,"55":3,"56":3,"63":3,"64":3,"59":3,"60":3,"67":3,"68":3,"57":3,"58":3,"65":3,"66":3,"61":3,"62":3,"69":3,"70":3,"48":2,"49":2,"52":2,"53":2,"43":1,"46":1,"47":1},"26:10":{"54":3,"0":1,"1":1,"2":1,"3":1,"4":1,"5":1,"16":1,"21":1,"6":1,"7":1,"8":1,"9":1,"14":1,"15":1,"22":1,"23":1,"24":1,"25":1,"30":1,"31":1,"48":2,"49":2,"52":2,"53":2,"55":3,"56":3,"63":3,"64":3,"59":3,"60":3,"57":3,"58":3,"65":3,"66":3,"61":3,"62":3,"67":3,"68":3,"69":3,"70":3,"43":1,"46":1,"47":1,"10":1,"11":1},"26:12":{"1":1,"2":1,"3":1,"80":0,"81":0,"0":1,"5":0,"8":1,"9":1,"22":1,"19":1,"82":0,"83":0,"16":1,"7":1,"6":1,"23":1,"20":1,"17":1,"4":1,"11":1,"12":1,"24":1,"21":1,"18":1,"87":0,"25":1,"86":0,"85":0,"84":0,"30":3,"31":3,"88":0,"89":0,"26":2,"27":2,"91":0,"92":0,"93":0,"94":0,"28":2,"29":2,"95":0,"13":0,"15":0,"10":1},"26:15":{"1":1,"6":1,"82":1,"83":1,"7":1,"23":1,"48":2,"49":2,"50":2,"51":2,"4":1,"8":1,"9":1,"80":1,"81":1,"12":1,"52":2,"53":2,"54":2,"55":2,"64":0,"65":0,"66":0,"67":0,"100":0,"56":2,"57":2,"58":2,"59":2,"68":0,"69":0,"70":0,"71":0,"107":0,"60":2,"61":2,"62":2,"63":2,"72":0,"73":0,"74":0,"75":0,"103":0,"76":0,"77":0,"78":0,"79":0,"101":0,"108":0,"109":0,"28":0,"29":0,"110":0,"111":0,"30":0,"31":0,"32":0,"33":0,"34":0,"35":0,"11":1,"10":1,"27":1,"36":0,"37":0,"38":0,"39":0,"22":1,"19":1,"105":0,"106":0,"40":0,"41":0,"42":0,"43":0,"20":1,"44":0,"45":0,"46":0,"47":0,"21":1},"26:18":{"5":0,"4":1,"10":1,"11":1,"7":1,"6":1,"22":1,"8":1,"26":1,"1":1,"3":1,"23":1,"0":1,"27":1,"9":1,"12":1,"24":1,"20":1,"28":2,"29":2,"17":1,"21":1,"30":2,"31":2,"18":1,"84":1,"100":1,"85":1,"101":1,"102":1,"103":1,"82":0,"83":0,"96":0,"97":0,"80":0,"81":0,"104":1,"105":1,"106":1,"98":0,"99":0},"26:21":{"0":0,"1":0,"32":0,"33":0,"34":0,"35":0,"82":0,"83":0,"2":0,"3":0,"36":0,"37":2,"38":2,"39":0,"80":0,"81":0,"4":0,"5":0,"40":2,"41":2,"42":2,"43":2,"16":1,"17":1,"6":0,"7":0,"44":2,"45":2,"46":2,"47":2,"18":1,"19":1,"8":0,"9":0,"10":0,"11":0,"12":1,"13":1,"14":1,"15":1},"26:24":{"4":1,"5":1,"32":0,"33":0,"44":1,"37":1,"0":1,"1":1,"50":2,"51":2,"6":1,"7":1,"40":1,"41":1,"20":1,"21":1,"34":0,"35":0,"38":1,"39":1,"16":1,"17":1,"52":2,"53":2,"22":1,"23":1,"42":1,"43":1,"36":1,"15":1,"2":0,"3":0,"24":1,"8":1,"9":1,"25":1,"18":0,"19":0,"10":1,"11":1,"12":1,"13":1,"14":1,"45":1},"26:27":{"42":1,"5":1,"10":1,"16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0,"3":1,"24":0,"25":0,"26":0,"27":0,"28":0,"29":0,"30":0,"31":0,"80":0,"84":2,"86":2,"85":2,"87":2,"88":2,"89":2,"12":2,"13":2,"14":2,"15":2,"90":2,"91":2,"36":2,"39":2,"37":2,"38":2,"41":2,"32":2,"33":2,"40":2,"34":2,"35":2,"92":2,"4":1,"1":1,"7":1},"29:01":{"40":3,"41":3,"42":3,"43":3,"14":1,"15":1,"44":3,"4":0,"18":1,"19":1,"45":3,"0":1,"1":1,"62":0,"63":0,"16":1,"17":1,"78":0,"79":0,"3":1,"11":0,"20":0,"2":1,"28":1,"29":1,"30":1,"31":1,"5":0,"76":1,"77":1,"84":3,"85":3,"86":3,"87":3,"7":0,"6":0,"27":0,"8":0,"9":0,"22":0,"23":0,"25":0,"26":0,"21":0,"10":0,"59":0,"60":0,"46":3,"47":3,"50":3,"48":3,"36":2,"37":2,"51":3,"52":3,"53":3,"38":2,"39":2,"56":3,"54":3,"49":3,"55":3,"12":0,"80":2,"81":2,"82":2,"83":2,"88":1,"89":1,"90":1,"91":1},"29:09":{"0":3,"4":3,"116":3,"117":3,"118":3,"119":3,"1":3,"2":3,"3":3,"6":3,"7":3,"120":3,"121":3,"122":3,"5":3,"20":1,"21":1,"100":0,"101":0,"36":1,"37":1,"102":0,"103":0,"96":0,"97":0,"98":0,"99":0,"64":3,"65":3,"66":3,"67":3,"68":3,"69":1,"70":1,"71":3,"72":1,"73":1,"74":1,"75":1,"76":1,"77":1,"78":1,"79":1,"16":1,"17":1,"32":1,"33":1,"12":1,"13":1,"104":1,"105":1,"90":1,"91":1,"28":1,"29":1,"106":1,"107":1,"14":1,"15":1,"86":1,"87":1,"30":1,"31":1,"88":1,"89":1,"8":1,"9":1,"10":1,"11":1,"24":1,"25":1,"26":1,"27":1,"92":1,"93":1,"94":1,"95":1,"112":1,"113":1,"108":1,"109":1,"110":1,"111":1,"114":1,"115":1,"18":2,"19":2,"34":2,"35":2},"29:14":{"14":2,"15":2,"22":0,"23":0,"87":0,"110":0,"111":0,"86":0,"57":0,"25":0,"24":0,"30":2,"31":2,"26":0,"27":0,"108":3,"109":3,"70":0,"7":0,"6":0,"96":3,"97":3,"11":0,"98":3,"99":3,"10":0,"0":0,"3":0,"2":0,"16":0,"19":0,"18":0,"90":2,"91":2,"4":0,"5":0,"92":2,"93":2,"20":0,"21":0,"40":2,"41":2,"42":2,"43":2,"44":3,"45":2,"46":2,"47":3,"32":2,"33":2,"48":0,"8":0,"9":0,"49":0,"50":1,"51":1,"52":1,"53":1,"54":1,"55":1,"71":0,"64":0,"65":1,"66":1,"67":1,"68":1,"69":1,"72":1,"73":1,"80":1,"81":1,"82":1,"83":1,"84":1,"85":1,"88":1,"89":1,"58":1,"59":1,"60":1,"100":1,"101":1,"104":1,"105":1,"61":1,"62":1,"63":1,"74":1,"75":1,"76":1,"102":1,"103":1,"106":1,"107":1,"77":1,"78":1,"79":1,"34":2,"35":2,"36":2,"37":2,"38":2,"39":2,"56":0,"1":0,"17":0},"29:18":{"14":0,"15":0,"0":0,"1":0,"4":0,"5":0,"8":0,"9":0,"2":0,"3":0,"30":0,"31":0,"16":0,"17":0,"20":0,"21":0,"24":0,"25":0,"18":0,"19":0,"6":0,"7":0,"10":0,"11":0,"126":0,"127":0,"22":0,"23":0,"26":0,"27":0,"124":2,"125":2,"102":2,"103":2,"112":2,"113":2,"28":0,"29":2,"114":2,"115":2,"12":2,"13":0,"36":3,"37":3,"52":3,"53":3,"38":3,"39":3,"54":3,"55":3,"40":2,"41":1,"42":1,"43":2,"56":1,"57":1,"58":1,"59":1,"44":1,"45":1,"46":1,"47":1,"60":1,"61":1,"62":1,"63":1,"88":0,"89":0,"92":1,"93":1,"96":3,"97":3,"90":0,"91":0,"94":1,"95":1,"98":3,"99":3,"34":1,"35":1,"50":1,"51":1,"108":3,"109":3,"104":3,"105":3,"110":3,"111":3,"106":3,"107":3,"32":0,"33":0,"66":1,"67":1,"76":1,"64":1,"65":1,"48":1,"71":1,"77":0,"68":1,"69":1,"49":1,"100":0,"101":0,"70":1,"83":0},"29:28":{"0":0,"20":0,"46":0,"11":0,"17":0,"6":0,"7":0,"8":0,"9":0,"10":0,"14":0,"12":0,"13":0,"65":0,"22":0,"23":0,"24":0,"25":0,"26":0,"27":0,"28":0,"29":0,"30":0,"81":0,"37":0,"38":0,"39":0,"40":0,"41":0,"42":0,"43":0,"44":0,"45":0,"16":0,"15":0,"52":0,"53":0,"54":0,"55":0,"56":0,"57":0,"58":0,"59":0,"60":0,"61":0,"62":0,"63":0,"18":0,"68":0,"69":0,"70":0,"71":0,"72":3,"73":3,"74":3,"75":3,"76":3,"77":0,"78":0,"79":0,"128":0,"129":0,"84":0,"85":0,"86":0,"87":3,"88":3,"89":3,"90":3,"91":3,"92":3,"93":3,"94":0,"95":0,"144":0,"145":0,"100":0,"101":0,"102":3,"103":3,"104":3,"105":2,"164":2,"165":2,"108":2,"109":3,"110":3,"111":0,"80":0,"116":0,"117":0,"118":3,"119":3,"120":3,"121":2,"166":2,"167":2,"124":2,"125":3,"126":3,"127":0,"96":0,"97":0,"132":0,"133":0,"134":0,"135":3,"136":3,"137":2,"162":2,"163":2,"140":2,"141":3,"142":3,"143":0,"113":0,"2":0,"82":0,"150":0,"151":3,"152":3,"153":3,"168":1,"169":1,"156":3,"157":3,"158":3,"159":0,"149":0,"19":0,"31":0,"47":3,"146":3,"147":3,"170":1,"171":1,"130":3,"131":3,"138":3,"139":0,"3":0,"48":0,"49":0,"98":0,"99":3,"106":3,"107":3,"154":0,"155":0,"160":0,"161":0,"64":0,"114":0,"115":0,"122":0,"123":0,"172":1,"173":1,"50":0,"51":0,"112":0,"4":0,"5":0,"32":0,"33":0,"34":0,"35":0,"36":0,"174":1,"175":1,"83":0,"66":0,"67":0,"21":0,"1":0},"29:31":{"0":0,"1":1,"2":1,"20":3,"21":3,"4":3,"5":3,"3":1,"17":1,"18":1,"22":3,"23":3,"6":3,"7":3,"36":0,"37":0,"32":3,"33":3,"34":3,"35":3,"38":0,"39":0,"40":0,"41":0,"10":3,"11":3,"42":0,"43":0,"12":3,"13":3,"19":1,"16":1},"29:35":{"6":0,"8":0,"12":0,"13":0,"9":0,"4":0,"10":0,"11":0,"24":1,"25":1,"26":1,"27":1,"0":0,"1":0,"14":0,"7":0,"2":0},"29:38":{"43":0,"38":0,"4":0,"5":0,"6":0,"7":0,"8":0,"26":1,"27":1,"2":0,"3":0,"0":0,"1":0,"9":0,"28":1,"29":1,"10":0,"30":1,"31":1,"11":0,"52":1,"53":1,"48":1,"49":1,"50":1,"51":1,"54":3,"55":3,"63":3,"64":3,"56":3,"57":3,"58":3,"65":3,"66":3,"59":3,"16":3,"17":3,"18":3,"19":3,"32":3,"33":3,"34":3,"35":3,"60":3,"61":3,"62":3,"20":2,"21":2,"36":2,"37":2,"13":0,"12":0,"14":0,"15":0},"2A:00":{"33":2,"75":2,"59":2,"49":2,"65":2,"34":1,"35":1,"43":2,"41":2,"42":2,"40":2,"81":2,"48":2,"50":1,"51":1,"57":2,"58":2,"56":2,"66":1,"67":1,"46":2,"73":2,"74":2,"72":2,"98":1,"99":1,"14":1,"15":1,"102":0,"103":0,"30":1,"31":1,"45":2,"44":2,"60":2,"62":2,"80":2,"77":3,"78":3,"36":1,"37":1,"52":1,"53":1,"68":1,"69":1,"87":3,"89":3,"0":1,"1":1,"2":1,"3":1,"4":1,"5":1,"6":1,"7":1,"16":1,"17":1,"18":1,"19":1,"20":1,"21":1,"22":1,"23":1,"8":1,"9":1,"108":1,"11":1,"85":1,"24":1,"25":1,"109":1,"27":1,"86":1,"82":2,"104":3,"88":3,"105":3,"106":3,"107":3,"64":2,"28":1,"10":0,"47":1,"29":2,"39":1,"76":1,"26":1,"61":3,"63":3,"38":3,"70":3,"71":3,"13":0,"12":0},"2A:08":{"41":1,"42":1,"43":1,"45":1,"46":1,"38":1,"44":1,"37":1,"61":1,"62":1,"47":2,"36":2,"28":0,"29":0,"31":0,"24":0,"9":0,"10":0,"14":0,"15":0,"8":0,"12":0,"13":0,"11":0,"23":0,"30":0,"25":0,"26":0,"27":0,"72":0,"65":0,"74":0,"75":0,"76":0,"77":0,"78":0,"69":0,"66":0,"64":0,"119":3,"120":3,"79":0,"121":3,"122":3,"96":0,"97":0,"98":0,"99":0,"73":0,"100":0,"101":0,"102":0,"81":0,"83":0,"82":0,"80":0,"84":0,"85":0,"86":0,"89":0,"90":0,"4":0,"5":0,"0":0,"1":0,"6":0,"7":0,"91":0,"92":0,"20":0,"21":0,"16":0,"17":0,"22":0,"93":0,"94":0,"71":0,"60":3,"35":3,"68":3,"39":3,"56":0,"57":0,"58":0,"59":0,"103":0,"104":0,"67":3,"105":0,"106":0,"70":3,"88":0,"111":0,"112":0,"113":0,"114":0,"2":0,"3":0,"18":0,"19":0},"2A:20":{"30":1,"4":1,"5":1,"63":1,"23":1,"7":1,"20":1,"21":1,"48":0,"32":0,"33":0,"96":0,"97":0,"99":0,"98":0,"49":1,"8":2,"9":2,"80":0,"100":0,"101":0,"84":0,"85":0,"102":0,"103":0,"40":1,"24":2,"25":2,"83":0,"82":0,"81":0,"87":2,"78":1,"79":1,"86":1,"2":2,"3":2,"34":0,"91":0,"0":2,"1":2,"50":0,"106":0,"107":0,"16":2,"17":2,"42":0,"41":0,"92":0,"93":0,"18":2,"19":2,"58":0,"52":0,"108":0,"109":0,"31":1,"43":0,"90":0,"57":1,"59":0,"6":1,"88":0,"89":0,"22":1,"105":0,"56":1,"62":1,"47":1,"46":0,"60":0,"36":0,"55":0,"10":2,"11":2,"94":0,"37":0,"26":2,"27":2,"110":0,"95":0,"44":0,"45":0,"111":0,"61":0,"35":0,"38":0},"2A:33":{"38":0,"20":0,"4":0,"5":0,"15":0,"9":1,"10":3,"11":3,"12":1,"25":3,"26":3,"27":3,"28":3,"6":0,"0":0,"1":0,"3":0,"21":3,"22":3,"23":3,"24":3,"2":0,"16":0,"17":0,"13":3,"14":3,"19":0,"48":2,"50":2,"49":2,"18":0,"36":0,"37":0,"29":3,"30":3,"32":0,"35":0,"34":0,"33":0,"51":2,"66":2,"67":2,"64":2,"65":2,"7":0,"31":0,"8":0,"62":2,"63":2,"60":2,"61":2},"2D:00":{"40":0,"35":3,"36":3,"13":1,"14":1,"34":3,"2":1,"3":1,"4":1,"5":1,"29":1,"30":1,"18":1,"19":1,"20":1,"21":1,"15":1,"31":1,"6":1,"7":0,"8":0,"9":1,"72":3,"73":3,"54":2,"55":2,"22":1,"23":0,"24":0,"25":1,"74":3,"75":3,"56":2,"57":2,"58":0,"52":0,"53":0,"50":0,"51":0,"59":0,"60":0,"0":0,"1":0,"48":0,"49":0,"16":0,"17":0,"41":3,"42":3,"39":3,"43":3,"44":3,"37":3,"33":3,"32":3,"10":3,"11":3,"12":3,"38":3,"26":3,"27":3,"28":3},"2D:02":{"14":0,"1":0,"18":0,"4":0,"19":2,"20":2,"16":0,"21":2,"22":2,"23":0,"24":0,"36":1,"37":1,"40":1,"41":1,"32":1,"33":1,"48":3,"49":3,"38":1,"39":1,"42":1,"43":1,"34":1,"35":1,"50":3,"51":3,"0":0,"3":0,"6":0,"7":0,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"17":0,"2":0},"2D:04":{"9":0,"4":0,"5":0,"7":0,"3":0,"32":3,"33":3,"34":3,"35":3,"6":0,"23":2,"24":2,"10":2,"11":2,"25":2,"26":2,"12":2,"13":2,"14":2,"15":2,"16":2,"17":2,"0":0,"1":0,"2":0},"2D:06":{"19":0,"1":0,"18":0,"4":0,"16":0,"6":2,"7":2,"64":3,"65":3,"36":2,"8":2,"9":2,"10":2,"11":2,"66":3,"67":3,"37":2,"12":2,"13":2,"14":2,"15":2,"46":2,"47":2,"20":2,"21":2,"22":2,"5":0,"23":2,"24":2,"48":2,"49":2,"25":2,"40":2,"32":1,"33":1,"50":1,"51":1,"41":2,"39":2,"44":2,"45":2,"34":1,"35":1,"52":1,"53":1,"38":2,"42":2,"0":0,"17":0},"2D:08":{"19":0,"1":0,"18":0,"4":0,"16":0,"6":2,"7":2,"17":0,"5":0,"22":2,"23":2,"3":0,"12":0,"43":0,"20":1,"21":1,"8":0,"9":0,"52":1,"53":1,"10":0,"11":0,"42":0,"13":0,"28":0,"45":0,"36":3,"37":3,"24":0,"25":0,"54":1,"55":1,"26":0,"27":0,"44":0,"29":0,"14":0,"39":0,"64":3,"65":3,"68":3,"69":3,"38":0,"15":0,"30":0,"41":0,"66":3,"67":3,"70":3,"71":3,"40":0,"31":0,"48":1,"57":1,"56":1,"49":1,"50":1,"59":1,"58":1,"51":1,"60":1,"61":1,"2":0},"2D:10":{"6":0,"4":0,"5":0,"8":0,"3":0,"10":1,"11":1,"20":1,"21":1,"12":1,"13":1,"22":1,"23":1,"32":3,"33":3,"34":3,"35":3,"7":0,"9":0,"16":1,"17":1,"18":1,"19":1,"0":0,"1":0,"2":0},"2D:12":{"19":0,"1":0,"18":0,"4":0,"16":0,"6":0,"7":0,"22":0,"23":0,"8":0,"9":0,"10":1,"11":2,"72":3,"73":3,"65":2,"12":2,"13":1,"24":0,"25":0,"14":2,"27":2,"74":3,"75":3,"64":2,"28":2,"15":2,"20":1,"21":1,"29":2,"30":2,"56":2,"57":2,"35":2,"32":2,"33":2,"37":3,"38":3,"31":2,"36":2,"58":2,"59":2,"34":2,"52":1,"53":1,"54":1,"55":1,"66":1,"67":1,"60":1,"61":1,"62":1,"63":1,"17":0,"2":0,"0":0},"2D:14":{"19":0,"1":0,"18":0,"4":0,"16":0,"6":2,"7":2,"22":2,"23":2,"8":0,"9":0,"48":3,"49":3,"40":1,"41":1,"24":0,"25":0,"50":3,"51":3,"42":1,"43":1,"20":1,"21":1,"36":1,"37":1,"10":3,"11":3,"38":1,"39":1,"44":1,"45":1,"32":1,"33":1,"34":1,"35":1,"17":0,"2":0,"0":0},"2D:16":{"19":0,"1":0,"18":0,"4":0,"16":0,"6":2,"7":2,"17":0,"5":0,"8":2,"9":2,"3":0,"14":0,"15":0,"10":0,"11":0,"36":1,"37":1,"20":0,"21":0,"12":0,"13":0,"38":1,"39":1,"32":1,"33":1,"22":0,"23":0,"34":1,"35":1,"24":0,"25":0,"48":3,"49":3,"50":3,"51":3,"2":0,"0":0},"2D:18":{"19":0,"1":0,"18":0,"4":0,"16":0,"8":2,"9":2,"46":2,"44":2,"45":2,"10":2,"11":2,"24":2,"25":2,"47":2,"42":2,"43":2,"26":2,"27":2,"12":2,"40":2,"41":2,"48":3,"49":3,"15":2,"50":3,"51":3,"13":2,"36":2,"37":2,"29":2,"14":2,"17":0,"28":2,"20":2,"38":2,"39":2,"21":2,"3":0,"6":1,"7":1,"22":1,"23":1,"32":1,"33":1,"34":1,"35":1,"2":0},"2D:20":{"19":0,"1":0,"18":0,"4":0,"16":0,"6":2,"7":2,"8":2,"9":2,"10":0,"11":0,"40":1,"41":1,"12":0,"13":0,"42":1,"43":1,"48":3,"49":3,"50":3,"51":3,"14":0,"15":0,"36":1,"37":1,"17":0,"20":0,"21":0,"38":1,"39":1,"3":0,"22":0,"23":0,"24":0,"25":0,"32":1,"33":1,"34":1,"35":1,"2":0},"2D:22":{"19":0,"1":0,"18":0,"4":0,"16":0,"14":0,"15":0,"30":0,"31":0,"12":0,"13":0,"56":1,"57":1,"32":0,"22":1,"23":1,"64":3,"65":3,"28":0,"29":0,"58":1,"59":1,"33":0,"24":3,"25":3,"66":3,"67":3,"60":1,"61":1,"48":0,"49":0,"52":1,"53":1,"55":1,"62":1,"63":1,"50":0,"51":0,"54":1,"10":0,"11":0,"20":0,"21":0,"6":1,"7":1,"68":3,"69":3,"26":0,"27":0,"34":0,"70":3,"71":3,"0":0,"17":0},"2D:24":{"5":0,"1":0,"18":0,"4":0,"16":0,"10":2,"11":2,"64":3,"65":3,"40":2,"12":2,"13":2,"26":2,"27":2,"66":3,"67":3,"41":2,"28":2,"29":2,"14":2,"15":2,"55":2,"56":2,"36":2,"20":2,"21":2,"17":0,"30":2,"31":2,"57":2,"58":2,"19":2,"3":0,"44":2,"6":2,"7":2,"42":2,"43":2,"46":2,"47":2,"22":2,"23":2,"51":1,"49":2,"8":0,"9":0,"53":1,"24":0,"25":0,"45":2,"0":0,"2":0,"54":1},"30:00":{"16":0,"4":0,"5":0,"6":0,"7":0,"8":0,"0":0,"1":0,"2":0,"3":0,"31":1,"47":1,"23":1,"24":1,"9":0,"56":1,"57":1,"48":1,"49":1,"39":1,"40":1,"10":0,"58":1,"59":1,"50":1,"51":1,"11":0,"19":1,"20":1,"64":1,"65":1,"66":1,"67":1,"72":1,"73":1,"25":2,"26":2,"76":2,"77":2,"88":3,"89":3,"35":1,"36":1,"74":1,"75":1,"41":2,"42":2,"79":2,"80":2,"90":3,"91":3,"21":1,"22":1,"81":2,"37":1,"38":1,"82":2,"83":2,"84":2,"27":0,"28":0,"29":0,"30":0,"68":1,"69":1,"43":1,"44":0,"45":0,"46":1,"70":1,"71":1,"52":1,"53":1,"54":1,"55":1,"13":0,"12":0,"15":0,"14":0},"30:02":{"4":0,"16":0,"0":0,"1":0,"2":0,"3":0,"17":0,"5":2,"33":0,"32":0,"6":2,"21":1,"22":1,"80":1,"81":1,"37":1,"38":1,"82":1,"83":1,"27":0,"28":0,"52":0,"53":0,"43":0,"44":0,"54":0,"55":0,"23":3,"24":3,"41":0,"42":0,"39":3,"40":3,"31":0,"47":0},"30:04":{"16":0,"4":0,"5":0,"6":0,"7":0,"8":0,"0":0,"1":0,"2":0,"3":0,"27":1,"28":1,"48":1,"49":1,"9":0,"17":1,"18":1,"43":1,"44":1,"50":1,"51":1,"10":0,"33":1,"34":1,"31":1,"47":1,"11":0,"23":1,"24":1,"58":1,"59":1,"56":1,"57":1,"29":2,"30":2,"39":1,"40":1,"75":1,"76":1,"45":2,"46":2,"25":1,"26":1,"73":1,"74":1,"64":3,"65":3,"60":3,"61":3,"66":3,"41":1,"42":1,"67":3,"68":3,"62":3,"63":3,"69":3,"19":3,"20":3,"21":3,"22":3,"35":3,"36":3,"37":3,"38":3,"70":3,"71":3,"72":3,"13":0,"12":0,"15":0,"14":0},"30:07":{"16":0,"6":0,"7":0,"4":0,"5":0,"8":0,"42":1,"43":1,"0":0,"1":0,"17":0,"18":0,"9":0,"28":1,"29":1,"2":0,"33":0,"34":0,"10":0,"44":2,"45":2,"30":0,"31":0,"11":0,"70":1,"71":1,"64":1,"65":1,"66":1,"67":1,"26":1,"27":1,"12":0,"13":0,"15":0,"14":0},"30:10":{"16":0,"6":0,"7":0,"4":0,"5":0,"8":0,"42":2,"43":2,"9":0,"28":2,"29":2,"10":0,"44":1,"45":1,"11":0,"70":2,"71":2,"66":1,"67":1,"26":1,"27":1,"64":1,"65":1,"84":3,"85":3,"86":3,"87":3,"13":0,"12":0,"15":0,"14":0,"0":0,"1":0,"2":0,"3":0},"30:12":{"17":0,"16":0,"4":0,"5":0,"6":0,"7":0,"8":0,"0":0,"1":0,"2":0,"3":0,"9":0,"80":0,"81":0,"10":0,"82":1,"83":1,"11":0,"64":1,"65":1,"66":1,"67":1,"68":1,"69":1,"70":1,"71":1,"18":1,"19":1,"20":1,"21":1,"13":0,"14":0,"15":0},"30:15":{"2":2,"4":0,"5":2,"6":2,"102":2,"103":2,"20":0,"21":2,"22":2,"104":2,"105":2},"30:19":{"16":0,"17":0,"4":0,"5":0,"6":0,"7":0,"11":0,"0":0,"1":0,"2":0,"3":0,"8":0,"9":0,"10":0,"66":1,"67":1,"68":1,"69":1,"70":1,"71":1,"74":3,"75":3,"78":2,"79":2,"72":1,"73":1,"76":3,"77":3,"80":2,"81":2},"30:21":{"16":0,"17":0,"4":0,"5":0,"6":0,"7":0,"11":0,"0":0,"1":0,"2":0,"3":0,"8":0,"9":0,"10":0,"66":1,"67":1,"68":1,"69":1,"15":0,"70":1,"71":1,"74":3,"75":3,"78":2,"79":2,"72":1,"73":1,"76":3,"77":3,"80":2,"81":2},"30:23":{"0":0,"1":0,"48":2,"49":2,"16":1,"17":1,"18":1,"19":1,"20":1,"21":1,"22":1,"23":1,"2":0,"3":0,"50":2,"51":2,"32":1,"33":1,"34":1,"35":1,"36":1,"37":1,"38":1,"39":1,"52":2,"53":2,"12":1,"13":1,"81":1,"82":1,"83":1,"84":1,"14":1,"15":1,"28":1,"29":1,"97":1,"98":1,"99":1,"100":1,"30":1,"31":1,"44":1,"45":1,"85":1,"86":1,"87":1,"88":1,"46":1,"47":1,"54":2,"55":2,"60":1,"61":1,"101":1,"102":1,"103":1,"104":1,"62":1,"63":1,"80":1,"89":3,"90":3,"91":3,"105":3,"96":3,"8":3,"9":3,"10":3,"11":3,"107":3,"108":3,"106":3,"24":3,"25":3,"26":3,"27":3,"109":3,"110":3,"40":3,"41":3,"42":3,"43":3,"56":3,"57":3,"58":3,"59":3,"92":3,"93":3,"94":3,"4":0,"5":0,"6":0,"7":0},"30:25":{"0":0,"1":0,"10":3,"11":3,"8":3,"9":3,"12":3,"13":3,"2":0,"3":0,"14":3,"15":3,"20":1,"21":1,"22":1,"23":1,"16":3,"17":3,"24":1,"25":1,"18":3,"19":3,"26":1,"27":1,"36":3,"37":3,"100":3,"101":3,"105":2,"38":3,"39":3,"110":2,"103":2,"102":2,"111":2,"40":3,"41":3,"42":3,"43":3,"107":2,"108":2,"109":2,"96":3,"97":3,"98":3,"99":3,"4":0,"5":0,"6":0,"7":0},"30:27":{"14":0,"15":0,"0":0,"1":0,"30":0,"31":0,"2":0,"3":0,"6":2,"7":2,"8":2,"9":2,"10":2,"11":2,"22":2,"23":2,"24":2,"25":2,"26":2,"27":2,"4":0,"5":0,"12":0,"13":0,"28":0,"29":0,"48":1,"49":1,"50":1,"51":1,"36":3,"37":3,"38":3,"39":3,"40":3,"41":3,"42":3,"43":3,"44":3,"45":3,"46":3,"47":3,"16":0,"17":3,"18":3,"19":3,"20":0,"21":3,"34":3,"35":0,"54":3,"55":3,"56":3,"57":3,"32":0,"33":0},"30:29":{"14":0,"15":0,"0":0,"1":0,"30":0,"31":0,"2":0,"3":0,"12":1,"13":1,"4":0,"5":0,"28":1,"29":1,"10":3,"11":3,"6":3,"7":3,"34":1,"35":1,"26":3,"27":3,"22":3,"23":3,"40":1,"41":1,"42":1,"43":1,"36":3,"37":3,"8":3,"9":3,"16":3,"17":3,"18":3,"38":3,"39":3,"24":3,"25":3,"19":3,"20":3,"21":3,"32":0,"33":0},"37:00":{"40":1,"41":1,"42":1,"43":1,"44":1,"45":1,"8":2,"9":2,"46":1,"47":1,"24":2,"25":2,"48":3,"49":3,"50":3,"51":3,"0":1,"1":1,"2":1,"3":1,"16":1,"17":1,"18":1,"19":1,"14":1,"15":1,"30":1,"31":1,"72":0,"73":0,"60":0,"61":0,"74":0,"75":0,"62":0,"63":0,"4":1,"5":1,"20":1,"21":1,"10":2,"11":2,"26":2,"27":2,"68":0,"69":0,"70":0,"71":0,"36":1,"37":1,"38":1,"39":1,"6":2,"7":2,"22":2,"23":2,"32":2,"33":2,"64":0,"65":0,"34":2,"35":2,"66":0,"67":0},"37:10":{"40":1,"41":1,"42":1,"43":1,"44":1,"45":1,"8":2,"9":2,"46":1,"47":1,"24":2,"25":2,"60":0,"61":0,"62":0,"63":0,"72":0,"73":0,"74":0,"75":0,"0":1,"1":1,"4":1,"5":1,"48":3,"49":3,"16":1,"17":1,"20":1,"21":1,"50":3,"51":3,"36":1,"37":1,"64":0,"65":0,"38":1,"39":1,"66":0,"67":0,"2":1,"3":1,"18":1,"19":1,"68":0,"69":0,"70":0,"71":0,"6":2,"7":2,"10":2,"11":2,"22":2,"23":2,"26":2,"27":2,"12":1,"13":1,"28":1,"29":1,"14":1,"15":1,"30":1,"31":1},"37:20":{"40":1,"41":1,"42":1,"43":1,"44":1,"45":1,"8":2,"9":2,"46":1,"47":1,"24":2,"25":2,"68":0,"69":0,"64":0,"65":0,"70":0,"71":0,"66":0,"67":0,"48":3,"49":3,"50":3,"51":3,"60":0,"61":0,"62":0,"63":0,"72":0,"73":0,"74":0,"75":0,"36":1,"37":1,"38":1,"39":1,"76":3,"77":3,"78":3,"79":3},"37:30":{"40":1,"41":1,"42":1,"43":1,"44":1,"45":1,"8":2,"9":2,"14":1,"15":1,"46":1,"47":1,"24":2,"25":2,"30":1,"31":1,"48":3,"49":3,"50":3,"51":3,"0":1,"1":1,"2":1,"3":1,"16":1,"17":1,"18":1,"19":1,"36":1,"37":1,"38":1,"39":1,"10":2,"11":2,"6":2,"7":2,"26":2,"27":2,"22":2,"23":2,"4":1,"5":1,"20":1,"21":1,"32":2,"33":2,"34":2,"35":2},"37:40":{"40":1,"41":1,"42":1,"43":1,"44":1,"45":1,"8":2,"9":2,"14":1,"15":1,"46":1,"47":1,"24":2,"25":2,"30":1,"31":1,"48":3,"49":3,"50":3,"51":3,"0":1,"1":1,"4":1,"5":1,"32":2,"33":2,"12":1,"13":1,"16":1,"17":1,"20":1,"21":1,"34":2,"35":2,"28":1,"29":1,"36":1,"37":1,"38":1,"39":1,"2":1,"3":1,"18":1,"19":1,"6":2,"7":2,"10":2,"11":2,"22":2,"23":2,"26":2,"27":2},"37:50":{"40":1,"41":1,"42":1,"43":1,"44":1,"45":1,"8":2,"9":2,"14":1,"15":1,"46":1,"47":1,"24":2,"25":2,"30":1,"31":1,"48":3,"49":3,"32":2,"33":2,"50":3,"51":3,"34":2,"35":2,"0":1,"1":1,"4":1,"5":1,"2":1,"3":1,"16":1,"17":1,"20":1,"21":1,"18":1,"19":1,"6":2,"7":2,"36":1,"37":1,"22":2,"23":2,"38":1,"39":1,"10":2,"11":2,"26":2,"27":2,"12":1,"13":1,"28":1,"29":1}};
+const TILE_THRESH = {"2A:00":87,"2A:08":80,"2A:20":73,"2A:33":48,"29:01":58,"29:09":80,"29:14":90,"29:18":82,"29:28":162,"29:31":24,"29:35":24,"29:38":48,"30:00":64,"30:02":80,"30:04":56,"30:07":64,"30:10":64,"30:12":64,"30:15":78,"30:19":64,"30:21":64,"30:23":80,"30:25":80,"30:27":48,"30:29":36,"2D:00":48,"2D:02":32,"2D:04":24,"2D:06":32,"2D:08":48,"2D:10":16,"2D:12":48,"2D:14":32,"2D:16":32,"2D:18":32,"2D:20":32,"2D:22":48,"2D:24":40,"26:12":64,"26:15":80,"24:21":32,"26:18":64,"26:21":80,"26:24":32,"26:27":80,"25:26":64,"25:00":80,"23:03":32,"25:03":64,"24:06":80,"23:06":102,"25:06":16,"25:08":80,"24:00":80,"25:21":64,"25:23":64,"24:18":80,"24:15":64,"24:24":32,"24:09":80,"23:00":80,"24:27":101,"24:12":64,"25:11":80,"23:10":64,"23:13":20,"23:16":104,"25:14":64,"25:17":85,"24:03":96,"26:00":32,"26:02":32,"26:04":43,"23:24":48,"37:00":48,"37:10":48,"37:20":48,"37:30":48,"37:40":48,"37:50":48,"26:06":55,"26:08":55,"26:10":55,"23:19":96,"23:22":0};
+
+const TS_NAMES = {"2A:00":"Castle","2A:08":"GreatTree","2A:20":"Bazaar","2A:33":"Gate Hub","29:01":"Farm","29:09":"Stable","29:14":"Arena Lobby","29:18":"Arena Rooms","29:28":"Starry Shrine Breeding Cutscene","29:31":"Starry Shrine","29:35":"Secret Passage","29:38":"Egg Evaluator","30:00":"Old Man Gate Room","30:02":"Vault","30:04":"Copycat House","30:07":"Library","30:10":"Library Gate Room","30:12":"MedalMan","30:15":"Well","30:19":"Goopy Room 1","30:21":"Goopy Room 2","30:23":"Stable: KingSlime Room","30:25":"Stable: Coffin Room","30:27":"Monster School","30:29":"Restaurant","2D:00":"Queen Room","2D:02":"Room of Beginning","2D:04":"Room: Villager/Talisman","2D:06":"Room: Memories/Bewilder","2D:08":"Room: Peace/Bravery","2D:10":"Room: Strength/Anger","2D:12":"Room: Joy/Wisdom","2D:14":"Room: Happiness/Temptation","2D:16":"Room: Labyrinth/Judgment","2D:18":"Room: Reflection","2D:20":"Room: Ambition/Demolition","2D:22":"Room: Mastermind/Control","2D:24":"Room: Extinction/Sleep","26:12":"Boss: Beginning","26:15":"Boss: Villager","24:21":"Boss: Talisman","26:18":"Boss: Memories","26:21":"Boss: Bewilder","26:24":"Boss: Bazaar","26:27":"Boss: Peace","25:26":"Boss: Bravery","25:00":"Boss: Well","23:03":"Boss: Strength","25:03":"Boss: Wisdom","24:06":"Boss: Joy","23:06":"Boss: Anger","25:06":"Boss: Arena Left","25:08":"Boss: Happiness","24:00":"Boss: Temptation","25:21":"KingSlime Decision Room","25:23":"Boss: Medal","24:18":"Labyrinth","24:15":"Boss: Judgment","24:24":"Boss: Library","24:09":"Boss: Reflection","23:00":"Boss: Ambition","24:27":"Boss: Demolition","24:12":"Boss: Mastermind","25:11":"Boss: Control","23:10":"Boss: Extinction","23:13":"Boss: Sleep","23:16":"Boss: Bazaar Edge","25:14":"Boss: Arena Right","25:17":"Boss: Grandpa's Gate","24:03":"Boss: Unused","26:00":"Gate Floor: Item Shop","26:02":"Gate Floor: Priest","26:04":"Gate Floor: Coliseum","23:24":"Forest Maze","37:00":"Conveyor Maze 1","37:10":"Conveyor Maze 2","37:20":"Conveyor Maze 3","37:30":"Maze 1","37:40":"Maze 2","37:50":"Maze 3","26:06":"Gate Floor: 6 Chests Diagonal","26:08":"Gate Floor: 6 Chests Rows","26:10":"Gate Floor: 8 Chests Rows","23:19":"Arena Battle","23:22":"Arena Setup Room"};
 
 
-const GRID_COLS=20,GRID_ROWS=16,TILE_PX=8,PAL_SCALE=3;
-let zoom=3,sel=0,tool="paint",showGrid=true,showMark=true;
-let painting=false,hover=null,curTSKey="",curMapID=0;
-let layout=Array.from({length:16},()=>Array(20).fill(0x11));
-let undoStack=[],redoStack=[];
-let tsImg=null;
+// ===== State =====
+const G=20, GR=16, TPX=8, PS=3;
+let palette=[];       // [{ts:"29:01",idx:40},...]
+let layout=Array.from({length:GR},()=>Array(G).fill(-1));
+let stamps=[];        // [{name:"...",w:2,h:2,tiles:[a,b,c,d]}]
 let markers=[
-  {id:"spawn",x:2,y:6,type:"spawn",label:"Spawn",color:"#22c55e",glyph:"S"},
-  {id:"npc1",x:2,y:2,type:"npc",label:"NPC",color:"#ef4444",glyph:"N"},
-  {id:"exit1",x:3,y:7,type:"exit",label:"Exit 1",color:"#3b82f6",glyph:"E"},
-  {id:"exit2",x:3,y:1,type:"exit",label:"Exit 2",color:"#3b82f6",glyph:"E"},
+  {label:"Spawn",x:7,y:6,color:"#4ade80",glyph:"S",w:2,h:2},
+  {label:"Exit→Castle",x:6,y:3,color:"#f87171",glyph:"E",w:2,h:2},
+  {label:"Exit→Well",x:6,y:14,color:"#ff6b6b",glyph:"↓",w:2,h:2},
+  {label:"NPC",x:2,y:7,color:"#60a5fa",glyph:"N",w:2,h:2}
 ];
+let sel=-1, tool="paint", zoom=3, showGrid=true, showMark=true, showWalk=false;
+let painting=false, hover=null, activeStamp=-1;
+let undoStack=[], redoStack=[];
+let curSrcTS="", srcImg=null;
+let tsImages={};
+let stampBuilder=null; // {name,w,h,tiles:[],needed:w*h}
 
 function hex(n){return "$"+n.toString(16).toUpperCase().padStart(2,"0")}
 function deepCopy(a){return a.map(r=>[...r])}
 function setStatus(s){document.getElementById("status").textContent=s}
 
-function loadTileset(key){
+// ===== Walkability: tile index < threshold = walkable =====
+function isWalkable(tsKey, tileIdx){
+  const thresh = TILE_THRESH[tsKey];
+  if(thresh===undefined) return tileIdx < 64; // fallback
+  return tileIdx < thresh;
+}
+
+// ===== Tileset image loading =====
+function getTSImage(key, cb){
+  if(tsImages[key]){cb(tsImages[key]);return}
   if(!TS[key])return;
-  curTSKey=key;
   const img=new Image();
-  img.onload=()=>{tsImg=img;drawPalette();drawCanvas()};
+  img.onload=()=>{tsImages[key]=img;cb(img)};
   img.src="data:image/png;base64,"+TS[key];
 }
 
-function loadRoom(val){
-  if(!val||!ROOMS[val])return;
-  const room=ROOMS[val];
-  pushUndo();
-  layout=room.layout.map(r=>[...r]);
-  curMapID=room.mapid;
-  loadTileset(room.ts);
-  document.getElementById("tsName").textContent=room.name;
-  setStatus("Loaded: "+room.name+" (mapID "+hex(room.mapid)+", tileset "+room.ts+")");
-  drawCanvas();saveState();
+function loadSrcTileset(key){
+  if(!TS[key])return;
+  curSrcTS=key;
+  getTSImage(key,img=>{srcImg=img;drawSrcPalette()});
 }
 
-function drawPalette(){
-  if(!tsImg)return;
-  const c=document.getElementById("palCanvas").getContext("2d");
+// ===== Source palette =====
+function drawSrcPalette(){
+  const c=document.getElementById("srcCanvas").getContext("2d");
   c.imageSmoothingEnabled=false;c.clearRect(0,0,384,192);
-  const s=PAL_SCALE;
+  if(!srcImg)return;
+  const thresh=TILE_THRESH[curSrcTS]||64;
   for(let i=0;i<128;i++){
-    c.drawImage(tsImg,(i%16)*8,Math.floor(i/16)*8,8,8,(i%16)*8*s,Math.floor(i/16)*8*s,8*s,8*s);
+    const sx=(i%16)*8,sy=Math.floor(i/16)*8;
+    const dx=(i%16)*8*PS,dy=Math.floor(i/16)*8*PS;
+    c.drawImage(srcImg,sx,sy,8,8,dx,dy,8*PS,8*PS);
+    // Walkability tint on source
+    if(showWalk){
+      c.fillStyle=i<thresh?"rgba(74,222,128,0.15)":"rgba(248,113,113,0.18)";
+      c.fillRect(dx,dy,8*PS,8*PS);
+    }
   }
-  const px=(sel%16)*8*s,py=Math.floor(sel/16)*8*s;
-  c.strokeStyle="#f59e0b";c.lineWidth=3;c.strokeRect(px+1,py+1,8*s-2,8*s-2);
-  c.strokeStyle="#000";c.lineWidth=1;c.strokeRect(px,py,8*s,8*s);
-  document.getElementById("selLbl").textContent=hex(sel);
+  // Dim tiles already in palette
+  palette.forEach(p=>{
+    if(p.ts===curSrcTS){
+      const i=p.idx,px=(i%16)*8*PS,py=Math.floor(i/16)*8*PS;
+      c.fillStyle="rgba(0,0,0,0.55)";c.fillRect(px,py,8*PS,8*PS);
+      c.strokeStyle="#4ade80";c.lineWidth=2;c.strokeRect(px+1,py+1,8*PS-2,8*PS-2);
+    }
+  });
+  // Threshold line
+  if(showWalk&&thresh>0&&thresh<128){
+    const row=Math.floor(thresh/16),col=thresh%16;
+    c.strokeStyle="#ff4444";c.lineWidth=2;c.setLineDash([4,2]);
+    const y=row*8*PS;
+    c.beginPath();c.moveTo(col*8*PS,y);c.lineTo(16*8*PS,y);c.stroke();
+    if(col>0){c.beginPath();c.moveTo(0,y+8*PS);c.lineTo(col*8*PS,y+8*PS);c.stroke()}
+    c.setLineDash([]);
+    c.fillStyle="#ff4444";c.font="9px monospace";
+    c.fillText("threshold="+thresh,2,y-2);
+  }
 }
 
-function drawCanvas(){
-  if(!tsImg)return;
-  const cv=document.getElementById("mainCanvas");
-  const cell=TILE_PX*zoom;
-  cv.width=GRID_COLS*cell;cv.height=GRID_ROWS*cell;
-  const c=cv.getContext("2d");
-  c.imageSmoothingEnabled=false;c.clearRect(0,0,cv.width,cv.height);
-  for(let r=0;r<GRID_ROWS;r++)
-    for(let col=0;col<GRID_COLS;col++){
-      const t=layout[r][col];
-      c.drawImage(tsImg,(t%16)*8,Math.floor(t/16)*8,8,8,col*cell,r*cell,cell,cell);
+document.getElementById("srcCanvas").addEventListener("click",e=>{
+  if(!curSrcTS||!srcImg)return;
+  const rect=e.target.getBoundingClientRect();
+  const scaleX=384/rect.width, scaleY=192/rect.height;
+  const col=Math.floor((e.clientX-rect.left)*scaleX/(8*PS));
+  const row=Math.floor((e.clientY-rect.top)*scaleY/(8*PS));
+  if(col<0||col>=16||row<0||row>=8)return;
+  const idx=row*16+col;
+  if(stampBuilder){
+    let slotIdx=palette.findIndex(p=>p.ts===curSrcTS&&p.idx===idx);
+    if(slotIdx<0){
+      if(palette.length>=128){setStatus("Palette full");return}
+      palette.push({ts:curSrcTS,idx});slotIdx=palette.length-1;
     }
-  if(showGrid){
-    c.strokeStyle="rgba(255,255,255,0.15)";c.lineWidth=1;
-    for(let r=0;r<=GRID_ROWS;r++){c.beginPath();c.moveTo(0,r*cell);c.lineTo(GRID_COLS*cell,r*cell);c.stroke()}
-    for(let col=0;col<=GRID_COLS;col++){c.beginPath();c.moveTo(col*cell,0);c.lineTo(col*cell,GRID_ROWS*cell);c.stroke()}
+    stampBuilder.tiles.push(slotIdx);
+    finishStampStep();
+    drawSrcPalette();drawCombinedPalette();return;
   }
-  if(showMark) markers.forEach(m=>{
-    const cell2=TILE_PX*zoom;
-    c.fillStyle=m.color+"44";c.fillRect(m.x*cell2,m.y*cell2,cell2,cell2);
-    c.strokeStyle=m.color;c.lineWidth=2;c.strokeRect(m.x*cell2+1,m.y*cell2+1,cell2-2,cell2-2);
-    c.fillStyle="#fff";c.font=`bold ${Math.max(10,cell2*.45)}px monospace`;
+  const existing=palette.findIndex(p=>p.ts===curSrcTS&&p.idx===idx);
+  if(existing>=0){sel=existing;setTool("paint");drawCombinedPalette();setStatus("Selected slot "+existing);return}
+  if(palette.length>=128){setStatus("Palette full (128 max)");return}
+  palette.push({ts:curSrcTS,idx});
+  sel=palette.length-1;setTool("paint");
+  drawSrcPalette();drawCombinedPalette();drawCanvas();saveState();
+  setStatus("Added tile "+hex(idx)+" → slot "+sel+". Paint on canvas!");
+});
+
+// ===== Combined palette =====
+function drawCombinedPalette(){
+  const cv=document.getElementById("palCanvas");
+  const c=cv.getContext("2d");
+  c.imageSmoothingEnabled=false;c.clearRect(0,0,384,192);
+  c.strokeStyle="#1a1a1a";c.lineWidth=0.5;
+  for(let i=0;i<128;i++)c.strokeRect((i%16)*8*PS,Math.floor(i/16)*8*PS,8*PS,8*PS);
+  if(!palette.length){
+    c.fillStyle="#333";c.font="11px monospace";c.textAlign="center";
+    c.fillText("Click tiles above to build palette",192,96);
+    document.getElementById("palCount").textContent="0/128";
+    document.getElementById("selLbl").textContent="—";return;
+  }
+  let pending=0;
+  palette.forEach((p,i)=>{
+    const img=tsImages[p.ts];
+    if(img){
+      const sx=(p.idx%16)*8,sy=Math.floor(p.idx/16)*8;
+      const dx=(i%16)*8*PS,dy=Math.floor(i/16)*8*PS;
+      c.drawImage(img,sx,sy,8,8,dx,dy,8*PS,8*PS);
+      if(showWalk){
+        const w=isWalkable(p.ts,p.idx);
+        c.fillStyle=w?"rgba(74,222,128,0.2)":"rgba(248,113,113,0.25)";
+        c.fillRect(dx,dy,8*PS,8*PS);
+        c.fillStyle=w?"#4ade80":"#f87171";c.font="bold 8px monospace";c.textAlign="center";
+        c.fillText(w?"W":"X",dx+8*PS/2,dy+8*PS/2+3);
+      }
+    } else {pending++;getTSImage(p.ts,()=>{pending--;if(pending<=0)drawCombinedPalette()})}
+  });
+  if(sel>=0&&sel<palette.length){
+    const px=(sel%16)*8*PS,py=Math.floor(sel/16)*8*PS;
+    c.strokeStyle="#f59e0b";c.lineWidth=3;c.strokeRect(px+1,py+1,8*PS-2,8*PS-2);
+  }
+  document.getElementById("palCount").textContent=palette.length+"/128";
+  document.getElementById("selLbl").textContent=sel>=0&&sel<palette.length?
+    "Slot "+sel+" ["+palette[sel].ts+" "+hex(palette[sel].idx)+(isWalkable(palette[sel].ts,palette[sel].idx)?" walkable":" WALL")+"]":"—";
+}
+
+const palCanvas=document.getElementById("palCanvas");
+palCanvas.addEventListener("click",e=>{
+  const rect=palCanvas.getBoundingClientRect();
+  const scaleX=384/rect.width,scaleY=192/rect.height;
+  const col=Math.floor((e.clientX-rect.left)*scaleX/(8*PS));
+  const row=Math.floor((e.clientY-rect.top)*scaleY/(8*PS));
+  if(col<0||col>=16||row<0||row>=8)return;
+  const i=row*16+col;
+  if(i>=palette.length)return;
+  if(stampBuilder){stampBuilder.tiles.push(i);finishStampStep();drawCombinedPalette();return}
+  sel=i;setTool("paint");drawCombinedPalette();
+  setStatus("Slot "+i+": "+palette[i].ts+" tile "+hex(palette[i].idx));
+});
+palCanvas.addEventListener("contextmenu",e=>{
+  e.preventDefault();
+  const rect=palCanvas.getBoundingClientRect();
+  const scaleX=384/rect.width,scaleY=192/rect.height;
+  const i=Math.floor((e.clientY-rect.top)*scaleY/(8*PS))*16+Math.floor((e.clientX-rect.left)*scaleX/(8*PS));
+  if(i<0||i>=palette.length)return;
+  palette.splice(i,1);
+  for(let r=0;r<GR;r++)for(let cc=0;cc<G;cc++){if(layout[r][cc]===i)layout[r][cc]=-1;else if(layout[r][cc]>i)layout[r][cc]--}
+  stamps.forEach(st=>st.tiles=st.tiles.map(t=>t===i?-1:t>i?t-1:t));
+  if(sel>=palette.length)sel=palette.length-1;
+  drawCombinedPalette();drawCanvas();drawSrcPalette();renderStamps();saveState();
+});
+
+// ===== Main canvas =====
+function drawCanvas(){
+  const cv=document.getElementById("mainCanvas");
+  const cell=TPX*zoom;
+  cv.width=G*cell;cv.height=GR*cell;
+  const c=cv.getContext("2d");
+  c.imageSmoothingEnabled=false;
+  c.fillStyle="#0d0d0d";c.fillRect(0,0,cv.width,cv.height);
+  for(let r=0;r<GR;r++)for(let col=0;col<G;col++){
+    const ti=layout[r][col];
+    if(ti>=0&&ti<palette.length){
+      const p=palette[ti],img=tsImages[p.ts];
+      if(img){
+        c.drawImage(img,(p.idx%16)*8,Math.floor(p.idx/16)*8,8,8,col*cell,r*cell,cell,cell);
+      }
+      if(showWalk){
+        const w=isWalkable(p.ts,p.idx);
+        c.fillStyle=w?"rgba(74,222,128,0.18)":"rgba(248,113,113,0.28)";
+        c.fillRect(col*cell,r*cell,cell,cell);
+        if(!w){// Red X on walls
+          c.strokeStyle="rgba(248,113,113,0.4)";c.lineWidth=1;
+          c.beginPath();c.moveTo(col*cell+2,r*cell+2);c.lineTo((col+1)*cell-2,(r+1)*cell-2);c.stroke();
+          c.beginPath();c.moveTo((col+1)*cell-2,r*cell+2);c.lineTo(col*cell+2,(r+1)*cell-2);c.stroke();
+        }
+      }
+    }
+  }
+  if(showGrid){
+    c.strokeStyle="rgba(255,255,255,0.12)";c.lineWidth=1;
+    for(let r=0;r<=GR;r++){c.beginPath();c.moveTo(0,r*cell);c.lineTo(G*cell,r*cell);c.stroke()}
+    for(let col=0;col<=G;col++){c.beginPath();c.moveTo(col*cell,0);c.lineTo(col*cell,GR*cell);c.stroke()}
+  }
+  // Markers as 2×2 blocks
+  if(showMark)markers.forEach(m=>{
+    const mw=m.w||2,mh=m.h||2;
+    c.fillStyle=m.color+"33";c.fillRect(m.x*cell,m.y*cell,mw*cell,mh*cell);
+    c.strokeStyle=m.color;c.lineWidth=2;c.strokeRect(m.x*cell+1,m.y*cell+1,mw*cell-2,mh*cell-2);
+    c.fillStyle="#fff";c.font=`bold ${Math.max(10,cell*.6)}px monospace`;
     c.textAlign="center";c.textBaseline="middle";
-    c.fillText(m.glyph,m.x*cell2+cell2/2,m.y*cell2+cell2/2);
+    c.fillText(m.glyph,m.x*cell+mw*cell/2,m.y*cell+mh*cell/2);
   });
   if(hover){
-    const cell2=TILE_PX*zoom;
     c.strokeStyle="#f59e0baa";c.lineWidth=2;
-    c.strokeRect(hover.c*cell2+1,hover.r*cell2+1,cell2-2,cell2-2);
+    if(tool==="stamp"&&activeStamp>=0){
+      const st=stamps[activeStamp];
+      c.strokeRect(hover.c*cell+1,hover.r*cell+1,st.w*cell-2,st.h*cell-2);
+    } else c.strokeRect(hover.c*cell+1,hover.r*cell+1,cell-2,cell-2);
   }
 }
 
 function getCell(e){
   const cv=document.getElementById("mainCanvas"),rect=cv.getBoundingClientRect();
-  const cell=TILE_PX*zoom;
-  const c=Math.floor((e.clientX-rect.left)/cell),r=Math.floor((e.clientY-rect.top)/cell);
-  return(c>=0&&c<GRID_COLS&&r>=0&&r<GRID_ROWS)?{r,c}:null;
+  const scaleX=cv.width/rect.width,scaleY=cv.height/rect.height;
+  const cell=TPX*zoom;
+  const col=Math.floor((e.clientX-rect.left)*scaleX/cell),r=Math.floor((e.clientY-rect.top)*scaleY/cell);
+  return(col>=0&&col<G&&r>=0&&r<GR)?{r,c:col}:null;
 }
 
 function pushUndo(){undoStack.push(deepCopy(layout));if(undoStack.length>30)undoStack.shift();redoStack=[]}
@@ -627,15 +633,28 @@ function doUndo(){if(!undoStack.length)return;redoStack.push(deepCopy(layout));l
 function doRedo(){if(!redoStack.length)return;undoStack.push(deepCopy(layout));layout=redoStack.pop();drawCanvas();saveState();setStatus("Redo.")}
 
 function apply(r,c,start){
-  if(tool==="paint"){if(layout[r][c]!==sel){if(start)pushUndo();layout[r][c]=sel;drawCanvas();saveState()}}
-  else if(tool==="erase"){if(layout[r][c]!==0x11){if(start)pushUndo();layout[r][c]=0x11;drawCanvas();saveState()}}
-  else if(tool==="pick"){sel=layout[r][c];setTool("paint");drawPalette();setStatus("Picked "+hex(sel))}
-  else if(tool==="fill"){
-    const target=layout[r][c];if(target===sel)return;if(start)pushUndo();
+  if(tool==="paint"){
+    if(sel<0){setStatus("Select a tile first!");return}
+    if(layout[r][c]!==sel){if(start)pushUndo();layout[r][c]=sel;drawCanvas();saveState()}
+  }else if(tool==="stamp"&&activeStamp>=0){
+    const st=stamps[activeStamp];if(!st)return;
+    if(c+st.w-1<G&&r+st.h-1<GR){
+      if(start)pushUndo();
+      for(let dr=0;dr<st.h;dr++)for(let dc=0;dc<st.w;dc++)
+        layout[r+dr][c+dc]=st.tiles[dr*st.w+dc];
+      drawCanvas();saveState();
+    }
+  }else if(tool==="erase"){
+    if(layout[r][c]!==-1){if(start)pushUndo();layout[r][c]=-1;drawCanvas();saveState()}
+  }else if(tool==="pick"){
+    const ti=layout[r][c];
+    if(ti>=0){sel=ti;setTool("paint");drawCombinedPalette();setStatus("Picked slot "+ti)}
+  }else if(tool==="fill"){
+    const target=layout[r][c];if(target===sel||sel<0)return;if(start)pushUndo();
     const stk=[[r,c]],vis=new Set();
     while(stk.length){
       const[cr,cc]=stk.pop(),k=cr+","+cc;
-      if(vis.has(k)||cr<0||cr>=GRID_ROWS||cc<0||cc>=GRID_COLS||layout[cr][cc]!==target)continue;
+      if(vis.has(k)||cr<0||cr>=GR||cc<0||cc>=G||layout[cr][cc]!==target)continue;
       vis.add(k);layout[cr][cc]=sel;stk.push([cr-1,cc],[cr+1,cc],[cr,cc-1],[cr,cc+1]);
     }
     drawCanvas();saveState();
@@ -643,46 +662,158 @@ function apply(r,c,start){
 }
 
 function setTool(t){
-  tool=t;
-  ["paint","erase","pick","fill"].forEach(n=>{document.getElementById("bt_"+n).classList.toggle("active",n===t)});
-  document.getElementById("mainCanvas").style.cursor=t==="pick"?"crosshair":t==="fill"?"cell":"pointer";
+  tool=t;if(t!=="stamp")activeStamp=-1;
+  ["paint","stamp","erase","pick","fill"].forEach(n=>{
+    const el=document.getElementById("bt_"+n);if(el)el.classList.toggle("active",n===t)});
+  document.getElementById("mainCanvas").style.cursor=
+    t==="pick"?"crosshair":t==="fill"?"cell":t==="stamp"?"copy":"pointer";
+  if(t==="stamp")renderStamps();
 }
-
 function toggleGrid(){showGrid=!showGrid;document.getElementById("gridBtn").textContent=showGrid?"Grid ✓":"Grid ✗";drawCanvas()}
 function toggleMarkers(){showMark=!showMark;document.getElementById("markBtn").textContent=showMark?"Markers ✓":"Markers ✗";drawCanvas()}
+function toggleWalk(){showWalk=!showWalk;document.getElementById("walkBtn").textContent=showWalk?"Walk ✓":"Walk ✗";drawCanvas();drawCombinedPalette();drawSrcPalette()}
 function adjZoom(d){zoom=Math.max(2,Math.min(5,zoom+d));document.getElementById("zoomLbl").textContent=zoom+"×";drawCanvas()}
-function clearAll(){pushUndo();layout=Array.from({length:16},()=>Array(20).fill(0x11));drawCanvas();saveState();setStatus("Cleared.")}
+function clearAll(){pushUndo();layout=Array.from({length:GR},()=>Array(G).fill(-1));drawCanvas();saveState();setStatus("Cleared.")}
 
-function showExport(){
-  const box=document.getElementById("exportBox"),area=document.getElementById("exportArea");
-  area.value=JSON.stringify({tileset:curTSKey,mapid:curMapID,layout,markers},null,2);
-  box.style.display="block";area.focus();area.select();
-  setStatus("JSON ready — Cmd+A then Cmd+C to copy.");
+const mainCanvas=document.getElementById("mainCanvas");
+mainCanvas.addEventListener("mousedown",e=>{e.preventDefault();painting=true;const p=getCell(e);if(p)apply(p.r,p.c,true)});
+mainCanvas.addEventListener("mousemove",e=>{
+  const p=getCell(e);hover=p;
+  if(p){
+    const ti=layout[p.r][p.c];
+    let info=`(${p.c},${p.r})`;
+    if(ti>=0&&ti<palette.length){
+      const pp=palette[ti];
+      info+=` slot ${ti} [${pp.ts} ${hex(pp.idx)} ${isWalkable(pp.ts,pp.idx)?"✓walk":"✗wall"}]`;
+    } else info+=" empty";
+    document.getElementById("hoverLbl").textContent=info;
+  } else document.getElementById("hoverLbl").textContent="";
+  if(painting&&p&&(tool==="paint"||tool==="erase"))apply(p.r,p.c,false);
+  else drawCanvas();
+});
+mainCanvas.addEventListener("mouseup",()=>{painting=false});
+mainCanvas.addEventListener("mouseleave",()=>{painting=false;hover=null;drawCanvas()});
+
+// ===== Stamps with variable sizes =====
+function newStamp(){
+  if(!palette.length){setStatus("Add tiles first!");return}
+  const sizeStr=prompt("Stamp size (WxH):\n1x2, 2x1, or 2x2","2x2");
+  if(!sizeStr)return;
+  const m=sizeStr.match(/(\d+)\s*[x×]\s*(\d+)/i);
+  if(!m){setStatus("Format: WxH (e.g. 2x2)");return}
+  const w=parseInt(m[1]),h=parseInt(m[2]);
+  if(w<1||w>4||h<1||h>4){setStatus("Size 1-4 each");return}
+  const name=prompt("Stamp name:","Stamp "+(stamps.length+1));
+  if(!name)return;
+  stampBuilder={name,w,h,tiles:[],needed:w*h};
+  const labels=w===2&&h===2?["top-left","top-right","bottom-left","bottom-right"]:
+    w===1&&h===2?["top","bottom"]:w===2&&h===1?["left","right"]:
+    Array.from({length:w*h},(_,i)=>`tile ${i+1}`);
+  setStatus(`Stamp '${name}' (${w}×${h}): click ${labels[0]} tile (1/${w*h})`);
 }
+function finishStampStep(){
+  if(!stampBuilder)return;
+  const {name,w,h,tiles,needed}=stampBuilder;
+  if(tiles.length>=needed){
+    stamps.push({name,w,h,tiles:[...tiles]});
+    stampBuilder=null;renderStamps();saveState();
+    setStatus("Stamp '"+name+"' created! Select → Stamp tool → click canvas.");
+  } else {
+    const labels=w===2&&h===2?["top-left","top-right","bottom-left","bottom-right"]:
+      w===1&&h===2?["top","bottom"]:w===2&&h===1?["left","right"]:
+      Array.from({length:needed},(_,i)=>`tile ${i+1}`);
+    setStatus(`Stamp '${name}': click ${labels[tiles.length]} (${tiles.length+1}/${needed})`);
+  }
+}
+function renderStamps(){
+  const grid=document.getElementById("stampGrid");grid.innerHTML="";
+  if(!stamps.length){grid.innerHTML='<div class="panel-sub">Click + New → pick size → click tiles in order.</div>';return}
+  stamps.forEach((st,si)=>{
+    const div=document.createElement("div");
+    div.className="stamp-item"+(si===activeStamp?" active":"");
+    div.title=st.name+` (${st.w}×${st.h})\nClick → Stamp tool → paint`;
+    const scale=2,cw=st.w*8*scale,ch=st.h*8*scale;
+    const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;
+    cv.style.cssText=`width:${cw}px;height:${ch}px;image-rendering:pixelated`;
+    const c=cv.getContext("2d");c.imageSmoothingEnabled=false;
+    for(let dr=0;dr<st.h;dr++)for(let dc=0;dc<st.w;dc++){
+      const ti=st.tiles[dr*st.w+dc];
+      if(ti>=0&&ti<palette.length){
+        const p=palette[ti],img=tsImages[p.ts];
+        if(img)c.drawImage(img,(p.idx%16)*8,Math.floor(p.idx/16)*8,8,8,dc*8*scale,dr*8*scale,8*scale,8*scale);
+      }
+    }
+    div.appendChild(cv);
+    const lbl=document.createElement("div");
+    lbl.style.cssText="font-size:9px;color:#888;text-align:center;overflow:hidden";
+    lbl.textContent=st.name;div.appendChild(lbl);
+    div.addEventListener("click",()=>{activeStamp=si;setTool("stamp");renderStamps();setStatus("Stamp '"+st.name+"' ("+st.w+"×"+st.h+") — click canvas")});
+    const del=document.createElement("button");del.className="stamp-del";del.textContent="×";
+    del.addEventListener("click",e=>{e.stopPropagation();stamps.splice(si,1);if(activeStamp>=stamps.length)activeStamp=-1;renderStamps();saveState()});
+    div.appendChild(del);grid.appendChild(div);
+  });
+}
+
+// ===== Load room =====
+function loadRoom(val){
+  if(!val||!ROOMS[val])return;
+  const room=ROOMS[val];pushUndo();
+  palette=[];
+  const tsKey=room.ts,tileMap={};
+  room.layout.forEach(row=>row.forEach(t=>{
+    const k=tsKey+":"+t;
+    if(!(k in tileMap)){tileMap[k]=palette.length;palette.push({ts:tsKey,idx:t})}
+  }));
+  layout=room.layout.map(row=>row.map(t=>tileMap[tsKey+":"+t]));
+  sel=0;
+  getTSImage(tsKey,()=>{drawSrcPalette();drawCombinedPalette();drawCanvas()});
+  loadSrcTileset(tsKey);document.getElementById("srcTS").value=tsKey;
+  setStatus("Loaded "+room.name+" — "+palette.length+" tiles. Threshold: "+(TILE_THRESH[tsKey]||"?"));
+  saveState();
+}
+
+// ===== Export/Import =====
+function showExport(){
+  const palExport=palette.map((p,i)=>{
+    const pm=TILE_PAL[p.ts];const pal=pm?parseInt(pm[String(p.idx)]||"0"):0;
+    return {slot:i,ts:p.ts,idx:p.idx,pal,walkable:isWalkable(p.ts,p.idx)};
+  });
+  const data={_generator:"DWM1_Multi_Tileset_Editor_v3",palette:palExport,layout,
+    stamps:stamps.map(s=>({name:s.name,w:s.w,h:s.h,tiles:[...s.tiles]})),markers};
+  const area=document.getElementById("exportArea");
+  area.value=JSON.stringify(data,null,2);
+  document.getElementById("exportBox").style.display="block";area.focus();area.select();
+  setStatus("Exported: "+palette.length+" tiles, threshold="+(TILE_THRESH[palette[0]?.ts]||"?"));
+}
+function copyExport(){navigator.clipboard?navigator.clipboard.writeText(document.getElementById("exportArea").value).then(()=>setStatus("Copied!")):setStatus("Use Cmd+C")}
 function showImportBox(){document.getElementById("importBox").style.display="block"}
 function doImport(){
   try{
-    let p=JSON.parse(document.getElementById("importArea").value);
-    let g=p.layout||p;
-    if(!Array.isArray(g)||g.length!==16||g[0]?.length!==20)return setStatus("Bad format: need 16×20.");
-    pushUndo();layout=g;
+    const p=JSON.parse(document.getElementById("importArea").value);pushUndo();
+    if(p.palette)palette=p.palette.map(e=>({ts:e.ts,idx:e.idx}));
+    if(p.layout)layout=p.layout;
+    if(p.stamps)stamps=p.stamps.map(s=>({name:s.name,w:s.w||2,h:s.h||2,tiles:s.tiles}));
     if(p.markers)markers=p.markers;
-    if(p.tileset&&TS[p.tileset])loadTileset(p.tileset);
-    if(p.mapid!==undefined)curMapID=p.mapid;
-    drawCanvas();renderMarkers();saveState();
+    sel=0;
+    const tsKeys=new Set(palette.map(p=>p.ts));
+    let rem=tsKeys.size;
+    if(!rem){drawCanvas();drawCombinedPalette();renderStamps();renderMarkers();saveState();return}
+    tsKeys.forEach(k=>getTSImage(k,()=>{rem--;if(!rem){drawCanvas();drawCombinedPalette();drawSrcPalette();renderStamps();renderMarkers();saveState()}}));
     document.getElementById("importBox").style.display="none";
-    setStatus("Imported!");
+    setStatus("Imported! "+palette.length+" tiles");
   }catch(e){setStatus("Error: "+e.message)}
 }
 
+// ===== Markers =====
 function renderMarkers(){
   const list=document.getElementById("markerList");list.innerHTML="";
   markers.forEach((m,i)=>{
     const row=document.createElement("div");row.className="mrow";
     row.innerHTML=`<span class="mdot" style="background:${m.color}"></span>
-      <span class="mlbl">${m.label}</span>
+      <span style="min-width:60px">${m.label}</span>
       <span class="mkey">x</span><input class="minp" type="number" min="0" max="19" value="${m.x}" data-i="${i}" data-f="x">
-      <span class="mkey">y</span><input class="minp" type="number" min="0" max="15" value="${m.y}" data-i="${i}" data-f="y">`;
+      <span class="mkey">y</span><input class="minp" type="number" min="0" max="15" value="${m.y}" data-i="${i}" data-f="y">
+      <button class="sbtn" style="font-size:9px;padding:1px 4px;color:#f66" onclick="removeMarker(${i})">×</button>`;
     list.appendChild(row);
   });
   list.querySelectorAll("input").forEach(inp=>inp.addEventListener("change",e=>{
@@ -690,50 +821,52 @@ function renderMarkers(){
     drawCanvas();saveState();
   }));
 }
+function addMarker(){
+  const label=prompt("Marker label:","Marker");if(!label)return;
+  const glyph=prompt("Glyph (1 char):","M");if(!glyph)return;
+  const colors=["#4ade80","#f87171","#60a5fa","#facc15","#c084fc","#fb923c"];
+  markers.push({label,x:10,y:8,color:colors[markers.length%colors.length],glyph:glyph[0],w:2,h:2});
+  renderMarkers();drawCanvas();saveState();
+}
+function removeMarker(i){markers.splice(i,1);renderMarkers();drawCanvas();saveState()}
 
-function saveState(){try{localStorage.setItem("dwm-editor-v3",JSON.stringify({layout,markers,sel,curTSKey,curMapID}))}catch(e){}}
+// ===== Persistence =====
+function saveState(){try{localStorage.setItem("dwm-mteditor-v3",JSON.stringify({palette,layout,stamps,markers,sel,curSrcTS}))}catch(e){}}
 function loadState(){
   try{
-    const s=JSON.parse(localStorage.getItem("dwm-editor-v3"));
+    const s=JSON.parse(localStorage.getItem("dwm-mteditor-v3"));
     if(s){
-      if(s.layout)layout=s.layout;if(s.markers)markers=s.markers;
-      if(s.sel!==undefined)sel=s.sel;
-      if(s.curTSKey&&TS[s.curTSKey]){curTSKey=s.curTSKey;loadTileset(curTSKey)}
-      if(s.curMapID!==undefined)curMapID=s.curMapID;
-      setStatus("Restored saved state.");
+      if(s.palette)palette=s.palette;if(s.layout)layout=s.layout;
+      if(s.stamps)stamps=(s.stamps||[]).map(st=>({name:st.name,w:st.w||2,h:st.h||2,tiles:st.tiles}));
+      if(s.markers)markers=s.markers;if(s.sel!==undefined)sel=s.sel;
+      if(s.curSrcTS){curSrcTS=s.curSrcTS;document.getElementById("srcTS").value=curSrcTS}
+      const tsKeys=new Set(palette.map(p=>p.ts));
+      if(curSrcTS)tsKeys.add(curSrcTS);
+      let rem=tsKeys.size;if(!rem)return;
+      tsKeys.forEach(k=>getTSImage(k,()=>{rem--;if(!rem){
+        srcImg=tsImages[curSrcTS]||null;
+        drawSrcPalette();drawCombinedPalette();drawCanvas();renderStamps();
+      }}));
+      setStatus("Restored — "+palette.length+" tiles");
     }
   }catch(e){}
 }
 
-const palCanvas=document.getElementById("palCanvas");
-palCanvas.addEventListener("click",e=>{
-  const rect=palCanvas.getBoundingClientRect(),s=PAL_SCALE;
-  const col=Math.floor((e.clientX-rect.left)/(8*s)),row=Math.floor((e.clientY-rect.top)/(8*s));
-  if(col<0||col>=16||row<0||row>=8)return;
-  sel=row*16+col;setTool("paint");drawPalette();setStatus("Tile "+hex(sel));
+// ===== Init =====
+Object.keys(ROOMS).sort((a,b)=>{const[am,as]=a.split("_").map(Number),[bm,bs]=b.split("_").map(Number);return am-bm||as-bs}).forEach(k=>{
+  const r=ROOMS[k],o=document.createElement("option");o.value=k;
+  o.textContent=`$${r.mapid.toString(16).toUpperCase().padStart(2,"0")}.${r.scr} ${r.name}`;
+  document.getElementById("roomSelect").appendChild(o);
 });
-
-const mainCanvas=document.getElementById("mainCanvas");
-mainCanvas.addEventListener("mousedown",e=>{painting=true;const p=getCell(e);if(p)apply(p.r,p.c,true)});
-mainCanvas.addEventListener("mousemove",e=>{
-  const p=getCell(e);hover=p;
-  document.getElementById("hoverLbl").textContent=p?`(${p.c},${p.r}) = ${hex(layout[p.r][p.c])}`:"";
-  if(painting&&p&&(tool==="paint"||tool==="erase"))apply(p.r,p.c,false);
-  drawCanvas();
+Object.keys(TS).sort().forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=k+" "+(TS_NAMES[k]||"");document.getElementById("srcTS").appendChild(o)});
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;
+  if(e.key==="z"&&(e.metaKey||e.ctrlKey)){e.preventDefault();e.shiftKey?doRedo():doUndo()}
+  if(e.key==="p")setTool("paint");if(e.key==="e")setTool("erase");
+  if(e.key==="i")setTool("pick");if(e.key==="f")setTool("fill");
+  if(e.key==="s")setTool("stamp");if(e.key==="g")toggleGrid();if(e.key==="w")toggleWalk();
 });
-mainCanvas.addEventListener("mouseup",()=>{painting=false});
-mainCanvas.addEventListener("mouseleave",()=>{painting=false;hover=null;drawCanvas()});
+loadState();renderMarkers();renderStamps();
+if(!palette.length){loadSrcTileset(Object.keys(TS).sort()[0]);drawCanvas()}
 
-// Init
-loadState();
-renderMarkers();
-if(!curTSKey){
-  // Default: load Castle screen 0
-  loadRoom("0_0");
-  document.getElementById("roomSelect").value="0_0";
-}else{
-  drawCanvas();
-}
-</script>
-</body>
-</html>
+</script></body></html>

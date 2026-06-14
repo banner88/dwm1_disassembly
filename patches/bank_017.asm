@@ -124,7 +124,7 @@ label17_409e:
     jp nz, Jump_017_40da
 
     ld hl, AttrPtrTable
-    call MapIDClampForPalette   ; ROM0 helper: clamps mapID for custom rooms
+    call CustomAttrCheck        ; intercept: custom rooms → bank $64 attr data
     add a
     add l
     ld l, a
@@ -2554,8 +2554,29 @@ AttrMapDataB:
     db $00, $00, $FF, $5F, $BF, $03, $DF, $01, $00, $00, $9F, $33, $91, $69, $BF, $60
     db $00, $00, $D9, $7F, $FF, $47, $37, $7D, $00, $00, $F9, $63, $DF, $01, $15, $00
     db $00, $00, $FD, $7F, $A5, $7E, $0E, $7F, $00, $00, $FF, $7F, $FF, $7F, $BF, $01
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+; ---------------------------------------------------------------------------
+; CustomAttrCheck: intercept for entry 1 (attr map decompression)
+; Called instead of MapIDClampForPalette in label17_409e.
+; For vanilla rooms + Room $6C+: falls through to MapIDClampForPalette.
+; For Room $6B only: pops return address, directly decompresses custom attr
+;   data from bank $64 entry 1, then returns to entry 1's caller.
+; Size: 22 bytes (+ 10 padding = 32 total, replacing 2 lines of $00)
+; When adding more custom rooms with custom attr: extend with cp $6C/jr z etc.
+; ---------------------------------------------------------------------------
+CustomAttrCheck:
+    ld a, [wMapID]             ; 3B — check actual room
+    cp $6B                     ; 2B — Room $6B only (has custom attr data)
+    jr z, .customAttr          ; 2B — exact match only; $6C+ falls through
+    jp MapIDClampForPalette    ; 3B — vanilla + other custom: normal path
+.customAttr:
+    pop hl                     ; 1B — discard return into entry 1 table lookup
+    ld d, $64                  ; 2B — bank $64 (custom layout/attr bank)
+    ld e, $01                  ; 2B — entry 1 = CustomAttr_Room6B
+    ld hl, $c200               ; 3B — attr decompression destination
+    call WaitLCDTransfer       ; 3B — decompress + copy to VRAM
+    ret                        ; 1B — return to entry 1's caller (rst $10 / caller bank)
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; remaining padding
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00

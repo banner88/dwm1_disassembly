@@ -35,6 +35,7 @@ was lost; they were intentionally curated. Treat as documentation.
 | resistance_mapping.json | Structured resistance→skill mapping with skill IDs | reference |
 | tile_registry.json | 9 hand-cataloged tile entries (Milayou sprite tiles) | reference |
 | custom_layouts/room_6b_custom.json | 20×16 tile grid for Room $6B — user-designed Farm tileset room | tile_layout_compiler.py → bank_064.asm |
+| custom_layouts/room_6b_medalman.json | 20×16 tile grid for Room $6B — user-designed MedalMan tileset room (v28, current) | tile_layout_compiler.py → bank_064.asm |
 
 ### Tier S — Stable analysis output (generator not in repo; data is ROM-derived and unchanging)
 | File | Contents | Used by |
@@ -65,16 +66,23 @@ editor (snapshot → regen → diff).
 ### Core pipeline (editor sits on these)
 `compile_script.py` (✅ --test passes) · `decompile_script.py` (✅) ·
 `compress_tiles.py` / `decompress_tiles.py` (✅ roundtrip) ·
-`tile_layout_compiler.py` (✅ new — standalone layout compiler: JSON grid
+`tile_layout_compiler.py` (✅ — standalone layout compiler: JSON grid
 → padded → LZSS → ASM db; roundtrip verified; editor backend module) ·
+`generate_attr_map.py` (✅ new — builds tile→palette maps from ROM for
+all 85 tilesets, generates LZSS-compressed nibble-packed attr data;
+collision thresholds from ROM0 $26E3 ×8 stride) ·
 `gen_script_banks.py` · `render_rooms.py` · `dwm/` package.
 
 ### Prototype editor (towards_editor/)
-`DWM1_Tile_Editor.html` — standalone HTML file (open in browser on Mac).
-Contains all 170 room screens and 85 tilesets with correct palettes and
-names from map_table.json. Load any existing room, edit tiles with
-paint/erase/pick/fill tools, export JSON for tile_layout_compiler.py.
-Next step: palette attribute support, then tileset mashup tool.
+`DWM1_Multi_Tileset_Editor.html` — standalone HTML file (open in browser).
+Multi-tileset room designer: browse 85 tilesets (with names), pick tiles
+from any source into a combined palette (128 max), paint 20×16 rooms,
+collision-threshold-based walkability overlay (W key), variable-size stamps
+(1×2, 2×1, 2×2+), add/remove markers with 2×2 NPC/exit display.
+Exports JSON with full source mapping (`{ts, idx, pal, walkable}` per tile)
+for backend consumption. Proof-of-concept — the Phase 3 romhacking tool
+will have an integrated editor with build pipeline. Known issue: localStorage
+key should auto-version instead of requiring manual cache clear.
 
 ### Dumpers (refresh extracted/ — all tested this session)
 `dump_monsters` `dump_enemy_stats`(✅ reconciled) `dump_encounters`
