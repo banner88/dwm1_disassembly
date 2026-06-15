@@ -81,8 +81,8 @@ jr_00b_4027:
 
 jr_00b_4037:
     ; Index into table: DE = tileset_table + mapID * 8
-    ; For custom rooms, remap to source tileset's mapID
-    call MapIDClampForPalette   ; ROM0: returns A=mapID or $16 for custom rooms
+    ; For custom rooms: raw mapID indexes the $2A35 entry (combined tileset)
+    call CustomGFXMapID         ; ROM0: raw mapID for $6B → reads $2A35 (bank $67)
     ld l, a
     ld h, $00
     add hl, hl                      ; × 2
@@ -149,8 +149,8 @@ labelb_4088:
     ld de, $2a5d
 
 jr_00b_4094:
-    ; For custom rooms, remap to source tileset's mapID
-    call MapIDClampForPalette   ; ROM0: returns A=mapID or $16 for custom rooms
+    ; For custom rooms: raw mapID indexes the $2A35 entry (combined tileset)
+    call CustomGFXMapID         ; ROM0: raw mapID for $6B → reads $2A35 (bank $67)
     ld l, a
     ld h, $00
     add hl, hl

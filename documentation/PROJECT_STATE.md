@@ -5,7 +5,7 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-14 (v28 custom room with MedalMan tileset:
+> Last verified: 2026-06-15 (v6 multi-tileset mashup room: 113 tiles from 7 tilesets,
 > palette attribute intercept working — CustomAttrCheck at bank $17:$6C75
 > redirects Room $6B attr decompression to bank $64 entry 1; tileset
 > switching via MapIDClampForPalette $16 (MedalMan); generate_attr_map.py
@@ -77,7 +77,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | Blocker |
 |--------|---------|
 | Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
-| Custom tile GRAPHICS | Palette attributes fixed (v28). Tileset switching works for single-tileset rooms. Next: combined tileset mashup backend — extract 2bpp tile data from multiple source tilesets, build merged tileset in free bank, intercept GFX loader, merge palette colors. Multi-tileset editor (towards_editor/) captures designs with full source mapping; backend needs to consume the export. |
+| Custom tile GRAPHICS | Palette attributes fixed (v28). Multi-tileset mashup pipeline working end-to-end (Session 6): editor exports JSON → `build_combined_tileset.py` → ROM patches → playable room with tiles from up to 7 source tilesets. NORDEN (DWM2) tileset extracted with correct flat indexing. Walkability, collision thresholds, and palette attributes all functional. **Remaining**: GBC 8-palette limit causes wrong colors when >8 unique color groups used — editor needs validation/warning. k-means palette grouping should be replaced with exact-color grouping. Animated tile index ranges not handled. |
 | Custom music | Sound engine unexplored |
 | Save-data audit | SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Only remaining: in-game save/load test of a custom flag in SameBoy. |
 

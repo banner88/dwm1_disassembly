@@ -543,12 +543,12 @@ CustomRoom0_Screen0:
 
 CustomRoom0_NPCs:
     db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
-    db $00, $0B, $02, $02, $01     ; NPC at (2,2), script_id=1 — gives item
+    db $00, $0B, $02, $07, $01     ; NPC at (2,7), script_id=1 — gives item
     db $FF
 
 CustomRoom0_Exits:
-    db $03, $07, $01, $00, $08, $04, $05
-    db $03, $01, $6C, $00, $01, $05, $07
+    db $04, $00, $6C, $00, $01, $05, $07  ; Castle exit: (4,0) → Room $6C screen 0
+    db $03, $07, $01, $00, $08, $04, $05  ; GreatTree return: (3,7) → GreatTree
     db $FF
 
 ; =============================================
@@ -576,14 +576,14 @@ CustomRoom1_Screen0:
     dw CustomRoom1_S0_Exits         ; shared exit data
 
 CustomRoom1_S0_Step0_NPCs:
-    db $8F, $FF, $09, $04, $01     ; spawn (from screen 1)
+    db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
     db $00, $0B, $05, $02, $01     ; NPC at (5,2), script_id=1 — YES/NO demo
     db $00, $0B, $02, $04, $02     ; NPC at (2,4), script_id=2 — teleport Castle
     db $00, $09, $07, $04, $04     ; NPC at (7,4), script_id=4 — Gatekeeper ★
     db $FF
 
 CustomRoom1_S0_Step1_NPCs:
-    db $8F, $FF, $09, $04, $01     ; spawn (from screen 1)
+    db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
     db $00, $0B, $05, $02, $01     ; NPC at (5,2), script_id=1 — YES/NO demo
     db $00, $0B, $02, $04, $02     ; NPC at (2,4), script_id=2 — teleport Castle
     db $20, $07, $07, $04, $05     ; NPC at (7,4), script_id=5 — Guard ★ (different sprite+facing)
@@ -613,7 +613,7 @@ CustomRoom1_Screen5:
     dw CustomRoom1_S5_Exits
 
 CustomRoom1_S5_NPCs:
-    db $8F, $FF, $04, $02, $01     ; spawn point
+    db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
     db $FF
 
 CustomRoom1_S5_Exits:

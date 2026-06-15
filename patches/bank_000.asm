@@ -6067,7 +6067,7 @@ TileBuffer_1E96:
     ld de, $2a63
 
 UseGateWorldTable:
-    call MapIDClampForPalette       ; ROM0: A=mapID or $16 for custom rooms
+    call CustomGFXMapID         ; ROM0: raw mapID for $6B (reads custom threshold at $2A3B)
     ld l, a
     ld h, $00
     add hl, hl
@@ -8804,15 +8804,15 @@ Data_2A30:
     nop
     ld d, b
     nop
-    ld [de], a
-    inc h
+    nop                         ; $2A35: step_id=$00 (combined GFX in bank $67)
+    ld h, a                     ; $2A36: bank=$67
     and b
 
 Data_2A38:
     nop
     add b
     nop
-    ld d, b
+    dec hl                      ; $2A3B: collision threshold=$2B (43 wall tiles)
     nop
 
 DataTable_2A3D:
@@ -13030,15 +13030,14 @@ AudioLookup_3BA7:
     rst $38
 
 AudioWavePatternData:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; CustomGFXMapID: returns raw wMapID for $00-$6B, MapIDClampForPalette for $6C+
+; Used by GFX loader (bank $0B Entry 0+1) and collision threshold (ROM0)
+; 9 bytes — fits within the 17 unreferenced rst $38 bytes at $3BC1
+CustomGFXMapID::
+    ld a, [wMapID]              ; 3 bytes: FA 68 C9
+    cp $6C                      ; 2 bytes: FE 6C
+    ret c                       ; 1 byte:  D8 (raw mapID for $00-$6B)
+    jp MapIDClampForPalette     ; 3 bytes: C3 xx xx (clamped for $6C+)
     rst $38
     rst $38
     rst $38

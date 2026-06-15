@@ -216,7 +216,7 @@ Contrary to initial analysis ("bank $17 is full"), the LZSS attribute data ends 
 **Symptom**: Reading ROM0 $26E3 as consecutive bytes gave threshold=0 for MedalMan (mapID $16), implying all tiles are walls — clearly wrong since the player walks in that room.
 **Root cause**: The code does `add hl,hl; add hl,hl; add hl,hl` (×8) before indexing. Each mapID's entry is 8 bytes apart, not 1. The first byte at each 8-byte entry is the threshold.
 **Fix**: Read `rom[$26E3 + mapID * 8]` instead of `rom[$26E3 + mapID]`. MedalMan's correct threshold is 64 (tiles <64 walkable, ≥64 wall).
-**Rule**: Collision table: ROM0 $26E3, stride 8 bytes per mapID. Threshold = first byte. Tile index < threshold = walkable. `jr c` after `cp [hl]` means tile < threshold → B=$FF (passable); tile ≥ threshold → B=$0F (blocked).
+**Rule**: Collision table: ROM0 $26E3, stride 8 bytes per mapID. Threshold = first byte. Tile index < threshold = WALL (blocked). Tile index ≥ threshold = WALKABLE. `jr c` after `cp [hl]` means tile < threshold → B=$FF (BLOCKED); tile ≥ threshold → B=$0F (passable). **CORRECTION** (Session 6): Previous version had walkable/blocked swapped. User verified across every room with overlay: floor tiles always have index ≥ threshold, walls always < threshold. $FF = blocked, $0F = walkable.
 
 ### CustomAttrCheck must match exact mapID, not range
 **Symptom**: Room $6C (Castle tileset) showed scrambled palettes after the attr intercept was added.
@@ -229,3 +229,42 @@ Contrary to initial analysis ("bank $17 is full"), the LZSS attribute data ends 
 **Root cause**: The $60DB figure came from early analysis of the LZSS attribute data endpoint. Actual measurement: last non-zero byte is at offset $2C74 (addr $6C74), so free space starts at $6C75.
 **Fix**: CustomAttrCheck placed at $6C75 (22 bytes). Remaining free: ~4981 bytes at $6C8B-$7FFF.
 **Rule**: Always verify free space boundaries against the ROM, not previous documentation.
+
+
+---
+
+## Session 6 Lessons — Tileset Mashup & Editor
+
+### CORRECTION: Collision threshold direction was documented backwards
+**Symptom**: Editor walkability overlay showed walkable tiles as walls and vice versa, confirmed by user across EVERY room.
+**Root cause**: Session 5 documented "tile < threshold = walkable, $FF = passable." This is BACKWARDS. In bank $01, `cp $FF; jp nz, $51B2` — when B=$FF the code does NOT jump (continues to clear movement flag = BLOCKED). When B=$0F, it JUMPS to the movement handler (ALLOWED).
+**Fix**: `isWalkable` in editor changed to `tileIdx >= threshold`. Build tool sorts WALL tiles first (low indices), walkable after. Threshold = wall count.
+**Rule**: tile < threshold → $FF → BLOCKED. tile ≥ threshold → $0F → WALKABLE. This was proven empirically by the user across every room with blue/orange overlay.
+
+### Tileset PNG and tile data MUST use identical flat indexing
+**Symptom**: 84% of NORDEN tiles showed wrong colors in ROM — grey stone appeared orange, floor appeared solid white, bookshelf tiles were completely different.
+**Root cause**: The NORDEN tileset PNG was organized in 2×2 meta-tile groups (tiles 0,1 = top of meta-tile 0; tiles 2,3 = bottom). But the editor draws tiles using flat left-to-right indexing: `x=(idx%16)*8, y=(idx//16)*8`. This meant tile index 2 read from PNG position (16,0) but the actual tile 2 was at (0,8). The editor showed one tile, the build tool read a different one.
+**Fix**: Rebuild tileset PNG, 2bpp, and palette JSON all in flat scan order (left-to-right, top-to-bottom, 16 tiles per row). Verify with: `for each tile, PNG colors at flat position ⊆ JSON stored colors`.
+**Rule**: The tileset PNG, 2bpp file, and palette JSON must ALL index tiles in the same order. The editor uses flat order. NEVER use meta-tile-internal ordering for tile indices.
+
+### 2bpp re-encoding required when merging subset palettes
+**Symptom**: Tiles with 3 unique colors sharing a 4-color palette slot rendered wrong — grey pixels appeared white.
+**Root cause**: A 3-color tile [grey, brown, black] encodes grey as index 0 (lightest of its own palette). When placed in a 4-color palette [white, grey, brown, black], index 0 maps to white, not grey. The pixel indices are relative to the tile's own sorted palette, not the shared palette.
+**Fix**: At build time, for each EXT: tile, compute a remap table from tile-local indices to palette-slot indices. Re-encode the 2bpp data using the remapped indices.
+**Rule**: When merging a tile into a palette with more colors than the tile uses, the 2bpp data must be re-encoded. Index alignment is NOT automatic.
+
+### Claude's upload system silently converts PNG to JPEG
+**Symptom**: Analysis showed 41,003 unique colors in a "PNG" that should have had 41 (Mode P indexed palette).
+**Root cause**: The upload system converts PNG→JPEG while keeping the .png extension. `file` command reveals "JPEG image data, JFIF standard 1.01." JPEG compression introduces thousands of artifact colors, destroying pixel-perfect tile data.
+**Fix**: Upload PNGs inside a .zip file. The zip bypasses the JPEG conversion.
+**Rule**: Never trust uploaded PNG files. Always verify with `file` command. Use zip for pixel-perfect data.
+
+### NORDEN map extraction parameters
+**Verified values**: Grid offset (3,3), bottom separator at y=579 (3-pixel green band), background color (0,128,0), content area 320×576 pixels = 20×36 meta-tiles → 106 unique meta-tiles (448 tiles in flat order). Image is RGB with exactly 36 unique colors. User confirmed (3,3) offset visually.
+**Rule**: Any re-extraction must use these exact parameters. Different offsets produce misaligned tiles with green background bleed.
+
+### Palette regex must write exactly 8 db lines
+**Symptom**: Dialog boxes rendered as solid black in custom room. All other rooms fine.
+**Root cause**: The Python regex replacing palette data in bank_017.asm silently dropped the 8th line (palette 7). The game read garbage bytes past the 7th palette entry, corrupting palette slot 7's colors.
+**Fix**: Always count db lines after replacement. Assert exactly 8 lines between `CustomPaletteColors_6B:` and the next code.
+**Rule**: After every palette update in bank_017.asm, verify: `grep -c 'db \$' | == 8`. Missing palette lines cause garbage colors AND break dialog rendering.
