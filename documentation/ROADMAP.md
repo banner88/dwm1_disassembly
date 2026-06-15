@@ -149,27 +149,27 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       Multi-tileset HTML editor delivered (towards_editor/) with
       walkability overlay, variable-size stamps, marker management,
       tileset names, and full source-mapping export.
-- [~] **Custom tile GRAPHICS**: palette attribute intercept DONE (v28).
+- [x] **Custom tile GRAPHICS**: palette attribute intercept DONE (v28).
       Single-tileset rooms fully working (tileset switch + correct palettes).
-      **Next: combined tileset mashup backend.** The multi-tileset editor
-      (towards_editor/) exports `{palette:[{ts,idx,pal,walkable},...], layout}`
-      with full source mapping. Backend needs:
-      1. `tools/build_combined_tileset.py`: decompress each source tileset
-         (2048B via decompress_tiles.py), cherry-pick 16 bytes per tile,
-         concatenate up to 128 tiles, LZSS compress, store in free bank.
-      2. GFX loading intercept: Entry 0 loads tile graphics with D=bank,
-         E=step_id via DecompressTileLayout. For mashup rooms, redirect
-         to the custom combined tileset bank instead of source mapID's bank.
-      3. Palette color merging: different source tilesets have different
-         pal_ptr values (palette colors). Need to load multiple color sets
-         into the 8 BG palette slots. The attr nibble values (0-7) select
-         which palette; colors must match.
-      Editor note: towards_editor/ is a proof-of-concept/mockup. The actual
-      romhacking tool (Phase 3) will have an integrated editor that mimics
-      this functionality but connects to the full build pipeline.
-      Editor known issue: localStorage key should auto-migrate between
-      versions instead of requiring manual cache clearing.
-      *Accept*: custom room shows tiles cherry-picked from 2+ source tilesets.
+      **Multi-tileset mashup: WORKING (Session 7).** Full pipeline:
+      editor → JSON export → `build_combined_tileset.py` → ASM patches → ROM.
+      Tested with 80 tiles from 4 tilesets (MedalMan, NORDEN, Bazaar,
+      GreatTree), 8/8 palette slots, verified in SameBoy.
+      Key fixes this session:
+      - K-means palette grouping → exact-color matching (10 groups for NORDEN,
+        subset merging). NORDEN_palettes.json regenerated.
+      - Game engine forces BG palette color index 1 to $6BFF at runtime →
+        build tool swaps EXT palette indices 0↔1 so custom colors use 0,2,3.
+      - Castle VRAM handler animates tile indices 77-78 → build tool inserts
+        blank tiles at those positions, shifting custom tiles past them.
+      - Editor: palette slot counter (X/8), export warns if >8, localStorage v4.
+      *Accept*: custom room shows tiles cherry-picked from 2+ source tilesets. ✅
+      **Remaining (next session)**:
+      - Editor tileset PNGs use ROM step-entry palette data which is encoded
+        (not raw RGB15) for some rooms → wrong colors. Fix: regenerate PNGs
+        using `room_palettes.json` (runtime-correct data for 81 rooms).
+      - Editor doesn't preview the index-1 forced color effect (tiles look
+        slightly different in editor vs in-game for the lightest color).
 - [!] **Random encounters in custom rooms** — blocked on decoupling.
       `wInGateworld` ($C969) gates encounters AND script dispatch AND floor
       generator. Attack plans, in order:

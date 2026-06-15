@@ -249,58 +249,8 @@ def build_combined(export_data, rom):
         tile_bytes = tileset_data[idx * 16:(idx + 1) * 16]
         tile_data.append((tile_bytes, pal, walkable, ts_key, idx))
 
-    # --- Step 1b: Auto-correct EXT: tile palette assignments ---
-    # K-means groups from the extraction may assign tiles to wrong palettes.
-    # Fix: for each EXT: tile, find the pal_group whose colors are a superset
-    # of the tile's actual colors (from the JSON).
-    import json as _json
-    _ext_pal_cache = {}
-    for i, entry in enumerate(palette):
-        ts_key = entry['ts']
-        if not ts_key.startswith('EXT:'):
-            continue
-        ext_name = ts_key.split(':')[1]
-        if ext_name not in _ext_pal_cache:
-            pj = os.path.join(ROOT_DIR, 'extracted', 'custom_tilesets',
-                              f'{ext_name}_palettes.json')
-            if os.path.exists(pj):
-                with open(pj) as f:
-                    _ext_pal_cache[ext_name] = _json.load(f)
-        pd = _ext_pal_cache.get(ext_name, {})
-        tinfo = pd.get('tiles', {}).get(str(entry['idx']))
-        if not tinfo:
-            continue
-        tile_colors = set(tuple(c) for c in tinfo['colors'])
-        orig_group = entry.get('pal', 0)
-
-        # Collect color sets for all pal_groups from tiles in the export
-        group_color_sets = {}
-        for e2 in palette:
-            if e2['ts'] != ts_key:
-                continue
-            g = e2.get('pal', 0)
-            t2 = pd.get('tiles', {}).get(str(e2['idx']))
-            if t2:
-                if g not in group_color_sets:
-                    group_color_sets[g] = set()
-                group_color_sets[g] |= set(tuple(c) for c in t2['colors'])
-
-        # Find best matching group: prefer superset, then closest match
-        best_group = orig_group
-        best_score = -1
-        for g, g_colors in group_color_sets.items():
-            if tile_colors <= g_colors:  # tile's colors are subset
-                overlap = len(tile_colors & g_colors)
-                size_penalty = len(g_colors)  # prefer smaller supersets
-                score = overlap * 100 - size_penalty
-                if score > best_score:
-                    best_score = score
-                    best_group = g
-
-        if best_group != orig_group:
-            palette[i] = dict(entry, pal=best_group)
-            tile_data[i] = (tile_data[i][0], best_group, tile_data[i][2],
-                            tile_data[i][3], tile_data[i][4])
+    # (Step 1b removed: k-means auto-correction no longer needed.
+    #  NORDEN_palettes.json now uses exact-color grouping with subset merging.)
 
     # --- Step 2: Sort — WALL tiles first, walkable after ---
     # Game collision: tile < threshold = blocked ($FF), tile >= threshold = walkable ($0F)
@@ -317,10 +267,38 @@ def build_combined(export_data, rom):
     for new_idx, (old_idx, _) in enumerate(sorted_tiles):
         remap[old_idx] = new_idx
 
+    # --- Step 2b: Avoid animated tile indices ---
+    # The Castle VRAM handler (mapID $00, which runs for custom rooms via
+    # MapIDClampForDispatch) animates tile indices 77-78 by rotating their
+    # pixel data in VRAM. Any custom tile at those indices gets animated.
+    # Fix: shift tiles past the animated range by inserting blanks.
+    ANIMATED_INDICES = {77, 78}
+    final_idx_for_tile = {}  # sorted_tiles position → final GFX index
+    final_idx = 0
+    for pos in range(len(sorted_tiles)):
+        while final_idx in ANIMATED_INDICES:
+            final_idx += 1
+        final_idx_for_tile[pos] = final_idx
+        final_idx += 1
+    total_gfx_tiles = final_idx  # includes gaps for animated indices
+
+    # Update remap: old_palette_index → final GFX index
+    for new_pos, (old_idx, _) in enumerate(sorted_tiles):
+        remap[old_idx] = final_idx_for_tile[new_pos]
+
+    if any(final_idx_for_tile[i] != i for i in range(len(sorted_tiles))):
+        print(f"Shifted tiles to avoid animated indices {sorted(ANIMATED_INDICES)}",
+              file=sys.stderr)
+
     # --- Step 3: Build combined GFX ---
     gfx_bytes = bytearray()
-    for _, (_, tile_info) in enumerate(sorted_tiles):
-        gfx_bytes.extend(tile_info[0])
+    tile_pos = 0
+    for gfx_idx in range(total_gfx_tiles):
+        if gfx_idx in ANIMATED_INDICES:
+            gfx_bytes.extend(b'\x00' * 16)  # blank at animated index
+        else:
+            gfx_bytes.extend(sorted_tiles[tile_pos][1][0])
+            tile_pos += 1
 
     # Pad to 2048 bytes (128 tiles) with blank tiles
     while len(gfx_bytes) < 2048:
@@ -419,55 +397,66 @@ def build_combined(export_data, rom):
 
     # --- Step 6: Build tile→COMBINED palette mapping ---
     sorted_pal = {}
-    for new_idx, (_, tile_info) in enumerate(sorted_tiles):
+    for pos, (_, tile_info) in enumerate(sorted_tiles):
+        final_idx = final_idx_for_tile[pos]
         _, src_pal, _, ts_key, _ = tile_info
         key = merge_map.get((ts_key, src_pal), (ts_key, src_pal))
         combined_slot = pal_slot_map.get(key, 0)
         if combined_slot >= 8:
             combined_slot = 0
-        sorted_pal[new_idx] = combined_slot
+        sorted_pal[final_idx] = combined_slot
 
     attr_256 = generate_attr_data(layout_remapped, sorted_pal)
+
+    # Compute merged palette colors (must happen before Step 6b so
+    # ext_rearranged is available for 2bpp re-encoding)
+    palette_64, pal_remap_info, ext_rearranged = merge_palette_colors(
+        rom, pal_slot_map, source_tilesets, export_palette=palette, merge_map=merge_map
+    )
 
     # --- Step 6b: Re-encode EXT: tile 2bpp data for palette index alignment ---
     # When a tile's colors are a subset of the palette slot's colors,
     # the 2bpp indices won't align (tile index 0 might be grey, but palette
     # index 0 is white). Re-encode each EXT: tile's 2bpp data so pixel
     # indices match the palette slot's color positions.
-    for new_idx, (old_idx, tile_info) in enumerate(sorted_tiles):
+    #
+    # Uses the canonical palette colors from the JSON's palette_colors field
+    # (exact-color grouping, not computed from tile colors).
+    for pos, (old_idx, tile_info) in enumerate(sorted_tiles):
         tile_data_16, src_pal, walkable, ts_key, orig_idx = tile_info
+        final_gfx_idx = final_idx_for_tile[pos]
         if not ts_key.startswith('EXT:'):
             continue  # ROM tiles already match their palette
 
-        # Get this tile's exact colors
-        tc = _get_tile_colors(ts_key, orig_idx)
-        if not tc:
-            continue
+        ext_name = ts_key.split(':')[1]
+        pd = _ext_cache.get(ext_name, {})
 
-        # Get the palette slot's colors
+        # Get canonical palette colors for this group
+        # For EXT tiles: use the REARRANGED palette (0↔1 swapped) so that
+        # the lightest color maps to index 1 (forced by game engine)
         key = merge_map.get((ts_key, src_pal), (ts_key, src_pal))
-        combined_slot = pal_slot_map.get(key, 0)
-        if combined_slot >= 8:
-            combined_slot = 0
+        effective_pal = key[1]
 
-        # Get the palette slot's 4 colors from group_colors
-        slot_colors_set = group_colors.get(key, set())
-        # Sort by luminance (lightest first) — same order as palette encoding
-        slot_colors = sorted(slot_colors_set,
-                             key=lambda c: c[0]*0.299+c[1]*0.587+c[2]*0.114,
-                             reverse=True)
-        while len(slot_colors) < 4:
-            slot_colors.append(slot_colors[-1] if slot_colors else (0,0,0))
-        slot_colors = slot_colors[:4]
+        if key in ext_rearranged:
+            slot_colors = ext_rearranged[key]
+        else:
+            slot_colors_raw = pd.get('palette_colors', {}).get(str(effective_pal))
+            if not slot_colors_raw:
+                continue
+            slot_colors = [tuple(c) for c in slot_colors_raw]
 
-        # Get tile's own colors sorted by luminance
+        # Get tile's own unique colors sorted by luminance (lightest first)
+        tinfo = pd.get('tiles', {}).get(str(orig_idx))
+        if not tinfo:
+            continue
+        tc = set(tuple(c) for c in tinfo['colors'])
         tile_colors = sorted(tc, key=lambda c: c[0]*0.299+c[1]*0.587+c[2]*0.114,
                              reverse=True)
         while len(tile_colors) < 4:
             tile_colors.append(tile_colors[-1])
         tile_colors = tile_colors[:4]
 
-        # Build remap: tile_index → palette_index
+        # Build remap: tile_index → palette_index (nearest color match)
         color_remap = {}
         for ti, tcol in enumerate(tile_colors):
             best_pi = 0
@@ -501,11 +490,8 @@ def build_combined(export_data, rom):
             new_data[row*2+1] = new_hi
 
         # Update gfx_bytes in place
-        offset = new_idx * 16
+        offset = final_gfx_idx * 16
         gfx_bytes[offset:offset+16] = new_data
-    palette_64, pal_remap_info = merge_palette_colors(
-        rom, pal_slot_map, source_tilesets, export_palette=palette, merge_map=merge_map
-    )
 
     return {
         'gfx_bytes': bytes(gfx_bytes),
@@ -553,39 +539,34 @@ def generate_attr_data(layout_20x16, tile_pal, default_pal=0):
 def merge_palette_colors(rom, pal_slot_map, source_tilesets, export_palette=None, merge_map=None):
     """Merge palette colors from multiple source tilesets.
 
-    For EXT: tilesets, uses per-tile exact colors from the tiles actually in
-    the export (not group averages from the full tileset).
+    For EXT: tilesets, reads exact palette colors from the palette JSON's
+    palette_colors field (exact-color grouping, not k-means averages).
+    For ROM tilesets, reads from the ROM's palette data.
+
+    CRITICAL: The game engine forces BG palette color index 1 to a shared
+    value ($6BFF = (248,248,208)) at runtime, overwriting whatever we set.
+    For EXT tilesets, we swap colors 0↔1 so the lightest color (closest to
+    the forced value) goes to index 1 (where it'll be overwritten with
+    something similar), and the second color goes to index 0 (preserved).
+    ROM tilesets already account for this in their original encoding.
     """
     if merge_map is None:
         merge_map = {}
-    
-    # For EXT: tilesets, build a map of (ts_key, pal) → list of per-tile colors
-    ext_tile_colors = {}
+
+    # Load EXT palette JSON data
+    pal_json_cache = {}
     if export_palette:
-        import json as _json
-        pal_json_cache = {}
         for entry in export_palette:
             ts_key = entry['ts']
             if not ts_key.startswith('EXT:'):
                 continue
-            src_pal = entry.get('pal', 0)
-            tile_idx = entry['idx']
-            # Apply merge_map to redirect subsets to superset
-            key = merge_map.get((ts_key, src_pal), (ts_key, src_pal))
-            if key not in ext_tile_colors:
-                ext_tile_colors[key] = []
             ext_name = ts_key.split(':')[1]
             if ext_name not in pal_json_cache:
                 pj = os.path.join(ROOT_DIR, 'extracted', 'custom_tilesets',
                                   f'{ext_name}_palettes.json')
                 if os.path.exists(pj):
                     with open(pj) as f:
-                        pal_json_cache[ext_name] = _json.load(f)
-            pd = pal_json_cache.get(ext_name, {})
-            tinfo = pd.get('tiles', {}).get(str(tile_idx))
-            if tinfo and 'colors' in tinfo:
-                for c in tinfo['colors']:
-                    ext_tile_colors[key].append(tuple(c))
+                        pal_json_cache[ext_name] = json.load(f)
 
     # Load ROM palette colors for non-EXT tilesets
     pal_color_cache = {}
@@ -598,29 +579,36 @@ def merge_palette_colors(rom, pal_slot_map, source_tilesets, export_palette=None
         except ValueError as e:
             print(f"WARNING: {e}", file=sys.stderr)
 
-    # Build 64-byte output
+    # Build 64-byte output + track rearranged palettes for EXT tiles
     output = bytearray(64)
     info = {}
+    ext_rearranged = {}  # (ts_key, pal) → rearranged [4 × (r,g,b)]
 
     for (ts_key, src_pal), combined_slot in pal_slot_map.items():
         if combined_slot >= 8:
             break
-        
-        if ts_key.startswith('EXT:') and (ts_key, src_pal) in ext_tile_colors:
-            # Use exact colors from the export's tiles
-            from collections import Counter as _C
-            cc = _C(ext_tile_colors[(ts_key, src_pal)])
-            top4 = [c for c, _ in cc.most_common(4)]
-            while len(top4) < 4:
-                top4.append(top4[-1] if top4 else (0, 0, 0))
-            # Sort lightest first
-            top4.sort(key=lambda c: c[0]*0.299+c[1]*0.587+c[2]*0.114, reverse=True)
-            for ci, (r, g, b) in enumerate(top4):
-                gr, gg, gb = min(31, r//8), min(31, g//8), min(31, b//8)
-                val = (gr & 0x1F) | ((gg & 0x1F) << 5) | ((gb & 0x1F) << 10)
-                output[combined_slot * 8 + ci * 2] = val & 0xFF
-                output[combined_slot * 8 + ci * 2 + 1] = (val >> 8) & 0xFF
-            info[combined_slot] = f"{ts_key} pal {src_pal}"
+
+        if ts_key.startswith('EXT:'):
+            # Read exact palette colors from the JSON's palette_colors field
+            ext_name = ts_key.split(':')[1]
+            pd = pal_json_cache.get(ext_name, {})
+            pal_colors_rgb = pd.get('palette_colors', {}).get(str(src_pal))
+            if pal_colors_rgb:
+                # Rearrange: swap positions 0↔1 so lightest color goes to
+                # index 1 (forced by game) and second color to index 0 (preserved)
+                rearranged = list(pal_colors_rgb[:4])
+                while len(rearranged) < 4:
+                    rearranged.append(rearranged[-1])
+                rearranged[0], rearranged[1] = rearranged[1], rearranged[0]
+                ext_rearranged[(ts_key, src_pal)] = [tuple(c) for c in rearranged]
+
+                for ci, color in enumerate(rearranged):
+                    r, g, b = color
+                    gr, gg, gb = min(31, r // 8), min(31, g // 8), min(31, b // 8)
+                    val = (gr & 0x1F) | ((gg & 0x1F) << 5) | ((gb & 0x1F) << 10)
+                    output[combined_slot * 8 + ci * 2] = val & 0xFF
+                    output[combined_slot * 8 + ci * 2 + 1] = (val >> 8) & 0xFF
+                info[combined_slot] = f"{ts_key} pal {src_pal}"
         elif ts_key in pal_color_cache and src_pal in pal_color_cache[ts_key]:
             colors = pal_color_cache[ts_key][src_pal]
             for c in range(4):
@@ -628,7 +616,7 @@ def merge_palette_colors(rom, pal_slot_map, source_tilesets, export_palette=None
                 output[combined_slot * 8 + c * 2 + 1] = colors[c][1]
             info[combined_slot] = f"{ts_key} pal {src_pal}"
 
-    return bytes(output), info
+    return bytes(output), info, ext_rearranged
 
 
 # ---------------------------------------------------------------------------

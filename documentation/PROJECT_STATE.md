@@ -5,13 +5,13 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-15 (v6 multi-tileset mashup room: 113 tiles from 7 tilesets,
-> palette attribute intercept working — CustomAttrCheck at bank $17:$6C75
-> redirects Room $6B attr decompression to bank $64 entry 1; tileset
-> switching via MapIDClampForPalette $16 (MedalMan); generate_attr_map.py
-> builds tile→palette maps from ROM for all 85 tilesets; multi-tileset
-> HTML editor delivered with walkability overlay, variable stamps, marker
-> add/remove; collision threshold table confirmed at ROM0 $26E3 ×8 stride)
+> Last verified: 2026-06-15 (Session 7: tile mashup palette system rewritten —
+> k-means replaced with exact-color grouping; game engine forces BG palette
+> color index 1 to shared $6BFF at runtime, fixed by swapping EXT palette
+> indices 0↔1; Castle VRAM handler animates tile indices 77-78, fixed by
+> reserving those indices; editor palette slot counter (X/8) added with
+> export validation; NORDEN_palettes.json regenerated with 10 exact groups;
+> build_combined_tileset.py overhauled; verified in SameBoy v4 build)
 
 ---
 
@@ -77,7 +77,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | Blocker |
 |--------|---------|
 | Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
-| Custom tile GRAPHICS | Palette attributes fixed (v28). Multi-tileset mashup pipeline working end-to-end (Session 6): editor exports JSON → `build_combined_tileset.py` → ROM patches → playable room with tiles from up to 7 source tilesets. NORDEN (DWM2) tileset extracted with correct flat indexing. Walkability, collision thresholds, and palette attributes all functional. **Remaining**: GBC 8-palette limit causes wrong colors when >8 unique color groups used — editor needs validation/warning. k-means palette grouping should be replaced with exact-color grouping. Animated tile index ranges not handled. |
+| Custom tile GRAPHICS | Palette attributes fixed (v28). Multi-tileset mashup pipeline working end-to-end (Session 7): editor exports JSON → `build_combined_tileset.py` → ROM patches → playable room with tiles from 4 source tilesets (80 tiles). K-means palette grouping replaced with exact-color matching (10 groups for NORDEN). Game engine forces BG palette color index 1 to shared value ($6BFF) at runtime — build tool swaps EXT palette indices 0↔1 to work around this. Castle VRAM animation at tile indices 77-78 avoided by inserting blanks. Editor has live palette slot counter (X/8) with export validation. **Remaining**: Editor tileset PNGs rendered with wrong palette for some rooms (Starry Shrine etc.) — `room_palettes.json` has correct runtime data, needs regeneration script. |
 | Custom music | Sound engine unexplored |
 | Save-data audit | SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Only remaining: in-game save/load test of a custom flag in SameBoy. |
 

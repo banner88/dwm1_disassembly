@@ -8812,7 +8812,7 @@ Data_2A38:
     nop
     add b
     nop
-    dec hl                      ; $2A3B: collision threshold=$2B (43 wall tiles)
+    inc l                       ; $2A3B: collision threshold=$2C (44 wall tiles)
     nop
 
 DataTable_2A3D:

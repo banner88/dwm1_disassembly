@@ -268,3 +268,36 @@ Contrary to initial analysis ("bank $17 is full"), the LZSS attribute data ends 
 **Root cause**: The Python regex replacing palette data in bank_017.asm silently dropped the 8th line (palette 7). The game read garbage bytes past the 7th palette entry, corrupting palette slot 7's colors.
 **Fix**: Always count db lines after replacement. Assert exactly 8 lines between `CustomPaletteColors_6B:` and the next code.
 **Rule**: After every palette update in bank_017.asm, verify: `grep -c 'db \$' | == 8`. Missing palette lines cause garbage colors AND break dialog rendering.
+
+---
+
+## Session 7 Lessons — Palette Index 1 Forced Color & Animated Tile Indices
+
+### BG palette color index 1 is FORCED by the game engine at runtime
+**Symptom**: All NORDEN tiles appeared "way too white" in-game despite correct palette data in the ROM. Floor, walls, bannisters, drapes all washed out. Palette bytes in ROM verified correct. Editor/PNG showed correct colors.
+**Root cause**: The game engine overwrites BG palette color index 1 in ALL 8 palette slots to a shared value (`$6BFF` = (248,248,208) light yellow-white) every frame. This is a palette refresh/animation system tied to the "source" tileset (MapIDClampForPalette returns $16=MedalMan for room $6B). The NORDEN extraction tool encoded tiles with index 0=lightest (white), index 1=second-lightest (grey-blue). At runtime, the game replaced index 1 (grey-blue) with the forced light-yellow, making everything appear washed out/white. ROM tilesets are already encoded to work with this constraint — their 2bpp data accounts for the forced color at index 1.
+**Discovery method**: `>palette` command in SameBoy while inside the room. Showed `6BFF` at position 1 in all 8 BG palettes. This took 5 minutes; reasoning from hex dumps took hours and found nothing.
+**Fix**: In `build_combined_tileset.py`, for EXT tilesets, swap palette colors 0↔1 so the lightest color (expendable, similar to the forced value) goes to index 1, and the second color goes to index 0 (preserved). Re-encode all EXT tile 2bpp data to match the swapped palette. ROM tileset palettes are used as-is (they already have the correct convention).
+**Verification**: `>palette` in SameBoy after fix showed custom colors at indices 0, 2, 3 (preserved) and the forced `6BFF` at index 1 (acceptable — close to white). Tiles displayed with correct grey-blue stone, olive shadows, proper bannister colors.
+**Rule**: BG palette color index 1 is NOT freely assignable in this game. It is forced to a shared value at runtime. All custom palette data must place expendable/lightest colors at index 1 and critical colors at indices 0, 2, 3. Always verify runtime palette state with SameBoy `>palette` — static ROM analysis cannot detect runtime overwrites.
+
+### Castle VRAM handler animates tile indices 77-78
+**Symptom**: Blue gravestone tiles in custom room were cycling/animated despite being static tiles.
+**Root cause**: `MapIDClampForDispatch` returns $00 (Castle) for custom rooms. Castle's per-room VRAM handler at bank $01 `label1_61f9` does `ld hl, $94D0; call CheckVisualEffectType` which rotates pixel data at VRAM address $94D0-$94FF = tile indices 77-78 (($94D0-$9000)/16 = 77). The build tool's wall/walkable sort placed the gravestone tiles at indices 76-79, with tiles 77-78 landing exactly in the animated range.
+**Fix**: `build_combined_tileset.py` now reserves indices 77-78 as "animated no-go zones." After sorting, tiles are remapped to skip those indices (blank tiles inserted at 77-78, subsequent tiles shifted to 79+). The `ANIMATED_INDICES` set is checked during GFX building, layout remapping, and palette assignment.
+**Rule**: Custom rooms using Castle as their dispatch source (mapID $00) must not place tiles at indices 77-78. The build tool handles this automatically. If MapIDClampForDispatch is changed to a different source room, the animated indices may be different — check that room's VRAM handler in bank $01.
+
+### K-means palette grouping replaced with exact-color matching
+**Symptom**: NORDEN tiles had wrong colors — bookshelf black, crate black, grey tiles showing wrong tones.
+**Root cause**: The original `extract_png_tileset.py` used k-means clustering to group 448 tiles into 8 palette groups by color similarity. K-means assigned tiles to groups whose averaged palette didn't contain their actual colors. A grey-toned tile could end up in an orange-dominated group, getting orange palette colors instead of grey.
+**Fix**: Replaced k-means with exact-color grouping in NORDEN_palettes.json: group tiles by identical 4-color sets (26 unique sets), then merge subsets (tile with 3 colors fits in a 4-color group containing those 3). Result: 10 exact palette groups. Each group's palette IS the exact tile colors, not averages. Per-tile `color_remap` stored for tiles that need 2bpp re-encoding when merged into a superset group. TILE_PAL in editor updated to match new group numbers. localStorage key bumped to v4 to force cache clear.
+**Rule**: Never use k-means or any approximate clustering for GBC palette assignment. Use exact-color matching: group tiles by identical color sets, merge strict subsets. The GBC has 4 colors per palette — there is no room for approximation.
+
+### ROM palette data is not always raw RGB15 — some rooms use encoded palette references
+**Symptom**: Editor shows wrong colors for Starry Shrine and other rooms (uniform color instead of colorful).
+**Root cause**: The ROM's step entry `pal_ptr` for some rooms points to ENCODED palette data (values with bit 15 set, e.g., `$C2EA`, which is impossible for RGB15). The game's palette loader transforms this into actual RGB15 at runtime. Tools that read pal_ptr as raw RGB15 get garbage colors.
+**Status**: Not yet fixed. `extracted/room_palettes.json` has correct runtime-dumped palette data for 81 rooms. The editor's tileset PNGs need regenerating using these runtime palettes instead of ROM step entry data.
+**Rule**: Verify palette data against `room_palettes.json` (runtime ground truth), not ROM step entries. Some rooms have palette animation/encoding that the step entry data does not reflect.
+
+### Verify against runtime state, not static analysis
+This session's two biggest bugs (forced index 1 and animated tiles) were both invisible in static ROM analysis. The palette bytes in the ROM were correct. The 2bpp encoding was correct. The tile indices were valid. Only runtime observation (SameBoy `>palette` command, visual inspection of animation) revealed the actual problems. **30 seconds of runtime observation beats hours of hex-dump theorizing.**
