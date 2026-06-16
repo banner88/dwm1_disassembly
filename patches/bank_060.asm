@@ -236,7 +236,17 @@ CustomRoom0_ScriptPtrTable:
     dw CustomRoom0_NPC02            ; [3] BGM NPC — changes music
 
 CustomRoom0_RoomEntry:
-    dw $FFFF
+    ; Arms the random-encounter step counter on room load / post-battle reload.
+    ; (gate ID / floor are pinned in ASM every step — see Seed6BEncounterPool in
+    ; bank_00b — because the room-entry script runs only on scroll/reload, not
+    ; reliably at initial entry.)  write_ram writes the LOW byte of the value.
+    dw $FF12                        ; write_ram
+    dw $CA39                        ; wEncounterCounterLo = $64
+    dw $0064
+    dw $FF12                        ; write_ram
+    dw $CA3A                        ; wEncounterCounterHi = $00  → counter = 100 (~4-5 steps)
+    dw $0000
+    dw $FFFF                        ; end of room-entry script
 
 CustomRoom0_NPC00:
     dw $0A00                        ; "Want a Beef Jerky?" [Y/N]

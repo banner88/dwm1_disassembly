@@ -5,12 +5,16 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-16 (Session 9: editor tileset PNGs regenerated
-> with runtime-correct palettes from room_palettes.json — all 86 tilesets;
-> force-preview toggle (Frc button) shows colour index 1 marker;
-> `--build` flag on build_combined_tileset.py validated end-to-end;
-> KEY_LESSONS bit-15 palette claim corrected;
-> regenerate_tileset_pngs.py tool added)
+> Last verified: 2026-06-16 (Session 11: random encounters PROVEN in a custom
+> non-gate room (Strategy A) — whitelist mapID in $0B:Jump_00b_4674 + pin
+> wGateID/wCurrentFloor in ASM + arm wEncounterCounter from the room-entry
+> script. Pool fully controllable via gate/floor; win+flee return clean.
+> Runtime-verified in SameBoy ($C935=00/$C939=01/$CA38=00, starter pool).
+> Full mechanism documented (DATA_STRUCTURES "Encounter Runtime Flow",
+> CROSSBANK_ROOMS "Random Encounters in Custom Rooms", KEY_LESSONS S11).
+> Editor generalization (#1 per-room toggle, #2 custom pool) specced, not built.
+> Prior — Session 9: editor tileset PNGs regenerated with runtime-correct
+> palettes from room_palettes.json; regenerate_tileset_pngs.py added.)
 
 ---
 
@@ -70,12 +74,13 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom tileset selection | ✅ working | MapIDClampForPalette at ROM0 $3FE8; Room $6B currently $16 (MedalMan). |
 | Attr map generator | ✅ working | tools/generate_attr_map.py; builds tile→palette maps from all 85 tilesets, generates LZSS-compressed attr data. |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
+| Random encounters in custom rooms | ✅ working (single room, Strategy A) | Whitelist mapID in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor (ASM) + arm wEncounterCounter (room-entry script). Pool selectable via gate/floor. v30, runtime-verified. Editor generalization specced (CROSSBANK_ROOMS.md). |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
 
 | System | Blocker |
 |--------|---------|
-| Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
+| Random encounters in custom rooms | ✅ PROVEN (Strategy A, Session 11). Mechanism: encounters are gated per-step by a mapID whitelist in `$0B:Jump_00b_4674` (NOT by `wInGateworld`); whitelisting a custom mapID enables them. The battle pool is `GateBasePoolIndex[wGateID]+floor` resolved at battle time, so a non-gate room must pin `wGateID`/`wCurrentFloor` (done in ASM every step) and arm `wEncounterCounter` (room-entry script, since vanilla skips seeding when `wInGateworld=0`). Win+flee return clean; saving still works (no gate mode). **Remaining (editor):** #1 per-room on/off + gate/floor table, #2 custom pools — both specced in CROSSBANK_ROOMS.md, not yet generalized. |
 | Custom tile GRAPHICS | Palette attributes fixed (v28). Multi-tileset mashup pipeline working end-to-end (Session 7): editor exports JSON → `build_combined_tileset.py` → ROM patches → playable room with tiles from 4 source tilesets (80 tiles). K-means palette grouping replaced with exact-color matching (10 groups for NORDEN). Game engine forces BG palette color index 1 to shared value ($6BFF) at runtime — build tool swaps EXT palette indices 0↔1 to work around this. Castle VRAM animation at tile indices 77-78 avoided by inserting blanks. Editor has live palette slot counter (X/8) with export validation. **Session 9**: editor tileset PNGs regenerated with runtime-correct palettes via `regenerate_tileset_pngs.py` (all 86 tilesets, using `room_palettes.json`). Force-preview toggle shows colour index 1 marker tint. `--build` flag validated end-to-end (editor export → patched ROM → clean restore). **Session 10**: multi-screen ROM patches working — per-screen layout+attr in bank $64, screen-aware CustomAttrCheck in bank $17, room height in $26DD table. **Remaining**: editor multi-screen UI (screen selector, per-screen canvas, exit/NPC placement); `build_combined_tileset.py` multi-screen export. |
 | Custom music | Sound engine unexplored |
 | Save-data audit | ✅ Completed Session 8. SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Flag $0158 tested in SameBoy: set via NPC script, persisted through save+reload. |

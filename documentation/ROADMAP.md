@@ -187,16 +187,26 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       export; extend to horizontal and larger grids.
       *Accept*: editor exports a 2+ screen room; `--build` produces a ROM
       where the player can scroll between screens.
-- [!] **Random encounters in custom rooms** — blocked on decoupling.
-      `wInGateworld` ($C969) gates encounters AND script dispatch AND floor
-      generator. Attack plans, in order:
-      1. Find the battle-trigger call chain (step counter $CA39 → threshold
-         → battle init) and invoke it from a per-step hook (RoomEntry6 runs
-         every step) with a custom pool — bypass $C969 entirely.
-      2. Else set $C969=1 in custom rooms and patch the two unwanted
-         consumers to check mapID ≥ $6B.
-      *Accept*: random battle fires in a custom room from a custom pool;
-      win/lose/flee all return to the room intact.
+- [x] **Random encounters in custom rooms** — ✅ PROVEN (Strategy A,
+      Session 11; runtime-verified in SameBoy). The blocker assumption was
+      wrong: encounters are NOT gated by `wInGateworld`. They are gated
+      per-step by a hardcoded mapID whitelist in `$0B:Jump_00b_4674`
+      (`$53`,`$54-$56`,`$57-$59`,`$61-$64`); non-whitelisted normal rooms
+      `ret` before the encounter step. **Recipe:** (1) add the custom mapID
+      to that whitelist → enables battles; (2) the pool is
+      `GateBasePoolIndex[wGateID]+floor` resolved at battle time, so a
+      non-gate room must pin `wGateID`/`wCurrentFloor` (done every step in
+      ASM — they're read only when a battle fires) and (3) arm
+      `wEncounterCounter` from the room-entry script (vanilla skips seeding
+      when `wInGateworld=0`). Trigger chain: counter underflow → `rst $10`
+      bank $01 entry $0b (`EncounterMonsterSelect`) → `set 6,[wGameState]`.
+      *Verified*: Room $6B, gate 0/floor 1 → pool 0 (Slime/Anteater/Dracky);
+      `$C935=00 $C939=01 $CA38=00`; win+flee return intact, saving works.
+      Full docs: DATA_STRUCTURES "Encounter Runtime Flow", CROSSBANK_ROOMS
+      "Random Encounters in Custom Rooms", KEY_LESSONS Session 11.
+      **Remaining → moved to Phase 2 (editor):** #1 per-room on/off + gate/floor
+      table; #2 fully custom monster pools in a free bank. Both specced in
+      CROSSBANK_ROOMS.md.
 - [ ] Custom music — parked; sound engine unexplored, BGM-change suffices
       for v1 stories.
 
@@ -213,6 +223,14 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 - [ ] **Regression baseline**: re-express the v23 content as
       example-project/ and diff behavior. *Accept*: same rooms, NPCs,
       dialogue, item give work from generated asm.
+- [ ] **Encounters #1 — per-room toggle** (from the proven Strategy A): emit a
+      `RoomEncTable` (mapID → enabled/gateID/floor) the whitelist hook scans,
+      replacing the hardcoded `cp $6B`. Project fields per room: `encounters`,
+      `gate_id` (0-31), `floor`. Spec in CROSSBANK_ROOMS.md.
+- [ ] **Encounters #2 — custom monster pools**: 26-byte pool in a free bank +
+      intercept of `EncounterMonsterSelect`'s pool fetch for custom mapIDs (or
+      reuse a verified-unreferenced pool slot). Project fields: up to 5
+      `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
 
 ### Phase 3 — Editor app (see EDITOR_DESIGN.md — native macOS)
 - [ ] Walking skeleton: open project, room list, Build, Run-in-SameBoy

@@ -353,3 +353,64 @@ This session's two biggest bugs (forced index 1 and animated tiles) were both in
 
 ### Stale palette data from `--build` restore behavior
 **Discovery**: `build_combined_tileset.py --build` patches bank_017.asm palette data in-memory, builds the ROM, then RESTORES the original file. If the palette slot order changes between runs, the committed bank_017.asm has stale data. Always commit after running `--build`.
+
+## Session 11 Lessons — Random Encounters in Custom Rooms (Strategy A)
+
+Full mechanism in DATA_STRUCTURES.md ("Encounter Runtime Flow"); recipe + editor
+spec in CROSSBANK_ROOMS.md ("Random Encounters in Custom Rooms").
+
+### The per-step encounter whitelist is the town/encounter discriminator
+**Discovery**: Random encounters are gated at `$0B:Jump_00b_4674` by a hardcoded
+mapID whitelist (`$53`, `$54-$56`, `$57-$59`, `$61-$64`). Non-whitelisted normal
+rooms hit `ret` before the encounter step ever runs — that is *why* towns/castle
+have no encounters, not `wInGateworld`. Gate rooms reach the step via
+`Jump_00b_46a7` when `wInGateworld != 0`.
+**Rule**: To enable encounters in a custom (non-gate) room, add its mapID to the
+`Jump_00b_4674` whitelist. That single change is sufficient to make battles fire.
+
+### Non-gate custom rooms inherit a STALE encounter pool
+**Symptom**: Encounters fired in custom Room $6B but spawned mid-game monsters
+(Boneslave) instead of the intended starters.
+**Root cause**: The battle pool is `GateBasePoolIndex[wGateID] + floor_subindex`,
+resolved at battle time from `wGateID`/`wCurrentFloor`. A non-gate room never
+sets these, so they hold whatever the last *real* gate left behind (observed:
+gate 7 / floor 8 → pool 18). Runtime `examine $C935/$C939/$CA38` showed `07/08/12`
+instead of the expected `00/01/00`.
+**Fix**: Pin `wGateID`/`wCurrentFloor` to the desired gate/floor. Writing them
+every step in the whitelist hook (`xor a; ld [wGateID],a; inc a;
+ld [wCurrentFloor],a`) is safe — they are read only when a battle fires.
+**Rule**: A custom room's encounter table is undefined until you pin
+`wGateID`+`wCurrentFloor`. Never assume the seed "should" be 0/1; verify with
+`examine` at a battle break.
+
+### Room-entry script (index 0) is unreliable for battle-time state
+**Symptom**: A `write_ram` seed of `wGateID=0` placed in the room-entry script
+appeared correct (the write fired) yet `$C935` still read the stale value at
+battle time. A SameBoy watchpoint on `$C935` only fired on *scroll to the next
+screen* (through `$06:$66e3`), never at initial entry.
+**Root cause**: Script index 0 runs on screen scroll and post-battle reload, but
+not dependably at initial room entry — so state it writes is not guaranteed
+present when a battle fires on the first screen.
+**Fix**: Seed per-step/battle-critical state (gate/floor) in ASM at the
+per-step hook; use the room-entry script only for one-shot arming that tolerates
+running on reload (the encounter step counter).
+**Rule**: Don't rely on the room-entry script for values that must be correct at
+an arbitrary later step. `write_ram` (opcode $12) *does* work in custom rooms
+(params route via `DispatchBank0F_Ext → CustomScriptRead`), but its firing
+*timing* is the trap, not the write itself.
+
+### Vanilla counter seeding skips non-gate rooms
+**Discovery**: `SetRandomEncounterCounter` ($16:$6E14) is only reached via
+`label16_5b4e`, which `ret z`s when `wInGateworld = 0`. So a non-gate custom
+room's `wEncounterCounter` is never armed by the engine.
+**Fix**: Seed `wEncounterCounter` ($CA39/$CA3A) from the custom room's entry
+script; it re-arms on each post-battle room reload, giving repeatable encounters.
+**Rule**: Encounters in a non-gate custom room need an explicit counter seed;
+without it, timing is whatever stale value carried in.
+
+### Win/flee return cleanly with wInGateworld=0 (Strategy A validated)
+**Discovery**: A wild battle triggered in a non-gate custom room returns to the
+room intact on win and flee — saving/menus keep working because the room is not
+in gate mode. (Loss follows the normal DWM "back to King" flow, expected.) This
+confirmed Strategy A (encounters decoupled from full gate mode) over Strategy B
+(true `wInGateworld=1` gate, which suppresses saving).

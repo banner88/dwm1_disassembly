@@ -156,6 +156,68 @@ PRNG mod 101 compared to threshold. Range: 1100-6000 steps. Last entry $FF=catch
 | Generator | | `tools/gen_encounter_db.py` | |
 
 **Encounter pool entry (26 bytes):** `[header:10][eid_slots:5×2B_LE16][weights:5×1B][extra:1]`
+The header is NOT inert "floor range info": bytes at **+2** (read ×3) and **+5**
+(read ×5) feed the per-slot weighted selection (`LookupEncounterEntry` builds a
+table at `$C0D8`, `CalcEncounterPoolIdx` draws an index 0-4). The EID slots at
+**+10** are `enemy_stats_id`s. A slot is only selectable if its weight (+20) is
+non-zero — e.g. pool 0 = EIDs `[2,4,3,0,0]` weights `[1,1,1,0,0]` = Slime,
+Dracky, Anteater only.
+
+---
+
+### Encounter Runtime Flow (verified end-to-end, June 2026)
+
+The full chain from "player takes a step" to "wild battle starts". Every
+address below was traced against ROM bytes.
+
+**1. Per-step gating — `$0B:Jump_00b_4674` (the town/encounter discriminator).**
+After the exit checker finds no exit on a step, control reaches
+`Jump_00b_4674`, which compares `wMapID` against a hardcoded whitelist:
+`$53` (Forest Maze), `$54–$56` (Conveyor mazes), `$57–$59` (Mazes),
+`$61–$64` (sub-rooms). Match → falls to `jr_00b_46d5`; **no match → `ret`,
+no encounter check this step.** This is *why towns/castle have no random
+encounters*. Gate rooms (`wInGateworld != 0`) instead reach `jr_00b_46d5` via
+the gate exit handler `Jump_00b_46a7`. `jr_00b_46d5` does `ld hl, $1608;
+rst $10` → bank $16 entry 8.
+
+**2. Encounter step — `$16:$6F05` (`label16_6f05`, jump-table entry 8).**
+Early-outs (no encounter) on: `wGameState` bits 2/5/6 set, `$C850 != 0`, or
+`$C93E` bit 1 set. Then branches on `wInGateworld`:
+- non-gate: base rate `bc = $0050` for mapID `$54/$55/$56`, else `bc = $0064`.
+- gate: rate from `EncounterRateData[mapID×8]`, only when player tile row
+  (`[$FFAA]>>2`) is `$0C/$0D/$0E` (else `ret`).
+
+**3. Rate + counter — `jr_016_6f62`.**
+`modifier = EncounterRateModifierTable[wC8A9]` (`$10`–`$80`);
+`decrement = (base_rate × modifier) / $40`. (Non-gate default: 100×16/64 = **25
+per step**.) Subtract `decrement` from `wEncounterCounter` (`$CA39` lo /`$CA3A`
+hi). No borrow → store decremented counter and `ret`. **Borrow (underflow) →
+fire battle.** The counter value ≈ steps remaining (e.g. seed 100 → ~4-5 steps
+at the non-gate rate).
+
+**4. Battle fire (underflow branch).** `ld hl, $010b; rst $10` → bank $01
+entry $0b = `EncounterMonsterSelect` (`label1_683e`), then `set 6, [wGameState]`
+(battle-pending), `$C905 = 0`, `$DA09 = 0`. The main field loop acts on
+`wGameState` bit 6 to enter battle.
+
+**5. Pool selection — `EncounterMonsterSelect` → `LoadNextDungeonFloor`.**
+`pool_index = GateBasePoolIndex[wGateID] + floor_subindex`, where
+`floor_subindex` = walk `GateFloorBreakpoints[wGateID×2]`, incrementing the
+sub-index while `(wCurrentFloor + 1) >= breakpoint`. Result stored to
+`wEncounterPoolIndex` (`$CA38`); pool bytes fetched from
+`EncounterPoolData + pool_index×26`. **So the encounter table for any battle is
+fully determined by `wGateID` (`$C935`) + `wCurrentFloor` (`$C939`).** Gate 0's
+breakpoint list is a lone `$FF` (catch-all) → all floors map to pool 0.
+
+**6. Counter seeding — `SetRandomEncounterCounter` (`$16:$6E14`).** PRNG → mod
+101 → `RandomEncounterCounterTable` lookup → `wEncounterCounter`. Its only
+caller, `label16_5b4e`, does `ld a,[wInGateworld]; or a; ret z` first — so
+**the vanilla path never seeds the counter when `wInGateworld = 0`** (custom
+non-gate rooms must seed it themselves; see CROSSBANK_ROOMS.md).
+
+Key RAM: `wGateID $C935`, `wCurrentFloor $C939`, `wEncounterPoolIndex $CA38`,
+`wEncounterCounterLo/Hi $CA39/$CA3A`, `wC8A9` rate-modifier index,
+`wInGateworld $C969`.
 
 ---
 

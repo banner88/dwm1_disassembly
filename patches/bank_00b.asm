@@ -1403,7 +1403,26 @@ jr_00b_4674:
     cp $59                          ; Maze 3
     jr z, jr_00b_46d5
 
+    cp $6B                          ; custom MedalMan room — random encounters enabled
+    jr z, Seed6BEncounterPool
+
     ret
+
+
+; Seed6BEncounterPool — pin the encounter pool for custom Room $6B.
+; Runs every step in $6B (deterministic; independent of screen index or
+; room-entry-script timing, which proved unreliable — gate ID stayed stale
+; at battle time, drawing from whatever real gate the player last visited).
+; gate 0 / floor 1 → pool 0 = Gate of Beginning (Slime / Anteater / Dracky).
+; wGateID/wCurrentFloor are consumed only when a battle fires (by
+; EncounterMonsterSelect → LoadNextDungeonFloor), so writing them here before
+; the per-step encounter handler is safe.
+Seed6BEncounterPool:
+    xor a
+    ld [wGateID], a                 ; $C935 = 0  (gate 0)
+    inc a
+    ld [wCurrentFloor], a           ; $C939 = 1  (floor 1)
+    jp jr_00b_46d5                  ; run the per-step encounter handler
 
 
 ; --- Gate world exit handler ---

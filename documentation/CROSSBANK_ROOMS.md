@@ -236,13 +236,100 @@ Modify an existing room's exit data in bank $0B to point to your new mapID.
 
 ---
 
+## Random Encounters in Custom Rooms
+
+**Status: PROVEN (v30, June 2026).** Random battles fire in custom Room `$6B`
+from a chosen pool; win and flee return to the room intact. The full vanilla
+mechanism is documented in DATA_STRUCTURES.md → "Encounter Runtime Flow"; this
+section is the custom-room recipe and the editor build spec.
+
+### What it takes (two patches)
+
+**Patch 1 — enable + pin the pool (`bank_00b.asm`).** Add the custom mapID to
+the per-step encounter whitelist in `Jump_00b_4674`, routing it to a tiny seed
+stub that pins the encounter table, then runs the per-step handler:
+
+```
+    cp $6B
+    jr z, Seed6BEncounterPool
+    ret
+Seed6BEncounterPool:
+    xor a
+    ld [wGateID], a            ; $C935 = 0  (gate 0 = Gate of Beginning)
+    inc a
+    ld [wCurrentFloor], a      ; $C939 = 1  (floor 1)
+    jp jr_00b_46d5             ; run bank $16 entry 8 (encounter step)
+```
+
+`wGateID`/`wCurrentFloor` are consumed only when a battle fires
+(`EncounterMonsterSelect`), so writing them every step here is safe and makes
+the resolved pool deterministic (`gate 0 / floor 1 → pool 0 =
+Slime/Anteater/Dracky`). Change the two constants to point at any of the 32
+gates / any floor band.
+
+**Patch 2 — arm the step counter (`bank_060.asm`, room-entry script index 0).**
+Non-gate rooms are never seeded by the vanilla counter path (it `ret z`s on
+`wInGateworld=0`). Seed it from the room-entry script with `write_ram`
+(opcode `$12`, writes the LOW byte of the value):
+
+```
+CustomRoom0_RoomEntry:
+    dw $FF12 / dw $CA39 / dw $0064   ; wEncounterCounterLo = $64
+    dw $FF12 / dw $CA3A / dw $0000   ; wEncounterCounterHi = $00 → 100 (~5 steps)
+    dw $FFFF
+```
+
+### Hard-won gotchas (see KEY_LESSONS.md for full write-ups)
+
+- **Stale gate drift.** A non-gate custom room inherits `wGateID`/`wCurrentFloor`
+  from the last *real* gate the player visited. Without Patch 1, battles draw
+  from that stale gate's pool (observed: gate 7/floor 8 → pool 18 = Boneslave &
+  co. in a "starter" room). The table is meaningless until you pin gate+floor.
+- **Room-entry script timing.** Script index 0 runs reliably on screen *scroll*
+  and post-battle *reload*, but NOT dependably at initial room entry — so it is
+  unsuitable for state that must be correct at battle time. Pin per-step state
+  (gate/floor) in ASM (Patch 1); use the script only for one-shot arming
+  (the counter, Patch 2). `write_ram` itself works in custom rooms because
+  param reads route through `DispatchBank0F_Ext → CustomScriptRead`.
+
+### Editor build spec
+
+**#1 — per-room encounter toggle (generalize the hardcoded `$6B`).**
+Replace the single `cp $6B` with a small per-mapID table the editor emits, e.g.
+in bank $60: `RoomEncTable: db mapID, gateID, floor` rows, `$FF`-terminated.
+The whitelist hook scans it: no match → `ret` (encounters OFF); match → seed
+`wGateID`/`wCurrentFloor` from the row, `jp jr_00b_46d5` (ON). Counter arming
+(Patch 2) becomes part of every encounter-enabled room's entry script. Editor
+project fields per room: `encounters: bool`, `gate_id: 0-31`, `floor: int`.
+
+**#2 — fully custom monster pool (not tied to a vanilla gate).**
+Two viable routes, both needing a 26-byte pool in the exact format (header
+selection sub-fields at +2/+5 matter — copy a working pool's header and only
+swap EID slots +10 and weights +20):
+  (a) **Reuse a free pool slot** if any of the 128 `EncounterPoolData` entries
+      are unreferenced — must first verify which indices no gate maps to.
+  (b) **Custom pool bank + intercept**: place pool table in a free bank and
+      intercept `EncounterMonsterSelect`'s pool-data fetch for custom mapIDs
+      (return the custom pool address instead of `EncounterPoolData +
+      idx×26`). Set `wEncounterPoolIndex` directly and skip the gate/floor
+      lookup. Editor fields: up to 5 `{enemy_stats_id, weight}` + the header
+      template.
+
+Both #1 and #2 must keep counter arming for non-gate rooms (Patch 2) and must
+not set `wInGateworld=1` (that re-engages gate save/menu suppression — that's
+Strategy B, deliberately not used here so saving keeps working).
+
+---
+
 ## Known Limitations
 
 1. **4 palette groups max**: BG palette slots 4-7 are reserved by the game engine for monster display (slots 4/5/6) and menu text (slot 7). Custom rooms may use at most 4 unique palette groups (slots 0-3). All 85 original DWM1 tilesets observe this limit. The PalGrp toggle in the editor shows group assignments.
 2. **Custom tilesets**: Currently reuses existing rooms' tilesets. New tile graphics require adding entries to the $26DD table and tileset banks.
 3. **Step progression**: CustomPtrChase always uses step 0. Multi-step rooms (changing layout based on game progress) need step counter management.
 4. **Source mapID scaling**: MapIDClampForPalette uses hardcoded conditionals for 2 rooms. For many rooms, extend to a ROM0 table or WRAM-cached lookup from bank $60.
-5. **Random encounters**: Not yet implemented for custom rooms. wInGateworld=0 means the encounter system is inactive. Attack plans documented in ROADMAP.md.
+5. **Random encounters**: ✅ PROVEN for custom rooms (Strategy A, v30) — see
+   "Random Encounters in Custom Rooms" below. Per-room toggle (#1) and custom
+   monster pools (#2) are specced there for the editor, not yet generalized.
 
 ---
 
