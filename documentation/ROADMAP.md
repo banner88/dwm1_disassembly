@@ -177,13 +177,14 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
         ($6BFF at colour index 1) and marker-tint view (light cyan at index 1).
       - KEY_LESSONS corrected: "bit 15 set" palette claim was wrong — actual
         issue is that ROM palette bytes are always transformed at runtime.
-- [ ] **Multi-screen room editing** — the editor currently handles single
-      20×16 screens only. Real DWM1 rooms have 2–9 screens with scroll
-      transitions. Needed: multi-screen canvas (side-by-side or tabbed),
-      per-screen layout/tileset data, screen-to-screen exit wiring,
-      scroll direction metadata, and updated `build_combined_tileset.py`
-      to emit multi-screen layout+attr data in bank $64. CustomPtrChase
-      already supports multi-screen via step entries (proven in v25).
+- [~] **Multi-screen room editing** — ROM-side patches complete (v28):
+      2-screen vertical room proven (Room $6B, screens 0+4). Key changes:
+      room height in $26DD table ($2A39: $80→$00,$01 = 256px = 2 rows),
+      sub-table indices 0+4, bank $64 entries 0-3 (per-screen layout+attr),
+      CustomAttrCheck screen-aware (bank $17), wCustomStep_Room6B_S1 added.
+      **Remaining**: editor UI for multi-screen (canvas, screen selector,
+      per-screen NPC/exit placement); `build_combined_tileset.py` multi-screen
+      export; extend to horizontal and larger grids.
       *Accept*: editor exports a 2+ screen room; `--build` produces a ROM
       where the player can scroll between screens.
 - [!] **Random encounters in custom rooms** — blocked on decoupling.

@@ -216,11 +216,12 @@ wCustomExitBuffer:: ds 127 ;d3f9 — exit data copied from overflow bank ($FF te
 ; NOTE: not in SRAM save range — step counters reset on power cycle.
 ; For persistence, use event flags + room-entry script flag checks instead.
 wCustomStep_Room6B_S0:: db ;d478 — Room $6B screen 0 step counter
-wCustomStep_Room6C_S0:: db ;d479 — Room $6C screen 0 step counter
-wCustomStep_Room6C_S1:: db ;d47a — Room $6C screen 1 step counter
-wCustomStep_Room6C_S5:: db ;d47b — Room $6C screen 5 step counter
+wCustomStep_Room6B_S1:: db ;d479 — Room $6B screen 1 step counter
+wCustomStep_Room6C_S0:: db ;d47a — Room $6C screen 0 step counter
+wCustomStep_Room6C_S1:: db ;d47b — Room $6C screen 1 step counter
+wCustomStep_Room6C_S5:: db ;d47c — Room $6C screen 5 step counter
 
-    ds $315                         ; gap ($D47C-$D790)
+    ds $314                         ; gap ($D47D-$D790)
 
 wGroundItemData:: db ;d791
 

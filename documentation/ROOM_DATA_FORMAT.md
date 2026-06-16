@@ -296,7 +296,16 @@ Verified example — Castle Screen 5 exits:
 The tileset GRAPHICS (tile pixel data) use the same LZSS decompressor as tile layouts.
 Loaded by Call_000_1577 (Entry 0) from the graphics table:
 
-- Normal rooms: $00:$26DD — 8 bytes per map_type: [gfx_id:1][gfx_bank:1][spawn_data:6]
+- Normal rooms: $00:$26DD — 8 bytes per map_type:
+  `[gfx_id:1][gfx_bank:1][room_width:2][room_height:2][collision_threshold:1][pad:1]`
+  - Bytes 0-1: GFX step_id and bank (for tile pixel data loading)
+  - Bytes 2-3: Room width in pixels (LE). 160 = 1 column, 320 = 2, 480 = 3
+  - Bytes 4-5: Room height in pixels (LE). 128 = 1 row, 256 = 2, 512 = 4
+  - Byte 6: Collision threshold (tiles < threshold = blocked)
+  - Byte 7: Padding ($00)
+  Room dimensions control the walkable area — the movement system clamps
+  player position to (0,0)-(width-1, height-1). For multi-screen custom rooms,
+  height/width must match the screen count (e.g. 2 vertical screens = height 256).
 - Gate rooms: $00:$2A5D — same format
 
 The gfx_id and gfx_bank work identically to step_id and tileset_bank:
@@ -318,17 +327,35 @@ GBC-only. Contains tile palette/attribute data for the background map.
 
 Screen transitions within a room are computed from player world position:
 
-
+Grid layout (screen indices):
+```
+          X=0  X=1  X=2  X=3
+  Y=0:   [ 0] [ 1] [ 2] [ 3]
+  Y=1:   [ 4] [ 5] [ 6] [ 7]
+  Y=2:   [ 8] [ 9] [10] [11]
+  Y=3:   [12] [13] [14] [15]
+```
 
 Handled by Entry 2 (RoomEntry2_ScreenScroll), which:
-1. Divides player X by $80 (128) → column (0-3)
-2. Multiplies column by 4
-3. Divides player Y by $A0 (160) → row (0-1)
-4. Adds row to get final screen_index
-5. Decompresses tile layout for the new screen
-6. Updates $C925 with the new screen index
+1. Divides player Y ($FF95/$FF96) by $80 (128) → row (0-3)
+2. Multiplies row by 4
+3. Divides player X ($FF92/$FF93) by $A0 (160) → column (0-3)
+4. screen_index = row × 4 + column
+5. Sets scroll offsets: $FFBB = row × 128, $FFB7 = column × 160
+6. Decompresses tile layout for the current screen_index
+7. Updates $C925 (wScreenIndex)
 
-No explicit boundary checks needed — scrolling is automatic based on position.
+Collision boundary clamp: the collision check at ROM0 $1E96 subtracts the
+scroll offset from the player position. If screen-local Y ≥ 128 or X ≥ 160,
+it returns early (player at screen edge). Movement past the boundary requires
+the room dimensions in $26DD bytes 2-5 to allow positions beyond one screen.
+
+Exit handlers: Entry 6 checks exits at Y=1-6 (interior, walk-onto trigger).
+Entry 9 checks exits at Y=0 and Y=7 (boundary, requires walking into edge).
+
+Walk grid: 10 columns × 8 rows per screen. Each cell = 16×16 pixels (2×2 tiles).
+$FF97 = walk X, $FF98 = walk Y. Screen offsets from $2DE7 table (indexed by
+screen_index × 2): X_offset (walk units) and Y_offset (walk units).
 
 ## NPC Type Byte Encoding
 

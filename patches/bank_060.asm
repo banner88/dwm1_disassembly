@@ -529,26 +529,44 @@ CustomRoomPtrTable:
     dw CustomRoom1_SubTable
 
 ; =============================================
-; Room 0 (mapID $6B) — Farm single-screen
+; Room 0 (mapID $6B) — 2-screen vertical room
+; Screen 0 = top, Screen 1 = bottom
+; Scroll between screens is automatic
 ; =============================================
 CustomRoom0_SubTable:
     dw CustomRoom0_Screen0
-    dw $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF
+    dw $FFFF, $FFFF, $FFFF
+    dw CustomRoom0_Screen1
+    dw $FFFF, $FFFF, $FFFF
 
 CustomRoom0_Screen0:
-    dw wCustomStep_Room6B_S0    ; $D478 — safe step counter (was $D95E/MedalMan)
-    db 0, $64                   ; step_id=0 from bank $64 (custom layout: OpenHall)
-    dw CustomRoom0_NPCs
-    dw CustomRoom0_Exits
+    dw wCustomStep_Room6B_S0    ; $D478 — safe step counter
+    db 0, $64                   ; step_id=0 from bank $64 (custom layout screen 0)
+    dw CustomRoom0_S0_NPCs
+    dw CustomRoom0_S0_Exits
 
-CustomRoom0_NPCs:
+CustomRoom0_S0_NPCs:
     db $8F, $FF, $07, $06, $00     ; spawn point (7,6), script_id=0 (room entry = no-op)
     db $00, $0B, $02, $07, $01     ; NPC at (2,7), script_id=1 — gives item
     db $FF
 
-CustomRoom0_Exits:
-    db $04, $00, $6C, $00, $01, $05, $07  ; Castle exit: (4,0) → Room $6C screen 0
-    db $03, $07, $01, $00, $08, $04, $05  ; GreatTree return: (3,7) → GreatTree
+CustomRoom0_S0_Exits:
+    db $03, $01, $6C, $00, $01, $05, $07  ; exit: (3,1) → Room $6C screen 0 spawn (5,7)
+    db $FF
+
+CustomRoom0_Screen1:
+    dw wCustomStep_Room6B_S1    ; $D479 — safe step counter
+    db 2, $64                   ; step_id=2 from bank $64 (custom layout screen 1)
+    dw CustomRoom0_S1_NPCs
+    dw CustomRoom0_S1_Exits
+
+CustomRoom0_S1_NPCs:
+    db $8F, $FF, $05, $03, $00     ; spawn point (5,3)
+    db $00, $09, $05, $04, $02     ; NPC at (5,4), script_id=2 — monster giver
+    db $FF
+
+CustomRoom0_S1_Exits:
+    db $03, $07, $01, $00, $08, $04, $05  ; south edge exit: (3,7) → GreatTree screen 8
     db $FF
 
 ; =============================================

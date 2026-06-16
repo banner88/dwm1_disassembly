@@ -8809,9 +8809,9 @@ Data_2A30:
     and b
 
 Data_2A38:
-    nop
-    add b
-    nop
+    nop                         ; $2A38: room width high ($00) — width=$00A0 (160px, 1 column)
+    nop                         ; $2A39: room height low ($00) — was $80 (128px, 1 row)
+    db $01                      ; $2A3A: room height high ($01) — height=$0100 (256px, 2 rows)
     db $1B                      ; $2A3B: collision threshold=$1B (27 wall tiles)
     nop
 

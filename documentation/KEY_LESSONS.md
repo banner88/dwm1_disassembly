@@ -328,3 +328,28 @@ This session's two biggest bugs (forced index 1 and animated tiles) were both in
 
 ### SRAM save audit confirmed — custom flags persist
 **Verified**: Event flag $0158 (RAM byte $D9C6, bit 0) set via NPC script opcode $03, persists through save and reload. Flag is within SRAM save range ($C8EA–$D9E9) and unused by the original game. Tested with a purpose-built ROM: set flag → save → close → reload → flag still set.
+
+### Session 10: Multi-screen room scrolling
+
+### $26DD table bytes 2-5 are room dimensions (not spawn data)
+**Discovery**: The $26DD tileset table has room width (bytes 2-3, LE) and height (bytes 4-5, LE) in pixels. Width = columns × 160, height = rows × 128. The movement system clamps player position to these bounds.
+**Impact**: Custom Room $6B at $2A35 had height=$0080 (128 = 1 row). Changing to $0100 (256 = 2 rows) enabled vertical scrolling. Without this, the player is physically blocked at the screen edge.
+**Rule**: When adding screens to a custom room, ALWAYS update the room dimensions in the $26DD table to match.
+
+### Screen index formula was documented backwards
+**Bug**: ROOM_DATA_FORMAT.md had X/$80 → column, Y/$A0 → row. Actual code: Y($FF95)/$80 → row (×4), X($FF92)/$A0 → column (×1). Grid is [0][1][2][3] / [4][5][6][7] — horizontal indices first, vertical rows in multiples of 4.
+**Impact**: First attempt used indices 0+1 (horizontal neighbor), needed 0+4 (vertical neighbor below).
+
+### Entry 6 vs Entry 9 exit handling
+**Discovery**: Entry 6 (ExitChecker) handles exits at Y=1-6 only (interior positions, walk-onto trigger). Entry 9 (SpecialRooms) handles exits at Y=0 and Y=7 only (boundary positions, requires walking into screen edge). Entry 9 has INVERTED logic from Entry 6 — it skips Y=1-6 and processes Y=0/Y=7.
+**Impact**: Boundary exits (Y=0, Y=7) can't coexist with scroll transitions on the same edge. For vertical scrolling between screens 0 and 4, screen 0 must NOT have Y=7 exits (the scroll takes priority).
+
+### Per-screen palette/attr data is engine-supported
+**Discovery**: Bank $17 entries 0 (palette) and 1 (attr) both index by wScreenIndex then step counter. Each screen can have its own palette colors and attr map. 11 original rooms use different palettes across screens.
+**Impact**: CustomAttrCheck extended to dispatch per-screen attr entries from bank $64 (screen 0 → entry 1, screen 4 → entry 3).
+
+### Never run `make clean`
+**Reminder**: Violated the documented rule (PROJECT_STATE, SESSION_PROTOCOL, README all say never). `make clean` deletes committed .2bpp source files; regenerating from PNG produces different bytes. Only delete build artifacts: `rm -f game.o game.gbc game.sym game.map`.
+
+### Stale palette data from `--build` restore behavior
+**Discovery**: `build_combined_tileset.py --build` patches bank_017.asm palette data in-memory, builds the ROM, then RESTORES the original file. If the palette slot order changes between runs, the committed bank_017.asm has stale data. Always commit after running `--build`.
