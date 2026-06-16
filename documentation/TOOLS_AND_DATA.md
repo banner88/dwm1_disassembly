@@ -71,6 +71,10 @@ editor (snapshot → regen → diff).
 `generate_attr_map.py` (✅ new — builds tile→palette maps from ROM for
 all 85 tilesets, generates LZSS-compressed nibble-packed attr data;
 collision thresholds from ROM0 $26E3 ×8 stride) ·
+`regenerate_tileset_pngs.py` (✅ new Session 9 — renders all 86 editor
+tileset PNGs using runtime palettes from room_palettes.json; also
+generates force-preview variant with colour index 1 marker tint;
+outputs JS for editor HTML embedding) ·
 `gen_script_banks.py` · `render_rooms.py` · `dwm/` package.
 
 ### Prototype editor (towards_editor/)

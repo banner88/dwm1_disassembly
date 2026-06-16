@@ -163,16 +163,29 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       - **Ghost NPC**: spawn point script_id=$01 was talkable. Fixed to $00.
       - **Build automation**: `--build OUTPUT.gbc` flag added to
         `build_combined_tileset.py` (patches palette+threshold, builds ROM,
-        restores tree). **UNTESTED** — needs validation next session.
+        restores tree). **Validated Session 9** — end-to-end pass with
+        3-tileset test export (MedalMan+NORDEN+Farm).
       - **Editor**: PalGrp toggle shows palette group per tile (P0-P3 custom,
         S4-S9 system). Counter shows X/4. Export warns if >4.
       *Accept*: custom room shows tiles cherry-picked from 2+ source tilesets. ✅
-      **Remaining**:
-      - Editor tileset PNGs use ROM step-entry palette data which is encoded
-        (not raw RGB15) for some rooms → wrong colors. Fix: regenerate PNGs
-        using `room_palettes.json` (runtime-correct data for 81 rooms).
-      - Editor doesn't preview the index-1 forced color effect.
-      - `--build` flag needs testing and validation.
+      **Session 9 fixes:**
+      - Editor tileset PNGs regenerated with runtime-correct palettes from
+        `room_palettes.json` via new `regenerate_tileset_pngs.py` tool (86
+        tilesets, all verified). ROM step-entry palette data is encoded (not
+        raw RGB15) — was causing wrong colours for Starry Shrine and others.
+      - Force-preview toggle ("Frc" button) added: swaps between runtime view
+        ($6BFF at colour index 1) and marker-tint view (light cyan at index 1).
+      - KEY_LESSONS corrected: "bit 15 set" palette claim was wrong — actual
+        issue is that ROM palette bytes are always transformed at runtime.
+- [ ] **Multi-screen room editing** — the editor currently handles single
+      20×16 screens only. Real DWM1 rooms have 2–9 screens with scroll
+      transitions. Needed: multi-screen canvas (side-by-side or tabbed),
+      per-screen layout/tileset data, screen-to-screen exit wiring,
+      scroll direction metadata, and updated `build_combined_tileset.py`
+      to emit multi-screen layout+attr data in bank $64. CustomPtrChase
+      already supports multi-screen via step entries (proven in v25).
+      *Accept*: editor exports a 2+ screen room; `--build` produces a ROM
+      where the player can scroll between screens.
 - [!] **Random encounters in custom rooms** — blocked on decoupling.
       `wInGateworld` ($C969) gates encounters AND script dispatch AND floor
       generator. Attack plans, in order:

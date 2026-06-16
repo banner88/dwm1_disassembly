@@ -5,13 +5,12 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-15 (Session 7: tile mashup palette system rewritten —
-> k-means replaced with exact-color grouping; game engine forces BG palette
-> color index 1 to shared $6BFF at runtime, fixed by swapping EXT palette
-> indices 0↔1; Castle VRAM handler animates tile indices 77-78, fixed by
-> reserving those indices; editor palette slot counter (X/8) added with
-> export validation; NORDEN_palettes.json regenerated with 10 exact groups;
-> build_combined_tileset.py overhauled; verified in SameBoy v4 build)
+> Last verified: 2026-06-16 (Session 9: editor tileset PNGs regenerated
+> with runtime-correct palettes from room_palettes.json — all 86 tilesets;
+> force-preview toggle (Frc button) shows colour index 1 marker;
+> `--build` flag on build_combined_tileset.py validated end-to-end;
+> KEY_LESSONS bit-15 palette claim corrected;
+> regenerate_tileset_pngs.py tool added)
 
 ---
 
@@ -77,9 +76,9 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | Blocker |
 |--------|---------|
 | Random encounters in custom rooms | Encounter system entangled with gate/floor generator via `wInGateworld` ($C969) |
-| Custom tile GRAPHICS | Palette attributes fixed (v28). Multi-tileset mashup pipeline working end-to-end (Session 7): editor exports JSON → `build_combined_tileset.py` → ROM patches → playable room with tiles from 4 source tilesets (80 tiles). K-means palette grouping replaced with exact-color matching (10 groups for NORDEN). Game engine forces BG palette color index 1 to shared value ($6BFF) at runtime — build tool swaps EXT palette indices 0↔1 to work around this. Castle VRAM animation at tile indices 77-78 avoided by inserting blanks. Editor has live palette slot counter (X/8) with export validation. **Remaining**: Editor tileset PNGs rendered with wrong palette for some rooms (Starry Shrine etc.) — `room_palettes.json` has correct runtime data, needs regeneration script. |
+| Custom tile GRAPHICS | Palette attributes fixed (v28). Multi-tileset mashup pipeline working end-to-end (Session 7): editor exports JSON → `build_combined_tileset.py` → ROM patches → playable room with tiles from 4 source tilesets (80 tiles). K-means palette grouping replaced with exact-color matching (10 groups for NORDEN). Game engine forces BG palette color index 1 to shared value ($6BFF) at runtime — build tool swaps EXT palette indices 0↔1 to work around this. Castle VRAM animation at tile indices 77-78 avoided by inserting blanks. Editor has live palette slot counter (X/8) with export validation. **Session 9**: editor tileset PNGs regenerated with runtime-correct palettes via `regenerate_tileset_pngs.py` (all 86 tilesets, using `room_palettes.json`). Force-preview toggle shows colour index 1 marker tint. `--build` flag validated end-to-end (editor export → patched ROM → clean restore). **Remaining**: editor is single-screen only — multi-screen room editing needed for practical custom content. |
 | Custom music | Sound engine unexplored |
-| Save-data audit | SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Only remaining: in-game save/load test of a custom flag in SameBoy. |
+| Save-data audit | ✅ Completed Session 8. SRAM save layout fully traced and documented in ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 are in save range. Flag byte collisions mapped. Flag $0158 tested in SameBoy: set via NPC script, persisted through save+reload. |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 
@@ -175,6 +174,12 @@ blocks direct editing of monsters/enemies/encounters/breeding in source.
   **$0F** at $5A02 (MapTransitionFull: writes gate_id → $C96D, flag
   → $C96E, spawn XY, sets wIsPlayerChangingMaps). ROADMAP also
   corrected ($0E → $0F).
+- ~~KEY_LESSONS claimed ROM palette pointers had "bit 15 set" as encoding
+  marker~~ → **Corrected (Session 9).** Zero step-0 palette pointers have
+  bit 15 set (verified all 107 entries). The actual issue: ROM palette bytes
+  at `pal_ptr` are in an engine-internal format for ALL rooms, not just some.
+  The game engine always transforms them at runtime. Editor tileset PNGs now
+  use `room_palettes.json` (runtime-dumped data) via `regenerate_tileset_pngs.py`.
 
 ---
 
