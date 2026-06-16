@@ -67,6 +67,7 @@ select{background:#1a1a1a;color:#ccc;border:1px solid #333;border-radius:4px;pad
   <button class="tbtn" id="gridBtn" onclick="toggleGrid()">Grid ✓</button>
   <button class="tbtn" id="markBtn" onclick="toggleMarkers()">Markers ✓</button>
   <button class="tbtn" id="walkBtn" onclick="toggleWalk()">Walk ✗</button>
+  <button class="tbtn" id="palGrpBtn" onclick="togglePalGroups()">PalGrp ✗</button>
     <button class="tbtn" id="walkEditBtn" onclick="toggleWalkEdit()" title="Click canvas tiles to toggle walk/wall">WalkEdit ✗</button>
     <button class="tbtn" onclick="resetAll()" style="color:#f87171">⟲ Reset All</button>
   <button class="sbtn" onclick="adjZoom(-1)">−</button>
@@ -92,7 +93,7 @@ select{background:#1a1a1a;color:#ccc;border:1px solid #333;border-radius:4px;pad
 
   <!-- Combined palette -->
   <div class="panel">
-    <div class="panel-hdr">Custom Palette <span id="palCount" class="panel-sub">0/128</span> <span id="palSlots" class="panel-sub" style="margin-left:6px;color:#6ee06e">0/8 pal slots</span></div>
+    <div class="panel-hdr">Custom Palette <span id="palCount" class="panel-sub">0/128</span> <span id="palSlots" class="panel-sub" style="margin-left:6px;color:#6ee06e">0/4 pal slots</span></div>
     <canvas id="palCanvas" width="384" height="192" style="border:1px solid #282828;border-radius:4px;cursor:pointer;width:100%"></canvas>
     <div class="panel-sub" style="margin-top:2px">Selected: <span id="selLbl">—</span> · Right-click to remove</div>
   </div>
@@ -418,7 +419,7 @@ let markers=[
   {label:"Exit→Well",x:6,y:14,color:"#ff6b6b",glyph:"↓",w:2,h:2},
   {label:"NPC",x:2,y:7,color:"#60a5fa",glyph:"N",w:2,h:2}
 ];
-let sel=-1, srcSel=-1, pendingSrc=null, tool="paint", walkEditMode=false, zoom=3, showGrid=true, showMark=true, showWalk=false;
+let sel=-1, srcSel=-1, pendingSrc=null, tool="paint", walkEditMode=false, zoom=3, showGrid=true, showMark=true, showWalk=false, showPalGroups=false;
 let painting=false, hover=null, activeStamp=-1;
 let undoStack=[], redoStack=[];
 let curSrcTS="", srcImg=null;
@@ -429,15 +430,16 @@ function hex(n){return "$"+n.toString(16).toUpperCase().padStart(2,"0")}
 function deepCopy(a){return a.map(r=>[...r])}
 function setStatus(s){document.getElementById("status").textContent=s}
 
-// ===== Palette slot tracking (GBC has 8 BG palette slots) =====
+// ===== Palette slot tracking (GBC BG palette: slots 0-3 for tiles, 4-7 for system) =====
+// The game uses BG palette slots 4-7 for monster display and menu text.
+// ALL 85 DWM1 tilesets use max 4 palette groups (0-3). This is a hard engine limit.
+// Custom rooms get 4 unique palette groups total, from ANY mix of tilesets.
 function getTilePalKey(ts,idx){
-  // Returns the palette slot key for a tile: "ts:pal_number"
   const pm=TILE_PAL[ts];
   const pal=pm?parseInt(pm[String(idx)]||"0"):0;
   return ts+":pal:"+pal;
 }
 function countPalSlots(){
-  // Count unique palette slots used by tiles actually placed on the canvas
   const used=new Set();
   for(let r=0;r<GR;r++)for(let c=0;c<G;c++){
     const ti=layout[r][c];
@@ -462,17 +464,16 @@ function getUsedPalKeys(){
 function updatePalSlotDisplay(){
   const n=countPalSlots();
   const el=document.getElementById("palSlots");
-  el.textContent=n+"/8 pal slots";
-  if(n>8){el.style.color="#f87171";el.style.fontWeight="bold"}
-  else if(n>=7){el.style.color="#fbbf24";el.style.fontWeight="bold"}
+  el.textContent=n+"/4 pal slots";
+  if(n>4){el.style.color="#f87171";el.style.fontWeight="bold"}
+  else if(n>=4){el.style.color="#fbbf24";el.style.fontWeight="bold"}
   else{el.style.color="#6ee06e";el.style.fontWeight="normal"}
 }
 function wouldExceedPalSlots(ts,idx){
-  // Would placing this tile create a 9th palette slot?
   const key=getTilePalKey(ts,idx);
   const used=getUsedPalKeys();
-  if(used.has(key)) return false; // already using this slot
-  return used.size>=8;
+  if(used.has(key)) return false;
+  return used.size>=4;
 }
 
 // ===== Walkability: tile index < threshold = walkable =====
@@ -553,6 +554,16 @@ function drawSrcPalette(){
       c.fillStyle=i>=thresh?"rgba(0,150,255,0.40)":"rgba(255,140,0,0.45)";
       c.fillRect(dx,dy,8*PS,8*PS);
     }
+    // Palette group overlay
+    if(showPalGroups){
+      const pm=TILE_PAL[curSrcTS];
+      const pal=pm?parseInt(pm[String(i)]||"0"):0;
+      const col=PAL_GRP_COLORS[Math.min(pal,9)];
+      c.fillStyle=col;
+      c.fillRect(dx,dy,8*PS,8*PS);
+      c.fillStyle=pal<4?"#fff":"#fcc";c.font="bold 8px monospace";
+      c.fillText(PAL_GRP_LABELS[Math.min(pal,9)]||("P"+pal),dx+1,dy+9);
+    }
   }
   // (selection drawn at end of function)
   // Threshold line
@@ -628,6 +639,13 @@ function drawCombinedPalette(){
         c.fillStyle=w?"#3b82f6":"#f97316";c.font="bold 8px monospace";c.textAlign="center";
         c.fillText(w?"W":"X",dx+8*PS/2,dy+8*PS/2+3);
         if(palette[i].walk!==undefined){c.strokeStyle="#f59e0b";c.lineWidth=1;c.strokeRect(dx+1,dy+1,8*PS-2,8*PS-2)}
+      }
+      if(showPalGroups){
+        const pm=TILE_PAL[p.ts];const pal=pm?parseInt(pm[String(p.idx)]||"0"):0;
+        const col=PAL_GRP_COLORS[Math.min(pal,9)];
+        c.fillStyle=col;c.fillRect(dx,dy,8*PS,8*PS);
+        c.fillStyle=pal<4?"#fff":"#fcc";c.font="bold 8px monospace";c.textAlign="center";
+        c.fillText(PAL_GRP_LABELS[Math.min(pal,9)]||("P"+pal),dx+8*PS/2,dy+8*PS/2+3);
       }
     } else {pending++;getTSImage(p.ts,()=>{pending--;if(pending<=0)drawCombinedPalette()})}
   });
@@ -824,6 +842,9 @@ function toggleWalkEdit(){
   if(walkEditMode&&!showWalk){toggleWalk()}// auto-enable walk overlay
 }
 function toggleWalk(){showWalk=!showWalk;document.getElementById("walkBtn").textContent=showWalk?"Walk ✓ (🔵W=walk 🟠X=wall)":"Walk ✗";drawCanvas();drawCombinedPalette();drawSrcPalette()}
+const PAL_GRP_COLORS=["rgba(0,200,80,0.45)","rgba(60,130,255,0.45)","rgba(180,60,255,0.45)","rgba(0,200,220,0.45)","rgba(255,60,60,0.50)","rgba(255,60,60,0.50)","rgba(255,60,60,0.50)","rgba(255,60,60,0.50)","rgba(255,60,60,0.50)","rgba(255,60,60,0.50)"];
+const PAL_GRP_LABELS=["P0","P1","P2","P3","S4","S5","S6","S7","S8","S9"];
+function togglePalGroups(){showPalGroups=!showPalGroups;document.getElementById("palGrpBtn").textContent=showPalGroups?"PalGrp ✓":"PalGrp ✗";drawSrcPalette();drawCombinedPalette()}
 function adjZoom(d){zoom=Math.max(2,Math.min(5,zoom+d));document.getElementById("zoomLbl").textContent=zoom+"×";drawCanvas()}
 function clearAll(){pushUndo();layout=Array.from({length:GR},()=>Array(G).fill(-1));drawCanvas();saveState();setStatus("Cleared.")}
 
@@ -927,9 +948,9 @@ function loadRoom(val){
 // ===== Export/Import =====
 function showExport(){
   const slots=countPalSlots();
-  if(slots>8){
-    if(!confirm("WARNING: This room uses "+slots+" palette slots (GBC max is 8).\nTiles in overflow slots will show wrong colors in-game.\n\nExport anyway?")){
-      setStatus("Export cancelled — reduce palette slots to ≤8");return;
+  if(slots>4){
+    if(!confirm("WARNING: This room uses "+slots+" palette groups (GBC limit is 4).\nSlots 4-7 are reserved by the game engine for monster display and menu text.\nAll 85 original DWM1 tilesets use max 4 groups — this is a hard engine limit.\n\nExport anyway?")){
+      setStatus("Export cancelled — reduce palette groups to ≤4");return;
     }
   }
   const palExport=palette.map((p,i)=>{

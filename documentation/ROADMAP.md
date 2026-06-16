@@ -58,12 +58,12 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 ## 2. NEEDS DOING
 
 ### Phase 0 — Foundation (finish before feature work)
-- [~] **SRAM save audit** — SRAM layout fully traced and documented in
+- [x] **SRAM save audit** — SRAM layout fully traced and documented in
       ARCHITECTURE.md + known_RAM_map.md. Custom flags $0158-$0277 in save
       range. Flag byte collisions mapped (D9CB/D9CD/D9CF-D9D6/D9E3/D9E6/D9E9).
       Safe contiguous block: $0158-$017F (40 flags).
-      *Remaining*: in-game save/load test of a custom flag in SameBoy.
-      *Accept*: v24 save → reload → custom flag still set.
+      *Verified Session 8*: flag $0158 (byte $D9C6, bit 0) set via NPC script,
+      persisted through save+reload in SameBoy. PASS.
 - [x] **Fix `dump_all_scripts.py` branch-following** — linear decoder missed
       ~45% of WriteRAM operations. Fixed: work-queue follows 9 branch opcodes
       ($00/$01/$0E/$14/$15/$27/$28/$2C/$37). 810 unique WriteRAM found (was
@@ -151,25 +151,28 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       tileset names, and full source-mapping export.
 - [x] **Custom tile GRAPHICS**: palette attribute intercept DONE (v28).
       Single-tileset rooms fully working (tileset switch + correct palettes).
-      **Multi-tileset mashup: WORKING (Session 7).** Full pipeline:
+      **Multi-tileset mashup: WORKING (Session 7, refined Session 8).** Full pipeline:
       editor → JSON export → `build_combined_tileset.py` → ASM patches → ROM.
-      Tested with 80 tiles from 4 tilesets (MedalMan, NORDEN, Bazaar,
-      GreatTree), 8/8 palette slots, verified in SameBoy.
-      Key fixes this session:
-      - K-means palette grouping → exact-color matching (10 groups for NORDEN,
-        subset merging). NORDEN_palettes.json regenerated.
-      - Game engine forces BG palette color index 1 to $6BFF at runtime →
-        build tool swaps EXT palette indices 0↔1 so custom colors use 0,2,3.
-      - Castle VRAM handler animates tile indices 77-78 → build tool inserts
-        blank tiles at those positions, shifting custom tiles past them.
-      - Editor: palette slot counter (X/8), export warns if >8, localStorage v4.
+      **Session 8 critical discoveries and fixes:**
+      - **4 palette groups max** (not 8). BG slots 4-7 reserved by game engine
+        for monster display (4/5/6) and menu text (7). Verified: all 85 DWM1
+        tilesets use max group 3. CustomPalCheck changed B=$08→$04.
+      - **Gate detection in banks $06/$07**: mapID≥$50 whitelists treated custom
+        rooms as gate-like (blocked saving, wrong menu state). Fixed with
+        same-size `ld a,[wMapID]`→`call MapIDClampForPalette` patches.
+      - **Ghost NPC**: spawn point script_id=$01 was talkable. Fixed to $00.
+      - **Build automation**: `--build OUTPUT.gbc` flag added to
+        `build_combined_tileset.py` (patches palette+threshold, builds ROM,
+        restores tree). **UNTESTED** — needs validation next session.
+      - **Editor**: PalGrp toggle shows palette group per tile (P0-P3 custom,
+        S4-S9 system). Counter shows X/4. Export warns if >4.
       *Accept*: custom room shows tiles cherry-picked from 2+ source tilesets. ✅
-      **Remaining (next session)**:
+      **Remaining**:
       - Editor tileset PNGs use ROM step-entry palette data which is encoded
         (not raw RGB15) for some rooms → wrong colors. Fix: regenerate PNGs
         using `room_palettes.json` (runtime-correct data for 81 rooms).
-      - Editor doesn't preview the index-1 forced color effect (tiles look
-        slightly different in editor vs in-game for the lightest color).
+      - Editor doesn't preview the index-1 forced color effect.
+      - `--build` flag needs testing and validation.
 - [!] **Random encounters in custom rooms** — blocked on decoupling.
       `wInGateworld` ($C969) gates encounters AND script dispatch AND floor
       generator. Attack plans, in order:

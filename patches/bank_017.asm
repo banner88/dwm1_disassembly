@@ -2579,7 +2579,9 @@ CustomAttrCheck:
 
 ; CustomPalCheck: intercept for entry 0 (palette color loading)
 ; For Room $6B, redirects HL to merged palette colors instead of source pal_ptr
-; ALSO forces B=$08 C=$00 to load ALL 8 palettes (vanilla only loads 4)
+; IMPORTANT: Only loads slots 0-3. Slots 4-7 are SYSTEM palettes (used by
+; monster display, menus, NPC rendering) — the game engine sets them from
+; the source mapID's palette data. Overwriting them breaks the menu.
 CustomPalCheck:
     push af
     ld a, [wMapID]
@@ -2590,7 +2592,7 @@ CustomPalCheck:
 .customPal:
     pop af
     ld hl, CustomPaletteColors_6B
-    ld b, $08                   ; load ALL 8 palettes (not just first 4)
+    ld b, $04                   ; load ONLY slots 0-3 (not all 8!)
     ld c, $00                   ; start at palette slot 0
     jp LoadPal_46a1             ; load from merged palette data
 
@@ -2607,10 +2609,10 @@ CustomPalCheck:
 ;   Palette 7: from 30:12 pal 0
 CustomPaletteColors_6B:
     db $B1, $5A, $FF, $7F, $8C, $21, $00, $00  ; palette 0
-    db $20, $17, $FF, $6B, $42, $7F, $00, $00  ; palette 1
+    db $00, $7D, $FF, $6B, $42, $7F, $00, $00  ; palette 1
     db $EC, $04, $FF, $6B, $3A, $02, $00, $00  ; palette 2
-    db $48, $7D, $2B, $6B, $2F, $01, $00, $00  ; palette 3
+    db $ED, $04, $FF, $6B, $15, $1A, $00, $00  ; palette 3
     db $3F, $02, $FF, $2B, $1B, $00, $00, $00  ; palette 4
-    db $20, $17, $FF, $6B, $42, $7F, $00, $00  ; palette 5
-    db $E1, $7F, $FF, $7F, $01, $7C, $00, $00  ; palette 6
-    db $ED, $04, $FF, $6B, $15, $1A, $00, $00  ; palette 7
+    db $9A, $02, $7F, $3F, $2F, $01, $00, $00  ; palette 5
+    db $48, $7D, $2B, $6B, $2F, $01, $00, $00  ; palette 6
+    db $DA, $01, $7F, $3F, $15, $14, $00, $00  ; palette 7

@@ -301,3 +301,30 @@ Contrary to initial analysis ("bank $17 is full"), the LZSS attribute data ends 
 
 ### Verify against runtime state, not static analysis
 This session's two biggest bugs (forced index 1 and animated tiles) were both invisible in static ROM analysis. The palette bytes in the ROM were correct. The 2bpp encoding was correct. The tile indices were valid. Only runtime observation (SameBoy `>palette` command, visual inspection of animation) revealed the actual problems. **30 seconds of runtime observation beats hours of hex-dump theorizing.**
+
+## Session 8 Lessons — Palette Budget, Gate Detection, SRAM
+
+### BG palette slots 4-7 are SYSTEM-RESERVED — hard 4-slot limit for tiles
+**Symptom**: Monster sprites displayed wrong colors when opening the party menu in the custom room.
+**Root cause**: CustomPalCheck loaded all 8 BG palette slots (B=$08) with custom tileset colors. BG palette slots 4-7 are used by the game engine for monster display (slot 4=monster 1, 5=monster 2, 6=monster 3) and menu text (slot 7). Overwriting them with tileset colors made monsters display with tileset palette instead of standard monster colors. The menu does NOT trigger any palette reload — it uses whatever BG palette the room has.
+**Verification**: SameBoy VRAM viewer on monster stats screen confirmed tile attributes: monster tiles use palette 4/5/6, text uses palette 7. `>palette` during menu confirmed custom tileset colors persisting in slots 4-7. All 85 original DWM1 tilesets use max palette group 3 — verified programmatically. Zero exceptions.
+**Fix**: CustomPalCheck changed from B=$08 to B=$04 — only loads custom palette into slots 0-3. Slots 4-7 are left for the game engine's standard system palette.
+**Rule**: Custom rooms may use **at most 4 unique palette groups** for tile graphics. This is a hard engine constraint, not an artificial limit. All original DWM1 rooms observe it. The NORDEN (DWM2) tileset has 10 groups — only 4 can be active at once; the user picks which 4 per room. The PalGrp toggle in the editor shows which tiles share palette groups.
+
+### Bank $07 gate-detection blocks saving in custom rooms
+**Symptom**: JOURNAL (save) option unavailable in Room $6B despite wInGateworld=0.
+**Root cause**: Bank $07 at $6061 has a mapID whitelist for "normal" rooms: mapID<$30 is normal, $5A/$5B/$5C/$50/$51 are exceptions, everything else is treated as gate-like (blocks save, changes transition). MapID $6B falls through all exceptions → gate behavior.
+**Fix**: Same-size 3-byte replacement: `ld a, [wMapID]` → `call MapIDClampForPalette` at bank $07 $6061. Returns $16 (MedalMan) for custom rooms, which is <$30 → normal behavior.
+
+### Bank $06 $C905 state machine treats custom rooms as gate-like
+**Symptom**: Custom room exhibited gate-like menu behavior.
+**Root cause**: Bank $06 at $6B93 (`Jump_006_6b87`) has a similar mapID≥$50 check that sets $C905=$10 (gate-like state). MapID $6B triggers this.
+**Fix**: Same-size 3-byte replacement: `ld a, [wMapID]` → `call MapIDClampForPalette` at bank $06 $6B93.
+
+### Spawn point NPC entry can be "talked to" — ghost NPC
+**Symptom**: Player could press A facing down from spawn position (7,6) and trigger NPC dialogue from the spawn entry.
+**Root cause**: Spawn entry `db $8F, $FF, $07, $06, $01` has script_id=$01. The interaction code iterates all NPC entries including spawn points. If the player's facing direction intersects the spawn position, it triggers the spawn entry's script.
+**Fix**: Changed spawn script_id from $01 to $00. Script 0 is the room entry script (no-op `dw $FFFF` for Room $6B).
+
+### SRAM save audit confirmed — custom flags persist
+**Verified**: Event flag $0158 (RAM byte $D9C6, bit 0) set via NPC script opcode $03, persists through save and reload. Flag is within SRAM save range ($C8EA–$D9E9) and unused by the original game. Tested with a purpose-built ROM: set flag → save → close → reload → flag still set.

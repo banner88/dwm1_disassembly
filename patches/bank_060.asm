@@ -542,7 +542,7 @@ CustomRoom0_Screen0:
     dw CustomRoom0_Exits
 
 CustomRoom0_NPCs:
-    db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
+    db $8F, $FF, $07, $06, $00     ; spawn point (7,6), script_id=0 (room entry = no-op)
     db $00, $0B, $02, $07, $01     ; NPC at (2,7), script_id=1 — gives item
     db $FF
 

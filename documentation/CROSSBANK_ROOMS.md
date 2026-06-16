@@ -10,7 +10,7 @@ Tested with single-screen room (MedalMan clone) and multi-screen room (3-screen 
 
 ## Architecture Overview
 
-Custom rooms use mapID values ≥ $6B (`CUSTOM_ROOM_START`). Room data lives in bank $60 (or any free bank). Small intercept patches in banks $00, $01, $0B, and $17 detect custom mapIDs and redirect to bank $60 via `rst $10` or ROM0 helper functions.
+Custom rooms use mapID values ≥ $6B (`CUSTOM_ROOM_START`). Room data lives in bank $60 (or any free bank). Small intercept patches in banks $00, $01, $06, $07, $0B, and $17 detect custom mapIDs and redirect to bank $60 via `rst $10` or ROM0 helper functions.
 
 ### The Core Pattern: Same-Size `call` Replacements
 
@@ -238,11 +238,11 @@ Modify an existing room's exit data in bank $0B to point to your new mapID.
 
 ## Known Limitations
 
-1. **NPC scripts**: Custom room NPCs with script_id ≠ $FF will crash (bank $0F master table has no entries for custom mapIDs). Needs script routing extension.
+1. **4 palette groups max**: BG palette slots 4-7 are reserved by the game engine for monster display (slots 4/5/6) and menu text (slot 7). Custom rooms may use at most 4 unique palette groups (slots 0-3). All 85 original DWM1 tilesets observe this limit. The PalGrp toggle in the editor shows group assignments.
 2. **Custom tilesets**: Currently reuses existing rooms' tilesets. New tile graphics require adding entries to the $26DD table and tileset banks.
-3. **Gate transition animation**: Exiting custom rooms may show gate-style screen compression instead of normal white flash. Cosmetic only.
-4. **Step progression**: CustomPtrChase always uses step 0. Multi-step rooms (changing layout based on game progress) need step counter management.
-5. **Source mapID scaling**: MapIDClampForPalette uses hardcoded conditionals for 2 rooms. For many rooms, extend to a ROM0 table or WRAM-cached lookup from bank $60.
+3. **Step progression**: CustomPtrChase always uses step 0. Multi-step rooms (changing layout based on game progress) need step counter management.
+4. **Source mapID scaling**: MapIDClampForPalette uses hardcoded conditionals for 2 rooms. For many rooms, extend to a ROM0 table or WRAM-cached lookup from bank $60.
+5. **Random encounters**: Not yet implemented for custom rooms. wInGateworld=0 means the encounter system is inactive. Attack plans documented in ROADMAP.md.
 
 ---
 

@@ -716,6 +716,217 @@ def generate_palette_inc(palette_64, info):
 
 
 # ---------------------------------------------------------------------------
+# Build automation (--build flag)
+# ---------------------------------------------------------------------------
+
+import re
+import shutil
+import subprocess
+import hashlib
+
+PATCH_OVERLAY = [
+    "bank_000.asm", "bank_001.asm", "bank_004.asm", "bank_006.asm",
+    "bank_007.asm", "bank_00b.asm", "bank_017.asm", "wram.asm", "game.asm",
+]
+PATCH_NEW = ["bank_060.asm", "bank_064.asm", "bank_067.asm"]
+ORIGINAL_MD5 = "1ca6579359f21d8e27b446f865bf6b83"
+
+
+def _generate_palette_db_lines(palette_64, info):
+    """Return JUST the 8 db lines for the palette block (no label, no comments above)."""
+    lines = []
+    for pal in range(8):
+        chunk = palette_64[pal * 8:(pal + 1) * 8]
+        hex_bytes = ', '.join(f'${b:02X}' for b in chunk)
+        source = info.get(pal, '?')
+        lines.append(f'    db {hex_bytes}  ; palette {pal} — {source}')
+    return lines
+
+
+def patch_bank017_palette(bank017_text, palette_64, info):
+    """Replace the 8 db lines after CustomPaletteColors_6B: with new palette data.
+
+    Returns the patched text. Raises if assertion fails (not exactly 8 db lines).
+    """
+    new_db_lines = _generate_palette_db_lines(palette_64, info)
+    assert len(new_db_lines) == 8, f"Expected 8 palette db lines, got {len(new_db_lines)}"
+
+    # Find the label and replace the 8 db lines that follow it
+    lines = bank017_text.split('\n')
+    label_idx = None
+    for i, line in enumerate(lines):
+        if line.strip().startswith('CustomPaletteColors_6B:'):
+            label_idx = i
+            break
+
+    if label_idx is None:
+        raise ValueError("CustomPaletteColors_6B: label not found in bank_017.asm")
+
+    # Find the 8 db lines after the label
+    db_start = label_idx + 1
+    db_count = 0
+    while db_start + db_count < len(lines) and lines[db_start + db_count].strip().startswith('db '):
+        db_count += 1
+
+    if db_count < 8:
+        raise ValueError(f"Found only {db_count} db lines after CustomPaletteColors_6B: (need 8)")
+
+    # Replace exactly 8 db lines
+    lines[db_start:db_start + 8] = new_db_lines
+
+    result = '\n'.join(lines)
+
+    # Verify: count db lines after label in result
+    result_lines = result.split('\n')
+    for i, line in enumerate(result_lines):
+        if line.strip().startswith('CustomPaletteColors_6B:'):
+            count = 0
+            j = i + 1
+            while j < len(result_lines) and result_lines[j].strip().startswith('db '):
+                count += 1
+                j += 1
+            assert count == 8, f"Post-patch assertion: {count} db lines (need 8)"
+            break
+
+    return result
+
+
+def patch_bank000_threshold(bank000_text, threshold):
+    """Replace the collision threshold byte at $2A3B in bank_000.asm.
+
+    Finds the line with '$2A3B: collision threshold', replaces the instruction
+    with 'db $XX' for the new threshold value.
+    """
+    lines = bank000_text.split('\n')
+    marker = '$2A3B: collision threshold'
+    found = False
+    for i, line in enumerate(lines):
+        if marker in line:
+            wall_count = threshold
+            lines[i] = f'    db ${threshold:02X}                      ; $2A3B: collision threshold=${threshold:02X} ({wall_count} wall tiles)'
+            found = True
+            break
+
+    if not found:
+        raise ValueError(f"Marker '{marker}' not found in bank_000.asm")
+
+    return '\n'.join(lines)
+
+
+def do_build(repo_dir, output_gbc, patched_files):
+    """Copy patched files into disassembly/, build, copy ROM out, restore tree.
+
+    Args:
+        repo_dir: root of the repository
+        output_gbc: path to write the output .gbc file
+        patched_files: dict of {filename: content_string} for files to write
+                       into disassembly/ before building
+
+    Returns True on success.
+    """
+    dis_dir = os.path.join(repo_dir, 'disassembly')
+    patches_dir = os.path.join(repo_dir, 'patches')
+
+    # Step 1: Backup clean files we'll overwrite
+    backups = {}
+    for f in PATCH_OVERLAY:
+        src = os.path.join(dis_dir, f)
+        if os.path.exists(src):
+            backups[f] = open(src, 'rb').read()
+
+    try:
+        # Step 2: Copy standard patches first
+        for f in PATCH_OVERLAY + PATCH_NEW:
+            src = os.path.join(patches_dir, f)
+            if os.path.exists(src):
+                shutil.copy(src, os.path.join(dis_dir, f))
+
+        # Step 3: Overwrite with our patched versions
+        for filename, content in patched_files.items():
+            path = os.path.join(dis_dir, filename)
+            with open(path, 'w') as fh:
+                fh.write(content)
+
+        # Step 4: Build
+        for artifact in ['game.o', 'game.gbc', 'game.sym', 'game.map']:
+            p = os.path.join(dis_dir, artifact)
+            if os.path.exists(p):
+                os.remove(p)
+
+        result = subprocess.run('make', cwd=dis_dir, shell=True,
+                                capture_output=True, text=True)
+        gbc_path = os.path.join(dis_dir, 'game.gbc')
+        if result.returncode != 0 or not os.path.exists(gbc_path):
+            print("BUILD FAILED:", file=sys.stderr)
+            print(result.stdout[-2000:] if result.stdout else "", file=sys.stderr)
+            print(result.stderr[-2000:] if result.stderr else "", file=sys.stderr)
+            return False
+
+        # Step 5: Copy ROM to output
+        shutil.copy(gbc_path, output_gbc)
+
+        # Verify bank $60 is populated (sanity check)
+        rom_data = open(gbc_path, 'rb').read()
+        bank60 = rom_data[0x60 * 0x4000:0x61 * 0x4000]
+        used = sum(1 for b in bank60 if b != 0)
+        if used < 16:
+            print(f"WARNING: bank $60 nearly empty ({used} bytes) — patches may not have applied",
+                  file=sys.stderr)
+            return False
+
+        # Verify NOT byte-perfect with original (patches should differ)
+        h = hashlib.md5()
+        with open(gbc_path, 'rb') as fh:
+            h.update(fh.read())
+        if h.hexdigest() == ORIGINAL_MD5:
+            print("WARNING: patched ROM matches original MD5 — patches were not applied",
+                  file=sys.stderr)
+            return False
+
+        return True
+
+    finally:
+        # Step 6: ALWAYS restore clean tree
+        for f, data in backups.items():
+            with open(os.path.join(dis_dir, f), 'wb') as fh:
+                fh.write(data)
+        for f in PATCH_NEW:
+            p = os.path.join(dis_dir, f)
+            if os.path.exists(p):
+                os.remove(p)
+        for artifact in ['game.o', 'game.gbc', 'game.sym', 'game.map']:
+            p = os.path.join(dis_dir, artifact)
+            if os.path.exists(p):
+                os.remove(p)
+
+
+def verify_clean_build(repo_dir):
+    """Run a clean build and verify byte-perfect MD5. Returns True on success."""
+    dis_dir = os.path.join(repo_dir, 'disassembly')
+    for artifact in ['game.o', 'game.gbc', 'game.sym', 'game.map']:
+        p = os.path.join(dis_dir, artifact)
+        if os.path.exists(p):
+            os.remove(p)
+
+    result = subprocess.run('make', cwd=dis_dir, shell=True,
+                            capture_output=True, text=True)
+    gbc_path = os.path.join(dis_dir, 'game.gbc')
+    if result.returncode != 0 or not os.path.exists(gbc_path):
+        return False
+
+    h = hashlib.md5()
+    with open(gbc_path, 'rb') as f:
+        h.update(f.read())
+
+    for artifact in ['game.o', 'game.gbc', 'game.sym', 'game.map']:
+        p = os.path.join(dis_dir, artifact)
+        if os.path.exists(p):
+            os.remove(p)
+
+    return h.hexdigest() == ORIGINAL_MD5
+
+
+# ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
 
@@ -726,6 +937,8 @@ def main():
                         help='Output directory (default: patches/)')
     parser.add_argument('--info', action='store_true',
                         help='Show stats only, don\'t generate files')
+    parser.add_argument('--build', metavar='OUTPUT.gbc', default=None,
+                        help='Full pipeline: generate ASM, patch, build, output playable .gbc')
     parser.add_argument('--rom', default=ROM_PATH,
                         help='Path to DWM-original.gbc')
     args = parser.parse_args()
@@ -819,6 +1032,61 @@ def main():
                 print(f"  Exit at ({x},{y}) — exit coords = ({x//2},{y//2})", file=sys.stderr)
             else:
                 print(f"  {mtype} at ({x},{y})", file=sys.stderr)
+
+    # ---------------------------------------------------------------------------
+    # --build: full pipeline → playable .gbc
+    # ---------------------------------------------------------------------------
+    if args.build:
+        output_gbc = args.build
+        print(f"\n{'='*60}", file=sys.stderr)
+        print(f"BUILD PIPELINE: generating {output_gbc}", file=sys.stderr)
+        print(f"{'='*60}", file=sys.stderr)
+
+        patches_dir = os.path.join(ROOT_DIR, 'patches')
+
+        # 1. Patch bank_017.asm palette block
+        print(f"\n[1/4] Patching palette into bank_017.asm ...", file=sys.stderr)
+        bank017_path = os.path.join(patches_dir, 'bank_017.asm')
+        with open(bank017_path) as f:
+            bank017_text = f.read()
+        bank017_patched = patch_bank017_palette(
+            bank017_text, result['palette_64'], result['palette_info'])
+        print(f"  ✓ 8 palette db lines replaced", file=sys.stderr)
+
+        # 2. Patch bank_000.asm collision threshold
+        print(f"[2/4] Patching threshold ${result['threshold']:02X} into bank_000.asm ...",
+              file=sys.stderr)
+        bank000_path = os.path.join(patches_dir, 'bank_000.asm')
+        with open(bank000_path) as f:
+            bank000_text = f.read()
+        bank000_patched = patch_bank000_threshold(bank000_text, result['threshold'])
+        print(f"  ✓ Threshold byte at $2A3B updated", file=sys.stderr)
+
+        # 3. Build ROM
+        print(f"[3/4] Building ROM ...", file=sys.stderr)
+        patched_files = {
+            'bank_000.asm': bank000_patched,
+            'bank_017.asm': bank017_patched,
+            'bank_064.asm': bank064_asm,
+            'bank_067.asm': bank067_asm,
+        }
+        success = do_build(ROOT_DIR, output_gbc, patched_files)
+        if not success:
+            print(f"\n✗ BUILD FAILED", file=sys.stderr)
+            sys.exit(1)
+        print(f"  ✓ ROM built: {output_gbc}", file=sys.stderr)
+
+        # 4. Verify clean tree
+        print(f"[4/4] Verifying clean tree ...", file=sys.stderr)
+        if verify_clean_build(ROOT_DIR):
+            print(f"  ✓ Clean build still byte-perfect ({ORIGINAL_MD5})", file=sys.stderr)
+        else:
+            print(f"  ✗ WARNING: clean build failed after restore!", file=sys.stderr)
+            sys.exit(1)
+
+        print(f"\n{'='*60}", file=sys.stderr)
+        print(f"SUCCESS: {output_gbc} ready to play", file=sys.stderr)
+        print(f"{'='*60}", file=sys.stderr)
 
 
 if __name__ == '__main__':
