@@ -31,7 +31,8 @@ DOCS = os.path.join(REPO, "documentation")
 
 PATCH_FILES = [
     "bank_000.asm", "bank_001.asm", "bank_004.asm", "bank_006.asm",
-    "bank_007.asm", "bank_00b.asm", "bank_017.asm", "wram.asm", "game.asm",
+    "bank_007.asm", "bank_00b.asm", "bank_016.asm", "bank_017.asm",
+    "wram.asm", "game.asm",
 ]
 PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm"]  # don't exist in clean disassembly/
 

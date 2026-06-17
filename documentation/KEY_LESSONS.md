@@ -414,3 +414,53 @@ room intact on win and flee — saving/menus keep working because the room is no
 in gate mode. (Loss follows the normal DWM "back to King" flow, expected.) This
 confirmed Strategy A (encounters decoupled from full gate mode) over Strategy B
 (true `wInGateworld=1` gate, which suppresses saving).
+
+## Session 12 Lessons — Custom Breeding (special-recipe edit + table format)
+
+Full reference in BREEDING_SYSTEM.md; overhaul/extension spec there +
+ROADMAP Phase 2B.
+
+### Add a recipe without inserting bytes: overwrite a provably-dead entry
+**Symptom**: Wanted Anteater × BattleRex → GoldSlime, but bank $16 has embedded
+pointers (gate floor tables at $70A6+) — inserting a table entry shifts them
+and corrupts the bank.
+**Root cause**: The special recipe table ($16:$4B30, 825×5, $FF-terminated) is
+contiguous data with real code immediately after the terminator ($5B4D). Growing
+it in place is impossible without a shift.
+**Fix**: Same-size overwrite of an entry that is already unreachable. Two kinds
+of dead entry exist in vanilla: an exact duplicate (entry 803 == 802, both
+Zombie-fam×Swordgon→Skullgon) and a shadowed entry (693 has identical matchers
+to 682 but a later index, so 682 always wins first). Overwriting either changes
+nothing in vanilla. A focused build (only bank_016 over the clean tree) diffed
+the original ROM at EXACTLY the intended bytes (+ the 2 header-checksum bytes).
+**Rule**: To add a recipe at fixed table size, target a duplicate/shadowed entry
+(`patch_breeding_recipe.py --list-dead`) and verify with a focused build diff
+(expect only your bytes + $014E/$014F). Never insert into bank $16.
+
+### The family ("defaults") table encodes the result as the SLOT INDEX
+**Symptom**: Plausible to assume the family table stores a result species per
+entry (like the special table). It does not.
+**Root cause**: `LoadBrd_45ff` walks 2-byte `[B,C]` pairs incrementing D on every
+read (separators included), and on a match does `ld a,d; ld [$da71],a` — the
+offspring species IS D, the positional index. `$FFFF` separators are slots that
+can't match but still advance D, used to align a matcher to its result species.
+**Fix/understanding**: To make `famA×famB → species S`, place `[codeA,codeB]` at
+slot S. Each species has ≤1 family default (one slot = one pair); many→one must
+go in the special table. Verified: slot 0 Slime×Dragon→DrakSlime, slot 19
+MetalKing²→GoldSlime.
+**Rule**: When rewriting defaults, author "result ← parents" and place at the
+result's slot; a compiler must reject two pairs claiming the same result species
+(positional conflict) and preserve the `$FA` "any family" wildcard.
+
+### Extending past bank space: relocate + rst $10, leave the original dead
+**Symptom**: Want 1×–2× more special recipes; bank $16 has no room.
+**Root cause**: Breeding executes in ROMX bank $16; you can't page another bank
+into ROMX mid-execution.
+**Fix (design, not yet built)**: Put the extended table + a ported scanner in a
+free bank ($69) and call it via `rst $10` (handler in ROM0 saves/switches/
+restores ROMX — same far-call the custom rooms use). Redirect bank $16's scan
+entry with a same-size `ld hl,$6900; rst $10` (+NOP pad); leave the vanilla
+table in place (dead) so nothing in bank $16 shifts.
+**Rule**: Cross-bank data that a ROMX routine must read goes behind a free-bank
+scanner invoked via rst $10; never relocate by removing in-bank data (it shifts
+embedded pointers).

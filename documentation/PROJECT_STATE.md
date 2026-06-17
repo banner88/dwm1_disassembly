@@ -5,16 +5,20 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-16 (Session 11: random encounters PROVEN in a custom
+> Last verified: 2026-06-17 (Session 12: custom breeding PROVEN — special-recipe
+> override Anteater × BattleRex → GoldSlime via same-size, in-place edit of two
+> provably-dead table entries; confirmed in-game in SameBoy. Tool
+> `patch_breeding_recipe.py` + `patches/bank_016.asm` (bank $16 added to the
+> verifier patch set). Romhack-scale breeding overhaul + extension specced
+> (BREEDING_SYSTEM "Planned: Overhaul & Extension" + ROADMAP Phase 2B): defaults
+> rewritten in place, special table relocated to free bank $69 via rst $10 and
+> extended to 1×–2× (~1650). Family table is positional (result = slot index) —
+> documented. Nothing for the overhaul built yet; keystone is the round-trip
+> encoder B1.
+> Prior — Session 11: random encounters PROVEN in a custom
 > non-gate room (Strategy A) — whitelist mapID in $0B:Jump_00b_4674 + pin
 > wGateID/wCurrentFloor in ASM + arm wEncounterCounter from the room-entry
-> script. Pool fully controllable via gate/floor; win+flee return clean.
-> Runtime-verified in SameBoy ($C935=00/$C939=01/$CA38=00, starter pool).
-> Full mechanism documented (DATA_STRUCTURES "Encounter Runtime Flow",
-> CROSSBANK_ROOMS "Random Encounters in Custom Rooms", KEY_LESSONS S11).
-> Editor generalization (#1 per-room toggle, #2 custom pool) specced, not built.
-> Prior — Session 9: editor tileset PNGs regenerated with runtime-correct
-> palettes from room_palettes.json; regenerate_tileset_pngs.py added.)
+> script. Pool fully controllable via gate/floor; win+flee return clean.)
 
 ---
 
@@ -75,6 +79,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Attr map generator | ✅ working | tools/generate_attr_map.py; builds tile→palette maps from all 85 tilesets, generates LZSS-compressed attr data. |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ working (single room, Strategy A) | Whitelist mapID in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor (ASM) + arm wEncounterCounter (room-entry script). Pool selectable via gate/floor. v30, runtime-verified. Editor generalization specced (CROSSBANK_ROOMS.md). |
+| Custom breeding recipes (special table) | ✅ working (same-size edit) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). Overhaul+extension specced (BREEDING_SYSTEM "Planned"; ROADMAP 2B), not built. |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
 

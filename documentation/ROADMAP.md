@@ -44,6 +44,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 | Item give + inventory-full ($2A wrapped, $2C) | v23 |
 | Event flag ops from custom scripts ($00/$01/$03) | v23 |
 | All mapID-table intercepts (11 sites, 4 banks) | CROSSBANK_ROOMS table; 19 debug iterations documented in KEY_LESSONS |
+| Custom breeding recipes (special table, same-size edit) | v31/Session 12: Anteater×BattleRex→GoldSlime via two provably-dead entries (803 dup, 693 shadowed); focused build diffs original at exactly the intended bytes; confirmed in-game. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. |
 
 ### Tooling (re-verified this session)
 | Item | Evidence |
@@ -231,6 +232,30 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       intercept of `EncounterMonsterSelect`'s pool fetch for custom mapIDs (or
       reuse a verified-unreferenced pool slot). Project fields: up to 5
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
+
+### Phase 2B — Breeding overhaul & extension (specced Session 12; see BREEDING_SYSTEM.md)
+Keep 10 families. Defaults rewritten; special recipes extended to 1×–2× (→~1650).
+Mechanism ROM-verified: relocate special table + scanner to free bank `$69`,
+call via `rst $10`; rewrite family table in place (result = slot index, so the
+compiler inverts `A×B→C` to slot order and rejects positional conflicts); bank
+$16 edits same-size only (leave vanilla tables dead-in-place).
+- [ ] **B1 — Round-trip encoder (keystone).** `tools/build_breeding.py` decodes
+      + re-emits BOTH vanilla tables. *Accept:* `$4974`+`$4B30` byte-identical to
+      ROM; clean build still `1ca6579…`; verifier PASS. (Decoder half done S12.)
+- [ ] **B2 — Relocation harness.** Bank `$69` scanner + special table mirrored
+      there; bank $16 redirected via `rst $10`; vanilla tables left in place.
+      *Accept:* breeding identical to vanilla (regression) in SameBoy; saving OK.
+- [ ] **B3 — Capacity 1×–2×.** Raise special capacity to ≥1650; add recipes past
+      index 825. *Accept:* a recipe at index >825 fires in-game.
+- [ ] **B4 — Defaults rewrite.** New family×family map compiled in-place;
+      positional-conflict validation. *Accept:* 8–10 sample crosses give NEW
+      results in SameBoy; untouched crosses unchanged.
+- [ ] **B5 — Full overhaul spec.** Complete `special`+`family_defaults` authored,
+      compiled, test ROM for playtesting. *Accept:* user playtest sign-off.
+- [ ] **B6 — (companion) family reassignment + ??? → "Mecha".** Same-size family
+      byte edits (offset $00) + name/flavor text. *Gate:* SameBoy check that
+      family 9 isn't special-cased outside breeding (boss-ness likely from boss
+      table `$14:$4897`, not the family byte).
 
 ### Phase 3 — Editor app (see EDITOR_DESIGN.md — native macOS)
 - [ ] Walking skeleton: open project, room list, Build, Run-in-SameBoy

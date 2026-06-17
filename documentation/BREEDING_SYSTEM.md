@@ -1,5 +1,13 @@
 # DWM1 Breeding System — Complete Technical Reference
 
+> **Custom breeding PROVEN (v31, Session 12).** A special-recipe override —
+> Anteater × BattleRex → GoldSlime — was applied as a same-size, in-place edit
+> of two provably-dead table entries (zero vanilla collateral) and confirmed
+> in-game in SameBoy. Tool: `tools/patch_breeding_recipe.py`; patch:
+> `patches/bank_016.asm` (bank $16 now in the verifier's patch set). A
+> romhack-scale overhaul + extension is specced below ("Planned: Overhaul &
+> Extension").
+
 ## Overview
 
 Breeding is handled in **Bank $16**. The offspring determination function `Call_016_456e` (entry 2) executes three steps in priority order:
@@ -72,6 +80,18 @@ A post-recipe **mutation system** (~1-5% RNG) at `$16:$44DA` can override the re
 
 The result species index `D` starts at -1 and increments at every 2-byte read (including separators). So `$FFFF` entries advance D without storing a recipe.
 
+**CRITICAL — the result species IS the slot index.** On a match the handler
+does `ld a,d; ld [$da71],a`: the offspring species equals `D`, i.e. the
+positional index of the matching `[B,C]` pair (counting separators). So to
+make `famA × famB → species S`, the pair `[codeA, codeB]` must live at **slot
+S**. Each species therefore has **at most one** family-cross default (one slot
+= one pair); species with no family default get a `$FFFF` separator at their
+slot. Many-parent→one-result mappings are **not** expressible here — put those
+in the special table (which has an explicit result byte). Verified decode:
+slot 0 = Slime×Dragon→DrakSlime, slot 15 = Slime×Boss→KingSlime, slot 19 =
+MetalKing×MetalKing→GoldSlime. Table is 221 slots (D 0–220), 197 matchers, 24
+separators.
+
 **Match logic** (critical — order matters):
 - **Exact species match** on parent 1: returns IMMEDIATELY
 - **Family match** on parent 1: stores result but CONTINUES SCANNING (last family match wins)
@@ -105,3 +125,59 @@ Before table searches, `Call_016_4653` computes the offspring's plus value:
 
 - `extracted/breeding_complete.json` — both tables fully decoded
 - `extracted/breeding_recipes.json` — family table only
+
+---
+
+## Planned: Overhaul & Extension (specced Session 12, NOT yet built)
+
+Goal: a romhack-scale rebuild keeping the existing 10 families — (1) defaults
+(family×family) rewritten with entirely new results, (2) special recipes
+extended to 1×–2× capacity (825 → up to ~1650) for iterative playtesting.
+
+### Mechanism (all ROM-verified Session 12)
+- **Special table — extend.** Result is an explicit byte; many→one is fine;
+  first-match-wins; checked before the family table. No slack after it in bank
+  $16 (`$FF` terminator at `$5B4D`, code follows), so **relocate** it (plus a
+  ported scanner) into free **bank `$69`** and invoke via **`rst $10`**
+  (`HL=(bank<<8)|entry`; ROM0 handler `SaveBankAndSwitch` saves/switches/
+  restores ROMX — the proven custom-room far-call). One 16 KB bank holds 2×
+  special (1650×5 = 8250 B) + family + scanner with ~7 KB headroom. Free banks:
+  `$69–$77,$79–$7A,$7C,$7E–$7F`.
+- **Family table — rewrite in place.** It already spans the full species range,
+  so no extension needed. Same-length rewrite in bank $16 = zero shift.
+  Because result = slot index (see Step 2), the compiler must **invert** the
+  author's `A×B→C` into slot order and **reject** two pairs claiming the same
+  result species (positional conflict → move one to `special`). Preserve the
+  `$FA` "any family" wildcard and the two-pass search.
+- **Bank $16 is shift-sensitive** (embedded pointers at `$70A6+`): never
+  insert. Leave the vanilla tables in place (dead, ~8.7 KB) and overwrite only
+  the scan-entry region in-place (`ld hl,$6900; rst $10` + NOP pad to preserve
+  byte length); fall through to the existing plus-clamp.
+- Preserve plus computation, the ~1–5% mutation override (`$16:$44DA`→`$D9E6`),
+  and precedence: special → family → fallback(parent 1) → mutation.
+
+### Source-spec + compiler
+Extend `tools/patch_breeding_recipe.py` into `tools/build_breeding.py`: a JSON
+spec with `special` (list of `{p1,p2,min_plus,result,plus_mod}`) and
+`family_defaults` (map `result_species → {p1,p2}`); names resolved via
+`dwm/map_names` + `monsters_full.json`; emits bank `$69` data + scanner + the
+same-size bank `$16` redirect; validations = capacity, shadow/unreachable
+warnings, family positional-conflict rejection.
+
+### Keystone prerequisite
+A decoder↔encoder that re-emits **both vanilla tables byte-identical** to the
+ROM (`build_breeding.py --selftest`) before feeding new data — the family
+table's positional/separator encoding is subtle. Decoder half done Session 12
+(both tables decoded; family verified vs known recipes). Encoder + self-test is
+build task **B1**.
+
+### Companion (same-size data/text edits, gated on a SameBoy check)
+Family **reassignment** (bosses spread across families 0–8; slot-9 "Mecha"
+collates cross-family monsters) = single-byte edits at offset $00 of each
+43-byte monster info entry. **??? → "Mecha"** rename = family-name table +
+flavor text (e.g. the library bookshelf "…and ???"). Before mass reassignment,
+verify in SameBoy whether family 9 is special-cased outside breeding (battle
+"boss-ness" likely comes from the boss table `$14:$4897`, separate from the
+family byte — confirm, don't assume).
+
+Phased plan (B1–B6) with acceptance tests lives in ROADMAP.md (Phase 2).
