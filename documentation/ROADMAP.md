@@ -212,26 +212,64 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       for v1 stories.
 
 ### Phase 2 — Content format & compiler (the editor backend)
-- [ ] `project.json` schema: rooms/screens/exits/NPCs, scripts
-      (decompiler pseudo-code), dialogue (auto-wrap 18 ch, auto-DTE,
-      auto page-split, two-level table emission), named flags
-      auto-allocated from the free pool, items, encounters.
-- [ ] `tools/build_project.py`: project → bank_060.asm (+spill to $64,
-      $67… — multi-bank from day one) → make → ROM. Deterministic.
-      KEY_LESSONS rules become compiler validations (script index 0
-      reserved, text termination, exit byte copying, entry-sized data,
-      bank space accounting).
-- [ ] **Regression baseline**: re-express the v23 content as
-      example-project/ and diff behavior. *Accept*: same rooms, NPCs,
-      dialogue, item give work from generated asm.
-- [ ] **Encounters #1 — per-room toggle** (from the proven Strategy A): emit a
-      `RoomEncTable` (mapID → enabled/gateID/floor) the whitelist hook scans,
-      replacing the hardcoded `cp $6B`. Project fields per room: `encounters`,
-      `gate_id` (0-31), `floor`. Spec in CROSSBANK_ROOMS.md.
+> **Plan LOCKED Session 13.** Full architecture, four-layer schema, the
+> table-driven keystone, the debug manifest, the Milayou bifurcation, and the
+> monster-sprite pipeline are all specced in **EDITOR_DESIGN.md**. Canonical
+> bank reservation in PROJECT_STATE.md. Build order below; do the keystone (M0)
+> first — it unblocks everything.
+- [x] **Editor architecture & project schema (DESIGN)** — done S13 (docs only,
+      no ROM). Four layers (world/custom/gamedata/build), table-driven dispatch
+      keystone, manifest, bank map, sprite pipeline. See EDITOR_DESIGN.md.
+- [ ] **M0 — Table-driven custom-room dispatch (keystone).** Add `CustomRoomTable`
+      in bank `$6A`; convert hardcoded per-room sites (`MapIDClampForPalette`
+      `cp $6C`; encounter `cp $6B`; `CustomAttrCheck` exact match) to same-size
+      table lookups keyed by `wMapID−$6B`. *Accept:* Room $6B byte-identical in
+      behavior (regression) AND a 2nd custom room reachable/walkable added **by
+      table row alone** — zero new hardcoded patches. Test ROM. (EDITOR_DESIGN §2.)
+- [ ] **`tools/extract_project.py`** — vanilla ROM → `world` layer (§5). Uses
+      existing dumpers. *Accept:* extract→build round-trips byte-perfect
+      `1ca6579…`; verifier PASS. This is the regression baseline.
+- [ ] **`tools/build_project.py`** — project → bank_060.asm (+multi-bank spill
+      per the reservation) → make → ROM, **deterministic**, emits
+      `build/manifest.json` (symbols, mapID→row, free-space accounting, flag map,
+      hash) + `.sym` + SameBoy warp helper. KEY_LESSONS rules become hard
+      validations incl. **orphaned-trigger detection**. (EDITOR_DESIGN §3,§6.)
+- [ ] **Regression baseline**: v23 content re-expressed as `example-project/`,
+      diff behavior. *Accept*: same rooms/NPCs/dialogue/item-give from generated asm.
+- [ ] **Bifurcation** — repoint the dresser exit (`$2F`) → Milayou's first custom
+      room; strip the Terry-recruitment intro cutscene. *Accept:* new game starts
+      in Milayou's room, walkable; no leftover Terry intro. (EDITOR_DESIGN §1.)
+- [ ] **Preserved-systems flag audit** — for the six islands (give-first-monster,
+      Arena `$06/$07/$5D/$5E`, Starry Shrine `$09/$08`, Library `$12/$13`, Vault
+      `$0F`, Shops `$50`): trace flag dependencies, decouple from vanilla
+      story/arena gating, satisfy-or-strip. *Accept:* each island reachable &
+      functional from Milayou's world without the vanilla story spine. SameBoy.
+- [ ] **Encounters #1 — per-room toggle** (proven Strategy A): folds into
+      `CustomRoomTable` (enc_enable/gate/floor fields) — the hardcoded `cp $6B`
+      seed becomes a row read. Project fields: `encounters`, `gate_id` (0-31),
+      `floor`. Spec in CROSSBANK_ROOMS.md.
 - [ ] **Encounters #2 — custom monster pools**: 26-byte pool in a free bank +
       intercept of `EncounterMonsterSelect`'s pool fetch for custom mapIDs (or
       reuse a verified-unreferenced pool slot). Project fields: up to 5
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
+
+### Phase 2C — Monster sprite replacement (DWM2 rips; designed S13, see EDITOR_DESIGN §7)
+Replace (not add) DWM1 species' graphics with DWM2 rips — battle (large) +
+overworld (walking) sprites. Sprites are LZSS-compressed in banks ~`$30`–`$3A`.
+Reuses the `build_combined_tileset.py` 2bpp/≤4-palette pipeline + LZSS codec;
+oversized sprites relocate to reserved overflow banks `$7E`–`$7F`.
+- [ ] **C0 — Locate the monster→sprite pointer table** (confirm single-level /
+      repointable). *Flagged S13.* *Accept:* table found, an entry's bank:addr
+      verified to decompress to the expected sprite.
+- [ ] **C1 — Per-monster sprite dimensions** (battle + overworld frame counts/
+      sizes = the conversion target). *Flagged S13.* *Accept:* dimensions dumped
+      for a sample monster, cross-checked by rendering.
+- [ ] **C2 — Replacement spike**: swap ONE DWM1 monster's sprites for a DWM2 rip
+      (Water/Material sheets supplied). *Accept:* the new sprite shows in-game
+      (battle + overworld) in SameBoy; clean build still `1ca6579…` for the
+      untouched tree; verifier PASS. Test ROM.
+- [ ] **C3 — Editor SpritePanel**: "import sprite sheet → assign to monster slot"
+      on the shared PNG-import flow (same as custom room tilesets).
 
 ### Phase 2B — Breeding overhaul & extension (specced Session 12; see BREEDING_SYSTEM.md)
 Keep 10 families. Defaults rewritten; special recipes extended to 1×–2× (→~1650).

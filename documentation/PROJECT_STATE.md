@@ -5,7 +5,21 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-17 (Session 12: custom breeding PROVEN — special-recipe
+> Last verified: 2026-06-17 (Session 13: EDITOR PLAN LOCKED — design only, no
+> ROM. Full editor architecture + romhack scope agreed and written to
+> EDITOR_DESIGN.md: (1) "Milayou's Story" bifurcation at the dresser (intro
+> mapID $2F → first custom room; strip Terry intro); build-new-on-old with six
+> preserved "island" systems (give-first-monster, Arena, Starry Shrine, Library,
+> Vault, Shops); (2) architectural keystone = table-driven custom-room dispatch
+> via `CustomRoomTable` in bank $6A, replacing the remaining hardcoded per-room
+> `cp` sites — adding a room becomes "append a row"; (3) four-layer project.json
+> schema (world/custom/gamedata/build) with `extract_project.py` for full-world
+> editability; (4) LLM-debuggable builds via `build/manifest.json` +
+> orphaned-trigger detection; (5) monster-sprite replacement (DWM2 rips) pipeline
+> on the existing 2bpp/LZSS tooling, overflow → banks $7E–$7F. Bank count
+> corrected (20 unclaimed, not 21 — $67 is in use). Nothing built; build order in
+> ROADMAP Phase 2 (M0 keystone first) / 2C (sprites). verify_integrity PASS 4/4.
+> Prior — Session 12: custom breeding PROVEN — special-recipe
 > override Anteater × BattleRex → GoldSlime via same-size, in-place edit of two
 > provably-dead table entries; confirmed in-game in SameBoy. Tool
 > `patch_breeding_recipe.py` + `patches/bank_016.asm` (bank $16 added to the
@@ -30,9 +44,10 @@
 | Clean build target | MUST equal the MD5 above, byte-perfect |
 | Assembler | RGBDS v0.6.1 exactly |
 | ROM size | 2 MB, 128 banks ($00–$7F) |
-| Custom content bank | $60 (~14.9 KB free as of v25 content, 1322 bytes used) |
+| Custom content bank | $60 (~14.9 KB free as of v25 content, 1348 bytes used) |
 | Custom layout bank | $64 (layout ptr table + LZSS layout + attr data, 309 bytes used) |
-| Empty banks available | 21 banks = 336 KB: $67,$69–$77,$79–$7A,$7C,$7E–$7F |
+| Tileset GFX bank | $67 (combined-tileset mashup GFX; IN USE — not free) |
+| Empty banks available | **20 unclaimed = 320 KB: $69–$77,$79–$7A,$7C,$7E–$7F.** ($60/$64/$67 already used by patches. Gap banks $78/$7B/$7D hold original graphics — not free.) Reservation map in EDITOR_DESIGN.md §8. |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
