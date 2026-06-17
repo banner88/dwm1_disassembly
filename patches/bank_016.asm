@@ -1195,28 +1195,19 @@ jr_016_46dc:
     ld [$da74], a
 
 jr_016_46f2:
-    ld hl, SpecialRecipeTable             ; special recipe table base (825 entries × 5 bytes)
-
-; Special table scan loop
-jr_016_46f5:
-    ld a, [hl]
-    cp $ff                   ; $FF = end of table
-    jr z, jr_016_4710
-
-    push hl
-    call LoadBrd_471c        ; check this entry against parents
-    pop hl
-    ld a, [$da71]
-    cp $ff
-    jr nz, jr_016_4710       ; found a match → done
-
-    ld a, l
-    add $05                  ; advance to next 5-byte entry
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    jr jr_016_46f5
+    ; --- B2 (ROADMAP Phase 2B): SPECIAL-table scan relocated to bank $69 ---
+    ; Same-size, in-place redirect (exactly 30 bytes = the original scan's
+    ; length): ld hl,$6900 (3) + rst $10 (1) + 26-byte NOP pad. `rst $10`
+    ; (H=$69, L=0) runs RelocatedSpecialScan in bank $69, a faithful port of
+    ; the old in-bank scan + LoadBrd_471c. It sets $DA71/$DA77 identically,
+    ; returns here, and falls through to the plus-clamp at jr_016_4710.
+    ; Bank $16 is shift-sensitive (embedded pointers at $70A6+), so the
+    ; vanilla SpecialRecipeTable + LoadBrd_471c below are left DEAD in place
+    ; (no bytes inserted/removed; assembled output is byte-for-byte the same
+    ; size as vanilla except inside this 30-byte window).
+    ld hl, $6900             ; bank $69, jump-table entry 0
+    rst $10                  ; -> RelocatedSpecialScan (bank $69)
+    ds 26, $00               ; NOP pad: preserve 30-byte length (zero shift)
 
 jr_016_4710:
     ld a, [$da77]            ; clamp plus to max 99

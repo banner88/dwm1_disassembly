@@ -24,6 +24,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | room_connections.json | dump_map_table.py | Regenerated with fixed connection graph. 262→361 connected rooms. |
 | all_scripts.json | dump_all_scripts.py | **BRANCH-FOLLOWING added this session.** Follows 9 branch opcodes ($00/$01/$0E/$14/$15/$27/$28/$2C/$37) via work-queue. 732 scripts, 810 unique WriteRAM locations (was 482 linear-only; ROM ground truth 866 after false positives = 93.5% coverage). 56 unreached WriteRAMs are in alternate dispatch paths (entry 1/2 tables). Canonical room names from editor/editor.py (96 entries). New `branch_targets` field per script. |
 | event_flags_complete.json | analyze_event_flags.py | **REWRITTEN this session.** Now reads all_scripts.json (branch-following) instead of linear ROM scan. 328 flags, 298 with sets (was 92). 29 check-only anomalies (was 219). Includes collision zones, SRAM boundary. |
+| breeding_tables.json | build_breeding.py | **NEW (Session 13, B1 keystone).** Round-trip-faithful decode of BOTH vanilla breeding tables (special $16:$4B30 825×5; family $16:$4974 222 pairs). `--selftest` proves re-emission is byte-identical to the ROM. Independently reconciled with hand-authored breeding_complete.json (825/825 + 197/197, 0 diffs). Name-annotated; `_generator` stamped. |
 
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
 These are knowledge artifacts — human analysis in JSON form. No generator
@@ -75,7 +76,12 @@ collision thresholds from ROM0 $26E3 ×8 stride) ·
 tileset PNGs using runtime palettes from room_palettes.json; also
 generates force-preview variant with colour index 1 marker tint;
 outputs JS for editor HTML embedding) ·
-`gen_script_banks.py` · `render_rooms.py` · `dwm/` package.
+`gen_script_banks.py` · `render_rooms.py` · `dwm/` package ·
+`build_breeding.py` (✅ new Session 13 — breeding round-trip decode/encode/emit;
+`--selftest` byte-identical to ROM; keystone for the Phase 2B overhaul; produces
+breeding_tables.json. `--emit-relocation` (B2) writes `patches/bank_069.asm` —
+the relocated special-table scanner + table, sourced from the **patched**
+`bank_016.asm` so custom recipes survive; self-checks relocated == patched).
 
 ### Prototype editor (towards_editor/)
 `DWM1_Multi_Tileset_Editor.html` — standalone HTML file (open in browser).
