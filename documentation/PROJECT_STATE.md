@@ -5,7 +5,23 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-17 (Session 13: breeding B1 + B2 DONE.
+> Last verified: 2026-06-18 (Session 14: bank $0B repointing — breeding-cutscene
+> glitch FIXED.
+> **Bank $0B dynamic-repointing completed.** The breeding-cutscene parent-sprite
+> glitch (wrong monster, correct palette) and a parallel gate-table glitch were
+> caused by three un-labelized raw pointer refs into bank $0B's shift region
+> (`$4974` sprite table; `$42c8`/`$4308` gate table with raw `dw` entries). Labelized
+> in the disassembly first (clean build still `1ca6579…`), then ported to
+> `patches/bank_00b.asm` — where the sprite ref was additionally found **mislabeled**
+> to `RoomScreenPtrTable` (`$49b5`) instead of the real `$4974` data (`$4911`), and
+> repointed. User-confirmed in SameBoy: breeding cutscene clean; custom rooms
+> `$6B`/`$6C` + custom→custom transitions working (patched ROM `b43a04fe…`; canonical
+> clean build still `1ca6579…`). No trampolines — pure dynamic repointing. Custom
+> banks are 100% label-based (repointable by construction). Remaining hardcoded
+> repointing refs: `$08:$7751`, `$32:$5A5F` (latent — banks not patched). Method
+> + rule: KEY_LESSONS "Session 14 — Bank $0B repointing" and SESSION_PROTOCOL §4.
+>
+> Session 13: breeding B1 + B2 DONE.
 > **B2 — special-table relocation harness (SameBoy-confirmed).** The special
 > scan moved from bank $16 to free bank `$69`, called via `rst $10`
 > (`ld hl,$6900`); the 30-byte scan at $16:$46F2–$470F replaced in-place with
@@ -19,7 +35,8 @@
 > artifact only — canonical clean build is still 1ca6579…). Open follow-up:
 > breeding-cutscene parent sprites glitch — NOT from B2 (graphics path; B2 only
 > writes result RAM), suspected pre-existing earlier-patch regression; logged in
-> ROADMAP with a bisect plan.
+> ROADMAP with a bisect plan. **RESOLVED in Session 14** — see top entry (it was an
+> incomplete bank $0B labelization, not a breeding-path regression).
 > **B1 — breeding round-trip encoder (keystone).** `tools/build_breeding.py --selftest` decodes BOTH vanilla tables
 > and re-emits them byte-identical to the ROM (special $4B30 4126 B incl $FF;
 > family $4974 444 B incl $0000); db-text emission re-parses to the same bytes;

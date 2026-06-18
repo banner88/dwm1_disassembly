@@ -284,17 +284,17 @@ $16 edits same-size only (leave vanilla tables dead-in-place).
       byte edits (offset $00) + name/flavor text. *Gate:* SameBoy check that
       family 9 isn't special-cased outside breeding (boss-ness likely from boss
       table `$14:$4897`, not the family byte).
-- [ ] **BUG — breeding cutscene: parent sprites glitch.** Observed Session 13
-      while playtesting B2; **not caused by B2** (B2 only writes `$DA71`/`$DA77`
-      result bytes in RAM and bank-switches cleanly — it touches no VRAM/OAM/tile
-      data). Almost certainly a pre-existing graphics regression from an earlier
-      content patch (suspect the combined-tileset / VRAM work in bank `$67`, or a
-      monster-sprite repoint — hypothesis, not diagnosed). Possibly related to the
-      "minor cosmetic glitch on hatch" already noted under Monster/egg give.
-      *Bisect to run first (≈5 min):* breed the same pair and watch the cutscene
-      on (1) vanilla `DWM-original.gbc`, (2) the most recent pre-B2 patched ROM,
-      (3) the B2 ROM — to localize which patch introduced it. Separate item; do
-      not bundle with breeding-logic work.
+- [x] **BUG — breeding cutscene: parent sprites glitch.** **FIXED Session 14.**
+      Observed Session 13 while playtesting B2; confirmed **not caused by B2**. Root
+      cause was an incomplete bank `$0B` labelization: three raw pointer refs into the
+      bank's shift region (`$4974` sprite-pointer table; `$42c8`/`$4308` gate table)
+      were never converted to labels, so the custom dispatch's shift left them stale —
+      and in `patches/bank_00b.asm` the sprite ref was additionally **mislabeled** to
+      `RoomScreenPtrTable` (`$49b5`) instead of the real `$4974` data (`$4911`).
+      Fixed by re-sectioning both tables into labeled `dw`/`db` (disassembly stays
+      byte-identical to `1ca657…`) and repointing the sprite consumer. User-confirmed
+      in SameBoy (clean build still `1ca657…`; patched ROM `b43a04fe…`). See
+      KEY_LESSONS "Session 12 Lessons — Bank $0B repointing" and PROJECT_STATE.
 
 ### Phase 3 — Editor app (see EDITOR_DESIGN.md — native macOS)
 - [ ] Walking skeleton: open project, room list, Build, Run-in-SameBoy

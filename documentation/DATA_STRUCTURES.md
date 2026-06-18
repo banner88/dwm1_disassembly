@@ -961,17 +961,25 @@ Each was converted to `add LOW(Label) / adc HIGH(Label)` so the table can move.
 | $16 | $7736 | `FloorTilePatterns` | Floor tile sub-table — label created |
 | $08 | $447E | `label8_447e` | Audio instrument data |
 
-### Remaining Hardcoded Offset References (3 total — need Priority 3 data conversion)
+### Remaining Hardcoded Offset References (2 total — need Priority 3 data conversion)
 
 These still use `add $XX / adc $YY` with raw bytes. Each needs a label at the target
 address and conversion to `LOW(Label)/HIGH(Label)`. Many targets fall mid-line in
-`db` data, requiring line splitting.
+`db` data, requiring line splitting. **Both are latent**: their banks are not currently
+patched, so they cannot break today — but they will break the instant a patch shifts
+their bank. Resolve proactively before editing banks $08 / $32.
 
 | Bank | Target | Issue |
 |------|--------|-------|
 | $08 | $7751 | Audio waveform data — misassembled as instructions |
-| $0B | $4974 | Code/data hybrid — jr offsets form lookup table |
 | $32 | $5A5F | Tile animation data — misassembled as instructions |
+
+**Fixed 2026-06-18:** `$0B:$4974` (sprite pointer table) and `$0B:$42c8`/`$4308` (gate
+pointer table) labelized — this closed the breeding-cutscene + gate glitches in the custom
+ROM. Done in the disassembly first (build remains byte-identical to vanilla `1ca657…`), then
+ported to `patches/bank_00b.asm`. In the patch the sprite ref had also been **mislabeled**
+to `RoomScreenPtrTable` (`$49b5`) instead of the real `$4974` data (`$4911`) — repointed to
+the correct table. Method + rule: KEY_LESSONS "Session 14 Lessons — Bank $0B repointing"; the `disassembly/bank_00b.asm` gate/sprite diff is a worked re-sectioning example.
 
 **All other 19 targets from the original 22 have been fixed** with proper labels
 and LOW/HIGH conversions. New labels created: NPCWalkDataTable, ScreenTransDataTable,

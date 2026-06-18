@@ -129,6 +129,12 @@ DELETE.
 - Never insert bytes in banks $01/$04/$17 (and in `disassembly/`, any bank).
 - Never run `make clean` or `git stash`.
 - Never write a new top-level status/handoff doc.
+- Never hand-author a pointer label directly in a patch. Labelize the raw pointer
+  in `disassembly/` first and confirm the build still equals `1ca657…` (a mislabel
+  changes bytes → fails the check), then port the converted reference to the patch.
+  A label that resolves to the wrong address passes visual review but glitches at
+  runtime (Session 14: `$0B:$4974` sprite ref was mislabeled to `RoomScreenPtrTable`
+  at `$49b5` instead of `$4911`).
 - Never re-run a `gen_*.py --apply` tool over a bank with un-regenerated
   manual edits (it overwrites them with original ROM data).
 

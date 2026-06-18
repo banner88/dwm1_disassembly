@@ -464,3 +464,30 @@ table in place (dead) so nothing in bank $16 shifts.
 **Rule**: Cross-bank data that a ROMX routine must read goes behind a free-bank
 scanner invoked via rst $10; never relocate by removing in-bank data (it shifts
 embedded pointers).
+
+## Session 14 Lessons — Bank $0B repointing (breeding-cutscene fix)
+
+Rule also captured in SESSION_PROTOCOL §4 ("What a session must never do").
+
+### Labelize in the byte-identical disassembly FIRST, then port to the patch
+**Symptom**: Custom ROM's breeding cutscene showed the wrong parent monsters with the
+correct palette ("wrong data, right palette" = a pointer reading the wrong address).
+**Root cause (two layers)**: (1) three raw pointer refs into bank $0B's shift region were
+never labelized (`add $74/adc $49`→`$4974` sprite table; `ld hl,$42c8`/`$4308` gate table
+with raw `dw` entries), so the custom dispatch's shift left them stale — the same drift
+class as the bank $04 incident. (2) Worse, the patch had *attempted* to labelize the sprite
+ref but pointed it at a label (`RoomScreenPtrTable`, `$49b5`) 164 bytes off from the real
+`$4974` data (`$4911`), which sat orphaned. A wrong label *looks* fixed and passes review.
+**Fix**: re-section both tables into labeled `dw`/`db` in the disassembly (build stays
+byte-identical to `1ca657…`), then port to `patches/bank_00b.asm` and repoint the mislabeled
+sprite consumer to the correct table.
+**Rule**: Always labelize a raw pointer in the disassembly first and confirm `MD5==1ca657`
+(a mislabel changes bytes → fails instantly). Only then port to the patch. Patches have no
+vanilla-MD5 guard, so never hand-author a pointer label directly in a patch without verifying
+where it resolves — check the bytes at the label's address, not just that a label exists.
+
+### No trampolines — finish the labelization instead
+**Reminder**: A full disassembly makes WRAM/ROM0 trampolines unnecessary (KEY_LESSONS #1).
+When a shift breaks a reference, the fix is to labelize the reference, not to add an
+indirection layer or avoid the shift. Shifting code is fine once every reference into the
+shifted region is a label.

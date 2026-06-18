@@ -613,12 +613,12 @@ jr_00b_42ac:
     cp $ff
     jr nz, jr_00b_42b7
 
-    ld hl, $4308
+    ld hl, GateDefaultEntry_4308
     ret
 
 
 jr_00b_42b7:
-    ld hl, $42c8
+    ld hl, GatePtrTable_42c8
     ld a, [$c92b]
     add a
     add l
@@ -632,51 +632,27 @@ jr_00b_42b7:
     ret
 
 
-    ret c
-
-    ld b, d
-    sbc $42
-    db $e4
-    ld b, d
-    ld [$f042], a
-    ld b, d
-    or $42
-    db $fc
-    ld b, d
-    ld [bc], a
-    ld b, e
-    rrca
-    dec bc
-    ld bc, $0101
-    rst $38
-    rrca
-    dec bc
-    ld bc, $0101
-    rst $38
-    rrca
-    inc c
-    ld bc, $0201
-    rst $38
-    rrca
-    inc c
-    ld bc, $0201
-    rst $38
-    rrca
-    ld de, $0101
-    inc bc
-    rst $38
-    rrca
-    ld [$0101], sp
-    inc b
-    rst $38
-    rrca
-    rrca
-    ld bc, $0501
-    rst $38
-    rrca
-    ld b, $01
-    ld bc, $ff06
-    rst $38
+GatePtrTable_42c8:
+    dw GateEntry0, GateEntry1, GateEntry2, GateEntry3
+    dw GateEntry4, GateEntry5, GateEntry6, GateEntry7
+GateEntry0:
+    db $0f, $0b, $01, $01, $01, $ff
+GateEntry1:
+    db $0f, $0b, $01, $01, $01, $ff
+GateEntry2:
+    db $0f, $0c, $01, $01, $02, $ff
+GateEntry3:
+    db $0f, $0c, $01, $01, $02, $ff
+GateEntry4:
+    db $0f, $11, $01, $01, $03, $ff
+GateEntry5:
+    db $0f, $08, $01, $01, $04, $ff
+GateEntry6:
+    db $0f, $0f, $01, $01, $05, $ff
+GateEntry7:
+    db $0f, $06, $01, $01, $06, $ff
+GateDefaultEntry_4308:
+    db $ff
 
 Call_00b_4309:
     ld a, [wInGateworld]
@@ -2039,10 +2015,10 @@ jr_00b_490b:
     ld h, $00
     add hl, hl
     ld a, l
-    add $74
+    add LOW(SpritePtrTable_4974)
     ld l, a
     ld a, h
-    adc $49
+    adc HIGH(SpritePtrTable_4974)
     ld h, a
 
 jr_00b_4917:
@@ -2134,6 +2110,7 @@ jr_00b_496c:
     ret
 
 ;DATA
+SpritePtrTable_4974:
     nop
     cpl
     ld b, b
