@@ -5,8 +5,30 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-18 (Session 15: breeding B3 — special-table capacity
-> 1×–2× DONE, user-confirmed.)
+> Last verified: 2026-06-18 (Session 16: breeding B4 — family-defaults rewrite
+> DONE, user-confirmed in SameBoy.)
+> **B4 — family-defaults rewrite (SameBoy-confirmed).** The FAMILY recipe table
+> (`$16:$4974`, positional: offspring species == slot index) can now be authored
+> in place via `tools/build_breeding.py --emit-family`, sourced from
+> `extracted/breeding_family_defaults.json` (a `result→{p1,p2}` override list). The
+> tool starts from the vanilla family decode, applies only the overrides, validates
+> positional 1:1 (one cross per result species) + 444-byte zero-shift + shadow classes
+> (special-table family-code shadow and duplicate family matchers), and rewrites only
+> the `FamilyRecipeTable` db block in `patches/bank_016.asm`. Authored proof set is a
+> zero-collateral permutation of the three Dragon-mate matchers plus one NEW recipe at a
+> previously-empty separator slot: Bird×Dragon→DrakSlime, Slime×Dragon→Almiraj,
+> Beast×Dragon→Wyvern, Dragon×Dragon→GreatDrak (slot 37). Whole-ROM impact: **5 bytes**
+> in bank `$16` + header/global checksum (focused diff vs the B3 ROM; B3 baseline rebuilt
+> as the recorded `f1cd94b1…`). User-confirmed in SameBoy: FunkyBird×BattleRex→DrakSlime,
+> Snaily×BattleRex→Almiraj, Dragon×Dragon→GreatDrak (patched ROM `caa597d1…`; canonical
+> clean build still `1ca6579…`). Beast×Dragon→Wyvern is in the table but correctly
+> shadowed for MadCat by SPECIAL entry 187 (MadCat×BattleRex→Yeti) — special > family
+> precedence, not a bug. Untouched cross BattleRex×Healer→DragonKid (vanilla family slot
+> 20) unchanged. Confirmed mechanics (grepped, do not re-trust): family scan does
+> exact-species-immediate / family-code-last-wins with a two-pass (parent2 specific, then
+> as family); `$FA` "AnyFamily" wildcard is scanner-supported but used ZERO times in vanilla
+> data. Method + rules: KEY_LESSONS "Session 16 — Breeding B4" and BREEDING_SYSTEM "Planned".
+>
 > **B3 — special-recipe capacity extension (SameBoy-confirmed).** The relocated
 > bank `$69` special table (B2) now grows past the 825 vanilla entries: its
 > scanner walks to the `$FF` terminator with no hardcoded count, so
@@ -138,7 +160,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Attr map generator | ✅ working | tools/generate_attr_map.py; builds tile→palette maps from all 85 tilesets, generates LZSS-compressed attr data. |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ working (single room, Strategy A) | Whitelist mapID in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor (ASM) + arm wEncounterCounter (room-entry script). Pool selectable via gate/floor. v30, runtime-verified. Editor generalization specced (CROSSBANK_ROOMS.md). |
-| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. Overhaul B4/B5/B6 specced (BREEDING_SYSTEM "Planned"; ROADMAP 2B), not built. |
+| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. **S16: B4 family-defaults rewrite** — `build_breeding.py --emit-family` authors the positional family table in place from `extracted/breeding_family_defaults.json`; Bird/Slime/Beast×Dragon + new Dragon×Dragon→GreatDrak confirmed in-game (5 bytes, zero-collateral). B5/B6 specced (BREEDING_SYSTEM "Planned"; ROADMAP 2B), not built. |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
 

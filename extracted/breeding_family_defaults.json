@@ -1,0 +1,34 @@
+{
+  "_note": "Hand-authored (Tier R) input for tools/build_breeding.py --emit-family (ROADMAP Phase 2B / B4). Each override rewrites ONE entry of the FAMILY recipe table ($16:$4974) IN PLACE. The family table is POSITIONAL: the offspring species == the slot index, so an override is keyed by `result` (the offspring species id) and supplies the parent matchers for that slot. Untouched slots keep their vanilla matcher byte-for-byte. The tool starts from the vanilla ROM family table and applies only these overrides, so the emitted table differs from vanilla at exactly the listed slots (+ zero shift: still 222 pairs / 444 bytes).",
+  "_consumed_by": "tools/build_breeding.py (read by load_family_overrides); emitted into patches/bank_016.asm (FamilyRecipeTable db block).",
+  "_format": "each override = {result, p1, p2}. result = offspring species id 0-220 (== the table slot). p1 = Pedigree matcher ($DA6F, family code in $DA72), p2 = Mate matcher ($DA70). p1/p2 may be a family NAME (Slime/Dragon/Beast/Bird/Plant/Bug/Devil/Zombie/Material/Boss; Flying is an alias for Bird=$F3), a raw family code ($F0-$F9), the mate-only wildcard AnyFamily/$FA, or a species id 0-220. Underscore keys are comments.",
+  "_constraints": "(1) Each `result` species may appear at most once (positional 1:1 - the family table cannot map two crosses to the same offspring; put many->one crosses in the SPECIAL table instead). (2) result must be 0-220 (the $0000 terminator slot is reserved). (3) The table length is invariant (in-place edits only), so bank $16's downstream embedded pointers never shift.",
+  "_precedence": "Resolver order is SPECIAL -> FAMILY -> fallback(parent1). Within the family table: an exact parent-1 SPECIES match returns immediately; a parent-1 FAMILY-code match stores and keeps scanning (last family match wins); the search runs twice (parent-2 specific, then parent-2 as family). So a family-code cross only surfaces if (a) no special-table entry matches the parents first, and (b) no other family entry out-ranks it. The tool warns on both shadow classes.",
+  "_test_guidance": "Mate = a female Dragon (any dragon - all four crosses key the mate as the Dragon FAMILY $F1). Pedigree shadow-safety (a SPECIAL with an any-Dragon mate would otherwise hide the family default): SLIME pedigree = always safe (no slime is shadowed); DRAGON pedigree = always safe; BEAST pedigree avoid Almiraj/Saccer/SuperTen/Grizzly/Yeti/Trumpeter/BigEye; BIRD pedigree avoid Wyvern/LandOwl/MadCondor/Phoenix. A specific dragon species can also trigger a species-specific special - if a cross gives an unexpected result, report the exact pedigree+mate species and it can be traced.",
+  "overrides": [
+    {
+      "_comment": "Bird x Dragon -> DrakSlime (species 0). Vanilla slot 0 was Slime x Dragon -> DrakSlime; this swaps which cross produces DrakSlime. Matcher becomes [$F3,$F1].",
+      "result": 0,
+      "p1": "Bird",
+      "p2": "Dragon"
+    },
+    {
+      "_comment": "Dragon x Dragon -> GreatDrak (species 37). NEW recipe: vanilla slot 37 was a separator ($FFFF), so Dragon x Dragon had NO family default and fell through to fallback=parent1 (the dragon itself). Now two dragons breed into GreatDrak. Zero collateral (no existing recipe displaced). Matcher [$F1,$F1].",
+      "result": 37,
+      "p1": "Dragon",
+      "p2": "Dragon"
+    },
+    {
+      "_comment": "Slime x Dragon -> Almiraj (species 46). Vanilla slot 46 was Beast x Dragon -> Almiraj; now Slime x Dragon makes Almiraj. Matcher [$F0,$F1]. Slime pedigree is fully shadow-safe with a Dragon mate.",
+      "result": 46,
+      "p1": "Slime",
+      "p2": "Dragon"
+    },
+    {
+      "_comment": "Beast x Dragon -> Wyvern (species 71). Vanilla slot 71 was Bird x Dragon -> Wyvern; now Beast x Dragon makes Wyvern. Matcher [$F2,$F1]. Pick a beast NOT in the avoid-list above.",
+      "result": 71,
+      "p1": "Beast",
+      "p2": "Dragon"
+    }
+  ]
+}

@@ -48,6 +48,8 @@ DISASM = os.path.join(REPO, "disassembly", "bank_016.asm")
 MONSTERS = os.path.join(REPO, "extracted", "monsters_full.json")
 OUT_JSON = os.path.join(REPO, "extracted", "breeding_tables.json")
 EXTRA_RECIPES = os.path.join(REPO, "extracted", "breeding_extra_recipes.json")
+FAMILY_DEFAULTS = os.path.join(REPO, "extracted", "breeding_family_defaults.json")
+PATCH_BANK16 = os.path.join(REPO, "patches", "bank_016.asm")
 ORIGINAL_MD5 = "1ca6579359f21d8e27b446f865bf6b83"
 
 # --- ROM geometry (bank $16) -------------------------------------------------
@@ -393,6 +395,184 @@ def species_family_code(rom, sp):
     return 0xF0 + fam if fam <= 9 else None
 
 
+# --- B4: family-defaults authoring (in-place rewrite of $16:$4974) -----------
+# The family recipe table is POSITIONAL: offspring species == slot index. An
+# override is keyed by `result` (the offspring species) and supplies the parent
+# matchers written at that slot. We start from the VANILLA ROM decode and apply
+# only the overrides, so the emitted table differs from vanilla at exactly the
+# overridden slots and stays 222 pairs / 444 bytes (zero shift -> bank $16's
+# downstream embedded pointers never move).
+
+# Family NAME -> code. "Bird" and "Flying" are both $F3 (FamilyTextPtrTable names
+# the family "Bird"; monsters_full.json labels those species "Flying").
+_FAMILY_NAME_TO_CODE = {
+    "slime": 0xF0, "dragon": 0xF1, "beast": 0xF2, "bird": 0xF3, "flying": 0xF3,
+    "plant": 0xF4, "bug": 0xF5, "devil": 0xF6, "zombie": 0xF7, "material": 0xF8,
+    "boss": 0xF9, "anyfamily": 0xFA, "any": 0xFA,
+}
+
+
+def _name_to_id(names):
+    """Reverse of the id->name map (lowercased) for resolving species by name."""
+    return {v.lower(): k for k, v in names.items()}
+
+
+def resolve_matcher(token, names, *, mate_side):
+    """Resolve a p1/p2 matcher token to a byte.
+
+    token may be: an int (species id 0-220, or a raw code $F0-$FA), a family
+    name (Slime/Dragon/.../Boss, Flying=Bird), '$FA'/'AnyFamily', or a species
+    name. $FA (AnyFamily wildcard) is only meaningful on the mate side (parent 2)
+    per the scanner; reject it on the pedigree side."""
+    if isinstance(token, int):
+        b = token
+    else:
+        s = str(token).strip()
+        key = s.lower()
+        if key in _FAMILY_NAME_TO_CODE:
+            b = _FAMILY_NAME_TO_CODE[key]
+        elif s.startswith("$"):
+            b = int(s[1:], 16)
+        elif key in _name_to_id(names):
+            b = _name_to_id(names)[key]
+        else:
+            raise ValueError("cannot resolve breeding matcher %r (not a family "
+                             "name, species name, id, or $hex code)" % (token,))
+    if not (0 <= b <= 0xFF):
+        raise ValueError("matcher byte out of range: %r -> $%X" % (token, b))
+    if b == 0xFA and not mate_side:
+        raise ValueError("AnyFamily ($FA) wildcard is mate-side (parent 2) only")
+    if b > 0xFA:
+        raise ValueError("matcher $%02X is above the family-code range" % b)
+    return b
+
+
+def load_family_overrides(names):
+    """Load hand-authored family-default overrides (B4).
+
+    Returns a list of {result:int, b:int, c:int}. Missing file -> [] (the tool
+    then re-emits the vanilla family table unchanged). Underscore keys ignored."""
+    if not os.path.exists(FAMILY_DEFAULTS):
+        return []
+    spec = json.load(open(FAMILY_DEFAULTS))
+    out = []
+    for o in spec.get("overrides", []):
+        result = o["result"]
+        if isinstance(result, str):           # allow a species name for `result`
+            key = result.strip().lower()
+            nid = _name_to_id(names)
+            if key not in nid:
+                raise ValueError("override result %r is not a known species" % result)
+            result = nid[key]
+        result = int(result)
+        if not (0 <= result <= 220):
+            raise ValueError("override result must be species id 0-220 (the "
+                             "$0000 terminator slot is reserved): %r" % result)
+        b = resolve_matcher(o["p1"], names, mate_side=False)
+        c = resolve_matcher(o["p2"], names, mate_side=True)
+        out.append({"result": result, "b": b, "c": c})
+    return out
+
+
+def apply_family_overrides(pairs, overrides):
+    """Apply overrides to a decoded vanilla family pair list (in place by slot).
+
+    pairs is the list returned by decode_family (slots 0..N with one terminator).
+    Each override sets pairs[result] = its matcher. Validates positional 1:1
+    (no two overrides share a result) and that the target slot is not the
+    terminator. Returns the modified pairs and asserts the length is invariant."""
+    seen = {}
+    for o in overrides:
+        r = o["result"]
+        if r in seen:
+            raise ValueError("positional conflict: result species %d is claimed "
+                             "by two overrides (the family table is strictly 1:1; "
+                             "move one cross to the SPECIAL table)" % r)
+        seen[r] = o
+        if r >= len(pairs):
+            raise ValueError("override result %d is past the family table" % r)
+        if pairs[r]["kind"] == "terminator":
+            raise ValueError("override result %d targets the $0000 terminator" % r)
+        pairs[r]["b"] = o["b"]
+        pairs[r]["c"] = o["c"]
+        pairs[r]["kind"] = "recipe"
+    return pairs
+
+
+def family_shadow_warnings(rom, pairs, overrides, names):
+    """Warn when an authored family cross will not surface in-game.
+
+    Two shadow classes: (1) a SPECIAL-table entry matches the same parents by
+    family code and wins (special is checked before family); (2) another FAMILY
+    recipe carries the identical [b,c] family-code pair (last family match wins,
+    so a duplicate at a higher slot would out-rank a lower one). Species-specific
+    shadowing depends on the player's exact monsters and is left to play-test."""
+    warn = []
+    sp = decode_special(rom)
+    for o in overrides:
+        b, c, r = o["b"], o["c"], o["result"]
+        rn = species_name(r, names)
+        # (1) special-table family-code shadow
+        for i, e in enumerate(sp):
+            if e[0] == b and e[1] == c:
+                warn.append("family cross [%s x %s -> %s] is SHADOWED by SPECIAL "
+                            "entry %d (-> %s); the family default will not fire"
+                            % (species_name(b, names), species_name(c, names),
+                               rn, i, species_name(e[3], names)))
+                break
+        # (2) duplicate family-code matcher at another (higher) slot
+        if 0xF0 <= b <= 0xFA and 0xF0 <= c <= 0xFA:
+            dups = [p["slot"] for p in pairs
+                    if p["kind"] == "recipe" and p["slot"] != r
+                    and p["b"] == b and p["c"] == c]
+            higher = [s for s in dups if s > r]
+            if higher:
+                warn.append("family cross -> %s at slot %d is out-ranked by an "
+                            "identical matcher at slot(s) %s (last family match "
+                            "wins)" % (rn, r, higher))
+    return warn
+
+
+def emit_family_db_block(pairs):
+    """The db lines for the family table body (no label), 16 bytes/line."""
+    return _emit_db(list(encode_family(pairs)))
+
+
+def build_family_pairs(rom):
+    """Vanilla family decode + B4 overrides applied. Returns (pairs, overrides,
+    warnings)."""
+    names = load_monster_names()
+    pairs = decode_family(rom)
+    overrides = load_family_overrides(names)
+    apply_family_overrides(pairs, overrides)
+    warnings = family_shadow_warnings(rom, pairs, overrides, names)
+    body = encode_family(pairs)
+    if len(body) != 444:
+        raise ValueError("family table is %d bytes, expected 444 (zero-shift "
+                         "invariant violated)" % len(body))
+    return pairs, overrides, warnings
+
+
+def write_family_table(rom):
+    """Rewrite the FamilyRecipeTable db block in patches/bank_016.asm in place.
+
+    Replaces only the bytes BETWEEN the `FamilyRecipeTable:` label and the next
+    label (`SpecialRecipeTable:`); the special table and everything else are
+    untouched."""
+    pairs, overrides, warnings = build_family_pairs(rom)
+    with open(PATCH_BANK16) as f:
+        text = f.read()
+    m = re.search(r"(FamilyRecipeTable:\n)(.*?)(\n[A-Za-z_][A-Za-z0-9_]*:)",
+                  text, re.S)
+    if not m:
+        raise ValueError("FamilyRecipeTable block not found in patches/bank_016.asm")
+    new_block = emit_family_db_block(pairs)
+    new_text = text[:m.start(2)] + new_block + text[m.end(2):]
+    with open(PATCH_BANK16, "w") as f:
+        f.write(new_text)
+    return overrides, warnings
+
+
 # --- B2: relocation harness (bank $69 special-table scanner) -----------------
 # The special table can't grow in place (code follows its $FF terminator at
 # $5B4D) and bank $16 is shift-sensitive (embedded pointers at $70A6+). B2
@@ -602,6 +782,9 @@ def main():
     ap.add_argument("--emit-relocation", action="store_true",
                     help="write patches/bank_069.asm (B2 relocated scanner+table "
                          "+ B3 appended recipes from breeding_extra_recipes.json)")
+    ap.add_argument("--emit-family", action="store_true",
+                    help="rewrite the FamilyRecipeTable in patches/bank_016.asm "
+                         "in place from breeding_family_defaults.json (B4)")
     args = ap.parse_args()
 
     if not os.path.exists(ROM_PATH):
@@ -668,6 +851,45 @@ def main():
         if not (base_match and appended_ok and total <= SPECIAL_CAPACITY_MAX
                 and not warnings):
             return 1
+
+    if args.emit_family:
+        names = load_monster_names()
+        overrides, warnings = write_family_table(rom)
+        # Self-checks: parse the rewritten FamilyRecipeTable bytes back, confirm
+        # every untouched slot stayed vanilla-identical, the length is invariant,
+        # and each authored cross is present at its slot.
+        text = open(PATCH_BANK16).read()
+        m = re.search(r"FamilyRecipeTable:\n(.*?)\n[A-Za-z_][A-Za-z0-9_]*:",
+                      text, re.S)
+        body = parse_db_bytes(m.group(1))
+        new_pairs = [{"slot": i, "b": body[2 * i], "c": body[2 * i + 1]}
+                     for i in range(len(body) // 2)]
+        van = decode_family(rom)
+        applied = {o["result"]: o for o in overrides}
+        untouched_ok = all(
+            new_pairs[p["slot"]]["b"] == p["b"]
+            and new_pairs[p["slot"]]["c"] == p["c"]
+            for p in van if p["slot"] not in applied
+        )
+        roundtrip_ok = all(
+            new_pairs[r]["b"] == o["b"] and new_pairs[r]["c"] == o["c"]
+            for r, o in applied.items()
+        )
+        len_ok = len(body) == 444
+        print("wrote patches/bank_016.asm (FamilyRecipeTable)")
+        print("  applied %d family-default override(s):" % len(overrides))
+        for o in overrides:
+            print("    %s x %s -> %s (slot %d)"
+                  % (species_name(o["b"], names), species_name(o["c"], names),
+                     species_name(o["result"], names), o["result"]))
+        print("  untouched slots == vanilla: %s" % ("OK" if untouched_ok else "MISMATCH"))
+        print("  overrides present at their slots: %s" % ("OK" if roundtrip_ok else "BAD"))
+        print("  table length 444 B (zero shift): %s" % ("OK" if len_ok else "BAD"))
+        for w in warnings:
+            print("  WARNING: " + w)
+        if not (untouched_ok and roundtrip_ok and len_ok and not warnings):
+            return 1
+        return 0
 
     if not args.no_write:
         data = build_json(rom)

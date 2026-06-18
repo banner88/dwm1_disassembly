@@ -179,6 +179,27 @@ extended to 1×–2× capacity (825 → up to ~1650) for iterative playtesting.
   author's `A×B→C` into slot order and **reject** two pairs claiming the same
   result species (positional conflict → move one to `special`). Preserve the
   `$FA` "any family" wildcard and the two-pass search.
+  **B4 DONE (Session 16, SameBoy-confirmed):** `tools/build_breeding.py --emit-family`
+  reads `extracted/breeding_family_defaults.json` — a list of positional
+  `{result, p1, p2}` overrides (result = offspring species id = slot; p1/p2 = a
+  family name/`$F0`–`$FA`/species name|id; `$FA` mate-side only). It starts from the
+  vanilla family decode, applies only the overrides, then rewrites the
+  `FamilyRecipeTable` db block in `patches/bank_016.asm` IN PLACE. Validations:
+  positional 1:1 (reject duplicate `result`), 444-byte zero-shift invariant, and two
+  shadow classes — a SPECIAL entry that matches the same parents by family code, and a
+  duplicate family-code matcher at a higher slot (family scan is last-family-wins).
+  Self-checks: every untouched slot stays vanilla-identical; each override is present at
+  its slot. Confirmed precedence (grepped, do not re-trust): special → family → fallback;
+  within family, exact-parent-1-species returns immediately, family-code match keeps
+  scanning (last wins), search runs twice (parent2 specific, then as family). Note: `$FA`
+  is scanner-supported but used ZERO times in vanilla data. **Caveat surfaced in test:** a
+  species-specific SPECIAL masks the family default for that exact pair regardless of the
+  family edit (e.g. MadCat×BattleRex → Yeti via special 187, so Beast×Dragon→Wyvern can't
+  surface through MadCat) — choose proof crosses with no special, or expect the special's
+  result. Proof set (zero-collateral permutation + 1 new recipe at empty slot 37):
+  Bird×Dragon→DrakSlime, Slime×Dragon→Almiraj, Beast×Dragon→Wyvern, Dragon×Dragon→GreatDrak;
+  5 changed bytes; patched ROM `caa597d1…`, clean build still `1ca6579…`. See KEY_LESSONS
+  "Session 16 — Breeding B4".
 - **Bank $16 is shift-sensitive** (embedded pointers at `$70A6+`): never
   insert. Leave the vanilla tables in place (dead, ~8.7 KB) and overwrite only
   the scan-entry region in-place (`ld hl,$6900; rst $10` + NOP pad to preserve

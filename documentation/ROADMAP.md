@@ -301,13 +301,27 @@ Dragon×Boss→sp$29). So "??? × anything → itself" is the **universal fallba
 showing through, NOT a ???-specific rule — nothing special to dismantle; Spirit
 recipes are pure authoring.
 
-- [ ] **B4 — Family-defaults rewrite.** New family×family map compiled in-place
+- [x] **B4 — Family-defaults rewrite.** New family×family map compiled in-place
       (family table `$16:$4974`, same length = zero shift; result = slot index, so
       the compiler inverts `A×B→C` to slot order and rejects positional conflicts;
       preserve the `$FA` wildcard + two-pass search). *Accept:* 8–10 sample crosses
       give NEW results in SameBoy; untouched crosses unchanged. *Note:* family
       table is strictly 1:1 (one cross per result species, no many→one) — put
       flexible/many→one family×family in the SPECIAL table instead (works now).
+      **DONE (Session 16, user-confirmed in SameBoy).** `build_breeding.py --emit-family`
+      reads `extracted/breeding_family_defaults.json` (positional `result→{p1,p2}`
+      overrides), applies them to the vanilla family decode, validates positional 1:1 +
+      444-byte zero-shift + shadow classes, and rewrites only the `FamilyRecipeTable` db
+      block in `patches/bank_016.asm`. Authored proof set (zero-collateral permutation of
+      the three Dragon-mate matchers + one NEW recipe at empty separator slot 37):
+      Bird×Dragon→DrakSlime, Slime×Dragon→Almiraj, Beast×Dragon→Wyvern,
+      Dragon×Dragon→GreatDrak. **5 changed bytes total** in bank `$16` (focused diff vs the
+      B3 ROM = those 5 + 1 checksum byte; the B3 baseline rebuilt as the recorded `f1cd94b1…`).
+      User-confirmed: FunkyBird×BattleRex→DrakSlime, Snaily×BattleRex→Almiraj,
+      Dragon×Dragon→GreatDrak (patched ROM `caa597d1…`; clean build still `1ca6579…`).
+      Beast×Dragon→Wyvern is present but correctly shadowed for MadCat by SPECIAL entry 187
+      (MadCat×BattleRex→Yeti) — precedence, not a bug. Untouched BattleRex×Healer→DragonKid
+      (vanilla family slot 20) unchanged. Method + precedence: KEY_LESSONS "Session 16".
 - [ ] **B5 — Full special-table authoring + overhaul spec.** Extend
       `build_breeding.py` to own the WHOLE special table as authored data (base +
       overrides + appends) and emit it to bank `$69`, leaving bank `$16` fully

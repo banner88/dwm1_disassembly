@@ -527,3 +527,58 @@ one appended entry + new `$FF`) plus the header checksum.
 terminator-driven (not count-driven) so later capacity growth is data-only. Keep the base
 slice byte-identical to its source (assert it) so appends can never silently corrupt the
 inherited recipes.
+
+## Session 16 Lessons — Breeding B4 (family-defaults rewrite)
+
+Full reference in BREEDING_SYSTEM.md "Planned"; acceptance test in ROADMAP Phase 2B.
+Tool: `tools/build_breeding.py --emit-family`; spec: `extracted/breeding_family_defaults.json`.
+
+### The family table is positional, so a "recipe change" is a slot edit, not a free mapping
+**Discovery**: Offspring species == slot index in the family table ($16:$4974). You cannot
+"set Slime×Dragon → species X" directly; you write the matcher pair `[$F0,$F1]` into the
+SLOT whose index == X. One slot = one result species (strict 1:1). Many→one must go in the
+SPECIAL table. The table is exactly 222 pairs / 444 bytes and bank $16 has embedded pointers
+downstream, so the rewrite is IN PLACE only (zero shift): edit matcher bytes at existing
+recipe slots, convert a separator (`$FFFF`) slot to a recipe to ADD a default, or vice-versa
+— never grow/shrink the pair count.
+**Rule**: Author family defaults as `result_species → (p1,p2)` and place at the result's slot.
+The compiler rejects two overrides claiming the same result (positional conflict) and asserts
+the emitted table is still 444 bytes. A zero-collateral change = permute existing matchers
+among their own slots (result set unchanged, just reached by different parents) + add new
+recipes only at empty separator slots. B4 did exactly this: 5 changed bytes total.
+
+### SPECIAL > FAMILY: a species-specific special silently masks a family default
+**Symptom**: After setting Beast×Dragon → Wyvern (family slot 71), `MadCat × BattleRex`
+still produced **Yeti**, not Wyvern — looked like the change failed.
+**Root cause**: The resolver is special → family → fallback(parent1). `MadCat(68) × BattleRex(42)`
+is vanilla SPECIAL entry **187** (`[68,42,0,59,0] → Yeti`), a SPECIES-SPECIFIC match that fires
+before the family table is ever consulted. The family default was correct and present; it was
+simply out-ranked for that exact pair. Crosses that hit no special (FunkyBird×BattleRex →
+DrakSlime; Snaily×BattleRex → Almiraj; Dragon×Dragon → GreatDrak) showed the new family
+defaults immediately.
+**Rule**: Before claiming a family default works for a given pair, check the SPECIAL table for
+BOTH a family-code match (`[p1fam,p2fam]`) AND a species-specific match (`[p1,p2]`) in the
+player's parent ORDER (p1=Pedigree $DA6F, p2=Mate $DA70). `--emit-family` warns on family-code
+shadows; species-specific shadows depend on the exact monsters and are surfaced at play-test —
+so when picking a proof cross, choose parents with no special at all (Slime pedigree + any
+Dragon mate is fully clear) or expect the special's result.
+
+### Family-table internal precedence: exact-species returns immediately; family-code last-wins; two passes
+**Discovery (grepped `LoadBrd_45ff`/`45d5`, do not re-trust)**: within the family scan, an EXACT
+parent-1 species match (`cp b` on $DA6F) returns immediately, but a parent-1 FAMILY-code match
+stores the result and KEEPS scanning (so the LAST family-code match wins). The search also runs
+TWICE: pass 1 with parent 2 as its specific species, pass 2 with parent 2 converted to its
+family code. So a family-code default `[Fx,$F1]` only surfaces in pass 2, and only if no exact
+or higher-slot family match out-ranks it.
+**Rule**: For a clean family-code default, ensure no duplicate `[b,c]` family pair exists at a
+higher slot and no exact-species family entry catches the same parents first. `--emit-family`'s
+shadow check flags duplicate family-code matchers; the positional 1:1 rule prevents result
+collisions by construction.
+
+### The `$FA` "AnyFamily" wildcard is supported by the scanner but used ZERO times in vanilla
+**Discovery**: `LoadBrd_45ff` special-cases `cp $fa` (matches any family-coded parent 2), but
+no vanilla family entry uses `$FA`. So "preserve the `$FA` wildcard" means preserve the SCANNER
+capability — there is no data depending on it. `--emit-family` can still emit `$FA` (mate side
+only; it rejects `$FA` on the pedigree side, matching the scanner).
+**Rule**: Don't assume documented "wildcard" data exists; grep the table. The compiler keeps the
+capability available for authored recipes without inventing data that was never there.
