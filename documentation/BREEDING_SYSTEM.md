@@ -285,17 +285,25 @@ and appears as a matcher in only **2 of 825** special entries (both as the
 pure authoring (add Spirit-as-pedigree specials and/or `$F9` family defaults);
 there is no special-case to dismantle.
 
-**Rename location:** `FamilyTextPtrTable` at bank `$04:$60F4` (10 entries indexed
-by family ID; entry 9 = ??? → "Spirit"). Same-size if the name fits the slot.
+**Rename location (CORRECTED — the old claim here was WRONG, see below):** the
+family-NAME string path is **NOT** `FamilyTextPtrTable` ($04:$60F4). That table is
+10 `dw` entries → `FamilyTextGroup_A/B/C/D`, used by opcode `$2D`
+(`MonsterSlotDialogue`) — it is per-family monster **dialogue** text dispatch, not
+the name string shown on the library tabs (verified S19 against the disassembly
+header at `$04:$60F4`; consistent with the "Future — 11th family" note below). The
+real family-name render path is **still untraced** — tracing it is the FIRST task of
+the rename (B8 / B9 naming). Do not attempt the rename via `FamilyTextPtrTable`.
 
 **Reassignment = family byte (offset $00 of each 43-byte entry `$03:$4461`).**
-**B6 GATE (partly audited S15):** the family byte is read OUTSIDE breeding —
-confirmed readers in bank `$01` (battle: loads both party monsters' family),
-bank `$04` (`$DA33`→FamilyTextPtrTable = family-name DISPLAY, intended), and
-skill/AI banks `$07/$09/$52–$58`. Before mass reassignment, trace those readers
-and confirm none gate **scout/breed eligibility or resistance/AI grouping** on
-family==9 (hypothesis: true boss-ness comes from boss table `$14:$4897`, separate
-from the family byte — consistent with S15 findings, NOT yet confirmed). Concrete
+**B6 GATE — CLEARED in S18** (see "Family-byte reader trace (the B6 gate —
+CLEARED)" below; this S15 signpost predates that and is kept only for the trace
+list). The family byte is read OUTSIDE breeding — confirmed readers in bank `$01`
+(battle: loads both party monsters' family), bank `$04` (FamilyTextPtrTable =
+per-family monster-**dialogue** text dispatch via opcode `$2D`, display-only — NOT
+the family-name string), and skill/AI banks `$07/$09/$52–$58`. The S18 trace
+confirmed none gate **scout/breed eligibility or resistance/AI grouping** on
+family==9: true boss-ness comes from the boss table `$14:$4897` + the enemy-stats
+joinability byte (`$14 +$3`), separate from the family byte. Concrete
 risk: a former boss moved out of ??? could become breedable/scoutable, and a
 monster moved in could lose those. Confirm in SameBoy; don't assume.
 
@@ -451,11 +459,12 @@ knows the terrain:
   `$FA` is the breeding scanner's "AnyFamily" wildcard (mate-side) — so an 11th
   family can't cleanly be `$FA`; either repurpose `$FA` (give up the wildcard,
   which has ZERO vanilla data uses) or extend the scanner's family-code range.
-- **FamilyTextPtrTable** (`$04:$60F4`, 10 entries) — add an 11th (name + text
-  group). The family-NAME string render path for the rename (??? → "Spirit") still
-  needs tracing; the doc's old "entry 9 of FamilyTextPtrTable" claim was WRONG —
-  that table is a per-family monster-text dispatch (groups A–D), not the family
-  name string. Find the real name string before the rename.
+- **FamilyTextPtrTable** (`$04:$60F4`, 10 entries) — add an 11th entry (its
+  per-family monster-**dialogue** text group, opcode `$2D`). NOTE this table does
+  NOT hold the family name. The family-NAME string render path for the rename
+  (??? → "Spirit") still needs tracing; the doc's old "entry 9 of FamilyTextPtrTable"
+  claim was WRONG — that table is per-family monster-text dispatch (groups A–D), not
+  the family name string. Find the real name string before the rename.
 - **Library tab strip** — today a 2-col×5-row grid (10 tabs); 11 doesn't fit
   cleanly → the tab navigation (`b=5,c=10` grid in `LoadItem_4241`) + tab-strip
   graphics + a new family ICON need real layout work. With the precomputed
