@@ -351,22 +351,52 @@ recipes are pure authoring.
       in the editor UI later (B5 delivers the machinery, not the content).
       *Folded into `verify_integrity.py`? No — see B3 open follow-up; the tool
       self-asserts, the verifier does not yet run `--emit-special` self-checks.*
-- [ ] **B6 — Family reassignment + ??? → "Spirit".** Same-size family-byte edits
-      (offset $00 of each 43-byte monster-info entry `$03:$4461`) + family-name
-      text (`FamilyTextPtrTable` at bank `$04:$60F4`, entry 9) + any flavor text
-      (e.g. library "…and ???"). **GATE (partly audited S15):** the family byte is
-      read OUTSIDE breeding — confirmed readers in bank `$01` (battle, loads both
-      party monsters' family), bank `$04` (`$DA33`→FamilyTextPtrTable = family-name
-      DISPLAY, intended), and skill/AI banks `$07/$09/$52–$58`. Before mass
-      reassignment, trace those readers and confirm none gate **scout/breed
-      eligibility or resistance/AI grouping** on family==9 (hypothesis: true
-      boss-ness comes from boss table `$14:$4897`, not the family byte — consistent
-      with S15 findings but NOT yet confirmed). Concrete risk: a former boss moved
-      out of ??? could become breedable/scoutable, and vice-versa. *Accept:* a
-      reassigned monster shows the new family name, breeds per the new rules, and
-      no non-breeding system (battle/scout/resistance) regresses in SameBoy.
-      *Suggested order:* B4+B5 first (proven/low-risk, independent of the family
-      byte); B6 last, gated on the reader trace; the rename can ride with B6.
+- [~] **B6 — Family reassignment + ??? → "Spirit".** Same-size family-byte edits
+      (offset $00 of each 43-byte monster-info entry `$03:$4461`).
+      **REASSIGNMENT DONE + reader-gate CLEARED (Session 18, user-confirmed in
+      SameBoy).** `tools/build_family_reassign.py` (spec
+      `extracted/breeding_family_reassign.json`, validated `from`==vanilla) emits
+      `patches/bank_003.asm` as exact-line db edits (zero shift). Monsters move
+      between ANY families incl. in/out of ??? (Boss=9). **Reader trace (the gate)
+      cleared:** family-byte readers outside breeding are DISPLAY/struct-copy only
+      (bank `$01` battle copy, `$04` FamilyTextPtrTable text dispatch, `$07`
+      sprite/icon, `$09` VRAM index, `$14` recruit stamp); none gate scout/recruit/
+      AI/resistance on family==9 — eligibility is the enemy-stats joinability byte
+      (`$14 +$3`) + boss table (`$14:$4897`), independent. Annotated inline at bank
+      `$03` `label443f`. **Three family representations found** (BREEDING_SYSTEM
+      "B6"): breeding=live byte; status/menus=struct +$0A stamped at creation
+      (snapshot — pre-existing monsters keep old value, correct for a fresh hack);
+      library=id-range (see below). **Dynamic library PROOF OF CONCEPT done**
+      (`patches/bank_012.asm`, `tools/build_dynamic_library.py`): `SetItem_6242`
+      redirected to a family-byte scan; all 8 reassigned monsters group correctly
+      in SameBoy. POC only (lags ~221 far-loads/render; bearable). *Still TODO,
+      split out below:* the ??? → "Spirit" RENAME (the doc's old `FamilyTextPtrTable`
+      entry-9 claim was WRONG — that's a per-family monster-text dispatch, not the
+      family-name string; find the real string first); the production library table;
+      the 11th-family feature.
+- [ ] **B7 — Production library grouping table (replaces the B6 POC).** The editor
+      emits a precomputed **family→members** table into free ROM at build time
+      (family membership is static in a shipped hack); `SetItem_6242` reads it
+      directly — zero runtime RAM, zero far-loads, scales to arbitrary shuffles and
+      to an 11th family. Do NOT optimize the runtime POC (a WRAM family cache was
+      rejected: standing RAM + coherence). Derive the table from the same family-byte
+      source as `breeding_family_reassign.json`. Belongs with the editor monster-data
+      backend (Phase 2). *Accept:* library groups by family with no perceptible lag
+      and no runtime RAM claim; reassigned monsters appear under the correct tab.
+      Spec: BREEDING_SYSTEM "Dynamic library → PRODUCTION PLAN".
+- [ ] **B8 — ??? → "Spirit" rename (10 families, no insert).** Same-size family-name
+      text edit. PREREQUISITE: trace the real family-NAME string render path (NOT
+      `FamilyTextPtrTable` $04:$60F4 — that's per-family monster-text groups A–D).
+      Optionally update flavor text (library "…and ???"). *Accept:* the family shows
+      "Spirit" in menus/library; clean build still `1ca6579…`.
+- [ ] **B9 — Add an 11th family (keep ??? AND add Spirit).** SEPARATE larger feature
+      (B6/B7 keep 10). Scope (BREEDING_SYSTEM "Future — 11th family"): family code
+      space ($F0–$F9 full; $FA is the breeding "AnyFamily" wildcard → repurpose or
+      extend scanner); 11th `FamilyTextPtrTable` entry + name + text group; library
+      tab strip 2col×5row → needs layout rework + new family ICON + nav grid
+      (`b=5,c=10` in `LoadItem_4241`); any family-indexed array sized to 10 gains a
+      slot. With B7 done the DATA side is free; the cost is UI/graphics. Gated on B7.
+      *Decision deferred (user):* Spirit replaces ??? (B8 only) vs added as 11th (B9).
 - [x] **BUG — breeding cutscene: parent sprites glitch.** **FIXED Session 14.**
       Observed Session 13 while playtesting B2; confirmed **not caused by B2**. Root
       cause was an incomplete bank `$0B` labelization: three raw pointer refs into the
@@ -396,6 +426,21 @@ Driven by what the editor must EDIT, not completionism:
       free block is reference-free
 - [ ] Bank $50 event state machine (story events)
 - [ ] Save/SRAM code annotation (supports Phase 0 audit)
+- [ ] **Re-section misassembled data tables → labeled `db`/`dw`.** mgbdis decoded
+      many in-bank DATA tables as fake instructions (`rst $38`, `db $fc`,
+      `ld hl,sp+$nn`, stray `stop`, etc. appearing mid-routine). These pass the build
+      (bytes are identical) but READ as garbage code, so a future session can't edit
+      the table in source and wastes time re-deriving it from raw bytes — it bit S18
+      (the library bounds table) and earlier ($0B sprite/gate tables, fixed S14).
+      Convert each to a labeled `db`/`dw` block; **the build MUST stay `1ca6579…`**
+      after each (a wrong split changes bytes → fails instantly — same guard as the
+      S14 labelization rule, KEY_LESSONS). Drive this by what the editor must EDIT,
+      not completionism. **Known offenders (seed list — grep widens it):**
+      `$12:$6294` `LibraryFamilyTabBounds` (11 B id-range table, the S18 case — comment
+      added, db conversion still TODO); the `$12:$564a`/`$5a8e` library cursor/tab
+      pointer blobs; assorted `cp $f9`/`rst $38` runs in banks `$08/$11/$15/$2c/$33/
+      $55/$57/$66` that are data, not code. *Accept:* targeted tables read as `db`/`dw`
+      with names; MD5 unchanged; the editor can address them by label.
 Raw graphics/audio banks ($32–$3A, $5A, $63…) stay LOW priority — they
 block nothing.
 

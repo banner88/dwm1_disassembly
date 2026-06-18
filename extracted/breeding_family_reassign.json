@@ -1,0 +1,14 @@
+{
+  "_generator": "tools/build_family_reassign.py (hand-authored spec); ROM source data/DWM-original.gbc 1ca6579359f21d8e27b446f865bf6b83",
+  "_note": "B6 proof-of-concept family reassignment. Same-size family-byte edits at $03:$4461 (offset $00 of each 43-byte monster-info entry). 'from' is the vanilla family and is validated against the ROM at build time. Mix of in/out of ??? (Boss=9) and between-ordinary-family moves. Dracky(78)->Boss and Slime(8)->Dragon are early-gate catches added to test that NEWLY-OBTAINED monsters show the new family in library/status (snapshot semantics: creation paths stamp $03:$4461 family into struct +$0A, which display reads).",
+  "reassignments": [
+    { "id": 214, "name": "Darkdrium", "from": 9, "to": 1 },
+    { "id": 42,  "name": "BattleRex", "from": 1, "to": 9 },
+    { "id": 68,  "name": "MadCat",    "from": 2, "to": 0 },
+    { "id": 4,   "name": "Snaily",    "from": 0, "to": 3 },
+    { "id": 53,  "name": "Anteater",  "from": 2, "to": 4 },
+    { "id": 88,  "name": "FunkyBird", "from": 3, "to": 2 },
+    { "id": 78,  "name": "Dracky",    "from": 3, "to": 9 },
+    { "id": 8,   "name": "Slime",     "from": 0, "to": 1 }
+  ]
+}

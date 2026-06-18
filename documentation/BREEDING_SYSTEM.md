@@ -304,3 +304,119 @@ Yeti = entry-187 result byte) are proven/low-risk and independent of the family
 byte → do first. B6 (reassignment + rename) last, gated on the reader trace.
 
 Phased plan (B1–B6) with per-part acceptance tests lives in ROADMAP.md (Phase 2B).
+
+---
+
+## B6 — family reassignment: VERIFIED MECHANICS (Session 18)
+
+**Reassignment works. Monsters can be moved between ANY families** (incl. in/out
+of ??? / Boss=9) via a **same-size family-byte edit** at `$03:$4461 + id*43`
+(offset $00). Tool: `tools/build_family_reassign.py` (spec
+`extracted/breeding_family_reassign.json`, a `{id,name,from,to}` list; `from` is
+validated against the vanilla ROM; emits `patches/bank_003.asm` as an exact-line
+db edit, zero shift). User-confirmed in SameBoy with 8 monsters across in/out of
+??? and between ordinary families.
+
+### Three family representations (grepped S18 — do not re-trust)
+The family byte is the single source of truth, but it reaches three consumers
+DIFFERENTLY, which is why a naive edit appears partly applied:
+
+1. **Breeding match** — reads the LIVE family byte each cross (`$DA33` after the
+   species load, and `$DA73/$DA74` family codes `$F0+fam`). Honors reassignment
+   immediately. (Proof S18: Anteater→Plant × BattleRex→Boss hit the vanilla
+   family-table default slot 108 `[Plant,Boss]→Rosevine` — a cross impossible
+   before the reassignment.)
+2. **Status / detail menus + name + symbol** — read the per-monster **party/
+   storage struct byte at +$0A** (`$CACB` for slot 0). That byte is STAMPED from
+   the live family byte at **creation time** (breed: bank `$16` ~$408x writes
+   `[$DA33]`→struct +$0A; recruit/catch: bank `$14` ~$0316 same). So a monster
+   obtained AFTER the patch shows the new family; monsters that predate the patch
+   (or a savestate) keep the old stamped value. This is snapshot semantics, not a
+   bug — correct for a fresh hack where players obtain monsters post-patch.
+3. **Library / Encyclopedia tabs** — group by **species-id RANGE**, NOT the family
+   byte. Routine `SetItem_6242` (`$12:$6242`) reads `LibraryFamilyTabBounds`
+   (`$12:$6294`, 11 bytes `[0,20,45,70,90,110,130,155,175,200,215]`): family index
+   = `wOPTN_and_Item_selection*5 + (wMenu_selection & $7F)` (2-col×5-row tab grid,
+   0..9), then scans the contiguous id range `[bounds[i], bounds[i+1])`. **This is
+   the ONLY id-range family assumption in the whole ROM** (audited S18: every `cp`
+   against the boundary ids checked; breeding/menus key off the family byte or
+   species id, never an id-range→family map).
+
+### Family-byte reader trace (the B6 gate — CLEARED)
+Confirmed readers of the family byte gate **nothing** outside display/copy:
+bank `$01` battle (copies into battle struct), `$04` FamilyTextPtrTable (text
+dispatch / display), `$07` farm/scout sprite+icon (display), `$09` VRAM tile
+index (display), `$14` recruit (stamps struct +$0A). **Scout/recruit eligibility
+is the enemy-stats joinability byte (`$14 +$3`) + boss table (`$14:$4897`),
+independent of the family byte.** So reassignment cannot accidentally make a wild
+monster recruitable or strip a boss's join behavior. (Annotated inline at the
+bank `$03` MonsterInfoLoad header, `label443f`.)
+
+## Dynamic library — PROOF OF CONCEPT (Session 18, `patches/bank_012.asm`)
+
+To make the library honor arbitrary family reassignment, `SetItem_6242` is
+redirected (`jp LibScanByFamily`, zero-shift) to a routine in bank `$12` trailing
+free space (`$7B9B+`) that scans ALL species 0..220, reads each one's family byte
+via the `$0301` far-loader, and lists those matching the current tab whose "seen"
+bit (`$CA94`) is set. Tool: `tools/build_dynamic_library.py --emit`. **User-
+confirmed in SameBoy:** all 8 reassigned monsters group under the correct tab.
+
+**This is PROOF OF CONCEPT, not production.** It proves the library can be fully
+dynamic and that the family byte is the sole grouping source. Costs: ~221
+far-loads per tab-change/A-press → visible but bearable lag (each far-load is a
+bank switch + `id*43` multiply + 43-byte copy just to read 1 byte); one scratch
+byte `$D470`; a `PAGE_SIZE=30` per-tab display cap. It is kept as a working
+reference, clearly marked in the patch header.
+
+### Why it lags and the vanilla doesn't
+Vanilla scans a CONTIGUOUS id range (cheap, no cross-bank reads) precisely
+because families were id-contiguous. Arbitrary membership forces a per-species
+"what family are you?" lookup, and the family byte lives in bank `$03` which the
+library (executing in bank `$12` ROMX) can't page in — hence the per-species
+far-loader. The cost is intrinsic to doing it AT RUNTIME.
+
+### PRODUCTION PLAN — precomputed grouping table (do this, not runtime caching)
+In a shipped hack family membership is **static** (fixed once monsters are
+shuffled / a new family inserted). So the grouping should be computed **at build
+time by the editor**, not at runtime:
+
+- The editor (or a `build_*` tool) emits a **family→members table** into free ROM:
+  for each family, the compact list of its species ids (derived from the same
+  family-byte source as `breeding_family_reassign.json`). Place in a free bank or
+  bank `$12` free space.
+- `SetItem_6242` becomes trivial: for the current family, walk its precomputed id
+  list, test the seen-bit, fill the buffer. As cheap as vanilla's range scan
+  (cheaper — no gaps), **zero runtime RAM**, **zero far-loads**, scales to any
+  shuffle and to an 11th family.
+- Deterministic + rebuildable: pure function of the family bytes, regenerated each
+  build; never mutated at runtime (no coherence problem).
+- **Rejected alternative:** a runtime 221-byte WRAM family cache. It removes the
+  lag but claims standing custom WRAM solely for one menu and needs coherence —
+  exactly the "convenience RAM" to avoid. The build-time table is strictly better
+  on RAM, speed, and editor-alignment. Do not optimize the runtime POC; replace it.
+
+## Future — 11th family (keep ??? AND add "Spirit")
+
+Adding an 11th family is a SEPARATE, larger feature (the reassignment + dynamic
+library above keep 10 families). Conceptual scope, captured so a fresh instance
+knows the terrain:
+
+- **Family code space.** Codes are `$F0`–`$F9` (10). A new family wants `$FA`, but
+  `$FA` is the breeding scanner's "AnyFamily" wildcard (mate-side) — so an 11th
+  family can't cleanly be `$FA`; either repurpose `$FA` (give up the wildcard,
+  which has ZERO vanilla data uses) or extend the scanner's family-code range.
+- **FamilyTextPtrTable** (`$04:$60F4`, 10 entries) — add an 11th (name + text
+  group). The family-NAME string render path for the rename (??? → "Spirit") still
+  needs tracing; the doc's old "entry 9 of FamilyTextPtrTable" claim was WRONG —
+  that table is a per-family monster-text dispatch (groups A–D), not the family
+  name string. Find the real name string before the rename.
+- **Library tab strip** — today a 2-col×5-row grid (10 tabs); 11 doesn't fit
+  cleanly → the tab navigation (`b=5,c=10` grid in `LoadItem_4241`) + tab-strip
+  graphics + a new family ICON need real layout work. With the precomputed
+  grouping table done, the DATA side of an 11th family is free; the cost is UI.
+- **Any family-indexed array sized to 10** must gain a slot. The dynamic library
+  (POC or production) already handles family index 10 in its scan logic.
+
+**Decision deferred (user):** whether "Spirit" REPLACES ??? (rename only, stays 10
+families — small) or is ADDED as an 11th family (the above — larger). The dynamic
+grouping + precomputed table is the prerequisite for either.

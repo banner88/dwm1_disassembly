@@ -647,3 +647,71 @@ for convenience, but ambiguous ones must be given by id.
 **Rule**: When authoring against a name table that has duplicate names, prefer numeric ids for the
 colliding entries; the future editor should disambiguate by id (and show level_cap/form) rather
 than trust the name string.
+
+## Session 18 Lessons — Breeding B6 (family reassignment + dynamic library)
+
+Full reference in BREEDING_SYSTEM.md "B6 — family reassignment" + "Dynamic library".
+Tools: `tools/build_family_reassign.py`, `tools/build_dynamic_library.py`.
+
+### One value, three readers: a family edit looks half-applied until you trace all consumers
+**Symptom**: Changed a monster's family byte ($03:$4461+$00). Breeding behaved as
+the new family (bred new offspring), but the status menu and the library showed the
+OLD family — and the library and menu disagreed with each other.
+**Root cause**: The family byte reaches three systems by three different paths.
+(1) Breeding reads it LIVE every cross. (2) Status/menus read the per-monster party/
+storage struct byte at +$0A ($CACB), which is STAMPED from the live byte only at
+CREATION (breed: bank $16; recruit/catch: bank $14) — so pre-existing monsters keep
+the old stamp (snapshot semantics). (3) The library groups by species-id RANGE, not
+the family byte at all.
+**Fix**: Verify each path separately. Snapshot semantics are correct for a fresh hack
+(obtain the monster after patching → correct). The library needed a code change.
+**Rule**: When one byte feeds multiple subsystems, a partial-looking result means
+DIFFERENT READ PATHS, not a failed write. Grep every reader and classify it
+(live / snapshot-at-creation / independent representation) before concluding.
+
+### The library groups by id-range, the single id-range family assumption in the ROM
+**Discovery (grepped S18, do not re-trust)**: `SetItem_6242` ($12:$6242) populates a
+family tab by scanning a CONTIGUOUS species-id range from `LibraryFamilyTabBounds`
+($12:$6294 = [0,20,45,70,90,110,130,155,175,200,215]). It works in vanilla only
+because families are id-contiguous. Audit confirmed this is the ONLY place a family
+is derived from an id range (checked every `cp` against the boundary ids; all other
+family uses read the family byte or take a species id directly).
+**Rule**: Before a "dynamic family" feature, confirm the id-range assumption is
+isolated — one routine + one table here. Reassignment is then safe everywhere except
+that routine, which must be made to scan by family byte.
+
+### The library tab index is a flat 2-col×5-row cell, not the column var alone
+**Symptom**: First dynamic-library attempt put whole families under the wrong tab and
+made other families vanish from the library entirely.
+**Root cause**: The tab strip is a 2-column×5-row grid. The FAMILY index is
+`wOPTN_and_Item_selection*5 + (wMenu_selection & $7F)` (the value the original stores
+into $cac0). `wOPTN_and_Item_selection` ALONE is just the column (0..1) — using it as
+the family meant only families 0 and 1 were ever scanned; 2..9 never matched.
+**Fix**: Compute the flat index exactly as the original did. Confirmed by simulation
+against the patched ROM (each reassigned monster maps to the right tab) before
+re-testing in SameBoy.
+**Rule**: When replacing a menu routine, reproduce the EXACT selection-index math the
+original used (the `*5 + row` flat-cell encoding here), don't assume a selection var
+maps 1:1 to the logical item. Simulate the index→result map before building a ROM.
+
+### Reassignment doesn't gate eligibility — that's the joinability byte + boss table
+**Discovery**: Every family-byte reader outside breeding is display or struct-copy
+(bank $01 battle copy, $04 text dispatch, $07 sprite/icon, $09 VRAM index, $14 recruit
+stamp). NONE gate scout/recruit/AI/resistance on family==9. Recruit eligibility is the
+enemy-stats joinability byte ($14 +$3) + boss table ($14:$4897).
+**Rule**: "Is this a boss/unbreedable?" is NOT the family byte. Moving a monster in/out
+of ??? changes its family label/grouping/breeding, not its recruitability — those are
+separate tables. Don't assume family==9 means "boss-locked".
+
+### Don't optimize a runtime path that the editor should precompute
+**Symptom**: The dynamic-library POC lags (~221 cross-bank family reads per render).
+Tempting to add a 221-byte WRAM family cache to speed it up.
+**Root cause**: The lag is intrinsic to computing static data at runtime. In a shipped
+hack, family membership never changes — so it should be precomputed at BUILD time.
+**Fix**: Keep the runtime POC as a proof that dynamic grouping works; plan the
+production library to read a build-time-emitted family→members table (zero runtime RAM,
+zero far-loads). A runtime WRAM cache was rejected: it claims standing RAM for one menu
+and needs coherence.
+**Rule**: Before optimizing runtime code, ask whether the data is static in the shipped
+product. If yes, move the work to the build tool (the editor) — don't spend RAM or
+cycles recomputing at runtime what can be a baked table.

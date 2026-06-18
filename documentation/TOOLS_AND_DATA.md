@@ -38,6 +38,7 @@ was lost; they were intentionally curated. Treat as documentation.
 | custom_layouts/room_6b_custom.json | 20×16 tile grid for Room $6B — user-designed Farm tileset room | tile_layout_compiler.py → bank_064.asm |
 | breeding_family_defaults.json | B4 family-default overrides: positional `{result,p1,p2}` list applied in place to `$16:$4974` (offspring species == slot). Includes the shadow avoid-list inline. | tools/build_breeding.py --emit-family → patches/bank_016.asm |
 | breeding_special.json | B5 full special-table spec: `base:"rom"` + in-place `overrides` (edit any base entry, by `index` or by parent `match`) + `appends` (new entries past 824). The SINGLE authored source for the whole special table; bank `$16` stays vanilla. | tools/build_breeding.py --emit-special → patches/bank_069.asm |
+| breeding_family_reassign.json | B6 family reassignment spec: `{id,name,from,to}` list of same-size family-byte edits ($03:$4461+$00). `from` is validated == vanilla at build time. | tools/build_family_reassign.py --emit → patches/bank_003.asm |
 | custom_layouts/room_6b_medalman.json | 20×16 tile grid for Room $6B — user-designed MedalMan tileset room (v28, current) | tile_layout_compiler.py → bank_064.asm |
 
 ### Tier S — Stable analysis output (generator not in repo; data is ROM-derived and unchanging)
@@ -84,6 +85,19 @@ outputs JS for editor HTML embedding) ·
 breeding_tables.json. `--emit-relocation` (B2) writes `patches/bank_069.asm` —
 the relocated special-table scanner + table, sourced from the **patched**
 `bank_016.asm` so custom recipes survive; self-checks relocated == patched). `--emit-family` (B4) authors the POSITIONAL family table in place: reads `extracted/breeding_family_defaults.json` (`result→{p1,p2}` overrides), applies them to the vanilla decode, validates positional 1:1 + 444-byte zero-shift + shadow classes, and rewrites only the `FamilyRecipeTable` db block in `patches/bank_016.asm`. `--emit-special` (B5) OWNS the whole SPECIAL table as authored data: 825 vanilla ROM base + in-place `overrides` (by index or by parent `match`) + `appends`, from `extracted/breeding_special.json`; runs a whole-table first-match-wins shadow validator (ERRORS on shadowed append/override; WARNINGS on new collateral shadowing + on a result-change other entries still produce); emits only `patches/bank_069.asm`, leaving bank `$16` byte-identical to the ROM (single source of truth). Supersedes `--emit-relocation` as the canonical bank `$69` emitter.
+
+`build_family_reassign.py` (✅ new Session 18 — B6 family reassignment): reads
+`extracted/breeding_family_reassign.json` (`{id,name,from,to}`), validates every
+`from` == the vanilla ROM family byte, and rewrites only the targeted Family `db`
+lines in `patches/bank_003.asm` (same-size, exact-line, zero shift). `--selftest`
+asserts the clean source's 221 family bytes == ROM. Delivered WITH its spec JSON. ·
+`build_dynamic_library.py` (✅ new Session 18 — B6 dynamic-library PROOF OF CONCEPT):
+redirects the library tab-populate `SetItem_6242` ($12:$6242) to `LibScanByFamily`
+in bank `$12` free space ($7B9B+), which groups by the family byte instead of the
+hardcoded id-range table at `$12:$6294`. Emits `patches/bank_012.asm` (zero-shift
+`jp` + routine in trailing pad). POC only — see BREEDING_SYSTEM "Dynamic library";
+production is a build-time family→members table (ROADMAP B7), do NOT optimize the
+runtime path.
 
 ### Prototype editor (towards_editor/)
 `DWM1_Multi_Tileset_Editor.html` — standalone HTML file (open in browser).

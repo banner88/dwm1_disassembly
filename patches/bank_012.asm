@@ -2,6 +2,31 @@
 ; This file was created with:
 ; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
 ; https://github.com/mattcurrie/mgbdis
+;
+; ============================================================================
+; B6 PROOF OF CONCEPT — dynamic monster-library grouping (Session 18).
+; ----------------------------------------------------------------------------
+; SetItem_6242 (the library tab-populate, originally an id-range scan over
+; LibraryFamilyTabBounds at $6294) is redirected here to `jp LibScanByFamily`
+; (zero-shift: jp + NOP pad to the original body length). LibScanByFamily lives
+; in this bank's trailing free space ($7B9B+, verified unreferenced S18) and
+; groups by the FAMILY BYTE ($03:$4461+$00, read via the $0301 far-loader),
+; so monsters reassigned to new families appear under the correct tab.
+;
+; STATUS: proof of concept ONLY. It PROVES the library can be made fully dynamic
+; (user-confirmed in SameBoy: 8 reassigned monsters group correctly). It is NOT
+; the production design. Costs: ~221 far-loads per tab-change/A-press (visible
+; but bearable lag); one scratch byte $D470; PAGE_SIZE=30 cap.
+;
+; PRODUCTION PLAN (do NOT optimize this runtime path — replace it): the editor
+; emits a precomputed family->members grouping table into free ROM at build time
+; (family membership is static in a shipped hack), and the library reads that
+; table directly — zero runtime RAM, zero far-loads, scales to arbitrary shuffles
+; and to an 11th family. See BREEDING_SYSTEM.md "Dynamic library" and ROADMAP
+; Phase 2B (B7) / Phase 2 (editor monster-data backend).
+; ============================================================================
+
+; Generated/maintained by tools/build_dynamic_library.py (--emit).
 
 SECTION "ROM Bank $012", ROMX[$4000], BANK[$12]
 
@@ -5434,80 +5459,87 @@ Jump_012_6225:
     ret
 
 
-; -----------------------------------------------------------------------------
-; SetItem_6242 — Monster-Library (Encyclopedia) tab populate.
-; Fills the display buffer $C0D8 with the seen species of the currently selected
-; family tab, then sets $C8E9 = slot count, $C8E8 = seen count.
-;
-; FAMILY GROUPING IS BY SPECIES-ID RANGE, *not* by the family byte. The tab strip
-; is a 2-col x 5-row grid: family index = wOPTN_and_Item_selection*5 +
-; (wMenu_selection & $7F), range 0..9 (wOPTN = column 0..1, wMenu = row 0..4).
-; That flat index looks up LibraryFamilyTabBounds at $6294: entry[i]=start id,
-; entry[i+1]=end id; the loop scans species start..end-1 and lists the seen ones.
-;
-; THIS IS THE ONLY id-range family assumption in the ROM (audit S18). Because it
-; ignores the family byte ($03:$4461+$00), a monster reassigned to a new family
-; still appears under its original id-range tab. B6 Option 2 (proof of concept)
-; redirects this routine to a family-byte scan in bank $12 free space; see
-; patches/bank_012.asm and BREEDING_SYSTEM.md "Dynamic library".
-; -----------------------------------------------------------------------------
 SetItem_6242:
-    ld hl, $c0d8
-    ld bc, $0020
-    ld a, $ff
-    call FillNBytesWithRegA
-    ld a, [wOPTN_and_Item_selection]   ; family tab column (0..1)
-    ld b, a
-    add a
-    add a
-    add b
-    ld b, a
-    ld a, [wMenu_selection]
-    and $7f                            ; family row (0..4); flat index in a
-    add b
-    ld [$cac0], a                      ; $cac0 = flat family index (scratch here)
-    ld hl, $6294                       ; LibraryFamilyTabBounds (11 bytes, id ranges)
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]                        ; b = start id of this family
-    ld c, [hl]                         ; c = end id (next family's start)
-    ld b, a
-    ld d, $00
-    ld e, $00
-    ld hl, $c0d8
-
-jr_012_6271:
-    push bc
-    push de
-    push hl
-    ld hl, $ca94
-    ld a, b
-    call TestBitInArray
-    pop hl
-    pop de
-    pop bc
-    ld [hl], $e0
-    jr z, jr_012_6284
-
-    ld [hl], b
-    inc e
-
-jr_012_6284:
-    inc d
-    inc hl
-    inc b
-    ld a, b
-    cp c
-    jr nz, jr_012_6271
-
-    ld a, d
-    ld [$c8e9], a
-    ld a, e
-    ld [$c8e8], a
-    ret
+    jp LibScanByFamily
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
     nop
@@ -10536,104 +10568,82 @@ jr_012_7aca:
     reti
 
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+
+; =============================================================================
+; LibScanByFamily — B6 dynamic library tab populate (replaces id-range scan).
+; In:  family = wOPTN_and_Item_selection*5 + (wMenu_selection & $7F)   (0..9)
+; Out: $C0D8.. buffer = seen species of that family (cap 30)
+;      $C8E9 = slots written, $C8E8 = count shown
+; Reads family byte via far-loader ($0301 rst $10 -> [$DA33]); ROM0 helpers.
+; =============================================================================
+LibScanByFamily:
+    ld hl, $c0d8                       ; blank the display buffer ($20 slots)
+    ld bc, $0020
+    ld a, $ff
+    call FillNBytesWithRegA
+
+    ld a, [wOPTN_and_Item_selection]   ; column (0..1)
+    ld b, a
+    add a
+    add a
+    add b                              ; a = wOPTN*5
+    ld b, a
+    ld a, [wMenu_selection]
+    and $7f                            ; row (0..4)
+    add b                              ; a = flat family index 0..9
+    ld [$d470], a
+    ld [$cac0], a                      ; keep $cac0 semantics from the original
+
+    ld e, $00                          ; e = count shown
+    ld hl, $c0d8                       ; buffer write ptr
+    ld b, $00                          ; b = species id 0..220
+.loop:
+    ld a, e                            ; buffer full?
+    cp 30
+    jr z, .done
+
+    push bc                            ; --- family byte of species b ---
+    push de
+    push hl
+    ld a, b
+    ld [wTempSpeciesId], a
+    ld hl, $0301
+    rst $10                            ; monster info -> $DA33
+    ld a, [$da33]                      ; family byte
+    ld hl, $d470
+    cp [hl]                            ; this family?
+    pop hl
+    pop de
+    pop bc
+    jr nz, .next
+
+    push bc                            ; --- seen bit? ---
+    push de
+    push hl
+    ld hl, $ca94
+    ld a, b
+    call TestBitInArray                ; Z = unseen
+    pop hl
+    pop de
+    pop bc
+    jr z, .next
+
+    ld [hl], b                         ; write species id
+    inc hl
+    inc e
+
+.next:
+    inc b
+    ld a, b
+    cp $dd                             ; 221 = past last species
+    jr nz, .loop
+
+.done:
+    ld a, e
+    ld [$c8e9], a                      ; slots written
+    ld [$c8e8], a                      ; count shown (same: we only write seen)
+    ret
+
     nop
     nop
     nop

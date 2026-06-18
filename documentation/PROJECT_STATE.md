@@ -5,6 +5,30 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-18 (Session 18: breeding B6 — family reassignment +
+> dynamic-library proof-of-concept, user-confirmed in SameBoy.)
+> **B6 — family reassignment (SameBoy-confirmed) + dynamic-library POC.** Monsters
+> can be moved between ANY families (incl. in/out of ??? / Boss=9) via same-size
+> family-byte edits at `$03:$4461+$00`. `tools/build_family_reassign.py` (spec
+> `extracted/breeding_family_reassign.json`, `from` validated == vanilla) emits
+> `patches/bank_003.asm` (exact-line db edits, zero shift). **Reader gate CLEARED:**
+> family-byte readers outside breeding are display/struct-copy only (banks
+> `$01/$04/$07/$09/$14`); none gate scout/recruit/AI/resistance on family==9 —
+> eligibility is the enemy-stats joinability byte (`$14 +$3`) + boss table
+> (`$14:$4897`). **Three family representations** (BREEDING_SYSTEM "B6"): breeding =
+> live byte; status/menus = struct `+$0A` stamped at creation (snapshot — correct
+> for a fresh hack); library = id-range via `SetItem_6242`/`$12:$6294` (the ONLY
+> id-range family assumption in the ROM). **Dynamic library = PROOF OF CONCEPT**
+> (`patches/bank_012.asm`, `tools/build_dynamic_library.py`): `SetItem_6242`
+> redirected (zero-shift) to a family-byte scan in bank `$12` free space; 8
+> reassigned monsters group correctly in SameBoy. POC only — lags ~221 far-loads/
+> render (bearable), no RAM claim beyond one scratch byte. **Production plan (B7):
+> editor emits a precomputed family→members table at build time; do NOT optimize the
+> runtime POC.** Rename (B8) + 11th family (B9) split out in ROADMAP. Disassembly
+> annotated (comments only, byte-perfect `1ca6579…`): `SetItem_6242`, the family-byte
+> reader trace at bank `$03 label443f`. Patched test ROMs only; canonical clean build
+> still `1ca6579…`. Method: KEY_LESSONS "Session 18 — Breeding B6".
+>
 > Last verified: 2026-06-18 (Session 17: breeding B5 — full special-table
 > authoring DONE, user-confirmed in SameBoy.)
 > **B5 — full special-table authoring (SameBoy-confirmed).** `build_breeding.py
@@ -187,7 +211,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Attr map generator | ✅ working | tools/generate_attr_map.py; builds tile→palette maps from all 85 tilesets, generates LZSS-compressed attr data. |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ working (single room, Strategy A) | Whitelist mapID in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor (ASM) + arm wEncounterCounter (room-entry script). Pool selectable via gate/floor. v30, runtime-verified. Editor generalization specced (CROSSBANK_ROOMS.md). |
-| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. **S16: B4 family-defaults rewrite** — `build_breeding.py --emit-family` authors the positional family table in place from `extracted/breeding_family_defaults.json`; Bird/Slime/Beast×Dragon + new Dragon×Dragon→GreatDrak confirmed in-game (5 bytes, zero-collateral). **S17: B5 full special-table authoring** — `build_breeding.py --emit-special` owns the WHOLE special table as authored data (825 ROM base + in-place `overrides` by index/parents + `appends`) from `extracted/breeding_special.json`, with a whole-table first-match-wins shadow validator; bank `$16` stays vanilla (single source = JSON → bank `$69`). Confirmed in-game: MadCat×BattleRex→DracoLord (entry-187 in-place edit), Darkdrium×BattleRex→Armorpion (append), S12 GoldSlime preserved. Supersedes the B3 `--emit-relocation` path. B6 specced (BREEDING_SYSTEM "Planned"; ROADMAP 2B), not built. |
+| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. **S16: B4 family-defaults rewrite** — `build_breeding.py --emit-family` authors the positional family table in place from `extracted/breeding_family_defaults.json`; Bird/Slime/Beast×Dragon + new Dragon×Dragon→GreatDrak confirmed in-game (5 bytes, zero-collateral). **S17: B5 full special-table authoring** — `build_breeding.py --emit-special` owns the WHOLE special table as authored data (825 ROM base + in-place `overrides` by index/parents + `appends`) from `extracted/breeding_special.json`, with a whole-table first-match-wins shadow validator; bank `$16` stays vanilla (single source = JSON → bank `$69`). Confirmed in-game: MadCat×BattleRex→DracoLord (entry-187 in-place edit), Darkdrium×BattleRex→Armorpion (append), S12 GoldSlime preserved. Supersedes the B3 `--emit-relocation` path. **S18: B6 family reassignment** — `build_family_reassign.py` moves monsters between ANY families (incl. ???/Boss=9) via same-size family-byte edits (`patches/bank_003.asm`); reader gate cleared (display/copy only, eligibility is joinability+boss table, not family). **S18: dynamic-library POC** — `build_dynamic_library.py` redirects `SetItem_6242` ($12) to a family-byte scan so the library groups by reassigned family (`patches/bank_012.asm`); user-confirmed, POC only (lags). Production = build-time family→members table (ROADMAP B7). Rename (B8) + 11th family (B9) split out. |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
 

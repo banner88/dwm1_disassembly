@@ -829,7 +829,7 @@ MonsterInfo_003_TreeSlime:
 
 ; --- Monster $04 (4): Snaily ---
 MonsterInfo_004_Snaily:
-    db 0  ; Family: Slime
+    db 3  ; Family: Bird  ; B6-reassigned (was Slime)
     db 30  ; Level cap
     db 8  ; Exp table
     db 2  ; Female ratio (50/50)
@@ -881,7 +881,7 @@ MonsterInfo_007_BoxSlime:
 
 ; --- Monster $08 (8): Slime ---
 MonsterInfo_008_Slime:
-    db 0  ; Family: Slime
+    db 1  ; Family: Dragon  ; B6-reassigned (was Slime)
     db 40  ; Level cap
     db 16  ; Exp table
     db 2  ; Female ratio (50/50)
@@ -1323,7 +1323,7 @@ MonsterInfo_041_Orochi:
 
 ; --- Monster $2A (42): BattleRex ---
 MonsterInfo_042_BattleRex:
-    db 1  ; Family: Dragon
+    db 9  ; Family: Boss  ; B6-reassigned (was Dragon)
     db 60  ; Level cap
     db 22  ; Exp table
     db 2  ; Female ratio (50/50)
@@ -1466,7 +1466,7 @@ MonsterInfo_052_WindBeast:
 
 ; --- Monster $35 (53): Anteater ---
 MonsterInfo_053_Anteater:
-    db 2  ; Family: Beast
+    db 4  ; Family: Plant  ; B6-reassigned (was Beast)
     db 40  ; Level cap
     db 8  ; Exp table
     db 2  ; Female ratio (50/50)
@@ -1661,7 +1661,7 @@ MonsterInfo_067_DarkHorn:
 
 ; --- Monster $44 (68): MadCat ---
 MonsterInfo_068_MadCat:
-    db 2  ; Family: Beast
+    db 0  ; Family: Slime  ; B6-reassigned (was Beast)
     db 40  ; Level cap
     db 12  ; Exp table
     db 2  ; Female ratio (50/50)
@@ -1791,7 +1791,7 @@ MonsterInfo_077_MistyWing:
 
 ; --- Monster $4E (78): Dracky ---
 MonsterInfo_078_Dracky:
-    db 3  ; Family: Flying
+    db 9  ; Family: Boss  ; B6-reassigned (was Bird)
     db 40  ; Level cap
     db 2  ; Exp table
     db 2  ; Female ratio (50/50)
@@ -1921,7 +1921,7 @@ MonsterInfo_087_WhipBird:
 
 ; --- Monster $58 (88): FunkyBird ---
 MonsterInfo_088_FunkyBird:
-    db 3  ; Family: Flying
+    db 2  ; Family: Beast  ; B6-reassigned (was Bird)
     db 50  ; Level cap
     db 5  ; Exp table
     db 2  ; Female ratio (50/50)
@@ -3574,7 +3574,7 @@ MonsterInfo_213_DeathMore:
 
 ; --- Monster $D6 (214): Darkdrium ---
 MonsterInfo_214_Darkdrium:
-    db 9  ; Family: Boss
+    db 1  ; Family: Dragon  ; B6-reassigned (was Boss)
     db 80  ; Level cap
     db 30  ; Exp table
     db 0  ; Female ratio (0%)
