@@ -374,16 +374,28 @@ recipes are pure authoring.
       entry-9 claim was WRONG — that's a per-family monster-text dispatch, not the
       family-name string; find the real string first); the production library table;
       the 11th-family feature.
-- [ ] **B7 — Production library grouping table (replaces the B6 POC).** The editor
-      emits a precomputed **family→members** table into free ROM at build time
-      (family membership is static in a shipped hack); `SetItem_6242` reads it
-      directly — zero runtime RAM, zero far-loads, scales to arbitrary shuffles and
-      to an 11th family. Do NOT optimize the runtime POC (a WRAM family cache was
-      rejected: standing RAM + coherence). Derive the table from the same family-byte
-      source as `breeding_family_reassign.json`. Belongs with the editor monster-data
-      backend (Phase 2). *Accept:* library groups by family with no perceptible lag
-      and no runtime RAM claim; reassigned monsters appear under the correct tab.
-      Spec: BREEDING_SYSTEM "Dynamic library → PRODUCTION PLAN".
+- [x] **B7 — Production library grouping table (replaces the B6 POC).**
+      **DONE (Session 19, user-confirmed in SameBoy — zero lag, reassigned monsters
+      under correct tabs).** `tools/build_library_table.py` emits a precomputed
+      **family→members** table into bank `$12` trailing free space (`$7B9B+`) at build
+      time and rewrites `SetItem_6242` zero-shift (`jp LibScanByFamily`, 82-byte body →
+      `jp` + 79 `nop`). The walker reads the table directly — **zero far-loads, zero
+      scratch RAM** (the POC's two costs eliminated), and restores vanilla blank-slot
+      semantics ($E0 for unseen / id for seen) the POC had dropped. Table format is a
+      pointer table + length-prefixed member lists (additive for an 11th family);
+      family assignment sourced from the vanilla family byte + `breeding_family_reassign.json`
+      (the SAME spec `bank_003`/B6 consumes, kept in lock-step). Build-time validation:
+      `--selftest` proves no-reassign grouping reproduces the vanilla bounds table
+      exactly (parity); every family ≤ buffer capacity (32); free-space fit; ids ≤ 255.
+      Data deliverable `extracted/library_grouping.json`. **Extension-aware (no hardcoded
+      221):** species ids are 1 byte (256-ceiling); `COLLECTIBLE_MAX` (→255) and
+      `NUM_FAMILIES` (→11, B9) are the only knobs — table + walker are already count/id
+      agnostic. The 6 special non-collectible entries (215–220: TERRY? story enemy +
+      4 summon tiers + 1 blank) are enumerated and PROTECTED (excluded, never a
+      reassignment target). Test ROM `065943f6…`; clean build still `1ca6579…`. Method:
+      KEY_LESSONS "Session 19 — Breeding B7"; format: BREEDING_SYSTEM "Dynamic library
+      → PRODUCTION (B7, done)". *Open follow-up:* tool not yet folded into
+      `verify_integrity.py` (self-asserts via `--selftest`; the verifier does not run it).
 - [ ] **B8 — ??? → "Spirit" rename (10 families, no insert).** Same-size family-name
       text edit. PREREQUISITE: trace the real family-NAME string render path (NOT
       `FamilyTextPtrTable` $04:$60F4 — that's per-family monster-text groups A–D).
@@ -395,8 +407,14 @@ recipes are pure authoring.
       extend scanner); 11th `FamilyTextPtrTable` entry + name + text group; library
       tab strip 2col×5row → needs layout rework + new family ICON + nav grid
       (`b=5,c=10` in `LoadItem_4241`); any family-indexed array sized to 10 gains a
-      slot. With B7 done the DATA side is free; the cost is UI/graphics. Gated on B7.
-      *Decision deferred (user):* Spirit replaces ??? (B8 only) vs added as 11th (B9).
+      slot. **B7 is now DONE (S19), so the DATA side is free** (the library table +
+      walker are family-count agnostic; bump `NUM_FAMILIES`→11 and add one pointer +
+      one list); the remaining cost is UI/graphics (tab strip, icon, nav grid) + the
+      breeding family-code (`$FA` wildcard) + family-NAME string trace.
+      *Decision (user, S19):* **Spirit is ADDED as an 11th family (B9 path), then
+      families are reshuffled** — not a rename-only replace. So B9 is the target, B8
+      (rename-only) is not the chosen route (the ??? → Spirit name work still applies,
+      but as part of B9's 11th-family naming, not a 10-family replace).
 - [x] **BUG — breeding cutscene: parent sprites glitch.** **FIXED Session 14.**
       Observed Session 13 while playtesting B2; confirmed **not caused by B2**. Root
       cause was an incomplete bank `$0B` labelization: three raw pointer refs into the

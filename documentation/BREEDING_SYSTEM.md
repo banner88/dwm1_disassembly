@@ -352,48 +352,94 @@ independent of the family byte.** So reassignment cannot accidentally make a wil
 monster recruitable or strip a boss's join behavior. (Annotated inline at the
 bank `$03` MonsterInfoLoad header, `label443f`.)
 
-## Dynamic library — PROOF OF CONCEPT (Session 18, `patches/bank_012.asm`)
+## Dynamic library — PROOF OF CONCEPT (Session 18) → SUPERSEDED by B7 (Session 19)
 
-To make the library honor arbitrary family reassignment, `SetItem_6242` is
-redirected (`jp LibScanByFamily`, zero-shift) to a routine in bank `$12` trailing
-free space (`$7B9B+`) that scans ALL species 0..220, reads each one's family byte
-via the `$0301` far-loader, and lists those matching the current tab whose "seen"
-bit (`$CA94`) is set. Tool: `tools/build_dynamic_library.py --emit`. **User-
-confirmed in SameBoy:** all 8 reassigned monsters group under the correct tab.
+The S18 POC (`tools/build_dynamic_library.py`) redirected `SetItem_6242`
+(`jp LibScanByFamily`, zero-shift) to a routine in bank `$12` trailing free space
+(`$7B9B+`) that scanned ALL species 0..220, read each one's family byte via the
+`$0301` far-loader, and listed those matching the current tab whose "seen" bit
+(`$CA94`) was set. User-confirmed in SameBoy (all 8 reassigned monsters grouped
+correctly), but PROOF OF CONCEPT only: ~221 far-loads per tab-change/A-press →
+visible lag (each far-load = bank switch + `id*43` multiply + 43-byte copy to read
+1 byte); one scratch byte `$D470`; a `PAGE_SIZE=30` cap; and it dropped the vanilla
+blank-slot semantics (it listed seen-only and compacted). It proved the family byte
+is the sole grouping source. **`build_dynamic_library.py` is retained as a reference
+only; the patch it produced is replaced by B7 below.**
 
-**This is PROOF OF CONCEPT, not production.** It proves the library can be fully
-dynamic and that the family byte is the sole grouping source. Costs: ~221
-far-loads per tab-change/A-press → visible but bearable lag (each far-load is a
-bank switch + `id*43` multiply + 43-byte copy just to read 1 byte); one scratch
-byte `$D470`; a `PAGE_SIZE=30` per-tab display cap. It is kept as a working
-reference, clearly marked in the patch header.
+### Why the POC lagged and vanilla didn't
+Vanilla scans a CONTIGUOUS id range (cheap, no cross-bank reads) precisely because
+families were id-contiguous. Arbitrary membership forces a per-species "what family
+are you?" lookup, and the family byte lives in bank `$03` which the library
+(executing in bank `$12` ROMX) can't page in — hence the per-species far-loader.
+The cost is intrinsic to doing it AT RUNTIME — so B7 does it at BUILD time instead.
 
-### Why it lags and the vanilla doesn't
-Vanilla scans a CONTIGUOUS id range (cheap, no cross-bank reads) precisely
-because families were id-contiguous. Arbitrary membership forces a per-species
-"what family are you?" lookup, and the family byte lives in bank `$03` which the
-library (executing in bank `$12` ROMX) can't page in — hence the per-species
-far-loader. The cost is intrinsic to doing it AT RUNTIME.
+## Dynamic library → PRODUCTION (B7, Session 19, DONE, SameBoy-confirmed)
 
-### PRODUCTION PLAN — precomputed grouping table (do this, not runtime caching)
-In a shipped hack family membership is **static** (fixed once monsters are
-shuffled / a new family inserted). So the grouping should be computed **at build
-time by the editor**, not at runtime:
+`tools/build_library_table.py` emits a build-time precomputed **family→members**
+table into bank `$12` trailing free space (`$7B9B+`) and rewrites `SetItem_6242`
+zero-shift (`jp LibScanByFamily`; original 82-byte body → `jp` + 79 `nop`). The
+walker reads the table directly: **zero far-loads, zero scratch RAM**, vanilla
+blank-slot semantics restored. User-confirmed in SameBoy (zero lag; reassigned
+monsters under correct tabs). Test ROM `065943f6…`; clean build still `1ca6579…`.
 
-- The editor (or a `build_*` tool) emits a **family→members table** into free ROM:
-  for each family, the compact list of its species ids (derived from the same
-  family-byte source as `breeding_family_reassign.json`). Place in a free bank or
-  bank `$12` free space.
-- `SetItem_6242` becomes trivial: for the current family, walk its precomputed id
-  list, test the seen-bit, fill the buffer. As cheap as vanilla's range scan
-  (cheaper — no gaps), **zero runtime RAM**, **zero far-loads**, scales to any
-  shuffle and to an 11th family.
-- Deterministic + rebuildable: pure function of the family bytes, regenerated each
-  build; never mutated at runtime (no coherence problem).
-- **Rejected alternative:** a runtime 221-byte WRAM family cache. It removes the
-  lag but claims standing custom WRAM solely for one menu and needs coherence —
-  exactly the "convenience RAM" to avoid. The build-time table is strictly better
-  on RAM, speed, and editor-alignment. Do not optimize the runtime POC; replace it.
+**Table format** (placed in the free region, all label-based / repointable):
+```
+LibFamilyPtrTable:                 ; NUM_FAMILIES 2-byte pointers (one per tab)
+    dw LibFamily_00 ... LibFamily_{N-1}
+LibFamily_00:
+    db <count>, <id>, <id>, ...    ; length-prefixed member list (species-id order)
+...
+```
+Adding an 11th family (B9) is purely additive: one more `dw` + one more list. The
+walker is family-count agnostic — the ONLY 10-bound in it is the 2×5 tab-grid →
+flat-index formula (`wOPTN*5 + (wMenu_selection & $7F)`), which is the menu/UI's
+concern and changes with the B9 tab UI, not the data path.
+
+**Walker contract** (matches vanilla `SetItem_6242`): blanks the `$C0D8` buffer
+(`$20` bytes) to `$FF`; for each member writes `$E0` if its seen-bit (`$CA94`) is
+clear, else the species id; stores `$C8E9` = member count (total slots) and `$C8E8`
+= seen count. ROM0 helpers only (`FillNBytesWithRegA`, `TestBitInArray`). Capacity:
+the emitter guarantees every family ≤ buffer capacity (32), so no runtime overflow
+check is needed.
+
+**Source of truth (single):** family assignment = the vanilla family byte
+(`$03:$4461+$00`, raw 0..9) with `breeding_family_reassign.json` overrides applied —
+the SAME spec `patches/bank_003.asm` (B6) consumes. Library grouping and family
+bytes therefore stay in lock-step; `from` is validated == vanilla, exactly as B6.
+
+**Build-time validation:** `--selftest` proves the no-reassign grouping reproduces
+the vanilla bounds table exactly for ids 0..214 (parity); every family ≤ 32; all
+ids ≤ 255; content fits the free region. Data deliverable:
+`extracted/library_grouping.json` (`_generator` stamped).
+
+**COLLECTIBLE vs SPECIAL (user-confirmed S19 — do NOT re-derive from "looks empty"):**
+ids 0..214 are the collectible monsters the encyclopedia lists. Ids 215..220 are
+REAL but NON-collectible combat-only entities and are PROTECTED (excluded from the
+library, never a reassignment target, never overwritten):
+- 215 `TERRY?` — scripted story enemy (Durran fight); fightable, not recruitable/breedable
+- 216 `Tatsu`, 217 `Diago`, 218 `Samsi`, 219 `Bazoo` — the four tiers of a summon skill
+- 220 — reserved/blank, left strictly untouched
+
+Their stats read empty (lvl cap 0, Blaze×3, no growth) only because they need no
+recruit/breed/growth data. Vanilla's id-range bounds table stops at 214 for exactly
+this reason. Grouping ids 0..214 by family byte == the vanilla bounds ranges (proven),
+so the specials stay out the same way vanilla keeps them out.
+
+### EXTENSION TO 255 / 11th family (design knobs, no hardcoded 221)
+Species id is 1 byte → architectural ceiling 256 (ids 0..255). The only knobs in
+`build_library_table.py`:
+- `COLLECTIBLE_MAX` (214) — raise toward 255 as new collectible monsters are added.
+- `NUM_FAMILIES` (10) — set to 11 for B9; the table format + walker need no change.
+- `BUFFER_CAPACITY` (32) — the per-family display-buffer limit ($C0D8 size).
+Count-expansion past 221 is a separate larger project (relocate the 221×43 monster
+table via its single labeled reader `SaveMon_4446`, fill the 256-slot name pointer
+table at `$41:$4339`, add enemy-stats/sprite/breeding entries, grep-and-bump the
+hardcoded count loops); B7's library side is already ready for it.
+
+### Rejected alternative (kept for the record)
+A runtime 221-byte WRAM family cache removes the POC's lag but claims standing custom
+WRAM solely for one menu and needs coherence. The build-time table is strictly better
+on RAM, speed, and editor-alignment — so B7 replaced the POC rather than optimizing it.
 
 ## Future — 11th family (keep ??? AND add "Spirit")
 

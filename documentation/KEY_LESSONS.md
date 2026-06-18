@@ -715,3 +715,39 @@ and needs coherence.
 **Rule**: Before optimizing runtime code, ask whether the data is static in the shipped
 product. If yes, move the work to the build tool (the editor) — don't spend RAM or
 cycles recomputing at runtime what can be a baked table.
+
+## Session 19 Lessons — Breeding B7 (production library grouping)
+
+### "Looks empty" is not "junk" — verify a slot's ROLE before treating it as free
+**Symptom**: Auditing the library, ids 215–220 are excluded by the vanilla id-range
+bounds table and read as empty (level cap 0, all skills "Blaze", no growth, id 220
+blank). The natural inference: dead placeholder slots, free to repurpose for new
+monsters.
+**Root cause**: Empty-looking STATS only mean a monster needs no recruit/breed/growth
+data — not that it is unused. 215 `TERRY?` is a scripted story enemy (Durran fight);
+216–219 (`Tatsu`/`Diago`/`Samsi`/`Bazoo`) are the four tiers of a summon skill. They are
+real, functional combat entities; overwriting any of them would break that fight or the
+summon. The vanilla bounds table stops at 214 because the library is the COLLECTION
+register (recruitable monsters), not a bestiary — so non-collectible combat entities are
+correctly omitted, not "missing".
+**Fix**: Treat the collectible set as authored data (`COLLECTIBLE_MAX = 214`), enumerate
+215–220 explicitly as PROTECTED special entries in `build_library_table.py`, and make the
+tool REFUSE any reassignment that targets them. Confirmed with the user (who knows the
+game) rather than inferred from stats.
+**Rule**: Before calling a data slot free/unused, confirm its in-game ROLE (grep its
+usage, or ask the user). "Empty stats" can mean "special-cased elsewhere", not "garbage".
+A wrong "it's a free slot" assumption corrupts live content silently.
+
+### Replacing a POC with a build-time table — keep one source of truth
+**Symptom**: Two consumers of family membership (bank_003 family bytes via B6; the new
+library table via B7) could drift if each derived membership independently.
+**Root cause**: Duplicated derivation = divergence risk (the status menu would show one
+family, the library another).
+**Fix**: `build_library_table.py` sources family assignment from the vanilla family byte
+plus the SAME `breeding_family_reassign.json` spec that B6 feeds to bank_003, and
+validates each `from` == vanilla (same guard as B6). One spec → two consistent artifacts.
+A `--selftest` proves the no-reassign path reproduces the vanilla bounds table exactly,
+so the default build is provably behavior-identical to vanilla.
+**Rule**: When two emitted artifacts depend on the same fact, both must derive it from one
+source file, not re-derive it independently. Add a self-check that the no-op case
+reproduces vanilla byte/behavior, so "I didn't break the default" is machine-verified.

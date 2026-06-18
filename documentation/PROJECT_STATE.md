@@ -5,6 +5,32 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-18 (Session 19: breeding B7 — production library grouping
+> table, user-confirmed in SameBoy: zero lag, reassigned monsters under correct tabs.)
+> **B7 — production library grouping (SameBoy-confirmed).** The S18 dynamic-library
+> POC (runtime per-species far-load scan, ~221 loads/tab → lag + scratch RAM) is
+> REPLACED by a build-time precomputed **family→members** table. `tools/build_library_table.py`
+> emits the table into bank `$12` trailing free space (`$7B9B+`) and rewrites
+> `SetItem_6242` zero-shift (`jp LibScanByFamily`; 82-byte body → `jp`+79 `nop`); the
+> walker reads the table directly — **zero far-loads, zero scratch RAM**, and restores
+> the vanilla blank-slot-for-undiscovered semantics the POC had dropped (`$E0` unseen /
+> id seen; `$C8E9`=member count, `$C8E8`=seen count). Format: pointer table + length-
+> prefixed member lists (additive for an 11th family). Family assignment sourced from
+> the vanilla family byte (`$03:$4461+$00`, raw 0..9) + `breeding_family_reassign.json`
+> (the SAME spec `bank_003`/B6 consumes — library and family bytes stay in lock-step).
+> Build-time self-checks: `--selftest` proves no-reassign grouping == vanilla bounds
+> table exactly (ids 0..214 → parity); each family ≤ buffer cap (32); ids ≤ 255;
+> free-space fit. **COLLECTIBLE vs SPECIAL clarified (user, do not re-derive from
+> "looks empty"):** ids 0..214 are collectible (library-listed); ids 215..220 are REAL
+> but non-collectible combat-only entities — 215 `TERRY?` (Durran story enemy), 216–219
+> the four summon-skill tiers (Tatsu/Diago/Samsi/Bazoo), 220 reserved/blank — enumerated
+> and PROTECTED (excluded, never a reassignment target). **Extension-aware (no hardcoded
+> 221):** species id is 1 byte → 256 ceiling; `COLLECTIBLE_MAX`(→255) and `NUM_FAMILIES`
+> (→11, B9) are the only knobs. **User decision (S19): Spirit will be ADDED as an 11th
+> family (B9), then families reshuffled** — not a 10-family rename. Data deliverable
+> `extracted/library_grouping.json`. Test ROM `065943f6…`; canonical clean build still
+> `1ca6579…`. Method: KEY_LESSONS "Session 19 — Breeding B7".
+>
 > Last verified: 2026-06-18 (Session 18: breeding B6 — family reassignment +
 > dynamic-library proof-of-concept, user-confirmed in SameBoy.)
 > **B6 — family reassignment (SameBoy-confirmed) + dynamic-library POC.** Monsters
@@ -211,7 +237,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Attr map generator | ✅ working | tools/generate_attr_map.py; builds tile→palette maps from all 85 tilesets, generates LZSS-compressed attr data. |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ working (single room, Strategy A) | Whitelist mapID in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor (ASM) + arm wEncounterCounter (room-entry script). Pool selectable via gate/floor. v30, runtime-verified. Editor generalization specced (CROSSBANK_ROOMS.md). |
-| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. **S16: B4 family-defaults rewrite** — `build_breeding.py --emit-family` authors the positional family table in place from `extracted/breeding_family_defaults.json`; Bird/Slime/Beast×Dragon + new Dragon×Dragon→GreatDrak confirmed in-game (5 bytes, zero-collateral). **S17: B5 full special-table authoring** — `build_breeding.py --emit-special` owns the WHOLE special table as authored data (825 ROM base + in-place `overrides` by index/parents + `appends`) from `extracted/breeding_special.json`, with a whole-table first-match-wins shadow validator; bank `$16` stays vanilla (single source = JSON → bank `$69`). Confirmed in-game: MadCat×BattleRex→DracoLord (entry-187 in-place edit), Darkdrium×BattleRex→Armorpion (append), S12 GoldSlime preserved. Supersedes the B3 `--emit-relocation` path. **S18: B6 family reassignment** — `build_family_reassign.py` moves monsters between ANY families (incl. ???/Boss=9) via same-size family-byte edits (`patches/bank_003.asm`); reader gate cleared (display/copy only, eligibility is joinability+boss table, not family). **S18: dynamic-library POC** — `build_dynamic_library.py` redirects `SetItem_6242` ($12) to a family-byte scan so the library groups by reassigned family (`patches/bank_012.asm`); user-confirmed, POC only (lags). Production = build-time family→members table (ROADMAP B7). Rename (B8) + 11th family (B9) split out. |
+| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. **S16: B4 family-defaults rewrite** — `build_breeding.py --emit-family` authors the positional family table in place from `extracted/breeding_family_defaults.json`; Bird/Slime/Beast×Dragon + new Dragon×Dragon→GreatDrak confirmed in-game (5 bytes, zero-collateral). **S17: B5 full special-table authoring** — `build_breeding.py --emit-special` owns the WHOLE special table as authored data (825 ROM base + in-place `overrides` by index/parents + `appends`) from `extracted/breeding_special.json`, with a whole-table first-match-wins shadow validator; bank `$16` stays vanilla (single source = JSON → bank `$69`). Confirmed in-game: MadCat×BattleRex→DracoLord (entry-187 in-place edit), Darkdrium×BattleRex→Armorpion (append), S12 GoldSlime preserved. Supersedes the B3 `--emit-relocation` path. **S18: B6 family reassignment** — `build_family_reassign.py` moves monsters between ANY families (incl. ???/Boss=9) via same-size family-byte edits (`patches/bank_003.asm`); reader gate cleared (display/copy only, eligibility is joinability+boss table, not family). **S18: dynamic-library POC** — `build_dynamic_library.py` redirects `SetItem_6242` ($12) to a family-byte scan so the library groups by reassigned family (`patches/bank_012.asm`); user-confirmed, POC only (lags). **S19: B7 production library grouping (DONE, replaces the POC)** — `build_library_table.py` emits a build-time precomputed family→members table into bank `$12` free space + a zero-shift `SetItem_6242` walker; **zero far-loads, zero scratch RAM**, vanilla blank-slot semantics restored; generic-N (`NUM_FAMILIES`) + 256-id-ceiling extension-aware; special entries 215–220 protected; `extracted/library_grouping.json` data deliverable; user-confirmed in SameBoy (zero lag). Production library now done; 11th family (B9) data side unblocked. Rename (B8) folded into B9 per user decision. |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
 
