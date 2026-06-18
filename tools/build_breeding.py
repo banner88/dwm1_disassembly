@@ -47,14 +47,26 @@ ROM_PATH = os.path.join(REPO, "data", "DWM-original.gbc")
 DISASM = os.path.join(REPO, "disassembly", "bank_016.asm")
 MONSTERS = os.path.join(REPO, "extracted", "monsters_full.json")
 OUT_JSON = os.path.join(REPO, "extracted", "breeding_tables.json")
+EXTRA_RECIPES = os.path.join(REPO, "extracted", "breeding_extra_recipes.json")
 ORIGINAL_MD5 = "1ca6579359f21d8e27b446f865bf6b83"
 
 # --- ROM geometry (bank $16) -------------------------------------------------
 BANK = 0x16
 SPECIAL_ADDR = 0x4B30          # bank-relative
 FAMILY_ADDR = 0x4974           # bank-relative
-SPECIAL_COUNT = 825
+SPECIAL_COUNT = 825            # VANILLA base count (decode/round-trip; never changes)
 SPECIAL_ENTRY = 5
+
+# --- B3: special-table capacity extension (bank $69) -------------------------
+# The relocated bank $69 table (B2) can grow past the 825 vanilla entries because
+# its scanner walks to the $FF terminator with no hardcoded count. B3 appends the
+# recipes in EXTRA_RECIPES after the base entries. The spec target is 1x-2x the
+# vanilla size; bank $69 (16 KB) easily holds 1650*5 = 8250 B + scanner.
+SPECIAL_CAPACITY_MAX = 1650    # 2x vanilla; spec ceiling for the appended table
+# Bytes available in bank $69 for (scanner + table). Bank is $4000..$7FFF.
+# db $69 (1) + jump table dw (2) + scanner code; the table follows. We assert the
+# whole emitted bank fits with margin rather than hardcoding the scanner length.
+BANK69_SIZE = 0x4000
 SPECIAL_TERMINATOR = 0xFF      # single byte at $5B4D
 FAMILY_TERMINATOR = (0x00, 0x00)   # terminating pair
 SEPARATOR = (0xFF, 0xFF)           # advances slot, stores no recipe
@@ -332,6 +344,55 @@ def build_json(rom):
     }
 
 
+# --- B3: appended special recipes (capacity extension) -----------------------
+def load_extra_recipes():
+    """Load hand-authored recipes to APPEND after the 825 base entries (B3).
+
+    Returns a list of 5-byte [p1,p2,min_plus,result,plus_mod] entries (ints).
+    Missing file -> [] (tool still emits the base table, i.e. behaves like B2).
+    Underscore-prefixed keys in the JSON are comments and are ignored."""
+    if not os.path.exists(EXTRA_RECIPES):
+        return []
+    spec = json.load(open(EXTRA_RECIPES))
+    out = []
+    for r in spec.get("recipes", []):
+        entry = [int(r["p1"]), int(r["p2"]), int(r["min_plus"]),
+                 int(r["result"]), int(r["plus_mod"])]
+        for b in entry:
+            if not (0 <= b <= 0xFF):
+                raise ValueError("extra recipe byte out of range 0-255: %r" % (entry,))
+        # p1/p2 may be a species id (0-220) or a family code ($F0-$FA); result
+        # must be a real species id (0-220) since it is written to $DA71.
+        if not (0 <= entry[3] <= 220):
+            raise ValueError("extra recipe result must be a species id 0-220: $%02X"
+                             % entry[3])
+        out.append(entry)
+    return out
+
+
+def first_match_index(rom, entries, p1, p2):
+    """Index of the first base entry that would match a (p1_species,p2_species)
+    cross regardless of plus, or None. Used to warn when an appended recipe is
+    SHADOWED (an earlier entry matches the same parents and wins first), which
+    would make the appended recipe dead. Family-code matching is approximated by
+    the parents' family bytes from the monster info table."""
+    f1, f2 = species_family_code(rom, p1), species_family_code(rom, p2)
+    for i, e in enumerate(entries):
+        if e[0] in (p1, f1) and e[1] in (p2, f2):
+            return i
+    return None
+
+
+def species_family_code(rom, sp):
+    """Family code ($F0-$F9) for a species id, read from monster info table
+    $03:$4461 (byte 0 = family 0-9). Returns None for codes (>=$F0) or OOB."""
+    if sp is None or sp >= 0xF0 or sp > 220:
+        return None
+    off = 0x03 * 0x4000 + (0x4461 - 0x4000) + sp * 43
+    fam = rom[off]
+    return 0xF0 + fam if fam <= 9 else None
+
+
 # --- B2: relocation harness (bank $69 special-table scanner) -----------------
 # The special table can't grow in place (code follows its $FF terminator at
 # $5B4D) and bank $16 is shift-sensitive (embedded pointers at $70A6+). B2
@@ -360,7 +421,7 @@ SECTION "ROM Bank $069", ROMX[$4000], BANK[$69]
 ; Outputs (RAM): $DA71 result species (untouched if no match), $DA77 += plus_mod.
 ; -----------------------------------------------------------------------------
 RelocatedSpecialScan:
-    ld hl, RelocatedSpecialTable      ; relocated 825x5 table (this bank)
+    ld hl, RelocatedSpecialTable      ; relocated table: 825 base + appended (B3); scan to $FF
 .scan:
     ld a, [hl]
     cp $ff                            ; $FF = end of table
@@ -443,35 +504,81 @@ def read_patched_special_table():
     return data
 
 
+def build_relocated_table(rom):
+    """Return (table_bytes, base_count, extras). The relocated bank $69 table is:
+    825 patched/vanilla base entries (NO terminator) + appended B3 extras + a
+    single $FF terminator. Validates capacity, byte ranges, bank fit, and warns
+    on shadowed (dead) appended recipes."""
+    patched = read_patched_special_table()
+    if patched is not None:
+        base = list(patched)
+        src = "patched bank_016.asm (carries existing custom recipe edits)"
+    else:
+        base = list(encode_special(decode_special(rom)))   # fallback: vanilla ROM
+        src = "vanilla ROM (patches/bank_016.asm not found)"
+    assert base[-1] == 0xFF, "base table must be $FF-terminated"
+    base_body = base[:-1]                       # drop terminator; 825*5 bytes
+    assert len(base_body) == SPECIAL_COUNT * SPECIAL_ENTRY
+
+    extras = load_extra_recipes()
+    base_entries = decode_special(rom) if patched is None else \
+        [base_body[i:i + 5] for i in range(0, len(base_body), 5)]
+
+    # Validations -------------------------------------------------------------
+    total = SPECIAL_COUNT + len(extras)
+    if total > SPECIAL_CAPACITY_MAX:
+        raise ValueError("special capacity exceeded: %d entries > max %d"
+                         % (total, SPECIAL_CAPACITY_MAX))
+    warnings = []
+    for k, e in enumerate(extras):
+        # Only species-id parents can be shadow-checked precisely; family-coded
+        # appended parents are rarer and skipped (matching is approximate).
+        if e[0] < 0xF0 and e[1] < 0xF0:
+            hit = first_match_index(rom, base_entries, e[0], e[1])
+            if hit is not None:
+                warnings.append("appended recipe #%d (%s) is SHADOWED by base "
+                                "entry %d and will never fire" % (k, e, hit))
+
+    body = list(base_body) + [b for e in extras for b in e] + [0xFF]
+
+    # Bank fit: scanner is small and fixed; assert the whole bank fits with
+    # margin. Table offset within the bank isn't known until link, so bound the
+    # table size conservatively against the full 16 KB bank.
+    if len(body) > BANK69_SIZE - 0x200:        # keep >=512 B headroom for scanner
+        raise ValueError("relocated table too large for bank $69: %d bytes"
+                         % len(body))
+    return bytes(body), src, extras, warnings
+
+
 def emit_bank69_asm(rom):
     """Full patches/bank_069.asm text: header note + scanner + relocated table.
 
-    The relocated table mirrors the PATCHED special table (patches/bank_016.asm)
-    so behaviour matches the current patched build, not raw vanilla. This keeps
-    B2 a true regression relative to the in-progress ROM and preserves earlier
-    custom recipes."""
-    patched = read_patched_special_table()
-    if patched is not None:
-        table = bytes(patched)
-        src = "patched bank_016.asm (carries existing custom recipe edits)"
-    else:
-        table = encode_special(decode_special(rom))   # fallback: vanilla ROM
-        src = "vanilla ROM (patches/bank_016.asm not found)"
+    The relocated table = the 825 PATCHED base entries (so custom recipes from
+    earlier sessions survive) followed by the B3 appended recipes from
+    extracted/breeding_extra_recipes.json, then a single $FF terminator. The
+    bank $69 scanner walks to $FF, so appended entries (>index 824) are scanned
+    with normal first-match-wins precedence."""
+    table, src, extras, _warn = build_relocated_table(rom)
+    note = ("; The table below = 825 base entries from\n"
+            ";   " + src + "\n"
+            "; then %d APPENDED recipe(s) (B3) from\n"
+            ";   extracted/breeding_extra_recipes.json\n"
+            "; proving the table grows past index 824 (capacity 1x-2x, max %d).\n"
+            % (len(extras), SPECIAL_CAPACITY_MAX))
     header = ("; ============================================================="
               "================\n"
-              "; BANK $69 - Relocated SPECIAL breeding-recipe scanner (B2)\n"
+              "; BANK $69 - Relocated SPECIAL breeding-recipe scanner (B2) +\n"
+              ";           appended-recipe capacity extension (B3)\n"
               "; ============================================================="
               "================\n"
               "; Generated by tools/build_breeding.py --emit-relocation\n"
               ";\n"
-              "; ROADMAP Phase 2B / B2 (relocation harness). The special-recipe\n"
-              "; scan is moved here from bank $16 and invoked via `rst $10`\n"
-              "; (ld hl,$6900). REGRESSION step: behaviour matches the current\n"
-              "; PATCHED build. The table below is sourced from\n"
-              ";   " + src + "\n"
-              "; so it preserves every recipe present in the patched bank $16\n"
-              "; (verified byte-for-byte by build_breeding.py --emit-relocation).\n"
-              "; B3 will replace this table with an extended one.\n"
+              "; ROADMAP Phase 2B / B2 (relocation harness) + B3 (capacity 1x-2x).\n"
+              "; The special-recipe scan was moved here from bank $16 and is\n"
+              "; invoked via `rst $10` (ld hl,$6900). The scanner walks to the\n"
+              "; $FF terminator with no hardcoded count, so the table can grow.\n"
+              ";\n"
+              + note +
               "; ============================================================="
               "================\n\n")
     return header + BANK69_SCANNER_ASM + _emit_db(list(table)) + "\n"
@@ -493,7 +600,8 @@ def main():
     ap.add_argument("--no-write", action="store_true",
                     help="run selftest but do not write the JSON")
     ap.add_argument("--emit-relocation", action="store_true",
-                    help="write patches/bank_069.asm (B2 relocated scanner+table)")
+                    help="write patches/bank_069.asm (B2 relocated scanner+table "
+                         "+ B3 appended recipes from breeding_extra_recipes.json)")
     args = ap.parse_args()
 
     if not os.path.exists(ROM_PATH):
@@ -517,25 +625,48 @@ def main():
 
     if args.emit_relocation:
         path = write_bank69(rom)
-        # self-check: the table we just emitted must re-parse to the PATCHED
-        # bank_016 table (the source of truth), and must contain the Session-12
-        # Anteater(53) x BattleRex(42) -> GoldSlime(19) recipe in both orders.
+        # Self-checks (B2 + B3):
+        #  - the FIRST 825 entries must equal the PATCHED bank_016 table (so the
+        #    relocation preserves the in-progress build, incl. the Session-12
+        #    Anteater(53) x BattleRex(42) -> GoldSlime(19) recipe, both orders);
+        #  - the appended (>824) recipes must be present and end with $FF;
+        #  - capacity must be within SPECIAL_CAPACITY_MAX with no shadow warnings.
         emitted = emit_bank69_asm(rom)
         tbl = parse_db_bytes(emitted.split("RelocatedSpecialTable:")[1])
         patched = read_patched_special_table()
         ref = patched if patched is not None else \
             list(rom[file_off(SPECIAL_ADDR): file_off(SPECIAL_ADDR) + SPECIAL_COUNT * SPECIAL_ENTRY + 1])
-        match = tbl == list(ref)
+        base_len = SPECIAL_COUNT * SPECIAL_ENTRY            # 4125 (no terminator)
+        base_match = tbl[:base_len] == list(ref)[:base_len]
+
+        _table, _src, extras, warnings = build_relocated_table(rom)
+        total = SPECIAL_COUNT + len(extras)
+        appended_ok = (
+            len(tbl) == base_len + len(extras) * SPECIAL_ENTRY + 1
+            and tbl[-1] == 0xFF
+            and all(tbl[base_len + k * 5: base_len + k * 5 + 5] == extras[k]
+                    for k in range(len(extras)))
+        )
 
         def _has(t, p):
             return any(t[i:i + len(p)] == p for i in range(len(t) - len(p) + 1))
-        fwd = _has(tbl, [0x35, 0x2a, 0x00, 0x13, 0x00])
-        rev = _has(tbl, [0x2a, 0x35, 0x00, 0x13, 0x00])
+        fwd = _has(tbl[:base_len], [0x35, 0x2a, 0x00, 0x13, 0x00])
+        rev = _has(tbl[:base_len], [0x2a, 0x35, 0x00, 0x13, 0x00])
+
         print("wrote %s" % os.path.relpath(path, REPO))
-        print("  relocated table == patched bank_016 table: %s" % ("OK" if match else "MISMATCH"))
+        print("  base 825 entries == patched bank_016 table: %s"
+              % ("OK" if base_match else "MISMATCH"))
         print("  Anteater x BattleRex -> GoldSlime present (both orders): %s"
               % ("OK" if (fwd and rev) else "MISSING"))
-        if not match:
+        print("  appended recipes (B3): %d  -> total %d / max %d (%s)"
+              % (len(extras), total, SPECIAL_CAPACITY_MAX,
+                 "OK" if total <= SPECIAL_CAPACITY_MAX else "OVER CAPACITY"))
+        print("  appended bytes placed + $FF-terminated: %s"
+              % ("OK" if appended_ok else "BAD"))
+        for w in warnings:
+            print("  WARNING: " + w)
+        if not (base_match and appended_ok and total <= SPECIAL_CAPACITY_MAX
+                and not warnings):
             return 1
 
     if not args.no_write:

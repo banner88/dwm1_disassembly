@@ -269,21 +269,69 @@ $16 edits same-size only (leave vanilla tables dead-in-place).
       the Session-12 recipe (parents fell through to the family table); fixed by
       sourcing from patched bank_016. The `--emit-relocation` self-check now
       asserts relocated == patched table.
-- [ ] **B3 — Capacity 1×–2×.** Raise special capacity to ≥1650; add recipes past
-      index 825. *Accept:* a recipe at index >825 fires in-game.
-      *Pre-work landed in B2:* bank `$69` already hosts the relocatable table;
-      B3 just grows it (table is a free-bank `db`, no shift limit). Consider
-      folding the "relocated table == patched bank_016 table" equality check
-      into `verify_integrity.py` so future table edits can't silently diverge.
-- [ ] **B4 — Defaults rewrite.** New family×family map compiled in-place;
-      positional-conflict validation. *Accept:* 8–10 sample crosses give NEW
-      results in SameBoy; untouched crosses unchanged.
-- [ ] **B5 — Full overhaul spec.** Complete `special`+`family_defaults` authored,
-      compiled, test ROM for playtesting. *Accept:* user playtest sign-off.
-- [ ] **B6 — (companion) family reassignment + ??? → "Mecha".** Same-size family
-      byte edits (offset $00) + name/flavor text. *Gate:* SameBoy check that
-      family 9 isn't special-cased outside breeding (boss-ness likely from boss
-      table `$14:$4897`, not the family byte).
+- [x] **B3 — Capacity 1×–2×.** Raise special capacity to ≥1650; add recipes past
+      index 824. *Accept:* a recipe at index >824 fires in-game.
+      **DONE (Session 15):** the bank `$69` scanner walks to the `$FF` terminator
+      with no hardcoded count, so `build_breeding.py` appends recipes from
+      `extracted/breeding_extra_recipes.json` after the 825 base entries and
+      re-terminates (`SPECIAL_CAPACITY_MAX = 1650`; bank `$69` fits 2× with
+      headroom). Proof recipe at index 825: **BattleRex(Pedigree) × MadCat(Mate)
+      → DracoLord** — user-confirmed DracoLord in SameBoy (patched ROM
+      `f1cd94b1…`; clean build still `1ca6579…`). Picked because it is UNSHADOWED
+      by all 825 base entries (the forward order MadCat×BattleRex is the vanilla
+      → Yeti recipe at index 187, which would win first — see KEY_LESSONS S15).
+      Self-checks: base 825 == patched bank_016 table; S12 recipe intact; appended
+      bytes placed + `$FF`-terminated; emit-time SHADOW CHECK fails the build on a
+      dead appended recipe. Focused diff: 4 bank-`$69` bytes + checksum.
+      *Open follow-up:* fold "base 825 of relocated table == patched bank_016
+      table" into `verify_integrity.py` so future table edits can't silently
+      diverge (the tool asserts it; the verifier does not yet).
+
+### Breeding romhack plan (user goal — Session 15 signpost; test each part separately)
+Target: rename the **??? family ($F9) → "Spirit"**, shuffle monsters out of ???
+and Spirit-looking monsters in, and **fundamentally rewrite all recipes**. Monster
+count stays 221 (shuffle + rename only → same-size byte edits, NO table expansion;
+expansion would shift every species-ID-indexed table and is not needed). DWM2
+sprite swaps are an independent same-size graphics job (does not touch this logic).
+Verified mechanics (Session 15, grepped — do not re-trust): resolver is
+special → family → **fallback = parent 1** (`$16` Step 4: `ld a,[$da6f]; ld
+[$da71],a`). **??? has ZERO family-table defaults** and appears as a matcher in
+only 2 of 825 specials (both as the *mate*: Slime×Boss→KingSlime,
+Dragon×Boss→sp$29). So "??? × anything → itself" is the **universal fallback**
+showing through, NOT a ???-specific rule — nothing special to dismantle; Spirit
+recipes are pure authoring.
+
+- [ ] **B4 — Family-defaults rewrite.** New family×family map compiled in-place
+      (family table `$16:$4974`, same length = zero shift; result = slot index, so
+      the compiler inverts `A×B→C` to slot order and rejects positional conflicts;
+      preserve the `$FA` wildcard + two-pass search). *Accept:* 8–10 sample crosses
+      give NEW results in SameBoy; untouched crosses unchanged. *Note:* family
+      table is strictly 1:1 (one cross per result species, no many→one) — put
+      flexible/many→one family×family in the SPECIAL table instead (works now).
+- [ ] **B5 — Full special-table authoring + overhaul spec.** Extend
+      `build_breeding.py` to own the WHOLE special table as authored data (base +
+      overrides + appends) and emit it to bank `$69`, leaving bank `$16` fully
+      dead; supports edit-in-place of any base entry (e.g. **replace Yeti** =
+      change entry 187 result byte) and append. Includes a precedence/shadow
+      validator (first-match-wins across the whole table). Author the complete
+      `special` + `family_defaults` (incl. Spirit-as-a-breedable-family), build a
+      test ROM. *Accept:* user playtest sign-off on the rewritten recipe set.
+- [ ] **B6 — Family reassignment + ??? → "Spirit".** Same-size family-byte edits
+      (offset $00 of each 43-byte monster-info entry `$03:$4461`) + family-name
+      text (`FamilyTextPtrTable` at bank `$04:$60F4`, entry 9) + any flavor text
+      (e.g. library "…and ???"). **GATE (partly audited S15):** the family byte is
+      read OUTSIDE breeding — confirmed readers in bank `$01` (battle, loads both
+      party monsters' family), bank `$04` (`$DA33`→FamilyTextPtrTable = family-name
+      DISPLAY, intended), and skill/AI banks `$07/$09/$52–$58`. Before mass
+      reassignment, trace those readers and confirm none gate **scout/breed
+      eligibility or resistance/AI grouping** on family==9 (hypothesis: true
+      boss-ness comes from boss table `$14:$4897`, not the family byte — consistent
+      with S15 findings but NOT yet confirmed). Concrete risk: a former boss moved
+      out of ??? could become breedable/scoutable, and vice-versa. *Accept:* a
+      reassigned monster shows the new family name, breeds per the new rules, and
+      no non-breeding system (battle/scout/resistance) regresses in SameBoy.
+      *Suggested order:* B4+B5 first (proven/low-risk, independent of the family
+      byte); B6 last, gated on the reader trace; the rename can ride with B6.
 - [x] **BUG — breeding cutscene: parent sprites glitch.** **FIXED Session 14.**
       Observed Session 13 while playtesting B2; confirmed **not caused by B2**. Root
       cause was an incomplete bank `$0B` labelization: three raw pointer refs into the

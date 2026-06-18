@@ -5,8 +5,27 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-18 (Session 14: bank $0B repointing — breeding-cutscene
-> glitch FIXED.
+> Last verified: 2026-06-18 (Session 15: breeding B3 — special-table capacity
+> 1×–2× DONE, user-confirmed.)
+> **B3 — special-recipe capacity extension (SameBoy-confirmed).** The relocated
+> bank `$69` special table (B2) now grows past the 825 vanilla entries: its
+> scanner walks to the `$FF` terminator with no hardcoded count, so
+> `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json`
+> after the 825 base entries and re-terminates. Capacity ceiling `SPECIAL_CAPACITY_MAX
+> = 1650` (2× vanilla); bank `$69` (16 KB) fits it with headroom. Proof recipe at
+> index 825: **BattleRex(Pedigree) × MadCat(Mate) → DracoLord** — chosen because
+> it is UNSHADOWED by all 825 base entries (the forward order MadCat×BattleRex is
+> the vanilla → Yeti recipe at index 187, so it would win first); user-confirmed
+> DracoLord in SameBoy (patched ROM `f1cd94b1…`; canonical clean build still
+> `1ca6579…`). Tool self-checks: base 825 == patched bank_016 table, S12 recipe
+> intact, appended bytes placed + `$FF`-terminated, and an emit-time SHADOW CHECK
+> that FAILS the build on a dead (already-matched) appended recipe. Focused diff:
+> 4 bank-`$69` bytes + header checksum, nothing else. Method + rule: KEY_LESSONS
+> "Session 15 — Breeding B3" and BREEDING_SYSTEM "Planned: Overhaul & Extension".
+> Forward plan signposted there + ROADMAP Phase 2B (B4/B5/B6) after a ??? mechanic
+> audit (see below).
+>
+> Session 14: bank $0B repointing — breeding-cutscene glitch FIXED.
 > **Bank $0B dynamic-repointing completed.** The breeding-cutscene parent-sprite
 > glitch (wrong monster, correct palette) and a parallel gate-table glitch were
 > caused by three un-labelized raw pointer refs into bank $0B's shift region
@@ -119,7 +138,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Attr map generator | ✅ working | tools/generate_attr_map.py; builds tile→palette maps from all 85 tilesets, generates LZSS-compressed attr data. |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ working (single room, Strategy A) | Whitelist mapID in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor (ASM) + arm wEncounterCounter (room-entry script). Pool selectable via gate/floor. v30, runtime-verified. Editor generalization specced (CROSSBANK_ROOMS.md). |
-| Custom breeding recipes (special table) | ✅ working (same-size edit) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical (keystone for the overhaul). Overhaul+extension B2-B6 specced (BREEDING_SYSTEM "Planned"; ROADMAP 2B), not built. |
+| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. Overhaul B4/B5/B6 specced (BREEDING_SYSTEM "Planned"; ROADMAP 2B), not built. |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
 

@@ -491,3 +491,39 @@ where it resolves — check the bytes at the label's address, not just that a la
 When a shift breaks a reference, the fix is to labelize the reference, not to add an
 indirection layer or avoid the shift. Shifting code is fine once every reference into the
 shifted region is a label.
+
+## Session 15 Lessons — Breeding B3 (special-table capacity extension)
+
+Full reference in BREEDING_SYSTEM.md "Planned"; phased plan + acceptance tests in
+ROADMAP Phase 2B.
+
+### An appended special recipe only fires if it is UNSHADOWED — verify against the table
+**Symptom**: Chose `MadCat × BattleRex → DracoLord` as the >824 capacity-proof recipe.
+Had it been appended in that order, the in-game test would have produced **Yeti**, not
+DracoLord, and looked like B3 had failed.
+**Root cause**: The special table is first-match-wins, checked before the family table.
+`MadCat × BattleRex` is already vanilla **special entry 187 → Yeti ($3B)**, at a far lower
+index, so it wins before the appended entry at index 825 is ever reached. The appended
+recipe was *shadowed* (dead).
+**Fix**: Append the **reverse** order `BattleRex(Pedigree) × MadCat(Mate) → DracoLord`,
+which no base entry matches (checked: byte0 ∈ {p1 species, p1 family} AND byte1 ∈ {p2
+species, p2 family} for all 825 entries → no hit). DracoLord can then only come from the
+>824 entry, so the in-game result is an unambiguous pass. `build_breeding.py` now runs this
+shadow check at emit time and FAILS the build on a dead appended recipe.
+**Rule**: Before adding a special recipe, confirm no earlier entry matches the same parents
+(species OR family code, ignoring plus). For a capacity/override proof, the cross MUST be
+unshadowed or the test is meaningless. Remember matchers can be family codes ($F0–$FA), so
+a `[$F2,$F1]` (Beast×Dragon) entry shadows every Beast×Dragon species cross. Parent ORDER
+matters (p1=Pedigree `$DA6F`, p2=Mate `$DA70`); a cross can be free in one order and taken
+in the other.
+
+### Grow the relocated table by appending before the $FF — the scanner has no count
+**Discovery**: The bank `$69` scanner (B2) is a pure scan-to-`$FF` loop (`cp $ff; jr z,.done`;
+`add $05` per entry). It has no hardcoded entry count, so the table grows simply by writing
+more 5-byte entries before the terminator. Vanilla bank `$16` tables stay dead-in-place
+(zero shift). B3's whole ROM impact was **4 bytes** in bank `$69` (old `$FF` + padding →
+one appended entry + new `$FF`) plus the header checksum.
+**Rule**: When relocating a `$FF`/`$0000`-terminated table to a free bank, port the scan as
+terminator-driven (not count-driven) so later capacity growth is data-only. Keep the base
+slice byte-identical to its source (assert it) so appends can never silently corrupt the
+inherited recipes.
