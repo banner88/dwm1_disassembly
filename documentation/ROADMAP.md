@@ -322,7 +322,7 @@ recipes are pure authoring.
       Beast×Dragon→Wyvern is present but correctly shadowed for MadCat by SPECIAL entry 187
       (MadCat×BattleRex→Yeti) — precedence, not a bug. Untouched BattleRex×Healer→DragonKid
       (vanilla family slot 20) unchanged. Method + precedence: KEY_LESSONS "Session 16".
-- [ ] **B5 — Full special-table authoring + overhaul spec.** Extend
+- [x] **B5 — Full special-table authoring + overhaul spec.** Extend
       `build_breeding.py` to own the WHOLE special table as authored data (base +
       overrides + appends) and emit it to bank `$69`, leaving bank `$16` fully
       dead; supports edit-in-place of any base entry (e.g. **replace Yeti** =
@@ -330,6 +330,27 @@ recipes are pure authoring.
       validator (first-match-wins across the whole table). Author the complete
       `special` + `family_defaults` (incl. Spirit-as-a-breedable-family), build a
       test ROM. *Accept:* user playtest sign-off on the rewritten recipe set.
+      **DONE (Session 17, user-confirmed in SameBoy).** `build_breeding.py
+      --emit-special` decodes the 825 vanilla entries from the ROM as the base,
+      applies `overrides` (edit any entry, by `index` or by parent `match`) and
+      `appends` from `extracted/breeding_special.json`, runs a whole-table
+      first-match-wins shadow validator (ERRORS on a shadowed append/override;
+      WARNS on new collateral shadowing and on a result-species change that other
+      entries still produce), and emits only `patches/bank_069.asm`. Bank `$16`'s
+      special table stays byte-identical to the ROM (single source = JSON → bank
+      `$69`). Self-checks: emitted == authored bytes + `$FF`; untouched base ==
+      vanilla; overrides present at their indices; capacity ≤ 1650. Proof
+      (confirmed): MadCat×BattleRex → **DracoLord** (in-place edit of entry 187,
+      was Yeti), Darkdrium×BattleRex → **Armorpion** (unshadowed append),
+      Anteater×BattleRex → GoldSlime both orders (S12 carried forward as overrides
+      at dead entries 693/803). Patched ROM `c95f62ce…`; clean build still
+      `1ca6579…`. **Supersedes B3's `--emit-relocation` + `breeding_extra_recipes.json`
+      as the canonical bank `$69` emitter.** *Note:* the spec carries `base`,
+      `overrides`, `appends`; this is the editor's emit backend — the actual recipe
+      REWRITE (Spirit-as-breedable, new results across the board) is authored by hand
+      in the editor UI later (B5 delivers the machinery, not the content).
+      *Folded into `verify_integrity.py`? No — see B3 open follow-up; the tool
+      self-asserts, the verifier does not yet run `--emit-special` self-checks.*
 - [ ] **B6 — Family reassignment + ??? → "Spirit".** Same-size family-byte edits
       (offset $00 of each 43-byte monster-info entry `$03:$4461`) + family-name
       text (`FamilyTextPtrTable` at bank `$04:$60F4`, entry 9) + any flavor text

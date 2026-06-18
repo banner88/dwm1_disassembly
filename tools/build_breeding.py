@@ -49,6 +49,7 @@ MONSTERS = os.path.join(REPO, "extracted", "monsters_full.json")
 OUT_JSON = os.path.join(REPO, "extracted", "breeding_tables.json")
 EXTRA_RECIPES = os.path.join(REPO, "extracted", "breeding_extra_recipes.json")
 FAMILY_DEFAULTS = os.path.join(REPO, "extracted", "breeding_family_defaults.json")
+SPECIAL_SPEC = os.path.join(REPO, "extracted", "breeding_special.json")
 PATCH_BANK16 = os.path.join(REPO, "patches", "bank_016.asm")
 ORIGINAL_MD5 = "1ca6579359f21d8e27b446f865bf6b83"
 
@@ -657,6 +658,324 @@ RelocatedSpecialTable:
 """
 
 
+# --- B5: full special-table authoring (ROADMAP Phase 2B) ---------------------
+# B5 makes build_breeding.py the SOLE OWNER of the whole special recipe table as
+# authored data. The base is the 825 vanilla entries decoded from the ROM (the
+# canonical source); authored OVERRIDES edit any base entry in place (addressed
+# by index OR by parents), and authored APPENDS add new entries past index 824
+# (the B3 capacity mechanism). The result is emitted only to bank $69 (B2/B3
+# relocation); bank $16's vanilla special table stays byte-identical to the ROM
+# forever (it is already runtime-dead — B2 redirects the scan via `rst $10`), so
+# there is a SINGLE source of truth (the JSON) and a single emit target. This is
+# the precedence-aware machinery the editor will sit on; the actual recipe
+# content is authored later in the editor UI.
+#
+# Spec file: extracted/breeding_special.json
+#   { "base": "rom",                       # always the vanilla ROM 825 entries
+#     "overrides": [ {index|match, ...} ], # edit a base entry in place
+#     "appends":   [ {p1,p2,...} ] }       # new entries (B3), first-match-wins
+#
+# Override addressing:
+#   {"index": N, "result": ..., ...}                 # edit base entry N
+#   {"match": {"p1":..., "p2":...}, "result": ...}   # edit the FIRST base entry
+#                                                    # that matches those parents
+# Any of p1/p2/min_plus/result/plus_mod present in an override replaces that
+# field; absent fields keep the base entry's value. Appends require all five.
+SPECIAL_FIELDS = ("p1", "p2", "min_plus", "result", "plus_mod")
+
+
+def _resolve_recipe_fields(spec, names, *, require_all, base=None):
+    """Resolve a JSON recipe dict to a 5-byte entry [p1,p2,min_plus,result,
+    plus_mod]. p1/p2 go through resolve_matcher (names/family/$hex/id). result
+    must resolve to a real species id 0-220 (it is written to $DA71). min_plus
+    and plus_mod are raw 0-255. When `base` is given (override case), absent
+    fields inherit from it; when require_all is True (append case), all five
+    fields must be present."""
+    out = list(base) if base is not None else [None] * 5
+
+    def has(k):
+        return k in spec and spec[k] is not None
+
+    if has("p1"):
+        out[0] = resolve_matcher(spec["p1"], names, mate_side=False)
+    if has("p2"):
+        out[1] = resolve_matcher(spec["p2"], names, mate_side=True)
+    if has("min_plus"):
+        out[2] = int(spec["min_plus"])
+    if has("result"):
+        r = spec["result"]
+        if isinstance(r, str):
+            key = r.strip().lower()
+            nid = _name_to_id(names)
+            if key not in nid:
+                raise ValueError("recipe result %r is not a known species" % r)
+            r = nid[key]
+        out[3] = int(r)
+    if has("plus_mod"):
+        out[4] = int(spec["plus_mod"])
+
+    if require_all and any(v is None for v in out):
+        missing = [f for f, v in zip(SPECIAL_FIELDS, out) if v is None]
+        raise ValueError("append recipe is missing field(s) %s: %r"
+                         % (missing, spec))
+    for i, v in enumerate(out):
+        if v is None:
+            continue
+        if not (0 <= v <= 0xFF):
+            raise ValueError("recipe byte %s out of range 0-255: %r"
+                             % (SPECIAL_FIELDS[i], spec))
+    # result must be a concrete species id (0-220), never a family code
+    if out[3] is not None and not (0 <= out[3] <= 220):
+        raise ValueError("recipe result must be a species id 0-220 (got $%02X): %r"
+                         % (out[3], spec))
+    return out
+
+
+def _entry_matches(entry, p1, p2, f1, f2):
+    """True if a 5-byte special `entry` would match a cross with pedigree
+    species p1 (family code f1) and mate species p2 (family code f2), ignoring
+    the plus threshold. Mirrors the scanner: byte0 ∈ {p1, f1}, byte1 ∈ {p2, f2};
+    the mate-side $FA wildcard matches any family-coded mate."""
+    b0, b1 = entry[0], entry[1]
+    m0 = b0 == p1 or (f1 is not None and b0 == f1)
+    m1 = b1 == p2 or (f2 is not None and b1 == f2) or (b1 == 0xFA and f2 is not None)
+    return m0 and m1
+
+
+def _first_match_in(entries, p1, p2, f1, f2, *, upto=None):
+    """Index of the first entry (optionally only the first `upto` entries) that
+    matches the cross, or None."""
+    end = len(entries) if upto is None else upto
+    for i in range(end):
+        if _entry_matches(entries[i], p1, p2, f1, f2):
+            return i
+    return None
+
+
+def load_special_spec(rom, names):
+    """Load extracted/breeding_special.json and produce the full authored entry
+    list plus structured override/append records for reporting.
+
+    Returns (entries, overrides, appends) where:
+      * entries  = list of 5-byte lists (base 825 with overrides applied, then
+                   appends, NO terminator) — ready for emission.
+      * overrides = [{index, before, after, label}]
+      * appends   = [{entry, label}]
+    Missing file -> the spec is treated as the pure ROM base with no edits, so
+    --emit-special is a faithful no-op equivalent to the relocated vanilla table.
+    """
+    base_entries = decode_special(rom)            # 825 vanilla 5-byte lists
+    entries = [list(e) for e in base_entries]
+
+    spec = {}
+    if os.path.exists(SPECIAL_SPEC):
+        spec = json.load(open(SPECIAL_SPEC))
+
+    base_mode = spec.get("base", "rom")
+    if base_mode != "rom":
+        raise ValueError("breeding_special.json: base must be \"rom\" (the "
+                         "authored base is always the vanilla ROM 825 entries); "
+                         "got %r" % base_mode)
+
+    # --- overrides: edit a base entry in place -------------------------------
+    overrides = []
+    seen_idx = {}
+    for o in spec.get("overrides", []):
+        if "index" in o and o["index"] is not None:
+            idx = int(o["index"])
+            if not (0 <= idx < SPECIAL_COUNT):
+                raise ValueError("override index %d out of range 0-%d"
+                                 % (idx, SPECIAL_COUNT - 1))
+        elif "match" in o and o["match"]:
+            mp = o["match"]
+            p1 = resolve_matcher(mp["p1"], names, mate_side=False)
+            p2 = resolve_matcher(mp["p2"], names, mate_side=True)
+            f1 = species_family_code(rom, p1)
+            f2 = species_family_code(rom, p2)
+            idx = _first_match_in(entries, p1, p2, f1, f2)
+            if idx is None:
+                raise ValueError("override match %r resolves to no base entry "
+                                 "(no special currently fires for that cross — "
+                                 "use an append instead)" % (mp,))
+        else:
+            raise ValueError("override must have either \"index\" or \"match\": %r" % o)
+        if idx in seen_idx:
+            raise ValueError("two overrides target base entry %d "
+                             "(the second would clobber the first): %r and %r"
+                             % (idx, seen_idx[idx], o))
+        seen_idx[idx] = o
+        before = list(entries[idx])
+        after = _resolve_recipe_fields(o, names, require_all=False, base=before)
+        entries[idx] = after
+        overrides.append({
+            "index": idx, "before": before, "after": after,
+            "label": "%s x %s -> %s (was %s)" % (
+                species_name(after[0], names), species_name(after[1], names),
+                species_name(after[3], names), species_name(before[3], names)),
+        })
+
+    # --- appends: new entries past index 824 (B3 mechanism) -----------------
+    appends = []
+    for a in spec.get("appends", []):
+        entry = _resolve_recipe_fields(a, names, require_all=True)
+        appends.append({
+            "entry": entry,
+            "label": "%s x %s -> %s" % (
+                species_name(entry[0], names), species_name(entry[1], names),
+                species_name(entry[3], names)),
+        })
+
+    full = entries + [a["entry"] for a in appends]
+    return full, overrides, appends
+
+
+def special_shadow_report(rom, full, overrides, appends, names):
+    """Whole-table first-match-wins precedence analysis (the editor's live
+    validator). Returns (errors, warnings).
+
+    ERRORS (build-failing):
+      * an APPEND is shadowed by an earlier entry matching the same parents
+        (species-level) — the appended recipe is dead.
+      * an OVERRIDE entry is itself shadowed by an earlier entry (its edit can
+        never surface for that cross).
+    WARNINGS (informational):
+      * an OVERRIDE or APPEND newly SHADOWS a later entry that produces a
+        different result (collateral: that later cross now resolves earlier).
+      * for an override that CHANGES a result species R away from its old value,
+        list any OTHER surviving entries that still produce R (so "edited this
+        cross" is not mistaken for "removed R from the game").
+    Species-level checks use each matcher's concrete species when it is a real
+    id, and the parents' family bytes when it is a family code; this mirrors the
+    scanner closely enough to catch real shadows without simulating every
+    possible parent pair.
+    """
+    errors, warnings = [], []
+
+    def fam_of(code):
+        # For a matcher that is itself a family code, the "family" is the code;
+        # for a species id, look up its family byte.
+        if 0xF0 <= code <= 0xFA:
+            return code
+        return species_family_code(rom, code)
+
+    # APPEND shadow check (errors): does any earlier entry match these parents?
+    base_len = len(full) - len(appends)
+    for k, a in enumerate(appends):
+        e = a["entry"]
+        p1, p2 = e[0], e[1]
+        f1, f2 = fam_of(p1), fam_of(p2)
+        hit = _first_match_in(full, p1, p2, f1, f2, upto=base_len + k)
+        if hit is not None and hit < base_len + k:
+            errors.append("append [%s] is SHADOWED by entry %d [%s -> %s] and "
+                          "will never fire"
+                          % (a["label"], hit,
+                             "%s x %s" % (species_name(full[hit][0], names),
+                                          species_name(full[hit][1], names)),
+                             species_name(full[hit][3], names)))
+
+    # OVERRIDE shadow check (errors) + collateral / residual-result (warnings)
+    for o in overrides:
+        idx = o["index"]
+        e = o["after"]
+        p1, p2 = e[0], e[1]
+        f1, f2 = fam_of(p1), fam_of(p2)
+        earlier = _first_match_in(full, p1, p2, f1, f2, upto=idx)
+        if earlier is not None:
+            errors.append("override at entry %d [%s] is SHADOWED by earlier "
+                          "entry %d [%s -> %s]; its edit cannot surface"
+                          % (idx, o["label"], earlier,
+                             "%s x %s" % (species_name(full[earlier][0], names),
+                                          species_name(full[earlier][1], names)),
+                             species_name(full[earlier][3], names)))
+        # collateral: does this entry now shadow a later DIFFERENT-result entry
+        # for the same parents?
+        later = _first_match_in(full[idx + 1:], p1, p2, f1, f2)
+        if later is not None:
+            j = idx + 1 + later
+            if full[j][3] != e[3]:
+                warnings.append("override at entry %d now precedes entry %d "
+                                "[%s -> %s] for the same parents (that cross "
+                                "resolved later before)"
+                                % (idx, j,
+                                   "%s x %s" % (species_name(full[j][0], names),
+                                                species_name(full[j][1], names)),
+                                   species_name(full[j][3], names)))
+        # residual result: if the override changed the RESULT species, list the
+        # other surviving entries that still produce the OLD result.
+        old_r = o["before"][3]
+        if old_r != e[3]:
+            residual = [i for i, x in enumerate(full)
+                        if i != idx and x[3] == old_r]
+            if residual:
+                warnings.append("entry %d no longer yields %s, but %d other "
+                                "entr%s still do (e.g. %s); editing one cross "
+                                "does not remove %s from breeding"
+                                % (idx, species_name(old_r, names), len(residual),
+                                   "y" if len(residual) == 1 else "ies",
+                                   ", ".join("#%d" % i for i in residual[:6])
+                                   + ("…" if len(residual) > 6 else ""),
+                                   species_name(old_r, names)))
+    return errors, warnings
+
+
+def build_authored_special(rom):
+    """Full authored special table (bytes, no terminator) + structured records.
+    Returns (full_entries, overrides, appends, errors, warnings)."""
+    names = load_monster_names()
+    full, overrides, appends = load_special_spec(rom, names)
+    total = len(full)
+    if total > SPECIAL_CAPACITY_MAX:
+        raise ValueError("authored special table has %d entries > capacity %d"
+                         % (total, SPECIAL_CAPACITY_MAX))
+    errors, warnings = special_shadow_report(rom, full, overrides, appends, names)
+    return full, overrides, appends, errors, warnings
+
+
+def emit_bank69_from_spec(rom):
+    """patches/bank_069.asm text built from the AUTHORED special table (B5):
+    same scanner as B2/B3, table = authored 825 (base+overrides) + appends +
+    single $FF terminator. Raises on capacity or shadow ERRORS."""
+    full, overrides, appends, errors, warnings = build_authored_special(rom)
+    if errors:
+        raise ValueError("authored special table has shadow ERRORS:\n  "
+                         + "\n  ".join(errors))
+    body = [b for e in full for b in e] + [0xFF]
+    if len(body) > BANK69_SIZE - 0x200:
+        raise ValueError("authored table too large for bank $69: %d bytes"
+                         % len(body))
+    note = ("; The table below is the AUTHORED special table (B5):\n"
+            ";   825 base entries (vanilla ROM) with %d in-place override(s)\n"
+            ";   + %d appended recipe(s); single $FF terminator.\n"
+            "; Source of truth: extracted/breeding_special.json.\n"
+            "; Bank $16's vanilla special table is left byte-identical to the\n"
+            "; ROM (runtime-dead via the B2 rst $10 redirect).\n"
+            % (len(overrides), len(appends)))
+    header = ("; ============================================================="
+              "================\n"
+              "; BANK $69 - Relocated SPECIAL breeding-recipe scanner (B2) +\n"
+              ";           FULL authored special table (B5)\n"
+              "; ============================================================="
+              "================\n"
+              "; Generated by tools/build_breeding.py --emit-special\n"
+              ";\n"
+              "; ROADMAP Phase 2B / B5. The scanner (unchanged from B2/B3) walks\n"
+              "; to the $FF terminator with no hardcoded count. The whole table\n"
+              "; is authored data owned by build_breeding.py; edit any base entry\n"
+              "; in place or append new ones via breeding_special.json.\n"
+              ";\n"
+              + note +
+              "; ============================================================="
+              "================\n\n")
+    return header + BANK69_SCANNER_ASM + _emit_db(body) + "\n"
+
+
+def write_bank69_from_spec(rom):
+    path = os.path.join(REPO, "patches", "bank_069.asm")
+    with open(path, "w") as f:
+        f.write(emit_bank69_from_spec(rom))
+    return path
+
+
 def read_patched_special_table():
     """Parse the SPECIAL table from patches/bank_016.asm (the source of truth for
     the patched build) so the relocated copy carries ALL existing patched edits
@@ -785,6 +1104,10 @@ def main():
     ap.add_argument("--emit-family", action="store_true",
                     help="rewrite the FamilyRecipeTable in patches/bank_016.asm "
                          "in place from breeding_family_defaults.json (B4)")
+    ap.add_argument("--emit-special", action="store_true",
+                    help="write patches/bank_069.asm from the AUTHORED special "
+                         "table (B5): vanilla 825 base + in-place overrides + "
+                         "appends, from breeding_special.json")
     args = ap.parse_args()
 
     if not os.path.exists(ROM_PATH):
@@ -851,6 +1174,49 @@ def main():
         if not (base_match and appended_ok and total <= SPECIAL_CAPACITY_MAX
                 and not warnings):
             return 1
+
+    if args.emit_special:
+        names = load_monster_names()
+        path = write_bank69_from_spec(rom)
+        full, overrides, appends, errors, warnings = build_authored_special(rom)
+        # Self-checks: re-parse the emitted table and confirm it equals the
+        # authored bytes, ends with $FF, and that every untouched base entry is
+        # still vanilla-identical (only the overridden indices may differ).
+        emitted = emit_bank69_from_spec(rom)
+        tbl = parse_db_bytes(emitted.split("RelocatedSpecialTable:")[1])
+        want = [b for e in full for b in e] + [0xFF]
+        emit_ok = tbl == want and tbl[-1] == 0xFF
+        van = decode_special(rom)
+        changed = {o["index"] for o in overrides}
+        base_part = [tbl[i * 5:i * 5 + 5] for i in range(SPECIAL_COUNT)]
+        untouched_ok = all(base_part[i] == van[i]
+                           for i in range(SPECIAL_COUNT) if i not in changed)
+        overrides_ok = all(base_part[o["index"]] == o["after"] for o in overrides)
+        total = len(full)
+        print("wrote %s" % os.path.relpath(path, REPO))
+        print("  base 825 (vanilla ROM) + %d override(s) + %d append(s) = %d entries"
+              % (len(overrides), len(appends), total))
+        for o in overrides:
+            print("    override #%d: %s" % (o["index"], o["label"]))
+        for a in appends:
+            print("    append:      %s" % a["label"])
+        print("  emitted table == authored bytes + $FF: %s"
+              % ("OK" if emit_ok else "MISMATCH"))
+        print("  untouched base entries == vanilla: %s"
+              % ("OK" if untouched_ok else "MISMATCH"))
+        print("  overrides present at their indices: %s"
+              % ("OK" if overrides_ok else "BAD"))
+        print("  capacity %d / max %d: %s"
+              % (total, SPECIAL_CAPACITY_MAX,
+                 "OK" if total <= SPECIAL_CAPACITY_MAX else "OVER"))
+        for w in warnings:
+            print("  NOTE: " + w)
+        for e in errors:
+            print("  ERROR: " + e)
+        if not (emit_ok and untouched_ok and overrides_ok
+                and total <= SPECIAL_CAPACITY_MAX and not errors):
+            return 1
+        return 0
 
     if args.emit_family:
         names = load_monster_names()

@@ -1,0 +1,43 @@
+{
+  "_note": "Hand-authored (Tier R) input for tools/build_breeding.py --emit-special (ROADMAP Phase 2B / B5). This file is the SINGLE source of truth for the whole SPECIAL recipe table. The tool decodes the 825 vanilla entries from the ROM as the base, applies the in-place `overrides` below (edit any base entry), appends the `appends` past index 824 (B3 capacity mechanism), and emits the result to patches/bank_069.asm. Bank $16's vanilla special table is left byte-identical to the ROM (it is runtime-dead via the B2 rst $10 redirect), so nothing in the shift-sensitive bank moves and there is exactly one authored source.",
+  "_consumed_by": "tools/build_breeding.py (load_special_spec); emitted into patches/bank_069.asm.",
+  "_format": "base is always \"rom\". Each override edits one base entry, addressed by {\"index\": N} OR {\"match\": {\"p1\":..., \"p2\":...}} (the FIRST base entry that fires for that cross). Override fields p1/p2/min_plus/result/plus_mod are all OPTIONAL — present ones replace, absent ones keep the base value. Each append is a full recipe {p1,p2,min_plus,result,plus_mod}. p1=Pedigree matcher ($DA6F/$DA73), p2=Mate matcher ($DA70/$DA74); each may be a species name, species id 0-220, a family NAME (Slime/Dragon/Beast/Bird/Plant/Bug/Devil/Zombie/Material/Boss; Flying=Bird), a raw family code $F0-$F9, or the mate-only wildcard AnyFamily/$FA. result is a species id 0-220 (written to $DA71). ids may be given as names or numbers.",
+  "_precedence": "The scanner is first-match-wins, checked BEFORE the family table. The tool runs a whole-table shadow validator: it FAILS the build if an append is shadowed by an earlier entry (dead recipe) or if an override is itself shadowed; it WARNS when an edit newly precedes a later different-result entry, or when an override changes a result species that other entries still produce (so 'edited this cross' is not mistaken for 'removed that monster').",
+  "_parent_order": "p1 = Pedigree (the base/first parent), p2 = Mate. Order matters: a cross can be free in one order and taken in the other. Breeding requires opposite genders, Lv10+.",
+  "base": "rom",
+  "overrides": [
+    {
+      "_comment": "Session-12 custom recipe, carried forward so the authored base reproduces current behavior exactly. BattleRex(Pedigree) x Anteater(Mate) -> GoldSlime, at vanilla dead entry 693 (originally Zombie-fam x [Bird-result] shadowed entry). Same bytes as the patched bank_016 mirror.",
+      "index": 693,
+      "p1": "BattleRex",
+      "p2": "Anteater",
+      "min_plus": 0,
+      "result": "GoldSlime",
+      "plus_mod": 0
+    },
+    {
+      "_comment": "Session-12 custom recipe, reverse order. Anteater(Pedigree) x BattleRex(Mate) -> GoldSlime, at vanilla duplicate entry 803 (== 802). Same bytes as the patched bank_016 mirror.",
+      "index": 803,
+      "p1": "Anteater",
+      "p2": "BattleRex",
+      "min_plus": 0,
+      "result": "GoldSlime",
+      "plus_mod": 0
+    },
+    {
+      "_comment": "B5 PROOF (base edit in place). Entry 187 is vanilla MadCat x BattleRex -> Yeti. Change ONLY the result to DracoLord. NOTE: two species are named 'DracoLord' (id 200 = level_cap 50 base form, id 201 = level_cap 80 second form); we use the numeric id 200 explicitly (matching the B3 proof) so the name collision can't make the choice ambiguous. TEST: breed MadCat (Pedigree) x BattleRex (Mate, female), opposite genders, Lv10+ -> should now produce DracoLord instead of Yeti. The validator will also list the OTHER entries that still produce Yeti as offspring of other crosses (editing one cross does not remove Yeti from the game) — that report demonstrates the whole-table precedence engine.",
+      "index": 187,
+      "result": 200
+    }
+  ],
+  "appends": [
+    {
+      "_comment": "B5 PROOF (append, unshadowed). Darkdrium(214,Boss) x BattleRex(42,Dragon) currently matches NO special and has no family default (it falls back to the pedigree, Darkdrium). Appended past index 824, so Armorpion can ONLY come from this entry. TEST: breed Darkdrium (Pedigree) x BattleRex (Mate, female), opposite genders, Lv10+ -> should produce Armorpion.",
+      "p1": "Darkdrium",
+      "p2": "BattleRex",
+      "min_plus": 0,
+      "result": "Armorpion",
+      "plus_mod": 0
+    }
+  ]
+}

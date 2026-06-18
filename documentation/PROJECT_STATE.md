@@ -5,8 +5,35 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-18 (Session 16: breeding B4 — family-defaults rewrite
-> DONE, user-confirmed in SameBoy.)
+> Last verified: 2026-06-18 (Session 17: breeding B5 — full special-table
+> authoring DONE, user-confirmed in SameBoy.)
+> **B5 — full special-table authoring (SameBoy-confirmed).** `build_breeding.py
+> --emit-special` now OWNS the whole SPECIAL recipe table as authored data and emits
+> it to bank `$69`. The base is the 825 vanilla entries decoded from the **ROM**;
+> `extracted/breeding_special.json` supplies in-place `overrides` (edit any base
+> entry — addressed by `{"index":N}` or by `{"match":{p1,p2}}` = first base entry that
+> fires for that cross; absent fields inherit the base) and `appends` (new entries
+> past 824, the B3 mechanism). A **whole-table first-match-wins shadow validator**
+> replaces B3's append-only check: build-failing ERRORS on a shadowed append or a
+> shadowed override; WARNINGS on an edit newly preceding a later different-result
+> entry and on an override that changes a result species **other entries still
+> produce** (so "edit a cross" ≠ "remove a monster"). **Single source of truth:**
+> bank `$16`'s special table stays byte-identical to the ROM forever (already
+> runtime-dead via the B2 `rst $10` redirect), so nothing in the shift-sensitive bank
+> moves and there is one authored source + one emit target. Self-checks: emitted ==
+> authored bytes + `$FF`; every non-overridden base entry == vanilla; each override
+> present at its index; capacity ≤ 1650. User-confirmed in SameBoy: MadCat×BattleRex →
+> DracoLord (in-place edit of entry 187, was Yeti; DracoLord id 200 used explicitly —
+> two species share the name), Darkdrium×BattleRex → Armorpion (unshadowed append),
+> Anteater×BattleRex → GoldSlime both orders (S12 carried forward as overrides at dead
+> entries 693/803). Patched ROM `c95f62ce…`; canonical clean build still `1ca6579…`.
+> **B5 supersedes the B3 `--emit-relocation` + `breeding_extra_recipes.json` path** as
+> the canonical bank `$69` emitter (the old index-825 DracoLord append is replaced by
+> the cleaner entry-187 edit; DracoLord still reachable, no capability lost). Method +
+> rules: KEY_LESSONS "Session 17 — Breeding B5" and BREEDING_SYSTEM "Planned". The
+> actual recipe REWRITE (Spirit-as-breedable, new results) is authored by hand in the
+> editor UI later — B5 is the machinery, not the content.
+>
 > **B4 — family-defaults rewrite (SameBoy-confirmed).** The FAMILY recipe table
 > (`$16:$4974`, positional: offspring species == slot index) can now be authored
 > in place via `tools/build_breeding.py --emit-family`, sourced from
@@ -160,7 +187,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Attr map generator | ✅ working | tools/generate_attr_map.py; builds tile→palette maps from all 85 tilesets, generates LZSS-compressed attr data. |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ working (single room, Strategy A) | Whitelist mapID in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor (ASM) + arm wEncounterCounter (room-entry script). Pool selectable via gate/floor. v30, runtime-verified. Editor generalization specced (CROSSBANK_ROOMS.md). |
-| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. **S16: B4 family-defaults rewrite** — `build_breeding.py --emit-family` authors the positional family table in place from `extracted/breeding_family_defaults.json`; Bird/Slime/Beast×Dragon + new Dragon×Dragon→GreatDrak confirmed in-game (5 bytes, zero-collateral). B5/B6 specced (BREEDING_SYSTEM "Planned"; ROADMAP 2B), not built. |
+| Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. **S16: B4 family-defaults rewrite** — `build_breeding.py --emit-family` authors the positional family table in place from `extracted/breeding_family_defaults.json`; Bird/Slime/Beast×Dragon + new Dragon×Dragon→GreatDrak confirmed in-game (5 bytes, zero-collateral). **S17: B5 full special-table authoring** — `build_breeding.py --emit-special` owns the WHOLE special table as authored data (825 ROM base + in-place `overrides` by index/parents + `appends`) from `extracted/breeding_special.json`, with a whole-table first-match-wins shadow validator; bank `$16` stays vanilla (single source = JSON → bank `$69`). Confirmed in-game: MadCat×BattleRex→DracoLord (entry-187 in-place edit), Darkdrium×BattleRex→Armorpion (append), S12 GoldSlime preserved. Supersedes the B3 `--emit-relocation` path. B6 specced (BREEDING_SYSTEM "Planned"; ROADMAP 2B), not built. |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
 

@@ -582,3 +582,68 @@ capability — there is no data depending on it. `--emit-family` can still emit 
 only; it rejects `$FA` on the pedigree side, matching the scanner).
 **Rule**: Don't assume documented "wildcard" data exists; grep the table. The compiler keeps the
 capability available for authored recipes without inventing data that was never there.
+
+## Session 17 Lessons — Breeding B5 (full special-table authoring)
+
+Full reference in BREEDING_SYSTEM.md "Planned"; acceptance test in ROADMAP Phase 2B.
+Tool: `tools/build_breeding.py --emit-special`; spec: `extracted/breeding_special.json`.
+
+### Author from the ROM, not from the patched mirror — one source of truth
+**Symptom**: B3's relocation sourced the bank `$69` table from the **patched** `bank_016.asm`
+(so custom recipes survived a re-emit). That works, but it means a recipe lives in two places
+(the dead bank `$16` db block AND bank `$69`), and editing a base entry would require touching a
+shift-sensitive bank for zero runtime benefit (bank `$16`'s special table is already dead — B2
+redirects the scan via `rst $10`).
+**Root cause**: Dual bookkeeping is exactly the loophole that caused the historical byte-perfect
+drift. The patched mirror was a crutch for "preserve existing edits across a re-emit," but once a
+JSON spec owns the edits, the mirror is redundant.
+**Fix**: B5 decodes the 825 base entries from the **vanilla ROM** and applies authored
+`overrides`/`appends` from `breeding_special.json`. Bank `$16`'s special table stays
+byte-identical to the ROM forever; the ONLY authored source is the JSON, the ONLY emit target is
+bank `$69`. Existing custom recipes (e.g. the S12 GoldSlime cross) are re-expressed as overrides
+at their dead entries (693/803), so behavior is preserved without inheriting from the mirror.
+**Rule**: When a table is relocated to a free bank and the original is left dead, AUTHOR from the
+canonical ROM decode + an explicit override list, not from the patched copy. The dead in-bank
+table must equal vanilla (assert it: "untouched base entries == vanilla"); a single authored
+source can't silently diverge from two places.
+
+### A first-match-wins table needs a WHOLE-table validator, not an append-only one
+**Symptom**: B3 only checked whether an *appended* recipe was shadowed. With B5 able to edit any
+base entry, two more failure modes appear: an *override* can be shadowed by an earlier entry (its
+edit never surfaces), and an edit can newly *shadow a later* entry for the same parents (silent
+collateral).
+**Root cause**: Precedence in a first-match-wins table is global. Any edit's effect depends on
+every earlier entry (does something win first?) and every later entry (do I now win before it?).
+Checking only the tail misses both.
+**Fix**: `special_shadow_report` runs the precedence analysis across the full authored table.
+ERRORS (build-failing): a shadowed append or a shadowed override. WARNINGS: an edit that now
+precedes a later different-result entry, and — when an override CHANGES a result species — a list
+of the OTHER surviving entries that still produce the old result.
+**Rule**: For first-match-wins data, the validator must consider the whole table both before AND
+after each edit. "Edit fired in my one test" is not proof it's globally correct; "no earlier entry
+shadows it AND it doesn't shadow a different later result" is.
+
+### Editing one cross's result ≠ removing that monster from breeding
+**Symptom**: Plausible to think "change entry 187 MadCat×BattleRex from Yeti to DracoLord" removes
+Yeti from the game. It does not — **23 other entries still produce Yeti** as offspring of other
+crosses (Yeti is a frequent result, and is also a parent *matcher* in entries 166–188, which is a
+different thing again).
+**Root cause**: The special table is many→one: a result species typically appears as the result
+byte of many entries. Editing one entry's result byte only changes that one cross.
+**Fix**: The validator emits a "residual result" note whenever an override changes a result
+species, listing the other entries that still yield the old result. This keeps the editor honest:
+"recolor this recipe" is not "delete this monster."
+**Rule**: Before claiming an edit removes a species/outcome, grep the result column for every other
+producer. To truly remove an outcome you must edit (or shadow) ALL of its producers, not one.
+
+### Duplicate species NAMES require id-based disambiguation
+**Symptom**: `"result": "DracoLord"` resolved to species **201**, not the intended **200** — two
+distinct species share the name "DracoLord" (id 200 = level_cap 50 base form, id 201 = level_cap
+80 second form), and the name→id map let the later id win.
+**Root cause**: `monsters_full.json` has non-unique names; a name→id reverse map is lossy for
+collisions (last write wins).
+**Fix**: The B5 proof spec uses the numeric id `200` explicitly. The resolver still accepts names
+for convenience, but ambiguous ones must be given by id.
+**Rule**: When authoring against a name table that has duplicate names, prefer numeric ids for the
+colliding entries; the future editor should disambiguate by id (and show level_cap/form) rather
+than trust the name string.

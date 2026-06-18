@@ -13,9 +13,18 @@
 > `rst $10`. **B3 (Session 15): special-table capacity 1×–2×** — the bank `$69`
 > table now grows past the 825 vanilla entries by appending from
 > `extracted/breeding_extra_recipes.json` (cap `SPECIAL_CAPACITY_MAX = 1650`);
-> BattleRex×MadCat→DracoLord at index 825 confirmed in-game. The verified ??? /
-> family-reassignment mechanics and the user's full romhack plan are in
-> "Planned" below.
+> BattleRex×MadCat→DracoLord at index 825 confirmed in-game. **B4 (Session 16):
+> family-defaults rewrite in place** (`--emit-family`). **B5 (Session 17): full
+> special-table authoring** — `build_breeding.py --emit-special` now OWNS the whole
+> special table as authored data: 825 vanilla base (decoded from the ROM) + in-place
+> `overrides` (edit any entry, by index or by parents) + `appends`, from
+> `extracted/breeding_special.json`, with a whole-table first-match-wins shadow
+> validator; bank `$16`'s special table is left byte-identical to the ROM forever
+> (single source = JSON → bank `$69`). User-confirmed in SameBoy: MadCat×BattleRex→
+> DracoLord (in-place edit of entry 187, was Yeti), Darkdrium×BattleRex→Armorpion
+> (unshadowed append), Anteater×BattleRex→GoldSlime both orders (S12 carried forward).
+> The verified ??? / family-reassignment mechanics and the user's full romhack plan
+> are in "Planned" below.
 
 ## Overview
 
@@ -173,7 +182,33 @@ extended to 1×–2× capacity (825 → up to ~1650) for iterative playtesting.
   ($C8)`, `min_plus 0`; user-confirmed DracoLord in SameBoy. **Order matters:**
   the forward MadCat × BattleRex is the vanilla → Yeti ($3B) recipe at index 187,
   so only the reverse (unshadowed) order demonstrates >824 capacity.
-- **Family table — rewrite in place.** It already spans the full species range,
+  **B5 DONE (Session 17, SameBoy-confirmed):** `build_breeding.py --emit-special`
+  now OWNS the whole special table as authored data and emits it to bank `$69`.
+  The base is the 825 vanilla entries decoded from the **ROM** (canonical, not the
+  bank_016 mirror); `extracted/breeding_special.json` supplies in-place `overrides`
+  (edit any base entry — addressed by `{"index":N}` or by `{"match":{p1,p2}}` =
+  the first base entry that fires for that cross; absent fields inherit) and
+  `appends` (new entries past 824, the B3 mechanism). A **whole-table
+  first-match-wins shadow validator** replaces B3's append-only check: it FAILS the
+  build if an append is shadowed by an earlier entry or an override is itself
+  shadowed, and WARNS when an edit newly precedes a later different-result entry or
+  when an override changes a result species that **other entries still produce**
+  (so "edited a cross" is never mistaken for "removed a monster"). Single source of
+  truth: bank `$16`'s special table stays **byte-identical to the ROM forever**
+  (already runtime-dead via the B2 redirect), so nothing in the shift-sensitive bank
+  moves and there is exactly one authored source + one emit target. Self-checks:
+  emitted table == authored bytes + `$FF`; every non-overridden base entry ==
+  vanilla; each override present at its index; capacity ≤ 1650. Proof set
+  (user-confirmed): entry 187 edited in place MadCat×BattleRex → **DracoLord** (id
+  200, was Yeti); appended **Darkdrium×BattleRex → Armorpion** (unshadowed — no
+  vanilla special or family default for that cross); S12 Anteater×BattleRex→GoldSlime
+  carried forward in both orders (overrides at the same dead entries 693/803).
+  Patched ROM `c95f62ce…`; clean build still `1ca6579…`. Method + precedence:
+  KEY_LESSONS "Session 17 — Breeding B5". **B5 supersedes the B3 `--emit-relocation`
+  + `breeding_extra_recipes.json` path** as the canonical bank `$69` emitter; the old
+  index-825 DracoLord append is replaced by the cleaner in-place entry-187 edit (the
+  DracoLord result is still reachable, now via a base edit, so no confirmed
+  capability is lost).
   so no extension needed. Same-length rewrite in bank $16 = zero shift.
   Because result = slot index (see Step 2), the compiler must **invert** the
   author's `A×B→C` into slot order and **reject** two pairs claiming the same
