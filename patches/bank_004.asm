@@ -9942,11 +9942,23 @@ OpcodeData_7F4F:
 
 ; DispatchBank0F_Ext (10 bytes) — tail-calls existing DispatchBank0F for normal rooms
 DispatchBank0F_Ext:
-    cp CUSTOM_ROOM_START
-    jp c, DispatchBank0F     ; if < $6B, tail-call original bank $0F dispatch
-    ld hl, $6004             ; else: bank $60 entry 4
+    ; B-regression fix: the previous version tested the SCRIPT map-type (A) with
+    ; `cp $6b`, which (a) mis-classified gate-world scripts (wScriptMapType $70 is a
+    ; legitimate bank-$0F gate script, NOT a custom room) and diverted them into the
+    ; bank-$60 custom reader -> gate-entry freeze, and (b) `jp c, DispatchBank0F`
+    ; re-entered the overwritten $720d hook -> infinite $720d<->$7fd8 loop for
+    ; map-types $40-$6A. The correct discriminator is the ROOM map-type wMapID, not
+    ; the script map-type. That needs >5 bytes + two dispatch tails, which won't fit
+    ; this full bank's slot, so the decision is delegated to bank $60 entry 6
+    ; (GateAwareDispatch), which has room. Same 10-byte slot; 5 used, 5 left as pad.
+    ld hl, $6006             ; bank $60 entry 6: GateAwareDispatch (reads wMapID)
     rst $10
     ret
+    rst $38
+    rst $38
+    rst $38
+    rst $38
+    rst $38
 
 ; TextQueueCheck_Ext (19 bytes) — jp c instead of jr nc + jp saves 2 bytes
 TextQueueCheck_Ext:

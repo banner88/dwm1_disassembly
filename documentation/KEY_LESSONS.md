@@ -396,7 +396,7 @@ per-step hook; use the room-entry script only for one-shot arming that tolerates
 running on reload (the encounter step counter).
 **Rule**: Don't rely on the room-entry script for values that must be correct at
 an arbitrary later step. `write_ram` (opcode $12) *does* work in custom rooms
-(params route via `DispatchBank0F_Ext → CustomScriptRead`), but its firing
+(params route via `DispatchBank0F_Ext → GateAwareDispatch → CustomScriptRead`), but its firing
 *timing* is the trap, not the write itself.
 
 ### Vanilla counter seeding skips non-gate rooms
@@ -751,3 +751,40 @@ so the default build is provably behavior-identical to vanilla.
 **Rule**: When two emitted artifacts depend on the same fact, both must derive it from one
 source file, not re-derive it independently. Add a self-check that the no-op case
 reproduces vanilla byte/behavior, so "I didn't break the default" is machine-verified.
+
+## Session 20 Lessons — Gate-Entry Freeze (latent regression fix)
+
+> Full writeup: `documentation/GATE_FREEZE_FIX.md`.
+
+### Walking into a gate from a fresh game froze every patched build since 3d94ad9
+**Symptom**: Fresh new game → enter any gate floor → instant freeze (idle loop at
+ROM0 `$02e2`, waiting on the screen-transition flag `$C88E` that never gets set). No
+save dependency. Present in the recorded "known-good" `065943f6` too.
+**Root cause**: The custom-room script-divert hook in bank `$04` (`DispatchBank0F` →
+`DispatchBank0F_Ext`) tested the **script** map-type (`wScriptMapType`) against `$6B`
+to decide a custom-room divert. But `wScriptMapType ≥ $6B` is legitimate bank-`$0F`
+script territory — gate world hardcodes `wScriptMapType = $70`. So gate scripts were
+diverted into bank `$60`'s custom-room reader, read garbage, and the floor transition
+never completed. (A sibling defect made the same hook an infinite `$720d↔$7fd8` loop
+for map-types `$40–$6A`, introduced when the handler was "optimized" in `d564e7e`.)
+**Fix**: Route the divert decision through a new bank-`$60` entry (`GateAwareDispatch`)
+that keys off the **room** map-type `wMapID` — the only value that is `≥ $6B`
+exclusively for real custom rooms (gates keep a normal `wMapID`). Bank `$04`'s 10-byte
+handler slot becomes a same-size redirect (`ld hl,$6006; rst $10; ret`), killing the
+loop and the bad divert with zero byte shift.
+**Rule**: A custom-room divert MUST key off the **room identity** (`wMapID ≥
+CUSTOM_ROOM_START`), never a script/dispatch value (`wScriptMapType`, opcodes, text
+IDs) that merely happens to share the `≥$6B` numeric range. Different "map type"
+variables live in overlapping numeric spaces; test the one that actually means "which
+room."
+
+### Process gap: the smoke test that would have caught it on day one
+**Symptom**: A freeze on the most basic action (entering the first gate) survived ~5
+sessions because nobody walked into a real gate from a fresh game — custom rooms were
+always reached by warping in from GreatTree, which doesn't feed the faulty path.
+**Rule**: After ANY change touching room entry, the script engine, or the crossbank
+intercepts, run two manual smoke tests that the integrity script can't cover:
+(1) **fresh game → walk into a real gate**, and (2) **enter a custom room and exercise
+its NPCs/exits/encounters**. `verify_integrity.py` proves the build assembles and the
+clean tree is byte-perfect; it does NOT prove the game plays. Gate entry is the
+canary.

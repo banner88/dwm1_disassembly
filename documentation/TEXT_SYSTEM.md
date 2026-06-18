@@ -148,7 +148,7 @@ indexed by `wMapID` to the table at `$6119`. Each handler does room-specific vis
 | $C831/$C832 | Text data base position (for $F0 reset when bit 4 set) |
 | $C83A | Last special control code ($FF = YES/NO choice active) |
 | $C83C | **YES/NO result: 0=YES, 1=NO** (checked by script opcode $15) |
-| $D8D3 | wScriptMapType (set to wMapID directly by bank $01) |
+| $D8D3 | wScriptMapType — script-bank selector. Set from wMapID for normal/custom rooms, BUT gate world sets it to `$70` (a bank-$0F selector, NOT the room mapID). ⚠️ It is NOT always == wMapID; assuming so froze gate entry (see GATE_FREEZE_FIX.md). Use wMapID to test "which room." |
 | $D8D4 | wScriptNPCId (script_id from NPC entry byte 4) |
 | $D8D5/$D8D6 | wScriptCounter (16-bit, indexes script data) |
 | $D8D9/$D8DA | Queued text ID from script (set when B≠$FF) |

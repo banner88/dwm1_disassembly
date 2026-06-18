@@ -5,6 +5,21 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-18 (Session 20: **gate-entry freeze fixed** — a latent
+> regression since `3d94ad9` that froze a fresh-game walk into ANY gate. The bank-`$04`
+> custom-room script-divert tested `wScriptMapType` (gate world = `$70`) instead of the
+> room `wMapID`, diverting live gate scripts into bank `$60` → freeze; also looped for
+> map-types `$40–$6A`. Fixed via bank-`$60` entry 6 `GateAwareDispatch` (routes by
+> `wMapID`); bank-`$04` handler is a same-size redirect, zero shift. User-confirmed in
+> SameBoy: gate entry + custom room + scrolling + exits + encounters all work. Full
+> writeup: `documentation/GATE_FREEZE_FIX.md`.)
+>
+> ⚠️ **Retired baseline:** the previously-recorded "known-good" test ROM `065943f6`
+> (S19) **freezes on gate entry** — it was only ever confirmed for the library, never
+> for walking into a real gate. Do not treat it as good. New baseline = this fix.
+> Required smoke tests going forward (the integrity script can't cover them): fresh
+> game → walk into a real gate; enter a custom room and exercise NPCs/exits/encounters.
+>
 > Last verified: 2026-06-18 (Session 19: breeding B7 — production library grouping
 > table, user-confirmed in SameBoy: zero lag, reassigned monsters under correct tabs.)
 > **B7 — production library grouping (SameBoy-confirmed).** The S18 dynamic-library

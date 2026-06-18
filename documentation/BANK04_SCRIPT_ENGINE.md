@@ -82,6 +82,27 @@ The script counter at $D8D5/$D8D6 (16-bit) tracks position within the script dat
 
 Each bank's entry 0 uses the script counter ($D8D5/$D8D6) to look up the next command in its internal script data tables.
 
+### Custom-room divert hook on the bank-$0F path (and the gate-freeze fix)
+
+The crossbank custom-room system hooks the `≥ $40 → bank $0F` dispatch
+(`DispatchBank0F` at `$04:$720d` → handler `DispatchBank0F_Ext` in padding at
+`$7fd8`) so that **custom-room** scripts are diverted to bank `$60` instead of bank
+`$0F`. Gate world reaches this path with `wScriptMapType = $70` (hardcoded by the
+gate-world room-entry path in bank `$01`); labyrinth/arena/post-game use `$40–$6A`.
+
+⚠️ **The divert must key off `wMapID`, NOT `wScriptMapType`.** A custom room is the
+only thing with `wMapID ≥ CUSTOM_ROOM_START ($6B)`; a gate keeps a normal `wMapID`
+(e.g. `$0D`) even though its *script* map-type is `$70`. The original hook tested
+`wScriptMapType ≥ $6B`, which wrongly captured gate world (`$70`) and diverted live
+gate scripts into bank `$60` → garbage → **gate-entry freeze** (idle loop at ROM0
+`$02e2`, `$C88E` never set). It also looped `$720d↔$7fd8` for `$40–$6A`.
+
+**Current (fixed) flow:** `DispatchBank0F_Ext` is a same-size redirect
+(`ld hl,$6006; rst $10; ret`) to **bank `$60` entry 6 `GateAwareDispatch`**, which
+reads `wMapID`: `< $6B` → real bank-`$0F` dispatch (`ld hl,$0f00; rst $10`); `≥ $6B`
+→ `CustomScriptRead`. See `documentation/GATE_FREEZE_FIX.md`. (Latent regression since
+`3d94ad9`; loop variant added in `d564e7e`.)
+
 ## Text System Integration
 
 When the script emits a text ID (B != $FF in the BC pair):
@@ -246,7 +267,7 @@ This allows conditional and unconditional jumps within the script data.
 
 Custom rooms (mapID ≥ $6B) use bank $60 for scripts, text, and room data:
 
-1. **MapTypeDispatch** (bank $04) patched: `cp CUSTOM_ROOM_START` before existing cascade → routes to bank $60 entry 4 (CustomScriptRead)
+1. **MapTypeDispatch → DispatchBank0F** (bank $04) hooked: the `≥ $40 → bank $0F` sub-path redirects to bank $60 **entry 6 (GateAwareDispatch)**, which routes by **`wMapID`**: `≥ $6B` → entry 4 (CustomScriptRead); `< $6B` → real bank $0F dispatch (gates/labyrinth). *(The original hook tested `wScriptMapType` and froze gate entry — fixed S20, see `GATE_FREEZE_FIX.md`.)*
 2. **TextQueueCheck** (bank $04) patched: text IDs with high byte ≥ $0A intercepted before ROM0 cascade → routes to bank $60 entry 5 (CustomTextDisplay)
 3. **Script data** in bank $60: same triple-index format as banks $0C-$0F
 4. **Text data** in bank $60: two-level pointer table (required by SaveBankAndSwitch)

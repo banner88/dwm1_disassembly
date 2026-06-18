@@ -8,6 +8,7 @@
 ;   Entry 3: CustomTilesetInfo  — returns source mapID from wCustomRoomFlag
 ;   Entry 4: CustomScriptRead   — triple-index script data reader
 ;   Entry 5: CustomTextDisplay  — custom text renderer via ROM0 CallTextEngine
+;   Entry 6: GateAwareDispatch  — B-fix: bank-$0F script dispatch routed by wMapID
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
@@ -19,6 +20,7 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw CustomTilesetInfo    ; Entry 3
     dw CustomScriptRead     ; Entry 4
     dw CustomTextDisplay    ; Entry 5
+    dw GateAwareDispatch    ; Entry 6 — gate-entry regression fix (B-fix): route by wMapID
 
 ; =============================================================================
 ; CustomPtrChase
@@ -171,6 +173,29 @@ CustomExitCheck:
 CustomTilesetInfo:
     ld a, [wCustomRoomFlag]
     ret
+
+; =============================================================================
+; Entry 6: GateAwareDispatch  — gate-entry regression fix (B-fix)
+; =============================================================================
+; Reached from bank $04 DispatchBank0F (script bank dispatch, wScriptMapType >= $40).
+; The original bank-$04 hook tested the SCRIPT map-type against $6B to decide a
+; custom-room divert, but wScriptMapType >= $6B is legitimate bank-$0F territory
+; (gate world hardcodes $70; labyrinth/arena/post-game use $40-$6A). That froze
+; gate entry (gate script wrongly read from bank $60) and looped for $40-$6A.
+;
+; The correct test is the ROOM map-type wMapID ($C968): custom rooms are the ONLY
+; things with wMapID >= CUSTOM_ROOM_START ($6B). Everything else (gates, labyrinth,
+; all vanilla rooms) dispatches to the real bank $0F entry 0, exactly like vanilla.
+; Returns next script command in BC (both paths preserve the vanilla contract).
+GateAwareDispatch:
+    ld a, [wMapID]              ; $C968 — the actual room map-type
+    cp CUSTOM_ROOM_START        ; $6B
+    jr nc, .customRoom          ; wMapID >= $6B → genuine custom room
+    ld hl, $0f00                ; else: bank $0F entry 0 — vanilla gate/script dispatch
+    rst $10
+    ret
+.customRoom:
+    jp CustomScriptRead         ; bank $60 entry 4 logic (same bank); returns BC
 
 ; =============================================================================
 ; Entry 4: CustomScriptRead

@@ -17,6 +17,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 | Patch system (clean repo + patches/ overlay) | `verify_integrity.py` check 2: patched build assembles, bank $60 populated |
 | Integrity guardrail + doc-MD5 police | `tools/verify_integrity.py`, 4 checks, PASSING |
 | RGBDS 0.6.1 build chain documented | README quick start, exercised this session from scratch |
+| **Gate-entry freeze fixed (S20 regression fix)** | Latent since `3d94ad9`: bank-`$04` `DispatchBank0F` custom-room divert tested `wScriptMapType` (gate world `$70`) not `wMapID`, freezing fresh-game gate entry; also looped for `$40–$6A`. Fixed via bank-`$60` entry 6 `GateAwareDispatch` (routes by `wMapID`), bank-`$04` same-size redirect (zero shift). User-confirmed SameBoy: gate + custom room + scrolling + exits + encounters all work. Writeup: `GATE_FREEZE_FIX.md` |
 
 ### Reverse engineering (formats fully decoded, ROM-verified)
 | Item | Evidence |

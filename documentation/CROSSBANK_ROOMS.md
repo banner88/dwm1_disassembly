@@ -35,6 +35,11 @@ Custom room overflow bank. Contains:
 - **CustomReadStep** (Entry 0) — returns DE = [step_id, tileset_bank]
 - **CustomReadInteract** (Entry 1) — copies NPC data to wCustomNPCBuffer, returns HL
 - **CustomExitCheck** (Entry 2) — copies exit data to wCustomExitBuffer, returns HL
+- **GateAwareDispatch** (Entry 6) — gate-entry regression fix. Bank `$04`'s bank-`$0F`
+  script-dispatch hook (`DispatchBank0F`) redirects here; routes by **`wMapID`**:
+  `< $6B` → bank `$0F` entry 0 (vanilla gate/labyrinth script); `≥ $6B` →
+  `CustomScriptRead`. Replaces a broken hook that tested `wScriptMapType` (gate world
+  `$70`) and froze gate entry. See `GATE_FREEZE_FIX.md`.
 - **CustomSourceMapTable** — maps custom room index → source mapID
 - **Room data** — sub-tables, step entries, NPC data, exit data for each custom room
 
@@ -153,6 +158,13 @@ Discovered incrementally across 19 ROM iterations. Missing even ONE table causes
 | $01 room entry script | ScriptInit with mapID | call MapIDClampForPalette |
 | $01 $5E7D table | Per-room byte (107 entries) | call MapIDClampForPalette |
 | ROM0 ~$1EBF | Collision threshold ($26E3, ×8) | call MapIDClampForPalette |
+| $04 DispatchBank0F | Script bank-$0F dispatch (≥$40 map-types) | redirect to bank $60 entry 6 (GateAwareDispatch), route by **wMapID** — NOT wScriptMapType (see GATE_FREEZE_FIX.md) |
+
+> ⚠️ **The bank-$04 row is the one that bit hardest.** Unlike the others, its
+> divert decision is on the **script** map-type, which overlaps the custom-room
+> range ($6B+) with legitimate gate/labyrinth scripts (gate world = $70). The fix
+> keys the divert off the **room** map-type `wMapID` instead. Testing the wrong
+> "map type" variable froze gate entry for ~5 sessions (latent since 3d94ad9).
 
 ### 4. $FFFF Screen Guard Required for Multi-Screen Rooms
 When scrolling to an unused screen slot ($FFFF in the sub-table), CustomPtrChase must detect this and return a safe DummyStepEntry instead of dereferencing $FFFF. The DummyStepEntry MUST reference valid tileset data (not bank $00 which contains RST handlers, not tile data).
@@ -290,7 +302,7 @@ CustomRoom0_RoomEntry:
   unsuitable for state that must be correct at battle time. Pin per-step state
   (gate/floor) in ASM (Patch 1); use the script only for one-shot arming
   (the counter, Patch 2). `write_ram` itself works in custom rooms because
-  param reads route through `DispatchBank0F_Ext → CustomScriptRead`.
+  param reads route through `DispatchBank0F_Ext → GateAwareDispatch → CustomScriptRead`.
 
 ### Editor build spec
 
