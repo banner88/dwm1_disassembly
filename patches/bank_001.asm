@@ -1857,7 +1857,7 @@ jr_001_49a2:
     ld l, $00
     call WaitDMATransfer
     ld hl, $cacb
-    call ReadActiveMonsterByte
+    call ClampFamIdx
     add a
     ld hl, $4bad
     add l

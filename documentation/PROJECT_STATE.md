@@ -5,23 +5,61 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-18 (Session 20: **gate-entry freeze fixed** — a latent
-> regression since `3d94ad9` that froze a fresh-game walk into ANY gate. The bank-`$04`
-> custom-room script-divert tested `wScriptMapType` (gate world = `$70`) instead of the
-> room `wMapID`, diverting live gate scripts into bank `$60` → freeze; also looped for
-> map-types `$40–$6A`. Fixed via bank-`$60` entry 6 `GateAwareDispatch` (routes by
-> `wMapID`); bank-`$04` handler is a same-size redirect, zero shift. User-confirmed in
-> SameBoy: gate entry + custom room + scrolling + exits + encounters all work. Full
-> writeup: `documentation/GATE_FREEZE_FIX.md`.)
+> Last verified: 2026-06-19 (Spirit B9 — family-10 VRAM corruption FIXED + icon
+> finalized; user-confirmed in SameBoy. Built ON TOP of the gate-entry-freeze fix.)
+> **B9 — 11th family "Spirit": VRAM corruption FIXED; icon shipped.** Catching a
+> family-10 (Spirit) monster (Dracky sp.78 / DarkDrium sp.214) → party → map corrupted
+> ALL of VRAM. Root cause: `bank_01:$49C0` indexes a **10-entry family-indexed GFX
+> pointer table at `01:$4BAD`**; family=10 reads OOB → garbage source + garbage copy
+> length → runaway copy over all VRAM (SameBoy watchpoint: BC=$2196 runaway, source
+> $55fc, into $9864). Fix: 8-byte `ClampFamIdx::` in ROM0 end-of-bank padding (replaced
+> 8 `rst $38` filler at $3BCB: `call ReadActiveMonsterByte / cp $0a / ret c / dec a /
+> ret`, family≥10→9); `patches/bank_001.asm` routes ONLY the `$4BAD` lookup ($49C0)
+> through it as a same-size `call` (Iron-Rule-2 OK, zero shift). The nearby `$499D`
+> lookup is SPECIES-indexed into the 215-entry follower table `$49DF` (NOT family) —
+> clamping it broke all follower sprites, so it is left alone. **Icon:** the Spirit
+> whip (user-selected "option 5") ships on font byte **$19 (`$4F:$41A0`)**, overwriting
+> the vanilla ??? glyph (??? + Spirit share it) — NOT the S20-planned free slot $1A
+> (`$41B0`), which the menu blanks at runtime (not fill-immune). `extracted/family_icons.json`
+> + `tools/build_family_icon.py --selftest` reconciled to the $19 art (icon rederivable
+> from tracked data, no PNG). This whole feature sits ON TOP of the committed gate-entry-
+> freeze fix: `ClampFamIdx` and `CustomGFXMapID` coexist in ROM0. Clean build still
+> `1ca6579…`; integrity PASS. User-confirmed: no corruption, correct followers, library
+> grouping good, family attribution correct. Method: KEY_LESSONS "Spirit B9 Lessons".
+> **Doc correction:** any S20 text below stating the Spirit icon is on $1A is superseded
+> by the $19 placement recorded here.
 >
-> ⚠️ **Retired baseline:** the previously-recorded "known-good" test ROM `065943f6`
-> (S19) **freezes on gate entry** — it was only ever confirmed for the library, never
-> for walking into a real gate. Do not treat it as good. New baseline = this fix.
-> Required smoke tests going forward (the integrity script can't cover them): fresh
-> game → walk into a real gate; enter a custom room and exercise NPCs/exits/encounters.
+
+> Last verified: 2026-06-18 (Session 20: family-icon trace (B8/B9 "name" path) +
+> Spirit icon insert. NOTE: the S20 "$1A slot / pending sign-off" claims below are
+> SUPERSEDED by the 2026-06-19 block above — Spirit icon ships on $19, B9 confirmed.)
+> **B8/B9 family-icon path TRACED + Spirit icon half-built (S20).** The long-blocked
+> "family-NAME render path" is solved: the family identity is an **ICON font tile**,
+> not a string. 10 icons live at `$4F:$4110-$41A0`, addressed by **text bytes
+> `$10-$19`** via `ComputeTileDataAddr` (`$00`: `addr = $4010 + byte*16`); the
+> monster-detail screen prints `<$F0><icon $1x>"family"` (bank `$4D`) and the
+> library tab strip blits the same tiles. `FamilyTextPtrTable` (`$04:$60F4`) is
+> confirmed a red herring (per-family monster **dialogue**, opcode `$2D`). User
+> confirmed the medium ("symbols, not text") and the icon order (by visual, glyph
+> order `$10-$19`: slime, dragon, paw, feather, tree, insect, hammer/axe, black face,
+> red face, "?"). The free slot for an 11th icon is **byte `$1A` → `$4F:$41B0`**
+> (blank filler; charmap "20-23 are blank"). **Spirit icon inserted** as a same-size
+> 16-byte 2bpp tile there (`patches/bank_04f.asm`, user "Fire Whip Spirit" art, zero
+> shift; bank `$4F` otherwise byte-identical to vanilla). Tool
+> `tools/build_family_icon.py` + data `extracted/family_icons.json` (Variant A = head
+> on palette index 0 → yellow head if the menu palette allows; Variant B = head on
+> index 2 fallback; `--selftest` proves the JSON grid == the patch bytes). Disassembly
+> annotated (comments only, byte-perfect `1ca6579…`): `bank_04f.asm` family-icon block
+> + free-slot map. Verifier PASS 4/4 (`bank_04f.asm` added to the patch set). Test ROM
+> `ab59c842…`; clean build still `1ca6579…`. **STILL OPEN (rest of B9):** the "yellow
+> head" is a SameBoy palette question (menu BG pal via `LoadGBCPalettes`→`rst $10`
+> `$17:$03`); wiring Spirit as family 11 (the `$4D` detail line, tab-strip 11th cell
+> `LoadItem_4241` `b=5,c=10`, the `$FA` family-code wildcard, `NUM_FAMILIES`→11,
+> reshuffle) is not done. The icon isn't referenced by any family yet → view via
+> SameBoy VRAM viewer until wired. Method: KEY_LESSONS "Session 20 — Family icons";
+> reference: BREEDING_SYSTEM "Family icons (B8/B9)".
 >
-> Last verified: 2026-06-18 (Session 19: breeding B7 — production library grouping
-> table, user-confirmed in SameBoy: zero lag, reassigned monsters under correct tabs.)
+
 > **B7 — production library grouping (SameBoy-confirmed).** The S18 dynamic-library
 > POC (runtime per-species far-load scan, ~221 loads/tab → lag + scratch RAM) is
 > REPLACED by a build-time precomputed **family→members** table. `tools/build_library_table.py`

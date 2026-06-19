@@ -40,7 +40,8 @@ SPEC = os.path.join(REPO, "extracted", "breeding_family_reassign.json")
 ROM = os.path.join(REPO, "data", "DWM-original.gbc")
 
 FAMILY_NAMES = {0: "Slime", 1: "Dragon", 2: "Beast", 3: "Bird", 4: "Plant",
-                5: "Bug", 6: "Devil", 7: "Zombie", 8: "Material", 9: "Boss"}
+                5: "Bug", 6: "Devil", 7: "Zombie", 8: "Material", 9: "Boss",
+                10: "Spirit"}   # B9: 11th family (Spirit). Raw byte $0A.
 
 INFO_BASE = 0x03 * 0x4000 + (0x4461 - 0x4000)
 STRIDE = 43
@@ -56,8 +57,8 @@ def rom_family(rom, sid):
     return rom[INFO_BASE + sid * STRIDE + 0x00]
 
 
-def load_spec():
-    with open(SPEC) as f:
+def load_spec(path=None):
+    with open(path or SPEC) as f:
         spec = json.load(f)
     return spec["reassignments"]
 
@@ -93,7 +94,8 @@ def emit(spec, rom):
             sys.exit(f"ERROR: id {sid} listed twice in spec")
         seen.add(sid)
         if to not in FAMILY_NAMES:
-            sys.exit(f"ERROR: target family {to} for id {sid} out of range 0..9")
+            sys.exit(f"ERROR: target family {to} for id {sid} out of range "
+                     f"0..{max(FAMILY_NAMES)}")
         if sid not in idx:
             sys.exit(f"ERROR: id {sid} not found in {DIS}")
         # guard: spec 'from' must match vanilla
@@ -105,7 +107,7 @@ def emit(spec, rom):
         cur = int(m.group(2))
         if cur != frm:
             sys.exit(f"ERROR: id {sid} source family db={cur} but spec from={frm}")
-        new_line = f"{m.group(1)}{to}  ; Family: {FAMILY_NAMES[to]}  ; B6-reassigned (was {FAMILY_NAMES[frm]})\n"
+        new_line = f"{m.group(1)}{to}  ; Family: {FAMILY_NAMES[to]}  ; reassigned (was {FAMILY_NAMES[frm]})\n"
         lines[li] = new_line
 
     out_text = "".join(lines)
@@ -155,12 +157,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--emit", action="store_true")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--spec", default=None,
+                    help="path to a reassignment spec JSON (default: "
+                         "extracted/breeding_family_reassign.json)")
     args = ap.parse_args()
     rom = open(ROM, "rb").read()
     if args.selftest:
         selftest(rom)
     if args.emit:
-        spec = load_spec()
+        spec = load_spec(args.spec)
         emit(spec, rom)
     if not (args.selftest or args.emit):
         ap.print_help()

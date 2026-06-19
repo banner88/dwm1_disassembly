@@ -396,7 +396,7 @@ per-step hook; use the room-entry script only for one-shot arming that tolerates
 running on reload (the encounter step counter).
 **Rule**: Don't rely on the room-entry script for values that must be correct at
 an arbitrary later step. `write_ram` (opcode $12) *does* work in custom rooms
-(params route via `DispatchBank0F_Ext → GateAwareDispatch → CustomScriptRead`), but its firing
+(params route via `DispatchBank0F_Ext → CustomScriptRead`), but its firing
 *timing* is the trap, not the write itself.
 
 ### Vanilla counter seeding skips non-gate rooms
@@ -752,39 +752,113 @@ so the default build is provably behavior-identical to vanilla.
 source file, not re-derive it independently. Add a self-check that the no-op case
 reproduces vanilla byte/behavior, so "I didn't break the default" is machine-verified.
 
-## Session 20 Lessons — Gate-Entry Freeze (latent regression fix)
+## Session 20 Lessons — Family icons (B8/B9 "name" path)
 
-> Full writeup: `documentation/GATE_FREEZE_FIX.md`.
+Full reference: BREEDING_SYSTEM.md "Family icons (B8/B9)". Tool:
+`tools/build_family_icon.py`; data `extracted/family_icons.json`; patch
+`patches/bank_04f.asm`; annotation in `disassembly/bank_04f.asm`.
 
-### Walking into a gate from a fresh game froze every patched build since 3d94ad9
-**Symptom**: Fresh new game → enter any gate floor → instant freeze (idle loop at
-ROM0 `$02e2`, waiting on the screen-transition flag `$C88E` that never gets set). No
-save dependency. Present in the recorded "known-good" `065943f6` too.
-**Root cause**: The custom-room script-divert hook in bank `$04` (`DispatchBank0F` →
-`DispatchBank0F_Ext`) tested the **script** map-type (`wScriptMapType`) against `$6B`
-to decide a custom-room divert. But `wScriptMapType ≥ $6B` is legitimate bank-`$0F`
-script territory — gate world hardcodes `wScriptMapType = $70`. So gate scripts were
-diverted into bank `$60`'s custom-room reader, read garbage, and the floor transition
-never completed. (A sibling defect made the same hook an infinite `$720d↔$7fd8` loop
-for map-types `$40–$6A`, introduced when the handler was "optimized" in `d564e7e`.)
-**Fix**: Route the divert decision through a new bank-`$60` entry (`GateAwareDispatch`)
-that keys off the **room** map-type `wMapID` — the only value that is `≥ $6B`
-exclusively for real custom rooms (gates keep a normal `wMapID`). Bank `$04`'s 10-byte
-handler slot becomes a same-size redirect (`ld hl,$6006; rst $10; ret`), killing the
-loop and the bad divert with zero byte shift.
-**Rule**: A custom-room divert MUST key off the **room identity** (`wMapID ≥
-CUSTOM_ROOM_START`), never a script/dispatch value (`wScriptMapType`, opcodes, text
-IDs) that merely happens to share the `≥$6B` numeric range. Different "map type"
-variables live in overlapping numeric spaces; test the one that actually means "which
-room."
+### The "family name" we hunted for two sessions was never a string — it's a font tile
+**Symptom**: B8/B9 were blocked on "trace the family-NAME string render path." Three
+prior sessions correctly ruled out `FamilyTextPtrTable` ($04:$60F4) but left the real
+path "untraced," and earlier searches for the family-name TEXT (Slime/Beast/…) only
+found a flavor-text SENTENCE (bank $1A $6A46, "…Slimes… Beasts… and ???"), never a
+short tab-label table.
+**Root cause**: There is no family-name string. The family identity shown to the
+player is a graphical ICON: 10 font tiles at $4F:$4110-$41A0, addressed by text bytes
+$10-$19 (ComputeTileDataAddr in $00: addr = $4010 + byte*16). The detail screen prints
+`<$F0><icon $1x>"family"` (bank $4D); the library tab strip blits the same tiles. The
+charmap (dwm.tbl) literally hinted this with commented `10=[slime] … 19=[???]`.
+**Fix**: Confirm the render medium with the USER before hunting (they said "it has
+symbols, not text" in one line — slime, dragon face, paw, feather, …). Then verify the
+byte→tile formula from ROM code, not docs. A rename/add becomes a GRAPHICS edit.
+**Rule**: Before tracing a "text/name" render path, confirm it IS text. A one-line
+question to the user ("is that label text or a graphic?") can redirect an entire
+multi-session hunt. Charmap comments naming non-ASCII glyphs (`[slime]`) are a tell
+that the "name" is a tile.
 
-### Process gap: the smoke test that would have caught it on day one
-**Symptom**: A freeze on the most basic action (entering the first gate) survived ~5
-sessions because nobody walked into a real gate from a fresh game — custom rooms were
-always reached by warping in from GreatTree, which doesn't feed the faulty path.
-**Rule**: After ANY change touching room entry, the script engine, or the crossbank
-intercepts, run two manual smoke tests that the integrity script can't cover:
-(1) **fresh game → walk into a real gate**, and (2) **enter a custom room and exercise
-its NPCs/exits/encounters**. `verify_integrity.py` proves the build assembles and the
-clean tree is byte-perfect; it does NOT prove the game plays. Gate entry is the
-canary.
+### A "blank filler" tile is genuine free space — but verify it's filler, not a used blank
+**Symptom**: Needed a slot for an 11th-family icon. The tile right after the 10 icons
+(byte $1A / $4F:$41B0) reads `$ff,$00` repeated — looks free.
+**Root cause/check**: `$ff,$00`×8 is the font's blank-tile pattern (every pixel index
+1 = menu background). The charmap independently documents "20-23 are blank," and bytes
+$1A-$23 are 10 such tiles. Confirmed it's unreferenced filler, not a space/used glyph,
+before claiming it. (Contrast S19: "empty-looking" monster stat slots 215-220 were NOT
+free — they were special combat entities. Same discipline, opposite outcome.)
+**Fix**: Same-size 16-byte tile insert at $41B0, zero shift; bank $4F stays byte-
+identical to vanilla everywhere else. `build_family_icon.py --selftest` asserts the
+shipped Spirit grid encodes to exactly the bytes in the patch.
+**Rule**: "Looks blank" needs the same role-check as "looks empty" (S19). A blank font
+tile IS reusable, but prove it's filler (charmap + no references) first.
+
+### Tile graphics are palette-independent; "make it yellow" is a separate palette question
+**Symptom**: User asked for the new icon's "head" to be yellow. A 2bpp tile can't carry
+colour — it carries 4 palette INDICES; colour comes from the menu's CGB BG palette.
+**Fix**: Build the shape now (done), and encode the head on palette index 0 (Variant A)
+so it shows yellow IF that menu palette's index-0 is yellow; ship a Variant B (head on
+index 2) as a fallback. Leave the actual palette confirmation to SameBoy (the menu
+palette loads via LoadGBCPalettes → rst $10 bank $17 entry $03; palette attribution is
+a historically SameBoy-verified area here — see PROJECT_STATE "Palette Index 1 Forced").
+**Rule**: Separate the tile (shape, palette-independent, deliver now) from the palette
+(colour, menu-bound, SameBoy-verified). Don't guess palette behaviour from the tile;
+encode against the index and confirm the colour in the emulator.
+
+## Spirit B9 Lessons — family-10 VRAM corruption + icon slot
+
+Tools/patches: `patches/bank_000.asm` (ClampFamIdx), `patches/bank_001.asm` (lookup
+routing), `patches/bank_04f.asm` (Spirit icon), `tools/build_family_icon.py`.
+This work sits ON TOP of the gate-entry-freeze fix (GateAwareDispatch / CustomGFXMapID
+in ROM0); the two ROM0 routines coexist (ClampFamIdx immediately follows CustomGFXMapID
+in the same end-of-bank padding). Clean build stays `1ca6579…`; integrity PASS.
+
+### A family-indexed graphics table sized to 10 runs off the end for family 10
+**Symptom**: Catching a family-10 (Spirit) monster (Dracky sp.78 / DarkDrium sp.214),
+adding it to the party, then returning to the map corrupted ALL of VRAM (tileset +
+tilemap turned to garbage). Live SameBoy watchpoint on a garbage tilemap address
+($9863) broke with BC=$2196 (an 8598-byte runaway copy), DE=$55fc (source), HL=$9864,
+backtrace through the ROM0 copy ($1ac3←$159a←$1581) ← 01:$49da ← 01:$497f ← 01:$4865.
+**Root cause**: `bank_01:$49C0` builds a graphics source pointer by indexing a
+**10-entry, family-indexed pointer table at `01:$4BAD`** (families 0–9 → clean
+`$2E03..$2E0C`; entry[10] and beyond = garbage). `ReadActiveMonsterByte` ($2284) returns
+family=10 for a Spirit monster, so `$4BAD[10]` is read out of bounds → a garbage source
+pointer AND a garbage copy length → the copy loop overruns the whole VRAM region.
+**Fix**: 8-byte `ClampFamIdx::` in ROM0 end-of-bank padding (it replaced 8 `rst $38`
+filler bytes, landing at ROM0 $3BCB): `call ReadActiveMonsterByte / cp $0a / ret c /
+dec a / ret` (any family ≥ 10 clamps to 9). `patches/bank_001.asm` routes ONLY the
+`$4BAD` lookup ($49C0) through `call ClampFamIdx` — a same-size `CD xx xx` replacement
+(Iron-Rule-2 compliant for bank $01: zero byte shift). User-confirmed in SameBoy: no
+corruption, correct follower sprites, library correct, family attribution correct.
+**Rule**: Before letting an 11th family (index 10) reach the renderer, grep every
+family-INDEXED array/pointer table (not just the breeding/library ones) and confirm its
+length. A 10-entry GFX pointer table indexed by a now-possible family value 10 reads OOB
+and a bad length turns one bad index into a whole-VRAM wipe. Clamp at the read, in ROM0,
+same-size.
+
+### Clamp the FAMILY-indexed table, not the SPECIES-indexed one next to it
+**Symptom**: A first fix also clamped a SECOND lookup at `01:$499D` and broke every
+follower sprite ("BigEye shows MadCat" — all followers shifted by one).
+**Root cause**: `$499D` is NOT family-indexed. It uses the species byte ($caca) to index
+the **215-entry per-species follower table at `01:$49DF`** ($10→$2F01 … $1A→$2F0B, all
+valid). Clamping a species index corrupts a perfectly in-range lookup. ($cacb = family →
+$4BAD; $caca = species → $49DF — two different bytes, two different tables.)
+**Fix**: Reverted the $499D clamp; only the family-table lookup at $49C0/$4BAD is routed
+through ClampFamIdx.
+**Rule**: "Indexed near the same code" ≠ "indexed by the same thing." Identify the index
+SOURCE byte (family vs species) and the TABLE LENGTH before clamping. Clamping the wrong
+one silently corrupts valid data.
+
+### The Spirit icon ships on byte $19, not the "free" $1A slot ($1A is not fill-immune)
+**Symptom**: The S20 plan placed the Spirit family icon on the first free font slot,
+byte $1A ($4F:$41B0). In practice that tile rendered blank — the menu blanks $1A at
+runtime, so the icon never showed.
+**Root cause**: $1A is not fill-immune; the library/detail menu clears it. Byte $19
+($4F:$41A0, the vanilla ??? glyph) survives.
+**Fix**: Ship the option-5 whip on byte **$19**, overwriting the vanilla ??? glyph (??? and
+Spirit now share the whip — acceptable, ??? is rare). The free $1A slot is left blank.
+`extracted/family_icons.json` `spirit` grid + `tools/build_family_icon.py --selftest`
+were reconciled to verify the JSON grid against the $19 patch bytes, so the icon is
+rederivable from tracked data with NO PNG. PROJECT_STATE/ROADMAP/BREEDING_SYSTEM that
+still say "$1A" predate this and are corrected here.
+**Rule**: A "free/blank" font slot is not necessarily a usable one — confirm a candidate
+tile survives the menu's runtime fill before committing art to it (same family as the
+S19 "looks empty ≠ free" lesson, applied to tiles instead of species ids).

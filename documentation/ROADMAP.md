@@ -17,7 +17,6 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 | Patch system (clean repo + patches/ overlay) | `verify_integrity.py` check 2: patched build assembles, bank $60 populated |
 | Integrity guardrail + doc-MD5 police | `tools/verify_integrity.py`, 4 checks, PASSING |
 | RGBDS 0.6.1 build chain documented | README quick start, exercised this session from scratch |
-| **Gate-entry freeze fixed (S20 regression fix)** | Latent since `3d94ad9`: bank-`$04` `DispatchBank0F` custom-room divert tested `wScriptMapType` (gate world `$70`) not `wMapID`, freezing fresh-game gate entry; also looped for `$40–$6A`. Fixed via bank-`$60` entry 6 `GateAwareDispatch` (routes by `wMapID`), bank-`$04` same-size redirect (zero shift). User-confirmed SameBoy: gate + custom room + scrolling + exits + encounters all work. Writeup: `GATE_FREEZE_FIX.md` |
 
 ### Reverse engineering (formats fully decoded, ROM-verified)
 | Item | Evidence |
@@ -397,25 +396,44 @@ recipes are pure authoring.
       KEY_LESSONS "Session 19 — Breeding B7"; format: BREEDING_SYSTEM "Dynamic library
       → PRODUCTION (B7, done)". *Open follow-up:* tool not yet folded into
       `verify_integrity.py` (self-asserts via `--selftest`; the verifier does not run it).
-- [ ] **B8 — ??? → "Spirit" rename (10 families, no insert).** Same-size family-name
-      text edit. PREREQUISITE: trace the real family-NAME string render path (NOT
-      `FamilyTextPtrTable` $04:$60F4 — that's per-family monster-text groups A–D).
-      Optionally update flavor text (library "…and ???"). *Accept:* the family shows
-      "Spirit" in menus/library; clean build still `1ca6579…`.
-- [ ] **B9 — Add an 11th family (keep ??? AND add Spirit).** SEPARATE larger feature
-      (B6/B7 keep 10). Scope (BREEDING_SYSTEM "Future — 11th family"): family code
-      space ($F0–$F9 full; $FA is the breeding "AnyFamily" wildcard → repurpose or
-      extend scanner); 11th `FamilyTextPtrTable` entry + name + text group; library
-      tab strip 2col×5row → needs layout rework + new family ICON + nav grid
-      (`b=5,c=10` in `LoadItem_4241`); any family-indexed array sized to 10 gains a
-      slot. **B7 is now DONE (S19), so the DATA side is free** (the library table +
-      walker are family-count agnostic; bump `NUM_FAMILIES`→11 and add one pointer +
-      one list); the remaining cost is UI/graphics (tab strip, icon, nav grid) + the
-      breeding family-code (`$FA` wildcard) + family-NAME string trace.
-      *Decision (user, S19):* **Spirit is ADDED as an 11th family (B9 path), then
-      families are reshuffled** — not a rename-only replace. So B9 is the target, B8
-      (rename-only) is not the chosen route (the ??? → Spirit name work still applies,
-      but as part of B9's 11th-family naming, not a 10-family replace).
+- [~] **B8 — ??? → "Spirit" rename (10 families, no insert).** **PREREQ SOLVED
+      (S20):** the "family name" is an ICON font tile, not a string — there is no name
+      string to edit (`FamilyTextPtrTable` confirmed a red herring). 10 icons at
+      `$4F:$4110-$41A0`, text bytes `$10-$19`, addr = `$4010 + byte*16`; detail line is
+      `<$F0><icon>"family"` (bank `$4D`), tab strip blits the same tiles. So a
+      rename-only is "swap the `$19` (???) icon tile." **NOT the chosen route** — per
+      the S19/S20 user decision Spirit is ADDED (B9), not a 10-family replace; this row
+      stays as the solved-trace record. *Accept (if ever taken):* the ??? tab shows the
+      new icon; clean build still `1ca6579…`.
+- [~] **B9 — Add an 11th family (keep ??? AND add Spirit).** **VRAM CORRUPTION FIXED +
+      ICON SHIPPED (2026-06-19, user-confirmed in SameBoy; built ON TOP of the gate fix).**
+      The family-10 catch→map VRAM wipe is fixed (`ClampFamIdx` in ROM0 clamps the
+      10-entry family-indexed GFX table `01:$4BAD` so family 10 can't read OOB; the
+      species-indexed `$499D`/`$49DF` follower lookup is left alone). The Spirit whip
+      (option 5) ships on font byte **$19 (`$4F:$41A0`)**, overwriting vanilla ??? — NOT
+      the free $1A slot, which the menu blanks at runtime. Followers, library grouping,
+      and family attribution confirmed correct; clean build `1ca6579…`; integrity PASS.
+      See KEY_LESSONS "Spirit B9 Lessons" + PROJECT_STATE (2026-06-19 block). *Remaining
+      polish (not blocking play):* the "$1A vs $19" line in the S20 notes below is stale;
+      tab-strip/nav-grid layout for an 11th visible tab is the only open UI nicety.
+      ~~**ICON HALF DONE (S20,~~
+      pending SameBoy sign-off).** The family-icon path is traced (see B8) and the 11th
+      icon's free slot is found: **byte `$1A` → `$4F:$41B0`** (blank filler; charmap
+      "20-23 are blank"). `patches/bank_04f.asm` inserts the user's "Fire Whip Spirit"
+      art there as a same-size 16-byte 2bpp tile (zero shift; bank `$4F` otherwise
+      byte-identical to vanilla). Tool `tools/build_family_icon.py` + data
+      `extracted/family_icons.json` (Variants A/B: head on palette index 0 for a yellow
+      head if the menu palette allows, else index 2). Verifier PASS 4/4 (bank_04f added
+      to patch set). Test ROM `ab59c842…`; clean build still `1ca6579…`. **STILL OPEN
+      (rest of B9, next session):** (1) confirm the "yellow head" palette in SameBoy
+      (menu BG pal via `LoadGBCPalettes`→`rst $10` `$17:$03`); (2) wire Spirit as
+      family 11 — the `$4D` detail line (`$F0 $1A "family"`), the tab-strip 11th cell
+      (`LoadItem_4241` `b=5,c=10` grid + tab graphics), the family-code (`$FA` wildcard
+      question), `NUM_FAMILIES`→11 in `build_library_table.py`, family reshuffle. Icon
+      is not yet referenced by any family, so view it via SameBoy's VRAM viewer until
+      wired. Scope (full): BREEDING_SYSTEM "Family icons (B8/B9)" + "Future — 11th family".
+      *Decision (user, S19/S20):* Spirit is ADDED as the 11th family, then families
+      reshuffled.
 - [x] **BUG — breeding cutscene: parent sprites glitch.** **FIXED Session 14.**
       Observed Session 13 while playtesting B2; confirmed **not caused by B2**. Root
       cause was an incomplete bank `$0B` labelization: three raw pointer refs into the

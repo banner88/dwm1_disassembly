@@ -1,7 +1,7 @@
 {
-  "_generator": "tools/build_library_table.py; ROM 1ca6579359f21d8e27b446f865bf6b83; reassign breeding_family_reassign.json",
+  "_generator": "tools/build_library_table.py; ROM 1ca6579359f21d8e27b446f865bf6b83; reassign spirit_family.json",
   "_note": "B7 production library family->members grouping. Collectible set ids 0..214 grouped by effective family byte (vanilla + reassignment). Special non-collectible entries 215..220 are PROTECTED and excluded.",
-  "num_families": 10,
+  "num_families": 11,
   "buffer_capacity": 32,
   "collectible_max": 214,
   "species_id_max": 255,
@@ -19,9 +19,11 @@
       1,
       2,
       3,
+      4,
       5,
       6,
       7,
+      8,
       9,
       10,
       11,
@@ -32,11 +34,9 @@
       16,
       17,
       18,
-      19,
-      68
+      19
     ],
     "1": [
-      8,
       20,
       21,
       22,
@@ -59,9 +59,9 @@
       39,
       40,
       41,
+      42,
       43,
-      44,
-      214
+      44
     ],
     "2": [
       45,
@@ -72,6 +72,7 @@
       50,
       51,
       52,
+      53,
       54,
       55,
       56,
@@ -86,11 +87,10 @@
       65,
       66,
       67,
-      69,
-      88
+      68,
+      69
     ],
     "3": [
-      4,
       70,
       71,
       72,
@@ -108,10 +108,10 @@
       85,
       86,
       87,
+      88,
       89
     ],
     "4": [
-      53,
       90,
       91,
       92,
@@ -232,8 +232,6 @@
       199
     ],
     "9": [
-      42,
-      78,
       200,
       201,
       202,
@@ -248,6 +246,10 @@
       211,
       212,
       213
+    ],
+    "10": [
+      78,
+      214
     ]
   }
 }

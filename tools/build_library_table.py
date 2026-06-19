@@ -84,7 +84,10 @@ COLLECTIBLE_MAX = 214            # last collectible species id; library lists id
                                  # EXTENSION: raise toward 255 when new collectible
                                  # monsters are added (species id is 1 byte → max 255).
 SPECIES_ID_MAX = 255             # 1-byte species-id ceiling (hard architectural limit)
-NUM_FAMILIES = 10                # emitted tab count. EXTENSION: 11 for B9 (additive).
+NUM_FAMILIES = 11                # emitted tab count. B9: 11th family (Spirit) added.
+GRID_ROWS = 5                    # library tab grid rows (`ld b,$05`); cols = cells/rows.
+GRID_BOUND_SITES = 2             # number of `ld c,$0a` tab-cell-count sites in bank $12
+                                 # (both the nav setup and the redraw path). Audited S20.
 BUFFER_CAPACITY = 32             # display buffer $C0D8 size ($20). A family must fit.
                                  # (user guarantee: no family exceeds 30.)
 
@@ -341,6 +344,14 @@ def emit_table_asm(g):
     lines.append("LibFamilyPtrTable:")
     for f in range(NUM_FAMILIES):
         lines.append(f"    dw LibFamily_{f:02d}")
+    # B9: the nav grid rounds up to whole columns (GRID_ROWS), so it can reach cells
+    # beyond NUM_FAMILIES (e.g. 11 families -> 15 nav cells). Pad the pointer table to
+    # the full nav cell count so the walker never reads past it; spare cells point to a
+    # shared empty list (0 members) → blank, crash-safe tab.
+    import math as _math
+    nav_cells = GRID_ROWS * _math.ceil(NUM_FAMILIES / GRID_ROWS) if NUM_FAMILIES > 10 else NUM_FAMILIES
+    for _ in range(NUM_FAMILIES, nav_cells):
+        lines.append("    dw LibFamilyEmpty")
     lines.append("")
     for f in range(NUM_FAMILIES):
         members = g[f]
@@ -350,6 +361,9 @@ def emit_table_asm(g):
             lines.append(f"    db {len(members)}, {ids}")
         else:
             lines.append("    db 0")
+    if nav_cells > NUM_FAMILIES:
+        lines.append("LibFamilyEmpty:  ; spare nav cells (>= NUM_FAMILIES) — blank, crash-safe")
+        lines.append("    db 0")
     return "\n".join(lines) + "\n"
 
 
@@ -435,6 +449,28 @@ def emit(reassign_path):
 
     # header: rewrite the POC banner to the production banner.
     final = _rewrite_header(final, reassign_path, g)
+
+    # --- B9: extend the tab-strip NAV GRID so the cursor can reach tab 10 (Spirit) ---
+    # The grid is `ld b,$05` (rows) + `ld c,$0a` (cells = 2 cols x 5). Flat index =
+    # column*5 + row. For 11 families we set the cell bound to NUM_FAMILIES itself
+    # (11 -> $0b), NOT the rounded-up 15. This matters: LoadItem_4241's partial-last-
+    # column clamp computes `cells / rows` = 2 rem 1, so the 3rd column has exactly 1
+    # valid cell (Spirit, row 0) and the cursor CANNOT scroll down into the empty
+    # cells 11..14. (Vanilla never hit that clamp since 10 = 2x5, remainder 0.)
+    # The LibFamilyPtrTable is still padded to the rounded-up cell count (15) as a
+    # draw-time safety belt, but those cells are now unreachable.
+    if NUM_FAMILIES > 10:
+        cells = NUM_FAMILIES                                  # 11 -> $0b (clamped grid)
+        old = "    ld c, $0a\n"
+        new = f"    ld c, ${cells:02x}\n"
+        n = final.count(old)
+        if n != GRID_BOUND_SITES:
+            sys.exit(f"ERROR: expected {GRID_BOUND_SITES} `ld c,$0a` tab-grid sites, "
+                     f"found {n}. Library nav layout changed — re-audit before B9.")
+        final = final.replace(old, new)
+        print(f"  B9 nav grid: {n} sites `ld c,$0a` -> `ld c,${cells:02x}` "
+              f"(3rd column has {cells % GRID_ROWS or GRID_ROWS} cell(s); cursor clamps at Spirit).")
+
     open(OUT, "w").write(final)
 
     # --- data deliverable ---

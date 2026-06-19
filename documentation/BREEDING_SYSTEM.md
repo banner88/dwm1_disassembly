@@ -285,14 +285,40 @@ and appears as a matcher in only **2 of 825** special entries (both as the
 pure authoring (add Spirit-as-pedigree specials and/or `$F9` family defaults);
 there is no special-case to dismantle.
 
-**Rename location (CORRECTED — the old claim here was WRONG, see below):** the
-family-NAME string path is **NOT** `FamilyTextPtrTable` ($04:$60F4). That table is
-10 `dw` entries → `FamilyTextGroup_A/B/C/D`, used by opcode `$2D`
-(`MonsterSlotDialogue`) — it is per-family monster **dialogue** text dispatch, not
-the name string shown on the library tabs (verified S19 against the disassembly
-header at `$04:$60F4`; consistent with the "Future — 11th family" note below). The
-real family-name render path is **still untraced** — tracing it is the FIRST task of
-the rename (B8 / B9 naming). Do not attempt the rename via `FamilyTextPtrTable`.
+**Family "name" = an ICON, not a string (TRACED, Session 20 — user-confirmed):**
+the family identity shown to the player is **not text at all** — it is a graphical
+**icon** (slime, dragon face, paw, feather, tree, insect head, hammer/axe, two
+faces, "?"). It is rendered as an ordinary **font tile**:
+
+- The 10 icons are 8×8 2bpp font tiles in **bank `$4F` at `$4110`–`$41A0`**
+  (the disassembly block labeled `;mgsBox monster types`, now annotated
+  `FamilyTypeIcons` with the per-byte map).
+- They are addressed by **text bytes `$10`–`$19`**, via the font formula in
+  `ComputeTileDataAddr` (bank `$00`): `tile_addr = $4010 + byte*16`. So byte
+  `$10`→`$4110` (icon 0) … byte `$19`→`$41A0` (icon 9). The `dwm.tbl` charmap's
+  commented `10=[slime] … 19=[???]` hints are exactly this, now ROM-verified.
+- Both screens use the same tiles: the **Library/Encyclopedia tab strip** blits
+  them, and the **monster-detail screen** prints them inline as the text sequence
+  `<$F0><$1x>"family"` (an `$F0` control byte + the icon byte + the word "family").
+  The per-family detail lines live in bank `$4D` (`…$F0 $10 "family"`, one per
+  family, `$F0 $10`…`$F0 $18`); the breeding/library flavor sentence ("…Slimes…
+  Beasts… and ???") is separate running text in bank `$1A` (`$6A46`).
+
+So there is **no name string to edit** for a rename — `FamilyTextPtrTable`
+(`$04:$60F4`) remains a red herring (it is per-family monster **dialogue**, opcode
+`$2D`). The rename/add work is **graphics**: edit/add an icon tile.
+
+**Icon order (user-confirmed S20, by VISUAL; this is glyph order $10–$19, NOT the
+family-code order):** `$10` slime, `$11` dragon face, `$12` animal paw (Beast),
+`$13` feather (Bird), `$14` tree (Plant), `$15` insect head (Bug), `$16` hammer/axe,
+`$17` black face (Zombie), `$18` red face (Material), `$19` "?" (??? / Boss).
+
+**11th-family (Spirit) icon — free slot found:** the tile right after the icons,
+**byte `$1A` → `$41B0`**, is a blank `$ff/$00` filler (charmap "20-23 are blank");
+there are ~10 free font slots there. Adding the Spirit icon is a **same-size 16-byte
+tile insert, zero shift** — `patches/bank_04f.asm` does exactly this (Variant A:
+"Fire Whip Spirit" art, head on palette index 0). See "Family icons (B8/B9)" below.
+
 
 **Reassignment = family byte (offset $00 of each 43-byte entry `$03:$4461`).**
 **B6 GATE — CLEARED in S18** (see "Family-byte reader trace (the B6 gate —
@@ -459,12 +485,15 @@ knows the terrain:
   `$FA` is the breeding scanner's "AnyFamily" wildcard (mate-side) — so an 11th
   family can't cleanly be `$FA`; either repurpose `$FA` (give up the wildcard,
   which has ZERO vanilla data uses) or extend the scanner's family-code range.
-- **FamilyTextPtrTable** (`$04:$60F4`, 10 entries) — add an 11th entry (its
-  per-family monster-**dialogue** text group, opcode `$2D`). NOTE this table does
-  NOT hold the family name. The family-NAME string render path for the rename
-  (??? → "Spirit") still needs tracing; the doc's old "entry 9 of FamilyTextPtrTable"
-  claim was WRONG — that table is per-family monster-text dispatch (groups A–D), not
-  the family name string. Find the real name string before the rename.
+- **Family icon (the "name")** — TRACED S20: it is a font tile (`$4F:$4110+`,
+  bytes `$10`–`$19`), NOT a string and NOT `FamilyTextPtrTable`. An 11th family's
+  icon goes in the free slot at byte `$1A`/`$4F:$41B0` (same-size 16-byte tile,
+  zero shift; done in `patches/bank_04f.asm` for Spirit). The detail-screen line
+  is `<$F0><icon><"family">` in bank `$4D`, so an 11th family adds a `$F0 $1A
+  "family"` entry there; the library tab strip blits the same tile.
+- **FamilyTextPtrTable** (`$04:$60F4`, 10 entries) — add an 11th entry for the
+  per-family monster-**dialogue** text group (opcode `$2D`). This is unrelated to
+  the icon/name above (it was the historical red herring).
 - **Library tab strip** — today a 2-col×5-row grid (10 tabs); 11 doesn't fit
   cleanly → the tab navigation (`b=5,c=10` grid in `LoadItem_4241`) + tab-strip
   graphics + a new family ICON need real layout work. With the precomputed
@@ -472,6 +501,58 @@ knows the terrain:
 - **Any family-indexed array sized to 10** must gain a slot. The dynamic library
   (POC or production) already handles family index 10 in its scan logic.
 
-**Decision deferred (user):** whether "Spirit" REPLACES ??? (rename only, stays 10
-families — small) or is ADDED as an 11th family (the above — larger). The dynamic
-grouping + precomputed table is the prerequisite for either.
+**Decision (user, S19/S20):** "Spirit" is **ADDED as an 11th family** (not a
+rename-only replace of ???), then families reshuffled. So B9 is the target.
+
+---
+
+## Family icons (B8/B9 "name" path) — TRACED + Spirit icon half-built (Session 20)
+
+> **CORRECTION (2026-06-19):** the Spirit icon SHIPS on font byte **$19 (`$4F:$41A0`)**,
+> overwriting the vanilla ??? glyph (??? + Spirit share the whip). The S20 text in this
+> section that places it on the free slot **$1A (`$41B0`)** is SUPERSEDED — $1A is blanked
+> by the menu at runtime (not fill-immune). The art is the option-5 whip; it is verified
+> rederivable from `extracted/family_icons.json` via `build_family_icon.py --selftest`
+> (no PNG). See PROJECT_STATE (2026-06-19 block) + KEY_LESSONS "Spirit B9 Lessons".
+
+The family identity the player sees is an **icon font tile**, fully traced this
+session (see the corrected "Family name = an ICON" block above for the mechanism).
+Summary for builders:
+
+| Thing | Location |
+|-------|----------|
+| 10 family icon tiles | `$4F:$4110`–`$41A0`, addressed by text bytes `$10`–`$19` |
+| Byte→tile formula | `ComputeTileDataAddr` (`$00`): `$4010 + byte*16` |
+| Detail-screen line | `<$F0><icon $1x>"family"` per family, in bank `$4D` |
+| Library tab strip | blits the same `$10`–`$19` tiles |
+| Tile index→shade convention | idx 1 = menu background, idx 2/3 = ink, idx 0 = lightest (a few icons use it) |
+| 11th icon slot (SHIPPED) | byte `$19` → `$4F:$41A0` (overwrites vanilla ???; $1A was not fill-immune) |
+| ~~FREE slot for an 11th icon~~ (abandoned) | byte `$1A` → `$4F:$41B0` (blank; menu blanks it at runtime) |
+
+**Spirit icon — DONE as a same-size insert (`patches/bank_04f.asm`).** User art
+("Fire Whip Spirit"); encoded to a 16-byte 2bpp tile and dropped into `$41B0` (byte
+`$1A`), zero shift, bank `$4F` otherwise byte-identical to vanilla. Two encodings
+were built: **Variant A** (the whip "head" on palette **index 0**, the lightest
+slot — shows **yellow** iff that menu's BG palette index-0 is yellow) and **Variant
+B** (head on index 2, a safe mid-shade fallback). Variant A is the shipped default.
+Tool: `tools/build_family_icon.py` (PNG/grid → 2bpp → patch line); data deliverable
+`extracted/family_icons.json` (the 10 vanilla icon grids + the Spirit design + byte
+map, `_generator` stamped).
+
+**OPEN (next session, the rest of B9 — NOT done here):**
+1. **Palette / "yellow head" is a SameBoy question.** The menu BG palette that
+   colors these tiles is loaded via `LoadGBCPalettes` (`$00`) → `rst $10` bank `$17`
+   entry `$03`; the actual RGB15 set + which palette index the library/detail menus
+   bind to the font area was NOT chased (palette attribution is historically a
+   SameBoy-verified area here — see PROJECT_STATE "Palette Index 1 Forced"). Confirm
+   in SameBoy whether index 0 in that palette is yellow; if not, either switch to
+   Variant B or edit the palette entry (separate same-size edit).
+2. **Wiring Spirit as family 11**: the `$4D` detail line (`$F0 $1A "family"`), the
+   tab-strip 11th cell (`LoadItem_4241` `b=5,c=10` grid + tab graphics), the
+   family-code (`$FA` wildcard question), `NUM_FAMILIES`→11 in
+   `build_library_table.py`, and the family reshuffle. None done this session.
+3. **Viewing the icon now**: byte `$1A` is not referenced by any family yet, so it
+   won't appear in normal play — inspect `$4F:$41B0` via SameBoy's VRAM/tile viewer
+   (it pages into VRAM when any text uses byte `$1A`), or wait for the `$4D` wiring.
+
+Method: KEY_LESSONS "Session 20 — Family icons (B8/B9 name path)".

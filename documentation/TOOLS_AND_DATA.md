@@ -40,6 +40,7 @@ was lost; they were intentionally curated. Treat as documentation.
 | breeding_special.json | B5 full special-table spec: `base:"rom"` + in-place `overrides` (edit any base entry, by `index` or by parent `match`) + `appends` (new entries past 824). The SINGLE authored source for the whole special table; bank `$16` stays vanilla. | tools/build_breeding.py --emit-special → patches/bank_069.asm |
 | breeding_family_reassign.json | B6 family reassignment spec: `{id,name,from,to}` list of same-size family-byte edits ($03:$4461+$00). `from` is validated == vanilla at build time. | tools/build_family_reassign.py --emit → patches/bank_003.asm |
 | custom_layouts/room_6b_medalman.json | 20×16 tile grid for Room $6B — user-designed MedalMan tileset room (v28, current) | tile_layout_compiler.py → bank_064.asm |
+| family_icons.json | S20: the 10 vanilla family ICON tiles ($4F:$4110-$41A0, text bytes $10-$19) decoded as 8×8 grids + the free $1A slot + the authored Spirit icon (Variants A/B). Round-trip safe (decode→encode == ROM). `_generator` stamped. | tools/build_family_icon.py → patches/bank_04f.asm |
 
 ### Tier S — Stable analysis output (generator not in repo; data is ROM-derived and unchanging)
 | File | Contents | Used by |
@@ -98,6 +99,16 @@ hardcoded id-range table at `$12:$6294`. Emits `patches/bank_012.asm` (zero-shif
 `jp` + routine in trailing pad). POC only — see BREEDING_SYSTEM "Dynamic library";
 production is a build-time family→members table (ROADMAP B7), do NOT optimize the
 runtime path.
+
+`build_family_icon.py` (✅ new Session 20 — B8/B9 family-icon path): the family
+"name" is an ICON font tile ($4F:$4110-$41A0, text bytes $10-$19; addr = $4010 +
+byte*16). `--dump` decodes the 10 vanilla icons (+ the free $1A/$41B0 slot) to
+`extracted/family_icons.json` (round-trip safe). `--png FILE [--head-index N]`
+encodes an 8×8 PNG to a 2bpp tile and prints the `db` line for the Spirit slot.
+`--selftest` asserts vanilla icons round-trip and the Spirit grid in the JSON ==
+the bytes in `patches/bank_04f.asm` at the Spirit slot. Delivered WITH `family_icons.json`. **(CORRECTED 2026-06-19: Spirit ships on byte $19/`$41A0`, overwriting vanilla ???; the free $1A/`$41B0` slot is left blank — it is not fill-immune at runtime. selftest now checks $41A0.)**
+The Spirit icon insert itself is `patches/bank_04f.asm` (same-size 16-byte tile at
+$41B0, zero shift; bank $4F otherwise byte-identical to vanilla).
 
 ### Prototype editor (towards_editor/)
 `DWM1_Multi_Tileset_Editor.html` — standalone HTML file (open in browser).

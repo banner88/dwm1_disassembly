@@ -13038,14 +13038,16 @@ CustomGFXMapID::
     cp $6C                      ; 2 bytes: FE 6C
     ret c                       ; 1 byte:  D8 (raw mapID for $00-$6B)
     jp MapIDClampForPalette     ; 3 bytes: C3 xx xx (clamped for $6C+)
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+ClampFamIdx::
+; B9 S29: party-graphics tables $4BAD (family) & $49DF (glyph) have only 10 entries
+; (families 0-9). Spirit (family 10) overflows -> garbage pointer -> runaway VRAM
+; copy corrupts all of VRAM. Clamp the family index to 9 (Spirit borrows family 9 /
+; <???> graphics) at the two bank_01 party-GFX lookups. 8 bytes; family is only 0-10.
+    call ReadActiveMonsterByte  ; A = active monster family (CD 84 22)
+    cp $0a                      ; family < 10?  (FE 0A)
+    ret c                       ;   yes -> unchanged (D8)
+    dec a                       ;   10 -> 9 (3D)
+    ret                         ; C9
     cp $fe
     cp $fe
     cp $fe
