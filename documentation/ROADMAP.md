@@ -478,8 +478,79 @@ Driven by what the editor must EDIT, not completionism:
       pointer blobs; assorted `cp $f9`/`rst $38` runs in banks `$08/$11/$15/$2c/$33/
       $55/$57/$66` that are data, not code. *Accept:* targeted tables read as `db`/`dw`
       with names; MD5 unchanged; the editor can address them by label.
-Raw graphics/audio banks ($32–$3A, $5A, $63…) stay LOW priority — they
-block nothing.
+**STALE BOXES (verify + tick):** the first three boxes above (bank $03 monster
+table, $14 enemy stats/boss, $16 breeding) appear ALREADY `db`-converted on disk
+(bank_003/014/016 are heavily `db`/`dw` with labeled loaders). Confirm against
+disassembly and check them off.
+
+- [ ] **GFX-1 — Graphics system: gfx-ID indirection + sprite decompressor → annotate + tool.**
+  *VERIFIED this session via a working battle-sprite swap POC (Dracky→DWM2 clam);
+  the facts below are ROM-proven unless tagged speculative. Re-confirm in disassembly,
+  then annotate (labels/comments only, **build MUST stay `1ca6579…`**).*
+  - **gfx-ID = `(bank<<8)|index`.** High byte = ROM bank, low byte = index.
+  - **Resolver `DecompressTileLayout` @ `$00:$1627`:** switches to `bank` (`ld[$2100],a`
+    low bits; `swap a/rra/and 3 → ld[$4100],a` high bits — also twiddles SRAM bank,
+    restored after, harmless). Reads per-bank pointer table at **`$<bank>:$4001 + index*2`**
+    → stream addr in `$4000–$7FFF`.
+  - **Stream header (3 bytes):** `[declen_lo, declen_hi, runmark]`, then LZ body.
+    Decompressor path `WaitDMATransfer $00:$1577` → `TextScrollWindow` → writes to VRAM dest HL.
+  - **LZ body:** byte≠runmark → literal; byte==runmark → back-ref: next 2 bytes `b0,b1`,
+    offset = `b0 | ((b1>>4)&0xF)<<8` (**ABSOLUTE** index into output base `$ac/$ad` = VRAM dest),
+    count = `(b1&0xF)+4`, extension if low-nibble=`$F` (count = next_byte + `$13`).
+  - **KEY ARCHITECTURE:** back-refs point into a **SHARED VRAM tile pool pre-loaded before
+    the per-monster stream**, so one monster stream does NOT decode standalone (Dracky's
+    battle stream is ~9 on-disk bytes → 576 decompressed). **POC lever:** a stream with NO
+    runmark byte in its body = pure literal copy = self-contained (ignores the shared pool).
+    `tools/build_sprite_swap.py` (added this session) uses exactly this to repoint Dracky.
+    *(Gotcha: fill the WHOLE tile field with the backdrop index, not just the sprite
+    footprint — else the surround renders as palette index 0. For Dracky's battle palette
+    that index 0 is red; backdrop is index 1. Fixed in the tool via `BG_INDEX`/`BODY_INDICES`.)*
+  - **Battle path (VERIFIED):** `SetFld_466d` (bank `$07`, ~line 1008) reads species (`$caca`),
+    indexes table at **`$00:$2B9F`** by `species*2`, DMAs to VRAM **`$8B00`**. Dracky (sp 78)
+    → gfx-ID **`$3627`** (bank `$36` idx `$27`; 576 B / 36 tiles / 48×48; runmark `$02`).
+    Word lives at ROM0 `$2C3B` = `27 36`.
+  - **Follower path (VERIFIED):** table `ScreenTransDataTable` @ `$01:$49DF`, loader
+    `GetActiveMonsterStatus` @ `$01:$4986`, index `(species+$10)*2`; plus a family-shared
+    2nd load via `$01:$4BAD`. Dracky follower = gfx-ID **`$383E`** (bank `$38` idx `$3E`; 256 B / 16 tiles).
+  - **DOC ERRORS to fix while annotating:** `bank_038.asm` header says "gate dungeon tileset J"
+    but it ALSO holds monster follower sprites; `bank_036.asm` pointer table is labeled
+    "Cross-bank dispatch table (40 entries)" but is actually the **gfx pointer table**.
+  - **DISCARD (bogus):** an earlier `$382E` battle guess came from scan-tables at
+    `$07:$6E14`/`$09:$6B10` that have **NO code references**; `$382E` is a dungeon tile, not Dracky.
+  - **Deliverables:** labels/comments on the resolver, decompressor, pointer tables, and both
+    species→gfx-ID tables; fold a proper decode/encode into the tool; extract the gfx-ID
+    tables to JSON (tool ships with data). **Accept:** clean build still `1ca6579…`; tool
+    round-trips a sprite byte-identically; Dracky→clam swap reproducible.
+
+- [ ] **GFX-2 — Monster palette system + recolour (separate job; do AFTER GFX-1).**
+  *This is the recolour goal. Palette is a DIFFERENT subsystem from tiles — only PARTIALLY
+  traced this session, so most below is **SEMI-SPECULATIVE**: confirm in disassembly and
+  drive it with a recolour POC (verify-then-document, like GFX-1 did for tiles).*
+  - **Why needed:** the clam swap renders correctly but in Dracky's palette {red, white,
+    gold/brown, black} — no purple available from tiles alone. Recolour = editing palette data.
+  - **VERIFIED (probe ROM this session):** Dracky's battle palette indices are
+    **0=red, 1=white/transparent (backdrop), 2=gold/brown, 3=black** (index 1 is the backdrop).
+  - **Traced (speculative chain):** CGB upload routines live in **bank `$17`** (`rBCPS/rBCPD/rOCPS/rOCPD`
+    writes); bank `$00` has buffers `wBGPalette/wObj1Palette/wObj2Palette` + loaders
+    `SetGBCPalette`/`SetPaletteGBC`/`LoadGBCPalettes`. `SetGBCPalette(a=palID)` →(GBC)→
+    `SetPaletteGBC` stores ID at `$c850`, then `ld hl,$1704; rst $10` (far-call into bank `$17`)
+    does the upload from a palette table. **The per-monster/family palette SELECTION point is
+    NOT yet pinned** — the battle display init (bank `$07` ~lines 1090–1180) reads family
+    (`$cacb`) + species and calls `FuncFld_6942` etc.; start tracing there. NOTE the
+    `SetGBCPalette` calls in bank `$07` at lines 2460/2609 are SCENE palettes (warp/gate id `$03`),
+    **not** the monster's — don't be misled.
+  - **Recolour approach (speculative):** find the palette DATA table in bank `$17` reached via the
+    `rst $10`/`$1704` path, indexed by the monster/family palette ID; edit the 4 RGB555 colours,
+    OR repoint selection to a custom palette. **First confirm scope** (per-family vs per-monster):
+    a family palette edit recolours Dracky's whole family. **Accept:** clam renders in corrected
+    (e.g. purple) colours in SameBoy.
+
+- [ ] **GFX-3 — Walking/follower sprite swap (small).** Same mechanism as GFX-1 via the follower
+  path (gfx-ID `$383E`, table `$01:$49DF`). Can ride along with GFX-1 or stand alone. Hold until
+  the battle swap is signed off in SameBoy.
+
+Raw audio banks ($5A, $63…) stay LOW priority. **Graphics banks ($32–$3A are NO LONGER
+low-priority** — the monster sprite system there is editable and proven; see GFX-1/2/3 above.
 
 ---
 

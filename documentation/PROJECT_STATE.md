@@ -5,6 +5,21 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-19 (Session 21 — Monster battle-sprite swap POC:
+> Dracky sp.78 → DWM2 "clam", proven rendering in SameBoy; in Dracky's native
+> palette pending recolour.)
+> **Monster sprite graphics system reverse-engineered + swap proven.** Every
+> graphic = gfx-ID `(bank<<8)|index` → resolver `DecompressTileLayout` `$00:$1627`
+> → per-bank pointer table `$<bank>:$4001+index*2` → LZ stream (3-byte header,
+> back-refs into a SHARED VRAM tile pool). Battle path VERIFIED: `SetFld_466d`
+> (bank `$07`) → table `$00:$2B9F`[species*2] → VRAM `$8B00`; Dracky = gfx-ID
+> `$3627` (bank `$36`, 36 tiles). Swap method: self-contained literal stream (no
+> runmark byte) repointed in bank `$36` free space — `tools/build_sprite_swap.py`,
+> `patches/bank_036.asm`. Build stays `1ca6579…`; INTEGRITY PASS. Full mechanics
+> in MONSTER_DATA.md "Monster sprite graphics system"; next jobs queued as ROADMAP
+> **GFX-1** (annotate tile system), **GFX-2** (palette + recolour, semi-speculative),
+> **GFX-3** (follower swap). Palette is a separate subsystem (bank `$17`, not yet pinned).
+>
 > Last verified: 2026-06-19 (Spirit B9 — family-10 VRAM corruption FIXED + icon
 > finalized; user-confirmed in SameBoy. Built ON TOP of the gate-entry-freeze fix.)
 > **B9 — 11th family "Spirit": VRAM corruption FIXED; icon shipped.** Catching a

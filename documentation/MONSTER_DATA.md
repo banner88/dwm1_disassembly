@@ -169,3 +169,47 @@ is looked up and replaced with the join EID (the monster stats for what joins).
 - `extracted/monsters_full.json` — all 221 monsters with labeled fields
 - `extracted/enemy_stats.json` — all 487 enemy stat entries
 - `extracted/breeding_complete.json` — complete breeding data (both tables)
+
+## Monster sprite graphics system (verified Session 21)
+
+Reverse-engineered and proven in-game via a battle-sprite swap POC (Dracky → a
+DWM2 "clam"; `tools/build_sprite_swap.py`, `patches/bank_036.asm`). Execution
+jobs live in ROADMAP **GFX-1** (tile system: annotate + tool), **GFX-2** (palette
++ recolour, semi-speculative), **GFX-3** (follower swap). Re-confirm before
+trusting — annotate disassembly with labels/comments only, build stays `1ca6579…`.
+
+**Addressing.** Every graphic = a 2-byte **gfx-ID = `(bank<<8)|index`** (high byte
+= ROM bank, low = index). Resolver `DecompressTileLayout` @ `$00:$1627` switches to
+`bank` and reads a per-bank pointer table at **`$<bank>:$4001 + index*2`** → a
+compressed stream in `$4000–$7FFF`.
+
+**Stream format.** 3-byte header `[declen_lo, declen_hi, runmark]`, then an LZ body
+(decompressor `WaitDMATransfer $00:$1577` → `TextScrollWindow`): byte≠runmark =
+literal; byte==runmark = back-ref (next 2 bytes → offset `b0|((b1>>4)&0xF)<<8`,
+ABSOLUTE into output base `$ac/$ad`; count `(b1&0xF)+4`, ext if low-nibble `$F`).
+Back-refs index a **shared VRAM tile pool pre-loaded before the per-monster stream**,
+so a single stream does NOT decode standalone (Dracky's battle stream ≈ 9 on-disk
+bytes → 576 decompressed). **Swap lever:** a body with no runmark byte = pure literal
+copy = self-contained, ignoring the shared pool. (Gotcha: fill the WHOLE tile field
+with the backdrop index, not just the sprite footprint, or the surround renders as
+palette index 0.)
+
+**Species → gfx-ID tables (VERIFIED).**
+- Battle: `SetFld_466d` (bank `$07`, ~line 1008) reads species (`$caca`), indexes
+  **`$00:$2B9F`** by `species*2`, DMAs to VRAM **`$8B00`**. Dracky (sp 78) → **`$3627`**
+  (bank `$36` idx `$27`; 576 B / 36 tiles / 48×48; runmark `$02`; word at ROM0 `$2C3B`).
+- Follower: `ScreenTransDataTable` @ `$01:$49DF`, loader `GetActiveMonsterStatus` @
+  `$01:$4986`, index `(species+$10)*2`; family-shared 2nd load via `$01:$4BAD`.
+  Dracky → **`$383E`** (bank `$38` idx `$3E`; 256 B / 16 tiles).
+
+**Palette (SEMI-SPECULATIVE — see GFX-2).** Tiles only pick a palette index; colours
+come from a separate CGB subsystem. Dracky's battle palette (probe-verified):
+**0=red, 1=white/transparent backdrop, 2=gold/brown, 3=black**. Upload routines in
+bank `$17`; `SetPaletteGBC` stores a palette ID at `$c850` then `ld hl,$1704; rst $10`.
+Per-monster/family selection NOT yet pinned (start at bank `$07` battle-init ~1090–1180,
+which reads family `$cacb`).
+
+**Disassembly label errors to fix:** `bank_038.asm` header "gate dungeon tileset J"
+also holds follower sprites; `bank_036.asm` "Cross-bank dispatch table" is actually the
+gfx pointer table. A prior `$382E` battle guess (from unreferenced scan-tables
+`$07:$6E14`/`$09:$6B10`) is bogus — `$382E` is a dungeon tile.
