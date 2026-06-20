@@ -5,6 +5,37 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-20 (Session 23 — GFX-2 DONE: cross-bank sprite backbone +
+> monster battle palette SOLVED + recolour; clam→Dracky purple + full integration
+> user-confirmed in SameBoy.)
+> **GFX-2 DONE — cross-bank sprite swap backbone + monster palette recolour.**
+> (1) `dwm/sprite_bank.py` — cross-bank OVERFLOW allocator: places encoded streams in
+> the reserved sprite banks (`$7E–$7F`, then `$7C/$7A/$79`; EDITOR_DESIGN §8) with a
+> `$4001` pointer table, and `tools/build_sprite_swap.py` (rewritten) repoints the
+> species→gfx-ID entry — works for ANY of 221 monsters regardless of which bank their
+> art lives in (resolver reads `$<bank>:$4001+index*2`, NO bank gating; verified). This
+> is the bulk-DWM2-import enabler (the old tool was battle-only, bank `$36` only,
+> ~40/221). `--relocate` = lossless cross-bank copy (proof: Slime relocated renders
+> identically, user-confirmed). (2) **Monster battle palette SOLVED** (was the GFX-2
+> "semi-speculative" gap): the enemy renders as BG tiles on **BG palette slot 4**; the
+> per-species colours live in **`MonsterBattlePalettes` @ `$17:$62FD`** (mgbdis-misnamed
+> `RoomAttrDataBlocks`), 8 B/species `[c0, c1=$6bff backdrop, c2, c3=$0000 black]`,
+> loaded by bank `$17` **entry 6** (`$1706`: `$c81e`=species×8+base, `$c81f`=slot).
+> Found via SameBoy BG-slot-4 dump (Dracky `007b 6bff 2a97 0000`) + ROM grep; annotated
+> in `bank_017.asm` (label `MonsterBattlePalettes` + loader doc, byte-perfect). Recolour
+> = same-size 8-byte edit of one species' entry (Iron-Rule-2 safe; per-species, no
+> bleed) via `build_sprite_swap.py --palette`. (3) Data: `tools/extract_monster_palettes.py`
+> + `extracted/monster_palettes.json` (all 221); `extracted/monster_sprites.json`
+> REGENERATED (all 221 — the shipped copy was a 3-monster subset, a data defect now
+> fixed). USER-CONFIRMED in SameBoy: DWM2 clam→Dracky battle + correct purple palette;
+> and a full integration ROM (clam + Dracky→Spirit family + custom room with random
+> encounters + breeding/library all coexisting, no glitches). The swap touches only
+> bank `$7e` (art) + 2 B in `$00` (repoint) + 1 entry in `$17` (palette) — orthogonal to
+> breeding/library/custom-rooms/Spirit-family. Integrity PASS 4/4. NEXT: GFX-3 (follower
+> /walking swap) — rides this backbone via `$01:$49DF` (needs re-section first) + its own
+> palette table + the family-shared `$4bad` block. Method: KEY_LESSONS "Session 23";
+> mechanics: MONSTER_DATA "Monster battle palette system".
+>
 > Last verified: 2026-06-20 (Session 22 — GFX-1: graphics system annotated +
 > sprite codec/extraction/swap tooling; Dracky→Anteater swap user-confirmed in
 > SameBoy as a mostly-red Anteater, i.e. correct shape in Dracky's palette.)
@@ -284,6 +315,8 @@
 | Assembler | RGBDS v0.6.1 exactly |
 | ROM size | 2 MB, 128 banks ($00–$7F) |
 | Custom content bank | $60 (~14.9 KB free as of v25 content, 1322 bytes used) |
+| Monster battle palette table | `MonsterBattlePalettes` @ `$17:$62FD`, 8 B/species, 4 RGB555 `[c0, c1=$6bff, c2, c3=$0000]`; loaded by bank $17 entry 6 (`$1706`). Was mislabeled `RoomAttrDataBlocks`. |
+| Monster sprite overflow banks | `$7E,$7F` (then `$7C,$7A,$79`) — cross-bank sprite streams (`dwm/sprite_bank.py`); EDITOR_DESIGN §8. Resolver reads `$<bank>:$4001+index*2`, no bank gating. |
 | Custom layout bank | $64 (layout ptr table + LZSS layout + attr data, 309 bytes used) |
 | Empty banks available | 21 banks = 336 KB: $67,$69–$77,$79–$7A,$7C,$7E–$7F |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |

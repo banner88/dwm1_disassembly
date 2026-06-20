@@ -310,6 +310,10 @@ label17_41c0:
     call LoadPal_46bf
     ret
 
+; Entry 6 ($1706) — LOAD ONE CGB PALETTE from MonsterBattlePalettes.
+; $c81e = palette index (= monster species for battle), $c81f = dest CGB slot.
+; HL = MonsterBattlePalettes + index*8; copies the 8-byte (4-colour) palette to
+; the slot. The monster battle display calls this with index=species, slot=4 (BG).
 label17_41d0:
     ld a, [wIsGBC]
     or a
@@ -2395,6 +2399,16 @@ GateAttrTable_B:  ; $5415 — 256 entries × 2B (attr_idx, attr_bank)
     db $A1, $01, $FF, $6B, $AA, $03, $00, $00, $EE, $04, $FF, $6B, $7A, $02, $00, $00
     db $CA, $4D, $FF, $6B, $B2, $76, $00, $00, $CA, $4D, $FF, $6B, $B2, $76, $00, $00
     db $EE, $04, $FF, $6B, $7A, $02, $00, $00
+; --- Monster BATTLE palette table (GFX-2, located S23 via SameBoy palette dump +
+;     ROM grep). PER-SPECIES, 8 bytes/entry = 4 RGB555 LE colours
+;     [c0, c1=$6bff backdrop(forced), c2, c3=$0000 black]. Indexed species*8 from
+;     this base ($62FD). Loaded by entry 6 (label17_41d0 / far-call $1706):
+;     $c81e = palette index (= species), $c81f = dest CGB slot. The enemy monster
+;     renders as BG tiles on BG palette slot 4 (verified in SameBoy), so a recolour
+;     is a same-size 8-byte edit of one species' entry — e.g. Dracky sp78 @ $656d,
+;     Slime sp8 @ $633d. (Historically MISNAMED "RoomAttrDataBlocks"; the name is
+;     kept because it is referenced at $4120, but this is the monster palette table.)
+MonsterBattlePalettes:
 RoomAttrDataBlocks:
     db $BD, $01, $FF, $6B, $5F, $03, $00, $00
     db $BD, $01, $FF, $6B, $5F, $03, $00, $00, $00, $26, $FF, $6B, $80, $47, $00, $00

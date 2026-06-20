@@ -243,14 +243,35 @@ verified). But a CROSS-monster transplant must encode the new art **self-contain
 (`--literal`) — otherwise it inherits whatever pool state the *target* monster loads,
 not the source's. The swap tool defaults handle this.
 
-**Palette (still GFX-2; one fact upgraded).** Tiles only pick a palette index; colours
-come from a separate CGB subsystem. Dracky's battle palette (probe-verified):
-**0=red, 1=white/transparent backdrop, 2=gold/brown, 3=black**. **Session 22 (user VRAM
-data):** the enemy monster uses ONE shared **OBJ palette slot — slot 4** (Dracky and a
-blue slime both show OBJ attribute `04`); per-species COLOURS are loaded into slot 4 at
-battle-init, so recolour = edit the per-species colour table, not the slot. Entry point:
-`FuncFld_6942` (bank `$07` ~line 6567, does `ld h,$04`) / `SetGBCPalette` → `$1704`/`rst $10`
-upload in bank `$17`. Per-monster-vs-per-family scope still to confirm in GFX-2.
+**Monster battle palette system (SOLVED Session 23).** Tiles only pick a palette
+INDEX (0-3); the colours come from a separate CGB subsystem. The enemy monster renders
+as **BG tiles on BG palette slot 4** (SameBoy-confirmed: tilemap attr `---04`; the live
+BG colour buffer is `$c797`, slot 4 = `$c7b7`; uploaded to BCPD by bank `$17` entry 8).
+The per-species colours live in a ROM table **`MonsterBattlePalettes` @ `$17:$62FD`**
+(historically mislabeled `RoomAttrDataBlocks`), **8 bytes/species = 4 RGB555 LE colours
+`[c0, c1=$6bff backdrop(forced), c2, c3=$0000 black]`** (only c0/c2 vary per monster).
+It is loaded by **bank `$17` entry 6** (`label17_41d0` / far-call `$1706`): `$c81e` =
+palette index (= species) `×8 + base`, `$c81f` = destination CGB slot; the monster
+battle display calls it with index=species, slot=4. Verified: Dracky sp78 @ `$656d`
+= `007b 6bff 2a97 0000` (red/gold/black), Slime sp8 @ `$633d` = `5c0f 6bff 7ea0 0000`
+(blue) — both match the SameBoy palette viewer exactly.
+
+**Recolour** = a same-size 8-byte edit of one species' entry (per-species, no bleed;
+same-size in bank `$17` → Iron-Rule-2 safe). `tools/build_sprite_swap.py --palette`
+does it; `extracted/monster_palettes.json` (`tools/extract_monster_palettes.py`) has
+all 221. Note `SetGBCPalette($04)` (banks `$02/$13/$50`) is the constant battle-palette
+REFRESH, not the colour source; `FuncFld_6942`'s `ld h,$04` is tile streaming, not a
+slot — both were misleading earlier leads (KEY_LESSONS "Session 23").
+
+**Cross-bank sprite swap (Session 23).** `dwm/sprite_bank.py` places encoded streams
+into the reserved overflow banks (`$7E–$7F`, then `$7C/$7A/$79`; EDITOR_DESIGN §8) with
+a pointer table at `$4001`, and `tools/build_sprite_swap.py` repoints the species→gfx-ID
+entry — works for ANY of the 221 monsters regardless of which bank their original art is
+in (the resolver reads `$<bank>:$4001+index*2` with no bank gating). `--relocate` copies
+a monster's existing stream unchanged (lossless regression proof); `--png`/`--payload`
+import new art (literal/self-contained). `--palette` recolours in the same run. DWM2
+clam→Dracky (battle + purple palette) user-confirmed in SameBoy, including inside a
+custom room with random encounters and with Dracky reassigned to the Spirit family.
 
 **Disassembly label errors (noted; battle table FIXED Session 22):** `bank_038.asm`
 header "gate dungeon tileset J" also holds follower sprites; `bank_036.asm` "Cross-bank

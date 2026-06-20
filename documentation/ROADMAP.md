@@ -532,10 +532,25 @@ disassembly and check them off.
     tables to JSON (tool ships with data). **Accept:** clean build still `1ca6579…`; tool
     round-trips a sprite byte-identically; Dracky→clam swap reproducible.
 
-- [ ] **GFX-2 — Monster palette system + recolour (separate job; do AFTER GFX-1).**
-  *This is the recolour goal. Palette is a DIFFERENT subsystem from tiles — only PARTIALLY
-  traced this session, so most below is **SEMI-SPECULATIVE**: confirm in disassembly and
-  drive it with a recolour POC (verify-then-document, like GFX-1 did for tiles).*
+- [x] **GFX-2 — Monster palette system + recolour + cross-bank sprite backbone.** ✅ DONE (Session 23)
+  *DONE Session 23 — see PROJECT_STATE "Session 23" + KEY_LESSONS "Session 23" +
+  MONSTER_DATA "Monster battle palette system". Delivered: (a) `dwm/sprite_bank.py` —
+  cross-bank overflow allocator (places streams in reserved `$7E–$7F`/`$7C/$7A/$79`
+  with a `$4001` pointer table; resolver reads `$<bank>:$4001+index*2` with no bank
+  gating, so ANY of 221 monsters repointable regardless of source bank); (b)
+  `tools/build_sprite_swap.py` rewritten — cross-bank, `--relocate` (lossless proof) /
+  `--png` / `--payload`, `--palette` recolour, `--build-rom` focused test ROM; (c) the
+  monster battle palette SOLVED — per-species table `MonsterBattlePalettes @ $17:$62FD`
+  (was mislabeled `RoomAttrDataBlocks`), 8 B/species, loaded by entry 6 (`$1706`); found
+  via SameBoy BG-slot-4 dump + ROM grep; annotated in `bank_017.asm` (byte-perfect);
+  (d) `tools/extract_monster_palettes.py` + `extracted/monster_palettes.json`;
+  `extracted/monster_sprites.json` regenerated (all 221, was a 3-monster subset).
+  Proofs (user-confirmed in SameBoy): Slime relocated cross-bank renders identically;
+  DWM2 clam→Dracky battle + correct purple palette; and the full combined ROM (clam +
+  Dracky→Spirit family + custom room with random encounters + breeding/library) clean.
+  REMAINING (GFX-3): follower path needs `$01:$49DF` re-section + its own palette table
+  (find the same way) + the family-shared `$4bad` block.*
+  *Original verified facts (kept for reference):*
   - **Why needed:** the clam swap renders correctly but in Dracky's palette {red, white,
     gold/brown, black} — no purple available from tiles alone. Recolour = editing palette data.
   - **VERIFIED (probe ROM this session):** Dracky's battle palette indices are
@@ -562,9 +577,17 @@ disassembly and check them off.
     a family palette edit recolours Dracky's whole family. **Accept:** clam renders in corrected
     (e.g. purple) colours in SameBoy.
 
-- [ ] **GFX-3 — Walking/follower sprite swap (small).** Same mechanism as GFX-1 via the follower
-  path (gfx-ID `$383E`, table `$01:$49DF`). Can ride along with GFX-1 or stand alone. Hold until
-  the battle swap is signed off in SameBoy.
+- [ ] **GFX-3 — Walking/follower sprite swap.** Rides the Session-23 cross-bank backbone
+  (`dwm/sprite_bank.py` + `build_sprite_swap.py`), but via the FOLLOWER path. Prereqs now
+  known: (1) **re-section `ScreenTransDataTable` @ `$01:$49DF`** from mgbdis fake
+  instructions to a labeled `dw` block (byte-perfect, same job as the S22 battle gfx
+  table — preserve any cross-bank referenced labels), then `build_sprite_swap.py --kind
+  follower` can repoint it (the tool already has the follower table wired, gated until the
+  re-section lands); (2) the follower likely has its OWN palette table — find it the same
+  way GFX-2 found the battle one (SameBoy dump of the follower's palette slot + ROM grep);
+  (3) handle the **family-shared `$4bad` second DMA** (the B9-clamped 10-entry family GFX
+  table) — verify in SameBoy whether it overlaps the swapped walk frames. Follower = 16
+  tiles (`$383E` for Dracky); the 16-tile stream holds the full walk-animation frame set.
 
 Raw audio banks ($5A, $63…) stay LOW priority. **Graphics banks ($32–$3A are NO LONGER
 low-priority** — the monster sprite system there is editable and proven; see GFX-1/2/3 above.

@@ -912,3 +912,78 @@ keeps the target's colours (Anteater-on-Dracky rendered mostly RED, = Dracky ind
 Recolour = edit the per-species colour data, entry `FuncFld_6942`/`SetGBCPalette`
 (bank `$07`, `ld h,$04`). **Rule:** tile swaps and recolours are independent jobs;
 don't expect a sprite swap to change colours.
+
+## Session 23 Lessons — GFX-2 (cross-bank sprite backbone + monster palette recolour)
+
+Full reference: MONSTER_DATA.md "Monster sprite graphics system" + "Monster battle
+palette system". Tools: `dwm/sprite_bank.py` (cross-bank allocator),
+`tools/build_sprite_swap.py` (rewritten battle swap, cross-bank + `--palette`),
+`tools/extract_monster_palettes.py`; data `extracted/monster_palettes.json`,
+`extracted/monster_sprites.json` (regenerated, all 221). Disassembly annotation in
+`bank_017.asm` (`MonsterBattlePalettes` @ `$62FD`, loader `label17_41d0`).
+
+### The cross-bank allocator is the fundamental enabler for bulk DWM2 swaps
+**Symptom**: the S22 swap tool only handled monsters whose battle art is in bank `$36`
+(~40 of 221) and only same-bank free space — useless for swapping arbitrary or many
+monsters. **Root cause**: battle sprites are spread across 6 banks (`$2F,$32–$36`),
+followers across 5 (`$2E,$2F,$38–$3A`), each with tiny trailing free space.
+**Fix**: a cross-bank allocator (`dwm/sprite_bank.py`) that places streams into the
+reserved overflow region (`$7E–$7F`, then `$7C/$7A/$79`) with a pointer table at
+`$4001`, and repoints the species→gfx-ID entry. **Verified the resolver supports
+this**: `DecompressTileLayout` ($00:$1627) reads the stream pointer from
+`$<bank>:$4001 + index*2` with NO bank-validity gating — so any monster can point at
+any bank, including a fresh one you lay a pointer table into. **Rule**: never place
+swaps in the original bank; the editor's sprite backend is overflow-bank allocation +
+repoint, identical for battle (`$00:$2B9F`) and follower (`$01:$49DF`).
+
+### Prove the plumbing with a lossless relocation before touching art
+**Fix**: the cleanest regression proof of "cross-bank place + repoint" is to copy a
+monster's EXISTING stream bytes unchanged into overflow and repoint — decode is
+byte-identical, so it renders identically (Slime, user-confirmed). Back-refs are
+ABSOLUTE into the VRAM output base, so a stream is position-independent — relocating
+the bytes changes nothing. **Rule**: separate "does the plumbing work" (relocate
+unchanged) from "is the new art right" (literal-encode new art); debug them apart.
+
+### The monster battle palette: BG slot 4, table `$17:$62FD`, found via SameBoy + grep
+**Symptom**: a swapped sprite rendered in the TARGET monster's colours; the
+per-monster palette source would not surface in static tracing (the GFX-2 "semi-
+speculative" gap). Two things hid it: (1) the monster renders as **BG tiles on BG
+palette slot 4**, not OBJ — so an OBJ-buffer (`$c7f7`) watchpoint was a red herring;
+the live BG buffer is `$c797`, slot 4 = `$c7b7`. (2) The ROM table was **mislabeled
+`RoomAttrDataBlocks`**, so grepping for a "palette" label found nothing.
+**Fix**: a SameBoy palette dump gave the exact bytes (Dracky BG4 = `007b 6bff 2a97
+0000`); grepping the ROM for those bytes landed on `0x5e56d`, and Dracky(78)/Slime(8)
+being 560 B / 70 species apart proved an 8-B/species table at **`$17:$62FD`**
+(`MonsterBattlePalettes`), loaded by **entry 6** (`label17_41d0` / far-call `$1706`:
+`$c81e`=species index ×8 + base, `$c81f`=dest slot). **Rules**: when a static trace
+stalls, a SameBoy slot dump + ROM grep of the *exact* bytes beats hours of tracing;
+always check existing labels — a misnomer can be sitting on the table you're hunting;
+and confirm OBJ-vs-BG before chasing the wrong buffer.
+
+### Per-monster vs shared: dump the slot for two monsters
+**Fix**: Dracky BG4 (`007b 6bff 2a97 0000`, red) vs Slime BG4 (`5c0f 6bff 7ea0
+0000`, blue) differed while every other slot was identical → per-monster, settled in
+one comparison. **Rule**: to decide per-monster-vs-shared for any palette/asset, read
+the slot for two different subjects; identical-except-the-one-slot = per-subject.
+
+### Recolour = a same-size 8-byte edit of one species' entry (Iron-Rule-2 safe)
+Each entry is `[c0, c1=$6bff backdrop(forced), c2, c3=$0000 black]`; only c0/c2 vary.
+Editing Dracky's entry (`$17:$656d`) to the clam's colours touched 4 bytes, recoloured
+ONLY Dracky (per-species), and is a same-size edit in bank `$17` (no insertion →
+Iron-Rule-2 OK). `build_sprite_swap.py --palette` does it. **Rule**: a same-size data
+edit in a no-insert bank is allowed; the insert ban is about *shifting* bytes.
+
+### Corrected GFX-2 doc leads (were wrong)
+`FuncFld_6942`'s `ld h,$04` is a pointer high byte for VRAM **tile** streaming, NOT
+"OBJ slot 4"; the bank `$07` `SetGBCPalette` calls are scene palettes; and
+`SetGBCPalette($04)` is the constant battle-palette REFRESH — the per-monster colours
+come from `MonsterBattlePalettes` via entry 6, not from that call. **Rule**: trace
+palette colour to the per-index TABLE LOADER, not the upload/fade/refresh path.
+
+### The sprite/palette system is orthogonal to all prior custom work
+The combined ROM (custom rooms + encounters + breeding + library + Spirit family +
+clam swap + Dracky→Spirit) ran clean. The swap lives entirely in bank `$7e` (art) +
+2 bytes in `$00` (repoint) + one entry in `$17` (palette) — none of the breeding
+(`$69`), library (`$12`), custom-content (`$60/$64/$67`), or family (`$03`) banks.
+**Rule**: graphics swaps and the content/data systems don't interact; they can be
+developed and tested independently.

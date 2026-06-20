@@ -25,7 +25,8 @@ Regen produces identical output to committed file. Safe to re-run.
 | all_scripts.json | dump_all_scripts.py | **BRANCH-FOLLOWING added this session.** Follows 9 branch opcodes ($00/$01/$0E/$14/$15/$27/$28/$2C/$37) via work-queue. 732 scripts, 810 unique WriteRAM locations (was 482 linear-only; ROM ground truth 866 after false positives = 93.5% coverage). 56 unreached WriteRAMs are in alternate dispatch paths (entry 1/2 tables). Canonical room names from editor/editor.py (96 entries). New `branch_targets` field per script. |
 | event_flags_complete.json | analyze_event_flags.py | **REWRITTEN this session.** Now reads all_scripts.json (branch-following) instead of linear ROM scan. 328 flags, 298 with sets (was 92). 29 check-only anomalies (was 219). Includes collision zones, SRAM boundary. |
 | breeding_tables.json | build_breeding.py | **NEW (Session 13, B1 keystone).** Round-trip-faithful decode of BOTH vanilla breeding tables (special $16:$4B30 825×5; family $16:$4974 222 pairs). `--selftest` proves re-emission is byte-identical to the ROM. Independently reconciled with hand-authored breeding_complete.json (825/825 + 197/197, 0 diffs). Name-annotated; `_generator` stamped. |
-| monster_sprites.json | extract_monster_sprites.py | **NEW (Session 22, GFX-1).** All 221 monsters' battle + follower sprites: species → gfx-ID, bank, index, stream addr/len, declen, tile count, grid, and decoded 2bpp tile bytes (hex, regenerable without PNGs). Count-parameterised (`--count`). Decoded via `dwm/sprite_codec.py`; `--png` writes images to `extracted/monster_sprites/`. |
+| monster_sprites.json | extract_monster_sprites.py | **NEW (Session 22, GFX-1); REGENERATED Session 23 (all 221 — the shipped copy was a 3-monster subset, a data defect now fixed).** All 221 monsters' battle + follower sprites: species → gfx-ID, bank, index, stream addr/len, declen, tile count, grid, and decoded 2bpp tile bytes (hex, regenerable without PNGs). Count-parameterised (`--count`). Decoded via `dwm/sprite_codec.py`; `--png` writes images to `extracted/monster_sprites/`. |
+| monster_palettes.json | extract_monster_palettes.py | **NEW (Session 23, GFX-2).** All 221 per-species BATTLE palettes from `MonsterBattlePalettes` `$17:$62FD` (8 B/species, 4 RGB555 `[c0, c1=$6bff backdrop, c2, c3=$0000 black]`). Recolour via `build_sprite_swap.py --palette`. |
 
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
 These are knowledge artifacts — human analysis in JSON form. No generator
@@ -89,14 +90,35 @@ or `literal_only` self-contained; `tiles_to_indices`/`indices_to_tiles`;
 streams; NOT vanilla-byte-identical re-encode by design) ·
 `extract_monster_sprites.py` (✅ new Session 22 — all 221 monsters' battle+follower
 sprites → `extracted/monster_sprites.json` (+`--png`); count-parameterised) ·
-`build_sprite_swap.py` (✅ generalised Session 22 — species-agnostic battle swap:
-`--species id|Name`, `--png`/`--payload`/`--probe`, `--literal`; resolve gfx-ID → encode →
-place in bank free space → repoint pointer entry; clean tree stays byte-perfect. LIMIT:
-free-space anchor known for bank `$36` only — cross-bank allocator is the editor-backend
-follow-up) ·
+`build_sprite_swap.py` (✅ Session 22, REWRITTEN Session 23 — CROSS-BANK battle swap +
+recolour. `--species id|Name --kind battle`; `--relocate` (lossless cross-bank copy,
+regression proof) / `--png` / `--payload` (new art) / `--palette c0,c1,c2,c3` (RGB555
+recolour) / `--build-rom` (focused test ROM = clean tree + only these changes). Resolves
+gfx-ID → encodes (`dwm/sprite_codec`) → places via `dwm/sprite_bank.py` overflow allocator
+→ repoints `MonsterBattleGfxTable` (needs the S22 re-section in `disassembly/bank_000.asm`).
+The gfx swap is ASM-based; `--palette` is a same-size POST-BUILD BINARY PATCH + checksum
+fix (`fix_header_checksum`/`fix_global_checksum`) of `MonsterBattlePalettes[species]` —
+fine for test ROMs; for PERMANENT integration do the palette edit in `patches/bank_017.asm`
+against the annotated table. Follower path (`--kind follower`, table `$01:$49DF`) is wired
+but GATED until that table is re-sectioned (GFX-3). Depends on `dwm/sprite_codec.py`) ·
+`dwm/sprite_bank.py` (✅ new Session 23 — `SpriteOverflowAllocator`: places encoded streams
+into reserved overflow banks `$7E,$7F` then `$7C,$7A,$79` with a `$4001` pointer table,
+returns gfx-ID `(bank<<8|index)`, emits the bank `.asm`. The editor's sprite-asset backend;
+the resolver `$00:$1627` reads `$<bank>:$4001+index*2` with no bank gating) ·
+`extract_monster_palettes.py` (✅ new Session 23 — dumps `MonsterBattlePalettes` `$17:$62FD`
+→ `extracted/monster_palettes.json`, all 221, count-parameterised) ·
 `resection_battle_gfx_table.py` (✅ new Session 22 — re-sections the misassembled battle
 gfx-ID table `$00:$2B9F` into `MonsterBattleGfxTable`; anchors between real `.sym` labels,
 emits exact ROM bytes, preserves 23 cross-refs; build stays `1ca6579…`; idempotent) ·
+
+> **Making a sprite swap PERMANENT (in the canonical patched build).** The S23 hand-off
+> left the patched build CLEAN — the clam swap is a reproducible example
+> (`examples/sprite_swap/`), NOT baked in. To make any swap permanent you must edit the
+> DATA tables in the patch copies: `patches/bank_000.asm` (gfx-ID repoint) and
+> `patches/bank_017.asm` (palette), add a `patches/bank_07e.asm` overflow bank + its
+> `game.asm` include, and register `bank_07e.asm` in `verify_integrity.py`
+> PATCH_NEW_FILES. Those patch copies PREDATE the S22/S23 re-sections, so sync the
+> re-sectioned `MonsterBattleGfxTable` / `MonsterBattlePalettes` into them first.
 `build_breeding.py` (✅ new Session 13 — breeding round-trip decode/encode/emit;
 `--selftest` byte-identical to ROM; keystone for the Phase 2B overhaul; produces
 breeding_tables.json. `--emit-relocation` (B2) writes `patches/bank_069.asm` —

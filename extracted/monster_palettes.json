@@ -1,0 +1,2439 @@
+{
+ "_generator": "tools/extract_monster_palettes.py (ROM data/DWM-original.gbc)",
+ "_format": "species -> {addr, colors:[4 RGB555 ints], bytes_hex}. MonsterBattlePalettes @ $17:$62FD, 8B/species, [c0, c1=$6bff backdrop, c2, c3=$0000 black]. BG palette slot 4.",
+ "_count": 221,
+ "table_addr": "$17:$62FD",
+ "monsters": {
+  "0": {
+   "name": "DrakSlime",
+   "addr": "$17:$62fd",
+   "colors": [
+    445,
+    27647,
+    863,
+    0
+   ],
+   "bytes_hex": "bd01ff6b5f030000"
+  },
+  "1": {
+   "name": "SpotSlime",
+   "addr": "$17:$6305",
+   "colors": [
+    445,
+    27647,
+    863,
+    0
+   ],
+   "bytes_hex": "bd01ff6b5f030000"
+  },
+  "2": {
+   "name": "WingSlime",
+   "addr": "$17:$630d",
+   "colors": [
+    9728,
+    27647,
+    18304,
+    0
+   ],
+   "bytes_hex": "0026ff6b80470000"
+  },
+  "3": {
+   "name": "TreeSlime",
+   "addr": "$17:$6315",
+   "colors": [
+    52,
+    27647,
+    30900,
+    0
+   ],
+   "bytes_hex": "3400ff6bb4780000"
+  },
+  "4": {
+   "name": "Snaily",
+   "addr": "$17:$631d",
+   "colors": [
+    1538,
+    27647,
+    912,
+    0
+   ],
+   "bytes_hex": "0206ff6b90030000"
+  },
+  "5": {
+   "name": "SlimeNite",
+   "addr": "$17:$6325",
+   "colors": [
+    32000,
+    27647,
+    6976,
+    0
+   ],
+   "bytes_hex": "007dff6b401b0000"
+  },
+  "6": {
+   "name": "Babble",
+   "addr": "$17:$632d",
+   "colors": [
+    449,
+    27647,
+    876,
+    0
+   ],
+   "bytes_hex": "c101ff6b6c030000"
+  },
+  "7": {
+   "name": "BoxSlime",
+   "addr": "$17:$6335",
+   "colors": [
+    3094,
+    27647,
+    5502,
+    0
+   ],
+   "bytes_hex": "160cff6b7e150000"
+  },
+  "8": {
+   "name": "Slime",
+   "addr": "$17:$633d",
+   "colors": [
+    23567,
+    27647,
+    32416,
+    0
+   ],
+   "bytes_hex": "0f5cff6ba07e0000"
+  },
+  "9": {
+   "name": "Healer",
+   "addr": "$17:$6345",
+   "colors": [
+    31969,
+    27647,
+    703,
+    0
+   ],
+   "bytes_hex": "e17cff6bbf020000"
+  },
+  "10": {
+   "name": "FangSlime",
+   "addr": "$17:$634d",
+   "colors": [
+    17952,
+    27647,
+    909,
+    0
+   ],
+   "bytes_hex": "2046ff6b8d030000"
+  },
+  "11": {
+   "name": "RockSlime",
+   "addr": "$17:$6355",
+   "colors": [
+    240,
+    27647,
+    1530,
+    0
+   ],
+   "bytes_hex": "f000ff6bfa050000"
+  },
+  "12": {
+   "name": "SlimeBorg",
+   "addr": "$17:$635d",
+   "colors": [
+    13540,
+    27647,
+    14830,
+    0
+   ],
+   "bytes_hex": "e434ff6bee390000"
+  },
+  "13": {
+   "name": "Slabbit",
+   "addr": "$17:$6365",
+   "colors": [
+    9237,
+    27647,
+    24863,
+    0
+   ],
+   "bytes_hex": "1524ff6b1f610000"
+  },
+  "14": {
+   "name": "SpotKing",
+   "addr": "$17:$636d",
+   "colors": [
+    445,
+    27647,
+    863,
+    0
+   ],
+   "bytes_hex": "bd01ff6b5f030000"
+  },
+  "15": {
+   "name": "KingSlime",
+   "addr": "$17:$6375",
+   "colors": [
+    29924,
+    27647,
+    32320,
+    0
+   ],
+   "bytes_hex": "e474ff6b407e0000"
+  },
+  "16": {
+   "name": "Metaly",
+   "addr": "$17:$637d",
+   "colors": [
+    10602,
+    27647,
+    19025,
+    0
+   ],
+   "bytes_hex": "6a29ff6b514a0000"
+  },
+  "17": {
+   "name": "Metabble",
+   "addr": "$17:$6385",
+   "colors": [
+    10602,
+    27647,
+    19025,
+    0
+   ],
+   "bytes_hex": "6a29ff6b514a0000"
+  },
+  "18": {
+   "name": "MetalKing",
+   "addr": "$17:$638d",
+   "colors": [
+    10602,
+    27647,
+    19025,
+    0
+   ],
+   "bytes_hex": "6a29ff6b514a0000"
+  },
+  "19": {
+   "name": "GoldSlime",
+   "addr": "$17:$6395",
+   "colors": [
+    479,
+    27647,
+    799,
+    0
+   ],
+   "bytes_hex": "df01ff6b1f030000"
+  },
+  "20": {
+   "name": "DragonKid",
+   "addr": "$17:$639d",
+   "colors": [
+    478,
+    27647,
+    895,
+    0
+   ],
+   "bytes_hex": "de01ff6b7f030000"
+  },
+  "21": {
+   "name": "Tortragon",
+   "addr": "$17:$63a5",
+   "colors": [
+    341,
+    27647,
+    32384,
+    0
+   ],
+   "bytes_hex": "5501ff6b807e0000"
+  },
+  "22": {
+   "name": "Pteranod",
+   "addr": "$17:$63ad",
+   "colors": [
+    21962,
+    27647,
+    29553,
+    0
+   ],
+   "bytes_hex": "ca55ff6b71730000"
+  },
+  "23": {
+   "name": "Gasgon",
+   "addr": "$17:$63b5",
+   "colors": [
+    7223,
+    27647,
+    671,
+    0
+   ],
+   "bytes_hex": "371cff6b9f020000"
+  },
+  "24": {
+   "name": "FairyDrak",
+   "addr": "$17:$63bd",
+   "colors": [
+    11281,
+    27647,
+    8349,
+    0
+   ],
+   "bytes_hex": "112cff6b9d200000"
+  },
+  "25": {
+   "name": "LizardMan",
+   "addr": "$17:$63c5",
+   "colors": [
+    3560,
+    27647,
+    23335,
+    0
+   ],
+   "bytes_hex": "e80dff6b275b0000"
+  },
+  "26": {
+   "name": "Poisongon",
+   "addr": "$17:$63cd",
+   "colors": [
+    3433,
+    27647,
+    727,
+    0
+   ],
+   "bytes_hex": "690dff6bd7020000"
+  },
+  "27": {
+   "name": "Swordgon",
+   "addr": "$17:$63d5",
+   "colors": [
+    26634,
+    27647,
+    32256,
+    0
+   ],
+   "bytes_hex": "0a68ff6b007e0000"
+  },
+  "28": {
+   "name": "Dragon",
+   "addr": "$17:$63dd",
+   "colors": [
+    451,
+    27647,
+    12960,
+    0
+   ],
+   "bytes_hex": "c301ff6ba0320000"
+  },
+  "29": {
+   "name": "MiniDrak",
+   "addr": "$17:$63e5",
+   "colors": [
+    281,
+    27647,
+    703,
+    0
+   ],
+   "bytes_hex": "1901ff6bbf020000"
+  },
+  "30": {
+   "name": "MadDragon",
+   "addr": "$17:$63ed",
+   "colors": [
+    19744,
+    27647,
+    32384,
+    0
+   ],
+   "bytes_hex": "204dff6b807e0000"
+  },
+  "31": {
+   "name": "Rayburn",
+   "addr": "$17:$63f5",
+   "colors": [
+    594,
+    27647,
+    927,
+    0
+   ],
+   "bytes_hex": "5202ff6b9f030000"
+  },
+  "32": {
+   "name": "Chamelgon",
+   "addr": "$17:$63fd",
+   "colors": [
+    416,
+    27647,
+    1696,
+    0
+   ],
+   "bytes_hex": "a001ff6ba0060000"
+  },
+  "33": {
+   "name": "LizardFly",
+   "addr": "$17:$6405",
+   "colors": [
+    646,
+    27647,
+    950,
+    0
+   ],
+   "bytes_hex": "8602ff6bb6030000"
+  },
+  "34": {
+   "name": "Andreal",
+   "addr": "$17:$640d",
+   "colors": [
+    12684,
+    27647,
+    20146,
+    0
+   ],
+   "bytes_hex": "8c31ff6bb24e0000"
+  },
+  "35": {
+   "name": "KingCobra",
+   "addr": "$17:$6415",
+   "colors": [
+    5446,
+    27647,
+    2269,
+    0
+   ],
+   "bytes_hex": "4615ff6bdd080000"
+  },
+  "36": {
+   "name": "Spikerous",
+   "addr": "$17:$641d",
+   "colors": [
+    241,
+    27647,
+    15953,
+    0
+   ],
+   "bytes_hex": "f100ff6b513e0000"
+  },
+  "37": {
+   "name": "GreatDrak",
+   "addr": "$17:$6425",
+   "colors": [
+    4334,
+    27647,
+    1884,
+    0
+   ],
+   "bytes_hex": "ee10ff6b5c070000"
+  },
+  "38": {
+   "name": "Crestpent",
+   "addr": "$17:$642d",
+   "colors": [
+    7324,
+    27647,
+    1733,
+    0
+   ],
+   "bytes_hex": "9c1cff6bc5060000"
+  },
+  "39": {
+   "name": "WingSnake",
+   "addr": "$17:$6435",
+   "colors": [
+    417,
+    27647,
+    32352,
+    0
+   ],
+   "bytes_hex": "a101ff6b607e0000"
+  },
+  "40": {
+   "name": "Coatol",
+   "addr": "$17:$643d",
+   "colors": [
+    1507,
+    27647,
+    248,
+    0
+   ],
+   "bytes_hex": "e305ff6bf8000000"
+  },
+  "41": {
+   "name": "Orochi",
+   "addr": "$17:$6445",
+   "colors": [
+    305,
+    27647,
+    646,
+    0
+   ],
+   "bytes_hex": "3101ff6b86020000"
+  },
+  "42": {
+   "name": "BattleRex",
+   "addr": "$17:$644d",
+   "colors": [
+    7680,
+    27647,
+    1903,
+    0
+   ],
+   "bytes_hex": "001eff6b6f070000"
+  },
+  "43": {
+   "name": "SkyDragon",
+   "addr": "$17:$6455",
+   "colors": [
+    520,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "0802ff6b7f020000"
+  },
+  "44": {
+   "name": "Divinegon",
+   "addr": "$17:$645d",
+   "colors": [
+    4646,
+    27647,
+    6924,
+    0
+   ],
+   "bytes_hex": "2612ff6b0c1b0000"
+  },
+  "45": {
+   "name": "Tonguella",
+   "addr": "$17:$6465",
+   "colors": [
+    275,
+    27647,
+    538,
+    0
+   ],
+   "bytes_hex": "1301ff6b1a020000"
+  },
+  "46": {
+   "name": "Almiraj",
+   "addr": "$17:$646d",
+   "colors": [
+    505,
+    27647,
+    31991,
+    0
+   ],
+   "bytes_hex": "f901ff6bf77c0000"
+  },
+  "47": {
+   "name": "CatFly",
+   "addr": "$17:$6475",
+   "colors": [
+    217,
+    27647,
+    575,
+    0
+   ],
+   "bytes_hex": "d900ff6b3f020000"
+  },
+  "48": {
+   "name": "PillowRat",
+   "addr": "$17:$647d",
+   "colors": [
+    519,
+    27647,
+    819,
+    0
+   ],
+   "bytes_hex": "0702ff6b33030000"
+  },
+  "49": {
+   "name": "Saccer",
+   "addr": "$17:$6485",
+   "colors": [
+    22880,
+    27647,
+    439,
+    0
+   ],
+   "bytes_hex": "6059ff6bb7010000"
+  },
+  "50": {
+   "name": "GulpBeast",
+   "addr": "$17:$648d",
+   "colors": [
+    242,
+    27647,
+    656,
+    0
+   ],
+   "bytes_hex": "f200ff6b90020000"
+  },
+  "51": {
+   "name": "Skullroo",
+   "addr": "$17:$6495",
+   "colors": [
+    377,
+    27647,
+    863,
+    0
+   ],
+   "bytes_hex": "7901ff6b5f030000"
+  },
+  "52": {
+   "name": "WindBeast",
+   "addr": "$17:$649d",
+   "colors": [
+    27040,
+    27647,
+    32512,
+    0
+   ],
+   "bytes_hex": "a069ff6b007f0000"
+  },
+  "53": {
+   "name": "Anteater",
+   "addr": "$17:$64a5",
+   "colors": [
+    25827,
+    27647,
+    32291,
+    0
+   ],
+   "bytes_hex": "e364ff6b237e0000"
+  },
+  "54": {
+   "name": "SuperTen",
+   "addr": "$17:$64ad",
+   "colors": [
+    27761,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "716cff6b7f020000"
+  },
+  "55": {
+   "name": "IronTurt",
+   "addr": "$17:$64b5",
+   "colors": [
+    311,
+    27647,
+    820,
+    0
+   ],
+   "bytes_hex": "3701ff6b34030000"
+  },
+  "56": {
+   "name": "Mommonja",
+   "addr": "$17:$64bd",
+   "colors": [
+    15886,
+    27647,
+    27647,
+    0
+   ],
+   "bytes_hex": "0e3eff6bff6b0000"
+  },
+  "57": {
+   "name": "HammerMan",
+   "addr": "$17:$64c5",
+   "colors": [
+    9270,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "3624ff6b7f020000"
+  },
+  "58": {
+   "name": "Grizzly",
+   "addr": "$17:$64cd",
+   "colors": [
+    13606,
+    27647,
+    18956,
+    0
+   ],
+   "bytes_hex": "2635ff6b0c4a0000"
+  },
+  "59": {
+   "name": "Yeti",
+   "addr": "$17:$64d5",
+   "colors": [
+    274,
+    27647,
+    24095,
+    0
+   ],
+   "bytes_hex": "1201ff6b1f5e0000"
+  },
+  "60": {
+   "name": "MadGopher",
+   "addr": "$17:$64dd",
+   "colors": [
+    27756,
+    27647,
+    31367,
+    0
+   ],
+   "bytes_hex": "6c6cff6b877a0000"
+  },
+  "61": {
+   "name": "FairyRat",
+   "addr": "$17:$64e5",
+   "colors": [
+    29905,
+    27647,
+    31199,
+    0
+   ],
+   "bytes_hex": "d174ff6bdf790000"
+  },
+  "62": {
+   "name": "Unicorn",
+   "addr": "$17:$64ed",
+   "colors": [
+    283,
+    27647,
+    29145,
+    0
+   ],
+   "bytes_hex": "1b01ff6bd9710000"
+  },
+  "63": {
+   "name": "Goategon",
+   "addr": "$17:$64f5",
+   "colors": [
+    31200,
+    27647,
+    574,
+    0
+   ],
+   "bytes_hex": "e079ff6b3e020000"
+  },
+  "64": {
+   "name": "WildApe",
+   "addr": "$17:$64fd",
+   "colors": [
+    18540,
+    27647,
+    27862,
+    0
+   ],
+   "bytes_hex": "6c48ff6bd66c0000"
+  },
+  "65": {
+   "name": "Trumpeter",
+   "addr": "$17:$6505",
+   "colors": [
+    24900,
+    27647,
+    30448,
+    0
+   ],
+   "bytes_hex": "4461ff6bf0760000"
+  },
+  "66": {
+   "name": "KingLeo",
+   "addr": "$17:$650d",
+   "colors": [
+    1581,
+    27647,
+    31428,
+    0
+   ],
+   "bytes_hex": "2d06ff6bc47a0000"
+  },
+  "67": {
+   "name": "DarkHorn",
+   "addr": "$17:$6515",
+   "colors": [
+    588,
+    27647,
+    703,
+    0
+   ],
+   "bytes_hex": "4c02ff6bbf020000"
+  },
+  "68": {
+   "name": "MadCat",
+   "addr": "$17:$651d",
+   "colors": [
+    188,
+    27647,
+    607,
+    0
+   ],
+   "bytes_hex": "bc00ff6b5f020000"
+  },
+  "69": {
+   "name": "BigEye",
+   "addr": "$17:$6525",
+   "colors": [
+    239,
+    27647,
+    472,
+    0
+   ],
+   "bytes_hex": "ef00ff6bd8010000"
+  },
+  "70": {
+   "name": "Picky",
+   "addr": "$17:$652d",
+   "colors": [
+    22712,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "b858ff6b7f020000"
+  },
+  "71": {
+   "name": "Wyvern",
+   "addr": "$17:$6535",
+   "colors": [
+    444,
+    27647,
+    863,
+    0
+   ],
+   "bytes_hex": "bc01ff6b5f030000"
+  },
+  "72": {
+   "name": "BullBird",
+   "addr": "$17:$653d",
+   "colors": [
+    7246,
+    27647,
+    339,
+    0
+   ],
+   "bytes_hex": "4e1cff6b53010000"
+  },
+  "73": {
+   "name": "Florajay",
+   "addr": "$17:$6545",
+   "colors": [
+    6231,
+    27647,
+    32298,
+    0
+   ],
+   "bytes_hex": "5718ff6b2a7e0000"
+  },
+  "74": {
+   "name": "DuckKite",
+   "addr": "$17:$654d",
+   "colors": [
+    22677,
+    27647,
+    848,
+    0
+   ],
+   "bytes_hex": "9558ff6b50030000"
+  },
+  "75": {
+   "name": "MadPecker",
+   "addr": "$17:$6555",
+   "colors": [
+    603,
+    27647,
+    28022,
+    0
+   ],
+   "bytes_hex": "5b02ff6b766d0000"
+  },
+  "76": {
+   "name": "MadRaven",
+   "addr": "$17:$655d",
+   "colors": [
+    489,
+    27647,
+    699,
+    0
+   ],
+   "bytes_hex": "e901ff6bbb020000"
+  },
+  "77": {
+   "name": "MistyWing",
+   "addr": "$17:$6565",
+   "colors": [
+    221,
+    27647,
+    703,
+    0
+   ],
+   "bytes_hex": "dd00ff6bbf020000"
+  },
+  "78": {
+   "name": "Dracky",
+   "addr": "$17:$656d",
+   "colors": [
+    123,
+    27647,
+    10903,
+    0
+   ],
+   "bytes_hex": "7b00ff6b972a0000"
+  },
+  "79": {
+   "name": "BigRoost",
+   "addr": "$17:$6575",
+   "colors": [
+    22583,
+    27647,
+    767,
+    0
+   ],
+   "bytes_hex": "3758ff6bff020000"
+  },
+  "80": {
+   "name": "StubBird",
+   "addr": "$17:$657d",
+   "colors": [
+    32224,
+    27647,
+    607,
+    0
+   ],
+   "bytes_hex": "e07dff6b5f020000"
+  },
+  "81": {
+   "name": "LandOwl",
+   "addr": "$17:$6585",
+   "colors": [
+    15375,
+    27647,
+    22583,
+    0
+   ],
+   "bytes_hex": "0f3cff6b37580000"
+  },
+  "82": {
+   "name": "MadGoose",
+   "addr": "$17:$658d",
+   "colors": [
+    515,
+    27647,
+    32054,
+    0
+   ],
+   "bytes_hex": "0302ff6b367d0000"
+  },
+  "83": {
+   "name": "MadCondor",
+   "addr": "$17:$6595",
+   "colors": [
+    23629,
+    27647,
+    28022,
+    0
+   ],
+   "bytes_hex": "4d5cff6b766d0000"
+  },
+  "84": {
+   "name": "Blizzardy",
+   "addr": "$17:$659d",
+   "colors": [
+    26977,
+    27647,
+    32554,
+    0
+   ],
+   "bytes_hex": "6169ff6b2a7f0000"
+  },
+  "85": {
+   "name": "Phoenix",
+   "addr": "$17:$65a5",
+   "colors": [
+    253,
+    27647,
+    735,
+    0
+   ],
+   "bytes_hex": "fd00ff6bdf020000"
+  },
+  "86": {
+   "name": "ZapBird",
+   "addr": "$17:$65ad",
+   "colors": [
+    31981,
+    27647,
+    32361,
+    0
+   ],
+   "bytes_hex": "ed7cff6b697e0000"
+  },
+  "87": {
+   "name": "WhipBird",
+   "addr": "$17:$65b5",
+   "colors": [
+    219,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "db00ff6b7f020000"
+  },
+  "88": {
+   "name": "FunkyBird",
+   "addr": "$17:$65bd",
+   "colors": [
+    32082,
+    27647,
+    32650,
+    0
+   ],
+   "bytes_hex": "527dff6b8a7f0000"
+  },
+  "89": {
+   "name": "RainHawk",
+   "addr": "$17:$65c5",
+   "colors": [
+    31823,
+    27647,
+    25951,
+    0
+   ],
+   "bytes_hex": "4f7cff6b5f650000"
+  },
+  "90": {
+   "name": "MadPlant",
+   "addr": "$17:$65cd",
+   "colors": [
+    512,
+    27647,
+    909,
+    0
+   ],
+   "bytes_hex": "0002ff6b8d030000"
+  },
+  "91": {
+   "name": "FireWeed",
+   "addr": "$17:$65d5",
+   "colors": [
+    25712,
+    27647,
+    32488,
+    0
+   ],
+   "bytes_hex": "7064ff6be87e0000"
+  },
+  "92": {
+   "name": "FloraMan",
+   "addr": "$17:$65dd",
+   "colors": [
+    24754,
+    27647,
+    32366,
+    0
+   ],
+   "bytes_hex": "b260ff6b6e7e0000"
+  },
+  "93": {
+   "name": "WingTree",
+   "addr": "$17:$65e5",
+   "colors": [
+    452,
+    27647,
+    753,
+    0
+   ],
+   "bytes_hex": "c401ff6bf1020000"
+  },
+  "94": {
+   "name": "CactiBall",
+   "addr": "$17:$65ed",
+   "colors": [
+    481,
+    27647,
+    810,
+    0
+   ],
+   "bytes_hex": "e101ff6b2a030000"
+  },
+  "95": {
+   "name": "Gulpple",
+   "addr": "$17:$65f5",
+   "colors": [
+    517,
+    27647,
+    909,
+    0
+   ],
+   "bytes_hex": "0502ff6b8d030000"
+  },
+  "96": {
+   "name": "Toadstool",
+   "addr": "$17:$65fd",
+   "colors": [
+    25712,
+    27647,
+    822,
+    0
+   ],
+   "bytes_hex": "7064ff6b36030000"
+  },
+  "97": {
+   "name": "AmberWeed",
+   "addr": "$17:$6605",
+   "colors": [
+    28097,
+    27647,
+    511,
+    0
+   ],
+   "bytes_hex": "c16dff6bff010000"
+  },
+  "98": {
+   "name": "Stubsuck",
+   "addr": "$17:$660d",
+   "colors": [
+    272,
+    27647,
+    539,
+    0
+   ],
+   "bytes_hex": "1001ff6b1b020000"
+  },
+  "99": {
+   "name": "Oniono",
+   "addr": "$17:$6615",
+   "colors": [
+    437,
+    27647,
+    720,
+    0
+   ],
+   "bytes_hex": "b501ff6bd0020000"
+  },
+  "100": {
+   "name": "DanceVegi",
+   "addr": "$17:$661d",
+   "colors": [
+    218,
+    27647,
+    607,
+    0
+   ],
+   "bytes_hex": "da00ff6b5f020000"
+  },
+  "101": {
+   "name": "TreeBoy",
+   "addr": "$17:$6625",
+   "colors": [
+    272,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "1001ff6b7f020000"
+  },
+  "102": {
+   "name": "FaceTree",
+   "addr": "$17:$662d",
+   "colors": [
+    453,
+    27647,
+    532,
+    0
+   ],
+   "bytes_hex": "c501ff6b14020000"
+  },
+  "103": {
+   "name": "HerbMan",
+   "addr": "$17:$6635",
+   "colors": [
+    449,
+    27647,
+    535,
+    0
+   ],
+   "bytes_hex": "c101ff6b17020000"
+  },
+  "104": {
+   "name": "BeanMan",
+   "addr": "$17:$663d",
+   "colors": [
+    4577,
+    27647,
+    812,
+    0
+   ],
+   "bytes_hex": "e111ff6b2c030000"
+  },
+  "105": {
+   "name": "EvilSeed",
+   "addr": "$17:$6645",
+   "colors": [
+    12374,
+    27647,
+    638,
+    0
+   ],
+   "bytes_hex": "5630ff6b7e020000"
+  },
+  "106": {
+   "name": "ManEater",
+   "addr": "$17:$664d",
+   "colors": [
+    91,
+    27647,
+    30931,
+    0
+   ],
+   "bytes_hex": "5b00ff6bd3780000"
+  },
+  "107": {
+   "name": "Snapper",
+   "addr": "$17:$6655",
+   "colors": [
+    576,
+    27647,
+    915,
+    0
+   ],
+   "bytes_hex": "4002ff6b93030000"
+  },
+  "108": {
+   "name": "Rosevine",
+   "addr": "$17:$665d",
+   "colors": [
+    84,
+    27647,
+    287,
+    0
+   ],
+   "bytes_hex": "5400ff6b1f010000"
+  },
+  "109": {
+   "name": "Watabou",
+   "addr": "$17:$6665",
+   "colors": [
+    22752,
+    27647,
+    32422,
+    0
+   ],
+   "bytes_hex": "e058ff6ba67e0000"
+  },
+  "110": {
+   "name": "GiantSlug",
+   "addr": "$17:$666d",
+   "colors": [
+    24,
+    27647,
+    881,
+    0
+   ],
+   "bytes_hex": "1800ff6b71030000"
+  },
+  "111": {
+   "name": "Catapila",
+   "addr": "$17:$6675",
+   "colors": [
+    18450,
+    27647,
+    713,
+    0
+   ],
+   "bytes_hex": "1248ff6bc9020000"
+  },
+  "112": {
+   "name": "Gophecada",
+   "addr": "$17:$667d",
+   "colors": [
+    14352,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "1038ff6b7f020000"
+  },
+  "113": {
+   "name": "Butterfly",
+   "addr": "$17:$6685",
+   "colors": [
+    123,
+    27647,
+    32206,
+    0
+   ],
+   "bytes_hex": "7b00ff6bce7d0000"
+  },
+  "114": {
+   "name": "WeedBug",
+   "addr": "$17:$668d",
+   "colors": [
+    28000,
+    27647,
+    18240,
+    0
+   ],
+   "bytes_hex": "606dff6b40470000"
+  },
+  "115": {
+   "name": "GiantWorm",
+   "addr": "$17:$6695",
+   "colors": [
+    17488,
+    27647,
+    23832,
+    0
+   ],
+   "bytes_hex": "5044ff6b185d0000"
+  },
+  "116": {
+   "name": "Lipsy",
+   "addr": "$17:$669d",
+   "colors": [
+    412,
+    27647,
+    846,
+    0
+   ],
+   "bytes_hex": "9c01ff6b4e030000"
+  },
+  "117": {
+   "name": "StagBug",
+   "addr": "$17:$66a5",
+   "colors": [
+    376,
+    27647,
+    575,
+    0
+   ],
+   "bytes_hex": "7801ff6b3f020000"
+  },
+  "118": {
+   "name": "ArmyAnt",
+   "addr": "$17:$66ad",
+   "colors": [
+    2401,
+    27647,
+    7841,
+    0
+   ],
+   "bytes_hex": "6109ff6ba11e0000"
+  },
+  "119": {
+   "name": "GoHopper",
+   "addr": "$17:$66b5",
+   "colors": [
+    445,
+    27647,
+    847,
+    0
+   ],
+   "bytes_hex": "bd01ff6b4f030000"
+  },
+  "120": {
+   "name": "TailEater",
+   "addr": "$17:$66bd",
+   "colors": [
+    17493,
+    27647,
+    15990,
+    0
+   ],
+   "bytes_hex": "5544ff6b763e0000"
+  },
+  "121": {
+   "name": "ArmorPede",
+   "addr": "$17:$66c5",
+   "colors": [
+    1046,
+    27647,
+    415,
+    0
+   ],
+   "bytes_hex": "1604ff6b9f010000"
+  },
+  "122": {
+   "name": "Eyeder",
+   "addr": "$17:$66cd",
+   "colors": [
+    23663,
+    27647,
+    767,
+    0
+   ],
+   "bytes_hex": "6f5cff6bff020000"
+  },
+  "123": {
+   "name": "GiantMoth",
+   "addr": "$17:$66d5",
+   "colors": [
+    338,
+    27647,
+    638,
+    0
+   ],
+   "bytes_hex": "5201ff6b7e020000"
+  },
+  "124": {
+   "name": "Droll",
+   "addr": "$17:$66dd",
+   "colors": [
+    12304,
+    27647,
+    20893,
+    0
+   ],
+   "bytes_hex": "1030ff6b9d510000"
+  },
+  "125": {
+   "name": "ArmyCrab",
+   "addr": "$17:$66e5",
+   "colors": [
+    24,
+    27647,
+    478,
+    0
+   ],
+   "bytes_hex": "1800ff6bde010000"
+  },
+  "126": {
+   "name": "MadHornet",
+   "addr": "$17:$66ed",
+   "colors": [
+    1041,
+    27647,
+    703,
+    0
+   ],
+   "bytes_hex": "1104ff6bbf020000"
+  },
+  "127": {
+   "name": "HornBeet",
+   "addr": "$17:$66f5",
+   "colors": [
+    175,
+    27647,
+    411,
+    0
+   ],
+   "bytes_hex": "af00ff6b9b010000"
+  },
+  "128": {
+   "name": "Armorpion",
+   "addr": "$17:$66fd",
+   "colors": [
+    347,
+    27647,
+    703,
+    0
+   ],
+   "bytes_hex": "5b01ff6bbf020000"
+  },
+  "129": {
+   "name": "Digster",
+   "addr": "$17:$6705",
+   "colors": [
+    16493,
+    27647,
+    1213,
+    0
+   ],
+   "bytes_hex": "6d40ff6bbd040000"
+  },
+  "130": {
+   "name": "Pixy",
+   "addr": "$17:$670d",
+   "colors": [
+    31072,
+    27647,
+    575,
+    0
+   ],
+   "bytes_hex": "6079ff6b3f020000"
+  },
+  "131": {
+   "name": "ArcDemon",
+   "addr": "$17:$6715",
+   "colors": [
+    451,
+    27647,
+    25785,
+    0
+   ],
+   "bytes_hex": "c301ff6bb9640000"
+  },
+  "132": {
+   "name": "AgDevil",
+   "addr": "$17:$671d",
+   "colors": [
+    22755,
+    27647,
+    32487,
+    0
+   ],
+   "bytes_hex": "e358ff6be77e0000"
+  },
+  "133": {
+   "name": "Demonite",
+   "addr": "$17:$6725",
+   "colors": [
+    1264,
+    27647,
+    13432,
+    0
+   ],
+   "bytes_hex": "f004ff6b78340000"
+  },
+  "134": {
+   "name": "DarkEye",
+   "addr": "$17:$672d",
+   "colors": [
+    28000,
+    27647,
+    32087,
+    0
+   ],
+   "bytes_hex": "606dff6b577d0000"
+  },
+  "135": {
+   "name": "EyeBall",
+   "addr": "$17:$6735",
+   "colors": [
+    26944,
+    27647,
+    32420,
+    0
+   ],
+   "bytes_hex": "4069ff6ba47e0000"
+  },
+  "136": {
+   "name": "SkulRider",
+   "addr": "$17:$673d",
+   "colors": [
+    28000,
+    27647,
+    671,
+    0
+   ],
+   "bytes_hex": "606dff6b9f020000"
+  },
+  "137": {
+   "name": "EvilBeast",
+   "addr": "$17:$6745",
+   "colors": [
+    17777,
+    27647,
+    27160,
+    0
+   ],
+   "bytes_hex": "7145ff6b186a0000"
+  },
+  "138": {
+   "name": "1EyeClown",
+   "addr": "$17:$674d",
+   "colors": [
+    155,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "9b00ff6b7f020000"
+  },
+  "139": {
+   "name": "Gremlin",
+   "addr": "$17:$6755",
+   "colors": [
+    310,
+    27647,
+    29116,
+    0
+   ],
+   "bytes_hex": "3601ff6bbc710000"
+  },
+  "140": {
+   "name": "MedusaEye",
+   "addr": "$17:$675d",
+   "colors": [
+    607,
+    27647,
+    31232,
+    0
+   ],
+   "bytes_hex": "5f02ff6b007a0000"
+  },
+  "141": {
+   "name": "Lionex",
+   "addr": "$17:$6765",
+   "colors": [
+    16503,
+    27647,
+    671,
+    0
+   ],
+   "bytes_hex": "7740ff6b9f020000"
+  },
+  "142": {
+   "name": "GoatHorn",
+   "addr": "$17:$676d",
+   "colors": [
+    25923,
+    27647,
+    218,
+    0
+   ],
+   "bytes_hex": "4365ff6bda000000"
+  },
+  "143": {
+   "name": "Orc",
+   "addr": "$17:$6775",
+   "colors": [
+    306,
+    27647,
+    605,
+    0
+   ],
+   "bytes_hex": "3201ff6b5d020000"
+  },
+  "144": {
+   "name": "Ogre",
+   "addr": "$17:$677d",
+   "colors": [
+    25894,
+    27647,
+    3944,
+    0
+   ],
+   "bytes_hex": "2665ff6b680f0000"
+  },
+  "145": {
+   "name": "GateGuard",
+   "addr": "$17:$6785",
+   "colors": [
+    16493,
+    27647,
+    22807,
+    0
+   ],
+   "bytes_hex": "6d40ff6b17590000"
+  },
+  "146": {
+   "name": "ChopClown",
+   "addr": "$17:$678d",
+   "colors": [
+    32134,
+    27647,
+    22713,
+    0
+   ],
+   "bytes_hex": "867dff6bb9580000"
+  },
+  "147": {
+   "name": "Grendal",
+   "addr": "$17:$6795",
+   "colors": [
+    422,
+    27647,
+    32416,
+    0
+   ],
+   "bytes_hex": "a601ff6ba07e0000"
+  },
+  "148": {
+   "name": "Akubar",
+   "addr": "$17:$679d",
+   "colors": [
+    187,
+    27647,
+    671,
+    0
+   ],
+   "bytes_hex": "bb00ff6b9f020000"
+  },
+  "149": {
+   "name": "MadKnight",
+   "addr": "$17:$67a5",
+   "colors": [
+    7619,
+    27647,
+    32335,
+    0
+   ],
+   "bytes_hex": "c31dff6b4f7e0000"
+  },
+  "150": {
+   "name": "Gigantes",
+   "addr": "$17:$67ad",
+   "colors": [
+    25984,
+    27647,
+    30496,
+    0
+   ],
+   "bytes_hex": "8065ff6b20770000"
+  },
+  "151": {
+   "name": "Centasaur",
+   "addr": "$17:$67b5",
+   "colors": [
+    29088,
+    27647,
+    30496,
+    0
+   ],
+   "bytes_hex": "a071ff6b20770000"
+  },
+  "152": {
+   "name": "EvilArmor",
+   "addr": "$17:$67bd",
+   "colors": [
+    16871,
+    27647,
+    26,
+    0
+   ],
+   "bytes_hex": "e741ff6b1a000000"
+  },
+  "153": {
+   "name": "Jamirus",
+   "addr": "$17:$67c5",
+   "colors": [
+    17428,
+    27647,
+    639,
+    0
+   ],
+   "bytes_hex": "1444ff6b7f020000"
+  },
+  "154": {
+   "name": "Durran",
+   "addr": "$17:$67cd",
+   "colors": [
+    22545,
+    27647,
+    479,
+    0
+   ],
+   "bytes_hex": "1158ff6bdf010000"
+  },
+  "155": {
+   "name": "Spooky",
+   "addr": "$17:$67d5",
+   "colors": [
+    22549,
+    27647,
+    767,
+    0
+   ],
+   "bytes_hex": "1558ff6bff020000"
+  },
+  "156": {
+   "name": "Skullgon",
+   "addr": "$17:$67dd",
+   "colors": [
+    9715,
+    27647,
+    16121,
+    0
+   ],
+   "bytes_hex": "f325ff6bf93e0000"
+  },
+  "157": {
+   "name": "Putrepup",
+   "addr": "$17:$67e5",
+   "colors": [
+    24588,
+    27647,
+    31264,
+    0
+   ],
+   "bytes_hex": "0c60ff6b207a0000"
+  },
+  "158": {
+   "name": "RotRaven",
+   "addr": "$17:$67ed",
+   "colors": [
+    6560,
+    27647,
+    29814,
+    0
+   ],
+   "bytes_hex": "a019ff6b76740000"
+  },
+  "159": {
+   "name": "Mummy",
+   "addr": "$17:$67f5",
+   "colors": [
+    30924,
+    27647,
+    28919,
+    196
+   ],
+   "bytes_hex": "cc78ff6bf770c400"
+  },
+  "160": {
+   "name": "DarkCrab",
+   "addr": "$17:$67fd",
+   "colors": [
+    27880,
+    27647,
+    32433,
+    4320
+   ],
+   "bytes_hex": "e86cff6bb17ee010"
+  },
+  "161": {
+   "name": "DeadNite",
+   "addr": "$17:$6805",
+   "colors": [
+    13328,
+    27647,
+    406,
+    0
+   ],
+   "bytes_hex": "1034ff6b96010000"
+  },
+  "162": {
+   "name": "Shadow",
+   "addr": "$17:$680d",
+   "colors": [
+    16907,
+    27647,
+    831,
+    0
+   ],
+   "bytes_hex": "0b42ff6b3f030000"
+  },
+  "163": {
+   "name": "Hork",
+   "addr": "$17:$6815",
+   "colors": [
+    30144,
+    27647,
+    376,
+    133
+   ],
+   "bytes_hex": "c075ff6b78018500"
+  },
+  "164": {
+   "name": "Mudron",
+   "addr": "$17:$681d",
+   "colors": [
+    17428,
+    27647,
+    831,
+    6144
+   ],
+   "bytes_hex": "1444ff6b3f030018"
+  },
+  "165": {
+   "name": "NiteWhip",
+   "addr": "$17:$6825",
+   "colors": [
+    639,
+    27647,
+    32384,
+    6144
+   ],
+   "bytes_hex": "7f02ff6b807e0018"
+  },
+  "166": {
+   "name": "MadSpirit",
+   "addr": "$17:$682d",
+   "colors": [
+    14351,
+    27647,
+    26937,
+    6144
+   ],
+   "bytes_hex": "0f38ff6b39690018"
+  },
+  "167": {
+   "name": "WindMerge",
+   "addr": "$17:$6835",
+   "colors": [
+    24896,
+    27647,
+    32483,
+    6144
+   ],
+   "bytes_hex": "4061ff6be37e0018"
+  },
+  "168": {
+   "name": "Reaper",
+   "addr": "$17:$683d",
+   "colors": [
+    220,
+    27647,
+    703,
+    166
+   ],
+   "bytes_hex": "dc00ff6bbf02a600"
+  },
+  "169": {
+   "name": "DeadNoble",
+   "addr": "$17:$6845",
+   "colors": [
+    8280,
+    27647,
+    32232,
+    166
+   ],
+   "bytes_hex": "5820ff6be87da600"
+  },
+  "170": {
+   "name": "WhiteKing",
+   "addr": "$17:$684d",
+   "colors": [
+    12305,
+    27647,
+    749,
+    6240
+   ],
+   "bytes_hex": "1130ff6bed026018"
+  },
+  "171": {
+   "name": "BoneSlave",
+   "addr": "$17:$6855",
+   "colors": [
+    1508,
+    27647,
+    509,
+    0
+   ],
+   "bytes_hex": "e405ff6bfd010000"
+  },
+  "172": {
+   "name": "Skeletor",
+   "addr": "$17:$685d",
+   "colors": [
+    8241,
+    27647,
+    23834,
+    0
+   ],
+   "bytes_hex": "3120ff6b1a5d0000"
+  },
+  "173": {
+   "name": "Servant",
+   "addr": "$17:$6865",
+   "colors": [
+    7465,
+    27647,
+    16784,
+    0
+   ],
+   "bytes_hex": "291dff6b90410000"
+  },
+  "174": {
+   "name": "Copycat",
+   "addr": "$17:$686d",
+   "colors": [
+    30112,
+    27647,
+    863,
+    4192
+   ],
+   "bytes_hex": "a075ff6b5f036010"
+  },
+  "175": {
+   "name": "JewelBag",
+   "addr": "$17:$6875",
+   "colors": [
+    3094,
+    27647,
+    799,
+    0
+   ],
+   "bytes_hex": "160cff6b1f030000"
+  },
+  "176": {
+   "name": "EvilWand",
+   "addr": "$17:$687d",
+   "colors": [
+    239,
+    27647,
+    538,
+    0
+   ],
+   "bytes_hex": "ef00ff6b1a020000"
+  },
+  "177": {
+   "name": "MadCandle",
+   "addr": "$17:$6885",
+   "colors": [
+    543,
+    27647,
+    32522,
+    0
+   ],
+   "bytes_hex": "1f02ff6b0a7f0000"
+  },
+  "178": {
+   "name": "CoilBird",
+   "addr": "$17:$688d",
+   "colors": [
+    32233,
+    27647,
+    767,
+    0
+   ],
+   "bytes_hex": "e97dff6bff020000"
+  },
+  "179": {
+   "name": "Facer",
+   "addr": "$17:$6895",
+   "colors": [
+    585,
+    27647,
+    799,
+    0
+   ],
+   "bytes_hex": "4902ff6b1f030000"
+  },
+  "180": {
+   "name": "SpikyBoy",
+   "addr": "$17:$689d",
+   "colors": [
+    580,
+    27647,
+    877,
+    0
+   ],
+   "bytes_hex": "4402ff6b6d030000"
+  },
+  "181": {
+   "name": "MadMirror",
+   "addr": "$17:$68a5",
+   "colors": [
+    5143,
+    27647,
+    863,
+    0
+   ],
+   "bytes_hex": "1714ff6b5f030000"
+  },
+  "182": {
+   "name": "RogueNite",
+   "addr": "$17:$68ad",
+   "colors": [
+    20531,
+    27647,
+    32292,
+    0
+   ],
+   "bytes_hex": "3350ff6b247e0000"
+  },
+  "183": {
+   "name": "Goopi",
+   "addr": "$17:$68b5",
+   "colors": [
+    339,
+    27647,
+    604,
+    0
+   ],
+   "bytes_hex": "5301ff6b5c020000"
+  },
+  "184": {
+   "name": "Voodoll",
+   "addr": "$17:$68bd",
+   "colors": [
+    17420,
+    27647,
+    22549,
+    0
+   ],
+   "bytes_hex": "0c44ff6b15580000"
+  },
+  "185": {
+   "name": "MetalDrak",
+   "addr": "$17:$68c5",
+   "colors": [
+    29129,
+    27647,
+    32596,
+    0
+   ],
+   "bytes_hex": "c971ff6b547f0000"
+  },
+  "186": {
+   "name": "Balzak",
+   "addr": "$17:$68cd",
+   "colors": [
+    28969,
+    27647,
+    32452,
+    0
+   ],
+   "bytes_hex": "2971ff6bc47e0000"
+  },
+  "187": {
+   "name": "SabreMan",
+   "addr": "$17:$68d5",
+   "colors": [
+    735,
+    27647,
+    32523,
+    0
+   ],
+   "bytes_hex": "df02ff6b0b7f0000"
+  },
+  "188": {
+   "name": "CurseLamp",
+   "addr": "$17:$68dd",
+   "colors": [
+    250,
+    27647,
+    703,
+    0
+   ],
+   "bytes_hex": "fa00ff6bbf020000"
+  },
+  "189": {
+   "name": "Roboster",
+   "addr": "$17:$68e5",
+   "colors": [
+    344,
+    27647,
+    32453,
+    0
+   ],
+   "bytes_hex": "5801ff6bc57e0000"
+  },
+  "190": {
+   "name": "EvilPot",
+   "addr": "$17:$68ed",
+   "colors": [
+    312,
+    27647,
+    799,
+    0
+   ],
+   "bytes_hex": "3801ff6b1f030000"
+  },
+  "191": {
+   "name": "Gismo",
+   "addr": "$17:$68f5",
+   "colors": [
+    19917,
+    27647,
+    25300,
+    0
+   ],
+   "bytes_hex": "cd4dff6bd4620000"
+  },
+  "192": {
+   "name": "LavaMan",
+   "addr": "$17:$68fd",
+   "colors": [
+    24,
+    27647,
+    607,
+    0
+   ],
+   "bytes_hex": "1800ff6b5f020000"
+  },
+  "193": {
+   "name": "IceMan",
+   "addr": "$17:$6905",
+   "colors": [
+    670,
+    27647,
+    32265,
+    0
+   ],
+   "bytes_hex": "9e02ff6b097e0000"
+  },
+  "194": {
+   "name": "Mimic",
+   "addr": "$17:$690d",
+   "colors": [
+    23635,
+    27647,
+    2625,
+    0
+   ],
+   "bytes_hex": "535cff6b410a0000"
+  },
+  "195": {
+   "name": "MudDoll",
+   "addr": "$17:$6915",
+   "colors": [
+    450,
+    27647,
+    508,
+    0
+   ],
+   "bytes_hex": "c201ff6bfc010000"
+  },
+  "196": {
+   "name": "Golem",
+   "addr": "$17:$691d",
+   "colors": [
+    211,
+    27647,
+    603,
+    0
+   ],
+   "bytes_hex": "d300ff6b5b020000"
+  },
+  "197": {
+   "name": "StoneMan",
+   "addr": "$17:$6925",
+   "colors": [
+    9678,
+    27647,
+    19125,
+    0
+   ],
+   "bytes_hex": "ce25ff6bb54a0000"
+  },
+  "198": {
+   "name": "BombCrag",
+   "addr": "$17:$692d",
+   "colors": [
+    24966,
+    27647,
+    29292,
+    0
+   ],
+   "bytes_hex": "8661ff6b6c720000"
+  },
+  "199": {
+   "name": "GoldGolem",
+   "addr": "$17:$6935",
+   "colors": [
+    24689,
+    27647,
+    767,
+    0
+   ],
+   "bytes_hex": "7160ff6bff020000"
+  },
+  "200": {
+   "name": "DracoLord",
+   "addr": "$17:$693d",
+   "colors": [
+    30089,
+    27647,
+    26809,
+    4192
+   ],
+   "bytes_hex": "8975ff6bb9686010"
+  },
+  "201": {
+   "name": "DracoLord",
+   "addr": "$17:$6945",
+   "colors": [
+    426,
+    27647,
+    27768,
+    0
+   ],
+   "bytes_hex": "aa01ff6b786c0000"
+  },
+  "202": {
+   "name": "Hargon",
+   "addr": "$17:$694d",
+   "colors": [
+    185,
+    27647,
+    32268,
+    0
+   ],
+   "bytes_hex": "b900ff6b0c7e0000"
+  },
+  "203": {
+   "name": "Sidoh",
+   "addr": "$17:$6955",
+   "colors": [
+    423,
+    27647,
+    32288,
+    0
+   ],
+   "bytes_hex": "a701ff6b207e0000"
+  },
+  "204": {
+   "name": "Baramos",
+   "addr": "$17:$695d",
+   "colors": [
+    617,
+    27647,
+    27994,
+    0
+   ],
+   "bytes_hex": "6902ff6b5a6d0000"
+  },
+  "205": {
+   "name": "Zoma",
+   "addr": "$17:$6965",
+   "colors": [
+    88,
+    27647,
+    671,
+    0
+   ],
+   "bytes_hex": "5800ff6b9f020000"
+  },
+  "206": {
+   "name": "Pizzaro",
+   "addr": "$17:$696d",
+   "colors": [
+    385,
+    27647,
+    3819,
+    0
+   ],
+   "bytes_hex": "8101ff6beb0e0000"
+  },
+  "207": {
+   "name": "Esterk",
+   "addr": "$17:$6975",
+   "colors": [
+    243,
+    27647,
+    735,
+    0
+   ],
+   "bytes_hex": "f300ff6bdf020000"
+  },
+  "208": {
+   "name": "Mirudraas",
+   "addr": "$17:$697d",
+   "colors": [
+    19539,
+    27647,
+    784,
+    0
+   ],
+   "bytes_hex": "534cff6b10030000"
+  },
+  "209": {
+   "name": "Mirudraas",
+   "addr": "$17:$6985",
+   "colors": [
+    4119,
+    27647,
+    18751,
+    0
+   ],
+   "bytes_hex": "1710ff6b3f490000"
+  },
+  "210": {
+   "name": "Mudou",
+   "addr": "$17:$698d",
+   "colors": [
+    310,
+    27647,
+    849,
+    163
+   ],
+   "bytes_hex": "3601ff6b5103a300"
+  },
+  "211": {
+   "name": "DeathMore",
+   "addr": "$17:$6995",
+   "colors": [
+    19539,
+    27647,
+    1017,
+    2
+   ],
+   "bytes_hex": "534cff6bf9030200"
+  },
+  "212": {
+   "name": "DeathMore",
+   "addr": "$17:$699d",
+   "colors": [
+    4119,
+    27647,
+    22879,
+    2048
+   ],
+   "bytes_hex": "1710ff6b5f590008"
+  },
+  "213": {
+   "name": "DeathMore",
+   "addr": "$17:$69a5",
+   "colors": [
+    4119,
+    27647,
+    30009,
+    2048
+   ],
+   "bytes_hex": "1710ff6b39750008"
+  },
+  "214": {
+   "name": "Darkdrium",
+   "addr": "$17:$69ad",
+   "colors": [
+    21891,
+    27647,
+    477,
+    0
+   ],
+   "bytes_hex": "8355ff6bdd010000"
+  },
+  "215": {
+   "name": "TERRY?",
+   "addr": "$17:$69b5",
+   "colors": [
+    3498,
+    27647,
+    32480,
+    0
+   ],
+   "bytes_hex": "aa0dff6be07e0000"
+  },
+  "216": {
+   "name": "Tatsu",
+   "addr": "$17:$69bd",
+   "colors": [
+    17971,
+    30654,
+    24312,
+    2116
+   ],
+   "bytes_hex": "3346be77f85e4408"
+  },
+  "217": {
+   "name": "Diago",
+   "addr": "$17:$69c5",
+   "colors": [
+    31744,
+    31744,
+    31744,
+    31744
+   ],
+   "bytes_hex": "007c007c007c007c"
+  },
+  "218": {
+   "name": "Samsi",
+   "addr": "$17:$69cd",
+   "colors": [
+    31744,
+    31744,
+    31744,
+    31744
+   ],
+   "bytes_hex": "007c007c007c007c"
+  },
+  "219": {
+   "name": "Bazoo",
+   "addr": "$17:$69d5",
+   "colors": [
+    31744,
+    31744,
+    31744,
+    31744
+   ],
+   "bytes_hex": "007c007c007c007c"
+  },
+  "220": {
+   "name": "",
+   "addr": "$17:$69dd",
+   "colors": [
+    31744,
+    31744,
+    31744,
+    31744
+   ],
+   "bytes_hex": "007c007c007c007c"
+  }
+ }
+}
