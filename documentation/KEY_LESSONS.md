@@ -862,3 +862,53 @@ still say "$1A" predate this and are corrected here.
 **Rule**: A "free/blank" font slot is not necessarily a usable one — confirm a candidate
 tile survives the menu's runtime fill before committing art to it (same family as the
 S19 "looks empty ≠ free" lesson, applied to tiles instead of species ids).
+
+## Session 22 Lessons — GFX-1 (sprite codec + re-sectioning a misassembled data table)
+
+Full reference: MONSTER_DATA.md "Monster sprite graphics system". Tools:
+`tools/resection_battle_gfx_table.py`, `tools/extract_monster_sprites.py`,
+`tools/build_sprite_swap.py`; codec `dwm/sprite_codec.py`; data
+`extracted/monster_sprites.json`; annotation in `disassembly/bank_000.asm`
+(`MonsterBattleGfxTable` @ `$2B9F`).
+
+**Re-sectioning a mgbdis-misassembled data table without breaking the build.**
+The battle gfx-ID table at `$00:$2B9F` was decoded by mgbdis as fake instructions,
+with 27 hallucinated labels on data bytes. **23 of those fake labels are referenced
+from OTHER banks** (themselves misassembled data whose bytes happen to encode
+`jp/jr/ld` to those addresses). Two traps bit, in order:
+1. **Naive `dw` re-section dropped the labels → link errors.** Converting to `dw`
+   deletes the fake labels; the cross-bank fake-instructions then fail to assemble
+   ("Unknown symbol"). **Rule:** before re-sectioning, grep the WHOLE tree for every
+   label in range; any that's referenced must be re-created at its exact address.
+2. **Opcode-size line-mapping drifted by 2 bytes → a downstream shift.** Computing
+   the replaced span's end by summing instruction sizes is fragile; a single
+   mis-sized line shifted everything after the table by −2 (first visible as a real
+   `jp $2EEA → $2EE8`). **Rule:** don't size instructions to find boundaries. Anchor
+   the replacement between two REAL label lines whose addresses come from the linker
+   `.sym`, and emit the EXACT ROM bytes for the whole inter-label range
+   (`ROM[start_addr:end_addr]`), attaching preserved labels at `addr-start` offsets.
+   Then byte-perfectness is structural, not arithmetic. Verify with verify_integrity.
+
+**LZ encode is many-to-one; pick the right round-trip contract.** `decode()` is
+deterministic and byte-exact, but `encode(decode(vanilla))` is NOT byte-identical to
+the vanilla stream — many valid streams decode to the same payload and the game's
+encoder made different greedy choices. The editor never re-emits originals, so the
+correct, sufficient guarantee is SEMANTIC: `decode(encode(x)) == x` (verified on all
+442 streams). **Rule:** don't chase vanilla-byte-identical re-encoding — zero editor
+value, and it's a research rabbit hole. Documented in `dwm/sprite_codec.py` so a
+future session doesn't "fix" it.
+
+**Shared-pool back-refs mean cross-monster transplants must be self-contained.**
+All 221 battle streams back-reference a shared VRAM pool. A swapped sprite encoded
+non-literally inherits the TARGET monster's pool state, not the source's. Encode new
+art with `--literal` (self-contained) for transplants. Standalone extraction decodes
+pool refs as zero-fill, which happens to be correct for display because meaningful
+refs are self-covered (Slime/Dracky/Anteater verified visually).
+
+**Palette is a separate slot+colour system (GFX-2 lead).** User VRAM data: the enemy
+monster uses ONE shared OBJ palette slot (slot 4 — Dracky and a blue slime both show
+attr `04`); per-species colours are loaded into slot 4 at battle-init. So a tile swap
+keeps the target's colours (Anteater-on-Dracky rendered mostly RED, = Dracky index-0).
+Recolour = edit the per-species colour data, entry `FuncFld_6942`/`SetGBCPalette`
+(bank `$07`, `ld h,$04`). **Rule:** tile swaps and recolours are independent jobs;
+don't expect a sprite swap to change colours.

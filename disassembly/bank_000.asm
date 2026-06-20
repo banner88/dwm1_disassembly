@@ -9115,502 +9115,187 @@ Data_2B78:
     ld sp, $313a
 
 Data_2B91:
-    ld a, [hl-]
-    ld sp, $313a
-    ld a, [hl-]
-    ld sp, $313a
-    ld a, [hl-]
-    ld sp, $2f00
-    add hl, de
-    ld l, $11
-    cpl
-    ld [de], a
-    cpl
-    inc de
-    cpl
-    inc d
-    cpl
-    dec d
-    cpl
-    ld d, $2f
-    rla
-    cpl
-    jr @+$31
-
-    add hl, de
-    cpl
-    ld a, [de]
-    cpl
-    dec de
-    cpl
-    inc e
-    cpl
-    dec e
-    cpl
-    ld e, $2f
-    rra
-
+    db $3a
+    db $31
+    db $3a
+    db $31
+    db $3a
+    db $31
+    db $3a
+    db $31
+    db $3a
+    db $31
+    db $00
+    db $2f
+    db $19
+    db $2e
+; --- Monster BATTLE sprite gfx-ID table (GFX-1) ---
+; Read by SetFld_466d ($07): A=species; word = [$2B9F + species*2].
+; gfx-ID = (bank<<8)|index -> per-bank pointer table $<bank>:$4001+index*2
+; -> LZ stream -> DMA to VRAM $8B00. 221 entries; banks $2F,$32-$36.
+MonsterBattleGfxTable:
+    dw $2f11, $2f12, $2f13, $2f14, $2f15, $2f16, $2f17, $2f18
+    dw $2f19, $2f1a, $2f1b, $2f1c, $2f1d, $2f1e
+    db $1f   ; sp14 lo
 Data_2BBC:
-    cpl
-    jr nz, TilemapFillBorder01
-
-    ld hl, $222f
-    cpl
-    inc hl
-
+    db $2f   ; sp14 hi
+    dw $2f20, $2f21, $2f22
+    db $23   ; sp18 lo
 TilemapScrollCalc:
-    cpl
-    inc h
-    cpl
-    dec h
-    cpl
-    ld h, $2f
-    daa
-
+    db $2f   ; sp18 hi
+    dw $2f24, $2f25, $2f26
+    db $27   ; sp22 lo
 BitComplementAndBranch:
-    cpl
-    jr z, WriteTileBorderMid
-
-    add hl, hl
-    cpl
-    ld a, [hl+]
-    cpl
-    dec hl
-    cpl
-    inc l
-    cpl
-    dec l
-    cpl
-    ld l, $2f
-    cpl
-    cpl
-
+    db $2f   ; sp22 hi
+    dw $2f28, $2f29, $2f2a, $2f2b, $2f2c, $2f2d, $2f2e, $2f2f
 TilemapDrawRegion:
-    jr nc, WriteTileBorderBot
-
-    ld sp, $322f
-    cpl
-    inc sp
-    cpl
-    inc [hl]
-    cpl
-    dec [hl]
-    cpl
-    ld [hl], $2f
-    scf
-
-TilemapFillRegion:
-    cpl
-    nop
-
+    dw $2f30, $2f31, $2f32, $2f33, $2f34, $2f35, $2f36, $2f37
+    db $00   ; sp39 lo
 TilemapFillBorder01:
-    ld [hl], $01
-
-TilemapFillBorder02:
-    ld [hl], $02
-    ld [hl], $03
-    ld [hl], $04
-    ld [hl], $05
-    ld [hl], $06
-    ld [hl], $07
-
-TilemapClearLine:
-    ld [hl], $08
-
+    db $36   ; sp39 hi
+    dw $3601, $3602, $3603, $3604, $3605, $3606, $3607
+    db $08   ; sp47 lo
 WriteTileBorderMid:
-    ld [hl], $09
-    ld [hl], $0a
-    ld [hl], $0b
-
-WriteTileSequence:
-    ld [hl], $0c
-    ld [hl], $0d
-    ld [hl], $0e
-    ld [hl], $0f
-    ld [hl], $10
-
+    db $36   ; sp47 hi
+    dw $3609, $360a, $360b, $360c, $360d, $360e, $360f
+    db $10   ; sp55 lo
 WriteTileBorderBot:
-    ld [hl], $11
-    ld [hl], $12
-
-WriteTileBorderInner:
-    ld [hl], $13
-    ld [hl], $14
-    ld [hl], $15
-    ld [hl], $16
-    ld [hl], $17
-    ld [hl], $18
-    ld [hl], $19
-    ld [hl], $1a
-    ld [hl], $1b
-    ld [hl], $1c
-    ld [hl], $1d
-    ld [hl], $1e
-    ld [hl], $1f
-    ld [hl], $20
-    ld [hl], $21
-    ld [hl], $22
-    ld [hl], $23
-    ld [hl], $24
-    ld [hl], $25
-    ld [hl], $26
-    ld [hl], $27
-    ld [hl], $00
-    dec [hl]
-    ld bc, $0235
-    dec [hl]
-    inc bc
-    dec [hl]
-    inc b
-    dec [hl]
-    dec b
-    dec [hl]
-    ld b, $35
-    rlca
-    dec [hl]
-    ld [$0935], sp
-    dec [hl]
-    ld a, [bc]
-    dec [hl]
-    dec bc
-    dec [hl]
-    inc c
-    dec [hl]
-    dec c
-    dec [hl]
-    ld c, $35
-    rrca
-    dec [hl]
-    db $10
-    dec [hl]
-    ld de, $1235
-    dec [hl]
-    inc de
-    dec [hl]
-    inc d
-    dec [hl]
-
+    db $36   ; sp55 hi
+    dw $3611, $3612, $3613, $3614, $3615, $3616, $3617, $3618
+    dw $3619, $361a, $361b, $361c, $361d, $361e, $361f, $3620
+    dw $3621, $3622, $3623, $3624, $3625, $3626, $3627, $3500
+    dw $3501, $3502, $3503, $3504, $3505, $3506, $3507, $3508
+    dw $3509, $350a, $350b, $350c, $350d, $350e, $350f, $3510
+    dw $3511, $3512, $3513, $3514
 TileSequenceMid:
-    dec d
-    dec [hl]
-    ld d, $35
-    rla
-    dec [hl]
-    jr TileSeqIncrementC
-
-    add hl, de
-    dec [hl]
-    ld a, [de]
-    dec [hl]
-    dec de
-    dec [hl]
-    inc e
-    dec [hl]
-    dec e
-    dec [hl]
-    ld e, $35
-    rra
-    dec [hl]
-    jr nz, TileSeqIncrementD
-
-    ld hl, AddBCToHL
-    dec [hl]
-    inc hl
-    dec [hl]
-    inc h
-    dec [hl]
-    dec h
-    dec [hl]
-    ld h, $35
-    daa
-    dec [hl]
-    nop
-    inc [hl]
-    ld bc, $0234
-    inc [hl]
-    inc bc
-    inc [hl]
-    inc b
-    inc [hl]
-    dec b
-    inc [hl]
-    ld b, $34
-    rlca
-    inc [hl]
-    ld [$0934], sp
-    inc [hl]
-    ld a, [bc]
-    inc [hl]
-    dec bc
-
+    dw $3515, $3516, $3517, $3518, $3519, $351a, $351b, $351c
+    dw $351d, $351e, $351f, $3520, $3521, $3522, $3523, $3524
+    dw $3525, $3526, $3527, $3400, $3401, $3402, $3403, $3404
+    dw $3405, $3406, $3407, $3408, $3409, $340a
+    db $0b   ; sp130 lo
 TileSeqIncrementC:
-    inc [hl]
-    inc c
-    inc [hl]
-    dec c
-    inc [hl]
-    ld c, $34
-    rrca
-    inc [hl]
-    db $10
-    inc [hl]
-    ld de, $1234
-    inc [hl]
-    inc de
-
+    db $34   ; sp130 hi
+    dw $340c, $340d, $340e, $340f, $3410, $3411, $3412
+    db $13   ; sp138 lo
 TileSeqIncrementD:
-    inc [hl]
-    inc d
-    inc [hl]
-    dec d
-    inc [hl]
-    ld d, $34
-    rla
-    inc [hl]
-    jr TileDataContinue
-
-    add hl, de
-    inc [hl]
-    ld a, [de]
-    inc [hl]
-
-TileSeqDecrementDE:
-    dec de
-    inc [hl]
-    inc e
-    inc [hl]
-    dec e
-    inc [hl]
-    ld e, $34
-    rra
-    inc [hl]
-    jr nz, TileNextInSeq
-
-    ld hl, $2234
-    inc [hl]
-    inc hl
-    inc [hl]
-    inc h
-    inc [hl]
-    dec h
-    inc [hl]
-    ld h, $34
-    daa
-    inc [hl]
-    nop
-    inc sp
-    ld bc, $0233
-    inc sp
-    inc bc
-    inc sp
-    inc b
-    inc sp
-    dec b
-
-TileDataBlock1:
-    inc sp
-    ld b, $33
-    rlca
-
+    db $34   ; sp138 hi
+    dw $3414, $3415, $3416, $3417, $3418, $3419, $341a, $341b
+    dw $341c, $341d, $341e, $341f, $3420, $3421, $3422, $3423
+    dw $3424, $3425, $3426, $3427, $3300, $3301, $3302, $3303
+    dw $3304, $3305, $3306
+    db $07   ; sp166 lo
 TileDataBlock2:
-    inc sp
-    ld [$0933], sp
-    inc sp
-    ld a, [bc]
-    inc sp
-
+    db $33   ; sp166 hi
+    dw $3308, $3309, $330a
 TileDataContinue:
-    dec bc
-    inc sp
-    inc c
-    inc sp
-    dec c
-    inc sp
-    ld c, $33
-
+    dw $330b, $330c, $330d, $330e
 TilemapWriteByte:
-    rrca
-
+    db $0f   ; sp174 lo
 TilemapWriteByte2:
-    inc sp
-    db $10
-    inc sp
-
+    db $33   ; sp174 hi
+    dw $3310
 TilemapNextTile:
-    ld de, $1233
-    inc sp
-
+    dw $3311, $3312
 TileNextInSeq:
-    inc de
-    inc sp
-    inc d
-    inc sp
-    dec d
-    inc sp
-    ld d, $33
-    rla
-    inc sp
-    jr TileStoreReverseLoop
-
+    dw $3313, $3314, $3315, $3316, $3317, $3318
 TileAddDE:
-    add hl, de
-    inc sp
-
-TileReadDE:
-    ld a, [de]
-    inc sp
-    dec de
-    inc sp
-    inc e
-    inc sp
-    dec e
-    inc sp
-    ld e, $33
-    rra
-    inc sp
-    jr nz, TileStoreEnd
-
-    ld hl, $2233
-    inc sp
-    inc hl
-    inc sp
-    inc h
-    inc sp
-    dec h
-    inc sp
-    ld h, $33
-    daa
-    inc sp
-    nop
-    ld [hl-], a
-    ld bc, $0232
-    ld [hl-], a
-    inc bc
-    ld [hl-], a
-
+    dw $3319, $331a, $331b, $331c, $331d, $331e, $331f, $3320
+    dw $3321, $3322, $3323, $3324, $3325, $3326, $3327, $3200
+    dw $3201, $3202, $3203
 TileStoreReverse:
-    inc b
-    ld [hl-], a
-    dec b
-    ld [hl-], a
-    ld b, $32
-    rlca
-    ld [hl-], a
-    ld [$0932], sp
-    ld [hl-], a
-    ld a, [bc]
-
+    dw $3204, $3205, $3206, $3207, $3208, $3209
+    db $0a   ; sp209 lo
 TileStoreReverseLoop:
-    ld [hl-], a
-    dec bc
-    ld [hl-], a
-    inc c
-    ld [hl-], a
-    dec c
-    ld [hl-], a
-    ld c, $32
-    rrca
-    ld [hl-], a
-    db $10
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-
+    db $32   ; sp209 hi
+    dw $320b, $320c, $320d, $320e, $320f, $3210, $320f
+    db $0f   ; sp217 lo
 TileStoreEnd:
-    ld [hl-], a
-
+    db $32   ; sp217 hi
 TilemapRotateWrite:
-    rrca
-    ld [hl-], a
-    rrca
-
+    dw $320f
+    db $0f   ; sp219 lo
 WriteRotatedBytesDown:
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-
-TilemapRotateCont:
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    nop
-
+    db $32   ; sp219 hi
+    dw $320f
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $0f
+    db $32
+    db $00
 TileRotatePadding:
     nop
     nop
@@ -13839,3 +13524,4 @@ MenuCheckEnd:
     rst $38
     rst $38
     rst $38
+

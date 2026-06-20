@@ -5,6 +5,33 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-20 (Session 22 — GFX-1: graphics system annotated +
+> sprite codec/extraction/swap tooling; Dracky→Anteater swap user-confirmed in
+> SameBoy as a mostly-red Anteater, i.e. correct shape in Dracky's palette.)
+> **GFX-1 DONE — editor graphics asset layer + correct disassembly.** Three
+> foundations landed: (1) the battle gfx-ID table `$00:$2B9F` was misassembled
+> (fake instructions, 23 hallucinated labels cross-referenced from other banks);
+> re-sectioned into a real labeled block `MonsterBattleGfxTable` via
+> `tools/resection_battle_gfx_table.py` — anchored between real symbol-map label
+> boundaries, exact ROM bytes emitted, all 23 cross-refs preserved, build still
+> `1ca6579…`. (2) `dwm/sprite_codec.py` — the SINGLE LZ codec for tiles+sprites
+> (decode byte-exact = game + existing tile decompressor; encode valid/compact;
+> tile↔image); `decode(encode(x))==x` verified on all 442 monster streams.
+> Deliberately NOT byte-identical re-encode of vanilla (no editor value). (3)
+> `tools/extract_monster_sprites.py` + `extracted/monster_sprites.json` — all 221
+> monsters' battle+follower sprites → manifest (count-parameterised, no 221 wall).
+> `tools/build_sprite_swap.py` generalised to species-agnostic (PNG/payload/probe →
+> encode → place → repoint); builds valid ROM. INTEGRITY PASS. KNOWN: all 221
+> battle streams use shared-VRAM-pool back-refs → new art must encode self-contained
+> (`--literal`) or reconstruct pool; swap tool's free-space placement currently
+> knows bank `$36` only (cross-bank allocator = editor-backend follow-up). PALETTE
+> LEAD for GFX-2 (user VRAM data): battle uses ONE shared OBJ palette slot (4); the
+> per-species COLOURS are loaded into it at battle-init via `FuncFld_6942`/
+> `SetGBCPalette` (bank `$07`, note `ld h,$04`). So recolour = edit the per-species
+> colour table, NOT a slot assignment. Full mechanics in MONSTER_DATA.md "Monster
+> sprite graphics system"; lesson in KEY_LESSONS "Session 22". Next: GFX-2 (palette
+> recolour) or GFX-3 (follower swap, rides the codec).
+>
 > Last verified: 2026-06-19 (Session 21 — Monster battle-sprite swap POC:
 > Dracky sp.78 → DWM2 "clam", proven rendering in SameBoy; in Dracky's native
 > palette pending recolour.)

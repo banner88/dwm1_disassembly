@@ -483,10 +483,20 @@ table, $14 enemy stats/boss, $16 breeding) appear ALREADY `db`-converted on disk
 (bank_003/014/016 are heavily `db`/`dw` with labeled loaders). Confirm against
 disassembly and check them off.
 
-- [ ] **GFX-1 — Graphics system: gfx-ID indirection + sprite decompressor → annotate + tool.**
-  *VERIFIED this session via a working battle-sprite swap POC (Dracky→DWM2 clam);
-  the facts below are ROM-proven unless tagged speculative. Re-confirm in disassembly,
-  then annotate (labels/comments only, **build MUST stay `1ca6579…`**).*
+- [x] **GFX-1 — Graphics system: gfx-ID indirection + sprite decompressor → annotate + tool.** ✅ DONE (Session 22)
+  *DONE Session 22 — see PROJECT_STATE "Session 22" + KEY_LESSONS "Session 22" +
+  MONSTER_DATA "Monster sprite graphics system". Delivered: (a) battle gfx-ID table
+  `$00:$2B9F` re-sectioned to `MonsterBattleGfxTable` (`tools/resection_battle_gfx_table.py`,
+  build still `1ca6579…`, 23 cross-refs preserved); (b) `dwm/sprite_codec.py` — shared
+  LZ codec, decode byte-exact, `decode(encode(x))==x` on all 442 streams; (c)
+  `tools/extract_monster_sprites.py` + `extracted/monster_sprites.json` (all 221,
+  count-parameterised); (d) `tools/build_sprite_swap.py` generalised species-agnostic.
+  ACCEPT criterion adjusted: round-trip is SEMANTIC (`decode(encode)==x`), NOT vanilla
+  byte-identical re-encode (no editor value — documented). Dracky→Anteater swap
+  user-confirmed in SameBoy. Doc errors below FIXED in the re-section comments.
+  REMAINING (moved to editor-backend / GFX-3): cross-bank free-space allocator (swap
+  tool knows bank `$36` only); follower-sprite extraction + animation-frame layout.*
+  *Original verified facts (kept for reference):*
   - **gfx-ID = `(bank<<8)|index`.** High byte = ROM bank, low byte = index.
   - **Resolver `DecompressTileLayout` @ `$00:$1627`:** switches to `bank` (`ld[$2100],a`
     low bits; `swap a/rra/and 3 → ld[$4100],a` high bits — also twiddles SRAM bank,
@@ -539,6 +549,13 @@ disassembly and check them off.
     (`$cacb`) + species and calls `FuncFld_6942` etc.; start tracing there. NOTE the
     `SetGBCPalette` calls in bank `$07` at lines 2460/2609 are SCENE palettes (warp/gate id `$03`),
     **not** the monster's — don't be misled.
+  - **NEW LEAD (Session 22, user SameBoy VRAM data):** the enemy monster's tiles use ONE
+    **shared OBJ palette slot — slot 4** (confirmed: Dracky AND a blue slime both show OBJ
+    attribute `04` in the VRAM viewer). So the SLOT is fixed; the per-species COLOURS are written
+    into slot 4 at battle-init. This means recolour = edit the **per-species colour data loaded
+    into slot 4**, NOT a slot/palette-ID assignment. Concrete entry point: `FuncFld_6942` (bank
+    `$07` ~line 6567) and `SetGBCPalette` — note `FuncFld_6942` does `ld h,$04` (matches slot 4).
+    Trace from there to the colour table that feeds the `$1704`/`rst $10` upload.
   - **Recolour approach (speculative):** find the palette DATA table in bank `$17` reached via the
     `rst $10`/`$1704` path, indexed by the monster/family palette ID; edit the 4 RGB555 colours,
     OR repoint selection to a custom palette. **First confirm scope** (per-family vs per-monster):

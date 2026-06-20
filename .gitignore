@@ -3,3 +3,9 @@
 *.bak
 *.txt
 *Zone.Identifier
+
+# Build artifacts — regenerated deterministically by rgbasm/rgblink.
+# (Do NOT ignore *.2bpp — those are committed source that cannot be byte-identically regenerated.)
+disassembly/game.o
+disassembly/game.sym
+disassembly/game.map

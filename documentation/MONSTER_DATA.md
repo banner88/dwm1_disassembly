@@ -170,13 +170,35 @@ is looked up and replaced with the join EID (the monster stats for what joins).
 - `extracted/enemy_stats.json` — all 487 enemy stat entries
 - `extracted/breeding_complete.json` — complete breeding data (both tables)
 
-## Monster sprite graphics system (verified Session 21)
+## Monster sprite graphics system (verified Session 21; tooling + annotation Session 22)
 
-Reverse-engineered and proven in-game via a battle-sprite swap POC (Dracky → a
-DWM2 "clam"; `tools/build_sprite_swap.py`, `patches/bank_036.asm`). Execution
-jobs live in ROADMAP **GFX-1** (tile system: annotate + tool), **GFX-2** (palette
-+ recolour, semi-speculative), **GFX-3** (follower swap). Re-confirm before
-trusting — annotate disassembly with labels/comments only, build stays `1ca6579…`.
+Reverse-engineered and proven in-game via battle-sprite swaps (Session 21 Dracky →
+DWM2 "clam"; Session 22 Dracky → Anteater via the generalised tool, user-confirmed
+in SameBoy). GFX-1 (tile system: annotate + tool) is **DONE** (Session 22); GFX-2
+(palette + recolour) and GFX-3 (follower swap) remain in ROADMAP. The disassembly is
+annotated with labels/comments only — build stays `1ca6579…`.
+
+**Tooling (Session 22 — the editor's graphics asset layer).**
+- `dwm/sprite_codec.py` — the SINGLE LZ codec for tiles AND sprites (no second copy
+  of the format). `decode()` is byte-exact (matches the game and the legacy
+  `tools/decompress_tiles.py`); `encode()`/`encode_safe()` produce valid, compact
+  streams (greedy) or self-contained literal streams (`literal_only=True`);
+  `tiles_to_indices`/`indices_to_tiles` convert 2bpp↔index grids;
+  `gfxid_stream_offset`/`read_stream` resolve+read a gfx-ID. Round-trip contract:
+  `decode(encode(x))==x` (verified on all 442 monster streams). It does **NOT**
+  promise byte-identical re-encode of a vanilla stream — LZ is many-to-one and the
+  editor never re-emits originals; do not "fix" this.
+- `tools/extract_monster_sprites.py` → `extracted/monster_sprites.json` — decodes
+  every monster's battle + follower sprite to a manifest (species → gfx-ID, bank,
+  index, stream addr/len, tile count, grid, decoded tile bytes hex), `--png` for
+  images. Count is a parameter (`--count`, default 221) — no hard 221 wall.
+- `tools/build_sprite_swap.py` — species-agnostic battle swap (`--species 78|Dracky`,
+  `--png`/`--payload`/`--probe`, `--literal`): resolve gfx-ID → encode → place in the
+  bank's trailing free space → repoint the pointer-table entry. Same-bank/same-size
+  repoint (zero shift); clean tree stays byte-perfect. LIMITS: free-space placement
+  currently knows bank `$36` only (`BANK_FREE_ANCHOR`) — a cross-bank allocator is the
+  editor-backend follow-up; PNG import is heuristic.
+- `tools/resection_battle_gfx_table.py` — re-sectioned the battle gfx-ID table (below).
 
 **Addressing.** Every graphic = a 2-byte **gfx-ID = `(bank<<8)|index`** (high byte
 = ROM bank, low = index). Resolver `DecompressTileLayout` @ `$00:$1627` switches to
@@ -196,20 +218,42 @@ palette index 0.)
 
 **Species → gfx-ID tables (VERIFIED).**
 - Battle: `SetFld_466d` (bank `$07`, ~line 1008) reads species (`$caca`), indexes
-  **`$00:$2B9F`** by `species*2`, DMAs to VRAM **`$8B00`**. Dracky (sp 78) → **`$3627`**
-  (bank `$36` idx `$27`; 576 B / 36 tiles / 48×48; runmark `$02`; word at ROM0 `$2C3B`).
+  **`MonsterBattleGfxTable` @ `$00:$2B9F`** by `species*2`, DMAs to VRAM **`$8B00`**.
+  Dracky (sp 78) → **`$3627`** (bank `$36` idx `$27`; 576 B / 36 tiles / 48×48;
+  runmark `$02`; word at ROM0 `$2C3B`). 221 entries, banks `$2F,$32–$36`.
+  **Re-sectioned Session 22**: this table was misassembled by mgbdis (fake
+  instructions; 23 hallucinated labels cross-referenced from banks
+  `$07/$09/$12/$21/$2C/$32–$36/$40/$61`). `tools/resection_battle_gfx_table.py`
+  rebuilds it as a labeled `dw`/`db` block, anchored between real symbol-map labels
+  (`Data_2B91`..`TileRotatePadding`), emitting exact ROM bytes and preserving all 23
+  cross-refs at their addresses — build stays `1ca6579…`. (See KEY_LESSONS "Session 22".)
 - Follower: `ScreenTransDataTable` @ `$01:$49DF`, loader `GetActiveMonsterStatus` @
   `$01:$4986`, index `(species+$10)*2`; family-shared 2nd load via `$01:$4BAD`.
-  Dracky → **`$383E`** (bank `$38` idx `$3E`; 256 B / 16 tiles).
+  Dracky → **`$383E`** (bank `$38` idx `$3E`; 256 B / 16 tiles). The follower load does
+  TWO DMAs — the species sprite + a family-shared block (`$4BAD`); the 16-tile stream
+  holds the full walk-animation frame set (engine cycles frames; not per-frame gfx-IDs).
+  *(Follower extraction is wired in `extract_monster_sprites.py`; the exact
+  frame→direction grid layout is a GFX-3 detail, not yet pinned.)*
 
-**Palette (SEMI-SPECULATIVE — see GFX-2).** Tiles only pick a palette index; colours
+**Pool dependency (Session 22).** All 221 battle streams (and 174/221 followers) use
+back-references that read below their own output start — i.e. into the shared VRAM
+pool. Standalone extraction decodes those as zero-fill; in practice the meaningful
+refs are self-covered, so extracted sprites render correctly (Slime/Dracky/Anteater
+verified). But a CROSS-monster transplant must encode the new art **self-contained**
+(`--literal`) — otherwise it inherits whatever pool state the *target* monster loads,
+not the source's. The swap tool defaults handle this.
+
+**Palette (still GFX-2; one fact upgraded).** Tiles only pick a palette index; colours
 come from a separate CGB subsystem. Dracky's battle palette (probe-verified):
-**0=red, 1=white/transparent backdrop, 2=gold/brown, 3=black**. Upload routines in
-bank `$17`; `SetPaletteGBC` stores a palette ID at `$c850` then `ld hl,$1704; rst $10`.
-Per-monster/family selection NOT yet pinned (start at bank `$07` battle-init ~1090–1180,
-which reads family `$cacb`).
+**0=red, 1=white/transparent backdrop, 2=gold/brown, 3=black**. **Session 22 (user VRAM
+data):** the enemy monster uses ONE shared **OBJ palette slot — slot 4** (Dracky and a
+blue slime both show OBJ attribute `04`); per-species COLOURS are loaded into slot 4 at
+battle-init, so recolour = edit the per-species colour table, not the slot. Entry point:
+`FuncFld_6942` (bank `$07` ~line 6567, does `ld h,$04`) / `SetGBCPalette` → `$1704`/`rst $10`
+upload in bank `$17`. Per-monster-vs-per-family scope still to confirm in GFX-2.
 
-**Disassembly label errors to fix:** `bank_038.asm` header "gate dungeon tileset J"
-also holds follower sprites; `bank_036.asm` "Cross-bank dispatch table" is actually the
-gfx pointer table. A prior `$382E` battle guess (from unreferenced scan-tables
-`$07:$6E14`/`$09:$6B10`) is bogus — `$382E` is a dungeon tile.
+**Disassembly label errors (noted; battle table FIXED Session 22):** `bank_038.asm`
+header "gate dungeon tileset J" also holds follower sprites; `bank_036.asm` "Cross-bank
+dispatch table" is actually the gfx pointer table (Entry-N comments added). A prior
+`$382E` battle guess (from unreferenced scan-tables `$07:$6E14`/`$09:$6B10`) is bogus —
+`$382E` is a dungeon tile.
