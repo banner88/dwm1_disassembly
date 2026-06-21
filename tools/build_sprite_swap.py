@@ -17,7 +17,7 @@ Art sources:
 
 Repoints (both are same-size 2-byte data edits = Iron-Rule-2 safe):
   battle    MonsterBattleGfxTable  $00:$2B9F  [species*2]
-  follower  ScreenTransDataTable   $01:$49DF  [(species+$10)*2]   (re-section pending)
+  follower  ScreenTransDataTable   $01:$49DF  [(species+$10)*2]   (re-sectioned)
 
 With --build-rom it assembles a FOCUSED test ROM (clean tree + ONLY these sprite
 changes), restoring the clean tree afterwards.
@@ -184,6 +184,47 @@ def repoint_battle(text, sp, new_gid):
     return head + '\n'.join(lines) + tail
 
 
+def repoint_follower(text, sp, new_gid):
+    """Rewrite ScreenTransDataTable[sp+$10] = new_gid in bank_001.asm.
+
+    The follower table was re-sectioned (resection_follower_gfx_table.py) into a
+    clean `dw` block from ScreenTransDataTable: to FollowerFamilyGfxTable: with no
+    db-splits and no preserved interior labels, so a straight dw-token walk is
+    sufficient (comment lines don't match TOK and are skipped). Index into the
+    table = species + $10 (the loader's (species+$10)*2 offset).
+    """
+    a = text.index('ScreenTransDataTable:')
+    b = text.index('FollowerFamilyGfxTable:', a)
+    head, body, tail = text[:a], text[a:b], text[b:]
+    target_byte = (sp + 0x10) * 2
+    lines = body.split('\n')
+    bytepos = 0
+    done = False
+    for li, ln in enumerate(lines):
+        m = TOK.match(ln)
+        if not m:
+            continue
+        indent, kind, data, comment = m.group(1), m.group(2), m.group(3), m.group(4) or ''
+        if kind != 'dw':
+            raise RuntimeError(f'unexpected `{kind}` in re-sectioned follower table '
+                               f'(expected pure dw) at line: {ln!r}')
+        toks = [t.strip() for t in data.split(',')]
+        new_toks = []
+        changed = False
+        for t in toks:
+            if bytepos == target_byte and not done:
+                new_toks.append(f'${new_gid:04x}'); changed = True; done = True
+            else:
+                new_toks.append(t)
+            bytepos += 2
+        if changed:
+            lines[li] = f'{indent}{kind} ' + ', '.join(new_toks) + comment
+    if not done:
+        raise RuntimeError(f'could not locate follower table entry for sp{sp} '
+                           f'(walked {bytepos} bytes; need the re-sectioned table)')
+    return head + '\n'.join(lines) + tail
+
+
 def build_focused_rom(out_rom, bank_edits, new_banks):
     backups = {}
     game = os.path.join(DIS, 'game.asm')
@@ -236,11 +277,24 @@ def main():
     args = ap.parse_args()
     if not (args.relocate or args.png or args.payload):
         sys.exit('need --relocate, --png, or --payload')
-    if args.kind == 'follower':
-        sys.exit('follower repoint needs $01:$49DF re-sectioned first (next step).')
 
     rom = open(ROM, 'rb').read()
     sp = species_id(args.species)
+
+    # The repoint edits the species->gfx-ID table for the chosen kind:
+    #   battle   -> MonsterBattleGfxTable  ($00:$2B9F) in bank_000.asm
+    #   follower -> ScreenTransDataTable   ($01:$49DF) in bank_001.asm
+    # The follower table must be re-sectioned first (resection_follower_gfx_table.py).
+    if args.kind == 'battle':
+        repoint_file = 'bank_000.asm'
+        repoint_fn = repoint_battle
+    else:
+        repoint_file = 'bank_001.asm'
+        repoint_fn = repoint_follower
+        if 'FollowerFamilyGfxTable:' not in open(os.path.join(DIS, repoint_file)).read():
+            sys.exit('follower repoint needs $01:$49DF re-sectioned first: '
+                     'run tools/resection_follower_gfx_table.py')
+
     banks = [int(x, 16) for x in args.banks.split(',')] if args.banks else None
     alloc = sb.SpriteOverflowAllocator(banks)
     stream, old_gid = make_stream(rom, sp, args.kind, args)
@@ -249,9 +303,9 @@ def main():
           f'(overflow bank ${new_gid>>8:02x} idx {new_gid&0xff}); stream {len(stream)} B'
           f'{" [relocated unchanged]" if args.relocate else ""}')
     new_banks = {bnk: alloc.emit_asm(bnk) for bnk in alloc.used_banks()}
-    bank000 = repoint_battle(open(os.path.join(DIS, 'bank_000.asm')).read(), sp, new_gid)
+    repointed = repoint_fn(open(os.path.join(DIS, repoint_file)).read(), sp, new_gid)
     if args.build_rom:
-        md5 = build_focused_rom(args.build_rom, {'bank_000.asm': bank000}, new_banks)
+        md5 = build_focused_rom(args.build_rom, {repoint_file: repointed}, new_banks)
         if args.palette:
             cols = [int(x, 16) for x in args.palette.split(',')]
             old, new = patch_palette(args.build_rom, sp, cols)

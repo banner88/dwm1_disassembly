@@ -232,8 +232,60 @@ palette index 0.)
   Dracky → **`$383E`** (bank `$38` idx `$3E`; 256 B / 16 tiles). The follower load does
   TWO DMAs — the species sprite + a family-shared block (`$4BAD`); the 16-tile stream
   holds the full walk-animation frame set (engine cycles frames; not per-frame gfx-IDs).
-  *(Follower extraction is wired in `extract_monster_sprites.py`; the exact
-  frame→direction grid layout is a GFX-3 detail, not yet pinned.)*
+  *(Follower extraction is wired in `extract_monster_sprites.py`. The frame→direction
+  layout — once "not yet pinned" — is now fully solved; see "Follower / walking-sprite
+  render system" below.)*
+
+### Follower / walking-sprite render system (SOLVED Session 24 — GFX-3)
+
+A monster's overworld follower is **two independent layers**: the **art** (16 tiles, the
+gfx-ID stream above) and the **layout** (a metasprite program that arranges those tiles into
+the four facings × two walk frames). They are orthogonal — same art + different layout =
+different-looking walk; this is the key to the editor.
+
+**Render engine — `SaveScr_40cd` @ `$04:$40cd`** (GBC variant of ROM0 `$0d91`). The follower
+path: `AdjustGateFloorIndex` (`$01:$5938`) sets `$ffc7` (sprite-type), `$ffc9` (tile base
+`$20`/`$30`/`$40` for party slot 0/1/2), reads the movement-trail record for facing, then
+far-calls `$0402` (`NPCSpriteLoadAlt`) → `SaveScr_40cd`. The engine walks a metasprite list:
+
+- **Entry = 4 bytes `(dy, dx, tile_offset, attr)`**, list terminated by `$80`.
+- Final OAM **tile = `tile_offset + [$ffc9]`** (so `tile_offset` is 0–15 within the 16-tile block).
+- Final OAM **attr = `[$ffca] XOR attr`** — **X-flip = bit5 (`$20`)**. Head-mirror is encoded as
+  two entries sharing a `tile_offset`, one with the flip bit toggled.
+- Selection: two-level pointer table indexed by **sprite-type `$ffc7`** then **frame/direction
+  `$ffc8`**. `$ffc7 = [$ca91] = GetActiveMonsterStatus` (`$01` if bit7 of `[$cb0b]`, else
+  `[$caca]+$10`) — i.e. driven by the monster's **sprite-class byte `[$caca]`**.
+
+**OBJ transparency (critical, opposite of battle):** for OBJ sprites **colour index 0 is
+hardware-transparent**. Empty/background pixels of a follower MUST be idx0 (the battle path
+instead used a BG backdrop on idx1). The 8 global OBJ palettes (4×RGB555 each) live at
+**`$17:$5615`**; per-monster slot assignment is dynamic (NPC OAM code), so a calibration ROM
+can force colours by overwriting these 8 palettes (`build_sprite_swap` numbered-ROM `--palette`).
+
+**Layouts are PER-MONSTER, not universal — 118 distinct layouts.** `tools/extract_follower_layouts.py`
+walks the frame-pointer tables in banks `$05`/`$10`/`$11` and dedupes them into
+`extracted/follower_layouts.json`. Each layout gives, per facing×walk-frame, the four
+`(position, tile 0–15, flip)` tuples. Two classes:
+
+- **Non-sharing (76 layouts, 202 sprite types):** down/up/side use disjoint tile sets — *any*
+  distinct front/back/profile art renders perfectly. The two workhorse layouts (41 + 30 types)
+  are of this kind. **This is the editor's default for imports.**
+- **Sharing (42 layouts, 58 types):** up and side reuse the same VRAM tiles (e.g. Healer:
+  tile `5` is both up-head-left and side top-left; `A`/`C` are both up-legs and side bottom).
+  Tile-efficient and invisible on a radially-symmetric blob, but a directional sprite forced
+  into it shows the borrowed tiles.
+
+**Measured anchors** (numbered-tile calibration, both matched the extracted data exactly):
+Healer = a sharing layout (`$05:$4bae`); DarkDrium (sp214) = a non-sharing layout (`$05:$45b4`):
+down `0,0^,1,2`/`0,0^,3,4`, right `5,6,7,8`/`5,6,9,A`, up `B,B^,C,D`/`B,B^,E,F`. The blue-dragon
+walk-sprite import rendered **perfectly in all four directions on DarkDrium's layout** —
+user-confirmed in SameBoy. (A symmetric blob masks layout errors; a directional monster
+exposes them — see KEY_LESSONS "Session 24".)
+
+**Remaining link (ROADMAP GFX-4):** monster → layout id. The level-1 dispatch (type `$ffc7` →
+layout, bank-routed by magnitude: `<$10`→`$04`, `$10–$8F`→`$10`, `≥$90`→`$11`) and each
+monster's `[$caca]` are not yet extracted; the engine structure is fully known, so it is a
+clean follow-up.
 
 **Pool dependency (Session 22).** All 221 battle streams (and 174/221 followers) use
 back-references that read below their own output start — i.e. into the shared VRAM

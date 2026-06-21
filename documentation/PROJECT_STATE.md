@@ -5,6 +5,44 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-21 (Session 24 — GFX-3 DONE: walking/follower sprite swap +
+> follower metasprite engine fully reverse-engineered + 118-layout library extracted.
+> Blue dragon → DarkDrium follower user-confirmed "absolutely perfect" all 4 directions.)
+> **GFX-3 DONE — follower (walking-sprite) swap, end to end.**
+> (1) `ScreenTransDataTable` @ `$01:$49DF` re-sectioned from mgbdis fake-instructions to a
+> labeled `dw` block (`tools/resection_follower_gfx_table.py`; 231 entries indexed
+> `species+$10`, + `FollowerFamilyGfxTable` 10 families @ `$4BAD`; build still `1ca6579…`,
+> zero external refs into range). `build_sprite_swap.py --kind follower --payload F.bin`
+> repoints the dw entry and DMAs a self-contained 16-tile (256 B) literal-encoded stream.
+> (2) **Follower render = metasprite engine** — `SaveScr_40cd` @ `$04:$40cd` (GBC variant of
+> ROM0 `$0d91`). A two-level pointer table (sprite-type `$ffc7` → frame/direction `$ffc8`)
+> selects a metasprite list: 4-byte entries **(dy, dx, tile_offset, attr)**, `$80`-terminated.
+> Final OAM tile = `tile_offset + [$ffc9]` (follower tile base `$20`/`$30`/`$40` per party
+> slot 0/1/2); final OAM attr = `[$ffca] XOR attr` (X-flip = bit5 `$20`). `$ffc7 = [$ca91]`
+> (= `GetActiveMonsterStatus` return: `$01` if bit7 of `[$cb0b]`, else `[$caca]+$10`).
+> (3) **OBJ transparency rule (critical):** colour index 0 is HARDWARE-transparent for OBJ
+> sprites (the battle path used a BG backdrop = index 1 — opposite). Follower empty/background
+> pixels MUST map to idx0. 8 global OBJ palettes (4×RGB555) at `$17:$5615`.
+> (4) **Per-monster layouts — there is NO single universal arrangement.** The tile→direction
+> mapping is one of **118 distinct layouts** (`tools/extract_follower_layouts.py` →
+> `extracted/follower_layouts.json`). **76 are non-sharing** (disjoint down/up/side tile sets
+> → ANY distinct art renders perfectly; cover 202 sprite types) and **42 are sharing**
+> (up/side reuse tiles — fine for radially-symmetric blobs, breaks directional art; 58 types).
+> This resolved the multi-attempt mystery: a symmetric blob masks layout errors (the clam
+> "worked" by luck); a directional dragon exposes them. Healer = a sharing layout, DarkDrium =
+> a non-sharing one (both measured, both matched the extracted data exactly).
+> (5) Tooling: interactive `tools/follower_frame_picker.html` (drag 6 boxes over a sprite
+> sheet, live per-direction engine-accurate preview, export coords/payload). **Numbered-tile
+> calibration method** (each VRAM tile renders its own hex index 0–F + a flip-foot →
+> read the layout directly off-screen, no decoding) — `--palette` override forces black digit
+> / red foot for legibility against terrain.
+> USER-CONFIRMED in SameBoy: blue dragon (DWM2 art) → DarkDrium follower, all 4 directions
+> correct, by matching the art to DarkDrium's non-sharing layout.
+> **FOLLOW-UP — GFX-4 flagged (ROADMAP):** monster→layout auto-map. The type→layout level-1
+> dispatch tables (banks `$05`/`$10`/`$11`, routed by `$ffc7` magnitude: `<$10` bank `$04`,
+> `$10–$8F` bank `$10`, `≥$90` bank `$11`) and the per-monster sprite-class byte (`[$caca]`)
+> are not yet located/extracted; the full engine structure IS known, so it's a clean pickup.
+>
 > Last verified: 2026-06-20 (Session 23 — GFX-2 DONE: cross-bank sprite backbone +
 > monster battle palette SOLVED + recolour; clam→Dracky purple + full integration
 > user-confirmed in SameBoy.)
@@ -317,6 +355,9 @@
 | Custom content bank | $60 (~14.9 KB free as of v25 content, 1322 bytes used) |
 | Monster battle palette table | `MonsterBattlePalettes` @ `$17:$62FD`, 8 B/species, 4 RGB555 `[c0, c1=$6bff, c2, c3=$0000]`; loaded by bank $17 entry 6 (`$1706`). Was mislabeled `RoomAttrDataBlocks`. |
 | Monster sprite overflow banks | `$7E,$7F` (then `$7C,$7A,$79`) — cross-bank sprite streams (`dwm/sprite_bank.py`); EDITOR_DESIGN §8. Resolver reads `$<bank>:$4001+index*2`, no bank gating. |
+| Follower gfx-ID table | `ScreenTransDataTable` @ `$01:$49DF`, 231 `dw`, indexed `species+$10`; loader `GetActiveMonsterStatus` @ `$01:$4986`; family table `FollowerFamilyGfxTable` @ `$01:$4BAD` (10). 16 tiles / 256 B per follower, DMA'd to VRAM `$8200`/`$8300`/`$8400` (party slot 0/1/2). |
+| Follower render engine | `SaveScr_40cd` @ `$04:$40cd` (GBC variant of ROM0 `$0d91`). Metasprite list = 4-byte entries **(dy, dx, tile_offset, attr)**, `$80`-terminated; OAM tile = `tile_offset + [$ffc9]` (base `$20/$30/$40`); OAM attr = `[$ffca] XOR attr` (X-flip bit5). 2-level table: sprite-type `$ffc7`(=`[$ca91]`) → frame/dir `$ffc8`. **OBJ idx0 = hardware-transparent** (battle BG used idx1). 8 OBJ palettes @ `$17:$5615`. |
+| Follower layout library | **118 distinct layouts**, `extracted/follower_layouts.json` (`tools/extract_follower_layouts.py`). 76 non-sharing (disjoint down/up/side → any art clean; 202 types), 42 sharing (blob-only; 58 types). Layout is per-monster (NOT universal). |
 | Custom layout bank | $64 (layout ptr table + LZSS layout + attr data, 309 bytes used) |
 | Empty banks available | 21 banks = 336 KB: $67,$69–$77,$79–$7A,$7C,$7E–$7F |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |

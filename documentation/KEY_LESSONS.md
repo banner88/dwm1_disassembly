@@ -987,3 +987,56 @@ clam swap + Dracky→Spirit) ran clean. The swap lives entirely in bank `$7e` (a
 (`$69`), library (`$12`), custom-content (`$60/$64/$67`), or family (`$03`) banks.
 **Rule**: graphics swaps and the content/data systems don't interact; they can be
 developed and tested independently.
+
+## Session 24 Lessons — GFX-3 (follower walking-sprite swap + metasprite engine)
+
+**1. A symmetric test subject masks layout bugs — pick an asymmetric one.** The first
+follower swap used a DWM2 *clam* (a near radially-symmetric blob). It rendered correctly in
+all four directions and we believed the tile→direction layout was solved. It was not: a blob
+looks identical whether or not subtiles are swapped, flipped, or mis-mapped, so it validated
+the *mechanism* but silently passed a wrong *layout*. Switching to a directional *dragon*
+(distinct head / back / profile) immediately exposed the errors. **Rule:** validate any
+spatial/sprite layout with the most asymmetric subject available; a symmetric one gives false
+confidence. (Cost us several rebuild cycles before we changed subjects.)
+
+**2. OBJ index 0 is hardware-transparent — the opposite of the battle BG path.** Battle
+sprites render as BG tiles where the backdrop is colour index 1 (GFX-2). Followers are OBJ
+sprites where **index 0 is transparent by hardware**. Empty pixels MUST be idx0 or the sprite
+gets an opaque box. Carrying the battle assumption (idx1 backdrop) into the follower path was
+the first wrong turn. **Rule:** transparency convention is per sprite category — confirm it,
+don't inherit it.
+
+**3. Numbered-tile calibration beats screenshot-decoding.** We first tried to read the layout
+from screenshots of bar-coded tiles and decode pixel patterns programmatically — noisy and
+self-contradictory. The fix: build a calibration ROM where **each of the 16 VRAM tiles renders
+its own hex index (0–F) plus a small "foot" in one corner** (foot on the left = unflipped, on
+the right = X-flipped). The user then just *reads the numbers* off-screen per direction — zero
+decoding, zero ambiguity. (Force black-digit/red-foot by overwriting the 8 OBJ palettes so the
+glyphs are legible against terrain.) **Rule:** when you need ground truth from a running game,
+make the game spell out the answer rather than inferring it from pixels.
+
+**4. The follower render is a metasprite engine — recover the FORMAT from code, the VALUES by
+calibration.** `SaveScr_40cd` walks 4-byte `(dy, dx, tile_offset, attr)` entries; tile =
+offset + base (`$ffc9`), attr = `$ffca XOR` entry (X-flip bit5), `$80`-terminated, selected by
+`$ffc7`→`$ffc8`. Static analysis cleanly recovered this *format* but NOT the literal per-monster
+tile tables (they sit behind a type-byte/bank-routing indirection). Once the format was known,
+calibration filled the values in a single clean pass — and any reading that didn't fit
+`(position, tile 0–15, flip)` was rejected as a misread. **Rule:** code gives you the schema;
+the running game gives you the data — use each for what it's good at instead of forcing one to
+do both.
+
+**5. Followers use PER-MONSTER layouts (118 of them), not one universal arrangement.** When the
+dragon scrambled on Dracky but was perfect on DarkDrium with identical art, the cause was that
+`$ffc7` (the monster's sprite-class) selects one of **118 distinct layouts**. ~64% are
+**non-sharing** (down/up/side use disjoint tiles → any distinct art renders clean) and ~36% are
+**sharing** (up/side reuse tiles — tile-budget-efficient for blobs, wrong for directional art).
+The user's instinct ("the game has 200+ *distinct* monsters, so reuse can't be universal") was
+exactly right and is what prompted testing a second monster. **Rule:** don't generalize a
+layout from one sample; if the data model *could* be per-entity, test a second, deliberately
+different entity before declaring it universal.
+
+**6. Decouple art from layout in the editor.** Because art (16 tiles) and layout (metasprite)
+are orthogonal, the editor should treat them as two independently-stored, independently-editable
+things, and **default every import to a non-sharing layout** (reassigning the host's sprite-class
+if needed) so arbitrary art always renders clean — the blob-sharing layouts only matter for
+original-game fidelity or tile budget.

@@ -1859,7 +1859,7 @@ jr_001_49a2:
     ld hl, $cacb
     call ReadActiveMonsterByte
     add a
-    ld hl, $4bad
+    ld hl, FollowerFamilyGfxTable
     add l
     ld l, a
     ld a, $00
@@ -1879,496 +1879,48 @@ jr_001_49a2:
 
 
 ScreenTransDataTable:
-    nop
-    cpl
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $2f01
-    ld [bc], a
-    cpl
-    inc bc
-    cpl
-    inc b
-    cpl
-    dec b
-    cpl
-    ld b, $2f
-    rlca
-    cpl
-    ld [$092f], sp
-    cpl
-    ld a, [bc]
-    cpl
-    dec bc
-    cpl
-    inc c
-    cpl
-    dec c
-    cpl
-    ld c, $2f
-    rrca
-    cpl
-    db $10
-    cpl
-    nop
-    jr c, @+$03
-
-    jr c, jr_001_4a26
-
-    jr c, @+$05
-
-jr_001_4a26:
-    jr c, jr_001_4a2c
-
-    jr c, @+$07
-
-    jr c, jr_001_4a32
-
-jr_001_4a2c:
-    jr c, @+$09
-
-    jr c, jr_001_4a38
-
-    jr c, @+$0b
-
-jr_001_4a32:
-    jr c, jr_001_4a3e
-
-    jr c, @+$0d
-
-    jr c, jr_001_4a44
-
-jr_001_4a38:
-    jr c, @+$0f
-
-    jr c, jr_001_4a4a
-
-    jr c, @+$11
-
-jr_001_4a3e:
-    jr c, jr_001_4a50
-
-    jr c, @+$13
-
-    jr c, jr_001_4a56
-
-jr_001_4a44:
-    jr c, @+$15
-
-    jr c, jr_001_4a5c
-
-    jr c, @+$17
-
-jr_001_4a4a:
-    jr c, jr_001_4a62
-
-    jr c, @+$19
-
-    jr c, jr_001_4a68
-
-jr_001_4a50:
-    jr c, @+$1b
-
-    jr c, jr_001_4a6e
-
-    jr c, @+$1d
-
-jr_001_4a56:
-    jr c, jr_001_4a74
-
-    jr c, @+$1f
-
-    jr c, jr_001_4a7a
-
-jr_001_4a5c:
-    jr c, @+$21
-
-    jr c, jr_001_4a80
-
-    jr c, @+$23
-
-jr_001_4a62:
-    jr c, jr_001_4a86
-
-    jr c, @+$25
-
-    jr c, jr_001_4a8c
-
-jr_001_4a68:
-    jr c, @+$27
-
-    jr c, jr_001_4a92
-
-    jr c, @+$29
-
-jr_001_4a6e:
-    jr c, jr_001_4a98
-
-    jr c, @+$2b
-
-    jr c, jr_001_4a9e
-
-jr_001_4a74:
-    jr c, @+$2d
-
-    jr c, jr_001_4aa4
-
-    jr c, @+$2f
-
-jr_001_4a7a:
-    jr c, jr_001_4aaa
-
-    jr c, @+$31
-
-    jr c, jr_001_4ab0
-
-jr_001_4a80:
-    jr c, @+$33
-
-    jr c, jr_001_4ab6
-
-    jr c, jr_001_4ab9
-
-jr_001_4a86:
-    jr c, @+$36
-
-    jr c, jr_001_4abf
-
-    jr c, jr_001_4ac2
-
-jr_001_4a8c:
-    jr c, jr_001_4ac5
-
-    jr c, jr_001_4ac8
-
-    jr c, jr_001_4acb
-
-jr_001_4a92:
-    jr c, jr_001_4ace
-
-    jr c, jr_001_4ad1
-
-    jr c, jr_001_4ad4
-
-jr_001_4a98:
-    jr c, jr_001_4ad7
-
-    jr c, jr_001_4ada
-
-    jr c, jr_001_4add
-
-jr_001_4a9e:
-    jr c, @+$42
-
-    jr c, jr_001_4ae3
-
-    jr c, jr_001_4ae6
-
-jr_001_4aa4:
-    jr c, jr_001_4ae9
-
-    jr c, @+$46
-
-    jr c, jr_001_4aef
-
-jr_001_4aaa:
-    jr c, @+$48
-
-    jr c, jr_001_4af5
-
-    jr c, jr_001_4ab0
-
-jr_001_4ab0:
-    add hl, sp
-    ld bc, $0239
-    add hl, sp
-    inc bc
-
-jr_001_4ab6:
-    add hl, sp
-    inc b
-    add hl, sp
-
-jr_001_4ab9:
-    dec b
-    add hl, sp
-    ld b, $39
-    rlca
-    add hl, sp
-
-jr_001_4abf:
-    ld [$0939], sp
-
-jr_001_4ac2:
-    add hl, sp
-    ld a, [bc]
-    add hl, sp
-
-jr_001_4ac5:
-    dec bc
-    add hl, sp
-    inc c
-
-jr_001_4ac8:
-    add hl, sp
-    dec c
-    add hl, sp
-
-jr_001_4acb:
-    ld c, $39
-    rrca
-
-jr_001_4ace:
-    add hl, sp
-    db $10
-    add hl, sp
-
-jr_001_4ad1:
-    ld de, $1239
-
-jr_001_4ad4:
-    add hl, sp
-    inc de
-    add hl, sp
-
-jr_001_4ad7:
-    inc d
-    add hl, sp
-    dec d
-
-jr_001_4ada:
-    add hl, sp
-    ld d, $39
-
-jr_001_4add:
-    rla
-    add hl, sp
-    jr jr_001_4b1a
-
-    add hl, de
-    add hl, sp
-
-jr_001_4ae3:
-    ld a, [de]
-    add hl, sp
-    dec de
-
-jr_001_4ae6:
-    add hl, sp
-    inc e
-    add hl, sp
-
-jr_001_4ae9:
-    dec e
-    add hl, sp
-    ld e, $39
-    rra
-    add hl, sp
-
-jr_001_4aef:
-    jr nz, jr_001_4b2a
-
-    ld hl, $2239
-    add hl, sp
-
-jr_001_4af5:
-    inc hl
-    add hl, sp
-    inc h
-    add hl, sp
-    dec h
-    add hl, sp
-    ld h, $39
-    daa
-    add hl, sp
-    jr z, jr_001_4b3a
-
-    add hl, hl
-    add hl, sp
-    ld a, [hl+]
-    add hl, sp
-    dec hl
-    add hl, sp
-    inc l
-    add hl, sp
-    dec l
-    add hl, sp
-    ld l, $39
-    cpl
-    add hl, sp
-    jr nc, jr_001_4b4a
-
-    ld sp, $3239
-    add hl, sp
-    inc sp
-    add hl, sp
-    inc [hl]
-    add hl, sp
-    dec [hl]
-
-jr_001_4b1a:
-    add hl, sp
-    ld [hl], $39
-    scf
-    add hl, sp
-    jr c, jr_001_4b5a
-
-    add hl, sp
-    add hl, sp
-    ld a, [hl-]
-    add hl, sp
-    dec sp
-    add hl, sp
-    inc a
-    add hl, sp
-    dec a
-
-jr_001_4b2a:
-    add hl, sp
-    ld a, $39
-    ccf
-    add hl, sp
-    ld b, b
-    add hl, sp
-    ld b, c
-    add hl, sp
-    ld b, d
-    add hl, sp
-    ld b, e
-    add hl, sp
-    ld b, h
-    add hl, sp
-    ld b, l
-
-jr_001_4b3a:
-    add hl, sp
-    ld b, [hl]
-    add hl, sp
-    ld b, a
-    add hl, sp
-    nop
-    ld a, [hl-]
-    ld bc, $023a
-    ld a, [hl-]
-    inc bc
-    ld a, [hl-]
-    inc b
-    ld a, [hl-]
-    dec b
-
-jr_001_4b4a:
-    ld a, [hl-]
-    ld b, $3a
-    rlca
-    ld a, [hl-]
-    ld [$093a], sp
-    ld a, [hl-]
-    ld a, [bc]
-    ld a, [hl-]
-    dec bc
-    ld a, [hl-]
-    inc c
-    ld a, [hl-]
-    dec c
-
-jr_001_4b5a:
-    ld a, [hl-]
-    ld c, $3a
-    rrca
-    ld a, [hl-]
-    db $10
-    ld a, [hl-]
-    ld de, $123a
-    ld a, [hl-]
-    inc de
-    ld a, [hl-]
-    inc d
-    ld a, [hl-]
-    dec d
-    ld a, [hl-]
-    ld d, $3a
-    rla
-    ld a, [hl-]
-    jr jr_001_4bab
-
-    add hl, de
-    ld a, [hl-]
-    ld a, [de]
-    ld a, [hl-]
-    dec de
-    ld a, [hl-]
-    inc e
-    ld a, [hl-]
-    dec e
-    ld a, [hl-]
-    ld e, $3a
-    rra
-    ld a, [hl-]
-    jr nz, @+$3c
-
-    ld hl, $223a
-    ld a, [hl-]
-    inc hl
-    ld a, [hl-]
-    inc h
-    ld a, [hl-]
-    dec h
-    ld a, [hl-]
-    ld h, $3a
-    daa
-    ld a, [hl-]
-    jr z, jr_001_4bcb
-
-    add hl, hl
-    ld a, [hl-]
-    ld a, [hl+]
-    ld a, [hl-]
-    dec hl
-    ld a, [hl-]
-    inc l
-    ld a, [hl-]
-    dec l
-    ld a, [hl-]
-    ld l, $3a
-    cpl
-    ld a, [hl-]
-    jr nc, @+$3c
-
-    ld sp, $323a
-    ld a, [hl-]
-    inc sp
-    ld a, [hl-]
-    inc [hl]
-    ld a, [hl-]
-    dec [hl]
-    ld a, [hl-]
-
-jr_001_4bab:
-    ld [hl], $3a
-    inc bc
-    ld l, $04
-    ld l, $05
-    ld l, $06
-    ld l, $07
-    ld l, $08
-    ld l, $09
-    ld l, $0a
-    ld l, $0b
-    ld l, $0c
-    db $2e
+    ; Follower (walking) gfx-ID table. GetActiveMonsterStatus ($4986)
+    ; indexes this by (species + $10)*2 -> 2-byte gfx-ID (bank<<8|index),
+    ; resolved by DecompressTileLayout ($00:$1627) via $<bank>:$4001+index*2.
+    ; entry 0 = default; entries 1-15 = bit-7 special case (loader forces
+    ; index 1 -> $3140); entries 16.. = species 0..214 followers.
+    dw $2f00, $3140, $3140, $3140, $3140, $3140, $3140, $3140
+    dw $3140, $3140, $3140, $3140, $3140, $3140, $3140, $3140
+    ; species 0.. followers (index = species + $10):
+    dw $2f01, $2f02, $2f03, $2f04, $2f05, $2f06, $2f07, $2f08
+    dw $2f09, $2f0a, $2f0b, $2f0c, $2f0d, $2f0e, $2f0f, $2f10
+    dw $3800, $3801, $3802, $3803, $3804, $3805, $3806, $3807
+    dw $3808, $3809, $380a, $380b, $380c, $380d, $380e, $380f
+    dw $3810, $3811, $3812, $3813, $3814, $3815, $3816, $3817
+    dw $3818, $3819, $381a, $381b, $381c, $381d, $381e, $381f
+    dw $3820, $3821, $3822, $3823, $3824, $3825, $3826, $3827
+    dw $3828, $3829, $382a, $382b, $382c, $382d, $382e, $382f
+    dw $3830, $3831, $3832, $3833, $3834, $3835, $3836, $3837
+    dw $3838, $3839, $383a, $383b, $383c, $383d, $383e, $383f
+    dw $3840, $3841, $3842, $3843, $3844, $3845, $3846, $3847
+    dw $3900, $3901, $3902, $3903, $3904, $3905, $3906, $3907
+    dw $3908, $3909, $390a, $390b, $390c, $390d, $390e, $390f
+    dw $3910, $3911, $3912, $3913, $3914, $3915, $3916, $3917
+    dw $3918, $3919, $391a, $391b, $391c, $391d, $391e, $391f
+    dw $3920, $3921, $3922, $3923, $3924, $3925, $3926, $3927
+    dw $3928, $3929, $392a, $392b, $392c, $392d, $392e, $392f
+    dw $3930, $3931, $3932, $3933, $3934, $3935, $3936, $3937
+    dw $3938, $3939, $393a, $393b, $393c, $393d, $393e, $393f
+    dw $3940, $3941, $3942, $3943, $3944, $3945, $3946, $3947
+    dw $3a00, $3a01, $3a02, $3a03, $3a04, $3a05, $3a06, $3a07
+    dw $3a08, $3a09, $3a0a, $3a0b, $3a0c, $3a0d, $3a0e, $3a0f
+    dw $3a10, $3a11, $3a12, $3a13, $3a14, $3a15, $3a16, $3a17
+    dw $3a18, $3a19, $3a1a, $3a1b, $3a1c, $3a1d, $3a1e, $3a1f
+    dw $3a20, $3a21, $3a22, $3a23, $3a24, $3a25, $3a26, $3a27
+    dw $3a28, $3a29, $3a2a, $3a2b, $3a2c, $3a2d, $3a2e, $3a2f
+    dw $3a30, $3a31, $3a32, $3a33, $3a34, $3a35, $3a36
+
+FollowerFamilyGfxTable:
+    ; Family-shared follower block (2nd DMA in GetActiveMonsterStatus,
+    ; via `ld hl, FollowerFamilyGfxTable` + family-byte index). 10 entries,
+    ; families 0-9 -> $2E03..$2E0C (B9 ClampFamIdx keeps family>=10 in range).
+    dw $2e03, $2e04, $2e05, $2e06, $2e07, $2e08, $2e09, $2e0a
+    dw $2e0b, $2e0c
 
 IteratePartySlots20:
     ld hl, $cac1

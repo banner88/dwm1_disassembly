@@ -27,6 +27,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | breeding_tables.json | build_breeding.py | **NEW (Session 13, B1 keystone).** Round-trip-faithful decode of BOTH vanilla breeding tables (special $16:$4B30 825×5; family $16:$4974 222 pairs). `--selftest` proves re-emission is byte-identical to the ROM. Independently reconciled with hand-authored breeding_complete.json (825/825 + 197/197, 0 diffs). Name-annotated; `_generator` stamped. |
 | monster_sprites.json | extract_monster_sprites.py | **NEW (Session 22, GFX-1); REGENERATED Session 23 (all 221 — the shipped copy was a 3-monster subset, a data defect now fixed).** All 221 monsters' battle + follower sprites: species → gfx-ID, bank, index, stream addr/len, declen, tile count, grid, and decoded 2bpp tile bytes (hex, regenerable without PNGs). Count-parameterised (`--count`). Decoded via `dwm/sprite_codec.py`; `--png` writes images to `extracted/monster_sprites/`. |
 | monster_palettes.json | extract_monster_palettes.py | **NEW (Session 23, GFX-2).** All 221 per-species BATTLE palettes from `MonsterBattlePalettes` `$17:$62FD` (8 B/species, 4 RGB555 `[c0, c1=$6bff backdrop, c2, c3=$0000 black]`). Recolour via `build_sprite_swap.py --palette`. |
+| follower_layouts.json | extract_follower_layouts.py | **NEW (Session 24, GFX-3).** All **118 distinct follower (walking-sprite) metasprite layouts**, decoded from the frame-pointer tables in banks `$05/$10/$11`. Per layout: the six frames (down/right/up × 2 walk steps), each as four `{pos, tile 0–15, xflip}`; a `sharing` flag (up/side reuse tiles → blob-only) vs non-sharing (disjoint → any distinct art clean); tile count; example table addr; how many sprite types use it. 76 non-sharing (202 types), 42 sharing (58 types). Anchors verified: Healer = sharing, DarkDrium = non-sharing. |
 
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
 These are knowledge artifacts — human analysis in JSON form. No generator
@@ -99,14 +100,29 @@ gfx-ID → encodes (`dwm/sprite_codec`) → places via `dwm/sprite_bank.py` over
 The gfx swap is ASM-based; `--palette` is a same-size POST-BUILD BINARY PATCH + checksum
 fix (`fix_header_checksum`/`fix_global_checksum`) of `MonsterBattlePalettes[species]` —
 fine for test ROMs; for PERMANENT integration do the palette edit in `patches/bank_017.asm`
-against the annotated table. Follower path (`--kind follower`, table `$01:$49DF`) is wired
-but GATED until that table is re-sectioned (GFX-3). Depends on `dwm/sprite_codec.py`) ·
+against the annotated table. **Follower path UNGATED Session 24 (GFX-3):** `--kind follower
+--payload F.bin` repoints `ScreenTransDataTable` `$01:$49DF` (`repoint_follower`, species+$10)
+and DMAs a self-contained 16-tile (256 B) literal stream; the numbered-tile calibration ROM is
+built the same way + a `--palette`-style 8-OBJ-palette overwrite (idx1→black digit, idx2→red
+foot) for legibility. Depends on `dwm/sprite_codec.py`) ·
 `dwm/sprite_bank.py` (✅ new Session 23 — `SpriteOverflowAllocator`: places encoded streams
 into reserved overflow banks `$7E,$7F` then `$7C,$7A,$79` with a `$4001` pointer table,
 returns gfx-ID `(bank<<8|index)`, emits the bank `.asm`. The editor's sprite-asset backend;
 the resolver `$00:$1627` reads `$<bank>:$4001+index*2` with no bank gating) ·
 `extract_monster_palettes.py` (✅ new Session 23 — dumps `MonsterBattlePalettes` `$17:$62FD`
 → `extracted/monster_palettes.json`, all 221, count-parameterised) ·
+`resection_follower_gfx_table.py` (✅ new Session 24, GFX-3 — re-sections `ScreenTransDataTable`
+`$01:$49DF` into a labeled `dw` block (231 entries) + `FollowerFamilyGfxTable` `$4BAD` (10);
+zero external refs into range; build stays `1ca6579…`; idempotent — same job as the S22 battle
+re-section) ·
+`extract_follower_layouts.py` (✅ new Session 24, GFX-3 — walks the follower metasprite
+frame-pointer tables in banks `$05/$10/$11`, decodes each `(dy,dx,tile_offset,attr)` list,
+dedupes → `extracted/follower_layouts.json` (118 layouts) + classifies sharing vs non-sharing.
+The editor's follower-layout library) ·
+`follower_frame_picker.html` (✅ new Session 24, GFX-3 — standalone interactive tool: drag/resize/
+arrow-nudge six boxes over an embedded sprite sheet, live per-direction engine-accurate preview,
+set the transparent colour, export frame coordinates JSON + 256-byte payload hex. The art-import
+front-end for follower/walking-sprite swaps) ·
 `resection_battle_gfx_table.py` (✅ new Session 22 — re-sections the misassembled battle
 gfx-ID table `$00:$2B9F` into `MonsterBattleGfxTable`; anchors between real `.sym` labels,
 emits exact ROM bytes, preserves 23 cross-refs; build stays `1ca6579…`; idempotent) ·

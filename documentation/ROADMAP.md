@@ -577,7 +577,31 @@ disassembly and check them off.
     a family palette edit recolours Dracky's whole family. **Accept:** clam renders in corrected
     (e.g. purple) colours in SameBoy.
 
-- [ ] **GFX-3 — Walking/follower sprite swap.** Rides the Session-23 cross-bank backbone
+- [x] **GFX-3 — Walking/follower sprite swap.** ✅ DONE (Session 24)
+  *DONE Session 24 — see PROJECT_STATE "Session 24" + MONSTER_DATA "Follower /
+  walking-sprite system" + KEY_LESSONS "Session 24" + TOOLS_AND_DATA. User-confirmed in
+  SameBoy: blue dragon → DarkDrium follower, all 4 directions perfect.*
+  **Delivered:**
+  - **Re-section:** `ScreenTransDataTable` @ `$01:$49DF` → labeled `dw` block
+    (`tools/resection_follower_gfx_table.py`; 231 entries `species+$10` + `FollowerFamilyGfxTable`
+    @ `$4BAD`; build still `1ca6579…`). `build_sprite_swap.py --kind follower --payload F.bin`
+    repoints + DMAs a 16-tile (256 B) self-contained literal stream.
+  - **Render engine reverse-engineered:** `SaveScr_40cd` @ `$04:$40cd` (GBC variant of ROM0
+    `$0d91`). Metasprite list of 4-byte **(dy, dx, tile_offset, attr)** entries, `$80`-term;
+    OAM tile = `tile_offset + [$ffc9]` (follower base `$20/$30/$40` per party slot); OAM attr
+    = `[$ffca] XOR attr` (X-flip bit5). 2-level table, sprite-type `$ffc7`(=`[$ca91]`) →
+    frame/dir `$ffc8`. Head-mirror = two entries sharing a tile_offset, one X-flipped.
+  - **OBJ transparency:** idx0 = HARDWARE-transparent for OBJ (battle BG used idx1 — opposite).
+    8 OBJ palettes @ `$17:$5615`.
+  - **118-layout library** (`tools/extract_follower_layouts.py` → `extracted/follower_layouts.json`):
+    76 non-sharing (disjoint down/up/side → any distinct art renders clean; 202 types) + 42
+    sharing (blob-only; 58 types). **Layout is per-monster, not universal** — this is why a
+    symmetric blob (clam/Healer) hides layout errors and a directional dragon exposes them.
+  - **Tooling:** `tools/follower_frame_picker.html` (drag 6 boxes, engine-accurate preview,
+    export coords/payload) + numbered-tile calibration ROM method (each VRAM tile shows its hex
+    index + flip-foot; `--palette` override = black digit / red foot for terrain legibility).
+  *Original plan (for reference):*
+  GFX-3 — Walking/follower sprite swap. Rides the Session-23 cross-bank backbone
   (`dwm/sprite_bank.py` + `build_sprite_swap.py`), but via the FOLLOWER path. Prereqs now
   known: (1) **re-section `ScreenTransDataTable` @ `$01:$49DF`** from mgbdis fake
   instructions to a labeled `dw` block (byte-perfect, same job as the S22 battle gfx
@@ -588,6 +612,28 @@ disassembly and check them off.
   (3) handle the **family-shared `$4bad` second DMA** (the B9-clamped 10-entry family GFX
   table) — verify in SameBoy whether it overlaps the swapped walk frames. Follower = 16
   tiles (`$383E` for Dracky); the 16-tile stream holds the full walk-animation frame set.
+
+- [ ] **GFX-4 — Monster → follower-layout auto-map (completes GFX-3 automation).**
+  GFX-3 proved the follower render is a metasprite engine and extracted all **118 distinct
+  layouts** (`extracted/follower_layouts.json`). The one remaining link is which layout each
+  of the ~215 monsters uses, so the editor can (a) slice imported art into the correct tiles
+  automatically, and (b) reassign a monster to a clean non-sharing layout on demand.
+  **Known structure (from GFX-3):**
+  - Render path: `AdjustGateFloorIndex` (`$01`) sets `$ffc7 = [$ca91]`, base `$ffc9 =
+    $20/$30/$40`, calls `$0402` (`NPCSpriteLoadAlt`) → `SaveScr_40cd`.
+  - `$ffc7 = [$ca91] = GetActiveMonsterStatus` return = `$01` (if bit7 of `[$cb0b]`) else
+    `[$caca] + $10`. So a monster's layout is driven by its **sprite-class byte `[$caca]`**.
+  - The 118 layouts are the **level-2** frame-pointer tables (6 ptrs each: down/right/up × 2),
+    living in banks `$05`/`$10`/`$11`. A **level-1** table indexes them by `$ffc7`, with the
+    BANK chosen by `$ffc7` magnitude (`NPCInteractDispatch` routing: `<$10`→`$04`,
+    `$10–$8F`→`$10` (sub `$10`), `≥$90`→`$11` (sub `$90`)). Bank starts are code, so the
+    level-1 tables are NOT at `$4000` — they must be located.
+  - **TODO:** (1) locate the level-1 dispatch table(s) per bank; (2) extract each monster's
+    `[$caca]` sprite-class from the monster data table; (3) compose monster → `$ffc7` → layout
+    id; emit `extracted/monster_follower_layouts.json`; (4) wire into `follower_frame_picker.html`
+    + `build_sprite_swap.py` so imports default to a non-sharing layout and reassignment is a
+    same-size `[$caca]` edit. **Accept:** every monster maps to a layout; a distinct-art import
+    on any monster renders clean (matching the DarkDrium-dragon result).
 
 Raw audio banks ($5A, $63…) stay LOW priority. **Graphics banks ($32–$3A are NO LONGER
 low-priority** — the monster sprite system there is editable and proven; see GFX-1/2/3 above.
