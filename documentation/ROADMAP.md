@@ -463,7 +463,7 @@ Driven by what the editor must EDIT, not completionism:
       free block is reference-free
 - [ ] Bank $50 event state machine (story events)
 - [ ] Save/SRAM code annotation (supports Phase 0 audit)
-- [ ] **Re-section misassembled data tables → labeled `db`/`dw`.** mgbdis decoded
+- [~] **Re-section misassembled data tables → labeled `db`/`dw`.** mgbdis decoded
       many in-bank DATA tables as fake instructions (`rst $38`, `db $fc`,
       `ld hl,sp+$nn`, stray `stop`, etc. appearing mid-routine). These pass the build
       (bytes are identical) but READ as garbage code, so a future session can't edit
@@ -472,12 +472,35 @@ Driven by what the editor must EDIT, not completionism:
       Convert each to a labeled `db`/`dw` block; **the build MUST stay `1ca6579…`**
       after each (a wrong split changes bytes → fails instantly — same guard as the
       S14 labelization rule, KEY_LESSONS). Drive this by what the editor must EDIT,
-      not completionism. **Known offenders (seed list — grep widens it):**
-      `$12:$6294` `LibraryFamilyTabBounds` (11 B id-range table, the S18 case — comment
-      added, db conversion still TODO); the `$12:$564a`/`$5a8e` library cursor/tab
-      pointer blobs; assorted `cp $f9`/`rst $38` runs in banks `$08/$11/$15/$2c/$33/
-      $55/$57/$66` that are data, not code. *Accept:* targeted tables read as `db`/`dw`
-      with names; MD5 unchanged; the editor can address them by label.
+      not completionism. *Accept:* targeted tables read as `db`/`dw` with names; MD5
+      unchanged; the editor can address them by label.
+      **DONE so far (Session 26): bank `$12` library/family data tables.**
+      `tools/resection_library_tables.py` converted `LibraryFamilyTabBounds` (`$6294`,
+      the S18 case), the two tab-column cursor-position tables (`$564a`/`$5a8e`), and
+      the menu window-draw layout streams (`$710c`/`$71aa`/`$71f4`/`$759a`/`$7b42`/`$7b6c`),
+      and labelized 31 raw-pointer reference sites — clean build still `1ca6579…`,
+      integrity PASS 4/4. `$5605` was correctly LEFT (it's a far-call descriptor
+      `ld hl,$5605; rst $10` → bank `$56` entry `$05`, not `$12` data). Format +
+      addresses now in DATA_STRUCTURES "Library / family-tab menu data (bank `$12`)".
+      The tool uses a zero-byte probe-build to map source line → address (no opcode-size
+      summing — the S22 trap); re-runnable from the clean tree.
+      **NEXT (per-session, one each):**
+      (1) **Finish bank `$12`** — ~30 more `ld de,$XXXX` refs into `$12` data are the
+          SAME window-layout format (`$724e $7768 $77cd $78ab $78d0 $7935 $79c6` …).
+          `$79c6` is reached via `ld de` (data draw-loop) so its mgbdis `jr` labels are
+          fake — convertible; it was conservatively skipped in S26. RULE for whoever
+          takes it: convert `ld de,$XXXX`+`ReadPtrFromDE` (data layouts) but LEAVE
+          `ld hl,$XXXX`+`rst $10` (far-call descriptors like `$5605`/`$6100`/`$6101` —
+          not `$12` data).
+      (2) **Tick the STALE BOXES below** — bank `$03`/`$14`/`$16` look already
+          `db`-converted (`$14`/`$16` clean; `$03` has 23 `rst $38` runs to confirm as
+          padding vs data). Cheap verify-and-check-off.
+      (3) **Editor-driven only:** bank `$01` encounter pools → `db` (Encounters #2 needs
+          to edit pools), bank `$51` transitions, bank `$50` event state machine — do
+          these when the feature is built, not for completionism.
+      (4) **Checked, SKIP (no editor value, mis-split risk):** the `$ff`-padding banks
+          `$08/$15/$2c/$33/$55/$66` from the old seed list — verified mostly filler
+          (`$08`: 2061, `$55`: 2112 `rst $38`). Not discrete tables.
 **STALE BOXES (verify + tick):** the first three boxes above (bank $03 monster
 table, $14 enemy stats/boss, $16 breeding) appear ALREADY `db`-converted on disk
 (bank_003/014/016 are heavily `db`/`dw` with labeled loaders). Confirm against

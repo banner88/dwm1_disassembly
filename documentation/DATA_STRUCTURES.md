@@ -407,6 +407,55 @@ Renderer: `tools/render_rooms.py`.
 
 ---
 
+### Library / family-tab menu data (bank $12)
+
+The monster-library / family-tab menu lives in bank `$12`. mgbdis decoded its
+in-bank data tables as fake instructions; Session 26 re-sectioned them to labeled
+`db`/`dw` (`tools/resection_library_tables.py`, labels/comments only — build still
+`1ca6579…`). All addresses are ROM-verified.
+
+**`LibraryFamilyTabBounds` @ `$6294` — 11 bytes.** Family id-range boundaries:
+`00 14 2d 46 5a 6e 82 9b af c8 d7` (= 0,20,45,70,90,110,130,155,175,200,215).
+Read by `SetItem_6242`: a flat family index (column×5 + row, 0..9) selects
+`entry[i]` = first species id of that family and `entry[i+1]` = one past its last;
+the loop lists the *seen* species in `[start,end)`. This is **the only id-range
+family assumption in the ROM** — it ignores the per-monster family byte
+(`$03:$4461+$00`), so a monster reassigned to a new family (B6) still appears under
+its original id-range tab unless the reader is redirected (B7 production library
+table does exactly that). An 11th family (B9) needs this table (or its B7
+replacement) extended.
+
+**`LibTabColPos_564a` / `LibTabColPos_5a8e` — 3 `dw` each.** `$00a1, $00e1, $ffff`
+— tab-column cursor-position words, indexed by the 0/1 column selector
+(`wOPTN_and_Item_selection`) via `FuncItem_43e2` (`de = base + a*2`, reads a word);
+`$ffff` terminates. Two parallel copies for two menu states.
+
+**`LibWinLayout_*` — window-draw layout streams.** Reached by
+`ld de,<addr>; call ReadPtrFromDE`, then drawn by the loop at `$40c3`. Format:
+a 2-byte **dest-position word**, then a **tile-byte stream** where `$d8` =
+newline (advance dest by `$20`) and `$d9` = terminator (`cp $d9 / ret z`); every
+other byte is a literal tile written via `ld [hl+],a` (no multi-byte control
+codes). Named instances and lengths:
+
+| Label | Addr | Bytes |
+|-------|------|-------|
+| `LibWinLayout_710c` | `$710c` | 158 |
+| `LibWinLayout_71aa` | `$71aa` | 74 |
+| `LibWinLayout_71f4` | `$71f4` | 90 |
+| `LibWinLayout_759a` | `$759a` | 38 |
+| `LibWinLayout_7b42` | `$7b42` | 42 |
+| `LibWinLayout_7b6c` | `$7b6c` | 47 (last before bank-`$12` free space at `$7b9b`) |
+
+**Not a data table — do not convert:** `$5605` (and similar `$6100`/`$6101`) are
+reached by `ld hl,<addr>; rst $10`, i.e. **far-call descriptors** (H=bank, L=entry;
+`$5605` → bank `$56` entry `$05`), NOT bank-`$12` data. The `$79c6` region is a
+layout reached via `ld de` but mgbdis decorated it with fake `jr` labels (data
+bytes that look like jumps); it was conservatively left for the bank-`$12`
+follow-up (ROADMAP Phase D). The general rule for finishing this bank: convert
+`ld de`+`ReadPtrFromDE` targets (data), leave `ld hl`+`rst $10` targets (far calls).
+
+---
+
 ## Named Functions
 
 ### Bank $00 — Core Utilities (149 named, 466 remaining)

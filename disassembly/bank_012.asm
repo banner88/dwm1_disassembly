@@ -945,7 +945,7 @@ AddCursorOffset:
 
 
 SetItem_44cb:
-    ld de, $710c
+    ld de, LibWinLayout_710c
     call ReadPtrFromDE
     ld de, $2e07
     call ReadPtrFromDE
@@ -1163,9 +1163,9 @@ jr_012_45ec:
 CallItem_4621:
     call SetItem_41ef
     call SetItem_44cb
-    ld de, $71aa
+    ld de, LibWinLayout_71aa
     call ReadPtrFromDE
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_46fd
     call ClrItem_4323
@@ -1352,7 +1352,7 @@ jr_012_473e:
     jr z, jr_012_4772
 
     call LoadItem_4682
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_46fd
     call GetScreenPos
@@ -1420,7 +1420,7 @@ jr_012_47ae:
 
 
 SetItem_47d7:
-    ld de, $7b42
+    ld de, LibWinLayout_7b42
     call ReadPtrFromDE
     call ClrItem_4323
     ld de, $483b
@@ -1673,10 +1673,10 @@ jr_012_498c:
 CallItem_49ba:
     call SetItem_41ef
     call SetItem_44cb
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_49ff
-    ld de, $71f4
+    ld de, LibWinLayout_71f4
     call ReadPtrFromDE
     call ClrItem_4323
     ld de, $4e26
@@ -1817,7 +1817,7 @@ jr_012_4a8e:
 
 
 SetItem_4aaf:
-    ld de, $7b42
+    ld de, LibWinLayout_7b42
     call ReadPtrFromDE
     call ClrItem_4323
     ld de, $4b18
@@ -2208,10 +2208,10 @@ jr_012_4d11:
 CallItem_4d32:
     call SetItem_41ef
     call SetItem_44cb
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_49ff
-    ld de, $71f4
+    ld de, LibWinLayout_71f4
     call ReadPtrFromDE
     call ClrItem_4323
     ld de, $4e26
@@ -2385,7 +2385,7 @@ jr_012_4e25:
 
 
 SetItem_4e52:
-    ld de, $7b42
+    ld de, LibWinLayout_7b42
     call ReadPtrFromDE
     call ClrItem_4323
     ld de, $4eb6
@@ -2680,10 +2680,10 @@ jr_012_5058:
 CallItem_5083:
     call SetItem_41ef
     call SetItem_44cb
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_49ff
-    ld de, $71f4
+    ld de, LibWinLayout_71f4
     call ReadPtrFromDE
     call ClrItem_4323
     ld de, $4e26
@@ -2784,7 +2784,7 @@ jr_012_511f:
 
 
 SetItem_5140:
-    ld de, $7b42
+    ld de, LibWinLayout_7b42
     call ReadPtrFromDE
     call ClrItem_4323
     ld de, $51a5
@@ -3006,9 +3006,9 @@ jr_012_51a4:
 CallItem_52ee:
     call SetItem_41ef
     call SetItem_44cb
-    ld de, $71aa
+    ld de, LibWinLayout_71aa
     call ReadPtrFromDE
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_5326
     call ClrItem_4323
@@ -3064,7 +3064,7 @@ LoadItem_5326:
     jr z, jr_012_5363
 
     call LoadItem_5313
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_5326
     call GetScreenPos
@@ -3129,7 +3129,7 @@ jr_012_5398:
 
 
 SetItem_53c1:
-    ld de, $7b42
+    ld de, LibWinLayout_7b42
     call ReadPtrFromDE
     call ClrItem_4323
     ld de, $5427
@@ -3288,7 +3288,7 @@ CallItem_54e5:
     call ReadPtrFromDE
     call SetItem_5504
     call ClrItem_4323
-    ld de, $564a
+    ld de, LibTabColPos_564a
     ld a, [wOPTN_and_Item_selection]
     call FuncItem_43e2
     call GetScreenPos
@@ -3492,7 +3492,7 @@ jr_012_55f5:
     ret
 
 
-    ld de, $564a
+    ld de, LibTabColPos_564a
     ld hl, wOPTN_and_Item_selection
     ld b, $02
     call FuncItem_42ca
@@ -3532,12 +3532,10 @@ jr_012_5649:
     ret
 
 
-    and c
-    nop
-    pop hl
-    nop
-    rst $38
-    rst $38
+; Library tab column cursor-position words, indexed by the 0/1 column
+; selector (wOPTN_and_Item_selection) via FuncItem_43e2. $ffff terminates.
+LibTabColPos_564a:
+    dw $00a1, $00e1, $ffff
     call SetItem_5670
     or a
     jr nz, jr_012_5662
@@ -3676,7 +3674,7 @@ CallItem_56fd:
     call ReadPtrFromDE
     call SetItem_5504
     call ClrItem_4323
-    ld de, $564a
+    ld de, LibTabColPos_564a
     ld a, [wOPTN_and_Item_selection]
     call FuncItem_43e2
     ld de, $77cd
@@ -3684,10 +3682,10 @@ CallItem_56fd:
     and $01
     jr nz, jr_012_572e
 
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_49ff
-    ld de, $71f4
+    ld de, LibWinLayout_71f4
 
 jr_012_572e:
     call ReadPtrFromDE
@@ -4143,13 +4141,13 @@ CallItem_5a07:
     call ReadPtrFromDE
     call SetItem_5504
     call ClrItem_4323
-    ld de, $5a8e
+    ld de, LibTabColPos_5a8e
     ld a, [wOPTN_and_Item_selection]
     call FuncItem_43e2
     ret
 
 
-    ld de, $5a8e
+    ld de, LibTabColPos_5a8e
     ld hl, wOPTN_and_Item_selection
     ld b, $02
     call FuncItem_42ca
@@ -4203,12 +4201,10 @@ LoadItem_5a75:
     ret
 
 
-    and c
-    nop
-    pop hl
-    nop
-    rst $38
-    rst $38
+; Library tab column cursor-position words (parallel copy of LibTabColPos_564a
+; for a second menu state). Same FuncItem_43e2 reader; $ffff terminates.
+LibTabColPos_5a8e:
+    dw $00a1, $00e1, $ffff
     call SetItem_5ab4
     or a
     jr nz, jr_012_5aa6
@@ -4354,7 +4350,7 @@ CallItem_5b4f:
     call ReadPtrFromDE
     call SetItem_5504
     call ClrItem_4323
-    ld de, $5a8e
+    ld de, LibTabColPos_5a8e
     ld a, [wOPTN_and_Item_selection]
     call FuncItem_43e2
     ld de, $77cd
@@ -4362,10 +4358,10 @@ CallItem_5b4f:
     and $01
     jr nz, jr_012_5b7d
 
-    ld de, $759a
+    ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_49ff
-    ld de, $71f4
+    ld de, LibWinLayout_71f4
 
 jr_012_5b7d:
     call ReadPtrFromDE
@@ -4512,12 +4508,12 @@ jr_012_5c45:
 
 
 SetItem_5c68:
-    ld de, $7b42
+    ld de, LibWinLayout_7b42
     ld a, [wOPTN_and_Item_selection]
     and $01
     jr z, jr_012_5c75
 
-    ld de, $7b6c
+    ld de, LibWinLayout_7b6c
 
 jr_012_5c75:
     call ReadPtrFromDE
@@ -5466,7 +5462,7 @@ SetItem_6242:
     and $7f                            ; family row (0..4); flat index in a
     add b
     ld [$cac0], a                      ; $cac0 = flat family index (scratch here)
-    ld hl, $6294                       ; LibraryFamilyTabBounds (11 bytes, id ranges)
+    ld hl, LibraryFamilyTabBounds                       ; LibraryFamilyTabBounds (11 bytes, id ranges)
     add l
     ld l, a
     ld a, $00
@@ -5510,18 +5506,12 @@ jr_012_6284:
     ret
 
 
-    nop
-    inc d
-    dec l
-    ld b, [hl]
-    ld e, d
-    ld l, [hl]
-    add d
-    sbc e
-    xor a
-    ret z
-
-    rst $10
+; Family id-range boundaries (read by SetItem_6242). entry[i]=first species id
+; of family i, entry[i+1]=one past its last. 10 families (0..9) => 11 bounds.
+; THE ONLY id-range family assumption in the ROM (a reassigned monster still
+; lists under its original id-range tab). See DATA_STRUCTURES 'Library menu'.
+LibraryFamilyTabBounds:
+    db $00, $14, $2d, $46, $5a, $6e, $82, $9b, $af, $c8, $d7
     ld a, [$c825]
     or a
     ret nz
@@ -8224,279 +8214,35 @@ jr_012_6d0f:
     reti
 
 
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sub d
-    sbc b
-    sbc h
-    db $e3
-    ldh [$9c], a
-    sub e
-    sub e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    db $e3
-    sub l
-    sub c
-    sub [hl]
-    ldh [$9a], a
-    db $e3
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub c
-    sub h
-    push de
-    sub c
-    sub [hl]
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub $d5
-    db $e3
-    sub b
-    sbc b
-    sub b
-    sbc c
-    push de
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub $97
-    push de
-    push de
-    db $e3
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    push de
-    and d
-    sub l
-    sbc c
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    dec c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sbc e
-    sub h
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    add h
-    add l
-    add [hl]
-    add a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc b
-    adc c
-    adc d
-    adc e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    dec c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sbc e
-    sub h
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    add h
-    add l
-    add [hl]
-    add a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc b
-    adc c
-    adc d
-    adc e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; Library window-draw layout streams (ReadPtrFromDE + draw loop $40c3).
+; Each: dest-position word, then a tile-byte stream; $d8=newline, $d9=end.
+LibWinLayout_710c:
+    dw $0000                ; dest position
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb, $d8, $fe, $e0, $92, $98
+    db $9c, $e3, $e0, $9c, $93, $93, $ff, $d8, $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff, $d8, $fe, $e0, $e3, $95, $91, $96, $e0, $9a, $e3, $e0, $ff, $d8
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $91, $94
+    db $d5, $91, $96, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff, $d8, $fe, $e0, $d6, $d5, $e3, $90, $98, $90, $99, $d5, $ff, $d8
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $d6, $97
+    db $d5, $d5, $e3, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff, $d8, $fe, $e0, $d5, $a2, $95, $99, $e0, $e0, $e0, $e0, $ff, $d8
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd, $d9
+LibWinLayout_71aa:
+    dw $000d                ; dest position
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb, $d8, $fe, $e0, $9b, $94, $9c, $e0, $ff, $d8
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed, $d8, $fe, $e0, $80, $81, $82, $83, $ff, $d8
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $84, $85, $86, $87, $ff, $d8
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $88, $89, $8a, $8b, $ff, $d8
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd, $d9
+LibWinLayout_71f4:
+    dw $000d                ; dest position
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb, $d8, $fe, $e0, $9b, $94, $9c, $e0, $ff, $d8
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed, $d8, $fe, $e0, $80, $81, $82, $83, $ff, $d8
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $84, $85, $86, $87, $ff, $d8
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $88, $89, $8a, $8b, $ff, $d8
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $8c, $8d, $8e, $8f, $ff, $d8
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd, $d9
     nop
     nop
     ld a, [$efef]
@@ -9197,38 +8943,12 @@ jr_012_6d0f:
     reti
 
 
-    ld c, c
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ld h, l
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    ld l, c
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; Library window-draw layout stream (see LibWinLayout_710c for format).
+LibWinLayout_759a:
+    dw $0149                ; dest position
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb, $d8, $fe, $e0, $e0, $e0
+    db $65, $66, $67, $68, $69, $e0, $ff, $d8, $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $fd, $d9
     ld b, b
     ld bc, $effa
     rst $28
@@ -10460,82 +10180,18 @@ jr_012_7aca:
     reti
 
 
-    nop
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sub l
-    sbc l
-    sub e
-    sbc h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sbc h
-    sub [hl]
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    nop
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sub l
-    sbc l
-    sub e
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc h
-    sub [hl]
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; Library window-draw layout streams (see LibWinLayout_710c for format).
+; Last layouts before the bank-$12 trailing free space at $7b9b.
+LibWinLayout_7b42:
+    dw $0100                ; dest position
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb, $d8, $fe, $e0, $95, $9d, $93, $9c, $ff, $d8
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $9c, $96, $e0, $e0, $ff, $d8
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd, $d9
+LibWinLayout_7b6c:
+    dw $0100                ; dest position
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb, $d8, $fe, $e0, $95, $9d, $93, $9c, $e0
+    db $ff, $d8, $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff, $d8, $fe, $e0, $9c, $96, $e0
+    db $e0, $e0, $ff, $d8, $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd, $d9
     nop
     nop
     nop

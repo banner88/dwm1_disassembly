@@ -5,6 +5,26 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-21 (Session 26 — Phase D re-section: bank `$12` library/family
+> data tables converted to labeled `db`/`dw`. Labels-only, byte-perfect — clean build still
+> `1ca6579…`, integrity PASS 4/4. No behavioral change, nothing to playtest.)
+> **S26 — bank `$12` library/family data tables re-sectioned (editor-addressable).**
+> `tools/resection_library_tables.py` converts the misassembled library-menu data tables in
+> `bank_012.asm` to named `db`/`dw` (labels/comments only, zero byte impact): `LibraryFamilyTabBounds`
+> (`$6294`, 11 B family id-range bounds — the S18 case, "THE ONLY id-range family assumption in the
+> ROM"), `LibTabColPos_564a`/`_5a8e` (tab-column cursor positions, `$ffff`-terminated, read by
+> `FuncItem_43e2`), and `LibWinLayout_710c`/`_71aa`/`_71f4`/`_759a`/`_7b42`/`_7b6c` (menu window-draw
+> layout streams: dest-position word + tile bytes, `$d8`=newline, `$d9`=terminator, via
+> `ReadPtrFromDE` + draw loop `$40c3`). 31 raw-pointer reference sites labelized. `$5605` correctly
+> LEFT — it's a far-call descriptor (`ld hl,$5605; rst $10` → bank `$56` entry `$05`), NOT `$12` data;
+> the `$79c6` region conservatively skipped (mgbdis put `jr` labels in it; it is reached via `ld de`
+> so likely a convertible layout — flagged for the bank-`$12` follow-up). The tool maps source
+> line→address via a zero-byte probe-build read from the linker `.sym` (avoids the S22 opcode-size-
+> summing trap) and is re-runnable from the clean tree. Format + addresses: DATA_STRUCTURES
+> "Library / family-tab menu data (bank `$12`)"; remaining bank-`$12` tables + skip-list folded into
+> ROADMAP Phase D "Re-section misassembled data tables". Supports the B8/B9 library/family work
+> (the 11th-family tab + bounds are now named/editable rather than re-derived from raw bytes).
+>
 > Last verified: 2026-06-21 (Session 25 — GFX-4 DONE: monster→follower-layout auto-map +
 > custom-art import + full multi-context consistency. Healer→Dragon clone and Dracky→custom
 > blue-dragon both user-confirmed "everything is correct" in SameBoy, consistent across overworld
