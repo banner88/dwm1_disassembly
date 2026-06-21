@@ -613,8 +613,27 @@ disassembly and check them off.
   table) — verify in SameBoy whether it overlaps the swapped walk frames. Follower = 16
   tiles (`$383E` for Dracky); the 16-tile stream holds the full walk-animation frame set.
 
-- [ ] **GFX-4 — Monster → follower-layout auto-map (completes GFX-3 automation).**
-  GFX-3 proved the follower render is a metasprite engine and extracted all **118 distinct
+- [x] **GFX-4 — Monster → follower-layout auto-map (completes GFX-3 automation).** ✅ DONE (Session 25)
+  *DONE Session 25 — see PROJECT_STATE "Session 25" + MONSTER_DATA "Monster → layout dispatch" +
+  KEY_LESSONS "Session 25" + TOOLS_AND_DATA. User-confirmed in SameBoy: Healer→Dragon clone and
+  Dracky→custom blue-dragon (imported art), correct all directions, consistent across overworld +
+  menu + library.*
+  **Delivered:**
+  - Level-1 layout tables LOCATED at fixed `$10:$407f` (species 0–127) / `$11:$407f` (species 128+),
+    indexed by species; per-species attr/palette table at `$10/$11:$417f`. (`[$caca]` is the SPECIES,
+    not a "sprite-class" byte; bank `$05` is the ObjTest viewer path, not the follower path — both
+    pre-GFX-4 doc errors, corrected.)
+  - `tools/extract_monster_follower_layouts.py` + `extracted/monster_follower_layouts.json` (every
+    species → layout id + addresses + sharing). `--selftest` reproduces Healer/DarkDrium anchors and
+    confirms all 215 collectible species map.
+  - `extracted/follower_layouts.json` REGENERATED & REPLACED — **155 complete layouts** (old 118 dropped
+    the 3-entry small/blob layouts), canonical `$10/$11` addresses.
+  - **8 follower-art table copies** discovered (`$01 $06 $07 $09 $0b $12 $18 $59`); a consistent swap
+    must repoint all 8 (layout/attr are single/shared).
+  - `tools/build_follower_reassign.py` — reassignment primitive: clone layout+art+attr from another
+    same-bank monster, OR import custom 16-tile art (placed cross-bank, all-8-copies repointed) and set
+    layout (default layout 0) + palette. Builds focused test ROMs; clean build stays `1ca6579…`.
+  *Original plan (for reference):*
   layouts** (`extracted/follower_layouts.json`). The one remaining link is which layout each
   of the ~215 monsters uses, so the editor can (a) slice imported art into the correct tiles
   automatically, and (b) reassign a monster to a clean non-sharing layout on demand.

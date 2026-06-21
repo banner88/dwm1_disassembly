@@ -254,7 +254,9 @@ far-calls `$0402` (`NPCSpriteLoadAlt`) → `SaveScr_40cd`. The engine walks a me
   two entries sharing a `tile_offset`, one with the flip bit toggled.
 - Selection: two-level pointer table indexed by **sprite-type `$ffc7`** then **frame/direction
   `$ffc8`**. `$ffc7 = [$ca91] = GetActiveMonsterStatus` (`$01` if bit7 of `[$cb0b]`, else
-  `[$caca]+$10`) — i.e. driven by the monster's **sprite-class byte `[$caca]`**.
+  `[$caca]+$10`). **`[$caca]` is the monster's SPECIES** (party struct base `$cac1` + offset
+  `$09`) — NOT a separate "sprite-class" byte (a pre-GFX-4 doc error). So `$ffc7 = species+$10`,
+  and the layout is selected by species directly.
 
 **OBJ transparency (critical, opposite of battle):** for OBJ sprites **colour index 0 is
 hardware-transparent**. Empty/background pixels of a follower MUST be idx0 (the battle path
@@ -282,10 +284,44 @@ walk-sprite import rendered **perfectly in all four directions on DarkDrium's la
 user-confirmed in SameBoy. (A symmetric blob masks layout errors; a directional monster
 exposes them — see KEY_LESSONS "Session 24".)
 
-**Remaining link (ROADMAP GFX-4):** monster → layout id. The level-1 dispatch (type `$ffc7` →
-layout, bank-routed by magnitude: `<$10`→`$04`, `$10–$8F`→`$10`, `≥$90`→`$11`) and each
-monster's `[$caca]` are not yet extracted; the engine structure is fully known, so it is a
-clean follow-up.
+**Monster → layout dispatch (SOLVED Session 25 — GFX-4).** The follower render is dispatched
+via bank `$04` entry 2 (`NPCInteractDispatch`), routed by `$ffc7` magnitude: `$10–$8F` → bank
+`$10` entry 0, `≥$90` → bank `$11` entry 0 (monster followers are always `≥$10`, so the bank-`$04`
+`$401d` table is for plain NPCs only). Bank `$10`/`$11` entry 0 does `ld de,$407f ; call $0d91`, so:
+
+- **Level-1 layout table = `$10:$407f` (species 0–127) / `$11:$407f` (species 128+)** — a fixed
+  address, 128 `dw` entries each, indexed by `species` (bank $10) or `species-$80` (bank $11). Each
+  entry points to that species' **level-2** table (six frame pointers). *(The pre-GFX-4 docs said
+  these were "not at $4000, must be located" and pointed at bank `$05`. Bank `$05` is a DIFFERENT
+  render path — the ObjTest monster viewer — whose `$407f`-style table happens to share layout
+  signatures; the real follower path is `$10`/`$11`. Verified by reproducing the Healer + DarkDrium
+  anchors byte-for-byte through `$10`/`$11`.)*
+- **Per-species attr/palette table = `$10:$417f` / `$11:$417f`** — 128 bytes, ORed into `$ffca` by
+  `HramScr2_406e`; low 3 bits select one of the 8 OBJ palettes (`$17:$5615`). This is the follower
+  palette knob.
+- `tools/extract_monster_follower_layouts.py` walks these tables → `extracted/monster_follower_layouts.json`
+  (every species → `bank, l1_index, l1_addr, l2_addr, attr_base, layout_id, sharing`) and regenerates
+  the complete `follower_layouts.json` (**155 layouts**, not the old 118 — the S24 brute-force scan
+  required exactly-4-entry frames and silently dropped ~15 small/blob monsters that use 3-entry frames).
+
+**Follower-art table has EIGHT copies (Session 25).** The per-species follower gfx-ID table is
+duplicated once per UI context: overworld `ScreenTransDataTable` (`$01:$49DF`, indexed `species+$10`)
+plus copies in banks `$06 $07 $09 $0b $12`(library) `$18`(menu/`TextDataPtrLookup` `$4123`, indexed
+`species`) `$59`. The layout (`$407f`) and attr (`$417f`) tables are single/shared. A complete
+follower-art swap must repoint the species in **all eight** copies — GFX-3 repointed only `$01`,
+which is why a swapped monster kept its old art in the menu/library.
+
+**Reassignment primitive (`tools/build_follower_reassign.py`).** To restyle a monster's follower:
+(1) repoint its level-1 entry (`$10`/`$11:$407f + idx*2`) to a clean non-sharing layout's level-2
+table (same-bank only — the level-2 pointer is dereferenced with the routed bank mapped, so a
+bank-$10 species can't point at a bank-$11 table); (2) repoint all 8 art copies to the new art
+(clone an existing monster's gfx-ID, or place a custom 16-tile stream cross-bank via the GFX-2/3
+overflow allocator and point all 8 at it); (3) set the attr byte for the palette. This is NOT a
+`[$caca]` edit — `[$caca]` is the species and can't be changed to restyle. Layout 0 (`$10:$4e33`,
+used by Dragon sp28 + 13 others) is the editor's default non-sharing import target: tiles 0–3 =
+DOWN-a, 4–7 = SIDE-a, 8–11 = SIDE-b, 12–15 = UP-a (down_B/up_B auto-mirror; LEFT = right X-flipped).
+USER-CONFIRMED in SameBoy: Healer→Dragon clone and Dracky→custom blue-dragon (imported art),
+correct in all directions and consistent across overworld + menu + library.
 
 **Pool dependency (Session 22).** All 221 battle streams (and 174/221 followers) use
 back-references that read below their own output start — i.e. into the shared VRAM

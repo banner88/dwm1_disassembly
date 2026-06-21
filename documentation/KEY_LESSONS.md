@@ -1040,3 +1040,54 @@ are orthogonal, the editor should treat them as two independently-stored, indepe
 things, and **default every import to a non-sharing layout** (reassigning the host's sprite-class
 if needed) so arbitrary art always renders clean — the blob-sharing layouts only matter for
 original-game fidelity or tile budget.
+
+## Session 25 Lessons — GFX-4 (monster→layout map, custom-art import, multi-context consistency)
+
+**1. The same datum can be duplicated N times across the ROM — find ALL copies before declaring a
+swap "done."** GFX-3 repointed the overworld follower-art table (`$01:$49DF`) and looked complete.
+But the per-species follower gfx-ID table is copied **eight** times (`$01 $06 $07 $09 $0b $12 $18
+$59`), one per UI context (overworld, menu, library, battle-adjacent, cutscene…). The menu loaded
+its own copy, so a "swapped" monster kept its old art there while rendering on the *new* (shared)
+layout — broken subtiles + wrong palette. The user caught it instantly by opening the menu.
+**Rule:** when a swap is correct in one place and wrong in another, the wrongly-rendered place is
+reading a *different copy* of the same table. Grep the whole ROM for the table signature (a
+distinctive ~10-byte run of the first few entries) and validate hits by comparing the full record
+against the canonical copy — don't assume one table.
+
+**2. A field's NAME in the docs is a hypothesis, not a fact — re-derive it from the struct.** The
+docs called `[$caca]` a "sprite-class byte" that selects the layout. It is actually the party
+struct's **species** field (`$cac1 + $09`). That single correction collapsed the whole GFX-4
+"sprite-class extraction" sub-task: the layout is indexed by species directly, so there was nothing
+extra to extract — and it killed the planned "reassign by a same-size `[$caca]` edit" (you can't
+change a monster's species to restyle it; you repoint its `$407f` level-1 entry instead).
+**Rule:** before building on a named field, confirm the name against the structure definition; a
+wrong name can invent or hide entire subsystems.
+
+**3. "Located via brute-force pattern match" ≠ "located on the real code path."** S24's layout
+extractor scanned banks `$05/$10/$11` for any six-pointer table and deduped by signature, then the
+docs recorded bank-`$05` example addresses. The *actual* follower path never touches bank `$05`
+(that's the ObjTest viewer); the real level-1 tables are at fixed `$10/$11:$407f`, reached by
+`ld de,$407f; call $0d91` in bank `$10`/`$11` entry 0. Dedup-by-signature hid the discrepancy
+because identical layouts appear in multiple banks. **Rule:** to locate a table the game uses,
+trace the code that reads it (here: the `$0402` dispatch → `$407f`), don't pattern-match the data
+and hope; verify by reproducing a known runtime result (Healer + DarkDrium reproduced byte-for-byte
+through `$10`/`$11`).
+
+**4. An over-strict decoder silently shrinks your dataset.** The S24 extractor required each frame
+to be exactly 4 metasprite entries and `return None` otherwise — so every small/blob monster (Slime,
+Metaly, …), whose frames are 3 entries (one head tile + two mirrored body halves), was dropped. The
+"118 distinct layouts" was really "118 of the 4-entry layouts"; the true count is **155**. The
+authoritative species-indexed walk (which must decode *every* species) naturally exposed the gap.
+**Rule:** a "complete" library built by filtering is only as complete as its acceptance test;
+prefer driving extraction from the authoritative index (every entry must decode) over a permissive
+scan that's allowed to skip.
+
+**5. Don't trust a tool's baked-in packing — pack to the target layout's actual geometry.** The
+`follower_frame_picker.html` `copyp` payload samples only the `-a` walk frames and uses a fixed
+16-tile arrangement that matches no single in-game layout (its side view would mis-render). Packing
+the imported art to the *chosen* layout's real tile→quadrant mapping (layout 0: 0–3=DOWN-a, 4–7=
+SIDE-a, 8–11=SIDE-b, 12–15=UP-a, with engine auto-mirror for down_B/up_B and LEFT) is correct by
+construction and uses both side walk frames. The user's DOWN/SIDE/UP × a/b frames map directly.
+**Rule:** when art and layout are separate, slice the art to the layout you're assigning, not to a
+tool's hardcoded template — and verify with an engine-accurate render (tiles + layout + OBJ palette)
+before building the ROM.

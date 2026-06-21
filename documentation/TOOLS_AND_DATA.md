@@ -27,7 +27,8 @@ Regen produces identical output to committed file. Safe to re-run.
 | breeding_tables.json | build_breeding.py | **NEW (Session 13, B1 keystone).** Round-trip-faithful decode of BOTH vanilla breeding tables (special $16:$4B30 825×5; family $16:$4974 222 pairs). `--selftest` proves re-emission is byte-identical to the ROM. Independently reconciled with hand-authored breeding_complete.json (825/825 + 197/197, 0 diffs). Name-annotated; `_generator` stamped. |
 | monster_sprites.json | extract_monster_sprites.py | **NEW (Session 22, GFX-1); REGENERATED Session 23 (all 221 — the shipped copy was a 3-monster subset, a data defect now fixed).** All 221 monsters' battle + follower sprites: species → gfx-ID, bank, index, stream addr/len, declen, tile count, grid, and decoded 2bpp tile bytes (hex, regenerable without PNGs). Count-parameterised (`--count`). Decoded via `dwm/sprite_codec.py`; `--png` writes images to `extracted/monster_sprites/`. |
 | monster_palettes.json | extract_monster_palettes.py | **NEW (Session 23, GFX-2).** All 221 per-species BATTLE palettes from `MonsterBattlePalettes` `$17:$62FD` (8 B/species, 4 RGB555 `[c0, c1=$6bff backdrop, c2, c3=$0000 black]`). Recolour via `build_sprite_swap.py --palette`. |
-| follower_layouts.json | extract_follower_layouts.py | **NEW (Session 24, GFX-3).** All **118 distinct follower (walking-sprite) metasprite layouts**, decoded from the frame-pointer tables in banks `$05/$10/$11`. Per layout: the six frames (down/right/up × 2 walk steps), each as four `{pos, tile 0–15, xflip}`; a `sharing` flag (up/side reuse tiles → blob-only) vs non-sharing (disjoint → any distinct art clean); tile count; example table addr; how many sprite types use it. 76 non-sharing (202 types), 42 sharing (58 types). Anchors verified: Healer = sharing, DarkDrium = non-sharing. |
+| follower_layouts.json | extract_monster_follower_layouts.py | **REGENERATED & REPLACED Session 25 (GFX-4).** Now the COMPLETE **155 distinct follower layouts** decoded from the REAL species-indexed dispatch (`$10/$11:$407f`), incl. the 3-entry small/blob layouts the S24 brute-force scan dropped (old count 118). Per layout: six frames as `{dy,dx,tile,xflip}`, sharing classification, usage count, canonical `$10/$11` example level-2 addr. *(Supersedes the S24 `extract_follower_layouts.py` output; that tool is retained but its bank-`$05` example addrs are the ObjTest-viewer path, not the follower path.)* |
+| monster_follower_layouts.json | extract_monster_follower_layouts.py | **NEW (Session 25, GFX-4).** Every species (0–220) → `{bank, l1_index, l1_addr, l2_addr, attr_base, layout_id, sharing}`, traced through the real follower dispatch (`$ffc7=species+$10` → bank `$10`/`$11` `$407f` level-1 table). `--selftest` reproduces the Healer (sp9, sharing) + DarkDrium (sp214, non-sharing) anchors byte-for-byte and confirms all 215 collectible species map. |
 
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
 These are knowledge artifacts — human analysis in JSON form. No generator
@@ -118,7 +119,25 @@ re-section) ·
 `extract_follower_layouts.py` (✅ new Session 24, GFX-3 — walks the follower metasprite
 frame-pointer tables in banks `$05/$10/$11`, decodes each `(dy,dx,tile_offset,attr)` list,
 dedupes → `extracted/follower_layouts.json` (118 layouts) + classifies sharing vs non-sharing.
-The editor's follower-layout library) ·
+**SUPERSEDED Session 25 by `extract_monster_follower_layouts.py`** — kept for reference, but its
+brute-force scan misses 3-entry blob layouts and reports ObjTest-viewer (`$05`) addrs, not the
+follower path) ·
+`extract_monster_follower_layouts.py` (✅ new Session 25, GFX-4 — the AUTHORITATIVE follower-layout
+extractor. Walks the REAL species-indexed dispatch the engine runs: `$ffc7=species+$10` → bank `$04`
+entry-2 routing → bank `$10`/`$11` `$407f` level-1 table → level-2 frames. Emits BOTH
+`extracted/monster_follower_layouts.json` (species → layout id + addresses + sharing) and a complete
+`extracted/follower_layouts.json` (155 layouts, incl. 3-entry blobs). `--selftest` reproduces the
+Healer/DarkDrium anchors byte-for-byte + asserts 215/215 collectible coverage. Delivered WITH both JSONs) ·
+`build_follower_reassign.py` (✅ new Session 25, GFX-4 — follower reassignment primitive + custom-art
+import. `--clone-from SRC` copies a same-bank monster's layout+art+attr (the same-bank constraint is
+enforced: the level-2 pointer is dereferenced with the routed bank mapped). `--art-png PNG
+--frames-json J` imports custom art: packs the 6 picker frames into layout 0's 16-tile order, encodes
+a literal stream (`dwm/sprite_codec`), places it cross-bank (`dwm/sprite_bank` overflow allocator),
+and repoints the species in ALL 8 follower-art table copies; `--attr N` sets the OBJ palette; layout
+defaults to layout 0 (`$10:$4e33`). Builds a focused test ROM (clean tree + overflow bank art +
+same-size binary repoints + checksum fix); clean canonical build stays `1ca6579…`. Reassignment is a
+`$407f` level-1 repoint, NOT a `[$caca]`/species edit. User-confirmed: Healer→Dragon, Dracky→custom
+blue-dragon) ·
 `follower_frame_picker.html` (✅ new Session 24, GFX-3 — standalone interactive tool: drag/resize/
 arrow-nudge six boxes over an embedded sprite sheet, live per-direction engine-accurate preview,
 set the transparent colour, export frame coordinates JSON + 256-byte payload hex. The art-import

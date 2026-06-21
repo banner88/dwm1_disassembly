@@ -5,6 +5,34 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-21 (Session 25 — GFX-4 DONE: monster→follower-layout auto-map +
+> custom-art import + full multi-context consistency. Healer→Dragon clone and Dracky→custom
+> blue-dragon both user-confirmed "everything is correct" in SameBoy, consistent across overworld
+> + menu + library.)
+> **GFX-4 DONE — monster → follower-layout map, custom-art import, all-context consistency.**
+> (1) The level-1 layout dispatch tables are LOCATED at FIXED addresses **`$10:$407f` (species
+> 0–127) / `$11:$407f` (species 128+)**, 128 `dw` each, indexed by species directly (`$ffc7 =
+> species+$10`, routed `$10–$8F`→bank `$10`, `≥$90`→bank `$11` via bank-`$04` entry 2). A per-species
+> **attr/palette table at `$10/$11:$417f`** (ORed into `$ffca`, low 3 bits = OBJ palette). **Two
+> pre-GFX-4 doc errors corrected:** `[$caca]` is the SPECIES (party struct +$09), NOT a "sprite-class"
+> byte; and bank `$05` is the ObjTest viewer path, NOT the follower path (S24 anchored to `$05`
+> addresses — harmless because dedup ignored bank, but wrong). Both Healer (sp9, sharing) and DarkDrium
+> (sp214, non-sharing) reproduced byte-for-byte through `$10`/`$11`. (2) `tools/extract_monster_follower_layouts.py`
+> + `extracted/monster_follower_layouts.json` (every species → layout id + addresses + sharing); it
+> REGENERATES & REPLACES `follower_layouts.json` with the COMPLETE **155 layouts** (old 118 dropped
+> the 3-entry small/blob layouts the brute-force scan rejected). `--selftest` PASS (215/215
+> collectible map; anchors verified). (3) **The follower-art gfx-ID table has EIGHT copies**
+> (`$01 $06 $07 $09 $0b $12`-library `$18`-menu `$59`); a consistent swap must repoint all 8 (layout
+> `$407f` + attr `$417f` are single/shared). GFX-3 repointed only `$01` → that's why swapped monsters
+> kept old art in menus. (4) `tools/build_follower_reassign.py` — reassignment primitive: clone
+> layout+art+attr from a same-bank monster, OR import custom 16-tile art (placed cross-bank via the
+> GFX-2/3 overflow allocator, all-8-copies repointed) + set layout (default layout 0 `$10:$4e33`) +
+> OBJ palette. Layout 0 packing: tiles 0–3=DOWN-a, 4–7=SIDE-a, 8–11=SIDE-b, 12–15=UP-a (down_B/up_B
+> auto-mirror; LEFT = right X-flip). Clean build still `1ca6579…`; integrity PASS 4/4. Reassignments
+> are reproducible EXAMPLES, not baked into the canonical ROM. **Reassignment is a level-1 repoint,
+> NOT a `[$caca]`/species edit** (supersedes the GFX-3 plan's "same-size `[$caca]` edit"). Method:
+> KEY_LESSONS "Session 25"; mechanics: MONSTER_DATA "Monster → layout dispatch".
+>
 > Last verified: 2026-06-21 (Session 24 — GFX-3 DONE: walking/follower sprite swap +
 > follower metasprite engine fully reverse-engineered + 118-layout library extracted.
 > Blue dragon → DarkDrium follower user-confirmed "absolutely perfect" all 4 directions.)
@@ -355,9 +383,10 @@
 | Custom content bank | $60 (~14.9 KB free as of v25 content, 1322 bytes used) |
 | Monster battle palette table | `MonsterBattlePalettes` @ `$17:$62FD`, 8 B/species, 4 RGB555 `[c0, c1=$6bff, c2, c3=$0000]`; loaded by bank $17 entry 6 (`$1706`). Was mislabeled `RoomAttrDataBlocks`. |
 | Monster sprite overflow banks | `$7E,$7F` (then `$7C,$7A,$79`) — cross-bank sprite streams (`dwm/sprite_bank.py`); EDITOR_DESIGN §8. Resolver reads `$<bank>:$4001+index*2`, no bank gating. |
-| Follower gfx-ID table | `ScreenTransDataTable` @ `$01:$49DF`, 231 `dw`, indexed `species+$10`; loader `GetActiveMonsterStatus` @ `$01:$4986`; family table `FollowerFamilyGfxTable` @ `$01:$4BAD` (10). 16 tiles / 256 B per follower, DMA'd to VRAM `$8200`/`$8300`/`$8400` (party slot 0/1/2). |
+| Follower gfx-ID table | `ScreenTransDataTable` @ `$01:$49DF`, 231 `dw`, indexed `species+$10`; loader `GetActiveMonsterStatus` @ `$01:$4986`; family table `FollowerFamilyGfxTable` @ `$01:$4BAD` (10). 16 tiles / 256 B per follower, DMA'd to VRAM `$8200`/`$8300`/`$8400` (party slot 0/1/2). **8 parallel copies of this gfx-ID table exist** (`$01 $06 $07 $09 $0b $12 $18 $59`, one per UI context: `$18`=menu/`TextDataPtrLookup`@`$4123` indexed `species`, `$12`=library); a complete art swap repoints ALL 8. |
+| Follower layout dispatch (GFX-4) | Level-1 tables at FIXED `$10:$407f` (species 0–127) / `$11:$407f` (species 128+), indexed by species; `$ffc7=species+$10` routed by bank-`$04` entry 2 (`$10–$8F`→bank `$10`, `≥$90`→bank `$11`). Per-species attr/palette byte at `$10/$11:$417f` (low 3 bits = OBJ palette). `[$caca]` = SPECIES (party +$09), not a "sprite-class" byte. Bank `$05` `$407f`-style table is the ObjTest viewer, NOT the follower path. `extracted/monster_follower_layouts.json`. |
 | Follower render engine | `SaveScr_40cd` @ `$04:$40cd` (GBC variant of ROM0 `$0d91`). Metasprite list = 4-byte entries **(dy, dx, tile_offset, attr)**, `$80`-terminated; OAM tile = `tile_offset + [$ffc9]` (base `$20/$30/$40`); OAM attr = `[$ffca] XOR attr` (X-flip bit5). 2-level table: sprite-type `$ffc7`(=`[$ca91]`) → frame/dir `$ffc8`. **OBJ idx0 = hardware-transparent** (battle BG used idx1). 8 OBJ palettes @ `$17:$5615`. |
-| Follower layout library | **118 distinct layouts**, `extracted/follower_layouts.json` (`tools/extract_follower_layouts.py`). 76 non-sharing (disjoint down/up/side → any art clean; 202 types), 42 sharing (blob-only; 58 types). Layout is per-monster (NOT universal). |
+| Follower layout library | **155 distinct layouts** (complete; regenerated by `tools/extract_monster_follower_layouts.py` from the real `$10/$11:$407f` tables — the old 118-count brute-force scan dropped 3-entry small/blob layouts). Layout is per-species. Reassignment = same-size 2-byte repoint of the species' `$407f` level-1 entry (same-bank only), NOT a `[$caca]` edit. `extracted/follower_layouts.json`. |
 | Custom layout bank | $64 (layout ptr table + LZSS layout + attr data, 309 bytes used) |
 | Empty banks available | 21 banks = 336 KB: $67,$69–$77,$79–$7A,$7C,$7E–$7F |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
