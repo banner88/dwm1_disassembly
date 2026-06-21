@@ -366,3 +366,44 @@ header "gate dungeon tileset J" also holds follower sprites; `bank_036.asm` "Cro
 dispatch table" is actually the gfx pointer table (Entry-N comments added). A prior
 `$382E` battle guess (from unreferenced scan-tables `$07:$6E14`/`$09:$6B10`) is bogus —
 `$382E` is a dungeon tile.
+
+## Species ID geography (256 slots) + add-new-species architecture (Phase N, Session 28)
+
+Species IDs are a **single byte** → hard ceiling of 256 slots. Data tool:
+`tools/map_species_slots.py` → `extracted/species_slot_map.json` (decodes all 256
+name slots from `$41:$4339`, classifies each, self-aborts on ROM drift).
+
+**Slot map (verified this session):**
+
+| Range | Count | Status | Notes |
+|-------|-------|--------|-------|
+| 0–214 | 215 | real monsters | normal species |
+| 215–219 | 5 | **special** | 215 `TERRY?` (one-off enemy, fightable, NOT breedable); 216–219 `Tatsu`/`Diago`/`Samsi`/`Bazoo` (summon-skill byproducts only). Bespoke per-id handling in code (see gates below). |
+| 220–223 | 4 | empty/phantom | empty names (220/221/222 share one `$F0`-only name ptr at `$41:$6287`); info table stops at 220. |
+| **224–255** | **32** | **FREE** | usable for NEW species — every top-range classifier routes ≥224 to "normal". |
+
+**First free id = 224 (`$E0`). Budget = 32 new species.** Going beyond 32 needs
+16-bit species IDs everywhere (`$DA31`, `[$caca]`, …) — a much larger arc; avoid.
+
+**Architecture = "high-table + single forked loader, vanilla 0–220 byte-identical".**
+Each per-species table has ONE arithmetic indexer; fork it as `if id < 224 → vanilla,
+else → free-bank high-table indexed (id−224)`. Verified single indexers:
+
+| Table | Addr | Entry | Indexer | Note |
+|-------|------|-------|---------|------|
+| Monster info | `$03:$4461` | 43 B | `$03:SaveMon_4446` (MonsterInfoCopy) | ONLY indexer; all 16 consumer banks read the `$DA33` copy. |
+| Enemy stats | `$14:$4C1D` | 25 B | `$14:LoadEnemyStats` | EID is **16-bit** (`$DA12`/`$DA13` → `Mul16x8To24`) → no 256 wall on the battle side; new fight/join entries can append past 487. |
+
+**Tables with headroom (no fork — just populate the slot):** name ptrs `$41:$4339`
+(256-wide), follower layout/attr dispatch `$10`/`$11:$407f`/`$417f` (128+128 = covers 0–255).
+**Shared (no per-species work):** growth curves `$13` (selected by a curve index stored
+inside the info entry, not by species).
+
+**N6 — top-range special-case gates to verify treat ≥224 as normal** (NOT a clean
+`MAX_SPECIES` ceiling — they special-case the 215–223 cluster):
+`bank_05f.asm ~1680` ($d5/$d6/$da/$dd/$de/$df/$e0 ladder, clears 6 B @ `$DA82`;
+≥224 → keep/normal), `bank_057.asm ~5773` (battle attacker, special-cases id 221),
+`bank_058.asm ~658` (equality on 217/221 → load `$5203`), `bank_052.asm ~3510`
+(skill-fn range near SkillFunctionTable). The ~40 OTHER `cp $dd`/`cp $de` hits
+repo-wide are FALSE POSITIVES — replicated interrupt boilerplate
+(`rst $28/ei/ret c/cp $dd/ldh [rIE]`) and misassembled data in high banks.

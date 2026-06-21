@@ -775,3 +775,33 @@ the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
 campaign*, **E1 (arena / gate-boss roster format) is the one true remaining
 reverse-engineering gap** and the natural next Phase-D/E session; **E2** is the authoring
 backbone; E3-E6 are schema / UI / capacity questions on top of largely-known mechanics.
+
+---
+
+## Phase N — Add NEW monster species (ids 224–255, 32-slot budget)
+User goal: add brand-new monsters *on top of* the existing 221 (not reskins of
+existing slots). Scoped Session 28. Architecture: **high-table + single forked
+loader, vanilla 0–220 byte-identical** (full detail in MONSTER_DATA "Species ID
+geography"). Species id is a byte → first free id **224 (`$E0`)**, budget **32**.
+Beyond 32 needs 16-bit ids everywhere (avoid).
+
+- [x] **N1 — Scope / RE + slot map (DONE, Session 28).** `tools/map_species_slots.py`
+      + `extracted/species_slot_map.json` (256-slot map, self-checking). Verified:
+      single indexers (info `$03:SaveMon_4446` ×43, enemy-stats `$14:LoadEnemyStats`
+      ×25 with 16-bit EID); slot geography (215–219 special, 220–223 empty, 224–255
+      free); the 4 real top-range gates vs ~40 false-positive `cp $dd` hits. No bytes
+      changed; integrity PASS 4/4.
+- [ ] **N2 — Info-table fork (keystone).** Patch `SaveMon_4446`: id ≥ 224 → free-bank
+      high-table (pick a free `rst $10` bank; breeding used `$69`, sprites `$7E–$7F`).
+      Author one test species (43-B entry via a JSON tool). *Accept:* injected id 224
+      loads correct 43 bytes; clean build still `1ca6579…`; verified in SameBoy.
+- [ ] **N3 — Enemy-stats fork.** Fork `LoadEnemyStats` for new fight/join EIDs so the
+      new species is fightable at chosen levels (append past 487; EID space is 16-bit).
+- [ ] **N4 — Sprite + palette.** Repoint the **8** follower gfx-ID table copies
+      (`$01 $06 $07 $09 $0b $12 $18 $59`), battle palette (`$17` free region, e.g.
+      `$6C75`), follower layout/attr slot (256-wide, headroom). Reuse GFX-2/3/4 tooling.
+- [ ] **N5 — Name + joinability + breeding/library wiring.** Real name ptr+string in
+      `$41:$4339`; locate + mark joinable (joinability + boss table, per S18); breeding
+      (`build_breeding.py`) + library (`build_library_table.py`, already 256-id-aware).
+- [ ] **N6 — Verify top-range gates.** Confirm `bank_05f/057/058/052` treat ids ≥224
+      as normal (the `$5f` ladder already routes ≥224 → keep). Patch any that don't.

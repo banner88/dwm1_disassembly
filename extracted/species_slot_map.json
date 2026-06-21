@@ -1,0 +1,2146 @@
+{
+  "_generator": "tools/map_species_slots.py (ROM data/DWM-original.gbc)",
+  "_format": "Per-id species slot map for the add-new-species arc (Phase N). status: real | special | empty_or_phantom | free.",
+  "_self_checks": [
+    "info/enemy indexer constants present in disasm",
+    "ids 220/221/222 share one empty name pointer",
+    "id 220 name is the bare $F0 terminator"
+  ],
+  "species_id_is_byte": true,
+  "hard_ceiling": 256,
+  "first_free_id": 224,
+  "free_count": 32,
+  "free_ids": [
+    224,
+    225,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243,
+    244,
+    245,
+    246,
+    247,
+    248,
+    249,
+    250,
+    251,
+    252,
+    253,
+    254,
+    255
+  ],
+  "info_table_last_id": 220,
+  "last_real_name_id": 219,
+  "fork_points": {
+    "monster_info": {
+      "table": "$03:$4461",
+      "entry_size": 43,
+      "count": 221,
+      "indexer": "$03:SaveMon_4446 (MonsterInfoCopy)",
+      "note": "Only indexer; all 16 consumer banks read the 43-byte copy at $DA33. Fork: if id >= FIRST_FREE_ID, index a free-bank high-table instead of $4461."
+    },
+    "enemy_stats": {
+      "table": "$14:$4C1D",
+      "entry_size": 25,
+      "count": 487,
+      "indexer": "$14:LoadEnemyStats",
+      "note": "Only indexer; EID is 16-bit ($DA12/$DA13 -> Mul16x8To24), so the battle-stats side has NO 256 ceiling - new fight/join entries can append past 487."
+    }
+  },
+  "n6_special_case_gates": [
+    {
+      "loc": "bank_05f.asm ~1680",
+      "ladder": "$d5/$d6/$da/$dd/$de/$df/$e0",
+      "effect": "clears 6 bytes @ $DA82 for ids <213,214-217,221,223; KEEP for 213,218-220,222,>=224",
+      "verdict_for_new": "ids >= 224 fall in the final 'ret/keep' bucket = NORMAL"
+    },
+    {
+      "loc": "bank_057.asm ~5773",
+      "ladder": "$db/$dc/$dd",
+      "effect": "battle attacker path special-cases id 221 (cp $dd; ret nz)",
+      "verdict_for_new": "ids >= 224 are not 221 -> unaffected; CONFIRM no upper open-end"
+    },
+    {
+      "loc": "bank_058.asm ~658",
+      "ladder": "$d9/$dd (equality)",
+      "effect": "loads $5203 for id 217 or 221",
+      "verdict_for_new": "equality on 217/221 only -> ids >= 224 unaffected"
+    },
+    {
+      "loc": "bank_052.asm ~3510",
+      "ladder": "$d6/$dd (range)",
+      "effect": "skill-function range check near SkillFunctionTable",
+      "verdict_for_new": "CONFIRM ids >= 224 take the intended branch"
+    }
+  ],
+  "slots": [
+    {
+      "id": 0,
+      "name": "DrakSlime",
+      "name_ptr": "$41:$5B1F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 1,
+      "name": "SpotSlime",
+      "name_ptr": "$41:$5B29",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 2,
+      "name": "WingSlime",
+      "name_ptr": "$41:$5B33",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 3,
+      "name": "TreeSlime",
+      "name_ptr": "$41:$5B3D",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 4,
+      "name": "Snaily",
+      "name_ptr": "$41:$5B47",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 5,
+      "name": "SlimeNite",
+      "name_ptr": "$41:$5B4E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 6,
+      "name": "Babble",
+      "name_ptr": "$41:$5B58",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 7,
+      "name": "BoxSlime",
+      "name_ptr": "$41:$5B5F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 8,
+      "name": "Slime",
+      "name_ptr": "$41:$5B68",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 9,
+      "name": "Healer",
+      "name_ptr": "$41:$5B6E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 10,
+      "name": "FangSlime",
+      "name_ptr": "$41:$5B75",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 11,
+      "name": "RockSlime",
+      "name_ptr": "$41:$5B7F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 12,
+      "name": "SlimeBorg",
+      "name_ptr": "$41:$5B89",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 13,
+      "name": "Slabbit",
+      "name_ptr": "$41:$5B93",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 14,
+      "name": "SpotKing",
+      "name_ptr": "$41:$5B9B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 15,
+      "name": "KingSlime",
+      "name_ptr": "$41:$5BA4",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 16,
+      "name": "Metaly",
+      "name_ptr": "$41:$5BAE",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 17,
+      "name": "Metabble",
+      "name_ptr": "$41:$5BB5",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 18,
+      "name": "MetalKing",
+      "name_ptr": "$41:$5BBE",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 19,
+      "name": "GoldSlime",
+      "name_ptr": "$41:$5BC8",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 20,
+      "name": "DragonKid",
+      "name_ptr": "$41:$5BD2",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 21,
+      "name": "Tortragon",
+      "name_ptr": "$41:$5BDC",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 22,
+      "name": "Pteranod",
+      "name_ptr": "$41:$5BE6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 23,
+      "name": "Gasgon",
+      "name_ptr": "$41:$5BEF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 24,
+      "name": "FairyDrak",
+      "name_ptr": "$41:$5BF6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 25,
+      "name": "LizardMan",
+      "name_ptr": "$41:$5C00",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 26,
+      "name": "Poisongon",
+      "name_ptr": "$41:$5C0A",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 27,
+      "name": "Swordgon",
+      "name_ptr": "$41:$5C14",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 28,
+      "name": "Dragon",
+      "name_ptr": "$41:$5C1D",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 29,
+      "name": "MiniDrak",
+      "name_ptr": "$41:$5C24",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 30,
+      "name": "MadDragon",
+      "name_ptr": "$41:$5C2D",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 31,
+      "name": "Rayburn",
+      "name_ptr": "$41:$5C37",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 32,
+      "name": "Chamelgon",
+      "name_ptr": "$41:$5C3F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 33,
+      "name": "LizardFly",
+      "name_ptr": "$41:$5C49",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 34,
+      "name": "Andreal",
+      "name_ptr": "$41:$5C53",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 35,
+      "name": "KingCobra",
+      "name_ptr": "$41:$5C5B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 36,
+      "name": "Spikerous",
+      "name_ptr": "$41:$5C65",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 37,
+      "name": "GreatDrak",
+      "name_ptr": "$41:$5C6F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 38,
+      "name": "Crestpent",
+      "name_ptr": "$41:$5C79",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 39,
+      "name": "WingSnake",
+      "name_ptr": "$41:$5C83",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 40,
+      "name": "Coatol",
+      "name_ptr": "$41:$5C8D",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 41,
+      "name": "Orochi",
+      "name_ptr": "$41:$5C94",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 42,
+      "name": "BattleRex",
+      "name_ptr": "$41:$5C9B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 43,
+      "name": "SkyDragon",
+      "name_ptr": "$41:$5CA5",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 44,
+      "name": "Divinegon",
+      "name_ptr": "$41:$5CAF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 45,
+      "name": "Tonguella",
+      "name_ptr": "$41:$5CB9",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 46,
+      "name": "Almiraj",
+      "name_ptr": "$41:$5CC3",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 47,
+      "name": "CatFly",
+      "name_ptr": "$41:$5CCB",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 48,
+      "name": "PillowRat",
+      "name_ptr": "$41:$5CD2",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 49,
+      "name": "Saccer",
+      "name_ptr": "$41:$5CDC",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 50,
+      "name": "GulpBeast",
+      "name_ptr": "$41:$5CE3",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 51,
+      "name": "Skullroo",
+      "name_ptr": "$41:$5CED",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 52,
+      "name": "WindBeast",
+      "name_ptr": "$41:$5CF6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 53,
+      "name": "Anteater",
+      "name_ptr": "$41:$5D00",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 54,
+      "name": "SuperTen",
+      "name_ptr": "$41:$5D09",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 55,
+      "name": "IronTurt",
+      "name_ptr": "$41:$5D12",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 56,
+      "name": "Mommonja",
+      "name_ptr": "$41:$5D1B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 57,
+      "name": "HammerMan",
+      "name_ptr": "$41:$5D24",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 58,
+      "name": "Grizzly",
+      "name_ptr": "$41:$5D2E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 59,
+      "name": "Yeti",
+      "name_ptr": "$41:$5D36",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 60,
+      "name": "MadGopher",
+      "name_ptr": "$41:$5D3B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 61,
+      "name": "FairyRat",
+      "name_ptr": "$41:$5D45",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 62,
+      "name": "Unicorn",
+      "name_ptr": "$41:$5D4E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 63,
+      "name": "Goategon",
+      "name_ptr": "$41:$5D56",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 64,
+      "name": "WildApe",
+      "name_ptr": "$41:$5D5F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 65,
+      "name": "Trumpeter",
+      "name_ptr": "$41:$5D67",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 66,
+      "name": "KingLeo",
+      "name_ptr": "$41:$5D71",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 67,
+      "name": "DarkHorn",
+      "name_ptr": "$41:$5D79",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 68,
+      "name": "MadCat",
+      "name_ptr": "$41:$5D82",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 69,
+      "name": "BigEye",
+      "name_ptr": "$41:$5D89",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 70,
+      "name": "Picky",
+      "name_ptr": "$41:$5D90",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 71,
+      "name": "Wyvern",
+      "name_ptr": "$41:$5D96",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 72,
+      "name": "BullBird",
+      "name_ptr": "$41:$5D9D",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 73,
+      "name": "Florajay",
+      "name_ptr": "$41:$5DA6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 74,
+      "name": "DuckKite",
+      "name_ptr": "$41:$5DAF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 75,
+      "name": "MadPecker",
+      "name_ptr": "$41:$5DB8",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 76,
+      "name": "MadRaven",
+      "name_ptr": "$41:$5DC2",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 77,
+      "name": "MistyWing",
+      "name_ptr": "$41:$5DCB",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 78,
+      "name": "Dracky",
+      "name_ptr": "$41:$5DD5",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 79,
+      "name": "BigRoost",
+      "name_ptr": "$41:$5DDC",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 80,
+      "name": "StubBird",
+      "name_ptr": "$41:$5DE5",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 81,
+      "name": "LandOwl",
+      "name_ptr": "$41:$5DEE",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 82,
+      "name": "MadGoose",
+      "name_ptr": "$41:$5DF6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 83,
+      "name": "MadCondor",
+      "name_ptr": "$41:$5DFF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 84,
+      "name": "Blizzardy",
+      "name_ptr": "$41:$5E09",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 85,
+      "name": "Phoenix",
+      "name_ptr": "$41:$5E13",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 86,
+      "name": "ZapBird",
+      "name_ptr": "$41:$5E1B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 87,
+      "name": "WhipBird",
+      "name_ptr": "$41:$5E23",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 88,
+      "name": "FunkyBird",
+      "name_ptr": "$41:$5E2C",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 89,
+      "name": "RainHawk",
+      "name_ptr": "$41:$5E36",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 90,
+      "name": "MadPlant",
+      "name_ptr": "$41:$5E3F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 91,
+      "name": "FireWeed",
+      "name_ptr": "$41:$5E48",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 92,
+      "name": "FloraMan",
+      "name_ptr": "$41:$5E51",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 93,
+      "name": "WingTree",
+      "name_ptr": "$41:$5E5A",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 94,
+      "name": "CactiBall",
+      "name_ptr": "$41:$5E63",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 95,
+      "name": "Gulpple",
+      "name_ptr": "$41:$5E6D",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 96,
+      "name": "Toadstool",
+      "name_ptr": "$41:$5E75",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 97,
+      "name": "AmberWeed",
+      "name_ptr": "$41:$5E7F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 98,
+      "name": "Stubsuck",
+      "name_ptr": "$41:$5E89",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 99,
+      "name": "Oniono",
+      "name_ptr": "$41:$5E92",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 100,
+      "name": "DanceVegi",
+      "name_ptr": "$41:$5E99",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 101,
+      "name": "TreeBoy",
+      "name_ptr": "$41:$5EA3",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 102,
+      "name": "FaceTree",
+      "name_ptr": "$41:$5EAB",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 103,
+      "name": "HerbMan",
+      "name_ptr": "$41:$5EB4",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 104,
+      "name": "BeanMan",
+      "name_ptr": "$41:$5EBC",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 105,
+      "name": "EvilSeed",
+      "name_ptr": "$41:$5EC4",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 106,
+      "name": "ManEater",
+      "name_ptr": "$41:$5ECD",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 107,
+      "name": "Snapper",
+      "name_ptr": "$41:$5ED6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 108,
+      "name": "Rosevine",
+      "name_ptr": "$41:$5EDE",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 109,
+      "name": "Watabou",
+      "name_ptr": "$41:$5EE7",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 110,
+      "name": "GiantSlug",
+      "name_ptr": "$41:$5EEF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 111,
+      "name": "Catapila",
+      "name_ptr": "$41:$5EF9",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 112,
+      "name": "Gophecada",
+      "name_ptr": "$41:$5F02",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 113,
+      "name": "Butterfly",
+      "name_ptr": "$41:$5F0C",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 114,
+      "name": "WeedBug",
+      "name_ptr": "$41:$5F16",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 115,
+      "name": "GiantWorm",
+      "name_ptr": "$41:$5F1E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 116,
+      "name": "Lipsy",
+      "name_ptr": "$41:$5F28",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 117,
+      "name": "StagBug",
+      "name_ptr": "$41:$5F2E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 118,
+      "name": "ArmyAnt",
+      "name_ptr": "$41:$5F36",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 119,
+      "name": "GoHopper",
+      "name_ptr": "$41:$5F3E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 120,
+      "name": "TailEater",
+      "name_ptr": "$41:$5F47",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 121,
+      "name": "ArmorPede",
+      "name_ptr": "$41:$5F51",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 122,
+      "name": "Eyeder",
+      "name_ptr": "$41:$5F5B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 123,
+      "name": "GiantMoth",
+      "name_ptr": "$41:$5F62",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 124,
+      "name": "Droll",
+      "name_ptr": "$41:$5F6C",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 125,
+      "name": "ArmyCrab",
+      "name_ptr": "$41:$5F72",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 126,
+      "name": "MadHornet",
+      "name_ptr": "$41:$5F7B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 127,
+      "name": "HornBeet",
+      "name_ptr": "$41:$5F85",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 128,
+      "name": "Armorpion",
+      "name_ptr": "$41:$5F8E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 129,
+      "name": "Digster",
+      "name_ptr": "$41:$5F98",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 130,
+      "name": "Pixy",
+      "name_ptr": "$41:$5FA0",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 131,
+      "name": "ArcDemon",
+      "name_ptr": "$41:$5FA5",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 132,
+      "name": "AgDevil",
+      "name_ptr": "$41:$5FAE",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 133,
+      "name": "Demonite",
+      "name_ptr": "$41:$5FB6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 134,
+      "name": "DarkEye",
+      "name_ptr": "$41:$5FBF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 135,
+      "name": "EyeBall",
+      "name_ptr": "$41:$5FC7",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 136,
+      "name": "SkulRider",
+      "name_ptr": "$41:$5FCF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 137,
+      "name": "EvilBeast",
+      "name_ptr": "$41:$5FD9",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 138,
+      "name": "1EyeClown",
+      "name_ptr": "$41:$5FE3",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 139,
+      "name": "Gremlin",
+      "name_ptr": "$41:$5FED",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 140,
+      "name": "MedusaEye",
+      "name_ptr": "$41:$5FF5",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 141,
+      "name": "Lionex",
+      "name_ptr": "$41:$5FFF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 142,
+      "name": "GoatHorn",
+      "name_ptr": "$41:$6006",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 143,
+      "name": "Orc",
+      "name_ptr": "$41:$600F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 144,
+      "name": "Ogre",
+      "name_ptr": "$41:$6013",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 145,
+      "name": "GateGuard",
+      "name_ptr": "$41:$6018",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 146,
+      "name": "ChopClown",
+      "name_ptr": "$41:$6022",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 147,
+      "name": "Grendal",
+      "name_ptr": "$41:$602C",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 148,
+      "name": "Akubar",
+      "name_ptr": "$41:$6034",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 149,
+      "name": "MadKnight",
+      "name_ptr": "$41:$603B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 150,
+      "name": "Gigantes",
+      "name_ptr": "$41:$6045",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 151,
+      "name": "Centasaur",
+      "name_ptr": "$41:$604E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 152,
+      "name": "EvilArmor",
+      "name_ptr": "$41:$6058",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 153,
+      "name": "Jamirus",
+      "name_ptr": "$41:$6062",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 154,
+      "name": "Durran",
+      "name_ptr": "$41:$606A",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 155,
+      "name": "Spooky",
+      "name_ptr": "$41:$6071",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 156,
+      "name": "Skullgon",
+      "name_ptr": "$41:$6078",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 157,
+      "name": "Putrepup",
+      "name_ptr": "$41:$6081",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 158,
+      "name": "RotRaven",
+      "name_ptr": "$41:$608A",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 159,
+      "name": "Mummy",
+      "name_ptr": "$41:$6093",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 160,
+      "name": "DarkCrab",
+      "name_ptr": "$41:$6099",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 161,
+      "name": "DeadNite",
+      "name_ptr": "$41:$60A2",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 162,
+      "name": "Shadow",
+      "name_ptr": "$41:$60AB",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 163,
+      "name": "Hork",
+      "name_ptr": "$41:$60B2",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 164,
+      "name": "Mudron",
+      "name_ptr": "$41:$60B7",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 165,
+      "name": "NiteWhip",
+      "name_ptr": "$41:$60BE",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 166,
+      "name": "MadSpirit",
+      "name_ptr": "$41:$60C7",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 167,
+      "name": "WindMerge",
+      "name_ptr": "$41:$60D1",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 168,
+      "name": "Reaper",
+      "name_ptr": "$41:$60DB",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 169,
+      "name": "DeadNoble",
+      "name_ptr": "$41:$60E2",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 170,
+      "name": "WhiteKing",
+      "name_ptr": "$41:$60EC",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 171,
+      "name": "BoneSlave",
+      "name_ptr": "$41:$60F6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 172,
+      "name": "Skeletor",
+      "name_ptr": "$41:$6100",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 173,
+      "name": "Servant",
+      "name_ptr": "$41:$6109",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 174,
+      "name": "Copycat",
+      "name_ptr": "$41:$6111",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 175,
+      "name": "JewelBag",
+      "name_ptr": "$41:$6119",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 176,
+      "name": "EvilWand",
+      "name_ptr": "$41:$6122",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 177,
+      "name": "MadCandle",
+      "name_ptr": "$41:$612B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 178,
+      "name": "CoilBird",
+      "name_ptr": "$41:$6135",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 179,
+      "name": "Facer",
+      "name_ptr": "$41:$613E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 180,
+      "name": "SpikyBoy",
+      "name_ptr": "$41:$6144",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 181,
+      "name": "MadMirror",
+      "name_ptr": "$41:$614D",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 182,
+      "name": "RogueNite",
+      "name_ptr": "$41:$6157",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 183,
+      "name": "Goopi",
+      "name_ptr": "$41:$6161",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 184,
+      "name": "Voodoll",
+      "name_ptr": "$41:$6167",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 185,
+      "name": "MetalDrak",
+      "name_ptr": "$41:$616F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 186,
+      "name": "Balzak",
+      "name_ptr": "$41:$6179",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 187,
+      "name": "SabreMan",
+      "name_ptr": "$41:$6180",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 188,
+      "name": "CurseLamp",
+      "name_ptr": "$41:$6189",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 189,
+      "name": "Roboster",
+      "name_ptr": "$41:$6193",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 190,
+      "name": "EvilPot",
+      "name_ptr": "$41:$619C",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 191,
+      "name": "Gismo",
+      "name_ptr": "$41:$61A4",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 192,
+      "name": "LavaMan",
+      "name_ptr": "$41:$61AA",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 193,
+      "name": "IceMan",
+      "name_ptr": "$41:$61B2",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 194,
+      "name": "Mimic",
+      "name_ptr": "$41:$61B9",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 195,
+      "name": "MudDoll",
+      "name_ptr": "$41:$61BF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 196,
+      "name": "Golem",
+      "name_ptr": "$41:$61C7",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 197,
+      "name": "StoneMan",
+      "name_ptr": "$41:$61CD",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 198,
+      "name": "BombCrag",
+      "name_ptr": "$41:$61D6",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 199,
+      "name": "GoldGolem",
+      "name_ptr": "$41:$61DF",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 200,
+      "name": "DracoLord",
+      "name_ptr": "$41:$61E9",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 201,
+      "name": "DracoLord",
+      "name_ptr": "$41:$61F3",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 202,
+      "name": "Hargon",
+      "name_ptr": "$41:$61FD",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 203,
+      "name": "Sidoh",
+      "name_ptr": "$41:$6204",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 204,
+      "name": "Baramos",
+      "name_ptr": "$41:$620A",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 205,
+      "name": "Zoma",
+      "name_ptr": "$41:$6212",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 206,
+      "name": "Pizzaro",
+      "name_ptr": "$41:$6217",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 207,
+      "name": "Esterk",
+      "name_ptr": "$41:$621F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 208,
+      "name": "Mirudraas",
+      "name_ptr": "$41:$6226",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 209,
+      "name": "Mirudraas",
+      "name_ptr": "$41:$6230",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 210,
+      "name": "Mudou",
+      "name_ptr": "$41:$623A",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 211,
+      "name": "DeathMore",
+      "name_ptr": "$41:$6240",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 212,
+      "name": "DeathMore",
+      "name_ptr": "$41:$624A",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 213,
+      "name": "DeathMore",
+      "name_ptr": "$41:$6254",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 214,
+      "name": "Darkdrium",
+      "name_ptr": "$41:$625E",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "real"
+    },
+    {
+      "id": 215,
+      "name": "TERRY?",
+      "name_ptr": "$41:$6268",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "special",
+      "_user_annotation": "TERRY? - one-off enemy, fightable, NOT breedable"
+    },
+    {
+      "id": 216,
+      "name": "Tatsu",
+      "name_ptr": "$41:$626F",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "special",
+      "_user_annotation": "Tatsu - summon-skill byproduct only"
+    },
+    {
+      "id": 217,
+      "name": "Diago",
+      "name_ptr": "$41:$6275",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "special",
+      "_user_annotation": "Diago - summon-skill byproduct only"
+    },
+    {
+      "id": 218,
+      "name": "Samsi",
+      "name_ptr": "$41:$627B",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "special",
+      "_user_annotation": "Samsi - summon-skill byproduct only"
+    },
+    {
+      "id": 219,
+      "name": "Bazoo",
+      "name_ptr": "$41:$6281",
+      "name_empty": false,
+      "has_info_entry": true,
+      "status": "special",
+      "_user_annotation": "Bazoo - summon-skill byproduct only"
+    },
+    {
+      "id": 220,
+      "name": "",
+      "name_ptr": "$41:$6287",
+      "name_empty": true,
+      "has_info_entry": true,
+      "status": "empty_or_phantom"
+    },
+    {
+      "id": 221,
+      "name": "",
+      "name_ptr": "$41:$6287",
+      "name_empty": true,
+      "has_info_entry": false,
+      "status": "empty_or_phantom"
+    },
+    {
+      "id": 222,
+      "name": "",
+      "name_ptr": "$41:$6287",
+      "name_empty": true,
+      "has_info_entry": false,
+      "status": "empty_or_phantom"
+    },
+    {
+      "id": 223,
+      "name": "",
+      "name_ptr": "$41:$6287",
+      "name_empty": true,
+      "has_info_entry": false,
+      "status": "empty_or_phantom"
+    },
+    {
+      "id": 224,
+      "name": "",
+      "name_ptr": "$41:$6287",
+      "name_empty": true,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 225,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 226,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 227,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 228,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 229,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 230,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 231,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 232,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 233,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 234,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 235,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 236,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 237,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 238,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 239,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 240,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 241,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 242,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 243,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 244,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 245,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 246,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 247,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 248,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 249,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 250,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 251,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 252,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 253,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 254,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    },
+    {
+      "id": 255,
+      "name": "?????",
+      "name_ptr": "$41:$6288",
+      "name_empty": false,
+      "has_info_entry": false,
+      "status": "free"
+    }
+  ]
+}

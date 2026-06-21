@@ -5,6 +5,25 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-21 (Session 28 — Phase N kickoff: add-NEW-species scoping/RE.
+> No bytes changed, vanilla ROM untouched, integrity PASS 4/4. Pure RE + data tool —
+> nothing to playtest yet; N2 is the first ROM.)
+> **S28 — "add new monsters on top of the 221" scoped + slot map delivered.**
+> User goal: brand-new species (not reskins). Species id is a single byte → hard 256
+> ceiling; ids 215–219 are special (215 `TERRY?` one-off enemy; 216–219 Tatsu/Diago/
+> Samsi/Bazoo = summon-skill byproducts, user-confirmed), 220–223 empty/phantom, so the
+> **first free id is 224 (`$E0`), budget 32 (224–255)**. Architecture chosen: **high-table
+> + single forked loader, vanilla 0–220 byte-identical** — each per-species table has ONE
+> arithmetic indexer to fork (`if id < 224 → vanilla, else → free-bank high-table`).
+> Verified single indexers: monster info `$03:SaveMon_4446` (×43; all 16 consumers read
+> the `$DA33` copy), enemy stats `$14:LoadEnemyStats` (×25, **16-bit EID** → no 256 wall on
+> the battle side). The ceiling is NOT one clean gate: ~40 `cp $dd`/`cp $de` hits are
+> false positives (interrupt boilerplate + misassembled data); only 4 real top-range
+> special-case gates (`$5f/$57/$58/$52`) need the N6 "treats ≥224 as normal" check.
+> Deliverable: `tools/map_species_slots.py` + `extracted/species_slot_map.json` (256-slot
+> map, self-aborts on drift). Plan: ROADMAP "Phase N" (N1 done; N2 info-table fork is the
+> keystone next session); mechanics: MONSTER_DATA "Species ID geography".
+>
 > Last verified: 2026-06-21 (Session 27 — Phase D re-section: bank `$12` library/family
 > data **COMPLETE**. Labels-only, byte-perfect — clean build still `1ca6579…`, integrity
 > PASS 4/4. No behavioral change, nothing to playtest.)
@@ -464,6 +483,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | Primitive | Status | Where |
 |-----------|--------|-------|
+| Add NEW monster species (ids 224–255) | 🔬 scoped (S28), N1 done; N2+ open | ROADMAP "Phase N"; mechanics MONSTER_DATA "Species ID geography". Byte-id → 32-slot budget (first free 224). Architecture: high-table + single forked loader, vanilla 0–220 byte-identical. Tool `tools/map_species_slots.py` + `extracted/species_slot_map.json`. NOT yet implemented — N2 (info-table fork) is the first ROM. |
 | Custom rooms (mapID ≥ $6B), multi-screen, exits | ✅ working | patches/bank_060.asm + intercepts. Multi-screen scrolling proven (v28): vertical 2-screen Room $6B (screens 0+4). Room dimensions in $26DD bytes 2-5 control walkable area. |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
