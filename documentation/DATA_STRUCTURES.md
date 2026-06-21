@@ -410,9 +410,10 @@ Renderer: `tools/render_rooms.py`.
 ### Library / family-tab menu data (bank $12)
 
 The monster-library / family-tab menu lives in bank `$12`. mgbdis decoded its
-in-bank data tables as fake instructions; Session 26 re-sectioned them to labeled
-`db`/`dw` (`tools/resection_library_tables.py`, labels/comments only — build still
-`1ca6579…`). All addresses are ROM-verified.
+in-bank data tables as fake instructions; Session 26 re-sectioned the directly-
+referenced subset and **Session 27 finished the rest**, so the entire bank-`$12`
+data is now labeled `db`/`dw` (`tools/resection_library_tables.py`, labels/comments
+only — build still `1ca6579…`). All addresses are ROM-verified.
 
 **`LibraryFamilyTabBounds` @ `$6294` — 11 bytes.** Family id-range boundaries:
 `00 14 2d 46 5a 6e 82 9b af c8 d7` (= 0,20,45,70,90,110,130,155,175,200,215).
@@ -430,29 +431,43 @@ replacement) extended.
 (`wOPTN_and_Item_selection`) via `FuncItem_43e2` (`de = base + a*2`, reads a word);
 `$ffff` terminates. Two parallel copies for two menu states.
 
-**`LibWinLayout_*` — window-draw layout streams.** Reached by
-`ld de,<addr>; call ReadPtrFromDE`, then drawn by the loop at `$40c3`. Format:
-a 2-byte **dest-position word**, then a **tile-byte stream** where `$d8` =
+**`LibWinLayout_*` — window-draw layout streams.** A **contiguous packed run of
+29 layouts at `$710c..$7b9b`** (the bank's trailing free space begins at `$7b9b`).
+Reached by `ld de,<addr>; call ReadPtrFromDE`, then drawn by the loop at `$40c3`.
+Format: a 2-byte **dest-position word**, then a **tile-byte stream** where `$d8` =
 newline (advance dest by `$20`) and `$d9` = terminator (`cp $d9 / ret z`); every
 other byte is a literal tile written via `ld [hl+],a` (no multi-byte control
-codes). Named instances and lengths:
+codes). Every layout is now named `LibWinLayout_<addr>` and emitted as `db`/`dw`,
+so the editor can address any of them by label.
 
-| Label | Addr | Bytes |
-|-------|------|-------|
-| `LibWinLayout_710c` | `$710c` | 158 |
-| `LibWinLayout_71aa` | `$71aa` | 74 |
-| `LibWinLayout_71f4` | `$71f4` | 90 |
-| `LibWinLayout_759a` | `$759a` | 38 |
-| `LibWinLayout_7b42` | `$7b42` | 42 |
-| `LibWinLayout_7b6c` | `$7b6c` | 47 (last before bank-`$12` free space at `$7b9b`) |
+All 29 layouts are decoded to structured rows in
+`extracted/library_layouts.json` (generator: `resection_library_tables.py
+--dump-json`) — `{addr, pos, length, ld_de_ref, rows[]}` per layout. Of the 29,
+**7 are direct `ld de,$imm` entry points** (13 reference sites, all labelized):
+
+| Entry-point label | Addr | Bytes | Notes |
+|-------|------|------|------|
+| `LibWinLayout_724e` | `$724e` |  74 | std window border (`fa..fb`/`fc..fd`/`fe..ff`) |
+| `LibWinLayout_7768` | `$7768` | 101 | |
+| `LibWinLayout_77cd` | `$77cd` | 128 | |
+| `LibWinLayout_78ab` | `$78ab` |  37 | |
+| `LibWinLayout_78d0` | `$78d0` | 101 | |
+| `LibWinLayout_7935` | `$7935` | 145 | |
+| `LibWinLayout_79c6` | `$79c6` | 380 | full-screen 18×20 library main view; a *different* border tileset (`$01 $02..$03` top, `$04/$05` line markers). mgbdis had decorated it with fake `jr` labels (`$7a05/$7a4c/$7a7d/$7aae/$7aca`) — data bytes that look like jumps; both the `jr`s and their targets were inside the data and vanished together when the range became `db`. |
+
+The remaining 22 layouts are part of the same packed run (e.g. parallel
+sub-windows, panel variants). Their exact dispatch isn't fully traced — the `ld
+de` sites only ever hit the 7 entry points above; the others are reached by menu
+paths or relative draws not yet mapped — but all are byte-verified data and are
+labelized for editing regardless. (S26 had converted `$710c/$71aa/$71f4`, `$759a`,
+`$7b42/$7b6c`; S27 converted the two remaining contiguous gaps `$724e..$759a` and
+`$75c0..$7b42`.)
 
 **Not a data table — do not convert:** `$5605` (and similar `$6100`/`$6101`) are
 reached by `ld hl,<addr>; rst $10`, i.e. **far-call descriptors** (H=bank, L=entry;
-`$5605` → bank `$56` entry `$05`), NOT bank-`$12` data. The `$79c6` region is a
-layout reached via `ld de` but mgbdis decorated it with fake `jr` labels (data
-bytes that look like jumps); it was conservatively left for the bank-`$12`
-follow-up (ROADMAP Phase D). The general rule for finishing this bank: convert
-`ld de`+`ReadPtrFromDE` targets (data), leave `ld hl`+`rst $10` targets (far calls).
+`$5605` → bank `$56` entry `$05`), NOT bank-`$12` data — 21 such descriptors remain
+correctly raw. The general rule for this bank: convert `ld de`+`ReadPtrFromDE`
+targets (data), leave `ld hl`+`rst $10` targets (far calls).
 
 ---
 

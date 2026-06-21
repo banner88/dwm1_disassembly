@@ -336,5 +336,35 @@ SameBoy test: set a known flag, trigger opcode $00, observe whether it
 branches or falls through.
 
 ---
+
+## Gaps for authoring a NEW campaign (Session 27)
+
+Two of the campaign-authoring gaps live in this doc's domain. The full prioritized
+list (E1–E6) is in ROADMAP "Phase E — Campaign-scale subsystems"; these two are the
+story/arena keystones.
+
+### Arena / gate-boss ROSTER format — NOT yet decoded (ROADMAP E1)
+This document maps the progression **flags** (which arena class / gate unlocks what),
+but NOT the opponent **content**: the monster parties fought at each arena class (G→S)
+and at each gate-boss fight, with their levels/skills, and the bracket ordering.
+`boss_table.json` (`dump_boss_table.py`, the `$4897` table, 32 gates) covers gate
+bosses; the **arena-class brackets are unconfirmed** (they may be a separate table).
+A new campaign's challenge curve cannot be authored until this is reversed. Concrete
+next step: trace the **arena-lobby battle-setup path** — how the Arena Lobby script
+(scripts 0/6/7/10/11, which already gate on `$00F1`/`$0025`/`$0037`/`$001D`) selects
+the opponent party for the player's current rank — then decode the roster table format
+and add it to `boss_table.json` (or a new `arena_brackets.json`).
+
+### Story progression is described, but not yet AUTHORABLE (ROADMAP E2)
+The variables documented above (`$D9E3` counter 48→78, rank flags `$0030-$0037`,
+interlude gates `$001D`/`$0025`/`$00F1`) describe the **vanilla** flow. Authoring a
+**new** flow needs: (a) bank `$50` — the post-battle event state machine (ARCHITECTURE:
+11 states) — annotated; it is currently only ~43 of 648 labels named; and (b) the engine
+**evaluation opcodes `$CA8D` / `$D8E1` / `$FF92`** traced per-opcode (the "primary
+remaining work" noted in the footer below), so the editor can express "win X → set
+counter/flag → unlock Y" as data rather than hand-edited script. Until then, the editor
+can place rooms/NPCs/dialogue for a campaign but cannot define its progression spine.
+
+---
 *Compiled from branch-following script analysis + FAQ game knowledge.*
 *Engine evaluation opcodes are the primary remaining work for editor support.*

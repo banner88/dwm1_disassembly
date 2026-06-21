@@ -5,6 +5,31 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-21 (Session 27 — Phase D re-section: bank `$12` library/family
+> data **COMPLETE**. Labels-only, byte-perfect — clean build still `1ca6579…`, integrity
+> PASS 4/4. No behavioral change, nothing to playtest.)
+> **S27 — bank `$12` window-layout run finished (whole bank now editor-addressable).**
+> Extended `tools/resection_library_tables.py` to convert the **two remaining contiguous gaps**
+> in the menu window-draw layout run: `$724e..$759a` (10 layouts) and `$75c0..$7b42` (13 layouts).
+> Combined with S26, the entire contiguous run **`$710c..$7b9b` = 29 layouts** now reads as named
+> `db`/`dw` (`LibWinLayout_<addr>`), all 13 remaining `ld de,$imm` reference sites labelized (44
+> total across S26+S27). The 380-B `$79c6` full-screen library view (an 18×20 layout using a
+> *different* window-border tileset, `$01 $02..$03`/`$04`/`$05`) is converted — its mgbdis fake `jr`
+> labels (`$7a05`…`$7aca`) and their `jr` sources were all inside the data range and vanished
+> together (no dangling refs). The 21 `ld hl,$XXXX; rst $10` far-call descriptors (`$5605`/`$6100`/
+> `$6101`) correctly LEFT raw. New data deliverable `extracted/library_layouts.json` (29 layouts
+> decoded to rows; `--dump-json`). Tool is now per-table idempotent and re-runnable from the clean
+> tree (verified: clean-tree run reproduces byte-perfect build + identical 29-label set). Format +
+> per-layout table: DATA_STRUCTURES "Library / family-tab menu data (bank `$12`)"; ROADMAP Phase D
+> bank-`$12` item ticked complete. This closes the bank-`$12` re-section; the remaining Phase D work
+> is the stale-box verify-ticks (`$03`/`$14`/`$16`) and editor-driven banks (`$01`/`$50`/`$51`).
+> Also recorded (Session 27) a **"new campaign" gap analysis** — the campaign-scale subsystems
+> beyond editor v1 (arena/gate-boss roster format, story-progression authoring + bank-`$50`,
+> new-game init/save headroom, gate-network, intro/ending, text capacity) — in ROADMAP "Phase E",
+> with the two story/arena keystones detailed in SIDEQUEST_MAP "Gaps for authoring a NEW campaign".
+> The keystone RE gap is **E1 (arena/gate-boss roster format)** — the natural next Phase-D/E session.
+>
+
 > Last verified: 2026-06-21 (Session 26 — Phase D re-section: bank `$12` library/family
 > data tables converted to labeled `db`/`dw`. Labels-only, byte-perfect — clean build still
 > `1ca6579…`, integrity PASS 4/4. No behavioral change, nothing to playtest.)

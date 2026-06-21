@@ -474,24 +474,25 @@ Driven by what the editor must EDIT, not completionism:
       S14 labelization rule, KEY_LESSONS). Drive this by what the editor must EDIT,
       not completionism. *Accept:* targeted tables read as `db`/`dw` with names; MD5
       unchanged; the editor can address them by label.
-      **DONE so far (Session 26): bank `$12` library/family data tables.**
+      **DONE (Session 26 + Session 27): bank `$12` library/family data — COMPLETE.**
       `tools/resection_library_tables.py` converted `LibraryFamilyTabBounds` (`$6294`,
       the S18 case), the two tab-column cursor-position tables (`$564a`/`$5a8e`), and
-      the menu window-draw layout streams (`$710c`/`$71aa`/`$71f4`/`$759a`/`$7b42`/`$7b6c`),
-      and labelized 31 raw-pointer reference sites — clean build still `1ca6579…`,
-      integrity PASS 4/4. `$5605` was correctly LEFT (it's a far-call descriptor
-      `ld hl,$5605; rst $10` → bank `$56` entry `$05`, not `$12` data). Format +
-      addresses now in DATA_STRUCTURES "Library / family-tab menu data (bank `$12`)".
-      The tool uses a zero-byte probe-build to map source line → address (no opcode-size
-      summing — the S22 trap); re-runnable from the clean tree.
+      the **entire contiguous window-draw layout run `$710c..$7b9b` (29 layouts)**.
+      Session 26 did the directly-referenced subset (`$710c/$71aa/$71f4`/`$759a`/`$7b42`/`$7b6c`);
+      **Session 27 finished the two remaining contiguous gaps** (`$724e..$759a` = 10
+      layouts, `$75c0..$7b42` = 13 layouts), including the 380-B `$79c6` full-screen
+      view whose fake `jr` labels (`$7a05`…`$7aca`) vanished cleanly with their
+      in-range `jr` sources. 44 raw-pointer reference sites labelized in total; the 21
+      `ld hl,$XXXX; rst $10` far-call descriptors (`$5605`/`$6100`/`$6101`) correctly
+      LEFT raw. Clean build still `1ca6579…`, integrity PASS 4/4. All 29 layouts also
+      decoded to `extracted/library_layouts.json` (`--dump-json`). Format + addresses
+      in DATA_STRUCTURES "Library / family-tab menu data (bank `$12`)". The tool uses a
+      zero-byte probe-build to map source line → address (no opcode-size summing — the
+      S22 trap), is per-table idempotent, and is re-runnable from the clean tree
+      (verified: clean-tree run reproduces the byte-perfect build + identical 29-label set).
       **NEXT (per-session, one each):**
-      (1) **Finish bank `$12`** — ~30 more `ld de,$XXXX` refs into `$12` data are the
-          SAME window-layout format (`$724e $7768 $77cd $78ab $78d0 $7935 $79c6` …).
-          `$79c6` is reached via `ld de` (data draw-loop) so its mgbdis `jr` labels are
-          fake — convertible; it was conservatively skipped in S26. RULE for whoever
-          takes it: convert `ld de,$XXXX`+`ReadPtrFromDE` (data layouts) but LEAVE
-          `ld hl,$XXXX`+`rst $10` (far-call descriptors like `$5605`/`$6100`/`$6101` —
-          not `$12` data).
+      (1) ✅ **Finish bank `$12`** — DONE (Session 27, above). The whole `$710c..$7b9b`
+          run now reads as labeled `db`/`dw`; `$79c6` converted; far-call descriptors left.
       (2) **Tick the STALE BOXES below** — bank `$03`/`$14`/`$16` look already
           `db`-converted (`$14`/`$16` clean; `$03` has 23 `rst $38` runs to confirm as
           padding vs data). Cheap verify-and-check-off.
@@ -688,3 +689,89 @@ NPCs with flag-gated branching dialogue, an item + monster reward, a warp
 between two custom maps, a BGM change — clicks Build, plays it in SameBoy.
 Everything except encounters/custom-art is already proven at ROM level;
 the gap is formats and UI, not reverse engineering.
+
+---
+
+## Definition of a NEW CAMPAIGN (beyond editor v1) — Phase E gap analysis
+
+Editor v1 (above) deliberately scopes to rooms / NPCs / dialogue / items / warps /
+BGM — all proven at ROM level, so "the gap is formats and UI, not RE." **Fundamentally
+writing a NEW CAMPAIGN** (a new questline, a new challenge progression, a new world —
+not just editing the vanilla one) needs additional load-bearing subsystems that are
+currently under-addressed. This section is the Session 27 gap analysis: each item gives
+current state (grounded in the repo), why it is campaign-critical, where it is outlined
+(if at all), a confidence level, and the owning doc / next step.
+
+### Phase E — Campaign-scale subsystems (the "new campaign" gaps)
+Priority: **E1 and E2 are the keystones** (E1 is the one true remaining RE gap; E2 is
+the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
+
+- [ ] **E1 — Arena / gate-boss ROSTER data format. (The biggest unreversed gap.)**
+      DWM1's campaign *is* the arena-rank climb (G→S class) plus mandatory gate bosses;
+      the opponents you fight ARE the campaign's challenge content. The progression
+      *flags* are mapped (SIDEQUEST_MAP "Story Progression Overview"), but the **opponent
+      rosters are NOT decoded** — which monster parties appear at each arena class and at
+      each gate-boss fight, their levels/skills, and the bracket ordering. `boss_table.json`
+      (`dump_boss_table.py`, the `$4897` table, 32 gates) covers gate bosses; whether it
+      *also* encodes the arena-class tournament brackets is **unverified** (a roster-format
+      search across docs returned zero hits). A new campaign cannot define its own challenge
+      curve until this is reverse-engineered and made authorable (`project.json`: arena
+      class → opponent party; gate → boss party). *Confidence: HIGH this is a real RE gap.
+      Owning doc: SIDEQUEST_MAP (technical) + this item. Next step: trace the arena-lobby
+      battle-setup path (how the lobby picks the opponent party for the current rank) and
+      confirm/extend `boss_table.json` (or add `arena_brackets.json`).*
+
+- [ ] **E2 — Story progression as an AUTHORABLE model (incl. bank `$50` annotation).**
+      The mechanism is understood at flag level — story counter `$D9E3` (`$0240-$0247`,
+      driven 48→78 by boss-defeat scripts), arena rank flags `$0030-$0037` (`$D9A1`, set by
+      Arena Lobby script 0), and the mandatory gate interludes (BattleRex `$001D`, Durran
+      `$0025`, Starry Night `$00F1`) checked in priority order. But this is NOT a first-class
+      object in the Phase 2 `project.json` schema (which stops at scripts / dialogue / flags /
+      items / encounters). Two concrete blockers: **bank `$50`** (the post-battle event state
+      machine that advances story on a win — ARCHITECTURE: "$50 = Event state machine, 11
+      states, post-battle states") is **largely unannotated — 43 named labels of 648**; and
+      the engine **evaluation opcodes `$CA8D` / `$D8E1` / `$FF92`** still need per-opcode
+      tracing (already flagged in SIDEQUEST_MAP). Authoring a *new* questline requires modeling
+      "win condition → flag/counter set → unlock" as editable structure. *Confidence: HIGH
+      (grounded). Partially outlined as Phase D one-liners (`bank $50 event state machine`),
+      but never recognized as an editor subsystem. Owning doc: SIDEQUEST_MAP + Phase D bank-`$50` box.*
+
+- [ ] **E3 — New-game initialization + save-schema headroom.**
+      A new campaign sets its own starting party / items / flags / map position, and may add
+      story variables. The opening is script-traced (ROUTING.md, FIRST_5MIN_TRACE.md; intro
+      marker flag `$0000`), and Phase 0 audited the SRAM custom-flag range `$0158-$0277` as
+      persistent across save+reload. But (a) new-game INIT data is not an authorable object,
+      and (b) there is no headroom analysis for story state that would exceed the audited
+      custom range (the story counter + any new arena/quest variables). *Confidence:
+      MEDIUM-HIGH. Partially outlined (Phase 0 audit; Phase D save annotation), not
+      editor-facing. Owning doc: ARCHITECTURE / known_RAM_map for the schema; this item for
+      the editor-object + headroom work.*
+
+- [ ] **E4 — Overworld / gate-network structure at campaign scale.**
+      Custom rooms (mapID ≥ `$6B`, bank `$60`+) and individual warps are proven, but the
+      **gate-selection / world-hub network** as an authorable graph — which gates exist, their
+      unlock order, the gate-warp/selection menu, the GreatLog hub topology — is not specced
+      beyond the Phase 3 "world/warp map" UI line. A *new world* (vs. editing the vanilla gate
+      set) is the least-proven-at-scale piece. *Confidence: MEDIUM (rooms + warps proven; the
+      gate-network DATA MODEL is the unknown). Owning doc: CROSSBANK_ROOMS / map docs; this
+      item for the network-graph schema.*
+
+- [ ] **E5 — Title screen + ending / credits sequences.**
+      The opening cutscene is script-traced, but the title screen and the ending/credits
+      sequences are not covered. A complete new campaign needs its own bookends; these are
+      likely special-cased rendering paths that must be located. *Confidence: MEDIUM. Lower
+      priority (cosmetic bookends). Owning doc: a new subsection of CUSTOM_CUTSCENES /
+      DATA_STRUCTURES once found.*
+
+- [ ] **E6 — Text / script capacity at full-campaign scale.**
+      The dialogue compiler is specced (Phase 2: auto-wrap 18 ch, auto-DTE, page-split,
+      two-level table emission, multi-bank spill). What is NOT validated is total capacity for
+      a full new script across the four script banks (`$0C-$0F`) and the text banks — i.e. an
+      allocation/budget strategy so a campaign-length script *provably* fits. *Confidence:
+      MEDIUM. Mostly covered by Phase 2; flag capacity-planning as an explicit acceptance test.
+      Owning doc: TEXT_SYSTEM + Phase 2 `build_project.py` validations.*
+
+**Bottom line:** for editor v1 the RE is done and the gap is formats + UI. For a *new
+campaign*, **E1 (arena / gate-boss roster format) is the one true remaining
+reverse-engineering gap** and the natural next Phase-D/E session; **E2** is the authoring
+backbone; E3-E6 are schema / UI / capacity questions on top of largely-known mechanics.

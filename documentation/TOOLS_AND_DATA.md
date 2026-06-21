@@ -29,6 +29,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | monster_palettes.json | extract_monster_palettes.py | **NEW (Session 23, GFX-2).** All 221 per-species BATTLE palettes from `MonsterBattlePalettes` `$17:$62FD` (8 B/species, 4 RGB555 `[c0, c1=$6bff backdrop, c2, c3=$0000 black]`). Recolour via `build_sprite_swap.py --palette`. |
 | follower_layouts.json | extract_monster_follower_layouts.py | **REGENERATED & REPLACED Session 25 (GFX-4).** Now the COMPLETE **155 distinct follower layouts** decoded from the REAL species-indexed dispatch (`$10/$11:$407f`), incl. the 3-entry small/blob layouts the S24 brute-force scan dropped (old count 118). Per layout: six frames as `{dy,dx,tile,xflip}`, sharing classification, usage count, canonical `$10/$11` example level-2 addr. *(Supersedes the S24 `extract_follower_layouts.py` output; that tool is retained but its bank-`$05` example addrs are the ObjTest-viewer path, not the follower path.)* |
 | monster_follower_layouts.json | extract_monster_follower_layouts.py | **NEW (Session 25, GFX-4).** Every species (0–220) → `{bank, l1_index, l1_addr, l2_addr, attr_base, layout_id, sharing}`, traced through the real follower dispatch (`$ffc7=species+$10` → bank `$10`/`$11` `$407f` level-1 table). `--selftest` reproduces the Healer (sp9, sharing) + DarkDrium (sp214, non-sharing) anchors byte-for-byte and confirms all 215 collectible species map. |
+| library_layouts.json | resection_library_tables.py --dump-json | **NEW (Session 27, Phase D).** All **29** bank-`$12` monster-library / family-tab menu window-draw layouts (contiguous run `$710c..$7b9b`) decoded to `{addr, label, pos, length, ld_de_ref, rows[]}`. `$d8`=newline, `$d9`=terminator; rows are literal tile ids. 7 layouts are direct `ld de,$imm` entry points (`ld_de_ref:true`); incl. the 380-B `$79c6` 18×20 full-screen view. Same tool re-sections the asm (labels-only, build stays `1ca6579…`). |
 
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
 These are knowledge artifacts — human analysis in JSON form. No generator
@@ -145,6 +146,12 @@ front-end for follower/walking-sprite swaps) ·
 `resection_battle_gfx_table.py` (✅ new Session 22 — re-sections the misassembled battle
 gfx-ID table `$00:$2B9F` into `MonsterBattleGfxTable`; anchors between real `.sym` labels,
 emits exact ROM bytes, preserves 23 cross-refs; build stays `1ca6579…`; idempotent) ·
+`resection_library_tables.py` (✅ new Session 26, extended Session 27 — re-sections ALL bank-`$12`
+monster-library / family-tab menu data: `LibraryFamilyTabBounds` `$6294`, `LibTabColPos_564a/_5a8e`,
+and the entire contiguous window-draw layout run `$710c..$7b9b` (29 `LibWinLayout_<addr>` blocks).
+Maps source-line→address via a zero-byte probe-build read from the linker `.sym` (no opcode-size
+summing — the S22 trap); per-table idempotent; re-runnable from the clean tree. Labels/comments only,
+build stays `1ca6579…`. `--dump-json` writes `extracted/library_layouts.json`) ·
 
 > **Making a sprite swap PERMANENT (in the canonical patched build).** The S23 hand-off
 > left the patched build CLEAN — the clam swap is a reproducible example
