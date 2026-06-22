@@ -417,17 +417,18 @@ tables differently and NONE bounds-check. For a new id `N`, any table with
 fork the **reader** (byte-neutral) to resolve id≥`N` to valid data in free space —
 never clamp/gate to hide the miss. Verified status for id 224:
 
-| System | Table | Addr | Entries | id224 | Status (S29) |
+| System | Table | Addr | Entries | id224 | Status (S30) |
 |--------|-------|------|---------|-------|--------------|
-| Monster info | — | `$03:$4461` | 221 | overshoot | **forked** → bank `$6A` |
-| Enemy stats | — | `$14` | (16-bit EID) | overshoot | **forked** |
-| Wild encounters | — | `$01` | — | overshoot | **forked** |
-| Name | `MonsterNamePtrTable` | `$41:$4339` | **256** | OK | slot written ("Gorbunok") |
+| Monster info | — | `$03:$4461` | 221 | overshoot | **forked** (`SaveMon_4446`/`label443f`, zero-shift, id≥224 → bank `$6A` high table); tool `build_new_species.py` → `patches/bank_06a.asm` |
+| Enemy stats | — | `$14:$4C1D` | 487 | overshoot | **no fork needed** — EID is 16-bit, so a new entry placed in bank `$14` trailing free at EID×25+`$4C1D` is read directly. EID 518 → `$14:$7EB3`. tool `build_new_species.py` → `patches/bank_014.asm` |
+| Wild encounters | `EncounterPoolData` | `$01:$6AAE` | 128 pools×26 B | n/a | **same-size pool edit (NOT a fork)** — fill an empty slot (EID 0/wt 0) with the new species' EID(+10,×2)+weight(+20). Gorbunok → pool 0 slot 3 = EID 518 wt 1. tool `build_new_species.py` → `patches/bank_001.asm` (in-place, Iron-Rule-2 safe) |
+| Name | `MonsterNamePtrTable` | `$41:$4339` | **256** | OK | slot written ("Gorbunok" @ `$41:$7E46`); `patches/bank_041.asm` |
 | Detail line 1 (name) | mode-0 | `$4D:$400B` | **256** | OK | no change |
 | Detail line 2 (desc) | mode-1 | `$4D:$420B` | **215** | **overshoot→freeze** | **forked** `HighDetailTextFork`; id224→`$60BC` *(Dracky placeholder)* |
 | Breeding family recipe | `FamilyRecipeTable` | `$16:$4974` | **222** | overshoot | **forked** `FamilyRecipeResolve` → `$FF,$FF` (correct: wild-only) |
-| Battle sprite gfx | `MonsterBattleGfxTable` | — | — | slot exists | placeholder `$320F` (DarkDrium) — real art DEFERRED |
-| Library tab | `LibFamilyPtrTable` (custom) | `$12` | by family | — | id224 added to Slime tab |
+| Battle sprite gfx | `MonsterBattleGfxTable` | — | — | slot exists | placeholder `$320F` (DarkDrium) — real art DEFERRED (N4) |
+| Follower gfx (walking) | follower gfx-ID copies | `$01/$06/$07/$09/$0b/$12/$18/$59` | — | overshoot | **partially forked** — byte-neutral `FollowerArtResolve07/09/18` route id≥224 → interim Slime art (`$2f09`). 3 of 8 copies done; remaining 5 + real art DEFERRED (N4) |
+| Library tab | `LibFamilyPtrTable` (custom) | `$12` | by family | — | id224 listed under Slime; **tool-owned** — `build_library_table.py --new-species` reads `new_species.json` (family from clone+override) + moves the unseen-marker `$E0`→`$FE` (id 224 now a real species; see BREEDING_SYSTEM "Walker contract") |
 
 The text engine multiplies the risk: detail/name text uses the mode×species double
 indirection (`SaveBankAndSwitch $092F`; see TEXT_SYSTEM.md), and **each mode's

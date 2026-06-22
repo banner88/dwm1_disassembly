@@ -1,5 +1,5 @@
 {
-  "_generator": "tools/build_library_table.py; ROM 1ca6579359f21d8e27b446f865bf6b83; reassign spirit_family.json",
+  "_generator": "tools/build_library_table.py; ROM 1ca6579359f21d8e27b446f865bf6b83; reassign spirit_family.json; new_species new_species.json",
   "_note": "B7 production library family->members grouping. Collectible set ids 0..214 grouped by effective family byte (vanilla + reassignment). Special non-collectible entries 215..220 are PROTECTED and excluded.",
   "num_families": 11,
   "buffer_capacity": 32,
@@ -34,7 +34,8 @@
       16,
       17,
       18,
-      19
+      19,
+      224
     ],
     "1": [
       20,

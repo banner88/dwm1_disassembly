@@ -7937,7 +7937,7 @@ EncounterPoolData:
 ; --- Pool 0 ($6AAE): Gate of Beginning ---
 EncounterPool_000:
     db $03, $01, $07, $00, $00, $01, $01, $01, $06, $00  ; Header (+5 sel-weights now 1,1,1,6 -> Gorbunok ~70% for testing)
-    dw 2, 4, 3, 518, 0  ; EIDs: Slime, Dracky, Anteater, Gorbunok(518), (none)
+    dw 2, 4, 3, 518, 0  ; pool 0 EIDs (slot(s) 3 = new species)
     db 1, 1, 1, 1, 0  ; Weights
     db 8  ; Extra
 

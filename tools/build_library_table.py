@@ -71,6 +71,7 @@ ROM_PATH = os.path.join(REPO, "data", "DWM-original.gbc")
 DIS = os.path.join(REPO, "disassembly", "bank_012.asm")
 OUT = os.path.join(REPO, "patches", "bank_012.asm")
 GROUPING_JSON = os.path.join(REPO, "extracted", "library_grouping.json")
+NEW_SPECIES_JSON = os.path.join(REPO, "extracted", "new_species.json")
 ORIGINAL_MD5 = "1ca6579359f21d8e27b446f865bf6b83"
 
 # --- ROM-verified constants (grep/byte-checked, not doc-trusted) ---
@@ -83,6 +84,15 @@ VANILLA_BOUNDS = [0, 20, 45, 70, 90, 110, 130, 155, 175, 200, 215]  # $12:$6294
 COLLECTIBLE_MAX = 214            # last collectible species id; library lists ids 0..214.
                                  # EXTENSION: raise toward 255 when new collectible
                                  # monsters are added (species id is 1 byte → max 255).
+FIRST_FREE_ID = 224             # first NEW-species id ($E0); new_species.json ids start here.
+# Library "unseen" sentinel: written into a family slot whose member is not yet discovered,
+# so the encyclopedia renders it blank. Vanilla used $E0 (224) — safe only while 224 was an
+# empty slot. Phase N puts a REAL species at $E0 (Gorbunok), so $E0-as-"unseen" would
+# collide (undiscovered slots would show Gorbunok). The marker is moved to $FE (254): above
+# every new-species id (224..253 budget) and pointed at a blank name in bank $41 (MonsterName
+# id 254 -> $F0-only blank). $FF stays the buffer-fill blank. If new species ever reach 254,
+# raise this AND re-point that name slot.
+UNSEEN_MARKER = 0xFE
 SPECIES_ID_MAX = 255             # 1-byte species-id ceiling (hard architectural limit)
 NUM_FAMILIES = 11                # emitted tab count. B9: 11th family (Spirit) added.
 GRID_ROWS = 5                    # library tab grid rows (`ld b,$05`); cols = cells/rows.
@@ -183,8 +193,44 @@ def load_reassign(path):
         return json.load(f).get("reassignments", [])
 
 
-def effective_families(rom, reassign_path):
-    """vanilla family bytes with reassignment overrides applied (validated)."""
+def load_new_species(path):
+    """NEW species (ids >= FIRST_FREE_ID) authored in new_species.json -> {id: family}.
+
+    New species are NOT in the ROM info table, so their library family is read from
+    the authored info entry's effective family byte: the cloned base species' family
+    byte (vanilla ROM) with any `info.overrides.family` applied. This keeps the
+    library grouping tool-owned and reproducible (the prior hand-edit of $e0 into
+    LibFamily_00 was the defect this fixes)."""
+    if not path or not os.path.exists(path):
+        return {}
+    with open(path) as f:
+        spec = json.load(f)
+    rom = read_rom()
+    base = MONSTER_INFO_BANK * 0x4000 + (MONSTER_INFO_BASE - 0x4000)
+    out = {}
+    for sp in spec.get("species", []):
+        sid = sp["id"]
+        if sid < FIRST_FREE_ID:
+            sys.exit(f"ERROR: new_species id {sid} < FIRST_FREE_ID {FIRST_FREE_ID} "
+                     f"(would collide with vanilla/special slots).")
+        if sid > SPECIES_ID_MAX:
+            sys.exit(f"ERROR: new_species id {sid} > {SPECIES_ID_MAX} (1-byte ceiling).")
+        if sid == UNSEEN_MARKER:
+            sys.exit(f"ERROR: new_species id {sid} == UNSEEN_MARKER ${UNSEEN_MARKER:02X} "
+                     f"(library sentinel collision — raise UNSEEN_MARKER first).")
+        info = sp.get("info", {})
+        cf = info.get("clone_from_species")
+        fam = rom[base + cf * ENTRY_SIZE + 0] if cf is not None else None
+        fam = info.get("overrides", {}).get("family", fam)
+        if fam is None:
+            sys.exit(f"ERROR: new_species id {sid} has no family "
+                     f"(needs info.clone_from_species or info.overrides.family).")
+        out[sid] = fam
+    return out
+
+
+def effective_families(rom, reassign_path, new_species_path=None):
+    """vanilla family bytes + reassignment overrides + NEW species (validated)."""
     fam = vanilla_families(rom)
     for r in load_reassign(reassign_path):
         i = r["id"]
@@ -197,6 +243,10 @@ def effective_families(rom, reassign_path):
             sys.exit(f"ERROR: reassignment id {i} 'from'={r['from']} != vanilla "
                      f"family {fam[i]} (spec drift vs ROM).")
         fam[i] = r["to"]
+    for sid, f in load_new_species(new_species_path).items():
+        if sid in SPECIAL_ENTRIES:
+            sys.exit(f"ERROR: new_species id {sid} collides with PROTECTED entry.")
+        fam[sid] = f                  # ids >= 224, added on top of the 0..214 set
     return fam
 
 
@@ -251,7 +301,7 @@ def selftest(rom):
 # ----------------------------------------------------------------------------
 # The walker. Reads the precomputed table; no far-loads, no scratch RAM.
 # ----------------------------------------------------------------------------
-WALKER = """
+WALKER = f"""
 ; =============================================================================
 ; LibScanByFamily — B7 PRODUCTION monster-library tab populate.
 ; Replaces vanilla's id-range scan over LibraryFamilyTabBounds ($12:$6294) with a
@@ -261,7 +311,7 @@ WALKER = """
 ; In : flat family index F = wOPTN_and_Item_selection*5 + (wMenu_selection & $7F)
 ;        (the 2x5 tab grid -> 0..9). This formula is the ONLY 10-bound here; it is
 ;        the tab-GRID mapping and changes with the B9 11th-family UI, not the data.
-; Out: $C0D8.. buffer = one slot per family member ($E0 if unseen, species id if
+; Out: $C0D8.. buffer = one slot per family member (${UNSEEN_MARKER:02X} if unseen, species id if
 ;        seen — vanilla semantics: undiscovered monsters keep their blank slot).
 ;      $C8E9 = total slots (= member count), $C8E8 = seen count.
 ; Cost: one table walk, ROM0 helpers only. Zero far-loads, zero scratch RAM.
@@ -316,7 +366,7 @@ LibScanByFamily:
     inc b                              ; seen count++
     jr .next
 .unseen:
-    ld [hl], $e0                       ; unseen -> blank marker
+    ld [hl], ${UNSEEN_MARKER:02x}                       ; unseen -> blank marker (id ${UNSEEN_MARKER:02X}, blank name; NOT $E0 — that's Gorbunok now)
 .next:
     inc hl
     inc de
@@ -410,13 +460,13 @@ def find_routine(lines):
     sys.exit("ERROR: could not find end of SetItem_6242")
 
 
-def emit(reassign_path):
+def emit(reassign_path, new_species_path=None):
     rom = read_rom()
     import hashlib
     if hashlib.md5(rom).hexdigest() != ORIGINAL_MD5:
         sys.exit("ERROR: data/DWM-original.gbc is not the canonical ROM.")
 
-    fam = effective_families(rom, reassign_path)
+    fam = effective_families(rom, reassign_path, new_species_path)
     g, extra = group(fam)
     validate(g, extra)
 
@@ -471,12 +521,42 @@ def emit(reassign_path):
         print(f"  B9 nav grid: {n} sites `ld c,$0a` -> `ld c,${cells:02x}` "
               f"(3rd column has {cells % GRID_ROWS or GRID_ROWS} cell(s); cursor clamps at Spirit).")
 
+    # --- Unseen-marker comparison sites (only when the marker moved off $E0) ---
+    # The walker writes UNSEEN_MARKER into undiscovered library slots; two routines
+    # READ a slot and compare it against the marker (one to skip-select a blank slot
+    # -> Jump_012_639d, one a blank-test that returns Z). Vanilla compares `cp $e0`.
+    # When a new species occupies $E0 (Gorbunok), the marker is $FE, so these two
+    # reads must compare `cp $FE` too — otherwise a blank slot ($FE) is mistaken for a
+    # real monster, or the real $E0 monster is mistaken for blank. Both sites are read
+    # from the $C0D8 buffer (`ld a, [hl]` immediately precedes the `cp`); matched on
+    # their full unique context so the other ~47 `cp $e0` sites in the bank are
+    # untouched. Count-validated: exactly 2 expected.
+    if UNSEEN_MARKER != 0xE0:
+        cmp_sites = [
+            ("    ld a, [hl]\n    ld [$cac0], a\n    cp $e0\n    jp z, Jump_012_639d\n",
+             f"    ld a, [hl]\n    ld [$cac0], a\n    cp ${UNSEEN_MARKER:02x}"
+             f"   ; unseen-marker test (moved off $E0 = Gorbunok)\n    jp z, Jump_012_639d\n"),
+            ("    ld a, [hl]\n    cp $e0\n    ret\n",
+             f"    ld a, [hl]\n    cp ${UNSEEN_MARKER:02x}"
+             f"   ; unseen-marker test (moved off $E0 = Gorbunok)\n    ret\n"),
+        ]
+        for old_ctx, new_ctx in cmp_sites:
+            c = final.count(old_ctx)
+            if c != 1:
+                sys.exit(f"ERROR: unseen-marker compare site matched {c}x (expected 1). "
+                         f"bank_012 layout changed — re-audit before moving the marker.\n"
+                         f"  context: {old_ctx!r}")
+            final = final.replace(old_ctx, new_ctx)
+        print(f"  unseen marker: 2 compare sites `cp $e0` -> `cp ${UNSEEN_MARKER:02x}` "
+              f"(walker + reads consistent; $E0 freed for new species).")
+
     open(OUT, "w").write(final)
 
     # --- data deliverable ---
     grouping = {
         "_generator": f"tools/build_library_table.py; ROM {ORIGINAL_MD5}"
-                      + (f"; reassign {os.path.basename(reassign_path)}" if reassign_path else "; vanilla (no reassign)"),
+                      + (f"; reassign {os.path.basename(reassign_path)}" if reassign_path else "; vanilla (no reassign)")
+                      + (f"; new_species {os.path.basename(new_species_path)}" if new_species_path else ""),
         "_note": "B7 production library family->members grouping. Collectible set ids "
                  "0..%d grouped by effective family byte (vanilla + reassignment). "
                  "Special non-collectible entries 215..220 are PROTECTED and excluded."
@@ -535,12 +615,15 @@ def main():
     ap.add_argument("--emit", action="store_true")
     ap.add_argument("--reassign", default=None,
                     help="path to breeding_family_reassign.json (applies B6 overrides)")
+    ap.add_argument("--new-species", default=None,
+                    help="path to new_species.json (adds Phase N species ids >= 224 to "
+                         "their family group, so the library lists them reproducibly)")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
         selftest(read_rom())
     if a.emit:
-        emit(a.reassign)
+        emit(a.reassign, a.new_species)
     if not (a.emit or a.selftest):
         ap.print_help()
 

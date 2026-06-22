@@ -454,6 +454,18 @@ recipes are pure authoring.
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:
+- [ ] **Annotate the new-species fork SEAMS in clean disassembly (labels/comments
+      only, byte-perfect `1ca6579…`).** The "which site is the seam" knowledge currently
+      lives only in patches + MONSTER_DATA. Propagate it as comments at the clean anchors:
+      `bank_003 label443f`/`SaveMon_4446` (single info indexer; id≥224 fork point),
+      `bank_014 LoadEnemyStats` + the `$7EAD` trailing free run (16-bit EID → append, no
+      fork), `bank_001 EncounterPool_000` (slot = EID(+10,×2)/weight(+20); empty slot =
+      insertion point), and the **8 follower gfx-ID copies** (`$01 $06 $07 $09 $0b $12 $18
+      $59` — the mgbdis defaults `FieldPtrLookupTable`/`TextDataPtrLookup`/`TileRefLookupTable`
+      etc. don't reveal they're copies; rename/annotate so a swap knows to repoint all 8).
+      CAUTION: a mislabel that resolves to the wrong address passes review but glitches at
+      runtime (SESSION_PROTOCOL §4) — verify the build stays `1ca6579…` after each label.
+      *(Flagged S30, deferred from the two-defect-fix session — own scoped pass.)*
 - [ ] Bank $03 monster table → labeled `db` (gen_monster_db.py exists —
       verify generator, apply, MD5 must stay `1ca6579…`)
 - [ ] Bank $14 enemy stats + boss tables → `db`
@@ -791,18 +803,31 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
       ×25 with 16-bit EID); slot geography (215–219 special, 220–223 empty, 224–255
       free); the 4 real top-range gates vs ~40 false-positive `cp $dd` hits. No bytes
       changed; integrity PASS 4/4.
-- [ ] **N2 — Info-table fork (keystone).** Patch `SaveMon_4446`: id ≥ 224 → free-bank
-      high-table (pick a free `rst $10` bank; breeding used `$69`, sprites `$7E–$7F`).
-      Author one test species (43-B entry via a JSON tool). *Accept:* injected id 224
-      loads correct 43 bytes; clean build still `1ca6579…`; verified in SameBoy.
-- [ ] **N3 — Enemy-stats fork.** Fork `LoadEnemyStats` for new fight/join EIDs so the
-      new species is fightable at chosen levels (append past 487; EID space is 16-bit).
-- [ ] **N4 — Sprite + palette.** Repoint the **8** follower gfx-ID table copies
-      (`$01 $06 $07 $09 $0b $12 $18 $59`), battle palette (`$17` free region, e.g.
-      `$6C75`), follower layout/attr slot (256-wide, headroom). Reuse GFX-2/3/4 tooling.
-- [ ] **N5 — Name + joinability + breeding/library wiring.** Real name ptr+string in
-      `$41:$4339`; locate + mark joinable (joinability + boss table, per S18); breeding
-      (`build_breeding.py`) + library (`build_library_table.py`, already 256-id-aware).
+- [x] **N2 — Info-table fork (keystone). DONE (S29 impl, S30 verified + made reproducible).**
+      `SaveMon_4446`/`label443f` forked zero-shift (id ≥ 224 → bank `$6A` high table via
+      `ld hl,$6a00; rst $10`); `MonsterInfoTable` stays pinned at `$4461`, ids 0–220
+      byte-identical (only the 2 B6 family-byte reassigns differ). Authored by
+      `tools/build_new_species.py` (`extracted/new_species.json` → `patches/bank_06a.asm`),
+      byte-exact round-trip validated. Gorbunok (id 224 = Dracky info, family→Slime).
+      *Accept met:* id 224 loads correct 43 B; clean build `1ca6579…`; SameBoy-confirmed
+      (S30: caught, correct Slime-family stats).
+- [x] **N3 — Enemy-stats. DONE (no fork needed).** EID is 16-bit, so a new entry placed in
+      bank `$14` trailing free at EID×25+`$4C1D` is read by vanilla `LoadEnemyStats` with no
+      code change. EID 518 → `$14:$7EB3` (Slime EID 2 clone, monster_id→224). Tool
+      `build_new_species.py` → `patches/bank_014.asm`. SameBoy-confirmed (S30: fightable/
+      catchable). Wild-encounter wiring: same-size `EncounterPoolData` edit (pool 0 slot 3 =
+      EID 518 wt 1), tool-owned in `patches/bank_001.asm` (S30 — was a hand-edit before).
+- [~] **N4 — Sprite + palette. PARTIAL.** Follower: 3 of the **8** gfx-ID copies forked
+      byte-neutral (`FollowerArtResolve07/09/18`, id≥224 → interim Slime art `$2f09`);
+      remaining 5 copies (`$01 $06 $0b $12 $59`) + real art DEFERRED. Battle gfx: placeholder
+      `$320F` (DarkDrium). Battle palette (`$17` free region, e.g. `$6C75`) + follower
+      layout/attr slot not yet authored. Reuse GFX-2/3/4 tooling.
+- [~] **N5 — Name + joinability + breeding/library wiring. PARTIAL.** Name DONE (id 224 →
+      "Gorbunok" @ `$41:$7E46`). Library DONE + reproducible (`build_library_table.py
+      --new-species`; lists under Slime; unseen-marker moved `$E0`→`$FE`). Joinability:
+      enemy-stats joinability byte set via the EID 2 clone (recruitable); boss-table marking
+      not needed (wild-only). Breeding: wild-only today (recipe `$FF,$FF`); making Gorbunok
+      breedable (result/parent paths) still open.
 - [ ] **N6 — Verify top-range gates.** Confirm `bank_05f/057/058/052` treat ids ≥224
       as normal (the `$5f` ladder already routes ≥224 → keep). Patch any that don't.
 

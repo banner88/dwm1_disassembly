@@ -5,6 +5,30 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-22 (Session 30 — **Phase N audit + two reproducibility defects
+> fixed; user-playtested OK**. Gorbunok (id 224) caught in Gate of Beginning, lists under
+> Slime family, visualizable in library; custom rooms + encounters still good. Integrity
+> PASS 4/4, clean build `1ca6579…`, test ROM `DWM-newspecies-repro-v1.gbc` MD5 `c17c2840…`.)
+> **S30 — Phase N keystone verified; library + encounter made TOOL-OWNED (reproducible).**
+> Forensic re-audit of the "add new monsters part 2" commits: clean disassembly net-zero
+> change (the d84a43f/c4af28b comment add+remove cancel; nothing lost), N2 info-fork +
+> N3 enemy-stats verified byte-correct (info table pinned at `$4461`, ids 0–220 byte-
+> identical bar the 2 B6 reassigns; EID 518 @ `$14:$7EB3`). Two latent defects found and
+> fixed, both "patch works but not reproducible from its tool": **(1)** the library Gorbunok
+> entry + the unseen-marker move `$E0`→`$FE` (needed because `$E0` is now a real species)
+> were hand-edited — `build_library_table.py` now reads `new_species.json` and owns all
+> three marker sites (`ld [hl],$fe` + 2× `cp $fe`), count-validated, `--selftest` still
+> proves vanilla parity. **(2)** the wild-encounter insertion (pool 0 slot 3 = EID 518) was
+> hand-edited — `build_new_species.py` now emits it as a same-size in-place `EncounterPoolData`
+> edit (validates the target slot was empty in vanilla first; Iron-Rule-2 safe). NOTE: an
+> earlier audit claim that the encounter was "not applied" was MY error (searched the pool
+> for species id `$E0` instead of EID `518`); the encounter was correct, only un-reproducible.
+> Docs updated in place: BREEDING_SYSTEM (walker marker `$FE`), MONSTER_DATA (overshoot
+> registry: encounters are a pool edit not a fork, follower 3/8 partial, library tool-owned),
+> ROADMAP (N2/N3 ticked, N4/N5 partial, + a Phase-D follow-up to annotate the fork seams in
+> clean disassembly). Changed files: `tools/build_library_table.py`, `tools/build_new_species.py`,
+> `patches/bank_012.asm`, `patches/bank_001.asm`, `extracted/library_grouping.json` (+ docs).
+>
 > Last verified: 2026-06-22 (Session 29 — **encyclopedia DETAIL page FREEZE fixed**;
 > Gorbunok (id 224) detail now opens clean, integrity PASS 4/4, ROM
 > `DWM-Gorbunok-stage1ac-v16.gbc` MD5 `4d3d0d59…`. User-playtested: no freeze, no
@@ -505,7 +529,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | Primitive | Status | Where |
 |-----------|--------|-------|
-| Add NEW monster species (ids 224–255) | 🔬 scoped (S28), N1 done; N2+ open | ROADMAP "Phase N"; mechanics MONSTER_DATA "Species ID geography". Byte-id → 32-slot budget (first free 224). Architecture: high-table + single forked loader, vanilla 0–220 byte-identical. Tool `tools/map_species_slots.py` + `extracted/species_slot_map.json`. NOT yet implemented — N2 (info-table fork) is the first ROM. |
+| Add NEW monster species (ids 224–255) | 🟡 working POC (S30): id 224 Gorbunok playable | ROADMAP "Phase N"; mechanics MONSTER_DATA "Species ID geography". N1 scope ✅, N2 info-fork ✅ (`build_new_species.py`→`bank_06a`, `SaveMon_4446` zero-shift, vanilla 0–220 byte-identical), N3 enemy-stats ✅ (16-bit EID → no fork, EID 518 @ `$14:$7EB3`) + wild encounter ✅ (pool 0 slot 3, same-size `EncounterPoolData` edit in `bank_001`), name ✅ ("Gorbunok"), library ✅ (`build_library_table.py --new-species`, unseen-marker `$E0`→`$FE`). All tool-owned/reproducible. **Open:** N4 sprite/palette (3/8 follower copies done, art placeholder), N5 breeding (wild-only), N6 top-range gate re-check. User-playtested S30 (caught, Slime family, library OK). |
 | Custom rooms (mapID ≥ $6B), multi-screen, exits | ✅ working | patches/bank_060.asm + intercepts. Multi-screen scrolling proven (v28): vertical 2-screen Room $6B (screens 0+4). Room dimensions in $26DD bytes 2-5 control walkable area. |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |

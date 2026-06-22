@@ -459,16 +459,33 @@ flat-index formula (`wOPTN*5 + (wMenu_selection & $7F)`), which is the menu/UI's
 concern and changes with the B9 tab UI, not the data path.
 
 **Walker contract** (matches vanilla `SetItem_6242`): blanks the `$C0D8` buffer
-(`$20` bytes) to `$FF`; for each member writes `$E0` if its seen-bit (`$CA94`) is
-clear, else the species id; stores `$C8E9` = member count (total slots) and `$C8E8`
-= seen count. ROM0 helpers only (`FillNBytesWithRegA`, `TestBitInArray`). Capacity:
-the emitter guarantees every family ≤ buffer capacity (32), so no runtime overflow
-check is needed.
+(`$20` bytes) to `$FF`; for each member writes the **unseen-marker `$FE`** if its
+seen-bit (`$CA94`) is clear, else the species id; stores `$C8E9` = member count
+(total slots) and `$C8E8` = seen count. ROM0 helpers only (`FillNBytesWithRegA`,
+`TestBitInArray`). Capacity: the emitter guarantees every family ≤ buffer capacity
+(32), so no runtime overflow check is needed.
+
+> **Unseen-marker = `$FE`, not `$E0` (Phase N change).** Vanilla used `$E0` (224) as
+> the "not yet discovered" sentinel — safe only while id 224 was an empty slot. Adding
+> a real species at id 224 (Gorbunok) made `$E0` collide, so `build_library_table.py`
+> moves the marker to **`$FE`** (`UNSEEN_MARKER` constant; above the 224–253 new-species
+> budget, with a blank name at MonsterName id 254). The marker is written in ONE place
+> (the walker) and READ in two: `jr_012_6369` (skip-select a blank slot → `Jump_012_639d`)
+> and `LoadItem_6544` (blank-test, returns Z). The tool rewrites all three sites together
+> (`ld [hl],$fe` + 2× `cp $fe`), count-validated; if new species ever reach 254, raise
+> `UNSEEN_MARKER` and re-point the name slot. `$FF` stays the buffer-fill blank.
 
 **Source of truth (single):** family assignment = the vanilla family byte
 (`$03:$4461+$00`, raw 0..9) with `breeding_family_reassign.json` overrides applied —
 the SAME spec `patches/bank_003.asm` (B6) consumes. Library grouping and family
 bytes therefore stay in lock-step; `from` is validated == vanilla, exactly as B6.
+
+**New species (Phase N, ids ≥ 224):** they have no ROM info entry, so their library
+family comes from `new_species.json` (cloned base family + `info.overrides.family`).
+`build_library_table.py --new-species extracted/new_species.json` adds them to their
+family's member list (appended after the 0..214 ids), so the encyclopedia lists them
+reproducibly. This replaced an earlier hand-edit of `$e0` into the Slime list — the
+data is now tool-owned (Gorbunok, id 224 = `$e0`, lists under Slime).
 
 **Build-time validation:** `--selftest` proves the no-reassign grouping reproduces
 the vanilla bounds table exactly for ids 0..214 (parity); every family ≤ 32; all

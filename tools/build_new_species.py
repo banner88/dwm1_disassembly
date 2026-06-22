@@ -18,9 +18,10 @@ The bank_003 loader fork (zero-shift) that reaches this bank for id>=224 is a
 hand-applied patch in patches/bank_003.asm (see that file's N2 comment block);
 this tool only owns the GENERATED bank_06a.asm + the authored data.
 
-Enemy-stats placement, encounter-pool edits, name and battle gfx/palette are
-applied in their owning banks (see APPLY notes); their authored values live in
-new_species.json so this file stays the single source of truth.
+Enemy-stats placement (bank $14) and encounter-pool edits (bank $01, same-size
+in-place) are emitted here too. Name and battle gfx/palette are applied in their
+owning banks (see APPLY notes); their authored values live in new_species.json so
+this file stays the single source of truth.
 
 Usage:
     python3 tools/build_new_species.py            # emit bank_06a.asm + validate
@@ -37,6 +38,8 @@ SPEC_PATH = os.path.join(REPO, "extracted", "new_species.json")
 OUT_PATH = os.path.join(REPO, "patches", "bank_06a.asm")
 DIS_BANK14 = os.path.join(REPO, "disassembly", "bank_014.asm")
 OUT_BANK14 = os.path.join(REPO, "patches", "bank_014.asm")
+DIS_BANK01 = os.path.join(REPO, "disassembly", "bank_001.asm")
+OUT_BANK01 = os.path.join(REPO, "patches", "bank_001.asm")
 
 BANK_SIZE = 0x4000
 FIRST_FREE_ID = 224
@@ -184,6 +187,87 @@ def emit_bank14(rom, spec):
     return placements
 
 
+def emit_bank01_encounters(rom, spec):
+    """Apply each new species' encounter-pool insertions as SAME-SIZE in-place edits
+    to patches/bank_001.asm (Iron Rule 2: bank $01 admits same-size edits only — this
+    rewrites existing EID/weight bytes in a pool, inserting NO bytes).
+
+    Pool format (verified bank_001 $6AAE comment + ROM): 26 B/pool; +10 = 5x EID (dw,
+    LE); +20 = 5x weight (db). A new species fills an EMPTY slot (EID 0, weight 0) of a
+    chosen pool with its enemy-stats EID + weight. Edits the existing patch file (to
+    preserve the other bank-$01 POC forks); validates each target slot was empty in the
+    CLEAN ROM first, so the spec can't silently clobber a real encounter."""
+    edits = []   # (pool, slot, eid, weight, species_id)
+    for e in spec["species"]:
+        sid = e["id"]
+        eid = e.get("enemy_stats", {}).get("eid")
+        for enc in e.get("encounter", []):
+            pool, slot, w = enc["pool"], enc["slot"], enc.get("weight", 1)
+            if not (0 <= slot < 5):
+                sys.exit(f"ERROR: encounter slot {slot} out of range 0..4 (species {sid}).")
+            if eid is None:
+                sys.exit(f"ERROR: species {sid} has an encounter but no enemy_stats.eid.")
+            # validate the target slot is empty in the CLEAN ROM
+            base = flat(0x01, 0x6AAE) + pool * 26
+            cur_eid = rom[base + 10 + slot * 2] | (rom[base + 11 + slot * 2] << 8)
+            cur_w = rom[base + 20 + slot]
+            if cur_eid != 0 or cur_w != 0:
+                sys.exit(f"ERROR: pool {pool} slot {slot} is NOT empty in the vanilla ROM "
+                         f"(EID={cur_eid}, weight={cur_w}) — refusing to clobber a real "
+                         f"encounter (species {sid}).")
+            edits.append((pool, slot, eid, w, sid))
+    if not edits:
+        return []
+
+    # operate on the existing patch file if present (keeps other bank-$01 forks),
+    # else the clean disassembly.
+    base_file = OUT_BANK01 if os.path.exists(OUT_BANK01) else DIS_BANK01
+    lines = open(base_file).read().split("\n")
+
+    def find_pool_lines(pool):
+        label = f"EncounterPool_{pool:03d}:"
+        try:
+            li = next(i for i, l in enumerate(lines) if l.strip() == label)
+        except StopIteration:
+            sys.exit(f"ERROR: {label} not found in {os.path.basename(base_file)}.")
+        eid_i = next(i for i in range(li, li + 8) if lines[i].lstrip().startswith("dw "))
+        wt_i = next(i for i in range(eid_i, eid_i + 8)
+                    if lines[i].lstrip().startswith("db ") and "Weights" in lines[i])
+        return eid_i, wt_i
+
+    # group edits per pool so multiple slots in one pool compose
+    from collections import defaultdict
+    by_pool = defaultdict(list)
+    for pool, slot, eid, w, sid in edits:
+        by_pool[pool].append((slot, eid, w, sid))
+
+    for pool, slot_edits in by_pool.items():
+        eid_i, wt_i = find_pool_lines(pool)
+        # parse current 5 EIDs and 5 weights from the (possibly already-patched) lines
+        def vals(line):
+            body = line.split(";", 1)[0]
+            body = body.split(None, 1)[1]   # drop the dw/db mnemonic
+            return [int(x.strip(), 0) for x in body.split(",")]
+        eids = vals(lines[eid_i])
+        wts = vals(lines[wt_i])
+        names = ["(none)"] * 5
+        # keep any existing slot labels intact by re-deriving names from EIDs later
+        for slot, eid, w, sid in slot_edits:
+            eids[slot] = eid
+            wts[slot] = w
+            names[slot] = f"NEW{sid}"
+        lines[eid_i] = ("    dw " + ", ".join(str(x) for x in eids)
+                        + f"  ; pool {pool} EIDs (slot(s) "
+                        + ",".join(str(s[0]) for s in slot_edits)
+                        + " = new species)")
+        lines[wt_i] = "    db " + ", ".join(str(x) for x in wts) + "  ; Weights"
+
+    out = "\n".join(lines)
+    with open(OUT_BANK01, "w") as f:
+        f.write(out)
+    return edits
+
+
 def emit_asm(slots):
     lines = []
     A = lines.append
@@ -295,6 +379,11 @@ def main():
         print("WROTE %s" % os.path.relpath(OUT_BANK14, REPO))
         for addr, entry, sid, eid in placements:
             print(f"  enemy-stats species {sid} EID {eid} @ ${addr:04x}: {entry.hex(' ')}")
+    enc = emit_bank01_encounters(rom, spec)
+    if enc:
+        print("WROTE %s" % os.path.relpath(OUT_BANK01, REPO))
+        for pool, slot, eid, w, sid in enc:
+            print(f"  encounter species {sid}: pool {pool} slot {slot} = EID {eid} weight {w}")
     print("VALIDATE OK: round-trip clean.")
 
 
