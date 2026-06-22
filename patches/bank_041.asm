@@ -312,7 +312,7 @@ MonsterNamePtrTable:  ; $4339 — 256 entries, indexed by monster ID
     dw MonsterName_220_Unused_220  ; [221]
     dw MonsterName_220_Unused_220  ; [222]
     dw MonsterName_220_Unused_220  ; [223]
-    dw MonsterName_220_Unused_220  ; [224]
+    dw MonsterName_224_Gorbunok  ; [224]
     dw MonsterName_225_Unused_225  ; [225]
     dw MonsterName_225_Unused_225  ; [226]
     dw MonsterName_225_Unused_225  ; [227]
@@ -342,7 +342,7 @@ MonsterNamePtrTable:  ; $4339 — 256 entries, indexed by monster ID
     dw MonsterName_225_Unused_225  ; [251]
     dw MonsterName_225_Unused_225  ; [252]
     dw MonsterName_225_Unused_225  ; [253]
-    dw MonsterName_225_Unused_225  ; [254]
+    dw MonsterName_220_Unused_220  ; [254] reserved library unseen-marker -> blank name
     dw MonsterName_225_Unused_225  ; [255]
 
 SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
@@ -2618,7 +2618,9 @@ SpellUseText_11:
     db $19, $F0, $0A, $5B, $0C, $5B, $0E, $5B, $10, $5B, $12, $5B, $14, $5B, $16, $5B  ; $7E16 (B9 S28: Spirit lib icon = $19 whip)
     db $18, $5B, $1A, $5B, $1C, $5B, $16, $7E, $1E, $5B, $1E, $5B, $1E, $5B, $1E, $5B  ; $7E26
     db $1E, $5B, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E36
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E46
+MonsterName_224_Gorbunok:  ; $7E46 — Phase N new species
+    db $2a, $4c, $4f, $3f, $52, $4b, $4c, $48, $f0  ; "Gorbunok" literal (no DTE) + terminator
+    db $00, $00, $00, $00, $00, $00, $00  ; $7E4F (remaining fill)
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E56
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E66
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E76

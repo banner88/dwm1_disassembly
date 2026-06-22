@@ -1834,7 +1834,7 @@ GetActiveMonsterStatus:
     jr nz, jr_001_49a2
 
     ld hl, $caca
-    call ReadActiveMonsterByte
+    call ReadActiveMonsterByteSpeciesClamped
     add $10
 
 jr_001_49a2:
@@ -7936,9 +7936,9 @@ FloorBreakpointData:
 EncounterPoolData:
 ; --- Pool 0 ($6AAE): Gate of Beginning ---
 EncounterPool_000:
-    db $03, $01, $07, $00, $00, $03, $05, $02, $00, $00  ; Header
-    dw 2, 4, 3, 0, 0  ; EIDs: Slime, Dracky, Anteater, (none), (none)
-    db 1, 1, 1, 0, 0  ; Weights
+    db $03, $01, $07, $00, $00, $01, $01, $01, $06, $00  ; Header (+5 sel-weights now 1,1,1,6 -> Gorbunok ~70% for testing)
+    dw 2, 4, 3, 518, 0  ; EIDs: Slime, Dracky, Anteater, Gorbunok(518), (none)
+    db 1, 1, 1, 1, 0  ; Weights
     db 8  ; Extra
 
 ; --- Pool 1 ($6AC8): Gate of Villager ---
@@ -10283,13 +10283,14 @@ jr_001_7fd0:
     rst $38
     rst $38
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; --- Phase N: clamp species>=224 to a valid follower (placeholder until Stage 2) ---
+; Lives in bank $01 end-of-bank padding (same bank as caller). Reached via the
+; repointed species read in GetActiveMonsterStatus; species>=224 has no follower
+; gfx-ID entry yet, so borrow species 214 to avoid a garbage-gfxID decompress crash.
+ReadActiveMonsterByteSpeciesClamped:
+    call ReadActiveMonsterByte        ; A = active monster species (ReadActiveMonsterByte is ROM0)
+    cp $e0                            ; >= 224 (new species)?
+    ret c                             ; no -> real species
+    ld a, $d6                         ; yes -> clamp to species 214 (valid follower)
+    ret
     db $01

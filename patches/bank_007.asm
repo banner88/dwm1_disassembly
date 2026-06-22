@@ -6082,12 +6082,12 @@ SaveFld_66b1:
     ld l, a
     ld h, $00
     add hl, hl
-    ld a, l
-    add LOW(TileRefLookupTable)
-    ld l, a
-    ld a, h
-    adc HIGH(TileRefLookupTable)
-    ld h, a
+    call FollowerArtResolve07
+    nop
+    nop
+    nop
+    nop
+    nop
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -11260,33 +11260,26 @@ jr_007_7f75:
     rst $38
     rst $38
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+FollowerArtResolve07:
+    ld a, h
+    cp $02
+    jr nc, .high
+    cp $01
+    jr c, .normal
+    ld a, l
+    cp $e0
+    jr c, .normal
+.high:
+    ld hl, GorbunokFollowerGfxID07
+    ret
+.normal:
+    ld a, l
+    add LOW(TileRefLookupTable)
+    ld l, a
+    ld a, h
+    adc HIGH(TileRefLookupTable)
+    ld h, a
+    ret
+GorbunokFollowerGfxID07:
+    dw $2f09
     rlca

@@ -722,37 +722,43 @@ jr_003_4424:
 ; ANY families (incl. in/out of ??? / Boss=9) by a same-size family-byte edit.
 ; The library tab grouping is the ONE exception — it groups by id-range, not this
 ; byte (see SetItem_6242 in bank $12 + BREEDING_SYSTEM "Dynamic library").
+; ===========================================================================
+; N2 — Info-table FORK (Phase N: add new species ids >= 224).
+; Zero-shift, byte-perfect: this whole block occupies exactly the vanilla
+; 34 bytes ($443f..$4460), so MonsterInfoTable stays at $4461 and nothing
+; downstream shifts. For species id < 224 the behaviour is byte-for-byte the
+; vanilla copy from MonsterInfoTable ($4461 + id*43). For id >= 224 (first
+; free slot, $E0) it far-calls bank $6A entry 0 (NewSpeciesInfoCopy), which
+; copies the 43-byte entry from the free-bank high info-table into $DA33.
+; DE ($DA33) is preserved across the dispatch (rst $10 leaves DE alone; the
+; vanilla Mul8x8To16 also preserves DE, so the old push/pop is unnecessary
+; and frees the bytes the compare needs).  Sole caller: entry 1 ($4001+2)
+; via `dw label443f`; SaveMon_4446 had no external callers.
+;   Authored by tools/build_new_species.py (extracted/new_species.json).
+; ===========================================================================
 label443f:
-    ld de, $da33             ; destination = WRAM $DA33 (byte 0 = family)
-    call SaveMon_4446
-    ret
-
-
-; MonsterInfoCopy — Calculate table address and copy 43 bytes
-; Input: $DA31 = species ID, DE = destination
-; Calculates: $4461 + species_id × 43($2B)
-SaveMon_4446:
-    push de
-    ld a, [wTempSpeciesId]            ; species ID
+    ld de, $da33             ; dest = WRAM $DA33 (byte 0 = family); preserved below
+    ld a, [wTempSpeciesId]   ; $DA31 = species ID
+    cp $e0                   ; >= 224 ($E0)? -> new-species high table
+    jr nc, NewSpeciesInfoHigh
+SaveMon_4446:                ; vanilla low path (ids 0..220), behaviourally identical
     ld c, $2b                ; 43 = entry size
-    call Mul8x8To16       ; HL = species_id × 43
-    ld a, l
-    add LOW(MonsterInfoTable)   ; HL += MonsterInfoTable base address
-    ld l, a
-    ld a, h
-    adc HIGH(MonsterInfoTable)
-    ld h, a
-    pop de
+    call Mul8x8To16          ; HL = species_id * 43
+    ld bc, MonsterInfoTable  ; + base ($4461); BC is free after the multiply
+    add hl, bc
     ld b, $2b                ; copy 43 bytes
-
 jr_003_445a:
     ld a, [hl+]
     ld [de], a
     inc de
     dec b
     jr nz, jr_003_445a
-
     ret
+NewSpeciesInfoHigh:
+    ld hl, $6a00             ; bank $6A, entry 0 (NewSpeciesInfoCopy)
+    rst $10                  ; far-call: copies high-table entry -> $DA33
+    ret
+    nop                      ; pad: keep MonsterInfoTable pinned at $4461
 
 
 ; ---------------------------------------------------------------

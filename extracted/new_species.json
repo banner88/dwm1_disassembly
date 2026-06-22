@@ -1,0 +1,30 @@
+{
+  "_generator": "tools/build_new_species.py (ROM data/DWM-original.gbc)",
+  "_format": "Phase N (Stage 1) new-species authoring. Each entry: id>=224 (first free $E0), info cloned from a base species with field overrides; enemy-stats cloned from a base EID; encounter-pool insertions; battle sprite/palette. Tool emits patches/bank_06a.asm (high info table + far-copy routine) and validates a byte-exact round-trip against the authored values.",
+  "first_free_id": 224,
+  "high_bank": "0x6A",
+  "species": [
+    {
+      "id": 224,
+      "name": "Gorbunok",
+      "info": {
+        "clone_from_species": 78,
+        "overrides": { "family": 0 },
+        "_note": "Clone Dracky (sp78) info; family byte -> Slime (0)."
+      },
+      "enemy_stats": {
+        "eid": 518,
+        "clone_from_eid": 2,
+        "overrides": { "monster_id": 224 },
+        "_note": "Clone the Slime (EID2, lvl1, recruitable, Slime-family-appropriate); species byte -> 224. NOT a Dracky clone (Dracky is locally modified in this ROM). Placed at $14:$7EB3 (= EID 518 * 25 + $4C1D) in bank $14 trailing free space; vanilla LoadEnemyStats addresses it with no code fork."
+      },
+      "encounter": [
+        { "pool": 0, "slot": 3, "weight": 1, "_note": "Gate of Beginning pool 0; fill empty slot 3." }
+      ],
+      "battle_sprite": {
+        "source_sheet": "W.png (#22 merman, 48x48)",
+        "_note": "Battle gfx-ID + palette forked for ids>=224 in Milestone D."
+      }
+    }
+  ]
+}

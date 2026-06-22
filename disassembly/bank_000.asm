@@ -1002,11 +1002,6 @@ CheckScreenTransition:
     ret
 
 
-; CallTextEngine ($05B6) — entry for mode x species text rendering.
-;   mgbdis labels the prior routine's $05B5 `ret`; the REAL entry is here ($05B6).
-;   Caller passes de = a $4007-style MODE-TABLE base, NOT a text source. The actual
-;   source is resolved by SaveBankAndSwitch (below) via a two-level [mode][id] lookup.
-;   Docs: documentation/TEXT_SYSTEM.md, ENCYCLOPEDIA_DETAIL_FREEZE.md.
 CallTextEngine:
     push de
 
@@ -1747,16 +1742,6 @@ MultiplyHL_091F:
     ret
 
 
-; SaveBankAndSwitch ($092F) — resolves the real text source by DOUBLE INDIRECTION.
-;   $C824 = current ROMX bank (the render bank).
-;   de(in) = mode-table base (e.g. $4007 in bank $4D / $41).
-;   LEVEL 1: de = [ base + [$C822]*2 ]   ; pick a per-species ptr table by MODE  ($C822)
-;   LEVEL 2: de = [ de   + [$C823]*2 ]   ; index that table by SPECIES / id      ($C823)
-;   result -> $C82D/$C82E (final source). PER-MODE TABLES HAVE DIFFERENT ENTRY COUNTS
-;   and there is NO bounds check: a high id overshoots a short table and reads the
-;   following bytes as a pointer (caused the encyclopedia detail-page freeze when
-;   id 224 overshot the 215-entry description table into routine code -> $0609).
-;   Docs: TEXT_SYSTEM.md, ENCYCLOPEDIA_DETAIL_FREEZE.md, NEW_MONSTER_IMPACT.md.
 SaveBankAndSwitch:
     ld a, [$4000]
     push af

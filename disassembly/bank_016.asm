@@ -1503,9 +1503,7 @@ UnevolvedSkillMap:
     db $ff, $ff, $ff, $ff, $ff, $d5, $d6, $d7, $d8, $d9, $ff, $ff, $ff, $ff, $ff, $ff
     db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
     db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-FamilyRecipeTable:  ; $4974 — 222 entries x 2B (species 0-221); ends at SpecialRecipeTable ($4B30).
-    ; Indexed species*2 by label16_485c with NO bounds check; id>=222 overshoots ->
-    ; forked via FamilyRecipeResolve (patches/bank_016.asm) to return $FF,$FF. See BREEDING_SYSTEM.md.
+FamilyRecipeTable:
     db $f0, $f1, $f0, $f2, $f0, $f3, $f0, $f4, $f0, $f5, $f0, $f6, $f0, $f7, $f0, $f8
     db $ff, $ff, $f0, $5a, $f0, $2e, $f0, $c6, $f0, $bd, $f0, $33, $ff, $ff, $f0, $f9
     db $f0, $b9, $10, $10, $11, $11, $12, $12, $f1, $f0, $f1, $f2, $f1, $f3, $f1, $f4

@@ -5706,7 +5706,7 @@ jr_012_6369:
     ld h, a
     ld a, [hl]
     ld [$cac0], a
-    cp $e0
+    cp $fe
     jp z, Jump_012_639d
 
     ld a, $59
@@ -5978,7 +5978,7 @@ LoadItem_6544:
     adc h
     ld h, a
     ld a, [hl]
-    cp $e0
+    cp $fe
     ret
 
 
@@ -10634,7 +10634,7 @@ LibScanByFamily:
     inc b                              ; seen count++
     jr .next
 .unseen:
-    ld [hl], $e0                       ; unseen -> blank marker
+    ld [hl], $fe                       ; unseen -> reserved placeholder id (name "?????")
 .next:
     inc hl
     inc de
@@ -10668,10 +10668,9 @@ LibFamilyPtrTable:
     dw LibFamilyEmpty
     dw LibFamilyEmpty
     dw LibFamilyEmpty
-    dw LibFamilyEmpty
 
-LibFamily_00:  ; 20 members
-    db 20, $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f, $10, $11, $12, $13
+LibFamily_00:  ; 21 members (incl. Gorbunok $e0)
+    db 21, $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f, $10, $11, $12, $13, $e0
 LibFamily_01:  ; 25 members
     db 25, $14, $15, $16, $17, $18, $19, $1a, $1b, $1c, $1d, $1e, $1f, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $2a, $2b, $2c
 LibFamily_02:  ; 25 members

@@ -12,11 +12,9 @@ SECTION "ROM Bank $04d", ROMX[$4000], BANK[$4d]
     dw SetB4d_43b9                  ; Entry 0
     dw $43C0                          ; Entry 1
     dw $43C7                          ; Entry 2
-    ; ---- Entries 3-10 ALSO serve as the $4007 TEXT MODE-TABLE (read by
-    ;      SaveBankAndSwitch as [$4007 + mode*2]). See TEXT_SYSTEM.md. ----
-    dw $400B                          ; Entry 3 | mode0 = detail line1 name template (256 entries)
-    dw $420B                          ; Entry 4 | mode1 = detail line2 DESCRIPTION table — 215 entries (0-214); id>=215 OVERSHOOTS into routine code -> freeze (see ENCYCLOPEDIA_DETAIL_FREEZE.md; forked in patches/bank_04d.asm).
-    dw $43CE                          ; Entry 5 | mode2 (routine target, not per-species)
+    dw $400B                          ; Entry 3
+    dw $420B                          ; Entry 4
+    dw $43CE                          ; Entry 5
     dw $43E1                          ; Entry 6
     dw $43F4                          ; Entry 7
     dw $4407                          ; Entry 8
