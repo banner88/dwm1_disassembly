@@ -176,3 +176,72 @@ Located at `$56:$44CD` (after `sub $E0` / `rst $00` at `$44CB`).
 | $E7 | $4511 | $EF | $4640 | $F7 | $47B4 | $FF | $4855 |
 
 (Merged from SESSION2_CUSTOM_CONTENT.md, 2026-06-13.)
+
+---
+
+## Two-Level (Mode × Species) Text Source Selection — `SaveBankAndSwitch`
+
+Many per-entity text renders (monster detail lines, name slots, icon slot) do
+**not** pass a text source directly. They pass a **mode-table base** (`$4007` in
+the active text bank) and let `SaveBankAndSwitch` (`$00:$092F`) resolve the real
+source with two indexed reads:
+
+```
+$C824 = current ROMX bank             ; render bank
+de    = $4007                         ; mode-table base (passed in)
+de    = [ $4007 + [$C822]*2 ]          ; LEVEL 1: pick a per-species ptr table by MODE
+de    = [ de    + [$C823]*2 ]          ; LEVEL 2: index that table by SPECIES/id
+$C82D/$C82E = de                      ; final text source pointer
+```
+
+- Entry point is **`CallTextEngine` = `$00:$05B6`** (mgbdis mislabels the `$05B5`
+  `ret`; the real routine starts at `$05B6`).
+- HRAM: `$C822` = mode, `$C823` = species/id, `$C824` = render bank,
+  `$C82D/$C82E` = source.
+- Bank `$4D` (monster detail text) and bank `$41` (name/dispatch text) each have
+  their own `$4007` mode-table.
+
+**Bank `$4D` `$4007` = `dw $400b,$420b,$43ce,$43e1,$43f4,$4407,$441a,$442d`:**
+
+| Mode | Base | Use | Entries |
+|------|------|-----|---------|
+| 0 | `$400B` | detail line 1 — name template (`$F6` insert) | 256 |
+| 1 | `$420B` | detail line 2 — **per-species description** | **215** (0–214) |
+| 2–6 | `$43CE…` | small routine targets (not per-species tables) | n/a |
+| 7 | `$442D` | large blob | — |
+
+**Bank `$41` `$4007` mode bases line up with the named tables in `DATA_STRUCTURES.md`:**
+mode 5 → `MonsterNamePtrTable` (`$4339`, 256), mode 6 → `SkillNamePtrTable`
+(`$4539`, 256), mode 7 → `FamilyCodePtrTable` (`$4739`, **215**). Modes 0–4 are
+the fixed-size dispatch tables (misc/item/spell, etc.).
+
+### Worked example & trap — the encyclopedia detail-page freeze (Session 29)
+
+The per-mode tables have **different entry counts**, and there is **no bounds
+check** — a high species id overshoots any mode whose table is ≤ id and reads the
+following bytes as a pointer. This froze the new-species (id 224) detail page:
+
+- Detail line 2 (mode 1) source = `[ [$4009] + 224*2 ] = [$420B + $1C0] = [$43CB]`.
+- The mode-1 description table is only **215 entries** and ends exactly at `$43B9`
+  (where `SetB4d_43b9`'s code begins), so `$43CB` is **inside routine code** and
+  reads the bytes `09 06` = **`$0609`** (a ROM0 address). The VM then renders ROM0
+  *opcodes* as glyphs forever, `$C825` (text-busy) never clears, and
+  `WaitScreenUpdateDone` (`$060E→$065F→$0CE7`) spins → freeze. The `$0609`/`$0617`
+  in the crash dumps is exactly this overshoot value. (Line 1 / mode 0 is fine: its
+  name-template table is 256 entries.) Vanilla never hit it because ids 215–223
+  never open a detail page.
+
+**Fix (`patches/bank_04d.asm`, byte-neutral):** `SetB4d_43b9` (7 B) → `jp
+HighDetailTextFork` + 4 `nop`. The fork gates on id (`cp $E0`): id < 224 → vanilla
+`$4007`; id ≥ 224 → a custom mode-table whose mode-1 base = `HighLine2Ptrs - $1C0`
+so `[base + 224*2] = HighLine2Ptrs[0]`. Modes 0/2–7 keep vanilla bases. This is the
+project's standard "high-table + forked loader, vanilla byte-identical" pattern (see
+MONSTER_DATA.md "Species ID geography"). Every species-indexed table and its
+overshoot/fork status is catalogued in MONSTER_DATA.md.
+
+> **Caveat (POC vs fundamental):** the *mechanism* is fundamental, but `HighLine2Ptrs`
+> currently holds ONE entry (id 224 → `$60BC`, **Dracky's description as a
+> placeholder**). Each additional new species needs its own description pointer added
+> here, or it will overshoot the 1-entry high-table and freeze again. A bespoke
+> Gorbunok description string (font-glyph encoded like the name) is deferred; the
+> editor will generate these high-tables from a species definition.

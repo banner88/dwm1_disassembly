@@ -31,8 +31,37 @@
 Breeding is handled in **Bank $16**. The offspring determination function `Call_016_456e` (entry 2) executes three steps in priority order:
 
 1. **Special recipe table** at `$16:$4B30` — 825 entries × 5 bytes, checked FIRST
-2. **Family recipe table** at `$16:$4974` — 2-byte pair entries, checked SECOND
+2. **Family recipe table** at `$16:$4974` — **222 entries** × 2-byte pair, checked
+   SECOND (the table runs `$4974`–`$4B2F`, ending exactly where SpecialRecipeTable
+   begins at `$4B30`; species 0–221 only)
 3. **Fallback** — offspring = parent 1 (pedigree) species
+
+### New species and the recipe tables (id ≥ 222)
+
+`FamilyRecipeTable` is **222 entries**, so any species id ≥ 222 overshoots it. The
+encyclopedia detail's "how to breed this" lookup `label16_485c` (bank `$16`
+entry 1) does `FamilyRecipeTable + id*2` with **no bounds check** — for id 224 it
+read `$4B34` (inside `SpecialRecipeTable`) and showed bogus breeding parents.
+
+**Fix (current):** `label16_485c`'s 8-byte base-add block is byte-neutrally
+replaced by `call FamilyRecipeResolve` + `ds 5,$00`; the resolver (bank `$16` free
+space) returns a pointer to a static `$FF,$FF` ("no recipe") for id ≥ 222, else the
+normal `FamilyRecipeTable` slot. New species are therefore **wild-only** and
+correctly show no breeding recipe (same as vanilla unbreedable id 220).
+
+**Can new species be made breedable later? Yes.** Two independent directions:
+- *As a RESULT* (breed X+Y → new species): add an entry to `SpecialRecipeTable`.
+  This table **already grows past its 825 vanilla entries by appending** (the B3
+  mechanism, see below / `extracted/breeding_extra_recipes.json`), and the
+  result-species decode supports ids beyond the vanilla range. This is the clean
+  path and needs no in-place table edits.
+- *As a PARENT / shown in its own encyclopedia recipe* (breed new species + Z):
+  give id ≥ 222 a real `FamilyRecipeTable`-style pair instead of the `$FF,$FF`
+  sentinel — extend the `FamilyRecipeResolve` lookup (a small per-high-id table in
+  free space, same pattern as `HighLine2Ptrs` for the description). No shift risk.
+
+Neither is done yet (Gorbunok is intentionally wild-only for now), but both are
+straightforward given the resolver fork is already in place.
 
 A post-recipe **mutation system** (~1-5% RNG) at `$16:$44DA` can override the result.
 

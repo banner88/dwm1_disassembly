@@ -276,6 +276,19 @@ Palette format: 32 bytes raw GBC RGB555 → WRAM $C797+ (BG) via `Call_017_46a1`
 | Generator | | `tools/gen_name_tables_db.py`, `tools/gen_bank41_remaining_db.py --apply` | |
 
 All strings $F0 terminated. 222 valid entries (0-221); entries 222-255 point to empty.
+
+> **Per-species text via mode×species double indirection.** Bank `$4D` (detail) and
+> bank `$41` (above) each have a `$4007` mode-table read by `SaveBankAndSwitch`
+> (`$00:$092F`): source = `[ [$4007 + mode*2] + id*2 ]`. The per-mode tables have
+> DIFFERENT counts — bank `$4D` mode 0 (name) = 256, **mode 1 (description) = 215**;
+> bank `$41` mode 5 (name) = 256, mode 7 (`FamilyCodePtrTable`) = **215**. Short
+> tables overshoot for high ids (the detail-page freeze). See `TEXT_SYSTEM.md`,
+> `TEXT_SYSTEM.md`, `MONSTER_DATA.md` (Species ID geography).
+
+> **Breeding `FamilyRecipeTable`** (`$16:$4974`) is **222 entries** (0–221), ending
+> at `SpecialRecipeTable` (`$16:$4B30`). Reader `label16_485c` has no bounds check;
+> id ≥ 222 overshoots. Forked via `FamilyRecipeResolve` → `$FF,$FF` for new species.
+> See `BREEDING_SYSTEM.md`.
 Text encoding: `charmap.asm`. Control codes/DTE: `TEXT_SYSTEM.md`.
 
 **Personality index formula:** `id = idx(Charge)*9 + idx(Cautious)*3 + idx(Mixed)` where `idx(x) = 0 if x≥$C0, 1 if $40≤x<$C0, 2 if x<$40`.

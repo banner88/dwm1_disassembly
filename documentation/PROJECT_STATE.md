@@ -5,6 +5,28 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-22 (Session 29 — **encyclopedia DETAIL page FREEZE fixed**;
+> Gorbunok (id 224) detail now opens clean, integrity PASS 4/4, ROM
+> `DWM-Gorbunok-stage1ac-v16.gbc` MD5 `4d3d0d59…`. User-playtested: no freeze, no
+> glitches; entry mirrors Dracky.)
+> **S29 — detail-page freeze root-caused and fixed; recipe overshoot fixed.**
+> Root cause: monster detail text uses a **mode×species double indirection** in
+> `SaveBankAndSwitch` (`$00:$092F`) — source = `[ [$4007 + mode*2] + id*2 ]`. The
+> line-2 **description** table (`$4D:$420B`) is only **215 entries** and ends at
+> routine code, so id 224 read `[$43CB]=$0609` (ROM0 code) and the text VM rendered
+> code as glyphs forever → `WaitScreenUpdateDone` spin. Fixed by a byte-neutral fork
+> of `SetB4d_43b9` → `HighDetailTextFork` (custom mode-table; id≥224 line-2 →
+> `$60BC`, Dracky's description as placeholder). Separately, the breeding-recipe
+> lookup `label16_485c` indexed the **222-entry** `FamilyRecipeTable` unchecked
+> (id 224 → bogus parents); forked via `FamilyRecipeResolve` → `$FF,$FF` (no recipe,
+> correct for wild-only). New patch file `patches/bank_04d.asm` (registered in
+> `PATCH_FILES`). The "material icon"/"stale Healer info" were render-abort artifacts
+> and cleared with the freeze. New docs: `TEXT_SYSTEM.md`,
+> `MONSTER_DATA.md` (Species ID geography) (species-indexed-table overshoot checklist); mechanism in
+> `TEXT_SYSTEM.md`; recipe/new-breeding path in `BREEDING_SYSTEM.md`; lessons in
+> `KEY_LESSONS.md`. **Deferred:** custom Gorbunok sprite/art and a custom (non-Dracky)
+> description string. Vanilla 0–220 byte-identical; clean build still `1ca6579`.
+>
 > Last verified: 2026-06-21 (Session 28 — Phase N kickoff: add-NEW-species scoping/RE.
 > No bytes changed, vanilla ROM untouched, integrity PASS 4/4. Pure RE + data tool —
 > nothing to playtest yet; N2 is the first ROM.)

@@ -407,3 +407,35 @@ inside the info entry, not by species).
 (skill-fn range near SkillFunctionTable). The ~40 OTHER `cp $dd`/`cp $de` hits
 repo-wide are FALSE POSITIVES — replicated interrupt boilerplate
 (`rst $28/ei/ret c/cp $dd/ldh [rIE]`) and misassembled data in high banks.
+
+### Species-indexed table overshoot registry (the new-monster checklist)
+
+**There is no global "monster count":** different systems size their per-species
+tables differently and NONE bounds-check. For a new id `N`, any table with
+`entries ≤ N` overshoots (`base + N*stride` reads whatever follows). Two remedies:
+(1) if the table already has a slot for `N` (≥256-wide), just write it; (2) else
+fork the **reader** (byte-neutral) to resolve id≥`N` to valid data in free space —
+never clamp/gate to hide the miss. Verified status for id 224:
+
+| System | Table | Addr | Entries | id224 | Status (S29) |
+|--------|-------|------|---------|-------|--------------|
+| Monster info | — | `$03:$4461` | 221 | overshoot | **forked** → bank `$6A` |
+| Enemy stats | — | `$14` | (16-bit EID) | overshoot | **forked** |
+| Wild encounters | — | `$01` | — | overshoot | **forked** |
+| Name | `MonsterNamePtrTable` | `$41:$4339` | **256** | OK | slot written ("Gorbunok") |
+| Detail line 1 (name) | mode-0 | `$4D:$400B` | **256** | OK | no change |
+| Detail line 2 (desc) | mode-1 | `$4D:$420B` | **215** | **overshoot→freeze** | **forked** `HighDetailTextFork`; id224→`$60BC` *(Dracky placeholder)* |
+| Breeding family recipe | `FamilyRecipeTable` | `$16:$4974` | **222** | overshoot | **forked** `FamilyRecipeResolve` → `$FF,$FF` (correct: wild-only) |
+| Battle sprite gfx | `MonsterBattleGfxTable` | — | — | slot exists | placeholder `$320F` (DarkDrium) — real art DEFERRED |
+| Library tab | `LibFamilyPtrTable` (custom) | `$12` | by family | — | id224 added to Slime tab |
+
+The text engine multiplies the risk: detail/name text uses the mode×species double
+indirection (`SaveBankAndSwitch $092F`; see TEXT_SYSTEM.md), and **each mode's
+per-species table has its own count** (bank `$4D` mode0=256, mode1=**215**; bank
+`$41` mode5=256, mode7 `FamilyCodePtrTable`=**215**). A new screen rendering a new
+species through a *different* mode must re-check that mode's size.
+
+**Not yet exercised for new species (check when touched):** status/party text via a
+`$4D`/`$41` mode other than 0/1/5; breeding *as a result* (`SpecialRecipeTable`,
+grows by append — BREEDING_SYSTEM.md); per-species skill/family-name text; save
+round-trip at the new id range.

@@ -32,10 +32,10 @@ DOCS = os.path.join(REPO, "documentation")
 PATCH_FILES = [
     "bank_000.asm", "bank_001.asm", "bank_003.asm", "bank_004.asm",
     "bank_006.asm", "bank_007.asm", "bank_00b.asm", "bank_012.asm",
-    "bank_016.asm", "bank_017.asm", "bank_036.asm", "bank_041.asm", "bank_04f.asm",
+    "bank_014.asm", "bank_016.asm", "bank_017.asm", "bank_018.asm", "bank_009.asm", "bank_036.asm", "bank_041.asm", "bank_04d.asm", "bank_04f.asm",
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm"]  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm"]  # don't exist in clean disassembly/
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

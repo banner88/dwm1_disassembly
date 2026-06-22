@@ -1091,3 +1091,48 @@ construction and uses both side walk frames. The user's DOWN/SIDE/UP × a/b fram
 **Rule:** when art and layout are separate, slice the art to the layout you're assigning, not to a
 tool's hardcoded template — and verify with an engine-accurate render (tiles + layout + OBJ palette)
 before building the ROM.
+
+---
+
+## New-Monster / Encyclopedia Detail Freeze (Gorbunok id 224, 2026-06-22)
+
+### Per-species table entry counts VARY — there is no global "monster count"
+The biggest structural lesson. Different systems size their per-species tables
+differently (monster info 221, FamilyRecipeTable 222, detail-description 215,
+name 256, FamilyCode 215, …). There is **no runtime bounds check** anywhere: every
+reader does `base + id*stride` blind. A high new id silently overshoots any table
+shorter than the id and reads whatever follows. **Before wiring a new species into
+any system, look up that system's table size** — see `MONSTER_DATA.md` (Species ID geography).
+**Rule:** treat every `base + id*stride` as a potential overshoot; verify the count.
+
+### Text source is a mode×species double indirection, not a direct pointer
+`SaveBankAndSwitch` (`$00:$092F`) resolves the text source as
+`[ [$4007 + mode*2] + species*2 ]`. Assuming `de=$4007` was the source (it is the
+*mode-table base*) wasted time. When a render's source looks like garbage, trace
+**both** indirections and check which mode's table you landed in and its size.
+**Rule:** for `$4007`-based text, the source = mode-table[mode] then [..][species].
+
+### Overshoot into CODE reads opcodes as a pointer → renders code as glyphs → spin
+The description table ended exactly at routine code; id 224's slot was *inside*
+`SetB4d_43b9`, so the "pointer" was the opcode bytes `09 06` = `$0609`. The text VM
+then rendered ROM0 code as text endlessly and the screen-update wait spun. The
+freeze address `$0609`/`$0617` in the crash dump **was** the overshoot value — match
+dump pointers against table-plus-index arithmetic early.
+
+### Cosmetic glitches downstream of a freeze are usually abort artifacts
+The "material" family icon and stale "Healer" info were **not** separate bugs — the
+page froze mid-draw so later refreshes never ran. They vanished when the freeze was
+fixed. **Rule:** fix the hang first; don't chase secondary visual oddities that sit
+*after* the hang in the draw order until the hang is gone.
+
+### Fix shape that keeps working: byte-neutral reader fork → free-space resolver
+Every fix this session followed the proven pattern: replace the reader's index
+math in place with `call Resolver` + `ds`-pad (same length), and put the
+species-gated logic in trailing free space, padding the bank with `ds $8000-@,$00`.
+Diff vs the prior ROM must show only the intended regions + header checksum.
+
+### Build hygiene: copy generated banks with a plain shell loop
+The recurring build break was `bank_064/067/069/06a.asm` not reaching
+`disassembly/` because a Python one-liner that imported `PATCH_FILES` errored on
+`__file__`. **Rule:** copy the patch + generated banks with a hardcoded bash `for`
+loop (or `cp patches/*.asm disassembly/`), never an `exec`-of-the-verify-script.

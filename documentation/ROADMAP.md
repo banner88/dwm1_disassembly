@@ -805,3 +805,25 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
       (`build_breeding.py`) + library (`build_library_table.py`, already 256-id-aware).
 - [ ] **N6 — Verify top-range gates.** Confirm `bank_05f/057/058/052` treat ids ≥224
       as normal (the `$5f` ladder already routes ≥224 → keep). Patch any that don't.
+
+> **S29 progress (stage1ac / Gorbunok id 224 track).** The **encyclopedia DETAIL page
+> freeze** — the last blocker for the new-species *display* feature set — is FIXED
+> (`TEXT_SYSTEM.md`): the text engine's mode×species double indirection
+> (`SaveBankAndSwitch $092F`) overshot the 215-entry line-2 description table at
+> `$4D:$420B`. Forked via `HighDetailTextFork` (`patches/bank_04d.asm`). Also fixed the
+> independent 222-entry `FamilyRecipeTable` overshoot (`FamilyRecipeResolve`,
+> `patches/bank_016.asm`). Detail page user-confirmed clean (mirrors Dracky), ROM
+> `DWM-Gorbunok-stage1ac-v16.gbc`. Every species-indexed table and its overshoot status
+> is now catalogued in `MONSTER_DATA.md` (Species ID geography).
+>
+> **Next steps / deferred (next session):**
+> 1. **Custom Gorbunok sprite + palette** (the N4 work) — currently a DarkDrium
+>    placeholder (`MonsterBattleGfxTable[224]=$320F`); follower sprite also deferred.
+> 2. **Bespoke Gorbunok description string** — line 2 currently reuses Dracky's
+>    (`$60BC`) as a valid placeholder; author a real string (needs font-glyph encoding
+>    like the name) and point `HighLine2Ptrs[0]` at it.
+> 3. **Optional: make Gorbunok breedable** — wild-only today (recipe = `$FF,$FF`); both
+>    the result-path (`SpecialRecipeTable` append) and parent-path (extend
+>    `FamilyRecipeResolve`) are documented in `BREEDING_SYSTEM.md`.
+> 4. **Re-check N4/N5/N6 formal acceptance** against the stage1ac implementation and
+>    tick the boxes whose acceptance tests are now met.
