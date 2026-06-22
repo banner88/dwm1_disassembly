@@ -1136,3 +1136,29 @@ The recurring build break was `bank_064/067/069/06a.asm` not reaching
 `disassembly/` because a Python one-liner that imported `PATCH_FILES` errored on
 `__file__`. **Rule:** copy the patch + generated banks with a hardcoded bash `for`
 loop (or `cp patches/*.asm disassembly/`), never an `exec`-of-the-verify-script.
+
+### A table-index overshoot can inject a hardware FLIP, not just wrong data
+New-species follower (id 224): the per-species attr read `[$412d + (species-$80)]` overshot
+its 87-entry table into live layout data at `$418d = $41`. That ONE garbage byte produced TWO
+"separate" cosmetic bugs at once — **bit6 ($40) = OBJ Y-flip** (every tile rendered upside-down
+in place) and **low3 = 1 = green palette**. The OAM builder (`SaveScr_40cd`) does
+`attr = [$ffca] XOR entry_attr`, so any flip bit in the overshoot byte flips the whole sprite.
+**Rule:** when an overshoot is in play, "upside-down/mirrored sprite" and "wrong palette" are
+often the SAME root cause — decode the stray byte's bits before treating them as independent
+problems. The clean fix is to fork the READ (supply a correct attr), not to pre-flip the art
+(which only cancels the symptom and silently couples art orientation to a garbage byte).
+
+### Static byte-tracing can "prove" a fix that the emulator disproves — use a numbered-tile ROM
+The overworld follower stayed wrong across several builds while every byte I checked (clamp,
+fork, overflow pointer, layout index, engine dy-sign) said it should be right. The gap was a
+prior-session placeholder clamp that I'd verified as "narrowed" but whose EFFECT I'd mis-modeled,
+plus the attr overshoot the static read never surfaced. **Rule:** after 2 builds that "should
+work" but don't, stop re-deriving and ship a calibration ROM (follower tiles replaced by glyphs
+0–F). Reading back which digits land where, and whether they're flipped, collapses "is the art
+loading?" vs "is the layout/flip wrong?" into one decisive user report.
+
+### Bank $10 and bank $11 follower tables are NOT at twin addresses
+Long-standing doc error: attr table listed as `$10/$11:$417f`. Real: bank `$10` = `$417f`
+(128 entries) but bank `$11` = `$412d` (87 entries), because bank `$11`'s level-1 pointer table
+is shorter so its attr table packs lower. Any "covers 0–255 symmetrically" assumption about the
+follower tables is wrong — bank `$11` only has rows for species 128–214, so 215+ overshoot.

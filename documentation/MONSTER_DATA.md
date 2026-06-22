@@ -296,9 +296,14 @@ via bank `$04` entry 2 (`NPCInteractDispatch`), routed by `$ffc7` magnitude: `$1
   render path — the ObjTest monster viewer — whose `$407f`-style table happens to share layout
   signatures; the real follower path is `$10`/`$11`. Verified by reproducing the Healer + DarkDrium
   anchors byte-for-byte through `$10`/`$11`.)*
-- **Per-species attr/palette table = `$10:$417f` / `$11:$417f`** — 128 bytes, ORed into `$ffca` by
-  `HramScr2_406e`; low 3 bits select one of the 8 OBJ palettes (`$17:$5615`). This is the follower
-  palette knob.
+- **Per-species attr/palette table** — read by `HramScr2_406e`/`HramUnk11_406e` as
+  `[base + adjusted-$ffc7]` and **OR-ed into `$ffca`**. The base DIFFERS per bank because the
+  level-1 pointer table length differs: **bank `$10` = `$417f`** (128 entries, species 0–127, after
+  the 256-byte pointer table `$407f`–`$417e`); **bank `$11` = `$412d`** (only **87** entries, species
+  128–214, after the shorter 174-byte pointer table `$407f`–`$412c`). *(Pre-this-fix docs wrongly listed
+  `$417f` for both — bank `$11`'s real attr base is `$412d`; the level-2 layout tables then start at
+  `$11:$4184`.)* **Attr byte bits: bit6 (`$40`) = OBJ Y-flip, bit5 (`$20`) = OBJ X-flip, low 3 bits =
+  one of the 8 OBJ palettes (`$17:$5615`).** This is the follower palette **and** flip knob.
 - `tools/extract_monster_follower_layouts.py` walks these tables → `extracted/monster_follower_layouts.json`
   (every species → `bank, l1_index, l1_addr, l2_addr, attr_base, layout_id, sharing`) and regenerates
   the complete `follower_layouts.json` (**155 layouts**, not the old 118 — the S24 brute-force scan
@@ -307,9 +312,38 @@ via bank `$04` entry 2 (`NPCInteractDispatch`), routed by `$ffc7` magnitude: `$1
 **Follower-art table has EIGHT copies (Session 25).** The per-species follower gfx-ID table is
 duplicated once per UI context: overworld `ScreenTransDataTable` (`$01:$49DF`, indexed `species+$10`)
 plus copies in banks `$06 $07 $09 $0b $12`(library) `$18`(menu/`TextDataPtrLookup` `$4123`, indexed
-`species`) `$59`. The layout (`$407f`) and attr (`$417f`) tables are single/shared. A complete
+`species`) `$59`. The layout (`$407f`) and attr (`$10:$417f` / `$11:$412d`) tables are single/shared. A complete
 follower-art swap must repoint the species in **all eight** copies — GFX-3 repointed only `$01`,
 which is why a swapped monster kept its old art in the menu/library.
+
+**NEW species (id ≥ 215) followers — overshoot is the whole problem (`tools/build_new_species_follower.py`,
+user-confirmed v7).** A brand-new species like Gorbunok (224) has no row in ANY of these tables, and
+`species-$80 = 96` overshoots every bank-`$11` table (87 real entries, indices 0–86 = species 128–214).
+Three independent overshoots, each handled:
+- **gfx-ID (art):** the 8 art-table readers are *forked* — patch the 8-byte add-base (`7D C6 lo 6F 7C CE hi 67`)
+  to `call <resolver>` that returns `HL=&GidWord` ($7e00 overflow stream) for id ≥ threshold, else the
+  normal add-base. All eight contexts (overworld + menu + library + …) must be forked or that screen
+  shows stale/overshoot art.
+- **overworld art loader = `GetActiveMonsterStatus` (`$01:$4986`)** — loads the 3 party followers' art to
+  VRAM tiles `$20/$30/$40` and returns `$ffc7=species+$10` into `$ca91/$ca92/$ca93`. A prior placeholder
+  patch (`ReadActiveMonsterByteSpeciesClamped`) clamped species ≥ 224 → 214 *before* this read to dodge a
+  garbage-gfx crash; that silently defeated the `$01` fork (overworld always showed DarkDrium). Fix: narrow
+  the clamp to ≥ 225 (`cp $e0` → `cp $e1`).
+- **layout level-1:** write the species' `$11:$407f + (species-$80)*2` slot (e.g. `$413f` for 224) to a
+  clean layout-0 level-2 table (Armorpion's `$4184` is the proven layout-0 — its DOWN-a is `0,1,2,3` at
+  `TL,TR,BL,BR` with no flips, matching `pack_png_layout0`). This write lands in the attr-table/early-layout
+  region and is part of the overshoot, not a free slot.
+- **attr (palette + FLIP) — the subtle one:** `HramUnk11_406e` reads `[$412d + (species-$80)]`; for 224 that
+  is `$418d`, **inside Armorpion's level-2 layout**, where the byte is `$41`. That single garbage byte caused
+  BOTH cosmetic bugs: **bit6 (`$40`) = the OBJ Y-flip bit** → every follower tile rendered upside-down in
+  place (head stays top/tail stays bottom, but each tile mirrored — the OAM builder `SaveScr_40cd` does
+  `attr = [$ffca] XOR entry_attr`, so a Y-flip in the base attr flips all tiles); and **low 3 bits = 1 →
+  OBJ palette 1 = green.** `$418d` is live Armorpion data and cannot be written, so the attr READ is forked:
+  redirect `HramUnk11_406e` (`$11:$406e` → free `$11:$792d`) so id 224 gets a clean attr
+  (`[$ffca] = ([$ffca] & $98) | palette`, no flip, chosen palette). With a clean attr the art is stored
+  un-flipped and renders upright in the correct palette. *(Lesson: an index that overshoots a table doesn't
+  just give wrong data — if the stray byte's bit6/bit5 are set it injects a hardware flip, so "upside-down
+  sprite" and "wrong palette" can be the same root cause.)*
 
 **Reassignment primitive (`tools/build_follower_reassign.py`).** To restyle a monster's follower:
 (1) repoint its level-1 entry (`$10`/`$11:$407f + idx*2`) to a clean non-sharing layout's level-2
@@ -395,18 +429,29 @@ else → free-bank high-table indexed (id−224)`. Verified single indexers:
 | Enemy stats | `$14:$4C1D` | 25 B | `$14:LoadEnemyStats` | EID is **16-bit** (`$DA12`/`$DA13` → `Mul16x8To24`) → no 256 wall on the battle side; new fight/join entries can append past 487. |
 
 **Tables with headroom (no fork — just populate the slot):** name ptrs `$41:$4339`
-(256-wide), follower layout/attr dispatch `$10`/`$11:$407f`/`$417f` (128+128 = covers 0–255).
+(256-wide), follower layout/attr dispatch `$10:$407f`/`$417f` (128 entries) + `$11:$407f`/`$412d` (87 entries).
 **Shared (no per-species work):** growth curves `$13` (selected by a curve index stored
 inside the info entry, not by species).
 
-**N6 — top-range special-case gates to verify treat ≥224 as normal** (NOT a clean
-`MAX_SPECIES` ceiling — they special-case the 215–223 cluster):
-`bank_05f.asm ~1680` ($d5/$d6/$da/$dd/$de/$df/$e0 ladder, clears 6 B @ `$DA82`;
-≥224 → keep/normal), `bank_057.asm ~5773` (battle attacker, special-cases id 221),
-`bank_058.asm ~658` (equality on 217/221 → load `$5203`), `bank_052.asm ~3510`
-(skill-fn range near SkillFunctionTable). The ~40 OTHER `cp $dd`/`cp $de` hits
-repo-wide are FALSE POSITIVES — replicated interrupt boilerplate
-(`rst $28/ei/ret c/cp $dd/ldh [rIE]`) and misassembled data in high banks.
+**N6 — RESOLVED (S31): the 4 "top-range gates" are NOT species gates.** The S28
+slot-map hand-decoded four `cp`-ladder sites and flagged them for N6 to confirm they
+treat species ≥224 as normal. Confirmed by tracing the operand: **all four read
+`$db8a`, and `$db8a` holds a battle skill/effect/animation id — never a species id.**
+It is written ONLY from constants and skill-table lookups (`ld a,$2f` / `$3a` / `$01`
+/ `$00` etc.), never from a monster's species byte. So a new SPECIES id 224 cannot
+flow into any of them; they are false positives for the new-monster checklist and
+need **no patch**. Detail per site:
+- `bank_05f.asm ~1680` — `$d5/$d6/$da/$dd/$de/$df/$e0` ladder on `$db8a` (effect id),
+  clears 6 B @ `$DA82`; ladder ends `cp $e0/jr c/ret`, so any value ≥`$e0` falls
+  through to `ret` (already safe even if it *were* reachable).
+- `bank_057.asm ~5773` — `cp $dd/ret nz` on `$db8a`; a battle-effect special-case.
+- `bank_058.asm ~658` (`SaveBtlFX_43ff`) — equality on `$db8a` (217/221) → load
+  `$5203`; effect-animation dispatch.
+- `bank_052.asm ~3510` — `$db8a` bucketed into the skill engine (`SkillFunctionTable`
+  @ `$4011`); `ld a,$1b` is a skill-fn index, not a species.
+The ~40 OTHER `cp $dd`/`cp $de` hits repo-wide are also FALSE POSITIVES — replicated
+interrupt boilerplate (`rst $28/ei/ret c/cp $dd/ldh [rIE]`) and misassembled data in
+high banks. **Net: Phase N needs no species-gate patch.** (See DOC_AUDIT.md.)
 
 ### Species-indexed table overshoot registry (the new-monster checklist)
 

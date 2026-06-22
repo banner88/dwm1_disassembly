@@ -1821,6 +1821,13 @@ jr_001_4947:
     ret
 
 
+; Overworld WALKING-follower art loader (called 3x: party slots 0/1/2 via $cac0).
+; For each slot: reads species at $caca, +$10, indexes ScreenTransDataTable -> gfx-ID, DMAs the
+; 16-tile art to VRAM tiles $20/$30/$40, and returns $ffc7=species+$10 (stored to $ca91/92/93 by
+; the caller; the metasprite engine reads tile base $ffc9=$20/$30/$40 and sprite-type $ffc7 from
+; these). NOTE for NEW species (id>=215): the patches/ build inserts a species clamp before the
+; $caca read (ReadActiveMonsterByteSpeciesClamped); narrow it to >=225 or the new species' overworld
+; art falls back to species 214. See MONSTER_DATA.md "NEW species followers".
 GetActiveMonsterStatus:
     ld hl, $cac1
     call ReadActiveMonsterByte

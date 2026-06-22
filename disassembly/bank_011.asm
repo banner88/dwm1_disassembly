@@ -93,6 +93,17 @@ jr_011_4069:
     ret
 
 
+; Per-species follower ATTR/palette read (bank $11, species 128+).
+; attr = [$412d + adjusted-$ffc7]  (adjusted-$ffc7 = species-$80, set by bank-$04 dispatch)
+; then OR-ed into $ffca (the base OAM attribute the metasprite engine XORs per tile).
+; Table = 87 entries ($412d..$4183, species 128..214); level-2 layout tables start at $4184.
+; ATTR BYTE BITS: bit6 ($40)=OBJ Y-flip, bit5 ($20)=OBJ X-flip, low3=OBJ palette (-> $17:$5615).
+; NOTE: bank $10's twin (HramScr2_406e) uses base $417f (128 entries); the two bases differ only
+;   because bank $11's level-1 pointer table is shorter (87 vs 128), so its attr table packs lower.
+; OVERSHOOT WARNING: a NEW species (id>=215) makes (species-$80) index past entry 86 into live
+;   layout data — e.g. id 224 reads $418d = $41, whose bit6 injects a stray Y-FLIP (upside-down
+;   tiles) and whose low3=1 picks the green palette. New-species followers must FORK this read to
+;   supply a clean attr (see tools/build_new_species_follower.py; MONSTER_DATA.md follower section).
 HramUnk11_406e:
     ldh a, [$c7]
     ld hl, $412d

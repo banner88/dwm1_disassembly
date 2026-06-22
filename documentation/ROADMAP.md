@@ -465,7 +465,10 @@ Driven by what the editor must EDIT, not completionism:
       etc. don't reveal they're copies; rename/annotate so a swap knows to repoint all 8).
       CAUTION: a mislabel that resolves to the wrong address passes review but glitches at
       runtime (SESSION_PROTOCOL §4) — verify the build stays `1ca6579…` after each label.
-      *(Flagged S30, deferred from the two-defect-fix session — own scoped pass.)*
+      *(Flagged S30, deferred from the two-defect-fix session — own scoped pass. PARTIAL: the
+      follower render seams `bank_011 HramUnk11_406e` (attr read + overshoot) and `bank_001
+      GetActiveMonsterStatus` (overworld walk loader + clamp) annotated when N4 was finished —
+      build still `1ca6579…`. The 8 gfx-ID copies + bank_003/014/001 seams still pending.)*
 - [ ] Bank $03 monster table → labeled `db` (gen_monster_db.py exists —
       verify generator, apply, MD5 must stay `1ca6579…`)
 - [ ] Bank $14 enemy stats + boss tables → `db`
@@ -656,7 +659,7 @@ disassembly and check them off.
   menu + library.*
   **Delivered:**
   - Level-1 layout tables LOCATED at fixed `$10:$407f` (species 0–127) / `$11:$407f` (species 128+),
-    indexed by species; per-species attr/palette table at `$10/$11:$417f`. (`[$caca]` is the SPECIES,
+    indexed by species; per-species attr/palette table at `$10:$417f` / `$11:$412d` (bit6=Y-flip, bit5=X-flip, low3=OBJ palette). (`[$caca]` is the SPECIES,
     not a "sprite-class" byte; bank `$05` is the ObjTest viewer path, not the follower path — both
     pre-GFX-4 doc errors, corrected.)
   - `tools/extract_monster_follower_layouts.py` + `extracted/monster_follower_layouts.json` (every
@@ -801,8 +804,9 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
       + `extracted/species_slot_map.json` (256-slot map, self-checking). Verified:
       single indexers (info `$03:SaveMon_4446` ×43, enemy-stats `$14:LoadEnemyStats`
       ×25 with 16-bit EID); slot geography (215–219 special, 220–223 empty, 224–255
-      free); the 4 real top-range gates vs ~40 false-positive `cp $dd` hits. No bytes
-      changed; integrity PASS 4/4.
+      free); the 4 hand-decoded top-range `cp`-ladder sites (flagged for N6 — since
+      RESOLVED as `$db8a` skill/effect gates, NOT species gates) vs ~40 false-positive
+      `cp $dd` hits. No bytes changed; integrity PASS 4/4.
 - [x] **N2 — Info-table fork (keystone). DONE (S29 impl, S30 verified + made reproducible).**
       `SaveMon_4446`/`label443f` forked zero-shift (id ≥ 224 → bank `$6A` high table via
       `ld hl,$6a00; rst $10`); `MonsterInfoTable` stays pinned at `$4461`, ids 0–220
@@ -817,19 +821,34 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
       `build_new_species.py` → `patches/bank_014.asm`. SameBoy-confirmed (S30: fightable/
       catchable). Wild-encounter wiring: same-size `EncounterPoolData` edit (pool 0 slot 3 =
       EID 518 wt 1), tool-owned in `patches/bank_001.asm` (S30 — was a hand-edit before).
-- [~] **N4 — Sprite + palette. PARTIAL.** Follower: 3 of the **8** gfx-ID copies forked
-      byte-neutral (`FollowerArtResolve07/09/18`, id≥224 → interim Slime art `$2f09`);
-      remaining 5 copies (`$01 $06 $0b $12 $59`) + real art DEFERRED. Battle gfx: placeholder
-      `$320F` (DarkDrium). Battle palette (`$17` free region, e.g. `$6C75`) + follower
-      layout/attr slot not yet authored. Reuse GFX-2/3/4 tooling.
+- [x] **N4 — Sprite + palette. DONE (user-confirmed v7).** Tool
+      `tools/build_new_species_follower.py` builds a standalone test ROM (patches/ untouched,
+      clean build stays byte-perfect) giving id 224 a real follower + battle sprite + palettes:
+      • **Follower art:** all **8** gfx-ID copies forked byte-neutral to a real overflow stream
+        (`$7e00`); the overworld loader `GetActiveMonsterStatus` ($01) clamp narrowed `cp $e0`→`cp $e1`
+        so id 224 reaches the fork (the placeholder clamp had pinned it to DarkDrium).
+      • **Follower layout:** level-1 slot `$11:$413f` → Armorpion's layout-0 level-2 `$4184` (proven
+        upright, matches `pack_png_layout0`).
+      • **Follower attr (palette + flip):** the per-species attr read (`HramUnk11_406e`) overshoots its
+        87-entry table into live layout data at `$418d=$41` — bit6 was a stray **Y-flip** (upside-down
+        tiles) and low3=1 the **green** palette. Forked the read (`$11:$406e`→`$792d`) to hand id 224 a
+        clean attr (no flip, OBJ palette 2 = blue). Both cosmetic bugs were this one overshoot byte.
+      • **Battle:** gfx `$00:$2d5f` `$320f`→`$7e01`; palette reader `label17_41d0` forked (resolver
+        `$17:$6ce0`) to a custom blue palette. (Full mechanism: MONSTER_DATA.md "NEW species followers".)
+      Remaining follow-up: port the binary forks/clamp/layout/attr/battle from the tool into proper
+      `patches/*.asm` (+ add new banks to verify_integrity PATCH lists) when a canonical build is wanted.
 - [~] **N5 — Name + joinability + breeding/library wiring. PARTIAL.** Name DONE (id 224 →
       "Gorbunok" @ `$41:$7E46`). Library DONE + reproducible (`build_library_table.py
       --new-species`; lists under Slime; unseen-marker moved `$E0`→`$FE`). Joinability:
       enemy-stats joinability byte set via the EID 2 clone (recruitable); boss-table marking
       not needed (wild-only). Breeding: wild-only today (recipe `$FF,$FF`); making Gorbunok
       breedable (result/parent paths) still open.
-- [ ] **N6 — Verify top-range gates.** Confirm `bank_05f/057/058/052` treat ids ≥224
-      as normal (the `$5f` ladder already routes ≥224 → keep). Patch any that don't.
+- [x] **N6 — Top-range gates verified (DONE, S31): NOT species gates → no patch.**
+      `bank_05f/057/058/052` all branch on `$db8a`, which is a battle skill/effect/
+      animation id (written only from constants + skill tables), never a species byte.
+      A new species 224 cannot reach them, so they were false positives in the S28
+      slot-map. Phase N requires no species-gate patch. (Detail in MONSTER_DATA.md
+      "Species ID geography" → N6; DOC_AUDIT.md.)
 
 > **S29 progress (stage1ac / Gorbunok id 224 track).** The **encyclopedia DETAIL page
 > freeze** — the last blocker for the new-species *display* feature set — is FIXED
