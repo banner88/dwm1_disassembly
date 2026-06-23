@@ -837,12 +837,39 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
         `$17:$6ce0`) to a custom blue palette. (Full mechanism: MONSTER_DATA.md "NEW species followers".)
       Remaining follow-up: port the binary forks/clamp/layout/attr/battle from the tool into proper
       `patches/*.asm` (+ add new banks to verify_integrity PATCH lists) when a canonical build is wanted.
-- [~] **N5 — Name + joinability + breeding/library wiring. PARTIAL.** Name DONE (id 224 →
-      "Gorbunok" @ `$41:$7E46`). Library DONE + reproducible (`build_library_table.py
-      --new-species`; lists under Slime; unseen-marker moved `$E0`→`$FE`). Joinability:
-      enemy-stats joinability byte set via the EID 2 clone (recruitable); boss-table marking
-      not needed (wild-only). Breeding: wild-only today (recipe `$FF,$FF`); making Gorbunok
-      breedable (result/parent paths) still open.
+- [x] **N5 — Name + joinability + breeding/library wiring. DONE (S32, user-tested).** Name
+      DONE ("Gorbunok" @ `$41:$7E46`). Library DONE + reproducible. Joinability via EID 2 clone.
+      **Breeding now DONE — all three paths, user-confirmed:**
+      - **Result-path:** Snaily(4) × BattleRex(42) → Gorbunok, a verified-free cross (no special,
+        no family default) appended in `extracted/breeding_special.json`. `build_breeding.py`
+        extended to admit a declared new-species id (>220) as a recipe result. Bank `$69`.
+      - **Parent-path:** works with zero new code — breeding loads parent family via the forked
+        `$0301` loader, so Gorbunok resolves to its Slime family `$F0`. Verified by simulation +
+        user playtest (Funkybird×Gorbunok→Picky, Dran×Gorbunok→DragonKid, Gorbunok×Funkybird→
+        Healer, AntEater×Gorbunok→Tonguella, Gorbunok×AntEater→SpotSlime).
+      - **Display-path:** `FamilyRecipeResolve` (`patches/bank_016.asm`) returns the parent pair
+        `db $04,$2a` so the encyclopedia shows the Snaily+BattleRex icons.
+      - **Hatch:** crashed on the first build — bank `$0b` follower-gfx copy overshot for id 224
+        (user pinned via SameBoy breakpoint `$0b:$48ac`). Fixed with `FollowerArtResolve0b`
+        (`patches/bank_00b.asm`), same byte-neutral pattern as `$07/$09/$18`.
+      - **Default-nickname / "take X with you" narration:** both used the 2-letter `FamilyCode`
+        short-name table (`$4739`, 215 entries) which overshot for id 224 into `ItemName[9]` =
+        "SkyBell". Fixed via `LoadModeBaseRedirect` (16 bytes in the `$00F0` ROM0 padding,
+        `patches/bank_000.asm`): mode-7 lookups for id≥224 redirect to a new-species SHORT-name
+        entry (first 4 letters, "Gorb") at bank `$41` tail (`$7FF9`). Generic (no per-monster
+        handcoding); gated on `$4739` so all other text is byte-identical.
+      - **[ ] SUB-ITEM (open, cosmetic):** library lineage shows parent *icons* correctly but
+        "?????" next to each instead of "Snaily"/"BattleRex". Root cause pinned (S32, SameBoy):
+        the parent-name line is rendered via `LoadItem_6456` (`$12:$6456`) → bank `$4d` entry 2,
+        **mode 0 = detail line 1** (`$4d:$400b`), indexed by the **offspring** id. Slot 224 holds the
+        vanilla "?????    ?????" placeholder (the 256-entry table isn't an overshoot — the slot is
+        simply un-authored). (mode 1 = line-2 description is already forked by S29's
+        `HighModeTable4D`/`HighLine2Ptrs` → Dracky placeholder.) **Head-start staged:** a correct
+        recipe string `GorbunokRecipeLine` ("Snaily BattleRex") already exists in
+        `patches/bank_04d.asm` but is **NOT wired**. TO FINISH: fork `HighModeTable4D` mode-0 for
+        id≥224 (point slot 224 at `GorbunokRecipeLine`), same pattern as the mode-1 fork right above
+        it. Confirmed in SameBoy ($6456 fires $c822=0/1, $c823=$E0; parents $da71/$da72=$04/$2a).
+        Breeding itself is unaffected.
 - [x] **N6 — Top-range gates verified (DONE, S31): NOT species gates → no patch.**
       `bank_05f/057/058/052` all branch on `$db8a`, which is a battle skill/effect/
       animation id (written only from constants + skill tables), never a species byte.

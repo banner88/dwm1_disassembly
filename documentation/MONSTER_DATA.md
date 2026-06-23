@@ -470,9 +470,11 @@ never clamp/gate to hide the miss. Verified status for id 224:
 | Name | `MonsterNamePtrTable` | `$41:$4339` | **256** | OK | slot written ("Gorbunok" @ `$41:$7E46`); `patches/bank_041.asm` |
 | Detail line 1 (name) | mode-0 | `$4D:$400B` | **256** | OK | no change |
 | Detail line 2 (desc) | mode-1 | `$4D:$420B` | **215** | **overshoot→freeze** | **forked** `HighDetailTextFork`; id224→`$60BC` *(Dracky placeholder)* |
-| Breeding family recipe | `FamilyRecipeTable` | `$16:$4974` | **222** | overshoot | **forked** `FamilyRecipeResolve` → `$FF,$FF` (correct: wild-only) |
+| Breeding family recipe | `FamilyRecipeTable` | `$16:$4974` | **222** | overshoot | **forked** `FamilyRecipeResolve` (`patches/bank_016.asm`). S32: id224 → `db $04,$2a` (Snaily+BattleRex) so the encyclopedia shows the recipe icons. NOTE: the *icons* render, but the lineage parent **names** still show "?????" — that text is a SEPARATE overshoot (modes 0/1, below) |
 | Battle sprite gfx | `MonsterBattleGfxTable` | — | — | slot exists | placeholder `$320F` (DarkDrium) — real art DEFERRED (N4) |
-| Follower gfx (walking) | follower gfx-ID copies | `$01/$06/$07/$09/$0b/$12/$18/$59` | — | overshoot | **partially forked** — byte-neutral `FollowerArtResolve07/09/18` route id≥224 → interim Slime art (`$2f09`). 3 of 8 copies done; remaining 5 + real art DEFERRED (N4) |
+| Follower gfx (walking) | follower gfx-ID copies | `$01/$06/$07/$09/$0b/$12/$18/$59` | — | overshoot | S32: `$0b` forked in `patches/` (`FollowerArtResolve0b`, hatch-crash fix). **Real follower ART now integrated** via `build_new_species_follower.py` (W.png → gid `$7e00`, layout `$4184`, attr palette 2, all 8 contexts repointed/forked + `$01` clamp lifted) — user-confirmed. CAVEAT: art is **tool-applied at build time, not yet baked into `patches/`**, so the bare patched build still shows interim Slime at `$0b`. Battle sprite still DarkDrium (N4 `--battle-png` pending) |
+| Default nickname + "take X with you" | `FamilyCodePtrTable` (mode 7) | `$41:$4739` | **215** | overshoot→"SkyBell" | **FIXED S32** — id224 overshot into `ItemName[9]`="SkyBell". `LoadModeBaseRedirect` (16 B in `$00F0` ROM0 padding, `patches/bank_000.asm`) redirects mode-7 id≥224 to a new-species SHORT-name table (`$7E39`→`$41:$7FF9`) holding the first-4 name ("Gorb"). Generic; gated on `$4739` so all other text byte-identical |
+| Lineage parent NAMES (library detail, line 1) | mode-0 `$400b` (bank `$4d` entry 2) | `$4d:$400b` | **256** | un-authored slot→"?????" | **OPEN (S32 sub-item)** — `LoadItem_6456` (`$12:$6456`) renders line 1 via bank `$4d` mode 0 indexed by the **offspring** id. NOT an overshoot (256 slots); slot 224 = vanilla "?????    ?????" placeholder. mode-1 (line 2) is already forked (`HighModeTable4D`→`HighLine2Ptrs`→`$60bc`). HEAD-START: recipe string `GorbunokRecipeLine` ("Snaily BattleRex") is staged in `patches/bank_04d.asm`, **unwired** — finish by forking `HighModeTable4D` mode-0 for id≥224 to point at it. Confirmed SameBoy ($6456: $c822=0/1, $c823=$E0; parents $04/$2a) |
 | Library tab | `LibFamilyPtrTable` (custom) | `$12` | by family | — | id224 listed under Slime; **tool-owned** — `build_library_table.py --new-species` reads `new_species.json` (family from clone+override) + moves the unseen-marker `$E0`→`$FE` (id 224 now a real species; see BREEDING_SYSTEM "Walker contract") |
 
 The text engine multiplies the risk: detail/name text uses the mode×species double
@@ -482,6 +484,7 @@ per-species table has its own count** (bank `$4D` mode0=256, mode1=**215**; bank
 species through a *different* mode must re-check that mode's size.
 
 **Not yet exercised for new species (check when touched):** status/party text via a
-`$4D`/`$41` mode other than 0/1/5; breeding *as a result* (`SpecialRecipeTable`,
-grows by append — BREEDING_SYSTEM.md); per-species skill/family-name text; save
-round-trip at the new id range.
+`$4D`/`$41` mode not yet touched; per-species skill-name text; save round-trip at the
+new id range. *(S32 cleared: breeding as a result — `SpecialRecipeTable` append, works;
+default-nickname/narration mode-7 overshoot — fixed. Newly OPEN: lineage parent-name
+line-1 un-authored placeholder, above — string staged, wiring TODO.)*

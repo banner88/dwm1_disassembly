@@ -208,7 +208,29 @@ SetScrollRegisters_00C2:
     jp RetFromLCDEnable
 
 
-    db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
+; --- Phase N default-nickname fix: occupies the 16-byte $00F0-$00FF padding ----
+; SaveBankAndSwitch's level-1 lookup loads DE = per-mode text table base. The
+; default monster nickname uses the 2-letter FamilyCodePtrTable ($4739, 215
+; entries); a new species (id>=224) overshoots it (id 224 -> $48F9 =
+; ItemNamePtrTable[9] = "SkyBell"). This reproduces the original
+; `ld e,[hl];inc hl;ld d,[hl]`, then ONLY when the base is $4739 and id>=224
+; redirects to a new-species SHORT-name table ($7E39, [224]=$7FF9) holding the
+; first 4 letters of the name. Using a real 4-char string (not the full name)
+; fixes BOTH the truncating nickname field AND the untruncated "take X with you"
+; narration. Generic for any new species; gated on $4739 so all other text is
+; byte/behaviour-identical ($4739/$7E39 share low byte $39, so D-only).
+LoadModeBaseRedirect:                ; $00F0
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    ld a, d
+    cp $47
+    ret nz
+    ld a, [$c823]
+    cp $e0
+    ret c
+    ld d, $7e                   ; $4739 -> $7E39 (new-species SHORT-name table; [224] = $7FF9 in bank $41). low byte $39 is shared so this is D-only. Gives the first-4 name to BOTH the 4-char nickname field AND the untruncated "take X with you" narration.
+    ret
 
 Boot::
     nop
@@ -1771,9 +1793,7 @@ LookupDoublePtrTable:
 
 TextHandler_0940:
     add hl, de
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
+    call LoadModeBaseRedirect   ; FORK: load DE=mode table base; for the 2-letter default-name table ($4739) + id>=224, redirect to the new-species SHORT-name table so the default nickname AND the narration use the first 4 letters of its name (else byte/behaviour-identical)
     ld a, [$c823]
     ld l, a
     ld h, $00
@@ -13859,3 +13879,4 @@ MapIDClampForPalette::
     xor a                       ; A = $00 (Castle)
     ret
     rst $38
+

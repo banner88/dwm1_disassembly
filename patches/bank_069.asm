@@ -11,7 +11,7 @@
 ;
 ; The table below is the AUTHORED special table (B5):
 ;   825 base entries (vanilla ROM) with 3 in-place override(s)
-;   + 1 appended recipe(s); single $FF terminator.
+;   + 2 appended recipe(s); single $FF terminator.
 ; Source of truth: extracted/breeding_special.json.
 ; Bank $16's vanilla special table is left byte-identical to the
 ; ROM (runtime-dead via the B2 rst $10 redirect).
@@ -344,4 +344,4 @@ RelocatedSpecialTable:
     db $f7, $64, $00, $a4, $00, $f7, $74, $00, $a4, $00, $f7, $7c, $00, $a4, $00, $f8
     db $32, $00, $bd, $00, $f8, $3a, $00, $bd, $00, $f8, $41, $00, $bd, $00, $f8, $42
     db $00, $bd, $00, $f8, $7f, $00, $c5, $00, $f8, $81, $00, $c5, $00, $d6, $2a, $00
-    db $80, $00, $ff
+    db $80, $00, $04, $2a, $00, $e0, $00, $ff

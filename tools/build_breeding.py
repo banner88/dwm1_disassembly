@@ -50,6 +50,7 @@ OUT_JSON = os.path.join(REPO, "extracted", "breeding_tables.json")
 EXTRA_RECIPES = os.path.join(REPO, "extracted", "breeding_extra_recipes.json")
 FAMILY_DEFAULTS = os.path.join(REPO, "extracted", "breeding_family_defaults.json")
 SPECIAL_SPEC = os.path.join(REPO, "extracted", "breeding_special.json")
+NEW_SPECIES_SPEC = os.path.join(REPO, "extracted", "new_species.json")
 PATCH_BANK16 = os.path.join(REPO, "patches", "bank_016.asm")
 ORIGINAL_MD5 = "1ca6579359f21d8e27b446f865bf6b83"
 
@@ -97,6 +98,27 @@ def load_monster_names():
         return {m["id"]: m["name"] for m in data}
     except Exception:
         return {}
+
+
+def load_new_species():
+    """Read extracted/new_species.json -> {id: name} for the ADD-NEW-species
+    entries (Phase N, ids >= 221). These ids are valid breeding RESULTS even
+    though they are above the vanilla 0-220 range: each is a real species whose
+    info/enemy-stats/etc. are authored by build_new_species.py. Missing file or
+    no entries -> {} (the tool then only allows vanilla 0-220 results).
+
+    Only ids that are genuinely declared here are admitted, so a phantom id in
+    the 220-223 dead range can never slip through as a recipe result."""
+    try:
+        spec = json.load(open(NEW_SPECIES_SPEC))
+    except Exception:
+        return {}
+    out = {}
+    for s in spec.get("species", []):
+        sid = s.get("id")
+        if isinstance(sid, int):
+            out[sid] = s.get("name", "newspecies_$%02X" % sid)
+    return out
 
 
 def species_name(code, names):
@@ -684,13 +706,15 @@ RelocatedSpecialTable:
 SPECIAL_FIELDS = ("p1", "p2", "min_plus", "result", "plus_mod")
 
 
-def _resolve_recipe_fields(spec, names, *, require_all, base=None):
+def _resolve_recipe_fields(spec, names, *, require_all, base=None,
+                           extra_result_ids=frozenset()):
     """Resolve a JSON recipe dict to a 5-byte entry [p1,p2,min_plus,result,
     plus_mod]. p1/p2 go through resolve_matcher (names/family/$hex/id). result
-    must resolve to a real species id 0-220 (it is written to $DA71). min_plus
-    and plus_mod are raw 0-255. When `base` is given (override case), absent
-    fields inherit from it; when require_all is True (append case), all five
-    fields must be present."""
+    must resolve to a real species id 0-220 OR a declared NEW species id (>=221,
+    passed in `extra_result_ids` from new_species.json) — it is written to
+    $DA71. min_plus and plus_mod are raw 0-255. When `base` is given (override
+    case), absent fields inherit from it; when require_all is True (append
+    case), all five fields must be present."""
     out = list(base) if base is not None else [None] * 5
 
     def has(k):
@@ -724,10 +748,17 @@ def _resolve_recipe_fields(spec, names, *, require_all, base=None):
         if not (0 <= v <= 0xFF):
             raise ValueError("recipe byte %s out of range 0-255: %r"
                              % (SPECIAL_FIELDS[i], spec))
-    # result must be a concrete species id (0-220), never a family code
-    if out[3] is not None and not (0 <= out[3] <= 220):
-        raise ValueError("recipe result must be a species id 0-220 (got $%02X): %r"
-                         % (out[3], spec))
+    # result must be a concrete species id, never a family code. Vanilla ids are
+    # 0-220; a NEW species (Phase N, id>=221) is also valid IFF it is declared in
+    # new_species.json (passed in extra_result_ids), so a phantom dead-range id
+    # (220-223 with no authored data) still can't be used as a result.
+    if out[3] is not None and not (0 <= out[3] <= 220
+                                   or out[3] in extra_result_ids):
+        hint = ("" if out[3] <= 220 else
+                " (new-species ids must be declared in new_species.json)")
+        raise ValueError("recipe result must be a species id 0-220 or a declared "
+                         "new species (got $%02X)%s: %r"
+                         % (out[3], hint, spec))
     return out
 
 
@@ -767,6 +798,14 @@ def load_special_spec(rom, names):
     base_entries = decode_special(rom)            # 825 vanilla 5-byte lists
     entries = [list(e) for e in base_entries]
 
+    # NEW species (Phase N, id>=221) are valid breeding results. Merge their
+    # names so report labels read "Gorbunok" not "species_$E0", and collect
+    # their ids so _resolve_recipe_fields admits them as results.
+    new_species = load_new_species()
+    for sid, nm in new_species.items():
+        names.setdefault(sid, nm)
+    new_ids = frozenset(new_species)
+
     spec = {}
     if os.path.exists(SPECIAL_SPEC):
         spec = json.load(open(SPECIAL_SPEC))
@@ -805,7 +844,8 @@ def load_special_spec(rom, names):
                              % (idx, seen_idx[idx], o))
         seen_idx[idx] = o
         before = list(entries[idx])
-        after = _resolve_recipe_fields(o, names, require_all=False, base=before)
+        after = _resolve_recipe_fields(o, names, require_all=False, base=before,
+                                        extra_result_ids=new_ids)
         entries[idx] = after
         overrides.append({
             "index": idx, "before": before, "after": after,
@@ -817,7 +857,8 @@ def load_special_spec(rom, names):
     # --- appends: new entries past index 824 (B3 mechanism) -----------------
     appends = []
     for a in spec.get("appends", []):
-        entry = _resolve_recipe_fields(a, names, require_all=True)
+        entry = _resolve_recipe_fields(a, names, require_all=True,
+                                       extra_result_ids=new_ids)
         appends.append({
             "entry": entry,
             "label": "%s x %s -> %s" % (

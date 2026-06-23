@@ -55,7 +55,9 @@ COPIES = {
     0x09: dict(base=0x6b10, raw=False, existing=True),
     # $0b's follower table relocates in the patched build, so locate the reader by a
     # base-agnostic code signature and read the (relocated) base out of it.
-    0x0b: dict(base=None, raw=False, existing=False,
+    # $0b is now forked in patches/ (FollowerArtResolve0b, this session's hatch-crash
+    # fix) carrying the interim $2f09 GidWord, so it is repointed like $07/$09/$18.
+    0x0b: dict(base=None, raw=False, existing=True,
                prefix=bytes([0x3E, 0x00, 0x8C, 0x67, 0x18, 0x0C, 0x6A, 0x26, 0x00, 0x29, 0x7D, 0xC6])),
     0x12: dict(base=0x65f2, raw=False, existing=False),
     0x18: dict(base=0x4103, raw=True,  existing=True),

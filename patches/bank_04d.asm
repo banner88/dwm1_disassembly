@@ -12419,4 +12419,11 @@ HighModeTable4D:
 HighLine2Ptrs:                    ; per-high-species line-2 description pointers (id 224+)
     dw $60bc                      ; id 224 (Gorbunok): Dracky's description (valid placeholder)
 
+; Phase N: recipe (mode-0 line 1) string for new species. mode-0[224] in the
+; vanilla $400b table (read by detail entry 2) was a "?????    ?????" placeholder;
+; it is repointed here. Format matches Armorpion ("P1 <sp> P2 <sp> $F0").
+GorbunokRecipeLine:               ; "Snaily BattleRex"
+    db $36, $4b, $3e, $46, $49, $56, $62      ; "Snaily" + space
+    db $25, $3e, $51, $51, $49, $42, $35, $42, $55, $62, $f0  ; "BattleRex" + space + term
+
     ds $8000 - @, $00             ; pad remainder of bank with $00 (byte-exact)

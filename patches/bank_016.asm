@@ -1458,7 +1458,7 @@ label16_485c:
     ld l, a
     ld h, $00
     add hl, hl
-    call FamilyRecipeResolve   ; FORK: id>=222 -> no recipe ($ff,$ff); else normal (byte-neutral 3+5)
+    call FamilyRecipeResolve   ; FORK: id>=222 -> new-species recipe (Gorbunok: Snaily+BattleRex) or $ff,$ff; else normal (byte-neutral 3+5)
     ds 5, $00
     ld a, [hl+]
     ld [$da71], a
@@ -5416,10 +5416,13 @@ FloorDataPtrTable2:
 
 ; =============================================================================
 ; FamilyRecipeResolve — bound-check for FamilyRecipeTable (222 entries, id 0-221).
-; New species (id>=222) have no breeding recipe; return a pointer to $FF,$FF so
-; the encyclopedia shows "no recipe" (same as vanilla unbreedable monsters, e.g.
-; id 220). HL enters as id*2. Without this, id 224 overshoots into SpecialRecipe-
-; Table and shows bogus breeding parents.
+; New species (id>=222) overshoot FamilyRecipeTable, so the reader is forked here.
+; Default: return a pointer to $FF,$FF so the encyclopedia shows "no recipe" (same
+; as vanilla wild-only monsters, e.g. id 220). A new species that is BREEDABLE
+; (has a SpecialRecipeTable recipe in extracted/breeding_special.json) instead
+; returns a 2-byte SPECIES pair (its parent icons) — currently id 224 Gorbunok ->
+; Snaily+BattleRex. HL enters as id*2. Without this fork, id 224 overshoots into
+; SpecialRecipeTable and shows bogus breeding parents.
 ; =============================================================================
 FamilyRecipeResolve:
     ld a, h
@@ -5437,9 +5440,25 @@ FamilyRecipeResolve:
     ld h, a
     ret
 .none:
+    ; id>=222. Default for a new species = no recipe ($ff,$ff) -> encyclopedia
+    ; "bred from" line stays blank (correct for wild-only ids, e.g. phantom 220).
+    ; A new species that IS breedable gets a display pair here so the detail page
+    ; shows its parent icons. HL still = id*2. The pair MUST mirror the actual
+    ; recipe authored in extracted/breeding_special.json so the icons match what
+    ; really breeds the monster. The encyclopedia hint (SetItem_67c0, bank $12)
+    ; renders these two bytes as monster sprites and bails on family codes ($F0+),
+    ; so they are SPECIES ids, not family codes.
+    ld a, l
+    cp $c0                        ; id 224 ($1c0) -> Gorbunok
+    jr z, .gorbunok
     ld hl, .ffval
+    ret
+.gorbunok:
+    ld hl, .gorbunok_recipe       ; Gorbunok: bred from Snaily + BattleRex
     ret
 .ffval:
     db $ff, $ff
+.gorbunok_recipe:
+    db $04, $2a                   ; Snaily (4) + BattleRex (42) — matches breeding_special.json
 
     ds $8000 - @, $00             ; pad remainder of bank with $00 (byte-exact)

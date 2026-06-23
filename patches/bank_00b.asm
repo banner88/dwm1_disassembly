@@ -1903,12 +1903,12 @@ jr_00b_490b:
     ld l, d
     ld h, $00
     add hl, hl
-    ld a, l
-    add LOW(SpritePtrTable_4974)
-    ld l, a
-    ld a, h
-    adc HIGH(SpritePtrTable_4974)
-    ld h, a
+    call FollowerArtResolve0b        ; FORK: id>=224 -> interim Slime follower gfx-ID; else normal table (byte-neutral 8->3+5)
+    nop
+    nop
+    nop
+    nop
+    nop
 
 jr_00b_4917:
     ld e, [hl]
@@ -2526,6 +2526,38 @@ SharedPtrChase:
     adc h
     ld h, a
     ret
+
+; =============================================================================
+; FollowerArtResolve0b — Phase N follower-art fork for the $0b library copy.
+; Mirrors FollowerArtResolve07/09/18. The reader passes HL = (species+$10)*2
+; (D held species+$10). id>=224 (HL>=$1E0) -> interim Slime follower gfx-ID
+; ($2f09); else replicate the original add-base into SpritePtrTable_4974
+; (byte-identical to vanilla for species 0-223). Without this, hatching/viewing
+; a new species (Gorbunok, 224) overshoots SpritePtrTable_4974 and crashes.
+; Lives in the $00 padding between the code section and the $4B43 room data.
+; =============================================================================
+FollowerArtResolve0b:                ; in: HL = (species+$10)*2
+    ld a, h
+    cp $02
+    jr nc, .high                     ; HL>=$200
+    cp $01
+    jr c, .normal                    ; HL<$100 (species<128)
+    ld a, l
+    cp $e0
+    jr c, .normal                    ; HL<$1E0 -> species<224
+.high:
+    ld hl, GorbunokFollowerGfxID0b
+    ret
+.normal:
+    ld a, l
+    add LOW(SpritePtrTable_4974)
+    ld l, a
+    ld a, h
+    adc HIGH(SpritePtrTable_4974)
+    ld h, a
+    ret
+GorbunokFollowerGfxID0b:
+    dw $2f09                         ; interim Slime follower art (same as $07/$09/$18)
 
 ; =============================================================================
 ; ROOM DATA SECTION ($4B43 - $7FFF)

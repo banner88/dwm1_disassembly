@@ -2647,4 +2647,12 @@ MonsterName_224_Gorbunok:  ; $7E46 — Phase N new species
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FC6
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FD6
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FE6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FF6
+;   Phase N: new-species SHORT (default-nickname) name table tail.
+;   The default-name redirect (bank $00 LoadModeBaseRedirect) sends id>=224 to
+;   base $7E39, so id 224 lands at $7FF9. Holds the first 4 letters of the name
+;   ("Gorb"), used for BOTH the nickname field and the "take X with you" line.
+    db $00, $00, $00                              ; $7FF6-$7FF8 pad
+NewSpeciesShortName224:                           ; $7FF9 (= $7E39 + 224*2)
+    dw .gorb                                      ; -> short name string
+.gorb:
+    db $2a, $4c, $4f, $3f, $f0                    ; "Gorb" (first 4 of "Gorbunok") + terminator

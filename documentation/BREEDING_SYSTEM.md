@@ -49,6 +49,16 @@ space) returns a pointer to a static `$FF,$FF` ("no recipe") for id ≥ 222, els
 normal `FamilyRecipeTable` slot. New species are therefore **wild-only** and
 correctly show no breeding recipe (same as vanilla unbreedable id 220).
 
+**DONE (S32) for Gorbunok (id 224), user-confirmed.** Recipe **Snaily(4) × BattleRex(42)
+→ Gorbunok** (a verified-free cross: no special entry, no family default → only changes
+that one pedigree fallback). Authored in `extracted/breeding_special.json` `appends`;
+`build_breeding.py` was extended to admit a declared new-species id (>220, read from
+`new_species.json`) as a recipe RESULT (the old 0–220 cap rejected it). Display via
+`FamilyRecipeResolve` → `db $04,$2a` (parent icons). Parent-path needs no code (Gorbunok's
+Slime family `$F0` is honoured through the forked `$0301` loader). KNOWN sub-item: the
+encyclopedia lineage shows the parent **icons** but "?????" for the **names** — a separate
+mode-0/1 (`$41:$4025/$4039`) offspring-indexed overshoot; see MONSTER_DATA registry + ROADMAP N5.
+
 **Can new species be made breedable later? Yes.** Two independent directions:
 - *As a RESULT* (breed X+Y → new species): add an entry to `SpecialRecipeTable`.
   This table **already grows past its 825 vanilla entries by appending** (the B3
