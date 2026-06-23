@@ -1029,8 +1029,12 @@ jr_016_45ff:
     jr nc, jr_016_4615       ; if already family-coded, skip conversion
 
     ld [wTempSpeciesId], a
-    ld hl, $0301
-    rst $10                  ; load parent 1 monster info
+    ld hl, $0301             ; far-call bank $03 entry 1 = monster-info load. SEAM: this
+    rst $10                  ;   info load is the SaveMon_4446 path, forked for id>=224
+                             ;   (-> bank $6A high table), so a NEW species used as a
+                             ;   breeding PARENT resolves a real family byte here instead
+                             ;   of overshooting. (The parent-2 conversion above uses the
+                             ;   same $0301 load.)
     ld a, [$da33]            ; family byte
     add $f0                  ; convert to family code
     ld [$da72], a            ; parent 1 family code

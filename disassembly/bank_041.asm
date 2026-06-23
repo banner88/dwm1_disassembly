@@ -6,6 +6,11 @@
 ;   - MonsterNamePtrTable at $4339 (256 × dw → MonsterName_XXX labels)
 ;   - SkillNamePtrTable at $4539 (256 × dw → SkillName_XXX labels)
 ;   - FamilyCodePtrTable at $4739 (215 × dw → FamilyCode_XXX labels)
+;       NOTE (label is misleading — kept for ref-stability, do not trust the name):
+;       this is the SPECIES-indexed 2-letter DEFAULT-NICKNAME code table (mode 7 of
+;       the $4007 config list), NOT a family table. Entry [i] = species i's 2-char
+;       code (DrakSlime=DS, Snaily=SN, ...). 215 entries (species 0–214); see the
+;       overshoot note at the FamilyCodePtrTable label below.
 ;   - ItemNamePtrTable at $48E7 (44 × dw → ItemName_XX labels)
 ;   - ItemDescPtrTable at $493F (44 × dw → ItemDesc_XX labels)
 ;   - PersonalityNamePtrTable at $4997 (27 × dw → PersonalityName_XX labels)
@@ -34,6 +39,25 @@
 SECTION "ROM Bank $041", ROMX[$4000], BANK[$41]
 
 ; --- Code/data ($4000-$4338, 825 bytes) ---
+;
+; $4007 = the mode->table CONFIG LIST (the root of the new-species name bugs).
+;   ROM0 SaveBankAndSwitch ($00:$092F) / TextHandler_0940 ($00:$0940) reads it as
+;   table_base = [ $4007 + mode*2 ]   ; mode = [$c822]
+;   string_ptr = [ table_base + id*2 ]; id   = [$c823]
+;   (the Func_Bank41 helpers below set DE=$4007 then far-call the ROM0 lookup.)
+;   Entries are little-endian table addresses; key modes (×2 from $4007):
+;     mode 5  -> $4339 MonsterNamePtrTable  (256 — full names, no overshoot)
+;     mode 6  -> $4539 SkillNamePtrTable    (256)
+;     mode 7  -> $4739 FamilyCodePtrTable   (215 — 2-letter default-nick; OVERSHOOTS)
+;     mode 8  -> $48E7 ItemNamePtrTable      (per the config table; verify the
+;                actual item-render selector in SameBoy via [$c822] when an item
+;                name draws — the config fact (mode 8) stands regardless)
+;     mode 9  -> $493F ItemDescPtrTable
+;     mode 10 -> $4997 PersonalityNamePtrTable
+;     mode 11 -> $49CD MiscTextPtrTable      (NOT item names)
+;   HAZARD: each mode's per-species table has its OWN entry count and NONE bounds-
+;   checks, so a new species id overshoots any table shorter than id+1 (see mode 7).
+;
     db $41, $93, $4A, $9A, $4A, $A1, $4A, $25, $40, $39, $40, $01, $41, $E3, $41, $23
     db $43, $39, $43, $39, $45, $39, $47, $E7, $48, $3F, $49, $97, $49, $CD, $49, $17
     db $4A, $1B, $4A, $7B, $4A, $A8, $4A, $A8, $4A, $A8, $4A, $A8, $4A, $25, $4B, $71
@@ -88,6 +112,8 @@ SECTION "ROM Bank $041", ROMX[$4000], BANK[$41]
     db $5B, $18, $5B, $1A, $5B, $1C, $5B, $1E, $5B
 
 MonsterNamePtrTable:  ; $4339 — 256 entries, indexed by monster ID
+    ; mode 5 of the $4007 config list (full monster name). 256-wide → a new species
+    ; id has a real slot here (no overshoot); just populate it ("Gorbunok" @ $7E46).
     dw MonsterName_000_DrakSlime  ; [  0]
     dw MonsterName_001_SpotSlime  ; [  1]
     dw MonsterName_002_WingSlime  ; [  2]
@@ -610,6 +636,21 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
 ; 2-letter family abbreviation per monster ID (0-214)
 ; ---------------------------------------------------------------
 
+; ===== DEFAULT-NICKNAME code table (label name is MISLEADING) ==================
+; Despite the "FamilyCode" name, this is the SPECIES-indexed 2-letter DEFAULT-
+; NICKNAME table — mode 7 of the $4007 config list (read by SaveBankAndSwitch
+; $00:$092F). Entry [i] = species i's own 2-char code (DrakSlime=DS, Snaily=SN),
+; NOT a per-family value. The name + the 215 FamilyCode_NNN entry-string labels
+; are LEGACY/mgbdis names kept only for reference-stability (the Phase-N nickname
+; fork gates on the literal address $4739, not on this label).
+; OVERSHOOT: 215 entries (species 0–214). index >= 215 reads past the table into
+; ItemNamePtrTable ($48E7); new species id 224 -> $48F9 = ItemName[9] ("SkyBell").
+; FORK: patches/bank_000.asm LoadModeBaseRedirect ($00:$00F0) redirects mode-7
+; loads for id >= 224 (gated cp $e0) to a new-species SHORT-name table ($41:$7FF9),
+; giving the first-4 letters of the real name to both the nickname field and the
+; "take X with you" narration. So: the TABLE overshoots at id>=215, but the FORK
+; only covers id>=224 — ids 215–223 are phantom/never-rendered and left to overshoot.
+; =============================================================================
 FamilyCodePtrTable:  ; $4739
     dw FamilyCode_000_DS  ; [0] DS
     dw FamilyCode_001_SP  ; [1] SP
@@ -834,6 +875,10 @@ FamilyCodePtrTable:  ; $4739
 ; ---------------------------------------------------------------
 
 ItemNamePtrTable:  ; $48E7
+    ; mode 8 of the $4007 config list (per the table; confirm the item-render
+    ; selector [$c822] in SameBoy). Also the OVERSHOOT landing for FamilyCodePtrTable
+    ; ($4739, mode 7): a default-nick lookup for species id>=215 reads here
+    ; (id 224 -> $48F9 = ItemName[9] = "SkyBell") until the mode-7 fork intercepts it.
     dw ItemName_00_Empty  ; [0] 
     dw ItemName_01_Herb  ; [1] Herb
     dw ItemName_02_Lovewater  ; [2] Lovewater
@@ -1097,17 +1142,23 @@ SpellUseTextPtrTable:  ; $4A7B
 ; 3 small helper functions, 7 bytes each
 ; ---------------------------------------------------------------
 
-Func_Bank41_GetText:  ; $4A93
+; Generic name/text FETCH entry points. Each loads DE = $4007 (the mode->table
+; config base) and far-calls the ROM0 two-level [mode][id] lookup
+; (SaveBankAndSwitch $00:$092F / TextHandler_0940 $00:$0940): mode=[$c822],
+; id=[$c823] -> string ptr in DE. This is the single funnel through which monster
+; names (mode 5), default nicknames (mode 7), item names (mode 8) etc. are resolved,
+; so it is also where a new-species id overshoots any short per-mode table.
+Func_Bank41_GetText:  ; $4A93 — fetch string ptr only ([mode][id] lookup)
     ld de, $4007
     call $05B6
     ret
 
-Func_Bank41_PutText:  ; $4A9A
+Func_Bank41_PutText:  ; $4A9A — render the already-fetched string
     ld de, $4007
     call $05F6
     ret
 
-Func_Bank41_GetPutText:  ; $4AA1
+Func_Bank41_GetPutText:  ; $4AA1 — fetch (GetText) then render in one call
     call Func_Bank41_GetText
     call $0609
     ret
@@ -1926,9 +1977,10 @@ SkillName_221_Ahhh: db "Ahhh", $F0
 SkillName_222_Unused_222: db $F0
 
 ; ---------------------------------------------------------------
-; Family Code Strings ($69F2-$6C77)
-; 2-letter family abbreviation + $F0 terminator
-; Indexed by FamilyCodePtrTable at $4739
+; Family Code Strings ($69F2-$6C77)  [LEGACY NAME — these are per-SPECIES codes]
+; 2-letter DEFAULT-NICKNAME code + $F0 terminator, one per species (NOT per family;
+; the "Family"/"FamilyCode_NNN" names are misleading legacy/mgbdis labels).
+; Indexed by FamilyCodePtrTable at $4739 (mode 7 of the $4007 config list)
 ; ---------------------------------------------------------------
 
 FamilyCodeStrings:

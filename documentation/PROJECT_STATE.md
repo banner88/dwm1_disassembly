@@ -5,6 +5,29 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-23 (Session 33 — **Phase D: new-species DISPLAY fork seams annotated
+> in clean disassembly; labels/comments only, ZERO byte impact.** Integrity PASS 4/4, clean build
+> `1ca6579…` after every edit; every referenced label sym-verified to its address. Nothing
+> functional changed — no ROM to playtest.)
+> **S33 — name/text/lineage/follower display fork seams now self-documenting at the clean anchors.**
+> 11 files touched (`bank_000/001/006/007/009/00b/012/016/018/041/059`), comments+labels only.
+> Covered: bank `$41` `$4007` mode→table config list, the corrective `FamilyCodePtrTable` block
+> (it's the SPECIES-indexed 2-letter default-nick table, mode 7 — NOT a family table; label kept
+> for ref-stability, flagged legacy), `Func_Bank41_GetText/GetPutText`; ROM0 `SaveBankAndSwitch
+> $092F`/`TextHandler_0940 $0940` two-level `[mode][id]` lookup + per-mode-count overshoot hazard +
+> `LoadModeBaseRedirect $00F0` fork cross-ref; bank `$12` lineage chain (`LoadItem_6456`→`$4d` entry
+> 2 modes 0/1, `LoadItem_65a8`→recipe `$1601`→parent icons, `CmpItem_65cb`→`ItemSlotPtrTable`); the
+> **8 follower gfx-ID copies** one-line-commented at their add-base sites (`$01/$06/$07/$09/$0b/$12/
+> $18/$59`, all operands sym-confirmed to the tool's bases); + one optional cross-ref at bank `$16`
+> `$0301` parent-family load. **Two corrections baked into source + MONSTER_DATA:** ItemNamePtrTable
+> is **mode 8** of the `$4007` list (NOT mode 11 = `$49CD` MiscTextPtrTable); `$4739` overshoots at
+> **id≥215** (fork covers **id≥224**; 215–223 phantom). Decisions (per user): keep the label + strong
+> corrective comment (no rename), bank `$16` breeding-determination internals deferred to a
+> breeding-mechanics pass. Docs updated in place: ROADMAP (Phase-D seam box → partial, display seams
+> done, data-table seams `bank_003/014/001-encounter` + breeding internals still pending),
+> MONSTER_DATA (overshoot registry + 8-copy add-base table + the two corrections). Changed source
+> files are clean-disassembly only; no patches/tools/extracted touched.
+>
 > Last verified: 2026-06-22 (Session 30 — **Phase N audit + two reproducibility defects
 > fixed; user-playtested OK**. Gorbunok (id 224) caught in Gate of Beginning, lists under
 > Slime family, visualizable in library; custom rooms + encounters still good. Integrity

@@ -488,3 +488,63 @@ species through a *different* mode must re-check that mode's size.
 new id range. *(S32 cleared: breeding as a result — `SpecialRecipeTable` append, works;
 default-nickname/narration mode-7 overshoot — fixed. Newly OPEN: lineage parent-name
 line-1 un-authored placeholder, above — string staged, wiring TODO.)*
+
+### Fork-seam annotations in clean disassembly (S33 — labels/comments only)
+
+The display-side fork seams are now commented at their clean anchors (build stays
+`1ca6579…`; every referenced label sym-verified to its address). Two corrections were
+baked into source while doing this:
+
+* **`$41` text config list — selectors by mode.** ROM0 `SaveBankAndSwitch` (`$00:$092F`)
+  / `TextHandler_0940` (`$00:$0940`) compute `table = [$4007 + mode*2]`, then
+  `string = [table + id*2]` (`mode = [$c822]`, `id = [$c823]`). Reading the `$41:$4007`
+  config list: mode 5 → `$4339` MonsterNamePtrTable (256), mode 6 → `$4539` SkillNamePtrTable,
+  mode 7 → `$4739` FamilyCodePtrTable (215, the 2-letter default-nick), **mode 8 → `$48E7`
+  ItemNamePtrTable**, mode 9 → `$493F` ItemDescPtrTable, mode 10 → `$4997` Personality,
+  **mode 11 → `$49CD` MiscTextPtrTable (NOT item names)**. *(Correction: an earlier note
+  said "mode 11 = ItemNamePtrTable" — the config table makes it mode 8. The item-render
+  path's selector should still be SameBoy-confirmed via `[$c822]`; the config fact stands.)*
+* **`$4739` overshoot bound.** The table has exactly 215 entries (species 0–214), so it
+  structurally overshoots at **id ≥ 215** (into `ItemNamePtrTable`); the `LoadModeBaseRedirect`
+  fork gates `cp $e0` so it only covers **id ≥ 224**. Ids 215–223 are phantom/never-rendered
+  and deliberately left to overshoot. *(Supersedes the looser "overshoots for id≥224".)*
+* **`FamilyCodePtrTable` name is legacy/misleading** (kept for ref-stability; the nickname
+  fork gates on the literal `$4739`, not the label). It is the SPECIES-indexed 2-letter
+  default-nickname table, not a family table; the 215 `FamilyCode_NNN` string labels are
+  likewise legacy.
+
+**The 8 follower gfx-ID copies — add-base sites (one comment each, `[n/8]`).** A complete
+art swap / new-species follower must repoint ALL 8 (layout `$10/$11:$407f` + attr are
+single/shared; these 8 gfx-ID tables are per-UI-context copies). Bank `$12`'s copy is the
+same `ItemSlotPtrTable` the lineage parent-icon loader uses. The mgbdis default labels are
+misleading (they are NOT NPC-pos / tile-ref / save-slot data):
+
+| # | Bank | add-base addr | table label (legacy) | base | index |
+|---|------|---------------|----------------------|------|-------|
+| 1 | `$01` | `$49a7` | `ScreenTransDataTable` | `$49df` | species+$10 |
+| 2 | `$06` | `$4d7e` | `MapNPCPosDataTable` | `$4dcc` | species+$10 |
+| 3 | `$07` | `$66b8` | `TileRefLookupTable` | `$6e14` | species+$10 |
+| 4 | `$09` | `$61fb` | `FieldPtrLookupTable` | `$6b10` | species+$10 |
+| 5 | `$0b` | `$490f` | `SpritePtrTable_4974` | `$4974` | species+$10 (forked in patches: `FollowerArtResolve0b`) |
+| 6 | `$12` | `$65de` | `ItemSlotPtrTable` | `$65f2` | species+$10 (= lineage parent-icon table; `CmpItem_65cb`) |
+| 7 | `$18` | `$40bf` | `TextDataPtrLookup` | `$4123` | raw species |
+| 8 | `$59` | `$42ca` | `SaveSlotPtrTable` | `$4363` | raw species |
+
+*(Note: `build_new_species_follower.py` lists bank `$18` reader-base as `$4103` — that is
+operand−`$20` bookkeeping for its `species+$10` scan logic, not a code address; the actual
+`add LOW/adc HIGH` operand is `$4123` = `TextDataPtrLookup`.)*
+
+**Lineage render chain (bank `$12`).** `LoadItem_65a8` resolves the recipe via
+`ld hl,$1601; rst $10` (bank `$16` entry 1 = `FamilyRecipeResolve` in the patched build) then
+loads two parent icons through `CmpItem_65cb` (→ `ItemSlotPtrTable[species+$10]`).
+`LoadItem_6456` far-calls bank `$4D` entry 2 (`$4d02`) to render the two lineage text lines —
+mode 0 line 1 (parent names, `$4D:$400B`, 256-wide) and mode 1 line 2 (desc, `$4D:$420B`, 215,
+already forked `HighDetailTextFork`); slot 224 of mode-0 is the vanilla `"?????"` placeholder
+(the open lineage parent-name sub-item).
+
+**Breeding parent seam (bank `$16`, cross-ref only).** `LoadBrd_45ff`/`LoadBrd_45d5` convert
+each parent species → family code via `ld hl,$0301; rst $10` (bank `$03` entry 1 monster-info
+load = the `SaveMon_4446` path, forked for id≥224), which is what lets a NEW species resolve a
+real family when used as a breeding parent. The breeding-determination internals proper
+(`LoadBrd_4653` special/plus, `LoadBrd_45d5/45ff` family scan, special→family→pedigree
+precedence) are left for a breeding-mechanics pass.

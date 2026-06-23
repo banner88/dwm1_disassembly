@@ -454,7 +454,7 @@ recipes are pure authoring.
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:
-- [ ] **Annotate the new-species fork SEAMS in clean disassembly (labels/comments
+- [~] **Annotate the new-species fork SEAMS in clean disassembly (labels/comments
       only, byte-perfect `1ca6579…`).** The "which site is the seam" knowledge currently
       lives only in patches + MONSTER_DATA. Propagate it as comments at the clean anchors:
       `bank_003 label443f`/`SaveMon_4446` (single info indexer; id≥224 fork point),
@@ -468,7 +468,23 @@ Driven by what the editor must EDIT, not completionism:
       *(Flagged S30, deferred from the two-defect-fix session — own scoped pass. PARTIAL: the
       follower render seams `bank_011 HramUnk11_406e` (attr read + overshoot) and `bank_001
       GetActiveMonsterStatus` (overworld walk loader + clamp) annotated when N4 was finished —
-      build still `1ca6579…`. The 8 gfx-ID copies + bank_003/014/001 seams still pending.)*
+      build still `1ca6579…`.*
+      ***S33 — the name/text/lineage/follower DISPLAY seams DONE*** (labels/comments only,
+      build `1ca6579…`, integrity 4/4, all referenced labels sym-verified to their addresses):
+      bank `$41` `$4007` mode→table config list (modes 5/7/8/11 documented) + the corrective
+      `FamilyCodePtrTable` block (species-indexed 2-letter default-nick, NOT family; legacy
+      labels) + `Func_Bank41_GetText/GetPutText`; ROM0 `SaveBankAndSwitch $092F`/`TextHandler_0940
+      $0940` two-level `[mode][id]` lookup + overshoot hazard + `LoadModeBaseRedirect $00F0` fork
+      cross-ref; bank `$12` `LoadItem_6456`/`LoadItem_65a8`/`CmpItem_65cb` lineage chain; and the
+      **8 follower gfx-ID copies** at their add-base sites (`$01:$49a7`→`ScreenTransDataTable`,
+      `$06:$4d7e`→`MapNPCPosDataTable`, `$07:$66b8`→`TileRefLookupTable`, `$09:$61fb`→
+      `FieldPtrLookupTable`, `$0b:$490f`→`SpritePtrTable_4974`, `$12:$65de`→`ItemSlotPtrTable`
+      [= the lineage parent-icon table, doubles as the menu copy], `$18:$40bf`→`TextDataPtrLookup`,
+      `$59:$42ca`→`SaveSlotPtrTable`); + one optional cross-ref at bank `$16` `$0301` parent-family
+      load. CORRECTIONS recorded in source + MONSTER_DATA: **ItemNamePtrTable = mode 8** (not 11);
+      **`$4739` overshoots at id≥215, fork covers id≥224**. **STILL PENDING (data-table seams, own
+      pass): `bank_003 SaveMon_4446`, `bank_014 LoadEnemyStats`+`$7EAD`, `bank_001 EncounterPool_000`,
+      and bank `$16` breeding-determination internals (`LoadBrd_4653`/`45d5`/`45ff`).)*
 - [ ] Bank $03 monster table → labeled `db` (gen_monster_db.py exists —
       verify generator, apply, MD5 must stay `1ca6579…`)
 - [ ] Bank $14 enemy stats + boss tables → `db`

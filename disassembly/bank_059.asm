@@ -416,15 +416,15 @@ SetB59_4276:
 
 
 LoadB59_42c0:
-    ld a, [wPLAN_selection]
+    ld a, [wPLAN_selection]   ; A = species (raw-species index for this copy)
     ld l, a
     ld [$c0e0], a
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(SaveSlotPtrTable)
-    ld l, a
-    ld a, h
+    add LOW(SaveSlotPtrTable)    ; [8/8] follower gfx-ID copy ($4363; label is mgbdis-
+    ld l, a                      ;   misleading — NOT save-slot data; raw-species index).
+    ld a, h                      ;   Repoint all 8 on a swap; new species id>=224 overshoots.
     adc HIGH(SaveSlotPtrTable)
     ld h, a
     ld e, [hl]

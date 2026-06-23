@@ -5770,6 +5770,13 @@ jr_012_63f4:
     ret
 
 
+; Lineage parent-NAME render: far-calls bank $4D entry 2 ($4d02) to draw the two
+; lineage text lines via the [mode][id] engine — mode 0 = line 1 (parent names,
+; table $4D:$400B, 256-wide so a new id has a slot), mode 1 = line 2 (description,
+; $4D:$420B, only 215 -> overshoot, already forked as HighDetailTextFork in
+; patches/bank_04d.asm). Indexed by the OFFSPRING id. For a new species, slot 224 of
+; mode-0 ($4D:$400B) is the vanilla "?????    ?????" placeholder (the open lineage
+; parent-name sub-item; string staged but unwired in patches/bank_04d.asm).
 LoadItem_6456:
     ld a, [$c827]
     ld c, a
@@ -5984,22 +5991,34 @@ LoadItem_6544:
     ret
 
 
+; Lineage parent-ICON render: resolve the offspring's recipe, then load each
+; parent's icon graphic. `ld hl,$1601; rst $10` far-calls bank $16 entry 1
+; (the family-recipe resolve; in the patched build = FamilyRecipeResolve, forked so
+; id>=224 returns a valid recipe instead of overshooting FamilyRecipeTable). It
+; returns the two parent species in $da71/$da72; each is passed to CmpItem_65cb to
+; DMA its parent icon to VRAM $8600/$8700.
 LoadItem_65a8:
     ld a, [$cac0]
     ld [$da6f], a
-    ld hl, $1601
+    ld hl, $1601         ; far-call bank $16 entry 1 = recipe resolve (FamilyRecipeResolve)
     rst $10
-    ld a, [$da71]
+    ld a, [$da71]        ; parent 1 species
     ld hl, $8600
     call CmpItem_65cb
     ld [$da71], a
-    ld a, [$da72]
+    ld a, [$da72]        ; parent 2 species
     ld hl, $8700
     call CmpItem_65cb
     ld [$da72], a
     ret
 
 
+; Parent-ICON loader: A = parent species, HL = dest VRAM. Sentinels $FF/$FA/$F0+
+; mean "no parent" (family-coded). Otherwise indexes ItemSlotPtrTable by species+$10
+; and DMAs the icon graphic. NB: ItemSlotPtrTable IS the bank-$12 copy of the 8
+; parallel follower/menu gfx-ID tables (see add-base below); a new species id>=224
+; overshoots it like the other 7 copies, so an art swap / new species must repoint
+; ALL 8 copies ($01/$06/$07/$09/$0b/$12/$18/$59), not just this one.
 CmpItem_65cb:
     cp $ff
     ret z
@@ -6012,12 +6031,12 @@ CmpItem_65cb:
 
     push af
     push hl
-    add $10
+    add $10              ; species + $10 (the shared follower/icon index convention)
     ld l, a
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(ItemSlotPtrTable)
+    add LOW(ItemSlotPtrTable)   ; [6/8] bank-$12 follower/parent-icon gfx-ID copy ($65f2)
     ld l, a
     ld a, h
     adc HIGH(ItemSlotPtrTable)
@@ -6036,6 +6055,11 @@ jr_012_65ef:
     ret
 
 
+; $65f2 — species-indexed gfx-ID pointer table (read by CmpItem_65cb at species+$10).
+; This is the bank-$12 copy [6/8] of the parallel follower/menu gfx-ID tables; it
+; supplies BOTH the lineage parent icons AND the menu/library follower art. mgbdis
+; misdecoded the dw entries below as instructions (nop/cpl/ld b,b/ld sp,$XXXX...) —
+; they are `dw <gfx-ID>` data; a `dw` re-section is a separate Phase D task.
 ItemSlotPtrTable:
     nop
     cpl

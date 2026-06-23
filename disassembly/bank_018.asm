@@ -87,15 +87,15 @@ label18_400b:
     jr nz, jr_018_40ca
 
     call LoadAud_42d1
-    ld hl, $caca
+    ld hl, $caca         ; species byte (party struct +$09)
     call GetMonsterDataPtr
-    ld l, [hl]
+    ld l, [hl]           ; raw species (this copy indexes by species, NOT species+$10)
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(TextDataPtrLookup)
-    ld l, a
-    ld a, h
+    add LOW(TextDataPtrLookup)   ; [7/8] follower gfx-ID copy ($4123, menu/status; raw-
+    ld l, a                      ;   species index). Repoint all 8 on a swap; new species
+    ld a, h                      ;   id>=224 overshoots it.
     adc HIGH(TextDataPtrLookup)
     ld h, a
     ld a, [hl+]

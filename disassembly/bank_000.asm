@@ -1742,31 +1742,47 @@ MultiplyHL_091F:
     ret
 
 
-SaveBankAndSwitch:
+; ===== The two-level [mode][id] name/text lookup (root of the new-species name bugs)
+; Generic string resolver shared by the bank-$41 name tables (and bank $4D detail
+; text). Caller sets the active text bank's $4000 byte, DE = that bank's mode->table
+; CONFIG LIST base (bank $41 => $4007; see Func_Bank41_GetText), [$c822] = MODE,
+; [$c823] = ID. Result (string pointer) returned in DE.
+;   level 1:  table_base = [ DE + mode*2 ]   ; pick this mode's per-id table
+;   level 2:  string_ptr = [ table_base + id*2 ]
+; HAZARD: each mode's per-id table has its OWN entry count and NONE is bounds-checked,
+; so a new species id overshoots any table shorter than id+1 (e.g. bank $41 mode 7
+; FamilyCodePtrTable = 215 entries -> id 224 reads ItemNamePtrTable[9] = "SkyBell";
+; bank $4D mode 1 desc = 215 -> id 224 read ROM0 code and froze the detail page).
+; FORK: patches/bank_000.asm replaces the level-1 `ld e,[hl];inc hl;ld d,[hl]` below
+; with `call LoadModeBaseRedirect` ($00:$00F0), which redirects the mode-7 default-
+; nick base ($4739) for id>=224 to a new-species short-name table; all other text
+; byte/behaviour-identical. (Other modes are forked nearer their own tables, e.g.
+; bank $4D HighDetailTextFork.)
+SaveBankAndSwitch:        ; $092F
     ld a, [$4000]
     push af
     ld a, [$4000]
     ld [$c824], a
-    ld a, [$c822]
+    ld a, [$c822]         ; A = MODE (selector into the config list)
     ld l, a
 
 LookupDoublePtrTable:
     ld h, $00
-    add hl, hl
+    add hl, hl            ; mode*2
 
-TextHandler_0940:
-    add hl, de
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
-    ld a, [$c823]
+TextHandler_0940:         ; $0940 — mid-routine entry; level-1 lookup starts here
+    add hl, de            ; HL = config_base + mode*2
+    ld e, [hl]            ; \ level 1: DE = this mode's per-id table base
+    inc hl               ; |  (PATCH forks these 3 instrs -> call LoadModeBaseRedirect)
+    ld d, [hl]           ; /
+    ld a, [$c823]        ; A = ID (species / item index)
     ld l, a
     ld h, $00
-    add hl, hl
-    add hl, de
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
+    add hl, hl           ; id*2
+    add hl, de           ; HL = table_base + id*2  (no bounds check -> overshoot risk)
+    ld e, [hl]           ; \ level 2: DE = string pointer
+    inc hl               ; |
+    ld d, [hl]           ; /
     pop af
     ld [$2100], a
     ret

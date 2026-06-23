@@ -2011,13 +2011,13 @@ jr_00b_48f6:
     jr jr_00b_4917
 
 jr_00b_490b:
-    ld l, d
+    ld l, d              ; D = species+$10
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(SpritePtrTable_4974)
-    ld l, a
-    ld a, h
+    add LOW(SpritePtrTable_4974)   ; [5/8] follower gfx-ID copy ($4974). Repoint all 8 on
+    ld l, a                        ;   a swap. This copy's overshoot caused the new-species
+    ld a, h                        ;   hatch crash; patches/ forks it (FollowerArtResolve0b).
     adc HIGH(SpritePtrTable_4974)
     ld h, a
 

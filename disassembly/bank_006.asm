@@ -2515,13 +2515,13 @@ jr_006_4d61:
     jr jr_006_4d86
 
 jr_006_4d7a:
-    ld l, b
+    ld l, b              ; B = species+$10
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(MapNPCPosDataTable)
-    ld l, a
-    ld a, h
+    add LOW(MapNPCPosDataTable)   ; [2/8] follower gfx-ID copy ($4dcc; label is mgbdis-
+    ld l, a                       ;   misleading — NOT NPC pos data). Repoint all 8 on a
+    ld a, h                       ;   swap; new species id>=224 overshoots it.
     adc HIGH(MapNPCPosDataTable)
     ld h, a
 

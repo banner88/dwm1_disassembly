@@ -6078,14 +6078,14 @@ ReadFld_66a4:
 
 SaveFld_66b1:
     push hl
-    add $10
+    add $10              ; species + $10
     ld l, a
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(TileRefLookupTable)
-    ld l, a
-    ld a, h
+    add LOW(TileRefLookupTable)   ; [3/8] follower gfx-ID copy ($6e14; label is mgbdis-
+    ld l, a                       ;   misleading). Repoint all 8 on a swap; new species
+    ld a, h                       ;   id>=224 overshoots it.
     adc HIGH(TileRefLookupTable)
     ld h, a
     ld e, [hl]

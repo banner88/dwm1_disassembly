@@ -5617,14 +5617,14 @@ jr_009_6155:
     ld de, $2e20
     ld hl, $8a00
     call WaitDMATransfer
-    ld a, [$c8f4]
+    ld a, [$c8f4]        ; index = species+$10
     ld l, a
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(FieldPtrLookupTable)
-    ld l, a
-    ld a, h
+    add LOW(FieldPtrLookupTable)   ; [4/8] follower gfx-ID copy ($6b10; label is mgbdis-
+    ld l, a                        ;   misleading). Repoint all 8 on a swap; new species
+    ld a, h                        ;   id>=224 overshoots it.
     adc HIGH(FieldPtrLookupTable)
     ld h, a
     ld e, [hl]

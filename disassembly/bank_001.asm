@@ -1850,9 +1850,9 @@ jr_001_49a2:
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(ScreenTransDataTable)
-    ld l, a
-    ld a, h
+    add LOW(ScreenTransDataTable)   ; [1/8] follower gfx-ID copy (overworld). A swap/new
+    ld l, a                         ;   species must repoint ALL 8 copies:
+    ld a, h                         ;   $01/$06/$07/$09/$0b/$12/$18/$59 (see MONSTER_DATA).
     adc HIGH(ScreenTransDataTable)
     ld h, a
     ld e, [hl]
