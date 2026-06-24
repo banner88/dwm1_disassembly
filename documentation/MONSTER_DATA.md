@@ -339,11 +339,20 @@ Three independent overshoots, each handled:
   place (head stays top/tail stays bottom, but each tile mirrored — the OAM builder `SaveScr_40cd` does
   `attr = [$ffca] XOR entry_attr`, so a Y-flip in the base attr flips all tiles); and **low 3 bits = 1 →
   OBJ palette 1 = green.** `$418d` is live Armorpion data and cannot be written, so the attr READ is forked:
-  redirect `HramUnk11_406e` (`$11:$406e` → free `$11:$792d`) so id 224 gets a clean attr
-  (`[$ffca] = ([$ffca] & $98) | palette`, no flip, chosen palette). With a clean attr the art is stored
-  un-flipped and renders upright in the correct palette. *(Lesson: an index that overshoots a table doesn't
-  just give wrong data — if the stray byte's bit6/bit5 are set it injects a hardware flip, so "upside-down
-  sprite" and "wrong palette" can be the same root cause.)*
+  redirect `HramUnk11_406e` (`$11:$406e` → free `$11:$792d`) so id 224 gets a clean attr, then the art is
+  stored **un-flipped** and renders upright in the correct palette.
+- **The clean attr is `[$ffca] = ([$ffca] & $B8) | palette` — mask `$B8`, NOT `$98`.** This is surgical and
+  the distinction matters: `$ffca` is the **engine's** base attr, and the engine sets **bit5 ($20 = X-flip)
+  every frame for the LEFT facing** (layout-0 LEFT and RIGHT share the SIDE frames; LEFT is produced by a
+  global X-flip carried in `[$ffca]` bit5, which the original `[$ffca] |= attr` preserved). The fork must
+  clear ONLY the genuinely-garbage bits — **bit6 (Y-flip) + low3 (palette)** = mask `$B8 = 1011_1000` — and
+  **preserve bit5**. The earlier `$98 = 1001_1000` mask also cleared bit5, which wiped the engine's
+  left-facing flip → the follower faced RIGHT while walking LEFT (up/down/right were fine because their
+  `[$ffca]` bit5 is already 0). *(Lesson: an index that overshoots a table doesn't just give wrong data —
+  if the stray byte's bit6/bit5 are set it injects a hardware flip, so "upside-down sprite" and "wrong
+  palette" can be the same root cause; and when you sanitise the base attr, touch ONLY the garbage bits —
+  never the X-flip the engine drives for direction.)*
+
 
 **Reassignment primitive (`tools/build_follower_reassign.py`).** To restyle a monster's follower:
 (1) repoint its level-1 entry (`$10`/`$11:$407f + idx*2`) to a clean non-sharing layout's level-2

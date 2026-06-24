@@ -5,10 +5,26 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-23 (Session 33 — **Phase D: new-species DISPLAY fork seams annotated
-> in clean disassembly; labels/comments only, ZERO byte impact.** Integrity PASS 4/4, clean build
-> `1ca6579…` after every edit; every referenced label sym-verified to its address. Nothing
-> functional changed — no ROM to playtest.)
+> Last verified: 2026-06-24 (Session 34 — **Milestone G1: new-species follower ART baked into
+> `patches/` as an id-indexed table; user-playtested OK (all 4 directions, sprite consistent).**
+> Integrity PASS 4/4, clean build `1ca6579…`, patched build verified.)
+> **S34 — follower-art fork is now permanent + editor-shaped.** id 224 (blue-dragon proof art)
+> walks the overworld / shows in menu+library with real custom art, built from the canonical
+> `make` path. What landed in `patches/`: new overflow bank `bank_07e.asm` (blue-dragon 256B
+> layout-0 payload, gid `$7E00`); all **8 follower-art gfx-ID copies** forked to a per-bank
+> **id-indexed `NewFollowerGfxTableNN`** (`dw $7E00` at slot 0; resolver computes
+> `table + (species-224)*2`, so adding species 225 = append a `dw` + rebuild — content-sized,
+> grows on rebuild); `bank_011.asm` writes the layout level-1 slot `$413f = dw $4184` and forks
+> the attr read (`HramUnk11_406e` → `NewAttrHandler @ $11:$792d`, id-indexed `NewFollowerAttrTable`);
+> overworld clamp narrowed `cp $e0`→`cp $e1` so 224 passes (225–255 still clamp). New patch files:
+> `bank_011/059/07e.asm`; new tool `tools/bake_follower_overflow.py` (emits the art bank).
+> **Two orientation bugs found + fixed PROPERLY (root cause, not band-aid), both the same lesson —
+> sanitise the base attr surgically:** (1) art is stored **un-flipped** (the `--flip-y` band-aid was
+> removed from both tools); (2) the clean-attr mask is **`$B8` not `$98`** — `$98` also cleared the
+> engine's bit5 X-flip, breaking the LEFT facing. See KEY_LESSONS + MONSTER_DATA. **NOT yet done
+> (next): battle sprite + battle palette for id 224 (G2 — currently falls through to gid `$320f` =
+> "Durran", by design); `new_species.json` schema fold (G3).**
+
 > **S33 — name/text/lineage/follower display fork seams now self-documenting at the clean anchors.**
 > 11 files touched (`bank_000/001/006/007/009/00b/012/016/018/041/059`), comments+labels only.
 > Covered: bank `$41` `$4007` mode→table config list, the corrective `FamilyCodePtrTable` block

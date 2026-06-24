@@ -851,8 +851,13 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
         clean attr (no flip, OBJ palette 2 = blue). Both cosmetic bugs were this one overshoot byte.
       • **Battle:** gfx `$00:$2d5f` `$320f`→`$7e01`; palette reader `label17_41d0` forked (resolver
         `$17:$6ce0`) to a custom blue palette. (Full mechanism: MONSTER_DATA.md "NEW species followers".)
-      Remaining follow-up: port the binary forks/clamp/layout/attr/battle from the tool into proper
-      `patches/*.asm` (+ add new banks to verify_integrity PATCH lists) when a canonical build is wanted.
+      **Follow-up status:** the **FOLLOWER half is now baked into `patches/*.asm`** — Milestone **G1,
+      DONE (S34, user-playtested OK, all 4 directions).** id-indexed (content-sized) gfx-ID tables in all
+      8 banks, layout slot, attr fork, clamp; new `patches/bank_011/059/07e.asm` + tool
+      `tools/bake_follower_overflow.py`; in verify_integrity PATCH lists; integrity PASS 4/4.
+      Orientation fixed at root: art stored **un-flipped** (no `--flip-y`), clean-attr mask **`$B8`**
+      (preserves the engine's bit5 X-flip for LEFT). **Still tool-only (→ G2): the BATTLE sprite +
+      battle palette** (id 224 currently falls through to gid `$320f` = "Durran" in battle, by design).
 - [x] **N5 — Name + joinability + breeding/library wiring. DONE (S32, user-tested).** Name
       DONE ("Gorbunok" @ `$41:$7E46`). Library DONE + reproducible. Joinability via EID 2 clone.
       **Breeding now DONE — all three paths, user-confirmed:**

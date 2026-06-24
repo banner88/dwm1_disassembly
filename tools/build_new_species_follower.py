@@ -242,9 +242,6 @@ def main():
     ap.add_argument("--battle-png", default=None,
                     help="optional: also swap the BATTLE sprite (4-colour) + palette")
     ap.add_argument("--out", default="out/DWM-newspecies-follower.gbc")
-    ap.add_argument("--flip-y", dest="flip_y", action="store_true", default=False,
-                    help="pre-Y-flip each follower tile (only needed if the attr Y-flip bit is kept)")
-    ap.add_argument("--no-flip-y", dest="flip_y", action="store_false")
     args = ap.parse_args()
     sp = args.species
     if sp < 224:
@@ -254,18 +251,14 @@ def main():
         sys.exit(f"species {sp} does not route to bank $11")
 
     # 1. ART -----------------------------------------------------------------
+    # ORIENTATION RULE (KEY_LESSONS.md / MONSTER_DATA.md): art is stored UN-FLIPPED.
+    # The OAM builder does `attr = [$ffca] XOR entry_attr`; orientation is governed by
+    # the attr byte (cleaned by the attr fork below -> no flip bits) and the layout's
+    # per-tile entry_attr -- NOT by pre-flipping the tile data. Pre-flipping the payload
+    # is the documented ANTI-PATTERN (it only cancels the symptom of a flip attr and
+    # couples art orientation to a garbage byte); there is deliberately no --flip-y.
     fj = json.load(open(args.frames_json))
     payload = bfr.pack_png_layout0(args.art_png, fj["frames"], fj["transparent_rgb"])
-    if args.flip_y:
-        # The follower display path Y-flips every tile in place (head stays top,
-        # tail stays bottom, but each 8x8 tile's rows are mirrored). Pre-flip each
-        # tile's 8 rows so the two cancel and the sprite renders upright.
-        pl = bytearray(payload)
-        for t in range(len(pl) // 16):
-            rows = [pl[t*16 + r*2 : t*16 + r*2 + 2] for r in range(8)]
-            for r in range(8):
-                pl[t*16 + r*2 : t*16 + r*2 + 2] = rows[7 - r]
-        payload = bytes(pl)
     stream = sc.encode_safe(payload, literal_only=True)
     alloc = sb.SpriteOverflowAllocator()
     gid = alloc.add(stream, f"Follower_sp{sp}")
@@ -295,7 +288,8 @@ def main():
     # palette 1 = green). Both prior symptoms were this one garbage byte. Writing
     # $418d is impossible (live Armorpion layout), so fork the read: redirect
     # HramUnk11_406e to free space and give id 224 a CLEAN attr (no flip, chosen
-    # palette). $98 keeps priority/bank bits, clears both flip bits + palette.
+    # palette). $b8 keeps priority/bank AND X-flip(5) bits (engine sets X-flip for the
+    # LEFT facing), clears only Y-flip(6) + palette(0-2).
     HRAM_FN = 0x406e            # HramUnk11_406e
     FREE = 0x792d              # bank $11 padding (1747 B of $00)
     orval = args.attr & 0x77
@@ -305,7 +299,7 @@ def main():
         0xFE, sub & 0xFF,                   # cp <sub>      (224-128 = $60)
         0x20, 0x09,                         # jr nz,.normal
         0xF0, 0xCA,                         # ldh a,[$ca]
-        0xE6, 0x98,                         # and $98       (clear Y/X-flip + palette)
+        0xE6, 0xB8,                         # and $b8       (clear Y-flip+palette; KEEP X-flip)
         0xF6, orval,                        # or  <palette>
         0xE0, 0xCA,                         # ldh [$ca],a
         0xC9,                               # ret

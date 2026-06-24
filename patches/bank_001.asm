@@ -1842,12 +1842,12 @@ jr_001_49a2:
     ld l, a
     ld h, $00
     add hl, hl
-    ld a, l
-    add LOW(ScreenTransDataTable)
-    ld l, a
-    ld a, h
-    adc HIGH(ScreenTransDataTable)
-    ld h, a
+    call FollowerArtResolve01         ; FORK: id>=224 -> new-species follower gfx-ID table; else normal (byte-neutral 8->3+5)
+    nop
+    nop
+    nop
+    nop
+    nop
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -10250,47 +10250,49 @@ jr_001_7fd0:
     inc hl
     inc hl
     inc de
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; =============================================================================
+; FollowerArtResolve01 — Phase N follower-art fork for the $01 ScreenTransData copy.
+; Reader passes HL = (species+$10)*2. id>=224 (HL>=$1E0) -> indexed new-species
+; follower gfx-ID table; else replicate the original add-base into
+; ScreenTransDataTable (byte-identical to vanilla for species 0-223). Compact
+; 12-byte dispatch (fits bank $01's tight end-of-bank padding). Byte-neutral:
+; replaces 32 of the 33 trailing $FF padding bytes, leaving the clamp in place.
+; =============================================================================
+FollowerArtResolve01:                ; in: HL = (species+$10)*2
+    ld a, h
+    cp $01
+    jr c, .normal                    ; h==0 -> HL<$100 (species<128)
+    jr nz, .high                     ; h>=2 -> HL>=$200 (species>=240)
+    ld a, l
+    cp $e0
+    jr c, .normal                    ; HL<$1E0 -> species<224
+.high:                               ; HL = NewFollowerGfxTable01 + (species-224)*2
+    ld a, l
+    add LOW(NewFollowerGfxTable01 - $1E0)
+    ld l, a
+    ld a, h
+    adc HIGH(NewFollowerGfxTable01 - $1E0)
+    ld h, a
+    ret
+.normal:
+    ld a, l
+    add LOW(ScreenTransDataTable)
+    ld l, a
+    ld a, h
+    adc HIGH(ScreenTransDataTable)
+    ld h, a
+    ret
+NewFollowerGfxTable01:
+    dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)
+    rst $38                          ; 1-byte padding refill (resolver=32B, run was 33B)
 ; --- Phase N: clamp species>=224 to a valid follower (placeholder until Stage 2) ---
 ; Lives in bank $01 end-of-bank padding (same bank as caller). Reached via the
 ; repointed species read in GetActiveMonsterStatus; species>=224 has no follower
 ; gfx-ID entry yet, so borrow species 214 to avoid a garbage-gfxID decompress crash.
 ReadActiveMonsterByteSpeciesClamped:
     call ReadActiveMonsterByte        ; A = active monster species (ReadActiveMonsterByte is ROM0)
-    cp $e0                            ; >= 224 (new species)?
-    ret c                             ; no -> real species
-    ld a, $d6                         ; yes -> clamp to species 214 (valid follower)
+    cp $e1                            ; >= 225? (224 now has real follower art -> let it pass)
+    ret c                             ; no (incl. 224) -> real species
+    ld a, $d6                         ; yes (225-255, no real monster) -> clamp to species 214
     ret
     db $01

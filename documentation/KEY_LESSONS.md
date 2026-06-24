@@ -1148,6 +1148,21 @@ often the SAME root cause — decode the stray byte's bits before treating them 
 problems. The clean fix is to fork the READ (supply a correct attr), not to pre-flip the art
 (which only cancels the symptom and silently couples art orientation to a garbage byte).
 
+### Sanitising a base attr: clear ONLY the garbage bits, never the X-flip the engine drives
+Follow-on from the above. After forking the new-species attr read, the clean attr must be built
+with a SURGICAL mask. `[$ffca]` is the **engine's** base OBJ attr, and the engine sets **bit5
+($20 = X-flip) every frame for the LEFT facing** — in layout-0, LEFT and RIGHT share the SIDE
+frames and LEFT is produced by a global X-flip carried in `[$ffca]` bit5 (the vanilla
+`[$ffca] |= attr` preserved it, which is why an existing-monster reassign mirrors LEFT
+correctly). Two builds in a row had the follower face RIGHT while walking LEFT (up/down/right
+fine) because the fork used `and $98` (`1001_1000`), which clears bit6 (Y-flip, correct) **and
+bit5 (X-flip, WRONG)** — wiping the engine's left-facing flip each frame. The fix is `and $B8`
+(`1011_1000`): clear only the genuine garbage — **bit6 (Y-flip) + low3 (palette)** — and
+preserve bit5. **Rule:** a "clean attr" mask must touch ONLY the bits that are actually garbage
+(Y-flip + the palette you're overriding). Bit5 is the engine's per-direction X-flip; clearing it
+is a silent directional bug that static byte-tracing won't surface (it only manifests for the
+one mirrored facing). Decode every bit of a mask against what the engine writes before using it.
+
 ### Static byte-tracing can "prove" a fix that the emulator disproves — use a numbered-tile ROM
 The overworld follower stayed wrong across several builds while every byte I checked (clamp,
 fork, overflow pointer, layout index, engine dy-sign) said it should be right. The gap was a

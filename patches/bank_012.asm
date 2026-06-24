@@ -6049,12 +6049,12 @@ CmpItem_65cb:
     ld l, a
     ld h, $00
     add hl, hl
-    ld a, l
-    add LOW(ItemSlotPtrTable)
-    ld l, a
-    ld a, h
-    adc HIGH(ItemSlotPtrTable)
-    ld h, a
+    call FollowerArtResolve12         ; FORK: id>=224 -> new-species follower gfx-ID table; else normal (byte-neutral 8->3+5)
+    nop
+    nop
+    nop
+    nop
+    nop
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -8631,38 +8631,39 @@ LibFamily_10:  ; 2 members
 LibFamilyEmpty:  ; spare nav cells (>= NUM_FAMILIES) — blank, crash-safe
     db 0
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; =============================================================================
+; FollowerArtResolve12 — Phase N follower-art fork for the $12 copy (ItemSlotPtrTable,
+; $65f2; supplies lineage parent icons AND menu/library follower art). Reader passes
+; HL = (species+$10)*2 (species>=240 already shunted upstream at cp $f0). id>=224 ->
+; indexed new-species follower gfx-ID table; else original add-base. Byte-neutral:
+; 32B resolver replaces 32 of the 785 trailing $00 padding bytes.
+; =============================================================================
+FollowerArtResolve12:                ; in: HL = (species+$10)*2
+    ld a, h
+    cp $01
+    jr c, .normal
+    jr nz, .high
+    ld a, l
+    cp $e0
+    jr c, .normal
+.high:
+    ld a, l
+    add LOW(NewFollowerGfxTable12 - $1E0)
+    ld l, a
+    ld a, h
+    adc HIGH(NewFollowerGfxTable12 - $1E0)
+    ld h, a
+    ret
+.normal:
+    ld a, l
+    add LOW(ItemSlotPtrTable)
+    ld l, a
+    ld a, h
+    adc HIGH(ItemSlotPtrTable)
+    ld h, a
+    ret
+NewFollowerGfxTable12:
+    dw $7E00
     nop
     nop
     nop

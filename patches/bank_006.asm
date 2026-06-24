@@ -2518,12 +2518,12 @@ jr_006_4d7a:
     ld l, b
     ld h, $00
     add hl, hl
-    ld a, l
-    add LOW(MapNPCPosDataTable)
-    ld l, a
-    ld a, h
-    adc HIGH(MapNPCPosDataTable)
-    ld h, a
+    call FollowerArtResolve06         ; FORK: id>=224 -> new-species follower gfx-ID table; else normal (byte-neutral 8->3+5)
+    nop
+    nop
+    nop
+    nop
+    nop
 
 jr_006_4d86:
     ld e, [hl]
@@ -13340,36 +13340,37 @@ Jump_006_7f7f:
     rst $38
     rst $38
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; =============================================================================
+; FollowerArtResolve06 — Phase N follower-art fork for the $06 copy (mislabelled
+; MapNPCPosDataTable, $4dcc). Reader passes HL = (species+$10)*2. id>=224 ->
+; indexed new-species follower gfx-ID table; else original add-base. Placed at the
+; end of bank-$06 end padding (byte-neutral: 32B resolver replaces 32 $FF bytes,
+; leaving the $7f7f label landing on rst $38 as before, db $06 still at $7FFF).
+; =============================================================================
+FollowerArtResolve06:                ; in: HL = (species+$10)*2
+    ld a, h
+    cp $01
+    jr c, .normal
+    jr nz, .high
+    ld a, l
+    cp $e0
+    jr c, .normal
+.high:
+    ld a, l
+    add LOW(NewFollowerGfxTable06 - $1E0)
+    ld l, a
+    ld a, h
+    adc HIGH(NewFollowerGfxTable06 - $1E0)
+    ld h, a
+    ret
+.normal:
+    ld a, l
+    add LOW(MapNPCPosDataTable)
+    ld l, a
+    ld a, h
+    adc HIGH(MapNPCPosDataTable)
+    ld h, a
+    ret
+NewFollowerGfxTable06:
+    dw $7E00
     db $06

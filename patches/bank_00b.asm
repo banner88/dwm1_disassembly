@@ -2545,8 +2545,13 @@ FollowerArtResolve0b:                ; in: HL = (species+$10)*2
     ld a, l
     cp $e0
     jr c, .normal                    ; HL<$1E0 -> species<224
-.high:
-    ld hl, GorbunokFollowerGfxID0b
+.high:                               ; species>=224: HL = NewFollowerGfxTable0b + (species-224)*2
+    ld a, l                          ; HL still = (species+$10)*2; +(Table-$1E0) yields the indexed slot
+    add LOW(NewFollowerGfxTable0b - $1E0)
+    ld l, a
+    ld a, h
+    adc HIGH(NewFollowerGfxTable0b - $1E0)
+    ld h, a
     ret
 .normal:
     ld a, l
@@ -2556,8 +2561,10 @@ FollowerArtResolve0b:                ; in: HL = (species+$10)*2
     adc HIGH(SpritePtrTable_4974)
     ld h, a
     ret
-GorbunokFollowerGfxID0b:
-    dw $2f09                         ; interim Slime follower art (same as $07/$09/$18)
+; id-indexed new-species follower gfx-ID table (one dw per id, starting at 224).
+; Editor appends one dw per new species; sized to content (grows on rebuild).
+NewFollowerGfxTable0b:
+    dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)
 
 ; =============================================================================
 ; ROOM DATA SECTION ($4B43 - $7FFF)

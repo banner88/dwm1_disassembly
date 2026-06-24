@@ -11604,21 +11604,21 @@ jr_009_7eca:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
 FollowerArtResolve09:
     ld a, h
-    cp $02
-    jr nc, .high
     cp $01
-    jr c, .normal
+    jr c, .normal                    ; h==0 -> HL<$100 (species<128)
+    jr nz, .high                     ; h>=2 -> HL>=$200 (species>=240)
     ld a, l
     cp $e0
-    jr c, .normal
-.high:
-    ld hl, GorbunokFollowerGfxID09
+    jr c, .normal                    ; HL<$1E0 -> species<224
+.high:                               ; species>=224: HL = NewFollowerGfxTable09 + (species-224)*2
+    ld a, l
+    add LOW(NewFollowerGfxTable09 - $1E0)
+    ld l, a
+    ld a, h
+    adc HIGH(NewFollowerGfxTable09 - $1E0)
+    ld h, a
     ret
 .normal:
     ld a, l
@@ -11628,5 +11628,5 @@ FollowerArtResolve09:
     adc HIGH(FieldPtrLookupTable)
     ld h, a
     ret
-GorbunokFollowerGfxID09:
-    dw $2f09
+NewFollowerGfxTable09:
+    dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)

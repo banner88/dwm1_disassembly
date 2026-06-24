@@ -8636,22 +8636,23 @@ jr_018_7e82:
     nop
     nop
     nop
-    nop
-    nop
 ; --- Phase N: follower-art resolver (species>=224 = new species) ---
 ; Replaces the inline TextDataPtrLookup index calc. <224: identical behaviour.
 ; >=224: HL -> Gorbunok follower gfx-ID (this bank). Same idea as the info fork.
 FollowerArtResolve18:                ; in: HL = species*2
     ld a, h
-    cp $02
-    jr nc, .high                     ; HL>=$200
     or a
-    jr z, .normal                    ; HL<$100 (species<128)
+    jr z, .normal                    ; h==0 -> HL<$100 (species<128)
     ld a, l
     cp $c0                           ; species>=224 -> species*2>=$1C0
     jr c, .normal
-.high:
-    ld hl, GorbunokFollowerGfxID18
+.high:                               ; species>=224: HL = NewFollowerGfxTable18 + (species-224)*2
+    ld a, l                          ; raw convention: HL = species*2, so +(Table-$1C0)
+    add LOW(NewFollowerGfxTable18 - $1C0)
+    ld l, a
+    ld a, h
+    adc HIGH(NewFollowerGfxTable18 - $1C0)
+    ld h, a
     ret
 .normal:
     ld a, l
@@ -8661,5 +8662,5 @@ FollowerArtResolve18:                ; in: HL = species*2
     adc HIGH(TextDataPtrLookup)
     ld h, a
     ret
-GorbunokFollowerGfxID18:
-    dw $2f09                         ; interim: Slime follower art (merman swap next)
+NewFollowerGfxTable18:
+    dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)
