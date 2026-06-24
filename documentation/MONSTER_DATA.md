@@ -93,6 +93,33 @@ Values: 0=weak/no resistance, 1=some resist, 2=normal, 3=strong/immune.
 | +17 | 4 | AI weights |
 | +21 | 4 | Skills ($FF = none) |
 
+### Starter Monster ("Slib") — enemy-stats EID 1 (verified S36, confirmed in-game)
+
+The starting monster is **enemy-stats entry 1** (`$14:$4C36`, flat `0x50C36`): a
+dedicated always-join (joinability `$00`) Lv1 Slime, structurally distinct from
+the wild Slime (EID 2, joinability `$02`, HP 8). Default fields: species `$08`,
+Lv1, HP 30, MP 0, ATK 10, DEF 6, AGL 5, INT 1.
+
+**Grant path**: the Castle (map-type `$00`) intro script reaches
+`add_monster enemy=$0001` at `$0C:$42D6` by falling through an `if_flag_set`
+cascade that all fail on a fresh save. The last gate is `if_flag_set $0002`;
+immediately after the grant the script does `set_flag $0002`, so the starter is
+given **exactly once** at new game. The `add_monster` opcode (`$29`, handler
+`$04:$5F9A`) writes the EID to `$DA12/$DA13`, finds the first empty `$CAC1` slot,
+and builds the monster via `LoadEnemyStats(EID 1)` → `label14_40b4` (`$14:$40B4`).
+The grant block is annotated in `disassembly/bank_00c.asm` at
+`Bank0C_ScriptAddr_4270:` (labels/comments only; byte-perfect).
+
+**Editing the starter**: change enemy-stats entry 1. Species and level transfer
+*exactly*. The six stats (HP/MP/ATK/DEF/AGL/INT) transfer as the **base**, then
+receive the standard creation roll (see Party Monster Structure) — each displayed
+stat is 80–100% of the field value, re-rolled per new game. Confirmed in-game by
+swapping EID 1 → SkyDragon, Lv25, HP-field 599: the starter appeared as a
+SkyDragon Lv25 with HP 566 (∈ 479–599) and Slime-tier ATK 8 / DEF 5 straight from
+entry 1's fields — proving the stats derive from the entry, not the species
+growth curve. EID 1 is starter-only (no encounter pool or boss references it), so
+edits are isolated to the starter.
+
 ## Boss Table (Bank $14:$4897)
 
 32 gates × 4 bytes. Preceded by 1 non-boss redirect entry at $4893.
@@ -125,6 +152,14 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | $5A | 2 | INT |
 | $62 | 1 | Plus value |
 | $68 | 27 | Resistances |
+
+**Stat creation roll (verified S36)**: when a monster is built from enemy stats
+(`label14_40b4`, `$14:$40B4`), each of the six stats is scaled by `SaveEnem_4821`
+— multiply the base by a random factor of `205..256`, then `>>8` (i.e. **80–100%
+of the base, rolled independently per stat**). Species and level are copied
+verbatim. The growth/personality value (the "WLD"-style field) is set to a
+species-derived base ±2 (RNG). This is why a freshly-granted monster's displayed
+stats sit slightly below the enemy-stats field values and vary between new games.
 
 ## Name Tables (Bank $41)
 
@@ -163,6 +198,42 @@ is looked up and replaced with the join EID (the monster stats for what joins).
 | `$DB85` | Joinability: $07=no, other=yes (RNG-based) |
 | `$DD61` | Join candidate species ($FF = none) |
 | `$DD6B` | Copy of $DB55 |
+
+### Per-gate force-join hack (editor-only; verified S36; NOT in patches/)
+
+The legacy hex editor can force normally-non-joinable (`$DB85 = $07`) monsters to
+join at chosen gates via a raw-byte hook. The hook sites and resolver were
+verified correct at the byte level (decoded from `$54:$55BB` onward):
+
+- `$54:$55D5` — the `cp $07 / jr z` non-joinable early-exit. NOP'd (`00 00`) so
+  `$07` monsters no longer skip the decision. (This only affects tier-7; the
+  branch never fired for other tiers, so tiers 0–6 are untouched.)
+- `$54:$5604` — `call $5683` (the join-result processor) redirected to
+  `call $7FC8` (`CD C8 7F`).
+- Resolver at `$54:$7FC8` (lives in the free zero padding `$7FC8–$7FFF`): it
+  calls `$5683` first and **honors its result** for tiers 0–6 and for non-flagged
+  tier-7 (normal behavior preserved); only when tier `== 7` **and**
+  `table[wGateID] == 1` does it `scf` (force join). Note `$5683` itself rejects
+  tier-7 (`cp $07 → carry clear`), which is exactly why both the NOP *and* the
+  redirect are required. Per-gate flag table = 32 bytes at `$54:$7FE0`.
+
+**Brittleness (must be resolved before any port to `patches/`):**
+1. **`wGateID` (`$C935`) is overloaded.** The arena (`bank_055`) sets it to `0`;
+   gate-entry (`bank_016`) sets it to `wMapID`. The resolver indexes
+   `table[wGateID]` unconditionally, so (a) a flagged gate 0 can leak force-join
+   into arena tier-7 fights, and (b) the table is keyed by `wMapID`, **not** the
+   "gate ID 0–31" ordering the editor UI assumes — if those numberings differ,
+   the wrong gates force-join. Confirm `wGateID` at the join check in SameBoy
+   (watchpoint on `$C935` read at `$7FD2`) before trusting table alignment.
+2. **Range:** `wMapID > 31` reads past the 32-byte table (stays in-bank, wrong
+   byte).
+3. **Semantics:** tier-7 monsters have no `join_eid` redirect (the boss redirect,
+   bank $14 entry 6, only applies to *designed* join monsters), so force-joining a
+   boss yields its **raw battle species at battle level** — potentially
+   overpowered with no proper growth.
+
+No misassembly exists here — `bank_054.asm` is correctly assembled and already
+annotated; the hack itself is editor-only and was never ported to `patches/`.
 
 ## Data Files
 

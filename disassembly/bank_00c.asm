@@ -522,130 +522,86 @@ Bank0C_ScriptAddr_4246:
     dw $490A
     dw $FFFF  ; END
 
-    db $01
-    db $FF
-    db $F1
-    db $00
-    db $FA
-    db $41
-    db $01
-    db $FF
-    db $EE
-    db $00
-    db $BA
-    db $44
-    db $01
-    db $FF
-    db $9A
-    db $00
-    db $FA
-    db $41
-    db $01
-    db $FF
-    db $37
-    db $00
-    db $38
-    db $44
-    db $01
-    db $FF
-    db $69
-    db $00
-    db $FA
-    db $41
-    db $01
-    db $FF
-    db $33
-    db $00
-    db $0C
-    db $44
-    db $01
-    db $FF
-    db $3E
-    db $00
-    db $FA
-    db $41
-    db $01
-    db $FF
-    db $30
-    db $00
-    db $8C
-    db $43
-    db $01
-    db $FF
-    db $08
-    db $00
-    db $FA
-    db $41
-    db $01
-    db $FF
-    db $07
-    db $00
-    db $EC
-    db $42
-    db $01
-    db $FF
-    db $02
-    db $00
-    db $FA
-    db $41
-    db $10
-    db $FF
-    db $00
-    db $00
-    db $E8
-    db $00
-    db $0B
-    db $FF
-    db $00
-    db $00
-    db $E0
-    db $FF
-    db $07
-    db $FF
-    db $20
-    db $00
-    db $06
-    db $FF
-    db $12
-    db $FF
-    db $F4
-    db $C8
-    db $00
-    db $00
-    db $13
-    db $FF
-    db $F2
-    db $C8
-    db $42
-    db $CA
-    db $04
-    db $FF
-    db $0F
-    db $00
-    db $00
-    db $00
-    db $29
-    db $FF
-    db $01
-    db $00
-    db $07
-    db $FF
-    db $21
-    db $00
-    db $06
-    db $FF
-    db $03
-    db $FF
-    db $02
-    db $00
-    db $12
-    db $FF
-    db $2C
-    db $D9
-    db $02
-    db $00
-    db $FF
-    db $FF
+Bank0C_ScriptAddr_4270:
+; =============================================================================
+; NEW-GAME INTRO  —  grants the STARTER MONSTER ("Slib").
+; -----------------------------------------------------------------------------
+; Reached by fall-through when NONE of the story-progress flags below are set,
+; i.e. on a brand-new save. Each if_flag_set jumps away once the corresponding
+; later-game flag exists; on a fresh game execution falls through to the
+; add_monster grant, then sets flag $0002 so the grant runs EXACTLY ONCE
+; (the $0002 check is the last gate in the cascade).
+;
+; STARTER = enemy-stats EID $0001  ($14:$4C36, flat 0x50C36): a dedicated
+; always-join (joinability $00) Lv1 Slime, distinct from the wild Slime (EID 2).
+; The add_monster ($29) handler ($04:$5F9A) builds it from LoadEnemyStats(EID 1)
+; into the first empty $CAC1 storage slot. Editing enemy-stats entry 1 therefore
+; changes the starting monster's species / level / stats.
+; =============================================================================
+    dw $FF01  ; if_flag_set $00F1 -> $41FA
+    dw $00F1
+    dw $41FA
+    dw $FF01  ; if_flag_set $00EE -> $44BA
+    dw $00EE
+    dw $44BA
+    dw $FF01  ; if_flag_set $009A -> $41FA
+    dw $009A
+    dw $41FA
+    dw $FF01  ; if_flag_set $0037 -> $4438
+    dw $0037
+    dw $4438
+    dw $FF01  ; if_flag_set $0069 -> $41FA
+    dw $0069
+    dw $41FA
+    dw $FF01  ; if_flag_set $0033 -> $440C
+    dw $0033
+    dw $440C
+    dw $FF01  ; if_flag_set $003E -> $41FA
+    dw $003E
+    dw $41FA
+    dw $FF01  ; if_flag_set $0030 -> $438C
+    dw $0030
+    dw $438C
+    dw $FF01  ; if_flag_set $0008 -> $41FA
+    dw $0008
+    dw $41FA
+    dw $FF01  ; if_flag_set $0007 -> $42EC
+    dw $0007
+    dw $42EC
+    dw $FF01  ; if_flag_set $0002 -> $41FA   (starter-given flag: skip once granted)
+    dw $0002
+    dw $41FA
+    ; --- fall-through: brand-new save, grant the starter ---
+    dw $FF10  ; npc_moveto npc#0, $00E8
+    dw $0000
+    dw $00E8
+    dw $FF0B  ; npc_move_y  npc#0, -32
+    dw $0000
+    dw $FFE0
+    dw $FF07  ; init_dialog $0020   (intro text)
+    dw $0020
+    dw $FF06  ; inc_counter
+    dw $FF12  ; write_ram  [$C8F4] = $0000
+    dw $C8F4
+    dw $0000
+    dw $FF13  ; write_ram2 [$C8F2] = $CA42
+    dw $C8F2
+    dw $CA42
+    dw $FF04  ; screen_effect $000F, $0000
+    dw $000F
+    dw $0000
+    dw $FF29  ; add_monster  <<<<<<  STARTER MONSTER GRANT
+    dw $0001  ;   enemy = enemy-stats EID $0001 = "Slib" (Lv1 Slime; $14:$4C36).
+              ;   Change enemy-stats entry 1 to change the starting monster.
+    dw $FF07  ; init_dialog $0021
+    dw $0021
+    dw $FF06  ; inc_counter
+    dw $FF03  ; set_flag $0002   (mark starter granted; cascade above skips hereafter)
+    dw $0002
+    dw $FF12  ; write_ram  [$D92C] = $0002
+    dw $D92C
+    dw $0002
+    dw $FFFF  ; END
     db $10
     db $FF
     db $00

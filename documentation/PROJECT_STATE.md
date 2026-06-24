@@ -5,6 +5,19 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-24 (Session 36 — **Starter + force-join verification (audit of legacy
+> editor knowledge).** Integrity PASS 4/4, clean build `1ca6579…`.)
+> **S36 — starter mechanism PROVEN end-to-end and editor claim confirmed.** Starter = enemy-stats
+> **EID 1** (`$14:$4C36`); granted by Castle intro `add_monster enemy=$0001` at `$0C:$42D6`, gated by
+> flag `$0002` (fires once at new game), built via `LoadEnemyStats(EID 1)` → `label14_40b4`. Confirmed
+> in-game (EID 1 → SkyDragon Lv25 swap). Stats transfer as base then take an 80–100% creation roll
+> (`SaveEnem_4821`). Annotated the previously-raw-`db` grant block in `bank_00c.asm`
+> (`Bank0C_ScriptAddr_4270:`, labels/comments only, byte-perfect). **Force-join hack verified** (hooks
+> `$54:$55D5` NOP + `$54:$5604`→`$7FC8` resolver + `$7FE0` table all correct; logic sound) but **NOT
+> ported** — brittle on `wGateID` (`$C935`) overload (arena/bank_055 zeroes it; gate-entry/bank_016 sets
+> it to `wMapID`, not the editor's 0–31 ordering), table range, and tier-7 lacking a `join_eid` redirect.
+> Crossbank left untouched per directive. Docs updated: MONSTER_DATA.md (Starter Monster, stat creation
+> roll, force-join verification), EVENT_FLAGS.md (flag `$0002`).
 > Last verified: 2026-06-24 (Session 35 — **Milestone G2: new-species BATTLE sprite + battle
 > palette baked into `patches/`; user-confirmed OK.** Integrity PASS 4/4, clean build `1ca6579…`,
 > patched build verified.)

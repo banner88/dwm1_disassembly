@@ -82,6 +82,7 @@ $D933=2, $D934=2) to their post-game states.
 
 | Flag | Byte.Bit | Checks | Set By | Purpose |
 |------|----------|--------|--------|---------|
+| $0002 | $D99B.1 | — | Castle scr0 (new-game intro) | Starter granted — gates the `add_monster enemy=$0001` (Slib) grant at `$0C:$42D6`; set immediately after so the starter is given exactly once (see MONSTER_DATA.md → Starter Monster) |
 | $00F1 | $D9B9.6 | **131** | Castle scr0 (unreached) | Post-game unlock (Starry Night champion) |
 | $0025 | $D99F.2 | 59 | Boss: Reflection scr0 | Defeat Durran — unlocks Starry Night |
 | $0037 | $D9A1.0 | 59 | Arena Lobby scr0 | Beat S class arena |
