@@ -5,9 +5,23 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-24 (Session 34 — **Milestone G1: new-species follower ART baked into
-> `patches/` as an id-indexed table; user-playtested OK (all 4 directions, sprite consistent).**
-> Integrity PASS 4/4, clean build `1ca6579…`, patched build verified.)
+> Last verified: 2026-06-24 (Session 35 — **Milestone G2: new-species BATTLE sprite + battle
+> palette baked into `patches/`; user-confirmed OK.** Integrity PASS 4/4, clean build `1ca6579…`,
+> patched build verified.)
+> **S35 — battle-art half is now permanent too.** id 224 (blue-dragon proof art) now shows its real
+> custom sprite IN BATTLE (royal-blue body / white belly / black outline), matching the G1 follower.
+> What landed in `patches/`: the dragon battle pose packed as a **2nd overflow entry** in `bank_07e.asm`
+> (`Battle_sp224` @ gid **`$7E01`**; the follower stays `$7E00`, byte-identical — the pointer table just
+> grew to 2 entries); `bank_000.asm` repoints `MonsterBattleGfxTable[224]` at `$00:$2d5f` `$320f`→`$7e01`
+> — a **same-size 2-byte edit, NO fork**, because the species-indexed battle gfx table `$2b9f` has a real
+> (padding) slot for id 224 (contrast the follower tables, which overshoot and needed id-indexed forks);
+> `bank_017.asm` forks the battle-palette reader `label17_41d0` byte-neutral (`call HighBattlePal` + 5 `nop`)
+> to a resolver in the bank `$17` filler tail (`$6cea`) — id≥224 → custom palette `67 4d ff 6b ff 7f 00 00`,
+> else vanilla `$62fd+species*8` (its slot `$69fd` overshoots into `PaletteColorData`). Tool
+> `tools/bake_follower_overflow.py` extended with `--battle-art/--battle-spec` (emits both streams, prints
+> the battle gfx-ID + palette); new spec `examples/follower_swap/gorbunok_battle.json`. No verify_integrity
+> PATCH-list change (`bank_000/017` already in PATCH_FILES, `bank_07e` in PATCH_NEW_FILES). See
+> KEY_LESSONS + MONSTER_DATA "NEW species battle sprite".
 > **S34 — follower-art fork is now permanent + editor-shaped.** id 224 (blue-dragon proof art)
 > walks the overworld / shows in menu+library with real custom art, built from the canonical
 > `make` path. What landed in `patches/`: new overflow bank `bank_07e.asm` (blue-dragon 256B
@@ -21,9 +35,9 @@
 > **Two orientation bugs found + fixed PROPERLY (root cause, not band-aid), both the same lesson —
 > sanitise the base attr surgically:** (1) art is stored **un-flipped** (the `--flip-y` band-aid was
 > removed from both tools); (2) the clean-attr mask is **`$B8` not `$98`** — `$98` also cleared the
-> engine's bit5 X-flip, breaking the LEFT facing. See KEY_LESSONS + MONSTER_DATA. **NOT yet done
-> (next): battle sprite + battle palette for id 224 (G2 — currently falls through to gid `$320f` =
-> "Durran", by design); `new_species.json` schema fold (G3).**
+> engine's bit5 X-flip, breaking the LEFT facing. See KEY_LESSONS + MONSTER_DATA. **G2 (battle sprite +
+> battle palette for id 224) is now DONE (S35, above).** NOT yet done (next): `new_species.json` schema
+> fold (G3).**
 
 > **S33 — name/text/lineage/follower display fork seams now self-documenting at the clean anchors.**
 > 11 files touched (`bank_000/001/006/007/009/00b/012/016/018/041/059`), comments+labels only.
@@ -568,7 +582,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | Primitive | Status | Where |
 |-----------|--------|-------|
-| Add NEW monster species (ids 224–255) | 🟡 working POC (S30): id 224 Gorbunok playable | ROADMAP "Phase N"; mechanics MONSTER_DATA "Species ID geography". N1 scope ✅, N2 info-fork ✅ (`build_new_species.py`→`bank_06a`, `SaveMon_4446` zero-shift, vanilla 0–220 byte-identical), N3 enemy-stats ✅ (16-bit EID → no fork, EID 518 @ `$14:$7EB3`) + wild encounter ✅ (pool 0 slot 3, same-size `EncounterPoolData` edit in `bank_001`), name ✅ ("Gorbunok"), library ✅ (`build_library_table.py --new-species`, unseen-marker `$E0`→`$FE`). All tool-owned/reproducible. **S32 (user-tested):** N5 breeding DONE — Snaily×BattleRex→Gorbunok (special append, `build_breeding.py` admits new-species results), parent-path free via Slime family, recipe icons via `FamilyRecipeResolve`. Hatch crash (bank `$0b` follower overshoot, pinned in SameBoy) fixed (`FollowerArtResolve0b`). Default-nickname+narration "SkyBell" overshoot fixed → "Gorb" first-4 via `LoadModeBaseRedirect` ($00F0 ROM0 padding) → new-species short-name at `$41:$7FF9`. N4 follower ART integrated via `build_new_species_follower.py` (real W.png art, gid `$7e00`, all 8 contexts) — note: art is tool-applied, not yet baked into `patches/`. **Open:** N4 battle sprite (still DarkDrium placeholder, separate `--battle-png`); follower art bake-into-`patches/`; lineage parent-name "?????" (modes 0/1 `$4025/$4039` overshoot id 224 — see ROADMAP N5 sub-item). |
+| Add NEW monster species (ids 224–255) | 🟡 working POC (S30): id 224 Gorbunok playable | ROADMAP "Phase N"; mechanics MONSTER_DATA "Species ID geography". N1 scope ✅, N2 info-fork ✅ (`build_new_species.py`→`bank_06a`, `SaveMon_4446` zero-shift, vanilla 0–220 byte-identical), N3 enemy-stats ✅ (16-bit EID → no fork, EID 518 @ `$14:$7EB3`) + wild encounter ✅ (pool 0 slot 3, same-size `EncounterPoolData` edit in `bank_001`), name ✅ ("Gorbunok"), library ✅ (`build_library_table.py --new-species`, unseen-marker `$E0`→`$FE`). All tool-owned/reproducible. **S32 (user-tested):** N5 breeding DONE — Snaily×BattleRex→Gorbunok (special append, `build_breeding.py` admits new-species results), parent-path free via Slime family, recipe icons via `FamilyRecipeResolve`. Hatch crash (bank `$0b` follower overshoot, pinned in SameBoy) fixed (`FollowerArtResolve0b`). Default-nickname+narration "SkyBell" overshoot fixed → "Gorb" first-4 via `LoadModeBaseRedirect` ($00F0 ROM0 padding) → new-species short-name at `$41:$7FF9`. N4 follower ART integrated via `build_new_species_follower.py` (real W.png art, gid `$7e00`, all 8 contexts) — **baked into `patches/` (G1, S34).** **S35 (user-confirmed):** G2 battle sprite DONE — `MonsterBattleGfxTable[224]` `$320f`→`$7e01` (same-size repoint, real slot, no fork), dragon battle pose = 2nd overflow entry `$7e01`, palette reader `label17_41d0` forked to `HighBattlePal` (custom blue palette). **Open:** lineage parent-name "?????" (modes 0/1 `$4025/$4039` overshoot id 224 — see ROADMAP N5 sub-item); `new_species.json` schema fold (G3). |
 | Custom rooms (mapID ≥ $6B), multi-screen, exits | ✅ working | patches/bank_060.asm + intercepts. Multi-screen scrolling proven (v28): vertical 2-screen Room $6B (screens 0+4). Room dimensions in $26DD bytes 2-5 control walkable area. |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |

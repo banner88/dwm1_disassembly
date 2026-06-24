@@ -9561,19 +9561,16 @@ TilemapRotateWrite:
     rrca
 
 WriteRotatedBytesDown:
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
+    ; --- MonsterBattleGfxTable tail ($2d56..$2d62), re-sectioned as data (this
+    ;     region is mgbdis-misassembled as ld/rrca; the bytes ARE the battle
+    ;     gfx-ID table $00:$2b9f[species*2]). Byte-identical to vanilla EXCEPT the
+    ;     id-224 word at $2d5f: $320f ("Durran" placeholder shared by sp216-255)
+    ;     -> $7e01 = Battle_sp224 (overflow bank $7e, index 1). G2 / Phase N.
+    ;     Editor: a battle-sprite swap for ANY species is a same-size 2-byte edit
+    ;     of its slot here ($2b9f + species*2). New art lives in an overflow bank.
+    db $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32   ; $2d56..$2d5e
+    db $01, $7e                                       ; $2d5f: id-224 battle gfx-ID = $7e01
+    db $0f, $32                                       ; $2d61..$2d62
 
 TilemapRotateCont:
     rrca

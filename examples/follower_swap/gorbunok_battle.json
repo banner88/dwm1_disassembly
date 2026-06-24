@@ -1,0 +1,12 @@
+{
+  "_comment": "Battle sprite (48x48, 6x6 tiles, 4-colour) for new species id 224 (Gorbunok), from the W_bluedragon.png DWM2 sheet. The battle pose is the big blue dragon; 'bbox' tightly crops it. The engine renders the enemy as BG tiles with idx1 forced to the cream backdrop ($6bff), leaving idx0/idx2/idx3 for body colours (3 usable). The dragon art has 4 colours, so 'color_map' merges the two body blues into idx0; black->idx3, white belly->idx2. 'palette' is the matching 4x RGB555 [c0,c1=$6bff backdrop,c2,c3].",
+  "transparent_rgb": [255, 194, 13],
+  "bbox": {"x": 177, "y": 20, "w": 47, "h": 29},
+  "color_map": [
+    {"rgb": [0, 0, 0],       "index": 3, "note": "outline -> black"},
+    {"rgb": [56, 88, 152],   "index": 0, "note": "dark blue body"},
+    {"rgb": [128, 136, 224], "index": 0, "note": "light blue body (merged into idx0)"},
+    {"rgb": [248, 248, 248], "index": 2, "note": "white belly / teeth"}
+  ],
+  "palette": ["0x4d67", "0x6bff", "0x7fff", "0x0000"]
+}

@@ -1177,3 +1177,37 @@ Long-standing doc error: attr table listed as `$10/$11:$417f`. Real: bank `$10` 
 (128 entries) but bank `$11` = `$412d` (87 entries), because bank `$11`'s level-1 pointer table
 is shorter so its attr table packs lower. Any "covers 0–255 symmetrically" assumption about the
 follower tables is wrong — bank `$11` only has rows for species 128–214, so 215+ overshoot.
+
+## Session 35 Lesson — G2 (new-species BATTLE sprite + palette baked)
+
+### Two sibling species-indexed tables can need OPPOSITE mechanisms at the top of the id range
+The battle GFX table (`MonsterBattleGfxTable $00:$2B9F`, 256 real slots — ids 216–255 are uniform
+`$320f` placeholder padding) and the battle PALETTE table (`MonsterBattlePalettes $17:$62FD`, only
+~216 slots) sit next to each other conceptually but behave oppositely for a NEW species (id 224):
+- **Gfx = a same-size 2-byte table write, NO fork.** id 224's slot `$2b9f+224*2 = $2d5f` exists (it
+  holds the `$320f` placeholder), so repointing it to the overflow gfx-ID (`$7e01`) is a direct edit.
+- **Palette = a fork, NOT a table write.** `$62fd+224*8 = $69fd` overshoots into `PaletteColorData`,
+  so there is no slot to write — the reader's add-base (`label17_41d0`) must be intercepted
+  byte-neutral and a resolver returns a custom palette for id ≥ 224.
+
+**Rule:** never assume "it's a species table, so a new species is always either a write or always a
+fork." Check each table's real length against the target id independently — `slot exists` vs
+`overshoots` is per-table, and it decides write-vs-fork. (The contrast with G1, where ALL 8 follower
+gfx tables overshoot and every one needed an id-indexed fork, is the tell: same "new species, new
+art" goal, completely different edit shape per table.)
+
+### Re-expressing a mgbdis-misassembled data slot as `db` is byte-neutral and unlocks the edit
+The `patches/bank_000.asm` copy predates the S22 re-section, so the battle gfx table reads there as
+fake `ld [hl-],a`/`rrca` instructions. To repoint one entry, replace just the label-bounded span
+covering it with explicit `db` (bytes copied from the ROM, one word changed). The build stays
+byte-identical except the intended 2 bytes; all 23 mgbdis cross-ref labels in the region keep their
+addresses because they bound the span rather than sit inside it. Verify by diffing the patched build
+against the *previous* patched build — the G2 delta should be exactly: the 2-byte repoint, the
+byte-neutral palette fork, the resolver in bank `$17` filler, the overflow-bank growth, and the auto
+header checksum. Nothing else.
+
+### Adding a 2nd overflow entry shifts the 1st stream's address but not its gfx-ID
+Putting the battle stream at index 1 grows the bank `$7e` pointer table from 1 to 2 `dw`s, so the
+follower stream (index 0) slides 2 bytes — but its gfx-ID `$7e00` still resolves, because the
+resolver dereferences the pointer table (`$<bank>:$4001+index*2`), it never hardcodes the stream
+address. Confirm by decoding both gfx-IDs back to their payload md5s after the rebuild.

@@ -394,6 +394,30 @@ all 221. Note `SetGBCPalette($04)` (banks `$02/$13/$50`) is the constant battle-
 REFRESH, not the colour source; `FuncFld_6942`'s `ld h,$04` is tile streaming, not a
 slot — both were misleading earlier leads (KEY_LESSONS "Session 23").
 
+**NEW species battle sprite (id ≥ 224) — the gfx/palette ASYMMETRY (G2, baked into `patches/`).**
+The two battle tables behave *oppositely* at the top of the id range, and this is the whole
+lesson:
+- **Gfx table `MonsterBattleGfxTable` @ `$00:$2B9F` has a REAL slot for every id 0–255.**
+  Ids 216–255 are uniform `$320f` padding ("Durran" placeholder), so giving id 224 real art is a
+  **same-size 2-byte repoint** of its slot (`$2b9f + 224*2 = $2d5f`: `$320f`→`$7e01`) — **no fork.**
+  (In a clean re-section this slot is a `dw`; in the pre-re-section `patches/bank_000.asm` the region
+  is mgbdis-misassembled as `ld/rrca` and must be re-expressed as `db` for the edit — bytes identical
+  except the one word.) The art itself is a stream in overflow bank `$7e` (here index 1 = `$7e01`,
+  sharing the bank with the follower at index 0 = `$7e00`).
+- **Palette table `MonsterBattlePalettes` @ `$17:$62FD` does NOT.** It is 8 B/species and runs out at
+  216; `$62fd + 224*8 = $69fd` **overshoots into `PaletteColorData`.** So a new-species battle palette
+  needs a **fork**, not a table write: `label17_41d0`'s add-base is intercepted byte-neutral
+  (`call HighBattlePal` + 5 `nop`) and the resolver (placed in bank `$17`'s filler tail, no shift —
+  Iron-Rule-2) returns a custom 8-byte palette for H≥`$07` (species*8 ≥ `$700` ⇔ id ≥ 224), else the
+  vanilla `$62fd + species*8`. The id-224 dragon palette is `67 4d ff 6b ff 7f 00 00` =
+  `[c0=$4d67 royal-blue, c1=$6bff cream backdrop, c2=$7fff white, c3=$0000 black]`. The 48×48 4-colour
+  convention still applies: idx1 is the forced backdrop, so only **idx0/idx2/idx3** are body colours
+  (the 4-colour dragon art merges its two blues into one body index).
+  Tooling: `tools/bake_follower_overflow.py --battle-art/--battle-spec` emits the stream + prints the
+  gfx-ID and palette; spec at `examples/follower_swap/gorbunok_battle.json` (bbox + color_map + palette).
+  Editor takeaway: a battle recolour/reskin for an EXISTING species is a table edit at `$2b9f`/`$62fd`;
+  for a NEW species the gfx is still a table edit but the palette must branch through `HighBattlePal`.
+
 **Cross-bank sprite swap (Session 23).** `dwm/sprite_bank.py` places encoded streams
 into the reserved overflow banks (`$7E–$7F`, then `$7C/$7A/$79`; EDITOR_DESIGN §8) with
 a pointer table at `$4001`, and `tools/build_sprite_swap.py` repoints the species→gfx-ID
@@ -480,8 +504,8 @@ never clamp/gate to hide the miss. Verified status for id 224:
 | Detail line 1 (name) | mode-0 | `$4D:$400B` | **256** | OK | no change |
 | Detail line 2 (desc) | mode-1 | `$4D:$420B` | **215** | **overshoot→freeze** | **forked** `HighDetailTextFork`; id224→`$60BC` *(Dracky placeholder)* |
 | Breeding family recipe | `FamilyRecipeTable` | `$16:$4974` | **222** | overshoot | **forked** `FamilyRecipeResolve` (`patches/bank_016.asm`). S32: id224 → `db $04,$2a` (Snaily+BattleRex) so the encyclopedia shows the recipe icons. NOTE: the *icons* render, but the lineage parent **names** still show "?????" — that text is a SEPARATE overshoot (modes 0/1, below) |
-| Battle sprite gfx | `MonsterBattleGfxTable` | — | — | slot exists | placeholder `$320F` (DarkDrium) — real art DEFERRED (N4) |
-| Follower gfx (walking) | follower gfx-ID copies | `$01/$06/$07/$09/$0b/$12/$18/$59` | — | overshoot | S32: `$0b` forked in `patches/` (`FollowerArtResolve0b`, hatch-crash fix). **Real follower ART now integrated** via `build_new_species_follower.py` (W.png → gid `$7e00`, layout `$4184`, attr palette 2, all 8 contexts repointed/forked + `$01` clamp lifted) — user-confirmed. CAVEAT: art is **tool-applied at build time, not yet baked into `patches/`**, so the bare patched build still shows interim Slime at `$0b`. Battle sprite still DarkDrium (N4 `--battle-png` pending) |
+| Battle sprite gfx | `MonsterBattleGfxTable` | `$00:$2B9F` | 256 | **slot exists** | **G2 (S35), baked into `patches/`:** `$2d5f` `$320f`→`$7e01` (same-size 2-byte repoint, no fork); dragon battle stream = overflow `$7e01`; palette via `HighBattlePal` fork in bank `$17` (`$62fd` overshoots, needs fork). User-confirmed. |
+| Follower gfx (walking) | follower gfx-ID copies | `$01/$06/$07/$09/$0b/$12/$18/$59` | — | overshoot | S32: `$0b` forked in `patches/` (`FollowerArtResolve0b`, hatch-crash fix). **Real follower ART now integrated** via `build_new_species_follower.py` (W.png → gid `$7e00`, layout `$4184`, attr palette 2, all 8 contexts repointed/forked + `$01` clamp lifted) — user-confirmed. **Now BAKED into `patches/` as id-indexed tables (G1, S34)**, so the bare patched build shows the real dragon. **Battle sprite also baked (G2, S35) — `$7e01` + palette fork.** |
 | Default nickname + "take X with you" | `FamilyCodePtrTable` (mode 7) | `$41:$4739` | **215** | overshoot→"SkyBell" | **FIXED S32** — id224 overshot into `ItemName[9]`="SkyBell". `LoadModeBaseRedirect` (16 B in `$00F0` ROM0 padding, `patches/bank_000.asm`) redirects mode-7 id≥224 to a new-species SHORT-name table (`$7E39`→`$41:$7FF9`) holding the first-4 name ("Gorb"). Generic; gated on `$4739` so all other text byte-identical |
 | Lineage parent NAMES (library detail, line 1) | mode-0 `$400b` (bank `$4d` entry 2) | `$4d:$400b` | **256** | un-authored slot→"?????" | **OPEN (S32 sub-item)** — `LoadItem_6456` (`$12:$6456`) renders line 1 via bank `$4d` mode 0 indexed by the **offspring** id. NOT an overshoot (256 slots); slot 224 = vanilla "?????    ?????" placeholder. mode-1 (line 2) is already forked (`HighModeTable4D`→`HighLine2Ptrs`→`$60bc`). HEAD-START: recipe string `GorbunokRecipeLine` ("Snaily BattleRex") is staged in `patches/bank_04d.asm`, **unwired** — finish by forking `HighModeTable4D` mode-0 for id≥224 to point at it. Confirmed SameBoy ($6456: $c822=0/1, $c823=$E0; parents $04/$2a) |
 | Library tab | `LibFamilyPtrTable` (custom) | `$12` | by family | — | id224 listed under Slime; **tool-owned** — `build_library_table.py --new-species` reads `new_species.json` (family from clone+override) + moves the unseen-marker `$E0`→`$FE` (id 224 now a real species; see BREEDING_SYSTEM "Walker contract") |
