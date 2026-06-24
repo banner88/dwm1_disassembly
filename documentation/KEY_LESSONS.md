@@ -1211,3 +1211,19 @@ Putting the battle stream at index 1 grows the bank `$7e` pointer table from 1 t
 follower stream (index 0) slides 2 bytes — but its gfx-ID `$7e00` still resolves, because the
 resolver dereferences the pointer table (`$<bank>:$4001+index*2`), it never hardcodes the stream
 address. Confirm by decoding both gfx-IDs back to their payload md5s after the rebuild.
+
+### A write-watchpoint on the affected RAM beats grepping for an unknown mechanism (S37, damage tiles)
+**Symptom**: "Where does floor-tile damage get applied?" Static search was fruitless — `cp $38`
+(the known brown damage-tile id) appears 30+ times across banks, all unrelated (animation counters,
+skill dispatch, misassembled data); the ground-feature list (`$D793`), the per-step encounter
+handler, and the `$D7D2` NPC scan were all dead ends.
+**Root cause**: detection is NOT a raw tile-id compare. The engine reads the standing tile id into
+HRAM `$AA` (`$00:$1E96`) and tests its **behavior class** `$AA>>2` (`$0E` = damage, ids `$38-$3B`).
+A grep for the *mechanism* can't find a routine that never names the constant you're searching for.
+**Fix**: one SameBoy write-watchpoint on the party leader's current HP (`$CB11`) + a single step
+onto the tile broke exactly at the HP store; the backtrace (`$01:$5E23 ← ... ← $00:$1E96`) handed
+over the whole routine chain in one shot. Mechanism fully documented in minutes after hours of grep.
+**Rule**: when hunting "where does X happen to Y" and the code may not name any constant you know,
+set a write-watchpoint on Y and trigger X once — the break PC + backtrace is the answer. Reserve
+grep for when you already know a label/constant the target code must contain. (Behavior class =
+`tile_id >> 2` is the unifying trick: `$0E`=damage, `$0F`=staircase share one `$AA` lookup.)

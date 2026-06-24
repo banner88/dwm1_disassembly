@@ -1,5 +1,10 @@
 # Room Data Format — Technical Reference
 
+> **Scope:** this doc covers the *static, pre-authored* rooms in bank `$0B`
+> (towns, dungeons, and the gate **special/boss** rooms). The **standard random
+> gate floors are NOT static** — they are procedurally generated at runtime (a
+> 4×4 screen grid carved per descent). For that system see **GATE_GENERATION.md**.
+
 ## Overview
 
 Room data lives in bank $0B. Each room (map_type) is a scrollable area

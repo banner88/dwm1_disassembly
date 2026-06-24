@@ -255,6 +255,14 @@ from a chosen pool; win and flee return to the room intact. The full vanilla
 mechanism is documented in DATA_STRUCTURES.md → "Encounter Runtime Flow"; this
 section is the custom-room recipe and the editor build spec.
 
+> **Related — putting a custom room INTO the gate floor rotation** (so it appears
+> as a special room while diving a gate, like the priest/treasure/maze rooms):
+> see **GATE_GENERATION.md §6**. The hook is the special-floor `rst $00` dispatch
+> at `$16:$5C1C`; each handler just sets `wMapID` + `wInGateworld=0` — the same
+> `wInGateworld=0` mode custom rooms (mapID ≥ `$6B`) already render in, so a
+> dispatch slot pointed at a custom mapID drops it into the rotation. (Not yet
+> built — ROADMAP Phase 2C.)
+
 ### What it takes (two patches)
 
 **Patch 1 — enable + pin the pool (`bank_00b.asm`).** Add the custom mapID to

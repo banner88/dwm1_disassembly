@@ -101,6 +101,11 @@ Documentation: `BREEDING_SYSTEM.md`
 
 ### Bank $16 — Gate Floor System
 
+> **Full generation pipeline (how these tables are consumed end-to-end):
+> GATE_GENERATION.md.** That doc covers the procedural maze grid, special-room
+> substitution, content placement, tileset/depth, rendering, and damage tiles.
+> The entries below are the table index.
+
 | Table | Address | Label | Entries | Entry size |
 |-------|---------|-------|---------|------------|
 | Gate floor data | `$16:$70A6` | `GateFloorDataTable` | 32 | 8 bytes |
@@ -110,6 +115,7 @@ Documentation: `BREEDING_SYSTEM.md`
 | Floor layout data | `$16:$7436` | `FloorLayoutData` | — | 1120 bytes |
 | Floor data ptrs 1 | `$16:$7896` | `FloorDataPtrTable1` | — | 512 bytes |
 | Floor data ptrs 2 | `$16:$7A96` | `FloorDataPtrTable2` | — | to bank end |
+| Floor damage (by type) | `$01:$5E7D` | `FloorDamageTable` | 16 | 1 byte (per-step HP dmg; class-`$0E` tiles; GATE_GENERATION.md §5.1) |
 
 **GateFloorDataTable entry (8 bytes):**
 

@@ -5182,6 +5182,17 @@ CheckGateworldForSpawn:
     call CheckSpecialMapExits
     ret nz
 
+; =============================================================================
+; ApplyFloorDamage — per-step DAMAGE-TILE handler (gate floors)
+; Reference: documentation/GATE_GENERATION.md (damage tiles)
+; -----------------------------------------------------------------------------
+; Runs once per completed step. Fires only when the tile under the player is a
+; DAMAGE tile: ($aa >> 2) == $0E, i.e. tile id $38-$3B (recoloured per floor
+; palette -> brown/red/blue). Damage amount = FloorDamageTable[wMapID] (per
+; floor type). Applied to the active party (front line, count $CA8D) via
+; ComparePartySlotCount2, which skips monsters whose status byte (slot +$0B /
+; $CB0B) has bit7 set. Then: SFX $6C, BG-palette flash $2D, shake $C8A8=$08.
+; =============================================================================
 jr_001_5e23:
     ld a, [$c850]
     or a
@@ -5239,7 +5250,12 @@ jr_001_5e23:
 jr_001_5e7c:
     ret
 
-
+; FloorDamageTable ($01:$5E7D) — 16 bytes, indexed by wMapID (= the generated
+; floor TYPE 0-15). Per-step HP damage when standing on a damage tile (class
+; $0E). Values: type $03 -> 5 (red), type $06 -> 10 (blue), types $0C/$0E -> 2
+; (brown), all others 0 (safe floor). [Disassembled below as stray opcodes by
+; mgbdis, but the bytes are the table: 00 00 00 05 00 00 0A 00 00 00 00 00 02
+; 00 02 00.]
     nop
     nop
     nop

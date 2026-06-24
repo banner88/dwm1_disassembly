@@ -6074,7 +6074,12 @@ TileBuffer_1E96:
     add hl, de
     ld c, [hl]
     ld a, [hl]
-    ldh [$aa], a
+    ldh [$aa], a                    ; $aa = TILE ID under the player (from the
+                                    ;   $C300 screen tile-id shadow buffer).
+                                    ; Behavior class = ($aa >> 2): $0E (ids
+                                    ;   $38-$3B) = DAMAGE tile, $0F ($3C-$3F) =
+                                    ;   staircase. Used by $01:$5E23 (floor
+                                    ;   damage) and the gate-exit check.
     ld de, $26e3
     ld a, [wInGateworld]
     or a

@@ -41,14 +41,24 @@
    C8B8     1    ? (related to BGM)
    C8B9     1    ? (related to BGM)
    C925     1    ? (related to current room or loading next room)
-   C935     1    Current Gate
+   C935     1    Current Gate (wGateID)
+   C936     3    Floor type 1/2/3 (maze biome / special-room / contents rolls)
    C939     1    Current Floor
-   C968     1    [[Dragon_Warrior_Monsters/Notes#Map_Type_IDs|Map type]]
-   C969     1    flag_in_gate
-                 00 - Not in a Gate
-                 01 - In a Gate
+   C93A     1    Last floor (floors before boss)
+   C93B     1    Boss room map type
+   C93C     1    Boss/floor tileset = DEPTH TIER 1/2/3 (also item-tier select)
+   C93F     1    Floor shape mode ([$16:$6056 + RNG%5])
+   C940    16    Floor screen GRID (4×4): byte = (piece<<4)|variant; $Fx = empty
+   C950    16    Floor grid paired per-cell state buffer
+   C960     1    Staircase screen index (down-stairs cell)
+   C100    16    Per-screen content state (item/master placement)
+   C968     1    [[Dragon_Warrior_Monsters/Notes#Map_Type_IDs|Map type]] (wMapID)
+   C969     1    flag_in_gate (wInGateworld)
+                 00 - Not in a Gate (or fixed special-room template)
+                 01 - In a Gate (procedural maze mode)
    C96D     1    Gate to warp to
    CA38     1    Encounter pool index (gate + floor → pool via $01:Call_69e1)
+;  Gate floor generation pipeline (these vars): see GATE_GENERATION.md
    CA39     2    Counter before random encounter
    CA4B     3    Gold
    CA51    20    Items
@@ -192,5 +202,8 @@
                  Low nibble: ?
    FFDD     1    High nibble: Current Row
                  Low nibble: ?
+   FFAA     1    Tile id under the player (from $C300 buffer; $00:$1E96).
+                 Behavior class = $AA>>2: $0E (ids $38-$3B)=damage tile,
+                 $0F ($3C-$3F)=staircase. See GATE_GENERATION.md §5.1.
 
 {{Internal Data|game=Dragon Warrior Monsters}}

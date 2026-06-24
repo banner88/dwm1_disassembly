@@ -1798,6 +1798,17 @@ SpecialRecipeTable:  ; $4B30 — 825 entries x 5 bytes, $FF terminated
     db $7f, $00, $c5, $00, $f8, $81, $00, $c5, $00, $ff
 
 
+; =============================================================================
+; GATE FLOOR GENERATION — entry 5 (DESCEND / ADVANCE FLOOR)
+; Full system reference: documentation/GATE_GENERATION.md
+; -----------------------------------------------------------------------------
+; Called when entering a gate or descending the staircase. Increments
+; wCurrentFloor (or zeroes it on first entry, setting wGateID = wMapID), then
+; falls into the floor-config load + floor-type branch at jr_016_5b72.
+;   Standard maze  -> jr_016_5bbf (roll FloorType1 -> wMapID, wInGateworld=1)
+;   Special room   -> jr_016_5c1c (roll FloorType2 -> rst $00 dispatch)
+;   Boss floor     -> jr_016_5be1 (load boss room from GateFloorDataTable+4)
+; =============================================================================
 label16_5b4e:
     ld a, [wInGateworld]
     or a
@@ -1869,6 +1880,10 @@ jr_016_5b72:
     jr z, jr_016_5c1c
 
 jr_016_5bbf:
+    ; STANDARD MAZE PATH: roll the floor biome/shape via FloorTypeSelectionTable
+    ; (row = wFloorType1), store the selected index to wFloorType1 AND wMapID,
+    ; set wInGateworld=1 so the engine renders wMapID as a generated maze.
+    ; The grid itself is built later by entry 6 -> label16_605b.
     ld a, [wFloorType1]
     add a
     add a
@@ -1926,6 +1941,13 @@ jr_016_5be1:
 
 
 jr_016_5c1c:
+    ; SPECIAL-ROOM PATH: roll wFloorType2 via FloorTypeSelectionTable2, then
+    ; dispatch through `rst $00` (RST_00 = jump-table-indexed-by-A; the dw words
+    ; immediately after the rst opcode are the table). Each target handler sets
+    ; wMapID to a fixed special map type ($5A/$5B/$5C TreasureChest, $53
+    ; ForestMaze, $51, ...) with wInGateworld=0 (rendered as a fixed bank-$0B
+    ; template, NOT a maze). This is the hook point for inserting a custom room
+    ; into the gate rotation — see GATE_GENERATION.md §6.
     ld a, [wFloorType2]
     add a
     add a
@@ -2451,6 +2473,14 @@ jr_016_5f9f:
     ret
 
 
+; -----------------------------------------------------------------------------
+; SelectFloorType — weighted-threshold roll (the floor-gen weighting primitive)
+; IN : HL -> a 16-byte (or 8-byte) cumulative-probability row (percent thresholds,
+;            $00 = skip, $64 = guaranteed).
+; OUT: A  = index (0..n) of the first entry that is $64 OR greater than a fresh
+;            RNG16-mod-100 roll. Used by all three FloorTypeSelectionTable stages
+;            and by the FloorLayoutData sub-selection.
+; -----------------------------------------------------------------------------
 SelectFloorType:
     push hl
     call GenerateRNG
@@ -2536,6 +2566,13 @@ jr_016_6002:
     db $00, $00, $00, $01, $02
 
 label16_605b:
+    ; MAZE GRID BUILDER. Builds the 4x4 screen grid at $C940-$C94F, each cell
+    ; byte = (piece_id<<4)|variant; high-nibble $F = empty/wall. wShapeMode
+    ; ($C93F = [$6056 + RNG%5]) picks the strategy: mode 2 copies a ready-made
+    ; pattern from FloorTilePatterns; other modes carve via FloorTypeOrderTable
+    ; + SetBrd_6744 (connectivity) + SetBrd_6800 (place/link). Placement passes
+    ; below use a 64-retry ($C0A9=$40) and regenerate the whole floor on failure;
+    ; the down-staircase screen lands in $C960. See GATE_GENERATION.md §4.
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3165,6 +3202,12 @@ jr_016_63e1:
     jr jr_016_63e1
 
 SaveBrd_6432:
+    ; FLOOR CONTENTS PLACEMENT (FloorType3). Scatters ground features
+    ; (items / gold / occasional masters) onto generated screens. Picks a feature
+    ; type via FloorTypeSelectionTable3 -> $C0AE (+$10 on one branch), tracks
+    ; per-screen content state at $C100-$C10F, avoids the staircase ($C960) and
+    ; spawn ($C0AF) screens, 16-retry per placement. Placed features are read back
+    ; from the per-screen list at $D793 by bank $01. See GATE_GENERATION.md §5.
     push hl
     ld a, $10
     ld [$c0a9], a

@@ -31,6 +31,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 | Text system: charmap, DTE, control codes, 2,067 IDs, routing cascade | text_id_map.json count; control codes proven in-game (v23) |
 | Event flags: fns $26A0/$26A6/$26AE, 311 used, 463 free | game.sym symbols; analyze_event_flags.py runs |
 | Encounter pool format: 32 gates → pools 0–127 | encounters.json structure audit |
+| Gate floor GENERATION: procedural maze grid `$C940`, per-gate `GateFloorDataTable` `$16:$70A6`, `SelectFloorType`/`FloorTypeSelectionTable`1/2/3, special-room `rst $00` dispatch `$16:$5C1C`, damage tiles (class `$0E`/`FloorDamageTable` `$01:$5E7D`) | S37: pipeline traced end-to-end + damage tiles SameBoy-watchpoint-confirmed; **GATE_GENERATION.md** |
 | Empty banks: 23 = 368 KB | full-ROM scan, exact match to list |
 | Custom WRAM $D378–$D477 unclaimed by original code | repo-wide grep: refs stop at $D375/$D376–7 |
 
@@ -232,6 +233,19 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       intercept of `EncounterMonsterSelect`'s pool fetch for custom mapIDs (or
       reuse a verified-unreferenced pool slot). Project fields: up to 5
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
+
+### Phase 2C — Gate generation (system mapped S37; see GATE_GENERATION.md)
+- [ ] **Custom room into the gate rotation** — point a `rst $00` dispatch slot
+      (`$16:$5C1C` jump table) at a handler setting `wMapID = <custom id≥$6B>` +
+      `wInGateworld=0`, and open its weight in `FloorTypeSelectionTable2`. POC
+      candidate; dovetails with the proven custom-room path. (GATE_GENERATION.md §6.)
+- [ ] **`piece_id → screen layout` map** — decode the table turning a grid cell's
+      high nibble into the rendered screen layout (needed to author NEW maze
+      pieces vs. only reweighting existing ones). (GATE_GENERATION.md §12.2.)
+- [ ] **Full `rst $00` dispatch enumeration** — list every special-floor handler
+      slot so reusable slots are known precisely. (§12.3.)
+- [ ] **`SetBrd_6744`/`SetBrd_6800` carve algorithm** — step-trace the maze
+      connectivity guarantee. (§12.4.)
 
 ### Phase 2B — Breeding overhaul & extension (specced Session 12; see BREEDING_SYSTEM.md)
 Keep 10 families. Defaults rewritten; special recipes extended to 1×–2× (→~1650).
