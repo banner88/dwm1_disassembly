@@ -8850,18 +8850,18 @@ Data_2A38:
     db $30                      ; $2A3B: collision threshold=$30 (tiles <$30 = wall)
     nop
 
-DataTable_2A3D:
-    ld [de], a
-    inc h
-    and b
+DataTable_2A3D:                 ; $26DD record for mapID $6C (Pillar A proof room)
+    db $0D                      ; $2A3D: step_id=$0D (gate maze) — was $12
+    db $28                      ; $2A3E: bank=$28 → gfx-ID $280D (gate tileset) — was $24
+    db $A0                      ; $2A3F: room width low ($A0=160px)
 
 DataLookup_2A40Alias:
 DataLookup_2A40:
-    nop
-    add b
-    nop
-    ld d, b
-    nop
+    db $00                      ; $2A40: room width high
+    db $00                      ; $2A41: room height low ($0100=256px, 2 screens, mirror $6B)
+    db $01                      ; $2A42: room height high
+    db $30                      ; $2A43: collision threshold=$30 — was $50
+    db $00                      ; $2A44: pad
     ld [de], a
     inc h
     and b
@@ -13062,14 +13062,15 @@ AudioLookup_3BA7:
     rst $38
 
 AudioWavePatternData:
-; CustomGFXMapID: returns raw wMapID for $00-$6B, MapIDClampForPalette for $6C+
+; CustomGFXMapID: raw wMapID for $00-$6F (so custom rooms $6B-$6F each use their
+; own $26DD tileset/threshold record), MapIDClampForPalette for $70+.
 ; Used by GFX loader (bank $0B Entry 0+1) and collision threshold (ROM0)
 ; 9 bytes — fits within the 17 unreferenced rst $38 bytes at $3BC1
 CustomGFXMapID::
     ld a, [wMapID]              ; 3 bytes: FA 68 C9
-    cp $6C                      ; 2 bytes: FE 6C
-    ret c                       ; 1 byte:  D8 (raw mapID for $00-$6B)
-    jp MapIDClampForPalette     ; 3 bytes: C3 xx xx (clamped for $6C+)
+    cp $70                      ; 2 bytes: FE 70  (raw for $00-$6F; $70 = gateworld)
+    ret c                       ; 1 byte:  D8 (raw mapID for $00-$6F)
+    jp MapIDClampForPalette     ; 3 bytes: C3 xx xx (clamped for $70+)
 ClampFamIdx::
 ; B9 S29: party-graphics tables $4BAD (family) & $49DF (glyph) have only 10 entries
 ; (families 0-9). Spirit (family 10) overflows -> garbage pointer -> runaway VRAM

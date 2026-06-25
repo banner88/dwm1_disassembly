@@ -337,7 +337,16 @@ CustomRoom1_ScriptPtrTable:
     dw CustomRoom1_NPC04            ; [5] Guard — post-step greeting
 
 CustomRoom1_RoomEntry:
-    dw $FFFF
+    ; Mirror $6B: arm the random-encounter step counter on room load so the
+    ; entry leaves the player in the same movement/encounter state $6B does
+    ; (the no-op version left this unset, the one behavioral gap vs $6B).
+    dw $FF12                        ; write_ram
+    dw $CA39                        ; wEncounterCounterLo = $64
+    dw $0064
+    dw $FF12                        ; write_ram
+    dw $CA3A                        ; wEncounterCounterHi = $00  → counter = 100
+    dw $0000
+    dw $FFFF                        ; end of room-entry script
 
 CustomRoom1_NPC00:
     dw $0A03                        ; "Is this your first time here?" [Y/N]
@@ -557,7 +566,7 @@ CustomText_14:
 ; =============================================================================
 CustomSourceMapTable:
     db $04                      ; Room 0 ($6B) → Farm
-    db $00                      ; Room 1 ($6C) → Castle
+    db $04                      ; Room 1 ($6C) → Farm (mirror $6B; CustomSourceMapTable)
 
 CustomRoomPtrTable:
     dw CustomRoom0_SubTable
@@ -586,7 +595,9 @@ CustomRoom0_S0_NPCs:
     db $FF
 
 CustomRoom0_S0_Exits:
-    db $03, $01, $6C, $00, $01, $05, $07  ; exit: (3,1) → Room $6C screen 0 spawn (5,7)
+    db $03, $01, $6C, $00, $00, $07, $06  ; exit: (3,1) → Room $6C screen 0 spawn (7,6)
+                                          ; byte4=screen_byte: $00 → $2DE7[0] X-offset 0 (in-room).
+                                          ; was $01 = +10 metatiles → tile col 35, OFF-MAP (movement bug).
     db $FF
 
 CustomRoom0_Screen1:
@@ -605,72 +616,41 @@ CustomRoom0_S1_Exits:
     db $FF
 
 ; =============================================
-; Room 1 (mapID $6C) — Castle 3-screen clone
+; Room 1 (mapID $6C) — 2-screen custom room (Pillar A proof)
+; Structurally MIRRORS $6B: same gate tileset, same layouts (bank $64 entries
+; 0/2) and attrs (entries 1/3 via CustomRoomAttr[1]), same Farm source-map. The
+; ONLY difference is its own DUSK palette from CustomRoomPalPtr[1]. This proves
+; per-room palette is table-driven on the exact render path $6B already validates.
 ; =============================================
 CustomRoom1_SubTable:
     dw CustomRoom1_Screen0
+    dw $FFFF, $FFFF, $FFFF
     dw CustomRoom1_Screen1
-    dw $FFFF
-    dw $FFFF
-    dw $FFFF
-    dw CustomRoom1_Screen5
-    dw $FFFF
-    dw $FFFF
+    dw $FFFF, $FFFF, $FFFF
 
 CustomRoom1_Screen0:
-    dw wCustomStep_Room6C_S0        ; $D479 — safe step counter (was $D9A0/event-flag collision)
-    ; --- Step 0: Castle layout, original NPCs + Gatekeeper ---
-    db 1, $2A
-    dw CustomRoom1_S0_Step0_NPCs
-    dw CustomRoom1_S0_Exits         ; shared exit data (no exits on this screen)
-    ; --- Step 1: Castle layout, original NPCs + Guard (replaces Gatekeeper) ---
-    db 1, $2A
-    dw CustomRoom1_S0_Step1_NPCs
-    dw CustomRoom1_S0_Exits         ; shared exit data
+    dw wCustomStep_Room6C_S0
+    db 0, $64                       ; reuse $6B screen-0 layout (bank $64 entry 0)
+    dw CustomRoom1_S0_NPCs
+    dw CustomRoom1_S0_Exits
 
-CustomRoom1_S0_Step0_NPCs:
-    db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
-    db $00, $0B, $05, $02, $01     ; NPC at (5,2), script_id=1 — YES/NO demo
-    db $00, $0B, $02, $04, $02     ; NPC at (2,4), script_id=2 — teleport Castle
-    db $00, $09, $07, $04, $04     ; NPC at (7,4), script_id=4 — Gatekeeper ★
-    db $FF
-
-CustomRoom1_S0_Step1_NPCs:
-    db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
-    db $00, $0B, $05, $02, $01     ; NPC at (5,2), script_id=1 — YES/NO demo
-    db $00, $0B, $02, $04, $02     ; NPC at (2,4), script_id=2 — teleport Castle
-    db $20, $07, $07, $04, $05     ; NPC at (7,4), script_id=5 — Guard ★ (different sprite+facing)
+CustomRoom1_S0_NPCs:
+    db $8F, $FF, $07, $06, $00     ; spawn (7,6) — same as $6B S0 (walkable)
+    db $00, $09, $05, $04, $03     ; NPC (5,4), script_id=3 — teleport back to $6B
     db $FF
 
 CustomRoom1_S0_Exits:
-    db $FF
+    db $FF                          ; no edge exits (return via NPC)
 
 CustomRoom1_Screen1:
-    dw wCustomStep_Room6C_S1        ; $D47A — safe step counter (was $D9A1/event-flag collision)
-    db 5, $2A
+    dw wCustomStep_Room6C_S1
+    db 2, $64                       ; reuse $6B screen-1 layout (bank $64 entry 2)
     dw CustomRoom1_S1_NPCs
     dw CustomRoom1_S1_Exits
 
 CustomRoom1_S1_NPCs:
-    db $8F, $FF, $05, $07, $6B     ; spawn (from MedalMan room)
+    db $8F, $FF, $05, $03, $00     ; spawn (5,3) — same as $6B S1 (walkable)
     db $FF
 
 CustomRoom1_S1_Exits:
-    db $07, $01, $01, $00, $80, $04, $04
-    db $FF
-
-CustomRoom1_Screen5:
-    dw wCustomStep_Room6C_S5        ; $D47B — safe step counter (was $D9A2/event-flag collision)
-    db 7, $2A
-    dw CustomRoom1_S5_NPCs
-    dw CustomRoom1_S5_Exits
-
-CustomRoom1_S5_NPCs:
-    db $8F, $FF, $07, $06, $01     ; spawn point (7,6)
-    db $FF
-
-CustomRoom1_S5_Exits:
-    ; Bottom exits → GreatTree
-    db $04, $07, $01, $00, $80, $04, $04  ; left door
-    db $05, $07, $01, $00, $80, $05, $04  ; right door (fixed dest X)
     db $FF

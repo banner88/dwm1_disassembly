@@ -360,6 +360,64 @@ This room is the **rendering half** of "custom room into the gate rotation"
 
 ---
 
+## 7.4 Pillar A — table-driven custom-room rendering ✅ (S40, user-confirmed in-game)
+
+§7.3 rendered **one** custom room with per-room values hardcoded into the bank-`$17`
+render intercepts (`cp $6B` … else vanilla). Pillar A generalises that so **any** custom
+mapID renders from per-room tables indexed by `mapID-$6B`, with **zero** new hardcoded
+render code per room. Proven by adding a real second room, `$6C`.
+
+**The three render inputs, now all table-driven by `mapID-$6B`:**
+
+1. **Tileset + dimensions + collision threshold** — from each room's own `$26DD` record.
+   `CustomGFXMapID` (ROM0) was widened `cp $6C`→`cp $70`, so `$6B-$6F` each return their
+   **raw** mapID and index their own 8-byte `$26DD` record `[gfx_lo,gfx_hi : w_lo,hi :
+   h_lo,hi : threshold : pad]`. (`$26DD` records exist only for `$6B-$6F` before the gate
+   table at `$2A5D`; `$70+` will need an intercept — Pillar B follow-up.) `$6C`'s record at
+   ROM0 `$2A3D` mirrors `$6B`'s (gate tileset `$280D`, 2-screen, threshold `$30`).
+2. **Palette** — `CustomRoomPalPtr` (bank `$17` filler tail): one `dw` per room → a 64-byte
+   palette. `$0000` = borrow vanilla; a real pointer is loaded by `CustomPalCheck` with
+   **`b=$04` (slots 0–3 only)** — same hard rule as §7.3.
+3. **Attr (per-position palette map)** — `CustomRoomAttr`: `db bank, base_entry` per room.
+   `CustomAttrCheck` reads it, picks `base_entry` for screen 0 or `base_entry+2` for the
+   second vertical screen, and decompresses from `bank` to `$C200`. `bank=$00` = vanilla
+   fallback.
+
+Both intercepts now do `index = mapID-$6B; …` table reads instead of `cp $6B`. The vanilla
+path is untouched for `mapID < $6B`, so the `$6B` regression is byte-identical (verified).
+
+**The proof room `$6C`** reuses `$6B`'s layout (bank `$64` entries 0/2), attr (entries 1/3),
+gate tileset, and Farm source-map — i.e. it is structurally `$6B` — and differs **only** in
+`CustomRoomPalPtr[1]` → a coherent **moonlit-night** palette (cool slate ground, navy water,
+dusk-teal trees). Same island, different time of day, entirely from the table. This is the
+cheapest possible "distinct room" and the cleanest possible isolation of the palette table.
+
+**Night palette-swap as a technique.** Recolouring an existing room via its palette-table
+entry is a ~64-byte, zero-code way to make biome/time-of-day variants (night, snow,
+volcanic, cave). It must **preserve the source palette's value structure** (keep idx1 light,
+idx3 dark; shift only hues, keep idx0/idx2 close in value) — the gate tiles' pixel→index
+mappings were authored for the gate palette, so a high-contrast recolour turns a textured
+floor into glitchy stripes. Author by deriving from the source palette (§7.1), not from
+scratch. (KEY_LESSONS S40.)
+
+**Files:** `patches/bank_017.asm` (`CustomPalCheck`/`CustomAttrCheck` generalised +
+`CustomRoomPalPtr`/`CustomRoomAttr`/`CustomPaletteColors_6C`), `patches/bank_000.asm`
+(`CustomGFXMapID` widen + `$26DD[$6C]` record), `patches/bank_060.asm` (`$6C` room data,
+2-screen mirror of `$6B`; the `$6B→$6C` warp **byte-4 must be `$00`**, see KEY_LESSONS S40),
+`patches/bank_064.asm` (shared layout/attr, unchanged from §7.3).
+
+**Gotcha that cost this session** (full write-up in KEY_LESSONS S40): the `$6B→$6C` exit's
+**byte-4 is the `$2DE7` spawn-screen index, not a "destination screen number".** A stale
+`$01` (legit when `$6C` was a wide Castle clone) added +10 metatiles of X and dropped the
+player at tile column 35 — off-map in the `$FF` padding — so the room rendered but the player
+couldn't walk. Must be `$00` for a single-screen-width room.
+
+This is the **rendering generalisation** that Pillar B (gate-aware rotation: pick *which*
+custom mapID appears, by gate/flag/floor/weight) builds on. With render table-driven, the
+rotation dispatcher only has to choose a mapID; rendering "just works" for whatever it picks.
+
+---
+
 ## 8. Floor completion / exit ✅
 
 - **Down-staircase**: `Jump_00b_46A7` checks `wScreenIndex == [$C960]` and the

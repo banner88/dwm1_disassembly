@@ -1282,3 +1282,65 @@ same side of the `$30` collision threshold yet need different palettes).
 together; author decorative objects as metatiles with explicit per-cell palette, and
 keep the custom-room palette load to slots 0–3 only (widening it clobbers the shared
 system slots and corrupts monster colours).
+
+## Session 40 Lessons — Pillar A (table-driven custom-room rendering, 2nd custom room)
+
+### Warp screen-byte must be $00 for a single-width custom room (off-map spawn reads as "can't move")
+**Symptom**: Second custom room ($6C) loads and renders fine; player can change facing but
+cannot walk in **any** direction; tiles/area around the player look like garbage.
+**Root cause**: the 7-byte exit's **byte-4 is the `screen_byte` that indexes the `$2DE7`
+spawn-offset table** (documented in the bank `$0B` warp parser at `$0B:$45A8`), NOT a
+"destination screen number". `$2DE7[idx]` is an (X,Y) metatile base for horizontally-tiled
+screens: idx 0→X+0, 1→X+10, 2→X+20, 3→X+30 (idx 4-7 add Y+8). The exit carried
+`screen_byte=$01` — a **stale value from when `$6C` was a wide multi-screen Castle clone**,
+where `$01` was legitimate. For the 20-tile-wide gate room `$01` adds +10 metatiles →
+final spawn at tile **column 35**, far outside the room in the off-map `$FF` padding. The
+player is stranded off-map, so every step is blocked. (This is the exact failure the
+v14-v18 lesson warns about; I carried a guessed field label and even *dismissed* the
+`$01`/`$00` difference because my wrong label made it look like a harmless facing flag.)
+**Fix**: `screen_byte=$00`. Player lands at metatile (7,6) = tile (15,13), inside the room.
+**Rule**: (reinforces v14-v18) Decode a binary format from the code that **consumes** it
+before editing data in that format — never infer a field's meaning from its struct
+position. For a single-screen-width custom room, exit byte-4 must be `$00`. Verify in
+SameBoy: `wWarpSpawnXLo` must compute to the intended pixel X, not +160 (= +10 metatiles).
+
+### Night palette-swap: a cheap, powerful room variant via the per-room palette table
+**Idea**: once rendering is table-driven (`CustomRoomPalPtr[mapID-$6B]`), a second *distinct*
+room can be made by reusing an existing room's layout + tileset + attr and pointing only its
+palette-table entry at a new 64-byte palette. `$6C` is `$6B`'s sandy island recolored to a
+coherent **moonlit-night** palette (cool slate ground, navy water, dusk-teal trees) — same
+layout, ~64 bytes of new data, zero new render code.
+**Why it must preserve value structure**: the gate tiles' pixel→index mappings were authored
+for the gate palette, so a recolor must keep **idx1 light, idx3 dark** and shift only hues,
+keeping idx0/idx2 close in value — otherwise a textured floor tile renders as high-contrast
+**stripes** instead of a smooth surface. A first attempt with saturated magenta/green/cyan
+read as "glitchy" for exactly this reason (it broke the value relationships, and the player
+was simultaneously stranded off-map by the warp bug above, compounding the "it's broken"
+impression).
+**Use**: day/night and biome variants (snow, volcanic, cave) of one room cost ~64 bytes each
+and no new code — strong tool for campaign-room variety.
+**Rule**: recolor = hue-shift inside a **preserved value structure**; derive the new palette
+from the source palette, not from scratch; keep the custom-room palette load to slots 0–3.
+
+### Renderer/tooling: custom layouts are 32-wide VRAM format, not 20-wide
+**Symptom**: a standalone preview-renderer produced scrambled output — 2×2 tree/hole
+metatiles split apart, objects misplaced, "coordinates all screwed up".
+**Root cause**: a decompressed layout is **512 bytes = 32 columns × 16 rows** (GB BG width):
+visible columns 0-19, columns 20-31 = `$FF` padding (see
+`tools/tile_layout_compiler.py:pad_layout` docstring). Reading it with a 20-stride offsets
+every row.
+**Fix**: stride **32**, render columns 0-19. Attr is unpacked separately (nibble-packed,
+`base = attr_row*32 + half*16`).
+**Rule**: read a format from the tool that **produces** it before consuming its output. A
+wrong coordinate model is more expensive than a wrong byte — this one silently invalidated
+several rounds of "the spawn tile is walkable" reasoning during the warp-bug hunt.
+
+### Tooling: ROM0 (bank $00) file offset = address, NOT address − $4000
+**Symptom**: a byte known to be non-zero (e.g. the `$26DD[$6C]` record at ROM0 `$2A3D`) read
+as zeros when dumped by a tool, sending the debug down a false path.
+**Root cause**: for **ROM0 addresses (`< $4000`)** the flat file offset **equals the address**
+(`$2A3D` → file `$2A3D`). The `bank*$4000 + (addr−$4000)` formula is only for banked addresses
+(`≥ $4000`). Applying `addr−$4000` to a ROM0 address reads from the wrong place.
+**Rule**: `file_off = addr if addr < $4000 else bank*$4000 + (addr − $4000)`. Most `$26DD`/
+`$2A5D` gate tables and ROM0 helpers live below `$4000` — get this wrong and every ROM0 dump
+lies to you.

@@ -236,19 +236,26 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 
 ### Phase 2C — Gate generation (system mapped S37; see GATE_GENERATION.md)
 - [~] **Custom room into the gate rotation** — TWO halves:
-   - [x] **Rendering half (S39).** Room `$6B` now renders the Gate-of-Beginning
-         maze tileset (gfx-ID `$280D`, bank `$28` step `$0D`) with the real gate
-         floor palette — sandy island with ocean-wall border, 2×2 tree/dune/pit
-         metatiles, per-position attr palette. Authored in `tools/build_gate_room.py`
-         → `patches/bank_064.asm` (+ `bank_000.asm` gfx-ID/threshold, `bank_017.asm`
-         `CustomPaletteColors_6B`, slots 0–3 only). Builds the v5 ROM
-         (`2a008235…`); verifier PASS; user-confirmed in SameBoy. As a by-product,
-         the room-palette derivation was fully solved + tooled (see below).
-         (GATE_GENERATION.md §7.1–7.3.)
-   - [ ] **Insertion half.** Point a `rst $00` dispatch slot (`$16:$5C1C` jump
-         table) at a handler setting `wMapID = <custom id≥$6B>` + `wInGateworld=0`,
-         and open its weight in `FloorTypeSelectionTable2`; for gate 0 specifically,
-         patch the gate-0 special-room exclusion (`$16:~$1886`). (GATE_GENERATION.md §6.)
+   - [x] **Rendering half (S39 + S40 generalisation).** Room `$6B` renders the
+         Gate-of-Beginning maze tileset (gfx-ID `$280D`, bank `$28` step `$0D`) with
+         the real gate floor palette — sandy island with ocean-wall border, 2×2
+         tree/dune/pit metatiles, per-position attr palette. Authored in
+         `tools/build_gate_room.py` → `patches/bank_064.asm` (+ `bank_000.asm`
+         gfx-ID/threshold, `bank_017.asm` `CustomPaletteColors_6B`, slots 0–3 only).
+         **S40 (Pillar A, user-confirmed):** render is now fully **table-driven by
+         `mapID-$6B`** — `CustomRoomPalPtr`/`CustomRoomAttr` tables (bank `$17`) +
+         per-room `$26DD` records via `CustomGFXMapID` widened to `cp $70`; no
+         hardcoded `cp $6B` render code remains. Proven by a 2nd room `$6C` (same
+         island, distinct moonlit palette, zero new code). `$6B` byte-identical
+         regression verified; verifier PASS. (GATE_GENERATION.md §7.1–7.4.)
+   - [ ] **Insertion half (= "Pillar B", next).** Point a `rst $00` dispatch slot
+         (`$16:$5C1C` jump table) at a handler setting `wMapID = <custom id≥$6B>` +
+         `wInGateworld=0`, and open its weight in `FloorTypeSelectionTable2`; for
+         gate 0 specifically, patch the gate-0 special-room exclusion at **`$16:~$5BAC`**
+         (it reads `wCurrentFloor $C939`; the earlier `~$1886` cite was wrong).
+         Designed as `CustomGateRotationTable[wGateID]` → weighted, flag-/floor-filtered
+         list of custom mapIDs; render "just works" for whatever it picks (Pillar A).
+         (GATE_GENERATION.md §6 + CROSSBANK_ROOMS.md.)
 - [x] **Room-palette derivation from ROM (S39).** `tools/derive_room_palette.py`
       reproduces any room's runtime BG palette: colours 0/2 from the room/gate
       palette pointer (`$17:$476F` normal / `$17:$51F5` gate), engine-forced

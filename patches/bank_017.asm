@@ -2563,42 +2563,96 @@ AttrMapDataB:
 ;   decompresses custom attr data from bank $64, returns to caller.
 ; Multi-screen: screen 0 → entry 1, screen 4 → entry 3 (vertical pair)
 ; ---------------------------------------------------------------------------
+; PILLAR A (Phase 2C): TABLE-DRIVEN for ANY custom room (mapID >= $6B), not just
+; $6B. Per-room attr source = CustomRoomAttr[mapID-$6B] = {bank, base_entry}.
+; bank $00 = no custom attr (fall through to vanilla). Screen 0 -> base_entry;
+; any other screen -> base_entry+2 (vertical-pair stride; degenerate for
+; single-screen rooms since screen is always 0). The editor emits one
+; CustomRoomAttr entry per custom mapID, so adding a room is pure data.
 CustomAttrCheck:
-    ld a, [wMapID]             ; 3B — check actual room
-    cp $6B                     ; 2B — Room $6B only (has custom attr data)
-    jr z, .customAttr          ; 2B — exact match only; $6C+ falls through
-    jp MapIDClampForPalette    ; 3B — vanilla + other custom: normal path
-.customAttr:
-    pop hl                     ; 1B — discard return into entry 1 table lookup
-    ld d, $64                  ; 2B — bank $64 (custom layout/attr bank)
-    ld e, $01                  ; 2B — default: entry 1 (screen 0 attr)
-    ld a, [wScreenIndex]       ; 3B — current screen index
-    or a                       ; 1B — test if zero (screen 0)
-    jr z, .attrReady           ; 2B — screen 0 → entry 1
-    ld e, $03                  ; 2B — screen 4 → entry 3 (screen 1 attr)
+    ld a, [wMapID]             ; actual room
+    cp CUSTOM_ROOM_START       ; $6B
+    jr nc, .custom             ; >= $6B → consult the per-room table
+    jp MapIDClampForPalette    ; vanilla room: normal path
+.custom:
+    sub CUSTOM_ROOM_START       ; index = mapID - $6B
+    add a                        ; ×2 (2 bytes/entry: bank, base_entry)
+    ld e, a
+    ld d, $00
+    ld hl, CustomRoomAttr
+    add hl, de
+    ld a, [hl+]                  ; A = attr bank
+    ld d, [hl]                   ; D = base_entry (temp hold)
+    or a                         ; bank $00?
+    jr z, .vanillaAttr           ; → no custom attr for this room
+    ld e, d                      ; E = base_entry (screen 0)
+    ld d, a                      ; D = attr bank
+    ld a, [wScreenIndex]
+    or a
+    jr z, .attrReady             ; screen 0 → base_entry
+    inc e
+    inc e                        ; other screen → base_entry+2 (vertical pair)
 .attrReady:
-    ld hl, $c200               ; 3B — attr decompression destination
-    call WaitLCDTransfer       ; 3B — decompress + copy to VRAM
-    ret                        ; 1B — return to entry 1's caller
+    pop hl                       ; discard return into entry 1 table lookup
+    ld hl, $c200                 ; attr decompression destination
+    call WaitLCDTransfer         ; decompress + copy to VRAM (D=bank, E=entry)
+    ret                          ; return to entry 1's caller
+.vanillaAttr:
+    jp MapIDClampForPalette      ; custom room without custom attr: vanilla path
 
 ; CustomPalCheck: intercept for entry 0 (palette color loading)
 ; For Room $6B, redirects HL to merged palette colors instead of source pal_ptr
 ; IMPORTANT: Only loads slots 0-3. Slots 4-7 are SYSTEM palettes (used by
 ; monster display, menus, NPC rendering) — the game engine sets them from
 ; the source mapID's palette data. Overwriting them breaks the menu.
+; PILLAR A (Phase 2C): TABLE-DRIVEN for ANY custom room. Per-room palette =
+; CustomRoomPalPtr[mapID-$6B]. A pointer of $0000 = "borrow the vanilla
+; source-map palette" (caller's HL/b/c left intact). A real pointer = load
+; slots 0-3 from it (slots 4-7 stay as the engine's system palettes — widening
+; corrupts monster/menu colours, see GATE_GENERATION §7.3). Both callers of this
+; routine (entry-0 slots-0-3, and the slot-7 overwrite) get the same treatment:
+; a custom-palette room loads slots 0-3 in both, which is exactly how $6B behaved.
 CustomPalCheck:
-    push af
     ld a, [wMapID]
-    cp $6B
-    jr z, .customPal
-    pop af
-    jp LoadPal_46a1             ; normal path: HL=pal_ptr from step entry
-.customPal:
-    pop af
-    ld hl, CustomPaletteColors_6B
-    ld b, $04                   ; load slots 0-3 only (maze uses pal0 sandy + pal1 ocean);
-    ld c, $00                   ;   leave 4-7 as engine system palettes (monster/menu display)
+    cp CUSTOM_ROOM_START
+    jr c, .vanilla              ; < $6B → vanilla, caller's HL/b/c intact
+    push hl                     ; save caller's fallback pal_ptr
+    sub CUSTOM_ROOM_START        ; index = mapID - $6B
+    add a                        ; ×2 (dw per entry)
+    ld e, a
+    ld d, $00
+    ld hl, CustomRoomPalPtr
+    add hl, de
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                      ; HL = room's custom palette ptr
+    ld a, h
+    or l
+    jr z, .borrowVanilla         ; $0000 → use the vanilla source palette
+    pop de                       ; drop saved fallback ptr
+    ld b, $04                    ; custom rooms: load slots 0-3
+    ld c, $00
     jp LoadPal_46a1
+.borrowVanilla:
+    pop hl                       ; restore caller's fallback pal_ptr
+.vanilla:
+    jp LoadPal_46a1              ; caller's HL/b/c unchanged
+
+; ---------------------------------------------------------------------------
+; Per-custom-room render tables (Pillar A). Indexed by (wMapID - $6B). The
+; editor emits a dense entry for every custom mapID it allocates ($6B..). These
+; two intercepts (CustomPalCheck/CustomAttrCheck) are the ONLY render code that
+; was custom-room-specific; everything else (layout/script/NPC/exit/source-map)
+; is already table-driven in bank $60. Tileset + collision threshold + room
+; dimensions live in the per-mapID $26DD record (ROM0) for mapIDs $6B-$6F;
+; mapIDs $70+ need a $26DD intercept (follow-up). See ROADMAP Phase 2C.
+CustomRoomPalPtr:
+    dw CustomPaletteColors_6B    ; $6B — gate floor palette (slots 0-3)
+    dw CustomPaletteColors_6C    ; $6C — distinct "dusk" palette (Pillar A proof)
+
+CustomRoomAttr:
+    db $64, $01                  ; $6B → bank $64, attr base entry 1 (2-screen)
+    db $64, $01                  ; $6C → bank $64, attr base entry 1 (mirror $6B, 2-screen)
 
 ; CustomPaletteColors_6B: 64 bytes (8 palettes × 4 colors × 2 bytes)
 ; HALF 1 (gate-tiles): the REAL in-game Gate of Beginning BG palette, dumped
@@ -2612,6 +2666,20 @@ CustomPaletteColors_6B:
     db $12, $00, $FF, $6B, $DE, $01, $00, $00  ; palette 5  0012 6bff 01de 0000
     db $15, $00, $FF, $6B, $1F, $02, $00, $00  ; palette 6  0015 6bff 021f 0000
     db $39, $01, $FF, $6B, $3F, $03, $00, $00  ; palette 7  0139 6bff 033f 0000
+
+; CustomPaletteColors_6C: Pillar A proof palette — same gate tileset as $6B but
+; obviously different (coherent twilight recolor of the gate palette: rose sand,
+; indigo water, dusk teal trees), so the table-driven 2nd room is unmistakable but
+; (Throwaway proof palette; the editor overwrites it per-room.)
+CustomPaletteColors_6C:
+    db $CC, $51, $16, $7B, $07, $39, $21, $10  ; pal0 ground(slate)
+    db $C4, $48, $16, $7B, $88, $61, $21, $10  ; pal1 water(navy)
+    db $D0, $59, $16, $7B, $C8, $30, $21, $10  ; pal2 accent(violet)
+    db $C6, $31, $16, $7B, $E2, $18, $21, $10  ; pal3 tree(teal)
+    db $CC, $51, $16, $7B, $07, $39, $21, $10  ; pal4 mirror
+    db $C4, $48, $16, $7B, $88, $61, $21, $10  ; pal5 mirror
+    db $D0, $59, $16, $7B, $C8, $30, $21, $10  ; pal6 mirror
+    db $C6, $31, $16, $7B, $E2, $18, $21, $10  ; pal7 mirror
 
 ; ---------------------------------------------------------------------------
 ; HighBattlePal: battle-palette resolver fork for NEW species (id >= 224). G2.

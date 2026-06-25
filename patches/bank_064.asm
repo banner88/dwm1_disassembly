@@ -13,6 +13,8 @@ SECTION "ROM Bank $064", ROMX[$4000], BANK[$64]
     dw CustomAttr_Room6B_S0
     dw CustomLayout_Room6B_S1
     dw CustomAttr_Room6B_S1
+    ; (Pillar A: $6C reuses these same entries 0/2 layout + 1/3 attr as $6B;
+    ;  its distinct look comes purely from CustomRoomPalPtr[1] = dusk palette.)
 
 CustomLayout_Room6B_S0:  ; top screen (LZSS)
     db $00, $02, $00, $08, $08, $08, $08, $00, $00, $00, $00, $00, $04, $00, $00, $00
