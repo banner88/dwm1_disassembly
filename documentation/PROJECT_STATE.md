@@ -5,6 +5,27 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-25 (Session 39 — **Phase 2C: custom gate room (rendering half) +
+> room-palette derivation fully solved & tooled.** Integrity PASS 4/4, clean build `1ca6579…`;
+> gate-room test ROM `DWM-gate-room-v5.gbc` MD5 `2a008235…`, **user-confirmed in SameBoy**.)
+> **S39 — two landed pieces.** (1) **Custom Room `$6B` now wears the Gate-of-Beginning maze
+> tileset** (gfx-ID `$280D` = bank `$28` step `$0D`, floortype `$D`): a sandy island with an
+> ocean-wall border (incl. top), 2×2 **tree** (`$34-$37`/pal3) and **dune** (`$38-$3B`/pal0)
+> metatiles, and pit holes — all real gate tiles with the real gate floor palette (`$17:$629D`).
+> Authored in new `tools/build_gate_room.py` → `patches/bank_064.asm`; gfx-ID/threshold in
+> `bank_000.asm`; `CustomPaletteColors_6B` (slots 0–3 ONLY — widening clobbers system slots →
+> monster-colour corruption) in `bank_017.asm`. Palette assigned **per position** (trees need
+> pal3 yet share the `$30` collision-threshold side with ocean/floor). This is the *rendering*
+> half of "custom room into the gate rotation"; the `rst $00` *insertion* half is still open.
+> (2) **Room-palette derivation from ROM** (`tools/derive_room_palette.py`): a room's real BG
+> colours are only indices 0 and 2 of slots 0–3 (from `$17:$476F`[mapID] normal / `$17:$51F5`
+> [floortype] gate, scanning past empty screens); the engine **forces idx1=`$6bff`, idx3=`$0000`**
+> in every BG palette; slots 4–7 are a shared system set; object palettes are one global block at
+> `$17:$5615`. Validated **30/30** SameBoy dumps + the gate floor; refuses cleanly when a room has
+> no resolvable pointer. Docs updated in place: GATE_GENERATION §7.1–7.3 + palette tables,
+> TOOLS_AND_DATA (both tools), ROADMAP (Phase 2C rendering half ticked), KEY_LESSONS (S39: forced
+> colours / screen-scan / decimal-label / metatile-palette lessons).
+>
 > Last verified: 2026-06-25 (Session 38 — **Phase D new-species data-table SEAMS annotated +
 > Phase N lineage parent-name "?????" FIXED.** Integrity PASS 4/4, clean build `1ca6579…`;
 > lineage test ROM `DWM-lineage-fix-v1.gbc` MD5 `2a09d94f…`, **user-confirmed in SameBoy**.)
@@ -590,6 +611,7 @@
 | Empty banks available | 21 banks = 336 KB: $67,$69–$77,$79–$7A,$7C,$7E–$7F |
 | Gate floor generation | Standard floors are procedurally generated (4×4 screen grid `$C940`, `(piece<<4)\|variant`); special/boss rooms are fixed templates substituted in. Per-gate config `GateFloorDataTable` `$16:$70A6` (32×8); weighting via `SelectFloorType` `$16:$5FC0` + `FloorTypeSelectionTable`1/2/3. Special-room insertion = `rst $00` dispatch at `$16:$5C1C` (sets `wMapID` + `wInGateworld=0`). **Full pipeline: GATE_GENERATION.md.** |
 | Gate damage tiles | Standing-tile id → HRAM `$AA` (`$00:$1E96`); behavior class `$AA>>2`: `$0E` (ids `$38–$3B`) = damage, `$0F` (`$3C–$3F`) = staircase. Amount = `FloorDamageTable` `$01:$5E7D` (16 B by floor type): type 3→5, type 6→10, types $0C/$0E→2, else 0. Applier `ApplyFloorDamage` `$01:$5E23`. (GATE_GENERATION.md §5.1.) |
+| Room palette derivation | A room's runtime BG palette is ROM-derivable: real colours are only indices 0 & 2 of slots 0–3 (`$17:$476F`[mapID] normal / `$17:$51F5`[floortype] gate, scanning past empty screens); engine FORCES idx1=`$6bff`, idx3=`$0000` in every BG palette; slots 4–7 shared system; object palettes global at `$17:$5615`. `tools/derive_room_palette.py`, validated 30/30 dumps + gate. (GATE_GENERATION.md §7.1.) |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -621,7 +643,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Primitive | Status | Where |
 |-----------|--------|-------|
 | Add NEW monster species (ids 224–255) | 🟡 working POC (S30): id 224 Gorbunok playable | ROADMAP "Phase N"; mechanics MONSTER_DATA "Species ID geography". N1 scope ✅, N2 info-fork ✅ (`build_new_species.py`→`bank_06a`, `SaveMon_4446` zero-shift, vanilla 0–220 byte-identical), N3 enemy-stats ✅ (16-bit EID → no fork, EID 518 @ `$14:$7EB3`) + wild encounter ✅ (pool 0 slot 3, same-size `EncounterPoolData` edit in `bank_001`), name ✅ ("Gorbunok"), library ✅ (`build_library_table.py --new-species`, unseen-marker `$E0`→`$FE`). All tool-owned/reproducible. **S32 (user-tested):** N5 breeding DONE — Snaily×BattleRex→Gorbunok (special append, `build_breeding.py` admits new-species results), parent-path free via Slime family, recipe icons via `FamilyRecipeResolve`. Hatch crash (bank `$0b` follower overshoot, pinned in SameBoy) fixed (`FollowerArtResolve0b`). Default-nickname+narration "SkyBell" overshoot fixed → "Gorb" first-4 via `LoadModeBaseRedirect` ($00F0 ROM0 padding) → new-species short-name at `$41:$7FF9`. N4 follower ART integrated via `build_new_species_follower.py` (real W.png art, gid `$7e00`, all 8 contexts) — **baked into `patches/` (G1, S34).** **S35 (user-confirmed):** G2 battle sprite DONE — `MonsterBattleGfxTable[224]` `$320f`→`$7e01` (same-size repoint, real slot, no fork), dragon battle pose = 2nd overflow entry `$7e01`, palette reader `label17_41d0` forked to `HighBattlePal` (custom blue palette). **S38 (user-confirmed):** lineage parent-name DONE — line-1 mode-0 wired (`HighModeTable4D`→`HighMode0Ptrs`→`GorbunokRecipeLine` "Snaily   BattleRex", `patches/bank_04d.asm`), so the library/encyclopedia lineage no longer shows "?????". **Open:** `new_species.json` schema fold (G3) — now the only remaining new-species item. |
-| Custom rooms (mapID ≥ $6B), multi-screen, exits | ✅ working | patches/bank_060.asm + intercepts. Multi-screen scrolling proven (v28): vertical 2-screen Room $6B (screens 0+4). Room dimensions in $26DD bytes 2-5 control walkable area. |
+| Custom rooms (mapID ≥ $6B), multi-screen, exits | ✅ working | patches/bank_060.asm + intercepts. Multi-screen scrolling proven (v28): vertical 2-screen Room $6B (screens 0+4). Room dimensions in $26DD bytes 2-5 control walkable area. **S39: Room $6B can render the gate maze tileset** (gfx-ID `$280D`) with the gate floor palette — sandy island, tree/dune/pit metatiles; `tools/build_gate_room.py` → `bank_064.asm`. (GATE_GENERATION.md §7.2–7.3.) |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
 | YES/NO choices with branching | ✅ working | $E7 $F0 + opcode $15 on $C83C |

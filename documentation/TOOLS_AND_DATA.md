@@ -44,7 +44,8 @@ was lost; they were intentionally curated. Treat as documentation.
 | breeding_family_defaults.json | B4 family-default overrides: positional `{result,p1,p2}` list applied in place to `$16:$4974` (offspring species == slot). Includes the shadow avoid-list inline. | tools/build_breeding.py --emit-family → patches/bank_016.asm |
 | breeding_special.json | B5 full special-table spec: `base:"rom"` + in-place `overrides` (edit any base entry, by `index` or by parent `match`) + `appends` (new entries past 824). The SINGLE authored source for the whole special table; bank `$16` stays vanilla. | tools/build_breeding.py --emit-special → patches/bank_069.asm |
 | breeding_family_reassign.json | B6 family reassignment spec: `{id,name,from,to}` list of same-size family-byte edits ($03:$4461+$00). `from` is validated == vanilla at build time. | tools/build_family_reassign.py --emit → patches/bank_003.asm |
-| custom_layouts/room_6b_medalman.json | 20×16 tile grid for Room $6B — user-designed MedalMan tileset room (v28, current) | tile_layout_compiler.py → bank_064.asm |
+| custom_layouts/room_6b_medalman.json | 20×16 tile grid for Room $6B — user-designed MedalMan tileset room (v28) | tile_layout_compiler.py → bank_064.asm |
+| *(Room $6B current = gate-tile room)* | **S39:** Room $6B is now the Gate-of-Beginning maze-tileset room (gfx-ID `$280D`), authored directly in **`tools/build_gate_room.py`** (no JSON) → `patches/bank_064.asm`. Sandy island: ocean-wall border, 2×2 tree/dune/pit metatiles, per-position palette. Builds the v5 ROM. See GATE_GENERATION.md §7.2–7.3. | tools/build_gate_room.py → bank_064.asm |
 | family_icons.json | S20: the 10 vanilla family ICON tiles ($4F:$4110-$41A0, text bytes $10-$19) decoded as 8×8 grids + the free $1A slot + the authored Spirit icon (Variants A/B). Round-trip safe (decode→encode == ROM). `_generator` stamped. | tools/build_family_icon.py → patches/bank_04f.asm |
 
 ### Tier S — Stable analysis output (generator not in repo; data is ROM-derived and unchanging)
@@ -221,7 +222,12 @@ key should auto-version instead of requiring manual cache clear.
 `map_gate_names` (writes gate_names.json — used by dump_room_data,
 gen_encounter_db; do NOT archive) ·
 `match_npc_text` (writes npc_text_mapping/npc_with_text — NPC↔dialogue
-join, useful for editor; do NOT archive)
+join, useful for editor; do NOT archive) ·
+`derive_room_palette` (**NEW S39** — derives any room's runtime BG palette from
+ROM: colours 0/2 from the room/gate palette pointer, forces idx1=`$6bff`/idx3=
+`$0000`, scans screens, refuses cleanly when unresolvable. `--map 0xNN` /
+`--gate 0xNN`. Validated 30/30 dumps + gate floor; see GATE_GENERATION.md §7.1.
+Prints, no JSON.)
 
 ### One-off investigations → move to `tools/archive/` when convenient
 `analyze_bank0b` `analyze_bank17` `analyze_screens` `annotate_bank052`

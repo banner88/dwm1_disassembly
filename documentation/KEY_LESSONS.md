@@ -1227,3 +1227,58 @@ over the whole routine chain in one shot. Mechanism fully documented in minutes 
 set a write-watchpoint on Y and trigger X once — the break PC + backtrace is the answer. Reserve
 grep for when you already know a label/constant the target code must contain. (Behavior class =
 `tile_id >> 2` is the unifying trick: `$0E`=damage, `$0F`=staircase share one `$AA` lookup.)
+
+---
+
+## Session 39 Lesson — custom gate room + room-palette derivation
+
+### Every BG palette has two engine-forced colours — derive only indices 0 and 2
+**Symptom**: ROM palette bytes read straight from a room's pointer didn't match the
+SameBoy dump for several rooms (Stable, Well), even though others (GreatTree) matched.
+**Root cause**: the engine **overwrites BG colour index 1 → `$6BFF` and index 3 →
+`$0000`** in every palette at runtime. Rooms whose ROM bytes already hold those values
+matched by luck; rooms that don't got "corrected" on load. So only indices 0 and 2 are
+real palette data.
+**Fix**: read colours 0 and 2 from the room's palette block; force 1=`$6bff`, 3=`$0000`.
+30/30 dumps + the gate floor then reproduced exactly (`tools/derive_room_palette.py`).
+**Rule**: when derived data is right for some inputs and wrong for others, look for a
+runtime normalisation that makes the wrong ones *look* right by coincidence — don't
+trust a partial match. (Object palettes are a global block at `$17:$5615`; BG slots 4–7
+are a shared system set; only slots 0–3 are per-room.)
+
+### A room's palette can live on a screen other than screen 0 — scan, don't assume
+**Symptom**: Starry Shrine (`$09`) "had no palette"; the Intro (`$2F`) looked
+script-driven; both seemed like underivable special cases.
+**Root cause**: a room's attr block is a list of screen pointers, and **screen 0 can be
+`$FFFF` (empty)** with the real data on a later screen (Starry Shrine → screen 1;
+Intro → screen 4). Reading only screen 0 finds nothing or the wrong block.
+**Fix**: scan screens for the first whose step-0 `pal_ptr` lands in the palette region
+(`$5200–$6300`); refuse only if none resolves. Both rooms then derived correctly — no
+script path involved. The Intro and the Library's opening cutscene even **share a
+screen** (`$5ADD`), which is why their dumps were identical; the normal Library (`$12`)
+is a different palette (`$583D`) on every screen.
+**Rule**: before declaring a room "script-driven / special", scan all its screens — an
+empty screen 0 is normal. And a tool that can't resolve a palette must **refuse, not
+guess**: a plausible-but-wrong palette is worse than an honest failure.
+
+### User-facing room labels were DECIMAL; mapIDs are hex
+**Symptom**: "Well (mt24)" derived garbage at mapID `$24`.
+**Root cause**: the human's `mtNN` labels are **decimal** (Well mt24 = mapID `$18`,
+Library mt18 = `$12`, boss rooms mt49–60 = `$31–$3C`). Feeding the label as hex hit the
+wrong room entirely — which masqueraded as a derivation bug.
+**Rule**: pin the radix of any externally-supplied index before trusting a mismatch;
+a "wrong output" is often a wrong *input* in the wrong base. (`mtNN` decimal → `$NN` hex.)
+
+### Maze "trees/dunes" are 2×2 metatiles, and need per-position palette
+**Symptom**: arranging gate-tileset fragments into green/sand blobs didn't read as the
+trees/dunes the user knew were in the tileset.
+**Root cause**: trees/dunes are **specific 2×2 object metatiles** (`$34-$37` tree,
+`$38-$3B` dune in bank `$28` step `$0D`), not free-form texture. The *same* tiles are a
+green tree on pal3 or a sand dune on pal0 — palette, not tile, distinguishes them. A
+pure tile-id→palette threshold rule can't express this (trees and ocean both sit on the
+same side of the `$30` collision threshold yet need different palettes).
+**Fix**: assign palette **per position** in the attr nibbles (`tools/build_gate_room.py`).
+**Rule**: in a shared maze tileset, "what is this" is set by tile **and** palette
+together; author decorative objects as metatiles with explicit per-cell palette, and
+keep the custom-room palette load to slots 0–3 only (widening it clobbers the shared
+system slots and corrupts monster colours).

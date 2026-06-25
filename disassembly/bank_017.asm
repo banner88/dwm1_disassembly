@@ -101,7 +101,9 @@ jr_017_4071:
     ld a, [hl+]
     ld d, [hl]
     ld e, a
-    ld hl, $51f5
+    ld hl, $51f5                ; FloorPalettePtrTable: BG palette pointer table,
+                                ; indexed [wMapID]×2 → pal_ptr (gate floor: wMapID =
+                                ; floortype, e.g. $D → $629D). See GATE_GENERATION §7.1.
     ld a, [wMapID]
     add a
     add l
@@ -299,12 +301,12 @@ jr_017_41a5:
     ei
     ret
 
-label17_41c0:
+label17_41c0:                   ; load the 8 global object/sprite palettes (GBC only)
     ld a, [wIsGBC]
     or a
     ret z
 
-    ld hl, $5615
+    ld hl, ObjectPalettes       ; $5615 — same in every room
     ld c, $00
     ld b, $08
     call LoadPal_46bf
@@ -2191,7 +2193,12 @@ GateAttrTable_B:  ; $5415 — 256 entries × 2B (attr_idx, attr_bank)
     db $B4, $3D  ; [254] attr_idx=$B4 bank=$3D
     db $B4, $3D  ; [255] attr_idx=$B4 bank=$3D
 
-; --- LZSS attribute data ($5615-$7FFF, 10731 bytes) ---
+; --- Palette colour data ($5615+) ---
+;   Begins with the 8 global object palettes, then the BG palette colours that the
+;   AttrPtrTable ($476F) and FloorPalettePtrTable ($51F5) entries point into. BG
+;   palettes store colour idx1=$6bff and idx3=$0000 (visible in the bytes below).
+;   The real LZSS attribute maps start later, at AttrMapData. (GATE_GENERATION §7.1.)
+ObjectPalettes:  ; $5615 — 8 object/sprite palettes (4 colours × 2B); global, every room
     db $AD, $35, $7F, $4B, $9F, $00, $42, $00, $AD, $35, $7F, $4B, $20, $17, $42, $00
     db $00, $7C, $7F, $4B, $AB, $7D, $42, $00, $00, $7C, $7F, $4B, $FF, $02, $42, $00
     db $B9, $36, $7F, $4B, $B6, $58, $42, $00, $00, $7C, $7F, $4B, $0F, $42, $42, $00

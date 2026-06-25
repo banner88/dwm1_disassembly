@@ -235,10 +235,25 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
 
 ### Phase 2C — Gate generation (system mapped S37; see GATE_GENERATION.md)
-- [ ] **Custom room into the gate rotation** — point a `rst $00` dispatch slot
-      (`$16:$5C1C` jump table) at a handler setting `wMapID = <custom id≥$6B>` +
-      `wInGateworld=0`, and open its weight in `FloorTypeSelectionTable2`. POC
-      candidate; dovetails with the proven custom-room path. (GATE_GENERATION.md §6.)
+- [~] **Custom room into the gate rotation** — TWO halves:
+   - [x] **Rendering half (S39).** Room `$6B` now renders the Gate-of-Beginning
+         maze tileset (gfx-ID `$280D`, bank `$28` step `$0D`) with the real gate
+         floor palette — sandy island with ocean-wall border, 2×2 tree/dune/pit
+         metatiles, per-position attr palette. Authored in `tools/build_gate_room.py`
+         → `patches/bank_064.asm` (+ `bank_000.asm` gfx-ID/threshold, `bank_017.asm`
+         `CustomPaletteColors_6B`, slots 0–3 only). Builds the v5 ROM
+         (`2a008235…`); verifier PASS; user-confirmed in SameBoy. As a by-product,
+         the room-palette derivation was fully solved + tooled (see below).
+         (GATE_GENERATION.md §7.1–7.3.)
+   - [ ] **Insertion half.** Point a `rst $00` dispatch slot (`$16:$5C1C` jump
+         table) at a handler setting `wMapID = <custom id≥$6B>` + `wInGateworld=0`,
+         and open its weight in `FloorTypeSelectionTable2`; for gate 0 specifically,
+         patch the gate-0 special-room exclusion (`$16:~$1886`). (GATE_GENERATION.md §6.)
+- [x] **Room-palette derivation from ROM (S39).** `tools/derive_room_palette.py`
+      reproduces any room's runtime BG palette: colours 0/2 from the room/gate
+      palette pointer (`$17:$476F` normal / `$17:$51F5` gate), engine-forced
+      idx1=`$6bff`/idx3=`$0000`, screen-scan, clean refusal when unresolvable.
+      Validated 30/30 SameBoy dumps + the gate floor. (GATE_GENERATION.md §7.1.)
 - [ ] **`piece_id → screen layout` map** — decode the table turning a grid cell's
       high nibble into the rendered screen layout (needed to author NEW maze
       pieces vs. only reweighting existing ones). (GATE_GENERATION.md §12.2.)

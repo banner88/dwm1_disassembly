@@ -8839,15 +8839,15 @@ Data_2A30:
     nop
     ld d, b
     nop
-    nop                         ; $2A35: step_id=$00 (combined GFX in bank $67)
-    ld h, a                     ; $2A36: bank=$67
+    db $0D                      ; $2A35: step_id=$0D (Gate of Beginning maze)
+    db $28                      ; $2A36: bank=$28 (gate dungeon tileset E) → gfx-ID $280D
     and b
 
 Data_2A38:
     nop                         ; $2A38: room width high ($00) — width=$00A0 (160px, 1 column)
     nop                         ; $2A39: room height low ($00) — was $80 (128px, 1 row)
     db $01                      ; $2A3A: room height high ($01) — height=$0100 (256px, 2 rows)
-    db $1B                      ; $2A3B: collision threshold=$1B (27 wall tiles)
+    db $30                      ; $2A3B: collision threshold=$30 (tiles <$30 = wall)
     nop
 
 DataTable_2A3D:
@@ -13870,7 +13870,9 @@ MapIDClampForPalette::
     ret c
     cp $6C                      ; room $6C+ = Castle source
     jr nc, .useCastle
-    ld a, $16                   ; room $6B = MedalMan source (tileset 30:12)
+    ld a, $16                   ; room $6B AttrPtrTable fallback = $16; NOTE: actual
+                                ;   $6B palette is overridden by CustomPaletteColors_6B
+                                ;   (gate floor $629D) via CustomPalCheck — GATE_GENERATION §7.3
     ret
 .useCastle:
     xor a                       ; A = $00 (Castle)
