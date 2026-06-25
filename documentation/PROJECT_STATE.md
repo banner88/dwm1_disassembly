@@ -5,6 +5,29 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-25 (Session 38 — **Phase D new-species data-table SEAMS annotated +
+> Phase N lineage parent-name "?????" FIXED.** Integrity PASS 4/4, clean build `1ca6579…`;
+> lineage test ROM `DWM-lineage-fix-v1.gbc` MD5 `2a09d94f…`, **user-confirmed in SameBoy**.)
+> **S38 — two pieces, both landed.** (1) **Data-table fork SEAMS** now self-documenting at their
+> clean anchors (labels/comments only, build byte-perfect; the S33 pass did the DISPLAY seams, this
+> finishes the data-table set): `bank_003 label443f`/`SaveMon_4446` (single info indexer; id≥224 →
+> bank `$6A` fork; also reached as `$03` entry 1 by breeding's `$0301` parent-family load),
+> `bank_014 LoadEnemyStats` (16-bit EID → NO fork) + new label `EnemyStatsTrailingFree` @ `$7EAD`
+> (append region; EIDs 487–517 are unusable CODE, first grid-aligned slot is EID 518 `$7EB3`),
+> `bank_001 EncounterPool_000` (empty slot = in-place insertion point, Iron-Rule-2 safe),
+> `bank_016 label16_485c` (entry-1 recipe lookup overshoots 222-entry `FamilyRecipeTable` →
+> `FamilyRecipeResolve` display fork) + the `$0301` parent→family seam (new species resolves a real
+> family as a breeding parent via the forked info loader). (2) **Lineage parent-name fix (N5 sub-item
+> closed):** the library/encyclopedia lineage line-1 showed "?????    ?????" for Gorbunok. Verified the
+> path from clean source (entry 2 `call SetB4d_43b9` → `HighDetailTextFork` → `HighModeTable4D` for
+> id≥224), then wired `HighModeTable4D` mode-0 → new `HighMode0Ptrs` → `GorbunokRecipeLine`
+> (`patches/bank_04d.asm`). Also **corrected a latent format bug** in the S32-staged string: real recipe
+> lines use TWO 9-char fields (e.g. slot 200 "Servant  GreatDrak"), so rebuilt as `"Snaily   BattleRex"`
+> (names sym-verified vs `MonsterNamePtrTable $41:$4339`). id≥224-gated → ids 0–223 byte-identical.
+> Built-ROM check: `[mode0base+224*2] → GorbunokRecipeLine` → "Snaily   BattleRex". Docs updated in
+> place: ROADMAP (Phase D seams ticked, N5 lineage sub-item done), MONSTER_DATA (overshoot registry
+> lineage row → DONE, data-table seam annotations recorded).
+>
 > Last verified: 2026-06-24 (Session 36 — **Starter + force-join verification (audit of legacy
 > editor knowledge).** Integrity PASS 4/4, clean build `1ca6579…`.)
 > **S36 — starter mechanism PROVEN end-to-end and editor claim confirmed.** Starter = enemy-stats
@@ -597,7 +620,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | Primitive | Status | Where |
 |-----------|--------|-------|
-| Add NEW monster species (ids 224–255) | 🟡 working POC (S30): id 224 Gorbunok playable | ROADMAP "Phase N"; mechanics MONSTER_DATA "Species ID geography". N1 scope ✅, N2 info-fork ✅ (`build_new_species.py`→`bank_06a`, `SaveMon_4446` zero-shift, vanilla 0–220 byte-identical), N3 enemy-stats ✅ (16-bit EID → no fork, EID 518 @ `$14:$7EB3`) + wild encounter ✅ (pool 0 slot 3, same-size `EncounterPoolData` edit in `bank_001`), name ✅ ("Gorbunok"), library ✅ (`build_library_table.py --new-species`, unseen-marker `$E0`→`$FE`). All tool-owned/reproducible. **S32 (user-tested):** N5 breeding DONE — Snaily×BattleRex→Gorbunok (special append, `build_breeding.py` admits new-species results), parent-path free via Slime family, recipe icons via `FamilyRecipeResolve`. Hatch crash (bank `$0b` follower overshoot, pinned in SameBoy) fixed (`FollowerArtResolve0b`). Default-nickname+narration "SkyBell" overshoot fixed → "Gorb" first-4 via `LoadModeBaseRedirect` ($00F0 ROM0 padding) → new-species short-name at `$41:$7FF9`. N4 follower ART integrated via `build_new_species_follower.py` (real W.png art, gid `$7e00`, all 8 contexts) — **baked into `patches/` (G1, S34).** **S35 (user-confirmed):** G2 battle sprite DONE — `MonsterBattleGfxTable[224]` `$320f`→`$7e01` (same-size repoint, real slot, no fork), dragon battle pose = 2nd overflow entry `$7e01`, palette reader `label17_41d0` forked to `HighBattlePal` (custom blue palette). **Open:** lineage parent-name "?????" (modes 0/1 `$4025/$4039` overshoot id 224 — see ROADMAP N5 sub-item); `new_species.json` schema fold (G3). |
+| Add NEW monster species (ids 224–255) | 🟡 working POC (S30): id 224 Gorbunok playable | ROADMAP "Phase N"; mechanics MONSTER_DATA "Species ID geography". N1 scope ✅, N2 info-fork ✅ (`build_new_species.py`→`bank_06a`, `SaveMon_4446` zero-shift, vanilla 0–220 byte-identical), N3 enemy-stats ✅ (16-bit EID → no fork, EID 518 @ `$14:$7EB3`) + wild encounter ✅ (pool 0 slot 3, same-size `EncounterPoolData` edit in `bank_001`), name ✅ ("Gorbunok"), library ✅ (`build_library_table.py --new-species`, unseen-marker `$E0`→`$FE`). All tool-owned/reproducible. **S32 (user-tested):** N5 breeding DONE — Snaily×BattleRex→Gorbunok (special append, `build_breeding.py` admits new-species results), parent-path free via Slime family, recipe icons via `FamilyRecipeResolve`. Hatch crash (bank `$0b` follower overshoot, pinned in SameBoy) fixed (`FollowerArtResolve0b`). Default-nickname+narration "SkyBell" overshoot fixed → "Gorb" first-4 via `LoadModeBaseRedirect` ($00F0 ROM0 padding) → new-species short-name at `$41:$7FF9`. N4 follower ART integrated via `build_new_species_follower.py` (real W.png art, gid `$7e00`, all 8 contexts) — **baked into `patches/` (G1, S34).** **S35 (user-confirmed):** G2 battle sprite DONE — `MonsterBattleGfxTable[224]` `$320f`→`$7e01` (same-size repoint, real slot, no fork), dragon battle pose = 2nd overflow entry `$7e01`, palette reader `label17_41d0` forked to `HighBattlePal` (custom blue palette). **S38 (user-confirmed):** lineage parent-name DONE — line-1 mode-0 wired (`HighModeTable4D`→`HighMode0Ptrs`→`GorbunokRecipeLine` "Snaily   BattleRex", `patches/bank_04d.asm`), so the library/encyclopedia lineage no longer shows "?????". **Open:** `new_species.json` schema fold (G3) — now the only remaining new-species item. |
 | Custom rooms (mapID ≥ $6B), multi-screen, exits | ✅ working | patches/bank_060.asm + intercepts. Multi-screen scrolling proven (v28): vertical 2-screen Room $6B (screens 0+4). Room dimensions in $26DD bytes 2-5 control walkable area. |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |

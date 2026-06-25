@@ -468,7 +468,7 @@ recipes are pure authoring.
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:
-- [~] **Annotate the new-species fork SEAMS in clean disassembly (labels/comments
+- [x] **Annotate the new-species fork SEAMS in clean disassembly (labels/comments
       only, byte-perfect `1ca6579…`).** The "which site is the seam" knowledge currently
       lives only in patches + MONSTER_DATA. Propagate it as comments at the clean anchors:
       `bank_003 label443f`/`SaveMon_4446` (single info indexer; id≥224 fork point),
@@ -496,9 +496,22 @@ Driven by what the editor must EDIT, not completionism:
       [= the lineage parent-icon table, doubles as the menu copy], `$18:$40bf`→`TextDataPtrLookup`,
       `$59:$42ca`→`SaveSlotPtrTable`); + one optional cross-ref at bank `$16` `$0301` parent-family
       load. CORRECTIONS recorded in source + MONSTER_DATA: **ItemNamePtrTable = mode 8** (not 11);
-      **`$4739` overshoots at id≥215, fork covers id≥224**. **STILL PENDING (data-table seams, own
-      pass): `bank_003 SaveMon_4446`, `bank_014 LoadEnemyStats`+`$7EAD`, `bank_001 EncounterPool_000`,
-      and bank `$16` breeding-determination internals (`LoadBrd_4653`/`45d5`/`45ff`).)*
+      **`$4739` overshoots at id≥215, fork covers id≥224**.
+      ***S38 — the DATA-TABLE seams DONE*** (labels/comments only, build `1ca6579…`, integrity
+      4/4; new label `EnemyStatsTrailingFree` sym-verified to `14:7ead`, cross-ref patch labels
+      `FamilyRecipeResolve`/`NewSpeciesInfoCopy` confirmed to exist): `bank_003 label443f`/
+      `SaveMon_4446` (single info indexer; patched `cp $e0` → bank `$6A` fork; also reached as
+      `$03` entry 1 by breeding's `$0301` parent-family load); `bank_014 LoadEnemyStats` (16-bit
+      EID → NO fork) + new label `EnemyStatsTrailingFree` @ `$7EAD` (append region — records that
+      the 487-entry table ends at `$7BAC` but `$7BAC..$7EAC` is CODE, so EIDs 487–517 are unusable
+      and the first grid-aligned slot is EID 518 `$7EB3`); `bank_001 EncounterPool_000` (empty
+      slot = EID 0/wt 0 = in-place insertion point, Iron-Rule-2 safe); `bank_016 label16_485c`
+      (entry-1 recipe lookup overshoots the 222-entry `FamilyRecipeTable` → `FamilyRecipeResolve`
+      DISPLAY fork) + the two `$0301` parent→family conversion sites (new species resolves a real
+      family as a breeding PARENT via the forked info loader). **STILL PENDING (own pass, NOT a
+      new-species seam — general breeding mechanics): bank `$16` breeding-determination internals
+      proper (`LoadBrd_4653` plus/special, `LoadBrd_45d5/45ff` family scan, special→family→pedigree
+      precedence) — deferred to a breeding-mechanics annotation pass.**
 - [ ] Bank $03 monster table → labeled `db` (gen_monster_db.py exists —
       verify generator, apply, MD5 must stay `1ca6579…`)
 - [ ] Bank $14 enemy stats + boss tables → `db`
@@ -902,18 +915,21 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
         `patches/bank_000.asm`): mode-7 lookups for id≥224 redirect to a new-species SHORT-name
         entry (first 4 letters, "Gorb") at bank `$41` tail (`$7FF9`). Generic (no per-monster
         handcoding); gated on `$4739` so all other text is byte-identical.
-      - **[ ] SUB-ITEM (open, cosmetic):** library lineage shows parent *icons* correctly but
-        "?????" next to each instead of "Snaily"/"BattleRex". Root cause pinned (S32, SameBoy):
-        the parent-name line is rendered via `LoadItem_6456` (`$12:$6456`) → bank `$4d` entry 2,
-        **mode 0 = detail line 1** (`$4d:$400b`), indexed by the **offspring** id. Slot 224 holds the
-        vanilla "?????    ?????" placeholder (the 256-entry table isn't an overshoot — the slot is
-        simply un-authored). (mode 1 = line-2 description is already forked by S29's
-        `HighModeTable4D`/`HighLine2Ptrs` → Dracky placeholder.) **Head-start staged:** a correct
-        recipe string `GorbunokRecipeLine` ("Snaily BattleRex") already exists in
-        `patches/bank_04d.asm` but is **NOT wired**. TO FINISH: fork `HighModeTable4D` mode-0 for
-        id≥224 (point slot 224 at `GorbunokRecipeLine`), same pattern as the mode-1 fork right above
-        it. Confirmed in SameBoy ($6456 fires $c822=0/1, $c823=$E0; parents $da71/$da72=$04/$2a).
-        Breeding itself is unaffected.
+      - **[x] SUB-ITEM (DONE, S38 — user-confirmed in SameBoy):** library/encyclopedia lineage
+        showed parent *icons* correctly but "?????" next to each instead of "Snaily"/"BattleRex".
+        Root cause (S32): the parent-name line is rendered via `LoadItem_6456` (`$12:$6456`) → bank
+        `$4d` entry 2, **mode 0 = line 1** (`$4d:$400b`), indexed by the **offspring** id; slot 224
+        held the vanilla shared "?????    ?????" placeholder @ `$53C4` (256-entry table, NOT an
+        overshoot — un-authored slot, shared with 220/225). **FIX (S38):** first verified from clean
+        source that the lineage path routes through the fork (bank `$4d` entry 2 = `call SetB4d_43b9`
+        → `HighDetailTextFork` → `HighModeTable4D` for id≥224), then wired `HighModeTable4D` mode-0 →
+        new `HighMode0Ptrs` → `GorbunokRecipeLine` (`patches/bank_04d.asm`). **Also corrected a
+        latent format bug** in the S32-staged string: real recipe lines use TWO fixed 9-char fields
+        (e.g. slot 200 "Servant  GreatDrak", slot 214 "DeathMoreWatabou"), so the single-spaced
+        staged string would have mis-columned parent 2 — rebuilt as `"Snaily   BattleRex"` (names
+        sym-verified vs `MonsterNamePtrTable $41:$4339`). id≥224-gated → ids 0–223 byte-identical;
+        built-ROM check `[mode0base+224*2] → GorbunokRecipeLine` → "Snaily   BattleRex". Test ROM
+        `DWM-lineage-fix-v1.gbc`. Breeding itself unaffected. **Phase N now has only G3 open.**
 - [x] **N6 — Top-range gates verified (DONE, S31): NOT species gates → no patch.**
       `bank_05f/057/058/052` all branch on `$db8a`, which is a battle skill/effect/
       animation id (written only from constants + skill tables), never a species byte.

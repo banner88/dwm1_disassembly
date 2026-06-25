@@ -578,7 +578,7 @@ never clamp/gate to hide the miss. Verified status for id 224:
 | Battle sprite gfx | `MonsterBattleGfxTable` | `$00:$2B9F` | 256 | **slot exists** | **G2 (S35), baked into `patches/`:** `$2d5f` `$320f`→`$7e01` (same-size 2-byte repoint, no fork); dragon battle stream = overflow `$7e01`; palette via `HighBattlePal` fork in bank `$17` (`$62fd` overshoots, needs fork). User-confirmed. |
 | Follower gfx (walking) | follower gfx-ID copies | `$01/$06/$07/$09/$0b/$12/$18/$59` | — | overshoot | S32: `$0b` forked in `patches/` (`FollowerArtResolve0b`, hatch-crash fix). **Real follower ART now integrated** via `build_new_species_follower.py` (W.png → gid `$7e00`, layout `$4184`, attr palette 2, all 8 contexts repointed/forked + `$01` clamp lifted) — user-confirmed. **Now BAKED into `patches/` as id-indexed tables (G1, S34)**, so the bare patched build shows the real dragon. **Battle sprite also baked (G2, S35) — `$7e01` + palette fork.** |
 | Default nickname + "take X with you" | `FamilyCodePtrTable` (mode 7) | `$41:$4739` | **215** | overshoot→"SkyBell" | **FIXED S32** — id224 overshot into `ItemName[9]`="SkyBell". `LoadModeBaseRedirect` (16 B in `$00F0` ROM0 padding, `patches/bank_000.asm`) redirects mode-7 id≥224 to a new-species SHORT-name table (`$7E39`→`$41:$7FF9`) holding the first-4 name ("Gorb"). Generic; gated on `$4739` so all other text byte-identical |
-| Lineage parent NAMES (library detail, line 1) | mode-0 `$400b` (bank `$4d` entry 2) | `$4d:$400b` | **256** | un-authored slot→"?????" | **OPEN (S32 sub-item)** — `LoadItem_6456` (`$12:$6456`) renders line 1 via bank `$4d` mode 0 indexed by the **offspring** id. NOT an overshoot (256 slots); slot 224 = vanilla "?????    ?????" placeholder. mode-1 (line 2) is already forked (`HighModeTable4D`→`HighLine2Ptrs`→`$60bc`). HEAD-START: recipe string `GorbunokRecipeLine` ("Snaily BattleRex") is staged in `patches/bank_04d.asm`, **unwired** — finish by forking `HighModeTable4D` mode-0 for id≥224 to point at it. Confirmed SameBoy ($6456: $c822=0/1, $c823=$E0; parents $04/$2a) |
+| Lineage parent NAMES (library detail, line 1) | mode-0 `$400b` (bank `$4d` entry 2) | `$4d:$400b` | **256** | un-authored slot→"?????" | **DONE (S38)** — `LoadItem_6456` (`$12:$6456`) renders line 1 via bank `$4d` entry 2 → entry 0 (`call SetB4d_43b9`) → `HighDetailTextFork`, mode 0 indexed by the **offspring** id. Slot 224 was the vanilla shared "?????    ?????" placeholder @ `$53C4` (NOT an overshoot; 256-wide, slot un-authored, shared w/ 220/225). Fixed by wiring `HighModeTable4D` mode-0 → `HighMode0Ptrs` → `GorbunokRecipeLine` "Snaily   BattleRex" (`patches/bank_04d.asm`); two 9-char fields to match vanilla recipe format. id≥224-gated. User-confirmed SameBoy. |
 | Library tab | `LibFamilyPtrTable` (custom) | `$12` | by family | — | id224 listed under Slime; **tool-owned** — `build_library_table.py --new-species` reads `new_species.json` (family from clone+override) + moves the unseen-marker `$E0`→`$FE` (id 224 now a real species; see BREEDING_SYSTEM "Walker contract") |
 
 The text engine multiplies the risk: detail/name text uses the mode×species double
@@ -652,3 +652,42 @@ load = the `SaveMon_4446` path, forked for id≥224), which is what lets a NEW s
 real family when used as a breeding parent. The breeding-determination internals proper
 (`LoadBrd_4653` special/plus, `LoadBrd_45d5/45ff` family scan, special→family→pedigree
 precedence) are left for a breeding-mechanics pass.
+
+### Fork-seam annotations in clean disassembly (S38 — the DATA-TABLE seams)
+
+The S33 pass (above) covered the DISPLAY seams; S38 finishes the **data-table** seams
+(labels/comments only, build `1ca6579…`, integrity 4/4). Each anchor in clean disassembly now
+documents its Phase-N fork/append behaviour and cross-refs the owning patch + tool:
+
+* **Monster info (`bank_003` `label443f`/`SaveMon_4446`).** The SINGLE `$4461+id*43` indexer; all
+  16 consumers read the `$DA33` copy, so this is the one fork point. Patched build: `cp $e0` →
+  `ld hl,$6a00; rst $10` → `NewSpeciesInfoCopy` (bank `$6A` high table). Also reached as bank `$03`
+  ENTRY 1 by breeding's `$0301` parent-family loads (so a new species resolves a real family as a
+  parent). Table is 221 entries → id≥221 overshoots into code; fork the READER, don't extend.
+* **Enemy stats (`bank_014` `LoadEnemyStats` + new label `EnemyStatsTrailingFree` @ `$7EAD`).**
+  16-bit EID (`$DA12/$DA13` → `Mul16x8To24`) ⇒ **NO 256 ceiling, no fork**: an entry appended in the
+  trailing free run `$7EAD..$7FFF` (339 × `$00`) is addressed directly at `EID*25+$4C1D`. KEY GOTCHA
+  recorded at the anchor: the 487-entry table ends at `$7BAC`, but `$7BAC..$7EAC` is CODE, so EIDs
+  487–517 are **unusable**; the first grid-aligned slot at/after `$7EAD` is **EID 518** (`$7EB3`) —
+  which is why Gorbunok (species 224) = EID 518. `EnemyStatsTrailingFree` sym-verified to `14:7ead`.
+* **Wild encounters (`bank_001` `EncounterPool_000`).** 5 EID slots (+`$0A`, 5×2 LE) + 5 weights
+  (+`$14`); an UNUSED slot = EID `$0000`/wt 0. A new species fills a provably-empty slot — a
+  same-size, in-place edit (Iron-Rule-2 safe, no shift), NOT a reader fork. Gorbunok → pool 0 slot 3.
+* **Breeding recipe display (`bank_016` `label16_485c`, entry 1) + the `$0301` parent seam.** Entry 1
+  reads `FamilyRecipeTable[p1*2]` → the offspring's parent pair (icons) with NO bounds check; the
+  222-entry table overshoots at id≥222, so the patched build does `call FamilyRecipeResolve` (DISPLAY
+  fork only — RESULTS are authored in the bank `$69` special-table append). The two `$0301` calls in
+  the determination chain are annotated as the parent→family resolution that routes through the forked
+  bank-`$03` info loader. *(The determination internals proper remain for a breeding-mechanics pass.)*
+
+### Lineage parent-name line (S38 — patch, user-confirmed)
+
+The library/encyclopedia lineage line-1 is **mode 0** of bank `$4d`'s text table (`$400b`), the
+2-parent recipe line ("P1" + "P2" as two 9-char fields, e.g. slot 200 "Servant  GreatDrak"). It is
+NOT the monster name (that is mode 5 / `$41:$4339`). For id≥224 the render routes
+`LoadItem_6456` → bank `$4d` entry 2 (`call SetB4d_43b9`) → `HighDetailTextFork` → `HighModeTable4D`.
+Slot 224 of vanilla `$400b` is the shared "?????    ?????" placeholder (`$53C4`). S38 wires
+`HighModeTable4D` mode-0 → `HighMode0Ptrs` (`dw GorbunokRecipeLine`, base = `HighMode0Ptrs - $01C0`
+so `[base+224*2]` = the entry), and `GorbunokRecipeLine` = `"Snaily   BattleRex"` in the correct
+two-9-char-field format (the S32-staged single-space string was mis-columned). `patches/bank_04d.asm`;
+id≥224-gated so ids 0–223 byte-identical. Built-ROM verified `[mode0base+224*2]→GorbunokRecipeLine`.

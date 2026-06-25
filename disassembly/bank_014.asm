@@ -1246,6 +1246,18 @@ SaveEnem_4821:
 ;        DE = destination WRAM address
 ; Calculates: table_base($4C1D) + eid × 25
 ; Output: 25 bytes copied to [DE]
+;
+; ===== PHASE N NEW-SPECIES SEAM (enemy stats) — NO FORK NEEDED ========
+; The EID is 16-bit ($DA12/$DA13 -> Mul16x8To24), so there is NO 256-entry
+; ceiling on the battle side: an enemy-stats entry appended PAST the 487
+; vanilla entries is addressed by this routine with zero code change, as long
+; as it sits at EID*25+$4C1D. A new species therefore needs only a new entry
+; placed in the bank trailing free run (see EnemyStatsTrailingFree below at
+; $7EAD) — Gorbunok (species 224) = EID 518 @ $7EB3. Wired via the boss/encounter
+; tables (encounter pool slot, bank_001) and breeding result (bank_069).
+; Tool: tools/build_new_species.py -> patches/bank_014.asm. (No reader fork,
+; unlike the bank-$03 info table.) Refs: MONSTER_DATA overshoot registry; N3.
+; ======================================================================
 LoadEnemyStats:
     push de
     ld a, [wTempEnemyStatsId]            ; EID low byte
@@ -6811,6 +6823,18 @@ Jump_014_7e96:
     ret
 
 
+; ===== PHASE N NEW-SPECIES SEAM (enemy-stats append region) ===========
+; $7EAD..$7FFF = 339 bytes of $00 in vanilla (the bank-$14 trailing free run).
+; New enemy-stats entries (read by LoadEnemyStats at EID*25+$4C1D, no fork —
+; see above) are appended HERE. NOTE the gap above: the EnemyStatsTable proper
+; (487 entries) ends at $7BAC, but $7BAC..$7EAC is CODE (label14_7bac..the
+; Jump_014_7e96 block), so EIDs 487..517 (which would land in that code) are
+; NOT usable. The first grid-aligned EID whose slot falls at/after $7EAD is
+; EID 518 ($7EB3) — hence Gorbunok (species 224) = EID 518. patches/bank_014.asm
+; emits `ds 6,$00` (pads $7EAD..$7EB2) then the 25-byte entry at $7EB3.
+; Tool: tools/build_new_species.py. Refs: MONSTER_DATA N3; PROJECT_STATE.
+; ======================================================================
+EnemyStatsTrailingFree:           ; $7EAD (vanilla $00 fill to bank end)
     nop
     nop
     nop

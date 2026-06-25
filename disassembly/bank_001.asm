@@ -7510,6 +7510,18 @@ FloorBreakpointData:
 
 EncounterPoolData:
 ; --- Pool 0 ($6AAE): Gate of Beginning ---
+;
+; ===== PHASE N NEW-SPECIES SEAM (wild encounter) — IN-PLACE, NO FORK ===
+; Each pool has 5 EID slots (+$0A, 5x2 LE) + 5 weights (+$14, 5x1); an UNUSED
+; slot is EID $0000 / weight 0. A new species is added to the wild by filling a
+; provably-empty slot with its EID(+10,*2) and a weight(+20) — a SAME-SIZE,
+; in-place edit (Iron-Rule-2 safe: pool table is fixed 128*26 B, nothing shifts).
+; This is NOT a reader fork; it just populates an existing hole. Gorbunok
+; (species 224 = EID 518) -> pool 0 SLOT 3, which is EID $0000/wt 0 in vanilla
+; below. patches/bank_001.asm sets `dw 2,4,3,518,0` + weight 1 (and bumps the
+; +5 header selection-weights). Tool: tools/build_new_species.py.
+; Refs: MONSTER_DATA overshoot registry (Wild encounters row); PROJECT_STATE N3.
+; ======================================================================
 EncounterPool_000:
     db $03, $01, $07, $00, $00, $03, $05, $02, $00, $00  ; Header
     dw 2, 4, 3, 0, 0  ; EIDs: Slime, Dracky, Anteater, (none), (none)

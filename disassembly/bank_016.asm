@@ -57,7 +57,7 @@ SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
 
     ; Bank $16 jump table (10 entries)
     dw label16_4015          ; Entry 0: BreedingInit — find empty slot, init offspring
-    dw label16_485c          ; Entry 1: Unknown
+    dw label16_485c          ; Entry 1: recipe-pair lookup (FamilyRecipeTable[p1*2]); PHASE N fork seam — see label16_485c
     dw LoadBrd_456e          ; Entry 2: BreedingResolve — determine offspring species
     dw label16_45a3          ; Entry 3: BreedingResolve alt (no mutation step)
     dw label16_474a          ; Entry 4: Skill/stat inheritance
@@ -250,16 +250,21 @@ jr_016_4169:
     ld de, $da39
     ld b, $03
     call LoadBrd_4496
-    ld a, [$d66e]
+; PHASE N seam (new species as a breeding PARENT): the two `ld hl,$0301; rst $10`
+; below load each parent's monster-info via BANK $03 ENTRY 1 (= label443f /
+; SaveMon_4446, forked for id>=224 — see bank_003). $DA33 byte 0 = family, so a
+; NEW species used as a parent resolves its REAL family with zero extra code here.
+; (Confirmed: Funkybird x Gorbunok -> Picky etc.) No fork needed in bank $16.
+    ld a, [$d66e]            ; parent 1 species id
     ld [wTempSpeciesId], a
-    ld hl, $0301
+    ld hl, $0301             ; -> bank $03 entry 1 (forked info loader)
     rst $10
     ld de, $da39
     ld b, $03
     call LoadBrd_4496
-    ld a, [$d703]
+    ld a, [$d703]            ; parent 2 species id
     ld [wTempSpeciesId], a
-    ld hl, $0301
+    ld hl, $0301             ; -> bank $03 entry 1 (forked info loader)
     rst $10
     ld de, $da39
     ld b, $03
@@ -1466,6 +1471,19 @@ jr_016_4857:
 
     ret
 
+; ===== PHASE N NEW-SPECIES FORK SEAM (breeding recipe display) ========
+; label16_485c (bank $16 ENTRY 1) reads FamilyRecipeTable[p1*2] -> the offspring's
+; parent pair into $DA71/$DA72; used to DISPLAY a monster's recipe (parent icons)
+; in the library/encyclopedia. FamilyRecipeTable ($4974) is only 222 entries
+; (species 0..221), indexed here by [$DA6F]*2 with NO bounds check, so a new
+; species (id >= 222, and certainly id 224) OVERSHOOTS into SpecialRecipeTable.
+; In the PATCHED build (patches/bank_016.asm) the first instructions become
+; `call FamilyRecipeResolve` (byte-neutral 3+5): id >= 222 returns a chosen pair
+; (Gorbunok -> db $04,$2a = Snaily+BattleRex) or $FF,$FF ("no recipe"); else the
+; vanilla lookup. This is a DISPLAY fork only — actual breeding RESULTS for a new
+; species are authored in the bank $69 special-table append (build_breeding.py),
+; not here. Refs: BREEDING_SYSTEM; MONSTER_DATA overshoot registry; PROJECT_STATE N5.
+; ======================================================================
 label16_485c:
     ld a, [$da6f]
     ld l, a

@@ -722,6 +722,25 @@ jr_003_4424:
 ; ANY families (incl. in/out of ??? / Boss=9) by a same-size family-byte edit.
 ; The library tab grouping is the ONE exception — it groups by id-range, not this
 ; byte (see SetItem_6242 in bank $12 + BREEDING_SYSTEM "Dynamic library").
+;
+; ===== PHASE N NEW-SPECIES FORK SEAM (info table) =====================
+; label443f / SaveMon_4446 is the SINGLE arithmetic indexer of MonsterInfoTable
+; ($4461 + id*43) — the ONE place a species id becomes an info-entry address.
+; All 16 consumer banks read the $DA33 copy this routine produces, so forking
+; here is sufficient to give a brand-new species (id >= 224, $E0) its own info.
+; The table itself is only 221 entries, so id >= 221 OVERSHOOTS into the code
+; that follows; the fix is to fork the READER, not extend the table in place.
+; In the PATCHED build (patches/bank_003.asm) label443f becomes:
+;       ld a,[wTempSpeciesId] / cp $e0 / jr nc,.high   ; id >= 224 -> high path
+;   .low  -> SaveMon_4446 (vanilla copy, ids 0..220 byte-identical)
+;   .high -> ld hl,$6a00 / rst $10  -> NewSpeciesInfoCopy in bank $6A
+;            (high info table, indexed id-224; tool tools/build_new_species.py).
+; This same routine is reached as BANK $03 ENTRY 1 (dw label443f) via the
+; `ld hl,$0301; rst $10` calls in bank $16 breeding, which is what lets a NEW
+; species resolve a real FAMILY when used as a breeding parent (see bank_016).
+; Zero-shift: the fork lives where SaveMon_4446 had no external callers.
+; Refs: MONSTER_DATA "Species ID geography" + overshoot registry; PROJECT_STATE N2.
+; ======================================================================
 label443f:
     ld de, $da33             ; destination = WRAM $DA33 (byte 0 = family)
     call SaveMon_4446

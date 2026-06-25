@@ -12412,18 +12412,25 @@ HighDetailTextFork:
     ret
 
 HighModeTable4D:
-    dw $400b                      ; mode0 (name)  vanilla 256-entry table
+    dw HighMode0Ptrs - $01C0      ; mode0 (line1 lineage/recipe) base: [base+224*2]=HighMode0Ptrs (was $400b -> shared "?????" @ $53C4)
     dw HighLine2Ptrs - $01C0      ; mode1 (line2) base: [base + 224*2] = HighLine2Ptrs
     dw $43ce, $43e1, $43f4, $4407, $441a, $442d   ; modes 2-7 vanilla
 
 HighLine2Ptrs:                    ; per-high-species line-2 description pointers (id 224+)
     dw $60bc                      ; id 224 (Gorbunok): Dracky's description (valid placeholder)
 
-; Phase N: recipe (mode-0 line 1) string for new species. mode-0[224] in the
-; vanilla $400b table (read by detail entry 2) was a "?????    ?????" placeholder;
-; it is repointed here. Format matches Armorpion ("P1 <sp> P2 <sp> $F0").
-GorbunokRecipeLine:               ; "Snaily BattleRex"
-    db $36, $4b, $3e, $46, $49, $56, $62      ; "Snaily" + space
-    db $25, $3e, $51, $51, $49, $42, $35, $42, $55, $62, $f0  ; "BattleRex" + space + term
+HighMode0Ptrs:                    ; per-high-species line-1 lineage/recipe pointers (id 224+)
+    dw GorbunokRecipeLine         ; id 224 (Gorbunok): "Snaily   BattleRex"
+
+; Phase N: lineage/recipe line-1 string for new species. mode-0[224] in the vanilla
+; $400b table (reached via bank $4d entry 2 -> entry 0 -> HighDetailTextFork) shared
+; the "?????    ?????" placeholder @ $53C4 (slots 220/224/225). Now repointed via
+; HighMode0Ptrs above. Format = TWO 9-char fields (matches vanilla recipes, e.g.
+; slot 200 "Servant  GreatDrak", slot 214 "DeathMoreWatabou"): parent1 padded to 9,
+; parent2 (to 9 or term), $F0. Names verified against MonsterNamePtrTable ($41:$4339).
+GorbunokRecipeLine:               ; "Snaily   BattleRex"  (Snaily=sp4, BattleRex=sp42)
+    db $36, $4b, $3e, $46, $49, $56, $62, $62, $62   ; "Snaily" + 3 spaces  (field 1 = 9)
+    db $25, $3e, $51, $51, $49, $42, $35, $42, $55   ; "BattleRex"          (field 2 = 9)
+    db $f0                                            ; terminator
 
     ds $8000 - @, $00             ; pad remainder of bank with $00 (byte-exact)
