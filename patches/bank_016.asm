@@ -1840,9 +1840,17 @@ jr_016_5b72:
     cp [hl]
     jr z, jr_016_5be1
 
-    ld a, [wGateID]
-    or a
-    jr z, jr_016_5bbf
+    ; --- Pillar B (Phase 2C): gate-decision fork ---------------------------
+    ; Original 6 bytes here were the gate-0 exclusion:
+    ;     ld a,[wGateID] / or a / jr z, jr_016_5bbf   (FA 35 C9 B7 28 xx)
+    ; Replaced IN PLACE (6 bytes -> 6 bytes, no shift) with a call to a fork
+    ; that preserves gate-0 (-> standard maze) and routes the Gate of Villager
+    ; (gate 1) to a custom-room setup. All other gates fall through unchanged
+    ; to the RNG gating below (the fork RETs to the nops, then $5BAF).
+    call GateDecisionFork
+    nop
+    nop
+    nop
 
     ld a, [wRNG1]
     bit 4, a
@@ -5460,5 +5468,60 @@ FamilyRecipeResolve:
     db $ff, $ff
 .gorbunok_recipe:
     db $04, $2a                   ; Snaily (4) + BattleRex (42) — matches breeding_special.json
+
+; =============================================================================
+; PILLAR B (Phase 2C) — custom room inserted into the Gate of Villager rotation
+; =============================================================================
+; GateDecisionFork is CALLed from the gate floor-type branch (replacing the
+; vanilla gate-0 exclusion, same 6 bytes). The call pushed a return address
+; pointing just past it (the 3 nops, then the RNG gating at $5BAF).
+;
+;   gate 0  -> discard that return addr, JP jr_016_5bbf (standard maze). Its
+;              own RET then returns to entry-5's caller, exactly as the vanilla
+;              `jr z, jr_016_5bbf` did. (Preserves the gate-0 exclusion.)
+;   gate 1  -> discard that return addr, JP CustomGate1Setup (custom room $6D).
+;   else    -> RET, so execution continues into the RNG gating untouched
+;              (gates 2-31 behave byte-for-byte as vanilla).
+;
+; The `pop hl` discards the call's return address so the gate-0/gate-1 paths'
+; final RET unwinds to entry-5's CALLER (not back into the RNG gating, which
+; would re-run the standard path and clobber wMapID). HL is dead here (it gets
+; reloaded in every downstream path), so popping into it is safe.
+GateDecisionFork:
+    ld a, [wGateID]
+    or a
+    jr z, .gate0
+    cp $01
+    jr z, .gate1
+    ret                         ; gates 2-31: continue to RNG gating ($5BAF)
+.gate0:
+    pop hl                      ; drop call return addr -> RET unwinds to caller
+    jp jr_016_5bbf              ; standard maze (vanilla gate-0 behaviour)
+.gate1:
+    pop hl                      ; drop call return addr -> RET unwinds to caller
+    jp CustomGate1Setup
+
+; CustomGate1Setup — mirror of the vanilla special-room handler at $5D0D (the
+; $50 treasure-room setup) byte-for-byte EXCEPT wMapID = $6D (our custom room).
+; Sets the custom map id, clears wInGateworld (custom rooms render via the
+; table-driven Pillar A path, NOT the maze generator), and arms the same spawn
+; position $0048/$0068 that $50/$51 use (central walkable sand). The room's
+; gate_flag=$80 exit then descends to the next floor, re-entering this fork.
+CustomGate1Setup:
+    ld a, $6D
+    ld [wMapID], a
+    xor a
+    ld [wInGateworld], a
+    ld hl, $0048
+    ld a, l
+    ld [wWarpSpawnXLo], a
+    ld a, h
+    ld [wWarpSpawnXHi], a
+    ld hl, $0068
+    ld a, l
+    ld [wWarpSpawnYLo], a
+    ld a, h
+    ld [wWarpSpawnYHi], a
+    ret
 
     ds $8000 - @, $00             ; pad remainder of bank with $00 (byte-exact)

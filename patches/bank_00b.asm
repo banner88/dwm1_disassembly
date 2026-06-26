@@ -1333,7 +1333,7 @@ jr_00b_465b:
     jr jr_00b_4674
 
 jr_00b_466b:
-    ld hl, wGameState
+    call CustomDescentInGate         ; custom rooms: wInGateworld=$01 for the transition; returns hl=wGameState
     set 5, [hl]
     xor a
     ld [$c905], a
@@ -2565,6 +2565,25 @@ FollowerArtResolve0b:                ; in: HL = (species+$10)*2
 ; Editor appends one dw per new species; sized to content (grows on rebuild).
 NewFollowerGfxTable0b:
     dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)
+
+; --- Pillar B helper: mark custom-room descents as in-gate floor changes -----
+; Called from the gate_flag exit-transition point (jr_00b_466b). For custom
+; rooms (mapID >= $6B) it sets wInGateworld=$01 *for the transition only*, so
+; the fade/BGM logic reads "already inside the gate" → quick whoosh + BGM
+; continues, instead of the hub→gate dissolve + music restart. The room itself
+; still runs with wInGateworld=0 for display (Entry0 resets it via the fork →
+; CustomGate1Setup), so the working render and exit-list descent are untouched.
+; Replaces the 'ld hl, wGameState' that the call site needs, so it restores HL
+; before returning.
+CustomDescentInGate:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START             ; $6B
+    jr c, .restore
+    ld a, $01
+    ld [wInGateworld], a             ; transient: in-gate floor change feel
+.restore:
+    ld hl, wGameState                ; the instruction this call replaced
+    ret
 
 ; =============================================================================
 ; ROOM DATA SECTION ($4B43 - $7FFF)

@@ -1344,3 +1344,64 @@ as zeros when dumped by a tool, sending the debug down a false path.
 **Rule**: `file_off = addr if addr < $4000 else bank*$4000 + (addr − $4000)`. Most `$26DD`/
 `$2A5D` gate tables and ROM0 helpers live below `$4000` — get this wrong and every ROM0 dump
 lies to you.
+
+---
+
+## Session 41 Lessons — Pillar B (custom room inserted into the gate rotation + descent)
+
+### A `call`-based fork can stay byte-neutral if the handler `pop`s the return address
+**Context**: inserting a custom room into gate 1's floor rotation, the cleanest hook is the
+6-byte gate-0 exclusion at `$16:$5BA9` (`ld a,[wGateID]/or a/jr z,jr_016_5bbf`). Replacing it
+**in place** with `call GateDecisionFork`+3 nop keeps the byte count (6→6) so nothing in the
+bank shifts — but a naive `call`/`ret` returns to *just past the call* (into the RNG gating
+that the original `jr z` skipped), which re-runs the standard path and clobbers `wMapID`.
+**Fix**: in the fork, the branches that must behave like the original `jr z` (`gate 0` →
+maze, `gate 1` → custom) do `pop hl` to **discard the call's return address**, then `jp` to
+their target. Their downstream `ret` then unwinds one frame further — to entry-5's *caller* —
+exactly as the vanilla `jr z` did. The fall-through branch (other gates) just `ret`s normally
+to continue into the code after the call. `HL` is dead at that point (reloaded on every
+downstream path), so popping into it is safe.
+**Rule**: a mid-routine `jr/jp z, X` can be converted to `call Fork`+pad **only** if the fork
+discards the pushed return address (`pop`) on the paths that emulate the original jump.
+Verify the target labels resolve and decode the built ROM (`call` operand + each `pop/jp`).
+
+### `wInGateworld = 0` makes the engine treat a descent as a *fresh hub→gate entry*
+**Symptom**: a custom gate room descended to the next floor correctly, but with the **slow
+dissolve** (the hub→gate-entry fade) and the **BGM restarting every descent**, instead of the
+maze-floor **whoosh + continuous BGM**.
+**Root cause (one cause, both symptoms)**: the custom room runs with `wInGateworld = 0`
+(special-room render mode). The fade-style and BGM decisions read `wInGateworld` *during the
+transition window* (after the exit fires, before the room reloads), when the leaving room's
+display value (`0`) is still live → "we are entering a gate from outside" → dissolve + the
+gate-entry path stops the music, so `LoadNewBGMIdIntoA` (`$01:$4364`, restarts only on
+`call nz, SetBGM` when the id differs) re-loads it. Maze floors keep `wInGateworld` nonzero
+(`$01`) the whole time, so their descents read as in-gate floor changes → whoosh, BGM kept.
+**Rule**: in-gate-vs-fresh-entry transition feel is gated on `wInGateworld` at transition
+time, not on the warp flags (both maze and special-room descents set `wWarpFlag=$80`).
+
+### Don't make a custom room a "real in-gate floor" by setting `wInGateworld` during display
+**Symptom (regression)**: setting `wInGateworld=$01` while the custom room is on screen (to
+get the smooth descent) **froze the game and stopped the room rendering**.
+**Root cause**: `wInGateworld` is the master gate/maze selector — it gates the tileset table
+(`$26DD` vs `$2A5D`), the exit checker (exit-list vs maze staircase), per-step maze handlers,
+and more. Flipping it nonzero routes the custom room through **all** of those, and the ones
+not intercepted go reading maze state (staircase screen `$C960`, grid buffers) the custom
+room never set up. There is **no** nonzero value that avoids the maze paths (they test
+`or a / jr nz`).
+**Rule**: a table-driven custom room must keep `wInGateworld = 0` for the entire time it is
+displayed. Anything that needs the in-gate value must be **transient**.
+
+### Transient-flag-during-transition: flip a master flag only in the warp window, let the engine reset it
+**Technique**: to get the in-gate descent feel without the freeze, set `wInGateworld=$01`
+**only at the gate-flag exit transition point** (`$0B` `jr_00b_466b`/`$45F9`), gated on
+`wMapID ≥ $6B`, via a byte-neutral `call CustomDescentInGate` (it also restores the
+`ld hl, wGameState` it displaced). The engine's own reload flow then resets the flag (Entry 0
+sets it from `wWarpFlag`, then the fork → `CustomGate1Setup` sets it back to `0`) **before the
+room redraws** — so the fade/BGM read "in gate" during the transition, while the room never
+*displays* in the broken in-gate state. Non-custom rooms (`wMapID < $6B`) are untouched.
+**Why it works**: the symptom-causing read and the freeze-causing reads happen at *different
+times* (transition window vs display/room-load). A flag that is wrong for one and right for
+the other can be satisfied by toggling it across that boundary rather than holding one value.
+**Rule**: when a single flag is read at two phases needing opposite values, set it transiently
+in the phase that needs the exception and rely on the engine's existing reset for the other —
+don't hold the exceptional value through both phases.

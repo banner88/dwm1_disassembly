@@ -235,7 +235,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
 
 ### Phase 2C — Gate generation (system mapped S37; see GATE_GENERATION.md)
-- [~] **Custom room into the gate rotation** — TWO halves:
+- [x] **Custom room into the gate rotation** — TWO halves (BOTH done; Pillar A render S40, Pillar B insertion S41):
    - [x] **Rendering half (S39 + S40 generalisation).** Room `$6B` renders the
          Gate-of-Beginning maze tileset (gfx-ID `$280D`, bank `$28` step `$0D`) with
          the real gate floor palette — sandy island with ocean-wall border, 2×2
@@ -248,14 +248,23 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
          hardcoded `cp $6B` render code remains. Proven by a 2nd room `$6C` (same
          island, distinct moonlit palette, zero new code). `$6B` byte-identical
          regression verified; verifier PASS. (GATE_GENERATION.md §7.1–7.4.)
-   - [ ] **Insertion half (= "Pillar B", next).** Point a `rst $00` dispatch slot
-         (`$16:$5C1C` jump table) at a handler setting `wMapID = <custom id≥$6B>` +
-         `wInGateworld=0`, and open its weight in `FloorTypeSelectionTable2`; for
-         gate 0 specifically, patch the gate-0 special-room exclusion at **`$16:~$5BAC`**
-         (it reads `wCurrentFloor $C939`; the earlier `~$1886` cite was wrong).
-         Designed as `CustomGateRotationTable[wGateID]` → weighted, flag-/floor-filtered
-         list of custom mapIDs; render "just works" for whatever it picks (Pillar A).
-         (GATE_GENERATION.md §6 + CROSSBANK_ROOMS.md.)
+   - [x] **Insertion half (= "Pillar B", S41, user-confirmed in SameBoy).** Custom room
+         `$6D` inserted into **gate 1 (Gate of Villager)**, descending floor-to-floor with the
+         correct in-gate transition feel. Mechanism chosen was **not** the `rst $00` slot below
+         but a cleaner **byte-neutral fork at the gate-branch decision**: the 6-byte gate-0
+         exclusion at `$16:$5BA9` (`ld a,[wGateID]/or a/jr z,jr_016_5bbf` — it reads
+         **`wGateID $C935`**, the earlier `wCurrentFloor` cite was wrong) is replaced in place
+         by `call GateDecisionFork`+3 nops; the fork routes gate 0 → vanilla maze, gate 1 →
+         `CustomGate1Setup` (`wMapID=$6D`), all others → untouched RNG gating. Descent uses a
+         `gate_flag=$80` exit (mirror of special rooms `$50/$51`). The descent **transition feel**
+         (whoosh + continuous BGM, not the hub→gate dissolve + BGM restart) is fixed by a transient
+         `wInGateworld=$01` set **only during the transition** (`CustomDescentInGate` @ `$0B`
+         `jr_00b_466b`); display-time `wInGateworld` must stay `0` or the room engine's gate/maze
+         branches freeze the game. Test ROM `DWM-gate-rotation-v3.gbc`. (GATE_GENERATION.md §7.5.)
+         *Alternative/general mechanism still valid for many-room rotations:* point a `rst $00`
+         dispatch slot (`$16:$5C32` table, ROM-verified idx0=`$5C42`) at a custom-id handler and
+         open its `FloorTypeSelectionTable2` weight. POC forces `$6D` every non-boss floor;
+         occasional placement = gate the fork branch behind the RNG roll / a weight table.
 - [x] **Room-palette derivation from ROM (S39).** `tools/derive_room_palette.py`
       reproduces any room's runtime BG palette: colours 0/2 from the room/gate
       palette pointer (`$17:$476F` normal / `$17:$51F5` gate), engine-forced

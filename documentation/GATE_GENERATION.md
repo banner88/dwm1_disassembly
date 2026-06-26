@@ -228,8 +228,11 @@ This is the mechanism for "insert a new special room into the rotation."
 The special path (`$16:$5C1C`) rolls `wFloorType2` via `FloorTypeSelectionTable2`,
 then dispatches through **`rst $00`** — a jump-table-indexed-by-A construct
 (`RST_00` at `$00:$0000`: the `dw` words immediately after the `rst $00` opcode are
-the table; `A` selects the entry). The table entries point at handlers at
-`$16:$5C50, $5CB9, $5CEC, $5D0D, $5D2E, $5ED8, $5F4C, …`.
+the table; `A` selects the entry). The `rst $00` opcode is at **`$16:$5C31`**, so the
+table starts at `$16:$5C32`. **ROM-verified entries** (idx 0–7):
+`$16:$5C42, $5CB9, $5CCB, $5CEC, $5D0D, $5D2E, $5ED8, $5F4C` (idx 8/9 = `$B0CD/$FA6D`
+are out-of-bank — only 0–7 are real handlers). *(Correction: earlier drafts listed
+idx 0 as `$5C50` and omitted idx 2 `$5CCB`; both verified wrong against the ROM.)*
 
 Each handler is a small, uniform block:
 
@@ -375,6 +378,11 @@ render code per room. Proven by adding a real second room, `$6C`.
    h_lo,hi : threshold : pad]`. (`$26DD` records exist only for `$6B-$6F` before the gate
    table at `$2A5D`; `$70+` will need an intercept — Pillar B follow-up.) `$6C`'s record at
    ROM0 `$2A3D` mirrors `$6B`'s (gate tileset `$280D`, 2-screen, threshold `$30`).
+   **Per-room `$26DD` record addresses** (= `$26DD + mapID*8`, all ROM0 so file-offset =
+   address): `$6B`=`$2A35`, `$6C`=`$2A3D`, `$6D`=`$2A45`, `$6E`=`$2A4D`, `$6F`=`$2A55`
+   (`$70` would land on `$2A5D` = the gate table, hence the `cp $70` ceiling). When editing
+   the `$6D` record in `patches/bank_000.asm`, the label **`Data_2A48`** falls inside it
+   (`$2A48` = the width-high byte) and is a referenced jump target — keep it in place.
 2. **Palette** — `CustomRoomPalPtr` (bank `$17` filler tail): one `dw` per room → a 64-byte
    palette. `$0000` = borrow vanilla; a real pointer is loaded by `CustomPalCheck` with
    **`b=$04` (slots 0–3 only)** — same hard rule as §7.3.
@@ -415,6 +423,92 @@ couldn't walk. Must be `$00` for a single-screen-width room.
 This is the **rendering generalisation** that Pillar B (gate-aware rotation: pick *which*
 custom mapID appears, by gate/flag/floor/weight) builds on. With render table-driven, the
 rotation dispatcher only has to choose a mapID; rendering "just works" for whatever it picks.
+
+---
+
+## 7.5 Pillar B — inserting a custom room into the rotation + descent ✅ (S41, user-confirmed)
+
+Pillar B is the **insertion** half: make a custom room actually appear as a gate floor and
+descend to the next floor like a real maze floor. Done for **gate 1 (Gate of Villager)**,
+custom room **`$6D`** (a dedicated 1-screen copy of `$6B`'s island, so the `$6B`/`$6C`
+warp demos stay intact). The POC forces `$6D` on **every** non-boss gate-1 floor.
+
+**Mechanism chosen — a byte-neutral fork at the gate-0 exclusion, NOT a `rst $00` slot.**
+The §6 plan (repurpose a `rst $00` dispatch slot + open a `FloorTypeSelectionTable2` weight)
+works, but the cleaner, lower-risk insertion point is the **gate-branch decision** itself.
+In entry-5 floor setup (`label16_5b4e`) the original 6 bytes at **`$16:$5BA9`** were the
+gate-0 special-room exclusion — `ld a,[wGateID] / or a / jr z, jr_016_5bbf`
+(`FA 35 C9 B7 28 xx`). *(Correction: this reads `wGateID $C935`, not `wCurrentFloor` as an
+earlier ROADMAP draft claimed.)* Those 6 bytes are replaced **in place** (6→6, no shift)
+with `call GateDecisionFork` + 3 `nop`. `GateDecisionFork` (appended in end-of-bank `$16`
+padding, `$7CB9`) routes by `wGateID`:
+
+```asm
+GateDecisionFork:
+    ld a,[wGateID] / or a / jr z,.gate0      ; gate 0 -> preserved exclusion
+    cp $01 / jr z,.gate1                       ; gate 1 -> custom room
+    ret                                        ; gates 2-31 -> fall into RNG gating ($5BAF)
+.gate0: pop hl / jp jr_016_5bbf                ; standard maze (vanilla gate-0 behaviour)
+.gate1: pop hl / jp CustomGate1Setup
+```
+
+**The `pop hl` is load-bearing.** The `call` pushed a return address pointing at the 3 nops
+(then the RNG gating at `$5BAF`). Gate 0/1 must NOT return there — they must unwind to
+entry-5's *caller*, exactly as the vanilla `jr z` did. So those paths `pop hl` to discard the
+call's return address; their downstream `ret` then unwinds one frame further, to entry-5's
+caller. Gates 2–31 simply `ret` so execution continues into the untouched RNG gating —
+byte-for-byte vanilla for every non-forked gate. (KEY_LESSONS S41.)
+
+**`CustomGate1Setup`** (`$16:$7CCC`) is a byte-mirror of the vanilla `$50` special-room
+handler `$5D0D`: `wMapID=$6D`, `wInGateworld=0`, spawn `$0048/$0068` (central walkable sand).
+
+**Descent** uses the special-room primitive, not the maze staircase: `$6D`'s lone exit
+(`patches/bank_060.asm`, on the island PIT at walk `(5,3)`) carries **`gate_flag=$80`**
+(exit byte 3 → `wWarpFlag $C96E`; `dest_map_type=$00` → `wWarpGateId $C96D`) — byte-identical
+to how `$50/$51` descend. That re-enters entry-5 floor setup (`wWarpFlag=$80` → bit 7 set →
+"subsequent floor"), which increments `wCurrentFloor`, re-runs the fork, and serves `$6D`
+again until `wCurrentFloor+1 == last_floor (5)` yields the vanilla boss floor.
+
+### 7.5.1 The descent-transition feel — `wInGateworld=0` ⇒ "fresh gate entry"
+
+First working build descended correctly but with the **wrong transition**: a slow dissolve
+(the hub→gate-entry fade) and the **BGM restarting every descent**, instead of the maze-floor
+feel (quick *whoosh* + BGM continuous). Both symptoms have **one root cause**: the custom room
+runs with **`wInGateworld = 0`**, so the engine reads each descent as a *fresh hub→gate entry*
+(slow dissolve + stop/restart music) rather than an *in-gate floor change*. Maze floors keep
+`wInGateworld` nonzero (`$01` on display, set by `jr_016_5bbf`) throughout, so their descents
+are smooth. The fade/BGM decision reads `wInGateworld` **during the transition window** — after
+the exit fires, before the room reloads — when the leaving room's display value (`0` here) is
+still live; `LoadNewBGMIdIntoA` (`$01:$4364`) only restarts via `call nz, SetBGM` when the new
+id differs, and the dissolve path stops the music, so the next floor re-loads it.
+
+**Why not just make it a real in-gate floor.** Setting `wInGateworld=$01` *during display*
+was tried and **freezes the game + breaks the render**: that flag gates **every** gate/maze
+branch in the room engine (tileset table `$26DD` vs `$2A5D`, exit checker vs maze staircase,
+per-step maze handlers, …), and the un-intercepted ones go looking for maze state the custom
+room doesn't have. No nonzero value dodges those paths — display-time `wInGateworld` must stay
+`0`. (KEY_LESSONS S41.)
+
+**The fix (surgical, transient).** Keep `wInGateworld=0` for the whole time the room is on
+screen, and flip it to `$01` **only for the transition**. At the gate-flag exit transition
+point `jr_00b_466b` (`$0B:$45F9`), a byte-neutral `call CustomDescentInGate` (it replaces the
+`ld hl, wGameState` the site needs and restores HL before returning) sets `wInGateworld=$01`
+**iff `wMapID ≥ $6B`**. The engine's own flow then resets it (Entry 0 → fork →
+`CustomGate1Setup` → back to `0`) before the room redraws. So the fade/BGM logic reads
+"already in the gate" during the transition, while the room never *displays* in the broken
+in-gate state. Result: whoosh + BGM continuous, render and descent unchanged. Non-custom
+rooms (`wMapID < $6B`) are untouched. (KEY_LESSONS S41.)
+
+**Production note (not in the POC).** The POC forces `$6D` on every non-boss floor. For
+*occasional* placement, gate the `.gate1` branch behind the existing RNG roll (or a
+`CustomGateRotationTable[wGateID]` weight) instead of jumping unconditionally to
+`CustomGate1Setup`.
+
+**Files:** `patches/bank_016.asm` (fork + `CustomGate1Setup`), `patches/bank_000.asm`
+(`$26DD[$6D]` gate-tileset record, 1-screen), `patches/bank_017.asm`
+(`CustomRoomPalPtr[2]`/`CustomRoomAttr[2]` → borrow `$6B`), `patches/wram.asm`
+(`wCustomStep_Room6D_S0 $D47D`), `patches/bank_060.asm` (`$6D` room data + descent exit),
+`patches/bank_00b.asm` (`CustomDescentInGate` transition intercept).
 
 ---
 

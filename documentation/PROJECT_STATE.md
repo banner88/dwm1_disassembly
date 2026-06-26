@@ -5,6 +5,36 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-26 (Session 41 — **Phase 2C: custom gate room INSERTION half ("Pillar B")
+> complete & user-confirmed in SameBoy.** Integrity PASS 4/4, clean build `1ca6579…`; test ROM
+> `DWM-gate-rotation-v3.gbc`, **user-confirmed: room appears every gate-1 floor, descends to boss,
+> with whoosh + continuous BGM.**)
+> **S41 — custom room `$6D` inserted into the Gate of Villager (gate 1) rotation, descending
+> floor-to-floor.** This is the *insertion* half that Pillar A (S40, table-driven render) set up.
+> (1) **Insertion via a byte-neutral fork**, NOT the planned `rst $00` slot: the 6-byte gate-0
+> exclusion at `$16:$5BA9` (`ld a,[wGateID]/or a/jr z,jr_016_5bbf` — reads **`wGateID $C935`**,
+> correcting an earlier `wCurrentFloor` cite) is replaced in place by `call GateDecisionFork`+3 nop.
+> The fork (`$16:$7CB9`, end-of-bank padding) routes by `wGateID`: gate 0 → vanilla maze, gate 1 →
+> `CustomGate1Setup` (`wMapID=$6D`, mirror of `$50` handler `$5D0D`), gates 2–31 → untouched RNG
+> gating. A `pop hl` discards the call's return addr so gate 0/1 unwind to entry-5's caller (not back
+> into the RNG path). (2) **Descent** via a `gate_flag=$80` exit on the room's PIT tile (mirror of
+> special rooms `$50/$51`) → re-enters entry-5 floor setup, increments `wCurrentFloor`, re-runs the
+> fork → `$6D` again until the boss floor. (3) **Descent-transition feel fixed.** Both the slow
+> dissolve and the per-descent BGM restart trace to **one cause**: the custom room runs with
+> `wInGateworld=0`, so the engine treats each descent as a *fresh hub→gate entry*. Making it a real
+> in-gate floor (`wInGateworld=$01` during display) **freezes the game** — that flag gates every
+> gate/maze branch and the un-intercepted ones read absent maze state. Fix is **transient**: set
+> `wInGateworld=$01` **only during the transition window** (`CustomDescentInGate` @ `$0B`
+> `jr_00b_466b`/`$45F9`, byte-neutral; resets to 0 before redraw via the fork) → whoosh + BGM
+> continuous, render/descent unchanged. Dedicated room `$6D` keeps the `$6B`/`$6C` demos intact.
+> Files: `patches/bank_016` (fork + setup), `bank_000` (`$26DD[$6D]` 1-screen gate record),
+> `bank_017` (`CustomRoomPalPtr/Attr[2]` borrow `$6B`), `wram` (`wCustomStep_Room6D_S0 $D47D`),
+> `bank_060` (`$6D` room data + descent exit), `bank_00b` (`CustomDescentInGate`). Docs updated in
+> place: GATE_GENERATION §7.5 (+§6 `rst $00` table corrected: idx0=`$5C42`, idx2=`$5CCB`), ROADMAP
+> (Phase 2C both halves ticked), KEY_LESSONS (S41: pop/jp fork control-flow; `wInGateworld=0` ⇒
+> fresh-gate-entry transition; transient-flag-during-transition technique). `APPLY_THESE_CHANGES.md`
+> regenerated for git.
+>
 > Last verified: 2026-06-25 (Session 39 — **Phase 2C: custom gate room (rendering half) +
 > room-palette derivation fully solved & tooled.** Integrity PASS 4/4, clean build `1ca6579…`;
 > gate-room test ROM `DWM-gate-room-v5.gbc` MD5 `2a008235…`, **user-confirmed in SameBoy**.)

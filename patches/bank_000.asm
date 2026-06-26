@@ -8862,16 +8862,17 @@ DataLookup_2A40:
     db $01                      ; $2A42: room height high
     db $30                      ; $2A43: collision threshold=$30 — was $50
     db $00                      ; $2A44: pad
-    ld [de], a
-    inc h
-    and b
+DataTable_2A45:                 ; $26DD record for mapID $6D (Pillar B gate-rotation room)
+    db $0D                      ; $2A45: step_id=$0D (gate maze) — was $12
+    db $28                      ; $2A46: bank=$28 → gfx-ID $280D (gate tileset) — was $24
+    db $A0                      ; $2A47: room width low ($A0=160px, 1 column)
 
 Data_2A48:
-    nop
-    add b
-    nop
-    ld d, b
-    nop
+    db $00                      ; $2A48: room width high → width=$00A0 (160px, 1 col)
+    db $80                      ; $2A49: room height low ($0080=128px, 1 screen)
+    db $00                      ; $2A4A: room height high
+    db $30                      ; $2A4B: collision threshold=$30 (tiles <$30 = wall) — was $42
+    db $00                      ; $2A4C: pad
     ld [de], a
     inc h
     and b

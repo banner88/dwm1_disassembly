@@ -220,8 +220,9 @@ wCustomStep_Room6B_S1:: db ;d479 — Room $6B screen 1 step counter
 wCustomStep_Room6C_S0:: db ;d47a — Room $6C screen 0 step counter
 wCustomStep_Room6C_S1:: db ;d47b — Room $6C screen 1 step counter
 wCustomStep_Room6C_S5:: db ;d47c — Room $6C screen 5 step counter
+wCustomStep_Room6D_S0:: db ;d47d — Room $6D screen 0 step counter (Pillar B)
 
-    ds $314                         ; gap ($D47D-$D790)
+    ds $313                         ; gap ($D47E-$D790)
 
 wGroundItemData:: db ;d791
 

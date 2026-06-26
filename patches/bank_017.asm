@@ -2649,10 +2649,12 @@ CustomPalCheck:
 CustomRoomPalPtr:
     dw CustomPaletteColors_6B    ; $6B — gate floor palette (slots 0-3)
     dw CustomPaletteColors_6C    ; $6C — distinct "dusk" palette (Pillar A proof)
+    dw CustomPaletteColors_6B    ; $6D — Pillar B gate-rotation room (borrows $6B gate palette)
 
 CustomRoomAttr:
     db $64, $01                  ; $6B → bank $64, attr base entry 1 (2-screen)
     db $64, $01                  ; $6C → bank $64, attr base entry 1 (mirror $6B, 2-screen)
+    db $64, $01                  ; $6D → bank $64, attr base entry 1 (Pillar B; screen 0 only)
 
 ; CustomPaletteColors_6B: 64 bytes (8 palettes × 4 colors × 2 bytes)
 ; HALF 1 (gate-tiles): the REAL in-game Gate of Beginning BG palette, dumped

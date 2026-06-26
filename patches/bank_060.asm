@@ -252,6 +252,7 @@ CustomTextDisplay:
 CustomScriptMasterTable:
     dw CustomRoom0_ScriptPtrTable   ; mapID $6B
     dw CustomRoom1_ScriptPtrTable   ; mapID $6C
+    dw CustomRoom2_ScriptPtrTable   ; mapID $6D (Pillar B gate-rotation room)
 
 ; --- Room 0 ($6B) scripts ---
 CustomRoom0_ScriptPtrTable:
@@ -567,10 +568,12 @@ CustomText_14:
 CustomSourceMapTable:
     db $04                      ; Room 0 ($6B) → Farm
     db $04                      ; Room 1 ($6C) → Farm (mirror $6B; CustomSourceMapTable)
+    db $04                      ; Room 2 ($6D) → Farm (Pillar B gate-rotation room)
 
 CustomRoomPtrTable:
     dw CustomRoom0_SubTable
     dw CustomRoom1_SubTable
+    dw CustomRoom2_SubTable
 
 ; =============================================
 ; Room 0 (mapID $6B) — 2-screen vertical room
@@ -653,4 +656,43 @@ CustomRoom1_S1_NPCs:
     db $FF
 
 CustomRoom1_S1_Exits:
+    db $FF
+
+; =============================================================================
+; Room 2 (mapID $6D) — Pillar B: custom room in the Gate of Villager rotation
+; =============================================================================
+; Inserted into gate 1's floor rotation by the bank-$16 fork (CustomGate1Setup
+; sets wMapID=$6D, wInGateworld=0, spawn $0048/$0068). Renders via the same
+; table-driven Pillar A path as $6B/$6C: reuses $6B's gate-island screen-0
+; layout (bank $64 entry 0), attr (CustomRoomAttr[2] = bank $64 entry 1) and
+; gate palette (CustomRoomPalPtr[2] = CustomPaletteColors_6B). Single screen.
+;
+; DESCENT: the lone exit sits on the island's PIT metatile at walk (col5,row3)
+; and carries gate_flag=$80 — byte-identical to how special rooms $50/$51
+; descend. That re-enters gate floor setup (entry 5), increments wCurrentFloor,
+; and (gate still 1) re-runs CustomGate1Setup → the next floor is $6D again,
+; until wCurrentFloor+1 == last_floor (5) yields the boss floor.
+; =============================================================================
+CustomRoom2_ScriptPtrTable:
+    dw CustomRoom2_RoomEntry        ; [0] room entry (no-op)
+
+CustomRoom2_RoomEntry:
+    dw $FFFF                        ; no-op room-entry script
+
+CustomRoom2_SubTable:
+    dw CustomRoom2_Screen0          ; screen 0 (only screen — 1 col × 1 row room)
+    dw $FFFF, $FFFF, $FFFF          ; screens 1-3 invalid
+
+CustomRoom2_Screen0:
+    dw wCustomStep_Room6D_S0        ; $D47D — safe step counter
+    db 0, $64                       ; step_id=0 from bank $64 (reuse $6B island screen 0)
+    dw CustomRoom2_S0_NPCs
+    dw CustomRoom2_S0_Exits
+
+CustomRoom2_S0_NPCs:
+    db $8F, $FF, $04, $06, $00      ; spawn point walk (col4,row6) — matches wWarpSpawn $0048/$0068 (central sand)
+    db $FF
+
+CustomRoom2_S0_Exits:
+    db $05, $03, $00, $80, $00, $00, $00  ; descent: PIT walk (col5,row3), gate_flag=$80 → next gate floor
     db $FF

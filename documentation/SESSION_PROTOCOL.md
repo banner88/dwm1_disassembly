@@ -117,9 +117,49 @@ Then update, in place:
 4. The relevant **reference doc** — new addresses, formats, opcodes,
    verified behaviors.
 
-Deliver changed files to the user as files (this project does not let
-Claude run git). List exactly: files to REPLACE, files to ADD, files to
-DELETE.
+### Delivery format (MANDATORY — do this exactly, every session)
+
+This project does not let Claude run git, so the user applies changes by hand.
+Make that a 10-second drop-in, not a reconstruction job. Deliver **one zip**:
+
+- **Filename:** `DWM-S<NN>-<slug>-changed-files.zip` (e.g. `DWM-S41-pillarB-changed-files.zip`).
+- **Contents = ONLY files changed this session**, each at its **repo-relative path**, inside a
+  single top wrapper folder named like the zip's stem, e.g.:
+  ```
+  S41_pillarB/
+    APPLY_THESE_CHANGES.md          (repo root)
+    patches/bank_016.asm            (only the patch files you touched)
+    patches/bank_00b.asm
+    documentation/PROJECT_STATE.md  (only the docs you touched)
+    documentation/ROADMAP.md
+  ```
+  The wrapper's inner tree mirrors the repo, so the user reviews then copies
+  `patches/*` and `documentation/*` straight over the repo. Do **not** include
+  unchanged files, the whole `disassembly/` tree, or build artifacts.
+- **The test ROM is delivered separately** (it is a build artifact / gitignored, not a
+  repo source file) — present it as its own `.gbc`, do not put it in the changed-files zip.
+- **`APPLY_THESE_CHANGES.md`** (repo root, regenerated each session) is the manifest:
+  list every file as **REPLACE / ADD / DELETE** with the repo-relative path and a one-line
+  description of each change, plus the verification status and any intentional follow-ups.
+  **CRITICAL — this file is DISPOSABLE: it is overwritten every session, so any fact that
+  lives ONLY here is LOST the moment the next session regenerates it.** It must therefore
+  carry **zero unique information**. Every technical fact in it (address, label, RAM var,
+  byte value, decision, gotcha, follow-up) must ALREADY exist in a permanent home — the
+  patch/code itself or a reference doc (`GATE_GENERATION`, `KEY_LESSONS`, `PROJECT_STATE`,
+  `ROADMAP`, etc.) — *before* it is written into the manifest. The manifest only says **what
+  moved where**; it points to the docs for the **why/how**. Mirror first, then reference.
+  Verify it: every `$XXXX` / `CamelCaseLabel` / `wRamVar` in the manifest must also `grep`-hit
+  under `documentation/` or `patches/`; if it only hits the manifest, move that fact to its
+  permanent home and re-check. (Lost-fact failure, S41: `$6D`'s `$26DD` record address `$2A45`
+  and the `Data_2A48` preserved-label gotcha existed only in the manifest until mirrored into
+  GATE_GENERATION §7.4.)
+- Present the zip (and the ROM, if any) with `present_files`. A bare list of edits in chat
+  is **not** a valid delivery — the user must get the zip.
+
+Self-check before signing off: did I (1) run `verify_integrity.py` → PASS, (2) update the
+four doc types in place, (3) regenerate `APPLY_THESE_CHANGES.md` **with no fact unique to it**
+(every address/label/var also grep-hits `documentation/` or `patches/`), (4) zip ONLY changed
+files in repo-relative folders, (5) present the zip + ROM? If any is missing, it is not signed off.
 
 ## 4. What a session must never do
 
