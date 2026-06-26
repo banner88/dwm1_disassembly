@@ -882,6 +882,81 @@ backbone; E3-E6 are schema / UI / capacity questions on top of largely-known mec
 
 ---
 
+## Phase F — Authorable subsystems: text, custom skills + AI, custom music
+Three subsystems promoted from "parked/under-stated" to first-class after the S43
+disassembly audit (PROJECT_STATE "S43"). Methodology mirrors the proven arcs
+(breeding B1→B6, GFX): **prove understanding with a byte-identical round-trip
+keystone first, then relocate/redirect into a free bank, then author**. One item =
+one session, each with a hard acceptance test. Honest risk: **S3 and M1 are real RE**
+(could expand); their downstream authoring items can't be precisely scoped until they
+land. Arc 1 (text) is fully predictable.
+
+### Arc 1 — Text re-section + vanilla-text editing (lowest risk, useful now)
+Extends the `[~]` "re-section misassembled tables" item to the dialogue corpus; the
+text *format* is fully known (TEXT_SYSTEM.md) and the dumpers already locate every
+string, so this is mechanical + byte-perfect. Unlocks Layer-A vanilla-text edits and
+yields the E6 capacity numbers.
+- [x] **T1 — Re-section keystone (bank `$47`). DONE (S43, byte-perfect).**
+      `tools/resection_text_bank.py` converts a corpus bank's contiguous DTE string run
+      from mgbdis fake-instructions to `TextStr_<bank>_<addr>:` + `db` blocks (one label
+      per text id, decoded text in a comment), labels/comments only. Region from data
+      (first string addr `text_id_map.json`; end = bank trailing-fill scan); `R_start/R_end`
+      snapped to real line boundaries via a probe-build line→address map (same machinery as
+      `resection_library_tables.py`) so no fake instruction is split; emits exact ROM bytes.
+      Idempotent, re-runnable from clean tree. **bank `$47`: 69 strings, run `$4174-$5b74`,
+      5607 fake lines replaced; clean build stays `1ca6579…`, integrity PASS 4/4.** Method +
+      per-bank bounds in TEXT_SYSTEM.md "Source re-section". *Accept met:* bank reads as
+      labeled `db` with decoded comments; MD5 unchanged.
+- [ ] **T2…Tn — Roll-out across `$42-$46, $48-$4B, $4E`** (one or two banks/session, same
+      tool). *Accept:* each bank re-sectioned; MD5 stays `1ca6579…` after each.
+- [ ] **T-author — Edit/replace a vanilla string.** A tool that rewrites a vanilla text id's
+      bytes (same-size in place, or relocate to a free bank via its pointer-table entry).
+      *Accept:* a known vanilla line shows new text in SameBoy; clean MD5 unchanged. Byproduct:
+      the E6 per-bank capacity/budget numbers.
+
+### Arc 2 — Custom skills, then per-skill AI (high value; one real RE gate)
+Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, 256 entries → 140
+handlers, dispatch `$52:$4211`; names `$41:$4539`; `skills.json`); AI *selection* is the
+unreversed half.
+- [ ] **S1 — Skill round-trip keystone.** Extend `skills.json` with handler addrs +
+      shared-handler grouping; tool re-emits `SkillFunctionTable` + name table byte-identical;
+      annotate the `$4211` dispatch + the 8-entry `rst $10` jump table (labels/comments only).
+      *Accept:* `--selftest` byte-identical re-emit; MD5 unchanged.
+- [ ] **S2 — Custom skill EFFECTS.** Add a new skill = name (extend/relocate
+      `SkillNamePtrTable`) + `SkillFunctionTable` entry (reuse an existing handler, then prove
+      a NEW handler authored in a free bank) + assign to a monster's skill list (enemy-stats
+      `+21..24`). id-indexed fork if the table overshoots (new-species pattern). *Accept:* a
+      renamed-existing-handler skill AND a novel-handler skill both work in battle, SameBoy-confirmed.
+- [ ] **S3 — AI selection RE (discovery, no patch).** Locate + annotate the enemy-turn
+      action-choice routine (reads skill list + `ai_weights` enemy-stats `+17..20`); determine
+      whether it keys off per-monster weights only, a per-skill category byte, or hardcoded
+      logic; confirm inputs with a SameBoy watchpoint. **Gates S4; its findings set S4's shape.**
+      *Accept:* routine located + algorithm documented (MONSTER_DATA.md battle-AI subsection).
+- [ ] **S4 — Per-skill AI authoring.** Per S3: expose a per-skill AI preference (easy if a
+      per-skill property exists) or a small same-size logic edit. *Accept:* changing a skill's
+      AI parameter measurably shifts enemy choice in SameBoy.
+
+### Arc 3 — Custom music (discovery-gated; longest pole)
+Unparks the "custom music" line. The main GBC sequence engine + song-data format are
+unreversed (the located `$08:LoadAudP` is only the SGB-packet path; song data lives in
+banks `$61 $62 $63 $65 $66 $68 $78 $7b $7d`, reached as DATA via the engine's bank-switch,
+e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block anything.
+- [ ] **M1 — Audio engine + data discovery (RE, no patch).** Trace the per-frame channel
+      driver (`rNRxx` writes), the song table (track id → data + bank), and the sequence
+      command format; pin each song's data range. *Deliverable:* a `SOUND_SYSTEM.md` reference
+      doc (precedent: GATE_GENERATION.md — confirm with user before adding) + a song enumerator.
+      *Accept:* songs listed with addresses; format documented; one known track decodes to its bytes.
+- [ ] **M2 — Song round-trip keystone.** Decode all songs to a spec; re-emit byte-identical.
+      *Accept:* `--selftest` byte-identical; MD5 unchanged.
+- [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
+      song-table entry. *Accept:* a custom track plays in SameBoy.
+
+**Recommended order:** T1 ✅ → S1 → M1 (discovery) → S2 → T2-roll-out → S3 → S4 → M2 → M3,
+slotting the text roll-out into spare sessions. Cheap high-confidence wins early; fire the
+two RE discovery sessions (M1, S3) before their authoring items depend on them.
+
+---
+
 ## Phase N — Add NEW monster species (ids 224–255, 32-slot budget)
 User goal: add brand-new monsters *on top of* the existing 221 (not reskins of
 existing slots). Scoped Session 28. Architecture: **high-table + single forked

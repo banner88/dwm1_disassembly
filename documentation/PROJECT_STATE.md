@@ -5,6 +5,36 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-26 (Session 43 — **disassembly gap audit + Arc-1/T1 text
+> re-section keystone (bank `$47`).** Integrity PASS 4/4, clean build byte-perfect
+> `1ca6579…`; T1 is byte-neutral so there is no test ROM — acceptance is the MD5.)
+> **S43 — two things.** (1) **Disassembly audit** (user-requested): characterized what is
+> entirely un-understood or misassembled. Three gaps were *understated* in docs and are now
+> first-class: **(a) audio** — engine partly in bank `$08` (`LoadAudP`, the SGB path; switches
+> to `$78`) + scattered `Aud_`/`SoundEffect` routines, barely annotated; song/SFX **data**
+> in banks `$61 $62 $63 $65 $66 $68 $78 $7b $7d` (~9 banks/144 KB) misassembled as
+> instructions, reached only as DATA (nothing executes them) — format unreversed; **(b) battle
+> engine** — bank `$52` holds the labeled `SkillFunctionTable`/dispatch but the 140 skill-effect
+> handlers + `Battle*` funcs (banks `$52-$5f`) are auto-labeled only; the **damage formula, turn
+> order, and enemy AI selection** are untraced (the `ai_weights` are extracted as DATA but the
+> consuming algorithm is unlocated); **(c) vanilla text `$42-$4B,$4E`** — fully tool-extractable
+> but **misassembled as fake instructions in source** (~12k bogus lines/bank), so vanilla text
+> isn't editable in place. (Phase E's E1/E2 confirmed as genuine, already-flagged gaps.) The full
+> attack plan is mapped in **ROADMAP Phase F** (Arc 1 text, Arc 2 skills+AI, Arc 3 music) —
+> session-sized items, keystone-first methodology, with S3/M1 flagged as real RE.
+> (2) **Arc-1/T1 DONE (byte-perfect):** new `tools/resection_text_bank.py` converts a corpus
+> bank's contiguous DTE string run into `TextStr_<bank>_<addr>:` + `db` blocks (one label per
+> text id, decoded text in a comment), labels/comments only. Region is data-driven (first string
+> addr from `text_id_map.json`; end = bank trailing-fill scan) and snapped to real line
+> boundaries via a probe-build line→address map (same machinery as `resection_library_tables.py`)
+> so no fake instruction is split; exact ROM bytes are emitted as `db`, so a wrong split fails
+> the build instantly. **Bank `$47`: 69 strings, run `$4174-$5b74`, 5607 fake lines replaced;
+> clean build stays `1ca6579…`, integrity PASS 4/4.** Idempotent, re-runnable from clean tree.
+> Docs updated in place: TEXT_SYSTEM.md "Source re-section" (method + per-bank bounds table),
+> ROADMAP Phase F (Arc plan, T1 ticked), TOOLS_AND_DATA (tool). Files: `disassembly/bank_047.asm`
+> (re-sectioned — clean tree, zero byte impact), `tools/resection_text_bank.py` (NEW).
+> `APPLY_THESE_CHANGES.md` regenerated.
+>
 > Last verified: 2026-06-26 (Session 42 — **Phase 2 keystone: table-driven custom-room
 > dispatch COMPLETE & user-confirmed in SameBoy.** Integrity PASS 4/4, clean build `1ca6579…`;
 > test ROM `DWM-S42-custom-room-keystone-v3.gbc`, **user-confirmed: 3-room walk loop with

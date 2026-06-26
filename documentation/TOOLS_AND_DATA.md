@@ -86,6 +86,14 @@ collision thresholds from ROM0 $26E3 ×8 stride) ·
 tileset PNGs using runtime palettes from room_palettes.json; also
 generates force-preview variant with colour index 1 marker tint;
 outputs JS for editor HTML embedding) ·
+`resection_text_bank.py` (✅ new S43 — Arc-1/T1: converts a dialogue-corpus bank's
+contiguous DTE string run from mgbdis fake-instructions to `TextStr_<bank>_<addr>:` +
+`db` blocks, one label per text id with decoded comment; labels/comments only, build
+stays `1ca6579…`. `--bank 0xNN [--apply|--check]`. Region from data (`text_id_map.json`
+first addr + ROM trailing-fill end), boundaries snapped to real line addresses via a
+probe-build so no fake instruction is split. Idempotent. bank `$47` done; rest of
+`$42-$4B,$4E` pending (ROADMAP Phase F Arc 1). See TEXT_SYSTEM.md "Source re-section") ·
+`resection_library_tables.py` (✅ Session 26/27 — same probe-build machinery for bank `$12`) ·
 `gen_script_banks.py` · `render_rooms.py` · `dwm/` package ·
 `dwm/sprite_codec.py` (✅ new Session 22 — the SINGLE LZ codec for tiles+sprites:
 `decode` byte-exact = game + `decompress_tiles.py`; `encode`/`encode_safe` valid/compact

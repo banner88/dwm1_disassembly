@@ -127,6 +127,40 @@ Exact ranges determined by CPU-simulating the cascade for all 2067 text IDs:
 
 Total: **2067 text IDs**. All decoded in `extracted/text_id_map.json`.
 
+## Source re-section: text corpus was misassembled as fake instructions {#text-resection}
+
+The text-string runs in the corpus banks were decoded by mgbdis as ~12k bogus
+instruction lines per bank: the bytes are byte-perfect (clean build stays
+`1ca6579…`) but the source READS as garbage, so vanilla text is not editable in
+place. Per-bank layout (verified): a small dispatch table + text-loader stubs
+(real CODE) at the bank head, then one **contiguous DTE string run**, then `$00`/
+`$FF` padding to the bank tail. The string run is the misassembled part.
+
+**`tools/resection_text_bank.py`** converts a bank's string run into labeled
+`TextStr_<bank>_<addr>:` + `db` blocks (one label per text id, decoded text in a
+comment), **labels/comments only → byte-impact zero**. Region bounds come from
+data, not guesses: first string addr from `text_id_map.json`, region end = start
+of the bank's trailing fill (ROM scan). `R_start`/`R_end` are snapped to real
+line boundaries (probe-build line→address map, same machinery as
+`resection_library_tables.py`) so no fake instruction is split; the exact ROM
+bytes are emitted as `db`, so byte-perfection is automatic and a wrong split
+fails the build instantly. Idempotent and re-runnable from the clean tree.
+
+Per-bank text run bounds (string region only; head = loader code, tail = fill):
+
+| Bank | distinct strings | string run | re-sectioned |
+|------|------------------|-----------|--------------|
+| $47 | 69 (125 ids) | `$4174-$5b74` | ✅ T1 keystone |
+| $42 | 161 ids | `$4149-~$7dc4` | pending |
+| $43–$46, $48–$4B, $4E | — | (see `text_id_map.json` addrs) | pending |
+
+Note: many ids alias the same addr or are **alternate mid-string entry points**
+(e.g. `$47:$4248` re-enters `$423e` partway) — a real game feature; each listed
+addr gets its own label, all byte-exact. Banks `$4C`/`$4D` are NOT in the corpus
+(no `text_id_map` entries) — different bank content (e.g. `$4D` lineage text).
+Editing a vanilla string in place is the Arc-1 `T-author` follow-up (ROADMAP
+Phase F). See ROADMAP "Phase F — Authorable subsystems" for the full roll-out.
+
 ## $6119 System (VRAM Visual Updates — NOT Text) {#6119-system}
 
 Function at `$01:$60E7` runs per-frame during gameplay. Dispatches via `rst $00`

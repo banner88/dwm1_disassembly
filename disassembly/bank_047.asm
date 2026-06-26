@@ -282,14966 +282,9950 @@ jr_047_4161:
     ld e, a
     rst $28
     xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    dec hl
-    ld b, d
-    ld h, d
-    ld c, c
-    ld c, h
-    ld c, h
-    ld c, b
-    ld d, b
-    ld h, d
-    ld a, $62
-    ccf
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $4b
-    ld b, d
-    ld c, a
-    ld d, e
-    ld c, h
-    ld d, d
-    ld d, b
-    ld e, a
-    ld a, [$eff7]
-    xor $2c
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, l
-    ld d, [hl]
-    ld h, h
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    jr nc, jr_047_41e9
+; --- BEGIN re-sectioned text run (bank $47: $4174-$5b74) ---
+; DTE-encoded dialogue strings, one label per text id (text_id_map.json).
+; Labels/comments only; bytes are byte-identical to the original ROM.
+TextStr_47_4174:           ; (region entry / unlisted fragment)
+    db $f0
+TextStr_47_4175:           ; id $03C8 $0400
+    ; "He looks a bit / nervous. / I wonder why? / / Maybe it's / because the / tournament is / approaching..."
+    db $eb, $9f, $a3, $2b, $42, $62, $49, $4c, $4c, $48, $50, $62, $3e, $62, $3f, $46
+    db $51, $ef, $ee, $4b, $42, $4f, $53, $4c, $52, $50, $5f, $fa, $f7, $ef, $ee, $2c
+    db $62, $54, $4c, $4b, $41, $42, $4f, $62, $54, $45, $56, $64, $ef, $ee, $fa, $f7
+    db $ef, $ee, $9f, $a3, $30, $3e, $56, $3f, $42, $62, $46, $51, $68, $ef, $ee, $3f
+    db $42, $40, $3e, $52, $50, $42, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $51, $4c
+    db $52, $4f, $4b, $3e, $4a, $42, $4b, $51, $62, $46, $50, $ef, $ee, $3e, $4d, $4d
+    db $4f, $4c, $3e, $40, $45, $46, $4b, $44, $5f, $5f, $5f, $f7, $f0
+TextStr_47_41e2:           ; id $03C9 $0401
+    ; "I'm the Monster / Minister! / Do you want to / know about where / the monsters live? / [YES/NO-2]"
+    db $ea, $9f, $a3, $2c, $6a, $62, $51, $45, $42, $62, $30, $4c, $4b, $50, $51, $42
+    db $4f, $ef, $ee, $30, $46, $4b, $46, $50, $51, $42, $4f, $63, $fa, $f7, $ef, $ee
+    db $9f, $a3, $27, $4c, $62, $56, $4c, $52, $62, $54, $3e, $4b, $51, $62, $51, $4c
+    db $ef, $ee, $48, $4b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $62, $54, $45, $42
+    db $4f, $42, $fa, $f7, $ef, $ee, $51, $45, $42, $62, $4a, $4c, $4b, $50, $51, $42
+    db $4f, $50, $62, $49, $46, $53, $42, $64, $ef, $ee, $ff, $f0
+TextStr_47_423e:           ; id $03CA $0402
+    ; "If you don't / want to know, / that's fine. / Come again!"
+    db $ea, $9f, $a3, $2c, $43, $62, $56, $4c, $52, $62
+TextStr_47_4248:           ; id $045E
+    ; "don't / want to know, / that's fine. / Come again!"
+    db $41, $4c, $4b, $67, $ef, $ee, $54, $3e, $4b, $51, $62
+TextStr_47_4253:           ; id $046C
+    ; "to know, / that's fine. / Come again!"
+    db $51, $4c, $62, $48, $4b, $4c, $54, $5e, $fa, $f7, $ef, $ee, $51, $45, $3e, $51
+    db $68, $62, $43, $46, $4b, $42, $5f, $ef, $ee, $26, $4c, $4a, $42, $62, $3e, $44
+    db $3e, $46, $4b, $63, $f7, $f0
+TextStr_47_4279:           ; id $03CB $0403
+    ; "How about the / monsters living / behind the / Travelers' Gates / in the Room of / Villager / Talisman? / [YES/NO-2]"
+    db $ea, $9f, $a3, $2b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $62, $51, $45, $42
+    db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $49, $46, $53, $46, $4b
+    db $44, $fa, $f7, $ef, $ee, $3f, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $ef
+    db $ee, $37, $4f, $3e, $53, $42, $49, $42, $4f, $50, $5c, $62, $2a, $3e, $51, $42
+    db $50, $fa, $f7, $ef, $ee, $46, $4b, $62, $51, $45, $42, $62, $35, $4c, $4c, $4a
+    db $62, $4c, $43, $ef, $ee, $39, $46, $49, $49, $3e, $44, $42, $4f, $62, $b6, $fa
+    db $f7, $ef, $ee, $37, $3e, $49, $46, $50, $4a, $3e, $4b, $64, $ef, $ee, $ff, $f0
+TextStr_47_42e9:           ; id $03CC $0404
+    ; "Behind the Gate / of Villager, / Stubsucks, / GoHoppers... / Anteaters, and / Gremlins are / living. / / Behind the Gate / of Talisman live ..."
+    db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
+    db $51, $42, $ef, $ee, $4c, $43, $62, $39, $46, $49, $49, $3e, $44, $42, $4f, $5e
+    db $fa, $f7, $ef, $ee, $36, $51, $52, $3f, $50, $52, $40, $48, $50, $5e, $ef, $ee
+    db $2a, $4c, $2b, $4c, $4d, $4d, $42, $4f, $50, $5f, $5f, $5f, $fa, $f7, $ef, $ee
+    db $9f, $a3, $24, $4b, $51, $42, $3e, $51, $42, $4f, $50, $5e, $62, $3e, $4b, $41
+    db $ef, $ee, $2a, $4f, $42, $4a, $49, $46, $4b, $50, $62, $3e, $4f, $42, $fa, $f7
+    db $ef, $ee, $49, $46, $53, $46, $4b, $44, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f
+    db $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e, $51, $42
+    db $ef, $ee, $4c, $43, $62, $37, $3e, $49, $46, $50, $4a, $3e, $4b, $62, $49, $46
+    db $53, $42, $fa, $f7, $ef, $ee, $36, $4d, $4c, $4c, $48, $56, $50, $62, $3e, $4b
+    db $41, $ef, $ee, $24, $4f, $4a, $56, $24, $4b, $51, $50, $5f, $f7, $f0
+TextStr_47_4397:           ; id $03CD $0405
+    ; "How about / monsters living / behind the Gates / in the Room of / Memories / Bewilder? [YES/NO-2]"
+    db $ea, $9f, $a3, $2b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $ef, $ee, $4a, $4c
+    db $4b, $50, $51, $42, $4f, $50, $62, $49, $46, $53, $46, $4b, $44, $fa, $f7, $ef
+    db $ee, $3f, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e, $51, $42
+    db $50, $ef, $ee, $46, $4b, $62, $51, $45, $42, $62, $35, $4c, $4c, $4a, $62, $4c
+    db $43, $fa, $f7, $ef, $ee, $30, $42, $4a, $4c, $4f, $46, $42, $50, $62, $b6, $ef
+    db $ee, $25, $42, $54, $46, $49, $41, $42, $4f, $64, $ff, $f0
+TextStr_47_43f3:           ; id $03CE $0406
+    ; "Behind the Gate / of Memories are, / Goopis, / PillowRats, / Catapilas, / / Pickys, and / FairyRats. / Behind the Gate / of Bewilder live / ..."
+    db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
+    db $51, $42, $ef, $ee, $4c, $43, $62, $30, $42, $4a, $4c, $4f, $46, $42, $50, $62
+    db $3e, $4f, $42, $5e, $fa, $f7, $ef, $ee, $2a, $4c, $4c, $4d, $46, $50, $5e, $ef
+    db $ee, $33, $46, $49, $49, $4c, $54, $35, $3e, $51, $50, $5e, $fa, $f7, $ef, $ee
+    db $26, $3e, $51, $3e, $4d, $46, $49, $3e, $50, $5e, $ef, $ee, $fa, $f7, $ef, $ee
+    db $9f, $a3, $33, $46, $40, $48, $56, $50, $5e, $62, $3e, $4b, $41, $ef, $ee, $29
+    db $3e, $46, $4f, $56, $35, $3e, $51, $50, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $25
+    db $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e, $51, $42, $ef, $ee
+    db $4c, $43, $62, $25, $42, $54, $46, $49, $41, $42, $4f, $62, $49, $46, $53, $42
+    db $fa, $f7, $ef, $ee, $30, $46, $4b, $46, $27, $4f, $3e, $48, $50, $62, $3e, $4b
+    db $41, $ef, $ee, $28, $53, $46, $49, $36, $42, $42, $41, $50, $5f, $f7, $f0
+TextStr_47_44a2:           ; id $03CF $0407
+    ; "How about the / monsters behind / the Gates in the / Room of Peace / Bravery? / [YES/NO-2]"
+    db $ea, $9f, $a3, $2b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $62, $51, $45, $42
+    db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $3f, $42, $45, $46, $4b
+    db $41, $fa, $f7, $ef, $ee, $51, $45, $42, $62, $2a, $3e, $51, $42, $50, $62, $46
+    db $4b, $62, $51, $45, $42, $ef, $ee, $35, $4c, $4c, $4a, $62, $4c, $43, $62, $33
+    db $42, $3e, $40, $42, $62, $b6, $fa, $f7, $ef, $ee, $25, $4f, $3e, $53, $42, $4f
+    db $56, $64, $ef, $ee, $ff, $f0
+TextStr_47_44f8:           ; id $03D0 $0408
+    ; "Behind the Gate / of Peace live / BigRoosts, / SpotSlimes, / CoilBirds, / DragonKids, / CrestPents, / BoneSlaves / Horks, / Almirajs, and / ..."
+    db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
+    db $51, $42, $ef, $ee, $4c, $43, $62, $33, $42, $3e, $40, $42, $62, $49, $46, $53
+    db $42, $fa, $f7, $ef, $ee, $25, $46, $44, $35, $4c, $4c, $50, $51, $50, $5e, $ef
+    db $ee, $36, $4d, $4c, $51, $36, $49, $46, $4a, $42, $50, $5e, $fa, $f7, $ef, $ee
+    db $9f, $a3, $26, $4c, $46, $49, $25, $46, $4f, $41, $50, $5e, $ef, $ee, $27, $4f
+    db $3e, $44, $4c, $4b, $2e, $46, $41, $50
+TextStr_47_4550:           ; id $0466
+    ; ", / CrestPents, / BoneSlaves / Horks, / Almirajs, and / BullBirds. / / Behind the Gate / of Bravery live / Demonites, / 1EyeClowns, / FloraM..."
+    db $5e
+TextStr_47_4551:           ; id $0462 $046E
+    ; "/ CrestPents, / BoneSlaves / Horks, / Almirajs, and / BullBirds. / / Behind the Gate / of Bravery live / Demonites, / 1EyeClowns, / FloraMen..."
+    db $fa, $f7, $ef, $ee, $26, $4f, $42, $50, $51, $33, $42, $4b, $51, $50, $5e, $ef
+    db $ee, $25, $4c, $4b, $42, $36, $49, $3e, $53, $42, $50, $fa, $f7, $ef, $ee, $9f
+    db $a3, $2b, $4c, $4f, $48, $50, $5e, $ef, $ee, $24, $49, $4a, $46, $4f, $3e, $47
+    db $50, $5e, $62, $3e, $4b, $41, $fa, $f7, $ef, $ee, $25, $52, $49, $49, $25, $46
+    db $4f, $41, $50, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $25, $42, $45, $46
+    db $4b, $41, $62, $51, $45, $42, $62, $2a, $3e, $51, $42, $ef, $ee, $4c, $43, $62
+    db $25, $4f, $3e, $53, $42, $4f, $56, $62, $49, $46, $53, $42, $fa, $f7, $ef, $ee
+    db $27, $42, $4a, $4c, $4b, $46, $51, $42, $50, $5e, $ef, $ee, $01, $28, $56, $42
+    db $26, $49, $4c, $54, $4b, $50, $5e, $fa, $f7, $ef, $ee, $29, $49, $4c, $4f, $3e
+    db $30, $42, $4b, $5e, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $36, $3e, $3f, $4f
+    db $42, $30, $42, $4b, $62, $3e, $4b, $41, $ef, $ee, $25, $42, $3e, $4b, $30, $42
+    db $4b, $5f, $f7, $f0
+TextStr_47_4605:           ; id $03D1 $0409
+    ; "How about / monsters behind / the Gates of / Strength Anger? [YES/NO-2]"
+    db $ea, $9f, $a3, $2b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $ef, $ee, $4a, $4c
+    db $4b, $50, $51, $42, $4f, $50, $62, $3f, $42, $45, $46, $4b, $41, $fa, $f7, $ef
+    db $ee, $51, $45, $42, $62, $2a, $3e, $51, $42, $50, $62, $4c, $43, $ef, $ee, $36
+    db $51, $4f, $42, $4b, $44, $51, $45, $62, $b6, $62, $24, $4b, $44, $42, $4f, $64
+    db $ff, $f0
+TextStr_47_4647:           ; id $03D2 $040A
+    ; "Behind the Gate / of Strength live / MudDolls, / SkulRiders, / FairyDraks, / TreeSlimes, / DrakSlimes, / / and WingTrees. / / Behind the Gat..."
+    db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
+    db $51, $42, $ef, $ee, $4c, $43, $62, $36, $51, $4f, $42, $4b, $44, $51, $45, $62
+    db $49, $46, $53, $42, $fa, $f7, $ef, $ee, $30, $52, $41, $27, $4c, $49, $49, $50
+    db $5e, $ef, $ee, $36, $48, $52, $49, $35, $46, $41, $42, $4f, $50, $5e, $fa, $f7
+    db $ef, $ee, $9f, $a3, $29, $3e, $46, $4f, $56, $27, $4f, $3e, $48, $50, $5e, $ef
+    db $ee, $37, $4f, $42, $42, $36, $49, $46, $4a, $42, $50, $5e, $fa, $f7, $ef, $ee
+    db $27, $4f, $3e, $48, $36, $49, $46, $4a, $42, $50, $5e, $ef, $ee, $fa, $f7, $ef
+    db $ee, $9f, $a3, $3e, $4b, $41, $62, $3a, $46, $4b, $44, $37, $4f, $42, $42, $50
+    db $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62
+    db $51, $45, $42, $62, $2a, $3e, $51, $42, $ef, $ee, $4c, $43, $62, $24, $4b, $44
+    db $42, $4f, $62, $49, $46, $53, $42, $fa, $f7, $ef, $ee, $2a, $46, $3e, $4b, $51
+    db $3a, $4c, $4f, $4a, $50, $5e, $ef, $ee, $2a, $46, $3e, $4b, $51, $36, $49, $52
+    db $44, $50, $5e, $fa, $f7, $ef, $ee, $33, $4c, $46, $50, $4c, $4b, $44, $4c, $4b
+    db $50, $5e, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $26, $3e, $51, $29, $49, $56
+    db $50, $5e, $ef, $ee, $28, $56, $42, $41, $42, $4f, $50, $5e, $62, $3e, $4b, $41
+    db $fa, $f7, $ef, $ee, $33, $52, $51, $4f, $42, $4d, $52, $4d, $50, $5f, $ef, $ee
+    db $f7, $f0
+TextStr_47_4749:           ; id $03D3 $040B
+    ; "If you don't / want to know, / that's fine. / Come again!"
+    db $ea, $9f, $a3, $2c, $43, $62, $56, $4c, $52, $62, $41, $4c, $4b, $67, $ef, $ee
+    db $54, $3e, $4b, $51, $62, $51, $4c, $62, $48, $4b, $4c, $54, $5e, $fa, $f7, $ef
+    db $ee, $51, $45, $3e, $51, $68, $62, $43, $46, $4b, $42, $5f, $ef, $ee, $26, $4c
+    db $4a, $42, $62, $3e, $44, $3e, $46, $4b, $63, $f7, $f0
+TextStr_47_4784:           ; id $03D4 $040C
+    ; "Don't / pick on me!"
+    db $eb, $9f, $a3, $27, $4c, $4b, $67, $ef, $ee, $4d, $46, $40, $48, $62, $4c, $4b
+    db $62, $4a, $42, $63, $f7, $f0
+TextStr_47_479a:           ; id $03D5 $040D
+    ; "Ha ha ha! I made / Gigantes a coward!"
+    db $ea, $9f, $a3, $2b, $3e, $62, $45, $3e, $62, $45, $3e, $63, $62, $2c, $62, $4a
+    db $3e, $41, $42, $ef, $ee, $2a, $46, $44, $3e, $4b, $51, $42, $50, $62, $3e, $62
+    db $40, $4c, $54, $3e, $4f, $41, $63, $f7, $f0
+TextStr_47_47c3:           ; id $03D6 $040E
+    ; "I can see.. I / can see! It's a / never before / seen monster!"
+    db $eb, $9f, $a3, $2c, $62, $40, $3e, $4b, $62, $50, $42, $42, $5f, $5f, $62, $2c
+    db $ef, $ee, $40, $3e, $4b, $62, $50, $42, $42, $63, $62, $2c, $51, $68, $62, $3e
+    db $fa, $f7, $ef, $ee, $4b, $42, $53, $42, $4f, $62, $3f, $42, $43, $4c, $4f, $42
+    db $ef, $ee, $50, $42, $42, $4b, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $63, $f7
+    db $f0
+TextStr_47_4804:           ; id $03D7 $040F
+    ; "You, must obey / my command. / I want to see / a Florajay! / A flowerlike / animal with wings. / A Florajay!"
+    db $eb, $9f, $a3, $3c, $4c, $52, $5e, $62, $4a, $52, $50, $51, $62, $4c, $3f, $42
+    db $56, $ef, $ee, $4a, $56, $62, $40, $4c, $4a, $4a, $3e, $4b, $41, $5f, $fa, $f7
+    db $ef, $ee, $9f, $a3, $2c, $62, $54, $3e, $4b, $51, $62, $51, $4c, $62, $50, $42
+    db $42, $ef, $ee, $3e, $62, $29, $49, $4c, $4f, $3e, $47, $3e, $56, $63, $fa, $f7
+    db $ef, $ee, $9f, $a3, $24, $62, $43, $49
+TextStr_47_484c:           ; id $0465
+    ; "owerlike / animal with wings. / A Florajay!"
+    db $4c, $54, $42, $4f, $9c, $49, $46, $48, $42, $ef, $ee, $3e, $4b, $46, $4a, $3e
+    db $49, $62, $54, $46, $51, $45, $62, $54, $46, $4b, $44, $50, $5f, $fa, $f7, $ef
+    db $ee, $24, $62, $29, $49, $4c, $4f, $3e, $47, $3e, $56, $63, $ef, $ee, $f7, $f0
+TextStr_47_487c:           ; id $03D8 $0410
+    ; "Oh! It's a / FloraJay! What a / funny face! / / Well done! / I'll give you a / reward."
+    db $eb, $9f, $a3, $32, $45, $63, $62, $2c, $51, $68, $62, $3e, $ef, $ee, $29, $49
+    db $4c, $4f, $3e, $2d, $3e, $56, $63, $62, $3a, $45, $3e, $51, $62, $3e, $fa, $f7
+    db $ef, $ee, $43, $52, $4b, $4b, $56, $62, $43, $3e, $40, $42, $63, $ef, $ee, $fa
+    db $f7, $ef, $ee, $9f, $a3, $3a, $42, $49, $49, $62, $41, $4c, $4b, $42, $63, $ef
+    db $ee, $2c, $66, $49, $62, $44, $46, $53, $42, $62, $56, $4c, $52, $62, $3e, $fa
+    db $f7, $ef, $ee, $4f, $42, $54, $3e, $4f, $41, $5f, $ef, $ee, $fa, $f7, $f0
+TextStr_47_48db:           ; id $03D9 $0411
+    ; "This is an / AGLseed. / Use it wisely."
+    db $eb, $9f, $a3, $37, $45, $46, $50, $62, $46, $50, $62, $3e, $4b, $ef, $ee, $24
+    db $2a, $2f, $50, $42, $42, $41, $5f, $fa, $f7, $ef, $ee, $38, $50, $42, $62, $46
+    db $51, $62, $54, $46, $50, $42, $49, $56, $5f, $ef, $ee, $f7, $f0
+TextStr_47_4908:           ; id $03DA $0412
+    ; "I heard a rumor / that a terrible / master appeared / from nowhere in / a foreign kingdom. / / When this master / defeats an enemy / master,..."
+    db $ea, $9f, $a3, $2c, $62, $45, $42, $3e, $4f, $41, $62, $3e, $62, $4f, $52, $4a
+    db $4c, $4f, $ef, $ee, $51, $45, $3e, $51, $62, $3e, $62, $51, $42, $4f, $4f, $46
+    db $3f, $49, $42, $fa, $f7, $ef, $ee, $4a, $3e, $50, $51, $42, $4f, $62, $3e, $4d
+    db $4d, $42, $3e, $4f, $42, $41, $ef, $ee, $43, $4f
+TextStr_47_4942:           ; id $0467
+    ; "om nowhere in / a foreign kingdom. / / When this master / defeats an enemy / master, this / master devours / their monsters!!"
+    db $4c, $4a, $62, $4b, $4c, $54, $45, $42, $4f, $42, $62, $46, $4b, $fa, $f7, $ef
+    db $ee, $3e, $62, $43, $4c, $4f, $42, $46, $44, $4b, $62, $48, $46, $4b, $44, $41
+TextStr_47_4962:           ; id $045C
+    ; "om. / / When this master / defeats an enemy / master, this / master devours / their monsters!!"
+    db $4c, $4a, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $3a, $45, $42, $4b, $62
+    db $51, $45, $46, $50, $62, $4a, $3e, $50, $51, $42, $4f, $ef, $ee, $41, $42, $43
+    db $42, $3e, $51, $50, $62, $3e, $4b, $62, $42, $4b, $42, $4a, $56, $fa, $f7, $ef
+    db $ee, $4a, $3e, $50, $51, $42, $4f, $5e, $62, $51, $45, $46, $50, $ef, $ee, $4a
+    db $3e, $50, $51, $42, $4f, $62, $41, $42, $53, $4c, $52, $4f, $50, $fa, $f7, $ef
+    db $ee, $51, $45, $42, $46, $4f, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $63
+    db $63, $ef, $ee, $f7, $f0
+TextStr_47_49c7:           ; id $03DB $0413
+    ; "Oops...I lost / ...I guess I'll / try to get more / sleep!"
+    db $ea, $9f, $a3, $32, $4c, $4d, $50, $5f, $5f, $5f, $2c, $62, $49, $4c, $50, $51
+    db $ef, $ee, $5f, $5f, $5f, $2c, $62, $44, $52, $42, $50, $50, $62, $2c, $66, $49
+    db $fa, $f7, $ef, $ee, $51, $4f, $56, $62, $51, $4c, $62, $44, $42, $51, $62, $4a
+    db $4c, $4f, $42, $ef, $ee, $50, $49, $42, $42, $4d, $63, $f7, $f0
+TextStr_47_4a04:           ; id $03DC $0414
+    ; "You're in / the Room of / Happiness / Temptation. / Go right to the / Gate of / Temptation. / Left to the Gate / of Happiness."
+    db $ea, $9f, $a3, $3c, $4c, $52, $69, $42, $62, $46, $4b, $ef, $ee, $51, $45, $42
+    db $62, $35, $4c, $4c, $4a, $62, $4c, $43, $fa, $f7, $ef, $ee, $2b, $3e, $4d, $4d
+    db $46, $4b, $42, $50, $50, $62, $b6, $ef, $ee, $37, $42, $4a, $4d, $51, $3e, $51
+    db $46, $4c, $4b, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $2a, $4c, $62, $4f, $46, $44
+    db $45, $51, $62, $51, $4c, $62, $51, $45, $42, $ef, $ee, $2a, $3e, $51, $42, $62
+    db $4c, $43, $fa, $f7, $ef, $ee, $37, $42, $4a, $4d, $51, $3e, $51, $46, $4c, $4b
+    db $5f, $ef, $ee, $2f, $42, $43, $51, $62, $51, $4c, $62, $51, $45, $42, $62, $2a
+    db $3e, $51, $42, $fa, $f7, $ef, $ee, $4c, $43, $62, $2b, $3e, $4d, $4d, $46, $4b
+    db $42, $50, $50, $5f, $ef, $ee, $f7, $f0
+TextStr_47_4a8c:           ; id $03DD $0415
+    ; "Welcome to / A class. I was / expecting you! / / C'mon, [HERO]! / Show me what / you've got!!"
+    db $eb, $9f, $a3, $3a, $42, $49, $40, $4c, $4a, $42, $62, $51, $4c, $ef, $ee, $24
+    db $62, $40, $49, $3e, $50, $50, $5f, $62, $2c, $62, $54, $3e, $50, $fa, $f7, $ef
+    db $ee, $42, $55, $4d, $42, $40, $51, $46, $4b, $44, $62, $56, $4c, $52, $63, $ef
+    db $ee, $fa, $f7, $ef, $ee, $9f, $a3, $26, $6a, $4c, $4b, $5e, $62, $f6, $63, $ef
+    db $ee, $36, $45, $4c, $54, $62, $4a, $42, $62, $54, $45, $3e, $51, $fa, $f7, $ef
+    db $ee, $56, $4c, $52, $6c, $42, $62, $44, $4c, $51, $63, $63, $ef, $ee, $f7, $f0
+TextStr_47_4aec:           ; id $03DE $0416
+    ; "Maybe you'll / do better next / time [HERO]. / / Never give up / just because you / failed a few / times!"
+    db $eb, $9f, $a3, $30, $3e, $56, $3f, $42, $62, $56, $4c, $52, $66, $49, $ef, $ee
+    db $41, $4c, $62, $3f, $42, $51, $51, $42, $4f, $62, $4b, $42, $55, $51, $fa, $f7
+    db $ef, $ee, $51, $46, $4a, $42, $62, $f6, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f
+    db $a3, $31, $42, $53, $42, $4f, $62, $44, $46, $53, $42, $62, $52, $4d, $ef, $ee
+    db $47, $52, $50, $51, $62, $3f, $42, $40, $3e, $52, $50, $42, $62, $56, $4c, $52
+    db $fa, $f7, $ef, $ee, $43, $3e, $46, $49, $42, $41
+TextStr_47_4b46:           ; id $046F
+    ; "a few / times!"
+    db $62, $3e, $62, $43, $42, $54, $ef, $ee, $51, $46, $4a, $42, $50, $63, $f7, $f0
+TextStr_47_4b56:           ; id $03DF $0417
+    ; "Are you familiar / with the Gate of / Labyrinth? / [YES/NO-2]"
+    db $eb, $9f, $a3, $24, $4f, $42, $62, $56, $4c, $52, $62, $43, $3e, $4a, $46, $49
+    db $46, $3e, $4f, $ef, $ee, $54, $46, $51, $45, $62, $51, $45, $42, $62, $2a, $3e
+    db $51, $42, $62, $4c, $43, $fa, $f7, $ef, $ee, $2f, $3e, $3f, $56, $4f, $46, $4b
+    db $51, $45, $64, $ef, $ee, $ff, $f0
+TextStr_47_4b8d:           ; id $03E0 $0418
+    ; "A quote from the / journal of a / journey by the / legendary monster / master, Mary / / It's a / mysterious cave / that seems to go / on for..."
+    db $eb, $9f, $a3, $24, $62, $4e, $52, $4c, $51, $42, $62, $43, $4f, $4c, $4a, $62
+    db $51, $45, $42, $ef, $ee, $47, $4c, $52, $4f, $4b, $3e, $49, $62, $4c, $43, $62
+    db $3e, $fa, $f7, $ef, $ee, $47, $4c, $52, $4f, $4b, $42, $56, $62, $3f, $56, $62
+    db $51, $45, $42, $ef, $ee, $49, $42, $44, $42, $4b, $41, $3e, $4f, $56, $62, $4a
+    db $4c, $4b, $50, $51, $42, $4f, $fa, $f7, $ef, $ee, $4a, $3e, $50, $51, $42, $4f
+    db $5e, $62, $30, $3e, $4f, $56, $a3, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c
+    db $51
+TextStr_47_4bee:           ; id $0473
+    ; "'s a / mysterious cave / that seems to go / on forever. / It looks like / there are many / paths, but there / is only one way to / go to fin..."
+    db $68, $62, $3e, $ef, $ee, $4a, $56, $50, $51, $42, $4f, $46, $4c, $52, $50, $62
+    db $40, $3e, $53, $42, $fa, $f7, $ef, $ee, $51, $45, $3e, $51, $62, $50, $42, $42
+    db $4a, $50, $62, $51, $4c, $62, $44, $4c, $ef, $ee, $4c, $4b, $62, $43, $4c, $4f
+    db $42, $53, $42, $4f, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $51, $62, $49, $4c
+    db $4c, $48, $50, $62, $49, $46, $48, $42, $ef, $ee, $51, $45, $42, $4f, $42, $62
+    db $3e
+TextStr_47_4c3f:           ; id $0464
+    ; "re many / paths, but there / is only one way to / go to find / the DarkHorn."
+    db $4f, $42, $62, $4a, $3e, $4b, $56, $fa, $f7, $ef, $ee, $4d, $3e
+TextStr_47_4c4c:           ; id $045D
+    ; "ths, but there / is only one way to / go to find / the DarkHorn."
+    db $51, $45, $50, $5e, $62, $3f, $52, $51, $62, $51
+TextStr_47_4c56:           ; id $0471
+    ; "here / is only one way to / go to find / the DarkHorn."
+    db $45, $42, $4f, $42, $ef, $ee, $46, $50, $62, $4c, $4b, $49, $56, $62, $4c, $4b
+    db $42, $62, $54, $3e, $56, $62, $51, $4c, $fa, $f7, $ef, $ee, $44, $4c, $62, $51
+    db $4c, $62, $43, $46, $4b, $41, $ef, $ee, $51, $45, $42, $62, $27, $3e, $4f, $48
+    db $2b, $4c, $4f, $4b, $5f, $f7, $f0
+TextStr_47_4c8d:           ; id $03E1 $0419
+    ; "Do you know of / the Gate of / Judgment? / [YES/NO-2]"
+    db $eb, $9f, $a3, $27, $4c, $62, $56, $4c, $52, $62, $48, $4b, $4c, $54, $62, $4c
+    db $43, $ef, $ee, $51, $45, $42, $62, $2a, $3e, $51, $42, $62, $4c, $43, $fa, $f7
+    db $ef, $ee, $2d, $52, $41, $44, $4a, $42, $4b, $51, $64, $ef, $ee, $ff, $f0
+TextStr_47_4cbc:           ; id $03E2 $041A
+    ; "A quote from the / first victor of / the tournament. / / A master is one / who commands / monsters in / fights. / You must trust / and love ..."
+    db $eb, $9f, $a3, $24, $62, $4e, $52, $4c, $51, $42, $62, $43, $4f, $4c, $4a, $62
+    db $51, $45, $42, $ef, $ee, $43, $46, $4f, $50, $51, $62, $53, $46, $40, $51, $4c
+    db $4f, $62, $4c, $43, $fa, $f7, $ef, $ee, $51, $45, $42, $62, $51, $4c, $52, $4f
+    db $4b, $3e, $4a, $42, $4b, $51, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $24
+    db $62, $4a, $3e, $50, $51, $42, $4f, $62, $46, $50, $62, $4c, $4b, $42, $ef, $ee
+    db $54, $45, $4c, $62, $40, $4c, $4a, $4a, $3e, $4b, $41, $50, $fa, $f7, $ef, $ee
+    db $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $46, $4b, $ef, $ee, $43, $46, $44
+    db $45, $51, $50, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $3c, $4c, $52, $62, $4a, $52
+    db $50, $51, $62, $51, $4f, $52, $50, $51, $ef, $ee, $3e, $4b, $41, $62, $49, $4c
+    db $53, $42, $62, $56, $4c, $52, $4f, $fa, $f7, $ef, $ee, $4a, $4c, $4b, $50, $51
+    db $42, $4f, $50, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $3a, $46, $51, $45
+    db $4c, $52, $51, $62, $51, $4f, $52, $50, $51, $5e, $ef, $ee, $4b, $4c, $62, $51
+    db $4f, $52, $42, $62, $4a, $3e, $50, $51, $42, $4f, $fa, $f7, $ef, $ee, $54, $46
+    db $49, $49, $62, $42, $4a, $42, $4f, $44, $42, $5f, $ef, $ee, $f7, $f0
+TextStr_47_4d9a:           ; id $03E3 $041B
+    ; "Far across / the ocean, is / the country / of Jipangu. / A dragon with 8 / heads lives there. / Its name is / Orochi! / A quote from the / d..."
+    db $eb, $9f, $a3, $29, $3e, $4f, $62, $3e, $40, $4f, $4c, $50, $50, $ef, $ee, $51
+    db $45, $42, $62, $4c, $40, $42, $3e, $4b, $5e, $62, $46, $50, $fa, $f7, $ef, $ee
+    db $51, $45, $42, $62, $40, $4c, $52, $4b, $51, $4f, $56, $ef, $ee, $4c, $43, $62
+    db $2d, $46, $4d, $3e, $4b, $44, $52, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $24, $62
+    db $41, $4f, $3e, $44, $4c, $4b, $62, $54, $46, $51, $45, $62, $08, $ef, $ee, $45
+    db $42, $3e, $41, $50, $62, $49, $46, $53, $42, $50, $62, $51, $45, $42, $4f, $42
+    db $5f, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $51, $50, $62, $4b, $3e, $4a, $42, $62
+    db $46, $50, $ef, $ee, $32, $4f, $4c, $40, $45, $46, $63, $fa, $f7, $ef, $ee, $9f
+    db $a3, $24, $62, $4e, $52, $4c, $51, $42, $62, $43, $4f, $4c, $4a, $62, $51, $45
+    db $42, $ef, $ee, $41, $46, $3e, $4f, $56, $62, $4c, $43, $62, $3e, $fa, $f7, $ef
+    db $ee, $49, $42, $44, $42, $4b, $41, $3e, $4f, $56, $62, $53, $46, $40, $51, $4c
+    db $4f, $5f, $ef, $ee, $f7, $f0
+TextStr_47_4e50:           ; id $03E4 $041C
+    ; "KingOh, [HERO]! / You beat DarkHorn! / KingYou beat it / without becoming / lost in the / labyrinth... / KingYou have / great wisdom!!"
+    db $ea, $2e, $46, $4b, $44, $a3, $32, $45, $5e, $62, $f6, $63, $ef, $ee, $3c, $4c
+    db $52, $62, $3f, $42, $3e, $51, $62, $27, $3e, $4f, $48, $2b, $4c, $4f, $4b, $63
+    db $fa, $f7, $ef, $ee, $2e, $46, $4b, $44, $a3, $3c, $4c, $52, $62, $3f, $42, $3e
+    db $51, $62, $46, $51, $ef, $ee, $54, $46, $51, $45, $4c, $52, $51, $62, $3f, $42
+    db $40, $4c, $4a, $46, $4b, $44, $fa, $f7, $ef, $ee, $49, $4c, $50, $51, $62, $46
+    db $4b, $62, $51, $45, $42, $ef, $ee, $49, $3e, $3f, $56, $4f, $46, $4b, $51, $45
+    db $5f, $5f, $5f, $fa, $f7, $ef, $ee, $2e, $46, $4b, $44, $a3, $3c, $4c, $52, $62
+    db $45, $3e, $53, $42, $ef, $ee, $44, $4f, $42, $3e, $51, $62, $54, $46, $50, $41
+    db $4c, $4a, $63, $63, $f7, $f0
+TextStr_47_4ed6:           ; id $03E5 $041D
+    ; "KingOh, [HERO]! / You beat Akubar! / KingIt's not / your fault! / Don't worry! / / KingIf anybody / complains, I'll / throw them in / the du..."
+    db $ea, $2e, $46, $4b, $44, $a3, $32, $45, $5e, $62, $f6, $63, $ef, $ee, $3c, $4c
+    db $52, $62, $3f, $42, $3e, $51, $62, $24, $48, $52, $3f, $3e, $4f, $63, $fa, $f7
+    db $ef, $ee, $2e, $46, $4b, $44, $a3, $2c, $51, $68, $62, $4b, $4c, $51, $ef, $ee
+    db $56, $4c, $52, $4f, $62, $43, $3e, $52, $49, $51, $63, $fa, $f7, $ef, $ee, $27
+    db $4c, $4b, $67, $62, $54, $4c, $4f, $4f, $56, $63, $ef, $ee, $fa, $f7, $ef, $ee
+    db $2e, $46, $4b, $44, $a3, $2c, $43, $62, $3e, $4b, $56, $3f, $4c, $41, $56, $ef
+    db $ee, $40, $4c, $4a, $4d, $49, $3e, $46, $4b, $50, $5e, $62, $2c, $66, $49, $fa
+    db $f7, $ef, $ee, $51, $45, $4f, $4c, $54, $62, $51, $45, $42, $4a, $62, $46, $4b
+    db $ef, $ee, $51, $45, $42, $62, $41, $52, $4b, $44, $42, $4c, $4b, $63, $f7, $f0
+TextStr_47_4f66:           ; id $03E6 $041E
+    ; "Hey are you / really aiming / for S class? / [YES/NO-2]"
+    db $eb, $9f, $a3, $2b, $42, $56, $62, $3e, $4f, $42, $62, $56, $4c, $52, $ef, $ee
+    db $4f, $42, $3e, $49, $49, $56, $62, $3e, $46, $4a, $46, $4b, $44, $fa, $f7, $ef
+    db $ee, $43, $4c, $4f, $62, $36, $62, $40, $49, $3e, $50, $50, $64, $ef, $ee, $ff
+    db $f0
+TextStr_47_4f97:           ; id $03E7 $041F
+    ; "You'll never get / there with such / pathetic powers!"
+    db $eb, $9f, $a3, $3c, $4c, $52, $66, $49, $62, $4b, $42, $53, $42, $4f, $62, $44
+    db $42, $51, $ef, $ee, $51, $45, $42, $4f, $42, $62, $54, $46, $51, $45, $62, $50
+    db $52, $40, $45, $fa, $f7, $ef, $ee, $4d, $3e, $51, $45, $42, $51, $46, $40, $62
+    db $4d, $4c, $54, $42, $4f, $50, $63, $ef, $ee, $f7, $f0
+TextStr_47_4fd2:           ; id $03E8 $0420
+    ; "Then go home, / liar!"
+    db $eb, $9f, $a3, $37, $45, $42, $4b, $62, $44, $4c, $62, $45, $4c, $4a, $42, $5e
+    db $ef, $ee, $49, $46, $3e, $4f, $63, $f7, $f0
+TextStr_47_4feb:           ; id $03E9 $0421
+    ; "You're in the / Chamber of / Travelers' Gates. / Go left to the / Room of the / Labyrinth / Judgment. / / Right to the / Room of Happiness /..."
+    db $ea, $9f, $a3, $3c, $4c, $52, $69, $42, $62, $46, $4b, $62, $51, $45, $42, $ef
+    db $ee, $26, $45, $3e, $4a, $3f, $42, $4f, $62, $4c, $43, $fa, $f7, $ef, $ee, $37
+    db $4f, $3e, $53, $42, $49, $42, $4f, $50, $5c, $62, $2a, $3e, $51, $42, $50, $5f
+    db $ef, $ee, $2a, $4c, $62, $49, $42, $43, $51, $62, $51, $4c, $62, $51, $45, $42
+    db $fa, $f7, $ef, $ee, $35, $4c, $4c, $4a, $62, $4c, $43, $62, $51, $45, $42, $ef
+    db $ee, $2f, $3e, $3f, $56, $4f, $46, $4b, $51, $45, $62, $b6, $fa, $f7, $ef, $ee
+    db $2d, $52, $41, $44, $4a, $42, $4b, $51, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f
+    db $a3, $35, $46, $44, $45, $51, $62, $51, $4c, $62, $51, $45, $42, $ef, $ee, $35
+    db $4c, $4c, $4a, $62, $4c, $43, $62, $2b, $3e, $4d, $4d, $46, $4b, $42, $50, $50
+    db $fa, $f7, $ef, $ee, $b6, $62, $37, $42, $4a, $4d, $51, $3e, $51, $46, $4c, $4b
+    db $5f, $ef, $ee, $f7, $f0
+TextStr_47_5090:           ; id $03EA $0422
+    ; "Behind the Gate / of Labyrinth / there really is a / labyrinth. / You need to get / more information! / The monsters in / the stable may / k..."
+    db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
+    db $51, $42, $ef, $ee, $4c, $43, $62, $2f, $3e, $3f, $56, $4f, $46, $4b, $51, $45
+    db $fa, $f7, $ef, $ee, $51, $45, $42, $4f, $42, $62, $4f, $42, $3e, $49, $49, $56
+    db $62, $46, $50, $62, $3e, $ef, $ee, $49, $3e, $3f, $56, $4f, $46, $4b, $51, $45
+    db $5f, $fa, $f7, $ef, $ee, $9f, $a3, $3c, $4c, $52, $62, $4b, $42, $42, $41, $62
+    db $51, $4c, $62, $44, $42, $51, $ef, $ee, $4a, $4c, $4f, $42, $62, $46, $4b, $43
+    db $4c, $4f, $4a, $3e, $51, $46, $4c, $4b, $63, $fa, $f7, $ef, $ee, $9f, $a3, $37
+    db $45, $42, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $46, $4b, $ef, $ee
+    db $51, $45, $42, $62, $50, $51, $3e, $3f, $49, $42, $62, $4a, $3e, $56, $fa, $f7
+    db $ef, $ee, $48, $4b, $4c, $54, $62, $4a, $4c, $4f, $42, $62, $3e, $3f, $4c, $52
+    db $51, $ef, $ee, $51, $45, $42, $62, $49, $3e, $3f, $56, $4f, $46, $4b
+TextStr_47_513e:           ; id $0460
+    ; "th."
+    db $51, $45, $5f, $f7, $f0
+TextStr_47_5143:           ; id $03EB $0423
+    ; "DuckKite is a / troublesome / monster. / / It makes us / sleep confuses / and curses us.. / / I hope you won't / encounter it / behind the G..."
+    db $eb, $9f, $a3, $27, $52, $40, $48, $2e, $46, $51, $42, $62, $46, $50, $62, $3e
+    db $ef, $ee, $51, $4f, $4c, $52, $3f, $49, $42, $50, $4c, $4a, $42, $fa, $f7, $ef
+    db $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f
+    db $a3, $2c, $51, $62, $4a, $3e, $48, $42, $50, $62, $52, $50, $ef, $ee, $50, $49
+    db $42, $42, $4d, $62, $b6, $62, $40, $4c, $4b, $43, $52, $50, $42, $50, $fa, $f7
+    db $ef, $ee, $3e, $4b, $41, $62, $40, $52, $4f, $50, $42, $50, $62, $52, $50, $5f
+    db $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $45, $4c, $4d, $42, $62
+    db $56, $4c, $52, $62, $54, $4c, $4b, $67, $ef, $ee, $42, $4b, $40, $4c, $52, $4b
+    db $51, $42, $4f, $62, $46, $51, $fa, $f7, $ef, $ee, $3f, $42, $45, $46, $4b, $41
+    db $62, $51, $45, $42, $62, $2a, $3e, $51, $42, $62, $4c, $43, $ef, $ee, $51, $45
+    db $42, $62, $2f, $3e, $3f, $56, $4f, $46, $4b, $51, $45, $63, $f7, $f0
+TextStr_47_51f1:           ; id $03EC $0424
+    ; "Copycopy. I / wanna copycopy an / Unicorn today. / Copycopy. / HealAll... / Antidote. / Revive. Perfect!"
+    db $eb, $9f, $a3, $26, $4c, $4d, $56, $40, $4c, $4d, $56, $5f, $62, $2c, $ef, $ee
+    db $54, $3e, $4b, $4b, $3e, $62, $40, $4c, $4d, $56, $40, $4c, $4d, $56, $62, $3e
+    db $4b, $fa, $f7, $ef, $ee, $38, $4b, $46, $40, $4c, $4f, $4b, $62, $51, $4c, $41
+    db $3e, $56, $5f, $ef, $ee, $26, $4c, $4d, $56, $40, $4c, $4d, $56, $5f, $fa, $f7
+    db $ef, $ee, $9f, $a3, $2b, $42, $3e, $49, $24, $49, $49, $5f, $5f, $5f, $ef, $ee
+    db $24, $4b, $51, $46, $41, $4c, $51, $42, $5f, $fa, $f7, $ef, $ee, $35, $42, $53
+    db $46, $53, $42, $5f, $62, $33, $42, $4f, $43, $42, $40, $51, $63, $ef, $ee, $f7
+    db $f0
+TextStr_47_5262:           ; id $03ED $0425
+    ; "Hello! / I am Helo. / My former master / wanted more / monsters so, / / he intentionally / extended the fight / and gave the / monsters lots..."
+    db $eb, $9f, $a3, $2b, $42, $49, $49, $4c, $63, $ef, $ee, $2c, $62, $3e, $4a, $62
+    db $2b, $42, $49, $4c, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $30, $56, $62, $43, $4c
+    db $4f, $4a, $42, $4f, $62, $4a, $3e, $50, $51, $42, $4f, $ef, $ee, $54, $3e, $4b
+    db $51, $42, $41, $62, $4a, $4c, $4f, $42, $fa, $f7, $ef, $ee, $4a, $4c, $4b, $50
+    db $51, $42, $4f, $50, $62, $50, $4c, $5e, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3
+    db $45, $42, $62, $46, $4b, $51, $42, $4b, $51, $46, $4c, $4b, $3e, $49, $49, $56
+    db $ef, $ee, $42, $55, $51, $42, $4b, $41, $42, $41, $62, $51, $45, $42, $62, $43
+    db $46, $44, $45, $51, $fa, $f7, $ef, $ee, $3e, $4b, $41, $62, $44, $3e, $53, $42
+    db $62, $51, $45, $42, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $49
+    db $4c, $51, $50, $fa, $f7, $ef, $ee, $4c, $43, $62, $51, $4f, $42, $3e, $51, $50
+    db $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $37, $4c, $62, $3e, $40, $40, $4c
+    db $4a, $4d, $49, $46, $50, $45, $ef, $ee, $51, $45, $46, $50, $5e, $62, $45, $42
+    db $62, $4c, $4b, $49, $56, $62, $51, $4c, $4c, $48, $fa, $f7, $ef, $ee, $54, $42
+    db $3e, $48, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $54, $46, $51, $45
+    db $ef, $ee, $45, $46, $4a, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $36, $4c, $4a, $42
+    db $51, $46, $4a, $42, $50, $62, $45, $42, $ef, $ee, $51, $4c, $4c, $48, $62, $4c
+    db $4b, $49, $56, $62, $4c, $4b, $42, $5f, $fa, $f7, $ef, $ee, $2b, $42, $62, $51
+    db $4f, $46, $42, $41, $62, $4a, $3e, $4b, $56, $ef, $ee, $51, $45, $46, $4b, $44
+    db $50, $5f, $f7, $f0
+TextStr_47_5386:           ; id $03EE $0426
+    ; "Yeah! The / Starry Night / has arrived! / / That merchant / has changed his / attitude at last! / / Wanna know / about the book / he's selli..."
+    db $ea, $9f, $a3, $3c, $42, $3e, $45, $63, $62, $37, $45, $42, $ef, $ee, $36, $51
+    db $3e, $4f, $4f, $56, $62, $31, $46, $44, $45, $51, $fa, $f7, $ef, $ee, $45, $3e
+    db $50, $62, $3e, $4f, $4f, $46, $53, $42, $41, $63, $ef, $ee, $fa, $f7, $ef, $ee
+    db $9f, $a3, $37, $45, $3e, $51, $62, $4a, $42, $4f, $40, $45, $3e, $4b, $51, $ef
+    db $ee, $45, $3e, $50, $62, $40, $45, $3e, $4b, $44, $42, $41, $62, $45, $46, $50
+    db $fa, $f7, $ef, $ee, $3e, $51, $51, $46, $51, $52, $41, $42, $62, $3e, $51, $62
+    db $49, $3e, $50, $51, $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $3a, $3e, $4b
+    db $4b, $3e, $62, $48, $4b, $4c, $54, $ef, $ee, $3e, $3f, $4c, $52, $51, $62, $51
+    db $45, $42, $62, $3f, $4c, $4c, $48, $fa, $f7, $ef, $ee, $45, $42, $68, $62, $50
+    db $42, $49, $49, $46, $4b, $44, $64, $ef, $ee, $ff, $f0
+TextStr_47_5421:           ; id $03EF $0427
+    ; "I wonder what / will happen if I / use Chance? / Eeek!"
+    db $eb, $9f, $a3, $2c, $62, $54, $4c, $4b, $41, $42, $4f, $62, $54, $45, $3e, $51
+    db $ef, $ee, $54, $46, $49, $49, $62, $45, $3e, $4d, $4d, $42, $4b, $62, $46, $43
+    db $62, $2c, $fa, $f7, $ef, $ee, $52, $50, $42, $62, $26, $45, $3e, $4b, $40, $42
+    db $64, $ef, $ee, $28, $42, $42, $48, $63, $f7, $f0
+TextStr_47_545b:           ; id $03F0 $0428
+    ; "Well done! You / survived S class! / Now you're the / master and the / representative / of GreatTree!!!"
+    db $ea, $9f, $a3, $3a, $42, $49, $49, $62, $41, $4c, $4b, $42, $63, $62, $3c, $4c
+    db $52, $ef, $ee, $50, $52, $4f, $53, $46, $53, $42, $41, $62, $36, $62, $40, $49
+    db $3e, $50, $50, $63, $fa, $f7, $ef, $ee, $9f, $a3, $31, $4c, $54, $62, $56, $4c
+    db $52, $69, $42, $62, $51, $45, $42, $ef, $ee, $4a, $3e, $50, $51, $42, $4f, $62
+    db $3e, $4b, $41, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $4f, $42, $4d, $4f, $42
+    db $50, $42, $4b, $51, $3e, $51, $46, $53, $42, $ef, $ee, $4c, $43, $62, $2a, $4f
+    db $42, $3e, $51, $37, $4f, $42, $42, $63, $63, $63, $f7, $f0
+TextStr_47_54c7:           ; id $03F1 $0429
+    ; "Monster Master / [HERO]! You became / our rep at last! / / The King needs / you. This way!"
+    db $ea, $9f, $a3, $30, $4c, $4b, $50, $51, $42, $4f, $62, $30, $3e, $50, $51, $42
+    db $4f, $ef, $ee, $f6, $63, $62, $3c, $4c, $52, $62, $3f, $42, $40, $3e, $4a, $42
+    db $fa, $f7, $ef, $ee, $4c, $52, $4f, $62, $4f, $42, $4d, $62, $3e, $51, $62, $49
+    db $3e, $50, $51, $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $37, $45, $42, $62
+    db $2e, $46, $4b, $44, $62, $4b, $42, $42, $41, $50, $ef, $ee, $56, $4c, $52, $5f
+    db $62, $37, $45, $46, $50, $62, $54, $3e, $56, $63, $f7, $f0
+TextStr_47_5523:           ; id $03F2 $042A
+    ; "The last match / in S class will / be with... / / the Medal Man in / the Queen's room!"
+    db $eb, $9f, $a3, $37, $45, $42, $62, $49, $3e, $50, $51, $62, $4a, $3e, $51, $40
+    db $45, $ef, $ee, $46, $4b, $62, $36, $62, $40, $49, $3e, $50, $50, $62, $54, $46
+    db $49, $49, $fa, $f7, $ef, $ee, $3f, $42, $62, $54, $46, $51, $45, $5f, $5f, $5f
+    db $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $51, $45, $42, $62, $30, $42, $41, $3e
+    db $49, $62, $30, $3e, $4b, $62, $46, $4b, $ef, $ee, $51, $45, $42, $62, $34, $52
+    db $42, $42, $4b, $68, $62, $4f, $4c, $4c, $4a, $63, $f7, $f0
+TextStr_47_557f:           ; id $03F3 $042B
+    ; "[HERO], nothing / left but S class. / I'll help you / with what little / I can do! / / Why don't you / breed with my / Yeti? / Tut! Not in /..."
+    db $ea, $9f, $f6, $5e, $62, $4b, $4c, $51, $45, $46, $4b, $44, $ef, $ee, $49, $42
+    db $43, $51, $62, $3f, $52, $51, $62, $36, $62, $40, $49, $3e, $50, $50, $5f, $fa
+    db $f7, $ef, $ee, $9f, $a3, $2c, $66, $49, $62, $45, $42, $49, $4d, $62, $56, $4c
+    db $52, $ef, $ee, $54, $46, $51, $45, $62, $54, $45, $3e, $51, $62, $49, $46, $51
+    db $51, $49, $42, $fa, $f7, $ef, $ee, $2c, $62, $40, $3e, $4b, $62, $41, $4c, $63
+    db $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $3a, $45, $56, $62, $41, $4c, $4b, $67
+    db $62, $56, $4c, $52, $ef, $ee, $3f, $4f, $42, $42, $41, $62, $54, $46, $51, $45
+    db $62, $4a, $56, $fa, $f7, $ef, $ee, $3c, $42, $51, $46, $64, $ef, $ee, $f0
+TextStr_47_55fe:           ; id $03F4 $042C
+    ; "Tut! Not in / here either!"
+    db $ea, $9f, $a3, $37, $52, $51, $63, $62, $31, $4c, $51, $62, $46, $4b, $ef, $ee
+    db $45, $42, $4f, $42, $62, $42, $46, $51, $45, $42, $4f, $63, $f7, $f0
+TextStr_47_561c:           ; id $03F5 $042D
+    ; "There are cliffs / that you can jump / down. / / Have you tried / jumping down the / cliffs?"
+    db $ea, $9f, $a3, $37, $45, $42, $4f, $42, $62, $3e, $4f, $42, $62, $40, $49, $46
+    db $43, $43, $50, $ef, $ee, $51, $45, $3e, $51, $62, $56, $4c, $52, $62, $40, $3e
+    db $4b, $62, $47, $52, $4a, $4d, $fa, $f7, $ef, $ee, $41, $4c, $54, $4b, $5f, $ef
+    db $ee, $fa, $f7
+TextStr_47_564f:           ; id $046D
+    ; "/ Have you tried / jumping down the / cliffs?"
+    db $ef, $ee, $9f, $a3, $2b, $3e, $53, $42, $62, $56, $4c, $52, $62, $51, $4f, $46
+    db $42, $41, $ef, $ee, $47, $52, $4a, $4d, $46, $4b, $44, $62, $41, $4c, $54, $4b
+    db $62, $51, $45, $42, $fa, $f7, $ef, $ee, $40, $49, $46, $43, $43, $50, $64, $ef
+    db $ee, $f7, $f0
+TextStr_47_5682:           ; id $03F6 $042E
+    ; "When a monster / learns two certain / skills, sometimes / a new... / ...skill is / created from the / combination. / / The S class is / the ..."
+    db $ea, $9f, $a3, $3a, $45, $42, $4b, $62, $3e, $62, $4a, $4c, $4b, $50, $51, $42
+    db $4f, $ef, $ee, $49, $42, $3e, $4f, $4b, $50, $62, $51, $54, $4c, $62, $40, $42
+    db $4f, $51, $3e, $46, $4b, $fa, $f7, $ef, $ee, $50, $48, $46, $49, $49, $50, $5e
+    db $62, $50, $4c, $4a, $42, $51, $46, $4a, $42, $50, $ef, $ee, $3e, $62, $4b, $42
+    db $54, $5f, $5f, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $5f, $5f, $5f, $50, $48, $46
+    db $49, $49, $62, $46, $50, $ef, $ee, $40, $4f, $42, $3e, $51, $42, $41, $62, $43
+    db $4f, $4c, $4a, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $40, $4c, $4a, $3f, $46
+    db $4b, $3e, $51, $46, $4c, $4b, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $37
+    db $45, $42, $62, $36, $62, $40, $49, $3e, $50, $50, $62, $46, $50, $ef, $ee, $51
+    db $45, $42, $62, $4c, $4b, $49, $56, $62, $4c, $4b, $42, $62, $49, $42, $43, $51
+    db $63, $fa, $f7, $ef, $ee, $2c, $62, $48, $4b, $4c, $54, $62, $f6, $ef, $ee, $40
+    db $3e, $4b, $62, $54, $46, $4b, $5f, $f7, $f0
+TextStr_47_573b:           ; id $03F7 $042F
+    ; "You, listen to / my request. / I want to see / a CurseLamp! / The CurseLamp / is filled with the / curse of a flying / plant."
+    db $eb, $9f, $a3, $3c, $4c, $52, $5e, $62, $49, $46, $50, $51, $42, $4b, $62, $51
+    db $4c, $ef, $ee, $4a, $56, $62, $4f, $42, $4e, $52, $42, $50, $51, $5f, $fa, $f7
+    db $ef, $ee, $9f, $a3, $2c, $62, $54, $3e, $4b, $51, $62, $51, $4c, $62, $50, $42
+    db $42, $ef, $ee, $3e, $62, $26, $52, $4f, $50, $42, $2f, $3e, $4a, $4d, $63, $fa
+    db $f7, $ef, $ee, $9f, $a3, $37, $45, $42, $62, $26, $52, $4f, $50, $42, $2f, $3e
+    db $4a, $4d, $ef, $ee, $46, $50, $62, $43, $46, $49, $49, $42, $41, $62, $54, $46
+    db $51, $45, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $40, $52, $4f, $50, $42, $62
+    db $4c, $43, $62, $3e, $62, $43, $49, $56, $46, $4b, $44, $ef, $ee, $4d, $49, $3e
+    db $4b, $51, $5f, $f7, $f0
+TextStr_47_57c0:           ; id $03F8 $0430
+    ; "Yeti doesn't / say yet. Funny?"
+    db $ea, $9f, $a3, $3c, $42, $51, $46, $62, $41, $4c, $42, $50, $4b, $67, $ef, $ee
+    db $50, $3e, $56, $62, $56, $42, $51, $5f, $62, $29, $52, $4b, $4b, $56, $64, $f7
+    db $f0
+TextStr_47_57e1:           ; id $03F9 $0431
+    ; "You're having / trouble with the / monsters' / personalities? [YES/NO-2]"
+    db $ea, $9f, $a3, $3c, $4c, $52, $69, $42, $62, $45, $3e, $53, $46, $4b, $44, $ef
+    db $ee, $51, $4f, $4c, $52, $3f, $49, $42, $62, $54, $46, $51, $45, $62, $51, $45
+    db $42, $fa, $f7, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $5c, $ef, $ee
+    db $4d, $42, $4f, $50, $4c, $4b, $3e, $49, $46, $51, $46, $42, $50, $64, $ff, $f0
+TextStr_47_5821:           ; id $03FA $0432
+    ; "You see the / merchant with an / attitude at the / Bazaar? / He sells / amazing items! / You should find / out how amazing / they are."
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $50, $42, $42, $62, $51, $45, $42, $ef, $ee
+    db $4a, $42, $4f, $40, $45, $3e, $4b, $51, $62, $54, $46, $51, $45, $62, $3e, $4b
+    db $fa, $f7, $ef, $ee, $3e, $51, $51, $46, $51, $52, $41, $42, $62, $3e, $51, $62
+    db $51, $45, $42, $ef, $ee, $25, $3e, $57, $3e, $3e, $4f, $64, $fa, $f7, $ef, $ee
+    db $9f, $a3, $2b, $42, $62, $50, $42, $49, $49, $50, $ef, $ee, $3e, $4a, $3e, $57
+    db $46, $4b, $44, $62, $46, $51, $42, $4a, $50, $63, $fa, $f7, $ef, $ee, $9f, $a3
+    db $3c, $4c, $52, $62, $50, $45, $4c, $52, $49, $41, $62, $43, $46, $4b, $41, $ef
+    db $ee, $4c, $52, $51, $62, $45, $4c, $54, $62, $3e, $4a, $3e, $57, $46, $4b, $44
+    db $fa, $f7, $ef, $ee, $51, $45, $42, $56, $62, $3e, $4f, $42, $5f, $ef, $ee, $f7
+    db $f0
+TextStr_47_58b2:           ; id $03FB $0433
+    ; "Hee hee! Yo / dude, wanna know / who're you / fighting in / S class? / [YES/NO-2]"
+    db $ea, $9f, $a3, $2b, $42, $42, $62, $45, $42, $42, $63, $62, $3c, $4c, $ef, $ee
+    db $41, $52, $41, $42, $5e, $62, $54, $3e, $4b, $4b, $3e, $62, $48, $4b, $4c, $54
+    db $fa, $f7, $ef, $ee, $54, $45, $4c, $69, $42, $62, $56, $4c, $52, $ef, $ee, $43
+    db $46, $44, $45, $51, $46, $4b, $44, $62, $46, $4b, $fa, $f7, $ef, $ee, $36, $62
+    db $40, $49, $3e, $50, $50, $64, $ef, $ee, $ff, $f0
+TextStr_47_58fc:           ; id $03FC $0434
+    ; "The last match / in S class will be / with the Medal Man / in the Queen's / room. / / His lineup is / MetalDrak, / Roboster / Metabble. / Me..."
+    db $ea, $9f, $a3, $37, $45, $42, $62, $49, $3e, $50, $51, $62, $4a, $3e, $51, $40
+    db $45, $ef, $ee, $46, $4b, $62, $36, $62, $40, $49, $3e, $50, $50, $62, $54, $46
+    db $49, $49, $62, $3f, $42, $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $51, $45
+    db $42, $62, $30, $42, $41, $3e, $49, $62, $30, $3e, $4b, $ef, $ee, $46, $4b, $62
+    db $51, $45, $42, $62, $34, $52, $42, $42, $4b, $68, $fa, $f7, $ef, $ee, $4f, $4c
+    db $4c, $4a, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2b, $46, $50, $62, $49
+    db $46, $4b, $42, $52, $4d, $62, $46, $50, $ef, $ee, $30, $42, $51, $3e, $49, $27
+    db $4f, $3e, $48, $5e, $fa, $f7, $ef, $ee, $35, $4c, $3f, $4c, $50, $51, $42, $4f
+    db $62, $b6, $ef, $ee, $30, $42, $51, $3e, $3f, $3f, $49, $42, $5f, $fa, $f7, $ef
+    db $ee, $9f, $a3, $30, $42, $41, $3e, $49, $62, $30, $3e, $4b, $68, $ef, $ee, $4a
+    db $4c, $4b, $50, $51, $42, $4f, $50, $62, $3e, $4f, $42, $fa, $f7, $ef, $ee, $4f
+    db $42, $50, $46, $50, $51, $3e, $4b, $51, $62, $51, $4c, $ef, $ee, $50, $4d, $42
+    db $49, $49, $50, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $24, $51, $51, $3e, $40, $48
+    db $62, $50, $4d, $42, $49, $49, $50, $ef, $ee, $4a, $46, $44, $45, $51, $62, $4b
+    db $4c, $51, $62, $3f, $42, $62, $50, $4c, $fa, $f7, $ef, $ee, $52, $50, $42, $43
+    db $52, $49, $63, $ef, $ee, $f7, $f0
+TextStr_47_59f3:           ; id $03FD $0435
+    ; "Well, you're / strong so you may / not need to hear / about it to win."
+    db $ea, $9f, $a3, $3a, $42, $49, $49, $5e, $62, $56, $4c, $52, $69, $42, $ef, $ee
+    db $50, $51, $4f, $4c, $4b, $44, $62, $50, $4c, $62, $56, $4c, $52, $62, $4a, $3e
+    db $56, $fa, $f7, $ef, $ee, $4b, $4c, $51, $62, $4b, $42, $42, $41, $62, $51, $4c
+    db $62, $45, $42, $3e, $4f, $ef, $ee, $3e, $3f, $4c, $52, $51, $62, $46, $51, $62
+    db $51, $4c, $62, $54, $46, $4b, $5f, $f7, $f0
+TextStr_47_5a3c:           ; id $03FE $0436
+    ; "You must be / something to / beat May! / / I heard a rumor / that a terrible / master appeared / from nowhere in / a foreign kingdom. / / Th..."
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $4a, $52, $50, $51, $62, $3f, $42, $ef, $ee
+    db $50, $4c, $4a, $42, $51, $45, $46, $4b, $44, $62, $51, $4c, $fa, $f7, $ef, $ee
+    db $3f, $42, $3e, $51, $62, $30, $3e, $56, $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f
+    db $a3, $2c, $62, $45, $42, $3e, $4f, $41, $62, $3e, $62, $4f, $52, $4a, $4c, $4f
+    db $ef, $ee, $51, $45, $3e, $51, $62, $3e, $62, $51, $42, $4f, $4f, $46, $3f, $49
+    db $42, $fa, $f7, $ef, $ee, $4a, $3e, $50, $51, $42, $4f, $62, $3e, $4d, $4d, $42
+    db $3e, $4f, $42, $41, $ef, $ee, $43, $4f, $4c, $4a, $62, $4b, $4c, $54, $45, $42
+    db $4f, $42, $62, $46, $4b, $fa, $f7, $ef, $ee, $3e, $62, $43, $4c, $4f, $42, $46
+    db $44, $4b, $62, $48, $46, $4b, $44, $41, $4c, $4a, $5f, $ef, $ee, $fa, $f7, $ef
+    db $ee, $9f, $a3, $37, $45, $46, $50, $62, $4a, $3e, $50, $51, $42, $4f, $ef, $ee
+    db $40, $4c, $4a, $4a, $3e, $4b, $41, $50, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $50, $fa, $f7, $ef, $ee, $51, $45, $3e, $51, $62, $45, $3e, $53, $42, $62, $4b
+    db $42, $53, $42, $4f, $ef, $ee, $3f, $42, $42, $4b, $62, $50, $42, $42, $4b, $62
+    db $3f, $42, $43, $4c, $4f, $42, $5e, $fa, $f7, $ef, $ee, $3e, $4b, $41, $62, $3f
+    db $42, $3e, $51, $50, $62, $42, $4b, $42, $4a, $46, $42, $50, $ef, $ee, $54, $46
+    db $51, $45, $62, $45, $46, $50, $fa, $f7, $ef, $ee, $52, $4b, $3f, $42, $49, $46
+    db $42, $53, $3e, $3f, $49, $42, $ef, $ee, $50, $48, $46, $49, $49, $50, $62, $3e
+    db $4b, $41, $5f, $5f, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $42, $3e, $51, $50, $62
+    db $42, $4b, $42, $4a, $56, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62
+    db $51, $4c, $4c, $63, $63, $f7, $f0, $00
+; --- END re-sectioned text run (bank $47) ---
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
-    ld d, [hl]
-    ccf
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld l, b
-    rst $28
-    xor $3f
-    ld b, d
-    ld b, b
-    ld a, $52
-    ld d, b
-    ld b, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $4a
-    ld b, d
-    ld c, e
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    rst $28
-    xor $3e
-    ld c, l
-    ld c, l
-    ld c, a
-    ld c, h
-    ld a, $40
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld l, d
-    ld h, d
-    ld d, c
-
-jr_047_41e9:
-    ld b, l
-    ld b, d
-    ld h, d
-    jr nc, jr_047_423a
-
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $30
-    ld b, [hl]
-    ld c, e
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    daa
-    ld c, h
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $48
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, d
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, h
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld h, h
-
-jr_047_423a:
-    rst $28
-    xor $ff
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld b, e
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $54
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld a, $51
-    ld l, b
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld e, a
-    rst $28
-    xor $26
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld a, $44
-    ld a, $46
-    ld c, e
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $3f
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $37
-    ld c, a
-    ld a, $53
-    ld b, d
-    ld c, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, h
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld d, b
-    ld a, [$eff7]
-    xor $46
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    dec [hl]
-    ld c, h
-    ld c, h
-    ld c, d
-    ld h, d
-    ld c, h
-    ld b, e
-    rst $28
-    xor $39
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld a, $44
-    ld b, d
-    ld c, a
-    ld h, d
-    or [hl]
-    ld a, [$eff7]
-    xor $37
-    ld a, $49
-    ld b, [hl]
-    ld d, b
-    ld c, d
-    ld a, $4b
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    add hl, sp
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld a, $44
-    ld b, d
-    ld c, a
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $36
-    ld d, c
-    ld d, d
-    ccf
-    ld d, b
-    ld d, d
-    ld b, b
-    ld c, b
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $2a
-    ld c, h
-    dec hl
-    ld c, h
-    ld c, l
-    ld c, l
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, a
-    ld e, a
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc h
-    ld c, e
-    ld d, c
-    ld b, d
-    ld a, $51
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    ld a, $4b
-    ld b, c
-    rst $28
-    xor $2a
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, c
-    ld b, [hl]
-    ld c, e
-    ld d, b
-    ld h, d
-    ld a, $4f
-    ld b, d
-    ld a, [$eff7]
-    xor $49
-    ld b, [hl]
-    ld d, e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    scf
-    ld a, $49
-    ld b, [hl]
-    ld d, b
-    ld c, d
-    ld a, $4b
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld a, [$eff7]
-    xor $36
-    ld c, l
-    ld c, h
-    ld c, h
-    ld c, b
-    ld d, [hl]
-    ld d, b
-    ld h, d
-    ld a, $4b
-    ld b, c
-    rst $28
-    xor $24
-    ld c, a
-    ld c, d
-    ld d, [hl]
-    inc h
-    ld c, e
-    ld d, c
-    ld d, b
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld d, c
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $3f
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld d, b
-    rst $28
-    xor $46
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    dec [hl]
-    ld c, h
-    ld c, h
-    ld c, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $30
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, [hl]
-    ld b, d
-    ld d, b
-    ld h, d
-    or [hl]
-    rst $28
-    xor $25
-    ld b, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, h
-    rst $38
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    jr nc, @+$44
-
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, [hl]
-    ld b, d
-    ld d, b
-    ld h, d
-    ld a, $4f
-    ld b, d
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $2a
-    ld c, h
-    ld c, h
-    ld c, l
-    ld b, [hl]
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $33
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld c, h
-    ld d, h
-    dec [hl]
-    ld a, $51
-    ld d, b
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $26
-    ld a, $51
-    ld a, $4d
-    ld b, [hl]
-    ld c, c
-    ld a, $50
-    ld e, [hl]
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc sp
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld d, [hl]
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    ld a, $4b
-    ld b, c
-    rst $28
-    xor $29
-    ld a, $46
-    ld c, a
-    ld d, [hl]
-    dec [hl]
-    ld a, $51
-    ld d, b
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    dec h
-    ld b, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld a, [$eff7]
-    xor $30
-    ld b, [hl]
-    ld c, e
-    ld b, [hl]
-    daa
-    ld c, a
-    ld a, $48
-    ld d, b
-    ld h, d
-    ld a, $4b
-    ld b, c
-    rst $28
-    xor $28
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld [hl], $42
-    ld b, d
-    ld b, c
-    ld d, b
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ccf
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $35
-    ld c, h
-    ld c, h
-    ld c, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    inc sp
-    ld b, d
-    ld a, $40
-    ld b, d
-    ld h, d
-    or [hl]
-    ld a, [$eff7]
-    xor $25
-    ld c, a
-    ld a, $53
-    ld b, d
-    ld c, a
-    ld d, [hl]
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    inc sp
-    ld b, d
-    ld a, $40
-    ld b, d
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld a, [$eff7]
-    xor $25
-    ld b, [hl]
-    ld b, h
-    dec [hl]
-    ld c, h
-    ld c, h
-    ld d, b
-    ld d, c
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $36
-    ld c, l
-    ld c, h
-    ld d, c
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld d, b
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld h, $4c
-    ld b, [hl]
-    ld c, c
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $27
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ld l, $46
-    ld b, c
-    ld d, b
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $26
-    ld c, a
-    ld b, d
-    ld d, b
-    ld d, c
-    inc sp
-    ld b, d
-    ld c, e
-    ld d, c
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $25
-    ld c, h
-    ld c, e
-    ld b, d
-    ld [hl], $49
-    ld a, $53
-    ld b, d
-    ld d, b
-    ld a, [$eff7]
-    xor $9f
-    and e
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, b
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $24
-    ld c, c
-    ld c, d
-    ld b, [hl]
-    ld c, a
-    ld a, $47
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    ld a, $4b
-    ld b, c
-    ld a, [$eff7]
-    xor $25
-    ld d, d
-    ld c, c
-    ld c, c
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ld d, b
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    dec h
-    ld c, a
-    ld a, $53
-    ld b, d
-    ld c, a
-    ld d, [hl]
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld a, [$eff7]
-    xor $27
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $01
-    jr z, @+$58
-
-    ld b, d
-    ld h, $49
-    ld c, h
-    ld d, h
-    ld c, e
-    ld d, b
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $29
-    ld c, c
-    ld c, h
-    ld c, a
-    ld a, $30
-    ld b, d
-    ld c, e
-    ld e, [hl]
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld [hl], $3e
-    ccf
-    ld c, a
-    ld b, d
-    jr nc, jr_047_4636
-
-    ld c, e
-    ld h, d
-    ld a, $4b
-    ld b, c
-    rst $28
-    xor $25
-    ld b, d
-    ld a, $4b
-    jr nc, jr_047_4643
-
-    ld c, e
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld d, c
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ccf
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld d, b
-    ld h, d
-    ld c, h
-    ld b, e
-    rst $28
-    xor $36
-    ld d, c
-
-jr_047_4636:
-    ld c, a
-    ld b, d
-    ld c, e
-    ld b, h
-    ld d, c
-    ld b, l
-    ld h, d
-    or [hl]
-    ld h, d
-    inc h
-    ld c, e
-    ld b, h
-    ld b, d
-
-jr_047_4643:
-    ld c, a
-    ld h, h
-    rst $38
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    ld [hl], $51
-    ld c, a
-    ld b, d
-    ld c, e
-    ld b, h
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld a, [$eff7]
-    xor $30
-    ld d, d
-    ld b, c
-    daa
-    ld c, h
-    ld c, c
-    ld c, c
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $36
-    ld c, b
-    ld d, d
-    ld c, c
-    dec [hl]
-    ld b, [hl]
-    ld b, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $9f
-    and e
-    add hl, hl
-    ld a, $46
-    ld c, a
-    ld d, [hl]
-    daa
-    ld c, a
-    ld a, $48
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $37
-    ld c, a
-    ld b, d
-    ld b, d
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld d, b
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $27
-    ld c, a
-    ld a, $48
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld a, $4b
-    ld b, c
-    ld h, d
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    scf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld d, b
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    inc h
-    ld c, e
-    ld b, h
-    ld b, d
-    ld c, a
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld a, [$eff7]
-    xor $2a
-    ld b, [hl]
-    ld a, $4b
-    ld d, c
-    ld a, [hl-]
-    ld c, h
-    ld c, a
-    ld c, d
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $2a
-    ld b, [hl]
-    ld a, $4b
-    ld d, c
-    ld [hl], $49
-    ld d, d
-    ld b, h
-    ld d, b
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $33
-    ld c, h
-    ld b, [hl]
-    ld d, b
-    ld c, h
-    ld c, e
-    ld b, h
-    ld c, h
-    ld c, e
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld h, $3e
-    ld d, c
-    add hl, hl
-    ld c, c
-    ld d, [hl]
-    ld d, b
-    ld e, [hl]
-    rst $28
-    xor $28
-    ld d, [hl]
-    ld b, d
-    ld b, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    ld a, $4b
-    ld b, c
-    ld a, [$eff7]
-    xor $33
-    ld d, d
-    ld d, c
-    ld c, a
-    ld b, d
-    ld c, l
-    ld d, d
-    ld c, l
-    ld d, b
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld b, e
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $54
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld a, $51
-    ld l, b
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld e, a
-    rst $28
-    xor $26
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld a, $44
-    ld a, $46
-    ld c, e
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    daa
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $4d
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld a, $62
-    ld b, l
-    ld a, $62
-    ld b, l
-    ld a, $63
-    ld h, d
-    inc l
-    ld h, d
-    ld c, d
-    ld a, $41
-    ld b, d
-    rst $28
-    xor $2a
-    ld b, [hl]
-    ld b, h
-    ld a, $4b
-    ld d, c
-    ld b, d
-    ld d, b
-    ld h, d
-    ld a, $62
-    ld b, b
-    ld c, h
-    ld d, h
-    ld a, $4f
-    ld b, c
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    ld d, b
-    ld b, d
-    ld b, d
-    ld e, a
-    ld e, a
-    ld h, d
-    inc l
-    rst $28
-    xor $40
-    ld a, $4b
-    ld h, d
-    ld d, b
-    ld b, d
-    ld b, d
-    ld h, e
-    ld h, d
-    inc l
-    ld d, c
-    ld l, b
-    ld h, d
-    ld a, $fa
-    rst $30
-    rst $28
-    xor $4b
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, a
-    ld h, d
-    ccf
-    ld b, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld b, d
-    rst $28
-    xor $50
-    ld b, d
-    ld b, d
-    ld c, e
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld e, [hl]
-    ld h, d
-    ld c, d
-    ld d, d
-    ld d, b
-    ld d, c
-    ld h, d
-    ld c, h
-    ccf
-    ld b, d
-    ld d, [hl]
-    rst $28
-    xor $4a
-    ld d, [hl]
-    ld h, d
-    ld b, b
-    ld c, h
-    ld c, d
-    ld c, d
-    ld a, $4b
-    ld b, c
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, b
-    ld b, d
-    ld b, d
-    rst $28
-    xor $3e
-    ld h, d
-    add hl, hl
-    ld c, c
-    ld c, h
-    ld c, a
-    ld a, $47
-    ld a, $56
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc h
-    ld h, d
-    ld b, e
-    ld c, c
-    ld c, h
-    ld d, h
-    ld b, d
-    ld c, a
-    sbc h
-    ld c, c
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    rst $28
-    xor $3e
-    ld c, e
-    ld b, [hl]
-    ld c, d
-    ld a, $49
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld d, b
-    ld e, a
-    ld a, [$eff7]
-    xor $24
-    ld h, d
-    add hl, hl
-    ld c, c
-    ld c, h
-    ld c, a
-    ld a, $47
-    ld a, $56
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld [hl-], a
-    ld b, l
-    ld h, e
-    ld h, d
-    inc l
-    ld d, c
-    ld l, b
-    ld h, d
-    ld a, $ef
-    xor $29
-    ld c, c
-    ld c, h
-    ld c, a
-    ld a, $2d
-    ld a, $56
-    ld h, e
-    ld h, d
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld a, $fa
-    rst $30
-    rst $28
-    xor $43
-    ld d, d
-    ld c, e
-    ld c, e
-    ld d, [hl]
-    ld h, d
-    ld b, e
-    ld a, $40
-    ld b, d
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld c, c
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, e
-    rst $28
-    xor $2c
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld b, h
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld a, $fa
-    rst $30
-    rst $28
-    xor $4f
-    ld b, d
-    ld d, h
-    ld a, $4f
-    ld b, c
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld a, $4b
-    rst $28
-    xor $24
-    ld a, [hl+]
-    cpl
-    ld d, b
-    ld b, d
-    ld b, d
-    ld b, c
-    ld e, a
-    ld a, [$eff7]
-    xor $38
-    ld d, b
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, b
-    ld b, d
-    ld c, c
-    ld d, [hl]
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld b, d
-    ld a, $4f
-    ld b, c
-    ld h, d
-    ld a, $62
-    ld c, a
-    ld d, d
-    ld c, d
-    ld c, h
-    ld c, a
-    rst $28
-    xor $51
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld a, $62
-    ld d, c
-    ld b, d
-    ld c, a
-    ld c, a
-    ld b, [hl]
-    ccf
-    ld c, c
-    ld b, d
-    ld a, [$eff7]
-    xor $4a
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld a, $4d
-    ld c, l
-    ld b, d
-    ld a, $4f
-    ld b, d
-    ld b, c
-    rst $28
-    xor $43
-    ld c, a
-    ld c, h
-    ld c, d
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, h
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld a, [$eff7]
-    xor $3e
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld b, d
-    ld b, [hl]
-    ld b, h
-    ld c, e
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld b, c
-    ld c, h
-    ld c, d
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, d
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, d
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $41
-    ld b, d
-    ld b, e
-    ld b, d
-    ld a, $51
-    ld d, b
-    ld h, d
-    ld a, $4b
-    ld h, d
-    ld b, d
-    ld c, e
-    ld b, d
-    ld c, d
-    ld d, [hl]
-    ld a, [$eff7]
-    xor $4a
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld e, [hl]
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    rst $28
-    xor $4a
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, c
-    ld b, d
-    ld d, e
-    ld c, h
-    ld d, d
-    ld c, a
-    ld d, b
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld b, [hl]
-    ld c, a
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, e
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld [hl-], a
-    ld c, h
-    ld c, l
-    ld d, b
-    ld e, a
-    ld e, a
-    ld e, a
-    inc l
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, b
-    ld d, c
-    rst $28
-    xor $5f
-    ld e, a
-    ld e, a
-    inc l
-    ld h, d
-    ld b, h
-    ld d, d
-    ld b, d
-    ld d, b
-    ld d, b
-    ld h, d
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld a, [$eff7]
-    xor $51
-    ld c, a
-    ld d, [hl]
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, h
-    ld b, d
-    ld d, c
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, d
-    rst $28
-    xor $50
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    dec [hl]
-    ld c, h
-    ld c, h
-    ld c, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $2b
-    ld a, $4d
-    ld c, l
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld d, b
-    ld d, b
-    ld h, d
-    or [hl]
-    rst $28
-    xor $37
-    ld b, d
-    ld c, d
-    ld c, l
-    ld d, c
-    ld a, $51
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld a, [hl+]
-    ld c, h
-    ld h, d
-    ld c, a
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $2a
-    ld a, $51
-    ld b, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $37
-    ld b, d
-    ld c, d
-    ld c, l
-    ld d, c
-    ld a, $51
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld e, a
-    rst $28
-    xor $2f
-    ld b, d
-    ld b, e
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld a, [$eff7]
-    xor $4c
-    ld b, e
-    ld h, d
-    dec hl
-    ld a, $4d
-    ld c, l
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld d, b
-    ld d, b
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld b, b
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $24
-    ld h, d
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld e, a
-    ld h, d
-    inc l
-    ld h, d
-    ld d, h
-    ld a, $50
-    ld a, [$eff7]
-    xor $42
-    ld d, l
-    ld c, l
-    ld b, d
-    ld b, b
-    ld d, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld h, $6a
-    ld c, h
-    ld c, e
-    ld e, [hl]
-    ld h, d
-    or $63
-    rst $28
-    xor $36
-    ld b, l
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, l
-    ld a, $51
-    ld a, [$eff7]
-    xor $56
-    ld c, h
-    ld d, d
-    ld l, h
-    ld b, d
-    ld h, d
-    ld b, h
-    ld c, h
-    ld d, c
-    ld h, e
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    jr nc, jr_047_4b2f
-
-    ld d, [hl]
-    ccf
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, [hl]
-    ld c, c
-    rst $28
-    xor $41
-    ld c, h
-    ld h, d
-    ccf
-    ld b, d
-    ld d, c
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld c, e
-    ld b, d
-    ld d, l
-    ld d, c
-    ld a, [$eff7]
-    xor $51
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld h, d
-    or $5f
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld sp, $5342
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, h
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld h, d
-    ld d, d
-    ld c, l
-    rst $28
-    xor $47
-    ld d, d
-    ld d, b
-
-jr_047_4b2f:
-    ld d, c
-    ld h, d
-    ccf
-    ld b, d
-    ld b, b
-    ld a, $52
-    ld d, b
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld a, [$eff7]
-    xor $43
-    ld a, $46
-    ld c, c
-    ld b, d
-    ld b, c
-    ld h, d
-    ld a, $62
-    ld b, e
-    ld b, d
-    ld d, h
-    rst $28
-    xor $51
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld d, b
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld b, [hl]
-    ld a, $4f
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $2f
-    ld a, $3f
-    ld d, [hl]
-    ld c, a
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld b, l
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc h
-    ld h, d
-    ld c, [hl]
-    ld d, d
-    ld c, h
-    ld d, c
-    ld b, d
-    ld h, d
-    ld b, e
-    ld c, a
-    ld c, h
-    ld c, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $47
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $49
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld a, $fa
-    rst $30
-    rst $28
-    xor $47
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld b, d
-    ld d, [hl]
-    ld h, d
-    ccf
-    ld d, [hl]
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $49
-    ld b, d
-    ld b, h
-    ld b, d
-    ld c, e
-    ld b, c
-    ld a, $4f
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld a, [$eff7]
-    xor $4a
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld e, [hl]
-    ld h, d
-    jr nc, jr_047_4c1f
-
-    ld c, a
-    ld d, [hl]
-    and e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld d, c
-    ld l, b
-    ld h, d
-    ld a, $ef
-    xor $4a
-    ld d, [hl]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld b, [hl]
-    ld c, h
-    ld d, d
-    ld d, b
-    ld h, d
-    ld b, b
-    ld a, $53
-    ld b, d
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld d, b
-    ld b, d
-    ld b, d
-    ld c, d
-    ld d, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, h
-    ld c, h
-    rst $28
-    xor $4c
-    ld c, e
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld b, d
-
-jr_047_4c1f:
-    ld d, e
-    ld b, d
-    ld c, a
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld d, c
-    ld h, d
-    ld c, c
-    ld c, h
-    ld c, h
-    ld c, b
-    ld d, b
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld a, $4f
-    ld b, d
-    ld h, d
-    ld c, d
-    ld a, $4b
-    ld d, [hl]
-    ld a, [$eff7]
-    xor $4d
-    ld a, $51
-    ld b, l
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    ccf
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    rst $28
-    xor $46
-    ld d, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, d
-    ld d, h
-    ld a, $56
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $44
-    ld c, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    daa
-    ld a, $4f
-    ld c, b
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, e
-    ld e, a
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    daa
-    ld c, h
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, h
-    ld b, e
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $2d
-    ld d, d
-    ld b, c
-    ld b, h
-    ld c, d
-    ld b, d
-    ld c, e
-    ld d, c
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc h
-    ld h, d
-    ld c, [hl]
-    ld d, d
-    ld c, h
-    ld d, c
-    ld b, d
-    ld h, d
-    ld b, e
-    ld c, a
-    ld c, h
-    ld c, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $43
-    ld b, [hl]
-    ld c, a
-    ld d, b
-    ld d, c
-    ld h, d
-    ld d, e
-    ld b, [hl]
-    ld b, b
-    ld d, c
-    ld c, h
-    ld c, a
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $4a
-    ld b, d
-    ld c, e
-    ld d, c
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc h
-    ld h, d
-    ld c, d
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    rst $28
-    xor $54
-    ld b, l
-    ld c, h
-    ld h, d
-    ld b, b
-    ld c, h
-    ld c, d
-    ld c, d
-    ld a, $4b
-    ld b, c
-    ld d, b
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    rst $28
-    xor $43
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld d, b
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, d
-    ld d, d
-    ld d, b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, a
-    ld d, d
-    ld d, b
-    ld d, c
-    rst $28
-    xor $3e
-    ld c, e
-    ld b, c
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, e
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld a, [hl-]
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, a
-    ld d, d
-    ld d, b
-    ld d, c
-    ld e, [hl]
-    rst $28
-    xor $4b
-    ld c, h
-    ld h, d
-    ld d, c
-    ld c, a
-    ld d, d
-    ld b, d
-    ld h, d
-    ld c, d
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld b, d
-    ld c, d
-    ld b, d
-    ld c, a
-    ld b, h
-    ld b, d
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    add hl, hl
-    ld a, $4f
-    ld h, d
-    ld a, $40
-    ld c, a
-    ld c, h
-    ld d, b
-    ld d, b
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, h
-    ld b, b
-    ld b, d
-    ld a, $4b
-    ld e, [hl]
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, b
-    ld c, h
-    ld d, d
-    ld c, e
-    ld d, c
-    ld c, a
-    ld d, [hl]
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    dec l
-    ld b, [hl]
-    ld c, l
-    ld a, $4b
-    ld b, h
-    ld d, d
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc h
-    ld h, d
-    ld b, c
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld [$eeef], sp
-    ld b, l
-    ld b, d
-    ld a, $41
-    ld d, b
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld d, b
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld d, c
-    ld d, b
-    ld h, d
-    ld c, e
-    ld a, $4a
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    rst $28
-    xor $32
-    ld c, a
-    ld c, h
-    ld b, b
-    ld b, l
-    ld b, [hl]
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc h
-    ld h, d
-    ld c, [hl]
-    ld d, d
-    ld c, h
-    ld d, c
-    ld b, d
-    ld h, d
-    ld b, e
-    ld c, a
-    ld c, h
-    ld c, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $41
-    ld b, [hl]
-    ld a, $4f
-    ld d, [hl]
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld a, $fa
-    rst $30
-    rst $28
-    xor $49
-    ld b, d
-    ld b, h
-    ld b, d
-    ld c, e
-    ld b, c
-    ld a, $4f
-    ld d, [hl]
-    ld h, d
-    ld d, e
-    ld b, [hl]
-    ld b, b
-    ld d, c
-    ld c, h
-    ld c, a
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    ld l, $46
-    ld c, e
-    ld b, h
-    and e
-    ld [hl-], a
-    ld b, l
-    ld e, [hl]
-    ld h, d
-    or $63
-    rst $28
-    xor $3c
-    ld c, h
-    ld d, d
-    ld h, d
-    ccf
-    ld b, d
-    ld a, $51
-    ld h, d
-    daa
-    ld a, $4f
-    ld c, b
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, e
-    ld h, e
-    ld a, [$eff7]
-    xor $2e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ccf
-    ld b, d
-    ld a, $51
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ccf
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, d
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $49
-    ld c, h
-    ld d, b
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $49
-    ld a, $3f
-    ld d, [hl]
-    ld c, a
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld b, l
-    ld e, a
-    ld e, a
-    ld e, a
-    ld a, [$eff7]
-    xor $2e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $44
-    ld c, a
-    ld b, d
-    ld a, $51
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, b
-    ld b, c
-    ld c, h
-    ld c, d
-    ld h, e
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    ld l, $46
-    ld c, e
-    ld b, h
-    and e
-    ld [hl-], a
-    ld b, l
-    ld e, [hl]
-    ld h, d
-    or $63
-    rst $28
-    xor $3c
-    ld c, h
-    ld d, d
-    ld h, d
-    ccf
-    ld b, d
-    ld a, $51
-    ld h, d
-    inc h
-    ld c, b
-    ld d, d
-    ccf
-    ld a, $4f
-    ld h, e
-    ld a, [$eff7]
-    xor $2e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    and e
-    inc l
-    ld d, c
-    ld l, b
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld c, a
-    ld h, d
-    ld b, e
-    ld a, $52
-    ld c, c
-    ld d, c
-    ld h, e
-    ld a, [$eff7]
-    xor $27
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, a
-    ld c, a
-    ld d, [hl]
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $2e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    and e
-    inc l
-    ld b, e
-    ld h, d
-    ld a, $4b
-    ld d, [hl]
-    ccf
-    ld c, h
-    ld b, c
-    ld d, [hl]
-    rst $28
-    xor $40
-    ld c, h
-    ld c, d
-    ld c, l
-    ld c, c
-    ld a, $46
-    ld c, e
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld c, a
-    ld c, h
-    ld d, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld c, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, c
-    ld d, d
-    ld c, e
-    ld b, h
-    ld b, d
-    ld c, h
-    ld c, e
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    dec hl
-    ld b, d
-    ld d, [hl]
-    ld h, d
-    ld a, $4f
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $4f
-    ld b, d
-    ld a, $49
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld a, $46
-    ld c, d
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $43
-    ld c, h
-    ld c, a
-    ld h, d
-    ld [hl], $62
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld c, e
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, h
-    ld b, d
-    ld d, c
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, b
-    ld d, d
-    ld b, b
-    ld b, l
-    ld a, [$eff7]
-    xor $4d
-    ld a, $51
-    ld b, l
-    ld b, d
-    ld d, c
-    ld b, [hl]
-    ld b, b
-    ld h, d
-    ld c, l
-    ld c, h
-    ld d, h
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld c, e
-    ld h, d
-    ld b, h
-    ld c, h
-    ld h, d
-    ld b, l
-    ld c, h
-    ld c, d
-    ld b, d
-    ld e, [hl]
-    rst $28
-    xor $49
-    ld b, [hl]
-    ld a, $4f
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $26
-    ld b, l
-    ld a, $4a
-    ccf
-    ld b, d
-    ld c, a
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $37
-    ld c, a
-    ld a, $53
-    ld b, d
-    ld c, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, h
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld d, b
-    ld e, a
-    rst $28
-    xor $2a
-    ld c, h
-    ld h, d
-    ld c, c
-    ld b, d
-    ld b, e
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $35
-    ld c, h
-    ld c, h
-    ld c, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $2f
-    ld a, $3f
-    ld d, [hl]
-    ld c, a
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld b, l
-    ld h, d
-    or [hl]
-    ld a, [$eff7]
-    xor $2d
-    ld d, d
-    ld b, c
-    ld b, h
-    ld c, d
-    ld b, d
-    ld c, e
-    ld d, c
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec [hl]
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $35
-    ld c, h
-    ld c, h
-    ld c, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    dec hl
-    ld a, $4d
-    ld c, l
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld d, b
-    ld d, b
-    ld a, [$eff7]
-    xor $b6
-    ld h, d
-    scf
-    ld b, d
-    ld c, d
-    ld c, l
-    ld d, c
-    ld a, $51
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec h
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    cpl
-    ld a, $3f
-    ld d, [hl]
-    ld c, a
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld b, l
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld c, a
-    ld b, d
-    ld a, $49
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld a, $ef
-    xor $49
-    ld a, $3f
-    ld d, [hl]
-    ld c, a
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld b, l
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, e
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, h
-    ld b, d
-    ld d, c
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld b, e
-    ld c, h
-    ld c, a
-    ld c, d
-    ld a, $51
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, b
-    ld d, c
-    ld a, $3f
-    ld c, c
-    ld b, d
-    ld h, d
-    ld c, d
-    ld a, $56
-    ld a, [$eff7]
-    xor $48
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld d, c
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, c
-    ld a, $3f
-    ld d, [hl]
-    ld c, a
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld b, l
-    ld e, a
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    daa
-    ld d, d
-    ld b, b
-    ld c, b
-    ld l, $46
-    ld d, c
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld a, $ef
-    xor $51
-    ld c, a
-    ld c, h
-    ld d, d
-    ccf
-    ld c, c
-    ld b, d
-    ld d, b
-    ld c, h
-    ld c, d
-    ld b, d
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld d, c
-    ld h, d
-    ld c, d
-    ld a, $48
-    ld b, d
-    ld d, b
-    ld h, d
-    ld d, d
-    ld d, b
-    rst $28
-    xor $50
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld h, d
-    or [hl]
-    ld h, d
-    ld b, b
-    ld c, h
-    ld c, e
-    ld b, e
-    ld d, d
-    ld d, b
-    ld b, d
-    ld d, b
-    ld a, [$eff7]
-    xor $3e
-    ld c, e
-    ld b, c
-    ld h, d
-    ld b, b
-    ld d, d
-    ld c, a
-    ld d, b
-    ld b, d
-    ld d, b
-    ld h, d
-    ld d, d
-    ld d, b
-    ld e, a
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld c, h
-    ld c, l
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $42
-    ld c, e
-    ld b, b
-    ld c, h
-    ld d, d
-    ld c, e
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld a, [$eff7]
-    xor $3f
-    ld b, d
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld h, d
-    ld c, h
-    ld b, e
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    cpl
-    ld a, $3f
-    ld d, [hl]
-    ld c, a
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld b, l
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld h, $4c
-    ld c, l
-    ld d, [hl]
-    ld b, b
-    ld c, h
-    ld c, l
-    ld d, [hl]
-    ld e, a
-    ld h, d
-    inc l
-    rst $28
-    xor $54
-    ld a, $4b
-    ld c, e
-    ld a, $62
-    ld b, b
-    ld c, h
-    ld c, l
-    ld d, [hl]
-    ld b, b
-    ld c, h
-    ld c, l
-    ld d, [hl]
-    ld h, d
-    ld a, $4b
-    ld a, [$eff7]
-    xor $38
-    ld c, e
-    ld b, [hl]
-    ld b, b
-    ld c, h
-    ld c, a
-    ld c, e
-    ld h, d
-    ld d, c
-    ld c, h
-    ld b, c
-    ld a, $56
-    ld e, a
-    rst $28
-    xor $26
-    ld c, h
-    ld c, l
-    ld d, [hl]
-    ld b, b
-    ld c, h
-    ld c, l
-    ld d, [hl]
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    dec hl
-    ld b, d
-    ld a, $49
-    inc h
-    ld c, c
-    ld c, c
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $24
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    ld b, c
-    ld c, h
-    ld d, c
-    ld b, d
-    ld e, a
-    ld a, [$eff7]
-    xor $35
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld e, a
-    ld h, d
-    inc sp
-    ld b, d
-    ld c, a
-    ld b, e
-    ld b, d
-    ld b, b
-    ld d, c
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    dec hl
-    ld b, d
-    ld c, c
-    ld c, c
-    ld c, h
-    ld h, e
-    rst $28
-    xor $2c
-    ld h, d
-    ld a, $4a
-    ld h, d
-    dec hl
-    ld b, d
-    ld c, c
-    ld c, h
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    jr nc, jr_047_52d5
-
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld c, d
-    ld b, d
-    ld c, a
-    ld h, d
-    ld c, d
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $54
-    ld a, $4b
-    ld d, c
-    ld b, d
-    ld b, c
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, d
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld d, b
-    ld c, h
-    ld e, [hl]
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld b, d
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld a, $49
-    ld c, c
-    ld d, [hl]
-    rst $28
-    xor $42
-    ld d, l
-    ld d, c
-    ld b, d
-    ld c, e
-    ld b, c
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld b, h
-    ld b, l
-
-jr_047_52d5:
-    ld d, c
-    ld a, [$eff7]
-    xor $3e
-    ld c, e
-    ld b, c
-    ld h, d
-    ld b, h
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, c
-    ld d, b
-    ld a, [$eff7]
-    xor $4c
-    ld b, e
-    ld h, d
-    ld d, c
-    ld c, a
-    ld b, d
-    ld a, $51
-    ld d, b
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    scf
-    ld c, h
-    ld h, d
-    ld a, $40
-    ld b, b
-    ld c, h
-    ld c, d
-    ld c, l
-    ld c, c
-    ld b, [hl]
-    ld d, b
-    ld b, l
-    rst $28
-    xor $51
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, h
-    ld c, e
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld d, c
-    ld c, h
-    ld c, h
-    ld c, b
-    ld a, [$eff7]
-    xor $54
-    ld b, d
-    ld a, $48
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    rst $28
-    xor $45
-    ld b, [hl]
-    ld c, d
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld [hl], $4c
-    ld c, d
-    ld b, d
-    ld d, c
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld d, b
-    ld h, d
-    ld b, l
-    ld b, d
-    rst $28
-    xor $51
-    ld c, h
-    ld c, h
-    ld c, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld e, a
-    ld a, [$eff7]
-    xor $2b
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, a
-    ld b, [hl]
-    ld b, d
-    ld b, c
-    ld h, d
-    ld c, d
-    ld a, $4b
-    ld d, [hl]
-    rst $28
-    xor $51
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld d, b
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld b, d
-    ld a, $45
-    ld h, e
-    ld h, d
-    scf
-    ld b, l
-    ld b, d
-    rst $28
-    xor $36
-    ld d, c
-    ld a, $4f
-    ld c, a
-    ld d, [hl]
-    ld h, d
-    ld sp, $4446
-    ld b, l
-    ld d, c
-    ld a, [$eff7]
-    xor $45
-    ld a, $50
-    ld h, d
-    ld a, $4f
-    ld c, a
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld b, c
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, d
-    ld b, d
-    ld c, a
-    ld b, b
-    ld b, l
-    ld a, $4b
-    ld d, c
-    rst $28
-    xor $45
-    ld a, $50
-    ld h, d
-    ld b, b
-    ld b, l
-    ld a, $4b
-    ld b, h
-    ld b, d
-    ld b, c
-    ld h, d
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld a, [$eff7]
-    xor $3e
-    ld d, c
-    ld d, c
-    ld b, [hl]
-    ld d, c
-    ld d, d
-    ld b, c
-    ld b, d
-    ld h, d
-    ld a, $51
-    ld h, d
-    ld c, c
-    ld a, $50
-    ld d, c
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld a, [hl-]
-    ld a, $4b
-    ld c, e
-    ld a, $62
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    rst $28
-    xor $3e
-    ccf
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ccf
-    ld c, h
-    ld c, h
-    ld c, b
-    ld a, [$eff7]
-    xor $45
-    ld b, d
-    ld l, b
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, c
-    ld c, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, l
-    ld a, $51
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld b, l
-    ld a, $4d
-    ld c, l
-    ld b, d
-    ld c, e
-    ld h, d
-    ld b, [hl]
-    ld b, e
-    ld h, d
-    inc l
-    ld a, [$eff7]
-    xor $52
-    ld d, b
-    ld b, d
-    ld h, d
-    ld h, $45
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ld h, h
-    rst $28
-    xor $28
-    ld b, d
-    ld b, d
-    ld c, b
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld c, c
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, e
-    ld h, d
-    inc a
-    ld c, h
-    ld d, d
-    rst $28
-    xor $50
-    ld d, d
-    ld c, a
-    ld d, e
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    ld b, c
-    ld h, d
-    ld [hl], $62
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld sp, $544c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $4a
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld a, $4b
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $4f
-    ld b, d
-    ld c, l
-    ld c, a
-    ld b, d
-    ld d, b
-    ld b, d
-    ld c, e
-    ld d, c
-    ld a, $51
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    rst $28
-    xor $4c
-    ld b, e
-    ld h, d
-    ld a, [hl+]
-    ld c, a
-    ld b, d
-    ld a, $51
-    scf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld h, e
-    ld h, e
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    jr nc, jr_047_5518
-
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    jr nc, jr_047_5512
-
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $f6
-    ld h, e
-    ld h, d
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ccf
-    ld b, d
-    ld b, b
-    ld a, $4a
-    ld b, d
-    ld a, [$eff7]
-    xor $4c
-    ld d, d
-    ld c, a
-    ld h, d
-    ld c, a
-    ld b, d
-    ld c, l
-    ld h, d
-    ld a, $51
-    ld h, d
-    ld c, c
-    ld a, $50
-    ld d, c
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld l, $46
-    ld c, e
-    ld b, h
-    ld h, d
-    ld c, e
-    ld b, d
-    ld b, d
-    ld b, c
-    ld d, b
-    rst $28
-
-jr_047_5512:
-    xor $56
-    ld c, h
-    ld d, d
-    ld e, a
-    ld h, d
-
-jr_047_5518:
-    scf
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld d, h
-    ld a, $56
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, c
-    ld a, $50
-    ld d, c
-    ld h, d
-    ld c, d
-    ld a, $51
-    ld b, b
-    ld b, l
-    rst $28
-    xor $46
-    ld c, e
-    ld h, d
-    ld [hl], $62
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld a, [$eff7]
-    xor $3f
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    jr nc, jr_047_55a3
-
-    ld b, c
-    ld a, $49
-    ld h, d
-    jr nc, jr_047_55a5
-
-    ld c, e
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    inc [hl]
-    ld d, d
-    ld b, d
-    ld b, d
-    ld c, e
-    ld l, b
-    ld h, d
-    ld c, a
-    ld c, h
-    ld c, h
-    ld c, d
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    or $5e
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    rst $28
-    xor $49
-    ld b, d
-    ld b, e
-    ld d, c
-    ld h, d
-    ccf
-    ld d, d
-    ld d, c
-    ld h, d
-    ld [hl], $62
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-
-jr_047_55a3:
-    and e
-    inc l
-
-jr_047_55a5:
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, c
-    ld c, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, h
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, c
-    ld d, c
-    ld c, c
-    ld b, d
-    ld a, [$eff7]
-    xor $2c
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    ld b, c
-    ld c, h
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld d, [hl]
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld a, [$eff7]
-    xor $3c
-    ld b, d
-    ld d, c
-    ld b, [hl]
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    scf
-    ld d, d
-    ld d, c
-    ld h, e
-    ld h, d
-    ld sp, $514c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    rst $28
-    xor $45
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, d
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld b, d
-    ld c, a
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld a, $4f
-    ld b, d
-    ld h, d
-    ld b, b
-    ld c, c
-    ld b, [hl]
-    ld b, e
-    ld b, e
-    ld d, b
-    rst $28
-    xor $51
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    ld b, a
-    ld d, d
-    ld c, d
-    ld c, l
-    ld a, [$eff7]
-    xor $41
-    ld c, h
-    ld d, h
-    ld c, e
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec hl
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, c
-    ld c, a
-    ld b, [hl]
-    ld b, d
-    ld b, c
-    rst $28
-    xor $47
-    ld d, d
-    ld c, d
-    ld c, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, c
-    ld c, h
-    ld d, h
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $40
-    ld c, c
-    ld b, [hl]
-    ld b, e
-    ld b, e
-    ld d, b
-    ld h, h
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, d
-    ld c, e
-    ld h, d
-    ld a, $62
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $49
-    ld b, d
-    ld a, $4f
-    ld c, e
-    ld d, b
-    ld h, d
-    ld d, c
-    ld d, h
-    ld c, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld d, c
-    ld a, $46
-    ld c, e
-    ld a, [$eff7]
-    xor $50
-    ld c, b
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    ld d, b
-    ld c, h
-    ld c, d
-    ld b, d
-    ld d, c
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld d, b
-    rst $28
-    xor $3e
-    ld h, d
-    ld c, e
-    ld b, d
-    ld d, h
-    ld e, a
-    ld e, a
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld e, a
-    ld e, a
-    ld e, a
-    ld d, b
-    ld c, b
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    rst $28
-    xor $40
-    ld c, a
-    ld b, d
-    ld a, $51
-    ld b, d
-    ld b, c
-    ld h, d
-    ld b, e
-    ld c, a
-    ld c, h
-    ld c, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $40
-    ld c, h
-    ld c, d
-    ccf
-    ld b, [hl]
-    ld c, e
-    ld a, $51
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld [hl], $62
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, h
-    ld c, e
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, d
-    ld c, c
-    ld b, d
-    ld b, e
-    ld d, c
-    ld h, e
-    ld a, [$eff7]
-    xor $2c
-    ld h, d
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, d
-    or $ef
-    xor $40
-    ld a, $4b
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, e
-    ld e, a
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld e, [hl]
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, e
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $4a
-    ld d, [hl]
-    ld h, d
-    ld c, a
-    ld b, d
-    ld c, [hl]
-    ld d, d
-    ld b, d
-    ld d, b
-    ld d, c
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, b
-    ld b, d
-    ld b, d
-    rst $28
-    xor $3e
-    ld h, d
-    ld h, $52
-    ld c, a
-    ld d, b
-    ld b, d
-    cpl
-    ld a, $4a
-    ld c, l
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld h, $52
-    ld c, a
-    ld d, b
-    ld b, d
-    cpl
-    ld a, $4a
-    ld c, l
-    rst $28
-    xor $46
-    ld d, b
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $40
-    ld d, d
-    ld c, a
-    ld d, b
-    ld b, d
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld a, $62
-    ld b, e
-    ld c, c
-    ld d, [hl]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    rst $28
-    xor $4d
-    ld c, c
-    ld a, $4b
-    ld d, c
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld b, d
-    ld d, c
-    ld b, [hl]
-    ld h, d
-    ld b, c
-    ld c, h
-    ld b, d
-    ld d, b
-    ld c, e
-    ld h, a
-    rst $28
-    xor $50
-    ld a, $56
-    ld h, d
-    ld d, [hl]
-    ld b, d
-    ld d, c
-    ld e, a
-    ld h, d
-    add hl, hl
-    ld d, d
-    ld c, e
-    ld c, e
-    ld d, [hl]
-    ld h, h
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    rst $28
-    xor $51
-    ld c, a
-    ld c, h
-    ld d, d
-    ccf
-    ld c, c
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, h
-    rst $28
-    xor $4d
-    ld b, d
-    ld c, a
-    ld d, b
-    ld c, h
-    ld c, e
-    ld a, $49
-    ld b, [hl]
-    ld d, c
-    ld b, [hl]
-    ld b, d
-    ld d, b
-    ld h, h
-    rst $38
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld b, d
-    ld b, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $4a
-    ld b, d
-    ld c, a
-    ld b, b
-    ld b, l
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld a, $4b
-    ld a, [$eff7]
-    xor $3e
-    ld d, c
-    ld d, c
-    ld b, [hl]
-    ld d, c
-    ld d, d
-    ld b, c
-    ld b, d
-    ld h, d
-    ld a, $51
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $25
-    ld a, $57
-    ld a, $3e
-    ld c, a
-    ld h, h
-    ld a, [$eff7]
-    xor $9f
-    and e
-    dec hl
-    ld b, d
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, c
-    ld c, c
-    ld d, b
-    rst $28
-    xor $3e
-    ld c, d
-    ld a, $57
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld c, d
-    ld d, b
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld b, l
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    rst $28
-    xor $4c
-    ld d, d
-    ld d, c
-    ld h, d
-    ld b, l
-    ld c, h
-    ld d, h
-    ld h, d
-    ld a, $4a
-    ld a, $57
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld d, [hl]
-    ld h, d
-    ld a, $4f
-    ld b, d
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld b, d
-    ld b, d
-    ld h, d
-    ld b, l
-    ld b, d
-    ld b, d
-    ld h, e
-    ld h, d
-    inc a
-    ld c, h
-    rst $28
-    xor $41
-    ld d, d
-    ld b, c
-    ld b, d
-    ld e, [hl]
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld c, e
-    ld a, $62
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    ld a, [$eff7]
-    xor $54
-    ld b, l
-    ld c, h
-    ld l, c
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $43
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld a, [$eff7]
-    xor $36
-    ld h, d
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, c
-    ld a, $50
-    ld d, c
-    ld h, d
-    ld c, d
-    ld a, $51
-    ld b, b
-    ld b, l
-    rst $28
-    xor $46
-    ld c, e
-    ld h, d
-    ld [hl], $62
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    jr nc, @+$44
-
-    ld b, c
-    ld a, $49
-    ld h, d
-    jr nc, @+$40
-
-    ld c, e
-    rst $28
-    xor $46
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    inc [hl]
-    ld d, d
-    ld b, d
-    ld b, d
-    ld c, e
-    ld l, b
-    ld a, [$eff7]
-    xor $4f
-    ld c, h
-    ld c, h
-    ld c, d
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec hl
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld d, d
-    ld c, l
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    rst $28
-    xor $30
-    ld b, d
-    ld d, c
-    ld a, $49
-    daa
-    ld c, a
-    ld a, $48
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $35
-    ld c, h
-    ccf
-    ld c, h
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    or [hl]
-    rst $28
-    xor $30
-    ld b, d
-    ld d, c
-    ld a, $3f
-    ccf
-    ld c, c
-    ld b, d
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    jr nc, jr_047_59d3
-
-    ld b, c
-    ld a, $49
-    ld h, d
-    jr nc, @+$40
-
-    ld c, e
-    ld l, b
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld a, $4f
-    ld b, d
-    ld a, [$eff7]
-    xor $4f
-    ld b, d
-    ld d, b
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $50
-    ld c, l
-    ld b, d
-    ld c, c
-    ld c, c
-    ld d, b
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc h
-    ld d, c
-    ld d, c
-    ld a, $40
-    ld c, b
-    ld h, d
-    ld d, b
-    ld c, l
-    ld b, d
-    ld c, c
-    ld c, c
-    ld d, b
-
-jr_047_59d3:
-    rst $28
-    xor $4a
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld h, d
-    ccf
-    ld b, d
-    ld h, d
-    ld d, b
-    ld c, h
-    ld a, [$eff7]
-    xor $52
-    ld d, b
-    ld b, d
-    ld b, e
-    ld d, d
-    ld c, c
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld c, c
-    ld e, [hl]
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    rst $28
-    xor $50
-    ld d, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ld b, h
-    ld h, d
-    ld d, b
-    ld c, h
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, d
-    ld a, $56
-    ld a, [$eff7]
-    xor $4b
-    ld c, h
-    ld d, c
-    ld h, d
-    ld c, e
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, l
-    ld b, d
-    ld a, $4f
-    rst $28
-    xor $3e
-    ccf
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, e
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, d
-    ld d, d
-    ld d, b
-    ld d, c
-    ld h, d
-    ccf
-    ld b, d
-    rst $28
-    xor $50
-    ld c, h
-    ld c, d
-    ld b, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $3f
-    ld b, d
-    ld a, $51
-    ld h, d
-    jr nc, jr_047_5aa1
-
-    ld d, [hl]
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld b, d
-    ld a, $4f
-    ld b, c
-    ld h, d
-    ld a, $62
-    ld c, a
-    ld d, d
-    ld c, d
-    ld c, h
-    ld c, a
-    rst $28
-    xor $51
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld a, $62
-    ld d, c
-    ld b, d
-    ld c, a
-    ld c, a
-    ld b, [hl]
-    ccf
-    ld c, c
-    ld b, d
-    ld a, [$eff7]
-    xor $4a
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld a, $4d
-    ld c, l
-    ld b, d
-    ld a, $4f
-    ld b, d
-    ld b, c
-    rst $28
-
-jr_047_5aa1:
-    xor $43
-    ld c, a
-    ld c, h
-    ld c, d
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, h
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld a, [$eff7]
-    xor $3e
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld b, d
-    ld b, [hl]
-    ld b, h
-    ld c, e
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld b, c
-    ld c, h
-    ld c, d
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, d
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $40
-    ld c, h
-    ld c, d
-    ld c, d
-    ld a, $4b
-    ld b, c
-    ld d, b
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld c, e
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, a
-    rst $28
-    xor $3f
-    ld b, d
-    ld b, d
-    ld c, e
-    ld h, d
-    ld d, b
-    ld b, d
-    ld b, d
-    ld c, e
-    ld h, d
-    ccf
-    ld b, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld b, d
-    ld e, [hl]
-    ld a, [$eff7]
-    xor $3e
-    ld c, e
-    ld b, c
-    ld h, d
-    ccf
-    ld b, d
-    ld a, $51
-    ld d, b
-    ld h, d
-    ld b, d
-    ld c, e
-    ld b, d
-    ld c, d
-    ld b, [hl]
-    ld b, d
-    ld d, b
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld a, [$eff7]
-    xor $52
-    ld c, e
-    ccf
-    ld b, d
-    ld c, c
-    ld b, [hl]
-    ld b, d
-    ld d, e
-    ld a, $3f
-    ld c, c
-    ld b, d
-    rst $28
-    xor $50
-    ld c, b
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld d, b
-    ld h, d
-    ld a, $4b
-    ld b, c
-    ld e, a
-    ld e, a
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld b, d
-    ld a, $51
-    ld d, b
-    ld h, d
-    ld b, d
-    ld c, e
-    ld b, d
-    ld c, d
-    ld d, [hl]
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld c, h
-    ld h, e
-    ld h, e
-    rst $30
-    ldh a, [rP1]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
