@@ -307,13 +307,39 @@ Text encoding: `charmap.asm`. Control codes/DTE: `TEXT_SYSTEM.md`.
 |-|-|
 | Address | `$52:$4011` |
 | Label | `SkillFunctionTable` |
-| Entries | 222 valid (256 nominal) × dw |
-| Generator | `tools/gen_skill_table_db.py` |
+| Entries | 222 valid (`$00–$DD`) × dw; ids 222–255 do not exist |
+| Dispatch | `$52:$6CC7` (`ld hl, SkillFunctionTable`); the older "$4211" note was wrong — $4211 is just the first byte after the 444-byte table |
+| Generator | `tools/gen_skill_records.py` (→ `skill_records.json`); legacy `gen_skill_table_db.py` over-reads to 256 |
 
 Entries 222-255 overlap with handler code (same trick as Bank $41).
 115 named handler labels (SkillBlaze, SkillSleep, etc.).
 9 family checks: `CheckIsSlime` through `CheckIsMaterial` ($52:$6304-$6373).
+Family codes: 0=Slime 1=Dragon 2=Beast 3=Bird 4=Plant **5=Bug** 6=Devil 7=Zombie 8=Material.
+id 215 (ROM name "Sheldodge", a placeholder) is the Bug-family cut → renamed "BugCut" in
+`patches/bank_041.asm`.
 7 math helpers: `BCsrl3`/`2`/`1`, `HLsrl4`/`3`/`2`/`1` ($52:$6B2A-$6B43).
+
+### Bank $07 — Skill MP Cost Table
+
+| | |
+|-|-|
+| Address | `$07:$570C` (..$58C8) |
+| Label | **mislabeled `TilesetLookupTable`** in disassembly — bytes are MP costs, not tileset ptrs |
+| Format | 222 × u16 LE = MP cost to CAST; `999` ($03E7) = "All MP" (ids 50 Farewell, 102 MegaMagic) |
+| Reader | `$07:$56E8` (acts as `GetSkillMPCost`; id-`$70`/Ahhh special case gated on `[$cacc]&1` picks male/female MP 1/2) |
+
+### Bank $06 — Skill Learn-Requirement Table
+
+| | |
+|-|-|
+| Address | `$06:$50E0` (..$607C) |
+| Label | `SkillLearnReqTable` (annotated S44) |
+| Format | 222 × 18B record |
+| Record | `+0` level (u8); `+1` hp `+3` mp `+5` atk `+7` def `+9` agl `+11` int (u16 LE); `+13..17` up to 5 prereq skill ids (`$FF`=none) |
+
+Both tables decoded/validated S44; round-trip proven by `tools/build_skill_tables.py --selftest`.
+Editor source of truth: `extracted/skill_records.json` (222 records, `kind` = 155 skill /
+37 item_effect ($B0–$D4) / 30 internal).
 
 ---
 
@@ -1070,6 +1096,12 @@ SpriteFrameDataTable, MapNPCPosDataTable, TilesetLookupTable (×3), TileRefLooku
 FieldPtrLookupTable, ItemSlotPtrTable, EnemyGroupTable, TransitionLookupTable,
 RoomAttrDataBlocks, PaletteColorData, AttrMapData, AttrMapDataB, TextDataPtrLookup,
 BattleHPLookupTable, SaveSlotPtrTable.
+
+> ⚠️ **Correction (S44):** `TilesetLookupTable` ($07:$570C) is a **mislabel** — the data
+> is the `SkillMPCostTable` (222 × u16 LE; see the "Bank $07 — Skill MP Cost Table" entry
+> above and DOC_AUDIT A.13). All three "×3" references are battle action-cost reads
+> (keyed off `wPLAN_selection`/`wOPTN_and_Item_selection`), not tileset lookups. The label
+> and its reader `$56E8` are pending a SameBoy-confirmed rename + `dw` re-section.
 
 ### Modified Generator Tool
 

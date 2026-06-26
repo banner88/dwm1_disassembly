@@ -3496,6 +3496,17 @@ jr_007_56fd:
     ret
 
 
+; -----------------------------------------------------------------------------
+; SkillMPCostTable  ($07:$570C .. $58C8) — 222 x u16 LE = MP cost to CAST each
+; skill, in skill-id order. 999 ($03E7) = "All MP" (id 50 Farewell, 102 MegaMagic).
+; Verified vs the FAQ for 40+ skills incl. both 999 sentinels at ids 50 / 102.
+; MISLABEL: the label below ('TilesetLookupTable') is WRONG — these bytes are skill
+; MP costs, not tileset pointers (values 2,4,10,… are far too small for addresses).
+; The indexing fn at $56E8 acts as GetSkillMPCost: its id-$70 (=112 Ahhh) special
+; case, gated on [$cacc]&1, picks Ahhh's male/female MP (1/2). Label + fn name kept
+; AS-IS pending SameBoy confirmation of the fn's callers — do NOT trust 'Tileset'.
+; Decoded by tools/gen_skill_records.py; round-trip proven by build_skill_tables.py.
+; -----------------------------------------------------------------------------
 TilesetLookupTable:
     ld [bc], a
     nop

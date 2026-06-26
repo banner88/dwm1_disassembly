@@ -3359,6 +3359,17 @@ jr_006_50d7:
     ret
 
 
+; -----------------------------------------------------------------------------
+; SkillLearnReqTable  ($06:$50E0 .. $607C) — 222 x 18-byte records, skill-id order.
+; Per-skill requirements a party monster must meet to LEARN the skill:
+;   +0  level (u8)
+;   +1 HP  +3 MP  +5 Atk  +7 Def  +9 Agl  +11 Int   (each u16 LE)
+;   +13..+17  up to 5 prerequisite skill ids ($FF = unused, trailing-padded)
+; Loaded via `ld hl, $50e0` (see code above). Validated vs the FAQ "Required
+; Stats to Learn" columns, incl. MegaMagic's 5 prereqs and BugCut(215)'s
+; 12/68/-/72/-/62/-. mgbdis rendered the bytes below as fake code; decoded by
+; tools/gen_skill_records.py and round-trip-proven by build_skill_tables.py.
+; -----------------------------------------------------------------------------
     ld bc, $0000
     rlca
     nop

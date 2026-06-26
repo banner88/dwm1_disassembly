@@ -5,6 +5,41 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-26 (Session 44 — **Phase F Arc-2 / S1: skill-editor data
+> foundation + BugCut rename.** Integrity PASS 4/4, clean build byte-perfect
+> `1ca6579…`. Functional change (rename) **user-confirmed in SameBoy: skill 215
+> displays "BugCut".**)
+> **S44 — the skill subsystem is now data-complete for an editor.** Audited the
+> reshaped S1 and found it was already partly done (bank `$52` `SkillFunctionTable`
+> was re-sectioned with named handlers); the real work was the *data* tables.
+> **Two undocumented tables fully decoded and FAQ-validated:**
+> **(a) `SkillMPCostTable` `$07:$570C`** — 222 × u16 LE = MP cost to cast (`999`=ALL,
+> ids 50/102). The disassembly **mislabels this region `TilesetLookupTable`**; the
+> indexing fn `$56E8` is effectively `GetSkillMPCost` (its id-`$70`/Ahhh special case,
+> gated on `[$cacc]&1`, picks Ahhh's male/female MP 1/2). Renamed **only in comments**
+> pending SameBoy confirmation of the fn's callers. **(b) `SkillLearnReqTable`
+> `$06:$50E0`** — 222 × 18B: `+0` level u8; `+1` hp `+3` mp `+5` atk `+7` def `+9` agl
+> `+11` int (u16 LE); `+13..17` up to 5 prereq skill ids (`$FF`=none). Validated vs the
+> FAQ incl. MegaMagic's 5 prereqs. **BugCut finding:** id 215 (ROM name "Sheldodge", a
+> placeholder) is the **Bug-family cut** — proven 3 ways: family sub `$6349` tests family
+> code `$05`=Bug; StubBird's enemy list uses 215; its learn reqs match the FAQ's "BugBlow"
+> row exactly. Renamed to **"BugCut"** in `patches/bank_041.asm` (10-byte slot preserved;
+> **user-confirmed in SameBoy**). **Real skill count is 222 (`$00–$DD`), not 256:** the
+> 222 entries classify as **155 skill / 37 item_effect (`$B0–$D4`) / 30 internal**, by
+> cross-referencing monster natural sets + enemy lists. Corrected the bank `$52` header
+> (`$4211`→`$6CC7` dispatch, `256`→`222`, `140`→`115` handlers). **Tools (NEW):**
+> `gen_skill_records.py` → `extracted/skill_records.json` (222 records: name, kind, mp,
+> handler+shared group, learn block, prereqs, family code, monster/enemy usage; `_generator`
+> key, all 6 source addrs); `build_skill_tables.py --selftest` proves the JSON re-emits the
+> function/MP/learn tables **byte-identical** (444+444+3996 B, PASS). Annotation is
+> comment-only in `disassembly/bank_006/007/052.asm` (clean build stays `1ca6579…`).
+> Test ROMs: `DWM-BugCut-test.gbc` (full stack + rename), `DWM-BugCut-vanillaVillager.gbc`
+> (villager fork reverted so wild Picky is catchable — throwaway; project keeps the gate mod).
+> **Follow-ups:** confirm the `TilesetLookupTable`/`$56E8` role in SameBoy, then rename +
+> re-section both tables to real `dw`/`db` blocks; retire the old 256-entry `skills.json`
+> (still read by `gen_name_tables_db.py`). Next item: **authoring NEW skills** (data side is
+> ready; novel effects need a new handler in a free bank = the ASM frontier).
+>
 > Last verified: 2026-06-26 (Session 43 — **disassembly gap audit + Arc-1/T1 text
 > re-section keystone (bank `$47`).** Integrity PASS 4/4, clean build byte-perfect
 > `1ca6579…`; T1 is byte-neutral so there is no test ROM — acceptance is the MD5.)

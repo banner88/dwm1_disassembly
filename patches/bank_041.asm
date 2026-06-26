@@ -561,7 +561,7 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_212_COMEDYBK  ; [212]
     dw SkillName_213_BeDragon  ; [213]
     dw SkillName_214_Smashlime  ; [214]
-    dw SkillName_215_Sheldodge  ; [215]
+    dw SkillName_215_BugCut  ; [215] renamed from "Sheldodge" (= Bug-family cut)
     dw SkillName_216_Branching  ; [216]
     dw SkillName_217_GigaSlash  ; [217]
     dw SkillName_218_LIFE  ; [218]
@@ -1916,7 +1916,7 @@ SkillName_211_SMARTBK: db "SMARTBK", $F0
 SkillName_212_COMEDYBK: db "COMEDYBK", $F0
 SkillName_213_BeDragon: db "BeDragon", $F0
 SkillName_214_Smashlime: db "Smashlime", $F0
-SkillName_215_Sheldodge: db "Sheldodge", $F0
+SkillName_215_BugCut: db "BugCut", $F0, $F0, $F0, $F0  ; was "Sheldodge" (placeholder); id 215 = Bug-family cut (family code $05). 3 trailing $F0 pad keeps the 10-byte slot so downstream strings don't shift.
 SkillName_216_Branching: db "Branching", $F0
 SkillName_217_GigaSlash: db "GigaSlash", $F0
 SkillName_218_LIFE: db "LIFE", $F0

@@ -2,14 +2,17 @@
 ; BANK $52 — BATTLE SYSTEM, SKILL FUNCTIONS
 ; =============================================================================
 ; Contains:
-;   - Skill Function Table at $4011 (256 entries → handler addresses)
-;   - Skill handler functions (140 unique handlers for 256 skills)
+;   - Skill Function Table at $4011 (222 entries, ids $00–$DD → handler addresses)
+;   - Skill handler functions (115 unique handlers for 222 skills)
 ;   - Resistance check functions
 ;   - Battle damage calculation
 ;
-; SKILL DISPATCH: Code at $4211 reads skill ID, looks up handler address
+; SKILL DISPATCH: Code at $6CC7 reads skill ID, looks up handler address
 ;   from SkillFunctionTable ($4011), and calls it. Many skills share handlers
 ;   (e.g., Blaze/Blazemore/Blazemost all point to $41CD).
+;   (NB: older notes said "$4211" — that was wrong. $4211 is merely the first
+;    instruction AFTER the 222-entry table; the real load `ld hl, SkillFunctionTable`
+;    is at $6CC7.)
 ;
 ; Jump table entries (via rst $10 with H=$52):
 ;   Entry 0: $6C4D    Entry 4: $52C3
@@ -42,9 +45,10 @@ SECTION "ROM Bank $052", ROMX[$4000], BANK[$52]
 
 ; ---------------------------------------------------------------
 ; Skill Function Table ($4011)
-; 256 entries x 2 bytes = 512 bytes
+; 222 entries x 2 bytes = 444 bytes ($4011..$41BC), then handler code begins.
+; (Table entries for ids 222–255 do not exist; skills only run 0–221 = $00–$DD.)
 ; Maps skill ID -> handler function address within bank $52
-; Referenced by code at $4211 via: ld hl, $4011
+; Referenced by code at $6CC7 via: ld hl, SkillFunctionTable
 ; ---------------------------------------------------------------
 
 SkillFunctionTable:

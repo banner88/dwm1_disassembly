@@ -915,13 +915,22 @@ yields the E6 capacity numbers.
       the E6 per-bank capacity/budget numbers.
 
 ### Arc 2 — Custom skills, then per-skill AI (high value; one real RE gate)
-Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, 256 entries → 140
-handlers, dispatch `$52:$4211`; names `$41:$4539`; `skills.json`); AI *selection* is the
+Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, **222 entries** ($00–$DD)
+→ 115 handlers, dispatch `$52:$6CC7`; names `$41:$4539`); plus the now-decoded
+`SkillMPCostTable $07:$570C` (u16, 999=ALL) and `SkillLearnReqTable $06:$50E0` (18B/skill).
+The editor data side is captured in `extracted/skill_records.json`. AI *selection* is the
 unreversed half.
-- [ ] **S1 — Skill round-trip keystone.** Extend `skills.json` with handler addrs +
-      shared-handler grouping; tool re-emits `SkillFunctionTable` + name table byte-identical;
-      annotate the `$4211` dispatch + the 8-entry `rst $10` jump table (labels/comments only).
-      *Accept:* `--selftest` byte-identical re-emit; MD5 unchanged.
+- [x] **S1 — Skill data foundation + round-trip keystone (S44).** *Reshaped on audit:* the
+      bank `$52` function table was already re-sectioned, so the real work was the data tables.
+      Decoded + FAQ-validated `SkillMPCostTable` ($07:$570C) and `SkillLearnReqTable`
+      ($06:$50E0, incl. prereqs); `gen_skill_records.py` → `skill_records.json` (222 records,
+      `kind` = 155 skill / 37 item_effect / 30 internal, family-cut codes, monster/enemy usage);
+      `build_skill_tables.py --selftest` proves the function/MP/learn tables re-emit
+      **byte-identical**. Corrected bank `$52` header ($4211→$6CC7, 256→222, 140→115). Found id
+      215 "Sheldodge" = the **Bug-family cut**; renamed → "BugCut" in `patches/bank_041.asm`
+      (**SameBoy-confirmed**). Comment-only annotation of the two tables in `bank_006/007`
+      (flagged the `TilesetLookupTable` mislabel at `$570C`; rename + full `dw` re-section
+      deferred pending SameBoy confirmation of the `$56E8` fn role). MD5 unchanged; integrity PASS.
 - [ ] **S2 — Custom skill EFFECTS.** Add a new skill = name (extend/relocate
       `SkillNamePtrTable`) + `SkillFunctionTable` entry (reuse an existing handler, then prove
       a NEW handler authored in a free bank) + assign to a monster's skill list (enemy-stats

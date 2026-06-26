@@ -1,0 +1,9937 @@
+{
+  "_generator": {
+    "tool": "tools/gen_skill_records.py",
+    "rom_md5_source": "1ca6579359f21d8e27b446f865bf6b83",
+    "n_skills": 222,
+    "id_range": "0x00..0xDD",
+    "sources": {
+      "name_ptr_table": "$41:$4539",
+      "function_table": "$52:$4011",
+      "mp_cost_table": "$07:$570C (u16 LE; 999=ALL)",
+      "learn_req_table": "$06:$50E0 (18B/record)",
+      "natural_skills": "$03:$4461+$06",
+      "inherit_base": "$16:$4874"
+    },
+    "learn_record_format": "+0 level u8 | +1 hp +3 mp +5 atk +7 def +9 agl +11 int (u16 LE) | +13..17 up to 5 prereq skill ids ($FF=none)",
+    "kind_counts": {
+      "skill": 155,
+      "internal": 30,
+      "item_effect": 37
+    }
+  },
+  "records": [
+    {
+      "id": 0,
+      "name": "Blaze",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$41CD",
+      "handler_shared_with": [
+        1,
+        2
+      ],
+      "learn": {
+        "level": 1,
+        "hp": 0,
+        "mp": 7,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 20
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 0,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        7,
+        16,
+        91,
+        133,
+        138,
+        145,
+        153,
+        173,
+        177,
+        192,
+        194,
+        208,
+        215,
+        216,
+        217,
+        218,
+        219,
+        220
+      ],
+      "enemy_users": [
+        "Metaly",
+        "Mimic",
+        "Rayburn"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Blazemore",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$41CD",
+      "handler_shared_with": [
+        0,
+        2
+      ],
+      "learn": {
+        "level": 13,
+        "hp": 0,
+        "mp": 46,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 64
+      },
+      "prereqs": [
+        0
+      ],
+      "prereq_names": [
+        "Blaze"
+      ],
+      "inherit_base": 0,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "1EyeClown",
+        "BoxSlime",
+        "Demonite",
+        "EvilWand",
+        "FireWeed",
+        "LavaMan",
+        "MadCandle",
+        "Mimic"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Blazemost",
+      "kind": "skill",
+      "mp_cost": 10,
+      "handler_addr": "$41CD",
+      "handler_shared_with": [
+        0,
+        1
+      ],
+      "learn": {
+        "level": 28,
+        "hp": 0,
+        "mp": 112,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 146
+      },
+      "prereqs": [
+        1
+      ],
+      "prereq_names": [
+        "Blazemore"
+      ],
+      "inherit_base": 0,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Jamirus",
+        "Mimic",
+        "Mirudraas",
+        "Servant",
+        "Skullgon",
+        "Trumpeter"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Firebal",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$41D4",
+      "handler_shared_with": [
+        4,
+        5
+      ],
+      "learn": {
+        "level": 3,
+        "hp": 0,
+        "mp": 11,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 23
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 3,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        8,
+        17,
+        22,
+        33,
+        63,
+        66,
+        83,
+        92,
+        122,
+        132,
+        137,
+        138,
+        139,
+        175,
+        200,
+        202
+      ],
+      "enemy_users": [
+        "AmberWeed",
+        "Eyeder",
+        "Gremlin",
+        "Pteranod",
+        "Rayburn"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Firebane",
+      "kind": "skill",
+      "mp_cost": 6,
+      "handler_addr": "$41D4",
+      "handler_shared_with": [
+        3,
+        5
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 0,
+        "mp": 34,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 52
+      },
+      "prereqs": [
+        3
+      ],
+      "prereq_names": [
+        "Firebal"
+      ],
+      "inherit_base": 3,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "AgDevil",
+        "EvilBeast",
+        "FloraMan",
+        "Goategon",
+        "JewelBag",
+        "Lionex",
+        "LizardFly",
+        "MadCondor"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Firebolt",
+      "kind": "skill",
+      "mp_cost": 10,
+      "handler_addr": "$41D4",
+      "handler_shared_with": [
+        3,
+        4
+      ],
+      "learn": {
+        "level": 26,
+        "hp": 0,
+        "mp": 96,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 122
+      },
+      "prereqs": [
+        4
+      ],
+      "prereq_names": [
+        "Firebane"
+      ],
+      "inherit_base": 3,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "DracoLord",
+        "Hargon",
+        "Metabble",
+        "Slime",
+        "StoneMan",
+        "SuperTen"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Bang",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$41DB",
+      "handler_shared_with": [
+        7,
+        8
+      ],
+      "learn": {
+        "level": 4,
+        "hp": 0,
+        "mp": 13,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 26
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 6,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        17,
+        40,
+        131,
+        142,
+        148,
+        171,
+        186,
+        202,
+        204,
+        208
+      ],
+      "enemy_users": [
+        "Rayburn"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Boom",
+      "kind": "skill",
+      "mp_cost": 8,
+      "handler_addr": "$41DB",
+      "handler_shared_with": [
+        6,
+        8
+      ],
+      "learn": {
+        "level": 14,
+        "hp": 0,
+        "mp": 50,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 68
+      },
+      "prereqs": [
+        6
+      ],
+      "prereq_names": [
+        "Bang"
+      ],
+      "inherit_base": 6,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "ArcDemon",
+        "EvilWand",
+        "MadMirror"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Explodet",
+      "kind": "skill",
+      "mp_cost": 15,
+      "handler_addr": "$41DB",
+      "handler_shared_with": [
+        6,
+        7
+      ],
+      "learn": {
+        "level": 29,
+        "hp": 0,
+        "mp": 120,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 158
+      },
+      "prereqs": [
+        7
+      ],
+      "prereq_names": [
+        "Boom"
+      ],
+      "inherit_base": 6,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Akubar",
+        "Balzak",
+        "Baramos",
+        "Coatol",
+        "DeathMore",
+        "GoatHorn",
+        "Hargon",
+        "Metabble",
+        "MetalDrak",
+        "Mirudraas",
+        "Trumpeter"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Infernos",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$41E2",
+      "handler_shared_with": [
+        10,
+        11
+      ],
+      "learn": {
+        "level": 2,
+        "hp": 0,
+        "mp": 10,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 21
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 9,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        34,
+        52,
+        75,
+        81,
+        95,
+        141,
+        142,
+        167,
+        170,
+        179
+      ],
+      "enemy_users": []
+    },
+    {
+      "id": 10,
+      "name": "Infermore",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$41E2",
+      "handler_shared_with": [
+        9,
+        11
+      ],
+      "learn": {
+        "level": 11,
+        "hp": 0,
+        "mp": 38,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 56
+      },
+      "prereqs": [
+        9
+      ],
+      "prereq_names": [
+        "Infernos"
+      ],
+      "inherit_base": 9,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Blizzardy",
+        "Facer",
+        "Gulpple",
+        "LandOwl",
+        "MadPecker",
+        "WindBeast"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Infermost",
+      "kind": "skill",
+      "mp_cost": 8,
+      "handler_addr": "$41E2",
+      "handler_shared_with": [
+        9,
+        10
+      ],
+      "learn": {
+        "level": 27,
+        "hp": 0,
+        "mp": 104,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 134
+      },
+      "prereqs": [
+        10
+      ],
+      "prereq_names": [
+        "Infermore"
+      ],
+      "inherit_base": 9,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Andreal",
+        "GoatHorn",
+        "GreatDrak",
+        "LandOwl",
+        "Lionex",
+        "WindMerge",
+        "Yeti"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "IceBolt",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$41E9",
+      "handler_shared_with": [
+        13,
+        14
+      ],
+      "learn": {
+        "level": 5,
+        "hp": 0,
+        "mp": 16,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 30
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 12,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        4,
+        16,
+        52,
+        56,
+        59,
+        69,
+        101,
+        138,
+        142,
+        173,
+        193
+      ],
+      "enemy_users": [
+        "Snaily",
+        "TreeBoy",
+        "WindBeast"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "SnowStorm",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$41E9",
+      "handler_shared_with": [
+        12,
+        14
+      ],
+      "learn": {
+        "level": 12,
+        "hp": 0,
+        "mp": 42,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 60
+      },
+      "prereqs": [
+        12
+      ],
+      "prereq_names": [
+        "IceBolt"
+      ],
+      "inherit_base": 12,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "BigEye",
+        "CurseLamp",
+        "Mommonja",
+        "TreeBoy",
+        "Yeti"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Blizzard",
+      "kind": "skill",
+      "mp_cost": 12,
+      "handler_addr": "$41E9",
+      "handler_shared_with": [
+        12,
+        13
+      ],
+      "learn": {
+        "level": 25,
+        "hp": 0,
+        "mp": 88,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 110
+      },
+      "prereqs": [
+        13
+      ],
+      "prereq_names": [
+        "SnowStorm"
+      ],
+      "inherit_base": 12,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "GoatHorn",
+        "GulpBeast",
+        "KingSlime",
+        "Mirudraas",
+        "Servant"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Bolt",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$41F0",
+      "handler_shared_with": [
+        16,
+        17,
+        90,
+        100
+      ],
+      "learn": {
+        "level": 6,
+        "hp": 0,
+        "mp": 20,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 35
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 15,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        18,
+        170,
+        186,
+        208,
+        214
+      ],
+      "enemy_users": [
+        "EvilBeast"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Zap",
+      "kind": "skill",
+      "mp_cost": 10,
+      "handler_addr": "$41F0",
+      "handler_shared_with": [
+        15,
+        17,
+        90,
+        100
+      ],
+      "learn": {
+        "level": 15,
+        "hp": 0,
+        "mp": 54,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 72
+      },
+      "prereqs": [
+        15
+      ],
+      "prereq_names": [
+        "Bolt"
+      ],
+      "inherit_base": 15,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Balzak",
+        "ManEater",
+        "MetalKing",
+        "Swordgon"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Thordain",
+      "kind": "skill",
+      "mp_cost": 15,
+      "handler_addr": "$41F0",
+      "handler_shared_with": [
+        15,
+        16,
+        90,
+        100
+      ],
+      "learn": {
+        "level": 30,
+        "hp": 0,
+        "mp": 128,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 170
+      },
+      "prereqs": [
+        16
+      ],
+      "prereq_names": [
+        "Zap"
+      ],
+      "inherit_base": 15,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Balzak",
+        "LavaMan",
+        "Mirudraas"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Beat",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$41F7",
+      "handler_shared_with": [
+        19,
+        113
+      ],
+      "learn": {
+        "level": 16,
+        "hp": 0,
+        "mp": 58,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 76
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 18,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        16,
+        84,
+        112,
+        164,
+        169,
+        190,
+        194
+      ],
+      "enemy_users": [
+        "Gophecada",
+        "KingCobra",
+        "Mimic",
+        "Mudron",
+        "RotRaven",
+        "Snapper"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "Defeat",
+      "kind": "skill",
+      "mp_cost": 7,
+      "handler_addr": "$41F7",
+      "handler_shared_with": [
+        18,
+        113
+      ],
+      "learn": {
+        "level": 24,
+        "hp": 0,
+        "mp": 80,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 98
+      },
+      "prereqs": [
+        18
+      ],
+      "prereq_names": [
+        "Beat"
+      ],
+      "inherit_base": 18,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "DeadNoble",
+        "Mimic",
+        "Orochi"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Sacrifice",
+      "kind": "skill",
+      "mp_cost": 1,
+      "handler_addr": "$422B",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 1,
+        "hp": 0,
+        "mp": 7,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 6
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 20,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        17,
+        23,
+        132,
+        179,
+        180,
+        198
+      ],
+      "enemy_users": [
+        "BombCrag",
+        "Centasaur",
+        "ChopClown",
+        "CurseLamp",
+        "IronTurt",
+        "SkyDragon",
+        "SpikyBoy"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Sleep",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4235",
+      "handler_shared_with": [
+        22,
+        106
+      ],
+      "learn": {
+        "level": 4,
+        "hp": 0,
+        "mp": 24,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 16
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 21,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        46,
+        67,
+        71,
+        74,
+        78,
+        95,
+        98,
+        117,
+        190
+      ],
+      "enemy_users": [
+        "Almiraj",
+        "DuckKite",
+        "MistyWing",
+        "Shadow",
+        "StagBug",
+        "Stubsuck"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "SleepAll",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$4235",
+      "handler_shared_with": [
+        21,
+        106
+      ],
+      "learn": {
+        "level": 11,
+        "hp": 0,
+        "mp": 52,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 46
+      },
+      "prereqs": [
+        21
+      ],
+      "prereq_names": [
+        "Sleep"
+      ],
+      "inherit_base": 21,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Balzak",
+        "DarkHorn",
+        "Dracky",
+        "EvilArmor",
+        "Gismo",
+        "MadPecker",
+        "Stubsuck",
+        "Wyvern"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "StopSpell",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$427C",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 9,
+        "hp": 0,
+        "mp": 44,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 38
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 23,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        38,
+        47,
+        67,
+        102,
+        107,
+        139,
+        151,
+        175
+      ],
+      "enemy_users": [
+        "CatFly",
+        "Centasaur",
+        "Crestpent",
+        "DarkCrab",
+        "DarkHorn",
+        "FaceTree",
+        "JewelBag",
+        "Reaper",
+        "Snapper",
+        "StoneMan",
+        "Yeti"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "Surround",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$42AA",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 10,
+        "hp": 0,
+        "mp": 47,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 41
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 24,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        6,
+        24,
+        34,
+        61,
+        70,
+        77,
+        113,
+        140,
+        184
+      ],
+      "enemy_users": [
+        "Andreal",
+        "Babble",
+        "Butterfly",
+        "FairyDrak",
+        "MedusaEye",
+        "MistyWing",
+        "Voodoll"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "PanicAll",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$42D8",
+      "handler_shared_with": [
+        110,
+        218
+      ],
+      "learn": {
+        "level": 12,
+        "hp": 0,
+        "mp": 56,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 49
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 25,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        32,
+        74,
+        82,
+        175,
+        184
+      ],
+      "enemy_users": [
+        "Baramos",
+        "Chamelgon",
+        "DuckKite",
+        "JewelBag",
+        "LizardMan",
+        "MadGoose",
+        "MadSpirit",
+        "Voodoll"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "RobMagic",
+      "kind": "skill",
+      "mp_cost": 0,
+      "handler_addr": "$4308",
+      "handler_shared_with": [
+        118
+      ],
+      "learn": {
+        "level": 7,
+        "hp": 0,
+        "mp": 32,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 28
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 26,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        78,
+        99,
+        104,
+        114,
+        119,
+        187
+      ],
+      "enemy_users": [
+        "BeanMan",
+        "CatFly",
+        "Dracky",
+        "Oniono",
+        "SabreMan",
+        "Shadow",
+        "WeedBug"
+      ]
+    },
+    {
+      "id": 27,
+      "name": "TakeMagic",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4330",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 13,
+        "hp": 0,
+        "mp": 58,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 52
+      },
+      "prereqs": [
+        26
+      ],
+      "prereq_names": [
+        "RobMagic"
+      ],
+      "inherit_base": 26,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "RogueNite"
+      ]
+    },
+    {
+      "id": 28,
+      "name": "Sap",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$434A",
+      "handler_shared_with": [
+        29
+      ],
+      "learn": {
+        "level": 4,
+        "hp": 0,
+        "mp": 18,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 15
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 28,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        3,
+        70,
+        75,
+        90,
+        140,
+        143,
+        157,
+        172,
+        184
+      ],
+      "enemy_users": [
+        "MadPecker",
+        "MadPlant",
+        "MedusaEye",
+        "Orc",
+        "Picky",
+        "Putrepup",
+        "TreeSlime"
+      ]
+    },
+    {
+      "id": 29,
+      "name": "Defence",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$434A",
+      "handler_shared_with": [
+        28
+      ],
+      "learn": {
+        "level": 8,
+        "hp": 0,
+        "mp": 36,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 32
+      },
+      "prereqs": [
+        28
+      ],
+      "prereq_names": [
+        "Sap"
+      ],
+      "inherit_base": 28,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "GoatHorn",
+        "MadSpirit",
+        "Skeletor",
+        "Voodoll",
+        "WingSnake"
+      ]
+    },
+    {
+      "id": 30,
+      "name": "Upper",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$436D",
+      "handler_shared_with": [
+        31
+      ],
+      "learn": {
+        "level": 2,
+        "hp": 0,
+        "mp": 14,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 12
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 30,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        5,
+        7,
+        9,
+        49,
+        111,
+        121,
+        125,
+        188
+      ],
+      "enemy_users": [
+        "ArmorPede",
+        "BoxSlime",
+        "CatFly",
+        "Catapila",
+        "Saccer",
+        "SlimeNite"
+      ]
+    },
+    {
+      "id": 31,
+      "name": "Increase",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$436D",
+      "handler_shared_with": [
+        30
+      ],
+      "learn": {
+        "level": 6,
+        "hp": 0,
+        "mp": 27,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 24
+      },
+      "prereqs": [
+        30
+      ],
+      "prereq_names": [
+        "Upper"
+      ],
+      "inherit_base": 30,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "ArmyCrab",
+        "CurseLamp",
+        "FangSlime",
+        "FunkyBird",
+        "SlimeNite",
+        "Swordgon"
+      ]
+    },
+    {
+      "id": 32,
+      "name": "Slow",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4385",
+      "handler_shared_with": [
+        33
+      ],
+      "learn": {
+        "level": 3,
+        "hp": 0,
+        "mp": 16,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 14
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 32,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        47,
+        61,
+        63,
+        90,
+        124,
+        157
+      ],
+      "enemy_users": [
+        "CatFly",
+        "FairyRat",
+        "MadPlant",
+        "Putrepup",
+        "Snapper"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "SlowAll",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4385",
+      "handler_shared_with": [
+        32
+      ],
+      "learn": {
+        "level": 7,
+        "hp": 0,
+        "mp": 32,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 28
+      },
+      "prereqs": [
+        32
+      ],
+      "prereq_names": [
+        "Slow"
+      ],
+      "inherit_base": 32,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Droll",
+        "Gismo",
+        "Goategon"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "Speed",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$43A8",
+      "handler_shared_with": [
+        35
+      ],
+      "learn": {
+        "level": 1,
+        "hp": 0,
+        "mp": 10,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 8
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 34,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        73,
+        130,
+        188
+      ],
+      "enemy_users": [
+        "SlimeNite"
+      ]
+    },
+    {
+      "id": 35,
+      "name": "SpeedUp",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$43A8",
+      "handler_shared_with": [
+        34
+      ],
+      "learn": {
+        "level": 5,
+        "hp": 0,
+        "mp": 24,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 20
+      },
+      "prereqs": [
+        34
+      ],
+      "prereq_names": [
+        "Speed"
+      ],
+      "inherit_base": 34,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "CurseLamp",
+        "DeadNite",
+        "Florajay",
+        "Pixy",
+        "Shadow",
+        "SkyDragon"
+      ]
+    },
+    {
+      "id": 36,
+      "name": "Barrier",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$43C0",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 18,
+        "hp": 0,
+        "mp": 76,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 70
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 36,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        15,
+        77,
+        97,
+        114,
+        167
+      ],
+      "enemy_users": [
+        "AmberWeed",
+        "EvilArmor",
+        "IronTurt",
+        "KingSlime",
+        "MistyWing",
+        "WeedBug",
+        "WindMerge"
+      ]
+    },
+    {
+      "id": 37,
+      "name": "TwinHits",
+      "kind": "skill",
+      "mp_cost": 6,
+      "handler_addr": "$43FB",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 17,
+        "hp": 0,
+        "mp": 72,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 66
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 37,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        80,
+        97,
+        104,
+        121,
+        130,
+        146,
+        188
+      ],
+      "enemy_users": [
+        "AmberWeed",
+        "ArmorPede",
+        "BeanMan",
+        "CatFly",
+        "CurseLamp",
+        "DanceVegi",
+        "DarkEye",
+        "Diago",
+        "GreatDrak",
+        "KingCobra",
+        "MadPecker",
+        "Pixy",
+        "StubBird"
+      ]
+    },
+    {
+      "id": 38,
+      "name": "MagicWall",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4415",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 19,
+        "hp": 0,
+        "mp": 80,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 74
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 38,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        97,
+        114,
+        160
+      ],
+      "enemy_users": [
+        "AmberWeed",
+        "Copycat",
+        "DarkCrab",
+        "FaceTree",
+        "Phoenix",
+        "WeedBug"
+      ]
+    },
+    {
+      "id": 39,
+      "name": "MagicBack",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4434",
+      "handler_shared_with": [
+        40
+      ],
+      "learn": {
+        "level": 16,
+        "hp": 0,
+        "mp": 68,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 62
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 39,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        21,
+        55,
+        112,
+        135,
+        157,
+        181
+      ],
+      "enemy_users": [
+        "DarkEye",
+        "EyeBall",
+        "Gophecada",
+        "TailEater"
+      ]
+    },
+    {
+      "id": 40,
+      "name": "Bounce",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4434",
+      "handler_shared_with": [
+        39
+      ],
+      "learn": {
+        "level": 20,
+        "hp": 0,
+        "mp": 84,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 78
+      },
+      "prereqs": [
+        39
+      ],
+      "prereq_names": [
+        "MagicBack"
+      ],
+      "inherit_base": 39,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "IronTurt",
+        "MadMirror",
+        "MadSpirit",
+        "Metabble",
+        "Spikerous",
+        "Tortragon",
+        "Voodoll"
+      ]
+    },
+    {
+      "id": 41,
+      "name": "Transform",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$446C",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 21,
+        "hp": 0,
+        "mp": 92,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 88
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 41,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        174,
+        181
+      ],
+      "enemy_users": [
+        "BombCrag",
+        "Copycat",
+        "MadMirror"
+      ]
+    },
+    {
+      "id": 42,
+      "name": "Ironize",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$447F",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 15,
+        "hp": 0,
+        "mp": 62,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 58
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 42,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        18,
+        21,
+        87,
+        135,
+        137,
+        160
+      ],
+      "enemy_users": [
+        "DarkCrab",
+        "WhipBird"
+      ]
+    },
+    {
+      "id": 43,
+      "name": "Heal",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$44C4",
+      "handler_shared_with": [
+        44,
+        45,
+        46,
+        47,
+        148
+      ],
+      "learn": {
+        "level": 1,
+        "hp": 0,
+        "mp": 7,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 6
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 43,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        5,
+        9,
+        15,
+        62,
+        69,
+        71,
+        101,
+        122,
+        139,
+        161,
+        164,
+        182
+      ],
+      "enemy_users": [
+        "BigEye",
+        "DeadNite",
+        "Dragon",
+        "Droll",
+        "EvilBeast",
+        "Eyeder",
+        "Gasgon",
+        "GiantMoth",
+        "Gremlin",
+        "Grizzly",
+        "Healer",
+        "LandOwl",
+        "LizardMan",
+        "Metaly",
+        "Mudron",
+        "Orc",
+        "Phoenix",
+        "RogueNite",
+        "SlimeNite",
+        "TailEater",
+        "TreeBoy",
+        "WindMerge"
+      ]
+    },
+    {
+      "id": 44,
+      "name": "HealMore",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$44C4",
+      "handler_shared_with": [
+        43,
+        45,
+        46,
+        47,
+        148
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 0,
+        "mp": 52,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 48
+      },
+      "prereqs": [
+        43
+      ],
+      "prereq_names": [
+        "Heal"
+      ],
+      "inherit_base": 43,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Gasgon",
+        "Grendal",
+        "KingSlime",
+        "MadCat",
+        "Roboster",
+        "Swordgon",
+        "Tatsu",
+        "TreeBoy",
+        "Wyvern"
+      ]
+    },
+    {
+      "id": 45,
+      "name": "HealAll",
+      "kind": "skill",
+      "mp_cost": 7,
+      "handler_addr": "$44C4",
+      "handler_shared_with": [
+        43,
+        44,
+        46,
+        47,
+        148
+      ],
+      "learn": {
+        "level": 16,
+        "hp": 0,
+        "mp": 82,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 80
+      },
+      "prereqs": [
+        44
+      ],
+      "prereq_names": [
+        "HealMore"
+      ],
+      "inherit_base": 43,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "DeadNoble",
+        "Goategon",
+        "Unicorn"
+      ]
+    },
+    {
+      "id": 46,
+      "name": "HealUs",
+      "kind": "skill",
+      "mp_cost": 18,
+      "handler_addr": "$44C4",
+      "handler_shared_with": [
+        43,
+        44,
+        45,
+        47,
+        148
+      ],
+      "learn": {
+        "level": 20,
+        "hp": 0,
+        "mp": 140,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 120
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 46,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        9,
+        83,
+        141,
+        169
+      ],
+      "enemy_users": [
+        "Balzak",
+        "BigEye",
+        "FunkyBird",
+        "GoldSlime",
+        "JewelBag",
+        "Lionex",
+        "Lipsy",
+        "MadCondor",
+        "Roboster",
+        "StoneMan"
+      ]
+    },
+    {
+      "id": 47,
+      "name": "HealUsAll",
+      "kind": "skill",
+      "mp_cost": 36,
+      "handler_addr": "$44C4",
+      "handler_shared_with": [
+        43,
+        44,
+        45,
+        46,
+        148
+      ],
+      "learn": {
+        "level": 28,
+        "hp": 0,
+        "mp": 196,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 160
+      },
+      "prereqs": [
+        46
+      ],
+      "prereq_names": [
+        "HealUs"
+      ],
+      "inherit_base": 46,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "DeadNoble"
+      ]
+    },
+    {
+      "id": 48,
+      "name": "Vivify",
+      "kind": "skill",
+      "mp_cost": 10,
+      "handler_addr": "$44F8",
+      "handler_shared_with": [
+        49,
+        173
+      ],
+      "learn": {
+        "level": 14,
+        "hp": 0,
+        "mp": 63,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 54
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 48,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        15,
+        62,
+        143,
+        164
+      ],
+      "enemy_users": [
+        "Centasaur",
+        "Goategon",
+        "LizardMan",
+        "Orc",
+        "TreeBoy"
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Revive",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$44F8",
+      "handler_shared_with": [
+        48,
+        173
+      ],
+      "learn": {
+        "level": 27,
+        "hp": 0,
+        "mp": 174,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 152
+      },
+      "prereqs": [
+        48
+      ],
+      "prereq_names": [
+        "Vivify"
+      ],
+      "inherit_base": 48,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Andreal",
+        "GoldSlime",
+        "KingSlime",
+        "SkyDragon",
+        "Unicorn"
+      ]
+    },
+    {
+      "id": 50,
+      "name": "Farewell",
+      "kind": "skill",
+      "mp_cost": "ALL",
+      "handler_addr": "$457E",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 32,
+        "hp": 0,
+        "mp": 188,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 176
+      },
+      "prereqs": [
+        20,
+        49
+      ],
+      "prereq_names": [
+        "Sacrifice",
+        "Revive"
+      ],
+      "inherit_base": 50,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        23,
+        93,
+        129,
+        198
+      ],
+      "enemy_users": [
+        "BigEye",
+        "BombCrag",
+        "Gasgon",
+        "Lipsy",
+        "StoneMan",
+        "WhipBird",
+        "WingTree"
+      ]
+    },
+    {
+      "id": 51,
+      "name": "Antidote",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$458F",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 5,
+        "hp": 0,
+        "mp": 21,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 20
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 51,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        62,
+        78,
+        92,
+        130
+      ],
+      "enemy_users": [
+        "Dracky",
+        "FloraMan",
+        "Pixy",
+        "Unicorn"
+      ]
+    },
+    {
+      "id": 52,
+      "name": "NumbOff",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$45A7",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 8,
+        "hp": 0,
+        "mp": 30,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 26
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 52,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        4,
+        90,
+        178
+      ],
+      "enemy_users": [
+        "CoilBird",
+        "MadPlant"
+      ]
+    },
+    {
+      "id": 53,
+      "name": "DeChaos",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$45D8",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 6,
+        "hp": 0,
+        "mp": 24,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 22
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 53,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        91,
+        161,
+        176,
+        178
+      ],
+      "enemy_users": [
+        "CoilBird",
+        "DeadNite",
+        "EvilWand",
+        "FireWeed"
+      ]
+    },
+    {
+      "id": 54,
+      "name": "CurseOff",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$45FE",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 7,
+        "hp": 0,
+        "mp": 27,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 24
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 54,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        92,
+        101,
+        161,
+        167
+      ],
+      "enemy_users": [
+        "DeadNite",
+        "FloraMan",
+        "TreeBoy",
+        "WindMerge"
+      ]
+    },
+    {
+      "id": 55,
+      "name": "StepGuard",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 0,
+        "mp": 40,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 34
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 55,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        93,
+        98,
+        115,
+        124,
+        160,
+        194
+      ],
+      "enemy_users": []
+    },
+    {
+      "id": 56,
+      "name": "MapMagic",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 0,
+        "mp": 40,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 34
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 56,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        104,
+        122,
+        176,
+        181
+      ],
+      "enemy_users": []
+    },
+    {
+      "id": 57,
+      "name": "Chance",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$4616",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 40,
+        "hp": 0,
+        "mp": 224,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 236
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 57,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        19,
+        109,
+        170
+      ],
+      "enemy_users": [
+        "MetalDrak",
+        "Watabou"
+      ]
+    },
+    {
+      "id": 58,
+      "name": "Attack",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 59,
+      "name": "TwinSlash",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$462F",
+      "handler_shared_with": [
+        86
+      ],
+      "learn": {
+        "level": 8,
+        "hp": 80,
+        "mp": 0,
+        "atk": 80,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 59,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        58,
+        64,
+        121,
+        156
+      ],
+      "enemy_users": [
+        "ArmorPede",
+        "Blizzardy",
+        "Goategon",
+        "Grizzly",
+        "LavaMan",
+        "Ogre",
+        "Skullgon",
+        "WildApe"
+      ]
+    },
+    {
+      "id": 60,
+      "name": "Ramming",
+      "kind": "skill",
+      "mp_cost": 1,
+      "handler_addr": "$464C",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 70,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 70,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 60,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        7,
+        29,
+        48,
+        50,
+        72,
+        212
+      ],
+      "enemy_users": [
+        "Almiraj",
+        "BoxSlime",
+        "BullBird",
+        "Goategon",
+        "Metabble"
+      ]
+    },
+    {
+      "id": 61,
+      "name": "Beserker",
+      "kind": "skill",
+      "mp_cost": 1,
+      "handler_addr": "$4653",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 14,
+        "hp": 98,
+        "mp": 0,
+        "atk": 84,
+        "def": 84,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 61,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        23,
+        36,
+        46,
+        65
+      ],
+      "enemy_users": [
+        "AgDevil",
+        "Almiraj",
+        "Gasgon",
+        "Goategon",
+        "GulpBeast",
+        "Spikerous",
+        "Trumpeter"
+      ]
+    },
+    {
+      "id": 62,
+      "name": "Kamikaze",
+      "kind": "skill",
+      "mp_cost": 1,
+      "handler_addr": "$467C",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 18,
+        "hp": 126,
+        "mp": 0,
+        "atk": 108,
+        "def": 108,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [
+        60,
+        65
+      ],
+      "prereq_names": [
+        "Ramming",
+        "ChargeUP"
+      ],
+      "inherit_base": 62,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        36,
+        57,
+        118,
+        158
+      ],
+      "enemy_users": [
+        "ArmyAnt",
+        "Copycat",
+        "HammerMan",
+        "Lipsy",
+        "Metaly",
+        "RotRaven",
+        "Spikerous"
+      ]
+    },
+    {
+      "id": 63,
+      "name": "Massacre",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4683",
+      "handler_shared_with": [
+        64
+      ],
+      "learn": {
+        "level": 12,
+        "hp": 84,
+        "mp": 0,
+        "atk": 72,
+        "def": 0,
+        "agl": 72,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 63,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        30,
+        50,
+        144,
+        149,
+        185,
+        190,
+        201
+      ],
+      "enemy_users": [
+        "Grizzly",
+        "GulpBeast",
+        "IceMan",
+        "MadDragon",
+        "MadKnight",
+        "MetalDrak",
+        "Metaly",
+        "Ogre",
+        "ZapBird"
+      ]
+    },
+    {
+      "id": 64,
+      "name": "EvilSlash",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4683",
+      "handler_shared_with": [
+        63
+      ],
+      "learn": {
+        "level": 15,
+        "hp": 106,
+        "mp": 0,
+        "atk": 90,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 64,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        25,
+        30,
+        40,
+        42,
+        57,
+        128,
+        150,
+        159,
+        182
+      ],
+      "enemy_users": [
+        "Coatol",
+        "Divinegon",
+        "Gigantes",
+        "HammerMan",
+        "KingSlime",
+        "LizardMan",
+        "MadDragon",
+        "MetalDrak",
+        "Mummy",
+        "RogueNite",
+        "Samsi",
+        "TERRY?",
+        "WhipBird"
+      ]
+    },
+    {
+      "id": 65,
+      "name": "ChargeUP",
+      "kind": "skill",
+      "mp_cost": 0,
+      "handler_addr": "$46BE",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 14,
+        "hp": 98,
+        "mp": 0,
+        "atk": 0,
+        "def": 84,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 65,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        10,
+        46,
+        51,
+        57,
+        60,
+        72,
+        99,
+        119,
+        150,
+        196
+      ],
+      "enemy_users": [
+        "Almiraj",
+        "BullBird",
+        "EvilWand",
+        "FangSlime",
+        "Gigantes",
+        "GoHopper",
+        "Golem",
+        "GreatDrak",
+        "HammerMan",
+        "MadGopher",
+        "Oniono",
+        "Skullroo",
+        "WildApe"
+      ]
+    },
+    {
+      "id": 66,
+      "name": "HighJump",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$46CF",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 20,
+        "hp": 140,
+        "mp": 0,
+        "atk": 120,
+        "def": 0,
+        "agl": 120,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 66,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        11,
+        39,
+        76,
+        94,
+        180
+      ],
+      "enemy_users": [
+        "BigEye",
+        "Blizzardy",
+        "CactiBall",
+        "GulpBeast",
+        "MadRaven",
+        "RockSlime",
+        "Snapper",
+        "SpikyBoy",
+        "WingSnake",
+        "Yeti"
+      ]
+    },
+    {
+      "id": 67,
+      "name": "SuckAir",
+      "kind": "skill",
+      "mp_cost": 0,
+      "handler_addr": "$470F",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 17,
+        "hp": 119,
+        "mp": 0,
+        "atk": 0,
+        "def": 102,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 67,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        0,
+        43,
+        191,
+        209
+      ],
+      "enemy_users": [
+        "DrakSlime",
+        "FangSlime",
+        "Gismo",
+        "Lionex",
+        "MadDragon",
+        "SkyDragon",
+        "Snapper",
+        "StoneMan"
+      ]
+    },
+    {
+      "id": 68,
+      "name": "FireSlash",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4720",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 11,
+        "hp": 77,
+        "mp": 34,
+        "atk": 66,
+        "def": 0,
+        "agl": 0,
+        "int": 42
+      },
+      "prereqs": [
+        65,
+        1
+      ],
+      "prereq_names": [
+        "ChargeUP",
+        "Blazemore"
+      ],
+      "inherit_base": 68,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        28,
+        41,
+        133,
+        136,
+        147,
+        151,
+        152
+      ],
+      "enemy_users": [
+        "ArcDemon",
+        "Centasaur",
+        "DeadNoble",
+        "Dragon",
+        "EvilArmor",
+        "Grendal",
+        "LavaMan",
+        "Orochi",
+        "SkulRider",
+        "SuperTen"
+      ]
+    },
+    {
+      "id": 69,
+      "name": "BoltSlash",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$472A",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 11,
+        "hp": 77,
+        "mp": 34,
+        "atk": 66,
+        "def": 0,
+        "agl": 0,
+        "int": 42
+      },
+      "prereqs": [
+        65,
+        90
+      ],
+      "prereq_names": [
+        "ChargeUP",
+        "Lightning"
+      ],
+      "inherit_base": 69,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        40,
+        81,
+        86,
+        127,
+        131,
+        152,
+        158,
+        171
+      ],
+      "enemy_users": [
+        "ArcDemon",
+        "BoneSlave",
+        "Coatol",
+        "EvilArmor",
+        "HammerMan",
+        "LandOwl",
+        "RotRaven",
+        "TERRY?",
+        "Trumpeter",
+        "ZapBird"
+      ]
+    },
+    {
+      "id": 70,
+      "name": "VacuSlash",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4734",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 11,
+        "hp": 77,
+        "mp": 34,
+        "atk": 66,
+        "def": 0,
+        "agl": 0,
+        "int": 42
+      },
+      "prereqs": [
+        65,
+        88
+      ],
+      "prereq_names": [
+        "ChargeUP",
+        "WindBeast"
+      ],
+      "inherit_base": 70,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        31,
+        52,
+        68,
+        75,
+        79,
+        141,
+        146
+      ],
+      "enemy_users": [
+        "ArcDemon",
+        "BombCrag",
+        "HammerMan",
+        "Lionex",
+        "MadCat",
+        "Phoenix",
+        "Rayburn",
+        "RotRaven",
+        "StagBug",
+        "WindBeast",
+        "ZapBird"
+      ]
+    },
+    {
+      "id": 71,
+      "name": "IceSlash",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$473E",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 11,
+        "hp": 77,
+        "mp": 34,
+        "atk": 66,
+        "def": 0,
+        "agl": 0,
+        "int": 42
+      },
+      "prereqs": [
+        65,
+        13
+      ],
+      "prereq_names": [
+        "ChargeUP",
+        "SnowStorm"
+      ],
+      "inherit_base": 71,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        37,
+        59,
+        84,
+        120,
+        156
+      ],
+      "enemy_users": [
+        "ArcDemon",
+        "GreatDrak",
+        "HammerMan",
+        "MadCat",
+        "MetalDrak",
+        "Skullgon",
+        "StagBug",
+        "TailEater",
+        "Yeti"
+      ]
+    },
+    {
+      "id": 72,
+      "name": "MetalCut",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4748",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 68,
+        "mp": 0,
+        "atk": 72,
+        "def": 0,
+        "agl": 62,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 72,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        42,
+        53,
+        125,
+        134,
+        144,
+        182
+      ],
+      "enemy_users": [
+        "ArmyCrab",
+        "BattleRex",
+        "DarkEye",
+        "LavaMan",
+        "Ogre",
+        "RogueNite",
+        "StagBug",
+        "WildApe"
+      ]
+    },
+    {
+      "id": 73,
+      "name": "DrakSlash",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4752",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 68,
+        "mp": 0,
+        "atk": 72,
+        "def": 0,
+        "agl": 62,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 73,
+      "family_code": 1,
+      "family": "dragon",
+      "natural_to_species": [
+        51,
+        76,
+        106,
+        147,
+        152,
+        154
+      ],
+      "enemy_users": [
+        "CurseLamp",
+        "DeadNite",
+        "Durran",
+        "EvilArmor",
+        "Grendal",
+        "KingSlime",
+        "ManEater"
+      ]
+    },
+    {
+      "id": 74,
+      "name": "BeastCut",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$475C",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 62,
+        "mp": 0,
+        "atk": 68,
+        "def": 0,
+        "agl": 72,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 74,
+      "family_code": 2,
+      "family": "beast",
+      "natural_to_species": [
+        5,
+        25,
+        73,
+        115,
+        149
+      ],
+      "enemy_users": [
+        "DuckKite",
+        "Florajay",
+        "GiantWorm",
+        "LizardMan",
+        "MadKnight",
+        "MadPecker",
+        "Ogre",
+        "SlimeNite"
+      ]
+    },
+    {
+      "id": 75,
+      "name": "BirdBlow",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4766",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 62,
+        "mp": 0,
+        "atk": 68,
+        "def": 0,
+        "agl": 72,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 75,
+      "family_code": 3,
+      "family": "bird",
+      "natural_to_species": [
+        60,
+        131,
+        143,
+        154,
+        171,
+        172
+      ],
+      "enemy_users": [
+        "ArcDemon",
+        "BoneSlave",
+        "Droll",
+        "DuckKite",
+        "Durran",
+        "MadGopher",
+        "MadMirror",
+        "Orc",
+        "Skeletor"
+      ]
+    },
+    {
+      "id": 76,
+      "name": "DevilCut",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4770",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 64,
+        "mp": 0,
+        "atk": 58,
+        "def": 0,
+        "agl": 62,
+        "int": 48
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 76,
+      "family_code": 6,
+      "family": "devil",
+      "natural_to_species": [
+        31,
+        127,
+        168,
+        187
+      ],
+      "enemy_users": [
+        "AmberWeed",
+        "DeadNite",
+        "Phoenix",
+        "Rayburn",
+        "Reaper",
+        "SabreMan",
+        "Trumpeter"
+      ]
+    },
+    {
+      "id": 77,
+      "name": "ZombieCut",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$477A",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 64,
+        "mp": 0,
+        "atk": 58,
+        "def": 0,
+        "agl": 62,
+        "int": 48
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 77,
+      "family_code": 7,
+      "family": "zombie",
+      "natural_to_species": [
+        60,
+        93,
+        98,
+        128,
+        150
+      ],
+      "enemy_users": [
+        "Gigantes",
+        "GulpBeast",
+        "MadGopher",
+        "Stubsuck",
+        "WingTree"
+      ]
+    },
+    {
+      "id": 78,
+      "name": "CleanCut",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4784",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 68,
+        "mp": 0,
+        "atk": 72,
+        "def": 0,
+        "agl": 62,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 78,
+      "family_code": 8,
+      "family": "material",
+      "natural_to_species": [
+        14,
+        27,
+        105,
+        145
+      ],
+      "enemy_users": [
+        "EvilSeed",
+        "Skeletor",
+        "SlimeBorg",
+        "SpotKing",
+        "Swordgon",
+        "WildApe"
+      ]
+    },
+    {
+      "id": 79,
+      "name": "MultiCut",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$478E",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 28,
+        "hp": 154,
+        "mp": 140,
+        "atk": 168,
+        "def": 0,
+        "agl": 168,
+        "int": 148
+      },
+      "prereqs": [
+        77,
+        89
+      ],
+      "prereq_names": [
+        "ZombieCut",
+        "Vacuum"
+      ],
+      "inherit_base": 79,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        43,
+        83,
+        186
+      ],
+      "enemy_users": [
+        "GreatDrak",
+        "Roboster",
+        "Skeletor",
+        "Snapper"
+      ]
+    },
+    {
+      "id": 80,
+      "name": "BiAttack",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4798",
+      "handler_shared_with": [
+        81
+      ],
+      "learn": {
+        "level": 19,
+        "hp": 98,
+        "mp": 0,
+        "atk": 88,
+        "def": 0,
+        "agl": 112,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 80,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        41,
+        66,
+        108,
+        153,
+        172,
+        189,
+        206
+      ],
+      "enemy_users": [
+        "Darkdrium",
+        "FangSlime",
+        "RotRaven",
+        "SpotKing",
+        "Wyvern"
+      ]
+    },
+    {
+      "id": 81,
+      "name": "QuadHits",
+      "kind": "skill",
+      "mp_cost": 6,
+      "handler_addr": "$4798",
+      "handler_shared_with": [
+        80
+      ],
+      "learn": {
+        "level": 24,
+        "hp": 124,
+        "mp": 0,
+        "atk": 112,
+        "def": 0,
+        "agl": 136,
+        "int": 0
+      },
+      "prereqs": [
+        80
+      ],
+      "prereq_names": [
+        "BiAttack"
+      ],
+      "inherit_base": 80,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Jamirus",
+        "Orochi",
+        "Pizzaro",
+        "Roboster",
+        "Skeletor",
+        "SuperTen",
+        "WhipBird"
+      ]
+    },
+    {
+      "id": 82,
+      "name": "CallHelp",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$480C",
+      "handler_shared_with": [
+        83
+      ],
+      "learn": {
+        "level": 17,
+        "hp": 84,
+        "mp": 42,
+        "atk": 0,
+        "def": 0,
+        "agl": 68,
+        "int": 54
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 82,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        1,
+        4,
+        10,
+        29,
+        48,
+        64,
+        107,
+        112,
+        113,
+        118,
+        119,
+        125,
+        159,
+        183
+      ],
+      "enemy_users": [
+        "ArmyCrab",
+        "Dragon",
+        "FangSlime",
+        "Gophecada",
+        "Mummy",
+        "Phoenix",
+        "Snaily",
+        "SpotKing",
+        "SpotSlime"
+      ]
+    },
+    {
+      "id": 83,
+      "name": "YellHelp",
+      "kind": "skill",
+      "mp_cost": 8,
+      "handler_addr": "$480C",
+      "handler_shared_with": [
+        82
+      ],
+      "learn": {
+        "level": 23,
+        "hp": 128,
+        "mp": 64,
+        "atk": 0,
+        "def": 0,
+        "agl": 82,
+        "int": 74
+      },
+      "prereqs": [
+        82
+      ],
+      "prereq_names": [
+        "CallHelp"
+      ],
+      "inherit_base": 82,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "ArmyAnt",
+        "ArmyCrab",
+        "Gasgon",
+        "Metabble",
+        "Snapper",
+        "WildApe"
+      ]
+    },
+    {
+      "id": 84,
+      "name": "Focus",
+      "kind": "skill",
+      "mp_cost": 0,
+      "handler_addr": "$4888",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 18,
+        "hp": 126,
+        "mp": 0,
+        "atk": 0,
+        "def": 108,
+        "agl": 108,
+        "int": 108
+      },
+      "prereqs": [
+        65,
+        67,
+        147
+      ],
+      "prereq_names": [
+        "ChargeUP",
+        "SuckAir",
+        "Meditate"
+      ],
+      "inherit_base": 84,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        103,
+        148,
+        173,
+        213
+      ],
+      "enemy_users": [
+        "Akubar",
+        "ChopClown",
+        "Divinegon",
+        "Esterk",
+        "Roboster",
+        "Servant",
+        "Skeletor",
+        "Zoma"
+      ]
+    },
+    {
+      "id": 85,
+      "name": "SquallHit",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4897",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 72,
+        "mp": 0,
+        "atk": 68,
+        "def": 0,
+        "agl": 82,
+        "int": 0
+      },
+      "prereqs": [
+        35,
+        65
+      ],
+      "prereq_names": [
+        "SpeedUp",
+        "ChargeUP"
+      ],
+      "inherit_base": 85,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        2,
+        39,
+        53,
+        58,
+        68,
+        85,
+        146,
+        189
+      ],
+      "enemy_users": [
+        "Goategon",
+        "Grizzly",
+        "IceMan",
+        "LavaMan",
+        "MadCat",
+        "Roboster",
+        "Samsi",
+        "Skullgon",
+        "Unicorn",
+        "WingSlime",
+        "WingSnake",
+        "Wyvern"
+      ]
+    },
+    {
+      "id": 86,
+      "name": "PsycheUp",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$462F",
+      "handler_shared_with": [
+        59
+      ],
+      "learn": {
+        "level": 12,
+        "hp": 72,
+        "mp": 0,
+        "atk": 82,
+        "def": 68,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 86,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        49,
+        67,
+        106,
+        177,
+        196
+      ],
+      "enemy_users": [
+        "DarkHorn",
+        "Golem",
+        "Grendal",
+        "MadCandle",
+        "ManEater",
+        "Saccer",
+        "SlimeBorg"
+      ]
+    },
+    {
+      "id": 87,
+      "name": "RainSlash",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$48B4",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 15,
+        "hp": 92,
+        "mp": 0,
+        "atk": 90,
+        "def": 0,
+        "agl": 96,
+        "int": 0
+      },
+      "prereqs": [
+        80,
+        85
+      ],
+      "prereq_names": [
+        "BiAttack",
+        "SquallHit"
+      ],
+      "inherit_base": 87,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        12,
+        27,
+        80,
+        107,
+        128,
+        136,
+        144,
+        151,
+        189,
+        207
+      ],
+      "enemy_users": [
+        "BombCrag",
+        "Centasaur",
+        "Esterk",
+        "EvilArmor",
+        "MadMirror",
+        "Ogre",
+        "Roboster",
+        "Samsi",
+        "SkulRider",
+        "SlimeBorg",
+        "Snapper",
+        "SpotKing",
+        "StubBird",
+        "Swordgon",
+        "TERRY?"
+      ]
+    },
+    {
+      "id": 88,
+      "name": "WindBeast",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4918",
+      "handler_shared_with": [
+        89
+      ],
+      "learn": {
+        "level": 13,
+        "hp": 74,
+        "mp": 0,
+        "atk": 60,
+        "def": 0,
+        "agl": 84,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 88,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        2,
+        22,
+        33,
+        123,
+        154,
+        165
+      ],
+      "enemy_users": [
+        "GiantMoth",
+        "LizardFly",
+        "NiteWhip",
+        "Pteranod",
+        "WingSlime",
+        "Wyvern"
+      ]
+    },
+    {
+      "id": 89,
+      "name": "Vacuum",
+      "kind": "skill",
+      "mp_cost": 6,
+      "handler_addr": "$4918",
+      "handler_shared_with": [
+        88
+      ],
+      "learn": {
+        "level": 19,
+        "hp": 112,
+        "mp": 0,
+        "atk": 114,
+        "def": 0,
+        "agl": 132,
+        "int": 0
+      },
+      "prereqs": [
+        88
+      ],
+      "prereq_names": [
+        "WindBeast"
+      ],
+      "inherit_base": 88,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Centasaur",
+        "Durran",
+        "Ogre",
+        "Yeti",
+        "ZapBird"
+      ]
+    },
+    {
+      "id": 90,
+      "name": "Lightning",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$41F0",
+      "handler_shared_with": [
+        15,
+        16,
+        17,
+        100
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 65,
+        "mp": 0,
+        "atk": 90,
+        "def": 0,
+        "agl": 52,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 90,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        12,
+        21,
+        86,
+        158,
+        165
+      ],
+      "enemy_users": [
+        "FunkyBird",
+        "NiteWhip",
+        "Rayburn",
+        "RotRaven",
+        "SlimeBorg",
+        "Tatsu",
+        "Tortragon",
+        "ZapBird"
+      ]
+    },
+    {
+      "id": 91,
+      "name": "RockThrow",
+      "kind": "skill",
+      "mp_cost": 5,
+      "handler_addr": "$492B",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 16,
+        "hp": 124,
+        "mp": 0,
+        "atk": 102,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 91,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        11,
+        36,
+        127,
+        185,
+        204
+      ],
+      "enemy_users": [
+        "Baramos",
+        "ManEater",
+        "MetalDrak",
+        "RockSlime",
+        "Spikerous"
+      ]
+    },
+    {
+      "id": 92,
+      "name": "FireAir",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4932",
+      "handler_shared_with": [
+        93,
+        94,
+        95
+      ],
+      "learn": {
+        "level": 3,
+        "hp": 21,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 92,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        0,
+        20,
+        28,
+        33,
+        41,
+        42,
+        43,
+        85,
+        117,
+        165,
+        191,
+        192,
+        201,
+        203,
+        206,
+        209,
+        210,
+        212,
+        214
+      ],
+      "enemy_users": [
+        "Dragon",
+        "DrakSlime",
+        "LizardFly"
+      ]
+    },
+    {
+      "id": 93,
+      "name": "BlazeAir",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4932",
+      "handler_shared_with": [
+        92,
+        94,
+        95
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 70,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [
+        92
+      ],
+      "prereq_names": [
+        "FireAir"
+      ],
+      "inherit_base": 92,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "AmberWeed",
+        "BattleRex",
+        "DragonKid",
+        "DrakSlime",
+        "Gismo",
+        "LizardFly",
+        "NiteWhip",
+        "Phoenix",
+        "StagBug"
+      ]
+    },
+    {
+      "id": 94,
+      "name": "Scorching",
+      "kind": "skill",
+      "mp_cost": 8,
+      "handler_addr": "$4932",
+      "handler_shared_with": [
+        92,
+        93,
+        95
+      ],
+      "learn": {
+        "level": 20,
+        "hp": 140,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [
+        93
+      ],
+      "prereq_names": [
+        "BlazeAir"
+      ],
+      "inherit_base": 92,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Diago",
+        "Lionex",
+        "Orochi",
+        "SkyDragon"
+      ]
+    },
+    {
+      "id": 95,
+      "name": "WhiteFire",
+      "kind": "skill",
+      "mp_cost": 16,
+      "handler_addr": "$4932",
+      "handler_shared_with": [
+        92,
+        93,
+        94
+      ],
+      "learn": {
+        "level": 30,
+        "hp": 210,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [
+        94
+      ],
+      "prereq_names": [
+        "Scorching"
+      ],
+      "inherit_base": 92,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Darkdrium",
+        "Esterk",
+        "Mudou",
+        "Pizzaro",
+        "Servant",
+        "Sidoh",
+        "Snapper"
+      ]
+    },
+    {
+      "id": 96,
+      "name": "FrigidAir",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$493C",
+      "handler_shared_with": [
+        97,
+        98,
+        99
+      ],
+      "learn": {
+        "level": 3,
+        "hp": 21,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 96,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        37,
+        44,
+        66,
+        69,
+        71,
+        84,
+        133,
+        137,
+        148,
+        156,
+        162,
+        176,
+        191,
+        193,
+        203,
+        205,
+        210,
+        214
+      ],
+      "enemy_users": [
+        "LizardFly"
+      ]
+    },
+    {
+      "id": 97,
+      "name": "IceAir",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$493C",
+      "handler_shared_with": [
+        96,
+        98,
+        99
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 70,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [
+        96
+      ],
+      "prereq_names": [
+        "FrigidAir"
+      ],
+      "inherit_base": 96,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "BigEye",
+        "EvilBeast",
+        "EvilWand",
+        "Gismo",
+        "Shadow",
+        "Skullgon",
+        "Wyvern"
+      ]
+    },
+    {
+      "id": 98,
+      "name": "IceStorm",
+      "kind": "skill",
+      "mp_cost": 8,
+      "handler_addr": "$493C",
+      "handler_shared_with": [
+        96,
+        97,
+        99
+      ],
+      "learn": {
+        "level": 20,
+        "hp": 140,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [
+        97
+      ],
+      "prereq_names": [
+        "IceAir"
+      ],
+      "inherit_base": 96,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Akubar",
+        "Bazoo",
+        "GreatDrak",
+        "Rayburn"
+      ]
+    },
+    {
+      "id": 99,
+      "name": "WhiteAir",
+      "kind": "skill",
+      "mp_cost": 16,
+      "handler_addr": "$493C",
+      "handler_shared_with": [
+        96,
+        97,
+        98
+      ],
+      "learn": {
+        "level": 30,
+        "hp": 210,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [
+        98
+      ],
+      "prereq_names": [
+        "IceStorm"
+      ],
+      "inherit_base": 96,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "BattleRex",
+        "Copycat",
+        "Darkdrium",
+        "GateGuard",
+        "MadDragon",
+        "Mudou",
+        "Pizzaro",
+        "Sidoh",
+        "StoneMan",
+        "Zoma"
+      ]
+    },
+    {
+      "id": 100,
+      "name": "Hellblast",
+      "kind": "skill",
+      "mp_cost": 25,
+      "handler_addr": "$41F0",
+      "handler_shared_with": [
+        15,
+        16,
+        17,
+        90
+      ],
+      "learn": {
+        "level": 34,
+        "hp": 184,
+        "mp": 184,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 196
+      },
+      "prereqs": [
+        17,
+        90
+      ],
+      "prereq_names": [
+        "Thordain",
+        "Lightning"
+      ],
+      "inherit_base": 100,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        18,
+        86,
+        203,
+        204,
+        206,
+        211
+      ],
+      "enemy_users": [
+        "Baramos",
+        "Bazoo",
+        "DeathMore",
+        "Divinegon",
+        "Pizzaro",
+        "Sidoh"
+      ]
+    },
+    {
+      "id": 101,
+      "name": "BigBang",
+      "kind": "skill",
+      "mp_cost": 30,
+      "handler_addr": "$4946",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 36,
+        "hp": 196,
+        "mp": 196,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 208
+      },
+      "prereqs": [
+        8,
+        95,
+        99
+      ],
+      "prereq_names": [
+        "Explodet",
+        "WhiteFire",
+        "WhiteAir"
+      ],
+      "inherit_base": 101,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        19,
+        44,
+        199,
+        205,
+        211,
+        213
+      ],
+      "enemy_users": [
+        "Baramos",
+        "DeathMore",
+        "Sidoh",
+        "Zoma"
+      ]
+    },
+    {
+      "id": 102,
+      "name": "MegaMagic",
+      "kind": "skill",
+      "mp_cost": "ALL",
+      "handler_addr": "$494D",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 38,
+        "hp": 0,
+        "mp": 210,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 224
+      },
+      "prereqs": [
+        2,
+        5,
+        8,
+        11,
+        14
+      ],
+      "prereq_names": [
+        "Blazemost",
+        "Firebolt",
+        "Explodet",
+        "Infermost",
+        "Blizzard"
+      ],
+      "inherit_base": 102,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        8,
+        89
+      ],
+      "enemy_users": [
+        "DeadNoble",
+        "RainHawk"
+      ]
+    },
+    {
+      "id": 103,
+      "name": "PoisonHit",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 5,
+        "hp": 35,
+        "mp": 0,
+        "atk": 30,
+        "def": 0,
+        "agl": 0,
+        "int": 30
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 103,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        6,
+        26,
+        31,
+        35,
+        38,
+        126
+      ],
+      "enemy_users": [
+        "Babble",
+        "Centasaur",
+        "Crestpent",
+        "GiantMoth",
+        "HornBeet",
+        "KingCobra",
+        "MadHornet",
+        "Poisongon",
+        "Rayburn",
+        "Spikerous"
+      ]
+    },
+    {
+      "id": 104,
+      "name": "NapAttack",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 7,
+        "hp": 49,
+        "mp": 0,
+        "atk": 42,
+        "def": 0,
+        "agl": 0,
+        "int": 42
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 104,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        14,
+        45,
+        95,
+        96,
+        116,
+        118
+      ],
+      "enemy_users": [
+        "ArmyAnt",
+        "Gulpple",
+        "Lipsy",
+        "MetalKing",
+        "Phoenix",
+        "SpotKing",
+        "Toadstool",
+        "Tonguella"
+      ]
+    },
+    {
+      "id": 105,
+      "name": "Paralyze",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 9,
+        "hp": 63,
+        "mp": 0,
+        "atk": 54,
+        "def": 0,
+        "agl": 0,
+        "int": 54
+      },
+      "prereqs": [
+        103,
+        104
+      ],
+      "prereq_names": [
+        "PoisonHit",
+        "NapAttack"
+      ],
+      "inherit_base": 105,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        3,
+        32,
+        94,
+        105,
+        123,
+        126,
+        159,
+        187
+      ],
+      "enemy_users": [
+        "Balzak",
+        "CactiBall",
+        "Chamelgon",
+        "EvilSeed",
+        "GiantMoth",
+        "MadHornet",
+        "Mummy",
+        "Rayburn",
+        "TreeSlime"
+      ]
+    },
+    {
+      "id": 106,
+      "name": "SleepAir",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4235",
+      "handler_shared_with": [
+        21,
+        22
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 70,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 60
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 106,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        3,
+        20,
+        24,
+        45,
+        63,
+        96,
+        99,
+        106,
+        132,
+        166
+      ],
+      "enemy_users": [
+        "AgDevil",
+        "DragonKid",
+        "FairyDrak",
+        "Goategon",
+        "MadSpirit",
+        "ManEater",
+        "Mudou",
+        "Oniono",
+        "Toadstool",
+        "TreeSlime"
+      ]
+    },
+    {
+      "id": 107,
+      "name": "PalsyAir",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4954",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 16,
+        "hp": 112,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 96
+      },
+      "prereqs": [
+        106,
+        109
+      ],
+      "prereq_names": [
+        "SleepAir",
+        "PoisonAir"
+      ],
+      "inherit_base": 107,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        32,
+        49,
+        91,
+        134
+      ],
+      "enemy_users": [
+        "BombCrag",
+        "DarkEye",
+        "FireWeed"
+      ]
+    },
+    {
+      "id": 108,
+      "name": "PoisonGas",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$497B",
+      "handler_shared_with": [
+        109
+      ],
+      "learn": {
+        "level": 9,
+        "hp": 63,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 54
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 108,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        26,
+        34,
+        39,
+        111,
+        120,
+        163,
+        210
+      ],
+      "enemy_users": [
+        "Hork",
+        "Poisongon",
+        "TailEater"
+      ]
+    },
+    {
+      "id": 109,
+      "name": "PoisonAir",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$497B",
+      "handler_shared_with": [
+        108
+      ],
+      "learn": {
+        "level": 14,
+        "hp": 98,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 84
+      },
+      "prereqs": [
+        108
+      ],
+      "prereq_names": [
+        "PoisonGas"
+      ],
+      "inherit_base": 108,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Andreal",
+        "DeathMore",
+        "Gismo",
+        "Mudou",
+        "Phoenix",
+        "Voodoll",
+        "WingSnake"
+      ]
+    },
+    {
+      "id": 110,
+      "name": "PaniDance",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$42D8",
+      "handler_shared_with": [
+        25,
+        218
+      ],
+      "learn": {
+        "level": 13,
+        "hp": 74,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 78,
+        "int": 78
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 110,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        51,
+        88
+      ],
+      "enemy_users": [
+        "FireWeed",
+        "FunkyBird",
+        "Golem",
+        "MetalDrak",
+        "Skullroo",
+        "WingSnake"
+      ]
+    },
+    {
+      "id": 111,
+      "name": "Curse",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$49D2",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 15,
+        "hp": 0,
+        "mp": 65,
+        "atk": 0,
+        "def": 0,
+        "agl": 82,
+        "int": 82
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 111,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        35,
+        74,
+        102,
+        103,
+        113,
+        168
+      ],
+      "enemy_users": [
+        "ArmyCrab",
+        "BattleRex",
+        "Butterfly",
+        "DuckKite",
+        "FaceTree",
+        "GoatHorn",
+        "KingCobra",
+        "LavaMan",
+        "MadHornet",
+        "Reaper",
+        "RogueNite",
+        "Servant"
+      ]
+    },
+    {
+      "id": 112,
+      "name": "Ahhh",
+      "kind": "skill",
+      "mp_cost": 1,
+      "handler_addr": "$4A00",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 10,
+        "hp": 0,
+        "mp": 0,
+        "atk": 60,
+        "def": 0,
+        "agl": 60,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 112,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        116
+      ],
+      "enemy_users": [
+        "Centasaur",
+        "Lipsy",
+        "StoneMan"
+      ]
+    },
+    {
+      "id": 113,
+      "name": "K.O.Dance",
+      "kind": "skill",
+      "mp_cost": 6,
+      "handler_addr": "$41F7",
+      "handler_shared_with": [
+        18,
+        19
+      ],
+      "learn": {
+        "level": 20,
+        "hp": 140,
+        "mp": 72,
+        "atk": 0,
+        "def": 0,
+        "agl": 120,
+        "int": 120
+      },
+      "prereqs": [
+        111,
+        120
+      ],
+      "prereq_names": [
+        "Curse",
+        "LureDance"
+      ],
+      "inherit_base": 113,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        35,
+        54,
+        100,
+        162
+      ],
+      "enemy_users": [
+        "DanceVegi",
+        "Shadow",
+        "SuperTen"
+      ]
+    },
+    {
+      "id": 114,
+      "name": "SandStorm",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4A22",
+      "handler_shared_with": [
+        115
+      ],
+      "learn": {
+        "level": 10,
+        "hp": 70,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 70,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 114,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        29,
+        65,
+        79,
+        185
+      ],
+      "enemy_users": [
+        "BigRoost",
+        "Blizzardy",
+        "HornBeet",
+        "MadHornet",
+        "MetalDrak",
+        "MiniDrak",
+        "Snapper",
+        "Trumpeter",
+        "WhipBird"
+      ]
+    },
+    {
+      "id": 115,
+      "name": "Radiant",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4A22",
+      "handler_shared_with": [
+        114
+      ],
+      "learn": {
+        "level": 12,
+        "hp": 0,
+        "mp": 42,
+        "atk": 0,
+        "def": 0,
+        "agl": 72,
+        "int": 72
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 115,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        8,
+        105,
+        120,
+        123,
+        134,
+        155,
+        166
+      ],
+      "enemy_users": [
+        "DarkEye",
+        "Dracky",
+        "GiantMoth",
+        "Grizzly",
+        "MadSpirit",
+        "Slime",
+        "TailEater"
+      ]
+    },
+    {
+      "id": 116,
+      "name": "EerieLite",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4A57",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 14,
+        "hp": 0,
+        "mp": 65,
+        "atk": 0,
+        "def": 0,
+        "agl": 84,
+        "int": 84
+      },
+      "prereqs": [
+        111,
+        115
+      ],
+      "prereq_names": [
+        "Curse",
+        "Radiant"
+      ],
+      "inherit_base": 116,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        6,
+        77,
+        163,
+        168
+      ],
+      "enemy_users": [
+        "FangSlime",
+        "KingCobra",
+        "LavaMan",
+        "MistyWing",
+        "Reaper",
+        "StoneMan"
+      ]
+    },
+    {
+      "id": 117,
+      "name": "OddDance",
+      "kind": "skill",
+      "mp_cost": 0,
+      "handler_addr": "$4A7B",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 10,
+        "hp": 54,
+        "mp": 27,
+        "atk": 0,
+        "def": 0,
+        "agl": 63,
+        "int": 49
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 117,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        47,
+        82,
+        94,
+        102,
+        115,
+        174,
+        195
+      ],
+      "enemy_users": [
+        "ArmyCrab",
+        "CactiBall",
+        "FaceTree",
+        "GiantMoth",
+        "GiantWorm",
+        "MadGoose",
+        "MudDoll"
+      ]
+    },
+    {
+      "id": 118,
+      "name": "RobDance",
+      "kind": "skill",
+      "mp_cost": 0,
+      "handler_addr": "$4308",
+      "handler_shared_with": [
+        26
+      ],
+      "learn": {
+        "level": 12,
+        "hp": 68,
+        "mp": 39,
+        "atk": 0,
+        "def": 0,
+        "agl": 85,
+        "int": 61
+      },
+      "prereqs": [
+        117
+      ],
+      "prereq_names": [
+        "OddDance"
+      ],
+      "inherit_base": 117,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Copycat",
+        "DarkCrab",
+        "Eyeder",
+        "Golem"
+      ]
+    },
+    {
+      "id": 119,
+      "name": "SideStep",
+      "kind": "skill",
+      "mp_cost": 1,
+      "handler_addr": "$4AA3",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 9,
+        "hp": 63,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 54,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 119,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        13,
+        48,
+        81,
+        100,
+        195
+      ],
+      "enemy_users": [
+        "DanceVegi",
+        "DarkEye",
+        "DeadNoble",
+        "Eyeder",
+        "JewelBag",
+        "LandOwl",
+        "MudDoll",
+        "PillowRat",
+        "Slabbit"
+      ]
+    },
+    {
+      "id": 120,
+      "name": "LureDance",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4AC5",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 14,
+        "hp": 84,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 98,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 120,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        30,
+        56,
+        82,
+        100
+      ],
+      "enemy_users": [
+        "Balzak",
+        "CactiBall",
+        "DanceVegi",
+        "Eyeder",
+        "LizardMan",
+        "MadCat",
+        "MadDragon",
+        "MadGoose",
+        "Mommonja",
+        "Orc",
+        "Orochi",
+        "Unicorn"
+      ]
+    },
+    {
+      "id": 121,
+      "name": "LushLicks",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4AE7",
+      "handler_shared_with": [
+        122
+      ],
+      "learn": {
+        "level": 7,
+        "hp": 55,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 67,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 121,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        1,
+        24,
+        26,
+        45,
+        53,
+        110,
+        116,
+        155,
+        163
+      ],
+      "enemy_users": [
+        "CactiBall",
+        "FireWeed",
+        "GiantSlug",
+        "Hork",
+        "Lipsy",
+        "ManEater",
+        "Spooky",
+        "SpotSlime",
+        "Tonguella"
+      ]
+    },
+    {
+      "id": 122,
+      "name": "SickLick",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4AE7",
+      "handler_shared_with": [
+        121
+      ],
+      "learn": {
+        "level": 13,
+        "hp": 81,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 94,
+        "int": 0
+      },
+      "prereqs": [
+        121
+      ],
+      "prereq_names": [
+        "LushLicks"
+      ],
+      "inherit_base": 121,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Blizzardy",
+        "DarkCrab",
+        "Diago",
+        "GoatHorn",
+        "GreatDrak",
+        "RogueNite",
+        "Snapper"
+      ]
+    },
+    {
+      "id": 123,
+      "name": "LegSweep",
+      "kind": "skill",
+      "mp_cost": 1,
+      "handler_addr": "$4B34",
+      "handler_shared_with": [
+        124
+      ],
+      "learn": {
+        "level": 6,
+        "hp": 32,
+        "mp": 0,
+        "atk": 31,
+        "def": 0,
+        "agl": 48,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 123,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        13,
+        58,
+        64,
+        68,
+        117,
+        136,
+        183
+      ],
+      "enemy_users": [
+        "Goopi",
+        "LizardMan",
+        "MadCat",
+        "SkulRider",
+        "StagBug"
+      ]
+    },
+    {
+      "id": 124,
+      "name": "BigTrip",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4B34",
+      "handler_shared_with": [
+        123
+      ],
+      "learn": {
+        "level": 12,
+        "hp": 66,
+        "mp": 0,
+        "atk": 63,
+        "def": 0,
+        "agl": 77,
+        "int": 0
+      },
+      "prereqs": [
+        123
+      ],
+      "prereq_names": [
+        "LegSweep"
+      ],
+      "inherit_base": 123,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "BombCrag",
+        "EvilBeast",
+        "Grizzly",
+        "MetalDrak",
+        "Slabbit",
+        "WildApe"
+      ]
+    },
+    {
+      "id": 125,
+      "name": "WarCry",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4B68",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 14,
+        "hp": 120,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 125,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        10,
+        50,
+        59,
+        65,
+        135
+      ],
+      "enemy_users": [
+        "DeadNite",
+        "EyeBall",
+        "FangSlime",
+        "FireWeed",
+        "GulpBeast",
+        "MistyWing",
+        "SlimeBorg",
+        "Trumpeter",
+        "Voodoll",
+        "Yeti"
+      ]
+    },
+    {
+      "id": 126,
+      "name": "Whistle",
+      "kind": "skill",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 4,
+        "hp": 0,
+        "mp": 28,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 24
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 126,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        13,
+        109,
+        110,
+        177
+      ],
+      "enemy_users": [
+        "Watabou"
+      ]
+    },
+    {
+      "id": 127,
+      "name": "Imitate",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4B92",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 21,
+        "hp": 147,
+        "mp": 147,
+        "atk": 126,
+        "def": 126,
+        "agl": 126,
+        "int": 126
+      },
+      "prereqs": [
+        41,
+        84
+      ],
+      "prereq_names": [
+        "Transform",
+        "Focus"
+      ],
+      "inherit_base": 127,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        1,
+        54,
+        109,
+        174
+      ],
+      "enemy_users": [
+        "BombCrag",
+        "Copycat",
+        "GateGuard",
+        "Gigantes",
+        "Rosevine",
+        "SpotSlime",
+        "SuperTen",
+        "Watabou"
+      ]
+    },
+    {
+      "id": 128,
+      "name": "DeMagic",
+      "kind": "skill",
+      "mp_cost": 7,
+      "handler_addr": "$4BA1",
+      "handler_shared_with": [
+        131,
+        165
+      ],
+      "learn": {
+        "level": 20,
+        "hp": 0,
+        "mp": 100,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 140
+      },
+      "prereqs": [
+        129,
+        130
+      ],
+      "prereq_names": [
+        "Surge",
+        "UltraDown"
+      ],
+      "inherit_base": 128,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        205,
+        207,
+        209,
+        213
+      ],
+      "enemy_users": [
+        "Bazoo",
+        "Esterk",
+        "Rosevine",
+        "Sidoh",
+        "Zoma"
+      ]
+    },
+    {
+      "id": 129,
+      "name": "Surge",
+      "kind": "skill",
+      "mp_cost": 7,
+      "handler_addr": "$4BAB",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 23,
+        "hp": 0,
+        "mp": 130,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 170
+      },
+      "prereqs": [
+        51,
+        52,
+        53,
+        54
+      ],
+      "prereq_names": [
+        "Antidote",
+        "NumbOff",
+        "DeChaos",
+        "CurseOff"
+      ],
+      "inherit_base": 129,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        19,
+        89,
+        199,
+        201
+      ],
+      "enemy_users": [
+        "Andreal",
+        "BombCrag",
+        "GoldSlime",
+        "LandOwl",
+        "RainHawk"
+      ]
+    },
+    {
+      "id": 130,
+      "name": "UltraDown",
+      "kind": "skill",
+      "mp_cost": 7,
+      "handler_addr": "$4BB6",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 21,
+        "hp": 0,
+        "mp": 110,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 150
+      },
+      "prereqs": [
+        24,
+        29,
+        33
+      ],
+      "prereq_names": [
+        "Surround",
+        "Defence",
+        "SlowAll"
+      ],
+      "inherit_base": 130,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        108,
+        212
+      ],
+      "enemy_users": [
+        "Pizzaro",
+        "ZapBird"
+      ]
+    },
+    {
+      "id": 131,
+      "name": "ThickFog",
+      "kind": "skill",
+      "mp_cost": 8,
+      "handler_addr": "$4BA1",
+      "handler_shared_with": [
+        128,
+        165
+      ],
+      "learn": {
+        "level": 22,
+        "hp": 0,
+        "mp": 120,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 160
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 131,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        87,
+        111,
+        145,
+        162,
+        166
+      ],
+      "enemy_users": [
+        "Balzak",
+        "Copycat",
+        "Droll",
+        "MadSpirit",
+        "Shadow",
+        "Spikerous",
+        "WhipBird"
+      ]
+    },
+    {
+      "id": 132,
+      "name": "TatsuCall",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$4BD0",
+      "handler_shared_with": [
+        133,
+        134,
+        135
+      ],
+      "learn": {
+        "level": 20,
+        "hp": 0,
+        "mp": 70,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 90
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 132,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        87,
+        169,
+        199,
+        202,
+        211
+      ],
+      "enemy_users": [
+        "IronTurt"
+      ]
+    },
+    {
+      "id": 133,
+      "name": "DiagoCall",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$4BD0",
+      "handler_shared_with": [
+        132,
+        134,
+        135
+      ],
+      "learn": {
+        "level": 25,
+        "hp": 0,
+        "mp": 100,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 120
+      },
+      "prereqs": [
+        132
+      ],
+      "prereq_names": [
+        "TatsuCall"
+      ],
+      "inherit_base": 132,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "JewelBag"
+      ]
+    },
+    {
+      "id": 134,
+      "name": "SamsiCall",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$4BD0",
+      "handler_shared_with": [
+        132,
+        133,
+        135
+      ],
+      "learn": {
+        "level": 30,
+        "hp": 0,
+        "mp": 130,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 150
+      },
+      "prereqs": [
+        133
+      ],
+      "prereq_names": [
+        "DiagoCall"
+      ],
+      "inherit_base": 132,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "DeathMore",
+        "LavaMan"
+      ]
+    },
+    {
+      "id": 135,
+      "name": "BazooCall",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$4BD0",
+      "handler_shared_with": [
+        132,
+        133,
+        134
+      ],
+      "learn": {
+        "level": 35,
+        "hp": 0,
+        "mp": 160,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 180
+      },
+      "prereqs": [
+        134
+      ],
+      "prereq_names": [
+        "SamsiCall"
+      ],
+      "inherit_base": 132,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Hargon",
+        "Phoenix",
+        "StoneMan",
+        "WhipBird"
+      ]
+    },
+    {
+      "id": 136,
+      "name": "Cover",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4C31",
+      "handler_shared_with": [
+        137
+      ],
+      "learn": {
+        "level": 5,
+        "hp": 35,
+        "mp": 0,
+        "atk": 0,
+        "def": 30,
+        "agl": 30,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 136,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        55,
+        147,
+        192,
+        197
+      ],
+      "enemy_users": [
+        "AgDevil",
+        "Dragon",
+        "Droll",
+        "IceMan",
+        "Metaly",
+        "StoneMan",
+        "Tatsu",
+        "WindMerge"
+      ]
+    },
+    {
+      "id": 137,
+      "name": "Guardian",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4C31",
+      "handler_shared_with": [
+        136
+      ],
+      "learn": {
+        "level": 12,
+        "hp": 84,
+        "mp": 0,
+        "atk": 0,
+        "def": 72,
+        "agl": 72,
+        "int": 0
+      },
+      "prereqs": [
+        136
+      ],
+      "prereq_names": [
+        "Cover"
+      ],
+      "inherit_base": 136,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "FaceTree",
+        "GateGuard",
+        "Gigantes",
+        "Grendal",
+        "IronTurt",
+        "MetalKing",
+        "Metaly",
+        "StoneMan",
+        "Unicorn"
+      ]
+    },
+    {
+      "id": 138,
+      "name": "TailWind",
+      "kind": "skill",
+      "mp_cost": 6,
+      "handler_addr": "$4C3B",
+      "handler_shared_with": [
+        139
+      ],
+      "learn": {
+        "level": 11,
+        "hp": 75,
+        "mp": 0,
+        "atk": 0,
+        "def": 84,
+        "agl": 70,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 138,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        2,
+        22,
+        76,
+        85,
+        126,
+        153
+      ],
+      "enemy_users": [
+        "IceMan",
+        "MadHornet",
+        "MadRaven",
+        "MistyWing",
+        "Phoenix",
+        "Pteranod",
+        "WindMerge",
+        "WingSlime"
+      ]
+    },
+    {
+      "id": 139,
+      "name": "StormWind",
+      "kind": "skill",
+      "mp_cost": 10,
+      "handler_addr": "$4C3B",
+      "handler_shared_with": [
+        138
+      ],
+      "learn": {
+        "level": 19,
+        "hp": 140,
+        "mp": 0,
+        "atk": 0,
+        "def": 126,
+        "agl": 140,
+        "int": 0
+      },
+      "prereqs": [
+        138
+      ],
+      "prereq_names": [
+        "TailWind"
+      ],
+      "inherit_base": 138,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Blizzardy",
+        "Jamirus",
+        "MadHornet",
+        "Roboster",
+        "Rosevine",
+        "Servant"
+      ]
+    },
+    {
+      "id": 140,
+      "name": "Dodge",
+      "kind": "skill",
+      "mp_cost": 4,
+      "handler_addr": "$4C72",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 18,
+        "hp": 126,
+        "mp": 0,
+        "atk": 108,
+        "def": 108,
+        "agl": 108,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 140,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        20,
+        79,
+        110,
+        183
+      ],
+      "enemy_users": [
+        "BigRoost",
+        "DeadNoble",
+        "DragonKid",
+        "Gasgon",
+        "GiantSlug"
+      ]
+    },
+    {
+      "id": 141,
+      "name": "Defence",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4C81",
+      "handler_shared_with": [
+        142,
+        144
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 142,
+      "name": "StrongD",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4C81",
+      "handler_shared_with": [
+        141,
+        144
+      ],
+      "learn": {
+        "level": 14,
+        "hp": 98,
+        "mp": 0,
+        "atk": 0,
+        "def": 84,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 142,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        11,
+        55,
+        89,
+        129,
+        193,
+        196
+      ],
+      "enemy_users": [
+        "AgDevil",
+        "DeadNoble",
+        "Digster",
+        "Golem",
+        "IronTurt",
+        "LizardMan",
+        "RockSlime"
+      ]
+    },
+    {
+      "id": 143,
+      "name": "SuckAll",
+      "kind": "skill",
+      "mp_cost": 2,
+      "handler_addr": "$4CA5",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 13,
+        "hp": 91,
+        "mp": 0,
+        "atk": 0,
+        "def": 78,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 143,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        28,
+        37,
+        129,
+        178,
+        197
+      ],
+      "enemy_users": [
+        "Andreal",
+        "Digster",
+        "Gasgon",
+        "GreatDrak",
+        "Metaly",
+        "StoneMan"
+      ]
+    },
+    {
+      "id": 144,
+      "name": "BladeD",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4C81",
+      "handler_shared_with": [
+        141,
+        142
+      ],
+      "learn": {
+        "level": 14,
+        "hp": 98,
+        "mp": 0,
+        "atk": 84,
+        "def": 84,
+        "agl": 84,
+        "int": 0
+      },
+      "prereqs": [
+        59,
+        142
+      ],
+      "prereq_names": [
+        "TwinSlash",
+        "StrongD"
+      ],
+      "inherit_base": 144,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        12,
+        27,
+        108
+      ],
+      "enemy_users": [
+        "CactiBall",
+        "FangSlime",
+        "SlimeBorg",
+        "Swordgon"
+      ]
+    },
+    {
+      "id": 145,
+      "name": "DanceShut",
+      "kind": "skill",
+      "mp_cost": 6,
+      "handler_addr": "$4CDC",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 16,
+        "hp": 100,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 120,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 145,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        103
+      ],
+      "enemy_users": [
+        "DeadNite",
+        "Reaper",
+        "Trumpeter",
+        "Yeti",
+        "ZapBird"
+      ]
+    },
+    {
+      "id": 146,
+      "name": "MouthShut",
+      "kind": "skill",
+      "mp_cost": 6,
+      "handler_addr": "$4D0A",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 17,
+        "hp": 120,
+        "mp": 0,
+        "atk": 100,
+        "def": 0,
+        "agl": 140,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 146,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        14,
+        56,
+        96,
+        155
+      ],
+      "enemy_users": [
+        "BombCrag",
+        "DanceVegi",
+        "MadDragon",
+        "Mommonja",
+        "Reaper",
+        "SpotKing",
+        "Toadstool",
+        "Yeti",
+        "ZapBird"
+      ]
+    },
+    {
+      "id": 147,
+      "name": "Meditate",
+      "kind": "skill",
+      "mp_cost": 8,
+      "handler_addr": "$4D38",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 26,
+        "hp": 182,
+        "mp": 0,
+        "atk": 0,
+        "def": 156,
+        "agl": 0,
+        "int": 156
+      },
+      "prereqs": [
+        137,
+        142
+      ],
+      "prereq_names": [
+        "Guardian",
+        "StrongD"
+      ],
+      "inherit_base": 147,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        44,
+        197,
+        198,
+        200
+      ],
+      "enemy_users": [
+        "BombCrag",
+        "ChopClown",
+        "DracoLord",
+        "HornBeet"
+      ]
+    },
+    {
+      "id": 148,
+      "name": "Hustle",
+      "kind": "skill",
+      "mp_cost": 12,
+      "handler_addr": "$44C4",
+      "handler_shared_with": [
+        43,
+        44,
+        45,
+        46,
+        47
+      ],
+      "learn": {
+        "level": 18,
+        "hp": 114,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 130,
+        "int": 96
+      },
+      "prereqs": [
+        45,
+        119
+      ],
+      "prereq_names": [
+        "HealAll",
+        "SideStep"
+      ],
+      "inherit_base": 148,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        54,
+        88,
+        195
+      ],
+      "enemy_users": [
+        "BattleRex",
+        "Digster",
+        "FunkyBird",
+        "Golem",
+        "Orochi",
+        "Phoenix",
+        "SuperTen",
+        "WhipBird"
+      ]
+    },
+    {
+      "id": 149,
+      "name": "LifeSong",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$4D92",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 27,
+        "hp": 198,
+        "mp": 94,
+        "atk": 0,
+        "def": 0,
+        "agl": 145,
+        "int": 162
+      },
+      "prereqs": [
+        49,
+        125
+      ],
+      "prereq_names": [
+        "Revive",
+        "WarCry"
+      ],
+      "inherit_base": 149,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        73,
+        179
+      ],
+      "enemy_users": [
+        "Facer",
+        "Florajay",
+        "Grendal"
+      ]
+    },
+    {
+      "id": 150,
+      "name": "LifeDance",
+      "kind": "skill",
+      "mp_cost": 1,
+      "handler_addr": "$4DE9",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 30,
+        "hp": 210,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 180,
+        "int": 180
+      },
+      "prereqs": [
+        20,
+        148
+      ],
+      "prereq_names": [
+        "Sacrifice",
+        "Hustle"
+      ],
+      "inherit_base": 150,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        88
+      ],
+      "enemy_users": [
+        "Digster",
+        "FunkyBird",
+        "MetalKing",
+        "Metaly"
+      ]
+    },
+    {
+      "id": 151,
+      "name": "Run",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 152,
+      "name": "Daze",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4E0A",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 153,
+      "name": "HitAlly",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4E8A",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 154,
+      "name": "HitEnemy",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EA4",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 155,
+      "name": "HitRandom",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EBE",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 156,
+      "name": "Scared",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EE3",
+      "handler_shared_with": [
+        157,
+        169
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 157,
+      "name": "Dance",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EE3",
+      "handler_shared_with": [
+        156,
+        169
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 158,
+      "name": "Trip",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4ED8",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 159,
+      "name": "Paralyze",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EE7",
+      "handler_shared_with": [
+        160
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 160,
+      "name": "CANTMOVE",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EE7",
+      "handler_shared_with": [
+        159
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 161,
+      "name": "RUN",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4E3A",
+      "handler_shared_with": [
+        219
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 162,
+      "name": "CALLHOROR",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EF9",
+      "handler_shared_with": [
+        164
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 163,
+      "name": "HealUsAll",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4F2C",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 164,
+      "name": "Smashed",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EF9",
+      "handler_shared_with": [
+        162
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 165,
+      "name": "FILTHZONE",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4BA1",
+      "handler_shared_with": [
+        128,
+        131
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 166,
+      "name": "ALLCHANGE",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4F35",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 167,
+      "name": "BIGSLEEP",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4F54",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 168,
+      "name": "MP0",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4F7F",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 169,
+      "name": "ECHO",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4EE3",
+      "handler_shared_with": [
+        156,
+        157
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 170,
+      "name": "CHGDRAGON",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4E0E",
+      "handler_shared_with": [
+        213
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 171,
+      "name": "CALLEVIL",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4FA1",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 172,
+      "name": "FREEZY",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4FCC",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 173,
+      "name": "ALLREVIVE",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$44F8",
+      "handler_shared_with": [
+        48,
+        49
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 174,
+      "name": "RESTOREMP",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$4FFC",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 175,
+      "name": "METEOR",
+      "kind": "internal",
+      "mp_cost": 0,
+      "handler_addr": "$501F",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 176,
+      "name": "HERB",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 177,
+      "name": "HEALWATER",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 178,
+      "name": "SAGESTONE",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 179,
+      "name": "WARLDDEW",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 180,
+      "name": "POTION",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 181,
+      "name": "ELFWATER",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 182,
+      "name": "ANTIDOTE",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 183,
+      "name": "MOONHERB",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 184,
+      "name": "SKYBELL",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 185,
+      "name": "LAUREL",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 186,
+      "name": "AWAKESAND",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 187,
+      "name": "WARLDLEAF",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 188,
+      "name": "LIFEACORN",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 189,
+      "name": "MYSTICNUT",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 190,
+      "name": "PWRSEED",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 191,
+      "name": "DEFSEED",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 192,
+      "name": "AGILSEED",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 193,
+      "name": "INTSEED",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 194,
+      "name": "FEEDMEAT",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 195,
+      "name": "BEFFJERKY",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 196,
+      "name": "PORKCHOP",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 197,
+      "name": "BADMEAT",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 198,
+      "name": "SIRLOIN",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 199,
+      "name": "BOLTSTAFF",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 200,
+      "name": "STAFF",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 201,
+      "name": "BLOKSTAFF",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 202,
+      "name": "LAVASTAFF",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 203,
+      "name": "SNOWSTAFF",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 204,
+      "name": "FIRESTAFF",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 205,
+      "name": "WARPWING",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 206,
+      "name": "TINYMEDAL",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 207,
+      "name": "QuestBk",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        208,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 208,
+      "name": "HORRORBK",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        209,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 209,
+      "name": "BENICEBK",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        210,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 210,
+      "name": "CHEATERBK",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        211,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 211,
+      "name": "SMARTBK",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        212
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 212,
+      "name": "COMEDYBK",
+      "kind": "item_effect",
+      "mp_cost": 0,
+      "handler_addr": "$4625",
+      "handler_shared_with": [
+        55,
+        56,
+        58,
+        103,
+        104,
+        105,
+        126,
+        151,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211
+      ],
+      "learn": {
+        "level": 0,
+        "hp": 0,
+        "mp": 0,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 213,
+      "name": "BeDragon",
+      "kind": "skill",
+      "mp_cost": 9,
+      "handler_addr": "$4E0E",
+      "handler_shared_with": [
+        170
+      ],
+      "learn": {
+        "level": 28,
+        "hp": 0,
+        "mp": 124,
+        "atk": 0,
+        "def": 0,
+        "agl": 0,
+        "int": 160
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 213,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        0,
+        38,
+        200
+      ],
+      "enemy_users": [
+        "BombCrag",
+        "Crestpent",
+        "DracoLord"
+      ]
+    },
+    {
+      "id": 214,
+      "name": "Smashlime",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4E15",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 62,
+        "mp": 0,
+        "atk": 68,
+        "def": 0,
+        "agl": 72,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 214,
+      "family_code": 0,
+      "family": "slime",
+      "natural_to_species": [
+        61,
+        180
+      ],
+      "enemy_users": [
+        "DeadNite",
+        "Droll",
+        "DuckKite",
+        "FairyRat",
+        "Gigantes",
+        "GreatDrak",
+        "SpikyBoy"
+      ]
+    },
+    {
+      "id": 215,
+      "name": "Sheldodge",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4E1F",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 68,
+        "mp": 0,
+        "atk": 72,
+        "def": 0,
+        "agl": 62,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 215,
+      "family_code": 5,
+      "family": "bug",
+      "natural_to_species": [
+        70,
+        80
+      ],
+      "enemy_users": [
+        "ArmyCrab",
+        "Droll",
+        "FaceTree",
+        "Skeletor",
+        "StubBird"
+      ],
+      "note": "ROM name 'Sheldodge' is a placeholder; this is the Bug-family cut (family code 5). FAQ calls it 'BugBlow'. patches/bank_041.asm renames the displayed string to 'BugCut'."
+    },
+    {
+      "id": 216,
+      "name": "Branching",
+      "kind": "skill",
+      "mp_cost": 3,
+      "handler_addr": "$4E29",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 12,
+        "hp": 68,
+        "mp": 0,
+        "atk": 62,
+        "def": 0,
+        "agl": 72,
+        "int": 0
+      },
+      "prereqs": [],
+      "prereq_names": [],
+      "inherit_base": 216,
+      "family_code": 4,
+      "family": "plant",
+      "natural_to_species": [
+        72,
+        124,
+        140
+      ],
+      "enemy_users": [
+        "BullBird",
+        "Digster",
+        "Droll",
+        "IceMan",
+        "MedusaEye",
+        "Snapper",
+        "WingSnake"
+      ]
+    },
+    {
+      "id": 217,
+      "name": "GigaSlash",
+      "kind": "skill",
+      "mp_cost": 20,
+      "handler_addr": "$4E33",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 33,
+        "hp": 231,
+        "mp": 164,
+        "atk": 198,
+        "def": 0,
+        "agl": 198,
+        "int": 198
+      },
+      "prereqs": [
+        68,
+        69,
+        70,
+        71
+      ],
+      "prereq_names": [
+        "FireSlash",
+        "BoltSlash",
+        "VacuSlash",
+        "IceSlash"
+      ],
+      "inherit_base": 217,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [
+        25,
+        149,
+        207
+      ],
+      "enemy_users": [
+        "Esterk",
+        "Skeletor"
+      ]
+    },
+    {
+      "id": 218,
+      "name": "LIFE",
+      "kind": "internal",
+      "mp_cost": 5,
+      "handler_addr": "$42D8",
+      "handler_shared_with": [
+        25,
+        110
+      ],
+      "learn": {
+        "level": 250,
+        "hp": 51343,
+        "mp": 49335,
+        "atk": 60410,
+        "def": 52168,
+        "agl": 49775,
+        "int": 27527
+      },
+      "prereqs": [
+        203,
+        127,
+        194,
+        149,
+        98
+      ],
+      "prereq_names": [
+        "SNOWSTAFF",
+        "Imitate",
+        "FEEDMEAT",
+        "LifeSong",
+        "IceStorm"
+      ],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 219,
+      "name": "RUN",
+      "kind": "skill",
+      "mp_cost": 0,
+      "handler_addr": "$4E3A",
+      "handler_shared_with": [
+        161
+      ],
+      "learn": {
+        "level": 203,
+        "hp": 49767,
+        "mp": 25266,
+        "atk": 18379,
+        "def": 43458,
+        "agl": 52071,
+        "int": 10319
+      },
+      "prereqs": [
+        5,
+        33,
+        0,
+        7,
+        215
+      ],
+      "prereq_names": [
+        "Firebolt",
+        "SlowAll",
+        "Blaze",
+        "Boom",
+        "Sheldodge"
+      ],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": [
+        "Metabble",
+        "Metaly"
+      ]
+    },
+    {
+      "id": 220,
+      "name": "IRONIZE",
+      "kind": "internal",
+      "mp_cost": 2,
+      "handler_addr": "$4479",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 201,
+        "hp": 24523,
+        "mp": 1320,
+        "atk": 33,
+        "def": 55065,
+        "agl": 52169,
+        "int": 10359
+      },
+      "prereqs": [
+        5,
+        33,
+        3,
+        19,
+        215
+      ],
+      "prereq_names": [
+        "Firebolt",
+        "SlowAll",
+        "Firebal",
+        "Defeat",
+        "Sheldodge"
+      ],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    },
+    {
+      "id": 221,
+      "name": "Ahhh",
+      "kind": "internal",
+      "mp_cost": 2,
+      "handler_addr": "$4E6D",
+      "handler_shared_with": [],
+      "learn": {
+        "level": 201,
+        "hp": 22475,
+        "mp": 63170,
+        "atk": 64098,
+        "def": 55784,
+        "agl": 49847,
+        "int": 25220
+      },
+      "prereqs": [
+        250,
+        215,
+        216,
+        183,
+        194
+      ],
+      "prereq_names": [
+        "?250",
+        "Sheldodge",
+        "Branching",
+        "MOONHERB",
+        "FEEDMEAT"
+      ],
+      "inherit_base": null,
+      "family_code": null,
+      "family": null,
+      "natural_to_species": [],
+      "enemy_users": []
+    }
+  ]
+}
