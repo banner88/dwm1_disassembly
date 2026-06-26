@@ -1405,3 +1405,62 @@ the other can be satisfied by toggling it across that boundary rather than holdi
 **Rule**: when a single flag is read at two phases needing opposite values, set it transiently
 in the phase that needs the exception and rely on the engine's existing reset for the other —
 don't hold the exceptional value through both phases.
+
+## Session 42 Lessons — Keystone (table-driven dispatch, $26DD ceiling lifted)
+
+### Empty-bank-as-logic-home: dodge dense-bank fragmentation entirely
+**Problem**: the three remaining hardcoded intercepts live in dense banks (ROM0, `$0B`) with
+no contiguous free space — the largest genuine runs were ~9 B (`$0B`) and the only big ROM0
+run was inside audio data (see next lesson). Scattering ~40 B of interdependent helpers across
+6-12 B fragments with `jr`-range constraints is fragile.
+**Technique**: put **all new logic + data in a previously-empty reserved bank** (here `$71`)
+and reach it via `rst $10`. Each in-bank edit then collapses to a **≤10-byte byte-neutral
+stub** (`ld hl,$71xx / rst $10 / ld hl,wScratch` + nops). No ROM0/`$0B` free space needed;
+no shifting of dense code/audio.
+**Rule**: when an edit needs more contiguous free bytes than a dense bank offers, don't
+fragment — move the body to an empty bank behind `rst $10` and leave a fixed-size trampoline
+in place. The far-call **far-COPY** contract (routine writes WRAM scratch, caller reads it; DE
+preserved) is the reliable shape — mirror `bank_06a`/`NewSpeciesInfoCopy`, don't rely on
+returning a pointer in HL.
+
+### `push bc`/`pop bc` survives an `rst $10` round trip — use it to protect a live register
+**Context**: the ROM0 collision-threshold reader holds the player's tile value in `C` across
+the record lookup (`ld c,[hl]` before, `ld a,c` after). `rst $10` clobbers `BC`, so routing
+that site through bank `$71` looked impossible.
+**Technique**: wrap the far call as `push bc / ld hl,$7100 / rst $10 / pop bc`. `rst $10` is
+stack-balanced (the whole game relies on it returning), so a value pushed before it is intact
+after — `C` is preserved.
+**Rule**: `rst $10` clobbers A/BC and is unreliable for HL-return, but it does **not** corrupt
+the caller's stack; `push`/`pop` around it protects any register the routine would otherwise
+destroy.
+
+### The free-space scanner lies inside data regions — runs of $00/$FF can be live data
+**Symptom**: `tools/find_free_space.py`-style scans reported "free" runs at ROM0 `$318E`,
+`$3A83`, and an `AudioNOPBlock` — but these sit **inside decoded audio wave/song data**
+(`cp $fe` = `$FE` samples, `ld bc,$0101` = `$01` samples, NOP runs = rests). Overwriting them
+would corrupt sound, not reclaim space.
+**Rule**: a filler-valued run is only *safe* free space if it is end-of-bank fill or
+explicitly-known padding (e.g. the `$3BC1` "unreferenced rst $38" run prior patches used).
+Verify against labels/section boundaries before trusting a scan; in pinned data banks, a
+`$00`/`$FF` byte may be meaningful. This is what pushed S42 to the empty-bank approach above.
+
+### Recognise when a "hardcoded" thing is already O(1) — don't add a table for its own sake
+**Context**: `MapIDClampForPalette` looked like a hardcoded `cp`-chain, but it already returned
+`$00` for *every* mapID `≥ $6C` — only the lone `$6B→$16` case was special, and that fallback
+was dead (overridden by `CustomRoomAttr`/`CustomRoomPalPtr`). Adding rooms never required
+editing it.
+**Rule**: before "table-ifying" an intercept, check its actual scaling. If it's already O(1),
+the systematic move is to remove the one special case (here: make it uniform `$00`), not to
+build a per-room table that costs scarce space for no benefit.
+
+### Staircase tiles ($3C-$3F) are inert outside gates — safe as visible exit markers
+**Context**: edge exits were invisible walk-on triggers on plain sand. The gate tileset's
+PIT/staircase quad (`$3C-$3F`, behavior class `$0F`) is the natural "step here to transition"
+visual.
+**Why safe**: class `$0F` is auto-detected **only** by the gate-world exit handler
+(`$0B:$46A7`, `$AA>>2==$0F`). In a non-gate room that handler is inactive, so a staircase tile
+is purely cosmetic + walkable; the warp is still driven by the coordinate-based exit record.
+**Rule**: you can place a class-`$0F` staircase on any exit metatile to mark it, as long as the
+room isn't running the gate exit handler — it won't auto-trigger anything; the exit record does
+the work. (Shared layouts mean the marker also appears in sibling rooms that reuse the entry;
+it only warps where a record exists.)

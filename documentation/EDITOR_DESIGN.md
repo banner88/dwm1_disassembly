@@ -120,6 +120,45 @@ is what makes the editor's `build_project.py` possible.
 in behavior (regression), and add a *second* custom room **by table row alone**
 — zero new hardcoded patches. That is the green light for the whole backend.
 
+> **✅ BUILT — S42 (user-confirmed in SameBoy).** The keystone is done. All three
+> remaining hardcoded intercepts are now table-driven, and the old `$6F` room
+> ceiling is lifted to editor scale. Realized slightly differently from the
+> single-`$6A`-table sketch above: the master table is **distributed per concern**
+> (same "append a row to add a room" property), and the *logic* lives in the
+> previously-empty **bank `$71`** (reached via `rst $10`) so every in-bank edit is
+> a **byte-neutral** stub — no scarce/fragmented ROM0 or bank-`$0B` free space, and
+> no risk to the dense code/audio banks. As-built map:
+> - **Encounters** (Encounters #1 folded in): `RoomEncTable` (bank `$71`, 3 B/room
+>   `[enabled, gate, floor]`, indexed `mapID−$6B`) via `CustomEncResolve` (bank `$71`
+>   entry 1). Replaces the hardcoded `cp $6B` whitelist in bank `$0B`.
+> - **`$26DD` tileset/dims/threshold records past `$6F`**: `Custom26DDTable` (bank
+>   `$71`, 8 B/room, indexed `mapID−$70`) via `CopyCustomRoomRecord` (bank `$71`
+>   entry 0), which far-copies the record into `wRoomRecScratch`. All three consumer
+>   sites (both bank-`$0B` GFX loaders + the ROM0 collision-threshold reader) read it.
+>   For `mapID < $70` the same routine replicates the original in-ROM0 `$26DD/$2A5D`
+>   index byte-for-byte, so vanilla + `$6B-$6F` are unchanged. **This is the piece
+>   that lifts the ceiling** (the in-ROM0 `$26DD` `$70` slot collides with the gate
+>   table at `$2A5D`; the far table sidesteps it). Threshold site preserves `C` with
+>   `push bc`/`pop bc` around the `rst $10` (the far-call clobbers `BC`).
+> - **Render** (`CustomRoomPalPtr`/`CustomRoomAttr`, bank `$17`): relocated into the
+>   bank tail and widened to 6 entries (`$6B-$70`); `$6E/$6F` are vanilla-fallback
+>   placeholders. Editor appends one entry per room.
+> - **Palette source** (`MapIDClampForPalette`, ROM0): made **uniform** (`$00` for all
+>   custom rooms) — already O(1), the lone `$6B→$16` special case (dead, overridden by
+>   the render tables) was removed; no per-room table needed here.
+> - **Room data/exits** (`CustomSourceMapTable`/`CustomRoomPtrTable`, bank `$60`):
+>   widened to 6 entries.
+>
+> **Proof:** room **`$70`** (amber) — the first room *past* the old `$6F` ceiling —
+> was added by table rows alone (no new hardcoded patches). User-confirmed it renders,
+> its encounters fire, and its exit works, plus a walkable 3-room loop
+> `$6B → $6C → $70 → $6B` with visible **staircase** exit markers. `$6B/$6C/$6D`
+> behavior preserved; gate-rotation `$6D` (Pillar B) untouched. Files:
+> `bank_071.asm` (new), `bank_000/00b/017/060/064`, `wram`, `game.asm`,
+> `tools/build_gate_room.py` (exit staircases), `tools/verify_integrity.py`.
+> The remaining sketch above (single `$6A` table, dims fields, etc.) stands as the
+> *project.json → table* shape `build_project.py` will emit.
+
 ---
 
 ## 3. project.json — the four-layer schema (v1, designed; not built)

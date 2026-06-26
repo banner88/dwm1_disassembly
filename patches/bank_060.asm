@@ -569,11 +569,17 @@ CustomSourceMapTable:
     db $04                      ; Room 0 ($6B) → Farm
     db $04                      ; Room 1 ($6C) → Farm (mirror $6B; CustomSourceMapTable)
     db $04                      ; Room 2 ($6D) → Farm (Pillar B gate-rotation room)
+    db $04                      ; Room 3 ($6E) → Farm (placeholder, never entered)
+    db $04                      ; Room 4 ($6F) → Farm (placeholder, never entered)
+    db $04                      ; Room 5 ($70) → Farm (keystone proof room)
 
 CustomRoomPtrTable:
-    dw CustomRoom0_SubTable
-    dw CustomRoom1_SubTable
-    dw CustomRoom2_SubTable
+    dw CustomRoom0_SubTable      ; $6B
+    dw CustomRoom1_SubTable      ; $6C
+    dw CustomRoom2_SubTable      ; $6D
+    dw CustomRoomDummy_SubTable  ; $6E placeholder
+    dw CustomRoomDummy_SubTable  ; $6F placeholder
+    dw CustomRoom5_SubTable      ; $70 keystone proof room
 
 ; =============================================
 ; Room 0 (mapID $6B) — 2-screen vertical room
@@ -643,7 +649,8 @@ CustomRoom1_S0_NPCs:
     db $FF
 
 CustomRoom1_S0_Exits:
-    db $FF                          ; no edge exits (return via NPC)
+    db $03, $01, $70, $00, $00, $07, $06  ; edge exit (3,1) → Room $70 spawn (7,6)
+    db $FF                          ; (NPC script_id=3 still offers a return to $6B)
 
 CustomRoom1_Screen1:
     dw wCustomStep_Room6C_S1
@@ -695,4 +702,41 @@ CustomRoom2_S0_NPCs:
 
 CustomRoom2_S0_Exits:
     db $05, $03, $00, $80, $00, $00, $00  ; descent: PIT walk (col5,row3), gate_flag=$80 → next gate floor
+    db $FF                          ; gate-rotation room ONLY (reached via Gate of Villager, not the walk loop)
+
+; =============================================================================
+; Dummy subtable for unallocated custom mapIDs ($6E/$6F placeholders).
+; Never entered (no exit leads here); all screens invalid.
+; =============================================================================
+CustomRoomDummy_SubTable:
+    dw $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF
+
+; =============================================================================
+; Room 5 (mapID $70) — KEYSTONE PROOF: first room PAST the old $6F ceiling.
+; =============================================================================
+; Renders via the same fully table-driven path as $6B-$6D, but its $26DD-style
+; record (tileset / dimensions / collision threshold) is supplied by bank $71's
+; far Custom26DDTable[0] — NOT the in-ROM0 $26DD table (whose $70 slot collides
+; with the gate tileset table at $2A5D). Reuses $6B's gate-island screen-0 layout
+; (bank $64 entry 0), gate attr (CustomRoomAttr[5] = bank $64 entry 1) and its OWN ember
+; palette (CustomRoomPalPtr[5] = CustomPaletteColors_70). Single screen.
+; Encounters enabled (RoomEncTable[5]).
+; A single edge exit closes the loop back to $6B.
+; =============================================================================
+CustomRoom5_SubTable:
+    dw CustomRoom5_Screen0
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom5_Screen0:
+    dw wCustomStep_Room70_S0        ; $D47E — safe step counter
+    db 0, $64                       ; reuse $6B island layout (bank $64 entry 0)
+    dw CustomRoom5_S0_NPCs
+    dw CustomRoom5_S0_Exits
+
+CustomRoom5_S0_NPCs:
+    db $8F, $FF, $07, $06, $00      ; spawn (7,6) — central walkable (matches $6B S0)
+    db $FF
+
+CustomRoom5_S0_Exits:
+    db $03, $01, $6B, $00, $00, $07, $06  ; edge exit (3,1) → Room $6B spawn (7,6) — close the loop
     db $FF

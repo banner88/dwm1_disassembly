@@ -80,15 +80,15 @@ jr_00b_4027:
     ld de, $2a5d                    ; tileset_table (gate rooms)
 
 jr_00b_4037:
-    ; Index into table: DE = tileset_table + mapID * 8
-    ; For custom rooms: raw mapID indexes the $2A35 entry (combined tileset)
-    call CustomGFXMapID         ; ROM0: raw mapID for $6B → reads $2A35 (bank $67)
-    ld l, a
-    ld h, $00
-    add hl, hl                      ; × 2
-    add hl, hl                      ; × 4
-    add hl, hl                      ; × 8
-    add hl, de                      ; HL = &tileset_table[mapID]
+    ; Table-driven record fetch (all mapIDs, incl $70+ past the old ceiling):
+    ; bank $71 entry 0 far-copies the 8-byte $26DD record for wMapID into
+    ; wRoomRecScratch; HL → scratch. (DE base set above is now unused but kept.)
+    ld hl, $7100
+    rst $10
+    ld hl, wRoomRecScratch
+    nop
+    nop
+    nop
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -149,14 +149,13 @@ labelb_4088:
     ld de, $2a5d
 
 jr_00b_4094:
-    ; For custom rooms: raw mapID indexes the $2A35 entry (combined tileset)
-    call CustomGFXMapID         ; ROM0: raw mapID for $6B → reads $2A35 (bank $67)
-    ld l, a
-    ld h, $00
-    add hl, hl
-    add hl, hl
-    add hl, hl
-    add hl, de
+    ; Table-driven record fetch (mirror of Entry 0); bank $71 entry 0 → scratch.
+    ld hl, $7100
+    rst $10
+    ld hl, wRoomRecScratch
+    nop
+    nop
+    nop
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -1379,8 +1378,8 @@ jr_00b_4674:
     cp $59                          ; Maze 3
     jr z, jr_00b_46d5
 
-    cp $6B                          ; custom MedalMan room — random encounters enabled
-    jr z, Seed6BEncounterPool
+    cp CUSTOM_ROOM_START            ; any custom room ($6B+) → table-driven encounter check
+    jr nc, CustomRoomEncCheck
 
     ret
 
@@ -1393,12 +1392,20 @@ jr_00b_4674:
 ; wGateID/wCurrentFloor are consumed only when a battle fires (by
 ; EncounterMonsterSelect → LoadNextDungeonFloor), so writing them here before
 ; the per-step encounter handler is safe.
-Seed6BEncounterPool:
-    xor a
-    ld [wGateID], a                 ; $C935 = 0  (gate 0)
-    inc a
-    ld [wCurrentFloor], a           ; $C939 = 1  (floor 1)
-    jp jr_00b_46d5                  ; run the per-step encounter handler
+; CustomRoomEncCheck — table-driven custom-room encounter gate (replaces the
+; hardcoded $6B-only Seed6BEncounterPool). Bank $71 entry 1 looks up
+; RoomEncTable[mapID-$6B]: if enabled it pins wGateID/wCurrentFloor (consumed
+; only when a battle fires) and sets wRoomEncFlag=$01; else clears it. We then
+; run the per-step encounter handler iff enabled. $6B keeps its exact old
+; behavior (gate 0 / floor 1); $6C/$6D stay silent as before; new rooms are
+; data-driven (e.g. $70 enabled — proof encounters fire past the old ceiling).
+CustomRoomEncCheck:
+    ld hl, $7101                    ; bank $71 entry 1: resolve RoomEncTable[mapID-$6B]
+    rst $10
+    ld a, [wRoomEncFlag]
+    or a
+    jr nz, jr_00b_46d5              ; enabled → per-step encounter handler
+    ret
 
 
 ; --- Gate world exit handler ---

@@ -2646,15 +2646,10 @@ CustomPalCheck:
 ; is already table-driven in bank $60. Tileset + collision threshold + room
 ; dimensions live in the per-mapID $26DD record (ROM0) for mapIDs $6B-$6F;
 ; mapIDs $70+ need a $26DD intercept (follow-up). See ROADMAP Phase 2C.
-CustomRoomPalPtr:
-    dw CustomPaletteColors_6B    ; $6B — gate floor palette (slots 0-3)
-    dw CustomPaletteColors_6C    ; $6C — distinct "dusk" palette (Pillar A proof)
-    dw CustomPaletteColors_6B    ; $6D — Pillar B gate-rotation room (borrows $6B gate palette)
-
-CustomRoomAttr:
-    db $64, $01                  ; $6B → bank $64, attr base entry 1 (2-screen)
-    db $64, $01                  ; $6C → bank $64, attr base entry 1 (mirror $6B, 2-screen)
-    db $64, $01                  ; $6D → bank $64, attr base entry 1 (Pillar B; screen 0 only)
+; Per-custom-room render tables RELOCATED to the bank tail (see CustomRoomPalPtr /
+; CustomRoomAttr below) so they can grow to 6 entries without shifting the palette
+; data that follows. These 12 bytes are reserved padding to keep that data in place.
+    ds 12, $00
 
 ; CustomPaletteColors_6B: 64 bytes (8 palettes × 4 colors × 2 bytes)
 ; HALF 1 (gate-tiles): the REAL in-game Gate of Beginning BG palette, dumped
@@ -2713,3 +2708,55 @@ HighBattlePal:
     ret
 .pal:
     db $67, $4d, $ff, $6b, $ff, $7f, $00, $00  ; id-224 battle palette (RGB555 LE)
+
+; ---------------------------------------------------------------------------
+; Per-custom-room render tables (relocated from $6CC8 into the bank-$17 filler
+; tail so they extend to 6 entries — $6B,$6C,$6D,$6E,$6F,$70 — without shifting
+; any pointer-bearing byte above). Indexed (wMapID - $6B) by CustomPalCheck /
+; CustomAttrCheck. $6E/$6F are placeholders (ptr $0000 / bank $00 → borrow
+; vanilla). $70 = keystone proof room: gate palette + bank $64 attr, proving the
+; render path works PAST the old $6F ceiling. Editor appends one entry per room.
+; ---------------------------------------------------------------------------
+CustomRoomPalPtr:
+    dw CustomPaletteColors_6B    ; $6B — gate floor palette
+    dw CustomPaletteColors_6C    ; $6C — distinct "dusk" palette (Pillar A proof)
+    dw CustomPaletteColors_6D    ; $6D — verdant green (gate-rotation proof)
+    dw $0000                     ; $6E — placeholder (borrow vanilla palette)
+    dw $0000                     ; $6F — placeholder (borrow vanilla palette)
+    dw CustomPaletteColors_70    ; $70 — ember amber (past-the-ceiling proof room)
+
+CustomRoomAttr:
+    db $64, $01                  ; $6B → bank $64, attr base entry 1
+    db $64, $01                  ; $6C → bank $64, attr base entry 1
+    db $64, $01                  ; $6D → bank $64, attr base entry 1
+    db $00, $00                  ; $6E → placeholder (vanilla attr fallback)
+    db $00, $00                  ; $6F → placeholder (vanilla attr fallback)
+    db $64, $01                  ; $70 → bank $64, attr base entry 1 (proof room)
+
+; ---------------------------------------------------------------------------
+; Distinct per-room proof palettes (so the four demo rooms are tellable apart
+; at a glance, and as a stronger per-room-palette proof). Luminance-themed
+; recolours of the gate palette: structure preserved, hue fixed per room.
+; Throwaway proof palettes; the editor overwrites them per-room.
+;   $6D = VERDANT green (gate-rotation proof, reached via Gate of Villager)
+;   $70 = EMBER amber  (past-the-$6F-ceiling proof room)
+; ---------------------------------------------------------------------------
+CustomPaletteColors_6D:
+    db $C4, $11, $E9, $2B, $48, $23, $00, $00  ; sub-pal 0
+    db $E9, $2B, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 1
+    db $05, $16, $E9, $2B, $48, $23, $00, $00  ; sub-pal 2
+    db $A4, $11, $E9, $2B, $A9, $27, $00, $00  ; sub-pal 3
+    db $66, $1A, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 4
+    db $45, $1A, $E9, $2B, $C9, $2B, $00, $00  ; sub-pal 5
+    db $A6, $1E, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 6
+    db $28, $23, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 7
+
+CustomPaletteColors_70:
+    db $2E, $09, $7F, $12, $1A, $0E, $00, $00  ; sub-pal 0
+    db $7F, $12, $7F, $12, $7F, $12, $00, $00  ; sub-pal 1
+    db $50, $09, $7F, $12, $1A, $0E, $00, $00  ; sub-pal 2
+    db $0D, $09, $7F, $12, $5D, $0E, $00, $00  ; sub-pal 3
+    db $93, $09, $7F, $12, $7F, $12, $00, $00  ; sub-pal 4
+    db $72, $09, $7F, $12, $7E, $12, $00, $00  ; sub-pal 5
+    db $B5, $0D, $7F, $12, $7F, $12, $00, $00  ; sub-pal 6
+    db $19, $0E, $7F, $12, $7F, $12, $00, $00  ; sub-pal 7

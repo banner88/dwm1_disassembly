@@ -213,6 +213,16 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       for v1 stories.
 
 ### Phase 2 — Content format & compiler (the editor backend)
+- [x] **Architectural keystone — table-driven custom-room dispatch (DONE S42, user-confirmed).**
+      All remaining hardcoded per-room intercepts are now table-driven and the old `$6F` room
+      ceiling is lifted to editor scale. Dispatch *logic* lives in the previously-empty bank
+      `$71` (reached via `rst $10`) so every in-bank edit is byte-neutral. `$70+` rooms get
+      their `$26DD` tileset/dims/threshold record from `Custom26DDTable` (bank `$71`,
+      far-copied to `wRoomRecScratch`), sidestepping the in-ROM0 `$70`↔`$2A5D` gate-table
+      collision. Encounters folded in (see Encounters #1). Proven by room `$70` (amber) added
+      *past* the ceiling by table rows alone — renders, encounters, exits all confirmed.
+      Owning doc: **EDITOR_DESIGN.md §2** (as-built map). This is the green light for
+      `build_project.py`.
 - [ ] `project.json` schema: rooms/screens/exits/NPCs, scripts
       (decompiler pseudo-code), dialogue (auto-wrap 18 ch, auto-DTE,
       auto page-split, two-level table emission), named flags
@@ -225,9 +235,11 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 - [ ] **Regression baseline**: re-express the v23 content as
       example-project/ and diff behavior. *Accept*: same rooms, NPCs,
       dialogue, item give work from generated asm.
-- [ ] **Encounters #1 — per-room toggle** (from the proven Strategy A): emit a
-      `RoomEncTable` (mapID → enabled/gateID/floor) the whitelist hook scans,
-      replacing the hardcoded `cp $6B`. Project fields per room: `encounters`,
+- [x] **Encounters #1 — per-room toggle** (DONE S42, user-confirmed). `RoomEncTable`
+      (bank `$71`, 3 B/room `[enabled, gateID, floor]`, indexed `mapID−$6B`) scanned by
+      `CustomEncResolve` (bank `$71` entry 1) via the bank-`$0B` whitelist hook, replacing
+      the hardcoded `cp $6B`. `$6B` reproduces its old gate-0/floor-1 behavior exactly;
+      `$6C-$6F` silent; `$70` enabled (proof). Project fields per room: `encounters`,
       `gate_id` (0-31), `floor`. Spec in CROSSBANK_ROOMS.md.
 - [ ] **Encounters #2 — custom monster pools**: 26-byte pool in a free bank +
       intercept of `EncounterMonsterSelect`'s pool fetch for custom mapIDs (or
@@ -248,6 +260,9 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
          hardcoded `cp $6B` render code remains. Proven by a 2nd room `$6C` (same
          island, distinct moonlit palette, zero new code). `$6B` byte-identical
          regression verified; verifier PASS. (GATE_GENERATION.md §7.1–7.4.)
+         **S42 generalisation:** the old `$6B-$6F` `$26DD`-record ceiling is lifted —
+         `$70+` rooms read their record from `Custom26DDTable` (bank `$71`, far-copied
+         to `wRoomRecScratch`). See EDITOR_DESIGN.md §2 (keystone, as-built) + Phase 2.
    - [x] **Insertion half (= "Pillar B", S41, user-confirmed in SameBoy).** Custom room
          `$6D` inserted into **gate 1 (Gate of Villager)**, descending floor-to-floor with the
          correct in-gate transition feel. Mechanism chosen was **not** the `rst $00` slot below

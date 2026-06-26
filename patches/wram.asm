@@ -221,8 +221,19 @@ wCustomStep_Room6C_S0:: db ;d47a — Room $6C screen 0 step counter
 wCustomStep_Room6C_S1:: db ;d47b — Room $6C screen 1 step counter
 wCustomStep_Room6C_S5:: db ;d47c — Room $6C screen 5 step counter
 wCustomStep_Room6D_S0:: db ;d47d — Room $6D screen 0 step counter (Pillar B)
+wCustomStep_Room70_S0:: db ;d47e — Room $70 screen 0 step counter (keystone proof room)
 
-    ds $313                         ; gap ($D47E-$D790)
+; Custom-room dispatch scratch ($D47F-$D487), populated by bank $71 via rst $10.
+; wRoomRecScratch: the 8-byte $26DD-style record (tileset/dims/threshold) for the
+;   current mapID, far-copied from ROM0 ($26DD/$2A5D, mapIDs <$70) or bank $71's
+;   Custom26DDTable (mapIDs $70+). Read by the GFX loaders (offset 0) and the
+;   collision threshold reader (offset 6).
+; wRoomEncFlag: set by bank $71 entry 1 (CustomEncResolve) — $01 if the current
+;   custom room has encounters enabled (RoomEncTable), else $00.
+wRoomRecScratch:: ds 8 ;d47f
+wRoomEncFlag:: db ;d487
+
+    ds $309                         ; gap ($D488-$D790)
 
 wGroundItemData:: db ;d791
 

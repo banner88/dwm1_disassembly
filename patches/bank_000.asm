@@ -6102,13 +6102,12 @@ TileBuffer_1E96:
     ld de, $2a63
 
 UseGateWorldTable:
-    call CustomGFXMapID         ; ROM0: raw mapID for $6B (reads custom threshold at $2A3B)
-    ld l, a
-    ld h, $00
-    add hl, hl
-    add hl, hl
-    add hl, hl
-    add hl, de
+    push bc                     ; preserve C (saved tile value) across rst $10
+    ld hl, $7100               ; bank $71 entry 0: $26DD record for wMapID → wRoomRecScratch
+    rst $10
+    pop bc
+    ld hl, wRoomRecScratch + 6  ; threshold byte = record offset 6
+    nop
     ld a, c
     ld b, $ff
     cp [hl]
@@ -13865,19 +13864,24 @@ MapIDClampForDispatch::
     xor a                   ; A=0 → Castle handler (maintains VRAM state)
     ret
 
-; Also used by bank $17 palette lookup — returns safe mapID for AttrPtrTable
+; Also used by bank $17 palette lookup — returns safe mapID for AttrPtrTable.
+; Uniform/systematic: every custom room ($6B+) sources $00 (Castle) for its
+; AttrPtrTable fallback. O(1) — no per-room special-casing, so new editor rooms
+; need no edit here. (Was: $6B→$16, $6C+→$00. The lone $6B→$16 fallback was dead
+; — $6B's attr+palette come from CustomRoomAttr/CustomRoomPalPtr, which override
+; this for any room with a custom entry.) Padded to hold its 16-byte ROM0 slot.
 MapIDClampForPalette::
     ld a, [wMapID]
     cp CUSTOM_ROOM_START
     ret c
-    cp $6C                      ; room $6C+ = Castle source
-    jr nc, .useCastle
-    ld a, $16                   ; room $6B AttrPtrTable fallback = $16; NOTE: actual
-                                ;   $6B palette is overridden by CustomPaletteColors_6B
-                                ;   (gate floor $629D) via CustomPalCheck — GATE_GENERATION §7.3
+    xor a                       ; A = $00 (Castle) for ALL custom rooms
     ret
-.useCastle:
-    xor a                       ; A = $00 (Castle)
-    ret
+    rst $38
+    rst $38
+    rst $38
+    rst $38
+    rst $38
+    rst $38
+    rst $38
     rst $38
 

@@ -56,9 +56,11 @@ def place(tile, pal, quad, r0, c0, palv):
 s0t, s0p = new_screen(True, False)
 place(s0t, s0p, TREE, 3, 3, 3);  place(s0t, s0p, TREE, 4, 16, 3)
 place(s0t, s0p, DUNE, 9, 6, 0);  place(s0t, s0p, PIT, 6, 10, 0)
+place(s0t, s0p, PIT, 2, 6, 0)    # STAIRCASE marker on the edge exit (metatile 3,1): $6B→$6C→$70→$6B
 # S1 (bottom screen): ocean sides + bottom, open top; spawn (r6,c10), exit GreatTree (r14,c6)
 s1t, s1p = new_screen(False, True)
 place(s1t, s1p, TREE, 2, 15, 3); place(s1t, s1p, DUNE, 4, 4, 0); place(s1t, s1p, PIT, 9, 10, 0)
+place(s1t, s1p, PIT, 14, 6, 0)   # STAIRCASE marker on the south edge exit (metatile 3,7): $6B→GreatTree
 
 def gen_attr(pal_grid):
     """Pack a 16x20 per-position palette grid into the 256-byte attr block
@@ -88,6 +90,10 @@ bank = '''; ====================================================================
 ;   Per-position palette (attr): floor/dune/pit = pal0 (sand), ocean = pal1 (blue),
 ;   tree = pal3 (green). Objects: TREE metatile $34-$37 (pal3), DUNE $38-$3B (pal0),
 ;   PIT $3C-$3F. Ocean wall ($08) borders all edges. 2 vertical screens.
+;   Edge exits are marked with a walkable STAIRCASE ($3C-$3F): S0 metatile (3,1)
+;   and S1 metatile (3,7), so the room exits are visible (not invisible walk-on
+;   triggers). Shared layout: $6C/$6D/$70 reuse these entries, so the staircase
+;   shows in them too, but only warps where an exit record exists.
 ; Regenerate with: python3 tools/build_gate_room.py   (see GATE_GENERATION.md §7.2)
 ; Engine reads via DecompressTileLayout ($1627): D=bank($64), E=entry index.
 ; =============================================================================
@@ -97,7 +103,8 @@ SECTION "ROM Bank $064", ROMX[$4000], BANK[$64]
     dw CustomAttr_Room6B_S0
     dw CustomLayout_Room6B_S1
     dw CustomAttr_Room6B_S1
-
+    ; (Pillar A: $6C reuses these same entries 0/2 layout + 1/3 attr as $6B;
+    ;  its distinct look comes purely from CustomRoomPalPtr[1] = dusk palette.)
 '''
 bank += blk('CustomLayout_Room6B_S0', lay0, 'top screen (LZSS)') + '\n\n'
 bank += blk('CustomAttr_Room6B_S0', attr0, 'per-position sand/ocean/tree (LZSS)') + '\n\n'

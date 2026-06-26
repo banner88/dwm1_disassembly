@@ -36,7 +36,7 @@ PATCH_FILES = [
     "bank_059.asm",
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_07e.asm"]  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_071.asm", "bank_07e.asm"]  # don't exist in clean disassembly/
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

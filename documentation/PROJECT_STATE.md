@@ -5,6 +5,42 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-26 (Session 42 — **Phase 2 keystone: table-driven custom-room
+> dispatch COMPLETE & user-confirmed in SameBoy.** Integrity PASS 4/4, clean build `1ca6579…`;
+> test ROM `DWM-S42-custom-room-keystone-v3.gbc`, **user-confirmed: 3-room walk loop with
+> visible staircase exits, amber `$70` renders past the old ceiling with working encounters +
+> exit, green `$6D` gate rotation → boss still works.**)
+> **S42 — the editor-backend keystone (EDITOR_DESIGN §2) is built.** All remaining hardcoded
+> per-room intercepts are now table-driven, and the old `$6B-$6F` room ceiling is lifted to
+> editor scale. **Architecture:** dispatch *logic + data* live in the previously-empty bank
+> **`$71`** (reached via `rst $10`), so every in-bank edit is a **byte-neutral** stub — no
+> scarce/fragmented ROM0 or bank-`$0B` free space consumed, and no risk to dense code/audio
+> banks. (1) **Encounters #1 folded in:** `RoomEncTable` (bank `$71`, 3 B/room
+> `[enabled,gate,floor]`, indexed `mapID−$6B`) via `CustomEncResolve` (bank `$71` e1) replaces
+> the hardcoded `cp $6B` whitelist in `$0B`; `$6B` keeps gate-0/floor-1 exactly. (2) **`$26DD`
+> ceiling lifted:** `Custom26DDTable` (bank `$71`, 8 B/room, indexed `mapID−$70`) via
+> `CopyCustomRoomRecord` (bank `$71` e0) far-copies the tileset/dims/threshold record into
+> `wRoomRecScratch` ($D47F). All three consumers (both `$0B` GFX loaders + the ROM0 collision
+> threshold reader) read scratch; for `mapID<$70` the routine replicates the original
+> `$26DD/$2A5D` index byte-for-byte (vanilla + `$6B-$6F` unchanged). Threshold site preserves
+> `C` with `push bc`/`pop bc` around `rst $10`. This sidesteps the in-ROM0 `$70`↔`$2A5D`
+> gate-table collision. (3) **Render tables** (`CustomRoomPalPtr`/`CustomRoomAttr`, `$17`)
+> relocated to the bank tail + widened to 6 entries (`$6B-$70`; `$6E/$6F` vanilla-fallback).
+> (4) **`MapIDClampForPalette`** (ROM0) made **uniform** (`$00` for all custom rooms) — already
+> O(1); removed the dead `$6B→$16` special case. (5) **Room data** (`CustomSourceMapTable`/
+> `CustomRoomPtrTable`, `$60`) widened to 6. **Proof:** room **`$70`** (amber) added *past* the
+> ceiling by table rows alone; walkable loop `$6B→$6C→$70→$6B` with **staircase** exit markers
+> (`$3C-$3F` placed on the exit metatiles via `tools/build_gate_room.py`); `$6D` (green) left
+> as the gate-rotation-only proof. `$6B/$6C/$6D` behavior preserved. Files: `patches/bank_071`
+> (NEW), `bank_000` (clamp + threshold site), `bank_00b` (2 GFX sites + encounter hook),
+> `bank_017` (render tables relocated/widened + `$6D`/`$70` palettes), `bank_060` (tables + `$70`
+> room + chained exits), `bank_064` (regenerated: exit staircases), `wram`
+> (`wCustomStep_Room70_S0 $D47E`, `wRoomRecScratch $D47F`, `wRoomEncFlag $D487`), `game.asm`
+> (`bank_071` include), `tools/build_gate_room.py`, `tools/verify_integrity.py`
+> (`PATCH_NEW_FILES += bank_071`). Docs updated in place: EDITOR_DESIGN §2 (as-built),
+> ROADMAP (Phase 2 keystone + Encounters #1 ticked, Pillar A ceiling-lift note), KEY_LESSONS
+> (S42). `APPLY_THESE_CHANGES.md` regenerated for git.
+>
 > Last verified: 2026-06-26 (Session 41 — **Phase 2C: custom gate room INSERTION half ("Pillar B")
 > complete & user-confirmed in SameBoy.** Integrity PASS 4/4, clean build `1ca6579…`; test ROM
 > `DWM-gate-rotation-v3.gbc`, **user-confirmed: room appears every gate-1 floor, descends to boss,
