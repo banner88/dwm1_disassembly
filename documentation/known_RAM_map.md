@@ -193,6 +193,40 @@
    1:DD23   1    ? (related to random battles or exp)
    1:DD61   1    Join candidate species ($FF = none)
 
+; ===================================================================
+; Battle skill-cast vars (Session S45 — see BATTLE_SKILL_SYSTEM.md).
+; CONFIDENCE VARIES — items marked (INFERRED) were deduced from behaviour
+; or literal base addresses, NOT from fully decoding the index math.
+; The hard lesson: a literal-reference "free RAM" scan is BLIND to arrays
+; accessed via base+offset. $DD80-$DE4F and $DBA3-$DC33 below are such
+; arrays — DO NOT use any byte in them as scratch.
+; ===================================================================
+   1:DB56   2    Computed damage number (handler writes here; consumer applies)
+   1:DB86   1    *** OUR custom-skill stash (real id, single). Was an unused ds
+                 gap between $DB85 and wBattleAttackerIdx $DB88. VERIFIED free
+                 by in-game test. Only writer = AliasCommit (patches/bank_050).
+   1:DB88   1    wBattleAttackerIdx — attacker combatant index (re-derived;
+                 NOTE: repurposed during target processing, unreliable at
+                 effect-dispatch time)
+   1:DB89   1    wBattleTargetIdx — target combatant index
+   1:DB8A   1    Working skill id (re-derived from $DCEC each cast; ~35 writers)
+   1:DB4C   1    Record-lookup index (re-derived FROM $DB8A during the cast)
+   1:DB4F   1    "Selected skill" (targeting helper)
+   1:DBA3  96    (INFERRED) Battle stat tables, 16 bytes each, indexed by
+                 combatant 0-2 party / 4-6 enemy: HP $DBA3, MaxHP $DBB3,
+                 MP $DBC3, MaxMP $DBD3, ATK $DBE3, DEF $DBF3, AGL $DC03,
+                 INT $DC13, LVL $DC23. (Conflicts with the older "$DBAB Enemy 1
+                 HP" line above — older line may be stale; re-verify.)
+   1:DCEC  ~16   Action queue: 2 bytes/combatant {skill id, target}, indexed by
+                 combatant*2. The single source the cast re-derives $DB8A from.
+   1:DD6F   1    (INFERRED) Damage descriptor bitfield (bit5 = apply $DB56/57)
+   1:DD70   2    (INFERRED) Animation pointer (Blaze = $B882)
+   1:DD80 ~208   (INFERRED) Per-combatant battle struct array, stride 26 ($1A),
+                 ~8 slots ($DD80-$DE4F). Bases seen: $DD80,$DD9A,$DDB4,$DDCE,
+                 $DDE8,$DE02,$DE1C. $DDE8 ≈ enemy struct in a 1v1. *** OFF-LIMITS
+                 as scratch — writing $DDF0/$DDFE/$DE36 corrupted enemy stats,
+                 status, and damage during S45 testing.
+
 ==HRAM==
  Address Size    Description
  ------- ----    -----------

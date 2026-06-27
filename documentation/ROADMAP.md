@@ -931,11 +931,16 @@ unreversed half.
       (**SameBoy-confirmed**). Comment-only annotation of the two tables in `bank_006/007`
       (flagged the `TilesetLookupTable` mislabel at `$570C`; rename + full `dw` re-section
       deferred pending SameBoy confirmation of the `$56E8` fn role). MD5 unchanged; integrity PASS.
-- [ ] **S2 — Custom skill EFFECTS.** Add a new skill = name (extend/relocate
-      `SkillNamePtrTable`) + `SkillFunctionTable` entry (reuse an existing handler, then prove
-      a NEW handler authored in a free bank) + assign to a monster's skill list (enemy-stats
-      `+21..24`). id-indexed fork if the table overshoots (new-species pattern). *Accept:* a
-      renamed-existing-handler skill AND a novel-handler skill both work in battle, SameBoy-confirmed.
+- [x] **S2 — Custom skill EFFECTS. ✅ DONE (S45, SameBoy-confirmed).** Added two
+      net-new ids: $DE "Scorch" (reuses Blaze's handler) and $DF "Smite" (NEW handler,
+      fixed 80 dmg), assigned to starter EID 1. Both work in battle: full Blaze presentation
+      (targeting/animation/message) + correct effect + correct menu names. Achieved via a
+      **skill-alias framework** (commit-time templatize to Blaze + `$db86` real-id stash +
+      `$db8a==0` dispatch guard + `FarSkillFork` custom dispatch), NOT a `SkillFunctionTable`
+      relocation. Full RE + framework + UNCERTAINTY FLAGS: `BATTLE_SKILL_SYSTEM.md`.
+      Known limitations (single custom-caster; enemy-real-Blaze edge case) documented there.
+      *Accept met:* renamed-existing-handler skill (Scorch) AND novel-handler skill (Smite)
+      both confirmed in battle by user.
 - [ ] **S3 — AI selection RE (discovery, no patch).** Locate + annotate the enemy-turn
       action-choice routine (reads skill list + `ai_weights` enemy-stats `+17..20`); determine
       whether it keys off per-monster weights only, a per-skill category byte, or hardcoded
@@ -960,7 +965,7 @@ e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block a
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
 
-**Recommended order:** T1 ✅ → S1 → M1 (discovery) → S2 → T2-roll-out → S3 → S4 → M2 → M3,
+**Recommended order:** T1 ✅ → S1 → M1 (discovery) → S2 ✅ → T2-roll-out → S3 → S4 → M2 → M3,
 slotting the text roll-out into spare sessions. Cheap high-confidence wins early; fire the
 two RE discovery sessions (M1, S3) before their authoring items depend on them.
 

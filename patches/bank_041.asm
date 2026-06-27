@@ -568,8 +568,8 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_219_RUN  ; [219]
     dw SkillName_220_IRONIZE  ; [220]
     dw SkillName_221_Ahhh  ; [221]
-    dw SkillName_222_Unused_222  ; [222]
-    dw SkillName_222_Unused_222  ; [223]
+    dw SkillName_222_Scorch  ; [222]
+    dw SkillName_223_Smite  ; [223]
     dw SkillName_222_Unused_222  ; [224]
     dw SkillName_222_Unused_222  ; [225]
     dw SkillName_222_Unused_222  ; [226]
@@ -2640,7 +2640,11 @@ MonsterName_224_Gorbunok:  ; $7E46 — Phase N new species
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F56
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F66
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F76
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F86
+SkillName_222_Scorch:                                             ; $7F86
+    db $36, $40, $4c, $4f, $40, $45, $f0                          ; "Scorch" + terminator
+SkillName_223_Smite:                                              ; $7F8D
+    db $36, $4a, $46, $51, $42, $f0                               ; "Smite" + terminator
+    db $00, $00, $00                                              ; $7F93-$7F95 pad
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F96
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FA6
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FB6

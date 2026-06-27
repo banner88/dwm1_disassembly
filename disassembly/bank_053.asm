@@ -939,6 +939,9 @@ jr_053_451e:
     ret
 
 
+; [S45] Cast-time attacker setup: wBattleAttackerIdx := a (the caster). NOTE this
+; runs AFTER the selection readback ($50:1866) that locks targeting, so the alias
+; framework templatizes at COMMIT, not here. See BATTLE_SKILL_SYSTEM.md §"dead ends".
 jr_053_4546:
     ld [wBattleAttackerIdx], a
     call CheckMonsterSlot

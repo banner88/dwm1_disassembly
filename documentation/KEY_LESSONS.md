@@ -1464,3 +1464,65 @@ is purely cosmetic + walkable; the warp is still driven by the coordinate-based 
 room isn't running the gate exit handler — it won't auto-trigger anything; the exit record does
 the work. (Shared layouts mean the marker also appears in sibling rooms that reuse the entry;
 it only warps where a record exists.)
+
+## Session 45 Lessons — Custom skill EFFECTS (ROADMAP S2, alias framework)
+
+Full RE + framework: see `BATTLE_SKILL_SYSTEM.md`. Shipped patched ROM (md5
+`6e8b8337805d020ca6cdbf878c21f1c6`, **patched** not original) verified in-game:
+Scorch = Blaze 14 dmg, Smite = 80 dmg, attacks fine.
+
+### ⚠️ TRUST CALIBRATION — this took 9 test iterations; my confidence was often wrong
+Multiple times this session I stated a fix was correct, and in-game testing
+proved it broke something (enemy stat corruption, wrong targeting, no
+animation). **Do not accept a "this is correct" claim about the battle engine
+without a build + live test.** Items I label INFERRED in the docs are
+hypotheses. The only things that are truly settled are the ones a human watched
+work on hardware/emulator.
+
+### id-range bucketing is pervasive — there is no single "current skill" variable
+The engine buckets the skill id by NUMERIC RANGE in many independent places
+(targeting, animation, cast message, MP, per-skill record), each with its own
+`cp`-chain or 222-entry table bound, spread across banks $50/$52/$53/$58. A
+net-new high id ($DE) overshoots/falls through ALL of them, so it presents wrong
+everywhere at once. Fixing buckets one at a time is endless whack-a-mole.
+
+### Alias > re-implement: make the new id masquerade as a template skill
+Instead of teaching every bucket about the new id, templatize it to an existing
+skill (Blaze=0) for the whole engine and peel off the real id only for the
+custom effect + the name. The leverage point is the **action queue `$dcec`** —
+the single source every bucket re-derives from. Templatize the queue and the
+engine inherits the template for free.
+
+### Templatize at the COMMIT, not at cast-setup — TIMING is load-bearing
+Targeting is locked in at the selection readback ($50:1866), which runs BEFORE
+the cast-time attacker setup ($53:943). Templatizing at 943 was too late — the
+caster hit himself with no animation. Templatizing at the commit (before 1866)
+fixed presentation completely. Same byte, different line = pass/fail.
+
+### `$db4c` is re-derived FROM `$db8a` during the cast — propagation works in our favour
+The record/targeting index `$db4c` is repeatedly set from `$db8a` mid-cast
+($53:1433/1778/2018/5054). So templatizing the queue → `$db8a`=template →
+`$db4c`=template → correct record/targeting, with no separate `$db4c` patch.
+
+### The literal-reference "free RAM" scan LIES for base+offset arrays (cost: 3 corruptions)
+I picked "0 literal references" bytes ($ddf0, $ddfe, $de36) as scratch — all
+three were inside the per-combatant battle struct array ($dd80 + 26*k), accessed
+via a base pointer, so the scan never saw them. Each corrupted live enemy
+stats / status / damage. **A scalar `ds` gap between two NAMED vars** (we used
+$db86, between $db85 and $db88) is far safer, and you MUST confirm freeness by
+in-game test, not by grep. Updated `known_RAM_map.md` accordingly.
+
+### The `$db8a == 0` dispatch guard avoids needing the (unreliable) attacker index
+`wBattleAttackerIdx` is repurposed during target processing, so it's wrong at
+effect-dispatch time — a per-combatant stash indexed by it read the wrong slot.
+The guard "use the stash only when the working id is 0 (templatized/Blaze)"
+distinguishes the aliased cast from normal casts (which carry a nonzero id)
+without ever needing the caster index at dispatch. Caveat: a real Blaze cast is
+also id 0, so the guard has one unclosed edge (enemy casts real Blaze with a
+player custom pending, enemy first) — see BATTLE_SKILL_SYSTEM.md §"Limitations".
+
+### Tooling: a SM83 disassembler-at-address (`tools/sm83dis.py`) was essential
+mgbdis renders routines that are jumped-to from data tables as raw `db`/`nop`,
+so the real instructions are invisible in the .asm. `sm83dis.py <bank> <addr>
+[n]` decodes live bytes at any address. Validated against SkillBlaze + the
+dispatch only — spot-check exotic shapes.

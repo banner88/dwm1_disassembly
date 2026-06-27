@@ -278,7 +278,8 @@ wBattlePostFlag:: db ;db55 — 0 for bosses
 
 wJoinability:: db ;db85 — $07=non-joinable, other=recruitable via RNG
 
-    ds ($DB88 - $DB86)
+    ds ($DB88 - $DB86) ; $DB86-87 free gap. [S45] $DB86 used by S2 skill-alias
+                        ; framework as the custom-skill real-id stash (BATTLE_SKILL_SYSTEM.md)
 
 ; Battle combatant index registers
 wBattleAttackerIdx:: db ;db88 — attacker combatant index

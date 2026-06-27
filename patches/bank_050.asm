@@ -1861,7 +1861,7 @@ jr_050_4a65:
     call SaveBtl_4ba4
     jr c, jr_050_4a5e
 
-    call LoadBtl_4f86
+    call AliasCommit
     ld a, [hl]
     ld [$db4c], a
     ld [$db8a], a
@@ -2677,9 +2677,6 @@ CallBtl_4f80:
     ret
 
 
-; [S45] Action-queue WRITER: stores b -> $dcec[$c8dd*2]. The S2 skill-alias
-; framework hooks the player-commit caller (line ~1864) with AliasCommit to
-; templatize a custom id ($DE/$DF) to Blaze here. See BATTLE_SKILL_SYSTEM.md.
 LoadBtl_4f86:
     ld a, [$c8dd]
     ld hl, $dcec
@@ -11724,27 +11721,16 @@ SetBtl_7e1e:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+AliasCommit:               ; b = skill id being committed to action queue $dcec
+    ld a, b
+    cp $DE                 ; one of our new ids ($DE/$DF)?
+    jr c, .normal
+    cp $E0
+    jr nc, .normal
+    ld [$db86], a          ; stash REAL id (read by effect dispatch when $db8a==0)
+    ld b, $00              ; queue + all presentation derivations get TEMPLATE (Blaze 0)
+    jp LoadBtl_4f86
+.normal:
+    xor a
+    ld [$db86], a          ; clear: this commit is not a custom skill
+    jp LoadBtl_4f86

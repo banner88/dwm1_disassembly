@@ -1463,9 +1463,9 @@ EnemyStats_001:
     dw 0  ; EXP reward
     db 0  ; Joinability (always)
     db 1  ; Level
-    dw 30, 0, 10, 6, 5, 1  ; HP, MP, ATK, DEF, AGL, INT
+    dw 30, 100, 10, 6, 5, 1  ; HP, MP, ATK, DEF, AGL, INT  (MP 0->100 for S2 casting)
     db 100, 200, 100, 200  ; AI weights
-    db $FF, $FF, $FF, $FF  ; Skills: none, none, none, none
+    db $DE, $DF, $FF, $FF  ; Skills: Scorch (S2), Smite (S2), none, none
 
 ; --- EID 2 (0x2): Slime Lv1 ---
 EnemyStats_002:

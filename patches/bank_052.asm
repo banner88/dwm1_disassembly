@@ -8208,9 +8208,6 @@ jr_052_6c5c:
     cp $0b
     ret nz
 
-; [S45] EFFECT DISPATCH: reads $db8a -> SkillFunctionTable ($4011). The 5 bytes
-; at $6CD5 (ld hl,$4011/add hl,bc/add hl,bc) are patched to far-call FarSkillFork
-; (bank $72) for custom-skill dispatch. See BATTLE_SKILL_SYSTEM.md §3.
 jr_052_6cc7:
     ld hl, $d9ee
     inc [hl]
@@ -8219,9 +8216,15 @@ jr_052_6cc7:
     ld a, [$db8a]
     ld c, a
     ld b, $00
-    ld hl, SkillFunctionTable
-    add hl, bc
-    add hl, bc
+    ; --- S2 custom-skill fork (byte-neutral, 5-for-5) ---
+    ; Original was: ld hl,SkillFunctionTable / add hl,bc / add hl,bc  (21 11 40 09 09).
+    ; Replaced with a far-call to bank $72 entry 0 (FarSkillFork), which returns
+    ; HL = pointer-to-handler-pointer: $4011+id*2 for vanilla ids (<$DE), or
+    ; CustomSkillTable52+(id-$DE)*2 for new ids ($DE/$DF). bc(=id) is preserved.
+    ; The following unchanged `call RST_08` then derefs [HL] and jp's to the handler.
+    ld hl, $7200
+    rst $10
+    nop
     call RST_08
     ld a, [$d9ee]
     cp $0c
@@ -11564,22 +11567,18 @@ jr_052_7fe2:
     ret
 
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; =============================================================================
+; S2 custom-skill tail data (replaces 19 bytes of $00 padding at $7FED-$7FFF)
+; =============================================================================
+CustomSkillTable52:          ; $7FED — handler pointers for new skill ids
+    dw SkillBlaze            ; [id $DE] Scorch: reuse existing fire-damage handler ($41CD)
+    dw NovelEffect52         ; [id $DF] Smite: novel handler, in-bank (no trampoline)
+NovelEffect52:               ; $7FF1 — novel skill: fixed hit via the proven Blaze machinery
+    call $5bff               ; StoreDamageResult + target/guard (Blaze record via reloc table)
+    call $54e7               ; set damage descriptor ($dd6f=$a8 apply-mode, $dd70/71 anim)
+    ld a, $50                ; override computed damage low byte = 80 (distinct fixed hit)
+    ld [$db56], a            ; Blaze damage <256 so $db57 already 0 -> total = $0050 = 80
+    ret
+    nop                      ; $7FFD-$7FFF padding (3 bytes, preserves bank size)
     nop
     nop

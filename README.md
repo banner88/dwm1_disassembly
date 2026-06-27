@@ -19,6 +19,7 @@ and story content. End goal: a visual editor for building custom stories.
 | Understand the future editor | `documentation/EDITOR_DESIGN.md` |
 | Look up a ROM data structure | `documentation/DATA_STRUCTURES.md` |
 | Avoid known landmines before patching | `documentation/KEY_LESSONS.md` |
+| Add/understand custom battle skills (effects, aliasing) | `documentation/BATTLE_SKILL_SYSTEM.md` |
 
 ## Quick start
 
