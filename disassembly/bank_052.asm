@@ -6932,6 +6932,13 @@ LoadBattle_66ba:
 
 
 StoreDamageResult:
+; $52:$66D6 -- the MAIN in-battle skill-magnitude reader. Re-derives the record
+; index ($db4c) FROM the working skill id ($db8a), selects the side power-field
+; offset ($0f enemy / $0b party), then invokes bank-$54 record reader entry 1
+; ($526e via `ld hl,$5401; rst $10`) to read the power word. HW-confirmed (S48):
+; casting Scorching ($5E) breaks here ($66D9) with A=$5E. Because magnitude is
+; RECORD-INDEXED by the id, a custom id (>= $DE) overshoots -> needs the record
+; fork (BATTLE_SKILL_SYSTEM.md §12). NOT the minor entry-5/$535F path.
     ld a, [$db8a]
     ld [$db4c], a
     ld a, $00

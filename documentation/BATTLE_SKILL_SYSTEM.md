@@ -603,3 +603,90 @@ interleaved at `$4071`+).
 **Tools:** `tools/gen_skill_records.py` (decodes records → JSON, 7 ROM sources
 incl. battle_record), `tools/build_skill_tables.py` (round-trips function/MP/learn
 + record ptr/data; `--selftest`, `--emit {func,mp,learn,record,recordptr}`).
+
+---
+
+## 12. Skill-ID bucketing audit & de-aliasing surface (S2d FOUNDATION)  [S48, 2026-06-28]
+
+**Why this section exists.** S45 added custom skill ids ($DE/$DF) by *aliasing*
+them to Blaze at commit time, precisely to AVOID enumerating where the engine
+buckets the skill id. The "proper" S2d (own record/handler/name, no alias) needs
+that enumeration. This section is it — the `$db8a` analog of the species-slot map.
+Tool: `tools/map_skill_id_buckets.py` → `extracted/skill_id_bucket_map.json`
+(self-checking, aborts on ROM drift). Everything below is ROM-grounded; the
+hardware lines are from a SameBoy session.
+
+### 12.1 Geography
+Real skills are `$00–$DD` (222 records). Custom budget is `$DE–$FF`. The working
+id lives at **`$db8a`** (authoritative — never reused). The record-lookup index
+**`$db4c`** is re-derived from `$db8a` but is ALSO reused as scratch inside
+routines, so its low-threshold gates (`cp $02/$03/$04`) are NOT skill-id gates.
+High-id specials: `$D5` BeDragon, `$D9` GigaSlash, `$DA` LIFE, `$DB` RUN (flee
+*skill*, not the menu command), `$DC` IRONIZE, `$DD` Ahhh. **Avoid id `$E1`** —
+`$50:$6BC4` routes `$db4c==$e1` to a menu pseudo-action.
+
+### 12.2 The surface reduces to a small fork set
+`$db8a` is read at **254 sites across 9 banks** ($00/$50/$52/$53/$54/$55/$57/$58/
+$5f); bank `$57` (enemy AI) alone holds 148. But the surface is bounded:
+
+- **204 equality checks** vs specific ids; the highest value compared is `$C5`,
+  so a custom id (`≥ $DE`) matches NONE → auto-safe (asserted as an invariant).
+- **15 range gates** (`cp X; jr c/nc`): all are windowed equality ladders; a
+  custom id falls through to the default, and NONE routes it into a table index.
+- **Enemy AI `$57`** — all 148 reads classified exhaustively: 138 equality (max
+  `$95`), 5 windowed range ladders, 3 shared-`$54`-reader setups, and one `rst $00`
+  sub-dispatch at `$57:$4C50` **guarded by `cp $d9; ret nc`** so every custom id
+  returns before reaching it. **Zero** of the 148 mishandle a custom id. The AI's
+  record reads use the shared `$54` reader, so the record fork covers the AI.
+
+### 12.3 The cast pipeline (production → consumption)
+**Production.** Menu real id at `$caea` (name). On commit at **`$50:~$4A55`**:
+`ld a,[hl]; ld [$db4c],a; ld [$db8a],a; ld [$db4f],a`, then the action is queued at
+`$dcec` and `$db8a` is re-derived from it at resolution. The FX router (`$58`) and
+multi-hit code (`$52`) re-set `$db8a` for sub-effects (most of the 35 write sites).
+**De-alias point = this commit:** S45's `AliasCommit` forces the queued value to
+`$00` for `$DE/$DF`; S2d must NOT templatize and let the real id flow.
+
+**Consumption (every id-keyed subsystem):**
+
+| Subsystem | Indexer | Custom-id behavior | Fork |
+|---|---|---|---|
+| **Record table** `$54:$4013` | entries 0/1/2 (`$5251/$5276/$529E`), `ld hl,$4013; add hl,bc;×2` | overshoot | **KEYSTONE** (3 sites) |
+| ↳ magnitude | `$52:$66D6 StoreDamageResult` → entry 1 | overshoot | (record fork) |
+| ↳ targeting (+2) | entry 2 caches `record+2 → $dcfc`; `$dcfc` drives `and $01` target select | overshoot | (record fork) |
+| ↳ status/dmg/ai_weight | +5/+6/+3 via shared readers | overshoot | (record fork) |
+| ↳ entry 5 `$535F` | side-power; `cp $d5/jr nc $53a6` BAILS `≥$d6` | bails (minor path) | defer |
+| **Function table** `$52:$4011` | `$52:$6CD5` dispatch | — | DONE (FarSkillFork) |
+| **MP** `$07:$570C` | 3 readers `$56E8/$5A98/$5B4E`; `$570C+2*id` | overshoot | 3 sites |
+| **Sound** `$55:$4070` | side-selected ptr table, indexed at `$55:$4067` | overshoot; `$FF`=silence | 1 site |
+| **Anim** `$5f:$58dd` | `$5f:$5433`, `$58dd+id` | `$58dd[$DE]=$0d`=no-visual | none for no-visual skills |
+| **Message** `$dd6f/$dd70` | handler-set descriptor (Heal: `$bb84`) | not id-indexed | none |
+| **Name** `$41:$4539` | 256 entries | in range | repoint only |
+| **Learn-req** `$06:$50E0` | species-keyed (`$06:$4FA5`), not cast-path | irrelevant to assigned skill | only if naturally learnable |
+
+MP is **mirrored**: `$570C[id] == record+4` (verified) — set both (build_skill_tables.py does).
+
+### 12.4 Keystone fork is byte-neutrally implementable [PROVEN]
+The 3 indexer sites are the identical 5 bytes `21 13 40 09 09`. Replace each with
+`call Fork` + `nop` + `nop` (`cd lo hi 00 00`, exactly 5 bytes, byte-neutral). No
+interior branch targets land in any window; readers don't re-use `bc`. Bank `$54`
+has ~10550 free trailing bytes, so the `Fork` routine **and** the high pointer
+table + 19B custom records live IN-BANK (near `call`, no bankswitch). `Fork`:
+`ld a,c; cp $DE; jr nc,.custom; ld hl,$4013; add hl,bc; add hl,bc; ret; .custom:
+push bc; sub $DE; ld c,a; ld b,0; ld hl,HIGH_PTR; add hl,bc; add hl,bc; pop bc; ret`.
+RGBDS-assembled and byte-executed: normal ids come out **vanilla-identical**
+(`$2B`→`$4069`, `$00`→`$4013`), custom ids index the high table (`$DE`→base).
+
+### 12.5 Hardware verification (SameBoy, 2026-06-28)
+- **Record-index = skill id [CONFIRMED]** — bp `$52:$66D9` casting Scorching (`$5E`,
+  handler `$4932`) writes `$db4c = $5E`; a custom id overshoots here.
+- **`$535F` minor [CONFIRMED]** — bp `$54:$5362` did NOT fire for Scorching/Zap/
+  IceStorm (`$5E/$10/$62`); the side-power reader is off the main damage path.
+- **RUN correction** — bp `$52:$4E3A` did NOT fire on the menu Flee command; menu
+  Flee ≠ skill `$DB`. High-id FUNCTION dispatch is proven by the shipped S45 patch.
+
+### 12.6 S2d is shovel-ready
+Fork the 3 record sites (+ in-bank high tables), MP (3 sites), sound (1 site),
+name (repoint). A no-visual ally heal needs no anim/message/targeting patch
+(those follow from the record). Authoring a *visible* custom animation remains
+blocked on the `$5f` disassembly cleanup (DOC_AUDIT #15) — separate item.

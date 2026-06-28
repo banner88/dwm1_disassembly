@@ -1526,3 +1526,51 @@ mgbdis renders routines that are jumped-to from data tables as raw `db`/`nop`,
 so the real instructions are invisible in the .asm. `sm83dis.py <bank> <addr>
 [n]` decodes live bytes at any address. Validated against SkillBlaze + the
 dispatch only — spot-check exotic shapes.
+
+## Session 48 Lessons — Skill-ID bucketing audit (S2d foundation, RE)
+
+### Classify the id-reads before counting them — a huge surface can be mostly inert
+**Symptom:** the working skill id `$db8a` is read at 254 sites across 9 banks (148 in
+enemy AI alone). That looks like "endless whack-a-mole" (S45's words) and is why S45
+aliased instead of de-aliasing.
+**Root cause:** raw counts conflate kinds of reads. 204 of the 254 are *equality* checks
+against specific skill ids, and the highest value compared is `$C5`.
+**Fix:** a custom id (`≥ $DE`) matches none of them, so all 204 are auto-safe; the real
+surface is the handful of fixed-size *table indexers* + a few range gates.
+**Rule:** before concluding a bucketing surface is intractable, classify each read
+(equality vs range vs table-index). An equality check against a value below the new id
+is inert by construction — assert the max-equality invariant and move on.
+
+### A dramatic-looking gate can be a symptom, not the root cause — trace the hot path
+**Symptom:** I first flagged `$54:$535F` (which zeroes the record index for ids `≥ $d6`)
+as the "critical divert" that breaks custom-skill magnitude.
+**Root cause:** `$535F` is only ONE of four record readers, and a minor one. The MAIN
+magnitude path is `$52:$66D6` → record reader entry 1, which *indexes the record table by
+the id* and overshoots. SameBoy proved it: casting Scorching hit `$66D9`; `$535F` never
+fired for Scorch/Zap/IceStorm.
+**Fix:** the keystone is the shared record-table indexer fork, not the `$535F` special-case;
+`$535F` can be deferred.
+**Rule:** when a gate looks load-bearing, confirm it's actually on the live path (hardware
+breakpoint) before designing around it. The root cause is usually the boring shared indexer.
+
+### Verify a command's dispatch path before using it as a probe (RUN ≠ menu Flee)
+**Symptom:** a breakpoint on skill `$DB`'s handler (`$52:$4E3A`) never fired when the user
+chose Flee/Run from the battle menu.
+**Root cause:** the menu Flee is a top-level battle command; skill id `$DB` "RUN" is a
+separate skill-system entry, reached only when the skill machinery needs a flee effect.
+**Fix:** don't use menu Flee to probe skill-id dispatch; high-id function dispatch is
+already proven by the shipped S45 patch (Scorch `$DE`/Smite `$DF`).
+**Rule:** a name match in a table (skill `$DB` = "RUN") does not mean the obvious UI action
+routes through it. Trace the dispatch before spending a hardware breakpoint on it.
+
+### Prove a fork is byte-neutrally *implementable*, not just *enumerated*
+**Symptom:** enumerating the fork points doesn't tell you they can be built without inserting
+bytes (the iron rule).
+**Fix:** for the keystone, the 3 indexer sites are identical 5-byte windows
+(`21 13 40 09 09`); checked there are no interior branch-targets; confirmed bank `$54` has
+~10550 free in-bank bytes; then RGBDS-assembled a `call Fork`+nop+nop trampoline and
+byte-executed it (mini SM83 interp) to show normal ids stay vanilla-identical and custom
+ids index a high table.
+**Rule:** a foundation session that gates an authoring session should end by proving the
+fork *assembles 5-for-5 and behaves*, not just by listing addresses. Cheap, zero ROM risk,
+and it catches "the window isn't replaceable" before the patch session discovers it the hard way.

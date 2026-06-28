@@ -980,11 +980,28 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         *Reuse* a known animation on a new id = table edit (`$58dd/$59c3/$5aa9`). *Authoring a
         novel animation* = add metasprite frame lists + a `$4071`-table entry (now fully
         specified; **remaining static-only:** per-bank table extent + tile-graphics VRAM source).
+  - [x] **S2d-audit — Skill-ID bucketing audit (de-aliasing FOUNDATION, RE/discovery). [S48, 2026-06-28]**
+        Byte-neutral. The prerequisite S45 skipped: a complete map of where the engine buckets the
+        working skill id (`$db8a`, 254 reads / 9 banks). **Surface reduces to a small verified fork
+        set** — 204 equality reads (max `$C5`, custom id matches none), 15 windowed range gates (fall
+        through to defaults), exhaustive enemy-AI `$57` pass (148 reads, ZERO mishandle a custom id;
+        high-id sub-dispatch guarded by `cp $d9; ret nc`). **Keystone = the record-table indexer
+        `$54:$4013` (3 sites `$5251/$5276/$529E`)**: one fork fixes magnitude/targeting/MP-in-record/
+        status/ai_weight + the AI. HW-confirmed (SameBoy): `$52:$66D9` writes `$db4c=$db8a`; `$535F`
+        divert is a minor path; menu Flee ≠ skill `$DB`. **Keystone fork PROVEN byte-neutrally
+        implementable** (5-byte `call Fork`+nop+nop trampoline, RGBDS-assembled + byte-executed,
+        in-bank tables in `$54`'s ~10550 free bytes). Other forks: MP (3 readers, mirror `record+4`),
+        sound (`$55:$4067`), name (repoint), anim (none for no-visual). Tool
+        `tools/map_skill_id_buckets.py` → `extracted/skill_id_bucket_map.json`. Full RE: **§12.**
   - [ ] **S2d — Proper per-id custom-skill records (the real authoring; replaces the alias
         hack).** Give new ids ($DE+) their OWN record + handler + name instead of aliasing to
         Blaze, so heal/Tame/Anchor-shaped skills become expressible; fix the single-caster +
         enemy-Blaze limitations. *Accept:* a non-damage custom skill (e.g. an ally heal) works
-        in SameBoy without aliasing.
+        in SameBoy without aliasing. **SHOVEL-READY (S2d-audit done, S48):** fork the 3 record
+        indexer sites (+ in-bank high pointer table + 19B records in `$54` free space), MP (3
+        sites), sound (1 site), name (repoint); leave `$535F`/anim/message alone for a heal
+        (those follow from the record / are handler-driven). Don't templatize at the commit
+        (`$50:~$4A55`) — let `$DE` flow. Step-by-step in **§12.6**.
 - [~] **S3 — AI selection RE (partly answered S46).** **Found:** the per-skill AI lever is
       **record +3 (`ai_weight`)** — the enemy AI (`$57 Jump_057_7529`) walks its skill list and
       SUMS record[+3] into the score table `$dce4`, then picks weighted (Sacrifice/MegaMagic=0).
@@ -1010,7 +1027,7 @@ e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block a
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
 
-**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → S2c-msg ✅ → S2c-anim ✅ → **S2d** (next) / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
+**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → S2c-msg ✅ → S2c-anim ✅ → S2d-audit ✅ (S48) → **S2d** (next, shovel-ready) / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
 slotting the text roll-out into spare sessions. Cheap high-confidence wins early; fire the
 two RE discovery sessions (M1, S3) before their authoring items depend on them.
 

@@ -533,6 +533,11 @@ LoadB54_5249:
 ;      $db4e       = byte offset into the 19-byte record
 ; Out: bc = 16-bit LE field at SkillRecordData[index] + $db4e
 ;      ALSO written back to $db4c(lo)/$db4d(hi). 28 call sites across $50-$58.
+; S48 RECORD-FORK KEYSTONE (1 of 3): the `ld hl,$4013; add hl,bc; add hl,bc` below
+; indexes the 222-entry SkillRecordPtrTable by the skill id and OVERSHOOTS for a
+; custom id (>= $DE). 5-byte window, byte-neutral `call Fork`+nop+nop trampoline
+; (proven). Sites: $5251/$5276/$529E. See BATTLE_SKILL_SYSTEM.md §12 +
+; extracted/skill_id_bucket_map.json.
     ld a, [$db4c]
     ld c, a
     ld a, [$db4d]
@@ -564,6 +569,10 @@ LoadB54_526e:
 ; entry 0 but ALSO loads the byte at offset+2 into $db4e (so a caller can read a
 ; field word and then immediately read the adjacent field, e.g. power +11 then
 ; the +13 aux). Returns the word in bc and writes $db4c(lo)/$db4d(hi).
+; S48 RECORD-FORK KEYSTONE (2 of 3): indexer at $5276. This is the MAIN in-battle
+; magnitude reader -- invoked by $52:$66D6 (`ld hl,$5401; rst $10`) after it sets
+; $db4c=$db8a and the power field offset ($0b party / $0f enemy). HW-confirmed:
+; casting Scorching ($5E) hits $52:$66D9 and reads power here. Overshoots at >= $DE.
     ld a, [$db4c]
     ld c, a
     ld a, [$db4d]
@@ -599,6 +608,10 @@ CacheSkillRecordFields_5298:           ; dispatch entry 2 ($5298)
 ;   $dcfd <- record[+7] flags7
 ;   $dcfe <- record[+8] field8
 ;   $dcff <- record[+9] anim9
+; S48 RECORD-FORK KEYSTONE (3 of 3): indexer at $529E. $dcfc (target_mode, +2) is
+; what DRIVES target selection (read at $52:$707B/$7E08, $53:$47C1/$5E41, $57:$7331
+; via `and $01` branching) -- so forking THIS record index also fixes targeting for
+; a custom skill (e.g. an ally heal target_mode $21) with no separate targeting patch.
     ld a, [$db8a]
     ld c, a
     ld b, $00
@@ -734,6 +747,10 @@ jr_054_5356:
 
 
     ld a, [$db4c]
+; S48: entry-5 high-id BAIL. id==$d5 (BeDragon) -> $539d; id>=$d6 (incl ALL custom
+; ids >= $DE) -> $53a6 which zeroes $db4c and returns (no record-power read). This is
+; a MINOR reader (HW Test C: Scorching/Zap/IceStorm do NOT reach it) -- DEFER forking
+; it; the first custom skills use the main path ($66D6 -> entry 1). See §12.
     cp $d5
     jr z, jr_054_539d
 

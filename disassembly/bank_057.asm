@@ -2323,6 +2323,11 @@ jr_057_4c34:
     cp $50
     jr c, jr_057_4c62
 
+; S48: enemy-AI high-id sub-dispatch ($57:$4C50). The `cp $d9; ret nc` below is the
+; guard that makes EVERY custom id (>= $DE, hence >= $d9) RETURN before reaching the
+; rst-$00 jump table at $4C67 -- so a custom skill can never be misrouted into this
+; AI special-case. The table serves only $d6/$d7/$d8. (Exhaustive $57 audit: of 148
+; $db8a reads, ZERO mishandle a custom id; see BATTLE_SKILL_SYSTEM.md §12.)
     cp $d6
     ret c
 

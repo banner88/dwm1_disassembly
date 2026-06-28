@@ -73,6 +73,9 @@ LoadB55_404a:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
+; S48: cast-SFX id-index ($55:$4067). $4070 is a SIDE-SELECTED pointer table; the
+; chosen sub-table is indexed by the skill id here. `cp $ff; ret z` => $FF = silence
+; (graceful default, like the $0d no-visual anim). One fork site for a custom SFX.
     ld a, [$db8a]
     ld c, a
     ld b, $00

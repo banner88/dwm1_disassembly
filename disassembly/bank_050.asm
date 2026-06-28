@@ -1862,6 +1862,12 @@ jr_050_4a65:
     jr c, jr_050_4a5e
 
     call LoadBtl_4f86
+; S48: WORKING-ID COMMIT / de-alias point ($50:~$4A55). Sets record-index ($db4c),
+; working id ($db8a) and selected-skill ($db4f) from the chosen skill [hl], and the
+; action is queued at $dcec. S45's AliasCommit replaces the `call` above to force the
+; queued value to $00 (Blaze) for ids $DE/$DF (stash real id in $db86). The proper
+; S2d path does NOT templatize -- it lets the real id flow here and relies on the
+; consumption forks (BATTLE_SKILL_SYSTEM.md §12).
     ld a, [hl]
     ld [$db4c], a
     ld [$db8a], a

@@ -3465,6 +3465,10 @@ jr_007_56a3:
 
 
 LoadFld_56e8:
+; $07:$56E8 GetSkillMPCost. id in `de`; special-cases $70 (gender remap via $cacc),
+; then hl=$570C+2*id reads the u16 MP. One of THREE $570C readers (also $5A98/$5B4E,
+; afford/deduct). All overshoot at >= $DE. MP is mirrored: $570C[id] == record+4
+; (verified). Fork all 3 for a custom skill. See BATTLE_SKILL_SYSTEM.md §12.
     ld a, e
     cp $70
     jr nz, jr_007_56fd

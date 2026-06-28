@@ -1,0 +1,318 @@
+{
+  "_generator": "tools/map_skill_id_buckets.py (ROM data/DWM-original.gbc)",
+  "_format": "Skill-ID bucketing audit (ROADMAP S2d foundation). Enumerates every site the battle engine buckets/indexes the working skill id $db8a, and the verified fork points + high-range special gates a custom id (>=$DE) must survive. The $db8a equality gates are SAFE by the max-value invariant.",
+  "_self_checks": [
+    "magnitude divert bytes @ $54:$535F/$53A6",
+    "record-ptr indexer @ $54:$5251",
+    "$e1 menu pseudo-id @ $50:$6BC4",
+    "$52 window gate @ $70E0",
+    "magnitude path @ $52:$66D6 re-derives $db4c, invokes record reader entry 1 @ $66F7",
+    "equality-safe invariant: max vanilla equality vs $db8a = $C5 < $DE"
+  ],
+  "geography": {
+    "working_id_var": "$DB8A",
+    "record_index_var": "$DB4C (re-derived from $db8a; ALSO reused as scratch)",
+    "last_real_skill_id": "$DD",
+    "first_custom_id": "$DE",
+    "custom_budget": "$DE..$FF",
+    "id_is_byte": true,
+    "hard_ceiling": 256,
+    "n_records": 222,
+    "high_id_specials": {
+      "$D5": "BeDragon (transform)",
+      "$D6": "Smashlime",
+      "$D7": "BugCut (was Sheldodge)",
+      "$D8": "Branching",
+      "$D9": "GigaSlash",
+      "$DA": "LIFE (internal)",
+      "$DB": "RUN (flee command)",
+      "$DC": "IRONIZE (internal)",
+      "$DD": "Ahhh (internal)"
+    }
+  },
+  "summary": {
+    "db8a_direct_reads": 254,
+    "by_bank": {
+      "$00": 1,
+      "$50": 5,
+      "$52": 47,
+      "$53": 35,
+      "$54": 4,
+      "$55": 1,
+      "$57": 148,
+      "$58": 1,
+      "$5F": 12
+    },
+    "classification": {
+      "equality": 204,
+      "range": 15,
+      "table_index": 3,
+      "store_or_other": 32
+    },
+    "max_equality_value": "$C5",
+    "equality_gates_are_safe": true,
+    "equality_checks_ge_custom": []
+  },
+  "hardware_verified_sameboy": {
+    "_note": "User SameBoy session (2026-06-28); breakpoints confirm/correct the static read.",
+    "record_index_is_skill_id": "CONFIRMED. bp $52:$66D9 fired casting Scorching (id $5E, handler $4932 per backtrace $66d9<-$6514<-$4932<-dispatch $6cda); the routine writes $db4c = the skill id. A custom id $DE would index $4013+2*222=$41CF (record DATA) => overshoot. This is the keystone the record fork fixes.",
+    "s535f_is_minor_path": "CONFIRMED. bp $54:$5362 did NOT fire for Scorching/Zap/IceStorm (ids $5E/$10/$62) -> entry 5 ($535F) is a narrow side-power reader, not the main magnitude path. Main path is $66d6 -> entry 1 ($526e). De-prioritises $535F.",
+    "run_command_correction": "bp $52:$4E3A did NOT fire on the player's Flee/Run menu command -> the menu Flee is a top-level command path (not the skill effect dispatch); skill id $DB 'RUN' / handler $4E3A is reached only via the skill system, not the menu. High-id FUNCTION dispatch is instead already proven by the shipped S45 patch (Scorch $DE / Smite $DF dispatch via FarSkillFork)."
+  },
+  "key_finding": "Of all db8a reads, the large majority are EQUALITY checks vs specific skill ids (max $C5); a custom id >=$DE matches none, so they are auto-safe. The real audit surface is the fixed-size TABLE indexers (fork_points) plus a few high-range SPECIAL_GATES a custom id enters -- chiefly the $54:$535F magnitude divert, which sends every custom id AWAY from record-driven power.",
+  "fork_points": {
+    "record_ptr_table": {
+      "table": "$54:$4013",
+      "entry": "2B ptr -> 19B record @ $41CF+id*19",
+      "count": 222,
+      "indexer": "$54 entries 0/1/2 ($5249/$526e/$5298) ALL do `ld hl,$4013; add hl,bc` with bc=$db4c (=skill id). Entry 5 ($535F SkillMagnitudeBySide) is a 4th reader that BAILS for id>=$d6 (see special_case_gates).",
+      "canonical_magnitude_path": "$52:$66D6 sets $db4c=$db8a (ld [$db4c],a), picks field offset $0b(party)/$0f(enemy), then invokes entry 1 ($526e via ld hl,$5401; rst $10) -> indexes $4013 by id -> reads power +11/+15. OVERSHOOTS at $DE.",
+      "drives": "targeting(+2) MP(+4) status(+5) damage_class(+6) power(+11/13/15/17) ai_weight(+3)",
+      "fork": "THE KEYSTONE. id>=$DE -> read a free-bank 19B record instead of $41CF+id*19. Must cover ALL 4 readers: the 3 overshooting indexers (entries 0/1/2) AND entry 5's >=$d6 bail. One record fork makes magnitude/targeting/MP/AI all correct."
+    },
+    "function_table": {
+      "table": "$52:$4011",
+      "entry": "2B handler ptr",
+      "count": 222,
+      "indexer": "$52:$6CD5 dispatch (ALREADY FORKED by S45 FarSkillFork, bank $72)",
+      "drives": "effect handler (effect TYPE)",
+      "fork": "DONE for the alias path; generalize to route id>=$DE on $db8a directly"
+    },
+    "mp_cost_table": {
+      "table": "$07:$570C",
+      "entry": "u16 LE (999=ALL)",
+      "count": 222,
+      "indexer": "THREE readers all do hl=$570C+2*id: $07:$56E8 GetSkillMPCost (id in de; menu display via $55B0; has a $70 gender remap), and $07:$5A98 & $07:$5B4E (id pulled from the monster skill list; afford-check / deduction).",
+      "drives": "MP shown + deducted; overshoot reads garbage",
+      "mirror": "VERIFIED record+4 (mp_cost) == $570C[id] for all sampled skills. MP is duplicated: record+4 (read in-battle by $54 readers) and $570C (menu/deduct). A custom skill must set both; build_skill_tables.py derives both from skill_records.json so they stay in sync.",
+      "fork": "id>=$DE -> custom MP word. Cover all 3 reader sites (or a shared high-table)."
+    },
+    "anim_index_tables": {
+      "table": "$5f:$58dd (party) / $59c3 (enemy) / $5aa9 (special)",
+      "entry": "1B routine index",
+      "count": 230,
+      "indexer": "$5f:$5433 (ld hl,$58dd; ld a,[$db8a]; add a,l)",
+      "drives": "which $5f:$58bd routine draws the sprite animation",
+      "fork": "id>=$DE -> chosen index. NOTE overshoot already reads $0d = no-visual (verified), so a NO-ANIMATION custom skill (e.g. heal) needs NO fork here"
+    },
+    "sound_table": {
+      "table": "$55:$4070 = side-selected POINTER table (not a flat 222 array)",
+      "entry": "$4070 holds 2 sub-table pointers chosen by $c863/$db88 (caster side); the selected sub-table is then indexed by the skill id",
+      "count": "per-side sub-table",
+      "indexer": "$55:$404a: side-select deref, then $4067 `add hl,bc` (bc=$db8a) into the sub-table",
+      "drives": "cast SFX; $4068 reads SFX id, `cp $ff; ret z` => $FF = silence (graceful default)",
+      "fork": "one site ($55:$4067) after side-select covers both sides; id>=$DE -> chosen SFX (or $FF for silence). Overshoot may already read $FF depending on sub-table tail."
+    },
+    "learn_req_table": {
+      "table": "$06:$50E0",
+      "entry": "18B",
+      "count": 222,
+      "indexer": "gen_skill_records source; only used when a monster LEARNS it naturally",
+      "drives": "level/stat reqs + prereqs to learn",
+      "fork": "NOT needed for an assigned/starter skill; fork only for naturally-learnable custom skills"
+    },
+    "name_table": {
+      "table": "$41:$4539",
+      "entry": "2B name ptr",
+      "count": 256,
+      "indexer": "menu reads real id $caea",
+      "drives": "displayed name",
+      "fork": "NONE -- table runs to id 255; just repoint slot (alias framework already does)"
+    }
+  },
+  "fork_feasibility": {
+    "indexer_sites": [
+      "$54:$5251",
+      "$54:$5276",
+      "$54:$529E"
+    ],
+    "window": "all 3 are the identical 5 bytes `21 13 40 09 09` (ld hl,$4013; add hl,bc; add hl,bc)",
+    "trampoline": "replace each with `call Fork` + nop + nop = `cd lo hi 00 00` (exactly 5 bytes, byte-neutral 5-for-5). No interior branch targets land in any window (verified).",
+    "registers": "readers don't re-use bc after the indexer; Fork preserves bc anyway (push/pop).",
+    "host_bank": "$54 has ~10550 free trailing bytes -> Fork routine + high pointer table + high 19B records all fit IN-BANK, so the pointer-deref chain stays in bank $54 (near call, no bankswitch, no cross-bank reads).",
+    "fork_routine": "ld a,c; cp $DE; jr nc,.custom; ld hl,$4013; add hl,bc; add hl,bc; ret; .custom: push bc; sub $DE; ld c,a; ld b,0; ld hl,HIGH_PTR; add hl,bc; add hl,bc; pop bc; ret  (24 bytes)",
+    "proof": "RGBDS-assembled; mini-SM83 execution: normal ids byte-identical to vanilla ($2B->$4069, $00->$4013); custom ids index the high table ($DE->HIGH+0, $E1->HIGH+6).",
+    "entry5_bail": "DEFER. $535F (entry 5) is a minor side-power reader not on the heal/common-attack path (hw Test C). Leave its >=$d6 bail as-is for the first custom skills; fork it later only for a side-power custom skill. Its window ($535F..$5367) is also jump-in-clear if/when needed.",
+    "verdict": "KEYSTONE FORK IS BYTE-NEUTRALLY IMPLEMENTABLE. S2d is shovel-ready: fork these 3 sites + add in-bank high tables, then MP (3 sites), sound (1 site), name (repoint)."
+  },
+  "cast_pipeline": {
+    "production": {
+      "menu_real_id": "$caea holds the player's menu-selected REAL id (used for the NAME).",
+      "primary_commit": "$50:~$4A55 -- after the chosen skill is fetched into [hl], the engine does `ld a,[hl]; ld [$db4c],a; ld [$db8a],a; ld [$db4f],a`, setting record-index + working-id + selected-skill from the chosen skill.",
+      "action_queue": "$dcec -- the committed action queue; $db8a is (re)derived from it during turn resolution. The FX router ($58) and multi-hit/chain code ($52) re-set $db8a for sub-effects (accounts for most of the 35 write sites).",
+      "alias_hook_S45": "AliasCommit (bank $50 patch) intercepts the commit: for id $DE/$DF it stashes the real id in $db86 and forces the queued value to $00 (Blaze), so all downstream presentation sees Blaze. $db8a==0 at effect dispatch is the alias signal.",
+      "dealias_plan_S2d": "Do NOT templatize -- let the real id ($DE+) flow into the queue and thus into $db8a. Then the consumption forks below make it correct."
+    },
+    "consumption_order": [
+      "$db8a (working id) -> $db4c (record index, re-derived e.g. at $52:$66D9)",
+      "RECORD table $54:$4013 indexed by id: magnitude ($66d6->entry1), targeting (+2->$dcfc via entry2), status/damage_class (+5/+6), ai_weight (+3, via shared entry0). 3 indexer sites + entry5 bail = the KEYSTONE fork.",
+      "FUNCTION table $52:$4011 indexed by id -> effect handler (FarSkillFork done).",
+      "MP table $07:$570C indexed by id (3 readers) -> shown + deducted.",
+      "SOUND $55:$4070 side-selected -> sub-table indexed by id at $4067 ($FF=silence).",
+      "ANIM $5f:$58dd indexed by id ($0d=no-visual; no fork for a no-visual skill).",
+      "MESSAGE: handler-driven descriptor ($dd6f/$dd70), NOT id-indexed -> no fork.",
+      "NAME $41:$4539 (256 entries) from the real id $caea -> repoint, no fork.",
+      "ENEMY AI $57: 148 id-reads, EXHAUSTIVELY classified -> 138 equality(<$DE)+5 windowed range gates+high-id sub-dispatch guarded by `cp $d9; ret nc`; ZERO mishandle a custom id; AI record reads use the shared $54 reader (covered by the keystone)."
+    ]
+  },
+  "special_case_gates": [
+    {
+      "loc": "$54:$535F",
+      "name": "SkillMagnitudeBySide (record reader #4, side-power)",
+      "anchor": "cp $d5 / jr z $539d / jr nc $53a6",
+      "behavior": "id==$d5 -> $539d; id>=$d6 -> $53a6 which ZEROES $db4c and returns (this reader BAILS, no record-power read); id<$d5 -> normal side-power read. Called from $55:$532A/$5332 (a side-by-side power path), NOT from the main magnitude routine $66d6 (which uses entry 1).",
+      "verdict_for_new": "This is ONE of four record-table readers, and the only one that guards the high range. It does NOT independently break custom skills: the main magnitude path ($66d6 -> entry 1) already OVERSHOOTS the record table for id>=$DE. The fix for both is the SAME single record fork (fork_points.record_ptr_table). The $535F bail just means a forked reader here must also handle id>=$d6 explicitly rather than fall into the zeroing branch. Corrects the doc implication that '+11/+13 power drives the skill' -- record-driven power is reached by INDEXING the record table with the id, so it needs the record fork."
+    },
+    {
+      "loc": "$50:$6BC4",
+      "name": "menu/command pseudo-id check",
+      "anchor": "ld a,[$db4c] / cp $e1 / jr z $6be7",
+      "behavior": "record index $e1 (225) routed to a bespoke menu/inventory path ($6be7)",
+      "verdict_for_new": "AVOID id $E1 ($e1=225) for custom skills (or account for this path). Other custom ids unaffected."
+    },
+    {
+      "loc": "$52:$70E0",
+      "name": "narrow spell window (example of a SAFE window gate)",
+      "anchor": "cp $52 / jr c $710e / cp $54 / jr nc $710e",
+      "behavior": "only ids [$52,$54) take the special path; all else (incl $DE) -> $710e",
+      "verdict_for_new": "SAFE. Representative of the many $db8a 'gates' that are narrow windows EXCLUDING the custom range."
+    }
+  ],
+  "db8a_range_gates": [
+    {
+      "loc": "$52:$538F",
+      "cp": "$3A",
+      "branch": "jr c $53DC",
+      "new_id_lands": "$5396",
+      "landing_first": "cp $7e",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$52:$5C6F",
+      "cp": "$72",
+      "branch": "jr c $5C81",
+      "new_id_lands": "$5C76",
+      "landing_first": "cp $82",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$52:$70E0",
+      "cp": "$52",
+      "branch": "jr c $710E",
+      "new_id_lands": "$70E7",
+      "landing_first": "cp $54",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$52:$7661",
+      "cp": "$3A",
+      "branch": "jr c $768E",
+      "new_id_lands": "$7668",
+      "landing_first": "cp $29",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$53:$59A5",
+      "cp": "$5C",
+      "branch": "jr c $59C3",
+      "new_id_lands": "$59AC",
+      "landing_first": "cp $64",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$53:$5B07",
+      "cp": "$84",
+      "branch": "jr c $5B17",
+      "new_id_lands": "$5B0E",
+      "landing_first": "cp $88",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$57:$5EE5",
+      "cp": "$1A",
+      "branch": "jr c $5EFC",
+      "new_id_lands": "$5EEC",
+      "landing_first": "cp $1c",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$57:$5F1F",
+      "cp": "$1A",
+      "branch": "jr c $5F6E",
+      "new_id_lands": "$5F26",
+      "landing_first": "cp $1c",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$57:$6810",
+      "cp": "$14",
+      "branch": "jr c $6821",
+      "new_id_lands": "$6817",
+      "landing_first": "cp $4f",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$57:$6C9A",
+      "cp": "$15",
+      "branch": "jr c $6CB7",
+      "new_id_lands": "$6CA1",
+      "landing_first": "cp $3b",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$57:$7CE0",
+      "cp": "$14",
+      "branch": "jr c $7CFD",
+      "new_id_lands": "$7CE7",
+      "landing_first": "cp $4f",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$58:$4400",
+      "cp": "$37",
+      "branch": "jr c $4415",
+      "new_id_lands": "$4407",
+      "landing_first": "cp $d9",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$5F:$4A60",
+      "cp": "$12",
+      "branch": "jr c $4AE8",
+      "new_id_lands": "$4A68",
+      "landing_first": "cp $39",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$5F:$52F0",
+      "cp": "$15",
+      "branch": "jr c $53A4",
+      "new_id_lands": "$52F8",
+      "landing_first": "cp $24",
+      "risk": "shares-high-id-path"
+    },
+    {
+      "loc": "$5F:$544E",
+      "cp": "$1A",
+      "branch": "jr c $54C3",
+      "new_id_lands": "$5455",
+      "landing_first": "cp $1c",
+      "risk": "shares-high-id-path"
+    }
+  ],
+  "db8a_table_index_reads": [
+    {
+      "loc": "$52:$6CCF",
+      "instr": "add hl, bc"
+    },
+    {
+      "loc": "$54:$5298",
+      "instr": "add hl, bc"
+    },
+    {
+      "loc": "$55:$4061",
+      "instr": "add hl, bc"
+    }
+  ],
+  "db4c_note": "db4c low-threshold gates ($50:$5CA4/$5D53/$5D81 cp $02; $52:$6A2E cp $04; $57:$48D8/$493F cp $03) are SCRATCH reuse: they gate a 0-4 value feeding sla/rl scaling, NOT the skill id. Not skill-id gates."
+}

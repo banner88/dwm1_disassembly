@@ -19,6 +19,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | enemy_stats.json | dump_enemy_stats.py | **RECONCILED this session.** Full 25-byte layout now decoded: +1..2 exp LE16, +3 joinability, +17..20 ai_weights, +21..24 skills. 487/487 match. |
 | skills.json | dump_skills.py | **SUPERSEDED (S44) by skill_records.json** for editor use (it over-reads to 256 with 33 junk entries). Retained only because `gen_name_tables_db.py` still reads it. |
 | skill_records.json | gen_skill_records.py | **NEW (S44).** 222 records ($00–$DD), the editor source of truth. Per skill: name, `kind` (155 skill / 37 item_effect / 30 internal), mp_cost (ALL=999), handler + shared-handler group, learn block ($06:$50E0), prereqs, family code, monster/enemy usage; `_generator` key lists all 6 source addrs. Round-trip proven by `build_skill_tables.py --selftest` (function/MP/learn tables re-emit byte-identical). |
+| skill_id_bucket_map.json | map_skill_id_buckets.py | **NEW (S48).** The de-aliasing FOUNDATION for S2d: every place the battle engine buckets the working skill id (`$db8a`, 254 reads / 9 banks), classified (equality/range/table-index) with per-gate verdicts for a custom id (`≥ $DE`); the verified fork points (record `$54:$4013` keystone, function, MP, sound, anim, name, learn-req); the high-range special gates; the full cast pipeline (production→consumption); the byte-neutral fork feasibility proof; and the SameBoy hardware-verification block. Self-checking: the tool re-derives the load-bearing anchors from the ROM and aborts on drift. See BATTLE_SKILL_SYSTEM.md §12. |
 | text_id_map.json | dump_text_id_map.py | **NEW GENERATOR this session.** 2,061 entries (vs 2,067 committed). All 2,061 are structurally identical (id/bank/index/addr). 6 "missing" are zero-padding junk the old generator decoded as "0000…" — exclusion is strictly more correct. Text decoding improved (proper charmap, DTE, control codes). |
 | map_table.json | dump_map_table.py | **REWRITTEN this session.** Fixed TWO bugs: (1) interact/exit label swap (DOC_AUDIT A.11), (2) screen enumerator stopped at first $FFFF hole, dropping a third of rooms (exits 541→812, NPCs 961→1320). Ground-truth verified (GreatTree→Well exit found). |
 | exit_table.json | dump_map_table.py | Regenerated with fixed semantics (trigger coords, dest_map_type, spawn). |
@@ -236,7 +237,12 @@ join, useful for editor; do NOT archive) ·
 ROM: colours 0/2 from the room/gate palette pointer, forces idx1=`$6bff`/idx3=
 `$0000`, scans screens, refuses cleanly when unresolvable. `--map 0xNN` /
 `--gate 0xNN`. Validated 30/30 dumps + gate floor; see GATE_GENERATION.md §7.1.
-Prints, no JSON.)
+Prints, no JSON.) ·
+`map_skill_id_buckets` (**NEW S48** — writes skill_id_bucket_map.json: the skill-id
+de-aliasing surface for S2d. Auto-scans `$db8a` reads + curated fork points/special
+gates/cast pipeline/fork-feasibility; self-checks load-bearing anchors against the ROM
+and aborts on drift. `--print` dumps the range-gate table. See BATTLE_SKILL_SYSTEM.md
+§12; precedent `map_species_slots`.)
 
 ### One-off investigations → move to `tools/archive/` when convenient
 `analyze_bank0b` `analyze_bank17` `analyze_screens` `annotate_bank052`
