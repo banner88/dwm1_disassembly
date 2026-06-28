@@ -236,6 +236,11 @@ jr_05d_411e:
     add b
     nop
 
+; Layer-1 RENDERER: metasprite/OAM builder, bank $5d (BATTLE_SKILL_SYSTEM.md §11.2).
+; Called with de=$4071 (frame-table base). Two-level: [$c7]=animation, [$c8]=frame ->
+; 4-byte OAM entries (dy,dx,tile,attr; $80-term) = same format as the follower engine.
+; Loop bound $cb<$28 (40=max OAM). EMULATOR-VERIFIED on Zap (cmd $10 routes here; $c7=$10,
+; $c8 advanced 00->01). Sibling builders: $5c:$40fc (cmd<$0e), $5e:$413a (cmd>$20).
 HramB5d_4122:
     ldh a, [$cb]
     cp $28

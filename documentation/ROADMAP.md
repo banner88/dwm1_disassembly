@@ -920,7 +920,7 @@ Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, **222 entri
 `SkillMPCostTable $07:$570C` (u16, 999=ALL) and `SkillLearnReqTable $06:$50E0` (18B/skill).
 The editor data side is captured in `extracted/skill_records.json`; the **presentation**
 layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SKILL_SYSTEM.md`
-§7–§10). Remaining RE: the animation renderer (S2c-anim) and the full AI weighted-pick (S3). (S2c message format done + validated 2026-06-28.)
+§7–§10). Remaining RE: the full AI weighted-pick (S3). (S2c message format done + validated 2026-06-28; S2c-anim renderer reversed + emulator-verified 2026-06-28 — see §11.)
 - [x] **S1 — Skill data foundation + round-trip keystone (S44).** *Reshaped on audit:* the
       bank `$52` function table was already re-sectioned, so the real work was the data tables.
       Decoded + FAQ-validated `SkillMPCostTable` ($07:$570C) and `SkillLearnReqTable`
@@ -958,13 +958,28 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         `tools/decode_effect_messages.py` (`--selftest`, `--validate`) →
         `extracted/effect_messages.json` (222 skills, 203 message ids). Format in
         BATTLE_SKILL_SYSTEM.md §9.
-  - [ ] **S2c-anim — Animation FORMAT / authoring (RE, discovery). [OPEN — located, not reversed]**
-        The visual is keyed by **skill id**, dispatch fully mapped: bank `$5f` e6 (`$52F0`) →
-        anim-index tables `$5f:$58dd/$59c3/$5aa9` → routine table `$5f:$58bd` (8 routines) → the
-        routine sets `$dd68` (animation-type). **Not reversed:** the renderer that consumes
-        `$dd68` (frame/OAM/tile/palette engine) + the animation data format. *Reuse* of an
-        existing animation on a new id = a table edit; *authoring a novel animation* needs this
-        item. Sound is the analogous id-keyed table (`$55:$4070`). See §9 "Visual + sound".
+  - [ ] **S2c-anim-cleanup — convert the verified battle-anim DATA tables to `db`/`dw` in the
+        disassembly (label-only, byte-neutral). [OPEN — blocked on `$5f` map-script RE]** The
+        anim tables (`$5f:$56ed/$57d5/$58bd/$58dd/$59c3/$5aa9`; `$5c/$5d/$5e` frame tables at
+        `$4071`+) currently mis-disassemble as instructions. `tools/emit_anim_data_sections.py`
+        emits byte-exact directives, but the `$5f` span overlaps mgbdis `Map*_Script*` labels
+        (some bogus, some maybe-real) — see DOC_AUDIT #15. **Must reverse the `$5f` map-cutscene
+        script accessors first** to set correct boundaries, else risk mislabeling real scripts
+        or absorbing them into anim tables (a silent error a passing MD5 won't catch). The
+        `$5c/$5d/$5e` frame tables have the same code/data-interleave hazard.
+  - [x] **S2c-anim — Animation FORMAT / renderer (RE, discovery). [RENDERER REVERSED + EMULATOR-VERIFIED 2026-06-28]**
+        The `$dd68` renderer is a **metasprite/OAM engine** (same 4-byte `dy,dx,tile,attr`
+        $80-term format as the follower system). Full chain emulator-verified: skill id →
+        `$5f:$52F0` → side-select tables `$5f:$58dd/$59c3/$5aa9` → routine dispatch
+        `$5f:$5441` → routine table `$5f:$58bd` (index `$0d`=`$55cc`=`ret`=NO VISUAL) → sets
+        `$dd68` anim-type → builder `$5c:$40fc`/`$5d:$4122`/`$5e:$413a` (de=`$4071`, two-level
+        `[$c7]`anim/`[$c8]`frame → metasprites). **3 presentation layers** mapped: (1) sprite
+        anim, (2) sound+flash (`$56ed/$57d5`→`$da81`; heal chime, TatsuCall `$da83` blink),
+        (3) vertical screen-shake `$5f:$4c0c` (SCY via `$da84`/`$bb`). See §11. Tool:
+        `decode_battle_animations.py` → `extracted/battle_animations.json` (45 anims/~600 frames).
+        *Reuse* a known animation on a new id = table edit (`$58dd/$59c3/$5aa9`). *Authoring a
+        novel animation* = add metasprite frame lists + a `$4071`-table entry (now fully
+        specified; **remaining static-only:** per-bank table extent + tile-graphics VRAM source).
   - [ ] **S2d — Proper per-id custom-skill records (the real authoring; replaces the alias
         hack).** Give new ids ($DE+) their OWN record + handler + name instead of aliasing to
         Blaze, so heal/Tame/Anchor-shaped skills become expressible; fix the single-caster +
@@ -995,7 +1010,7 @@ e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block a
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
 
-**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → S2c-msg ✅ → **S2d** (next) / S2c-anim / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
+**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → S2c-msg ✅ → S2c-anim ✅ → **S2d** (next) / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
 slotting the text roll-out into spare sessions. Cheap high-confidence wins early; fire the
 two RE discovery sessions (M1, S3) before their authoring items depend on them.
 

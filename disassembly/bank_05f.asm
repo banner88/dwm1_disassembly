@@ -3481,6 +3481,11 @@ jr_05f_5433:
     ret
 
 
+; === Layer-1 SPRITE-ANIMATION routine dispatch (BATTLE_SKILL_SYSTEM.md §11.1) ===
+; A = per-skill animation routine index (from $5f:$58dd/$59c3/$5aa9 [skill id $db8a],
+; side-selected by $c863 bit1). Indexes the routine table at $58bd and JP [hl]s to it
+; (via RST_08 = $00:$0008). Index $0d -> $55cc = bare `ret` = NO VISUAL (the "no animation"
+; sentinel; e.g. HealMore/Increase party-cast). EMULATOR-VERIFIED: Zap A=$02, HealMore A=$0d.
 FuncFldUI_5441:
     ld c, a
     ld b, $00

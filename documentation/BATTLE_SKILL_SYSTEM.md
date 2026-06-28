@@ -310,6 +310,7 @@ the relevant routine (`$58:$591E`-style recruitment, or an inventory-grant).
 > animation *data* format are **not** decoded. So **reusing** an existing animation on a
 > new skill id is a table edit (set its `$58dd/$59c3/$5aa9` slots); **authoring a novel
 > animation** still requires reversing the `$dd68` renderer (tracked as an open item).
+> **UPDATE (S2c-anim, 2026-06-28): the `$dd68` renderer IS now reversed and emulator-verified — see §11.** It is a metasprite/OAM engine using the same 4-byte format as the follower system. The "reuse vs author" split still holds, but authoring is no longer blocked on an unknown renderer.
 
 **Animation is chosen by the HANDLER, not the record.** Each handler ends by
 calling one of ~12 **descriptor-setters** (`$52:$5460–$54f8`, annotated) that set a
@@ -406,6 +407,180 @@ as their on-screen message.
 `extracted/effect_messages.json` (222 skills, 203 message ids, Blaze decoded to bytes,
 descriptor-kind classification). Ground truth: `extracted/skill_faq.json` (built by
 `tools/build_skill_faq.py`; effect/class/learn/prereq per skill — also feeds S2d).
+
+## 11. Battle-effect PRESENTATION — the 3 layers (S2c-anim renderer reversed)  [2026-06-28]
+
+> **This closes the §9 open item** ("the renderer that consumes `$dd68` … was not
+> traced"). The renderer IS reversed, AND a load-bearing error in the §9 mental model
+> is corrected here. Most of this section is **emulator-verified** (SameBoy
+> breakpoints/watchpoints, this session); the few static-only parts are tagged.
+>
+> **Method note for the next session:** the *frame data* decoded statically held up
+> perfectly under the emulator, but the *control flow* (which path drives what, on
+> which axis, under which side condition) was wrong **four times** from static reading
+> alone and was only settled by watchpoints. Treat any `[STATIC-ONLY]` claim below as a
+> hypothesis until an emulator check confirms it.
+
+### 11.0 The correction (what §9 and earlier got wrong)
+A skill's on-screen presentation is **three independent systems**, not one. The §9
+section correctly split *message* vs *visual+sound*, but the visual side was still
+under-specified and two later guesses were outright wrong:
+
+- `$c8a8` is **NOT** "screen shake" (a disassembly comment said so; it's wrong). It is an
+  **effect-busy / input-suppress flag**. Damage-floor tiles set `$c8a8=$08` **and**
+  `wBGPalette=$2d` — the visible effect is the **black palette flash**, not a shake.
+  (Ground truth: damage tiles flash, don't shake. GATE_GENERATION.md's "screen-shake
+  `$C8A8`" line is the same mislabel and should be read as "effect-busy flag".)
+- `$c8b1`/`$c8b2` is a real rSCY/rSCX wobble routine in ROM0 (`$00:$056e–$05aa`) but
+  **nothing ever sets it nonzero** — confirmed dormant by watchpoint (never fires).
+- The real shake is **vertical only** (SCY), a different routine entirely (§11.3).
+
+### 11.1 Layer 1 — SPRITE ANIMATION  [EMULATOR-VERIFIED]
+The actual spell graphic. Driven by the per-skill **routine** path (NOT the `$da81`
+command path, which is layer 2):
+
+```
+skill cast → $5f entry 6 ($5f:$52F0) visual dispatch
+  → side-select table by attacker side ($c863 bit1, =0 in normal turns):
+        party caster → $5f:$58dd[id]      (VERIFIED: HL=$58dd+id at the fetch)
+        enemy caster → $5f:$59c3[id]
+        special phase → $5f:$5aa9[id]      (gated by $d9ed==1 && $d9ee==5)
+  → value = routine INDEX (0..$0d)
+  → FuncFldUI_5441 ($5f:$5441): ld c,a; ld hl,$58bd; add hl,bc×2; call $0008 (JP [hl])
+  → jumps to routine $5f:$58bd[index]
+```
+The 8+ routines at `$5f:$58bd` (`$5591 $559b $55a7 $55b1 $55cd $55d6 $55df $55e8 …`)
+each set `$dd68` = an **animation-type** byte and set up the draw, OR are a bare `ret`.
+
+**Index `$0d` → routine `$55cc` = `ret` = NO VISUAL.** This is the "no animation"
+sentinel. (VERIFIED: HealMore reads `A=$0d`, the `JP [hl]` lands on `$55cc`, returns
+drawing nothing — matches the in-game "healing sound, no animation".)
+
+Verified per-skill indices (party-cast = `$58dd`):
+
+| Skill | id | `$58dd` index | routine | result |
+|---|---|---|---|---|
+| Zap | `$10` | `$02` | `$55a7` (sets `$dd68=2`) | animates *(VERIFIED A=$02)* |
+| Scorching / IceStorm | `$5e`/`$62` | `$01` | `$559b` (`$dd68=1`) | animates `[STATIC]` |
+| MetalCut / EvilSlash | `$48`/`$40` | `$00` | `$5591` (`$dd68=1`) | animates `[STATIC]` |
+| HealMore / Increase | `$2c`/`$1f` | `$0d` | `$55cc` = `ret` | **no visual** *(VERIFIED)* |
+
+**Side-gating (VERIFIED):** `$5f:$5441` fires **per involved side** of an action (it
+fired on the caster turn *and* when the enemy was hit). Each side reads its own table,
+so an offensive skill animates on the caster side (`$58dd`) and is `$0d`/no-visual on the
+target side (`$59c3`), and an ally-heal is the reverse. This is why "enemy offensive
+skills don't animate on your party, but the enemy's own heal does."
+
+### 11.2 Layer 1 renderer — the METASPRITE/OAM engine  [EMULATOR-VERIFIED]
+The routine's `$dd68` animation-type selects a renderer bank; the renderer rebuilds OAM
+every frame from a two-level frame table. **It is the same 4-byte metasprite format the
+project already knows from the follower engine (GFX-3).**
+
+```
+animation command (layer-2 byte $da81, = $56ed[id] / $57d5[id]) → ROM0 dispatcher:
+    < $0e  → bank $5c (builder $5c:$40fc)
+   $0e..$20 → bank $5d (builder $5d:$4122)     ← Zap (cmd $10) VERIFIED here
+    else   → bank $5e (builder $5e:$413a)
+```
+Each builder (called with `de = $4071`, the bank's frame-table base):
+```
+animation = [ $4071 + [$c7]*2 ]       ; $c7 = HRAM animation index (VERIFIED = $10 for Zap)
+frame_ptr = [ animation + [$c8]*2 ]   ; $c8 = HRAM frame counter (VERIFIED advanced 00→01)
+frame     = N × 4-byte OAM entries, $80-terminated:
+    byte0 dy   → OAM Y    = dy + [$c5] + $10     (signed)
+    byte1 dx   → OAM X    = dx + [$c3] + $08     (signed)
+    byte2 tile → OAM tile = tile + [$c9]         (tile base, per-skill)
+    byte3 attr → OAM attr = attr XOR [$ca]       (attr base; bit5 = X-flip)
+loop bound: sprite counter [$cb] < $28 (40 = max OAM)   (VERIFIED: cp $28 at $4122)
+```
+HRAM live during a draw (read straight out of the Zap break): `$c3`/`$c5` = X/Y screen
+base, `$c7` = animation, `$c8` = frame, `$c9`/`$ca` = tile/attr base, `$cb` = sprite count.
+The frame counter struct (`$dd62/$dd63/.../$dd66`) is stepped by a generic bank-`$02`
+timer routine via the pointer at `$d7b4/$d7b5`. `$dd66`→`$c8` each frame.
+
+**Per-bank table shape `[STATIC-ONLY]`:** `$5c`'s top table is 14 distinct animations;
+`$5d`/`$5e` begin with a run of repeated DEFAULT pointers (`$5d`→`$4173`, `$5e`→`$418b`)
+for unused indices, then the distinct animations (`$5d` 19, `$5e` 12). Decoder handles
+this; counts are "verified-decodable", not "proven-exhaustive". The *which-frame-plays-
+when* playback (projectile motion via `$dd68` phase moving `$c3` across screen) is
+decoded statically but only the frame-advance (`$c8` increment) is emulator-confirmed.
+
+### 11.3 Layer 3 — SCREEN SHAKE (vertical)  [EMULATOR-VERIFIED]
+A physical hit shakes the screen **up-down only (SCY)**. This is a *separate* effect
+step-machine in bank `$5f`, **not** a skill-table entry and **not** `$c8a8`/`$c8b1`:
+
+```
+$50:$60b9 (battle main)
+  → $52:$6c56 (effect-step dispatcher; reads done-flag $da82, dispatches by $d9ed)
+    → $5f:$4c0c  THE SHAKE ROUTINE
+```
+`$5f:$4c0c` is a `rst $00` step-machine driven by counter **`$da84`** through a jump
+table (`$4c15 $4c2f $4c15 $4c3a`):
+```
+step0 → ld a,$02; ldh [$bb],a   ; SCY = +2  (screen jolts DOWN)   ldh [$b7],a = 0
+step1 → SCY = 0
+…
+step3 ($4c3a) → ld a,$01; ld [$da82],a (done) ; xor a; ldh [$bb]; ldh [$b7] (reset scroll 0)
+              ; xor a; ld [$da84],a (reset step)
+```
+Hardware path: HRAM `$bb` (SCY source) → `$00:$122c` copies it to `rSCY`. The battle
+scroll uses HRAM `$b7`(SCX)/`$bb`(SCY) directly — **NOT** the `$c991/$c992` scroll
+shadow (watchpoints on the shadow never fired; this is why the shadow was a dead end).
+Fires on *any* physical hit (attacker or target). A sibling SCX (horizontal) oscillation
+exists at `$5f:$51dd` (`-2,+2,-4,+4,-8,+8…` written to `$b7`) — a *different* effect, not
+the hit-shake. `$da84`/`$da85` are written **only** in bank `$5f` (effect-only; quiet
+outside battle — the clean watch target).
+
+### 11.4 Layer 2 — SOUND + screen-FLASH  (recap, keyed by `$56ed`/`$57d5` → `$da81`)
+The `$56ed[id]`/`$57d5[id]` → `$da81` command path (§9 "Visual + sound" / the `$5c/$5d/$5e`
+dispatch on `$da81`) drives **sound and screen-flash/blink**, side-selected like layer 1:
+- offensive skills (`$11/$12`): real cmd in `$56ed`, `$ff` in `$57d5`
+- ally skills (`$21/$22`): `$ff` in `$56ed`, real cmd in `$57d5`
+- `$ff` in both = no layer-2 effect.
+Examples: HealMore `$57d5=$14` = the heal **chime** (the sound you hear with no visual);
+TatsuCall (`$84`) = `$ff` both → no sprite, but routine `$55cd`→`$4a60`→`$4b0b` sets
+`$da83=$04` = the **rapid screen blink** (Tatsu itself is never drawn — it appears via the
+combatant-display system). BeDragon (`$d5`) `$57d5=$18` = the transform animation (whitelisted
+to force the `$57d5` path on its own side). Summons (`*Call` `$84-$87`) = `$ff`/`$ff` = no
+effect animation.
+
+### 11.5 Tools / data
+`tools/decode_battle_animations.py` — decodes the `$5c/$5d/$5e` two-level frame tables to
+metasprites + the per-skill `$5f` descriptor tables. `--selftest` (ROM anchors),
+`--dump` (every frame), default writes `extracted/battle_animations.json` (45 distinct
+animations across 3 banks, ~600 frames, + 222 per-skill descriptors).
+
+**Disassembly-cleanup status (NOT yet applied — see DOC_AUDIT #15):** the `$5f` tables
+`$56ed`/`$57d5` (anim commands), `$58bd` (routine ptrs), `$58dd`/`$59c3`/`$5aa9` (anim
+indices, 230 B each) currently mis-disassemble as instructions. `tools/emit_anim_data_sections.py`
+emits byte-exact `db`/`dw` for them, BUT this span overlaps mgbdis-auto `Map*_Script*`
+labels in bank `$5f` (some bogus — e.g. `Map5A_Script02/03` sit on anim padding — some
+possibly real map-cutscene scripts not yet traced). **Converting safely first requires
+reversing the `$5f` map-script accessors to settle the boundaries.** Until then the regions
+are left as-is and documented here; the live code + watchpoints (not the labels) are the
+truth for the anim tables. Same caveat applies to the `$5c/$5d/$5e` frame tables (code/data
+interleaved at `$4071`+).
+
+### 11.6 Quick-reference (layer addresses)
+
+| Thing | Address |
+|---|---|
+| Visual dispatch (entry 6) | `$5f:$52F0` |
+| Side-select tables (by skill id) | `$5f:$58dd` (party) / `$59c3` (enemy) / `$5aa9` (special) |
+| Routine-index → routine dispatch | `FuncFldUI_5441` `$5f:$5441` (`JP [hl]` via `$00:$0008`) |
+| Animation routine table (8+) | `$5f:$58bd` |
+| **No-visual sentinel** | index `$0d` → `$5f:$55cc` = `ret` |
+| Metasprite/OAM builders | `$5c:$40fc` / `$5d:$4122` / `$5e:$413a` (de=`$4071`) |
+| Frame-table base (per bank) | `$4071` → `[$c7]` anim → `[$c8]` frame → 4B `dy,dx,tile,attr` $80-term |
+| Anim/frame HRAM | `$c7` anim · `$c8` frame · `$c3/$c5` X/Y base · `$c9/$ca` tile/attr base · `$cb` OAM count |
+| Frame counter struct / stepper | `$dd62..$dd66` ; bank-`$02` timer via `$d7b4/5` |
+| **Screen shake (vertical, SCY)** | `$5f:$4c0c` (step ctr `$da84`, done-flag `$da82`) → HRAM `$bb` |
+| Shake hardware copy | `$00:$122c` (`$b7`→rSCX, `$bb`→rSCY) |
+| Effect-step dispatcher | `$52:$6c56` (dispatch by `$d9ed`) |
+| Effect-busy / input-lock (NOT shake) | `$c8a8` |
+| Dormant ROM0 wobble (never triggered) | `$00:$056e–$05aa` (`$c8b1/$c8b2`) |
+| Sound (layer 2) | `$55:$4026` → `$55:$4070[id]` SFX table |
+| Screen-blink (TatsuCall etc.) | `$da83` (set by `$5f:$4b0b`) |
 
 ## 10. Updated address quick-reference (additions to §4)
 

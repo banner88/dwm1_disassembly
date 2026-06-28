@@ -258,6 +258,8 @@ jr_05e_4136:
     add b
     nop
 
+; Layer-1 metasprite/OAM builder (BATTLE_SKILL_SYSTEM.md §11.2). de=$4071 frame-table
+; base; two-level [$c7]=anim/[$c8]=frame -> 4B OAM entries ($80-term). See $5d:$4122 (verified).
 HramB5e_413a:
     ldh a, [$cb]
     cp $28
