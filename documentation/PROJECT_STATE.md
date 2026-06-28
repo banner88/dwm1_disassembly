@@ -5,6 +5,38 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
+> Last verified: 2026-06-28 (Session 47 — **S2c: effect-script format / animation
+> dispatch RE.** Integrity PASS 4/4, clean build byte-perfect `1ca6579…`. Byte-neutral
+> (discovery + tooling; no `disassembly/` or ROM change). Resolves the S46 OPEN item.
+> **Finding (corrects the prior model):** bank `$4c` is **not** a novel effect-bytecode
+> interpreter — it is the shared **text/message VM**. The `$dd70/71` "script pointer"
+> is a **packed pair of 8-bit message ids**: low = the "effect happens" message
+> (damage/status/heal), high = the "effect fails" message (miss/resist). The battle
+> effect player (`bank_053 jr_053_5a6f`, a frame-stepped state machine) hands a small
+> mode (0/1) + the chosen id byte to bank `$4c` e0 (`LoadB4c_42d1`), which runs
+> `CallTextEngine`/`SaveBankAndSwitch` to resolve the string via the **mode-0 two-level
+> table at `$4c:$4019`** (`subtable=[$4c:$4009+mode*2]`, `string=[subtable+id*2]`).
+> Effect "scripts" are standard `$F0`-terminated text-VM strings (DTE + control codes;
+> `$F9 <slot>` = insert name/number). The on-screen **visual** is a SEPARATE system keyed
+> by **skill id**: bank `$5f` e6 (`$52F0`) → per-skill anim-index (`$5f:$58dd/$59c3/$5aa9`)
+> → routine table `$5f:$58bd`; **sound** = bank `$55` e1 → SFX table `$55:$4070`. So
+> Blaze/Firebal/IceBolt share selector `$b882` yet differ visually. **Accept met +
+> validated:** Blaze decoded to bytes — hit `$4c:529f` "{mon}{name} takes {num} damage pts!",
+> miss `$4c:5871` "Has no effect on {name}!"; and `--validate` cross-checks decoded messages
+> against the categorized FAQ (`extracted/skill_faq.json`, user-provided) — **67/67**
+> statically-resolved skills match, 0 contradictions (≈81 real skills incl. the `$b682`
+> physical-attack default). **NOT done — flagged open as S2c-anim:** the animation *renderer*.
+> The visual *dispatch* is fully mapped (skill id → `$5f:$58dd/$59c3/$5aa9` anim-index →
+> `$5f:$58bd` routine → sets `$dd68` animation-type), but the engine that consumes `$dd68`
+> (frame/OAM/tile/palette) + the animation data format are NOT reversed. So *reusing* an
+> existing animation on a new id is a table edit; *authoring a novel animation* remains open.
+> **Tool:** `tools/decode_effect_messages.py` (`--selftest`, `--validate`) →
+> `extracted/effect_messages.json` (222 skills → selector → hit/miss messages, full 203-id
+> mode-0 corpus, Blaze byte dump; honest classification of `a:a` flag-params, RAM-ptr loads,
+> and dynamic builders as non-static). Full RE: **`BATTLE_SKILL_SYSTEM.md` §9** (rewritten).
+> **NEXT:** S2d — proper per-id custom-skill records (own record+handler+name; set the new
+> id's `$5f`/`$55` anim/SFX slots) to replace the S45 alias hack.
+>
 > Last verified: 2026-06-28 (Session 46 — **Phase F / S2-arc: skill PRESENTATION
 > foundation decoded + record-table round-trip keystone + re-section.** Integrity
 > PASS 4/4, clean build byte-perfect `1ca6579…`. Byte-neutral (discovery +

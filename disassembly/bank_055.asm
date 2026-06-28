@@ -10,7 +10,7 @@ SECTION "ROM Bank $055", ROMX[$4000], BANK[$55]
     ; Cross-bank dispatch table (15 entries)
     ; Called via: ld hl, $55XX / rst $10
     dw $401F                          ; Entry 0
-    dw $4026                          ; Entry 1
+    dw $4026                          ; Entry 1 = skill SOUND trigger (S2c): -> LoadB55_404a -> per-skill SFX-id table $55:$4070 (by skill id) -> PlaySoundEffect.
     dw $4035                          ; Entry 2
     dw $403C                          ; Entry 3
     dw $4043                          ; Entry 4

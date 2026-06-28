@@ -3662,19 +3662,21 @@ GetAttackerBattleSlot:
 
 
 ApplySkillDamage:
-; --- Skill effect/animation descriptor-setter family ($5460-$54f8) -----------
-; Each sets $dd6f (effect DESCRIPTOR bitfield) and $dd70/71 (effect-SCRIPT
-; pointer, e.g. Blaze=$b882). The skill HANDLER picks which setter to call -> this
-; is where a skill's animation/message is chosen (NOT in the skill record).
-; $dd6f bits: bit7=has-effect (consumer gate, bank $53); bit6/5/4/3..=effect-mode
-;   ($a8 Blaze=bit7+5+3, $a0, $98, $90, $d0, $88, $84, $80, $40=flag-only/no ptr).
-; Flow: $dd70/71 -> $c822/$c823 -> bank $4c (effect-script/message engine,
-;   CallTextEngine) + bank $55 entry 1 (sprite anim). So battle effects are
-;   bytecode SCRIPTS in the $b6xx-$bcxx pointer space ($b682 = shared default,
-;   28 handlers; elemental spells cluster $b882-$b898). The script bytecode
-;   FORMAT + its $b000-region backing is the remaining sub-item (animation
-;   authoring). To REUSE an existing animation on a custom skill, point its
-;   handler at a different $bXXX setter. See BATTLE_SKILL_SYSTEM.md.
+; --- Skill effect descriptor-setter family ($5460-$54f8) ---------------------
+; Each sets $dd6f (effect-class bitfield) and $dd70/71 (the SELECTOR). The skill
+; HANDLER picks which setter to call -> this is where a skill's messages are chosen
+; (NOT in the skill record).
+; $dd6f bits: bit7=has-effect; bit6 selects path in the consumer (bank $53
+;   jr_053_5a6f); $a8 Blaze, family $a0/$98/$90/$d0/$88/$84/$80, $40=flag-only.
+; SELECTOR ($dd70/71) is NOT a pointer (S2c): it packs TWO 8-bit MESSAGE ids --
+;   $dd70 (low) = "effect happens" msg id, $dd71 (high) = "effect fails" msg id.
+;   e.g. Blaze $b882 = (hit $82 "takes N damage", miss $b8 "Has no effect").
+; Flow: consumer hands (mode 0/1, id byte) -> $c822/$c823 -> bank $4c entry 0
+;   (LoadB4c_42d1), the shared TEXT VM, which resolves the string via the mode-0
+;   two-level table at $4c:$4019. The on-screen VISUAL + SOUND are SEPARATE systems
+;   keyed by skill id ($db8a): visual = bank $5f entry 6 ($52F0); sound = bank $55
+;   entry 1. ($b0b0/$b2b2/$b5b5/$9191 a:a values here are flag-params, not selectors.)
+; See BATTLE_SKILL_SYSTEM.md S9 + tools/decode_effect_messages.py.
     ld [$dd70], a
     ld [$dd71], a
     ld a, $80

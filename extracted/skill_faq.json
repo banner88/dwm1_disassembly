@@ -1,0 +1,1996 @@
+{
+  "_source": "external community skill FAQ (user-provided 2026-06-28), transcribed",
+  "_note": "NOT ROM-derived. Effect/class/learn/prereq reference for S2c validation and S2d. Effect CLASS maps to the message selector in BATTLE_SKILL_SYSTEM.md S9. Regenerate: python3 tools/build_skill_faq.py",
+  "n_skills": 154,
+  "skills": {
+    "Antidote": {
+      "category": "Healing Spells",
+      "mp": "2",
+      "effect": "Cures poison to one ally",
+      "class": "Healing",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 5,
+        "int": 20
+      },
+      "prereqs": []
+    },
+    "CurseOff": {
+      "category": "Healing Spells",
+      "mp": "2",
+      "effect": "Cures Curse to one ally",
+      "class": "Healing",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 7,
+        "int": 24
+      },
+      "prereqs": []
+    },
+    "DeChaos": {
+      "category": "Healing Spells",
+      "mp": "2",
+      "effect": "Cures confusion to one ally",
+      "class": "Healing",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 6,
+        "int": 22
+      },
+      "prereqs": []
+    },
+    "NumbOff": {
+      "category": "Healing Spells",
+      "mp": "2",
+      "effect": "Cures paralysis/wakes all allies",
+      "class": "Healing",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 8,
+        "int": 78
+      },
+      "prereqs": []
+    },
+    "Surge": {
+      "category": "Healing Spells",
+      "mp": "7",
+      "effect": "Cures all status + stat decreases",
+      "class": "Healing",
+      "type": "-",
+      "range": "All Allies",
+      "learn": {
+        "level": 23,
+        "int": 170
+      },
+      "prereqs": [
+        "Antidote",
+        "CurseOff",
+        "DeChaos",
+        "NumbOff"
+      ]
+    },
+    "Heal": {
+      "category": "Recovery Spells",
+      "mp": "2",
+      "effect": "Heals 30-40 HP one ally",
+      "class": "Recovery",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 1,
+        "int": 6
+      },
+      "prereqs": []
+    },
+    "HealMore": {
+      "category": "Recovery Spells",
+      "mp": "5",
+      "effect": "Heals 75-90 HP one ally",
+      "class": "Recovery",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 10,
+        "int": 48
+      },
+      "prereqs": []
+    },
+    "HealAll": {
+      "category": "Recovery Spells",
+      "mp": "7",
+      "effect": "Heals all HP one ally",
+      "class": "Recovery",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 16,
+        "int": 80
+      },
+      "prereqs": []
+    },
+    "HealUs": {
+      "category": "Recovery Spells",
+      "mp": "18",
+      "effect": "Heals 90-120 HP all allies",
+      "class": "Recovery",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 20,
+        "int": 120
+      },
+      "prereqs": []
+    },
+    "HealUsAll": {
+      "category": "Recovery Spells",
+      "mp": "36",
+      "effect": "Heals all HP all allies",
+      "class": "Recovery",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 28,
+        "int": 160
+      },
+      "prereqs": []
+    },
+    "Vivify": {
+      "category": "Revival",
+      "mp": "10",
+      "effect": "Revive one ally at half HP (50%)",
+      "class": "Revive",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 14,
+        "int": 54
+      },
+      "prereqs": []
+    },
+    "Revive": {
+      "category": "Revival",
+      "mp": "20",
+      "effect": "Revive one ally full HP",
+      "class": "Revive",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 27,
+        "int": 152
+      },
+      "prereqs": []
+    },
+    "Farewell": {
+      "category": "Revival",
+      "mp": "All",
+      "effect": "Revive all; caster dies",
+      "class": "Recovery",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 32,
+        "int": 176
+      },
+      "prereqs": [
+        "Sacrifice",
+        "Revive"
+      ]
+    },
+    "LifeSong": {
+      "category": "Revival",
+      "mp": "20",
+      "effect": "Revive all (2 turns, can fail)",
+      "class": "Revive",
+      "type": "-",
+      "range": "All Allies",
+      "learn": {
+        "level": 27,
+        "int": 162
+      },
+      "prereqs": [
+        "Revive",
+        "WarCry"
+      ]
+    },
+    "Upper": {
+      "category": "Defense",
+      "mp": "2",
+      "effect": "+50% defence one ally",
+      "class": "Defense",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 2,
+        "int": 12
+      },
+      "prereqs": []
+    },
+    "Increase": {
+      "category": "Defense",
+      "mp": "3",
+      "effect": "+50% defence all allies",
+      "class": "Defense",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 6,
+        "int": 12
+      },
+      "prereqs": []
+    },
+    "SuckAll": {
+      "category": "Defense",
+      "mp": "2",
+      "effect": "Sucks attacks at one ally 1 turn",
+      "class": "Defense",
+      "type": "Breath",
+      "range": "Self",
+      "learn": {
+        "level": 13
+      },
+      "prereqs": []
+    },
+    "Cover": {
+      "category": "Defense",
+      "mp": "2",
+      "effect": "Takes attack against one ally",
+      "class": "Defense",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 5
+      },
+      "prereqs": []
+    },
+    "Guardian": {
+      "category": "Defense",
+      "mp": "4",
+      "effect": "Takes all attacks one turn",
+      "class": "Defense",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "BladeD": {
+      "category": "Defense",
+      "mp": "3",
+      "effect": "Halve physical dmg + reflect 50%",
+      "class": "Defense",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 14
+      },
+      "prereqs": []
+    },
+    "MagicWall": {
+      "category": "Defense",
+      "mp": "3",
+      "effect": "+resistance vs foes' skills",
+      "class": "Defense",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 19,
+        "int": 74
+      },
+      "prereqs": []
+    },
+    "MagicBack": {
+      "category": "Defense",
+      "mp": "4",
+      "effect": "Reflect a skill once to foes",
+      "class": "Defense",
+      "type": "Spell",
+      "range": "Self",
+      "learn": {
+        "level": 16,
+        "int": 62
+      },
+      "prereqs": []
+    },
+    "Bounce": {
+      "category": "Defense",
+      "mp": "4",
+      "effect": "Reflect spells back",
+      "class": "Defense",
+      "type": "Spell",
+      "range": "Self",
+      "learn": {
+        "level": 20,
+        "int": 68
+      },
+      "prereqs": []
+    },
+    "Barrier": {
+      "category": "Defense",
+      "mp": "3",
+      "effect": "-50% Fire/Ice breath dmg",
+      "class": "Defense",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 18,
+        "int": 70
+      },
+      "prereqs": []
+    },
+    "TailWind": {
+      "category": "Defense",
+      "mp": "6",
+      "effect": "Reflect breath to one foe",
+      "class": "Defense",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 11
+      },
+      "prereqs": []
+    },
+    "StormWind": {
+      "category": "Defense",
+      "mp": "10",
+      "effect": "Reflect breath to all foes",
+      "class": "Defense",
+      "type": "-",
+      "range": "All Allies",
+      "learn": {
+        "level": 19
+      },
+      "prereqs": []
+    },
+    "Dodge": {
+      "category": "Defense",
+      "mp": "4",
+      "effect": "Redirect a physical attack",
+      "class": "Defense",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 18
+      },
+      "prereqs": []
+    },
+    "Ironize": {
+      "category": "Defense",
+      "mp": "2",
+      "effect": "All allies invulnerable 3 turns",
+      "class": "Defense",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 15,
+        "int": 21
+      },
+      "prereqs": []
+    },
+    "StrongD": {
+      "category": "Defense",
+      "mp": "3",
+      "effect": "-90% all damage this turn",
+      "class": "Defense",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 14
+      },
+      "prereqs": []
+    },
+    "BeDragon": {
+      "category": "Support",
+      "mp": "9",
+      "effect": "Become dragon (SnowStorm/Scorching/DeMagic)",
+      "class": "Support",
+      "type": "Spell",
+      "range": "Self",
+      "learn": {
+        "level": 28,
+        "int": 160
+      },
+      "prereqs": []
+    },
+    "Chance": {
+      "category": "Support",
+      "mp": "20",
+      "effect": "Random effect (good or bad)",
+      "class": "Support",
+      "type": "Spell",
+      "range": "Random",
+      "learn": {
+        "level": 40,
+        "int": 236
+      },
+      "prereqs": []
+    },
+    "DeMagic": {
+      "category": "Support",
+      "mp": "7",
+      "effect": "Dispel Upper/Speed/Barrier/MagicWall",
+      "class": "Support",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 20,
+        "int": 140
+      },
+      "prereqs": [
+        "Surge",
+        "UltraDown"
+      ]
+    },
+    "Focus": {
+      "category": "Support",
+      "mp": "0",
+      "effect": "Two attacks next turn",
+      "class": "Support",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 18
+      },
+      "prereqs": [
+        "ChargeUP",
+        "SuckAir",
+        "Meditate"
+      ]
+    },
+    "HighJump": {
+      "category": "Support",
+      "mp": "5",
+      "effect": "Jump, attack next turn +atk",
+      "class": "Support",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 20
+      },
+      "prereqs": []
+    },
+    "Imitate": {
+      "category": "Support",
+      "mp": "4",
+      "effect": "Copy+return every skill cast on you 1 turn",
+      "class": "Support",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 21
+      },
+      "prereqs": [
+        "Transform",
+        "Focus"
+      ]
+    },
+    "PsycheUp": {
+      "category": "Support",
+      "mp": "3",
+      "effect": "Greater normal-attack dmg next turn",
+      "class": "Support",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "Speed": {
+      "category": "Support",
+      "mp": "2",
+      "effect": "+50% agility one ally",
+      "class": "Support",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 1,
+        "int": 8
+      },
+      "prereqs": []
+    },
+    "SpeedUp": {
+      "category": "Support",
+      "mp": "3",
+      "effect": "+50% agility all allies",
+      "class": "Support",
+      "type": "Spell",
+      "range": "All Allies",
+      "learn": {
+        "level": 5,
+        "int": 20
+      },
+      "prereqs": []
+    },
+    "ThickFog": {
+      "category": "Support",
+      "mp": "8",
+      "effect": "Suspend everyone's skills one round",
+      "class": "Support",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 22,
+        "int": 160
+      },
+      "prereqs": []
+    },
+    "TwinHits": {
+      "category": "Support",
+      "mp": "2",
+      "effect": "+physical attack damage",
+      "class": "Support",
+      "type": "Spell",
+      "range": "1 Ally",
+      "learn": {
+        "level": 17,
+        "int": 66
+      },
+      "prereqs": []
+    },
+    "DanceShut": {
+      "category": "Dance",
+      "mp": "6",
+      "effect": "Suspend all foes' Dance attacks",
+      "class": "Dance Trap",
+      "type": "Dance",
+      "range": "All Foes",
+      "learn": {
+        "level": 16
+      },
+      "prereqs": []
+    },
+    "SideStep": {
+      "category": "Dance",
+      "mp": "1",
+      "effect": "+dodge chance",
+      "class": "Defense",
+      "type": "Dance",
+      "range": "Self",
+      "learn": {
+        "level": 9
+      },
+      "prereqs": []
+    },
+    "Hustle": {
+      "category": "Dance",
+      "mp": "12",
+      "effect": "Heals 70-80 HP all allies",
+      "class": "Recovery",
+      "type": "Dance",
+      "range": "Self",
+      "learn": {
+        "level": 18
+      },
+      "prereqs": [
+        "HealAll",
+        "SideStep"
+      ]
+    },
+    "LifeDance": {
+      "category": "Dance",
+      "mp": "1",
+      "effect": "Revive all; caster dies",
+      "class": "Recovery",
+      "type": "Dance",
+      "range": "All Allies",
+      "learn": {
+        "level": 30
+      },
+      "prereqs": [
+        "Hustle",
+        "Sacrifice"
+      ]
+    },
+    "OddDance": {
+      "category": "Dance",
+      "mp": "0",
+      "effect": "Lower one foe MP (level based)",
+      "class": "OddDance",
+      "type": "Dance",
+      "range": "1 Foe",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "RobDance": {
+      "category": "Dance",
+      "mp": "2",
+      "effect": "Steal foe MP (caster Lvl)",
+      "class": "OddDance",
+      "type": "Dance",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "K.O.Dance": {
+      "category": "Dance",
+      "mp": "6",
+      "effect": "Instant death all foes",
+      "class": "Beat",
+      "type": "Dance",
+      "range": "All Foes",
+      "learn": {
+        "level": 20
+      },
+      "prereqs": []
+    },
+    "Meditate": {
+      "category": "Dance",
+      "mp": "8",
+      "effect": "Heal 500 HP to caster",
+      "class": "Recovery",
+      "type": "Dance",
+      "range": "-",
+      "learn": {
+        "level": 26
+      },
+      "prereqs": [
+        "Guardian",
+        "StrongD"
+      ]
+    },
+    "PaniDance": {
+      "category": "Dance",
+      "mp": "4",
+      "effect": "Confuse/paralyze all foes",
+      "class": "Panic",
+      "type": "Dance",
+      "range": "All Foes",
+      "learn": {
+        "level": 13
+      },
+      "prereqs": []
+    },
+    "LureDance": {
+      "category": "Dance",
+      "mp": "2",
+      "effect": "Stop all foes one turn",
+      "class": "Lose a Turn",
+      "type": "Dance",
+      "range": "1 Foe",
+      "learn": {
+        "level": 14
+      },
+      "prereqs": []
+    },
+    "BiAttack": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "Attack twice 75% str",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 19
+      },
+      "prereqs": []
+    },
+    "QuadHits": {
+      "category": "Attack (physical)",
+      "mp": "6",
+      "effect": "Attack 4 times random foes",
+      "class": "Attack",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 24
+      },
+      "prereqs": []
+    },
+    "SquallHit": {
+      "category": "Attack (physical)",
+      "mp": "2",
+      "effect": "Attack first this turn",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "RainSlash": {
+      "category": "Attack (physical)",
+      "mp": "5",
+      "effect": "Physical attack all foes",
+      "class": "Attack",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 15
+      },
+      "prereqs": [
+        "BiAttack",
+        "SquallHit"
+      ]
+    },
+    "ChargeUP": {
+      "category": "Attack (physical)",
+      "mp": "0",
+      "effect": "Additional damage next turn",
+      "class": "Support",
+      "type": "-",
+      "range": "Self",
+      "learn": {
+        "level": 14
+      },
+      "prereqs": []
+    },
+    "BoltSlash": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "Attack by Lightning resist",
+      "class": "Bolt",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 11
+      },
+      "prereqs": [
+        "ChargeUp",
+        "Lightning"
+      ]
+    },
+    "FireSlash": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "Attack by Fire resist",
+      "class": "Blaze",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 11
+      },
+      "prereqs": [
+        "Blazemore",
+        "ChargeUP"
+      ]
+    },
+    "VacuSlash": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "Attack by Air resist",
+      "class": "Infernos",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 11
+      },
+      "prereqs": [
+        "ChargeUp",
+        "WindBeast"
+      ]
+    },
+    "IceSlash": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "Attack by Ice resist",
+      "class": "IceBolt",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 11
+      },
+      "prereqs": [
+        "ChargeUP",
+        "SnowStorm"
+      ]
+    },
+    "GigaSlash": {
+      "category": "Attack (physical)",
+      "mp": "20",
+      "effect": "350-410 dmg one foe",
+      "class": "GigaSlash",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 33
+      },
+      "prereqs": [
+        "FireSlash",
+        "BoltSlash",
+        "VacuSlash",
+        "IceSlash"
+      ]
+    },
+    "NapAttack": {
+      "category": "Attack (physical)",
+      "mp": "2",
+      "effect": "Attack + sleep",
+      "class": "Sleep",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 7
+      },
+      "prereqs": []
+    },
+    "PoisonHit": {
+      "category": "Attack (physical)",
+      "mp": "2",
+      "effect": "Attack + poison",
+      "class": "Poison",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 5
+      },
+      "prereqs": []
+    },
+    "Paralyze": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "Attack + paralyze",
+      "class": "Paralysis",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 9
+      },
+      "prereqs": [
+        "PoisonHit",
+        "NapAttack"
+      ]
+    },
+    "Smashlime": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs SLIME",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "DrakSlash": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs DRAGON",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "BeastCut": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs BEAST",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "BirdBlow": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs BIRD",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "Branching": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs PLANT",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "BugBlow": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs BUG",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "DevilCut": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs DEVIL",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "CleanCut": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs MATERIAL",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "MetalCut": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs metal monsters",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "ZombieCut": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "+50% vs ZOMBIE",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "MultiCut": {
+      "category": "Attack (physical)",
+      "mp": "20",
+      "effect": "180-210 dmg all foes",
+      "class": "Infernos",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 28
+      },
+      "prereqs": [
+        "ZombieCut",
+        "Vacuum"
+      ]
+    },
+    "Beserker": {
+      "category": "Attack (physical)",
+      "mp": "1",
+      "effect": "Attack +dmg, def 0",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 14
+      },
+      "prereqs": []
+    },
+    "EvilSlash": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "95-105% atk, 3/8 prob",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 15
+      },
+      "prereqs": []
+    },
+    "Massacre": {
+      "category": "Attack (physical)",
+      "mp": "3",
+      "effect": "95-105% atk random target",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe/Ally",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "TwinSlash": {
+      "category": "Attack (physical)",
+      "mp": "2",
+      "effect": "Physical dmg + self wound",
+      "class": "Attack",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 8
+      },
+      "prereqs": []
+    },
+    "StopSpell": {
+      "category": "Offensive Spells",
+      "mp": "3",
+      "effect": "Suspend all foes' magic",
+      "class": "StopSpell",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 9,
+        "int": 38
+      },
+      "prereqs": []
+    },
+    "Blaze": {
+      "category": "Offensive Spells",
+      "mp": "2",
+      "effect": "12-15 Fire dmg one foe",
+      "class": "Blaze",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 1,
+        "int": 20
+      },
+      "prereqs": []
+    },
+    "Blazemore": {
+      "category": "Offensive Spells",
+      "mp": "4",
+      "effect": "70-90 Fire dmg one foe",
+      "class": "Blaze",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 13,
+        "int": 64
+      },
+      "prereqs": []
+    },
+    "Blazemost": {
+      "category": "Offensive Spells",
+      "mp": "10",
+      "effect": "180-200 Fire dmg one foe",
+      "class": "Blaze",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 28,
+        "int": 146
+      },
+      "prereqs": []
+    },
+    "IceBolt": {
+      "category": "Offensive Spells",
+      "mp": "3",
+      "effect": "25-35 Ice dmg all foes",
+      "class": "IceBolt",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 5,
+        "int": 30
+      },
+      "prereqs": []
+    },
+    "SnowStorm": {
+      "category": "Offensive Spells",
+      "mp": "5",
+      "effect": "42-58 Ice dmg all foes",
+      "class": "IceBolt",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 12,
+        "int": 60
+      },
+      "prereqs": []
+    },
+    "Blizzard": {
+      "category": "Offensive Spells",
+      "mp": "12",
+      "effect": "80-104 Ice dmg all foes",
+      "class": "IceBolt",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 25,
+        "int": 110
+      },
+      "prereqs": []
+    },
+    "Bang": {
+      "category": "Offensive Spells",
+      "mp": "5",
+      "effect": "20-30 Explosion dmg all foes",
+      "class": "Bang",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 4,
+        "int": 26
+      },
+      "prereqs": []
+    },
+    "Boom": {
+      "category": "Offensive Spells",
+      "mp": "8",
+      "effect": "52-68 Explosion dmg all foes",
+      "class": "Bang",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 14,
+        "int": 68
+      },
+      "prereqs": []
+    },
+    "Explodet": {
+      "category": "Offensive Spells",
+      "mp": "15",
+      "effect": "130-140 Explosion dmg all",
+      "class": "Bang",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 29,
+        "int": 158
+      },
+      "prereqs": []
+    },
+    "Firebal": {
+      "category": "Offensive Spells",
+      "mp": "4",
+      "effect": "16-24 Fire dmg all foes",
+      "class": "Fireball",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 3,
+        "int": 23
+      },
+      "prereqs": []
+    },
+    "Firebane": {
+      "category": "Offensive Spells",
+      "mp": "6",
+      "effect": "30-42 Fire dmg all foes",
+      "class": "Fireball",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 10,
+        "int": 52
+      },
+      "prereqs": []
+    },
+    "Firebolt": {
+      "category": "Offensive Spells",
+      "mp": "10",
+      "effect": "88-112 Fire dmg all foes",
+      "class": "Fireball",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 26,
+        "int": 122
+      },
+      "prereqs": []
+    },
+    "Infernos": {
+      "category": "Offensive Spells",
+      "mp": "2",
+      "effect": "8-24 Air dmg all foes",
+      "class": "Infernos",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 2,
+        "int": 21
+      },
+      "prereqs": []
+    },
+    "Infermore": {
+      "category": "Offensive Spells",
+      "mp": "4",
+      "effect": "25-55 Air dmg all foes",
+      "class": "Infernos",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 11,
+        "int": 56
+      },
+      "prereqs": []
+    },
+    "Infermost": {
+      "category": "Offensive Spells",
+      "mp": "8",
+      "effect": "80-180 Air dmg all foes",
+      "class": "Infernos",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 27,
+        "int": 134
+      },
+      "prereqs": []
+    },
+    "MegaMagic": {
+      "category": "Offensive Spells",
+      "mp": "All",
+      "effect": "Highest dmg all foes",
+      "class": "MegaMagic",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 38,
+        "int": 224
+      },
+      "prereqs": [
+        "Blazemost",
+        "Blizzard",
+        "Explodet",
+        "FireBolt",
+        "Infermost"
+      ]
+    },
+    "Bolt": {
+      "category": "Offensive Spells",
+      "mp": "5",
+      "effect": "35-50 Lightning dmg all foes",
+      "class": "Bolt",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 6,
+        "int": 35
+      },
+      "prereqs": []
+    },
+    "Zap": {
+      "category": "Offensive Spells",
+      "mp": "10",
+      "effect": "70-90 Lightning dmg all foes",
+      "class": "Bolt",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 15,
+        "int": 72
+      },
+      "prereqs": []
+    },
+    "Thordain": {
+      "category": "Offensive Spells",
+      "mp": "15",
+      "effect": "175-225 Lightning dmg all",
+      "class": "Bolt",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 30,
+        "int": 174
+      },
+      "prereqs": []
+    },
+    "Lightning": {
+      "category": "Offensive Spells",
+      "mp": "3",
+      "effect": "40-60 Lightning dmg all foes",
+      "class": "Bolt",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "HellBlast": {
+      "category": "Offensive Spells",
+      "mp": "25",
+      "effect": "210-290 Lightning dmg all",
+      "class": "Bolt",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 34
+      },
+      "prereqs": [
+        "Thordain",
+        "Lightning"
+      ]
+    },
+    "Beat": {
+      "category": "Offensive Spells",
+      "mp": "4",
+      "effect": "Instant death one foe",
+      "class": "Beat",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 16,
+        "int": 76
+      },
+      "prereqs": []
+    },
+    "Defeat": {
+      "category": "Offensive Spells",
+      "mp": "7",
+      "effect": "Instant death all foes",
+      "class": "Beat",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 24,
+        "int": 98
+      },
+      "prereqs": []
+    },
+    "Ramming": {
+      "category": "Offensive Spells",
+      "mp": "1",
+      "effect": "-50% foe HP, hurts caster",
+      "class": "Sacrifice",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "Sacrifice": {
+      "category": "Offensive Spells",
+      "mp": "1",
+      "effect": "Instant death all foes+caster",
+      "class": "Sacrifice",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 1,
+        "int": 6
+      },
+      "prereqs": []
+    },
+    "WindBeast": {
+      "category": "Offensive Spells",
+      "mp": "3",
+      "effect": "Air dmg one foe (level based)",
+      "class": "Infernos",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 13
+      },
+      "prereqs": []
+    },
+    "Vacuum": {
+      "category": "Offensive Spells",
+      "mp": "6",
+      "effect": "Air dmg all foes (level based)",
+      "class": "Infernos",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 19
+      },
+      "prereqs": []
+    },
+    "MouthShut": {
+      "category": "Breath",
+      "mp": "6",
+      "effect": "Suspend one foe's breath",
+      "class": "Breath Seal",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 17
+      },
+      "prereqs": []
+    },
+    "FireAir": {
+      "category": "Breath",
+      "mp": "2",
+      "effect": "14-22 Fire dmg all foes",
+      "class": "Flame",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 3
+      },
+      "prereqs": []
+    },
+    "BlazeAir": {
+      "category": "Breath",
+      "mp": "4",
+      "effect": "32-48 Fire dmg all foes",
+      "class": "Flame",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "Scorching": {
+      "category": "Breath",
+      "mp": "8",
+      "effect": "75-100 Fire dmg all foes",
+      "class": "Flame",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 20
+      },
+      "prereqs": []
+    },
+    "WhiteFire": {
+      "category": "Breath",
+      "mp": "16",
+      "effect": "150-170 Fire dmg all foes",
+      "class": "Flame",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 30
+      },
+      "prereqs": []
+    },
+    "FrigidAir": {
+      "category": "Breath",
+      "mp": "2",
+      "effect": "16-24 Ice dmg all foes",
+      "class": "Blizzard",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 3
+      },
+      "prereqs": []
+    },
+    "IceAir": {
+      "category": "Breath",
+      "mp": "4",
+      "effect": "42-54 Ice dmg all foes",
+      "class": "Blizzard",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "IceStorm": {
+      "category": "Breath",
+      "mp": "8",
+      "effect": "82-112 Ice dmg all foes",
+      "class": "Blizzard",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 20
+      },
+      "prereqs": []
+    },
+    "WhiteAir": {
+      "category": "Breath",
+      "mp": "16",
+      "effect": "160-180 Ice dmg all foes",
+      "class": "Blizzard",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 30
+      },
+      "prereqs": []
+    },
+    "BigBang": {
+      "category": "Breath",
+      "mp": "30",
+      "effect": "300-400 Explosion dmg all",
+      "class": "Blaze",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 36
+      },
+      "prereqs": [
+        "Explodet",
+        "WhiteFire",
+        "WhiteAir"
+      ]
+    },
+    "PoisonGas": {
+      "category": "Breath",
+      "mp": "3",
+      "effect": "Poison all foes (breath)",
+      "class": "Poison",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 9
+      },
+      "prereqs": []
+    },
+    "PoisonAir": {
+      "category": "Breath",
+      "mp": "4",
+      "effect": "Poison all foes (breath)",
+      "class": "Poison",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 14
+      },
+      "prereqs": []
+    },
+    "SleepAir": {
+      "category": "Breath",
+      "mp": "3",
+      "effect": "Sleep all foes",
+      "class": "Sleep",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "PalsyAir": {
+      "category": "Breath",
+      "mp": "4",
+      "effect": "Paralyze all foes (breath)",
+      "class": "Paralysis",
+      "type": "Breath",
+      "range": "All Foes",
+      "learn": {
+        "level": 16
+      },
+      "prereqs": [
+        "SleepAir",
+        "PoisonAir"
+      ]
+    },
+    "SuckAir": {
+      "category": "Breath",
+      "mp": "0",
+      "effect": "+breath dmg next turn",
+      "class": "Support",
+      "type": "Breath",
+      "range": "Self",
+      "learn": {
+        "level": 17
+      },
+      "prereqs": []
+    },
+    "LushLicks": {
+      "category": "Status Effect",
+      "mp": "2",
+      "effect": "Stop one foe one turn",
+      "class": "Lose a Turn",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 7
+      },
+      "prereqs": []
+    },
+    "SickLick": {
+      "category": "Status Effect",
+      "mp": "4",
+      "effect": "Stop + def to 1 one foe one turn",
+      "class": "Sap",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 13
+      },
+      "prereqs": []
+    },
+    "LegSweep": {
+      "category": "Status Effect",
+      "mp": "1",
+      "effect": "Trip one foe (flyers immune)",
+      "class": "Lose a Turn",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 6
+      },
+      "prereqs": []
+    },
+    "BigTrip": {
+      "category": "Status Effect",
+      "mp": "3",
+      "effect": "Trip all foes (flyers immune)",
+      "class": "Lose a Turn",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "WarCry": {
+      "category": "Status Effect",
+      "mp": "3",
+      "effect": "Freeze all foes one turn (roar)",
+      "class": "Lose a Turn",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 14
+      },
+      "prereqs": []
+    },
+    "Sleep": {
+      "category": "Status Effect",
+      "mp": "3",
+      "effect": "Sleep one foe",
+      "class": "Sleep",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 4,
+        "int": 16
+      },
+      "prereqs": []
+    },
+    "SleepAll": {
+      "category": "Status Effect",
+      "mp": "5",
+      "effect": "Sleep all foes",
+      "class": "Sleep",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 11,
+        "int": 46
+      },
+      "prereqs": []
+    },
+    "PanicAll": {
+      "category": "Status Effect",
+      "mp": "5",
+      "effect": "Confuse all foes",
+      "class": "Panic",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 12,
+        "int": 49
+      },
+      "prereqs": []
+    },
+    "Curse": {
+      "category": "Status Effect",
+      "mp": "3",
+      "effect": "Curse all foes (random)",
+      "class": "Curse",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 15
+      },
+      "prereqs": []
+    },
+    "Radiant": {
+      "category": "Status Effect",
+      "mp": "2",
+      "effect": "-physical hit chance all foes",
+      "class": "Surround",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 12
+      },
+      "prereqs": []
+    },
+    "EerieLite": {
+      "category": "Status Effect",
+      "mp": "2",
+      "effect": "-magic resist all foes",
+      "class": "Beat",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 14
+      },
+      "prereqs": [
+        "Curse",
+        "Radiant"
+      ]
+    },
+    "RobMagic": {
+      "category": "Status Effect",
+      "mp": "0",
+      "effect": "Steal one foe's MP",
+      "class": "OddDance",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 7
+      },
+      "prereqs": []
+    },
+    "TakeMagic": {
+      "category": "Status Effect",
+      "mp": "2",
+      "effect": "Absorb MP of one spell foe casts",
+      "class": "Support",
+      "type": "Spell",
+      "range": "Self",
+      "learn": {
+        "level": 13
+      },
+      "prereqs": []
+    },
+    "SandStorm": {
+      "category": "Status Effect",
+      "mp": "2",
+      "effect": "-hit chance all foes",
+      "class": "Surround",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "Surround": {
+      "category": "Status Effect",
+      "mp": "3",
+      "effect": "-hit chance all foes",
+      "class": "Surround",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 10,
+        "int": 41
+      },
+      "prereqs": []
+    },
+    "Slow": {
+      "category": "Status Effect",
+      "mp": "3",
+      "effect": "-50% agility one foe",
+      "class": "Slow",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 3,
+        "int": 16
+      },
+      "prereqs": []
+    },
+    "SlowAll": {
+      "category": "Status Effect",
+      "mp": "4",
+      "effect": "-50% agility all foes",
+      "class": "Slow",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 7,
+        "int": 28
+      },
+      "prereqs": []
+    },
+    "UltraDown": {
+      "category": "Status Effect",
+      "mp": "7",
+      "effect": "Sap+Slow+Surround one foe",
+      "class": "Beat",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 21
+      },
+      "prereqs": [
+        "Surround",
+        "Defence",
+        "SlowAll"
+      ]
+    },
+    "Sap": {
+      "category": "Status Effect",
+      "mp": "3",
+      "effect": "-50% defense one foe",
+      "class": "Sap",
+      "type": "Spell",
+      "range": "1 Foe",
+      "learn": {
+        "level": 4,
+        "int": 15
+      },
+      "prereqs": []
+    },
+    "Defence": {
+      "category": "Status Effect",
+      "mp": "4",
+      "effect": "-50% defense all foes",
+      "class": "Sap",
+      "type": "Spell",
+      "range": "All Foes",
+      "learn": {
+        "level": 8,
+        "int": 32
+      },
+      "prereqs": []
+    },
+    "Ahh": {
+      "category": "Misc / Allied / Summon",
+      "mp": "1/2",
+      "effect": "Female foe: stop; Male foe: dmg",
+      "class": "Lose a Turn",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "CallHelp": {
+      "category": "Misc / Allied / Summon",
+      "mp": "4",
+      "effect": "Call allies (level dmg)",
+      "class": "Allied",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 17
+      },
+      "prereqs": []
+    },
+    "YellHelp": {
+      "category": "Misc / Allied / Summon",
+      "mp": "8",
+      "effect": "Call allies (level dmg)",
+      "class": "Allied",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 23
+      },
+      "prereqs": []
+    },
+    "RockThrow": {
+      "category": "Misc / Allied / Summon",
+      "mp": "5",
+      "effect": "75-100 dmg all foes (rocks)",
+      "class": "Allied",
+      "type": "-",
+      "range": "All Foes",
+      "learn": {
+        "level": 16
+      },
+      "prereqs": []
+    },
+    "TatsuCall": {
+      "category": "Misc / Allied / Summon",
+      "mp": "20",
+      "effect": "Summon Tatsu",
+      "class": "Summons",
+      "type": "-",
+      "range": "-",
+      "learn": {
+        "level": 20
+      },
+      "prereqs": []
+    },
+    "DiagoCall": {
+      "category": "Misc / Allied / Summon",
+      "mp": "20",
+      "effect": "Summon Diago",
+      "class": "Summons",
+      "type": "-",
+      "range": "-",
+      "learn": {
+        "level": 26
+      },
+      "prereqs": []
+    },
+    "SamsiCall": {
+      "category": "Misc / Allied / Summon",
+      "mp": "20",
+      "effect": "Summon Samsi",
+      "class": "Summons",
+      "type": "-",
+      "range": "-",
+      "learn": {
+        "level": 30
+      },
+      "prereqs": []
+    },
+    "BazooCall": {
+      "category": "Misc / Allied / Summon",
+      "mp": "20",
+      "effect": "Summon Bazoo",
+      "class": "Summons",
+      "type": "-",
+      "range": "-",
+      "learn": {
+        "level": 35
+      },
+      "prereqs": []
+    },
+    "Transform": {
+      "category": "Misc / Allied / Summon",
+      "mp": "5",
+      "effect": "Copy foe's skills+stats",
+      "class": "Support",
+      "type": "Spell",
+      "range": "Self",
+      "learn": {
+        "level": 21
+      },
+      "prereqs": []
+    },
+    "Kamikaze": {
+      "category": "Misc / Allied / Summon",
+      "mp": "1",
+      "effect": "Foe HP to 1, caster HP to 1",
+      "class": "Sacrifice",
+      "type": "-",
+      "range": "1 Foe",
+      "learn": {
+        "level": 18
+      },
+      "prereqs": [
+        "ChargeUP",
+        "Ramming"
+      ]
+    },
+    "MapMagic": {
+      "category": "Map",
+      "mp": "2",
+      "effect": "Reveal current gate level map",
+      "class": "Support",
+      "type": "Spell",
+      "range": "-",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "StepGuard": {
+      "category": "Map",
+      "mp": "2",
+      "effect": "No lava/swamp/barrier dmg 1 lvl",
+      "class": "Support",
+      "type": "Spell",
+      "range": "-",
+      "learn": {
+        "level": 10
+      },
+      "prereqs": []
+    },
+    "Whistle": {
+      "category": "Map",
+      "mp": "0",
+      "effect": "Summon gate monsters to fight",
+      "class": "Support",
+      "type": "-",
+      "range": "-",
+      "learn": {
+        "level": 4
+      },
+      "prereqs": []
+    }
+  }
+}

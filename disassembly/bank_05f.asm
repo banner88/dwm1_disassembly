@@ -15,7 +15,7 @@ SECTION "ROM Bank $05f", ROMX[$4000], BANK[$5f]
     dw $4619                          ; Entry 3
     dw LoadFldUI_4a60                  ; Entry 4
     dw $4B1B                          ; Entry 5
-    dw $52F0                          ; Entry 6
+    dw $52F0                          ; Entry 6 = skill VISUAL-anim dispatch by skill id $db8a (S2c): -> per-skill anim-index $5f:$58dd/$59c3/$5aa9 -> routine ptr table $5f:$58bd. See BATTLE_SKILL_SYSTEM.md S9.
     dw LoadFldUI_5630                  ; Entry 7
     dw $5BB7                          ; Entry 8
     dw $5C8D                          ; Entry 9

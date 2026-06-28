@@ -374,6 +374,12 @@ FuncB4c_42b1:
     dw $6944                          ; Entry 359
 
 LoadB4c_42d1:
+; Bank $4c entry 0 = battle-MESSAGE renderer (S2c). Caller sets $c822=mode (0/1)
+; and $c823=message id; this runs the shared text VM with config base $4009, which
+; resolves the string via the mode-0 two-level table: subtable=[$4c:$4009+mode*2]
+; (=$4019 for mode 0, the battle-message ptr table), string=[subtable+id*2]. The
+; "effect-script selector" $dd70/71 is just a packed (hit id, miss id) pair fed here
+; by bank $53 jr_053_5a6f. $ff id = "no message" (skip). See BATTLE_SKILL_SYSTEM.md S9.
     ld a, [$c823]
     cp $ff
     ret z

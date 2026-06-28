@@ -1,0 +1,4167 @@
+{
+  "_generator": {
+    "tool": "tools/decode_effect_messages.py",
+    "rom_md5_source": "1ca6579359f21d8e27b446f865bf6b83",
+    "roadmap_item": "S2c (effect message/script format)",
+    "selector_model": "16-bit descriptor $DD70/71 = (low=hit msg id, high=miss msg id)",
+    "resolution": "mode-0 two-level table: [$4c:$4009]=$4019; string=[$4019+id*2]",
+    "message_vm": "shared text VM CallTextEngine $00:$05B6 / SaveBankAndSwitch $00:$092F",
+    "visual_is_separate": "on-screen anim = bank $5f entry 6 by skill id; sound = bank $55 entry 1",
+    "n_skills": 222,
+    "n_message_ids": 203,
+    "faq_crosscheck": "67/67 resolved skills match their FAQ class (extracted/skill_faq.json)"
+  },
+  "descriptor_setters": {
+    "$52:5460": {
+      "name": "BattleFunc_5460",
+      "dd6f": "0x80",
+      "hardcoded_selector": null
+    },
+    "$52:5469": {
+      "name": "BattleFunc_5469",
+      "dd6f": "0x88",
+      "hardcoded_selector": null
+    },
+    "$52:5475": {
+      "name": "BattleFunc_5475",
+      "dd6f": "0x84",
+      "hardcoded_selector": null
+    },
+    "$52:5481": {
+      "name": "BattleFunc_5481",
+      "dd6f": "0x93",
+      "hardcoded_selector": null
+    },
+    "$52:548d": {
+      "name": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "hardcoded_selector": null
+    },
+    "$52:54a1": {
+      "name": "LoadBattle_54a1",
+      "dd6f": "0xd0",
+      "hardcoded_selector": null
+    },
+    "$52:54af": {
+      "name": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "hardcoded_selector": null
+    },
+    "$52:54bd": {
+      "name": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "hardcoded_selector": null
+    },
+    "$52:54d2": {
+      "name": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "hardcoded_selector": null
+    },
+    "$52:54e7": {
+      "name": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "hardcoded_selector": "0xb882"
+    },
+    "$52:54ea": {
+      "name": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "hardcoded_selector": null
+    },
+    "$52:54f8": {
+      "name": "LoadBattle_54f8",
+      "dd6f": "0xa0",
+      "hardcoded_selector": null
+    }
+  },
+  "selectors_in_use": {
+    "0xb682": [
+      "AGILSEED",
+      "ANTIDOTE",
+      "AWAKESAND",
+      "Attack",
+      "BADMEAT",
+      "BEFFJERKY",
+      "BENICEBK",
+      "BLOKSTAFF",
+      "BOLTSTAFF",
+      "BeastCut",
+      "Beserker",
+      "BirdBlow",
+      "BoltSlash",
+      "Branching",
+      "CALLEVIL",
+      "CHEATERBK",
+      "COMEDYBK",
+      "CleanCut",
+      "DEFSEED",
+      "DevilCut",
+      "DrakSlash",
+      "ELFWATER",
+      "EvilSlash",
+      "FEEDMEAT",
+      "FIRESTAFF",
+      "FireSlash",
+      "HEALWATER",
+      "HERB",
+      "HORRORBK",
+      "HitAlly",
+      "HitEnemy",
+      "HitRandom",
+      "INTSEED",
+      "IceSlash",
+      "LAUREL",
+      "LAVASTAFF",
+      "LIFEACORN",
+      "MOONHERB",
+      "MYSTICNUT",
+      "MapMagic",
+      "Massacre",
+      "MetalCut",
+      "MultiCut",
+      "NapAttack",
+      "PORKCHOP",
+      "POTION",
+      "PWRSEED",
+      "Paralyze",
+      "PoisonHit",
+      "PsycheUp",
+      "QuestBk",
+      "RainSlash",
+      "Run",
+      "SAGESTONE",
+      "SIRLOIN",
+      "SKYBELL",
+      "SMARTBK",
+      "SNOWSTAFF",
+      "STAFF",
+      "Sheldodge",
+      "Smashlime",
+      "SquallHit",
+      "StepGuard",
+      "TINYMEDAL",
+      "TwinSlash",
+      "VacuSlash",
+      "WARLDDEW",
+      "WARLDLEAF",
+      "WARPWING",
+      "Whistle",
+      "ZombieCut"
+    ],
+    "0xb882": [
+      "Bang",
+      "BigBang",
+      "Blaze",
+      "BlazeAir",
+      "Blazemore",
+      "Blazemost",
+      "Blizzard",
+      "Bolt",
+      "Boom",
+      "Explodet",
+      "FireAir",
+      "Firebal",
+      "Firebane",
+      "Firebolt",
+      "FrigidAir",
+      "GigaSlash",
+      "Hellblast",
+      "IceAir",
+      "IceBolt",
+      "IceStorm",
+      "Infermore",
+      "Infermost",
+      "Infernos",
+      "Kamikaze",
+      "Lightning",
+      "MegaMagic",
+      "Ramming",
+      "RockThrow",
+      "Scorching",
+      "SnowStorm",
+      "Thordain",
+      "Vacuum",
+      "WhiteAir",
+      "WhiteFire",
+      "WindBeast",
+      "Zap"
+    ],
+    "0xb886": [
+      "Defence",
+      "Sap"
+    ],
+    "0xb888": [
+      "StopSpell"
+    ],
+    "0xb88a": [
+      "RobDance",
+      "RobMagic"
+    ],
+    "0xb895": [
+      "Slow",
+      "SlowAll"
+    ],
+    "0xb898": [
+      "Surround"
+    ],
+    "0xb8e8": [
+      "Beat",
+      "Defeat",
+      "K.O.Dance"
+    ],
+    "0xbccc": [
+      "Sleep",
+      "SleepAir",
+      "SleepAll"
+    ]
+  },
+  "message_table_mode0": {
+    "base": "$4c:4019",
+    "index": "8-bit message id",
+    "entries": {
+      "0x34": {
+        "addr": "$4c:490d",
+        "used_by_selector": false,
+        "text": "{name} takes a deep breath!",
+        "bytes": "f9 00 62 51 3e 48 42 50 f1 3e 62 41 42 42 4d 62 3f 4f 42 3e 51 45 63 ec f0"
+      },
+      "0x35": {
+        "addr": "$4c:4926",
+        "used_by_selector": false,
+        "text": "{mon}{name} prays for a miracle.{name}<slime>A powerful wind slices {32}!",
+        "bytes": "ed f9 00 62 4d 4f 3e 56 50 f1 43 4c 4f 62 3e 62 4a 46 4f 3e 40 49 42 5f fc 10 ec f2 24 62 4d 4c 54 42 4f 43 52 49 62 54 46 4b 41 f1 50 49 46 40 42 50 62 f9 20 63 ec f0"
+      },
+      "0x36": {
+        "addr": "$4c:495e",
+        "used_by_selector": false,
+        "text": "{name} calls for help!",
+        "bytes": "f9 00 62 40 3e 49 49 50 f1 43 4c 4f 62 45 42 49 4d 63 ec f0"
+      },
+      "0x37": {
+        "addr": "$4c:4972",
+        "used_by_selector": false,
+        "text": "{name} yells loudly for help!",
+        "bytes": "f9 00 62 56 42 49 49 50 f1 49 4c 52 41 49 56 62 43 4c 4f 62 45 42 49 4d 63 ec f0"
+      },
+      "0x38": {
+        "addr": "$4c:498d",
+        "used_by_selector": false,
+        "text": "{mon}{name} calms itself and{name}<slime>focuses! ",
+        "bytes": "ed f9 00 62 40 3e 49 4a 50 f1 46 51 50 42 49 43 62 3e 4b 41 fc 10 ec f2 43 4c 40 52 50 42 50 63 f1 ec f0"
+      },
+      "0x39": {
+        "addr": "$4c:49b0",
+        "used_by_selector": false,
+        "text": "{name} slashes at tornado speed!",
+        "bytes": "f9 00 62 50 49 3e 50 45 42 50 f1 3e 51 62 51 4c 4f 4b 3e 41 4c 62 50 4d 42 42 41 63 ec f0"
+      },
+      "0x3a": {
+        "addr": "$4c:49ce",
+        "used_by_selector": false,
+        "text": "{name} yells and attacks!",
+        "bytes": "f9 00 62 56 42 49 49 50 f1 3e 4b 41 62 3e 51 51 3e 40 48 50 63 ec f0"
+      },
+      "0x3b": {
+        "addr": "$4c:49e5",
+        "used_by_selector": false,
+        "text": "{name} creates a vacuum wave!",
+        "bytes": "f9 00 62 40 4f 42 3e 51 42 50 f1 3e 62 53 3e 40 52 52 4a 62 54 3e 53 42 63 ec f0"
+      },
+      "0x3c": {
+        "addr": "$4c:4a00",
+        "used_by_selector": false,
+        "text": "{name} calls down lightning!",
+        "bytes": "f9 00 62 40 3e 49 49 50 f1 41 4c 54 4b 62 49 46 44 45 51 4b 46 4b 44 63 ec f0"
+      },
+      "0x3d": {
+        "addr": "$4c:4a1a",
+        "used_by_selector": false,
+        "text": "{name} throws a huge rock!",
+        "bytes": "f9 00 62 51 45 4f 4c 54 50 f1 3e 62 45 52 44 42 62 4f 4c 40 48 63 ec f0"
+      },
+      "0x3e": {
+        "addr": "$4c:4a32",
+        "used_by_selector": false,
+        "text": "{name} summons horrific thunder!",
+        "bytes": "f9 00 62 50 52 4a 4a 4c 4b 50 f1 45 4c 4f 4f 46 43 46 40 62 51 45 52 4b 41 42 4f 63 ec f0"
+      },
+      "0x3f": {
+        "addr": "$4c:4a50",
+        "used_by_selector": false,
+        "text": "{mon}{name} summons the BigBang!",
+        "bytes": "ed f9 00 62 50 52 4a 4a 4c 4b 50 f1 51 45 42 62 25 46 44 25 3e 4b 44 63 ec f0"
+      },
+      "0x40": {
+        "addr": "$4c:4a6a",
+        "used_by_selector": false,
+        "text": "{name} uses all magic powers!{name}<slime>A huge burst of magic energy!",
+        "bytes": "f9 00 62 52 50 42 50 f1 3e 49 49 62 4a 3e 44 46 40 62 4d 4c 54 42 4f 50 63 fc 10 ec f2 24 62 45 52 44 42 62 3f 52 4f 50 51 62 4c 43 f1 4a 3e 44 46 40 62 42 4b 42 4f 44 56 63 ec f0"
+      },
+      "0x41": {
+        "addr": "$4c:4aa6",
+        "used_by_selector": false,
+        "text": "{name} mumbles a curse!",
+        "bytes": "f9 00 62 4a 52 4a 3f 49 42 50 f1 3e 62 40 52 4f 50 42 63 ec f0"
+      },
+      "0x42": {
+        "addr": "$4c:4abb",
+        "used_by_selector": false,
+        "text": "{name} summons up the SandStorm!",
+        "bytes": "f9 00 62 50 52 4a 4a 4c 4b 50 f1 52 4d 62 51 45 42 62 36 3e 4b 41 36 51 4c 4f 4a 63 ec f0"
+      },
+      "0x43": {
+        "addr": "$4c:4ad9",
+        "used_by_selector": false,
+        "text": "{name} starts to dance!",
+        "bytes": "f9 00 62 50 51 3e 4f 51 50 f1 51 4c 62 41 3e 4b 40 42 63 ec f0"
+      },
+      "0x44": {
+        "addr": "$4c:4aee",
+        "used_by_selector": false,
+        "text": "{mon}{name} gives {32} a hug!",
+        "bytes": "ed f9 00 62 44 46 53 42 50 f1 f9 20 62 3e 62 45 52 44 63 ec f0"
+      },
+      "0x45": {
+        "addr": "$4c:4b03",
+        "used_by_selector": false,
+        "text": "{name} licks {32}'s face!",
+        "bytes": "f9 00 62 49 46 40 48 50 f1 f9 20 68 62 43 3e 40 42 63 ec f0"
+      },
+      "0x46": {
+        "addr": "$4c:4b17",
+        "used_by_selector": false,
+        "text": "{name} sweeps {32}'s legs!",
+        "bytes": "f9 00 62 50 54 42 42 4d 50 f1 f9 20 68 62 49 42 44 50 63 ec f0"
+      },
+      "0x47": {
+        "addr": "$4c:4b2c",
+        "used_by_selector": false,
+        "text": "{name} trips {32}!",
+        "bytes": "f9 00 62 51 4f 46 4d 50 f1 f9 20 63 ec f0"
+      },
+      "0x48": {
+        "addr": "$4c:4b3a",
+        "used_by_selector": false,
+        "text": "{name} shouts a WarCry!",
+        "bytes": "f9 00 62 50 45 4c 52 51 50 f1 3e 62 3a 3e 4f 26 4f 56 63 ec f0"
+      },
+      "0x49": {
+        "addr": "$4c:4b4f",
+        "used_by_selector": false,
+        "text": "{mon}{name} summons natural forces!",
+        "bytes": "ed f9 00 62 50 52 4a 4a 4c 4b 50 f1 4b 3e 51 52 4f 3e 49 62 43 4c 4f 40 42 50 63 ec f0"
+      },
+      "0x4a": {
+        "addr": "$4c:4b6c",
+        "used_by_selector": false,
+        "text": "{name} creates a tailwind!",
+        "bytes": "f9 00 62 40 4f 42 3e 51 42 50 f1 3e 62 51 3e 46 49 54 46 4b 41 63 ec f0"
+      },
+      "0x4b": {
+        "addr": "$4c:4b84",
+        "used_by_selector": false,
+        "text": "{name} summons a strong wind!",
+        "bytes": "f9 00 62 50 52 4a 4a 4c 4b 50 f1 3e 62 50 51 4f 4c 4b 44 62 54 46 4b 41 63 ec f0"
+      },
+      "0x4c": {
+        "addr": "$4c:4b9f",
+        "used_by_selector": false,
+        "text": "{mon}{name} binds {32}'s mouth!",
+        "bytes": "ed f9 00 62 3f 46 4b 41 50 f1 f9 20 68 62 4a 4c 52 51 45 63 ec f0"
+      },
+      "0x4d": {
+        "addr": "$4c:4bb5",
+        "used_by_selector": false,
+        "text": "{name} is meditating calmly!{name}<slime>{name}'s scars start to heal!",
+        "bytes": "f9 00 62 46 50 f1 4a 42 41 46 51 3e 51 46 4b 44 62 40 3e 49 4a 49 56 63 fc 10 ec f2 f9 00 68 62 50 40 3e 4f 50 f1 50 51 3e 4f 51 62 51 4c 62 45 42 3e 49 63 ec f0"
+      },
+      "0x4e": {
+        "addr": "$4c:4beb",
+        "used_by_selector": false,
+        "text": "{mon}{name} starts to sing the{name}<slime>LifeSong! ",
+        "bytes": "ed f9 00 62 50 51 3e 4f 51 50 f1 51 4c 62 50 46 4b 44 62 51 45 42 fc 10 ec f2 2f 46 43 42 36 4c 4b 44 63 f1 ec f0"
+      },
+      "0x4f": {
+        "addr": "$4c:4c11",
+        "used_by_selector": false,
+        "text": "{mon}{name} finishes singing{name}<slime>the song! ",
+        "bytes": "ed f9 00 f1 43 46 4b 46 50 45 42 50 62 50 46 4b 44 46 4b 44 fc 10 ec f2 51 45 42 62 50 4c 4b 44 63 f1 ec f0"
+      },
+      "0x50": {
+        "addr": "$4c:4c35",
+        "used_by_selector": false,
+        "text": "{name} prepares to fight.",
+        "bytes": "f9 00 f1 4d 4f 42 4d 3e 4f 42 50 62 51 4c 62 43 46 44 45 51 5f ec f0"
+      },
+      "0x51": {
+        "addr": "$4c:4c4c",
+        "used_by_selector": false,
+        "text": "{mon}{name} proctects{name}<slime>{32}! ",
+        "bytes": "ed f9 00 f1 4d 4f 4c 40 51 42 40 51 50 fc 10 ec f2 f9 20 63 f1 ec f0"
+      },
+      "0x52": {
+        "addr": "$4c:4c63",
+        "used_by_selector": false,
+        "text": "{mon}{name} prepares for enemy{name}<slime>attack! ",
+        "bytes": "ed f9 00 f1 4d 4f 42 4d 3e 4f 42 50 62 43 4c 4f 62 42 4b 42 4a 56 fc 10 ec f2 3e 51 51 3e 40 48 63 f1 ec f0"
+      },
+      "0x53": {
+        "addr": "$4c:4c87",
+        "used_by_selector": false,
+        "text": "{mon}{name} is ready to fend{name}<slime>an attack. ",
+        "bytes": "ed f9 00 f1 46 50 62 4f 42 3e 41 56 62 51 4c 62 43 42 4b 41 fc 10 ec f2 3e 4b 62 3e 51 51 3e 40 48 5f f1 ec f0"
+      },
+      "0x54": {
+        "addr": "$4c:4cac",
+        "used_by_selector": false,
+        "text": "{mon}{name} prepares for enemy{name}<slime>attack! ",
+        "bytes": "ed f9 00 f1 4d 4f 42 4d 3e 4f 42 50 62 43 4c 4f 62 42 4b 42 4a 56 fc 10 ec f2 3e 51 51 3e 40 48 63 f1 ec f0"
+      },
+      "0x55": {
+        "addr": "$4c:4cd0",
+        "used_by_selector": false,
+        "text": "{mon}{name} prepares to{name}<slime>counterattack! ",
+        "bytes": "ed f9 00 f1 4d 4f 42 4d 3e 4f 42 50 62 51 4c fc 10 ec f2 40 4c 52 4b 51 42 4f 3e 51 51 3e 40 48 63 f1 ec f0"
+      },
+      "0x56": {
+        "addr": "$4c:4cf4",
+        "used_by_selector": false,
+        "text": "{name} opens its mouth to suck{name}<slime>everything in! ",
+        "bytes": "f9 00 62 4c 4d 42 4b 50 f1 46 51 50 62 4a 4c 52 51 45 62 51 4c 62 50 52 40 48 fc 10 ec f2 42 53 42 4f 56 51 45 46 4b 44 62 46 4b 63 f1 ec f0"
+      },
+      "0x57": {
+        "addr": "$4c:4d23",
+        "used_by_selector": false,
+        "text": "{name} attacks wildly!{name}<slime>But it hits itself!",
+        "bytes": "f9 00 f1 3e 51 51 3e 40 48 50 62 54 46 49 41 49 56 63 fc 10 ec f2 25 52 51 62 46 51 62 45 46 51 50 f1 46 51 50 42 49 43 63 ec f0"
+      },
+      "0x58": {
+        "addr": "$4c:4d4e",
+        "used_by_selector": false,
+        "text": "{name} is scared!",
+        "bytes": "f9 00 62 46 50 f1 50 40 3e 4f 42 41 63 ec f0"
+      },
+      "0x59": {
+        "addr": "$4c:4d5d",
+        "used_by_selector": false,
+        "text": "{mon}{name} dashes towards{name}<slime>{32}! {name}<slime>But stumbles and falls!",
+        "bytes": "ed f9 00 62 41 3e 50 45 42 50 f1 51 4c 54 3e 4f 41 50 fc 10 ec f2 f9 20 63 f1 fc 10 ec f2 25 52 51 62 50 51 52 4a 3f 49 42 50 62 3e 4b 41 f1 43 3e 49 49 50 63 ec f0"
+      },
+      "0x5a": {
+        "addr": "$4c:4d94",
+        "used_by_selector": false,
+        "text": "{name} is frozen in fear!",
+        "bytes": "f9 00 62 46 50 f1 43 4f 4c 57 42 4b 62 46 4b 62 43 42 3e 4f 63 ec f0"
+      },
+      "0x5b": {
+        "addr": "$4c:4dab",
+        "used_by_selector": false,
+        "text": "{name}'s turn! But cannot move!",
+        "bytes": "f9 00 68 62 51 52 4f 4b 63 f1 25 52 51 62 40 3e 4b 4b 4c 51 62 4a 4c 53 42 63 ec f0"
+      },
+      "0x5c": {
+        "addr": "$4c:4dc7",
+        "used_by_selector": false,
+        "text": "{name} starts dancing!",
+        "bytes": "f9 00 f1 50 51 3e 4f 51 50 62 41 3e 4b 40 46 4b 44 63 ec f0"
+      },
+      "0x5d": {
+        "addr": "$4c:4ddb",
+        "used_by_selector": false,
+        "text": "{name} uses {num}!",
+        "bytes": "f9 00 62 52 50 42 50 f1 f9 10 63 ec f0"
+      },
+      "0x5e": {
+        "addr": "$4c:4de8",
+        "used_by_selector": false,
+        "text": "{name} throws {num} at{name}<slime>{32}! ",
+        "bytes": "f9 00 62 51 45 4f 4c 54 50 f1 f9 10 62 3e 51 fc 10 ec f2 f9 20 63 f1 ec f0"
+      },
+      "0x5f": {
+        "addr": "$4c:4e01",
+        "used_by_selector": false,
+        "text": "{mon}{name} holds up SageStone.",
+        "bytes": "ed f9 00 62 45 4c 49 41 50 f1 52 4d 62 36 3e 44 42 36 51 4c 4b 42 5f ec f0"
+      },
+      "0x60": {
+        "addr": "$4c:4e1a",
+        "used_by_selector": false,
+        "text": "{mon}{name} sprinkles WorldDew!",
+        "bytes": "ed f9 00 62 50 4d 4f 46 4b 48 49 42 50 f1 3a 4c 4f 49 41 27 42 54 63 ec f0"
+      },
+      "0x61": {
+        "addr": "$4c:4e33",
+        "used_by_selector": false,
+        "text": "{name} uses {num}!{name}<slime>The bolt bursts out of the staff!",
+        "bytes": "f9 00 62 52 50 42 50 f1 f9 10 63 fc 10 ec f2 37 45 42 62 3f 4c 49 51 62 3f 52 4f 50 51 50 f1 4c 52 51 62 4c 43 62 51 45 42 62 50 51 3e 43 43 63 ec f0"
+      },
+      "0x62": {
+        "addr": "$4c:4e65",
+        "used_by_selector": false,
+        "text": "{name} uses {num}!{name}<slime>It creates a whirling vacuum!",
+        "bytes": "f9 00 62 52 50 42 50 f1 f9 10 63 fc 10 ec f2 2c 51 62 40 4f 42 3e 51 42 50 62 3e f1 54 45 46 4f 49 46 4b 44 62 53 3e 40 52 52 4a 63 ec f0"
+      },
+      "0x63": {
+        "addr": "$4c:4e93",
+        "used_by_selector": false,
+        "text": "{name} uses {num}!{name}<slime>A mysterious mist covers everything!",
+        "bytes": "f9 00 62 52 50 42 50 f1 f9 10 63 fc 10 ec f2 24 62 4a 56 50 51 42 4f 46 4c 52 50 62 4a 46 50 51 f1 40 4c 53 42 4f 50 62 42 53 42 4f 56 51 45 46 4b 44 63 ec f0"
+      },
+      "0x64": {
+        "addr": "$4c:4ec8",
+        "used_by_selector": false,
+        "text": "{name} uses {num}!{name}<slime>Hot lava floods the ground!",
+        "bytes": "f9 00 62 52 50 42 50 f1 f9 10 63 fc 10 ec f2 2b 4c 51 62 49 3e 53 3e 62 43 49 4c 4c 41 50 f1 51 45 42 62 44 4f 4c 52 4b 41 63 ec f0"
+      },
+      "0x65": {
+        "addr": "$4c:4ef4",
+        "used_by_selector": false,
+        "text": "{name} uses {num}!{name}<slime>An icy blizzard blasts out!",
+        "bytes": "f9 00 62 52 50 42 50 f1 f9 10 63 fc 10 ec f2 24 4b 62 46 40 56 62 3f 49 46 57 57 3e 4f 41 f1 3f 49 3e 50 51 50 62 4c 52 51 63 ec f0"
+      },
+      "0x66": {
+        "addr": "$4c:4f20",
+        "used_by_selector": false,
+        "text": "{name} uses {num}!{name}<slime>A fireball bursts out of the staff!",
+        "bytes": "f9 00 62 52 50 42 50 f1 f9 10 63 fc 10 ec f2 24 62 43 46 4f 42 3f 3e 49 49 62 3f 52 4f 50 51 50 f1 4c 52 51 62 4c 43 62 51 45 42 62 50 51 3e 43 43 63 ec f0"
+      },
+      "0x67": {
+        "addr": "$4c:4f54",
+        "used_by_selector": false,
+        "text": "{mon}{name} attacks{name}<slime>with full force! ",
+        "bytes": "ed f9 00 f1 3e 51 51 3e 40 48 50 fc 10 ec f2 54 46 51 45 62 43 52 49 49 62 43 4c 4f 40 42 63 f1 ec f0"
+      },
+      "0x68": {
+        "addr": "$4c:4f76",
+        "used_by_selector": false,
+        "text": "{mon}{name}'s fear boosts its guard!",
+        "bytes": "ed f9 00 68 62 43 42 3e 4f f1 3f 4c 4c 50 51 50 62 46 51 50 62 44 52 3e 4f 41 63 ec f0"
+      },
+      "0x69": {
+        "addr": "$4c:4f93",
+        "used_by_selector": false,
+        "text": "{name} focuses its energy!",
+        "bytes": "f9 00 62 43 4c 40 52 50 42 50 f1 46 51 50 62 42 4b 42 4f 44 56 63 ec f0"
+      },
+      "0x6a": {
+        "addr": "$4c:4fab",
+        "used_by_selector": false,
+        "text": "{name} counters fiercely!{name}<slime>{name} gets even!",
+        "bytes": "f9 00 f1 40 4c 52 4b 51 42 4f 50 62 43 46 42 4f 40 42 49 56 63 fc 10 ec f2 f9 00 62 44 42 51 50 f1 42 53 42 4b 63 ec f0"
+      },
+      "0x6b": {
+        "addr": "$4c:4fd3",
+        "used_by_selector": false,
+        "text": "A Celestial light covers {name}!",
+        "bytes": "24 62 26 42 49 42 50 51 46 3e 49 62 49 46 44 45 51 f1 40 4c 53 42 4f 50 62 f9 00 63 ec f0"
+      },
+      "0x6c": {
+        "addr": "$4c:4ff1",
+        "used_by_selector": false,
+        "text": "{name} grabs {num} and{name}<slime>uses it as a shield!",
+        "bytes": "f9 00 62 44 4f 3e 3f 50 f1 f9 10 62 3e 4b 41 fc 10 ec f2 52 50 42 50 62 46 51 62 3e 50 62 3e f1 50 45 46 42 49 41 63 ec f0"
+      },
+      "0x6d": {
+        "addr": "$4c:501a",
+        "used_by_selector": false,
+        "text": "{name} shouts a battle cry!",
+        "bytes": "f9 00 62 50 45 4c 52 51 50 f1 3e 62 3f 3e 51 51 49 42 62 40 4f 56 63 ec f0"
+      },
+      "0x6e": {
+        "addr": "$4c:5033",
+        "used_by_selector": false,
+        "text": "{name} easily dodges the attack!",
+        "bytes": "f9 00 62 42 3e 50 46 49 56 f1 41 4c 41 44 42 50 62 51 45 42 62 3e 51 51 3e 40 48 63 ec f0"
+      },
+      "0x6f": {
+        "addr": "$4c:5051",
+        "used_by_selector": false,
+        "text": "A horrific thing is summoned!",
+        "bytes": "24 62 45 4c 4f 4f 46 43 46 40 62 51 45 46 4b 44 f1 46 50 62 50 52 4a 4a 4c 4b 42 41 63 ec f0"
+      },
+      "0x70": {
+        "addr": "$4c:5070",
+        "used_by_selector": false,
+        "text": "A thick fog cozes from {name}!",
+        "bytes": "24 62 51 45 46 40 48 62 43 4c 44 62 40 4c 57 42 50 f1 43 4f 4c 4a 62 f9 00 63 ec f0"
+      },
+      "0x71": {
+        "addr": "$4c:508c",
+        "used_by_selector": false,
+        "text": "{name} is now loaded with power!",
+        "bytes": "f9 00 62 46 50 62 4b 4c 54 f1 49 4c 3e 41 42 41 62 54 46 51 45 62 4d 4c 54 42 4f 63 ec f0"
+      },
+      "0x72": {
+        "addr": "$4c:50aa",
+        "used_by_selector": false,
+        "text": "{name} is out of MP!",
+        "bytes": "f9 00 62 46 50 62 4c 52 51 f1 4c 43 62 30 33 63 ec f0"
+      },
+      "0x73": {
+        "addr": "$4c:50bc",
+        "used_by_selector": false,
+        "text": "[96]Chance Chance Chance Chance...[97]{name}<slime>The voice echoes all around!",
+        "bytes": "96 26 45 3e 4b 40 42 62 26 45 3e 4b 40 42 f1 26 45 3e 4b 40 42 62 26 45 3e 4b 40 42 5f 5f 5f 97 fc 10 ec f2 37 45 42 62 53 4c 46 40 42 62 42 40 45 4c 42 50 f1 3e 49 49 62 3e 4f 4c 52 4b 41 63 ec f0"
+      },
+      "0x74": {
+        "addr": "$4c:50fe",
+        "used_by_selector": false,
+        "text": "A gigantic devil emerges!{name}<slime>Devil attack! ",
+        "bytes": "24 62 44 46 44 3e 4b 51 46 40 62 41 42 53 46 49 f1 42 4a 42 4f 44 42 50 63 fc 10 ec f2 27 42 53 46 49 62 3e 51 51 3e 40 48 63 f1 ec f0"
+      },
+      "0x75": {
+        "addr": "$4c:512b",
+        "used_by_selector": false,
+        "text": "Cold winds strike {32}!",
+        "bytes": "26 4c 49 41 62 54 46 4b 41 50 62 50 51 4f 46 48 42 f1 f9 20 63 ec f0"
+      },
+      "0x76": {
+        "addr": "$4c:5142",
+        "used_by_selector": false,
+        "text": "{name} recoveres MP!",
+        "bytes": "f9 00 f1 4f 42 40 4c 53 42 4f 42 50 62 30 33 63 ec f0"
+      },
+      "0x77": {
+        "addr": "$4c:5154",
+        "used_by_selector": false,
+        "text": "Shooting Stars fall everywhere!",
+        "bytes": "36 45 4c 4c 51 46 4b 44 62 36 51 3e 4f 50 f1 43 3e 49 49 62 42 53 42 4f 56 54 45 42 4f 42 63 ec f0"
+      },
+      "0x78": {
+        "addr": "$4c:5175",
+        "used_by_selector": false,
+        "text": "{name} easily dodges the attack!",
+        "bytes": "f9 00 62 42 3e 50 46 49 56 f1 41 4c 41 44 42 50 62 51 45 42 62 3e 51 51 3e 40 48 63 ec f0"
+      },
+      "0x79": {
+        "addr": "$4c:5193",
+        "used_by_selector": false,
+        "text": "A critical hit! ",
+        "bytes": "24 62 40 4f 46 51 46 40 3e 49 62 45 46 51 63 f1 ec f0"
+      },
+      "0x7a": {
+        "addr": "$4c:51a5",
+        "used_by_selector": false,
+        "text": "A pitiful attack! ",
+        "bytes": "24 62 4d 46 51 46 43 52 49 62 3e 51 51 3e 40 48 63 f1 ec f0"
+      },
+      "0x7b": {
+        "addr": "$4c:51b9",
+        "used_by_selector": false,
+        "text": "A wall of light reflects the{name}<slime>spell! ",
+        "bytes": "24 62 54 3e 49 49 62 4c 43 62 49 46 44 45 51 f1 4f 42 43 49 42 40 51 50 62 51 45 42 fc 10 ec f2 50 4d 42 49 49 63 f1 ec f0"
+      },
+      "0x7c": {
+        "addr": "$4c:51e2",
+        "used_by_selector": false,
+        "text": "The spell is reflected by a{name}<slime>wall of light! ",
+        "bytes": "37 45 42 62 50 4d 42 49 49 62 46 50 f1 4f 42 43 49 42 40 51 42 41 62 3f 56 62 3e fc 10 ec f2 54 3e 49 49 62 4c 43 62 49 46 44 45 51 63 f1 ec f0"
+      },
+      "0x7d": {
+        "addr": "$4c:5212",
+        "used_by_selector": false,
+        "text": "{mon}The wind around {name}{name}<slime>reflects the attack!",
+        "bytes": "ed 37 45 42 62 54 46 4b 41 62 3e 4f 4c 52 4b 41 f1 f9 00 fc 10 ec f2 4f 42 43 49 42 40 51 50 62 51 45 42 f1 3e 51 51 3e 40 48 63 ec f0"
+      },
+      "0x7e": {
+        "addr": "$4c:523f",
+        "used_by_selector": false,
+        "text": "{mon}{32} dodges the attack!",
+        "bytes": "ed f9 20 62 41 4c 41 44 42 50 f1 51 45 42 62 3e 51 51 3e 40 48 63 ec f0"
+      },
+      "0x7f": {
+        "addr": "$4c:5257",
+        "used_by_selector": false,
+        "text": "{32} cannot dodge in time!",
+        "bytes": "f9 20 62 40 3e 4b 4b 4c 51 f1 41 4c 41 44 42 62 46 4b 62 51 46 4a 42 63 ec f0"
+      },
+      "0x80": {
+        "addr": "$4c:5271",
+        "used_by_selector": false,
+        "text": "{mon}{name} protects{name}<slime>{num}! ",
+        "bytes": "ed f9 00 f1 4d 4f 4c 51 42 40 51 50 fc 10 ec f2 f9 10 63 f1 ec f0"
+      },
+      "0x81": {
+        "addr": "$4c:5287",
+        "used_by_selector": false,
+        "text": "{name} absorbs the attack!",
+        "bytes": "f9 00 62 3e 3f 50 4c 4f 3f 50 f1 51 45 42 62 3e 51 51 3e 40 48 63 ec f0"
+      },
+      "0x82": {
+        "addr": "$4c:529f",
+        "used_by_selector": true,
+        "text": "{mon}{name} takes {num} damage pts!",
+        "bytes": "ed f9 00 62 51 3e 48 42 50 f1 f9 10 62 41 3e 4a 3e 44 42 62 4d 51 50 63 ec f0"
+      },
+      "0x83": {
+        "addr": "$4c:52b9",
+        "used_by_selector": false,
+        "text": "{mon}{name} receives{name}<slime>{num} damage pts!",
+        "bytes": "ed f9 00 f1 4f 42 40 42 46 53 42 50 fc 10 ec f2 f9 10 62 41 3e 4a 3e 44 42 f1 4d 51 50 63 ec f0"
+      },
+      "0x84": {
+        "addr": "$4c:52d9",
+        "used_by_selector": false,
+        "text": "{name}'s wound heals!",
+        "bytes": "f9 00 68 f1 54 4c 52 4b 41 62 45 42 3e 49 50 63 ec f0"
+      },
+      "0x85": {
+        "addr": "$4c:52eb",
+        "used_by_selector": false,
+        "text": "{name} receives a fatal{name}<slime>blow! ",
+        "bytes": "f9 00 f1 4f 42 40 42 46 53 42 50 62 3e 62 43 3e 51 3e 49 fc 10 ec f2 3f 49 4c 54 63 f1 ec f0"
+      },
+      "0x86": {
+        "addr": "$4c:530a",
+        "used_by_selector": true,
+        "text": "{mon}{name} loses {num} defense!",
+        "bytes": "ed f9 00 62 49 4c 50 42 50 f1 f9 10 62 41 42 43 42 4b 50 42 63 ec f0"
+      },
+      "0x87": {
+        "addr": "$4c:5321",
+        "used_by_selector": false,
+        "text": "{name} loses {num} defense!",
+        "bytes": "f9 00 62 49 4c 50 42 50 f1 f9 10 62 41 42 43 42 4b 50 42 63 ec f0"
+      },
+      "0x88": {
+        "addr": "$4c:5337",
+        "used_by_selector": true,
+        "text": "{name}'s spells are all suspended!",
+        "bytes": "f9 00 68 62 50 4d 42 49 49 50 f1 3e 4f 42 62 3e 49 49 62 50 52 50 4d 42 4b 41 42 41 63 ec f0"
+      },
+      "0x89": {
+        "addr": "$4c:5356",
+        "used_by_selector": false,
+        "text": "{name}'s spells are all suspended!",
+        "bytes": "f9 00 68 62 50 4d 42 49 49 50 f1 3e 4f 42 62 3e 49 49 62 50 52 50 4d 42 4b 41 42 41 63 ec f0"
+      },
+      "0x8a": {
+        "addr": "$4c:5375",
+        "used_by_selector": true,
+        "text": "{name}'s MP is drained by {num}!",
+        "bytes": "f9 00 68 62 30 33 62 46 50 f1 41 4f 3e 46 4b 42 41 62 3f 56 62 f9 10 63 ec f0"
+      },
+      "0x8b": {
+        "addr": "$4c:538f",
+        "used_by_selector": false,
+        "text": "{name}'s MP is drained by {num}!",
+        "bytes": "f9 00 68 62 30 33 62 46 50 f1 41 4f 3e 46 4b 42 41 62 3f 56 62 f9 10 63 ec f0"
+      },
+      "0x8c": {
+        "addr": "$4c:53a9",
+        "used_by_selector": false,
+        "text": "{name} starts to glow faintly!",
+        "bytes": "f9 00 62 50 51 3e 4f 51 50 f1 51 4c 62 44 49 4c 54 62 43 3e 46 4b 51 49 56 63 ec f0"
+      },
+      "0x8d": {
+        "addr": "$4c:53c5",
+        "used_by_selector": false,
+        "text": "{name} sucks in {num} MP!",
+        "bytes": "f9 00 62 50 52 40 48 50 f1 46 4b 62 f9 10 62 30 33 63 ec f0"
+      },
+      "0x8e": {
+        "addr": "$4c:53d9",
+        "used_by_selector": false,
+        "text": "{name} is confused!",
+        "bytes": "f9 00 62 46 50 f1 40 4c 4b 43 52 50 42 41 63 ec f0"
+      },
+      "0x8f": {
+        "addr": "$4c:53ea",
+        "used_by_selector": false,
+        "text": "{name} is confused!",
+        "bytes": "f9 00 62 46 50 f1 40 4c 4b 43 52 50 42 41 63 ec f0"
+      },
+      "0x90": {
+        "addr": "$4c:53fb",
+        "used_by_selector": false,
+        "text": "{name}'s attack power is doubled!",
+        "bytes": "f9 00 68 62 3e 51 51 3e 40 48 f1 4d 4c 54 42 4f 62 46 50 62 41 4c 52 3f 49 42 41 63 ec f0"
+      },
+      "0x91": {
+        "addr": "$4c:5419",
+        "used_by_selector": false,
+        "text": "{mon}{name} changes into a big dragon!",
+        "bytes": "ed f9 00 62 40 45 3e 4b 44 42 50 f1 46 4b 51 4c 62 3e 62 3f 46 44 62 41 4f 3e 44 4c 4b 63 ec f0"
+      },
+      "0x92": {
+        "addr": "$4c:5439",
+        "used_by_selector": false,
+        "text": "{mon}{name}'s defense goes up{name}<slime>by {num}! ",
+        "bytes": "ed f9 00 68 f1 41 42 43 42 4b 50 42 62 44 4c 42 50 62 52 4d fc 10 ec f2 3f 56 62 f9 10 63 f1 ec f0"
+      },
+      "0x93": {
+        "addr": "$4c:545a",
+        "used_by_selector": false,
+        "text": "{name}'s gang become iron lumps!",
+        "bytes": "f9 00 68 62 44 3e 4b 44 f1 3f 42 40 4c 4a 42 62 46 4f 4c 4b 62 49 52 4a 4d 50 63 ec f0"
+      },
+      "0x94": {
+        "addr": "$4c:5477",
+        "used_by_selector": false,
+        "text": "{name} turns into an iron lump!",
+        "bytes": "f9 00 62 51 52 4f 4b 50 f1 46 4b 51 4c 62 3e 4b 62 46 4f 4c 4b 62 49 52 4a 4d 63 ec f0"
+      },
+      "0x95": {
+        "addr": "$4c:5494",
+        "used_by_selector": true,
+        "text": "{name}'s speed goes down by{name}<slime>{num}! ",
+        "bytes": "f9 00 68 62 50 4d 42 42 41 f1 44 4c 42 50 62 41 4c 54 4b 62 3f 56 fc 10 ec f2 f9 10 63 f1 ec f0"
+      },
+      "0x96": {
+        "addr": "$4c:54b4",
+        "used_by_selector": false,
+        "text": "{name}'s speed drops by {num}!",
+        "bytes": "f9 00 68 62 50 4d 42 42 41 f1 41 4f 4c 4d 50 62 3f 56 62 f9 10 63 ec f0"
+      },
+      "0x97": {
+        "addr": "$4c:54cc",
+        "used_by_selector": false,
+        "text": "{name}'s speed goes up by {num}!",
+        "bytes": "f9 00 68 62 50 4d 42 42 41 f1 44 4c 42 50 62 52 4d 62 3f 56 62 f9 10 63 ec f0"
+      },
+      "0x98": {
+        "addr": "$4c:54e6",
+        "used_by_selector": true,
+        "text": "An illusion engulfs{name}<slime>{name}! ",
+        "bytes": "24 4b 62 46 49 49 52 50 46 4c 4b f1 42 4b 44 52 49 43 50 fc 10 ec f2 f9 00 63 f1 ec f0"
+      },
+      "0x99": {
+        "addr": "$4c:5503",
+        "used_by_selector": false,
+        "text": "A wall of light rises before{name}<slime>{name}! ",
+        "bytes": "24 62 54 3e 49 49 62 4c 43 62 49 46 44 45 51 f1 4f 46 50 42 50 62 3f 42 43 4c 4f 42 fc 10 ec f2 f9 00 63 f1 ec f0"
+      },
+      "0x9a": {
+        "addr": "$4c:5529",
+        "used_by_selector": false,
+        "text": "A wall of light is created before{name}<slime>{name}! ",
+        "bytes": "24 62 54 3e 49 49 62 4c 43 62 49 46 44 45 51 f1 46 50 62 40 4f 42 3e 51 42 41 62 3f 42 43 4c 4f 42 fc 10 ec f2 f9 00 63 f1 ec f0"
+      },
+      "0x9b": {
+        "addr": "$4c:5554",
+        "used_by_selector": false,
+        "text": "A veil of light covers {name}{name}<slime>and the gang! ",
+        "bytes": "24 62 53 42 46 49 62 4c 43 62 49 46 44 45 51 f1 40 4c 53 42 4f 50 62 f9 00 fc 10 ec f2 3e 4b 41 62 51 45 42 62 44 3e 4b 44 63 f1 ec f0"
+      },
+      "0x9c": {
+        "addr": "$4c:5581",
+        "used_by_selector": false,
+        "text": "{name} is no longer poisoned!",
+        "bytes": "f9 00 62 46 50 62 4b 4c f1 49 4c 4b 44 42 4f 62 4d 4c 46 50 4c 4b 42 41 63 ec f0"
+      },
+      "0x9d": {
+        "addr": "$4c:559c",
+        "used_by_selector": false,
+        "text": "{name} is no longer paralyzed!",
+        "bytes": "f9 00 62 46 50 62 4b 4c f1 49 4c 4b 44 42 4f 62 4d 3e 4f 3e 49 56 57 42 41 63 ec f0"
+      },
+      "0x9e": {
+        "addr": "$4c:55b8",
+        "used_by_selector": false,
+        "text": "{name} is revived!",
+        "bytes": "f9 00 f1 46 50 62 4f 42 53 46 53 42 41 63 ec f0"
+      },
+      "0x9f": {
+        "addr": "$4c:55c8",
+        "used_by_selector": false,
+        "text": "{name} is no longer cursed!",
+        "bytes": "f9 00 62 46 50 62 4b 4c f1 49 4c 4b 44 42 4f 62 40 52 4f 50 42 41 63 ec f0"
+      },
+      "0xa0": {
+        "addr": "$4c:55e1",
+        "used_by_selector": false,
+        "text": "{32} turns into {name}!",
+        "bytes": "f9 20 62 51 52 4f 4b 50 f1 46 4b 51 4c 62 f9 00 63 ec f0"
+      },
+      "0xa1": {
+        "addr": "$4c:55f4",
+        "used_by_selector": false,
+        "text": "Allies appear from nowhere!",
+        "bytes": "24 49 49 46 42 50 62 3e 4d 4d 42 3e 4f f1 43 4f 4c 4a 62 4b 4c 54 45 42 4f 42 63 ec f0"
+      },
+      "0xa2": {
+        "addr": "$4c:5611",
+        "used_by_selector": false,
+        "text": "{name} gets sand in its eyes!",
+        "bytes": "f9 00 62 44 42 51 50 f1 50 3e 4b 41 62 46 4b 62 46 51 50 62 42 56 42 50 63 ec f0"
+      },
+      "0xa3": {
+        "addr": "$4c:562c",
+        "used_by_selector": false,
+        "text": "{name} is blinded!",
+        "bytes": "f9 00 62 46 50 f1 3f 49 46 4b 41 42 41 63 ec f0"
+      },
+      "0xa4": {
+        "addr": "$4c:563c",
+        "used_by_selector": false,
+        "text": "{name} is now vulnerable to{name}<slime>magic spells! ",
+        "bytes": "f9 00 62 46 50 62 4b 4c 54 f1 53 52 49 4b 42 4f 3e 3f 49 42 62 51 4c fc 10 ec f2 4a 3e 44 46 40 62 50 4d 42 49 49 50 63 f1 ec f0"
+      },
+      "0xa5": {
+        "addr": "$4c:5667",
+        "used_by_selector": false,
+        "text": "{name} lost {num} MP!",
+        "bytes": "f9 00 62 49 4c 50 51 f1 f9 10 62 30 33 63 ec f0"
+      },
+      "0xa6": {
+        "addr": "$4c:5677",
+        "used_by_selector": false,
+        "text": "{name} is lured into{name}<slime>dancing! ",
+        "bytes": "f9 00 62 46 50 f1 49 52 4f 42 41 62 46 4b 51 4c fc 10 ec f2 41 3e 4b 40 46 4b 44 63 f1 ec f0"
+      },
+      "0xa7": {
+        "addr": "$4c:5696",
+        "used_by_selector": false,
+        "text": "{name} seems to be feeling{name}<slime>good! ",
+        "bytes": "f9 00 62 50 42 42 4a 50 f1 51 4c 62 3f 42 62 43 42 42 49 46 4b 44 fc 10 ec f2 44 4c 4c 41 63 f1 ec f0"
+      },
+      "0xa8": {
+        "addr": "$4c:56b8",
+        "used_by_selector": false,
+        "text": "{name} gets goose bumps!",
+        "bytes": "f9 00 62 44 42 51 50 f1 44 4c 4c 50 42 62 3f 52 4a 4d 50 63 ec f0"
+      },
+      "0xa9": {
+        "addr": "$4c:56ce",
+        "used_by_selector": false,
+        "text": "{name} gets goose bumps!{name}<slime>{name}'s defense drops to 1",
+        "bytes": "f9 00 62 44 42 51 50 f1 44 4c 4c 50 42 62 3f 52 4a 4d 50 63 fc 10 ec f2 f9 00 68 f1 41 42 43 42 4b 50 42 62 41 4f 4c 4d 50 62 51 4c 62 01 ec f0"
+      },
+      "0xaa": {
+        "addr": "$4c:56fe",
+        "used_by_selector": false,
+        "text": "{name} freezes in shock!",
+        "bytes": "f9 00 f1 43 4f 42 42 57 42 50 62 46 4b 62 50 45 4c 40 48 63 ec f0"
+      },
+      "0xab": {
+        "addr": "$4c:5714",
+        "used_by_selector": false,
+        "text": "{name} stumbles!",
+        "bytes": "f9 00 f1 50 51 52 4a 3f 49 42 50 63 ec f0"
+      },
+      "0xac": {
+        "addr": "$4c:5722",
+        "used_by_selector": false,
+        "text": "The spell on {name}{name}<slime>is broken! ",
+        "bytes": "37 45 42 62 50 4d 42 49 49 62 4c 4b f1 f9 00 fc 10 ec f2 46 50 62 3f 4f 4c 48 42 4b 63 f1 ec f0"
+      },
+      "0xad": {
+        "addr": "$4c:5742",
+        "used_by_selector": false,
+        "text": "{name} returns to its true form!",
+        "bytes": "f9 00 62 4f 42 51 52 4f 4b 50 f1 51 4c 62 46 51 50 62 51 4f 52 42 62 43 4c 4f 4a 63 ec f0"
+      },
+      "0xae": {
+        "addr": "$4c:5760",
+        "used_by_selector": false,
+        "text": "{name} is completely cured!",
+        "bytes": "f9 00 62 46 50 f1 40 4c 4a 4d 49 42 51 42 49 56 62 40 52 4f 42 41 63 ec f0"
+      },
+      "0xaf": {
+        "addr": "$4c:5779",
+        "used_by_selector": false,
+        "text": "Wow! {name} joined the battle!",
+        "bytes": "3a 4c 54 63 62 f9 00 f1 47 4c 46 4b 42 41 62 51 45 42 62 3f 3e 51 51 49 42 63 ec f0"
+      },
+      "0xb0": {
+        "addr": "$4c:5795",
+        "used_by_selector": false,
+        "text": "{mon}{name} hypnotic dance is{name}<slime>stopped! ",
+        "bytes": "ed f9 00 f1 45 56 4d 4b 4c 51 46 40 62 41 3e 4b 40 42 62 46 50 fc 10 ec f2 50 51 4c 4d 4d 42 41 63 f1 ec f0"
+      },
+      "0xb1": {
+        "addr": "$4c:57b9",
+        "used_by_selector": false,
+        "text": "{mon}{name} hypnotic{name}<slime>dance is frozen! ",
+        "bytes": "ed f9 00 f1 45 56 4d 4b 4c 51 46 40 fc 10 ec f2 41 3e 4b 40 42 62 46 50 62 43 4f 4c 57 42 4b 63 f1 ec f0"
+      },
+      "0xb2": {
+        "addr": "$4c:57dc",
+        "used_by_selector": false,
+        "text": "{name}'s mouth is bound shut!",
+        "bytes": "f9 00 68 62 4a 4c 52 51 45 f1 46 50 62 3f 4c 52 4b 41 62 50 45 52 51 63 ec f0"
+      },
+      "0xb3": {
+        "addr": "$4c:57f6",
+        "used_by_selector": false,
+        "text": "{name}'s mouth is bound shut!",
+        "bytes": "f9 00 68 62 4a 4c 52 51 45 f1 46 50 62 3f 4c 52 4b 41 62 50 45 52 51 63 ec f0"
+      },
+      "0xb4": {
+        "addr": "$4c:5810",
+        "used_by_selector": false,
+        "text": "{name} is not listening to you!",
+        "bytes": "f9 00 62 46 50 62 4b 4c 51 f1 49 46 50 51 42 4b 46 4b 44 62 51 4c 62 56 4c 52 63 ec f0"
+      },
+      "0xb5": {
+        "addr": "$4c:582d",
+        "used_by_selector": false,
+        "text": "{name} is frozen!",
+        "bytes": "f9 00 62 46 50 f1 43 4f 4c 57 42 4b 63 ec f0"
+      },
+      "0xb6": {
+        "addr": "$4c:583c",
+        "used_by_selector": true,
+        "text": "Misses! {name}!{name}<slime>is unharmed! ",
+        "bytes": "30 46 50 50 42 50 63 f1 f9 00 63 fc 10 ec f2 46 50 62 52 4b 45 3e 4f 4a 42 41 63 f1 ec f0"
+      },
+      "0xb7": {
+        "addr": "$4c:585a",
+        "used_by_selector": false,
+        "text": "Missed {name}! No damage!",
+        "bytes": "30 46 50 50 42 41 62 f9 00 63 f1 31 4c 62 41 3e 4a 3e 44 42 63 ec f0"
+      },
+      "0xb8": {
+        "addr": "$4c:5871",
+        "used_by_selector": true,
+        "text": "Has no effect on {name}!",
+        "bytes": "2b 3e 50 62 4b 4c 62 42 43 43 42 40 51 f1 4c 4b 62 f9 00 63 ec f0"
+      },
+      "0xb9": {
+        "addr": "$4c:5887",
+        "used_by_selector": false,
+        "text": "But the enemy blocks the way!",
+        "bytes": "25 52 51 62 51 45 42 62 42 4b 42 4a 56 f1 3f 49 4c 40 48 50 62 51 45 42 62 54 3e 56 63 ec f0"
+      },
+      "0xba": {
+        "addr": "$4c:58a6",
+        "used_by_selector": false,
+        "text": "{name}'s turns to iron and{name}<slime>becomes invulnerable.",
+        "bytes": "f9 00 68 62 51 52 4f 4b 50 f1 51 4c 62 46 4f 4c 4b 62 3e 4b 41 fc 10 ec f2 3f 42 40 4c 4a 42 50 f1 46 4b 53 52 49 4b 42 4f 3e 3f 49 42 5f ec f0"
+      },
+      "0xbb": {
+        "addr": "$4c:58d6",
+        "used_by_selector": false,
+        "text": "But nothing happens!",
+        "bytes": "25 52 51 62 4b 4c 51 45 46 4b 44 f1 45 3e 4d 4d 42 4b 50 63 ec f0"
+      },
+      "0xbc": {
+        "addr": "$4c:58ec",
+        "used_by_selector": true,
+        "text": "{name} doesn't fall asleep!",
+        "bytes": "f9 00 62 41 4c 42 50 4b 67 f1 43 3e 49 49 62 3e 50 49 42 42 4d 63 ec f0"
+      },
+      "0xbd": {
+        "addr": "$4c:5904",
+        "used_by_selector": false,
+        "text": "{name} is already sleeping!",
+        "bytes": "f9 00 62 46 50 f1 3e 49 4f 42 3e 41 56 62 50 49 42 42 4d 46 4b 44 63 ec f0"
+      },
+      "0xbe": {
+        "addr": "$4c:591d",
+        "used_by_selector": false,
+        "text": "{name} becomes more confused!",
+        "bytes": "f9 00 62 3f 42 40 4c 4a 42 50 f1 4a 4c 4f 42 62 40 4c 4b 43 52 50 42 41 63 ec f0"
+      },
+      "0xbf": {
+        "addr": "$4c:5938",
+        "used_by_selector": false,
+        "text": "{name} isn't revived!",
+        "bytes": "f9 00 f1 46 50 4b 67 62 4f 42 53 46 53 42 41 63 ec f0"
+      },
+      "0xc0": {
+        "addr": "$4c:5938",
+        "used_by_selector": false,
+        "text": "{name} isn't revived!",
+        "bytes": "f9 00 f1 46 50 4b 67 62 4f 42 53 46 53 42 41 63 ec f0"
+      },
+      "0xc1": {
+        "addr": "$4c:594a",
+        "used_by_selector": false,
+        "text": "But it doesn't reach {name}!",
+        "bytes": "25 52 51 62 46 51 62 41 4c 42 50 4b 67 f1 4f 42 3e 40 45 62 f9 00 63 ec f0"
+      },
+      "0xc2": {
+        "addr": "$4c:5963",
+        "used_by_selector": false,
+        "text": "But the call is not heard!",
+        "bytes": "25 52 51 62 51 45 42 62 40 3e 49 49 f1 46 50 62 4b 4c 51 62 45 42 3e 4f 41 63 ec f0"
+      },
+      "0xc3": {
+        "addr": "$4c:597f",
+        "used_by_selector": false,
+        "text": "{name} dodges the air attack!",
+        "bytes": "f9 00 62 41 4c 41 44 42 50 f1 51 45 42 62 3e 46 4f 62 3e 51 51 3e 40 48 63 ec f0"
+      },
+      "0xc4": {
+        "addr": "$4c:599a",
+        "used_by_selector": false,
+        "text": "{name} quickly covers its ears!",
+        "bytes": "f9 00 62 4e 52 46 40 48 49 56 f1 40 4c 53 42 4f 50 62 46 51 50 62 42 3e 4f 50 63 ec f0"
+      },
+      "0xc5": {
+        "addr": "$4c:59b7",
+        "used_by_selector": false,
+        "text": "{name} shakes off the sand!",
+        "bytes": "f9 00 62 50 45 3e 48 42 50 f1 4c 43 43 62 51 45 42 62 50 3e 4b 41 63 ec f0"
+      },
+      "0xc6": {
+        "addr": "$4c:59d0",
+        "used_by_selector": false,
+        "text": "{name} dodges with ease!",
+        "bytes": "f9 00 62 41 4c 41 44 42 50 f1 54 46 51 45 62 42 3e 50 42 63 ec f0"
+      },
+      "0xc7": {
+        "addr": "$4c:59e6",
+        "used_by_selector": false,
+        "text": "{name} dodges quickly!",
+        "bytes": "f9 00 62 41 4c 41 44 42 50 f1 4e 52 46 40 48 49 56 63 ec f0"
+      },
+      "0xc8": {
+        "addr": "$4c:59fa",
+        "used_by_selector": false,
+        "text": "{name} isn't lured in!",
+        "bytes": "f9 00 62 46 50 4b 67 f1 49 52 4f 42 41 62 46 4b 63 ec f0"
+      },
+      "0xc9": {
+        "addr": "$4c:5a0d",
+        "used_by_selector": false,
+        "text": "But {name} dodges easily!",
+        "bytes": "25 52 51 62 f9 00 f1 41 4c 41 44 42 50 62 42 3e 50 46 49 56 63 ec f0"
+      },
+      "0xca": {
+        "addr": "$4c:5a24",
+        "used_by_selector": false,
+        "text": "{mon}{name} isn't affected!",
+        "bytes": "ed f9 00 62 46 50 4b 67 f1 3e 43 43 42 40 51 42 41 63 ec f0"
+      },
+      "0xcb": {
+        "addr": "$4c:5a38",
+        "used_by_selector": false,
+        "text": "But the prayer isn't heard!",
+        "bytes": "25 52 51 62 51 45 42 62 4d 4f 3e 56 42 4f f1 46 50 4b 67 62 45 42 3e 4f 41 63 ec f0"
+      },
+      "0xcc": {
+        "addr": "$4c:5a54",
+        "used_by_selector": true,
+        "text": "{name} is sent to sleep!",
+        "bytes": "f9 00 62 46 50 f1 50 42 4b 51 62 51 4c 62 50 49 42 42 4d 63 ec f0"
+      },
+      "0xcd": {
+        "addr": "$4c:5a6a",
+        "used_by_selector": false,
+        "text": "{name} falls asleep!",
+        "bytes": "f9 00 f1 43 3e 49 49 50 62 3e 50 49 42 42 4d 63 ec f0"
+      },
+      "0xce": {
+        "addr": "$4c:5a7c",
+        "used_by_selector": false,
+        "text": "{name} is poisoned!",
+        "bytes": "f9 00 f1 46 50 62 4d 4c 46 50 4c 4b 42 41 63 ec f0"
+      },
+      "0xcf": {
+        "addr": "$4c:5a8d",
+        "used_by_selector": false,
+        "text": "{name} is paralyzed!",
+        "bytes": "f9 00 f1 46 50 62 4d 3e 4f 3e 49 56 57 42 41 63 ec f0"
+      },
+      "0xd0": {
+        "addr": "$4c:5a9f",
+        "used_by_selector": false,
+        "text": "{name} is severely poisoned!",
+        "bytes": "f9 00 62 46 50 f1 50 42 53 42 4f 42 49 56 62 4d 4c 46 50 4c 4b 42 41 63 ec f0"
+      },
+      "0xd1": {
+        "addr": "$4c:5ab9",
+        "used_by_selector": false,
+        "text": "{name} is cursed!",
+        "bytes": "f9 00 f1 46 50 62 40 52 4f 50 42 41 63 ec f0"
+      },
+      "0xd2": {
+        "addr": "$4c:5ac8",
+        "used_by_selector": false,
+        "text": "{name} is frozen!",
+        "bytes": "f9 00 f1 46 50 62 43 4f 4c 57 42 4b 63 ec f0"
+      },
+      "0xd3": {
+        "addr": "$4c:5ad7",
+        "used_by_selector": false,
+        "text": "{name} gets even!",
+        "bytes": "f9 00 f1 44 42 51 50 62 42 53 42 4b 63 ec f0"
+      },
+      "0xd4": {
+        "addr": "$4c:5ae6",
+        "used_by_selector": false,
+        "text": "{name} can't get even!",
+        "bytes": "f9 00 f1 40 3e 4b 67 62 44 42 51 62 42 53 42 4b 63 ec f0"
+      },
+      "0xd5": {
+        "addr": "$4c:5af9",
+        "used_by_selector": false,
+        "text": "{name} counterattacks!",
+        "bytes": "f9 00 f1 40 4c 52 4b 51 42 4f 3e 51 51 3e 40 48 50 63 ec f0"
+      },
+      "0xd6": {
+        "addr": "$4c:5b0d",
+        "used_by_selector": false,
+        "text": "{name} can't counterattack!",
+        "bytes": "f9 00 62 40 3e 4b 67 f1 40 4c 52 4b 51 42 4f 3e 51 51 3e 40 48 63 ec f0"
+      },
+      "0xd7": {
+        "addr": "$4c:5b25",
+        "used_by_selector": false,
+        "text": "{name} blows back {num}!",
+        "bytes": "f9 00 62 3f 49 4c 54 50 f1 3f 3e 40 48 62 f9 10 63 ec f0"
+      },
+      "0xd8": {
+        "addr": "$4c:5b38",
+        "used_by_selector": false,
+        "text": "{name} disappears!",
+        "bytes": "f9 00 f1 41 46 50 3e 4d 4d 42 3e 4f 50 63 ec f0"
+      },
+      "0xd9": {
+        "addr": "$4c:5b48",
+        "used_by_selector": false,
+        "text": "The wind is stopped!",
+        "bytes": "37 45 42 62 54 46 4b 41 62 46 50 f1 50 51 4c 4d 4d 42 41 63 ec f0"
+      },
+      "0xda": {
+        "addr": "$4c:5b5e",
+        "used_by_selector": false,
+        "text": "Allies have gone! ",
+        "bytes": "24 49 49 46 42 50 62 45 3e 53 42 62 44 4c 4b 42 63 f1 ec f0"
+      },
+      "0xdb": {
+        "addr": "$4c:5b72",
+        "used_by_selector": false,
+        "text": "{name} wakes up!",
+        "bytes": "f9 00 f1 54 3e 48 42 50 62 52 4d 63 ec f0"
+      },
+      "0xdc": {
+        "addr": "$4c:5b80",
+        "used_by_selector": false,
+        "text": "{name} returns to normal!",
+        "bytes": "f9 00 62 4f 42 51 52 4f 4b 50 f1 51 4c 62 4b 4c 4f 4a 3e 49 63 ec f0"
+      },
+      "0xdd": {
+        "addr": "$4c:5b97",
+        "used_by_selector": false,
+        "text": "{name}'s Ironize wears off!",
+        "bytes": "f9 00 68 f1 2c 4f 4c 4b 46 57 42 62 54 42 3e 4f 50 62 4c 43 43 63 ec f0"
+      },
+      "0xde": {
+        "addr": "$4c:5baf",
+        "used_by_selector": false,
+        "text": "The wall of light disappears!",
+        "bytes": "37 45 42 62 54 3e 49 49 62 4c 43 f1 49 46 44 45 51 62 41 46 50 3e 4d 4d 42 3e 4f 50 63 ec f0"
+      },
+      "0xdf": {
+        "addr": "$4c:5bce",
+        "used_by_selector": false,
+        "text": "The devil leaves, laughing!",
+        "bytes": "37 45 42 62 41 42 53 46 49 62 49 42 3e 53 42 50 5e f1 49 3e 52 44 45 46 4b 44 63 ec f0"
+      },
+      "0xe0": {
+        "addr": "$4c:5beb",
+        "used_by_selector": false,
+        "text": "The {num} falls to pieces!",
+        "bytes": "37 45 42 62 f9 10 f1 43 3e 49 49 50 62 51 4c 62 4d 46 42 40 42 50 63 ec f0"
+      },
+      "0xe1": {
+        "addr": "$4c:5c04",
+        "used_by_selector": false,
+        "text": "Poisoned! {name}<slime>{name} loses {num} HP!",
+        "bytes": "33 4c 46 50 4c 4b 42 41 63 f1 fc 10 ec f2 f9 00 62 49 4c 50 42 50 f1 f9 10 62 2b 33 63 ec f0"
+      },
+      "0xe2": {
+        "addr": "$4c:5c23",
+        "used_by_selector": false,
+        "text": "A strong poison takes {num} HP{name}<slime>from {name}! {name}<slime>{name}'s HP decreases by{num} from the poi",
+        "bytes": "24 62 50 51 4f 4c 4b 44 62 4d 4c 46 50 4c 4b f1 51 3e 48 42 50 62 f9 10 62 2b 33 fc 10 ec f2 43 4f 4c 4a 62 f9 00 63 f1 fc 10 ec f2 f9 00 68 62 2b 33 f1 41 42 40 4f 42 3e 50 42 50 62 3f 56 ec f2 f9 10 62 43 4f 4c 4a f1 51 45 42 62 4d 4c 46"
+      },
+      "0xe3": {
+        "addr": "$4c:5c7b",
+        "used_by_selector": false,
+        "text": "{name} collapses!",
+        "bytes": "f9 00 f1 40 4c 49 49 3e 4d 50 42 50 63 ec f0"
+      },
+      "0xe4": {
+        "addr": "$4c:5c8a",
+        "used_by_selector": false,
+        "text": "{name} is knocked out!",
+        "bytes": "f9 00 62 46 50 f1 48 4b 4c 40 48 42 41 62 4c 52 51 63 ec f0"
+      },
+      "0xe5": {
+        "addr": "$4c:5c9e",
+        "used_by_selector": false,
+        "text": "{name} is weak after the dance!",
+        "bytes": "f9 00 62 46 50 62 54 42 3e 48 f1 3e 43 51 42 4f 62 51 45 42 62 41 3e 4b 40 42 63 ec f0"
+      },
+      "0xe6": {
+        "addr": "$4c:5cbb",
+        "used_by_selector": false,
+        "text": "{name} disappears!",
+        "bytes": "f9 00 f1 41 46 50 3e 4d 4d 42 3e 4f 50 63 ec f0"
+      },
+      "0xe7": {
+        "addr": "$4c:5ccb",
+        "used_by_selector": false,
+        "text": "{name} is out of HP and faints!",
+        "bytes": "f9 00 62 46 50 62 4c 52 51 f1 4c 43 62 2b 33 62 3e 4b 41 62 43 3e 46 4b 51 50 63 ec f0"
+      },
+      "0xe8": {
+        "addr": "$4c:5ce8",
+        "used_by_selector": true,
+        "text": "{name} is finished!",
+        "bytes": "f9 00 62 46 50 f1 43 46 4b 46 50 45 42 41 63 ec f0"
+      },
+      "0xe9": {
+        "addr": "$4c:5cf9",
+        "used_by_selector": false,
+        "text": "{name} falls to pieces!",
+        "bytes": "f9 00 62 43 3e 49 49 50 f1 51 4c 62 4d 46 42 40 42 50 63 ec f0"
+      },
+      "0xea": {
+        "addr": "$4c:5d0e",
+        "used_by_selector": false,
+        "text": "{name} is out of HP and faints!",
+        "bytes": "f9 00 62 46 50 62 4c 52 51 f1 4c 43 62 2b 33 62 3e 4b 41 62 43 3e 46 4b 51 50 63 ec f0"
+      },
+      "0xeb": {
+        "addr": "$4c:5d2b",
+        "used_by_selector": false,
+        "text": "The {name} gang is wiped out![FA][F7]",
+        "bytes": "37 45 42 62 f9 00 62 44 3e 4b 44 f1 46 50 62 54 46 4d 42 41 62 4c 52 51 63 fa f7 f0"
+      },
+      "0xec": {
+        "addr": "$4c:5d47",
+        "used_by_selector": false,
+        "text": "[F6] knocks out {name}![FA][F7]",
+        "bytes": "f6 62 48 4b 4c 40 48 50 f1 4c 52 51 62 f9 00 63 fa f7 f0"
+      },
+      "0xed": {
+        "addr": "$4c:5d5a",
+        "used_by_selector": false,
+        "text": "[F6] beats the {name} gang![FA][F7]",
+        "bytes": "f6 62 3f 42 3e 51 50 62 51 45 42 f1 f9 00 62 44 3e 4b 44 63 fa f7 f0"
+      },
+      "0xee": {
+        "addr": "$4c:5d71",
+        "used_by_selector": false,
+        "text": "[F6] knocks out the enemy![FA][F7]",
+        "bytes": "f6 62 48 4b 4c 40 48 50 f1 4c 52 51 62 51 45 42 62 42 4b 42 4a 56 63 fa f7 f0"
+      },
+      "0xef": {
+        "addr": "$4c:5d8b",
+        "used_by_selector": false,
+        "text": "The {name} has fled![FA][F7]",
+        "bytes": "37 45 42 62 f9 00 62 45 3e 50 f1 43 49 42 41 63 fa f7 f0"
+      },
+      "0xf0": {
+        "addr": "$4c:5d9e",
+        "used_by_selector": false,
+        "text": "The {name} gang has fled![FA][F7]",
+        "bytes": "37 45 42 62 f9 00 62 44 3e 4b 44 f1 45 3e 50 62 43 49 42 41 63 fa f7 f0"
+      },
+      "0xf1": {
+        "addr": "$4c:5db6",
+        "used_by_selector": false,
+        "text": "All the monsters have fled![FA][F7]",
+        "bytes": "24 49 49 62 51 45 42 62 4a 4c 4b 50 51 42 4f 50 f1 45 3e 53 42 62 43 49 42 41 63 fa f7 f0"
+      },
+      "0xf2": {
+        "addr": "$4c:5dd4",
+        "used_by_selector": false,
+        "text": "Can't use this item in battle![FA][F7]",
+        "bytes": "26 3e 4b 67 62 52 50 42 62 51 45 46 50 f1 46 51 42 4a 62 46 4b 62 3f 3e 51 51 49 42 63 fa f7 f0"
+      },
+      "0xf3": {
+        "addr": "$4c:5df4",
+        "used_by_selector": false,
+        "text": "But there are no items that can be[FA][F7]used in battle! [FA][F7]",
+        "bytes": "25 52 51 62 51 45 42 4f 42 62 3e 4f 42 62 4b 4c f1 46 51 42 4a 50 62 51 45 3e 51 62 40 3e 4b 62 3f 42 fa f7 f2 52 50 42 41 62 46 4b 62 3f 3e 51 51 49 42 63 f1 fa f7 f0"
+      },
+      "0xf4": {
+        "addr": "$4c:5e2c",
+        "used_by_selector": false,
+        "text": "Can't use items in this battle![FA][F7]",
+        "bytes": "26 3e 4b 67 62 52 50 42 62 46 51 42 4a 50 f1 46 4b 62 51 45 46 50 62 3f 3e 51 51 49 42 63 fa f7 f0"
+      },
+      "0xf5": {
+        "addr": "$4c:5e4d",
+        "used_by_selector": false,
+        "text": "Can't run from this battle![FA][F7]",
+        "bytes": "26 3e 4b 67 62 4f 52 4b 62 43 4f 4c 4a f1 51 45 46 50 62 3f 3e 51 51 49 42 63 fa f7 f0"
+      },
+      "0xf6": {
+        "addr": "$4c:5e6a",
+        "used_by_selector": false,
+        "text": "{mon}Waiting for {name} to choose a move!",
+        "bytes": "ed 3a 3e 46 51 46 4b 44 62 43 4c 4f 62 f9 00 f1 51 4c 62 40 45 4c 4c 50 42 62 3e 62 4a 4c 53 42 63 ec f0"
+      },
+      "0xf7": {
+        "addr": "$4c:5e8d",
+        "used_by_selector": false,
+        "text": "{name} casts {num}!{name}<slime>But not enough MP! ",
+        "bytes": "f9 00 62 40 3e 50 51 50 f1 f9 10 63 fc 10 ec f2 25 52 51 62 4b 4c 51 62 42 4b 4c 52 44 45 62 30 33 63 f1 ec f0"
+      },
+      "0xf8": {
+        "addr": "$4c:5eb2",
+        "used_by_selector": false,
+        "text": "{name} spits {num}!{name}<slime>But not enough MP! ",
+        "bytes": "f9 00 62 50 4d 46 51 50 f1 f9 10 63 fc 10 ec f2 25 52 51 62 4b 4c 51 62 42 4b 4c 52 44 45 62 30 33 63 f1 ec f0"
+      },
+      "0xf9": {
+        "addr": "$4c:5ed7",
+        "used_by_selector": false,
+        "text": "{name} dances {num}!{name}<slime>But not enough MP! ",
+        "bytes": "f9 00 62 41 3e 4b 40 42 50 f1 f9 10 63 fc 10 ec f2 25 52 51 62 4b 4c 51 62 42 4b 4c 52 44 45 62 30 33 63 f1 ec f0"
+      },
+      "0xfa": {
+        "addr": "$4c:5efd",
+        "used_by_selector": false,
+        "text": "But cannot use {name}![FA][F7]",
+        "bytes": "25 52 51 62 40 3e 4b 4b 4c 51 62 52 50 42 f1 f9 00 63 fa f7 f0"
+      },
+      "0xfb": {
+        "addr": "$4c:5f12",
+        "used_by_selector": false,
+        "text": "But cannot use this skill in this[FA][F7]battle! [FA][F7]",
+        "bytes": "25 52 51 62 40 3e 4b 4b 4c 51 62 52 50 42 f1 51 45 46 50 62 50 48 46 49 49 62 46 4b 62 51 45 46 50 fa f7 f2 3f 3e 51 51 49 42 63 f1 fa f7 f0"
+      },
+      "0xfc": {
+        "addr": "$4c:5f41",
+        "used_by_selector": false,
+        "text": "Cannot give a command in this[FA][F7]battle! [FA][F7]",
+        "bytes": "26 3e 4b 4b 4c 51 62 44 46 53 42 62 3e f1 40 4c 4a 4a 3e 4b 41 62 46 4b 62 51 45 46 50 fa f7 f2 3f 3e 51 51 49 42 63 f1 fa f7 f0"
+      },
+      "0xfe": {
+        "addr": "$4c:5f6d",
+        "used_by_selector": false,
+        "text": "{mon}{name} gives {num} to{name}<material>{32}! ",
+        "bytes": "ed f9 00 62 44 46 53 42 50 f1 f9 10 62 51 4c fc 18 ec f2 f9 20 63 f1 ec f0"
+      },
+      "0xff": {
+        "addr": "$4c:5f86",
+        "used_by_selector": false,
+        "text": "{name} gives {num} to the{name}<material>{32} gang! ",
+        "bytes": "f9 00 62 44 46 53 42 50 f1 f9 10 62 51 4c 62 51 45 42 fc 18 ec f2 f9 20 62 44 3e 4b 44 63 f1 ec f0"
+      }
+    }
+  },
+  "blaze_decoded": {
+    "skill": "Blaze (id 0)",
+    "handler": "$52:$41CD",
+    "setter": "$52:$54E7 (SetHLBattle_54e7) -> $DD6F=$A8, $DD70/71=$B882",
+    "selector": "0xb882 = (hit id $82, miss id $b8)",
+    "hit": {
+      "id": "0x82",
+      "addr": "$4c:529f",
+      "text": "{mon}{name} takes {num} damage pts!",
+      "bytes": "ed f9 00 62 51 3e 48 42 50 f1 f9 10 62 41 3e 4a 3e 44 42 62 4d 51 50 63 ec f0"
+    },
+    "miss": {
+      "id": "0xb8",
+      "addr": "$4c:5871",
+      "text": "Has no effect on {name}!",
+      "bytes": "2b 3e 50 62 4b 4c 62 42 43 43 42 40 51 f1 4c 4b 62 f9 00 63 ec f0"
+    },
+    "visual_anim": "bank $5f entry 6 ($5f:$52F0) dispatch by skill id 0 -> $5f:$53A4",
+    "sound": "bank $55 entry 1 ($55:$4026) -> per-skill SFX table $55:$4070"
+  },
+  "skills": [
+    {
+      "id": 0,
+      "name": "Blaze",
+      "kind": "skill",
+      "handler": "$41CD",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 1,
+      "name": "Blazemore",
+      "kind": "skill",
+      "handler": "$41CD",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 2,
+      "name": "Blazemost",
+      "kind": "skill",
+      "handler": "$41CD",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 3,
+      "name": "Firebal",
+      "kind": "skill",
+      "handler": "$41D4",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 4,
+      "name": "Firebane",
+      "kind": "skill",
+      "handler": "$41D4",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 5,
+      "name": "Firebolt",
+      "kind": "skill",
+      "handler": "$41D4",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 6,
+      "name": "Bang",
+      "kind": "skill",
+      "handler": "$41DB",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 7,
+      "name": "Boom",
+      "kind": "skill",
+      "handler": "$41DB",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 8,
+      "name": "Explodet",
+      "kind": "skill",
+      "handler": "$41DB",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 9,
+      "name": "Infernos",
+      "kind": "skill",
+      "handler": "$41E2",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 10,
+      "name": "Infermore",
+      "kind": "skill",
+      "handler": "$41E2",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 11,
+      "name": "Infermost",
+      "kind": "skill",
+      "handler": "$41E2",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 12,
+      "name": "IceBolt",
+      "kind": "skill",
+      "handler": "$41E9",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 13,
+      "name": "SnowStorm",
+      "kind": "skill",
+      "handler": "$41E9",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 14,
+      "name": "Blizzard",
+      "kind": "skill",
+      "handler": "$41E9",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 15,
+      "name": "Bolt",
+      "kind": "skill",
+      "handler": "$41F0",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 16,
+      "name": "Zap",
+      "kind": "skill",
+      "handler": "$41F0",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 17,
+      "name": "Thordain",
+      "kind": "skill",
+      "handler": "$41F0",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 18,
+      "name": "Beat",
+      "kind": "skill",
+      "handler": "$41F7",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb8e8",
+      "hit_msg_id": "0xe8",
+      "hit_msg": "{name} is finished!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 19,
+      "name": "Defeat",
+      "kind": "skill",
+      "handler": "$41F7",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb8e8",
+      "hit_msg_id": "0xe8",
+      "hit_msg": "{name} is finished!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 20,
+      "name": "Sacrifice",
+      "kind": "skill",
+      "handler": "$422B",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 21,
+      "name": "Sleep",
+      "kind": "skill",
+      "handler": "$4235",
+      "setter": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xbccc",
+      "hit_msg_id": "0xcc",
+      "hit_msg": "{name} is sent to sleep!",
+      "miss_msg_id": "0xbc",
+      "miss_msg": "{name} doesn't fall asleep!"
+    },
+    {
+      "id": 22,
+      "name": "SleepAll",
+      "kind": "skill",
+      "handler": "$4235",
+      "setter": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xbccc",
+      "hit_msg_id": "0xcc",
+      "hit_msg": "{name} is sent to sleep!",
+      "miss_msg_id": "0xbc",
+      "miss_msg": "{name} doesn't fall asleep!"
+    },
+    {
+      "id": 23,
+      "name": "StopSpell",
+      "kind": "skill",
+      "handler": "$427C",
+      "setter": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb888",
+      "hit_msg_id": "0x88",
+      "hit_msg": "{name}'s spells are all suspended!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 24,
+      "name": "Surround",
+      "kind": "skill",
+      "handler": "$42AA",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "message",
+      "selector": "0xb898",
+      "hit_msg_id": "0x98",
+      "hit_msg": "An illusion engulfs{name}<slime>{name}! ",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 25,
+      "name": "PanicAll",
+      "kind": "skill",
+      "handler": "$42D8",
+      "setter": "BattleFunc_5475",
+      "dd6f": "0x84",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 26,
+      "name": "RobMagic",
+      "kind": "skill",
+      "handler": "$4308",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb88a",
+      "hit_msg_id": "0x8a",
+      "hit_msg": "{name}'s MP is drained by {num}!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 27,
+      "name": "TakeMagic",
+      "kind": "skill",
+      "handler": "$4330",
+      "setter": "LoadBattle_54a1",
+      "dd6f": "0xd0",
+      "descriptor_kind": "param",
+      "selector": null
+    },
+    {
+      "id": 28,
+      "name": "Sap",
+      "kind": "skill",
+      "handler": "$434A",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb886",
+      "hit_msg_id": "0x86",
+      "hit_msg": "{mon}{name} loses {num} defense!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 29,
+      "name": "Defence",
+      "kind": "skill",
+      "handler": "$434A",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb886",
+      "hit_msg_id": "0x86",
+      "hit_msg": "{mon}{name} loses {num} defense!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 30,
+      "name": "Upper",
+      "kind": "skill",
+      "handler": "$436D",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 31,
+      "name": "Increase",
+      "kind": "skill",
+      "handler": "$436D",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 32,
+      "name": "Slow",
+      "kind": "skill",
+      "handler": "$4385",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb895",
+      "hit_msg_id": "0x95",
+      "hit_msg": "{name}'s speed goes down by{name}<slime>{num}! ",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 33,
+      "name": "SlowAll",
+      "kind": "skill",
+      "handler": "$4385",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb895",
+      "hit_msg_id": "0x95",
+      "hit_msg": "{name}'s speed goes down by{name}<slime>{num}! ",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 34,
+      "name": "Speed",
+      "kind": "skill",
+      "handler": "$43A8",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 35,
+      "name": "SpeedUp",
+      "kind": "skill",
+      "handler": "$43A8",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 36,
+      "name": "Barrier",
+      "kind": "skill",
+      "handler": "$43C0",
+      "setter": "BattleFunc_5481",
+      "dd6f": "0x93",
+      "descriptor_kind": "param",
+      "selector": null
+    },
+    {
+      "id": 37,
+      "name": "TwinHits",
+      "kind": "skill",
+      "handler": "$43FB",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 38,
+      "name": "MagicWall",
+      "kind": "skill",
+      "handler": "$4415",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 39,
+      "name": "MagicBack",
+      "kind": "skill",
+      "handler": "$4434",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 40,
+      "name": "Bounce",
+      "kind": "skill",
+      "handler": "$4434",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 41,
+      "name": "Transform",
+      "kind": "skill",
+      "handler": "$446C",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 42,
+      "name": "Ironize",
+      "kind": "skill",
+      "handler": "$447F",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 43,
+      "name": "Heal",
+      "kind": "skill",
+      "handler": "$44C4",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 44,
+      "name": "HealMore",
+      "kind": "skill",
+      "handler": "$44C4",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 45,
+      "name": "HealAll",
+      "kind": "skill",
+      "handler": "$44C4",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 46,
+      "name": "HealUs",
+      "kind": "skill",
+      "handler": "$44C4",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 47,
+      "name": "HealUsAll",
+      "kind": "skill",
+      "handler": "$44C4",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 48,
+      "name": "Vivify",
+      "kind": "skill",
+      "handler": "$44F8",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 49,
+      "name": "Revive",
+      "kind": "skill",
+      "handler": "$44F8",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 50,
+      "name": "Farewell",
+      "kind": "skill",
+      "handler": "$457E",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 51,
+      "name": "Antidote",
+      "kind": "skill",
+      "handler": "$458F",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 52,
+      "name": "NumbOff",
+      "kind": "skill",
+      "handler": "$45A7",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 53,
+      "name": "DeChaos",
+      "kind": "skill",
+      "handler": "$45D8",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 54,
+      "name": "CurseOff",
+      "kind": "skill",
+      "handler": "$45FE",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 55,
+      "name": "StepGuard",
+      "kind": "skill",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 56,
+      "name": "MapMagic",
+      "kind": "skill",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 57,
+      "name": "Chance",
+      "kind": "skill",
+      "handler": "$4616",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "param",
+      "selector": null
+    },
+    {
+      "id": 58,
+      "name": "Attack",
+      "kind": "internal",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 59,
+      "name": "TwinSlash",
+      "kind": "skill",
+      "handler": "$462F",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 60,
+      "name": "Ramming",
+      "kind": "skill",
+      "handler": "$464C",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 61,
+      "name": "Beserker",
+      "kind": "skill",
+      "handler": "$4653",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 62,
+      "name": "Kamikaze",
+      "kind": "skill",
+      "handler": "$467C",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 63,
+      "name": "Massacre",
+      "kind": "skill",
+      "handler": "$4683",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 64,
+      "name": "EvilSlash",
+      "kind": "skill",
+      "handler": "$4683",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 65,
+      "name": "ChargeUP",
+      "kind": "skill",
+      "handler": "$46BE",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 66,
+      "name": "HighJump",
+      "kind": "skill",
+      "handler": "$46CF",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 67,
+      "name": "SuckAir",
+      "kind": "skill",
+      "handler": "$470F",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 68,
+      "name": "FireSlash",
+      "kind": "skill",
+      "handler": "$4720",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 69,
+      "name": "BoltSlash",
+      "kind": "skill",
+      "handler": "$472A",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 70,
+      "name": "VacuSlash",
+      "kind": "skill",
+      "handler": "$4734",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 71,
+      "name": "IceSlash",
+      "kind": "skill",
+      "handler": "$473E",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 72,
+      "name": "MetalCut",
+      "kind": "skill",
+      "handler": "$4748",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 73,
+      "name": "DrakSlash",
+      "kind": "skill",
+      "handler": "$4752",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 74,
+      "name": "BeastCut",
+      "kind": "skill",
+      "handler": "$475C",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 75,
+      "name": "BirdBlow",
+      "kind": "skill",
+      "handler": "$4766",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 76,
+      "name": "DevilCut",
+      "kind": "skill",
+      "handler": "$4770",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 77,
+      "name": "ZombieCut",
+      "kind": "skill",
+      "handler": "$477A",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 78,
+      "name": "CleanCut",
+      "kind": "skill",
+      "handler": "$4784",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 79,
+      "name": "MultiCut",
+      "kind": "skill",
+      "handler": "$478E",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 80,
+      "name": "BiAttack",
+      "kind": "skill",
+      "handler": "$4798",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 81,
+      "name": "QuadHits",
+      "kind": "skill",
+      "handler": "$4798",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 82,
+      "name": "CallHelp",
+      "kind": "skill",
+      "handler": "$480C",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 83,
+      "name": "YellHelp",
+      "kind": "skill",
+      "handler": "$480C",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 84,
+      "name": "Focus",
+      "kind": "skill",
+      "handler": "$4888",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 85,
+      "name": "SquallHit",
+      "kind": "skill",
+      "handler": "$4897",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 86,
+      "name": "PsycheUp",
+      "kind": "skill",
+      "handler": "$462F",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 87,
+      "name": "RainSlash",
+      "kind": "skill",
+      "handler": "$48B4",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 88,
+      "name": "WindBeast",
+      "kind": "skill",
+      "handler": "$4918",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 89,
+      "name": "Vacuum",
+      "kind": "skill",
+      "handler": "$4918",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 90,
+      "name": "Lightning",
+      "kind": "skill",
+      "handler": "$41F0",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 91,
+      "name": "RockThrow",
+      "kind": "skill",
+      "handler": "$492B",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 92,
+      "name": "FireAir",
+      "kind": "skill",
+      "handler": "$4932",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 93,
+      "name": "BlazeAir",
+      "kind": "skill",
+      "handler": "$4932",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 94,
+      "name": "Scorching",
+      "kind": "skill",
+      "handler": "$4932",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 95,
+      "name": "WhiteFire",
+      "kind": "skill",
+      "handler": "$4932",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 96,
+      "name": "FrigidAir",
+      "kind": "skill",
+      "handler": "$493C",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 97,
+      "name": "IceAir",
+      "kind": "skill",
+      "handler": "$493C",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 98,
+      "name": "IceStorm",
+      "kind": "skill",
+      "handler": "$493C",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 99,
+      "name": "WhiteAir",
+      "kind": "skill",
+      "handler": "$493C",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 100,
+      "name": "Hellblast",
+      "kind": "skill",
+      "handler": "$41F0",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 101,
+      "name": "BigBang",
+      "kind": "skill",
+      "handler": "$4946",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 102,
+      "name": "MegaMagic",
+      "kind": "skill",
+      "handler": "$494D",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 103,
+      "name": "PoisonHit",
+      "kind": "skill",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 104,
+      "name": "NapAttack",
+      "kind": "skill",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 105,
+      "name": "Paralyze",
+      "kind": "skill",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 106,
+      "name": "SleepAir",
+      "kind": "skill",
+      "handler": "$4235",
+      "setter": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xbccc",
+      "hit_msg_id": "0xcc",
+      "hit_msg": "{name} is sent to sleep!",
+      "miss_msg_id": "0xbc",
+      "miss_msg": "{name} doesn't fall asleep!"
+    },
+    {
+      "id": 107,
+      "name": "PalsyAir",
+      "kind": "skill",
+      "handler": "$4954",
+      "setter": "BattleFunc_5469",
+      "dd6f": "0x88",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 108,
+      "name": "PoisonGas",
+      "kind": "skill",
+      "handler": "$497B",
+      "setter": "BattleFunc_5469",
+      "dd6f": "0x88",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 109,
+      "name": "PoisonAir",
+      "kind": "skill",
+      "handler": "$497B",
+      "setter": "BattleFunc_5469",
+      "dd6f": "0x88",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 110,
+      "name": "PaniDance",
+      "kind": "skill",
+      "handler": "$42D8",
+      "setter": "BattleFunc_5475",
+      "dd6f": "0x84",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 111,
+      "name": "Curse",
+      "kind": "skill",
+      "handler": "$49D2",
+      "setter": "BattleFunc_5469",
+      "dd6f": "0x88",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 112,
+      "name": "Ahhh",
+      "kind": "skill",
+      "handler": "$4A00",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 113,
+      "name": "K.O.Dance",
+      "kind": "skill",
+      "handler": "$41F7",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb8e8",
+      "hit_msg_id": "0xe8",
+      "hit_msg": "{name} is finished!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 114,
+      "name": "SandStorm",
+      "kind": "skill",
+      "handler": "$4A22",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 115,
+      "name": "Radiant",
+      "kind": "skill",
+      "handler": "$4A22",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 116,
+      "name": "EerieLite",
+      "kind": "skill",
+      "handler": "$4A57",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 117,
+      "name": "OddDance",
+      "kind": "skill",
+      "handler": "$4A7B",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 118,
+      "name": "RobDance",
+      "kind": "skill",
+      "handler": "$4308",
+      "setter": "LoadBattle_54af",
+      "dd6f": "0x98",
+      "descriptor_kind": "message",
+      "selector": "0xb88a",
+      "hit_msg_id": "0x8a",
+      "hit_msg": "{name}'s MP is drained by {num}!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 119,
+      "name": "SideStep",
+      "kind": "skill",
+      "handler": "$4AA3",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 120,
+      "name": "LureDance",
+      "kind": "skill",
+      "handler": "$4AC5",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 121,
+      "name": "LushLicks",
+      "kind": "skill",
+      "handler": "$4AE7",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 122,
+      "name": "SickLick",
+      "kind": "skill",
+      "handler": "$4AE7",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 123,
+      "name": "LegSweep",
+      "kind": "skill",
+      "handler": "$4B34",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 124,
+      "name": "BigTrip",
+      "kind": "skill",
+      "handler": "$4B34",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 125,
+      "name": "WarCry",
+      "kind": "skill",
+      "handler": "$4B68",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 126,
+      "name": "Whistle",
+      "kind": "skill",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 127,
+      "name": "Imitate",
+      "kind": "skill",
+      "handler": "$4B92",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 128,
+      "name": "DeMagic",
+      "kind": "skill",
+      "handler": "$4BA1",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 129,
+      "name": "Surge",
+      "kind": "skill",
+      "handler": "$4BAB",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 130,
+      "name": "UltraDown",
+      "kind": "skill",
+      "handler": "$4BB6",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 131,
+      "name": "ThickFog",
+      "kind": "skill",
+      "handler": "$4BA1",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 132,
+      "name": "TatsuCall",
+      "kind": "skill",
+      "handler": "$4BD0",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 133,
+      "name": "DiagoCall",
+      "kind": "skill",
+      "handler": "$4BD0",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 134,
+      "name": "SamsiCall",
+      "kind": "skill",
+      "handler": "$4BD0",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 135,
+      "name": "BazooCall",
+      "kind": "skill",
+      "handler": "$4BD0",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 136,
+      "name": "Cover",
+      "kind": "skill",
+      "handler": "$4C31",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 137,
+      "name": "Guardian",
+      "kind": "skill",
+      "handler": "$4C31",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 138,
+      "name": "TailWind",
+      "kind": "skill",
+      "handler": "$4C3B",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 139,
+      "name": "StormWind",
+      "kind": "skill",
+      "handler": "$4C3B",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 140,
+      "name": "Dodge",
+      "kind": "skill",
+      "handler": "$4C72",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 141,
+      "name": "Defence",
+      "kind": "internal",
+      "handler": "$4C81",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 142,
+      "name": "StrongD",
+      "kind": "skill",
+      "handler": "$4C81",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 143,
+      "name": "SuckAll",
+      "kind": "skill",
+      "handler": "$4CA5",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 144,
+      "name": "BladeD",
+      "kind": "skill",
+      "handler": "$4C81",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 145,
+      "name": "DanceShut",
+      "kind": "skill",
+      "handler": "$4CDC",
+      "setter": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 146,
+      "name": "MouthShut",
+      "kind": "skill",
+      "handler": "$4D0A",
+      "setter": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 147,
+      "name": "Meditate",
+      "kind": "skill",
+      "handler": "$4D38",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 148,
+      "name": "Hustle",
+      "kind": "skill",
+      "handler": "$44C4",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 149,
+      "name": "LifeSong",
+      "kind": "skill",
+      "handler": "$4D92",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 150,
+      "name": "LifeDance",
+      "kind": "skill",
+      "handler": "$4DE9",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 151,
+      "name": "Run",
+      "kind": "internal",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 152,
+      "name": "Daze",
+      "kind": "internal",
+      "handler": "$4E0A",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 153,
+      "name": "HitAlly",
+      "kind": "internal",
+      "handler": "$4E8A",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 154,
+      "name": "HitEnemy",
+      "kind": "internal",
+      "handler": "$4EA4",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 155,
+      "name": "HitRandom",
+      "kind": "internal",
+      "handler": "$4EBE",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 156,
+      "name": "Scared",
+      "kind": "internal",
+      "handler": "$4EE3",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 157,
+      "name": "Dance",
+      "kind": "internal",
+      "handler": "$4EE3",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 158,
+      "name": "Trip",
+      "kind": "internal",
+      "handler": "$4ED8",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 159,
+      "name": "Paralyze",
+      "kind": "internal",
+      "handler": "$4EE7",
+      "setter": "LoadBattle_54a1",
+      "dd6f": "0xd0",
+      "descriptor_kind": "param",
+      "selector": null
+    },
+    {
+      "id": 160,
+      "name": "CANTMOVE",
+      "kind": "internal",
+      "handler": "$4EE7",
+      "setter": "LoadBattle_54a1",
+      "dd6f": "0xd0",
+      "descriptor_kind": "param",
+      "selector": null
+    },
+    {
+      "id": 161,
+      "name": "RUN",
+      "kind": "internal",
+      "handler": "$4E3A",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 162,
+      "name": "CALLHOROR",
+      "kind": "internal",
+      "handler": "$4EF9",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 163,
+      "name": "HealUsAll",
+      "kind": "internal",
+      "handler": "$4F2C",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 164,
+      "name": "Smashed",
+      "kind": "internal",
+      "handler": "$4EF9",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 165,
+      "name": "FILTHZONE",
+      "kind": "internal",
+      "handler": "$4BA1",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "none",
+      "selector": null
+    },
+    {
+      "id": 166,
+      "name": "ALLCHANGE",
+      "kind": "internal",
+      "handler": "$4F35",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 167,
+      "name": "BIGSLEEP",
+      "kind": "internal",
+      "handler": "$4F54",
+      "setter": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 168,
+      "name": "MP0",
+      "kind": "internal",
+      "handler": "$4F7F",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 169,
+      "name": "ECHO",
+      "kind": "internal",
+      "handler": "$4EE3",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 170,
+      "name": "CHGDRAGON",
+      "kind": "internal",
+      "handler": "$4E0E",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 171,
+      "name": "CALLEVIL",
+      "kind": "internal",
+      "handler": "$4FA1",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 172,
+      "name": "FREEZY",
+      "kind": "internal",
+      "handler": "$4FCC",
+      "setter": "LoadBattle_54d2",
+      "dd6f": "0x98",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 173,
+      "name": "ALLREVIVE",
+      "kind": "internal",
+      "handler": "$44F8",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 174,
+      "name": "RESTOREMP",
+      "kind": "internal",
+      "handler": "$4FFC",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 175,
+      "name": "METEOR",
+      "kind": "internal",
+      "handler": "$501F",
+      "setter": "LoadBattle_54f8",
+      "dd6f": "0xa0",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 176,
+      "name": "HERB",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 177,
+      "name": "HEALWATER",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 178,
+      "name": "SAGESTONE",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 179,
+      "name": "WARLDDEW",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 180,
+      "name": "POTION",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 181,
+      "name": "ELFWATER",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 182,
+      "name": "ANTIDOTE",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 183,
+      "name": "MOONHERB",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 184,
+      "name": "SKYBELL",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 185,
+      "name": "LAUREL",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 186,
+      "name": "AWAKESAND",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 187,
+      "name": "WARLDLEAF",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 188,
+      "name": "LIFEACORN",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 189,
+      "name": "MYSTICNUT",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 190,
+      "name": "PWRSEED",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 191,
+      "name": "DEFSEED",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 192,
+      "name": "AGILSEED",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 193,
+      "name": "INTSEED",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 194,
+      "name": "FEEDMEAT",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 195,
+      "name": "BEFFJERKY",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 196,
+      "name": "PORKCHOP",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 197,
+      "name": "BADMEAT",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 198,
+      "name": "SIRLOIN",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 199,
+      "name": "BOLTSTAFF",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 200,
+      "name": "STAFF",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 201,
+      "name": "BLOKSTAFF",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 202,
+      "name": "LAVASTAFF",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 203,
+      "name": "SNOWSTAFF",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 204,
+      "name": "FIRESTAFF",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 205,
+      "name": "WARPWING",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 206,
+      "name": "TINYMEDAL",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 207,
+      "name": "QuestBk",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 208,
+      "name": "HORRORBK",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 209,
+      "name": "BENICEBK",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 210,
+      "name": "CHEATERBK",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 211,
+      "name": "SMARTBK",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 212,
+      "name": "COMEDYBK",
+      "kind": "item_effect",
+      "handler": "$4625",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 213,
+      "name": "BeDragon",
+      "kind": "skill",
+      "handler": "$4E0E",
+      "setter": "SetSkillAnimB",
+      "dd6f": "0x90",
+      "descriptor_kind": "flag_aa",
+      "selector": null
+    },
+    {
+      "id": 214,
+      "name": "Smashlime",
+      "kind": "skill",
+      "handler": "$4E15",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 215,
+      "name": "Sheldodge",
+      "kind": "skill",
+      "handler": "$4E1F",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 216,
+      "name": "Branching",
+      "kind": "skill",
+      "handler": "$4E29",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb682",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb6",
+      "miss_msg": "Misses! {name}!{name}<slime>is unharmed! "
+    },
+    {
+      "id": 217,
+      "name": "GigaSlash",
+      "kind": "skill",
+      "handler": "$4E33",
+      "setter": "SetHLBattle_54e7",
+      "dd6f": "0xa8",
+      "descriptor_kind": "message",
+      "selector": "0xb882",
+      "hit_msg_id": "0x82",
+      "hit_msg": "{mon}{name} takes {num} damage pts!",
+      "miss_msg_id": "0xb8",
+      "miss_msg": "Has no effect on {name}!"
+    },
+    {
+      "id": 218,
+      "name": "LIFE",
+      "kind": "internal",
+      "handler": "$42D8",
+      "setter": "BattleFunc_5475",
+      "dd6f": "0x84",
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 219,
+      "name": "RUN",
+      "kind": "skill",
+      "handler": "$4E3A",
+      "setter": "SetSkillAnimFlag",
+      "dd6f": "0x40",
+      "descriptor_kind": "flag_only",
+      "selector": null
+    },
+    {
+      "id": 220,
+      "name": "IRONIZE",
+      "kind": "internal",
+      "handler": "$4479",
+      "setter": null,
+      "dd6f": null,
+      "descriptor_kind": "ram_ptr",
+      "selector": null
+    },
+    {
+      "id": 221,
+      "name": "Ahhh",
+      "kind": "internal",
+      "handler": "$4E6D",
+      "setter": "SetHLBattle_54ea",
+      "dd6f": "0xa8",
+      "descriptor_kind": "param",
+      "selector": null
+    }
+  ]
+}

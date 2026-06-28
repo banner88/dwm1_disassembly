@@ -920,7 +920,7 @@ Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, **222 entri
 `SkillMPCostTable $07:$570C` (u16, 999=ALL) and `SkillLearnReqTable $06:$50E0` (18B/skill).
 The editor data side is captured in `extracted/skill_records.json`; the **presentation**
 layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SKILL_SYSTEM.md`
-§7–§10). Remaining RE: the effect-script bytecode (S2c) and the full AI weighted-pick (S3).
+§7–§10). Remaining RE: the animation renderer (S2c-anim) and the full AI weighted-pick (S3). (S2c message format done + validated 2026-06-28.)
 - [x] **S1 — Skill data foundation + round-trip keystone (S44).** *Reshaped on audit:* the
       bank `$52` function table was already re-sectioned, so the real work was the data tables.
       Decoded + FAQ-validated `SkillMPCostTable` ($07:$570C) and `SkillLearnReqTable`
@@ -948,10 +948,23 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         block **re-sectioned to `db`** in `bank_054.asm`. Decoded the **item-effect/meat** system
         (`$52:$4625`, meat 194–198 → `$58:$591E`) and the **animation dispatch** (`$52:$5460–$54f8`
         → `$dd6f`/`$dd70` → bank `$4c`/`$55`). MD5 unchanged, integrity PASS. `BATTLE_SKILL_SYSTEM.md` §7–§10.
-  - [ ] **S2c — Effect-script bytecode / animation authoring (RE, discovery).** Reverse the
-        bank `$4c` effect-script interpreter + the `$b000`-region backing so a custom skill gets
-        its OWN animation. *Accept:* one effect script decoded to bytes; format documented.
-        (Reuse of an existing anim already works by repointing the handler's setter.)
+  - [x] **S2c — Effect-script MESSAGE format (RE, discovery). [2026-06-28]**
+        *Reframed on RE:* bank `$4c` is **not** a novel effect-bytecode interpreter — it is the
+        shared text VM, and the `$dd70/71` "pointer" is a **packed pair of message ids** (low=hit,
+        high=miss) resolved via the mode-0 two-level table at `$4c:$4019`. *Accept met +
+        validated:* Blaze `$b882` decoded to bytes (`$4c:529f` + `$4c:5871`); **67/67**
+        statically-resolved skills' messages cross-checked against the categorized FAQ
+        (`extracted/skill_faq.json`), 0 contradictions. Tool
+        `tools/decode_effect_messages.py` (`--selftest`, `--validate`) →
+        `extracted/effect_messages.json` (222 skills, 203 message ids). Format in
+        BATTLE_SKILL_SYSTEM.md §9.
+  - [ ] **S2c-anim — Animation FORMAT / authoring (RE, discovery). [OPEN — located, not reversed]**
+        The visual is keyed by **skill id**, dispatch fully mapped: bank `$5f` e6 (`$52F0`) →
+        anim-index tables `$5f:$58dd/$59c3/$5aa9` → routine table `$5f:$58bd` (8 routines) → the
+        routine sets `$dd68` (animation-type). **Not reversed:** the renderer that consumes
+        `$dd68` (frame/OAM/tile/palette engine) + the animation data format. *Reuse* of an
+        existing animation on a new id = a table edit; *authoring a novel animation* needs this
+        item. Sound is the analogous id-keyed table (`$55:$4070`). See §9 "Visual + sound".
   - [ ] **S2d — Proper per-id custom-skill records (the real authoring; replaces the alias
         hack).** Give new ids ($DE+) their OWN record + handler + name instead of aliasing to
         Blaze, so heal/Tame/Anchor-shaped skills become expressible; fix the single-caster +
@@ -982,7 +995,7 @@ e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block a
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
 
-**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → **S2c or S2d** (next) / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
+**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → S2c-msg ✅ → **S2d** (next) / S2c-anim / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
 slotting the text roll-out into spare sessions. Cheap high-confidence wins early; fire the
 two RE discovery sessions (M1, S3) before their authoring items depend on them.
 

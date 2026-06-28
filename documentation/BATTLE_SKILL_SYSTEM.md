@@ -39,8 +39,9 @@ either round-tripped byte-identical or FAQ-validated and are safe to rely on.
   one handler `$41CD`); the record carries the per-skill **parameters**.
 - The 37 **item_effect** skills (ids 176–212) are the in-battle usable items;
   the **meat** items (194–198) special-case to a recruitment handler (§8).
-- Animation/effect **dispatch**: descriptor-setters set `$dd6f`+`$dd70`; the
-  effect-script pointer flows to bank `$4c`/`$55` (§9).
+- Animation/effect **dispatch**: descriptor-setters set `$dd6f`+`$dd70/71`; the
+  selector packs **two message ids** (low=hit, high=miss) resolved by the bank-`$4c`
+  text VM, while the **visual+sound are keyed by skill id** in `$5f`/`$55` (§9, S2c).
 
 **VERIFIED in-game (S45, v9, user-confirmed):** $DE "Scorch" casts as Blaze
 (~14 dmg, Blaze anim/msg, targets enemy); $DF "Smite" same but fixed 80 dmg;
@@ -54,8 +55,10 @@ the single-custom-caster case.
 - Record fields **+7/+8/+9** are flag bitfields (only individual bits observed);
   **+10** is a class flag (LOW). `$dd6f` bit meanings beyond bit7 (=has-effect)
   are partially observed, not exhaustively decoded.
-- The effect-script **bytecode format** and its `$b000`-region backing are NOT
-  reversed (the remaining animation-authoring sub-item; §9).
+- The effect-script **format** and its `$b000` backing are now **RESOLVED (S2c)**:
+  the selector packs two message ids resolved via the mode-0 table at `$4c:$4019`;
+  the visual/sound are id-keyed in `$5f`/`$55` (§9). `$dd6f` bits beyond bit7 are
+  decoded in §9's consumer trace.
 - `SaveBtlFX_43ff` bucket boundaries; `$c8dd`==`wBattleAttackerIdx`; `sm83dis.py`
   coverage — as before.
 
@@ -161,7 +164,7 @@ Three hooks, all byte-neutral, plus one new bank:
 | Attacker / target combatant index | `$db88` / `$db89` |
 | Computed damage number | `$db56`/`$db57` |
 | Damage descriptor bitfield (bit5 = apply $db56/57) | `$dd6f` |
-| Animation pointer (Blaze = `$b882`) | `$dd70`/`$dd71` |
+| Effect selector (Blaze `$b882` = hit id $82 / miss id $b8) | `$dd70`/`$dd71` |
 | Skill function table (222 entries) | `$52:$4011` |
 | Effect dispatch site (reads `$db8a`) | `$52:$6CC7` (hook at `$6CD5`) |
 | SkillBlaze handler | `$52:$41CD` |
@@ -292,33 +295,117 @@ handler `$4625` (no new code). Novel outcomes (meat/recruitment, granting an
 inventory item) → a custom handler (free bank, crib `NovelEffect52`) that calls
 the relevant routine (`$58:$591E`-style recruitment, or an inventory-grant).
 
-## 9. Animation / effect dispatch (#2)  [dispatch PROVEN; bytecode format OPEN]
+## 9. Skill effect MESSAGES (resolved) + animation dispatch (located)  [S2c, 2026-06-28]
+
+> **Scope of what S2c proved — read this so the status is not over-read.**
+> **RESOLVED & validated:** the effect-*message* format. The descriptor selector is a
+> packed `(hit msg id, miss msg id)` pair resolved through the bank-`$4c` text VM; one
+> effect decoded to bytes (Blaze) and **67/67** statically-resolved skills (across the
+> damage, death, sleep, sap, MP-steal, slow, stop-spell and surround classes, plus the
+> `$b682` physical-attack default) cross-checked against the categorized skill FAQ
+> (`extracted/skill_faq.json`), **0 contradictions**. **LOCATED but NOT reversed:** the on-screen *animation* format. The full
+> dispatch is mapped (skill id → `$5f:$58dd/$59c3/$5aa9` anim-index → `$5f:$58bd` routine
+> → the routine sets `$dd68` = animation-type) — see "Visual + sound" below — but the
+> low-level renderer that *consumes* `$dd68` (the frame/OAM/tile/palette engine) and the
+> animation *data* format are **not** decoded. So **reusing** an existing animation on a
+> new skill id is a table edit (set its `$58dd/$59c3/$5aa9` slots); **authoring a novel
+> animation** still requires reversing the `$dd68` renderer (tracked as an open item).
 
 **Animation is chosen by the HANDLER, not the record.** Each handler ends by
-calling one of ~12 **descriptor-setters** (`$52:$5460–$54f8`, annotated) that set:
-- `$dd6f` — effect DESCRIPTOR bitfield. **bit7 = has-effect** (the consumer's
-  gate). Other bits select mode: Blaze=`$a8` (bit7+5+3); family is
-  `$80/$84/$88/$90/$93/$98/$a0/$a8/$d0`, plus `$40`=flag-only (no pointer).
-- `$dd70/71` — effect-SCRIPT pointer. Blaze's setter `SetHLBattle_54e7` hardcodes
-  `$b882`.
+calling one of ~12 **descriptor-setters** (`$52:$5460–$54f8`, annotated) that set a
+16-bit **effect descriptor**:
+- `$dd6f` — effect-class bitfield. Blaze=`$a8`; family is
+  `$80/$84/$88/$90/$93/$98/$a0/$a8/$d0`, plus `$40`=flag-only.
+- `$dd70` = **low** byte of the selector; `$dd71` = **high** byte. Blaze's
+  `SetHLBattle_54e7` hardcodes `$b882`.
 
-**Flow / consumer** (`bank_053` `jr_053_5a6f`): reads `$dd6f`; if bit7 set, hands
-`$dd70/71` → `$c822/$c823` to **bank `$4c`** (the effect/message script engine,
-`CallTextEngine`) and **bank `$55` entry 1** (sprite-animation trigger). So battle
-effects are interpreted **bytecode scripts**, not raw frames. `$dd6f` bit5 selects
-the `$db56` alt pointer; bits 3/4 gate sub-effects.
+### The selector is NOT a pointer — it packs two MESSAGE ids  ⚠️ corrects prior model
+The earlier note ("`$dd70/71` is an effect-SCRIPT pointer into a `$b000` region; the
+bank-`$4c` interpreter is novel bytecode, animation-authoring") was **wrong**. The
+truth, byte-verified end to end:
 
-**Pointer space:** effect-script pointers live in `$b6xx–$bcxx`. `$b682` is the
-shared default (28 handlers); generic spell-damage uses `$b882`; a few skills have
-unique pointers (`$b886/$b888/$b88a/$b88e/$b895/$b898/$b8e8/$bb84/$bccc`).
-(`$b0b0/$b2b2/$b5b5` are `a:a` flag-values from `ApplySkillDamage`, not pointers.)
+- The selector value `$b882` is **`(low=$82, high=$b8)` = two 8-bit message ids**:
+  **low = the "effect happens" message** (damage / status / heal), **high = the
+  "effect fails" message** (miss / resisted / no-effect).
+- Bank `$4c` is the shared **text/message VM**, not a bespoke effect interpreter.
+- The on-screen **visual animation and the sound are SEPARATE systems keyed by
+  skill id** (`$db8a`), *not* by this selector (see "Visual + sound" below). That is
+  why Blaze/Firebal/IceBolt all share selector `$b882` yet look different.
 
-**For goal #2 (custom animations):** to REUSE an existing animation on a custom
-skill, point its handler at a different `$bXXX` setter — low-risk, no new data,
-and it frees a custom skill from inheriting Blaze's `$b882`. **OPEN sub-item:** the
-effect-script **bytecode format** and its `$b000`-region backing are not reversed
-(`$dd70` is passed as a handle to bank `$4c`, not dereferenced inline). Reversing
-the bank `$4c` effect interpreter = "animation authoring", the next discovery item.
+### Flow / consumer (`bank_053` `jr_053_5a6f`, a frame-stepped state machine)
+Reads `$dd6f`. For the common **bit6-clear** path (Blaze `$a8` etc.): bit5 recomputes
+bit4 from the damage `$db56/57`; when the hit lands it plays sound (`$55` entry 1) +
+visual (`$5f` entry 6), then renders the **low-byte** message; on a miss it renders
+the **high-byte** message. Each render does `$c822 = mode (0, or 1 if `$dd6f` bit0/1)`,
+`$c823 = the chosen id byte`, then `ld hl,$4c00 / rst $10` → **bank `$4c` entry 0**
+(`LoadB4c_42d1`). (A separate **bit6-set** path — `$d0`/`$c0` descriptors — instead
+hands the raw `(mode=low, high=id)` straight through.)
+
+### Message resolution (two-level table — the "`$b000` backing")
+`LoadB4c_42d1` does `ld de,$4009 / call CallTextEngine`. The shared VM
+(`CallTextEngine` `$00:$05B6` → `SaveBankAndSwitch` `$00:$092F`) resolves the string:
+```
+subtable = [ $4c : $4009 + mode*2 ]      ; mode 0 -> $4019  (the battle-MESSAGE table)
+string   = [ $4c : subtable + id*2 ]     ; id = the chosen selector byte
+```
+`$4009` is just dispatch entry 4, so the "modes" are dispatch entries 4,5,6…; **mode 0
+= `$4019` is the battle-message pointer table** (8-bit id → string ptr, 203 live ids).
+
+### Effect-script format = standard text-VM strings
+A resolved "effect script" is a normal `$F0`-terminated text section: charmap glyphs,
+DTE pairs ($65–$7F), and control codes. Battle-relevant codes (handlers in bank `$56`):
+`$F9 <slot>` insert variable (`$00`=target name, `$10`=number), `$FC` name-with-icon,
+`$ED`/`$EC` monster/name, `$F1` reposition (wrap), `$F2` clear+reposition, `$F0` end.
+High ids are **mid-string entry points** into shared runs (a real DWM feature).
+
+### Worked example (accept test) — Blaze `$b882` decoded to bytes
+```
+hit  id $82 → $4c:529f  "{mon}{name} takes {num} damage pts!"
+     ED F9 00 62 51 3E 48 42 50 F1 F9 10 62 41 3E 4A 3E 44 42 62 4D 51 50 63 EC F0
+miss id $b8 → $4c:5871  "Has no effect on {name}!"
+     2B 3E 50 62 4B 4C 62 42 43 43 42 40 51 F1 4C 4B 62 F9 00 63 EC F0
+```
+Other verified pairs: default `$b682` (hit "takes…", miss "Misses!"), heal `$bb84`
+("wound heals!" / "But nothing happens!"), sleep `$bccc` ("sent to sleep!" /
+"doesn't fall asleep!"), death `$b8e8` ("is finished!"). `$b0b0/$b2b2/$b5b5/$9191…`
+(low==high) are **`a:a` flag-params, not selectors**; `$dbXX/$dcXX` loads are
+battle-RAM pointers — the decoder classifies these and never renders them as text.
+
+### Visual + sound (the real "animation", keyed by skill id — NOT the selector)
+- **Visual dispatch (mapped)**: bank `$5f` entry 6 (`$5f:$52F0`) dispatches on skill id →
+  an animation gate (Blaze id 0 → `$5f:$53A4`) → per-skill anim-index tables
+  (`$5f:$58dd/$59c3/$5aa9`, indexed by id) → routine-pointer table `$5f:$58bd` (8 entries:
+  `$5591/$559b/$55a7/$55b1/$55cd/$55d6/$55df/$55e8`). Blaze's anim-index is `0` → routine
+  `$5f:$5591`, which sets `$dd68 = $01` (an **animation-type** byte) and falls to a shared tail.
+- **Renderer (NOT reversed)**: whatever consumes `$dd68` to actually draw frames
+  (OAM/tile/palette sequencing + the animation graphics source) was not traced. That is the
+  remaining work for *authoring* a brand-new animation; the indices above only let you
+  **reuse** one of the existing 8 routines.
+- **Sound**: bank `$55` entry 1 (`$55:$4026` → `LoadB55_404a`) → per-skill SFX-id table
+  at `$55:$4070`, indexed by id → `PlaySoundEffect`.
+
+**To give a custom skill its presentation:** point its handler's descriptor-setter at the
+`$bXXX` pair whose (hit, miss) messages you want **(fully actionable now)**, and set its
+skill-id slots in the `$5f:$58dd/$59c3/$5aa9` anim-index + `$55:$4070` SFX tables to **reuse**
+an existing animation/sound (id-indexed, so a net-new high id needs entries added — the usual
+"high-table + forked loader"). A *novel* animation additionally needs the `$dd68` renderer
+reversed (open). Selector, visual, and sound are independent.
+
+**Validation (S2c):** Blaze decoded to bytes (above); `--validate` cross-checks the
+decoded messages against the categorized FAQ — **67/67** statically-resolved skills match
+(damage→"takes N damage"; Beat/Defeat/K.O.Dance→"is finished"; Sleep family→"sent to sleep";
+Sap/Defence→"loses N defense"; RobMagic/RobDance→"MP drained"; Slow/SlowAll→"speed goes down";
+StopSpell→"spells suspended"; Surround→"illusion engulfs"). The `$b682` default (71 entries =
+28 physical-attack skills + 37 item-effects + 6 internal commands) is correct "takes N
+damage / Misses!" for the physical attacks; for item-effects/internals it is the setter
+fallback and the shown text comes from the item/command flow (§8), so it is **not** claimed
+as their on-screen message.
+
+**Tool / data:** `tools/decode_effect_messages.py` — `--selftest` (ROM anchors),
+`--validate` (FAQ cross-check, 67/67), and default run writes
+`extracted/effect_messages.json` (222 skills, 203 message ids, Blaze decoded to bytes,
+descriptor-kind classification). Ground truth: `extracted/skill_faq.json` (built by
+`tools/build_skill_faq.py`; effect/class/learn/prereq per skill — also feeds S2d).
 
 ## 10. Updated address quick-reference (additions to §4)
 
@@ -333,8 +420,9 @@ the bank `$4c` effect interpreter = "animation authoring", the next discovery it
 | Item-effect handler (ids 176–212) | `$52:$4625` |
 | Meat branch (ids $c2–$c6) → recruitment | `$52:$4014` → `$58:$591E` |
 | Descriptor-setter family | `$52:$5460–$54f8` |
-| Effect descriptor / script pointer | `$dd6f` / `$dd70`–`$dd71` |
-| Effect-script / sprite engines | bank `$4c` (entry 0) + bank `$55` (entry 1) |
+| Effect descriptor / message-id selector | `$dd6f` / `$dd70`–`$dd71` |
+| Message VM / visual-anim / sound | bank `$4c` e0 (msg) + `$5f` e6 (`$52F0`, visual) + `$55` e1 (sound) |
+| Battle-message table (mode 0) | `$4c:$4019` (8-bit id → string) |
 | FX router (id-range split) | `SaveBtlFX_43ff` `$58:$43FF` |
 
 **Tools:** `tools/gen_skill_records.py` (decodes records → JSON, 7 ROM sources

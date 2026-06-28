@@ -4611,12 +4611,16 @@ jr_053_5a44:
 
 Jump_053_5a6f:
 jr_053_5a6f:
-; Skill effect/animation player. Reads the descriptor $dd6f (set by the bank $52
-; descriptor-setter family) and dispatches the effect: bit6 selects the play
-; path; bit7=0 means no effect (ret). When playing, the effect-script pointer
-; $dd70/71 is handed to $c822/$c823 and run via bank $4c (effect/message engine)
-; and bank $55 entry 1 (sprite anim). bit5 -> use the $db56 alt pointer; bit3/4
-; gate sub-effects. See BATTLE_SKILL_SYSTEM.md (skill animation).
+; Skill effect player (frame-stepped state machine; counters $d9ec/$d9ed/$d9ee,
+; gate $da80). Reads the descriptor $dd6f (set by the bank $52 setter family) and
+; presents the effect. The "selector" $dd70/71 is a packed pair of MESSAGE ids
+; (low=hit msg, high=miss msg) -- NOT a pointer (S2c). bit6 CLEAR (Blaze $a8, common):
+; bit5 recomputes bit4 from damage $db56/57; on a hit it plays sound (bank $55 e1) +
+; visual (bank $5f e6) keyed by SKILL ID, then renders the LOW-byte message; on a miss
+; it renders the HIGH-byte message -- each via $c822=mode(0/1), $c823=id, ld hl,$4c00 /
+; rst $10 -> bank $4c e0 (LoadB4c_42d1, the text VM). bit6 SET ($d0): hands raw
+; (mode=low, id=high) straight to bank $4c. See BATTLE_SKILL_SYSTEM.md S9 +
+; tools/decode_effect_messages.py.
     ld hl, $d9ee
     inc [hl]
     ld a, [$dd6f]
