@@ -10,8 +10,10 @@
       "mp_cost_table": "$07:$570C (u16 LE; 999=ALL)",
       "learn_req_table": "$06:$50E0 (18B/record)",
       "natural_skills": "$03:$4461+$06",
-      "inherit_base": "$16:$4874"
+      "inherit_base": "$16:$4874",
+      "battle_record_table": "$54:$4013 ptrs (=$41CF+id*19) -> 19B records; handler=effect-type (shared), record=per-skill params"
     },
+    "battle_record_format": "+0 effect_class | +1 effect_category(1=dmg 2=status 3=heal/buff 8=item) | +2 target_mode($11=1foe $12=allfoes $21=1ally $22=allallies) | +3 ai_weight(per-skill AI score, summed by enemy AI $57) | +4 mp_cost_byte | +5 status_id(Sleep=$08 Poison=$13 Slow=$0e death=$09) | +6 damage_class($00=none $04=spell $05=breath) | +7/+8/+9 flag bitfields(presentation/anim/cast) | +11/+13 power_party_min/range, +15/+17 power_enemy_min/range (u16 LE; max=min+range; caster-side). PROVEN/HIGH: +0,+1,+2,+3,+4,+5,+6,+11,+13,+15,+17. Animation pointer is in the handler's descriptor-setter ($52:SetHLBattle_54e7 -> $dd70=$b882 for Blaze), NOT the record.",
     "learn_record_format": "+0 level u8 | +1 hp +3 mp +5 atk +7 def +9 agl +11 int (u16 LE) | +13..17 up to 5 prereq skill ids ($FF=none)",
     "kind_counts": {
       "skill": 155,
@@ -68,7 +70,28 @@
         "Metaly",
         "Mimic",
         "Rayburn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$41CF",
+        "raw": "00131114020104410717020c00030007000500",
+        "fields": {
+          "effect_class": 0,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 2,
+          "status_id": 1,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 12,
+          "power_party_range": 3,
+          "power_enemy_min": 7,
+          "power_enemy_range": 5
+        }
+      }
     },
     {
       "id": 1,
@@ -108,7 +131,28 @@
         "LavaMan",
         "MadCandle",
         "Mimic"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$41E2",
+        "raw": "0013111404010441071702460014001e000c00",
+        "fields": {
+          "effect_class": 0,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 4,
+          "status_id": 1,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 70,
+          "power_party_range": 20,
+          "power_enemy_min": 30,
+          "power_enemy_range": 12
+        }
+      }
     },
     {
       "id": 2,
@@ -146,7 +190,28 @@
         "Servant",
         "Skullgon",
         "Trumpeter"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$41F5",
+        "raw": "001311140a010441071702b400140064001400",
+        "fields": {
+          "effect_class": 0,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 10,
+          "status_id": 1,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 180,
+          "power_party_range": 20,
+          "power_enemy_min": 100,
+          "power_enemy_range": 20
+        }
+      }
     },
     {
       "id": 3,
@@ -196,7 +261,28 @@
         "Gremlin",
         "Pteranod",
         "Rayburn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4208",
+        "raw": "0113120a04020441071702100008000a000800",
+        "fields": {
+          "effect_class": 1,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 10,
+          "mp_cost_byte": 4,
+          "status_id": 2,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 16,
+          "power_party_range": 8,
+          "power_enemy_min": 10,
+          "power_enemy_range": 8
+        }
+      }
     },
     {
       "id": 4,
@@ -236,7 +322,28 @@
         "Lionex",
         "LizardFly",
         "MadCondor"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$421B",
+        "raw": "0113120c060204410717021e000c0016000c00",
+        "fields": {
+          "effect_class": 1,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 6,
+          "status_id": 2,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 30,
+          "power_party_range": 12,
+          "power_enemy_min": 22,
+          "power_enemy_range": 12
+        }
+      }
     },
     {
       "id": 5,
@@ -274,7 +381,28 @@
         "Slime",
         "StoneMan",
         "SuperTen"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$422E",
+        "raw": "0113120e0a020441071702580018003c001400",
+        "fields": {
+          "effect_class": 1,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 14,
+          "mp_cost_byte": 10,
+          "status_id": 2,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 88,
+          "power_party_range": 24,
+          "power_enemy_min": 60,
+          "power_enemy_range": 20
+        }
+      }
     },
     {
       "id": 6,
@@ -314,7 +442,28 @@
       ],
       "enemy_users": [
         "Rayburn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4241",
+        "raw": "0213120b0503044107170214000a000f000500",
+        "fields": {
+          "effect_class": 2,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 11,
+          "mp_cost_byte": 5,
+          "status_id": 3,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 20,
+          "power_party_range": 10,
+          "power_enemy_min": 15,
+          "power_enemy_range": 5
+        }
+      }
     },
     {
       "id": 7,
@@ -349,7 +498,28 @@
         "ArcDemon",
         "EvilWand",
         "MadMirror"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4254",
+        "raw": "0213120d080304410717023400100023000a00",
+        "fields": {
+          "effect_class": 2,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 13,
+          "mp_cost_byte": 8,
+          "status_id": 3,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 52,
+          "power_party_range": 16,
+          "power_enemy_min": 35,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 8,
@@ -392,7 +562,28 @@
         "MetalDrak",
         "Mirudraas",
         "Trumpeter"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4267",
+        "raw": "021312100f030441071702820014005f001400",
+        "fields": {
+          "effect_class": 2,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 15,
+          "status_id": 3,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 130,
+          "power_party_range": 20,
+          "power_enemy_min": 95,
+          "power_enemy_range": 20
+        }
+      }
     },
     {
       "id": 9,
@@ -430,7 +621,28 @@
         170,
         179
       ],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$427A",
+        "raw": "0313120a020404410717020800100006000c00",
+        "fields": {
+          "effect_class": 3,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 4,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 8,
+          "power_party_range": 16,
+          "power_enemy_min": 6,
+          "power_enemy_range": 12
+        }
+      }
     },
     {
       "id": 10,
@@ -468,7 +680,28 @@
         "LandOwl",
         "MadPecker",
         "WindBeast"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$428D",
+        "raw": "0313120c0404044107170219001e000e001400",
+        "fields": {
+          "effect_class": 3,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 4,
+          "status_id": 4,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 25,
+          "power_party_range": 30,
+          "power_enemy_min": 14,
+          "power_enemy_range": 20
+        }
+      }
     },
     {
       "id": 11,
@@ -507,7 +740,28 @@
         "Lionex",
         "WindMerge",
         "Yeti"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$42A0",
+        "raw": "0313120f080404410717025000640028003700",
+        "fields": {
+          "effect_class": 3,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 15,
+          "mp_cost_byte": 8,
+          "status_id": 4,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 80,
+          "power_party_range": 100,
+          "power_enemy_min": 40,
+          "power_enemy_range": 55
+        }
+      }
     },
     {
       "id": 12,
@@ -550,7 +804,28 @@
         "Snaily",
         "TreeBoy",
         "WindBeast"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$42B3",
+        "raw": "0413120b0306044107170219000a000c000800",
+        "fields": {
+          "effect_class": 4,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 11,
+          "mp_cost_byte": 3,
+          "status_id": 6,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 25,
+          "power_party_range": 10,
+          "power_enemy_min": 12,
+          "power_enemy_range": 8
+        }
+      }
     },
     {
       "id": 13,
@@ -587,7 +862,28 @@
         "Mommonja",
         "TreeBoy",
         "Yeti"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$42C6",
+        "raw": "0413120c050604410717022a0010001e000a00",
+        "fields": {
+          "effect_class": 4,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 5,
+          "status_id": 6,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 42,
+          "power_party_range": 16,
+          "power_enemy_min": 30,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 14,
@@ -624,7 +920,28 @@
         "KingSlime",
         "Mirudraas",
         "Servant"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$42D9",
+        "raw": "0413120e0c060441071702500018003c000a00",
+        "fields": {
+          "effect_class": 4,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 14,
+          "mp_cost_byte": 12,
+          "status_id": 6,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 80,
+          "power_party_range": 24,
+          "power_enemy_min": 60,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 15,
@@ -661,7 +978,28 @@
       ],
       "enemy_users": [
         "EvilBeast"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$42EC",
+        "raw": "0513120c0505044107170223000f0014000a00",
+        "fields": {
+          "effect_class": 5,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 5,
+          "status_id": 5,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 35,
+          "power_party_range": 15,
+          "power_enemy_min": 20,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 16,
@@ -699,7 +1037,28 @@
         "ManEater",
         "MetalKing",
         "Swordgon"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$42FF",
+        "raw": "0513120d0a050441071702460014002d001e00",
+        "fields": {
+          "effect_class": 5,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 13,
+          "mp_cost_byte": 10,
+          "status_id": 5,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 70,
+          "power_party_range": 20,
+          "power_enemy_min": 45,
+          "power_enemy_range": 30
+        }
+      }
     },
     {
       "id": 17,
@@ -736,7 +1095,28 @@
         "Balzak",
         "LavaMan",
         "Mirudraas"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4312",
+        "raw": "051312100f050441071702af00320078002800",
+        "fields": {
+          "effect_class": 5,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 15,
+          "status_id": 5,
+          "damage_class": 4,
+          "flags7": 65,
+          "flags8": 7,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 175,
+          "power_party_range": 50,
+          "power_enemy_min": 120,
+          "power_enemy_range": 40
+        }
+      }
     },
     {
       "id": 18,
@@ -778,7 +1158,28 @@
         "Mudron",
         "RotRaven",
         "Snapper"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4325",
+        "raw": "06131114040903400712020000000000000000",
+        "fields": {
+          "effect_class": 6,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 4,
+          "status_id": 9,
+          "damage_class": 3,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 18,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 19,
@@ -813,7 +1214,28 @@
         "DeadNoble",
         "Mimic",
         "Orochi"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4338",
+        "raw": "0613120a070903400712020000000000000000",
+        "fields": {
+          "effect_class": 6,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 10,
+          "mp_cost_byte": 7,
+          "status_id": 9,
+          "damage_class": 3,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 18,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 20,
@@ -852,7 +1274,28 @@
         "IronTurt",
         "SkyDragon",
         "SpikyBoy"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$434B",
+        "raw": "07131100010f01400702020000000000000000",
+        "fields": {
+          "effect_class": 7,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 0,
+          "mp_cost_byte": 1,
+          "status_id": 15,
+          "damage_class": 1,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 21,
@@ -896,7 +1339,28 @@
         "Shadow",
         "StagBug",
         "Stubsuck"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$435E",
+        "raw": "0823110a030800400753020000000000000000",
+        "fields": {
+          "effect_class": 8,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 8,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 83,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 22,
@@ -936,7 +1400,28 @@
         "MadPecker",
         "Stubsuck",
         "Wyvern"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4371",
+        "raw": "0823120c050803400753020000000000000000",
+        "fields": {
+          "effect_class": 8,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 5,
+          "status_id": 8,
+          "damage_class": 3,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 83,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 23,
@@ -981,7 +1466,28 @@
         "Snapper",
         "StoneMan",
         "Yeti"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4384",
+        "raw": "0923120f030b00400753020000000000000000",
+        "fields": {
+          "effect_class": 9,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 15,
+          "mp_cost_byte": 3,
+          "status_id": 11,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 83,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 24,
@@ -1023,7 +1529,28 @@
         "MedusaEye",
         "MistyWing",
         "Voodoll"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4397",
+        "raw": "0a23120f030700400757020000000000000000",
+        "fields": {
+          "effect_class": 10,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 15,
+          "mp_cost_byte": 3,
+          "status_id": 7,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 87,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 25,
@@ -1065,7 +1592,28 @@
         "MadGoose",
         "MadSpirit",
         "Voodoll"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$43AA",
+        "raw": "0b22120f050c03400753020000000000000000",
+        "fields": {
+          "effect_class": 11,
+          "effect_category": 34,
+          "target_mode": 18,
+          "ai_weight": 15,
+          "mp_cost_byte": 5,
+          "status_id": 12,
+          "damage_class": 3,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 83,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 26,
@@ -1106,7 +1654,28 @@
         "SabreMan",
         "Shadow",
         "WeedBug"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$43BD",
+        "raw": "0c23110a000a00400712020000000000000000",
+        "fields": {
+          "effect_class": 12,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 0,
+          "status_id": 10,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 18,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 27,
@@ -1136,7 +1705,28 @@
       "natural_to_species": [],
       "enemy_users": [
         "RogueNite"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$43D0",
+        "raw": "0d23410c020000400442020000000000000000",
+        "fields": {
+          "effect_class": 13,
+          "effect_category": 35,
+          "target_mode": 65,
+          "ai_weight": 12,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 28,
@@ -1180,7 +1770,28 @@
         "Picky",
         "Putrepup",
         "TreeSlime"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$43E3",
+        "raw": "0e23110a030d00400757020000000000000000",
+        "fields": {
+          "effect_class": 14,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 13,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 87,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 29,
@@ -1216,7 +1827,28 @@
         "Skeletor",
         "Voodoll",
         "WingSnake"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$43F6",
+        "raw": "0e23120c040d00400757020000000000000000",
+        "fields": {
+          "effect_class": 14,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 4,
+          "status_id": 13,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 87,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 30,
@@ -1258,7 +1890,28 @@
         "Catapila",
         "Saccer",
         "SlimeNite"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4409",
+        "raw": "0f23210a020000400452020000000000000000",
+        "fields": {
+          "effect_class": 15,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 31,
@@ -1295,7 +1948,28 @@
         "FunkyBird",
         "SlimeNite",
         "Swordgon"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$441C",
+        "raw": "0f23220f030000400452020000000000000000",
+        "fields": {
+          "effect_class": 15,
+          "effect_category": 35,
+          "target_mode": 34,
+          "ai_weight": 15,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 32,
@@ -1334,7 +2008,28 @@
         "MadPlant",
         "Putrepup",
         "Snapper"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$442F",
+        "raw": "1023110a030e00400757020000000000000000",
+        "fields": {
+          "effect_class": 16,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 14,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 87,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 33,
@@ -1368,7 +2063,28 @@
         "Droll",
         "Gismo",
         "Goategon"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4442",
+        "raw": "1023120f040e00400757020000000000000000",
+        "fields": {
+          "effect_class": 16,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 15,
+          "mp_cost_byte": 4,
+          "status_id": 14,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 87,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 34,
@@ -1400,7 +2116,28 @@
       ],
       "enemy_users": [
         "SlimeNite"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4455",
+        "raw": "1123210a020000400452020000000000000000",
+        "fields": {
+          "effect_class": 17,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 35,
@@ -1437,7 +2174,28 @@
         "Pixy",
         "Shadow",
         "SkyDragon"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4468",
+        "raw": "1123220f030000400452020000000000000000",
+        "fields": {
+          "effect_class": 17,
+          "effect_category": 35,
+          "target_mode": 34,
+          "ai_weight": 15,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 36,
@@ -1475,7 +2233,28 @@
         "MistyWing",
         "WeedBug",
         "WindMerge"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$447B",
+        "raw": "12232110030000400442020000000000000000",
+        "fields": {
+          "effect_class": 18,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 16,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 37,
@@ -1521,7 +2300,28 @@
         "MadPecker",
         "Pixy",
         "StubBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$448E",
+        "raw": "13232110060000400452020000000000000000",
+        "fields": {
+          "effect_class": 19,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 16,
+          "mp_cost_byte": 6,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 38,
@@ -1556,7 +2356,28 @@
         "FaceTree",
         "Phoenix",
         "WeedBug"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$44A1",
+        "raw": "1423210a030000400442020000000000000000",
+        "fields": {
+          "effect_class": 20,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 39,
@@ -1594,7 +2415,28 @@
         "EyeBall",
         "Gophecada",
         "TailEater"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$44B4",
+        "raw": "1523410a040000400442020000000000000000",
+        "fields": {
+          "effect_class": 21,
+          "effect_category": 35,
+          "target_mode": 65,
+          "ai_weight": 10,
+          "mp_cost_byte": 4,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 40,
@@ -1632,7 +2474,28 @@
         "Spikerous",
         "Tortragon",
         "Voodoll"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$44C7",
+        "raw": "15234110040000400442020000000000000000",
+        "fields": {
+          "effect_class": 21,
+          "effect_category": 35,
+          "target_mode": 65,
+          "ai_weight": 16,
+          "mp_cost_byte": 4,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 41,
@@ -1663,7 +2526,28 @@
         "BombCrag",
         "Copycat",
         "MadMirror"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$44DA",
+        "raw": "1623110a050000400042020000000000000000",
+        "fields": {
+          "effect_class": 22,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 5,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 0,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 42,
@@ -1697,7 +2581,28 @@
       "enemy_users": [
         "DarkCrab",
         "WhipBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$44ED",
+        "raw": "17332100020000480442020000000000000000",
+        "fields": {
+          "effect_class": 23,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 72,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 43,
@@ -1763,7 +2668,28 @@
         "TailEater",
         "TreeBoy",
         "WindMerge"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4500",
+        "raw": "18332114020000400412031e000a001e000a00",
+        "fields": {
+          "effect_class": 24,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 3,
+          "power_party_min": 30,
+          "power_party_range": 10,
+          "power_enemy_min": 30,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 44,
@@ -1807,7 +2733,28 @@
         "Tatsu",
         "TreeBoy",
         "Wyvern"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4513",
+        "raw": "18332114050000400412034b000f004b000f00",
+        "fields": {
+          "effect_class": 24,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 5,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 3,
+          "power_party_min": 75,
+          "power_party_range": 15,
+          "power_enemy_min": 75,
+          "power_enemy_range": 15
+        }
+      }
     },
     {
       "id": 45,
@@ -1845,7 +2792,28 @@
         "DeadNoble",
         "Goategon",
         "Unicorn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4526",
+        "raw": "1833211407000040041203e7030000e7030000",
+        "fields": {
+          "effect_class": 24,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 7,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 3,
+          "power_party_min": 999,
+          "power_party_range": 0,
+          "power_enemy_min": 999,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 46,
@@ -1891,7 +2859,28 @@
         "MadCondor",
         "Roboster",
         "StoneMan"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4539",
+        "raw": "1933220a120000400412035a001e0046001e00",
+        "fields": {
+          "effect_class": 25,
+          "effect_category": 51,
+          "target_mode": 34,
+          "ai_weight": 10,
+          "mp_cost_byte": 18,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 3,
+          "power_party_min": 90,
+          "power_party_range": 30,
+          "power_enemy_min": 70,
+          "power_enemy_range": 30
+        }
+      }
     },
     {
       "id": 47,
@@ -1927,7 +2916,28 @@
       "natural_to_species": [],
       "enemy_users": [
         "DeadNoble"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$454C",
+        "raw": "1933220a24000040040203e7030000e7030000",
+        "fields": {
+          "effect_class": 25,
+          "effect_category": 51,
+          "target_mode": 34,
+          "ai_weight": 10,
+          "mp_cost_byte": 36,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 3,
+          "power_party_min": 999,
+          "power_party_range": 0,
+          "power_enemy_min": 999,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 48,
@@ -1965,7 +2975,28 @@
         "LizardMan",
         "Orc",
         "TreeBoy"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$455F",
+        "raw": "1a33210f0a0000400412030000000000000000",
+        "fields": {
+          "effect_class": 26,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 15,
+          "mp_cost_byte": 10,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 3,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 49,
@@ -2002,7 +3033,28 @@
         "KingSlime",
         "SkyDragon",
         "Unicorn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4572",
+        "raw": "1a332114140000400412030000000000000000",
+        "fields": {
+          "effect_class": 26,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 20,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 3,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 50,
@@ -2045,7 +3097,28 @@
         "StoneMan",
         "WhipBird",
         "WingTree"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4585",
+        "raw": "1b332100010000400402020000000000000000",
+        "fields": {
+          "effect_class": 27,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 1,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 51,
@@ -2079,7 +3152,28 @@
         "FloraMan",
         "Pixy",
         "Unicorn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4598",
+        "raw": "1c332114020000400412030000000000000000",
+        "fields": {
+          "effect_class": 28,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 3,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 52,
@@ -2110,7 +3204,28 @@
       "enemy_users": [
         "CoilBird",
         "MadPlant"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$45AB",
+        "raw": "1d33221402000040040a020000000000000000",
+        "fields": {
+          "effect_class": 29,
+          "effect_category": 51,
+          "target_mode": 34,
+          "ai_weight": 20,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 10,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 53,
@@ -2144,7 +3259,28 @@
         "DeadNite",
         "EvilWand",
         "FireWeed"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$45BE",
+        "raw": "1e33221402000040040a020000000000000000",
+        "fields": {
+          "effect_class": 30,
+          "effect_category": 51,
+          "target_mode": 34,
+          "ai_weight": 20,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 10,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 54,
@@ -2178,7 +3314,28 @@
         "FloraMan",
         "TreeBoy",
         "WindMerge"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$45D1",
+        "raw": "1f332214020000400402030000000000000000",
+        "fields": {
+          "effect_class": 31,
+          "effect_category": 51,
+          "target_mode": 34,
+          "ai_weight": 20,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 3,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 55,
@@ -2254,7 +3411,28 @@
         160,
         194
       ],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$45E4",
+        "raw": "2313111400000083fe3e020000000000000000",
+        "fields": {
+          "effect_class": 35,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 62,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 56,
@@ -2328,7 +3506,28 @@
         176,
         181
       ],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$45F7",
+        "raw": "2313111400000083fe3e020000000000000000",
+        "fields": {
+          "effect_class": 35,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 62,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 57,
@@ -2359,7 +3558,28 @@
       "enemy_users": [
         "MetalDrak",
         "Watabou"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$460A",
+        "raw": "22230014140000400402020000000000000000",
+        "fields": {
+          "effect_class": 34,
+          "effect_category": 35,
+          "target_mode": 0,
+          "ai_weight": 20,
+          "mp_cost_byte": 20,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 58,
@@ -2428,7 +3648,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$461D",
+        "raw": "2313111400000083fe3e020000000000000000",
+        "fields": {
+          "effect_class": 35,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 62,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 59,
@@ -2468,7 +3709,28 @@
         "Ogre",
         "Skullgon",
         "WildApe"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4630",
+        "raw": "2413110a020000838e3f020000000000000000",
+        "fields": {
+          "effect_class": 36,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 60,
@@ -2505,7 +3767,28 @@
         "BullBird",
         "Goategon",
         "Metabble"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4643",
+        "raw": "25131100010f04838e3b020000000000000000",
+        "fields": {
+          "effect_class": 37,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 0,
+          "mp_cost_byte": 1,
+          "status_id": 15,
+          "damage_class": 4,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 59,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 61,
@@ -2542,7 +3825,28 @@
         "GulpBeast",
         "Spikerous",
         "Trumpeter"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4656",
+        "raw": "2613110a010004838e3b020000000000000000",
+        "fields": {
+          "effect_class": 38,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 1,
+          "status_id": 0,
+          "damage_class": 4,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 59,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 62,
@@ -2585,7 +3889,28 @@
         "Metaly",
         "RotRaven",
         "Spikerous"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4669",
+        "raw": "27131100010f04828e2b020000000000000000",
+        "fields": {
+          "effect_class": 39,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 0,
+          "mp_cost_byte": 1,
+          "status_id": 15,
+          "damage_class": 4,
+          "flags7": 130,
+          "flags8": 142,
+          "flags9": 43,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 63,
@@ -2629,7 +3954,28 @@
         "Metaly",
         "Ogre",
         "ZapBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$467C",
+        "raw": "2813110a030000838e3f020000000000000000",
+        "fields": {
+          "effect_class": 40,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 64,
@@ -2679,7 +4025,28 @@
         "Samsi",
         "TERRY?",
         "WhipBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$468F",
+        "raw": "2913110a030000838e3f020000000000000000",
+        "fields": {
+          "effect_class": 41,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 65,
@@ -2728,7 +4095,28 @@
         "Oniono",
         "Skullroo",
         "WildApe"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$46A2",
+        "raw": "2a23410f000000000402020000000000000000",
+        "fields": {
+          "effect_class": 42,
+          "effect_category": 35,
+          "target_mode": 65,
+          "ai_weight": 15,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 66,
@@ -2769,7 +4157,28 @@
         "SpikyBoy",
         "WingSnake",
         "Yeti"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$46B5",
+        "raw": "2b13110a050000838e03020000000000000000",
+        "fields": {
+          "effect_class": 43,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 5,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 3,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 67,
@@ -2807,7 +4216,28 @@
         "SkyDragon",
         "Snapper",
         "StoneMan"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$46C8",
+        "raw": "2c234114000000100402020000000000000000",
+        "fields": {
+          "effect_class": 44,
+          "effect_category": 35,
+          "target_mode": 65,
+          "ai_weight": 20,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 16,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 68,
@@ -2856,7 +4286,28 @@
         "Orochi",
         "SkulRider",
         "SuperTen"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$46DB",
+        "raw": "2d13110a03010683fe3f020000000000000000",
+        "fields": {
+          "effect_class": 45,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 1,
+          "damage_class": 6,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 69,
@@ -2906,7 +4357,28 @@
         "TERRY?",
         "Trumpeter",
         "ZapBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$46EE",
+        "raw": "2e13110a03050683fe3f020000000000000000",
+        "fields": {
+          "effect_class": 46,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 5,
+          "damage_class": 6,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 70,
@@ -2956,7 +4428,28 @@
         "StagBug",
         "WindBeast",
         "ZapBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4701",
+        "raw": "2f13110a03040683fe3f020000000000000000",
+        "fields": {
+          "effect_class": 47,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 4,
+          "damage_class": 6,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 71,
@@ -3002,7 +4495,28 @@
         "StagBug",
         "TailEater",
         "Yeti"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4714",
+        "raw": "3013110a03060683fe3f020000000000000000",
+        "fields": {
+          "effect_class": 48,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 6,
+          "damage_class": 6,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 72,
@@ -3042,7 +4556,28 @@
         "RogueNite",
         "StagBug",
         "WildApe"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4727",
+        "raw": "3113110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 49,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 73,
@@ -3081,7 +4616,28 @@
         "Grendal",
         "KingSlime",
         "ManEater"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$473A",
+        "raw": "3213110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 50,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 74,
@@ -3120,7 +4676,28 @@
         "MadPecker",
         "Ogre",
         "SlimeNite"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$474D",
+        "raw": "3313110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 51,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 75,
@@ -3161,7 +4738,28 @@
         "MadMirror",
         "Orc",
         "Skeletor"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4760",
+        "raw": "3413110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 52,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 76,
@@ -3198,7 +4796,28 @@
         "Reaper",
         "SabreMan",
         "Trumpeter"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4773",
+        "raw": "3513110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 53,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 77,
@@ -3234,7 +4853,28 @@
         "MadGopher",
         "Stubsuck",
         "WingTree"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4786",
+        "raw": "3613110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 54,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 78,
@@ -3270,7 +4910,28 @@
         "SpotKing",
         "Swordgon",
         "WildApe"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4799",
+        "raw": "3713110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 55,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 79,
@@ -3309,7 +4970,28 @@
         "Roboster",
         "Skeletor",
         "Snapper"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$47AC",
+        "raw": "3813121014040501061702b4001e005a003200",
+        "fields": {
+          "effect_class": 56,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 20,
+          "status_id": 4,
+          "damage_class": 5,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 180,
+          "power_party_range": 30,
+          "power_enemy_min": 90,
+          "power_enemy_range": 50
+        }
+      }
     },
     {
       "id": 80,
@@ -3349,7 +5031,28 @@
         "RotRaven",
         "SpotKing",
         "Wyvern"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$47BF",
+        "raw": "3913110c03000083fe3a020000000000000000",
+        "fields": {
+          "effect_class": 57,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 12,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 58,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 81,
@@ -3387,7 +5090,28 @@
         "Skeletor",
         "SuperTen",
         "WhipBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$47D2",
+        "raw": "3913110e06000083fe3a020000000000000000",
+        "fields": {
+          "effect_class": 57,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 14,
+          "mp_cost_byte": 6,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 58,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 82,
@@ -3438,7 +5162,28 @@
         "Snaily",
         "SpotKing",
         "SpotSlime"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$47E5",
+        "raw": "3a13110c041904010e3a020000000000000000",
+        "fields": {
+          "effect_class": 58,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 12,
+          "mp_cost_byte": 4,
+          "status_id": 25,
+          "damage_class": 4,
+          "flags7": 1,
+          "flags8": 14,
+          "flags9": 58,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 83,
@@ -3475,7 +5220,28 @@
         "Metabble",
         "Snapper",
         "WildApe"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$47F8",
+        "raw": "3a13110e081904010e3a020000000000000000",
+        "fields": {
+          "effect_class": 58,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 14,
+          "mp_cost_byte": 8,
+          "status_id": 25,
+          "damage_class": 4,
+          "flags7": 1,
+          "flags8": 14,
+          "flags9": 58,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 84,
@@ -3521,7 +5287,28 @@
         "Servant",
         "Skeletor",
         "Zoma"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$480B",
+        "raw": "3b234114000000000402020000000000000000",
+        "fields": {
+          "effect_class": 59,
+          "effect_category": 35,
+          "target_mode": 65,
+          "ai_weight": 20,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 85,
@@ -3573,7 +5360,28 @@
         "WingSlime",
         "WingSnake",
         "Wyvern"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$481E",
+        "raw": "3c13110c02000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 60,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 12,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 86,
@@ -3613,7 +5421,28 @@
         "ManEater",
         "Saccer",
         "SlimeBorg"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4831",
+        "raw": "3d131114030000838e3f020000000000000000",
+        "fields": {
+          "effect_class": 61,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 87,
@@ -3670,7 +5499,28 @@
         "StubBird",
         "Swordgon",
         "TERRY?"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4844",
+        "raw": "3e13120a05000483fe3f020000000000000000",
+        "fields": {
+          "effect_class": 62,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 10,
+          "mp_cost_byte": 5,
+          "status_id": 0,
+          "damage_class": 4,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 88,
@@ -3710,7 +5560,28 @@
         "Pteranod",
         "WingSlime",
         "Wyvern"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4857",
+        "raw": "3f13111403040401061f020000000000000000",
+        "fields": {
+          "effect_class": 63,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 3,
+          "status_id": 4,
+          "damage_class": 4,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 31,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 89,
@@ -3746,7 +5617,28 @@
         "Ogre",
         "Yeti",
         "ZapBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$486A",
+        "raw": "3f13120d060404010617020000000000000000",
+        "fields": {
+          "effect_class": 63,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 13,
+          "mp_cost_byte": 6,
+          "status_id": 4,
+          "damage_class": 4,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 90,
@@ -3790,7 +5682,28 @@
         "Tatsu",
         "Tortragon",
         "ZapBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$487D",
+        "raw": "4013120c030504010617022800140019000f00",
+        "fields": {
+          "effect_class": 64,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 3,
+          "status_id": 5,
+          "damage_class": 4,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 40,
+          "power_party_range": 20,
+          "power_enemy_min": 25,
+          "power_enemy_range": 15
+        }
+      }
     },
     {
       "id": 91,
@@ -3826,7 +5739,28 @@
         "MetalDrak",
         "RockSlime",
         "Spikerous"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4890",
+        "raw": "4113120e05190401063f025a00280028001e00",
+        "fields": {
+          "effect_class": 65,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 14,
+          "mp_cost_byte": 5,
+          "status_id": 25,
+          "damage_class": 4,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 90,
+          "power_party_range": 40,
+          "power_enemy_min": 40,
+          "power_enemy_range": 30
+        }
+      }
     },
     {
       "id": 92,
@@ -3878,7 +5812,28 @@
         "Dragon",
         "DrakSlime",
         "LizardFly"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$48A3",
+        "raw": "4213120a021105150617020e0008000a000600",
+        "fields": {
+          "effect_class": 66,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 17,
+          "damage_class": 5,
+          "flags7": 21,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 14,
+          "power_party_range": 8,
+          "power_enemy_min": 10,
+          "power_enemy_range": 6
+        }
+      }
     },
     {
       "id": 93,
@@ -3920,7 +5875,28 @@
         "NiteWhip",
         "Phoenix",
         "StagBug"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$48B6",
+        "raw": "4213120c041105150617022000100014001000",
+        "fields": {
+          "effect_class": 66,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 4,
+          "status_id": 17,
+          "damage_class": 5,
+          "flags7": 21,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 32,
+          "power_party_range": 16,
+          "power_enemy_min": 20,
+          "power_enemy_range": 16
+        }
+      }
     },
     {
       "id": 94,
@@ -3957,7 +5933,28 @@
         "Lionex",
         "Orochi",
         "SkyDragon"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$48C9",
+        "raw": "4213120e081105150617024b0019002d001900",
+        "fields": {
+          "effect_class": 66,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 14,
+          "mp_cost_byte": 8,
+          "status_id": 17,
+          "damage_class": 5,
+          "flags7": 21,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 75,
+          "power_party_range": 25,
+          "power_enemy_min": 45,
+          "power_enemy_range": 25
+        }
+      }
     },
     {
       "id": 95,
@@ -3997,7 +5994,28 @@
         "Servant",
         "Sidoh",
         "Snapper"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$48DC",
+        "raw": "42131210101105150617029600140055002300",
+        "fields": {
+          "effect_class": 66,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 16,
+          "status_id": 17,
+          "damage_class": 5,
+          "flags7": 21,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 150,
+          "power_party_range": 20,
+          "power_enemy_min": 85,
+          "power_enemy_range": 35
+        }
+      }
     },
     {
       "id": 96,
@@ -4046,7 +6064,28 @@
       ],
       "enemy_users": [
         "LizardFly"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$48EF",
+        "raw": "4313120a02120515061702100008000e000400",
+        "fields": {
+          "effect_class": 67,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 18,
+          "damage_class": 5,
+          "flags7": 21,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 16,
+          "power_party_range": 8,
+          "power_enemy_min": 14,
+          "power_enemy_range": 4
+        }
+      }
     },
     {
       "id": 97,
@@ -4086,7 +6125,28 @@
         "Shadow",
         "Skullgon",
         "Wyvern"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4902",
+        "raw": "4313120c041205150617022a000c0019000f00",
+        "fields": {
+          "effect_class": 67,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 4,
+          "status_id": 18,
+          "damage_class": 5,
+          "flags7": 21,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 42,
+          "power_party_range": 12,
+          "power_enemy_min": 25,
+          "power_enemy_range": 15
+        }
+      }
     },
     {
       "id": 98,
@@ -4123,7 +6183,28 @@
         "Bazoo",
         "GreatDrak",
         "Rayburn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4915",
+        "raw": "4313120e0812051506170252001e0032001e00",
+        "fields": {
+          "effect_class": 67,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 14,
+          "mp_cost_byte": 8,
+          "status_id": 18,
+          "damage_class": 5,
+          "flags7": 21,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 82,
+          "power_party_range": 30,
+          "power_enemy_min": 50,
+          "power_enemy_range": 30
+        }
+      }
     },
     {
       "id": 99,
@@ -4166,7 +6247,28 @@
         "Sidoh",
         "StoneMan",
         "Zoma"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4928",
+        "raw": "4313121010120515061702a00014005a002800",
+        "fields": {
+          "effect_class": 67,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 16,
+          "status_id": 18,
+          "damage_class": 5,
+          "flags7": 21,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 160,
+          "power_party_range": 20,
+          "power_enemy_min": 90,
+          "power_enemy_range": 40
+        }
+      }
     },
     {
       "id": 100,
@@ -4215,7 +6317,28 @@
         "Divinegon",
         "Pizzaro",
         "Sidoh"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$493B",
+        "raw": "4413121019050001061702d2005000aa001e00",
+        "fields": {
+          "effect_class": 68,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 25,
+          "status_id": 5,
+          "damage_class": 0,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 210,
+          "power_party_range": 80,
+          "power_enemy_min": 170,
+          "power_enemy_range": 30
+        }
+      }
     },
     {
       "id": 101,
@@ -4259,7 +6382,28 @@
         "DeathMore",
         "Sidoh",
         "Zoma"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$494E",
+        "raw": "451312101e0105010617022c016400f0003c00",
+        "fields": {
+          "effect_class": 69,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 30,
+          "status_id": 1,
+          "damage_class": 5,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 23,
+          "field10": 2,
+          "power_party_min": 300,
+          "power_party_range": 100,
+          "power_enemy_min": 240,
+          "power_enemy_range": 60
+        }
+      }
     },
     {
       "id": 102,
@@ -4301,7 +6445,28 @@
       "enemy_users": [
         "DeadNoble",
         "RainHawk"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4961",
+        "raw": "46121200011005010602020000000000000000",
+        "fields": {
+          "effect_class": 70,
+          "effect_category": 18,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 1,
+          "status_id": 16,
+          "damage_class": 5,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 103,
@@ -4388,7 +6553,28 @@
         "Poisongon",
         "Rayburn",
         "Spikerous"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4974",
+        "raw": "4713110a02130383fe3f020000000000000000",
+        "fields": {
+          "effect_class": 71,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 19,
+          "damage_class": 3,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 104,
@@ -4473,7 +6659,28 @@
         "SpotKing",
         "Toadstool",
         "Tonguella"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4987",
+        "raw": "4813110a02080383fe33020000000000000000",
+        "fields": {
+          "effect_class": 72,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 8,
+          "damage_class": 3,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 105,
@@ -4567,7 +6774,28 @@
         "Mummy",
         "Rayburn",
         "TreeSlime"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$499A",
+        "raw": "4913110a03140383fe3b020000000000000000",
+        "fields": {
+          "effect_class": 73,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 20,
+          "damage_class": 3,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 59,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 106,
@@ -4616,7 +6844,28 @@
         "Oniono",
         "Toadstool",
         "TreeSlime"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$49AD",
+        "raw": "4a23120c030803100633020000000000000000",
+        "fields": {
+          "effect_class": 74,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 3,
+          "status_id": 8,
+          "damage_class": 3,
+          "flags7": 16,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 107,
@@ -4655,7 +6904,28 @@
         "BombCrag",
         "DarkEye",
         "FireWeed"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$49C0",
+        "raw": "4b231210041403100633020000000000000000",
+        "fields": {
+          "effect_class": 75,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 4,
+          "status_id": 20,
+          "damage_class": 3,
+          "flags7": 16,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 108,
@@ -4693,7 +6963,28 @@
         "Hork",
         "Poisongon",
         "TailEater"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$49D3",
+        "raw": "4c23120c031303100637020000000000000000",
+        "fields": {
+          "effect_class": 76,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 3,
+          "status_id": 19,
+          "damage_class": 3,
+          "flags7": 16,
+          "flags8": 6,
+          "flags9": 55,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 109,
@@ -4731,7 +7022,28 @@
         "Phoenix",
         "Voodoll",
         "WingSnake"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$49E6",
+        "raw": "4c231210041303100637020000000000000000",
+        "fields": {
+          "effect_class": 76,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 4,
+          "status_id": 19,
+          "damage_class": 3,
+          "flags7": 16,
+          "flags8": 6,
+          "flags9": 55,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 110,
@@ -4768,7 +7080,28 @@
         "MetalDrak",
         "Skullroo",
         "WingSnake"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$49F9",
+        "raw": "4d23120f040c04200633020000000000000000",
+        "fields": {
+          "effect_class": 77,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 15,
+          "mp_cost_byte": 4,
+          "status_id": 12,
+          "damage_class": 4,
+          "flags7": 32,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 111,
@@ -4812,7 +7145,28 @@
         "Reaper",
         "RogueNite",
         "Servant"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4A0C",
+        "raw": "4e231210031504000637020000000000000000",
+        "fields": {
+          "effect_class": 78,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 16,
+          "mp_cost_byte": 3,
+          "status_id": 21,
+          "damage_class": 4,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 55,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 112,
@@ -4842,7 +7196,28 @@
         "Centasaur",
         "Lipsy",
         "StoneMan"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4A1F",
+        "raw": "4f23110a011600000633020000000000000000",
+        "fields": {
+          "effect_class": 79,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 1,
+          "status_id": 22,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 113,
@@ -4884,7 +7259,28 @@
         "DanceVegi",
         "Shadow",
         "SuperTen"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4A32",
+        "raw": "5013120a060903200612020000000000000000",
+        "fields": {
+          "effect_class": 80,
+          "effect_category": 19,
+          "target_mode": 18,
+          "ai_weight": 10,
+          "mp_cost_byte": 6,
+          "status_id": 9,
+          "damage_class": 3,
+          "flags7": 32,
+          "flags8": 6,
+          "flags9": 18,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 114,
@@ -4925,7 +7321,28 @@
         "Snapper",
         "Trumpeter",
         "WhipBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4A45",
+        "raw": "5123120c020702000637020000000000000000",
+        "fields": {
+          "effect_class": 81,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 2,
+          "status_id": 7,
+          "damage_class": 2,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 55,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 115,
@@ -4967,7 +7384,28 @@
         "MadSpirit",
         "Slime",
         "TailEater"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4A58",
+        "raw": "5223120c020700000637020000000000000000",
+        "fields": {
+          "effect_class": 82,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 2,
+          "status_id": 7,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 55,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 116,
@@ -5009,7 +7447,28 @@
         "MistyWing",
         "Reaper",
         "StoneMan"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4A6B",
+        "raw": "5323120c020900000637020000000000000000",
+        "fields": {
+          "effect_class": 83,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 2,
+          "status_id": 9,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 55,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 117,
@@ -5049,7 +7508,28 @@
         "GiantWorm",
         "MadGoose",
         "MudDoll"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4A7E",
+        "raw": "5423110a000a00200636020000000000000000",
+        "fields": {
+          "effect_class": 84,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 0,
+          "status_id": 10,
+          "damage_class": 0,
+          "flags7": 32,
+          "flags8": 6,
+          "flags9": 54,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 118,
@@ -5084,7 +7564,28 @@
         "DarkCrab",
         "Eyeder",
         "Golem"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4A91",
+        "raw": "5423110f000a00200636020000000000000000",
+        "fields": {
+          "effect_class": 84,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 15,
+          "mp_cost_byte": 0,
+          "status_id": 10,
+          "damage_class": 0,
+          "flags7": 32,
+          "flags8": 6,
+          "flags9": 54,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 119,
@@ -5124,7 +7625,28 @@
         "MudDoll",
         "PillowRat",
         "Slabbit"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4AA4",
+        "raw": "5523410c010000200662020000000000000000",
+        "fields": {
+          "effect_class": 85,
+          "effect_category": 35,
+          "target_mode": 65,
+          "ai_weight": 12,
+          "mp_cost_byte": 1,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 32,
+          "flags8": 6,
+          "flags9": 98,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 120,
@@ -5166,7 +7688,28 @@
         "Orc",
         "Orochi",
         "Unicorn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4AB7",
+        "raw": "5623120c021600200633020000000000000000",
+        "fields": {
+          "effect_class": 86,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 2,
+          "status_id": 22,
+          "damage_class": 0,
+          "flags7": 32,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 121,
@@ -5212,7 +7755,28 @@
         "Spooky",
         "SpotSlime",
         "Tonguella"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4ACA",
+        "raw": "5723110a021600000633020000000000000000",
+        "fields": {
+          "effect_class": 87,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 22,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 122,
@@ -5250,7 +7814,28 @@
         "GreatDrak",
         "RogueNite",
         "Snapper"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4ADD",
+        "raw": "5723110a040d00000673020000000000000000",
+        "fields": {
+          "effect_class": 87,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 4,
+          "status_id": 13,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 115,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 123,
@@ -5290,7 +7875,28 @@
         "MadCat",
         "SkulRider",
         "StagBug"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4AF0",
+        "raw": "5823110a011600000633020000000000000000",
+        "fields": {
+          "effect_class": 88,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 1,
+          "status_id": 22,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 124,
@@ -5327,7 +7933,28 @@
         "MetalDrak",
         "Slabbit",
         "WildApe"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B03",
+        "raw": "5823120c031603000633020000000000000000",
+        "fields": {
+          "effect_class": 88,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 12,
+          "mp_cost_byte": 3,
+          "status_id": 22,
+          "damage_class": 3,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 125,
@@ -5368,7 +7995,28 @@
         "Trumpeter",
         "Voodoll",
         "Yeti"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B16",
+        "raw": "5923120f031603000633020000000000000000",
+        "fields": {
+          "effect_class": 89,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 15,
+          "mp_cost_byte": 3,
+          "status_id": 22,
+          "damage_class": 3,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 51,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 126,
@@ -5444,7 +8092,28 @@
       ],
       "enemy_users": [
         "Watabou"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B29",
+        "raw": "2313111400000083fe3e020000000000000000",
+        "fields": {
+          "effect_class": 35,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 20,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 62,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 127,
@@ -5488,7 +8157,28 @@
         "SpotSlime",
         "SuperTen",
         "Watabou"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B3C",
+        "raw": "5b21410a040000080442020000000000000000",
+        "fields": {
+          "effect_class": 91,
+          "effect_category": 33,
+          "target_mode": 65,
+          "ai_weight": 10,
+          "mp_cost_byte": 4,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 8,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 128,
@@ -5532,7 +8222,28 @@
         "Rosevine",
         "Sidoh",
         "Zoma"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B4F",
+        "raw": "5c23110a070000000002020000000000000000",
+        "fields": {
+          "effect_class": 92,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 7,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 0,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 129,
@@ -5577,7 +8288,28 @@
         "GoldSlime",
         "LandOwl",
         "RainHawk"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B62",
+        "raw": "5d33221407000000040a020000000000000000",
+        "fields": {
+          "effect_class": 93,
+          "effect_category": 51,
+          "target_mode": 34,
+          "ai_weight": 20,
+          "mp_cost_byte": 7,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 10,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 130,
@@ -5615,7 +8347,28 @@
       "enemy_users": [
         "Pizzaro",
         "ZapBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B75",
+        "raw": "5e23110a070902000457020000000000000000",
+        "fields": {
+          "effect_class": 94,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 7,
+          "status_id": 9,
+          "damage_class": 2,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 87,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 131,
@@ -5656,7 +8409,28 @@
         "Shadow",
         "Spikerous",
         "WhipBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B88",
+        "raw": "5f230100080000000042020000000000000000",
+        "fields": {
+          "effect_class": 95,
+          "effect_category": 35,
+          "target_mode": 1,
+          "ai_weight": 0,
+          "mp_cost_byte": 8,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 0,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 132,
@@ -5692,7 +8466,28 @@
       ],
       "enemy_users": [
         "IronTurt"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4B9B",
+        "raw": "60232114140000000452020000000000000000",
+        "fields": {
+          "effect_class": 96,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 20,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 133,
@@ -5726,7 +8521,28 @@
       "natural_to_species": [],
       "enemy_users": [
         "JewelBag"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4BAE",
+        "raw": "60232114140000000452020000000000000000",
+        "fields": {
+          "effect_class": 96,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 20,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 134,
@@ -5761,7 +8577,28 @@
       "enemy_users": [
         "DeathMore",
         "LavaMan"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4BC1",
+        "raw": "60232114140000000452020000000000000000",
+        "fields": {
+          "effect_class": 96,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 20,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 135,
@@ -5798,7 +8635,28 @@
         "Phoenix",
         "StoneMan",
         "WhipBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4BD4",
+        "raw": "60232114140000000452020000000000000000",
+        "fields": {
+          "effect_class": 96,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 20,
+          "mp_cost_byte": 20,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 82,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 136,
@@ -5838,7 +8696,28 @@
         "StoneMan",
         "Tatsu",
         "WindMerge"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4BE7",
+        "raw": "6133210a020000080402020000000000000000",
+        "fields": {
+          "effect_class": 97,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 8,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 137,
@@ -5878,7 +8757,28 @@
         "Metaly",
         "StoneMan",
         "Unicorn"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4BFA",
+        "raw": "6133210a040000080402020000000000000000",
+        "fields": {
+          "effect_class": 97,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 10,
+          "mp_cost_byte": 4,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 8,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 138,
@@ -5920,7 +8820,28 @@
         "Pteranod",
         "WindMerge",
         "WingSlime"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4C0D",
+        "raw": "6223410c060000000442020000000000000000",
+        "fields": {
+          "effect_class": 98,
+          "effect_category": 35,
+          "target_mode": 65,
+          "ai_weight": 12,
+          "mp_cost_byte": 6,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 139,
@@ -5957,7 +8878,28 @@
         "Roboster",
         "Rosevine",
         "Servant"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4C20",
+        "raw": "622321100a0000000442020000000000000000",
+        "fields": {
+          "effect_class": 98,
+          "effect_category": 35,
+          "target_mode": 33,
+          "ai_weight": 16,
+          "mp_cost_byte": 10,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 140,
@@ -5992,7 +8934,28 @@
         "DragonKid",
         "Gasgon",
         "GiantSlug"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4C33",
+        "raw": "63334110040000080402020000000000000000",
+        "fields": {
+          "effect_class": 99,
+          "effect_category": 51,
+          "target_mode": 65,
+          "ai_weight": 16,
+          "mp_cost_byte": 4,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 8,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 141,
@@ -6019,7 +8982,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4C46",
+        "raw": "64334100000000080402020000000000000000",
+        "fields": {
+          "effect_class": 100,
+          "effect_category": 51,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 8,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 142,
@@ -6061,7 +9045,28 @@
         "IronTurt",
         "LizardMan",
         "RockSlime"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4C59",
+        "raw": "65334110030000080402020000000000000000",
+        "fields": {
+          "effect_class": 101,
+          "effect_category": 51,
+          "target_mode": 65,
+          "ai_weight": 16,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 8,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 143,
@@ -6098,7 +9103,28 @@
         "GreatDrak",
         "Metaly",
         "StoneMan"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4C6C",
+        "raw": "6633210a020000180442020000000000000000",
+        "fields": {
+          "effect_class": 102,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 24,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 144,
@@ -6140,7 +9166,28 @@
         "FangSlime",
         "SlimeBorg",
         "Swordgon"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4C7F",
+        "raw": "6733410c030000080442020000000000000000",
+        "fields": {
+          "effect_class": 103,
+          "effect_category": 51,
+          "target_mode": 65,
+          "ai_weight": 12,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 8,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 145,
@@ -6172,7 +9219,28 @@
         "Trumpeter",
         "Yeti",
         "ZapBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4C92",
+        "raw": "6823120f061700200653020000000000000000",
+        "fields": {
+          "effect_class": 104,
+          "effect_category": 35,
+          "target_mode": 18,
+          "ai_weight": 15,
+          "mp_cost_byte": 6,
+          "status_id": 23,
+          "damage_class": 0,
+          "flags7": 32,
+          "flags8": 6,
+          "flags9": 83,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 146,
@@ -6211,7 +9279,28 @@
         "Toadstool",
         "Yeti",
         "ZapBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4CA5",
+        "raw": "6923110f061800000657020000000000000000",
+        "fields": {
+          "effect_class": 105,
+          "effect_category": 35,
+          "target_mode": 17,
+          "ai_weight": 15,
+          "mp_cost_byte": 6,
+          "status_id": 24,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 6,
+          "flags9": 87,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 147,
@@ -6251,7 +9340,28 @@
         "ChopClown",
         "DracoLord",
         "HornBeet"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4CB8",
+        "raw": "6a33411408000000041202f4010000f4010000",
+        "fields": {
+          "effect_class": 106,
+          "effect_category": 51,
+          "target_mode": 65,
+          "ai_weight": 20,
+          "mp_cost_byte": 8,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 2,
+          "power_party_min": 500,
+          "power_party_range": 0,
+          "power_enemy_min": 500,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 148,
@@ -6300,7 +9410,28 @@
         "Phoenix",
         "SuperTen",
         "WhipBird"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4CCB",
+        "raw": "6b3322140c00002004120246000a0046000a00",
+        "fields": {
+          "effect_class": 107,
+          "effect_category": 51,
+          "target_mode": 34,
+          "ai_weight": 20,
+          "mp_cost_byte": 12,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 32,
+          "flags8": 4,
+          "flags9": 18,
+          "field10": 2,
+          "power_party_min": 70,
+          "power_party_range": 10,
+          "power_enemy_min": 70,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 149,
@@ -6337,7 +9468,28 @@
         "Facer",
         "Florajay",
         "Grendal"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4CDE",
+        "raw": "6c33210a140000000442020000000000000000",
+        "fields": {
+          "effect_class": 108,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 10,
+          "mp_cost_byte": 20,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 150,
@@ -6374,7 +9526,28 @@
         "FunkyBird",
         "MetalKing",
         "Metaly"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$4CF1",
+        "raw": "6d332100010000200402020000000000000000",
+        "fields": {
+          "effect_class": 109,
+          "effect_category": 51,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 1,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 32,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 151,
@@ -6443,7 +9616,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D04",
+        "raw": "6e422200000000000400020000000000000000",
+        "fields": {
+          "effect_class": 110,
+          "effect_category": 66,
+          "target_mode": 34,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 0,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 152,
@@ -6467,7 +9661,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D17",
+        "raw": "6f414100000000000402020000000000000000",
+        "fields": {
+          "effect_class": 111,
+          "effect_category": 65,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 153,
@@ -6491,7 +9706,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D2A",
+        "raw": "ff53210000000083ae1a020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 83,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 174,
+          "flags9": 26,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 154,
@@ -6515,7 +9751,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D3D",
+        "raw": "ff53110000000083be1e020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 83,
+          "target_mode": 17,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 190,
+          "flags9": 30,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 155,
@@ -6539,7 +9796,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D50",
+        "raw": "ff534100000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 83,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 156,
@@ -6566,7 +9844,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D63",
+        "raw": "ff534100000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 83,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 157,
@@ -6593,7 +9892,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D76",
+        "raw": "ff514100000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 81,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 158,
@@ -6617,7 +9937,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D89",
+        "raw": "ff534100000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 83,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 159,
@@ -6643,7 +9984,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4D9C",
+        "raw": "ff514100000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 81,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 160,
@@ -6669,7 +10031,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4DAF",
+        "raw": "ff514100000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 81,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 161,
@@ -6695,7 +10078,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4DC2",
+        "raw": "ff514100000000000400020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 81,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 0,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 162,
@@ -6721,7 +10125,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4DD5",
+        "raw": "ff620200000000000400020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 98,
+          "target_mode": 2,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 0,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 163,
@@ -6745,7 +10170,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4DE8",
+        "raw": "ff63220000000000040202e7030000e7030000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 34,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 999,
+          "power_party_range": 0,
+          "power_enemy_min": 999,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 164,
@@ -6771,7 +10217,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4DFB",
+        "raw": "ff621200000000000400020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 98,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 0,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 165,
@@ -6798,7 +10265,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4E0E",
+        "raw": "ff630200000000000040020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 2,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 0,
+          "flags9": 64,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 166,
@@ -6822,7 +10310,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4E21",
+        "raw": "ff632100000000000440020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 64,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 167,
@@ -6846,7 +10355,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4E34",
+        "raw": "ff630100000000000442020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 1,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 168,
@@ -6870,7 +10400,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4E47",
+        "raw": "ff63010000000000040002e7030000e7030000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 1,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 0,
+          "field10": 2,
+          "power_party_min": 999,
+          "power_party_range": 0,
+          "power_enemy_min": 999,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 169,
@@ -6897,7 +10448,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4E5A",
+        "raw": "ff634100000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 170,
@@ -6923,7 +10495,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4E6D",
+        "raw": "ff634100000000000442020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 65,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 171,
@@ -6947,7 +10540,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4E80",
+        "raw": "ff631200000000838e0a020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 10,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 172,
@@ -6971,7 +10585,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4E93",
+        "raw": "ff631200000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 173,
@@ -6998,7 +10633,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4EA6",
+        "raw": "ff632200000000000402020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 34,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 174,
@@ -7022,7 +10678,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4EB9",
+        "raw": "ff63220000000000040202e7030000e7030000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 34,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 2,
+          "field10": 2,
+          "power_party_min": 999,
+          "power_party_range": 0,
+          "power_enemy_min": 999,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 175,
@@ -7046,7 +10723,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4ECC",
+        "raw": "ff630100000000000400020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 99,
+          "target_mode": 1,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 0,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 176,
@@ -7115,7 +10813,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4EDF",
+        "raw": "ff843100000000000423031e000a001e000a00",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 30,
+          "power_party_range": 10,
+          "power_enemy_min": 30,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 177,
@@ -7184,7 +10903,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4EF2",
+        "raw": "ff843100000000000423033c000a003c000a00",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 60,
+          "power_party_range": 10,
+          "power_enemy_min": 60,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 178,
@@ -7253,7 +10993,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F05",
+        "raw": "ff843200000000000423022d000a002d000a00",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 50,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 45,
+          "power_party_range": 10,
+          "power_enemy_min": 45,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 179,
@@ -7322,7 +11083,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F18",
+        "raw": "ff84320000000000042302e7030000e7030000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 50,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 999,
+          "power_party_range": 0,
+          "power_enemy_min": 999,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 180,
@@ -7391,7 +11173,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F2B",
+        "raw": "ff8431000000000004230314000a0014000a00",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 20,
+          "power_party_range": 10,
+          "power_enemy_min": 20,
+          "power_enemy_range": 10
+        }
+      }
     },
     {
       "id": 181,
@@ -7460,7 +11263,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F3E",
+        "raw": "ff84310000000000042303e7030000e7030000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 999,
+          "power_party_range": 0,
+          "power_enemy_min": 999,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 182,
@@ -7529,7 +11353,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F51",
+        "raw": "ff843100000000000423030000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 183,
@@ -7598,7 +11443,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F64",
+        "raw": "ff843100000000000423020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 184,
@@ -7667,7 +11533,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F77",
+        "raw": "ff843100000000000423020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 185,
@@ -7736,7 +11623,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F8A",
+        "raw": "ff843100000000000423030000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 186,
@@ -7805,7 +11713,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4F9D",
+        "raw": "ff843100000000000423020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 187,
@@ -7874,7 +11803,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4FB0",
+        "raw": "ff843100000000000423030000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 188,
@@ -7943,7 +11893,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4FC3",
+        "raw": "ff843100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 189,
@@ -8012,7 +11983,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4FD6",
+        "raw": "ff843100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 190,
@@ -8081,7 +12073,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4FE9",
+        "raw": "ff843100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 191,
@@ -8150,7 +12163,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$4FFC",
+        "raw": "ff843100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 192,
@@ -8219,7 +12253,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$500F",
+        "raw": "ff843100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 193,
@@ -8288,7 +12343,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5022",
+        "raw": "ff843100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 194,
@@ -8357,7 +12433,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5035",
+        "raw": "ff84310000000000042303050000000a000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 5,
+          "power_party_range": 0,
+          "power_enemy_min": 10,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 195,
@@ -8426,7 +12523,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5048",
+        "raw": "ff843100000000000423030a0000001e000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 10,
+          "power_party_range": 0,
+          "power_enemy_min": 30,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 196,
@@ -8495,7 +12613,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$505B",
+        "raw": "ff843100000000000423031400000064000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 20,
+          "power_party_range": 0,
+          "power_enemy_min": 100,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 197,
@@ -8564,7 +12703,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$506E",
+        "raw": "ff843100000000000423030500000005000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 5,
+          "power_party_range": 0,
+          "power_enemy_min": 5,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 198,
@@ -8633,7 +12793,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5081",
+        "raw": "ff843100000000000423036400000090010000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 49,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 3,
+          "power_party_min": 100,
+          "power_party_range": 0,
+          "power_enemy_min": 400,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 199,
@@ -8702,7 +12883,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5094",
+        "raw": "ff8412000005000106230223000f0000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 5,
+          "damage_class": 0,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 35,
+          "power_party_range": 15,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 200,
@@ -8771,7 +12973,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$50A7",
+        "raw": "ff841200000400010623020800100000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 4,
+          "damage_class": 0,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 8,
+          "power_party_range": 16,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 201,
@@ -8840,7 +13063,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$50BA",
+        "raw": "ff841200000700010663020000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 7,
+          "damage_class": 0,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 99,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 202,
@@ -8909,7 +13153,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$50CD",
+        "raw": "ff841200000200010623021e000c0000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 2,
+          "damage_class": 0,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 30,
+          "power_party_range": 12,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 203,
@@ -8978,7 +13243,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$50E0",
+        "raw": "ff8412000012000106230250001e0000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 18,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 18,
+          "damage_class": 0,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 80,
+          "power_party_range": 30,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 204,
@@ -9047,7 +13333,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$50F3",
+        "raw": "ff842200000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 34,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 205,
@@ -9116,7 +13423,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5106",
+        "raw": "ff842100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 206,
@@ -9185,7 +13513,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5119",
+        "raw": "ff842100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 207,
@@ -9254,7 +13603,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$512C",
+        "raw": "ff842100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 208,
@@ -9323,7 +13693,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$513F",
+        "raw": "ff842100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 209,
@@ -9392,7 +13783,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5152",
+        "raw": "ff842100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 210,
@@ -9461,7 +13873,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5165",
+        "raw": "ff842100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 211,
@@ -9530,7 +13963,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5178",
+        "raw": "ff842100000000000423010000000000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 33,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 35,
+          "field10": 1,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 212,
@@ -9599,7 +14053,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$518B",
+        "raw": "ff841100000100010623028c001e0000000000",
+        "fields": {
+          "effect_class": 255,
+          "effect_category": 132,
+          "target_mode": 17,
+          "ai_weight": 0,
+          "mp_cost_byte": 0,
+          "status_id": 1,
+          "damage_class": 0,
+          "flags7": 1,
+          "flags8": 6,
+          "flags9": 35,
+          "field10": 2,
+          "power_party_min": 140,
+          "power_party_range": 30,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 213,
@@ -9633,7 +14108,28 @@
         "BombCrag",
         "Crestpent",
         "DracoLord"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$519E",
+        "raw": "70224114090000400442020000000000000000",
+        "fields": {
+          "effect_class": 112,
+          "effect_category": 34,
+          "target_mode": 65,
+          "ai_weight": 20,
+          "mp_cost_byte": 9,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 64,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 214,
@@ -9668,7 +14164,28 @@
         "Gigantes",
         "GreatDrak",
         "SpikyBoy"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$51B1",
+        "raw": "7113110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 113,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 215,
@@ -9702,6 +14219,27 @@
         "Skeletor",
         "StubBird"
       ],
+      "battle_record": {
+        "addr": "$51C4",
+        "raw": "7213110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 114,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      },
       "note": "ROM name 'Sheldodge' is a placeholder; this is the Bug-family cut (family code 5). FAQ calls it 'BugBlow'. patches/bank_041.asm renames the displayed string to 'BugCut'."
     },
     {
@@ -9738,7 +14276,28 @@
         "MedusaEye",
         "Snapper",
         "WingSnake"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$51D7",
+        "raw": "7313110a03000083fe3f020000000000000000",
+        "fields": {
+          "effect_class": 115,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 3,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 254,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 217,
@@ -9779,7 +14338,28 @@
       "enemy_users": [
         "Esterk",
         "Skeletor"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$51EA",
+        "raw": "74131110141a04838e3f025e013c000e013200",
+        "fields": {
+          "effect_class": 116,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 16,
+          "mp_cost_byte": 20,
+          "status_id": 26,
+          "damage_class": 4,
+          "flags7": 131,
+          "flags8": 142,
+          "flags9": 63,
+          "field10": 2,
+          "power_party_min": 350,
+          "power_party_range": 60,
+          "power_enemy_min": 270,
+          "power_enemy_range": 50
+        }
+      }
     },
     {
       "id": 218,
@@ -9818,7 +14398,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$51FD",
+        "raw": "7521110a050c03400753020000000000000000",
+        "fields": {
+          "effect_class": 117,
+          "effect_category": 33,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 5,
+          "status_id": 12,
+          "damage_class": 3,
+          "flags7": 64,
+          "flags8": 7,
+          "flags9": 83,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 219,
@@ -9859,7 +14460,28 @@
       "enemy_users": [
         "Metabble",
         "Metaly"
-      ]
+      ],
+      "battle_record": {
+        "addr": "$5210",
+        "raw": "76314128000000000400020000000000000000",
+        "fields": {
+          "effect_class": 118,
+          "effect_category": 49,
+          "target_mode": 65,
+          "ai_weight": 40,
+          "mp_cost_byte": 0,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 0,
+          "flags8": 4,
+          "flags9": 0,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 220,
@@ -9895,7 +14517,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5223",
+        "raw": "7731410a020000480442020000000000000000",
+        "fields": {
+          "effect_class": 119,
+          "effect_category": 49,
+          "target_mode": 65,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 72,
+          "flags8": 4,
+          "flags9": 66,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     },
     {
       "id": 221,
@@ -9931,7 +14574,28 @@
       "family_code": null,
       "family": null,
       "natural_to_species": [],
-      "enemy_users": []
+      "enemy_users": [],
+      "battle_record": {
+        "addr": "$5236",
+        "raw": "7813110a020000839e13020000000000000000",
+        "fields": {
+          "effect_class": 120,
+          "effect_category": 19,
+          "target_mode": 17,
+          "ai_weight": 10,
+          "mp_cost_byte": 2,
+          "status_id": 0,
+          "damage_class": 0,
+          "flags7": 131,
+          "flags8": 158,
+          "flags9": 19,
+          "field10": 2,
+          "power_party_min": 0,
+          "power_party_range": 0,
+          "power_enemy_min": 0,
+          "power_enemy_range": 0
+        }
+      }
     }
   ]
 }

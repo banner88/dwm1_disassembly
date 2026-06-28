@@ -18,7 +18,10 @@ SECTION "ROM Bank $058", ROMX[$4000], BANK[$58]
     dw $57C5                          ; Entry 6
     dw $57A4                          ; Entry 7
     dw LoadBtlFX_5498                  ; Entry 8
-    dw $591E                          ; Entry 9
+    dw $591E                          ; Entry 9  — MeatFeedHandler ($591E): the
+                                      ; meat-item ($C2-$C6) recruitment-boost
+                                      ; effect (call $5c0b -> result; msg table
+                                      ; $5937). Routed here from $52:$4014. (S2 arc)
     dw $41E9                          ; Entry 10
     dw $67BA                          ; Entry 11
     dw $5C48                          ; Entry 12
@@ -647,6 +650,13 @@ jr_058_43fe:
 
 
 SaveBtlFX_43ff:
+; SkillFXRouter — routes the working skill id ($db8a) to one of two effect-
+; presentation handlers by id range (the "id-range bucketing" the skill system is
+; built on): id < $37, or id == $d9 / $dd  -> bank $54 entry 3 ($52C7); else ->
+; bank $52 entry 3 ($5203). Those handlers drive targeting / animation / battle
+; message. The animation POINTER itself is set deeper, by the effect handler's
+; descriptor-setter (e.g. $52:SetHLBattle_54e7 -> $dd70/71 = $b882 for Blaze);
+; it is NOT carried in the skill record. See BATTLE_SKILL_SYSTEM.md.
     push bc
     ld a, [$db8a]
     cp $37

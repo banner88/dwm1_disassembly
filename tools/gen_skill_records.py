@@ -55,6 +55,87 @@ INHERIT_BANK, INHERIT_TABLE = 0x16, 0x4874
 MON_BANK, MON_TABLE, MON_STRIDE, MON_COUNT = 0x03, 0x4461, 43, 221
 MON_SKILL_OFF = 0x06             # +6,+7,+8 = 3 base skill ids
 
+# --- battle "record" table (the per-skill PARAMETER block) ---------------------
+# $54:$4001 is a 231-entry dw table reached via rst $10 (entries 0..8 are routines).
+# Entries 9..230 (222) are the per-skill record pointers; they are simply
+# $41CF + id*19, i.e. the record-pointer table shares storage with the dispatch
+# table and is indexed (as $54:$4013 + id*2) by the working skill id $db8a.
+# Each record is 19 ($13) bytes. Handlers ($52:$4011) are the EFFECT TYPE and are
+# shared across same-effect skills (Blaze/Blazemore/Blazemost all -> $41CD); the
+# per-skill differences (power, targeting, message) live HERE in the record.
+#
+# Field map — FAQ-validated where marked PROVEN:
+#   +0  b  effect_class    fine effect/message id; shared by same-effect skills
+#                          (Heal/Healmore=$18, Increase/Upper=$0f)            HIGH
+#   +1  b  effect_category coarse category, hi-nibble: 1=damage 2=status/debuff
+#                          3=heal/buff 6/8=special, items=$8x                  HIGH
+#   +2  b  target_mode     target scope (cached -> $dcfc, read by AI $57):
+#                          $11=1 foe $12=all foes $21=1 ally $22=all allies,
+#                          $31/$41=special. FAQ-Range-validated.             PROVEN
+#   +3  b  ai_weight       per-skill AI action score; the enemy AI ($57
+#                          Jump_057_7529) SUMS record[+3] over its skill list
+#                          into the score table $dce4 -> picks weighted. The
+#                          per-skill AI lever (distinct from enemy-stats +17).  HIGH
+#   +4  b  mp_cost_byte    byte copy of MP cost ($07 table); 19/19 match     PROVEN
+#   +5  b  status_id       status/secondary-effect id; groups by effect
+#                          (Sleep fam=$08, Poison=$13, Slow=$0e, death=$09)  PROVEN
+#   +6  b  damage_class    $00=non-damage $04=spell-damage $05=breath-damage PROVEN
+#                          (FireAir/Scorching breath=$05 vs Blaze spell=$04;
+#                          element itself is chosen in the handler, not here)
+#   +7  b  flags7          presentation bitfield (cached $dcfd; bit3 -> guard/
+#                          skip path in bank $53)                              MED
+#   +8  b  flags8          anim/message bitfield (cached $dcfe; bit4 -> message
+#                          variant $67/$68)                                    MED
+#   +9  b  flags9          cast-behavior bitfield (cached $dcff; bit5 -> special
+#                          cast sub-state $d9ed=5)                             MED
+#   +10 b  field10         small class flag (read, compared ==1 in a build loop) LOW
+#   +11 w  power_party_min   damage/heal MINIMUM, party-side caster          PROVEN
+#   +13 w  power_party_range damage/heal RANGE (max = min+range), party       PROVEN
+#   +15 w  power_enemy_min   damage/heal minimum, enemy-side caster          PROVEN
+#   +17 w  power_enemy_range damage/heal range, enemy                        PROVEN
+# PROVEN +11/+13: 31/32 FAQ damage-heal ranges match min..min+range exactly
+# (the 1 miss is Explodet, ROM 130-150 vs a likely FAQ typo "130-140").
+# Caster side picked in $52:StoreDamageResult / $54 entry5 by wBattleAttackerIdx
+# bit2. Animation is NOT here — it is the descriptor-setter's anim pointer
+# ($52:SetHLBattle_54e7 -> $dd70=$b882 for Blaze).
+REC_BANK, REC_PTRS = 0x54, 0x4013   # entry 9 = first record pointer
+REC_DATA = 0x41CF                    # record data start (= entry 9 target)
+REC_STRIDE = 19                      # $13 bytes / record
+
+# Symmetric (name <-> byte) codec so every one of the 19 bytes is a named field
+# and encode(decode(raw)) == raw exactly (the round-trip guarantee).
+REC_BYTE_FIELDS = [                 # offset -> single-byte field name
+    (0, "effect_class"), (1, "effect_category"), (2, "target_mode"),
+    (3, "ai_weight"), (4, "mp_cost_byte"), (5, "status_id"), (6, "damage_class"),
+    (7, "flags7"), (8, "flags8"), (9, "flags9"), (10, "field10"),
+]
+REC_WORD_FIELDS = [                 # offset -> 16-bit LE field name
+    (11, "power_party_min"), (13, "power_party_range"),
+    (15, "power_enemy_min"), (17, "power_enemy_range"),
+]
+
+
+def decode_battle_record(b):
+    """19 raw bytes -> dict of named fields covering every byte."""
+    d = {}
+    for off, nm in REC_BYTE_FIELDS:
+        d[nm] = b[off]
+    for off, nm in REC_WORD_FIELDS:
+        d[nm] = b[off] | (b[off + 1] << 8)
+    return d
+
+
+def encode_battle_record(fields):
+    """Named fields -> 19 raw bytes (inverse of decode_battle_record)."""
+    b = bytearray(REC_STRIDE)
+    for off, nm in REC_BYTE_FIELDS:
+        b[off] = fields[nm] & 0xFF
+    for off, nm in REC_WORD_FIELDS:
+        v = fields[nm]
+        b[off] = v & 0xFF
+        b[off + 1] = (v >> 8) & 0xFF
+    return bytes(b)
+
 MP_ALL_SENTINEL = 999            # Farewell / MegaMagic
 
 FAMILY_NAMES = {0: "slime", 1: "dragon", 2: "beast", 3: "bird", 4: "plant",
@@ -118,6 +199,21 @@ def main():
     # --- inheritance base map ---
     inherit = rom.read(INHERIT_BANK, INHERIT_TABLE, 256)
 
+    # --- battle records (the per-skill PARAMETER block) ---
+    # Verify the pointer table (entries 9..230) is exactly $41CF + i*19 so the
+    # round-trip can re-emit BOTH the pointers and the data from id alone.
+    battle_raw = []
+    for i in range(N_SKILLS):
+        ptr = u16(rom.read(REC_BANK, REC_PTRS + i * 2, 2), 0)
+        assert ptr == REC_DATA + i * REC_STRIDE, (
+            f"record ptr[{i}]=${ptr:04X} != ${REC_DATA + i * REC_STRIDE:04X}; "
+            "table geometry changed — re-verify before trusting")
+        battle_raw.append(rom.read(REC_BANK, ptr, REC_STRIDE))
+    # self-check: decode->encode is byte-exact for every record
+    for i, b in enumerate(battle_raw):
+        assert encode_battle_record(decode_battle_record(b)) == bytes(b), \
+            f"battle-record codec not byte-exact for id {i}"
+
     # --- usage: monster natural sets + enemy lists ---
     nat_by_skill = {i: [] for i in range(N_SKILLS)}
     for m in range(MON_COUNT):
@@ -160,6 +256,11 @@ def main():
             "family": (fam[1] if fam else None),
             "natural_to_species": sorted(set(nat_by_skill[i])),
             "enemy_users": sorted(set(x for x in enemy_by_skill[i] if x)),
+            "battle_record": {
+                "addr": f"${REC_DATA + i * REC_STRIDE:04X}",
+                "raw": battle_raw[i].hex(),
+                "fields": decode_battle_record(battle_raw[i]),
+            },
         }
         if i == 215:
             rec["note"] = ("ROM name 'Sheldodge' is a placeholder; this is the "
@@ -180,7 +281,22 @@ def main():
                 "learn_req_table": f"${LEARN_BANK:02X}:${LEARN_TABLE:04X} (18B/record)",
                 "natural_skills": f"${MON_BANK:02X}:${MON_TABLE:04X}+${MON_SKILL_OFF:02X}",
                 "inherit_base": f"${INHERIT_BANK:02X}:${INHERIT_TABLE:04X}",
+                "battle_record_table": (
+                    f"${REC_BANK:02X}:${REC_PTRS:04X} ptrs (=${REC_DATA:04X}+id*{REC_STRIDE}) "
+                    f"-> {REC_STRIDE}B records; handler=effect-type (shared), "
+                    "record=per-skill params"),
             },
+            "battle_record_format": (
+                "+0 effect_class | +1 effect_category(1=dmg 2=status 3=heal/buff "
+                "8=item) | +2 target_mode($11=1foe $12=allfoes $21=1ally $22=allallies) "
+                "| +3 ai_weight(per-skill AI score, summed by enemy AI $57) "
+                "| +4 mp_cost_byte | +5 status_id(Sleep=$08 Poison=$13 Slow=$0e death=$09) "
+                "| +6 damage_class($00=none $04=spell $05=breath) | +7/+8/+9 flag "
+                "bitfields(presentation/anim/cast) | +11/+13 power_party_min/range, "
+                "+15/+17 power_enemy_min/range (u16 LE; max=min+range; caster-side). "
+                "PROVEN/HIGH: +0,+1,+2,+3,+4,+5,+6,+11,+13,+15,+17. Animation pointer "
+                "is in the handler's descriptor-setter ($52:SetHLBattle_54e7 -> "
+                "$dd70=$b882 for Blaze), NOT the record."),
             "learn_record_format":
                 "+0 level u8 | +1 hp +3 mp +5 atk +7 def +9 agl +11 int (u16 LE) "
                 "| +13..17 up to 5 prereq skill ids ($FF=none)",

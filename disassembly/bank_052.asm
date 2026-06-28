@@ -1090,6 +1090,13 @@ SkillChance:
     ret
 
 SkillPoisonHit_StepGuard_Whistle_Attack:
+; Generic effect handler shared by PoisonHit/Attack/Whistle/StepGuard AND all 37
+; item_effect skills (ids $B0-$D4 / 176-212 = the in-battle usable items: HERB,
+; POTION, the stat SEEDs, the MEATs, staves, books...). Applies the record's
+; effect via CalcDefenseWrapper($519a) -> CalcSkillDefense($60d7); the outcome
+; (heal amount, cure, stat boost) is RECORD-DRIVEN (power/target_mode/status_id).
+; A custom item-outcome skill = new id + record + this handler (heal/cure/seed
+; shapes), or a custom handler for novel outcomes (e.g. meat -> $58:$591E).
 
 
     call CalcDefenseWrapper
@@ -3655,6 +3662,19 @@ GetAttackerBattleSlot:
 
 
 ApplySkillDamage:
+; --- Skill effect/animation descriptor-setter family ($5460-$54f8) -----------
+; Each sets $dd6f (effect DESCRIPTOR bitfield) and $dd70/71 (effect-SCRIPT
+; pointer, e.g. Blaze=$b882). The skill HANDLER picks which setter to call -> this
+; is where a skill's animation/message is chosen (NOT in the skill record).
+; $dd6f bits: bit7=has-effect (consumer gate, bank $53); bit6/5/4/3..=effect-mode
+;   ($a8 Blaze=bit7+5+3, $a0, $98, $90, $d0, $88, $84, $80, $40=flag-only/no ptr).
+; Flow: $dd70/71 -> $c822/$c823 -> bank $4c (effect-script/message engine,
+;   CallTextEngine) + bank $55 entry 1 (sprite anim). So battle effects are
+;   bytecode SCRIPTS in the $b6xx-$bcxx pointer space ($b682 = shared default,
+;   28 handlers; elemental spells cluster $b882-$b898). The script bytecode
+;   FORMAT + its $b000-region backing is the remaining sub-item (animation
+;   authoring). To REUSE an existing animation on a custom skill, point its
+;   handler at a different $bXXX setter. See BATTLE_SKILL_SYSTEM.md.
     ld [$dd70], a
     ld [$dd71], a
     ld a, $80
@@ -4011,6 +4031,11 @@ ApplySkillHit:
     ld hl, $c1a0
     call Copy4Bytes
     ld a, [$db78]
+    ; [S2 arc] MEAT items: ids $C2-$C6 (194-198 = FEEDMEAT, BEFFJERKY, PORKCHOP,
+    ; BADMEAT, SIRLOIN) route to the meat-feeding / recruitment-boost handler at
+    ; $58 entry 9 ($58:$591E) below; other in-battle items use the generic
+    ; record-driven applier. The 37 item_effect "skills" (ids $B0-$D4 / 176-212)
+    ; ARE the usable battle items. See BATTLE_SKILL_SYSTEM.md.
     cp $c2
     jr c, jr_052_565a
 

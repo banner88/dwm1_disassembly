@@ -918,8 +918,9 @@ yields the E6 capacity numbers.
 Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, **222 entries** ($00–$DD)
 → 115 handlers, dispatch `$52:$6CC7`; names `$41:$4539`); plus the now-decoded
 `SkillMPCostTable $07:$570C` (u16, 999=ALL) and `SkillLearnReqTable $06:$50E0` (18B/skill).
-The editor data side is captured in `extracted/skill_records.json`. AI *selection* is the
-unreversed half.
+The editor data side is captured in `extracted/skill_records.json`; the **presentation**
+layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SKILL_SYSTEM.md`
+§7–§10). Remaining RE: the effect-script bytecode (S2c) and the full AI weighted-pick (S3).
 - [x] **S1 — Skill data foundation + round-trip keystone (S44).** *Reshaped on audit:* the
       bank `$52` function table was already re-sectioned, so the real work was the data tables.
       Decoded + FAQ-validated `SkillMPCostTable` ($07:$570C) and `SkillLearnReqTable`
@@ -931,24 +932,40 @@ unreversed half.
       (**SameBoy-confirmed**). Comment-only annotation of the two tables in `bank_006/007`
       (flagged the `TilesetLookupTable` mislabel at `$570C`; rename + full `dw` re-section
       deferred pending SameBoy confirmation of the `$56E8` fn role). MD5 unchanged; integrity PASS.
-- [x] **S2 — Custom skill EFFECTS. ✅ DONE (S45, SameBoy-confirmed).** Added two
-      net-new ids: $DE "Scorch" (reuses Blaze's handler) and $DF "Smite" (NEW handler,
-      fixed 80 dmg), assigned to starter EID 1. Both work in battle: full Blaze presentation
-      (targeting/animation/message) + correct effect + correct menu names. Achieved via a
-      **skill-alias framework** (commit-time templatize to Blaze + `$db86` real-id stash +
-      `$db8a==0` dispatch guard + `FarSkillFork` custom dispatch), NOT a `SkillFunctionTable`
-      relocation. Full RE + framework + UNCERTAINTY FLAGS: `BATTLE_SKILL_SYSTEM.md`.
-      Known limitations (single custom-caster; enemy-real-Blaze edge case) documented there.
-      *Accept met:* renamed-existing-handler skill (Scorch) AND novel-handler skill (Smite)
-      both confirmed in battle by user.
-- [ ] **S3 — AI selection RE (discovery, no patch).** Locate + annotate the enemy-turn
-      action-choice routine (reads skill list + `ai_weights` enemy-stats `+17..20`); determine
-      whether it keys off per-monster weights only, a per-skill category byte, or hardcoded
-      logic; confirm inputs with a SameBoy watchpoint. **Gates S4; its findings set S4's shape.**
-      *Accept:* routine located + algorithm documented (MONSTER_DATA.md battle-AI subsection).
-- [ ] **S4 — Per-skill AI authoring.** Per S3: expose a per-skill AI preference (easy if a
-      per-skill property exists) or a small same-size logic edit. *Accept:* changing a skill's
-      AI parameter measurably shifts enemy choice in SameBoy.
+- [~] **S2 — Custom skills (ARC, not a single item).** S45 marked this "done" off a
+      narrow POC; corrected (S46). The arc:
+  - [x] **S2a — Alias EFFECTS POC (S45, SameBoy-confirmed).** Net-new ids $DE "Scorch"
+        (reuses Blaze handler) + $DF "Smite" (NEW handler, 80 dmg) on starter EID 1, via the
+        **skill-alias framework** (commit-time templatize to Blaze + `$db86` stash + `$db8a==0`
+        guard + `FarSkillFork`). Works in battle. **Narrow:** single custom-caster, Blaze-shaped
+        presentation only; enemy-real-Blaze edge case unclosed. `BATTLE_SKILL_SYSTEM.md` §1–§6.
+  - [x] **S2b — Presentation foundation + record round-trip keystone (S46, byte-neutral;
+        NOT yet user-tested).** Proved handler=effect TYPE (shared) / record=per-skill params.
+        Decoded the **record table** `$54:$4013`→`$41CF` (222×19B): field map FAQ-validated
+        (+0 effect_class, +1 effect_category, +2 target_mode, +3 ai_weight, +4 mp_cost,
+        +5 status_id, +6 damage_class, +11/+13/+15/+17 power min/range — 31/32 FAQ ranges exact).
+        `build_skill_tables.py --selftest` re-emits ptr table + data **byte-identical**; the 4218B
+        block **re-sectioned to `db`** in `bank_054.asm`. Decoded the **item-effect/meat** system
+        (`$52:$4625`, meat 194–198 → `$58:$591E`) and the **animation dispatch** (`$52:$5460–$54f8`
+        → `$dd6f`/`$dd70` → bank `$4c`/`$55`). MD5 unchanged, integrity PASS. `BATTLE_SKILL_SYSTEM.md` §7–§10.
+  - [ ] **S2c — Effect-script bytecode / animation authoring (RE, discovery).** Reverse the
+        bank `$4c` effect-script interpreter + the `$b000`-region backing so a custom skill gets
+        its OWN animation. *Accept:* one effect script decoded to bytes; format documented.
+        (Reuse of an existing anim already works by repointing the handler's setter.)
+  - [ ] **S2d — Proper per-id custom-skill records (the real authoring; replaces the alias
+        hack).** Give new ids ($DE+) their OWN record + handler + name instead of aliasing to
+        Blaze, so heal/Tame/Anchor-shaped skills become expressible; fix the single-caster +
+        enemy-Blaze limitations. *Accept:* a non-damage custom skill (e.g. an ally heal) works
+        in SameBoy without aliasing.
+- [~] **S3 — AI selection RE (partly answered S46).** **Found:** the per-skill AI lever is
+      **record +3 (`ai_weight`)** — the enemy AI (`$57 Jump_057_7529`) walks its skill list and
+      SUMS record[+3] into the score table `$dce4`, then picks weighted (Sacrifice/MegaMagic=0).
+      Distinct from per-monster enemy-stats `+17..20`. *Remaining:* trace the weighted pick + how
+      per-monster weights combine; confirm with a SameBoy watchpoint on `$dce4`/record+3.
+      *Accept:* selection algorithm documented (MONSTER_DATA battle-AI subsec).
+- [ ] **S4 — Per-skill AI authoring.** Likely easy now: edit record +3 (`ai_weight`) per skill
+      (round-trips via `build_skill_tables.py`). *Accept:* changing a skill's ai_weight measurably
+      shifts enemy choice in SameBoy.
 
 ### Arc 3 — Custom music (discovery-gated; longest pole)
 Unparks the "custom music" line. The main GBC sequence engine + song-data format are
@@ -965,7 +982,7 @@ e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block a
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
 
-**Recommended order:** T1 ✅ → S1 → M1 (discovery) → S2 ✅ → T2-roll-out → S3 → S4 → M2 → M3,
+**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → **S2c or S2d** (next) / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
 slotting the text roll-out into spare sessions. Cheap high-confidence wins early; fire the
 two RE discovery sessions (M1, S3) before their authoring items depend on them.
 

@@ -6,6 +6,10 @@ Tables covered (the numeric, fully-owned ones):
   - SkillFunctionTable   $52:$4011   222 x dw (handler_addr)
   - SkillMPCostTable     $07:$570C   222 x u16 LE  (ALL -> 999)
   - SkillLearnReqTable   $06:$50E0   222 x 18B record
+  - SkillRecordPtrTable  $54:$4013   222 x dw  (= $41CF + id*19; dispatch entries 9..230)
+  - SkillRecordData      $54:$41CF   222 x 19B per-skill PARAMETER block
+                                     (power/targeting/message; handler is the shared
+                                      effect TYPE, record is the per-skill params)
 
 (The name pointer table + strings round-trip is owned by the text keystone, T1.)
 
@@ -34,6 +38,14 @@ FUNC_BANK, FUNC_TABLE = 0x52, 0x4011
 MP_BANK, MP_TABLE = 0x07, 0x570C
 LEARN_BANK, LEARN_TABLE, LEARN_REC = 0x06, 0x50E0, 18
 MP_ALL = 999
+
+# Battle "record" table (per-skill PARAMETER block; see gen_skill_records.py).
+# $54:$4013 = entry 9 of the rst-$10 dispatch table; entries 9..230 are the 222
+# record pointers (= $41CF + id*19). The record DATA (222 x 19 = 4218 B) begins
+# at $41CF, immediately after the 231-entry table.
+REC_BANK, REC_PTRS, REC_DATA, REC_STRIDE = 0x54, 0x4013, 0x41CF, 19
+sys.path.insert(0, SCRIPT_DIR)
+from gen_skill_records import encode_battle_record  # noqa: E402  (single codec)
 
 
 def load_records():
@@ -77,6 +89,22 @@ def emit_learn_bytes(recs):
     return bytes(out)
 
 
+def emit_record_data_bytes(recs):
+    """The 222 x 19B record data block at $54:$41CF (4218 bytes)."""
+    out = bytearray()
+    for r in recs:
+        out += encode_battle_record(r["battle_record"]["fields"])
+    return bytes(out)
+
+
+def emit_record_ptr_bytes(recs):
+    """The 222 record pointers (dispatch-table entries 9..230) = $41CF + id*19."""
+    out = bytearray()
+    for r in recs:
+        out += lo_hi(REC_DATA + r["id"] * REC_STRIDE)
+    return bytes(out)
+
+
 def rom_bytes(rom, bank, addr, size):
     return rom.read(bank, addr, size)
 
@@ -89,6 +117,8 @@ def selftest():
         ("SkillFunctionTable", FUNC_BANK, FUNC_TABLE, emit_func_bytes(recs), N * 2),
         ("SkillMPCostTable",   MP_BANK,  MP_TABLE,   emit_mp_bytes(recs),   N * 2),
         ("SkillLearnReqTable", LEARN_BANK, LEARN_TABLE, emit_learn_bytes(recs), N * LEARN_REC),
+        ("SkillRecordPtrTable", REC_BANK, REC_PTRS, emit_record_ptr_bytes(recs), N * 2),
+        ("SkillRecordData",     REC_BANK, REC_DATA, emit_record_data_bytes(recs), N * REC_STRIDE),
     ]
     ok = True
     for name, bank, addr, got, size in checks:
@@ -125,6 +155,15 @@ def emit_asm(which):
                               for k in ("hp", "mp", "atk", "def", "agl", "int"))
             prs = ", ".join(f"${p:02X}" for p in pre[:5])
             print(f"    db ${L['level']:02X}, {stats}, {prs}  ; [{r['id']:3d}] {r['name']}")
+    elif which == "recordptr":
+        print("SkillRecordPtrTable:  ; $54:$4013 — 222 x dw (dispatch entries 9..230 = $41CF+id*19)")
+        for r in recs:
+            print(f"    dw ${REC_DATA + r['id'] * REC_STRIDE:04X}  ; [{r['id']:3d}] {r['name']}")
+    elif which == "record":
+        print("SkillRecordData:  ; $54:$41CF — 222 x 19B per-skill parameter block")
+        for r in recs:
+            b = encode_battle_record(r["battle_record"]["fields"])
+            print("    db " + ", ".join(f"${x:02X}" for x in b) + f"  ; [{r['id']:3d}] {r['name']}")
     else:
         print("unknown table:", which, file=sys.stderr)
         sys.exit(2)

@@ -5,8 +5,42 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-26 (Session 44 — **Phase F Arc-2 / S1: skill-editor data
-> foundation + BugCut rename.** Integrity PASS 4/4, clean build byte-perfect
+> Last verified: 2026-06-28 (Session 46 — **Phase F / S2-arc: skill PRESENTATION
+> foundation decoded + record-table round-trip keystone + re-section.** Integrity
+> PASS 4/4, clean build byte-perfect `1ca6579…`. Byte-neutral (discovery +
+> annotation + tooling); no functional ROM. NOT yet user-tested — handoff for a
+> fresh instance to continue.)
+> **S46 — S2 was NOT done; it is an ARC.** S45 shipped a single-caster,
+> Blaze-shaped alias POC (correct but narrow). Audited S45 byte-for-byte: built
+> correctly, no false claims; the error was marking S2 "done". This session
+> decoded the skill **presentation** layer that the alias hack worked around.
+> **Core architecture proven:** handler (`$52:$4011`) = effect TYPE (shared:
+> Blaze/Blazemore/Blazemost → one handler `$41CD`); the per-skill **record**
+> (`$54`) = parameters. **(a) Record table fully decoded + round-tripped:**
+> `$54:$4013` pointer entries (dispatch entries 9–230) = `$41CF + id*19`, 222 × 19B
+> data at `$41CF`. `build_skill_tables.py` now re-emits the pointer table + data
+> **byte-identical** (`--selftest` 5/5 PASS); the 4218-byte block is **re-sectioned
+> to clean `db` records** in `bank_054.asm` (editable in source). Field map (FAQ-
+> validated PROVEN: +0 effect_class, +1 effect_category, +2 target_mode, +3
+> **ai_weight** (per-skill AI score summed by enemy AI `$57`), +4 mp_cost, +5
+> status_id, +6 damage_class, +11/+13/+15/+17 power min/range party/enemy — 31/32
+> FAQ damage-heal ranges exact). **(b) Item-effect/meat system (#3):** the 37
+> item_effect skills (ids 176–212) are the in-battle items; shared handler
+> `$52:$4625` (record-driven); meat items (194–198) special-case via `$52:$4014`
+> → recruitment handler `$58:$591E`. **(c) Animation dispatch (#2):** handler picks
+> a descriptor-setter (`$52:$5460–$54f8`) → `$dd6f` (bit7=has-effect) + `$dd70`
+> script pointer (Blaze=`$b882`) → bank `$4c` effect engine + `$55` sprite anim;
+> pointer space `$b6xx–$bcxx` (`$b682` default). **OPEN:** effect-script bytecode
+> FORMAT + `$b000` backing not reversed = the animation-authoring sub-item.
+> **Tools:** `gen_skill_records.py` (+battle_record 7th source), `build_skill_tables.py`
+> (+record round-trip, `--emit record/recordptr`). Annotation comment/label-only in
+> `bank_052/053/054/058.asm` (clean build stays `1ca6579…`). Full RE + field tables
+> + confidence: **`BATTLE_SKILL_SYSTEM.md` §7–§10.** **NEXT for the new instance:**
+> either (1) reverse the effect-script bytecode (animation authoring, bank `$4c`),
+> or (2) the real authoring step — proper per-id custom-skill records (own record +
+> handler + name) that REPLACE the S45 alias hack, enabling heal/Tame/Anchor shapes.
+>
+ Integrity PASS 4/4, clean build byte-perfect
 > `1ca6579…`. Functional change (rename) **user-confirmed in SameBoy: skill 215
 > displays "BugCut".**)
 > **S44 — the skill subsystem is now data-complete for an editor.** Audited the
@@ -792,7 +826,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Random encounters in custom rooms | ✅ working (single room, Strategy A) | Whitelist mapID in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor (ASM) + arm wEncounterCounter (room-entry script). Pool selectable via gate/floor. v30, runtime-verified. Editor generalization specced (CROSSBANK_ROOMS.md). |
 | Custom breeding recipes (special table) | ✅ working (same-size edit + capacity extension) | v31/S12: special-recipe override (Anteater×BattleRex→GoldSlime) via two provably-dead entries; in-game confirmed. Tool `patch_breeding_recipe.py`, `patches/bank_016.asm`. Family table is positional (result=slot index). **S13: round-trip encoder B1 built** (`tools/build_breeding.py`, `extracted/breeding_tables.json`) — both vanilla tables decode/re-emit byte-identical. **S13: B2 relocation** (special scan → free bank `$69` via `rst $10`). **S15: B3 capacity 1×–2×** — `build_breeding.py` appends recipes from `extracted/breeding_extra_recipes.json` past index 824 (cap 1650); BattleRex×MadCat→DracoLord confirmed in-game. **S16: B4 family-defaults rewrite** — `build_breeding.py --emit-family` authors the positional family table in place from `extracted/breeding_family_defaults.json`; Bird/Slime/Beast×Dragon + new Dragon×Dragon→GreatDrak confirmed in-game (5 bytes, zero-collateral). **S17: B5 full special-table authoring** — `build_breeding.py --emit-special` owns the WHOLE special table as authored data (825 ROM base + in-place `overrides` by index/parents + `appends`) from `extracted/breeding_special.json`, with a whole-table first-match-wins shadow validator; bank `$16` stays vanilla (single source = JSON → bank `$69`). Confirmed in-game: MadCat×BattleRex→DracoLord (entry-187 in-place edit), Darkdrium×BattleRex→Armorpion (append), S12 GoldSlime preserved. Supersedes the B3 `--emit-relocation` path. **S18: B6 family reassignment** — `build_family_reassign.py` moves monsters between ANY families (incl. ???/Boss=9) via same-size family-byte edits (`patches/bank_003.asm`); reader gate cleared (display/copy only, eligibility is joinability+boss table, not family). **S18: dynamic-library POC** — `build_dynamic_library.py` redirects `SetItem_6242` ($12) to a family-byte scan so the library groups by reassigned family (`patches/bank_012.asm`); user-confirmed, POC only (lags). **S19: B7 production library grouping (DONE, replaces the POC)** — `build_library_table.py` emits a build-time precomputed family→members table into bank `$12` free space + a zero-shift `SetItem_6242` walker; **zero far-loads, zero scratch RAM**, vanilla blank-slot semantics restored; generic-N (`NUM_FAMILIES`) + 256-id-ceiling extension-aware; special entries 215–220 protected; `extracted/library_grouping.json` data deliverable; user-confirmed in SameBoy (zero lag). Production library now done; 11th family (B9) data side unblocked. Rename (B8) folded into B9 per user decision. |
 
-| Custom battle skill EFFECTS (net-new ids) | ✅ working (S45, user-confirmed) | **Skill-alias framework** — net-new ids ($DE Scorch, $DF Smite) on starter EID 1. A new id is templatized to an existing skill (Blaze) at the action-queue commit so all range-bucketed presentation (targeting/animation/message/MP/record) inherits it; the real id is stashed in `$db86` and the custom **effect** is dispatched via `FarSkillFork` (bank `$72`) → `CustomSkillTable52` (`$52:$7FED`); names via `SkillNamePtrTable`. Scorch reuses Blaze's handler, Smite uses a NEW handler (`NovelEffect52`, fixed 80 dmg). Patches: `bank_050` (AliasCommit/templatize+stash), `bank_052` (dispatch hook + custom table/handler), `bank_072` (FarSkillFork), `bank_041` (names), `bank_014` (assignment). **Full RE + framework + UNCERTAINTY FLAGS + known limitations: `BATTLE_SKILL_SYSTEM.md`.** Took 9 iterations; do not extend without reading the confidence section there. |
+| Custom battle skill EFFECTS (net-new ids) | 🟡 S2-ARC in progress (S45 alias POC ✅ user-confirmed; S46 presentation foundation, byte-neutral, not yet tested) | **S2 is an ARC, not done.** (1) **Alias framework (S45, POC):** net-new ids ($DE Scorch, $DF Smite) on starter EID 1, templatized to Blaze at the action-queue commit; real id stashed in `$db86`; custom effect via `FarSkillFork` (bank `$72`) → `CustomSkillTable52` (`$52:$7FED`); names via `SkillNamePtrTable`. Single-caster, Blaze-shaped only. (2) **Presentation foundation (S46):** the skill RECORD table (`$54:$4013`→`$41CF`, 222×19B) decoded + round-tripped byte-identical + re-sectioned to `db`; field map FAQ-validated (power/targeting/MP/status/ai_weight); item-effect+meat system (`$52:$4625`, meat→`$58:$591E`); animation dispatch (descriptor-setters `$52:$5460–$54f8` → `$dd6f`/`$dd70` → bank `$4c`/`$55`). Handler=effect TYPE (shared), record=per-skill params. **Full RE + field tables + confidence + known limitations: `BATTLE_SKILL_SYSTEM.md` (read §⚠️ + §7–§10 before extending).** OPEN: effect-script bytecode format (animation authoring); proper per-id custom records to replace the alias hack. |
 
 ### Not yet implemented (the roadblocks — see ROADMAP.md)
 

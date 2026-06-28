@@ -4611,6 +4611,12 @@ jr_053_5a44:
 
 Jump_053_5a6f:
 jr_053_5a6f:
+; Skill effect/animation player. Reads the descriptor $dd6f (set by the bank $52
+; descriptor-setter family) and dispatches the effect: bit6 selects the play
+; path; bit7=0 means no effect (ret). When playing, the effect-script pointer
+; $dd70/71 is handed to $c822/$c823 and run via bank $4c (effect/message engine)
+; and bank $55 entry 1 (sprite anim). bit5 -> use the $db56 alt pointer; bit3/4
+; gate sub-effects. See BATTLE_SKILL_SYSTEM.md (skill animation).
     ld hl, $d9ee
     inc [hl]
     ld a, [$dd6f]
