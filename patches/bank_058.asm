@@ -4171,15 +4171,8 @@ jr_058_57c2:
     ld h, a
     ld a, [hl]
 
-; [S2d] ANNOUNCE-TEMPLATE LOOKUP (bank $58 entry 6, $57C5). $db4c := announce msgid
-; for the queued skill: a = [AnnounceTemplateTable + skill_id], rendered by $50 entry 7
-; ($50:$5A42). $FF = silent. The table at $5806 is DATA (256-wide, indexed by skill id)
-; but is misdisassembled below as code ($5806.. = inc hl / rst $38 / ld l,x ...). The
-; clean labeled `db` form + the custom-skill slot ($E0 MagicBurn) live in
-; patches/bank_058.asm (AnnounceTemplateTable / AnnounceTpl_E0_MagicBurn). See
-; BATTLE_SKILL_SYSTEM.md §13.1.
 jr_058_57e6:
-    ld hl, $5806                      ; $5806 = AnnounceTemplateTable (data; see note above)
+    ld hl, $5806
     add l
     ld l, a
     ld a, $00
@@ -4207,227 +4200,31 @@ jr_058_57fa:
     ret
 
 
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    ld [hl+], a
-    ld [hl+], a
-    inc hl
-    ld [hl+], a
-    dec hl
-    inc l
-    dec l
-    ld l, $2f
-    jr nc, jr_058_5879
-
-    ld [hl-], a
-    inc [hl]
-    inc h
-    inc h
-    inc h
-    inc h
-    inc h
-    inc h
-    inc h
-    inc h
-    inc h
-    inc h
-    inc h
-    dec [hl]
-    inc h
-    inc h
-    ld [hl], $37
-    jr c, jr_058_5895
-
-    ld a, [hl-]
-    inc h
-    inc h
-    dec sp
-    inc a
-    dec a
-    dec h
-    dec h
-    dec h
-    dec h
-    dec h
-    dec h
-    dec h
-    dec h
-    ld a, $3f
-    ld b, b
-    ld [hl+], a
-    ld [hl+], a
-    ld [hl+], a
-    dec h
-    dec h
-    dec h
-    dec h
-    ld h, $41
-    ld b, h
-    ld h, $42
-
-jr_058_5879:
-    inc h
-    inc h
-    ld h, $26
-    ld b, e
-    ld h, $45
-    ld b, l
-    ld b, [hl]
-    inc h
-    ld c, b
-    ld [hl+], a
-    ld d, b
-    daa
-    daa
-    daa
-    ld [hl], b
-    ld c, c
-    ld c, c
-    ld c, c
-    ld c, c
-    ld d, c
-    ld d, d
-    ld c, d
-    ld c, e
-    ld d, e
-    jr z, @+$56
-
-jr_058_5895:
-    ld d, [hl]
-    ld d, l
-    ld h, $4c
-    ld c, l
-    ld h, $4e
-    ld h, $2a
-    jr jr_058_58c2
-
-    ld [hl+], a
-    ld d, a
-    ld e, b
-    ld e, h
-    ld e, c
-    ld e, d
-    ld e, e
-    add hl, hl
-    ld l, a
-    rst $38
-    rst $38
-    ld [hl], b
-    ld [hl], c
-    rst $38
-    rst $38
-    ld [hl], e
-    rst $38
-    ld [hl], h
-    ld [hl], l
-    rst $38
-    rst $38
-    ld [hl], a
-    ld e, l
-    ld e, l
-    ld e, a
-    ld h, b
-    ld e, l
-    ld e, l
-    ld e, l
-    ld e, l
-    ld e, l
-    ld e, l
-    ld e, l
-    ld e, l
-
-jr_058_58c2:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld e, [hl]
-    ld e, [hl]
-    ld e, [hl]
-    ld e, [hl]
-    ld e, [hl]
-    ld h, c
-    ld h, d
-    ld h, e
-    ld h, h
-    ld h, l
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld h, [hl]
-    inc hl
-    inc h
-    inc h
-    inc h
-    inc h
-    inc hl
-    add hl, hl
-    inc hl
-    ld b, h
-    ld h, a
-    ld l, b
-    rst $38
-    ld l, d
+; === AnnounceTemplateTable ($58:$5806) =========================================
+; Per-skill battle announce msgid = [$5806 + skill_id]; rendered via $50 entry 7.
+; $FF = silent. Originally misdisassembled as code; now a real table so custom
+; skills ($DE+) have a clean, one-line-editable announce slot. [S2d]
+AnnounceTemplateTable:
+    db $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23   ; ids $00-$0F
+    db $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23   ; ids $10-$1F
+    db $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23, $23   ; ids $20-$2F
+    db $23, $23, $23, $23, $23, $23, $23, $22, $22, $23, $22, $2B, $2C, $2D, $2E, $2F   ; ids $30-$3F
+    db $30, $31, $32, $34, $24, $24, $24, $24, $24, $24, $24, $24, $24, $24, $24, $35   ; ids $40-$4F
+    db $24, $24, $36, $37, $38, $39, $3A, $24, $24, $3B, $3C, $3D, $25, $25, $25, $25   ; ids $50-$5F
+    db $25, $25, $25, $25, $3E, $3F, $40, $22, $22, $22, $25, $25, $25, $25, $26, $41   ; ids $60-$6F
+    db $44, $26, $42, $24, $24, $26, $26, $43, $26, $45, $45, $46, $24, $48, $22, $50   ; ids $70-$7F
+    db $27, $27, $27, $70, $49, $49, $49, $49, $51, $52, $4A, $4B, $53, $28, $54, $56   ; ids $80-$8F
+    db $55, $26, $4C, $4D, $26, $4E, $26, $2A, $18, $22, $22, $57, $58, $5C, $59, $5A   ; ids $90-$9F
+    db $5B, $29, $6F, $FF, $FF, $70, $71, $FF, $FF, $73, $FF, $74, $75, $FF, $FF, $77   ; ids $A0-$AF
+    db $5D, $5D, $5F, $60, $5D, $5D, $5D, $5D, $5D, $5D, $5D, $5D, $FF, $FF, $FF, $FF   ; ids $B0-$BF
+    db $FF, $FF, $5E, $5E, $5E, $5E, $5E, $61, $62, $63, $64, $65, $FF, $FF, $FF, $FF   ; ids $C0-$CF
+    db $FF, $FF, $FF, $FF, $66, $23, $24, $24, $24, $24, $23, $29, $23, $44   ; ids $D0-$DD
+    ; --- custom / high skill-id announce slots (one line each) ---
+    db $67   ; id $DE (retired POC)
+    db $68   ; id $DF (retired POC)
+AnnounceTpl_E0_MagicBurn::
+    db $FD   ; id $E0 MagicBurn -> custom-pool msg ("burns half its MP!"); was $FF
+    db $6A   ; id $E1 (reserved)
 
 Jump_058_58e8:
     ld a, [wBattleTargetIdx]

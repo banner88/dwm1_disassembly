@@ -1574,3 +1574,47 @@ ids index a high table.
 **Rule:** a foundation session that gates an authoring session should end by proving the
 fork *assembles 5-for-5 and behaves*, not just by listing addresses. Cheap, zero ROM risk,
 and it catches "the window isn't replaceable" before the patch session discovers it the hard way.
+
+---
+
+## S49 (2026-06-29) — custom-skill PRESENTATION, end to end
+
+### Missing presentation is empty DATA, not broken code
+**Symptom:** custom skill `$E0` dealt damage + showed result text but had no
+announcement, no animation, no hit-flash, no cast sound.
+**Root cause:** every presentation layer reads a *per-skill data slot* indexed by
+skill id, and `$E0`'s slots were empty/sentinel or overshot: announce
+`AnnounceTemplateTable[$E0]=$FF` (silent), and the `$5f` anim-command tables
+(`$56ed`/`$57d5`) overshoot past their valid range for `$E0` → garbage command →
+the script never finishes → `$52:$6c4d` spins on `$da82` (hang).
+**Fix:** fill the announce slot; for animation, fork the skill-id reads to a proxy
+(below).
+**Rule:** when a custom id is silent/invisible/hangs, look for an empty or
+overshot per-skill table slot before suspecting logic. The engine is data-driven.
+
+### Full-proxy the skill id; don't "trigger" a custom animation
+**Symptom:** an earlier naive attempt to *trigger* `$E0`'s animation hung; `$E0`
+has no script.
+**Root cause:** the script VM keys off the skill id only at *selection* time
+(bank `$5f`, 12 reads of `$db8a`); the renderers (`$5c`/`$5d`/`$5e`) read the id
+**zero** times — they consume the `$da81` command stream. So a half-substituted id
+desyncs and hangs.
+**Fix:** `GetPresentId` — identity for stock ids, a per-skill PROXY id for custom
+ids — forked into ALL 12 `$5f` reads (byte-neutral `ld a,[$db8a]`→`call`). The
+custom skill then plays a real skill's *entire* script to completion. Flash + SFX
+ride along because they are commands inside that script.
+**Rule:** to borrow a behavior keyed by an id, repoint the id at every selection
+read consistently — partial substitution is worse than none. Verify the diff is
+confined to exactly the intended sites + free-space routine before trusting it.
+
+### Re-disassembling a misdisassembled data table: clean form in patches/, label in disassembly/
+**Symptom:** a per-skill data table (`$58:$5806`) is disassembled as fake code
+(`inc hl`/`rst $38`/…); a one-byte data edit looked like poking a magic byte into
+opcodes.
+**Fix:** the clean labeled `db` table lives in `patches/bank_058.asm` (byte-identical
+to the original except the one intended slot — verified by diffing the built bank);
+`disassembly/` gets only a label-pointer comment (zero byte impact, integrity stays
+`1ca6579…`).
+**Rule:** representation fixes that change how bytes are *expressed* (code→data) are
+functional changes → they belong in `patches/`; `disassembly/` gets a comment that
+points at the clean form. Never "improve" `disassembly/` past labels/comments.

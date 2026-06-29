@@ -1465,7 +1465,7 @@ EnemyStats_001:
     db 1  ; Level
     dw 30, 100, 10, 6, 5, 1  ; HP, MP, ATK, DEF, AGL, INT  (MP 0->100 for S2 casting)
     db 100, 200, 100, 200  ; AI weights
-    db $DE, $DF, $FF, $FF  ; Skills: Scorch (S2), Smite (S2), none, none
+    db $E0, $09, $FF, $FF  ; TEST: MagicBurn ($E0) slot0 + Infernos ($09) slot1 for announce comparison
 
 ; --- EID 2 (0x2): Slime Lv1 ---
 EnemyStats_002:

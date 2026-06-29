@@ -199,6 +199,10 @@ Three hooks, all byte-neutral, plus one new bank:
 
 ## 6. How to add the NEXT custom skill (foundation is built)
 
+> **Superseded by §13.4** — presentation now works end-to-end (announce +
+> animation + flash + SFX), so the recipe below (alias-era) is history. Use the
+> §13.4 checklist. Kept for the alias-framework rationale.
+
 For a damage-variant like Smite: add a `CustomSkillTable52` entry pointing to a
 new handler (crib `NovelEffect52`), a `SkillNamePtrTable` name, extend
 `AliasCommit`/`FarSkillFork`'s `cp` range, and assign the id in bank `$14`.
@@ -688,5 +692,95 @@ RGBDS-assembled and byte-executed: normal ids come out **vanilla-identical**
 ### 12.6 S2d is shovel-ready
 Fork the 3 record sites (+ in-bank high tables), MP (3 sites), sound (1 site),
 name (repoint). A no-visual ally heal needs no anim/message/targeting patch
-(those follow from the record). Authoring a *visible* custom animation remains
-blocked on the `$5f` disassembly cleanup (DOC_AUDIT #15) — separate item.
+(those follow from the record). Authoring a *visible* custom animation is **SOLVED** via the GetPresentId
+presentation proxy — see §13.2 (the whole anim/flash/SFX pipeline now works for
+custom ids). §13 is the current end-to-end truth; skill #1 (MagicBurn) is live.
+
+---
+
+## 13. Custom-skill PRESENTATION — the working system  [S49, 2026-06-29, v32]
+
+S2d shipped end-to-end for skill #1 **MagicBurn (`$E0`)**: a non-aliased custom
+skill with its own record (½ current MP as damage to all foes), result text,
+**announcement**, **animation**, **hit-flash**, and **cast sound** — all via
+clean dynamic indirection, no per-aspect byte hacks. This supersedes the earlier
+"presentation blocked on `$5f` cleanup" note (§12.6) and the standalone
+groundwork doc (folded here). Empirically located via SameBoy (probe ROM, bp
+`$4c:$42d1 if [$db8a]==<id>`): a normal cast renders msgs `$23`(announce) →
+`$82`(damage) → `$e4` → `$ec`; `$E0` was missing `$23` only.
+
+### 13.1 Announcement — per-skill template table + custom message pool
+- **Lookup:** bank `$58` entry 6 (`$57C5`) sets `$db4c = [AnnounceTemplateTable + skill_id]`,
+  where `AnnounceTemplateTable = $58:$5806` (256-wide, indexed by skill id). The
+  renderer is `$50` entry 7 at `$50:$5A42` (`ld a,[$db4c]; ld [$c823],a; cp $ff;
+  ret z; ld hl,$4c00; rst $10`). **`$db4c == $FF` ⇒ silent.** `$E0`'s slot
+  (`$58:$58E6`) was `$FF` — the entire bug. The table is misdisassembled as code
+  in `disassembly/`; the clean `db` form (label `AnnounceTemplateTable`, custom
+  slot `AnnounceTpl_E0_MagicBurn`) is in `patches/bank_058.asm`.
+- **Message text:** battle messages are an 8-bit id → pointer table at `$4c:$4019`
+  (`subtable=[$4c:$4009]=$4019`; `string=[subtable+id*2]`) → `$F0`-terminated
+  bytes in bank `$4c` (charset/codes in TEXT_SYSTEM.md). **The 256-id space is
+  full**; the only empty slot was `$FD`. Custom announce text therefore lives in
+  a **custom message pool** at `$4c:$7326` (~3290 free bytes after the last
+  message at `$7325`); `$FD`'s pointer (`$4c:$4213`) is repointed there. MagicBurn's
+  message (`CustomMsg_E0_MagicBurn`, 56 B) decodes to `{name} burns half its MP!
+  {name}<slime>A huge burst of magic energy!` (`{name}`=caster, no skill-name
+  insert — the custom-id name path is unfilled, so name-inserting templates like
+  the generic "casts {skill}!" `$23` would garble for custom ids; see §13.4).
+
+### 13.2 Animation + hit-flash + cast-SFX — the GetPresentId presentation proxy
+- **One root cause for all three.** The on-screen animation is a **command
+  script**: bank `$5f` selects a per-skill start command from tables at
+  `$5f:$56ed` / `$5f:$57d5` (and entry-6 dispatch `$52F0` → anim-index
+  `$5f:$58dd/$59c3/$5aa9` → routine table `$5f:$58bd`), all indexed by skill id
+  `$db8a`; bank `$5f` entry 7 advances the script and sets `$da81` (command),
+  which the renderers in `$5c`/`$5d`/`$5e` consume. The hit-flash and cast SFX
+  are commands *within* that script. `$E0` overshoots the selection tables →
+  garbage command → the script never emits "done" → `$52:$6c4d` spins on
+  `$da82` forever (the hang) and nothing flashes/sounds.
+- **Key enabling fact:** the renderers `$5c`/`$5d`/`$5e` read `$db8a` **zero
+  times** — they are driven purely by the `$da81` command stream. ALL skill-id
+  dependence is the **12 reads in bank `$5f`** (`$4a60 $4c02 $52d6 $52f0 $5382
+  $5433 $544e $564e $565f $567f $56cb $56dc`).
+- **The foundation (`GetPresentId`, in `$5f` free space, patches/bank_05f.asm):**
+  a resolver returning the skill id unchanged for stock ids (`< $DE`) and a
+  per-skill **proxy** id for custom ids (`>= $DE`, from `CustomProxyTable`
+  indexed by `id-$DE`). All 12 reads are forked `ld a,[$db8a]` → `call
+  GetPresentId` (byte-neutral, 3→3). A custom skill thus selects a *real* skill's
+  whole script and plays it to completion → no hang, flash + SFX restored.
+  MagicBurn's proxy = `$09` (Infernos); it animates/flashes/sounds identically.
+  Stock skills are unaffected (resolver is the identity for `< $DE`).
+
+### 13.3 Skill #1 file set (the complete working stack)
+- `patches/bank_072.asm` (NEW) — far-call table + `CustomBattleExec`/`SkillMagicBurn` (effect).
+- `patches/bank_054.asm` — record fork (`Fork54_RecordIndex`, `CustomRecord_E0`).
+- `patches/bank_052.asm` — `CustomDispatch52` (runs `$52`-context result setup, far-calls `$72`).
+- `patches/bank_041.asm` — `SkillName_224_MagicBurn` (menu name).
+- `patches/bank_058.asm` — `AnnounceTemplateTable` clean db + `$E0`→`$FD`.
+- `patches/bank_04c.asm` — `CustomMsg_E0_MagicBurn` in the pool + `$FD` repoint.
+- `patches/bank_05f.asm` — `GetPresentId` + `CustomProxyTable`, 12 forked reads.
+- `patches/bank_014.asm` — test-monster skill assignment (line 1468; currently `$E0`+`$09` Infernos for regression compare).
+- All registered in `tools/verify_integrity.py` `PATCH_FILES`/`PATCH_NEW_FILES`. Integrity PASS 4/4, clean build byte-perfect `1ca6579…`.
+
+### 13.4 How to add a custom skill (the repeatable recipe — skills #2–#12)
+Each presentation layer is now a one-line edit; nothing is rebuilt:
+1. **Effect:** add a record (`CustomRecordPtrTable`/`CustomRecord_*`) and, if the
+   behavior isn't pure record-driven damage, a handler in the `$72` dispatch.
+2. **Name:** `SkillNamePtrTable[id]` → a `SkillName_*` string (bank `$41`).
+3. **Assignment:** give a monster the id in bank `$14`.
+4. **Announce:** set `AnnounceTemplateTable[id]` (patches/bank_058.asm). Either
+   reuse a **self-contained** stock template (no skill-name insert, e.g. `$40`
+   "uses all magic powers!", `$3c` "calls down lightning!") or add a bespoke
+   message to the pool at `$4c:$7326` and claim a slot. NOTE: only `$FD` is free
+   in the stock id table; a 2nd+ bespoke message needs either a verified-unused
+   id or a forked render — OR fix the custom-id **skill-name insert** so the
+   generic "casts {skill}!" templates work with the real name (higher leverage;
+   open follow-up).
+5. **Animation/flash/SFX:** set `CustomProxyTable[id-$DE]` (patches/bank_05f.asm)
+   to a stock skill whose presentation fits. (Unique custom animation = authoring
+   a new script into the same indirection — a refinement, not a redo.)
+
+**Open follow-ups (not blockers):** (a) custom-id skill-name insert for
+name-inserting announce templates; (b) a 2nd bespoke-message render path beyond
+`$FD`; (c) FIELD-cast skills (e.g. teleport) — a different code path the battle
+foundation doesn't touch yet.

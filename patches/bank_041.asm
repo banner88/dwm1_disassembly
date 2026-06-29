@@ -570,7 +570,7 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_221_Ahhh  ; [221]
     dw SkillName_222_Scorch  ; [222]
     dw SkillName_223_Smite  ; [223]
-    dw SkillName_222_Unused_222  ; [224]
+    dw SkillName_224_MagicBurn  ; [224] $E0 [S2d]
     dw SkillName_222_Unused_222  ; [225]
     dw SkillName_222_Unused_222  ; [226]
     dw SkillName_222_Unused_222  ; [227]
@@ -2644,13 +2644,10 @@ SkillName_222_Scorch:                                             ; $7F86
     db $36, $40, $4c, $4f, $40, $45, $f0                          ; "Scorch" + terminator
 SkillName_223_Smite:                                              ; $7F8D
     db $36, $4a, $46, $51, $42, $f0                               ; "Smite" + terminator
-    db $00, $00, $00                                              ; $7F93-$7F95 pad
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F96
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FA6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FB6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FC6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FD6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7FE6
+SkillName_224_MagicBurn:                                          ; $7F93  [S2d]
+    db $30, $3e, $44, $46, $40, $25, $52, $4f, $4b, $f0           ; "MagicBurn" + terminator
+.pad224
+    ds $7FF6 - .pad224, $00                                       ; pad to $7FF6 (NewSpecies tail unchanged)
 ;   Phase N: new-species SHORT (default-nickname) name table tail.
 ;   The default-name redirect (bank $00 LoadModeBaseRedirect) sends id>=224 to
 ;   base $7E39, so id 224 lands at $7FF9. Holds the first 4 letters of the name

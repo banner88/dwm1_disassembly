@@ -1587,7 +1587,7 @@ LoadFldUI_4a3b:
 
 
 LoadFldUI_4a60:
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     cp $12
     jp c, Jump_05f_4ae8
 
@@ -1888,7 +1888,7 @@ jr_05f_4bf4:
     ret
 
 
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     cp $81
     jr z, jr_05f_4c3a
 
@@ -3219,7 +3219,7 @@ jr_05f_52c8:
 
 
 LoadFldUI_52d6:
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     cp $3b
     jr z, jr_05f_52e4
 
@@ -3239,7 +3239,7 @@ jr_05f_52e4:
     ret
 
 
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     cp $15
     jp c, Jump_05f_53a4
 
@@ -3343,7 +3343,7 @@ jr_05f_52e4:
 
 Jump_05f_5382:
 jr_05f_5382:
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     cp $80
     jp z, Jump_05f_53e9
 
@@ -3470,7 +3470,7 @@ jr_05f_5412:
     ld hl, $5aa9
 
 jr_05f_5433:
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     add l
     ld l, a
     ld a, $00
@@ -3500,7 +3500,7 @@ FuncFldUI_5441:
 
 
 LoadFldUI_544e:
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     cp $1a
     jr c, jr_05f_54c3
 
@@ -3852,15 +3852,8 @@ jr_05f_5649:
     jr c, jr_05f_5690
 
 jr_05f_564e:
-; [S2d] PRESENTATION SKILL-ID read. This `ld a,[$db8a]` (and the 11 other $db8a reads in
-; this bank: $4a60 $4c02 $52d6 $52f0 $5382 $5433 $544e $564e $565f $567f $56cb $56dc) is the
-; surface that selects per-skill animation/flash/SFX. $56ed/$57d5 are per-skill anim-command
-; tables (-> $da81); custom ids ($E0+) overshoot them -> hang. patches/bank_05f.asm forks ALL
-; of these to `call GetPresentId` (identity for stock ids; a per-skill PROXY id for custom
-; ids, from CustomProxyTable in $5f free space), so a custom skill borrows a real skill's whole
-; animation script -> no hang, hit-flash + cast-SFX restored. See BATTLE_SKILL_SYSTEM.md §13.2.
-    ld a, [$db8a]
-    ld de, $56ed                      ; $56ed = per-skill anim-command table 1 (indexed by skill id)
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
+    ld de, $56ed
     add e
     ld e, a
     ld a, $00
@@ -3872,7 +3865,7 @@ jr_05f_564e:
 
 
 jr_05f_565f:
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     cp $1a
     jr z, jr_05f_567f
 
@@ -3895,7 +3888,7 @@ jr_05f_565f:
     jr c, jr_05f_5690
 
 jr_05f_567f:
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     ld de, $57d5
     add e
     ld e, a
@@ -3945,7 +3938,7 @@ jr_05f_56c7:
     call LoadFldUI_5ba3
     ret c
 
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     ld hl, $56ed
     add l
     ld l, a
@@ -3958,7 +3951,7 @@ jr_05f_56c7:
 
 
 jr_05f_56dc:
-    ld a, [$db8a]
+    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     ld hl, $57d5
     add l
     ld l, a
@@ -13463,40 +13456,26 @@ jr_05f_68d1:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; === Custom-skill presentation indirection (GetPresentId) ============== [S2d]
+; Forked into bank $5f animation-selection reads of $db8a. Returns the skill id
+; unchanged for stock skills (<$DE); for custom skills it returns a PROXY id so
+; the whole anim/flash pipeline borrows a real skill's animation -> no hang,
+; hit-flash restored. Per-skill proxy = one byte in CustomProxyTable. (21+16=37 B)
+GetPresentId::
+    ld a, [$db8a]      ; 3
+    cp $DE             ; 2  custom range?
+    ret c              ; 1  stock id -> unchanged
+    push hl            ; 1
+    sub $DE            ; 2  index into proxy table
+    ld hl, CustomProxyTable  ; 3
+    add l              ; 1
+    ld l, a            ; 1
+    ld a, $00          ; 2
+    adc h              ; 1
+    ld h, a            ; 1
+    ld a, [hl]         ; 1  proxy presentation id
+    pop hl             ; 1
+    ret                ; 1   (=21 bytes)
+CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id; default $09 (Infernos)
+    db $09, $09, $09, $09, $09, $09, $09, $09   ; $DE-$E5  ($E0 MagicBurn -> Infernos)
+    db $09, $09, $09, $09, $09, $09, $09, $09   ; $E6-$ED  (reserved for skills #2-#12)

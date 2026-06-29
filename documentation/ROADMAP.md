@@ -993,15 +993,25 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         in-bank tables in `$54`'s ~10550 free bytes). Other forks: MP (3 readers, mirror `record+4`),
         sound (`$55:$4067`), name (repoint), anim (none for no-visual). Tool
         `tools/map_skill_id_buckets.py` → `extracted/skill_id_bucket_map.json`. Full RE: **§12.**
-  - [ ] **S2d — Proper per-id custom-skill records (the real authoring; replaces the alias
-        hack).** Give new ids ($DE+) their OWN record + handler + name instead of aliasing to
-        Blaze, so heal/Tame/Anchor-shaped skills become expressible; fix the single-caster +
-        enemy-Blaze limitations. *Accept:* a non-damage custom skill (e.g. an ally heal) works
-        in SameBoy without aliasing. **SHOVEL-READY (S2d-audit done, S48):** fork the 3 record
-        indexer sites (+ in-bank high pointer table + 19B records in `$54` free space), MP (3
-        sites), sound (1 site), name (repoint); leave `$535F`/anim/message alone for a heal
-        (those follow from the record / are handler-driven). Don't templatize at the commit
-        (`$50:~$4A55`) — let `$DE` flow. Step-by-step in **§12.6**.
+  - [x] **S2d — Proper per-id custom-skill records + PRESENTATION (skill #1 live). [S49, 2026-06-29, v32]**
+        Skill **MagicBurn (`$E0`)** ships non-aliased, end-to-end in SameBoy (user-confirmed):
+        own record (½ current MP → all foes), result text, **announcement**, **animation**,
+        **hit-flash**, **cast sound** — via clean dynamic indirection (own record/handler/name +
+        `AnnounceTemplateTable` slot + `$4c:$7326` message pool + `GetPresentId` presentation
+        proxy in `$5f`), no per-aspect hacks. Integrity PASS 4/4, byte-perfect. The earlier
+        "anim blocked on `$5f` cleanup" is **solved**. Full system + per-skill recipe:
+        **BATTLE_SKILL_SYSTEM.md §13**.
+  - [ ] **S2e — Custom skill #2 (prove the system generalizes). [NEXT]** Add a skill of a
+        DIFFERENT shape than MagicBurn to stress parts skill #1 didn't: a **non-damage** skill
+        (ally heal, a buff, or a status effect) and/or a **single-target** one. *Accept:* it
+        works in SameBoy with its own record/handler/name/announce/presentation, no aliasing.
+        **SHOVEL-READY:** follow the 5-step recipe in **§13.4** — each layer is a one-line edit;
+        nothing is rebuilt. Watch the two open follow-ups in §13.4 (custom-id skill-NAME insert
+        for name-inserting announce templates; a 2nd bespoke-message render path beyond `$FD`) —
+        a heal that reuses a self-contained stock announce template hits neither.
+  - [ ] **S2f — FIELD-cast custom skill (e.g. teleport/warp).** A different code path the
+        battle foundation (§13) doesn't touch yet — genuinely new groundwork. *Accept:* a custom
+        field skill (warp) fires from the field menu in SameBoy.
 - [~] **S3 — AI selection RE (partly answered S46).** **Found:** the per-skill AI lever is
       **record +3 (`ai_weight`)** — the enemy AI (`$57 Jump_057_7529`) walks its skill list and
       SUMS record[+3] into the score table `$dce4`, then picks weighted (Sacrifice/MegaMagic=0).
@@ -1027,7 +1037,7 @@ e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block a
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
 
-**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → S2c-msg ✅ → S2c-anim ✅ → S2d-audit ✅ (S48) → **S2d** (next, shovel-ready) / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
+**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → S2c-msg ✅ → S2c-anim ✅ → S2d-audit ✅ (S48) → S2d ✅ (S49, skill #1 live) → **S2e** (next — custom skill #2) / S2f (field skill) / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
 slotting the text roll-out into spare sessions. Cheap high-confidence wins early; fire the
 two RE discovery sessions (M1, S3) before their authoring items depend on them.
 

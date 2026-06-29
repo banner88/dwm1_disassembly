@@ -11568,17 +11568,26 @@ jr_052_7fe2:
 
 
 ; =============================================================================
-; S2 custom-skill tail data (replaces 19 bytes of $00 padding at $7FED-$7FFF)
+; [S2d] CUSTOM-SKILL BATTLE DISPATCH TRAMPOLINE
+; (replaces the retired alias POCs; same 19 bytes of $00 padding at $7FED-$7FFF)
+; -----------------------------------------------------------------------------
+; De-aliased model: a custom id ($DE-$FF) flows with its REAL value. FarSkillFork
+; (bank $72) returns HL = &CustomSkillPtr for any custom id. The dispatcher's
+; `call RST_08` then derefs [CustomSkillPtr] -> CustomDispatch52 and jp's to it
+; with bank $52 mapped. CustomDispatch52 far-calls bank $72 entry 1
+; (CustomBattleExec), which selects + runs the per-id handler (ROM0 + RAM only),
+; returns; the rst restores bank $52; the trailing `ret` returns into the
+; dispatcher (after its `call RST_08`). Scales to all 34 custom ids via $72.
 ; =============================================================================
-CustomSkillTable52:          ; $7FED — handler pointers for new skill ids
-    dw SkillBlaze            ; [id $DE] Scorch: reuse existing fire-damage handler ($41CD)
-    dw NovelEffect52         ; [id $DF] Smite: novel handler, in-bank (no trampoline)
-NovelEffect52:               ; $7FF1 — novel skill: fixed hit via the proven Blaze machinery
-    call $5bff               ; StoreDamageResult + target/guard (Blaze record via reloc table)
-    call $54e7               ; set damage descriptor ($dd6f=$a8 apply-mode, $dd70/71 anim)
-    ld a, $50                ; override computed damage low byte = 80 (distinct fixed hit)
-    ld [$db56], a            ; Blaze damage <256 so $db57 already 0 -> total = $0050 = 80
+CustomSkillPtr:              ; $7FED — the single &handler-pointer FarSkillFork returns
+    dw CustomDispatch52
+CustomDispatch52:            ; $7FEF — jp'd in $52 ctx; runs the standard damage-skill
+                             ; CONTEXT setup here (only callable with bank $52 mapped),
+                             ; THEN far-calls $72 for the per-skill custom override.
+    call LoadBattle_653e     ; MegaMagic's exact setup: damage-result context + base $db56
+    call SetHLBattle_54e7    ; descriptor $dd6f=$a8, msg pair $dd70/71=$b882 (hit/miss ids)
+    ld hl, $7201             ; bank $72, entry 1 = CustomBattleExec
+    rst $10                  ; far-call: override $db56 with the skill's real damage + cost
     ret
-    nop                      ; $7FFD-$7FFF padding (3 bytes, preserves bank size)
-    nop
-    nop
+.pad
+    ds $8000 - .pad, $00     ; pad remaining tail (preserves bank size)

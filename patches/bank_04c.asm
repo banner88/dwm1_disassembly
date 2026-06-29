@@ -276,7 +276,7 @@ Jump_04c_40c0:
     dw $5EFD                          ; Entry 262
     dw $5F12                          ; Entry 263
     dw $5F41                          ; Entry 264
-    dw $5F6C                          ; Entry 265 = msg id $FD. [S2d] the one empty battle-message slot; patches/bank_04c.asm repoints it to CustomMsg_E0_MagicBurn in the custom message pool ($4c:$7326, ~3290 free bytes after the last message at $7325). The stock 256-id table is otherwise full. See TEXT_SYSTEM.md + BATTLE_SKILL_SYSTEM.md §13.1.
+    dw CustomMsg_E0_MagicBurn                          ; Entry 265
     dw $5F6D                          ; Entry 266
     dw $5F86                          ; Entry 267
     dw $5FA7                          ; Entry 268
@@ -11730,62 +11730,11 @@ jr_04c_72b9:
     inc b
     rst $38
     ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+CustomMsg_E0_MagicBurn::   ; $4c:$7326 MagicBurn announce ("burns half its MP!") [S2d custom msg pool]
+    db $F9, $00, $62, $3F, $52, $4F, $4B, $50, $62, $45, $3E, $49, $43, $62, $46, $51
+    db $50, $62, $30, $33, $63, $FC, $10, $EC, $F2, $24, $62, $45, $52, $44, $42, $62
+    db $3F, $52, $4F, $50, $51, $62, $4C, $43, $F1, $4A, $3E, $44, $46, $40, $62, $42
+    db $4B, $42, $4F, $44, $56, $63, $EC, $F0
     nop
     nop
     nop

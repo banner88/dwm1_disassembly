@@ -279,3 +279,19 @@ overshoot/fork status is catalogued in MONSTER_DATA.md.
 > here, or it will overshoot the 1-entry high-table and freeze again. A bespoke
 > Gorbunok description string (font-glyph encoded like the name) is deferred; the
 > editor will generate these high-tables from a species definition.
+
+---
+
+## Battle-message id space is FULL — custom pool at `$4c:$7326`  [S49, 2026-06-29]
+
+The mode-0 battle-message table (`subtable=[$4c:$4009]=$4019`; `string=[$4019+id*2]`)
+maps all 256 ids to live message data; **exactly one slot (`$FD`) was empty**
+(it pointed at an empty `$F0` at `$5F6C`). So a custom skill that needs *bespoke*
+announce/result text cannot just claim a fresh id. Free **text bytes** are not the
+constraint — bank `$4c` has ~3290 free bytes at **`$7326`** (after the last message
+at `$7325`), the **custom message pool**. MagicBurn uses it: `CustomMsg_E0_MagicBurn`
+(56 B) at `$7326`, with `$FD`'s pointer (`$4c:$4213`) repointed there
+(patches/bank_04c.asm). A 2nd+ bespoke message needs either a verified-unused id, a
+forked render-from-pointer path, or fixing the custom-id skill-name insert so
+name-inserting templates can be reused instead. Encoder/charset: this doc + the
+round-trip in the build. Full context: BATTLE_SKILL_SYSTEM.md §13.1.
