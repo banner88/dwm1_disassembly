@@ -233,7 +233,9 @@ wCustomStep_Room70_S0:: db ;d47e — Room $70 screen 0 step counter (keystone pr
 wRoomRecScratch:: ds 8 ;d47f
 wRoomEncFlag:: db ;d487
 
-    ds $309                         ; gap ($D488-$D790)
+wTameDelay:: db ;d488 — [S2e] Tame heart->message delay counter (frames)
+wTameBGSave:: ds 3 ;d489 — [S2e] saved BGP/OBP0/OBP1 during the hit-flash flicker
+    ds $305                         ; gap ($D48C-$D790)
 
 wGroundItemData:: db ;d791
 

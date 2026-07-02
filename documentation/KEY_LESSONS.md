@@ -1618,3 +1618,34 @@ to the original except the one intended slot — verified by diffing the built b
 **Rule:** representation fixes that change how bytes are *expressed* (code→data) are
 functional changes → they belong in `patches/`; `disassembly/` gets a comment that
 points at the clean form. Never "improve" `disassembly/` past labels/comments.
+
+## Session 50 (S2e) Lesson — sequencing a note-then-hit custom skill (Tame)
+
+**Symptom**: Tame's recruitment heart and its "takes X damage" sound/message played at the same
+time; the enemy never blinked. Several "obvious" fixes did nothing.
+
+**Root cause (a chain of wrong assumptions, each settled only by an emulator test)**:
+1. The heart (note) and the hit-flash are BOTH layer-2 animation commands (`$56ed`→`$da81`),
+   one slot per presentation → they cannot co-exist. A proxy "split" (anim on one id, flash on
+   another) fails because the note IS the layer-2 command, not a layer-1 sprite.
+2. Swapping the descriptor `$a8`→`$a0` changed nothing — both are bit6-clear, same state-machine
+   path. The descriptor byte was never the timing lever.
+3. The real timing lever is `$53:$5b07`: only ids `$84`–`$87` WAIT for the animation done-flag
+   `$da82` before the message. But gating Tame on `$da82` STILL didn't separate them — the
+   note's done-flag fires before the note visually finishes.
+
+**Fix**: a FIXED FRAME DELAY in the effect state machine (fork `$5b07`→`TameGateHook`, counter
+`wTameDelay`) holds the message N frames so the heart plays first; suppress the early damage
+sound (`$5501`/`$5502` at `$5add`/`$5afa`) and re-fire it near the text. Damage `ATK/2`→`ATK/4`
+(ATK/2 equalled a normal hit). Full detail: BATTLE_SKILL_SYSTEM §11.7 + §13.5.
+
+**Rule**: For battle-presentation timing, the lever is the effect state machine's per-id
+animation-wait gate (`$53:$5b07`) plus a frame counter — NOT the descriptor byte and NOT the
+animation done-flag (it can fire before the sprite visually finishes). Two visually distinct
+animations on one hit need two beats or a delay, never one presentation. Verify every
+presentation hypothesis on the emulator — static reading of this control flow was wrong 4+ times
+in one session (see the §11 warning banner).
+
+**Still open**: the per-enemy-sprite blink (normal-ATK style) — not `wBGPalette` (whole screen),
+not OBP-only; likely an OAM visibility toggle of the enemy sprite, not yet found. Deferred
+(BATTLE_SKILL_SYSTEM §11.7).

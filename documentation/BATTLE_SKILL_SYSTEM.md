@@ -610,6 +610,39 @@ incl. battle_record), `tools/build_skill_tables.py` (round-trips function/MP/lea
 
 ---
 
+### 11.7 Message/animation TIMING gate, hit-flash, and the enemy-blink open item  [S50/S2e, 2026-06-30, emulator-tested via Tame]
+Reversed while sequencing Tame's beats (heart → then damage). All user-confirmed except the last.
+
+**Message-vs-animation timing gate — `$53:$5b07`.** In the effect state machine's bit6-clear
+(damage) path (`jr_053_5a6f`→`$5ab4`), the message step WAITS for the animation done-flag
+`$da82` **only when the skill id is `$84`–`$87`** (summon/TatsuCall-type). Every other id (incl.
+custom `$E1`) SKIPS the wait, so "takes X damage" fires the instant the hit lands, on top of a
+brief animation. (`ld a,[$db8a]; cp $84; jr c,skip; cp $88; jr nc,skip; ld a,[$da82]; or a;
+ret z`.) `$5b07` is a `jr` target ($5b17's address must hold); forked byte-neutrally
+(`jp TameGateHook`, pool `$53:$6c6a`).
+- **Gating Tame on `$da82` did NOT fix it** — the note's done-flag fires EARLY (before the note
+  visually finishes). Working fix = a **FIXED FRAME DELAY**: `wTameDelay` (`$D488`) inits to 40
+  in SkillTame; TameGateHook `ret`s (waits) each frame until it drains, so the heart plays fully
+  before the message. Same ret-and-re-enter mechanism the $84–$87 gate uses (proven safe).
+
+**Damage sound = bank `$55` entry 1 (`$5501`@`$5add`) + entry 2 (`$5502`@`$5afa`)** — both fire
+EARLY (with the animation). Tame suppresses both for its id (`TameSound1Hook`/`TameSound2Hook`
+fork `$5add`/`$5afa`, byte-neutral jp+nop: skip the `rst` for $E1 else play it) and re-fires the
+sound near the end of the delay (8 frames left) so it lands with the text.
+
+**Hit-FLASH = `wBGPalette`** (`$c89b` BGP / `$c89c` OBP0 / `$c89d` OBP1). The game's white flash
+sets these to `$00` (all-light) and restores the battle palette (`$d2/$d2/$e2`); bank `$5f`
+drives it. Setting all three flashes the WHOLE SCREEN. `$da83=$04` (set by `$5f:$4b0b`, which
+also clears `$da82`–`$da87`) is a separate screen blink (TatsuCall), not per-enemy.
+
+**OPEN — per-enemy-sprite blink** (a plain ATK blinks just the enemy). NOT `wBGPalette` (whole
+screen) and NOT an OBP0/OBP1-only palette flash (TESTED: nothing blinked). Enemy is OBJ
+(`UpdateBattleSprites $50:$79B4`); the per-sprite blink is a DIFFERENT mechanism (likely an OAM
+visibility toggle of the enemy's entries over a few frames), NOT YET FOUND. Deferred as minor
+cosmetic. Next: trace what a plain physical ATTACK does to the enemy OAM at the hit frame.
+
+---
+
 ## 12. Skill-ID bucketing audit & de-aliasing surface (S2d FOUNDATION)  [S48, 2026-06-28]
 
 **Why this section exists.** S45 added custom skill ids ($DE/$DF) by *aliasing*
@@ -784,3 +817,46 @@ Each presentation layer is now a one-line edit; nothing is rebuilt:
 name-inserting announce templates; (b) a 2nd bespoke-message render path beyond
 `$FD`; (c) FIELD-cast skills (e.g. teleport) — a different code path the battle
 foundation doesn't touch yet.
+
+### 13.5 Custom skill #2 — Tame (`$E1`): reusable custom-message fork + note-then-hit timing  [S50/S2e, 2026-06-30, USER-CONFIRMED in SameBoy]
+Skill #2 = **Tame** (`$E1`): recruit (meat-meter) + small anti-abuse damage, single-target.
+Announce, heart animation, sound timing, damage, and recruitment are all confirmed correct;
+only the per-enemy-sprite blink is deferred (§11.7). This resolves §13.4 open follow-up (b).
+
+**(A) Reusable custom-message render fork (`$FD` → per-skill pool string).** Message id `$FD`
+is now a general **custom-message escape**, not a one-skill slot (the stock `$4c:$4019` table is
+full — TEXT_SYSTEM.md). `LoadB4c_42d1` (`$4c:$42d1`, bank $4c entry 0) head is replaced
+byte-neutrally (`jp LoadB4c_Fork` + 15 nop) with a fork in the pool (`$4c:$735e`):
+- id `$FD` → `id=[$db8a]-$DE`, mode 0, `de=CustomMsgModeTable`, `call CallTextEngine`
+  (`$00:$05b6`, the SAME two-level resolver). Guard `$db8a<$DE` (stock emitting $FD) → vanilla
+  `$4019[$FD]`. All non-$FD ids byte-identical to vanilla.
+- `CustomMsgModeTable: dw CustomMsgPtrTable`; `CustomMsgPtrTable: dw dummy,dummy,
+  CustomMsg_E0_MagicBurn,CustomMsg_E1_Tame` (index = id-$DE → $E0=idx2, $E1=idx3).
+- `CustomMsg_E1_Tame` = "{caster} used Tame!" = `ED F9 00 62 52 50 42 41 62 37 3E 4A 42 63 EC F0`.
+- **MagicBurn (`$E0`) migrated onto the fork** (idx2 → its existing 56-B string); its old fixed
+  `$4019[$FD]` repoint is now dead but harmless. Scales: each skill = one table entry + one pool
+  string. All in `patches/bank_04c.asm`; `AnnounceTemplateTable[$E1]=$FD` (bank_058) drives it.
+
+**(B) The 4-beat presentation, and how each beat was achieved.** Target: "used Tame!" box →
+heart plays → then the enemy takes damage (sound + text). The heart and the hit-flash are the
+SAME layer-2 command channel and CANNOT share one presentation (§11.7), so a **fixed delay +
+sound-move** in the effect state machine sequences them **without a second animation beat**
+(the "two-beat replay" surgery was explored and deliberately AVOIDED — bank $52 is full and it
+touches shared code):
+- Beat 1 announce: `AnnounceTemplateTable[$E1]=$FD` → CustomMsg_E1_Tame.
+- Beat 2 heart: `CustomProxyTable[$E1]=$c2` (meat/heart; `$56ed[$c2]=$2c` note command).
+- Beats 3/4 sound+text: effect state machine forked (`TameGateHook`, §11.7) to hold the message
+  a fixed number of frames (heart plays first) and to move the damage sound onto the text.
+- Damage: `SkillTame` (`$72`) = **ATK/4** (was ATK/2 — ATK/2 equalled a normal attack, so the
+  anti-abuse hit must be weaker). Meter += crank `$0640` **[TEST — revert to `$000A` for Stage 2]**.
+- Record/dispatch (unchanged S2d pattern): `CustomRecordPtrTable[$E1]`→`CustomRecord_E1_Tame`
+  ($54); `CustomBattleExec` ($72 e1) `cp $E1; jp z,SkillTame`; `SkillNamePtrTable[$E1]`→"Tame"
+  ($41); Slime learns $E1 ($14, harness); descriptor `SetHLBattle_54e7` ($dd6f=$a8, msg $b882).
+
+**(C) File set (skill #2):** bank_04c (msg fork), bank_058 (announce=$FD), bank_05f (proxy=$c2),
+bank_054 (record), bank_072 (SkillTame ATK/4 + meter + `wTameDelay` init), **bank_053 (NEW —
+timing/sound/blink, §11.7)**, bank_041 (name), bank_014 (harness), wram (`$D488 wTameDelay`,
+`$D489 wTameBGSave[3]`). `tools/verify_integrity.py` registers `bank_053.asm`.
+
+**Stage-2 TODO (deferred):** revert meter crank `$0640`→`$000A`; 3 upgrade tiers (learn-chain
+fork bank $06); make Tame natural to Slime (replace a `$03:$4461` slot); per-enemy blink (§11.7).

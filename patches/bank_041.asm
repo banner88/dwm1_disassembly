@@ -571,7 +571,7 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_222_Scorch  ; [222]
     dw SkillName_223_Smite  ; [223]
     dw SkillName_224_MagicBurn  ; [224] $E0 [S2d]
-    dw SkillName_222_Unused_222  ; [225]
+    dw SkillName_225_Tame        ; [225] $E1 [S2e]
     dw SkillName_222_Unused_222  ; [226]
     dw SkillName_222_Unused_222  ; [227]
     dw SkillName_222_Unused_222  ; [228]
@@ -2646,6 +2646,8 @@ SkillName_223_Smite:                                              ; $7F8D
     db $36, $4a, $46, $51, $42, $f0                               ; "Smite" + terminator
 SkillName_224_MagicBurn:                                          ; $7F93  [S2d]
     db $30, $3e, $44, $46, $40, $25, $52, $4f, $4b, $f0           ; "MagicBurn" + terminator
+SkillName_225_Tame:                                               ; [S2e]
+    db $37, $3e, $4a, $42, $f0                                     ; "Tame" + terminator
 .pad224
     ds $7FF6 - .pad224, $00                                       ; pad to $7FF6 (NewSpecies tail unchanged)
 ;   Phase N: new-species SHORT (default-nickname) name table tail.

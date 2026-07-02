@@ -4691,8 +4691,8 @@ jr_053_5ad2:
     bit 2, a
     jr nz, jr_053_5aec
 
-    ld hl, $5501    ;; [S2e/§11.7] damage sound (bank $55 e1) fired EARLY, with the anim
-    rst $10
+    jp TameSound1Hook   ; [S2e] suppress early damage sound for Tame; else play $5501
+    nop
     ld hl, $5f06
     rst $10
     ld a, [$da80]
@@ -4713,25 +4713,26 @@ jr_053_5aed:
     bit 4, a
     ret z
 
-    ld hl, $5502    ;; [S2e/§11.7] damage sound #2 (bank $55 e2) fired EARLY, with the anim
-    rst $10
+    jp TameSound2Hook   ; [S2e] suppress early sound #2 for Tame; else play $5502
+    nop
     ld hl, $5f04
     rst $10
     ld a, $01
     ld [$c1c9], a
-;; [S2e/§11.7] message-vs-animation TIMING gate ($5b07): only skill ids $84-$87
-    ;; (summon/TatsuCall) WAIT for the anim done-flag $da82 before the message; all other
-    ;; ids fire it immediately (coincides with a brief anim). Tame forks here (patches).
-    ld a, [$db8a]
-    cp $84
-    jr c, jr_053_5b17
-
-    cp $88
-    jr nc, jr_053_5b17
-
-    ld a, [$da82]
-    or a
-    ret z
+    jp TameGateHook   ; [S2e] Tame ($E1) joins the anim-wait set (heart must finish before msg)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 jr_053_5b17:
     ld hl, $d9ee
@@ -7663,163 +7664,77 @@ jr_053_6c66:
     ret
 
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+TameGateHook:            ; [S2e] heart plays during the delay; near the end, fire the damage
+                         ; sound + blink (with a few frames to render), then the message.
+    ld a, [$db8a]
+    cp $e1
+    jr z, TameGate_delay
+    cp $84
+    jr c, TameGate_go
+    cp $88
+    jr nc, TameGate_go
+    ld a, [$da82]        ; $84-$87: original animation-done gate
+    or a
+    ret z
+    jr TameGate_go
+TameGate_delay:
+    ld a, [wTameDelay]
+    or a
+    jr z, TameGate_tame_go   ; counter hit 0 -> restore palette + render message
+    cp $08
+    jr nz, TameGate_flick    ; at 8 frames left: save OBJ palettes + fire the damage sound (once)
+    ld a, [$c89c]            ; save OBP0
+    ld [wTameBGSave], a
+    ld a, [$c89d]            ; save OBP1
+    ld [wTameBGSave+1], a
+    ld hl, $5501             ; damage sound, in line with the text
+    rst $10
+    ld hl, $5502
+    rst $10
+TameGate_flick:
+    ld a, [wTameDelay]
+    cp $09
+    jr nc, TameGate_tick     ; >8 frames left = heart phase, no flicker yet
+    bit 0, a
+    jr z, TameGate_white     ; even -> flash frame
+    ld a, [wTameBGSave]      ; odd -> restore OBJ palettes (enemy normal)
+    ld [$c89c], a
+    ld a, [wTameBGSave+1]
+    ld [$c89d], a
+    jr TameGate_tick
+TameGate_white:
+    xor a                    ; $00 = white: flash OBP0+OBP1 only (enemy SPRITE), BG untouched
+    ld [$c89c], a
+    ld [$c89d], a
+TameGate_tick:
+    ld a, [wTameDelay]
+    dec a
+    ld [wTameDelay], a
+    ret
+TameGate_tame_go:
+    ld a, [wTameBGSave]      ; restore the real OBJ palettes before the message
+    ld [$c89c], a
+    ld a, [wTameBGSave+1]
+    ld [$c89d], a
+TameGate_go:
+    jp jr_053_5b17
+
+TameSound1Hook:              ; [S2e] early $5501 suppressed for Tame
+    ld a, [$db8a]
+    cp $e1
+    jr z, TameSound1_skip
+    ld hl, $5501
+    rst $10
+TameSound1_skip:
+    jp $5ae1
+TameSound2Hook:              ; [S2e] early $5502 suppressed for Tame
+    ld a, [$db8a]
+    cp $e1
+    jr z, TameSound2_skip
+    ld hl, $5502
+    rst $10
+TameSound2_skip:
+    jp $5afe
     nop
     nop
     nop

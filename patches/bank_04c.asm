@@ -380,15 +380,25 @@ LoadB4c_42d1:
 ; (=$4019 for mode 0, the battle-message ptr table), string=[subtable+id*2]. The
 ; "effect-script selector" $dd70/71 is just a packed (hit id, miss id) pair fed here
 ; by bank $53 jr_053_5a6f. $ff id = "no message" (skip). See BATTLE_SKILL_SYSTEM.md S9.
-    ld a, [$c823]
-    cp $ff
-    ret z
-
-    ld de, $4009
-    call CallTextEngine
-    ld a, $ff
-    ld [$c823], a
-    ret
+    ; S2e: forked to the custom-message resolver (LoadB4c_Fork, in pool free
+    ; space). Byte-neutral: jp (3) + 15 nop = the original 18-byte footprint, so
+    ; the entries at $42e3/$42ea/$42f1 stay at their addresses. See LoadB4c_Fork.
+    jp LoadB4c_Fork
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
     ld de, $4009
@@ -11735,95 +11745,62 @@ CustomMsg_E0_MagicBurn::   ; $4c:$7326 MagicBurn announce ("burns half its MP!")
     db $50, $62, $30, $33, $63, $FC, $10, $EC, $F2, $24, $62, $45, $52, $44, $42, $62
     db $3F, $52, $4F, $50, $51, $62, $4C, $43, $F1, $4A, $3E, $44, $46, $40, $62, $42
     db $4B, $42, $4F, $44, $56, $63, $EC, $F0
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; ============================================================================
+; S2e CUSTOM-MESSAGE INFRASTRUCTURE  (reusable, scales to all custom skills)
+; ----------------------------------------------------------------------------
+; Battle-message renderer fork. Message id $FD is the "custom message" escape:
+; when seen, the string is resolved from CustomMsgPtrTable indexed by the CURRENT
+; skill id ($db8a - $DE), by feeding a PRIVATE mode-table base (CustomMsgModeTable)
+; to the SAME unchanged two-level resolver (CallTextEngine -> $092f). This is the
+; project's standard "gate on skill id >= $DE -> high-table" pattern (cf. bank_04d
+; HighDetailTextFork). Stock ids (< $FD) are byte-identical to vanilla; a stock
+; skill that ever emits $FD (skill id < $DE) also falls through to vanilla $4019[$FD].
+; Adding a new custom skill = one CustomMsgPtrTable entry + one pooled string.
+; ============================================================================
+LoadB4c_Fork::
+    ld a, [$c823]
+    cp $ff
+    ret z
+    cp $fd
+    jr z, LoadB4c_Fork_custom
+    ld de, $4009                     ; vanilla battle-message path (unchanged)
+    call CallTextEngine
+    ld a, $ff
+    ld [$c823], a
+    ret
+LoadB4c_Fork_custom:
+    ld a, [$db8a]                    ; current skill id
+    cp $de
+    jr c, LoadB4c_Fork_stockfd       ; not a custom skill -> vanilla $FD
+    sub $de
+    ld [$c823], a                    ; id = custom index (skill - $DE)
+    xor a
+    ld [$c822], a                    ; mode 0
+    ld de, CustomMsgModeTable        ; private mode table -> CustomMsgPtrTable
+    call CallTextEngine
+    ld a, $ff
+    ld [$c823], a
+    ret
+LoadB4c_Fork_stockfd:
+    ld de, $4009
+    call CallTextEngine
+    ld a, $ff
+    ld [$c823], a
+    ret
+
+CustomMsgModeTable:
+    dw CustomMsgPtrTable             ; mode 0 -> the custom pointer table
+CustomMsgPtrTable:
+    dw CustomMsg_dummy               ; idx 0 = skill $DE (unused)
+    dw CustomMsg_dummy               ; idx 1 = skill $DF (unused)
+    dw CustomMsg_E0_MagicBurn        ; idx 2 = skill $E0 (MagicBurn, migrated)
+    dw CustomMsg_E1_Tame             ; idx 3 = skill $E1 (Tame)
+CustomMsg_dummy:
+    db $F0                           ; empty/safe
+CustomMsg_E1_Tame:
+    ; "{caster} used Tame!"  ED=mon prefix, F9 00=caster name, 63="!", EC F0=end
+    db $ED, $F9, $00, $62, $52, $50, $42, $41, $62, $37, $3E, $4A, $42, $63, $EC, $F0
+; --- end S2e custom-message infrastructure ---
     nop
     nop
     nop

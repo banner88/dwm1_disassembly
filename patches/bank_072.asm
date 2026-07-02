@@ -59,6 +59,8 @@ CustomBattleExec:
     ld a, [$db8a]
     cp $E0
     jp z, SkillMagicBurn
+    cp $E1
+    jp z, SkillTame
     ; (future custom battle skills dispatch here)
     ret
 
@@ -96,4 +98,61 @@ SkillMagicBurn:
     ld a, [hl]
     sbc d
     ld [hl], a
+    ret
+
+; -----------------------------------------------------------------------------
+; SkillTame ($E1) [S2e] — the custom override for Tame. Far-called from
+; CustomDispatch52 AFTER LoadBattle_653e (context+base dmg) + SetHLBattle_54e7
+; (descriptor), so target/message context is already set (record = single-foe).
+; Two effects:
+;   (1) damage = ATK/2  -> $db56/57   (OVERRIDES the record's 0 power; anti-abuse cap)
+;   (2) taming meter $db83/$db84 += 10 (Beef Jerky tier), clamped to $0640 (1600)
+;       -- byte-identical to feeding one Beef Jerky, so post-battle JoinDecision
+;          ($54:$55f1, HW-confirmed) rolls recruitment exactly as if fed.
+; ROM0 + RAM only; no bankswitch. wBattleAttackerIdx=$db88; ATK array base=$dbe3.
+; -----------------------------------------------------------------------------
+SkillTame:
+    ; (0) [S2e] arm the heart->message delay (frames) so the heart plays before the hit text
+    ld a, $28                           ; [S2e] 40 frames: heart plays, then sound+blink, then text
+    ld [wTameDelay], a
+    ; (1) damage = ATK/2
+    ld a, [$db88]                       ; attacker idx
+    add a                               ; idx*2
+    ld e, a
+    ld d, $00
+    ld hl, $dbe3                        ; wBattleATK base
+    add hl, de                          ; &ATK[attacker]
+    ld a, [hl+]                         ; A = ATK low
+    ld h, [hl]                          ; H = ATK high
+    ld l, a                             ; HL = ATK (u16 LE)
+    srl h
+    rr l                                ; HL = ATK >> 1
+    srl h
+    rr l                                ; HL = ATK >> 2  [S2e] = ATK/4 (weaker than a normal hit)
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a                       ; OVERRIDE damage = ATK/4
+    ; (2) taming meter += 10, clamp $0640
+    ld a, [$db83]
+    ld l, a
+    ld a, [$db84]
+    ld h, a                             ; HL = meter
+    ld bc, $0640                        ; [S2e TEST CRANK] one cast -> meter maxed (1600)
+                                        ;   so recruitment is observable; real value = $000A (Beef Jerky)
+    add hl, bc
+    ld a, h
+    cp $06
+    jr c, .store                        ; high < 6 -> under cap
+    jr nz, .clamp                       ; high > 6 -> over cap
+    ld a, l
+    cp $40
+    jr c, .store                        ; ==6 and low < $40 -> under cap
+.clamp:
+    ld hl, $0640                        ; cap = 1600
+.store:
+    ld a, l
+    ld [$db83], a
+    ld a, h
+    ld [$db84], a
     ret

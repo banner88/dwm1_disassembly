@@ -4224,7 +4224,7 @@ AnnounceTemplateTable:
     db $68   ; id $DF (retired POC)
 AnnounceTpl_E0_MagicBurn::
     db $FD   ; id $E0 MagicBurn -> custom-pool msg ("burns half its MP!"); was $FF
-    db $6A   ; id $E1 (reserved)
+    db $FD   ; id $E1 Tame -> $FD custom-message escape [S2e] -> CustomMsg_E1_Tame "used Tame!"; was $6A
 
 Jump_058_58e8:
     ld a, [wBattleTargetIdx]

@@ -3219,7 +3219,7 @@ jr_05f_52c8:
 
 
 LoadFldUI_52d6:
-    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
+    call GetPresentId   ; [S2d] presentation-id proxy (identity for stock)
     cp $3b
     jr z, jr_05f_52e4
 
@@ -3239,7 +3239,7 @@ jr_05f_52e4:
     ret
 
 
-    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
+    call GetPresentId   ; [S2d] presentation-id proxy (identity for stock)
     cp $15
     jp c, Jump_05f_53a4
 
@@ -3343,7 +3343,7 @@ jr_05f_52e4:
 
 Jump_05f_5382:
 jr_05f_5382:
-    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
+    call GetPresentId   ; [S2d] presentation-id proxy (identity for stock)
     cp $80
     jp z, Jump_05f_53e9
 
@@ -3470,7 +3470,7 @@ jr_05f_5412:
     ld hl, $5aa9
 
 jr_05f_5433:
-    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
+    call GetPresentId   ; [S2d] presentation-id proxy (identity for stock)
     add l
     ld l, a
     ld a, $00
@@ -3500,7 +3500,7 @@ FuncFldUI_5441:
 
 
 LoadFldUI_544e:
-    call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
+    call GetPresentId   ; [S2d] presentation-id proxy (identity for stock)
     cp $1a
     jr c, jr_05f_54c3
 
@@ -13477,5 +13477,5 @@ GetPresentId::
     pop hl             ; 1
     ret                ; 1   (=21 bytes)
 CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id; default $09 (Infernos)
-    db $09, $09, $09, $09, $09, $09, $09, $09   ; $DE-$E5  ($E0 MagicBurn -> Infernos)
-    db $09, $09, $09, $09, $09, $09, $09, $09   ; $E6-$ED  (reserved for skills #2-#12)
+    db $09, $09, $09, $c2, $09, $09, $09, $09   ; $DE-$E5  ($E0 MagicBurn=$09; $E1 Tame=$c2 HEART [S2e ThrowMeat])
+    db $09, $09, $09, $09, $09, $09, $09, $09   ; $E6-$ED  (reserved for skills #2-#12; full 16 slots)

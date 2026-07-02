@@ -295,3 +295,14 @@ at `$7325`), the **custom message pool**. MagicBurn uses it: `CustomMsg_E0_Magic
 forked render-from-pointer path, or fixing the custom-id skill-name insert so
 name-inserting templates can be reused instead. Encoder/charset: this doc + the
 round-trip in the build. Full context: BATTLE_SKILL_SYSTEM.md §13.1.
+
+### The custom-message render FORK — `$FD` → per-skill pool string  [S50/S2e, 2026-06-30, DONE]
+Since only `$FD` was free, it is now a general **custom-message escape** (not a single-skill
+slot). `LoadB4c_42d1` (`$4c:$42d1`) is forked byte-neutrally to `LoadB4c_Fork` (`$4c:$735e`):
+when the message id is `$FD`, it resolves the string from `CustomMsgPtrTable` indexed by the
+current skill id (`[$db8a]-$DE`), by feeding a private mode-table base (`CustomMsgModeTable dw
+CustomMsgPtrTable`) to the SAME two-level resolver (`CallTextEngine $00:$05b6`, mode 0). Stock
+ids stay byte-identical; a stock skill emitting `$FD` (id < $DE) falls back to vanilla
+`$4019[$FD]`. This is the "forked render-from-pointer path" (BATTLE_SKILL_SYSTEM §13.4 open
+follow-up b) — now implemented. MagicBurn (`$E0`) and Tame (`$E1`) both use it (idx = id-$DE).
+Add a skill = one `CustomMsgPtrTable` entry + one pool string. `patches/bank_04c.asm`.

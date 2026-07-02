@@ -1386,6 +1386,7 @@ CustomRecordPtrTable:       ; indexed by (id - $DE)*2
     dw $41CF                ; [$DE] retired POC -> Blaze record (benign default)
     dw $41CF                ; [$DF] retired POC -> Blaze record (benign default)
     dw CustomRecord_E0      ; [$E0] MagicBurn
+    dw CustomRecord_E1_Tame ; [$E1] Tame [S2e]
 
 ; --- MagicBurn ($E0) 19-byte record ------------------------------------------
 ; Based on BigBang/MegaMagic-class all-foes magic, with mp_cost (+4) zeroed (the
@@ -1399,6 +1400,16 @@ CustomRecordPtrTable:       ; indexed by (id - $DE)*2
 ;   +5 status=$10  +6 dmg_class=$05  +7 flags7=$01  +8 field8=$06  +9 anim9=$17
 CustomRecord_E0:
     db $46,$12,$12,$00,$00,$10,$05,$01,$06,$02,$02,$00,$00,$00,$00,$00,$00,$00,$00
+
+; --- Tame ($E1) 19-byte record [S2e] ----------------------------------------
+; Based on Blaze (id 0): single-target ($11), spell dmg-class ($04), presentation
+; flags +7/+8/+9 = $41/$07/$17 (announce+animate path that Blaze proves works).
+; Differences from Blaze: +4 mp=0 and +5 status=0 (handler drives effect), and the
+; power fields +11.. = 0 because SkillTame OVERRIDES $db56/57 with ATK/2 directly.
+;   +0 eclass=$00  +1 cat=$13  +2 target=$11(1 FOE)  +3 ai=$14  +4 mp=0  +5 status=0
+;   +6 dmg_class=$04(spell)  +7 $41  +8 $07  +9 $17  +10 $02  +11.. power=0
+CustomRecord_E1_Tame:
+    db $00,$13,$11,$14,$00,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
 
 ; pad the rest of the bank back out to $8000 (keeps bank $54 layout intact)
 CustomSkillBlobEnd_054:

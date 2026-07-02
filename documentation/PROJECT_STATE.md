@@ -5,7 +5,23 @@
 > references and must not duplicate status claims. If this file and another
 > doc disagree, this file wins — and the session should fix the other doc.
 >
-> Last verified: 2026-06-29 (Session 49 — **S2d: custom skill #1 ships end-to-end.**
+> Last verified: 2026-06-30 (Session 50 — **S2e: custom skill #2 (Tame) ships; the
+> custom-message + presentation-timing infra generalizes.** Integrity PASS 4/4, clean build
+> byte-perfect `1ca6579…`. **Tame (`$E1`)** — recruit (meat-meter) + anti-abuse damage
+> (ATK/4), single-target — is user-confirmed in SameBoy: announce "used Tame!", heart
+> animation, damage sound + "takes X damage" text correctly SEQUENCED after the heart, damage,
+> and recruitment all correct. New infra this session: (1) **custom-message render fork** —
+> `$FD` is now a general escape resolving a per-skill pool string by `[$db8a]-$DE`
+> (`LoadB4c_Fork`), so bespoke text no longer needs a scarce free id (MagicBurn migrated onto
+> it); (2) **presentation timing** — the effect state machine's per-id animation-wait gate
+> (`$53:$5b07`) + a fixed frame delay (`wTameDelay`) sequences a note-then-hit skill, and the
+> damage sound is moved off the note onto the text. Full RE: `BATTLE_SKILL_SYSTEM.md` §13.5 +
+> §11.7; TEXT_SYSTEM.md (fork); KEY_LESSONS.md (Session 50). KNOWN DEFECT (deferred, minor
+> cosmetic): the per-enemy-sprite blink is unsolved (not `wBGPalette`/whole-screen, not
+> OBP-only — an OAM visibility toggle not yet found; §11.7). Meter is TEST-cranked (`$0640`);
+> revert to `$000A` for Stage 2.
+>
+> [S49 context] Session 49 — **S2d: custom skill #1 ships end-to-end.**
 > Integrity PASS 4/4, clean build byte-perfect `1ca6579…`. **MagicBurn (`$E0`)** is a
 > non-aliased custom skill, user-confirmed working in SameBoy: own record (½ current MP →
 > all foes) + result text + **announcement** + **animation** + **hit-flash** + **cast
@@ -21,8 +37,10 @@
 > proxies Infernos `$09`). Full RE + per-skill recipe: **`BATTLE_SKILL_SYSTEM.md` §13**;
 > TEXT_SYSTEM.md (pool); KEY_LESSONS.md (3 lessons). The standalone presentation-groundwork
 > doc was folded into §13 and deleted.
-> **NEXT:** S2e — custom skill #2 of a different shape (heal/buff/status, or single-target)
-> to prove the system generalizes; §13.4 is the shovel-ready recipe.
+> **NEXT:** Tame Stage 2 — revert meter crank `$0640`→`$000A`; 3 upgrade tiers (learn-chain
+> fork, bank $06); make Tame natural to Slime (a `$03:$4461` slot). Then S2f (field-cast skill,
+> e.g. teleport) / more custom skills via the §13.4 recipe. Optional polish: the per-enemy
+> blink (§11.7).
 >
 > Prior (Session 48 — **S2d FOUNDATION: skill-id bucketing audit.**
 > Integrity PASS 4/4, clean build byte-perfect `1ca6579…`. Byte-neutral (disassembly

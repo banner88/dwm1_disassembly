@@ -1001,7 +1001,16 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         proxy in `$5f`), no per-aspect hacks. Integrity PASS 4/4, byte-perfect. The earlier
         "anim blocked on `$5f` cleanup" is **solved**. Full system + per-skill recipe:
         **BATTLE_SKILL_SYSTEM.md §13**.
-  - [ ] **S2e — Custom skill #2 (prove the system generalizes). [NEXT]** Add a skill of a
+  - [x] **S2e — Custom skill #2 (Tame `$E1`) — system GENERALIZES. [S50, 2026-06-30, user-confirmed]**
+    Recruit + anti-abuse damage (ATK/4), single-target. Built the reusable **custom-message
+    render fork** (`$FD`→per-skill pool string, `LoadB4c_Fork`; MagicBurn migrated onto it) and
+    the **presentation-timing** path (per-id anim-wait gate `$53:$5b07` + fixed frame delay
+    `wTameDelay` sequences note→hit; damage sound moved off the note onto the text). Full RE:
+    BATTLE_SKILL_SYSTEM §13.5 + §11.7; TEXT_SYSTEM ($FD fork); KEY_LESSONS (S50). **Deferred:**
+    Tame Stage 2 (revert meter crank $0640→$000A; 3 upgrade tiers via learn-chain fork bank $06;
+    make natural to Slime via a $03:$4461 slot). **Known minor defect:** per-enemy-sprite blink
+    unsolved (not wBGPalette/whole-screen, not OBP-only; likely an OAM visibility toggle — §11.7).
+  - [ ] **S2e-orig (superseded desc) — Custom skill #2 (prove the system generalizes).** Add a skill of a
         DIFFERENT shape than MagicBurn to stress parts skill #1 didn't: a **non-damage** skill
         (ally heal, a buff, or a status effect) and/or a **single-target** one. *Accept:* it
         works in SameBoy with its own record/handler/name/announce/presentation, no aliasing.
