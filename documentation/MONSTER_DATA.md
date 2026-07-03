@@ -445,7 +445,15 @@ verified). But a CROSS-monster transplant must encode the new art **self-contain
 (`--literal`) — otherwise it inherits whatever pool state the *target* monster loads,
 not the source's. The swap tool defaults handle this.
 
-**Monster battle palette system (SOLVED Session 23).** Tiles only pick a palette
+**Monster battle palette system (SOLVED Session 23).**
+
+> **Tracing trap (S22 note, promoted from the archive):** the `SetGBCPalette`
+> calls in bank `$07` (~lines 2460/2609) are SCENE palettes (warp/gate id `$03`),
+> **not** the monster's — don't be misled when re-tracing. The per-monster
+> selection question those S22 notes chased was answered in S23 (this section);
+> the `$07` display-init family read at `$cacb` remains an un-pinned curiosity —
+> harmless, the palette does not come from it.
+ Tiles only pick a palette
 INDEX (0-3); the colours come from a separate CGB subsystem. The enemy monster renders
 as **BG tiles on BG palette slot 4** (SameBoy-confirmed: tilemap attr `---04`; the live
 BG colour buffer is `$c797`, slot 4 = `$c7b7`; uploaded to BCPD by bank `$17` entry 8).

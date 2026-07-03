@@ -54,7 +54,8 @@ make                                       # → game.gbc, MD5 1ca657…
 # Custom-content (patched) ROM
 cp ../patches/*.asm . && make              # → modified game.gbc
 git checkout -- .                          # restore clean tree afterwards
-rm -f bank_060.asm
+rm -f bank_060.asm bank_064.asm bank_067.asm bank_069.asm bank_06a.asm \
+      bank_071.asm bank_072.asm bank_07e.asm   # the 8 new-bank patch files
 ```
 
 > **NEVER run `make clean`.** It deletes committed `.2bpp` graphics that
@@ -80,9 +81,9 @@ status dashboard and `documentation/CROSSBANK_ROOMS.md` for how it works.
 ```
 disassembly/     Byte-perfect buildable source (105 bank files + gfx)
 patches/         Custom-content patch files, applied over disassembly/
-documentation/   PROJECT_STATE / SESSION_PROTOCOL / ROADMAP / references
+documentation/   PROJECT_STATE / SESSION_PROTOCOL / ROADMAP / SESSION_HISTORY (cold archive) / references
 extracted/       Decoded game data as JSON (regenerable by tools/)
-tools/           43+ Python tools: dumpers, compilers, verify_integrity.py
+tools/           100+ Python tools: dumpers, compilers, verify_integrity.py
 dwm/             Python support package (ROM access, text codec)
 editor/          Legacy Streamlit editor — frozen, superseded by EDITOR_DESIGN.md
 data/            DWM-original.gbc (user-provided, gitignored)

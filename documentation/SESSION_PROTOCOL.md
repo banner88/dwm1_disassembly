@@ -63,7 +63,8 @@ still behaves like a continuing one.
 # a) Read, in order:
 documentation/PROJECT_STATE.md      # status, iron rules, canonical facts
 documentation/ROADMAP.md            # what the current phase is
-documentation/reference/KEY_LESSONS.md   # only if touching patches/ASM
+documentation/KEY_LESSONS.md        # only if touching patches/ASM
+# (documentation/SESSION_HISTORY.md is a COLD ARCHIVE — do NOT read it at session start)
 
 # b) Verify the repo before trusting it:
 mkdir -p data && cp <user-provided ROM> data/DWM-original.gbc
@@ -106,9 +107,12 @@ python3 tools/verify_integrity.py     # must PASS
 
 Then update, in place:
 
-1. **PROJECT_STATE.md** — flip status rows you changed; update the
-   "Last verified" date; add any new known defect you discovered but
-   didn't fix.
+1. **PROJECT_STATE.md** — flip status rows you changed; write the new session
+   block; add any new known defect you discovered but didn't fix.
+   **Aging rule (S51):** PROJECT_STATE keeps only the latest TWO session blocks
+   verbose — move the oldest retained block VERBATIM to the top of
+   SESSION_HISTORY.md Part 1 and add one row to the Session Index. Never
+   summarize when moving; move whole.
 2. **ROADMAP.md** — check off what's done; if you hit a wall, write the
    exact failure mode and the next thing to try (this is the single
    highest-value sentence you can leave behind).
@@ -116,6 +120,9 @@ Then update, in place:
    Symptom / Root cause / Fix / Rule. Lessons without a Rule are stories.
 4. The relevant **reference doc** — new addresses, formats, opcodes,
    verified behaviors.
+5. **TOOLS_AND_DATA.md** — any tool or extracted/ JSON you added or changed
+   gets its manifest row THE SAME SESSION (the manifest drifted 40 tools
+   behind once; S51 re-audited it — don't let it happen again).
 
 ### Delivery format (MANDATORY — do this exactly, every session)
 
@@ -167,7 +174,7 @@ files in repo-relative folders, (5) present the zip + ROM? If any is missing, it
   If a build mismatches, the BUILD is wrong, by definition.
 - Never refactor/optimize `disassembly/` (even "harmless" `jp`→`jr`).
 - Never insert bytes in banks $01/$04/$17 (and in `disassembly/`, any bank).
-- Never run `make clean` or `git stash`.
+- Never run `make clean` or `git stash`. Never `git checkout -- <directory>` mid-session (reverts uncommitted work; restore single files via `git show HEAD:<file>`). (S51: `make clean` is now also structurally defanged in the Makefile — twice violated as a prose rule — but the rule stands.)
 - Never write a new top-level status/handoff doc.
 - Never hand-author a pointer label directly in a patch. Labelize the raw pointer
   in `disassembly/` first and confirm the build still equals `1ca657…` (a mislabel

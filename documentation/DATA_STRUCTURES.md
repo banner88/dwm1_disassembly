@@ -324,7 +324,7 @@ id 215 (ROM name "Sheldodge", a placeholder) is the Bug-family cut → renamed "
 | | |
 |-|-|
 | Address | `$07:$570C` (..$58C8) |
-| Label | **mislabeled `TilesetLookupTable`** in disassembly — bytes are MP costs, not tileset ptrs |
+| Label | `SkillMPCostTable` (renamed S51; was the mgbdis mislabel `TilesetLookupTable`). **Re-sectioned S51**: real `dw` block with per-skill comments in both trees (`tools/resection_skill_tables.py`). |
 | Format | 222 × u16 LE = MP cost to CAST; `999` ($03E7) = "All MP" (ids 50 Farewell, 102 MegaMagic) |
 | Reader | `$07:$56E8` (acts as `GetSkillMPCost`; id-`$70`/Ahhh special case gated on `[$cacc]&1` picks male/female MP 1/2) |
 
@@ -991,8 +991,7 @@ $3C-$3E: Attribute/palette map data (78-239 entries).
 | `known_RAM_map.md` | Community WRAM documentation |
 | `CUSTOM_CUTSCENES.md` | Custom cutscene creation guide, verified opcode reference |
 | `SCRIPT_TOOLS.md` | How to use gen_script_banks.py and decompile_script.py |
-| `FIRST_5MIN_TRACE.md` | SameBoy trace guide for game opening |
-| `known_ROM_map.md` | Community ROM map (source for much of this work) |
+| `ROUTING.md` (appendix) | First-5-minutes boot/intro SameBoy trace (merged from FIRST_5MIN_TRACE.md, 2026-06-13) |
 
 ---
 
@@ -1092,12 +1091,12 @@ the correct table. Method + rule: KEY_LESSONS "Session 14 Lessons — Bank $0B r
 
 **All other 19 targets from the original 22 have been fixed** with proper labels
 and LOW/HIGH conversions. New labels created: NPCWalkDataTable, ScreenTransDataTable,
-SpriteFrameDataTable, MapNPCPosDataTable, TilesetLookupTable (×3), TileRefLookupTable,
+SpriteFrameDataTable, MapNPCPosDataTable, SkillMPCostTable (×3, renamed S51), TileRefLookupTable,
 FieldPtrLookupTable, ItemSlotPtrTable, EnemyGroupTable, TransitionLookupTable,
 RoomAttrDataBlocks, PaletteColorData, AttrMapData, AttrMapDataB, TextDataPtrLookup,
 BattleHPLookupTable, SaveSlotPtrTable.
 
-> ⚠️ **Correction (S44):** `TilesetLookupTable` ($07:$570C) is a **mislabel** — the data
+> ⚠️ **Correction (S44; renamed S51 → `SkillMPCostTable`):** the old `TilesetLookupTable` label at $07:$570C was a **mislabel** — the data
 > is the `SkillMPCostTable` (222 × u16 LE; see the "Bank $07 — Skill MP Cost Table" entry
 > above and DOC_AUDIT A.13). All three "×3" references are battle action-cost reads
 > (keyed off `wPLAN_selection`/`wOPTN_and_Item_selection`), not tileset lookups. The label

@@ -1,8 +1,12 @@
 # TOOLS & EXTRACTED DATA — Audited Manifest
 
-Audited 2026-06-13. Method: regenerated dumps against the original ROM,
-diffed vs committed JSON, dry-ran every generator, traced every JSON to
-its writer/readers. 62 tools, 37 JSON files.
+Full audit 2026-06-13 (method: regenerated dumps against the original ROM,
+diffed vs committed JSON, dry-ran every generator, traced every JSON to its
+writer/readers — 62 tools / 37 JSONs then). **Manifest re-synced 2026-07-02
+(S51): now 102 tools in `tools/` + 7 `dwm/` package modules, 54 JSONs in
+`extracted/`.** Rows added after 06-13 are manifest entries, not re-audits.
+SESSION_PROTOCOL §3 rule 5: new/changed tools + JSONs get their row the SAME
+session.
 
 ---
 
@@ -33,6 +37,11 @@ Regen produces identical output to committed file. Safe to re-run.
 | monster_follower_layouts.json | extract_monster_follower_layouts.py | **NEW (Session 25, GFX-4).** Every species (0–220) → `{bank, l1_index, l1_addr, l2_addr, attr_base, layout_id, sharing}`, traced through the real follower dispatch (`$ffc7=species+$10` → bank `$10`/`$11` `$407f` level-1 table). `--selftest` reproduces the Healer (sp9, sharing) + DarkDrium (sp214, non-sharing) anchors byte-for-byte and confirms all 215 collectible species map. |
 | library_layouts.json | resection_library_tables.py --dump-json | **NEW (Session 27, Phase D).** All **29** bank-`$12` monster-library / family-tab menu window-draw layouts (contiguous run `$710c..$7b9b`) decoded to `{addr, label, pos, length, ld_de_ref, rows[]}`. `$d8`=newline, `$d9`=terminator; rows are literal tile ids. 7 layouts are direct `ld de,$imm` entry points (`ld_de_ref:true`); incl. the 380-B `$79c6` 18×20 full-screen view. Same tool re-sections the asm (labels-only, build stays `1ca6579…`). |
 
+| species_slot_map.json | map_species_slots.py | **S28 (N1).** The 256-slot species-ID map: per id → occupancy class (real 0–214 / special 215–219 / empty 220–223 / free 224–255) + per-table presence. Self-checking anchors. |
+| library_grouping.json | build_library_table.py | **S19 (B7), re-owned S30.** The build-time family→members grouping table emitted into bank $12 free space; owns the 3 unseen-marker sites ($E0→$FE). Inputs: spirit_family.json + new_species.json. `--selftest` proves vanilla parity. |
+| battle_animations.json | decode_battle_animations.py | **S47 (S2c-anim).** All 45 battle-effect animations decoded (routine ids, side-table params, $0d = no visual); emulator-verified renderer model. See BATTLE_SKILL_SYSTEM §11. |
+| effect_messages.json | decode_effect_messages.py | **S47 (S2c).** Packed hit/miss message-id pairs ($dd70/71) for all skills; 67/67 statically-resolved FAQ-validated. See BATTLE_SKILL_SYSTEM §9. |
+
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
 These are knowledge artifacts — human analysis in JSON form. No generator
 was lost; they were intentionally curated. Treat as documentation.
@@ -49,6 +58,10 @@ was lost; they were intentionally curated. Treat as documentation.
 | custom_layouts/room_6b_medalman.json | 20×16 tile grid for Room $6B — user-designed MedalMan tileset room (v28) | tile_layout_compiler.py → bank_064.asm |
 | *(Room $6B current = gate-tile room)* | **S39:** Room $6B is now the Gate-of-Beginning maze-tileset room (gfx-ID `$280D`), authored directly in **`tools/build_gate_room.py`** (no JSON) → `patches/bank_064.asm`. Sandy island: ocean-wall border, 2×2 tree/dune/pit metatiles, per-position palette. Builds the v5 ROM. See GATE_GENERATION.md §7.2–7.3. | tools/build_gate_room.py → bank_064.asm |
 | family_icons.json | S20: the 10 vanilla family ICON tiles ($4F:$4110-$41A0, text bytes $10-$19) decoded as 8×8 grids + the free $1A slot + the authored Spirit icon (Variants A/B). Round-trip safe (decode→encode == ROM). `_generator` stamped. | tools/build_family_icon.py → patches/bank_04f.asm |
+| new_species.json | Phase-N authored spec (normalized/stamped by build_new_species.py): first_free_id 224, high bank $6A, per-species info/stats/encounter/name blocks. G3 (ROADMAP) will fold ALL Gorbunok artifacts into this schema. | tools/build_new_species.py → patches/bank_003/006a/014/001.asm |
+| spirit_family.json | B6 authored spec: Spirit-family reassignment list (`{id,name,from,to}`), `from` validated vs vanilla. | build_family_reassign.py, build_library_table.py |
+| skill_faq.json | **EXTERNAL ground truth** (community skill FAQ, transcribed — `_source`, deliberately NOT `_generator`): per-skill MP/target/learn/family data used to validate S44/S46 decodes. | build_skill_faq.py (writer); gen_skill_records.py + docs (validation) |
+| npc_names.json | Hand-curated naming reference: sprite/type names, NPC labels, room-name overrides. No generator by design. | dump_all_npcs.py, editor tooling |
 
 ### Tier S — Stable analysis output (generator not in repo; data is ROM-derived and unchanging)
 | File | Contents | Used by |
@@ -60,9 +73,10 @@ was lost; they were intentionally curated. Treat as documentation.
 ### Tier L — Legacy / superseded (safe to delete)
 | File | Why |
 |------|-----|
-| monsters.json | Old schema, superseded by monsters_full.json |
-| event_flags.json (1 KB) | Superseded by event_flags_complete.json (146 KB) |
-| edits.json | Legacy Streamlit-editor patch store; frozen editor |
+| monsters.json | Old schema, superseded by monsters_full.json. **Already absent before S51** (stale queue row). ⚠️ `dump_monsters.py` still WRITES this legacy schema when run — and reads monsters_full for names, so the Tier-A "monsters_full ← dump_monsters" attribution is suspect (open defect, PROJECT_STATE). |
+| event_flags.json | Superseded by event_flags_complete.json. **Was already absent** (untracked at HEAD; stale Tier-L row, verified S51). |
+| edits.json | Legacy Streamlit-editor patch store. **Was already absent** (untracked at HEAD; stale Tier-L row, verified S51 — legacy tools already tolerate absence). |
+| breeding_extra_recipes.json | B3 append path, superseded by B5. **DELETED S51** (was tracked → recoverable from git; content = one self-described capacity-proof TEST recipe, BattleRex×MadCat→DracoLord, archived in SESSION_HISTORY B3); `build_breeding.py --emit-relocation` is marked LEGACY and tolerates absence (emits base table only). |
 
 Everything else (all_text, all_transitions, transitions, npc_catalog,
 npc_with_text, npc_text_mapping, free_space, gate_names, orphan_pointers,
@@ -71,7 +85,11 @@ text_blobs): regenerable from named dumpers; not
 freshness-tested this session — verify before relying on one for the
 editor (snapshot → regen → diff).
 
-## 2. tools/ — classification (62 files)
+## 2. tools/ — classification (102 files in tools/ + the `dwm/` package)
+
+`dwm/` package (importable, not scripts): `rom.py`, `text.py`, `map_names.py`,
+`sprite_codec.py` (GFX-1 codec), `sprite_bank.py` (GFX-2 overflow allocator:
+$7E,$7F→$7C,$7A,$79), `build.py`.
 
 ### Guardrail
 `verify_integrity.py` — run at every session start/end.
@@ -201,8 +219,40 @@ the bytes in `patches/bank_04f.asm` at the Spirit slot. Delivered WITH `family_i
 The Spirit icon insert itself is `patches/bank_04f.asm` (same-size 16-byte tile at
 $41B0, zero shift; bank $4F otherwise byte-identical to vanilla).
 
+### Builders / decoders added after the 06-13 audit (rows synced S51)
+`build_combined_tileset.py` — multi-tileset editor JSON → bank_067.asm (cherry-picked
+LZSS GFX) + bank_017.asm palette wiring; the Phase-1 "custom tile GRAPHICS" pipeline. ·
+`build_library_table.py` — B7 production library grouping → patches/bank_012.asm;
+owns the $E0→$FE unseen-marker sites; inputs spirit_family/new_species; `--selftest`
+vanilla parity (see library_grouping.json row). ·
+`build_new_species.py` — Phase N: info-table fork ($6A), enemy stats (EID 518),
+same-size wild-encounter edit, name wiring, from new_species.json; SameBoy-proven. ·
+`build_new_species_follower.py` — G1 follower-art path for ids ≥224 (all-8-copy
+gfx-ID fork + attr fix); standalone TEST-ROM emitter during bring-up. ·
+`bake_follower_overflow.py` — emits a sprite-overflow bank ($7E…) as a STATIC patch
+file from follower art sources (the baked-into-patches/ path, vs test ROMs). ·
+`build_skill_faq.py` — transcribed community FAQ → skill_faq.json (external ground
+truth, `_source`-stamped). ·
+`decode_battle_animations.py` / `decode_effect_messages.py` — S2c/S2c-anim decoders
+(see their Tier-A JSON rows). ·
+`emit_anim_data_sections.py` — rgbasm `db`/`dw` emitter for the battle-effect
+presentation tables mgbdis mis-rendered as instructions (Phase-D re-section helper). ·
+`extract_png_tileset.py` — PNG map rip → unique 8×8 GBC tiles, 4-colour quantize,
+palette-group clustering (custom-art import front door). ·
+`patch_breeding_recipe.py` — S12 keystone: direct same-size edits to the vanilla
+special table $16:$4B30 (predates B5; kept as the minimal-edit precedent). ·
+`resection_skill_tables.py` — **NEW S51**, Phase-D item (2b): converts
+`SkillMPCostTable` ($07:$570C) + `SkillLearnReqTable` ($06:$50E0) from fake
+instructions to labeled `dw`/`db` in BOTH trees via the probe-build method;
+byte-perfect asserted; keeps outside-referenced fake-artifact labels at exact
+offsets; idempotent (`--check`). ·
+`sm83dis.py` — targeted SM83 disassembler for bank:addr regions mgbdis left as `db`
+(unreferenced routines / data-reached code); used by the RE arcs.
+
 ### Prototype editor (towards_editor/)
-`DWM1_Multi_Tileset_Editor.html` — standalone HTML file (open in browser).
+`DWM1_Tile_Editor.html` — standalone HTML file (open in browser); earlier docs
+call it "DWM1_Multi_Tileset_Editor" — same artifact, current filename is
+`DWM1_Tile_Editor.html`.
 Multi-tileset room designer: browse 85 tilesets (with names), pick tiles
 from any source into a combined palette (128 max), paint 20×16 rooms,
 collision-threshold-based walkability overlay (W key), variable-size stamps

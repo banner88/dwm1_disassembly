@@ -3077,7 +3077,7 @@ label6_4f9a:
     call GetMonsterDataPtr
     ld e, l
     ld d, h
-    ld hl, $50e0
+    ld hl, SkillLearnReqTable   ; = $50e0 (relabeled S51, byte-identical)
 
 jr_006_4fa8:
     ld c, $00
@@ -3365,3895 +3365,463 @@ jr_006_50d7:
 ;   +0  level (u8)
 ;   +1 HP  +3 MP  +5 Atk  +7 Def  +9 Agl  +11 Int   (each u16 LE)
 ;   +13..+17  up to 5 prerequisite skill ids ($FF = unused, trailing-padded)
-; Loaded via `ld hl, $50e0` (see code above). Validated vs the FAQ "Required
+; Loaded via `ld hl, SkillLearnReqTable` (see code above). Validated vs the FAQ "Required
 ; Stats to Learn" columns, incl. MegaMagic's 5 prereqs and BugCut(215)'s
 ; 12/68/-/72/-/62/-. mgbdis rendered the bytes below as fake code; decoded by
 ; tools/gen_skill_records.py and round-trip-proven by build_skill_tables.py.
 ; -----------------------------------------------------------------------------
-    ld bc, $0000
-    rlca
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc d
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec c
-    nop
-    nop
-    ld l, $00
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, b
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc e
-    nop
-    nop
-    ld [hl], b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    sub d
-    nop
-    ld bc, $ffff
-    rst $38
-    rst $38
-    inc bc
-    nop
-    nop
-    dec bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rla
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    nop
-    nop
-    ld [hl+], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc [hl]
-    nop
-    inc bc
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [de]
-    nop
-    nop
-    ld h, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, d
-    nop
-    inc b
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc b
-    nop
-    nop
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [de]
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $00
-    nop
-    ld [hl-], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, h
-    nop
-    ld b, $ff
-    rst $38
-    rst $38
-    rst $38
-    dec e
-    nop
-    nop
-    ld a, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    sbc [hl]
-    nop
-    rlca
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [bc], a
-    nop
-    nop
-    ld a, [bc]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec d
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec bc
-    nop
-    nop
-    ld h, $00
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    jr c, jr_006_51a1
-
-jr_006_51a1:
-    add hl, bc
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec de
-    nop
-    nop
-    ld l, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    add [hl]
-    nop
-    ld a, [bc]
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec b
-    nop
-    nop
-    stop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld e, $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    nop
-    nop
-    ld a, [hl+]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc a
-    nop
-    inc c
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    add hl, de
-    nop
-    nop
-    ld e, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld l, [hl]
-    nop
-    dec c
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld b, $00
-    nop
-    inc d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc hl
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rrca
-    nop
-    nop
-    ld [hl], $00
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    rrca
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld e, $00
-    nop
-    add b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    xor d
-    nop
-    db $10
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    stop
-    nop
-    ld a, [hl-]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, h
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    jr jr_006_5238
-
-jr_006_5238:
-    nop
-    ld d, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld h, d
-    nop
-    ld [de], a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld bc, $0000
-    rlca
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc b
-    nop
-    nop
-    jr jr_006_525f
-
-jr_006_525f:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    stop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec bc
-    nop
-    nop
-    inc [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld l, $00
-    dec d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    add hl, bc
-    nop
-    nop
-    inc l
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld h, $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    nop
-    nop
-    cpl
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    add hl, hl
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    nop
-    nop
-    jr c, jr_006_52a7
-
-jr_006_52a7:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld sp, $ff00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rlca
-    nop
-    nop
-    jr nz, jr_006_52b9
-
-jr_006_52b9:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc e
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec c
-    nop
-    nop
-    ld a, [hl-]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc [hl]
-    nop
-    ld a, [de]
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc b
-    nop
-    nop
-    ld [de], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rrca
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [$0000], sp
-    inc h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    jr nz, jr_006_52f7
-
-jr_006_52f7:
-    inc e
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [bc], a
-    nop
-    nop
-    ld c, $00
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc c
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld b, $00
-    nop
-    dec de
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    jr jr_006_531b
-
-jr_006_531b:
-    ld e, $ff
-    rst $38
-    rst $38
-    rst $38
-    inc bc
-    nop
-    nop
-    stop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rlca
-    nop
-    nop
-    jr nz, jr_006_5337
-
-jr_006_5337:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc e
-    nop
-    jr nz, @+$01
-
-    rst $38
-    rst $38
-    rst $38
-    ld bc, $0000
-    ld a, [bc]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [$ff00], sp
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec b
-    nop
-    nop
-    jr jr_006_535b
-
-jr_006_535b:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc d
-    nop
-    ld [hl+], a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [de], a
-    nop
-    nop
-    ld c, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, [hl]
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld de, $0000
-    ld c, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, d
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc de
-    nop
-    nop
-    ld d, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, d
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    stop
-    nop
-    ld b, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    nop
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, [hl]
-    nop
-    daa
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec d
-    nop
-    nop
-    ld e, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld e, b
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rrca
-    nop
-    nop
-    ld a, $00
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [hl-]
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld bc, $0000
-    rlca
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    nop
-    nop
-    inc [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    jr nc, jr_006_5405
-
-jr_006_5405:
-    dec hl
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    stop
-    nop
-    ld d, d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, b
-    nop
-    inc l
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    nop
-    nop
-    adc h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, b
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc e
-    nop
-    nop
-    call nz, RST_00
-    nop
-    nop
-    nop
-    nop
-    nop
-    and b
-    nop
-    ld l, $ff
-    rst $38
-    rst $38
-    rst $38
-    ld c, $00
-    nop
-    ccf
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [hl], $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec de
-    nop
-    nop
-    xor [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    sbc b
-    nop
-    jr nc, @+$01
-
-    rst $38
-    rst $38
-    rst $38
-    jr nz, jr_006_5466
-
-jr_006_5466:
-    nop
-    cp h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    or b
-    nop
-    inc d
-    ld sp, $ffff
-    rst $38
-    dec b
-    nop
-    nop
-    dec d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc d
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [$0000], sp
-    ld e, $00
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [de]
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld b, $00
-    nop
-    jr jr_006_549f
-
-jr_006_549f:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rlca
-    nop
-    nop
-    dec de
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    jr jr_006_54b9
-
-jr_006_54b9:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    nop
-    nop
-    jr z, jr_006_54c3
-
-jr_006_54c3:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [hl+], a
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    nop
-    nop
-    jr z, jr_006_54d5
-
-jr_006_54d5:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [hl+], a
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    jr z, jr_006_54e4
-
-jr_006_54e4:
-    nop
-    ldh [rP1], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    db $ec
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [$0050], sp
-    nop
-    nop
-    ld d, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, [hl]
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $62
-    nop
-    nop
-    nop
-    ld d, h
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [de], a
-    ld a, [hl]
-    nop
-    nop
-    nop
-    ld l, h
-    nop
-    ld l, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc a
-    ld b, c
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld d, h
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rrca
-    ld l, d
-    nop
-    nop
-    nop
-    ld e, d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $62
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    adc h
-    nop
-    nop
-    nop
-    ld a, b
-    nop
-    nop
-    nop
-    ld a, b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld de, $0077
-    nop
-    nop
-    nop
-    nop
-    ld h, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec bc
-    ld c, l
-    nop
-    ld [hl+], a
-    nop
-    ld b, d
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [hl+]
-    nop
-    ld b, c
-    ld bc, $ffff
-    rst $38
-    dec bc
-    ld c, l
-    nop
-    ld [hl+], a
-    nop
-    ld b, d
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [hl+]
-    nop
-    ld b, c
-    ld e, d
-    rst $38
-    rst $38
-    rst $38
-    dec bc
-    ld c, l
-    nop
-    ld [hl+], a
-    nop
-    ld b, d
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [hl+]
-    nop
-    ld b, c
-    ld e, b
-    rst $38
-    rst $38
-    rst $38
-    dec bc
-    ld c, l
-    nop
-    ld [hl+], a
-    nop
-    ld b, d
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [hl+]
-    nop
-    ld b, c
-    dec c
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, h
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    ld a, $00
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, h
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    ld a, $00
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld a, $00
-    nop
-    nop
-    ld b, h
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld a, $00
-    nop
-    nop
-    ld b, h
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, b
-    nop
-    nop
-    nop
-    ld a, [hl-]
-    nop
-    nop
-    nop
-    ld a, $00
-    jr nc, jr_006_5645
-
-jr_006_5645:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, b
-    nop
-    nop
-    nop
-    ld a, [hl-]
-    nop
-    nop
-    nop
-    ld a, $00
-    jr nc, jr_006_5657
-
-jr_006_5657:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, h
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    ld a, $00
-    nop
-    nop
-    rst $38
-    rst $38
-
-DispMapS_566b:
-    rst $38
-    rst $38
-    rst $38
-    inc e
-    sbc d
-    nop
-    adc h
-    nop
-    xor b
-    nop
-    nop
-    nop
-    xor b
-    nop
-    sub h
-    nop
-    ld c, l
-    ld e, c
-    rst $38
-    rst $38
-    rst $38
-    inc de
-    ld h, d
-    nop
-    nop
-    nop
-    ld e, b
-    nop
-    nop
-    nop
-    ld [hl], b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    jr jr_006_5710
-
-    nop
-    nop
-    nop
-    ld [hl], b
-    nop
-    nop
-    nop
-    adc b
-    nop
-    nop
-    nop
-    ld d, b
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld de, $0054
-    ld a, [hl+]
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, h
-    nop
-    ld [hl], $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rla
-    add b
-    nop
-    ld b, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, d
-    nop
-    ld c, d
-    nop
-    ld d, d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [de], a
-    ld a, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld l, h
-    nop
-    ld l, h
-    nop
-    ld l, h
-    nop
-    ld b, c
-    ld b, e
-    sub e
-    rst $38
-    rst $38
-    inc c
-    ld c, b
-    nop
-    nop
-    nop
-    ld b, h
-    nop
-    nop
-    nop
-    ld d, d
-    nop
-    nop
-    nop
-    inc hl
-    ld b, c
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld c, b
-    nop
-    nop
-    nop
-    ld d, d
-    nop
-    ld b, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rrca
-    ld e, h
-    nop
-    nop
-    nop
-    ld e, d
-    nop
-    nop
-    nop
-    ld h, b
-    nop
-    nop
-    nop
-    ld d, b
-    ld d, l
-    rst $38
-    rst $38
-    rst $38
-
-jr_006_5710:
-    dec c
-    ld c, d
-    nop
-    nop
-    nop
-    inc a
-    nop
-    nop
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc de
-    ld [hl], b
-    nop
-    nop
-    nop
-    ld [hl], d
-    nop
-    nop
-    nop
-    add h
-    nop
-    nop
-    nop
-    ld e, b
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    ld b, c
-    nop
-    nop
-    nop
-    ld e, d
-    nop
-    nop
-    nop
-    inc [hl]
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    db $10
-    ld a, h
-    nop
-    nop
-    nop
-    ld h, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc bc
-    dec d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    ld b, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld e, h
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    adc h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld e, l
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld e, $d2
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld e, [hl]
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc bc
-    dec d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    ld b, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld h, b
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    adc h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld h, c
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld e, $d2
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld h, d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [hl+], a
-    cp b
-    nop
-    cp b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    db $c4, $00, $11
-    ld e, d
-    rst $38
-    rst $38
-    rst $38
-    inc h
-    call nz, $c400
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ret nc
-
-    nop
-    ld [$635f], sp
-    rst $38
-    rst $38
-    ld h, $00
-    nop
-    jp nc, RST_00
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    ldh [rP1], a
-    ld [bc], a
-    dec b
-    ld [$0e0b], sp
-    dec b
-    inc hl
-    nop
-    nop
-    nop
-    ld e, $00
-    nop
-    nop
-    nop
-    nop
-    ld e, $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rlca
-    ld sp, $0000
-    nop
-    ld a, [hl+]
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [hl+]
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    add hl, bc
-    ccf
-    nop
-    nop
-    nop
-    ld [hl], $00
-    nop
-    nop
-    nop
-    nop
-    ld [hl], $00
-    ld h, a
-    ld l, b
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    ld b, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    inc a
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    db $10
-    ld [hl], b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld h, b
-    nop
-    ld l, d
-    ld l, l
-    rst $38
-    rst $38
-    rst $38
-    add hl, bc
-    ccf
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [hl], $00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $62
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, h
-    nop
-    ld l, h
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec c
-    ld c, d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, [hl]
-    nop
-    ld c, [hl]
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rrca
-    nop
-    nop
-    ld b, c
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, d
-    nop
-    ld d, d
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    nop
-    nop
-    nop
-    nop
-    inc a
-    nop
-    nop
-    nop
-    inc a
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    adc h
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, b
-    nop
-    ld a, b
-    nop
-    ld l, a
-    ld a, b
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    ld b, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, [hl]
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    nop
-    nop
-    ld a, [hl+]
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $00
-    nop
-    ld b, c
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, h
-    nop
-    ld d, h
-    nop
-    ld l, a
-    ld [hl], e
-    rst $38
-    rst $38
-    rst $38
-    ld a, [bc]
-    ld [hl], $00
-    dec de
-    nop
-    nop
-    nop
-    nop
-    nop
-    ccf
-    nop
-    ld sp, $ff00
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, h
-    nop
-    daa
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, l
-    nop
-    dec a
-    nop
-    ld [hl], l
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    add hl, bc
-    ccf
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [hl], $00
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $54
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld h, d
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rlca
-    scf
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld b, e
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec c
-    ld d, c
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld e, [hl]
-    nop
-    nop
-    nop
-    ld a, c
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld b, $20
-    nop
-    nop
-    nop
-    rra
-    nop
-    nop
-    nop
-    jr nc, jr_006_5991
-
-jr_006_5991:
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, d
-    nop
-    nop
-    nop
-    ccf
-    nop
-    nop
-    nop
-    ld c, l
-    nop
-    nop
-    nop
-    ld a, e
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $78
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc b
-    nop
-    nop
-    inc e
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    jr jr_006_59c9
-
-jr_006_59c9:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec d
-    sub e
-    nop
-    sub e
-    nop
-    ld a, [hl]
-    nop
-    ld a, [hl]
-    nop
-    ld a, [hl]
-    nop
-    ld a, [hl]
-    nop
-    add hl, hl
-    ld d, h
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    nop
-    nop
-    ld h, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    adc h
-    nop
-    add c
-    add d
-    rst $38
-    rst $38
-    rst $38
-    rla
-    nop
-    nop
-    add d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    xor d
-    nop
-    inc sp
-    inc [hl]
-    dec [hl]
-    ld [hl], $ff
-    dec d
-    nop
-    nop
-    ld l, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    sub [hl]
-    nop
-    jr jr_006_5a30
-
-    ld hl, $ffff
-    ld d, $00
-    nop
-    ld a, b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    and b
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    nop
-    nop
-    ld b, [hl]
-    nop
-    nop
-    nop
-    nop
-
-jr_006_5a30:
-    nop
-    nop
-    nop
-    ld e, d
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    add hl, de
-    nop
-    nop
-    ld h, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, b
-    nop
-    add h
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld e, $00
-    nop
-    add d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    sub [hl]
-    nop
-    add l
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc hl
-    nop
-    nop
-    and b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    or h
-    nop
-    add [hl]
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec b
-    inc hl
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld e, $00
-    ld e, $00
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld d, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    adc b
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec bc
-    ld c, e
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, h
-    nop
-    ld b, [hl]
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc de
-    adc h
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, [hl]
-    nop
-    adc h
-    nop
-    nop
-    nop
-    adc d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [de], a
-    ld a, [hl]
-    nop
-    nop
-    nop
-    ld l, h
-    nop
-    ld l, h
-    nop
-    ld l, h
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $62
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec c
-    ld e, e
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld c, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld c, $62
-    nop
-    nop
-    nop
-    ld d, h
-    nop
-    ld d, h
-    nop
-    ld d, h
-    nop
-    nop
-    nop
-    dec sp
-    adc [hl]
-    rst $38
-    rst $38
-    rst $38
-    db $10
-    ld h, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld a, b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld de, $0078
-    nop
-    nop
-    ld h, h
-    nop
-    nop
-    nop
-    adc h
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld a, [de]
-    or [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    sbc h
-    nop
-    nop
-    nop
-    sbc h
-    nop
-    adc c
-    adc [hl]
-    rst $38
-    rst $38
-    rst $38
-    ld [de], a
-    ld [hl], d
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    add d
-    nop
-    ld h, b
-    nop
-    dec l
-    ld [hl], a
-    rst $38
-    rst $38
-    rst $38
-    dec de
-    add $00
-    ld e, [hl]
-    nop
-    nop
-    nop
-    nop
-    nop
-    sub c
-    nop
-    and d
-    nop
-    ld sp, $ff7d
-    rst $38
-    rst $38
-    ld e, $d2
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    or h
-    nop
-    or h
-    nop
-    inc d
-    sub h
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc e
-    nop
-    nop
-    ld a, h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    and b
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld a, $00
-    nop
-    nop
-    ld b, h
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, h
-    nop
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    ld a, $00
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc c
-    ld b, h
-    nop
-    nop
-    nop
-    ld a, $00
-    nop
-    nop
-    ld c, b
-    nop
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld hl, $00e7
-    and h
-    nop
-    add $00
-    nop
-    nop
-    add $00
-    add $00
-    ld b, h
-    ld b, l
-    ld b, [hl]
-    ld b, a
-    rst $38
-
-
-label6_6034:
-    ld a, [$c88f]
-    or a
-    ret nz
-
-    ld a, [wGameState]
-    bit 5, a
-    jp nz, Jump_006_6b87
-
-    bit 7, a
-    jp nz, Jump_006_6295
-
-    bit 4, a
-    jp nz, Jump_006_62b2
-
-    bit 0, a
-    jp nz, Jump_006_67a9
-
-    bit 1, a
-    jr z, jr_006_6059
-
-    ld hl, $0700
-    rst $10
-    ret
-
-
-jr_006_6059:
-    bit 3, a
-    jr z, jr_006_6062
-
-    ld hl, $1900
-    rst $10
-    ret
-
-
-jr_006_6062:
-    bit 6, a
-    jr z, jr_006_606b
-
-    ld hl, $1303
-    rst $10
-    ret
-
-
-jr_006_606b:
-    bit 2, a
-    jp nz, Jump_006_62f6
-
-    ld a, [$d9e8]
-    or a
-    jp nz, Jump_006_6284
-
-    ld a, [wScriptStateFlags]
-    or a
-    jp nz, Jump_006_6284
-
+SkillLearnReqTable:  ; $06:$50E0 — 222 x 18 B, skill-id order (label added S51;
+;   the block below was emitted without it by a tool defect, caught by --check).
+    ; --- $00 Blaze: lvl 1; hp 0 mp 7 atk 0 def 0 agl 0 int 20; no prereq
+    db $01, $00, $00, $07, $00, $00, $00, $00, $00, $00, $00, $14, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $01 Blazemore: lvl 13; hp 0 mp 46 atk 0 def 0 agl 0 int 64; prereq $00
+    db $0d, $00, $00, $2e, $00, $00, $00, $00, $00, $00, $00, $40, $00, $00, $ff, $ff, $ff, $ff
+    ; --- $02 Blazemost: lvl 28; hp 0 mp 112 atk 0 def 0 agl 0 int 146; prereq $01
+    db $1c, $00, $00, $70, $00, $00, $00, $00, $00, $00, $00, $92, $00, $01, $ff, $ff, $ff, $ff
+    ; --- $03 Firebal: lvl 3; hp 0 mp 11 atk 0 def 0 agl 0 int 23; no prereq
+    db $03, $00, $00, $0b, $00, $00, $00, $00, $00, $00, $00, $17, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $04 Firebane: lvl 10; hp 0 mp 34 atk 0 def 0 agl 0 int 52; prereq $03
+    db $0a, $00, $00, $22, $00, $00, $00, $00, $00, $00, $00, $34, $00, $03, $ff, $ff, $ff, $ff
+    ; --- $05 Firebolt: lvl 26; hp 0 mp 96 atk 0 def 0 agl 0 int 122; prereq $04
+    db $1a, $00, $00, $60, $00, $00, $00, $00, $00, $00, $00, $7a, $00, $04, $ff, $ff, $ff, $ff
+    ; --- $06 Bang: lvl 4; hp 0 mp 13 atk 0 def 0 agl 0 int 26; no prereq
+    db $04, $00, $00, $0d, $00, $00, $00, $00, $00, $00, $00, $1a, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $07 Boom: lvl 14; hp 0 mp 50 atk 0 def 0 agl 0 int 68; prereq $06
+    db $0e, $00, $00, $32, $00, $00, $00, $00, $00, $00, $00, $44, $00, $06, $ff, $ff, $ff, $ff
+    ; --- $08 Explodet: lvl 29; hp 0 mp 120 atk 0 def 0 agl 0 int 158; prereq $07
+    db $1d, $00, $00, $78, $00, $00, $00, $00, $00, $00, $00, $9e, $00, $07, $ff, $ff, $ff, $ff
+    ; --- $09 Infernos: lvl 2; hp 0 mp 10 atk 0 def 0 agl 0 int 21; no prereq
+    db $02, $00, $00, $0a, $00, $00, $00, $00, $00, $00, $00, $15, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $0a Infermore: lvl 11; hp 0 mp 38 atk 0 def 0 agl 0 int 56; prereq $09
+    db $0b, $00, $00, $26, $00, $00, $00, $00, $00, $00, $00, $38, $00, $09, $ff, $ff, $ff, $ff
+    ; --- $0b Infermost: lvl 27; hp 0 mp 104 atk 0 def 0 agl 0 int 134; prereq $0a
+    db $1b, $00, $00, $68, $00, $00, $00, $00, $00, $00, $00, $86, $00, $0a, $ff, $ff, $ff, $ff
+    ; --- $0c IceBolt: lvl 5; hp 0 mp 16 atk 0 def 0 agl 0 int 30; no prereq
+    db $05, $00, $00, $10, $00, $00, $00, $00, $00, $00, $00, $1e, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $0d SnowStorm: lvl 12; hp 0 mp 42 atk 0 def 0 agl 0 int 60; prereq $0c
+    db $0c, $00, $00, $2a, $00, $00, $00, $00, $00, $00, $00, $3c, $00, $0c, $ff, $ff, $ff, $ff
+    ; --- $0e Blizzard: lvl 25; hp 0 mp 88 atk 0 def 0 agl 0 int 110; prereq $0d
+    db $19, $00, $00, $58, $00, $00, $00, $00, $00, $00, $00, $6e, $00, $0d, $ff, $ff, $ff, $ff
+    ; --- $0f Bolt: lvl 6; hp 0 mp 20 atk 0 def 0 agl 0 int 35; no prereq
+    db $06, $00, $00, $14, $00, $00, $00, $00, $00, $00, $00, $23, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $10 Zap: lvl 15; hp 0 mp 54 atk 0 def 0 agl 0 int 72; prereq $0f
+    db $0f, $00, $00, $36, $00, $00, $00, $00, $00, $00, $00, $48, $00, $0f, $ff, $ff, $ff, $ff
+    ; --- $11 Thordain: lvl 30; hp 0 mp 128 atk 0 def 0 agl 0 int 170; prereq $10
+    db $1e, $00, $00, $80, $00, $00, $00, $00, $00, $00, $00, $aa, $00, $10, $ff, $ff, $ff, $ff
+    ; --- $12 Beat: lvl 16; hp 0 mp 58 atk 0 def 0 agl 0 int 76; no prereq
+    db $10, $00, $00, $3a, $00, $00, $00, $00, $00, $00, $00, $4c, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $13 Defeat: lvl 24; hp 0 mp 80 atk 0 def 0 agl 0 int 98; prereq $12
+    db $18, $00, $00, $50, $00, $00, $00, $00, $00, $00, $00, $62, $00, $12, $ff, $ff, $ff, $ff
+    ; --- $14 Sacrifice: lvl 1; hp 0 mp 7 atk 0 def 0 agl 0 int 6; no prereq
+    db $01, $00, $00, $07, $00, $00, $00, $00, $00, $00, $00, $06, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $15 Sleep: lvl 4; hp 0 mp 24 atk 0 def 0 agl 0 int 16; no prereq
+    db $04, $00, $00, $18, $00, $00, $00, $00, $00, $00, $00, $10, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $16 SleepAll: lvl 11; hp 0 mp 52 atk 0 def 0 agl 0 int 46; prereq $15
+    db $0b, $00, $00, $34, $00, $00, $00, $00, $00, $00, $00, $2e, $00, $15, $ff, $ff, $ff, $ff
+    ; --- $17 StopSpell: lvl 9; hp 0 mp 44 atk 0 def 0 agl 0 int 38; no prereq
+    db $09, $00, $00, $2c, $00, $00, $00, $00, $00, $00, $00, $26, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $18 Surround: lvl 10; hp 0 mp 47 atk 0 def 0 agl 0 int 41; no prereq
+    db $0a, $00, $00, $2f, $00, $00, $00, $00, $00, $00, $00, $29, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $19 PanicAll: lvl 12; hp 0 mp 56 atk 0 def 0 agl 0 int 49; no prereq
+    db $0c, $00, $00, $38, $00, $00, $00, $00, $00, $00, $00, $31, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $1a RobMagic: lvl 7; hp 0 mp 32 atk 0 def 0 agl 0 int 28; no prereq
+    db $07, $00, $00, $20, $00, $00, $00, $00, $00, $00, $00, $1c, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $1b TakeMagic: lvl 13; hp 0 mp 58 atk 0 def 0 agl 0 int 52; prereq $1a
+    db $0d, $00, $00, $3a, $00, $00, $00, $00, $00, $00, $00, $34, $00, $1a, $ff, $ff, $ff, $ff
+    ; --- $1c Sap: lvl 4; hp 0 mp 18 atk 0 def 0 agl 0 int 15; no prereq
+    db $04, $00, $00, $12, $00, $00, $00, $00, $00, $00, $00, $0f, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $1d Defence: lvl 8; hp 0 mp 36 atk 0 def 0 agl 0 int 32; prereq $1c
+    db $08, $00, $00, $24, $00, $00, $00, $00, $00, $00, $00, $20, $00, $1c, $ff, $ff, $ff, $ff
+    ; --- $1e Upper: lvl 2; hp 0 mp 14 atk 0 def 0 agl 0 int 12; no prereq
+    db $02, $00, $00, $0e, $00, $00, $00, $00, $00, $00, $00, $0c, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $1f Increase: lvl 6; hp 0 mp 27 atk 0 def 0 agl 0 int 24; prereq $1e
+    db $06, $00, $00, $1b, $00, $00, $00, $00, $00, $00, $00, $18, $00, $1e, $ff, $ff, $ff, $ff
+    ; --- $20 Slow: lvl 3; hp 0 mp 16 atk 0 def 0 agl 0 int 14; no prereq
+    db $03, $00, $00, $10, $00, $00, $00, $00, $00, $00, $00, $0e, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $21 SlowAll: lvl 7; hp 0 mp 32 atk 0 def 0 agl 0 int 28; prereq $20
+    db $07, $00, $00, $20, $00, $00, $00, $00, $00, $00, $00, $1c, $00, $20, $ff, $ff, $ff, $ff
+    ; --- $22 Speed: lvl 1; hp 0 mp 10 atk 0 def 0 agl 0 int 8; no prereq
+    db $01, $00, $00, $0a, $00, $00, $00, $00, $00, $00, $00, $08, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $23 SpeedUp: lvl 5; hp 0 mp 24 atk 0 def 0 agl 0 int 20; prereq $22
+    db $05, $00, $00, $18, $00, $00, $00, $00, $00, $00, $00, $14, $00, $22, $ff, $ff, $ff, $ff
+    ; --- $24 Barrier: lvl 18; hp 0 mp 76 atk 0 def 0 agl 0 int 70; no prereq
+    db $12, $00, $00, $4c, $00, $00, $00, $00, $00, $00, $00, $46, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $25 TwinHits: lvl 17; hp 0 mp 72 atk 0 def 0 agl 0 int 66; no prereq
+    db $11, $00, $00, $48, $00, $00, $00, $00, $00, $00, $00, $42, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $26 MagicWall: lvl 19; hp 0 mp 80 atk 0 def 0 agl 0 int 74; no prereq
+    db $13, $00, $00, $50, $00, $00, $00, $00, $00, $00, $00, $4a, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $27 MagicBack: lvl 16; hp 0 mp 68 atk 0 def 0 agl 0 int 62; no prereq
+    db $10, $00, $00, $44, $00, $00, $00, $00, $00, $00, $00, $3e, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $28 Bounce: lvl 20; hp 0 mp 84 atk 0 def 0 agl 0 int 78; prereq $27
+    db $14, $00, $00, $54, $00, $00, $00, $00, $00, $00, $00, $4e, $00, $27, $ff, $ff, $ff, $ff
+    ; --- $29 Transform: lvl 21; hp 0 mp 92 atk 0 def 0 agl 0 int 88; no prereq
+    db $15, $00, $00, $5c, $00, $00, $00, $00, $00, $00, $00, $58, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $2a Ironize: lvl 15; hp 0 mp 62 atk 0 def 0 agl 0 int 58; no prereq
+    db $0f, $00, $00, $3e, $00, $00, $00, $00, $00, $00, $00, $3a, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $2b Heal: lvl 1; hp 0 mp 7 atk 0 def 0 agl 0 int 6; no prereq
+    db $01, $00, $00, $07, $00, $00, $00, $00, $00, $00, $00, $06, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $2c HealMore: lvl 10; hp 0 mp 52 atk 0 def 0 agl 0 int 48; prereq $2b
+    db $0a, $00, $00, $34, $00, $00, $00, $00, $00, $00, $00, $30, $00, $2b, $ff, $ff, $ff, $ff
+    ; --- $2d HealAll: lvl 16; hp 0 mp 82 atk 0 def 0 agl 0 int 80; prereq $2c
+    db $10, $00, $00, $52, $00, $00, $00, $00, $00, $00, $00, $50, $00, $2c, $ff, $ff, $ff, $ff
+    ; --- $2e HealUs: lvl 20; hp 0 mp 140 atk 0 def 0 agl 0 int 120; no prereq
+    db $14, $00, $00, $8c, $00, $00, $00, $00, $00, $00, $00, $78, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $2f HealUsAll: lvl 28; hp 0 mp 196 atk 0 def 0 agl 0 int 160; prereq $2e
+    db $1c, $00, $00, $c4, $00, $00, $00, $00, $00, $00, $00, $a0, $00, $2e, $ff, $ff, $ff, $ff
+    ; --- $30 Vivify: lvl 14; hp 0 mp 63 atk 0 def 0 agl 0 int 54; no prereq
+    db $0e, $00, $00, $3f, $00, $00, $00, $00, $00, $00, $00, $36, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $31 Revive: lvl 27; hp 0 mp 174 atk 0 def 0 agl 0 int 152; prereq $30
+    db $1b, $00, $00, $ae, $00, $00, $00, $00, $00, $00, $00, $98, $00, $30, $ff, $ff, $ff, $ff
+    ; --- $32 Farewell: lvl 32; hp 0 mp 188 atk 0 def 0 agl 0 int 176; prereq $14,$31
+    db $20, $00, $00, $bc, $00, $00, $00, $00, $00, $00, $00, $b0, $00, $14, $31, $ff, $ff, $ff
+    ; --- $33 Antidote: lvl 5; hp 0 mp 21 atk 0 def 0 agl 0 int 20; no prereq
+    db $05, $00, $00, $15, $00, $00, $00, $00, $00, $00, $00, $14, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $34 NumbOff: lvl 8; hp 0 mp 30 atk 0 def 0 agl 0 int 26; no prereq
+    db $08, $00, $00, $1e, $00, $00, $00, $00, $00, $00, $00, $1a, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $35 DeChaos: lvl 6; hp 0 mp 24 atk 0 def 0 agl 0 int 22; no prereq
+    db $06, $00, $00, $18, $00, $00, $00, $00, $00, $00, $00, $16, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $36 CurseOff: lvl 7; hp 0 mp 27 atk 0 def 0 agl 0 int 24; no prereq
+    db $07, $00, $00, $1b, $00, $00, $00, $00, $00, $00, $00, $18, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $37 StepGuard: lvl 10; hp 0 mp 40 atk 0 def 0 agl 0 int 34; no prereq
+    db $0a, $00, $00, $28, $00, $00, $00, $00, $00, $00, $00, $22, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $38 MapMagic: lvl 10; hp 0 mp 40 atk 0 def 0 agl 0 int 34; no prereq
+    db $0a, $00, $00, $28, $00, $00, $00, $00, $00, $00, $00, $22, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $39 Chance: lvl 40; hp 0 mp 224 atk 0 def 0 agl 0 int 236; no prereq
+    db $28, $00, $00, $e0, $00, $00, $00, $00, $00, $00, $00, $ec, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $3a Attack: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $3b TwinSlash: lvl 8; hp 80 mp 0 atk 80 def 0 agl 0 int 0; no prereq
+    db $08, $50, $00, $00, $00, $50, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $3c Ramming: lvl 12; hp 70 mp 0 atk 0 def 0 agl 70 int 0; no prereq
+    db $0c, $46, $00, $00, $00, $00, $00, $00, $00, $46, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $3d Beserker: lvl 14; hp 98 mp 0 atk 84 def 84 agl 0 int 0; no prereq
+    db $0e, $62, $00, $00, $00, $54, $00, $54, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $3e Kamikaze: lvl 18; hp 126 mp 0 atk 108 def 108 agl 0 int 0; prereq $3c,$41
+    db $12, $7e, $00, $00, $00, $6c, $00, $6c, $00, $00, $00, $00, $00, $3c, $41, $ff, $ff, $ff
+    ; --- $3f Massacre: lvl 12; hp 84 mp 0 atk 72 def 0 agl 72 int 0; no prereq
+    db $0c, $54, $00, $00, $00, $48, $00, $00, $00, $48, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $40 EvilSlash: lvl 15; hp 106 mp 0 atk 90 def 0 agl 0 int 0; no prereq
+    db $0f, $6a, $00, $00, $00, $5a, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $41 ChargeUP: lvl 14; hp 98 mp 0 atk 0 def 84 agl 0 int 0; no prereq
+    db $0e, $62, $00, $00, $00, $00, $00, $54, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $42 HighJump: lvl 20; hp 140 mp 0 atk 120 def 0 agl 120 int 0; no prereq
+    db $14, $8c, $00, $00, $00, $78, $00, $00, $00, $78, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $43 SuckAir: lvl 17; hp 119 mp 0 atk 0 def 102 agl 0 int 0; no prereq
+    db $11, $77, $00, $00, $00, $00, $00, $66, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $44 FireSlash: lvl 11; hp 77 mp 34 atk 66 def 0 agl 0 int 42; prereq $41,$01
+    db $0b, $4d, $00, $22, $00, $42, $00, $00, $00, $00, $00, $2a, $00, $41, $01, $ff, $ff, $ff
+    ; --- $45 BoltSlash: lvl 11; hp 77 mp 34 atk 66 def 0 agl 0 int 42; prereq $41,$5a
+    db $0b, $4d, $00, $22, $00, $42, $00, $00, $00, $00, $00, $2a, $00, $41, $5a, $ff, $ff, $ff
+    ; --- $46 VacuSlash: lvl 11; hp 77 mp 34 atk 66 def 0 agl 0 int 42; prereq $41,$58
+    db $0b, $4d, $00, $22, $00, $42, $00, $00, $00, $00, $00, $2a, $00, $41, $58, $ff, $ff, $ff
+    ; --- $47 IceSlash: lvl 11; hp 77 mp 34 atk 66 def 0 agl 0 int 42; prereq $41,$0d
+    db $0b, $4d, $00, $22, $00, $42, $00, $00, $00, $00, $00, $2a, $00, $41, $0d, $ff, $ff, $ff
+    ; --- $48 MetalCut: lvl 12; hp 68 mp 0 atk 72 def 0 agl 62 int 0; no prereq
+    db $0c, $44, $00, $00, $00, $48, $00, $00, $00, $3e, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $49 DrakSlash: lvl 12; hp 68 mp 0 atk 72 def 0 agl 62 int 0; no prereq
+    db $0c, $44, $00, $00, $00, $48, $00, $00, $00, $3e, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $4a BeastCut: lvl 12; hp 62 mp 0 atk 68 def 0 agl 72 int 0; no prereq
+    db $0c, $3e, $00, $00, $00, $44, $00, $00, $00, $48, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $4b BirdBlow: lvl 12; hp 62 mp 0 atk 68 def 0 agl 72 int 0; no prereq
+    db $0c, $3e, $00, $00, $00, $44, $00, $00, $00, $48, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $4c DevilCut: lvl 12; hp 64 mp 0 atk 58 def 0 agl 62 int 48; no prereq
+    db $0c, $40, $00, $00, $00, $3a, $00, $00, $00, $3e, $00, $30, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $4d ZombieCut: lvl 12; hp 64 mp 0 atk 58 def 0 agl 62 int 48; no prereq
+    db $0c, $40, $00, $00, $00, $3a, $00, $00, $00, $3e, $00, $30, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $4e CleanCut: lvl 12; hp 68 mp 0 atk 72 def 0 agl 62 int 0; no prereq
+    db $0c, $44, $00, $00, $00, $48, $00, $00, $00, $3e, $00, $00, $00, $ff, $ff
+DispMapS_566b:  ; fake-decode ARTIFACT kept at exact offset $566b — referenced by a fake instruction in a not-yet-re-sectioned region of this bank; NOT a real entry point (mid-table byte)
+    db $ff, $ff, $ff
+    ; --- $4f MultiCut: lvl 28; hp 154 mp 140 atk 168 def 0 agl 168 int 148; prereq $4d,$59
+    db $1c, $9a, $00, $8c, $00, $a8, $00, $00, $00, $a8, $00, $94, $00, $4d, $59, $ff, $ff, $ff
+    ; --- $50 BiAttack: lvl 19; hp 98 mp 0 atk 88 def 0 agl 112 int 0; no prereq
+    db $13, $62, $00, $00, $00, $58, $00, $00, $00, $70, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $51 QuadHits: lvl 24; hp 124 mp 0 atk 112 def 0 agl 136 int 0; prereq $50
+    db $18, $7c, $00, $00, $00, $70, $00, $00, $00, $88, $00, $00, $00, $50, $ff, $ff, $ff, $ff
+    ; --- $52 CallHelp: lvl 17; hp 84 mp 42 atk 0 def 0 agl 68 int 54; no prereq
+    db $11, $54, $00, $2a, $00, $00, $00, $00, $00, $44, $00, $36, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $53 YellHelp: lvl 23; hp 128 mp 64 atk 0 def 0 agl 82 int 74; prereq $52
+    db $17, $80, $00, $40, $00, $00, $00, $00, $00, $52, $00, $4a, $00, $52, $ff, $ff, $ff, $ff
+    ; --- $54 Focus: lvl 18; hp 126 mp 0 atk 0 def 108 agl 108 int 108; prereq $41,$43,$93
+    db $12, $7e, $00, $00, $00, $00, $00, $6c, $00, $6c, $00, $6c, $00, $41, $43, $93, $ff, $ff
+    ; --- $55 SquallHit: lvl 12; hp 72 mp 0 atk 68 def 0 agl 82 int 0; prereq $23,$41
+    db $0c, $48, $00, $00, $00, $44, $00, $00, $00, $52, $00, $00, $00, $23, $41, $ff, $ff, $ff
+    ; --- $56 PsycheUp: lvl 12; hp 72 mp 0 atk 82 def 68 agl 0 int 0; no prereq
+    db $0c, $48, $00, $00, $00, $52, $00, $44, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $57 RainSlash: lvl 15; hp 92 mp 0 atk 90 def 0 agl 96 int 0; prereq $50,$55
+    db $0f, $5c, $00, $00, $00, $5a, $00, $00, $00, $60, $00, $00, $00, $50, $55, $ff, $ff, $ff
+    ; --- $58 WindBeast: lvl 13; hp 74 mp 0 atk 60 def 0 agl 84 int 0; no prereq
+    db $0d, $4a, $00, $00, $00, $3c, $00, $00, $00, $54, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $59 Vacuum: lvl 19; hp 112 mp 0 atk 114 def 0 agl 132 int 0; prereq $58
+    db $13, $70, $00, $00, $00, $72, $00, $00, $00, $84, $00, $00, $00, $58, $ff, $ff, $ff, $ff
+    ; --- $5a Lightning: lvl 10; hp 65 mp 0 atk 90 def 0 agl 52 int 0; no prereq
+    db $0a, $41, $00, $00, $00, $5a, $00, $00, $00, $34, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $5b RockThrow: lvl 16; hp 124 mp 0 atk 102 def 0 agl 0 int 0; no prereq
+    db $10, $7c, $00, $00, $00, $66, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $5c FireAir: lvl 3; hp 21 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $03, $15, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $5d BlazeAir: lvl 10; hp 70 mp 0 atk 0 def 0 agl 0 int 0; prereq $5c
+    db $0a, $46, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $5c, $ff, $ff, $ff, $ff
+    ; --- $5e Scorching: lvl 20; hp 140 mp 0 atk 0 def 0 agl 0 int 0; prereq $5d
+    db $14, $8c, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $5d, $ff, $ff, $ff, $ff
+    ; --- $5f WhiteFire: lvl 30; hp 210 mp 0 atk 0 def 0 agl 0 int 0; prereq $5e
+    db $1e, $d2, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $5e, $ff, $ff, $ff, $ff
+    ; --- $60 FrigidAir: lvl 3; hp 21 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $03, $15, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $61 IceAir: lvl 10; hp 70 mp 0 atk 0 def 0 agl 0 int 0; prereq $60
+    db $0a, $46, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $60, $ff, $ff, $ff, $ff
+    ; --- $62 IceStorm: lvl 20; hp 140 mp 0 atk 0 def 0 agl 0 int 0; prereq $61
+    db $14, $8c, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $61, $ff, $ff, $ff, $ff
+    ; --- $63 WhiteAir: lvl 30; hp 210 mp 0 atk 0 def 0 agl 0 int 0; prereq $62
+    db $1e, $d2, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $62, $ff, $ff, $ff, $ff
+    ; --- $64 Hellblast: lvl 34; hp 184 mp 184 atk 0 def 0 agl 0 int 196; prereq $11,$5a
+    db $22, $b8, $00, $b8, $00, $00, $00, $00, $00, $00, $00, $c4, $00, $11, $5a, $ff, $ff, $ff
+    ; --- $65 BigBang: lvl 36; hp 196 mp 196 atk 0 def 0 agl 0 int 208; prereq $08,$5f,$63
+    db $24, $c4, $00, $c4, $00, $00, $00, $00, $00, $00, $00, $d0, $00, $08, $5f, $63, $ff, $ff
+    ; --- $66 MegaMagic: lvl 38; hp 0 mp 210 atk 0 def 0 agl 0 int 224; prereq $02,$05,$08,$0b,$0e
+    db $26, $00, $00, $d2, $00, $00, $00, $00, $00, $00, $00, $e0, $00, $02, $05, $08, $0b, $0e
+    ; --- $67 PoisonHit: lvl 5; hp 35 mp 0 atk 30 def 0 agl 0 int 30; no prereq
+    db $05, $23, $00, $00, $00, $1e, $00, $00, $00, $00, $00, $1e, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $68 NapAttack: lvl 7; hp 49 mp 0 atk 42 def 0 agl 0 int 42; no prereq
+    db $07, $31, $00, $00, $00, $2a, $00, $00, $00, $00, $00, $2a, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $69 Paralyze: lvl 9; hp 63 mp 0 atk 54 def 0 agl 0 int 54; prereq $67,$68
+    db $09, $3f, $00, $00, $00, $36, $00, $00, $00, $00, $00, $36, $00, $67, $68, $ff, $ff, $ff
+    ; --- $6a SleepAir: lvl 10; hp 70 mp 0 atk 0 def 0 agl 0 int 60; no prereq
+    db $0a, $46, $00, $00, $00, $00, $00, $00, $00, $00, $00, $3c, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $6b PalsyAir: lvl 16; hp 112 mp 0 atk 0 def 0 agl 0 int 96; prereq $6a,$6d
+    db $10, $70, $00, $00, $00, $00, $00, $00, $00, $00, $00, $60, $00, $6a, $6d, $ff, $ff, $ff
+    ; --- $6c PoisonGas: lvl 9; hp 63 mp 0 atk 0 def 0 agl 0 int 54; no prereq
+    db $09, $3f, $00, $00, $00, $00, $00, $00, $00, $00, $00, $36, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $6d PoisonAir: lvl 14; hp 98 mp 0 atk 0 def 0 agl 0 int 84; prereq $6c
+    db $0e, $62, $00, $00, $00, $00, $00, $00, $00, $00, $00, $54, $00, $6c, $ff, $ff, $ff, $ff
+    ; --- $6e PaniDance: lvl 13; hp 74 mp 0 atk 0 def 0 agl 78 int 78; no prereq
+    db $0d, $4a, $00, $00, $00, $00, $00, $00, $00, $4e, $00, $4e, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $6f Curse: lvl 15; hp 0 mp 65 atk 0 def 0 agl 82 int 82; no prereq
+    db $0f, $00, $00, $41, $00, $00, $00, $00, $00, $52, $00, $52, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $70 Ahhh: lvl 10; hp 0 mp 0 atk 60 def 0 agl 60 int 0; no prereq
+    db $0a, $00, $00, $00, $00, $3c, $00, $00, $00, $3c, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $71 K.O.Dance: lvl 20; hp 140 mp 72 atk 0 def 0 agl 120 int 120; prereq $6f,$78
+    db $14, $8c, $00, $48, $00, $00, $00, $00, $00, $78, $00, $78, $00, $6f, $78, $ff, $ff, $ff
+    ; --- $72 SandStorm: lvl 10; hp 70 mp 0 atk 0 def 0 agl 70 int 0; no prereq
+    db $0a, $46, $00, $00, $00, $00, $00, $00, $00, $46, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $73 Radiant: lvl 12; hp 0 mp 42 atk 0 def 0 agl 72 int 72; no prereq
+    db $0c, $00, $00, $2a, $00, $00, $00, $00, $00, $48, $00, $48, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $74 EerieLite: lvl 14; hp 0 mp 65 atk 0 def 0 agl 84 int 84; prereq $6f,$73
+    db $0e, $00, $00, $41, $00, $00, $00, $00, $00, $54, $00, $54, $00, $6f, $73, $ff, $ff, $ff
+    ; --- $75 OddDance: lvl 10; hp 54 mp 27 atk 0 def 0 agl 63 int 49; no prereq
+    db $0a, $36, $00, $1b, $00, $00, $00, $00, $00, $3f, $00, $31, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $76 RobDance: lvl 12; hp 68 mp 39 atk 0 def 0 agl 85 int 61; prereq $75
+    db $0c, $44, $00, $27, $00, $00, $00, $00, $00, $55, $00, $3d, $00, $75, $ff, $ff, $ff, $ff
+    ; --- $77 SideStep: lvl 9; hp 63 mp 0 atk 0 def 0 agl 54 int 0; no prereq
+    db $09, $3f, $00, $00, $00, $00, $00, $00, $00, $36, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $78 LureDance: lvl 14; hp 84 mp 0 atk 0 def 0 agl 98 int 0; no prereq
+    db $0e, $54, $00, $00, $00, $00, $00, $00, $00, $62, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $79 LushLicks: lvl 7; hp 55 mp 0 atk 0 def 0 agl 67 int 0; no prereq
+    db $07, $37, $00, $00, $00, $00, $00, $00, $00, $43, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $7a SickLick: lvl 13; hp 81 mp 0 atk 0 def 0 agl 94 int 0; prereq $79
+    db $0d, $51, $00, $00, $00, $00, $00, $00, $00, $5e, $00, $00, $00, $79, $ff, $ff, $ff, $ff
+    ; --- $7b LegSweep: lvl 6; hp 32 mp 0 atk 31 def 0 agl 48 int 0; no prereq
+    db $06, $20, $00, $00, $00, $1f, $00, $00, $00, $30, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $7c BigTrip: lvl 12; hp 66 mp 0 atk 63 def 0 agl 77 int 0; prereq $7b
+    db $0c, $42, $00, $00, $00, $3f, $00, $00, $00, $4d, $00, $00, $00, $7b, $ff, $ff, $ff, $ff
+    ; --- $7d WarCry: lvl 14; hp 120 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $0e, $78, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $7e Whistle: lvl 4; hp 0 mp 28 atk 0 def 0 agl 0 int 24; no prereq
+    db $04, $00, $00, $1c, $00, $00, $00, $00, $00, $00, $00, $18, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $7f Imitate: lvl 21; hp 147 mp 147 atk 126 def 126 agl 126 int 126; prereq $29,$54
+    db $15, $93, $00, $93, $00, $7e, $00, $7e, $00, $7e, $00, $7e, $00, $29, $54, $ff, $ff, $ff
+    ; --- $80 DeMagic: lvl 20; hp 0 mp 100 atk 0 def 0 agl 0 int 140; prereq $81,$82
+    db $14, $00, $00, $64, $00, $00, $00, $00, $00, $00, $00, $8c, $00, $81, $82, $ff, $ff, $ff
+    ; --- $81 Surge: lvl 23; hp 0 mp 130 atk 0 def 0 agl 0 int 170; prereq $33,$34,$35,$36
+    db $17, $00, $00, $82, $00, $00, $00, $00, $00, $00, $00, $aa, $00, $33, $34, $35, $36, $ff
+    ; --- $82 UltraDown: lvl 21; hp 0 mp 110 atk 0 def 0 agl 0 int 150; prereq $18,$1d,$21
+    db $15, $00, $00, $6e, $00, $00, $00, $00, $00, $00, $00, $96, $00, $18, $1d, $21, $ff, $ff
+    ; --- $83 ThickFog: lvl 22; hp 0 mp 120 atk 0 def 0 agl 0 int 160; no prereq
+    db $16, $00, $00, $78, $00, $00, $00, $00, $00, $00, $00, $a0, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $84 TatsuCall: lvl 20; hp 0 mp 70 atk 0 def 0 agl 0 int 90; no prereq
+    db $14, $00, $00, $46, $00, $00, $00, $00, $00, $00, $00, $5a, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $85 DiagoCall: lvl 25; hp 0 mp 100 atk 0 def 0 agl 0 int 120; prereq $84
+    db $19, $00, $00, $64, $00, $00, $00, $00, $00, $00, $00, $78, $00, $84, $ff, $ff, $ff, $ff
+    ; --- $86 SamsiCall: lvl 30; hp 0 mp 130 atk 0 def 0 agl 0 int 150; prereq $85
+    db $1e, $00, $00, $82, $00, $00, $00, $00, $00, $00, $00, $96, $00, $85, $ff, $ff, $ff, $ff
+    ; --- $87 BazooCall: lvl 35; hp 0 mp 160 atk 0 def 0 agl 0 int 180; prereq $86
+    db $23, $00, $00, $a0, $00, $00, $00, $00, $00, $00, $00, $b4, $00, $86, $ff, $ff, $ff, $ff
+    ; --- $88 Cover: lvl 5; hp 35 mp 0 atk 0 def 30 agl 30 int 0; no prereq
+    db $05, $23, $00, $00, $00, $00, $00, $1e, $00, $1e, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $89 Guardian: lvl 12; hp 84 mp 0 atk 0 def 72 agl 72 int 0; prereq $88
+    db $0c, $54, $00, $00, $00, $00, $00, $48, $00, $48, $00, $00, $00, $88, $ff, $ff, $ff, $ff
+    ; --- $8a TailWind: lvl 11; hp 75 mp 0 atk 0 def 84 agl 70 int 0; no prereq
+    db $0b, $4b, $00, $00, $00, $00, $00, $54, $00, $46, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $8b StormWind: lvl 19; hp 140 mp 0 atk 0 def 126 agl 140 int 0; prereq $8a
+    db $13, $8c, $00, $00, $00, $00, $00, $7e, $00, $8c, $00, $00, $00, $8a, $ff, $ff, $ff, $ff
+    ; --- $8c Dodge: lvl 18; hp 126 mp 0 atk 108 def 108 agl 108 int 0; no prereq
+    db $12, $7e, $00, $00, $00, $6c, $00, $6c, $00, $6c, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $8d Defence: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $8e StrongD: lvl 14; hp 98 mp 0 atk 0 def 84 agl 0 int 0; no prereq
+    db $0e, $62, $00, $00, $00, $00, $00, $54, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $8f SuckAll: lvl 13; hp 91 mp 0 atk 0 def 78 agl 0 int 0; no prereq
+    db $0d, $5b, $00, $00, $00, $00, $00, $4e, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $90 BladeD: lvl 14; hp 98 mp 0 atk 84 def 84 agl 84 int 0; prereq $3b,$8e
+    db $0e, $62, $00, $00, $00, $54, $00, $54, $00, $54, $00, $00, $00, $3b, $8e, $ff, $ff, $ff
+    ; --- $91 DanceShut: lvl 16; hp 100 mp 0 atk 0 def 0 agl 120 int 0; no prereq
+    db $10, $64, $00, $00, $00, $00, $00, $00, $00, $78, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $92 MouthShut: lvl 17; hp 120 mp 0 atk 100 def 0 agl 140 int 0; no prereq
+    db $11, $78, $00, $00, $00, $64, $00, $00, $00, $8c, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $93 Meditate: lvl 26; hp 182 mp 0 atk 0 def 156 agl 0 int 156; prereq $89,$8e
+    db $1a, $b6, $00, $00, $00, $00, $00, $9c, $00, $00, $00, $9c, $00, $89, $8e, $ff, $ff, $ff
+    ; --- $94 Hustle: lvl 18; hp 114 mp 0 atk 0 def 0 agl 130 int 96; prereq $2d,$77
+    db $12, $72, $00, $00, $00, $00, $00, $00, $00, $82, $00, $60, $00, $2d, $77, $ff, $ff, $ff
+    ; --- $95 LifeSong: lvl 27; hp 198 mp 94 atk 0 def 0 agl 145 int 162; prereq $31,$7d
+    db $1b, $c6, $00, $5e, $00, $00, $00, $00, $00, $91, $00, $a2, $00, $31, $7d, $ff, $ff, $ff
+    ; --- $96 LifeDance: lvl 30; hp 210 mp 0 atk 0 def 0 agl 180 int 180; prereq $14,$94
+    db $1e, $d2, $00, $00, $00, $00, $00, $00, $00, $b4, $00, $b4, $00, $14, $94, $ff, $ff, $ff
+    ; --- $97 Run: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $98 Daze: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $99 HitAlly: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $9a HitEnemy: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $9b HitRandom: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $9c Scared: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $9d Dance: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $9e Trip: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $9f Paralyze: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a0 CANTMOVE: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a1 RUN: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a2 CALLHOROR: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a3 HealUsAll: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a4 Smashed: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a5 FILTHZONE: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a6 ALLCHANGE: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a7 BIGSLEEP: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a8 MP0: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $a9 ECHO: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $aa CHGDRAGON: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $ab CALLEVIL: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $ac FREEZY: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $ad ALLREVIVE: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $ae RESTOREMP: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $af METEOR: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b0 HERB: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b1 HEALWATER: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b2 SAGESTONE: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b3 WARLDDEW: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b4 POTION: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b5 ELFWATER: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b6 ANTIDOTE: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b7 MOONHERB: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b8 SKYBELL: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $b9 LAUREL: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $ba AWAKESAND: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $bb WARLDLEAF: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $bc LIFEACORN: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $bd MYSTICNUT: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $be PWRSEED: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $bf DEFSEED: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c0 AGILSEED: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c1 INTSEED: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c2 FEEDMEAT: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c3 BEFFJERKY: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c4 PORKCHOP: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c5 BADMEAT: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c6 SIRLOIN: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c7 BOLTSTAFF: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c8 STAFF: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $c9 BLOKSTAFF: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $ca LAVASTAFF: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $cb SNOWSTAFF: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $cc FIRESTAFF: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $cd WARPWING: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $ce TINYMEDAL: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $cf QuestBk: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d0 HORRORBK: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d1 BENICEBK: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d2 CHEATERBK: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d3 SMARTBK: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d4 COMEDYBK: lvl 0; hp 0 mp 0 atk 0 def 0 agl 0 int 0; no prereq
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d5 BeDragon: lvl 28; hp 0 mp 124 atk 0 def 0 agl 0 int 160; no prereq
+    db $1c, $00, $00, $7c, $00, $00, $00, $00, $00, $00, $00, $a0, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d6 Smashlime: lvl 12; hp 62 mp 0 atk 68 def 0 agl 72 int 0; no prereq
+    db $0c, $3e, $00, $00, $00, $44, $00, $00, $00, $48, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d7 Sheldodge: lvl 12; hp 68 mp 0 atk 72 def 0 agl 62 int 0; no prereq
+    db $0c, $44, $00, $00, $00, $48, $00, $00, $00, $3e, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d8 Branching: lvl 12; hp 68 mp 0 atk 62 def 0 agl 72 int 0; no prereq
+    db $0c, $44, $00, $00, $00, $3e, $00, $00, $00, $48, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
+    ; --- $d9 GigaSlash: lvl 33; hp 231 mp 164 atk 198 def 0 agl 198 int 198; prereq $44,$45,$46,$47
+    db $21, $e7, $00, $a4, $00, $c6, $00, $00, $00, $c6, $00, $c6, $00, $44, $45, $46, $47, $ff
+    ; --- $da LIFE: lvl 250; hp 51343 mp 49335 atk 60410 def 52168 agl 49775 int 27527; prereq $cb,$7f,$c2,$95,$62
+label6_6034:  ; fake-decode ARTIFACT kept at exact offset $6034 — referenced by a fake instruction in a not-yet-re-sectioned region of this bank; NOT a real entry point (mid-table byte)
+    db $fa, $8f, $c8, $b7, $c0, $fa, $eb, $c8, $cb, $6f, $c2, $87, $6b, $cb, $7f, $c2, $95, $62
+    ; --- $db RUN: lvl 203; hp 49767 mp 25266 atk 18379 def 43458 agl 52071 int 10319; prereq $05,$21,$00,$07,$d7
+    db $cb, $67, $c2, $b2, $62, $cb, $47, $c2, $a9, $67, $cb, $4f, $28, $05, $21, $00, $07, $d7
+    ; --- $dc IRONIZE: lvl 201; hp 24523 mp 1320 atk 33 def 55065 agl 52169 int 10359; prereq $05,$21,$03,$13,$d7
+    db $c9, $cb, $5f, $28, $05, $21, $00, $19, $d7, $c9, $cb, $77, $28, $05, $21, $03, $13, $d7
+    ; --- $dd Ahhh: lvl 201; hp 22475 mp 63170 atk 64098 def 55784 agl 49847 int 25220; prereq $fa,$d7,$d8,$b7,$c2
+    db $c9, $cb, $57, $c2, $f6, $62, $fa, $e8, $d9, $b7, $c2, $84, $62, $fa, $d7, $d8, $b7, $c2
+; $607c-$607d: bytes between SkillLearnReqTable and the next labeled line (unclassified; preserved verbatim, was fake-decoded)
+    db $84, $62
+; NOTE: fake-decode artifact labels removed with this region: jr_006_51a1, jr_006_5238, jr_006_525f, jr_006_52a7, jr_006_52b9, jr_006_52f7, jr_006_531b, jr_006_5337, jr_006_535b, jr_006_5405, jr_006_5466, jr_006_549f, jr_006_54b9, jr_006_54c3, jr_006_54d5, jr_006_54e4, jr_006_5645, jr_006_5657, jr_006_5710, jr_006_5991, jr_006_59c9, jr_006_5a30, jr_006_6059, jr_006_6062, jr_006_606b
     ld a, [$c8a8]
     or a
     jp nz, Jump_006_6284

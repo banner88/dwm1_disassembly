@@ -185,7 +185,7 @@ Before table searches, `Call_016_4653` computes the offspring's plus value:
 
 ---
 
-## Planned: Overhaul & Extension (specced Session 12, NOT yet built)
+## Overhaul & Extension (specced Session 12 — B1–B7 BUILT, Sessions 13–19; see ROADMAP Phase 2B for per-item status)
 
 Goal: a romhack-scale rebuild keeping the existing 10 families — (1) defaults
 (family×family) rewritten with entirely new results, (2) special recipes
@@ -447,6 +447,11 @@ are you?" lookup, and the family byte lives in bank `$03` which the library
 The cost is intrinsic to doing it AT RUNTIME — so B7 does it at BUILD time instead.
 
 ## Dynamic library → PRODUCTION (B7, Session 19, DONE, SameBoy-confirmed)
+
+> **Design rationale (S18→S19, promoted from the archive):** the table is
+> precomputed at BUILD time because the S18 runtime family-scan POC cost
+> ~221 far-loads per library render (visible lag). Do not "simplify" B7 back
+> to a runtime scan — the zero-far-load walker is the point.
 
 `tools/build_library_table.py` emits a build-time precomputed **family→members**
 table into bank `$12` trailing free space (`$7B9B+`) and rewrites `SetItem_6242`

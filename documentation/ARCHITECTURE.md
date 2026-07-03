@@ -22,9 +22,12 @@
 | $54 | Post-battle join logic ($55BB), EXP distribution, level-up processing |
 | $56 | Text rendering engine, parallel text dispatch cascade |
 
-## Empty ROM Banks (23 banks = 368KB free)
+## Empty ROM Banks (23 banks = 368KB in the VANILLA ROM)
 
 `$60, $64, $67, $69-$77, $79-$7A, $7C, $7E-$7F`
+
+> 8 of these are now patch-owned ($60,$64,$67,$69,$6A,$71,$72,$7E). The
+> canonical current-allocation table lives in PROJECT_STATE.md "Bank allocation".
 
 ## Free Space in Used Banks
 

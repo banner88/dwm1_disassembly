@@ -1140,8 +1140,10 @@ def main():
     ap.add_argument("--no-write", action="store_true",
                     help="run selftest but do not write the JSON")
     ap.add_argument("--emit-relocation", action="store_true",
-                    help="write patches/bank_069.asm (B2 relocated scanner+table "
-                         "+ B3 appended recipes from breeding_extra_recipes.json)")
+                    help="write patches/bank_069.asm (B2 relocated scanner+table). "
+                         "LEGACY: superseded by --emit-special (B5); the B3 "
+                         "appends file breeding_extra_recipes.json was deleted "
+                         "S51 (absence tolerated -> base table only)")
     ap.add_argument("--emit-family", action="store_true",
                     help="rewrite the FamilyRecipeTable in patches/bank_016.asm "
                          "in place from breeding_family_defaults.json (B4)")

@@ -9,7 +9,7 @@ against the ROM bytes at generation time:
   2. Effect handler $52:$4011  SkillFunctionTable (222 x dw), 115 unique handlers
   3. MP cost (cast) $07:$570C  222 x u16 LE   (999 = "All MP" sentinel)
                                [disassembly currently mislabels this region
-                                'TilesetLookupTable'; the values are MP costs]
+                                'SkillMPCostTable' (renamed S51; was mislabeled TilesetLookupTable); the values are MP costs]
   4. Learn reqs     $06:$50E0  222 x 18B record (see LEARN_FMT below)
   5. Natural skills $03:$4461  monster info table, +$06 = 3 base-skill ids/monster
   6. Inherit base   $16:$4874  UnevolvedSkillMap (256B, skill_id -> base, $FF=none)

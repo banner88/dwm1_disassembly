@@ -348,8 +348,17 @@ This session's two biggest bugs (forced index 1 and animated tiles) were both in
 **Discovery**: Bank $17 entries 0 (palette) and 1 (attr) both index by wScreenIndex then step counter. Each screen can have its own palette colors and attr map. 11 original rooms use different palettes across screens.
 **Impact**: CustomAttrCheck extended to dispatch per-screen attr entries from bank $64 (screen 0 → entry 1, screen 4 → entry 3).
 
-### Never run `make clean`
+### Never run `make clean` (CANONICAL entry; violated TWICE — now structurally fixed)
 **Reminder**: Violated the documented rule (PROJECT_STATE, SESSION_PROTOCOL, README all say never). `make clean` deletes committed .2bpp source files; regenerating from PNG produces different bytes. Only delete build artifacts: `rm -f game.o game.gbc game.sym game.map`.
+**Violated AGAIN in S51** (a session-authored tool called `make clean` without
+checking the rules — the second recorded violation by a different instance, and
+the violator then wrongly told the user no such rule existed; grep the docs
+before making claims about the docs). Two violations proved the prose rule
+doesn't reliably prevent the accident, so S51 removed the hazard itself:
+the Makefile `clean` target no longer touches gfx, the `%.2bpp: %.png` pattern
+rules are deleted (measured: **17 of 18 committed .2bpp are not PNG-regenerable**,
+regen builds MD5 `91609a37…`), and `disassembly/gfx/README.md` sits at the
+hazard point. The rule stands; it just can't be violated by `make clean` anymore.
 
 ### Stale palette data from `--build` restore behavior
 **Discovery**: `build_combined_tileset.py --build` patches bank_017.asm palette data in-memory, builds the ROM, then RESTORES the original file. If the palette slot order changes between runs, the committed bank_017.asm has stale data. Always commit after running `--build`.
@@ -1649,3 +1658,26 @@ in one session (see the §11 warning banner).
 **Still open**: the per-enemy-sprite blink (normal-ATK style) — not `wBGPalette` (whole screen),
 not OBP-only; likely an OAM visibility toggle of the enemy sprite, not yet found. Deferred
 (BATTLE_SKILL_SYSTEM §11.7).
+
+## Session 51 — `make clean` violation #2 (see the CANONICAL entry above) + new hazards
+
+1. **`make clean`: see the canonical "Never run `make clean`" entry earlier in
+   this file** — S51 was the SECOND violation of that four-doc rule, and the
+   session then falsely claimed the rule didn't pre-exist. Grep the docs before
+   asserting what the docs say. The hazard is now structurally removed
+   (Makefile fixed; gfx/README.md added; 17/18 .2bpp measured non-regenerable).
+2. **Never `git checkout -- disassembly/` (or any broad path) mid-session.** It
+   restores EVERYTHING under the path, silently reverting the session's
+   uncommitted label/comment work (it undid the S51 rename once). Recover
+   single files surgically (`git show HEAD:path > path`) and re-apply edits, or
+   check `git status` first and checkout only the files you mean.
+3. **Probe-build re-section works and is now a reusable pattern** —
+   `tools/resection_skill_tables.py` (after `resection_library_tables.py`):
+   zero-size `Lprobe_N:` labels before every code line, one build, read real
+   line addresses from `game.sym`. Two traps it now handles: (a) a pre-existing
+   bare `Label:` line above the splice must be absorbed or you emit a duplicate
+   label; (b) fake-decode artifact labels inside the region that are referenced
+   by OTHER fake-decoded regions must be kept at their exact byte offsets
+   (splitting a `db` row), not deleted — bank `$06` had two (`DispMapS_566b`,
+   `label6_6034`). An "entry-point-looking" name inside a proven data table is
+   not evidence of code: check what the referencing site actually is.

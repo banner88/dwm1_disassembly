@@ -27,12 +27,12 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 | Breeding tables $16:$4B30 (825×5) + $4974 | terminator at base+4125; extracted JSON |
 | Room system: ptr table $0B:$4B43, 107 rooms; step/interact/exit formats | 106 valid ptrs + $FFFF hole; interact/exit semantics SameBoy-confirmed (ROOM_DATA_FORMAT) |
 | NPC RAM: $D7D2, 32 B/slot | parser `add $20` at $0B:~$4820 (DOC_AUDIT A.3) |
-| Script engine: 100 opcodes, 518 scripts in $0C–$0F | label census 129+168+130+91; compile/decompile roundtrip; dump_all_scripts follows 9 branch opcodes via work-queue (810/866 WriteRAM = 93.5% coverage, was 55%) |
+| Script engine: 100 opcodes; 518 `*_ScriptNN:` labels in $0C–$0F (census 129+168+130+91) = 551 unique script bodies = 732 (map_type, script_id) pointer-table entries in all_scripts.json (map types share banks/scripts — all three counts correct on different bases, verified S51) | compile/decompile roundtrip; branch-following work-queue (810/866 WriteRAM = 93.5%) |
 | Text system: charmap, DTE, control codes, 2,067 IDs, routing cascade | text_id_map.json count; control codes proven in-game (v23) |
-| Event flags: fns $26A0/$26A6/$26AE, 311 used, 463 free | game.sym symbols; analyze_event_flags.py runs |
+| Event flags: fns $26A0/$26A6/$26AE; 328 referenced, 298 with sets (branch-following) | EVENT_FLAGS.md statistics; analyze_event_flags.py |
 | Encounter pool format: 32 gates → pools 0–127 | encounters.json structure audit |
 | Gate floor GENERATION: procedural maze grid `$C940`, per-gate `GateFloorDataTable` `$16:$70A6`, `SelectFloorType`/`FloorTypeSelectionTable`1/2/3, special-room `rst $00` dispatch `$16:$5C1C`, damage tiles (class `$0E`/`FloorDamageTable` `$01:$5E7D`) | S37: pipeline traced end-to-end + damage tiles SameBoy-watchpoint-confirmed; **GATE_GENERATION.md** |
-| Empty banks: 23 = 368 KB | full-ROM scan, exact match to list |
+| Vanilla-empty banks: 23 = 368 KB | full-ROM scan; CURRENT allocation lives in PROJECT_STATE "Bank allocation" (8 banks now patch-owned) |
 | Custom WRAM $D378–$D477 unclaimed by original code | repo-wide grep: refs stop at $D375/$D376–7 |
 
 ### Custom content primitives (proven in-game, v23)
@@ -90,6 +90,36 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       superseded data (monsters.json, event_flags.json, edits.json) per
       TOOLS_AND_DATA.md. *(Postponed — low priority.)*
 - [~] Housekeeping deletions/moves per PROJECT_STATE. *(Postponed.)*
+- [ ] **Fold tool selftests into `verify_integrity.py`** (promoted S51 from *Open*
+      notes buried in the B3/B7/S1 completed stubs): the byte-identity selftests of
+      `build_breeding.py`, `build_library_table.py`, and `build_skill_tables.py`
+      only run when someone remembers to invoke them — the verifier doesn't, so a
+      table edit can silently diverge from its JSON. Add a check 5 that runs each
+      `--selftest`. *Accept:* verifier FAILS on a deliberately mutated table; PASS
+      5/5 on the clean tree.
+- [ ] **Retire `extracted/skills.json`** — superseded by `skill_records.json` (S44);
+      only `gen_name_tables_db.py` still reads it. Port the reader, then delete
+      `skills.json` (+ mark `dump_skills.py` legacy). *Accept:* repo-wide grep shows
+      zero readers; TOOLS_AND_DATA updated.
+- [x] **Housekeeping deletions — EXECUTED S51 (user OK'd):** actually deleted:
+      `__pycache__/`, 8× `.DS_Store`, `breeding_extra_recipes.json` — all three
+      were TRACKED at HEAD, so recoverable from git history if ever needed
+      (breeding_extra_recipes was a self-described B3 capacity TEST fixture; its
+      facts are in SESSION_HISTORY's archived B3 narrative). THREE queue rows
+      were stale: `monsters.json`, `event_flags.json`, `edits.json` were all
+      already absent (untracked at HEAD — a fresh clone never contained them;
+      verified S51 during the no-loss audit). `build_breeding.py
+      --emit-relocation` help marked LEGACY (absence-tolerant). Verifier PASS 4/4.
+      NEW defect found: `dump_monsters.py` WRITES the legacy `monsters.json`
+      schema and READS `monsters_full.json` — the Tier-A generator attribution for
+      `monsters_full.json` is suspect (see PROJECT_STATE Open defects).
+- [x] **S51 — Doc consolidation + audit** (2026-07-02): PROJECT_STATE 1,071→~280 and
+      ROADMAP 1,176→~640 lines with ZERO deletion (everything cut moved verbatim to
+      the new cold archive `documentation/SESSION_HISTORY.md`); contradictions fixed
+      in place (bank counts, script/flag counts, stale paths/headers);
+      TOOLS_AND_DATA refreshed to 103 tools / 56 JSONs; `TilesetLookupTable` →
+      `SkillMPCostTable` + `LoadFld_56e8` → `GetSkillMPCost` renamed (byte-perfect).
+      → PROJECT_STATE "S51" block; SESSION_HISTORY.md.
 
 ### Phase 1 — Remaining primitives (1 session each; ordered by editor impact)
 - [x] **Script-driven teleport** — exit-based room transitions already
@@ -100,85 +130,27 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       at $59D2 was wrong, fixed). $0F writes gate_id → $C96D, flag → $C96E,
       spawn XY → $C96F-$C972, sets wIsPlayerChangingMaps=1.
       Format: `$FF0F <gate_id:flag> <spawnX> <spawnY>` (3 word params).
-- [x] **NPC show/hide by flag** — mechanism IS the step system
-      (ROOM_DATA_FORMAT.md "Room State System"): multiple step entries
-      per screen with different NPC lists, step counter set by opcode
-      $12 (WriteRAM $D9xx). **Implemented and confirmed in-game (v25)**:
-      CustomPtrChase now reads RAM step counter and indexes by ×6
-      (was always returning step 0). Room $6C screen 0 has 2 step
-      entries — Gatekeeper NPC at step 0 (advances counter via opcode
-      $12) replaced by Guard NPC at step 1. Verified: NPC changes on
-      re-entry after WriteRAM sets counter. Step counter addresses
-      moved from event-flag collision zone ($D9A0-$D9A2 = flags
-      $0028-$003F) to safe range $D478-$D47B. Note: $D478+ not in
-      SRAM save range — step progress resets on power cycle; for
-      persistence, use event flags + room-entry flag checks.
-      *Accept*: NPC appears only after custom flag/step is set; verified
-      after room re-entry. ✅
+- [x] **NPC show/hide by flag/step** — mechanism is the step system (multiple step
+      entries per screen; opcode $12 advances the counter; custom counters moved to
+      safe $D478+, not SRAM-persistent). Confirmed in-game v25.
+      → ROOM_DATA_FORMAT "Room State System"; archive: SESSION_HISTORY Part 3.
 - [x] **BGM change** — opcode $41 (SetBGM) **confirmed working**.
       Saves current BGM to $C8B6, plays new track from param.
       Track IDs in known_RAM_map ($C8B5). Tested: Arena ($1E) in
       custom room; reverts on room exit.
-- [x] **Monster/egg give** — opcode $29 (AddMonster) **confirmed working**.
-      Takes 1 param (enemy_stats_id). Opcode $28 (CheckStorageFull)
-      branches when all 20 slots full. Egg give proven with SkyDragon
-      (EID 350, same as Farm event) — egg appears at farm, hatches
-      correctly (minor cosmetic glitch on hatch). Direct monster give
-      (EID 1) creates a withdrawable monster but species/stats don't
-      fully initialize without `$FF04 $000F` preamble. Egg path is
-      the practical choice for custom content.
-      AddMonsterWrapper needed in bank $04 padding (bare `ret` →
-      wrapper + `jp ScriptExecContinue`, same fix as GiveItem $2A).
-- [x] **Custom tile LAYOUTS** (compressor done): place compressed layouts
-      in a free bank, point step_entry byte 1 at it.
-      **Done.** `tools/tile_layout_compiler.py` compiles 20×16 visible
-      tile grid → 32×16 padded → LZSS compressed → ASM db statements.
-      Bank $64 holds custom layout data with pointer table at $4001.
-      Room $6B step entry uses `db 0,$64`. Tileset switching via
-      MapIDClampForPalette in ROM0 (currently $04=Farm). User-designed
-      layout confirmed in-game. Standalone HTML editor with 170 rooms
-      and 85 tilesets delivered (towards_editor/). Spawn position for
-      Room $6B is in Exit_GreatTree_s8 (bank_00b.asm), currently (7,6).
-      *Accept*: custom room renders a layout that exists nowhere in the
-      original ROM. ✅ Confirmed in-game.
-      **Known issue (FIXED v28)**: palette attributes were per-position,
-      causing color mismatches. Fixed by CustomAttrCheck intercept in
-      bank $17 free space ($6C75): for Room $6B, bypasses vanilla attr
-      lookup and decompresses custom nibble-packed attr data from bank
-      $64 entry 1. Attr data generated by `tools/generate_attr_map.py`
-      which builds tile→palette maps from ROM for any of the 85 tilesets.
-      Collision threshold table at ROM0 $26E3 uses ×8 stride (not ×1).
-      Multi-tileset HTML editor delivered (towards_editor/) with
-      walkability overlay, variable-size stamps, marker management,
-      tileset names, and full source-mapping export.
-- [x] **Custom tile GRAPHICS**: palette attribute intercept DONE (v28).
-      Single-tileset rooms fully working (tileset switch + correct palettes).
-      **Multi-tileset mashup: WORKING (Session 7, refined Session 8).** Full pipeline:
-      editor → JSON export → `build_combined_tileset.py` → ASM patches → ROM.
-      **Session 8 critical discoveries and fixes:**
-      - **4 palette groups max** (not 8). BG slots 4-7 reserved by game engine
-        for monster display (4/5/6) and menu text (7). Verified: all 85 DWM1
-        tilesets use max group 3. CustomPalCheck changed B=$08→$04.
-      - **Gate detection in banks $06/$07**: mapID≥$50 whitelists treated custom
-        rooms as gate-like (blocked saving, wrong menu state). Fixed with
-        same-size `ld a,[wMapID]`→`call MapIDClampForPalette` patches.
-      - **Ghost NPC**: spawn point script_id=$01 was talkable. Fixed to $00.
-      - **Build automation**: `--build OUTPUT.gbc` flag added to
-        `build_combined_tileset.py` (patches palette+threshold, builds ROM,
-        restores tree). **Validated Session 9** — end-to-end pass with
-        3-tileset test export (MedalMan+NORDEN+Farm).
-      - **Editor**: PalGrp toggle shows palette group per tile (P0-P3 custom,
-        S4-S9 system). Counter shows X/4. Export warns if >4.
-      *Accept*: custom room shows tiles cherry-picked from 2+ source tilesets. ✅
-      **Session 9 fixes:**
-      - Editor tileset PNGs regenerated with runtime-correct palettes from
-        `room_palettes.json` via new `regenerate_tileset_pngs.py` tool (86
-        tilesets, all verified). ROM step-entry palette data is encoded (not
-        raw RGB15) — was causing wrong colours for Starry Shrine and others.
-      - Force-preview toggle ("Frc" button) added: swaps between runtime view
-        ($6BFF at colour index 1) and marker-tint view (light cyan at index 1).
-      - KEY_LESSONS corrected: "bit 15 set" palette claim was wrong — actual
-        issue is that ROM palette bytes are always transformed at runtime.
+- [x] **Monster/egg give** — opcode $29 (AddMonster, wrapped in bank $04 padding) +
+      $28 storage-full. Egg path proven (SkyDragon EID 350) and is the practical
+      choice; direct give needs the `$FF04 $000F` preamble.
+      → DATA_STRUCTURES; KEY_LESSONS S3; archive: SESSION_HISTORY Part 3.
+- [x] **Custom tile LAYOUTS** — tile_layout_compiler.py → bank $64 (ptr table +
+      LZSS); a nowhere-in-ROM layout renders in-game; palette-attr fix v28
+      (CustomAttrCheck, bank $17); collision thresholds ROM0 $26E3 ×8 stride.
+      → ROOM_DATA_FORMAT "Tile Layout System"; KEY_LESSONS S4–S5; archive: SESSION_HISTORY.
+- [x] **Custom tile GRAPHICS (multi-tileset mashup)** — full pipeline: editor JSON →
+      build_combined_tileset.py → bank $67/$17 patches → playable room (4-palette-group
+      budget; gate-detection fixes in $06/$07; --build automation; runtime-correct
+      tileset PNGs S9). Confirmed in-game.
+      → KEY_LESSONS S6–S9; TOOLS_AND_DATA; archive: SESSION_HISTORY Part 3.
 - [~] **Multi-screen room editing** — ROM-side patches complete (v28):
       2-screen vertical room proven (Room $6B, screens 0+4). Key changes:
       room height in $26DD table ($2A39: $80→$00,$01 = 256px = 2 rows),
@@ -189,26 +161,10 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       export; extend to horizontal and larger grids.
       *Accept*: editor exports a 2+ screen room; `--build` produces a ROM
       where the player can scroll between screens.
-- [x] **Random encounters in custom rooms** — ✅ PROVEN (Strategy A,
-      Session 11; runtime-verified in SameBoy). The blocker assumption was
-      wrong: encounters are NOT gated by `wInGateworld`. They are gated
-      per-step by a hardcoded mapID whitelist in `$0B:Jump_00b_4674`
-      (`$53`,`$54-$56`,`$57-$59`,`$61-$64`); non-whitelisted normal rooms
-      `ret` before the encounter step. **Recipe:** (1) add the custom mapID
-      to that whitelist → enables battles; (2) the pool is
-      `GateBasePoolIndex[wGateID]+floor` resolved at battle time, so a
-      non-gate room must pin `wGateID`/`wCurrentFloor` (done every step in
-      ASM — they're read only when a battle fires) and (3) arm
-      `wEncounterCounter` from the room-entry script (vanilla skips seeding
-      when `wInGateworld=0`). Trigger chain: counter underflow → `rst $10`
-      bank $01 entry $0b (`EncounterMonsterSelect`) → `set 6,[wGameState]`.
-      *Verified*: Room $6B, gate 0/floor 1 → pool 0 (Slime/Anteater/Dracky);
-      `$C935=00 $C939=01 $CA38=00`; win+flee return intact, saving works.
-      Full docs: DATA_STRUCTURES "Encounter Runtime Flow", CROSSBANK_ROOMS
-      "Random Encounters in Custom Rooms", KEY_LESSONS Session 11.
-      **Remaining → moved to Phase 2 (editor):** #1 per-room on/off + gate/floor
-      table; #2 fully custom monster pools in a free bank. Both specced in
-      CROSSBANK_ROOMS.md.
+- [x] **Random encounters in custom rooms** — PROVEN S11 (Strategy A: mapID whitelist
+      in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor + arm wEncounterCounter);
+      generalized per-room S42 (RoomEncTable, bank $71 — see Encounters #1).
+      → CROSSBANK_ROOMS "Random Encounters"; KEY_LESSONS S11; archive: SESSION_HISTORY.
 - [ ] Custom music — parked; sound engine unexplored, BGM-change suffices
       for v1 stories.
 
@@ -247,44 +203,13 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
 
 ### Phase 2C — Gate generation (system mapped S37; see GATE_GENERATION.md)
-- [x] **Custom room into the gate rotation** — TWO halves (BOTH done; Pillar A render S40, Pillar B insertion S41):
-   - [x] **Rendering half (S39 + S40 generalisation).** Room `$6B` renders the
-         Gate-of-Beginning maze tileset (gfx-ID `$280D`, bank `$28` step `$0D`) with
-         the real gate floor palette — sandy island with ocean-wall border, 2×2
-         tree/dune/pit metatiles, per-position attr palette. Authored in
-         `tools/build_gate_room.py` → `patches/bank_064.asm` (+ `bank_000.asm`
-         gfx-ID/threshold, `bank_017.asm` `CustomPaletteColors_6B`, slots 0–3 only).
-         **S40 (Pillar A, user-confirmed):** render is now fully **table-driven by
-         `mapID-$6B`** — `CustomRoomPalPtr`/`CustomRoomAttr` tables (bank `$17`) +
-         per-room `$26DD` records via `CustomGFXMapID` widened to `cp $70`; no
-         hardcoded `cp $6B` render code remains. Proven by a 2nd room `$6C` (same
-         island, distinct moonlit palette, zero new code). `$6B` byte-identical
-         regression verified; verifier PASS. (GATE_GENERATION.md §7.1–7.4.)
-         **S42 generalisation:** the old `$6B-$6F` `$26DD`-record ceiling is lifted —
-         `$70+` rooms read their record from `Custom26DDTable` (bank `$71`, far-copied
-         to `wRoomRecScratch`). See EDITOR_DESIGN.md §2 (keystone, as-built) + Phase 2.
-   - [x] **Insertion half (= "Pillar B", S41, user-confirmed in SameBoy).** Custom room
-         `$6D` inserted into **gate 1 (Gate of Villager)**, descending floor-to-floor with the
-         correct in-gate transition feel. Mechanism chosen was **not** the `rst $00` slot below
-         but a cleaner **byte-neutral fork at the gate-branch decision**: the 6-byte gate-0
-         exclusion at `$16:$5BA9` (`ld a,[wGateID]/or a/jr z,jr_016_5bbf` — it reads
-         **`wGateID $C935`**, the earlier `wCurrentFloor` cite was wrong) is replaced in place
-         by `call GateDecisionFork`+3 nops; the fork routes gate 0 → vanilla maze, gate 1 →
-         `CustomGate1Setup` (`wMapID=$6D`), all others → untouched RNG gating. Descent uses a
-         `gate_flag=$80` exit (mirror of special rooms `$50/$51`). The descent **transition feel**
-         (whoosh + continuous BGM, not the hub→gate dissolve + BGM restart) is fixed by a transient
-         `wInGateworld=$01` set **only during the transition** (`CustomDescentInGate` @ `$0B`
-         `jr_00b_466b`); display-time `wInGateworld` must stay `0` or the room engine's gate/maze
-         branches freeze the game. Test ROM `DWM-gate-rotation-v3.gbc`. (GATE_GENERATION.md §7.5.)
-         *Alternative/general mechanism still valid for many-room rotations:* point a `rst $00`
-         dispatch slot (`$16:$5C32` table, ROM-verified idx0=`$5C42`) at a custom-id handler and
-         open its `FloorTypeSelectionTable2` weight. POC forces `$6D` every non-boss floor;
-         occasional placement = gate the fork branch behind the RNG roll / a weight table.
-- [x] **Room-palette derivation from ROM (S39).** `tools/derive_room_palette.py`
-      reproduces any room's runtime BG palette: colours 0/2 from the room/gate
-      palette pointer (`$17:$476F` normal / `$17:$51F5` gate), engine-forced
-      idx1=`$6bff`/idx3=`$0000`, screen-scan, clean refusal when unresolvable.
-      Validated 30/30 SameBoy dumps + the gate floor. (GATE_GENERATION.md §7.1.)
+- [x] **Custom room into the gate rotation** — BOTH halves done, user-confirmed:
+      render (S39 gate-tileset room; S40 Pillar A — fully table-driven by mapID−$6B,
+      no hardcoded cp $6B) + insertion (S41 Pillar B — GateDecisionFork at $16:$5BA9
+      routes gate 1 → custom $6D; descent feel via transient wInGateworld=$01 during
+      transition only). → GATE_GENERATION §7.1–7.5; archive: SESSION_HISTORY Part 3.
+- [x] **Room-palette derivation from ROM** (S39) — derive_room_palette.py, validated
+      30/30 SameBoy dumps + gate floor. → GATE_GENERATION §7.1.
 - [ ] **`piece_id → screen layout` map** — decode the table turning a grid cell's
       high nibble into the rendered screen layout (needed to author NEW maze
       pieces vs. only reweighting existing ones). (GATE_GENERATION.md §12.2.)
@@ -299,53 +224,21 @@ Mechanism ROM-verified: relocate special table + scanner to free bank `$69`,
 call via `rst $10`; rewrite family table in place (result = slot index, so the
 compiler inverts `A×B→C` to slot order and rejects positional conflicts); bank
 $16 edits same-size only (leave vanilla tables dead-in-place).
-- [x] **B1 — Round-trip encoder (keystone).** `tools/build_breeding.py` decodes
-      + re-emits BOTH vanilla tables. *Accept:* `$4974`+`$4B30` byte-identical to
-      ROM; clean build still `1ca6579…`; verifier PASS. (Decoder half done S12.)
-      **DONE (Session 13):** `tools/build_breeding.py --selftest` proves both
-      tables round-trip byte-identical to the ROM slices (special $4B30 4126 B
-      incl $FF; family $4974 444 B incl $0000), the `db`-text emission re-parses
-      to the same bytes, and the disassembly `db` bytes equal the ROM
-      (`--check-disasm`). Decode independently reconciles with the hand-authored
-      `breeding_complete.json` (825/825 special, 197/197 family slots, 0 diffs).
-      Data deliverable: `extracted/breeding_tables.json` (Tier A, `_generator`
-      stamped). Verifier PASS 4/4; clean build unchanged. Family encoding
-      confirmed positional (result species == slot index; 197 recipes + 24
-      separators + 1 terminator = 222 pairs).
-- [x] **B2 — Relocation harness.** Bank `$69` scanner + special table mirrored
-      there; bank $16 redirected via `rst $10`; vanilla tables left in place.
-      *Accept:* breeding identical to vanilla (regression) in SameBoy; saving OK.
-      **DONE (Session 13):** special-table scan ($46F2–$470F, 30 B) replaced
-      in-place with `ld hl,$6900` + `rst $10` + 26-byte NOP pad (zero shift);
-      faithful port of the scan loop + per-entry check in `patches/bank_069.asm`
-      (`db $69`, jump table, scanner, then the table). `rst $10` ABI decoded
-      from ROM bytes (H=bank, L=entry<$80; far func ends `ret` → returns to the
-      bank-$16 plus-clamp at $4710). Relocated table sourced from the **patched**
-      `bank_016.asm` (via `build_breeding.py --emit-relocation`), so it carries
-      existing custom recipes. Verifier PASS 4/4; full-ROM diff shows bank $16
-      changed only in the 30-byte window. User-confirmed in SameBoy: Anteater×
-      BattleRex→GoldSlime (both orders) + vanilla crosses unchanged; saving OK.
-      *Note:* rev 1 wrongly sourced the table from vanilla and silently reverted
-      the Session-12 recipe (parents fell through to the family table); fixed by
-      sourcing from patched bank_016. The `--emit-relocation` self-check now
-      asserts relocated == patched table.
-- [x] **B3 — Capacity 1×–2×.** Raise special capacity to ≥1650; add recipes past
-      index 824. *Accept:* a recipe at index >824 fires in-game.
-      **DONE (Session 15):** the bank `$69` scanner walks to the `$FF` terminator
-      with no hardcoded count, so `build_breeding.py` appends recipes from
-      `extracted/breeding_extra_recipes.json` after the 825 base entries and
-      re-terminates (`SPECIAL_CAPACITY_MAX = 1650`; bank `$69` fits 2× with
-      headroom). Proof recipe at index 825: **BattleRex(Pedigree) × MadCat(Mate)
-      → DracoLord** — user-confirmed DracoLord in SameBoy (patched ROM
-      `f1cd94b1…`; clean build still `1ca6579…`). Picked because it is UNSHADOWED
-      by all 825 base entries (the forward order MadCat×BattleRex is the vanilla
-      → Yeti recipe at index 187, which would win first — see KEY_LESSONS S15).
-      Self-checks: base 825 == patched bank_016 table; S12 recipe intact; appended
-      bytes placed + `$FF`-terminated; emit-time SHADOW CHECK fails the build on a
-      dead appended recipe. Focused diff: 4 bank-`$69` bytes + checksum.
-      *Open follow-up:* fold "base 825 of relocated table == patched bank_016
-      table" into `verify_integrity.py` so future table edits can't silently
-      diverge (the tool asserts it; the verifier does not yet).
+- [x] **B1 — Round-trip encoder (keystone)** — DONE S13: build_breeding.py --selftest
+      re-emits BOTH vanilla tables byte-identical ($4B30 4126 B; $4974 444 B);
+      reconciled 825/825 + 197/197 vs the hand-authored JSON.
+      → BREEDING_SYSTEM; TOOLS_AND_DATA; archive: SESSION_HISTORY Part 3.
+- [x] **B2 — Relocation harness** — DONE S13: bank $16 special scan replaced in place
+      with `ld hl,$6900`+`rst $10` (zero shift); faithful scanner + table in
+      patches/bank_069.asm sourced from the PATCHED bank_016 (rev-1 lesson: sourcing
+      vanilla silently reverted S12's recipe). User-confirmed; saving OK.
+      → BREEDING_SYSTEM; archive: SESSION_HISTORY Part 3.
+- [x] **B3 — Capacity 1×–2×** — DONE S15: scanner walks to the $FF terminator, so
+      appends past index 824 work (cap 1650); unshadowed proof recipe user-confirmed.
+      SUPERSEDED as the bank-$69 emitter by B5. *Open follow-up:* fold the
+      "base 825 == patched bank_016" assert into verify_integrity.py (tool
+      self-asserts; the verifier does not run it — same note on B7).
+      → BREEDING_SYSTEM; KEY_LESSONS S15; archive: SESSION_HISTORY Part 3.
 
 ### Breeding romhack plan (user goal — Session 15 signpost; test each part separately)
 Target: rename the **??? family ($F9) → "Spirit"**, shuffle monsters out of ???
@@ -361,150 +254,43 @@ Dragon×Boss→sp$29). So "??? × anything → itself" is the **universal fallba
 showing through, NOT a ???-specific rule — nothing special to dismantle; Spirit
 recipes are pure authoring.
 
-- [x] **B4 — Family-defaults rewrite.** New family×family map compiled in-place
-      (family table `$16:$4974`, same length = zero shift; result = slot index, so
-      the compiler inverts `A×B→C` to slot order and rejects positional conflicts;
-      preserve the `$FA` wildcard + two-pass search). *Accept:* 8–10 sample crosses
-      give NEW results in SameBoy; untouched crosses unchanged. *Note:* family
-      table is strictly 1:1 (one cross per result species, no many→one) — put
-      flexible/many→one family×family in the SPECIAL table instead (works now).
-      **DONE (Session 16, user-confirmed in SameBoy).** `build_breeding.py --emit-family`
-      reads `extracted/breeding_family_defaults.json` (positional `result→{p1,p2}`
-      overrides), applies them to the vanilla family decode, validates positional 1:1 +
-      444-byte zero-shift + shadow classes, and rewrites only the `FamilyRecipeTable` db
-      block in `patches/bank_016.asm`. Authored proof set (zero-collateral permutation of
-      the three Dragon-mate matchers + one NEW recipe at empty separator slot 37):
-      Bird×Dragon→DrakSlime, Slime×Dragon→Almiraj, Beast×Dragon→Wyvern,
-      Dragon×Dragon→GreatDrak. **5 changed bytes total** in bank `$16` (focused diff vs the
-      B3 ROM = those 5 + 1 checksum byte; the B3 baseline rebuilt as the recorded `f1cd94b1…`).
-      User-confirmed: FunkyBird×BattleRex→DrakSlime, Snaily×BattleRex→Almiraj,
-      Dragon×Dragon→GreatDrak (patched ROM `caa597d1…`; clean build still `1ca6579…`).
-      Beast×Dragon→Wyvern is present but correctly shadowed for MadCat by SPECIAL entry 187
-      (MadCat×BattleRex→Yeti) — precedence, not a bug. Untouched BattleRex×Healer→DragonKid
-      (vanilla family slot 20) unchanged. Method + precedence: KEY_LESSONS "Session 16".
-- [x] **B5 — Full special-table authoring + overhaul spec.** Extend
-      `build_breeding.py` to own the WHOLE special table as authored data (base +
-      overrides + appends) and emit it to bank `$69`, leaving bank `$16` fully
-      dead; supports edit-in-place of any base entry (e.g. **replace Yeti** =
-      change entry 187 result byte) and append. Includes a precedence/shadow
-      validator (first-match-wins across the whole table). Author the complete
-      `special` + `family_defaults` (incl. Spirit-as-a-breedable-family), build a
-      test ROM. *Accept:* user playtest sign-off on the rewritten recipe set.
-      **DONE (Session 17, user-confirmed in SameBoy).** `build_breeding.py
-      --emit-special` decodes the 825 vanilla entries from the ROM as the base,
-      applies `overrides` (edit any entry, by `index` or by parent `match`) and
-      `appends` from `extracted/breeding_special.json`, runs a whole-table
-      first-match-wins shadow validator (ERRORS on a shadowed append/override;
-      WARNS on new collateral shadowing and on a result-species change that other
-      entries still produce), and emits only `patches/bank_069.asm`. Bank `$16`'s
-      special table stays byte-identical to the ROM (single source = JSON → bank
-      `$69`). Self-checks: emitted == authored bytes + `$FF`; untouched base ==
-      vanilla; overrides present at their indices; capacity ≤ 1650. Proof
-      (confirmed): MadCat×BattleRex → **DracoLord** (in-place edit of entry 187,
-      was Yeti), Darkdrium×BattleRex → **Armorpion** (unshadowed append),
-      Anteater×BattleRex → GoldSlime both orders (S12 carried forward as overrides
-      at dead entries 693/803). Patched ROM `c95f62ce…`; clean build still
-      `1ca6579…`. **Supersedes B3's `--emit-relocation` + `breeding_extra_recipes.json`
-      as the canonical bank `$69` emitter.** *Note:* the spec carries `base`,
-      `overrides`, `appends`; this is the editor's emit backend — the actual recipe
-      REWRITE (Spirit-as-breedable, new results across the board) is authored by hand
-      in the editor UI later (B5 delivers the machinery, not the content).
-      *Folded into `verify_integrity.py`? No — see B3 open follow-up; the tool
-      self-asserts, the verifier does not yet run `--emit-special` self-checks.*
-- [~] **B6 — Family reassignment + ??? → "Spirit".** Same-size family-byte edits
-      (offset $00 of each 43-byte monster-info entry `$03:$4461`).
-      **REASSIGNMENT DONE + reader-gate CLEARED (Session 18, user-confirmed in
-      SameBoy).** `tools/build_family_reassign.py` (spec
-      `extracted/breeding_family_reassign.json`, validated `from`==vanilla) emits
-      `patches/bank_003.asm` as exact-line db edits (zero shift). Monsters move
-      between ANY families incl. in/out of ??? (Boss=9). **Reader trace (the gate)
-      cleared:** family-byte readers outside breeding are DISPLAY/struct-copy only
-      (bank `$01` battle copy, `$04` FamilyTextPtrTable text dispatch, `$07`
-      sprite/icon, `$09` VRAM index, `$14` recruit stamp); none gate scout/recruit/
-      AI/resistance on family==9 — eligibility is the enemy-stats joinability byte
-      (`$14 +$3`) + boss table (`$14:$4897`), independent. Annotated inline at bank
-      `$03` `label443f`. **Three family representations found** (BREEDING_SYSTEM
-      "B6"): breeding=live byte; status/menus=struct +$0A stamped at creation
-      (snapshot — pre-existing monsters keep old value, correct for a fresh hack);
-      library=id-range (see below). **Dynamic library PROOF OF CONCEPT done**
-      (`patches/bank_012.asm`, `tools/build_dynamic_library.py`): `SetItem_6242`
-      redirected to a family-byte scan; all 8 reassigned monsters group correctly
-      in SameBoy. POC only (lags ~221 far-loads/render; bearable). *Still TODO,
-      split out below:* the ??? → "Spirit" RENAME (the doc's old `FamilyTextPtrTable`
-      entry-9 claim was WRONG — that's a per-family monster-text dispatch, not the
-      family-name string; find the real string first); the production library table;
-      the 11th-family feature.
-- [x] **B7 — Production library grouping table (replaces the B6 POC).**
-      **DONE (Session 19, user-confirmed in SameBoy — zero lag, reassigned monsters
-      under correct tabs).** `tools/build_library_table.py` emits a precomputed
-      **family→members** table into bank `$12` trailing free space (`$7B9B+`) at build
-      time and rewrites `SetItem_6242` zero-shift (`jp LibScanByFamily`, 82-byte body →
-      `jp` + 79 `nop`). The walker reads the table directly — **zero far-loads, zero
-      scratch RAM** (the POC's two costs eliminated), and restores vanilla blank-slot
-      semantics ($E0 for unseen / id for seen) the POC had dropped. Table format is a
-      pointer table + length-prefixed member lists (additive for an 11th family);
-      family assignment sourced from the vanilla family byte + `breeding_family_reassign.json`
-      (the SAME spec `bank_003`/B6 consumes, kept in lock-step). Build-time validation:
-      `--selftest` proves no-reassign grouping reproduces the vanilla bounds table
-      exactly (parity); every family ≤ buffer capacity (32); free-space fit; ids ≤ 255.
-      Data deliverable `extracted/library_grouping.json`. **Extension-aware (no hardcoded
-      221):** species ids are 1 byte (256-ceiling); `COLLECTIBLE_MAX` (→255) and
-      `NUM_FAMILIES` (→11, B9) are the only knobs — table + walker are already count/id
-      agnostic. The 6 special non-collectible entries (215–220: TERRY? story enemy +
-      4 summon tiers + 1 blank) are enumerated and PROTECTED (excluded, never a
-      reassignment target). Test ROM `065943f6…`; clean build still `1ca6579…`. Method:
-      KEY_LESSONS "Session 19 — Breeding B7"; format: BREEDING_SYSTEM "Dynamic library
-      → PRODUCTION (B7, done)". *Open follow-up:* tool not yet folded into
-      `verify_integrity.py` (self-asserts via `--selftest`; the verifier does not run it).
-- [~] **B8 — ??? → "Spirit" rename (10 families, no insert).** **PREREQ SOLVED
-      (S20):** the "family name" is an ICON font tile, not a string — there is no name
-      string to edit (`FamilyTextPtrTable` confirmed a red herring). 10 icons at
-      `$4F:$4110-$41A0`, text bytes `$10-$19`, addr = `$4010 + byte*16`; detail line is
-      `<$F0><icon>"family"` (bank `$4D`), tab strip blits the same tiles. So a
-      rename-only is "swap the `$19` (???) icon tile." **NOT the chosen route** — per
-      the S19/S20 user decision Spirit is ADDED (B9), not a 10-family replace; this row
-      stays as the solved-trace record. *Accept (if ever taken):* the ??? tab shows the
-      new icon; clean build still `1ca6579…`.
-- [~] **B9 — Add an 11th family (keep ??? AND add Spirit).** **VRAM CORRUPTION FIXED +
-      ICON SHIPPED (2026-06-19, user-confirmed in SameBoy; built ON TOP of the gate fix).**
-      The family-10 catch→map VRAM wipe is fixed (`ClampFamIdx` in ROM0 clamps the
-      10-entry family-indexed GFX table `01:$4BAD` so family 10 can't read OOB; the
-      species-indexed `$499D`/`$49DF` follower lookup is left alone). The Spirit whip
-      (option 5) ships on font byte **$19 (`$4F:$41A0`)**, overwriting vanilla ??? — NOT
-      the free $1A slot, which the menu blanks at runtime. Followers, library grouping,
-      and family attribution confirmed correct; clean build `1ca6579…`; integrity PASS.
-      See KEY_LESSONS "Spirit B9 Lessons" + PROJECT_STATE (2026-06-19 block). *Remaining
-      polish (not blocking play):* the "$1A vs $19" line in the S20 notes below is stale;
-      tab-strip/nav-grid layout for an 11th visible tab is the only open UI nicety.
-      ~~**ICON HALF DONE (S20,~~
-      pending SameBoy sign-off).** The family-icon path is traced (see B8) and the 11th
-      icon's free slot is found: **byte `$1A` → `$4F:$41B0`** (blank filler; charmap
-      "20-23 are blank"). `patches/bank_04f.asm` inserts the user's "Fire Whip Spirit"
-      art there as a same-size 16-byte 2bpp tile (zero shift; bank `$4F` otherwise
-      byte-identical to vanilla). Tool `tools/build_family_icon.py` + data
-      `extracted/family_icons.json` (Variants A/B: head on palette index 0 for a yellow
-      head if the menu palette allows, else index 2). Verifier PASS 4/4 (bank_04f added
-      to patch set). Test ROM `ab59c842…`; clean build still `1ca6579…`. **STILL OPEN
-      (rest of B9, next session):** (1) confirm the "yellow head" palette in SameBoy
-      (menu BG pal via `LoadGBCPalettes`→`rst $10` `$17:$03`); (2) wire Spirit as
-      family 11 — the `$4D` detail line (`$F0 $1A "family"`), the tab-strip 11th cell
-      (`LoadItem_4241` `b=5,c=10` grid + tab graphics), the family-code (`$FA` wildcard
-      question), `NUM_FAMILIES`→11 in `build_library_table.py`, family reshuffle. Icon
-      is not yet referenced by any family, so view it via SameBoy's VRAM viewer until
-      wired. Scope (full): BREEDING_SYSTEM "Family icons (B8/B9)" + "Future — 11th family".
-      *Decision (user, S19/S20):* Spirit is ADDED as the 11th family, then families
-      reshuffled.
-- [x] **BUG — breeding cutscene: parent sprites glitch.** **FIXED Session 14.**
-      Observed Session 13 while playtesting B2; confirmed **not caused by B2**. Root
-      cause was an incomplete bank `$0B` labelization: three raw pointer refs into the
-      bank's shift region (`$4974` sprite-pointer table; `$42c8`/`$4308` gate table)
-      were never converted to labels, so the custom dispatch's shift left them stale —
-      and in `patches/bank_00b.asm` the sprite ref was additionally **mislabeled** to
-      `RoomScreenPtrTable` (`$49b5`) instead of the real `$4974` data (`$4911`).
-      Fixed by re-sectioning both tables into labeled `dw`/`db` (disassembly stays
-      byte-identical to `1ca657…`) and repointing the sprite consumer. User-confirmed
-      in SameBoy (clean build still `1ca657…`; patched ROM `b43a04fe…`). See
-      KEY_LESSONS "Session 12 Lessons — Bank $0B repointing" and PROJECT_STATE.
+- [x] **B4 — Family-defaults rewrite** — DONE S16, user-confirmed: --emit-family
+      authors the positional family table in place (1:1 + 444-byte zero-shift + shadow
+      validation); 5-changed-byte proof set incl. Dragon×Dragon→GreatDrak.
+      → BREEDING_SYSTEM; KEY_LESSONS S16; archive: SESSION_HISTORY Part 3.
+- [x] **B5 — Full special-table authoring** — DONE S17, user-confirmed: --emit-special
+      OWNS the whole special table (825 ROM base + in-place overrides + appends +
+      whole-table first-match-wins shadow validator) → bank $69; bank $16 stays
+      vanilla. Supersedes B3's emitter. Delivers the machinery; the recipe REWRITE is
+      editor-authored content later.
+      → BREEDING_SYSTEM; KEY_LESSONS S17; archive: SESSION_HISTORY Part 3.
+- [~] **B6 — Family reassignment** — reassignment DONE S18, user-confirmed
+      (build_family_reassign.py: same-size family-byte edits, ANY family incl. ???;
+      reader gate cleared — eligibility is joinability + boss table, NOT family; three
+      family representations documented). Dynamic-library POC superseded by B7.
+      *Remaining, split out:* the rename / 11th-family work = B8/B9 below.
+      → BREEDING_SYSTEM "B6"; KEY_LESSONS S18; archive: SESSION_HISTORY Part 3.
+- [x] **B7 — Production library grouping** — DONE S19, user-confirmed zero-lag:
+      build_library_table.py emits a build-time family→members table into bank $12
+      free space + a zero-shift walker (zero far-loads/scratch RAM; vanilla blank-slot
+      semantics; NUM_FAMILIES/256-id aware; specials 215–220 protected). *Open:* tool
+      selftest not run by verify_integrity.py (see B3 note).
+      → BREEDING_SYSTEM "B7"; KEY_LESSONS S19; archive: SESSION_HISTORY Part 3.
+- [~] **B8 — ??? → "Spirit" rename** — trace SOLVED S20: the family "name" is an ICON
+      font tile ($4F:$4110–$41A0, text bytes $10–$19, addr=$4010+byte*16), not a
+      string. NOT taken — user decision: Spirit is ADDED (B9). Kept as the
+      solved-trace record. → BREEDING_SYSTEM "Family icons"; archive: SESSION_HISTORY.
+- [~] **B9 — Add an 11th family (Spirit)** — VRAM corruption FIXED (ClampFamIdx,
+      ROM0) + Spirit whip icon SHIPPED on byte $19 / $4F:$41A0 (user-confirmed; the
+      "free" $1A slot is runtime-blanked — not usable). *Open:* wire Spirit as family
+      11 — $4D detail line, tab-strip 11th cell, $FA wildcard question,
+      NUM_FAMILIES→11 in build_library_table.py, family reshuffle; tab-strip layout is
+      the one UI nicety. → BREEDING_SYSTEM "Future — 11th family"; KEY_LESSONS
+      "Spirit B9"; archive: SESSION_HISTORY Part 3.
+- [x] **BUG — breeding-cutscene parent sprites** — FIXED S14: incomplete bank $0B
+      labelization (3 raw pointer refs into the shift region) + one ref mislabeled to
+      RoomScreenPtrTable; re-sectioned + repointed, user-confirmed.
+      → KEY_LESSONS "Session 14 — Bank $0B repointing"; archive: SESSION_HISTORY.
 
 ### Phase 3 — Editor app (see EDITOR_DESIGN.md — native macOS)
 - [ ] Walking skeleton: open project, room list, Build, Run-in-SameBoy
@@ -514,273 +300,85 @@ recipes are pure authoring.
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:
-- [x] **Annotate the new-species fork SEAMS in clean disassembly (labels/comments
-      only, byte-perfect `1ca6579…`).** The "which site is the seam" knowledge currently
-      lives only in patches + MONSTER_DATA. Propagate it as comments at the clean anchors:
-      `bank_003 label443f`/`SaveMon_4446` (single info indexer; id≥224 fork point),
-      `bank_014 LoadEnemyStats` + the `$7EAD` trailing free run (16-bit EID → append, no
-      fork), `bank_001 EncounterPool_000` (slot = EID(+10,×2)/weight(+20); empty slot =
-      insertion point), and the **8 follower gfx-ID copies** (`$01 $06 $07 $09 $0b $12 $18
-      $59` — the mgbdis defaults `FieldPtrLookupTable`/`TextDataPtrLookup`/`TileRefLookupTable`
-      etc. don't reveal they're copies; rename/annotate so a swap knows to repoint all 8).
-      CAUTION: a mislabel that resolves to the wrong address passes review but glitches at
-      runtime (SESSION_PROTOCOL §4) — verify the build stays `1ca6579…` after each label.
-      *(Flagged S30, deferred from the two-defect-fix session — own scoped pass. PARTIAL: the
-      follower render seams `bank_011 HramUnk11_406e` (attr read + overshoot) and `bank_001
-      GetActiveMonsterStatus` (overworld walk loader + clamp) annotated when N4 was finished —
-      build still `1ca6579…`.*
-      ***S33 — the name/text/lineage/follower DISPLAY seams DONE*** (labels/comments only,
-      build `1ca6579…`, integrity 4/4, all referenced labels sym-verified to their addresses):
-      bank `$41` `$4007` mode→table config list (modes 5/7/8/11 documented) + the corrective
-      `FamilyCodePtrTable` block (species-indexed 2-letter default-nick, NOT family; legacy
-      labels) + `Func_Bank41_GetText/GetPutText`; ROM0 `SaveBankAndSwitch $092F`/`TextHandler_0940
-      $0940` two-level `[mode][id]` lookup + overshoot hazard + `LoadModeBaseRedirect $00F0` fork
-      cross-ref; bank `$12` `LoadItem_6456`/`LoadItem_65a8`/`CmpItem_65cb` lineage chain; and the
-      **8 follower gfx-ID copies** at their add-base sites (`$01:$49a7`→`ScreenTransDataTable`,
-      `$06:$4d7e`→`MapNPCPosDataTable`, `$07:$66b8`→`TileRefLookupTable`, `$09:$61fb`→
-      `FieldPtrLookupTable`, `$0b:$490f`→`SpritePtrTable_4974`, `$12:$65de`→`ItemSlotPtrTable`
-      [= the lineage parent-icon table, doubles as the menu copy], `$18:$40bf`→`TextDataPtrLookup`,
-      `$59:$42ca`→`SaveSlotPtrTable`); + one optional cross-ref at bank `$16` `$0301` parent-family
-      load. CORRECTIONS recorded in source + MONSTER_DATA: **ItemNamePtrTable = mode 8** (not 11);
-      **`$4739` overshoots at id≥215, fork covers id≥224**.
-      ***S38 — the DATA-TABLE seams DONE*** (labels/comments only, build `1ca6579…`, integrity
-      4/4; new label `EnemyStatsTrailingFree` sym-verified to `14:7ead`, cross-ref patch labels
-      `FamilyRecipeResolve`/`NewSpeciesInfoCopy` confirmed to exist): `bank_003 label443f`/
-      `SaveMon_4446` (single info indexer; patched `cp $e0` → bank `$6A` fork; also reached as
-      `$03` entry 1 by breeding's `$0301` parent-family load); `bank_014 LoadEnemyStats` (16-bit
-      EID → NO fork) + new label `EnemyStatsTrailingFree` @ `$7EAD` (append region — records that
-      the 487-entry table ends at `$7BAC` but `$7BAC..$7EAC` is CODE, so EIDs 487–517 are unusable
-      and the first grid-aligned slot is EID 518 `$7EB3`); `bank_001 EncounterPool_000` (empty
-      slot = EID 0/wt 0 = in-place insertion point, Iron-Rule-2 safe); `bank_016 label16_485c`
-      (entry-1 recipe lookup overshoots the 222-entry `FamilyRecipeTable` → `FamilyRecipeResolve`
-      DISPLAY fork) + the two `$0301` parent→family conversion sites (new species resolves a real
-      family as a breeding PARENT via the forked info loader). **STILL PENDING (own pass, NOT a
-      new-species seam — general breeding mechanics): bank `$16` breeding-determination internals
-      proper (`LoadBrd_4653` plus/special, `LoadBrd_45d5/45ff` family scan, special→family→pedigree
-      precedence) — deferred to a breeding-mechanics annotation pass.**
-- [ ] Bank $03 monster table → labeled `db` (gen_monster_db.py exists —
-      verify generator, apply, MD5 must stay `1ca6579…`)
-- [ ] Bank $14 enemy stats + boss tables → `db`
-- [ ] Bank $01 encounter pools → `db`
-- [ ] Bank $16 breeding tables → `db`
+- [x] **Annotate the new-species fork SEAMS in clean disassembly** — DONE across
+      S30/S33/S38 (labels/comments only, build byte-perfect each time): info indexer
+      ($03 label443f/SaveMon_4446), enemy stats ($14 LoadEnemyStats +
+      EnemyStatsTrailingFree @ $7EAD — EIDs 487–517 unusable, first slot EID 518),
+      encounter pool ($01), breeding sites ($16 label16_485c + the two $0301
+      parent-family loads), the 8 follower gfx-ID copies, and the name/text/lineage
+      chain ($41 / ROM0 $092F / $12 / $4d). Corrections recorded: ItemNamePtrTable =
+      mode 8 (not 11); $4739 overshoots at id≥215 (fork covers ≥224).
+      **STILL PENDING (own pass, general breeding mechanics — NOT a new-species
+      seam):** bank $16 breeding-determination internals (LoadBrd_4653 plus/special,
+      LoadBrd_45d5/45ff family scan, special→family→pedigree precedence).
+      → MONSTER_DATA "Species ID geography"; archive: SESSION_HISTORY Part 3.
+- [x] Bank $03 monster table → `db` ✅ VERIFIED S51: `MonsterInfoTable` +
+      per-monster `MonsterInfo_NNN_Name:` labeled `db` blocks (stale box; the
+      conversion had already landed in an earlier pass).
+- [x] Bank $14 enemy stats + boss tables → `db` ✅ VERIFIED S51: `EnemyStatsTable`
+      + per-EID `EnemyStats_NNN:` labeled field-commented `db`/`dw` blocks.
+- [ ] Bank $01 encounter pools → `db` (editor-driven — Encounters #2)
+- [x] Bank $16 breeding tables → `db` ✅ VERIFIED S51: `SpecialRecipeTable` +
+      `FamilyRecipeTable` labeled `db` blocks.
 - [ ] Bank $51: annotate transitions + prove/disprove the 1,228 B
       free block is reference-free
 - [ ] Bank $50 event state machine (story events)
 - [ ] Save/SRAM code annotation (supports Phase 0 audit)
-- [~] **Re-section misassembled data tables → labeled `db`/`dw`.** mgbdis decoded
-      many in-bank DATA tables as fake instructions (`rst $38`, `db $fc`,
-      `ld hl,sp+$nn`, stray `stop`, etc. appearing mid-routine). These pass the build
-      (bytes are identical) but READ as garbage code, so a future session can't edit
-      the table in source and wastes time re-deriving it from raw bytes — it bit S18
-      (the library bounds table) and earlier ($0B sprite/gate tables, fixed S14).
-      Convert each to a labeled `db`/`dw` block; **the build MUST stay `1ca6579…`**
-      after each (a wrong split changes bytes → fails instantly — same guard as the
-      S14 labelization rule, KEY_LESSONS). Drive this by what the editor must EDIT,
-      not completionism. *Accept:* targeted tables read as `db`/`dw` with names; MD5
-      unchanged; the editor can address them by label.
-      **DONE (Session 26 + Session 27): bank `$12` library/family data — COMPLETE.**
-      `tools/resection_library_tables.py` converted `LibraryFamilyTabBounds` (`$6294`,
-      the S18 case), the two tab-column cursor-position tables (`$564a`/`$5a8e`), and
-      the **entire contiguous window-draw layout run `$710c..$7b9b` (29 layouts)**.
-      Session 26 did the directly-referenced subset (`$710c/$71aa/$71f4`/`$759a`/`$7b42`/`$7b6c`);
-      **Session 27 finished the two remaining contiguous gaps** (`$724e..$759a` = 10
-      layouts, `$75c0..$7b42` = 13 layouts), including the 380-B `$79c6` full-screen
-      view whose fake `jr` labels (`$7a05`…`$7aca`) vanished cleanly with their
-      in-range `jr` sources. 44 raw-pointer reference sites labelized in total; the 21
-      `ld hl,$XXXX; rst $10` far-call descriptors (`$5605`/`$6100`/`$6101`) correctly
-      LEFT raw. Clean build still `1ca6579…`, integrity PASS 4/4. All 29 layouts also
-      decoded to `extracted/library_layouts.json` (`--dump-json`). Format + addresses
-      in DATA_STRUCTURES "Library / family-tab menu data (bank `$12`)". The tool uses a
-      zero-byte probe-build to map source line → address (no opcode-size summing — the
-      S22 trap), is per-table idempotent, and is re-runnable from the clean tree
-      (verified: clean-tree run reproduces the byte-perfect build + identical 29-label set).
+- [~] **Re-section misassembled data tables → labeled `db`/`dw`.** mgbdis rendered
+      many in-bank DATA tables as fake instructions — they build byte-identical but
+      can't be edited in source; this bit S14 ($0B tables), S18 (library bounds), S22.
+      Convert per table with the probe-build line→address method (no opcode-size
+      summing — the S22 trap); **build MUST stay `1ca6579…` after each**.
+      Bank `$12` COMPLETE (S26+S27: bounds table, tab-column tables, all 29 window
+      layouts → library_layouts.json). → DATA_STRUCTURES "Library / family-tab menu
+      data (bank $12)"; TOOLS_AND_DATA; archive: SESSION_HISTORY Part 3.
       **NEXT (per-session, one each):**
-      (1) ✅ **Finish bank `$12`** — DONE (Session 27, above). The whole `$710c..$7b9b`
-          run now reads as labeled `db`/`dw`; `$79c6` converted; far-call descriptors left.
-      (2) **Tick the STALE BOXES below** — bank `$03`/`$14`/`$16` look already
-          `db`-converted (`$14`/`$16` clean; `$03` has 23 `rst $38` runs to confirm as
-          padding vs data). Cheap verify-and-check-off.
-      (3) **Editor-driven only:** bank `$01` encounter pools → `db` (Encounters #2 needs
-          to edit pools), bank `$51` transitions, bank `$50` event state machine — do
-          these when the feature is built, not for completionism.
+      (1) ✅ bank `$12` — DONE (S26/S27).
+      (2) ✅ STALE BOXES verified + ticked (S51): bank `$03`/`$14`/`$16` were
+          already `db`-converted.
+      (2b) ✅ DONE (S51): `SkillMPCostTable` ($07:$570C, 222×`dw` with per-skill
+          name/MP comments) + `SkillLearnReqTable` ($06:$50E0, 222×18B `db` with
+          decoded stat/prereq comments) re-sectioned in BOTH trees via the new
+          `tools/resection_skill_tables.py` (probe-build; clean build byte-perfect;
+          verifier PASS 4/4). Two fake-decode artifact labels (`DispMapS_566b`,
+          `label6_6034`) are kept at exact offsets — they're referenced by fake
+          instructions in not-yet-re-sectioned regions of bank `$06`.
+      (3) **Editor-driven only:** bank `$01` encounter pools (Encounters #2), bank
+          `$51` transitions, bank `$50` event state machine — when the feature needs them.
       (4) **Checked, SKIP (no editor value, mis-split risk):** the `$ff`-padding banks
-          `$08/$15/$2c/$33/$55/$66` from the old seed list — verified mostly filler
-          (`$08`: 2061, `$55`: 2112 `rst $38`). Not discrete tables.
+          `$08/$15/$2c/$33/$55/$66` — mostly filler, not discrete tables.
 **STALE BOXES (verify + tick):** the first three boxes above (bank $03 monster
 table, $14 enemy stats/boss, $16 breeding) appear ALREADY `db`-converted on disk
 (bank_003/014/016 are heavily `db`/`dw` with labeled loaders). Confirm against
 disassembly and check them off.
 
-- [x] **GFX-1 — Graphics system: gfx-ID indirection + sprite decompressor → annotate + tool.** ✅ DONE (Session 22)
-  *DONE Session 22 — see PROJECT_STATE "Session 22" + KEY_LESSONS "Session 22" +
-  MONSTER_DATA "Monster sprite graphics system". Delivered: (a) battle gfx-ID table
-  `$00:$2B9F` re-sectioned to `MonsterBattleGfxTable` (`tools/resection_battle_gfx_table.py`,
-  build still `1ca6579…`, 23 cross-refs preserved); (b) `dwm/sprite_codec.py` — shared
-  LZ codec, decode byte-exact, `decode(encode(x))==x` on all 442 streams; (c)
-  `tools/extract_monster_sprites.py` + `extracted/monster_sprites.json` (all 221,
-  count-parameterised); (d) `tools/build_sprite_swap.py` generalised species-agnostic.
-  ACCEPT criterion adjusted: round-trip is SEMANTIC (`decode(encode)==x`), NOT vanilla
-  byte-identical re-encode (no editor value — documented). Dracky→Anteater swap
-  user-confirmed in SameBoy. Doc errors below FIXED in the re-section comments.
-  REMAINING (moved to editor-backend / GFX-3): cross-bank free-space allocator (swap
-  tool knows bank `$36` only); follower-sprite extraction + animation-frame layout.*
-  *Original verified facts (kept for reference):*
-  - **gfx-ID = `(bank<<8)|index`.** High byte = ROM bank, low byte = index.
-  - **Resolver `DecompressTileLayout` @ `$00:$1627`:** switches to `bank` (`ld[$2100],a`
-    low bits; `swap a/rra/and 3 → ld[$4100],a` high bits — also twiddles SRAM bank,
-    restored after, harmless). Reads per-bank pointer table at **`$<bank>:$4001 + index*2`**
-    → stream addr in `$4000–$7FFF`.
-  - **Stream header (3 bytes):** `[declen_lo, declen_hi, runmark]`, then LZ body.
-    Decompressor path `WaitDMATransfer $00:$1577` → `TextScrollWindow` → writes to VRAM dest HL.
-  - **LZ body:** byte≠runmark → literal; byte==runmark → back-ref: next 2 bytes `b0,b1`,
-    offset = `b0 | ((b1>>4)&0xF)<<8` (**ABSOLUTE** index into output base `$ac/$ad` = VRAM dest),
-    count = `(b1&0xF)+4`, extension if low-nibble=`$F` (count = next_byte + `$13`).
-  - **KEY ARCHITECTURE:** back-refs point into a **SHARED VRAM tile pool pre-loaded before
-    the per-monster stream**, so one monster stream does NOT decode standalone (Dracky's
-    battle stream is ~9 on-disk bytes → 576 decompressed). **POC lever:** a stream with NO
-    runmark byte in its body = pure literal copy = self-contained (ignores the shared pool).
-    `tools/build_sprite_swap.py` (added this session) uses exactly this to repoint Dracky.
-    *(Gotcha: fill the WHOLE tile field with the backdrop index, not just the sprite
-    footprint — else the surround renders as palette index 0. For Dracky's battle palette
-    that index 0 is red; backdrop is index 1. Fixed in the tool via `BG_INDEX`/`BODY_INDICES`.)*
-  - **Battle path (VERIFIED):** `SetFld_466d` (bank `$07`, ~line 1008) reads species (`$caca`),
-    indexes table at **`$00:$2B9F`** by `species*2`, DMAs to VRAM **`$8B00`**. Dracky (sp 78)
-    → gfx-ID **`$3627`** (bank `$36` idx `$27`; 576 B / 36 tiles / 48×48; runmark `$02`).
-    Word lives at ROM0 `$2C3B` = `27 36`.
-  - **Follower path (VERIFIED):** table `ScreenTransDataTable` @ `$01:$49DF`, loader
-    `GetActiveMonsterStatus` @ `$01:$4986`, index `(species+$10)*2`; plus a family-shared
-    2nd load via `$01:$4BAD`. Dracky follower = gfx-ID **`$383E`** (bank `$38` idx `$3E`; 256 B / 16 tiles).
-  - **DOC ERRORS to fix while annotating:** `bank_038.asm` header says "gate dungeon tileset J"
-    but it ALSO holds monster follower sprites; `bank_036.asm` pointer table is labeled
-    "Cross-bank dispatch table (40 entries)" but is actually the **gfx pointer table**.
-  - **DISCARD (bogus):** an earlier `$382E` battle guess came from scan-tables at
-    `$07:$6E14`/`$09:$6B10` that have **NO code references**; `$382E` is a dungeon tile, not Dracky.
-  - **Deliverables:** labels/comments on the resolver, decompressor, pointer tables, and both
-    species→gfx-ID tables; fold a proper decode/encode into the tool; extract the gfx-ID
-    tables to JSON (tool ships with data). **Accept:** clean build still `1ca6579…`; tool
-    round-trips a sprite byte-identically; Dracky→clam swap reproducible.
-
-- [x] **GFX-2 — Monster palette system + recolour + cross-bank sprite backbone.** ✅ DONE (Session 23)
-  *DONE Session 23 — see PROJECT_STATE "Session 23" + KEY_LESSONS "Session 23" +
-  MONSTER_DATA "Monster battle palette system". Delivered: (a) `dwm/sprite_bank.py` —
-  cross-bank overflow allocator (places streams in reserved `$7E–$7F`/`$7C/$7A/$79`
-  with a `$4001` pointer table; resolver reads `$<bank>:$4001+index*2` with no bank
-  gating, so ANY of 221 monsters repointable regardless of source bank); (b)
-  `tools/build_sprite_swap.py` rewritten — cross-bank, `--relocate` (lossless proof) /
-  `--png` / `--payload`, `--palette` recolour, `--build-rom` focused test ROM; (c) the
-  monster battle palette SOLVED — per-species table `MonsterBattlePalettes @ $17:$62FD`
-  (was mislabeled `RoomAttrDataBlocks`), 8 B/species, loaded by entry 6 (`$1706`); found
-  via SameBoy BG-slot-4 dump + ROM grep; annotated in `bank_017.asm` (byte-perfect);
-  (d) `tools/extract_monster_palettes.py` + `extracted/monster_palettes.json`;
-  `extracted/monster_sprites.json` regenerated (all 221, was a 3-monster subset).
-  Proofs (user-confirmed in SameBoy): Slime relocated cross-bank renders identically;
-  DWM2 clam→Dracky battle + correct purple palette; and the full combined ROM (clam +
-  Dracky→Spirit family + custom room with random encounters + breeding/library) clean.
-  REMAINING (GFX-3): follower path needs `$01:$49DF` re-section + its own palette table
-  (find the same way) + the family-shared `$4bad` block.*
-  *Original verified facts (kept for reference):*
-  - **Why needed:** the clam swap renders correctly but in Dracky's palette {red, white,
-    gold/brown, black} — no purple available from tiles alone. Recolour = editing palette data.
-  - **VERIFIED (probe ROM this session):** Dracky's battle palette indices are
-    **0=red, 1=white/transparent (backdrop), 2=gold/brown, 3=black** (index 1 is the backdrop).
-  - **Traced (speculative chain):** CGB upload routines live in **bank `$17`** (`rBCPS/rBCPD/rOCPS/rOCPD`
-    writes); bank `$00` has buffers `wBGPalette/wObj1Palette/wObj2Palette` + loaders
-    `SetGBCPalette`/`SetPaletteGBC`/`LoadGBCPalettes`. `SetGBCPalette(a=palID)` →(GBC)→
-    `SetPaletteGBC` stores ID at `$c850`, then `ld hl,$1704; rst $10` (far-call into bank `$17`)
-    does the upload from a palette table. **The per-monster/family palette SELECTION point is
-    NOT yet pinned** — the battle display init (bank `$07` ~lines 1090–1180) reads family
-    (`$cacb`) + species and calls `FuncFld_6942` etc.; start tracing there. NOTE the
-    `SetGBCPalette` calls in bank `$07` at lines 2460/2609 are SCENE palettes (warp/gate id `$03`),
-    **not** the monster's — don't be misled.
-  - **NEW LEAD (Session 22, user SameBoy VRAM data):** the enemy monster's tiles use ONE
-    **shared OBJ palette slot — slot 4** (confirmed: Dracky AND a blue slime both show OBJ
-    attribute `04` in the VRAM viewer). So the SLOT is fixed; the per-species COLOURS are written
-    into slot 4 at battle-init. This means recolour = edit the **per-species colour data loaded
-    into slot 4**, NOT a slot/palette-ID assignment. Concrete entry point: `FuncFld_6942` (bank
-    `$07` ~line 6567) and `SetGBCPalette` — note `FuncFld_6942` does `ld h,$04` (matches slot 4).
-    Trace from there to the colour table that feeds the `$1704`/`rst $10` upload.
-  - **Recolour approach (speculative):** find the palette DATA table in bank `$17` reached via the
-    `rst $10`/`$1704` path, indexed by the monster/family palette ID; edit the 4 RGB555 colours,
-    OR repoint selection to a custom palette. **First confirm scope** (per-family vs per-monster):
-    a family palette edit recolours Dracky's whole family. **Accept:** clam renders in corrected
-    (e.g. purple) colours in SameBoy.
-
-- [x] **GFX-3 — Walking/follower sprite swap.** ✅ DONE (Session 24)
-  *DONE Session 24 — see PROJECT_STATE "Session 24" + MONSTER_DATA "Follower /
-  walking-sprite system" + KEY_LESSONS "Session 24" + TOOLS_AND_DATA. User-confirmed in
-  SameBoy: blue dragon → DarkDrium follower, all 4 directions perfect.*
-  **Delivered:**
-  - **Re-section:** `ScreenTransDataTable` @ `$01:$49DF` → labeled `dw` block
-    (`tools/resection_follower_gfx_table.py`; 231 entries `species+$10` + `FollowerFamilyGfxTable`
-    @ `$4BAD`; build still `1ca6579…`). `build_sprite_swap.py --kind follower --payload F.bin`
-    repoints + DMAs a 16-tile (256 B) self-contained literal stream.
-  - **Render engine reverse-engineered:** `SaveScr_40cd` @ `$04:$40cd` (GBC variant of ROM0
-    `$0d91`). Metasprite list of 4-byte **(dy, dx, tile_offset, attr)** entries, `$80`-term;
-    OAM tile = `tile_offset + [$ffc9]` (follower base `$20/$30/$40` per party slot); OAM attr
-    = `[$ffca] XOR attr` (X-flip bit5). 2-level table, sprite-type `$ffc7`(=`[$ca91]`) →
-    frame/dir `$ffc8`. Head-mirror = two entries sharing a tile_offset, one X-flipped.
-  - **OBJ transparency:** idx0 = HARDWARE-transparent for OBJ (battle BG used idx1 — opposite).
-    8 OBJ palettes @ `$17:$5615`.
-  - **118-layout library** (`tools/extract_follower_layouts.py` → `extracted/follower_layouts.json`):
-    76 non-sharing (disjoint down/up/side → any distinct art renders clean; 202 types) + 42
-    sharing (blob-only; 58 types). **Layout is per-monster, not universal** — this is why a
-    symmetric blob (clam/Healer) hides layout errors and a directional dragon exposes them.
-  - **Tooling:** `tools/follower_frame_picker.html` (drag 6 boxes, engine-accurate preview,
-    export coords/payload) + numbered-tile calibration ROM method (each VRAM tile shows its hex
-    index + flip-foot; `--palette` override = black digit / red foot for terrain legibility).
-  *Original plan (for reference):*
-  GFX-3 — Walking/follower sprite swap. Rides the Session-23 cross-bank backbone
-  (`dwm/sprite_bank.py` + `build_sprite_swap.py`), but via the FOLLOWER path. Prereqs now
-  known: (1) **re-section `ScreenTransDataTable` @ `$01:$49DF`** from mgbdis fake
-  instructions to a labeled `dw` block (byte-perfect, same job as the S22 battle gfx
-  table — preserve any cross-bank referenced labels), then `build_sprite_swap.py --kind
-  follower` can repoint it (the tool already has the follower table wired, gated until the
-  re-section lands); (2) the follower likely has its OWN palette table — find it the same
-  way GFX-2 found the battle one (SameBoy dump of the follower's palette slot + ROM grep);
-  (3) handle the **family-shared `$4bad` second DMA** (the B9-clamped 10-entry family GFX
-  table) — verify in SameBoy whether it overlaps the swapped walk frames. Follower = 16
-  tiles (`$383E` for Dracky); the 16-tile stream holds the full walk-animation frame set.
-
-- [x] **GFX-4 — Monster → follower-layout auto-map (completes GFX-3 automation).** ✅ DONE (Session 25)
-  *DONE Session 25 — see PROJECT_STATE "Session 25" + MONSTER_DATA "Monster → layout dispatch" +
-  KEY_LESSONS "Session 25" + TOOLS_AND_DATA. User-confirmed in SameBoy: Healer→Dragon clone and
-  Dracky→custom blue-dragon (imported art), correct all directions, consistent across overworld +
-  menu + library.*
-  **Delivered:**
-  - Level-1 layout tables LOCATED at fixed `$10:$407f` (species 0–127) / `$11:$407f` (species 128+),
-    indexed by species; per-species attr/palette table at `$10:$417f` / `$11:$412d` (bit6=Y-flip, bit5=X-flip, low3=OBJ palette). (`[$caca]` is the SPECIES,
-    not a "sprite-class" byte; bank `$05` is the ObjTest viewer path, not the follower path — both
-    pre-GFX-4 doc errors, corrected.)
-  - `tools/extract_monster_follower_layouts.py` + `extracted/monster_follower_layouts.json` (every
-    species → layout id + addresses + sharing). `--selftest` reproduces Healer/DarkDrium anchors and
-    confirms all 215 collectible species map.
-  - `extracted/follower_layouts.json` REGENERATED & REPLACED — **155 complete layouts** (old 118 dropped
-    the 3-entry small/blob layouts), canonical `$10/$11` addresses.
-  - **8 follower-art table copies** discovered (`$01 $06 $07 $09 $0b $12 $18 $59`); a consistent swap
-    must repoint all 8 (layout/attr are single/shared).
-  - `tools/build_follower_reassign.py` — reassignment primitive: clone layout+art+attr from another
-    same-bank monster, OR import custom 16-tile art (placed cross-bank, all-8-copies repointed) and set
-    layout (default layout 0) + palette. Builds focused test ROMs; clean build stays `1ca6579…`.
-  *Original plan (for reference):*
-  layouts** (`extracted/follower_layouts.json`). The one remaining link is which layout each
-  of the ~215 monsters uses, so the editor can (a) slice imported art into the correct tiles
-  automatically, and (b) reassign a monster to a clean non-sharing layout on demand.
-  **Known structure (from GFX-3):**
-  - Render path: `AdjustGateFloorIndex` (`$01`) sets `$ffc7 = [$ca91]`, base `$ffc9 =
-    $20/$30/$40`, calls `$0402` (`NPCSpriteLoadAlt`) → `SaveScr_40cd`.
-  - `$ffc7 = [$ca91] = GetActiveMonsterStatus` return = `$01` (if bit7 of `[$cb0b]`) else
-    `[$caca] + $10`. So a monster's layout is driven by its **sprite-class byte `[$caca]`**.
-  - The 118 layouts are the **level-2** frame-pointer tables (6 ptrs each: down/right/up × 2),
-    living in banks `$05`/`$10`/`$11`. A **level-1** table indexes them by `$ffc7`, with the
-    BANK chosen by `$ffc7` magnitude (`NPCInteractDispatch` routing: `<$10`→`$04`,
-    `$10–$8F`→`$10` (sub `$10`), `≥$90`→`$11` (sub `$90`)). Bank starts are code, so the
-    level-1 tables are NOT at `$4000` — they must be located.
-  - **TODO:** (1) locate the level-1 dispatch table(s) per bank; (2) extract each monster's
-    `[$caca]` sprite-class from the monster data table; (3) compose monster → `$ffc7` → layout
-    id; emit `extracted/monster_follower_layouts.json`; (4) wire into `follower_frame_picker.html`
-    + `build_sprite_swap.py` so imports default to a non-sharing layout and reassignment is a
-    same-size `[$caca]` edit. **Accept:** every monster maps to a layout; a distinct-art import
-    on any monster renders clean (matching the DarkDrium-dragon result).
+- [x] **GFX-1 — Sprite codec + gfx-table re-section** ✅ S22 — MonsterBattleGfxTable
+      $00:$2B9F re-sectioned (23 cross-refs preserved); dwm/sprite_codec.py (decode
+      byte-exact; decode(encode(x))==x on all 442 streams; round-trip is SEMANTIC by
+      design, not vanilla re-encode); extract_monster_sprites.py (all 221);
+      build_sprite_swap.py; Dracky→clam swap user-confirmed.
+      → MONSTER_DATA "Monster sprite graphics system"; KEY_LESSONS S22; archive: SESSION_HISTORY.
+- [x] **GFX-2 — Palettes + cross-bank sprite backbone** ✅ S23 — dwm/sprite_bank.py
+      overflow allocator ($7E,$7F then $7C,$7A,$79; resolver has no bank gating →
+      any of 221 monsters repointable); MonsterBattlePalettes @ $17:$62FD SOLVED
+      (was mislabeled RoomAttrDataBlocks; 8 B/species, loaded by $17 entry 6);
+      recolour = same-size 8-byte edit. User-confirmed (clam→Dracky purple + full
+      integration ROM). → MONSTER_DATA "Monster battle palette system"; KEY_LESSONS
+      S23; archive: SESSION_HISTORY Part 3.
+- [x] **GFX-3 — Follower/walking sprite swap** ✅ S24 — ScreenTransDataTable
+      $01:$49DF re-sectioned; metasprite render engine reversed (SaveScr_40cd:
+      4-byte dy,dx,tile_offset,attr entries, $80-term; OAM tile += $ffc9 base
+      $20/$30/$40; attr XOR $ffca; **OBJ idx0 = hardware-transparent** — opposite of
+      the battle BG path); 118-layout library + follower_frame_picker.html +
+      numbered-tile calibration method. User-confirmed all 4 directions.
+      → MONSTER_DATA "Follower / walking-sprite system"; KEY_LESSONS S24; archive: SESSION_HISTORY.
+- [x] **GFX-4 — Species→layout auto-map + custom-art import** ✅ S25 — level-1 layout
+      tables LOCATED at $10/$11:$407f (+ per-species attr tables $10:$417f/$11:$412d);
+      155 complete layouts (monster_follower_layouts.json); the **8 follower gfx-ID
+      table copies** discovered ($01 $06 $07 $09 $0b $12 $18 $59 — a swap repoints
+      ALL 8); build_follower_reassign.py (clone or custom-art import; reassignment =
+      level-1 repoint, NOT a [$caca] edit). User-confirmed across overworld+menu+library.
+      → MONSTER_DATA "Monster → layout dispatch"; KEY_LESSONS S25; archive: SESSION_HISTORY.
 
 Raw audio banks ($5A, $63…) stay LOW priority. **Graphics banks ($32–$3A are NO LONGER
 low-priority** — the monster sprite system there is editable and proven; see GFX-1/2/3 above.
@@ -896,17 +494,10 @@ Extends the `[~]` "re-section misassembled tables" item to the dialogue corpus; 
 text *format* is fully known (TEXT_SYSTEM.md) and the dumpers already locate every
 string, so this is mechanical + byte-perfect. Unlocks Layer-A vanilla-text edits and
 yields the E6 capacity numbers.
-- [x] **T1 — Re-section keystone (bank `$47`). DONE (S43, byte-perfect).**
-      `tools/resection_text_bank.py` converts a corpus bank's contiguous DTE string run
-      from mgbdis fake-instructions to `TextStr_<bank>_<addr>:` + `db` blocks (one label
-      per text id, decoded text in a comment), labels/comments only. Region from data
-      (first string addr `text_id_map.json`; end = bank trailing-fill scan); `R_start/R_end`
-      snapped to real line boundaries via a probe-build line→address map (same machinery as
-      `resection_library_tables.py`) so no fake instruction is split; emits exact ROM bytes.
-      Idempotent, re-runnable from clean tree. **bank `$47`: 69 strings, run `$4174-$5b74`,
-      5607 fake lines replaced; clean build stays `1ca6579…`, integrity PASS 4/4.** Method +
-      per-bank bounds in TEXT_SYSTEM.md "Source re-section". *Accept met:* bank reads as
-      labeled `db` with decoded comments; MD5 unchanged.
+- [x] **T1 — Text re-section keystone (bank `$47`)** ✅ S43 — resection_text_bank.py:
+      69 strings, run $4174–$5b74, 5607 fake lines → labeled `db` with decoded
+      comments; byte-perfect, idempotent, data-driven bounds.
+      → TEXT_SYSTEM "Source re-section"; TOOLS_AND_DATA; archive: SESSION_HISTORY.
 - [ ] **T2…Tn — Roll-out across `$42-$46, $48-$4B, $4E`** (one or two banks/session, same
       tool). *Accept:* each bank re-sectioned; MD5 stays `1ca6579…` after each.
 - [ ] **T-author — Edit/replace a vanilla string.** A tool that rewrites a vanilla text id's
@@ -921,43 +512,26 @@ Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, **222 entri
 The editor data side is captured in `extracted/skill_records.json`; the **presentation**
 layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SKILL_SYSTEM.md`
 §7–§10). Remaining RE: the full AI weighted-pick (S3). (S2c message format done + validated 2026-06-28; S2c-anim renderer reversed + emulator-verified 2026-06-28 — see §11.)
-- [x] **S1 — Skill data foundation + round-trip keystone (S44).** *Reshaped on audit:* the
-      bank `$52` function table was already re-sectioned, so the real work was the data tables.
-      Decoded + FAQ-validated `SkillMPCostTable` ($07:$570C) and `SkillLearnReqTable`
-      ($06:$50E0, incl. prereqs); `gen_skill_records.py` → `skill_records.json` (222 records,
-      `kind` = 155 skill / 37 item_effect / 30 internal, family-cut codes, monster/enemy usage);
-      `build_skill_tables.py --selftest` proves the function/MP/learn tables re-emit
-      **byte-identical**. Corrected bank `$52` header ($4211→$6CC7, 256→222, 140→115). Found id
-      215 "Sheldodge" = the **Bug-family cut**; renamed → "BugCut" in `patches/bank_041.asm`
-      (**SameBoy-confirmed**). Comment-only annotation of the two tables in `bank_006/007`
-      (flagged the `TilesetLookupTable` mislabel at `$570C`; rename + full `dw` re-section
-      deferred pending SameBoy confirmation of the `$56E8` fn role). MD5 unchanged; integrity PASS.
+- [x] **S1 — Skill data foundation** ✅ S44 — SkillMPCostTable ($07:$570C, renamed
+      S51) + SkillLearnReqTable ($06:$50E0) decoded + FAQ-validated;
+      skill_records.json (222 = 155 skill / 37 item_effect / 30 internal);
+      build_skill_tables.py --selftest byte-identical; BugCut (id 215 = the
+      Bug-family cut) proven 3 ways + renamed, SameBoy-confirmed; bank $52 header
+      corrected ($6CC7 / 222 / 115). → BATTLE_SKILL_SYSTEM; DOC_AUDIT #12–14;
+      archive: SESSION_HISTORY Part 3.
 - [~] **S2 — Custom skills (ARC, not a single item).** S45 marked this "done" off a
       narrow POC; corrected (S46). The arc:
-  - [x] **S2a — Alias EFFECTS POC (S45, SameBoy-confirmed).** Net-new ids $DE "Scorch"
-        (reuses Blaze handler) + $DF "Smite" (NEW handler, 80 dmg) on starter EID 1, via the
-        **skill-alias framework** (commit-time templatize to Blaze + `$db86` stash + `$db8a==0`
-        guard + `FarSkillFork`). Works in battle. **Narrow:** single custom-caster, Blaze-shaped
-        presentation only; enemy-real-Blaze edge case unclosed. `BATTLE_SKILL_SYSTEM.md` §1–§6.
-  - [x] **S2b — Presentation foundation + record round-trip keystone (S46, byte-neutral;
-        NOT yet user-tested).** Proved handler=effect TYPE (shared) / record=per-skill params.
-        Decoded the **record table** `$54:$4013`→`$41CF` (222×19B): field map FAQ-validated
-        (+0 effect_class, +1 effect_category, +2 target_mode, +3 ai_weight, +4 mp_cost,
-        +5 status_id, +6 damage_class, +11/+13/+15/+17 power min/range — 31/32 FAQ ranges exact).
-        `build_skill_tables.py --selftest` re-emits ptr table + data **byte-identical**; the 4218B
-        block **re-sectioned to `db`** in `bank_054.asm`. Decoded the **item-effect/meat** system
-        (`$52:$4625`, meat 194–198 → `$58:$591E`) and the **animation dispatch** (`$52:$5460–$54f8`
-        → `$dd6f`/`$dd70` → bank `$4c`/`$55`). MD5 unchanged, integrity PASS. `BATTLE_SKILL_SYSTEM.md` §7–§10.
-  - [x] **S2c — Effect-script MESSAGE format (RE, discovery). [2026-06-28]**
-        *Reframed on RE:* bank `$4c` is **not** a novel effect-bytecode interpreter — it is the
-        shared text VM, and the `$dd70/71` "pointer" is a **packed pair of message ids** (low=hit,
-        high=miss) resolved via the mode-0 two-level table at `$4c:$4019`. *Accept met +
-        validated:* Blaze `$b882` decoded to bytes (`$4c:529f` + `$4c:5871`); **67/67**
-        statically-resolved skills' messages cross-checked against the categorized FAQ
-        (`extracted/skill_faq.json`), 0 contradictions. Tool
-        `tools/decode_effect_messages.py` (`--selftest`, `--validate`) →
-        `extracted/effect_messages.json` (222 skills, 203 message ids). Format in
-        BATTLE_SKILL_SYSTEM.md §9.
+  - [x] **S2a — Alias EFFECTS POC** (S45, SameBoy-confirmed): net-new ids $DE Scorch /
+        $DF Smite via commit-time templatize-to-Blaze + $db86 stash + FarSkillFork.
+        Narrow (single caster, Blaze-shaped). → §1–§6; KEY_LESSONS S45; archive: SESSION_HISTORY.
+  - [x] **S2b — Record-table round-trip + presentation foundation** (S46,
+        byte-neutral): record table $54:$4013→$41CF (222×19B) decoded, FAQ-validated
+        field map, re-sectioned to `db` in bank_054; item-effect/meat system; animation
+        dispatch located. → §7–§10; archive: SESSION_HISTORY Part 3.
+  - [x] **S2c — Effect MESSAGE format** (S47): bank $4c is the shared text VM;
+        $dd70/71 = a packed hit/miss message-id PAIR (mode-0 two-level table
+        $4c:$4019); 67/67 statically-resolved skills FAQ-validated. Tool
+        decode_effect_messages.py → effect_messages.json. → §9; archive: SESSION_HISTORY.
   - [ ] **S2c-anim-cleanup — convert the verified battle-anim DATA tables to `db`/`dw` in the
         disassembly (label-only, byte-neutral). [OPEN — blocked on `$5f` map-script RE]** The
         anim tables (`$5f:$56ed/$57d5/$58bd/$58dd/$59c3/$5aa9`; `$5c/$5d/$5e` frame tables at
@@ -967,57 +541,42 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         script accessors first** to set correct boundaries, else risk mislabeling real scripts
         or absorbing them into anim tables (a silent error a passing MD5 won't catch). The
         `$5c/$5d/$5e` frame tables have the same code/data-interleave hazard.
-  - [x] **S2c-anim — Animation FORMAT / renderer (RE, discovery). [RENDERER REVERSED + EMULATOR-VERIFIED 2026-06-28]**
-        The `$dd68` renderer is a **metasprite/OAM engine** (same 4-byte `dy,dx,tile,attr`
-        $80-term format as the follower system). Full chain emulator-verified: skill id →
-        `$5f:$52F0` → side-select tables `$5f:$58dd/$59c3/$5aa9` → routine dispatch
-        `$5f:$5441` → routine table `$5f:$58bd` (index `$0d`=`$55cc`=`ret`=NO VISUAL) → sets
-        `$dd68` anim-type → builder `$5c:$40fc`/`$5d:$4122`/`$5e:$413a` (de=`$4071`, two-level
-        `[$c7]`anim/`[$c8]`frame → metasprites). **3 presentation layers** mapped: (1) sprite
-        anim, (2) sound+flash (`$56ed/$57d5`→`$da81`; heal chime, TatsuCall `$da83` blink),
-        (3) vertical screen-shake `$5f:$4c0c` (SCY via `$da84`/`$bb`). See §11. Tool:
-        `decode_battle_animations.py` → `extracted/battle_animations.json` (45 anims/~600 frames).
-        *Reuse* a known animation on a new id = table edit (`$58dd/$59c3/$5aa9`). *Authoring a
-        novel animation* = add metasprite frame lists + a `$4071`-table entry (now fully
-        specified; **remaining static-only:** per-bank table extent + tile-graphics VRAM source).
-  - [x] **S2d-audit — Skill-ID bucketing audit (de-aliasing FOUNDATION, RE/discovery). [S48, 2026-06-28]**
-        Byte-neutral. The prerequisite S45 skipped: a complete map of where the engine buckets the
-        working skill id (`$db8a`, 254 reads / 9 banks). **Surface reduces to a small verified fork
-        set** — 204 equality reads (max `$C5`, custom id matches none), 15 windowed range gates (fall
-        through to defaults), exhaustive enemy-AI `$57` pass (148 reads, ZERO mishandle a custom id;
-        high-id sub-dispatch guarded by `cp $d9; ret nc`). **Keystone = the record-table indexer
-        `$54:$4013` (3 sites `$5251/$5276/$529E`)**: one fork fixes magnitude/targeting/MP-in-record/
-        status/ai_weight + the AI. HW-confirmed (SameBoy): `$52:$66D9` writes `$db4c=$db8a`; `$535F`
-        divert is a minor path; menu Flee ≠ skill `$DB`. **Keystone fork PROVEN byte-neutrally
-        implementable** (5-byte `call Fork`+nop+nop trampoline, RGBDS-assembled + byte-executed,
-        in-bank tables in `$54`'s ~10550 free bytes). Other forks: MP (3 readers, mirror `record+4`),
-        sound (`$55:$4067`), name (repoint), anim (none for no-visual). Tool
-        `tools/map_skill_id_buckets.py` → `extracted/skill_id_bucket_map.json`. Full RE: **§12.**
-  - [x] **S2d — Proper per-id custom-skill records + PRESENTATION (skill #1 live). [S49, 2026-06-29, v32]**
-        Skill **MagicBurn (`$E0`)** ships non-aliased, end-to-end in SameBoy (user-confirmed):
-        own record (½ current MP → all foes), result text, **announcement**, **animation**,
-        **hit-flash**, **cast sound** — via clean dynamic indirection (own record/handler/name +
-        `AnnounceTemplateTable` slot + `$4c:$7326` message pool + `GetPresentId` presentation
-        proxy in `$5f`), no per-aspect hacks. Integrity PASS 4/4, byte-perfect. The earlier
-        "anim blocked on `$5f` cleanup" is **solved**. Full system + per-skill recipe:
-        **BATTLE_SKILL_SYSTEM.md §13**.
-  - [x] **S2e — Custom skill #2 (Tame `$E1`) — system GENERALIZES. [S50, 2026-06-30, user-confirmed]**
-    Recruit + anti-abuse damage (ATK/4), single-target. Built the reusable **custom-message
-    render fork** (`$FD`→per-skill pool string, `LoadB4c_Fork`; MagicBurn migrated onto it) and
-    the **presentation-timing** path (per-id anim-wait gate `$53:$5b07` + fixed frame delay
-    `wTameDelay` sequences note→hit; damage sound moved off the note onto the text). Full RE:
-    BATTLE_SKILL_SYSTEM §13.5 + §11.7; TEXT_SYSTEM ($FD fork); KEY_LESSONS (S50). **Deferred:**
-    Tame Stage 2 (revert meter crank $0640→$000A; 3 upgrade tiers via learn-chain fork bank $06;
-    make natural to Slime via a $03:$4461 slot). **Known minor defect:** per-enemy-sprite blink
-    unsolved (not wBGPalette/whole-screen, not OBP-only; likely an OAM visibility toggle — §11.7).
-  - [ ] **S2e-orig (superseded desc) — Custom skill #2 (prove the system generalizes).** Add a skill of a
-        DIFFERENT shape than MagicBurn to stress parts skill #1 didn't: a **non-damage** skill
-        (ally heal, a buff, or a status effect) and/or a **single-target** one. *Accept:* it
-        works in SameBoy with its own record/handler/name/announce/presentation, no aliasing.
-        **SHOVEL-READY:** follow the 5-step recipe in **§13.4** — each layer is a one-line edit;
-        nothing is rebuilt. Watch the two open follow-ups in §13.4 (custom-id skill-NAME insert
-        for name-inserting announce templates; a 2nd bespoke-message render path beyond `$FD`) —
-        a heal that reuses a self-contained stock announce template hits neither.
+  - [x] **S2c-anim — Animation renderer reversed** (S47, emulator-verified): $dd68 is
+        a metasprite/OAM engine; full chain skill id → $5f:$52F0 → side tables
+        $58dd/$59c3/$5aa9 → routine table $58bd ($0d = no visual) → builders
+        $5c/$5d/$5e; 3 presentation layers (sprite anim, sound+flash, SCY shake).
+        Tool decode_battle_animations.py → battle_animations.json (45 anims).
+        → §11; archive: SESSION_HISTORY Part 3.
+  - [x] **S2d-audit — Skill-id bucketing map** (S48, byte-neutral): $db8a, 254 reads /
+        9 banks → reduces to a small verified fork set; keystone = the record indexer
+        $54:$4013 (3 sites — one fork fixes magnitude/targeting/MP/status/ai_weight +
+        the enemy AI). Tool map_skill_id_buckets.py (self-checking).
+        → §12; KEY_LESSONS S48; archive: SESSION_HISTORY Part 3.
+  - [x] **S2d — Skill #1 MagicBurn ($E0)** (S49, user-confirmed): non-aliased,
+        end-to-end — own record/handler/name + announce + animation + hit-flash +
+        cast sound via clean indirection (AnnounceTemplateTable slot, $4c:$7326
+        message pool, GetPresentId proxy in $5f). Per-skill recipe: **§13**.
+        → KEY_LESSONS S49; archive: SESSION_HISTORY Part 3.
+  - [x] **S2e — Skill #2 Tame ($E1)** (S50, user-confirmed): recruit + anti-abuse
+        damage (ATK/4), single-target. New reusable infra: custom-message render fork
+        ($FD → per-skill pool string) + presentation timing (note→hit sequencing).
+        → §13.5 + §11.7; TEXT_SYSTEM ($FD fork); KEY_LESSONS S50; archive:
+        SESSION_HISTORY Part 3. **Follow-ups split out as the next three boxes.**
+  - [ ] **⚠️ Tame Stage 2 / SKILL EVOLVE (own session — flagged S51).** The S50 TEST
+        CRANK is **LIVE in the canonical patched build**: `patches/bank_072.asm` (+
+        the `$0640` mirrors in `patches/bank_052.asm`) max the meat meter in ONE cast.
+        This session does: (1) revert crank `$0640` → `$000A` (Beef Jerky tier);
+        (2) the 3 upgrade tiers via a learn-chain fork (bank `$06`
+        SkillLearnReqTable path); (3) make Tame natural to Slime (a `$03:$4461`
+        natural-skill slot). *Accept:* meter behaves per the FAQ meat tiers; tiers
+        learnable in sequence; Slime learns Tame naturally; SameBoy sign-off.
+  - [ ] **§13.4 follow-ups** — (a) custom-id skill-NAME insert so name-inserting
+        announce templates work for ids ≥ $DE; (b) a 2nd bespoke-message render path
+        beyond the single `$FD` escape. *Accept:* a custom skill using a
+        name-inserting stock announce template renders correctly. → §13.4.
+  - [ ] **(optional polish) Per-enemy hit-blink** — the enemy-sprite blink toggle is
+        unlocated (not wBGPalette/whole-screen, not OBP-only; likely an OAM
+        visibility toggle). → §11.7.
   - [ ] **S2f — FIELD-cast custom skill (e.g. teleport/warp).** A different code path the
         battle foundation (§13) doesn't touch yet — genuinely new groundwork. *Accept:* a custom
         field skill (warp) fires from the field menu in SameBoy.
@@ -1046,9 +605,11 @@ e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block a
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
 
-**Recommended order:** T1 ✅ → S1 ✅ → S2a ✅ → S2b ✅ (S46) → S2c-msg ✅ → S2c-anim ✅ → S2d-audit ✅ (S48) → S2d ✅ (S49, skill #1 live) → **S2e** (next — custom skill #2) / S2f (field skill) / S3 → S4 → M1 → M2 → M3 / T2-roll-out,
-slotting the text roll-out into spare sessions. Cheap high-confidence wins early; fire the
-two RE discovery sessions (M1, S3) before their authoring items depend on them.
+**Recommended order:** T1 ✅ → S1 ✅ → S2a–S2e ✅ (two custom skills live) →
+**⚠️ Tame Stage 2** (next — the TEST CRANK must come out of patches/) → S2f (field
+skill) / S3 → S4 → M1 → M2 → M3 / T2 roll-out, slotting text roll-out into spare
+sessions. Fire the two RE discovery sessions (M1, S3) before their authoring items
+depend on them.
 
 ---
 
@@ -1059,118 +620,36 @@ loader, vanilla 0–220 byte-identical** (full detail in MONSTER_DATA "Species I
 geography"). Species id is a byte → first free id **224 (`$E0`)**, budget **32**.
 Beyond 32 needs 16-bit ids everywhere (avoid).
 
-- [x] **N1 — Scope / RE + slot map (DONE, Session 28).** `tools/map_species_slots.py`
-      + `extracted/species_slot_map.json` (256-slot map, self-checking). Verified:
-      single indexers (info `$03:SaveMon_4446` ×43, enemy-stats `$14:LoadEnemyStats`
-      ×25 with 16-bit EID); slot geography (215–219 special, 220–223 empty, 224–255
-      free); the 4 hand-decoded top-range `cp`-ladder sites (flagged for N6 — since
-      RESOLVED as `$db8a` skill/effect gates, NOT species gates) vs ~40 false-positive
-      `cp $dd` hits. No bytes changed; integrity PASS 4/4.
-- [x] **N2 — Info-table fork (keystone). DONE (S29 impl, S30 verified + made reproducible).**
-      `SaveMon_4446`/`label443f` forked zero-shift (id ≥ 224 → bank `$6A` high table via
-      `ld hl,$6a00; rst $10`); `MonsterInfoTable` stays pinned at `$4461`, ids 0–220
-      byte-identical (only the 2 B6 family-byte reassigns differ). Authored by
-      `tools/build_new_species.py` (`extracted/new_species.json` → `patches/bank_06a.asm`),
-      byte-exact round-trip validated. Gorbunok (id 224 = Dracky info, family→Slime).
-      *Accept met:* id 224 loads correct 43 B; clean build `1ca6579…`; SameBoy-confirmed
-      (S30: caught, correct Slime-family stats).
-- [x] **N3 — Enemy-stats. DONE (no fork needed).** EID is 16-bit, so a new entry placed in
-      bank `$14` trailing free at EID×25+`$4C1D` is read by vanilla `LoadEnemyStats` with no
-      code change. EID 518 → `$14:$7EB3` (Slime EID 2 clone, monster_id→224). Tool
-      `build_new_species.py` → `patches/bank_014.asm`. SameBoy-confirmed (S30: fightable/
-      catchable). Wild-encounter wiring: same-size `EncounterPoolData` edit (pool 0 slot 3 =
-      EID 518 wt 1), tool-owned in `patches/bank_001.asm` (S30 — was a hand-edit before).
-- [x] **N4 — Sprite + palette. DONE (user-confirmed v7).** Tool
-      `tools/build_new_species_follower.py` builds a standalone test ROM (patches/ untouched,
-      clean build stays byte-perfect) giving id 224 a real follower + battle sprite + palettes:
-      • **Follower art:** all **8** gfx-ID copies forked byte-neutral to a real overflow stream
-        (`$7e00`); the overworld loader `GetActiveMonsterStatus` ($01) clamp narrowed `cp $e0`→`cp $e1`
-        so id 224 reaches the fork (the placeholder clamp had pinned it to DarkDrium).
-      • **Follower layout:** level-1 slot `$11:$413f` → Armorpion's layout-0 level-2 `$4184` (proven
-        upright, matches `pack_png_layout0`).
-      • **Follower attr (palette + flip):** the per-species attr read (`HramUnk11_406e`) overshoots its
-        87-entry table into live layout data at `$418d=$41` — bit6 was a stray **Y-flip** (upside-down
-        tiles) and low3=1 the **green** palette. Forked the read (`$11:$406e`→`$792d`) to hand id 224 a
-        clean attr (no flip, OBJ palette 2 = blue). Both cosmetic bugs were this one overshoot byte.
-      • **Battle:** gfx `$00:$2d5f` `$320f`→`$7e01`; palette reader `label17_41d0` forked (resolver
-        `$17:$6ce0`) to a custom blue palette. (Full mechanism: MONSTER_DATA.md "NEW species followers".)
-      **Follow-up status:** the **FOLLOWER half is now baked into `patches/*.asm`** — Milestone **G1,
-      DONE (S34, user-playtested OK, all 4 directions).** id-indexed (content-sized) gfx-ID tables in all
-      8 banks, layout slot, attr fork, clamp; new `patches/bank_011/059/07e.asm` + tool
-      `tools/bake_follower_overflow.py`; in verify_integrity PATCH lists; integrity PASS 4/4.
-      Orientation fixed at root: art stored **un-flipped** (no `--flip-y`), clean-attr mask **`$B8`**
-      (preserves the engine's bit5 X-flip for LEFT). The **BATTLE half is now baked too** — Milestone
-      **G2, DONE (this session).** Battle gfx `$00:$2d5f` `$320f`→`$7e01` (a **same-size 2-byte repoint**,
-      no fork: the species-indexed gfx table `$2b9f` has a real padding slot for id 224, unlike the
-      follower tables that overshoot); the dragon battle pose packed as a 2nd overflow entry
-      (`Battle_sp224` @ `$7e01`, follower stays `$7e00`) by the extended `tools/bake_follower_overflow.py`
-      (`--battle-art/--battle-spec`); battle palette reader `label17_41d0` forked byte-neutral to
-      `HighBattlePal` in bank `$17` filler tail (id≥224 → custom blue palette `67 4d ff 6b ff 7f 00 00`,
-      else vanilla `$62fd+species*8`). New `examples/follower_swap/gorbunok_battle.json`; bank `$000/017/07e`
-      in verify_integrity PATCH lists already; integrity PASS 4/4, user-playtested OK. (Full mechanism:
-      MONSTER_DATA.md "NEW species battle sprite".)  **Remaining new-species item → G3:** new_species.json
-      schema fold.
-- [x] **N5 — Name + joinability + breeding/library wiring. DONE (S32, user-tested).** Name
-      DONE ("Gorbunok" @ `$41:$7E46`). Library DONE + reproducible. Joinability via EID 2 clone.
-      **Breeding now DONE — all three paths, user-confirmed:**
-      - **Result-path:** Snaily(4) × BattleRex(42) → Gorbunok, a verified-free cross (no special,
-        no family default) appended in `extracted/breeding_special.json`. `build_breeding.py`
-        extended to admit a declared new-species id (>220) as a recipe result. Bank `$69`.
-      - **Parent-path:** works with zero new code — breeding loads parent family via the forked
-        `$0301` loader, so Gorbunok resolves to its Slime family `$F0`. Verified by simulation +
-        user playtest (Funkybird×Gorbunok→Picky, Dran×Gorbunok→DragonKid, Gorbunok×Funkybird→
-        Healer, AntEater×Gorbunok→Tonguella, Gorbunok×AntEater→SpotSlime).
-      - **Display-path:** `FamilyRecipeResolve` (`patches/bank_016.asm`) returns the parent pair
-        `db $04,$2a` so the encyclopedia shows the Snaily+BattleRex icons.
-      - **Hatch:** crashed on the first build — bank `$0b` follower-gfx copy overshot for id 224
-        (user pinned via SameBoy breakpoint `$0b:$48ac`). Fixed with `FollowerArtResolve0b`
-        (`patches/bank_00b.asm`), same byte-neutral pattern as `$07/$09/$18`.
-      - **Default-nickname / "take X with you" narration:** both used the 2-letter `FamilyCode`
-        short-name table (`$4739`, 215 entries) which overshot for id 224 into `ItemName[9]` =
-        "SkyBell". Fixed via `LoadModeBaseRedirect` (16 bytes in the `$00F0` ROM0 padding,
-        `patches/bank_000.asm`): mode-7 lookups for id≥224 redirect to a new-species SHORT-name
-        entry (first 4 letters, "Gorb") at bank `$41` tail (`$7FF9`). Generic (no per-monster
-        handcoding); gated on `$4739` so all other text is byte-identical.
-      - **[x] SUB-ITEM (DONE, S38 — user-confirmed in SameBoy):** library/encyclopedia lineage
-        showed parent *icons* correctly but "?????" next to each instead of "Snaily"/"BattleRex".
-        Root cause (S32): the parent-name line is rendered via `LoadItem_6456` (`$12:$6456`) → bank
-        `$4d` entry 2, **mode 0 = line 1** (`$4d:$400b`), indexed by the **offspring** id; slot 224
-        held the vanilla shared "?????    ?????" placeholder @ `$53C4` (256-entry table, NOT an
-        overshoot — un-authored slot, shared with 220/225). **FIX (S38):** first verified from clean
-        source that the lineage path routes through the fork (bank `$4d` entry 2 = `call SetB4d_43b9`
-        → `HighDetailTextFork` → `HighModeTable4D` for id≥224), then wired `HighModeTable4D` mode-0 →
-        new `HighMode0Ptrs` → `GorbunokRecipeLine` (`patches/bank_04d.asm`). **Also corrected a
-        latent format bug** in the S32-staged string: real recipe lines use TWO fixed 9-char fields
-        (e.g. slot 200 "Servant  GreatDrak", slot 214 "DeathMoreWatabou"), so the single-spaced
-        staged string would have mis-columned parent 2 — rebuilt as `"Snaily   BattleRex"` (names
-        sym-verified vs `MonsterNamePtrTable $41:$4339`). id≥224-gated → ids 0–223 byte-identical;
-        built-ROM check `[mode0base+224*2] → GorbunokRecipeLine` → "Snaily   BattleRex". Test ROM
-        `DWM-lineage-fix-v1.gbc`. Breeding itself unaffected. **Phase N now has only G3 open.**
-- [x] **N6 — Top-range gates verified (DONE, S31): NOT species gates → no patch.**
-      `bank_05f/057/058/052` all branch on `$db8a`, which is a battle skill/effect/
-      animation id (written only from constants + skill tables), never a species byte.
-      A new species 224 cannot reach them, so they were false positives in the S28
-      slot-map. Phase N requires no species-gate patch. (Detail in MONSTER_DATA.md
-      "Species ID geography" → N6; DOC_AUDIT.md.)
-
-> **S29 progress (stage1ac / Gorbunok id 224 track).** The **encyclopedia DETAIL page
-> freeze** — the last blocker for the new-species *display* feature set — is FIXED
-> (`TEXT_SYSTEM.md`): the text engine's mode×species double indirection
-> (`SaveBankAndSwitch $092F`) overshot the 215-entry line-2 description table at
-> `$4D:$420B`. Forked via `HighDetailTextFork` (`patches/bank_04d.asm`). Also fixed the
-> independent 222-entry `FamilyRecipeTable` overshoot (`FamilyRecipeResolve`,
-> `patches/bank_016.asm`). Detail page user-confirmed clean (mirrors Dracky), ROM
-> `DWM-Gorbunok-stage1ac-v16.gbc`. Every species-indexed table and its overshoot status
-> is now catalogued in `MONSTER_DATA.md` (Species ID geography).
->
-> **Next steps / deferred (next session):**
-> 1. **Custom Gorbunok sprite + palette** (the N4 work) — currently a DarkDrium
->    placeholder (`MonsterBattleGfxTable[224]=$320F`); follower sprite also deferred.
-> 2. **Bespoke Gorbunok description string** — line 2 currently reuses Dracky's
->    (`$60BC`) as a valid placeholder; author a real string (needs font-glyph encoding
->    like the name) and point `HighLine2Ptrs[0]` at it.
-> 3. **Optional: make Gorbunok breedable** — wild-only today (recipe = `$FF,$FF`); both
->    the result-path (`SpecialRecipeTable` append) and parent-path (extend
->    `FamilyRecipeResolve`) are documented in `BREEDING_SYSTEM.md`.
-> 4. **Re-check N4/N5/N6 formal acceptance** against the stage1ac implementation and
->    tick the boxes whose acceptance tests are now met.
+- [x] **N1 — Scope + slot map** (S28): 256-slot species map (map_species_slots.py,
+      self-checking); single indexers verified; slot geography 215–219 special /
+      220–223 empty / 224–255 free. → MONSTER_DATA "Species ID geography"; archive: SESSION_HISTORY.
+- [x] **N2 — Info-table fork (keystone)** (S29/S30, SameBoy-confirmed): SaveMon_4446
+      forked zero-shift, id≥224 → bank $6A high table; ids 0–220 byte-identical;
+      tool-owned (build_new_species.py ← new_species.json). → MONSTER_DATA; archive: SESSION_HISTORY.
+- [x] **N3 — Enemy stats: NO fork needed** (16-bit EID; EID 518 @ $14:$7EB3, bank
+      trailing free); wild-encounter wiring tool-owned (same-size EncounterPoolData
+      edit, validates the slot was empty). SameBoy-confirmed. → MONSTER_DATA; archive: SESSION_HISTORY.
+- [x] **N4 — Sprite + palette, BAKED** — follower half = **G1** (S34: all-8-copy
+      gfx-ID fork, attr-overshoot fixed at root, clean-attr mask $B8, art stored
+      un-flipped); battle half = **G2** (S35: $2b9f same-size repoint → $7e01;
+      HighBattlePal fork in $17 filler tail). User-playtested OK.
+      → MONSTER_DATA "NEW species followers" / "NEW species battle sprite";
+      KEY_LESSONS S35; archive: SESSION_HISTORY Part 3.
+- [x] **N5 — Name / joinability / breeding / library wiring** — DONE S32,
+      user-tested: all 3 breeding paths (result append; parent via the forked $0301
+      loader; display via FamilyRecipeResolve); hatch crash fixed
+      (FollowerArtResolve0b, bank $0b); default-nickname/narration overshoot fixed
+      (LoadModeBaseRedirect @ ROM0 $00F0 → short-name "Gorb" @ $41:$7FF9). Lineage
+      parent-name line fixed S38 (HighModeTable4D mode-0 → "Snaily   BattleRex",
+      two fixed 9-char fields). → BREEDING_SYSTEM; MONSTER_DATA; TEXT_SYSTEM;
+      archive: SESSION_HISTORY Part 3.
+- [x] **N6 — Top-range gates: NOT species gates** (S31): the 4 cp-ladder sites branch
+      on $db8a (a skill/effect id, never a species byte) — false positives; no patch.
+      → MONSTER_DATA "Species ID geography" N6; DOC_AUDIT; archive: SESSION_HISTORY.
+- [ ] **G3 — new_species.json schema fold (the last open new-species item).** One
+      JSON drives EVERY Gorbunok artifact (info, enemy stats, encounter, name,
+      short-name, library, breeding, **the real description string** — line 2 still
+      reuses Dracky's $60BC placeholder — and the art hooks) through
+      build_new_species.py; reproducible from the clean tree. *Accept:* rebuilding
+      from the JSON alone reproduces the current baked state byte-for-byte; the
+      hand-staged pieces are deleted.

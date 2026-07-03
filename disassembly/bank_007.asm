@@ -10,7 +10,7 @@ SECTION "ROM Bank $007", ROMX[$4000], BANK[$7]
     dw label7_4009
     dw label7_6456
     dw label7_6468
-    dw LoadFld_56e8
+    dw GetSkillMPCost
 
 label7_4009:
     ld a, [$c90d]
@@ -3266,7 +3266,7 @@ jr_007_559c:
     ld h, a
     ld e, [hl]
     ld d, $00
-    call LoadFld_56e8
+    call GetSkillMPCost
     ld c, e
     ld b, d
     ld a, e
@@ -3464,7 +3464,7 @@ jr_007_56a3:
     ret
 
 
-LoadFld_56e8:
+GetSkillMPCost:
 ; $07:$56E8 GetSkillMPCost. id in `de`; special-cases $70 (gender remap via $cacc),
 ; then hl=$570C+2*id reads the u16 MP. One of THREE $570C readers (also $5A98/$5B4E,
 ; afford/deduct). All overshoot at >= $DE. MP is mirrored: $570C[id] == record+4
@@ -3489,10 +3489,10 @@ jr_007_56fd:
     ld h, d
     add hl, hl
     ld a, l
-    add LOW(TilesetLookupTable)
+    add LOW(SkillMPCostTable)
     ld l, a
     ld a, h
-    adc HIGH(TilesetLookupTable)
+    adc HIGH(SkillMPCostTable)
     ld h, a
     ld e, [hl]
     inc hl
@@ -3504,422 +3504,240 @@ jr_007_56fd:
 ; SkillMPCostTable  ($07:$570C .. $58C8) — 222 x u16 LE = MP cost to CAST each
 ; skill, in skill-id order. 999 ($03E7) = "All MP" (id 50 Farewell, 102 MegaMagic).
 ; Verified vs the FAQ for 40+ skills incl. both 999 sentinels at ids 50 / 102.
-; MISLABEL: the label below ('TilesetLookupTable') is WRONG — these bytes are skill
+; RENAMED (S51): was mgbdis-mislabeled 'TilesetLookupTable' — the bytes are skill
 ; MP costs, not tileset pointers (values 2,4,10,… are far too small for addresses).
-; The indexing fn at $56E8 acts as GetSkillMPCost: its id-$70 (=112 Ahhh) special
-; case, gated on [$cacc]&1, picks Ahhh's male/female MP (1/2). Label + fn name kept
-; AS-IS pending SameBoy confirmation of the fn's callers — do NOT trust 'Tileset'.
+; The indexing fn GetSkillMPCost ($56E8, was LoadFld_56e8) special-cases id $70
+; (=112 Ahhh), gated on [$cacc]&1, picking Ahhh's male/female MP (1/2). Role
+; confirmed live: S48 mapped all 3 MP readers ($56E8/$5A98/$5B4E) and the S49
+; MagicBurn custom-skill MP path exercises this table in SameBoy.
 ; Decoded by tools/gen_skill_records.py; round-trip proven by build_skill_tables.py.
 ; -----------------------------------------------------------------------------
-TilesetLookupTable:
-    ld [bc], a
-    nop
-    inc b
-    nop
-    ld a, [bc]
-    nop
-    inc b
-    nop
-    ld b, $00
-    ld a, [bc]
-    nop
-    dec b
-    nop
-    ld [$0f00], sp
-    nop
-    ld [bc], a
-    nop
-    inc b
-    nop
-    ld [$0300], sp
-    nop
-    dec b
-    nop
-    inc c
-    nop
-    dec b
-    nop
-    ld a, [bc]
-    nop
-    rrca
-    nop
-    inc b
-    nop
-    rlca
-    nop
-    ld bc, $0300
-    nop
-    dec b
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    dec b
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    inc bc
-    nop
-    inc b
-    nop
-    ld [bc], a
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc b
-    nop
-    ld [bc], a
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    ld b, $00
-    inc bc
-    nop
-    inc b
-    nop
-    inc b
-    nop
-    dec b
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    dec b
-    nop
-    rlca
-    nop
-    ld [de], a
-    nop
-    inc h
-    nop
-    ld a, [bc]
-    nop
-    inc d
-    nop
-    rst $20
-    inc bc
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    inc d
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld bc, Boot
-    nop
-    ld bc, $0300
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    dec b
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc d
-    nop
-    inc bc
-    nop
-    ld b, $00
-    inc b
-    nop
-    ld [$0000], sp
-    nop
-    ld [bc], a
-    nop
-    inc bc
-    nop
-    dec b
-    nop
-    inc bc
-    nop
-    ld b, $00
-    inc bc
-    nop
-    dec b
-    nop
-    ld [bc], a
-    nop
-    inc b
-    nop
-    ld [$1000], sp
-    nop
-    ld [bc], a
-    nop
-    inc b
-    nop
-    ld [$1000], sp
-    nop
-    add hl, de
-    nop
-    ld e, $00
-    rst $20
-    inc bc
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc b
-    nop
-    inc bc
-    nop
-    inc b
-    nop
-    inc b
-    nop
-    inc bc
-    nop
-    ld bc, CopyDE2HL_0600
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0200
-    nop
-    ld [bc], a
-    nop
-    inc b
-    nop
-    ld bc, $0300
-    nop
-    inc bc
-    nop
-    nop
-    nop
-    inc b
-    nop
-    rlca
-    nop
-    rlca
-    nop
-    rlca
-    nop
-    ld [$1400], sp
-    nop
-    inc d
-    nop
-    inc d
-    nop
-    inc d
-    nop
-    ld [bc], a
-    nop
-    inc b
-    nop
-    ld b, $00
-    ld a, [bc]
-    nop
-    inc b
-    nop
-    nop
-    nop
-    inc bc
-    nop
-    ld [bc], a
-    nop
-    inc bc
-    nop
-    ld b, $00
-    ld b, $00
-    ld [$0c00], sp
-    nop
-    inc d
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    add hl, bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc bc
-    nop
-    inc d
-    nop
-    dec b
-    nop
-    nop
-    nop
-    ld [bc], a
-    nop
-    ld [bc], a
-    nop
+SkillMPCostTable:  ; $07:$570C — 222 x u16 LE MP cost, skill-id order; $03E7 (999) = "All MP".
+;   Decoded S44 (gen_skill_records.py), FAQ-validated; round-trip proven by
+;   build_skill_tables.py --selftest. Re-sectioned S51 (probe-build; byte-perfect).
+;   Read by GetSkillMPCost ($56E8) and the two other MP readers mapped in S48.
+    dw $0002  ; $00 Blaze (MP 2, skill)
+    dw $0004  ; $01 Blazemore (MP 4, skill)
+    dw $000a  ; $02 Blazemost (MP 10, skill)
+    dw $0004  ; $03 Firebal (MP 4, skill)
+    dw $0006  ; $04 Firebane (MP 6, skill)
+    dw $000a  ; $05 Firebolt (MP 10, skill)
+    dw $0005  ; $06 Bang (MP 5, skill)
+    dw $0008  ; $07 Boom (MP 8, skill)
+    dw $000f  ; $08 Explodet (MP 15, skill)
+    dw $0002  ; $09 Infernos (MP 2, skill)
+    dw $0004  ; $0a Infermore (MP 4, skill)
+    dw $0008  ; $0b Infermost (MP 8, skill)
+    dw $0003  ; $0c IceBolt (MP 3, skill)
+    dw $0005  ; $0d SnowStorm (MP 5, skill)
+    dw $000c  ; $0e Blizzard (MP 12, skill)
+    dw $0005  ; $0f Bolt (MP 5, skill)
+    dw $000a  ; $10 Zap (MP 10, skill)
+    dw $000f  ; $11 Thordain (MP 15, skill)
+    dw $0004  ; $12 Beat (MP 4, skill)
+    dw $0007  ; $13 Defeat (MP 7, skill)
+    dw $0001  ; $14 Sacrifice (MP 1, skill)
+    dw $0003  ; $15 Sleep (MP 3, skill)
+    dw $0005  ; $16 SleepAll (MP 5, skill)
+    dw $0003  ; $17 StopSpell (MP 3, skill)
+    dw $0003  ; $18 Surround (MP 3, skill)
+    dw $0005  ; $19 PanicAll (MP 5, skill)
+    dw $0000  ; $1a RobMagic (MP 0, skill)
+    dw $0002  ; $1b TakeMagic (MP 2, skill)
+    dw $0003  ; $1c Sap (MP 3, skill)
+    dw $0004  ; $1d Defence (MP 4, skill)
+    dw $0002  ; $1e Upper (MP 2, skill)
+    dw $0003  ; $1f Increase (MP 3, skill)
+    dw $0003  ; $20 Slow (MP 3, skill)
+    dw $0004  ; $21 SlowAll (MP 4, skill)
+    dw $0002  ; $22 Speed (MP 2, skill)
+    dw $0003  ; $23 SpeedUp (MP 3, skill)
+    dw $0003  ; $24 Barrier (MP 3, skill)
+    dw $0006  ; $25 TwinHits (MP 6, skill)
+    dw $0003  ; $26 MagicWall (MP 3, skill)
+    dw $0004  ; $27 MagicBack (MP 4, skill)
+    dw $0004  ; $28 Bounce (MP 4, skill)
+    dw $0005  ; $29 Transform (MP 5, skill)
+    dw $0002  ; $2a Ironize (MP 2, skill)
+    dw $0002  ; $2b Heal (MP 2, skill)
+    dw $0005  ; $2c HealMore (MP 5, skill)
+    dw $0007  ; $2d HealAll (MP 7, skill)
+    dw $0012  ; $2e HealUs (MP 18, skill)
+    dw $0024  ; $2f HealUsAll (MP 36, skill)
+    dw $000a  ; $30 Vivify (MP 10, skill)
+    dw $0014  ; $31 Revive (MP 20, skill)
+    dw $03e7  ; $32 Farewell (MP ALL, skill)
+    dw $0002  ; $33 Antidote (MP 2, skill)
+    dw $0002  ; $34 NumbOff (MP 2, skill)
+    dw $0002  ; $35 DeChaos (MP 2, skill)
+    dw $0002  ; $36 CurseOff (MP 2, skill)
+    dw $0002  ; $37 StepGuard (MP 2, skill)
+    dw $0002  ; $38 MapMagic (MP 2, skill)
+    dw $0014  ; $39 Chance (MP 20, skill)
+    dw $0000  ; $3a Attack (MP 0, internal)
+    dw $0002  ; $3b TwinSlash (MP 2, skill)
+    dw $0001  ; $3c Ramming (MP 1, skill)
+    dw $0001  ; $3d Beserker (MP 1, skill)
+    dw $0001  ; $3e Kamikaze (MP 1, skill)
+    dw $0003  ; $3f Massacre (MP 3, skill)
+    dw $0003  ; $40 EvilSlash (MP 3, skill)
+    dw $0000  ; $41 ChargeUP (MP 0, skill)
+    dw $0005  ; $42 HighJump (MP 5, skill)
+    dw $0000  ; $43 SuckAir (MP 0, skill)
+    dw $0003  ; $44 FireSlash (MP 3, skill)
+    dw $0003  ; $45 BoltSlash (MP 3, skill)
+    dw $0003  ; $46 VacuSlash (MP 3, skill)
+    dw $0003  ; $47 IceSlash (MP 3, skill)
+    dw $0003  ; $48 MetalCut (MP 3, skill)
+    dw $0003  ; $49 DrakSlash (MP 3, skill)
+    dw $0003  ; $4a BeastCut (MP 3, skill)
+    dw $0003  ; $4b BirdBlow (MP 3, skill)
+    dw $0003  ; $4c DevilCut (MP 3, skill)
+    dw $0003  ; $4d ZombieCut (MP 3, skill)
+    dw $0003  ; $4e CleanCut (MP 3, skill)
+    dw $0014  ; $4f MultiCut (MP 20, skill)
+    dw $0003  ; $50 BiAttack (MP 3, skill)
+    dw $0006  ; $51 QuadHits (MP 6, skill)
+    dw $0004  ; $52 CallHelp (MP 4, skill)
+    dw $0008  ; $53 YellHelp (MP 8, skill)
+    dw $0000  ; $54 Focus (MP 0, skill)
+    dw $0002  ; $55 SquallHit (MP 2, skill)
+    dw $0003  ; $56 PsycheUp (MP 3, skill)
+    dw $0005  ; $57 RainSlash (MP 5, skill)
+    dw $0003  ; $58 WindBeast (MP 3, skill)
+    dw $0006  ; $59 Vacuum (MP 6, skill)
+    dw $0003  ; $5a Lightning (MP 3, skill)
+    dw $0005  ; $5b RockThrow (MP 5, skill)
+    dw $0002  ; $5c FireAir (MP 2, skill)
+    dw $0004  ; $5d BlazeAir (MP 4, skill)
+    dw $0008  ; $5e Scorching (MP 8, skill)
+    dw $0010  ; $5f WhiteFire (MP 16, skill)
+    dw $0002  ; $60 FrigidAir (MP 2, skill)
+    dw $0004  ; $61 IceAir (MP 4, skill)
+    dw $0008  ; $62 IceStorm (MP 8, skill)
+    dw $0010  ; $63 WhiteAir (MP 16, skill)
+    dw $0019  ; $64 Hellblast (MP 25, skill)
+    dw $001e  ; $65 BigBang (MP 30, skill)
+    dw $03e7  ; $66 MegaMagic (MP ALL, skill)
+    dw $0002  ; $67 PoisonHit (MP 2, skill)
+    dw $0002  ; $68 NapAttack (MP 2, skill)
+    dw $0003  ; $69 Paralyze (MP 3, skill)
+    dw $0003  ; $6a SleepAir (MP 3, skill)
+    dw $0004  ; $6b PalsyAir (MP 4, skill)
+    dw $0003  ; $6c PoisonGas (MP 3, skill)
+    dw $0004  ; $6d PoisonAir (MP 4, skill)
+    dw $0004  ; $6e PaniDance (MP 4, skill)
+    dw $0003  ; $6f Curse (MP 3, skill)
+    dw $0001  ; $70 Ahhh (MP 1, skill)
+    dw $0006  ; $71 K.O.Dance (MP 6, skill)
+    dw $0002  ; $72 SandStorm (MP 2, skill)
+    dw $0002  ; $73 Radiant (MP 2, skill)
+    dw $0002  ; $74 EerieLite (MP 2, skill)
+    dw $0000  ; $75 OddDance (MP 0, skill)
+    dw $0000  ; $76 RobDance (MP 0, skill)
+    dw $0001  ; $77 SideStep (MP 1, skill)
+    dw $0002  ; $78 LureDance (MP 2, skill)
+    dw $0002  ; $79 LushLicks (MP 2, skill)
+    dw $0004  ; $7a SickLick (MP 4, skill)
+    dw $0001  ; $7b LegSweep (MP 1, skill)
+    dw $0003  ; $7c BigTrip (MP 3, skill)
+    dw $0003  ; $7d WarCry (MP 3, skill)
+    dw $0000  ; $7e Whistle (MP 0, skill)
+    dw $0004  ; $7f Imitate (MP 4, skill)
+    dw $0007  ; $80 DeMagic (MP 7, skill)
+    dw $0007  ; $81 Surge (MP 7, skill)
+    dw $0007  ; $82 UltraDown (MP 7, skill)
+    dw $0008  ; $83 ThickFog (MP 8, skill)
+    dw $0014  ; $84 TatsuCall (MP 20, skill)
+    dw $0014  ; $85 DiagoCall (MP 20, skill)
+    dw $0014  ; $86 SamsiCall (MP 20, skill)
+    dw $0014  ; $87 BazooCall (MP 20, skill)
+    dw $0002  ; $88 Cover (MP 2, skill)
+    dw $0004  ; $89 Guardian (MP 4, skill)
+    dw $0006  ; $8a TailWind (MP 6, skill)
+    dw $000a  ; $8b StormWind (MP 10, skill)
+    dw $0004  ; $8c Dodge (MP 4, skill)
+    dw $0000  ; $8d Defence (MP 0, internal)
+    dw $0003  ; $8e StrongD (MP 3, skill)
+    dw $0002  ; $8f SuckAll (MP 2, skill)
+    dw $0003  ; $90 BladeD (MP 3, skill)
+    dw $0006  ; $91 DanceShut (MP 6, skill)
+    dw $0006  ; $92 MouthShut (MP 6, skill)
+    dw $0008  ; $93 Meditate (MP 8, skill)
+    dw $000c  ; $94 Hustle (MP 12, skill)
+    dw $0014  ; $95 LifeSong (MP 20, skill)
+    dw $0001  ; $96 LifeDance (MP 1, skill)
+    dw $0000  ; $97 Run (MP 0, internal)
+    dw $0000  ; $98 Daze (MP 0, internal)
+    dw $0000  ; $99 HitAlly (MP 0, internal)
+    dw $0000  ; $9a HitEnemy (MP 0, internal)
+    dw $0000  ; $9b HitRandom (MP 0, internal)
+    dw $0000  ; $9c Scared (MP 0, internal)
+    dw $0000  ; $9d Dance (MP 0, internal)
+    dw $0000  ; $9e Trip (MP 0, internal)
+    dw $0000  ; $9f Paralyze (MP 0, internal)
+    dw $0000  ; $a0 CANTMOVE (MP 0, internal)
+    dw $0000  ; $a1 RUN (MP 0, internal)
+    dw $0000  ; $a2 CALLHOROR (MP 0, internal)
+    dw $0000  ; $a3 HealUsAll (MP 0, internal)
+    dw $0000  ; $a4 Smashed (MP 0, internal)
+    dw $0000  ; $a5 FILTHZONE (MP 0, internal)
+    dw $0000  ; $a6 ALLCHANGE (MP 0, internal)
+    dw $0000  ; $a7 BIGSLEEP (MP 0, internal)
+    dw $0000  ; $a8 MP0 (MP 0, internal)
+    dw $0000  ; $a9 ECHO (MP 0, internal)
+    dw $0000  ; $aa CHGDRAGON (MP 0, internal)
+    dw $0000  ; $ab CALLEVIL (MP 0, internal)
+    dw $0000  ; $ac FREEZY (MP 0, internal)
+    dw $0000  ; $ad ALLREVIVE (MP 0, internal)
+    dw $0000  ; $ae RESTOREMP (MP 0, internal)
+    dw $0000  ; $af METEOR (MP 0, internal)
+    dw $0000  ; $b0 HERB (MP 0, item_effect)
+    dw $0000  ; $b1 HEALWATER (MP 0, item_effect)
+    dw $0000  ; $b2 SAGESTONE (MP 0, item_effect)
+    dw $0000  ; $b3 WARLDDEW (MP 0, item_effect)
+    dw $0000  ; $b4 POTION (MP 0, item_effect)
+    dw $0000  ; $b5 ELFWATER (MP 0, item_effect)
+    dw $0000  ; $b6 ANTIDOTE (MP 0, item_effect)
+    dw $0000  ; $b7 MOONHERB (MP 0, item_effect)
+    dw $0000  ; $b8 SKYBELL (MP 0, item_effect)
+    dw $0000  ; $b9 LAUREL (MP 0, item_effect)
+    dw $0000  ; $ba AWAKESAND (MP 0, item_effect)
+    dw $0000  ; $bb WARLDLEAF (MP 0, item_effect)
+    dw $0000  ; $bc LIFEACORN (MP 0, item_effect)
+    dw $0000  ; $bd MYSTICNUT (MP 0, item_effect)
+    dw $0000  ; $be PWRSEED (MP 0, item_effect)
+    dw $0000  ; $bf DEFSEED (MP 0, item_effect)
+    dw $0000  ; $c0 AGILSEED (MP 0, item_effect)
+    dw $0000  ; $c1 INTSEED (MP 0, item_effect)
+    dw $0000  ; $c2 FEEDMEAT (MP 0, item_effect)
+    dw $0000  ; $c3 BEFFJERKY (MP 0, item_effect)
+    dw $0000  ; $c4 PORKCHOP (MP 0, item_effect)
+    dw $0000  ; $c5 BADMEAT (MP 0, item_effect)
+    dw $0000  ; $c6 SIRLOIN (MP 0, item_effect)
+    dw $0000  ; $c7 BOLTSTAFF (MP 0, item_effect)
+    dw $0000  ; $c8 STAFF (MP 0, item_effect)
+    dw $0000  ; $c9 BLOKSTAFF (MP 0, item_effect)
+    dw $0000  ; $ca LAVASTAFF (MP 0, item_effect)
+    dw $0000  ; $cb SNOWSTAFF (MP 0, item_effect)
+    dw $0000  ; $cc FIRESTAFF (MP 0, item_effect)
+    dw $0000  ; $cd WARPWING (MP 0, item_effect)
+    dw $0000  ; $ce TINYMEDAL (MP 0, item_effect)
+    dw $0000  ; $cf QuestBk (MP 0, item_effect)
+    dw $0000  ; $d0 HORRORBK (MP 0, item_effect)
+    dw $0000  ; $d1 BENICEBK (MP 0, item_effect)
+    dw $0000  ; $d2 CHEATERBK (MP 0, item_effect)
+    dw $0000  ; $d3 SMARTBK (MP 0, item_effect)
+    dw $0000  ; $d4 COMEDYBK (MP 0, item_effect)
+    dw $0009  ; $d5 BeDragon (MP 9, skill)
+    dw $0003  ; $d6 Smashlime (MP 3, skill)
+    dw $0003  ; $d7 Sheldodge (MP 3, skill)
+    dw $0003  ; $d8 Branching (MP 3, skill)
+    dw $0014  ; $d9 GigaSlash (MP 20, skill)
+    dw $0005  ; $da LIFE (MP 5, internal)
+    dw $0000  ; $db RUN (MP 0, skill)
+    dw $0002  ; $dc IRONIZE (MP 2, internal)
+    dw $0002  ; $dd Ahhh (MP 2, internal)
     nop
     nop
     nop
@@ -4184,10 +4002,10 @@ jr_007_5a82:
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(TilesetLookupTable)
+    add LOW(SkillMPCostTable)
     ld l, a
     ld a, h
-    adc HIGH(TilesetLookupTable)
+    adc HIGH(SkillMPCostTable)
     ld h, a
     ld c, [hl]
     inc hl
@@ -4308,10 +4126,10 @@ jr_007_5b38:
     ld h, $00
     add hl, hl
     ld a, l
-    add LOW(TilesetLookupTable)
+    add LOW(SkillMPCostTable)
     ld l, a
     ld a, h
-    adc HIGH(TilesetLookupTable)
+    adc HIGH(SkillMPCostTable)
     ld h, a
     ld c, [hl]
     inc hl
