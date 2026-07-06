@@ -4172,12 +4172,13 @@ jr_058_57c2:
     ld a, [hl]
 
 jr_058_57e6:
-    ld hl, $5806
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
+    call AnnounceIdxFork    ; [Stage2] id >= $E2 -> CustomAnnounceTable (the vanilla
+    nop                     ;   $5806 table's tail overlaps CODE at $58E8, so slots
+    nop                     ;   for $E2+ cannot live in place). Byte-neutral 9->3+6.
+    nop
+    nop
+    nop
+    nop
     ld a, [hl]
     ld [$db4c], a
     ret
@@ -7285,34 +7286,37 @@ ReadBtlFX_6918:
     ret
 
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; =============================================================================
+; [Stage2] AnnounceIdxFork — announce-template lookup fork for custom ids >= $E2.
+; The vanilla AnnounceTemplateTable ($5806, 256-wide by design) physically ends
+; at id $E1: the byte for $E2 IS the first opcode of Jump_058_58e8, so high slots
+; cannot be edited in place. Forked from jr_058_57e6 (byte-neutral window).
+; In: A = skill id. Out: HL = &announce msgid byte. Clobbers A (as vanilla did).
+; Placed in the bank-$58 free run ($6920+, $00 fill); replaces 28 nop lines so
+; DataBtlFX_7959 keeps its exact byte offset. (14+12+2 = 28 bytes)
+; =============================================================================
+AnnounceIdxFork:
+    cp $E2
+    jr nc, .custom
+    ld hl, AnnounceTemplateTable    ; vanilla path, identical math (label = $5806)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ret
+.custom:
+    sub $E2
+    ld hl, CustomAnnounceTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ret
+CustomAnnounceTable:        ; indexed (id - $E2)
+    db $FD                  ; $E2 TameMore -> custom-message escape ("used TameMore!")
+    db $FD                  ; $E3 TameMost -> custom-message escape ("used TameMost!")
     nop
     nop
     nop

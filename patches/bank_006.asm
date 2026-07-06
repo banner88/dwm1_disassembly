@@ -3268,8 +3268,9 @@ jr_006_507c:
     adc $00
     ld h, a
     inc c
-    ld a, c
-    cp $da
+    call LearnLoopFork          ; [Stage2] was: ld a,c / cp $da (3 bytes -> call, byte-neutral).
+                                ;   Extends the natural-learn scan past the vanilla 0..$D9
+                                ;   range into CustomLearnReqTable (ids $E1-$E3); Z at end.
     jp nz, Jump_006_4faa
 
     ld a, $ff
@@ -9741,75 +9742,39 @@ jr_006_7f02:
     rst $38
     rst $38
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; =============================================================================
+; [Stage2] LearnLoopFork + CustomLearnReqTable — natural-learn/skill-evolve for
+; CUSTOM skill ids. The scanner (bank $06 entry 5, $4f9a; caller = bank $51
+; level-up flow) loops ids 0..$D9 over SkillLearnReqTable; custom ids were never
+; scanned. The fork continues the SAME loop over this table for ids $E1..$E3
+; (ids $DA-$E0 are skipped: $DA-$DD vanilla-unscanned, $DE/$DF retired POCs,
+; $E0 MagicBurn = not naturally learnable). Same 18-byte record format as
+; SkillLearnReqTable: +0 lvl, +1..+12 six u16 stat reqs, +13..+17 prereq ids
+; ($FF pad). Prereq chain = the vanilla EVOLVE mechanic: knowing the prereq +
+; meeting reqs REPLACES it (scanner code-1 path). Placed in the bank-$06 $FF
+; free run ($7F1E+); replaces 69 rst $38 lines so Jump_006_7f7f keeps its
+; exact byte offset. (15 + 3*18 = 69 bytes)
+; =============================================================================
+LearnLoopFork:                  ; in: C = next skill id; out: Z = end scan,
+    ld a, c                     ;   NZ = continue (A/HL adjusted on range switch)
+    cp $da
+    jr z, .toCustom             ; vanilla range done -> jump to the custom range
+    cp $e4                      ; one past the last custom learnable id
+    ret                         ; Z at end -> exit loop; NZ -> keep scanning
+.toCustom:
+    ld c, $e1                   ; first custom learnable id (Tame)
+    ld hl, CustomLearnReqTable  ; scanner walks records from here (+$12/iter)
+    or a                        ; A=$da -> NZ (continue)
+    ret
+
+CustomLearnReqTable:            ; 18 B/record, ids $E1..$E3 (walked by the scanner)
+    ; --- $E1 Tame: lvl 2; no stat reqs; no prereq (learned via the natural-slot
+    ;     queue, code-0 path, when placed in a species' $03:$4461 skill slots)
+    db $02, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $ff,$ff,$ff,$ff,$ff
+    ; --- $E2 TameMore: lvl 3; no stat reqs; prereq $E1 (Tame -> REPLACED on learn)
+    db $03, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e1,$ff,$ff,$ff,$ff
+    ; --- $E3 TameMost: lvl 5; no stat reqs; prereq $E2 (TameMore -> REPLACED on learn)
+    db $05, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e2,$ff,$ff,$ff,$ff
 
 Jump_006_7f7f:
     rst $38

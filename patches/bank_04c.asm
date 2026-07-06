@@ -11795,56 +11795,18 @@ CustomMsgPtrTable:
     dw CustomMsg_dummy               ; idx 1 = skill $DF (unused)
     dw CustomMsg_E0_MagicBurn        ; idx 2 = skill $E0 (MagicBurn, migrated)
     dw CustomMsg_E1_Tame             ; idx 3 = skill $E1 (Tame)
+    dw CustomMsg_E2_TameMore         ; idx 4 = skill $E2 (TameMore) [Stage2]
+    dw CustomMsg_E3_TameMost         ; idx 5 = skill $E3 (TameMost) [Stage2]
 CustomMsg_dummy:
     db $F0                           ; empty/safe
 CustomMsg_E1_Tame:
     ; "{caster} used Tame!"  ED=mon prefix, F9 00=caster name, 63="!", EC F0=end
     db $ED, $F9, $00, $62, $52, $50, $42, $41, $62, $37, $3E, $4A, $42, $63, $EC, $F0
+CustomMsg_E2_TameMore:               ; [Stage2] "{caster} used TameMore!"
+    db $ED, $F9, $00, $62, $52, $50, $42, $41, $62, $37, $3E, $4A, $42, $30, $4C, $4F, $42, $63, $EC, $F0
+CustomMsg_E3_TameMost:               ; [Stage2] "{caster} used TameMost!"
+    db $ED, $F9, $00, $62, $52, $50, $42, $41, $62, $37, $3E, $4A, $42, $30, $4C, $50, $51, $63, $EC, $F0
 ; --- end S2e custom-message infrastructure ---
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
     nop
     nop
     nop

@@ -212,11 +212,28 @@
    1:DB8A   1    Working skill id (re-derived from $DCEC each cast; ~35 writers)
    1:DB4C   1    Record-lookup index (re-derived FROM $DB8A during the cast)
    1:DB4F   1    "Selected skill" (targeting helper)
-   1:DBA3  96    (INFERRED) Battle stat tables, 16 bytes each, indexed by
+   1:DBA3  96    Battle stat tables, 16 bytes each (2 B/combatant), indexed by
                  combatant 0-2 party / 4-6 enemy: HP $DBA3, MaxHP $DBB3,
                  MP $DBC3, MaxMP $DBD3, ATK $DBE3, DEF $DBF3, AGL $DC03,
-                 INT $DC13, LVL $DC23. (Conflicts with the older "$DBAB Enemy 1
-                 HP" line above — older line may be stale; re-verify.)
+                 INT $DC13, LVL $DC23. (S52: NO conflict with "$DBAB Enemy 1
+                 HP" — $DBA3 + 2*4 = $DBAB, enemy 1 = combatant 4. HW-confirmed:
+                 the $DBAB watchpoint fired on enemy damage; writer $51:$4a61,
+                 damage-apply $51:$47e0.)
+   1:DA34   1    Battle-animation frame DIVIDER for bank $5f entry 5 (tick runs
+                 its phase every 5th frame). [S52, HW + static]
+   1:DA81   1    Layer-2 presentation command (sound+flash channel; §11.4).
+   1:DA82   1    Animation done-flag (1 = phase machine finished). [S52]
+   1:DA83   1    Animation PHASE for $5f entry 5 (rst $00 dispatch, ptr table
+                 $5f:$4b28; one phase = the per-enemy hit-blink). [S52, HW]
+   1:DA84   1    Phase STEP counter / blink toggle (sub-dispatch $5f:$4b99:
+                 0=blank frame $4ba5, 1=enemy frame $4bcb). [S52, HW]
+   1:DA85   1    Phase frame counter (blink uses 6). [S52, HW]
+   1:C500 $240   Battle enemy TILE buffer — the enemy is BG-DRAWN from here to
+                 the $98xx map by LoadBtl_7627 ($50:$7627; slots at BG cols
+                 $25/$2b/$31); $E0 = blank. NOT OBJ (§11.7). [S52]
+   1:DD60   1    Player-hit reaction ACTIVE flag (screen shake; ticked by banks
+                 $5c/$5d/$5e entry 0 with $DD62/$DD65/$DD66/$DD68 + hFFC3).
+                 [S52, partial]
    1:DCEC  ~16   Action queue: 2 bytes/combatant {skill id, target}, indexed by
                  combatant*2. The single source the cast re-derives $DB8A from.
    1:DD6F   1    (INFERRED) Damage descriptor bitfield (bit5 = apply $DB56/57)

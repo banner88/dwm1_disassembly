@@ -13477,5 +13477,5 @@ GetPresentId::
     pop hl             ; 1
     ret                ; 1   (=21 bytes)
 CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id; default $09 (Infernos)
-    db $09, $09, $09, $c2, $09, $09, $09, $09   ; $DE-$E5  ($E0 MagicBurn=$09; $E1 Tame=$c2 HEART [S2e ThrowMeat])
+    db $09, $09, $09, $c2, $c2, $c2, $09, $09   ; $DE-$E5  ($E0 MagicBurn=$09; $E1-$E3 Tame tiers=$c2 HEART [S2e/Stage2 ThrowMeat])
     db $09, $09, $09, $09, $09, $09, $09, $09   ; $E6-$ED  (reserved for skills #2-#12; full 16 slots)

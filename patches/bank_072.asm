@@ -16,6 +16,9 @@
 ; Registered skills:
 ;   $E0  MagicBurn  - spends HALF current MP; deals that exact amount to ALL foes
 ;                     (raw, no defense). Record (bank $54) gives target_mode $12.
+;   $E1  Tame       - recruit (meter +10, FeedMeat tier) + ATK/4 damage, 1 foe.
+;   $E2  TameMore   - Tame tier 2: meter +100 (PorkChop tier).      [Stage2]
+;   $E3  TameMost   - Tame tier 3: meter +400 (Sirloin tier).       [Stage2]
 ; =============================================================================
 
 SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
@@ -61,6 +64,10 @@ CustomBattleExec:
     jp z, SkillMagicBurn
     cp $E1
     jp z, SkillTame
+    cp $E2
+    jp z, SkillTame                     ; [Stage2] TameMore -> same handler, tiered meter
+    cp $E3
+    jp z, SkillTame                     ; [Stage2] TameMost -> same handler, tiered meter
     ; (future custom battle skills dispatch here)
     ret
 
@@ -101,14 +108,16 @@ SkillMagicBurn:
     ret
 
 ; -----------------------------------------------------------------------------
-; SkillTame ($E1) [S2e] — the custom override for Tame. Far-called from
+; SkillTame ($E1/$E2/$E3) [S2e/Stage2] — the custom override for the Tame tier
+; chain (Tame/TameMore/TameMost share this handler). Far-called from
 ; CustomDispatch52 AFTER LoadBattle_653e (context+base dmg) + SetHLBattle_54e7
 ; (descriptor), so target/message context is already set (record = single-foe).
 ; Two effects:
-;   (1) damage = ATK/2  -> $db56/57   (OVERRIDES the record's 0 power; anti-abuse cap)
-;   (2) taming meter $db83/$db84 += 10 (Beef Jerky tier), clamped to $0640 (1600)
-;       -- byte-identical to feeding one Beef Jerky, so post-battle JoinDecision
-;          ($54:$55f1, HW-confirmed) rolls recruitment exactly as if fed.
+;   (1) damage = ATK/4  -> $db56/57   (OVERRIDES the record's 0 power; anti-abuse cap)
+;   (2) taming meter $db83/$db84 += TameMeterTable[id-$E1] (10/100/400 = the
+;       FeedMeat/PorkChop/Sirloin meat tiers), clamped to $0640 (1600)
+;       -- byte-identical to feeding the equivalent meat, so post-battle
+;          JoinDecision ($54:$55f1, HW-confirmed) rolls recruitment as if fed.
 ; ROM0 + RAM only; no bankswitch. wBattleAttackerIdx=$db88; ATK array base=$dbe3.
 ; -----------------------------------------------------------------------------
 SkillTame:
@@ -133,13 +142,23 @@ SkillTame:
     ld [$db56], a
     ld a, h
     ld [$db57], a                       ; OVERRIDE damage = ATK/4
-    ; (2) taming meter += 10, clamp $0640
+    ; (2) taming meter += per-tier amount, clamp $0640
     ld a, [$db83]
     ld l, a
     ld a, [$db84]
     ld h, a                             ; HL = meter
-    ld bc, $0640                        ; [S2e TEST CRANK] one cast -> meter maxed (1600)
-                                        ;   so recruitment is observable; real value = $000A (Beef Jerky)
+    ld a, [$db8a]                       ; [Stage2] tier from the skill id
+    sub $E1                             ;   0=Tame / 1=TameMore / 2=TameMost
+    add a                               ;   *2 (u16 table)
+    ld e, a
+    ld d, $00
+    push hl
+    ld hl, TameMeterTable
+    add hl, de
+    ld a, [hl+]
+    ld c, a
+    ld b, [hl]                          ; BC = tier increment (10/100/400)
+    pop hl
     add hl, bc
     ld a, h
     cp $06
@@ -156,3 +175,11 @@ SkillTame:
     ld a, h
     ld [$db84], a
     ret
+
+; [Stage2] Per-tier taming-meter increments, indexed (skill_id - $E1) * 2.
+; Values = the vanilla per-meat meter boosts (meat record power_enemy words):
+; FeedMeat +10 / PorkChop +100 / Sirloin +400; cap $0640 (1600) unchanged.
+TameMeterTable:
+    dw 10                               ; $E1 Tame     (FeedMeat tier)
+    dw 100                              ; $E2 TameMore (PorkChop tier)
+    dw 400                              ; $E3 TameMost (Sirloin tier)

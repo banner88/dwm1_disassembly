@@ -7668,7 +7668,10 @@ TameGateHook:            ; [S2e] heart plays during the delay; near the end, fir
                          ; sound + blink (with a few frames to render), then the message.
     ld a, [$db8a]
     cp $e1
-    jr z, TameGate_delay
+    jr c, .stock         ; [Stage2] Tame tiers $E1-$E3 all take the delay path
+    cp $e4
+    jr c, TameGate_delay
+.stock:
     cp $84
     jr c, TameGate_go
     cp $88
@@ -7680,57 +7683,40 @@ TameGateHook:            ; [S2e] heart plays during the delay; near the end, fir
 TameGate_delay:
     ld a, [wTameDelay]
     or a
-    jr z, TameGate_tame_go   ; counter hit 0 -> restore palette + render message
+    jr z, TameGate_tame_go   ; counter hit 0 -> render message
     cp $08
-    jr nz, TameGate_flick    ; at 8 frames left: save OBJ palettes + fire the damage sound (once)
-    ld a, [$c89c]            ; save OBP0
-    ld [wTameBGSave], a
-    ld a, [$c89d]            ; save OBP1
-    ld [wTameBGSave+1], a
+    jr nz, TameGate_tick     ; at 8 frames left: fire the damage sound (once)
     ld hl, $5501             ; damage sound, in line with the text
     rst $10
     ld hl, $5502
     rst $10
-TameGate_flick:
-    ld a, [wTameDelay]
-    cp $09
-    jr nc, TameGate_tick     ; >8 frames left = heart phase, no flicker yet
-    bit 0, a
-    jr z, TameGate_white     ; even -> flash frame
-    ld a, [wTameBGSave]      ; odd -> restore OBJ palettes (enemy normal)
-    ld [$c89c], a
-    ld a, [wTameBGSave+1]
-    ld [$c89d], a
-    jr TameGate_tick
-TameGate_white:
-    xor a                    ; $00 = white: flash OBP0+OBP1 only (enemy SPRITE), BG untouched
-    ld [$c89c], a
-    ld [$c89d], a
 TameGate_tick:
     ld a, [wTameDelay]
     dec a
     ld [wTameDelay], a
     ret
 TameGate_tame_go:
-    ld a, [wTameBGSave]      ; restore the real OBJ palettes before the message
-    ld [$c89c], a
-    ld a, [wTameBGSave+1]
-    ld [$c89d], a
 TameGate_go:
     jp jr_053_5b17
 
-TameSound1Hook:              ; [S2e] early $5501 suppressed for Tame
+TameSound1Hook:              ; [S2e] early $5501 suppressed for Tame tiers ($E1-$E3) [Stage2]
     ld a, [$db8a]
     cp $e1
-    jr z, TameSound1_skip
+    jr c, .play
+    cp $e4
+    jr c, TameSound1_skip
+.play:
     ld hl, $5501
     rst $10
 TameSound1_skip:
     jp $5ae1
-TameSound2Hook:              ; [S2e] early $5502 suppressed for Tame
+TameSound2Hook:              ; [S2e] early $5502 suppressed for Tame tiers ($E1-$E3) [Stage2]
     ld a, [$db8a]
     cp $e1
-    jr z, TameSound2_skip
+    jr c, .play
+    cp $e4
+    jr c, TameSound2_skip
+.play:
     ld hl, $5502
     rst $10
 TameSound2_skip:

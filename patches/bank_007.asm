@@ -3483,13 +3483,13 @@ GetSkillMPCost:
 jr_007_56fd:
     ld l, e
     ld h, d
-    add hl, hl
-    ld a, l
-    add LOW(SkillMPCostTable)
-    ld l, a
-    ld a, h
-    adc HIGH(SkillMPCostTable)
-    ld h, a
+    call MPPtrFromId            ; [Stage2] custom ids (>=$DE) -> CustomMPCostTable
+    nop                         ;   (vanilla $570C overshoots for them). 9 -> 3+6
+    nop                         ;   byte-neutral window; in HL = skill id.
+    nop
+    nop
+    nop
+    nop
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -3984,13 +3984,13 @@ jr_007_5a82:
     ld h, a
     ld l, [hl]
     ld h, $00
-    add hl, hl
-    ld a, l
-    add LOW(SkillMPCostTable)
-    ld l, a
-    ld a, h
-    adc HIGH(SkillMPCostTable)
-    ld h, a
+    call MPPtrFromId            ; [Stage2] custom ids (>=$DE) -> CustomMPCostTable
+    nop                         ;   (vanilla $570C overshoots for them). 9 -> 3+6
+    nop                         ;   byte-neutral window; in HL = skill id.
+    nop
+    nop
+    nop
+    nop
     ld c, [hl]
     inc hl
     ld b, [hl]
@@ -4108,13 +4108,13 @@ jr_007_5b38:
     ld h, a
     ld l, [hl]
     ld h, $00
-    add hl, hl
-    ld a, l
-    add LOW(SkillMPCostTable)
-    ld l, a
-    ld a, h
-    adc HIGH(SkillMPCostTable)
-    ld h, a
+    call MPPtrFromId            ; [Stage2] custom ids (>=$DE) -> CustomMPCostTable
+    nop                         ;   (vanilla $570C overshoots for them). 9 -> 3+6
+    nop                         ;   byte-neutral window; in HL = skill id.
+    nop
+    nop
+    nop
+    nop
     ld c, [hl]
     inc hl
     ld b, [hl]
@@ -11030,49 +11030,6 @@ jr_007_7f75:
     rst $38
     rst $38
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
 FollowerArtResolve07:
     ld a, h
     cp $01
@@ -11100,3 +11057,46 @@ FollowerArtResolve07:
 NewFollowerGfxTable07:
     dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)
 
+; =============================================================================
+; [Stage2] MPPtrFromId — MP-cost pointer resolver forked into ALL THREE $570C
+; readers ($56E8 GetSkillMPCost display, $5A9x afford, $5B4x deduct; the S48 map).
+; Vanilla ids: identical math on the labeled SkillMPCostTable. Custom ids >= $DE:
+; index CustomMPCostTable instead (the vanilla table is exactly 222 entries; a
+; custom id used to read garbage past $58C8). In: HL = skill id. Out: HL =
+; &u16 MP cost. Clobbers A only (as the replaced window did); BC/DE preserved.
+; MP is MIRRORED in record byte +4 (BATTLE_SKILL_SYSTEM §12.3): keep this table
+; and CustomRecordPtrTable records (bank $54) in sync.
+; =============================================================================
+MPPtrFromId:
+    ld a, h
+    or a
+    jr nz, .vanilla             ; 16-bit oddity -> exact vanilla math
+    ld a, l
+    cp $DE
+    jr nc, .custom
+.vanilla:
+    add hl, hl
+    ld a, l
+    add LOW(SkillMPCostTable)
+    ld l, a
+    ld a, h
+    adc HIGH(SkillMPCostTable)
+    ld h, a
+    ret
+.custom:
+    sub $DE
+    add a                       ; (id - $DE) * 2
+    add LOW(CustomMPCostTable)
+    ld l, a
+    ld a, $00
+    adc HIGH(CustomMPCostTable)
+    ld h, a
+    ret
+
+CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $DE)*2
+    dw 0                        ; $DE (retired POC)
+    dw 0                        ; $DF (retired POC)
+    dw 0                        ; $E0 MagicBurn (handler charges half current MP)
+    dw 10                       ; $E1 Tame
+    dw 30                       ; $E2 TameMore
+    dw 50                       ; $E3 TameMost

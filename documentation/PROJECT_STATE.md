@@ -10,6 +10,45 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-07-06 (Session 52 — **Tame Stage 2 ships: 3-tier skill-evolve chain,
+> natural-learn fork, real MP costs.** Integrity PASS 4/4, clean build byte-perfect
+> `1ca6579…`. **Tame $E1 / TameMore $E2 / TameMost $E3** are a working upgrade chain,
+> level-up learn + upgrade-replace **user-confirmed in SameBoy** (v34: "levelled up
+> perfectly, message correct"). New systems (all label-based, byte-neutral splices):
+> (1) **learn-chain fork** — the natural-learn scanner (bank `$06` entry 5 `$4f9a`,
+> caller `$51` level-up) loops ids `0..$D9`; `LearnLoopFork` (3-byte splice at `$5088`)
+> continues the SAME loop over `CustomLearnReqTable` (`$E1..$E3`, vanilla 18-byte format,
+> prereq chain = vanilla EVOLVE/replace path) in the `$7F1E` free run — `Jump_006_7f7f`
+> and `db $06 @ $7FFF` offsets preserved. (2) **MP fork** — ALL THREE `$570C` readers
+> (display `$56E8` / afford / deduct) route through `MPPtrFromId` → `CustomMPCostTable`
+> (0/0/0/10/30/50 for `$DE..$E3`); record `+4` mirrors match. Custom ids no longer read
+> garbage MP. (3) **announce fork** — the vanilla announce table's tail physically
+> overlaps CODE at `$58:$58E8` (byte for id `$E2` IS an opcode), so `AnnounceIdxFork`
+> (9-byte window at `jr_058_57e6`) reads `CustomAnnounceTable` for ids ≥`$E2`;
+> `DataBtlFX_7959` offset preserved. (4) **crank reverted** — `SkillTame` meter add is
+> now `TameMeterTable` dw 10/100/400 (= FeedMeat/PorkChop/Sirloin meat record powers,
+> NOT "$000A = Beef Jerky" as previously documented — BeefJerky is +30; DOC_AUDIT S52).
+> The "$0640 mirrors in bank_052" claim was FALSE — those are the vanilla meter CAP
+> (present in the clean tree); the only crank was one line in bank_072. (5) **upgrade
+> message page-split** — `MiscTextPtrTable[3]` repointed to `MiscText_03_Paged`
+> ("[Mon]'s [Old]" / page / "becomes"+NL+"[New]!"), fixing the orphaned "!" (vanilla
+> defect for 8+-char names). Built S52, NOT yet user-confirmed. (6) MP charging
+> (10/30/50) + tier meter values: built S52, NOT yet user-tested. Harness wild-Slime
+> (bank `$14`) KEPT per user (revert at editor time); natural-to-Slime slot DE-SCOPED
+> by user (editor lays real data; the fork makes any species slot work). (7) **Enemy
+> hit-blink mechanism SOLVED via HW captures but implementation DEFERRED** (user:
+> "bank it"): the battle enemy is **BG-drawn** (NOT OBJ — §11.7's old OAM premise was
+> wrong; three prior fix attempts targeted layers the enemy doesn't use). The blink =
+> tilemap toggle, bank `$5f` entry 5, `$da83` phase → `$da84` sub-dispatch `$4b99`
+> (blank `$4ba5` / enemy `$4bcb`, sources via `$50f4`+`$50ff`/`$5109`, VRAM-safe copy
+> `$4e1f`, divider `$da34`, done-flag `$da82`). Full map: BATTLE_SKILL_SYSTEM §11.7.
+> An interim whole-screen BGP flash was built, user-rejected (that's the PLAYER-hit
+> visual), REVERTED — the S50 no-op OBP flicker was removed with it (hook is now
+> sound-only during the delay; `wTameBGSave` reserved, unused).
+> **NEXT:** S2f (field-cast skill) or more §13.4 skills, or the blink implementation
+> (mechanism fully mapped — drive `$5f` entry 5's blink phase from `TameGateHook`
+> via `$da82/$da83/$da84/$da34` state injection), or T2 text roll-out.
+>
 > Last verified: 2026-07-02 (Session 51 — **Repo/doc consolidation audit + skill-table
 > rename.** Integrity PASS 4/4, clean build byte-perfect `1ca6579…`. Doc-layer session:
 > no functional ROM change.)
@@ -22,6 +61,8 @@
 > evidence + owning-doc pointer; cut narratives preserved verbatim in SESSION_HISTORY
 > Part 3. New boxes added: **Tame Stage 2 / skill evolve** (⚠️ the S50 TEST CRANK
 > `$0640` is LIVE in `patches/bank_072.asm`+`bank_052.asm` — one Tame cast maxes the
+> [S52 correction: FALSE re bank_052 — its two `$0640`s are the VANILLA meter cap,
+> present in the clean tree; the only crank was one line in bank_072. Crank reverted S52.]
 > meat meter; revert to `$000A` is part of that box), G3 schema fold (was prose-only),
 > MP/learn-table `dw`/`db` re-section, §13.4 skill follow-ups, skills.json retirement,
 > TOOLS_AND_DATA upkeep. (3) **Contradictions fixed in place:** empty-bank counts
@@ -70,42 +111,7 @@
 > or S2f (field-cast skill), or T2 text roll-out. Housekeeping deletions (`__pycache__/`,
 > 8× `.DS_Store`, Tier-L JSONs, `breeding_extra_recipes.json`) queued pending user OK.
 >
-> Last verified: 2026-06-30 (Session 50 — **S2e: custom skill #2 (Tame) ships; the
-> custom-message + presentation-timing infra generalizes.** Integrity PASS 4/4, clean build
-> byte-perfect `1ca6579…`. **Tame (`$E1`)** — recruit (meat-meter) + anti-abuse damage
-> (ATK/4), single-target — is user-confirmed in SameBoy: announce "used Tame!", heart
-> animation, damage sound + "takes X damage" text correctly SEQUENCED after the heart, damage,
-> and recruitment all correct. New infra this session: (1) **custom-message render fork** —
-> `$FD` is now a general escape resolving a per-skill pool string by `[$db8a]-$DE`
-> (`LoadB4c_Fork`), so bespoke text no longer needs a scarce free id (MagicBurn migrated onto
-> it); (2) **presentation timing** — the effect state machine's per-id animation-wait gate
-> (`$53:$5b07`) + a fixed frame delay (`wTameDelay`) sequences a note-then-hit skill, and the
-> damage sound is moved off the note onto the text. Full RE: `BATTLE_SKILL_SYSTEM.md` §13.5 +
-> §11.7; TEXT_SYSTEM.md (fork); KEY_LESSONS.md (Session 50). KNOWN DEFECT (deferred, minor
-> cosmetic): the per-enemy-sprite blink is unsolved (not `wBGPalette`/whole-screen, not
-> OBP-only — an OAM visibility toggle not yet found; §11.7). Meter is TEST-cranked (`$0640`);
-> revert to `$000A` for Stage 2.
->
-> [S49 context] Session 49 — **S2d: custom skill #1 ships end-to-end.**
-> Integrity PASS 4/4, clean build byte-perfect `1ca6579…`. **MagicBurn (`$E0`)** is a
-> non-aliased custom skill, user-confirmed working in SameBoy: own record (½ current MP →
-> all foes) + result text + **announcement** + **animation** + **hit-flash** + **cast
-> sound**, all via clean dynamic indirection, zero per-aspect hacks. New this session:
-> (1) **announce** — `AnnounceTemplateTable` (`$58:$5806`, lookup `$58` e6 `$57C5`, render
-> `$50:$5A42`; `$FF`=silent) re-disassembled to a clean `db` table in patches with `$E0`'s
-> slot filled; (2) **custom message pool** — the 256-id battle-message table is FULL (one
-> free slot `$FD`), so bespoke text lives at `$4c:$7326` (`CustomMsg_E0_MagicBurn`, `$FD`
-> repointed); (3) **presentation proxy** — `GetPresentId` in `$5f` free space (identity for
-> stock ids, per-skill PROXY for custom ids via `CustomProxyTable`) forked into the 12 `$5f`
-> reads of `$db8a` (byte-neutral); renderers `$5c/$5d/$5e` read the id zero times, so a custom
-> skill borrows a real skill's whole anim script → no hang, flash + SFX restored (MagicBurn
-> proxies Infernos `$09`). Full RE + per-skill recipe: **`BATTLE_SKILL_SYSTEM.md` §13**;
-> TEXT_SYSTEM.md (pool); KEY_LESSONS.md (3 lessons). The standalone presentation-groundwork
-> doc was folded into §13 and deleted.
-> **NEXT:** Tame Stage 2 — revert meter crank `$0640`→`$000A`; 3 upgrade tiers (learn-chain
-> fork, bank $06); make Tame natural to Slime (a `$03:$4461` slot). Then S2f (field-cast skill,
-> e.g. teleport) / more custom skills via the §13.4 recipe. Optional polish: the per-enemy
-> blink (§11.7).
+> (S50 block moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
 
 ---
 
@@ -148,6 +154,7 @@
 | 49 | S2d: MagicBurn ($E0) ships non-aliased end-to-end | BATTLE_SKILL_SYSTEM §13; KEY_LESSONS S49 |
 | 50 | S2e: Tame ($E1) ships; custom-message + timing infra generalizes | BATTLE_SKILL_SYSTEM §13.5, §11.7; TEXT_SYSTEM $FD; KEY_LESSONS S50 |
 | 51 | Doc consolidation; SkillMPCostTable/GetSkillMPCost rename | this file; SESSION_HISTORY.md |
+| 52 | Tame Stage 2: 3-tier evolve chain ($E1-$E3), learn/MP/announce forks, crank revert; enemy hit-blink mechanism solved (deferred) | BATTLE_SKILL_SYSTEM §13.6, §11.7; DOC_AUDIT S52; KEY_LESSONS S52 |
 
 ---
 
@@ -234,7 +241,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). Remaining: custom monster POOLS (Encounters #2, ROADMAP). | CROSSBANK_ROOMS; KEY_LESSONS S11 |
 | Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). B9 11th-family icon shipped; tab wiring open. | BREEDING_SYSTEM; ROADMAP Phase 2B |
-| Custom battle skills (net-new ids) | 🟢 TWO custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), on the full de-aliased stack (record/handler/name/announce/anim/flash/SFX/messages). ⚠️ **Tame TEST CRANK `$0640` live in patches** — see Open defects + ROADMAP "Tame Stage 2". | BATTLE_SKILL_SYSTEM §12–§13; ROADMAP Arc 2 |
+| Custom battle skills (net-new ids) | 🟢 FOUR custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52) — a 3-tier evolve chain on the full de-aliased stack incl. natural-learn (LearnLoopFork), real MP (MPPtrFromId, 10/30/50), announce (AnnounceIdxFork). Crank reverted S52; meter tiers 10/100/400. Learn/upgrade user-confirmed; MP charge + meter values built S52, NOT yet user-tested. | BATTLE_SKILL_SYSTEM §12–§13.6; ROADMAP Arc 2 |
 | SRAM save layout | ✅ audited S8: custom flags $0158–$0277 persist; collisions mapped | ARCHITECTURE; known_RAM_map |
 
 ### Not yet implemented
@@ -262,11 +269,12 @@ re-section items).
 
 ### Open defects
 
-- ⚠️ **Tame TEST CRANK is live in the canonical patched build**: `patches/bank_072.asm`
-  (+ mirrors in `bank_052.asm`) set the meat meter to `$0640` per cast (one cast =
-  recruit). Revert to `$000A` is part of ROADMAP "Tame Stage 2 / skill evolve".
-- Tame per-enemy-sprite blink unsolved (cosmetic; not `wBGPalette`, not OBP-only —
-  likely an OAM visibility toggle). BATTLE_SKILL_SYSTEM §11.7.
+- Tame per-enemy hit-blink NOT IMPLEMENTED (cosmetic; deferred by user S52 — "bank it").
+  The MECHANISM IS SOLVED (S52, HW-confirmed): enemy is BG-drawn; blink = tilemap toggle
+  in bank `$5f` entry 5 (`$da83` phase → `$da84` sub-dispatch `$4b99`). Full map +
+  implementation plan: BATTLE_SKILL_SYSTEM §11.7.
+- S52 items built but NOT yet user-tested: MP charging (10/30/50), meter tier values
+  (10/100/400), the "!" page-split upgrade message. Marked in §13.6.
 - `extracted/skills.json` is superseded by `skill_records.json` but still read by
   `gen_name_tables_db.py` — retire (ROADMAP box).
 - DOC_AUDIT.md's full-corpus audit is dated 2026-06-13; later findings are dated

@@ -562,21 +562,28 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         ($FD → per-skill pool string) + presentation timing (note→hit sequencing).
         → §13.5 + §11.7; TEXT_SYSTEM ($FD fork); KEY_LESSONS S50; archive:
         SESSION_HISTORY Part 3. **Follow-ups split out as the next three boxes.**
-  - [ ] **⚠️ Tame Stage 2 / SKILL EVOLVE (own session — flagged S51).** The S50 TEST
-        CRANK is **LIVE in the canonical patched build**: `patches/bank_072.asm` (+
-        the `$0640` mirrors in `patches/bank_052.asm`) max the meat meter in ONE cast.
-        This session does: (1) revert crank `$0640` → `$000A` (Beef Jerky tier);
-        (2) the 3 upgrade tiers via a learn-chain fork (bank `$06`
-        SkillLearnReqTable path); (3) make Tame natural to Slime (a `$03:$4461`
-        natural-skill slot). *Accept:* meter behaves per the FAQ meat tiers; tiers
-        learnable in sequence; Slime learns Tame naturally; SameBoy sign-off.
+  - [x] **Tame Stage 2 / SKILL EVOLVE** (S52). Crank reverted (`TameMeterTable` dw
+        10/100/400 = FeedMeat/PorkChop/Sirloin; the box's "$000A = Beef Jerky" was a
+        mislabel and "mirrors in bank_052" was FALSE — the vanilla cap; DOC_AUDIT S52).
+        3-tier chain $E1→$E2→$E3 via `LearnLoopFork` (bank $06 loop-bound splice +
+        `CustomLearnReqTable`); vanilla EVOLVE/replace semantics (prereq path);
+        real MP 10/30/50 via `MPPtrFromId` fork of ALL THREE `$570C` readers;
+        `AnnounceIdxFork` (vanilla table tail overlaps code at `$58E8`); upgrade-msg
+        "!"-orphan fixed by `MiscText_03_Paged` repoint. *Accept variance:* natural-to-
+        Slime DE-SCOPED by user ("editor lays real data" — the fork makes any species
+        slot work); harness KEPT per user. Learn/upgrade user-confirmed (v34); MP
+        charge + meter values + msg page-split built, NOT yet user-tested.
+        → §13.6 (systems), §11.7 (blink), KEY_LESSONS S52.
   - [ ] **§13.4 follow-ups** — (a) custom-id skill-NAME insert so name-inserting
         announce templates work for ids ≥ $DE; (b) a 2nd bespoke-message render path
         beyond the single `$FD` escape. *Accept:* a custom skill using a
         name-inserting stock announce template renders correctly. → §13.4.
-  - [ ] **(optional polish) Per-enemy hit-blink** — the enemy-sprite blink toggle is
-        unlocated (not wBGPalette/whole-screen, not OBP-only; likely an OAM
-        visibility toggle). → §11.7.
+  - [ ] **(optional polish) Per-enemy hit-blink** — mechanism SOLVED S52 (HW captures):
+        enemy is BG-DRAWN; blink = tilemap toggle, bank `$5f` entry 5, `$da83` phase →
+        `$da84` sub-dispatch `$4b99` (blank `$4ba5`/enemy `$4bcb`, copy `$4e1f`).
+        Implementation deferred by user ("bank it"). Plan: drive the blink phase from
+        `TameGateHook` via `$da82/$da83/$da84/$da34` state injection; expect 1-2
+        SameBoy iterations. Full map: → §11.7.
   - [ ] **S2f — FIELD-cast custom skill (e.g. teleport/warp).** A different code path the
         battle foundation (§13) doesn't touch yet — genuinely new groundwork. *Accept:* a custom
         field skill (warp) fires from the field menu in SameBoy.
@@ -605,8 +612,8 @@ e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block a
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
 
-**Recommended order:** T1 ✅ → S1 ✅ → S2a–S2e ✅ (two custom skills live) →
-**⚠️ Tame Stage 2** (next — the TEST CRANK must come out of patches/) → S2f (field
+**Recommended order:** T1 ✅ → S1 ✅ → S2a–S2e ✅ → **Tame Stage 2 ✅ (S52 — four
+custom skills live, evolve chain proven)** → S2f (field
 skill) / S3 → S4 → M1 → M2 → M3 / T2 roll-out, slotting text roll-out into spare
 sessions. Fire the two RE discovery sessions (M1, S3) before their authoring items
 depend on them.

@@ -1681,3 +1681,35 @@ not OBP-only; likely an OAM visibility toggle of the enemy sprite, not yet found
    (splitting a `db` row), not deleted — bank `$06` had two (`DispMapS_566b`,
    `label6_6034`). An "entry-point-looking" name inside a proven data table is
    not evidence of code: check what the referencing site actually is.
+
+## Session 52 (Stage 2) Lessons — evolve chain, three forks, and the blink hunt
+
+**1. Verify the RENDER LAYER before designing a visual effect.** Three blink fixes in a row
+targeted layers the battle enemy doesn't use (OBP0/1 — it isn't OBJ; whole-BGP — that's the
+PLAYER-hit flash; `$ffc3` — that's the PLAYER-hit shake). One static check would have
+prevented all three: `LoadBtl_7627` writes the enemy to the BG map. When an effect "does
+nothing", suspect the layer, not the values.
+
+**2. SameBoy `watch $a-$b` is SUBTRACTION, not a range.** `watch $c000-$c03f` silently set
+one watchpoint at `$ffc1` (= $c000-$c03f as arithmetic). Give users single-address watch
+lists. Also: buffers rewritten every frame (shadow OAM) are unusable watch targets — anchor
+on a value that changes once (e.g. enemy HP `$dbab`) or a stable VRAM cell (the `$9929`
+tilemap watch cracked the blink in one run: value alternates `$14`⇄`$e0`, backtrace names
+the writer).
+
+**3. rgbasm reports section overflow at the FIRST excess byte** ("reached 0x4001"), not the
+total. Don't "fix one byte" and rebuild — count the bytes you appended.
+
+**4. Loop-bound splices extend vanilla scanners cheaply.** The natural-learn loop's
+`ld a,c / cp $da` (3 bytes) → `call LearnLoopFork` lets the SAME loop walk a custom table —
+no engine duplication, vanilla semantics (incl. the code-1 UPGRADE/replace path) for free.
+Pattern generalizes: any `cp BOUND / jp nz,LOOP` is a fork point.
+
+**5. "256-wide" tables may physically END early.** The announce table's byte for id `$E2`
+is the first OPCODE of `Jump_058_58e8`. Editing "the table" would corrupt code — check
+what the bytes AT your target index actually are before writing (a lookup fork is the fix).
+
+**6. `ld hl,$0bXX` constants can be mgbdis-mislabeled as ROM0 labels.** `$0b03` (a text
+(mode,idx) pair) rendered as `ld hl, DispatchAboveE2`. When a "label load" makes no sense
+as an address, decode it as data.
+

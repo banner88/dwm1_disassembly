@@ -610,7 +610,7 @@ incl. battle_record), `tools/build_skill_tables.py` (round-trips function/MP/lea
 
 ---
 
-### 11.7 Message/animation TIMING gate, hit-flash, and the enemy-blink open item  [S50/S2e, 2026-06-30, emulator-tested via Tame]
+### 11.7 Message/animation TIMING gate, hit-flash, and the enemy-blink (mechanism SOLVED S52, implementation deferred)  [S50/S2e + S52, emulator-tested]
 Reversed while sequencing Tame's beats (heart → then damage). All user-confirmed except the last.
 
 **Message-vs-animation timing gate — `$53:$5b07`.** In the effect state machine's bit6-clear
@@ -635,11 +635,31 @@ sets these to `$00` (all-light) and restores the battle palette (`$d2/$d2/$e2`);
 drives it. Setting all three flashes the WHOLE SCREEN. `$da83=$04` (set by `$5f:$4b0b`, which
 also clears `$da82`–`$da87`) is a separate screen blink (TatsuCall), not per-enemy.
 
-**OPEN — per-enemy-sprite blink** (a plain ATK blinks just the enemy). NOT `wBGPalette` (whole
-screen) and NOT an OBP0/OBP1-only palette flash (TESTED: nothing blinked). Enemy is OBJ
-(`UpdateBattleSprites $50:$79B4`); the per-sprite blink is a DIFFERENT mechanism (likely an OAM
-visibility toggle of the enemy's entries over a few frames), NOT YET FOUND. Deferred as minor
-cosmetic. Next: trace what a plain physical ATTACK does to the enemy OAM at the hit frame.
+**SOLVED (mechanism) — per-enemy hit-blink; implementation DEFERRED** [S52, HW-confirmed
+via `$9929` tilemap watchpoint captures; user: "bank it"].
+- **The old premise here was WRONG:** the battle enemy is **BG-DRAWN, not OBJ**. Enemy tile
+  data is composed in the `$c500` buffer and written to the BG map by `LoadBtl_7627`
+  (`$50:$7627` → `BtlFunc_7656`, three enemy slots at BG columns `$25/$2b/$31`); the OBJ/OAM
+  layer holds the EFFECT metasprites (heart, fireballs — compositor `$5c:$40fc`, `$80`-term
+  entries, position base `hFFC3/hFFC5`). Three fix attempts failed by targeting layers the
+  enemy doesn't use: OBP0/1 flash (S50 — enemy isn't OBJ), whole-BGP flash (S52 — that IS the
+  PLAYER-hit whole-screen flash, user-identified on sight), `$ffc3` bump (that's the
+  PLAYER-hit screen shake, ticked by banks `$5c/$5d/$5e` entry 0 on `$dd60/$dd62/$dd65/
+  $dd66/$dd68` state).
+- **The actual blink = a TILEMAP TOGGLE** inside the layer-2 animation machine, bank `$5f`
+  **entry 5** (`$4b1b`; far-called `ld hl,$5f05; rst $10` from `$52:$6c56`): global 5-frame
+  divider `$da34`, done-flag `$da82`, phase dispatch `rst $00` on **`$da83`** (ptr table
+  `$4b28`), and within the blink phase a sub-dispatch on **`$da84`** at `$4b99`
+  (ptrs: `$4ba5` = BLANK frame, `$4bcb` = ENEMY frame, `$4bf4` = finish→`$da82=1`).
+  Both frame routines resolve tile sources via `$50f4` (table lookup `[hl+2A]`; enemy src
+  table `$50ff`, blank src table `$5109`) and write the enemy's BG cells with the VRAM-safe
+  copy at **`$4e1f`** (DI/STAT-wait/EI per byte — the `$9929` cell alternates `$14`⇄`$e0`).
+  Captured backtrace: `$5f:$4e2a ← $5f:$4bc3/$4bec ← $52:$6c56 ← $50:$60b9`.
+- **Implementation plan (1–2 SameBoy iterations expected):** from `TameGateHook`'s per-frame
+  delay, arm the machine (`$da82=0`, `$da83=<blink phase>`, `$da84=0`, `$da34` divider) at the
+  hit beat and let the existing entry-5 tick run the toggle; or trampoline the two frame
+  routines directly. `wTameBGSave` (`$d489`, 3 bytes) is reserved and free for this state.
+  Deferred to its own session / editor animation support (ROADMAP optional-polish box).
 
 ---
 
@@ -848,7 +868,8 @@ touches shared code):
 - Beats 3/4 sound+text: effect state machine forked (`TameGateHook`, §11.7) to hold the message
   a fixed number of frames (heart plays first) and to move the damage sound onto the text.
 - Damage: `SkillTame` (`$72`) = **ATK/4** (was ATK/2 — ATK/2 equalled a normal attack, so the
-  anti-abuse hit must be weaker). Meter += crank `$0640` **[TEST — revert to `$000A` for Stage 2]**.
+  anti-abuse hit must be weaker). Meter += `TameMeterTable[id-$E1]` since S52 (crank
+  reverted; §13.6 — the old "$000A = Beef Jerky" note was a MISLABEL: $0A=10 is FEEDMEAT tier).
 - Record/dispatch (unchanged S2d pattern): `CustomRecordPtrTable[$E1]`→`CustomRecord_E1_Tame`
   ($54); `CustomBattleExec` ($72 e1) `cp $E1; jp z,SkillTame`; `SkillNamePtrTable[$E1]`→"Tame"
   ($41); Slime learns $E1 ($14, harness); descriptor `SetHLBattle_54e7` ($dd6f=$a8, msg $b882).
@@ -858,5 +879,71 @@ bank_054 (record), bank_072 (SkillTame ATK/4 + meter + `wTameDelay` init), **ban
 timing/sound/blink, §11.7)**, bank_041 (name), bank_014 (harness), wram (`$D488 wTameDelay`,
 `$D489 wTameBGSave[3]`). `tools/verify_integrity.py` registers `bank_053.asm`.
 
-**Stage-2 TODO (deferred):** revert meter crank `$0640`→`$000A`; 3 upgrade tiers (learn-chain
-fork bank $06); make Tame natural to Slime (replace a `$03:$4461` slot); per-enemy blink (§11.7).
+**Stage-2: DONE S52 — see §13.6** (crank reverted; 3-tier evolve chain; learn/MP/announce
+forks; natural-to-Slime DE-SCOPED by user — the learn fork makes any species slot work).
+Per-enemy blink: mechanism solved, implementation deferred (§11.7).
+
+### 13.6 Tame Stage 2 — the 3-tier EVOLVE chain + the three new forks  [S52, 2026-07-06, v34-v37]
+
+**Status:** level-up learn + upgrade-replace + upgrade message **user-confirmed in SameBoy**
+(v34). Built S52, **NOT yet user-tested**: MP charging (10/30/50), meter tier values
+(10/100/400), the "!" page-split message. Clean build byte-perfect throughout; verifier PASS.
+
+**(A) Skills.** TameMore `$E2` / TameMost `$E3` = Tame with a bigger meter boost, on the full
+§13.4 stack: records (`$54`, mp mirror +4 = 30/50; Tame's set to 10), `CustomBattleExec`
+dispatch → shared `SkillTame`, names (`$41` [226]/[227]), announce (`$FD` via the NEW
+`AnnounceIdxFork`, below), proxy `$c2` (heart), pool messages (idx 4/5), `TameGateHook`/
+`TameSound1/2Hook` widened to the `$E1-$E3` range. Meter: `TameMeterTable` (`$72`) dw
+**10/100/400** = the vanilla per-meat record `power_enemy` words (FeedMeat/PorkChop/Sirloin;
+BeefJerky=30, BadMeat=5; cap `$0640`=1600 unchanged — the two `$0640`s in bank_052 are that
+VANILLA cap, never a crank).
+
+**(B) Natural-learn / EVOLVE fork (`LearnLoopFork`, bank `$06`).** The scanner ($06 entry 5,
+`$4f9a`; caller = `$51` level-up flow via `ld hl,$0605; rst $10`) loops skill ids `0..$D9`
+against `SkillLearnReqTable` (18 B: lvl, 6 u16 stats, up to 5 prereq ids `$FF`-padded),
+skipping already-known ids via the `$c0d8` working copy (caller pre-fills $FF + the monster's
+8 skills). Return in `$ffd8/$ffd9`: code 0 = plain learn (id found in the monster's personal
+learnable queue — natural slots seed it), code 1 = **UPGRADE** (prereq known; old id in
+`$ffda`; the caller REPLACES it in the skill list — this IS vanilla skill-evolve, e.g.
+Vivify→Revive per the FAQ), code 2 = all-prereqs path; `$FF` = nothing. Custom ids were
+simply NEVER SCANNED (loop bound `cp $da` — exclusion, not overshoot). Fork: the 3-byte
+window `ld a,c / cp $da` at `$5088` → `call LearnLoopFork`; at `c==$DA` the fork repoints
+`HL=CustomLearnReqTable`, `c=$E1`, and the SAME loop continues to `$E4`. Table: `$E1` lvl 2
+no prereq; `$E2` lvl 3 prereq `$E1`; `$E3` lvl 5 prereq `$E2` (PLACEHOLDER reqs — the editor
+owns real values). Placement: bank `$06`'s only free run (`$7F1E`, 225x`$FF`): 28 `rst $38`
+kept + 15 B fork + 54 B table, so `Jump_006_7f7f` and `db $06 @ $7FFF` keep exact offsets.
+Ids `$DA-$E0` stay unscanned by design ($DE/$DF retired POCs, $E0 not naturally learnable).
+
+**(C) MP fork (`MPPtrFromId`, bank `$07`).** ALL THREE `SkillMPCostTable` readers (S48 map:
+`$56E8` GetSkillMPCost/display, `$5A9x` afford, `$5B4x` deduct) had the identical 9-byte
+index window (`add hl,hl` + table add) → each replaced with `call MPPtrFromId` + 6 nops
+(byte-neutral). Fork: id < `$DE` → exact vanilla math on the labeled table; id >= `$DE` →
+`CustomMPCostTable` dw 0/0/0/**10/30/50** (`$DE..$E3`). Clobbers A only; BC/DE preserved.
+Before S52, custom ids read GARBAGE past `$58C8` (e.g. `$E1` → 65242) — Tame worked only
+because its record mp was 0; with real costs the fork is mandatory. Record `+4` MUST stay
+mirrored with this table. Placement: appended in the `$7F58` free run; 43 fill bytes
+consumed, so `FollowerArtResolve07` relocated (label-based; assembler updates the call).
+
+**(D) Announce fork (`AnnounceIdxFork`, bank `$58`).** The announce table (`$5806`,
+"256-wide" by design) PHYSICALLY ends at id `$E1`: the byte for `$E2` **is the first opcode
+of `Jump_058_58e8`** — high slots cannot be edited in place. Fork: the 9-byte index window
+at `jr_058_57e6` → `call AnnounceIdxFork`; ids >= `$E2` read `CustomAnnounceTable`
+(db `$FD,$FD`). Placed in the `$6920` free run replacing 28 nops 1:1 (`DataBtlFX_7959`
+offset preserved).
+
+**(E) Upgrade-message "!"-orphan fix.** The upgrade message is **mode-$0b template 3**
+(`MiscTextPtrTable` `$41:$49CD` entry 3 → `MiscText_03` `$728B`; the `ld hl,$0b02/$0b03/
+$0b0f` constants in the `$51` caller are (mode,idx) pairs — `$0b03` was mgbdis-mislabeled
+as ROM0 `DispatchAboveE2`). Line 2 "becomes [New]!" auto-wraps the bare `!` for names >= 8
+chars (a VANILLA defect too: Blazemore/Blazemost). Fix: entry [3] repointed to
+`MiscText_03_Paged` (bank $41 free space), page-splitting like sibling `MiscText_02`:
+page 1 `[Mon]'s [Old]`, page 2 `becomes` + NL + `[New]!` — never orphans, costs one button
+press, applies to vanilla upgrades too. Insert codes: `$F9 $00` nickname / `$F9 $30` old /
+`$F9 $20` new; `$68` = "'s".
+
+**(F) File set (Stage 2):** bank_006 (learn fork), bank_007 (MP fork), bank_041 (names +
+msg template), bank_04c (2 pool msgs, 44 nops consumed), bank_053 (range checks; the S50
+OBP flicker REMOVED — a no-op on the wrong render layer, §11.7), bank_054 (ptr entries +
+records + mp mirrors), bank_058 (announce fork), bank_05f (proxy $E2/$E3 = $c2), bank_072
+(dispatch + TameMeterTable), wram (comment only). Harness (bank_014) KEPT per user.
+

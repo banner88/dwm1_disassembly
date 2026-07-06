@@ -572,8 +572,8 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_223_Smite  ; [223]
     dw SkillName_224_MagicBurn  ; [224] $E0 [S2d]
     dw SkillName_225_Tame        ; [225] $E1 [S2e]
-    dw SkillName_222_Unused_222  ; [226]
-    dw SkillName_222_Unused_222  ; [227]
+    dw SkillName_226_TameMore    ; [226] $E2 [Stage2]
+    dw SkillName_227_TameMost    ; [227] $E3 [Stage2]
     dw SkillName_222_Unused_222  ; [228]
     dw SkillName_222_Unused_222  ; [229]
     dw SkillName_222_Unused_222  ; [230]
@@ -974,7 +974,9 @@ MiscTextPtrTable:  ; $49CD
     dw MiscText_00  ; [0]
     dw MiscText_01  ; [1]
     dw MiscText_02  ; [2]
-    dw MiscText_03  ; [3]
+    dw MiscText_03_Paged  ; [3] [Stage2] skill-upgrade msg, repointed: page-split so
+                          ;   "[NewSkill]!" renders whole (vanilla wrapped the "!"
+                          ;   alone for 8+ char names). Vanilla MiscText_03 left dead in place.
     dw MiscText_04  ; [4]
     dw MiscText_05  ; [5]
     dw MiscText_06  ; [6]
@@ -2648,6 +2650,20 @@ SkillName_224_MagicBurn:                                          ; $7F93  [S2d]
     db $30, $3e, $44, $46, $40, $25, $52, $4f, $4b, $f0           ; "MagicBurn" + terminator
 SkillName_225_Tame:                                               ; [S2e]
     db $37, $3e, $4a, $42, $f0                                     ; "Tame" + terminator
+SkillName_226_TameMore:                                           ; [Stage2]
+    db $37, $3e, $4a, $42, $30, $4c, $4f, $42, $f0                 ; "TameMore" + terminator
+SkillName_227_TameMost:                                           ; [Stage2]
+    db $37, $3e, $4a, $42, $30, $4c, $50, $51, $f0                 ; "TameMost" + terminator
+; [Stage2] Skill-upgrade message, paged (MiscTextPtrTable[3] repointed here).
+; Vanilla MiscText_03 ($728B) = "[Mon]'s [Old]\nbecomes [New]!" — line 2 auto-wraps
+; the "!" alone for names >= 8 chars. This version page-splits like MiscText_02:
+;   page 1: "[Mon]'s [Old]"   page 2: "becomes\n[New]!"  — never orphans.
+; $ED mon-prefix, $F9 xx buffer insert ($00 nickname / $30 old / $20 new),
+; $68 "'s", $F1 newline, $FA $F7 wait-button, $F2 page, $63 "!", $F0 end.
+MiscText_03_Paged:
+    db $ED, $F9, $00, $68, $62, $F9, $30, $FA, $F7, $F2            ; "[Mon]'s [Old]" <page>
+    db $3F, $42, $40, $4C, $4A, $42, $50, $F1                      ; "becomes" <newline>
+    db $F9, $20, $63, $FA, $F7, $F0                                ; "[New]!" <end>
 .pad224
     ds $7FF6 - .pad224, $00                                       ; pad to $7FF6 (NewSpecies tail unchanged)
 ;   Phase N: new-species SHORT (default-nickname) name table tail.

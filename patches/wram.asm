@@ -234,7 +234,10 @@ wRoomRecScratch:: ds 8 ;d47f
 wRoomEncFlag:: db ;d487
 
 wTameDelay:: db ;d488 — [S2e] Tame heart->message delay counter (frames)
-wTameBGSave:: ds 3 ;d489 — [S2e] saved BGP/OBP0/OBP1 during the hit-flash flicker
+wTameBGSave:: ds 3 ;d489 — [S2e] was: saved palettes for the Tame hit-flicker. The flicker
+                   ;  was removed in S52 (targeted OBP but the battle enemy is BG-drawn —
+                   ;  see BATTLE_SKILL_SYSTEM §11.7); bytes kept RESERVED so later WRAM
+                   ;  labels don't shift. Free for the future blink state if needed.
     ds $305                         ; gap ($D48C-$D790)
 
 wGroundItemData:: db ;d791

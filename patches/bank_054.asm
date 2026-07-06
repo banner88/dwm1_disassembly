@@ -1387,6 +1387,8 @@ CustomRecordPtrTable:       ; indexed by (id - $DE)*2
     dw $41CF                ; [$DF] retired POC -> Blaze record (benign default)
     dw CustomRecord_E0      ; [$E0] MagicBurn
     dw CustomRecord_E1_Tame ; [$E1] Tame [S2e]
+    dw CustomRecord_E2_TameMore ; [$E2] TameMore [Stage2]
+    dw CustomRecord_E3_TameMost ; [$E3] TameMost [Stage2]
 
 ; --- MagicBurn ($E0) 19-byte record ------------------------------------------
 ; Based on BigBang/MegaMagic-class all-foes magic, with mp_cost (+4) zeroed (the
@@ -1404,12 +1406,21 @@ CustomRecord_E0:
 ; --- Tame ($E1) 19-byte record [S2e] ----------------------------------------
 ; Based on Blaze (id 0): single-target ($11), spell dmg-class ($04), presentation
 ; flags +7/+8/+9 = $41/$07/$17 (announce+animate path that Blaze proves works).
-; Differences from Blaze: +4 mp=0 and +5 status=0 (handler drives effect), and the
-; power fields +11.. = 0 because SkillTame OVERRIDES $db56/57 with ATK/2 directly.
-;   +0 eclass=$00  +1 cat=$13  +2 target=$11(1 FOE)  +3 ai=$14  +4 mp=0  +5 status=0
+; Differences from Blaze: +5 status=0 (handler drives effect), and the
+; power fields +11.. = 0 because SkillTame OVERRIDES $db56/57 with ATK/4 directly.
+; +4 mp = 10 [Stage2] — mirrors CustomMPCostTable (bank $07 fork charges it).
+;   +0 eclass=$00  +1 cat=$13  +2 target=$11(1 FOE)  +3 ai=$14  +4 mp=10  +5 status=0
 ;   +6 dmg_class=$04(spell)  +7 $41  +8 $07  +9 $17  +10 $02  +11.. power=0
 CustomRecord_E1_Tame:
-    db $00,$13,$11,$14,$00,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
+    db $00,$13,$11,$14,$0A,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
+
+; --- TameMore ($E2) / TameMost ($E3) 19-byte records [Stage2] ----------------
+; Identical to Tame except the MP mirror (+4): 30 / 50. Meter tier + damage come
+; from the shared SkillTame handler (bank $72 TameMeterTable), not the record.
+CustomRecord_E2_TameMore:
+    db $00,$13,$11,$14,$1E,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
+CustomRecord_E3_TameMost:
+    db $00,$13,$11,$14,$32,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
 
 ; pad the rest of the bank back out to $8000 (keeps bank $54 layout intact)
 CustomSkillBlobEnd_054:
