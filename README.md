@@ -9,6 +9,12 @@ and story content. End goal: a visual editor for building custom stories.
 **Original MD5**: `1ca6579359f21d8e27b446f865bf6b83` ← the only canonical hash
 **Assembler**: [RGBDS](https://github.com/gbdev/rgbds) v0.6.1 exactly
 
+
+# Atribution Npte: 
+
+This repo was built off this original disassembly work by Mallos31: https://github.com/Mallos31/dwm
+All credit for inital work is to that repo. 
+
 ## Start here
 
 | You want to… | Read |
