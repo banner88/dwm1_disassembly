@@ -10,7 +10,7 @@ and story content. End goal: a visual editor for building custom stories.
 **Assembler**: [RGBDS](https://github.com/gbdev/rgbds) v0.6.1 exactly
 
 
-# Atribution Npte: 
+# Attribution Note: 
 
 This repo was built off this original disassembly work by Mallos31: https://github.com/Mallos31/dwm
 All credit for inital work is to that repo. 
