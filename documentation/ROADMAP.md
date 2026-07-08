@@ -179,18 +179,34 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       *past* the ceiling by table rows alone — renders, encounters, exits all confirmed.
       Owning doc: **EDITOR_DESIGN.md §2** (as-built map). This is the green light for
       `build_project.py`.
-- [ ] `project.json` schema: rooms/screens/exits/NPCs, scripts
-      (decompiler pseudo-code), dialogue (auto-wrap 18 ch, auto-DTE,
-      auto page-split, two-level table emission), named flags
-      auto-allocated from the free pool, items, encounters.
-- [ ] `tools/build_project.py`: project → bank_060.asm (+spill to $64,
-      $67… — multi-bank from day one) → make → ROM. Deterministic.
-      KEY_LESSONS rules become compiler validations (script index 0
-      reserved, text termination, exit byte copying, entry-sized data,
-      bank space accounting).
-- [ ] **Regression baseline**: re-express the v23 content as
-      example-project/ and diff behavior. *Accept*: same rooms, NPCs,
-      dialogue, item give work from generated asm.
+- [x] **`project.json` schema (DONE S53; fix-build NOT yet user-tested).**
+      Layer B (custom) + Layer D (build): rooms/screens/NPCs/exits (dense
+      mapIDs, records ≥`$70`, per-room render + encounters), scripts (op
+      model, `@label` branches, symbol pass-through), dialogue (explicit
+      `lines`, `auto` 18-cell wrap, `raw` escape; two-level table emitted;
+      DTE deferred, matches proven hand text), palettes (placement a/b),
+      wram step counters (auto-alloc reproduces hand addresses), named
+      flags from the EVENT_FLAGS safe pool. Layers A/C + music/skills
+      HARD-ERROR (never silently ignored). → **PROJECT_COMPILER.md §2**.
+- [x] **`tools/build_project.py` (DONE S53).** project → generated
+      `bank_060.asm`/`bank_071.asm` (sha256-pinned engine template heads)
+      + `@BUILD_PROJECT` regions in `bank_017.asm`/`wram.asm` → stage →
+      `make` → ROM + `manifest.json` + `game.sym`. Deterministic (emit ×2
+      compared); bank accounting BEFORE rgbasm (pinned template sizes);
+      KEY_LESSONS rules are validations (spawn script 0, screen_byte
+      required, terminators, dense tables, flag pool, palette shape).
+      Layouts/tilesets stay tool-owned ($64/$67 referenced, not compiled) —
+      multi-bank spill deferred until content needs it (bank_map declared).
+      18/18 tests. → **PROJECT_COMPILER.md §3–5, §10**.
+- [x] **Regression baseline (DONE S53 — exceeded: byte-identity, not just
+      behavior).** `editor2/example-project/project.json` re-expresses ALL
+      current user-confirmed content (6 rooms, 21 texts, 10 scripts, 4
+      palettes, enc/record rows, step counters); generated patched ROM ==
+      S53 reference patched build, md5-equal (`--expect-md5`). The
+      `build.compat.master_table_rooms` key pins legacy bytes; removing it
+      emits the FIXED full-width script master table (+ shared no-op) —
+      built S53, NOT yet user-tested; delta measured = bank `$60` + header
+      checksums only. → **PROJECT_COMPILER.md §1, §7**.
 - [x] **Encounters #1 — per-room toggle** (DONE S42, user-confirmed). `RoomEncTable`
       (bank `$71`, 3 B/room `[enabled, gateID, floor]`, indexed `mapID−$6B`) scanned by
       `CustomEncResolve` (bank `$71` entry 1) via the bank-`$0B` whitelist hook, replacing

@@ -16,7 +16,73 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S50 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first: S51 → S11)
+
+### Session 51 (archived from PROJECT_STATE by S53, verbatim)
+
+> Last verified: 2026-07-02 (Session 51 — **Repo/doc consolidation audit + skill-table
+> rename.** Integrity PASS 4/4, clean build byte-perfect `1ca6579…`. Doc-layer session:
+> no functional ROM change.)
+> **S51 — the status layer is restructured for context cost; contradictions fixed.**
+> (1) **PROJECT_STATE compressed** (~1,071 → ~330 lines): session blocks S11–S48 moved
+> verbatim to the new cold archive `SESSION_HISTORY.md`; a one-line Session Index (below)
+> replaces them; resolved doc-defects moved there too. Aging rule added to
+> SESSION_PROTOCOL §3 (keep latest 2 blocks; move the oldest on each new session).
+> (2) **ROADMAP compressed** (~1,176 → ~490 lines): every [x] item reduced to
+> evidence + owning-doc pointer; cut narratives preserved verbatim in SESSION_HISTORY
+> Part 3. New boxes added: **Tame Stage 2 / skill evolve** (⚠️ the S50 TEST CRANK
+> `$0640` is LIVE in `patches/bank_072.asm`+`bank_052.asm` — one Tame cast maxes the
+> [S52 correction: FALSE re bank_052 — its two `$0640`s are the VANILLA meter cap,
+> present in the clean tree; the only crank was one line in bank_072. Crank reverted S52.]
+> meat meter; revert to `$000A` is part of that box), G3 schema fold (was prose-only),
+> MP/learn-table `dw`/`db` re-section, §13.4 skill follow-ups, skills.json retirement,
+> TOOLS_AND_DATA upkeep. (3) **Contradictions fixed in place:** empty-bank counts
+> unified (canonical Bank Allocation table below); script-count bases reconciled
+> (518 = bank $0C–$0F label census; 732 = (map_type, script) entries in
+> all_scripts.json — map types share banks); ROADMAP flag counts updated to the
+> branch-following numbers (328/298); SESSION_PROTOCOL stale `documentation/reference/`
+> path fixed (layout stays FLAT — the old "target structure" is dropped, user decision);
+> DATA_STRUCTURES related-docs table fixed (FIRST_5MIN_TRACE → ROUTING appendix;
+> known_ROM_map.md removed); BREEDING_SYSTEM "NOT yet built" header fixed (B1–B7 built);
+> TOOLS_AND_DATA refreshed (103 tools / 56 JSONs; ~13 tools + ~10 JSONs added to the
+> manifest; header counts fixed); README patched-build cleanup line fixed (8 new-bank
+> files, not just bank_060). (4) **Rename executed (was deferred S44):**
+> `TilesetLookupTable` → **`SkillMPCostTable`** and `LoadFld_56e8` → **`GetSkillMPCost`**
+> in `disassembly/bank_007.asm` + `patches/bank_007.asm` (labels/comments only; clean
+> build byte-perfect; role confirmed live by S48's 3-reader map + S49 MagicBurn MP path).
+> (5) **Same session, user-approved follow-on:** housekeeping deletions EXECUTED —
+> actually deleted: `__pycache__/`, 8× `.DS_Store`, `breeding_extra_recipes.json`
+> (all tracked at HEAD → git-recoverable; the recipes file was a B3 capacity TEST
+> fixture, facts archived in SESSION_HISTORY). THREE queue rows were stale:
+> `monsters.json`, `event_flags.json`, `edits.json` were already absent
+> (untracked at HEAD — never in a fresh clone). `--emit-relocation` marked
+> legacy/absence-tolerant. (6) **Both skill tables
+> RE-SECTIONED to real data** in BOTH trees via the new
+> `tools/resection_skill_tables.py` (probe-build method): `SkillMPCostTable` →
+> 222×`dw` with per-skill name/MP comments; `SkillLearnReqTable` → 222×18B `db`
+> with decoded stat/prereq comments; 4,293 fake-instruction lines → 676 real ones;
+> two fake-decode artifact labels kept at exact offsets (`DispMapS_566b`,
+> `label6_6034` — referenced from not-yet-re-sectioned bank-$06 regions). Clean
+> build byte-perfect; verifier PASS 4/4. (7) Phase-D STALE BOXES verified + ticked:
+> banks $03/$14/$16 were already labeled `db`. Toolchain incident, honestly
+> recorded: S51 **violated the pre-existing four-doc "never `make clean`" rule**
+> (README ×2, PROJECT_STATE Iron Rule 3, SESSION_PROTOCOL, KEY_LESSONS — the
+> SECOND recorded violation; the KEY_LESSONS canonical entry now logs both) and
+> initially misreported the rule as nonexistent until the user pushed back —
+> grep the docs before making claims about the docs. Sibling hazard also hit:
+> **broad `git checkout -- disassembly/`** reverts uncommitted label work.
+> STRUCTURALLY FIXED: Makefile `clean` no longer
+> deletes gfx, the `%.2bpp: %.png` trap rules are removed (17/18 committed .2bpp
+> are NOT PNG-regenerable — measured), `disassembly/gfx/README.md` added.
+> (8) `--check` caught a tool defect (the SkillLearnReqTable label line was
+> emitted missing — a silent str.replace no-op in the tool build); label inserted
+> in both trees + the `ld hl, $50e0` loader relabeled to `ld hl,
+> SkillLearnReqTable` (byte-identical), tool fixed with an assert.
+> **NEXT:** Tame Stage 2 (crank revert + 3 tiers + natural-to-Slime) as its own session,
+> or S2f (field-cast skill), or T2 text roll-out. Housekeeping deletions (`__pycache__/`,
+> 8× `.DS_Store`, Tier-L JSONs, `breeding_extra_recipes.json`) queued pending user OK.
+
+---
 
 ### Session 50 (archived from PROJECT_STATE by S52, verbatim)
 

@@ -10,6 +10,96 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-07-07 (Session 53 — **Editor headless backend ships:
+> `project.json` schema + `tools/build_project.py`; regression machine-verified
+> byte-identical.** Integrity PASS 4/4, clean build byte-perfect `1ca6579…`.)
+> **The compiler (`editor2/` package + `tools/build_project.py`) compiles a semantic
+> `project.json` into the proven patch overlay.** It owns `bank_060.asm` +
+> `bank_071.asm` whole-file (verbatim, sha256-pinned engine template heads +
+> generated data) and three byte-neutral `@BUILD_PROJECT` regions
+> (`bank_017.asm` ×2: `room_palettes_a`/`room_render_tables`; `wram.asm` ×1:
+> `wram_step_counters` — markers added S53, neutrality proven by integrity PASS).
+> Pipeline: content-validate → emit ×2 (determinism enforced) → bank-accounting
+> BEFORE rgbasm (pinned template sizes: `$60`=283 B @`$411B`, `$71`=103 B
+> @`$4067`, from the reference `game.sym`) → splice regions → stage/`make`/
+> restore (PATCH_FILES lists parsed from verify_integrity.py — one source of
+> truth) → `build/manifest.json` (+`game.sym`) mapping every text/script/
+> step-counter/flag to `bank:addr` for the SameBoy debug loop. KEY_LESSONS
+> rules are compiler VALIDATIONS (spawn script 0; screen_byte required, never
+> guessed; text terminators + bare-`$EE`; 8×4 palettes + forced-idx1/idx3
+> warnings; dense mapID/text tables; flag safe-pool allocator; wram region cap
+> keeping `wRoomRecScratch`@`$D47F`). 18/18 tests
+> (`editor2/tests/test_compiler.py --rom`).
+> **Proof 1 — regression:** `editor2/example-project/project.json` re-expresses
+> ALL user-confirmed content (6 rooms `$6B–$70`, 21 texts, 10 scripts, 4
+> palettes, records/enc rows, 7 step counters — auto-allocation reproduces the
+> hand addresses incl. the `$D47C` legacy hole via a `reserved` entry); the
+> generated patched ROM md5 **`3a5a514c65b330e2788170c5d409b960`** equals the
+> S53 reference patched build — byte-identical.
+> **Proof 2 + defect fixed by construction (built S53, NOT yet user-tested):**
+> the hand `CustomScriptMasterTable` had 3 entries but rooms reach index 5; on
+> the SCROLL path a room past the table overshoots into following data —
+> benign today ONLY because `$70` is single-screen (cannot scroll). Compiler
+> default emits the full-width master table + shared `CustomScriptNoop`
+> (+10 B); `build.compat.master_table_rooms` reproduces the legacy bytes
+> (compile-time warning). Fixed patched ROM `f81d4ad84ee52f4c3342cc1f7e261e58`;
+> measured delta vs reference = bank `$60` `$4010–$45B8` (+ the 2 header
+> checksum bytes) ONLY; `$60` usage 1455→1465 B. Test ROM delivered
+> (`DWM-S53-compiler-fixed-master-table.gbc`).
+> **Script routing documented (resolves S11 "room-entry script unreliable at
+> initial entry"; engine UNMODIFIED, grep-verified):** scroll/post-battle path
+> (bank `$06` `$66e3`, patches/bank_006.asm ~4931) sets `wScriptMapType` = raw
+> `wMapID` → `MapTypeDispatch` ≥`$40` → `DispatchBank0F_Ext` →
+> `GateAwareDispatch` → `CustomScriptRead` — the path that reaches bank-`$60`
+> scripts. Initial-entry path (bank `$01` `$4C3E`, ~line 2478) clamps via
+> `MapIDClampForPalette` → post-S42 `$00` for ALL custom rooms → CASTLE scr0
+> runs at initial entry (benign: flag/var-guarded; the "`$16` for custom
+> rooms" comment at that site is stale). Full write-up: PROJECT_COMPILER.md §7.
+> **Tool defect logged, NOT fixed:** `tools/compile_script.py` declares
+> `set_bgm` (`$41`) = 2 params; the handler `$04:$669D` consumes ONE (the
+> user-confirmed hand script uses one). Fix later together with
+> decompile_script.py's independent PARAM_COUNTS + round-trip re-test
+> (PROJECT_COMPILER.md §8).
+> New reference doc (user-sanctioned, like GATE_GENERATION precedent):
+> **PROJECT_COMPILER.md** — schema, pipeline, regions, template pinning,
+> insertion recipes for future skills/music emitters, S53 findings.
+> **User test result (S53, same day):** demo loop CONFIRMED on the fixed ROM —
+> $6B render/NPCs/jerky, scroll, encounters, $6C dusk + teleports + step demo,
+> $70 ember + encounters, save. TWO anomalies, BOTH classified NOT-S53 by
+> byte evidence (identical in reference + fixed builds):
+> (a) **Gate of Villager shows 4 vanilla floors** (Pillar B $6D absent) —
+> bank_016 unchanged since the S41 commit; fork machine code verified byte-equal
+> in BOTH built ROMs at $16:$5BA9→$7CB9. Fresh-entry contract is
+> `wGateID := wMapID` (pedestal pseudo-id) at `$16:$5B67` when wInGateworld
+> bit7 clear; gate 1 record has last_floor=5 (matches the 4 observed floors),
+> so the .gate1 branch never fired → wGateID ≠ 1 at the floor decisions under
+> the CURRENT save state (story-step-dependent hub exit data is the lead
+> suspect). Probe: `watch $c935` before the pedestal; `examine $c935` on
+> floor 1. OPEN — runtime data needed.
+> (b) **SkyDragon-egg give ($6B bottom screen) then scroll up → crash** —
+> unknown vintage per user. Not plausibly S53 (the fix's measured delta doesn't
+> touch the path). Mechanism audit: $FF29 → AddMonsterWrapper (S3) →
+> bank $14 entry 2 `$40B4` (**pure vanilla**, 0 patched bytes in 600) →
+> bank $01 entry 3 `$484E` whose chain passes THROUGH the G1/GFX-3-patched
+> follower-loader region (12 patched bytes at ~`$4984`:
+> ScreenTransDataTable repoint + ClampFamIdx routing) — so vintage candidates
+> are: original-game edge (egg-in-storage + scroll), or a follower-era
+> regression. **A/B CONFIRMED (user, S53): reproduces on the reference build
+> too → PRE-EXISTING, not S53.** Root-cause/fix is its own session item
+> (suspect list above; start with a SameBoy backtrace at the hang). OPEN.
+> Demo rooms are THROWAWAY per user (real romhack starts from a fresh
+> project.json); both anomalies matter as MECHANISMS ($29 give, Pillar B),
+> not as content.
+> **NEXT:** egg A/B DONE (pre-existing). Remaining probe: gate `watch $c935`.
+> Recommended follow-up: a mechanism-reliability session root-causing + fixing
+> both (they sit on core content verbs — $29 give, Pillar B insertion — that
+> the real romhack will use). On compiler sign-off (GIVEN S53),
+> decide whether to `--apply`
+> the fixed build as the committed overlay baseline (drops `build.compat`).
+> Then Phase 2 follow-ons: Encounters #2 (custom pools), Layer A extraction
+> (the GreatTree-entrance bank-$0B data edit → `world` layer), dialogue DTE
+> pass, `set_flag`-by-name sugar — or resume S2f / T2 / the blink.
+>
 > Last verified: 2026-07-06 (Session 52 — **Tame Stage 2 ships: 3-tier skill-evolve chain,
 > natural-learn fork, real MP costs.** Integrity PASS 4/4, clean build byte-perfect
 > `1ca6579…`. **Tame $E1 / TameMore $E2 / TameMost $E3** are a working upgrade chain,
@@ -49,69 +139,7 @@
 > (mechanism fully mapped — drive `$5f` entry 5's blink phase from `TameGateHook`
 > via `$da82/$da83/$da84/$da34` state injection), or T2 text roll-out.
 >
-> Last verified: 2026-07-02 (Session 51 — **Repo/doc consolidation audit + skill-table
-> rename.** Integrity PASS 4/4, clean build byte-perfect `1ca6579…`. Doc-layer session:
-> no functional ROM change.)
-> **S51 — the status layer is restructured for context cost; contradictions fixed.**
-> (1) **PROJECT_STATE compressed** (~1,071 → ~330 lines): session blocks S11–S48 moved
-> verbatim to the new cold archive `SESSION_HISTORY.md`; a one-line Session Index (below)
-> replaces them; resolved doc-defects moved there too. Aging rule added to
-> SESSION_PROTOCOL §3 (keep latest 2 blocks; move the oldest on each new session).
-> (2) **ROADMAP compressed** (~1,176 → ~490 lines): every [x] item reduced to
-> evidence + owning-doc pointer; cut narratives preserved verbatim in SESSION_HISTORY
-> Part 3. New boxes added: **Tame Stage 2 / skill evolve** (⚠️ the S50 TEST CRANK
-> `$0640` is LIVE in `patches/bank_072.asm`+`bank_052.asm` — one Tame cast maxes the
-> [S52 correction: FALSE re bank_052 — its two `$0640`s are the VANILLA meter cap,
-> present in the clean tree; the only crank was one line in bank_072. Crank reverted S52.]
-> meat meter; revert to `$000A` is part of that box), G3 schema fold (was prose-only),
-> MP/learn-table `dw`/`db` re-section, §13.4 skill follow-ups, skills.json retirement,
-> TOOLS_AND_DATA upkeep. (3) **Contradictions fixed in place:** empty-bank counts
-> unified (canonical Bank Allocation table below); script-count bases reconciled
-> (518 = bank $0C–$0F label census; 732 = (map_type, script) entries in
-> all_scripts.json — map types share banks); ROADMAP flag counts updated to the
-> branch-following numbers (328/298); SESSION_PROTOCOL stale `documentation/reference/`
-> path fixed (layout stays FLAT — the old "target structure" is dropped, user decision);
-> DATA_STRUCTURES related-docs table fixed (FIRST_5MIN_TRACE → ROUTING appendix;
-> known_ROM_map.md removed); BREEDING_SYSTEM "NOT yet built" header fixed (B1–B7 built);
-> TOOLS_AND_DATA refreshed (103 tools / 56 JSONs; ~13 tools + ~10 JSONs added to the
-> manifest; header counts fixed); README patched-build cleanup line fixed (8 new-bank
-> files, not just bank_060). (4) **Rename executed (was deferred S44):**
-> `TilesetLookupTable` → **`SkillMPCostTable`** and `LoadFld_56e8` → **`GetSkillMPCost`**
-> in `disassembly/bank_007.asm` + `patches/bank_007.asm` (labels/comments only; clean
-> build byte-perfect; role confirmed live by S48's 3-reader map + S49 MagicBurn MP path).
-> (5) **Same session, user-approved follow-on:** housekeeping deletions EXECUTED —
-> actually deleted: `__pycache__/`, 8× `.DS_Store`, `breeding_extra_recipes.json`
-> (all tracked at HEAD → git-recoverable; the recipes file was a B3 capacity TEST
-> fixture, facts archived in SESSION_HISTORY). THREE queue rows were stale:
-> `monsters.json`, `event_flags.json`, `edits.json` were already absent
-> (untracked at HEAD — never in a fresh clone). `--emit-relocation` marked
-> legacy/absence-tolerant. (6) **Both skill tables
-> RE-SECTIONED to real data** in BOTH trees via the new
-> `tools/resection_skill_tables.py` (probe-build method): `SkillMPCostTable` →
-> 222×`dw` with per-skill name/MP comments; `SkillLearnReqTable` → 222×18B `db`
-> with decoded stat/prereq comments; 4,293 fake-instruction lines → 676 real ones;
-> two fake-decode artifact labels kept at exact offsets (`DispMapS_566b`,
-> `label6_6034` — referenced from not-yet-re-sectioned bank-$06 regions). Clean
-> build byte-perfect; verifier PASS 4/4. (7) Phase-D STALE BOXES verified + ticked:
-> banks $03/$14/$16 were already labeled `db`. Toolchain incident, honestly
-> recorded: S51 **violated the pre-existing four-doc "never `make clean`" rule**
-> (README ×2, PROJECT_STATE Iron Rule 3, SESSION_PROTOCOL, KEY_LESSONS — the
-> SECOND recorded violation; the KEY_LESSONS canonical entry now logs both) and
-> initially misreported the rule as nonexistent until the user pushed back —
-> grep the docs before making claims about the docs. Sibling hazard also hit:
-> **broad `git checkout -- disassembly/`** reverts uncommitted label work.
-> STRUCTURALLY FIXED: Makefile `clean` no longer
-> deletes gfx, the `%.2bpp: %.png` trap rules are removed (17/18 committed .2bpp
-> are NOT PNG-regenerable — measured), `disassembly/gfx/README.md` added.
-> (8) `--check` caught a tool defect (the SkillLearnReqTable label line was
-> emitted missing — a silent str.replace no-op in the tool build); label inserted
-> in both trees + the `ld hl, $50e0` loader relabeled to `ld hl,
-> SkillLearnReqTable` (byte-identical), tool fixed with an assert.
-> **NEXT:** Tame Stage 2 (crank revert + 3 tiers + natural-to-Slime) as its own session,
-> or S2f (field-cast skill), or T2 text roll-out. Housekeeping deletions (`__pycache__/`,
-> 8× `.DS_Store`, Tier-L JSONs, `breeding_extra_recipes.json`) queued pending user OK.
->
-> (S50 block moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
+> (S51 block moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
 
 ---
 
@@ -155,6 +183,7 @@
 | 50 | S2e: Tame ($E1) ships; custom-message + timing infra generalizes | BATTLE_SKILL_SYSTEM §13.5, §11.7; TEXT_SYSTEM $FD; KEY_LESSONS S50 |
 | 51 | Doc consolidation; SkillMPCostTable/GetSkillMPCost rename | this file; SESSION_HISTORY.md |
 | 52 | Tame Stage 2: 3-tier evolve chain ($E1-$E3), learn/MP/announce forks, crank revert; enemy hit-blink mechanism solved (deferred) | BATTLE_SKILL_SYSTEM §13.6, §11.7; DOC_AUDIT S52; KEY_LESSONS S52 |
+| 53 | Editor headless backend: project.json schema + build_project.py; byte-identity regression; master-table fix built (untested); script-routing documented | PROJECT_COMPILER.md; KEY_LESSONS S53 |
 
 ---
 

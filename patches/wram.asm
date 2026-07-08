@@ -215,6 +215,7 @@ wCustomExitBuffer:: ds 127 ;d3f9 — exit data copied from overflow bank ($FF te
 ; This range is verified unused by the original engine ($D478-$D790 gap).
 ; NOTE: not in SRAM save range — step counters reset on power cycle.
 ; For persistence, use event flags + room-entry script flag checks instead.
+; @BUILD_PROJECT BEGIN wram_step_counters
 wCustomStep_Room6B_S0:: db ;d478 — Room $6B screen 0 step counter
 wCustomStep_Room6B_S1:: db ;d479 — Room $6B screen 1 step counter
 wCustomStep_Room6C_S0:: db ;d47a — Room $6C screen 0 step counter
@@ -222,6 +223,7 @@ wCustomStep_Room6C_S1:: db ;d47b — Room $6C screen 1 step counter
 wCustomStep_Room6C_S5:: db ;d47c — Room $6C screen 5 step counter
 wCustomStep_Room6D_S0:: db ;d47d — Room $6D screen 0 step counter (Pillar B)
 wCustomStep_Room70_S0:: db ;d47e — Room $70 screen 0 step counter (keystone proof room)
+; @BUILD_PROJECT END wram_step_counters
 
 ; Custom-room dispatch scratch ($D47F-$D487), populated by bank $71 via rst $10.
 ; wRoomRecScratch: the 8-byte $26DD-style record (tileset/dims/threshold) for the

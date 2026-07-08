@@ -2651,6 +2651,7 @@ CustomPalCheck:
 ; data that follows. These 12 bytes are reserved padding to keep that data in place.
     ds 12, $00
 
+; @BUILD_PROJECT BEGIN room_palettes_a
 ; CustomPaletteColors_6B: 64 bytes (8 palettes × 4 colors × 2 bytes)
 ; HALF 1 (gate-tiles): the REAL in-game Gate of Beginning BG palette, dumped
 ; from SameBoy by the user (all 8 slots). Format: RGB15 LE pairs [lo,hi].
@@ -2677,6 +2678,8 @@ CustomPaletteColors_6C:
     db $C4, $48, $16, $7B, $88, $61, $21, $10  ; pal5 mirror
     db $D0, $59, $16, $7B, $C8, $30, $21, $10  ; pal6 mirror
     db $C6, $31, $16, $7B, $E2, $18, $21, $10  ; pal7 mirror
+; @BUILD_PROJECT END room_palettes_a
+
 
 ; ---------------------------------------------------------------------------
 ; HighBattlePal: battle-palette resolver fork for NEW species (id >= 224). G2.
@@ -2709,6 +2712,7 @@ HighBattlePal:
 .pal:
     db $67, $4d, $ff, $6b, $ff, $7f, $00, $00  ; id-224 battle palette (RGB555 LE)
 
+; @BUILD_PROJECT BEGIN room_render_tables
 ; ---------------------------------------------------------------------------
 ; Per-custom-room render tables (relocated from $6CC8 into the bank-$17 filler
 ; tail so they extend to 6 entries — $6B,$6C,$6D,$6E,$6F,$70 — without shifting
@@ -2760,3 +2764,4 @@ CustomPaletteColors_70:
     db $72, $09, $7F, $12, $7E, $12, $00, $00  ; sub-pal 5
     db $B5, $0D, $7F, $12, $7F, $12, $00, $00  ; sub-pal 6
     db $19, $0E, $7F, $12, $7F, $12, $00, $00  ; sub-pal 7
+; @BUILD_PROJECT END room_render_tables

@@ -95,7 +95,20 @@ $7E,$7F→$7C,$7A,$79), `build.py`.
 `verify_integrity.py` — run at every session start/end.
 
 ### Core pipeline (editor sits on these)
-`compile_script.py` (✅ --test passes) · `decompile_script.py` (✅) ·
+`tools/build_project.py` + **`editor2/` package** (✅ new S53 — the headless
+editor backend: compiles `project.json` (Layer B custom + Layer D build) into
+generated `patches/bank_060.asm`/`bank_071.asm` (verbatim sha256-pinned engine
+template heads in `editor2/core/templates/`) + `@BUILD_PROJECT` regions in
+`bank_017.asm`/`wram.asm`; content-validate → deterministic emit ×2 →
+pre-rgbasm bank accounting → splice → stage/`make`/restore →
+`build/manifest.json` + `game.sym`. Modules: `project.py` (schema/alloc),
+`formats.py` (byte formats, doc-cited), `textenc.py`, `scriptgen.py`
+(bank_004-verified param counts), `validators.py` (KEY_LESSONS rules),
+`emitters.py` (registry), `compiler.py`, `builder.py`. Regression:
+`editor2/example-project/` == the S53 reference patched build, byte-identical;
+`editor2/tests/test_compiler.py` 18/18 (`--rom` builds both ROMs). Owning doc:
+**PROJECT_COMPILER.md**) ·
+`compile_script.py` (✅ --test passes; ⚠️ S53: its OPCODES table says `set_bgm`($41)=2 params — handler `$04:$669D` consumes ONE; fix together with decompile_script.py's PARAM_COUNTS copy + round-trip re-test, see PROJECT_COMPILER.md §8) · `decompile_script.py` (✅) ·
 `compress_tiles.py` / `decompress_tiles.py` (✅ roundtrip) ·
 `tile_layout_compiler.py` (✅ — standalone layout compiler: JSON grid
 → padded → LZSS → ASM db; roundtrip verified; editor backend module) ·

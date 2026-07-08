@@ -1713,3 +1713,52 @@ what the bytes AT your target index actually are before writing (a lookup fork i
 (mode,idx) pair) rendered as `ld hl, DispatchAboveE2`. When a "label load" makes no sense
 as an address, decode it as data.
 
+## Session 53 Lessons — project compiler (headless editor backend)
+
+Full reference: PROJECT_COMPILER.md (schema, pipeline, regions, pinning).
+
+### The room-entry script has TWO trigger paths with DIFFERENT map-type sources
+**Symptom (resolves the S11 mystery)**: the room-entry script (index 0) "runs on
+scroll and post-battle reload but not dependably at initial room entry" — S11
+recorded the behavior; the mechanism was never traced.
+**Root cause (grep-verified S53, engine untouched)**: two independent trigger
+sites set `wScriptMapType` differently. The scroll/reload path (bank `$06`
+`$66e3`) stores **raw `wMapID`** → dispatch ≥`$40` → `GateAwareDispatch` →
+`CustomScriptRead` — this is what reaches bank-`$60` scripts. The initial-entry
+path (bank `$01` `$4C3E`) stores **`call MapIDClampForPalette`**, which post-S42
+returns `$00` for ALL custom rooms → bank `$0C` → **Castle's script 0** runs at
+initial entry of every custom room (benign: its actions are flag/var-guarded).
+The inline comment "`$16` for custom rooms" at that site is stale (pre-S42).
+**Rule**: "script 0 timing is unreliable" is really "two paths, two map-type
+sources". Anything that must run at initial entry cannot live in the custom
+room-entry script; per-step ASM (the S11 pattern) remains the correct home.
+When a clamp helper changes (S42 made it uniform `$00`), re-audit every CALLER
+for semantic drift — the comment at a call site is not the behavior.
+
+### A latent table overshoot only surfaces when data becomes code-generated
+**Symptom**: `CustomScriptMasterTable` had 3 entries; rooms extend to index 5
+(`$70`). On the scroll path a high room indexes past the table into following
+data and executes a garbage "script". Never fired in play ONLY because `$6E/$6F`
+are unreachable and `$70` is single-screen (cannot scroll).
+**Fix (compiler, built S53, NOT yet user-tested)**: default emit = full-width
+master table + shared `CustomScriptNoop_PtrTable → dw $FFFF` (+10 bytes);
+`build.compat.master_table_rooms` reproduces the legacy narrow bytes for the
+byte-identity regression and WARNS at compile time.
+**Rule**: when acceptance is byte-identity to a proven artifact, inherited
+defects must be reproduced — make each one an EXPLICIT, warned compat switch,
+ship the fix as the default, and prove the fix build's delta is exactly the
+intended bytes (here: bank `$60` `$4010–$45B8` + header checksums, nothing
+else). "Byte-identical" and "fixed" are two builds, not one argument.
+
+### Verify opcode param counts against the HANDLER, even when a tool asserts them
+**Symptom**: `tools/compile_script.py` declares `set_bgm` (`$41`) with 2 params;
+the proven hand-authored script passes ONE and works.
+**Root cause**: the handler (`$04:$669D`) advances the script counter once and
+consumes one word (`ld a, c / call SetBGM`). The tool's table is wrong — the
+same failure class as the wrong comments of S2/S3 (`$E7`, `$04`, `$0E`), now in
+a TOOL's data table, which reads as more authoritative than a comment.
+**Rule**: a tool's opcode table is a claim, not a verification. Before encoding
+an opcode in a new emitter, read the handler (the bank_004 per-opcode reference
+block + code). Log tool-table defects where the next session will look
+(TOOLS_AND_DATA row + owning doc) instead of silently diverging — and don't
+"fix" the tool without re-testing its decompiler twin's round-trip.

@@ -1,0 +1,373 @@
+{
+  "meta": {
+    "name": "DWM1 demo content — S53 regression baseline",
+    "schema_version": 1,
+    "notes": [
+      "Re-expresses the user-confirmed hand-authored custom content of",
+      "patches/bank_060.asm, bank_071.asm, the bank_017.asm render regions",
+      "and the wram.asm step-counter region as compiler input.",
+      "With build.compat.master_table_rooms present, the generated patched",
+      "ROM is byte-identical to the S53 reference build (md5",
+      "3a5a514c65b330e2788170c5d409b960 as of S53).",
+      "Removing build.compat emits the FIXED full-width script master table",
+      "(+ shared no-op entry) that closes the S53 scroll-overshoot defect."
+    ]
+  },
+
+  "world": { "_status": "NOT_IMPLEMENTED_V1 — Layer A (vanilla-room edits) is extraction work, ROADMAP Phase 2/F" },
+  "gamedata": { "_status": "NOT_IMPLEMENTED_V1 — Layer C keeps its proven per-system tools (build_breeding.py etc.)" },
+
+  "custom": {
+    "wram": {
+      "region_size": 7,
+      "reserved": [
+        { "label": "wCustomStep_Room6C_S5", "addr": "0xD47C",
+          "comment": "Room $6C screen 5 step counter (legacy hole — kept so later counters stay at their proven addresses)" }
+      ]
+    },
+
+    "rooms": [
+      {
+        "id": "gate_island",
+        "mapID": "0x6B",
+        "source_mapID": "0x04",
+        "render": { "palette": "pal_6b", "attr": { "bank": "0x64", "base_entry": 1 } },
+        "encounters": { "enabled": true, "gate_id": 0, "floor": 1 },
+        "scripts": { "0": "arm_encounters", "1": "give_jerky", "2": "give_egg", "3": "bgm_change" },
+        "screens": {
+          "0": {
+            "layout": { "bank": "0x64", "entry": 0 },
+            "npcs": [
+              { "kind": "spawn", "x": 7, "y": 6 },
+              { "kind": "npc", "facing": "down", "sprite": "0x0B", "x": 2, "y": 7, "script": "give_jerky" }
+            ],
+            "exits": [
+              { "x": 3, "y": 1, "dest": "room:$6C", "gate_flag": 0, "screen_byte": "0x00",
+                "spawn_x": 7, "spawn_y": 6,
+                "comment": "exit (3,1) -> Room $6C screen 0 spawn (7,6); screen_byte $00 = in-room ($2DE7[0]); $01 stranded the player off-map (KEY_LESSONS S40)" }
+            ]
+          },
+          "4": {
+            "layout": { "bank": "0x64", "entry": 2 },
+            "npcs": [
+              { "kind": "spawn", "x": 5, "y": 3 },
+              { "kind": "npc", "facing": "down", "sprite": "0x09", "x": 5, "y": 4, "script": "give_egg" }
+            ],
+            "exits": [
+              { "x": 3, "y": 7, "dest": "vanilla:$01", "gate_flag": 0, "screen_byte": "0x08",
+                "spawn_x": 4, "spawn_y": 5,
+                "comment": "south edge exit (3,7) -> GreatTree screen 8 (screen_byte $08 copied from WellStairway per KEY_LESSONS v14-v18)" }
+            ]
+          }
+        }
+      },
+
+      {
+        "id": "dusk_mirror",
+        "mapID": "0x6C",
+        "source_mapID": "0x04",
+        "render": { "palette": "pal_6c", "attr": { "bank": "0x64", "base_entry": 1 } },
+        "scripts": { "0": "arm_encounters", "1": "first_time_q", "2": "teleport_castle",
+                     "3": "teleport_6b", "4": "gate_open", "5": "guard_greet" },
+        "screens": {
+          "0": {
+            "layout": { "bank": "0x64", "entry": 0 },
+            "npcs": [
+              { "kind": "spawn", "x": 7, "y": 6 },
+              { "kind": "npc", "facing": "down", "sprite": "0x09", "x": 5, "y": 4, "script": "teleport_6b" }
+            ],
+            "exits": [
+              { "x": 3, "y": 1, "dest": "room:$70", "gate_flag": 0, "screen_byte": "0x00",
+                "spawn_x": 7, "spawn_y": 6,
+                "comment": "edge exit (3,1) -> Room $70 spawn (7,6) (NPC script still offers a return to $6B)" }
+            ]
+          },
+          "4": {
+            "layout": { "bank": "0x64", "entry": 2 },
+            "npcs": [ { "kind": "spawn", "x": 5, "y": 3 } ],
+            "exits": []
+          }
+        }
+      },
+
+      {
+        "id": "gate_rotation",
+        "mapID": "0x6D",
+        "source_mapID": "0x04",
+        "scripts_placement": "inline",
+        "render": { "palette": "pal_6d", "attr": { "bank": "0x64", "base_entry": 1 } },
+        "scripts": { "0": "noop_entry" },
+        "screens": {
+          "0": {
+            "layout": { "bank": "0x64", "entry": 0 },
+            "npcs": [ { "kind": "spawn", "x": 4, "y": 6,
+                        "comment": "matches wWarpSpawn $0048/$0068 (central sand)" } ],
+            "exits": [
+              { "x": 5, "y": 3, "dest": "0x00", "gate_flag": "0x80", "screen_byte": "0x00",
+                "spawn_x": 0, "spawn_y": 0,
+                "comment": "descent: PIT walk (col5,row3), gate_flag=$80 -> next gate floor (Pillar B; byte-identical to special rooms $50/$51)" }
+            ]
+          }
+        }
+      },
+
+      { "id": "reserved_6e", "mapID": "0x6E", "placeholder": true, "source_mapID": "0x04" },
+      { "id": "reserved_6f", "mapID": "0x6F", "placeholder": true, "source_mapID": "0x04" },
+
+      {
+        "id": "ember_keystone",
+        "mapID": "0x70",
+        "source_mapID": "0x04",
+        "record": { "gfx_id": "0x0D", "gfx_bank": "0x28",
+                    "width_px": 160, "height_px": 128,
+                    "collision_threshold": "0x30" },
+        "render": { "palette": "pal_70", "attr": { "bank": "0x64", "base_entry": 1 } },
+        "encounters": { "enabled": true, "gate_id": 0, "floor": 1 },
+        "screens": {
+          "0": {
+            "layout": { "bank": "0x64", "entry": 0 },
+            "npcs": [ { "kind": "spawn", "x": 7, "y": 6 } ],
+            "exits": [
+              { "x": 3, "y": 1, "dest": "room:$6B", "gate_flag": 0, "screen_byte": "0x00",
+                "spawn_x": 7, "spawn_y": 6,
+                "comment": "edge exit (3,1) -> Room $6B spawn (7,6) — close the loop" }
+            ]
+          }
+        }
+      }
+    ],
+
+    "dialogue": [
+      { "id": "jerky_offer",     "text_id": "0x0A00", "lines": ["Want a", "Beef Jerky?"], "choice": true,  "comment": "item offer [Y/N]" },
+      { "id": "jerky_given",     "text_id": "0x0A01", "lines": ["Received", "BeefJerky!"],                  "comment": "item given" },
+      { "id": "jerky_declined",  "text_id": "0x0A02", "lines": ["Maybe next time."],                        "comment": "declined" },
+      { "id": "castle_q",        "text_id": "0x0A03", "lines": ["Is this your", "first time here?"], "choice": true, "comment": "castle question [Y/N]" },
+      { "id": "castle_yes",      "text_id": "0x0A04", "lines": ["Welcome to this", "castle!"],              "comment": "castle YES" },
+      { "id": "castle_no",       "text_id": "0x0A05", "lines": ["Good to see", "you again."],               "comment": "castle NO" },
+      { "id": "inv_full",        "text_id": "0x0A06", "lines": ["Your inventory", "is full!"],              "comment": "inventory full" },
+      { "id": "egg_offer",       "text_id": "0x0A07", "lines": ["Want a SkyDragon", "egg?"], "choice": true, "comment": "monster offer [Y/N]" },
+      { "id": "egg_given",       "text_id": "0x0A08", "lines": ["Got a SkyDragon", "egg!"],                 "comment": "monster joined" },
+      { "id": "egg_declined",    "text_id": "0x0A09", "lines": ["Maybe another", "time then."],             "comment": "monster declined" },
+      { "id": "tp_castle_q",     "text_id": "0x0A0A", "lines": ["Teleport to", "the Castle?"], "choice": true, "comment": "teleport Castle [Y/N]" },
+      { "id": "tp_declined",     "text_id": "0x0A0B", "lines": ["Changed your", "mind."],                   "comment": "teleport declined" },
+      { "id": "tp_6b_q",         "text_id": "0x0A0C", "lines": ["Teleport to", "MedalMan room?"], "choice": true, "comment": "teleport MedalMan [Y/N]" },
+      { "id": "bgm_q",           "text_id": "0x0A0D", "lines": ["Change the", "music?"], "choice": true,    "comment": "BGM change offer [Y/N]" },
+      { "id": "bgm_changed",     "text_id": "0x0A0E", "lines": ["Now playing", "Arena music!"],             "comment": "BGM changed" },
+      { "id": "bgm_declined",    "text_id": "0x0A0F", "lines": ["Keeping current", "music."],               "comment": "BGM declined" },
+      { "id": "storage_full",    "text_id": "0x0A10", "lines": ["Monster storage", "is full!"],             "comment": "monster storage full" },
+      { "id": "gate_q",          "text_id": "0x0A11", "lines": ["Open the gate?", "NPCs will change!"], "choice": true, "comment": "gatekeeper offer [Y/N]" },
+      { "id": "gate_opened",     "text_id": "0x0A12", "lines": ["Gate opened!", "Leave and return", "to see the change."], "comment": "gate opened" },
+      { "id": "gate_declined",   "text_id": "0x0A13", "lines": ["The gate stays", "closed for now."],       "comment": "gate declined" },
+      { "id": "guard_greeting",  "text_id": "0x0A14", "lines": ["The gate has been", "opened! I replaced", "the Gatekeeper."], "comment": "guard greeting (post-step)" }
+    ],
+
+    "scripts": [
+      { "id": "arm_encounters",
+        "comment": "Arms the random-encounter step counter on scroll/post-battle reload (KEY_LESSONS S11: script 0 does NOT run dependably at initial entry; gate/floor are pinned per-step in ASM via bank $71). write_ram writes the LOW byte.",
+        "ops": [
+          ["op", "write_ram", "0xCA39", "0x0064"],
+          ["op", "write_ram", "0xCA3A", "0x0000"],
+          ["end"]
+        ] },
+
+      { "id": "give_jerky",
+        "comment": "Beef Jerky giver — YES/NO, inventory-full branch, GiveItem wrapper opcode $2A",
+        "ops": [
+          ["text", "jerky_offer"],
+          ["op", "check_and_branch", "0xC83C", "0x0001", "@declined"],
+          ["op", "check_inv_full", "@invFull"],
+          ["op", "give_item", "ITEM_BEEF_JERKY"],
+          ["text", "jerky_given"],
+          ["end"],
+          "label:invFull",
+          ["text", "inv_full"],
+          ["end"],
+          "label:declined",
+          ["text", "jerky_declined"],
+          ["end"]
+        ] },
+
+      { "id": "give_egg",
+        "comment": "SkyDragon egg giver — AddMonster opcode $29 (enemy_stats_id $015E, same as the Farm event)",
+        "ops": [
+          ["text", "egg_offer"],
+          ["op", "check_and_branch", "0xC83C", "0x0001", "@declined"],
+          ["op", "check_storage_full", "@storageFull"],
+          ["op", "add_monster", "0x015E"],
+          ["text", "egg_given"],
+          ["end"],
+          "label:storageFull",
+          ["text", "storage_full"],
+          ["end"],
+          "label:declined",
+          ["text", "egg_declined"],
+          ["end"]
+        ] },
+
+      { "id": "bgm_change",
+        "comment": "SetBGM opcode $41 — VERIFIED 1 param (handler $04:$669D); track $1E = Arena music",
+        "ops": [
+          ["text", "bgm_q"],
+          ["op", "check_and_branch", "0xC83C", "0x0001", "@declined"],
+          ["op", "set_bgm", "0x001E"],
+          ["text", "bgm_changed"],
+          ["end"],
+          "label:declined",
+          ["text", "bgm_declined"],
+          ["end"]
+        ] },
+
+      { "id": "first_time_q",
+        "ops": [
+          ["text", "castle_q"],
+          ["op", "check_and_branch", "0xC83C", "0x0001", "@noAnswer"],
+          ["text", "castle_yes"],
+          ["end"],
+          "label:noAnswer",
+          ["text", "castle_no"],
+          ["end"]
+        ] },
+
+      { "id": "teleport_castle",
+        "comment": "MapTransitionFull opcode $0F to vanilla Castle (params gate/X/Y; transition fires before the trailing end)",
+        "ops": [
+          ["text", "tp_castle_q"],
+          ["op", "check_and_branch", "0xC83C", "0x0001", "@declined"],
+          ["op", "map_transition", "0x0000", "0x00E8", "0x0078"],
+          ["end"],
+          "label:declined",
+          ["text", "tp_declined"],
+          ["end"]
+        ] },
+
+      { "id": "teleport_6b",
+        "comment": "MapTransitionFull to custom room $6B — spawn (120,104)px = grid (7,6)",
+        "ops": [
+          ["text", "tp_6b_q"],
+          ["op", "check_and_branch", "0xC83C", "0x0001", "@declined"],
+          ["op", "map_transition", "0x006B", "0x0078", "0x0068"],
+          ["end"],
+          "label:declined",
+          ["text", "tp_declined"],
+          ["end"]
+        ] },
+
+      { "id": "gate_open",
+        "comment": "Gatekeeper — advances Room $6C screen 0 step counter to 1 (step-system demo)",
+        "ops": [
+          ["text", "gate_q"],
+          ["op", "check_and_branch", "0xC83C", "0x0001", "@declined"],
+          ["op", "write_ram", "wCustomStep_Room6C_S0", "0x0001"],
+          ["text", "gate_opened"],
+          ["end"],
+          "label:declined",
+          ["text", "gate_declined"],
+          ["end"]
+        ] },
+
+      { "id": "guard_greet",
+        "ops": [
+          ["text", "guard_greeting"],
+          ["end"]
+        ] },
+
+      { "id": "noop_entry",
+        "comment": "no-op room-entry script",
+        "ops": [ ["end"] ] }
+    ],
+
+    "palettes": [
+      {
+        "id": "pal_6b", "label": "CustomPaletteColors_6B", "placement": "a",
+        "comment": [
+          "CustomPaletteColors_6B: 64 bytes (8 palettes x 4 colors x 2 bytes).",
+          "The REAL in-game Gate of Beginning BG palette, dumped from SameBoy",
+          "by the user (all 8 slots). Format: RGB15 LE pairs [lo,hi]."
+        ],
+        "colors_rgb555": [
+          ["0x04EE", "0x6BFF", "0x027A", "0x0000"],
+          ["0x7D40", "0x6BFF", "0x7F81", "0x0000"],
+          ["0x00F0", "0x6BFF", "0x021A", "0x0000"],
+          ["0x01A1", "0x6BFF", "0x03AA", "0x0000"],
+          ["0x4D67", "0x6BFF", "0x7FFF", "0x0000"],
+          ["0x0012", "0x6BFF", "0x01DE", "0x0000"],
+          ["0x0015", "0x6BFF", "0x021F", "0x0000"],
+          ["0x0139", "0x6BFF", "0x033F", "0x0000"]
+        ],
+        "row_comments": ["palette 0  04ee 6bff 027a 0000", "palette 1  7d40 6bff 7f81 0000",
+                         "palette 2  00f0 6bff 021a 0000", "palette 3  01a1 6bff 03aa 0000",
+                         "palette 4  4d67 6bff 7fff 0000", "palette 5  0012 6bff 01de 0000",
+                         "palette 6  0015 6bff 021f 0000", "palette 7  0139 6bff 033f 0000"]
+      },
+      {
+        "id": "pal_6c", "label": "CustomPaletteColors_6C", "placement": "a",
+        "comment": [
+          "CustomPaletteColors_6C: Pillar A proof palette — twilight recolor of",
+          "the gate palette (rose sand, indigo water, dusk teal trees).",
+          "(Throwaway proof palette; overwritten per-room by real projects.)"
+        ],
+        "colors_rgb555": [
+          ["0x51CC", "0x7B16", "0x3907", "0x1021"],
+          ["0x48C4", "0x7B16", "0x6188", "0x1021"],
+          ["0x59D0", "0x7B16", "0x30C8", "0x1021"],
+          ["0x31C6", "0x7B16", "0x18E2", "0x1021"],
+          ["0x51CC", "0x7B16", "0x3907", "0x1021"],
+          ["0x48C4", "0x7B16", "0x6188", "0x1021"],
+          ["0x59D0", "0x7B16", "0x30C8", "0x1021"],
+          ["0x31C6", "0x7B16", "0x18E2", "0x1021"]
+        ],
+        "row_comments": ["pal0 ground(slate)", "pal1 water(navy)", "pal2 accent(violet)",
+                         "pal3 tree(teal)", "pal4 mirror", "pal5 mirror", "pal6 mirror", "pal7 mirror"]
+      },
+      {
+        "id": "pal_6d", "label": "CustomPaletteColors_6D", "placement": "b",
+        "comment": [
+          "$6D = VERDANT green (gate-rotation proof, reached via Gate of Villager).",
+          "Luminance-themed recolour of the gate palette: structure preserved, hue fixed."
+        ],
+        "colors_rgb555": [
+          ["0x11C4", "0x2BE9", "0x2348", "0x0000"],
+          ["0x2BE9", "0x2BE9", "0x2BE9", "0x0000"],
+          ["0x1605", "0x2BE9", "0x2348", "0x0000"],
+          ["0x11A4", "0x2BE9", "0x27A9", "0x0000"],
+          ["0x1A66", "0x2BE9", "0x2BE9", "0x0000"],
+          ["0x1A45", "0x2BE9", "0x2BC9", "0x0000"],
+          ["0x1EA6", "0x2BE9", "0x2BE9", "0x0000"],
+          ["0x2328", "0x2BE9", "0x2BE9", "0x0000"]
+        ],
+        "row_comments": ["sub-pal 0", "sub-pal 1", "sub-pal 2", "sub-pal 3",
+                         "sub-pal 4", "sub-pal 5", "sub-pal 6", "sub-pal 7"]
+      },
+      {
+        "id": "pal_70", "label": "CustomPaletteColors_70", "placement": "b",
+        "comment": [
+          "$70 = EMBER amber (past-the-$6F-ceiling proof room)."
+        ],
+        "colors_rgb555": [
+          ["0x092E", "0x127F", "0x0E1A", "0x0000"],
+          ["0x127F", "0x127F", "0x127F", "0x0000"],
+          ["0x0950", "0x127F", "0x0E1A", "0x0000"],
+          ["0x090D", "0x127F", "0x0E5D", "0x0000"],
+          ["0x0993", "0x127F", "0x127F", "0x0000"],
+          ["0x0972", "0x127F", "0x127E", "0x0000"],
+          ["0x0DB5", "0x127F", "0x127F", "0x0000"],
+          ["0x0E19", "0x127F", "0x127F", "0x0000"]
+        ],
+        "row_comments": ["sub-pal 0", "sub-pal 1", "sub-pal 2", "sub-pal 3",
+                         "sub-pal 4", "sub-pal 5", "sub-pal 6", "sub-pal 7"]
+      }
+    ]
+  },
+
+  "build": {
+    "compat": {
+      "master_table_rooms": ["0x6B", "0x6C", "0x6D"]
+    },
+    "bank_map": {
+      "0x60": "rooms + scripts + text (compiler-owned file)",
+      "0x71": "dispatch tables — Custom26DDTable + RoomEncTable (compiler-owned file)",
+      "0x17": "@BUILD_PROJECT regions (compiler) inside the hand-patched vanilla bank",
+      "0x64": "tile layouts + attrs (tools/build_gate_room.py — referenced by rooms, not compiled here)"
+    }
+  }
+}
