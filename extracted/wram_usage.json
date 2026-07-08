@@ -1,0 +1,2905 @@
+{
+ "generated_by": "tools/audit_wram.py",
+ "method": "vanilla literal refs + curated evidence-cited indexed arrays + known_RAM_map sized spans; custom = patch-only refs and wram.asm labels at vanilla-unreferenced addresses. Gaps are UNVETTED, never 'free'.",
+ "caveats": [
+  "Literal refs from data-heavy banks can be data-disassembled-as-code artifacts (e.g. 'ld sp,$d38c' in bank_019 gfx). The tool keeps them: it must over-claim usage, never under-claim.",
+  "call/jp/jr operands into WRAM are classed 'suspect' and excluded from coverage (data-as-code; this ROM runs no code from WRAM).",
+  "Curated indexed arrays are the only positive free-space evidence source; a gap here still needs per-candidate vetting (pointer-walk loops, SVBK bank-2 windows in bank_051/052) before anything is placed in it."
+ ],
+ "indexed_arrays": [
+  {
+   "name": "party/storage monster array",
+   "base": 51905,
+   "stride": 149,
+   "count": 20,
+   "evidence": "GetMonsterDataPtr (bank_000: HL=HL+(A&$7F)*$95); label14_40b4 field writes; slots hold party+farm+eggs under one 20-slot limit (user-confirmed S54)",
+   "span": "$CAC1-$D664"
+  },
+  {
+   "name": "library seen-bits",
+   "base": 51860,
+   "stride": 1,
+   "count": 30,
+   "evidence": "bank_007 jr_007_4251/PushAndReadParty loops: TestBitInArray($CA94, b) for b in 0..$EF -> 240 bits = 30 bytes $CA94-$CAB1",
+   "span": "$CA94-$CAB1"
+  },
+  {
+   "name": "OAM shadow (DMA source page)",
+   "base": 49152,
+   "stride": 1,
+   "count": 160,
+   "evidence": "standard $FF46 DMA source page; wram.asm reserves $C000-$C09F before first label at $C0A0",
+   "span": "$C000-$C09F"
+  },
+  {
+   "name": "screen tile-id shadow",
+   "base": 49920,
+   "stride": 1,
+   "count": 256,
+   "evidence": "GATE_GENERATION.md \u00a79 + known_RAM_map $FFAA note (tile under player read from $C300 buffer, $00:$1E96)",
+   "span": "$C300-$C3FF"
+  },
+  {
+   "name": "gate floor grid + per-cell state",
+   "base": 51520,
+   "stride": 1,
+   "count": 32,
+   "evidence": "GATE_GENERATION.md \u00a74.1/\u00a79 ($C940-$C94F grid, $C950-$C95F paired state)",
+   "span": "$C940-$C95F"
+  },
+  {
+   "name": "per-screen content state",
+   "base": 49408,
+   "stride": 1,
+   "count": 16,
+   "evidence": "GATE_GENERATION.md \u00a79 ($C100-$C10F placement state)",
+   "span": "$C100-$C10F"
+  },
+  {
+   "name": "per-screen feature list",
+   "base": 55187,
+   "stride": 1,
+   "count": 37,
+   "evidence": "GATE_GENERATION.md \u00a79 ($D793 entries [type,?,x,y]), bounded above by documented $D7B8",
+   "span": "$D793-$D7B7"
+  }
+ ],
+ "custom_state_findings": [
+  {
+   "label": "wIsSGB",
+   "addr": "$C81C",
+   "size": 1,
+   "end": "$C81C",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wIsGBC",
+   "addr": "$C81D",
+   "size": 1,
+   "end": "$C81D",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_00b.asm",
+    "bank_017.asm",
+    "bank_050.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wRNG1",
+   "addr": "$C899",
+   "size": 1,
+   "end": "$C899",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_001.asm",
+    "bank_003.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_009.asm",
+    "bank_014.asm",
+    "bank_016.asm",
+    "bank_050.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_054.asm",
+    "bank_058.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wRNG2",
+   "addr": "$C89A",
+   "size": 1,
+   "end": "$C89A",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_001.asm",
+    "bank_003.asm",
+    "bank_016.asm",
+    "bank_050.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_054.asm",
+    "bank_058.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wTempObj2Pal",
+   "addr": "$C8A0",
+   "size": 1,
+   "end": "$C8A0",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCurrPlayingBGM",
+   "addr": "$C8B5",
+   "size": 1,
+   "end": "$C8B5",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_001.asm",
+    "bank_004.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBGM",
+   "addr": "$C8B7",
+   "size": 1,
+   "end": "$C8B7",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wSoundEffect",
+   "addr": "$C8B8",
+   "size": 1,
+   "end": "$C8B8",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wTextSpeed",
+   "addr": "$C8EE",
+   "size": 1,
+   "end": "$C8EE",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_001.asm",
+    "bank_007.asm",
+    "bank_053.asm",
+    "bank_054.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wScreenIndex",
+   "addr": "$C925",
+   "size": 1,
+   "end": "$C925",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_009.asm",
+    "bank_00b.asm",
+    "bank_016.asm",
+    "bank_017.asm",
+    "bank_060.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wGateID",
+   "addr": "$C935",
+   "size": 1,
+   "end": "$C935",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_00b.asm",
+    "bank_016.asm",
+    "bank_071.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wFloorType1",
+   "addr": "$C936",
+   "size": 1,
+   "end": "$C936",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_016.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wFloorType2",
+   "addr": "$C937",
+   "size": 1,
+   "end": "$C937",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_016.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wFloorType3",
+   "addr": "$C938",
+   "size": 1,
+   "end": "$C938",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_016.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wCurrentFloor",
+   "addr": "$C939",
+   "size": 1,
+   "end": "$C939",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_00b.asm",
+    "bank_016.asm",
+    "bank_060.asm",
+    "bank_071.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wLastFloor",
+   "addr": "$C93A",
+   "size": 1,
+   "end": "$C93A",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_016.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBossMapType",
+   "addr": "$C93B",
+   "size": 1,
+   "end": "$C93B",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_016.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBossTileset",
+   "addr": "$C93C",
+   "size": 1,
+   "end": "$C93C",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_016.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wMapID",
+   "addr": "$C968",
+   "size": 1,
+   "end": "$C968",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_001.asm",
+    "bank_003.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_009.asm",
+    "bank_00b.asm",
+    "bank_016.asm",
+    "bank_017.asm",
+    "bank_050.asm",
+    "bank_060.asm",
+    "bank_071.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wInGateworld",
+   "addr": "$C969",
+   "size": 1,
+   "end": "$C969",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_001.asm",
+    "bank_003.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_009.asm",
+    "bank_00b.asm",
+    "bank_014.asm",
+    "bank_016.asm",
+    "bank_017.asm",
+    "bank_060.asm",
+    "bank_071.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wIsPlayerChangingMaps",
+   "addr": "$C96C",
+   "size": 1,
+   "end": "$C96C",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_00b.asm",
+    "bank_050.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wWarpGateId",
+   "addr": "$C96D",
+   "size": 1,
+   "end": "$C96D",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_003.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_00b.asm",
+    "bank_050.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wWarpFlag",
+   "addr": "$C96E",
+   "size": 1,
+   "end": "$C96E",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_00b.asm",
+    "bank_050.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wWarpSpawnXLo",
+   "addr": "$C96F",
+   "size": 1,
+   "end": "$C96F",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_00b.asm",
+    "bank_016.asm",
+    "bank_050.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wWarpSpawnXHi",
+   "addr": "$C970",
+   "size": 1,
+   "end": "$C970",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_00b.asm",
+    "bank_016.asm",
+    "bank_050.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wWarpSpawnYLo",
+   "addr": "$C971",
+   "size": 1,
+   "end": "$C971",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_00b.asm",
+    "bank_016.asm",
+    "bank_050.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wWarpSpawnYHi",
+   "addr": "$C972",
+   "size": 1,
+   "end": "$C972",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_00b.asm",
+    "bank_016.asm",
+    "bank_050.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wEncounterPoolIndex",
+   "addr": "$CA38",
+   "size": 1,
+   "end": "$CA38",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wEncounterCounterLo",
+   "addr": "$CA39",
+   "size": 1,
+   "end": "$CA39",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_016.asm",
+    "bank_060.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wEncounterCounterHi",
+   "addr": "$CA3A",
+   "size": 1,
+   "end": "$CA3A",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_016.asm",
+    "bank_060.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wMonsterInfoToggle",
+   "addr": "$CA3F",
+   "size": 1,
+   "end": "$CA3F",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_001.asm",
+    "bank_006.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCurrGoldLo",
+   "addr": "$CA4B",
+   "size": 1,
+   "end": "$CA4B",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_009.asm",
+    "bank_050.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wCurrGoldMid",
+   "addr": "$CA4C",
+   "size": 1,
+   "end": "$CA4C",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_009.asm",
+    "bank_050.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wCurrGoldHi",
+   "addr": "$CA4D",
+   "size": 1,
+   "end": "$CA4D",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_009.asm",
+    "bank_050.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wInventory",
+   "addr": "$CA51",
+   "size": 20,
+   "end": "$CA64",
+   "collision_classes": [
+    "A':rammap-span",
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_003.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_007.asm",
+    "bank_009.asm",
+    "bank_012.asm",
+    "bank_050.asm",
+    "bank_054.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBankSlots",
+   "addr": "$CA65",
+   "size": 40,
+   "end": "$CA8C",
+   "collision_classes": [
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_009.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomRoomFlag",
+   "addr": "$D378",
+   "size": 1,
+   "end": "$D378",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomNPCBuffer",
+   "addr": "$D379",
+   "size": 128,
+   "end": "$D3F8",
+   "collision_classes": [
+    "A:vanilla-literal",
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomExitBuffer",
+   "addr": "$D3F9",
+   "size": 127,
+   "end": "$D477",
+   "collision_classes": [
+    "A:vanilla-literal",
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6B_S0",
+   "addr": "$D478",
+   "size": 1,
+   "end": "$D478",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6B_S1",
+   "addr": "$D479",
+   "size": 1,
+   "end": "$D479",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6C_S0",
+   "addr": "$D47A",
+   "size": 1,
+   "end": "$D47A",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6C_S1",
+   "addr": "$D47B",
+   "size": 1,
+   "end": "$D47B",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6C_S5",
+   "addr": "$D47C",
+   "size": 1,
+   "end": "$D47C",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6D_S0",
+   "addr": "$D47D",
+   "size": 1,
+   "end": "$D47D",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room70_S0",
+   "addr": "$D47E",
+   "size": 1,
+   "end": "$D47E",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wRoomRecScratch",
+   "addr": "$D47F",
+   "size": 8,
+   "end": "$D486",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_00b.asm",
+    "bank_071.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wRoomEncFlag",
+   "addr": "$D487",
+   "size": 1,
+   "end": "$D487",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_00b.asm",
+    "bank_071.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wTameDelay",
+   "addr": "$D488",
+   "size": 1,
+   "end": "$D488",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [
+    "bank_053.asm",
+    "bank_072.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wTameBGSave",
+   "addr": "$D489",
+   "size": 3,
+   "end": "$D48B",
+   "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array"
+   ],
+   "referenced_by": [],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wGroundItemData",
+   "addr": "$D791",
+   "size": 1,
+   "end": "$D791",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wScriptMapType",
+   "addr": "$D8D3",
+   "size": 1,
+   "end": "$D8D3",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_050.asm",
+    "bank_060.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wScriptNPCId",
+   "addr": "$D8D4",
+   "size": 1,
+   "end": "$D8D4",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_006.asm",
+    "bank_060.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wScriptCounter",
+   "addr": "$D8D5",
+   "size": 2,
+   "end": "$D8D6",
+   "collision_classes": [
+    "A':rammap-span",
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_004.asm",
+    "bank_060.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wScriptStateFlags",
+   "addr": "$D8D7",
+   "size": 1,
+   "end": "$D8D7",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_006.asm",
+    "bank_00b.asm",
+    "bank_012.asm",
+    "bank_050.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wScriptQueuedTextId",
+   "addr": "$D8D9",
+   "size": 2,
+   "end": "$D8DA",
+   "collision_classes": [
+    "A':rammap-span",
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_004.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wEventStateMachineIndex",
+   "addr": "$D9F4",
+   "size": 1,
+   "end": "$D9F4",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_050.asm",
+    "bank_059.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wTempEnemyStatsId",
+   "addr": "$DA12",
+   "size": 2,
+   "end": "$DA13",
+   "collision_classes": [
+    "A':rammap-span",
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_001.asm",
+    "bank_004.asm",
+    "bank_012.asm",
+    "bank_014.asm",
+    "bank_016.asm",
+    "bank_050.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_058.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBattleTargetIdx",
+   "addr": "$DB89",
+   "size": 1,
+   "end": "$DB89",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_050.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_058.asm",
+    "bank_05f.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBattleMaxHP",
+   "addr": "$DBB3",
+   "size": 16,
+   "end": "$DBC2",
+   "collision_classes": [
+    "A':rammap-span",
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_058.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBattleMP",
+   "addr": "$DBC3",
+   "size": 16,
+   "end": "$DBD2",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_050.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_058.asm",
+    "bank_072.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBattleMaxMP",
+   "addr": "$DBD3",
+   "size": 16,
+   "end": "$DBE2",
+   "collision_classes": [
+    "A':rammap-span",
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_058.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBattleATK",
+   "addr": "$DBE3",
+   "size": 16,
+   "end": "$DBF2",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_058.asm",
+    "bank_072.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBattleDEF",
+   "addr": "$DBF3",
+   "size": 16,
+   "end": "$DC02",
+   "collision_classes": [
+    "A':rammap-span",
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_058.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wBattleAGL",
+   "addr": "$DC03",
+   "size": 16,
+   "end": "$DC12",
+   "collision_classes": [
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_052.asm",
+    "bank_053.asm",
+    "bank_058.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wBattleINT",
+   "addr": "$DC13",
+   "size": 16,
+   "end": "$DC22",
+   "collision_classes": [
+    "A:vanilla-literal"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_053.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wBattleLVL",
+   "addr": "$DC23",
+   "size": 16,
+   "end": "$DC32",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_052.asm"
+   ],
+   "vanilla_alias": false
+  }
+ ],
+ "custom_literal_only_refs": {
+  "$CA39": [
+   "bank_060.asm:270",
+   "bank_060.asm:345"
+  ],
+  "$CA3A": [
+   "bank_060.asm:273",
+   "bank_060.asm:348"
+  ],
+  "$DBC3": [
+   "bank_072.asm:99"
+  ],
+  "$DBE3": [
+   "bank_072.asm:132"
+  ]
+ },
+ "extended_index_findings": [
+  {
+   "array": "library seen-bits",
+   "base": 51860,
+   "vanilla_scan_bits": 240,
+   "vanilla_max_species": 214,
+   "new_ids_source": "extracted/new_species.json",
+   "note": "SetBitInArray($CA94, species) fires on add-to-storage (label14_40b4). Bits for new species land inside the vanilla-scanned extent, so no memory collision, but they COUNT toward the library completion counters (cp $64 / 100-monster reward checks in bank_007).",
+   "new_ids": [
+    224
+   ],
+   "worst_bit_byte": "$CAB0",
+   "inside_vanilla_scanned_extent": true,
+   "verdict": "benign placement (inside scanned extent); affects library completion counts"
+  }
+ ],
+ "unvetted_gaps": [
+  {
+   "addr": "$C161",
+   "end": "$C17A",
+   "size": 26,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C20D",
+   "end": "$C2C2",
+   "size": 182,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C2C4",
+   "end": "$C2F3",
+   "size": 48,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C416",
+   "end": "$C429",
+   "size": 20,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C42B",
+   "end": "$C4C3",
+   "size": 153,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C4C8",
+   "end": "$C4F5",
+   "size": 46,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C508",
+   "end": "$C51E",
+   "size": 23,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C522",
+   "end": "$C536",
+   "size": 21,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C543",
+   "end": "$C56C",
+   "size": 42,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C56E",
+   "end": "$C59F",
+   "size": 50,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C5A1",
+   "end": "$C5BC",
+   "size": 28,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C5C6",
+   "end": "$C5DE",
+   "size": 25,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C5E0",
+   "end": "$C5FE",
+   "size": 31,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C646",
+   "end": "$C655",
+   "size": 16,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C6A8",
+   "end": "$C6B8",
+   "size": 17,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C70E",
+   "end": "$C71D",
+   "size": 16,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C759",
+   "end": "$C76B",
+   "size": 19,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C77A",
+   "end": "$C796",
+   "size": 29,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C9A8",
+   "end": "$C9BF",
+   "size": 24,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$C9C6",
+   "end": "$C9EF",
+   "size": 42,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$CA0D",
+   "end": "$CA36",
+   "size": 42,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$CA70",
+   "end": "$CA7F",
+   "size": 16,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D69B",
+   "end": "$D6C6",
+   "size": 44,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D6CE",
+   "end": "$D6DE",
+   "size": 17,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D728",
+   "end": "$D743",
+   "size": 28,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D745",
+   "end": "$D75B",
+   "size": 23,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D7D9",
+   "end": "$D7E9",
+   "size": 17,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D879",
+   "end": "$D889",
+   "size": 17,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D88C",
+   "end": "$D8A9",
+   "size": 30,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D8B9",
+   "end": "$D8D2",
+   "size": 26,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$D9BB",
+   "end": "$D9CA",
+   "size": 16,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DA89",
+   "end": "$DAA3",
+   "size": 27,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DAA5",
+   "end": "$DAD1",
+   "size": 45,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DAD3",
+   "end": "$DAE4",
+   "size": 18,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DB0A",
+   "end": "$DB1F",
+   "size": 22,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DB21",
+   "end": "$DB41",
+   "size": 33,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DC0B",
+   "end": "$DC1F",
+   "size": 21,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DC21",
+   "end": "$DC32",
+   "size": 18,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DC66",
+   "end": "$DC7B",
+   "size": 22,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DC7D",
+   "end": "$DC9E",
+   "size": 34,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DCA6",
+   "end": "$DCBE",
+   "size": 25,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DCC0",
+   "end": "$DCCF",
+   "size": 16,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DD41",
+   "end": "$DD5B",
+   "size": 27,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DE50",
+   "end": "$DE6C",
+   "size": 29,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DE74",
+   "end": "$DEDD",
+   "size": 106,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DEDF",
+   "end": "$DEFF",
+   "size": 33,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DF10",
+   "end": "$DF1F",
+   "size": 16,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DF40",
+   "end": "$DF50",
+   "size": 17,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DF62",
+   "end": "$DF8F",
+   "size": 46,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DF91",
+   "end": "$DFA9",
+   "size": 25,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DFAB",
+   "end": "$DFD1",
+   "size": 39,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  }
+ ],
+ "vanilla_suspect_only_refs": {
+  "$C5C4": [
+   "bank_000.asm:9466",
+   "bank_000.asm:9558",
+   "bank_009.asm:7857",
+   "bank_00a.asm:7291",
+   "bank_012.asm:7500",
+   "bank_059.asm:5436",
+   "bank_059.asm:5526"
+  ],
+  "$CCCB": [
+   "bank_000.asm:9475",
+   "bank_000.asm:9567",
+   "bank_007.asm:8296",
+   "bank_009.asm:7780",
+   "bank_009.asm:7866",
+   "bank_00a.asm:7300",
+   "bank_012.asm:7509",
+   "bank_056.asm:457",
+   "bank_059.asm:5445",
+   "bank_059.asm:5535",
+   "bank_05f.asm:5944",
+   "bank_05f.asm:7148",
+   "bank_05f.asm:7468",
+   "bank_05f.asm:7734",
+   "bank_065.asm:3405"
+  ],
+  "$CFCE": [
+   "bank_000.asm:9477",
+   "bank_000.asm:9569",
+   "bank_009.asm:7782",
+   "bank_009.asm:7868",
+   "bank_00a.asm:7302",
+   "bank_012.asm:7511",
+   "bank_056.asm:459",
+   "bank_059.asm:5447",
+   "bank_059.asm:5537",
+   "bank_05f.asm:5946",
+   "bank_05f.asm:7050",
+   "bank_065.asm:3407"
+  ],
+  "$DDDD": [
+   "bank_000.asm:10355",
+   "bank_000.asm:10373",
+   "bank_061.asm:1088"
+  ],
+  "$D43C": [
+   "bank_000.asm:12960"
+  ],
+  "$CD7E": [
+   "bank_001.asm:9491"
+  ],
+  "$C342": [
+   "bank_002.asm:629",
+   "bank_002.asm:633",
+   "bank_002.asm:637",
+   "bank_002.asm:641",
+   "bank_002.asm:645",
+   "bank_002.asm:649"
+  ],
+  "$C2C1": [
+   "bank_002.asm:9876"
+  ],
+  "$CD41": [
+   "bank_003.asm:359"
+  ],
+  "$DF6D": [
+   "bank_003.asm:3807"
+  ],
+  "$CC70": [
+   "bank_003.asm:4628"
+  ],
+  "$C979": [
+   "bank_003.asm:6624"
+  ],
+  "$D67D": [
+   "bank_003.asm:7224"
+  ],
+  "$D542": [
+   "bank_005.asm:570"
+  ],
+  "$DB43": [
+   "bank_005.asm:753",
+   "bank_011.asm:843"
+  ],
+  "$DD47": [
+   "bank_005.asm:1565",
+   "bank_011.asm:1667"
+  ],
+  "$D349": [
+   "bank_005.asm:1992"
+  ],
+  "$D54D": [
+   "bank_005.asm:2794"
+  ],
+  "$D856": [
+   "bank_005.asm:4674"
+  ],
+  "$D368": [
+   "bank_005.asm:8537"
+  ],
+  "$D56C": [
+   "bank_005.asm:9420"
+  ],
+  "$CF6D": [
+   "bank_005.asm:9610"
+  ],
+  "$C010": [
+   "bank_006.asm:6925",
+   "bank_036.asm:7733"
+  ],
+  "$CF47": [
+   "bank_006.asm:7092",
+   "bank_055.asm:10465"
+  ],
+  "$DFC8": [
+   "bank_006.asm:8048"
+  ],
+  "$C77B": [
+   "bank_006.asm:8942",
+   "bank_015.asm:10780"
+  ],
+  "$C7C3": [
+   "bank_006.asm:8957",
+   "bank_055.asm:9206",
+   "bank_063.asm:1287",
+   "bank_063.asm:1588"
+  ],
+  "$DE54": [
+   "bank_007.asm:2936"
+  ],
+  "$C4C3": [
+   "bank_007.asm:8285",
+   "bank_009.asm:7747",
+   "bank_056.asm:448",
+   "bank_05f.asm:7139",
+   "bank_05f.asm:7449",
+   "bank_05f.asm:7714",
+   "bank_065.asm:3396"
+  ],
+  "$CED8": [
+   "bank_007.asm:8298"
+  ],
+  "$D6D5": [
+   "bank_007.asm:10326",
+   "bank_007.asm:9934",
+   "bank_009.asm:10228",
+   "bank_009.asm:7898",
+   "bank_009.asm:7927",
+   "bank_009.asm:7957",
+   "bank_009.asm:8235",
+   "bank_00a.asm:7332",
+   "bank_00a.asm:7361",
+   "bank_00a.asm:7391",
+   "bank_00a.asm:7669",
+   "bank_00a.asm:9662",
+   "bank_012.asm:7541",
+   "bank_012.asm:7570",
+   "bank_012.asm:7600",
+   "bank_012.asm:7878",
+   "bank_015.asm:6128",
+   "bank_015.asm:6410",
+   "bank_018.asm:3694",
+   "bank_050.asm:8850",
+   "bank_051.asm:7917",
+   "bank_056.asm:1798",
+   "bank_059.asm:6696"
+  ],
+  "$D340": [
+   "bank_008.asm:106"
+  ],
+  "$D341": [
+   "bank_008.asm:134"
+  ],
+  "$CB00": [
+   "bank_008.asm:930"
+  ],
+  "$D300": [
+   "bank_008.asm:943",
+   "bank_04b.asm:13147"
+  ],
+  "$C4FF": [
+   "bank_008.asm:1903",
+   "bank_066.asm:7785"
+  ],
+  "$C39F": [
+   "bank_008.asm:4007"
+  ],
+  "$CCDE": [
+   "bank_008.asm:5020"
+  ],
+  "$CE3C": [
+   "bank_008.asm:7866"
+  ],
+  "$C7BF": [
+   "bank_008.asm:8183",
+   "bank_063.asm:2544"
+  ],
+  "$C783": [
+   "bank_008.asm:8286"
+  ],
+  "$CC40": [
+   "bank_008.asm:8322"
+  ],
+  "$CE14": [
+   "bank_008.asm:9464"
+  ],
+  "$D314": [
+   "bank_008.asm:9498"
+  ],
+  "$D514": [
+   "bank_008.asm:9501"
+  ],
+  "$C60F": [
+   "bank_008.asm:12541"
+  ],
+  "$CC1E": [
+   "bank_008.asm:12546"
+  ],
+  "$C480": [
+   "bank_008.asm:13423"
+  ],
+  "$DDFF": [
+   "bank_008.asm:13677",
+   "bank_034.asm:1038",
+   "bank_034.asm:10925",
+   "bank_078.asm:12633"
+  ],
+  "$D310": [
+   "bank_008.asm:13707",
+   "bank_032.asm:10995"
+  ],
+  "$DD14": [
+   "bank_008.asm:13806"
+  ],
+  "$C310": [
+   "bank_008.asm:14411"
+  ],
+  "$C510": [
+   "bank_008.asm:14416"
+  ],
+  "$CD14": [
+   "bank_008.asm:14484"
+  ],
+  "$C145": [
+   "bank_00a.asm:10153"
+  ],
+  "$C158": [
+   "bank_00a.asm:10721"
+  ],
+  "$CF45": [
+   "bank_010.asm:1238"
+  ],
+  "$DE4D": [
+   "bank_010.asm:3007",
+   "bank_033.asm:4050"
+  ],
+  "$D34E": [
+   "bank_010.asm:3196"
+  ],
+  "$D552": [
+   "bank_010.asm:4083"
+  ],
+  "$DD57": [
+   "bank_010.asm:5132"
+  ],
+  "$D45C": [
+   "bank_010.asm:6176"
+  ],
+  "$DE62": [
+   "bank_010.asm:7515"
+  ],
+  "$D363": [
+   "bank_010.asm:7706"
+  ],
+  "$D567": [
+   "bank_010.asm:8587"
+  ],
+  "$D36E": [
+   "bank_010.asm:10148"
+  ],
+  "$D572": [
+   "bank_010.asm:11010"
+  ],
+  "$D375": [
+   "bank_010.asm:11630"
+  ],
+  "$D176": [
+   "bank_010.asm:11837"
+  ],
+  "$DE79": [
+   "bank_010.asm:12498"
+  ],
+  "$D441": [
+   "bank_011.asm:367"
+  ],
+  "$D44C": [
+   "bank_011.asm:2649"
+  ],
+  "$DE55": [
+   "bank_011.asm:4537"
+  ],
+  "$D356": [
+   "bank_011.asm:4723"
+  ],
+  "$D55A": [
+   "bank_011.asm:5601"
+  ],
+  "$D461": [
+   "bank_011.asm:7075"
+  ],
+  "$DD67": [
+   "bank_011.asm:8421"
+  ],
+  "$C3FD": [
+   "bank_011.asm:8810"
+  ],
+  "$DFD0": [
+   "bank_011.asm:10150",
+   "bank_011.asm:10352"
+  ],
+  "$CE76": [
+   "bank_011.asm:10260"
+  ],
+  "$C7FB": [
+   "bank_011.asm:10340"
+  ],
+  "$CDBE": [
+   "bank_011.asm:12366",
+   "bank_03a.asm:3955"
+  ],
+  "$C3BF": [
+   "bank_011.asm:12388",
+   "bank_015.asm:8034"
+  ],
+  "$D852": [
+   "bank_012.asm:2054"
+  ],
+  "$D160": [
+   "bank_012.asm:5151"
+  ],
+  "$C668": [
+   "bank_012.asm:6647"
+  ],
+  "$C1BE": [
+   "bank_015.asm:7342"
+  ],
+  "$CEBD": [
+   "bank_015.asm:7380"
+  ],
+  "$C73B": [
+   "bank_015.asm:8215"
+  ],
+  "$C0BF": [
+   "bank_015.asm:8401"
+  ],
+  "$C13F": [
+   "bank_015.asm:8746"
+  ],
+  "$CFBF": [
+   "bank_015.asm:10099"
+  ],
+  "$DBBD": [
+   "bank_015.asm:10153",
+   "bank_03a.asm:4163"
+  ],
+  "$CF74": [
+   "bank_015.asm:10523",
+   "bank_015.asm:10788"
+  ],
+  "$CF76": [
+   "bank_015.asm:10767"
+  ],
+  "$C37E": [
+   "bank_015.asm:10910",
+   "bank_032.asm:7085"
+  ],
+  "$C10E": [
+   "bank_018.asm:4841",
+   "bank_018.asm:7267"
+  ],
+  "$C47F": [
+   "bank_018.asm:5443",
+   "bank_018.asm:5503",
+   "bank_018.asm:8239",
+   "bank_018.asm:8257"
+  ],
+  "$CE0A": [
+   "bank_018.asm:7778",
+   "bank_018.asm:7866"
+  ],
+  "$C41E": [
+   "bank_019.asm:5586",
+   "bank_019.asm:8318"
+  ],
+  "$D064": [
+   "bank_019.asm:7296"
+  ],
+  "$D2AC": [
+   "bank_019.asm:8157",
+   "bank_019.asm:8180",
+   "bank_019.asm:8204",
+   "bank_019.asm:8448"
+  ],
+  "$C3A2": [
+   "bank_019.asm:8228",
+   "bank_019.asm:8481"
+  ],
+  "$D398": [
+   "bank_019.asm:8760"
+  ],
+  "$D486": [
+   "bank_019.asm:13356",
+   "bank_019.asm:13358",
+   "bank_019.asm:13373",
+   "bank_019.asm:13388",
+   "bank_019.asm:13407",
+   "bank_019.asm:13438",
+   "bank_019.asm:13440",
+   "bank_019.asm:13449",
+   "bank_019.asm:13451",
+   "bank_019.asm:13456",
+   "bank_019.asm:13458",
+   "bank_019.asm:13460",
+   "bank_019.asm:13465",
+   "bank_019.asm:9263"
+  ],
+  "$DB70": [
+   "bank_019.asm:10051"
+  ],
+  "$D498": [
+   "bank_019.asm:12549"
+  ],
+  "$D298": [
+   "bank_01a.asm:12451",
+   "bank_01a.asm:12459",
+   "bank_01a.asm:12495",
+   "bank_01a.asm:12513",
+   "bank_01a.asm:12545",
+   "bank_01a.asm:12549",
+   "bank_01a.asm:12569",
+   "bank_01a.asm:12590",
+   "bank_01a.asm:12611",
+   "bank_01a.asm:12618",
+   "bank_01a.asm:12653",
+   "bank_01a.asm:12671",
+   "bank_01a.asm:12700",
+   "bank_01a.asm:12705",
+   "bank_01a.asm:12750",
+   "bank_01a.asm:12784"
+  ],
+  "$D2A0": [
+   "bank_01a.asm:12507",
+   "bank_01a.asm:12525",
+   "bank_01a.asm:12665",
+   "bank_01a.asm:12683"
+  ],
+  "$D2A4": [
+   "bank_01a.asm:12532",
+   "bank_01a.asm:12539"
+  ],
+  "$CC35": [
+   "bank_02c.asm:344"
+  ],
+  "$C2FD": [
+   "bank_02c.asm:351"
+  ],
+  "$C718": [
+   "bank_02c.asm:2533"
+  ],
+  "$C33C": [
+   "bank_02c.asm:4101",
+   "bank_04b.asm:11753",
+   "bank_04b.asm:11773",
+   "bank_04b.asm:11781",
+   "bank_04b.asm:11803",
+   "bank_04b.asm:11865",
+   "bank_04b.asm:11890",
+   "bank_04b.asm:11898",
+   "bank_04b.asm:11919"
+  ],
+  "$CCDC": [
+   "bank_02c.asm:5394",
+   "bank_035.asm:7929",
+   "bank_065.asm:1945"
+  ],
+  "$CBC3": [
+   "bank_02c.asm:5521",
+   "bank_07b.asm:2506",
+   "bank_07b.asm:686"
+  ],
+  "$D573": [
+   "bank_02c.asm:6194"
+  ],
+  "$C3E3": [
+   "bank_02c.asm:6325"
+  ],
+  "$C2D4": [
+   "bank_02c.asm:6567"
+  ],
+  "$C27F": [
+   "bank_032.asm:128",
+   "bank_066.asm:6089"
+  ],
+  "$C7BB": [
+   "bank_032.asm:211"
+  ],
+  "$DEDF": [
+   "bank_032.asm:1202"
+  ],
+  "$D83D": [
+   "bank_032.asm:1587"
+  ],
+  "$DD7D": [
+   "bank_032.asm:2292"
+  ],
+  "$D50B": [
+   "bank_032.asm:2416"
+  ],
+  "$CA7F": [
+   "bank_032.asm:3819"
+  ],
+  "$DF7A": [
+   "bank_032.asm:4190"
+  ],
+  "$C352": [
+   "bank_032.asm:4860"
+  ],
+  "$D35A": [
+   "bank_032.asm:5664"
+  ],
+  "$C2C7": [
+   "bank_032.asm:5809"
+  ],
+  "$C17F": [
+   "bank_032.asm:5935"
+  ],
+  "$C3DD": [
+   "bank_032.asm:6756",
+   "bank_061.asm:976"
+  ],
+  "$DAD3": [
+   "bank_032.asm:6914"
+  ],
+  "$DA93": [
+   "bank_032.asm:6918"
+  ],
+  "$D0DB": [
+   "bank_032.asm:6968"
+  ],
+  "$D36F": [
+   "bank_032.asm:7177"
+  ],
+  "$D894": [
+   "bank_032.asm:7224"
+  ],
+  "$D1B4": [
+   "bank_032.asm:7797",
+   "bank_032.asm:8737"
+  ],
+  "$C2E5": [
+   "bank_032.asm:8155"
+  ],
+  "$C30A": [
+   "bank_032.asm:8680"
+  ],
+  "$C3E1": [
+   "bank_032.asm:9707"
+  ],
+  "$C038": [
+   "bank_032.asm:9791",
+   "bank_07d.asm:513",
+   "bank_07d.asm:6356"
+  ],
+  "$CFFD": [
+   "bank_032.asm:10851"
+  ],
+  "$C410": [
+   "bank_032.asm:10946",
+   "bank_035.asm:11679"
+  ],
+  "$CB10": [
+   "bank_032.asm:10963",
+   "bank_036.asm:246"
+  ],
+  "$CD10": [
+   "bank_032.asm:10966"
+  ],
+  "$DB10": [
+   "bank_032.asm:11010"
+  ],
+  "$DD10": [
+   "bank_032.asm:11013"
+  ],
+  "$D432": [
+   "bank_032.asm:11548"
+  ],
+  "$D422": [
+   "bank_032.asm:11593"
+  ],
+  "$CD18": [
+   "bank_032.asm:12358"
+  ],
+  "$DD18": [
+   "bank_032.asm:12658"
+  ],
+  "$D318": [
+   "bank_032.asm:12693"
+  ],
+  "$D4FF": [
+   "bank_033.asm:212"
+  ],
+  "$DC06": [
+   "bank_033.asm:1964"
+  ],
+  "$D287": [
+   "bank_033.asm:3348"
+  ],
+  "$CAFF": [
+   "bank_033.asm:3622"
+  ],
+  "$C167": [
+   "bank_033.asm:4054"
+  ],
+  "$CD8C": [
+   "bank_033.asm:5928"
+  ],
+  "$C063": [
+   "bank_033.asm:5930"
+  ],
+  "$D37E": [
+   "bank_033.asm:6297",
+   "bank_034.asm:5584",
+   "bank_066.asm:6532"
+  ],
+  "$D67F": [
+   "bank_033.asm:6322"
+  ],
+  "$C33E": [
+   "bank_033.asm:6762"
+  ],
+  "$CEF4": [
+   "bank_033.asm:7875"
+  ],
+  "$CDCD": [
+   "bank_033.asm:9027"
+  ],
+  "$C3BD": [
+   "bank_033.asm:9119"
+  ],
+  "$CCBB": [
+   "bank_033.asm:9146"
+  ],
+  "$D49C": [
+   "bank_033.asm:9388"
+  ],
+  "$D3A7": [
+   "bank_033.asm:10204"
+  ],
+  "$CF6C": [
+   "bank_033.asm:10234"
+  ],
+  "$D4D5": [
+   "bank_033.asm:11270"
+  ],
+  "$C2DE": [
+   "bank_034.asm:769"
+  ],
+  "$D743": [
+   "bank_034.asm:1501"
+  ],
+  "$D27C": [
+   "bank_034.asm:2395"
+  ],
+  "$C267": [
+   "bank_034.asm:3347"
+  ],
+  "$C467": [
+   "bank_034.asm:3428"
+  ],
+  "$C4C2": [
+   "bank_034.asm:3524"
+  ],
+  "$DC7F": [
+   "bank_034.asm:4096"
+  ],
+  "$C57C": [
+   "bank_034.asm:4105"
+  ],
+  "$CDE2": [
+   "bank_034.asm:4480"
+  ],
+  "$C762": [
+   "bank_034.asm:4515"
+  ],
+  "$C97E": [
+   "bank_034.asm:4557"
+  ],
+  "$D26E": [
+   "bank_034.asm:5055"
+  ],
+  "$CC47": [
+   "bank_034.asm:6233"
+  ],
+  "$C44F": [
+   "bank_034.asm:6269"
+  ],
+  "$C244": [
+   "bank_034.asm:6645"
+  ],
+  "$D8AE": [
+   "bank_034.asm:6845"
+  ],
+  "$D47F": [
+   "bank_034.asm:7183"
+  ],
+  "$C17E": [
+   "bank_034.asm:7373"
+  ],
+  "$CAED": [
+   "bank_034.asm:8354"
+  ],
+  "$C47C": [
+   "bank_034.asm:8408",
+   "bank_039.asm:3993"
+  ],
+  "$D57E": [
+   "bank_034.asm:8472"
+  ],
+  "$CCFE": [
+   "bank_034.asm:8804"
+  ],
+  "$C75E": [
+   "bank_034.asm:9085"
+  ],
+  "$C344": [
+   "bank_034.asm:9430"
+  ],
+  "$CC7F": [
+   "bank_034.asm:10583",
+   "bank_035.asm:12325"
+  ],
+  "$C474": [
+   "bank_034.asm:10766"
+  ],
+  "$CC8F": [
+   "bank_034.asm:10831"
+  ],
+  "$C766": [
+   "bank_034.asm:11201"
+  ],
+  "$C142": [
+   "bank_034.asm:11357"
+  ],
+  "$C6FB": [
+   "bank_034.asm:11658",
+   "bank_036.asm:11672"
+  ],
+  "$D775": [
+   "bank_034.asm:12291"
+  ],
+  "$D74E": [
+   "bank_035.asm:132"
+  ],
+  "$DBEE": [
+   "bank_035.asm:293"
+  ],
+  "$C77E": [
+   "bank_035.asm:4077"
+  ],
+  "$D8BF": [
+   "bank_035.asm:4309"
+  ],
+  "$CAFC": [
+   "bank_035.asm:4640"
+  ],
+  "$C37F": [
+   "bank_035.asm:4649",
+   "bank_03a.asm:9525"
+  ],
+  "$C642": [
+   "bank_035.asm:7846"
+  ],
+  "$DF17": [
+   "bank_035.asm:8085"
+  ],
+  "$C9D4": [
+   "bank_035.asm:8413"
+  ],
+  "$CF9F": [
+   "bank_035.asm:9187"
+  ],
+  "$DD77": [
+   "bank_035.asm:9283",
+   "bank_036.asm:3437"
+  ],
+  "$C7EC": [
+   "bank_035.asm:10628"
+  ],
+  "$D27F": [
+   "bank_035.asm:10845"
+  ],
+  "$CC45": [
+   "bank_036.asm:625"
+  ],
+  "$DB7C": [
+   "bank_036.asm:670"
+  ],
+  "$DF4B": [
+   "bank_036.asm:1524"
+  ],
+  "$DFFE": [
+   "bank_036.asm:1815"
+  ],
+  "$C27C": [
+   "bank_036.asm:1863"
+  ],
+  "$CAF7": [
+   "bank_036.asm:3607"
+  ],
+  "$CB60": [
+   "bank_036.asm:3980"
+  ],
+  "$CEDF": [
+   "bank_036.asm:3985"
+  ],
+  "$C77C": [
+   "bank_036.asm:4061"
+  ],
+  "$D877": [
+   "bank_036.asm:4089"
+  ],
+  "$C195": [
+   "bank_036.asm:4256"
+  ],
+  "$C21F": [
+   "bank_036.asm:4407"
+  ],
+  "$DD1D": [
+   "bank_036.asm:4771"
+  ],
+  "$CD78": [
+   "bank_036.asm:5170"
+  ],
+  "$C46E": [
+   "bank_036.asm:5850"
+  ],
+  "$C47D": [
+   "bank_036.asm:6320"
+  ],
+  "$C407": [
+   "bank_036.asm:6880"
+  ],
+  "$CAF6": [
+   "bank_036.asm:7666"
+  ],
+  "$C8AC": [
+   "bank_036.asm:7670"
+  ],
+  "$D0C9": [
+   "bank_036.asm:8364"
+  ],
+  "$D313": [
+   "bank_036.asm:8394"
+  ],
+  "$D88F": [
+   "bank_036.asm:9102"
+  ],
+  "$CEB9": [
+   "bank_036.asm:10587"
+  ],
+  "$DE5E": [
+   "bank_036.asm:10790"
+  ],
+  "$C356": [
+   "bank_036.asm:10843"
+  ],
+  "$D480": [
+   "bank_036.asm:11500"
+  ],
+  "$CE49": [
+   "bank_036.asm:11512"
+  ],
+  "$C4DF": [
+   "bank_036.asm:11670"
+  ],
+  "$CC57": [
+   "bank_036.asm:12120"
+  ],
+  "$D0F0": [
+   "bank_039.asm:531"
+  ],
+  "$DCBC": [
+   "bank_039.asm:1086"
+  ],
+  "$DCCC": [
+   "bank_039.asm:3149"
+  ],
+  "$D4FC": [
+   "bank_039.asm:3400"
+  ],
+  "$CC7C": [
+   "bank_039.asm:6513"
+  ],
+  "$CEFE": [
+   "bank_039.asm:7404"
+  ],
+  "$DEBC": [
+   "bank_039.asm:7953"
+  ],
+  "$CCFC": [
+   "bank_039.asm:8179"
+  ],
+  "$DAFE": [
+   "bank_039.asm:8607"
+  ],
+  "$CCBF": [
+   "bank_039.asm:11435"
+  ],
+  "$D47C": [
+   "bank_039.asm:11812"
+  ],
+  "$DEF4": [
+   "bank_039.asm:12903"
+  ],
+  "$D0FF": [
+   "bank_03a.asm:1297"
+  ],
+  "$CEBE": [
+   "bank_03a.asm:6320"
+  ],
+  "$DFBD": [
+   "bank_03a.asm:6725"
+  ],
+  "$D742": [
+   "bank_03e.asm:2796",
+   "bank_03e.asm:7291"
+  ],
+  "$CD42": [
+   "bank_03e.asm:3892",
+   "bank_03e.asm:5976",
+   "bank_03e.asm:7687",
+   "bank_03e.asm:8440"
+  ],
+  "$CC78": [
+   "bank_04b.asm:10469",
+   "bank_04b.asm:10579",
+   "bank_066.asm:1977"
+  ],
+  "$CCF8": [
+   "bank_04b.asm:10694",
+   "bank_04b.asm:10813"
+  ],
+  "$DDCD": [
+   "bank_04b.asm:11182"
+  ],
+  "$D0D6": [
+   "bank_04b.asm:11209"
+  ],
+  "$CCEE": [
+   "bank_04b.asm:11545",
+   "bank_04b.asm:11744"
+  ],
+  "$CCAA": [
+   "bank_04b.asm:11588",
+   "bank_04b.asm:11590",
+   "bank_04b.asm:11668",
+   "bank_04b.asm:11670"
+  ],
+  "$C813": [
+   "bank_04b.asm:12229",
+   "bank_04b.asm:12280",
+   "bank_04b.asm:12329",
+   "bank_04b.asm:12378"
+  ],
+  "$CA0F": [
+   "bank_04b.asm:13227",
+   "bank_04b.asm:13349"
+  ],
+  "$DE25": [
+   "bank_04b.asm:14158",
+   "bank_04b.asm:14259"
+  ],
+  "$D4B0": [
+   "bank_04c.asm:9992"
+  ],
+  "$D0BC": [
+   "bank_04c.asm:11361"
+  ],
+  "$D5E0": [
+   "bank_050.asm:8720",
+   "bank_051.asm:7787",
+   "bank_059.asm:5678",
+   "bank_059.asm:6566"
+  ],
+  "$DBD7": [
+   "bank_050.asm:10826",
+   "bank_051.asm:9884"
+  ],
+  "$CE57": [
+   "bank_051.asm:3804"
+  ],
+  "$CF67": [
+   "bank_052.asm:7782"
+  ],
+  "$DCDB": [
+   "bank_053.asm:2749",
+   "bank_056.asm:488",
+   "bank_065.asm:3432"
+  ],
+  "$D64F": [
+   "bank_053.asm:2776"
+  ],
+  "$C282": [
+   "bank_055.asm:5366"
+  ],
+  "$C082": [
+   "bank_055.asm:5653"
+  ],
+  "$CDCA": [
+   "bank_055.asm:10728",
+   "bank_055.asm:10731",
+   "bank_055.asm:6350",
+   "bank_055.asm:6353"
+  ],
+  "$C2BD": [
+   "bank_055.asm:10890",
+   "bank_055.asm:11085",
+   "bank_055.asm:6816",
+   "bank_065.asm:1285"
+  ],
+  "$CEEE": [
+   "bank_055.asm:12366",
+   "bank_055.asm:8390"
+  ],
+  "$C6CC": [
+   "bank_055.asm:8583"
+  ],
+  "$CECE": [
+   "bank_055.asm:8585"
+  ],
+  "$CC4F": [
+   "bank_055.asm:9135"
+  ],
+  "$CE03": [
+   "bank_055.asm:9980"
+  ],
+  "$CBBD": [
+   "bank_055.asm:10830",
+   "bank_055.asm:10967",
+   "bank_055.asm:11093",
+   "bank_055.asm:11285"
+  ],
+  "$DC2B": [
+   "bank_055.asm:11405"
+  ],
+  "$CF04": [
+   "bank_055.asm:12258"
+  ],
+  "$C3C7": [
+   "bank_055.asm:12264"
+  ],
+  "$C7CF": [
+   "bank_055.asm:12269"
+  ],
+  "$D4D3": [
+   "bank_056.asm:479",
+   "bank_05f.asm:7054",
+   "bank_065.asm:3423"
+  ],
+  "$CCFF": [
+   "bank_056.asm:4545",
+   "bank_05b.asm:14248"
+  ],
+  "$D655": [
+   "bank_057.asm:705",
+   "bank_05f.asm:4433"
+  ],
+  "$DC51": [
+   "bank_057.asm:812"
+  ],
+  "$DD4C": [
+   "bank_057.asm:2364"
+  ],
+  "$C946": [
+   "bank_059.asm:1235"
+  ],
+  "$DA46": [
+   "bank_059.asm:1247"
+  ],
+  "$C6B8": [
+   "bank_05a.asm:541"
+  ],
+  "$C9F6": [
+   "bank_05a.asm:869"
+  ],
+  "$D23C": [
+   "bank_05a.asm:3438"
+  ],
+  "$C0C4": [
+   "bank_05a.asm:5996"
+  ],
+  "$CD32": [
+   "bank_05a.asm:6238"
+  ],
+  "$DC32": [
+   "bank_05a.asm:6241",
+   "bank_05a.asm:7142"
+  ],
+  "$CD23": [
+   "bank_05a.asm:6405"
+  ],
+  "$D20C": [
+   "bank_05a.asm:6817",
+   "bank_05b.asm:990"
+  ],
+  "$C324": [
+   "bank_05a.asm:7425"
+  ],
+  "$D423": [
+   "bank_05a.asm:9025"
+  ],
+  "$C43D": [
+   "bank_05a.asm:10841"
+  ],
+  "$D52A": [
+   "bank_05a.asm:10942"
+  ],
+  "$D428": [
+   "bank_05a.asm:11215"
+  ],
+  "$CC30": [
+   "bank_05a.asm:11377"
+  ],
+  "$D8FC": [
+   "bank_05a.asm:11873",
+   "bank_05b.asm:5451"
+  ],
+  "$DA54": [
+   "bank_05b.asm:3952"
+  ],
+  "$C31D": [
+   "bank_05b.asm:6538"
+  ],
+  "$D626": [
+   "bank_05b.asm:6570"
+  ],
+  "$CEC2": [
+   "bank_05b.asm:7331"
+  ],
+  "$CCC4": [
+   "bank_05b.asm:11317"
+  ],
+  "$C639": [
+   "bank_05b.asm:12809"
+  ],
+  "$DE49": [
+   "bank_05b.asm:14605"
+  ],
+  "$CC49": [
+   "bank_05b.asm:14608"
+  ],
+  "$CF52": [
+   "bank_05c.asm:108"
+  ],
+  "$C252": [
+   "bank_05c.asm:3518",
+   "bank_05c.asm:3521",
+   "bank_05c.asm:3524",
+   "bank_05c.asm:3527",
+   "bank_05c.asm:3531",
+   "bank_05c.asm:3534",
+   "bank_05c.asm:3537",
+   "bank_05c.asm:3540",
+   "bank_05c.asm:3543",
+   "bank_05c.asm:3546",
+   "bank_05c.asm:3549"
+  ],
+  "$D052": [
+   "bank_05c.asm:3552"
+  ],
+  "$D458": [
+   "bank_05d.asm:5485"
+  ],
+  "$CA00": [
+   "bank_05f.asm:2866"
+  ],
+  "$D05E": [
+   "bank_061.asm:157"
+  ],
+  "$C7BC": [
+   "bank_061.asm:551"
+  ],
+  "$DD04": [
+   "bank_061.asm:1070"
+  ],
+  "$CFB5": [
+   "bank_061.asm:1536"
+  ],
+  "$C3B5": [
+   "bank_061.asm:1615"
+  ],
+  "$CEAE": [
+   "bank_063.asm:706"
+  ],
+  "$CFC6": [
+   "bank_063.asm:1826"
+  ],
+  "$C6FC": [
+   "bank_063.asm:5083"
+  ],
+  "$CC2C": [
+   "bank_063.asm:5713"
+  ],
+  "$CF7E": [
+   "bank_063.asm:6015",
+   "bank_063.asm:6235"
+  ],
+  "$CE7C": [
+   "bank_063.asm:6343"
+  ],
+  "$DEBA": [
+   "bank_063.asm:9130"
+  ],
+  "$C0C1": [
+   "bank_063.asm:9558",
+   "bank_078.asm:4752",
+   "bank_07d.asm:1464"
+  ],
+  "$C3A1": [
+   "bank_063.asm:10839"
+  ],
+  "$DFCF": [
+   "bank_065.asm:1554"
+  ],
+  "$CFC7": [
+   "bank_065.asm:1562"
+  ],
+  "$DA7F": [
+   "bank_066.asm:102"
+  ],
+  "$C0BD": [
+   "bank_066.asm:293"
+  ],
+  "$C6BE": [
+   "bank_066.asm:1253"
+  ],
+  "$D73C": [
+   "bank_066.asm:5859"
+  ],
+  "$CC34": [
+   "bank_066.asm:6397"
+  ],
+  "$DCC4": [
+   "bank_066.asm:6755"
+  ],
+  "$C5BE": [
+   "bank_066.asm:6823"
+  ],
+  "$C004": [
+   "bank_068.asm:386"
+  ],
+  "$DFDE": [
+   "bank_068.asm:593"
+  ],
+  "$CB81": [
+   "bank_068.asm:2827"
+  ],
+  "$CECC": [
+   "bank_078.asm:608"
+  ],
+  "$C23D": [
+   "bank_078.asm:2436"
+  ],
+  "$DB24": [
+   "bank_078.asm:3399"
+  ],
+  "$DC2C": [
+   "bank_078.asm:3621"
+  ],
+  "$C683": [
+   "bank_078.asm:4482"
+  ],
+  "$DBE7": [
+   "bank_078.asm:4505"
+  ],
+  "$CEC6": [
+   "bank_078.asm:4520"
+  ],
+  "$DCE2": [
+   "bank_078.asm:8527"
+  ],
+  "$C6F6": [
+   "bank_078.asm:10002"
+  ],
+  "$C4F4": [
+   "bank_078.asm:10283"
+  ],
+  "$D0A8": [
+   "bank_078.asm:11401"
+  ],
+  "$CEC7": [
+   "bank_07b.asm:1352",
+   "bank_07b.asm:2077"
+  ],
+  "$C003": [
+   "bank_07b.asm:2936"
+  ],
+  "$C424": [
+   "bank_07d.asm:1313"
+  ],
+  "$DFCE": [
+   "bank_07d.asm:5068"
+  ],
+  "$C4D6": [
+   "bank_07d.asm:5356"
+  ],
+  "$DC8C": [
+   "bank_07d.asm:7777"
+  ]
+ }
+}

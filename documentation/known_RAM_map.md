@@ -66,12 +66,27 @@
                  Castle script 0 branches on values 1/2 to choose post-
                  tournament path. Value determines which variant of the
                  Starry Night victory cutscene plays (sets flag $00F1).
+   CA94    30    Library "seen" species bit array (bit N = species N seen).
+                 Set via SetBitInArray on add-to-storage ($14:label14_40b4);
+                 bank $07 completion counters scan bits 0-$EF (240 bits →
+                 $CA94-$CAB1). New species 224's bit lands at $CAB0 — inside
+                 the scanned extent (benign) but it COUNTS toward the
+                 100-monster library reward checks (S54).
    CAC0     1    Current monster slot index (0-19, used by Call_000_223b)
    CAC1   149    Party monster slot 0 (base address; see Party Monster Structure below)
    CB56   149    Party monster slot 1 ($CAC1 + $95 × 1)
    CBEB   149    Party monster slot 2 ($CAC1 + $95 × 2)
-                 ... 20 slots total, each $95 (149) bytes
-   1:D6B0        End of party/storage monster data (slot 19 + $95)
+                 ... 20 slots total, each $95 (149) bytes.
+                 Slots hold party + farm + eggs under ONE 20-slot limit.
+                 Access is INDEXED ONLY (GetMonsterDataPtr: HL = field + A×$95)
+                 — there are ZERO literal refs to slot 3-19 addresses. Do not
+                 place anything at $CAC4-$D664 (see audit_wram.py, S54).
+   1:D664        TRUE end of party/storage monster data (slot 19 = $D5D0 +
+                 $95 - 1). The old "D6B0" figure here was wrong (S54).
+                 WARNING (S54): the custom WRAM block $D378-$D48B currently
+                 sits INSIDE slots 14-16 of this array — known collision,
+                 relocation is a ROADMAP Phase 0 item. Until then, keep the
+                 array ≤14 occupied when using custom rooms.
 ; Party Monster Structure ($95 = 149 bytes per slot, 20 slots):
 ;   Base = $CAC1 + slot_index × $95
 ;   Call_000_223b: HL = field_addr + index × $95

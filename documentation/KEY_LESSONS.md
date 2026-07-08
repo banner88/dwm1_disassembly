@@ -1762,3 +1762,63 @@ an opcode in a new emitter, read the handler (the bank_004 per-opcode reference
 block + code). Log tool-table defects where the next session will look
 (TOOLS_AND_DATA row + owning doc) instead of silently diverging — and don't
 "fix" the tool without re-testing its decompiler twin's round-trip.
+
+## Session 54 Lessons — WRAM collision root cause (egg-give room corruption)
+
+### "No literal refs" is NOT "unclaimed WRAM" — indexed arrays are invisible to grep
+**Symptom**: `$FF29` (AddMonster) egg give in custom room `$6B` → bottom exit
+dead + crash on scroll-up. Pre-existing across builds; only on a full save.
+**Root cause**: the party/storage monster array is accessed EXCLUSIVELY through
+`GetMonsterDataPtr` (`HL = field + slot×$95`, 20 slots) so it spans
+**`$CAC1-$D664` with zero literal `$D3xx/$D4xx` refs**. The Phase-0 grep audit
+therefore declared `$D378-$D477` "unclaimed", and ALL custom WRAM was placed
+inside monster slots 14-16. The give writes a 149-byte record into the first
+empty slot: for slot 16 that lands SkyDragon's 27 resistance bytes on
+`$D479-$D493` = the live step counters + `wRoomRecScratch` → garbage step-entry
+pointer (dead exit) + garbage tileset/collision record read on the next screen
+load (crash). Party+farm+eggs share the one 20-slot limit (user-confirmed), so
+"how full is the save" is the trigger variable — which is why it "used to work"
+on early saves and why party size changes don't help.
+**The reverse direction is the silent killer**: `CopyCustomRoomRecord` rewrites
+`wRoomRecScratch` on EVERY room transition (since S42), and custom-room
+NPC/exit buffer copies spray `$D379-$D477` — stored monsters #15-17 get
+corrupted by NORMAL PLAY, and saving persists it.
+**This is the THIRD instance of the class**: `$D95E` (MedalMan collision) and
+`$D9A0-$D9A2` (inside `wEventFlags`) were the first two — both "fixed" by
+moving to `$D478+`, i.e. deeper into the same unaudited hole.
+**Rule**: never claim WRAM is free from literal-grep evidence. Free-space
+claims need POSITIVE evidence covering all three access classes: literal refs,
+indexed arrays (base + index×stride helpers like `GetMonsterDataPtr` /
+`Mul8x8To16` users), and pointer-walked buffers (literal base + loop, e.g.
+library seen-bits `$CA94-$CAB1` scanned to bit `$EF`). `tools/audit_wram.py`
+now encodes this; its gaps are reported as "UNVETTED", never "free", and its
+`--selftest` pins the detection of this exact collision.
+
+### A "mixed up the gates" report can hide a refutable suspect — kill suspects statically before designing probes
+The S53 anomaly (a) ("Pillar B $6D absent in Gate of Villager") dissolved as a
+user misread, but its recorded suspect ("story-step-dependent hub exit data")
+was ALSO statically false: room `$24`'s four step variants carry byte-identical
+exits (pedestal (2,2) → dest 1 / gate_flag 1 in every step; steps only toggle
+the sprite-77 pedestal objects). Ten minutes of `map_table.json` reading
+removed both a phantom bug and a phantom mechanism.
+**Rule**: before handing the user a runtime probe, spend the grep/extract pass
+that could make the probe unnecessary — and when an anomaly is closed as
+user-error, still check whether its written-down suspect would have survived;
+delete it from the docs if not, or it will be chased again.
+
+### Per-frame-refreshed state masks its own corruption — probe the non-refreshed neighbors
+**Symptom (S54 probe)**: after the corrupting give, `wRoomRecScratch` read back
+byte-identical to its pre-give value, which could be misread as "the scratch
+was never hit". It WAS hit — the ROM0 collision-threshold reader re-populates
+it via bank $71 entry 0 on essentially every movement frame, so any corruption
+self-heals before a human can `examine` it. The step counters have no
+refresher and held the garbage (`$D478=$c8`, `$D479=$22`), which is why they —
+not the scratch — are the persistent crash vector. Same pattern: the
+NPC/exit buffers self-heal per read (re-copied by every
+CustomReadInteract/CustomExitCheck call), so a slot-14/15 give is transient
+while a slot-16 give is persistent.
+**Rule**: when probing for memory corruption, know each variable's refresh
+cadence first; an unchanged read of frequently-rewritten state proves nothing.
+Probe the neighbors that nothing rewrites. And when relocating such state,
+verify the NEW addresses for both the refreshed and non-refreshed vars — the
+self-heal will hide a botched move of the refreshed ones.

@@ -204,6 +204,17 @@ wram1Start:: db
 ; Custom room overflow system ($D378-$D477)
 ; Used to buffer NPC/exit data from overflow banks ($60+) for cross-bank rooms.
 ; The flag is checked by patched readers in bank $0B.
+;
+; !!! KNOWN COLLISION (S54) — THIS ENTIRE BLOCK ($D378-$D48B) SITS INSIDE THE
+; !!! PARTY/STORAGE MONSTER ARRAY ($CAC1-$D664, 20 slots x $95, indexed via
+; !!! GetMonsterDataPtr — zero literal refs, which is how the old "unclaimed"
+; !!! grep audit missed it). Slots 14-16 overlay these vars: a $FF29 give into
+; !!! slot 14-16 corrupts live room state (dead exits, scroll crash), and
+; !!! normal room transitions corrupt stored monsters #15-17 (wRoomRecScratch
+; !!! is rewritten every room load). DO NOT add anything here. Relocation is a
+; !!! ROADMAP Phase 0 item; evidence + candidate targets in
+; !!! tools/audit_wram.py / extracted/wram_usage.json. Until relocated, keep
+; !!! the monster array <=14 occupied when using custom rooms.
 CUSTOM_ROOM_START EQU $6B ; first custom map type (107 = one past last original)
 wCustomRoomFlag:: db ;d378 — $00=normal room, $01=custom room active
 wCustomNPCBuffer:: ds 128 ;d379 — NPC interact data copied from overflow bank ($FF terminated)
@@ -212,7 +223,11 @@ wCustomExitBuffer:: ds 127 ;d3f9 — exit data copied from overflow bank ($FF te
 ; Custom room step counters ($D478-$D47B)
 ; These replace the original $D95E (MedalMan collision) and $D9A0-$D9A2
 ; (event flag collision — bytes 5-7 of wEventFlags held boss/story flags).
-; This range is verified unused by the original engine ($D478-$D790 gap).
+; S54 CORRECTION: the old claim "verified unused ($D478-$D790 gap)" was FALSE —
+; $D478-$D664 is monster slots 16-19 and $D665-$D78F is engine-used. These
+; counters are inside monster slot 16 (see collision banner above). The two
+; collisions this block "escaped" ($D95E, $D9A0-2) were the same bug class;
+; this was the third. Relocation pending (ROADMAP Phase 0).
 ; NOTE: not in SRAM save range — step counters reset on power cycle.
 ; For persistence, use event flags + room-entry script flag checks instead.
 ; @BUILD_PROJECT BEGIN wram_step_counters

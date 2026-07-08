@@ -33,7 +33,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 | Encounter pool format: 32 gates → pools 0–127 | encounters.json structure audit |
 | Gate floor GENERATION: procedural maze grid `$C940`, per-gate `GateFloorDataTable` `$16:$70A6`, `SelectFloorType`/`FloorTypeSelectionTable`1/2/3, special-room `rst $00` dispatch `$16:$5C1C`, damage tiles (class `$0E`/`FloorDamageTable` `$01:$5E7D`) | S37: pipeline traced end-to-end + damage tiles SameBoy-watchpoint-confirmed; **GATE_GENERATION.md** |
 | Vanilla-empty banks: 23 = 368 KB | full-ROM scan; CURRENT allocation lives in PROJECT_STATE "Bank allocation" (8 banks now patch-owned) |
-| Custom WRAM $D378–$D477 unclaimed by original code | repo-wide grep: refs stop at $D375/$D376–7 |
+| ~~Custom WRAM $D378–$D477 unclaimed by original code~~ **REFUTED S54**: that range sits INSIDE the party/storage monster array `$CAC1-$D664` (20 slots × $95, `GetMonsterDataPtr` — indexed access, zero literal refs, which is why the grep missed it). Every custom WRAM var ($D378-$D48B) collides — root cause of the S53 egg-give room corruption. See `tools/audit_wram.py` + `extracted/wram_usage.json`; relocation is a Phase 0 item | audit_wram.py --selftest; slot math $CAC1+20×$95=$D665 |
 
 ### Custom content primitives (proven in-game, v23)
 | Item | Evidence |
@@ -90,6 +90,38 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       superseded data (monsters.json, event_flags.json, edits.json) per
       TOOLS_AND_DATA.md. *(Postponed — low priority.)*
 - [~] Housekeeping deletions/moves per PROJECT_STATE. *(Postponed.)*
+- [ ] **Relocate ALL custom WRAM out of the monster array `$CAC1-$D664`** (root
+      cause found S54, statically proven AND runtime-confirmed by user probe:
+      give picked slot $10; counters clobbered; probe bytes recorded in the
+      PROJECT_STATE S54 block). The entire
+      custom block `$D378-$D48B` (wCustomRoomFlag, NPC/exit buffers, 7 step
+      counters, wRoomRecScratch, wRoomEncFlag, Tame vars) sits inside monster
+      slots 14-16. Forward corruption: `$FF29` give into slot 14-16 trashes the
+      live room state (S53/S54 egg-give symptom: dead exit + scroll crash).
+      Reverse corruption: `CopyCustomRoomRecord` rewrites `wRoomRecScratch` on
+      EVERY room transition since S42, and custom-room buffer copies spray
+      slots 14-16 — monsters #15-17 in storage get corrupted by normal play
+      and the damage persists through save. Interim play rule: keep the
+      party+farm+eggs array ≤14 occupied around custom rooms.
+      Plan: vet a relocation target from `extracted/wram_usage.json`'s
+      unvetted-gaps list (top candidates $C20D-$C2C2 182 B, $C42B-$C4C3 153 B,
+      $DE74-$DEDD 106 B — may need block split or buffer shrink; per-candidate
+      vetting REQUIRED: pointer-walk loops + the SVBK bank-2 windows in
+      bank_051/052). FIX-SESSION NOTES (from the S54 probe): wRoomRecScratch
+      SELF-HEALS (ROM0 collision-threshold reader re-populates it per
+      movement/frame via bank $71 entry 0) — do not let that mask a bad move;
+      verify counters AND scratch at the NEW address after relocation. The
+      crash vector is the step counters (no refresher); the buffers self-heal
+      per read (CustomReadInteract/CustomExitCheck re-copy every call), so a
+      slot-14/15 give is transient but a slot-16 give is persistent — the fix
+      must still move EVERYTHING (reverse corruption of stored monsters in
+      slots 14-15 happens regardless of self-heal). Touches the compiler-owned
+      `wram_step_counters` region +
+      pinned `wRoomRecScratch@$D47F` → same-session cascade: project.json
+      example, engine template re-pin (PROJECT_COMPILER §5), regression md5,
+      `editor2/tests/test_compiler.py --rom`. *Accept:* audit_wram.py shows
+      zero class-B collisions for custom state; egg-give-then-scroll works on
+      a ≥15-monster save (user test); verifier PASS.
 - [ ] **Fold tool selftests into `verify_integrity.py`** (promoted S51 from *Open*
       notes buried in the B3/B7/S1 completed stubs): the byte-identity selftests of
       `build_breeding.py`, `build_library_table.py`, and `build_skill_tables.py`

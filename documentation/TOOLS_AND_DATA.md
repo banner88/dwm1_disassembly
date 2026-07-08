@@ -16,6 +16,7 @@ session.
 Regen produces identical output to committed file. Safe to re-run.
 | File | Generator | Notes |
 |------|-----------|-------|
+| wram_usage.json | audit_wram.py | S54. Full WRAM classification + custom-state collision findings + unvetted-gap list (relocation candidates). Regenerate with the tool; not ROM-derived alone (also parses docs + patches). |
 | monsters_full.json | dump_monsters.py | 221 monsters, all 43 fields. Verified identical. |
 | encounters.json | dump_encounters.py | 32 gates / 125 pools. Verified identical. |
 | boss_table.json | dump_boss_table.py | $4897 table, 32 gates. Verified identical. |
@@ -233,6 +234,15 @@ The Spirit icon insert itself is `patches/bank_04f.asm` (same-size 16-byte tile 
 $41B0, zero shift; bank $4F otherwise byte-identical to vanilla).
 
 ### Builders / decoders added after the 06-13 audit (rows synced S51)
+`audit_wram.py` — S54: WRAM usage mapper. Classifies every WRAM byte from four
+evidence sources (vanilla literal refs with data-as-code 'suspect' filtering;
+curated evidence-cited indexed arrays — incl. the monster array $CAC1-$D664
+whose invisibility to grep caused the S54 collision; known_RAM_map sized spans;
+patch-only refs + wram.asm label resolution with comment cross-check). Emits
+`extracted/wram_usage.json`; reports gaps as UNVETTED, never "free";
+`--selftest` pins detection of the S54 custom-block/monster-array collision
+(the tool must always find the bug that motivated it). Rerun after ANY
+wram.asm change or before placing new WRAM state. ·
 `build_combined_tileset.py` — multi-tileset editor JSON → bank_067.asm (cherry-picked
 LZSS GFX) + bank_017.asm palette wiring; the Phase-1 "custom tile GRAPHICS" pipeline. ·
 `build_library_table.py` — B7 production library grouping → patches/bank_012.asm;

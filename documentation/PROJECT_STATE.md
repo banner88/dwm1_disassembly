@@ -71,34 +71,80 @@
 > bank_016 unchanged since the S41 commit; fork machine code verified byte-equal
 > in BOTH built ROMs at $16:$5BA9→$7CB9. Fresh-entry contract is
 > `wGateID := wMapID` (pedestal pseudo-id) at `$16:$5B67` when wInGateworld
-> bit7 clear; gate 1 record has last_floor=5 (matches the 4 observed floors),
-> so the .gate1 branch never fired → wGateID ≠ 1 at the floor decisions under
-> the CURRENT save state (story-step-dependent hub exit data is the lead
-> suspect). Probe: `watch $c935` before the pedestal; `examine $c935` on
-> floor 1. OPEN — runtime data needed.
+> bit7 clear. **CLOSED S54 — user misread which gate; Pillar B $6D + descent
+> music + Dran boss all work as designed.** The recorded suspect
+> ("story-step-dependent hub exit data") was ALSO statically refuted in S54:
+> room $24's four step variants carry byte-identical exits (pedestal (2,2) →
+> dest 1 / gate_flag 1 in every step; steps only toggle the sprite-77 pedestal
+> objects). Do not chase it again.
 > (b) **SkyDragon-egg give ($6B bottom screen) then scroll up → crash** —
 > unknown vintage per user. Not plausibly S53 (the fix's measured delta doesn't
-> touch the path). Mechanism audit: $FF29 → AddMonsterWrapper (S3) →
-> bank $14 entry 2 `$40B4` (**pure vanilla**, 0 patched bytes in 600) →
-> bank $01 entry 3 `$484E` whose chain passes THROUGH the G1/GFX-3-patched
-> follower-loader region (12 patched bytes at ~`$4984`:
-> ScreenTransDataTable repoint + ClampFamIdx routing) — so vintage candidates
-> are: original-game edge (egg-in-storage + scroll), or a follower-era
-> regression. **A/B CONFIRMED (user, S53): reproduces on the reference build
-> too → PRE-EXISTING, not S53.** Root-cause/fix is its own session item
-> (suspect list above; start with a SameBoy backtrace at the hang). OPEN.
+> touch the path). **A/B CONFIRMED (user, S53): reproduces on the reference
+> build too → PRE-EXISTING, not S53.** **ROOT CAUSE FOUND S54 (static; runtime
+> probe pending)** — see the S54 block below: the custom WRAM block sits inside
+> the party/storage monster array; the give's 149-byte record lands on the live
+> room state. The earlier follower-loader suspect list is dead (the egg goes to
+> storage, party untouched; family byte written correctly from the bank-$03
+> info loader). **RUNTIME-CONFIRMED (user probe, same session): `$da14=$10` —
+> the give picked slot 16 exactly as predicted; step counters clobbered
+> ($D478=$c8 → scroll-up crash via garbage screen-0 step-entry ptr;
+> $D479=$22 → dead bottom exit; $D488-$D497 garbage) while wRoomRecScratch
+> read back UNCHANGED — it self-heals (the ROM0 collision-threshold reader
+> re-populates it via bank $71 entry 0 per movement/frame), so the crash
+> vector is the counters, not the scratch. Fix NOT built yet — next session.**
 > Demo rooms are THROWAWAY per user (real romhack starts from a fresh
 > project.json); both anomalies matter as MECHANISMS ($29 give, Pillar B),
 > not as content.
-> **NEXT:** egg A/B DONE (pre-existing). Remaining probe: gate `watch $c935`.
-> Recommended follow-up: a mechanism-reliability session root-causing + fixing
-> both (they sit on core content verbs — $29 give, Pillar B insertion — that
-> the real romhack will use). On compiler sign-off (GIVEN S53),
-> decide whether to `--apply`
-> the fixed build as the committed overlay baseline (drops `build.compat`).
-> Then Phase 2 follow-ons: Encounters #2 (custom pools), Layer A extraction
-> (the GreatTree-entrance bank-$0B data edit → `world` layer), dialogue DTE
-> pass, `set_flag`-by-name sugar — or resume S2f / T2 / the blink.
+> **NEXT (updated S54):** the WRAM relocation (ROADMAP Phase 0, full spec
+> there) is now the gating item before ANY new custom state or bigger romhack
+> content — it touches the compiler-owned wram region + pinned scratch, so it
+> is its own session with the PROJECT_COMPILER §5 re-pin cascade. After that:
+> `--apply` decision (compiler sign-off GIVEN S53), then Phase 2 follow-ons
+> (Encounters #2, Layer A extraction, dialogue DTE, set_flag-by-name) — or
+> resume S2f / T2 / the blink.
+>
+> Session 54 (2026-07-08 — **egg-give root cause: custom WRAM sits inside the
+> monster array; audit_wram.py ships. Byte-neutral session** — no ROM delta,
+> verifier PASS 4/4, clean build byte-perfect `1ca6579…`).
+> S53 anomaly (a) CLOSED (user misread the gate; Pillar B works; the "hub exit
+> data" suspect statically refuted — room $24 exits step-invariant). S53
+> anomaly (b) **ROOT CAUSE (static, runtime probe pending)**: the party/storage
+> monster array (party+farm+eggs, ONE 20-slot limit, user-confirmed) spans
+> **$CAC1-$D664** via `GetMonsterDataPtr` indexed access — zero literal refs,
+> so the Phase-0 grep audit falsely called $D378-$D477 "unclaimed", and ALL 14
+> custom WRAM labels ($D378-$D48B: room flag, NPC/exit buffers, 7 step
+> counters, wRoomRecScratch, wRoomEncFlag, Tame vars) sit inside monster slots
+> 14-16 (third instance of this bug class after $D95E and $D9A0-2).
+> Forward corruption (the user's crash): `$FF29` writes a 149-B record into the
+> first empty slot; slot 16 lands the 27 resistance bytes on $D479-$D493 =
+> bottom-screen step counter (garbage step-entry ptr → dead exit) +
+> wRoomRecScratch (garbage tileset/collision record → scroll-up crash).
+> Reverse corruption (silent, worse): `CopyCustomRoomRecord` rewrites scratch
+> on EVERY room transition since S42; buffer copies spray slots 14-16 →
+> stored monsters #15-17 corrupted by normal play, persisted by saving.
+> **Interim play rule: keep the array ≤14 occupied around custom rooms; user
+> should inspect stored monsters #15-17 for damaged stats/resistances.**
+> Confirmation probe: **RUN AND CONFIRMED by user same session.** Recorded
+> values for the fix session — before: $D478-$D47E = 00×7, scratch
+> `0d 28 a0 00 00 01 30 00`, encFlag 01, $D488+ = 00. After the give:
+> $da14=$10 (slot 16); $D478-$D47E = `c8 22 fa 8b c8 22 fa`;
+> $D488-$D497 = `ea 8a c8 af ea 8b c8 21 8e c8 34 fa 42 c8 cb 5f`;
+> scratch bytes unchanged (per-frame self-heal, see above). Slot 16 = first
+> empty ⇒ the user's save has slots 0-15 OCCUPIED ⇒ **monsters #15-#16
+> (slots 14-15) are being actively corrupted by every custom-room visit** —
+> slot 15's in-use flag ($D37C) is NPC-buffer byte 3; user advised to inspect
+> both. The given egg (slot 16) will itself be corrupted by future room
+> transitions (scratch/Tame writes land at its +$6E..+$7A). Deliverables: `tools/audit_wram.py` (4 evidence sources;
+> gaps reported UNVETTED, never "free"; `--selftest` pins this detection) +
+> `extracted/wram_usage.json` (TOOLS_AND_DATA rows added). Relocation
+> candidates from the gap list: $C20D-$C2C2 (182 B), $C42B-$C4C3 (153 B),
+> $DE74-$DEDD (106 B) — each needs vetting (pointer-walk loops; SVBK bank-2
+> windows exist in bank_051/052, so banked WRAM is NOT assumed free). Docs
+> corrected in place: ROADMAP facts row (refuted claim + new Phase 0 item),
+> known_RAM_map (array end $D664, not $D6B0; seen-bits $CA94-$CAB1 documented;
+> collision warning), DOC_AUDIT addendum, KEY_LESSONS S54. Class-C finding:
+> new species 224's library bit at $CAB0 is inside the vanilla-scanned extent
+> (benign; counts toward the 100-monster library rewards).
 >
 > Last verified: 2026-07-06 (Session 52 — **Tame Stage 2 ships: 3-tier skill-evolve chain,
 > natural-learn fork, real MP costs.** Integrity PASS 4/4, clean build byte-perfect
