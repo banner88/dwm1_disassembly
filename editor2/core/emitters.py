@@ -355,16 +355,16 @@ def emit_region_render_tables(prj, warnings):
 
 
 # ---------------------------------------------------------------------------
-# wram region emitter — custom step counters ($D478+ verified-unused gap;
+# wram region emitter — custom step counters ($DE74+, S55-vetted block;
 # ROOM_DATA_FORMAT "Room State System": NOT SRAM-persistent)
 # ---------------------------------------------------------------------------
 
 def emit_region_wram_steps(prj, warnings):
     """Step-counter labels at exact addresses inside the fixed-size region
-    ($D478.., ROOM_DATA_FORMAT 'verified unused gap'; NOT SRAM-persistent).
+    ($DE74.., S55-vetted — see patches/wram.asm banner; NOT SRAM-persistent).
     Holes between explicit addresses become `ds` fillers so every label
     lands at its declared address; the region is padded to its fixed size
-    so wRoomRecScratch stays pinned at $D47F (engine code in banks $00/$0B/
+    so wRoomRecScratch stays pinned at $DE7B (label-resolved by banks $00/$0B/
     $71 reads it by that address)."""
     from .project import STEP_COUNTER_BASE
     alloc = prj.step_counter_allocation()      # ordered [(label, addr, cm)]
@@ -379,7 +379,7 @@ def emit_region_wram_steps(prj, warnings):
     end = STEP_COUNTER_BASE + size
     if cursor < end:
         out.append(f"    ds {end - cursor} ; reserved (region size fixed so "
-                   "wRoomRecScratch stays at $D47F — PROJECT_COMPILER.md)")
+                   "wRoomRecScratch stays at $DE7B — PROJECT_COMPILER.md)")
     return "\n".join(out) + "\n"
 
 

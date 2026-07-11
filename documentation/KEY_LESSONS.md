@@ -1822,3 +1822,85 @@ cadence first; an unchanged read of frequently-rewritten state proves nothing.
 Probe the neighbors that nothing rewrites. And when relocating such state,
 verify the NEW addresses for both the refreshed and non-refreshed vars — the
 self-heal will hide a botched move of the refreshed ones.
+
+## Session 55 Lessons — WRAM relocation vetting (why the gap list lied)
+
+### A "gap" below a decompression destination is the buffer, not free space
+**Symptom**: audit_wram's two largest relocation candidates ($C20D-$C2C2 182 B,
+$C42B-$C4C3 153 B) had zero real literal refs and looked placeable.
+**Root cause**: both sit inside STAGING BUFFERS whose writes are invisible to
+literal-ref scanning: $C200 is the attr decompression destination (the stream
+HEADER declares the write length — every attr stream in the ROM declares 256),
+and $C300-$C4FF is a 512-byte screen staging unit (proven by a bank $06 bulk
+copy `$C500→$C300 ×$0200`, and by the save routine copying both blocks to SRAM
+whole). Ten more "gaps" sat inside the $C500 battle tile buffer the tool's
+curated list lacked.
+**Fix**: curated arrays added (attr staging, screen staging ×$200, battle tile
+buffer, audio channels, battle stat tables); wram_usage.json regenerated
+(51→34 gaps).
+**Rule**: before trusting any WRAM gap, find the nearest decompression/copy
+DESTINATION below it and bound that buffer from its own evidence (declared
+declen in the stream header, bulk-copy length, save-block length). A gap's
+edges as drawn by junk literals mean nothing.
+
+### Read the loop bound, not the doc label — the "battle struct array" was the audio engine
+**Symptom**: known_RAM_map called $DD80-$DE4F an "(INFERRED) per-combatant
+battle struct array, ~8 slots", making all of $DExx battle territory.
+**Root cause**: the inference came from observed stride-26 bases. The actual
+init loop (`ClearAudioChannels`, bank $00) reads `ld hl,$dd80 / ld b,$06` —
+SIX channels × 26 B = $DD80-$DE1B, with audio scalars enumerating to $DE2B.
+It's the sound engine. (S45's "battle corruption" when poking $DDF0/$DDFE was
+audio channel bytes.)
+**Rule**: when an array's extent matters, find its INIT/CLEAR loop and read
+the bound register — a `ld b,$06` beats any inferred "~8 slots". Corollary
+proven same session: the sleep pool's extent came free from SRAM save-map
+arithmetic ($BCC8−$B124 = $BA4 = exactly 20×$95).
+
+### Big feature ≠ big WRAM — measure exclusivity before proposing a sacrifice
+**Symptom**: debug mode (a whole wGameMode dispatch family: banks $55/$56/$59)
+looked like a sacrificial WRAM donor for the romhack.
+**Root cause**: debug menus DRIVE the real engine (real anim vars, real audio,
+real game state) and borrow shared menu scratch. A full cross-bank exclusivity
+scan found ~10 exclusive bytes.
+**Rule**: to cost a feature-sacrifice, compute the set of addresses referenced
+ONLY by that feature's banks — in a codebase this shared, expect near-zero.
+The scarce resource is runtime-mutable memory, and vanilla already shares it
+aggressively; the real donors are ARRAYS with negotiable bounds (monster
+slots, counter pools), not features.
+
+
+### Vetted-unclaimed is NOT initialized — relocation must audit init AND restore paths
+**Symptom (S55, user hardware test)**: after relocating custom state
+$D478->$DE74, hard crash ON ENTRY to room $6B (previously the crash was on a
+give); and loading a save made inside the room crashed on the first scroll.
+**Root cause**: the vetting proved nobody CLAIMS $DE74-$DEDD — which also
+means nobody INITIALIZES it. The old location was defined entirely by
+accident of address: inside the boot clear (ClearAllWRAM zeroes only
+$C000-$DDFF — it stops short of the stack zone) AND inside the SRAM save
+image ($C8EA-$D9E9, so new-game init zeroed it and load restored it). The new
+location had neither: SameBoy/hardware randomize WRAM at power-on -> garbage
+step counter -> garbage step-entry pointer -> entry crash (the S53 crash
+mechanism, resurrected by the fix that was supposed to bury it). And
+wCustomRoomFlag, silently load-bearing on save-image restoration, read $00
+after loading in-room -> bank $0B readers took the vanilla path for a custom
+mapID -> garbage walk on scroll.
+**Fix**: ClearAllWRAM $1E00->$1EE0 (same-size operand edit; single call site,
+early boot); flag DERIVED from wMapID every movement frame at
+CopyCustomRoomRecord head (template re-pinned per PROJECT_COMPILER §5,
+TEMPLATE_SIZE 0x71: 103->116). Counters after load-in-room legitimately read
+step 0 (transient semantics, documented).
+**Rule**: when moving ANY WRAM, audit three things, not one: (1) who claims
+the destination, (2) who INITIALIZES the source region today (boot clears,
+save-image init, implicit zeroing) and whether the destination inherits any
+of it, (3) who RESTORES the source on load and what breaks when restoration
+stops. A variable can be load-bearing through pure address accident.
+
+### One variable per test ROM
+**Symptom (S55)**: the first S55 test ROM shipped the relocation ON TOP OF
+the S53 master-table fix — which itself had never been user-tested (the S53
+user loop ran the compat config). Two untested changes, one crash report.
+**Rule**: a test ROM tests ONE change against the last USER-TESTED
+configuration. Check PROJECT_STATE for which config the user actually ran —
+"built SN, NOT yet user-tested" in the docs means it does not count as a
+baseline. Deliver the isolating build first; stack configs only after each
+passes alone.

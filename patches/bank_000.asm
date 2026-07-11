@@ -3748,7 +3748,20 @@ ClearAllWRAM:
     ld a, [wIsGBC]
     push af
     ld hl, $c000
-    ld bc, $1e00
+    ld bc, $1ee0                        ; S55 FIX: was $1e00 ($C000-$DDFF). The
+                                        ; relocated custom block ($DE74-$DEDD)
+                                        ; sits ABOVE the vanilla clear line and
+                                        ; outside the save image — without this
+                                        ; it is power-on garbage (SameBoy
+                                        ; randomizes WRAM): garbage step counter
+                                        ; -> garbage step-entry ptr -> hard
+                                        ; crash on custom-room entry. New count
+                                        ; clears $C000-$DEDF; still well below
+                                        ; the $DF00 vars / $DFFF stack. Audio
+                                        ; state ($DD80-$DE2B) was already partly
+                                        ; inside the old clear and self-inits
+                                        ; (InitAudioSystem) — unaffected.
+                                        ; Same-size edit (operand only).
     xor a
     call FillNBytesWithRegA
 

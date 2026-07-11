@@ -10,98 +10,74 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-07 (Session 53 — **Editor headless backend ships:
-> `project.json` schema + `tools/build_project.py`; regression machine-verified
-> byte-identical.** Integrity PASS 4/4, clean build byte-perfect `1ca6579…`.)
-> **The compiler (`editor2/` package + `tools/build_project.py`) compiles a semantic
-> `project.json` into the proven patch overlay.** It owns `bank_060.asm` +
-> `bank_071.asm` whole-file (verbatim, sha256-pinned engine template heads +
-> generated data) and three byte-neutral `@BUILD_PROJECT` regions
-> (`bank_017.asm` ×2: `room_palettes_a`/`room_render_tables`; `wram.asm` ×1:
-> `wram_step_counters` — markers added S53, neutrality proven by integrity PASS).
-> Pipeline: content-validate → emit ×2 (determinism enforced) → bank-accounting
-> BEFORE rgbasm (pinned template sizes: `$60`=283 B @`$411B`, `$71`=103 B
-> @`$4067`, from the reference `game.sym`) → splice regions → stage/`make`/
-> restore (PATCH_FILES lists parsed from verify_integrity.py — one source of
-> truth) → `build/manifest.json` (+`game.sym`) mapping every text/script/
-> step-counter/flag to `bank:addr` for the SameBoy debug loop. KEY_LESSONS
-> rules are compiler VALIDATIONS (spawn script 0; screen_byte required, never
-> guessed; text terminators + bare-`$EE`; 8×4 palettes + forced-idx1/idx3
-> warnings; dense mapID/text tables; flag safe-pool allocator; wram region cap
-> keeping `wRoomRecScratch`@`$D47F`). 18/18 tests
-> (`editor2/tests/test_compiler.py --rom`).
-> **Proof 1 — regression:** `editor2/example-project/project.json` re-expresses
-> ALL user-confirmed content (6 rooms `$6B–$70`, 21 texts, 10 scripts, 4
-> palettes, records/enc rows, 7 step counters — auto-allocation reproduces the
-> hand addresses incl. the `$D47C` legacy hole via a `reserved` entry); the
-> generated patched ROM md5 **`3a5a514c65b330e2788170c5d409b960`** equals the
-> S53 reference patched build — byte-identical.
-> **Proof 2 + defect fixed by construction (built S53, NOT yet user-tested):**
-> the hand `CustomScriptMasterTable` had 3 entries but rooms reach index 5; on
-> the SCROLL path a room past the table overshoots into following data —
-> benign today ONLY because `$70` is single-screen (cannot scroll). Compiler
-> default emits the full-width master table + shared `CustomScriptNoop`
-> (+10 B); `build.compat.master_table_rooms` reproduces the legacy bytes
-> (compile-time warning). Fixed patched ROM `f81d4ad84ee52f4c3342cc1f7e261e58`;
-> measured delta vs reference = bank `$60` `$4010–$45B8` (+ the 2 header
-> checksum bytes) ONLY; `$60` usage 1455→1465 B. Test ROM delivered
-> (`DWM-S53-compiler-fixed-master-table.gbc`).
-> **Script routing documented (resolves S11 "room-entry script unreliable at
-> initial entry"; engine UNMODIFIED, grep-verified):** scroll/post-battle path
-> (bank `$06` `$66e3`, patches/bank_006.asm ~4931) sets `wScriptMapType` = raw
-> `wMapID` → `MapTypeDispatch` ≥`$40` → `DispatchBank0F_Ext` →
-> `GateAwareDispatch` → `CustomScriptRead` — the path that reaches bank-`$60`
-> scripts. Initial-entry path (bank `$01` `$4C3E`, ~line 2478) clamps via
-> `MapIDClampForPalette` → post-S42 `$00` for ALL custom rooms → CASTLE scr0
-> runs at initial entry (benign: flag/var-guarded; the "`$16` for custom
-> rooms" comment at that site is stale). Full write-up: PROJECT_COMPILER.md §7.
-> **Tool defect logged, NOT fixed:** `tools/compile_script.py` declares
-> `set_bgm` (`$41`) = 2 params; the handler `$04:$669D` consumes ONE (the
-> user-confirmed hand script uses one). Fix later together with
-> decompile_script.py's independent PARAM_COUNTS + round-trip re-test
-> (PROJECT_COMPILER.md §8).
-> New reference doc (user-sanctioned, like GATE_GENERATION precedent):
-> **PROJECT_COMPILER.md** — schema, pipeline, regions, template pinning,
-> insertion recipes for future skills/music emitters, S53 findings.
-> **User test result (S53, same day):** demo loop CONFIRMED on the fixed ROM —
-> $6B render/NPCs/jerky, scroll, encounters, $6C dusk + teleports + step demo,
-> $70 ember + encounters, save. TWO anomalies, BOTH classified NOT-S53 by
-> byte evidence (identical in reference + fixed builds):
-> (a) **Gate of Villager shows 4 vanilla floors** (Pillar B $6D absent) —
-> bank_016 unchanged since the S41 commit; fork machine code verified byte-equal
-> in BOTH built ROMs at $16:$5BA9→$7CB9. Fresh-entry contract is
-> `wGateID := wMapID` (pedestal pseudo-id) at `$16:$5B67` when wInGateworld
-> bit7 clear. **CLOSED S54 — user misread which gate; Pillar B $6D + descent
-> music + Dran boss all work as designed.** The recorded suspect
-> ("story-step-dependent hub exit data") was ALSO statically refuted in S54:
-> room $24's four step variants carry byte-identical exits (pedestal (2,2) →
-> dest 1 / gate_flag 1 in every step; steps only toggle the sprite-77 pedestal
-> objects). Do not chase it again.
-> (b) **SkyDragon-egg give ($6B bottom screen) then scroll up → crash** —
-> unknown vintage per user. Not plausibly S53 (the fix's measured delta doesn't
-> touch the path). **A/B CONFIRMED (user, S53): reproduces on the reference
-> build too → PRE-EXISTING, not S53.** **ROOT CAUSE FOUND S54 (static; runtime
-> probe pending)** — see the S54 block below: the custom WRAM block sits inside
-> the party/storage monster array; the give's 149-byte record lands on the live
-> room state. The earlier follower-loader suspect list is dead (the egg goes to
-> storage, party untouched; family byte written correctly from the bank-$03
-> info loader). **RUNTIME-CONFIRMED (user probe, same session): `$da14=$10` —
-> the give picked slot 16 exactly as predicted; step counters clobbered
-> ($D478=$c8 → scroll-up crash via garbage screen-0 step-entry ptr;
-> $D479=$22 → dead bottom exit; $D488-$D497 garbage) while wRoomRecScratch
-> read back UNCHANGED — it self-heals (the ROM0 collision-threshold reader
-> re-populates it via bank $71 entry 0 per movement/frame), so the crash
-> vector is the counters, not the scratch. Fix NOT built yet — next session.**
-> Demo rooms are THROWAWAY per user (real romhack starts from a fresh
-> project.json); both anomalies matter as MECHANISMS ($29 give, Pillar B),
-> not as content.
-> **NEXT (updated S54):** the WRAM relocation (ROADMAP Phase 0, full spec
-> there) is now the gating item before ANY new custom state or bigger romhack
-> content — it touches the compiler-owned wram region + pinned scratch, so it
-> is its own session with the PROJECT_COMPILER §5 re-pin cascade. After that:
-> `--apply` decision (compiler sign-off GIVEN S53), then Phase 2 follow-ons
-> (Encounters #2, Layer A extraction, dialogue DTE, set_flag-by-name) — or
-> resume S2f / T2 / the blink.
+> Last verified: 2026-07-10 (Session 55 — **WRAM relocation (reduced form) →
+> $DE74 + the two init/restore fixes the first cut missed; Cold Farm +
+> Layer A′ arcs scoped.** Integrity PASS 4/4, clean build byte-perfect
+> `1ca6579…`; 18/18 compiler tests at the S55v2 reference.)
+> **MID-SESSION CRASH POST-MORTEM (user test of the first S55 ROM): hard
+> crash on room entry + on scroll after loading an in-room save.** Root
+> cause: the old block was initialized by ADDRESS ACCIDENT (inside both the
+> boot clear — ClearAllWRAM stops at $DDFF — and the SRAM save image); $DE74
+> is inside neither → power-on garbage counters (the S53 crash mechanism,
+> resurrected) + wCustomRoomFlag no longer restored on load. Fixes (v2):
+> ClearAllWRAM `$1E00`→`$1EE0` (boot zeroes $C000-$DEDF; same-size operand
+> edit, single early-boot call site) and flag DERIVED := (wMapID ≥ $6B) every
+> movement frame at CopyCustomRoomRecord head (bank $71 template re-pinned
+> per §5; TEMPLATE_SIZE 0x71: 103→116). Load-in-room now shows step-0 content
+> — expected under transient semantics, not a bug. Full lesson: KEY_LESSONS
+> S55 ("vetted-unclaimed is NOT initialized" + "one variable per test ROM" —
+> the first S55 ROM wrongly stacked the never-user-tested S53 master-table
+> fix under the relocation; v2 delivers COMPAT first).
+> **What moved (patches/wram.asm; all refs were label-based → zero patch-bank
+> edits; template sha256 pins UNCHANGED):** step counters $D478→**$DE74**
+> (compiler region, STEP_COUNTER_BASE + example-project reserved hole
+> →0xDE78), wRoomRecScratch→**$DE7B**, wRoomEncFlag $DE83, wTameDelay $DE84,
+> wTameBGSave $DE85, wCustomRoomFlag→**$DE88**; $DE89-$DEDD reserved (85 B).
+> Regression md5 re-pinned (v2): S55v2 reference patched build
+> **`026970d361f6afe03f28e29fa6e631f6`** (compat) / fixed master-table build
+> **`fb6a96abd2b045c68234d74fcfcc76b5`** — historical, superseded: S53 pair
+> `3a5a514c…`/`f81d4ad8…`; mid-S55 pair `cc62b5…`/`8878ef…` (crashed, no
+> init/flag fixes). Test ROMs delivered: **`DWM-S55v2-compat-TEST-FIRST.gbc`**
+> (S53-user-tested table config + relocation/fixes — the isolating build)
+> and `DWM-S55v2-fixed-master-table.gbc` (adds the S53 table fix) — **both
+> user-confirmed working, 2026-07-10**.
+> **USER-CONFIRMED 2026-07-10** ("everything now works without issues", both
+> S55v2 deliverables): well entry, egg-give exit + scroll-up, save-in-room →
+> reload → scroll all work. This ALSO clears the S53 master-table fix's
+> test debt (first user run of the fixed-table config). Standing expected
+> behaviors: load-in-room shows step-0 content (transient counters); stored
+> monsters #15-16 still corrupt on custom-room transitions (≤14 rule). **NPC/exit buffers stayed at $D379-$D477** (inside monster slots
+> 14-15): ACCEPTED legacy hazard of the exploration overlay (user decision —
+> saves there are disposable); **≤14-occupied rule stands** for custom rooms
+> on the hand overlay.
+> **Why reduced (S55 vetting — full detail KEY_LESSONS S55 + wram_usage.json
+> regen, 51→34 gaps):** the S54 candidates were FALSE gaps — $C200-$C2FF =
+> attr decompression staging (every stream declares declen 256), $C300-$C4FF
+> = 512-B screen staging unit (bank $06 bulk copy $C500→$C300 ×$0200; both
+> blocks SRAM-save-copied — ARCHITECTURE's save table was right, the S54 read
+> of it was partial); $DD80-$DE2B = **AUDIO engine** (6 chan × 26 B +
+> scalars; known_RAM_map's "INFERRED battle structs" corrected); stack tops
+> $DFFF. $DE74-$DEDD was the only vetted block. **Retired alternative:** cap
+> monster slots 20→18 (reclaim $D53B-$D664 298 B; $00 in-use pads defuse all
+> 44 read-walkers; give scanner `label4_5c14` + full-check `label4_5f67`
+> located) — viable but retired as throwaway-path surgery; do NOT re-derive.
+> **New canonical discoveries:** farm SLEEP pool = second 20×$95 monster
+> array, SRAM-only at $B124-$BCC7 ($CA41 bit7; bank $07 scans it in place —
+> vanilla's own cold-storage precedent); SVBK census: five writes total in
+> the ROM → **WRAM banks 3-7 = 16 KB virgin** (docs: known_RAM_map); debug
+> mode (banks $55/$56/$59) owns ~10 exclusive WRAM bytes (exclusivity scan).
+> **Architecture decisions (user, S55):** vanilla rooms KEPT as postgame →
+> mapID ≥$80 audit in scope (custom room #22+), vanilla counter pool not
+> harvestable; parallel architecture (overlay = exploration, structural fixes
+> = compiler pipeline only); **Cold Farm arc** = editor-era WRAM strategy
+> (farm→SRAM, party-only exp + accumulator drained at the castle gate-exit
+> chokepoint — user-confirmed: all gate exits funnel there, Arena awards no
+> exp; ~2.5 KB freed; exp level-scan loop found at bank $50 `jr_050_6318`).
+> Full specs: ROADMAP Arc COLD FARM / Arc LAYER A′; EDITOR_DESIGN §1 S55
+> amendments.
+> **NEXT:** CF1
+> (party/farm boundary RE) or A′1 (mapID ≥$80 audit) — or resume S2f / T2 /
+> the blink. The `--apply` decision from S53 remains open.
 >
 > Session 54 (2026-07-08 — **egg-give root cause: custom WRAM sits inside the
 > monster array; audit_wram.py ships. Byte-neutral session** — no ROM delta,
@@ -146,46 +122,8 @@
 > new species 224's library bit at $CAB0 is inside the vanilla-scanned extent
 > (benign; counts toward the 100-monster library rewards).
 >
-> Last verified: 2026-07-06 (Session 52 — **Tame Stage 2 ships: 3-tier skill-evolve chain,
-> natural-learn fork, real MP costs.** Integrity PASS 4/4, clean build byte-perfect
-> `1ca6579…`. **Tame $E1 / TameMore $E2 / TameMost $E3** are a working upgrade chain,
-> level-up learn + upgrade-replace **user-confirmed in SameBoy** (v34: "levelled up
-> perfectly, message correct"). New systems (all label-based, byte-neutral splices):
-> (1) **learn-chain fork** — the natural-learn scanner (bank `$06` entry 5 `$4f9a`,
-> caller `$51` level-up) loops ids `0..$D9`; `LearnLoopFork` (3-byte splice at `$5088`)
-> continues the SAME loop over `CustomLearnReqTable` (`$E1..$E3`, vanilla 18-byte format,
-> prereq chain = vanilla EVOLVE/replace path) in the `$7F1E` free run — `Jump_006_7f7f`
-> and `db $06 @ $7FFF` offsets preserved. (2) **MP fork** — ALL THREE `$570C` readers
-> (display `$56E8` / afford / deduct) route through `MPPtrFromId` → `CustomMPCostTable`
-> (0/0/0/10/30/50 for `$DE..$E3`); record `+4` mirrors match. Custom ids no longer read
-> garbage MP. (3) **announce fork** — the vanilla announce table's tail physically
-> overlaps CODE at `$58:$58E8` (byte for id `$E2` IS an opcode), so `AnnounceIdxFork`
-> (9-byte window at `jr_058_57e6`) reads `CustomAnnounceTable` for ids ≥`$E2`;
-> `DataBtlFX_7959` offset preserved. (4) **crank reverted** — `SkillTame` meter add is
-> now `TameMeterTable` dw 10/100/400 (= FeedMeat/PorkChop/Sirloin meat record powers,
-> NOT "$000A = Beef Jerky" as previously documented — BeefJerky is +30; DOC_AUDIT S52).
-> The "$0640 mirrors in bank_052" claim was FALSE — those are the vanilla meter CAP
-> (present in the clean tree); the only crank was one line in bank_072. (5) **upgrade
-> message page-split** — `MiscTextPtrTable[3]` repointed to `MiscText_03_Paged`
-> ("[Mon]'s [Old]" / page / "becomes"+NL+"[New]!"), fixing the orphaned "!" (vanilla
-> defect for 8+-char names). Built S52, NOT yet user-confirmed. (6) MP charging
-> (10/30/50) + tier meter values: built S52, NOT yet user-tested. Harness wild-Slime
-> (bank `$14`) KEPT per user (revert at editor time); natural-to-Slime slot DE-SCOPED
-> by user (editor lays real data; the fork makes any species slot work). (7) **Enemy
-> hit-blink mechanism SOLVED via HW captures but implementation DEFERRED** (user:
-> "bank it"): the battle enemy is **BG-drawn** (NOT OBJ — §11.7's old OAM premise was
-> wrong; three prior fix attempts targeted layers the enemy doesn't use). The blink =
-> tilemap toggle, bank `$5f` entry 5, `$da83` phase → `$da84` sub-dispatch `$4b99`
-> (blank `$4ba5` / enemy `$4bcb`, sources via `$50f4`+`$50ff`/`$5109`, VRAM-safe copy
-> `$4e1f`, divider `$da34`, done-flag `$da82`). Full map: BATTLE_SKILL_SYSTEM §11.7.
-> An interim whole-screen BGP flash was built, user-rejected (that's the PLAYER-hit
-> visual), REVERTED — the S50 no-op OBP flicker was removed with it (hook is now
-> sound-only during the delay; `wTameBGSave` reserved, unused).
-> **NEXT:** S2f (field-cast skill) or more §13.4 skills, or the blink implementation
-> (mechanism fully mapped — drive `$5f` entry 5's blink phase from `TameGateHook`
-> via `$da82/$da83/$da84/$da34` state injection), or T2 text roll-out.
 >
-> (S51 block moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
+> (S53 + S52 blocks moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
 
 ---
 
@@ -230,6 +168,8 @@
 | 51 | Doc consolidation; SkillMPCostTable/GetSkillMPCost rename | this file; SESSION_HISTORY.md |
 | 52 | Tame Stage 2: 3-tier evolve chain ($E1-$E3), learn/MP/announce forks, crank revert; enemy hit-blink mechanism solved (deferred) | BATTLE_SKILL_SYSTEM §13.6, §11.7; DOC_AUDIT S52; KEY_LESSONS S52 |
 | 53 | Editor headless backend: project.json schema + build_project.py; byte-identity regression; master-table fix built (untested); script-routing documented | PROJECT_COMPILER.md; KEY_LESSONS S53 |
+| 54 | Egg-give root cause: custom WRAM inside the monster array; audit_wram.py ships | known_RAM_map; KEY_LESSONS S54; ROADMAP Phase 0 |
+| 55 | WRAM relocation (reduced): counters/scratch/flags → $DE74; false-gap vetting (staging buffers, audio array, sleep pool, SVBK census); Cold Farm + Layer A′ arcs scoped; cap-18 retired | ROADMAP arcs; KEY_LESSONS S55; known_RAM_map; EDITOR_DESIGN §1; PROJECT_COMPILER |
 
 ---
 
@@ -308,7 +248,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Script-driven teleport | ✅ working | opcode $0F (MapTransitionFull); vanilla + custom destinations |
 | BGM change | ✅ working | opcode $41 (SetBGM); track reverts on room exit |
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 referenced, 298 with sets (branch-following) |
-| NPC show/hide by step | ✅ working | step system; counters at $D478+; opcode $12 advances (v25) |
+| NPC show/hide by step | ✅ working | step system; counters at $DE74+ (S55 relocation); opcode $12 advances (v25) |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
 | Custom tile layouts + tileset selection | ✅ working | bank $64 + tile_layout_compiler.py; MapIDClampForPalette ROM0 $3FE8 |
 | Custom tile GRAPHICS (multi-tileset mashup) | ✅ working end-to-end (S6–S10): editor JSON → build_combined_tileset.py → bank $67/$17 patches. Remaining = editor multi-screen UI. | KEY_LESSONS S5–S8; TOOLS_AND_DATA |

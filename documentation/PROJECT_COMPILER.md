@@ -39,9 +39,9 @@ owns.
 ### Quick start
 
 ```bash
-# regression check (compat project must equal the S53 reference patched md5)
+# regression check (compat project must equal the S55 reference patched md5)
 python3 tools/build_project.py --project editor2/example-project \
-    --build --expect-md5 3a5a514c65b330e2788170c5d409b960
+    --build --expect-md5 026970d361f6afe03f28e29fa6e631f6
 
 # author→test loop: ROM lands at <out>/build/rom.gbc (+ game.sym + manifest.json)
 python3 tools/build_project.py --project my-project --build
@@ -59,15 +59,25 @@ python3 editor2/tests/test_compiler.py [--rom]
   re-expresses the entire user-confirmed hand-authored content (6 rooms, 21
   dialogue entries, 10 scripts, 4 palettes, 7 step counters, enc/record
   tables). With `build.compat.master_table_rooms` present, the generated
-  patched ROM md5 is **`3a5a514c65b330e2788170c5d409b960`** — byte-identical
-  to the reference patched build of S53. (This md5 moves whenever ANY patch
-  changes; re-derive it via verify_integrity-style staging when needed.)
+  patched ROM md5 is **`026970d361f6afe03f28e29fa6e631f6`** — byte-identical
+  to the S55v2 reference patched build (WRAM relocation + init/flag fixes —
+  ClearAllWRAM `$1E00`->`$1EE0`, flag derivation at CopyCustomRoomRecord head;
+  bank $71 template re-pinned per §5, TEMPLATE_SIZE 0x71: 103->116). (This
+  md5 moves whenever ANY patch changes; re-derive via verify_integrity-style
+  staging. Historical, superseded values: S53 pair
+  `3a5a514c65b330e2788170c5d409b960` / `f81d4ad84ee52f4c3342cc1f7e261e58`;
+  the mid-S55 pair `cc62b5…`/`8878ef…` never passed user test — it lacked
+  the init/flag fixes and crashed on entry, see KEY_LESSONS S55.)
 * **Fix build** — deleting `build.compat` emits the full-width script master
-  table (+ shared no-op). Patched ROM md5 `f81d4ad84ee52f4c3342cc1f7e261e58`
-  (**built S53, NOT yet user-tested**). Measured delta vs the reference:
-  bank `$60` `$4010–$45B8` only (the +10 table bytes, downstream labels
-  shifted, template operands re-resolved by the linker) + the 2 header
-  checksum bytes `$014E/$014F`. Bank `$60` usage 1455 → 1465 B.
+  table (+ shared no-op). S55v2 fixed patched ROM md5
+  `fb6a96abd2b045c68234d74fcfcc76b5` (patched build, **user-confirmed
+  working 2026-07-10** — this run also cleared the master-table fix's test
+  debt from S53, whose user loop had only run the COMPAT config; see
+  KEY_LESSONS S55 "one variable per test ROM").
+  S53-measured delta vs the reference: bank `$60` `$4010–$45B8` only (the
+  +10 table bytes, downstream labels shifted, template operands re-resolved
+  by the linker) + the 2 header checksum bytes `$014E/$014F`. Bank `$60`
+  usage 1455 → 1465 B.
 
 ---
 
@@ -107,7 +117,7 @@ the compiler never silently ignores authored data. Same for `custom.music`
   "screens": {                    // sparse map, keys = 4x2 grid indices "0".."7"
     "0": {
       "layout": { "bank": "0x64", "entry": 0 },   // step_id + tileset_bank
-      "step_counter": "auto",     // or {"label": "...", "addr": "0xD478"}
+      "step_counter": "auto",     // or {"label": "...", "addr": "0xDE78"}
       "npcs": [
         { "kind": "spawn", "x": 7, "y": 6 },              // script forced 0
         { "kind": "npc", "facing": "down", "sprite": "0x0B",
@@ -185,19 +195,23 @@ loads slots 0–3 (KEY_LESSONS S8).
 ```jsonc
 "wram": { "region_size": 7,
           "reserved": [ { "label": "wCustomStep_Room6C_S5",
-                          "addr": "0xD47C", "comment": "legacy hole" } ] }
+                          "addr": "0xDE78", "comment": "legacy hole" } ] }
 ```
 
-Step counters allocate from `$D478` (ROOM_DATA_FORMAT verified-unused gap;
-NOT SRAM-persistent): reserved entries claim first, then explicit
-`step_counter` dicts, then `auto` in room/screen order, skipping used
-addresses. The emitted region is padded to `region_size` so
-**`wRoomRecScratch` stays pinned at `$D47F`** (read by engine code in banks
-`$00/$0B/$71`). Exceeding the region is an error; growing it is a
-deliberate engine change (move `wRoomRecScratch`+`wRoomEncFlag`), not a
-knob. The example project's auto allocation reproduces the proven hand
-addresses exactly (labels are index-accurate `_S4` where the hand file said
-`_S1`; addresses — the bytes — are identical).
+Step counters allocate from `$DE74` (S55 relocation — the S53/S54 "$D478
+verified-unused gap" claim was refuted: it was monster slot 16; $DE74-$DEDD
+is the S55-vetted block past the audio ceiling $DE2B, see patches/wram.asm
+banner and wram_usage.json. NOT SRAM-persistent — persistent room state is
+event flags + entry scripts, user decision S55): reserved entries claim
+first, then explicit `step_counter` dicts, then `auto` in room/screen
+order, skipping used addresses. The emitted region is padded to
+`region_size` so **`wRoomRecScratch` stays pinned at `$DE7B`**
+(label-resolved by engine patches in banks `$00/$0B/$71`). Exceeding the
+region is an error; growing it is a deliberate engine change (move
+`wRoomRecScratch`+`wRoomEncFlag` — 85 B of vetted reserve follows the block
+at $DE89-$DEDD), not a knob. The example project's auto allocation
+reproduces the proven hand layout at the new base (legacy hole `0xDE78`,
+was `0xD47C`).
 
 ### 2.7 `custom.flags[]`
 
@@ -262,7 +276,7 @@ added S53 — integrity PASS proves neutrality):
 
 | Region | File | Content |
 |---|---|---|
-| `wram_step_counters` | `patches/wram.asm` | step-counter labels `$D478+`, `ds`-padded to `region_size` |
+| `wram_step_counters` | `patches/wram.asm` | step-counter labels `$DE74+` (S55 relocation), `ds`-padded to `region_size` |
 | `room_palettes_a` | `patches/bank_017.asm` | placement-`a` palette blocks (`_6B`,`_6C`) |
 | `room_render_tables` | `patches/bank_017.asm` | `CustomRoomPalPtr` + `CustomRoomAttr` (one row/room) + placement-`b` palettes |
 

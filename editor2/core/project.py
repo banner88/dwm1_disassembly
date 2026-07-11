@@ -16,8 +16,8 @@ from . import formats as F
 # use, and the collision zones it must skip (script-written named variables).
 FLAG_SAFE_RANGES = [(0x0158, 0x017F), (0x0188, 0x018F), (0x01E0, 0x023F),
                     (0x0248, 0x0257), (0x0260, 0x026F)]
-STEP_COUNTER_BASE = 0xD478          # ROOM_DATA_FORMAT: verified-unused gap
-WRAM_REGION_SIZE_DEFAULT = 7        # keeps wRoomRecScratch pinned at $D47F
+STEP_COUNTER_BASE = 0xDE74          # S55 relocation: vetted block past the audio ceiling ($DE2B)
+WRAM_REGION_SIZE_DEFAULT = 7        # keeps wRoomRecScratch pinned at $DE7B
 
 
 class ProjectError(ValueError):
@@ -267,7 +267,7 @@ class Project:
             raise ProjectError(
                 "step counters exceed the fixed wram region size "
                 f"({self.wram_region_size}) — wRoomRecScratch must stay at "
-                "$D47F; grow the region only in a deliberate engine session "
+                "$DE7B; grow the region only in a deliberate engine session "
                 "(PROJECT_COMPILER.md §wram)")
         self._step_alloc = [(lbl, addr, cm)
                             for addr, (lbl, cm) in sorted(used.items())]

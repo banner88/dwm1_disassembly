@@ -21,7 +21,7 @@
     "wram": {
       "region_size": 7,
       "reserved": [
-        { "label": "wCustomStep_Room6C_S5", "addr": "0xD47C",
+        { "label": "wCustomStep_Room6C_S5", "addr": "0xDE78",
           "comment": "Room $6C screen 5 step counter (legacy hole — kept so later counters stay at their proven addresses)" }
       ]
     },

@@ -91,3 +91,18 @@ are made in place; no new session/handoff files, ever.
 | 2026-07-02 (S51b) | User-approved follow-on: housekeeping deletions executed (see TOOLS_AND_DATA Tier L); `SkillMPCostTable` + `SkillLearnReqTable` re-sectioned to real `dw`/`db` in both trees (`tools/resection_skill_tables.py`, probe-build, byte-perfect, PASS 4/4); Phase-D stale boxes ($03/$14/$16 → `db`) verified + ticked. New defect: `dump_monsters.py` writes legacy `monsters.json` / reads `monsters_full.json` — Tier-A attribution for monsters_full is suspect. Build-infra fix (after S51 became the SECOND recorded violation of the pre-existing four-doc never-`make clean` rule): `disassembly/Makefile` clean target no longer deletes `gfx/*.2bpp` (ROM-exact INCBIN source data, 17/18 not PNG-regenerable) and the `%.2bpp: %.png` pattern rules were removed; `disassembly/gfx/README.md` added. `SkillLearnReqTable:` label + `ld hl, SkillLearnReqTable` relabel landed in both trees (byte-identical). |
 | 2026-07-06 (S52) | THREE doc errors found by the Stage-2 audit + HW captures, corrected in place: (1) PROJECT_STATE/ROADMAP claimed "$0640 mirrors in patches/bank_052.asm" — FALSE: those two `$0640`s are the VANILLA meter cap (present in the clean tree, `disassembly/bank_052.asm:4544/4550`); the only crank was one line in bank_072. (2) "revert to `$000A` (Beef Jerky tier)" — MISLABEL: per-meat meter boosts are the meat records' `power_enemy` words = FeedMeat 10 / BeefJerky 30 / PorkChop 100 / BadMeat 5 / Sirloin 400; $0A=10 is FEEDMEAT tier. (3) §11.7 claimed the battle enemy is OBJ and the hit-blink "likely an OAM visibility toggle" — WRONG PREMISE: the enemy is BG-DRAWN (`$c500` buffer → `LoadBtl_7627` → `$98xx`); the blink is a tilemap toggle in bank `$5f` entry 5 (full map now in §11.7). Three fix attempts failed on the bad premise before HW captures corrected it. |
 | 2026-07-02 (S51) | Doc consolidation: PROJECT_STATE/ROADMAP compressed; all cut text preserved verbatim in `SESSION_HISTORY.md` (cold archive). Contradictions fixed: empty-bank counts (canonical = PROJECT_STATE "Bank allocation"), script counts (518 labels = 551 unique bodies = 732 pointer-table entries, verified), flag counts (328/298), stale `documentation/reference/` path, FIRST_5MIN_TRACE/known_ROM_map pointers, BREEDING_SYSTEM "NOT yet built" header, TOOLS_AND_DATA manifest (103 tools / 56 JSONs). |
+
+## S55 addendum (2026-07-10)
+- **known_RAM_map "$DD80 ~208 (INFERRED) per-combatant battle struct array"
+  was WRONG** — it is the AUDIO engine: 6 channels × 26 B ($DD80-$DE1B, bound
+  `ld b,$06` in bank $00 ClearAudioChannels) + scalars to $DE2B. Corrected in
+  place; S45's "battle corruption" from poking $DDF0/$DDFE was audio bytes.
+- **"screen tile-id shadow = $C300-$C3FF (256 B)" was too small** — the engine
+  treats $C300-$C4FF as ONE 512-B staging unit (bank $06 bulk copy ×$0200;
+  save-copied whole). Corrected in known_RAM_map + audit_wram curated arrays.
+- **S54's "top relocation candidates $C20D/$C42B" were FALSE gaps** (attr
+  staging / screen staging). ROADMAP Phase 0 row rewritten S55.
+- **ARCHITECTURE.md's save table was CORRECT all along** (three WRAM blocks +
+  $A1FB partial path); the S54-era reading quoted only the $C8EA prose line.
+  Lesson: quote the table, not the summary sentence. New fact added: the
+  $B124-$BCC7 SRAM hole = the farm sleep pool (20×$95, exactly).

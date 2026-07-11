@@ -33,6 +33,20 @@ SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
 ; Entry 0: CopyCustomRoomRecord — 8-byte $26DD record for wMapID → wRoomRecScratch
 ; -----------------------------------------------------------------------------
 CopyCustomRoomRecord:
+    ; S55 FIX: maintain wCustomRoomFlag on every call (this entry runs per
+    ; movement frame for ALL rooms via the ROM0 collision-threshold reader).
+    ; The flag is no longer inside the save image after the $DE74 relocation,
+    ; so it must be DERIVED, not restored: flag := (wMapID >= CUSTOM_ROOM_START).
+    ; Fixes load-inside-custom-room (flag read $00 after load -> bank $0B
+    ; readers took the vanilla path for a custom mapID -> garbage walk on the
+    ; first scroll).
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ld a, $00
+    jr c, .setFlag
+    inc a
+.setFlag:
+    ld [wCustomRoomFlag], a
     ld a, [wMapID]
     cp $70
     jr nc, .custom

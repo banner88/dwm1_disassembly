@@ -20,7 +20,7 @@ All credit for inital work is to that repo.
 | You want to… | Read |
 |--------------|------|
 | Know the current state of everything | `documentation/PROJECT_STATE.md` |
-| Work on the project (human or Claude session) | `documentation/SESSION_PROTOCOL.md` |
+| Work on the project | `documentation/SESSION_PROTOCOL.md` |
 | See the plan and pick a task | `documentation/ROADMAP.md` |
 | Understand the future editor | `documentation/EDITOR_DESIGN.md` |
 | Look up a ROM data structure | `documentation/DATA_STRUCTURES.md` |

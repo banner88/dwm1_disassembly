@@ -77,10 +77,39 @@ INDEXED_ARRAYS = [
                     "$C000-$C09F before first label at $C0A0",
     },
     {
-        "name": "screen tile-id shadow",
-        "base": 0xC300, "stride": 1, "count": 0x100,
-        "evidence": "GATE_GENERATION.md §9 + known_RAM_map $FFAA note "
-                    "(tile under player read from $C300 buffer, $00:$1E96)",
+        "name": "screen staging block (tile-id shadow + pair)",
+        "base": 0xC300, "stride": 1, "count": 0x200,
+        "evidence": "S55: bank_006 bulk copy $C500->$C300 length $0200; "
+                    "save routine copies $C300 x$200 -> SRAM $BCC8 as a unit "
+                    "(bank_000 SavePartyData). Old 256-B extent was too small.",
+    },
+    {
+        "name": "attr decompression staging",
+        "base": 0xC200, "stride": 1, "count": 0x100,
+        "evidence": "S55: every attr stream declares declen 256 to $C200 "
+                    "(bank_017 'ld hl,$c200 / call WaitLCDTransfer' x2 + "
+                    "banks $00/$06/$07/$0B; stream header = 2-byte declen); "
+                    "save routine copies $C200 x$100 -> SRAM $BEC8.",
+    },
+    {
+        "name": "battle enemy tile buffer / staging source",
+        "base": 0xC500, "stride": 1, "count": 0x240,
+        "evidence": "known_RAM_map $C500 $240 (LoadBtl_7627, S52 HW); also the "
+                    "source of the bank_006 $0200 copy to $C300 (S55).",
+    },
+    {
+        "name": "audio channel state + engine scalars",
+        "base": 0xDD80, "stride": 1, "count": 0xAC,
+        "evidence": "S55: ClearAudioChannels (bank_000 ~10701) inits 6 "
+                    "channels x 26 B from $DD80 (b=$06, stride $19+1); audio "
+                    "scalars enumerate to $DE2B. Supersedes the known_RAM_map "
+                    "'INFERRED battle struct array' label for this range.",
+    },
+    {
+        "name": "battle stat tables",
+        "base": 0xDBA3, "stride": 1, "count": 0x90,
+        "evidence": "known_RAM_map / patches wram.asm: 9 tables x 16 B "
+                    "($DBA3-$DC32), HW-confirmed S52.",
     },
     {
         "name": "gate floor grid + per-cell state",
@@ -211,9 +240,15 @@ def parse_rammap(path: Path):
             a = int(m.group(1), 16)
             if not (WRAM_LO <= a <= WRAM_HI):
                 continue
+            desc = m.group(3).strip()
+            # S55: rammap rows that DOCUMENT our own custom state are not
+            # vanilla claims — treating them as such makes the custom labels
+            # self-collide the moment the map is documented.
+            if "CUSTOM ROOM STATE" in desc.upper():
+                continue
             size = int(m.group(2).lstrip("~"))
             spans.append({"addr": a, "size": size,
-                          "desc": m.group(3).strip(),
+                          "desc": desc,
                           "approx": m.group(2).startswith("~")})
     return spans
 
@@ -380,24 +415,38 @@ def main():
     }
 
     if selftest:
-        # regression: the tool MUST detect the S54 collision (custom room
-        # state inside the monster array) and MUST place the array end at $D664
+        # regression 1: array extent pin (S54)
         arr = next(a for a in INDEXED_ARRAYS if "monster array" in a["name"])
         assert arr["base"] + arr["stride"] * arr["count"] - 1 == 0xD664
         bad = [f for f in findings
                if "B:vanilla-indexed" in f["collision_classes"]
                and any("monster array" in n for n in f["collides_with_indexed"])]
         names = {f["label"] for f in bad}
-        expect = {"wCustomRoomFlag", "wCustomNPCBuffer", "wCustomExitBuffer",
-                  "wCustomStep_Room6B_S0", "wCustomStep_Room6B_S1",
-                  "wCustomStep_Room6C_S0", "wCustomStep_Room6C_S1",
-                  "wCustomStep_Room6C_S5", "wCustomStep_Room6D_S0",
-                  "wCustomStep_Room70_S0", "wRoomRecScratch", "wRoomEncFlag",
-                  "wTameDelay", "wTameBGSave"}
-        missing = expect - names
+        # regression 2 (S55): the buffers REMAIN in the array (accepted legacy
+        # hazard, exploration overlay only — see patches/wram.asm banner) and
+        # MUST still be detected...
+        expect_flagged = {"wCustomNPCBuffer", "wCustomExitBuffer"}
+        missing = expect_flagged - names
         assert not missing, f"selftest FAILED — collisions not detected: {missing}"
-        print(f"SELFTEST PASS: monster array extent $CAC1-$D664; all "
-              f"{len(expect)} custom labels inside it are flagged class B.")
+        # ...and the S55-relocated labels MUST be collision-free at $DE74+.
+        expect_clean = {"wCustomRoomFlag",
+                        "wCustomStep_Room6B_S0", "wCustomStep_Room6B_S1",
+                        "wCustomStep_Room6C_S0", "wCustomStep_Room6C_S1",
+                        "wCustomStep_Room6C_S5", "wCustomStep_Room6D_S0",
+                        "wCustomStep_Room70_S0", "wRoomRecScratch",
+                        "wRoomEncFlag", "wTameDelay", "wTameBGSave"}
+        wrongly_flagged = expect_clean & {
+            f["label"] for f in findings
+            if any(c != "clear" for c in f["collision_classes"])}
+        assert not wrongly_flagged, (
+            f"selftest FAILED — relocated labels still collide: {wrongly_flagged}")
+        # regression 3 (S55): the relocated block must sit inside the vetted
+        # window $DE74-$DEDD, past the audio ceiling $DE2B.
+        audio = next(a for a in INDEXED_ARRAYS if "audio channel" in a["name"])
+        assert audio["base"] + audio["count"] - 1 == 0xDE2B
+        print("SELFTEST PASS: array extent $CAC1-$D664; buffers still flagged "
+              "class B (accepted legacy); relocated labels clean; audio "
+              "ceiling $DE2B pinned below the $DE74 block.")
         return
 
     OUT.write_text(json.dumps(result, indent=1))

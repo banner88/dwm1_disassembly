@@ -3,6 +3,14 @@
 ==WRAM==
  Address Size    Description
  ------- ----    -----------
+   C200   256    Attr decompression staging (S55): every attr stream declares
+                 a 256-B decompressed length to $C200 (loader reads 2-byte
+                 declen from the stream head; users in banks
+                 $00/$06/$07/$0B/$17). Save-copied to SRAM $BEC8 x$100.
+   C300   512    Screen staging block (S55): tile-id shadow + pair, treated
+                 as ONE $200 unit (bank $06 bulk copy $C500->$C300 x$0200;
+                 save-copied to SRAM $BCC8 x$200). The old "256 B" extent
+                 was too small. Tile under player read from here ($00:$1E96).
    C899     2    Pseudo-Random Number
    C8A9     1    ? (related to floor change in Gate)
    C8B5     1    BGM (offset)
@@ -83,10 +91,18 @@
                  place anything at $CAC4-$D664 (see audit_wram.py, S54).
    1:D664        TRUE end of party/storage monster data (slot 19 = $D5D0 +
                  $95 - 1). The old "D6B0" figure here was wrong (S54).
-                 WARNING (S54): the custom WRAM block $D378-$D48B currently
-                 sits INSIDE slots 14-16 of this array — known collision,
-                 relocation is a ROADMAP Phase 0 item. Until then, keep the
-                 array ≤14 occupied when using custom rooms.
+                 S55 UPDATE: step counters/scratch/flags relocated to $DE74
+                 (crash vector fixed). The NPC/exit BUFFERS ($D379-$D477)
+                 remain inside slots 14-15 as an ACCEPTED legacy hazard of
+                 the exploration overlay (self-healing per read; reverse
+                 corruption of stored monsters #15-16 remains) — keep the
+                 array ≤14 occupied when using custom rooms. Editor-era fix:
+                 Cold Farm arc (ROADMAP).
+                 SLEEP POOL (S55): a SECOND 20-slot x $95 monster array lives
+                 in SRAM at $B124-$BCC7 (never WRAM-resident): the farm
+                 "sleep" batch. Gated by $CA41 bit 7; scanned in-place by
+                 bank $07 (EnableSRAM per access) e.g. for library counting.
+                 One-way archival (no wake path known; FAQ + user).
 ; Party Monster Structure ($95 = 149 bytes per slot, 20 slots):
 ;   Base = $CAC1 + slot_index × $95
 ;   Call_000_223b: HL = field_addr + index × $95
@@ -253,11 +269,34 @@
                  combatant*2. The single source the cast re-derives $DB8A from.
    1:DD6F   1    (INFERRED) Damage descriptor bitfield (bit5 = apply $DB56/57)
    1:DD70   2    (INFERRED) Animation pointer (Blaze = $B882)
-   1:DD80 ~208   (INFERRED) Per-combatant battle struct array, stride 26 ($1A),
-                 ~8 slots ($DD80-$DE4F). Bases seen: $DD80,$DD9A,$DDB4,$DDCE,
-                 $DDE8,$DE02,$DE1C. $DDE8 ≈ enemy struct in a 1v1. *** OFF-LIMITS
-                 as scratch — writing $DDF0/$DDFE/$DE36 corrupted enemy stats,
-                 status, and damage during S45 testing.
+   1:DD80  172   AUDIO ENGINE channel state + scalars (S55 correction — the
+                 old "(INFERRED) battle struct array, ~8 slots to $DE4F" label
+                 was WRONG): ClearAudioChannels (bank $00, ~$3343 region)
+                 inits 6 channels x 26 B ($1A stride) from $DD80 = $DD80-$DE1B;
+                 engine scalars continue to $DE2B ($DE1C-$DE2B: state, frame,
+                 $DE22/$DE23/$DE29 counters). Still *** OFF-LIMITS as scratch
+                 (S45's corruption when writing $DDF0/$DDFE stands — those are
+                 audio channel bytes).
+   1:DE74  106   CUSTOM ROOM STATE (S55 relocation; was $D378/$D478-$D48B
+                 inside the monster array): step counters $DE74+ (compiler
+                 region), wRoomRecScratch $DE7B, wRoomEncFlag $DE83, Tame vars
+                 $DE84-$DE87, wCustomRoomFlag $DE88; $DE89-$DEDD reserved.
+                 Vetted: no real claimant above the audio ceiling $DE2B
+                 (full-corpus scan; $DE30-$DEFF literals are all data-as-code
+                 junk); SVBK windows touch $DB00+ only; NOT in save range.
+                 INIT (S55v2): vanilla ClearAllWRAM stops at $DDFF — the
+                 patched build extends it to $DEDF so this block is boot-
+                 zeroed; wCustomRoomFlag is derived from wMapID per movement
+                 frame (never restored from saves). See KEY_LESSONS S55.
+
+ ; GBC WRAM BANKING (S55): $D000-$DFFF is switchable via SVBK ($FF70), banks
+ ; 1-7 (32 KB total WRAM). The ENTIRE ROM contains only five SVBK writes:
+ ; boot init (bank 1; SVBK=0 maps bank 1) and four battle windows in banks
+ ; $51/$52 that briefly select bank 2 to park per-combatant bytes at $DB00+
+ ; and switch straight back. Banks 3-7 = 16 KB VIRGIN RAM — unusable for
+ ; anything vanilla code reads (vanilla runs SVBK=1; per-frame audio ticks
+ ; $DD80+ in bank 1, so foreign-bank access needs di/ei wrapping), but
+ ; available to future editor-era systems whose accessors we emit ourselves.
 
 ==HRAM==
  Address Size    Description

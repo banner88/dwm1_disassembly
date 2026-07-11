@@ -90,38 +90,38 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       superseded data (monsters.json, event_flags.json, edits.json) per
       TOOLS_AND_DATA.md. *(Postponed — low priority.)*
 - [~] Housekeeping deletions/moves per PROJECT_STATE. *(Postponed.)*
-- [ ] **Relocate ALL custom WRAM out of the monster array `$CAC1-$D664`** (root
-      cause found S54, statically proven AND runtime-confirmed by user probe:
-      give picked slot $10; counters clobbered; probe bytes recorded in the
-      PROJECT_STATE S54 block). The entire
-      custom block `$D378-$D48B` (wCustomRoomFlag, NPC/exit buffers, 7 step
-      counters, wRoomRecScratch, wRoomEncFlag, Tame vars) sits inside monster
-      slots 14-16. Forward corruption: `$FF29` give into slot 14-16 trashes the
-      live room state (S53/S54 egg-give symptom: dead exit + scroll crash).
-      Reverse corruption: `CopyCustomRoomRecord` rewrites `wRoomRecScratch` on
-      EVERY room transition since S42, and custom-room buffer copies spray
-      slots 14-16 — monsters #15-17 in storage get corrupted by normal play
-      and the damage persists through save. Interim play rule: keep the
-      party+farm+eggs array ≤14 occupied around custom rooms.
-      Plan: vet a relocation target from `extracted/wram_usage.json`'s
-      unvetted-gaps list (top candidates $C20D-$C2C2 182 B, $C42B-$C4C3 153 B,
-      $DE74-$DEDD 106 B — may need block split or buffer shrink; per-candidate
-      vetting REQUIRED: pointer-walk loops + the SVBK bank-2 windows in
-      bank_051/052). FIX-SESSION NOTES (from the S54 probe): wRoomRecScratch
-      SELF-HEALS (ROM0 collision-threshold reader re-populates it per
-      movement/frame via bank $71 entry 0) — do not let that mask a bad move;
-      verify counters AND scratch at the NEW address after relocation. The
-      crash vector is the step counters (no refresher); the buffers self-heal
-      per read (CustomReadInteract/CustomExitCheck re-copy every call), so a
-      slot-14/15 give is transient but a slot-16 give is persistent — the fix
-      must still move EVERYTHING (reverse corruption of stored monsters in
-      slots 14-15 happens regardless of self-heal). Touches the compiler-owned
-      `wram_step_counters` region +
-      pinned `wRoomRecScratch@$D47F` → same-session cascade: project.json
-      example, engine template re-pin (PROJECT_COMPILER §5), regression md5,
-      `editor2/tests/test_compiler.py --rom`. *Accept:* audit_wram.py shows
-      zero class-B collisions for custom state; egg-give-then-scroll works on
-      a ≥15-monster save (user test); verifier PASS.
+- [x] **Custom-WRAM relocation — DONE S55 IN DELIBERATELY REDUCED FORM** (user
+      decision: the hand overlay is exploration scaffolding; the editor system
+      gets the structural fix — see "Cold Farm" arc below). What moved: step
+      counters (compiler region, base $D478→**$DE74**), wRoomRecScratch
+      (→$DE7B), wRoomEncFlag, Tame vars, wCustomRoomFlag (→$DE88) — the S53/S54
+      CRASH VECTOR (a slot-16 give landed on the counters/scratch) is gone.
+      What stayed: the NPC/exit buffers ($D379-$D477, inside monster slots
+      14-15) — ACCEPTED legacy hazard: forward corruption is transient
+      (buffers self-heal per read), reverse corruption of stored monsters
+      #15-16 remains → **keep the array ≤14 occupied around custom rooms on
+      the exploration overlay** (saves there are disposable, user decision).
+      S55 vetting findings that forced the reduction (details in
+      wram_usage.json + KEY_LESSONS S55): the S54 gap candidates were FALSE —
+      $C200-$C2FF is the attr decompression staging buffer (declen 256 in
+      every stream), $C300-$C4FF is a 512-B screen staging unit (bank $06 bulk
+      copy; both save-copied to SRAM); $DD80-$DE2B is the AUDIO engine (6
+      chan × 26 B + scalars — known_RAM_map's "battle structs" was wrong);
+      stack tops $DFFF. $DE74-$DEDD was the ONLY vetted block (junk-only refs
+      above the $DE2B audio ceiling; SVBK windows are $DB00-only) — 21 B used,
+      $DE89-$DEDD reserved. **Retired alternative — cap monster slots 20→18**
+      (reclaim $D53B-$D664, 298 B proven, with $00 in-use pads defusing all 44
+      read-walkers): fully vetted and viable, but retired because it spends
+      surgery on the throwaway overlay; do NOT re-derive it — Cold Farm
+      supersedes. Cascade done: project.py STEP_COUNTER_BASE, example project
+      (reserved hole 0xDE78), regression md5 re-pinned
+      (patched-build reference `cc62b50119368eb24a40564e23d66779`), 18/18 tests, audit_wram selftest
+      re-pinned (buffers still flagged; relocated labels clean). Template
+      sha256 pins UNCHANGED (label-only refs). *Accepted — USER-CONFIRMED
+      2026-07-10 on both S55v2 ROMs:* well entry, egg-give → exit +
+      scroll-up, and save-in-room → reload → scroll all work; stored
+      monsters #15-16 still corrupt on transitions (expected, ≤14 rule).
+      The fixed-table run also cleared S53's master-table test debt.
 - [ ] **Fold tool selftests into `verify_integrity.py`** (promoted S51 from *Open*
       notes buried in the B3/B7/S1 completed stubs): the byte-identity selftests of
       `build_breeding.py`, `build_library_table.py`, and `build_skill_tables.py`
@@ -199,6 +199,58 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       → CROSSBANK_ROOMS "Random Encounters"; KEY_LESSONS S11; archive: SESSION_HISTORY.
 - [ ] Custom music — parked; sound engine unexplored, BGM-change suffices
       for v1 stories.
+
+### Arc COLD FARM — farm slots → SRAM, exp via chokepoint (editor-era WRAM strategy; scoped S55)
+The structural fix for ALL custom-WRAM scarcity, replacing the retired cap-18
+plan. User-designed (S55): party stays hot (slots 0-2 WRAM); farm/eggs become
+SRAM-resident like the existing sleep pool ($B124 — vanilla's own precedent:
+bank $07 already scans it in place with EnableSRAM per access). Per-battle exp
+loops re-bound to party-only + a pending-exp accumulator; the accumulator
+DRAINS EAGERLY at the gate-exit chokepoint — user-confirmed (S55): EVERY gate
+exit funnels through the castle return warp (boss/warpwing/death/revisit),
+GreatTree is battle-free except the Arena which awards NO exp, and in-gate
+colosseum battles exit through the same funnel. Eager-drain-at-chokepoint means
+farm SRAM data is CURRENT whenever any reader can run → the "proxy all 44
+walkers" problem collapses to: (1) re-bound the post-battle exp-add +
+level-scan loops (level-scan found S55: bank $50 `jr_050_6318`, b=0..$13 over
+`CmpBtl_6383`) to party + accumulator, (2) one chokepoint hook, (3) redirect
+the genuine farm read/write paths (farm UI drop/pick, give `label4_5c14`,
+full-check `label4_5f67`, breeding parent fetch, trades) to SRAM addressing.
+In-gate farm touches (give/full-check) read occupancy only — exp staleness
+invisible. Farm level-ups apply at the chokepoint ("grew while you were away").
+Prize: ~2.5 KB contiguous WRAM freed ($CBEB-$D664) + the S54 collision class
+dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
+- [ ] **CF1 — RE: party/farm boundary semantics.** Is party always slots 0-2?
+      What marks membership? Enumerate every empty-slot WRITER scanner (all
+      funnel into bank $14 initializers via `$da14` — writers found S55:
+      bank_004 give/item, bank_00a release+$15-special, bank_012 ~7262) and
+      every farm READ path. *Accept:* a written classification of all 44
+      walkers (party-only / all-slot / farm-write) in MONSTER_DATA.
+- [ ] **CF2 — exp accumulator + chokepoint drain.** *Accept:* farm monster
+      levels correct at farm UI after multi-battle gate runs in SameBoy.
+- [ ] **CF3 — farm storage → SRAM + path redirects.** *Accept:* full
+      drop/pick/breed/give/library loop in SameBoy; WRAM $CBEB-$D664 free per
+      audit_wram; custom buffers relocated into it; ≤14 rule deleted from docs.
+
+### Arc LAYER A′ — vanilla-room coexistence (revised S55: vanilla rooms KEPT as postgame)
+User decision (S55): the romhack occupies a NEW world (custom rooms); most
+VANILLA rooms remain as postgame content, lightly edited (rewired
+entries/exits, e.g. around the castle chokepoint). Consequences, replacing the
+earlier "Layer A = replace vanilla" sketch: (a) the vanilla step-counter pool
+$D92A-$D99A stays vanilla-owned — NOT harvestable; custom counters keep $DE74
+(+ Cold-Farm-freed space later); (b) the **mapID ≥$80 audit is IN scope**: 75
+custom rooms on top of $00-$6A cross $7F at custom room #22 — audit the engine
+for sign-bit tests (`bit 7` / `add a` / `jp m`-class patterns) on wMapID/
+wScriptMapType before content crosses $7F; (c) Layer A shrinks to "edit
+vanilla room data in place" (bank $0B emitter per PROJECT_COMPILER §6
+pattern) rather than wholesale replacement. Parallel-architecture rule
+(user, S55): the hand patch overlay stays AS-IS for exploration (known ≤14
+limitation); editor-era systems (Cold Farm, Layer A′) land in the compiler
+pipeline — never retrofit the overlay.
+- [ ] **A′1 — mapID ≥$80 sign-test audit** (blocker for custom room #22+).
+- [ ] **A′2 — bank $0B in-place room emitter** (Layer A of project.json).
+- [ ] **A′3 — bank $60 multi-bank spill** (bank_map; 16 KB won't hold 75
+      rooms of scripts+dialogue; 13 banks / 208 KB free).
 
 ### Phase 2 — Content format & compiler (the editor backend)
 - [x] **Architectural keystone — table-driven custom-room dispatch (DONE S42, user-confirmed).**

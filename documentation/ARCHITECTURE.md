@@ -70,13 +70,18 @@ SaveGameState (ROM0, bank_000.asm line 6577) copies game state to SRAM:
 | $C8EA | $A024 | $1100 (4352 B) | Main game state (last byte: $D9E9) |
 | $C300 | $BCC8 | $0200 | Tile layout buffer |
 | $C200 | $BEC8 | $0100 | GBC attribute buffer |
-| $CAC1 | $A1FB | 2980 B | Party (separate SavePartyToSRAM path) |
+| $CAC1 | $A1FB | 2980 B | Party (separate SavePartyToSRAM path — NOT a second copy: $A024 + ($CAC1−$C8EA) = $A1FB, i.e. a targeted partial update of the same save image) |
+| (SRAM-resident) | $B124 | $0BA4 (20×$95) | **Farm SLEEP pool (S55)** — a second 20-slot monster array that lives ONLY in SRAM, never WRAM. Gated by $CA41 bit 7; read in place by bank $07 (EnableSRAM per access); initialized by the sleep action (bank $12). One-way archival. Fills the $B124-$BCC7 hole in this map exactly. |
 
 Checksum: $A002-$BFFF → stored at $A000-$A001. Valid flag: $A002 (1 = save exists).
 
 The main save range $C8EA-$D9E9 covers step counters ($D92A-$D99A), most event
-flags ($D99B-$D9E9), inventory, gold, and custom WRAM. **Flags at byte $D9EA+
-(indices $0278+) are OUTSIDE the save range and will NOT persist.**
+flags ($D99B-$D9E9), inventory, gold, and the monster array (incl. the custom
+NPC/exit buffers that remain inside it, harmlessly — they self-heal per read).
+**Flags at byte $D9EA+ (indices $0278+) are OUTSIDE the save range and will NOT
+persist.** S55: the relocated custom block at $DE74 is also outside the save
+range — custom step counters are transient BY DESIGN (persistent room state =
+event flags + entry scripts, user decision S55).
 
 ### Flag byte collisions
 

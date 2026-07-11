@@ -201,60 +201,34 @@ wram1Start:: db
 
     ds $377
 
-; Custom room overflow system ($D378-$D477)
+; Custom room overflow BUFFERS ($D379-$D477)
 ; Used to buffer NPC/exit data from overflow banks ($60+) for cross-bank rooms.
-; The flag is checked by patched readers in bank $0B.
 ;
-; !!! KNOWN COLLISION (S54) — THIS ENTIRE BLOCK ($D378-$D48B) SITS INSIDE THE
+; !!! KNOWN COLLISION (S54, scoped down S55) — THESE BUFFERS SIT INSIDE THE
 ; !!! PARTY/STORAGE MONSTER ARRAY ($CAC1-$D664, 20 slots x $95, indexed via
 ; !!! GetMonsterDataPtr — zero literal refs, which is how the old "unclaimed"
-; !!! grep audit missed it). Slots 14-16 overlay these vars: a $FF29 give into
-; !!! slot 14-16 corrupts live room state (dead exits, scroll crash), and
-; !!! normal room transitions corrupt stored monsters #15-17 (wRoomRecScratch
-; !!! is rewritten every room load). DO NOT add anything here. Relocation is a
-; !!! ROADMAP Phase 0 item; evidence + candidate targets in
-; !!! tools/audit_wram.py / extracted/wram_usage.json. Until relocated, keep
-; !!! the monster array <=14 occupied when using custom rooms.
+; !!! grep audit missed it). Slots 14-15 overlay the buffers.
+; !!! S55 STATUS — ACCEPTED LEGACY HAZARD, exploration overlay only:
+; !!!  * forward corruption (a give into slots 14-15) is TRANSIENT — the
+; !!!    buffers self-heal (re-copied by every CustomReadInteract /
+; !!!    CustomExitCheck call). The S53 give-then-scroll CRASH is fixed:
+; !!!    counters/scratch moved to $DE74 (see below), out of the array.
+; !!!  * reverse corruption (buffer copies spraying stored monsters #15-16)
+; !!!    REMAINS — keep the array <=14 occupied when using custom rooms.
+; !!! The buffers were NOT relocated: S55 vetting proved no free WRAM block
+; !!! >=106 B exists outside the array (attr staging owns $C200-$C2FF, screen
+; !!! staging owns $C300-$C4FF — both SRAM-save-copied; audio owns
+; !!! $DD80-$DE2B). The editor-era fix is the Cold Farm arc (farm slots ->
+; !!! SRAM, ~2.5 KB freed; ROADMAP), which retires this hazard structurally.
 CUSTOM_ROOM_START EQU $6B ; first custom map type (107 = one past last original)
-wCustomRoomFlag:: db ;d378 — $00=normal room, $01=custom room active
+    ds 1 ;d378 — freed S55 (wCustomRoomFlag moved to $DE88); inside monster slot 14
 wCustomNPCBuffer:: ds 128 ;d379 — NPC interact data copied from overflow bank ($FF terminated)
 wCustomExitBuffer:: ds 127 ;d3f9 — exit data copied from overflow bank ($FF terminated)
 
-; Custom room step counters ($D478-$D47B)
-; These replace the original $D95E (MedalMan collision) and $D9A0-$D9A2
-; (event flag collision — bytes 5-7 of wEventFlags held boss/story flags).
-; S54 CORRECTION: the old claim "verified unused ($D478-$D790 gap)" was FALSE —
-; $D478-$D664 is monster slots 16-19 and $D665-$D78F is engine-used. These
-; counters are inside monster slot 16 (see collision banner above). The two
-; collisions this block "escaped" ($D95E, $D9A0-2) were the same bug class;
-; this was the third. Relocation pending (ROADMAP Phase 0).
-; NOTE: not in SRAM save range — step counters reset on power cycle.
-; For persistence, use event flags + room-entry script flag checks instead.
-; @BUILD_PROJECT BEGIN wram_step_counters
-wCustomStep_Room6B_S0:: db ;d478 — Room $6B screen 0 step counter
-wCustomStep_Room6B_S1:: db ;d479 — Room $6B screen 1 step counter
-wCustomStep_Room6C_S0:: db ;d47a — Room $6C screen 0 step counter
-wCustomStep_Room6C_S1:: db ;d47b — Room $6C screen 1 step counter
-wCustomStep_Room6C_S5:: db ;d47c — Room $6C screen 5 step counter
-wCustomStep_Room6D_S0:: db ;d47d — Room $6D screen 0 step counter (Pillar B)
-wCustomStep_Room70_S0:: db ;d47e — Room $70 screen 0 step counter (keystone proof room)
-; @BUILD_PROJECT END wram_step_counters
-
-; Custom-room dispatch scratch ($D47F-$D487), populated by bank $71 via rst $10.
-; wRoomRecScratch: the 8-byte $26DD-style record (tileset/dims/threshold) for the
-;   current mapID, far-copied from ROM0 ($26DD/$2A5D, mapIDs <$70) or bank $71's
-;   Custom26DDTable (mapIDs $70+). Read by the GFX loaders (offset 0) and the
-;   collision threshold reader (offset 6).
-; wRoomEncFlag: set by bank $71 entry 1 (CustomEncResolve) — $01 if the current
-;   custom room has encounters enabled (RoomEncTable), else $00.
-wRoomRecScratch:: ds 8 ;d47f
-wRoomEncFlag:: db ;d487
-
-wTameDelay:: db ;d488 — [S2e] Tame heart->message delay counter (frames)
-wTameBGSave:: ds 3 ;d489 — [S2e] was: saved palettes for the Tame hit-flicker. The flicker
-                   ;  was removed in S52 (targeted OBP but the battle enemy is BG-drawn —
-                   ;  see BATTLE_SKILL_SYSTEM §11.7); bytes kept RESERVED so later WRAM
-                   ;  labels don't shift. Free for the future blink state if needed.
+    ds 20 ;d478-d48b — freed S55 (step counters, wRoomRecScratch, wRoomEncFlag,
+          ; Tame vars moved to $DE74 — a slot-16 give landed SkyDragon's
+          ; resistance bytes exactly here, the S53/S54 crash vector). Inside
+          ; monster slots 16 — do NOT re-place anything here.
     ds $305                         ; gap ($D48C-$D790)
 
 wGroundItemData:: db ;d791
@@ -360,3 +334,55 @@ wBattleDEF:: ds 16 ;dbf3 — defense per combatant
 wBattleAGL:: ds 16 ;dc03 — agility per combatant
 wBattleINT:: ds 16 ;dc13 — intelligence per combatant
 wBattleLVL:: ds 16 ;dc23 — level per combatant (tentative)
+
+    ds ($DE74 - ($DC23 + 16))       ; gap ($DC33-$DE73): battle vars, AI score
+                                    ; table $DCE4, action queue $DCEC, AUDIO
+                                    ; channel state $DD80-$DE2B (6 x 26 B +
+                                    ; scalars to $DE2B — S55 correction: NOT
+                                    ; battle structs). $DE2C-$DE73 = margin.
+
+; =============================================================================
+; Custom room state — RELOCATED HERE S55 (was $D378/$D478-$D48B, inside the
+; party/storage monster array — the S53/S54 egg-give corruption root cause).
+; $DE74-$DEDD vetted S55: full-corpus scan shows zero real claimants above the
+; audio engine's $DE2B ceiling (every $DE30-$DEFF literal is data-as-code junk
+; from gfx/audio data banks); SVBK bank-2 windows (banks $51/$52) touch $DB00+
+; only; stack ($DFFF down) is fenced by vanilla's own $DF00-$DF0D vars.
+; Evidence: tools/audit_wram.py / extracted/wram_usage.json (S55 regen).
+; NOT in the SRAM save range ($C8EA-$D9E9) — counters are TRANSIENT by design
+; (user decision S55): persistent room state = event flags + entry scripts.
+; INITIALIZATION (S55 crash post-mortem — vetted-unclaimed is NOT initialized):
+; the old block was defined for free (inside BOTH the boot clear $C000-$DDFF
+; AND the save image); this block is above/outside both. Two fixes:
+;  * ClearAllWRAM count $1E00->$1EE0 (patches/bank_000.asm) — boot now zeroes
+;    $C000-$DEDF, covering this block + reserve.
+;  * wCustomRoomFlag is DERIVED (:= wMapID >= CUSTOM_ROOM_START) every
+;    movement frame at CopyCustomRoomRecord head (bank $71 template) — it can
+;    never be restored from a save again, so it is never trusted as state.
+; Load-inside-a-custom-room shows step-0 content (counters not in the save
+; image) — expected under transient semantics, NOT a bug.
+; Reserve after the block: $DE89-$DEDD (85 B) for counter-region growth.
+; =============================================================================
+; @BUILD_PROJECT BEGIN wram_step_counters
+wCustomStep_Room6B_S0:: db ;de74 — Room $6B screen 0 step counter
+wCustomStep_Room6B_S1:: db ;de75 — Room $6B screen 1 step counter
+wCustomStep_Room6C_S0:: db ;de76 — Room $6C screen 0 step counter
+wCustomStep_Room6C_S1:: db ;de77 — Room $6C screen 1 step counter
+wCustomStep_Room6C_S5:: db ;de78 — Room $6C screen 5 step counter
+wCustomStep_Room6D_S0:: db ;de79 — Room $6D screen 0 step counter (Pillar B)
+wCustomStep_Room70_S0:: db ;de7a — Room $70 screen 0 step counter (keystone proof room)
+; @BUILD_PROJECT END wram_step_counters
+
+; Custom-room dispatch scratch, populated by bank $71 via rst $10.
+; wRoomRecScratch: the 8-byte $26DD-style record (tileset/dims/threshold) for the
+;   current mapID, far-copied from ROM0 ($26DD/$2A5D, mapIDs <$70) or bank $71's
+;   Custom26DDTable (mapIDs $70+). Read by the GFX loaders (offset 0) and the
+;   collision threshold reader (offset 6). Self-heals per movement frame.
+; wRoomEncFlag: set by bank $71 entry 1 (CustomEncResolve) — $01 if the current
+;   custom room has encounters enabled (RoomEncTable), else $00.
+wRoomRecScratch:: ds 8 ;de7b
+wRoomEncFlag:: db ;de83
+
+wTameDelay:: db ;de84 — [S2e] Tame heart->message delay counter (frames)
+wTameBGSave:: ds 3 ;de85 — [S2e] RESERVED (flicker removed S52; BATTLE_SKILL_SYSTEM §11.7)
+wCustomRoomFlag:: db ;de88 — $00=normal room, $01=custom room active (bank $0B readers)

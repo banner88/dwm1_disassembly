@@ -49,6 +49,27 @@ that needs ~30–80 rooms. So the vanilla world becomes a parts bin: we keep six
 systems as preserved "islands," wire exits to them from Milayou's world, and
 ignore/strip the rest.
 
+**S55 amendments (user decisions):**
+- **Vanilla rooms are KEPT as postgame content** (lightly edited, entries/
+  exits rewired), not stripped — so vanilla-owned WRAM (step-counter pool
+  `$D92A-$D99A`) stays vanilla's, and the mapID ≥`$80` sign-test audit is a
+  real blocker for custom room #22+ (ROADMAP Arc LAYER A′).
+- **Parallel architecture.** The hand patch overlay is exploration scaffolding
+  with a known, accepted WRAM limitation (buffers inside monster slots 14-15;
+  ≤14 rule). Editor-era structural fixes are NEVER retrofitted onto it; they
+  land in the compiler pipeline.
+- **Cold Farm is the editor-era WRAM strategy** (ROADMAP Arc COLD FARM, full
+  spec there): party hot (slots 0-2), farm/eggs SRAM-resident like the
+  vanilla sleep pool (`$B124`), per-battle exp re-bound to party + an
+  accumulator drained eagerly at the castle gate-exit chokepoint (all gate
+  exits funnel there; GreatTree is battle-free, Arena awards no exp —
+  user-confirmed). Frees ~2.5 KB WRAM (`$CBEB-$D664`) for everything the
+  editor will ever need, and retires the S54 collision class structurally.
+- Interim custom-state home: `$DE74-$DEDD` (S55-vetted; the ONLY clean block
+  in banks 0-1 — see KEY_LESSONS S55 for why the S54 gap list lied). GBC WRAM
+  banks 3-7 (16 KB, SVBK) are VIRGIN — reserved for future editor-emitted
+  systems whose accessors we control (unusable for vanilla-read state).
+
 **Preserved systems (must keep, isolable rooms):**
 
 | System | mapID(s) | Preservation note |

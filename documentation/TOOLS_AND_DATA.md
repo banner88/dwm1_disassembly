@@ -16,7 +16,7 @@ session.
 Regen produces identical output to committed file. Safe to re-run.
 | File | Generator | Notes |
 |------|-----------|-------|
-| wram_usage.json | audit_wram.py | S54. Full WRAM classification + custom-state collision findings + unvetted-gap list (relocation candidates). Regenerate with the tool; not ROM-derived alone (also parses docs + patches). |
+| wram_usage.json | audit_wram.py | S54; REGENERATED S55 (curated arrays added: attr staging $C200, screen staging $C300 ×$200, battle tile buffer $C500, audio channels $DD80-$DE2B, battle stat tables — gaps 51→34; the S54 relocation candidates $C20D/$C42B were FALSE, see KEY_LESSONS S55). Selftest re-pinned S55: buffers still class-B (accepted legacy), relocated labels at $DE74 clean, audio ceiling pinned. Regenerate with the tool; not ROM-derived alone (also parses docs + patches). |
 | monsters_full.json | dump_monsters.py | 221 monsters, all 43 fields. Verified identical. |
 | encounters.json | dump_encounters.py | 32 gates / 125 pools. Verified identical. |
 | boss_table.json | dump_boss_table.py | $4897 table, 32 gates. Verified identical. |

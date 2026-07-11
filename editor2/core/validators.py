@@ -20,7 +20,7 @@ from . import scriptgen as S
 # with a warning.
 TEMPLATE_SIZE = {
     0x60: 283,   # addr(CustomScriptMasterTable)-$4000, S53 reference game.sym
-    0x71: 103,    # addr(Custom26DDTable)-$4000, S53 reference game.sym
+    0x71: 116,    # addr(Custom26DDTable)-$4000, S55 (S53 head 103 + 13-byte flag-derivation fix)
 }
 BANK_SIZE = 0x4000
 

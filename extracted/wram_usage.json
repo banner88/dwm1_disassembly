@@ -32,12 +32,44 @@
    "span": "$C000-$C09F"
   },
   {
-   "name": "screen tile-id shadow",
+   "name": "screen staging block (tile-id shadow + pair)",
    "base": 49920,
    "stride": 1,
+   "count": 512,
+   "evidence": "S55: bank_006 bulk copy $C500->$C300 length $0200; save routine copies $C300 x$200 -> SRAM $BCC8 as a unit (bank_000 SavePartyData). Old 256-B extent was too small.",
+   "span": "$C300-$C4FF"
+  },
+  {
+   "name": "attr decompression staging",
+   "base": 49664,
+   "stride": 1,
    "count": 256,
-   "evidence": "GATE_GENERATION.md \u00a79 + known_RAM_map $FFAA note (tile under player read from $C300 buffer, $00:$1E96)",
-   "span": "$C300-$C3FF"
+   "evidence": "S55: every attr stream declares declen 256 to $C200 (bank_017 'ld hl,$c200 / call WaitLCDTransfer' x2 + banks $00/$06/$07/$0B; stream header = 2-byte declen); save routine copies $C200 x$100 -> SRAM $BEC8.",
+   "span": "$C200-$C2FF"
+  },
+  {
+   "name": "battle enemy tile buffer / staging source",
+   "base": 50432,
+   "stride": 1,
+   "count": 576,
+   "evidence": "known_RAM_map $C500 $240 (LoadBtl_7627, S52 HW); also the source of the bank_006 $0200 copy to $C300 (S55).",
+   "span": "$C500-$C73F"
+  },
+  {
+   "name": "audio channel state + engine scalars",
+   "base": 56704,
+   "stride": 1,
+   "count": 172,
+   "evidence": "S55: ClearAudioChannels (bank_000 ~10701) inits 6 channels x 26 B from $DD80 (b=$06, stride $19+1); audio scalars enumerate to $DE2B. Supersedes the known_RAM_map 'INFERRED battle struct array' label for this range.",
+   "span": "$DD80-$DE2B"
+  },
+  {
+   "name": "battle stat tables",
+   "base": 56227,
+   "stride": 1,
+   "count": 144,
+   "evidence": "known_RAM_map / patches wram.asm: 9 tables x 16 B ($DBA3-$DC32), HW-confirmed S52.",
+   "span": "$DBA3-$DC32"
   },
   {
    "name": "gate floor grid + per-cell state",
@@ -723,22 +755,6 @@
    "vanilla_alias": false
   },
   {
-   "label": "wCustomRoomFlag",
-   "addr": "$D378",
-   "size": 1,
-   "end": "$D378",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_060.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
    "label": "wCustomNPCBuffer",
    "addr": "$D379",
    "size": 128,
@@ -770,182 +786,6 @@
    "referenced_by": [
     "bank_060.asm"
    ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wCustomStep_Room6B_S0",
-   "addr": "$D478",
-   "size": 1,
-   "end": "$D478",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_060.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wCustomStep_Room6B_S1",
-   "addr": "$D479",
-   "size": 1,
-   "end": "$D479",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_060.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wCustomStep_Room6C_S0",
-   "addr": "$D47A",
-   "size": 1,
-   "end": "$D47A",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_060.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wCustomStep_Room6C_S1",
-   "addr": "$D47B",
-   "size": 1,
-   "end": "$D47B",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_060.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wCustomStep_Room6C_S5",
-   "addr": "$D47C",
-   "size": 1,
-   "end": "$D47C",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wCustomStep_Room6D_S0",
-   "addr": "$D47D",
-   "size": 1,
-   "end": "$D47D",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_060.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wCustomStep_Room70_S0",
-   "addr": "$D47E",
-   "size": 1,
-   "end": "$D47E",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_060.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wRoomRecScratch",
-   "addr": "$D47F",
-   "size": 8,
-   "end": "$D486",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_000.asm",
-    "bank_00b.asm",
-    "bank_071.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wRoomEncFlag",
-   "addr": "$D487",
-   "size": 1,
-   "end": "$D487",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_00b.asm",
-    "bank_071.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wTameDelay",
-   "addr": "$D488",
-   "size": 1,
-   "end": "$D488",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [
-    "bank_053.asm",
-    "bank_072.asm"
-   ],
-   "vanilla_alias": false
-  },
-  {
-   "label": "wTameBGSave",
-   "addr": "$D489",
-   "size": 3,
-   "end": "$D48B",
-   "collision_classes": [
-    "B:vanilla-indexed"
-   ],
-   "collides_with_indexed": [
-    "party/storage monster array"
-   ],
-   "referenced_by": [],
    "vanilla_alias": false
   },
   {
@@ -1112,9 +952,12 @@
    "end": "$DBC2",
    "collision_classes": [
     "A':rammap-span",
-    "A:vanilla-literal"
+    "A:vanilla-literal",
+    "B:vanilla-indexed"
    ],
-   "collides_with_indexed": [],
+   "collides_with_indexed": [
+    "battle stat tables"
+   ],
    "referenced_by": [
     "bank_000.asm",
     "bank_052.asm",
@@ -1129,9 +972,12 @@
    "size": 16,
    "end": "$DBD2",
    "collision_classes": [
-    "A':rammap-span"
+    "A':rammap-span",
+    "B:vanilla-indexed"
    ],
-   "collides_with_indexed": [],
+   "collides_with_indexed": [
+    "battle stat tables"
+   ],
    "referenced_by": [
     "bank_000.asm",
     "bank_050.asm",
@@ -1149,9 +995,12 @@
    "end": "$DBE2",
    "collision_classes": [
     "A':rammap-span",
-    "A:vanilla-literal"
+    "A:vanilla-literal",
+    "B:vanilla-indexed"
    ],
-   "collides_with_indexed": [],
+   "collides_with_indexed": [
+    "battle stat tables"
+   ],
    "referenced_by": [
     "bank_000.asm",
     "bank_052.asm",
@@ -1166,9 +1015,12 @@
    "size": 16,
    "end": "$DBF2",
    "collision_classes": [
-    "A':rammap-span"
+    "A':rammap-span",
+    "B:vanilla-indexed"
    ],
-   "collides_with_indexed": [],
+   "collides_with_indexed": [
+    "battle stat tables"
+   ],
    "referenced_by": [
     "bank_000.asm",
     "bank_052.asm",
@@ -1185,9 +1037,12 @@
    "end": "$DC02",
    "collision_classes": [
     "A':rammap-span",
-    "A:vanilla-literal"
+    "A:vanilla-literal",
+    "B:vanilla-indexed"
    ],
-   "collides_with_indexed": [],
+   "collides_with_indexed": [
+    "battle stat tables"
+   ],
    "referenced_by": [
     "bank_000.asm",
     "bank_052.asm",
@@ -1202,9 +1057,12 @@
    "size": 16,
    "end": "$DC12",
    "collision_classes": [
-    "A:vanilla-literal"
+    "A:vanilla-literal",
+    "B:vanilla-indexed"
    ],
-   "collides_with_indexed": [],
+   "collides_with_indexed": [
+    "battle stat tables"
+   ],
    "referenced_by": [
     "bank_052.asm",
     "bank_053.asm",
@@ -1218,9 +1076,12 @@
    "size": 16,
    "end": "$DC22",
    "collision_classes": [
-    "A:vanilla-literal"
+    "A:vanilla-literal",
+    "B:vanilla-indexed"
    ],
-   "collides_with_indexed": [],
+   "collides_with_indexed": [
+    "battle stat tables"
+   ],
    "referenced_by": [
     "bank_053.asm"
    ],
@@ -1232,11 +1093,182 @@
    "size": 16,
    "end": "$DC32",
    "collision_classes": [
+    "B:vanilla-indexed"
+   ],
+   "collides_with_indexed": [
+    "battle stat tables"
+   ],
+   "referenced_by": [
+    "bank_052.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6B_S0",
+   "addr": "$DE74",
+   "size": 1,
+   "end": "$DE74",
+   "collision_classes": [
     "clear"
    ],
    "collides_with_indexed": [],
    "referenced_by": [
-    "bank_052.asm"
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6B_S1",
+   "addr": "$DE75",
+   "size": 1,
+   "end": "$DE75",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6C_S0",
+   "addr": "$DE76",
+   "size": 1,
+   "end": "$DE76",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6C_S1",
+   "addr": "$DE77",
+   "size": 1,
+   "end": "$DE77",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6C_S5",
+   "addr": "$DE78",
+   "size": 1,
+   "end": "$DE78",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room6D_S0",
+   "addr": "$DE79",
+   "size": 1,
+   "end": "$DE79",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomStep_Room70_S0",
+   "addr": "$DE7A",
+   "size": 1,
+   "end": "$DE7A",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_060.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wRoomRecScratch",
+   "addr": "$DE7B",
+   "size": 8,
+   "end": "$DE82",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_000.asm",
+    "bank_00b.asm",
+    "bank_071.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wRoomEncFlag",
+   "addr": "$DE83",
+   "size": 1,
+   "end": "$DE83",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_00b.asm",
+    "bank_071.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wTameDelay",
+   "addr": "$DE84",
+   "size": 1,
+   "end": "$DE84",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_053.asm",
+    "bank_072.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wTameBGSave",
+   "addr": "$DE85",
+   "size": 3,
+   "end": "$DE87",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomRoomFlag",
+   "addr": "$DE88",
+   "size": 1,
+   "end": "$DE88",
+   "collision_classes": [
+    "clear"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_060.asm",
+    "bank_071.asm"
    ],
    "vanilla_alias": false
   }
@@ -1255,6 +1287,12 @@
   ],
   "$DBE3": [
    "bank_072.asm:132"
+  ],
+  "$DC23": [
+   "wram.asm:338"
+  ],
+  "$DE74": [
+   "wram.asm:338"
   ]
  },
  "extended_index_findings": [
@@ -1278,96 +1316,6 @@
    "addr": "$C161",
    "end": "$C17A",
    "size": 26,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C20D",
-   "end": "$C2C2",
-   "size": 182,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C2C4",
-   "end": "$C2F3",
-   "size": 48,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C416",
-   "end": "$C429",
-   "size": 20,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C42B",
-   "end": "$C4C3",
-   "size": 153,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C4C8",
-   "end": "$C4F5",
-   "size": 46,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C508",
-   "end": "$C51E",
-   "size": 23,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C522",
-   "end": "$C536",
-   "size": 21,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C543",
-   "end": "$C56C",
-   "size": 42,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C56E",
-   "end": "$C59F",
-   "size": 50,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C5A1",
-   "end": "$C5BC",
-   "size": 28,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C5C6",
-   "end": "$C5DE",
-   "size": 25,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C5E0",
-   "end": "$C5FE",
-   "size": 31,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C646",
-   "end": "$C655",
-   "size": 16,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C6A8",
-   "end": "$C6B8",
-   "size": 17,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$C70E",
-   "end": "$C71D",
-   "size": 16,
    "verdict": "no known use (UNVETTED \u2014 not 'free')"
   },
   {
@@ -1491,18 +1439,6 @@
    "verdict": "no known use (UNVETTED \u2014 not 'free')"
   },
   {
-   "addr": "$DC0B",
-   "end": "$DC1F",
-   "size": 21,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$DC21",
-   "end": "$DC32",
-   "size": 18,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
    "addr": "$DC66",
    "end": "$DC7B",
    "size": 22,
@@ -1530,6 +1466,12 @@
    "addr": "$DD41",
    "end": "$DD5B",
    "size": 27,
+   "verdict": "no known use (UNVETTED \u2014 not 'free')"
+  },
+  {
+   "addr": "$DE2C",
+   "end": "$DE3F",
+   "size": 20,
    "verdict": "no known use (UNVETTED \u2014 not 'free')"
   },
   {
