@@ -1378,6 +1378,19 @@ jr_001_46f1:
     ret
 
 
+; =============================================================================
+; PARTY/STORAGE CANONICALIZER (bank $01 entry 5; 22 call sites / 8 banks —
+; the standard "roster changed" epilogue; S56, see MONSTER_DATA CF1 section).
+; 1. Party-list entries ($CA8E-$CA90) pointing at empty slots -> $FF
+; 2. Normalize every occupied in-use flag (+$00) to $01 (farm)
+; 3. Re-mark listed slots $02 (party) via RetIfSlotInvalid
+; 4. COMPACT the array: 149-B record swaps toward slot 0 (SaveRegsAndSetupDE),
+;    old->new index map built at $C0D8
+; 5. Remap the party list through the map (RetIfSlotInvalid2)
+; 6. Recount $CA8D; reload follower art (entry 6)
+; Records MOVE between slots here — slot indices are only stable between
+; canonicalize calls.
+; =============================================================================
 ReadPartySlotInfo:
     ld a, [$ca8e]
     cp $ff
@@ -1562,6 +1575,7 @@ jr_001_4801:
     ret
 
 
+; Mark party-list slot A as a party member: in-use flag (+$00) := $02 (S56).
 RetIfSlotInvalid:
     cp $ff
     ret z
@@ -1572,6 +1586,8 @@ RetIfSlotInvalid:
     ret
 
 
+; Array compaction step: if slot at HL is empty and the NEXT slot is
+; occupied, swap the two 149-byte records (bubble toward slot 0). (S56)
 SaveRegsAndSetupDE:
     push bc
     push hl

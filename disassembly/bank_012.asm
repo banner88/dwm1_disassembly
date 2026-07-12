@@ -5039,6 +5039,8 @@ jr_012_5fcd:
     ret
 
 
+; SLEEP POOL first-time init (S56): if $CA41 bit7 clear, set it and zero
+; the SRAM pool $B124 x $BA4 (20 x $95). See ARCHITECTURE SRAM map.
 SetItem_5fde:
     ld hl, $ca41
     bit 7, [hl]
@@ -7253,6 +7255,9 @@ jr_012_6bfa:
     dec b
     jr nz, jr_012_6bfa
 
+; EGG RECEIVE (S56): c = first-empty from jr_012_6bfa; bail if full; EID
+; pair from table $6D2B by egg id [$D9E1] (event flags $0050-$0057);
+; bank $14 builder; then +$63 := $01 (egg).
 jr_012_6c0a:
     ld a, c
     cp $14

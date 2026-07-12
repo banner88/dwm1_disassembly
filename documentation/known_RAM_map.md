@@ -68,6 +68,15 @@
    CA38     1    Encounter pool index (gate + floor → pool via $01:Call_69e1)
 ;  Gate floor generation pipeline (these vars): see GATE_GENERATION.md
    CA39     2    Counter before random encounter
+   CA40     1    Breeding/hatch offspring slot (S56): first-empty index chosen
+                 by $16:jr_016_402d, persisted for the script-side finalizer
+                 $04:label4_64c2 ($CAC0 := [$CA40] then bank $16 entry 4)
+   CA41     1    bit7 = farm SLEEP pool active (SRAM $B124; see sleep row
+                 below / ARCHITECTURE SRAM map). Other bits unknown.
+   CA42     9    Monster-name text scratch (S56): nickname (+$0C, 8-9 B) of
+                 the current/new monster copied here for the text engine
+                 (writers: $14 builder, $12 farm detail, $01 placeholder
+                 codes $D3/$D4/$D5)
    CA4B     3    Gold
    CA51    20    Items
    CAB9     1    Starry Night cutscene selector. Set by engine (bank $2D).
@@ -80,8 +89,20 @@
                  $CA94-$CAB1). New species 224's bit lands at $CAB0 — inside
                  the scanned extent (benign) but it COUNTS toward the
                  100-monster library reward checks (S54).
-   CAC0     1    Current monster slot index (0-19, used by Call_000_223b)
-   CAC1   149    Party monster slot 0 (base address; see Party Monster Structure below)
+   CA8D     1    PARTY COUNT (0-3) (S56). Recounted by the canonicalizer
+                 ReadPartySlotInfo ($01:$46F6, bank $01 entry 5).
+   CA8E     3    PARTY SLOT LIST (S56): three indices into the 20-slot
+                 monster array ($FF = empty entry). Party membership is
+                 list+flag, NOT positional — see MONSTER_DATA "Party/farm
+                 boundary semantics". Battle copies it to $DA15-$DA17.
+   CA91     3    Per-party-member follower sprite-type cache
+                 (species+$10, positions 0/1/2; loader $01:LoadPartySpriteVRAM)
+   CAC0     1    Current monster slot index (used by Call_000_223b/
+                 GetMonsterDataPtr; 0-19 real, $14/$15 staging; one bank $12
+                 site reuses it as a flat family index scratch)
+   CAC1   149    Party monster slot 0 (base address; see Party Monster
+                 Structure below). In-use flag +$00 is TRI-STATE (S56):
+                 $00 empty / $01 farm / $02 party.
    CB56   149    Party monster slot 1 ($CAC1 + $95 × 1)
    CBEB   149    Party monster slot 2 ($CAC1 + $95 × 2)
                  ... 20 slots total, each $95 (149) bytes.
@@ -98,6 +119,13 @@
                  corruption of stored monsters #15-16 remains) — keep the
                  array ≤14 occupied when using custom rooms. Editor-era fix:
                  Cold Farm arc (ROADMAP).
+                 STAGING PSEUDO-SLOTS (S56): GetMonsterDataPtr masks $7F, and
+                 indices $14/$15 address two more 149-B slots at $D665-$D6F9
+                 and $D6FA-$D78E (inside the save image): breeding parents
+                 (both parents copied+deleted there before bank $16 runs;
+                 parent fields read as +$0BA4/+$0BA4+$95), link-trade
+                 transit, and bank $15 menu scratch. Do not place anything
+                 at $D665-$D78E either.
                  SLEEP POOL (S55): a SECOND 20-slot x $95 monster array lives
                  in SRAM at $B124-$BCC7 (never WRAM-resident): the farm
                  "sleep" batch. Gated by $CA41 bit 7; scanned in-place by
@@ -108,10 +136,17 @@
 ;   Call_000_223b: HL = field_addr + index × $95
 ;
 ;   Offset  Size  Field
-;   $00     1     In-use flag
+;   $00     1     In-use flag: $00 empty / $01 farm / $02 party (S56)
 ;   $09     1     Species ID
 ;   $0A     1     Family
-;   $14     1     Name data
+;   $0C     9     Nickname (S56; the old "$14 Name data 1 B" row was the
+;                 last byte of this field)
+;   $29     8     $FF-terminated ID list A (semantics unverified; sanitized
+;                 by $01:ScanPartySlotTable) (S56)
+;   $31     25    $FF-terminated ID list B (same sanitizer) (S56)
+;   $4A     1     Battle status; bit7 = KO/incapacitated (no exp, not
+;                 counted for the party share; bulk-cleared by
+;                 $01:IteratePartySlots20) (S56)
 ;   $4B     1     Level
 ;   $4C     1     Level cap
 ;   $4D     3     Experience (24-bit)
@@ -198,7 +233,12 @@
                  Enemy stats ID 2 (while loading battle)
    1:DA07   1    Enemy 3 ID
                  Enemy stats ID 3 (while loading battle)
-   1:DA12   2    Enemy stats ID (16-bit, input for bank $14 loader)
+   1:DA12   2    Enemy stats ID (16-bit, input for bank $14 loader;
+                 = wTempEnemyStatsId)
+   1:DA14   1    Give/creation target slot (S56): first-empty scan result;
+                 consumed by the bank $14 record builder ($1402)
+   1:DA15   3    Battle position -> array slot cache (S56): validated copy
+                 of $CA8E-$CA90 made at battle setup ($51:LoadBtlS_40d1)
    1:DA18  25    Enemy stats copy (loaded by Call_014_4849)
    1:DA31   1    Species ID (input for bank $03 monster info loader)
    1:DA33  43    Monster info copy (loaded by Call_003_4446)
@@ -221,7 +261,10 @@
    1:DBBB   2    Enemy 1 Max HP
    1:DBBD   2    Enemy 2 Max HP
    1:DBBF   2    Enemy 3 Max HP
-   1:DD23   1    ? (related to random battles or exp)
+   1:DD23   3    Battle exp total, 24-bit (SOLVED S56; was "? related to
+                 random battles or exp"): party share = total / eligible
+                 party count; farm share = total/16 each (exp walker
+                 $50:$61E2; see MONSTER_DATA)
    1:DD61   1    Join candidate species ($FF = none)
 
 ; ===================================================================

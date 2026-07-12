@@ -16,7 +16,53 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S53 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first: S54 → S11)
+
+> Session 54 (2026-07-08 — **egg-give root cause: custom WRAM sits inside the
+> monster array; audit_wram.py ships. Byte-neutral session** — no ROM delta,
+> verifier PASS 4/4, clean build byte-perfect `1ca6579…`).
+> S53 anomaly (a) CLOSED (user misread the gate; Pillar B works; the "hub exit
+> data" suspect statically refuted — room $24 exits step-invariant). S53
+> anomaly (b) **ROOT CAUSE (static, runtime probe pending)**: the party/storage
+> monster array (party+farm+eggs, ONE 20-slot limit, user-confirmed) spans
+> **$CAC1-$D664** via `GetMonsterDataPtr` indexed access — zero literal refs,
+> so the Phase-0 grep audit falsely called $D378-$D477 "unclaimed", and ALL 14
+> custom WRAM labels ($D378-$D48B: room flag, NPC/exit buffers, 7 step
+> counters, wRoomRecScratch, wRoomEncFlag, Tame vars) sit inside monster slots
+> 14-16 (third instance of this bug class after $D95E and $D9A0-2).
+> Forward corruption (the user's crash): `$FF29` writes a 149-B record into the
+> first empty slot; slot 16 lands the 27 resistance bytes on $D479-$D493 =
+> bottom-screen step counter (garbage step-entry ptr → dead exit) +
+> wRoomRecScratch (garbage tileset/collision record → scroll-up crash).
+> Reverse corruption (silent, worse): `CopyCustomRoomRecord` rewrites scratch
+> on EVERY room transition since S42; buffer copies spray slots 14-16 →
+> stored monsters #15-17 corrupted by normal play, persisted by saving.
+> **Interim play rule: keep the array ≤14 occupied around custom rooms; user
+> should inspect stored monsters #15-17 for damaged stats/resistances.**
+> Confirmation probe: **RUN AND CONFIRMED by user same session.** Recorded
+> values for the fix session — before: $D478-$D47E = 00×7, scratch
+> `0d 28 a0 00 00 01 30 00`, encFlag 01, $D488+ = 00. After the give:
+> $da14=$10 (slot 16); $D478-$D47E = `c8 22 fa 8b c8 22 fa`;
+> $D488-$D497 = `ea 8a c8 af ea 8b c8 21 8e c8 34 fa 42 c8 cb 5f`;
+> scratch bytes unchanged (per-frame self-heal, see above). Slot 16 = first
+> empty ⇒ the user's save has slots 0-15 OCCUPIED ⇒ **monsters #15-#16
+> (slots 14-15) are being actively corrupted by every custom-room visit** —
+> slot 15's in-use flag ($D37C) is NPC-buffer byte 3; user advised to inspect
+> both. The given egg (slot 16) will itself be corrupted by future room
+> transitions (scratch/Tame writes land at its +$6E..+$7A). Deliverables: `tools/audit_wram.py` (4 evidence sources;
+> gaps reported UNVETTED, never "free"; `--selftest` pins this detection) +
+> `extracted/wram_usage.json` (TOOLS_AND_DATA rows added). Relocation
+> candidates from the gap list: $C20D-$C2C2 (182 B), $C42B-$C4C3 (153 B),
+> $DE74-$DEDD (106 B) — each needs vetting (pointer-walk loops; SVBK bank-2
+> windows exist in bank_051/052, so banked WRAM is NOT assumed free). Docs
+> corrected in place: ROADMAP facts row (refuted claim + new Phase 0 item),
+> known_RAM_map (array end $D664, not $D6B0; seen-bits $CA94-$CAB1 documented;
+> collision warning), DOC_AUDIT addendum, KEY_LESSONS S54. Class-C finding:
+> new species 224's library bit at $CAB0 is inside the vanilla-scanned extent
+> (benign; counts toward the 100-monster library rewards).
+
+---
+
 
 > Last verified: 2026-07-07 (Session 53 — **Editor headless backend ships:
 > `project.json` schema + `tools/build_project.py`; regression machine-verified

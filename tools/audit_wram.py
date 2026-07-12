@@ -64,6 +64,17 @@ INDEXED_ARRAYS = [
                     "under one 20-slot limit (user-confirmed S54)",
     },
     {
+        "name": "monster staging pseudo-slots $14/$15 (S56)",
+        "base": 0xD665, "stride": 0x95, "count": 2,
+        "evidence": "GetMonsterDataPtr masks $7F so indices $14/$15 reach "
+                    "$D665/$D6FA: breeding parents copied+deleted here "
+                    "(bank $0a flows; $16:SaveBrd_41ff reads fields at "
+                    "+$0BA4/+$0BA4+$95), link-trade transit ($15:jr_015_5aa5 "
+                    "send, $18 receive), bank $15 menu scratch "
+                    "($CAC0:=$14/$15 writers). See MONSTER_DATA CF1 section "
+                    "+ extracted/monster_walkers.json",
+    },
+    {
         "name": "library seen-bits",
         "base": 0xCA94, "stride": 1, "count": 30,
         "evidence": "bank_007 jr_007_4251/PushAndReadParty loops: "
@@ -418,6 +429,10 @@ def main():
         # regression 1: array extent pin (S54)
         arr = next(a for a in INDEXED_ARRAYS if "monster array" in a["name"])
         assert arr["base"] + arr["stride"] * arr["count"] - 1 == 0xD664
+        # regression 4 (S56): staging pseudo-slots pinned at $D665-$D78E
+        stg = next(a for a in INDEXED_ARRAYS if "staging pseudo-slots" in a["name"])
+        assert stg["base"] == 0xD665
+        assert stg["base"] + stg["stride"] * stg["count"] - 1 == 0xD78E
         bad = [f for f in findings
                if "B:vanilla-indexed" in f["collision_classes"]
                and any("monster array" in n for n in f["collides_with_indexed"])]
@@ -444,7 +459,8 @@ def main():
         # window $DE74-$DEDD, past the audio ceiling $DE2B.
         audio = next(a for a in INDEXED_ARRAYS if "audio channel" in a["name"])
         assert audio["base"] + audio["count"] - 1 == 0xDE2B
-        print("SELFTEST PASS: array extent $CAC1-$D664; buffers still flagged "
+        print("SELFTEST PASS: array extent $CAC1-$D664 (+staging to $D78E); "
+              "buffers still flagged "
               "class B (accepted legacy); relocated labels clean; audio "
               "ceiling $DE2B pinned below the $DE74 block.")
         return

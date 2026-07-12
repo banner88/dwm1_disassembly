@@ -6010,6 +6010,9 @@ jr_051_63bb:
     ret
 
 
+; BATTLE JOIN first-empty scan (S56): returns c = first empty slot (or
+; $14 if full). The joined monster is built via the bank $14 builder and,
+; if $CA8D < 3, appended to the party list + canonicalized (code below).
 SetBtlS_63e8:
     ld de, $cac1
     ld b, $14

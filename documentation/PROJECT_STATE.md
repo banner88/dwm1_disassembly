@@ -10,10 +10,61 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-10 (Session 55 — **WRAM relocation (reduced form) →
-> $DE74 + the two init/restore fixes the first cut missed; Cold Farm +
-> Layer A′ arcs scoped.** Integrity PASS 4/4, clean build byte-perfect
-> `1ca6579…`; 18/18 compiler tests at the S55v2 reference.)
+> Last verified: 2026-07-11 (Session 56 — **CF1 party/farm boundary RE
+> complete. Byte-neutral session** — no ROM delta, verifier PASS 4/4, clean
+> build byte-perfect `1ca6579…`.)
+>
+> Session 56 (2026-07-11 — **CF1: the monster-array access map. Byte-neutral;
+> deliverables = docs + tool + JSON + source comments only.**)
+> **Membership model (the CF1 headline):** party is NOT positional — dual
+> representation: per-record in-use flag +$00 (**$00 empty / $01 farm /
+> $02 party**, tri-state, what battle trusts) + party order list **$CA8D**
+> (count) / **$CA8E-$CA90** (slot indices, $FF empty; battle position cache
+> $DA15-$DA17). Synced by the CANONICALIZER `ReadPartySlotInfo` ($01:$46F6,
+> entry 5, **22 call sites / 8 banks** — every roster mutation's epilogue):
+> flags normalized $01, listed slots re-marked $02, array COMPACTED
+> (149-B record swaps toward slot 0; old→new map at $C0D8), list remapped,
+> $CA8D recounted. Records MOVE between slots on every canonicalize.
+> **Exp (walker $50:$61E2, ONE walk over all 20):** party member =
+> total/eligible-count (KO +$4A bit7 excluded; ±1 rounding quirk), farm =
+> **total/16 each**; skips eggs (+$63 flag), level 99, level≥cap; total in
+> $DD23-25 (RAM-map row solved). Level-ups: party list first, then all-20
+> scan `jr_050_6318`. **The party/farm forks are single-site** — CF2 is a
+> retarget, not new plumbing.
+> **New structures:** EGG flag = record +$63 (set by egg-receive
+> $12:jr_012_6c0a + builder sub-cmd $5E); KO bit +$4A.7 (bulk-cleared by
+> $01 entry 9); nickname = +$0C ×9 (old "+$14 name" row was its last byte);
+> two $FF-terminated ID lists +$29 ×8 / +$31 ×25 (semantics unverified);
+> **staging pseudo-slots $14/$15 @ $D665/$D6FA** (GetMonsterDataPtr masks
+> $7F): breeding parents (copied+deleted pre-bank-$16; fields read at
+> +$0BA4/+$0BA4+$95), link-trade transit (send $15:jr_015_5aa5; receive
+> $18:~$4C50 with forced SRAM saves = anti-clone), bank $15 menu scratch.
+> $CA40 = offspring first-empty slot persist; $CA42 ×9 = name text scratch.
+> Roster mutation paths enumerated (gives $28/$29, egg, battle join
+> $51:SetBtlS_63e8, breeding ×2 variants, release $12, trade ×2, sleep $12
+> init + $07 scans, compaction) — table in MONSTER_DATA.
+> **Deliverables:** MONSTER_DATA "Party/farm boundary semantics + monster-
+> array access map" (owning section); `tools/map_monster_walkers.py` +
+> `extracted/monster_walkers.json` (**all 44 $CAC0 writers** — the S55
+> count's origin: 44 = the `ld [$cac0],a` sites — **+ 60 register/stride
+> walkers classified**; self-checking: drift in writer set or labels
+> aborts); known_RAM_map rows ($CA40/$CA41/$CA42/$CA8D/$CA8E/$CA91/$CAC0
+> tri-state/staging/$DA14/$DA15/$DD23 + record fields); audit_wram curated
+> staging entry (gaps 34→31, selftest re-pinned incl. $D78E extent);
+> bank_054 header corrected (claimed "EXP distribution entries 0-6" — they
+> are the skill-record accessors — and "$CA94 party/storage count" — it is
+> the seen-bits array; DOC_AUDIT row added); discovery comments at 17 sites
+> across 10 banks (build byte-perfect after).
+> **⚠ CF3 design input:** arc premise "party stays hot in slots 0-2" is
+> false in vanilla — CF3 needs a party-first sort in the canonicalizer or
+> index remapping (user decision pending). The S55 "$15-special release"
+> was actually trade/breeding staging.
+> **NEXT:** CF2 (exp accumulator + chokepoint drain — fork sites now known)
+> or A′1 (mapID ≥$80 audit). T2 / S2f / blink remain parked; `--apply`
+> decision from S53 still open. **OPEN USER DECISIONS for CF3** (details
+> ROADMAP CF3 S56 amendments): save-persistence semantics of the freed
+> range $CBEB-$D664 (it is inside the save image + SavePartyToSRAM copy);
+> party-first sort vs index remapping.
 > **MID-SESSION CRASH POST-MORTEM (user test of the first S55 ROM): hard
 > crash on room entry + on scroll after loading an in-room save.** Root
 > cause: the old block was initialized by ADDRESS ACCIDENT (inside both the
@@ -75,55 +126,9 @@
 > exp; ~2.5 KB freed; exp level-scan loop found at bank $50 `jr_050_6318`).
 > Full specs: ROADMAP Arc COLD FARM / Arc LAYER A′; EDITOR_DESIGN §1 S55
 > amendments.
-> **NEXT:** CF1
-> (party/farm boundary RE) or A′1 (mapID ≥$80 audit) — or resume S2f / T2 /
-> the blink. The `--apply` decision from S53 remains open.
+> (S55 NEXT superseded by S56 — see above.)
 >
-> Session 54 (2026-07-08 — **egg-give root cause: custom WRAM sits inside the
-> monster array; audit_wram.py ships. Byte-neutral session** — no ROM delta,
-> verifier PASS 4/4, clean build byte-perfect `1ca6579…`).
-> S53 anomaly (a) CLOSED (user misread the gate; Pillar B works; the "hub exit
-> data" suspect statically refuted — room $24 exits step-invariant). S53
-> anomaly (b) **ROOT CAUSE (static, runtime probe pending)**: the party/storage
-> monster array (party+farm+eggs, ONE 20-slot limit, user-confirmed) spans
-> **$CAC1-$D664** via `GetMonsterDataPtr` indexed access — zero literal refs,
-> so the Phase-0 grep audit falsely called $D378-$D477 "unclaimed", and ALL 14
-> custom WRAM labels ($D378-$D48B: room flag, NPC/exit buffers, 7 step
-> counters, wRoomRecScratch, wRoomEncFlag, Tame vars) sit inside monster slots
-> 14-16 (third instance of this bug class after $D95E and $D9A0-2).
-> Forward corruption (the user's crash): `$FF29` writes a 149-B record into the
-> first empty slot; slot 16 lands the 27 resistance bytes on $D479-$D493 =
-> bottom-screen step counter (garbage step-entry ptr → dead exit) +
-> wRoomRecScratch (garbage tileset/collision record → scroll-up crash).
-> Reverse corruption (silent, worse): `CopyCustomRoomRecord` rewrites scratch
-> on EVERY room transition since S42; buffer copies spray slots 14-16 →
-> stored monsters #15-17 corrupted by normal play, persisted by saving.
-> **Interim play rule: keep the array ≤14 occupied around custom rooms; user
-> should inspect stored monsters #15-17 for damaged stats/resistances.**
-> Confirmation probe: **RUN AND CONFIRMED by user same session.** Recorded
-> values for the fix session — before: $D478-$D47E = 00×7, scratch
-> `0d 28 a0 00 00 01 30 00`, encFlag 01, $D488+ = 00. After the give:
-> $da14=$10 (slot 16); $D478-$D47E = `c8 22 fa 8b c8 22 fa`;
-> $D488-$D497 = `ea 8a c8 af ea 8b c8 21 8e c8 34 fa 42 c8 cb 5f`;
-> scratch bytes unchanged (per-frame self-heal, see above). Slot 16 = first
-> empty ⇒ the user's save has slots 0-15 OCCUPIED ⇒ **monsters #15-#16
-> (slots 14-15) are being actively corrupted by every custom-room visit** —
-> slot 15's in-use flag ($D37C) is NPC-buffer byte 3; user advised to inspect
-> both. The given egg (slot 16) will itself be corrupted by future room
-> transitions (scratch/Tame writes land at its +$6E..+$7A). Deliverables: `tools/audit_wram.py` (4 evidence sources;
-> gaps reported UNVETTED, never "free"; `--selftest` pins this detection) +
-> `extracted/wram_usage.json` (TOOLS_AND_DATA rows added). Relocation
-> candidates from the gap list: $C20D-$C2C2 (182 B), $C42B-$C4C3 (153 B),
-> $DE74-$DEDD (106 B) — each needs vetting (pointer-walk loops; SVBK bank-2
-> windows exist in bank_051/052, so banked WRAM is NOT assumed free). Docs
-> corrected in place: ROADMAP facts row (refuted claim + new Phase 0 item),
-> known_RAM_map (array end $D664, not $D6B0; seen-bits $CA94-$CAB1 documented;
-> collision warning), DOC_AUDIT addendum, KEY_LESSONS S54. Class-C finding:
-> new species 224's library bit at $CAB0 is inside the vanilla-scanned extent
-> (benign; counts toward the 100-monster library rewards).
->
->
-> (S53 + S52 blocks moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
+> (S54 + earlier blocks moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
 
 ---
 
@@ -170,6 +175,7 @@
 | 53 | Editor headless backend: project.json schema + build_project.py; byte-identity regression; master-table fix built (untested); script-routing documented | PROJECT_COMPILER.md; KEY_LESSONS S53 |
 | 54 | Egg-give root cause: custom WRAM inside the monster array; audit_wram.py ships | known_RAM_map; KEY_LESSONS S54; ROADMAP Phase 0 |
 | 55 | WRAM relocation (reduced): counters/scratch/flags → $DE74; false-gap vetting (staging buffers, audio array, sleep pool, SVBK census); Cold Farm + Layer A′ arcs scoped; cap-18 retired | ROADMAP arcs; KEY_LESSONS S55; known_RAM_map; EDITOR_DESIGN §1; PROJECT_COMPILER |
+| 56 | CF1: party/farm boundary + monster-array access map (tri-state flag, party list $CA8D/$CA8E, canonicalizer+compaction, exp shares, egg/KO fields, staging slots $D665/$D6FA, 44 writers + 60 walkers classified) | MONSTER_DATA "Party/farm boundary"; extracted/monster_walkers.json; known_RAM_map; KEY_LESSONS S56 |
 
 ---
 

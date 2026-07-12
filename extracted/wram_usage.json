@@ -16,6 +16,14 @@
    "span": "$CAC1-$D664"
   },
   {
+   "name": "monster staging pseudo-slots $14/$15 (S56)",
+   "base": 54885,
+   "stride": 149,
+   "count": 2,
+   "evidence": "GetMonsterDataPtr masks $7F so indices $14/$15 reach $D665/$D6FA: breeding parents copied+deleted here (bank $0a flows; $16:SaveBrd_41ff reads fields at +$0BA4/+$0BA4+$95), link-trade transit ($15:jr_015_5aa5 send, $18 receive), bank $15 menu scratch ($CAC0:=$14/$15 writers). See MONSTER_DATA CF1 section + extracted/monster_walkers.json",
+   "span": "$D665-$D78E"
+  },
+  {
    "name": "library seen-bits",
    "base": 51860,
    "stride": 1,
@@ -1352,30 +1360,6 @@
    "addr": "$CA70",
    "end": "$CA7F",
    "size": 16,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$D69B",
-   "end": "$D6C6",
-   "size": 44,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$D6CE",
-   "end": "$D6DE",
-   "size": 17,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$D728",
-   "end": "$D743",
-   "size": 28,
-   "verdict": "no known use (UNVETTED \u2014 not 'free')"
-  },
-  {
-   "addr": "$D745",
-   "end": "$D75B",
-   "size": 23,
    "verdict": "no known use (UNVETTED \u2014 not 'free')"
   },
   {

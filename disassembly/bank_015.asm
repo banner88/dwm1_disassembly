@@ -4105,6 +4105,8 @@ jr_015_5aa5:
     ld de, $d665
     ld b, $95
 
+; TRADE SEND staging copy (S56): record [$CAC0] -> staging slot $14
+; ($D665), then the source slot is deleted (in-use := 0) below.
 jr_015_5b41:
     ld a, [hl+]
     ld [de], a

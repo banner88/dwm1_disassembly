@@ -2180,6 +2180,11 @@ jr_018_4c34:
     call Copy4Bytes
     pop hl
 
+; TRADE RECEIVE commit (S56): restore party list + seen bits from SRAM;
+; set seen bit for the staged monster's species ($D703 = slot $15 +$09);
+; delete the traded-away slot; canonicalize; copy staged record slot $15
+; ($D6FA) -> slot 19 ($D5D0); canonicalize again; forced partial SRAM
+; saves (seen bits + SavePartyToSRAM) — anti-clone discipline.
 jr_018_4c76:
     push hl
     di

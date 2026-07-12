@@ -90,6 +90,8 @@ jr_016_401c:
     ret
 
 
+; Offspring insert (S56): c = first-empty slot from jr_016_401c; persisted
+; in BOTH $CAC0 and $CA40 (script finalizer label4_64c2 re-reads $CA40).
 jr_016_402d:
     ld a, c
     ld [$cac0], a
@@ -341,6 +343,9 @@ jr_016_41fa:
     ret
 
 
+; Breeding parent field sum (S56): entry HL = $CAC1+field; reads the same
+; field from staging slot $14 (+$0BA4) and slot $15 (+$0BA4+$95) — the two
+; parents are addressed as monster-array slots 20/21 at $D665/$D6FA.
 SaveBrd_41ff:
     push hl
     ld a, l

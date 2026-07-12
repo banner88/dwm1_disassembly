@@ -5877,6 +5877,17 @@ BtlFunc_61cd:
     ret
 
 
+; =============================================================================
+; POST-BATTLE EXP DISTRIBUTION (S56, see MONSTER_DATA CF1 section).
+; CallBtl_6197: HRAM $D8-$DA := party share = total($DD23-25) / eligible
+;   party count (b from BtlFunc_61cd: listed members not $FF, not KO +$4A
+;   bit7; rounding quirk b=3 -> +1, b=1 -> -1).
+; Below: HRAM $DB-$DD := farm share = total/16. Then ONE walk over all 20
+; slots (Jump_050_6211): flag $02 -> +party share; flag $01 -> +farm share;
+; skip empty / egg (+$63!=0) / KO party / level $63 / level>=cap (+$4C);
+; clamp $98967F. THE party/farm fork for Cold Farm CF2 is the `cp $02` in
+; Jump_050_6211.
+; =============================================================================
 CallBtl_61e2:
     call CallBtl_6197
     ld a, l
@@ -6182,6 +6193,10 @@ jr_050_6337:
     ret
 
 
+; Pending-level-up probe for slot A: carry = skip (empty/$FF/level 99);
+; else bank $13 entry 0 threshold fetch + 24-bit exp compare. Callers run
+; the party list FIRST, then the all-20 scan jr_050_6318 (farm monsters
+; level immediately post-battle in vanilla). (S56)
 CmpBtl_6383:
     cp $ff
     jr z, jr_050_63a2

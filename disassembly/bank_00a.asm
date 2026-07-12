@@ -1783,6 +1783,9 @@ label4a10:
     ld [$d7ca], a
     ld a, $01
     ld [$d7cb], a
+; NPC-MATE BREEDING (S56): your parent [$CAC0] -> staging slot $14 ($D665),
+; deleted from array; mate synthesized from EID $C8F7/8 directly into
+; staging slot $15 via the bank $14 builder; canonicalize + bank $16.
     ld a, [$cac0]
     ld hl, $cac1
     call GetMonsterDataPtr
@@ -3566,6 +3569,11 @@ label565f:
     ld [$d7ca], a
     ld a, $01
     ld [$d7cb], a
+; TWO-PARENT BREEDING (S56): parent A [$C8E8] -> staging slot $14 ($D665),
+; parent B [$CAC0] -> staging slot $15 ($D6FA), both deleted; canonicalize;
+; bank $16 entry 0 computes offspring (fields read at +$0BA4/+$0BA4+$95);
+; offspring inserted later at first-empty ($16:jr_016_402d -> $CA40);
+; auto-saves and warps to the Starry Shrine.
     ld a, [$c8e8]
     ld hl, $cac1
     call GetMonsterDataPtr
@@ -7118,6 +7126,10 @@ jr_00a_6d9f:
     or a
     ret nz
 
+; PARTY DROP/PICK COMMIT (S56): re-mark the 4-entry working set
+; ($C0D8-$C0DB = 3 party + candidate) as $02, flip the cursor-selected slot
+; to $01 (drop), rebuild the party list from flags (FuncFldA_6e3f), then
+; canonicalize ($0105) + battle-data reload ($0103).
     ld a, [$c0d8]
     ld hl, $cac1
     call GetMonsterDataPtr

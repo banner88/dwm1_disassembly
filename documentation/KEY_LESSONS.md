@@ -1904,3 +1904,33 @@ configuration. Check PROJECT_STATE for which config the user actually ran —
 "built SN, NOT yet user-tested" in the docs means it does not count as a
 baseline. Deliver the isolating build first; stack configs only after each
 passes alone.
+
+## Session 56 Lessons — CF1 boundary RE (the access map)
+
+### Never record a count without its method — "44 walkers" cost an hour to re-derive
+**Symptom**: S55 recorded "44 read-walkers" as the size of the proxy problem;
+no list, no method. S56 had to reverse the number before it could do the
+actual work (it is the count of `ld [$cac0], a` sites — the slot-select
+writer sites, one per access path).
+**Rule**: any quantified claim in the docs carries its generator: the grep
+pattern, the tool, or the enumeration itself. A bare count is a puzzle for
+the next session, not a fact.
+
+### Classify the selection funnel, not the readers
+**Symptom**: 326 GetMonsterDataPtr call sites looked like the classification
+universe. Nearly all take their slot from `[$CAC0]`; classifying the 44
+writer sites (+ the register/stride loops that bypass $CAC0) classified
+everything in one pass.
+**Rule**: for base+index×stride structures, find where the INDEX is chosen
+before enumerating where the pointer is used. The writers of the index
+variable are the access map; the readers are fan-out.
+
+### An index helper that masks its argument defines a LARGER address space than the array
+**Symptom**: GetMonsterDataPtr does `and $7F` — indices $14/$15 are valid and
+vanilla USES them ($D665/$D6FA staging pseudo-slots for breeding parents,
+trade transit, menu scratch). known_RAM_map's "20 slots, end $D664" was true
+for the logical array and still hid 298 live bytes from the audit.
+**Rule**: when documenting an indexed structure, state the ADDRESSABLE
+extent implied by the helper's mask/bounds, then enumerate which indices are
+actually used and by whom. audit_wram now carries the staging slots as their
+own curated entry ($D665-$D78E pinned in its selftest).

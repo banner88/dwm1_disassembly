@@ -1,8 +1,10 @@
 ; =============================================================================
-; BANK $54 — POST-BATTLE PROCESSING, MONSTER JOIN SYSTEM
+; BANK $54 — SKILL RECORD ACCESSORS, MONSTER JOIN SYSTEM
 ; =============================================================================
 ; Contains:
-;   - Post-battle EXP distribution and level-up (entries 0-6)
+;   - Skill-record field accessors (entries 0-6 — NOT exp distribution; that
+;     lives in bank $50 CallBtl_61e2. Header corrected S56; see
+;     BATTLE_SKILL_SYSTEM.md for entries 0-6 and the $4013 record table)
 ;   - Monster join decision (entry 7 → JoinDecision at $55BB)
 ;   - Join probability calculation
 ;
@@ -14,6 +16,8 @@
 ;   5. Checks party capacity via Call_000_267E
 ;   6. Calls join probability handler (Call_054_560E or LoadB54_5655)
 ;   7. If join succeeds: LoadB54_5683 processes the join
+;      (insert = bank $51 SetBtlS_63e8 first-empty + bank $14 builder;
+;       party-list append if $CA8D < 3 — see MONSTER_DATA CF1 section)
 ;   8. If join fails: increments $D9EC to advance post-battle state
 ;
 ; KEY RAM:
@@ -23,7 +27,8 @@
 ;   $DC3C+N: Enemy species ID per battle slot
 ;   $DD61:   Defeated monster slot for join check (0 = no candidate)
 ;   $D9EC:   Post-battle state machine index
-;   $CA94:   Party/storage count
+;   ($CA94 is the library seen-bits array, NOT a "party/storage count" — the
+;    old DISCOVERIES_v2 claim here was wrong; party count is $CA8D. S56.)
 ;
 ; Sources: DISCOVERIES_v2 watchpoint analysis, disassembly trace
 ; =============================================================================

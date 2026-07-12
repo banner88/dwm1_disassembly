@@ -106,3 +106,4 @@ are made in place; no new session/handoff files, ever.
   $A1FB partial path); the S54-era reading quoted only the $C8EA prose line.
   Lesson: quote the table, not the summary sentence. New fact added: the
   $B124-$BCC7 SRAM hole = the farm sleep pool (20×$95, exactly).
+| 2026-07-11 (S56) | **bank_054.asm header: two stale DISCOVERIES_v2 claims corrected in place** — "Post-battle EXP distribution and level-up (entries 0-6)" (entries 0-6 are the skill-record accessors, documented S46/S48; exp distribution is bank $50 `CallBtl_61e2`) and "$CA94: Party/storage count" ($CA94 = library seen-bits, S54-verified; the party count is $CA8D, found S56). Same failure class as the S2/S3 wrong comments: a bank-header claim reads as authoritative and nearly misdirected the CF1 RE. Comment-only fix, build byte-perfect. |

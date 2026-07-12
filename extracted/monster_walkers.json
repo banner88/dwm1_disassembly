@@ -1,0 +1,902 @@
+{
+  "_generator": "tools/map_monster_walkers.py (S56/CF1); sources: disassembly/*.asm at the byte-perfect tree; addresses from game.sym when present",
+  "array": {
+    "base": "$CAC1",
+    "stride": "$95",
+    "real_slots": 20,
+    "staging_slots": {
+      "$14": "$D665",
+      "$15": "$D6FA"
+    },
+    "end_real": "$D664",
+    "end_staging": "$D78E"
+  },
+  "semantics": {
+    "membership": "dual: in-use flag +$00 ($00 empty/$01 farm/$02 party) + party list $CA8D count / $CA8E-$CA90 slot indices ($FF=empty); synced by ReadPartySlotInfo ($01 entry 5)",
+    "party_positional": false,
+    "party_note": "party slots are NOT fixed at 0-2; the list points at arbitrary array indices (compaction keeps occupied slots contiguous but party members can sit anywhere among them)",
+    "exp_shares": "party member: total/eligible_party_count (+1 if 3, -1 if 1 \u2014 rounding quirk); farm monster: total/16 EACH; eggs (+$63!=0), KO'd party (+$4A bit7), level 99, and level>=cap (+$4C) receive none. Total in $DD23-$DD25.",
+    "staging_slots": "GetMonsterDataPtr indices $14 ($D665) / $15 ($D6FA): breeding parents, trade transit, menu scratch; inside the $C8EA-$D9E9 save image",
+    "battle_position_cache": "$DA15-$DA17 := validated party list (bank $51 LoadBtlS_40d1 via $01 entry 7)",
+    "give_param_block": "$DA12/wTempEnemyStatsId + $DA13 = EID, $DA14 = target slot"
+  },
+  "cac0_writers": [
+    {
+      "file": "bank_001.asm",
+      "label": "jr_001_4947",
+      "line": 1802,
+      "occ": 0,
+      "addr": "$01:$4947",
+      "class": "party-only",
+      "role": "LoadPartySpriteVRAM body: $CAC0:=$00 then GetActiveMonsterStatus (party position 0 follower art); gated by party count $CA8D"
+    },
+    {
+      "file": "bank_001.asm",
+      "label": "jr_001_4947",
+      "line": 1810,
+      "occ": 1,
+      "addr": "$01:$4947",
+      "class": "party-only",
+      "role": "as above, $CAC0:=$01 (position 1)"
+    },
+    {
+      "file": "bank_001.asm",
+      "label": "jr_001_4947",
+      "line": 1818,
+      "occ": 2,
+      "addr": "$01:$4947",
+      "class": "party-only",
+      "role": "as above, $CAC0:=$02 (position 2)"
+    },
+    {
+      "file": "bank_003.asm",
+      "label": "jr_003_7e9d",
+      "line": 7545,
+      "occ": 0,
+      "addr": "$03:$7e9d",
+      "class": "single-slot",
+      "role": "link/debug viewer slot++ (BCD/daa arithmetic, bound cp $16 \u2014 navigates into the staging index range)"
+    },
+    {
+      "file": "bank_003.asm",
+      "label": "jr_003_7ec1",
+      "line": 7563,
+      "occ": 0,
+      "addr": "$03:$7ec1",
+      "class": "single-slot",
+      "role": "link/debug viewer slot-- (BCD/daa, floor $00)"
+    },
+    {
+      "file": "bank_004.asm",
+      "label": "label4_64c2",
+      "line": 4721,
+      "occ": 0,
+      "addr": "$04:$64c2",
+      "class": "farm-write",
+      "role": "script opcode: $CAC0 := [$CA40] (slot chosen by bank $16 first-empty scan jr_016_402d) then bank $16 entry 4 \u2014 offspring/hatch record finalization path"
+    },
+    {
+      "file": "bank_004.asm",
+      "label": "label4_6bdf",
+      "line": 5833,
+      "occ": 0,
+      "addr": "$04:$6bdf",
+      "class": "party-only",
+      "role": "script opcode: $CAC0 := party list [$CA8E+c] (also cached to $D8E1), reads MP (+$52 via $CB13) \u2014 party-member MP check from scripts"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "SetFld_44e3",
+      "line": 803,
+      "occ": 0,
+      "addr": "$07:$44e3",
+      "class": "single-slot",
+      "role": "status screen: $CAC0 := [wOPTN_and_Item_selection] (slot preselected by list UI)"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "LoadFld_45ee",
+      "line": 929,
+      "occ": 0,
+      "addr": "$07:$45ee",
+      "class": "single-slot",
+      "role": "status screen re-entry: $CAC0 := cursor slot"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_4704",
+      "line": 1169,
+      "occ": 0,
+      "addr": "$07:$4704",
+      "class": "single-slot",
+      "role": "status exp-to-next display: temporarily retargets $CAC0 := [LoadFld_6d8b] (next monster in display order)"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_47ca",
+      "line": 1189,
+      "occ": 0,
+      "addr": "$07:$47ca",
+      "class": "single-slot",
+      "role": "status exp display: restore saved $CAC0 (pop af path)"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_5330",
+      "line": 2960,
+      "occ": 0,
+      "addr": "$07:$5330",
+      "class": "single-slot",
+      "role": "status nav: $CAC0 := cursor slot on selection change"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_5330",
+      "line": 3014,
+      "occ": 1,
+      "addr": "$07:$5330",
+      "class": "single-slot",
+      "role": "status nav: $CAC0 := cursor slot (change-detect branch)"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "label7_6468",
+      "line": 5543,
+      "occ": 0,
+      "addr": "$07:$6468",
+      "class": "single-slot",
+      "role": "list-scroll helper: $CAC0 := [[ptr $C930] + offset $C932] (display-order list indirection)"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_6531",
+      "line": 5651,
+      "occ": 0,
+      "addr": "$07:$6531",
+      "class": "single-slot",
+      "role": "list-scroll helper: $CAC0 := [[ptr $C930] + b] (next/prev monster in display order)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_47f0",
+      "line": 1476,
+      "occ": 0,
+      "addr": "$0a:$47f0",
+      "class": "single-slot",
+      "role": "farm menu select: $CAC0 := $C0D8[cursor] (display list)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_4f76",
+      "line": 2581,
+      "occ": 0,
+      "addr": "$0a:$4f76",
+      "class": "single-slot",
+      "role": "breeding parent A select: $CAC0 := $C0D8[cursor], also stored to $C8E8"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_52ae",
+      "line": 3076,
+      "occ": 0,
+      "addr": "$0a:$52ae",
+      "class": "single-slot",
+      "role": "menu select ($C8E4 cursor set): $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "label5c5b",
+      "line": 4442,
+      "occ": 0,
+      "addr": "$0a:$5c5b",
+      "class": "single-slot",
+      "role": "menu select: $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "label5c92",
+      "line": 4460,
+      "occ": 0,
+      "addr": "$0a:$5c92",
+      "class": "single-slot",
+      "role": "post-menu display: $CAC0 := [$C908] (saved slot), species-indexed name render"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "label63f7",
+      "line": 5610,
+      "occ": 0,
+      "addr": "$0a:$63f7",
+      "class": "single-slot",
+      "role": "menu select + species read (+$09): $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "label6659",
+      "line": 5993,
+      "occ": 0,
+      "addr": "$0a:$6659",
+      "class": "single-slot",
+      "role": "menu select then bank $07 entry 1 (status open): $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "label67bd",
+      "line": 6212,
+      "occ": 0,
+      "addr": "$0a:$67bd",
+      "class": "single-slot",
+      "role": "menu select + Plus-value read (+$62 via $CB23): $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "Jump_00a_6cc4",
+      "line": 6980,
+      "occ": 0,
+      "addr": "$0a:$6cc4",
+      "class": "single-slot",
+      "role": "menu select (confirm sfx path): $CAC0 := $C0D8[cursor], also $C8E8"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "SetItem_6242",
+      "line": 5464,
+      "occ": 0,
+      "addr": "$12:$6242",
+      "class": "single-slot",
+      "role": "SCRATCH REUSE: $CAC0 holds a flat family index here (existing in-line comment), not a slot select"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_6369",
+      "line": 5665,
+      "occ": 0,
+      "addr": "$12:$6369",
+      "class": "single-slot",
+      "role": "farm list select: $CAC0 := $C0D8[cursor]; $E0 sentinel branch"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "LoadItem_6544",
+      "line": 5978,
+      "occ": 0,
+      "addr": "$12:$6544",
+      "class": "single-slot",
+      "role": "farm list select (second state): $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_6a61",
+      "line": 6997,
+      "occ": 0,
+      "addr": "$12:$6a61",
+      "class": "single-slot",
+      "role": "farm detail: $CAC0 := $C0D8[cursor], copies nickname (+$0C, 9 B via $CACD) to $CA42 scratch"
+    },
+    {
+      "file": "bank_014.asm",
+      "label": "jr_014_42fe",
+      "line": 382,
+      "occ": 0,
+      "addr": "$14:$42fe",
+      "class": "farm-write",
+      "role": "record builder (label14_40b4 family): $CAC0 := [$DA14], bank $13 entry 1 exp snap; +$0B growth roll just above"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_49d4",
+      "line": 1481,
+      "occ": 0,
+      "addr": "$15:$49d4",
+      "class": "single-slot",
+      "role": "menu select: $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_4c3b",
+      "line": 1815,
+      "occ": 0,
+      "addr": "$15:$4c3b",
+      "class": "staging",
+      "role": "$CAC0 := $14 + clear $D665 in-use (init staging slot 20 as menu scratch)"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "Jump_015_4c8d",
+      "line": 1869,
+      "occ": 0,
+      "addr": "$15:$4c8d",
+      "class": "staging",
+      "role": "same staging-slot-20 init, second entry"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_4e1b",
+      "line": 2138,
+      "occ": 0,
+      "addr": "$15:$4e1b",
+      "class": "single-slot",
+      "role": "menu select: $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "Jump_015_50da",
+      "line": 2531,
+      "occ": 0,
+      "addr": "$15:$50da",
+      "class": "staging",
+      "role": "$CAC0 := $15 (view staging slot 21 \u2014 incoming trade monster)"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "Jump_015_561e",
+      "line": 3400,
+      "occ": 0,
+      "addr": "$15:$561e",
+      "class": "single-slot",
+      "role": "menu select: $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "Jump_015_58e0",
+      "line": 3795,
+      "occ": 0,
+      "addr": "$15:$58e0",
+      "class": "staging",
+      "role": "$CAC0 := $15 (staging slot 21 view, second state)"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_5aa5",
+      "line": 4102,
+      "occ": 0,
+      "addr": "$15:$5aa5",
+      "class": "farm-write",
+      "role": "TRADE-AWAY head: $CAC0 := $C0D8[cursor], then copy record -> staging $D665 and delete (in-use:=0)"
+    },
+    {
+      "file": "bank_016.asm",
+      "label": "jr_016_402d",
+      "line": 95,
+      "occ": 0,
+      "addr": "$16:$402d",
+      "class": "farm-write",
+      "role": "breeding offspring insert: first-empty scan result c -> $CAC0 AND $CA40 (persisted for label4_64c2), zero-fill record via LoadBrd_41b1"
+    },
+    {
+      "file": "bank_018.asm",
+      "label": "jr_018_4abd",
+      "line": 1938,
+      "occ": 0,
+      "addr": "$18:$4abd",
+      "class": "single-slot",
+      "role": "trade menu select: $CAC0 := $C0D8[cursor]"
+    },
+    {
+      "file": "bank_050.asm",
+      "label": "CallBtl_61e2",
+      "line": 5905,
+      "occ": 0,
+      "addr": "$50:$61e2",
+      "class": "all-slot",
+      "role": "EXP DISTRIBUTION walker init: $CAC0:=0 then walks all 20 (flag $02 -> party share = total/eligible_count; flag $01 -> farm share = total/16; skips empty, egg +$63!=0, KO +$4A bit7 [party], level $63, level>=cap)"
+    },
+    {
+      "file": "bank_050.asm",
+      "label": "jr_050_6337",
+      "line": 6148,
+      "occ": 0,
+      "addr": "$50:$6337",
+      "class": "party-only",
+      "role": "battle HP-strip refresh fragment: $CAC0 := slot from caller, $DA15+pos battle-position cache compare/update"
+    },
+    {
+      "file": "bank_050.asm",
+      "label": "CmpBtl_6383",
+      "line": 6189,
+      "occ": 0,
+      "addr": "$50:$6383",
+      "class": "all-slot",
+      "role": "pending-level-up probe for slot A (used on party list $CA8E/8F/90 FIRST, then all-20 loop jr_050_6318); bank $13 entry 0 threshold + exp compare"
+    },
+    {
+      "file": "bank_051.asm",
+      "label": "CmpBtlS_6650",
+      "line": 6375,
+      "occ": 0,
+      "addr": "$51:$6650",
+      "class": "single-slot",
+      "role": "battle-adjacent menu: $CAC0 := $C0D8[cursor] then bank $07 entry 1 (status open)"
+    },
+    {
+      "file": "bank_051.asm",
+      "label": "jr_051_66d7",
+      "line": 6445,
+      "occ": 0,
+      "addr": "$51:$66d7",
+      "class": "single-slot",
+      "role": "battle-adjacent menu: $CAC0 := $C0D8[$C8DF] then bank $07 entry 1"
+    }
+  ],
+  "register_walkers": [
+    {
+      "file": "bank_001.asm",
+      "label": "IteratePartySlots20",
+      "addr": "$01:$4bc1",
+      "class": "all-slot",
+      "role": "bank $01 entry 9: walk 20 occupied; clear +$4A battle status byte (KO bit7) and adjacent state \u2014 post-battle/heal bulk clear"
+    },
+    {
+      "file": "bank_001.asm",
+      "label": "ReadPartySlotInfo",
+      "addr": "$01:$46f6",
+      "class": "farm-write",
+      "role": "bank $01 entry 5 CANONICALIZER: clear stale party-list entries; normalize all in-use flags to $01; re-mark party slots $02 (RetIfSlotInvalid); COMPACT the array (149-B record swaps via SaveRegsAndSetupDE); remap list via $C0D8 old->new map (RetIfSlotInvalid2); recount $CA8D. 22 call sites across 8 banks ('roster changed' epilogue)"
+    },
+    {
+      "file": "bank_001.asm",
+      "label": "RollRandomEncounter",
+      "addr": "$01:$4d02",
+      "class": "farm-write",
+      "role": "random record generator: $DA14 := A param, random EID -> bank $14 builder (init/debug party seeding; despite the label, not the wild-encounter roll)"
+    },
+    {
+      "file": "bank_001.asm",
+      "label": "ScanPartySlotTable",
+      "addr": "$01:$4686",
+      "class": "all-slot",
+      "role": "bank $01 entry 6: walk 20; per occupied slot sanitize the two $FF-terminated ID lists (+$29 x8 via $CAEA, +$31 x25 via $CAF2; semantics unverified)"
+    },
+    {
+      "file": "bank_004.asm",
+      "label": "CheckEnemyData",
+      "addr": "$04:$5c36",
+      "class": "farm-write",
+      "role": "script opcode $29 give (label4_5c14): first-empty scan -> $DA14 -> $1402 build; if $CA8D<3 ALSO appends slot to party list + $CA8D++ (given monster joins party when room)"
+    },
+    {
+      "file": "bank_004.asm",
+      "label": "CheckInventorySlot",
+      "addr": "$04:$5f7e",
+      "class": "all-slot",
+      "role": "script opcode storage-full check (label4_5f67): count occupied, branch if 20"
+    },
+    {
+      "file": "bank_004.asm",
+      "label": "CheckItemData",
+      "addr": "$04:$5fbc",
+      "class": "farm-write",
+      "role": "script opcode $28 AddMonsterToStorage: first-empty -> $DA14 -> $1402 build (NO party-list append)"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_42ee",
+      "addr": "$07:$42ee",
+      "class": "all-slot",
+      "role": "library counting: walk 20 WRAM slots (+ the SRAM sleep pool $B124 in the sibling loop) collecting species for completion counters"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_431e",
+      "addr": "$07:$431e",
+      "class": "all-slot",
+      "role": "library counting sibling walk"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_435b",
+      "addr": "$07:$435b",
+      "class": "all-slot",
+      "role": "library counting sibling walk"
+    },
+    {
+      "file": "bank_007.asm",
+      "label": "jr_007_4398",
+      "addr": "$07:$4398",
+      "class": "all-slot",
+      "role": "library counting sibling walk"
+    },
+    {
+      "file": "bank_009.asm",
+      "label": "FuncFld9_692a",
+      "addr": "$09:$692a",
+      "class": "all-slot",
+      "role": "walk slots via GetMonsterDataPtr with loop counter c, skip empties (field/overworld context)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_458b",
+      "addr": "$0a:$458b",
+      "class": "all-slot",
+      "role": "count occupied NON-EGG slots -> $C8E9 (menu list size)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_45c4",
+      "addr": "$0a:$45c4",
+      "class": "all-slot",
+      "role": "build display list $C0D8[] of non-egg slot indices (SetFldA_459c)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_4d66",
+      "addr": "$0a:$4d66",
+      "class": "all-slot",
+      "role": "count occupied non-egg (SetFldA_4d4d, second menu)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_4d9f",
+      "addr": "$0a:$4d9f",
+      "class": "all-slot",
+      "role": "build non-egg display list (sibling)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_5055",
+      "addr": "$0a:$5055",
+      "class": "party-only",
+      "role": "party loop cp $03 over positions (party display)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_50d2",
+      "addr": "$0a:$50d2",
+      "class": "all-slot",
+      "role": "count with egg/mode filter (breeding-eligible list)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_5112",
+      "addr": "$0a:$5112",
+      "class": "all-slot",
+      "role": "build filtered display list (sibling)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_538c",
+      "addr": "$0a:$538c",
+      "class": "party-only",
+      "role": "breeding guardrails: parent level>=10; if $CA8D==2 both parents must be flag $02 (cannot empty the party)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_53a7",
+      "addr": "$0a:$53a7",
+      "class": "party-only",
+      "role": "breeding guardrail flag==$02 checks (both parents)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_5960",
+      "addr": "$0a:$5960",
+      "class": "all-slot",
+      "role": "count occupied EGG slots (SetFldA_5947 \u2014 egg/hatch menu)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_5999",
+      "addr": "$0a:$5999",
+      "class": "all-slot",
+      "role": "build egg display list (sibling)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_620b",
+      "addr": "$0a:$620b",
+      "class": "all-slot",
+      "role": "count (Plus/quality-filtered list)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "jr_00a_6244",
+      "addr": "$0a:$6244",
+      "class": "all-slot",
+      "role": "build that display list (sibling)"
+    },
+    {
+      "file": "bank_00a.asm",
+      "label": "label6518",
+      "addr": "$0a:$6518",
+      "class": "all-slot",
+      "role": "walk 20 via GetMonsterDataPtr (cp $14 loop) \u2014 menu-wide per-slot read"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_4cd4",
+      "addr": "$12:$4cd4",
+      "class": "all-slot",
+      "role": "farm-list count (filtered)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_4d11",
+      "addr": "$12:$4d11",
+      "class": "all-slot",
+      "role": "farm-list build (sibling)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_553e",
+      "addr": "$12:$553e",
+      "class": "all-slot",
+      "role": "farm-list count (filtered)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_556e",
+      "addr": "$12:$556e",
+      "class": "all-slot",
+      "role": "farm-list build (sibling)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_55ab",
+      "addr": "$12:$55ab",
+      "class": "all-slot",
+      "role": "farm-list count (filtered)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_55e8",
+      "addr": "$12:$55e8",
+      "class": "all-slot",
+      "role": "farm-list build (sibling)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_5695",
+      "addr": "$12:$5695",
+      "class": "all-slot",
+      "role": "farm-list count (filtered)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_56dc",
+      "addr": "$12:$56dc",
+      "class": "all-slot",
+      "role": "farm-list build (sibling)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_5add",
+      "addr": "$12:$5add",
+      "class": "all-slot",
+      "role": "farm-list count (filtered)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_5b28",
+      "addr": "$12:$5b28",
+      "class": "all-slot",
+      "role": "farm-list build (sibling)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_5e0b",
+      "addr": "$12:$5e0b",
+      "class": "all-slot",
+      "role": "farm-occupancy probe: any flag==$01 slot? (dialogue branch)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_5e27",
+      "addr": "$12:$5e27",
+      "class": "all-slot",
+      "role": "SLEEP POOL probe: walk SRAM $B124 20 slots via EnableSRAM per-slot in-use read"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_5edf",
+      "addr": "$12:$5edf",
+      "class": "all-slot",
+      "role": "farm-list count (filtered)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_5f00",
+      "addr": "$12:$5f00",
+      "class": "all-slot",
+      "role": "farm-list build (sibling)"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_5f58",
+      "addr": "$12:$5f58",
+      "class": "all-slot",
+      "role": "walk 20 via GetMonsterDataPtr (cp $14) \u2014 farm/library per-slot read"
+    },
+    {
+      "file": "bank_012.asm",
+      "label": "jr_012_6bfa",
+      "addr": "$12:$6bfa",
+      "class": "farm-write",
+      "role": "egg receive first-empty scan (head of the jr_012_6c0a creation path)"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_475b",
+      "addr": "$15:$475b",
+      "class": "all-slot",
+      "role": "menu count walk (cp $14)"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_47a9",
+      "addr": "$15:$47a9",
+      "class": "all-slot",
+      "role": "menu list-build walk (sibling)"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_4cdb",
+      "addr": "$15:$4cdb",
+      "class": "all-slot",
+      "role": "menu count walk"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_4d14",
+      "addr": "$15:$4d14",
+      "class": "all-slot",
+      "role": "menu list-build walk (sibling)"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_54d8",
+      "addr": "$15:$54d8",
+      "class": "all-slot",
+      "role": "menu count walk"
+    },
+    {
+      "file": "bank_015.asm",
+      "label": "jr_015_5511",
+      "addr": "$15:$5511",
+      "class": "all-slot",
+      "role": "menu list-build walk (sibling)"
+    },
+    {
+      "file": "bank_016.asm",
+      "label": "SaveBrd_41ff",
+      "addr": "$16:$41ff",
+      "class": "staging",
+      "role": "breeding parent field sum: reads field at +$0BA4 (staging slot $14) and +$0BA4+$95 (slot $15) \u2014 parents addressed as array slots 20/21"
+    },
+    {
+      "file": "bank_016.asm",
+      "label": "jr_016_401c",
+      "addr": "$16:$401c",
+      "class": "farm-write",
+      "role": "breeding offspring first-empty scan (feeds jr_016_402d)"
+    },
+    {
+      "file": "bank_018.asm",
+      "label": "jr_018_459b",
+      "addr": "$18:$459b",
+      "class": "all-slot",
+      "role": "trade menu count walk (cp $14)"
+    },
+    {
+      "file": "bank_018.asm",
+      "label": "jr_018_470a",
+      "addr": "$18:$470a",
+      "class": "all-slot",
+      "role": "trade menu walk (cp $14)"
+    },
+    {
+      "file": "bank_018.asm",
+      "label": "jr_018_4763",
+      "addr": "$18:$4763",
+      "class": "all-slot",
+      "role": "trade menu walk (cp $14)"
+    },
+    {
+      "file": "bank_050.asm",
+      "label": "jr_050_62c4",
+      "addr": "$50:$62c4",
+      "class": "all-slot",
+      "role": "exp-walker loop tail: per-slot ReadBtl_689e + $CAC0++ + stride (body of CallBtl_61e2)"
+    },
+    {
+      "file": "bank_050.asm",
+      "label": "jr_050_6318",
+      "addr": "$50:$6318",
+      "class": "all-slot",
+      "role": "post-battle level-up scan b=0..$13 over CmpBtl_6383 (runs AFTER the party-list members are processed)"
+    },
+    {
+      "file": "bank_051.asm",
+      "label": "SetBtlS_5e34",
+      "addr": "$51:$5e34",
+      "class": "all-slot",
+      "role": "count EMPTY slots (capacity check before join)"
+    },
+    {
+      "file": "bank_051.asm",
+      "label": "SetBtlS_63e8",
+      "addr": "$51:$63e8",
+      "class": "farm-write",
+      "role": "battle JOIN first-empty scan; joined monster built via bank $14, appended to party list if $CA8D<3 + canonicalize"
+    },
+    {
+      "file": "bank_051.asm",
+      "label": "jr_051_5f53",
+      "addr": "$51:$5f53",
+      "class": "all-slot",
+      "role": "count with egg-flag/mode filter ($C8E4 bit0 XOR +$63)"
+    },
+    {
+      "file": "bank_051.asm",
+      "label": "jr_051_5f9a",
+      "addr": "$51:$5f9a",
+      "class": "all-slot",
+      "role": "build that display list (sibling)"
+    },
+    {
+      "file": "bank_055.asm",
+      "label": "SaveB55_53f6",
+      "addr": "$55:$53f6",
+      "class": "farm-write",
+      "role": "debug menu monster spawner ($1402 caller)"
+    }
+  ],
+  "mutation_paths": [
+    {
+      "path": "script give $29",
+      "where": "$04 label4_5c14",
+      "action": "create @ first-empty ($DA14); party-list append if $CA8D<3"
+    },
+    {
+      "path": "script give $28",
+      "where": "$04 label4_5f9a/CheckItemData",
+      "action": "create @ first-empty; storage only"
+    },
+    {
+      "path": "egg receive",
+      "where": "$12 jr_012_6c0a",
+      "action": "create @ first-empty; +$63:=1 (egg)"
+    },
+    {
+      "path": "battle join",
+      "where": "$51 SetBtlS_63e8 + $50 jr_050_63ea",
+      "action": "create @ first-empty (join-EID via boss redirect $1406); party-list append if room"
+    },
+    {
+      "path": "breeding (2-parent)",
+      "where": "$0a ~$538c flow",
+      "action": "parents copied to staging $D665/$D6FA + both DELETED; offspring created later @ first-empty ($16 jr_016_402d, slot persisted in $CA40); auto-save"
+    },
+    {
+      "path": "breeding (NPC mate)",
+      "where": "$0a ~$4f00 flow (site 1792)",
+      "action": "your parent -> staging $D665 + deleted; mate synthesized from EID $C8F7/8 into slot $15"
+    },
+    {
+      "path": "release (part with)",
+      "where": "$12 ~$63e0 (line 4599)",
+      "action": "delete (in-use:=0) + canonicalize"
+    },
+    {
+      "path": "link trade",
+      "where": "$15 jr_015_5b2c (send), $18 ~$4c50 (receive)",
+      "action": "send: copy -> staging $D665, delete; receive: staged $D6FA -> slot 19 after canonicalize; seen-bit set; forced SRAM saves (anti-clone)"
+    },
+    {
+      "path": "sleep",
+      "where": "$12 SetItem_5fde (init) + $12 transfer loops; $07 scans",
+      "action": "one-way archival: records -> SRAM pool $B124 (20x$95); $CA41 bit7 gates"
+    },
+    {
+      "path": "party drop/pick",
+      "where": "$0a ~$6de6 commit",
+      "action": "flag flips $02<->$01 over the $C0D8 4-entry working set; party list rebuilt from flags; canonicalize + battle reload ($0105 + $0103)"
+    },
+    {
+      "path": "canonicalizer compaction",
+      "where": "$01 ReadPartySlotInfo",
+      "action": "MOVES records (149-B swaps) to close holes; remaps party list; 22 call sites"
+    }
+  ],
+  "gmdp_call_sites": 326,
+  "manual_stride_sites": 56
+}

@@ -725,6 +725,8 @@ Jump_014_456f:
     ret
 
 
+; Slot-init sub-command $5E (S56): set EGG flag (+$63 := $01) for slot
+; [$DA14]. Eggs get no exp and populate the egg-menu filters.
 Jump_014_4586:
     ld hl, $cb24
     ld a, [$da14]

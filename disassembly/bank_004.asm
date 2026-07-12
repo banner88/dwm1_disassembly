@@ -3361,6 +3361,8 @@ jr_004_5c05:
 
     ret
 
+; Script give (S56): first-empty scan -> $DA14 -> bank $14 builder; if
+; party count $CA8D < 3 the new slot is ALSO appended to the party list.
 label4_5c14:
     ld a, [wScriptCounter]
     add $01

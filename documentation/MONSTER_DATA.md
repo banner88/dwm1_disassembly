@@ -699,3 +699,159 @@ Slot 224 of vanilla `$400b` is the shared "?????    ?????" placeholder (`$53C4`)
 so `[base+224*2]` = the entry), and `GorbunokRecipeLine` = `"Snaily   BattleRex"` in the correct
 two-9-char-field format (the S32-staged single-space string was mis-columned). `patches/bank_04d.asm`;
 id≥224-gated so ids 0–223 byte-identical. Built-ROM verified `[mode0base+224*2]→GorbunokRecipeLine`.
+
+## Party/farm boundary semantics + monster-array access map (CF1, S56)
+
+The complete access map for the party/storage monster array — the gating RE
+for the Cold Farm arc (CF2/CF3). Machine-readable twin:
+`extracted/monster_walkers.json` (generator `tools/map_monster_walkers.py`,
+self-checking against the source). Everything below was read from the
+disassembly this session; addresses are vanilla.
+
+### Membership model (the headline answer)
+
+Party membership is **dual-represented and NOT positional**:
+
+1. **Per-record in-use flag at +$00**: `$00` = empty, `$01` = farm/storage,
+   `$02` = party member. This tri-state is what the battle engine trusts
+   (exp shares fork on `cp $02` in the exp walker `$50:$61E2`).
+2. **Party order list**: `$CA8D` = party count (0-3); `$CA8E-$CA90` = three
+   slot indices into the 20-slot array (`$FF` = empty entry). This is what
+   UI ordering, battle position mapping, and script party access use.
+
+Party members can sit at ANY array index; the list points at them. The two
+representations are synced by the **canonicalizer `ReadPartySlotInfo`
+(`$01:$46F6`, bank $01 dispatch entry 5, 22 call sites across 8 banks — the
+standard "roster changed" epilogue)**, which: clears list entries pointing at
+empty slots (+ shifts the list up), normalizes every occupied flag to `$01`,
+re-marks listed slots `$02` (`RetIfSlotInvalid $01:$480D`), **compacts the
+array** (149-byte record swaps toward slot 0 via `SaveRegsAndSetupDE
+$01:$4819`, using an old→new index map built at `$C0D8`), remaps the list
+through that map, recounts `$CA8D`, and reloads follower art (entry 6).
+Because of the compaction, occupied slots are contiguous from slot 0 after
+any canonicalize — but party members are NOT necessarily slots 0-2.
+
+The inverse direction exists too: the party drop/pick commit
+(`$0A:~$6DE6`) rebuilds the LIST from the FLAGS over a 4-entry working set
+(3 party + candidate at `$C0D8-$C0DB`), then canonicalizes and reloads
+battle data (`$0105` + `$0103`).
+
+`$DA15-$DA17` = battle-position → slot cache, filled from the party list at
+battle setup (`$51:LoadBtlS_40d1` via bank $01 entry 7). `$DA12-$DA14` =
+give/creation parameter block (EID lo/hi, target slot).
+
+### Record fields established this session
+
+| Offset | Size | Field | Evidence |
+|--------|------|-------|----------|
+| +$00 | 1 | In-use/side flag: $00 empty / $01 farm / $02 party | exp walker fork; canonicalizer writes; drop/pick flips |
+| +$0C | 9 | Nickname (the old "+$14 Name data 1 B" row was the LAST byte of this field) | status render reads `$CACD`; farm detail copies 9 B to `$CA42` scratch |
+| +$29 | 8 | $FF-terminated ID list A (semantics UNVERIFIED — sanitized by `ScanPartySlotTable`) | `$01:$46A5` walks it |
+| +$31 | 25 | $FF-terminated ID list B (semantics UNVERIFIED — same sanitizer, compacted in place) | `$01:$46BE` |
+| +$4A | 1 | Battle status byte; **bit7 = KO/incapacitated** (excluded from exp + eligible-count; bulk-cleared post-battle/heal) | exp walker; `CmpBtl_62dd`; `IteratePartySlots20` clears |
+| +$63 | 1 | **Egg flag** ($01 = egg) | set by egg-receive `$12:jr_012_6c0a` + builder sub-cmd $5E (`$14:Jump_014_4586`); exp walker skips ≠0; egg/non-egg menu filters test it |
+
+### Battle exp distribution (vanilla, `$50:$61E2`)
+
+Total battle exp lives in `$DD23-$DD25` (24-bit). Eligible party count b =
+listed members that are not `$FF` and not KO'd (+$4A bit7). Then ONE walk
+over all 20 slots pays out:
+
+- flag `$02` (party): + total/b (rounding quirk: b=3 → +1, b=1 → −1, b=2 exact)
+- flag `$01` (farm): + **total/16 each** (computed once at walker head)
+- skipped entirely: empty, egg (+$63≠0), KO'd party member, level 99 (`$63`),
+  level ≥ cap (+$4C)
+- clamp at 9,999,999 (`$98967F`)
+
+Level-ups then run in a separate state: party list members FIRST
+(`$CA8E/8F/90` through `CmpBtl_6383`), then the all-20 scan `jr_050_6318`
+(so farm monsters level immediately post-battle in vanilla). Bank $13
+entries: 0 = next-level threshold fetch → HRAM `$D5-$D7`, 1 = snap exp to
+level, 2 = apply level-up stat gains ($C8D0 = hit-cap flag).
+
+**Cold Farm consequence**: the party/farm fork ALREADY exists at exactly one
+site each for exp (the `cp $02` in the walker) and leveling (the all-20 scan
+after the party list). CF2's "party-only + pending-exp accumulator" is a
+retarget of these two sites, not new plumbing.
+
+### Staging pseudo-slots $14/$15 ($D665/$D6FA) — NEW
+
+`GetMonsterDataPtr` masks with `$7F`, so indices $14/$15 address two
+149-byte pseudo-slots immediately after slot 19 ($D665-$D6F9, $D6FA-$D78E).
+They are inside the `$C8EA-$D9E9` save image. Uses found:
+
+- **Breeding**: both parents are copied to slots 20/21 and DELETED from the
+  array before bank $16 runs; breeding math indexes parents as `field+$0BA4`
+  and `+$0BA4+$95` (`$16:SaveBrd_41ff`). Two-parent flow at `$0A:~$5877`;
+  NPC-mate flow at `$0A:~$4F00` (mate synthesized from EID `$C8F7/8`
+  directly into slot 21). Offspring is inserted later at first-empty by
+  `$16:jr_016_402d`, which persists the chosen slot in **`$CA40`** for the
+  script-side finalizer (`$04:label4_64c2`). Breeding force-saves
+  (`SaveGameState`) and warps to gate 8 (Starry Shrine).
+- **Link trade**: send = copy → slot 20 + delete (`$15:jr_015_5aa5` head);
+  receive = staged monster in slot 21 → seen-bit set for its species →
+  traded-away slot deleted → canonicalize → staged record copied into slot
+  19 → canonicalize again → forced partial SRAM saves (`$18:~$4C50`,
+  anti-clone: party list + seen bits + whole array via `SavePartyToSRAM`).
+- **Menus**: bank $15 initializes slot 20 as scratch (`$CAC0:=$14`,
+  `$D665:=0`) and views slot 21 (`$CAC0:=$15`) for the incoming-trade
+  preview. Bank $03's link viewer navigates slot indices up to `$16` (BCD).
+
+### Roster mutation paths (create/delete/move)
+
+All record creation funnels through the bank $14 builder `label14_40b4`
+(`$1402` dispatch; zero-fills the slot, $FF-fills the +$29/+$31 lists,
+copies enemy-stats-derived fields, rolls stats 80-100%, sets in-use `$01`):
+
+| Path | Where | Behavior |
+|------|-------|----------|
+| Script give $29 | `$04:label4_5c14` | first-empty → `$DA14` → build; if `$CA8D`<3 ALSO appends to party list (`$CA8D`++) |
+| Script give $28 | `$04:label4_5f9a` | first-empty → build; storage only |
+| Egg receive | `$12:jr_012_6c0a` | first-empty → build → +$63:=1; EID pair from table `$12:$6D2B` by egg id (event flags $0050-$0057) |
+| Battle join | `$51:SetBtlS_63e8` scan + `$50:jr_050_63ea` (fight→join EID via boss redirect `$1406`) | first-empty → build → party-list append if room → canonicalize |
+| Breeding offspring | `$16:jr_016_402d` (+`$CA40` persist) | first-empty → zero-fill → bank $16 fills |
+| Debug spawner | `$55:SaveB55_53f6` | first-empty-style build (debug menus) |
+| Release ("part with") | `$12:~$63E0` | in-use:=0 + canonicalize |
+| Trade send | `$15:jr_015_5aa5` | copy → slot 20, in-use:=0 |
+| Trade receive | `$18:~$4C50` | slot 21 → slot 19 insert + forced saves |
+| Sleep | `$12:SetItem_5fde` init (`$CA41` bit7 gate, zero `$B124` ×$BA4) + transfer loops; scanned by bank $07 | one-way WRAM→SRAM archival |
+| Compaction | `$01:ReadPartySlotInfo` | records MOVE between slots on every canonicalize |
+
+Breeding guardrails (`$0A:~$538C`): parent level ≥ 10; if `$CA8D`==2 both
+selected parents must be flag `$02` — the party can never be emptied.
+
+### Walker classification summary
+
+44 `ld [$CAC0], a` writer sites (the S55 count — each heads an access path)
++ 60 register/stride walkers, all classified in
+`extracted/monster_walkers.json`: totals all-slot=50, single-slot=29,
+farm-write=12, party-only=8, staging=5. The dominant patterns:
+
+- **Menu banks $0A/$12/$15/$18** never iterate GetMonsterDataPtr per
+  cursor move; they pre-build display lists of slot indices at `$C0D8`
+  (count walker + list-build walker pairs, filtered by egg flag/mode) and
+  select via `$CAC0 := $C0D8[cursor]`.
+- **Single-slot readers** (326 GetMonsterDataPtr call sites) overwhelmingly
+  take the slot from `[$CAC0]`; classifying the 44 writers therefore
+  classifies them.
+- **The only all-slot WRITERS** are the canonicalizer (compaction), the exp
+  walker (+$4D adds), `IteratePartySlots20` (+$4A clears), and
+  `ScanPartySlotTable` (list sanitize) — everything else mutates single
+  slots chosen via `$DA14`/cursor.
+
+### Cold Farm implications (feeds CF2/CF3)
+
+1. Party is list+flag, not position: an SRAM farm design must either keep
+   party records in WRAM and remap `$CA8E-$CA90`, or hot-swap on
+   canonicalize. The canonicalizer is the single choke point for both
+   representations — 22 call sites, one body.
+2. The exp/level fork points are single-site (see above).
+3. First-empty scans (6 creation paths) and the menu list-builder pairs are
+   the farm READ/WRITE surface that must learn the new boundary; they share
+   two idioms (stride scan of +$00; `$C0D8` list build), so a redirected
+   helper covers them mechanically.
+4. Staging slots 20/21 and their breeding/trade flows are WRAM-resident and
+   save-imaged; they are independent of where farm slots live.
+5. The sleep pool proves the "monsters in SRAM, scanned via EnableSRAM per
+   access" pattern already ships in vanilla (bank $07/$12) — CF3 can copy
+   that access discipline.

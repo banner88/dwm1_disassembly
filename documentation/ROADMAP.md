@@ -202,7 +202,8 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 
 ### Arc COLD FARM — farm slots → SRAM, exp via chokepoint (editor-era WRAM strategy; scoped S55)
 The structural fix for ALL custom-WRAM scarcity, replacing the retired cap-18
-plan. User-designed (S55): party stays hot (slots 0-2 WRAM); farm/eggs become
+plan. User-designed (S55): party stays hot (slots 0-2 WRAM — S56: vanilla
+party is NOT positional; CF3 must add a party-first sort, see CF1); farm/eggs become
 SRAM-resident like the existing sleep pool ($B124 — vanilla's own precedent:
 bank $07 already scans it in place with EnableSRAM per access). Per-battle exp
 loops re-bound to party-only + a pending-exp accumulator; the accumulator
@@ -220,17 +221,43 @@ In-gate farm touches (give/full-check) read occupancy only — exp staleness
 invisible. Farm level-ups apply at the chokepoint ("grew while you were away").
 Prize: ~2.5 KB contiguous WRAM freed ($CBEB-$D664) + the S54 collision class
 dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
-- [ ] **CF1 — RE: party/farm boundary semantics.** Is party always slots 0-2?
-      What marks membership? Enumerate every empty-slot WRITER scanner (all
-      funnel into bank $14 initializers via `$da14` — writers found S55:
-      bank_004 give/item, bank_00a release+$15-special, bank_012 ~7262) and
-      every farm READ path. *Accept:* a written classification of all 44
-      walkers (party-only / all-slot / farm-write) in MONSTER_DATA.
+- [x] **CF1 — RE: party/farm boundary semantics.** DONE S56 (byte-neutral).
+      Party is NOT positional: dual representation = in-use flag +$00
+      ($00/$01 farm/$02 party) + party list $CA8D/$CA8E-$CA90, synced by the
+      canonicalizer ReadPartySlotInfo ($01 entry 5, 22 call sites) which
+      also COMPACTS the array (records move). Exp: party = total/eligible,
+      farm = total/16 each — the fork is ONE `cp $02` site in the exp
+      walker $50:$61E2. Egg flag +$63; KO bit +$4A.7; staging pseudo-slots
+      $14/$15 @ $D665/$D6FA (breeding/trade/menus). All 44 $CAC0 writers +
+      60 register walkers classified: MONSTER_DATA "Party/farm boundary
+      semantics" + extracted/monster_walkers.json (self-checking generator).
+      ⚠ DESIGN NOTE for CF3: the arc premise "party stays hot in slots 0-2"
+      needs a party-first sort added to the canonicalizer (or index
+      remapping) — vanilla does not keep party at 0-2. The "$15-special"
+      (S55) turned out to be trade/breeding STAGING, not a release variant.
 - [ ] **CF2 — exp accumulator + chokepoint drain.** *Accept:* farm monster
       levels correct at farm UI after multi-battle gate runs in SameBoy.
 - [ ] **CF3 — farm storage → SRAM + path redirects.** *Accept:* full
       drop/pick/breed/give/library loop in SameBoy; WRAM $CBEB-$D664 free per
       audit_wram; custom buffers relocated into it; ≤14 rule deleted from docs.
+      S56 amendments (from CF1):
+      (a) ORDER: the party-first sort in the canonicalizer lands FIRST — the
+      freed range only means "slots 3-19" once that invariant exists.
+      (b) THE REDIRECTS ARE THE GATE, the space is NOT incrementally usable:
+      every all-slot walker reads the +$00 flags of slots 3-19 (first-empty
+      scans, $C0D8 list builders, exp/level walkers, occupancy counts); one
+      unredirected first-empty scan reading custom bytes as flags = a 149-B
+      record written into custom state (the S54 crash class). Two shared
+      idioms → two redirected helpers cover most sites (see
+      monster_walkers.json).
+      (c) Trade-receive inserts at HARDCODED slot 19 ($D5D0, $18:~$4CB0
+      copy loop) — inside the freed range; redirect with the trade flow.
+      (d) OPEN USER DECISION before CF3 starts: the freed range sits inside
+      the $C8EA-$D9E9 save image AND the SavePartyToSRAM block copy
+      ($CAC1 ×$0BA4 → $A1FB), so custom state placed there PERSISTS across
+      save/load — opposite of the S55 transient-counters semantics. Choose:
+      exploit it (persistent custom state), mask it out of the save copy,
+      or shrink the save copy to party slots.
 
 ### Arc LAYER A′ — vanilla-room coexistence (revised S55: vanilla rooms KEPT as postgame)
 User decision (S55): the romhack occupies a NEW world (custom rooms); most
