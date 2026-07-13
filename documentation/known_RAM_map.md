@@ -193,6 +193,13 @@
                  $D9A0-$D9A2 (room $6C, unique). See ROOM_DATA_FORMAT.md.
    1:D99B  ~32   Event flag bitfield. Flag BC → byte $D99B+(BC/8), bit (BC&7).
                  182 unique flags used. Set by cmd $03, cleared by $02, checked by $00/$01.
+   1:D9C8   3    [CF2, S57] wPendingFarmExp — pending farm exp, 24-bit LE,
+                 clamp $98967F. Fed per battle by bank $50 CF2FarmShareDivert
+                 (total/16); drained by bank $73 entry 0 at the bank-$0B
+                 map-change commit when the destination is non-gate. Carved
+                 from the clean event-flag block (flags $0168-$017F RETIRED —
+                 EVENT_FLAGS.md); inside the save image ON PURPOSE (in-gate
+                 save rooms exist). Vanilla never touches these bytes.
    1:D988   1    Current step in Labyrinth (part of step counter range above)
                  From the initial room:
                    RIGHT (north one): Mimic

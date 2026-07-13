@@ -60,8 +60,17 @@ labelb_4015:
     ; Apply pending map change: copy destination to active
     ld a, [wWarpGateId]                   ; destination map_type (set by exit checker)
     ld [wMapID], a                  ; $C968 — now the active map
-    ld a, [wWarpFlag]                   ; destination gate flag
-    ld [wInGateworld], a            ; $C969 — gate/normal mode
+    ; [CF2] SAME-SIZE 6-byte window replacement ($4020-$4025). Vanilla:
+    ;   ld a,[wWarpFlag] / ld [wInGateworld],a
+    ; Bank $73 entry 0 performs that displaced store, then drains
+    ; wPendingFarmExp when the destination is non-gate (wWarpFlag = 0) — the
+    ; Cold-Farm CF2 chokepoint (bank_073.asm). A/BC are dead here (A reloaded
+    ; below, BC = $4001 from this entry's own rst dispatch either way); HL is
+    ; reloaded on the next line; DE is not consumed before its next fresh load.
+    ld hl, $7300                    ; far-call bank $73 entry 0
+    rst $10
+    nop
+    nop
 
 jr_00b_4027:
     ld hl, $1605	; rst $10: bank $16, entry 5 — tileset prep function

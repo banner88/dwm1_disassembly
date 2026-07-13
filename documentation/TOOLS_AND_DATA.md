@@ -94,7 +94,9 @@ editor (snapshot → regen → diff).
 $7E,$7F→$7C,$7A,$79), `build.py`.
 
 ### Guardrail
-`verify_integrity.py` — run at every session start/end.
+`verify_integrity.py` — run at every session start/end. (S57:
+`bank_073.asm` added to `PATCH_NEW_FILES` — the CF2 drain bank; the
+compiler's builder parses these lists, so staging stays single-sourced.)
 
 ### Core pipeline (editor sits on these)
 `tools/build_project.py` + **`editor2/` package** (✅ new S53 — the headless
@@ -107,8 +109,12 @@ pre-rgbasm bank accounting → splice → stage/`make`/restore →
 `formats.py` (byte formats, doc-cited), `textenc.py`, `scriptgen.py`
 (bank_004-verified param counts), `validators.py` (KEY_LESSONS rules),
 `emitters.py` (registry), `compiler.py`, `builder.py`. Regression:
-`editor2/example-project/` == the S53 reference patched build, byte-identical;
-`editor2/tests/test_compiler.py` 18/18 (`--rom` builds both ROMs). Owning doc:
+`editor2/example-project/` == the current reference patched build,
+byte-identical (re-pinned S57, md5 `6c41f0d8…` **patched** — see
+PROJECT_COMPILER §1);
+`editor2/tests/test_compiler.py` 18/18 (`--rom` builds both ROMs).
+S57 fixes: `project.py FLAG_SAFE_RANGES` corrected to the per-byte-audited
+pool [(0x0158,0x0167),(0x01E0,0x01EF)] (EVENT_FLAGS; DOC_AUDIT S57). Owning doc:
 **PROJECT_COMPILER.md**) ·
 `compile_script.py` (✅ --test passes; ⚠️ S53: its OPCODES table says `set_bgm`($41)=2 params — handler `$04:$669D` consumes ONE; fix together with decompile_script.py's PARAM_COUNTS copy + round-trip re-test, see PROJECT_COMPILER.md §8) · `decompile_script.py` (✅) ·
 `compress_tiles.py` / `decompress_tiles.py` (✅ roundtrip) ·

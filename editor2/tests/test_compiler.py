@@ -24,7 +24,7 @@ from editor2.core import validators as V
 from editor2.core.project import Project, ProjectError
 
 EXAMPLE = os.path.join(REPO, 'editor2/example-project/project.json')
-REFERENCE_MD5 = "026970d361f6afe03f28e29fa6e631f6"   # S55v2 reference patched build (relocation + init/flag fixes)
+REFERENCE_MD5 = "6c41f0d86ab5b41ca5e160e1c166f3d3"   # S57 reference patched build (S55v2 + CF2 pending-exp/drain patches)
 
 PASS = 0
 

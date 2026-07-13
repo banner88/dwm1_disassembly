@@ -13,9 +13,14 @@ import os
 from . import formats as F
 
 # EVENT_FLAGS.md "Free Flag Slots" — safe+persistent ranges the allocator may
-# use, and the collision zones it must skip (script-written named variables).
-FLAG_SAFE_RANGES = [(0x0158, 0x017F), (0x0188, 0x018F), (0x01E0, 0x023F),
-                    (0x0248, 0x0257), (0x0260, 0x026F)]
+# use. CORRECTED S57: the previous ranges were derived from script analysis
+# only and included bytes with live ENGINE literal refs ($D9CC, $D9D9-$D9E2,
+# $D9E7-$D9E8) and script-referenced bytes ($D9DF/$D9E0/$D9E2/$D9E4/$D9E5/
+# $D9E8) — allocating there corrupts named engine variables. Per-byte audit
+# (engine literals + all_scripts.json) leaves exactly $D9C6-$D9C7 and
+# $D9D7-$D9D8 clean. Flags $0168-$017F ($D9C8-$D9CA) are RETIRED: those bytes
+# are wPendingFarmExp (CF2). See EVENT_FLAGS.md "Free Flag Slots".
+FLAG_SAFE_RANGES = [(0x0158, 0x0167), (0x01E0, 0x01EF)]
 STEP_COUNTER_BASE = 0xDE74          # S55 relocation: vetted block past the audio ceiling ($DE2B)
 WRAM_REGION_SIZE_DEFAULT = 7        # keeps wRoomRecScratch pinned at $DE7B
 

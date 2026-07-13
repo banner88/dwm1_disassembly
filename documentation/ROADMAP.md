@@ -235,8 +235,25 @@ dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
       needs a party-first sort added to the canonicalizer (or index
       remapping) — vanilla does not keep party at 0-2. The "$15-special"
       (S55) turned out to be trade/breeding STAGING, not a release variant.
-- [ ] **CF2 — exp accumulator + chokepoint drain.** *Accept:* farm monster
-      levels correct at farm UI after multi-battle gate runs in SameBoy.
+- [x] **CF2 — exp accumulator + chokepoint drain — DONE S57,
+      USER-CONFIRMED 2026-07-13.** Accept test passed: farm exp/levels
+      correct at the farm UI after a multi-battle gate run; save in an
+      in-gate save room → reload → exit gives the FULL run's exp (pending is
+      PERSISTENT: $D9C8-$D9CA inside the save image, because in-gate save
+      rooms exist — FAQ); party level-ups + town behavior unchanged.
+      As built (owning section MONSTER_DATA "CF2 as built"): bank $50
+      `CF2FarmShareDivert` (same-size 14-B window at the exp-walker head)
+      zeroes the per-monster farm share and banks total/16 into
+      `wPendingFarmExp` — walker + post-battle level scan become farm-inert
+      with zero loop edits; NEW bank $73 entry 0 `CF2WarpCommitDrain`, hooked
+      at the bank-$0B RoomEntry0 map-change commit (same-size 6-B window),
+      pays + silently levels eligible farm monsters when the destination is
+      non-gate, using the vanilla $1300/$1302/$510d pair. Semantic deltas
+      accepted-pending-veto: payout at first non-gate transition (not per
+      battle; invisible — farm UI is town-only, vanilla farm level-ups are
+      silent); mid-run storage recruits get the full run's pending; drain
+      also fires entering in-gate special rooms (early, safe). Flag indices
+      $0168-$017F retired to the accumulator (EVENT_FLAGS).
 - [ ] **CF3 — farm storage → SRAM + path redirects.** *Accept:* full
       drop/pick/breed/give/library loop in SameBoy; WRAM $CBEB-$D664 free per
       audit_wram; custom buffers relocated into it; ≤14 rule deleted from docs.

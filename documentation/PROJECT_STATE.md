@@ -10,9 +10,62 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-11 (Session 56 — **CF1 party/farm boundary RE
-> complete. Byte-neutral session** — no ROM delta, verifier PASS 4/4, clean
-> build byte-perfect `1ca6579…`.)
+> Last verified: 2026-07-13 (Session 57 — **CF2 shipped: pending farm exp +
+> chokepoint drain. Verifier PASS 4/4** — clean build byte-perfect `1ca6579…`;
+> patched build (md5 `6c41f0d86ab5b41ca5e160e1c166f3d3`, **patched**, the new
+> compiler-regression reference) **USER-CONFIRMED 2026-07-13**.)
+>
+> Session 57 (2026-07-13 — **CF2: per-battle exp re-bound to party; farm exp
+> banked into a persistent accumulator, paid at the map-change commit.**)
+> **Implementation (3 patch sites + 1 new bank; MONSTER_DATA "CF2 as built"
+> is the owning section):** (1) `wPendingFarmExp` **$D9C8-$D9CA** (24-bit LE,
+> clamp $98967F) — carved from the S8-verified clean event-flag block, INSIDE
+> the save image ON PURPOSE: in-gate save rooms exist (FAQ), so pending must
+> survive save+reload; boot-cleared, new-game-zeroed, pre-CF2 saves load as 0.
+> Flag indices **$0168-$017F retired** from the allocator pool in exchange.
+> (2) Bank $50 same-size 14-B window at the exp walker head ($61FA):
+> `CF2FarmShareDivert` (67 B, tail nops) still runs the vanilla Div24x8To16
+> but banks total/16 into pending and ZEROES the per-monster farm share HRAM
+> $DB-$DD — the walker's farm branch and the post-battle all-20 level scan
+> become farm-inert with zero loop edits. (3) Bank $0B same-size 6-B window at
+> RoomEntry0's map-change commit ($4020): `ld hl,$7300 / rst $10` + 2 nop →
+> NEW **bank $73** entry 0 `CF2WarpCommitDrain` does the displaced
+> wWarpFlag→wInGateworld store, then, when the DESTINATION is non-gate
+> (wWarpFlag=0) and pending≠0, pays each eligible farm monster (flag $01, not
+> egg +$63, level≠99, level<cap) the full pending and levels it with the
+> IDENTICAL silent vanilla pair the post-battle farm scan uses
+> ($1300 threshold / $1302 gains / $510d apply — all context-free, only
+> [$CAC0]; nested rst $10 = vanilla precedent, bank $50 does it). [$CAC0]
+> saved/restored. **Semantic deltas (user to veto in test):** farm
+> exp/levels land at the first non-gate transition, not per battle (invisible
+> — farm UI is town-only, and vanilla farm level-ups are SILENT: the
+> party-list pass gets the display state, the all-20 scan is the $1302+$510d
+> pair with no message — code-verified); mid-run storage recruits get the
+> FULL run's pending (slightly generous); drain also fires entering in-gate
+> special rooms (wWarpFlag=0) — an early payout, semantically safe (vanilla
+> paid farm mid-gate every battle).
+> **Validation:** emitted bytes decoded at all 3 sites (sm83dis);
+> divert+drain byte-executed in a mini SM83 interp (accumulate ×2, clamp at
+> 9,999,999, multi-level drain, egg/99/cap/party/empty skips, gate-dest
+> passthrough, zero-pending early-out — all pass). Compiler regression
+> re-pinned: compat build == the S57 hand-staged patched build md5-equal
+> (`6c41f0d8…`, **patched**), 18/18 `--rom` tests green; old reference
+> `026970d3…` (patched) historical.
+> **⚠ FLAG-POOL DEFECT found + fixed in passing:** EVENT_FLAGS' "broader safe
+> ranges" (and `editor2/core/project.py FLAG_SAFE_RANGES`) were script-only
+> analysis — per-byte audit vs engine literals + all_scripts.json shows
+> $D9CC, $D9D9-$D9E2, $D9E4-$D9E5, $D9E7-$D9E8 are LIVE (engine named vars
+> and/or script-referenced). Truly clean persistent flag bytes: **$D9C6-$D9C7
+> + $D9D7-$D9D8** (32 flags after the CF2 retirement, not "~200").
+> EVENT_FLAGS rewritten in place; FLAG_SAFE_RANGES now
+> [(0x0158,0x0167),(0x01E0,0x01EF)]; DOC_AUDIT addendum + KEY_LESSONS S57.
+> **USER-CONFIRMED 2026-07-13 (`DWM-S57-CF2-TEST.gbc`):** farm exp up at the
+> farm UI after a multi-battle gate run; save in an in-gate save room →
+> reload → exit gives the FULL run's exp (persistence proven); party
+> level-ups/display unchanged; town walk clean. Semantic deltas above stand
+> un-vetoed.
+> **NEXT:** CF3 (order: party-first sort first; the open user decisions in
+> ROADMAP CF3 must be settled before it starts) or A′1 (mapID ≥$80 audit).
 >
 > Session 56 (2026-07-11 — **CF1: the monster-array access map. Byte-neutral;
 > deliverables = docs + tool + JSON + source comments only.**)
@@ -65,70 +118,8 @@
 > ROADMAP CF3 S56 amendments): save-persistence semantics of the freed
 > range $CBEB-$D664 (it is inside the save image + SavePartyToSRAM copy);
 > party-first sort vs index remapping.
-> **MID-SESSION CRASH POST-MORTEM (user test of the first S55 ROM): hard
-> crash on room entry + on scroll after loading an in-room save.** Root
-> cause: the old block was initialized by ADDRESS ACCIDENT (inside both the
-> boot clear — ClearAllWRAM stops at $DDFF — and the SRAM save image); $DE74
-> is inside neither → power-on garbage counters (the S53 crash mechanism,
-> resurrected) + wCustomRoomFlag no longer restored on load. Fixes (v2):
-> ClearAllWRAM `$1E00`→`$1EE0` (boot zeroes $C000-$DEDF; same-size operand
-> edit, single early-boot call site) and flag DERIVED := (wMapID ≥ $6B) every
-> movement frame at CopyCustomRoomRecord head (bank $71 template re-pinned
-> per §5; TEMPLATE_SIZE 0x71: 103→116). Load-in-room now shows step-0 content
-> — expected under transient semantics, not a bug. Full lesson: KEY_LESSONS
-> S55 ("vetted-unclaimed is NOT initialized" + "one variable per test ROM" —
-> the first S55 ROM wrongly stacked the never-user-tested S53 master-table
-> fix under the relocation; v2 delivers COMPAT first).
-> **What moved (patches/wram.asm; all refs were label-based → zero patch-bank
-> edits; template sha256 pins UNCHANGED):** step counters $D478→**$DE74**
-> (compiler region, STEP_COUNTER_BASE + example-project reserved hole
-> →0xDE78), wRoomRecScratch→**$DE7B**, wRoomEncFlag $DE83, wTameDelay $DE84,
-> wTameBGSave $DE85, wCustomRoomFlag→**$DE88**; $DE89-$DEDD reserved (85 B).
-> Regression md5 re-pinned (v2): S55v2 reference patched build
-> **`026970d361f6afe03f28e29fa6e631f6`** (compat) / fixed master-table build
-> **`fb6a96abd2b045c68234d74fcfcc76b5`** — historical, superseded: S53 pair
-> `3a5a514c…`/`f81d4ad8…`; mid-S55 pair `cc62b5…`/`8878ef…` (crashed, no
-> init/flag fixes). Test ROMs delivered: **`DWM-S55v2-compat-TEST-FIRST.gbc`**
-> (S53-user-tested table config + relocation/fixes — the isolating build)
-> and `DWM-S55v2-fixed-master-table.gbc` (adds the S53 table fix) — **both
-> user-confirmed working, 2026-07-10**.
-> **USER-CONFIRMED 2026-07-10** ("everything now works without issues", both
-> S55v2 deliverables): well entry, egg-give exit + scroll-up, save-in-room →
-> reload → scroll all work. This ALSO clears the S53 master-table fix's
-> test debt (first user run of the fixed-table config). Standing expected
-> behaviors: load-in-room shows step-0 content (transient counters); stored
-> monsters #15-16 still corrupt on custom-room transitions (≤14 rule). **NPC/exit buffers stayed at $D379-$D477** (inside monster slots
-> 14-15): ACCEPTED legacy hazard of the exploration overlay (user decision —
-> saves there are disposable); **≤14-occupied rule stands** for custom rooms
-> on the hand overlay.
-> **Why reduced (S55 vetting — full detail KEY_LESSONS S55 + wram_usage.json
-> regen, 51→34 gaps):** the S54 candidates were FALSE gaps — $C200-$C2FF =
-> attr decompression staging (every stream declares declen 256), $C300-$C4FF
-> = 512-B screen staging unit (bank $06 bulk copy $C500→$C300 ×$0200; both
-> blocks SRAM-save-copied — ARCHITECTURE's save table was right, the S54 read
-> of it was partial); $DD80-$DE2B = **AUDIO engine** (6 chan × 26 B +
-> scalars; known_RAM_map's "INFERRED battle structs" corrected); stack tops
-> $DFFF. $DE74-$DEDD was the only vetted block. **Retired alternative:** cap
-> monster slots 20→18 (reclaim $D53B-$D664 298 B; $00 in-use pads defuse all
-> 44 read-walkers; give scanner `label4_5c14` + full-check `label4_5f67`
-> located) — viable but retired as throwaway-path surgery; do NOT re-derive.
-> **New canonical discoveries:** farm SLEEP pool = second 20×$95 monster
-> array, SRAM-only at $B124-$BCC7 ($CA41 bit7; bank $07 scans it in place —
-> vanilla's own cold-storage precedent); SVBK census: five writes total in
-> the ROM → **WRAM banks 3-7 = 16 KB virgin** (docs: known_RAM_map); debug
-> mode (banks $55/$56/$59) owns ~10 exclusive WRAM bytes (exclusivity scan).
-> **Architecture decisions (user, S55):** vanilla rooms KEPT as postgame →
-> mapID ≥$80 audit in scope (custom room #22+), vanilla counter pool not
-> harvestable; parallel architecture (overlay = exploration, structural fixes
-> = compiler pipeline only); **Cold Farm arc** = editor-era WRAM strategy
-> (farm→SRAM, party-only exp + accumulator drained at the castle gate-exit
-> chokepoint — user-confirmed: all gate exits funnel there, Arena awards no
-> exp; ~2.5 KB freed; exp level-scan loop found at bank $50 `jr_050_6318`).
-> Full specs: ROADMAP Arc COLD FARM / Arc LAYER A′; EDITOR_DESIGN §1 S55
-> amendments.
-> (S55 NEXT superseded by S56 — see above.)
 >
-> (S54 + earlier blocks moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
+> (S55 + earlier blocks moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
 
 ---
 
@@ -176,6 +167,7 @@
 | 54 | Egg-give root cause: custom WRAM inside the monster array; audit_wram.py ships | known_RAM_map; KEY_LESSONS S54; ROADMAP Phase 0 |
 | 55 | WRAM relocation (reduced): counters/scratch/flags → $DE74; false-gap vetting (staging buffers, audio array, sleep pool, SVBK census); Cold Farm + Layer A′ arcs scoped; cap-18 retired | ROADMAP arcs; KEY_LESSONS S55; known_RAM_map; EDITOR_DESIGN §1; PROJECT_COMPILER |
 | 56 | CF1: party/farm boundary + monster-array access map (tri-state flag, party list $CA8D/$CA8E, canonicalizer+compaction, exp shares, egg/KO fields, staging slots $D665/$D6FA, 44 writers + 60 walkers classified) | MONSTER_DATA "Party/farm boundary"; extracted/monster_walkers.json; known_RAM_map; KEY_LESSONS S56 |
+| 57 | CF2 built (NOT user-tested): wPendingFarmExp $D9C8 (persistent), bank $50 farm-share divert, bank $73 drain at the bank-$0B map-change commit; flag-pool audit fix (safe = $D9C6-7 + $D9D7-8) | MONSTER_DATA "CF2 as built"; EVENT_FLAGS; known_RAM_map; KEY_LESSONS S57; ROADMAP CF2 |
 
 ---
 
@@ -220,9 +212,10 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $6A | New-species info high table (ids 224+) | `build_new_species.py` |
 | $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`) | hand-authored `patches/bank_071.asm` |
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables) | hand-authored `patches/bank_072.asm` |
+| $73 | Cold Farm systems (CF2 drain) | hand-authored `patches/bank_073.asm` |
 | $7E | Sprite overflow streams (battle + follower art) | `dwm/sprite_bank.py`, `bake_follower_overflow.py` |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A, $79) | `dwm/sprite_bank.py` order |
-| **Unallocated** | **$6B–$70, $73–$77, $79–$7A, $7C** (13 banks = 208 KB) + reserved $7F | — |
+| **Unallocated** | **$6B–$70, $74–$77, $79–$7A, $7C** (12 banks = 192 KB) + reserved $7F | — |
 
 ## Iron Rules
 

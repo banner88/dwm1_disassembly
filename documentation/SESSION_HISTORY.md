@@ -16,7 +16,74 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S54 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first: S55 → S11)
+
+> Session 55 (2026-07-10 — WRAM relocation, reduced form; block below moved
+> verbatim from PROJECT_STATE by S57 per the aging rule; it was retained
+> there without its own header, appended to the S56-era notes):
+> **MID-SESSION CRASH POST-MORTEM (user test of the first S55 ROM): hard
+> crash on room entry + on scroll after loading an in-room save.** Root
+> cause: the old block was initialized by ADDRESS ACCIDENT (inside both the
+> boot clear — ClearAllWRAM stops at $DDFF — and the SRAM save image); $DE74
+> is inside neither → power-on garbage counters (the S53 crash mechanism,
+> resurrected) + wCustomRoomFlag no longer restored on load. Fixes (v2):
+> ClearAllWRAM `$1E00`→`$1EE0` (boot zeroes $C000-$DEDF; same-size operand
+> edit, single early-boot call site) and flag DERIVED := (wMapID ≥ $6B) every
+> movement frame at CopyCustomRoomRecord head (bank $71 template re-pinned
+> per §5; TEMPLATE_SIZE 0x71: 103→116). Load-in-room now shows step-0 content
+> — expected under transient semantics, not a bug. Full lesson: KEY_LESSONS
+> S55 ("vetted-unclaimed is NOT initialized" + "one variable per test ROM" —
+> the first S55 ROM wrongly stacked the never-user-tested S53 master-table
+> fix under the relocation; v2 delivers COMPAT first).
+> **What moved (patches/wram.asm; all refs were label-based → zero patch-bank
+> edits; template sha256 pins UNCHANGED):** step counters $D478→**$DE74**
+> (compiler region, STEP_COUNTER_BASE + example-project reserved hole
+> →0xDE78), wRoomRecScratch→**$DE7B**, wRoomEncFlag $DE83, wTameDelay $DE84,
+> wTameBGSave $DE85, wCustomRoomFlag→**$DE88**; $DE89-$DEDD reserved (85 B).
+> Regression md5 re-pinned (v2): S55v2 reference patched build
+> **`026970d361f6afe03f28e29fa6e631f6`** (compat) / fixed master-table build
+> **`fb6a96abd2b045c68234d74fcfcc76b5`** — historical, superseded: S53 pair
+> `3a5a514c…`/`f81d4ad8…`; mid-S55 pair `cc62b5…`/`8878ef…` (crashed, no
+> init/flag fixes). Test ROMs delivered: **`DWM-S55v2-compat-TEST-FIRST.gbc`**
+> (S53-user-tested table config + relocation/fixes — the isolating build)
+> and `DWM-S55v2-fixed-master-table.gbc` (adds the S53 table fix) — **both
+> user-confirmed working, 2026-07-10**.
+> **USER-CONFIRMED 2026-07-10** ("everything now works without issues", both
+> S55v2 deliverables): well entry, egg-give exit + scroll-up, save-in-room →
+> reload → scroll all work. This ALSO clears the S53 master-table fix's
+> test debt (first user run of the fixed-table config). Standing expected
+> behaviors: load-in-room shows step-0 content (transient counters); stored
+> monsters #15-16 still corrupt on custom-room transitions (≤14 rule). **NPC/exit buffers stayed at $D379-$D477** (inside monster slots
+> 14-15): ACCEPTED legacy hazard of the exploration overlay (user decision —
+> saves there are disposable); **≤14-occupied rule stands** for custom rooms
+> on the hand overlay.
+> **Why reduced (S55 vetting — full detail KEY_LESSONS S55 + wram_usage.json
+> regen, 51→34 gaps):** the S54 candidates were FALSE gaps — $C200-$C2FF =
+> attr decompression staging (every stream declares declen 256), $C300-$C4FF
+> = 512-B screen staging unit (bank $06 bulk copy $C500→$C300 ×$0200; both
+> blocks SRAM-save-copied — ARCHITECTURE's save table was right, the S54 read
+> of it was partial); $DD80-$DE2B = **AUDIO engine** (6 chan × 26 B +
+> scalars; known_RAM_map's "INFERRED battle structs" corrected); stack tops
+> $DFFF. $DE74-$DEDD was the only vetted block. **Retired alternative:** cap
+> monster slots 20→18 (reclaim $D53B-$D664 298 B; $00 in-use pads defuse all
+> 44 read-walkers; give scanner `label4_5c14` + full-check `label4_5f67`
+> located) — viable but retired as throwaway-path surgery; do NOT re-derive.
+> **New canonical discoveries:** farm SLEEP pool = second 20×$95 monster
+> array, SRAM-only at $B124-$BCC7 ($CA41 bit7; bank $07 scans it in place —
+> vanilla's own cold-storage precedent); SVBK census: five writes total in
+> the ROM → **WRAM banks 3-7 = 16 KB virgin** (docs: known_RAM_map); debug
+> mode (banks $55/$56/$59) owns ~10 exclusive WRAM bytes (exclusivity scan).
+> **Architecture decisions (user, S55):** vanilla rooms KEPT as postgame →
+> mapID ≥$80 audit in scope (custom room #22+), vanilla counter pool not
+> harvestable; parallel architecture (overlay = exploration, structural fixes
+> = compiler pipeline only); **Cold Farm arc** = editor-era WRAM strategy
+> (farm→SRAM, party-only exp + accumulator drained at the castle gate-exit
+> chokepoint — user-confirmed: all gate exits funnel there, Arena awards no
+> exp; ~2.5 KB freed; exp level-scan loop found at bank $50 `jr_050_6318`).
+> Full specs: ROADMAP Arc COLD FARM / Arc LAYER A′; EDITOR_DESIGN §1 S55
+> amendments.
+> (S55 NEXT superseded by S56 — see above.)
+
 
 > Session 54 (2026-07-08 — **egg-give root cause: custom WRAM sits inside the
 > monster array; audit_wram.py ships. Byte-neutral session** — no ROM delta,

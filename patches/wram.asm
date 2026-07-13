@@ -256,7 +256,19 @@ wArenaStarryBattle:: db ;d999 — current Starry Night Tournament battle (0/1/2)
 ; Flag BC → byte $D99B+(BC/8), bit (BC&7)
 wEventFlags:: ds 32 ;d99b
 
-    ds $12
+    ds $0D                          ; d9bb-d9c7 (incl. $D9C6-$D9C7 = flag-pool
+                                    ; bytes, flags $0158-$0167 — see EVENT_FLAGS)
+; [CF2] Pending farm exp accumulator, 24-bit LE, clamp $98967F. Fed per battle
+; by bank $50 CF2FarmShareDivert (total/16); drained by bank $73 entry 0 at
+; the map-change commit (bank $0B Entry 0) when the destination is non-gate.
+; PERSISTENT BY DESIGN: $D9C8-$D9CA sit inside the $C8EA-$D9E9 save image
+; (in-gate save rooms exist, so pending must survive save+reload), are
+; boot-cleared by ClearAllWRAM, and are the top 3 bytes of the S8-verified
+; clean event-flag block — flag indices $0168-$017F are RETIRED from the
+; allocator pool in exchange (EVENT_FLAGS.md; editor2/core/project.py).
+wPendingFarmExp:: ds 3 ;d9c8
+
+    ds $02                          ; d9cb-d9cc
 
 wColiseumBattle:: db ;d9cd — current consecutive battle in gates/arena
 wArenaGroup:: db ;d9ce — arena battle group index

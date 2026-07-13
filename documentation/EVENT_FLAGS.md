@@ -91,34 +91,47 @@ $D933=2, $D934=2) to their post-game states.
 | $001D | $D99E.2 | 52 | Boss: Anger scr8 | Defeat BattleRex (mandatory gate) |
 | $0030–$0037 | $D9A1 | 297 total | Arena Lobby scr0 | All 8 arena ranks in one byte |
 
-## Free Flag Slots
+## Free Flag Slots (CORRECTED S57 — per-byte audit)
 
 **Primary block: $0158–$02C0 (361 flag indices)** — WRAM $D9C6–$D9F3.
 
-**⚠ COLLISION WARNING**: Several bytes in this range are written directly by
-script opcode $12 (WriteRAM) as named variables. Allocating custom flags at
-these indices will corrupt game state:
+**⚠ The pre-S57 version of this section was WRONG.** Its "broader safe
+ranges" came from script analysis only. A per-byte audit (grep of every
+`$d9xx` literal across `disassembly/` + `patches/`, PLUS a full-text scan of
+`extracted/all_scripts.json`) shows most of those bytes are live ENGINE named
+variables and/or script-referenced, on top of the known WriteRAM collisions:
 
-| Flag indices | WRAM byte | Variable | Effect if corrupted |
-|-------------|-----------|----------|---------------------|
-| $0180–$0187 | $D9CB | (unverified) | Unknown |
-| $0190–$019F | $D9CD–$D9CE | Coliseum battle / round | Arena battles break |
-| $01A0–$01DF | $D9CF–$D9D6 | Gate room reset counters | Gate rooms stop resetting |
-| $0240–$0247 | $D9E3 | Story progression counter | Story progression breaks |
-| $0258–$025F | $D9E6 | Breeding mutation flag | Breeding mutations break |
-| $0270–$0277 | $D9E9 | Current step (multi-step) | Room state system breaks |
+| WRAM byte | Flag indices | Evidence | Verdict |
+|-----------|--------------|----------|---------|
+| $D9C6–$D9C7 | $0158–$0167 | zero engine literals, zero script refs (S8-tested: flag $0158 persisted) | **SAFE** |
+| $D9C8–$D9CA | $0168–$017F | clean, but **RETIRED S57** → `wPendingFarmExp` (CF2) | reserved |
+| $D9CB | $0180–$0187 | WriteRAM collision (pre-S57 table) | poisoned |
+| $D9CC | $0188–$018F | engine literals (2 files) | poisoned |
+| $D9CD–$D9D6 | $0190–$01DF | Coliseum / gate-reset named vars | poisoned |
+| $D9D7–$D9D8 | $01E0–$01EF | zero engine literals, zero script refs | **SAFE** |
+| $D9D9–$D9DE | $01F0–$021F | engine literals (6 files each) | poisoned |
+| $D9DF–$D9E2 | $0220–$023F | engine literals and/or script refs | poisoned |
+| $D9E3 | $0240–$0247 | story progression counter | poisoned |
+| $D9E4–$D9E5 | $0248–$0257 | script-referenced | poisoned |
+| $D9E6 | $0258–$025F | breeding mutation flag | poisoned |
+| $D9E7–$D9E8 | $0260–$026F | engine literals / script refs | poisoned |
+| $D9E9 | $0270–$0277 | current step (multi-step) | poisoned |
 
 **SRAM boundary**: Flags at byte $D9EA+ ($0278+) are outside the SRAM save
 range and will NOT persist across save/load.
 
-**Safe contiguous block: $0158–$017F (40 flags guaranteed clean).**
+**Actual safe+persistent pool: $0158–$0167 and $01E0–$01EF = 32 flags**
+(not "~200"). `editor2/core/project.py FLAG_SAFE_RANGES` matches this list
+as of S57; keep the two in sync. Note the audit verdicts are conservative:
+an "engine literal" byte might in principle be a benign read, but nothing is
+allocated onto a byte that any code names directly.
 
-Broader safe ranges within $0158–$02C0 (excluding collision zones above):
-$0158–$017F, $0188–$018F, $01E0–$023F, $0248–$0257, $0260–$026F.
-
-After range: $02C2–$0327 (102 flags, but outside SRAM — won't persist).
-
-**Total safe+persistent: ~200 flags. Editor must skip collision ranges.**
+**`wPendingFarmExp` appropriation (S57/CF2):** bytes $D9C8–$D9CA hold the
+pending farm-exp accumulator (24-bit LE; fed by bank $50
+`CF2FarmShareDivert`, drained by bank $73 entry 0). They were chosen exactly
+BECAUSE they are clean, save-imaged (in-gate save rooms exist, so pending
+must survive save+reload), and boot-cleared. Flag indices $0168–$017F must
+never be allocated.
 
 ## Analysis Tool
 

@@ -855,3 +855,102 @@ farm-write=12, party-only=8, staging=5. The dominant patterns:
 5. The sleep pool proves the "monsters in SRAM, scanned via EnableSRAM per
    access" pattern already ships in vanilla (bank $07/$12) — CF3 can copy
    that access discipline.
+
+## CF2 as built (S57): party-only per-battle exp + pending-farm-exp drain
+
+Built S57, **USER-CONFIRMED 2026-07-13** (gate-run payout, save-in-gate
+persistence, party parity, town sanity — all pass). Implements ROADMAP Arc
+COLD FARM CF2 on the fork sites CF1 established. Three patch sites + one new bank; all
+same-size in-place windows (zero shift).
+
+### The accumulator — `wPendingFarmExp` ($D9C8-$D9CA, 24-bit LE, clamp $98967F)
+
+Persistent BY DESIGN: in-gate save rooms exist (FAQ: "the only places we can
+record our save states when we're beyond the Travelers' Gate"), so a
+transient accumulator would lose a run's farm exp on save+reload. $D9C8-$D9CA
+sit inside the $C8EA-$D9E9 save image (auto save/restore), are boot-cleared
+by ClearAllWRAM, zeroed by new-game init, and are the top 3 bytes of the
+S8-verified clean event-flag block — flag indices $0168-$017F are RETIRED
+from the allocator pool in exchange (EVENT_FLAGS "Free Flag Slots", corrected
+S57). Pre-CF2 saves hold $00 there → pending migrates as 0.
+
+### Site 1 — bank $50 exp walker head ($61FA, 14-byte window)
+
+Vanilla computed farm share = total/16 → HRAM $DB-$DD once per battle.
+`CF2FarmShareDivert` (67 B in the bank $50 tail nops) still runs the same
+`Div24x8To16`, but stores the quotient into `wPendingFarmExp` (24-bit add,
+clamped) and ZEROES $DB-$DD. Consequences, with **zero edits to the walker
+loop or the level scan**:
+
+- the walker's farm branch (flag $01) runs vanilla and adds 0 — farm exp
+  never moves post-battle;
+- the post-battle all-20 level scan (`jr_050_6318`) finds no farm level-ups
+  because farm exp is static — party behavior byte-identical (party list pass
+  + display state untouched).
+
+### Site 2 — bank $0B RoomEntry0 map-change commit ($4020, 6-byte window)
+
+`RoomEntry0_TilesetLoader`'s `wIsPlayerChangingMaps` block is the single
+funnel every COMMITTED map transition passes (doorways, gate descents, boss
+return, WarpWing, death reload — anything that goes through the
+wWarpGateId/wWarpFlag commit). The window `ld a,[wWarpFlag] /
+ld [wInGateworld],a` becomes `ld hl,$7300 / rst $10 / nop / nop`. Register
+audit: A dead (reloaded), BC = $4001 either way (this entry is itself
+rst-dispatched; nested rst leaves the same value), HL reloaded next line, DE
+not consumed before its next fresh load. The z-branch (no pending change)
+skips the window — the drain check runs exactly once per committed
+transition. Death/breeding paths that set wMapID DIRECTLY (bank $15-style
+inits) bypass the commit; pending is persistent, so it simply drains at the
+next committed transition (the first doorway) — totals preserved.
+
+### Site 3 — NEW bank $73 entry 0 `CF2WarpCommitDrain`
+
+Does the displaced wWarpFlag→wInGateworld store first (all destinations),
+then returns unless the destination is non-gate (wWarpFlag = 0) AND pending
+≠ 0. Drain, per slot 0-19 (saving/restoring [$CAC0]):
+
+- eligibility mirrors the walker's farm branch, evaluated at drain time:
+  in-use +$00 == $01, egg +$63 == 0, level +$4B != $63, level < cap +$4C;
+- exp +$4D += pending, clamped $98967F (the walker's exact add/clamp shape);
+- level-to-match loop mirrors `CmpBtl_6383` (level≠99 → `$1300` threshold →
+  24-bit exp−threshold on HRAM $D5-$D7) and applies each level with the
+  IDENTICAL silent vanilla pair the post-battle farm scan uses
+  (`jr_050_6337`: `$1302` gains → $C8CA-$C8CF/$C8D0, then `$510d` = bank $51
+  `LoadBtlS_5b31`, which increments +$4B and applies the stat adds — or the
+  past-cap SUB variant when $C8D0 is set, exactly as vanilla). **Vanilla farm
+  level-ups are SILENT** (code-verified S57: only the party-list pass routes
+  to the display state; the all-20 scan is the $1302+$510d pair with no
+  message), so the drain is silent too — full parity.
+
+All three dispatch pieces ($1300/$1302/$510d + the nested $0301 info fetch
+inside them) are context-free (parameter = [$CAC0] only) and rst-callable
+from any bank; nested `rst $10` is vanilla-pervasive (bank $50's state
+machine is itself rst-dispatched and nests these exact calls).
+
+### Semantic deltas vs vanilla (documented for user veto)
+
+1. Farm exp/levels land at the first non-gate transition after battles, not
+   immediately — invisible (farm UI is town-only; both paths silent).
+2. A monster recruited to STORAGE mid-run receives the full run's pending at
+   the drain (vanilla pays from its join onward). Slightly generous.
+3. Eligibility (cap/99) is evaluated at drain time, not per battle.
+4. The drain also fires on entry to in-gate special rooms (they commit with
+   wWarpFlag=0) — an earlier payout than the town chokepoint; semantically
+   safe (vanilla paid farm exp mid-gate after every battle) and invisible.
+
+### Validation (S57, pre-SameBoy)
+
+Emitted bytes decoded at all three sites (`sm83dis`); helper + drain
+byte-executed in a throwaway mini SM83 interpreter against the built ROM:
+accumulate ×2, clamp at 9,999,999, multi-level drain (threshold stub),
+egg/99/cap/party/empty skips, gate-destination passthrough, zero-pending
+early-out — all pass. Compiler byte-identity regression re-pinned: the compat
+project build equals the S57 hand-staged patched build md5-exactly
+(`6c41f0d86ab5b41ca5e160e1c166f3d3`, **patched** build reference).
+
+### CF3 hand-off
+
+The drain is the prototype of CF3's SRAM-farm write burst: once farm records
+move to SRAM, `CF2WarpCommitDrain`'s record accesses become EnableSRAM-styled
+(the bank $07 sleep-pool discipline) at the same hook. The accumulator and
+both fork sites carry over unchanged.

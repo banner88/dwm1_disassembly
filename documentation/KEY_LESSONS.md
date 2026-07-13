@@ -1934,3 +1934,54 @@ for the logical array and still hid 298 live bytes from the audit.
 extent implied by the helper's mask/bounds, then enumerate which indices are
 actually used and by whom. audit_wram now carries the staging slots as their
 own curated entry ($D665-$D78E pinned in its selftest).
+
+## Session 57 Lessons — CF2 (pending farm exp + drain)
+
+### "Safe flag ranges" from script analysis alone are NOT safe — audit engine literals too
+**Symptom**: CF2 needed 3 persistent bytes; EVENT_FLAGS' "broader safe ranges"
+offered $01E0-$023F, and the first pick ($D9E0-$D9E2, flags $0228-$023F)
+looked ideal — until a routine literal-grep found live engine refs in banks
+$01/$04/$12, and all_scripts.json showed $D9E0/$D9E2 script-referenced. The
+compiler's `FLAG_SAFE_RANGES` carried the same lie, so the flag ALLOCATOR
+could have written onto live engine variables the first time a project
+declared enough flags.
+**Root cause**: the flag analysis enumerated flags used BY SCRIPTS (via the
+flag opcodes) and WriteRAM collisions; it never checked whether the engine
+names the underlying BYTES directly. Same failure class as the S54 "no
+literal refs ≠ unclaimed", inverted: here the claim was derived from one
+access class (script flag ops) while another (engine literals) was live.
+**Fix**: per-byte audit of every byte in every claimed range (engine literal
+grep across disassembly/ + patches/, plus all_scripts.json full-text). Truly
+clean: $D9C6-$D9C7 + $D9D7-$D9D8 (+$D9C8-$D9CA, taken by wPendingFarmExp).
+EVENT_FLAGS rewritten in place; FLAG_SAFE_RANGES corrected; DOC_AUDIT row.
+**Rule**: a WRAM byte is only allocatable when EVERY access class is clean:
+literal refs (disassembly AND patches), script references (all_scripts.json),
+indexed-array coverage, and pointer-walked buffers. A "safe range" claim in a
+doc names its evidence classes or it is a hypothesis.
+
+### Persistence requirements come from the GAME's save model, not the variable's lifetime
+**Symptom**: the obvious home for a "transient" accumulator was the vetted
+$DE89+ block (outside the save image) — pending exp only lives between a
+battle and the next town visit, so transient "felt" right.
+**Root cause**: DWM1 allows saving INSIDE gates (small save rooms — FAQ
+line ~560), so "between battle and town" can span a save+reload. A transient
+accumulator silently loses a run's farm exp on every in-gate save+reload.
+**Fix**: put the accumulator INSIDE the save image ($D9C8-$D9CA) — save/load
+then carries it for free, no extra hooks, and pre-CF2 saves migrate as 0
+(bytes were never written). The alternative (drain-before-save hook) costs a
+second engine hook and still misses force-save paths.
+**Rule**: before classifying custom state transient vs persistent, enumerate
+the save points the PLAYER can reach while the state is nonzero (the FAQ is
+the fastest source). If any exist, the state goes in the save image or every
+save site needs a hook.
+
+### Zero the INPUT of a vanilla loop instead of patching the loop
+**Technique (CF2's core trick)**: the exp walker reads the farm share from
+HRAM $DB-$DD, computed once at the walker head. Zeroing that input (and
+banking the real value elsewhere) made the walker's farm branch AND the
+downstream all-20 level scan farm-inert with ZERO edits to either loop —
+one same-size 14-byte window instead of surgery on branch logic, and party
+behavior stays byte-identical by construction.
+**Rule**: when a vanilla loop must stop affecting a subset, look for a
+loop-invariant input that is zero-neutral for that subset (share=0 → adds 0 →
+downstream scans see no change). Patching the head beats patching the body.

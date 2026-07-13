@@ -41,7 +41,7 @@ owns.
 ```bash
 # regression check (compat project must equal the S55 reference patched md5)
 python3 tools/build_project.py --project editor2/example-project \
-    --build --expect-md5 026970d361f6afe03f28e29fa6e631f6
+    --build --expect-md5 6c41f0d86ab5b41ca5e160e1c166f3d3
 
 # author→test loop: ROM lands at <out>/build/rom.gbc (+ game.sym + manifest.json)
 python3 tools/build_project.py --project my-project --build
@@ -59,8 +59,13 @@ python3 editor2/tests/test_compiler.py [--rom]
   re-expresses the entire user-confirmed hand-authored content (6 rooms, 21
   dialogue entries, 10 scripts, 4 palettes, 7 step counters, enc/record
   tables). With `build.compat.master_table_rooms` present, the generated
-  patched ROM md5 is **`026970d361f6afe03f28e29fa6e631f6`** — byte-identical
-  to the S55v2 reference patched build (WRAM relocation + init/flag fixes —
+  patched ROM md5 is **`6c41f0d86ab5b41ca5e160e1c166f3d3`** (patched build,
+  re-pinned S57 after the CF2 patches: wPendingFarmExp in wram.asm, bank $50
+  farm-share divert, bank $0B commit stub, new bank $73 — the compat project
+  build stayed md5-EQUAL to the hand-staged patched tree, proving the
+  byte-identity property across the change; historical, superseded:
+  `026970d361f6afe03f28e29fa6e631f6`, the S55v2 patched reference — WRAM
+  relocation + init/flag fixes —
   ClearAllWRAM `$1E00`->`$1EE0`, flag derivation at CopyCustomRoomRecord head;
   bank $71 template re-pinned per §5, TEMPLATE_SIZE 0x71: 103->116). (This
   md5 moves whenever ANY patch changes; re-derive via verify_integrity-style

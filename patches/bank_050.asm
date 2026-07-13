@@ -5882,14 +5882,23 @@ CallBtl_61e2:
     ld h, a
     ld a, [$dd25]
     ld e, a
-    ld a, $10
-    call Div24x8To16
-    ld a, l
-    ldh [$db], a
-    ld a, h
-    ldh [$dc], a
-    ld a, e
-    ldh [$dd], a
+    ; [CF2] SAME-SIZE 14-byte window replacement ($61FA-$6207). Vanilla:
+    ;   ld a,$10 / call Div24x8To16 / (l,h,e -> HRAM $DB,$DC,$DD) = farm share.
+    ; CF2FarmShareDivert (tail of this bank) still computes total/16 but banks
+    ; it into wPendingFarmExp and ZEROES $DB-$DD, making the walker's farm
+    ; branch (and the post-battle level scan) farm-inert. See bank_073.asm.
+    call CF2FarmShareDivert
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     ld hl, $cac1
     ld b, $14
     xor a
@@ -11654,73 +11663,50 @@ SetBtl_7e1e:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; -----------------------------------------------------------------------------
+; [CF2] CF2FarmShareDivert — called from the 14-byte window at $61FA (see the
+; walker above). Entry: HL:E = 24-bit battle exp total ($DD23-25).
+;   * computes total/16 exactly as vanilla (same Div24x8To16 call),
+;   * banks it: wPendingFarmExp += total/16, 24-bit, clamped at $98967F
+;     (drained by bank $73 entry 0 at the map-change commit — bank_073.asm),
+;   * zeroes the per-monster farm share HRAM $DB/$DC/$DD so the vanilla walker
+;     adds 0 to every farm monster (farm branch runs, exp unchanged; the
+;     post-battle all-20 level scan then finds nothing for farm).
+; Clobbers A/HL/E (all dead: caller immediately reloads HL/B/A). 67 bytes,
+; carved from the tail nop fill (net bank size unchanged).
+; -----------------------------------------------------------------------------
+CF2FarmShareDivert:
+    ld a, $10
+    call Div24x8To16
+    xor a
+    ldh [$db], a
+    ldh [$dc], a
+    ldh [$dd], a
+    ld a, [wPendingFarmExp]
+    add l
+    ld [wPendingFarmExp], a
+    ld a, [wPendingFarmExp+1]
+    adc h
+    ld [wPendingFarmExp+1], a
+    ld a, [wPendingFarmExp+2]
+    adc e
+    ld [wPendingFarmExp+2], a
+    jr c, .clamp                    ; 24-bit carry-out -> clamp
+    ld a, [wPendingFarmExp]
+    sub $7f
+    ld a, [wPendingFarmExp+1]
+    sbc $96
+    ld a, [wPendingFarmExp+2]
+    sbc $98
+    ret c                           ; pending <= 9,999,999 -> done
+.clamp:
+    ld a, $7f
+    ld [wPendingFarmExp], a
+    ld a, $96
+    ld [wPendingFarmExp+1], a
+    ld a, $98
+    ld [wPendingFarmExp+2], a
+    ret
 AliasCommit:               ; b = skill id being committed to action queue $dcec
     ld a, b
     cp $DE                 ; one of our new ids ($DE/$DF)?
