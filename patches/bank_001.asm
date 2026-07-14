@@ -1557,7 +1557,12 @@ jr_001_4801:
 
     ld a, c
     ld [$ca8d], a
-    ld hl, $0106
+    ; CF3 step 1 (S58): canonicalizer tail retargeted $0106 -> $7301
+    ; (same-size operand edit at $01:$4809-$480A). Bank $73 entry 1
+    ; CF3PartyFirstSort establishes "party at slots 0-2 in list order"
+    ; after every canonicalize, then nest-calls the displaced $0106
+    ; (ScanPartySlotTable) itself. See patches/bank_073.asm.
+    ld hl, $7301
     rst $10
     ret
 

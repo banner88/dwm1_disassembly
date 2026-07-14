@@ -16,7 +16,60 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S55 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first: S56 → S11)
+
+> Session 56 (2026-07-11 — **CF1: the monster-array access map. Byte-neutral;
+> deliverables = docs + tool + JSON + source comments only.**)
+> **Membership model (the CF1 headline):** party is NOT positional — dual
+> representation: per-record in-use flag +$00 (**$00 empty / $01 farm /
+> $02 party**, tri-state, what battle trusts) + party order list **$CA8D**
+> (count) / **$CA8E-$CA90** (slot indices, $FF empty; battle position cache
+> $DA15-$DA17). Synced by the CANONICALIZER `ReadPartySlotInfo` ($01:$46F6,
+> entry 5, **22 call sites / 8 banks** — every roster mutation's epilogue):
+> flags normalized $01, listed slots re-marked $02, array COMPACTED
+> (149-B record swaps toward slot 0; old→new map at $C0D8), list remapped,
+> $CA8D recounted. Records MOVE between slots on every canonicalize.
+> **Exp (walker $50:$61E2, ONE walk over all 20):** party member =
+> total/eligible-count (KO +$4A bit7 excluded; ±1 rounding quirk), farm =
+> **total/16 each**; skips eggs (+$63 flag), level 99, level≥cap; total in
+> $DD23-25 (RAM-map row solved). Level-ups: party list first, then all-20
+> scan `jr_050_6318`. **The party/farm forks are single-site** — CF2 is a
+> retarget, not new plumbing.
+> **New structures:** EGG flag = record +$63 (set by egg-receive
+> $12:jr_012_6c0a + builder sub-cmd $5E); KO bit +$4A.7 (bulk-cleared by
+> $01 entry 9); nickname = +$0C ×9 (old "+$14 name" row was its last byte);
+> two $FF-terminated ID lists +$29 ×8 / +$31 ×25 (semantics unverified);
+> **staging pseudo-slots $14/$15 @ $D665/$D6FA** (GetMonsterDataPtr masks
+> $7F): breeding parents (copied+deleted pre-bank-$16; fields read at
+> +$0BA4/+$0BA4+$95), link-trade transit (send $15:jr_015_5aa5; receive
+> $18:~$4C50 with forced SRAM saves = anti-clone), bank $15 menu scratch.
+> $CA40 = offspring first-empty slot persist; $CA42 ×9 = name text scratch.
+> Roster mutation paths enumerated (gives $28/$29, egg, battle join
+> $51:SetBtlS_63e8, breeding ×2 variants, release $12, trade ×2, sleep $12
+> init + $07 scans, compaction) — table in MONSTER_DATA.
+> **Deliverables:** MONSTER_DATA "Party/farm boundary semantics + monster-
+> array access map" (owning section); `tools/map_monster_walkers.py` +
+> `extracted/monster_walkers.json` (**all 44 $CAC0 writers** — the S55
+> count's origin: 44 = the `ld [$cac0],a` sites — **+ 60 register/stride
+> walkers classified**; self-checking: drift in writer set or labels
+> aborts); known_RAM_map rows ($CA40/$CA41/$CA42/$CA8D/$CA8E/$CA91/$CAC0
+> tri-state/staging/$DA14/$DA15/$DD23 + record fields); audit_wram curated
+> staging entry (gaps 34→31, selftest re-pinned incl. $D78E extent);
+> bank_054 header corrected (claimed "EXP distribution entries 0-6" — they
+> are the skill-record accessors — and "$CA94 party/storage count" — it is
+> the seen-bits array; DOC_AUDIT row added); discovery comments at 17 sites
+> across 10 banks (build byte-perfect after).
+> **⚠ CF3 design input:** arc premise "party stays hot in slots 0-2" is
+> false in vanilla — CF3 needs a party-first sort in the canonicalizer or
+> index remapping (user decision pending). The S55 "$15-special release"
+> was actually trade/breeding staging.
+> **NEXT:** CF2 (exp accumulator + chokepoint drain — fork sites now known)
+> or A′1 (mapID ≥$80 audit). T2 / S2f / blink remain parked; `--apply`
+> decision from S53 still open. **OPEN USER DECISIONS for CF3** (details
+> ROADMAP CF3 S56 amendments): save-persistence semantics of the freed
+> range $CBEB-$D664 (it is inside the save image + SavePartyToSRAM copy);
+> party-first sort vs index remapping.
+
 
 > Session 55 (2026-07-10 — WRAM relocation, reduced form; block below moved
 > verbatim from PROJECT_STATE by S57 per the aging rule; it was retained

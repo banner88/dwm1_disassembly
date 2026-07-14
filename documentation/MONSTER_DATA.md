@@ -721,13 +721,15 @@ Party membership is **dual-represented and NOT positional**:
 
 Party members can sit at ANY array index; the list points at them. The two
 representations are synced by the **canonicalizer `ReadPartySlotInfo`
-(`$01:$46F6`, bank $01 dispatch entry 5, 22 call sites across 8 banks — the
+(`$01:$46F6`, bank $01 dispatch entry 5, 22 call sites across 7 banks — count re-verified S58, DOC_AUDIT — the
 standard "roster changed" epilogue)**, which: clears list entries pointing at
 empty slots (+ shifts the list up), normalizes every occupied flag to `$01`,
 re-marks listed slots `$02` (`RetIfSlotInvalid $01:$480D`), **compacts the
 array** (149-byte record swaps toward slot 0 via `SaveRegsAndSetupDE
 $01:$4819`, using an old→new index map built at `$C0D8`), remaps the list
-through that map, recounts `$CA8D`, and reloads follower art (entry 6).
+through that map, recounts `$CA8D`, and tail-calls bank $01 **entry 6 =
+`ScanPartySlotTable`** (the +$29/+$31 ID-list sanitizer — the original S56
+text said "follower art" here, which was wrong; corrected S58, DOC_AUDIT).
 Because of the compaction, occupied slots are contiguous from slot 0 after
 any canonicalize — but party members are NOT necessarily slots 0-2.
 
@@ -786,7 +788,12 @@ They are inside the `$C8EA-$D9E9` save image. Uses found:
   NPC-mate flow at `$0A:~$4F00` (mate synthesized from EID `$C8F7/8`
   directly into slot 21). Offspring is inserted later at first-empty by
   `$16:jr_016_402d`, which persists the chosen slot in **`$CA40`** for the
-  script-side finalizer (`$04:label4_64c2`). Breeding force-saves
+  script-side finalizer (`$04:label4_64c2`). NOTE (S58): `$CA40` is ALSO the farm
+  drop/pick flow's live candidate register — written per selection at
+  `$0A:~$5CC4` (together with `$CAC0`/`$C908`), consumed by the working-set
+  filler `SetFldA_6ad5` ($0A:$6AD5 — party list + `[$CA40]`) and the
+  direct-pick party-list append (`$0A:~$6A9F`). One cell, two flows: treat it
+  as a selection register, never a stable pointer. Breeding force-saves
   (`SaveGameState`) and warps to gate 8 (Starry Shrine).
 - **Link trade**: send = copy → slot 20 + delete (`$15:jr_015_5aa5` head);
   receive = staged monster in slot 21 → seen-bit set for its species →
@@ -954,3 +961,98 @@ The drain is the prototype of CF3's SRAM-farm write burst: once farm records
 move to SRAM, `CF2WarpCommitDrain`'s record accesses become EnableSRAM-styled
 (the bank $07 sleep-pool discipline) at the same hook. The accumulator and
 both fork sites carry over unchanged.
+
+## CF3 step 1 as built (S58): party-first sort in the canonicalizer
+
+The invariant CF1 flagged as the arc's missing precondition: **after every
+canonicalize, party member at list position i occupies array slot i** — party
+in slots 0-2 in list order, farm contiguous from slot `party_count`. Vanilla
+never holds this (records land anywhere; the list points at them). With it,
+"slots 3-19" and "farm" become the same set, which is what lets CF3 move farm
+records to SRAM wholesale.
+
+### Hook (1 same-size operand edit)
+
+The canonicalizer tail `ld hl,$0106 / rst $10` at **$01:$4808** (operand
+bytes $4809-$480A, pattern `79 EA 8D CA 21 06 01 D7 C9` — unique in ROM) is
+retargeted to **$7301** (bank $73 entry 1). The sort therefore runs after
+every vanilla canonicalize step (list cleaned/compacted/remapped, array
+compacted, `$CA8D` recounted) at ALL call sites, and nest-calls the displaced
+`$0106` itself (rst $10 nests stack-safely — `RST_10` pushes the caller bank;
+depth 3 here). Entry `$0106` is `ScanPartySlotTable`, order-independent
+per-record work, so running the sort before it is semantics-preserving.
+
+### Algorithm (`CF3PartyFirstSort`, patches/bank_073.asm entry 1)
+
+Selection sort over the ≤3 party-list positions. On entry (vanilla
+guarantees): occupied slots contiguous from 0; list compacted (non-$FF
+first), entries unique, each < occupied count — so at step i, `t = list[i]`
+satisfies t > i (0..i-1 already identity), and a swap of records i↔t plus
+`list[i] := i` is sound. Occupied contiguity is preserved (the swap permutes
+occupied slots only). Per swap, every WRAM cell that stores raw slot indices
+across a canonicalize is fixed up:
+
+| Cell | Rule | Why |
+|------|------|-----|
+| party list entries | `== i → t` (one-way; t exists only at position i) | a party member sitting at slot i is displaced to t |
+| `$DA15-$DA17` battle-position cache | exchange `i ↔ t` | set at battle setup; vanilla compaction is provably a no-op at the mid-battle join canonicalize (array contiguous → no holes), the sort is NOT — exchange keeps stale cache truthful. Analysis: pre-join members already sit at identity slots, so their entries are untouched even without the fixup; the exchange is belt-and-braces for exotic paths |
+
+Deliberately NOT remapped: `[$CAC0]` and — since v2 — `$CA40`: both are live
+selection registers written fresh by each flow (the v1 build exchange-fixed
+`$CA40` on the S56 "breeding offspring persist" description; reading the farm
+UI showed it doubles as the drop/pick candidate register, so remapping it
+rewrites UI state behind the flow's back — removed in v2). Breeding residual
+risk without the fixup (a canonicalize between the offspring insert and the
+bank $04 hatch finalizer's `$CA40` read) is judged low — no `$0105` call
+sits in that window — WATCH ITEM: verify in the breeding test. `$DA14` needs
+no fixup (give-parameter, consumed before the canonicalize — verified). The
+`$C0D8` old→new map has no straight-line consumer after return (S58 audit:
+20-line scan below every `ld hl,$0105` site across all banks, zero hits).
+CAVEAT (v2): that scan cannot clear menu STATE MACHINES resuming next frame;
+vanilla already clobbers `$C0D8` with the map on every canonicalize, so any
+such reader is a pre-existing vanilla hazard — but the sort makes leftover
+map values stale-by-one-permutation where vanilla's were self-consistent.
+WATCH ITEM for farm/menu testing.
+Call-site figure re-verified with its generator: `grep 'ld hl, \$0105$'` over
+`disassembly/` = **22 sites / 7 banks** ($04 $0A $12 $15 $18 $50 $51), all
+`rst $10` dispatches; patch copies add none (DOC_AUDIT S58). The sort is
+site-count-independent regardless (it lives inside the callee).
+
+### Semantic deltas vs vanilla (user to veto in test)
+
+* Farm-menu display order can change when the party changes: display lists
+  scan slots in order, and the sort displaces farm records that sat below a
+  party member. Cosmetic, order-only — no records are created/lost.
+* Any code holding a raw slot index across a canonicalize sees different
+  (correctly remapped where it matters — see fixups) values than vanilla.
+  Same instability class vanilla already has via compaction.
+
+### Migration note (OPEN for the next CF3 session)
+
+Loading a PRE-SORT save restores a vanilla-layout roster; the invariant is
+only established at the first canonicalize after load (any roster change).
+Before CF3's walker redirects assume "slots 3-19 == farm", the load path
+needs either a forced canonicalize or an explicit sort call. Harmless in the
+sort-only build (nothing reads the invariant yet).
+
+### Validation (S58, pre-SameBoy)
+
+Emitted bytes decoded (`sm83dis`) and byte-executed in a mini SM83
+interpreter against constructed rosters: identity/no-op, scattered party
+(list [4,0,2] over 6 occupied), displaced-member list fixup (list [1,0]),
+post-breeding shape ($CA40 untouched in v2 — raw value preserved), empty
+party, and the mid-battle-join shape (pre-join cache entries untouched) —
+21/21 checks. Byte-diff of the patched build vs the S57 reference: header
+checksum + the 2 operand bytes at $01:$4809 + bank $73 only (entry-table +2
+shift of CF2 code, label-resolved; external refs are entry-number-based).
+Compiler regression re-pinned to the v2 build
+`d31c9300e13b98f516c6bee8b446069d` (patched; the v1 pin `79dd32c5…` (patched)
+is historical — v1 carried a `$CA40` exchange-fixup, removed after the farm-UI
+role of `$CA40` surfaced during the S58 phantom-monster investigation), 18/18.
+Built S58 v2, **USER-CONFIRMED 2026-07-14** (farm multi pick/drop, breeding
+— the $CA40 watch item passes — full gate run + boss, party shuffles,
+save/reset; battle JOIN not explicitly exercised, carried as residual).
+The S58 phantom-monster reports were traced to the S55 buffer-overlay
+hazard's phantom-spawn facet (slots 15/16 flag bytes $D37C/$D411 sprayed by
+the NPC/exit buffer copies — user re-accepted, retired by CF3 relocation;
+see patches/wram.asm hazard note + ROADMAP CF3 (d)), NOT to the sort.

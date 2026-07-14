@@ -1985,3 +1985,51 @@ behavior stays byte-identical by construction.
 **Rule**: when a vanilla loop must stop affecting a subset, look for a
 loop-invariant input that is zero-neutral for that subset (share=0 → adds 0 →
 downstream scans see no change). Patching the head beats patching the body.
+
+## Session 58 Lessons — CF3 party-first sort (v1 defect + phantom investigation)
+
+### A doc's description of a WRAM cell is its role in ONE flow, not its contract
+**Symptom (S58 v1)**: the sort exchange-fixed `$CA40` across record swaps,
+justified by MONSTER_DATA's (accurate) S56 note "`$CA40` = offspring
+first-empty slot persist". Reading the farm UI during the phantom-monster
+investigation showed `$CA40` is ALSO the drop/pick flow's live candidate
+register (written per selection at `$0A:~$5CC4` with `$CAC0`/`$C908`;
+consumed by `SetFldA_6ad5` + the direct-pick list append) — so the fixup
+rewrote UI state behind the flow's back, feeding paths that force-mark
+in-use flags with NO validity guard.
+**Rule**: before writing to any engine WRAM cell from custom code, enumerate
+ALL its writers and readers (grep, not docs) — a doc names the roles a past
+session needed, not the cell's full contract. Selection registers
+(`$CAC0`, `$CA40`, `$C908`, cursor caches) are written fresh by each flow
+and must never be "helpfully" remapped.
+
+### Straight-line audits cannot clear state machines
+**Symptom (S58)**: "no caller consumes the `$C0D8` map after canonicalize"
+was concluded from a 20-line scan below each call site. Menu state machines
+resume in a LATER FRAME, far beyond any static window — the farm UI reads
+`$C0D8` display lists across canonicalize boundaries as a matter of course
+(vanilla survives because it rebuilds and because vanilla's leftover map is
+self-consistent where the sort's is stale-by-one-permutation).
+**Rule**: an "unconsumed after X" claim needs the consumer TYPE stated:
+straight-line callers (static scan suffices) vs state machines / interrupt
+readers (need flow tracing or a runtime watchpoint). Say which one was
+checked.
+
+### Unreproducible corruption: date the fossils before hunting the ghost
+**Symptom (S58)**: phantom farm monsters (garbage species, 0 HP/MP, paired
+junk names, level 1→cap spread) first appeared only in an old save; every
+clean-save reproduction attempt failed — until the user found the trigger
+(enter/exit a custom room), and the byte trace closed it: the NPC/exit
+buffer copies spray monster slot 15/16 IN-USE FLAG bytes ($D37C = NPC
+buffer byte 3, $D411 = exit buffer byte 24 — a documented-but-incomplete
+S55 hazard: the <=14 rule protects occupied slots, not empty ones), and the
+next canonicalize mints the spray into real farm records. CF2's drain then
+leveled the old save's fossils into that 1→cap spread (0 HP because
+level-ups don't heal). The NEW patch (the sort) was blamed first and was
+innocent.
+**Rule**: when corruption appears only in an old save, the first split is
+Test 0 = same save on the PREVIOUS build, and the first suspects are prior
+bug classes archived in the docs — not the newest patch. Keep the corrupt
+save as evidence; record hypotheses as hypotheses until a repro + byte
+trace closes them — a user-found reproduction beats any amount of static
+theorizing.

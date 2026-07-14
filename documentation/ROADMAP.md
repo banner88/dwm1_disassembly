@@ -254,12 +254,36 @@ dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
       silent); mid-run storage recruits get the full run's pending; drain
       also fires entering in-gate special rooms (early, safe). Flag indices
       $0168-$017F retired to the accumulator (EVENT_FLAGS).
-- [ ] **CF3 — farm storage → SRAM + path redirects.** *Accept:* full
+- [~] **CF3 — farm storage → SRAM + path redirects.** *Accept:* full
       drop/pick/breed/give/library loop in SameBoy; WRAM $CBEB-$D664 free per
       audit_wram; custom buffers relocated into it; ≤14 rule deleted from docs.
-      S56 amendments (from CF1):
-      (a) ORDER: the party-first sort in the canonicalizer lands FIRST — the
-      freed range only means "slots 3-19" once that invariant exists.
+      **STEP 1 DONE S58, USER-CONFIRMED 2026-07-14 (v2: farm multi pick/drop,
+      breeding, full gate run + boss, party shuffles, save/reset; battle
+      JOIN not explicitly exercised): party-first sort in the
+      canonicalizer** — 2-byte operand hook at $01:$4809 ($0106→$7301) + bank
+      $73 entry 1 CF3PartyFirstSort; invariant "party at slots 0-2 in list
+      order, farm contiguous after" now holds after every canonicalize.
+      **v2 (S58):** fixups = party list + $DA15-$DA17 cache only; the v1
+      $CA40 fixup REMOVED ($CA40 is dual-role — also the farm drop/pick
+      candidate register; rewriting it fed unguarded flag-marking paths).
+      $CAC0, $CA40, $DA14 deliberately not remapped (analysis + watch items:
+      MONSTER_DATA "CF3 step 1 as built"). Compiler regression re-pinned (v2)
+      `d31c9300e13b98f516c6bee8b446069d` (patched; v1 `79dd32c5…` (patched)
+      historical).
+      **USER DECISIONS SETTLED 2026-07-13 (this conversation):**
+      (1) party-first SORT chosen over index remapping;
+      (2) save semantics of the freed range = **EXPLOIT** (keep the vanilla
+      block copy; the range persists across save/load). Layout rule for the
+      arc: transient scratch stays at $DE74; the relocated legacy NPC/exit
+      buffers take a small corner of the freed range; the BULK is reserved
+      as the editor's persistent-state pool (flag-allocator expansion of
+      FLAG_SAFE_RANGES comes AFTER the redirects land — the space is not
+      usable before then, see (b)).
+      Remaining (order):
+      (a) ~~party-first sort FIRST~~ DONE S58 (pending user test).
+      (a2) NEW (S58): pre-sort save migration — loading an old save restores
+      a vanilla-layout roster; force a canonicalize (or sort) on the load
+      path before any walker redirect assumes slots 3-19 == farm.
       (b) THE REDIRECTS ARE THE GATE, the space is NOT incrementally usable:
       every all-slot walker reads the +$00 flags of slots 3-19 (first-empty
       scans, $C0D8 list builders, exp/level walkers, occupancy counts); one
@@ -269,12 +293,16 @@ dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
       monster_walkers.json).
       (c) Trade-receive inserts at HARDCODED slot 19 ($D5D0, $18:~$4CB0
       copy loop) — inside the freed range; redirect with the trade flow.
-      (d) OPEN USER DECISION before CF3 starts: the freed range sits inside
-      the $C8EA-$D9E9 save image AND the SavePartyToSRAM block copy
-      ($CAC1 ×$0BA4 → $A1FB), so custom state placed there PERSISTS across
-      save/load — opposite of the S55 transient-counters semantics. Choose:
-      exploit it (persistent custom state), mask it out of the save copy,
-      or shrink the save copy to party slots.
+      (d) NEW (S58, confirmed by user repro + byte trace): the buffer overlay
+      ALSO phantom-spawns monsters in EMPTY slots 15/16 (flags $D37C/$D411 =
+      NPC buffer byte 3 / exit buffer byte 24 — well-room repro: 2 Drakslimes
+      "0095" per visit; the S57 gate save's 4 fossils were this + the CF2
+      drain leveling them). USER RULING S58: hazard re-accepted as-is on the
+      exploration overlay (no interim flag-zeroing patch); the CF3 buffer
+      relocation must retire BOTH facets (real-monster corruption AND
+      phantom spawning). Stale $D478/$D479 step-counter comments in the
+      bank_060 emitter output noted for the next compiler-touching session
+      (labels resolve correctly to $DE74+; comments only).
 
 ### Arc LAYER A′ — vanilla-room coexistence (revised S55: vanilla rooms KEPT as postgame)
 User decision (S55): the romhack occupies a NEW world (custom rooms); most

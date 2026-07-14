@@ -215,6 +215,17 @@ wram1Start:: db
 ; !!!    counters/scratch moved to $DE74 (see below), out of the array.
 ; !!!  * reverse corruption (buffer copies spraying stored monsters #15-16)
 ; !!!    REMAINS — keep the array <=14 occupied when using custom rooms.
+; !!!  * PHANTOM SPAWNING (confirmed S58, user repro + byte trace): the <=14
+; !!!    rule protects REAL monsters only. EMPTY slots 15/16 still get their
+; !!!    in-use flag bytes sprayed by the copies — slot 15 flag $D37C = NPC
+; !!!    buffer byte 3, slot 16 flag $D411 = exit buffer byte 24 — and any
+; !!!    nonzero value there is normalized to a "real" farm monster by the
+; !!!    next canonicalize (garbage species/name, level 0, 0 HP/MP; CF2's
+; !!!    drain will then level such fossils into visibility). Each custom-
+; !!!    room visit can mint up to 2 per canonicalize-with-sprayed-flag.
+; !!!    USER RULING (S58, reaffirming S55): ACCEPTED on the exploration
+; !!!    overlay — release phantoms in-game as they appear; no interim
+; !!!    patch; the CF3 buffer relocation retires the whole hazard class.
 ; !!! The buffers were NOT relocated: S55 vetting proved no free WRAM block
 ; !!! >=106 B exists outside the array (attr staging owns $C200-$C2FF, screen
 ; !!! staging owns $C300-$C4FF — both SRAM-save-copied; audio owns

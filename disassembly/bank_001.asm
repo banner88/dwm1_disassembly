@@ -1379,7 +1379,7 @@ jr_001_46f1:
 
 
 ; =============================================================================
-; PARTY/STORAGE CANONICALIZER (bank $01 entry 5; 22 call sites / 8 banks —
+; PARTY/STORAGE CANONICALIZER (bank $01 entry 5; 22 call sites / 7 banks —
 ; the standard "roster changed" epilogue; S56, see MONSTER_DATA CF1 section).
 ; 1. Party-list entries ($CA8E-$CA90) pointing at empty slots -> $FF
 ; 2. Normalize every occupied in-use flag (+$00) to $01 (farm)
@@ -1387,7 +1387,8 @@ jr_001_46f1:
 ; 4. COMPACT the array: 149-B record swaps toward slot 0 (SaveRegsAndSetupDE),
 ;    old->new index map built at $C0D8
 ; 5. Remap the party list through the map (RetIfSlotInvalid2)
-; 6. Recount $CA8D; reload follower art (entry 6)
+; 6. Recount $CA8D; sanitize the +$29/+$31 ID lists (entry 6 =
+;    ScanPartySlotTable — NOT follower art; corrected S58, DOC_AUDIT)
 ; Records MOVE between slots here — slot indices are only stable between
 ; canonicalize calls.
 ; =============================================================================
