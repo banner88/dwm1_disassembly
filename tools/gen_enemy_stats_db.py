@@ -15,7 +15,7 @@ ROM_PATH = os.path.join(SCRIPT_DIR, '..', 'data', 'DWM-original.gbc')
 ENEMIES_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'enemy_stats.json')
 BOSSES_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'boss_table.json')
 MONSTERS_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'monsters_full.json')
-SKILLS_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'skills.json')
+SKILL_RECORDS_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'skill_records.json')
 
 BANK = 0x14
 BOSS_TABLE_ADDR = 0x4893
@@ -36,8 +36,8 @@ def main():
         bosses = json.load(f)
     with open(MONSTERS_PATH) as f:
         mon_names = {m['id']: m['name'] for m in json.load(f)}
-    with open(SKILLS_PATH) as f:
-        skill_names = {s['id']: s['name'] for s in json.load(f)}
+    with open(SKILL_RECORDS_PATH) as f:
+        skill_names = {s['id']: s['name'] for s in json.load(f)['records']}
 
     base = BANK * 0x4000
     lines = []

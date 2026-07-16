@@ -2033,3 +2033,53 @@ bug classes archived in the docs — not the newest patch. Keep the corrupt
 save as evidence; record hypotheses as hypotheses until a repro + byte
 trace closes them — a user-found reproduction beats any amount of static
 theorizing.
+
+## Session 59 Lessons — Phase 0 close-out (verifier check 5; skills.json retired)
+
+### A table with no terminator is bounded by the next thing in the bank — read that, not a round number
+
+**Symptom**: `extracted/skills.json` carried 34 junk records (ids 222–255):
+blank names, "handler addresses" like `$FFCD` / `$CD5B` / `$E7CD`. Three
+generators consumed the file and emitted them as table entries with blank
+comments.
+
+**Root cause**: `dump_skills.py` read the skill function table as **256**
+entries because 256 is the size of a byte's id space — a plausible round
+number, never verified. The table is **222** entries (ids `$00..$DD`,
+`$52:$4011..$41CC`, 444 B). It has no terminator; its bound is simply where
+the next thing starts — `SkillBlaze` @ `$52:$41CD`. The 34 phantom entries
+were 68 bytes of that handler's CODE decoded as little-endian pointers. The
+tell was in the data all along: `$CD` is the `call` opcode, so `call $5BFF`
+(`CD FF 5B`) surfaces as the "pointer" `$FFCD`.
+
+**Fix**: ported the three real readers to `skill_records.json` (which stops
+correctly at 221), fixed `gen_skill_table_db.py` to emit 222, deleted
+`skills.json`, and made `dump_skills.py` an inert tombstone that exits
+non-zero rather than silently recreating the retired file.
+
+**Rule**: when a table's length is a suspiciously round number (256, 128,
+100), treat it as unverified until you find the byte that ends the table.
+For an unterminated table that means locating the next label/handler and
+proving adjacency — `table_start + n*stride == next_symbol` is the proof.
+Corollary: garbage decodes are evidence, not noise. Pointer values dense in
+`$CD`/`$C9`/`$21` are opcodes wearing a pointer's clothes, and they tell you
+you have run off the end.
+
+### The doc naming a stale dependency can be the one that is stale
+
+**Symptom**: ROADMAP and PROJECT_STATE both said `skills.json` was "still read
+by `gen_name_tables_db.py`" — the item's entire scope.
+
+**Root cause**: exactly backwards. `gen_name_tables_db.py` declared
+`SKILLS_PATH` and **never opened it** (a dead constant, one occurrence). The
+three tools that *did* read it — `gen_skill_table_db.py`,
+`gen_enemy_stats_db.py`, `gen_monster_db.py` — went unmentioned in both docs.
+A one-line grep for the *reads* rather than the *name* would have caught it at
+any point. The same row also miscounted the junk entries as 33 (it is 34:
+256 − 222).
+
+**Rule**: a roadmap item's stated scope is a claim like any other — grep it
+before costing the work. Verify a dependency by its **use** (`open(`, the
+call site), never by the presence of a path constant or an import; declaring
+a path is not reading a file. Rule of thumb: if a doc names exactly one
+consumer, count them yourself — the count is cheap and the doc's is stale.

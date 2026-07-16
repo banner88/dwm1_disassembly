@@ -122,17 +122,48 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       scroll-up, and save-in-room → reload → scroll all work; stored
       monsters #15-16 still corrupt on transitions (expected, ≤14 rule).
       The fixed-table run also cleared S53's master-table test debt.
-- [ ] **Fold tool selftests into `verify_integrity.py`** (promoted S51 from *Open*
-      notes buried in the B3/B7/S1 completed stubs): the byte-identity selftests of
-      `build_breeding.py`, `build_library_table.py`, and `build_skill_tables.py`
-      only run when someone remembers to invoke them — the verifier doesn't, so a
-      table edit can silently diverge from its JSON. Add a check 5 that runs each
-      `--selftest`. *Accept:* verifier FAILS on a deliberately mutated table; PASS
-      5/5 on the clean tree.
-- [ ] **Retire `extracted/skills.json`** — superseded by `skill_records.json` (S44);
-      only `gen_name_tables_db.py` still reads it. Port the reader, then delete
-      `skills.json` (+ mark `dump_skills.py` legacy). *Accept:* repo-wide grep shows
-      zero readers; TOOLS_AND_DATA updated.
+- [x] **Fold tool selftests into `verify_integrity.py` — DONE S59.** (promoted S51
+      from *Open* notes buried in the B3/B7/S1 completed stubs): the byte-identity
+      selftests of `build_breeding.py`, `build_library_table.py`, and
+      `build_skill_tables.py` only ran when someone remembered to invoke them — the
+      verifier didn't, so a table edit could silently diverge from its JSON.
+      **As built:** `check_tool_selftests()` + `SELFTEST_TOOLS` list; labels
+      renumbered `/4`→`/5`. **ROM-tolerant by design** (the load-bearing decision):
+      `data/DWM-original.gbc` is gitignored/user-provided and `.github/workflows/
+      verify.yml` runs with no ROM ("MD5 compare needs only the expected hash"), so
+      an absent ROM **SKIPs** check 5 instead of failing — otherwise every CI push
+      would break. A present-but-non-canonical ROM still FAILs.
+      *Accept — MET, all four branches proven S59:* PASS 5/5 on the clean tree;
+      FAIL on a deliberately mutated `skill_records.json` `mp_cost` (pinpointed
+      `SkillMPCostTable mismatch at offset 0 (got 0x09 want 0x02, skill id ~0)`,
+      restored → PASS); SKIP with the ROM absent; FAIL on a 1-byte-corrupted ROM.
+      Owning doc: TOOLS_AND_DATA "Guardrail".
+- [x] **Retire `extracted/skills.json` — DONE S59.** Superseded by
+      `skill_records.json` (S44). **This box's stated scope was WRONG** (DOC_AUDIT
+      S59): "only `gen_name_tables_db.py` still reads it" was inverted — that tool
+      declared `SKILLS_PATH` and never opened it (dead constant, removed; output
+      byte-identical), while THREE unmentioned tools actually read it:
+      `gen_skill_table_db.py`, `gen_enemy_stats_db.py`, `gen_monster_db.py`. All
+      three ported to `skill_records.json` (`json.load(f)['records']`); they consume
+      only `id`→`name`, never `function_addr`, so the port is a one-line change each.
+      Output diffs: `gen_enemy_stats_db` + `gen_monster_db` **byte-identical**;
+      `gen_skill_table_db` comments-only (34 garbage ids gained `?NNN` in place of
+      blanks) with emitted code identical.
+      **Root cause found + fixed (the real prize):** `skills.json`'s 34 junk records
+      (ids 222–255, not "33") came from reading the 222-entry skill function table
+      as 256. The table is `$52:$4011..$41CC` (222 × 2 = 444 B) and is UNTERMINATED —
+      it ends where `SkillBlaze` begins at `$52:$41CD` (`CD FF 5B` = `call $5BFF`),
+      so the phantom entries were handler CODE read as pointers. `gen_skill_table_db.py`
+      still emitted 256/"512 bytes" and a bogus `$4211` xref (real site: `$6CD5`, the
+      only `21 11 40` in bank $52, inside `jr_052_6cc7`) — corrected to 222 + `$6CC7`;
+      it now emits zero `?` fallbacks, proving `skill_records.json` covers the table's
+      id space exactly. `disassembly/` + `patches/bank_052.asm` header `$41BC`→`$41CC`
+      (comment-only, build re-verified `1ca6579…`). `dump_skills.py` is now an inert
+      documented tombstone (exits non-zero) rather than a live tool that would
+      silently recreate the deleted file — the `dump_monsters.py` hazard class.
+      *Accept — MET:* repo-wide grep shows zero readers (only tombstone/historical
+      mentions); TOOLS_AND_DATA updated. Owning docs: BATTLE_SKILL_SYSTEM (table
+      extent), KEY_LESSONS S59, DOC_AUDIT S59.
 - [x] **Housekeeping deletions — EXECUTED S51 (user OK'd):** actually deleted:
       `__pycache__/`, 8× `.DS_Store`, `breeding_extra_recipes.json` — all three
       were TRACKED at HEAD, so recoverable from git history if ever needed

@@ -1,37 +1,33 @@
-"""Dump the skill table: 256 skill names + battle function addresses.
+"""LEGACY (retired S59) — do not use. Superseded by tools/gen_skill_records.py.
 
-Regenerates extracted/skills.json (previously frozen-source — produced by
-in-session code that was never committed; this tool replaces it).
+This tool used to write extracted/skills.json, which was RETIRED in S59 and is
+no longer present in the repo. Its replacement is extracted/skill_records.json
+(generator: tools/gen_skill_records.py, S44 schema), which every consumer now
+reads.
 
-Sources:
-  Bank $41 SkillNamePtrTable at $4539 — 256 × dw → name strings ($F0-terminated)
-  Bank $52 SkillFunctionTable at $4011 — 256 × dw → handler addresses
+Why it was retired
+------------------
+This dumper read 256 entries from the skill name/function tables. The skill
+function table at $52:$4011 is only 222 entries (ids $00..$DD, 444 bytes,
+$4011..$41CC). It ends where the first handler begins — SkillBlaze @ $52:$41CD,
+whose opening bytes are CD FF 5B (`call $5BFF`). Reading 256 entries therefore
+overran 68 bytes of handler CODE and decoded it as pointers, producing 34
+garbage records (ids 222-255: blank names, bogus $FFCD / $CD5B / $E7CD
+"addresses"). skill_records.json stops correctly at 221.
 
-Usage:
-  python3 -m tools.dump_skills
+This file is kept as a tombstone rather than deleted so that a future session
+does not re-derive the same 256-entry mistake. It is deliberately inert: running
+it exits non-zero instead of recreating the retired file (the project has
+already been bitten once by a legacy dumper silently resurrecting a deleted
+extracted/ file — see PROJECT_STATE "Open defects", dump_monsters.py).
+
+See: documentation/TOOLS_AND_DATA.md, documentation/BATTLE_SKILL_SYSTEM.md.
 """
-import json
-from pathlib import Path
-from dwm.rom import ROM
-from dwm.text import decode
+import sys
 
-NAME_BANK, NAME_TABLE = 0x41, 0x4539
-FUNC_BANK, FUNC_TABLE = 0x52, 0x4011
-
-rom = ROM(Path("data/DWM-original.gbc"))
-
-skills = []
-for i in range(256):
-    np = rom.read(NAME_BANK, NAME_TABLE + i * 2, 2)
-    name_ptr = np[0] | (np[1] << 8)
-    raw = rom.read_until(NAME_BANK, name_ptr, 0xF0)
-    name, _ = decode(raw)
-
-    fp = rom.read(FUNC_BANK, FUNC_TABLE + i * 2, 2)
-    func = fp[0] | (fp[1] << 8)
-
-    skills.append({"id": i, "name": name, "function_addr": f"${func:04X}"})
-
-out = Path("extracted/skills.json")
-out.write_text(json.dumps(skills, indent=2))
-print(f"Saved {out} ({len(skills)} skills)")
+sys.exit(
+    "tools/dump_skills.py is LEGACY (retired S59) and does nothing.\n"
+    "extracted/skills.json no longer exists; it read the 222-entry skill\n"
+    "function table as 256 entries and emitted 34 garbage records.\n"
+    "Use: python3 tools/gen_skill_records.py  ->  extracted/skill_records.json"
+)

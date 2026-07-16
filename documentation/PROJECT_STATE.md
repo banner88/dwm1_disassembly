@@ -10,14 +10,65 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-14 (Session 58 v2 — **CF3 step 1 (party-first sort)
-> USER-CONFIRMED: farm multi pick/drop, breeding, full gate run + boss,
-> party shuffles, save/reset (battle JOIN not explicitly exercised).
-> Phantom-monster mystery RESOLVED (buffer-overlay flag spray, hazard
-> re-accepted by user). Verifier PASS 4/4** — clean build byte-perfect
-> `1ca6579…`; patched build md5 `d31c9300e13b98f516c6bee8b446069d`
-> (**patched**, the compiler-regression reference; v1 `79dd32c5…` (patched)
-> and S57 `6c41f0d8…` (patched) are historical).)
+> Last verified: 2026-07-16 (Session 59 — **Phase 0 CLOSED: verifier check 5
+> (tool selftests) + `extracted/skills.json` retired. Byte-neutral session —
+> no test ROM. Verifier PASS 5/5** — clean build byte-perfect `1ca6579…`
+> (unchanged; the only `disassembly/` edits were comments). Patched-build /
+> compiler-regression reference `d31c9300e13b98f516c6bee8b446069d`
+> (**patched**) is UNTOUCHED — this session emitted zero ROM bytes; v1
+> `79dd32c5…` (patched) and S57 `6c41f0d8…` (patched) remain historical.)
+>
+> Session 59 (2026-07-16 — **Phase 0 close-out: the last two Phase 0 boxes.
+> Byte-neutral: tools + docs + comments only; ROM MD5 unchanged.**)
+> **NOTE — the ROM was not attached to the kickoff.** It did not need to be:
+> the clean build reproduces `1ca6579…` from source, so `data/DWM-original.gbc`
+> was reconstructed from `disassembly/game.gbc` and MD5-verified canonical.
+> Worth remembering — a missing ROM is not a blocker.
+> **(1) `verify_integrity.py` check 5 = tool selftests** (owning doc
+> TOOLS_AND_DATA "Guardrail"): `check_tool_selftests()` + `SELFTEST_TOOLS`
+> runs `--selftest` on `build_breeding.py` / `build_library_table.py` /
+> `build_skill_tables.py`; labels renumbered `/4`→`/5`. **The load-bearing
+> design decision is ROM-tolerance:** the ROM is gitignored/user-provided and
+> `.github/workflows/verify.yml` runs WITHOUT it ("MD5 compare needs only the
+> expected hash"), so an absent ROM **SKIPs** check 5 — failing there would
+> break every CI push. A present-but-non-canonical ROM still FAILs. All four
+> branches proven: PASS 5/5 clean; FAIL on a mutated `skill_records.json`
+> `mp_cost` (pinpointed `SkillMPCostTable` offset 0, restored → PASS); SKIP
+> with no ROM; FAIL on a 1-byte-corrupted ROM.
+> **(2) `extracted/skills.json` RETIRED (deleted).** The box's scope was
+> INVERTED (DOC_AUDIT S59): "only `gen_name_tables_db.py` reads it" — that
+> tool declared `SKILLS_PATH` and never opened it (dead constant, removed,
+> output byte-identical); the three real readers (`gen_skill_table_db.py`,
+> `gen_enemy_stats_db.py`, `gen_monster_db.py`) were named in no doc. All
+> ported to `skill_records.json`; they use only `id`→`name`, so each port is
+> one line. `gen_enemy_stats_db` + `gen_monster_db` outputs byte-identical;
+> `gen_skill_table_db` comments-only. `dump_skills.py` → inert tombstone
+> (exits non-zero; the `dump_monsters.py` "legacy dumper resurrects a deleted
+> file" hazard).
+> **ROOT CAUSE (the session's real find; owning section BATTLE_SKILL_SYSTEM
+> "Extent"):** the 34 junk records (ids 222–255 — the docs said 33) came from
+> reading the **222**-entry skill function table as **256**. The table is
+> `$52:$4011..$41CC` (222 × 2 = 444 B) and is **UNTERMINATED** — its bound is
+> simply where the next thing starts: `SkillBlaze` @ `$52:$41CD`
+> (`CD FF 5B` = `call $5BFF`). The phantoms were that handler's CODE decoded
+> as pointers (`$CD` = `call` opcode ⇒ the bogus `$FFCD`/`$CD5B`/`$E7CD`).
+> Corroborated three ways: `$4011 + 222*2 == $41CD == SkillBlaze`;
+> `build_skill_tables.py --selftest` re-emits `SkillFunctionTable` at **444
+> bytes byte-identical**; ported `gen_skill_table_db` now emits **zero `?`
+> fallbacks**, proving `skill_records.json` covers the id space exactly.
+> **Doc errors fixed in place (DOC_AUDIT S59):** `bank_052.asm` header
+> `$4011..$41BC` → `$41CC` (`$4011+$1BC = $41CD`; the count 222 was right, only
+> the end address was wrong — a correct-looking header with one bad number),
+> in BOTH `disassembly/` and `patches/`, comment-only, build re-verified
+> byte-perfect; same headers' `; Sources: … skills.json` → `skill_records.json`;
+> `gen_skill_table_db.py`'s `256 entries`/`512 bytes` → 222/444 and its bogus
+> `$4211` xref → `$6CC7` (the only `21 11 40` in bank $52 is `$6CD5`, inside
+> `jr_052_6cc7`). The disassembly had been correct at 222 since S45 — the
+> TOOLS had rotted past their own source.
+> **NEXT:** Phase 0 is now clear, so feature work is unblocked: CF3 (a2)
+> (pre-sort save migration) + the two redirected walker helpers (b), or A′1
+> (mapID ≥$80 audit). S58's residual test item stands: battle JOIN was never
+> explicitly exercised.
 >
 > Session 58 (2026-07-13 — **CF3 step 1: party-first sort. The invariant
 > "party at slots 0-2 in list order, farm contiguous after" now holds after
@@ -101,59 +152,7 @@
 > farm-menu order sanity) → then CF3 (a2) + the two redirected walker
 > helpers (b), or A′1.
 >
-> Session 57 (2026-07-13 — **CF2: per-battle exp re-bound to party; farm exp
-> banked into a persistent accumulator, paid at the map-change commit.**)
-> **Implementation (3 patch sites + 1 new bank; MONSTER_DATA "CF2 as built"
-> is the owning section):** (1) `wPendingFarmExp` **$D9C8-$D9CA** (24-bit LE,
-> clamp $98967F) — carved from the S8-verified clean event-flag block, INSIDE
-> the save image ON PURPOSE: in-gate save rooms exist (FAQ), so pending must
-> survive save+reload; boot-cleared, new-game-zeroed, pre-CF2 saves load as 0.
-> Flag indices **$0168-$017F retired** from the allocator pool in exchange.
-> (2) Bank $50 same-size 14-B window at the exp walker head ($61FA):
-> `CF2FarmShareDivert` (67 B, tail nops) still runs the vanilla Div24x8To16
-> but banks total/16 into pending and ZEROES the per-monster farm share HRAM
-> $DB-$DD — the walker's farm branch and the post-battle all-20 level scan
-> become farm-inert with zero loop edits. (3) Bank $0B same-size 6-B window at
-> RoomEntry0's map-change commit ($4020): `ld hl,$7300 / rst $10` + 2 nop →
-> NEW **bank $73** entry 0 `CF2WarpCommitDrain` does the displaced
-> wWarpFlag→wInGateworld store, then, when the DESTINATION is non-gate
-> (wWarpFlag=0) and pending≠0, pays each eligible farm monster (flag $01, not
-> egg +$63, level≠99, level<cap) the full pending and levels it with the
-> IDENTICAL silent vanilla pair the post-battle farm scan uses
-> ($1300 threshold / $1302 gains / $510d apply — all context-free, only
-> [$CAC0]; nested rst $10 = vanilla precedent, bank $50 does it). [$CAC0]
-> saved/restored. **Semantic deltas (user to veto in test):** farm
-> exp/levels land at the first non-gate transition, not per battle (invisible
-> — farm UI is town-only, and vanilla farm level-ups are SILENT: the
-> party-list pass gets the display state, the all-20 scan is the $1302+$510d
-> pair with no message — code-verified); mid-run storage recruits get the
-> FULL run's pending (slightly generous); drain also fires entering in-gate
-> special rooms (wWarpFlag=0) — an early payout, semantically safe (vanilla
-> paid farm mid-gate every battle).
-> **Validation:** emitted bytes decoded at all 3 sites (sm83dis);
-> divert+drain byte-executed in a mini SM83 interp (accumulate ×2, clamp at
-> 9,999,999, multi-level drain, egg/99/cap/party/empty skips, gate-dest
-> passthrough, zero-pending early-out — all pass). Compiler regression
-> re-pinned: compat build == the S57 hand-staged patched build md5-equal
-> (`6c41f0d8…`, **patched**), 18/18 `--rom` tests green; old reference
-> `026970d3…` (patched) historical.
-> **⚠ FLAG-POOL DEFECT found + fixed in passing:** EVENT_FLAGS' "broader safe
-> ranges" (and `editor2/core/project.py FLAG_SAFE_RANGES`) were script-only
-> analysis — per-byte audit vs engine literals + all_scripts.json shows
-> $D9CC, $D9D9-$D9E2, $D9E4-$D9E5, $D9E7-$D9E8 are LIVE (engine named vars
-> and/or script-referenced). Truly clean persistent flag bytes: **$D9C6-$D9C7
-> + $D9D7-$D9D8** (32 flags after the CF2 retirement, not "~200").
-> EVENT_FLAGS rewritten in place; FLAG_SAFE_RANGES now
-> [(0x0158,0x0167),(0x01E0,0x01EF)]; DOC_AUDIT addendum + KEY_LESSONS S57.
-> **USER-CONFIRMED 2026-07-13 (`DWM-S57-CF2-TEST.gbc`):** farm exp up at the
-> farm UI after a multi-battle gate run; save in an in-gate save room →
-> reload → exit gives the FULL run's exp (persistence proven); party
-> level-ups/display unchanged; town walk clean. Semantic deltas above stand
-> un-vetoed.
-> **NEXT:** CF3 (order: party-first sort first; the open user decisions in
-> ROADMAP CF3 must be settled before it starts) or A′1 (mapID ≥$80 audit).
->
-> (S56 + earlier blocks moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
+> (S57 + earlier blocks moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
 
 ---
 
@@ -202,7 +201,8 @@
 | 55 | WRAM relocation (reduced): counters/scratch/flags → $DE74; false-gap vetting (staging buffers, audio array, sleep pool, SVBK census); Cold Farm + Layer A′ arcs scoped; cap-18 retired | ROADMAP arcs; KEY_LESSONS S55; known_RAM_map; EDITOR_DESIGN §1; PROJECT_COMPILER |
 | 56 | CF1: party/farm boundary + monster-array access map (tri-state flag, party list $CA8D/$CA8E, canonicalizer+compaction, exp shares, egg/KO fields, staging slots $D665/$D6FA, 44 writers + 60 walkers classified) | MONSTER_DATA "Party/farm boundary"; extracted/monster_walkers.json; known_RAM_map; KEY_LESSONS S56 |
 | 57 | CF2 built + USER-CONFIRMED: wPendingFarmExp $D9C8 (persistent), bank $50 farm-share divert, bank $73 drain at the bank-$0B map-change commit; flag-pool audit fix (safe = $D9C6-7 + $D9D7-8) | MONSTER_DATA "CF2 as built"; EVENT_FLAGS; known_RAM_map; KEY_LESSONS S57; ROADMAP CF2 |
-| 58 | CF3 step 1 built (NOT user-tested): party-first sort in the canonicalizer ($01:$4809 operand hook → bank $73 entry 1); user decisions settled (sort; freed range = EXPLOIT/persistent); entry-6 = ScanPartySlotTable doc fix; call-site count re-verified 22/7 banks | MONSTER_DATA "CF3 step 1 as built"; ROADMAP CF3; DOC_AUDIT S58 |
+| 58 | CF3 step 1 built, v2 USER-CONFIRMED 2026-07-14 (battle JOIN not exercised — residual): party-first sort in the canonicalizer ($01:$4809 operand hook → bank $73 entry 1); user decisions settled (sort; freed range = EXPLOIT/persistent); phantom-monster mystery resolved (buffer-overlay spray into empty slots 15/16; hazard re-accepted); entry-6 = ScanPartySlotTable doc fix; call-site count re-verified 22/7 banks | MONSTER_DATA "CF3 step 1 as built"; ROADMAP CF3; DOC_AUDIT S58; KEY_LESSONS S58 |
+| 59 | **Phase 0 CLOSED** (byte-neutral): verifier check 5 = tool selftests (ROM-tolerant — SKIPs without a ROM so CI stays green); `extracted/skills.json` retired/deleted, 3 real readers ported to `skill_records.json`, `dump_skills.py` → tombstone. Root cause: the 222-entry skill function table (`$52:$4011..$41CC`, unterminated, bounded by `SkillBlaze` @ `$41CD`) was read as 256 → 34 phantom records. Doc fixes: inverted "sole reader" claim (2 files), `$41BC`→`$41CC` header arithmetic, tool's `256`/`$4211` → `222`/`$6CC7` | TOOLS_AND_DATA "Guardrail"; BATTLE_SKILL_SYSTEM "Extent"; KEY_LESSONS S59; DOC_AUDIT S59; ROADMAP Phase 0 |
 
 ---
 
@@ -324,8 +324,14 @@ re-section items).
   implementation plan: BATTLE_SKILL_SYSTEM §11.7.
 - S52 items built but NOT yet user-tested: MP charging (10/30/50), meter tier values
   (10/100/400), the "!" page-split upgrade message. Marked in §13.6.
-- `extracted/skills.json` is superseded by `skill_records.json` but still read by
-  `gen_name_tables_db.py` — retire (ROADMAP box).
+- ~~`extracted/skills.json` is superseded by `skill_records.json` but still read by
+  `gen_name_tables_db.py` — retire (ROADMAP box).~~ **RESOLVED S59 — and the claim was
+  inverted:** `gen_name_tables_db.py` declared the path but never opened it; the real
+  readers were `gen_skill_table_db.py`, `gen_enemy_stats_db.py`, `gen_monster_db.py`.
+  All ported to `skill_records.json`; `skills.json` DELETED; `dump_skills.py` is an
+  inert tombstone. Root cause of its 34 junk records: the 222-entry skill function
+  table (`$52:$4011..$41CC`) read as 256, overrunning into `SkillBlaze` (`$52:$41CD`).
+  (DOC_AUDIT S59; KEY_LESSONS S59.)
 - DOC_AUDIT.md's full-corpus audit is dated 2026-06-13; later findings are dated
   addenda inside it, not a re-audit.
 - `dump_monsters.py` WRITES the legacy `monsters.json` schema (43-byte parse) while

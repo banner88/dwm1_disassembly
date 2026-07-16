@@ -9,6 +9,11 @@ Checks, in order:
                    bank $60 is populated (custom content present).
   3. TREE RESTORE  working tree is restored to clean state afterwards.
   4. DOC SANITY    no documentation file claims a different "original MD5".
+  5. TOOL SELFTESTS the table generators' --selftest round-trips still pass, so a
+                   hand edit to a generated table cannot silently diverge from
+                   the JSON/ROM it is supposed to reproduce. SKIPPED (not failed)
+                   when data/DWM-original.gbc is absent — the ROM is gitignored
+                   and user-provided, and CI runs without it.
 
 Exit code 0 = all good. Non-zero = integrity broken; see output.
 
@@ -28,6 +33,17 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIS = os.path.join(REPO, "disassembly")
 PATCHES = os.path.join(REPO, "patches")
 DOCS = os.path.join(REPO, "documentation")
+TOOLS = os.path.join(REPO, "tools")
+ROM_PATH = os.path.join(REPO, "data", "DWM-original.gbc")
+
+# Check 5. Each tool exposes --selftest and exits non-zero on any mismatch.
+# These prove the emitted tables still reproduce the ROM/JSON byte-for-byte;
+# without this they only ran when someone remembered to invoke them.
+SELFTEST_TOOLS = [
+    "build_breeding.py",       # breeding family/special tables round-trip
+    "build_library_table.py",  # library grouping reproduces vanilla bounds
+    "build_skill_tables.py",   # skill MP/learn/record tables byte-identical
+]
 
 PATCH_FILES = [
     "bank_000.asm", "bank_001.asm", "bank_003.asm", "bank_004.asm",
@@ -71,7 +87,7 @@ def build():
 
 
 def check_clean_build():
-    print("[1/4] Clean build (byte-perfect check)...")
+    print("[1/5] Clean build (byte-perfect check)...")
     ok, log = build()
     if not ok:
         print("  FAIL: clean build did not produce game.gbc")
@@ -92,7 +108,7 @@ def check_clean_build():
 
 
 def check_patched_build():
-    print("[2/4] Patched build (custom content check)...")
+    print("[2/5] Patched build (custom content check)...")
     # Snapshot clean files we are about to overwrite
     backups = {}
     for f in PATCH_FILES:
@@ -135,7 +151,7 @@ def check_patched_build():
 
 
 def check_tree_restored():
-    print("[3/4] Tree restore check...")
+    print("[3/5] Tree restore check...")
     bad = [f for f in PATCH_NEW_FILES
            if os.path.exists(os.path.join(DIS, f))]
     if bad:
@@ -146,7 +162,7 @@ def check_tree_restored():
 
 
 def check_doc_sanity():
-    print("[4/4] Documentation MD5 sanity...")
+    print("[4/5] Documentation MD5 sanity...")
     bad = []
     pat = re.compile(r"\b([0-9a-f]{32})\b")
     for root, _dirs, files in os.walk(DOCS):
@@ -180,6 +196,40 @@ def check_doc_sanity():
     return True
 
 
+def check_tool_selftests():
+    print("[5/5] Tool selftests (generated tables vs ROM)...")
+    # ROM-tolerant BY DESIGN. These generators decode tables straight out of the
+    # original ROM, but data/DWM-original.gbc is gitignored and user-provided:
+    # CI verifies the build with only the expected MD5 and has no ROM. Treating
+    # an absent ROM as FAIL would break every CI push, so it SKIPs instead.
+    if not os.path.exists(ROM_PATH):
+        print("  SKIP: data/DWM-original.gbc not present"
+              " (CI / no-ROM checkout) — selftests need the ROM")
+        return True
+    got = md5(ROM_PATH)
+    if got != ORIGINAL_MD5:
+        print(f"  FAIL: data/DWM-original.gbc MD5 {got}")
+        print(f"        expected              {ORIGINAL_MD5}")
+        print("  Selftests compare against the canonical ROM; this one is not it.")
+        return False
+
+    ok = True
+    for tool in SELFTEST_TOOLS:
+        if not os.path.exists(os.path.join(TOOLS, tool)):
+            print(f"  FAIL: tools/{tool} is missing")
+            ok = False
+            continue
+        r = run(f"python3 tools/{tool} --selftest", REPO)
+        if r.returncode != 0:
+            print(f"  FAIL: {tool} --selftest exited {r.returncode}")
+            for line in (r.stdout + r.stderr).splitlines()[-8:]:
+                print(f"    | {line}")
+            ok = False
+        else:
+            print(f"  OK: {tool}")
+    return ok
+
+
 def main():
     clean_only = "--clean" in sys.argv
     results = [check_clean_build()]
@@ -188,6 +238,7 @@ def main():
             results.append(check_patched_build())
         results.append(check_tree_restored())
         results.append(check_doc_sanity())
+        results.append(check_tool_selftests())
     if all(results):
         print("\nINTEGRITY: PASS")
         return 0

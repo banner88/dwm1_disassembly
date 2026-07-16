@@ -12,7 +12,7 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROM_PATH = os.path.join(SCRIPT_DIR, '..', 'data', 'DWM-original.gbc')
 MONSTERS_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'monsters_full.json')
-SKILLS_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'skills.json')
+SKILL_RECORDS_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'skill_records.json')
 
 TABLE_ADDR = 0x4461
 ENTRY_SIZE = 43
@@ -58,8 +58,8 @@ def main():
         rom = f.read()
     with open(MONSTERS_PATH) as f:
         monsters = json.load(f)
-    with open(SKILLS_PATH) as f:
-        skill_names = {s['id']: s['name'] for s in json.load(f)}
+    with open(SKILL_RECORDS_PATH) as f:
+        skill_names = {s['id']: s['name'] for s in json.load(f)['records']}
 
     base = 0x03 * 0x4000 + (TABLE_ADDR - 0x4000)
 

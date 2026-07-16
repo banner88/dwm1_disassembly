@@ -23,7 +23,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | boss_table.json | dump_boss_table.py | $4897 table, 32 gates. Verified identical. |
 | all_exits.json | dump_all_exits.py | Verified identical. |
 | enemy_stats.json | dump_enemy_stats.py | **RECONCILED this session.** Full 25-byte layout now decoded: +1..2 exp LE16, +3 joinability, +17..20 ai_weights, +21..24 skills. 487/487 match. |
-| skills.json | dump_skills.py | **SUPERSEDED (S44) by skill_records.json** for editor use (it over-reads to 256 with 33 junk entries). Retained only because `gen_name_tables_db.py` still reads it. |
+| ~~skills.json~~ | ~~dump_skills.py~~ | **RETIRED S59 — file DELETED, do not recreate.** Superseded by `skill_records.json`. It read the skill function table as 256 entries; the table is 222 (ids $00–$DD, $52:$4011..$41CC, 444 B), ending where the first handler begins (`SkillBlaze` @ $52:$41CD, bytes `CD FF 5B` = `call $5BFF`). The extra **34** ids (222–255, not 33) were that handler's CODE decoded as pointers — hence blank names and bogus `$FFCD`/`$CD5B`/`$E7CD` addresses. All readers ported to `skill_records.json` S59: `gen_skill_table_db.py`, `gen_enemy_stats_db.py`, `gen_monster_db.py` (the pre-S59 note claiming `gen_name_tables_db.py` was the sole reader was backwards — that tool declared the path but never opened it; the dead constant is gone). `dump_skills.py` is now an inert documented tombstone (exits non-zero). |
 | skill_records.json | gen_skill_records.py | **NEW (S44).** 222 records ($00–$DD), the editor source of truth. Per skill: name, `kind` (155 skill / 37 item_effect / 30 internal), mp_cost (ALL=999), handler + shared-handler group, learn block ($06:$50E0), prereqs, family code, monster/enemy usage; `_generator` key lists all 6 source addrs. Round-trip proven by `build_skill_tables.py --selftest` (function/MP/learn tables re-emit byte-identical). |
 | skill_id_bucket_map.json | map_skill_id_buckets.py | **NEW (S48).** The de-aliasing FOUNDATION for S2d: every place the battle engine buckets the working skill id (`$db8a`, 254 reads / 9 banks), classified (equality/range/table-index) with per-gate verdicts for a custom id (`≥ $DE`); the verified fork points (record `$54:$4013` keystone, function, MP, sound, anim, name, learn-req); the high-range special gates; the full cast pipeline (production→consumption); the byte-neutral fork feasibility proof; and the SameBoy hardware-verification block. Self-checking: the tool re-derives the load-bearing anchors from the ROM and aborts on drift. See BATTLE_SKILL_SYSTEM.md §12. |
 | text_id_map.json | dump_text_id_map.py | **NEW GENERATOR this session.** 2,061 entries (vs 2,067 committed). All 2,061 are structurally identical (id/bank/index/addr). 6 "missing" are zero-padding junk the old generator decoded as "0000…" — exclusion is strictly more correct. Text decoding improved (proper charmap, DTE, control codes). |
@@ -97,6 +97,16 @@ $7E,$7F→$7C,$7A,$79), `build.py`.
 `verify_integrity.py` — run at every session start/end. (S57:
 `bank_073.asm` added to `PATCH_NEW_FILES` — the CF2 drain bank; the
 compiler's builder parses these lists, so staging stays single-sourced.)
+**S59: check 5 = tool selftests** (`SELFTEST_TOOLS`): runs `--selftest` on
+`build_breeding.py`, `build_library_table.py`, `build_skill_tables.py`, so a
+hand edit to a generated table can no longer silently diverge from the
+JSON/ROM it must reproduce (previously these ran only when someone
+remembered). **ROM-tolerant by design:** `data/DWM-original.gbc` is
+gitignored/user-provided and CI runs without it (CI needs only the expected
+MD5), so an absent ROM SKIPs check 5 rather than failing — a present but
+non-canonical ROM still FAILs. Verified S59 all four ways: PASS 5/5 clean;
+FAIL on a deliberately mutated `skill_records.json` mp_cost (pinpointed
+`SkillMPCostTable` offset 0); SKIP with no ROM; FAIL on a 1-byte-corrupted ROM.
 
 ### Core pipeline (editor sits on these)
 `tools/build_project.py` + **`editor2/` package** (✅ new S53 — the headless
@@ -296,7 +306,7 @@ key should auto-version instead of requiring manual cache clear.
 `dump_monsters` `dump_enemy_stats`(✅ reconciled) `dump_encounters`
 `dump_boss_table` `dump_all_exits` `dump_all_npcs` `dump_all_text`
 `dump_map_table`(✅ rewritten) `dump_routing_table` `dump_room_data`
-`dump_monster_names` `dump_steps` `dump_bank` `dump_skills`(✅ new)
+`dump_monster_names` `dump_steps` `dump_bank` `dump_skills`(⛔ RETIRED S59 — inert tombstone; use `gen_skill_records.py`)
 `dump_text_id_map`(✅ new) `dump_all_scripts`(✅ new)
 
 ### Phase-D db generators (all dry-run OK; apply+MD5-check remaining)

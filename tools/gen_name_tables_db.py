@@ -14,7 +14,6 @@ import json, os, sys
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROM_PATH = os.path.join(SCRIPT_DIR, '..', 'data', 'DWM-original.gbc')
 MONSTERS_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'monsters_full.json')
-SKILLS_PATH = os.path.join(SCRIPT_DIR, '..', 'extracted', 'skills.json')
 
 BANK = 0x41
 NAME_PTR_TABLE = 0x4339

@@ -16,7 +16,59 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S56 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first: S57 → S11)
+
+> Session 57 (2026-07-13 — **CF2: per-battle exp re-bound to party; farm exp
+> banked into a persistent accumulator, paid at the map-change commit.**)
+> **Implementation (3 patch sites + 1 new bank; MONSTER_DATA "CF2 as built"
+> is the owning section):** (1) `wPendingFarmExp` **$D9C8-$D9CA** (24-bit LE,
+> clamp $98967F) — carved from the S8-verified clean event-flag block, INSIDE
+> the save image ON PURPOSE: in-gate save rooms exist (FAQ), so pending must
+> survive save+reload; boot-cleared, new-game-zeroed, pre-CF2 saves load as 0.
+> Flag indices **$0168-$017F retired** from the allocator pool in exchange.
+> (2) Bank $50 same-size 14-B window at the exp walker head ($61FA):
+> `CF2FarmShareDivert` (67 B, tail nops) still runs the vanilla Div24x8To16
+> but banks total/16 into pending and ZEROES the per-monster farm share HRAM
+> $DB-$DD — the walker's farm branch and the post-battle all-20 level scan
+> become farm-inert with zero loop edits. (3) Bank $0B same-size 6-B window at
+> RoomEntry0's map-change commit ($4020): `ld hl,$7300 / rst $10` + 2 nop →
+> NEW **bank $73** entry 0 `CF2WarpCommitDrain` does the displaced
+> wWarpFlag→wInGateworld store, then, when the DESTINATION is non-gate
+> (wWarpFlag=0) and pending≠0, pays each eligible farm monster (flag $01, not
+> egg +$63, level≠99, level<cap) the full pending and levels it with the
+> IDENTICAL silent vanilla pair the post-battle farm scan uses
+> ($1300 threshold / $1302 gains / $510d apply — all context-free, only
+> [$CAC0]; nested rst $10 = vanilla precedent, bank $50 does it). [$CAC0]
+> saved/restored. **Semantic deltas (user to veto in test):** farm
+> exp/levels land at the first non-gate transition, not per battle (invisible
+> — farm UI is town-only, and vanilla farm level-ups are SILENT: the
+> party-list pass gets the display state, the all-20 scan is the $1302+$510d
+> pair with no message — code-verified); mid-run storage recruits get the
+> FULL run's pending (slightly generous); drain also fires entering in-gate
+> special rooms (wWarpFlag=0) — an early payout, semantically safe (vanilla
+> paid farm mid-gate every battle).
+> **Validation:** emitted bytes decoded at all 3 sites (sm83dis);
+> divert+drain byte-executed in a mini SM83 interp (accumulate ×2, clamp at
+> 9,999,999, multi-level drain, egg/99/cap/party/empty skips, gate-dest
+> passthrough, zero-pending early-out — all pass). Compiler regression
+> re-pinned: compat build == the S57 hand-staged patched build md5-equal
+> (`6c41f0d8…`, **patched**), 18/18 `--rom` tests green; old reference
+> `026970d3…` (patched) historical.
+> **⚠ FLAG-POOL DEFECT found + fixed in passing:** EVENT_FLAGS' "broader safe
+> ranges" (and `editor2/core/project.py FLAG_SAFE_RANGES`) were script-only
+> analysis — per-byte audit vs engine literals + all_scripts.json shows
+> $D9CC, $D9D9-$D9E2, $D9E4-$D9E5, $D9E7-$D9E8 are LIVE (engine named vars
+> and/or script-referenced). Truly clean persistent flag bytes: **$D9C6-$D9C7
+> + $D9D7-$D9D8** (32 flags after the CF2 retirement, not "~200").
+> EVENT_FLAGS rewritten in place; FLAG_SAFE_RANGES now
+> [(0x0158,0x0167),(0x01E0,0x01EF)]; DOC_AUDIT addendum + KEY_LESSONS S57.
+> **USER-CONFIRMED 2026-07-13 (`DWM-S57-CF2-TEST.gbc`):** farm exp up at the
+> farm UI after a multi-battle gate run; save in an in-gate save room →
+> reload → exit gives the FULL run's exp (persistence proven); party
+> level-ups/display unchanged; town walk clean. Semantic deltas above stand
+> un-vetoed.
+> **NEXT:** CF3 (order: party-first sort first; the open user decisions in
+> ROADMAP CF3 must be settled before it starts) or A′1 (mapID ≥$80 audit).
 
 > Session 56 (2026-07-11 — **CF1: the monster-array access map. Byte-neutral;
 > deliverables = docs + tool + JSON + source comments only.**)

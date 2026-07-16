@@ -165,9 +165,9 @@ Three hooks, all byte-neutral, plus one new bank:
 | Computed damage number | `$db56`/`$db57` |
 | Damage descriptor bitfield (bit5 = apply $db56/57) | `$dd6f` |
 | Effect selector (Blaze `$b882` = hit id $82 / miss id $b8) | `$dd70`/`$dd71` |
-| Skill function table (222 entries) | `$52:$4011` |
+| Skill function table (222 entries, `$4011..$41CC` = 444 B) | `$52:$4011` |
 | Effect dispatch site (reads `$db8a`) | `$52:$6CC7` (hook at `$6CD5`) |
-| SkillBlaze handler | `$52:$41CD` |
+| SkillBlaze handler — **also the function table's hard upper bound** | `$52:$41CD` |
 | Per-skill record pointer table (222) | `$54:$4013` |
 | Record data start (Blaze rec, 19 bytes) | `$54:$41CF` |
 | FX/anim/message selector | `SaveBtlFX_43ff` (bank `$58`) |
@@ -229,6 +229,17 @@ layer was not yet understood. §7–§9 decode that layer. Core principle:
 > makes them *differ* — damage, targeting, MP, message, AI weight — lives in the
 > per-skill **record**. So most "edit a skill" operations are record edits with
 > zero code change.
+>
+> **Extent (S59, verified against ROM + disassembly).** The table is exactly
+> **222 entries × 2 B = 444 B, `$52:$4011..$41CC`**. It has no terminator: its
+> upper bound is simply where the first handler starts — `SkillBlaze` @
+> `$52:$41CD` (`CD FF 5B` = `call $5BFF`). Anything reading it as 256 entries
+> runs 68 bytes into that handler and decodes CODE as pointers, yielding
+> phantom ids 222–255 with blank names and bogus `$FFCD`/`$CD5B`/`$E7CD`
+> "addresses" (`$CD` is the `call` opcode — the tell). This is exactly what the
+> retired `extracted/skills.json` did; `skill_records.json` stops correctly at
+> 221. Independently corroborated by `build_skill_tables.py --selftest`, which
+> re-emits `SkillFunctionTable` and reports **444 bytes byte-identical**.
 
 ## 7. The skill RECORD table (`$54`) — per-skill parameters  [PROVEN]
 

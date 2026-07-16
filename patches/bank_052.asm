@@ -20,7 +20,8 @@
 ;   Entry 2: $7A18    Entry 6: $6A8A
 ;   Entry 3: $538F    Entry 7: $7EF1
 ;
-; Sources: skill function table analysis, skills.json
+; Sources: skill function table analysis, extracted/skill_records.json
+;          (skills.json retired S59 — it read this 222-entry table as 256)
 ; =============================================================================
 
 ; Disassembly of "baserom.gbc"
@@ -45,7 +46,8 @@ SECTION "ROM Bank $052", ROMX[$4000], BANK[$52]
 
 ; ---------------------------------------------------------------
 ; Skill Function Table ($4011)
-; 222 entries x 2 bytes = 444 bytes ($4011..$41BC), then handler code begins.
+; 222 entries x 2 bytes = 444 bytes ($4011..$41CC), then handler code begins
+; at SkillBlaze ($41CD) — the table's hard upper bound (verified S59).
 ; (Table entries for ids 222–255 do not exist; skills only run 0–221 = $00–$DD.)
 ; Maps skill ID -> handler function address within bank $52
 ; Referenced by code at $6CC7 via: ld hl, SkillFunctionTable
