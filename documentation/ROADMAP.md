@@ -99,7 +99,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       What stayed: the NPC/exit buffers ($D379-$D477, inside monster slots
       14-15) — ACCEPTED legacy hazard: forward corruption is transient
       (buffers self-heal per read), reverse corruption of stored monsters
-      #15-16 remains → **keep the array ≤14 occupied around custom rooms on
+      #15-16 remains → **(RETIRED S60 — window freed by CF3)** keep the array ≤14 occupied around custom rooms on
       the exploration overlay** (saves there are disposable, user decision).
       S55 vetting findings that forced the reduction (details in
       wram_usage.json + KEY_LESSONS S55): the S54 gap candidates were FALSE —
@@ -285,7 +285,16 @@ dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
       silent); mid-run storage recruits get the full run's pending; drain
       also fires entering in-gate special rooms (early, safe). Flag indices
       $0168-$017F retired to the accumulator (EVENT_FLAGS).
-- [~] **CF3 — farm storage → SRAM + path redirects.** *Accept:* full
+- [x] **CF3 — farm storage → SRAM + path redirects — DONE S60,
+      USER-CONFIRMED 2026-07-17 (sleep/unsleep, breeding + reload,
+      in-gate saves; "all tests normal").** Farm slots 3-19 live at
+      SRAM $A1FB+s*$95; WRAM $CC80-$D664 freed; buffers legal in
+      place; ≤14 rule RETIRED. Roster uniformly EAGER (checksum v2
+      excludes $A1C7-$AD9E; canonicalizer-tail mirror). Pre-CF3 AND
+      S60v1 saves self-heal at boot verify. See MONSTER_DATA "CF3 as
+      built (S60)". ⚠ save states from pre-CF3 builds are invalid
+      under CF3 (two-timeline splice — documented, unfixable).
+      *Original accept:* full
       drop/pick/breed/give/library loop in SameBoy; WRAM $CBEB-$D664 free per
       audit_wram; custom buffers relocated into it; ≤14 rule deleted from docs.
       **STEP 1 DONE S58, USER-CONFIRMED 2026-07-14 (v2: farm multi pick/drop,

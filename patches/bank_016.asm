@@ -77,12 +77,12 @@ jr_016_401c:
     or a
     jr z, jr_016_402d
 
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc c
     dec b
     jr nz, jr_016_401c

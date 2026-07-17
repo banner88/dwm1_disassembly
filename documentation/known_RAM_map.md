@@ -110,6 +110,13 @@
                  Access is INDEXED ONLY (GetMonsterDataPtr: HL = field + A×$95)
                  — there are ZERO literal refs to slot 3-19 addresses. Do not
                  place anything at $CAC4-$D664 (see audit_wram.py, S54).
+                 **S60 (CF3): SUPERSEDED for $CC80-$D664** — farm slots 3-19
+                 moved to SRAM $A3BA-$AD9E (live in the save image); the WRAM
+                 window is now FREE/dead (link+arena still time-share it as
+                 scratch; custom-room buffers $D379-$D477 legal in place; ≤14
+                 rule retired). Party 0-2 ($CAC1-$CC7F) + staging $14/$15
+                 ($D665-$D78E) remain live WRAM. See MONSTER_DATA "CF3 as
+                 built (S60)".
    1:D664        TRUE end of party/storage monster data (slot 19 = $D5D0 +
                  $95 - 1). The old "D6B0" figure here was wrong (S54).
                  S55 UPDATE: step counters/scratch/flags relocated to $DE74

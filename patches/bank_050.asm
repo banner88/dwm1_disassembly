@@ -6054,12 +6054,12 @@ jr_050_62c4:
     inc [hl]
     pop hl
     pop bc
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
+    call CF3AdvHLHead           ; CF3 (S60): slot advance (HL form) -> ROM0
+    nop                         ; head moves the pointer through DE into bank
+    nop                         ; $73 entry 2 (boundary-hopping advance).
+    nop                         ; Same-size 8-byte window; DE preserved by the
+    nop                         ; helper, A/flags clobbered as vanilla did.
+    nop
     dec b
     jp nz, Jump_050_6211
 

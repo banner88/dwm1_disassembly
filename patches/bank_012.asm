@@ -2141,12 +2141,12 @@ jr_012_4cbe:
 
 jr_012_4cd4:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     dec b
     jr nz, jr_012_4cbe
 
@@ -2189,12 +2189,12 @@ jr_012_4cfa:
 
 jr_012_4d11:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc c
     dec b
     jr nz, jr_012_4cfa
@@ -3346,12 +3346,12 @@ jr_012_5528:
 
 jr_012_553e:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     dec b
     jr nz, jr_012_5528
 
@@ -3388,12 +3388,12 @@ jr_012_555c:
 
 jr_012_556e:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     dec b
     jr nz, jr_012_555c
 
@@ -3597,12 +3597,12 @@ jr_012_5677:
 
 jr_012_5695:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     dec b
     jr nz, jr_012_5677
 
@@ -3651,12 +3651,12 @@ jr_012_56bb:
 
 jr_012_56dc:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc c
     dec b
     jr nz, jr_012_56bb
@@ -4269,12 +4269,12 @@ jr_012_5abb:
 
 jr_012_5add:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     dec b
     jr nz, jr_012_5abb
 
@@ -4326,12 +4326,12 @@ jr_012_5b03:
 
 jr_012_5b28:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc c
     dec b
     jr nz, jr_012_5b03
@@ -4744,12 +4744,12 @@ jr_012_5e0b:
     cp $01
     jr z, jr_012_5e4d
 
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
+    call CF3AdvHLHead           ; CF3 (S60): slot advance (HL form) -> ROM0
+    nop                         ; head moves the pointer through DE into bank
+    nop                         ; $73 entry 2 (boundary-hopping advance).
+    nop                         ; Same-size 8-byte window; DE preserved by the
+    nop                         ; helper, A/flags clobbered as vanilla did.
+    nop
     dec b
     jr nz, jr_012_5e0b
 
@@ -4881,12 +4881,12 @@ jr_012_5edf:
     cp $01
     jr z, jr_012_5ef4
 
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
+    call CF3AdvHLHead           ; CF3 (S60): slot advance (HL form) -> ROM0
+    nop                         ; head moves the pointer through DE into bank
+    nop                         ; $73 entry 2 (boundary-hopping advance).
+    nop                         ; Same-size 8-byte window; DE preserved by the
+    nop                         ; helper, A/flags clobbered as vanilla did.
+    nop
     dec b
     jr nz, jr_012_5edf
 
@@ -7252,12 +7252,12 @@ jr_012_6bfa:
     or a
     jr z, jr_012_6c0a
 
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
+    call CF3AdvHLHead           ; CF3 (S60): slot advance (HL form) -> ROM0
+    nop                         ; head moves the pointer through DE into bank
+    nop                         ; $73 entry 2 (boundary-hopping advance).
+    nop                         ; Same-size 8-byte window; DE preserved by the
+    nop                         ; helper, A/flags clobbered as vanilla did.
+    nop
     inc c
     dec b
     jr nz, jr_012_6bfa

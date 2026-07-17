@@ -1027,7 +1027,7 @@ site-count-independent regardless (it lives inside the callee).
   (correctly remapped where it matters — see fixups) values than vanilla.
   Same instability class vanilla already has via compaction.
 
-### Migration note (OPEN for the next CF3 session)
+### Migration note (RESOLVED S60 — see "CF3 as built" below)
 
 Loading a PRE-SORT save restores a vanilla-layout roster; the invariant is
 only established at the first canonicalize after load (any roster change).
@@ -1056,3 +1056,79 @@ The S58 phantom-monster reports were traced to the S55 buffer-overlay
 hazard's phantom-spawn facet (slots 15/16 flag bytes $D37C/$D411 sprayed by
 the NPC/exit buffer copies — user re-accepted, retired by CF3 relocation;
 see patches/wram.asm hazard note + ROADMAP CF3 (d)), NOT to the sort.
+
+
+## CF3 as built (S60) — farm storage in SRAM
+
+**The map.** Farm slot s (3-19) lives permanently at its save-image address
+`$A1FB + s*$95` — the farm window `$A3BA-$AD9E`. Party slots 0-2 stay at WRAM
+`$CAC1-$CC7F`; staging slots $14/$15 stay at WRAM `$D665-$D78E`. The vanilla
+WRAM farm window `$CC80-$D664` is FREED (the S55 custom-room buffer hazard and
+the ≤14 rule are retired — the buffers at `$D379-$D477` now overlay dead
+memory). Rebase WRAM→SRAM = −$28C6, SRAM→WRAM = +$28C6. Migration is free:
+vanilla's own save copy already placed every save's farm records at these
+SRAM addresses; loading any pre-CF3 save just works (plus the checksum
+self-heal below).
+
+**Pointer production.** `GetMonsterDataPtr` forks per slot: slots <3 (and any
+non-`$CAxx` base, e.g. the `$A246` image-preview readers in banks $07/$0A)
+take the vanilla fast path; slots ≥3 route through bank $73 entry 3 to the
+rebased SRAM address with SRAM enabled. All record access is position-
+independent (no self-pointers; `+$50/+$52` are numeric).
+
+**Walker advances.** 48 inline `+$95` advance sites across banks
+$01/$04/$07/$0A/$12/$15/$16/$18/$50/$51 were replaced byte-neutrally with the
+dance `push bc / push hl / ld hl,$730x / rst $10 / pop hl / pop bc` (DE form,
+8 bytes) or `call CF3AdvHLHead` + nops (HL form). Entry 2 advances DE by $95
+and hops the boundary: down-hop `[$CC80,$CD14]` → −$28C6 + enable SRAM;
+up-hop `[$AD9F,$AE33]` → +$28C6. Pool walks (`$B124` base, banks $07/$12)
+are correctly untouched; pool addresses miss both hop windows by design.
+**`rst $10` CLOBBERS BC** (dispatcher's `ld bc,$4001`) — hence the push/pop;
+copy callees recover true BC from the dispatcher frame via `ld hl,sp+6`.
+bank $59's monster readers receive party-only slot indices (S58 sort
+invariant) and are NOT patched (the bank is also 100% full).
+
+**Persistence model (v2 — the load-consistency fix).** The entire roster
+image `$A1C7-$AD9E` (party list, library bits, monster vars, party records,
+farm) is EAGER: farm writes land in live SRAM immediately, and the
+canonicalizer tail mirrors WRAM `$CA8D-$CC7F` → `$A1C7-$A3B9` after every
+canonicalize. The save checksum excludes the whole roster region (v2 formula:
+seed $4638 + `$A002 x $1C5` + `$AD9F x $1261`); world state (gold, items,
+flags, position) stays lazy as vanilla. Consequences: reload restores the
+last canonical roster — roster changes (breed, catch, deposit, sleep) are
+never undone by reloading, and can never be half-committed, duplicated, or
+lost (the recalled v1 build committed cross-space sort/compaction swaps
+SRAM-eagerly but WRAM-lazily; reload-without-save duplicated one record and
+lost the other). Boot-verify self-heal accepts vanilla-full and S60v1 stored
+checksums and rewrites v2 in place, so every save era loads.
+
+**Flag convention (oracle-verified S60).** Slot flag `$02` = party
+(protected), `$01` = farm/awake, `$00` = empty. The canonicalizer's normalize
+walk flattens nonzero→$01, then `RetIfSlotInvalid` (misnomer; "mark party
+slot") re-marks the list's three slots $02 — so the convention is
+re-derived from the party list every canonicalize. The farm sleep function is
+a wholesale barn↔pool exchange of every flag≠$02 slot with sequential pool
+slots (`bank $12:$5F55`), protected only by the standing $02 flags; it is an
+involution and survives interleaved compaction/sort.
+
+**Save-state caveat (S60, user-verified).** Emulator save states snapshot
+WRAM and SRAM atomically. States captured under pre-CF3 builds are
+ARCHITECTURALLY INVALID under CF3 builds: the state's WRAM holds the old
+all-WRAM roster layout while CF3 code reads slots ≥3 from the state's (older)
+SRAM — two spliced timelines that no code can reconcile. Same-build states
+are safe. (Also normal emulator behavior regardless of build: loading a state
+rewinds the battery save, and the emulator flushes the rewound SRAM back to
+the .sav.)
+
+**Validation (S60).** 145/145 interpreter battery (bank-aware SM83
+interpreter executing real ROM bytes: producers, advances+hops, checksum
+3-format migration, copy skips, new-game clear, trade-recv, roster mirror
+incl. an exact reproduction of the v1 field bug); 5 differential simulations
+vs the ORIGINAL ROM as oracle (sleep commit x3 input shapes, wake, S52-shape
+first canonicalize, full load→sleep-enter→commit→canonicalize session) — all
+byte-identical or invariant-clean; plus a replay of the user's real .sav
+under the v2 build (checksum migrates, party = DarkDrium/BattleRex/Healer at
+0-2, mirror consistent). Byte-diff vs the S58 reference: size-neutral,
+regions in banks 00/01/04/07/0A/12/15/16/18/50/51/73 only. Compiler-regression pin
+`168c5f1b5b4b3b2568a6d6e2f3f1ab45` (patched build). **USER-CONFIRMED 2026-07-17**: sleep/
+unsleep, breeding + reload persistence, in-gate saves, "all tests normal."

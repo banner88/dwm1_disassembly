@@ -6566,13 +6566,19 @@ ReformatDigitResult:
 
 
 ; EnableSRAM: Enable external SRAM access (write $0A to $0100)
+; (misnamed by mgbdis — this is ReadSRAMByte: A := [HL] with SRAM gated.)
+; CF3 (S60): the "disable" write now re-writes $0A — SRAM STAYS ENABLED.
+; Same-size 1-byte operand edit. This is one of the two vanilla SRAM-access
+; choke points (see DisableSRAMAccess below); with both neutralized, the
+; sleep-pool swap loop and every helper-based SRAM byte access leave the
+; farm's SRAM window readable for the pointer-based derefs that follow.
 EnableSRAM:
     di
     ld a, $0a
     ld [$0100], a
     ld a, [hl]
     push af
-    ld a, $00
+    ld a, $0a                   ; CF3: was $00 — keep SRAM enabled
     ld [$0100], a
     pop af
     ei
@@ -6592,33 +6598,60 @@ EnableSRAMAccess:
     pop af
     ld [hl], a
 
+; CF3 (S60): second neutralized choke point (tail of the misnamed
+; DisableIntAndPush = WriteSRAMByte helper). Same-size 1-byte operand edit.
 DisableSRAMAccess:
-    ld a, $00
+    ld a, $0a                   ; CF3: was $00 — keep SRAM enabled
     ld [$0100], a
     ei
     ret
 
 
+; =============================================================================
+; CF3 (S60): SRAMWriteBlock reduced to a 6-byte husk -> bank $73 entry 4
+; (CF3Checksum: 3-segment sum excluding the farm window $A3BA-$AD9E, plus
+; the pre-CF3 save migration self-heal). All three vanilla call sites pass
+; the constant HL=$A002/BC=$1FFE, so the callee hardcodes the ranges and the
+; husk needs no argument plumbing; DE (the returned sum) survives rst $10.
+; This one husk makes save-time compute, boot-time verify, and the
+; corrupt-save wipe-recompute consistent at a single choke point.
+; The freed 20 interior bytes host two CF3 ROM0 stubs (below) — total region
+; size is byte-identical (26 bytes).
+; =============================================================================
 SRAMWriteBlock:
-    ld a, $0a
-    ld [$0100], a
-    ld de, $4638
-
-SRAMChecksumLoop:
-    ld a, [hl+]
-    add e
-    ld e, a
-    ld a, $00
-    adc d
-    ld d, a
-    dec bc
-    ld a, b
-    or c
-    jr nz, SRAMChecksumLoop
-
-    ld a, $00
-    ld [$0100], a
+    ld hl, $7304                ; bank $73 entry 4: CF3Checksum -> DE
+    rst $10
     ret
+
+; GMDP slow path (farm pointers, cold): reached from CF3RebaseHL's gate with
+; AF pushed and HL = the computed pointer (high byte >= $CC). Moves the
+; pointer through DE (rst $10 eats HL; the three producers all push/pop DE
+; around their bodies, so the clobber is invisible to callers), lets bank
+; $73 entry 3 test/rebase/enable, and restores the vanilla A+flags contract
+; via the gate's pushed AF.
+CF3RebSlow:
+    ld d, h
+    ld e, l
+    ld hl, $7303                ; bank $73 entry 3: CF3RebaseDE
+    rst $10
+    ld h, d
+    ld l, e
+    pop af
+    ret
+
+; Tail of the HL-walker advance helper (head at CF3AdvHLHead in the GMDP
+; cluster's dead-writer pocket): DE was pushed and now holds the walk
+; pointer; entry 2 advances it with the boundary hop.
+CF3AdvHLTail:
+    ld hl, $7302                ; bank $73 entry 2: CF3AdvanceDE
+    rst $10
+    ld h, d
+    ld l, e
+    pop de
+    pop bc                      ; restore the walker's counters (head pushed)
+    ret
+    rst $38                     ; -- 2 pad bytes: region stays 26 --
+    rst $38
 
 
 SaveGameState:
@@ -6671,23 +6704,30 @@ GetMonsterField2:
     ret
 
 
+; =============================================================================
+; CF3 (S60): CopySRAMBlock reduced to a 14-byte husk (+5 pad = byte-identical
+; 19-byte region) -> bank $73 entry 5. HL (source) travels via the
+; wCF3CopyMbx mailbox because rst $10 consumes HL; DE/BC survive the
+; dispatcher. The callee copies with the generic rule "never WRITE into the
+; farm window $A3BA-$AD9E (still advance)", which masks the SaveGameState
+; image copy AND SavePartyToSRAM's 20-slot block with zero operand changes.
+; Leaves SRAM enabled (CF3 policy).
+; =============================================================================
 CopySRAMBlock:
 Jump_CopySRAMBlock:
-    ld a, $0a
-    ld [$0100], a
-
-CopySRAMLoop:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec bc
-    ld a, b
-    or c
-    jr nz, CopySRAMLoop
-
-    ld a, $00
-    ld [$0100], a
+    ld a, l
+    ld [wCF3CopyMbxLo], a
+    ld a, h
+    ld [wCF3CopyMbxHi], a
+    push bc                     ; rst $10 clobbers BC — the callee recovers the
+    ld hl, $7305                ; true length from the constant-depth dispatcher
+    rst $10                     ; frame (ld hl,sp+6). bank $73 entry 5.
+    pop bc
     ret
+    rst $38                     ; -- 4 bytes vanilla-loop padding --
+    rst $38
+    rst $38
+    rst $38
 
 
 SavePartyToSRAM:
@@ -6737,27 +6777,38 @@ LoadExtraFromSRAM:
     ret
 
 
+; =============================================================================
+; CF3 (S60): CopyFromSRAM reduced to the same 14-byte husk shape -> bank $73
+; entry 6 (HL = DEST via mailbox here; DE = SRAM source). The callee skips
+; reads FROM the farm window (dest still advances) so restores never spray
+; farm records over the freed WRAM where the custom room buffers live.
+; Interior labels kept at their original addresses (they had no external
+; code refs; kept for symbol stability).
+; =============================================================================
+; NOTE: CheckCopyDone (+9) and RetFromSRAMCopy (+11) are referenced by
+; fake-decoded data in banks $08/$1D/$35/$3A/$3D/$5A — their ADDRESS VALUES
+; are pinned by a nop filler so those data bytes stay identical.
 CopyFromSRAM:
-    ld a, $0a
-    ld [$0100], a
+    ld a, l
+    ld [wCF3CopyMbxLo], a
+    ld a, h
 
 CopyFromSRAMLoop:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec bc
+    ld [wCF3CopyMbxHi], a
+    push bc                     ; true length -> dispatcher frame (see entry 6)
 
 CheckCopyDone:
-    ld a, b
-    or c
+    ld h, $73
 
 BranchIfNonZero:
 RetFromSRAMCopy:
-    jr nz, CopyFromSRAMLoop
-
-    ld a, $00
-    ld [$0100], a
+    ld l, $06                   ; bank $73 entry 6: CF3CopyFromSRAM
+    rst $10
+    pop bc
     ret
+    rst $38                     ; -- 3 bytes vanilla-loop padding --
+    rst $38
+    rst $38
 
 
 
@@ -6806,12 +6857,18 @@ GetCurrentMonsterPtr:
     push hl
     call GetMonsterSlotContext
     ld c, $95
-    call Mul8x8To16
+    ; CF3 (S60): shared producer-tail fork. CF3MulRebase = call Mul8x8To16 +
+    ; pop base + add hl,bc + party/farm gate (farm ptrs rebased -$28C6 into
+    ; SRAM, SRAM enabled). A + flags return exactly as vanilla (push af/pop
+    ; af sandwich around the gate). Same-size: 5-byte window -> call + 2 nop.
+    ; AddBCToHL/Jump_000_2235 keep their ADDRESS (fake-data refs) — the code
+    ; under them is now the nop tail of the fork call.
+    call CF3MulRebase
 
 AddBCToHL:
 Jump_000_2235:
-    pop bc
-    add hl, bc
+    nop
+    nop
     pop de
     pop bc
     pop af
@@ -6832,11 +6889,11 @@ MonsterFieldCalc:
     and $7f
 
 ComputeMonsterOffset:
-    call Mul8x8To16
+    call CF3MulRebase           ; CF3 (S60): fork — see GetCurrentMonsterPtr
 
 MonsterFieldWrite:
-    pop bc
-    add hl, bc
+    nop
+    nop
     pop de
     pop bc
     ret
@@ -6859,11 +6916,17 @@ Jump_000_224f:
     ret
 
 
-    push bc
-    call GetCurrentMonsterPtr
-    pop bc
-    ld [hl], c
-    ret
+; CF3 (S60): 7-byte dead vanilla helper (unlabeled = unreferenced; zero LE
+; refs to $2256 anywhere in ROM0) repurposed as the HL-walker advance head.
+; Callers: the 11 HL-form `add $95` walker windows (call CF3AdvHLHead + 5
+; nop). Moves the walk pointer into DE (rst $10 eats HL), tail lives in the
+; SRAMWriteBlock husk space.
+CF3AdvHLHead:
+    push bc                     ; rst $10 clobbers BC (table-index ld bc,$4001)
+    push de                     ; and HL walkers keep live counters in BC
+    ld d, h
+    ld e, l
+    jp CF3AdvHLTail
 
 
 WriteMonsterWord:
@@ -6891,9 +6954,9 @@ GetActiveMonsterPtr:
     ld h, a
     ld a, [hl]
     ld c, $95
-    call Mul8x8To16
-    pop bc
-    add hl, bc
+    call CF3MulRebase           ; CF3 (S60): fork — see GetCurrentMonsterPtr
+    nop
+    nop
 
 RestoreRegisters3:
     pop de
@@ -6916,19 +6979,24 @@ ReadActiveMonsterWord:
     ret
 
 
-    push bc
-    call GetActiveMonsterPtr
-    pop bc
-    ld [hl], c
-    ret
-
-
-    push bc
-    call GetActiveMonsterPtr
-    pop bc
-    ld a, c
-    ld [hl+], a
-    ld [hl], b
+; CF3 (S60): two adjacent dead vanilla helpers (16 bytes, unlabeled =
+; unreferenced; zero LE refs to $2290/$2297 anywhere in ROM0) repurposed as
+; the shared producer fork. Stack on entry: [ret][base][de][bc](+[af]).
+; Fast path (party, hot): ~6 extra instructions. Slow path (farm, cold):
+; CF3RebSlow -> bank $73 entry 3. CF3RebaseHL is also a public gate for
+; bank $59's two local producers (add hl,bc done, HL = candidate ptr).
+CF3MulRebase:
+    call Mul8x8To16
+    pop de                      ; ret addr
+    pop bc                      ; base (the producer's pushed HL)
+    push de
+    add hl, bc                  ; HL = base + slot*$95 (vanilla result)
+CF3RebaseHL:
+    push af                     ; preserve vanilla A + add-flags contract
+    ld a, h
+    cp $cc
+    jp nc, CF3RebSlow           ; >= $CC00: farm/staging/other -> full test
+    pop af
     ret
 
 

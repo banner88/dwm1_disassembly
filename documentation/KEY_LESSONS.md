@@ -2083,3 +2083,55 @@ before costing the work. Verify a dependency by its **use** (`open(`, the
 call site), never by the presence of a path constant or an import; declaring
 a path is not reading a file. Rule of thumb: if a doc names exactly one
 consumer, count them yourself — the count is cheap and the doc's is stale.
+
+
+## S60 — CF3: dispatcher contracts, split-tier persistence, and the vanilla oracle
+
+**`rst $10` clobbers BC — validate dispatcher contracts by execution, not by
+reading.** The cross-bank dispatcher preserves DE only; its `RST_20` tail
+(`ld bc,$4001`) destroys BC, and A/HL/flags go with it. Forty-eight walker
+patches initially assumed BC survived; every live loop counter died. The
+interpreter battery caught it pre-ship because it EXECUTED the emitted bytes.
+**Rule**: a helper's register contract is a claim about machine behavior —
+prove it by running the real bytes (a 200-line interpreter suffices), not by
+reading the helper's happy path. Corollary: `ld hl,$NNNN` costs 3 bytes where
+`ld h,$NN / ld l,$NN` costs 4 — the freed byte funded the `push bc/pop bc`
+everywhere.
+
+**Split-tier storage must have a uniform persistence policy.** Moving the
+farm to live SRAM while the party stayed save-time-lazy WRAM worked until an
+operation SWAPPED records across the boundary: the SRAM half committed
+instantly, the WRAM half waited for a save, and reload-without-save
+duplicated one record and destroyed the other. The fix made the whole roster
+one tier (eager: checksum exclusion + canonicalize-time mirror). **Rule**:
+when state spans storage tiers with different commit semantics, any operation
+that MOVES data across the boundary is a distributed transaction — either
+make the tiers' policies uniform for that data, or never let records cross.
+
+**Differential simulation against the vanilla oracle ends speculation.**
+Three sessions of hypothesis-grinding about the sleep flow's semantics were
+settled in minutes by loading the ORIGINAL ROM into the interpreter next to
+the patched one, feeding both identical synthetic states, and diffing
+outcomes. The oracle also decoded the flag convention ($02=party-protected)
+that no amount of code-reading had pinned down. **Rule**: when a mod must
+preserve behavior, the original binary is an executable specification — diff
+against it instead of arguing with yourself. And when synthetic states all
+pass but the field bug persists, STOP GUESSING STATES and get the user's real
+save file; two fingerprints from it (checksum format, record hashes) solved
+what a day of simulation could not.
+
+**A save's checksum format fingerprints the build that wrote it.** The
+"third field bug" dissolved when the user's saves showed v1-formula stored
+checksums — proof they were running the recalled first build, since v2 stamps
+its own formula on every save. **Rule**: give every save-format revision a
+distinguishable stored signature; it turns "which binary touched this file?"
+from an interrogation into an arithmetic check.
+
+**Save states do not survive storage-architecture migrations.** An emulator
+state snapshots WRAM+SRAM atomically UNDER ONE BUILD'S LAYOUT. Loading a
+pre-migration state under the post-migration build splices two timelines
+(state WRAM has the old layout; new code reads the moved region from the
+state's older SRAM) — no code can reconcile it, and the symptom masquerades
+perfectly as data corruption. **Rule**: when a mod moves persistent state
+between memory tiers, declare old save STATES (not saves — those migrate)
+invalid across the boundary, loudly, in the hand-off notes.

@@ -18,6 +18,93 @@
 
 ## Part 1 — Archived session blocks (verbatim, newest first: S57 → S11)
 
+> Session 58 (2026-07-13 — **CF3 step 1: party-first sort. The invariant
+> "party at slots 0-2 in list order, farm contiguous after" now holds after
+> every canonicalize** — the CF1-flagged precondition for farm→SRAM.
+> Owning section: MONSTER_DATA "CF3 step 1 as built".)
+> **User decisions settled at session start (recorded in ROADMAP CF3):**
+> (1) party-first SORT over index remapping; (2) freed-range save semantics
+> = **EXPLOIT** (keep the vanilla block copy — the range persists across
+> save/load; layout rule: transient scratch stays $DE74, relocated buffers
+> take a corner, the bulk is the editor's persistent-state pool, usable
+> only AFTER the walker redirects land).
+> **Implementation (1 operand edit + 1 new bank entry):** canonicalizer
+> tail `ld hl,$0106 / rst $10` at $01:$4808 retargeted **$0106→$7301**
+> (2 operand bytes $4809-$480A; pattern `79 EA 8D CA 21 06 01 D7 C9` unique
+> in ROM). Bank $73 entry 1 `CF3PartyFirstSort` (patches/bank_073.asm):
+> selection sort over ≤3 party-list positions (entry state per vanilla:
+> occupied contiguous, list compacted/unique ⇒ t=list[i]>i), 149-B record
+> swap i↔t + fixups of every WRAM cell holding raw slot indices across a
+> canonicalize — later party-list entries (==i→t), battle-position cache
+> $DA15-$DA17 (exchange i↔t; vanilla compaction is provably no-op at the
+> mid-battle join canonicalize, the sort is not), $CA40 breeding-offspring
+> persist (exchange; vanilla compaction happens to preserve it, the sort
+> would not). Deliberately NOT remapped: $CAC0 (vanilla "indices unstable
+> across canonicalize" contract; positional uses exist), $DA14 (consumed
+> pre-canonicalize, verified). $C0D8 map: no caller consumes it after
+> return (20-line scan below all 22 sites). Then nest-calls the displaced
+> $0106 (rst $10 stack-nests; depth 3).
+> **Validation:** emitted bytes decoded (sm83dis) + byte-executed in a mini
+> SM83 interp: identity, scattered party [4,0,2], displaced-member fixup
+> [1,0], post-breeding $CA40 tracking, empty party, mid-battle-join shape
+> (pre-join cache untouched) — 21/21. Patched-build byte-diff vs S57
+> reference: header checksum + 2 operand bytes + bank $73 only. Compiler
+> regression re-pinned `79dd32c5…` (patched), 18/18 `--rom` green.
+> **Two doc errors fixed in place (DOC_AUDIT S58):** the canonicalizer tail
+> $0106 is `ScanPartySlotTable` (+$29/+$31 sanitizer), NOT "follower art"
+> (MONSTER_DATA CF1 + bank_001 comment block, both corrected, byte-perfect);
+> canonicalizer call-site count re-verified with generator: 22 sites /
+> **7** banks ($04 $0A $12 $15 $18 $50 $51), S56's "8 banks" off by one.
+> **Semantic delta (user to veto in test):** farm-menu display order can
+> change when the party changes (sort displaces farm records that sat
+> below a party member) — cosmetic, order-only.
+> **NEW OPEN (ROADMAP CF3 (a2)):** pre-sort saves load a vanilla-layout
+> roster; the invariant only appears at the first canonicalize after load —
+> force a canonicalize/sort on the load path BEFORE any walker redirect
+> assumes slots 3-19 == farm. Harmless in the sort-only build.
+> **v2 (2026-07-14) — phantom-monster incident + $CA40 fixup removal:**
+> user's first v1 session showed phantom farm monsters (garbage species,
+> 0 HP/MP, PAIRED junk names "0012/0095", levels 1→cap) — ONLY in the S57
+> in-gate save; unreproducible from any clean save on S57 OR S58 builds
+> (user ran full gate loops both ways). SHELVED with hypothesis (recorded as
+> hypothesis, KEY_LESSONS S58): fossils of the pre-S55 slot-14/16 collision
+> bug class in that save's lineage, surfaced by CF2's drain leveling any
+> flag-$01 garbage into visibility (level spread = garbage exp; 0 HP =
+> level-ups don't heal). User advised to archive the .sav as evidence, then
+> release the phantoms in-game. The investigation DID surface a real v1
+> defect: the sort's $CA40 exchange-fixup rewrites the farm drop/pick flow's
+> live candidate register ($CA40 is dual-role — S56's "breeding persist" was
+> one flow's view; farm UI writes it per selection at $0A:~$5CC4 and feeds
+> it to unguarded flag-marking paths). REMOVED in v2; $DA15-17 fixup kept
+> (verified battle-only, 2 refs). Drain's nested calls exonerated by
+> reading: $13 entry 2 + $51:$5B31 are context-free record math off [$CAC0].
+> Interp re-run vs v2 bytes 21/21; compiler re-pinned `d31c9300…` (patched)
+> 18/18; PASS 4/4. Breeding window + stale-$C0D8 state-machine reads are
+> WATCH ITEMS in the as-built section.
+> **v2 RESOLUTION (2026-07-14):** phantom mystery SOLVED — user found the
+> repro (enter/exit well custom room = +2 Drakslimes "0095", level 0, all
+> zeros) and the byte trace confirmed the S55 accepted hazard's undocumented
+> facet: room $6B S1 NPC table byte 3 ($03, the spawn Y) is copied to
+> wCustomNPCBuffer+3 = $D37C = SLOT 15's IN-USE FLAG (slot 16's = $D411 =
+> exit buffer byte 24); the next canonicalize normalizes the spray into a
+> real farm record. The <=14 rule protects real monsters, NOT empty 15/16.
+> The S57 gate save's 4 fossils = two rooms' visits + CF2 drain leveling.
+> SORT EXONERATED (predicted to repro on S57). USER RULING: hazard
+> re-accepted, no interim patch, CF3 relocation retires it (ROADMAP CF3 (d);
+> hazard note sharpened in patches/wram.asm). v2 then USER-CONFIRMED: farm
+> multi pick/drop, breeding (the $CA40 watch item passes), full gate run +
+> boss, party shuffles, save/reset. Battle JOIN not explicitly exercised —
+> carry as a residual test item.
+> **NEXT:** user test of the S58 **v2** ROM (party swaps at the farm —
+> multiple picks/drops in one visit, battle join, breeding, save/load,
+> farm-menu order sanity) → then CF3 (a2) + the two redirected walker
+> helpers (b), or A′1.
+>
+> (S57 + earlier blocks moved verbatim to SESSION_HISTORY.md Part 1 — see Session Index.)
+
+---
+
+
 > Session 57 (2026-07-13 — **CF2: per-battle exp re-bound to party; farm exp
 > banked into a persistent accumulator, paid at the map-change commit.**)
 > **Implementation (3 patch sites + 1 new bank; MONSTER_DATA "CF2 as built"

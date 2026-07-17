@@ -67,6 +67,13 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     db $73                          ; bank number (entry-table header)
     dw CF2WarpCommitDrain           ; entry 0  ($7300 -> $4001)
     dw CF3PartyFirstSort            ; entry 1  ($7301 -> $4003)
+    dw CF3AdvanceDE                 ; entry 2  — walker slot advance w/ boundary hop (S60)
+    dw CF3RebaseDE                  ; entry 3  — GMDP slow path: rebase computed ptr (S60)
+    dw CF3Checksum                  ; entry 4  — 3-segment save checksum + migration (S60)
+    dw CF3CopyToSRAM                ; entry 5  — CopySRAMBlock body, farm-window write-skip (S60)
+    dw CF3CopyFromSRAM              ; entry 6  — CopyFromSRAM body, farm-window read-skip (S60)
+    dw CF3NewGameClear              ; entry 7  — new-game WRAM image zero + SRAM farm-flag zero (S60)
+    dw CF3TradeRecv                 ; entry 8  — trade receive: staging $15 -> farm slot 19 SRAM (S60)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -358,4 +365,422 @@ CF3PartyFirstSort:
 .tail:
     ld hl, $0106                    ; displaced vanilla tail: ScanPartySlotTable
     rst $10
+    ; -------------------------------------------------------------------------
+    ; S60v2 ROSTER MIRROR — the cross-space atomicity fix.
+    ; Sort and compaction move records between WRAM party slots (lazy, saved
+    ; at save time) and SRAM farm slots (eager, live). Committing only the
+    ; SRAM half meant a reload-without-save DUPLICATED one record and LOST
+    ; the other (S60 field bug: party member swapped to slot 0-2 vanished on
+    ; reload, its farm counterpart doubled). Fix: after every canonicalize,
+    ; bulk-mirror the WRAM roster region — list, library bits, monster vars,
+    ; party records $CA8D-$CC7F — into its image home $A1C7-$A3B9. Together
+    ; with the v2 checksum exclusion of $A1C7-$AD9E this makes the ENTIRE
+    ; roster uniformly eager: reload restores the last canonical roster; no
+    ; record can be lost or doubled. World state (gold/items/flags/position)
+    ; stays lazy exactly as vanilla. ~$1F3 byte copies, negligible.
+    ; (Runs after the displaced ScanPartySlotTable so the mirrored list is
+    ; the sanitized one. BC/A are free here — rst $10 clobbered them anyway.)
+    ; -------------------------------------------------------------------------
+    ld a, $0a
+    ld [$0100], a
+    ld hl, $ca8d
+    ld de, $a1c7
+    ld bc, $01f3
+.mir:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec bc
+    ld a, b
+    or c
+    jr nz, .mir
+    ret
+
+
+; =============================================================================
+; S60 — CF3 FULL MOVE: farm slots 3-19 are SRAM-RESIDENT.
+;
+; ADDRESS MAP (the one fact everything below derives from):
+;   Farm slot s (3..19) lives at its SAVE-IMAGE address:
+;     SRAM = $A1FB + s*$95  (slot 3 = $A3BA .. slot 19 = $AD0A-$AD9E end)
+;   which is exactly (WRAM address - $28C6). Party slots 0-2 ($CAC1-$CC7F)
+;   and staging pseudo-slots $14/$15 ($D665-$D78E) STAY in WRAM. WRAM
+;   $CC80-$D664 is freed (the custom NPC/exit buffers at $D379-$D477 now sit
+;   in genuinely free space — the phantom-spawn hazard class is retired).
+;   MIGRATION IS FREE: vanilla's own save block copy already put every
+;   pre-CF3 save's farm records at these SRAM addresses.
+;
+; PERSISTENCE MODEL (S60v2): the monster ROSTER — party list, library bits,
+; monster vars, party records, farm records (image $A1C7-$AD9E) — is EAGER:
+; farm writes land in live SRAM immediately, and the canonicalizer tail
+; mirrors the WRAM roster region into the image after every sort/compaction.
+; The checksum excludes the whole roster region accordingly. World state
+; (gold, items, flags, position) stays LAZY (persisted at save) as vanilla.
+; Consequence: reload restores the last canonical roster, not the last save
+; — roster changes (breed, catch, deposit) are not undone by reloading, but
+; can never be half-committed, duplicated, or lost (the S60v1 field bug).
+;
+; ACCESS COVERAGE (redirect points; RE in MONSTER_DATA "CF3 as built"):
+;   * pointer producers: ROM0 GMDP/GetCurrentMonsterPtr/GetActiveMonsterPtr
+;     share one 5-byte tail window -> CF3MulRebase (ROM0) -> entry 3 here for
+;     the farm (cold) case. bank $59's two local producers route through the
+;     exported CF3RebaseHL gate.
+;   * stride walkers (49 sites): 8-byte `add $95` advance windows -> entry 2.
+;   * save system: SRAMWriteBlock/CopySRAMBlock/CopyFromSRAM husks -> entries
+;     4/5/6 (single choke points for checksum compute+verify+wipe-recompute
+;     and for every image block copy incl. SavePartyToSRAM).
+;   * SRAM stays enabled: ReadSRAMByte/WriteSRAMByte helpers no longer
+;     disable (1-byte operand edits); every entry here (re-)enables.
+;
+; rst $10 contract reminders: callee gets A/HL/flags CLOBBERED both ways.
+; DE is preserved by the dispatcher; BC is NOT — RST_20's `ld bc,$4001`
+; table index destroys it BEFORE the callee runs (S60 validation catch).
+; Hence: dance sites push/pop BC, the copy husks pass the true BC via the
+; stack (callees read it at the constant dispatcher-frame depth sp+4), and
+; producers rely on their own entry push bc / exit pop bc. RAMB is set per
+; bank by RST_10 but the 8KB cart ignores it (vanilla proof: saves fire from
+; bank $50 with RAMB=2).
+; =============================================================================
+
+; -----------------------------------------------------------------------------
+; Entry 2 — CF3AdvanceDE: DE += $95 with WRAM<->SRAM boundary hops.
+; In/out: DE = slot-field pointer being walked. A/HL/flags free.
+; Down-hop (slot 2 -> 3): DE lands in [$CC80,$CD14] (field offset f in
+;   [0,$94]) -> DE -= $28C6 and enable SRAM (the walker dereferences next).
+; Up-hop (slot 19 -> staging $14): DE lands in [$AD9F,$AE33] -> DE += $28C6.
+;   No vanilla walk goes past slot 19 (all bounds are $14), so this only
+;   fires on the discarded post-loop advance — kept so a stray 22-slot walk
+;   degrades to vanilla behaviour instead of dereferencing SRAM garbage.
+; -----------------------------------------------------------------------------
+CF3AdvanceDE:
+    ld a, e
+    add $95
+    ld e, a
+    ld a, d
+    adc $00
+    ld d, a
+    ; down-hop test: $CC80 <= DE <= $CD14
+    ld a, d
+    cp $cc
+    jr z, .dlow
+    cp $cd
+    jr nz, .uptest
+    ld a, e
+    cp $15
+    jr c, .down                     ; $CD00-$CD14 -> hop
+    jr .uptest
+.dlow:
+    ld a, e
+    cp $80
+    jr c, .uptest                   ; $CC00-$CC7F unreachable by a valid walk; guard
+.down:
+    ld a, e
+    sub $c6
+    ld e, a
+    ld a, d
+    sbc $28
+    ld d, a                         ; DE -= $28C6 -> farm SRAM
+    ld a, $0a
+    ld [$0100], a                   ; enable SRAM for the walker's derefs
+    ret
+.uptest:
+    ; up-hop test: $AD9F <= DE <= $AE33
+    ld a, d
+    cp $ad
+    jr z, .ulow
+    cp $ae
+    ret nz
+    ld a, e
+    cp $34
+    ret nc
+    jr .up
+.ulow:
+    ld a, e
+    cp $9f
+    ret c
+.up:
+    ld a, e
+    add $c6
+    ld e, a
+    ld a, d
+    adc $28
+    ld d, a                         ; DE += $28C6 -> staging WRAM
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 3 — CF3RebaseDE: GMDP slow path (pointer's high byte >= $CC).
+; In/out: DE = computed monster pointer (base + slot*$95, base $CAC1..$CB55).
+; If DE in [$CC80,$D664] (farm slots 3-19) -> DE -= $28C6 + enable SRAM.
+; Party ($CAC1-$CC7F, fast-pathed in ROM0), staging ($D665+), and any
+; non-array base a caller might feed GMDP pass through untouched.
+; -----------------------------------------------------------------------------
+CF3RebaseDE:
+    ld a, d
+    cp $cc
+    jr nz, .hi
+    ld a, e
+    cp $80
+    ret c                           ; $CC00-$CC7F: party slot 2 tail — leave
+    jr .reb
+.hi:
+    ld a, d
+    cp $d6
+    jr c, .reb                      ; $CD00-$D5FF: in window
+    ret nz                          ; $D700+: out (staging $D7xx included)
+    ld a, e
+    cp $65
+    ret nc                          ; $D665+: staging — leave
+.reb:
+    ld a, e
+    sub $c6
+    ld e, a
+    ld a, d
+    sbc $28
+    ld d, a                         ; DE -= $28C6 -> farm SRAM
+    ld a, $0a
+    ld [$0100], a                   ; pointer will be dereferenced by the caller
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 4 — CF3Checksum: replaces SRAMWriteBlock's interior.
+; All three vanilla call sites pass HL=$A002/BC=$1FFE (constant), so the
+; ranges are hardcoded. Returns DE = $4638 seed + byte-sum over
+; [$A002..$A1C6] + [$AD9F..$BFFF] — the vanilla sum MINUS the entire roster
+; image (list + library bits + party records + farm, $A1C7-$AD9E), which is
+; uniformly EAGER under S60v2 (live farm + canonicalize-time party mirror)
+; and must not be able to invalidate the save. Migration self-heal converts
+; pre-CF3 (vanilla-sum) and S60v1 (two-segment) saves in place at the boot
+; verify; details at .heal. At save time the extra passes are redundant but
+; harmless (SaveTimestamp overwrites $A000/$A001 anyway). Leaves SRAM
+; enabled (CF3 policy).
+; -----------------------------------------------------------------------------
+CF3Checksum:
+    ld a, $0a
+    ld [$0100], a
+    ; --- v2 formula: exclude the WHOLE roster image $A1C7-$AD9E ---
+    ; (party list + library bits + monster vars + party records + farm).
+    ; S60v2: the roster is uniformly EAGER — the canonicalizer tail mirrors
+    ; WRAM roster state into the image, so the checksum must not cover it,
+    ; exactly as it must not cover the live farm.
+    ld de, $4638
+    ld hl, $a002
+    ld bc, $01c5                    ; $A002..$A1C6 (world state before the list)
+    call .sum
+    ld hl, $ad9f
+    ld bc, $1261                    ; $AD9F..$BFFF (image tail + sleep pool + buffers)
+    call .sum
+    ld a, [$a000]
+    cp e
+    jr nz, .heal
+    ld a, [$a001]
+    cp d
+    ret z                           ; stored matches v2
+.heal:
+    ; MIGRATION SELF-HEAL — accept and convert two legacy stored formats:
+    ;   (1) vanilla full sum over $A002 x $1FFE   (pre-CF3 saves)
+    ;   (2) S60v1 two-segment sum ($A002 x $3B8 + $AD9F x $1261)
+    ;       (saves written by the recalled first S60 build)
+    ; Either match rewrites stored := v2 and returns v2 (verify passes,
+    ; save converts in place). No match: return v2 untouched -> the vanilla
+    ; corrupt-save wipe path fires as designed.
+    push de                         ; save v2 sum
+    ld de, $4638
+    ld hl, $a002
+    ld bc, $1ffe                    ; vanilla full range
+    call .sum
+    call .cmpstored
+    jr z, .mig
+    ld de, $4638
+    ld hl, $a002
+    ld bc, $03b8                    ; S60v1 head segment
+    call .sum
+    ld hl, $ad9f
+    ld bc, $1261
+    call .sum
+    call .cmpstored
+    jr z, .mig
+    pop de
+    ret                             ; genuine mismatch -> vanilla wipe path
+.mig:
+    pop de
+    ld a, e
+    ld [$a000], a
+    ld a, d
+    ld [$a001], a
+    ret
+.cmpstored:                         ; Z set iff stored checksum == DE
+    ld a, [$a000]
+    cp e
+    ret nz
+    ld a, [$a001]
+    cp d
+    ret
+.sum:
+    ld a, [hl+]
+    add e
+    ld e, a
+    ld a, $00
+    adc d
+    ld d, a
+    dec bc
+    ld a, b
+    or c
+    jr nz, .sum
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 5 — CF3CopyToSRAM: CopySRAMBlock body (WRAM/HRAM -> SRAM), source HL
+; via the wCF3CopyMbx mailbox (rst $10 eats HL), DE=dest, BC=len.
+; Writes into the farm window [$A3BA,$AD9E] are SKIPPED (pointers/count still
+; advance, so the rest of the block lands at vanilla offsets). This one rule
+; masks both SaveGameState's $C8EA->$A024 image copy and SavePartyToSRAM's
+; $CAC1->$A1FB block with zero operand changes — the farm's SRAM home is the
+; live store and must never be overwritten from WRAM.
+; -----------------------------------------------------------------------------
+CF3CopyToSRAM:
+    ld a, $0a
+    ld [$0100], a
+    ld hl, sp+6                 ; recover the TRUE length: rst $10's dispatcher
+    ld c, [hl]                  ; clobbers BC (ld bc,$4001 table index), so the
+    inc hl                      ; husk pushes BC before its rst. Constant frame:
+    ld b, [hl]                  ; [+0]=dispatch-ret [+2]=bank-af [+4]=husk-ret
+                                ; (rst $10's own push!) [+6]=BC
+    ld a, [wCF3CopyMbxLo]
+    ld l, a
+    ld a, [wCF3CopyMbxHi]
+    ld h, a
+.loop:
+    ld a, d
+    cp $a3
+    jr c, .store
+    jr z, .dlo
+    cp $ad
+    jr c, .skip                     ; $A400-$ACFF: in window
+    jr nz, .store                   ; $AE00+: out
+    ld a, e
+    cp $9f
+    jr c, .skip                     ; $AD00-$AD9E: in window
+    jr .store
+.dlo:
+    ld a, e
+    cp $ba
+    jr c, .store                    ; $A300-$A3B9: out
+.skip:
+    ld a, [hl+]                     ; consume source, no write
+    jr .adv
+.store:
+    ld a, [hl+]
+    ld [de], a
+.adv:
+    inc de
+    dec bc
+    ld a, b
+    or c
+    jr nz, .loop
+    ret                             ; SRAM stays enabled (CF3 policy)
+
+; -----------------------------------------------------------------------------
+; Entry 6 — CF3CopyFromSRAM: CopyFromSRAM body (SRAM -> WRAM/HRAM), dest HL
+; via mailbox, DE=src, BC=len. Reads FROM the farm window are skipped (dest
+; still advances): the farm's WRAM shadow is dead space post-CF3, and the
+; skip keeps restores from spraying 2.5KB of records over the freed range
+; (where the custom room buffers now live).
+; -----------------------------------------------------------------------------
+CF3CopyFromSRAM:
+    ld a, $0a
+    ld [$0100], a
+    ld hl, sp+6                 ; recover the TRUE length: rst $10's dispatcher
+    ld c, [hl]                  ; clobbers BC (ld bc,$4001 table index), so the
+    inc hl                      ; husk pushes BC before its rst. Constant frame:
+    ld b, [hl]                  ; [+0]=dispatch-ret [+2]=bank-af [+4]=husk-ret
+                                ; (rst $10's own push!) [+6]=BC
+    ld a, [wCF3CopyMbxLo]
+    ld l, a
+    ld a, [wCF3CopyMbxHi]
+    ld h, a
+.loop:
+    ld a, d
+    cp $a3
+    jr c, .store
+    jr z, .dlo
+    cp $ad
+    jr c, .skip
+    jr nz, .store
+    ld a, e
+    cp $9f
+    jr c, .skip
+    jr .store
+.dlo:
+    ld a, e
+    cp $ba
+    jr c, .store
+.skip:
+    inc hl                          ; advance dest, no read/write
+    jr .adv
+.store:
+    ld a, [de]
+    ld [hl+], a
+.adv:
+    inc de
+    dec bc
+    ld a, b
+    or c
+    jr nz, .loop
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 7 — CF3NewGameClear: hooked over the New Game handler's
+; `ld hl,$C8EA / ld bc,$1100 / xor a / call FillNBytesWithRegA` (bank $15,
+; ~$460x). Replicates the displaced WRAM image zero-fill, then zeroes the 17
+; farm in-use flags in SRAM so a new game never inherits the previous save's
+; farm. (Fresh/corrupt carts are already covered: LoadMap_60df's checksum
+; wipe zeroes all of SRAM $A002+, farm included.) Flags-only is sufficient —
+; every reader keys on +$00, and inserts rebuild the full record.
+; -----------------------------------------------------------------------------
+CF3NewGameClear:
+    ld hl, $c8ea
+    ld bc, $1100
+.wclr:
+    xor a
+    ld [hl+], a
+    dec bc
+    ld a, b
+    or c
+    jr nz, .wclr
+    ld a, $0a
+    ld [$0100], a
+    ld hl, $a3ba                    ; farm slot 3 in-use flag
+    ld b, $11                       ; 17 slots
+.fclr:
+    xor a
+    ld [hl], a
+    ld a, l
+    add $95
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    dec b
+    jr nz, .fclr
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 8 — CF3TradeRecv: hooked over both trade-receive copy loops
+; (bank $18 jr_018_45b8 / ~$4CA8 region): staging pseudo-slot $15 ($D6FA,
+; the received monster in transit) -> farm slot 19 at its SRAM home ($AD0A).
+; The canonicalizer immediately after compacts it into place, exactly as
+; vanilla did with the WRAM slot 19.
+; -----------------------------------------------------------------------------
+CF3TradeRecv:
+    ld a, $0a
+    ld [$0100], a
+    ld hl, $ad0a                    ; slot 19 @ SRAM ($A1FB + 19*$95)
+    ld de, $d6fa                    ; staging slot $15 (WRAM)
+    ld b, $95
+.loop:
+    ld a, [de]
+    ld [hl+], a
+    inc de
+    dec b
+    jr nz, .loop
     ret

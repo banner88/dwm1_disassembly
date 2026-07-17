@@ -3382,12 +3382,12 @@ CheckEnemyData:
     jr z, StoreEnemyID
 
     inc c
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     dec b
     jr nz, CheckEnemyData
 
@@ -3920,12 +3920,12 @@ CheckInventorySlot:
     or a
     jr z, CheckItemCount14
 
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
+    call CF3AdvHLHead           ; CF3 (S60): slot advance (HL form) -> ROM0
+    nop                         ; head moves the pointer through DE into bank
+    nop                         ; $73 entry 2 (boundary-hopping advance).
+    nop                         ; Same-size 8-byte window; DE preserved by the
+    nop                         ; helper, A/flags clobbered as vanilla did.
+    nop
     inc c
     dec b
     jr nz, CheckInventorySlot
@@ -3966,12 +3966,12 @@ CheckItemData:
     jr z, StoreItemID
 
     inc c
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     dec b
     jr nz, CheckItemData
 
@@ -4080,12 +4080,12 @@ CompareItemSlots:
 
 PopAndAdvance:
     pop hl
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
+    call CF3AdvHLHead           ; CF3 (S60): slot advance (HL form) -> ROM0
+    nop                         ; head moves the pointer through DE into bank
+    nop                         ; $73 entry 2 (boundary-hopping advance).
+    nop                         ; Same-size 8-byte window; DE preserved by the
+    nop                         ; helper, A/flags clobbered as vanilla did.
+    nop
     inc c
     dec b
     jr nz, PushAndReadSlot
@@ -4964,12 +4964,12 @@ PushAndCheckHL:
 
 PopAndAdvanceL:
     pop hl
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
+    call CF3AdvHLHead           ; CF3 (S60): slot advance (HL form) -> ROM0
+    nop                         ; head moves the pointer through DE into bank
+    nop                         ; $73 entry 2 (boundary-hopping advance).
+    nop                         ; Same-size 8-byte window; DE preserved by the
+    nop                         ; helper, A/flags clobbered as vanilla did.
+    nop
     inc c
     dec b
     jr nz, PushAndCheckHL

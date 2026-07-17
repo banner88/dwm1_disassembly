@@ -52,6 +52,7 @@ PATCH_FILES = [
     "bank_054.asm", "bank_053.asm",
     "bank_04c.asm", "bank_058.asm", "bank_05f.asm", "bank_059.asm",
     "bank_052.asm", "bank_050.asm",
+    "bank_00a.asm", "bank_015.asm", "bank_051.asm",  # S60 CF3 walker redirects
     "wram.asm", "game.asm",
 ]
 PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_07e.asm"]  # don't exist in clean disassembly/

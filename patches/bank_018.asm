@@ -1052,12 +1052,12 @@ jr_018_459b:
     or a
     jr z, jr_018_45b8
 
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc b
     ld a, b
     cp $14
@@ -1071,16 +1071,23 @@ jr_018_459b:
 
 
 jr_018_45b8:
-    ld hl, $d5d0
-    ld de, $d6fa
-    ld b, $95
+    ; CF3 (S60): trade receive — staging $15 ($D6FA) -> farm slot 19 at its
+    ; SRAM home ($AD0A), via bank $73 entry 8 (enables SRAM, 149-byte copy).
+    ; Same-size 14-byte window; local loop label pinned in place.
+    ld h, $73
+    ld l, $08
+    rst $10
+    nop
+    nop
+    nop
 
 jr_018_45c0:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
-    jr nz, jr_018_45c0
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
     di
     ld hl, $ca8d
@@ -1297,12 +1304,12 @@ jr_018_46dd:
 
 jr_018_470a:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc b
     ld a, b
     cp $14
@@ -1365,12 +1372,12 @@ jr_018_4733:
 
 jr_018_4763:
     pop de
-    ld a, e
-    add $95
-    ld e, a
-    ld a, d
-    adc $00
-    ld d, a
+    push bc                     ; CF3 (S60): slot advance -> bank $73 entry 2
+    push hl                     ; (DE += $95 with the WRAM<->SRAM boundary hop
+    ld hl, $7302                ; at slot 2->3). Same-size 8-byte window.
+    rst $10                     ; BC/HL preserved (rst $10 clobbers BC via its
+    pop hl                      ; `ld bc,$4001` table index — walkers keep live
+    pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc c
     inc b
     ld a, b
@@ -2202,16 +2209,23 @@ jr_018_4c76:
     ld [hl], $00
     ld hl, $0105
     rst $10
-    ld hl, $d5d0
-    ld de, $d6fa
-    ld b, $95
+    ; CF3 (S60): trade receive — staging $15 ($D6FA) -> farm slot 19 at its
+    ; SRAM home ($AD0A), via bank $73 entry 8 (enables SRAM, 149-byte copy).
+    ; Same-size 14-byte window; local loop label pinned in place.
+    ld h, $73
+    ld l, $08
+    rst $10
+    nop
+    nop
+    nop
 
 jr_018_4cb0:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
-    jr nz, jr_018_4cb0
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
     ld hl, $0105
     rst $10

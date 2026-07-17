@@ -9,6 +9,10 @@ two access classes the engine uses heavily:
   1. INDEXED ARRAYS  — base + index*stride computed at runtime (e.g. the party/
      storage monster array: GetMonsterDataPtr = $CAC1 + slot*$95, 20 slots,
      spanning $CAC1-$D664 with ZERO literal refs to $D3xx/$D4xx). The custom
+     S60 NOTE: this file documents the VANILLA WRAM shape (the selftest
+     asserts the vanilla array extent). Post-CF3 (S60), farm slots 3-19 are
+     SRAM-resident ($A3BA-$AD9E in the save image) and WRAM $CC80-$D664 is
+     free — see MONSTER_DATA "CF3 as built (S60)".
      room state placed at $D378-$D48B sits inside monster slots 14-16 → the
      SkyDragon-egg-give room corruption (S54 root cause).
   2. POINTER-WALKED BUFFERS — a literal base plus a copy/scan loop; interior

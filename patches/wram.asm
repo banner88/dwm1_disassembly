@@ -384,7 +384,8 @@ wBattleLVL:: ds 16 ;dc23 — level per combatant (tentative)
 ;    never be restored from a save again, so it is never trusted as state.
 ; Load-inside-a-custom-room shows step-0 content (counters not in the save
 ; image) — expected under transient semantics, NOT a bug.
-; Reserve after the block: $DE89-$DEDD (85 B) for counter-region growth.
+; Reserve after the block: $DE8B-$DEDD (83 B) for counter-region growth
+; ($DE89-$DE8A carved S60 for the CF3 copy-husk mailbox, defined at EOF).
 ; =============================================================================
 ; @BUILD_PROJECT BEGIN wram_step_counters
 wCustomStep_Room6B_S0:: db ;de74 — Room $6B screen 0 step counter
@@ -409,3 +410,12 @@ wRoomEncFlag:: db ;de83
 wTameDelay:: db ;de84 — [S2e] Tame heart->message delay counter (frames)
 wTameBGSave:: ds 3 ;de85 — [S2e] RESERVED (flicker removed S52; BATTLE_SKILL_SYSTEM §11.7)
 wCustomRoomFlag:: db ;de88 — $00=normal room, $01=custom room active (bank $0B readers)
+
+; CF3 (S60): 2-byte pointer mailbox for the CopySRAMBlock/CopyFromSRAM ROM0
+; husks — rst $10 consumes HL, so the husk stashes its HL argument here for
+; the bank $73 copy callees (entries 5/6). Written/read only inside those
+; calls (the save cluster runs with interrupts quiesced; nothing else
+; touches it between store and use). Carved from the $DE89-$DEDD reserve —
+; counter-region growth now starts at $DE8B (83 B left).
+wCF3CopyMbxLo:: db ;de89
+wCF3CopyMbxHi:: db ;de8a

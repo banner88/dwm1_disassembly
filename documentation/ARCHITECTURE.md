@@ -71,6 +71,7 @@ SaveGameState (ROM0, bank_000.asm line 6577) copies game state to SRAM:
 | $C300 | $BCC8 | $0200 | Tile layout buffer |
 | $C200 | $BEC8 | $0100 | GBC attribute buffer |
 | $CAC1 | $A1FB | 2980 B | Party (separate SavePartyToSRAM path — NOT a second copy: $A024 + ($CAC1−$C8EA) = $A1FB, i.e. a targeted partial update of the same save image) |
+| (SRAM-resident, S60) | $A3BA | $0BE5 (17×$95) | **Farm slots 3-19 (CF3, S60)** — live IN the save image at $A1FB+s*$95; never WRAM-resident anymore (vanilla window $CC80-$D664 freed). GMDP forks slots ≥3 here; walkers hop the boundary via bank $73 entry 2. EAGER together with the whole roster image $A1C7-$AD9E, which the v2 checksum EXCLUDES (seed $4638 + $A002×$1C5 + $AD9F×$1261); the canonicalizer tail mirrors WRAM $CA8D-$CC7F→$A1C7-$A3B9. World state stays lazy. Boot verify self-heals vanilla-full and S60v1 stored checksums to v2. |
 | (SRAM-resident) | $B124 | $0BA4 (20×$95) | **Farm SLEEP pool (S55)** — a second 20-slot monster array that lives ONLY in SRAM, never WRAM. Gated by $CA41 bit 7; read in place by bank $07 (EnableSRAM per access); initialized by the sleep action (bank $12). One-way archival. Fills the $B124-$BCC7 hole in this map exactly. |
 
 Checksum: $A002-$BFFF → stored at $A000-$A001. Valid flag: $A002 (1 = save exists).
