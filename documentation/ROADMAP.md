@@ -823,20 +823,34 @@ ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.m
       (user's target track, internal id $16) = 1,762 B of relocatable data, direct port
       judged feasible** (SOUND_SYSTEM.md §7). This replaces MP3 transcription for the
       user's custom-well-music goal.
-- [ ] **M2 — Song round-trip keystone.** Decode all songs to a spec; re-emit byte-identical.
-      *Accept:* `--selftest` byte-identical; MD5 unchanged.
+- [x] **M2 — Song round-trip keystone.** DONE S62, acceptance exceeded: `tools/song_codec.py
+      selftest` decodes ALL audio in banks $1C/$1D/$1E (157 streams incl. 4 orphans) and
+      re-emits the full 16KB banks **byte-identical**; `extracted/songs_spec.json` is the
+      M3 common intermediate. Grammar corrected en route (no 3-byte $FC token; loop-jump =
+      Bn-pair prm=$FC + target pair — SOUND_SYSTEM §5, DOC_AUDIT S62).
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
-      *Concrete plan from M1 (SOUND_SYSTEM.md §2/§8):* new ids ≥ $9E; records+streams in a
-      free bank; master table copied+extended in ROM0 and the one `ld hl,$3466` operand in
-      `AudioProcess` repointed; first target = DWM2 BGM #06 port into the well custom room
-      (script `SetBGM`); watch for DWM2-only cmd $AC (no-op here) + header diffs in SameBoy.
-      **User requirement (S61): authoring must accept BOTH DWM2 tracks AND MIDI files.**
-      Design consequence: M2's decoded-song spec is the common intermediate — a DWM2
-      extractor (extract only; do NOT reverse DWM2's driver further) and a MIDI→spec
-      converter (quantize to ticks; map ≤2 melodic voices + bass to pulse1/pulse2/wave,
-      percussion to noise; clamp to the 12+12 pitch table) both emit it, and one
-      spec→bytes compiler serves both.
+  - [x] **M3-POC (S62, user-confirmed by ear):** DWM2 BGM #06 ported into custom well
+        room $6B (BGM NPC, SetBGM $9E). **ZERO ROM0 changes** — ids $9E-$A0 ride the
+        4 orphan record slots @ $1E:$419D that the open-ended master-table row already
+        resolves; translated streams (5,035 B) in bank $1E filler @ $6B80.
+        **DWM2→DWM1 translation layer** (song_codec.py, trace-equivalence proved): DWM2's
+        $AC/$AD call-return phrases (stored past $FF!) inlined; per-slot mark loops →
+        Bn/$FC jump form; nested counted loops unrolled; headers carried verbatim
+        (field-identical parse, verified in the GBS driver). SOUND_SYSTEM §7 has the
+        full DWM2 driver grammar.
+  - [ ] **M3a — general song slots.** The orphan-slot route is CAPPED AT ONE custom song
+        (4 record slots = 1×3ch + 1 spare). More songs need the master table
+        copied+extended and the `ld hl,$3466` operand repointed — **open problem: ROM0
+        has NO 17-byte free run** (S62 audit); candidate: trampoline the table into a
+        switched bank via an existing ROM0 helper, or steal the table's own slack.
+        Bank $74 remains reserved/unallocated for song data.
+  - [ ] **M3b — USER REQUIREMENTS (S62): song LIBRARY in the editor** — import multiple
+        custom songs, assign to rooms/gates/events (SetBGM wiring per assignment).
+  - [ ] **M3c — MIDI import** (user requirement S61/S62): MIDI→spec converter (quantize
+        to ticks; map ≤2 melodic voices + bass to pulse1/pulse2/wave, percussion to
+        noise; clamp to the 12+12 pitch table); the spec→bytes compiler from M2 serves
+        both MIDI and DWM2 sources.
 
 **Recommended order:** T1 ✅ → S1 ✅ → S2a–S2e ✅ → **Tame Stage 2 ✅ (S52 — four
 custom skills live, evolve chain proven)** → S2f (field

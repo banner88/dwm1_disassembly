@@ -321,8 +321,9 @@ CustomRoom0_NPC02:
     dw $0001                        ; compare to 1 (NO)
     dw .declined                    ; branch if NO
     dw $FF41                        ; SetBGM (opcode $41)
-    dw $001E                        ; track $1E = Arena music
-    dw $0A0E                        ; "Now playing Arena music!"
+    dw $009E                        ; track $9E = DWM2 BGM #06 port (S62;
+                                    ; records $1E:$419D, streams $1E:$6B80)
+    dw $0A0E                        ; "Now playing DWM2 music!"
     dw $FFFF
 .declined:
     dw $0A0F                        ; "Keeping current music."
@@ -526,7 +527,7 @@ CustomText_0D:
 CustomText_0E:
     db $EA, $9F, $A3
     db "Now playing", $EF, $EE
-    db "Arena music!", $F7, $F0
+    db "DWM2 music!", $F7, $F0
 
 CustomText_0F:
     db $EA, $9F, $A3
@@ -601,6 +602,9 @@ CustomRoom0_Screen0:
 CustomRoom0_S0_NPCs:
     db $8F, $FF, $07, $06, $00     ; spawn point (7,6), script_id=0 (room entry = no-op)
     db $00, $0B, $02, $07, $01     ; NPC at (2,7), script_id=1 — gives item
+    db $00, $0B, $05, $06, $03     ; NPC at (5,6), script_id=3 — BGM change (S62:
+                                   ; DWM2 BGM #06 port, SetBGM $9E; open floor,
+                                   ; sprite $0B already loaded on this screen)
     db $FF
 
 CustomRoom0_S0_Exits:

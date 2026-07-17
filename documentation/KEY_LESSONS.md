@@ -2135,3 +2135,42 @@ state's older SRAM) — no code can reconcile it, and the symptom masquerades
 perfectly as data corruption. **Rule**: when a mod moves persistent state
 between memory tiers, declare old save STATES (not saves — those migrate)
 invalid across the boundary, loudly, in the hand-off notes.
+
+## S62 — M2 codec + DWM2 port: grammar from instructions, translation with proof
+
+### Data-pattern grammar is a hypothesis; the handler's instructions are the grammar
+S61 inferred a standalone 3-byte `$FC lo hi` jump token from stream data. It
+doesn't exist: `AudioCheckFC` inspects the **Bn pair's own param byte**, and
+`$FC` there makes the *next pair* a jump target — 4 bytes, pair-aligned, no
+odd-length token anywhere. The mislabel survived a whole session because the
+byte-accounting happened to align either way. A byte-identical round-trip
+selftest catches *carriage* errors but not *labeling* errors; only reading
+the dispatch instruction-by-instruction nailed the real shapes. **Rule: for
+any interpreter, grammar claims cite the handler's instructions, not
+patterns in the data it consumes.**
+
+### "Same engine family" ≠ "same language" — translate with an equivalence proof, don't feed raw
+DWM2's driver shares DWM1's pitch table, fetch model, and header fields — and
+still broke playback three separate ways when its bytes were fed raw: a
+call/return pair (`$AC`/`$AD`) whose phrases live PAST the `$FF` terminator
+(naive extraction truncates them), per-slot mark loops that collapse onto
+DWM1's single mark, and a DWM1 elapse path that eats the pair after any
+foreign-param loop. The fix that worked: a **translation layer to
+DWM1-native constructs** plus a **static trace-equivalence prover** — execute
+the original bytes under source-driver semantics and the translated bytes
+under target-driver semantics, require identical event traces before
+shipping. The prover caught nothing on the final build *because* the
+translator was built against RE'd handler semantics; its value is that "it
+sounds right" stopped being the only evidence. **Rule: porting data between
+engine dialects gets a translator + machine-checked equivalence, never
+"unknown commands are probably no-ops."**
+
+### A script in a table is not a feature until an entity is wired to it
+S61's docs said a custom-room NPC "currently sets BGM $1E". The script
+existed in the script-pointer table; **no NPC record referenced it**, so it
+was unreachable dead data — found only when the user reported no such NPC
+in-game. Placement lives in a different structure (screen NPC records) than
+behavior (script table); documenting the second without grepping the first
+asserted an in-game behavior that had never existed. **Rule: any "X happens
+in-game" doc claim needs the full wiring chain verified — script AND the
+entity/trigger that invokes it — or it's marked as unwired.**

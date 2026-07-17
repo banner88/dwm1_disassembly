@@ -1,7 +1,7 @@
 # SOUND SYSTEM — engine, song table, sequence format (M1, S61)
 
 Everything here was verified against `disassembly/bank_000.asm` and ROM bytes
-in S61 unless marked *(unverified)*. Tool: `tools/enumerate_songs.py`
+in S61/S62 unless marked *(unverified)*. Tool: `tools/enumerate_songs.py`
 (enumerates all sounds, walks every stream to termination, decodes tracks).
 Status: **M1 complete. M2 (byte-identical round-trip) NOT started — the
 *(unverified)* items below are M2's checklist.**
@@ -82,7 +82,7 @@ number at $4000).
 | +$0F | $F3 | pitch-slide amount (signed, cmd $Dn/$En) |
 | +$10/$11 | $F4/$F5 | pitch-slide period reload/counter |
 | +$12/$13 | $F6/$F7 | last freq-lo guard / NR-4 retrigger+pan byte |
-| +$14/$1A→$FE? | $F8,$FE | loop mark position (cmd $FD) lo/hi *(offsets unverified — confirm in M2)* |
+| +$14/+$1A | $F8,$FE | loop mark position (cmd $FD) lo/hi — CONFIRMED S62 at instruction level |
 | +$16/$17 | $FA/$FB | tick length reload / tick countdown (frames per tick, from $A3) |
 | +$18 | $FC | cmd $A8 value *(unverified fx)* |
 | +$19 | $FD | stream position HIGH |
@@ -111,13 +111,14 @@ envelope; b3 -> $ED duty/wave id.
 | `A8 xx` | xx → $FC *(unverified fx)* |
 | `AE xx` | xx&$10 → $E9 bit4: select alternate tuning half (+12 entries into pitch table) |
 | `AF xx` | xx&$0F → $E9 low nibble: per-frame pitch-slide rate |
-| other `Ax xx` | **2-byte no-op** (falls through to skip) — this is why DWM2's extra `$AC` is safe to feed this engine |
-| `Bn xx` (n=1–F) | loop: repeat-count n on counter A (xx=0 → $EE) or B (xx≠0 → $EF); while count remains, next `$FC`/mark-return is taken, else skipped |
-| `B0 FC lo hi` | unconditional jump to pair index hi:lo (3 bytes; safe: next fetch recomputes address from pos) — also appears as bare `FC lo hi` |
+| other `Ax xx`, `$F0–$FB xx`, `$FE xx` | **2-byte no-op** (AudioCheckFD chain falls to AudioIncHLLoop). NOTE (S62): DWM2's `$AC` is NOT merely tolerated — its target pair would be executed as a bogus command; DWM2 data must be TRANSLATED, not fed raw (§7) |
+| `Bn xx` (n=1–F, xx≠$FC) | counted MARK loop: counter A (xx=$00 → $EE) or B (xx≠0 → $EF); while counting, return to the mark ($F8/$FE); total passes = n+1. **Elapse asymmetry (S62, instruction-verified):** $EE elapse continues at the next pair; $EF elapse does pos+1 — it SKIPS the following pair (this skip exists for the jump form below; vanilla only ever uses xx=$00 or $FC, so mark loops never hit it) |
+| `Bn FC lo hi` (4 B = 2 pairs) | counted JUMP loop: the engine inspects the Bn's OWN param at `AudioCheckFC`; $FC → jump to pair index hi:lo read from the NEXT pair; counter B ($EF); total passes = n+1; on elapse pos+1 skips the (lo,hi) pair — landing exactly after the construct. `B0 FC lo hi` = unconditional jump. **There is NO standalone 3-byte `$FC` token** (S61's reading, falsified S62 — DOC_AUDIT): top-level $FC is a 2-byte no-op and never occurs in real data |
+| `B0 xx` (xx≠$FC) | unconditional mark-return (no counter) |
 | `Cn xx` | effect (gate/vol shape): n<<4 → $F0, xx → $F1, gated on $EB low nibble = 0 *(exact audible effect unverified)* |
 | `Dn xx` | pitch slide UP: rate n → $F3, xx → $F4/$F5 period |
 | `En xx` | pitch slide DOWN: rate −n → $F3, xx → $F4/$F5 period |
-| `FD xx` | set loop mark = current pos → $F8/$FE (param ignored) |
+| `FD xx` | set loop mark = current pos (the pair AFTER this one) → $F8/$FE = state +$14/+$1A (CONFIRMED S62); param ignored by DWM1 — DWM2 uses it as a mark-SLOT selector (§7) |
 | `FF` | channel end: pos := $FFFF, sweep off |
 
 Note frequency table: **ROM0 $3A53**, 12+12 words (normal + alt half via
@@ -130,8 +131,10 @@ Wave instruments: **$316E**, 16 bytes each, ≥16 instruments.
 zero overruns**, streams tile banks $1C/$1D/$1E contiguously. 21 sounds are
 BGM-slot music (2–4 channels), the rest jingles/SEs. Selected BGM starts:
 $06 (first BGM, 3ch), $27 (only 4ch BGM, noise channel), $37/$3A/$3C…
-short pieces in $1E. Custom-room NPC currently sets BGM $1E (Arena) —
-`patches/bank_060.asm` `CustomRoom0_NPC02`.
+short pieces in $1E. (An S61 claim that a custom-room NPC "currently sets
+BGM $1E" was FALSE — the script existed but no NPC entity was wired to it;
+falsified + fixed S62, see DOC_AUDIT. Since S62 the room-$6B screen-0 NPC at
+metatile (5,6) runs `CustomRoom0_NPC02` = SetBGM **$9E**, the DWM2 port.)
 
 ## 7. DWM2 cross-compatibility (S61, from user-supplied GBS rip `DMG-BQLJ-JPN.gbs`)
 
@@ -141,22 +144,58 @@ DWM2 (Cobi's Journey JP) runs an **evolved sibling of the same engine**:
 - Same master-table algorithm (table @ GBS $3DC2; DWM2 audio banks
   $40–$43), same 4-byte records, same 2-byte-pair stream format, same
   song-start convention (first BGM = id $06).
-- Driver-side changes: channel state grew 26→32 bytes; new stream commands
-  exist (seen: `$AC`, a countdown/repeat fx) — unknown `$Ax` are 2-byte
-  no-ops to DWM1's interpreter, so DWM2 data degrades gracefully.
+- Driver-side changes (S62, targeted RE of the GBS driver — handlers at GBS
+  $35A7/$361C/$37D8/$381A, slot resolver $3D5D, fetch $357C, header parse
+  $3503):
+  - **`FD slot`**: set mark[slot & $0F] = {counter := 0, pos}. **4 mark
+    slots per channel**, 3 bytes each @ $DCC0 + ch*12 — vs DWM1's single
+    $F8/$FE mark. Data uses params $F0/$F3 (= slots 0/3).
+  - **`Bn slot` (n≥1)**: inc mark counter; while counter < n+1, jump to
+    mark[slot] → the marked section plays **n+1 times** (identical total to
+    DWM1's counted loops). No pair-skip on exit (unlike DWM1's $EF elapse).
+  - **`B0 $Fx`**: unconditional jump to mark[x]; `B0` with param < $F0 =
+    no-op.
+  - **`AC n, target`**: counted CALL — the pair AFTER `$AC` is a 16-bit LE
+    *byte-offset* target (>>1 = pair index), NOT a command; saves the return
+    position; the phrase plays n times. **Phrases live PAST the stream's
+    `$FF` terminator** (appendix regions between streams).
+  - **`AD x`**: RETURN to the saved `$AC` position (single return slot — the
+    driver cannot nest calls).
+  - **Headers: all 4 fields parse IDENTICALLY to DWM1** (b0 low nibble =
+    slide rate, b1 = duty, b2 swapped = envelope, b3 = instrument) — carried
+    verbatim in ports.
+- **Raw DWM2 bytes therefore do NOT degrade gracefully in DWM1** (falsifies
+  the S61 note): truncating at `$FF` loses the `$AC` appendix phrases, `$AC`
+  target pairs execute as bogus commands, and slot loops collapse onto the
+  single mark + hit the $EF elapse pair-skip → audible skipping/corruption
+  (observed in S62 v1/v2 builds).
 
-**DWM2 BGM #06** (user's target; GBS song-map index 5 → internal id $16):
-3 channels, `$40:$67EF` (pulse1, 692 B) / `$40:$6C5F` (pulse2, 578 B) /
-`$40:$70BF` (wave, 492 B) = **1,762 bytes total**, all streams terminate,
-wave ids used = 3/9/11 (byte-identical in DWM1). **Direct port judged
-feasible**: relocatable streams + 12 bytes of records + master-table
-extension (§2) + fix headers/`$AC` if SameBoy playback shows artifacts.
+**DWM2 BGM #06 port (S62, SHIPPED + user-confirmed by ear):** GBS song-map
+index 5 → internal id $16; sources `$40:$67EF/$6C5F/$70BF`.
+`tools/song_codec.py translate_dwm2_stream()` walks the true DWM2 grammar
+and emits DWM1-native tokens: `$AC` phrases INLINED at call sites (n times),
+slot loops → `Bn $FC lo hi` jump form (both engines play n+1 passes),
+counted loops whose body contains another counted loop UNROLLED (DWM1's
+jump form shares one $EF counter; only pulse1 nested — 2 sites, depth 2).
+`prove_translation()` executes the ORIGINAL bytes under DWM2 semantics and
+the TRANSLATED bytes under DWM1 semantics and requires identical event
+traces (passed: 1858/1566/2287 events over 2 outer loops). Result: 5,035
+stream bytes; ROM home = bank $1E filler @ $6B80 with records in the 4
+ORPHAN slots @ $419D (ids $9E–$A0) — **zero ROM0 changes** (the open-ended
+last master-table row already resolves ids $9E–$A1 into bank $1E).
+Residual unknowns: `$Cn`/`$A5`/`$A8` audible semantics (same family both
+drivers; user ear-test clean).
 
 ## 8. M2/M3 implications
 
-- M2 round-trip: decode→re-emit banks $1C–$1E byte-identical; the
-  *(unverified)* rows above are exactly what M2 must nail (envelope handler,
-  $A5/$A8/$Cn semantics, state +$14/+$1A layout).
+- M2 round-trip: DONE S62 (`tools/song_codec.py selftest`, byte-identical;
+  spec `extracted/songs_spec.json`). Nailed: loop/jump grammar (§5 rewrite),
+  mark offsets. Still *(unverified)*: $A5/$A8/$Cn audible semantics, $A0
+  handler internals — cosmetic for authoring (byte carriage is exact).
+- Custom-song capacity: the orphan-slot route (§7) caps at ONE custom song.
+  A song LIBRARY (user requirement S62: multiple songs assigned to
+  rooms/gates in the editor, plus MIDI import) needs the master-table
+  extension — see ROADMAP M3a–M3c for the ROM0 free-space problem.
 - **Song sources (user requirement, S61): BOTH DWM2 tracks AND MIDI files.**
   M2's decoded-song spec is therefore the common intermediate format:
   `DWM2 GBS/ROM → extractor → spec` and `MIDI → converter → spec`, then one

@@ -2513,3 +2513,41 @@ two RE discovery sessions (M1, S3) before their authoring items depend on them.
 > 4. **Re-check N4/N5/N6 formal acceptance** against the stage1ac implementation and
 >    tick the boxes whose acceptance tests are now met.
 
+
+> Session 60 (2026-07-16/17 — **CF3 COMPLETE: farm slots 3-19 moved to SRAM.
+> USER-CONFIRMED 2026-07-17 (sleep/unsleep, breeding + reload, gate saves,
+> "all tests normal") — hand-off accepted.**)
+> **The move (v2 architecture):** farm slot s (3-19) lives permanently at its
+> save-image address $A1FB+s*$95 (window $A3BA-$AD9E); party 0-2 + staging
+> stay WRAM; WRAM $CC80-$D664 FREED (custom-room buffers at $D379-$D477 now
+> legal in place — S55 hazard + ≤14 rule RETIRED). Rebase WRAM<->SRAM =
+> -/+$28C6. GMDP forks per-slot (fast path <3, slow path via bank $73 entry 3);
+> 48 walker advance sites across 10 banks patched with the byte-neutral
+> `ld hl,$730x / rst $10` dance (BC/HL preserved via push/pop — **rst $10
+> CLOBBERS BC**, caught by interpreter validation pre-ship). Bank $73 entries
+> 2-8: AdvanceDE / RebaseDE / Checksum / CopyTo / CopyFrom / NewGameClear /
+> TradeRecv. bank $59 NOT patched (party-only by S58 sort invariant — bank
+> 100% full anyway).
+> **Persistence model (v2, the field-bug fix):** the entire roster image
+> $A1C7-$AD9E (list + library bits + monster vars + party records + farm) is
+> EAGER — checksum v2 excludes it ($A002 x $1C5 + $AD9F x $1261, seed $4638);
+> the canonicalizer tail mirrors WRAM $CA8D-$CC7F -> $A1C7-$A3B9 after every
+> canonicalize. World state stays lazy. Reload restores the last canonical
+> roster; roster changes are never half-committed/duplicated/lost (the v1
+> field bug: cross-space sort swaps committed SRAM eagerly, WRAM lazily).
+> Migration self-heal accepts vanilla-full AND S60v1 stored checksums,
+> rewrites v2 in place at boot verify.
+> **The "third field bug" was NOT a bug:** save analysis (checksum-format
+> fingerprinting) proved the user was on the recalled v1 ROM, AND loading an
+> S52-era emulator save state under S60 splices two timelines (state WRAM has
+> the S52-layout roster; S60 reads slots >=3 from the state's OLD SRAM).
+> **Save states across the storage migration are architecturally invalid**;
+> same-build states are safe (both tiers snapshot atomically). Machinery
+> vindicated by 145/145 battery + 5 differential simulations of real ROM
+> bytes vs the vanilla oracle (bank-aware SM83 interpreter) + a clean replay
+> of the user's real .sav under v2.
+> Patched-build/compiler pin `168c5f1b5b4b3b2568a6d6e2f3f1ab45` (18/18);
+> verifier PASS 5/5 (PATCH_FILES + bank_00a/bank_015/bank_051). Clean build
+> untouched `1ca6579…`. Owning docs: MONSTER_DATA "CF3 as built (S60)",
+> ARCHITECTURE SRAM layout, known_RAM_map, KEY_LESSONS (5 new), ROADMAP CF3
+> [x].
