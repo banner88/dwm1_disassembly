@@ -10,65 +10,7 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-17 (Session 60 — **CF3 COMPLETE, user-confirmed hand-off.** Patched/compiler pin `168c5f1b5b4b3b2568a6d6e2f3f1ab45`; clean build `1ca6579…` unchanged; verifier 5/5.)
-> (tool selftests) + `extracted/skills.json` retired. Byte-neutral session —
-> no test ROM. Verifier PASS 5/5** — clean build byte-perfect `1ca6579…`
-> (unchanged; the only `disassembly/` edits were comments). Patched-build /
-> compiler-regression reference `d31c9300e13b98f516c6bee8b446069d`
-> (**patched**) is UNTOUCHED — this session emitted zero ROM bytes; v1
-> `79dd32c5…` (patched) and S57 `6c41f0d8…` (patched) remain historical.)
->
-> Session 59 (2026-07-16 — **Phase 0 close-out: the last two Phase 0 boxes.
-> Byte-neutral: tools + docs + comments only; ROM MD5 unchanged.**)
-> **NOTE — the ROM was not attached to the kickoff.** It did not need to be:
-> the clean build reproduces `1ca6579…` from source, so `data/DWM-original.gbc`
-> was reconstructed from `disassembly/game.gbc` and MD5-verified canonical.
-> Worth remembering — a missing ROM is not a blocker.
-> **(1) `verify_integrity.py` check 5 = tool selftests** (owning doc
-> TOOLS_AND_DATA "Guardrail"): `check_tool_selftests()` + `SELFTEST_TOOLS`
-> runs `--selftest` on `build_breeding.py` / `build_library_table.py` /
-> `build_skill_tables.py`; labels renumbered `/4`→`/5`. **The load-bearing
-> design decision is ROM-tolerance:** the ROM is gitignored/user-provided and
-> `.github/workflows/verify.yml` runs WITHOUT it ("MD5 compare needs only the
-> expected hash"), so an absent ROM **SKIPs** check 5 — failing there would
-> break every CI push. A present-but-non-canonical ROM still FAILs. All four
-> branches proven: PASS 5/5 clean; FAIL on a mutated `skill_records.json`
-> `mp_cost` (pinpointed `SkillMPCostTable` offset 0, restored → PASS); SKIP
-> with no ROM; FAIL on a 1-byte-corrupted ROM.
-> **(2) `extracted/skills.json` RETIRED (deleted).** The box's scope was
-> INVERTED (DOC_AUDIT S59): "only `gen_name_tables_db.py` reads it" — that
-> tool declared `SKILLS_PATH` and never opened it (dead constant, removed,
-> output byte-identical); the three real readers (`gen_skill_table_db.py`,
-> `gen_enemy_stats_db.py`, `gen_monster_db.py`) were named in no doc. All
-> ported to `skill_records.json`; they use only `id`→`name`, so each port is
-> one line. `gen_enemy_stats_db` + `gen_monster_db` outputs byte-identical;
-> `gen_skill_table_db` comments-only. `dump_skills.py` → inert tombstone
-> (exits non-zero; the `dump_monsters.py` "legacy dumper resurrects a deleted
-> file" hazard).
-> **ROOT CAUSE (the session's real find; owning section BATTLE_SKILL_SYSTEM
-> "Extent"):** the 34 junk records (ids 222–255 — the docs said 33) came from
-> reading the **222**-entry skill function table as **256**. The table is
-> `$52:$4011..$41CC` (222 × 2 = 444 B) and is **UNTERMINATED** — its bound is
-> simply where the next thing starts: `SkillBlaze` @ `$52:$41CD`
-> (`CD FF 5B` = `call $5BFF`). The phantoms were that handler's CODE decoded
-> as pointers (`$CD` = `call` opcode ⇒ the bogus `$FFCD`/`$CD5B`/`$E7CD`).
-> Corroborated three ways: `$4011 + 222*2 == $41CD == SkillBlaze`;
-> `build_skill_tables.py --selftest` re-emits `SkillFunctionTable` at **444
-> bytes byte-identical**; ported `gen_skill_table_db` now emits **zero `?`
-> fallbacks**, proving `skill_records.json` covers the id space exactly.
-> **Doc errors fixed in place (DOC_AUDIT S59):** `bank_052.asm` header
-> `$4011..$41BC` → `$41CC` (`$4011+$1BC = $41CD`; the count 222 was right, only
-> the end address was wrong — a correct-looking header with one bad number),
-> in BOTH `disassembly/` and `patches/`, comment-only, build re-verified
-> byte-perfect; same headers' `; Sources: … skills.json` → `skill_records.json`;
-> `gen_skill_table_db.py`'s `256 entries`/`512 bytes` → 222/444 and its bogus
-> `$4211` xref → `$6CC7` (the only `21 11 40` in bank $52 is `$6CD5`, inside
-> `jr_052_6cc7`). The disassembly had been correct at 222 since S45 — the
-> TOOLS had rotted past their own source.
-> **NEXT:** Phase 0 is now clear, so feature work is unblocked: CF3 (a2)
-> (pre-sort save migration) + the two redirected walker helpers (b), or A′1
-> (mapID ≥$80 audit). S58's residual test item stands: battle JOIN was never
-> explicitly exercised.
+> Last verified: 2026-07-17 (Session 61 — **Arc 3 M1 COMPLETE (sound engine mapped; SOUND_SYSTEM.md new). Byte-neutral.** Clean build `1ca6579…` unchanged; verifier PASS 5/5; patched/compiler pin `168c5f1b5b4b3b2568a6d6e2f3f1ab45` untouched.)
 >
 > Session 60 (2026-07-16/17 — **CF3 COMPLETE: farm slots 3-19 moved to SRAM.
 > USER-CONFIRMED 2026-07-17 (sleep/unsleep, breeding + reload, gate saves,
@@ -108,7 +50,40 @@
 > ARCHITECTURE SRAM layout, known_RAM_map, KEY_LESSONS (5 new), ROADMAP CF3
 > [x].
 >
+>
+> Session 61 (2026-07-17 — **Arc 3 M1 COMPLETE: sound engine + song data fully
+> mapped. Byte-neutral: tool + docs + comments only; ROM MD5 unchanged.**)
+> **Engine (owning doc SOUND_SYSTEM.md — new, user-approved):** entirely ROM0
+> $3331–$3AB2 region, VBlank-driven; the ROADMAP claim of song banks
+> `$61 $62 $63 $65 $66 $68 $78 $7b $7d` is FALSIFIED (DOC_AUDIT S61) — ALL
+> audio data is in banks **$1C/$1D/$1E**. Master table @ ROM0 **$3466**
+> (`[base_id, ptr, bank]` rows; $00-$20→$1C, $21-$36→$1D, $37-$9D→$1E; the
+> `ld hl,$3466` operand in `AudioProcess` is the M3 extension hook). Per-id
+> record `[state_slot, hw_ch, seq_ptr]`; a sound = CONSECUTIVE ids, one per
+> channel ($DE24 increments per AudioProcess call; Update1x/2x/3x = 2/3/4 ch).
+> 6× 26-B channel state @ $DD80 ↔ HRAM $FFE4-$FFFD per tick. **Streams =
+> 2-byte (cmd,param) pairs, position = PAIR INDEX (addr = base + pos*2) → all
+> jumps stream-relative → streams relocatable.** Notes <$A0 (semitone|octave,
+> len); $Ax ctl (unknown $Ax = 2-byte no-op); $Bn loops; $FC jump; $FD mark;
+> $FF end. Pitch table $3A53 (12+12 words), noise $37C5, wave instruments
+> $316E (16 B each). `tools/enumerate_songs.py` + `extracted/songs.json`:
+> **86 sounds / 158 streams, all terminate, zero overruns**; track $06
+> decoded note-by-note (acceptance).
+> **DWM2 (user-supplied GBS `DMG-BQLJ-JPN.gbs`): same engine family** — pitch
+> table + all 16 wave instruments byte-identical; same master-table algorithm
+> (@ GBS $3DC2, DWM2 banks $40-$43), same stream format; driver evolved
+> (state 26→32 B, new cmd $AC = benign no-op to DWM1). **User's target DWM2
+> BGM #06 = internal id $16, 3 ch, 1,762 B relocatable — direct port judged
+> feasible** (SOUND_SYSTEM.md §7); replaces MP3 transcription.
+> **User requirement logged: M3 must accept BOTH DWM2 tracks AND MIDI** —
+> M2's decoded-song spec is the common intermediate (ROADMAP M3;
+> SOUND_SYSTEM §8). DWM2 stays extraction-only.
+> Byte-neutral session — no test ROM. Verifier PASS 5/5; clean build
+> byte-perfect `1ca6579…` (bank_000 audio comments only). NEXT: M2 round-trip
+> keystone (nails the §4/§5 *(unverified)* rows), then M3.
+>
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S59** (2026-07-16): Phase 0 close-out — verifier check 5 (tool selftests, ROM-tolerant), skills.json retired, 222-entry skill-table root cause. Owning: TOOLS_AND_DATA, BATTLE_SKILL_SYSTEM, DOC_AUDIT S59.
 - **S58** (2026-07-13): CF3 step 1 — party-first sort in the canonicalizer (bank $73 entry 1), v2 fixups, phantom-monster forensics. Owning: MONSTER_DATA, ROADMAP CF3.
 
 | S | What landed | Knowledge lives in |
@@ -251,7 +226,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | State |
 |--------|-------|
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
-| Custom music | Sound engine unreversed (ROADMAP Arc 3, M1 first) |
+| Custom music | 🟡 M1 DONE S61: engine+format fully mapped (SOUND_SYSTEM.md); banks $1C-$1E; DWM2 BGM#06 port judged feasible. M2 (round-trip) + M3 (authoring; DWM2+MIDI sources) open |
 | Editor app (Phase 3) | Not started; backend keystone (S42) done |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
@@ -310,7 +285,7 @@ documentation/                 FLAT — all docs at this level:
   <subject references>         ARCHITECTURE, DATA_STRUCTURES, BANK04_SCRIPT_ENGINE,
                                TEXT_SYSTEM, ROOM_DATA_FORMAT, CROSSBANK_ROOMS,
                                EVENT_FLAGS, ROUTING, MONSTER_DATA, BREEDING_SYSTEM,
-                               BATTLE_SKILL_SYSTEM, GATE_GENERATION, QUEST_OPCODES,
+                               BATTLE_SKILL_SYSTEM, GATE_GENERATION, SOUND_SYSTEM, QUEST_OPCODES,
                                CUSTOM_CUTSCENES, SCRIPT_TOOLS, SIDEQUEST_MAP,
                                KEY_LESSONS, SAMEBOY_GUIDE, known_RAM_map, known_NOTES
 disassembly/                   Byte-perfect source. NEVER refactored.

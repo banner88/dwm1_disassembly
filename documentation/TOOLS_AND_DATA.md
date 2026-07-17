@@ -18,6 +18,7 @@ Regen produces identical output to committed file. Safe to re-run.
 |------|-----------|-------|
 | wram_usage.json | audit_wram.py | S54; REGENERATED S55 (curated arrays added: attr staging $C200, screen staging $C300 ×$200, battle tile buffer $C500, audio channels $DD80-$DE2B, battle stat tables — gaps 51→34; the S54 relocation candidates $C20D/$C42B were FALSE, see KEY_LESSONS S55). Selftest re-pinned S55: buffers still class-B (accepted legacy), relocated labels at $DE74 clean, audio ceiling pinned. Regenerate with the tool; not ROM-derived alone (also parses docs + patches). REGENERATED S56: curated staging pseudo-slot entry added ($D665-$D78E, monster-array indices $14/$15); gaps 34→31; selftest re-pinned (staging extent). |
 | monster_walkers.json | map_monster_walkers.py | **NEW (S56, CF1).** The monster-array access map: all 44 `ld [$cac0],a` writer sites + 60 register/stride walkers classified (party-only / all-slot / farm-write / single-slot / staging), membership semantics, exp-share model, roster mutation path table, staging pseudo-slots. Self-checking: writer-set drift or missing labels abort. Owning prose: MONSTER_DATA "Party/farm boundary semantics". |
+| songs.json | enumerate_songs.py | **NEW (S61, M1).** Full sound enumeration: 86 sounds / 158 channel streams from the master table @ ROM0 $3466 (banks $1C/$1D/$1E), each stream statically walked to termination (zero overruns), with per-channel slot/hw/seq/extent/header. Owning prose: SOUND_SYSTEM.md. |
 | monsters_full.json | dump_monsters.py | 221 monsters, all 43 fields. Verified identical. |
 | encounters.json | dump_encounters.py | 32 gates / 125 pools. Verified identical. |
 | boss_table.json | dump_boss_table.py | $4897 table, 32 gates. Verified identical. |
@@ -251,6 +252,13 @@ The Spirit icon insert itself is `patches/bank_04f.asm` (same-size 16-byte tile 
 $41B0, zero shift; bank $4F otherwise byte-identical to vanilla).
 
 ### Builders / decoders added after the 06-13 audit (rows synced S51)
+`enumerate_songs.py` — S61 (M1): sound-engine enumerator + stream decoder.
+Reads the master table @ ROM0 $3466, per-id channel records, walks every
+sequence stream (2-byte pairs, $FC jump follow, revisit = loop) to
+termination; `--decode <id>` prints a track note-by-note; `--json` emits
+`extracted/songs.json`. Engine facts it encodes are documented in
+SOUND_SYSTEM.md; exit non-zero on any stream overrun. ·
+
 `audit_wram.py` — S54: WRAM usage mapper. Classifies every WRAM byte from four
 evidence sources (vanilla literal refs with data-as-code 'suspect' filtering;
 curated evidence-cited indexed arrays — incl. the monster array $CAC1-$D664

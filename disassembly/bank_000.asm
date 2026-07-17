@@ -10814,6 +10814,12 @@ AudioUpdate2x:
 AudioUpdate1x:
     call AudioProcess
 
+; Start ONE channel of sound id [$de24], then INCREMENT $de24 — so a
+; multi-channel sound = consecutive ids (AudioUpdate1x/2x/3x chain = 2/3/4
+; channels). $3466 = master sound table, rows [base_id, ptr_lo, ptr_hi, bank],
+; sentinel $FF: ids $00-$20 -> $1C:$4001, $21-$36 -> $1D:$4001, $37+ -> $1E:$4001.
+; Per-id record @ bank:ptr+(id-base)*4 = [state_slot, hw_channel, seq_lo, seq_hi].
+; Full reference: documentation/SOUND_SYSTEM.md (S61).
 AudioProcess:
     push bc
     push de
@@ -11269,7 +11275,7 @@ AudioReadEAndSwap:
 AudioStoreDE2B:
     ld [$de2b], a
     swap e
-    ld hl, $316e
+    ld hl, $316e			;wave instrument table: 16 bytes/instrument, id*16
     add hl, de
 
 CopyBlock_35DD:
@@ -11285,6 +11291,11 @@ AudioBlockCopy:
 
     jr AudioClearEE
 
+; Sequence fetch: current pair address = seq_base($e6/$e7) + pos($fd:$e4)*2.
+; Streams are 2-byte (cmd,param) pairs; pos is a PAIR INDEX, so jump targets
+; ($FC lo hi) are stream-relative -> streams are relocatable. Command set:
+; <$A0 note(semitone|octave, len) / $Ax channel ctl / $Bn loop / $Cn effect /
+; $Dn/$En pitch slide / $FD mark / $FF end. See documentation/SOUND_SYSTEM.md.
 AudioGetEnvelope:
 Jump_000_35ea:
     ldh a, [$e4]
@@ -11748,6 +11759,10 @@ AudioCheckFlagClear:
     ret
 
 
+; Note pair: b = note byte (tone ch: low nibble = semitone 0-11, >=$0C rest;
+; high nibble = octave downshift; noise ch: index into $37C5, $1F = rest),
+; [hl] = length in ticks -> $ec. Pitch table @ $3a53 (12+12 words, $e9 bit4
+; selects the alternate half).
 AudioLoadNoteB:
     ld b, a
     ld a, [hl]

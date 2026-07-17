@@ -810,19 +810,33 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
       shifts enemy choice in SameBoy.
 
 ### Arc 3 — Custom music (discovery-gated; longest pole)
-Unparks the "custom music" line. The main GBC sequence engine + song-data format are
-unreversed (the located `$08:LoadAudP` is only the SGB-packet path; song data lives in
-banks `$61 $62 $63 $65 $66 $68 $78 $7b $7d`, reached as DATA via the engine's bank-switch,
-e.g. `$08` → `$78`). Fire M1 early so its unknowns surface before they block anything.
-- [ ] **M1 — Audio engine + data discovery (RE, no patch).** Trace the per-frame channel
-      driver (`rNRxx` writes), the song table (track id → data + bank), and the sequence
-      command format; pin each song's data range. *Deliverable:* a `SOUND_SYSTEM.md` reference
-      doc (precedent: GATE_GENERATION.md — confirm with user before adding) + a song enumerator.
-      *Accept:* songs listed with addresses; format documented; one known track decodes to its bytes.
+Unparks the "custom music" line. ~~Song data lives in banks `$61 $62 …`~~ **CLAIM
+FALSIFIED S61 (DOC_AUDIT S61):** the engine is entirely ROM0 ($3331–$3AB2 region,
+VBlank-driven) and ALL audio data lives in banks **$1C/$1D/$1E** (master table @
+ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.md.
+- [x] **M1 — Audio engine + data discovery (RE, no patch).** DONE S61 (byte-neutral).
+      Master table, per-id channel records, 2-byte-pair sequence format, pitch/noise/wave
+      tables all pinned; `tools/enumerate_songs.py` + `extracted/songs.json`: 86 sounds /
+      158 streams, all terminate, zero overruns; track $06 decoded note-by-note.
+      **BONUS (user-supplied DWM2 GBS):** DWM2 runs the same engine family — pitch table
+      + all 16 wave instruments byte-identical, same stream format; **DWM2 BGM #06
+      (user's target track, internal id $16) = 1,762 B of relocatable data, direct port
+      judged feasible** (SOUND_SYSTEM.md §7). This replaces MP3 transcription for the
+      user's custom-well-music goal.
 - [ ] **M2 — Song round-trip keystone.** Decode all songs to a spec; re-emit byte-identical.
       *Accept:* `--selftest` byte-identical; MD5 unchanged.
 - [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
       song-table entry. *Accept:* a custom track plays in SameBoy.
+      *Concrete plan from M1 (SOUND_SYSTEM.md §2/§8):* new ids ≥ $9E; records+streams in a
+      free bank; master table copied+extended in ROM0 and the one `ld hl,$3466` operand in
+      `AudioProcess` repointed; first target = DWM2 BGM #06 port into the well custom room
+      (script `SetBGM`); watch for DWM2-only cmd $AC (no-op here) + header diffs in SameBoy.
+      **User requirement (S61): authoring must accept BOTH DWM2 tracks AND MIDI files.**
+      Design consequence: M2's decoded-song spec is the common intermediate — a DWM2
+      extractor (extract only; do NOT reverse DWM2's driver further) and a MIDI→spec
+      converter (quantize to ticks; map ≤2 melodic voices + bass to pulse1/pulse2/wave,
+      percussion to noise; clamp to the 12+12 pitch table) both emit it, and one
+      spec→bytes compiler serves both.
 
 **Recommended order:** T1 ✅ → S1 ✅ → S2a–S2e ✅ → **Tame Stage 2 ✅ (S52 — four
 custom skills live, evolve chain proven)** → S2f (field

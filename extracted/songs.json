@@ -1,0 +1,3208 @@
+{
+ "_generator": "tools/enumerate_songs.py vs data/DWM-original.gbc (md5 1ca6579359f21d8e27b446f865bf6b83)",
+ "master_table": 13414,
+ "sounds": [
+  {
+   "sound": 0,
+   "first_id": 0,
+   "channels": [
+    {
+     "id": 0,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 16517,
+     "end": 16523,
+     "bytes": 6,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "notes": 0,
+     "terminated": "end"
+    },
+    {
+     "id": 1,
+     "slot": "SE1",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 16517,
+     "end": 16523,
+     "bytes": 6,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "notes": 0,
+     "terminated": "end"
+    },
+    {
+     "id": 2,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 16517,
+     "end": 16523,
+     "bytes": 6,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "notes": 0,
+     "terminated": "end"
+    },
+    {
+     "id": 3,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 16517,
+     "end": 16523,
+     "bytes": 6,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "notes": 0,
+     "terminated": "end"
+    },
+    {
+     "id": 4,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 16517,
+     "end": 16523,
+     "bytes": 6,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "notes": 0,
+     "terminated": "end"
+    },
+    {
+     "id": 5,
+     "slot": "BGM-D",
+     "hw": "noise",
+     "bank": 28,
+     "seq": 16517,
+     "end": 16523,
+     "bytes": 6,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "notes": 0,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 1,
+   "first_id": 6,
+   "channels": [
+    {
+     "id": 6,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 16522,
+     "end": 17148,
+     "bytes": 626,
+     "header": [
+      4,
+      0,
+      12,
+      0
+     ],
+     "notes": 182,
+     "terminated": "end"
+    },
+    {
+     "id": 7,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 17147,
+     "end": 17803,
+     "bytes": 656,
+     "header": [
+      4,
+      0,
+      13,
+      0
+     ],
+     "notes": 162,
+     "terminated": "end"
+    },
+    {
+     "id": 8,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 17802,
+     "end": 18452,
+     "bytes": 650,
+     "header": [
+      4,
+      72,
+      2,
+      11
+     ],
+     "notes": 269,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 2,
+   "first_id": 9,
+   "channels": [
+    {
+     "id": 9,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 18451,
+     "end": 19187,
+     "bytes": 736,
+     "header": [
+      2,
+      2,
+      9,
+      0
+     ],
+     "notes": 199,
+     "terminated": "end"
+    },
+    {
+     "id": 10,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 19187,
+     "end": 19731,
+     "bytes": 544,
+     "header": [
+      2,
+      2,
+      15,
+      0
+     ],
+     "notes": 150,
+     "terminated": "end"
+    },
+    {
+     "id": 11,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 19731,
+     "end": 20571,
+     "bytes": 840,
+     "header": [
+      2,
+      0,
+      2,
+      15
+     ],
+     "notes": 183,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 3,
+   "first_id": 12,
+   "channels": [
+    {
+     "id": 12,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 20572,
+     "end": 21200,
+     "bytes": 628,
+     "header": [
+      7,
+      2,
+      10,
+      0
+     ],
+     "notes": 232,
+     "terminated": "end"
+    },
+    {
+     "id": 13,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 21199,
+     "end": 22073,
+     "bytes": 874,
+     "header": [
+      7,
+      2,
+      10,
+      0
+     ],
+     "notes": 238,
+     "terminated": "end"
+    },
+    {
+     "id": 14,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 22072,
+     "end": 22574,
+     "bytes": 502,
+     "header": [
+      7,
+      255,
+      2,
+      5
+     ],
+     "notes": 153,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 4,
+   "first_id": 15,
+   "channels": [
+    {
+     "id": 15,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 22574,
+     "end": 22820,
+     "bytes": 246,
+     "header": [
+      4,
+      2,
+      9,
+      0
+     ],
+     "notes": 108,
+     "terminated": "end"
+    },
+    {
+     "id": 16,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 22819,
+     "end": 23017,
+     "bytes": 198,
+     "header": [
+      4,
+      2,
+      13,
+      0
+     ],
+     "notes": 47,
+     "terminated": "end"
+    },
+    {
+     "id": 17,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 23016,
+     "end": 23350,
+     "bytes": 334,
+     "header": [
+      4,
+      16,
+      2,
+      2
+     ],
+     "notes": 69,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 5,
+   "first_id": 18,
+   "channels": [
+    {
+     "id": 18,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 23350,
+     "end": 23702,
+     "bytes": 352,
+     "header": [
+      10,
+      0,
+      10,
+      0
+     ],
+     "notes": 87,
+     "terminated": "end"
+    },
+    {
+     "id": 19,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 23701,
+     "end": 24155,
+     "bytes": 454,
+     "header": [
+      10,
+      0,
+      12,
+      0
+     ],
+     "notes": 95,
+     "terminated": "end"
+    },
+    {
+     "id": 20,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 24154,
+     "end": 24626,
+     "bytes": 472,
+     "header": [
+      10,
+      16,
+      2,
+      11
+     ],
+     "notes": 112,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 6,
+   "first_id": 21,
+   "channels": [
+    {
+     "id": 21,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 24626,
+     "end": 24890,
+     "bytes": 264,
+     "header": [
+      8,
+      2,
+      4,
+      0
+     ],
+     "notes": 88,
+     "terminated": "end"
+    },
+    {
+     "id": 22,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 24889,
+     "end": 25369,
+     "bytes": 480,
+     "header": [
+      8,
+      2,
+      12,
+      0
+     ],
+     "notes": 135,
+     "terminated": "end"
+    },
+    {
+     "id": 23,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 25368,
+     "end": 25636,
+     "bytes": 268,
+     "header": [
+      8,
+      255,
+      2,
+      5
+     ],
+     "notes": 104,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 7,
+   "first_id": 24,
+   "channels": [
+    {
+     "id": 24,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 25636,
+     "end": 26086,
+     "bytes": 450,
+     "header": [
+      2,
+      1,
+      12,
+      0
+     ],
+     "notes": 182,
+     "terminated": "end"
+    },
+    {
+     "id": 25,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 26085,
+     "end": 26527,
+     "bytes": 442,
+     "header": [
+      2,
+      1,
+      15,
+      0
+     ],
+     "notes": 117,
+     "terminated": "end"
+    },
+    {
+     "id": 26,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 26526,
+     "end": 27172,
+     "bytes": 646,
+     "header": [
+      2,
+      255,
+      2,
+      3
+     ],
+     "notes": 167,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 8,
+   "first_id": 27,
+   "channels": [
+    {
+     "id": 27,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 27172,
+     "end": 27532,
+     "bytes": 360,
+     "header": [
+      10,
+      1,
+      11,
+      0
+     ],
+     "notes": 119,
+     "terminated": "end"
+    },
+    {
+     "id": 28,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 27531,
+     "end": 27933,
+     "bytes": 402,
+     "header": [
+      10,
+      1,
+      14,
+      0
+     ],
+     "notes": 102,
+     "terminated": "end"
+    },
+    {
+     "id": 29,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 27932,
+     "end": 28372,
+     "bytes": 440,
+     "header": [
+      10,
+      18,
+      2,
+      3
+     ],
+     "notes": 101,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 9,
+   "first_id": 30,
+   "channels": [
+    {
+     "id": 30,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 28,
+     "seq": 28372,
+     "end": 28950,
+     "bytes": 578,
+     "header": [
+      8,
+      2,
+      11,
+      0
+     ],
+     "notes": 198,
+     "terminated": "end"
+    },
+    {
+     "id": 31,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 28,
+     "seq": 28949,
+     "end": 29489,
+     "bytes": 540,
+     "header": [
+      8,
+      1,
+      13,
+      0
+     ],
+     "notes": 182,
+     "terminated": "end"
+    },
+    {
+     "id": 32,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 28,
+     "seq": 29488,
+     "end": 29890,
+     "bytes": 402,
+     "header": [
+      8,
+      32,
+      2,
+      2
+     ],
+     "notes": 138,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 10,
+   "first_id": 33,
+   "channels": [
+    {
+     "id": 33,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 29,
+     "seq": 16473,
+     "end": 17327,
+     "bytes": 854,
+     "header": [
+      8,
+      1,
+      7,
+      0
+     ],
+     "notes": 286,
+     "terminated": "end"
+    },
+    {
+     "id": 34,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 29,
+     "seq": 17326,
+     "end": 18284,
+     "bytes": 958,
+     "header": [
+      8,
+      0,
+      14,
+      0
+     ],
+     "notes": 224,
+     "terminated": "end"
+    },
+    {
+     "id": 35,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 29,
+     "seq": 18283,
+     "end": 19545,
+     "bytes": 1262,
+     "header": [
+      8,
+      16,
+      4,
+      3
+     ],
+     "notes": 308,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 11,
+   "first_id": 36,
+   "channels": [
+    {
+     "id": 36,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 29,
+     "seq": 19545,
+     "end": 20017,
+     "bytes": 472,
+     "header": [
+      1,
+      1,
+      9,
+      0
+     ],
+     "notes": 134,
+     "terminated": "end"
+    },
+    {
+     "id": 37,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 29,
+     "seq": 20016,
+     "end": 20490,
+     "bytes": 474,
+     "header": [
+      1,
+      1,
+      14,
+      0
+     ],
+     "notes": 109,
+     "terminated": "end"
+    },
+    {
+     "id": 38,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 29,
+     "seq": 20489,
+     "end": 21069,
+     "bytes": 580,
+     "header": [
+      1,
+      8,
+      2,
+      10
+     ],
+     "notes": 150,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 12,
+   "first_id": 39,
+   "channels": [
+    {
+     "id": 39,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 29,
+     "seq": 21069,
+     "end": 21711,
+     "bytes": 642,
+     "header": [
+      1,
+      1,
+      9,
+      0
+     ],
+     "notes": 191,
+     "terminated": "end"
+    },
+    {
+     "id": 40,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 29,
+     "seq": 21710,
+     "end": 22472,
+     "bytes": 762,
+     "header": [
+      1,
+      1,
+      12,
+      0
+     ],
+     "notes": 204,
+     "terminated": "end"
+    },
+    {
+     "id": 41,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 29,
+     "seq": 22471,
+     "end": 23161,
+     "bytes": 690,
+     "header": [
+      1,
+      255,
+      2,
+      10
+     ],
+     "notes": 175,
+     "terminated": "end"
+    },
+    {
+     "id": 42,
+     "slot": "BGM-D",
+     "hw": "noise",
+     "bank": 29,
+     "seq": 23160,
+     "end": 23264,
+     "bytes": 104,
+     "header": [
+      1,
+      0,
+      15,
+      0
+     ],
+     "notes": 32,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 13,
+   "first_id": 43,
+   "channels": [
+    {
+     "id": 43,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 29,
+     "seq": 23263,
+     "end": 24333,
+     "bytes": 1070,
+     "header": [
+      1,
+      1,
+      11,
+      0
+     ],
+     "notes": 331,
+     "terminated": "end"
+    },
+    {
+     "id": 44,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 29,
+     "seq": 24332,
+     "end": 25258,
+     "bytes": 926,
+     "header": [
+      1,
+      1,
+      12,
+      0
+     ],
+     "notes": 260,
+     "terminated": "end"
+    },
+    {
+     "id": 45,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 29,
+     "seq": 25257,
+     "end": 25783,
+     "bytes": 526,
+     "header": [
+      1,
+      48,
+      2,
+      2
+     ],
+     "notes": 154,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 14,
+   "first_id": 46,
+   "channels": [
+    {
+     "id": 46,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 29,
+     "seq": 26089,
+     "end": 26295,
+     "bytes": 206,
+     "header": [
+      3,
+      2,
+      9,
+      0
+     ],
+     "notes": 68,
+     "terminated": "end"
+    },
+    {
+     "id": 47,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 29,
+     "seq": 26294,
+     "end": 26490,
+     "bytes": 196,
+     "header": [
+      3,
+      2,
+      11,
+      0
+     ],
+     "notes": 62,
+     "terminated": "end"
+    },
+    {
+     "id": 48,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 29,
+     "seq": 26489,
+     "end": 26785,
+     "bytes": 296,
+     "header": [
+      3,
+      22,
+      10,
+      3
+     ],
+     "notes": 106,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 15,
+   "first_id": 49,
+   "channels": [
+    {
+     "id": 49,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 29,
+     "seq": 26784,
+     "end": 27338,
+     "bytes": 554,
+     "header": [
+      8,
+      1,
+      12,
+      0
+     ],
+     "notes": 190,
+     "terminated": "end"
+    },
+    {
+     "id": 50,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 29,
+     "seq": 27337,
+     "end": 27865,
+     "bytes": 528,
+     "header": [
+      8,
+      2,
+      15,
+      0
+     ],
+     "notes": 136,
+     "terminated": "end"
+    },
+    {
+     "id": 51,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 29,
+     "seq": 27864,
+     "end": 28390,
+     "bytes": 526,
+     "header": [
+      8,
+      64,
+      2,
+      11
+     ],
+     "notes": 145,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 16,
+   "first_id": 52,
+   "channels": [
+    {
+     "id": 52,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 29,
+     "seq": 28390,
+     "end": 29062,
+     "bytes": 672,
+     "header": [
+      7,
+      1,
+      12,
+      0
+     ],
+     "notes": 255,
+     "terminated": "end"
+    },
+    {
+     "id": 53,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 29,
+     "seq": 29061,
+     "end": 30015,
+     "bytes": 954,
+     "header": [
+      7,
+      2,
+      15,
+      0
+     ],
+     "notes": 251,
+     "terminated": "end"
+    },
+    {
+     "id": 54,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 29,
+     "seq": 30014,
+     "end": 30320,
+     "bytes": 306,
+     "header": [
+      7,
+      255,
+      2,
+      0
+     ],
+     "notes": 109,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 17,
+   "first_id": 55,
+   "channels": [
+    {
+     "id": 55,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 16813,
+     "end": 16915,
+     "bytes": 102,
+     "header": [
+      4,
+      0,
+      15,
+      0
+     ],
+     "notes": 37,
+     "terminated": "end"
+    },
+    {
+     "id": 56,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 16914,
+     "end": 16992,
+     "bytes": 78,
+     "header": [
+      4,
+      0,
+      15,
+      0
+     ],
+     "notes": 28,
+     "terminated": "end"
+    },
+    {
+     "id": 57,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 30,
+     "seq": 16991,
+     "end": 17027,
+     "bytes": 36,
+     "header": [
+      4,
+      255,
+      2,
+      3
+     ],
+     "notes": 9,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 18,
+   "first_id": 58,
+   "channels": [
+    {
+     "id": 58,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 17026,
+     "end": 17060,
+     "bytes": 34,
+     "header": [
+      9,
+      2,
+      15,
+      0
+     ],
+     "notes": 11,
+     "terminated": "end"
+    },
+    {
+     "id": 59,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 17059,
+     "end": 17093,
+     "bytes": 34,
+     "header": [
+      9,
+      2,
+      15,
+      0
+     ],
+     "notes": 11,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 19,
+   "first_id": 60,
+   "channels": [
+    {
+     "id": 60,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 17092,
+     "end": 17378,
+     "bytes": 286,
+     "header": [
+      5,
+      0,
+      13,
+      0
+     ],
+     "notes": 112,
+     "terminated": "end"
+    },
+    {
+     "id": 61,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 17377,
+     "end": 17589,
+     "bytes": 212,
+     "header": [
+      5,
+      0,
+      15,
+      0
+     ],
+     "notes": 85,
+     "terminated": "end"
+    },
+    {
+     "id": 62,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 30,
+     "seq": 17588,
+     "end": 17796,
+     "bytes": 208,
+     "header": [
+      5,
+      255,
+      2,
+      3
+     ],
+     "notes": 88,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 20,
+   "first_id": 63,
+   "channels": [
+    {
+     "id": 63,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 17795,
+     "end": 17829,
+     "bytes": 34,
+     "header": [
+      4,
+      2,
+      14,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    },
+    {
+     "id": 64,
+     "slot": "SE1",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 17828,
+     "end": 17862,
+     "bytes": 34,
+     "header": [
+      4,
+      2,
+      15,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    },
+    {
+     "id": 65,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 17861,
+     "end": 17881,
+     "bytes": 20,
+     "header": [
+      5,
+      0,
+      12,
+      0
+     ],
+     "notes": 4,
+     "terminated": "end"
+    },
+    {
+     "id": 66,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 17880,
+     "end": 17920,
+     "bytes": 40,
+     "header": [
+      5,
+      0,
+      15,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    },
+    {
+     "id": 67,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 30,
+     "seq": 17919,
+     "end": 17945,
+     "bytes": 26,
+     "header": [
+      5,
+      255,
+      2,
+      12
+     ],
+     "notes": 8,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 21,
+   "first_id": 68,
+   "channels": [
+    {
+     "id": 68,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 17944,
+     "end": 18042,
+     "bytes": 98,
+     "header": [
+      1,
+      0,
+      15,
+      0
+     ],
+     "notes": 32,
+     "terminated": "end"
+    },
+    {
+     "id": 69,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 18041,
+     "end": 18131,
+     "bytes": 90,
+     "header": [
+      1,
+      0,
+      15,
+      0
+     ],
+     "notes": 32,
+     "terminated": "end"
+    },
+    {
+     "id": 70,
+     "slot": "BGM-C",
+     "hw": "wave",
+     "bank": 30,
+     "seq": 18130,
+     "end": 18222,
+     "bytes": 92,
+     "header": [
+      1,
+      48,
+      2,
+      2
+     ],
+     "notes": 26,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 22,
+   "first_id": 71,
+   "channels": [
+    {
+     "id": 71,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18221,
+     "end": 18251,
+     "bytes": 30,
+     "header": [
+      7,
+      1,
+      15,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    },
+    {
+     "id": 72,
+     "slot": "SE1",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 18250,
+     "end": 18280,
+     "bytes": 30,
+     "header": [
+      7,
+      1,
+      15,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 23,
+   "first_id": 73,
+   "channels": [
+    {
+     "id": 73,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18279,
+     "end": 18311,
+     "bytes": 32,
+     "header": [
+      5,
+      0,
+      14,
+      0
+     ],
+     "notes": 10,
+     "terminated": "end"
+    },
+    {
+     "id": 74,
+     "slot": "SE1",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 18310,
+     "end": 18342,
+     "bytes": 32,
+     "header": [
+      5,
+      0,
+      15,
+      0
+     ],
+     "notes": 10,
+     "terminated": "end"
+    },
+    {
+     "id": 75,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18341,
+     "end": 18393,
+     "bytes": 52,
+     "header": [
+      5,
+      0,
+      14,
+      0
+     ],
+     "notes": 20,
+     "terminated": "end"
+    },
+    {
+     "id": 76,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 18392,
+     "end": 18444,
+     "bytes": 52,
+     "header": [
+      5,
+      0,
+      15,
+      0
+     ],
+     "notes": 20,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 24,
+   "first_id": 77,
+   "channels": [
+    {
+     "id": 77,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18443,
+     "end": 18511,
+     "bytes": 68,
+     "header": [
+      5,
+      0,
+      14,
+      0
+     ],
+     "notes": 28,
+     "terminated": "end"
+    },
+    {
+     "id": 78,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 18510,
+     "end": 18578,
+     "bytes": 68,
+     "header": [
+      5,
+      0,
+      15,
+      0
+     ],
+     "notes": 28,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 25,
+   "first_id": 79,
+   "channels": [
+    {
+     "id": 79,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18577,
+     "end": 18623,
+     "bytes": 46,
+     "header": [
+      11,
+      0,
+      5,
+      0
+     ],
+     "notes": 20,
+     "terminated": "end"
+    },
+    {
+     "id": 80,
+     "slot": "SE1",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 18622,
+     "end": 18666,
+     "bytes": 44,
+     "header": [
+      11,
+      0,
+      15,
+      0
+     ],
+     "notes": 19,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 26,
+   "first_id": 81,
+   "channels": [
+    {
+     "id": 81,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 18665,
+     "end": 18701,
+     "bytes": 36,
+     "header": [
+      0,
+      0,
+      13,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 27,
+   "first_id": 82,
+   "channels": [
+    {
+     "id": 82,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18700,
+     "end": 18852,
+     "bytes": 152,
+     "header": [
+      0,
+      2,
+      2,
+      0
+     ],
+     "notes": 45,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 28,
+   "first_id": 83,
+   "channels": [
+    {
+     "id": 83,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18852,
+     "end": 18872,
+     "bytes": 20,
+     "header": [
+      0,
+      1,
+      15,
+      55
+     ],
+     "notes": 6,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 29,
+   "first_id": 84,
+   "channels": [
+    {
+     "id": 84,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18871,
+     "end": 18891,
+     "bytes": 20,
+     "header": [
+      0,
+      0,
+      7,
+      0
+     ],
+     "notes": 4,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 30,
+   "first_id": 85,
+   "channels": [
+    {
+     "id": 85,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18890,
+     "end": 18904,
+     "bytes": 14,
+     "header": [
+      0,
+      2,
+      15,
+      23
+     ],
+     "notes": 2,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 31,
+   "first_id": 86,
+   "channels": [
+    {
+     "id": 86,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 18903,
+     "end": 18917,
+     "bytes": 14,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 3,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 32,
+   "first_id": 87,
+   "channels": [
+    {
+     "id": 87,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 18916,
+     "end": 18946,
+     "bytes": 30,
+     "header": [
+      0,
+      0,
+      15,
+      23
+     ],
+     "notes": 7,
+     "terminated": "end"
+    },
+    {
+     "id": 88,
+     "slot": "SE1",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 18945,
+     "end": 19083,
+     "bytes": 138,
+     "header": [
+      0,
+      0,
+      12,
+      23
+     ],
+     "notes": 63,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 33,
+   "first_id": 89,
+   "channels": [
+    {
+     "id": 89,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 19082,
+     "end": 19094,
+     "bytes": 12,
+     "header": [
+      0,
+      2,
+      15,
+      0
+     ],
+     "notes": 2,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 34,
+   "first_id": 90,
+   "channels": [
+    {
+     "id": 90,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 19093,
+     "end": 19101,
+     "bytes": 8,
+     "header": [
+      0,
+      2,
+      15,
+      0
+     ],
+     "notes": 1,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 35,
+   "first_id": 91,
+   "channels": [
+    {
+     "id": 91,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 19100,
+     "end": 19108,
+     "bytes": 8,
+     "header": [
+      0,
+      2,
+      15,
+      0
+     ],
+     "notes": 1,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 36,
+   "first_id": 92,
+   "channels": [
+    {
+     "id": 92,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 19107,
+     "end": 19141,
+     "bytes": 34,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 12,
+     "terminated": "end"
+    },
+    {
+     "id": 93,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 19140,
+     "end": 19212,
+     "bytes": 72,
+     "header": [
+      0,
+      0,
+      7,
+      0
+     ],
+     "notes": 17,
+     "terminated": "end"
+    },
+    {
+     "id": 94,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 19211,
+     "end": 19367,
+     "bytes": 156,
+     "header": [
+      0,
+      0,
+      7,
+      0
+     ],
+     "notes": 33,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 37,
+   "first_id": 95,
+   "channels": [
+    {
+     "id": 95,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 19366,
+     "end": 19380,
+     "bytes": 14,
+     "header": [
+      0,
+      2,
+      15,
+      23
+     ],
+     "notes": 3,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 38,
+   "first_id": 96,
+   "channels": [
+    {
+     "id": 96,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 19379,
+     "end": 19399,
+     "bytes": 20,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 6,
+     "terminated": "end"
+    },
+    {
+     "id": 97,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 19398,
+     "end": 19730,
+     "bytes": 332,
+     "header": [
+      0,
+      2,
+      15,
+      0
+     ],
+     "notes": 152,
+     "terminated": "end"
+    },
+    {
+     "id": 98,
+     "slot": "BGM-B",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 19729,
+     "end": 20069,
+     "bytes": 340,
+     "header": [
+      0,
+      2,
+      15,
+      0
+     ],
+     "notes": 156,
+     "terminated": "end"
+    },
+    {
+     "id": 99,
+     "slot": "BGM-C",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 20068,
+     "end": 20086,
+     "bytes": 18,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 4,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 39,
+   "first_id": 100,
+   "channels": [
+    {
+     "id": 100,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20085,
+     "end": 20133,
+     "bytes": 48,
+     "header": [
+      0,
+      0,
+      15,
+      31
+     ],
+     "notes": 15,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 40,
+   "first_id": 101,
+   "channels": [
+    {
+     "id": 101,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20132,
+     "end": 20162,
+     "bytes": 30,
+     "header": [
+      0,
+      1,
+      15,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 41,
+   "first_id": 102,
+   "channels": [
+    {
+     "id": 102,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 20161,
+     "end": 20183,
+     "bytes": 22,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 5,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 42,
+   "first_id": 103,
+   "channels": [
+    {
+     "id": 103,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20182,
+     "end": 20206,
+     "bytes": 24,
+     "header": [
+      0,
+      1,
+      15,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 43,
+   "first_id": 104,
+   "channels": [
+    {
+     "id": 104,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 20205,
+     "end": 20227,
+     "bytes": 22,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 7,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 44,
+   "first_id": 105,
+   "channels": [
+    {
+     "id": 105,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20226,
+     "end": 20272,
+     "bytes": 46,
+     "header": [
+      0,
+      2,
+      15,
+      0
+     ],
+     "notes": 18,
+     "terminated": "end"
+    },
+    {
+     "id": 106,
+     "slot": "SE1",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 20271,
+     "end": 20317,
+     "bytes": 46,
+     "header": [
+      0,
+      2,
+      5,
+      0
+     ],
+     "notes": 18,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 45,
+   "first_id": 107,
+   "channels": [
+    {
+     "id": 107,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20316,
+     "end": 20342,
+     "bytes": 26,
+     "header": [
+      0,
+      1,
+      15,
+      0
+     ],
+     "notes": 9,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 46,
+   "first_id": 108,
+   "channels": [
+    {
+     "id": 108,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 20341,
+     "end": 20357,
+     "bytes": 16,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 4,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 47,
+   "first_id": 109,
+   "channels": [
+    {
+     "id": 109,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 20356,
+     "end": 20384,
+     "bytes": 28,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 11,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 48,
+   "first_id": 110,
+   "channels": [
+    {
+     "id": 110,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 20383,
+     "end": 20403,
+     "bytes": 20,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 7,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 49,
+   "first_id": 111,
+   "channels": [
+    {
+     "id": 111,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20402,
+     "end": 20418,
+     "bytes": 16,
+     "header": [
+      0,
+      2,
+      15,
+      0
+     ],
+     "notes": 4,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 50,
+   "first_id": 112,
+   "channels": [
+    {
+     "id": 112,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20417,
+     "end": 20479,
+     "bytes": 62,
+     "header": [
+      0,
+      1,
+      15,
+      0
+     ],
+     "notes": 24,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 51,
+   "first_id": 113,
+   "channels": [
+    {
+     "id": 113,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20478,
+     "end": 20506,
+     "bytes": 28,
+     "header": [
+      0,
+      2,
+      15,
+      38
+     ],
+     "notes": 4,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 52,
+   "first_id": 114,
+   "channels": [
+    {
+     "id": 114,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20505,
+     "end": 20531,
+     "bytes": 26,
+     "header": [
+      0,
+      2,
+      15,
+      46
+     ],
+     "notes": 7,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 53,
+   "first_id": 115,
+   "channels": [
+    {
+     "id": 115,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20530,
+     "end": 20644,
+     "bytes": 114,
+     "header": [
+      0,
+      2,
+      15,
+      31
+     ],
+     "notes": 22,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 54,
+   "first_id": 116,
+   "channels": [
+    {
+     "id": 116,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20648,
+     "end": 20734,
+     "bytes": 86,
+     "header": [
+      0,
+      0,
+      15,
+      35
+     ],
+     "notes": 18,
+     "terminated": "end"
+    },
+    {
+     "id": 117,
+     "slot": "SE1",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 20734,
+     "end": 20748,
+     "bytes": 14,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 3,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 55,
+   "first_id": 118,
+   "channels": [
+    {
+     "id": 118,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20748,
+     "end": 20898,
+     "bytes": 150,
+     "header": [
+      0,
+      0,
+      15,
+      35
+     ],
+     "notes": 49,
+     "terminated": "end"
+    },
+    {
+     "id": 119,
+     "slot": "SE1",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 20900,
+     "end": 20914,
+     "bytes": 14,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 3,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 56,
+   "first_id": 120,
+   "channels": [
+    {
+     "id": 120,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 20914,
+     "end": 21132,
+     "bytes": 218,
+     "header": [
+      0,
+      0,
+      15,
+      35
+     ],
+     "notes": 50,
+     "terminated": "end"
+    },
+    {
+     "id": 121,
+     "slot": "SE1",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21132,
+     "end": 21146,
+     "bytes": 14,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 3,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 57,
+   "first_id": 122,
+   "channels": [
+    {
+     "id": 122,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 21146,
+     "end": 21392,
+     "bytes": 246,
+     "header": [
+      0,
+      1,
+      15,
+      29
+     ],
+     "notes": 57,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 58,
+   "first_id": 123,
+   "channels": [
+    {
+     "id": 123,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21392,
+     "end": 21428,
+     "bytes": 36,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 13,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 59,
+   "first_id": 124,
+   "channels": [
+    {
+     "id": 124,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 21428,
+     "end": 21478,
+     "bytes": 50,
+     "header": [
+      0,
+      0,
+      15,
+      23
+     ],
+     "notes": 17,
+     "terminated": "end"
+    },
+    {
+     "id": 125,
+     "slot": "SE1",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21478,
+     "end": 21546,
+     "bytes": 68,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 26,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 60,
+   "first_id": 126,
+   "channels": [
+    {
+     "id": 126,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21546,
+     "end": 21572,
+     "bytes": 26,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 6,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 61,
+   "first_id": 127,
+   "channels": [
+    {
+     "id": 127,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21572,
+     "end": 21612,
+     "bytes": 40,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 12,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 62,
+   "first_id": 128,
+   "channels": [
+    {
+     "id": 128,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 21612,
+     "end": 21746,
+     "bytes": 134,
+     "header": [
+      0,
+      0,
+      15,
+      20
+     ],
+     "notes": 60,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 63,
+   "first_id": 129,
+   "channels": [
+    {
+     "id": 129,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21746,
+     "end": 21790,
+     "bytes": 44,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 17,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 64,
+   "first_id": 130,
+   "channels": [
+    {
+     "id": 130,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21790,
+     "end": 21814,
+     "bytes": 24,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 7,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 65,
+   "first_id": 131,
+   "channels": [
+    {
+     "id": 131,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21814,
+     "end": 21840,
+     "bytes": 26,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 8,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 66,
+   "first_id": 132,
+   "channels": [
+    {
+     "id": 132,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21840,
+     "end": 21868,
+     "bytes": 28,
+     "header": [
+      0,
+      2,
+      15,
+      21
+     ],
+     "notes": 9,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 67,
+   "first_id": 133,
+   "channels": [
+    {
+     "id": 133,
+     "slot": "SE0",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 21868,
+     "end": 21892,
+     "bytes": 24,
+     "header": [
+      0,
+      2,
+      15,
+      47
+     ],
+     "notes": 7,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 68,
+   "first_id": 134,
+   "channels": [
+    {
+     "id": 134,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 21892,
+     "end": 21912,
+     "bytes": 20,
+     "header": [
+      0,
+      1,
+      15,
+      0
+     ],
+     "notes": 4,
+     "terminated": "end"
+    },
+    {
+     "id": 135,
+     "slot": "SE1",
+     "hw": "pulse2",
+     "bank": 30,
+     "seq": 21912,
+     "end": 21932,
+     "bytes": 20,
+     "header": [
+      0,
+      1,
+      15,
+      0
+     ],
+     "notes": 5,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 69,
+   "first_id": 136,
+   "channels": [
+    {
+     "id": 136,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21932,
+     "end": 21968,
+     "bytes": 36,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 11,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 70,
+   "first_id": 137,
+   "channels": [
+    {
+     "id": 137,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 21968,
+     "end": 21990,
+     "bytes": 22,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 6,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 71,
+   "first_id": 138,
+   "channels": [
+    {
+     "id": 138,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 21990,
+     "end": 22298,
+     "bytes": 308,
+     "header": [
+      0,
+      0,
+      15,
+      35
+     ],
+     "notes": 86,
+     "terminated": "end"
+    },
+    {
+     "id": 139,
+     "slot": "SE1",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22298,
+     "end": 22314,
+     "bytes": 16,
+     "header": [
+      0,
+      0,
+      7,
+      0
+     ],
+     "notes": 3,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 72,
+   "first_id": 140,
+   "channels": [
+    {
+     "id": 140,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22314,
+     "end": 22336,
+     "bytes": 22,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 6,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 73,
+   "first_id": 141,
+   "channels": [
+    {
+     "id": 141,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22336,
+     "end": 22376,
+     "bytes": 40,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 12,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 74,
+   "first_id": 142,
+   "channels": [
+    {
+     "id": 142,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22376,
+     "end": 22420,
+     "bytes": 44,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 13,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 75,
+   "first_id": 143,
+   "channels": [
+    {
+     "id": 143,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22420,
+     "end": 22468,
+     "bytes": 48,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 12,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 76,
+   "first_id": 144,
+   "channels": [
+    {
+     "id": 144,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 22468,
+     "end": 22604,
+     "bytes": 136,
+     "header": [
+      0,
+      0,
+      15,
+      20
+     ],
+     "notes": 61,
+     "terminated": "end"
+    },
+    {
+     "id": 145,
+     "slot": "SE1",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22604,
+     "end": 22626,
+     "bytes": 22,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 6,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 77,
+   "first_id": 146,
+   "channels": [
+    {
+     "id": 146,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22626,
+     "end": 22644,
+     "bytes": 18,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 4,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 78,
+   "first_id": 147,
+   "channels": [
+    {
+     "id": 147,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22644,
+     "end": 22672,
+     "bytes": 28,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 7,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 79,
+   "first_id": 148,
+   "channels": [
+    {
+     "id": 148,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22672,
+     "end": 22706,
+     "bytes": 34,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 9,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 80,
+   "first_id": 149,
+   "channels": [
+    {
+     "id": 149,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22708,
+     "end": 22742,
+     "bytes": 34,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 10,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 81,
+   "first_id": 150,
+   "channels": [
+    {
+     "id": 150,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22742,
+     "end": 22786,
+     "bytes": 44,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 17,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 82,
+   "first_id": 151,
+   "channels": [
+    {
+     "id": 151,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 22786,
+     "end": 22848,
+     "bytes": 62,
+     "header": [
+      0,
+      2,
+      15,
+      37
+     ],
+     "notes": 24,
+     "terminated": "end"
+    },
+    {
+     "id": 152,
+     "slot": "SE1",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22848,
+     "end": 22870,
+     "bytes": 22,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 6,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 83,
+   "first_id": 153,
+   "channels": [
+    {
+     "id": 153,
+     "slot": "SE0",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 22870,
+     "end": 22986,
+     "bytes": 116,
+     "header": [
+      0,
+      0,
+      15,
+      38
+     ],
+     "notes": 36,
+     "terminated": "end"
+    },
+    {
+     "id": 154,
+     "slot": "SE1",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 22986,
+     "end": 23012,
+     "bytes": 26,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 5,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 84,
+   "first_id": 155,
+   "channels": [
+    {
+     "id": 155,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 23012,
+     "end": 23036,
+     "bytes": 24,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 5,
+     "terminated": "end"
+    }
+   ]
+  },
+  {
+   "sound": 85,
+   "first_id": 156,
+   "channels": [
+    {
+     "id": 156,
+     "slot": "SE0",
+     "hw": "noise",
+     "bank": 30,
+     "seq": 23036,
+     "end": 23086,
+     "bytes": 50,
+     "header": [
+      0,
+      0,
+      15,
+      0
+     ],
+     "notes": 16,
+     "terminated": "end"
+    },
+    {
+     "id": 157,
+     "slot": "BGM-A",
+     "hw": "pulse1",
+     "bank": 30,
+     "seq": 23086,
+     "end": 23390,
+     "bytes": 304,
+     "header": [
+      0,
+      1,
+      15,
+      0
+     ],
+     "notes": 72,
+     "terminated": "end"
+    }
+   ]
+  }
+ ]
+}

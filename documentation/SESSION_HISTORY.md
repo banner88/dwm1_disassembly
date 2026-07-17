@@ -16,7 +16,68 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S57 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first: S59 → S11)
+
+> Session 59 (2026-07-16 — **Phase 0 close-out: the last two Phase 0 boxes.
+> Byte-neutral: tools + docs + comments only; ROM MD5 unchanged.**)
+> [S61 archival note: the following six lines are the tail of S59's original
+> header sentence, orphaned in PROJECT_STATE when S60's 'Last verified' line
+> replaced its head; rejoined here verbatim.]
+> (tool selftests) + `extracted/skills.json` retired. Byte-neutral session —
+> no test ROM. Verifier PASS 5/5** — clean build byte-perfect `1ca6579…`
+> (unchanged; the only `disassembly/` edits were comments). Patched-build /
+> compiler-regression reference `d31c9300e13b98f516c6bee8b446069d`
+> (**patched**) is UNTOUCHED — this session emitted zero ROM bytes; v1
+> `79dd32c5…` (patched) and S57 `6c41f0d8…` (patched) remain historical.)
+> **NOTE — the ROM was not attached to the kickoff.** It did not need to be:
+> the clean build reproduces `1ca6579…` from source, so `data/DWM-original.gbc`
+> was reconstructed from `disassembly/game.gbc` and MD5-verified canonical.
+> Worth remembering — a missing ROM is not a blocker.
+> **(1) `verify_integrity.py` check 5 = tool selftests** (owning doc
+> TOOLS_AND_DATA "Guardrail"): `check_tool_selftests()` + `SELFTEST_TOOLS`
+> runs `--selftest` on `build_breeding.py` / `build_library_table.py` /
+> `build_skill_tables.py`; labels renumbered `/4`→`/5`. **The load-bearing
+> design decision is ROM-tolerance:** the ROM is gitignored/user-provided and
+> `.github/workflows/verify.yml` runs WITHOUT it ("MD5 compare needs only the
+> expected hash"), so an absent ROM **SKIPs** check 5 — failing there would
+> break every CI push. A present-but-non-canonical ROM still FAILs. All four
+> branches proven: PASS 5/5 clean; FAIL on a mutated `skill_records.json`
+> `mp_cost` (pinpointed `SkillMPCostTable` offset 0, restored → PASS); SKIP
+> with no ROM; FAIL on a 1-byte-corrupted ROM.
+> **(2) `extracted/skills.json` RETIRED (deleted).** The box's scope was
+> INVERTED (DOC_AUDIT S59): "only `gen_name_tables_db.py` reads it" — that
+> tool declared `SKILLS_PATH` and never opened it (dead constant, removed,
+> output byte-identical); the three real readers (`gen_skill_table_db.py`,
+> `gen_enemy_stats_db.py`, `gen_monster_db.py`) were named in no doc. All
+> ported to `skill_records.json`; they use only `id`→`name`, so each port is
+> one line. `gen_enemy_stats_db` + `gen_monster_db` outputs byte-identical;
+> `gen_skill_table_db` comments-only. `dump_skills.py` → inert tombstone
+> (exits non-zero; the `dump_monsters.py` "legacy dumper resurrects a deleted
+> file" hazard).
+> **ROOT CAUSE (the session's real find; owning section BATTLE_SKILL_SYSTEM
+> "Extent"):** the 34 junk records (ids 222–255 — the docs said 33) came from
+> reading the **222**-entry skill function table as **256**. The table is
+> `$52:$4011..$41CC` (222 × 2 = 444 B) and is **UNTERMINATED** — its bound is
+> simply where the next thing starts: `SkillBlaze` @ `$52:$41CD`
+> (`CD FF 5B` = `call $5BFF`). The phantoms were that handler's CODE decoded
+> as pointers (`$CD` = `call` opcode ⇒ the bogus `$FFCD`/`$CD5B`/`$E7CD`).
+> Corroborated three ways: `$4011 + 222*2 == $41CD == SkillBlaze`;
+> `build_skill_tables.py --selftest` re-emits `SkillFunctionTable` at **444
+> bytes byte-identical**; ported `gen_skill_table_db` now emits **zero `?`
+> fallbacks**, proving `skill_records.json` covers the id space exactly.
+> **Doc errors fixed in place (DOC_AUDIT S59):** `bank_052.asm` header
+> `$4011..$41BC` → `$41CC` (`$4011+$1BC = $41CD`; the count 222 was right, only
+> the end address was wrong — a correct-looking header with one bad number),
+> in BOTH `disassembly/` and `patches/`, comment-only, build re-verified
+> byte-perfect; same headers' `; Sources: … skills.json` → `skill_records.json`;
+> `gen_skill_table_db.py`'s `256 entries`/`512 bytes` → 222/444 and its bogus
+> `$4211` xref → `$6CC7` (the only `21 11 40` in bank $52 is `$6CD5`, inside
+> `jr_052_6cc7`). The disassembly had been correct at 222 since S45 — the
+> TOOLS had rotted past their own source.
+> **NEXT:** Phase 0 is now clear, so feature work is unblocked: CF3 (a2)
+> (pre-sort save migration) + the two redirected walker helpers (b), or A′1
+> (mapID ≥$80 audit). S58's residual test item stands: battle JOIN was never
+> explicitly exercised.
 
 > Session 58 (2026-07-13 — **CF3 step 1: party-first sort. The invariant
 > "party at slots 0-2 in list order, farm contiguous after" now holds after
