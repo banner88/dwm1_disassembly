@@ -49,6 +49,18 @@ from pathlib import Path
 
 MASTER_TABLE = 0x3466
 AUDIO_BANKS = (0x1C, 0x1D, 0x1E)
+# --- Custom song bank (M3a, S63) -------------------------------------------
+# The extended master table (AudioMasterTableExt @ ROM0 $3FE8, patches/
+# bank_000.asm) adds row [base=$9E, ptr=$4001, bank=$74]: custom ids $9E-$FC
+# resolve to bank $74 with the exact vanilla-bank layout (bank byte @ $4000,
+# records from $4001). Record area is FIXED at 95 slots (ids $9E-$FC,
+# $4001-$417C, unassigned slots $00) so adding songs later never relocates
+# existing streams; streams start at $4180.
+SONG_BANK = 0x74
+SONG_BANK_FIRST_ID = 0x9E
+SONG_BANK_RECORDS_AT = 0x4001
+SONG_BANK_RECORD_SLOTS = 0xFD - SONG_BANK_FIRST_ID  # 95 (ids $9E-$FC; $FD-$FF reserved/sentinels)
+SONG_BANK_STREAMS_AT = 0x4180
 DWM1_SLOTS = {0: 0x00, 1: 0x1A, 2: 0x34, 3: 0x4E, 4: 0x68, 5: 0x82}
 # DWM2 32-byte-state slot -> DWM1 26-byte-state slot (same channel role order)
 DWM2_TO_DWM1_SLOT = {0x00: 0x00, 0x20: 0x1A, 0x40: 0x34,
@@ -776,6 +788,124 @@ def gen_bank1e_patch(rom_path, gbs_path, first_id=0x16,
     return "\n".join(lines) + "\n", port
 
 
+# ------------------------------------------------------- custom song bank ---
+def parse_patch_asm(path):
+    """Parse a pure-`db` full-bank patch (e.g. the S62 bank_01e.asm) back
+    into its 16 KB image. Only `db $XX, ...` lines carry bytes."""
+    img = bytearray()
+    for line in Path(path).read_text().splitlines():
+        s = line.split(";")[0].strip()
+        if not s.startswith("db "):
+            continue
+        for tok in s[3:].split(","):
+            tok = tok.strip()
+            if tok.startswith("$"):
+                img.append(int(tok[1:], 16))
+    if len(img) != 0x4000:
+        raise ValueError(f"{path}: parsed {len(img)} bytes, expected 16384")
+    return bytes(img)
+
+
+class ImageReader:
+    """Reader over a single parsed bank image (banked addrs $4000-$7FFF)."""
+    def __init__(self, img, bank):
+        self.img, self.bank = img, bank
+
+    def rd(self, bank, addr, n=1):
+        assert bank == self.bank
+        return self.img[addr - 0x4000:addr - 0x4000 + n]
+
+
+def import_port(asm_path, bank, records_at, first_id, n_channels):
+    """Recover a ported song (records + decoded streams) from a generated
+    full-bank patch .asm into the song-library channel format (the same
+    shape extract-gbs emits). Streams re-emit byte-identically (M2
+    round-trip property), so this migration is lossless."""
+    img = parse_patch_asm(asm_path)
+    reader = ImageReader(img, bank)
+    chans = []
+    for k in range(n_channels):
+        b = reader.rd(bank, records_at + k * 4, 4)
+        slot, hw, seq = b[0], b[1], b[2] | b[3] << 8
+        hdr, toks, end = decode_tokens(reader, bank, seq)
+        # The S62 translator emits an unreachable safety $FF after a final
+        # backward loop_jump; decode_tokens stops at the jump. Re-append it
+        # so the migrated stream is byte-identical to the trace-proven blob.
+        if toks[-1]["op"] != "end" and reader.rd(bank, end)[0] == 0xFF:
+            toks.append({"op": "end"})
+        blob = emit_tokens(hdr, toks)
+        if bytes(blob) != bytes(reader.rd(bank, seq, len(blob))):
+            raise ValueError(f"channel {k}: round-trip mismatch @ ${seq:04X}")
+        chans.append({"slot": slot, "hw": hw, "header": hdr,
+                      "tokens": toks, "bytes": len(blob)})
+    return {"first_id": first_id, "channels": chans}
+
+
+def emit_song_bank(library):
+    """library = {"songs": [{"id", "first_id", "channels": [...]}, ...]}.
+    Emits the full bank $74 image: bank byte, fixed 95-slot record area
+    ($00 = unassigned), streams tiled from SONG_BANK_STREAMS_AT."""
+    img = bytearray(0x4000)
+    img[0] = SONG_BANK
+    pos = SONG_BANK_STREAMS_AT
+    placements = []
+    for song in library["songs"]:
+        fid = song["first_id"]
+        for k, c in enumerate(song["channels"]):
+            sid = fid + k
+            if not (SONG_BANK_FIRST_ID <= sid <= 0xFC):
+                raise ValueError(f"song id ${sid:02X} outside $9E-$FC")
+            ro = (SONG_BANK_RECORDS_AT - 0x4000) + (sid - SONG_BANK_FIRST_ID) * 4
+            if any(img[ro:ro + 4]):
+                raise ValueError(f"record slot for id ${sid:02X} already used")
+            blob = emit_tokens(c["header"], c["tokens"])
+            img[ro:ro + 4] = bytes((c["slot"], c["hw"],
+                                    pos & 0xFF, pos >> 8))
+            img[pos - 0x4000:pos - 0x4000 + len(blob)] = blob
+            placements.append((sid, pos, len(blob)))
+            pos += len(blob)
+    if pos > 0x8000:
+        raise ValueError(f"streams overflow bank ${SONG_BANK:02X} "
+                         f"(end ${pos:04X})")
+    return bytes(img), placements, pos
+
+
+def song_bank_asm(library):
+    img, placements, end = emit_song_bank(library)
+    names = ", ".join(f"{s.get('id','?')} (ids ${s['first_id']:02X}+)"
+                      for s in library["songs"])
+    lines = [
+        "; =============================================================================",
+        f"; BANK $74 — custom song bank (M3a, S63)",
+        "; GENERATED by tools/song_codec.py emit-song-bank — do not hand-edit;",
+        f";   regenerate from {library.get('_source', 'the song library JSON')}.",
+        ";",
+        "; Resolved by AudioMasterTableExt (ROM0 $3FE8, patches/bank_000.asm) row",
+        f";   [base=${SONG_BANK_FIRST_ID:02X}, ptr=${SONG_BANK_RECORDS_AT:04X}, bank=${SONG_BANK:02X}] — custom ids ${SONG_BANK_FIRST_ID:02X}-$FC.",
+        f"; Layout (vanilla audio-bank convention): $4000 bank byte; $4001-$417C",
+        f";   fixed {SONG_BANK_RECORD_SLOTS}-slot record area ($00 = unassigned id); streams from",
+        f";   ${SONG_BANK_STREAMS_AT:04X} (fixed record area => adding songs never moves old streams).",
+        f"; Songs: {names}",
+        f"; Stream bytes end ${end - 1:04X}; free ${end:04X}-$7FFF ({0x8000 - end} bytes).",
+        "; =============================================================================",
+        "",
+        'SECTION "ROM Bank $074", ROMX[$4000], BANK[$74]',
+        "",
+    ]
+    pl = {p[1]: (p[0], p[2]) for p in placements}
+    for i in range(0, 0x4000, 16):
+        addr = 0x4000 + i
+        tag = ""
+        if addr == SONG_BANK_RECORDS_AT & 0xFFF0:
+            tag = "  ; record area begins ($4001)"
+        for a in range(addr, addr + 16):
+            if a in pl:
+                tag = f"  ; id ${pl[a][0]:02X} stream @ ${a:04X} ({pl[a][1]} B)"
+        chunk = img[i:i + 16]
+        lines.append("    db " + ", ".join(f"${b:02X}" for b in chunk) + tag)
+    return "\n".join(lines) + "\n"
+
+
 # ------------------------------------------------------------------- main ---
 def main():
     ap = argparse.ArgumentParser()
@@ -796,11 +926,30 @@ def main():
     p.add_argument("--records-at", type=lambda x: int(x, 0), default=0x419D)
     p.add_argument("--streams-at", type=lambda x: int(x, 0), default=0x6B80)
     p.add_argument("--asm", default=None)
-    q = sub.add_parser("patch-bank1e")
+    q = sub.add_parser("patch-bank1e")   # historical (S62 orphan-slot route, retired by M3a)
     q.add_argument("--rom", default="data/DWM-original.gbc")
     q.add_argument("--gbs", required=True)
     q.add_argument("--id", type=lambda x: int(x, 0), default=0x16)
     q.add_argument("--out", default="patches/bank_01e.asm")
+    i = sub.add_parser("import-port")    # one-shot S62->S63 migration helper
+    i.add_argument("--asm", required=True)
+    i.add_argument("--bank", type=lambda x: int(x, 0), default=0x1E)
+    i.add_argument("--records-at", type=lambda x: int(x, 0), default=0x419D)
+    i.add_argument("--first-id", type=lambda x: int(x, 0), default=0x9E)
+    i.add_argument("--channels", type=int, default=3)
+    i.add_argument("--song-id", default="imported")
+    i.add_argument("--library", default="extracted/custom_songs.json")
+    b = sub.add_parser("emit-song-bank")
+    b.add_argument("--library", default="extracted/custom_songs.json")
+    b.add_argument("--out", default="patches/bank_074.asm")
+    a2 = sub.add_parser("add-gbs-song")   # extract-gbs + DWM2->DWM1 slot map + library append
+    a2.add_argument("--gbs", required=True)
+    a2.add_argument("--id", type=lambda x: int(x, 0), required=True,
+                    help="DWM2 internal id (GBS song map @ $0FC0[gbs_index])")
+    a2.add_argument("--first-id", type=lambda x: int(x, 0), required=True,
+                    help="DWM1 id for channel 0 (>= 0x9E)")
+    a2.add_argument("--song-id", required=True)
+    a2.add_argument("--library", default="extracted/custom_songs.json")
     args = ap.parse_args()
 
     if args.cmd == "decode":
@@ -838,6 +987,58 @@ def main():
         print(f"wrote {args.out}: full bank $1E as data + port "
               f"({blob} stream bytes @ $6B80, records @ $419D, "
               f"foreign {port['foreign']})")
+    elif args.cmd == "import-port":
+        song = import_port(args.asm, args.bank, args.records_at,
+                           args.first_id, args.channels)
+        song["id"] = args.song_id
+        p = Path(args.library)
+        lib = json.loads(p.read_text()) if p.exists() else {
+            "_generator": "tools/song_codec.py import-port / emit-song-bank "
+                          "(M3a song library; superseded by project.json in M3b)",
+            "songs": []}
+        lib["songs"] = [s for s in lib["songs"] if s.get("id") != args.song_id]
+        lib["songs"].append(song)
+        lib["songs"].sort(key=lambda s: s["first_id"])
+        p.write_text(json.dumps(lib, indent=1))
+        print(f"imported '{args.song_id}' (ids ${args.first_id:02X}+"
+              f"{len(song['channels'])-1}, "
+              f"{sum(c['bytes'] for c in song['channels'])} stream bytes) "
+              f"-> {args.library} ({len(lib['songs'])} songs)")
+    elif args.cmd == "emit-song-bank":
+        lib = json.loads(Path(args.library).read_text())
+        lib["_source"] = args.library
+        text = song_bank_asm(lib)
+        Path(args.out).write_text(text)
+        img, placements, end = emit_song_bank(lib)
+        print(f"wrote {args.out}: {len(lib['songs'])} songs, "
+              f"{len(placements)} streams, streams end ${end - 1:04X}, "
+              f"free {0x8000 - end} bytes")
+    elif args.cmd == "add-gbs-song":
+        song = extract_gbs_song(args.gbs, args.id)
+        chans = [{"slot": DWM2_TO_DWM1_SLOT[c["slot"]], "hw": c["hw"],
+                  "header": c["header"], "tokens": c["tokens"],
+                  "bytes": c["bytes"], "proved_events": c["proved_events"],
+                  "dwm2_src": f"${c['bank']:02X}:${c['seq']:04X}"}
+                 for c in song["channels"]]
+        entry = {"id": args.song_id, "first_id": args.first_id,
+                 "channels": chans,
+                 "dwm2_internal_id": song["first_id"],
+                 "foreign_cmds": foreign_cmds(song["channels"])}
+        p = Path(args.library)
+        lib = json.loads(p.read_text()) if p.exists() else {
+            "_generator": "tools/song_codec.py import-port / add-gbs-song / "
+                          "emit-song-bank (M3a song library; superseded by "
+                          "project.json in M3b)", "songs": []}
+        lib["songs"] = [s for s in lib["songs"] if s.get("id") != args.song_id]
+        lib["songs"].append(entry)
+        lib["songs"].sort(key=lambda s: s["first_id"])
+        p.write_text(json.dumps(lib, indent=1))
+        print(f"added '{args.song_id}': DWM2 id ${song['first_id']:02X} -> "
+              f"DWM1 ids ${args.first_id:02X}-"
+              f"${args.first_id + len(chans) - 1:02X}, "
+              f"{sum(c['bytes'] for c in chans)} stream bytes, "
+              f"proved {[c['proved_events'] for c in chans]} events, "
+              f"foreign {entry['foreign_cmds']}")
 
 
 if __name__ == "__main__":

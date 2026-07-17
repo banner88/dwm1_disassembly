@@ -388,13 +388,13 @@ wBattleLVL:: ds 16 ;dc23 — level per combatant (tentative)
 ; ($DE89-$DE8A carved S60 for the CF3 copy-husk mailbox, defined at EOF).
 ; =============================================================================
 ; @BUILD_PROJECT BEGIN wram_step_counters
-wCustomStep_Room6B_S0:: db ;de74 — Room $6B screen 0 step counter
-wCustomStep_Room6B_S1:: db ;de75 — Room $6B screen 1 step counter
-wCustomStep_Room6C_S0:: db ;de76 — Room $6C screen 0 step counter
-wCustomStep_Room6C_S1:: db ;de77 — Room $6C screen 1 step counter
-wCustomStep_Room6C_S5:: db ;de78 — Room $6C screen 5 step counter
-wCustomStep_Room6D_S0:: db ;de79 — Room $6D screen 0 step counter (Pillar B)
-wCustomStep_Room70_S0:: db ;de7a — Room $70 screen 0 step counter (keystone proof room)
+wCustomStep_Room6B_S0:: db ;de74 — Room $6B screen 0 step counter (gate_island)
+wCustomStep_Room6B_S4:: db ;de75 — Room $6B screen 4 step counter (gate_island)
+wCustomStep_Room6C_S0:: db ;de76 — Room $6C screen 0 step counter (dusk_mirror)
+wCustomStep_Room6C_S4:: db ;de77 — Room $6C screen 4 step counter (dusk_mirror)
+wCustomStep_Room6C_S5:: db ;de78 — Room $6C screen 5 step counter (legacy hole — kept so later counters stay at their proven addresses)
+wCustomStep_Room6D_S0:: db ;de79 — Room $6D screen 0 step counter (gate_rotation)
+wCustomStep_Room70_S0:: db ;de7a — Room $70 screen 0 step counter (ember_keystone)
 ; @BUILD_PROJECT END wram_step_counters
 
 ; Custom-room dispatch scratch, populated by bank $71 via rst $10.

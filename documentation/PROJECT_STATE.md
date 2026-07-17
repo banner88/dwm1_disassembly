@@ -10,39 +10,64 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-17 (Session 62 — **Arc 3 M2 COMPLETE (song round-trip codec, byte-identical selftest) + M3 POC: DWM2 BGM #06 ported, translated, trace-proved, USER-CONFIRMED by ear ("sounds great"). Test ROM `5683146a…` (v3).** Clean build `1ca6579…` unchanged; verifier PASS 5/5; patched/compiler pin untouched.)
+> Last verified: 2026-07-18 (Session 63 — **Arc 3 M3a: v4 USER-CONFIRMED (well BGM identical, no issues; save/reload transience = vanilla SetBGM behavior, logged SOUND_SYSTEM §8). v5 USER-CONFIRMED same session ("Sounds great") — DWM2 BGM #07 → ids $A1-$A3, room $6C NPC, wired via project.json/--apply. **M3a COMPLETE: two custom songs live via the extended table.** Test ROMs: v4 `c23beed7…`, v5 `3009b75e…` (both patched, both user-confirmed). ALSO fixed: S62's silent compiler-regression break.** Clean build `1ca6579…` unchanged; verifier PASS 5/5; compiler tests 18/18 @ pin `3009b75e…`.)
 >
 >
-> Session 61 (2026-07-17 — **Arc 3 M1 COMPLETE: sound engine + song data fully
-> mapped. Byte-neutral: tool + docs + comments only; ROM MD5 unchanged.**)
-> **Engine (owning doc SOUND_SYSTEM.md — new, user-approved):** entirely ROM0
-> $3331–$3AB2 region, VBlank-driven; the ROADMAP claim of song banks
-> `$61 $62 $63 $65 $66 $68 $78 $7b $7d` is FALSIFIED (DOC_AUDIT S61) — ALL
-> audio data is in banks **$1C/$1D/$1E**. Master table @ ROM0 **$3466**
-> (`[base_id, ptr, bank]` rows; $00-$20→$1C, $21-$36→$1D, $37-$9D→$1E; the
-> `ld hl,$3466` operand in `AudioProcess` is the M3 extension hook). Per-id
-> record `[state_slot, hw_ch, seq_ptr]`; a sound = CONSECUTIVE ids, one per
-> channel ($DE24 increments per AudioProcess call; Update1x/2x/3x = 2/3/4 ch).
-> 6× 26-B channel state @ $DD80 ↔ HRAM $FFE4-$FFFD per tick. **Streams =
-> 2-byte (cmd,param) pairs, position = PAIR INDEX (addr = base + pos*2) → all
-> jumps stream-relative → streams relocatable.** Notes <$A0 (semitone|octave,
-> len); $Ax ctl (unknown $Ax = 2-byte no-op); $Bn loops; $FC jump; $FD mark;
-> $FF end. Pitch table $3A53 (12+12 words), noise $37C5, wave instruments
-> $316E (16 B each). `tools/enumerate_songs.py` + `extracted/songs.json`:
-> **86 sounds / 158 streams, all terminate, zero overruns**; track $06
-> decoded note-by-note (acceptance).
-> **DWM2 (user-supplied GBS `DMG-BQLJ-JPN.gbs`): same engine family** — pitch
-> table + all 16 wave instruments byte-identical; same master-table algorithm
-> (@ GBS $3DC2, DWM2 banks $40-$43), same stream format; driver evolved
-> (state 26→32 B, new cmd $AC = benign no-op to DWM1). **User's target DWM2
-> BGM #06 = internal id $16, 3 ch, 1,762 B relocatable — direct port judged
-> feasible** (SOUND_SYSTEM.md §7); replaces MP3 transcription.
-> **User requirement logged: M3 must accept BOTH DWM2 tracks AND MIDI** —
-> M2's decoded-song spec is the common intermediate (ROADMAP M3;
-> SOUND_SYSTEM §8). DWM2 stays extraction-only.
-> Byte-neutral session — no test ROM. Verifier PASS 5/5; clean build
-> byte-perfect `1ca6579…` (bank_000 audio comments only). NEXT: M2 round-trip
-> keystone (nails the §4/§5 *(unverified)* rows), then M3.
+> Session 63 (2026-07-18 — **Arc 3 M3a BUILT, NOT yet user-tested: general
+> song slots. v4 test ROM `c23beed7aadee80a061c0f6c24d7c1f4` (patched).**)
+> **The S62 blocker ("ROM0 has NO 17-byte free run") dissolved by auditing
+> our own CLAIMS, not vanilla filler** (KEY_LESSONS S63): the twin helpers
+> `MapIDClampForDispatch`/`MapIDClampForPalette` were byte-identical
+> (merged — one 8-B body @ $3BC2 carrying both exported labels; all callers
+> relink) and `CustomGFXMapID` was DEAD since S42 (bank $71 Entry 0 replaced
+> all consumers; its header still said "used by" — DOC_AUDIT S63; deleted).
+> Freed 24-B $3FE8 slot hosts **`AudioMasterTableExt`** (3 vanilla rows
+> byte-identical + row `[$9E,$4001,$74]` + $FF sentinel; ONE spare future
+> row); `AudioProcess`'s single `ld hl,$3466` operand repointed ($33D9,
+> 2 B). Zero WRAM (user constraint), zero boot changes, zero net ROM0 bytes.
+> **Bank $74 = song bank** (`patches/bank_074.asm` ← `song_codec.py
+> emit-song-bank` ← `extracted/custom_songs.json`): vanilla-bank convention,
+> FIXED 95-slot record area $4001-$417C (ids $9E-$FC; adding songs never
+> moves old streams), streams from $4180. BGM #06 migrated via new
+> `import-port` (byte-identical to the S62 trace-proven blobs incl. the
+> translator's unreachable trailing $FF; static re-trace = S62's exact
+> 1858/1566/2287 event counts); **bank $1E back to 100% vanilla** (patch
+> deleted; orphan-slot route retired). Static proof: all vanilla ids
+> $00-$9D resolve identically through the new table. Capacity ~31 3-ch
+> songs; 10,965 stream B free. patches/game.asm includes bank_074 (the
+> blank-stub include was the one build gotcha); verify_integrity
+> PATCH_FILES/PATCH_NEW_FILES updated.
+> **Pre-existing defect found+fixed: S62 broke compat==hand byte-identity
+> silently** — hand edits to compiler-owned bank_060.asm (BGM NPC record,
+> `SetBGM $9E`, "DWM2 music!") never folded into the example project; pin
+> left at S60's; CI runs only verify_integrity so nothing failed. S63
+> ported all three into project.json → compat build == hand tree again
+> (both `c23beed7…`), `REFERENCE_MD5` re-pinned, 18/18 `--rom` tests green.
+> PROJECT_COMPILER's quick-start md5 had ALSO been stale (S57 value while
+> the pin was S60's) — fixed. **CI follow-up boxed in ROADMAP** (add
+> `test_compiler.py --rom`). Doc fixes: SOUND_SYSTEM §1 engine addresses
+> were transcription slips (`AudioProcess` = **$33D2**, updates
+> $33CF/$33CC/$33C9 — not $3477/$3474/$3471/$346E; sym-verified);
+> "$3BC1" comments were off by one (code @ $3BC2). SESSION_HISTORY: S60
+> block refiled from file tail into Part 1 order (S61 misfiling).
+> **v4 USER-CONFIRMED same session** ("music plays as before via NPC, no
+> issues"); user-observed save/reload music transience = vanilla SetBGM
+> behavior, expected non-issue for M3b room-defaults (SOUND_SYSTEM §8;
+> room→BGM derivation to be traced at M3b wiring). **v5 BUILT + USER-CONFIRMED same session** ("Sounds great";
+> GBS re-uploaded): DWM2 BGM #07 (GBS index 6 →
+> internal id $19 via song map @ GBS $0FC0) → DWM1 ids $A1-$A3, 2,471 B
+> in bank $74 (`add-gbs-song`: extract+translate+prove+slot-map); room $6C
+> screen 0 NPC (5,6) `SetBGM $A1` wired through project.json + `--apply`
+> (bank_060/bank_071/bank_017-regions/wram-region now compiler-generated —
+> the sanctioned route S62 skipped); pin re-pinned `3009b75e…` (v5 compat
+> == hand tree by construction). End-to-end proof: ROM-resident $A1-$A3
+> under DWM1 semantics == original GBS bytes under DWM2 semantics
+> (954/645/840 ev). Foreign `$AA`×20 verified NON-FLOW at instruction
+> level (DWM2 handler @ GBS $37AE: one param, HRAM $F2/$F3/$ED only) —
+> a DWM2 ornament dropped as no-op in DWM1; ear test judges. v4→v5 ROM
+> diff: banks $60/$74 + header checksum only.
+> **v5 acceptance MET (user)**: both NPC songs confirmed in-game; the
+> $AA-ornament drop passed the ear test unremarked.
 >
 > Session 62 (2026-07-17 — **Arc 3 M2 COMPLETE: song round-trip codec.
 > M3 POC: DWM2 BGM #06 audible in custom well room — USER-CONFIRMED by ear
@@ -88,6 +113,7 @@
 > $Cn/$A5/$A8 audible semantics unverified (same family; ear test clean).
 >
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S61** (2026-07-17): Arc 3 M1 — sound engine + song data fully mapped (byte-neutral); ROADMAP bank-list claim falsified; DWM2 GBS same-engine-family finding. Owning: SOUND_SYSTEM.md, DOC_AUDIT S61, ROADMAP M1.
 - **S60** (2026-07-16/17): CF3 complete — farm slots 3-19 to SRAM (v2 eager-roster architecture), 48 walker sites, save-state invalidation across migration. Owning: MONSTER_DATA "CF3 as built", ARCHITECTURE SRAM, KEY_LESSONS S60.
 - **S59** (2026-07-16): Phase 0 close-out — verifier check 5 (tool selftests, ROM-tolerant), skills.json retired, 222-entry skill-table root cause. Owning: TOOLS_AND_DATA, BATTLE_SKILL_SYSTEM, DOC_AUDIT S59.
 - **S58** (2026-07-13): CF3 step 1 — party-first sort in the canonicalizer (bank $73 entry 1), v2 fixups, phantom-monster forensics. Owning: MONSTER_DATA, ROADMAP CF3.
@@ -182,9 +208,10 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`) | hand-authored `patches/bank_071.asm` |
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables) | hand-authored `patches/bank_072.asm` |
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1) | hand-authored `patches/bank_073.asm` |
+| $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E) | `song_codec.py emit-song-bank` ← `extracted/custom_songs.json` |
 | $7E | Sprite overflow streams (battle + follower art) | `dwm/sprite_bank.py`, `bake_follower_overflow.py` |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A, $79) | `dwm/sprite_bank.py` order |
-| **Unallocated** | **$6B–$70, $74–$77, $79–$7A, $7C** (12 banks = 192 KB) + reserved $7F | — |
+| **Unallocated** | **$6B–$70, $75–$77, $79–$7A, $7C** (11 banks = 176 KB) + reserved $7F | — |
 
 ## Iron Rules
 
@@ -232,7 +259,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | State |
 |--------|-------|
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
-| Custom music | 🟡 M1 DONE S61: engine+format fully mapped (SOUND_SYSTEM.md); banks $1C-$1E; DWM2 BGM#06 port judged feasible. M2 (round-trip) + M3 (authoring; DWM2+MIDI sources) open |
+| Custom music | 🟡 M1+M2 DONE (S61/S62); M3-POC user-confirmed (S62); **M3a COMPLETE S63, USER-CONFIRMED (v4+v5: two custom songs live)** — AudioMasterTableExt + bank $74, ~31-song capacity, bank $1E vanilla. Open: M3b room-default music + `custom.music` schema, M3c MIDI, CI compiler-test box |
 | Editor app (Phase 3) | Not started; backend keystone (S42) done |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)

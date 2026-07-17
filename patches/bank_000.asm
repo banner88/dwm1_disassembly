@@ -11226,7 +11226,7 @@ AudioProcess:
     push de
     push hl
     ld a, [$de24]
-    ld hl, $3466
+    ld hl, AudioMasterTableExt  ; M3a/S63: was $3466 (13-B vanilla table, no room to grow); extended 4-row copy @ $3FE8 adds custom ids $9E+ -> bank $74. Same-size operand edit; vanilla rows byte-identical.
 
 AudioCompareAndJump:
     cp [hl]
@@ -13143,15 +13143,25 @@ AudioLookup_3BA7:
     rst $38
 
 AudioWavePatternData:
-; CustomGFXMapID: raw wMapID for $00-$6F (so custom rooms $6B-$6F each use their
-; own $26DD tileset/threshold record), MapIDClampForPalette for $70+.
-; Used by GFX loader (bank $0B Entry 0+1) and collision threshold (ROM0)
-; 9 bytes — fits within the 17 unreferenced rst $38 bytes at $3BC1
-CustomGFXMapID::
+; --- $3BC1 (17 unreferenced rst $38 bytes) — occupancy reworked M3a/S63 ---
+; CustomGFXMapID DELETED: dead since S42 — bank $71 Entry 0
+; (CopyCustomRoomRecord) replaced it at all three consumer sites; zero call
+; sites remained (grep-verified S63). Its 9 bytes + the clamp merge below
+; freed the $3FE8 slot for AudioMasterTableExt (see there).
+;
+; MapIDClampForDispatch / MapIDClampForPalette were byte-identical twins
+; (same 8 instructions, authored in different sessions); merged here as one
+; body carrying BOTH exported labels — every `call` site links unchanged.
+; Contract (both callers): A = wMapID if < CUSTOM_ROOM_START, else A = 0
+; (Castle: harmless VRAM handler / AttrPtrTable fallback — see the original
+; per-function notes preserved in GATE_GENERATION / KEY_LESSONS).
+MapIDClampForDispatch::
+MapIDClampForPalette::
     ld a, [wMapID]              ; 3 bytes: FA 68 C9
-    cp $70                      ; 2 bytes: FE 70  (raw for $00-$6F; $70 = gateworld)
-    ret c                       ; 1 byte:  D8 (raw mapID for $00-$6F)
-    jp MapIDClampForPalette     ; 3 bytes: C3 xx xx (clamped for $70+)
+    cp CUSTOM_ROOM_START        ; 2 bytes: FE 6B
+    ret c                       ; 1 byte:  D8 (raw mapID for vanilla rooms)
+    xor a                       ; 1 byte:  AF  A = $00 (Castle) for ALL custom rooms
+    ret                         ; 1 byte:  C9
 ClampFamIdx::
 ; B9 S29: party-graphics tables $4BAD (family) & $49DF (glyph) have only 10 entries
 ; (families 0-9). Spirit (family 10) overflows -> garbage pointer -> runaway VRAM
@@ -13162,6 +13172,7 @@ ClampFamIdx::
     ret c                       ;   yes -> unchanged (D8)
     dec a                       ;   10 -> 9 (3D)
     ret                         ; C9
+    rst $38                     ; 1 pad byte — region is 17 B ($3BC2-$3BD2): 8+8+1; the $FF @ $3BC1 is untouched vanilla filler (old comments' "$3BC1" was off by one — sym-verified S63: clamp $3BC2, ClampFamIdx $3BCA)
     cp $fe
     cp $fe
     cp $fe
@@ -13931,38 +13942,27 @@ MenuCheckEnd:
     jr MenuCheckEnd
 
 ; =============================================================================
-; MapIDClampForDispatch — ROM0 helper for bank $01 per-room VRAM dispatch
+; AudioMasterTableExt — extended master sound table (M3a, S63) @ $3FE8
 ; =============================================================================
-; Returns A = wMapID if < CUSTOM_ROOM_START, else A = 0 (falls through to
-; Castle's VRAM handler, which is harmless — just a VRAM update to $94D0).
-; Called from bank $01 instead of `ld a, [wMapID]` before rst $00.
-; 8 bytes, fits in ROM0 free space at $3FE8.
-; =============================================================================
-MapIDClampForDispatch::
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    ret c
-    xor a                   ; A=0 → Castle handler (maintains VRAM state)
-    ret
-
-; Also used by bank $17 palette lookup — returns safe mapID for AttrPtrTable.
-; Uniform/systematic: every custom room ($6B+) sources $00 (Castle) for its
-; AttrPtrTable fallback. O(1) — no per-room special-casing, so new editor rooms
-; need no edit here. (Was: $6B→$16, $6C+→$00. The lone $6B→$16 fallback was dead
-; — $6B's attr+palette come from CustomRoomAttr/CustomRoomPalPtr, which override
-; this for any room with a custom entry.) Padded to hold its 16-byte ROM0 slot.
-MapIDClampForPalette::
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    ret c
-    xor a                       ; A = $00 (Castle) for ALL custom rooms
-    ret
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; The vanilla master table @ $3466 (13 B: 3 rows + $FF sentinel, live code
+; hard against both ends) cannot grow in place. This 24-byte slot (freed by
+; merging the twin MapIDClamp* helpers and deleting dead CustomGFXMapID —
+; both now at $3BC1) hosts the extended copy; AudioProcess's single
+; `ld hl, $3466` operand is repointed here (same-size edit). The vanilla
+; $3466 bytes remain in ROM, now unreferenced.
+; Rows [base_id, ptr_lo, ptr_hi, bank]; lookup: first base > id -> previous
+; row; record = bank:ptr + (id-base)*4 (SOUND_SYSTEM §2). Rows 1-3 are
+; byte-identical to vanilla => every vanilla sound resolves identically.
+; Row 4: custom ids $9E-$FC -> bank $74 (patches/bank_074.asm, generated by
+; song_codec.py emit-song-bank; records $4001, fixed 95-slot area).
+; Growth: ONE more row (a future song bank $75+) fits by consuming 4 filler
+; bytes; the sentinel moves down. Beyond that, relocate the table again.
+AudioMasterTableExt::
+    db $00, $01, $40, $1C       ; ids $00-$20 -> $1C:$4001 (vanilla row)
+    db $21, $01, $40, $1D       ; ids $21-$36 -> $1D:$4001 (vanilla row)
+    db $37, $01, $40, $1E       ; ids $37-$9D -> $1E:$4001 (vanilla row)
+    db $9E, $01, $40, $74       ; ids $9E-$FC -> $74:$4001 (custom song bank)
+    db $FF                      ; sentinel
+    db $FF, $FF, $FF, $FF       ; 7 filler bytes = room for one future row
+    db $FF, $FF, $FF            ;   (slot is $3FE8-$3FFF, 24 B total)
 

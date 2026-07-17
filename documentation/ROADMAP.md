@@ -828,8 +828,8 @@ ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.m
       re-emits the full 16KB banks **byte-identical**; `extracted/songs_spec.json` is the
       M3 common intermediate. Grammar corrected en route (no 3-byte $FC token; loop-jump =
       Bn-pair prm=$FC + target pair — SOUND_SYSTEM §5, DOC_AUDIT S62).
-- [ ] **M3 — Custom song authoring.** Author/edit a track into a free bank; redirect the
-      song-table entry. *Accept:* a custom track plays in SameBoy.
+- [~] **M3 — Custom song authoring.** Core acceptance MET (custom tracks play in-game,
+      user-confirmed S62/S63); M3a complete; M3b/M3c open below.
   - [x] **M3-POC (S62, user-confirmed by ear):** DWM2 BGM #06 ported into custom well
         room $6B (BGM NPC, SetBGM $9E). **ZERO ROM0 changes** — ids $9E-$A0 ride the
         4 orphan record slots @ $1E:$419D that the open-ended master-table row already
@@ -839,14 +839,40 @@ ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.m
         Bn/$FC jump form; nested counted loops unrolled; headers carried verbatim
         (field-identical parse, verified in the GBS driver). SOUND_SYSTEM §7 has the
         full DWM2 driver grammar.
-  - [ ] **M3a — general song slots.** The orphan-slot route is CAPPED AT ONE custom song
-        (4 record slots = 1×3ch + 1 spare). More songs need the master table
-        copied+extended and the `ld hl,$3466` operand repointed — **open problem: ROM0
-        has NO 17-byte free run** (S62 audit); candidate: trampoline the table into a
-        switched bank via an existing ROM0 helper, or steal the table's own slack.
-        Bank $74 remains reserved/unallocated for song data.
+  - [x] **M3a — general song slots. COMPLETE S63, USER-CONFIRMED (v4 + v5: two custom songs live).** The ROM0
+        free-run blocker dissolved by auditing our own claims instead of vanilla filler
+        (KEY_LESSONS S63): `MapIDClampForDispatch`/`ForPalette` were byte-identical
+        twins (merged @ $3BC2, both labels one body) and `CustomGFXMapID` was dead
+        since S42 (deleted) — freeing the 24-B $3FE8 slot for **`AudioMasterTableExt`**
+        (3 vanilla rows byte-identical + row `[$9E,$4001,$74]` + sentinel; one spare
+        future row). One 2-byte operand repoint @ $33D9 (`AudioProcess`). **Bank $74 =
+        song bank** (fixed 95-slot record area $4001-$417C, streams from $4180;
+        `song_codec.py emit-song-bank` ← `extracted/custom_songs.json`); BGM #06
+        migrated byte-identically (import-port; static re-trace matched S62's
+        1858/1566/2287 event counts); **bank $1E reverted to 100% vanilla** (orphan
+        route retired). Static proof: all vanilla ids $00-$9D resolve identically
+        through the new table. Capacity: ~31 3-ch songs / 10,965 stream B free.
+        *v4 acceptance MET (user)*: well BGM identical, no issues; save/reload
+        transience = vanilla SetBGM (SOUND_SYSTEM §8, M3b room-defaults). *Also fixed en route*: S62's silent
+        compiler-regression break (bank_060 hand edits folded into the example
+        project; pin `168c5f1b…`→`c23beed7…`; DOC_AUDIT S63).
+  - [ ] **CI gap (S63)**: `.github/workflows/verify.yml` runs only
+        `verify_integrity.py` — add `editor2/tests/test_compiler.py --rom` so
+        compiler-owned-bank hand edits fail in CI, not two sessions later.
   - [ ] **M3b — USER REQUIREMENTS (S62): song LIBRARY in the editor** — import multiple
         custom songs, assign to rooms/gates/events (SetBGM wiring per assignment).
+        *v5 BUILT + USER-CONFIRMED S63*: **DWM2 BGM #07**
+        (GBS index 6 → internal id $19; song map @ GBS $0FC0) → DWM1 ids $A1-$A3,
+        2,471 B in bank $74 via new `add-gbs-song` mode; room $6C screen 0 NPC (5,6)
+        `SetBGM $A1` — wired through project.json + `--apply` (bank_060 now
+        compiler-generated; pin `3009b75e…`). End-to-end trace proof from ROM bytes
+        vs GBS bytes (954/645/840 ev). Foreign `$AA`×20 = DWM2 ornament, verified
+        non-flow @ GBS $37AE, dropped as no-op in DWM1 — ear test judges.
+        *v5 acceptance MET (user)*: both NPC songs play; $AA-ornament drop
+        unremarked by ear. Remaining M3b: music as
+        room DEFAULT (trace the room→BGM derivation — expected to fix the
+        user-observed save/reload transience, SOUND_SYSTEM §8), library/assignment
+        schema in project.json (`custom.music`), MIDI (M3c).
   - [ ] **M3c — MIDI import** (user requirement S61/S62): MIDI→spec converter (quantize
         to ticks; map ≤2 melodic voices + bass to pulse1/pulse2/wave, percussion to
         noise; clamp to the 12+12 pitch table); the spec→bytes compiler from M2 serves

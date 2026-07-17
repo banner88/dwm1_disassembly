@@ -135,7 +135,7 @@ INCLUDE "blank/Empty_bank_070.asm"
 INCLUDE "bank_071.asm"
 INCLUDE "bank_072.asm"
 INCLUDE "bank_073.asm"
-INCLUDE "blank/Empty_bank_074.asm"
+INCLUDE "bank_074.asm"          ; M3a/S63: custom song bank (song_codec.py emit-song-bank)
 INCLUDE "blank/Empty_bank_075.asm"
 INCLUDE "blank/Empty_bank_076.asm"
 INCLUDE "blank/Empty_bank_077.asm"

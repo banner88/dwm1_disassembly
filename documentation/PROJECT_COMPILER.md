@@ -41,7 +41,7 @@ owns.
 ```bash
 # regression check (compat project must equal the S55 reference patched md5)
 python3 tools/build_project.py --project editor2/example-project \
-    --build --expect-md5 6c41f0d86ab5b41ca5e160e1c166f3d3
+    --build --expect-md5 c23beed7aadee80a061c0f6c24d7c1f4
 
 # author→test loop: ROM lands at <out>/build/rom.gbc (+ game.sym + manifest.json)
 python3 tools/build_project.py --project my-project --build
@@ -59,8 +59,18 @@ python3 editor2/tests/test_compiler.py [--rom]
   re-expresses the entire user-confirmed hand-authored content (6 rooms, 21
   dialogue entries, 10 scripts, 4 palettes, 7 step counters, enc/record
   tables). With `build.compat.master_table_rooms` present, the generated
-  patched ROM md5 is **`6c41f0d86ab5b41ca5e160e1c166f3d3`** (patched build,
-  re-pinned S57 after the CF2 patches: wPendingFarmExp in wram.asm, bank $50
+  patched ROM md5 is **`c23beed7aadee80a061c0f6c24d7c1f4`** (patched build,
+  re-pinned S63 after M3a: AudioMasterTableExt + song bank $74 + bank $1E
+  reverted, AND S62's hand edits to compiler-owned bank_060.asm — BGM NPC,
+  `set_bgm 0x9E`, dialogue — folded into the example project. **S62 had
+  silently broken compat==hand byte-identity** (pin left at S60's
+  `168c5f1b5b4b3b2568a6d6e2f3f1ab45`, historical patched reference; this
+  doc's quick-start had ALSO gone
+  stale at S57's value — CI runs only verify_integrity, so neither failed
+  in public; DOC_AUDIT/KEY_LESSONS S63, CI box in ROADMAP). Property
+  restored: compat build == hand-staged tree, both `c23beed7…`.
+  Historical, superseded: `168c5f1b…` (S60), `6c41f0d8…` (S57 patched,
+  re-pinned after the CF2 patches: wPendingFarmExp in wram.asm, bank $50
   farm-share divert, bank $0B commit stub, new bank $73 — the compat project
   build stayed md5-EQUAL to the hand-staged patched tree, proving the
   byte-identity property across the change; historical, superseded:

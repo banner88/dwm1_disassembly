@@ -39,7 +39,9 @@
             "layout": { "bank": "0x64", "entry": 0 },
             "npcs": [
               { "kind": "spawn", "x": 7, "y": 6 },
-              { "kind": "npc", "facing": "down", "sprite": "0x0B", "x": 2, "y": 7, "script": "give_jerky" }
+              { "kind": "npc", "facing": "down", "sprite": "0x0B", "x": 2, "y": 7, "script": "give_jerky" },
+              { "kind": "npc", "facing": "down", "sprite": "0x0B", "x": 5, "y": 6, "script": "bgm_change",
+                "comment": "S62 BGM NPC: DWM2 BGM #06 port, SetBGM $9E (M3a/S63: bank $74 via AudioMasterTableExt); open floor, sprite $0B already loaded" }
             ],
             "exits": [
               { "x": 3, "y": 1, "dest": "room:$6C", "gate_flag": 0, "screen_byte": "0x00",
@@ -68,13 +70,15 @@
         "source_mapID": "0x04",
         "render": { "palette": "pal_6c", "attr": { "bank": "0x64", "base_entry": 1 } },
         "scripts": { "0": "arm_encounters", "1": "first_time_q", "2": "teleport_castle",
-                     "3": "teleport_6b", "4": "gate_open", "5": "guard_greet" },
+                     "3": "teleport_6b", "4": "gate_open", "5": "guard_greet", "6": "bgm07_change" },
         "screens": {
           "0": {
             "layout": { "bank": "0x64", "entry": 0 },
             "npcs": [
               { "kind": "spawn", "x": 7, "y": 6 },
-              { "kind": "npc", "facing": "down", "sprite": "0x09", "x": 5, "y": 4, "script": "teleport_6b" }
+              { "kind": "npc", "facing": "down", "sprite": "0x09", "x": 5, "y": 4, "script": "teleport_6b" },
+              { "kind": "npc", "facing": "down", "sprite": "0x09", "x": 5, "y": 6, "script": "bgm07_change",
+                "comment": "v5/S63 BGM NPC: DWM2 BGM #07 (ids $A1-$A3, bank $74), SetBGM $A1; sprite $09 already loaded on this screen" }
             ],
             "exits": [
               { "x": 3, "y": 1, "dest": "room:$70", "gate_flag": 0, "screen_byte": "0x00",
@@ -152,13 +156,16 @@
       { "id": "tp_declined",     "text_id": "0x0A0B", "lines": ["Changed your", "mind."],                   "comment": "teleport declined" },
       { "id": "tp_6b_q",         "text_id": "0x0A0C", "lines": ["Teleport to", "MedalMan room?"], "choice": true, "comment": "teleport MedalMan [Y/N]" },
       { "id": "bgm_q",           "text_id": "0x0A0D", "lines": ["Change the", "music?"], "choice": true,    "comment": "BGM change offer [Y/N]" },
-      { "id": "bgm_changed",     "text_id": "0x0A0E", "lines": ["Now playing", "Arena music!"],             "comment": "BGM changed" },
+      { "id": "bgm_changed",     "text_id": "0x0A0E", "lines": ["Now playing", "DWM2 music!"],             "comment": "BGM changed" },
       { "id": "bgm_declined",    "text_id": "0x0A0F", "lines": ["Keeping current", "music."],               "comment": "BGM declined" },
       { "id": "storage_full",    "text_id": "0x0A10", "lines": ["Monster storage", "is full!"],             "comment": "monster storage full" },
       { "id": "gate_q",          "text_id": "0x0A11", "lines": ["Open the gate?", "NPCs will change!"], "choice": true, "comment": "gatekeeper offer [Y/N]" },
       { "id": "gate_opened",     "text_id": "0x0A12", "lines": ["Gate opened!", "Leave and return", "to see the change."], "comment": "gate opened" },
       { "id": "gate_declined",   "text_id": "0x0A13", "lines": ["The gate stays", "closed for now."],       "comment": "gate declined" },
-      { "id": "guard_greeting",  "text_id": "0x0A14", "lines": ["The gate has been", "opened! I replaced", "the Gatekeeper."], "comment": "guard greeting (post-step)" }
+      { "id": "guard_greeting",  "text_id": "0x0A14", "lines": ["The gate has been", "opened! I replaced", "the Gatekeeper."], "comment": "guard greeting (post-step)" },
+      { "id": "bgm07_q",        "text_id": "0x0A15", "lines": ["Hear a", "second song?"], "choice": true, "comment": "v5 BGM #07 offer [Y/N]" },
+      { "id": "bgm07_changed",  "text_id": "0x0A16", "lines": ["Now playing", "DWM2 song 2!"],           "comment": "v5 BGM #07 set" },
+      { "id": "bgm07_declined", "text_id": "0x0A17", "lines": ["Keeping current", "music."],             "comment": "v5 BGM #07 declined" }
     ],
 
     "scripts": [
@@ -205,18 +212,28 @@
         ] },
 
       { "id": "bgm_change",
-        "comment": "SetBGM opcode $41 — VERIFIED 1 param (handler $04:$669D); track $1E = Arena music",
+        "comment": "SetBGM opcode $41 — VERIFIED 1 param (handler $04:$669D); track $9E = DWM2 BGM #06 port (S62; M3a/S63: bank $74)",
         "ops": [
           ["text", "bgm_q"],
           ["op", "check_and_branch", "0xC83C", "0x0001", "@declined"],
-          ["op", "set_bgm", "0x001E"],
+          ["op", "set_bgm", "0x009E"],
           ["text", "bgm_changed"],
           ["end"],
           "label:declined",
           ["text", "bgm_declined"],
           ["end"]
         ] },
-
+      { "id": "bgm07_change",
+        "comment": "v5/S63: SetBGM $A1 = DWM2 BGM #07 (bank $74 via AudioMasterTableExt)",
+        "ops": [
+          ["text", "bgm07_q"],
+          ["op", "check_and_branch", "0xC83C", "0x0001", "@declined"],
+          ["op", "set_bgm", "0x00A1"],
+          ["text", "bgm07_changed"],
+          ["end"],
+          "label:declined",
+          ["text", "bgm07_declined"],
+          ["end"] ] },
       { "id": "first_time_q",
         "ops": [
           ["text", "castle_q"],

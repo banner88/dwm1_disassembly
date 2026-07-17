@@ -24,7 +24,7 @@ from editor2.core import validators as V
 from editor2.core.project import Project, ProjectError
 
 EXAMPLE = os.path.join(REPO, 'editor2/example-project/project.json')
-REFERENCE_MD5 = "168c5f1b5b4b3b2568a6d6e2f3f1ab45"   # S60 reference patched build (S58 + CF3 full move: farm slots 3-19 -> SRAM). Prev pin: d31c9300e13b98f516c6bee8b446069d (S58v2)
+REFERENCE_MD5 = "3009b75ee1e3bd58bc315a39b7324e17"   # S63v5 reference patched build (M3a v4 + v5: BGM #07 ids $A1-$A3 in bank $74, room $6C NPC via project.json; bank_060 now compiler-generated via --apply). Prev: c23beed7aadee80a061c0f6c24d7c1f4 (S63 v4, M3a: AudioMasterTableExt + song bank $74 + bank $1E reverted; S62's BGM NPC/set_bgm $9E folded into the example project — S62 had hand-edited bank_060 without updating project/pin, breaking compat==hand byte-identity; restored S63). Prev pins: 168c5f1b5b4b3b2568a6d6e2f3f1ab45 (S60), d31c9300e13b98f516c6bee8b446069d (S58v2)
 
 PASS = 0
 

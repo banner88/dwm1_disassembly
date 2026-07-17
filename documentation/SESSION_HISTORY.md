@@ -16,7 +16,76 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S59 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first: S61 → S11)
+
+> Session 61 (2026-07-17 — **Arc 3 M1 COMPLETE: sound engine + song data fully
+> mapped. Byte-neutral: tool + docs + comments only; ROM MD5 unchanged.**)
+> **Engine (owning doc SOUND_SYSTEM.md — new, user-approved):** entirely ROM0
+> $3331–$3AB2 region, VBlank-driven; the ROADMAP claim of song banks
+> `$61 $62 $63 $65 $66 $68 $78 $7b $7d` is FALSIFIED (DOC_AUDIT S61) — ALL
+> audio data is in banks **$1C/$1D/$1E**. Master table @ ROM0 **$3466**
+> (`[base_id, ptr, bank]` rows; $00-$20→$1C, $21-$36→$1D, $37-$9D→$1E; the
+> `ld hl,$3466` operand in `AudioProcess` is the M3 extension hook). Per-id
+> record `[state_slot, hw_ch, seq_ptr]`; a sound = CONSECUTIVE ids, one per
+> channel ($DE24 increments per AudioProcess call; Update1x/2x/3x = 2/3/4 ch).
+> 6× 26-B channel state @ $DD80 ↔ HRAM $FFE4-$FFFD per tick. **Streams =
+> 2-byte (cmd,param) pairs, position = PAIR INDEX (addr = base + pos*2) → all
+> jumps stream-relative → streams relocatable.** Notes <$A0 (semitone|octave,
+> len); $Ax ctl (unknown $Ax = 2-byte no-op); $Bn loops; $FC jump; $FD mark;
+> $FF end. Pitch table $3A53 (12+12 words), noise $37C5, wave instruments
+> $316E (16 B each). `tools/enumerate_songs.py` + `extracted/songs.json`:
+> **86 sounds / 158 streams, all terminate, zero overruns**; track $06
+> decoded note-by-note (acceptance).
+> **DWM2 (user-supplied GBS `DMG-BQLJ-JPN.gbs`): same engine family** — pitch
+> table + all 16 wave instruments byte-identical; same master-table algorithm
+> (@ GBS $3DC2, DWM2 banks $40-$43), same stream format; driver evolved
+> (state 26→32 B, new cmd $AC = benign no-op to DWM1). **User's target DWM2
+> BGM #06 = internal id $16, 3 ch, 1,762 B relocatable — direct port judged
+> feasible** (SOUND_SYSTEM.md §7); replaces MP3 transcription.
+> **User requirement logged: M3 must accept BOTH DWM2 tracks AND MIDI** —
+> M2's decoded-song spec is the common intermediate (ROADMAP M3;
+> SOUND_SYSTEM §8). DWM2 stays extraction-only.
+> Byte-neutral session — no test ROM. Verifier PASS 5/5; clean build
+> byte-perfect `1ca6579…` (bank_000 audio comments only). NEXT: M2 round-trip
+> keystone (nails the §4/§5 *(unverified)* rows), then M3.
+
+> Session 60 (2026-07-16/17 — **CF3 COMPLETE: farm slots 3-19 moved to SRAM.
+> USER-CONFIRMED 2026-07-17 (sleep/unsleep, breeding + reload, gate saves,
+> "all tests normal") — hand-off accepted.**)
+> **The move (v2 architecture):** farm slot s (3-19) lives permanently at its
+> save-image address $A1FB+s*$95 (window $A3BA-$AD9E); party 0-2 + staging
+> stay WRAM; WRAM $CC80-$D664 FREED (custom-room buffers at $D379-$D477 now
+> legal in place — S55 hazard + ≤14 rule RETIRED). Rebase WRAM<->SRAM =
+> -/+$28C6. GMDP forks per-slot (fast path <3, slow path via bank $73 entry 3);
+> 48 walker advance sites across 10 banks patched with the byte-neutral
+> `ld hl,$730x / rst $10` dance (BC/HL preserved via push/pop — **rst $10
+> CLOBBERS BC**, caught by interpreter validation pre-ship). Bank $73 entries
+> 2-8: AdvanceDE / RebaseDE / Checksum / CopyTo / CopyFrom / NewGameClear /
+> TradeRecv. bank $59 NOT patched (party-only by S58 sort invariant — bank
+> 100% full anyway).
+> **Persistence model (v2, the field-bug fix):** the entire roster image
+> $A1C7-$AD9E (list + library bits + monster vars + party records + farm) is
+> EAGER — checksum v2 excludes it ($A002 x $1C5 + $AD9F x $1261, seed $4638);
+> the canonicalizer tail mirrors WRAM $CA8D-$CC7F -> $A1C7-$A3B9 after every
+> canonicalize. World state stays lazy. Reload restores the last canonical
+> roster; roster changes are never half-committed/duplicated/lost (the v1
+> field bug: cross-space sort swaps committed SRAM eagerly, WRAM lazily).
+> Migration self-heal accepts vanilla-full AND S60v1 stored checksums,
+> rewrites v2 in place at boot verify.
+> **The "third field bug" was NOT a bug:** save analysis (checksum-format
+> fingerprinting) proved the user was on the recalled v1 ROM, AND loading an
+> S52-era emulator save state under S60 splices two timelines (state WRAM has
+> the S52-layout roster; S60 reads slots >=3 from the state's OLD SRAM).
+> **Save states across the storage migration are architecturally invalid**;
+> same-build states are safe (both tiers snapshot atomically). Machinery
+> vindicated by 145/145 battery + 5 differential simulations of real ROM
+> bytes vs the vanilla oracle (bank-aware SM83 interpreter) + a clean replay
+> of the user's real .sav under v2.
+> Patched-build/compiler pin `168c5f1b5b4b3b2568a6d6e2f3f1ab45` (18/18);
+> verifier PASS 5/5 (PATCH_FILES + bank_00a/bank_015/bank_051). Clean build
+> untouched `1ca6579…`. Owning docs: MONSTER_DATA "CF3 as built (S60)",
+> ARCHITECTURE SRAM layout, known_RAM_map, KEY_LESSONS (5 new), ROADMAP CF3
+> [x].
 
 > Session 59 (2026-07-16 — **Phase 0 close-out: the last two Phase 0 boxes.
 > Byte-neutral: tools + docs + comments only; ROM MD5 unchanged.**)
@@ -2512,42 +2581,3 @@ two RE discovery sessions (M1, S3) before their authoring items depend on them.
 >    `FamilyRecipeResolve`) are documented in `BREEDING_SYSTEM.md`.
 > 4. **Re-check N4/N5/N6 formal acceptance** against the stage1ac implementation and
 >    tick the boxes whose acceptance tests are now met.
-
-
-> Session 60 (2026-07-16/17 — **CF3 COMPLETE: farm slots 3-19 moved to SRAM.
-> USER-CONFIRMED 2026-07-17 (sleep/unsleep, breeding + reload, gate saves,
-> "all tests normal") — hand-off accepted.**)
-> **The move (v2 architecture):** farm slot s (3-19) lives permanently at its
-> save-image address $A1FB+s*$95 (window $A3BA-$AD9E); party 0-2 + staging
-> stay WRAM; WRAM $CC80-$D664 FREED (custom-room buffers at $D379-$D477 now
-> legal in place — S55 hazard + ≤14 rule RETIRED). Rebase WRAM<->SRAM =
-> -/+$28C6. GMDP forks per-slot (fast path <3, slow path via bank $73 entry 3);
-> 48 walker advance sites across 10 banks patched with the byte-neutral
-> `ld hl,$730x / rst $10` dance (BC/HL preserved via push/pop — **rst $10
-> CLOBBERS BC**, caught by interpreter validation pre-ship). Bank $73 entries
-> 2-8: AdvanceDE / RebaseDE / Checksum / CopyTo / CopyFrom / NewGameClear /
-> TradeRecv. bank $59 NOT patched (party-only by S58 sort invariant — bank
-> 100% full anyway).
-> **Persistence model (v2, the field-bug fix):** the entire roster image
-> $A1C7-$AD9E (list + library bits + monster vars + party records + farm) is
-> EAGER — checksum v2 excludes it ($A002 x $1C5 + $AD9F x $1261, seed $4638);
-> the canonicalizer tail mirrors WRAM $CA8D-$CC7F -> $A1C7-$A3B9 after every
-> canonicalize. World state stays lazy. Reload restores the last canonical
-> roster; roster changes are never half-committed/duplicated/lost (the v1
-> field bug: cross-space sort swaps committed SRAM eagerly, WRAM lazily).
-> Migration self-heal accepts vanilla-full AND S60v1 stored checksums,
-> rewrites v2 in place at boot verify.
-> **The "third field bug" was NOT a bug:** save analysis (checksum-format
-> fingerprinting) proved the user was on the recalled v1 ROM, AND loading an
-> S52-era emulator save state under S60 splices two timelines (state WRAM has
-> the S52-layout roster; S60 reads slots >=3 from the state's OLD SRAM).
-> **Save states across the storage migration are architecturally invalid**;
-> same-build states are safe (both tiers snapshot atomically). Machinery
-> vindicated by 145/145 battery + 5 differential simulations of real ROM
-> bytes vs the vanilla oracle (bank-aware SM83 interpreter) + a clean replay
-> of the user's real .sav under v2.
-> Patched-build/compiler pin `168c5f1b5b4b3b2568a6d6e2f3f1ab45` (18/18);
-> verifier PASS 5/5 (PATCH_FILES + bank_00a/bank_015/bank_051). Clean build
-> untouched `1ca6579…`. Owning docs: MONSTER_DATA "CF3 as built (S60)",
-> ARCHITECTURE SRAM layout, known_RAM_map, KEY_LESSONS (5 new), ROADMAP CF3
-> [x].

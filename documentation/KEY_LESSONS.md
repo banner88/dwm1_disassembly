@@ -2174,3 +2174,44 @@ behavior (script table); documenting the second without grepping the first
 asserted an in-game behavior that had never existed. **Rule: any "X happens
 in-game" doc claim needs the full wiring chain verified — script AND the
 entity/trigger that invokes it — or it's marked as unwired.**
+
+## S63 — M3a: the ROM0 space was hiding in our own patches
+
+### "No free space" audits must re-audit the CLAIMED space — duplicates and dead code are free bytes
+**Symptom**: M3a was blocked on "ROM0 has NO 17-byte free run" (S62 audit,
+correct on its own terms: every vanilla filler run was already patch-claimed
+or live data). The extended master table looked homeless; the first design
+(WRAM-resident table + boot-path rewrite) was invasive and spent the
+custom-room WRAM reserve — the user rejected it.
+**Root cause**: the audit counted *unclaimed* bytes only. Auditing the
+*claims* found 17 bytes inside them: `MapIDClampForDispatch` and
+`MapIDClampForPalette` were byte-identical 8-byte twins authored in
+different sessions (merge → 8 bytes), and `CustomGFXMapID` had been dead
+since S42 (bank $71 Entry 0 replaced all consumers — its own header still
+said "used by"; 9 bytes).
+**Fix**: merge the twins (one body, both exported labels — every `call`
+site relinks automatically), delete the dead function, host
+`AudioMasterTableExt` in the freed 24-byte $3FE8 slot; one 2-byte operand
+repoint in `AudioProcess`. Zero WRAM, zero boot changes, zero net ROM0
+bytes.
+**Rule**: when a free-space audit comes up empty, audit the existing claims
+next: grep every patch-owned ROM0 symbol for (a) zero remaining call sites
+and (b) byte-identical siblings. In a multi-session codebase both
+accumulate silently, and they are the cheapest bytes available.
+
+### A hand edit to a compiler-owned file is invisible until something rebuilds from source
+**Symptom**: S63 ran `test_compiler.py --rom` (mandatory: the session
+changed patches) and the regression failed BEFORE any S63 change was
+relevant — the committed S62 tree already failed it.
+**Root cause**: S62 hand-edited compiler-owned `bank_060.asm` (BGM NPC +
+`SetBGM $9E` + text) without updating the example project or the pin — the
+exact hazard PROJECT_COMPILER warns about. CI runs only
+`verify_integrity.py`, which assembles the hand files and stays green; only
+a from-source compile exposes the divergence.
+**Fix**: S62's content ported into `project.json` (three edits: NPC record,
+`set_bgm 0x9E`, dialogue line); compat build == hand-staged tree again
+(`c23beed7…`); pin re-pinned with the S60→S63 lineage in its comment.
+**Rule**: any session that touches a compiler-owned bank runs
+`test_compiler.py --rom` at wrap-up even if it "only" hand-verified the
+ASM — and CI should run it too (ROADMAP box added S63) so the next
+violation fails in public, not two sessions later.

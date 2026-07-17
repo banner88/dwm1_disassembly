@@ -20,6 +20,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | monster_walkers.json | map_monster_walkers.py | **NEW (S56, CF1).** The monster-array access map: all 44 `ld [$cac0],a` writer sites + 60 register/stride walkers classified (party-only / all-slot / farm-write / single-slot / staging), membership semantics, exp-share model, roster mutation path table, staging pseudo-slots. Self-checking: writer-set drift or missing labels abort. Owning prose: MONSTER_DATA "Party/farm boundary semantics". |
 | songs.json | enumerate_songs.py | **NEW (S61, M1).** Full sound enumeration: 86 sounds / 158 channel streams from the master table @ ROM0 $3466 (banks $1C/$1D/$1E), each stream statically walked to termination (zero overruns), with per-channel slot/hw/seq/extent/header. Owning prose: SOUND_SYSTEM.md. |
 | songs_spec.json | song_codec.py | **NEW (S62, M2).** Full decoded-song spec: every stream in banks $1C/$1D/$1E as a token list (notes/ctl/fx/slides/loop_jump/mark), records, orphan records, unreferenced tails — the byte-exact round-trip source (`selftest` re-emits all three 16KB banks byte-identical) and the M3 common intermediate for DWM2/MIDI import. Owning prose: SOUND_SYSTEM.md §5/§8. |
+| custom_songs.json | song_codec.py (import-port; future: extract-gbs appends) | **NEW (S63, M3a).** The custom song LIBRARY: per song `first_id` + per-channel `{slot, hw, header, tokens}` (DWM1-native). Source of truth for `emit-song-bank` → `patches/bank_074.asm`. 2 songs: `dwm2_bgm06_well` (ids $9E-$A0, 5,035 B — migrated byte-identically from the S62 bank-$1E port) + `dwm2_bgm07` (ids $A1-$A3, 2,471 B — S63 v5 via `add-gbs-song`: extract+translate+prove+slot-map from the GBS; carries `dwm2_internal_id`/`foreign_cmds`/`proved_events` provenance). Ownership moves to project.json in M3b. Owning prose: SOUND_SYSTEM.md §2/§8. |
 | monsters_full.json | dump_monsters.py | 221 monsters, all 43 fields. Verified identical. |
 | encounters.json | dump_encounters.py | 32 gates / 125 pools. Verified identical. |
 | boss_table.json | dump_boss_table.py | $4897 table, 32 gates. Verified identical. |
@@ -254,12 +255,17 @@ $41B0, zero shift; bank $4F otherwise byte-identical to vanilla).
 
 ### Builders / decoders added after the 06-13 audit (rows synced S51)
 `enumerate_songs.py` — S61 (M1): sound-engine enumerator + stream decoder.
-`song_codec.py` — S62 (M2+M3-POC): song round-trip codec (decode / selftest /
-extract-gbs / build-port / patch-bank1e). Corrected loop-jump grammar (vs
+`song_codec.py` — S62 (M2+M3-POC), extended S63 (M3a): song round-trip codec
+(decode / selftest / extract-gbs / build-port / patch-bank1e[historical] /
+**import-port / emit-song-bank / add-gbs-song**). Corrected loop-jump grammar (vs
 enumerate_songs.py's S61 mislabel — DOC_AUDIT S62); DWM2→DWM1 translation
 layer (`translate_dwm2_stream` + `prove_translation` static trace-equivalence
-prover); generates `patches/bank_01e.asm` (whole bank $1E as data + the DWM2
-BGM #06 port in the orphan record slots).
+prover). S63: `import-port` recovers a ported song from a generated full-bank
+patch .asm into the song library (lossless — round-trip-checked incl. the
+translator's unreachable trailing $FF); `emit-song-bank` generates
+`patches/bank_074.asm` from `extracted/custom_songs.json` (fixed 95-slot
+record area, streams from $4180 — SOUND_SYSTEM §2). `patch-bank1e` retained
+for S62 provenance only; bank $1E is vanilla again.
 Reads the master table @ ROM0 $3466, per-id channel records, walks every
 sequence stream (2-byte pairs, $FC jump follow, revisit = loop) to
 termination; `--decode <id>` prints a track note-by-note; `--json` emits
