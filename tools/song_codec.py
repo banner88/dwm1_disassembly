@@ -70,6 +70,28 @@ CTL_NAMES = {0xA0: "envelope", 0xA1: "instrument", 0xA2: "duty_outlevel",
              0xA7: "rest_hold", 0xA8: "fx_fc", 0xAE: "alt_tuning",
              0xAF: "slide_rate"}
 
+# Canonical DWM2 GBS subsong index -> track name, from the zophar.net GBS rip
+# m3u playlist set for DMG-BQLJ-JPN.gbs ("Dragon Warrior Monsters 2 - Cobi's
+# Journey (EMU)"); internal ids come from the GBS song map @ $0FC0 (S63).
+# BGM numbering is the rip's, NOT subsong order (e.g. BGM #17 = subsong 23).
+DWM2_GBS_TRACKS = {
+    0: "BGM #01", 1: "BGM #02", 2: "BGM #03", 3: "BGM #04", 4: "BGM #05",
+    5: "BGM #06", 6: "BGM #07", 7: "BGM #08", 8: "BGM #09", 9: "BGM #10",
+    10: "BGM #11", 11: "BGM #12", 12: "BGM #13", 13: "BGM #14",
+    14: "BGM #15", 15: "BGM #16", 16: "Jingle #01", 17: "Jingle #02",
+    18: "Jingle #03", 19: "Jingle #04", 20: "Jingle #05", 21: "Jingle #06",
+    22: "Jingle #07", 23: "BGM #17", 24: "Jingle #08", 25: "Jingle #09",
+    26: "Jingle #10", 27: "Jingle #11", 28: "BGM #18", 29: "BGM #19",
+    30: "Jingle #12",
+}
+DWM2_SONG_MAP_ADDR = 0x0FC0     # GBS: subsong index -> engine-internal id
+
+
+def dwm2_slug(name):
+    """'BGM #07' -> 'dwm2_bgm07'; 'Jingle #03' -> 'dwm2_jingle03'."""
+    kind, num = name.split(" #")
+    return f"dwm2_{kind.lower()}{int(num):02d}"
+
 
 # ---------------------------------------------------------------- readers ---
 class RomReader:
@@ -694,6 +716,48 @@ def foreign_cmds(chans):
     return dict(c)
 
 
+def extract_gbs_library(gbs_path, out_path):
+    """Translate + prove EVERY DWM2 subsong into a DWM1-native song library
+    (extracted/dwm2_song_library.json): the full inbuilt-DWM2 catalog the
+    editor picks from, so the GBS never needs re-uploading. Channels carry
+    DWM1 state slots (DWM2_TO_DWM1_SLOT applied) and per-channel proof
+    counts; foreign ctl cmds (DWM1 no-ops) are reported per song."""
+    import hashlib
+    raw = Path(gbs_path).read_bytes()
+    load = int.from_bytes(raw[6:8], "little")
+    songs = []
+    for idx in sorted(DWM2_GBS_TRACKS):
+        internal = raw[0x70 + (DWM2_SONG_MAP_ADDR - load) + idx]
+        song = extract_gbs_song(gbs_path, internal)
+        chans = [{"slot": DWM2_TO_DWM1_SLOT[c["slot"]], "hw": c["hw"],
+                  "header": c["header"], "tokens": c["tokens"],
+                  "bytes": c["bytes"], "proved_events": c["proved_events"],
+                  "dwm2_src": f"${c['bank']:02X}:${c['seq']:04X}"}
+                 for c in song["channels"]]
+        name = DWM2_GBS_TRACKS[idx]
+        songs.append({"id": dwm2_slug(name), "name": name, "gbs_index": idx,
+                      "dwm2_internal_id": internal, "channels": chans,
+                      "channel_count": len(chans),
+                      "total_bytes": sum(c["bytes"] for c in chans),
+                      "foreign_cmds": foreign_cmds(song["channels"])})
+        print(f"  {name:11s} (gbs {idx:2d}, id ${internal:02X}): "
+              f"{len(chans)}ch {songs[-1]['total_bytes']:5d} B, proved "
+              f"{[c['proved_events'] for c in chans]}"
+              + (f", foreign {songs[-1]['foreign_cmds']}"
+                 if songs[-1]["foreign_cmds"] else ""))
+    lib = {"_generator": f"tools/song_codec.py extract-gbs-library "
+                         f"(DWM2->DWM1 translation, per-channel "
+                         f"trace-equivalence proved; slots are DWM1)",
+           "_source_gbs": {"file": Path(gbs_path).name,
+                           "md5": hashlib.md5(raw).hexdigest()},
+           "songs": songs}
+    Path(out_path).write_text(json.dumps(lib, indent=1))
+    total = sum(s["total_bytes"] for s in songs)
+    print(f"wrote {out_path}: {len(songs)} songs, {total} stream bytes "
+          f"(bank $74 stream capacity is {0x8000 - SONG_BANK_STREAMS_AT} B — "
+          f"the library is a catalog; only ASSIGNED songs are baked)")
+
+
 # ------------------------------------------------------------- build-port ---
 def build_port(gbs_path, first_id, bank, records_at, streams_at):
     song = extract_gbs_song(gbs_path, first_id)
@@ -938,10 +1002,18 @@ def main():
     i.add_argument("--first-id", type=lambda x: int(x, 0), default=0x9E)
     i.add_argument("--channels", type=int, default=3)
     i.add_argument("--song-id", default="imported")
-    i.add_argument("--library", default="extracted/custom_songs.json")
+    i.add_argument("--library", default="extracted/midi_song_library.json")
     b = sub.add_parser("emit-song-bank")
-    b.add_argument("--library", default="extracted/custom_songs.json")
+    b.add_argument("--library", default="extracted/midi_song_library.json")
     b.add_argument("--out", default="patches/bank_074.asm")
+    gl = sub.add_parser("extract-gbs-library")  # ALL subsongs -> DWM1-native catalog (S64, M3b)
+    gl.add_argument("--gbs", required=True)
+    gl.add_argument("--out", default="extracted/dwm2_song_library.json")
+    # NOTE (S64): extracted/custom_songs.json is RETIRED — song ownership
+    # moved to project.json custom.music + the repo-committed library JSONs
+    # (extracted/dwm2_song_library.json, extracted/midi_song_library.json);
+    # the editor2 music emitter calls song_bank_asm directly. The --library
+    # defaults below now point at the MIDI library for ad-hoc use.
     a2 = sub.add_parser("add-gbs-song")   # extract-gbs + DWM2->DWM1 slot map + library append
     a2.add_argument("--gbs", required=True)
     a2.add_argument("--id", type=lambda x: int(x, 0), required=True,
@@ -949,7 +1021,7 @@ def main():
     a2.add_argument("--first-id", type=lambda x: int(x, 0), required=True,
                     help="DWM1 id for channel 0 (>= 0x9E)")
     a2.add_argument("--song-id", required=True)
-    a2.add_argument("--library", default="extracted/custom_songs.json")
+    a2.add_argument("--library", default="extracted/midi_song_library.json")
     args = ap.parse_args()
 
     if args.cmd == "decode":
@@ -1013,6 +1085,8 @@ def main():
         print(f"wrote {args.out}: {len(lib['songs'])} songs, "
               f"{len(placements)} streams, streams end ${end - 1:04X}, "
               f"free {0x8000 - end} bytes")
+    elif args.cmd == "extract-gbs-library":
+        extract_gbs_library(args.gbs, args.out)
     elif args.cmd == "add-gbs-song":
         song = extract_gbs_song(args.gbs, args.id)
         chans = [{"slot": DWM2_TO_DWM1_SLOT[c["slot"]], "hw": c["hw"],

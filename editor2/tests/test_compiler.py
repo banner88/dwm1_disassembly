@@ -24,7 +24,7 @@ from editor2.core import validators as V
 from editor2.core.project import Project, ProjectError
 
 EXAMPLE = os.path.join(REPO, 'editor2/example-project/project.json')
-REFERENCE_MD5 = "3009b75ee1e3bd58bc315a39b7324e17"   # S63v5 reference patched build (M3a v4 + v5: BGM #07 ids $A1-$A3 in bank $74, room $6C NPC via project.json; bank_060 now compiler-generated via --apply). Prev: c23beed7aadee80a061c0f6c24d7c1f4 (S63 v4, M3a: AudioMasterTableExt + song bank $74 + bank $1E reverted; S62's BGM NPC/set_bgm $9E folded into the example project — S62 had hand-edited bank_060 without updating project/pin, breaking compat==hand byte-identity; restored S63). Prev pins: 168c5f1b5b4b3b2568a6d6e2f3f1ab45 (S60), d31c9300e13b98f516c6bee8b446069d (S58v2)
+REFERENCE_MD5 = "7cc0857faad8a950573e865e93f791eb"   # S64 reference patched build (M3b+M3c: LoadNewBGMIdIntoA same-size rewrite -> bank $71 entry 2 CustomRoomBGMResolve + CustomRoomBGMTable; music emitter owns bank $74; dq6_town1 ids $A4-$A6 from MIDI; Library $12 + gate_island $6B room defaults). Prev: 3009b75ee1e3bd58bc315a39b7324e17 (S63v5 reference patched build (M3a v4 + v5: BGM #07 ids $A1-$A3 in bank $74, room $6C NPC via project.json; bank_060 now compiler-generated via --apply). Prev: c23beed7aadee80a061c0f6c24d7c1f4 (S63 v4, M3a: AudioMasterTableExt + song bank $74 + bank $1E reverted; S62's BGM NPC/set_bgm $9E folded into the example project — S62 had hand-edited bank_060 without updating project/pin, breaking compat==hand byte-identity; restored S63). Prev pins: 168c5f1b5b4b3b2568a6d6e2f3f1ab45 (S60), d31c9300e13b98f516c6bee8b446069d (S58v2)
 
 PASS = 0
 
@@ -66,14 +66,40 @@ def main():
     ok("deterministic emit", out1 == out2)
     ok("all five targets produced",
        sorted(out1) == ['patches/bank_017.asm', 'patches/bank_060.asm',
-                        'patches/bank_071.asm', 'patches/wram.asm'],
+                        'patches/bank_071.asm', 'patches/bank_074.asm',
+                        'patches/wram.asm'],
        f"(got {sorted(out1)})")
 
     # 2. NOT_IMPLEMENTED layers hard-error
     d = base(); d['world'] = {'transitions': [1]}
     expect_error("world layer content hard-errors", d, "NOT_IMPLEMENTED")
     d = base(); d['custom']['music'] = [{'song': 'x'}]
-    expect_error("custom.music hard-errors", d, "NOT_IMPLEMENTED")
+    expect_error("custom.music must be an object", d, "must be an object")
+    d = base(); d['custom']['music']['tracks'] = []
+    expect_error("custom.music unknown key hard-errors", d, "unknown key")
+
+    # 2b. music validation (M3b, S64)
+    d = base()
+    d['custom']['music']['songs'][0]['source']['library'] = 'nope'
+    expect_error("music library ref must exist", d, "not found")
+    d = base()
+    d['custom']['music']['songs'][2]['first_id'] = "0x9F"   # collides 0x9E-0xA0
+    expect_error("music id overlap rejected", d, "already claimed")
+    d = base()
+    d['custom']['music']['room_defaults']['0x99'] = 'dq6_town1'
+    expect_error("room_defaults mapID range", d, "outside $00-$7F")
+    d = base()
+    d['custom']['music']['room_defaults']['0x30'] = 0
+    expect_error("room_defaults id 0 is the sentinel", d, "sentinel")
+    d = base()
+    d['custom']['music']['room_defaults']['0x30'] = "0x09"
+    _, _, wmr = compile_data(d)
+    ok("raw vanilla id assignable to a vanilla room",
+       not any('custom.music' in w for w in wmr))
+    d = base()
+    d['custom']['rooms'][0]['music'] = 'dq6_town1'   # vs room_defaults? none set for 6B in defaults... set conflict:
+    d['custom']['music']['room_defaults']['0x6B'] = 'dwm2_bgm07'
+    expect_error("rooms[].music vs room_defaults conflict", d, "disagree")
     d = base(); d['custom']['skills'] = [{'id': 'anchor'}]
     expect_error("custom.skills hard-errors", d, "NOT_IMPLEMENTED")
 

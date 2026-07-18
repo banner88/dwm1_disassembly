@@ -49,6 +49,8 @@ class Project:
         self.wram_region_size = (self.custom.get('wram', {})
                                  .get('region_size', WRAM_REGION_SIZE_DEFAULT))
         self._step_alloc = None
+        self.repo_root = None          # set by compiler.compile_project
+        self._music = None
 
     # ------------------------------------------------------------------ load
     @classmethod
@@ -69,10 +71,18 @@ class Project:
                     "content found; refusing to silently ignore it "
                     "(PROJECT_COMPILER.md §layers)")
         music = (self.data.get('custom') or {}).get('music')
-        if music:
+        if music is not None and not isinstance(music, dict):
             raise ProjectError(
-                "custom.music is NOT_IMPLEMENTED (ROADMAP Arc 3 M1-M3 must "
-                "land first) — refusing to silently ignore it")
+                "custom.music must be an object {libraries, songs, "
+                "room_defaults} (PROJECT_COMPILER.md §2.9; implemented S64)")
+        if music:
+            bad = [k for k in music
+                   if k not in ('libraries', 'songs', 'room_defaults')
+                   and not k.startswith('_')]
+            if bad:
+                raise ProjectError(
+                    f"custom.music: unknown key(s) {bad} — refusing to "
+                    "silently ignore authored data")
         skills = (self.data.get('custom') or {}).get('skills')
         if skills:
             raise ProjectError(
@@ -300,6 +310,26 @@ class Project:
             raise ProjectError(f"room {r.get('id')} references palette "
                                f"{pid!r} which is not defined")
         return self._pal_by_id[pid]
+
+    # ----------------------------------------------------------------- music
+    def music_resolved(self):
+        """(bank74_library, room_bgm[128], song_ids, warnings) — cached so
+        the double-emit determinism check sees identical results."""
+        if self._music is None:
+            from . import music as M
+            self._music = M.resolve(self)
+        return self._music
+
+    def music_room_bgm(self, warnings=None):
+        lib, room_bgm, ids, mw = self.music_resolved()
+        if warnings is not None:
+            for w in mw:
+                if w not in warnings:
+                    warnings.append(w)
+        return room_bgm
+
+    def music_song_ids(self):
+        return dict(self.music_resolved()[2])
 
     # ----------------------------------------------------------------- dests
     def resolve_dest(self, dest):

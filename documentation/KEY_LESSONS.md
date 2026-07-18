@@ -2215,3 +2215,36 @@ a from-source compile exposes the divergence.
 `test_compiler.py --rom` at wrap-up even if it "only" hand-verified the
 ASM — and CI should run it too (ROADMAP box added S63) so the next
 violation fails in public, not two sessions later.
+
+### The tick model was inferred from a control byte, not the countdown — note lengths are FRAMES
+**Context (S64)**: SOUND_SYSTEM (S61) said `$A3` sets "frames per tick" and
+note lengths are "in ticks" — an inference from the `$A3` handler alone
+(`(xx&$0F)*2 → $FA/$FB`). Building the MIDI converter forced the question:
+what does `$FB` actually gate?
+**Finding**: reading the per-frame driver's countdown (bank_000 ~11110):
+BOTH branches of the `$FB` check fall into `dec [hl]` on `$FFEC` — the note
+length decrements unconditionally EVERY FRAME; `$FB` only gates the groove
+stepper (`AudioProcessChannel` early-`ret`, groove table $3B83). Lengths
+are frames (~59.73/s). Duration cross-check: the 0:01 jingles are ~1 s at
+frame semantics, ~12 s at tick semantics. Bonus finding: every groove row
+is a live vibrato/detune shape (no all-zero row), so `$A3 $80` (bit7=1 →
+`$E5 &= $0F`, groove OFF) is the only deterministic straight form.
+**Rule**: a control register's WRITER tells you what a value is; only the
+READER tells you what it does. Verify the consuming loop before building
+timing math on a doc's model — the S61 reading survived two sessions
+because byte carriage never depends on semantics.
+
+### Same-size rewrites can be self-funding: audit the function's own fat before hunting free space
+**Context (S64)**: the room-BGM hook needed 7 bytes inside a 70-byte
+function in dense bank $01 with its padding already consumed (S63).
+**Technique**: the function itself paid: a vestigial `ld b,[hl] / ld a,b /
+cp $09 / ret nz / ret` tail whose flags the single caller immediately
+overwrites (`cp b` before acting) collapses to `ld a,[hl] / ret` (−4); a
+second `ld a,[wMapID]` was redundant because A survives a pure `cp` chain
+(−3); `ld a,$00 / adc h` → `adc h / sub l` at two table lookups (−2).
+Net −9 funded the 7-byte `rst $10` prologue with 2 bytes to pad.
+**Rule**: before declaring "no room", disassemble the exact footprint being
+replaced: vestigial compare-tails (flags nobody reads), redundant reloads
+across flag-only instructions, and the `adc h / sub l` idiom are recurring
+free bytes inside vanilla functions — and a same-size rewrite keeps every
+address stable, which is the whole game in banks $01/$04/$17.

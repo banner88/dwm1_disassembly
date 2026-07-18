@@ -1,0 +1,3368 @@
+{
+ "_generator": "tools/midi_to_song.py (MIDI -> DWM1-native tokens; lengths in frames, decode round-trip checked)",
+ "songs": [
+  {
+   "id": "dq6_town1",
+   "name": "DQ6 Town 1",
+   "channels": [
+    {
+     "slot": 52,
+     "hw": 0,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "tokens": [
+      {
+       "op": "ctl",
+       "byte": 163,
+       "prm": 128,
+       "name": "tempo_groove"
+      },
+      {
+       "op": "ctl",
+       "byte": 162,
+       "prm": 2,
+       "name": "duty_outlevel"
+      },
+      {
+       "op": "ctl",
+       "byte": 160,
+       "prm": 11,
+       "name": "envelope"
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 255
+      },
+      {
+       "op": "ctl",
+       "byte": 167,
+       "prm": 163,
+       "name": "rest_hold"
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 71,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 70,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 255
+      },
+      {
+       "op": "ctl",
+       "byte": 167,
+       "prm": 163,
+       "name": "rest_hold"
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 35,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 71,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 70,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 41,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 15
+      },
+      {
+       "op": "loop_jump",
+       "n": 0,
+       "target": 2
+      },
+      {
+       "op": "end"
+      }
+     ],
+     "bytes": 487,
+     "midi_channel": 1,
+     "note_count": 184,
+     "overlap_cuts": 106
+    },
+    {
+     "slot": 78,
+     "hw": 1,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "tokens": [
+      {
+       "op": "ctl",
+       "byte": 163,
+       "prm": 128,
+       "name": "tempo_groove"
+      },
+      {
+       "op": "ctl",
+       "byte": 162,
+       "prm": 2,
+       "name": "duty_outlevel"
+      },
+      {
+       "op": "ctl",
+       "byte": 160,
+       "prm": 11,
+       "name": "envelope"
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 224
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 7
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 8
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 71,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 8
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 7
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 7
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 8
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 8
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 7
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 70,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 71,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 119
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 45
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 42,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 90
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 45
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 40,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 42,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 58,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 65,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 58,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 56,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 56,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 58,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 56,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 56,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 119
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 90
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 253
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 8
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 7
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 71,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 7
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 8
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 8
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 7
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 7
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 8
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 59,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 66,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 70,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 71,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 68,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 57,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 54,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 120
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 44
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 42,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 89
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 45
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 40,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 42,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 43,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 52,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 58,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 65,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 64,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 58,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 56,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 56,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 58,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 56,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 56,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 55,
+       "len": 14
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 53,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 51,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 48,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 119
+      },
+      {
+       "op": "note",
+       "byte": 50,
+       "len": 90
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 30
+      },
+      {
+       "op": "loop_jump",
+       "n": 0,
+       "target": 2
+      },
+      {
+       "op": "end"
+      }
+     ],
+     "bytes": 509,
+     "midi_channel": 0,
+     "note_count": 224,
+     "overlap_cuts": 0
+    },
+    {
+     "slot": 104,
+     "hw": 2,
+     "header": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "tokens": [
+      {
+       "op": "ctl",
+       "byte": 163,
+       "prm": 128,
+       "name": "tempo_groove"
+      },
+      {
+       "op": "ctl",
+       "byte": 161,
+       "prm": 8,
+       "name": "instrument"
+      },
+      {
+       "op": "ctl",
+       "byte": 162,
+       "prm": 32,
+       "name": "duty_outlevel"
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 119
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 19,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 20,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 11,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 20,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 11,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 11,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 20,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 20,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 9,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 104
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 19,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 10,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 3,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 10,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 19,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 24,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 9,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 9,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 7,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 23,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 7,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 5,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 7,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 23,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 5,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 21,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 9,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 32,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 32,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 32,
+       "len": 90
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 149
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 37,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 36,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 38,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 39,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 19,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 20,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 11,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 20,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 11,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 11,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 20,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 20,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 9,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 15
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 105
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 34,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 19,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 10,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 3,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 10,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 19,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 24,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 9,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 9,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 7,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 18,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 23,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 7,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 5,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 8,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 7,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 23,
+       "len": 29
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 5,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 21,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 17,
+       "len": 30
+      },
+      {
+       "op": "note",
+       "byte": 16,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 9,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 32,
+       "len": 60
+      },
+      {
+       "op": "note",
+       "byte": 32,
+       "len": 59
+      },
+      {
+       "op": "note",
+       "byte": 32,
+       "len": 90
+      },
+      {
+       "op": "note",
+       "byte": 12,
+       "len": 30
+      },
+      {
+       "op": "loop_jump",
+       "n": 0,
+       "target": 2
+      },
+      {
+       "op": "end"
+      }
+     ],
+     "bytes": 329,
+     "midi_channel": 2,
+     "note_count": 148,
+     "overlap_cuts": 98
+    }
+   ],
+   "channel_count": 3,
+   "total_bytes": 1325,
+   "duration_frames": 5495,
+   "loops": true,
+   "midi_source": {
+    "file": "dq6-town1.mid",
+    "md5": "46782101c25857b9fecb892903ae1dfc",
+    "division": 480,
+    "tempo_us_per_qn": [
+     [
+      0,
+      500000
+     ]
+    ]
+   },
+   "conversion": {
+    "transpose": 0,
+    "pulse_duty": 2,
+    "pulse_envelope": 11,
+    "wave_instrument": 8,
+    "wave_outlevel": 32,
+    "map": {
+     "2": "wave",
+     "1": "pulse1",
+     "0": "pulse2"
+    },
+    "overlap_cuts": 204,
+    "warnings": []
+   }
+  }
+ ]
+}

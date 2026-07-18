@@ -89,7 +89,7 @@ number at $4000).
 | +5 | $E9 | bits7–6 duty; bit4 = alt-tuning select; low nibble = per-frame pitch-slide rate |
 | +6 | $EA | pitch-slide accumulator |
 | +7 | $EB | envelope (stored SWAPPED) |
-| +8 | $EC | note length remaining (ticks) |
+| +8 | $EC | note length remaining — **FRAMES** (~59.73/s), decremented unconditionally every frame by the per-frame driver (instruction-verified S64; the S61 "ticks" reading is falsified — DOC_AUDIT S64) |
 | +9 | $ED | pulse: duty/period byte, wave: wave-instrument id ($FF = unset) |
 | +$0A/$0B | $EE/$EF | loop counters A/B (cmd $Bn) |
 | +$0C/$0D | $F0/$F1 | effect rate / effect param (cmd $Cn; wave out-level) |
@@ -98,7 +98,7 @@ number at $4000).
 | +$10/$11 | $F4/$F5 | pitch-slide period reload/counter |
 | +$12/$13 | $F6/$F7 | last freq-lo guard / NR-4 retrigger+pan byte |
 | +$14/+$1A | $F8,$FE | loop mark position (cmd $FD) lo/hi — CONFIRMED S62 at instruction level |
-| +$16/$17 | $FA/$FB | tick length reload / tick countdown (frames per tick, from $A3) |
+| +$16/$17 | $FA/$FB | groove-step period reload / countdown (from $A3). Gates ONLY the groove stepper in `AudioProcessChannel` (~ROM0 $3937: `ret nz` while $FB>0); it does NOT scale note lengths — $EC decrements every frame regardless (S64, instruction-verified: both branches of the $FB check at the $EC countdown fall into `dec [hl]`) |
 | +$18 | $FC | cmd $A8 value *(unverified fx)* |
 | +$19 | $FD | stream position HIGH |
 
@@ -115,14 +115,14 @@ envelope; b3 -> $ED duty/wave id.
 
 | pair | meaning |
 |------|---------|
-| `nn ll` (nn<$A0) | note: low nibble semitone 0–11 (≥$0C = rest/key-off), high nibble = octave downshift (freq >> n); `ll` = length in ticks. Noise ch: nn = raw index into noise table $37C5 (<$10), $1F = rest |
+| `nn ll` (nn<$A0) | note: low nibble semitone 0–11 (≥$0C = rest/key-off); high nibble n shifts the pitch-table PERIOD right (`P>>n`) which RAISES the pitch n octaves (freq = 131072/(P>>n); semitone 0, n=0 = 65.4 Hz = **C2 = MIDI 36** — S64, from `AudioLoadNoteB` + the $3A53 table values; S61's "octave downshift" phrasing described the period, not the pitch). `ll` = length in **FRAMES** (§4). Noise ch: nn = raw index into noise table $37C5 (<$10), $1F = rest |
 | `A0 xx` | set envelope `$EB = swap(xx)` + retrigger via `AudioCommandHandler` ($3AB3) *(handler internals unverified)* |
 | `A1 xx` | instrument: wave ch = load 16B wave `$316E + xx*16` → $FF30; pulse = xx → $ED |
 | `A2 xx` | pulse: duty (xx rrca×2 & $C0 → $E9); wave: xx → $F1 out-level |
-| `A3 xx` | tempo/groove: bit7=0: `(xx&$0F)*2` → $FA/$FB frames-per-tick, bits4–6 → $E5 groove, sets $E5 bit7; bit7=1: clear gate |
+| `A3 xx` | groove ctl (NOT tempo — lengths are frames, §4): bit7=0: `(xx&$0F)*2` → $FA/$FB groove-step period, bits4–6 → $E5 groove row select, **sets $E5 bit7 (groove ON)**; bit7=1: `$E5 &= $0F` (groove OFF). Groove rows @ ROM0 $3B83 (8×16 signed steps added to the freq via $F6) are ALL live vibrato/detune shapes — there is no all-zero row, so `$A3 $80` is the only deterministic "straight" form (S64; tools/midi_to_song.py emits it) |
 | `A5 xx` | $F9 pan/enable ctl (xx=$01 swaps current) *(unverified)* |
 | `A6 xx` | write xx to NR50 (master volume) |
-| `A7 xx` | rest: xx → $EC, no retrigger, keeps NR51 mask |
+| `A7 xx` | hold: xx → $EC with NO retrigger and NR51 mask kept — the sounding note simply continues, so this is the tie/extension primitive (midi_to_song.py chains it for notes >255 frames) |
 | `A8 xx` | xx → $FC *(unverified fx)* |
 | `AE xx` | xx&$10 → $E9 bit4: select alternate tuning half (+12 entries into pitch table) |
 | `AF xx` | xx&$0F → $E9 low nibble: per-frame pitch-slide rate |
@@ -170,6 +170,13 @@ DWM2 (Cobi's Journey JP) runs an **evolved sibling of the same engine**:
     DWM1's counted loops). No pair-skip on exit (unlike DWM1's $EF elapse).
   - **`B0 $Fx`**: unconditional jump to mark[x]; `B0` with param < $F0 =
     no-op.
+  - **`$A4` (and `$AB`) are 2-byte no-ops in DWM2 TOO** (S64,
+    instruction-verified: the DWM2 Ax dispatch is a linear equality chain —
+    cp $A0,$A1,$A2,$A3,$A5,$A6,$A7,$A8,$A9,$AA($37AE),$AC($37D8),$AD,$AE,
+    $AF — with NO cp $A4/$AB; unmatched values fall to the terminal default
+    `inc hl / jp $358A`). So the `$A4 xx` pairs in BGM #19 (×6) are inert
+    padding in BOTH engines and verbatim carriage is exact — unlike `$AA`,
+    which is a real DWM2 ornament that DWM1 drops.
   - **`AC n, target`**: counted CALL — the pair AFTER `$AC` is a 16-bit LE
     *byte-offset* target (>>1 = pair index), NOT a command; saves the return
     position; the phrase plays n times. **Phrases live PAST the stream's
@@ -234,27 +241,53 @@ drivers; user ear-test clean).
   BGM #06 port). A second song bank later = one more table row (fits the
   $3FE8 slot filler) + its own bank file. The S62 orphan-slot route
   (capped at one song) is retired.
-- Authoring path as built: `extracted/custom_songs.json` (song library:
-  first_id + per-channel {slot, hw, header, tokens}) →
-  `song_codec.py emit-song-bank` → `patches/bank_074.asm`; assignment =
-  `SetBGM first_id` from any script (the S62 well NPC does exactly this,
-  now via the example project). M3b moves library ownership into
-  project.json; M3c adds the MIDI→spec converter.
-- **Save/reload music behavior (user-observed S63, v4):** a script
-  `SetBGM` is transient — loading a save replays the ROOM's default track
-  (vanilla behavior; the load path re-derives music from the room, not
-  from saved `wBGM`). Expected NON-issue for M3b room-default assignment:
-  the same room→BGM derivation that now returns the vanilla id will return
-  the custom id, so it survives load by construction. The room→BGM
-  mechanism itself is *(not yet traced)* — trace it when wiring M3b.
-- **Song sources (user requirement, S61): BOTH DWM2 tracks AND MIDI files.**
-  M2's decoded-song spec is therefore the common intermediate format:
-  `DWM2 GBS/ROM → extractor → spec` and `MIDI → converter → spec`, then one
-  `spec → (records + streams)` compiler for both. DWM2 side stays
-  extraction-only (walk streams via the shared format; no further DWM2
-  driver RE). MIDI side: quantize to the tick grid ($A3 tempo), map melodic
-  voices to pulse1/pulse2 + bass/lead to wave, drums to noise, clamp pitches
-  to the 12-semitone × octave-shift model.
+- Authoring path as built (M3b/M3c, S64): **project.json `custom.music`
+  owns songs** (PROJECT_COMPILER §2.9) — `libraries` reference the
+  repo-committed catalogs `extracted/dwm2_song_library.json` (ALL 31 DWM2
+  songs, translated + trace-proven, 57,383 stream bytes; the GBS never
+  needs re-uploading) and `extracted/midi_song_library.json`
+  (`tools/midi_to_song.py` conversions); the editor2 music emitter calls
+  `song_codec.song_bank_asm` → generated `patches/bank_074.asm`.
+  `extracted/custom_songs.json` is RETIRED (S64; its two songs re-emit
+  byte-identically from the DWM2 library — verified). Songs are normalized
+  to the exact 3-channel trio at bake time: missing trio slots get a
+  6-byte silent stream (InitBGM starts 3 consecutive ids, so a 2ch song
+  packed before another song would otherwise start the neighbor's
+  channel); >3ch sources (BGM #04 noise, 4/5ch jingles) drop extras with
+  a warning — an InitBGM channel-count extension is a ROADMAP box.
+  Assignment = `SetBGM first_id` from scripts AND/OR room defaults below.
+- **Room→BGM derivation (traced + rebuilt S64, M3b):**
+  `LoadNewBGMIdIntoA` @ $01:$432D–$4372 (70 B, single caller
+  `CheckScreenLock` ← `InitFieldState` ← `GameInit` — runs on every map
+  entry AND on save-load; the caller compares against `wCurrPlayingBGM`
+  and `call nz, SetBGM`). Vanilla logic: `wInGateworld`≠0 → floor path
+  ($34, or `RoomBGMTable[wBossMapType]` on the boss floor); else mapID
+  <MAP_ITEMSP($50), ==MAP_COLISUM($52), or $5D–$60 → `RoomBGMTable
+  [wMapID]`; mapID ≥$61 (incl. all custom rooms) → gate path — which is
+  exactly why script `SetBGM` was transient in custom rooms. **RoomBGMTable
+  = $01:$4373, 112 bytes, $70 entries (mapIDs $00–$6F; $61+ padded $34)** —
+  re-sectioned from fake instructions to labeled `db` data in BOTH trees
+  (clean build still 1ca6579…). The patched tree rewrites the function
+  SAME-SIZE (70 B; funded −9 B by dropping the vestigial `cp $09/ret nz/
+  ret` tail, the redundant second `ld a,[wMapID]`, and the `adc h/sub l`
+  idiom) to call **bank $71 entry 2 `CustomRoomBGMResolve` FIRST**: E :=
+  `CustomRoomBGMTable[wMapID]` (128-entry generated table; 0 = vanilla
+  fallback; gate floors excluded by the resolver since wMapID is not
+  room-meaningful there). Nonzero E wins for ANY mapID $00–$7F — vanilla
+  and custom rooms alike — and **survives save/reload by construction**
+  (the load path re-runs this same derivation; user-confirmed S64 v6:
+  Library $12 → MIDI song, gate_island $6B → DWM2 BGM #07 incl. reload).
+  Return-in-E per the proven rst $10 DE-return contract (KEY_LESSONS).
+- **Song sources (user requirement, S61 — DELIVERED S64): DWM2 tracks,
+  MIDI files, and inbuilt vanilla ids.** The decoded-song spec is the
+  common intermediate: DWM2 → `song_codec.py extract-gbs-library` → catalog
+  JSON; MIDI → `tools/midi_to_song.py` → catalog JSON (frame-accurate
+  boundary rounding — no drift; monophonize per channel; lowest-mean-pitch
+  channel auto-maps to wave; $A7 holds extend >255-frame notes; `$A3 $80`
+  for deterministic straight playback; `B0 $FC` whole-song loop; decode
+  round-trip checked). Vanilla ids assign directly via
+  `music.room_defaults` raw values. One `spec → bytes` path
+  (`song_codec.emit_song_bank`) serves all three.
 - M3 authoring: new ids ≥ $9E resolve via the AudioMasterTableExt row into
   bank $74 (§2); then either script `SetBGM new_id` or the room-BGM path.
   DWM2 imports need a channel-count entry decision (3ch default path needs

@@ -19,6 +19,18 @@
 ;     Look up RoomEncTable[mapID-$6B]. If enabled, write wGateID + wCurrentFloor
 ;     and set wRoomEncFlag=$01; else wRoomEncFlag=$00. Replaces the hardcoded
 ;     Seed6BEncounterPool whitelist in bank $0B.
+;
+; Entry 2 (HL=$7102) CustomRoomBGMResolve (S64, M3b):
+;     E := CustomRoomBGMTable[wMapID] (128-entry table, generated), or 0 when
+;     wInGateworld!=0 / wMapID>=$80 / no assignment. Called by the rewritten
+;     LoadNewBGMIdIntoA head (patches/bank_001.asm) BEFORE the vanilla
+;     derivation, so an assigned id overrides both the vanilla RoomBGMTable
+;     and the gate path, for vanilla AND custom rooms alike — and survives
+;     save/reload because the load path re-runs the same derivation.
+;     Return in E per the proven DE-return contract (KEY_LESSONS: rst $10
+;     clobbers A on return but not DE; CustomReadStep returns DE the same way).
+;     Gate floors (wInGateworld!=0) keep vanilla floor-derived music: wMapID is
+;     not room-meaningful there; gate/event music assignment is a future item.
 ; =============================================================================
 
 SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
@@ -28,6 +40,7 @@ SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
 ; rst-$10 entry table at $4001
     dw CopyCustomRoomRecord             ; entry 0  (HL=$7100)
     dw CustomEncResolve                 ; entry 1  (HL=$7101)
+    dw CustomRoomBGMResolve             ; entry 2  (HL=$7102, S64 M3b)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0: CopyCustomRoomRecord — 8-byte $26DD record for wMapID → wRoomRecScratch
@@ -112,5 +125,26 @@ CustomEncResolve:
 .disabled:
     xor a
     ld [wRoomEncFlag], a
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 2: CustomRoomBGMResolve — E := assigned room BGM id, or 0 (S64, M3b)
+; -----------------------------------------------------------------------------
+CustomRoomBGMResolve:
+    ld e, $00                           ; default: no assignment
+    ld a, [wInGateworld]
+    or a
+    ret nz                              ; gate floors: vanilla floor music
+    ld a, [wMapID]
+    cp $80
+    ret nc                              ; out of table range
+    ld hl, CustomRoomBGMTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]
+    ld e, a                             ; 0 entries fall through as "none"
     ret
 

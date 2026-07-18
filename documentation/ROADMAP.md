@@ -869,14 +869,41 @@ ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.m
         vs GBS bytes (954/645/840 ev). Foreign `$AA`×20 = DWM2 ornament, verified
         non-flow @ GBS $37AE, dropped as no-op in DWM1 — ear test judges.
         *v5 acceptance MET (user)*: both NPC songs play; $AA-ornament drop
-        unremarked by ear. Remaining M3b: music as
-        room DEFAULT (trace the room→BGM derivation — expected to fix the
-        user-observed save/reload transience, SOUND_SYSTEM §8), library/assignment
-        schema in project.json (`custom.music`), MIDI (M3c).
-  - [ ] **M3c — MIDI import** (user requirement S61/S62): MIDI→spec converter (quantize
-        to ticks; map ≤2 melodic voices + bass to pulse1/pulse2/wave, percussion to
-        noise; clamp to the 12+12 pitch table); the spec→bytes compiler from M2 serves
-        both MIDI and DWM2 sources.
+        unremarked by ear. Remaining M3b (then): room defaults, schema, MIDI.
+  - [x] **M3b — COMPLETE S64, USER-CONFIRMED (v6)**: room-default music for
+        ANY mapID (vanilla or custom) + `custom.music` schema. Traced
+        `LoadNewBGMIdIntoA` ($01:$432D; caller runs on map entry AND
+        save-load — hence the S63 transience) + `RoomBGMTable` ($01:$4373,
+        $70 entries, re-sectioned from fake instructions in both trees);
+        SAME-SIZE 70-byte rewrite dispatches bank $71 entry 2
+        `CustomRoomBGMResolve` first (E-return; generated 128-entry
+        `CustomRoomBGMTable`; gate floors excluded). Schema: `music.
+        {libraries, songs, room_defaults}` + `rooms[].music`; music emitter
+        owns bank $74; full 31-song DWM2 catalog committed
+        (`extracted/dwm2_song_library.json`, all trace-proven;
+        `custom_songs.json` retired byte-identically). v6 confirmed:
+        Library ($12) plays the MIDI song, gate_island ($6B) defaults to
+        BGM #07 incl. save/reload, NPC overrides still work. Details:
+        SOUND_SYSTEM §8, PROJECT_COMPILER §2.9.
+  - [x] **M3c — MIDI import. COMPLETE S64, USER-CONFIRMED (same v6)**:
+        `tools/midi_to_song.py` (pure-python SMF 0/1): frame-accurate
+        boundary rounding (engine lengths ARE frames — S64 correction,
+        SOUND_SYSTEM §4), per-channel monophonize, lowest-mean-pitch→wave
+        auto-map, $A7 tie-holds past 255 frames, `$A3 $80` groove-off
+        (every groove row is live vibrato — §5), `B0 $FC` whole-song loop,
+        decode round-trip check. dq6_town1: 3ch, 1,325 B, 92s loop.
+  - [ ] **InitBGM channel-count extension** (unblocks DWM2 BGM #04's noise
+        channel + 4/5-channel jingles as BGM): InitBGM starts exactly 3
+        consecutive ids for a normal BGM; the music emitter currently pads
+        2ch→3ch silent and DROPS >trio channels with a warning. Extension =
+        a per-first-id channel-count column (or id-range rule) in the
+        InitBGM path.
+  - [ ] **Gate/event music assignment**: gate floors derive music from the
+        floor path ($34 / boss-type table), deliberately excluded from
+        CustomRoomBGMResolve (wMapID is not room-meaningful in gateworld).
+        Assigning per-gate/per-floor music needs its own hook at the
+        gate branch (+ event triggers = script `set_bgm`, which already
+        works).
 
 **Recommended order:** T1 ✅ → S1 ✅ → S2a–S2e ✅ → **Tame Stage 2 ✅ (S52 — four
 custom skills live, evolve chain proven)** → S2f (field

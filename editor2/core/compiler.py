@@ -64,6 +64,7 @@ def splice(base_text, name, new_content):
 def compile_project(project_path, repo_root):
     """Returns (outputs {relpath: text}, prj, warnings)."""
     prj = Project.load(project_path)
+    prj.repo_root = repo_root          # music libraries are repo-relative
 
     # content validation BEFORE emit: schema errors surface as validation
     errors, warnings = validators.validate(prj)

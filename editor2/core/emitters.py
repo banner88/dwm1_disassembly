@@ -23,6 +23,7 @@ import os
 from . import formats as F
 from . import textenc as T
 from . import scriptgen as S
+from . import music as M
 
 HERE = os.path.dirname(__file__)
 TEMPLATES = os.path.join(HERE, 'templates')
@@ -292,6 +293,26 @@ def emit_bank_071(prj, warnings):
                  f"floor {F.val(enc.get('floor',0))}"
                  if enc.get('enabled') else "disabled")
         lines.append(F.db_line(b, comment=f"{F.hexb(F.val(r['mapID']))} — {state}"))
+    lines.append("")
+    lines += ["; " + "-" * 77,
+              "; CustomRoomBGMTable — 128 entries indexed by wMapID (S64, M3b).",
+              "; Read by entry 2 (CustomRoomBGMResolve, template head) for the",
+              "; rewritten LoadNewBGMIdIntoA (patches/bank_001.asm). 0 = no",
+              "; assignment -> vanilla derivation; nonzero = the room's default",
+              "; BGM id (survives save/reload: the load path re-derives here).",
+              "; Covers VANILLA and custom rooms alike; gate floors",
+              "; (wInGateworld!=0) are excluded by the resolver. (generated)",
+              "; " + "-" * 77,
+              "CustomRoomBGMTable:"]
+    room_bgm = prj.music_room_bgm(warnings)
+    names = prj.music_song_ids()
+    by_id = {v: k for k, v in names.items()}
+    for i in range(0, 128, 16):
+        row = room_bgm[i:i + 16]
+        tags = [f"${i+j:02X}={by_id.get(v, F.hexb(v))}"
+                for j, v in enumerate(row) if v]
+        lines.append(F.db_line(row, comment=f"mapIDs ${i:02X}-${i+15:02X}"
+                     + (": " + ", ".join(tags) if tags else "")))
     return "\n".join(lines) + "\n"
 
 
@@ -383,6 +404,24 @@ def emit_region_wram_steps(prj, warnings):
     return "\n".join(out) + "\n"
 
 
+# ---------------------------------------------------------------------------
+# bank $74 emitter — custom song bank (owns file patches/bank_074.asm)
+# ---------------------------------------------------------------------------
+
+def emit_bank_074(prj, warnings):
+    """The song bank: project songs (library refs / inline) -> the proven
+    song_codec emit path (fixed 95-slot record area, streams from $4180).
+    Deterministic: pure function of project.json + the referenced library
+    JSONs (which are repo-committed extracted/ data)."""
+    library, _, _, mw = prj.music_resolved()
+    warnings += [w for w in mw if w not in warnings]
+    repo = M._repo_root(getattr(prj, 'repo_root', prj.root))
+    sc = M.song_codec(repo)
+    lib = {"_source": "project.json custom.music (music emitter, S64)",
+           "songs": library["songs"]}
+    return sc.song_bank_asm(lib)
+
+
 REGISTRY = [
     # (name, schema_section, target, function, owned_banks)
     ("rooms60", "custom.rooms", "file:patches/bank_060.asm",
@@ -398,4 +437,6 @@ REGISTRY = [
     ("wram_steps", "custom.rooms",
      "region:patches/wram.asm#wram_step_counters", emit_region_wram_steps,
      []),
+    ("music74", "custom.music", "file:patches/bank_074.asm",
+     emit_bank_074, [0x74]),
 ]

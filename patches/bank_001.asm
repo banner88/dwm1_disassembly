@@ -461,7 +461,23 @@ LoadMapMetadata:
     ret
 
 
+; --- S64 M3b: room-default music override (same-size rewrite, 70-byte
+; footprint $432D-$4372 preserved; RoomBGMTable stays fixed at $4373).
+; The override dispatch (7 B) is funded by: dropping the redundant second
+; `ld a, [wMapID]` (A still holds wMapID through the compare chain, -3 B),
+; the `adc h / sub l` hi-byte idiom at both table lookups (-2 B), and the
+; vestigial `ld b,[hl] / ld a,b / cp $09 / ret nz / ret` tail -> `ld a,[hl] /
+; ret` (-4 B; the caller overwrites those flags with its own `cp b` before
+; acting, single call site, so behavior is identical). Net -9, +7, 2 pad.
+; rst $10 clobbers A on return (bank-restore pop af) but preserves DE, so the
+; resolver hands the id back in E; 0 = no assignment -> vanilla logic intact.
 LoadNewBGMIdIntoA:
+    ld hl, $7102                     ; bank $71 entry 2: CustomRoomBGMResolve
+    rst $10                          ; -> E = assigned BGM id, or 0
+    ld a, e
+    or a
+    ret nz                           ; assigned id wins (any mapID $00-$7F)
+
     ld a, [wInGateworld]
     or a
     jr nz, jr_001_4358
@@ -476,22 +492,18 @@ LoadNewBGMIdIntoA:
     cp MAP_BTLDEMO
     jr c, jr_001_4358
 
-    cp $61 ;maps do not go above 5F. This is unused. w
+    cp $61 ;mapIDs $5D-$60 use the table; >= $61 falls to the gate path
     jr nc, jr_001_4358
 
 jr_001_4346:
-    ld hl, $4373
-    ld a, [wMapID]
+    ; A = wMapID here on ALL entry paths (cp does not modify A)
+    ld hl, RoomBGMTable
     add l
     ld l, a
-    ld a, $00
     adc h
+    sub l
     ld h, a
-    ld b, [hl]
-    ld a, b
-    cp $09
-    ret nz
-
+    ld a, [hl]
     ret
 
 
@@ -504,127 +516,35 @@ jr_001_4358:
     ld a, $34
     ret nz
 
-    ld hl, $4373
+    ld hl, RoomBGMTable
     ld a, [wBossMapType]
     add l
     ld l, a
-    ld a, $00
     adc h
+    sub l
     ld h, a
     ld a, [hl]
     ret
 
+    rst $38                          ; 2-byte pad: rewrite is 68 B, footprint 70
+    rst $38
 
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    ld e, $1e
-    ld sp, $0931
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    ld e, $1e
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    sbc l
-    inc [hl]
-    inc c
-    inc c
-    jr jr_001_43bd
 
-    inc c
-    ld l, $18
-    rrca
-    jr @+$14
-
-    ld l, $1b
-    ld [de], a
-    dec de
-    dec de
-    dec de
-    dec de
-    dec de
-    dec de
-    ld [de], a
-    dec de
-    inc c
-    rrca
-    ld [de], a
-    ld [de], a
-
-jr_001_43bd:
-    dec d
-    dec d
-    jr jr_001_43dc
-
-    dec de
-    dec de
-    inc [hl]
-    inc [hl]
-    ld h, c
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    ld h, c
-    ld [bc], a
-    ld [bc], a
-    dec de
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-
-jr_001_43dc:
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
+; Per-map default BGM table, 1 byte per mapID, $70 entries ($4373-$43E2).
+; (Re-sectioned S64; see disassembly/bank_001.asm for the vanilla notes.)
+; PATCHED TREE NOTE: LoadNewBGMIdIntoA above is rewritten same-size (S64) to
+; consult bank $71 entry 2 (CustomRoomBGMResolve) FIRST — a nonzero resolver
+; result overrides this table AND the gate path for any mapID $00-$7F, which
+; is what makes assigned room music survive save/reload (the load path calls
+; the same derivation). Resolver returns 0 -> vanilla logic below unchanged.
+RoomBGMTable:
+    db $09, $09, $09, $09, $09, $09, $1E, $1E, $31, $31, $09, $09, $09, $09, $09, $09 ; mapIDs $00-$0F
+    db $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $1E, $1E, $09 ; mapIDs $10-$1F
+    db $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $9D ; mapIDs $20-$2F
+    db $34, $0C, $0C, $18, $15, $0C, $2E, $18, $0F, $18, $12, $2E, $1B, $12, $1B, $1B ; mapIDs $30-$3F
+    db $1B, $1B, $1B, $1B, $12, $1B, $0C, $0F, $12, $12, $15, $15, $18, $1B, $1B, $1B ; mapIDs $40-$4F
+    db $34, $34, $61, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $61, $02, $02 ; mapIDs $50-$5F
+    db $1B, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34 ; mapIDs $60-$6F
 
 SaveMapStateToHRAM:
     ld a, [wMapID]

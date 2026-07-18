@@ -10,7 +10,69 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-18 (Session 63 — **Arc 3 M3a: v4 USER-CONFIRMED (well BGM identical, no issues; save/reload transience = vanilla SetBGM behavior, logged SOUND_SYSTEM §8). v5 USER-CONFIRMED same session ("Sounds great") — DWM2 BGM #07 → ids $A1-$A3, room $6C NPC, wired via project.json/--apply. **M3a COMPLETE: two custom songs live via the extended table.** Test ROMs: v4 `c23beed7…`, v5 `3009b75e…` (both patched, both user-confirmed). ALSO fixed: S62's silent compiler-regression break.** Clean build `1ca6579…` unchanged; verifier PASS 5/5; compiler tests 18/18 @ pin `3009b75e…`.)
+> Last verified: 2026-07-18 (Session 64 — **Arc 3 M3b + M3c COMPLETE, USER-CONFIRMED (v6 `7cc0857f…`): room-default music for ANY mapID (vanilla + custom; Library $12 plays a MIDI conversion, gate_island $6B defaults to DWM2 BGM #07 incl. save/reload) via the same-size `LoadNewBGMIdIntoA` rewrite → bank $71 entry 2; `custom.music` schema + music emitter own bank $74; full 31-song DWM2 catalog committed; `tools/midi_to_song.py` ships.** Clean build `1ca6579…` unchanged (RoomBGMTable re-sectioned byte-neutrally); verifier PASS 5/5; compiler tests 25/25 @ pin `7cc0857f…`; templates re-pinned, TEMPLATE_SIZE $71 116→142.)
+>
+>
+> Session 64 (2026-07-18 — **Arc 3 M3b + M3c: room-default music + MIDI
+> import, both USER-CONFIRMED (test ROM v6 `7cc0857faad8a950573e865e93f791eb`,
+> patched).** User decisions: DQ6-town MIDI → the vanilla LIBRARY room ($12)
+> to prove vanilla-room assignment; room $6B default = DWM2 BGM #07; this
+> ROM is testing-only (the real romhack starts from vanilla via the editor;
+> sources = inbuilt ids, DWM2 catalog, MIDI); >3ch songs drop extras for
+> now; `custom_songs.json` retired.
+> **M3b engine**: traced `LoadNewBGMIdIntoA` $01:$432D-$4372 (70 B, single
+> caller `CheckScreenLock` ← `InitFieldState` ← `GameInit` — runs on map
+> entry AND save-load, which is both why script SetBGM was transient and
+> why the fix survives reload by construction). `RoomBGMTable` $01:$4373 =
+> 112 B, $70 entries (mapIDs $00-$6F, $61+ padded $34) — re-sectioned from
+> fake instructions to labeled `db` in BOTH trees (clean build still
+> `1ca6579…`; fake labels jr_001_43bd/43dc were misassembly-internal).
+> Patched tree: SAME-SIZE rewrite (−9 B funded by the vestigial `cp $09/
+> ret nz/ret` tail, the redundant 2nd `ld a,[wMapID]`, and `adc h/sub l`;
+> +7 B prologue `ld hl,$7102/rst $10/ld a,e/or a/ret nz`; 2 pad) — table
+> address unmoved, vanilla fallback byte-equivalent. Bank $71 template:
+> 3-entry table + `CustomRoomBGMResolve` (E := `CustomRoomBGMTable[wMapID]`
+> or 0; gate floors return 0 — wMapID isn't room-meaningful there; the
+> proven rst $10 DE-return contract). Templates re-pinned (`64cb43ee…`),
+> TEMPLATE_SIZE $71 116→142 ($408E).
+> **Compiler**: `custom.music` live (PROJECT_COMPILER §2.9): `libraries`
+> (repo-committed catalogs) + `songs` (library refs or inline; `first_id`
+> explicit/auto from $9E) + `room_defaults` (ANY mapID $00-$7F; raw value =
+> inbuilt vanilla id) + `rooms[].music` sugar (conflict = error, found by
+> a new test: key normalization `0x6B` vs `$6B` had let conflicts slip).
+> Trio normalization at bake: missing $34/$4E/$68 slots pad silent (6 B;
+> InitBGM starts 3 CONSECUTIVE ids — an unpadded 2ch song would start its
+> neighbor's channel), >trio drops warn (InitBGM ext boxed). `music74`
+> emitter owns generated `patches/bank_074.asm` via `song_codec.
+> song_bank_asm`; existing BGM #06/#07 streams verified BYTE-IDENTICAL
+> under the new ownership (fixed-record-area property); `dispatch71` emits
+> the 128-entry BGM table. 25/25 tests (8 new music tests) @ re-pinned
+> `7cc0857f…`; verifier PASS 5/5.
+> **DWM2 catalog**: `song_codec.py extract-gbs-library` → `extracted/
+> dwm2_song_library.json`: ALL 31 subsongs (19 BGM + 12 jingles, names per
+> the zophar m3u set, ids via GBS song map @ $0FC0) translated +
+> trace-proven, 57,383 stream B total (catalog only — the emitter bakes
+> assigned songs; bank $74 streams cap 16,000 B). GBS never needs
+> re-uploading (md5 recorded). New foreign cmd `$A4` (×6, BGM #19)
+> instruction-verified as a 2-byte NO-OP IN BOTH ENGINES (DWM2 dispatch has
+> no `cp $A4`; terminal default `inc hl/jp $358A`) — unlike $AA, not even
+> an ornament is lost.
+> **M3c**: `tools/midi_to_song.py` (pure-python SMF 0/1 → catalog entry):
+> frame-accurate boundary rounding, monophonize (new-on truncates prev),
+> lowest-mean-pitch→wave auto-map, $A7 tie-holds >255 frames, `B0 $FC`
+> whole-song loop, decode round-trip checked. dq6_town1: 3ch, 1,325 B,
+> 92.0 s/loop, 204 overlap cuts. **Two engine corrections en route
+> (instruction-verified; owning SOUND_SYSTEM §4/§5, DOC_AUDIT S64):**
+> (1) note lengths are FRAMES — $EC decrements unconditionally every frame;
+> $FA/$FB only gates the groove stepper (S61 "ticks" falsified; duration
+> evidence: the 0:01 jingles); (2) $A3 bit7=0 ENABLES the groove stepper
+> and every groove row @ $3B83 is a live vibrato/detune shape — `$A3 $80`
+> (E5 &= $0F) is the only deterministic straight form; the converter emits
+> it. Also §5's "octave downshift" rephrased: P>>n RAISES pitch; note $00 =
+> C2 = MIDI 36 (from `AudioLoadNoteB` + the $3A53 values).
+> **v6 acceptance MET (user)**: Library plays DQ6 Town; $6B defaults to
+> BGM #07 including save/reload; NPC overrides intact; vanilla rooms/gates
+> unchanged.
 >
 >
 > Session 63 (2026-07-18 — **Arc 3 M3a BUILT, NOT yet user-tested: general
@@ -68,51 +130,9 @@
 > diff: banks $60/$74 + header checksum only.
 > **v5 acceptance MET (user)**: both NPC songs confirmed in-game; the
 > $AA-ornament drop passed the ear test unremarked.
->
-> Session 62 (2026-07-17 — **Arc 3 M2 COMPLETE: song round-trip codec.
-> M3 POC: DWM2 BGM #06 audible in custom well room — USER-CONFIRMED by ear
-> ("sounds great"). patched test ROM v3 `5683146a…`.**)
-> **M2 (`tools/song_codec.py` + `extracted/songs_spec.json`):** decode /
-> selftest / extract-gbs / build-port / patch-bank1e. Selftest decodes ALL
-> audio in banks $1C/$1D/$1E (157 streams: 153 referenced + 4 orphan) and
-> re-emits full 16KB banks **byte-identical**. **Grammar corrected vs S61
-> (owning: SOUND_SYSTEM §5):** there is NO standalone 3-byte $FC jump — the
-> real form is a `Bn` pair with param $FC + a (lo,hi) TARGET PAIR (4 B);
-> engine reads the Bn's own param at AudioCheckFC; counter elapse skips the
-> target pair. Bn prm=$00 = $EE counter + mark-return (no skip). B0 =
-> unconditional. Counted loops play n+1 passes. $F0-$FB/$FE = 2-byte no-ops.
-> Mark = state+$14/+$1A (CONFIRMED at instruction level). Bank $1E orphans:
-> 4 records @ $419D (ids $9E-$A1 via the open-ended master-table row — ZERO
-> ROM0 changes needed for the port) + 4 orphan streams; $00 filler $6B7D+.
-> **M3 POC (patches/bank_01e.asm regenerated by patch-bank1e; bank_060.asm
-> NPC):** BGM NPC placed room $6B screen 0 metatile (5,6) (v2 fix: the
-> script existed but NO NPC was wired — SOUND_SYSTEM's claim falsified,
-> DOC_AUDIT S62); SetBGM $9E; reverts on room exit (vanilla).
-> **v1/v2 played but SKIPPED + distorted → root cause via targeted DWM2 GBS
-> driver RE (sanctioned by M3's "fix $AC + header diffs"; owning: SOUND_SYSTEM
-> §7):** DWM2 driver has (1) **$AC n = counted CALL** — the pair after it is
-> a 16-bit LE byte-offset target; phrases live PAST the $FF terminator;
-> **$AD = return** (single slot, no nesting); v1/v2 truncated at $FF, losing
-> the phrases, and DWM1 executed target pairs as bogus commands. (2) **4 mark
-> slots per channel with private counters** (`FD slot`/`Bn slot`, resolver
-> $DCC0+ch*12+slot*3); under DWM1 these collapse to the single mark and the
-> prm∉{00,FC} elapse path EATS the following pair. Headers: all 4 fields
-> parse identically (GBS $3503) — no translation.
-> **Fix: translate_dwm2_stream()** — true-grammar walk → IR with labels →
-> nested counted loops UNROLLED (only pulse1 nested, 2 sites, depth 2) →
-> DWM1-native emit (AC phrases inlined, slot loops → Bn/$FC jump form; both
-> engines play n+1 passes, exact match). **prove_translation(): static
-> event-trace equivalence (DWM2 semantics on original bytes vs DWM1 semantics
-> on translated bytes, 2 outer wraps) — PASS 1858/1566/2287 events**; ROM-
-> resident streams byte-equal the proved translation. 5,035 stream B @ $6B80;
-> diff envelope bank $1E $419D-$7F2A + header checksums + bank $60 NPC.
-> **Limits/next (ROADMAP M3):** orphan-slot route caps at ONE custom song
-> (4 record slots); general authoring needs master-table relocation but ROM0
-> has NO 17-byte free run — open problem. **USER REQUIREMENTS logged: song
-> LIBRARY in the editor, assignment to rooms/gates, MIDI import.** Residual:
-> $Cn/$A5/$A8 audible semantics unverified (same family; ear test clean).
->
+
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S62** (2026-07-17): Arc 3 M2 — song round-trip codec (157 streams byte-identical); DWM2 grammar corrections ($AC call/$FD slots/loop forms); BGM #06 POC user-confirmed. Owning: SOUND_SYSTEM §5/§7, KEY_LESSONS S62, DOC_AUDIT S62.
 - **S61** (2026-07-17): Arc 3 M1 — sound engine + song data fully mapped (byte-neutral); ROADMAP bank-list claim falsified; DWM2 GBS same-engine-family finding. Owning: SOUND_SYSTEM.md, DOC_AUDIT S61, ROADMAP M1.
 - **S60** (2026-07-16/17): CF3 complete — farm slots 3-19 to SRAM (v2 eager-roster architecture), 48 walker sites, save-state invalidation across migration. Owning: MONSTER_DATA "CF3 as built", ARCHITECTURE SRAM, KEY_LESSONS S60.
 - **S59** (2026-07-16): Phase 0 close-out — verifier check 5 (tool selftests, ROM-tolerant), skills.json retired, 222-entry skill-table root cause. Owning: TOOLS_AND_DATA, BATTLE_SKILL_SYSTEM, DOC_AUDIT S59.
@@ -205,10 +225,10 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $67 | Combined-tileset GFX (multi-tileset mashup) | `build_combined_tileset.py` |
 | $69 | Breeding special table + scanner (B5 owns the whole table) | `build_breeding.py --emit-special` |
 | $6A | New-species info high table (ids 224+) | `build_new_species.py` |
-| $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`) | hand-authored `patches/bank_071.asm` |
+| $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64) | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables) | hand-authored `patches/bank_072.asm` |
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1) | hand-authored `patches/bank_073.asm` |
-| $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E) | `song_codec.py emit-song-bank` ← `extracted/custom_songs.json` |
+| $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $7E | Sprite overflow streams (battle + follower art) | `dwm/sprite_bank.py`, `bake_follower_overflow.py` |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A, $79) | `dwm/sprite_bank.py` order |
 | **Unallocated** | **$6B–$70, $75–$77, $79–$7A, $7C** (11 banks = 176 KB) + reserved $7F | — |
@@ -241,7 +261,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Item give + inventory-full check | ✅ working | opcodes $2A (wrapped) / $2C |
 | Monster/egg give + storage-full check | ✅ working | opcodes $29 (wrapped) / $28; egg path is the practical choice |
 | Script-driven teleport | ✅ working | opcode $0F (MapTransitionFull); vanilla + custom destinations |
-| BGM change | ✅ working | opcode $41 (SetBGM); track reverts on room exit |
+| BGM change | ✅ working | opcode $41 (SetBGM); reverts to the ROOM DEFAULT on exit/reload |
+| Room-default music (vanilla + custom rooms) | ✅ working (S64, user-confirmed v6): `music.room_defaults`/`rooms[].music` → `CustomRoomBGMTable` (bank $71 entry 2) consulted first by the rewritten `LoadNewBGMIdIntoA`; survives save/reload by construction; sources = inbuilt ids, DWM2 catalog (all 31), MIDI conversions | SOUND_SYSTEM §8; PROJECT_COMPILER §2.9 |
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 referenced, 298 with sets (branch-following) |
 | NPC show/hide by step | ✅ working | step system; counters at $DE74+ (S55 relocation); opcode $12 advances (v25) |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
@@ -259,7 +280,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | System | State |
 |--------|-------|
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
-| Custom music | 🟡 M1+M2 DONE (S61/S62); M3-POC user-confirmed (S62); **M3a COMPLETE S63, USER-CONFIRMED (v4+v5: two custom songs live)** — AudioMasterTableExt + bank $74, ~31-song capacity, bank $1E vanilla. Open: M3b room-default music + `custom.music` schema, M3c MIDI, CI compiler-test box |
+| Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. Open boxes: InitBGM channel-count ext (4/5ch sources), gate/event music, CI compiler-test |
 | Editor app (Phase 3) | Not started; backend keystone (S42) done |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)

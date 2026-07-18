@@ -20,7 +20,7 @@ from . import scriptgen as S
 # with a warning.
 TEMPLATE_SIZE = {
     0x60: 283,   # addr(CustomScriptMasterTable)-$4000, S53 reference game.sym
-    0x71: 116,    # addr(Custom26DDTable)-$4000, S55 (S53 head 103 + 13-byte flag-derivation fix)
+    0x71: 142,    # addr(Custom26DDTable)-$4000, S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
 }
 BANK_SIZE = 0x4000
 
@@ -71,6 +71,32 @@ def validate(prj, generated=None):
         return errors, warnings
     warnings += list(prj.warnings)
     rooms = [r for r in prj.rooms if not r.get('placeholder')]
+
+    # ------------------------------------------------------------- music
+    # M3b (S64): resolve custom.music up front so schema/reference errors
+    # surface as validation. Capacity: fixed 95-slot record area (ids
+    # $9E-$FC) + streams $4180-$7FFF (song_codec constants; SOUND_SYSTEM §8).
+    if prj.custom.get('music') or any(r.get('music') for r in prj.rooms):
+        try:
+            lib, room_bgm, ids, mw = prj.music_resolved()
+        except Exception as e:
+            errors.append(f"custom.music: {e}")
+        else:
+            warnings += [w for w in mw if w not in warnings]
+            from . import music as M
+            repo = M._repo_root(getattr(prj, 'repo_root', None) or prj.root)
+            sc = M.song_codec(repo)
+            total = 0
+            for song in lib['songs']:
+                for c in song['channels']:
+                    total += len(sc.emit_tokens(c['header'], c['tokens']))
+            cap = 0x8000 - sc.SONG_BANK_STREAMS_AT
+            if total > cap:
+                errors.append(
+                    f"custom.music: {total} stream bytes exceed bank $74 "
+                    f"capacity ({cap}) — the libraries are a catalog; only "
+                    "assign what fits (or a second song bank is a future "
+                    "AudioMasterTableExt row)")
 
     # ------------------------------------------------------------- master
     # KEY_LESSONS S53 finding: CustomScriptRead indexes the master table by

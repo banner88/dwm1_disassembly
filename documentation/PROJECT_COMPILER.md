@@ -41,7 +41,7 @@ owns.
 ```bash
 # regression check (compat project must equal the S55 reference patched md5)
 python3 tools/build_project.py --project editor2/example-project \
-    --build --expect-md5 c23beed7aadee80a061c0f6c24d7c1f4
+    --build --expect-md5 7cc0857faad8a950573e865e93f791eb
 
 # author→test loop: ROM lands at <out>/build/rom.gbc (+ game.sym + manifest.json)
 python3 tools/build_project.py --project my-project --build
@@ -59,16 +59,24 @@ python3 editor2/tests/test_compiler.py [--rom]
   re-expresses the entire user-confirmed hand-authored content (6 rooms, 21
   dialogue entries, 10 scripts, 4 palettes, 7 step counters, enc/record
   tables). With `build.compat.master_table_rooms` present, the generated
-  patched ROM md5 is **`c23beed7aadee80a061c0f6c24d7c1f4`** (patched build,
-  re-pinned S63 after M3a: AudioMasterTableExt + song bank $74 + bank $1E
-  reverted, AND S62's hand edits to compiler-owned bank_060.asm — BGM NPC,
+  patched ROM md5 is **`7cc0857faad8a950573e865e93f791eb`** (patched build,
+  re-pinned S64 after M3b/M3c: LoadNewBGMIdIntoA rewrite + bank $71 entry
+  2/BGM table + music emitter owning bank $74 + dq6_town1; user-confirmed
+  v6. NOTE: this doc's copy had gone stale at S63v4's `c23beed7…` while the
+  test pin moved to S63v5's `3009b75e…` — the same doc-vs-test drift class
+  as the S63 finding below; both now carry S64's value. Historical,
+  superseded: `3009b75ee1e3bd58bc315a39b7324e17` (S63v5, room $6C NPC +
+  BGM #07), `c23beed7aadee80a061c0f6c24d7c1f4` (S63v4, M3a:
+  AudioMasterTableExt + song bank $74 + bank $1E reverted, AND S62's hand
+  edits to compiler-owned bank_060.asm — BGM NPC,
   `set_bgm 0x9E`, dialogue — folded into the example project. **S62 had
   silently broken compat==hand byte-identity** (pin left at S60's
   `168c5f1b5b4b3b2568a6d6e2f3f1ab45`, historical patched reference; this
   doc's quick-start had ALSO gone
   stale at S57's value — CI runs only verify_integrity, so neither failed
   in public; DOC_AUDIT/KEY_LESSONS S63, CI box in ROADMAP). Property
-  restored: compat build == hand-staged tree, both `c23beed7…`.
+  restored: compat build == hand-staged tree, both `c23beed7…`; the
+  property held through S64's re-pin as well.
   Historical, superseded: `168c5f1b…` (S60), `6c41f0d8…` (S57 patched,
   re-pinned after the CF2 patches: wPendingFarmExp in wram.asm, bank $50
   farm-share divert, bank $0B commit stub, new bank $73 — the compat project
@@ -249,6 +257,48 @@ The example project uses none (the proven content predates named flags).
 emitter registry); it exists so multi-bank spill has a declared home when
 content outgrows `$60`.
 
+### 2.9 `custom.music` (M3b/M3c, S64)
+
+```jsonc
+"music": {
+  "libraries": [ "extracted/dwm2_song_library.json",     // repo-relative
+                 "extracted/midi_song_library.json" ],
+  "songs": [
+    { "id": "dwm2_bgm07",                 // project-local song id
+      "source": { "library": "dwm2_bgm07" },   // or {"inline":{"channels":[…]}}
+      "first_id": "0xA1" },               // or "auto": allocates from $9E
+    …
+  ],
+  "room_defaults": {
+    "0x12": "dq6_town1",                  // ANY mapID $00-$7F: vanilla too
+    "0x30": "0x09" }                      // raw value = INBUILT vanilla BGM id
+}
+```
+
+plus per-room sugar `custom.rooms[].music: "<song id>"` (merged into
+`room_defaults`; a conflicting explicit `room_defaults` entry for the same
+mapID is an ERROR, not last-wins).
+
+Resolution (`editor2/core/music.py`): library refs pull channels from the
+repo-committed catalog JSONs (`song_codec.py extract-gbs-library` for the
+full 31-song DWM2 set; `tools/midi_to_song.py` for MIDI conversions).
+`first_id` allocation: explicit claims first, then `auto` fills upward from
+`$9E`; each song reserves consecutive ids per channel; overlap/out-of-range
+($9E–$FC) = error. Every BGM is normalized to the exact pulse1/pulse2/wave
+trio (slots $34/$4E/$68): missing slots pad with a 6-byte silent stream
+(InitBGM starts 3 CONSECUTIVE ids — an unpadded 2ch song would start its
+neighbor's first channel as its own third); channels outside the trio drop
+with a warning (SOUND_SYSTEM §8; InitBGM channel-count extension = ROADMAP
+box). `room_defaults` values: song id → its `first_id`; raw number = used
+verbatim (vanilla music assignment); id 0 = the no-assignment sentinel and
+is rejected. Output: the 128-entry `CustomRoomBGMTable` in bank $71 (read
+by template entry 2 `CustomRoomBGMResolve` for the rewritten
+`LoadNewBGMIdIntoA`, patches/bank_001.asm — SOUND_SYSTEM §8) + the whole
+generated `patches/bank_074.asm` via `song_codec.song_bank_asm` (fixed
+95-slot record area: adding songs never moves existing streams — the S63
+byte-identity property, re-verified S64 when `custom_songs.json` retired).
+Capacity is validated up front: stream total ≤ 16,000 B ($4180–$7FFF).
+
 ---
 
 ## 3. Pipeline
@@ -310,10 +360,11 @@ registering an emitter; nothing existing changes.
 | Emitter | Consumes | Target | Banks |
 |---|---|---|---|
 | `rooms60` | `custom.rooms/scripts/dialogue` | `file:patches/bank_060.asm` | `$60` |
-| `dispatch71` | `custom.rooms` (records, encounters) | `file:patches/bank_071.asm` | `$71` |
+| `dispatch71` | `custom.rooms` (records, encounters) + `custom.music` (room BGM table, S64) | `file:patches/bank_071.asm` | `$71` |
 | `palettes_a` | `custom.palettes` (placement a) | `region:…#room_palettes_a` | `$17` |
 | `render17` | `custom.rooms` (+ placement-b palettes) | `region:…#room_render_tables` | `$17` |
 | `wram_steps` | `custom.rooms` + `custom.wram` | `region:…#wram_step_counters` | — |
+| `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` | `$74` |
 
 `bank_060` generated layout order (fixed, deterministic): script master
 table → shared no-op (if needed) → per-room script tables+bodies (script
@@ -332,19 +383,22 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_060_head.asm` — bank byte, 7-entry `rst $10`
   table, `CustomPtrChase`, `DummyStepEntry/NPCs/Exits`, entries 0–6
   (readers, `GateAwareDispatch`, `CustomScriptRead`, `CustomTextDisplay`).
-* `editor2/core/templates/bank_071_head.asm` — bank byte, 2-entry table,
-  `CopyCustomRoomRecord`, `CustomEncResolve`.
+* `editor2/core/templates/bank_071_head.asm` — bank byte, 3-entry table
+  (S64), `CopyCustomRoomRecord`, `CustomEncResolve`,
+  `CustomRoomBGMResolve` (entry 2: E := `CustomRoomBGMTable[wMapID]` or 0;
+  gate floors return 0 — SOUND_SYSTEM §8).
 
 Two pins, both enforced at compile time:
 
-1. **sha256** in `editor2/core/templates/PINNED_SHA256`
-   (`63969b1a…33d9` / `1b5d0015…982c`) — a drifted template refuses to
-   compile. Re-pin (`--pin-templates`) ONLY after a deliberate engine
-   session changes the head.
+1. **sha256** in `editor2/core/templates/PINNED_SHA256` — a drifted
+   template refuses to compile. Re-pin (`--pin-templates`) ONLY after a
+   deliberate engine session changes the head. Re-pinned S64 (bank $71
+   entry 2 added: `64cb43ee…be23`; bank $60 unchanged `63969b1a…33d9`).
 2. **TEMPLATE_SIZE** in `editor2/core/validators.py` — measured from the
-   S53 reference `game.sym`: bank `$60` head = **283 B**
-   (`CustomScriptMasterTable @ $411B`), bank `$71` head = **103 B**
-   (`Custom26DDTable @ $4067`). Used by the pre-build overflow check
+   reference `game.sym`: bank `$60` head = **283 B**
+   (`CustomScriptMasterTable @ $411B`, S53), bank `$71` head = **142 B**
+   (`Custom26DDTable @ $408E`, S64; history 103 S53 → 116 S55 flag fix →
+   142 S64 entry-2 dw + resolver). Used by the pre-build overflow check
    (template + counted generated payload ≤ `$4000`). Re-measure from the
    new `.sym` whenever a template is re-pinned.
 

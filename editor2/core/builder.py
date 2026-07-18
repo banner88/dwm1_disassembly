@@ -122,7 +122,10 @@ def write_manifest(out_dir, prj, project_path, rom_path, sym_path, rom_md5,
         "project_sha256": C.content_hash(project_path),
         "rom_md5": rom_md5,
         "bank_usage": {f"${b:02X}": bank_usage(rom_path, b)
-                       for b in (0x60, 0x71)},
+                       for b in (0x60, 0x71, 0x74)},
+        "music": {sid: f"${fid:02X}"
+                  for sid, fid in (prj.music_song_ids().items()
+                                   if prj.custom.get('music') else [])},
         "texts": texts,
         "scripts": scripts,
         "flags": {k: f"${v:04X}" for k, v in prj.flag_map().items()},

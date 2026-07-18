@@ -476,11 +476,12 @@ LoadNewBGMIdIntoA:
     cp MAP_BTLDEMO
     jr c, jr_001_4358
 
-    cp $61 ;maps do not go above 5F. This is unused. w
+    cp $61 ;mapIDs $5D-$60 use the table; >= $61 (incl. custom rooms $6B+)
+           ;falls to the gate path (the old "unused" note was wrong for $5D-$60)
     jr nc, jr_001_4358
 
 jr_001_4346:
-    ld hl, $4373
+    ld hl, RoomBGMTable
     ld a, [wMapID]
     add l
     ld l, a
@@ -504,7 +505,7 @@ jr_001_4358:
     ld a, $34
     ret nz
 
-    ld hl, $4373
+    ld hl, RoomBGMTable
     ld a, [wBossMapType]
     add l
     ld l, a
@@ -515,116 +516,22 @@ jr_001_4358:
     ret
 
 
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    ld e, $1e
-    ld sp, $0931
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    ld e, $1e
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    sbc l
-    inc [hl]
-    inc c
-    inc c
-    jr jr_001_43bd
-
-    inc c
-    ld l, $18
-    rrca
-    jr @+$14
-
-    ld l, $1b
-    ld [de], a
-    dec de
-    dec de
-    dec de
-    dec de
-    dec de
-    dec de
-    ld [de], a
-    dec de
-    inc c
-    rrca
-    ld [de], a
-    ld [de], a
-
-jr_001_43bd:
-    dec d
-    dec d
-    jr jr_001_43dc
-
-    dec de
-    dec de
-    inc [hl]
-    inc [hl]
-    ld h, c
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    ld h, c
-    ld [bc], a
-    ld [bc], a
-    dec de
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-
-jr_001_43dc:
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
-    inc [hl]
+; Per-map default BGM table, 1 byte per mapID, $70 entries ($4373-$43E2).
+; Indexed by wMapID (mapIDs < MAP_ITEMSP, == MAP_COLISUM, or MAP_BTLDEMO-$60)
+; and by wBossMapType on the gate boss-floor path (LoadNewBGMIdIntoA above).
+; Entries $61-$6F are $34 (gate BGM) padding never indexed by vanilla code
+; (the cp $61 guard stops at $60). Was misassembled as fake instructions
+; (add hl,bc / inc [hl] / jr ...) until the S64 re-section; the fake local
+; labels jr_001_43bd/jr_001_43dc were only referenced from inside the fake
+; instruction stream and are gone with it.
+RoomBGMTable:
+    db $09, $09, $09, $09, $09, $09, $1E, $1E, $31, $31, $09, $09, $09, $09, $09, $09 ; mapIDs $00-$0F
+    db $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $1E, $1E, $09 ; mapIDs $10-$1F
+    db $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $9D ; mapIDs $20-$2F
+    db $34, $0C, $0C, $18, $15, $0C, $2E, $18, $0F, $18, $12, $2E, $1B, $12, $1B, $1B ; mapIDs $30-$3F
+    db $1B, $1B, $1B, $1B, $12, $1B, $0C, $0F, $12, $12, $15, $15, $18, $1B, $1B, $1B ; mapIDs $40-$4F
+    db $34, $34, $61, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $61, $02, $02 ; mapIDs $50-$5F
+    db $1B, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34, $34 ; mapIDs $60-$6F
 
 SaveMapStateToHRAM:
     ld a, [wMapID]
