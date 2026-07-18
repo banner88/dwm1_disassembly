@@ -112,20 +112,31 @@
                  place anything at $CAC4-$D664 (see audit_wram.py, S54).
                  **S60 (CF3): SUPERSEDED for $CC80-$D664** — farm slots 3-19
                  moved to SRAM $A3BA-$AD9E (live in the save image); the WRAM
-                 window is now FREE/dead (link+arena still time-share it as
-                 scratch; custom-room buffers $D379-$D477 legal in place; ≤14
-                 rule retired). Party 0-2 ($CAC1-$CC7F) + staging $14/$15
+                 window is FREED. (An earlier "link+arena still time-share it
+                 as scratch" clause here was UNSOURCED and is refuted by the
+                 S56 access map — no non-array writer into the window exists;
+                 link/trade uses staging $D665/$D6FA, outside it. S65 /
+                 DOC_AUDIT.) **S65 layout of the window**: wCustomNPCBuffer
+                 $CC80 (128 B) / wCustomExitBuffer $CD00 (127 B) /
+                 step-counter region $CD80-$CFFF (compiler-owned, 640 B) /
+                 wCustomPool $D001-$D664 (1,636 B transient reserve).
+                 TRANSIENT permanently: the window's SRAM image is the live
+                 farm, so the CF3 copy skips it BOTH ways; init guaranteed
+                 zeroed at power-on/new-game/restore (bank $73 entry 6
+                 tail-clear, S65). Vanilla literal refs inside the window are
+                 data-as-code artifacts ($CD = the CALL opcode minting fake
+                 $CDxx operands) — structural proof: the vanilla array lived
+                 here. Party 0-2 ($CAC1-$CC7F) + staging $14/$15
                  ($D665-$D78E) remain live WRAM. See MONSTER_DATA "CF3 as
-                 built (S60)".
+                 built (S60)"; patches/wram.asm banner.
    1:D664        TRUE end of party/storage monster data (slot 19 = $D5D0 +
                  $95 - 1). The old "D6B0" figure here was wrong (S54).
-                 S55 UPDATE: step counters/scratch/flags relocated to $DE74
-                 (crash vector fixed). The NPC/exit BUFFERS ($D379-$D477)
-                 remain inside slots 14-15 as an ACCEPTED legacy hazard of
-                 the exploration overlay (self-healing per read; reverse
-                 corruption of stored monsters #15-16 remains) — keep the
-                 array ≤14 occupied when using custom rooms. Editor-era fix:
-                 Cold Farm arc (ROADMAP).
+                 History: custom state $D378/$D478-$D48B (S53) → refuted S54
+                 (inside slots 14-16; egg-give crash) → scratch/counters to
+                 $DE74 (S55) → buffers stayed $D379-$D477 as accepted hazard
+                 (phantom spawns, S58) → hazard structurally retired by CF3
+                 (S60) → buffers/counters migrated INTO the freed window at
+                 $CC80/$CD00/$CD80 (S65; see row above).
                  STAGING PSEUDO-SLOTS (S56): GetMonsterDataPtr masks $7F, and
                  indices $14/$15 address two more 149-B slots at $D665-$D6F9
                  and $D6FA-$D78E (inside the save image): breeding parents
@@ -334,17 +345,25 @@
                  $DE22/$DE23/$DE29 counters). Still *** OFF-LIMITS as scratch
                  (S45's corruption when writing $DDF0/$DDFE stands — those are
                  audio channel bytes).
-   1:DE74  106   CUSTOM ROOM STATE (S55 relocation; was $D378/$D478-$D48B
-                 inside the monster array): step counters $DE74+ (compiler
-                 region), wRoomRecScratch $DE7B, wRoomEncFlag $DE83, Tame vars
-                 $DE84-$DE87, wCustomRoomFlag $DE88; $DE89-$DEDD reserved.
+   1:DE74  106   CUSTOM SCRATCH BLOCK (S55 relocation; counters MIGRATED OUT
+                 S65): $DE74-$DE7A static pad (step counters now at $CD80
+                 region, see the $CC80 window row), wRoomRecScratch $DE7B,
+                 wRoomEncFlag $DE83, Tame vars $DE84-$DE87, wCustomRoomFlag
+                 $DE88, CF3 mailbox $DE89-$DE8A; $DE8B-$DEDD reserved.
                  Vetted: no real claimant above the audio ceiling $DE2B
                  (full-corpus scan; $DE30-$DEFF literals are all data-as-code
                  junk); SVBK windows touch $DB00+ only; NOT in save range.
                  INIT (S55v2): vanilla ClearAllWRAM stops at $DDFF — the
                  patched build extends it to $DEDF so this block is boot-
-                 zeroed; wCustomRoomFlag is derived from wMapID per movement
+                 zeroed (STILL REQUIRED post-S65: the scratch vars remain);
+                 wCustomRoomFlag is derived from wMapID per movement
                  frame (never restored from saves). See KEY_LESSONS S55.
+
+   0:FFA3        HRAM shadow of the MBC5 RAM-bank register ($4100 writes are
+                 paired with it: bank_040 multi-bank SRAM wipe, bank_020 ×4,
+                 boot init). Dead-store convention on the 8 KB cart; LIVE
+                 under a 32 KB expansion — see ARCHITECTURE "SRAM banking"
+                 (S65 audit) before touching.
 
  ; GBC WRAM BANKING (S55): $D000-$DFFF is switchable via SVBK ($FF70), banks
  ; 1-7 (32 KB total WRAM). The ENTIRE ROM contains only five SVBK writes:

@@ -76,13 +76,58 @@ SaveGameState (ROM0, bank_000.asm line 6577) copies game state to SRAM:
 
 Checksum: $A002-$BFFF → stored at $A000-$A001. Valid flag: $A002 (1 = save exists).
 
+### SRAM banking + the 32 KB expansion question (audited S65, NOT implemented)
+
+Cartridge header: MBC5+RAM+BATTERY (`$0147=$1B`), RAM size `$0149=$02` =
+**8 KB, one bank**. The map above occupies $A000-$BFC7; native persistent
+headroom = the tail **$BFC8-$BFFF (56 B)**. A romhack can declare 32 KB
+(`$0149→$03`, banks 1-3 = +24 KB persistent) — MBC5 supports it, SameBoy
+honors the header, old 8 KB .sav files load padded — **but the engine is
+NOT expansion-ready as-is**. S65 audit findings (all instruction-verified):
+
+* **RST_18 sets RAMB on every `rst $10`**: the dispatcher tail
+  (`ROM0 $0018`: `swap a / rra / and $03 / ld [$4100],a`) writes
+  `RAMB := rom_bank>>5` — quadrant convention $00-$1F→0, $20-$3F→1,
+  $40-$5F→2, $60-$7F→3. Dead store on the 8 KB cart (only bank 0 exists);
+  LIVE bank switching at 32 KB.
+* **`$FFA3` is the RAMB shadow**; disciplined multi-bank SRAM code exists
+  in vanilla: bank $40 `jr_040_41a5` region `di`s, then wipes $A000×$2000
+  across RAMB 0/1/2… with save/restore via $FFA3 — proof the engine family
+  carries genuine 32 KB SRAM infrastructure (gated on `$CBC6`). bank $20
+  has 4 more $FFA3-shadowed `[$4100]` writers. All other `$4000-$5FFF`
+  "write" hits repo-wide are data-as-code junk.
+* **Vanilla's live SRAM users all run from quadrant 0** (banks $00/$01/$07/
+  $0A/$12/$15/$18 — save, sleep pool, trade, image copy), so RST_18 leaves
+  them on RAMB 0 correctly. **CF3 runs from bank $73 → RAMB=3** under
+  expansion: every farm access would hit the wrong bank.
+* **The audio ISR dispatches into bank $74 every vblank while music plays**
+  (`AudioMasterTableExt` row $9E) → RAMB flips to 3 mid-anything. Any SRAM
+  access that isn't `di`-bracketed (CF3's hot paths are not; vanilla's
+  save cluster is quiesced, the bank $40 wipe `di`s) can be torn.
+
+**Consequently, expansion requires (E3 scope, one session):** RAMB=0
+(re)establishment inside CF3's SRAM entry points (bank $73 entries 3/5/6/7/8
++ the GetMonsterDataPtr fork path) with interrupt discipline (di/ei bracket
+or per-access set+access within uninterruptible windows), an accessor
+convention for new banked state, and a boot RAMB=0 init audit (vanilla
+already writes 0 at boot, bank_000 ~294-304). Do NOT flip `$0149` without
+this — the failure mode is silent farm/save corruption.
+
 The main save range $C8EA-$D9E9 covers step counters ($D92A-$D99A), most event
-flags ($D99B-$D9E9), inventory, gold, and the monster array (incl. the custom
-NPC/exit buffers that remain inside it, harmlessly — they self-heal per read).
+flags ($D99B-$D9E9), inventory, gold, and the party records ($CAC1-$CC7F).
+**The CF3-freed window $CC80-$D664 inside it is EXCLUDED from save AND
+restore** (its SRAM image $A3BA-$AD9E is the live farm — CF3CopyToSRAM/
+CF3CopyFromSRAM skip it both ways, bank $73 entries 5/6). S65 layout of the
+window: `wCustomNPCBuffer` $CC80 / `wCustomExitBuffer` $CD00 / step-counter
+region $CD80-$CFFF (compiler-owned, 640 B) / `wCustomPool` $D001-$D664
+(transient reserve). Init guarantee: ClearAllWRAM (power-on) +
+CF3NewGameClear (new game) + the S65 entry-6 tail-clear (after the
+main-image restore copy) — gameplay always starts with the window zeroed.
 **Flags at byte $D9EA+ (indices $0278+) are OUTSIDE the save range and will NOT
-persist.** S55: the relocated custom block at $DE74 is also outside the save
-range — custom step counters are transient BY DESIGN (persistent room state =
-event flags + entry scripts, user decision S55).
+persist.** The custom scratch block at $DE74-$DE8A (wRoomRecScratch $DE7B,
+wRoomEncFlag, Tame vars, wCustomRoomFlag, CF3 mailbox) is also outside the
+save range — transient BY DESIGN (persistent room state = event flags +
+entry scripts, user decision S55, reaffirmed S65).
 
 ### Flag byte collisions
 

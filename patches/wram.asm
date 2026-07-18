@@ -194,53 +194,75 @@ wInventory:: ds 20 ;ca51
 
 wBankSlots:: ds 40 ;ca65
 
+    ds $34 ; ca8d-cac0 — party list ($CA8D/$CA8E-$CA90), library seen-bits
+           ; ($CA94-$CAB1), selection registers ($CAC0 etc.) — LIVE vanilla
+
+; Party monster records, slots 0-2 ONLY ($95 B each) — LIVE. Post-CF3 (S60)
+; the party stays hot in WRAM; farm slots 3-19 are SRAM-resident at
+; $A1FB+s*$95 (MONSTER_DATA "CF3 as built"). The vanilla array extent
+; $CAC1-$D664 (20 slots) ends here at slot 2.
+    ds $1BF ; cac1-cc7f
+
+; =============================================================================
+; CF3-FREED WINDOW $CC80-$D664 (freed S60; custom-room/editor layout S65)
+; This is the vanilla WRAM shadow of farm slots 3-19. Post-CF3 it is DEAD to
+; the engine: GetMonsterDataPtr forks slots >=3 to SRAM, all 48 walker
+; advances hop the boundary, trade-recv and new-game clear are redirected
+; (patches/bank_073.asm). The S54/S55/S58 buffer-overlay hazard class
+; (real-monster corruption + phantom spawning) is structurally retired.
+;
+; PERSISTENCE: TRANSIENT, permanently. The window's save-image address is
+; SRAM $A3BA-$AD9E ($C8EA->$A024 copy) — exactly where CF3's live farm
+; records now reside — so CF3CopyToSRAM/CF3CopyFromSRAM (bank $73 entries
+; 5/6) SKIP it in BOTH directions. Nothing here is saved or restored; the
+; S58 "EXPLOIT the vanilla block copy" plan is dead as-built and cannot be
+; revived without evicting the farm. Persistent room/editor state = event
+; flags + entry scripts (user decision S55, reaffirmed S65); larger
+; persistent state = future SRAM expansion (ROADMAP E3).
+; INIT: inside the original ClearAllWRAM span ($C000+) — zeroed at boot for
+; free (unlike the S55 $DE74 move, which needed the $1EE0 extension).
+; Layout: $CC80 NPC buffer / $CD00 exit buffer / $CD80-$CFFF step-counter
+; region (compiler-owned) / $D001-$D664 wCustomPool transient reserve.
+; =============================================================================
+wCustomNPCBuffer:: ds 128 ;cc80 — NPC interact data copied from overflow bank ($FF terminated; relocated S65, was $D379)
+wCustomExitBuffer:: ds 127 ;cd00-cd7e — exit data copied from overflow bank ($FF terminated; relocated S65, was $D3F9)
+    ds 1 ;cd7f — pad to the counter-region base
+
+; Custom step-counter region ($CD80-$CFFF, 640 B, compiler-owned; migrated
+; S65 from $DE74 where the S55-vetted reserve capped at ~106 B — campaign
+; scale needs one counter per authored screen). TRANSIENT (see banner):
+; load-inside-a-custom-room shows step-0 content by design.
+; @BUILD_PROJECT BEGIN wram_step_counters
+wCustomStep_Room6B_S0:: db ;cd80 — Room $6B screen 0 step counter (gate_island)
+wCustomStep_Room6B_S4:: db ;cd81 — Room $6B screen 4 step counter (gate_island)
+wCustomStep_Room6C_S0:: db ;cd82 — Room $6C screen 0 step counter (dusk_mirror)
+wCustomStep_Room6C_S4:: db ;cd83 — Room $6C screen 4 step counter (dusk_mirror)
+wCustomStep_Room6C_S5:: db ;cd84 — Room $6C screen 5 step counter (legacy hole — kept at base+4 so the relative counter layout matches the proven S55 shape; S65 migration moved the base $DE74→$CD80)
+wCustomStep_Room6D_S0:: db ;cd85 — Room $6D screen 0 step counter (gate_rotation)
+wCustomStep_Room70_S0:: db ;cd86 — Room $70 screen 0 step counter (ember_keystone)
+    ds 633 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
+; @BUILD_PROJECT END wram_step_counters
+
 
 section "WRAM Bank1", wramx[$D000], bank[1]
 
 wram1Start:: db
 
-    ds $377
-
-; Custom room overflow BUFFERS ($D379-$D477)
-; Used to buffer NPC/exit data from overflow banks ($60+) for cross-bank rooms.
-;
-; !!! KNOWN COLLISION (S54, scoped down S55) — THESE BUFFERS SIT INSIDE THE
-; !!! PARTY/STORAGE MONSTER ARRAY ($CAC1-$D664, 20 slots x $95, indexed via
-; !!! GetMonsterDataPtr — zero literal refs, which is how the old "unclaimed"
-; !!! grep audit missed it). Slots 14-15 overlay the buffers.
-; !!! S55 STATUS — ACCEPTED LEGACY HAZARD, exploration overlay only:
-; !!!  * forward corruption (a give into slots 14-15) is TRANSIENT — the
-; !!!    buffers self-heal (re-copied by every CustomReadInteract /
-; !!!    CustomExitCheck call). The S53 give-then-scroll CRASH is fixed:
-; !!!    counters/scratch moved to $DE74 (see below), out of the array.
-; !!!  * reverse corruption (buffer copies spraying stored monsters #15-16)
-; !!!    REMAINS — keep the array <=14 occupied when using custom rooms.
-; !!!  * PHANTOM SPAWNING (confirmed S58, user repro + byte trace): the <=14
-; !!!    rule protects REAL monsters only. EMPTY slots 15/16 still get their
-; !!!    in-use flag bytes sprayed by the copies — slot 15 flag $D37C = NPC
-; !!!    buffer byte 3, slot 16 flag $D411 = exit buffer byte 24 — and any
-; !!!    nonzero value there is normalized to a "real" farm monster by the
-; !!!    next canonicalize (garbage species/name, level 0, 0 HP/MP; CF2's
-; !!!    drain will then level such fossils into visibility). Each custom-
-; !!!    room visit can mint up to 2 per canonicalize-with-sprayed-flag.
-; !!!    USER RULING (S58, reaffirming S55): ACCEPTED on the exploration
-; !!!    overlay — release phantoms in-game as they appear; no interim
-; !!!    patch; the CF3 buffer relocation retires the whole hazard class.
-; !!! The buffers were NOT relocated: S55 vetting proved no free WRAM block
-; !!! >=106 B exists outside the array (attr staging owns $C200-$C2FF, screen
-; !!! staging owns $C300-$C4FF — both SRAM-save-copied; audio owns
-; !!! $DD80-$DE2B). The editor-era fix is the Cold Farm arc (farm slots ->
-; !!! SRAM, ~2.5 KB freed; ROADMAP), which retires this hazard structurally.
 CUSTOM_ROOM_START EQU $6B ; first custom map type (107 = one past last original)
-    ds 1 ;d378 — freed S55 (wCustomRoomFlag moved to $DE88); inside monster slot 14
-wCustomNPCBuffer:: ds 128 ;d379 — NPC interact data copied from overflow bank ($FF terminated)
-wCustomExitBuffer:: ds 127 ;d3f9 — exit data copied from overflow bank ($FF terminated)
 
-    ds 20 ;d478-d48b — freed S55 (step counters, wRoomRecScratch, wRoomEncFlag,
-          ; Tame vars moved to $DE74 — a slot-16 give landed SkyDragon's
-          ; resistance bytes exactly here, the S53/S54 crash vector). Inside
-          ; monster slots 16 — do NOT re-place anything here.
-    ds $305                         ; gap ($D48C-$D790)
+; CF3-freed window continues into WRAM bank 1 ($D001-$D664; banner at $CC80).
+; wCustomPool: reserved TRANSIENT editor scratch pool (never saved/restored —
+; the CF3 copy skips this window's SRAM image in both directions; see the
+; $CC80 banner). Future subsystems carve named spans from the TOP ($D001+)
+; and document them here. The historical buffer/counter addresses inside
+; ($D379/$D3F9/$D478-$D48B) are plain pool bytes since the S65 relocation.
+wCustomPool:: ds $664 ;d001-d664 — 1,636 B transient reserve (end = vanilla array end $D664)
+
+; Staging pseudo-slots $14/$15 ($D665/$D6FA, $95 B each) — LIVE vanilla:
+; breeding parents, trade transit, menu scratch (S56; GetMonsterDataPtr
+; masks and $7F, so these are addressable array indices). NOT freed by CF3.
+    ds $12A ;d665-d78e
+    ds 2 ;d78f-d790
 
 wGroundItemData:: db ;d791
 
@@ -365,37 +387,33 @@ wBattleLVL:: ds 16 ;dc23 — level per combatant (tentative)
                                     ; battle structs). $DE2C-$DE73 = margin.
 
 ; =============================================================================
-; Custom room state — RELOCATED HERE S55 (was $D378/$D478-$D48B, inside the
-; party/storage monster array — the S53/S54 egg-give corruption root cause).
+; Custom-room dispatch scratch block ($DE74-$DE8A).
+; History: S55 relocated ALL custom room state here (out of the monster
+; array — the S53/S54 egg-give corruption); S65 migrated the step-counter
+; REGION onward into the CF3-freed window ($CD80, see the $CC80 banner)
+; because the reserve here caps at ~106 B, far short of campaign scale.
+; The scratch vars below STAY: their addresses are label-resolved by engine
+; patches in banks $00/$0B/$71 and there is no scaling pressure on them.
 ; $DE74-$DEDD vetted S55: full-corpus scan shows zero real claimants above the
 ; audio engine's $DE2B ceiling (every $DE30-$DEFF literal is data-as-code junk
 ; from gfx/audio data banks); SVBK bank-2 windows (banks $51/$52) touch $DB00+
 ; only; stack ($DFFF down) is fenced by vanilla's own $DF00-$DF0D vars.
-; Evidence: tools/audit_wram.py / extracted/wram_usage.json (S55 regen).
-; NOT in the SRAM save range ($C8EA-$D9E9) — counters are TRANSIENT by design
+; Evidence: tools/audit_wram.py / extracted/wram_usage.json.
+; NOT in the SRAM save range ($C8EA-$D9E9) — TRANSIENT by design
 ; (user decision S55): persistent room state = event flags + entry scripts.
 ; INITIALIZATION (S55 crash post-mortem — vetted-unclaimed is NOT initialized):
-; the old block was defined for free (inside BOTH the boot clear $C000-$DDFF
-; AND the save image); this block is above/outside both. Two fixes:
-;  * ClearAllWRAM count $1E00->$1EE0 (patches/bank_000.asm) — boot now zeroes
-;    $C000-$DEDF, covering this block + reserve.
+; this block is outside both the boot clear's vanilla span and the save image:
+;  * ClearAllWRAM count $1E00->$1EE0 (patches/bank_000.asm) — boot zeroes
+;    $C000-$DEDF, covering this block + reserve. STILL REQUIRED post-S65
+;    (scratch/Tame/flag/mailbox live here even though the counters left).
 ;  * wCustomRoomFlag is DERIVED (:= wMapID >= CUSTOM_ROOM_START) every
 ;    movement frame at CopyCustomRoomRecord head (bank $71 template) — it can
 ;    never be restored from a save again, so it is never trusted as state.
-; Load-inside-a-custom-room shows step-0 content (counters not in the save
-; image) — expected under transient semantics, NOT a bug.
-; Reserve after the block: $DE8B-$DEDD (83 B) for counter-region growth
+; Reserve after the block: $DE8B-$DEDD (83 B) free for future scratch
 ; ($DE89-$DE8A carved S60 for the CF3 copy-husk mailbox, defined at EOF).
 ; =============================================================================
-; @BUILD_PROJECT BEGIN wram_step_counters
-wCustomStep_Room6B_S0:: db ;de74 — Room $6B screen 0 step counter (gate_island)
-wCustomStep_Room6B_S4:: db ;de75 — Room $6B screen 4 step counter (gate_island)
-wCustomStep_Room6C_S0:: db ;de76 — Room $6C screen 0 step counter (dusk_mirror)
-wCustomStep_Room6C_S4:: db ;de77 — Room $6C screen 4 step counter (dusk_mirror)
-wCustomStep_Room6C_S5:: db ;de78 — Room $6C screen 5 step counter (legacy hole — kept so later counters stay at their proven addresses)
-wCustomStep_Room6D_S0:: db ;de79 — Room $6D screen 0 step counter (gate_rotation)
-wCustomStep_Room70_S0:: db ;de7a — Room $70 screen 0 step counter (ember_keystone)
-; @BUILD_PROJECT END wram_step_counters
+    ds 7 ;de74-de7a — legacy pad (step counters migrated to the $CD80 region,
+         ; S65); keeps wRoomRecScratch pinned at $DE7B
 
 ; Custom-room dispatch scratch, populated by bank $71 via rst $10.
 ; wRoomRecScratch: the 8-byte $26DD-style record (tileset/dims/threshold) for the

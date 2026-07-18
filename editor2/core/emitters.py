@@ -376,17 +376,19 @@ def emit_region_render_tables(prj, warnings):
 
 
 # ---------------------------------------------------------------------------
-# wram region emitter — custom step counters ($DE74+, S55-vetted block;
-# ROOM_DATA_FORMAT "Room State System": NOT SRAM-persistent)
+# wram region emitter — custom step counters ($CD80+, CF3-freed window, S65;
+# ROOM_DATA_FORMAT "Room State System": NOT SRAM-persistent — the CF3 save
+# copy skips the window's SRAM image $A3BA-$AD9E in both directions)
 # ---------------------------------------------------------------------------
 
 def emit_region_wram_steps(prj, warnings):
     """Step-counter labels at exact addresses inside the fixed-size region
-    ($DE74.., S55-vetted — see patches/wram.asm banner; NOT SRAM-persistent).
-    Holes between explicit addresses become `ds` fillers so every label
-    lands at its declared address; the region is padded to its fixed size
-    so wRoomRecScratch stays pinned at $DE7B (label-resolved by banks $00/$0B/
-    $71 reads it by that address)."""
+    ($CD80.. inside the CF3-freed window $CC80-$D664 — see patches/wram.asm
+    banner; TRANSIENT by construction). Holes between explicit addresses
+    become `ds` fillers so every label lands at its declared address; the
+    region is padded to its fixed size so its footprint (and everything the
+    section places after it) is layout-stable; region end is capped at $D000
+    (wram0 section boundary, validated in project.py)."""
     from .project import STEP_COUNTER_BASE
     alloc = prj.step_counter_allocation()      # ordered [(label, addr, cm)]
     size = prj.wram_region_size
@@ -399,8 +401,8 @@ def emit_region_wram_steps(prj, warnings):
         cursor = addr + 1
     end = STEP_COUNTER_BASE + size
     if cursor < end:
-        out.append(f"    ds {end - cursor} ; reserved (region size fixed so "
-                   "wRoomRecScratch stays at $DE7B — PROJECT_COMPILER.md)")
+        out.append(f"    ds {end - cursor} ; reserved (padded to region_size; "
+                   "region ends at $D000 — PROJECT_COMPILER.md §2.6)")
     return "\n".join(out) + "\n"
 
 

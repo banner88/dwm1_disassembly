@@ -685,6 +685,17 @@ CF3CopyToSRAM:
 ; still advances): the farm's WRAM shadow is dead space post-CF3, and the
 ; skip keeps restores from spraying 2.5KB of records over the freed range
 ; (where the custom room buffers now live).
+; S65: after the MAIN IMAGE copy (the only invocation whose source ends at
+; $A024+$1100 = $B124 — callers are exactly the 4 block copies in
+; SRAMAccess_21B2, ends $A024/$B124/$BEC8/$BFC8; any future caller must not
+; collide with $B124) the CF3-freed window $CC80-$D664 is ZEROED: its SRAM
+; image is the live farm (skipped above), so without this a restore would
+; carry boot-time or previous-session values into gameplay. Combined with
+; ClearAllWRAM (power-on) and CF3NewGameClear (new game, zeroes $C8EA-$D9E9)
+; this guarantees: GAMEPLAY ALWAYS STARTS WITH THE WINDOW ZEROED, immunizing
+; the relocated buffers/step counters against any data-as-code boot
+; scribbler and making save+reload step state deterministic (step 0).
+; Registers are free at the tail: the caller reloads HL/DE/BC per copy.
 ; -----------------------------------------------------------------------------
 CF3CopyFromSRAM:
     ld a, $0a
@@ -726,6 +737,23 @@ CF3CopyFromSRAM:
     ld a, b
     or c
     jr nz, .loop
+    ; S65: main-image copy detector (src end $B124 — see header)
+    ld a, d
+    cp $b1
+    ret nz
+    ld a, e
+    cp $24
+    ret nz
+    ld hl, wCustomNPCBuffer         ; $CC80 — window start
+.wclr:
+    xor a
+    ld [hl+], a
+    ld a, h
+    cp $d6
+    jr nz, .wclr
+    ld a, l
+    cp $65
+    jr nz, .wclr                    ; stops at HL=$D665: $CC80-$D664 zeroed
     ret
 
 ; -----------------------------------------------------------------------------

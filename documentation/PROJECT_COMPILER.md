@@ -39,9 +39,9 @@ owns.
 ### Quick start
 
 ```bash
-# regression check (compat project must equal the S55 reference patched md5)
+# regression check (compat project must equal the S65 reference patched md5)
 python3 tools/build_project.py --project editor2/example-project \
-    --build --expect-md5 7cc0857faad8a950573e865e93f791eb
+    --build --expect-md5 de0c5a672e7e7e1fb834dd7afe70b9e7
 
 # author→test loop: ROM lands at <out>/build/rom.gbc (+ game.sym + manifest.json)
 python3 tools/build_project.py --project my-project --build
@@ -59,7 +59,14 @@ python3 editor2/tests/test_compiler.py [--rom]
   re-expresses the entire user-confirmed hand-authored content (6 rooms, 21
   dialogue entries, 10 scripts, 4 palettes, 7 step counters, enc/record
   tables). With `build.compat.master_table_rooms` present, the generated
-  patched ROM md5 is **`7cc0857faad8a950573e865e93f791eb`** (patched build,
+  patched ROM md5 is **`de0c5a672e7e7e1fb834dd7afe70b9e7`** (patched build,
+  re-pinned S65 after the WRAM migration: buffers → `$CC80`/`$CD00`,
+  step-counter region → `$CD80` (640 B) in the CF3-freed window, static
+  `ds 7` pad keeps `wRoomRecScratch` at `$DE7B`, bank `$71` templates
+  UNCHANGED (label-only relink), + bank `$73` entry 6 tail zeroes the
+  window after the main-image restore copy. Built S65, NOT yet
+  user-tested. Historical, superseded:
+  `7cc0857faad8a950573e865e93f791eb` (S64, patched,
   re-pinned S64 after M3b/M3c: LoadNewBGMIdIntoA rewrite + bank $71 entry
   2/BGM table + music emitter owning bank $74 + dq6_town1; user-confirmed
   v6. NOTE: this doc's copy had gone stale at S63v4's `c23beed7…` while the
@@ -216,34 +223,44 @@ loads slots 0–3 (KEY_LESSONS S8).
 ### 2.6 `custom.wram` + step counters
 
 ```jsonc
-"wram": { "region_size": 7,
+"wram": { "region_size": 640,
           "reserved": [ { "label": "wCustomStep_Room6C_S5",
-                          "addr": "0xDE78", "comment": "legacy hole" } ] }
+                          "addr": "0xCD84", "comment": "legacy hole" } ] }
 ```
 
-Step counters allocate from `$DE74` (S55 relocation — the S53/S54 "$D478
-verified-unused gap" claim was refuted: it was monster slot 16; $DE74-$DEDD
-is the S55-vetted block past the audio ceiling $DE2B, see patches/wram.asm
-banner and wram_usage.json. NOT SRAM-persistent — persistent room state is
-event flags + entry scripts, user decision S55): reserved entries claim
-first, then explicit `step_counter` dicts, then `auto` in room/screen
-order, skipping used addresses. The emitted region is padded to
-`region_size` so **`wRoomRecScratch` stays pinned at `$DE7B`**
-(label-resolved by engine patches in banks `$00/$0B/$71`). Exceeding the
-region is an error; growing it is a deliberate engine change (move
-`wRoomRecScratch`+`wRoomEncFlag` — 85 B of vetted reserve follows the block
-at $DE89-$DEDD), not a knob. The example project's auto allocation
-reproduces the proven hand layout at the new base (legacy hole `0xDE78`,
-was `0xD47C`).
+Step counters allocate from **`$CD80`** (S65 migration into the CF3-freed
+window `$CC80-$D664`; history: `$D478` S53 → refuted S54 → `$DE74` S55 →
+`$CD80` S65 — the `$DE74` reserve capped at ~106 B, far short of one counter
+per authored screen at campaign scale). Region default/max = **640 B**
+(`$CD80-$CFFF`; the hard cap is the `$D000` wram0 section boundary,
+validated at load). The window is **TRANSIENT, permanently**: its SRAM
+image (`$A3BA-$AD9E`) is CF3's live farm storage, so the save copy skips it
+in both directions — persistent room state stays event flags + entry
+scripts (user decision S55, reaffirmed S65). Deterministic init is
+GUARANTEED: ClearAllWRAM at power-on, `CF3NewGameClear` at new game, and
+the S65 bank `$73` entry 6 tail-clear after the main-image restore copy —
+gameplay always starts with the window zeroed (reload-in-room shows step-0
+content BY DESIGN). Allocation order: reserved entries claim first, then
+explicit `step_counter` dicts, then `auto` in room/screen order, skipping
+used addresses; the emitted region is `ds`-padded to `region_size` for
+layout stability. `wRoomRecScratch` stays pinned at `$DE7B` by a static
+`ds 7` pad in `patches/wram.asm` (no longer coupled to this region). The
+relocated `wCustomNPCBuffer`/`wCustomExitBuffer` (`$CC80`/`$CD00`) and the
+`wCustomPool` reserve (`$D001-$D664`, 1,636 B) are hand-declared in
+`patches/wram.asm`, not compiler-emitted. The example project's auto
+allocation reproduces the proven relative layout at the new base (legacy
+hole `0xCD84`, was `0xDE78`/`0xD47C`).
 
 ### 2.7 `custom.flags[]`
 
 `{name, index: "auto"|"0x0158"}` → allocated from the EVENT_FLAGS.md
-safe+persistent pool (`$0158–$017F`, `$0188–$018F`, `$01E0–$023F`,
-`$0248–$0257`, `$0260–$026F`), never the collision zones or the non-SRAM
-`$0278+` range. Resolved indices appear in the manifest; scripts reference
-flags by the resolved value (a name→`set_flag` sugar is a v1.1 nicety).
-The example project uses none (the proven content predates named flags).
+safe+persistent pool (**`$0158–$0167` and `$01E0–$01EF` = 32 flags** — the
+S57 per-byte audit; the previously listed "broader" ranges were refuted,
+see EVENT_FLAGS "Free Flag Slots"), never the collision zones or the
+non-SRAM `$0278+` range. Resolved indices appear in the manifest; scripts
+reference flags by the resolved value (a name→`set_flag` sugar is a v1.1
+nicety). The example project uses none (the proven content predates named
+flags).
 
 ### 2.8 `build`
 

@@ -2248,3 +2248,80 @@ replaced: vestigial compare-tails (flags nobody reads), redundant reloads
 across flag-only instructions, and the `adc h / sub l` idiom are recurring
 free bytes inside vanilla functions — and a same-size rewrite keeps every
 address stable, which is the whole game in banks $01/$04/$17.
+
+## S65 — WRAM migration: freed ≠ persistent, and $CD mints phantom operands
+
+### A decision doc and the shipped architecture can silently diverge — re-verify DECISIONS, not just facts, before building on them
+**Symptom**: the S58 layout rule said the CF3-freed window's save semantics =
+"EXPLOIT the vanilla block copy" (persistent), and planned the bulk as the
+editor's persistent-state pool. S65 started from that plan.
+**Root cause**: S60's v2 architecture put the LIVE farm at exactly the
+window's save-image address ($A3BA-$AD9E) and therefore skips the window in
+BOTH copy directions (bank $73 entries 5/6) — the EXPLOIT trick is not
+"unimplemented", it is UNIMPLEMENTABLE without evicting the farm. No doc
+recorded the refutation; the S58 decision text stood for five sessions after
+the build had foreclosed it.
+**Fix**: window documented TRANSIENT-permanently everywhere it's described;
+persistent state = flags + entry scripts now, SRAM expansion later (E3);
+refutation annotated at the S58 decision text itself (ROADMAP) + DOC_AUDIT.
+**Rule**: when an architecture session lands, re-read the standing DECISIONS
+that touch its memory/semantics and annotate any it forecloses, at the place
+the decision is written. A refuted fact gets fixed in place; a refuted
+decision must be too — otherwise the next session builds on it (this one
+nearly did).
+
+### $CD is the CALL opcode — misassembled data mints fake $CDxx operand refs in dense clusters
+**Symptom**: a literal-ref census of the freed window showed 136 referenced
+addresses, with a dense, real-looking cluster at $CCB4-$CDFF — including
+named "code" (PaletteStoreCD80) in FULLY ANNOTATED banks 000/003 — casting
+doubt on the window being free at all.
+**Root cause**: any data run containing $CD bytes decodes as `call $XXCD`/
+`... $CDxx` when misassembled; annotated banks still contain misassembled
+DATA regions (bank 000's groove/audio tables, bank 003's info sub-tables),
+and auto-named labels on them look like real functions. The structural
+disproof: the vanilla monster array OCCUPIED the window — a live gameplay
+writer would have corrupted monsters, a live reader would have consumed
+monster bytes as its input; vanilla working IS the proof no live claimant
+exists. (Boot-time residue is a separate, real concern — see next lesson.)
+**Rule**: inside any range a vanilla structure verifiably occupied, treat
+interior literal refs as data-as-code artifacts until a coherent-code
+reading proves otherwise — and expect $CDxx (and $C3xx/jp, $C9/ret-adjacent)
+clusters specifically. "Fully annotated bank" does not mean "no misassembled
+data"; a plausible auto-name on top of instruction soup is still soup.
+
+### State that was masked by a restore-copy loses its initialization when the copy is skipped
+**Symptom (designed-out, not debugged)**: pre-CF3, any boot-time scribble
+into the window was invisible — the save-load image copy overwrote the whole
+window before gameplay. The CF3 skip removed that masking: boot residue (or
+a previous session-segment's live values, or another save's) would now reach
+gameplay in the migrated counters — a garbage step counter indexes past the
+step sub-table into a garbage step-entry pointer (the S53 crash mechanism).
+**Fix**: deterministic init at every gameplay entry route — ClearAllWRAM
+(power-on) + CF3NewGameClear (new game, already covered $C8EA-$D9E9) + a
+NEW bank $73 entry 6 tail-clear after the main-image restore copy (gated on
+its unique source end $B124; callers enumerated in the entry header).
+Reload-in-room now deterministically shows step 0 (also closes the
+S55-accepted cross-save staleness).
+**Rule**: when a mod stops a restore path from writing a region, list what
+that write was silently INITIALIZING and re-provide it explicitly. S55's
+init lesson ("vetted-unclaimed is NOT initialized") has a copy-skip
+corollary: skipped-on-restore is uninitialized-on-restore.
+
+### An 8 KB cart makes every RAM-bank write a dead store — audit them before declaring SRAM expansion "free"
+**Symptom**: 32 KB SRAM expansion looked header-only ($0149 $02→$03; no
+physical cart constraints).
+**Root cause**: vanilla writes the MBC5 RAMB register constantly — RST_18
+(`rst $10` tail) sets RAMB:=rom_bank>>5 as a quadrant convention with an
+HRAM shadow ($FFA3), and bank $40 carries a genuine `di`-bracketed
+multi-bank 32 KB SRAM wipe — all no-ops on the 8 KB cart (only bank 0
+exists), all LIVE at 32 KB. Under expansion: CF3 (bank $73) would run on
+RAMB=3, and the audio ISR's bank $74 dispatch flips RAMB every vblank while
+music plays, tearing any non-`di`-bracketed access.
+**Fix (this session)**: expansion NOT layered in; full audit banked into
+ARCHITECTURE "SRAM banking" + E3 so the implementing session lands RAMB
+discipline first.
+**Rule**: before widening any hardware resource a mapper masks (SRAM banks,
+ROM bank high bits), census every write to its register range and classify
+each as real code vs data-as-code — dead stores under the old mask are the
+whole hazard, and the ISR is part of the census (a register the vblank
+handler touches is not yours between di/ei).

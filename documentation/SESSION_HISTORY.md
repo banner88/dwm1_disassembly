@@ -16,7 +16,64 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S62 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first: S63 → S11)
+
+> Session 63 (2026-07-18 — **Arc 3 M3a BUILT, NOT yet user-tested: general
+> song slots. v4 test ROM `c23beed7aadee80a061c0f6c24d7c1f4` (patched).**)
+> **The S62 blocker ("ROM0 has NO 17-byte free run") dissolved by auditing
+> our own CLAIMS, not vanilla filler** (KEY_LESSONS S63): the twin helpers
+> `MapIDClampForDispatch`/`MapIDClampForPalette` were byte-identical
+> (merged — one 8-B body @ $3BC2 carrying both exported labels; all callers
+> relink) and `CustomGFXMapID` was DEAD since S42 (bank $71 Entry 0 replaced
+> all consumers; its header still said "used by" — DOC_AUDIT S63; deleted).
+> Freed 24-B $3FE8 slot hosts **`AudioMasterTableExt`** (3 vanilla rows
+> byte-identical + row `[$9E,$4001,$74]` + $FF sentinel; ONE spare future
+> row); `AudioProcess`'s single `ld hl,$3466` operand repointed ($33D9,
+> 2 B). Zero WRAM (user constraint), zero boot changes, zero net ROM0 bytes.
+> **Bank $74 = song bank** (`patches/bank_074.asm` ← `song_codec.py
+> emit-song-bank` ← `extracted/custom_songs.json`): vanilla-bank convention,
+> FIXED 95-slot record area $4001-$417C (ids $9E-$FC; adding songs never
+> moves old streams), streams from $4180. BGM #06 migrated via new
+> `import-port` (byte-identical to the S62 trace-proven blobs incl. the
+> translator's unreachable trailing $FF; static re-trace = S62's exact
+> 1858/1566/2287 event counts); **bank $1E back to 100% vanilla** (patch
+> deleted; orphan-slot route retired). Static proof: all vanilla ids
+> $00-$9D resolve identically through the new table. Capacity ~31 3-ch
+> songs; 10,965 stream B free. patches/game.asm includes bank_074 (the
+> blank-stub include was the one build gotcha); verify_integrity
+> PATCH_FILES/PATCH_NEW_FILES updated.
+> **Pre-existing defect found+fixed: S62 broke compat==hand byte-identity
+> silently** — hand edits to compiler-owned bank_060.asm (BGM NPC record,
+> `SetBGM $9E`, "DWM2 music!") never folded into the example project; pin
+> left at S60's; CI runs only verify_integrity so nothing failed. S63
+> ported all three into project.json → compat build == hand tree again
+> (both `c23beed7…`), `REFERENCE_MD5` re-pinned, 18/18 `--rom` tests green.
+> PROJECT_COMPILER's quick-start md5 had ALSO been stale (S57 value while
+> the pin was S60's) — fixed. **CI follow-up boxed in ROADMAP** (add
+> `test_compiler.py --rom`). Doc fixes: SOUND_SYSTEM §1 engine addresses
+> were transcription slips (`AudioProcess` = **$33D2**, updates
+> $33CF/$33CC/$33C9 — not $3477/$3474/$3471/$346E; sym-verified);
+> "$3BC1" comments were off by one (code @ $3BC2). SESSION_HISTORY: S60
+> block refiled from file tail into Part 1 order (S61 misfiling).
+> **v4 USER-CONFIRMED same session** ("music plays as before via NPC, no
+> issues"); user-observed save/reload music transience = vanilla SetBGM
+> behavior, expected non-issue for M3b room-defaults (SOUND_SYSTEM §8;
+> room→BGM derivation to be traced at M3b wiring). **v5 BUILT + USER-CONFIRMED same session** ("Sounds great";
+> GBS re-uploaded): DWM2 BGM #07 (GBS index 6 →
+> internal id $19 via song map @ GBS $0FC0) → DWM1 ids $A1-$A3, 2,471 B
+> in bank $74 (`add-gbs-song`: extract+translate+prove+slot-map); room $6C
+> screen 0 NPC (5,6) `SetBGM $A1` wired through project.json + `--apply`
+> (bank_060/bank_071/bank_017-regions/wram-region now compiler-generated —
+> the sanctioned route S62 skipped); pin re-pinned `3009b75e…` (v5 compat
+> == hand tree by construction). End-to-end proof: ROM-resident $A1-$A3
+> under DWM1 semantics == original GBS bytes under DWM2 semantics
+> (954/645/840 ev). Foreign `$AA`×20 verified NON-FLOW at instruction
+> level (DWM2 handler @ GBS $37AE: one param, HRAM $F2/$F3/$ED only) —
+> a DWM2 ornament dropped as no-op in DWM1; ear test judges. v4→v5 ROM
+> diff: banks $60/$74 + header checksum only.
+> **v5 acceptance MET (user)**: both NPC songs confirmed in-game; the
+> $AA-ornament drop passed the ear test unremarked.
+
 
 > Session 62 (2026-07-17 — **Arc 3 M2 COMPLETE: song round-trip codec.
 > M3 POC: DWM2 BGM #06 audible in custom well room — USER-CONFIRMED by ear

@@ -21,8 +21,17 @@ from . import formats as F
 # $D9D7-$D9D8 clean. Flags $0168-$017F ($D9C8-$D9CA) are RETIRED: those bytes
 # are wPendingFarmExp (CF2). See EVENT_FLAGS.md "Free Flag Slots".
 FLAG_SAFE_RANGES = [(0x0158, 0x0167), (0x01E0, 0x01EF)]
-STEP_COUNTER_BASE = 0xDE74          # S55 relocation: vetted block past the audio ceiling ($DE2B)
-WRAM_REGION_SIZE_DEFAULT = 7        # keeps wRoomRecScratch pinned at $DE7B
+# S65 migration: step counters live in the CF3-freed window (WRAM $CC80-$D664,
+# freed S60 — MONSTER_DATA "CF3 as built"). $CD80-$CFFF is the counter region;
+# $CC80/$CD00 hold the relocated NPC/exit buffers; $D001-$D664 is the reserved
+# transient pool (wCustomPool). The whole window is TRANSIENT: CF3's save copy
+# skips its SRAM image window $A3BA-$AD9E in BOTH directions (live farm storage
+# sits behind it), so nothing here survives save+reload. Persistent room state
+# stays event flags + entry scripts (user decision S55, reaffirmed S65).
+# wRoomRecScratch stays pinned at $DE7B by a static `ds 7` pad in wram.asm.
+STEP_COUNTER_BASE = 0xCD80
+WRAM_REGION_MAX = 0x280             # $CD80+$280 = $D000 = the wram0 section end
+WRAM_REGION_SIZE_DEFAULT = 0x280    # 640 counters — campaign-scale default
 
 
 class ProjectError(ValueError):
@@ -48,6 +57,12 @@ class Project:
         self._allocate_flags()
         self.wram_region_size = (self.custom.get('wram', {})
                                  .get('region_size', WRAM_REGION_SIZE_DEFAULT))
+        if self.wram_region_size > WRAM_REGION_MAX:
+            raise ProjectError(
+                f"wram.region_size {self.wram_region_size} exceeds "
+                f"{WRAM_REGION_MAX} — the region ends at $D000 (wram0 section "
+                "boundary; $D001+ is wCustomPool). Growing past it is a "
+                "deliberate engine change (PROJECT_COMPILER.md §2.6)")
         self._step_alloc = None
         self.repo_root = None          # set by compiler.compile_project
         self._music = None
@@ -281,9 +296,9 @@ class Project:
         if used and (max(used) - STEP_COUNTER_BASE + 1) > self.wram_region_size:
             raise ProjectError(
                 "step counters exceed the fixed wram region size "
-                f"({self.wram_region_size}) — wRoomRecScratch must stay at "
-                "$DE7B; grow the region only in a deliberate engine session "
-                "(PROJECT_COMPILER.md §wram)")
+                f"({self.wram_region_size}, max {WRAM_REGION_MAX} — region "
+                "ends at the $D000 wram0 section boundary; see "
+                "PROJECT_COMPILER.md §2.6)")
         self._step_alloc = [(lbl, addr, cm)
                             for addr, (lbl, cm) in sorted(used.items())]
         return self._step_alloc

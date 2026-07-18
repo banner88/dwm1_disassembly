@@ -10,7 +10,59 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-18 (Session 64 — **Arc 3 M3b + M3c COMPLETE, USER-CONFIRMED (v6 `7cc0857f…`): room-default music for ANY mapID (vanilla + custom; Library $12 plays a MIDI conversion, gate_island $6B defaults to DWM2 BGM #07 incl. save/reload) via the same-size `LoadNewBGMIdIntoA` rewrite → bank $71 entry 2; `custom.music` schema + music emitter own bank $74; full 31-song DWM2 catalog committed; `tools/midi_to_song.py` ships.** Clean build `1ca6579…` unchanged (RoomBGMTable re-sectioned byte-neutrally); verifier PASS 5/5; compiler tests 25/25 @ pin `7cc0857f…`; templates re-pinned, TEMPLATE_SIZE $71 116→142.)
+> Last verified: 2026-07-18 (Session 65 — **CF4 WRAM migration BUILT, NOT yet user-tested (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`, patched): custom-room buffers → $CC80/$CD00, step-counter region → $CD80 (640 B, compiler default/max) inside the CF3-freed window $CC80-$D664; wCustomPool $D001-$D664 transient reserve; bank $73 entry 6 tail-clear guarantees the window is zeroed at every gameplay entry (power-on/new-game/restore). Key finding: the window is TRANSIENT permanently — the S58 'EXPLOIT' persistence decision was foreclosed by S60's copy-skip (DOC_AUDIT S65). 32 KB SRAM expansion audited and BLOCKED on RAMB discipline (RST_18 quadrant writes; bank $74 audio-ISR dispatch) — banked into E3, not built.** Clean build `1ca6579…` unchanged; verifier PASS 5/5; compiler tests 25/25 @ pin `de0c5a67…`; templates NOT re-pinned (label-only relink).)
+>
+>
+> Session 65 (2026-07-18 — **CF4: custom-room WRAM migration into the
+> CF3-freed window + SRAM-expansion audit. BUILT, NOT yet user-tested
+> (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`, patched).**
+> User decisions: buffers move to the window head; counter region 640 B;
+> the $DE74 scratch block stays; persistent-pool doctrine = flags now,
+> SRAM expansion later (E3); 56-B SRAM tail = untouched emergency reserve.
+> **Pre-work finding (changes the S58 plan)**: the freed window
+> $CC80-$D664 is TRANSIENT PERMANENTLY — its save-image address
+> $A3BA-$AD9E is CF3's live farm, so entries 5/6 skip it in BOTH copy
+> directions; the S58 "EXPLOIT the vanilla block copy" decision was
+> foreclosed by S60's build and cannot be revived (annotated at the
+> decision text; DOC_AUDIT S65).
+> **As built**: wCustomNPCBuffer→$CC80, wCustomExitBuffer→$CD00
+> (label-only; the 4 operand sites live in the bank $60 template TEXT which
+> is unchanged — sha256 pins + TEMPLATE_SIZE untouched); STEP_COUNTER_BASE
+> $DE74→$CD80, WRAM_REGION default/max 640 (hard cap = the $D000 wram0
+> section boundary, validated in project.py); static `ds 7` at $DE74 keeps
+> wRoomRecScratch pinned $DE7B (scratch/Tame/flag/CF3-mailbox block
+> unmoved; ClearAllWRAM $1EE0 extension still required for it);
+> wCustomPool $D001-$D664 (1,636 B transient reserve). **Init guarantee**
+> (the copy-skip corollary of S55's init lesson): bank $73 entry 6 tail
+> zeroes the window after the main-image restore copy (gated on unique src
+> end $B124; the 4 callers are enumerated in the entry header) — with
+> ClearAllWRAM (power-on) and CF3NewGameClear (new game) this makes every
+> gameplay entry window-zeroed; reload-in-room now deterministically step-0
+> (also closes the S55-accepted cross-save staleness).
+> **Census scare resolved**: 136 vanilla literal refs inside the window are
+> ALL data-as-code artifacts ($CD = CALL opcode minting fake $CDxx
+> operands; "PaletteStoreCD80" etc. are auto-names on instruction soup);
+> structural proof = the vanilla array occupied the window. audit_wram.py
+> models it (FREED_WINDOWS, F-class; S54 detection power selftest-pinned
+> via a $CAC5 probe; arg guard added) + wram_usage.json regenerated
+> together. known_RAM_map's unsourced "link+arena time-share" clause
+> refuted via the S56 access map and removed.
+> **SRAM expansion (user request) audited, NOT built — BLOCKED, banked
+> into E3 + ARCHITECTURE "SRAM banking"**: header is $1B/8 KB; RST_18
+> writes RAMB:=rom_bank>>5 on every rst $10 ($FFA3 = shadow; bank $40 has
+> a genuine di-bracketed 32 KB multi-bank SRAM wipe — the engine family
+> carries the infrastructure); under 32 KB, CF3 (bank $73) would run on
+> RAMB=3 and the audio ISR's bank $74 dispatch flips RAMB every vblank —
+> RAMB discipline in CF3's SRAM entry points must land first. Free SRAM
+> today: tail $BFC8-$BFFF (56 B).
+> Doc repairs: PROJECT_COMPILER §2.7 stale pre-S57 flag pool → 32-flag
+> pool; §2.6 rewritten; quick-start + §1 md5 re-pinned WITH a stale-pin
+> grep this time. Compiler: example project (region_size 640, hole
+> 0xCD84), REFERENCE_MD5 `de0c5a67…` (patched), 25/25 --rom; compat==hand
+> re-proven file-identical. Verifier PASS 5/5; clean build `1ca6579…`.
+> **v7 acceptance (pending user)**: enter $6B/$6C/$70, NPC interact, exits
+> both ways, step advance, save-in-room → reload → scroll (expect step-0),
+> egg give in-room.
 >
 >
 > Session 64 (2026-07-18 — **Arc 3 M3b + M3c: room-default music + MIDI
@@ -73,65 +125,10 @@
 > **v6 acceptance MET (user)**: Library plays DQ6 Town; $6B defaults to
 > BGM #07 including save/reload; NPC overrides intact; vanilla rooms/gates
 > unchanged.
->
->
-> Session 63 (2026-07-18 — **Arc 3 M3a BUILT, NOT yet user-tested: general
-> song slots. v4 test ROM `c23beed7aadee80a061c0f6c24d7c1f4` (patched).**)
-> **The S62 blocker ("ROM0 has NO 17-byte free run") dissolved by auditing
-> our own CLAIMS, not vanilla filler** (KEY_LESSONS S63): the twin helpers
-> `MapIDClampForDispatch`/`MapIDClampForPalette` were byte-identical
-> (merged — one 8-B body @ $3BC2 carrying both exported labels; all callers
-> relink) and `CustomGFXMapID` was DEAD since S42 (bank $71 Entry 0 replaced
-> all consumers; its header still said "used by" — DOC_AUDIT S63; deleted).
-> Freed 24-B $3FE8 slot hosts **`AudioMasterTableExt`** (3 vanilla rows
-> byte-identical + row `[$9E,$4001,$74]` + $FF sentinel; ONE spare future
-> row); `AudioProcess`'s single `ld hl,$3466` operand repointed ($33D9,
-> 2 B). Zero WRAM (user constraint), zero boot changes, zero net ROM0 bytes.
-> **Bank $74 = song bank** (`patches/bank_074.asm` ← `song_codec.py
-> emit-song-bank` ← `extracted/custom_songs.json`): vanilla-bank convention,
-> FIXED 95-slot record area $4001-$417C (ids $9E-$FC; adding songs never
-> moves old streams), streams from $4180. BGM #06 migrated via new
-> `import-port` (byte-identical to the S62 trace-proven blobs incl. the
-> translator's unreachable trailing $FF; static re-trace = S62's exact
-> 1858/1566/2287 event counts); **bank $1E back to 100% vanilla** (patch
-> deleted; orphan-slot route retired). Static proof: all vanilla ids
-> $00-$9D resolve identically through the new table. Capacity ~31 3-ch
-> songs; 10,965 stream B free. patches/game.asm includes bank_074 (the
-> blank-stub include was the one build gotcha); verify_integrity
-> PATCH_FILES/PATCH_NEW_FILES updated.
-> **Pre-existing defect found+fixed: S62 broke compat==hand byte-identity
-> silently** — hand edits to compiler-owned bank_060.asm (BGM NPC record,
-> `SetBGM $9E`, "DWM2 music!") never folded into the example project; pin
-> left at S60's; CI runs only verify_integrity so nothing failed. S63
-> ported all three into project.json → compat build == hand tree again
-> (both `c23beed7…`), `REFERENCE_MD5` re-pinned, 18/18 `--rom` tests green.
-> PROJECT_COMPILER's quick-start md5 had ALSO been stale (S57 value while
-> the pin was S60's) — fixed. **CI follow-up boxed in ROADMAP** (add
-> `test_compiler.py --rom`). Doc fixes: SOUND_SYSTEM §1 engine addresses
-> were transcription slips (`AudioProcess` = **$33D2**, updates
-> $33CF/$33CC/$33C9 — not $3477/$3474/$3471/$346E; sym-verified);
-> "$3BC1" comments were off by one (code @ $3BC2). SESSION_HISTORY: S60
-> block refiled from file tail into Part 1 order (S61 misfiling).
-> **v4 USER-CONFIRMED same session** ("music plays as before via NPC, no
-> issues"); user-observed save/reload music transience = vanilla SetBGM
-> behavior, expected non-issue for M3b room-defaults (SOUND_SYSTEM §8;
-> room→BGM derivation to be traced at M3b wiring). **v5 BUILT + USER-CONFIRMED same session** ("Sounds great";
-> GBS re-uploaded): DWM2 BGM #07 (GBS index 6 →
-> internal id $19 via song map @ GBS $0FC0) → DWM1 ids $A1-$A3, 2,471 B
-> in bank $74 (`add-gbs-song`: extract+translate+prove+slot-map); room $6C
-> screen 0 NPC (5,6) `SetBGM $A1` wired through project.json + `--apply`
-> (bank_060/bank_071/bank_017-regions/wram-region now compiler-generated —
-> the sanctioned route S62 skipped); pin re-pinned `3009b75e…` (v5 compat
-> == hand tree by construction). End-to-end proof: ROM-resident $A1-$A3
-> under DWM1 semantics == original GBS bytes under DWM2 semantics
-> (954/645/840 ev). Foreign `$AA`×20 verified NON-FLOW at instruction
-> level (DWM2 handler @ GBS $37AE: one param, HRAM $F2/$F3/$ED only) —
-> a DWM2 ornament dropped as no-op in DWM1; ear test judges. v4→v5 ROM
-> diff: banks $60/$74 + header checksum only.
-> **v5 acceptance MET (user)**: both NPC songs confirmed in-game; the
-> $AA-ornament drop passed the ear test unremarked.
+
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S63** (2026-07-18): Arc 3 M3a — general song slots (bank $74, AudioMasterTableExt in ROM0 $3FE8 from merged-twin+dead-code bytes); v4+v5 user-confirmed; S62 compat-break fixed. Owning: SOUND_SYSTEM, PROJECT_COMPILER §1, KEY_LESSONS S63, DOC_AUDIT S63.
 - **S62** (2026-07-17): Arc 3 M2 — song round-trip codec (157 streams byte-identical); DWM2 grammar corrections ($AC call/$FD slots/loop forms); BGM #06 POC user-confirmed. Owning: SOUND_SYSTEM §5/§7, KEY_LESSONS S62, DOC_AUDIT S62.
 - **S61** (2026-07-17): Arc 3 M1 — sound engine + song data fully mapped (byte-neutral); ROADMAP bank-list claim falsified; DWM2 GBS same-engine-family finding. Owning: SOUND_SYSTEM.md, DOC_AUDIT S61, ROADMAP M1.
 - **S60** (2026-07-16/17): CF3 complete — farm slots 3-19 to SRAM (v2 eager-roster architecture), 48 walker sites, save-state invalidation across migration. Owning: MONSTER_DATA "CF3 as built", ARCHITECTURE SRAM, KEY_LESSONS S60.
@@ -273,7 +270,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). Remaining: custom monster POOLS (Encounters #2, ROADMAP). | CROSSBANK_ROOMS; KEY_LESSONS S11 |
 | Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). B9 11th-family icon shipped; tab wiring open. | BREEDING_SYSTEM; ROADMAP Phase 2B |
 | Custom battle skills (net-new ids) | 🟢 FOUR custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52) — a 3-tier evolve chain on the full de-aliased stack incl. natural-learn (LearnLoopFork), real MP (MPPtrFromId, 10/30/50), announce (AnnounceIdxFork). Crank reverted S52; meter tiers 10/100/400. Learn/upgrade user-confirmed; MP charge + meter values built S52, NOT yet user-tested. | BATTLE_SKILL_SYSTEM §12–§13.6; ROADMAP Arc 2 |
-| SRAM save layout | ✅ audited S8: custom flags $0158–$0277 persist; collisions mapped | ARCHITECTURE; known_RAM_map |
+| SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). 32 KB expansion audited S65: BLOCKED on RAMB discipline (E3) | ARCHITECTURE (incl. "SRAM banking" S65); known_RAM_map |
+| Custom-room WRAM state | 🟢 migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). Built S65, NOT yet user-tested (v7) | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
 
 ### Not yet implemented
 
@@ -300,6 +298,7 @@ re-section items).
 
 ### Open defects
 
+- S65 built but NOT yet user-tested: the CF4 WRAM migration (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`, patched) — acceptance list in ROADMAP CF4.
 - Tame per-enemy hit-blink NOT IMPLEMENTED (cosmetic; deferred by user S52 — "bank it").
   The MECHANISM IS SOLVED (S52, HW-confirmed): enemy is BG-drawn; blink = tilemap toggle
   in bank `$5f` entry 5 (`$da83` phase → `$da84` sub-dispatch `$4b99`). Full map +

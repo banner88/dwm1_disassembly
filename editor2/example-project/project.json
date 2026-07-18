@@ -21,12 +21,12 @@
  },
  "custom": {
   "wram": {
-   "region_size": 7,
+   "region_size": 640,
    "reserved": [
     {
      "label": "wCustomStep_Room6C_S5",
-     "addr": "0xDE78",
-     "comment": "Room $6C screen 5 step counter (legacy hole \u2014 kept so later counters stay at their proven addresses)"
+     "addr": "0xCD84",
+     "comment": "Room $6C screen 5 step counter (legacy hole \u2014 kept at base+4 so the relative counter layout matches the proven S55 shape; S65 migration moved the base $DE74\u2192$CD80)"
     }
    ]
   },

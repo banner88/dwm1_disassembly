@@ -54,6 +54,41 @@ OUT = REPO / "extracted" / "wram_usage.json"
 WRAM_LO, WRAM_HI = 0xC000, 0xDFFF
 
 # -----------------------------------------------------------------------------
+# Freed windows (S65): WRAM ranges whose VANILLA claimant has been structurally
+# retired by a patch-era architecture change. Collisions with the named vanilla
+# array inside a freed window classify as "F:<tag>" (informational), not "B:"
+# (real collision). Evidence rules as for INDEXED_ARRAYS.
+# -----------------------------------------------------------------------------
+FREED_WINDOWS = [
+    {
+        "lo": 0xCC80, "hi": 0xD664, "tag": "cf3-freed",
+        "vanilla_claimant": "party/storage monster array",
+        "evidence": "CF3 (S60): farm slots 3-19 are SRAM-resident at "
+                    "$A1FB+s*$95 (GetMonsterDataPtr fork, bank $73 entry 3; "
+                    "48 walker advances hop the boundary; trade-recv + "
+                    "new-game clear redirected) — MONSTER_DATA 'CF3 as "
+                    "built (S60)'. TRANSIENT: the window's save image "
+                    "($A3BA-$AD9E) is live farm storage, so CF3CopyToSRAM/"
+                    "CF3CopyFromSRAM (bank $73 entries 5/6) skip it in both "
+                    "directions — nothing here survives save+reload.",
+    },
+]
+
+
+def freed_window_for(addr, array_name):
+    for w in FREED_WINDOWS:
+        if w["lo"] <= addr <= w["hi"] and w["vanilla_claimant"] == array_name:
+            return w
+    return None
+
+
+def freed_window_at(addr):
+    for w in FREED_WINDOWS:
+        if w["lo"] <= addr <= w["hi"]:
+            return w
+    return None
+
+# -----------------------------------------------------------------------------
 # Curated indexed / pointer-walked arrays.
 # RULES for this table: every entry MUST carry evidence (code label + file, or
 # doc section verified against code). Do not add entries from documentation
@@ -295,10 +330,30 @@ def classify_custom(custom_spans, cov):
         for a in range(addr, addr + size):
             for ev in cov.get(a, []):
                 if ev["kind"] == "literal":
-                    classes.add("A:vanilla-literal")
+                    w = freed_window_at(a)
+                    if w:
+                        # In-window vanilla literal refs are data-as-code
+                        # artifacts (e.g. $CD = the CALL opcode minting fake
+                        # $CDxx operands). Structural proof they are not live
+                        # gameplay claimants: the vanilla monster array
+                        # occupied this window — a live writer would have
+                        # corrupted monsters, a live reader would have read
+                        # monster bytes. Boot-time residue is neutralized by
+                        # the S65 init guarantee (ClearAllWRAM / entry-6
+                        # restore clear / CF3NewGameClear).
+                        classes.add(f"F:{w['tag']}-vanlit")
+                    else:
+                        classes.add("A:vanilla-literal")
                 elif ev["kind"] == "indexed":
-                    classes.add("B:vanilla-indexed")
-                    details.append((a, ev["name"]))
+                    w = freed_window_for(a, ev["name"])
+                    if w:
+                        # vanilla claimant structurally retired here (S65):
+                        # informational, not a collision
+                        classes.add(f"F:{w['tag']}")
+                        details.append((a, ev["name"] + " (freed shadow)"))
+                    else:
+                        classes.add("B:vanilla-indexed")
+                        details.append((a, ev["name"]))
                 elif ev["kind"] == "rammap":
                     classes.add("A':rammap-span")
         det = sorted({d[1] for d in details})
@@ -359,6 +414,13 @@ def class_c_findings():
 
 
 def main():
+    # Guard (S65): this tool WRITES extracted/wram_usage.json on a plain run.
+    # Any unrecognized flag (incl. --help) prints usage and exits instead of
+    # silently regenerating committed data.
+    unknown = [a for a in sys.argv[1:] if a not in ("--selftest",)]
+    if unknown:
+        print(__doc__.strip())
+        sys.exit(0 if any(a in ("-h", "--help") for a in unknown) else 2)
     selftest = "--selftest" in sys.argv
     van_lits = collect_literals(DIS)
     pat_lits = collect_literals(PAT)
@@ -369,6 +431,9 @@ def main():
     # custom state = every wram.asm label whose address has no vanilla SOLID
     # ref. (Vanilla-naming labels alias vanilla-referenced bytes and drop out;
     # reserved-but-unreferenced custom bytes stay in — they still relocate.)
+    # S65: labels INSIDE a freed window are custom by construction and are
+    # kept even when their address carries junk vanilla refs (data-as-code
+    # artifacts — e.g. $CD00/$D001; see classify_custom's F-class note).
     van_solid = {a for a, k in van_lits.items() if k["solid"]}
     custom_lit = {a: sorted(k["solid"] | k["suspect"])
                   for a, k in pat_lits.items()
@@ -382,7 +447,8 @@ def main():
         for name in labels:
             if re.search(rf"\b{re.escape(name)}\b", text):
                 label_use[name].add(f.name)
-    custom_spans = [(n, a, s) for (n, a, s) in spans if a not in van_solid]
+    custom_spans = [(n, a, s) for (n, a, s) in spans
+                    if a not in van_solid or freed_window_at(a)]
     # drop labels that resolve to pure padding markers
     custom_spans = [(n, a, s) for (n, a, s) in custom_spans
                     if not n.endswith("Start")]
@@ -422,6 +488,9 @@ def main():
         "indexed_arrays": [
             {**a, "span": f"${a['base']:04X}-${a['base']+a['stride']*a['count']-1:04X}"}
             for a in INDEXED_ARRAYS],
+        "freed_windows": [
+            {**w, "span": f"${w['lo']:04X}-${w['hi']:04X}"}
+            for w in FREED_WINDOWS],
         "custom_state_findings": findings,
         "custom_literal_only_refs": {f"${a:04X}": v for a, v in sorted(custom_lit.items())},
         "extended_index_findings": classc,
@@ -430,43 +499,61 @@ def main():
     }
 
     if selftest:
-        # regression 1: array extent pin (S54)
+        # regression 1: VANILLA array extent pin (S54) — the vanilla shape
+        # stays documented even though CF3 freed its slots 3-19 shadow
         arr = next(a for a in INDEXED_ARRAYS if "monster array" in a["name"])
         assert arr["base"] + arr["stride"] * arr["count"] - 1 == 0xD664
         # regression 4 (S56): staging pseudo-slots pinned at $D665-$D78E
         stg = next(a for a in INDEXED_ARRAYS if "staging pseudo-slots" in a["name"])
         assert stg["base"] == 0xD665
         assert stg["base"] + stg["stride"] * stg["count"] - 1 == 0xD78E
-        bad = [f for f in findings
-               if "B:vanilla-indexed" in f["collision_classes"]
-               and any("monster array" in n for n in f["collides_with_indexed"])]
-        names = {f["label"] for f in bad}
-        # regression 2 (S55): the buffers REMAIN in the array (accepted legacy
-        # hazard, exploration overlay only — see patches/wram.asm banner) and
-        # MUST still be detected...
-        expect_flagged = {"wCustomNPCBuffer", "wCustomExitBuffer"}
-        missing = expect_flagged - names
-        assert not missing, f"selftest FAILED — collisions not detected: {missing}"
-        # ...and the S55-relocated labels MUST be collision-free at $DE74+.
-        expect_clean = {"wCustomRoomFlag",
-                        "wCustomStep_Room6B_S0", "wCustomStep_Room6B_S1",
-                        "wCustomStep_Room6C_S0", "wCustomStep_Room6C_S1",
-                        "wCustomStep_Room6C_S5", "wCustomStep_Room6D_S0",
-                        "wCustomStep_Room70_S0", "wRoomRecScratch",
-                        "wRoomEncFlag", "wTameDelay", "wTameBGSave"}
-        wrongly_flagged = expect_clean & {
-            f["label"] for f in findings
-            if any(c != "clear" for c in f["collision_classes"])}
+        # regression 5 (S65): freed-window pin — exactly the CF3 window
+        fw = FREED_WINDOWS[0]
+        assert (fw["lo"], fw["hi"]) == (0xCC80, 0xD664)
+        by_label = {f["label"]: f for f in findings}
+        # regression 2 (S65 form): the S54-class DETECTION POWER must remain —
+        # a hypothetical custom span inside a LIVE part of the array (party
+        # slot 0) must still flag class B...
+        probe = classify_custom([("wSelftestProbe", 0xCAC5, 4)], cov)[0]
+        assert "B:vanilla-indexed" in probe["collision_classes"], (
+            "selftest FAILED — S54 detection power lost (probe at $CAC5 "
+            f"not flagged: {probe['collision_classes']})")
+        # ...while the migrated buffers/counters/pool inside the CF3-freed
+        # window classify F (informational), never B.
+        expect_freed = {"wCustomNPCBuffer", "wCustomExitBuffer", "wCustomPool"}
+        for lbl in expect_freed:
+            f = by_label.get(lbl)
+            assert f is not None, f"selftest FAILED — {lbl} not found"
+            assert "F:cf3-freed" in f["collision_classes"], (
+                f"selftest FAILED — {lbl} not in freed window: "
+                f"{f['collision_classes']}")
+            assert not any(c.startswith("B") for c in f["collision_classes"]), (
+                f"selftest FAILED — {lbl} flags a REAL collision: "
+                f"{f['collision_classes']}")
+        # regression (S55, updated S65): scratch block labels at $DE74+ and
+        # the migrated counters at $CD80+ must carry no real collision class
+        # (counters sit in the freed window -> F allowed; scratch is clear).
+        expect_no_real = {"wCustomRoomFlag",
+                          "wCustomStep_Room6B_S0", "wCustomStep_Room6B_S4",
+                          "wCustomStep_Room6C_S0", "wCustomStep_Room6C_S4",
+                          "wCustomStep_Room6C_S5", "wCustomStep_Room6D_S0",
+                          "wCustomStep_Room70_S0", "wRoomRecScratch",
+                          "wRoomEncFlag", "wTameDelay", "wTameBGSave"}
+        wrongly_flagged = {
+            lbl for lbl in expect_no_real
+            if any(c.startswith(("A", "B"))
+                   for c in by_label.get(lbl, {"collision_classes": []})
+                   ["collision_classes"])}
         assert not wrongly_flagged, (
-            f"selftest FAILED — relocated labels still collide: {wrongly_flagged}")
-        # regression 3 (S55): the relocated block must sit inside the vetted
-        # window $DE74-$DEDD, past the audio ceiling $DE2B.
+            f"selftest FAILED — labels really collide: {wrongly_flagged}")
+        # regression 3 (S55): audio ceiling pinned below the $DE74 scratch
         audio = next(a for a in INDEXED_ARRAYS if "audio channel" in a["name"])
         assert audio["base"] + audio["count"] - 1 == 0xDE2B
-        print("SELFTEST PASS: array extent $CAC1-$D664 (+staging to $D78E); "
-              "buffers still flagged "
-              "class B (accepted legacy); relocated labels clean; audio "
-              "ceiling $DE2B pinned below the $DE74 block.")
+        print("SELFTEST PASS: vanilla array extent $CAC1-$D664 (+staging to "
+              "$D78E); CF3 freed window $CC80-$D664 pinned; S54 detection "
+              "power intact (probe $CAC5 flags B); migrated buffers/counters/"
+              "pool classify F:cf3-freed; scratch labels clean; audio "
+              "ceiling $DE2B pinned.")
         return
 
     OUT.write_text(json.dumps(result, indent=1))

@@ -285,6 +285,30 @@ dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
       silent); mid-run storage recruits get the full run's pending; drain
       also fires entering in-gate special rooms (early, safe). Flag indices
       $0168-$017F retired to the accumulator (EVENT_FLAGS).
+- [x] **CF4 — freed-window layout + custom-state migration — BUILT S65,
+      NOT yet user-tested (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`,
+      patched).** The S58 layout-rule remainder, executed with one
+      correction: **the S58 "EXPLOIT" persistence decision is dead as-built
+      and unrevivable** — the freed window's SRAM image ($A3BA-$AD9E) is
+      CF3's live farm, so the S60 copy skips the window BOTH ways; nothing
+      in it can persist via the vanilla block copy (DOC_AUDIT S65).
+      Persistent state stays flags (32) + entry scripts; larger persistent
+      state = SRAM expansion (E3). As built: wCustomNPCBuffer→$CC80,
+      wCustomExitBuffer→$CD00 (label-only relink; bank $60 template TEXT
+      unchanged, sha256 pins untouched); step-counter region $DE74→$CD80,
+      default/max 640 B (region cap = the $D000 wram0 section boundary,
+      validated); static `ds 7` keeps wRoomRecScratch at $DE7B; wCustomPool
+      $D001-$D664 (1,636 B transient reserve); **init guarantee** — bank
+      $73 entry 6 tail zeroes the window after the main-image restore copy
+      (unique src end $B124), joining ClearAllWRAM (power-on) and
+      CF3NewGameClear (new game): gameplay always starts window-zeroed,
+      immunizing against data-as-code boot residue and making reload step
+      state deterministic. audit_wram.py learned freed windows (F-class,
+      S54 detection power kept via probe; arg guard added) + regenerated
+      wram_usage.json. *Accept*: v7 smoke on the historical crash vectors —
+      enter $6B/$6C/$70, NPC interact, exits both ways, step advance,
+      save-in-room → reload → scroll (expect step-0), egg give in-room.
+
 - [x] **CF3 — farm storage → SRAM + path redirects — DONE S60,
       USER-CONFIRMED 2026-07-17 (sleep/unsleep, breeding + reload,
       in-gate saves; "all tests normal").** Farm slots 3-19 live at
@@ -313,7 +337,10 @@ dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
       **USER DECISIONS SETTLED 2026-07-13 (this conversation):**
       (1) party-first SORT chosen over index remapping;
       (2) save semantics of the freed range = **EXPLOIT** (keep the vanilla
-      block copy; the range persists across save/load). Layout rule for the
+      block copy; the range persists across save/load). **[REFUTED AS-BUILT,
+      S65: S60's copy-skip excludes the window from save AND restore — its
+      SRAM image is the live farm; unrevivable. See CF4 + DOC_AUDIT S65.]**
+      Layout rule for the
       arc: transient scratch stays at $DE74; the relocated legacy NPC/exit
       buffers take a small corner of the freed range; the BULK is reserved
       as the editor's persistent-state pool (flag-allocator expansion of
@@ -650,16 +677,35 @@ the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
       (grounded). Partially outlined as Phase D one-liners (`bank $50 event state machine`),
       but never recognized as an editor subsystem. Owning doc: SIDEQUEST_MAP + Phase D bank-`$50` box.*
 
-- [ ] **E3 — New-game initialization + save-schema headroom.**
+- [ ] **E3 — New-game initialization + save-schema headroom (now incl. the
+      32 KB SRAM expansion, audited S65).**
       A new campaign sets its own starting party / items / flags / map position, and may add
       story variables. The opening is script-traced (ROUTING.md, FIRST_5MIN_TRACE.md; intro
-      marker flag `$0000`), and Phase 0 audited the SRAM custom-flag range `$0158-$0277` as
-      persistent across save+reload. But (a) new-game INIT data is not an authorable object,
-      and (b) there is no headroom analysis for story state that would exceed the audited
-      custom range (the story counter + any new arena/quest variables). *Confidence:
-      MEDIUM-HIGH. Partially outlined (Phase 0 audit; Phase D save annotation), not
-      editor-facing. Owning doc: ARCHITECTURE / known_RAM_map for the schema; this item for
-      the editor-object + headroom work.*
+      marker flag `$0000`). Persistent headroom TODAY: **32 safe flags**
+      ($0158-$0167, $01E0-$01EF — EVENT_FLAGS) + the SRAM tail **$BFC8-$BFFF
+      (56 B, untouched emergency reserve — user decision S65)**; the
+      CF3-freed WRAM window is TRANSIENT permanently (CF4). The structural
+      fix is declaring 32 KB SRAM ($0149 $02→$03; MBC5 + SameBoy support it;
+      old .sav files load padded) — **BLOCKED on RAMB discipline, audited
+      S65 (ARCHITECTURE "SRAM banking")**: (a) RST_18 writes
+      RAMB:=rom_bank>>5 on EVERY `rst $10` (quadrant convention; $FFA3 is
+      the shadow; vanilla's live SRAM users all run from quadrant 0, and
+      bank $40 carries a genuine `di`-bracketed multi-bank 32 KB wipe —
+      the infrastructure exists); (b) CF3 runs from bank $73 → RAMB=3 under
+      expansion → farm hits the wrong bank; (c) the audio ISR dispatches
+      into bank $74 every vblank while music plays → RAMB flips mid-access
+      for anything not `di`-bracketed. Implementation session: RAMB=0
+      establishment inside CF3's SRAM entry points with interrupt
+      discipline, an accessor convention for new banked state, then flip
+      $0149 + smoke (boot/new-game/save/reload/farm/sleep/custom rooms +
+      .sav grows to 32 KB). Do NOT flip the header byte alone — silent
+      farm/save corruption. Also still open from the original scope:
+      (a2) new-game INIT data as an authorable object; (b2) story-variable
+      headroom analysis beyond the audited custom range. *Confidence:
+      HIGH for the expansion mechanics (instruction-verified S65);
+      MEDIUM for init-object scope. Owning doc: ARCHITECTURE (SRAM
+      banking) / known_RAM_map ($FFA3); this item for the editor-object +
+      implementation work.*
 
 - [ ] **E4 — Overworld / gate-network structure at campaign scale.**
       Custom rooms (mapID ≥ `$6B`, bank `$60`+) and individual warps are proven, but the
