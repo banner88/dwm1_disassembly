@@ -353,4 +353,103 @@ Strategy B, deliberately not used here so saving keeps working).
 
 ---
 
+## mapID ≥$80 readiness audit (A′1, S66)
+
+**Verdict: the engine is ≥$80-READY as patched.** No code change is needed to
+cross mapID $7F except the compiler-owned BGM-table extension below (a feature
+cap, not a crash). Census + per-site verdicts: `tools/audit_mapid_range.py`
+(SELFTEST-pinned; 58 clean / 56 patched `ld a, [wMapID]` sites, zero
+pointer-form or literal-`$C968` references in either tree, 21 writers all
+constants/copies/table reads with no masking) → `extracted/mapid_range_audit.json`.
+
+### Why the "sign test" fear was unfounded
+
+The SM83 **has no sign flag** — `jp m`-class patterns (ROADMAP's original
+wording) cannot exist; see DOC_AUDIT addendum. Every wMapID comparison in the
+ROM is an **unsigned `cp`**, so a mapID ≥$80 takes the *identical branch*
+already proven by rooms $6B-$70 at every comparison site. The only `bit 7`
+hits near mapID reads are on *other* variables (wInGateworld, `$c8ea`, skill
+id `$db8a` in bank $53) or on the NPC-entry **type byte**, whose ≥$80 range is
+the by-design spawn/exit-entry discriminator ($8F=spawn, $90=walk-on exit —
+ROOM_DATA_FORMAT), not a mapID.
+
+### The real ≥$80 hazard classes — and why each is already handled
+
+1. **8-bit `add a` doubling drops the $100 carry.** `add a / add l / ld l,a /
+   ld a,$00 / adc h` computes `(2·mapID mod 256) + base`: the doubling carry
+   is destroyed by the following `add l`. **RST_00 itself has this shape** —
+   every `rst $00` jump-table dispatch is $7F-capped by construction (RST_20
+   likewise caps L). Every vanilla instance is safe because:
+   - the only mapID-driven `rst $00` (PerRoomDispatchEntry, bank $01) is
+     patched with `call MapIDClampForDispatch` (unsigned `cp $6B / ret c /
+     xor a` → all custom rooms dispatch as Castle);
+   - the four bank $0B RoomPtrTable ×2 walks are diverted for **all** mapIDs
+     ≥$6B by `cp CUSTOM_ROOM_START / jr c` **before** the walk (→ bank $60
+     entries 0/1/2); the patched `SharedPtrChase` is therefore only reachable
+     with mapID <$6B;
+   - the two bank $17 AttrPtrTable ×2 walks are intercepted by
+     CustomAttrCheck / MapIDClampForPalette (both unsigned);
+   - FloorPalettePtrTable ($17:$51F5) and EncounterRateData ×8 ($16) run only
+     in gate context, where wMapID = floortype (<$20); GateFloorDataTable ×8
+     indexes wGateID (≤$1F), written from wMapID **only on the gate-entry
+     path** — hence the authoring rule below;
+   - RoomBGMTable ($01) is guarded by `cp $61` (≥$61 never indexes it) and,
+     S64, consulted only after the bounds-checked bank $71 resolver.
+2. **Fixed-size tables indexed by raw mapID.** All live ones are covered
+   above. One pre-existing **WATCH** item: the bank $01 default-player-spawn
+   table (auto-label `NPCWalkDataTable` — misleading; see the S66 comment at
+   the site) is indexed raw-mapID ×4 with 107 entries. Custom rooms already
+   overrun it today; every proven path is unaffected (v7 save-in-room →
+   reload OK: position restores from the save image). Crossing $80 changes
+   nothing. If the editor ever depends on non-warp default spawns in custom
+   rooms, emit a custom table.
+
+### Custom-side arithmetic ceilings
+
+| Path | Idiom | Safe through |
+|---|---|---|
+| bank $60 CustomPtrChase, $17 CustomAttrCheck / CustomPalCheck | `sub $6B` then 8-bit `add a` | index $7F → **mapID $EA** |
+| bank $71 entry 0 (CopyCustomRoomRecord) | 16-bit `sla/rl` ×8; $70+ → Custom26DDTable[mapID−$70] | mapID $FE |
+| bank $71 entry 1 (CustomEncResolve) | `cp ENC_TABLE_LEN` bounds check | table length (compiler-emitted) |
+| bank $71 entry 2 (CustomRoomBGMResolve) | `cp $80 / ret nc` bounds check | see BGM cap below |
+| bank $60 CustomScriptRead / script master table | 16-bit ×2, dense from $6B (validated) | mapID $FE |
+
+**Ceilings: hard max mapID $FE** ($FF = exit-list terminator byte); practical
+max **$EA** (8-bit sub-$6B idiom). The 75-room plan tops out at $B5 — 53 IDs
+of margin.
+
+### Room-default music is capped at $7F (feature gap, not crash)
+
+`CustomRoomBGMTable` is 128 entries; the resolver's `cp $80 / ret nc` returns
+"no assignment" for mapID ≥$80 (room then gets the vanilla ≥$61 fallback, same
+as any unassigned custom room today), and `editor2/core/music.py:176` already
+**errors loudly** on `room_defaults` with mid ≥128. Extension recipe (one
+compiler session, all compiler-owned): 256-entry table in the `dispatch71`
+emitter + widen/remove the `cp $80` guard in the bank $71 template head +
+lift the music.py validator range + re-pin TEMPLATE_SIZE[0x71] (currently 142)
+and the template hashes (`editor2/core/validators.py:23`).
+
+### Authoring rules the audit makes explicit
+
+1. **Exits targeting custom rooms MUST use `gate_flag=0`.** With flag=1 the
+   gate-entry path (bank $16, `label16_5b4e`) writes the mapID into wGateID
+   and ×8-indexes GateFloorDataTable with it — garbage floor config.
+2. **`trigger_x=$FF` is forbidden** in exit entries ($FF is the list
+   terminator; trigger_y 0/7 are already validator-warned).
+3. **wInGateworld must be 0 while custom-room scripts run** (wScriptMapType is
+   forced to the gateworld sentinel $70 when set; harmless for the S41
+   transient pattern, wrong if made persistent). Room $70 itself is safe:
+   GateAwareDispatch discriminates on wMapID, not wScriptMapType.
+4. Recommended **new compiler validators** (not yet implemented — ROADMAP A′1
+   follow-up): error on custom-destination exits with gate_flag≠0; error on
+   trigger_x=$FF.
+
+### Re-running the audit
+
+`python3 tools/audit_mapid_range.py` after any engine-adjacent session. A
+`NEEDS_REVIEW` row = new wMapID consumer since S66 → adjudicate by hand, add
+its key to the tool's verdict table, and record the reasoning here.
+
+---
+
 *Verified working June 2026. 19 iterations, 11 table patches, 3 critical bug classes discovered and resolved.*

@@ -10,11 +10,49 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-18 (Session 65 — **CF4 WRAM migration BUILT, NOT yet user-tested (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`, patched): custom-room buffers → $CC80/$CD00, step-counter region → $CD80 (640 B, compiler default/max) inside the CF3-freed window $CC80-$D664; wCustomPool $D001-$D664 transient reserve; bank $73 entry 6 tail-clear guarantees the window is zeroed at every gameplay entry (power-on/new-game/restore). Key finding: the window is TRANSIENT permanently — the S58 'EXPLOIT' persistence decision was foreclosed by S60's copy-skip (DOC_AUDIT S65). 32 KB SRAM expansion audited and BLOCKED on RAMB discipline (RST_18 quadrant writes; bank $74 audio-ISR dispatch) — banked into E3, not built.** Clean build `1ca6579…` unchanged; verifier PASS 5/5; compiler tests 25/25 @ pin `de0c5a67…`; templates NOT re-pinned (label-only relink).)
+> Last verified: 2026-07-18 (Session 66 — **A′1 mapID ≥$80 audit DONE: engine is ≥$80-READY as patched. No sign tests on mapID exist (SM83 has no sign flag; every compare is unsigned `cp` — ≥$80 takes the branch proven by $6B-$70). Real hazard classes: 8-bit `add a` carry-loss walks (RST_00 is $7F-capped by construction) and fixed tables — all diverted ≥$6B / clamped / gate-context in the patched tree. Ceilings: hard $FE, practical $EA; BGM room-defaults capped $7F (compiler follow-up recipe in CROSSBANK_ROOMS). New tool audit_mapid_range.py (58/56 sites pinned, all adjudicated). CF4 v7 USER-CONFIRMED this session.** Byte-neutral: clean build `1ca6579…` unchanged; verifier PASS 5/5; editor2 untouched.)
+>
+>
+> Session 66 (2026-07-18 — **A′1: mapID ≥$80 readiness audit — engine is
+> ≥$80-READY as patched (byte-neutral session). CF4 v7 USER-CONFIRMED
+> ("custom rooms work fine after WRAM move, no issues").**
+> Census: exactly 58 (clean) / 56 (patched) `ld a, [wMapID]` sites, zero
+> pointer-form/literal-$C968 refs, 21 writers (constants/copies/table reads,
+> no masking). Every site instruction-verified and adjudicated; reproducible
+> via new `tools/audit_mapid_range.py` (label-keyed verdicts, SELFTEST pins,
+> NEEDS_REVIEW tripwire for post-S66 code) → `extracted/mapid_range_audit.json`.
+> **Headline: the ROADMAP's "sign-test" fear was structurally impossible —
+> the SM83 has no sign flag (`jp m` doesn't exist); every mapID compare is
+> unsigned `cp`, so ≥$80 takes the identical branch proven by rooms $6B-$70.**
+> The `bit 7` hits near mapID reads are all on OTHER variables (wInGateworld,
+> $c8ea, skill id $db8a) or the NPC-entry TYPE byte ($8F/$90 spawn/exit
+> discriminators — by-design format, not mapIDs). Real ≥$80 hazard classes:
+> (a) 8-bit `add a` doubling drops the $100 carry — **RST_00 itself is
+> $7F-capped this way** (`add a / add l` destroys the doubling carry before
+> `adc h`; RST_20 likewise) — the only mapID-driven rst $00
+> (PerRoomDispatchEntry) is clamp-protected; the four bank $0B RoomPtrTable
+> walks, both bank $17 AttrPtrTable walks: diverted for ALL ≥$6B by unsigned
+> `cp CUSTOM_ROOM_START` predicates upstream; (b) fixed tables:
+> FloorPalettePtrTable/EncounterRateData/GateFloorDataTable/FloorDamageTable
+> are gate-context (wMapID = floortype/gateID <$20 there); RoomBGMTable is
+> `cp $61`-guarded + S64 resolver-first. Copies (wWarpGateId, $c8fb pair,
+> hram $d5/$d6, wScriptMapType, wGateID, $c96a) traced: full-byte, consumers
+> unsigned. Exit dest_map_type = full unmasked byte end-to-end.
+> **Ceilings**: hard mapID $FE ($FF = exit terminator); practical $EA
+> (custom-side `sub $6B` then 8-bit `add a` idiom); 75-room plan (max $B5)
+> fits with 53 spare. **Feature cap**: room-default music stops at $7F
+> (bank $71 `cp $80` guard + 128-entry table + music.py:176 loud validator)
+> — compiler-owned extension recipe + 2 recommended exit validators
+> (gate_flag=0 to custom dests; trigger_x≠$FF) recorded in CROSSBANK_ROOMS
+> §"mapID ≥$80 readiness audit" (owning) and as the A′1 ROADMAP follow-up.
+> **WATCH**: bank $01 default-spawn table (auto-label `NPCWalkDataTable`
+> is misleading — annotated in BOTH trees, comment-only) — pre-existing
+> ≥$6B overrun, benign on all proven paths (v7); $80 changes nothing.
+> Verifier PASS 5/5; clean build `1ca6579…` unchanged; editor2 untouched.
 >
 >
 > Session 65 (2026-07-18 — **CF4: custom-room WRAM migration into the
-> CF3-freed window + SRAM-expansion audit. BUILT, NOT yet user-tested
+> CF3-freed window + SRAM-expansion audit. BUILT; v7 USER-CONFIRMED S66
 > (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`, patched).**
 > User decisions: buffers move to the window head; counter region 640 B;
 > the $DE74 scratch block stays; persistent-pool doctrine = flags now,
@@ -60,74 +98,15 @@
 > grep this time. Compiler: example project (region_size 640, hole
 > 0xCD84), REFERENCE_MD5 `de0c5a67…` (patched), 25/25 --rom; compat==hand
 > re-proven file-identical. Verifier PASS 5/5; clean build `1ca6579…`.
-> **v7 acceptance (pending user)**: enter $6B/$6C/$70, NPC interact, exits
+> **v7 acceptance MET (user, S66 — "no issues")**: enter $6B/$6C/$70, NPC interact, exits
 > both ways, step advance, save-in-room → reload → scroll (expect step-0),
 > egg give in-room.
 >
 >
-> Session 64 (2026-07-18 — **Arc 3 M3b + M3c: room-default music + MIDI
-> import, both USER-CONFIRMED (test ROM v6 `7cc0857faad8a950573e865e93f791eb`,
-> patched).** User decisions: DQ6-town MIDI → the vanilla LIBRARY room ($12)
-> to prove vanilla-room assignment; room $6B default = DWM2 BGM #07; this
-> ROM is testing-only (the real romhack starts from vanilla via the editor;
-> sources = inbuilt ids, DWM2 catalog, MIDI); >3ch songs drop extras for
-> now; `custom_songs.json` retired.
-> **M3b engine**: traced `LoadNewBGMIdIntoA` $01:$432D-$4372 (70 B, single
-> caller `CheckScreenLock` ← `InitFieldState` ← `GameInit` — runs on map
-> entry AND save-load, which is both why script SetBGM was transient and
-> why the fix survives reload by construction). `RoomBGMTable` $01:$4373 =
-> 112 B, $70 entries (mapIDs $00-$6F, $61+ padded $34) — re-sectioned from
-> fake instructions to labeled `db` in BOTH trees (clean build still
-> `1ca6579…`; fake labels jr_001_43bd/43dc were misassembly-internal).
-> Patched tree: SAME-SIZE rewrite (−9 B funded by the vestigial `cp $09/
-> ret nz/ret` tail, the redundant 2nd `ld a,[wMapID]`, and `adc h/sub l`;
-> +7 B prologue `ld hl,$7102/rst $10/ld a,e/or a/ret nz`; 2 pad) — table
-> address unmoved, vanilla fallback byte-equivalent. Bank $71 template:
-> 3-entry table + `CustomRoomBGMResolve` (E := `CustomRoomBGMTable[wMapID]`
-> or 0; gate floors return 0 — wMapID isn't room-meaningful there; the
-> proven rst $10 DE-return contract). Templates re-pinned (`64cb43ee…`),
-> TEMPLATE_SIZE $71 116→142 ($408E).
-> **Compiler**: `custom.music` live (PROJECT_COMPILER §2.9): `libraries`
-> (repo-committed catalogs) + `songs` (library refs or inline; `first_id`
-> explicit/auto from $9E) + `room_defaults` (ANY mapID $00-$7F; raw value =
-> inbuilt vanilla id) + `rooms[].music` sugar (conflict = error, found by
-> a new test: key normalization `0x6B` vs `$6B` had let conflicts slip).
-> Trio normalization at bake: missing $34/$4E/$68 slots pad silent (6 B;
-> InitBGM starts 3 CONSECUTIVE ids — an unpadded 2ch song would start its
-> neighbor's channel), >trio drops warn (InitBGM ext boxed). `music74`
-> emitter owns generated `patches/bank_074.asm` via `song_codec.
-> song_bank_asm`; existing BGM #06/#07 streams verified BYTE-IDENTICAL
-> under the new ownership (fixed-record-area property); `dispatch71` emits
-> the 128-entry BGM table. 25/25 tests (8 new music tests) @ re-pinned
-> `7cc0857f…`; verifier PASS 5/5.
-> **DWM2 catalog**: `song_codec.py extract-gbs-library` → `extracted/
-> dwm2_song_library.json`: ALL 31 subsongs (19 BGM + 12 jingles, names per
-> the zophar m3u set, ids via GBS song map @ $0FC0) translated +
-> trace-proven, 57,383 stream B total (catalog only — the emitter bakes
-> assigned songs; bank $74 streams cap 16,000 B). GBS never needs
-> re-uploading (md5 recorded). New foreign cmd `$A4` (×6, BGM #19)
-> instruction-verified as a 2-byte NO-OP IN BOTH ENGINES (DWM2 dispatch has
-> no `cp $A4`; terminal default `inc hl/jp $358A`) — unlike $AA, not even
-> an ornament is lost.
-> **M3c**: `tools/midi_to_song.py` (pure-python SMF 0/1 → catalog entry):
-> frame-accurate boundary rounding, monophonize (new-on truncates prev),
-> lowest-mean-pitch→wave auto-map, $A7 tie-holds >255 frames, `B0 $FC`
-> whole-song loop, decode round-trip checked. dq6_town1: 3ch, 1,325 B,
-> 92.0 s/loop, 204 overlap cuts. **Two engine corrections en route
-> (instruction-verified; owning SOUND_SYSTEM §4/§5, DOC_AUDIT S64):**
-> (1) note lengths are FRAMES — $EC decrements unconditionally every frame;
-> $FA/$FB only gates the groove stepper (S61 "ticks" falsified; duration
-> evidence: the 0:01 jingles); (2) $A3 bit7=0 ENABLES the groove stepper
-> and every groove row @ $3B83 is a live vibrato/detune shape — `$A3 $80`
-> (E5 &= $0F) is the only deterministic straight form; the converter emits
-> it. Also §5's "octave downshift" rephrased: P>>n RAISES pitch; note $00 =
-> C2 = MIDI 36 (from `AudioLoadNoteB` + the $3A53 values).
-> **v6 acceptance MET (user)**: Library plays DQ6 Town; $6B defaults to
-> BGM #07 including save/reload; NPC overrides intact; vanilla rooms/gates
-> unchanged.
 
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S64** (2026-07-18): Arc 3 M3b+M3c — room-default music (LoadNewBGMIdIntoA same-size rewrite + bank $71 resolver + 128-entry table; custom.music compiler section) + MIDI import (midi_to_song.py); DWM2 31-subsong catalog; note-length FRAMES + $A3 groove corrections; v6 user-confirmed. Owning: SOUND_SYSTEM, PROJECT_COMPILER §2.9, CROSSBANK_ROOMS, DOC_AUDIT S64.
 - **S63** (2026-07-18): Arc 3 M3a — general song slots (bank $74, AudioMasterTableExt in ROM0 $3FE8 from merged-twin+dead-code bytes); v4+v5 user-confirmed; S62 compat-break fixed. Owning: SOUND_SYSTEM, PROJECT_COMPILER §1, KEY_LESSONS S63, DOC_AUDIT S63.
 - **S62** (2026-07-17): Arc 3 M2 — song round-trip codec (157 streams byte-identical); DWM2 grammar corrections ($AC call/$FD slots/loop forms); BGM #06 POC user-confirmed. Owning: SOUND_SYSTEM §5/§7, KEY_LESSONS S62, DOC_AUDIT S62.
 - **S61** (2026-07-17): Arc 3 M1 — sound engine + song data fully mapped (byte-neutral); ROADMAP bank-list claim falsified; DWM2 GBS same-engine-family finding. Owning: SOUND_SYSTEM.md, DOC_AUDIT S61, ROADMAP M1.
@@ -271,7 +250,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). B9 11th-family icon shipped; tab wiring open. | BREEDING_SYSTEM; ROADMAP Phase 2B |
 | Custom battle skills (net-new ids) | 🟢 FOUR custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52) — a 3-tier evolve chain on the full de-aliased stack incl. natural-learn (LearnLoopFork), real MP (MPPtrFromId, 10/30/50), announce (AnnounceIdxFork). Crank reverted S52; meter tiers 10/100/400. Learn/upgrade user-confirmed; MP charge + meter values built S52, NOT yet user-tested. | BATTLE_SKILL_SYSTEM §12–§13.6; ROADMAP Arc 2 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). 32 KB expansion audited S65: BLOCKED on RAMB discipline (E3) | ARCHITECTURE (incl. "SRAM banking" S65); known_RAM_map |
-| Custom-room WRAM state | 🟢 migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). Built S65, NOT yet user-tested (v7) | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
+| Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66 | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
 
 ### Not yet implemented
 
@@ -298,7 +277,6 @@ re-section items).
 
 ### Open defects
 
-- S65 built but NOT yet user-tested: the CF4 WRAM migration (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`, patched) — acceptance list in ROADMAP CF4.
 - Tame per-enemy hit-blink NOT IMPLEMENTED (cosmetic; deferred by user S52 — "bank it").
   The MECHANISM IS SOLVED (S52, HW-confirmed): enemy is BG-drawn; blink = tilemap toggle
   in bank `$5f` entry 5 (`$da83` phase → `$da84` sub-dispatch `$4b99`). Full map +

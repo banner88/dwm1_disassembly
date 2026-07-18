@@ -728,6 +728,15 @@ Jump_001_44ba:
     ret
 
 
+; S66 A'1 NOTE: auto-label is MISLEADING — this is the DEFAULT PLAYER SPAWN
+; table (4 bytes/map: X lo/hi, Y lo/hi -> hram $92/$93/$95/$96), used on the
+; non-warp room-init path (jr_001_4464) when wIsPlayerChangingMaps = 0.
+; Indexed by RAW mapID x4 (16-bit math). 107 vanilla entries: custom rooms
+; ($6B+) read past the end — pre-existing, empirically benign on every proven
+; path (v7 save-in-room -> reload OK: position comes from the save image, not
+; this table). Crossing mapID $7F changes nothing here. If the editor ever
+; relies on non-warp default spawns in custom rooms, emit a custom table
+; instead. (Bytes below are table data mis-decoded as instructions.)
 NPCWalkDataTable:
     ld hl, sp+$00
     ret c

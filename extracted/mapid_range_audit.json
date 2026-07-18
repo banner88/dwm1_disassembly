@@ -1,0 +1,1240 @@
+{
+ "_generator": "tools/audit_mapid_range.py (S66; tree-based, no ROM needed)",
+ "clean_sites": [
+  {
+   "tree": "clean",
+   "file": "bank_000.asm",
+   "line": 6091,
+   "label": "UseGateWorldTable",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "IDX16"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_000.asm",
+   "line": 7744,
+   "label": "CheckGateWorldMapType",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_000.asm",
+   "line": 7751,
+   "label": "CheckGateWorldMapType",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 150,
+   "label": "InitFieldState",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 158,
+   "label": "InitFieldState",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 362,
+   "label": "ClearAnimationState",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 469,
+   "label": "LoadNewBGMIdIntoA",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 485,
+   "label": "jr_001_4346",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "TBL_GUARDED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 537,
+   "label": "SaveMapStateToHRAM",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 638,
+   "label": "jr_001_4464",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "WATCH"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 1961,
+   "label": "CheckBattleModeFlag",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 2947,
+   "label": "RetIfInGateworld",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 3445,
+   "label": "CheckSpecialMapExits",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 3671,
+   "label": "CopyPlayerCoordsAndGetNextRoom",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 3745,
+   "label": "CheckScriptBeforeAction",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 5145,
+   "label": "jr_001_5e23",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "GATE_CTX"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 5750,
+   "label": "jr_001_6115",
+   "occ": 0,
+   "pattern": [
+    "rst00"
+   ],
+   "verdict": "RST00_CLAMPED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_001.asm",
+   "line": 6619,
+   "label": "CheckPaletteAnimActive",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_003.asm",
+   "line": 4502,
+   "label": "jr_003_6dd9",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_004.asm",
+   "line": 3321,
+   "label": "label4_5bdb",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_004.asm",
+   "line": 5015,
+   "label": "label4_66bd",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_004.asm",
+   "line": 5296,
+   "label": "label4_68d7",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_006.asm",
+   "line": 2545,
+   "label": "jr_006_4d99",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_006.asm",
+   "line": 3873,
+   "label": "jr_006_60b8",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_006.asm",
+   "line": 4001,
+   "label": "jr_006_618e",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_006.asm",
+   "line": 4943,
+   "label": "jr_006_66c2",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_006.asm",
+   "line": 5282,
+   "label": "jr_006_6893",
+   "occ": 0,
+   "pattern": [
+    "cp",
+    "store"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_006.asm",
+   "line": 5737,
+   "label": "Jump_006_6b87",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_007.asm",
+   "line": 4854,
+   "label": "jr_007_6004",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_007.asm",
+   "line": 4915,
+   "label": "CmpFld_604d",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_009.asm",
+   "line": 1394,
+   "label": "jr_009_46de",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_009.asm",
+   "line": 2164,
+   "label": "SetFld9_4bc8",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 102,
+   "label": "jr_00b_4037",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "IDX16"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 116,
+   "label": "jr_00b_4037",
+   "occ": 1,
+   "pattern": [],
+   "verdict": "DEAD"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 169,
+   "label": "jr_00b_4094",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "IDX16"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 183,
+   "label": "jr_00b_4094",
+   "occ": 1,
+   "pattern": [],
+   "verdict": "DEAD"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 485,
+   "label": "jr_00b_4244",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 565,
+   "label": "GetRoomDataPtr",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 1049,
+   "label": "labelb_4488",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 1190,
+   "label": "labelb_451d",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 1416,
+   "label": "jr_00b_4601",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 1429,
+   "label": "jr_00b_462c",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 1476,
+   "label": "jr_00b_4674",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 1477,
+   "label": "jr_00b_4674",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 2041,
+   "label": "jr_00b_492a",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_00b.asm",
+   "line": 2068,
+   "label": "Jump_00b_4945",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_013.asm",
+   "line": 1029,
+   "label": "label13_7370",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_016.asm",
+   "line": 1852,
+   "label": "label16_5b4e",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_016.asm",
+   "line": 5038,
+   "label": "label16_6f05",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_016.asm",
+   "line": 5053,
+   "label": "jr_016_6f39",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "GATE_CTX"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_017.asm",
+   "line": 36,
+   "label": "label17_401d",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_017.asm",
+   "line": 107,
+   "label": "jr_017_4071",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "GATE_CTX"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_017.asm",
+   "line": 129,
+   "label": "label17_409e",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_050.asm",
+   "line": 6319,
+   "label": "Jump_050_640a",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_050.asm",
+   "line": 6413,
+   "label": "Jump_050_64e0",
+   "occ": 0,
+   "pattern": [
+    "cp",
+    "store"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_051.asm",
+   "line": 66,
+   "label": "jr_051_4073",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_055.asm",
+   "line": 2322,
+   "label": "jr_055_4a47",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "DEBUG"
+  },
+  {
+   "tree": "clean",
+   "file": "bank_055.asm",
+   "line": 2858,
+   "label": "Jump_055_4dba",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  }
+ ],
+ "patched_sites": [
+  {
+   "tree": "patched",
+   "file": "bank_000.asm",
+   "line": 7838,
+   "label": "CheckGateWorldMapType",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_000.asm",
+   "line": 7845,
+   "label": "CheckGateWorldMapType",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_000.asm",
+   "line": 13160,
+   "label": "MapIDClampForPalette",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CLAMPED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 150,
+   "label": "InitFieldState",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 158,
+   "label": "InitFieldState",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 362,
+   "label": "ClearAnimationState",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 485,
+   "label": "LoadNewBGMIdIntoA",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 550,
+   "label": "SaveMapStateToHRAM",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 3389,
+   "label": "RetIfInGateworld",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 3887,
+   "label": "CheckSpecialMapExits",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 4113,
+   "label": "CopyPlayerCoordsAndGetNextRoom",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 4187,
+   "label": "CheckScriptBeforeAction",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 7045,
+   "label": "CheckPaletteAnimActive",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_003.asm",
+   "line": 4489,
+   "label": "jr_003_6dd9",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_004.asm",
+   "line": 3320,
+   "label": "label4_5bdb",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_004.asm",
+   "line": 5012,
+   "label": "label4_66bd",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_004.asm",
+   "line": 5293,
+   "label": "label4_68d7",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_006.asm",
+   "line": 2545,
+   "label": "jr_006_4d99",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_006.asm",
+   "line": 3863,
+   "label": "jr_006_60b8",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_006.asm",
+   "line": 3991,
+   "label": "jr_006_618e",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_006.asm",
+   "line": 4933,
+   "label": "jr_006_66c2",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_006.asm",
+   "line": 5272,
+   "label": "jr_006_6893",
+   "occ": 0,
+   "pattern": [
+    "cp",
+    "store"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_007.asm",
+   "line": 4838,
+   "label": "jr_007_6004",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_009.asm",
+   "line": 1394,
+   "label": "jr_009_46de",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_009.asm",
+   "line": 2164,
+   "label": "SetFld9_4bc8",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 108,
+   "label": "jr_00b_4037",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "IDX16"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 175,
+   "label": "jr_00b_4094",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "IDX16"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 475,
+   "label": "jr_00b_4244",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 523,
+   "label": "GetRoomDataPtr",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 979,
+   "label": "labelb_4488",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 1094,
+   "label": "labelb_451d",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "LOSSY_DIVERTED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 1294,
+   "label": "jr_00b_4601",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 1307,
+   "label": "jr_00b_462c",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 1354,
+   "label": "jr_00b_4674",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 1355,
+   "label": "jr_00b_4674",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 1946,
+   "label": "jr_00b_492a",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 1973,
+   "label": "Jump_00b_4945",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 2510,
+   "label": "SharedPtrChase",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "TBL_GUARDED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_00b.asm",
+   "line": 2595,
+   "label": "CustomDescentInGate",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_016.asm",
+   "line": 1803,
+   "label": "label16_5b4e",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_016.asm",
+   "line": 4965,
+   "label": "label16_6f05",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_016.asm",
+   "line": 4980,
+   "label": "jr_016_6f39",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "GATE_CTX"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_017.asm",
+   "line": 105,
+   "label": "jr_017_4071",
+   "occ": 0,
+   "pattern": [
+    "add_a"
+   ],
+   "verdict": "GATE_CTX"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_017.asm",
+   "line": 2573,
+   "label": "CustomAttrCheck",
+   "occ": 0,
+   "pattern": [
+    "add_a",
+    "cp",
+    "sub"
+   ],
+   "verdict": "IDX8_SUB6B"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_017.asm",
+   "line": 2616,
+   "label": "CustomPalCheck",
+   "occ": 0,
+   "pattern": [
+    "add_a",
+    "cp",
+    "sub"
+   ],
+   "verdict": "IDX8_SUB6B"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_050.asm",
+   "line": 6304,
+   "label": "Jump_050_640a",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_050.asm",
+   "line": 6398,
+   "label": "Jump_050_64e0",
+   "occ": 0,
+   "pattern": [
+    "cp",
+    "store"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_051.asm",
+   "line": 66,
+   "label": "jr_051_4073",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_060.asm",
+   "line": 30,
+   "label": "CustomPtrChase",
+   "occ": 0,
+   "pattern": [
+    "sub"
+   ],
+   "verdict": "IDX8_SUB6B"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_060.asm",
+   "line": 40,
+   "label": "CustomPtrChase",
+   "occ": 1,
+   "pattern": [
+    "add_a",
+    "sub"
+   ],
+   "verdict": "IDX8_SUB6B"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_060.asm",
+   "line": 191,
+   "label": "GateAwareDispatch",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 56,
+   "label": "CopyCustomRoomRecord",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 63,
+   "label": "CopyCustomRoomRecord",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 73,
+   "label": "CopyCustomRoomRecord",
+   "occ": 2,
+   "pattern": [
+    "sub"
+   ],
+   "verdict": "IDX16"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 105,
+   "label": "CustomEncResolve",
+   "occ": 0,
+   "pattern": [
+    "cp",
+    "sub"
+   ],
+   "verdict": "BOUNDED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 138,
+   "label": "CustomRoomBGMResolve",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "BOUNDED"
+  }
+ ],
+ "ceilings": {
+  "hard_max_mapid": "0xFE ($FF = exit-list terminator byte)",
+  "idx8_sub6b_max_mapid": "0xEA (custom-side sub $6B then 8-bit add a idiom)",
+  "bgm_room_default_max": "0x7F (bank $71 cp $80 guard + 128-entry table + music.py validator \u2014 compiler-owned extension, see ROADMAP A'1 follow-up)"
+ }
+}

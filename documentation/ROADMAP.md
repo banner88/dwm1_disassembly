@@ -285,9 +285,9 @@ dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
       silent); mid-run storage recruits get the full run's pending; drain
       also fires entering in-gate special rooms (early, safe). Flag indices
       $0168-$017F retired to the accumulator (EVENT_FLAGS).
-- [x] **CF4 — freed-window layout + custom-state migration — BUILT S65,
-      NOT yet user-tested (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`,
-      patched).** The S58 layout-rule remainder, executed with one
+- [x] **CF4 — freed-window layout + custom-state migration — DONE S65,
+      USER-CONFIRMED S66 (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`,
+      patched: "custom rooms work fine after WRAM move, no issues").** The S58 layout-rule remainder, executed with one
       correction: **the S58 "EXPLOIT" persistence decision is dead as-built
       and unrevivable** — the freed window's SRAM image ($A3BA-$AD9E) is
       CF3's live farm, so the S60 copy skips the window BOTH ways; nothing
@@ -386,7 +386,20 @@ pattern) rather than wholesale replacement. Parallel-architecture rule
 (user, S55): the hand patch overlay stays AS-IS for exploration (known ≤14
 limitation); editor-era systems (Cold Farm, Layer A′) land in the compiler
 pipeline — never retrofit the overlay.
-- [ ] **A′1 — mapID ≥$80 sign-test audit** (blocker for custom room #22+).
+- [x] **A′1 — mapID ≥$80 audit (DONE S66): engine is ≥$80-READY as patched.**
+      No sign tests on mapID exist anywhere (SM83 has no sign flag; every
+      comparison is unsigned `cp` — ≥$80 takes the branch already proven by
+      $6B-$70). Real hazard classes were 8-bit `add a` carry-loss walks
+      (RST_00 is $7F-capped by construction) and fixed tables — every
+      instance is diverted ≥$6B / clamped / gate-context in the patched
+      tree. Ceilings: hard $FE, practical $EA (sub-$6B 8-bit idiom); 75-room
+      plan (max $B5) fits with margin. Census tool:
+      `tools/audit_mapid_range.py` (SELFTEST-pinned, re-run before shipping
+      rooms ≥$80). Full adjudication: CROSSBANK_ROOMS "mapID ≥$80 readiness
+      audit". Follow-up (compiler-owned, do when first room ≥$80 ships —
+      recipe in that section): extend CustomRoomBGMTable 128→256 + bank $71
+      `cp $80` guard + music.py validator + template re-pin; add validators
+      (custom-dest exits must have gate_flag=0; trigger_x≠$FF).
 - [ ] **A′2 — bank $0B in-place room emitter** (Layer A of project.json).
 - [ ] **A′3 — bank $60 multi-bank spill** (bank_map; 16 KB won't hold 75
       rooms of scripts+dialogue; 13 banks / 208 KB free).

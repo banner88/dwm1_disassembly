@@ -18,6 +18,68 @@
 
 ## Part 1 — Archived session blocks (verbatim, newest first: S63 → S11)
 
+> Session 64 (2026-07-18 — **Arc 3 M3b + M3c: room-default music + MIDI
+> import, both USER-CONFIRMED (test ROM v6 `7cc0857faad8a950573e865e93f791eb`,
+> patched).** User decisions: DQ6-town MIDI → the vanilla LIBRARY room ($12)
+> to prove vanilla-room assignment; room $6B default = DWM2 BGM #07; this
+> ROM is testing-only (the real romhack starts from vanilla via the editor;
+> sources = inbuilt ids, DWM2 catalog, MIDI); >3ch songs drop extras for
+> now; `custom_songs.json` retired.
+> **M3b engine**: traced `LoadNewBGMIdIntoA` $01:$432D-$4372 (70 B, single
+> caller `CheckScreenLock` ← `InitFieldState` ← `GameInit` — runs on map
+> entry AND save-load, which is both why script SetBGM was transient and
+> why the fix survives reload by construction). `RoomBGMTable` $01:$4373 =
+> 112 B, $70 entries (mapIDs $00-$6F, $61+ padded $34) — re-sectioned from
+> fake instructions to labeled `db` in BOTH trees (clean build still
+> `1ca6579…`; fake labels jr_001_43bd/43dc were misassembly-internal).
+> Patched tree: SAME-SIZE rewrite (−9 B funded by the vestigial `cp $09/
+> ret nz/ret` tail, the redundant 2nd `ld a,[wMapID]`, and `adc h/sub l`;
+> +7 B prologue `ld hl,$7102/rst $10/ld a,e/or a/ret nz`; 2 pad) — table
+> address unmoved, vanilla fallback byte-equivalent. Bank $71 template:
+> 3-entry table + `CustomRoomBGMResolve` (E := `CustomRoomBGMTable[wMapID]`
+> or 0; gate floors return 0 — wMapID isn't room-meaningful there; the
+> proven rst $10 DE-return contract). Templates re-pinned (`64cb43ee…`),
+> TEMPLATE_SIZE $71 116→142 ($408E).
+> **Compiler**: `custom.music` live (PROJECT_COMPILER §2.9): `libraries`
+> (repo-committed catalogs) + `songs` (library refs or inline; `first_id`
+> explicit/auto from $9E) + `room_defaults` (ANY mapID $00-$7F; raw value =
+> inbuilt vanilla id) + `rooms[].music` sugar (conflict = error, found by
+> a new test: key normalization `0x6B` vs `$6B` had let conflicts slip).
+> Trio normalization at bake: missing $34/$4E/$68 slots pad silent (6 B;
+> InitBGM starts 3 CONSECUTIVE ids — an unpadded 2ch song would start its
+> neighbor's channel), >trio drops warn (InitBGM ext boxed). `music74`
+> emitter owns generated `patches/bank_074.asm` via `song_codec.
+> song_bank_asm`; existing BGM #06/#07 streams verified BYTE-IDENTICAL
+> under the new ownership (fixed-record-area property); `dispatch71` emits
+> the 128-entry BGM table. 25/25 tests (8 new music tests) @ re-pinned
+> `7cc0857f…`; verifier PASS 5/5.
+> **DWM2 catalog**: `song_codec.py extract-gbs-library` → `extracted/
+> dwm2_song_library.json`: ALL 31 subsongs (19 BGM + 12 jingles, names per
+> the zophar m3u set, ids via GBS song map @ $0FC0) translated +
+> trace-proven, 57,383 stream B total (catalog only — the emitter bakes
+> assigned songs; bank $74 streams cap 16,000 B). GBS never needs
+> re-uploading (md5 recorded). New foreign cmd `$A4` (×6, BGM #19)
+> instruction-verified as a 2-byte NO-OP IN BOTH ENGINES (DWM2 dispatch has
+> no `cp $A4`; terminal default `inc hl/jp $358A`) — unlike $AA, not even
+> an ornament is lost.
+> **M3c**: `tools/midi_to_song.py` (pure-python SMF 0/1 → catalog entry):
+> frame-accurate boundary rounding, monophonize (new-on truncates prev),
+> lowest-mean-pitch→wave auto-map, $A7 tie-holds >255 frames, `B0 $FC`
+> whole-song loop, decode round-trip checked. dq6_town1: 3ch, 1,325 B,
+> 92.0 s/loop, 204 overlap cuts. **Two engine corrections en route
+> (instruction-verified; owning SOUND_SYSTEM §4/§5, DOC_AUDIT S64):**
+> (1) note lengths are FRAMES — $EC decrements unconditionally every frame;
+> $FA/$FB only gates the groove stepper (S61 "ticks" falsified; duration
+> evidence: the 0:01 jingles); (2) $A3 bit7=0 ENABLES the groove stepper
+> and every groove row @ $3B83 is a live vibrato/detune shape — `$A3 $80`
+> (E5 &= $0F) is the only deterministic straight form; the converter emits
+> it. Also §5's "octave downshift" rephrased: P>>n RAISES pitch; note $00 =
+> C2 = MIDI 36 (from `AudioLoadNoteB` + the $3A53 values).
+> **v6 acceptance MET (user)**: Library plays DQ6 Town; $6B defaults to
+> BGM #07 including save/reload; NPC overrides intact; vanilla rooms/gates
+> unchanged.
+
+
 > Session 63 (2026-07-18 — **Arc 3 M3a BUILT, NOT yet user-tested: general
 > song slots. v4 test ROM `c23beed7aadee80a061c0f6c24d7c1f4` (patched).**)
 > **The S62 blocker ("ROM0 has NO 17-byte free run") dissolved by auditing

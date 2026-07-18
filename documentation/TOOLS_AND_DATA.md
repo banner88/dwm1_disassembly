@@ -16,6 +16,7 @@ session.
 Regen produces identical output to committed file. Safe to re-run.
 | File | Generator | Notes |
 |------|-----------|-------|
+| mapid_range_audit.json | audit_mapid_range.py | S66: A′1 census — every `ld a, [wMapID]` site in BOTH trees (58 clean / 56 patched) with pattern classification and the S66 adjudicated verdict per site (label-keyed), plus the ceilings dict (hard $FE / practical $EA / BGM-default $7F). Tree-derived only (no ROM needed). Regenerate with `--json`; selftest pins the counts and fails on any NEEDS_REVIEW (new consumer since S66 → adjudicate by hand, key it in the tool, record reasoning in CROSSBANK_ROOMS). |
 | wram_usage.json | audit_wram.py | S54; REGENERATED S55 (curated arrays added: attr staging $C200, screen staging $C300 ×$200, battle tile buffer $C500, audio channels $DD80-$DE2B, battle stat tables — gaps 51→34; the S54 relocation candidates $C20D/$C42B were FALSE, see KEY_LESSONS S55). Selftest re-pinned S55: buffers still class-B (accepted legacy), relocated labels at $DE74 clean, audio ceiling pinned. Regenerate with the tool; not ROM-derived alone (also parses docs + patches). REGENERATED S56: curated staging pseudo-slot entry added ($D665-$D78E, monster-array indices $14/$15); gaps 34→31; selftest re-pinned (staging extent). REGENERATED S65 (tool+data together): FREED_WINDOWS model added (CF3 window $CC80-$D664 — in-window collisions with the retired vanilla claimant AND in-window vanilla literal refs classify informational F:cf3-freed[-vanlit], never A/B; the literal refs are data-as-code artifacts, $CD=CALL opcode — KEY_LESSONS S65); vanilla-alias filter exempts freed-window labels (junk refs at $CD00/$D001 were dropping the migrated buffers/pool); selftest re-pinned (S54 detection power kept via a synthetic probe at $CAC5 which must still flag class B; migrated labels must classify F); arg guard added (unknown flags incl. --help print usage instead of silently regenerating the JSON — the prior behavior caused an accidental regen this session, reverted). NOTE: this regen also refreshes referenced_by lists that had drifted as later sessions added labels to banks. |
 | monster_walkers.json | map_monster_walkers.py | **NEW (S56, CF1).** The monster-array access map: all 44 `ld [$cac0],a` writer sites + 60 register/stride walkers classified (party-only / all-slot / farm-write / single-slot / staging), membership semantics, exp-share model, roster mutation path table, staging pseudo-slots. Self-checking: writer-set drift or missing labels abort. Owning prose: MONSTER_DATA "Party/farm boundary semantics". |
 | songs.json | enumerate_songs.py | **NEW (S61, M1).** Full sound enumeration: 86 sounds / 158 channel streams from the master table @ ROM0 $3466 (banks $1C/$1D/$1E), each stream statically walked to termination (zero overruns), with per-channel slot/hw/seq/extent/header. Owning prose: SOUND_SYSTEM.md. |
@@ -288,6 +289,16 @@ sequence stream (2-byte pairs, $FC jump follow, revisit = loop) to
 termination; `--decode <id>` prints a track note-by-note; `--json` emits
 `extracted/songs.json`. Engine facts it encodes are documented in
 SOUND_SYSTEM.md; exit non-zero on any stream overrun. ·
+
+`audit_mapid_range.py` — S66: mapID ≥$80 readiness census (A′1). Scans both
+trees for `ld a, [wMapID]`, classifies the consuming pattern (unsigned cp /
+8-bit `add a` doubling / 16-bit index / rst $00 / copy / bounds check), and
+attaches the S66 per-site verdict from an embedded label-keyed table.
+SELFTEST-pinned (clean=58 exactly; patched in [50,90] band so
+compiler-regenerated banks don't false-alarm); any unadjudicated site prints
+NEEDS_REVIEW and fails. Run it before shipping the first room with mapID
+≥$80 (ROADMAP A′1 follow-up) and after any session that touches wMapID
+consumers. Owning doc: CROSSBANK_ROOMS "mapID ≥$80 readiness audit (A′1, S66)".
 
 `audit_wram.py` — S54: WRAM usage mapper. Classifies every WRAM byte from four
 evidence sources (vanilla literal refs with data-as-code 'suspect' filtering;

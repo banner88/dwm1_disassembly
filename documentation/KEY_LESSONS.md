@@ -2325,3 +2325,33 @@ ROM bank high bits), census every write to its register range and classify
 each as real code vs data-as-code — dead stores under the old mask are the
 whole hazard, and the ISR is part of the census (a register the vblank
 handler touches is not yours between di/ei).
+
+---
+
+## Session 66 Lessons — mapID ≥$80 audit
+
+### mapID is unsigned EVERYWHERE — the SM83 cannot sign-test it
+The SM83 has no sign flag (`jp m`/`jp p` are Z80, not GB). Every wMapID
+comparison in the ROM is an unsigned `cp`, so a mapID ≥$80 takes the same
+branch as $6B-$70 at every compare site. When auditing for range hazards,
+look for these instead:
+1. **8-bit `add a` doubling** — `add a / add l / … / adc h` loses the $100
+   carry (the `add l` overwrites it before `adc h`). **RST_00 has exactly
+   this shape**: every `rst $00` jump-table dispatch is $7F-capped by
+   construction (RST_20 likewise caps L). Any mapID-driven `rst $00` must be
+   clamped (`MapIDClampForDispatch`) or diverted first.
+2. **Fixed-size tables** indexed by raw mapID.
+Custom code must `sub CUSTOM_ROOM_START` BEFORE any 8-bit doubling (safe to
+mapID $EA); 16-bit `sla/rl` or `add hl,hl` walks are safe to $FE.
+
+### `bit 7` near a mapID read is usually NOT a mapID test
+All census hits were on other variables (wInGateworld, $c8ea, skill id
+$db8a) or on the NPC-entry TYPE byte, whose ≥$80 range is the by-design
+spawn/exit discriminator ($8F/$90 — ROOM_DATA_FORMAT). Read the operand, not
+the pattern.
+
+### Exits to custom rooms must carry gate_flag=0
+The gate-entry path (bank $16 label16_5b4e) copies wMapID into wGateID and
+×8-indexes GateFloorDataTable with it — fine for gate ids ≤$1F, garbage for
+a custom mapID. trigger_x=$FF is likewise forbidden (exit-list terminator).
+Both are recommended compiler validators (ROADMAP A′1 follow-up).
