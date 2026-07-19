@@ -10,7 +10,56 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-19 (Session 67 — **E1 DECODED: arena/gate-boss roster system. Arena parties are FORMULA-addressed (EID = $E0 + 9*group + 3*match + slot, opcode $1F + bank $50 clone; group 8 = Starry Night, 9 = King override $01E1-3) — no roster table exists; gate bosses are opcode $5A/$05 EID params in boss-room scripts (53-site census; Durran chain = Servants×2 → Terry 343 → Durran 199); $14:$4893 is the fight→join RECRUITMENT redirect only (boss_table semantics corrected, data unchanged); Coliseum/Mimic/$52 battles are RNG level-banded ($CAB4 = arena-progress tier). Arena path USER-VERIFIED on HW (SameBoy: $DA02=$02 @ $04:$5D8E, EIDs 251-253, $DA09=$01 @ $04:$5E69). New Tier-A pair dump_arena_brackets.py → arena_brackets.json. Byte-neutral: clean build `1ca6579…` unchanged; verifier PASS 5/5; editor2 untouched.**)
+> Last verified: 2026-07-19 (Session 68 — **E2 RE half + AUTHORING SPEC: battle↔story engine decoded, byte-neutral. wGameMode $C88A mode tables; bank $50 = BATTLE mode manager; $D9EC = 18-phase battle machine; win→script-resume guarantee ($C8EA.7) + loss path (Castle warp, gold/2, keep-on-defeat item bit) decoded; evaluation opcodes resolved ($CA8D party count / $FF92 hPlayerX / $D8E1 evaluator family); flee=neutral-2/caught=win-0/1-in-32 intro events HW-pinned by user; authoring spec + campaign recommendation in SIDEQUEST_MAP; bank_050 header rewritten + phase labels in both trees (sym-verified). Clean build `1ca6579…` unchanged; verifier PASS 5/5; editor2 untouched.**)
+>
+>
+> Session 68 (2026-07-19 — **E2 RE half + AUTHORING SPEC: the battle↔story
+> engine decoded (byte-neutral). Owning section: SIDEQUEST_MAP "Story
+> progression ENGINE + AUTHORING SPEC — DECODED S68".**
+> Headline: **"win → subsequent script commands run" is an engine
+> guarantee** — wGameMode $C88A (ROM0 tables $00:$030F init / $00:$050F
+> tick; mode 1 = field bank $01, mode 2 = battle bank $50); battle request
+> = wGameState.6 latch → bank $13 $C905 transition ($13:$73F5 = the ROM's
+> only res 6) → mode 2; script VM state $D8D5-7 survives in WRAM;
+> BattleExitHandler ($50:$640A) restores mode 1 + $C8EA.7 → bank $01
+> ClearAnimationState SKIPS its reset → script resumes after the battle
+> opcode (= the on-win rewards). LOSS ($DB55==1): $D92B=8, engine warp to
+> Castle via the opcode-$0F cells, gold $CA4B-4D halved, items dropped
+> unless info byte +$0B bit 2 (keep-on-defeat = TinyMedal/BeastTail/
+> WarpStaff/ShinyHarp/BookMark — user FAQ list VERIFIED +BookMark), $D8D7
+> cleared. **$D9EC = 18-phase battle machine** (BattlePhaseTable $50:$5F3A;
+> not 15; intro 0-3 / main 4-8 / sequencer 9 on $D9ED / post $0A-$0D /
+> exit $0E-$11), outcome set by bank $52 KO scans (~$76E0 loss / ~$7727
+> win; XOR'd for link peer; $DB73=$FF loss freeze). **$D9F4 = nested
+> battle sub-machine** (bank $50 header's "main game state" framing + the
+> "$C86C = gate world" claim were WRONG — $C86C is the LINK flag, bank $03
+> serial setters; state variants are LOCAL/LINK; wInGateworld=$C969).
+> **Evaluation opcodes resolved**: $CA8D = party count (Well/Bazaar-Edge
+> "==1" = can't-forfeit-last-monster refusal, NOT skill check); $FF92 =
+> hPlayerX low (Bazaar 215/216/217 = position gate); $D8E1 = result cell
+> of the 10-opcode evaluator family $23/$30/$32/$34/$38/$51(library-seen
+> tiers)/$55(item count)/$56(gold÷10)/$59/$5F (census in
+> BANK04_SCRIPT_ENGINE); opcode $45 = restore party from $CAB9 7-byte
+> snapshot. Deliverables: bank_050 header rewrite + BattlePhaseTable/
+> BattlePhase09SubTable re-sections + 18 phase labels in BOTH trees
+> (sym-verified addresses; renames Jump_050_640a→BattleExitHandler,
+> Jump_050_6aac→BattlePhase09_TurnSequencer); wram.asm wBattlePostFlag
+> comment (0=win/1=loss/2=undecided); ARCHITECTURE mode table +
+> bank/$D9F4 rows; known_RAM_map (10 rows); MONSTER_DATA fixes;
+> SIDEQUEST_MAP spec + 3 corrections; DOC_AUDIT ×3; KEY_LESSONS S68;
+> ROADMAP E2 → [~] (RE+spec done, schema wiring open). **Campaign
+> recommendation recorded (user Q): new-world spine in custom rooms via
+> generated scripts; vanilla intact as postgame; arena gating = re-authored
+> Arena Lobby scr0; capacity = 32 flags → E3 or audited vanilla-flag
+> reuse.** **HW-pinned same session (user SameBoy): FLEE → $DB55=2
+> neutral (resolver $50:$5808 jumps phase $0A + masks exp targets
+> $DD1F-22; no penalty; $DB73-armed edge → 1); CAUGHT monster → plain win
+> ($52:$7729 = 0 via the phase-7 chain, backtrace-verified); $C899/$C89A
+> proven the LIVE RNG pair (adjacent examines differ) → LoadBtl_5d29's
+> &$1F==$1F = 1/32-per-side random battle-intro event ($DB55 doubles as
+> its marker until the KO scans).** Residuals: $CAB9 snapshot writer;
+> intro-event message text (3-14). Byte-neutral: clean build `1ca6579…`
+> unchanged; verifier PASS 5/5.
 >
 >
 > Session 67 (2026-07-19 — **E1: arena / gate-boss opponent-roster format
@@ -60,47 +109,10 @@
 > unchanged; editor2 untouched.
 >
 >
-> Session 66 (2026-07-18 — **A′1: mapID ≥$80 readiness audit — engine is
-> ≥$80-READY as patched (byte-neutral session). CF4 v7 USER-CONFIRMED
-> ("custom rooms work fine after WRAM move, no issues").**
-> Census: exactly 58 (clean) / 56 (patched) `ld a, [wMapID]` sites, zero
-> pointer-form/literal-$C968 refs, 21 writers (constants/copies/table reads,
-> no masking). Every site instruction-verified and adjudicated; reproducible
-> via new `tools/audit_mapid_range.py` (label-keyed verdicts, SELFTEST pins,
-> NEEDS_REVIEW tripwire for post-S66 code) → `extracted/mapid_range_audit.json`.
-> **Headline: the ROADMAP's "sign-test" fear was structurally impossible —
-> the SM83 has no sign flag (`jp m` doesn't exist); every mapID compare is
-> unsigned `cp`, so ≥$80 takes the identical branch proven by rooms $6B-$70.**
-> The `bit 7` hits near mapID reads are all on OTHER variables (wInGateworld,
-> $c8ea, skill id $db8a) or the NPC-entry TYPE byte ($8F/$90 spawn/exit
-> discriminators — by-design format, not mapIDs). Real ≥$80 hazard classes:
-> (a) 8-bit `add a` doubling drops the $100 carry — **RST_00 itself is
-> $7F-capped this way** (`add a / add l` destroys the doubling carry before
-> `adc h`; RST_20 likewise) — the only mapID-driven rst $00
-> (PerRoomDispatchEntry) is clamp-protected; the four bank $0B RoomPtrTable
-> walks, both bank $17 AttrPtrTable walks: diverted for ALL ≥$6B by unsigned
-> `cp CUSTOM_ROOM_START` predicates upstream; (b) fixed tables:
-> FloorPalettePtrTable/EncounterRateData/GateFloorDataTable/FloorDamageTable
-> are gate-context (wMapID = floortype/gateID <$20 there); RoomBGMTable is
-> `cp $61`-guarded + S64 resolver-first. Copies (wWarpGateId, $c8fb pair,
-> hram $d5/$d6, wScriptMapType, wGateID, $c96a) traced: full-byte, consumers
-> unsigned. Exit dest_map_type = full unmasked byte end-to-end.
-> **Ceilings**: hard mapID $FE ($FF = exit terminator); practical $EA
-> (custom-side `sub $6B` then 8-bit `add a` idiom); 75-room plan (max $B5)
-> fits with 53 spare. **Feature cap**: room-default music stops at $7F
-> (bank $71 `cp $80` guard + 128-entry table + music.py:176 loud validator)
-> — compiler-owned extension recipe + 2 recommended exit validators
-> (gate_flag=0 to custom dests; trigger_x≠$FF) recorded in CROSSBANK_ROOMS
-> §"mapID ≥$80 readiness audit" (owning) and as the A′1 ROADMAP follow-up.
-> **WATCH**: bank $01 default-spawn table (auto-label `NPCWalkDataTable`
-> is misleading — annotated in BOTH trees, comment-only) — pre-existing
-> ≥$6B overrun, benign on all proven paths (v7); $80 changes nothing.
-> Verifier PASS 5/5; clean build `1ca6579…` unchanged; editor2 untouched.
->
->
 
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S66** (2026-07-18): A′1 — mapID ≥$80 readiness audit: engine ≥$80-READY as patched (58/56 wMapID sites adjudicated; "sign-test" fear impossible on SM83; ceilings $FE hard/$EA practical; music cap $7F); audit_mapid_range.py → mapid_range_audit.json; CF4 v7 user-confirmed. Owning: CROSSBANK_ROOMS §mapID-audit, DOC_AUDIT S66, KEY_LESSONS S66.
 - **S65** (2026-07-18): CF4 — custom-room WRAM migration into the CF3-freed window (buffers $CC80/$CD00, counters $CD80×640, wCustomPool; TRANSIENT permanently) + SRAM-expansion audit (BLOCKED on RAMB discipline → E3); S58 EXPLOIT decision annotated foreclosed; audit_wram.py FREED_WINDOWS model. v7 USER-CONFIRMED S66. Owning: patches/wram.asm banner, PROJECT_COMPILER §2.6, ARCHITECTURE, DOC_AUDIT S65 (3 rows).
 - **S64** (2026-07-18): Arc 3 M3b+M3c — room-default music (LoadNewBGMIdIntoA same-size rewrite + bank $71 resolver + 128-entry table; custom.music compiler section) + MIDI import (midi_to_song.py); DWM2 31-subsong catalog; note-length FRAMES + $A3 groove corrections; v6 user-confirmed. Owning: SOUND_SYSTEM, PROJECT_COMPILER §2.9, CROSSBANK_ROOMS, DOC_AUDIT S64.
 - **S63** (2026-07-18): Arc 3 M3a — general song slots (bank $74, AudioMasterTableExt in ROM0 $3FE8 from merged-twin+dead-code bytes); v4+v5 user-confirmed; S62 compat-break fixed. Owning: SOUND_SYSTEM, PROJECT_COMPILER §1, KEY_LESSONS S63, DOC_AUDIT S63.

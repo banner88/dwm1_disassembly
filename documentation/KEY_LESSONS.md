@@ -2377,3 +2377,16 @@ cascade) — but the framing was wrong and a less careful session could have
 re-derived the formula at length. Grep the concept's synonyms (setup,
 bracket, opponent, $-addresses you already know) across documentation/
 before accepting any "not documented" premise, including the ROADMAP's own.
+
+## S68: A bank header is one flow's perspective — the ROM0 mode tables are the ground truth for "what runs when"
+bank_050.asm's header called the bank "the main game state" ($D9F4, 11
+states) and $C86C a "gate world flag"; MONSTER_DATA called $D9EC a
+"15-state post-battle machine". All three claims came from reading the bank
+in isolation. The two ROM0 dispatch tables on wGameMode $C88A ($00:$030F
+mode-init from the main loop $02B0; $00:$050F per-frame tick) settle scope
+in minutes: bank $50 is mode 2 = BATTLE only, $D9F4 is a nested battle
+sub-machine, $D9EC is the 18-phase battle machine, and the "(overworld)/
+(gate world)" state split is LOCAL vs LINK ($C86C's only writers are the
+bank $03 serial code; wInGateworld is $C969). Before trusting any "state
+machine" framing, find which mode row calls the dispatcher — and check a
+flag's WRITERS (one `EA lo hi` scan) before accepting its documented name.

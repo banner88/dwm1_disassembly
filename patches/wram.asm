@@ -347,7 +347,7 @@ wBreedOffspringPlus:: db ;da77
     ds ($DB55 - $DA78)
 
 ; Battle state
-wBattlePostFlag:: db ;db55 — 0 for bosses
+wBattlePostFlag:: db ;db55 — battle OUTCOME: 0=win, 1=loss, 2=neutral/undecided — FLEE ends at 2 (no exp/join, no loss penalty; HW-pinned S68), caught monster = win 0. Briefly reused as the 1/32 random intro-event marker at battle phase 2. Set by bank $52 KO scans; "0 for bosses" was a win-path observation
 
     ds ($DB85 - $DB56)
 

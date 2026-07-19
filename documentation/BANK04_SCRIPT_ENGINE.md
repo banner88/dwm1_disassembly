@@ -223,7 +223,7 @@ This means the script VM pauses for one or more frames while text is being displ
 | $D8DC | 1 | NPCNumber | NPC number for pending interaction (1-based) |
 | $D8DD-D8DE | 2 | NPCMoveX | X movement delta (signed 16-bit) |
 | $D8DF-D8E0 | 2 | NPCMoveY | Y movement delta (signed 16-bit) |
-| $D8E1 | 1 | ScriptTemp | Temporary storage used by multiple commands |
+| $D8E1 | 1 | ScriptTemp | EVALUATOR RESULT cell (S68): written by the 10-opcode evaluator family $23/$30/$32/$34/$38/$51/$55/$56/$59/$5F; read back by cond_branch $15. See "Evaluator opcodes" below |
 | $D8E9+ | 8×8 | NPCMoveBuffers | 8 NPC movement tracking buffers |
 | $C822-C823 | 2 | TextID | Active text ID (high/low) for ROM0 dispatch |
 | $C8A4 | 1 | InteractType | Interaction type (AND 3: 1=talk, 2/3=walk-toward) |
@@ -281,6 +281,46 @@ Custom rooms (mapID ≥ $6B) use bank $60 for scripts, text, and room data:
 - **NEVER insert bytes in bank $04** — use same-size replacements or wrappers in padding.
 
 See `patches/bank_004.asm` and `patches/bank_060.asm` for implementation.
+
+## Battle opcodes and script resume (S68)
+
+Opcode `$05` handler `$04:$57EB`: consumes the EID param → `$DA03/04`,
+`$DA02=0`, `$DA09=1`, `set 6,[wGameState $C8EB]` (battle REQUEST latch),
+resets `$C905` (the bank `$13` transition machine). The script VM's state
+(`$D8D5/6` counter, `$D8D7` flags) survives the battle in WRAM; on a WIN,
+`BattleExitHandler` (`$50:$640A`) restores field mode with `$C8EA.7` set,
+which makes bank `$01` skip its script-state reset — **the script resumes
+at the command after the battle opcode**. On a LOSS the engine warps to the
+Castle and clears `$D8D7` (script killed). Full story-engine writeup:
+SIDEQUEST_MAP "Story progression ENGINE + AUTHORING SPEC — DECODED S68".
+
+## Evaluator opcodes (the $D8E1 family; S68 census of every writer)
+
+All share the pattern: read game state → result to `$D8E1` (or act on a
+slot param), for a following `cond_branch $15`. Slot-param opcodes bound
+the slot against `$CA8D` (party count — also directly cond_branch'ed by
+scripts: `[$CA8D]==1` = "only one monster in party" refusal gates).
+
+| Op | Handler | Reads | Result |
+|----|---------|-------|--------|
+| $23 | $5E8F | per-monster field via slot → $CAEA-family | $D8E1 |
+| $30 | $6253 | per-monster field via slot → $CB19-family | $D8E1 |
+| $32 | $62DD | per-monster SPECIES via slot → $CACA-family | $D8E1 |
+| $34 | $634F | species vs value list (Library tiers) | $D8E1 |
+| $38 | $643F | per-monster field via slot → $CAEA-family | $D8E1 |
+| $51 | $696C | count of SEEN library bits $CA94 (ids 0-$EF) → 12-tier compare table $04:$699D | $D8E1 |
+| $55 | $6AFA | count of non-empty item slots $CA51 (×20) | $D8E1 |
+| $56 | $6B3A | 24-bit gold $CA4B-4D ÷ 10 (magnitude test + digit display) | $D8E1 |
+| $59 | $6BDF | party-list species via slot → $CB13-family | $D8E1 |
+| $5F | $6F9B | per-monster field via slot → $CB0D-family | $D8E1 |
+
+Position gates: scripts also cond_branch `hFF92` (player X low byte;
+`$FF92/93` = X word, `$FF95/96` = Y word — e.g. Bazaar counter 215/216/217).
+
+Opcode `$45` (`$04:$67B1`, S68): **restore party list from snapshot** —
+copies the 7-byte block `$CAB9-$CABF` (count + 3 party ids + 3 follower
+gfx) into `$CA8D-$CA93`, revalidates each id, re-canonicalizes (bank $01
+entries 5/9/3). The snapshot WRITER is not yet traced (residual).
 
 ## Cross-References
 

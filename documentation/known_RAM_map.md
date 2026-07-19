@@ -11,7 +11,20 @@
                  as ONE $200 unit (bank $06 bulk copy $C500->$C300 x$0200;
                  save-copied to SRAM $BCC8 x$200). The old "256 B" extent
                  was too small. Tile under player read from here ($00:$1E96).
-   C899     2    Pseudo-Random Number
+   C88A     4    wGameMode + sub-modes $C88B-$C88D (S68): top-level mode,
+                 ROM0 dispatch $00:$030F (init) / $00:$050F (per-frame).
+                 1=field (bank $01), 2=battle (bank $50); full table in
+                 ARCHITECTURE "Top-level game mode".
+   C88E     1    Mode-change latch (inc'd on every wGameMode write; main
+                 loop re-runs the mode INIT table when set) [S68]
+   C8AD     4    Saved wGameMode block for overlay modes 7/$0C (restored on
+                 overlay exit) [S68]
+   C899     2    Pseudo-Random Number (wRNG1/wRNG2) — stays the LIVE,
+                 per-frame-advancing RNG pair during battle (HW-pinned S68:
+                 two adjacent examines differ); battle engine save/restores
+                 it via $C1ED/EE ($52:$556D, phase-6 cycle). LoadBtl_5d29's
+                 &$1F==$1F checks on it = the 1/32-per-side random
+                 battle-intro event roll [S68]
    C8A9     1    ? (related to floor change in Gate)
    C8B5     1    BGM (offset)
                  0x02 - No music
@@ -64,6 +77,19 @@
    C969     1    flag_in_gate (wInGateworld)
                  00 - Not in a Gate (or fixed special-room template)
                  01 - In a Gate (procedural maze mode)
+   C8EA     1    Field-live/battle-resume flag (S68): field init sets 1;
+                 BattleExitHandler sets bit 7; nonzero -> bank $01
+                 ClearAnimationState SKIPS its reset, so script state
+                 $D8D5-7 survives and the NPC script RESUMES after a won
+                 battle. Cleared (res 7) on loss/arena warps -> full re-entry.
+   C8EB     1    wGameState flags. Bit 6 = battle REQUEST latch (set by wild
+                 encounters + script battle opcodes; the ROM's only res 6 is
+                 $13:$73F5 in the $C905 battle-transition machine) [S68]
+   C8ED     1    Follower-render suppression mask (bits 1-3 = the 3
+                 followers); boss win ($DA09==3) sets $0E, kept by bank $01
+                 only while $D92B==7 — cosmetic [S68]
+   C905     1    Battle-transition machine state (bank $13 label13_7366:
+                 BGM $4B/$4D, random wipe $C906, sets wGameMode=2) [S68]
    C96D     1    Gate to warp to
    CA38     1    Encounter pool index (gate + floor → pool via $01:Call_69e1)
 ;  Gate floor generation pipeline (these vars): see GATE_GENERATION.md
@@ -266,9 +292,19 @@
    1:D9E9   1    Current step in multi-step screens
                  CAUTION: shares byte with event flag indices $0270-$0277.
                  Last byte included in SRAM save range ($C8EA-$D9E9).
-   1:D9EC   1    Post-battle state machine index (15 states, dispatch at $50:$5F3A)
-   1:D9F4   1    Event state machine index (11 states 0-10)
+   1:D9EC   1    Battle PHASE machine index — 18 states (S68; not 15), the
+                 whole battle: intro 0-3, main 4-8, sequencer 9, post-battle
+                 $0A-$0D, exit $0E-$11. Dispatch BattlePhaseTable $50:$5F3A,
+                 gated by $DB73. Renamed refs: Jump_050_640a is now
+                 BattleExitHandler; Jump_050_6aac is BattlePhase09_TurnSequencer.
+   1:D9ED   1    Battle phase-9 sub-state (6 states, BattlePhase09SubTable
+                 $50:$6AB0) [S68]
+   1:D9F4   1    NESTED battle sub-machine index (11 states 0-10; ticked from
+                 battle phase $04 via LoadBtl_4017 — battle-scoped, NOT the
+                 main game state; wEventStateMachineIndex label is historical)
+                 [S68]
    1:DA02   1    Enemy COUNT − 1 (0/1/2 → 1-3 enemies). [S67, code-derived]
+   1:DA33   1    Battle frame-delay counter (phases $00/$07/$08/$0A) [S68]
    1:DA03   2    Enemy 1 stats EID, 16-bit LE (wTempEnemyId1 = low byte)
    1:DA05   2    Enemy 2 stats EID, 16-bit LE
    1:DA07   2    Enemy 3 stats EID, 16-bit LE
@@ -295,9 +331,23 @@
    1:DA75   1    Breeding: parent 1 party slot index
    1:DA76   1    Breeding: parent 2 party slot index
    1:DA77   1    Breeding: offspring plus value (0-99)
-   1:DB55   1    Post-battle flag (always 0 for bosses)
-   1:DB73   1    Post-battle gate flag ($FF = skip dispatch)
+   1:DB55   1    wBattlePostFlag = battle OUTCOME: 0=win, 1=loss, 2=neutral
+                 (S68; set by bank $52 KO scans ~$76E0/$7727, XOR'd for link
+                 peer at $52:$774F; loss skips exp+join and triggers the
+                 Castle warp + gold/item penalty in BattleExitHandler).
+                 HW-pinned S68: FLEE ends at 2 (resolver $50:$5808 — jumps
+                 phase $0A, masks exp targets $DD1F-22 = $FF; $DB73-armed
+                 edge -> 1); CAUGHT monster = plain win 0 ($52:$7729 via
+                 phase-7 turn engine, backtrace-verified). Also briefly the
+                 1/32 random intro-event marker at battle phase 2
+                 (LoadBtl_5d29 rolls live RNG $C899/$C89A &$1F==$1F).
+   1:DB73   1    Battle phase-machine freeze gate: $FF = frozen (set on loss
+                 for defeat jingle/fade; released at BattlePhaseFreezeWait
+                 $50:$5F5E when [$DD80]&[$DD9A]==$FF) [S68]
    1:DB85   1    Joinability: $07=non-joinable, other=recruitable via RNG
+   1:DD62   1    Battle-running latch (S68): nonzero -> bank $50 entry 1 runs
+                 bank $02 entry 0 per-frame; ==0 -> the $D9EC phase machine
+                 dispatches. Cleared by BattleInit.
    1:DBAB   2    Enemy 1 HP
    1:DBAD   2    Enemy 2 HP
    1:DBAF   2    Enemy 3 HP

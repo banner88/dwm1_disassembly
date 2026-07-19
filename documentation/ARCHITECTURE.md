@@ -16,11 +16,39 @@
 | $17 | Palette system |
 | $41 | Name/text tables: monster names, skill names, family codes, items, personalities, game text (fully annotated) |
 | $42-$4E | Text handler banks (text ID routing, text data) |
-| $50 | Event state machine (11 states, post-battle states) |
+| $50 | BATTLE MODE manager (wGameMode==2; S68): $D9EC 18-phase battle machine (BattlePhaseTable $5F3A), nested $D9F4 sub-machine (11 states), BattleExitHandler $640A (win→script-resume / loss penalty) |
 | $51 | Event sub-handlers, room transitions |
 | $52 | Battle system: 115 named skill handlers, SkillFunctionTable at $4011, family checks, math helpers |
 | $54 | Post-battle join logic ($55BB), EXP distribution, level-up processing |
 | $56 | Text rendering engine, parallel text dispatch cascade |
+
+## Top-level game mode (wGameMode $C88A) — S68
+
+ROM0 runs two parallel dispatch tables on `$C88A`: `$00:$030F` = mode INIT
+(called from the main loop at `$02B0` when `$C88E` mode-change latch fires),
+`$00:$050F` = per-frame TICK. Sub-modes `$C88B-$C88D`; `$C8AD-$C8B0` saves
+the 4-byte mode block for overlay modes. Mode rows (init entry / tick entry):
+
+| Mode | Bank:entries | Role |
+|------|--------------|------|
+| 0 | $15:0 / $15:1 | Title / new-game / link menus |
+| 1 | $01:0 / $01:1 | FIELD (script VM ticks here via bank $04) |
+| 2 | $50:0 / $50:1 | BATTLE (BattleInit / per-frame driver) |
+| 3 | $02:1 / $02:2 | bank $02 mode |
+| 4 | $5F:0 / $5F:1 | map-script/cutscene engine |
+| 5 | $5F:8 / $5F:9 | map-script/cutscene engine (2nd) |
+| 6 | $18:0 / $18:1 | bank $18 mode (link teardown target) |
+| 7 | $55:$0D / $55:$0E | overlay (START saves mode block to $C8AD) |
+| 8 | $59:0 / $59:1 | bank $59 mode |
+| 9 | $59:2 / $59:3 | bank $59 mode |
+| 10 | $59:4 / $59:5 | bank $59 mode |
+| 11 | $56:3 / — | bank $56 mode |
+| 12 | $56:7 / — | bank $56 mode (SELECT+? saves mode block) |
+
+Battle entry/exit: request latch `wGameState.6` → bank `$13` `$C905`
+transition machine (`$13:$73F5` = the ROM's only `res 6`) → mode 2;
+`BattleExitHandler $50:$640A` → mode 1 + `$C8EA.7` (script resume). Role
+names beyond banks 01/50/13 are best-effort; entries are ROM-verified.
 
 ## Empty ROM Banks (23 banks = 368KB in the VANILLA ROM)
 
@@ -57,7 +85,8 @@
 | $D8D0-$D8DF | Script engine state |
 | $D92A-$D99A | Room step counters (113 addresses — one per screen; value selects which NPC/exit set loads; see ROOM_DATA_FORMAT.md "Room State System") |
 | $D99B+ | Event flag bitfield |
-| $D9F4 | Event state machine index |
+| $D9EC | Battle phase index (18 phases; bank $50 BattlePhaseTable; S68) |
+| $D9F4 | Nested battle sub-machine index (0-10; battle-scoped, NOT the main game state — S68; label wEventStateMachineIndex is historical) |
 | $DA00-$DA7F | Temp: enemy stats, monster info copy, breeding vars |
 
 ## SRAM Save Layout

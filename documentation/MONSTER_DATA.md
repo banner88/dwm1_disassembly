@@ -176,13 +176,20 @@ of the post-battle level-up processing loop.
 - Any other value = recruitable via RNG probability
 - Story bosses have `$DB85 = $00` and join through the natural probability path
 
-**Post-battle state machine** (`$D9EC`): 15-state dispatch at `$50:$5F3A`, gated by `$DB73`.
-Key states:
-- `$0A`: Post-battle setup — experience calc, party processing init
-- `$0B`: Level-up check loop — check each monster, route to display or join
-- `$0C`: Level-up display per monster
-- `$0D`: Join dispatcher — if `$DD61 ≠ $FF`, load EID and call join handler
-- `$0E`: Post-join cleanup
+**Battle phase machine** (`$D9EC`) — CORRECTED S68: **18 states** (not 15),
+dispatch table `BattlePhaseTable $50:$5F3A`, dispatcher `$5F2F`, gated by
+`$DB73` (`$FF` = frozen; loss jingle/fade). `$D9EC` drives the WHOLE battle
+(intro phases 0-3, main loop 4-8, turn sequencer 9), not just post-battle.
+Post-battle phases:
+- `$0A` ($60ED): Post-battle setup — link fork (no exp), loss skip
+  (`$DB55≠0` skips exp AND join), exp walker `CallBtl_61e2`
+- `$0B` ($62F0): Level-up scan — party list `$CA8E-90`, then 20-slot loop
+- `$0C` ($63C1): Level display gate — win → bank `$51` entry `$0C`;
+  loss → jump `$0E`
+- `$0D` ($63D2): Join dispatcher — if `$DD61 ≠ $FF`, load EID and call join handler
+- `$0E` ($640A): `BattleExitHandler` — restore field mode, loss penalty
+  (NOT "post-join cleanup"; see SIDEQUEST_MAP S68 story-engine section)
+- `$0F`-`$11`: parking no-op / link exit + teardown
 
 **Boss redirect**: Bank $14 entry 6 (`$14:$4869`) remaps fight EIDs to join EIDs
 using the redirect table at `$14:$4893`. When a boss fight ends, the fight EID
@@ -192,9 +199,9 @@ is looked up and replaced with the join EID (the monster stats for what joins).
 
 | Address | Purpose |
 |---------|---------|
-| `$D9EC` | Post-battle state index (15 states) |
-| `$DB55` | Post-battle flag (always 0 for bosses) |
-| `$DB73` | Post-battle gate flag ($FF = skip dispatch) |
+| `$D9EC` | Battle phase index (18 states; S68) |
+| `$DB55` | Battle OUTCOME: 0=win, 1=loss, 2=undecided (S68; "always 0 for bosses" was a win-path observation) |
+| `$DB73` | Phase-machine freeze gate ($FF = frozen for defeat jingle/fade; S68) |
 | `$DB85` | Joinability: $07=no, other=yes (RNG-based) |
 | `$DD61` | Join candidate species ($FF = none) |
 | `$DD6B` | Copy of $DB55 |

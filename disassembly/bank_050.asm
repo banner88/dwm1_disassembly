@@ -4,85 +4,118 @@
 ; https://github.com/mattcurrie/mgbdis
 
 ; ===========================================================================
-; Bank $50 — Event State Machine & Game Loop Manager
+; Bank $50 — BATTLE MODE manager (wGameMode $C88A == 2)
 ; ===========================================================================
-; Controls the main game state via $D9F4 (11 states, 0-10).
-; Called per-frame to drive room initialization, normal gameplay,
-; battle transitions, and story event processing.
+; CORRECTED S68 (the old header framed this bank as "the main game state" —
+; wrong: ROM0's mode tables prove bank $50 runs only while wGameMode==2).
+; ROM0 top-level mode dispatch: $00:$030F = mode INIT table (from main loop
+; $02B0), $00:$050F = per-frame TICK table. Mode 2 rows: init -> bank $50
+; entry 0 (BattleInit $5DC9), tick -> bank $50 entry 1 ($5E21).
+; Mode map (both tables, same order): 0=bank $15 (title/link menus),
+; 1=bank $01 (FIELD), 2=bank $50 (BATTLE), 3=bank $02, 4/5=bank $5F
+; (map-script/cutscene), 6=bank $18, 7=bank $55, 8-10=bank $59, 11/12=bank $56.
 ;
-; $D9F4 State Machine:
-;   State 0  ($4031): Room/game initialization — setup party, clear state
+; ENTRY INTO BATTLE: a trigger (wild: bank $01 sets `set 6,[wGameState]`;
+; script opcodes $05/$1F/$20/$36/$52/$5A/$5B: bank $04 handlers stage
+; $DA02/$DA03+/$DA09 and `set 6,[wGameState]`, reset $C905) -> the bank $13
+; transition machine label13_7366 ($C905: pick battle BGM $4B/$4D, random
+; wipe effect $C906) -> $13:$73F5 does the ROM's ONLY `res 6,[wGameState]`
+; (bit 6 is a request LATCH) and sets wGameMode=2.
+;
+; EXIT FROM BATTLE: BattleExitHandler ($640A, battle phase $0E) restores
+; wGameMode=1 and `set 7,$C8EA`. $C8EA nonzero makes bank $01's field init
+; SKIP its state reset (ClearAnimationState) — so wScriptStateFlags $D8D7 +
+; script counter $D8D5/6 SURVIVE and the NPC script RESUMES at the command
+; after the battle opcode. This is the engine guarantee behind every boss
+; script's "trigger_battle then set flags/counters" pattern (E2).
+; LOSS ($DB55==1, non-arena): $D92B=8, engine warp to Castle (writes the
+; opcode-$0F cells $C96D-$C972 + $C96C=1, `res 7,$C8EA` -> full re-entry
+; clears script state), 24-bit gold $CA4B-4D halved ($1E1E a=2), inventory
+; loop drops items whose info byte +$0B bit 2 is clear (keep-on-defeat set
+; for TinyMedal/BeastTail/WarpStaff/ShinyHarp/BookMark; table $03:$71DA,
+; 12 B/item). Arena map $5D / Coliseum map $52 / $DA09==2 take special
+; branches and explicitly clear $D8D7 (script killed).
+;
+; $D9EC — BATTLE PHASE MACHINE (18 phases; dispatcher BattlePhaseDispatch
+; $5F2F, table BattlePhaseTable $5F3A; runs from entry 1 via $5EDE only when
+; $DD62==0; frozen while $DB73==$FF until [$DD80]&[$DD9A]==$FF at
+; BattlePhaseFreezeWait). Phase roles: see BattlePhaseTable comments.
+; Outcome detection lives in bank $52's end-of-round KO scans (~$76C8):
+; all party KO'd -> $DB55=1 (+link fork via bank $50 entry $0A); all enemies
+; KO'd -> $DB55=0; common tail $52:$7743 XORs $DB55 for the link peer
+; ($C863.1), sets victory ($69) / defeat ($4F) jingle, on loss $DB73=$FF,
+; then $D9EC=$0A (post-battle phases).
+;
+; $D9F4 State Machine — NESTED battle sub-machine (11 states, 0-10),
+; dispatched by LoadBtl_4017 from battle phase $04. NOTE (S68): the state
+; descriptions below predate the mode-table correction; their "(overworld)"
+; vs "(gate world)" split is actually LOCAL vs LINK — $C86C is the LINK
+; battle flag (set only by bank $03 serial code $40D4/$4113 and bank
+; $15/$18 link menus), NOT a gateworld flag (wInGateworld is $C969).
+; Per-state RAM lists below are as previously traced; re-verify before use.
+;   State 0  ($4031): Battle scene initialization
 ;     Calls: bank $55 entry 6
 ;     Writes: $C1C0, $D9F8/$D9F9 (VRAM ptr), $DB88
-;     Reads: $C86C (gate world flag), $C863
-;     Validates party monsters, sets up initial screen
-;
-;   State 1  ($40ED): Normal gameplay — main game loop
+;     Reads: $C86C (LINK flag), $C863
+;   State 1  ($40ED): Main input loop
 ;     Calls: bank $55 entry 5 (per-frame update)
-;     Reads: $C846 (input), $C8DA, $D9F3
-;     Writes: $D9F3, $D9F5
-;     Transitions: → 9 (UI wait), → 1 (loop)
-;
-;   State 2  ($4114): Battle transition check (overworld)
+;     Reads: $C846 (input), $C8DA, $D9F3; Writes: $D9F3, $D9F5
+;     Transitions: -> 9 (UI wait), -> 1 (loop)
+;   State 2  ($4114): Battle transition check (LOCAL)
 ;     Calls: bank $55 entry 6
-;     Reads: $C846, $C863, $C8DA, $D9F3
-;     Writes: $C8DD, $D9F3, $D9F5
-;     Checks if battle should trigger, transitions: → 9 or → 1
-;
-;   State 3  ($41EE): Battle transition check (gate world)
-;     Reads: $C846, $C863, $C86C, $C8DA, $D9F3
-;     Writes: $C8C7, $D9F3
-;     Gate-world variant of state 2
-;
+;     Reads: $C846, $C863, $C8DA, $D9F3; Writes: $C8DD, $D9F3, $D9F5
+;   State 3  ($41EE): Battle transition check (LINK)
+;     Reads: $C846, $C863, $C86C, $C8DA, $D9F3; Writes: $C8C7, $D9F3
 ;   State 4  ($4215): Post-event processing
-;     Reads: $C863, $C86C, $C86E, $D9F3
-;     Writes: $C873, $C8C7, $D9F3
-;     Handles post-battle/post-event cleanup
-;
-;   State 5  ($425E): Return to init (from overworld event)
-;     Reads: $C863, $C86C, $C86E, $C899, $C89A, $C8DA
-;     Writes: $C873
-;     Transitions: → 0 (back to init)
-;
-;   State 6  ($426E): Return to init (from gate world event)
-;     Reads: $C863, $C86C, $C86E, $C899, $C89A, $C8DA
-;     Gate-world variant of state 5. Transitions: → 0
-;
-;   State 7  ($4301): Complex event handler (overworld)
-;     Reads: $C863, $C86C, $C86E
-;     Writes: $C1D5, $C1D6, $C873
-;     Handles story events, cutscenes. Multiple paths:
-;     Transitions: → 0, → 4, → 1
-;
-;   State 8  ($43A7): Complex event handler (gate world)
+;     Reads: $C863, $C86C, $C86E, $D9F3; Writes: $C873, $C8C7, $D9F3
+;   State 5  ($425E): Return to init (LOCAL)
+;     Reads: $C863, $C86C, $C86E, $C899, $C89A, $C8DA; Writes: $C873
+;   State 6  ($426E): Return to init (LINK). Transitions: -> 0
+;   State 7  ($4301): Complex event handler (LOCAL)
+;     Reads: $C863, $C86C, $C86E; Writes: $C1D5, $C1D6, $C873
+;     Transitions: -> 0, -> 4, -> 1
+;   State 8  ($43A7): Complex event handler (LINK)
 ;     Calls: bank $56 entry 5
 ;     Reads: $C863, $D9F5, $DB74/$DB75
 ;     Writes: $C8C7, $D9F4, $DB77, $DB88, $DD72/$DD73
-;     Gate-world variant of state 7
-;     Transitions: → 0, → 4, → 1
+;   State 9  ($41E0): UI wait -> return to input loop
+;     Reads: $C825 (UI busy flag); Writes: $C8C7, $D9F3, $D9F4
+;   State 10 ($59D6): Full reset -> state 0
+;     Reads: $DB58-$DB5A, $DB88; Writes: $D9F4, $DB50
 ;
-;   State 9  ($41E0): UI wait → return to normal gameplay
-;     Reads: $C825 (UI busy flag)
-;     Writes: $C8C7, $D9F3, $D9F4
-;     Waits for $C825 to clear, then transitions: → 1
-;
-;   State 10 ($59D6): Full reset → state 0
-;     Reads: $DB58-$DB5A, $DB88
-;     Writes: $D9F4, $DB50
-;     Complete state reset. Transitions: → 0
-;
-; Key RAM Variables:
-;   $D9F3    Sub-state counter within current state
-;   $D9F4    Main state index (0-10)
-;   $D9F5    Secondary state flag
+; Key RAM Variables (S68-verified where noted):
+;   $D9EC    wBattlePhase — battle phase index (18 phases) [S68]
+;   $D9ED    phase-9 sub-state (BattlePhase09SubTable, 6 entries) [S68]
+;   $D9F3    Sub-state counter within current $D9F4 state
+;   $D9F4    Nested sub-machine index 0-10 (wEventStateMachineIndex —
+;            historical label name; battle-scoped) [S68]
+;   $DB55    wBattlePostFlag = battle OUTCOME: 0=win, 1=loss, 2=neutral
+;            (flee ends at 2 — resolver $5808: jump phase $0A, exp targets
+;            $DD1F-22 masked $FF; caught monster = plain win 0; HW-pinned
+;            S68). Also briefly the intro-event marker (see phase $02).
+;            Set by bank $52 KO scans; XOR'd for link peer [S68]
+;   $DB73    phase-machine freeze gate ($FF = frozen; loss jingle/fade) [S68]
+;   $DB74/75 side combatant counts (local/link second side)
+;   $DD62    battle-running latch: nonzero -> entry 1 runs bank $02 entry 0
+;            instead of the phase machine [S68]
+;   $DA33    frame delay counter (phases $00/$07/$08/$0A)
+;   $DA80    master-intro loader state (1=loading gfx via $5E84 dw table
+;            indexed $DA81; !=1 -> $5EDE battle/post-battle driver)
 ;   $C846    Input/button state
-;   $C863    Game mode flags
-;   $C86C    Gate world flag (0=overworld, non-0=gate)
-;   $C86E    Current gate ID
+;   $C863    link context flags (bit 1 = second side present) [S68]
+;   $C86C    LINK battle flag (writers: bank $03/$15/$18 only) [S68]
+;   $C86E    link context (cleared with $C863-$C86D block at link teardown)
 ;   $C825    UI busy flag (text box active)
 ;   $C873    Screen transition flag
 ;   $C8C7    Event completion flag
-;   $C8DA    Animation/effect counter
+;   $C8DA    Animation/effect counter (wMenu_selection alias in battle)
+;   $C8EA    field-live/resume flag; battle exit sets bit 7 -> field skips
+;            state reset -> SCRIPT RESUMES [S68]
+;   $C899/9A wRNG1/2 — the LIVE RNG pair (advances per frame; HW-pinned
+;            S68); saved/restored via $C1ED/EE; LoadBtl_5d29's &$1F==$1F
+;            checks = 1/32-per-side random battle-intro event roll [S68]
+;   $C8ED    follower-render suppression mask; boss win ($DA09==3) sets $0E,
+;            kept by bank $01 only while $D92B==7 (cosmetic) [S68]
 ; ===========================================================================
 
 SECTION "ROM Bank $050", ROMX[$4000], BANK[$50]
@@ -103,30 +136,30 @@ SECTION "ROM Bank $050", ROMX[$4000], BANK[$50]
     dw jr_050_5cb4              ; Entry 10
 
 ; ---------------------------------------------------------------------------
-; EventStateDispatch — Per-frame state machine dispatcher
+; LoadBtl_4017 — nested $D9F4 sub-machine dispatcher (battle-scoped, S68)
 ; ---------------------------------------------------------------------------
-; Reads $D9F4 (current event state) and dispatches to the appropriate
-; handler via rst $00 jump table.
+; Reads $D9F4 and dispatches via the rst $00 jump table below. Called from
+; battle phase $04 (BattlePhase04_SubMachineTick), NOT per-frame globally.
 ; ---------------------------------------------------------------------------
 LoadBtl_4017:
-    ld a, [wEventStateMachineIndex]            ; Current event state (0-10)
+    ld a, [wEventStateMachineIndex]            ; $D9F4 battle sub-state (0-10)
     rst $00                  ; Dispatch via jump table below
 
-; State dispatch table (11 entries, indexed by $D9F4)
-    dw $4031                    ; State 0: Room/game initialization
-    dw Jump_050_40ed            ; State 1: Normal gameplay loop
-    dw $4114                    ; State 2: Battle transition check (overworld)
-    dw $41EE                    ; State 3: Battle transition check (gate world)
+; $D9F4 sub-machine dispatch table (11 entries; battle-scoped)
+    dw $4031                    ; State 0: Battle scene initialization
+    dw Jump_050_40ed            ; State 1: Main input loop
+    dw $4114                    ; State 2: Battle transition check (LOCAL)
+    dw $41EE                    ; State 3: Battle transition check (LINK)
     dw $4215                    ; State 4: Post-event processing
-    dw $425E                    ; State 5: Return to init (overworld)
-    dw $426E                    ; State 6: Return to init (gate world)
-    dw $4301                    ; State 7: Complex event handler (overworld)
-    dw $43A7                    ; State 8: Complex event handler (gate world)
-    dw $41E0                    ; State 9: UI wait → return to gameplay
+    dw $425E                    ; State 5: Return to init (LOCAL)
+    dw $426E                    ; State 6: Return to init (LINK)
+    dw $4301                    ; State 7: Complex event handler (LOCAL)
+    dw $43A7                    ; State 8: Complex event handler (LINK)
+    dw $41E0                    ; State 9: UI wait -> return to input loop
     dw $59D6                    ; State 10: Full reset → state 0
 
 ; ---------------------------------------------------------------------------
-; State 0 ($4031): Room/Game Initialization
+; State 0 ($4031): Battle scene initialization
 ; ---------------------------------------------------------------------------
 ; Calls bank $55 entry 6 for setup, clears $D9F4-$D9FB (8 bytes),
 ; initializes VRAM tilemap pointer, validates party monsters.
@@ -4079,8 +4112,8 @@ jr_050_5808:
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    ld a, $02
-    ld [wBattlePostFlag], a
+    ld a, $02                ; flee: outcome back to 2 = NEUTRAL (HW-pinned S68)
+    ld [wBattlePostFlag], a  ; -> no exp/join, no loss penalty at exit
     call SetBtl_590c
     ld a, [$db73]
     or a
@@ -5389,61 +5422,52 @@ jr_050_5f10:
 jr_050_5f17:
     ld a, [$da82]
     or a
-    jr z, jr_050_5f2f
+    jr z, BattlePhaseDispatch
 
     ld a, [$da83]
     cp $09
-    jr nz, jr_050_5f2f
+    jr nz, BattlePhaseDispatch
 
     ld hl, $5f05
     rst $10
     ld a, [$c87e]
     or a
-    jr nz, jr_050_5f2f
+    jr nz, BattlePhaseDispatch
 
     ret
 
 
-jr_050_5f2f:
+BattlePhaseDispatch:
     ld a, [$db73]
     cp $ff
-    jr z, jr_050_5f5e
+    jr z, BattlePhaseFreezeWait
 
-    ld a, [$d9ec]
-    rst $00
-    ld l, l
-    ld e, a
-    sub e
-    ld e, a
-    xor [hl]
-    ld e, a
-    pop bc
-    ld e, a
-    ld d, c
-    ld h, b
-    ld l, a
-    ld h, b
-    ld a, c
-    ld h, b
-    or [hl]
-    ld h, b
-    bit 4, b
-    xor h
-    ld l, d
-    db $ed
-    ld h, b
-    ldh a, [$62]
-    pop bc
-    ld h, e
-    db $d2, $63, $0a
+    ld a, [$d9ec]            ; wBattlePhase
+    rst $00                  ; dispatch via BattlePhaseTable below
 
-    ld h, h
-    ld d, c
-    ld l, c
-    call c, $e665
-    ld h, l
+; BattlePhaseTable — 18 entries, indexed by $D9EC (battle phase machine).
+; Re-sectioned S68 from fake instructions (byte-identical; 36 bytes).
+BattlePhaseTable:
+    dw $5f6d                 ; $00 intro: party-alive check ($CA8D)
+    dw $5f93                 ; $01 intro: $DA33 delay; party empty -> BattleExitHandler
+    dw $5fae                 ; $02 intro: LoadBtl_5d29 ($DB55=2 + 1/32-per-side random intro event) + announce
+    dw $5fc1                 ; $03 intro: clear $DB42+, stage side slot masks $DD03/$DD07
+    dw $6051                 ; $04 tick nested $D9F4 sub-machine (LoadBtl_4017)
+    dw $606f                 ; $05 when UI free: far-call bank $58 entry 0
+    dw $6079                 ; $06 advance phase + clear $D9ED/$D9EE/$DD75/$DD6C/$DD68
+    dw $60b6                 ; $07 far-call bank $52 entry 0 (turn/skill engine)
+    dw $60cb                 ; $08 post-turn $DA33 delay -> phase $09
+    dw $6aac                 ; $09 turn sequencer sub-machine on $D9ED (6 states)
+    dw $60ed                 ; $0A post-battle setup: exp walker / link fork
+    dw $62f0                 ; $0B level scan: party list $CA8E-90 + 20-slot loop
+    dw $63c1                 ; $0C level display gate ($DB55!=0 -> phase $0E)
+    dw $63d2                 ; $0D join dispatcher ($DD61)
+    dw $640a                 ; $0E BattleExitHandler (mode->field; loss penalty)
+    dw $6951                 ; $0F no-op (ret) parking phase
+    dw $65dc                 ; $10 link exit: $C873=1 fade
+    dw $65e6                 ; $11 link teardown: commit party to SRAM, clear $C86x
 
-jr_050_5f5e:
+BattlePhaseFreezeWait:
     ld a, [$dd80]
     ld hl, $dd9a
     and [hl]
@@ -5454,7 +5478,10 @@ jr_050_5f5e:
     ld [$db73], a
     ret
 
-
+; Phase $00 ($5F6D): battle intro — bank $17 entries 2/8, then party-alive
+; count $CA8D: zero -> tilemap $0C00 + advance (wipe path); else announce
+; setup LoadBtl_6974 + $DA33=5 frame delay.
+BattlePhase00_PartyAliveCheck:
     ld hl, $1702
     rst $10
     ld hl, $1708
@@ -5478,7 +5505,9 @@ jr_050_5f86:
     inc [hl]
     ret
 
-
+; Phase $01 ($5F93): wait UI + $DA33 countdown; party count 0 -> jp
+; BattleExitHandler (pre-battle wipe), else intro announce LoadBtl_69c4.
+BattlePhase01_IntroDelay:
     ld a, [$c825]
     or a
     ret nz
@@ -5495,12 +5524,18 @@ jr_050_5f86:
 jr_050_5fa3:
     ld a, [$ca8d]
     or a
-    jp z, Jump_050_640a
+    jp z, BattleExitHandler
 
     call LoadBtl_69c4
     ret
 
-
+; Phase $02 ($5FAE): LoadBtl_5d29 sets $DB55=2 (neutral), then rolls the
+; RANDOM BATTLE-INTRO EVENT: [$C899]&$1F==$1F (1/32, live RNG — HW-pinned
+; S68) -> player-side variant (msgs 3-8 via $6AA0, +1 phase skip, $DB55=0);
+; [$C89A]&$1F==$1F -> enemy-side variant (msgs 9-14, +2 phase skip,
+; $DB88=4, $DB55=1). $DB55 doubles as the intro-event marker until the
+; bank $52 KO scans overwrite it with the real outcome. + LoadBtl_68fc.
+BattlePhase02_IntroAnnounce:
     call LoadBtl_5d29
     call LoadBtl_68fc
     ld hl, $d9ec
@@ -5511,7 +5546,10 @@ jr_050_5fa3:
     ld [$d9ee], a
     ret
 
-
+; Phase $03 ($5FC1): advance; clear $C8DA(wMenu_selection alias), $DB42x8;
+; stage side slot masks from enemy count $DB74 -> $DD03 (and $DB75 -> $DD07
+; when $C863.1 = link second side).
+BattlePhase03_InitSideSlots:
     ld hl, $d9ec
     inc [hl]
     xor a
@@ -5617,7 +5655,8 @@ jr_050_604b:
 
     ret
 
-
+; Phase $04 ($6051): tick the nested $D9F4 sub-machine (LoadBtl_4017).
+BattlePhase04_SubMachineTick:
     jr jr_050_6067
 
 BattleDispatchEntry3:
@@ -5642,7 +5681,8 @@ jr_050_6067:
     ld [$d9ed], a
     ret
 
-
+; Phase $05 ($606F): when UI free, far-call bank $58 entry 0.
+BattlePhase05_Bank58Tick:
     ld a, [$c825]
     or a
     ret nz
@@ -5651,7 +5691,9 @@ jr_050_6067:
     rst $10
     ret
 
-
+; Phase $06 ($6079): advance + clear $D9ED/$D9EE/$DD75/$DD6C/$DD68; link
+; ($C86C!=0): cycle saved RNG pair $C1ED/EE via $C899/$C89A + $12D0.
+BattlePhase06_AdvanceAndClear:
     ld hl, $d9ec
     inc [hl]
     xor a
@@ -5682,6 +5724,9 @@ jr_050_6067:
     ld a, h
     ld [$c1ee], a
 
+; Phase $07 ($60B6): far-call bank $52 entry 0 (turn/skill engine); the
+; engine itself advances $D9EC; on ==8 arm $DA33=5 post-turn delay.
+BattlePhase07_TurnEngine:
 jr_050_60b6:
     ld hl, $5200
     rst $10
@@ -5693,6 +5738,10 @@ jr_050_60b6:
 
     ld a, $05
     ld [$da33], a
+
+; Phase $08 ($60CB): $DA33 countdown, then advance; clear skill id trio
+; $DB4C-$DB4E; call $6053 sprites + fall through to phase-9 sequencer.
+BattlePhase08_PostTurnDelay:
     ld a, [$da33]
     or a
     jr z, jr_050_60d6
@@ -5711,9 +5760,12 @@ jr_050_60d6:
     ld [$db4e], a
     ld [$d9ed], a
     call BattleDispatchEntry3
-    jp Jump_050_6aac
+    jp BattlePhase09_TurnSequencer
 
-
+; Phase $0A ($60ED): post-battle setup. LINK ($C86C!=0): no exp — $C8C7=1,
+; jump phase $10. Local: exp accumulator $DD23-25 -> exp walker CallBtl_61e2
+; (CF2 divert site); $DB55!=0 (loss) skips exp AND join ($DD61=0).
+BattlePhase0A_PostBattleSetup:
     ld a, [$c825]
     or a
     ret nz
@@ -6094,7 +6146,11 @@ CmpBtl_62dd:
     inc b
     ret
 
-
+; Phase $0B ($62F0): level scan — party list $CA8E/$CA8F/$CA90 via
+; CmpBtl_6383, then the 20-slot b=0..$13 loop (farm scan; CF2 re-bound).
+; No hits -> advance + reset $D9F4=0; join pending -> skip 2 phases +
+; far-call bank $54 entry 7.
+BattlePhase0B_LevelScan:
     ld a, [$c825]
     or a
     ret nz
@@ -6240,7 +6296,9 @@ jr_050_63a4:
     sbc b
     ret
 
-
+; Phase $0C ($63C1): $DB55==0 (win) -> bank $51 entry $0C level display;
+; else (loss/undecided) jump straight to phase $0E (BattleExitHandler).
+BattlePhase0C_LevelDisplayGate:
     ld a, [wBattlePostFlag]
     or a
     jr nz, jr_050_63cc
@@ -6255,7 +6313,8 @@ jr_050_63cc:
     ld [$d9ec], a
     ret
 
-
+; Phase $0D ($63D2): join dispatcher — $DD61 join candidate ($FF = none).
+BattlePhase0D_JoinDispatch:
     ld a, [wEventStateMachineIndex]
     cp $24
     jr z, jr_050_63de
@@ -6295,7 +6354,7 @@ jr_050_63ea:
     ret
 
 
-Jump_050_640a:
+BattleExitHandler:
     ld a, [$c825]
     or a
     ret nz
@@ -7345,19 +7404,19 @@ ClrBtl_6aa3:
     ret
 
 
-Jump_050_6aac:
-    ld a, [$d9ed]
+BattlePhase09_TurnSequencer:
+    ld a, [$d9ed]            ; phase-9 sub-state
     rst $00
-    cp h
-    ld l, d
-    ld de, $256b
-    ld l, e
-    ld [bc], a
-    ld l, h
-    sbc e
-    ld l, h
-    inc c
-    ld l, l
+
+; BattlePhase09SubTable — 6 entries indexed by $D9ED (turn sequencing).
+; Re-sectioned S68 from fake instructions (byte-identical; 12 bytes).
+BattlePhase09SubTable:
+    dw $6abc                 ; sub 0: clear per-combatant status bits $DB00+
+    dw $6b11                 ; sub 1
+    dw $6b25                 ; sub 2
+    dw $6c02                 ; sub 3
+    dw $6c9b                 ; sub 4
+    dw $6d0c                 ; sub 5
     ld hl, $db00
     res 4, [hl]
     res 6, [hl]

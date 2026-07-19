@@ -685,20 +685,33 @@ the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
       is engine-side; matches-2/3 re-entry loop not single-stepped (bank $50
       regen HW-observed). Byte-neutral session (clean build `1ca6579…`).
 
-- [ ] **E2 — Story progression as an AUTHORABLE model (incl. bank `$50` annotation).**
-      The mechanism is understood at flag level — story counter `$D9E3` (`$0240-$0247`,
-      driven 48→78 by boss-defeat scripts), arena rank flags `$0030-$0037` (`$D9A1`, set by
-      Arena Lobby script 0), and the mandatory gate interludes (BattleRex `$001D`, Durran
-      `$0025`, Starry Night `$00F1`) checked in priority order. But this is NOT a first-class
-      object in the Phase 2 `project.json` schema (which stops at scripts / dialogue / flags /
-      items / encounters). Two concrete blockers: **bank `$50`** (the post-battle event state
-      machine that advances story on a win — ARCHITECTURE: "$50 = Event state machine, 11
-      states, post-battle states") is **largely unannotated — 43 named labels of 648**; and
-      the engine **evaluation opcodes `$CA8D` / `$D8E1` / `$FF92`** still need per-opcode
-      tracing (already flagged in SIDEQUEST_MAP). Authoring a *new* questline requires modeling
-      "win condition → flag/counter set → unlock" as editable structure. *Confidence: HIGH
-      (grounded). Partially outlined as Phase D one-liners (`bank $50 event state machine`),
-      but never recognized as an editor subsystem. Owning doc: SIDEQUEST_MAP + Phase D bank-`$50` box.*
+- [~] **E2 — Story progression as an AUTHORABLE model. RE half + AUTHORING
+      SPEC DONE S68** (owning section: SIDEQUEST_MAP "Story progression
+      ENGINE + AUTHORING SPEC — DECODED S68"); **schema wiring open** (same
+      split as E1). S68 decoded, all ROM-byte-verified: wGameMode $C88A +
+      the two ROM0 mode tables ($030F/$050F); bank $50 = BATTLE mode
+      manager; $D9EC = 18-phase battle machine (BattlePhaseTable $5F3A,
+      phase labels in both trees); $D9F4 = nested battle sub-machine (the
+      old "11-state event machine" framing was wrong — DOC_AUDIT S68);
+      $DB55 outcome 0/1/2 + bank $52 KO scans; **the win→script-resume
+      guarantee** ($C8EA.7 makes bank $01 skip the script-state reset, so
+      post-battle-opcode commands = the on-win rewards) and the LOSS path
+      ($D92B=8, Castle warp, gold/2, item drop with keep-on-defeat bit
+      +$0B.2 — TinyMedal/BeastTail/WarpStaff/ShinyHarp/BookMark, user FAQ
+      list verified); the evaluation opcodes resolved ($CA8D = party count,
+      $FF92 = hPlayerX, $D8E1 = 10-opcode evaluator family — census in
+      BANK04_SCRIPT_ENGINE). **Remaining (wiring, weak-model-safe):**
+      `progression.quests[]` schema layer in project.json that GENERATES
+      room scripts (condition ladder + battle opcode + on_win tail) through
+      the existing compiler — spec'd in SIDEQUEST_MAP; plus capacity
+      (32-flag pool → E3 or audited vanilla-flag reuse). HW-pinned same
+      session (user SameBoy): flee → $DB55=2 neutral (no penalty, resolver
+      $50:$5808), caught → win 0, $C899/9A = live RNG → LoadBtl_5d29 =
+      1/32-per-side random intro event. Residuals: $CAB9 snapshot writer;
+      intro-event message text. Byte-neutral session (`1ca6579…`).
+      *Recommendation recorded for the campaign (user Q, S68): author new
+      spines in custom rooms via generated scripts; keep vanilla intact as
+      postgame; arena gating survives as re-authored Arena Lobby scr0.*
 
 - [ ] **E3 — New-game initialization + save-schema headroom (now incl. the
       32 KB SRAM expansion, audited S65).**

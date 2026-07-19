@@ -54,7 +54,7 @@ gates are cleared.
 - **Script**: Bazaar script 7 — checks $0032(E), $004B, $004A, then `cond_branch [$FF92]==215/216/217`
 - **Flags**: $004A = fire monster given, $004B = gate accessible, $0040 = related state
 - **Step counter**: $D93A has 9 steps tracking BBQ→gate transformation
-- **Engine variable**: $FF92 holds species/evaluation result (values 215/216/217 — needs investigation; may be skill check, not species)
+- **Engine variable**: `$FF92` = **hPlayerX low byte** (S68: bank $01/$04 field code writes it as the player X coordinate word $FF92/93; Y = $FF95/96) — the 215/216/217 branch is a *player-position* gate (which counter tile you stand at), not a species/skill result. [in-game confirm trivially: stand elsewhere]
 - **Monster forfeited**: Yes (lost forever, e.g. Gremlin)
 
 ### Well Gate (map_type $18, screen 4 = $D960)
@@ -62,7 +62,7 @@ gates are cleared.
 - **Script**: Well script 6/7 — checks $006A, $005E, $005D, $0032, $0031, then `cond_branch [$CA8D]==1`
 - **Flags**: $005E = lightning check passed (engine-set, 4 checks), $006C = monster given, $006A = quest seen, $005D = quest started
 - **Step counter**: $D960 = 1 (Well screen 4 changes to show gate)
-- **Engine variable**: $CA8D = 1 means "selected monster has required skill"
+- **Engine variable**: `$CA8D` = **party count** (canonicalizer-owned; S68 — every slot-param opcode bounds against it). `cond_branch [$CA8D]==1` = "party has exactly ONE monster" → the can't-forfeit-your-last-monster refusal path. The skill check itself is the engine-set flag ($005E here), not $CA8D.
 - **Monster forfeited**: Yes
 
 ### Farm Gate (map_type $04)
@@ -102,7 +102,7 @@ gates are cleared.
 - **Requirement**: Starry Night ($00F1) + bring monster with summoning skill (NOT forfeited)
 - **Script**: Bazaar script 22/23 — checks $00F1, $009E, $0040, then `cond_branch [$CA8D]==1`
 - **Flags**: $009E = summoning check passed, $00F5/$00F6 = quest stages, $0040 = related
-- **Engine variable**: $CA8D = 1 (has summoning skill)
+- **Engine variable**: `$CA8D` = party count == 1 (same refusal gate as the Well; S68 — the summoning check is flag $009E, engine-set)
 - **Monster NOT forfeited** (unlike Bazaar/Well gates)
 
 ### Old Man's Gate (map_type $0D)
@@ -447,15 +447,109 @@ trigger — engine-forced during the intro (bank `$2D` per `$CAB9` note);
 (c) matches 2/3 re-entry: HW showed the bank `$50` clone firing post-battle
 as predicted; the full loop wasn't single-stepped but is consistent.
 
-### Story progression is described, but not yet AUTHORABLE (ROADMAP E2)
-The variables documented above (`$D9E3` counter 48→78, rank flags `$0030-$0037`,
-interlude gates `$001D`/`$0025`/`$00F1`) describe the **vanilla** flow. Authoring a
-**new** flow needs: (a) bank `$50` — the post-battle event state machine (ARCHITECTURE:
-11 states) — annotated; it is currently only ~43 of 648 labels named; and (b) the engine
-**evaluation opcodes `$CA8D` / `$D8E1` / `$FF92`** traced per-opcode (the "primary
-remaining work" noted in the footer below), so the editor can express "win X → set
-counter/flag → unlock Y" as data rather than hand-edited script. Until then, the editor
-can place rooms/NPCs/dialogue for a campaign but cannot define its progression spine.
+### Story progression ENGINE + AUTHORING SPEC — DECODED S68 (ROADMAP E2 RE half)
+
+**Owning section.** Everything below is ROM-byte-verified statically (S68);
+in-game/SameBoy confirmation points are marked. Bank `$50` battle-machine
+annotation: `disassembly/bank_050.asm` header + `BattlePhaseTable` (S68).
+
+**The engine guarantee that makes story authorable.** The game's top-level
+mode is `wGameMode $C88A` (ROM0 dispatch: `$00:$030F` init / `$00:$050F`
+per-frame; mode 1 = field bank `$01`, mode 2 = battle bank `$50`). A battle
+trigger (wild `set 6,[wGameState]`, or a script battle opcode) is a request
+LATCH consumed by the bank `$13` `$C905` transition machine ($13:$73F5 does
+the ROM's only `res 6`, sets mode 2). The script VM's state (`$D8D5/6`
+counter, `$D8D7` flags) lives in WRAM and is untouched by battle. On battle
+end, `BattleExitHandler` (`$50:$640A`, battle phase `$0E`) restores mode 1
+and sets bit 7 of `$C8EA` ("field live"); bank `$01`'s `ClearAnimationState`
+skips its state reset whenever `$C8EA != 0`, so **the NPC script resumes at
+the command after the battle opcode — on the WIN path only**:
+
+- **WIN** (`$DB55==0`, set by bank `$52`'s end-of-round KO scan ~`$52:$7727`):
+  exp/level/join phases `$0A-$0D` run, then exit; script resumes → the
+  commands after `trigger_battle` (set_flag / write_ram / dialogue /
+  teleport) ARE the "on-win" rewards. This is how every vanilla boss script
+  works (Watabou dialogue → opcode `$0F` teleport to the throne room →
+  castle step counters), and it is an engine guarantee, not a convention.
+- **LOSS** (`$DB55==1`, all party KO'd ~`$52:$76E0`): no exp/join
+  (`$DB55!=0` skips both in phase `$0A`); `BattleExitHandler` writes
+  `$D92B=8` (Castle "rescued" step state), engine-warps to the Castle via
+  the opcode-`$0F` cells (`$C96D-$C972`, `$C96C=1`), **halves 24-bit gold**
+  `$CA4B-4D` (`$1E1E` a=2), and drops every inventory item whose info-record
+  byte `+$0B` bit 2 is clear (**keep-on-defeat** items: TinyMedal, BeastTail,
+  WarpStaff, ShinyHarp, BookMark — table `$03:$71DA`, 12 B/item, id×12;
+  FAQ's keep-list verified + BookMark), clears `$C8EA` bit 7 and `$D8D7`
+  → full fresh room entry, script gone. The boss re-arms from its step
+  counters on revisit. (Arena map `$5D` / Coliseum `$52` / `$DA09==2` take
+  special branches — see the E1 section above — and also clear `$D8D7`.)
+- `$DB55` = 0 win / 1 loss / 2 undecided; XOR'd for the link peer at
+  `$52:$774F` (`$C863.1`). `wBattlePostFlag`'s old "always 0 for bosses"
+  comment was a win-path observation. On loss `$DB73=$FF` freezes the phase
+  machine for the defeat jingle/fade (released at `BattlePhaseFreezeWait`).
+
+**The condition vocabulary (what a quest can TEST).** `cond_branch`
+(opcode `$15`) reads any RAM cell; the engine-maintained cells scripts use:
+event flags (opcode `$03` check), step counters (`$D92A-$D99A`), `$C83C`
+YES/NO answer, **`$CA8D` = party count**, **`$FF92`/`$FF95` = player X/Y**
+(position gates), story bytes (`$D9E3` etc.), and **`$D8E1` = ScriptTemp**,
+the result cell of the EVALUATOR OPCODE FAMILY (all bank `$04`, S68 census
+of every `$D8E1` writer): `$23` (`+$6D`), `$30`, `$32` (species via slot →
+`$CACA`-family field reads), `$34` (species-vs-list tiers; Library),
+`$38`, `$59`, `$5F` (per-monster field reads, slot param bounded by
+`$CA8D`), **`$51`** (counts SEEN library bits `$CA94`, 0-$EF → 12-tier
+compare table `$04:$699D`), **`$55`** (counts non-empty item slots
+`$CA51`×20), **`$56`** (24-bit gold ÷10 magnitude test). Opcode `$45`
+(`$04:$67B1`) = restore party list from the 7-byte snapshot `$CAB9-$CABF`
+(count + 3 party ids + 3 follower gfx) — the party-borrowing mechanism's
+other half (the snapshot writer is engine/script-side; trace when needed).
+
+**The action vocabulary (what a quest can DO).** Set/clear flags
+(`$00/$01`), write step counters / any RAM (`$12`/write_ram), dialogue,
+YES/NO (`$E7 $F0`+`$15` on `$C83C`), give item/monster/egg
+(`$2A/$2C/$29/$28`), battles (`$05/$5A/$5B/$20/$1F/$36/$52`), teleport
+(`$0F`), BGM (`$41`), NPC movement — ALL already proven in custom rooms.
+
+**AUTHORING SPEC (E2 wiring; project.json).** Story progression for a
+NEW-WORLD campaign needs zero new engine work: a `progression` schema layer
+that *generates scripts* through the existing compiler. Proposed shape:
+`progression.quests[]` = `{id, room, trigger (npc/step/entry), requires
+[flag/step/evaluator conditions → generated cond_branch ladder], battle
+{eid, opcode, join_redirect}, on_win [set_flag / write_step / teleport /
+dialogue → generated post-battle command tail], on_refuse/alt branches}`.
+The compiler emits: the room's entry/NPC script bodies (condition ladder +
+battle opcode + on_win tail), flag allocations from the safe pool, and
+step-counter writes — exactly the vanilla pattern, machine-generated.
+**Recommendation (user Q, S68):** do NOT hand-edit vanilla story data;
+author new spines in custom rooms via generated scripts and keep vanilla
+intact as postgame (Layer A′). Arena-progress gating survives as-is: the
+per-class victory cascade is Arena Lobby scr0 SCRIPT content (E1 section),
+so a rewritten campaign re-authors that script and keeps the arena engine.
+**Capacity caveat:** persistent custom state today = 32 safe flags (+ step
+counters via the compiler pool are TRANSIENT — CF4); a campaign-sized spine
+(≈20+ quests × several flags) wants either E3 (SRAM expansion) or reuse of
+vanilla flag indices freed by the rewritten story — reuse requires the
+EVENT_FLAGS engine-literal audit per index (S57 lesson).
+
+**HW-pinned S68 (user SameBoy session):** (a) RESOLVED — `$C899/$C89A`
+stay the LIVE, per-frame-advancing RNG pair during battle (two adjacent
+examines differ), so `LoadBtl_5d29`'s `&$1F==$1F` checks are a
+**1/32-per-side random battle-intro event roll** (player-side variant:
+messages 3-8 via `$6AA0`, +1 phase skip, `$DB55=0`; enemy-side: messages
+9-14, +2 phase skip, `$DB88=4`, `$DB55=1` — likely the sleep/surprise
+intros; message text unchecked). `$DB55` doubles as that intro-event
+marker until the bank `$52` KO scans overwrite it with the outcome.
+(b) **FLEE ends at `$DB55=2` (neutral)** — resolver `$50:$5808` (via the
+`$D9F5` sub-dispatch, backtrace `$6067→$5715`): jumps straight to phase
+`$0A`, masks the exp targets `$DD1F-22 = $FF` → no exp/join AND no loss
+penalty; edge: if `$DB73` is already armed the flee converts to loss (=1).
+(c) **Caught monster = plain WIN** (`$52:$7729` writes 0 via the phase-7
+turn-engine chain, backtrace-verified) → join runs through phase `$0D`.
+
+**Residuals (banked, minor):** the `$CAB9` snapshot WRITER not yet traced;
+`$C8ED` follower-suppression mask = cosmetic (boss win `$DA09==3` sets
+`$0E`, bank `$01` keeps it only while `$D92B==7`); loss-path 20-slot item
+loop uses bank `$03` entry 2 info fetch per item — verified from the
+attribute table, not stepped; intro-event message text (3-14) unchecked.
 
 ---
 *Compiled from branch-following script analysis + FAQ game knowledge.*

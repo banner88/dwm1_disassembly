@@ -16,7 +16,47 @@
 
 ---
 
-## Part 1 — Archived session blocks (verbatim, newest first: S63 → S11)
+## Part 1 — Archived session blocks (verbatim, newest first)
+
+> Session 66 (2026-07-18 — **A′1: mapID ≥$80 readiness audit — engine is
+> ≥$80-READY as patched (byte-neutral session). CF4 v7 USER-CONFIRMED
+> ("custom rooms work fine after WRAM move, no issues").**
+> Census: exactly 58 (clean) / 56 (patched) `ld a, [wMapID]` sites, zero
+> pointer-form/literal-$C968 refs, 21 writers (constants/copies/table reads,
+> no masking). Every site instruction-verified and adjudicated; reproducible
+> via new `tools/audit_mapid_range.py` (label-keyed verdicts, SELFTEST pins,
+> NEEDS_REVIEW tripwire for post-S66 code) → `extracted/mapid_range_audit.json`.
+> **Headline: the ROADMAP's "sign-test" fear was structurally impossible —
+> the SM83 has no sign flag (`jp m` doesn't exist); every mapID compare is
+> unsigned `cp`, so ≥$80 takes the identical branch proven by rooms $6B-$70.**
+> The `bit 7` hits near mapID reads are all on OTHER variables (wInGateworld,
+> $c8ea, skill id $db8a) or the NPC-entry TYPE byte ($8F/$90 spawn/exit
+> discriminators — by-design format, not mapIDs). Real ≥$80 hazard classes:
+> (a) 8-bit `add a` doubling drops the $100 carry — **RST_00 itself is
+> $7F-capped this way** (`add a / add l` destroys the doubling carry before
+> `adc h`; RST_20 likewise) — the only mapID-driven rst $00
+> (PerRoomDispatchEntry) is clamp-protected; the four bank $0B RoomPtrTable
+> walks, both bank $17 AttrPtrTable walks: diverted for ALL ≥$6B by unsigned
+> `cp CUSTOM_ROOM_START` predicates upstream; (b) fixed tables:
+> FloorPalettePtrTable/EncounterRateData/GateFloorDataTable/FloorDamageTable
+> are gate-context (wMapID = floortype/gateID <$20 there); RoomBGMTable is
+> `cp $61`-guarded + S64 resolver-first. Copies (wWarpGateId, $c8fb pair,
+> hram $d5/$d6, wScriptMapType, wGateID, $c96a) traced: full-byte, consumers
+> unsigned. Exit dest_map_type = full unmasked byte end-to-end.
+> **Ceilings**: hard mapID $FE ($FF = exit terminator); practical $EA
+> (custom-side `sub $6B` then 8-bit `add a` idiom); 75-room plan (max $B5)
+> fits with 53 spare. **Feature cap**: room-default music stops at $7F
+> (bank $71 `cp $80` guard + 128-entry table + music.py:176 loud validator)
+> — compiler-owned extension recipe + 2 recommended exit validators
+> (gate_flag=0 to custom dests; trigger_x≠$FF) recorded in CROSSBANK_ROOMS
+> §"mapID ≥$80 readiness audit" (owning) and as the A′1 ROADMAP follow-up.
+> **WATCH**: bank $01 default-spawn table (auto-label `NPCWalkDataTable`
+> is misleading — annotated in BOTH trees, comment-only) — pre-existing
+> ≥$6B overrun, benign on all proven paths (v7); $80 changes nothing.
+> Verifier PASS 5/5; clean build `1ca6579…` unchanged; editor2 untouched.
+>
+>
+
 
 > Session 64 (2026-07-18 — **Arc 3 M3b + M3c: room-default music + MIDI
 > import, both USER-CONFIRMED (test ROM v6 `7cc0857faad8a950573e865e93f791eb`,
