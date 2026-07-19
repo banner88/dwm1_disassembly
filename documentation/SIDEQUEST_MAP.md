@@ -343,17 +343,109 @@ Two of the campaign-authoring gaps live in this doc's domain. The full prioritiz
 list (E1–E6) is in ROADMAP "Phase E — Campaign-scale subsystems"; these two are the
 story/arena keystones.
 
-### Arena / gate-boss ROSTER format — NOT yet decoded (ROADMAP E1)
-This document maps the progression **flags** (which arena class / gate unlocks what),
-but NOT the opponent **content**: the monster parties fought at each arena class (G→S)
-and at each gate-boss fight, with their levels/skills, and the bracket ordering.
-`boss_table.json` (`dump_boss_table.py`, the `$4897` table, 32 gates) covers gate
-bosses; the **arena-class brackets are unconfirmed** (they may be a separate table).
-A new campaign's challenge curve cannot be authored until this is reversed. Concrete
-next step: trace the **arena-lobby battle-setup path** — how the Arena Lobby script
-(scripts 0/6/7/10/11, which already gate on `$00F1`/`$0025`/`$0037`/`$001D`) selects
-the opponent party for the player's current rank — then decode the roster table format
-and add it to `boss_table.json` (or a new `arena_brackets.json`).
+### Arena / gate-boss ROSTER format — DECODED S67 (ROADMAP E1) ✅ [arena path USER-VERIFIED S67 via SameBoy write-watchpoints: Class D registration wrote $DA02=$02 at $04:$5D8E with EIDs 251/252/253 ($E0+9*3+slot, exact formula match), regen fired at the bank $50 clone, and $DA09=$01 written by opcode $20 at $04:$5E69 from map $5D scr0 (DE=$61E4). Boss/coliseum trigger sites are ROM-byte-derived.]
+
+**Owning section.** Machine-readable form: `extracted/arena_brackets.json`
+(`tools/dump_arena_brackets.py`, self-checking ROM anchors). The system has FOUR
+mechanisms; only the first two are "authored content", the rest are RNG.
+
+**Battle-slot RAM (common to all):** enemy EIDs are 16-bit LE at
+`$DA03/04`, `$DA05/06`, `$DA07/08`; **`$DA02` = enemy count − 1** (0/1/2);
+`$DA09` = battle mode (0 = field-touch [bank `$06` `SetMapS_6ad7`], 1 =
+scripted preset [$05/$20/$36], 2 = party-scaled random [$52], 3 = boss
+[$5A/$5B]). *(Mode 1 + `$DA02` semantics USER-VERIFIED S67 on HW; modes
+0/2/3 code-derived.)*
+
+**1. ARENA — formula-addressed, no roster table exists.**
+`ArenaBattleSetup` (script opcode `$1F`, `$04:$5D5B`; between-matches clone
+`LoadArenaEnemyStats` `$50:$66D3ish/$6716-labelled`) computes
+**`EID = $E0 + 9*wArenaGroup + 3*wColiseumBattle + slot`** (slot 0-2, 3 enemies).
+So the arena rosters are **90 consecutive enemy-stats rows from EID 224**:
+groups 0-7 = classes G F E D C B A S (3 matches × 3 monsters each), group 8 =
+Starry Night (EIDs 296-304; final = MetalKing/Coatol/RainHawk L50), group 9 =
+**King battle** — the formula result is overridden in code with EIDs
+`$01E1-$01E3` (GoldSlime/Divinegon/Rosevine L70); group 9's formula rows
+(EIDs 305-313, rival-species teams incl. Rayburn/Eyeder/DeadNite) are
+unreachable cut data. `wArenaGroup` (`$D9CE`) is set by the bank `$09` lobby
+class menu (`4*[$C8E3] + ([$C8E2]&$7F)`, availability bytes at `$C0D8`, entry
+gold word table `$09:$5D23` = 0/10/50/100/500/1000/5000/10000 for G→S) — or
+directly by Arena Lobby **scr6** (`write_ram $D9CE=8` + `$D999=1` for Starry
+Night; `$D9CE=9` + `$D999=4` for the King), which then runs opcode `$1F` and
+teleports to map `$5D` (Arena Battle). Map `$5D` scr0 stages the pre-fight
+scene (master sprite from `ArenaMasterSpriteTable` `$04:$5E22`, 30×2
+`[gfx_id, is_monster]`; dup `$50:$6778` without King rows) and launches with
+opcode `$20`. Bank `$50` post-battle (`Jump_050_640a`, map `$5D` branch)
+regenerates the next match's EIDs, handles loss (`wColiseumBattle=$FF`, warp
+to lobby) and the Starry phase machine (`$D999` 0→1→2→3).
+
+**2. GATE BOSSES — script-side EID params, no boss-selection table.**
+Every boss room script triggers its fight with **opcode `$5A trigger_battle3
+<EID>`** (single enemy, mode 3) or **opcode `$05 TriggerBattle <EID>`**
+(single enemy, mode 1). The `$14:$4893` redirect table (34 pairs incl. the
+non-boss `4→486` intro-Dracky entry) only maps **fight EID → join EID** for
+recruitment — it does NOT drive which boss appears; `boss_table.json`'s
+per-gate framing is positional coincidence. Multi-enemy exceptions write the
+slots directly (`write_ram2`): **Temptation** = Centasaur 151 + Servant 149 +
+EvilArmor 152 (`$DA02=2`, opcode `$5B`); **Durran phase 1** = Servant L55
+(EID 342) ×2 (`$DA02=1`, opcode `$20`). The Durran gate is a 3-fight chain in
+scr0: Servants ×2 → **Adult Terry EID 343 (`$0F:$4D46`)** → **Durran EID 199
+(`$0F:$4DB8`)**; post-game Terry rematch = EID 343 again (`$0F:$500E`).
+Other `$05` users: Digster/Arena-Left (127, scr1), Bewilder decoys (341 ×4),
+Anger decoys (349 ×7), Castle intro demo Slime (480, 2 HP), and a previously
+undocumented **MadGopher L21 event battle (EID 255)** from Castle scr13 +
+Farm scr26. Medal Gate has THREE boss variants (EIDs 156/153/155 in scr1/2/3).
+Tatsu EID 344 (species 216) appears unused (cut). Full site census with
+script attribution: `arena_brackets.json → gate_boss_triggers`.
+
+**3. IN-GATE COLISEUM (map `$52`) — RNG, level-banded, not authorable rosters.**
+Opcode **`$5C ColiseumInitPrize`** (`$04:$6D93`; old label "HugeBattleSetup"
+was wrong) generates the 3 foreign-master parties: 3 random EIDs each from a
+window `base + rand(range)` keyed on **MAX** party level (bank `$16` twin
+`SetBrd_5e38`, run at floor creation, keys on **AVERAGE** level). Bands
+(below-level → base EID, range): 4→2×9, 10→13×18, 16→33×18, 22→57×18,
+28→81×18, 34→105×18, 40→129×18, 46→157×18, else 181×18 — i.e. the wild-EID
+space. Parties 2/3 staged at `$D9D1-$D9D6` / `$D9D9-$D9DE` (chained by
+`SetBtl_67ae` `$50` as `wColiseumBattle` 0→1→2→3); prize item `$D9D0` rolled
+from 16-byte tables `$04:$6F44` (<9 lifetime visits, counter `$D9CF`) /
+`$6F54` (≥9).
+
+**4. MIMIC + RANDOM-SCALED battles.** Opcode `$36 MimicBattleSetup`: word
+table `$04:$63EF` (EIDs 317-324 = Mimic L1/5/10/20/30/38×3) indexed by
+**`$CAB4` = arena-progress tier** — Arena Lobby scr0 writes `$CAB4 = class+1`
+on every class victory, so chest Mimics scale with arena rank. Opcode
+`$52 RandomScaledBattle`: word table `$04:$6A3C` (8 bases $0160-$01D0, tier =
+(party level sum+1)/20 cap 7, EID = base + rand&$0F → EIDs 352-479).
+
+**Per-class VICTORY cascade (Arena Lobby scr0, runs on lobby return with
+`wColiseumBattle=$FE`).** Branches on `wArenaGroup` = the class just won:
+sets the rank flag + catch-up flags for any skipped lower ranks, writes
+`$CAB4 = class+1`, and batch-writes world step counters. Per class: **G**:
+flag $0030; steps $D92B=0 $D92F=2 $D931=1 $D93C=3 $D941=1. **F**: $0031;
+$D92F=3 $D931=2 $D933=1 $D93C=4 $D952-4=1. **E**: $0032 (+catch-up $0031,
+$0049); $D93B=1 $D942=1. **D**: $0031+$0032+$0033 (+$0119 if E unseen);
+$D92B=0 $D92F=3 $D931=2 $D933=1 $D93B=2 $D93C=4 $D942=1 $D952-4=1. **C**:
+$0034; $D93B=3. **B**: $0035 (+catch-up $0034); $D939=1 $D93D=1 $D945=1
+$D946=1 $D947=2 $D963=1 $D964=1. **A**: $0036 (+catch-ups $0035/$0034);
+$D93D=2. **S**: $0034-$0037 all (+$011C if A unseen); $D92B=0 $D936-8=2
+$D939=2 $D93B=3 $D93D=3 $D945/6=1 $D947=2 $D963/4=1. Registration/announce
+flags $0059/$005A/$007D/$00FD are set by scr0/scr6 (part of the "arena
+internal state" 27-flag group in §6, still only partially characterized).
+
+**AUTHORING SPEC (for project.json later):** an arena bracket = 90+3
+enemy-stats rows (224-304 + 481-483): edit species/level/stats/skills
+per row — position in the block IS the (class, match, slot) address; changing
+bracket SHAPE (more matches/classes) means patching the `$1F`/`$50` formula
+constants (multipliers 9/3, base $E0). A gate boss = the `$5A`/`$05` param in
+its boss-room script + its enemy-stats row + the redirect pair (fight→join) +
+optionally the `$14:$4C1D` join-version row. Coliseum/Mimic difficulty =
+the band tables above (same-size edits).
+
+**Residual (banked, minor):** (a) `$DA09` mode **1** + `$DA02` semantics are
+USER-VERIFIED S67 on HW (arena path); modes 0/2/3 remain code-derived;
+(b) the intro Dracky fight (EID 4, redirect 4→486) has no script-side
+trigger — engine-forced during the intro (bank `$2D` per `$CAB9` note);
+(c) matches 2/3 re-entry: HW showed the bank `$50` clone firing post-battle
+as predicted; the full loop wasn't single-stepped but is consistent.
 
 ### Story progression is described, but not yet AUTHORABLE (ROADMAP E2)
 The variables documented above (`$D9E3` counter 48→78, rank flags `$0030-$0037`,

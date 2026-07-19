@@ -10,7 +10,54 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-18 (Session 66 — **A′1 mapID ≥$80 audit DONE: engine is ≥$80-READY as patched. No sign tests on mapID exist (SM83 has no sign flag; every compare is unsigned `cp` — ≥$80 takes the branch proven by $6B-$70). Real hazard classes: 8-bit `add a` carry-loss walks (RST_00 is $7F-capped by construction) and fixed tables — all diverted ≥$6B / clamped / gate-context in the patched tree. Ceilings: hard $FE, practical $EA; BGM room-defaults capped $7F (compiler follow-up recipe in CROSSBANK_ROOMS). New tool audit_mapid_range.py (58/56 sites pinned, all adjudicated). CF4 v7 USER-CONFIRMED this session.** Byte-neutral: clean build `1ca6579…` unchanged; verifier PASS 5/5; editor2 untouched.)
+> Last verified: 2026-07-19 (Session 67 — **E1 DECODED: arena/gate-boss roster system. Arena parties are FORMULA-addressed (EID = $E0 + 9*group + 3*match + slot, opcode $1F + bank $50 clone; group 8 = Starry Night, 9 = King override $01E1-3) — no roster table exists; gate bosses are opcode $5A/$05 EID params in boss-room scripts (53-site census; Durran chain = Servants×2 → Terry 343 → Durran 199); $14:$4893 is the fight→join RECRUITMENT redirect only (boss_table semantics corrected, data unchanged); Coliseum/Mimic/$52 battles are RNG level-banded ($CAB4 = arena-progress tier). Arena path USER-VERIFIED on HW (SameBoy: $DA02=$02 @ $04:$5D8E, EIDs 251-253, $DA09=$01 @ $04:$5E69). New Tier-A pair dump_arena_brackets.py → arena_brackets.json. Byte-neutral: clean build `1ca6579…` unchanged; verifier PASS 5/5; editor2 untouched.**)
+>
+>
+> Session 67 (2026-07-19 — **E1: arena / gate-boss opponent-roster format
+> DECODED (byte-neutral). Arena path USER-VERIFIED on HW same session.**
+> Headline: there is NO arena roster table — opcode $1F `ArenaBattleSetup`
+> ($04:$5D5B; between-matches clone `LoadArenaEnemyStats` bank $50) computes
+> **EID = $E0 + 9*wArenaGroup + 3*wColiseumBattle + slot** → 90 consecutive
+> enemy-stats rows ARE the brackets (groups 0-7 = G..S, 8 = Starry Night
+> 296-304, 9 = King, overridden to $01E1-$01E3; formula rows 305-313 =
+> unreachable rival-team cut data). Group source: bank $09 lobby menu
+> (4*[$C8E3]+([$C8E2]&$7F); gold table $09:$5D23; availability $C0D8) or
+> Arena Lobby scr6 write_ram (group 8/9 + $D999 = 1/4). $D999 = map-$5D step
+> counter (0 arena / 1-3 Starry phases / 4 King). Master lobby sprites:
+> `ArenaMasterSpriteTable` $04:$5E22 (30×[gfx,is_monster]; dup $50:$6778) —
+> both re-sectioned from fake instructions (byte-perfect). Gate bosses:
+> EVERY boss fight is the opcode $5A/$05 EID param in the boss ROOM script
+> (53-site census, all script-attributed): Medal Gate has THREE variants
+> (156/153/155); Durran gate = 3-fight chain (write_ram2 Servant 342 ×2 +
+> op $20 → op $05 Terry 343 @ $0F:$4D46 → op $05 Durran 199 @ $0F:$4DB8;
+> post-game Terry rematch $0F:$500E); Bewilder/Anger decoys (341×4/349×7);
+> Digster = op $05 127; NEW: undocumented MadGopher L21 event battle
+> (EID 255, Castle scr13 + Farm scr26); Tatsu EID 344 unused. **$14:$4893 is
+> the fight→join RECRUITMENT redirect, NOT a boss-selection table** —
+> boss_table.json semantics corrected (data unchanged; DOC_AUDIT S67).
+> Coliseum (map $52): RNG level-banded parties (op $5C `ColiseumInitPrize`
+> keys MAX level, bank $16 twin keys AVERAGE; bands 2×9 then 18-wide at
+> 13/33/57/81/105/129/157/181; parties 2/3 staged $D9D1-6/$D9D9-DE, chained
+> by $50:SetBtl_67ae; prizes $04:$6F44/$6F54, visit counter $D9CF). Mimic
+> (op $36, $04:$63EF) tiered by **$CAB4 = arena progress** (Arena Lobby scr0
+> writes class+1 per victory — the scr0 per-class victory cascade of rank +
+> catch-up flags + world step counters is now fully tabled in SIDEQUEST_MAP).
+> Op $52 = random scaled battles ($04:$6A3C). Battle-slot RAM: $DA03/05/07
+> 16-bit EIDs, **$DA02 = count−1**, $DA09 mode 0/1/2/3. **HW verification
+> (user, SameBoy write-watchpoints, Class D)**: $DA02=$02 written at
+> $04:$5D8E with EIDs 251/252/253 (= $E0+27, exact formula), caller DE=$47AA
+> (scr6); regen fired at the $50 clone; $DA09=$01 by op $20 at $04:$5E69
+> from map $5D scr0 (DE=$61E4). Deliverables: `tools/dump_arena_brackets.py`
+> → `extracted/arena_brackets.json` (Tier A, self-checking anchors); owning
+> prose SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67" incl.
+> AUTHORING SPEC for E2; annotation both trees (2 table re-sections, 3 label
+> renames incl. the wrong `ArenaGenerateBattles`→`ScriptWriteRAM`, 7 opcode
+> header fixes); corrections in QUEST_OPCODES / known_RAM_map / DOC_AUDIT
+> (2 rows) / KEY_LESSONS (2: script words are op|$FF00; synonym-grep before
+> "not documented"). Residuals banked in SIDEQUEST_MAP ($DA09 modes 0/2/3
+> code-derived; intro Dracky EID 4 engine-side; match-2/3 loop not stepped).
+> ROADMAP E1 ✅ — E2 unblocked. Verifier PASS 5/5; clean build `1ca6579…`
+> unchanged; editor2 untouched.
 >
 >
 > Session 66 (2026-07-18 — **A′1: mapID ≥$80 readiness audit — engine is
@@ -51,61 +98,10 @@
 > Verifier PASS 5/5; clean build `1ca6579…` unchanged; editor2 untouched.
 >
 >
-> Session 65 (2026-07-18 — **CF4: custom-room WRAM migration into the
-> CF3-freed window + SRAM-expansion audit. BUILT; v7 USER-CONFIRMED S66
-> (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`, patched).**
-> User decisions: buffers move to the window head; counter region 640 B;
-> the $DE74 scratch block stays; persistent-pool doctrine = flags now,
-> SRAM expansion later (E3); 56-B SRAM tail = untouched emergency reserve.
-> **Pre-work finding (changes the S58 plan)**: the freed window
-> $CC80-$D664 is TRANSIENT PERMANENTLY — its save-image address
-> $A3BA-$AD9E is CF3's live farm, so entries 5/6 skip it in BOTH copy
-> directions; the S58 "EXPLOIT the vanilla block copy" decision was
-> foreclosed by S60's build and cannot be revived (annotated at the
-> decision text; DOC_AUDIT S65).
-> **As built**: wCustomNPCBuffer→$CC80, wCustomExitBuffer→$CD00
-> (label-only; the 4 operand sites live in the bank $60 template TEXT which
-> is unchanged — sha256 pins + TEMPLATE_SIZE untouched); STEP_COUNTER_BASE
-> $DE74→$CD80, WRAM_REGION default/max 640 (hard cap = the $D000 wram0
-> section boundary, validated in project.py); static `ds 7` at $DE74 keeps
-> wRoomRecScratch pinned $DE7B (scratch/Tame/flag/CF3-mailbox block
-> unmoved; ClearAllWRAM $1EE0 extension still required for it);
-> wCustomPool $D001-$D664 (1,636 B transient reserve). **Init guarantee**
-> (the copy-skip corollary of S55's init lesson): bank $73 entry 6 tail
-> zeroes the window after the main-image restore copy (gated on unique src
-> end $B124; the 4 callers are enumerated in the entry header) — with
-> ClearAllWRAM (power-on) and CF3NewGameClear (new game) this makes every
-> gameplay entry window-zeroed; reload-in-room now deterministically step-0
-> (also closes the S55-accepted cross-save staleness).
-> **Census scare resolved**: 136 vanilla literal refs inside the window are
-> ALL data-as-code artifacts ($CD = CALL opcode minting fake $CDxx
-> operands; "PaletteStoreCD80" etc. are auto-names on instruction soup);
-> structural proof = the vanilla array occupied the window. audit_wram.py
-> models it (FREED_WINDOWS, F-class; S54 detection power selftest-pinned
-> via a $CAC5 probe; arg guard added) + wram_usage.json regenerated
-> together. known_RAM_map's unsourced "link+arena time-share" clause
-> refuted via the S56 access map and removed.
-> **SRAM expansion (user request) audited, NOT built — BLOCKED, banked
-> into E3 + ARCHITECTURE "SRAM banking"**: header is $1B/8 KB; RST_18
-> writes RAMB:=rom_bank>>5 on every rst $10 ($FFA3 = shadow; bank $40 has
-> a genuine di-bracketed 32 KB multi-bank SRAM wipe — the engine family
-> carries the infrastructure); under 32 KB, CF3 (bank $73) would run on
-> RAMB=3 and the audio ISR's bank $74 dispatch flips RAMB every vblank —
-> RAMB discipline in CF3's SRAM entry points must land first. Free SRAM
-> today: tail $BFC8-$BFFF (56 B).
-> Doc repairs: PROJECT_COMPILER §2.7 stale pre-S57 flag pool → 32-flag
-> pool; §2.6 rewritten; quick-start + §1 md5 re-pinned WITH a stale-pin
-> grep this time. Compiler: example project (region_size 640, hole
-> 0xCD84), REFERENCE_MD5 `de0c5a67…` (patched), 25/25 --rom; compat==hand
-> re-proven file-identical. Verifier PASS 5/5; clean build `1ca6579…`.
-> **v7 acceptance MET (user, S66 — "no issues")**: enter $6B/$6C/$70, NPC interact, exits
-> both ways, step advance, save-in-room → reload → scroll (expect step-0),
-> egg give in-room.
->
->
 
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S65** (2026-07-18): CF4 — custom-room WRAM migration into the CF3-freed window (buffers $CC80/$CD00, counters $CD80×640, wCustomPool; TRANSIENT permanently) + SRAM-expansion audit (BLOCKED on RAMB discipline → E3); S58 EXPLOIT decision annotated foreclosed; audit_wram.py FREED_WINDOWS model. v7 USER-CONFIRMED S66. Owning: patches/wram.asm banner, PROJECT_COMPILER §2.6, ARCHITECTURE, DOC_AUDIT S65 (3 rows).
 - **S64** (2026-07-18): Arc 3 M3b+M3c — room-default music (LoadNewBGMIdIntoA same-size rewrite + bank $71 resolver + 128-entry table; custom.music compiler section) + MIDI import (midi_to_song.py); DWM2 31-subsong catalog; note-length FRAMES + $A3 groove corrections; v6 user-confirmed. Owning: SOUND_SYSTEM, PROJECT_COMPILER §2.9, CROSSBANK_ROOMS, DOC_AUDIT S64.
 - **S63** (2026-07-18): Arc 3 M3a — general song slots (bank $74, AudioMasterTableExt in ROM0 $3FE8 from merged-twin+dead-code bytes); v4+v5 user-confirmed; S62 compat-break fixed. Owning: SOUND_SYSTEM, PROJECT_COMPILER §1, KEY_LESSONS S63, DOC_AUDIT S63.
 - **S62** (2026-07-17): Arc 3 M2 — song round-trip codec (157 streams byte-identical); DWM2 grammar corrections ($AC call/$FD slots/loop forms); BGM #06 POC user-confirmed. Owning: SOUND_SYSTEM §5/§7, KEY_LESSONS S62, DOC_AUDIT S62.
@@ -258,6 +254,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 |--------|-------|
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. Open boxes: InitBGM channel-count ext (4/5ch sources), gate/event music, CI compiler-test |
+| Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
 | Editor app (Phase 3) | Not started; backend keystone (S42) done |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)

@@ -6807,57 +6807,23 @@ SetTempEnemyStatsId:
     ret
 
 
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    ld de, $0b00
-    nop
-    ld a, [bc]
-    nop
-    jp c, DispatchBank42Rst
-
-    nop
-    ld a, [bc]
-    nop
-    dec bc
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    ld [bc], a
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    dec bc
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    rrca
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    inc c
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    inc de
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    inc d
-    nop
+; ---------------------------------------------------------------
+; ArenaMasterSpriteTable50 ($50:$6778) — 27-entry duplicate of the
+; bank $04 ArenaMasterSpriteTable ($04:$5E22): per-arena-match master
+; lobby sprite [gfx_id, is_monster], groups G..S + Starry Night only
+; (no King rows — the King battle never re-enters via bank $50's
+; LoadArenaEnemyStats, which is the between-matches regenerator).
+; ---------------------------------------------------------------
+ArenaMasterSpriteTable50:
+    db $0b, $00, $0a, $00, $11, $00  ; G  class: matches 0/1/2
+    db $0b, $00, $0a, $00, $da, $01  ; F  class (match2 master = Hargon monster sprite)
+    db $0b, $00, $0a, $00, $0b, $00  ; E  class
+    db $0b, $00, $0a, $00, $02, $00  ; D  class
+    db $0b, $00, $0a, $00, $0b, $00  ; C  class
+    db $0b, $00, $0a, $00, $0f, $00  ; B  class
+    db $0b, $00, $0a, $00, $0c, $00  ; A  class
+    db $0b, $00, $0a, $00, $13, $00  ; S  class
+    db $0b, $00, $0a, $00, $14, $00  ; Starry Night Tournament
 
 SetBtl_67ae:
     ld hl, $d7ca

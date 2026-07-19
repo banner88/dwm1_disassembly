@@ -1,0 +1,3370 @@
+{
+  "_generator": "tools/dump_arena_brackets.py <- data/DWM-original.gbc (md5 1ca6579359f21d8e27b446f865bf6b83) + extracted/all_scripts.json",
+  "_note": "E1 roster system, decoded S67. Owning prose: SIDEQUEST_MAP.md. Arena parties are FORMULA-addressed consecutive enemy-stats rows (edit rows 224-304/481-483 to author); gate bosses are script opcode params (edit the $5A/$05 param + redirect pair + stats row).",
+  "arena": {
+    "formula": "EID = 0xE0 + 9*wArenaGroup + 3*wColiseumBattle + slot",
+    "enemy_slot_ram": "$DA03/04 $DA05/06 $DA07/08 (16-bit LE); $DA02 = count-1",
+    "groups": [
+      {
+        "group": 0,
+        "class": "G",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              224,
+              225,
+              226
+            ],
+            "party": [
+              {
+                "eid": 224,
+                "species_id": 78,
+                "species_name": "Dracky",
+                "level": 1,
+                "hp": 8,
+                "mp": 20,
+                "atk": 12,
+                "def": 4,
+                "agl": 12,
+                "int": 14,
+                "joinability": 7
+              },
+              {
+                "eid": 225,
+                "species_id": 53,
+                "species_name": "Anteater",
+                "level": 1,
+                "hp": 12,
+                "mp": 0,
+                "atk": 17,
+                "def": 4,
+                "agl": 4,
+                "int": 3,
+                "joinability": 7
+              },
+              {
+                "eid": 226,
+                "species_id": 78,
+                "species_name": "Dracky",
+                "level": 1,
+                "hp": 8,
+                "mp": 20,
+                "atk": 11,
+                "def": 3,
+                "agl": 10,
+                "int": 14,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              227,
+              228,
+              229
+            ],
+            "party": [
+              {
+                "eid": 227,
+                "species_id": 8,
+                "species_name": "Slime",
+                "level": 1,
+                "hp": 8,
+                "mp": 0,
+                "atk": 8,
+                "def": 5,
+                "agl": 7,
+                "int": 1,
+                "joinability": 7
+              },
+              {
+                "eid": 228,
+                "species_id": 98,
+                "species_name": "Stubsuck",
+                "level": 2,
+                "hp": 16,
+                "mp": 6,
+                "atk": 19,
+                "def": 7,
+                "agl": 10,
+                "int": 10,
+                "joinability": 7
+              },
+              {
+                "eid": 229,
+                "species_id": 8,
+                "species_name": "Slime",
+                "level": 1,
+                "hp": 7,
+                "mp": 0,
+                "atk": 8,
+                "def": 5,
+                "agl": 6,
+                "int": 1,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              230,
+              231,
+              232
+            ],
+            "party": [
+              {
+                "eid": 230,
+                "species_id": 155,
+                "species_name": "Spooky",
+                "level": 7,
+                "hp": 16,
+                "mp": 8,
+                "atk": 13,
+                "def": 12,
+                "agl": 17,
+                "int": 16,
+                "joinability": 7
+              },
+              {
+                "eid": 231,
+                "species_id": 163,
+                "species_name": "Hork",
+                "level": 5,
+                "hp": 20,
+                "mp": 6,
+                "atk": 20,
+                "def": 6,
+                "agl": 10,
+                "int": 10,
+                "joinability": 7
+              },
+              {
+                "eid": 232,
+                "species_id": 155,
+                "species_name": "Spooky",
+                "level": 7,
+                "hp": 14,
+                "mp": 8,
+                "atk": 15,
+                "def": 9,
+                "agl": 11,
+                "int": 13,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 1,
+        "class": "F",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              233,
+              234,
+              235
+            ],
+            "party": [
+              {
+                "eid": 233,
+                "species_id": 1,
+                "species_name": "SpotSlime",
+                "level": 8,
+                "hp": 26,
+                "mp": 11,
+                "atk": 30,
+                "def": 17,
+                "agl": 30,
+                "int": 11,
+                "joinability": 7
+              },
+              {
+                "eid": 234,
+                "species_id": 1,
+                "species_name": "SpotSlime",
+                "level": 9,
+                "hp": 20,
+                "mp": 12,
+                "atk": 26,
+                "def": 15,
+                "agl": 30,
+                "int": 32,
+                "joinability": 7
+              },
+              {
+                "eid": 235,
+                "species_id": 1,
+                "species_name": "SpotSlime",
+                "level": 8,
+                "hp": 24,
+                "mp": 15,
+                "atk": 28,
+                "def": 14,
+                "agl": 32,
+                "int": 11,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              236,
+              237,
+              238
+            ],
+            "party": [
+              {
+                "eid": 236,
+                "species_id": 195,
+                "species_name": "MudDoll",
+                "level": 12,
+                "hp": 38,
+                "mp": 20,
+                "atk": 22,
+                "def": 18,
+                "agl": 24,
+                "int": 44,
+                "joinability": 7
+              },
+              {
+                "eid": 237,
+                "species_id": 46,
+                "species_name": "Almiraj",
+                "level": 10,
+                "hp": 42,
+                "mp": 26,
+                "atk": 26,
+                "def": 20,
+                "agl": 40,
+                "int": 22,
+                "joinability": 7
+              },
+              {
+                "eid": 238,
+                "species_id": 195,
+                "species_name": "MudDoll",
+                "level": 12,
+                "hp": 40,
+                "mp": 44,
+                "atk": 20,
+                "def": 22,
+                "agl": 22,
+                "int": 44,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              239,
+              240,
+              241
+            ],
+            "party": [
+              {
+                "eid": 239,
+                "species_id": 157,
+                "species_name": "Putrepup",
+                "level": 12,
+                "hp": 75,
+                "mp": 10,
+                "atk": 28,
+                "def": 24,
+                "agl": 30,
+                "int": 20,
+                "joinability": 7
+              },
+              {
+                "eid": 240,
+                "species_id": 76,
+                "species_name": "MadRaven",
+                "level": 12,
+                "hp": 50,
+                "mp": 12,
+                "atk": 30,
+                "def": 24,
+                "agl": 60,
+                "int": 80,
+                "joinability": 7
+              },
+              {
+                "eid": 241,
+                "species_id": 51,
+                "species_name": "Skullroo",
+                "level": 12,
+                "hp": 58,
+                "mp": 8,
+                "atk": 38,
+                "def": 18,
+                "agl": 50,
+                "int": 50,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 2,
+        "class": "E",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              242,
+              243,
+              244
+            ],
+            "party": [
+              {
+                "eid": 242,
+                "species_id": 38,
+                "species_name": "Crestpent",
+                "level": 8,
+                "hp": 60,
+                "mp": 8,
+                "atk": 20,
+                "def": 30,
+                "agl": 15,
+                "int": 9,
+                "joinability": 7
+              },
+              {
+                "eid": 243,
+                "species_id": 3,
+                "species_name": "TreeSlime",
+                "level": 12,
+                "hp": 70,
+                "mp": 8,
+                "atk": 30,
+                "def": 26,
+                "agl": 49,
+                "int": 46,
+                "joinability": 7
+              },
+              {
+                "eid": 244,
+                "species_id": 26,
+                "species_name": "Poisongon",
+                "level": 12,
+                "hp": 50,
+                "mp": 14,
+                "atk": 35,
+                "def": 30,
+                "agl": 26,
+                "int": 23,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              245,
+              246,
+              247
+            ],
+            "party": [
+              {
+                "eid": 245,
+                "species_id": 0,
+                "species_name": "DrakSlime",
+                "level": 14,
+                "hp": 40,
+                "mp": 16,
+                "atk": 30,
+                "def": 26,
+                "agl": 96,
+                "int": 52,
+                "joinability": 7
+              },
+              {
+                "eid": 246,
+                "species_id": 28,
+                "species_name": "Dragon",
+                "level": 15,
+                "hp": 65,
+                "mp": 20,
+                "atk": 45,
+                "def": 40,
+                "agl": 30,
+                "int": 26,
+                "joinability": 7
+              },
+              {
+                "eid": 247,
+                "species_id": 24,
+                "species_name": "FairyDrak",
+                "level": 14,
+                "hp": 40,
+                "mp": 21,
+                "atk": 25,
+                "def": 30,
+                "agl": 51,
+                "int": 27,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              248,
+              249,
+              250
+            ],
+            "party": [
+              {
+                "eid": 248,
+                "species_id": 4,
+                "species_name": "Snaily",
+                "level": 16,
+                "hp": 45,
+                "mp": 20,
+                "atk": 30,
+                "def": 60,
+                "agl": 110,
+                "int": 60,
+                "joinability": 7
+              },
+              {
+                "eid": 249,
+                "species_id": 121,
+                "species_name": "ArmorPede",
+                "level": 20,
+                "hp": 80,
+                "mp": 27,
+                "atk": 40,
+                "def": 72,
+                "agl": 40,
+                "int": 68,
+                "joinability": 7
+              },
+              {
+                "eid": 250,
+                "species_id": 4,
+                "species_name": "Snaily",
+                "level": 16,
+                "hp": 40,
+                "mp": 20,
+                "atk": 32,
+                "def": 55,
+                "agl": 110,
+                "int": 60,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 3,
+        "class": "D",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              251,
+              252,
+              253
+            ],
+            "party": [
+              {
+                "eid": 251,
+                "species_id": 49,
+                "species_name": "Saccer",
+                "level": 17,
+                "hp": 80,
+                "mp": 31,
+                "atk": 48,
+                "def": 82,
+                "agl": 9,
+                "int": 62,
+                "joinability": 7
+              },
+              {
+                "eid": 252,
+                "species_id": 73,
+                "species_name": "Florajay",
+                "level": 19,
+                "hp": 50,
+                "mp": 56,
+                "atk": 55,
+                "def": 42,
+                "agl": 142,
+                "int": 120,
+                "joinability": 7
+              },
+              {
+                "eid": 253,
+                "species_id": 90,
+                "species_name": "MadPlant",
+                "level": 20,
+                "hp": 100,
+                "mp": 100,
+                "atk": 52,
+                "def": 50,
+                "agl": 135,
+                "int": 91,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              254,
+              255,
+              256
+            ],
+            "party": [
+              {
+                "eid": 254,
+                "species_id": 140,
+                "species_name": "MedusaEye",
+                "level": 20,
+                "hp": 70,
+                "mp": 48,
+                "atk": 40,
+                "def": 96,
+                "agl": 48,
+                "int": 44,
+                "joinability": 7
+              },
+              {
+                "eid": 255,
+                "species_id": 60,
+                "species_name": "MadGopher",
+                "level": 21,
+                "hp": 100,
+                "mp": 38,
+                "atk": 61,
+                "def": 45,
+                "agl": 54,
+                "int": 48,
+                "joinability": 7
+              },
+              {
+                "eid": 256,
+                "species_id": 140,
+                "species_name": "MedusaEye",
+                "level": 20,
+                "hp": 70,
+                "mp": 68,
+                "atk": 44,
+                "def": 90,
+                "agl": 48,
+                "int": 44,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              257,
+              258,
+              259
+            ],
+            "party": [
+              {
+                "eid": 257,
+                "species_id": 68,
+                "species_name": "MadCat",
+                "level": 20,
+                "hp": 100,
+                "mp": 28,
+                "atk": 65,
+                "def": 60,
+                "agl": 80,
+                "int": 45,
+                "joinability": 7
+              },
+              {
+                "eid": 258,
+                "species_id": 182,
+                "species_name": "RogueNite",
+                "level": 27,
+                "hp": 110,
+                "mp": 38,
+                "atk": 80,
+                "def": 100,
+                "agl": 50,
+                "int": 79,
+                "joinability": 7
+              },
+              {
+                "eid": 259,
+                "species_id": 68,
+                "species_name": "MadCat",
+                "level": 20,
+                "hp": 100,
+                "mp": 28,
+                "atk": 72,
+                "def": 50,
+                "agl": 80,
+                "int": 45,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 4,
+        "class": "C",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              260,
+              261,
+              262
+            ],
+            "party": [
+              {
+                "eid": 260,
+                "species_id": 180,
+                "species_name": "SpikyBoy",
+                "level": 24,
+                "hp": 80,
+                "mp": 26,
+                "atk": 70,
+                "def": 83,
+                "agl": 50,
+                "int": 63,
+                "joinability": 7
+              },
+              {
+                "eid": 261,
+                "species_id": 80,
+                "species_name": "StubBird",
+                "level": 23,
+                "hp": 100,
+                "mp": 44,
+                "atk": 100,
+                "def": 120,
+                "agl": 90,
+                "int": 82,
+                "joinability": 7
+              },
+              {
+                "eid": 262,
+                "species_id": 180,
+                "species_name": "SpikyBoy",
+                "level": 24,
+                "hp": 80,
+                "mp": 46,
+                "atk": 75,
+                "def": 83,
+                "agl": 50,
+                "int": 63,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              263,
+              264,
+              265
+            ],
+            "party": [
+              {
+                "eid": 263,
+                "species_id": 9,
+                "species_name": "Healer",
+                "level": 22,
+                "hp": 80,
+                "mp": 50,
+                "atk": 16,
+                "def": 80,
+                "agl": 37,
+                "int": 250,
+                "joinability": 7
+              },
+              {
+                "eid": 264,
+                "species_id": 182,
+                "species_name": "RogueNite",
+                "level": 27,
+                "hp": 180,
+                "mp": 48,
+                "atk": 150,
+                "def": 120,
+                "agl": 50,
+                "int": 79,
+                "joinability": 7
+              },
+              {
+                "eid": 265,
+                "species_id": 9,
+                "species_name": "Healer",
+                "level": 22,
+                "hp": 90,
+                "mp": 50,
+                "atk": 16,
+                "def": 80,
+                "agl": 37,
+                "int": 250,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              266,
+              267,
+              268
+            ],
+            "party": [
+              {
+                "eid": 266,
+                "species_id": 7,
+                "species_name": "BoxSlime",
+                "level": 27,
+                "hp": 240,
+                "mp": 39,
+                "atk": 122,
+                "def": 100,
+                "agl": 145,
+                "int": 76,
+                "joinability": 7
+              },
+              {
+                "eid": 267,
+                "species_id": 11,
+                "species_name": "RockSlime",
+                "level": 29,
+                "hp": 170,
+                "mp": 20,
+                "atk": 155,
+                "def": 160,
+                "agl": 89,
+                "int": 55,
+                "joinability": 7
+              },
+              {
+                "eid": 268,
+                "species_id": 7,
+                "species_name": "BoxSlime",
+                "level": 27,
+                "hp": 240,
+                "mp": 29,
+                "atk": 122,
+                "def": 100,
+                "agl": 145,
+                "int": 76,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 5,
+        "class": "B",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              269,
+              270,
+              271
+            ],
+            "party": [
+              {
+                "eid": 269,
+                "species_id": 57,
+                "species_name": "HammerMan",
+                "level": 32,
+                "hp": 150,
+                "mp": 30,
+                "atk": 110,
+                "def": 90,
+                "agl": 118,
+                "int": 62,
+                "joinability": 7
+              },
+              {
+                "eid": 270,
+                "species_id": 57,
+                "species_name": "HammerMan",
+                "level": 32,
+                "hp": 130,
+                "mp": 35,
+                "atk": 120,
+                "def": 85,
+                "agl": 118,
+                "int": 62,
+                "joinability": 7
+              },
+              {
+                "eid": 271,
+                "species_id": 57,
+                "species_name": "HammerMan",
+                "level": 32,
+                "hp": 120,
+                "mp": 30,
+                "atk": 115,
+                "def": 80,
+                "agl": 118,
+                "int": 62,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              272,
+              273,
+              274
+            ],
+            "party": [
+              {
+                "eid": 272,
+                "species_id": 132,
+                "species_name": "AgDevil",
+                "level": 31,
+                "hp": 200,
+                "mp": 60,
+                "atk": 98,
+                "def": 115,
+                "agl": 90,
+                "int": 142,
+                "joinability": 7
+              },
+              {
+                "eid": 273,
+                "species_id": 167,
+                "species_name": "WindMerge",
+                "level": 31,
+                "hp": 150,
+                "mp": 80,
+                "atk": 68,
+                "def": 126,
+                "agl": 122,
+                "int": 165,
+                "joinability": 7
+              },
+              {
+                "eid": 274,
+                "species_id": 101,
+                "species_name": "TreeBoy",
+                "level": 33,
+                "hp": 200,
+                "mp": 85,
+                "atk": 64,
+                "def": 80,
+                "agl": 156,
+                "int": 185,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              275,
+              276,
+              277
+            ],
+            "party": [
+              {
+                "eid": 275,
+                "species_id": 125,
+                "species_name": "ArmyCrab",
+                "level": 36,
+                "hp": 170,
+                "mp": 78,
+                "atk": 100,
+                "def": 150,
+                "agl": 105,
+                "int": 72,
+                "joinability": 7
+              },
+              {
+                "eid": 276,
+                "species_id": 30,
+                "species_name": "MadDragon",
+                "level": 33,
+                "hp": 220,
+                "mp": 20,
+                "atk": 200,
+                "def": 70,
+                "agl": 150,
+                "int": 20,
+                "joinability": 7
+              },
+              {
+                "eid": 277,
+                "species_id": 125,
+                "species_name": "ArmyCrab",
+                "level": 36,
+                "hp": 130,
+                "mp": 78,
+                "atk": 110,
+                "def": 140,
+                "agl": 105,
+                "int": 72,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 6,
+        "class": "A",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              278,
+              279,
+              280
+            ],
+            "party": [
+              {
+                "eid": 278,
+                "species_id": 91,
+                "species_name": "FireWeed",
+                "level": 39,
+                "hp": 160,
+                "mp": 80,
+                "atk": 73,
+                "def": 108,
+                "agl": 110,
+                "int": 147,
+                "joinability": 7
+              },
+              {
+                "eid": 279,
+                "species_id": 137,
+                "species_name": "EvilBeast",
+                "level": 37,
+                "hp": 150,
+                "mp": 60,
+                "atk": 172,
+                "def": 132,
+                "agl": 106,
+                "int": 186,
+                "joinability": 7
+              },
+              {
+                "eid": 280,
+                "species_id": 71,
+                "species_name": "Wyvern",
+                "level": 39,
+                "hp": 160,
+                "mp": 75,
+                "atk": 135,
+                "def": 100,
+                "agl": 160,
+                "int": 205,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              281,
+              282,
+              283
+            ],
+            "party": [
+              {
+                "eid": 281,
+                "species_id": 58,
+                "species_name": "Grizzly",
+                "level": 38,
+                "hp": 250,
+                "mp": 20,
+                "atk": 260,
+                "def": 72,
+                "agl": 200,
+                "int": 80,
+                "joinability": 7
+              },
+              {
+                "eid": 282,
+                "species_id": 141,
+                "species_name": "Lionex",
+                "level": 40,
+                "hp": 260,
+                "mp": 100,
+                "atk": 122,
+                "def": 200,
+                "agl": 210,
+                "int": 160,
+                "joinability": 7
+              },
+              {
+                "eid": 283,
+                "species_id": 58,
+                "species_name": "Grizzly",
+                "level": 38,
+                "hp": 240,
+                "mp": 20,
+                "atk": 250,
+                "def": 72,
+                "agl": 200,
+                "int": 80,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              284,
+              285,
+              286
+            ],
+            "party": [
+              {
+                "eid": 284,
+                "species_id": 96,
+                "species_name": "Toadstool",
+                "level": 40,
+                "hp": 250,
+                "mp": 120,
+                "atk": 150,
+                "def": 160,
+                "agl": 150,
+                "int": 120,
+                "joinability": 7
+              },
+              {
+                "eid": 285,
+                "species_id": 116,
+                "species_name": "Lipsy",
+                "level": 38,
+                "hp": 350,
+                "mp": 110,
+                "atk": 170,
+                "def": 100,
+                "agl": 180,
+                "int": 150,
+                "joinability": 7
+              },
+              {
+                "eid": 286,
+                "species_id": 96,
+                "species_name": "Toadstool",
+                "level": 40,
+                "hp": 250,
+                "mp": 100,
+                "atk": 140,
+                "def": 150,
+                "agl": 120,
+                "int": 120,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 7,
+        "class": "S",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              287,
+              288,
+              289
+            ],
+            "party": [
+              {
+                "eid": 287,
+                "species_id": 100,
+                "species_name": "DanceVegi",
+                "level": 44,
+                "hp": 160,
+                "mp": 80,
+                "atk": 84,
+                "def": 200,
+                "agl": 120,
+                "int": 150,
+                "joinability": 7
+              },
+              {
+                "eid": 288,
+                "species_id": 184,
+                "species_name": "Voodoll",
+                "level": 33,
+                "hp": 190,
+                "mp": 120,
+                "atk": 168,
+                "def": 216,
+                "agl": 150,
+                "int": 170,
+                "joinability": 7
+              },
+              {
+                "eid": 289,
+                "species_id": 100,
+                "species_name": "DanceVegi",
+                "level": 44,
+                "hp": 170,
+                "mp": 85,
+                "atk": 86,
+                "def": 190,
+                "agl": 316,
+                "int": 150,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              290,
+              291,
+              292
+            ],
+            "party": [
+              {
+                "eid": 290,
+                "species_id": 8,
+                "species_name": "Slime",
+                "level": 38,
+                "hp": 250,
+                "mp": 120,
+                "atk": 200,
+                "def": 130,
+                "agl": 260,
+                "int": 140,
+                "joinability": 7
+              },
+              {
+                "eid": 291,
+                "species_id": 78,
+                "species_name": "Dracky",
+                "level": 38,
+                "hp": 180,
+                "mp": 150,
+                "atk": 170,
+                "def": 130,
+                "agl": 160,
+                "int": 200,
+                "joinability": 7
+              },
+              {
+                "eid": 292,
+                "species_id": 118,
+                "species_name": "ArmyAnt",
+                "level": 33,
+                "hp": 210,
+                "mp": 100,
+                "atk": 250,
+                "def": 200,
+                "agl": 150,
+                "int": 90,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              293,
+              294,
+              295
+            ],
+            "party": [
+              {
+                "eid": 293,
+                "species_id": 17,
+                "species_name": "Metabble",
+                "level": 38,
+                "hp": 10,
+                "mp": 490,
+                "atk": 110,
+                "def": 670,
+                "agl": 511,
+                "int": 255,
+                "joinability": 7
+              },
+              {
+                "eid": 294,
+                "species_id": 189,
+                "species_name": "Roboster",
+                "level": 38,
+                "hp": 310,
+                "mp": 145,
+                "atk": 230,
+                "def": 180,
+                "agl": 360,
+                "int": 210,
+                "joinability": 7
+              },
+              {
+                "eid": 295,
+                "species_id": 185,
+                "species_name": "MetalDrak",
+                "level": 43,
+                "hp": 400,
+                "mp": 105,
+                "atk": 250,
+                "def": 200,
+                "agl": 250,
+                "int": 130,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 8,
+        "class": "StarryNight",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              296,
+              297,
+              298
+            ],
+            "party": [
+              {
+                "eid": 296,
+                "species_id": 151,
+                "species_name": "Centasaur",
+                "level": 43,
+                "hp": 320,
+                "mp": 85,
+                "atk": 205,
+                "def": 240,
+                "agl": 320,
+                "int": 200,
+                "joinability": 7
+              },
+              {
+                "eid": 297,
+                "species_id": 41,
+                "species_name": "Orochi",
+                "level": 50,
+                "hp": 300,
+                "mp": 200,
+                "atk": 160,
+                "def": 320,
+                "agl": 250,
+                "int": 180,
+                "joinability": 7
+              },
+              {
+                "eid": 298,
+                "species_id": 27,
+                "species_name": "Swordgon",
+                "level": 48,
+                "hp": 250,
+                "mp": 100,
+                "atk": 180,
+                "def": 210,
+                "agl": 100,
+                "int": 130,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              299,
+              300,
+              301
+            ],
+            "party": [
+              {
+                "eid": 299,
+                "species_id": 34,
+                "species_name": "Andreal",
+                "level": 48,
+                "hp": 340,
+                "mp": 180,
+                "atk": 185,
+                "def": 260,
+                "agl": 200,
+                "int": 250,
+                "joinability": 7
+              },
+              {
+                "eid": 300,
+                "species_id": 62,
+                "species_name": "Unicorn",
+                "level": 48,
+                "hp": 220,
+                "mp": 230,
+                "atk": 170,
+                "def": 150,
+                "agl": 290,
+                "int": 255,
+                "joinability": 7
+              },
+              {
+                "eid": 301,
+                "species_id": 30,
+                "species_name": "MadDragon",
+                "level": 33,
+                "hp": 220,
+                "mp": 20,
+                "atk": 305,
+                "def": 120,
+                "agl": 200,
+                "int": 30,
+                "joinability": 7
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              302,
+              303,
+              304
+            ],
+            "party": [
+              {
+                "eid": 302,
+                "species_id": 18,
+                "species_name": "MetalKing",
+                "level": 50,
+                "hp": 8,
+                "mp": 700,
+                "atk": 150,
+                "def": 700,
+                "agl": 511,
+                "int": 255,
+                "joinability": 7
+              },
+              {
+                "eid": 303,
+                "species_id": 40,
+                "species_name": "Coatol",
+                "level": 50,
+                "hp": 300,
+                "mp": 180,
+                "atk": 220,
+                "def": 240,
+                "agl": 320,
+                "int": 200,
+                "joinability": 7
+              },
+              {
+                "eid": 304,
+                "species_id": 89,
+                "species_name": "RainHawk",
+                "level": 50,
+                "hp": 380,
+                "mp": 50,
+                "atk": 200,
+                "def": 220,
+                "agl": 320,
+                "int": 255,
+                "joinability": 7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": 9,
+        "class": "King",
+        "matches": [
+          {
+            "match": 0,
+            "eids": [
+              305,
+              306,
+              307
+            ],
+            "party": [
+              {
+                "eid": 305,
+                "species_id": 25,
+                "species_name": "LizardMan",
+                "level": 20,
+                "hp": 80,
+                "mp": 40,
+                "atk": 130,
+                "def": 70,
+                "agl": 70,
+                "int": 70,
+                "joinability": 0
+              },
+              {
+                "eid": 306,
+                "species_id": 47,
+                "species_name": "CatFly",
+                "level": 20,
+                "hp": 50,
+                "mp": 40,
+                "atk": 80,
+                "def": 50,
+                "agl": 100,
+                "int": 70,
+                "joinability": 0
+              },
+              {
+                "eid": 307,
+                "species_id": 161,
+                "species_name": "DeadNite",
+                "level": 20,
+                "hp": 80,
+                "mp": 80,
+                "atk": 70,
+                "def": 90,
+                "agl": 60,
+                "int": 90,
+                "joinability": 0
+              }
+            ]
+          },
+          {
+            "match": 1,
+            "eids": [
+              308,
+              309,
+              310
+            ],
+            "party": [
+              {
+                "eid": 308,
+                "species_id": 193,
+                "species_name": "IceMan",
+                "level": 20,
+                "hp": 80,
+                "mp": 40,
+                "atk": 80,
+                "def": 150,
+                "agl": 50,
+                "int": 40,
+                "joinability": 0
+              },
+              {
+                "eid": 309,
+                "species_id": 31,
+                "species_name": "Rayburn",
+                "level": 30,
+                "hp": 150,
+                "mp": 80,
+                "atk": 160,
+                "def": 100,
+                "agl": 220,
+                "int": 90,
+                "joinability": 0
+              },
+              {
+                "eid": 310,
+                "species_id": 122,
+                "species_name": "Eyeder",
+                "level": 30,
+                "hp": 100,
+                "mp": 60,
+                "atk": 130,
+                "def": 120,
+                "agl": 140,
+                "int": 100,
+                "joinability": 0
+              }
+            ]
+          },
+          {
+            "match": 2,
+            "eids": [
+              311,
+              312,
+              313
+            ],
+            "party": [
+              {
+                "eid": 311,
+                "species_id": 10,
+                "species_name": "FangSlime",
+                "level": 30,
+                "hp": 90,
+                "mp": 60,
+                "atk": 170,
+                "def": 130,
+                "agl": 170,
+                "int": 90,
+                "joinability": 0
+              },
+              {
+                "eid": 312,
+                "species_id": 124,
+                "species_name": "Droll",
+                "level": 30,
+                "hp": 80,
+                "mp": 120,
+                "atk": 100,
+                "def": 100,
+                "agl": 80,
+                "int": 120,
+                "joinability": 0
+              },
+              {
+                "eid": 313,
+                "species_id": 59,
+                "species_name": "Yeti",
+                "level": 38,
+                "hp": 220,
+                "mp": 140,
+                "atk": 230,
+                "def": 210,
+                "agl": 100,
+                "int": 140,
+                "joinability": 0
+              }
+            ]
+          }
+        ],
+        "note": "group 9 formula rows (EIDs 305-313) are UNREACHABLE: opcode $1F overrides group 9 with the King party below; bank $50's clone early-returns before a 2nd King match",
+        "king_override_party": [
+          {
+            "eid": 481,
+            "species_id": 19,
+            "species_name": "GoldSlime",
+            "level": 70,
+            "hp": 900,
+            "mp": 600,
+            "atk": 400,
+            "def": 999,
+            "agl": 411,
+            "int": 255,
+            "joinability": 7
+          },
+          {
+            "eid": 482,
+            "species_id": 44,
+            "species_name": "Divinegon",
+            "level": 70,
+            "hp": 6500,
+            "mp": 999,
+            "atk": 700,
+            "def": 400,
+            "agl": 280,
+            "int": 255,
+            "joinability": 7
+          },
+          {
+            "eid": 483,
+            "species_id": 108,
+            "species_name": "Rosevine",
+            "level": 70,
+            "hp": 1800,
+            "mp": 999,
+            "atk": 600,
+            "def": 500,
+            "agl": 400,
+            "int": 255,
+            "joinability": 7
+          }
+        ]
+      }
+    ],
+    "master_sprites": [
+      {
+        "group": 0,
+        "class": "G",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 0,
+        "class": "G",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 0,
+        "class": "G",
+        "match": 2,
+        "gfx_id": 17,
+        "is_monster": false
+      },
+      {
+        "group": 1,
+        "class": "F",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 1,
+        "class": "F",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 1,
+        "class": "F",
+        "match": 2,
+        "gfx_id": 218,
+        "is_monster": true,
+        "species_id": 202,
+        "species_name": "Hargon"
+      },
+      {
+        "group": 2,
+        "class": "E",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 2,
+        "class": "E",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 2,
+        "class": "E",
+        "match": 2,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 3,
+        "class": "D",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 3,
+        "class": "D",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 3,
+        "class": "D",
+        "match": 2,
+        "gfx_id": 2,
+        "is_monster": false
+      },
+      {
+        "group": 4,
+        "class": "C",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 4,
+        "class": "C",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 4,
+        "class": "C",
+        "match": 2,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 5,
+        "class": "B",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 5,
+        "class": "B",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 5,
+        "class": "B",
+        "match": 2,
+        "gfx_id": 15,
+        "is_monster": false
+      },
+      {
+        "group": 6,
+        "class": "A",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 6,
+        "class": "A",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 6,
+        "class": "A",
+        "match": 2,
+        "gfx_id": 12,
+        "is_monster": false
+      },
+      {
+        "group": 7,
+        "class": "S",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 7,
+        "class": "S",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 7,
+        "class": "S",
+        "match": 2,
+        "gfx_id": 19,
+        "is_monster": false
+      },
+      {
+        "group": 8,
+        "class": "StarryNight",
+        "match": 0,
+        "gfx_id": 11,
+        "is_monster": false
+      },
+      {
+        "group": 8,
+        "class": "StarryNight",
+        "match": 1,
+        "gfx_id": 10,
+        "is_monster": false
+      },
+      {
+        "group": 8,
+        "class": "StarryNight",
+        "match": 2,
+        "gfx_id": 20,
+        "is_monster": false
+      },
+      {
+        "group": 9,
+        "class": "King",
+        "match": 0,
+        "gfx_id": 8,
+        "is_monster": false
+      },
+      {
+        "group": 9,
+        "class": "King",
+        "match": 1,
+        "gfx_id": 8,
+        "is_monster": false
+      },
+      {
+        "group": 9,
+        "class": "King",
+        "match": 2,
+        "gfx_id": 8,
+        "is_monster": false
+      }
+    ],
+    "entry_gold": {
+      "G": 0,
+      "F": 10,
+      "E": 50,
+      "D": 100,
+      "C": 500,
+      "B": 1000,
+      "A": 5000,
+      "S": 10000
+    }
+  },
+  "gate_boss_triggers": [
+    {
+      "bank": 12,
+      "addr": "0x54DC",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 255,
+      "script": "Castle/scr13",
+      "eid_info": {
+        "eid": 255,
+        "species_id": 60,
+        "species_name": "MadGopher",
+        "level": 21,
+        "hp": 100,
+        "mp": 38,
+        "atk": 61,
+        "def": 45,
+        "agl": 54,
+        "int": 48,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 12,
+      "addr": "0x6F04",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 255,
+      "script": "Farm/scr26",
+      "eid_info": {
+        "eid": 255,
+        "species_id": 60,
+        "species_name": "MadGopher",
+        "level": 21,
+        "hp": 100,
+        "mp": 38,
+        "atk": 61,
+        "def": 45,
+        "agl": 54,
+        "int": 48,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 13,
+      "addr": "0x6552",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 103,
+      "script": "Copycat House/scr4",
+      "eid_info": {
+        "eid": 103,
+        "species_id": 174,
+        "species_name": "Copycat",
+        "level": 20,
+        "hp": 800,
+        "mp": 48,
+        "atk": 95,
+        "def": 70,
+        "agl": 60,
+        "int": 60,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x4E68",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 11,
+      "script": "Boss: Beginning (Healer)/scr1",
+      "eid_info": {
+        "eid": 11,
+        "species_id": 9,
+        "species_name": "Healer",
+        "level": 6,
+        "hp": 40,
+        "mp": 7,
+        "atk": 20,
+        "def": 12,
+        "agl": 12,
+        "int": 28,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x4FCC",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 31,
+      "script": "Boss: Villager (Dragon)/scr2",
+      "eid_info": {
+        "eid": 31,
+        "species_id": 28,
+        "species_name": "Dragon",
+        "level": 6,
+        "hp": 90,
+        "mp": 60,
+        "atk": 40,
+        "def": 25,
+        "agl": 15,
+        "int": 10,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x519A",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 32,
+      "script": "Boss: Talisman (Golem)/scr2",
+      "eid_info": {
+        "eid": 32,
+        "species_id": 196,
+        "species_name": "Golem",
+        "level": 7,
+        "hp": 100,
+        "mp": 20,
+        "atk": 45,
+        "def": 20,
+        "agl": 20,
+        "int": 70,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x528A",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 51,
+      "script": "Boss: Memories (MadCat)/scr1",
+      "eid_info": {
+        "eid": 51,
+        "species_id": 68,
+        "species_name": "MadCat",
+        "level": 12,
+        "hp": 200,
+        "mp": 30,
+        "atk": 63,
+        "def": 35,
+        "agl": 63,
+        "int": 35,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x537A",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 53,
+      "script": "Boss: Bewilder (FaceTree)/scr2",
+      "eid_info": {
+        "eid": 53,
+        "species_id": 102,
+        "species_name": "FaceTree",
+        "level": 12,
+        "hp": 400,
+        "mp": 100,
+        "atk": 60,
+        "def": 30,
+        "agl": 38,
+        "int": 55,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x5434",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 341,
+      "script": "Boss: Bewilder (FaceTree)/scr3",
+      "eid_info": {
+        "eid": 341,
+        "species_id": 98,
+        "species_name": "Stubsuck",
+        "level": 20,
+        "hp": 80,
+        "mp": 120,
+        "atk": 40,
+        "def": 30,
+        "agl": 30,
+        "int": 100,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x544C",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 341,
+      "script": "Boss: Bewilder (FaceTree)/scr4",
+      "eid_info": {
+        "eid": 341,
+        "species_id": 98,
+        "species_name": "Stubsuck",
+        "level": 20,
+        "hp": 80,
+        "mp": 120,
+        "atk": 40,
+        "def": 30,
+        "agl": 30,
+        "int": 100,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x5464",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 341,
+      "script": "Boss: Bewilder (FaceTree)/scr5",
+      "eid_info": {
+        "eid": 341,
+        "species_id": 98,
+        "species_name": "Stubsuck",
+        "level": 20,
+        "hp": 80,
+        "mp": 120,
+        "atk": 40,
+        "def": 30,
+        "agl": 30,
+        "int": 100,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x547C",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 341,
+      "script": "Boss: Bewilder (FaceTree)/scr6",
+      "eid_info": {
+        "eid": 341,
+        "species_id": 98,
+        "species_name": "Stubsuck",
+        "level": 20,
+        "hp": 80,
+        "mp": 120,
+        "atk": 40,
+        "def": 30,
+        "agl": 30,
+        "int": 100,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x54D8",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 55,
+      "script": "Boss: Bazaar (MadKnight)/scr2",
+      "eid_info": {
+        "eid": 55,
+        "species_id": 149,
+        "species_name": "MadKnight",
+        "level": 12,
+        "hp": 300,
+        "mp": 60,
+        "atk": 77,
+        "def": 60,
+        "agl": 40,
+        "int": 50,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x569A",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 75,
+      "script": "Boss: Peace (FangSlime)/scr8",
+      "eid_info": {
+        "eid": 75,
+        "species_id": 10,
+        "species_name": "FangSlime",
+        "level": 20,
+        "hp": 400,
+        "mp": 40,
+        "atk": 87,
+        "def": 50,
+        "agl": 80,
+        "int": 65,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x5824",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 77,
+      "script": "Boss: Bravery (BigEye)/scr1",
+      "eid_info": {
+        "eid": 77,
+        "species_id": 69,
+        "species_name": "BigEye",
+        "level": 20,
+        "hp": 500,
+        "mp": 40,
+        "atk": 80,
+        "def": 40,
+        "agl": 62,
+        "int": 80,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x5B32",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 79,
+      "script": "Boss: Well (Gigantes)/scr1",
+      "eid_info": {
+        "eid": 79,
+        "species_id": 150,
+        "species_name": "Gigantes",
+        "level": 14,
+        "hp": 600,
+        "mp": 10,
+        "atk": 130,
+        "def": 30,
+        "agl": 68,
+        "int": 15,
+        "joinability": 6
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x5E76",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 99,
+      "script": "Boss: Strength (StoneMan)/scr3",
+      "eid_info": {
+        "eid": 99,
+        "species_id": 197,
+        "species_name": "StoneMan",
+        "level": 20,
+        "hp": 800,
+        "mp": 36,
+        "atk": 130,
+        "def": 90,
+        "agl": 45,
+        "int": 90,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x601A",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 125,
+      "script": "Boss: Wisdom (SkyDragon)/scr0",
+      "eid_info": {
+        "eid": 125,
+        "species_id": 43,
+        "species_name": "SkyDragon",
+        "level": 30,
+        "hp": 1200,
+        "mp": 150,
+        "atk": 170,
+        "def": 120,
+        "agl": 80,
+        "int": 80,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x6176",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 123,
+      "script": "Boss: Joy (FunkyBird)/scr1",
+      "eid_info": {
+        "eid": 123,
+        "species_id": 88,
+        "species_name": "FunkyBird",
+        "level": 30,
+        "hp": 1200,
+        "mp": 160,
+        "atk": 100,
+        "def": 140,
+        "agl": 98,
+        "int": 160,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x6316",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 349,
+      "script": "Boss: Anger (BattleRex)/scr1",
+      "eid_info": {
+        "eid": 349,
+        "species_id": 20,
+        "species_name": "DragonKid",
+        "level": 23,
+        "hp": 70,
+        "mp": 60,
+        "atk": 100,
+        "def": 60,
+        "agl": 90,
+        "int": 90,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x633C",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 349,
+      "script": "Boss: Anger (BattleRex)/scr2",
+      "eid_info": {
+        "eid": 349,
+        "species_id": 20,
+        "species_name": "DragonKid",
+        "level": 23,
+        "hp": 70,
+        "mp": 60,
+        "atk": 100,
+        "def": 60,
+        "agl": 90,
+        "int": 90,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x6362",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 349,
+      "script": "Boss: Anger (BattleRex)/scr3",
+      "eid_info": {
+        "eid": 349,
+        "species_id": 20,
+        "species_name": "DragonKid",
+        "level": 23,
+        "hp": 70,
+        "mp": 60,
+        "atk": 100,
+        "def": 60,
+        "agl": 90,
+        "int": 90,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x6388",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 349,
+      "script": "Boss: Anger (BattleRex)/scr4",
+      "eid_info": {
+        "eid": 349,
+        "species_id": 20,
+        "species_name": "DragonKid",
+        "level": 23,
+        "hp": 70,
+        "mp": 60,
+        "atk": 100,
+        "def": 60,
+        "agl": 90,
+        "int": 90,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x63AE",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 349,
+      "script": "Boss: Anger (BattleRex)/scr5",
+      "eid_info": {
+        "eid": 349,
+        "species_id": 20,
+        "species_name": "DragonKid",
+        "level": 23,
+        "hp": 70,
+        "mp": 60,
+        "atk": 100,
+        "def": 60,
+        "agl": 90,
+        "int": 90,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x63D4",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 349,
+      "script": "Boss: Anger (BattleRex)/scr6",
+      "eid_info": {
+        "eid": 349,
+        "species_id": 20,
+        "species_name": "DragonKid",
+        "level": 23,
+        "hp": 70,
+        "mp": 60,
+        "atk": 100,
+        "def": 60,
+        "agl": 90,
+        "int": 90,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x63FA",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 349,
+      "script": "Boss: Anger (BattleRex)/scr7",
+      "eid_info": {
+        "eid": 349,
+        "species_id": 20,
+        "species_name": "DragonKid",
+        "level": 23,
+        "hp": 70,
+        "mp": 60,
+        "atk": 100,
+        "def": 60,
+        "agl": 90,
+        "int": 90,
+        "joinability": 4
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x656A",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 101,
+      "script": "Boss: Anger (BattleRex)/scr8",
+      "eid_info": {
+        "eid": 101,
+        "species_id": 42,
+        "species_name": "BattleRex",
+        "level": 20,
+        "hp": 1000,
+        "mp": 50,
+        "atk": 170,
+        "def": 80,
+        "agl": 80,
+        "int": 70,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x6860",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 127,
+      "script": "Boss: Arena Left (Digster)/scr1",
+      "eid_info": {
+        "eid": 127,
+        "species_id": 129,
+        "species_name": "Digster",
+        "level": 45,
+        "hp": 1000,
+        "mp": 85,
+        "atk": 190,
+        "def": 150,
+        "agl": 60,
+        "int": 140,
+        "joinability": 0
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x692E",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 147,
+      "script": "Boss: Happiness (Jamirus)/scr1",
+      "eid_info": {
+        "eid": 147,
+        "species_id": 153,
+        "species_name": "Jamirus",
+        "level": 35,
+        "hp": 1600,
+        "mp": 175,
+        "atk": 260,
+        "def": 160,
+        "agl": 150,
+        "int": 145,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x6A14",
+      "opcode": "0x13",
+      "opcode_name": "write_ram2",
+      "target": "0xDA03",
+      "eid": 151,
+      "script": "Boss: Temptation (Servant)/scr1",
+      "eid_info": {
+        "eid": 151,
+        "species_id": 151,
+        "species_name": "Centasaur",
+        "level": 30,
+        "hp": 220,
+        "mp": 115,
+        "atk": 205,
+        "def": 140,
+        "agl": 320,
+        "int": 200,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x6A1A",
+      "opcode": "0x13",
+      "opcode_name": "write_ram2",
+      "target": "0xDA05",
+      "eid": 149,
+      "script": "Boss: Temptation (Servant)/scr1",
+      "eid_info": {
+        "eid": 149,
+        "species_id": 173,
+        "species_name": "Servant",
+        "level": 35,
+        "hp": 1000,
+        "mp": 250,
+        "atk": 160,
+        "def": 160,
+        "agl": 200,
+        "int": 170,
+        "joinability": 5
+      }
+    },
+    {
+      "bank": 14,
+      "addr": "0x6A20",
+      "opcode": "0x13",
+      "opcode_name": "write_ram2",
+      "target": "0xDA07",
+      "eid": 152,
+      "script": "Boss: Temptation (Servant)/scr1",
+      "eid_info": {
+        "eid": 152,
+        "species_id": 152,
+        "species_name": "EvilArmor",
+        "level": 28,
+        "hp": 175,
+        "mp": 98,
+        "atk": 170,
+        "def": 220,
+        "agl": 132,
+        "int": 146,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x4334",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 156,
+      "script": "Boss: Medal (Lipsy variant)/scr0",
+      "eid_info": {
+        "eid": 156,
+        "species_id": 116,
+        "species_name": "Lipsy",
+        "level": 10,
+        "hp": 23,
+        "mp": 17,
+        "atk": 23,
+        "def": 22,
+        "agl": 20,
+        "int": 72,
+        "joinability": 5
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x43E8",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 153,
+      "script": "Boss: Medal (Lipsy variant)/scr1",
+      "eid_info": {
+        "eid": 153,
+        "species_id": 15,
+        "species_name": "KingSlime",
+        "level": 38,
+        "hp": 2000,
+        "mp": 75,
+        "atk": 200,
+        "def": 130,
+        "agl": 190,
+        "int": 190,
+        "joinability": 5
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x449C",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 155,
+      "script": "Boss: Medal (Lipsy variant)/scr2",
+      "eid_info": {
+        "eid": 155,
+        "species_id": 96,
+        "species_name": "Toadstool",
+        "level": 10,
+        "hp": 45,
+        "mp": 17,
+        "atk": 25,
+        "def": 23,
+        "agl": 40,
+        "int": 36,
+        "joinability": 5
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x45F2",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 175,
+      "script": "Labyrinth/scr17",
+      "eid_info": {
+        "eid": 175,
+        "species_id": 67,
+        "species_name": "DarkHorn",
+        "level": 40,
+        "hp": 2000,
+        "mp": 130,
+        "atk": 225,
+        "def": 120,
+        "agl": 80,
+        "int": 210,
+        "joinability": 5
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x473E",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 177,
+      "script": "Boss: Judgment (Akubar)/scr2",
+      "eid_info": {
+        "eid": 177,
+        "species_id": 148,
+        "species_name": "Akubar",
+        "level": 40,
+        "hp": 2000,
+        "mp": 400,
+        "atk": 230,
+        "def": 240,
+        "agl": 250,
+        "int": 255,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x4806",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 179,
+      "script": "Boss: Library (Orochi)/scr0",
+      "eid_info": {
+        "eid": 179,
+        "species_id": 41,
+        "species_name": "Orochi",
+        "level": 40,
+        "hp": 2000,
+        "mp": 110,
+        "atk": 300,
+        "def": 210,
+        "agl": 130,
+        "int": 130,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x4C7E",
+      "opcode": "0x13",
+      "opcode_name": "write_ram2",
+      "target": "0xDA03",
+      "eid": 342,
+      "script": "Boss: Reflection (Durran)/scr0",
+      "eid_info": {
+        "eid": 342,
+        "species_id": 173,
+        "species_name": "Servant",
+        "level": 55,
+        "hp": 300,
+        "mp": 350,
+        "atk": 380,
+        "def": 220,
+        "agl": 306,
+        "int": 255,
+        "joinability": 6
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x4C84",
+      "opcode": "0x13",
+      "opcode_name": "write_ram2",
+      "target": "0xDA05",
+      "eid": 342,
+      "script": "Boss: Reflection (Durran)/scr0",
+      "eid_info": {
+        "eid": 342,
+        "species_id": 173,
+        "species_name": "Servant",
+        "level": 55,
+        "hp": 300,
+        "mp": 350,
+        "atk": 380,
+        "def": 220,
+        "agl": 306,
+        "int": 255,
+        "joinability": 6
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x4D46",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 343,
+      "script": "Boss: Reflection (Durran)/scr0",
+      "eid_info": {
+        "eid": 343,
+        "species_id": 215,
+        "species_name": "TERRY?",
+        "level": 60,
+        "hp": 2000,
+        "mp": 200,
+        "atk": 390,
+        "def": 220,
+        "agl": 400,
+        "int": 255,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x4DB8",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 199,
+      "script": "Boss: Reflection (Durran)/scr0",
+      "eid_info": {
+        "eid": 199,
+        "species_id": 154,
+        "species_name": "Durran",
+        "level": 45,
+        "hp": 3000,
+        "mp": 330,
+        "atk": 420,
+        "def": 380,
+        "agl": 370,
+        "int": 10,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x500E",
+      "opcode": "0x05",
+      "opcode_name": "trigger_battle",
+      "eid": 343,
+      "script": "Boss: Reflection (Durran)/scr0",
+      "eid_info": {
+        "eid": 343,
+        "species_id": 215,
+        "species_name": "TERRY?",
+        "level": 60,
+        "hp": 2000,
+        "mp": 200,
+        "atk": 390,
+        "def": 220,
+        "agl": 400,
+        "int": 255,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x5088",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 201,
+      "script": "Boss: Ambition (DracoLord)/scr1",
+      "eid_info": {
+        "eid": 201,
+        "species_id": 200,
+        "species_name": "DracoLord",
+        "level": 48,
+        "hp": 4000,
+        "mp": 550,
+        "atk": 340,
+        "def": 320,
+        "agl": 230,
+        "int": 255,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x5174",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 203,
+      "script": "Boss: Demolition (Hargon/Sidoh)/scr1",
+      "eid_info": {
+        "eid": 203,
+        "species_id": 202,
+        "species_name": "Hargon",
+        "level": 50,
+        "hp": 4000,
+        "mp": 550,
+        "atk": 260,
+        "def": 400,
+        "agl": 230,
+        "int": 255,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x5226",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 205,
+      "script": "Boss: Demolition (Hargon/Sidoh)/scr2",
+      "eid_info": {
+        "eid": 205,
+        "species_id": 203,
+        "species_name": "Sidoh",
+        "level": 50,
+        "hp": 6000,
+        "mp": 999,
+        "atk": 530,
+        "def": 340,
+        "agl": 230,
+        "int": 10,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x52FE",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 207,
+      "script": "Boss: Mastermind (Baramos)/scr1",
+      "eid_info": {
+        "eid": 207,
+        "species_id": 204,
+        "species_name": "Baramos",
+        "level": 50,
+        "hp": 4000,
+        "mp": 999,
+        "atk": 410,
+        "def": 550,
+        "agl": 230,
+        "int": 10,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x53D6",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 209,
+      "script": "Boss: Control (Zoma)/scr1",
+      "eid_info": {
+        "eid": 209,
+        "species_id": 205,
+        "species_name": "Zoma",
+        "level": 55,
+        "hp": 4500,
+        "mp": 999,
+        "atk": 440,
+        "def": 400,
+        "agl": 260,
+        "int": 255,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x54CC",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 211,
+      "script": "Boss: Extinction (Pizzaro)/scr1",
+      "eid_info": {
+        "eid": 211,
+        "species_id": 206,
+        "species_name": "Pizzaro",
+        "level": 55,
+        "hp": 6000,
+        "mp": 600,
+        "atk": 510,
+        "def": 450,
+        "agl": 260,
+        "int": 20,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x55B0",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 213,
+      "script": "Boss: Sleep (Esterk)/scr1",
+      "eid_info": {
+        "eid": 213,
+        "species_id": 207,
+        "species_name": "Esterk",
+        "level": 60,
+        "hp": 3800,
+        "mp": 700,
+        "atk": 560,
+        "def": 520,
+        "agl": 450,
+        "int": 255,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x5696",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 215,
+      "script": "Boss: Bazaar Edge (Mirudraas)/scr1",
+      "eid_info": {
+        "eid": 215,
+        "species_id": 208,
+        "species_name": "Mirudraas",
+        "level": 60,
+        "hp": 5000,
+        "mp": 999,
+        "atk": 520,
+        "def": 480,
+        "agl": 300,
+        "int": 10,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x5796",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 217,
+      "script": "Boss: Arena Right (Mudou)/scr1",
+      "eid_info": {
+        "eid": 217,
+        "species_id": 210,
+        "species_name": "Mudou",
+        "level": 60,
+        "hp": 5000,
+        "mp": 999,
+        "atk": 530,
+        "def": 450,
+        "agl": 300,
+        "int": 10,
+        "joinability": 7
+      }
+    },
+    {
+      "bank": 15,
+      "addr": "0x586E",
+      "opcode": "0x5A",
+      "opcode_name": "trigger_battle3",
+      "eid": 219,
+      "script": "Boss: Grandpa's Gate (DeathMore)/scr1",
+      "eid_info": {
+        "eid": 219,
+        "species_id": 211,
+        "species_name": "DeathMore",
+        "level": 58,
+        "hp": 9000,
+        "mp": 700,
+        "atk": 460,
+        "def": 520,
+        "agl": 450,
+        "int": 255,
+        "joinability": 7
+      }
+    }
+  ],
+  "boss_redirect_table": [
+    {
+      "fight_eid": 4,
+      "join_eid": 486,
+      "fight": "Dracky"
+    },
+    {
+      "fight_eid": 11,
+      "join_eid": 12,
+      "fight": "Healer"
+    },
+    {
+      "fight_eid": 31,
+      "join_eid": 484,
+      "fight": "Dragon"
+    },
+    {
+      "fight_eid": 32,
+      "join_eid": 485,
+      "fight": "Golem"
+    },
+    {
+      "fight_eid": 51,
+      "join_eid": 52,
+      "fight": "MadCat"
+    },
+    {
+      "fight_eid": 53,
+      "join_eid": 54,
+      "fight": "FaceTree"
+    },
+    {
+      "fight_eid": 55,
+      "join_eid": 56,
+      "fight": "MadKnight"
+    },
+    {
+      "fight_eid": 75,
+      "join_eid": 76,
+      "fight": "FangSlime"
+    },
+    {
+      "fight_eid": 77,
+      "join_eid": 78,
+      "fight": "BigEye"
+    },
+    {
+      "fight_eid": 79,
+      "join_eid": 80,
+      "fight": "Gigantes"
+    },
+    {
+      "fight_eid": 99,
+      "join_eid": 100,
+      "fight": "StoneMan"
+    },
+    {
+      "fight_eid": 101,
+      "join_eid": 102,
+      "fight": "BattleRex"
+    },
+    {
+      "fight_eid": 103,
+      "join_eid": 104,
+      "fight": "Copycat"
+    },
+    {
+      "fight_eid": 123,
+      "join_eid": 124,
+      "fight": "FunkyBird"
+    },
+    {
+      "fight_eid": 125,
+      "join_eid": 126,
+      "fight": "SkyDragon"
+    },
+    {
+      "fight_eid": 127,
+      "join_eid": 128,
+      "fight": "Digster"
+    },
+    {
+      "fight_eid": 147,
+      "join_eid": 148,
+      "fight": "Jamirus"
+    },
+    {
+      "fight_eid": 149,
+      "join_eid": 150,
+      "fight": "Servant"
+    },
+    {
+      "fight_eid": 153,
+      "join_eid": 154,
+      "fight": "KingSlime"
+    },
+    {
+      "fight_eid": 175,
+      "join_eid": 176,
+      "fight": "DarkHorn"
+    },
+    {
+      "fight_eid": 177,
+      "join_eid": 178,
+      "fight": "Akubar"
+    },
+    {
+      "fight_eid": 179,
+      "join_eid": 180,
+      "fight": "Orochi"
+    },
+    {
+      "fight_eid": 199,
+      "join_eid": 200,
+      "fight": "Durran"
+    },
+    {
+      "fight_eid": 201,
+      "join_eid": 202,
+      "fight": "DracoLord"
+    },
+    {
+      "fight_eid": 203,
+      "join_eid": 204,
+      "fight": "Hargon"
+    },
+    {
+      "fight_eid": 205,
+      "join_eid": 206,
+      "fight": "Sidoh"
+    },
+    {
+      "fight_eid": 207,
+      "join_eid": 208,
+      "fight": "Baramos"
+    },
+    {
+      "fight_eid": 209,
+      "join_eid": 210,
+      "fight": "Zoma"
+    },
+    {
+      "fight_eid": 211,
+      "join_eid": 212,
+      "fight": "Pizzaro"
+    },
+    {
+      "fight_eid": 213,
+      "join_eid": 214,
+      "fight": "Esterk"
+    },
+    {
+      "fight_eid": 215,
+      "join_eid": 216,
+      "fight": "Mirudraas"
+    },
+    {
+      "fight_eid": 217,
+      "join_eid": 218,
+      "fight": "Mudou"
+    },
+    {
+      "fight_eid": 219,
+      "join_eid": 220,
+      "fight": "DeathMore"
+    },
+    {
+      "fight_eid": 221,
+      "join_eid": 222,
+      "fight": "Darkdrium"
+    }
+  ],
+  "coliseum": {
+    "mechanism": "3 parties of 3 random EIDs = base + rand(range); party level keyed: bank $16 SetBrd_5e38 uses AVERAGE (floor-creation path), opcode $5C ColiseumInitPrize ($04:$6D93) uses MAX (room script path, also rolls prize). Parties 2/3 staged at $D9D1-$D9D6 / $D9D9-$D9DE; bank $50 SetBtl_67ae chains them as wColiseumBattle 0->1->2->3.",
+    "level_bands": [
+      {
+        "party_level_below": 4,
+        "base_eid": 2,
+        "range": 9,
+        "eid_window": [
+          2,
+          10
+        ]
+      },
+      {
+        "party_level_below": 10,
+        "base_eid": 13,
+        "range": 18,
+        "eid_window": [
+          13,
+          30
+        ]
+      },
+      {
+        "party_level_below": 16,
+        "base_eid": 33,
+        "range": 18,
+        "eid_window": [
+          33,
+          50
+        ]
+      },
+      {
+        "party_level_below": 22,
+        "base_eid": 57,
+        "range": 18,
+        "eid_window": [
+          57,
+          74
+        ]
+      },
+      {
+        "party_level_below": 28,
+        "base_eid": 81,
+        "range": 18,
+        "eid_window": [
+          81,
+          98
+        ]
+      },
+      {
+        "party_level_below": 34,
+        "base_eid": 105,
+        "range": 18,
+        "eid_window": [
+          105,
+          122
+        ]
+      },
+      {
+        "party_level_below": 40,
+        "base_eid": 129,
+        "range": 18,
+        "eid_window": [
+          129,
+          146
+        ]
+      },
+      {
+        "party_level_below": 46,
+        "base_eid": 157,
+        "range": 18,
+        "eid_window": [
+          157,
+          174
+        ]
+      },
+      {
+        "party_level_below": null,
+        "base_eid": 181,
+        "range": 18,
+        "eid_window": [
+          181,
+          198
+        ]
+      }
+    ],
+    "prize_table_lt9_visits": [
+      3,
+      4,
+      6,
+      12,
+      21,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      37,
+      26,
+      27,
+      28,
+      37
+    ],
+    "prize_table_ge9_visits": [
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      32,
+      33,
+      34,
+      35
+    ]
+  },
+  "mimic_battles": {
+    "indexed_by": "$CAB4 arena-progress tier (Arena Lobby scr0 sets class+1)",
+    "table_addr": "$04:$63EF",
+    "eids": [
+      317,
+      318,
+      319,
+      320,
+      321,
+      322,
+      323,
+      324,
+      324
+    ],
+    "parties": [
+      {
+        "eid": 317,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 1,
+        "hp": 12,
+        "mp": 2,
+        "atk": 10,
+        "def": 6,
+        "agl": 5,
+        "int": 8,
+        "joinability": 4
+      },
+      {
+        "eid": 318,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 5,
+        "hp": 20,
+        "mp": 9,
+        "atk": 20,
+        "def": 12,
+        "agl": 10,
+        "int": 30,
+        "joinability": 4
+      },
+      {
+        "eid": 319,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 10,
+        "hp": 45,
+        "mp": 20,
+        "atk": 40,
+        "def": 20,
+        "agl": 20,
+        "int": 80,
+        "joinability": 4
+      },
+      {
+        "eid": 320,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 20,
+        "hp": 80,
+        "mp": 40,
+        "atk": 60,
+        "def": 40,
+        "agl": 40,
+        "int": 130,
+        "joinability": 4
+      },
+      {
+        "eid": 321,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 30,
+        "hp": 125,
+        "mp": 60,
+        "atk": 80,
+        "def": 60,
+        "agl": 60,
+        "int": 170,
+        "joinability": 4
+      },
+      {
+        "eid": 322,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 38,
+        "hp": 165,
+        "mp": 80,
+        "atk": 100,
+        "def": 80,
+        "agl": 80,
+        "int": 210,
+        "joinability": 4
+      },
+      {
+        "eid": 323,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 38,
+        "hp": 295,
+        "mp": 160,
+        "atk": 120,
+        "def": 110,
+        "agl": 90,
+        "int": 225,
+        "joinability": 4
+      },
+      {
+        "eid": 324,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 38,
+        "hp": 330,
+        "mp": 220,
+        "atk": 200,
+        "def": 150,
+        "agl": 110,
+        "int": 225,
+        "joinability": 4
+      },
+      {
+        "eid": 324,
+        "species_id": 194,
+        "species_name": "Mimic",
+        "level": 38,
+        "hp": 330,
+        "mp": 220,
+        "atk": 200,
+        "def": 150,
+        "agl": 110,
+        "int": 225,
+        "joinability": 4
+      }
+    ]
+  },
+  "random_scaled_battles": {
+    "opcode": "0x52",
+    "table_addr": "$04:$6A3C",
+    "tier": "(sum of party levels + 1) / 20, capped 7",
+    "base_eids": [
+      352,
+      368,
+      384,
+      400,
+      416,
+      432,
+      448,
+      464
+    ],
+    "note": "EID = base + rand & $0F (16-wide windows, EIDs 352-479)"
+  }
+}

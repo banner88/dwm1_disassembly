@@ -225,15 +225,31 @@
                    UP UP LEFT (south one): Empty spot
                    UP UP UP LEFT DOWN DOWN LEFT (north one): Boss
    1:D997   1    Current step (?) in Unused Gate
-   1:D999   1    Current Arena Battle in Starry Night Tournament (00 01 02), or post-game battle against the King (04)
-   1:D9CD   1    Current Coliseum Battle in Gates, and current Arena Battle (except Starry Night Tournament)
+   1:D999   1    wArenaStarryBattle — step counter of map $5D (Arena Battle
+                 room; zero literal code refs, accessed via the step system).
+                 Written by Arena Lobby scr6: 0 = normal arena, 1 = Starry
+                 Night, 4 = King battle. Bank $50 post-battle advances the
+                 Starry phase 1→2→3 ($50:Jump_050_640a). [S67]
+   1:D9CD   1    wColiseumBattle — match index 0-2 within an arena class OR
+                 within the in-gate Coliseum trio; also used during Starry
+                 Night. Sentinels: $FE = class complete (Arena Lobby scr0
+                 victory processing), $FF = lost. Feeds the $1F/$50 arena
+                 formula EID = $E0 + 9*group + 3*battle + slot. [S67]
                  CAUTION: shares byte with event flag indices $0190-$0197
-   1:D9CE   1    Arena round counter (within a class). Arena Lobby script 0
-                 branches on values 0-7 to determine match progression.
-                 254 = arena unavailable (mandatory gate sequence active).
+   1:D9CE   1    wArenaGroup — arena GROUP: 0-7 = classes G F E D C B A S
+                 (bank $09 menu: 4*[$C8E3]+([$C8E2]&$7F)), 8 = Starry Night,
+                 9 = King (both written by Arena Lobby scr6). Arena Lobby
+                 scr0 branches 0-7 for the per-class victory cascade.
+                 (Old "round counter / 254" description was S-era guesswork;
+                 the $FE sentinel lives in $D9CD.) [S67]
                  CAUTION: shares byte with event flag indices $0198-$019F
-   1:D9CF  ~8    Gate room reset counters ($D9CF-$D9D6). Written to 0 on gate
-                 room entry. Shares bytes with flag indices $01A0-$01DF.
+   1:D9CF  ~8    Multi-use block $D9CF-$D9DE. Gate-room context: reset
+                 counters written 0 on entry. In-gate COLISEUM context (map
+                 $52): $D9CF = lifetime visit counter (bit7 = cap; ≥9 →
+                 better prize table), $D9D0 = rolled prize item id,
+                 $D9D1-$D9D6 / $D9D9-$D9DE = pending foreign-master parties
+                 2 and 3 (3 × 16-bit EIDs each), chained by $50:SetBtl_67ae.
+                 [S67] Shares bytes with flag indices $01A0-$01DF.
    1:D9E3   1    Story progression counter. Boss-defeat scripts set this to
                  increasing values:
                    48 after first boss (Beginning/Healer)
@@ -252,12 +268,14 @@
                  Last byte included in SRAM save range ($C8EA-$D9E9).
    1:D9EC   1    Post-battle state machine index (15 states, dispatch at $50:$5F3A)
    1:D9F4   1    Event state machine index (11 states 0-10)
-   1:DA03   1    Enemy 1 ID
-                 Enemy stats ID 1 (while loading battle)
-   1:DA05   1    Enemy 2 ID
-                 Enemy stats ID 2 (while loading battle)
-   1:DA07   1    Enemy 3 ID
-                 Enemy stats ID 3 (while loading battle)
+   1:DA02   1    Enemy COUNT − 1 (0/1/2 → 1-3 enemies). [S67, code-derived]
+   1:DA03   2    Enemy 1 stats EID, 16-bit LE (wTempEnemyId1 = low byte)
+   1:DA05   2    Enemy 2 stats EID, 16-bit LE
+   1:DA07   2    Enemy 3 stats EID, 16-bit LE
+   1:DA09   1    Battle mode: 0 = field-touch (bank $06), 1 = scripted preset
+                 (opcodes $05/$20/$36), 2 = party-scaled random ($52),
+                 3 = boss ($5A/$5B). [S67; mode 1 + $DA02 semantics USER-VERIFIED
+                 on HW (arena, SameBoy watchpoints); modes 0/2/3 code-derived]
    1:DA12   2    Enemy stats ID (16-bit, input for bank $14 loader;
                  = wTempEnemyStatsId)
    1:DA14   1    Give/creation target slot (S56): first-empty scan result;

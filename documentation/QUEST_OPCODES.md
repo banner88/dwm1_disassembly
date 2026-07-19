@@ -6,7 +6,7 @@ These three opcodes were initially labeled vaguely. Handler code analysis reveal
 
 | Opcode | Old Name | **Actual Function** | Params | Script Uses |
 |--------|----------|---------------------|--------|-------------|
-| $1F | LargeEventHandler | **ArenaBattleSetup** | 0 | 0 (engine-only) |
+| $1F | LargeEventHandler | **ArenaBattleSetup** | 0 | 1 (Arena Lobby scr6) — the S-era "0 uses" claim was a linear-decoder artifact |
 | $2C | EventDispatch | **CheckInvFull** | 1 (branch addr) | 45 |
 | $2D | CheckStep | **MonsterSlotDialogue** | 1 (slot index) | 3 |
 
@@ -19,21 +19,32 @@ These three opcodes were initially labeled vaguely. Handler code analysis reveal
 ### What it does
 Calculates the 3-monster enemy team for arena battles based on current arena state:
 - `enemy_base = wArenaGroup * 3 + wColiseumBattle`
-- Each of the 3 enemy IDs = `$00E0 + enemy_base * 3 + offset`
-- Writes enemy IDs to $DA03-$DA08 (3 pairs)
-- Special case: `wArenaGroup == 9` → hardcoded boss team ($01E1, $01E2, $01E3)
-- Loads NPC sprite data to $D7CA-$D7D1 from table at $5E22
+- Each of the 3 enemy IDs = `$00E0 + enemy_base * 3 + offset` (offset 0-2)
+- Writes enemy IDs to $DA03-$DA08 (3 × 16-bit LE); $DA02 = 2 (= count−1)
+- Special case: `wArenaGroup == 9` → King battle party ($01E1-$01E3 =
+  GoldSlime/Divinegon/Rosevine L70); group-9 formula rows 305-313 unreachable
+- Loads the pre-fight display list to $D7CA-$D7D1: master sprite from
+  `ArenaMasterSpriteTable` $04:$5E22 (30 × [gfx_id, is_monster]; 27-entry dup
+  at $50:$6778) + the 3 enemy species gfx (species+$10)
+- Bank $50 clone `LoadArenaEnemyStats` regenerates between matches; battle is
+  launched by opcode $20 in Arena Battle (map $5D) scr0
+- FULL SYSTEM (bosses, coliseum, victory cascade, authoring spec):
+  SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67" +
+  extracted/arena_brackets.json
 
 ### Usage
-**Zero script uses.** This opcode is called exclusively by game engine code during arena battle initialization, never from NPC scripts. Its 0-param count confirms it reads all state from WRAM variables.
+**One script use (CORRECTED S67):** Arena Lobby scr6 at $0D:$486C — the
+registration/Starry/King funnel runs it right before teleporting to map $5D.
+The old "zero script uses" claim came from the pre-branch-following decoder.
+It takes 0 params (reads wArenaGroup/wColiseumBattle from WRAM).
 
 ### Key RAM
 | Address | Name | Purpose |
 |---------|------|---------|
-| wArenaGroup | Arena rank group (0-9, where 9 = boss) |
-| wColiseumBattle | Battle number within current round |
+| wArenaGroup ($D9CE) | Arena rank group: 0-7 = G..S classes, 8 = Starry Night, 9 = King |
+| wColiseumBattle ($D9CD) | Match 0-2 within the class; $FE = class complete, $FF = lost |
 | $DA03-$DA08 | 3 enemy stat IDs (16-bit each) |
-| $DA02 | Battle mode ($02 = arena) |
+| $DA02 | Enemy count − 1 ($02 = 3 enemies) |
 
 ---
 

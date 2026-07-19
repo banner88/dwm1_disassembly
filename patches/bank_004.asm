@@ -2374,7 +2374,7 @@ MarkScriptActive:
 ; $02  $576F       Event        ClearEventFlag: clear bit in $D99B+ bitfield
 ; $03  $5788       Event        SetEventFlag: set bit in $D99B+ bitfield
 ; $04  $57A1       Screen       TriggerScreenEffect: set $C8EF/$C8F0/$C8F1
-; $05  $57EB       Battle       TriggerBattle: set enemy in $DA03, start fight
+; $05  $57EB       Battle       TriggerBattle(ByEID): 1 param = EID -> $DA03/04, 1 enemy, $DA09=1
 ; $06  $5819       State        IncrementC915: inc $C915 dialogue counter
 ; $07  $5824       State        InitDialogMode: set wGameState bit 0, init $C917
 ; $08  $5842       Flow         NOP: no operation
@@ -2400,7 +2400,8 @@ MarkScriptActive:
 ; $1C  $5D1A       NPC          NPCMoveCheck: check NPC movement completion
 ; $1D  $5D4B       NPC          LockMovement: set $D8D7 bit 5, suppress facing
 ; $1E  $5D53       NPC          UnlockMovement: clear $D8D7 bit 5
-; $1F  $5D5B       Event        LargeEventHandler: 157-line event dispatcher
+; $1F  $5D5B       Battle       ArenaBattleSetup: 3-enemy arena party from
+;                                wArenaGroup/wColiseumBattle (EID $E0+9g+3m+slot)
 ;                                Accesses $D7CA-$D7CE, calls bank $00/$01
 ; $20  $5E5E       Battle       SetBattleMode: set $DA09, $C905, $C8EB
 ; $21  $5E6D       Flow         SkipScriptData2: read 1 param, discard
@@ -2425,7 +2426,8 @@ MarkScriptActive:
 ; $33  $6332       Flow         SkipScriptData3: skip params
 ; $34  $634F       Monster      CheckMonsterSpecies3: check $CAEA species (50 lines)
 ; $35  $63BB       Monster      ResetPartyOrder: bank $01 entry 3/9
-; $36  $63C6       Battle       SetupBossEncounter: set $DA02-$DA04, $CAB4
+; $36  $63C6       Battle       MimicBattleSetup: [$CAB4 arena-progress tier] ->
+;                                word table $63EF (EIDs 317-324 Mimic L1-L38), 1 enemy
 ; $37  $6401       Event        CheckStoryVariable: check $D9CF region
 ; $38  $643F       Monster      CheckPartyMonster2: check $CAEA data (48 lines)
 ; $39  $64A7       Flow         ReadAndContinue: read params, continue
@@ -2454,7 +2456,8 @@ MarkScriptActive:
 ; $4F  $690B       Map          RestoreFromGate: restore gate state, transition
 ; $50  $6957       NPC          SetNPCField: write to $D7F8 NPC field
 ; $51  $696C       Event        CheckAndBranch: check $CA94, branch (42 lines)
-; $52  $69A9       Battle       BossSetup: 106-line boss battle configuration
+; $52  $69A9       Battle       RandomScaledBattle: 3 random EIDs, table $6A3C,
+;                                tier=(party level sum+1)/20 cap 7, $DA09=2
 ;                                Accesses $CA8E-$CB0C monster stats
 ; $53  $6A61       NPC          NPCComplexOp: 74-line NPC buffer manipulation
 ; $54  $6ACE       State        CheckC180: check $C180 game flag
@@ -2464,9 +2467,11 @@ MarkScriptActive:
 ; $58  $6BA0       Map          MapTransitionSpec: special map transition ($C939)
 ; $59  $6BDF       Event        HugeNPCHandler: 184-line NPC event processor
 ;                                Accesses $CAC0-$CAC2, bank $00/$14
-; $5A  $6D56       Battle       TriggerBattle3: battle with $DA02/$DA03
+; $5A  $6D56       Battle       TriggerBattle3: 1 param = EID -> $DA03/04, 1 enemy,
+;                                $DA09=3 (boss mode). ALL gate-boss fights use this
 ; $5B  $6D84       Battle       SetBattleFlags: set $C905/$DA09
-; $5C  $6D93       Battle       HugeBattleSetup: 249-line battle configuration
+; $5C  $6D93       Battle       ColiseumInitPrize: generates the 3 in-gate Coliseum
+;                                master parties + prize $D9D0 (see bank header)
 ;                                Accesses $CA8E-$CB0C, bank $02/$0D/$14
 ; $5D  $6F64       Event        CheckStoryRegion: check $D9D0 region var
 ; $5E  $6F89       State        CheckLabyrinth: check $D951/$C0D8
@@ -2482,7 +2487,7 @@ MarkScriptActive:
     dw label4_576f
     dw label4_5788
     dw label4_57a1
-    dw label4_57eb
+    dw TriggerBattleByEID
     dw label4_5819
     dw label4_5824
     dw label4_5842
@@ -2495,7 +2500,7 @@ MarkScriptActive:
     dw label4_5a02
     dw label4_5a6f
     dw label4_5ac5
-    dw ArenaGenerateBattles
+    dw ScriptWriteRAM
     dw label4_5b49
     dw label4_5b79
     dw label4_5b8f
@@ -2508,7 +2513,7 @@ MarkScriptActive:
     dw label4_5d1a
     dw label4_5d4b
     dw label4_5d53
-    dw label4_5d5b
+    dw ArenaBattleSetup
     dw label4_5e5e
     dw label4_5e6d
     dw label4_5e87
@@ -2752,7 +2757,15 @@ label4_57a1:
 ; Reads enemy stats ID from script, writes to $DA03/$DA04 (battle enemy),
 ; sets wGameState bit 6 (battle pending), sets $DA09=1 (battle trigger).
 ; ---------------------------------------------------------------------------
-label4_57eb:
+; ---------------------------------------------------------------------------
+; Script Command $05: TriggerBattle — 1 param = enemy-stats EID (16-bit).
+; Single enemy ($DA02=0), $DA09=1. Used for: Durran-gate phases 2/3
+; (Adult Terry EID 343 @ $0F:$4D46, Durran EID 199 @ $0F:$4DB8, post-game
+; Terry rematch @ $0F:$500E), Digster/Arena-Left boss (EID 127, scr1),
+; Bewilder decoys (EID 341 x4), Anger decoys (EID 349 x7), Castle intro
+; demo battle (EID 480). Gate bosses proper use opcode $5A instead.
+; ---------------------------------------------------------------------------
+TriggerBattleByEID:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3215,8 +3228,11 @@ TextFollowPointer2:
     set 3, [hl]
     ret
 
-                        ; begining of function relating to tresure chests
-ArenaGenerateBattles:                        ; inc unknown counter
+; ---------------------------------------------------------------------------
+; Script Command $12: write_ram — write value param to RAM address param.
+; (Old auto-label "ArenaGenerateBattles" was WRONG; also used for chest flags.)
+; ---------------------------------------------------------------------------
+ScriptWriteRAM:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3564,7 +3580,22 @@ label4_5d53:
     res 5, [hl]              ; Unlock NPC facing updates
     jp Jump_004_55f5          ; Continue script
 
-label4_5d5b:
+; ---------------------------------------------------------------------------
+; Script Command $1F: ArenaBattleSetup (was mislabeled LargeEventHandler)
+; Builds the 3-enemy party for ARENA battles from WRAM state (0 params):
+;   base EID = $00E0 + 3*(3*wArenaGroup + wColiseumBattle)
+;   slots    = base, base+1, base+2 -> $DA03/04, $DA05/06, $DA07/08 (16-bit)
+;   $DA02    = 2 (enemy count - 1, i.e. 3 enemies)
+; wArenaGroup: 0-7 = classes G F E D C B A S (menu: 4*[$C8E3]+([$C8E2]&$7F)),
+; 8 = Starry Night (EIDs 296-304), 9 = King battle -> the formula result is
+; OVERRIDDEN with EIDs $01E1-$01E3 (GoldSlime/Divinegon/Rosevine L70).
+; Formula rows for group 9 (EIDs 305-313, rival-species teams) are therefore
+; unreachable here (cut data). Then reads ArenaMasterSpriteTable and writes
+; the lobby display list $D7CA-$D7D1 (master sprite + 3 enemy species+$10).
+; Bank $50 clone: LoadArenaEnemyStats (regenerates between matches).
+; Battle is launched later by opcode $20 in Arena Battle (map $5D) scr0.
+; ---------------------------------------------------------------------------
+ArenaBattleSetup:
     ld a, [wArenaGroup]
     ld b, a
     add a
@@ -3675,60 +3706,30 @@ LoadScr_5e10:
     ret
 
 
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    ld de, $0b00
-    nop
-    ld a, [bc]
-    nop
-    jp c, DispatchBank42Rst
-
-    nop
-    ld a, [bc]
-    nop
-    dec bc
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    ld [bc], a
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    dec bc
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    rrca
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    inc c
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    inc de
-    nop
-    dec bc
-    nop
-    ld a, [bc]
-    nop
-    inc d
-    nop
-    ld [$0800], sp
-    nop
-    db $08, $00
+; ---------------------------------------------------------------
+; ArenaMasterSpriteTable ($04:$5E22) — per-arena-match master LOBBY
+; sprite shown in the Arena Battle room (map $5D) pre-fight scene.
+; 30 entries × 2 bytes = one per (group, match): 10 groups (G F E D C
+; B A S, StarryNight, King) × 3 matches. Read by ArenaBattleSetup
+; (opcode $1F) at index 2*(3*wArenaGroup + wColiseumBattle) into
+; $D7CA/$D7CB. Format: [gfx_id, is_monster]. is_monster=0: human NPC
+; sprite id ($0B warrior / $0A woman / etc, $08 = the King).
+; is_monster=1: monster follower gfx (gfx_id = species+$10; F match2
+; $DA = species $CA Hargon). Bank $50 carries a 27-entry duplicate
+; (LoadArenaEnemyStats @ $50:$6778, no King rows). The three enemy
+; monsters' sprites are computed at runtime (species+$10 → $D7CC-$D7D1).
+; ---------------------------------------------------------------
+ArenaMasterSpriteTable:
+    db $0b, $00, $0a, $00, $11, $00  ; G  class: matches 0/1/2
+    db $0b, $00, $0a, $00, $da, $01  ; F  class (match2 master = Hargon monster sprite)
+    db $0b, $00, $0a, $00, $0b, $00  ; E  class
+    db $0b, $00, $0a, $00, $02, $00  ; D  class
+    db $0b, $00, $0a, $00, $0b, $00  ; C  class
+    db $0b, $00, $0a, $00, $0f, $00  ; B  class
+    db $0b, $00, $0a, $00, $0c, $00  ; A  class
+    db $0b, $00, $0a, $00, $13, $00  ; S  class
+    db $0b, $00, $0a, $00, $14, $00  ; Starry Night Tournament
+    db $08, $00, $08, $00, $08, $00  ; King (group 9; sprite $08 = King)
 
 
 label4_5e5e:

@@ -206,7 +206,7 @@ This means the script VM pauses for one or more frames while text is being displ
 | $07 | $5824 | InitDialogMode | Set wGameState bit 0, init counters |
 | $13 | $5B49 | SetGameFlags | Configure game state flags |
 | $14 | $5B79 | ClearGameFlags | Clear game state flags |
-| $1F | $5D5B | EventTrigger | Complex event dispatch |
+| $1F | $5D5B | ArenaBattleSetup | 3-enemy arena party from wArenaGroup/wColiseumBattle (S67; see SIDEQUEST_MAP roster section) |
 | $2D | $6093 | EventDispatch | Large event handler |
 
 ## Key RAM Variables

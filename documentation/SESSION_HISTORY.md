@@ -2745,3 +2745,57 @@ two RE discovery sessions (M1, S3) before their authoring items depend on them.
 >    `FamilyRecipeResolve`) are documented in `BREEDING_SYSTEM.md`.
 > 4. **Re-check N4/N5/N6 formal acceptance** against the stage1ac implementation and
 >    tick the boxes whose acceptance tests are now met.
+
+
+> Session 65 (2026-07-18 — **CF4: custom-room WRAM migration into the
+> CF3-freed window + SRAM-expansion audit. BUILT; v7 USER-CONFIRMED S66
+> (test ROM v7 `de0c5a672e7e7e1fb834dd7afe70b9e7`, patched).**
+> User decisions: buffers move to the window head; counter region 640 B;
+> the $DE74 scratch block stays; persistent-pool doctrine = flags now,
+> SRAM expansion later (E3); 56-B SRAM tail = untouched emergency reserve.
+> **Pre-work finding (changes the S58 plan)**: the freed window
+> $CC80-$D664 is TRANSIENT PERMANENTLY — its save-image address
+> $A3BA-$AD9E is CF3's live farm, so entries 5/6 skip it in BOTH copy
+> directions; the S58 "EXPLOIT the vanilla block copy" decision was
+> foreclosed by S60's build and cannot be revived (annotated at the
+> decision text; DOC_AUDIT S65).
+> **As built**: wCustomNPCBuffer→$CC80, wCustomExitBuffer→$CD00
+> (label-only; the 4 operand sites live in the bank $60 template TEXT which
+> is unchanged — sha256 pins + TEMPLATE_SIZE untouched); STEP_COUNTER_BASE
+> $DE74→$CD80, WRAM_REGION default/max 640 (hard cap = the $D000 wram0
+> section boundary, validated in project.py); static `ds 7` at $DE74 keeps
+> wRoomRecScratch pinned $DE7B (scratch/Tame/flag/CF3-mailbox block
+> unmoved; ClearAllWRAM $1EE0 extension still required for it);
+> wCustomPool $D001-$D664 (1,636 B transient reserve). **Init guarantee**
+> (the copy-skip corollary of S55's init lesson): bank $73 entry 6 tail
+> zeroes the window after the main-image restore copy (gated on unique src
+> end $B124; the 4 callers are enumerated in the entry header) — with
+> ClearAllWRAM (power-on) and CF3NewGameClear (new game) this makes every
+> gameplay entry window-zeroed; reload-in-room now deterministically step-0
+> (also closes the S55-accepted cross-save staleness).
+> **Census scare resolved**: 136 vanilla literal refs inside the window are
+> ALL data-as-code artifacts ($CD = CALL opcode minting fake $CDxx
+> operands; "PaletteStoreCD80" etc. are auto-names on instruction soup);
+> structural proof = the vanilla array occupied the window. audit_wram.py
+> models it (FREED_WINDOWS, F-class; S54 detection power selftest-pinned
+> via a $CAC5 probe; arg guard added) + wram_usage.json regenerated
+> together. known_RAM_map's unsourced "link+arena time-share" clause
+> refuted via the S56 access map and removed.
+> **SRAM expansion (user request) audited, NOT built — BLOCKED, banked
+> into E3 + ARCHITECTURE "SRAM banking"**: header is $1B/8 KB; RST_18
+> writes RAMB:=rom_bank>>5 on every rst $10 ($FFA3 = shadow; bank $40 has
+> a genuine di-bracketed 32 KB multi-bank SRAM wipe — the engine family
+> carries the infrastructure); under 32 KB, CF3 (bank $73) would run on
+> RAMB=3 and the audio ISR's bank $74 dispatch flips RAMB every vblank —
+> RAMB discipline in CF3's SRAM entry points must land first. Free SRAM
+> today: tail $BFC8-$BFFF (56 B).
+> Doc repairs: PROJECT_COMPILER §2.7 stale pre-S57 flag pool → 32-flag
+> pool; §2.6 rewritten; quick-start + §1 md5 re-pinned WITH a stale-pin
+> grep this time. Compiler: example project (region_size 640, hole
+> 0xCD84), REFERENCE_MD5 `de0c5a67…` (patched), 25/25 --rom; compat==hand
+> re-proven file-identical. Verifier PASS 5/5; clean build `1ca6579…`.
+> **v7 acceptance MET (user, S66 — "no issues")**: enter $6B/$6C/$70, NPC interact, exits
+> both ways, step advance, save-in-room → reload → scroll (expect step-0),
+> egg give in-room.
+>
+>

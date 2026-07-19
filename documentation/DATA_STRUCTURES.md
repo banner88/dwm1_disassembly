@@ -404,7 +404,7 @@ Master table indexing: the script engine reads `$41BA + $D8D3 × 2` where `$D8D3
 | $0B | 2 | npc_move_y | Instant vertical move |
 | $0D | 3 | npc_write | Write byte to NPC buffer |
 | $0E | 2 | branch_by_screen | Branch on screen index |
-| $12 | 2 | **write_ram** | **Write value byte to RAM address.** Param1=addr, param2=value (low byte C written to [HL]). Label "ArenaGenerateBattles" is WRONG. |
+| $12 | 2 | **write_ram** | **Write value byte to RAM address.** Param1=addr, param2=value (low byte C written to [HL]). The wrong auto-label "ArenaGenerateBattles" was renamed `ScriptWriteRAM` in both trees (S67). |
 | $15 | 3 | **check_and_branch** | **Compare [addr] to value, branch if match.** Used for YES/NO: `$FF15, $C83C, $0001, branch_target` |
 | $19 | 0 | wait_movement | Pause until movement completes |
 | $1A | 2 | npc_walk_x | Animated horizontal walk |

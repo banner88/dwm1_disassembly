@@ -660,20 +660,30 @@ current state (grounded in the repo), why it is campaign-critical, where it is o
 Priority: **E1 and E2 are the keystones** (E1 is the one true remaining RE gap; E2 is
 the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
 
-- [ ] **E1 — Arena / gate-boss ROSTER data format. (The biggest unreversed gap.)**
-      DWM1's campaign *is* the arena-rank climb (G→S class) plus mandatory gate bosses;
-      the opponents you fight ARE the campaign's challenge content. The progression
-      *flags* are mapped (SIDEQUEST_MAP "Story Progression Overview"), but the **opponent
-      rosters are NOT decoded** — which monster parties appear at each arena class and at
-      each gate-boss fight, their levels/skills, and the bracket ordering. `boss_table.json`
-      (`dump_boss_table.py`, the `$4897` table, 32 gates) covers gate bosses; whether it
-      *also* encodes the arena-class tournament brackets is **unverified** (a roster-format
-      search across docs returned zero hits). A new campaign cannot define its own challenge
-      curve until this is reverse-engineered and made authorable (`project.json`: arena
-      class → opponent party; gate → boss party). *Confidence: HIGH this is a real RE gap.
-      Owning doc: SIDEQUEST_MAP (technical) + this item. Next step: trace the arena-lobby
-      battle-setup path (how the lobby picks the opponent party for the current rank) and
-      confirm/extend `boss_table.json` (or add `arena_brackets.json`).*
+- [x] **E1 — Arena / gate-boss ROSTER data format — DECODED S67; arena path
+      USER-VERIFIED on HW (SameBoy watchpoints: Class D wrote $DA02=$02 at
+      $04:$5D8E, EIDs 251/252/253 = exact formula; $DA09=$01 by opcode $20 at
+      $04:$5E69).** Headline: there IS no arena roster table — parties are
+      FORMULA-addressed consecutive enemy-stats rows, `EID = $E0 +
+      9*wArenaGroup + 3*wColiseumBattle + slot` (opcode $1F ArenaBattleSetup
+      $04:$5D5B + bank $50 clone; groups 0-7 = G..S, 8 = Starry Night, 9 =
+      King override $01E1-$01E3). Gate bosses are the opcode `$5A`/`$05` EID
+      param in each boss ROOM's script (53-site census; Medal Gate has 3
+      variants; Durran gate = Servants×2 → Terry 343 → Durran 199, all found);
+      `$14:$4893` is only the fight→join RECRUITMENT redirect — the "boss
+      table" framing was wrong semantics (DOC_AUDIT S67). In-gate Coliseum +
+      Mimic + opcode-$52 battles are RNG (level-banded windows; Mimic tier =
+      `$CAB4` = arena progress). Per-class VICTORY cascade (rank+catch-up
+      flags, `$CAB4`, world step counters) extracted from Arena Lobby scr0.
+      Owning prose: SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED
+      S67"; data pair: `tools/dump_arena_brackets.py` →
+      `extracted/arena_brackets.json` (self-checking); authoring spec for the
+      E2/project.json wiring is in that section (arena bracket = rows
+      224-304/481-483; boss = script param + redirect pair + stats row;
+      bracket SHAPE changes = patch the formula constants). Residuals (minor,
+      banked): `$DA09` modes 0/2/3 code-derived; intro Dracky (EID 4) trigger
+      is engine-side; matches-2/3 re-entry loop not single-stepped (bank $50
+      regen HW-observed). Byte-neutral session (clean build `1ca6579…`).
 
 - [ ] **E2 — Story progression as an AUTHORABLE model (incl. bank `$50` annotation).**
       The mechanism is understood at flag level — story counter `$D9E3` (`$0240-$0247`,
@@ -744,10 +754,12 @@ the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
       MEDIUM. Mostly covered by Phase 2; flag capacity-planning as an explicit acceptance test.
       Owning doc: TEXT_SYSTEM + Phase 2 `build_project.py` validations.*
 
-**Bottom line:** for editor v1 the RE is done and the gap is formats + UI. For a *new
-campaign*, **E1 (arena / gate-boss roster format) is the one true remaining
-reverse-engineering gap** and the natural next Phase-D/E session; **E2** is the authoring
-backbone; E3-E6 are schema / UI / capacity questions on top of largely-known mechanics.
+**Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
+**E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work
+is **E2** (the authoring backbone, now unblocked: E1's authoring spec feeds straight into
+it, and E1 removed part of E2's unknowns by decoding the Arena Lobby scr0 victory cascade
+and the `$CAB4` progress tier); E3-E6 are schema / UI / capacity questions on top of
+largely-known mechanics.
 
 ---
 

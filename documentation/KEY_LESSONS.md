@@ -2355,3 +2355,25 @@ The gate-entry path (bank $16 label16_5b4e) copies wMapID into wGateID and
 ×8-indexes GateFloorDataTable with it — fine for gate ids ≤$1F, garbage for
 a custom mapID. trigger_x=$FF is likewise forbidden (exit-list terminator).
 Both are recommended compiler validators (ROADMAP A′1 follow-up).
+
+
+## S67: Script opcode words are `op | $FF00` — byte-search accordingly
+Script streams in banks $0C-$0F are WORD streams; opcode words carry $FF in
+the high byte (`5A FF`, `05 FF`, `13 FF`…), params are plain words. A byte
+search built from the decompiler's decimal view (`5a 00`…) finds nothing and
+can "prove" a trigger doesn't exist. The Durran chain hid this way: the
+decompiler also mis-types some opcodes' params (`$05`'s EID shows as
+`text_or_param`, `$20` grabs the NEXT command's bytes as fake params), so
+filter-by-opcode scans over all_scripts.json miss anything not in the filter
+list. When a battle/effect has no visible trigger: (1) raw-scan `op|$FF`
+patterns across banks $0C-$0F, (2) list ALL writers of the target RAM with a
+ROM-wide `EA lo hi` scan, (3) only then conclude "engine-side".
+
+## S67: "Zero doc hits" needs synonym greps before it justifies a session
+E1 was pitched as a from-scratch RE gap ("no roster doc hits"), but the core
+arena formula sat in QUEST_OPCODES under the name ArenaBattleSetup. Half the
+session's value was in the OTHER half (boss triggers, coliseum RNG, victory
+cascade) — but the framing was wrong and a less careful session could have
+re-derived the formula at length. Grep the concept's synonyms (setup,
+bracket, opponent, $-addresses you already know) across documentation/
+before accepting any "not documented" premise, including the ROADMAP's own.

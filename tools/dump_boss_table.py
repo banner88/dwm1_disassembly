@@ -1,9 +1,19 @@
-"""Dump the full boss table (4 bytes per gate) from ROM.
+"""Dump the gate rows of the boss fight->join REDIRECT table from ROM.
 
-Boss table at $14:$4897, stride 4 bytes per gate.
-Byte 0 = boss fight EID (confirmed via watchpoint)
-Byte 1 = always $00
-Bytes 2-3 = join EID (16-bit LE) — monster that joins party after defeat
+SEMANTICS CORRECTED S67: $14:$4893 is a redirect table scanned BY FIGHT EID
+(LookupBossRedirect, bank $14 entry 6): [fight_eid u16, join_eid u16] pairs,
+$FFFF-terminated; first pair (4->486, intro Dracky) is non-boss. It maps a
+defeated fight EID to the recruitable join EID — it does NOT select which
+boss a gate spawns. Boss selection = the opcode $5A/$05 param hardcoded in
+each boss room's script (see tools/dump_arena_brackets.py ->
+extracted/arena_brackets.json, and SIDEQUEST_MAP "Arena / gate-boss ROSTER
+format — DECODED S67").
+
+This tool dumps from $4897 (skipping the non-boss pair) with stride 4, so
+the old field reading still holds per row and the OUTPUT IS UNCHANGED:
+Byte 0-1 = boss fight EID u16 (byte 1 = $00 for all vanilla bosses)
+Bytes 2-3 = join EID (16-bit LE)
+The per-gate ordering is positional convention, not an engine lookup key.
 
 Usage:
   uv run python -m tools.dump_boss_table
