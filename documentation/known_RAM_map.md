@@ -417,7 +417,13 @@
                  S65): $DE74-$DE7A static pad (step counters now at $CD80
                  region, see the $CC80 window row), wRoomRecScratch $DE7B,
                  wRoomEncFlag $DE83, Tame vars $DE84-$DE87, wCustomRoomFlag
-                 $DE88, CF3 mailbox $DE89-$DE8A; $DE8B-$DEDD reserved.
+                 $DE88, CF3 mailbox $DE89-$DE8A, E3 banked-copy mailbox
+                 $DE8B-$DE91 (S69: wSRAMXferBank db, wSRAMXferSrc/Dst/Len dw
+                 — params for CF3SRAMBankedCopy, bank $73 entry 9, the ONLY
+                 path to SRAM banks 1-3 under the RAMB pin; see ARCHITECTURE
+                 "SRAM banking as built S69"), wSnapBounce $DE92-$DEB1 (S69v2: 32-B
+                 bounce for CF3SnapXfer — roster snapshot staging, banks
+                 can't see each other); $DEB2-$DEDD reserved.
                  Vetted: no real claimant above the audio ceiling $DE2B
                  (full-corpus scan; $DE30-$DEFF literals are all data-as-code
                  junk); SVBK windows touch $DB00+ only; NOT in save range.

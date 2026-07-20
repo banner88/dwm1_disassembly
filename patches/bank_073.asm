@@ -74,6 +74,7 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     dw CF3CopyFromSRAM              ; entry 6  — CopyFromSRAM body, farm-window read-skip (S60)
     dw CF3NewGameClear              ; entry 7  — new-game WRAM image zero + SRAM farm-flag zero (S60)
     dw CF3TradeRecv                 ; entry 8  — trade receive: staging $15 -> farm slot 19 SRAM (S60)
+    dw CF3SRAMBankedCopy            ; entry 9  — E3 (S69): the ONLY path to SRAM banks 1-3 (di-bracketed RAMB)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -677,7 +678,18 @@ CF3CopyToSRAM:
     ld a, b
     or c
     jr nz, .loop
-    ret                             ; SRAM stays enabled (CF3 policy)
+    ; S69v2: main-save detector (only SaveGameState's $C8EA->$A024 copy ends
+    ; at DE=$B124 — same invariant entry 6 relies on; see its header) ->
+    ; commit the roster snapshot to bank 1. All other entry-5 callers
+    ; ($A003->$A024 header, SavePartyToSRAM ends $A3BA, $BCC8/$BEC8 blocks)
+    ; fall through the nz rets unchanged. SRAM stays enabled (CF3 policy).
+    ld a, d
+    cp $b1
+    ret nz
+    ld a, e
+    cp $24
+    ret nz
+    jp CF3SnapCommit
 
 ; -----------------------------------------------------------------------------
 ; Entry 6 — CF3CopyFromSRAM: CopyFromSRAM body (SRAM -> WRAM/HRAM), dest HL
@@ -754,7 +766,9 @@ CF3CopyFromSRAM:
     ld a, l
     cp $65
     jr nz, .wclr                    ; stops at HL=$D665: $CC80-$D664 zeroed
-    ret
+    ; S69v2: bank-1 roster snapshot — restore over the eager image if the
+    ; magic is present, else SEED it (one-time migration of pre-v3 saves).
+    jp CF3SnapRestore
 
 ; -----------------------------------------------------------------------------
 ; Entry 7 — CF3NewGameClear: hooked over the New Game handler's
@@ -812,3 +826,208 @@ CF3TradeRecv:
     dec b
     jr nz, .loop
     ret
+
+; -----------------------------------------------------------------------------
+; Entry 9 — CF3SRAMBankedCopy (E3, S69): copy between WRAM/HRAM and a chosen
+; SRAM bank under the RAMB-pin discipline. This is the ONLY sanctioned way to
+; touch SRAM banks 1-3 in the 32 KB build (everything else in the engine runs
+; with RAMB pinned to 0 — the ROM0 quadrant-convention writers were retargeted
+; to the MBC5-ignored $6100; see ARCHITECTURE "SRAM banking as built S69").
+;
+; Params (mailbox, patches/wram.asm $DE8B-$DE91; transient, caller-written
+; immediately before the call):
+;   wSRAMXferBank  target RAMB 0-3 (bank of the SRAM side)
+;   wSRAMXferSrc   source address       (either side may be $A000-$BFFF)
+;   wSRAMXferDst   destination address
+;   wSRAMXferLen   byte count ($0000 = no-op)
+;
+; DISCIPLINE (the load-bearing part — copy this pattern for any future banked
+; access): RAMB != 0 exists ONLY inside a di window, restored to 0 before ei,
+; per byte. The vblank audio ISR no longer writes RAMB (pin retarget), but an
+; ISR between ei/di still expects the invariant RAMB==0 — which this loop
+; maintains at every interruptible point. Per-byte bracketing is deliberate:
+; worst-case audio latency is one byte-copy (~10 M-cycles), and the exemplar
+; stays trivially verifiable. A chunked variant is a future optimization for
+; the first hot consumer (none exists yet).
+;
+; CONTRACT: call with interrupts ENABLED (every normal gameplay context; the
+; final ei assumes it). SRAM<->SRAM cross-bank copies are NOT supported (both
+; dereferences happen under the same RAMB). SRAM is (re-)enabled on entry and
+; left enabled (CF3 policy). rst $10 contract as usual: A/HL/flags clobbered,
+; BC clobbered by the dispatcher; DE preserved here (push/pop).
+; -----------------------------------------------------------------------------
+CF3SRAMBankedCopy:
+    push de
+    ld a, $0a
+    ld [$0100], a                   ; ensure SRAM enabled (CF3 policy)
+    ld a, [wSRAMXferSrc]
+    ld l, a
+    ld a, [wSRAMXferSrc+1]
+    ld h, a                         ; HL = src
+    ld a, [wSRAMXferDst]
+    ld e, a
+    ld a, [wSRAMXferDst+1]
+    ld d, a                         ; DE = dst
+    ld a, [wSRAMXferLen]
+    ld c, a
+    ld a, [wSRAMXferLen+1]
+    ld b, a                         ; BC = remaining
+.next:
+    ld a, b
+    or c
+    jr z, .done
+    di
+    ld a, [wSRAMXferBank]
+    ld [$4100], a                   ; RAMB := target — di window ONLY
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    xor a
+    ld [$4100], a                   ; restore the pin invariant BEFORE ei
+    ei
+    dec bc
+    jr .next
+.done:
+    pop de
+    ret
+
+; -----------------------------------------------------------------------------
+; S69v2 — THE ROSTER SNAPSHOT (persistence semantics v3). Root cause it fixes,
+; confirmed from the user's .sav: the v2 EAGER roster (canonicalizer tail
+; mirrors WRAM $CA8D-$CC7F -> $A1C7-$A3B9; farm writes live) makes UNSAVED
+; battle deaths and catches survive a reset — vanilla players expect a reset
+; without saving to rewind everything to the last save. v3 restores vanilla
+; semantics using the E3 32 KB expansion: SRAM BANK 1 holds a magic-gated
+; snapshot of the roster block, written ONLY on explicit save (entry 5's
+; main-copy detector) and restored OVER the eager image on load (entry 6's
+; tail). Bank 0's roster region remains the LIVE store (GMDP addressing home
+; for farm slots 3-19, crash-consistent between saves) — it just no longer
+; survives a reload.
+;
+; SNAPSHOT REGION: $A1BF-$AD9E (3040 = 95 chunks x 32 B, no partial chunk).
+; This is the roster block $A1C7-$AD9E plus 8 leading bytes $A1BF-$A1C6
+; (image of WRAM $CA85-$CA8C): those live BELOW the canonicalizer mirror
+; range, so bank 0 only ever holds their last-explicit-save values — the
+; restore overwrite is a proven no-op, bought for exact 32-byte chunking.
+;
+; MAGIC: bank 1 $A000-$A001 = $52,$33 ("R3"). Deliberately mirrors where
+; bank 0 keeps its checksum — different banks, no collision. The bank $40
+; 4-bank wipe (if its $CBC6 gate ever fires) clears the magic -> next load
+; re-seeds. The corrupt-save wipe (bank 0 only) leaves stale magic, but the
+; save-present flag $A002 is then 0, so the load funnel never runs entry 6
+; and the stale snapshot is overwritten by the next explicit save.
+;
+; INTERRUPT SAFETY (why NO di/ei — audited S69): under the RAMB pin no ISR
+; writes RAMB (all 19 convention writers retargeted), and no ISR touches
+; SRAM (vblank audio: zero SRAM literals in banks $41/$74; LCDC: scanline
+; display code; timer: reti; serial: inactive during save/load contexts and
+; pin-safe regardless). So a RAMB=1 window here is interrupt-transparent
+; without brackets — which also makes these hooks IME-agnostic (the load
+; funnel can run at boot with interrupts off; an unconditional ei would be
+; a boot hazard). Contrast entry 9, the conservative any-context primitive,
+; which keeps per-byte di/ei and remains the rule for future code.
+;
+; TIMELINE CONSISTENCY (adjudicated before building): pool $B124 stays
+; vanilla-eager (vanilla wrote it at sleep-commit directly; the sleep-state
+; flag lives in the main image and rewinds, gating stale pool copies
+; exactly as vanilla did). wPendingFarmExp ($D9C8, main image) rewinds
+; together with the farm records its drain feeds — one timeline. Trade-recv
+; (entry 8) writes live farm; unsaved trades rewind like vanilla's WRAM
+; farm did.
+; -----------------------------------------------------------------------------
+
+; CF3SnapXfer: move the $BE0-byte snapshot region between banks, staged
+; through the 32-byte bounce buffer wSnapBounce ($DE92 — SRAM is not dual-
+; port; the two banks cannot see each other directly).
+; entry: B = source RAMB, C = dest RAMB. clobbers A/D/E/HL. RAMB=0 on exit
+; (re-asserted after EVERY chunk so RAMB!=0 windows stay ~200 cycles).
+CF3SnapXfer:
+    ld hl, $a1bf
+    ld d, 95                        ; chunk count (95 x 32 = $BE0)
+.chunk:
+    push de
+    ld a, b
+    ld [$4100], a                   ; RAMB := source bank
+    push hl
+    ld de, wSnapBounce              ; $DE92; +32 = $DEB2, no page cross
+.rd:
+    ld a, [hl+]
+    ld [de], a
+    inc e
+    ld a, e
+    cp $b2
+    jr nz, .rd
+    ld a, c
+    ld [$4100], a                   ; RAMB := dest bank
+    pop hl
+    ld de, wSnapBounce
+.wr:
+    ld a, [de]
+    ld [hl+], a
+    inc e
+    ld a, e
+    cp $b2
+    jr nz, .wr
+    xor a
+    ld [$4100], a                   ; pin re-asserted every chunk
+    pop de
+    dec d
+    jr nz, .chunk
+    ret
+
+; CF3SnapCommit: bank 0 live roster -> bank 1 snapshot, then write magic.
+; Reached from entry 5's main-save detector and from the seed path below.
+; SRAM already enabled by the calling entry.
+CF3SnapCommit:
+    ld b, 0
+    ld c, 1
+    call CF3SnapXfer
+    ld a, 1
+    ld [$4100], a
+    ld hl, $a000
+    ld a, $52
+    ld [hl+], a
+    ld [hl], $33                    ; magic "R3" in bank 1
+    xor a
+    ld [$4100], a
+    ret
+
+; CF3SnapRestore: entry 6 tail (runs after the main-image restore + window
+; clear, exactly once per load). Magic present -> restore bank 1 -> bank 0,
+; then re-copy the roster's WRAM span $CA8D-$CC7F from the rewound bank 0
+; image $A1C7-$A3B9 (the main restore had filled it with EAGER values; this
+; overwrite is the actual rewind the player sees). Ends flush at $CC80 —
+; the just-zeroed window is untouched. Magic absent -> one-time migration:
+; seed the snapshot from the live roster (current state becomes the saved
+; state) via CF3SnapCommit.
+CF3SnapRestore:
+    ld a, 1
+    ld [$4100], a
+    ld hl, $a000
+    ld a, [hl+]
+    cp $52
+    jr nz, .seed
+    ld a, [hl]
+    cp $33
+    jr nz, .seed
+    xor a
+    ld [$4100], a
+    ld b, 1
+    ld c, 0
+    call CF3SnapXfer
+    ld hl, $a1c7                    ; rewound bank-0 roster -> WRAM
+    ld de, $ca8d
+    ld bc, $01f3
+.rw:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec bc
+    ld a, b
+    or c
+    jr nz, .rw
+    ret
+.seed:
+    xor a
+    ld [$4100], a
+    jr CF3SnapCommit

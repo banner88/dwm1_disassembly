@@ -10,7 +10,79 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-19 (Session 68 — **E2 RE half + AUTHORING SPEC: battle↔story engine decoded, byte-neutral. wGameMode $C88A mode tables; bank $50 = BATTLE mode manager; $D9EC = 18-phase battle machine; win→script-resume guarantee ($C8EA.7) + loss path (Castle warp, gold/2, keep-on-defeat item bit) decoded; evaluation opcodes resolved ($CA8D party count / $FF92 hPlayerX / $D8E1 evaluator family); flee=neutral-2/caught=win-0/1-in-32 intro events HW-pinned by user; authoring spec + campaign recommendation in SIDEQUEST_MAP; bank_050 header rewritten + phase labels in both trees (sym-verified). Clean build `1ca6579…` unchanged; verifier PASS 5/5; editor2 untouched.**)
+> Last verified: 2026-07-19 (Session 69 — **E3: 32 KB SRAM EXPANSION BUILT (NOT yet user-tested). RAMB PIN: 19 ROM0 quadrant-convention RAMB writers retargeted $4100→$6100 (one operand byte each, MBC5-ignored; boot's RAMB:=0 kept; bank $20/$40 explicit writers adjudicated safe); HeaderRAMSize $02→$03; banks 1-3 reachable ONLY via CF3SRAMBankedCopy (bank $73 entry 9, wSRAMXfer* mailbox $DE8B-$DE91, per-byte di-bracketed). Key finding: the ISR restores RAMB by QUADRANT RECOMPUTATION of the interrupted bank, not by saved value — the S65 per-entry sketch was insufficient (DOC_AUDIT S69). Entry 9 byte-executed (zero pin-invariant violations); byte-diff = exactly 19 operands + header + bank $73 shift. Clean build `1ca6579…` unchanged; verifier PASS 5/5; compiler re-pinned. **S69v2 same session: user found unsaved deaths/catches surviving reset (CF3 v2 eager-roster reload consequence, confirmed from uploaded .sav) → PERSISTENCE v3: bank-1 'R3' roster snapshot (save-time commit, load-time restore, self-seeding migration) restores vanilla reset-rewind semantics; first real consumer of the expansion; compiler re-pinned `94731e60…` (patched).**)
+>
+>
+> Session 69 (2026-07-19 — **E3: 32 KB SRAM expansion via the RAMB PIN.
+> BUILT, NOT yet user-tested.** Owning: ARCHITECTURE "SRAM banking as built
+> S69". Headline: instead of disciplining every SRAM consumer, the quadrant
+> convention (`RAMB := rom_bank>>5` on every rst $10 / return trampoline /
+> audio-tick entry+exit) is REMOVED at its 19 ROM0 producer sites — each
+> `ld [$4100],a` retargeted one operand byte to the MBC5-ignored `$6100`
+> (A/flags/timing preserved for trampoline-flag observers; vanilla itself
+> writes $6100 at boot = proven-inert sink). Boot's three literal `RAMB:=0`
+> kept (the pin's establishment). RAMB is therefore $00 forever; every
+> existing consumer (vanilla quadrant-0 save cluster, CF3 bank $73 entries,
+> $50/$51 walker dereferences) hits bank 0 = exact 8 KB behavior, zero
+> consumer changes. WHY the S65 sketch ("RAMB=0 inside CF3's entry points")
+> was wrong: the vblank audio tick saves only the interrupted ROM bank and
+> RECOMPUTES `RAMB := quadrant(popped bank)` on exit (AudioPopSetDE) —
+> RAMB is not saved state; a per-entry set is clobbered by the first vblank
+> (DOC_AUDIT S69, KEY_LESSONS S69 ×2). Untouched writers adjudicated: bank
+> $40 di-bracketed 4×8 KB wipe ($FFA3-shadowed, exits via InitGameData →
+> boot re-zeros; now genuinely useful at 32 KB); bank $20 streaming system
+> ($C68A has NO initializing writer — provably 0; all exits write RAMB:=0).
+> `HeaderRAMSize $0149 = $03` (32 KB; rgbfix recomputes checksums). New
+> accessor: **CF3SRAMBankedCopy** (bank $73 entry 9; mailbox wSRAMXferBank/
+> Src/Dst/Len $DE8B-$DE91 carved from the reserve, 76 B left) — per-byte
+> di / RAMB:=n / copy / RAMB:=0 / ei; the pin invariant (RAMB==0 whenever
+> IME on) holds at every interruptible point; call with IME on; one side is
+> the SRAM side; SRAM stays enabled (CF3 policy); DE preserved. Banks 1-3
+> arrive UNINITIALIZED — first consumer brings format/magic (E3 residual).
+> Validation: byte-diff vs S65 baseline = exactly 19 operand bytes
+> $41→$61 (all ROM0, offsets $1F/$35/$640/$862/$891/$8A0/$8D2/$8E1/$D5F/
+> $D76/$1167/$11BA/$1575/$1625/$1632/$33F4/$345A/$34E0/$357A) + $0149 +
+> header/global checksums + bank $73 (+2 entry-table shift, label-safe per
+> S58 precedent, + entry 9 at $73:$4302); entry 9 byte-executed on emitted
+> bytes (copies both directions, bank isolation, len-0 no-op, DE preserved,
+> ZERO pin-invariant violations); clean build `1ca6579…` untouched;
+> verifier PASS 5/5; compiler 25/25 re-pinned `e719d286db0ff66e80755ec3ef1203e0`
+> (patched; prev `de0c5a67…` S65). ARCHITECTURE stale 40-flag claim fixed
+> (pre-CF2; DOC_AUDIT S69). E3 remains [~]: (a2) new-game INIT object +
+> (b2) banks-1-3 storage schema: BANK 1 NOW CLAIMED (v2 half, below).
+> User smoke SAME SESSION: old-save load / gate run / warp heal /
+> save+reload / breeding / farm pick+drop PASS; .sav = 32 KB confirmed.
+> **S69v2 — USER-FOUND DEFECT → PERSISTENCE v3 (ROSTER SNAPSHOT), same
+> session.** Report: unsaved battle deaths (and an unsaved catch) survive
+> reset+reload. NOT an S69 regression — the CF3 v2 EAGER roster's reload
+> consequence, confirmed from the user's uploaded .sav (party slots 1-2:
+> HP $0000 + status bit 7 @ +$4A; +$50 empirically = CURRENT HP). The
+> first coffin report was the same mechanism; the S69 Coliseum
+> adjudication was WRONG (user: Coliseum faints auto-revive; DOC_AUDIT
+> S69v2, KEY_LESSONS S69v2). FIX (owning: MONSTER_DATA "Persistence model
+> (v3)"): SRAM bank 1 "R3"-magic snapshot of $A1BF-$AD9E (95×32-B chunks
+> via wSnapBounce $DE92-$DEB1), committed by entry 5's DE==$B124 main-save
+> detector, restored over the eager image by entry 6's tail (then bank0
+> roster → WRAM $CA8D-$CC7F re-copy); magic-absent = one-time seed
+> (migration). No di/ei — ISR graph audited SRAM-free + RAMB-free under
+> the pin, so hooks are IME-agnostic (boot-safe). Reset-no-save now
+> rewinds party+farm to last explicit save (pending-exp rewinds with the
+> main image; pool stays vanilla-eager, sleep-flag-gated; unsaved trades
+> rewind). New game untouched (snapshot must survive unsaved new game);
+> corrupt-save wipe safe ($A002 gate); bank $40 wipe clears magic →
+> reseed. Validation: 4-scenario emitted-bytes execution (commit /
+> death+catch+reset rewind / migration seed / non-main no-trigger, exit
+> RAMB=0 all); diff v1→v2 = bank $73 + global checksum only; verifier
+> PASS 5/5; compiler 25/25 re-pinned `94731e601af28503060acf3884348015`
+> (patched; prev `e719d286…` S69v1). **v2 USER-CONFIRMED same session:
+> all 5 smoke tests PASS (migration heal+save; death→reset-no-save→
+> rewound; catch→reset-no-save→gone; breed/deposit+save persists;
+> sleep/wake + in-gate save). E3 expansion + persistence v3 are
+> user-tested.** Pool write timing verified in code (S69v2): sleep/wake
+> commit $B124-$BCC7 eagerly via the di accessors at action time; the
+> save funnel's blocks end/start flush at $BCC7/$BCC8 — pool is
+> VANILLA-eager, gated by flags in the rewinding image; all sleep reset
+> edges resolve exactly as vanilla.**
 >
 >
 > Session 68 (2026-07-19 — **E2 RE half + AUTHORING SPEC: the battle↔story
@@ -60,58 +132,10 @@
 > its marker until the KO scans).** Residuals: $CAB9 snapshot writer;
 > intro-event message text (3-14). Byte-neutral: clean build `1ca6579…`
 > unchanged; verifier PASS 5/5.
->
->
-> Session 67 (2026-07-19 — **E1: arena / gate-boss opponent-roster format
-> DECODED (byte-neutral). Arena path USER-VERIFIED on HW same session.**
-> Headline: there is NO arena roster table — opcode $1F `ArenaBattleSetup`
-> ($04:$5D5B; between-matches clone `LoadArenaEnemyStats` bank $50) computes
-> **EID = $E0 + 9*wArenaGroup + 3*wColiseumBattle + slot** → 90 consecutive
-> enemy-stats rows ARE the brackets (groups 0-7 = G..S, 8 = Starry Night
-> 296-304, 9 = King, overridden to $01E1-$01E3; formula rows 305-313 =
-> unreachable rival-team cut data). Group source: bank $09 lobby menu
-> (4*[$C8E3]+([$C8E2]&$7F); gold table $09:$5D23; availability $C0D8) or
-> Arena Lobby scr6 write_ram (group 8/9 + $D999 = 1/4). $D999 = map-$5D step
-> counter (0 arena / 1-3 Starry phases / 4 King). Master lobby sprites:
-> `ArenaMasterSpriteTable` $04:$5E22 (30×[gfx,is_monster]; dup $50:$6778) —
-> both re-sectioned from fake instructions (byte-perfect). Gate bosses:
-> EVERY boss fight is the opcode $5A/$05 EID param in the boss ROOM script
-> (53-site census, all script-attributed): Medal Gate has THREE variants
-> (156/153/155); Durran gate = 3-fight chain (write_ram2 Servant 342 ×2 +
-> op $20 → op $05 Terry 343 @ $0F:$4D46 → op $05 Durran 199 @ $0F:$4DB8;
-> post-game Terry rematch $0F:$500E); Bewilder/Anger decoys (341×4/349×7);
-> Digster = op $05 127; NEW: undocumented MadGopher L21 event battle
-> (EID 255, Castle scr13 + Farm scr26); Tatsu EID 344 unused. **$14:$4893 is
-> the fight→join RECRUITMENT redirect, NOT a boss-selection table** —
-> boss_table.json semantics corrected (data unchanged; DOC_AUDIT S67).
-> Coliseum (map $52): RNG level-banded parties (op $5C `ColiseumInitPrize`
-> keys MAX level, bank $16 twin keys AVERAGE; bands 2×9 then 18-wide at
-> 13/33/57/81/105/129/157/181; parties 2/3 staged $D9D1-6/$D9D9-DE, chained
-> by $50:SetBtl_67ae; prizes $04:$6F44/$6F54, visit counter $D9CF). Mimic
-> (op $36, $04:$63EF) tiered by **$CAB4 = arena progress** (Arena Lobby scr0
-> writes class+1 per victory — the scr0 per-class victory cascade of rank +
-> catch-up flags + world step counters is now fully tabled in SIDEQUEST_MAP).
-> Op $52 = random scaled battles ($04:$6A3C). Battle-slot RAM: $DA03/05/07
-> 16-bit EIDs, **$DA02 = count−1**, $DA09 mode 0/1/2/3. **HW verification
-> (user, SameBoy write-watchpoints, Class D)**: $DA02=$02 written at
-> $04:$5D8E with EIDs 251/252/253 (= $E0+27, exact formula), caller DE=$47AA
-> (scr6); regen fired at the $50 clone; $DA09=$01 by op $20 at $04:$5E69
-> from map $5D scr0 (DE=$61E4). Deliverables: `tools/dump_arena_brackets.py`
-> → `extracted/arena_brackets.json` (Tier A, self-checking anchors); owning
-> prose SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67" incl.
-> AUTHORING SPEC for E2; annotation both trees (2 table re-sections, 3 label
-> renames incl. the wrong `ArenaGenerateBattles`→`ScriptWriteRAM`, 7 opcode
-> header fixes); corrections in QUEST_OPCODES / known_RAM_map / DOC_AUDIT
-> (2 rows) / KEY_LESSONS (2: script words are op|$FF00; synonym-grep before
-> "not documented"). Residuals banked in SIDEQUEST_MAP ($DA09 modes 0/2/3
-> code-derived; intro Dracky EID 4 engine-side; match-2/3 loop not stepped).
-> ROADMAP E1 ✅ — E2 unblocked. Verifier PASS 5/5; clean build `1ca6579…`
-> unchanged; editor2 untouched.
->
->
 
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S67** (2026-07-19): E1 — arena/gate-boss roster format decoded (byte-neutral; NO roster table — op $1F EID formula $E0+9*group+3*match+slot over enemy-stats rows; 53-site boss-script census; $14:$4893 = fight→join redirect; Coliseum RNG bands; $DA02/03/05/07/09 battle-slot RAM; HW-verified same session). Owning: SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67", arena_brackets.json, DOC_AUDIT S67 (2), KEY_LESSONS S67 (2).
 - **S66** (2026-07-18): A′1 — mapID ≥$80 readiness audit: engine ≥$80-READY as patched (58/56 wMapID sites adjudicated; "sign-test" fear impossible on SM83; ceilings $FE hard/$EA practical; music cap $7F); audit_mapid_range.py → mapid_range_audit.json; CF4 v7 user-confirmed. Owning: CROSSBANK_ROOMS §mapID-audit, DOC_AUDIT S66, KEY_LESSONS S66.
 - **S65** (2026-07-18): CF4 — custom-room WRAM migration into the CF3-freed window (buffers $CC80/$CD00, counters $CD80×640, wCustomPool; TRANSIENT permanently) + SRAM-expansion audit (BLOCKED on RAMB discipline → E3); S58 EXPLOIT decision annotated foreclosed; audit_wram.py FREED_WINDOWS model. v7 USER-CONFIRMED S66. Owning: patches/wram.asm banner, PROJECT_COMPILER §2.6, ARCHITECTURE, DOC_AUDIT S65 (3 rows).
 - **S64** (2026-07-18): Arc 3 M3b+M3c — room-default music (LoadNewBGMIdIntoA same-size rewrite + bank $71 resolver + 128-entry table; custom.music compiler section) + MIDI import (midi_to_song.py); DWM2 31-subsong catalog; note-length FRAMES + $A3 groove corrections; v6 user-confirmed. Owning: SOUND_SYSTEM, PROJECT_COMPILER §2.9, CROSSBANK_ROOMS, DOC_AUDIT S64.
@@ -257,7 +281,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). Remaining: custom monster POOLS (Encounters #2, ROADMAP). | CROSSBANK_ROOMS; KEY_LESSONS S11 |
 | Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). B9 11th-family icon shipped; tab wiring open. | BREEDING_SYSTEM; ROADMAP Phase 2B |
 | Custom battle skills (net-new ids) | 🟢 FOUR custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52) — a 3-tier evolve chain on the full de-aliased stack incl. natural-learn (LearnLoopFork), real MP (MPPtrFromId, 10/30/50), announce (AnnounceIdxFork). Crank reverted S52; meter tiers 10/100/400. Learn/upgrade user-confirmed; MP charge + meter values built S52, NOT yet user-tested. | BATTLE_SKILL_SYSTEM §12–§13.6; ROADMAP Arc 2 |
-| SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). 32 KB expansion audited S65: BLOCKED on RAMB discipline (E3) | ARCHITECTURE (incl. "SRAM banking" S65); known_RAM_map |
+| SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; NOT yet user-tested)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual) | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66 | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
 
 ### Not yet implemented

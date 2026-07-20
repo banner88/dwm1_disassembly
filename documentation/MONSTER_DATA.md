@@ -1095,7 +1095,36 @@ copy callees recover true BC from the dispatcher frame via `ld hl,sp+6`.
 bank $59's monster readers receive party-only slot indices (S58 sort
 invariant) and are NOT patched (the bank is also 100% full).
 
-**Persistence model (v2 — the load-consistency fix).** The entire roster
+**Persistence model (v3, S69v2 — the roster snapshot; supersedes v2's
+reload semantics).** v2's eager roster fixed cross-space duplication but
+silently broke the vanilla reset contract: the canonicalizer tail mirrors
+party records (including current HP and status) into SRAM after every
+canonicalize, and farm writes (catches, deposits, breeding) land live — so
+UNSAVED battle deaths and roster changes survived a reset. Confirmed S69v2
+from the user's .sav (two party records with HP 0 + dead-status bit, saved
+"in GreatTree where death is impossible") and the user's caught-monster-
+persisted-without-saving report. v3 restores vanilla semantics: SRAM BANK 1
+(first consumer of the E3 32 KB expansion) holds a magic-gated ("R3",
+bank1 $A000-$A001) snapshot of $A1BF-$AD9E, written ONLY by the explicit-
+save funnel (entry 5's DE==$B124 main-copy detector) and restored OVER the
+eager image at load (entry 6 tail), then re-copied to WRAM $CA8D-$CC7F.
+Reset without saving now rewinds party AND farm — deaths, catches,
+breeding, deposits — to the last explicit save, one timeline (pending-exp
+accumulator rewinds with the farm records its drain feeds; pool $B124
+stays vanilla-eager, gated by the sleep flag in the rewinding main image;
+unsaved trades rewind like vanilla's WRAM farm did). Bank 0's roster
+region REMAINS the live store (GMDP addressing home, crash-consistent
+between saves) — it just no longer survives a reload. Migration: first
+load with no magic seeds the snapshot from the live roster (current state
+becomes the saved state), one-time. Bank $73 "S69v2" header carries the
+full mechanism incl. the no-di/ei justification (ISR audit: nothing in the
+interrupt graph reads SRAM or writes RAMB under the pin).
+
+*(v2 description below retained for history — its "reload restores the
+last canonical roster / roster changes are never undone by reloading"
+consequence is exactly what v3 reverses.)*
+
+**Persistence model (v2 — the load-consistency fix, SUPERSEDED S69v2).** The entire roster
 image `$A1C7-$AD9E` (party list, library bits, monster vars, party records,
 farm) is EAGER: farm writes land in live SRAM immediately, and the
 canonicalizer tail mirrors WRAM `$CA8D-$CC7F` → `$A1C7-$A3B9` after every

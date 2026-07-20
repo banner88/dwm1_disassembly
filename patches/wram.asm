@@ -437,3 +437,20 @@ wCustomRoomFlag:: db ;de88 — $00=normal room, $01=custom room active (bank $0B
 ; counter-region growth now starts at $DE8B (83 B left).
 wCF3CopyMbxLo:: db ;de89
 wCF3CopyMbxHi:: db ;de8a
+
+; E3 (S69): parameter block for CF3SRAMBankedCopy (bank $73 entry 9) — the
+; ONLY sanctioned path to SRAM banks 1-3 under the 32 KB expansion (RAMB is
+; pinned 0 everywhere else; see ARCHITECTURE "SRAM banking as built S69").
+; Written by the caller immediately before `ld hl,$7309 / rst $10`; transient
+; (outside the save image), boot-zeroed by ClearAllWRAM. Carved from the
+; $DE8B-$DEDD reserve — 76 B left, growth starts $DE92.
+wSRAMXferBank:: db ;de8b — target RAMB 0-3 (bank of the SRAM side)
+wSRAMXferSrc::  dw ;de8c — source address (LE)
+wSRAMXferDst::  dw ;de8e — destination address (LE)
+wSRAMXferLen::  dw ;de90 — byte count (LE, >=1; $0000 = no-op)
+
+; S69v2: 32-byte bounce buffer for CF3SnapXfer (roster snapshot, bank $73) —
+; SRAM banks can't see each other, so bank0<->bank1 chunks stage here.
+; Transient; live only inside the save/load funnels. Reserve now 42 B,
+; growth starts $DEB2.
+wSnapBounce:: ds 32 ;de92-deb1

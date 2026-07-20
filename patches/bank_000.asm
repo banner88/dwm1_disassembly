@@ -40,7 +40,7 @@ RST_18::
     swap a		;swap A to prepare to find correct RAM bank
     rra
     and $03
-    ld [$4100], a	;load ram bank
+    ld [$6100], a	;load ram bank | E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
 
 RST_20::
     add hl, hl
@@ -57,7 +57,7 @@ RST_28::
 RST_30::
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ret
 
     db $ff
@@ -264,7 +264,7 @@ HeaderROMSize::
     db $06
 
 HeaderRAMSize::
-    db $02
+    db $03    ; E3 (S69): 32 KB SRAM, 4 banks — RAMB pinned 0; banks 1-3 via CF3SRAMBankedCopy only
 
 HeaderDestinationCode::
     db $01
@@ -1162,7 +1162,7 @@ SetROMBankHighMask:
     and $03
 
 WriteBankSwitch4100:
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ld a, [$c825]
     or a
     jp z, RestoreBankAndReturn
@@ -1603,7 +1603,7 @@ IncrementHLAndPop:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ret
 
 
@@ -1634,14 +1634,14 @@ LoadTileBankAware:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     call LoadTile8Bytes
     pop af
     ld [$2100], a
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ret
 
 
@@ -1684,7 +1684,7 @@ LoadTileBankAware2:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     call ComputeAndLoadTile
 
 RestoreBankAfterTile:
@@ -1693,7 +1693,7 @@ RestoreBankAfterTile:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ret
 
 
@@ -2654,7 +2654,7 @@ PushHLSetupL:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ld b, $08
 
 CopyTileDataLoop:
@@ -2672,7 +2672,7 @@ CopyTileDataLoop:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ret
 
 
@@ -3496,7 +3496,7 @@ TransferSGBPacket:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ld a, e
     add a
     ld e, a
@@ -3553,7 +3553,7 @@ EnableLCD:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ret
 
 
@@ -4341,7 +4341,7 @@ RestoreBankFromSprite:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ret
 
 
@@ -4507,7 +4507,7 @@ RestoreBankFromText:
     and $03
 
 WriteBankReg4100:
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ret
 
 
@@ -4521,7 +4521,7 @@ TextWriteBank:
 
 TextSetBank:
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     push hl
     ld l, e
     ld h, $00
@@ -11249,7 +11249,7 @@ AudioSaveBankState:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ld a, [hl-]
 
 AudioResetChannel:
@@ -11364,7 +11364,7 @@ AudioRestoreBank:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ld a, [$de24]
     inc a
     ld [$de24], a
@@ -11467,7 +11467,7 @@ AudioRotateChannel:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     ldh a, [$fd]
     or b
     and a
@@ -11602,7 +11602,7 @@ AudioPopSetDE:
     swap a
     rra
     and $03
-    ld [$4100], a
+    ld [$6100], a	;E3 RAMB pin: MBC5-ignored addr (was $4100) — quadrant convention retired; see ARCHITECTURE "SRAM banking"
     call AudioInitRegisters
     ret
 

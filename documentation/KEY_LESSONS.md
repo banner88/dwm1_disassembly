@@ -2390,3 +2390,47 @@ sub-machine, $D9EC is the 18-phase battle machine, and the "(overworld)/
 bank $03 serial code; wInGateworld is $C969). Before trusting any "state
 machine" framing, find which mode row calls the dispatcher — and check a
 flag's WRITERS (one `EA lo hi` scan) before accepting its documented name.
+
+---
+
+## Session 69 Lessons — E3: 32 KB SRAM via the RAMB pin
+
+### The ISR restores RAMB by QUADRANT CONVENTION, not by saved value — so "set RAMB at entry" cannot work
+**Symptom (predicted, caught before building)**: the S65-audited plan — establish
+RAMB=0 inside CF3's bank $73 SRAM entry points — looks sufficient on paper.
+**Root cause**: the vblank audio tick saves only the interrupted ROM bank
+(`ld a,[$4000]` / `push af`) and on exit recomputes `RAMB := quadrant(popped
+bank)` (AudioPopSetDE, and identically every RST_10/28 return tail). RAMB is
+NOT part of the saved interrupt context; it is re-derived. Any code running in
+bank $73 (quadrant 3) that sets RAMB=0 gets RAMB=3 back the moment a vblank
+fires and returns. The same applies to the $50/$51 walker dereferences
+(quadrant 2) that CF3 rebases onto farm SRAM addresses.
+**Fix**: remove the convention instead of disciplining consumers — retarget all
+19 quadrant-convention `ld [$4100],a` writers to the MBC5-ignored `$6100`
+(one operand byte each; A/flags/timing preserved for callers that might
+observe the trampoline's flags), keep boot's literal `RAMB:=0`, and route all
+future banks-1-3 access through one di-bracketed copy helper that restores
+RAMB=0 before every `ei`.
+**Rule**: before adding a discipline at N consumer sites, check whether the
+hazard source is a single derived-state CONVENTION that can be removed at its
+few producer sites instead. And never assume an ISR preserves memory-mapped
+banking state — verify what the ISR's exit path actually restores (here it
+restores a recomputation, not the saved value).
+
+### A retargeted store beats a neutered computation when trampoline flags leak
+**Symptom**: the obvious pin edit — `and $03` → `and $00` (or `xor a`) — is
+same-size but flips the Z flag seen by every quadrant-1..3 caller after
+`rst $10` returns (today they always see Z=0 from the quadrant math).
+**Fix**: change the STORE ADDRESS operand ($4100→$6100), not the computed
+value: A, flags, and timing stay bit-identical for all callers; only the
+side effect (the RAMB write) disappears, into an address MBC5 ignores —
+which vanilla itself already writes at boot (proven-inert on this mapper).
+**Rule**: when neutering a side effect inside a shared trampoline, prefer
+redirecting the effect to a proven-inert sink over altering any register or
+flag the trampoline leaks to its callers.
+
+### Eager persistence changed a player-visible contract, not just crash-consistency (S69v2)
+**Symptom**: unsaved battle deaths and catches survived reset+reload; found by the user, weeks after v2 shipped and passed its tests.
+**Root cause**: CF3 v2 made the roster EAGER to kill the v1 duplication bug. Every test targeted the property being fixed (no duplication, reload consistency) — nobody re-derived the full player-visible persistence contract, where vanilla guarantees "reset without saving rewinds everything". The consequence was even documented ("roster changes are never undone by reloading") and read as a feature.
+**Fix**: persistence v3 — the save-time roster snapshot in SRAM bank 1; the eager image remains for crash-consistency and live addressing but reloads restore the snapshot.
+**Rule**: when changing WHEN state persists, enumerate the before/after PLAYER-visible persistence matrix (each state class × {save, reset-no-save, crash}) and test the rows that changed — "documented consequence" is not "accepted consequence" until the user has seen it in play. And when a bug report contradicts an architecture's known consequences, re-derive from the architecture before theorizing external causes; my Coliseum theory was refuted by game knowledge the user had and I did not.

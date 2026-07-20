@@ -18,6 +18,53 @@
 
 ## Part 1 — Archived session blocks (verbatim, newest first)
 
+> Session 67 (2026-07-19 — **E1: arena / gate-boss opponent-roster format
+> DECODED (byte-neutral). Arena path USER-VERIFIED on HW same session.**
+> Headline: there is NO arena roster table — opcode $1F `ArenaBattleSetup`
+> ($04:$5D5B; between-matches clone `LoadArenaEnemyStats` bank $50) computes
+> **EID = $E0 + 9*wArenaGroup + 3*wColiseumBattle + slot** → 90 consecutive
+> enemy-stats rows ARE the brackets (groups 0-7 = G..S, 8 = Starry Night
+> 296-304, 9 = King, overridden to $01E1-$01E3; formula rows 305-313 =
+> unreachable rival-team cut data). Group source: bank $09 lobby menu
+> (4*[$C8E3]+([$C8E2]&$7F); gold table $09:$5D23; availability $C0D8) or
+> Arena Lobby scr6 write_ram (group 8/9 + $D999 = 1/4). $D999 = map-$5D step
+> counter (0 arena / 1-3 Starry phases / 4 King). Master lobby sprites:
+> `ArenaMasterSpriteTable` $04:$5E22 (30×[gfx,is_monster]; dup $50:$6778) —
+> both re-sectioned from fake instructions (byte-perfect). Gate bosses:
+> EVERY boss fight is the opcode $5A/$05 EID param in the boss ROOM script
+> (53-site census, all script-attributed): Medal Gate has THREE variants
+> (156/153/155); Durran gate = 3-fight chain (write_ram2 Servant 342 ×2 +
+> op $20 → op $05 Terry 343 @ $0F:$4D46 → op $05 Durran 199 @ $0F:$4DB8;
+> post-game Terry rematch $0F:$500E); Bewilder/Anger decoys (341×4/349×7);
+> Digster = op $05 127; NEW: undocumented MadGopher L21 event battle
+> (EID 255, Castle scr13 + Farm scr26); Tatsu EID 344 unused. **$14:$4893 is
+> the fight→join RECRUITMENT redirect, NOT a boss-selection table** —
+> boss_table.json semantics corrected (data unchanged; DOC_AUDIT S67).
+> Coliseum (map $52): RNG level-banded parties (op $5C `ColiseumInitPrize`
+> keys MAX level, bank $16 twin keys AVERAGE; bands 2×9 then 18-wide at
+> 13/33/57/81/105/129/157/181; parties 2/3 staged $D9D1-6/$D9D9-DE, chained
+> by $50:SetBtl_67ae; prizes $04:$6F44/$6F54, visit counter $D9CF). Mimic
+> (op $36, $04:$63EF) tiered by **$CAB4 = arena progress** (Arena Lobby scr0
+> writes class+1 per victory — the scr0 per-class victory cascade of rank +
+> catch-up flags + world step counters is now fully tabled in SIDEQUEST_MAP).
+> Op $52 = random scaled battles ($04:$6A3C). Battle-slot RAM: $DA03/05/07
+> 16-bit EIDs, **$DA02 = count−1**, $DA09 mode 0/1/2/3. **HW verification
+> (user, SameBoy write-watchpoints, Class D)**: $DA02=$02 written at
+> $04:$5D8E with EIDs 251/252/253 (= $E0+27, exact formula), caller DE=$47AA
+> (scr6); regen fired at the $50 clone; $DA09=$01 by op $20 at $04:$5E69
+> from map $5D scr0 (DE=$61E4). Deliverables: `tools/dump_arena_brackets.py`
+> → `extracted/arena_brackets.json` (Tier A, self-checking anchors); owning
+> prose SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67" incl.
+> AUTHORING SPEC for E2; annotation both trees (2 table re-sections, 3 label
+> renames incl. the wrong `ArenaGenerateBattles`→`ScriptWriteRAM`, 7 opcode
+> header fixes); corrections in QUEST_OPCODES / known_RAM_map / DOC_AUDIT
+> (2 rows) / KEY_LESSONS (2: script words are op|$FF00; synonym-grep before
+> "not documented"). Residuals banked in SIDEQUEST_MAP ($DA09 modes 0/2/3
+> code-derived; intro Dracky EID 4 engine-side; match-2/3 loop not stepped).
+> ROADMAP E1 ✅ — E2 unblocked. Verifier PASS 5/5; clean build `1ca6579…`
+> unchanged; editor2 untouched.
+
+
 > Session 66 (2026-07-18 — **A′1: mapID ≥$80 readiness audit — engine is
 > ≥$80-READY as patched (byte-neutral session). CF4 v7 USER-CONFIRMED
 > ("custom rooms work fine after WRAM move, no issues").**

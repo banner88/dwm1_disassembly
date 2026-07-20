@@ -105,7 +105,76 @@ SaveGameState (ROM0, bank_000.asm line 6577) copies game state to SRAM:
 
 Checksum: $A002-$BFFF → stored at $A000-$A001. Valid flag: $A002 (1 = save exists).
 
-### SRAM banking + the 32 KB expansion question (audited S65, NOT implemented)
+### SRAM banking as built S69 — 32 KB expansion via the RAMB PIN
+
+**Status: BUILT S69, NOT yet user-tested.** The patched build declares 32 KB
+SRAM (`HeaderRAMSize $0149 = $03`, banks 0-3) under a global **RAMB-pin
+discipline**: RAMB is $00 at power-on (vanilla boot's three literal writes,
+kept) and **no engine code ever changes it again** — the 19 ROM0
+quadrant-convention writers (`… and $03 / ld [$4100],a` after every ROM-bank
+switch: RST_18, the RST_28/30 return tail, `WriteBankSwitch4100` /
+`WriteBankReg4100` / `TextSetBank` shared helpers, the tile/SGB/text
+loaders, and all four audio-tick sites) are retargeted by one operand byte
+each to `ld [$6100],a` — an MBC5-ignored address (vanilla itself writes
+$6100 at boot; $6000-$7FFF is unmapped on MBC5). A/flags/timing identical,
+so quadrant-1..3 callers that might observe the trampoline's Z flag see no
+change. Every existing SRAM consumer (vanilla quadrant-0 save/sleep/trade
+cluster, CF3's bank $73 entries, the CF3 walker dereferences in banks
+$50/$51) therefore hits bank 0 — exactly the 8 KB cart's behavior — with
+**zero changes to any consumer**.
+
+**Why pin instead of per-entry RAMB=0 discipline (the S65 sketch):** the
+vblank audio tick is RAMB-transparent *by quadrant convention, not by
+value* — it saves the interrupted ROM bank (`ld a,[$4000]` / push af) and
+on exit restores `RAMB := quadrant(interrupted bank)` (AudioPopSetDE).
+So "establish RAMB=0 inside CF3's entry points" would NOT survive: any
+vblank during a bank $73 farm scan would exit the ISR with RAMB=3. The
+sound fixes were either di-bracketing every dereference window across 10+
+banks, or removing the convention. The pin removes it; interrupts now
+cannot move RAMB at all.
+
+**Accessing banks 1-3 (the new +24 KB persistent headroom):** the ONLY
+sanctioned path is `CF3SRAMBankedCopy` (bank $73 entry 9; mailbox
+`wSRAMXferBank/Src/Dst/Len` at $DE8B-$DE91, patches/wram.asm). It copies
+per byte inside `di` windows — RAMB≠0 exists only between di and the
+restore-to-0 before ei, so the pin invariant (`RAMB==0` whenever IME is
+on) holds at every interruptible point. Contract: call with interrupts
+enabled; one side of the copy is the banked-SRAM side; SRAM↔SRAM
+cross-bank is unsupported; SRAM is (re-)enabled and left enabled (CF3
+policy); DE preserved, A/HL/BC per the usual rst $10 contract.
+Byte-executed S69 (emitted-bytes interpreter): copies both directions,
+bank isolation, len-0 no-op, DE preserved, zero invariant violations.
+
+**Deliberately untouched RAMB writers:** boot's three `RAMB:=0` (they ARE
+the pin's establishment); bank $40's `di`-bracketed 4×8 KB wipe (saves/
+restores via the $FFA3 shadow, then `jp InitGameData` → boot re-zeros;
+under 32 KB it now genuinely clears banks 1-3 when its $CBC6 gate fires —
+its original engine-family intent); bank $20's streaming system
+(`RAMB:=[$C68A]` with $FFA3 shadow) — $C68A has **no initializing writer**
+in DWM1 (decrement-only, so provably 0 in any reachable execution), all
+its exit paths write RAMB:=0, and under the pin its RAMB survives
+interrupts *better* than under the convention. Residual, not a hazard.
+
+**Old saves:** an 8 KB .sav loads padded (SameBoy honors the header).
+**Bank 1 is now claimed (S69v2): the "R3" roster snapshot** — magic
+$52,$33 at bank1 $A000-$A001, snapshot region $A1BF-$AD9E, written by the
+explicit-save funnel and restored at load; it self-seeds on first load of
+a pre-v3 save (see MONSTER_DATA "Persistence model (v3)"). Banks 2-3
+remain uninitialized and unclaimed — any future consumer brings its own
+format/magic. The CF3 checksum covers bank-0 regions only, unaffected.
+**Pin invariant, stated precisely (S69v2):** RAMB==0 except inside
+CF3-owned banked-access windows — entry 9's per-byte di brackets, and the
+entry 5/6 snapshot hooks' ~200-cycle chunk windows, which need no di/ei
+because the ISR graph neither reads SRAM nor writes RAMB (audited S69:
+vblank audio has zero SRAM literals; LCDC is display-only; timer is reti;
+serial is inactive in save/load contexts and pin-safe regardless). Entry 9
+remains the conservative any-context primitive for future code.
+
+**What remains open in E3** (see ROADMAP): (a2) new-game INIT data as an
+authorable object; (b2) story-variable headroom schema on top of the new
+banks (allocation map + init/versioning convention for banks 1-3).
+
+#### The S65 audit that motivated the pin (historical, all instruction-verified)
 
 Cartridge header: MBC5+RAM+BATTERY (`$0147=$1B`), RAM size `$0149=$02` =
 **8 KB, one bank**. The map above occupies $A000-$BFC7; native persistent
@@ -141,6 +210,12 @@ or per-access set+access within uninterruptible windows), an accessor
 convention for new banked state, and a boot RAMB=0 init audit (vanilla
 already writes 0 at boot, bank_000 ~294-304). Do NOT flip `$0149` without
 this — the failure mode is silent farm/save corruption.
+**[SUPERSEDED S69 — do not build this sketch.** The per-entry approach is
+insufficient: the ISR restores RAMB by quadrant recomputation of the
+interrupted bank, clobbering any in-bank-$73 establishment, and the
+$50/$51 walker dereferences were outside this sketch's surface. The built
+design is the RAMB pin — see the as-built section above and DOC_AUDIT
+S69.**]**
 
 The main save range $C8EA-$D9E9 covers step counters ($D92A-$D99A), most event
 flags ($D99B-$D9E9), inventory, gold, and the party records ($CAC1-$CC7F).
@@ -172,5 +247,10 @@ must skip these flag index ranges when allocating custom flags:
 | $D9E6 | $0258-$025F | Breeding mutation flag |
 | $D9E9 | $0270-$0277 | Current step in multi-step screens |
 
-**Safe contiguous block for custom flags: $0158-$017F (40 flags guaranteed clean).**
-Broader safe range $0158-$0277 (288 flags) if collision ranges are excluded.
+**Safe pool for custom flags (S57 audit, current): 32 flags = $0158-$0167
+(bytes $D9C6-$D9C7) + $01E0-$01EF (bytes $D9D7-$D9D8).** The old claim of a
+40-flag contiguous block $0158-$017F was pre-CF2: wPendingFarmExp took
+$D9C8-$D9CA (= flags $0168-$017F) in S57 (DOC_AUDIT S69). Broader reuse of
+the $0158-$0277 range requires excluding the collision rows above AND the
+CF2 accumulator. Structural headroom beyond 32 flags = SRAM banks 1-3
+(E3 pin, above) once a storage schema exists.

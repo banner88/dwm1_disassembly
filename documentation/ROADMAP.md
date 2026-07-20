@@ -713,8 +713,55 @@ the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
       spines in custom rooms via generated scripts; keep vanilla intact as
       postgame; arena gating survives as re-authored Arena Lobby scr0.*
 
-- [ ] **E3 — New-game initialization + save-schema headroom (now incl. the
-      32 KB SRAM expansion, audited S65).**
+- [~] **E3 — New-game initialization + save-schema headroom.
+      THE 32 KB SRAM EXPANSION IS BUILT (S69, NOT yet user-tested);
+      init-object (a2) + story-variable schema (b2) remain open.**
+      As built (owning doc: ARCHITECTURE "SRAM banking as built S69"):
+      `$0149` $02→$03; **RAMB PIN** — the 19 ROM0 quadrant-convention RAMB
+      writers retargeted one operand byte each to the MBC5-ignored `$6100`
+      (boot's literal `RAMB:=0` writes kept; bank $20/$40 explicit writers
+      untouched, adjudicated safe), so every existing SRAM consumer hits
+      bank 0 with zero consumer changes; new banks 1-3 reachable ONLY via
+      `CF3SRAMBankedCopy` (bank $73 entry 9, `wSRAMXfer*` mailbox
+      $DE8B-$DE91, per-byte di-bracketed). **The S65 sketch ("RAMB=0
+      establishment inside CF3's SRAM entry points") was INSUFFICIENT and
+      was not built**: the audio ISR restores RAMB by *quadrant of the
+      interrupted ROM bank* (AudioPopSetDE), so a per-entry set would be
+      clobbered by any vblank mid-scan (DOC_AUDIT S69; KEY_LESSONS S69).
+      Validation S69: byte-diff = exactly 19 operands + header + bank $73;
+      entry 9 byte-executed (emitted-bytes interpreter): both directions,
+      bank isolation, DE preserved, zero pin-invariant violations;
+      verifier PASS 5/5; compiler 25/25 re-pinned `e719d286…` (patched).
+      *Smoke results (user, S69 same session): old 8 KB .sav loads (32 KB on
+      disk confirmed via uploaded .sav); gate run / warp heal / save+reload /
+      breeding / farm pick+drop PASS. USER-REPORTED DEFECT, root-caused and
+      FIXED same session (v2 ROM): unsaved battle deaths — and, per user, an
+      unsaved CATCH — survived reset+reload. NOT an S69 regression: this was
+      the CF3 v2 EAGER-ROSTER architecture's documented-but-untested reload
+      consequence (canonicalizer mirrors party incl. HP to SRAM at every
+      canonicalize; farm writes land live). Confirmed empirically from the
+      user's .sav (slots 1-2: HP field $0000 + status bit 7 at +$4A; slot 0
+      healthy). The initial S69 adjudication (Coliseum faint) was WRONG —
+      user testimony: fainted monsters auto-revive win or lose (DOC_AUDIT
+      S69v2). FIX = persistence v3, the ROSTER SNAPSHOT (owning: MONSTER_DATA
+      "Persistence model (v3)"): bank 1 magic-gated save-time roster copy,
+      restored over the eager image at load; reset-without-save now rewinds
+      party AND farm to the last explicit save, vanilla semantics; first
+      consumer of the E3 expansion, exercising CF3 bank-1 access in real
+      gameplay. Validated: 4-scenario emitted-bytes execution (save/commit,
+      death+catch+reset rewind, migration seed, non-main no-trigger); diff
+      vs v1 = bank $73 + global checksum only; verifier 5/5; compiler 25/25
+      re-pinned `94731e60…` (patched). *v2 USER-CONFIRMED (same session): all 5 smoke
+      tests PASS — migration, death-rewind, catch-rewind, breed/deposit
+      persistence, sleep/wake + in-gate save. E3 [~] status now reflects
+      only the open subscopes (a2 init object; banks 2-3 schema), not the
+      expansion itself, which is BUILT AND USER-TESTED.*
+      Still open: (a2) new-game INIT data as an authorable object; (b2)
+      story-variable headroom — allocation map + init/versioning convention
+      for banks 1-3 (first consumer brings the format; banks arrive
+      uninitialized by design).
+      *(Historical S65 audit below — superseded where it sketches the
+      per-entry approach.)*
       A new campaign sets its own starting party / items / flags / map position, and may add
       story variables. The opening is script-traced (ROUTING.md, FIRST_5MIN_TRACE.md; intro
       marker flag `$0000`). Persistent headroom TODAY: **32 safe flags**
