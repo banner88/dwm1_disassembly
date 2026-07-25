@@ -6818,4 +6818,14 @@ Jump_014_7e96:
     ds 6, $00
 NewSpeciesEnemyStats_224:   ; EID 518 @ $7eb3 (species 224)
     db $e0, $03, $00, $02, $01, $08, $00, $00, $00, $08, $00, $05, $00, $07, $00, $01, $00, $c8, $32, $64, $c8, $ff, $ff, $ff, $ff
-    ds 308, $00
+; @BUILD_PROJECT BEGIN quest_enemy_stats
+; progression.enemies rows (EIDs 519+ @ $7ECC+; 12-row capacity).
+; Emitted by editor2 `enemies14`; row addr = $4C1D + EID*25
+; (LoadEnemyStats, no fork — MONSTER_DATA "Enemy Stats Table").
+; Joinability byte: $00 = always joins (story-boss behavior);
+; fight EID == join EID needs NO BossRedirectTable entry (the
+; $14:$4893 lookup falls through unchanged — SIDEQUEST_MAP E1).
+QuestEnemyStats_519:   ; vault_goldslime — species 19 L30, join $00 — Vault GoldSlime: Upper($1E)/RobMagic($1A)/Ramming($3C); joinability $00 = always joins; fight EID == join EID (no redirect row needed)
+    db $13, $E0, $2E, $00, $1E, $7C, $01, $5A, $00, $A5, $00, $40, $01, $BE, $00, $82, $00, $FA, $96, $C8, $00, $1E, $1A, $3C, $FF
+    ds 283, $00
+; @BUILD_PROJECT END quest_enemy_stats

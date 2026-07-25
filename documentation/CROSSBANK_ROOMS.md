@@ -453,3 +453,24 @@ its key to the tool's verdict table, and record the reasoning here.
 ---
 
 *Verified working June 2026. 19 iterations, 11 table patches, 3 critical bug classes discovered and resolved.*
+
+## S70: unified Entry-6 resolve, fast custom exits, walk-on boundaries
+
+- **Entry 6 divert (bank $0B) is unconditional**: every step in every
+  non-gate room calls bank $60 entry 7 (`VanillaExitResolve`): mapID ≥ $6B
+  → `jp CustomExitCheck`; else scan `VanillaExitExtTable` (authored doors
+  into vanilla rooms); no match → HL=0 → original SharedPtrChase path.
+- **Custom-source transitions take the town fast path** (~18 frames): the
+  Entry-6 match tail's gating window was rewritten IN PLACE (no label
+  shifts) so mapID ≥ $6B skips `CheckGateWorldMapType` — whose ≥$30
+  gate-like sweep is load-bearing for the step machinery (do NOT change the
+  classifier; emulator-proven movement freeze) but routed custom exits
+  through the ~385-frame gateworld-return ceremony since day one.
+- **Walk-on boundary exits (S70v3)**: Entry 6's y=7 row skip compares
+  against `wCustomY7Cmp` ($DE74), armed fresh by entry 7 before every scan:
+  $07 vanilla (skip, byte-identical semantics), $FE custom (y=7 rows fire
+  on ARRIVAL). Entry 9 (push) still reads the same lists as fallback; its
+  caller is movement-attempt-gated and never runs while standing.
+- **Entrance authoring**: entry scripts run at INITIAL entry (bank $01
+  $4C3E reverted to vanilla `ld a,[wMapID]`) — arm encounters etc. at
+  entry; seed the counter with `write_ram2` (drain = 100/step).

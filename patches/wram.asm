@@ -240,7 +240,8 @@ wCustomStep_Room6C_S4:: db ;cd83 — Room $6C screen 4 step counter (dusk_mirror
 wCustomStep_Room6C_S5:: db ;cd84 — Room $6C screen 5 step counter (legacy hole — kept at base+4 so the relative counter layout matches the proven S55 shape; S65 migration moved the base $DE74→$CD80)
 wCustomStep_Room6D_S0:: db ;cd85 — Room $6D screen 0 step counter (gate_rotation)
 wCustomStep_Room70_S0:: db ;cd86 — Room $70 screen 0 step counter (ember_keystone)
-    ds 633 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
+wCustomStep_Room71_S0:: db ;cd87 — Room $71 screen 0 step counter (medal_vault)
+    ds 632 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
 ; @BUILD_PROJECT END wram_step_counters
 
 
@@ -412,8 +413,15 @@ wBattleLVL:: ds 16 ;dc23 — level per combatant (tentative)
 ; Reserve after the block: $DE8B-$DEDD (83 B) free for future scratch
 ; ($DE89-$DE8A carved S60 for the CF3 copy-husk mailbox, defined at EOF).
 ; =============================================================================
-    ds 7 ;de74-de7a — legacy pad (step counters migrated to the $CD80 region,
-         ; S65); keeps wRoomRecScratch pinned at $DE7B
+wCustomY7Cmp:: db ;de74 — Entry 6 scan-loop y-skip compare value (S70v3).
+         ; Written by bank $60 entry 7 fresh before EVERY exit scan:
+         ; $07 on the vanilla branch (y=7 rows skipped, original engine
+         ; semantics), $FE on the CustomExitCheck branch (never matches a
+         ; real trigger_y, so custom-room y=7 rows become walk-on exits).
+         ; Boot-zeroed by the $1EE0 clear; $00 is harmless (y=0 rows are
+         ; already skipped by the preceding `or a` check).
+    ds 6 ;de75-de7a — legacy pad remainder (step counters migrated to the
+         ; $CD80 region, S65); keeps wRoomRecScratch pinned at $DE7B
 
 ; Custom-room dispatch scratch, populated by bank $71 via rst $10.
 ; wRoomRecScratch: the 8-byte $26DD-style record (tileset/dims/threshold) for the

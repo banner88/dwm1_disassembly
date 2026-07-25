@@ -19,7 +19,9 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 283,   # addr(CustomScriptMasterTable)-$4000, S53 reference game.sym
+    0x60: 358,   # addr(CustomScriptMasterTable)-$4000 — S70v3 reference game.sym
+                 # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
+                 # factored CopyExitListToBuffer in the template head)
     0x71: 142,    # addr(Custom26DDTable)-$4000, S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
 }
 BANK_SIZE = 0x4000
@@ -110,13 +112,19 @@ def validate(prj, generated=None):
         exposed = [F.hexb(F.val(r['mapID'])) for r in prj.rooms
                    if F.val(r['mapID']) not in cov]
         if exposed:
-            warnings.append(
+            errors.append(
                 "build.compat.master_table_rooms reproduces the LEGACY "
-                f"narrow master table; rooms {', '.join(exposed)} overshoot "
-                "it if they ever scroll (single-screen rooms cannot scroll, "
-                "which is the only reason the legacy layout is benign — "
-                "KEY_LESSONS S53). Remove the compat key to emit the fixed "
-                "full-width table.")
+                f"narrow master table but rooms {', '.join(exposed)} are not "
+                "covered — since S70 the bank $01 initial-entry revert routes "
+                "EVERY custom room's FIRST ENTRY through CustomScriptRead, so "
+                "an uncovered room overshoots the table at entry (not merely "
+                "on scroll as pre-S70). Remove the compat key (full-width "
+                "table) or cover every room.")
+        else:
+            warnings.append(
+                "build.compat.master_table_rooms covers all rooms — the "
+                "compat table is then byte-identical to the default "
+                "full-width table; the key is legacy-only (S70)")
         order = [F.val(m) for m in compat]
         if order != sorted(order) or order[0] != 0x6B or \
                 order != list(range(0x6B, 0x6B + len(order))):
@@ -254,6 +262,95 @@ def validate(prj, generated=None):
                         "BOUNDARY exit (Entry 9 path, walk-into-edge); it "
                         "cannot coexist with a scroll transition on that "
                         "edge (KEY_LESSONS S10 Entry 6 vs Entry 9)")
+
+    # ---------------------------------------------- progression (S70, E2)
+    from .project import QUEST_EID_BASE, QUEST_EID_CAP
+    ens = prj.progression.get('enemies', []) if hasattr(prj, 'progression') \
+        else []
+    eids = sorted(e['_eid'] for e in ens)
+    if eids:
+        if eids != list(range(QUEST_EID_BASE, QUEST_EID_BASE + len(eids))):
+            errors.append(
+                f"progression.enemies: EIDs must be dense from "
+                f"{QUEST_EID_BASE} (rows are tail-appended at $14:$7ECC; a "
+                "gap would misaddress every later row — EID*25+$4C1D)")
+        if len(eids) > QUEST_EID_CAP:
+            errors.append(
+                f"progression.enemies: {len(eids)} rows exceed the bank $14 "
+                f"free-tail capacity ({QUEST_EID_CAP} rows / 308 bytes)")
+    for e in ens:
+        eid = e['_eid']
+        ctx = f"progression.enemies[{e.get('id')}]"
+        if not (0 <= F.val(e.get('species', -1)) <= 255):
+            errors.append(f"{ctx}: species must be 0-255 (byte field)")
+        if not (1 <= F.val(e.get('level', 0)) <= 99):
+            errors.append(f"{ctx}: level must be 1-99")
+        if not (0 <= F.val(e.get('joinability', 7)) <= 7):
+            errors.append(f"{ctx}: joinability 0-7 ($00 always joins, $07 "
+                          "never — MONSTER_DATA)")
+        for f16 in ('exp', 'hp', 'mp', 'atk', 'def', 'agl', 'int'):
+            if not (0 <= F.val(e.get(f16, 0)) <= 0xFFFF):
+                errors.append(f"{ctx}: {f16} must be 16-bit")
+        ai = e.get('ai_weights', [0, 0, 0, 0])
+        if len(ai) != 4 or any(not (0 <= F.val(x) <= 255) for x in ai):
+            errors.append(f"{ctx}: ai_weights must be 4 bytes")
+        sk = e.get('skills', [])
+        if len(sk) > 4 or any(not (0 <= F.val(x) <= 255) for x in sk):
+            errors.append(f"{ctx}: skills must be <= 4 byte ids ($FF pads)")
+        if F.val(e.get('joinability', 7)) != 7 and F.val(e.get('hp', 0)) > 1023:
+            warnings.append(
+                f"{ctx}: joinable enemy with hp {F.val(e['hp'])} — fight EID "
+                "== join EID means the JOINED monster inherits these stats "
+                "as its creation base (80-100% roll, MONSTER_DATA)")
+
+    # ------------------------------- vanilla exit extensions (S70, Entry 6)
+    for ext in getattr(prj, 'vanilla_exit_exts', []):
+        mid = F.val(ext.get('mapID', -1))
+        ctx = f"vanilla_exit_extensions[{F.hexb(mid) if mid >= 0 else '?'}]"
+        if not (0 <= mid < 0x6B):
+            errors.append(f"{ctx}: mapID must be a VANILLA room (< $6B) — "
+                          "custom rooms own their exit lists in bank $60")
+        if 'step_counter' not in ext:
+            errors.append(f"{ctx}: step_counter (the room's vanilla WRAM "
+                          "counter, e.g. $D95E for MedalMan) is required — "
+                          "variants are selected by its value")
+        steps = ext.get('steps') or []
+        if not (1 <= len(steps) <= 16):
+            errors.append(f"{ctx}: needs 1-16 step variants")
+        for si, st in enumerate(steps):
+            rows = st.get('exits') or []
+            if len(rows) > 17:
+                errors.append(f"{ctx} step {si}: {len(rows)} rows exceed the "
+                              "wCustomExitBuffer copy budget (17 rows + "
+                              "terminator in 127 bytes)")
+            for e in rows:
+                x, y = F.val(e.get('x', -1)), F.val(e.get('y', -1))
+                if x == 0xFF:
+                    errors.append(f"{ctx} step {si}: trigger_x $FF is the "
+                                  "list terminator (CROSSBANK_ROOMS "
+                                  "authoring rule 2)")
+                if y in (0, 7):
+                    warnings.append(
+                        f"{ctx} step {si}: row at y={y} is a BOUNDARY exit — "
+                        "Entry 9 is NOT extended (it reads the vanilla bank "
+                        "$0B list), so this row is INERT on the Entry 6 "
+                        "path; keep it only for list-parity documentation")
+                if 'screen_byte' not in e:
+                    errors.append(f"{ctx} step {si}: exit ({x},{y}) has no "
+                                  "screen_byte — NEVER guessed (KEY_LESSONS "
+                                  "v14-v18/S40)")
+                dest = e.get('dest')
+                try:
+                    dmid = prj.resolve_dest(dest)
+                except Exception as ex:
+                    errors.append(f"{ctx} step {si}: dest {dest!r}: {ex}")
+                    continue
+                if dmid >= 0x6B and F.val(e.get('gate_flag', 0)) != 0:
+                    errors.append(
+                        f"{ctx} step {si}: exit to custom room "
+                        f"{F.hexb(dmid)} must use gate_flag=0 (flag=1 takes "
+                        "the gate-entry path and garbage-indexes "
+                        "GateFloorDataTable — CROSSBANK_ROOMS mapID audit)")
 
     # ------------------------------------------------------------ dialogue
     for e in prj._dialogue:

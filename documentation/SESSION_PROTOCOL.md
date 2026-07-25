@@ -33,6 +33,19 @@ Mandatory startup, in order:
 3. Before trusting any documented address/format/opcode you depend on,
    verify it against the disassembly or ROM bytes (docs have been wrong;
    see DOC_AUDIT.md). Read KEY_LESSONS.md before touching patches.
+4. YOU CAN RUN THE GAME YOURSELF: `pip install pyboy --break-system-packages`
+   gives you a headless GBC emulator with per-frame RAM read/write, scripted
+   input, savestates, screenshots you can view, and code hooks. The harness
+   is tools/pyboy_harness.py (boot -> to_bedroom -> warp(mapID,x,y) skips
+   the whole game); the methodology + traps are in
+   documentation/PYBOY_DEBUGGING.md. Established S70: every runtime claim
+   must be MEASURED in the emulator, not inferred — and every gameplay
+   change must be emulator-verified BEFORE the ROM goes to the user. Do not
+   deliver a first attempt untested the way sessions 1-69 had to.
+   If a .sav file is attached to the session, it is a raw SRAM dump: use
+   boot_with_sav() to run a LEGITIMATE game state (real party/flags) —
+   and if your task touches battles, saving, or progression and no .sav is
+   attached, ASK the user for one before building synthetic state.
 
 TASK: <either: "next unchecked item in ROADMAP Phase 0/1" or a specific
 item, e.g. "Phase 1: teleport/warp opcode $0E — meet its acceptance test">
@@ -43,7 +56,8 @@ you write or improve that produces extracted/ data must be delivered WITH
 the data. Knowledge goes into the existing doc that owns the topic — never
 a new status/handoff file.
 
-Mandatory wrap-up: run verify_integrity.py (must PASS), update
+Mandatory wrap-up: emulator-verify the changed behavior (PYBOY_DEBUGGING),
+run verify_integrity.py (must PASS), update
 PROJECT_STATE.md status rows + ROADMAP.md checkbox/blocker notes +
 the owning reference doc, then give me the changed files plus an
 APPLY_THESE_CHANGES list (REPLACE / ADD / DELETE). No git on your side.

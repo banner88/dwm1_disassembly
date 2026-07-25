@@ -10,7 +10,32 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-19 (Session 69 — **E3: 32 KB SRAM EXPANSION BUILT (NOT yet user-tested). RAMB PIN: 19 ROM0 quadrant-convention RAMB writers retargeted $4100→$6100 (one operand byte each, MBC5-ignored; boot's RAMB:=0 kept; bank $20/$40 explicit writers adjudicated safe); HeaderRAMSize $02→$03; banks 1-3 reachable ONLY via CF3SRAMBankedCopy (bank $73 entry 9, wSRAMXfer* mailbox $DE8B-$DE91, per-byte di-bracketed). Key finding: the ISR restores RAMB by QUADRANT RECOMPUTATION of the interrupted bank, not by saved value — the S65 per-entry sketch was insufficient (DOC_AUDIT S69). Entry 9 byte-executed (zero pin-invariant violations); byte-diff = exactly 19 operands + header + bank $73 shift. Clean build `1ca6579…` unchanged; verifier PASS 5/5; compiler re-pinned. **S69v2 same session: user found unsaved deaths/catches surviving reset (CF3 v2 eager-roster reload consequence, confirmed from uploaded .sav) → PERSISTENCE v3: bank-1 'R3' roster snapshot (save-time commit, load-time restore, self-seeding migration) restores vanilla reset-rewind semantics; first real consumer of the expansion; compiler re-pinned `94731e60…` (patched).**)
+> Last verified: 2026-07-25 (Session 70 — **E2 SIDE-QUEST WIRING SHIPPED + BUG-FIX PASS, USER-CONFIRMED (save, join, conditional, exits). Pin `a5a5e0d5…` (S70v3). Medal Chamber demo quest (room $71 via a MedalMan ext-table door): progression.quests[]/enemies[] lowering → quest:/entry: scripts + bank $14 EID 519; vanilla_exit_extensions → bank $60 entry 7. Bug-fix pass established the PYBOY EMULATOR WORKFLOW (Claude runs the ROM: PYBOY_DEBUGGING.md, tools/pyboy_harness.py) and with it: init_dialog protocol (text outside interactions deadlocks without it — auto-injected by lowering), script-terminator hard guard, encounter seed 1200 (drain measured 100/step), bank $0B custom-source fast transitions (18 f vs the day-one 385 f ceremony), S70v3 walk-on boundary exits (wCustomY7Cmp $DE74). Full battle round-trip emulator-proven: offer/decline, win → resume → flag → GoldSlime joins, loss → Castle re-arm.**)
+>
+>
+> Session 70 (2026-07-25 — **E2: data-driven side quests + the emulator
+> revolution. SHIPPED, user-confirmed.** Owning docs: PROJECT_COMPILER
+> (§progression, §vanilla_exit_extensions, §5 re-pin 358 B),
+> PYBOY_DEBUGGING (new), SIDEQUEST_MAP (as-built), CROSSBANK_ROOMS
+> (unified Entry-6 resolve + walk-on y=7), MONSTER_DATA (quest EID rows),
+> KEY_LESSONS ×9. Three pins this session: 6a6f4f87 (v1, wiring),
+> 22d30b66 (v2, bug-fix pass), **a5a5e0d5 (v3, walk-on exits — CURRENT)**.
+> Headline engine findings, all PyBoy-measured: script text is serviced
+> only in dialog mode ($C915 slot $0B) → init_dialog before every
+> out-of-interaction say (vanilla Healer protocol, auto-injected);
+> field-mode script cadence 1/8 frames; encounter drain 100/step;
+> CheckGateWorldMapType's gate-like sweep of $6B+ is load-bearing for
+> movement yet caused the 385-frame exit ceremony — fixed by an in-place
+> bank $0B tail rewrite (custom source → town path); Entry 9 never runs
+> while standing (movement-attempt-gated) → walk-on via the data-driven
+> Entry-6 y=7 skip (wCustomY7Cmp, armed by bank $60 entry 7 per scan;
+> vanilla rooms byte-semantics-unchanged, regression-checked). Compiler
+> hardening: emit_script rejects non-terminated scripts; write_ram2 $13 +
+> init_dialog $07 opcodes (both handler-verified; $07's "1 param" table
+> row is a decompiler defect). Legacy build.compat retired (narrow table =
+> ERROR since the entry-path change). Known cosmetic remainder: guardian
+> sprite $23 renders draconic; sprite-id catalog = future session
+> (species+$10 disproven; $11 hard-crashes the renderer).**)
 >
 >
 > Session 69 (2026-07-19 — **E3: 32 KB SRAM expansion via the RAMB PIN.
@@ -85,54 +110,6 @@
 > edges resolve exactly as vanilla.**
 >
 >
-> Session 68 (2026-07-19 — **E2 RE half + AUTHORING SPEC: the battle↔story
-> engine decoded (byte-neutral). Owning section: SIDEQUEST_MAP "Story
-> progression ENGINE + AUTHORING SPEC — DECODED S68".**
-> Headline: **"win → subsequent script commands run" is an engine
-> guarantee** — wGameMode $C88A (ROM0 tables $00:$030F init / $00:$050F
-> tick; mode 1 = field bank $01, mode 2 = battle bank $50); battle request
-> = wGameState.6 latch → bank $13 $C905 transition ($13:$73F5 = the ROM's
-> only res 6) → mode 2; script VM state $D8D5-7 survives in WRAM;
-> BattleExitHandler ($50:$640A) restores mode 1 + $C8EA.7 → bank $01
-> ClearAnimationState SKIPS its reset → script resumes after the battle
-> opcode (= the on-win rewards). LOSS ($DB55==1): $D92B=8, engine warp to
-> Castle via the opcode-$0F cells, gold $CA4B-4D halved, items dropped
-> unless info byte +$0B bit 2 (keep-on-defeat = TinyMedal/BeastTail/
-> WarpStaff/ShinyHarp/BookMark — user FAQ list VERIFIED +BookMark), $D8D7
-> cleared. **$D9EC = 18-phase battle machine** (BattlePhaseTable $50:$5F3A;
-> not 15; intro 0-3 / main 4-8 / sequencer 9 on $D9ED / post $0A-$0D /
-> exit $0E-$11), outcome set by bank $52 KO scans (~$76E0 loss / ~$7727
-> win; XOR'd for link peer; $DB73=$FF loss freeze). **$D9F4 = nested
-> battle sub-machine** (bank $50 header's "main game state" framing + the
-> "$C86C = gate world" claim were WRONG — $C86C is the LINK flag, bank $03
-> serial setters; state variants are LOCAL/LINK; wInGateworld=$C969).
-> **Evaluation opcodes resolved**: $CA8D = party count (Well/Bazaar-Edge
-> "==1" = can't-forfeit-last-monster refusal, NOT skill check); $FF92 =
-> hPlayerX low (Bazaar 215/216/217 = position gate); $D8E1 = result cell
-> of the 10-opcode evaluator family $23/$30/$32/$34/$38/$51(library-seen
-> tiers)/$55(item count)/$56(gold÷10)/$59/$5F (census in
-> BANK04_SCRIPT_ENGINE); opcode $45 = restore party from $CAB9 7-byte
-> snapshot. Deliverables: bank_050 header rewrite + BattlePhaseTable/
-> BattlePhase09SubTable re-sections + 18 phase labels in BOTH trees
-> (sym-verified addresses; renames Jump_050_640a→BattleExitHandler,
-> Jump_050_6aac→BattlePhase09_TurnSequencer); wram.asm wBattlePostFlag
-> comment (0=win/1=loss/2=undecided); ARCHITECTURE mode table +
-> bank/$D9F4 rows; known_RAM_map (10 rows); MONSTER_DATA fixes;
-> SIDEQUEST_MAP spec + 3 corrections; DOC_AUDIT ×3; KEY_LESSONS S68;
-> ROADMAP E2 → [~] (RE+spec done, schema wiring open). **Campaign
-> recommendation recorded (user Q): new-world spine in custom rooms via
-> generated scripts; vanilla intact as postgame; arena gating = re-authored
-> Arena Lobby scr0; capacity = 32 flags → E3 or audited vanilla-flag
-> reuse.** **HW-pinned same session (user SameBoy): FLEE → $DB55=2
-> neutral (resolver $50:$5808 jumps phase $0A + masks exp targets
-> $DD1F-22; no penalty; $DB73-armed edge → 1); CAUGHT monster → plain win
-> ($52:$7729 = 0 via the phase-7 chain, backtrace-verified); $C899/$C89A
-> proven the LIVE RNG pair (adjacent examines differ) → LoadBtl_5d29's
-> &$1F==$1F = 1/32-per-side random battle-intro event ($DB55 doubles as
-> its marker until the KO scans).** Residuals: $CAB9 snapshot writer;
-> intro-event message text (3-14). Byte-neutral: clean build `1ca6579…`
-> unchanged; verifier PASS 5/5.
-
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
 - **S67** (2026-07-19): E1 — arena/gate-boss roster format decoded (byte-neutral; NO roster table — op $1F EID formula $E0+9*group+3*match+slot over enemy-stats rows; 53-site boss-script census; $14:$4893 = fight→join redirect; Coliseum RNG bands; $DA02/03/05/07/09 battle-slot RAM; HW-verified same session). Owning: SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67", arena_brackets.json, DOC_AUDIT S67 (2), KEY_LESSONS S67 (2).

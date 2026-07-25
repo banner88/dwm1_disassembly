@@ -7830,6 +7830,12 @@ AddCarryToD:
     ret
 
 
+; S70 note: CheckGateWorldMapType is intentionally UNCHANGED. Custom rooms
+; ($6B+) classifying as gate-like (>= MAP_OLDWELL) is LOAD-BEARING: the whole
+; custom-room step machinery (bank $0B Entries 6/9, movement, exits) runs on
+; the gate-like side of the engine — flipping the classifier freezes movement
+; in custom rooms entirely (v4 experiment). The slow-exit fix lives in bank
+; $0B as a source-room special case in front of the classifier call instead.
 CheckGateWorldMapType:
     ld a, [wInGateworld]
     or a

@@ -1168,3 +1168,14 @@ under the v2 build (checksum migrates, party = DarkDrium/BattleRex/Healer at
 regions in banks 00/01/04/07/0A/12/15/16/18/50/51/73 only. Compiler-regression pin
 `168c5f1b5b4b3b2568a6d6e2f3f1ab45` (patched build). **USER-CONFIRMED 2026-07-17**: sleep/
 unsleep, breeding + reload persistence, in-gate saves, "all tests normal."
+
+## Quest enemy rows (S70)
+
+EIDs **519+** live in the bank $14 free tail ($7ECC, `@BUILD_PROJECT
+quest_enemy_stats`, 308 B = 12 rows max, compiler-generated from
+`progression.enemies[]`; no-quest builds regenerate the vanilla zero pad
+byte-identically). Same 25-byte layout as the main table. Join semantics
+verified in-engine S70: join 0 on a trigger_battle3 win adds the enemy to
+the party (canonicalizer recount → $CA8D increments). The **canonicalizer
+runs on room transitions** and erases hand-built party RAM that isn't
+flag+list consistent — see PYBOY_DEBUGGING trap #2.

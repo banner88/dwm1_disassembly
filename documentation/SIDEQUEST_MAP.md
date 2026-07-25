@@ -554,3 +554,30 @@ attribute table, not stepped; intro-event message text (3-14) unchecked.
 ---
 *Compiled from branch-following script analysis + FAQ game knowledge.*
 *Engine evaluation opcodes are the primary remaining work for editor support.*
+
+## E2 AS BUILT — the Medal Chamber demo quest (S70, user-confirmed)
+
+Authored 100% in `editor2/example-project/project.json`; every mechanism
+below is the generic compiler path (PROJECT_COMPILER §progression), nothing
+is hand-wired. Pin `a5a5e0d5…`.
+
+- **Door**: `custom.vanilla_exit_extensions` adds (1,2)→room $71 to the
+  MedalMan room ($16) across all 6 step variants (counter $D95E) — the first
+  ever exit added to a VANILLA room via data.
+- **Room $71 "Medal Chamber"**: island layout source, gold palette, DWM2
+  BGM #10, guardian NPC (sprite $23 — renders draconic, catalog pending) at
+  (4,3), spawn/return-exit tile (7,6) → walk-on back to $16.
+- **Entry cutscene** (`entry:medal_vault`): seen/done-gated; init_dialog +
+  text ("Bwoing?! An intruder in the Medal Chamber!"), guardian jump
+  (trigger_anim $0101 — npc index 1), walk down 2 tiles, second
+  init_dialog + text, walk back, player-hop, set seen. Dialog-mode = per-
+  frame ticks, so delays are 1:1 frames.
+- **Quest script** (`quest:medal_vault`): done → "the chamber is quiet";
+  requires $CA8D==1 else refusal; YES/NO offer (cursor starts on NO; $C83C
+  1=NO); prebattle; trigger_battle3 **EID 519** (GoldSlime L30, 380 HP,
+  12000 exp, join 0 = always); win tail (auto init_dialog): set done flag
+  $0158, win text, npc_hide guardian; loss = vanilla Castle warp, quest
+  re-armed.
+- **Proven in PyBoy + user play**: cutscene once, re-entry skip, decline
+  loop, win → resume → flag → **GoldSlime joins (party 2)**, loss → Castle,
+  save persistence (user), walk-on exits, 12-step encounter cadence in $6B.

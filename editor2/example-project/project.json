@@ -1,6 +1,6 @@
 {
  "meta": {
-  "name": "DWM1 demo content \u2014 S53 regression baseline",
+  "name": "DWM1 demo content — S53 regression baseline",
   "schema_version": 1,
   "notes": [
    "Re-expresses the user-confirmed hand-authored custom content of",
@@ -14,10 +14,10 @@
   ]
  },
  "world": {
-  "_status": "NOT_IMPLEMENTED_V1 \u2014 Layer A (vanilla-room edits) is extraction work, ROADMAP Phase 2/F"
+  "_status": "NOT_IMPLEMENTED_V1 — Layer A (vanilla-room edits) is extraction work, ROADMAP Phase 2/F"
  },
  "gamedata": {
-  "_status": "NOT_IMPLEMENTED_V1 \u2014 Layer C keeps its proven per-system tools (build_breeding.py etc.)"
+  "_status": "NOT_IMPLEMENTED_V1 — Layer C keeps its proven per-system tools (build_breeding.py etc.)"
  },
  "custom": {
   "wram": {
@@ -26,7 +26,7 @@
     {
      "label": "wCustomStep_Room6C_S5",
      "addr": "0xCD84",
-     "comment": "Room $6C screen 5 step counter (legacy hole \u2014 kept at base+4 so the relative counter layout matches the proven S55 shape; S65 migration moved the base $DE74\u2192$CD80)"
+     "comment": "Room $6C screen 5 step counter (legacy hole — kept at base+4 so the relative counter layout matches the proven S55 shape; S65 migration moved the base $DE74→$CD80)"
     }
    ]
   },
@@ -312,11 +312,72 @@
         "screen_byte": "0x00",
         "spawn_x": 7,
         "spawn_y": 6,
-        "comment": "edge exit (3,1) -> Room $6B spawn (7,6) \u2014 close the loop"
+        "comment": "edge exit (3,1) -> Room $6B spawn (7,6) — close the loop"
        }
       ]
      }
     }
+   },
+   {
+    "id": "medal_vault",
+    "mapID": "0x71",
+    "source_mapID": "0x04",
+    "record": {
+     "gfx_id": "0x0D",
+     "gfx_bank": "0x28",
+     "width_px": 160,
+     "height_px": 128,
+     "collision_threshold": "0x30"
+    },
+    "render": {
+     "palette": "pal_71",
+     "attr": {
+      "bank": "0x64",
+      "base_entry": 1
+     }
+    },
+    "scripts": {
+     "0": "entry:medal_vault",
+     "1": "quest:medal_vault"
+    },
+    "screens": {
+     "0": {
+      "layout": {
+       "bank": "0x64",
+       "entry": 0
+      },
+      "npcs": [
+       {
+        "kind": "spawn",
+        "x": 7,
+        "y": 6
+       },
+       {
+        "kind": "npc",
+        "facing": "down",
+        "sprite": "0x23",
+        "x": 4,
+        "y": 3,
+        "script": "quest:medal_vault",
+        "comment": "Vault guardian: GoldSlime follower sprite = species 19 + $10 (SpritePtrTable_4974 is a follower gfx-ID copy)",
+        "_sprite_note": "S70: sprite $23 renders a draconic guard (not GoldSlime). $11 hard-crashes the room render (black screen, PyBoy). NPC-sprite-id catalog = future session; species+$10 mapping is DISPROVEN."
+       }
+      ],
+      "exits": [
+       {
+        "x": 7,
+        "y": 6,
+        "dest": "vanilla:$16",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 1,
+        "spawn_y": 2,
+        "comment": "back to MedalMan (1,2) vault-door tile; spawn-on-exit-tile is vanilla-precedented (SecretPassage->MedalMan lands on the north exit)"
+       }
+      ]
+     }
+    },
+    "music": "dwm2_bgm10"
    }
   ],
   "dialogue": [
@@ -544,6 +605,74 @@
      "music."
     ],
     "comment": "v5 BGM #07 declined"
+   },
+   {
+    "id": "vault_c1",
+    "lines": [
+     "Bwoing?!",
+     "An intruder in",
+     "the Medal Chamber!"
+    ],
+    "comment": "S70 cutscene line 1"
+   },
+   {
+    "id": "vault_c2",
+    "lines": [
+     "I am GoldSlime,",
+     "keeper of the",
+     "shiniest hoard!"
+    ],
+    "comment": "S70 cutscene line 2"
+   },
+   {
+    "id": "vault_need_one",
+    "lines": [
+     "Face me alone!",
+     "Bring exactly",
+     "one monster."
+    ],
+    "comment": "requires $CA8D==1 refusal"
+   },
+   {
+    "id": "vault_offer",
+    "lines": [
+     "You smell of",
+     "medals...",
+     "Challenge me?"
+    ],
+    "choice": true,
+    "comment": "quest YES/NO offer"
+   },
+   {
+    "id": "vault_decline",
+    "lines": [
+     "Then leave my",
+     "shinies alone!"
+    ]
+   },
+   {
+    "id": "vault_prebattle",
+    "lines": [
+     "Bwoing!",
+     "For the hoard!"
+    ]
+   },
+   {
+    "id": "vault_win",
+    "lines": [
+     "Bwoing...",
+     "You win. I shall",
+     "guard YOU now!"
+    ],
+    "comment": "win tail; GoldSlime joins engine-side (phase $0D)"
+   },
+   {
+    "id": "vault_done",
+    "lines": [
+     "The chamber is",
+     "quiet. The",
+     "shinies sleep."
+    ]
    }
   ],
   "scripts": [
@@ -553,24 +682,19 @@
     "ops": [
      [
       "op",
-      "write_ram",
+      "write_ram2",
       "0xCA39",
-      "0x0064"
-     ],
-     [
-      "op",
-      "write_ram",
-      "0xCA3A",
-      "0x0000"
+      "0x04B0"
      ],
      [
       "end"
      ]
-    ]
+    ],
+    "_comment": "S70v2 measured truth (PyBoy, both S69+S70 ROMs): the per-step handler drains 100/step — the old seed 100 armed a battle EVERY step (the '100=5 steps' note was wrong). $04B0=1200 = 12 steps between battles; write_ram2 is the vanilla 16-bit form (Healer post-battle uses it)."
    },
    {
     "id": "give_jerky",
-    "comment": "Beef Jerky giver \u2014 YES/NO, inventory-full branch, GiveItem wrapper opcode $2A",
+    "comment": "Beef Jerky giver — YES/NO, inventory-full branch, GiveItem wrapper opcode $2A",
     "ops": [
      [
       "text",
@@ -620,7 +744,7 @@
    },
    {
     "id": "give_egg",
-    "comment": "SkyDragon egg giver \u2014 AddMonster opcode $29 (enemy_stats_id $015E, same as the Farm event)",
+    "comment": "SkyDragon egg giver — AddMonster opcode $29 (enemy_stats_id $015E, same as the Farm event)",
     "ops": [
      [
       "text",
@@ -670,7 +794,7 @@
    },
    {
     "id": "bgm_change",
-    "comment": "SetBGM opcode $41 \u2014 VERIFIED 1 param (handler $04:$669D); track $9E = DWM2 BGM #06 port (S62; M3a/S63: bank $74)",
+    "comment": "SetBGM opcode $41 — VERIFIED 1 param (handler $04:$669D); track $9E = DWM2 BGM #06 port (S62; M3a/S63: bank $74)",
     "ops": [
      [
       "text",
@@ -810,7 +934,7 @@
    },
    {
     "id": "teleport_6b",
-    "comment": "MapTransitionFull to custom room $6B \u2014 spawn (120,104)px = grid (7,6)",
+    "comment": "MapTransitionFull to custom room $6B — spawn (120,104)px = grid (7,6)",
     "ops": [
      [
       "text",
@@ -845,7 +969,7 @@
    },
    {
     "id": "gate_open",
-    "comment": "Gatekeeper \u2014 advances Room $6C screen 0 step counter to 1 (step-system demo)",
+    "comment": "Gatekeeper — advances Room $6C screen 0 step counter to 1 (step-system demo)",
     "ops": [
      [
       "text",
@@ -979,7 +1103,7 @@
     "label": "CustomPaletteColors_6C",
     "placement": "a",
     "comment": [
-     "CustomPaletteColors_6C: Pillar A proof palette \u2014 twilight recolor of",
+     "CustomPaletteColors_6C: Pillar A proof palette — twilight recolor of",
      "the gate palette (rose sand, indigo water, dusk teal trees).",
      "(Throwaway proof palette; overwritten per-room by real projects.)"
     ],
@@ -1180,6 +1304,65 @@
      "sub-pal 6",
      "sub-pal 7"
     ]
+   },
+   {
+    "id": "pal_71",
+    "label": "CustomRoomPalette_71",
+    "placement": "b",
+    "comment": [
+     "Medal Vault (room $71) — gold-tinted derivation of pal_6b",
+     "(same layout bank $64 entry 0 / attrs base_entry 1; S70)"
+    ],
+    "colors_rgb555": [
+     [
+      "0x0990",
+      "0x6BFF",
+      "0x16FF",
+      "0x0000"
+     ],
+     [
+      "0x0DD3",
+      "0x6BFF",
+      "0x173F",
+      "0x0000"
+     ],
+     [
+      "0x0991",
+      "0x6BFF",
+      "0x16DD",
+      "0x0000"
+     ],
+     [
+      "0x094E",
+      "0x6BFF",
+      "0x16FF",
+      "0x0000"
+     ],
+     [
+      "0x0DF5",
+      "0x6BFF",
+      "0x27FF",
+      "0x0000"
+     ],
+     [
+      "0x052D",
+      "0x6BFF",
+      "0x16DE",
+      "0x0000"
+     ],
+     [
+      "0x094E",
+      "0x6BFF",
+      "0x171F",
+      "0x0000"
+     ],
+     [
+      "0x0E37",
+      "0x6BFF",
+      "0x1BBF",
+      "0x0000"
+     ]
+    ]
    }
   ],
   "music": {
@@ -1195,7 +1378,7 @@
       "library": "dwm2_bgm06"
      },
      "first_id": "0x9E",
-     "_comment": "DWM2 BGM #06 \u2014 played by the gate_island well NPC (set_bgm 0x9E)"
+     "_comment": "DWM2 BGM #06 — played by the gate_island well NPC (set_bgm 0x9E)"
     },
     {
      "id": "dwm2_bgm07",
@@ -1203,7 +1386,7 @@
       "library": "dwm2_bgm07"
      },
      "first_id": "0xA1",
-     "_comment": "DWM2 BGM #07 \u2014 dusk_mirror NPC (set_bgm 0xA1) AND gate_island room default"
+     "_comment": "DWM2 BGM #07 — dusk_mirror NPC (set_bgm 0xA1) AND gate_island room default"
     },
     {
      "id": "dq6_town1",
@@ -1211,27 +1394,408 @@
       "library": "dq6_town1"
      },
      "first_id": "0xA4",
-     "_comment": "DQ6 Town via tools/midi_to_song.py \u2014 Library (vanilla map $12) room default"
+     "_comment": "DQ6 Town via tools/midi_to_song.py — Library (vanilla map $12) room default"
+    },
+    {
+     "id": "dwm2_bgm10",
+     "source": {
+      "library": "dwm2_bgm10"
+     },
+     "first_id": "auto"
     }
    ],
    "room_defaults": {
     "0x12": "dq6_town1"
    }
-  }
+  },
+  "vanilla_exit_extensions": [
+   {
+    "mapID": "0x16",
+    "step_counter": "0xD95E",
+    "comment": "MedalMan + Medal Vault door at (1,2); per-step lists mirror disassembly Exit_MedalManRoom_s0/_v1/_v2 (steps 0/1-2-4-5/3) + the door row",
+    "steps": [
+     {
+      "exits": [
+       {
+        "x": 3,
+        "y": 7,
+        "dest": "vanilla:$01",
+        "gate_flag": 0,
+        "screen_byte": "0x81",
+        "spawn_x": 3,
+        "spawn_y": 2,
+        "comment": "vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)"
+       },
+       {
+        "x": 1,
+        "y": 2,
+        "dest": "room:$71",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 7,
+        "spawn_y": 6,
+        "comment": "S70 Medal Vault door -> room $71 spawn (7,6)"
+       }
+      ]
+     },
+     {
+      "exits": [
+       {
+        "x": 3,
+        "y": 7,
+        "dest": "vanilla:$01",
+        "gate_flag": 0,
+        "screen_byte": "0x81",
+        "spawn_x": 3,
+        "spawn_y": 2,
+        "comment": "vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)"
+       },
+       {
+        "x": 3,
+        "y": 1,
+        "dest": "vanilla:$0A",
+        "gate_flag": 0,
+        "screen_byte": "0x01",
+        "spawn_x": 3,
+        "spawn_y": 7,
+        "comment": "vanilla north exit -> SecretPassage"
+       },
+       {
+        "x": 1,
+        "y": 6,
+        "dest": "vanilla:$11",
+        "gate_flag": 1,
+        "screen_byte": "0x00",
+        "spawn_x": 0,
+        "spawn_y": 0,
+        "comment": "vanilla Medal Gate portal (gate_flag=1, vanilla dest)"
+       },
+       {
+        "x": 1,
+        "y": 2,
+        "dest": "room:$71",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 7,
+        "spawn_y": 6,
+        "comment": "S70 Medal Vault door -> room $71 spawn (7,6)"
+       }
+      ]
+     },
+     {
+      "exits": [
+       {
+        "x": 3,
+        "y": 7,
+        "dest": "vanilla:$01",
+        "gate_flag": 0,
+        "screen_byte": "0x81",
+        "spawn_x": 3,
+        "spawn_y": 2,
+        "comment": "vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)"
+       },
+       {
+        "x": 3,
+        "y": 1,
+        "dest": "vanilla:$0A",
+        "gate_flag": 0,
+        "screen_byte": "0x01",
+        "spawn_x": 3,
+        "spawn_y": 7,
+        "comment": "vanilla north exit -> SecretPassage"
+       },
+       {
+        "x": 1,
+        "y": 6,
+        "dest": "vanilla:$11",
+        "gate_flag": 1,
+        "screen_byte": "0x00",
+        "spawn_x": 0,
+        "spawn_y": 0,
+        "comment": "vanilla Medal Gate portal (gate_flag=1, vanilla dest)"
+       },
+       {
+        "x": 1,
+        "y": 2,
+        "dest": "room:$71",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 7,
+        "spawn_y": 6,
+        "comment": "S70 Medal Vault door -> room $71 spawn (7,6)"
+       }
+      ]
+     },
+     {
+      "exits": [
+       {
+        "x": 3,
+        "y": 7,
+        "dest": "vanilla:$01",
+        "gate_flag": 0,
+        "screen_byte": "0x81",
+        "spawn_x": 3,
+        "spawn_y": 2,
+        "comment": "vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)"
+       },
+       {
+        "x": 3,
+        "y": 1,
+        "dest": "vanilla:$0A",
+        "gate_flag": 0,
+        "screen_byte": "0x01",
+        "spawn_x": 3,
+        "spawn_y": 7,
+        "comment": "vanilla north exit -> SecretPassage"
+       },
+       {
+        "x": 1,
+        "y": 2,
+        "dest": "room:$71",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 7,
+        "spawn_y": 6,
+        "comment": "S70 Medal Vault door -> room $71 spawn (7,6)"
+       }
+      ]
+     },
+     {
+      "exits": [
+       {
+        "x": 3,
+        "y": 7,
+        "dest": "vanilla:$01",
+        "gate_flag": 0,
+        "screen_byte": "0x81",
+        "spawn_x": 3,
+        "spawn_y": 2,
+        "comment": "vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)"
+       },
+       {
+        "x": 3,
+        "y": 1,
+        "dest": "vanilla:$0A",
+        "gate_flag": 0,
+        "screen_byte": "0x01",
+        "spawn_x": 3,
+        "spawn_y": 7,
+        "comment": "vanilla north exit -> SecretPassage"
+       },
+       {
+        "x": 1,
+        "y": 6,
+        "dest": "vanilla:$11",
+        "gate_flag": 1,
+        "screen_byte": "0x00",
+        "spawn_x": 0,
+        "spawn_y": 0,
+        "comment": "vanilla Medal Gate portal (gate_flag=1, vanilla dest)"
+       },
+       {
+        "x": 1,
+        "y": 2,
+        "dest": "room:$71",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 7,
+        "spawn_y": 6,
+        "comment": "S70 Medal Vault door -> room $71 spawn (7,6)"
+       }
+      ]
+     },
+     {
+      "exits": [
+       {
+        "x": 3,
+        "y": 7,
+        "dest": "vanilla:$01",
+        "gate_flag": 0,
+        "screen_byte": "0x81",
+        "spawn_x": 3,
+        "spawn_y": 2,
+        "comment": "vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)"
+       },
+       {
+        "x": 3,
+        "y": 1,
+        "dest": "vanilla:$0A",
+        "gate_flag": 0,
+        "screen_byte": "0x01",
+        "spawn_x": 3,
+        "spawn_y": 7,
+        "comment": "vanilla north exit -> SecretPassage"
+       },
+       {
+        "x": 1,
+        "y": 6,
+        "dest": "vanilla:$11",
+        "gate_flag": 1,
+        "screen_byte": "0x00",
+        "spawn_x": 0,
+        "spawn_y": 0,
+        "comment": "vanilla Medal Gate portal (gate_flag=1, vanilla dest)"
+       },
+       {
+        "x": 1,
+        "y": 2,
+        "dest": "room:$71",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 7,
+        "spawn_y": 6,
+        "comment": "S70 Medal Vault door -> room $71 spawn (7,6)"
+       }
+      ]
+     }
+    ]
+   }
+  ]
  },
  "build": {
-  "compat": {
-   "master_table_rooms": [
-    "0x6B",
-    "0x6C",
-    "0x6D"
-   ]
-  },
   "bank_map": {
    "0x60": "rooms + scripts + text (compiler-owned file)",
-   "0x71": "dispatch tables \u2014 Custom26DDTable + RoomEncTable (compiler-owned file)",
+   "0x71": "dispatch tables — Custom26DDTable + RoomEncTable (compiler-owned file)",
    "0x17": "@BUILD_PROJECT regions (compiler) inside the hand-patched vanilla bank",
-   "0x64": "tile layouts + attrs (tools/build_gate_room.py \u2014 referenced by rooms, not compiled here)"
-  }
+   "0x64": "tile layouts + attrs (tools/build_gate_room.py — referenced by rooms, not compiled here)"
+  },
+  "_compat_note": "S70: legacy narrow master table RETIRED — the bank $01 initial-entry revert routes EVERY custom room's entry through CustomScriptRead, so the master table must be full-width (rooms $6E-$71 would overshoot the 3-entry compat table at first entry, not just on scroll)."
+ },
+ "progression": {
+  "_comment": "S70 — ROADMAP E2 wiring demo. Quests lower to generated scripts (quest:<id> / entry:<id>) referenced from rooms[].scripts; enemies emit bank $14 tail rows (EIDs 519+).",
+  "enemies": [
+   {
+    "id": "vault_goldslime",
+    "eid": "auto",
+    "species": 19,
+    "level": 30,
+    "exp": 12000,
+    "joinability": 0,
+    "hp": 380,
+    "mp": 90,
+    "atk": 165,
+    "def": 320,
+    "agl": 190,
+    "int": 130,
+    "ai_weights": [
+     250,
+     150,
+     200,
+     0
+    ],
+    "skills": [
+     30,
+     26,
+     60
+    ],
+    "comment": "Vault GoldSlime: Upper($1E)/RobMagic($1A)/Ramming($3C); joinability $00 = always joins; fight EID == join EID (no redirect row needed)"
+   }
+  ],
+  "quests": [
+   {
+    "id": "medal_vault",
+    "room": "medal_vault",
+    "flags": {
+     "done": "vault_guardian_beaten",
+     "cutscene_seen": "vault_cutscene_seen"
+    },
+    "requires": [
+     {
+      "ram": "0xCA8D",
+      "equals": 1,
+      "else_text": "vault_need_one"
+     }
+    ],
+    "offer": {
+     "text": "vault_offer",
+     "decline_text": "vault_decline",
+     "prebattle_text": "vault_prebattle"
+    },
+    "battle": {
+     "enemy": "vault_goldslime"
+    },
+    "on_win": [
+     {
+      "text": "vault_win"
+     },
+     {
+      "npc_hide": 1
+     }
+    ],
+    "already_done_text": "vault_done",
+    "entry_done": [
+     {
+      "npc_hide": 1
+     }
+    ],
+    "entry_cutscene": {
+     "ops": [
+      [
+       "op",
+       "init_dialog"
+      ],
+      [
+       "text",
+       "vault_c1"
+      ],
+      [
+       "op",
+       "trigger_anim",
+       "0x0101"
+      ],
+      [
+       "op",
+       "delay",
+       25
+      ],
+      [
+       "op",
+       "begin_walk"
+      ],
+      [
+       "op",
+       "npc_walk_y",
+       1,
+       32
+      ],
+      [
+       "op",
+       "delay",
+       45
+      ],
+      [
+       "op",
+       "init_dialog"
+      ],
+      [
+       "text",
+       "vault_c2"
+      ],
+      [
+       "op",
+       "npc_walk_y",
+       1,
+       "0xFFE0"
+      ],
+      [
+       "op",
+       "delay",
+       45
+      ],
+      [
+       "op",
+       "trigger_anim",
+       "0x0100"
+      ],
+      [
+       "op",
+       "delay",
+       20
+      ]
+     ],
+     "_comment": "S70v3: EVERY text outside an NPC interaction needs its own preceding init_dialog (vanilla Healer post-battle protocol FF07/say — dismissal tears script-initiated dialog mode down each time)."
+    }
+   }
+  ]
  }
 }

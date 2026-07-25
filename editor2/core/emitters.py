@@ -172,7 +172,68 @@ def emit_bank_060(prj, warnings):
             lines += _room_scripts(prj, r, text_names, warnings)
         lines += _room_data(prj, r)
 
+    lines += _vanilla_exit_exts(prj)
     return "\n".join(lines) + "\n"
+
+
+def _vanilla_exit_exts(prj):
+    """S70 — custom.vanilla_exit_extensions -> VanillaExitExtTable, read by
+    template entry 7 (VanillaExitResolve) for bank $0B RoomEntry6_ExitChecker.
+    The label is referenced by the TEMPLATE HEAD, so it is emitted ALWAYS
+    (empty table = a lone $FF terminator: every vanilla room scans one byte
+    and falls back to the vanilla SharedPtrChase path).
+    Row: db mapID / dw step_counter / db n_steps / dw variant ptrs; $FF term.
+    A variant list REPLACES the room's Entry-6 exit list wholesale for that
+    step, so it must contain the vanilla rows (copied from disassembly
+    bank_00b data) PLUS the additions. Entry 9 (boundary y=0/7) still reads
+    the vanilla lists — y 0/7 rows here are inert (validator-warned)."""
+    out = banner("VANILLA-ROOM EXIT EXTENSIONS (S70, generated)", [
+        "Read by bank $60 entry 7 (VanillaExitResolve, template head) on",
+        "EVERY non-gate room step via bank $0B RoomEntry6_ExitChecker.",
+        "Variant selected by [step_counter], clamped to n_steps-1.",
+        "Lists are copied to wCustomExitBuffer (<= 17 rows + terminator)."])
+    out.append("VanillaExitExtTable:")
+    variants = []                      # (label, rows) in first-use order
+    by_key = {}
+    for ext in prj.vanilla_exit_exts:
+        mid = F.val(ext['mapID'])
+        steps = ext['steps']
+        out.append(f"    db {F.hexb(mid)}   ; mapID"
+                   + (f" — {ext['comment']}" if ext.get('comment') else ""))
+        out.append(f"    dw {F.hexw(F.val(ext['step_counter']))}"
+                   "   ; vanilla step counter (WRAM)")
+        out.append(f"    db {len(steps)}   ; n_steps (variant count)")
+        labels = []
+        for st in steps:
+            rows = tuple(tuple([F.val(e['x']), F.val(e['y']),
+                                prj.resolve_dest(e['dest']),
+                                F.val(e.get('gate_flag', 0)),
+                                F.val(e['screen_byte']),
+                                F.val(e['spawn_x']), F.val(e['spawn_y'])])
+                         for e in st['exits'])
+            key = (mid, rows)
+            if key not in by_key:
+                lbl = f"VExt{mid:02X}_V{len([v for v in variants if v[0].startswith(f'VExt{mid:02X}_')])}"
+                by_key[key] = lbl
+                variants.append((lbl, st))
+            labels.append(by_key[key])
+        out.append("    dw " + ", ".join(labels)
+                   + "   ; per-step variant lists (deduped)")
+    out.append("    db $FF   ; table terminator")
+    out.append("")
+    for lbl, st in variants:
+        out.append(f"{lbl}:")
+        for e in st['exits']:
+            b = F.exit_entry(F.val(e['x']), F.val(e['y']),
+                             prj.resolve_dest(e['dest']),
+                             F.val(e.get('gate_flag', 0)),
+                             F.val(e['screen_byte']),
+                             F.val(e['spawn_x']), F.val(e['spawn_y']))
+            out.append(F.db_line(b, comment=e.get('comment',
+                       f"exit ({F.val(e['x'])},{F.val(e['y'])}) -> {e['dest']}")))
+        out.append("    db $FF")
+        out.append("")
+    return out
 
 
 def _room_scripts(prj, r, text_names, warnings):
@@ -424,10 +485,55 @@ def emit_bank_074(prj, warnings):
     return sc.song_bank_asm(lib)
 
 
+# ---------------------------------------------------------------------------
+# bank $14 region emitter — progression.enemies rows (S70, ROADMAP E2)
+# ---------------------------------------------------------------------------
+
+def emit_region_enemies14(prj, warnings):
+    """progression.enemies -> appended enemy-stats rows in the bank $14 free
+    tail (@BUILD_PROJECT quest_enemy_stats around the vanilla ds-308 pad).
+    Row format: MONSTER_DATA "Enemy Stats Table" ($14:$4C1D, 25 B/row):
+    [species, exp:2, joinability, level, hp:2, mp:2, atk:2, def:2, agl:2,
+     int:2, ai:4, skills:4]. EIDs from 519 ($7ECC = $4C1D + 519*25 — exact
+    tail alignment); pad shrinks by 25 per row so every following byte is
+    unmoved. No-op case = the vanilla ds 308 (byte-identical)."""
+    from .project import QUEST_REGION_BYTES
+    out = ["; progression.enemies rows (EIDs 519+ @ $7ECC+; 12-row capacity).",
+           "; Emitted by editor2 `enemies14`; row addr = $4C1D + EID*25",
+           "; (LoadEnemyStats, no fork — MONSTER_DATA \"Enemy Stats Table\").",
+           "; Joinability byte: $00 = always joins (story-boss behavior);",
+           "; fight EID == join EID needs NO BossRedirectTable entry (the",
+           "; $14:$4893 lookup falls through unchanged — SIDEQUEST_MAP E1)."]
+    used = 0
+    for e in prj.quest_enemy_rows():
+        eid = e['_eid']
+        sp, lv = F.val(e['species']), F.val(e['level'])
+        exp = F.val(e.get('exp', 0))
+        join = F.val(e.get('joinability', 7))
+        row = [sp, exp & 0xFF, exp >> 8, join, lv]
+        for f16 in ('hp', 'mp', 'atk', 'def', 'agl', 'int'):
+            v = F.val(e.get(f16, 0))
+            row += [v & 0xFF, (v >> 8) & 0xFF]
+        ai = [F.val(x) for x in e.get('ai_weights', [0, 0, 0, 0])]
+        sk = [F.val(x) for x in e.get('skills', [])]
+        row += ai + (sk + [0xFF] * 4)[:4]
+        out.append(f"QuestEnemyStats_{eid}:   ; {e['id']} — species {sp} "
+                   f"L{lv}, join {F.hexb(join)}"
+                   + (f" — {e['comment']}" if e.get('comment') else ""))
+        out.append(F.db_line(row))
+        used += 25
+    pad = QUEST_REGION_BYTES - used
+    out.append(f"    ds {pad}, $00")
+    return "\n".join(out) + "\n"
+
+
 REGISTRY = [
     # (name, schema_section, target, function, owned_banks)
     ("rooms60", "custom.rooms", "file:patches/bank_060.asm",
      emit_bank_060, [0x60]),
+    ("enemies14", "progression.enemies",
+     "region:patches/bank_014.asm#quest_enemy_stats", emit_region_enemies14,
+     [0x14]),
     ("dispatch71", "custom.rooms", "file:patches/bank_071.asm",
      emit_bank_071, [0x71]),
     ("palettes_a", "custom.palettes",

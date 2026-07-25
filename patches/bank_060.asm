@@ -9,6 +9,8 @@
 ;   Entry 4: CustomScriptRead   — triple-index script data reader
 ;   Entry 5: CustomTextDisplay  — custom text renderer via ROM0 CallTextEngine
 ;   Entry 6: GateAwareDispatch  — B-fix: bank-$0F script dispatch routed by wMapID
+;   Entry 7: VanillaExitResolve — S70: unified exit resolve (custom rooms AND
+;            compiler-authored vanilla-room exit EXTENSIONS; HL=list or 0)
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
@@ -21,6 +23,7 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw CustomScriptRead     ; Entry 4
     dw CustomTextDisplay    ; Entry 5
     dw GateAwareDispatch    ; Entry 6 — gate-entry regression fix (B-fix): route by wMapID
+    dw VanillaExitResolve   ; Entry 7 — S70 unified exit resolve (bank $0B Entry 6 calls this for EVERY non-gate room)
 
 ; =============================================================================
 ; CustomPtrChase
@@ -143,6 +146,12 @@ CustomReadInteract:
     ret
 
 CustomExitCheck:
+    ; S70v3: custom branch of the y-skip arming (see VanillaExitResolve):
+    ; $FE never equals a real trigger_y, so Entry 6's scan no longer skips
+    ; y=7 rows here — custom-room boundary exits fire on WALK-ON arrival.
+    ; Entry 9 (push) reads the same list and still works as a fallback.
+    ld a, $FE
+    ld [wCustomY7Cmp], a
     call CustomPtrChase
     inc hl
     inc hl
@@ -151,6 +160,10 @@ CustomExitCheck:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
+    ; fall through into the shared copy loop (S70 factoring; behavior
+    ; identical to the pre-S70 inline loop — 7-byte entries, first-byte-$FF
+    ; terminator only, KEY_LESSONS v3-v4)
+CopyExitListToBuffer:
     ld de, wCustomExitBuffer
 .copyExit:
     ld a, [hl]
@@ -173,6 +186,83 @@ CustomExitCheck:
 CustomTilesetInfo:
     ld a, [wCustomRoomFlag]
     ret
+
+; =============================================================================
+; Entry 7: VanillaExitResolve  (S70 — vanilla-room exit extensions)
+; =============================================================================
+; Called by bank $0B RoomEntry6_ExitChecker (patches/bank_00b.asm) for EVERY
+; non-gate room step in place of the old ">= $6B -> entry 2" divert.
+; Contract: returns HL = exit list to scan (a WRAM buffer copy), or HL = 0
+; meaning "no override — caller runs the vanilla SharedPtrChase path".
+; rst $10 preserves HL/DE across the far call but clobbers A (bank byte) —
+; the caller tests HL, never A (CROSSBANK_ROOMS "rst $10 Clobbers Register A").
+;
+;   wMapID >= $6B  -> jp CustomExitCheck (identical to the pre-S70 behavior)
+;   wMapID <  $6B  -> scan VanillaExitExtTable (compiler-generated):
+;       row: db mapID / dw step_counter_addr / db n_steps / dw list0..listN-1
+;       table terminated by db $FF. Match: variant = min([counter], n-1),
+;       copy that 7-byte exit list to wCustomExitBuffer, return HL=buffer.
+;       No match: HL=0.
+; Entry 9 (boundary y=0/7 exits) is NOT extended — it still reads the vanilla
+; bank $0B lists directly. Extension rows with trigger_y 0/7 are therefore
+; inert (Entry 6 skips them); the compiler validator enforces/warns this.
+VanillaExitResolve:
+    ; S70v3: arm the Entry 6 scan's y-skip compare for the VANILLA branch —
+    ; $07 = skip y=7 rows (original engine semantics; y=7 stays Entry-9/push
+    ; territory in vanilla rooms). CustomExitCheck writes $FE instead, which
+    ; matches no real trigger_y, making custom-room y=7 rows WALK-ON exits.
+    ; Entry 6 calls this entry before every scan, so the byte is always fresh.
+    ld a, $07
+    ld [wCustomY7Cmp], a
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .vanillaScan
+    jp CustomExitCheck          ; custom room — exact old entry-2 behavior
+.vanillaScan:
+    ld c, a                     ; C = mapID
+    ld hl, VanillaExitExtTable
+.scan:
+    ld a, [hl+]
+    cp $FF
+    jr z, .none                 ; table end — no extension for this room
+    cp c
+    jr z, .match
+    inc hl                      ; skip step_counter addr (2)
+    inc hl
+    ld a, [hl+]                 ; n_steps
+    add a                       ; 2 bytes per variant ptr
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    jr .scan
+.none:
+    ld hl, $0000
+    ret
+.match:
+    ld a, [hl+]
+    ld e, a
+    ld a, [hl+]
+    ld d, a                     ; DE = step counter address (WRAM)
+    ld a, [hl+]                 ; A = n_steps
+    ld b, a
+    ld a, [de]                  ; current step value
+    cp b
+    jr c, .stepOk
+    ld a, b                     ; clamp out-of-range step to the last variant
+    dec a
+.stepOk:
+    add a                       ; x2 (dw index)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                     ; HL = the variant's exit list
+    jp CopyExitListToBuffer     ; -> HL = wCustomExitBuffer
 
 ; =============================================================================
 ; Entry 6: GateAwareDispatch  — gate-entry regression fix (B-fix)
@@ -253,6 +343,15 @@ CustomScriptMasterTable:
     dw CustomRoom0_ScriptPtrTable   ; mapID $6B
     dw CustomRoom1_ScriptPtrTable   ; mapID $6C
     dw CustomRoom2_ScriptPtrTable   ; mapID $6D
+    dw CustomScriptNoop_PtrTable  ; scriptless/placeholder room — safe no-op
+    dw CustomScriptNoop_PtrTable  ; scriptless/placeholder room — safe no-op
+    dw CustomScriptNoop_PtrTable  ; scriptless/placeholder room — safe no-op
+    dw CustomRoom6_ScriptPtrTable   ; mapID $71
+
+CustomScriptNoop_PtrTable:
+    dw CustomScriptNoop_Entry   ; [0] room entry (no-op)
+CustomScriptNoop_Entry:
+    dw $FFFF
 
 ; --- $6B (gate_island) scripts ---
 CustomRoom0_ScriptPtrTable:
@@ -262,12 +361,9 @@ CustomRoom0_ScriptPtrTable:
     dw CustomRoom0_Scr03   ; [3] bgm_change
 
 CustomRoom0_Scr00:
-    dw $FF12  ; write_ram
+    dw $FF13  ; write_ram2
     dw $CA39
-    dw $0064
-    dw $FF12  ; write_ram
-    dw $CA3A
-    dw $0000
+    dw $04B0
     dw $FFFF
 
 CustomRoom0_Scr01:
@@ -333,12 +429,9 @@ CustomRoom1_ScriptPtrTable:
     dw CustomRoom1_Scr06   ; [6] bgm07_change
 
 CustomRoom1_Scr00:
-    dw $FF12  ; write_ram
+    dw $FF13  ; write_ram2
     dw $CA39
-    dw $0064
-    dw $FF12  ; write_ram
-    dw $CA3A
-    dw $0000
+    dw $04B0
     dw $FFFF
 
 CustomRoom1_Scr01:
@@ -419,6 +512,84 @@ CustomRoom1_Scr06_declined:
 ; --- $70 (ember_keystone) scripts ---
 CustomRoom5_ScriptPtrTable:
 
+; --- $71 (medal_vault) scripts ---
+CustomRoom6_ScriptPtrTable:
+    dw CustomRoom6_Scr00   ; [0] entry:medal_vault
+    dw CustomRoom6_Scr01   ; [1] quest:medal_vault
+
+CustomRoom6_Scr00:
+    dw $FF01  ; if_flag_set
+    dw $0158
+    dw CustomRoom6_Scr00_edone
+    dw $FF01  ; if_flag_set
+    dw $0159
+    dw CustomRoom6_Scr00_eseen
+    dw $FF07  ; init_dialog
+    dw $0A18  ; S70 cutscene line 1
+    dw $FF1C  ; trigger_anim
+    dw $0101
+    dw $FF09  ; delay
+    dw $0019
+    dw $FF22  ; begin_walk
+    dw $FF1B  ; npc_walk_y
+    dw $0001
+    dw $0020
+    dw $FF09  ; delay
+    dw $002D
+    dw $FF07  ; init_dialog
+    dw $0A19  ; S70 cutscene line 2
+    dw $FF1B  ; npc_walk_y
+    dw $0001
+    dw $FFE0
+    dw $FF09  ; delay
+    dw $002D
+    dw $FF1C  ; trigger_anim
+    dw $0100
+    dw $FF09  ; delay
+    dw $0014
+    dw $FF03  ; set_flag
+    dw $0159
+    dw $FFFF
+CustomRoom6_Scr00_eseen:
+    dw $FFFF
+CustomRoom6_Scr00_edone:
+    dw $FF48  ; npc_hide
+    dw $0001
+    dw $FFFF
+
+CustomRoom6_Scr01:
+    dw $FF01  ; if_flag_set
+    dw $0158
+    dw CustomRoom6_Scr01_qdone
+    dw $FF15  ; check_and_branch
+    dw $CA8D
+    dw $0001
+    dw CustomRoom6_Scr01_req0
+    dw $0A1A  ; requires $CA8D==1 refusal
+    dw $FFFF
+CustomRoom6_Scr01_req0:
+    dw $0A1B  ; quest YES/NO offer
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom6_Scr01_declined
+    dw $0A1D  ; vault_prebattle
+    dw $FF5A  ; trigger_battle3
+    dw $0207
+    dw $FF03  ; set_flag
+    dw $0158
+    dw $FF07  ; init_dialog
+    dw $0A1E  ; win tail; GoldSlime joins engine-side (phase $0D)
+    dw $FF48  ; npc_hide
+    dw $0001
+    dw $FFFF
+CustomRoom6_Scr01_declined:
+    dw $0A1C  ; vault_decline
+    dw $FFFF
+CustomRoom6_Scr01_qdone:
+    dw $0A1F  ; vault_done
+    dw $FFFF
+
 ; =============================================================================
 ; TEXT DATA — two-level pointer table (generated)
 ; SaveBankAndSwitch ($00:$0940) indexes table[$C822*2] -> section,
@@ -454,6 +625,14 @@ CustomTextSection0:
     dw CustomText_15   ; $0A15: v5 BGM #07 offer [Y/N]
     dw CustomText_16   ; $0A16: v5 BGM #07 set
     dw CustomText_17   ; $0A17: v5 BGM #07 declined
+    dw CustomText_18   ; $0A18: S70 cutscene line 1
+    dw CustomText_19   ; $0A19: S70 cutscene line 2
+    dw CustomText_1A   ; $0A1A: requires $CA8D==1 refusal
+    dw CustomText_1B   ; $0A1B: quest YES/NO offer
+    dw CustomText_1C   ; $0A1C: 
+    dw CustomText_1D   ; $0A1D: 
+    dw CustomText_1E   ; $0A1E: win tail; GoldSlime joins engine-side (phase $0D)
+    dw CustomText_1F   ; $0A1F: 
 
 ; $0A00 — item offer [Y/N]
 CustomText_00:
@@ -600,6 +779,60 @@ CustomText_17:
     db "Keeping current", $EF, $EE
     db "music.", $F7, $F0
 
+; $0A18 — S70 cutscene line 1
+CustomText_18:
+    db $EA, $9F, $A3
+    db "Bwoing?!", $EF, $EE
+    db "An intruder in", $EF, $EE
+    db "the Medal Chamber!", $F7, $F0
+
+; $0A19 — S70 cutscene line 2
+CustomText_19:
+    db $EA, $9F, $A3
+    db "I am GoldSlime,", $EF, $EE
+    db "keeper of the", $EF, $EE
+    db "shiniest hoard!", $F7, $F0
+
+; $0A1A — requires $CA8D==1 refusal
+CustomText_1A:
+    db $EA, $9F, $A3
+    db "Face me alone!", $EF, $EE
+    db "Bring exactly", $EF, $EE
+    db "one monster.", $F7, $F0
+
+; $0A1B — quest YES/NO offer
+CustomText_1B:
+    db $EA, $9F, $A3
+    db "You smell of", $EF, $EE
+    db "medals...", $EF, $EE
+    db "Challenge me?", $EF, $EE, $E7, $F0
+
+; $0A1C
+CustomText_1C:
+    db $EA, $9F, $A3
+    db "Then leave my", $EF, $EE
+    db "shinies alone!", $F7, $F0
+
+; $0A1D
+CustomText_1D:
+    db $EA, $9F, $A3
+    db "Bwoing!", $EF, $EE
+    db "For the hoard!", $F7, $F0
+
+; $0A1E — win tail; GoldSlime joins engine-side (phase $0D)
+CustomText_1E:
+    db $EA, $9F, $A3
+    db "Bwoing...", $EF, $EE
+    db "You win. I shall", $EF, $EE
+    db "guard YOU now!", $F7, $F0
+
+; $0A1F
+CustomText_1F:
+    db $EA, $9F, $A3
+    db "The chamber is", $EF, $EE
+    db "quiet. The", $EF, $EE
+    db "shinies sleep.", $F7, $F0
+
 ; =============================================================================
 ; ROOM DATA (generated)
 ; =============================================================================
@@ -610,6 +843,7 @@ CustomSourceMapTable:
     db $04   ; $6E — reserved_6e
     db $04   ; $6F — reserved_6f
     db $04   ; $70 — ember_keystone
+    db $04   ; $71 — medal_vault
 
 CustomRoomPtrTable:
     dw CustomRoom0_SubTable   ; $6B
@@ -618,6 +852,7 @@ CustomRoomPtrTable:
     dw CustomRoomDummy_SubTable   ; $6E
     dw CustomRoomDummy_SubTable   ; $6F
     dw CustomRoom5_SubTable   ; $70
+    dw CustomRoom6_SubTable   ; $71
 
 ; --- $6B (gate_island) room data ---
 CustomRoom0_SubTable:
@@ -742,5 +977,57 @@ CustomRoom5_S0_NPCs:
 
 CustomRoom5_S0_Exits:
     db $03, $01, $6B, $00, $00, $07, $06  ; edge exit (3,1) -> Room $6B spawn (7,6) — close the loop
+    db $FF
+
+; --- $71 (medal_vault) room data ---
+CustomRoom6_SubTable:
+    dw CustomRoom6_Screen0
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom6_Screen0:
+    dw wCustomStep_Room71_S0    ; step counter
+    db 0, $64   ; step_id, tileset_bank
+    dw CustomRoom6_S0_NPCs
+    dw CustomRoom6_S0_Exits
+
+CustomRoom6_S0_NPCs:
+    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
+    db $00, $23, $04, $03, $01  ; NPC (4,3) script quest:medal_vault
+    db $FF
+
+CustomRoom6_S0_Exits:
+    db $07, $06, $16, $00, $00, $01, $02  ; back to MedalMan (1,2) vault-door tile; spawn-on-exit-tile is vanilla-precedented (SecretPassage->MedalMan lands on the north exit)
+    db $FF
+
+; =============================================================================
+; VANILLA-ROOM EXIT EXTENSIONS (S70, generated)
+; Read by bank $60 entry 7 (VanillaExitResolve, template head) on
+; EVERY non-gate room step via bank $0B RoomEntry6_ExitChecker.
+; Variant selected by [step_counter], clamped to n_steps-1.
+; Lists are copied to wCustomExitBuffer (<= 17 rows + terminator).
+; =============================================================================
+VanillaExitExtTable:
+    db $16   ; mapID — MedalMan + Medal Vault door at (1,2); per-step lists mirror disassembly Exit_MedalManRoom_s0/_v1/_v2 (steps 0/1-2-4-5/3) + the door row
+    dw $D95E   ; vanilla step counter (WRAM)
+    db 6   ; n_steps (variant count)
+    dw VExt16_V0, VExt16_V1, VExt16_V1, VExt16_V2, VExt16_V1, VExt16_V1   ; per-step variant lists (deduped)
+    db $FF   ; table terminator
+
+VExt16_V0:
+    db $03, $07, $01, $00, $81, $03, $02  ; vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)
+    db $01, $02, $71, $00, $00, $07, $06  ; S70 Medal Vault door -> room $71 spawn (7,6)
+    db $FF
+
+VExt16_V1:
+    db $03, $07, $01, $00, $81, $03, $02  ; vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)
+    db $03, $01, $0A, $00, $01, $03, $07  ; vanilla north exit -> SecretPassage
+    db $01, $06, $11, $01, $00, $00, $00  ; vanilla Medal Gate portal (gate_flag=1, vanilla dest)
+    db $01, $02, $71, $00, $00, $07, $06  ; S70 Medal Vault door -> room $71 spawn (7,6)
+    db $FF
+
+VExt16_V2:
+    db $03, $07, $01, $00, $81, $03, $02  ; vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)
+    db $03, $01, $0A, $00, $01, $03, $07  ; vanilla north exit -> SecretPassage
+    db $01, $02, $71, $00, $00, $07, $06  ; S70 Medal Vault door -> room $71 spawn (7,6)
     db $FF
 

@@ -1089,15 +1089,17 @@ labelb_451d:
     or a
     jp nz, Jump_00b_46a7            ; gate rooms use separate exit logic
 
-    ; Shared pointer table read → HL = step_entry
-    ; Check for custom overflow room
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    jr c, .normalExit
-    ld hl, $6002                ; rst $10: bank $60, entry 2 (CustomExitCheck)
+    ; Unified exit resolve (S70): bank $60 entry 7 (VanillaExitResolve)
+    ; handles BOTH custom rooms (mapID >= $6B — identical to the old
+    ; entry-2 divert) AND compiler-authored vanilla-room exit EXTENSIONS
+    ; (VanillaExitExtTable, per-step variants). Returns HL = exit list
+    ; (WRAM buffer) or HL = 0 = no override -> vanilla SharedPtrChase.
+    ; rst $10 clobbers A (bank byte) but preserves HL — test HL, not A.
+    ld hl, $6007
     rst $10
-    jr .exitDataReady
-.normalExit:
+    ld a, h
+    or l
+    jr nz, .exitDataReady
     call SharedPtrChase
 
     ; Skip step_id(1) + tileset(1) + interact_ptr(2) = 4 bytes → exit_ptr
@@ -1156,8 +1158,18 @@ jr_00b_4578:
     or a
     jr z, jr_00b_459e               ; Y=0 means invalid
 
-    cp $07
-    jr z, jr_00b_459e               ; Y=7 means invalid
+    ; S70v3: the y=7 skip is now DATA-DRIVEN via wCustomY7Cmp, set fresh by
+    ; bank $60 entry 7 immediately before every scan (Entry 6 always calls
+    ; $6007 first — S70 unified divert): vanilla rooms write $07 (skip, the
+    ; original semantics — y=7 rows stay Entry-9/push-only there), custom
+    ; rooms write $FE (matches no real trigger_y -> y=7 rows become WALK-ON
+    ; exits: arrival at the tile fires Entry 6's scan, no push needed).
+    ; BC is dead inside this loop (reloaded fresh by the match handler and
+    ; by .exitDataReady), so C safely holds trigger_y across the compare.
+    ld c, a
+    ld a, [wCustomY7Cmp]
+    cp c
+    jr z, jr_00b_459e               ; y == per-room skip value -> skip row
 
     ; Compare trigger Y: player_row - screen_Y_offset == exit.trigger_Y?
     inc hl
@@ -1287,17 +1299,38 @@ jr_00b_4601:
     or a
     jr nz, jr_00b_466b
 
+    ; S70 CUSTOM-SOURCE FAST TRANSITION (in-place 24-byte rewrite; every label
+    ; below this window keeps its pre-S70 address — a naive insertion shifted
+    ; all downstream bank $0B labels and froze custom-room movement because
+    ; the region is reached by address-sensitive paths).
+    ; Custom rooms ($6B+) classify gate-like in CheckGateWorldMapType (mapID
+    ; >= MAP_OLDWELL $30); that classification is LOAD-BEARING for the step
+    ; machinery (Entries 6/9 run on the gate side — flipping the classifier
+    ; freezes movement outright, PyBoy v4 experiment), but in THIS tail it
+    ; routed every exit FROM a custom room through the ~385-frame "return
+    ; from gateworld" ceremony (jr_00b_462c fallthrough) instead of the
+    ; ~20-frame town transition at jr_00b_465b. Measured identical back to
+    ; the editor-keystone build: a day-one defect, not a regression.
+    ; Logic (original semantics preserved for all vanilla sources):
+    ;   wInGateworld != 0            -> classifier path (real gates)
+    ;   source >= $6B                -> town fast path            (NEW)
+    ;   source == $10 && [$95]==$68  -> jr_00b_462c special case
+    ;   else                         -> classifier path
     ld a, [wInGateworld]
     or a
     jr nz, jr_00b_4627
 
     ld a, [wMapID]
-    cp $10
+    cp CUSTOM_ROOM_START        ; $6B
+    jr nc, jr_00b_465b          ; custom source → town-style fast transition
+
+    cp $10                      ; A still holds wMapID
     jr nz, jr_00b_4627
 
     ldh a, [$95]
     cp $68
     jr z, jr_00b_462c
+    nop                         ; window pad: keep jr_00b_462c fixed
 
 jr_00b_4627:
     call CheckGateWorldMapType

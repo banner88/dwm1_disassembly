@@ -685,10 +685,20 @@ the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
       is engine-side; matches-2/3 re-entry loop not single-stepped (bank $50
       regen HW-observed). Byte-neutral session (clean build `1ca6579…`).
 
-- [~] **E2 — Story progression as an AUTHORABLE model. RE half + AUTHORING
-      SPEC DONE S68** (owning section: SIDEQUEST_MAP "Story progression
-      ENGINE + AUTHORING SPEC — DECODED S68"); **schema wiring open** (same
-      split as E1). S68 decoded, all ROM-byte-verified: wGameMode $C88A +
+- [x] **E2 — Story progression as an AUTHORABLE model. COMPLETE S70,
+      user-confirmed** (RE half + spec S68; schema wiring + demo quest +
+      bug-fix pass S70, pin `a5a5e0d5…`). As built: `progression.quests[]`
+      + `progression.enemies[]` lower to generated quest:/entry: scripts
+      (condition ladder, YES/NO offer, trigger_battle3, init_dialog'd
+      on_win tail, entry cutscene with seen/done gating) + bank $14 quest
+      EID rows (519+, 12-row tail capacity); `custom.vanilla_exit_extensions`
+      adds doors to vanilla rooms via bank $60 entry 7 (VanillaExitExtTable,
+      step-counter variants). Demo: Medal Chamber ($71, GoldSlime L30 boss,
+      joins on win, Castle re-arm on loss) — full round trip PyBoy-proven +
+      user-played. Flag capacity: safe pool ($0158+) auto-allocation; the
+      32-flag audit remains an E3-adjacent follow-up. Cosmetic residual:
+      NPC sprite-id catalog (guardian renders draconic; species+$10
+      disproven). S68 RE facts below remain the reference. S68 decoded, all ROM-byte-verified: wGameMode $C88A +
       the two ROM0 mode tables ($030F/$050F); bank $50 = BATTLE mode
       manager; $D9EC = 18-phase battle machine (BattlePhaseTable $5F3A,
       phase labels in both trees); $D9F4 = nested battle sub-machine (the

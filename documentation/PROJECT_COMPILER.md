@@ -550,3 +550,57 @@ editor2/
   tests/test_compiler.py            # 18 tests; --rom adds the 2 ROM builds
 tools/build_project.py              # CLI
 ```
+
+## §progression (S70) — quests + quest enemies
+
+`progression.quests[]` / `progression.enemies[]` (unknown keys hard-error).
+Enemies: dense EIDs from **519** (`auto` allocates), ≤**12** rows (308-byte
+`@BUILD_PROJECT quest_enemy_stats` region in patches/bank_014.asm, 25 B/row,
+zero-padded — the no-quest build regenerates the vanilla `ds 308` tail
+byte-identically; suite-enforced). Fields = the 25-byte enemy-stats layout
+(MONSTER_DATA); `join 0` = always joins; hp>1023 with join warns.
+Quests lower to two generated scripts referenced from `rooms[].scripts`:
+`quest:<id>` (done-check → requires check_ram ladder → offer choice text
+($C83C: 1 = NO) → prebattle → trigger_battle3 EID → **init_dialog-prefixed**
+win tail: set done flag + on_win actions) and `entry:<id>` (done → entry_done
+ops; seen-flag-gated entry_cutscene; sets seen). `flags.done`/`flags.seen`
+auto-register from the safe pool ($0158+). **Every text action lowered into
+a non-interaction context gets its own preceding `init_dialog`**
+(`_lower_actions(dialog_prefix=True)`) — field mode never services the text
+queue (KEY_LESSONS S70). emit_script hard-errors unless the item stream ends
+on `end`/goto/warp_castle (the S70 freeze class).
+
+## §vanilla_exit_extensions (S70)
+
+Adds exits to VANILLA rooms (mapID < $6B) without touching bank $0B's packed
+lists: compiler emits `VanillaExitExtTable` (row: db mapID / dw step_counter /
+db n_steps / dw variant ptrs, $FF-terminated; variants deduped) consumed by
+template **entry 7 `VanillaExitResolve`** — Entry 6's unified divert calls
+$6007 every step in every non-gate room; vanilla rooms scan the ext table
+(variant = min([counter], n−1), copy via CopyExitListToBuffer, HL=0 → the
+original SharedPtrChase path), custom rooms `jp CustomExitCheck`. Validator:
+step_counter required, 1-16 steps, ≤17 rows/step, x=$FF error, y0/7 rows
+inert-warn (vanilla rooms keep the y=7 Entry-6 skip), custom-dest rows need
+gate_flag 0, screen_byte required. `build.compat` retired: a narrow master
+table is now an **ERROR** with uncovered rooms (S70 entry-path routes first
+entry through CustomScriptRead); full-coverage compat = byte-identical +
+legacy-only warning.
+
+## §5 template pin (S70v3)
+
+bank_060_head.asm re-pinned twice this session: entry-7 dw +
+VanillaExitResolve + factored CopyExitListToBuffer (348 B), then the
+**wCustomY7Cmp arming** (+5 B in each of VanillaExitResolve /
+CustomExitCheck → head **358 B**, `TEMPLATE_SIZE[0x60]=358`, sha
+`ce595c61…` in PINNED_SHA256 — format: `<sha256>  <filename>`). The arming
+makes Entry 6's y=7 skip data-driven: $07 vanilla (original semantics), $FE
+custom (walk-on boundary exits). bank_071 unchanged (142 B).
+
+## New verified opcodes (S70, handler-byte-verified)
+
+`init_dialog` $07/0 (the "1 param" decompiler row is a set_bgm-class table
+defect), `write_ram2` $13/2 (addr, value16 LE), plus the S70 movement set:
+delay $09/1, wait_movement $19/0, npc_walk_x/y $1A/$1B/2, trigger_anim
+$1C/1, lock/unlock $1D/$1E/0, begin_walk $22/0, trigger_battle3 $5A/1.
+Field-mode script cadence is 1/8 frames; dialog mode per-frame — author
+delays accordingly.

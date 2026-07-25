@@ -2723,6 +2723,7 @@ CustomRoomPalPtr:
     dw $0000    ; $6E — borrow vanilla palette
     dw $0000    ; $6F — borrow vanilla palette
     dw CustomPaletteColors_70    ; $70 — pal_70
+    dw CustomRoomPalette_71    ; $71 — pal_71
 
 CustomRoomAttr:
     db $64, $01  ; $6B -> bank $64, attr base entry 1
@@ -2731,6 +2732,7 @@ CustomRoomAttr:
     db $00, $00  ; $6E — vanilla attr fallback
     db $00, $00  ; $6F — vanilla attr fallback
     db $64, $01  ; $70 -> bank $64, attr base entry 1
+    db $64, $01  ; $71 -> bank $64, attr base entry 1
 
 ; $6D = VERDANT green (gate-rotation proof, reached via Gate of Villager).
 ; Luminance-themed recolour of the gate palette: structure preserved, hue fixed.
@@ -2754,4 +2756,16 @@ CustomPaletteColors_70:
     db $72, $09, $7F, $12, $7E, $12, $00, $00  ; sub-pal 5
     db $B5, $0D, $7F, $12, $7F, $12, $00, $00  ; sub-pal 6
     db $19, $0E, $7F, $12, $7F, $12, $00, $00  ; sub-pal 7
+
+; Medal Vault (room $71) — gold-tinted derivation of pal_6b
+; (same layout bank $64 entry 0 / attrs base_entry 1; S70)
+CustomRoomPalette_71:
+    db $90, $09, $FF, $6B, $FF, $16, $00, $00
+    db $D3, $0D, $FF, $6B, $3F, $17, $00, $00
+    db $91, $09, $FF, $6B, $DD, $16, $00, $00
+    db $4E, $09, $FF, $6B, $FF, $16, $00, $00
+    db $F5, $0D, $FF, $6B, $FF, $27, $00, $00
+    db $2D, $05, $FF, $6B, $DE, $16, $00, $00
+    db $4E, $09, $FF, $6B, $1F, $17, $00, $00
+    db $37, $0E, $FF, $6B, $BF, $1B, $00, $00
 ; @BUILD_PROJECT END room_render_tables

@@ -2409,8 +2409,17 @@ CheckBattleModeFlag:
 
     ld a, $00
     ld [wScriptNPCId], a            ; script_id = $00 (room entry script)
-    call MapIDClampForPalette       ; ROM0: A=mapID or $16 for custom rooms
-    ld [wScriptMapType], a            ; map type = current map (or MedalMan for custom)
+    ; S70: REVERTED to the vanilla instruction (ld a,[wMapID] — 3 bytes, same
+    ; size as the old `call MapIDClampForPalette`). The clamp predated the S42
+    ; GateAwareDispatch routing and sent custom rooms to Castle's script 0 at
+    ; initial entry (PROJECT_COMPILER.md §7 "initial room entry"). With raw
+    ; wMapID, custom rooms ($6B+) take the SAME proven dispatch chain the
+    ; scroll/reload path uses (MapTypeDispatch >= $40 -> DispatchBank0F_Ext ->
+    ; GateAwareDispatch -> CustomScriptRead), so entry scripts (index 0) now
+    ; fire at initial entry too — the entry-cutscene enabler. Vanilla rooms:
+    ; byte-different, behavior-identical (clamp was identity for < $6B).
+    ld a, [wMapID]
+    ld [wScriptMapType], a            ; map type = current map (raw, incl. custom)
     ld hl, $0405             ; Bank $04 entry 5: ScriptInit
     rst $10
     ret

@@ -32,6 +32,15 @@ FLAG_SAFE_RANGES = [(0x0158, 0x0167), (0x01E0, 0x01EF)]
 STEP_COUNTER_BASE = 0xCD80
 WRAM_REGION_MAX = 0x280             # $CD80+$280 = $D000 = the wram0 section end
 WRAM_REGION_SIZE_DEFAULT = 0x280    # 640 counters — campaign-scale default
+# S70 (ROADMAP E2 wiring): progression.enemies rows append past the vanilla
+# 487-row enemy-stats table. EID 518 = Gorbunok (build_new_species.py); the
+# quest region (@BUILD_PROJECT quest_enemy_stats, patches/bank_014.asm) owns
+# $7ECC+ = EIDs 519+ (row addr = $4C1D + EID*25 — MONSTER_DATA "Enemy Stats
+# Table"; LoadEnemyStats has no bounds check, 16-bit EID). ds-308 tail = 12
+# rows capacity.
+QUEST_EID_BASE = 519
+QUEST_EID_CAP = 12
+QUEST_REGION_BYTES = 308
 
 
 class ProjectError(ValueError):
@@ -46,6 +55,18 @@ class Project:
         self._check_layers()
         self.custom = data.get('custom', {})
         self.build = data.get('build', {})
+        # S70 (E2 wiring): progression is lowered into ordinary custom.scripts
+        # BEFORE rooms/dialogue/scripts resolution, so every downstream
+        # validator and emitter sees plain compiler content. Flags allocate
+        # first (lowered ops embed resolved flag indices).
+        self.progression = data.get('progression') or {}
+        self._check_progression_shape()
+        self._flags = {}
+        self._register_progression_flags()
+        self._allocate_flags()
+        self.quest_enemies = self._resolve_quest_enemies()
+        self._lower_quests()
+        self.vanilla_exit_exts = self.custom.get('vanilla_exit_extensions', [])
         self.rooms = self._dense_rooms()
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}
@@ -53,8 +74,6 @@ class Project:
         self._text_by_id = {}
         self._assign_text_ids()
         self._scripts = {s['id']: s for s in self.custom.get('scripts', [])}
-        self._flags = {}
-        self._allocate_flags()
         self.wram_region_size = (self.custom.get('wram', {})
                                  .get('region_size', WRAM_REGION_SIZE_DEFAULT))
         if self.wram_region_size > WRAM_REGION_MAX:
@@ -104,6 +123,179 @@ class Project:
                 "custom.skills is NOT_IMPLEMENTED in v1 (data-half emitter "
                 "is a scoped follow-up; BATTLE_SKILL_SYSTEM §13) — refusing "
                 "to silently ignore it")
+
+    # ------------------------------------------------------------ progression
+    # S70 — ROADMAP E2 wiring. Owning spec: SIDEQUEST_MAP "Story progression
+    # ENGINE + AUTHORING SPEC — DECODED S68". A quest LOWERS to two ordinary
+    # generated scripts (registered under ids "quest:<id>" / "entry:<id>",
+    # referenced from rooms[].scripts like any hand script):
+    #   quest:<id>  — done-gate -> requires ladder -> YES/NO offer ->
+    #                 trigger_battle3 -> on-win tail (the vanilla boss shape:
+    #                 win resumes the script after the battle opcode; loss/
+    #                 flee clear $D8D7 -> script vanishes -> quest re-arms).
+    #   entry:<id>  — room entry (index 0): done-branch (entry_done actions,
+    #                 e.g. hide the beaten guardian) -> once-gated cutscene.
+    def _check_progression_shape(self):
+        bad = [k for k in self.progression
+               if k not in ('quests', 'enemies') and not k.startswith('_')]
+        if bad:
+            raise ProjectError(
+                f"progression: unknown key(s) {bad} — v1 implements "
+                "quests + enemies only (PROJECT_COMPILER.md §progression); "
+                "refusing to silently ignore authored data")
+
+    def _register_progression_flags(self):
+        """Quest flag NAMES become ordinary custom.flags entries (auto index
+        from the EVENT_FLAGS safe pool) unless already declared."""
+        flags = self.custom.setdefault('flags', [])
+        have = {f['name'] for f in flags}
+        for q in self.progression.get('quests', []):
+            for role in ('done', 'cutscene_seen'):
+                name = (q.get('flags') or {}).get(role)
+                if name and name not in have:
+                    flags.append({'name': name,
+                                  'comment': f"progression.quests[{q.get('id')}] {role}"})
+                    have.add(name)
+
+    def _flag_index(self, name, ctx):
+        if name not in self._flags:
+            raise ProjectError(f"{ctx}: flag {name!r} is not defined")
+        return self._flags[name]
+
+    def _resolve_quest_enemies(self):
+        out, nxt = {}, QUEST_EID_BASE
+        for e in self.progression.get('enemies', []):
+            eid = e.get('eid', 'auto')
+            eid = nxt if str(eid) == 'auto' else F.val(eid)
+            e['_eid'] = eid
+            nxt = max(nxt, eid + 1)
+            if e['id'] in out:
+                raise ProjectError(f"progression.enemies: duplicate id {e['id']!r}")
+            out[e['id']] = e
+        return out
+
+    def quest_enemy_rows(self):
+        """Enemies in EID order for the bank $14 region emitter."""
+        return sorted(self.quest_enemies.values(), key=lambda e: e['_eid'])
+
+    def _lower_actions(self, acts, ctx, dialog_prefix=False):
+        """dialog_prefix=True: the ops run OUTSIDE an NPC interaction (entry
+        script / post-battle tail) where the text queue is only serviced in
+        dialog mode — every text gets its own preceding init_dialog, exactly
+        like the vanilla Healer post-battle words FF07/0059 and FF07/0146
+        (S70 finding: dismissal tears script-initiated dialog mode down, so
+        each say re-enters it)."""
+        ops = []
+        for a in acts:
+            if isinstance(a, (list, str)):
+                ops.append(a)                     # raw script item pass-through
+            elif 'op' in a:
+                ops.append(['op'] + list(a['op']))
+            elif 'text' in a:
+                if dialog_prefix:
+                    ops.append(['op', 'init_dialog'])
+                ops.append(['text', a['text']])
+            elif 'set_flag' in a:
+                ops.append(['op', 'set_flag', self._flag_index(a['set_flag'], ctx)])
+            elif 'clear_flag' in a:
+                ops.append(['op', 'clear_flag', self._flag_index(a['clear_flag'], ctx)])
+            elif 'npc_hide' in a:
+                ops.append(['op', 'npc_hide', int(a['npc_hide'])])
+            elif 'npc_show' in a:
+                ops.append(['op', 'npc_show', int(a['npc_show'])])
+            elif 'give_item' in a:
+                ops.append(['op', 'give_item', a['give_item']])
+            elif 'write_ram' in a:
+                addr, val = a['write_ram']
+                ops.append(['op', 'write_ram', addr, val])
+            else:
+                raise ProjectError(f"{ctx}: unknown action {a!r}")
+        return ops
+
+    def quest_battle_eid(self, q):
+        b = q.get('battle') or {}
+        if 'eid' in b:
+            return F.val(b['eid'])
+        en = b.get('enemy')
+        if en not in self.quest_enemies:
+            raise ProjectError(
+                f"progression.quests[{q.get('id')}]: battle.enemy {en!r} not "
+                "in progression.enemies (and no explicit battle.eid)")
+        return self.quest_enemies[en]['_eid']
+
+    def _lower_quests(self):
+        scripts = self.custom.setdefault('scripts', [])
+        have = {s['id'] for s in scripts}
+        for q in self.progression.get('quests', []):
+            qid = q.get('id') or '?'
+            ctx = f"progression.quests[{qid}]"
+            done = self._flag_index((q.get('flags') or {}).get('done'), ctx) \
+                if (q.get('flags') or {}).get('done') else None
+            if done is None:
+                raise ProjectError(f"{ctx}: flags.done is required (the quest "
+                                   "completion gate must persist — safe pool)")
+            # ---- quest:<id> — the NPC script (vanilla boss shape) ----
+            ops = [['op', 'if_flag_set', done, '@qdone']]
+            for i, req in enumerate(q.get('requires', [])):
+                ops.append(['op', 'check_and_branch',
+                            req['ram'], req['equals'], f'@req{i}'])
+                ops.append(['text', req['else_text']])
+                ops.append(['end'])
+                ops.append(f'label:req{i}')
+            offer = q.get('offer')
+            if offer:
+                ops.append(['text', offer['text']])
+                ops.append(['op', 'check_and_branch', '0xC83C', 1, '@declined'])
+                if offer.get('prebattle_text'):
+                    ops.append(['text', offer['prebattle_text']])
+            ops.append(['op', 'trigger_battle3', self.quest_battle_eid(q)])
+            # WIN resumes here (S68 engine guarantee); loss/flee never reach
+            # it. The resumed context is FIELD mode — dialog_prefix gives
+            # every win text its own init_dialog (vanilla Healer protocol).
+            ops += self._lower_actions(
+                [{'set_flag': q['flags']['done']}] + list(q.get('on_win', [])),
+                ctx, dialog_prefix=True)
+            ops.append(['end'])
+            if offer:
+                ops.append('label:declined')
+                if offer.get('decline_text'):
+                    ops.append(['text', offer['decline_text']])
+                ops.append(['end'])
+            ops.append('label:qdone')
+            if q.get('already_done_text'):
+                ops.append(['text', q['already_done_text']])
+            ops.append(['end'])
+            sid = f'quest:{qid}'
+            if sid in have:
+                raise ProjectError(f"{ctx}: script id {sid!r} already exists")
+            scripts.append({'id': sid, 'ops': ops,
+                            '_generated': ctx})
+            # ---- entry:<id> — room-entry script (index 0) ----
+            cut = q.get('entry_cutscene')
+            edone = q.get('entry_done')
+            if cut or edone:
+                e = []
+                if edone:
+                    e.append(['op', 'if_flag_set', done, '@edone'])
+                if cut:
+                    seen_name = (q.get('flags') or {}).get('cutscene_seen')
+                    if not seen_name:
+                        raise ProjectError(f"{ctx}: entry_cutscene requires "
+                                           "flags.cutscene_seen (once-gate)")
+                    seen = self._flag_index(seen_name, ctx)
+                    e.append(['op', 'if_flag_set', seen, '@eseen'])
+                    e += self._lower_actions(list(cut.get('ops', [])), ctx, dialog_prefix=True)
+                    e.append(['op', 'set_flag', seen])
+                e.append(['end'])
+                if cut:
+                    e.append('label:eseen')
+                    e.append(['end'])
+                if edone:
+                    e.append('label:edone')
+                    e += self._lower_actions(list(edone), ctx, dialog_prefix=True)
+                    e.append(['end'])
+                scripts.append({'id': f'entry:{qid}', 'ops': e,
+                                '_generated': ctx})
 
     # ----------------------------------------------------------------- rooms
     def _dense_rooms(self):

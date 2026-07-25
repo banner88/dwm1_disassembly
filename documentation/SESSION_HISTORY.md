@@ -1,5 +1,55 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Session 68 (2026-07-19 — **E2 RE half + AUTHORING SPEC: the battle↔story
+> engine decoded (byte-neutral). Owning section: SIDEQUEST_MAP "Story
+> progression ENGINE + AUTHORING SPEC — DECODED S68".**
+> Headline: **"win → subsequent script commands run" is an engine
+> guarantee** — wGameMode $C88A (ROM0 tables $00:$030F init / $00:$050F
+> tick; mode 1 = field bank $01, mode 2 = battle bank $50); battle request
+> = wGameState.6 latch → bank $13 $C905 transition ($13:$73F5 = the ROM's
+> only res 6) → mode 2; script VM state $D8D5-7 survives in WRAM;
+> BattleExitHandler ($50:$640A) restores mode 1 + $C8EA.7 → bank $01
+> ClearAnimationState SKIPS its reset → script resumes after the battle
+> opcode (= the on-win rewards). LOSS ($DB55==1): $D92B=8, engine warp to
+> Castle via the opcode-$0F cells, gold $CA4B-4D halved, items dropped
+> unless info byte +$0B bit 2 (keep-on-defeat = TinyMedal/BeastTail/
+> WarpStaff/ShinyHarp/BookMark — user FAQ list VERIFIED +BookMark), $D8D7
+> cleared. **$D9EC = 18-phase battle machine** (BattlePhaseTable $50:$5F3A;
+> not 15; intro 0-3 / main 4-8 / sequencer 9 on $D9ED / post $0A-$0D /
+> exit $0E-$11), outcome set by bank $52 KO scans (~$76E0 loss / ~$7727
+> win; XOR'd for link peer; $DB73=$FF loss freeze). **$D9F4 = nested
+> battle sub-machine** (bank $50 header's "main game state" framing + the
+> "$C86C = gate world" claim were WRONG — $C86C is the LINK flag, bank $03
+> serial setters; state variants are LOCAL/LINK; wInGateworld=$C969).
+> **Evaluation opcodes resolved**: $CA8D = party count (Well/Bazaar-Edge
+> "==1" = can't-forfeit-last-monster refusal, NOT skill check); $FF92 =
+> hPlayerX low (Bazaar 215/216/217 = position gate); $D8E1 = result cell
+> of the 10-opcode evaluator family $23/$30/$32/$34/$38/$51(library-seen
+> tiers)/$55(item count)/$56(gold÷10)/$59/$5F (census in
+> BANK04_SCRIPT_ENGINE); opcode $45 = restore party from $CAB9 7-byte
+> snapshot. Deliverables: bank_050 header rewrite + BattlePhaseTable/
+> BattlePhase09SubTable re-sections + 18 phase labels in BOTH trees
+> (sym-verified addresses; renames Jump_050_640a→BattleExitHandler,
+> Jump_050_6aac→BattlePhase09_TurnSequencer); wram.asm wBattlePostFlag
+> comment (0=win/1=loss/2=undecided); ARCHITECTURE mode table +
+> bank/$D9F4 rows; known_RAM_map (10 rows); MONSTER_DATA fixes;
+> SIDEQUEST_MAP spec + 3 corrections; DOC_AUDIT ×3; KEY_LESSONS S68;
+> ROADMAP E2 → [~] (RE+spec done, schema wiring open). **Campaign
+> recommendation recorded (user Q): new-world spine in custom rooms via
+> generated scripts; vanilla intact as postgame; arena gating = re-authored
+> Arena Lobby scr0; capacity = 32 flags → E3 or audited vanilla-flag
+> reuse.** **HW-pinned same session (user SameBoy): FLEE → $DB55=2
+> neutral (resolver $50:$5808 jumps phase $0A + masks exp targets
+> $DD1F-22; no penalty; $DB73-armed edge → 1); CAUGHT monster → plain win
+> ($52:$7729 = 0 via the phase-7 chain, backtrace-verified); $C899/$C89A
+> proven the LIVE RNG pair (adjacent examines differ) → LoadBtl_5d29's
+> &$1F==$1F = 1/32-per-side random battle-intro event ($DB55 doubles as
+> its marker until the KO scans).** Residuals: $CAB9 snapshot writer;
+> intro-event message text (3-14). Byte-neutral: clean build `1ca6579…`
+> unchanged; verifier PASS 5/5.
+
+
+
 > **Purpose.** This file is a verbatim archive of superseded PROJECT_STATE.md
 > session blocks and of long narratives compressed out of ROADMAP.md. It exists
 > so that consolidation never loses information — but it is **not session

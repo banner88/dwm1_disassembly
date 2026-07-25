@@ -2434,3 +2434,57 @@ flag the trampoline leaks to its callers.
 **Root cause**: CF3 v2 made the roster EAGER to kill the v1 duplication bug. Every test targeted the property being fixed (no duplication, reload consistency) — nobody re-derived the full player-visible persistence contract, where vanilla guarantees "reset without saving rewinds everything". The consequence was even documented ("roster changes are never undone by reloading") and read as a feature.
 **Fix**: persistence v3 — the save-time roster snapshot in SRAM bank 1; the eager image remains for crash-consistency and live addressing but reloads restore the snapshot.
 **Rule**: when changing WHEN state persists, enumerate the before/after PLAYER-visible persistence matrix (each state class × {save, reset-no-save, crash}) and test the rows that changed — "documented consequence" is not "accepted consequence" until the user has seen it in play. And when a bug report contradicts an architecture's known consequences, re-derive from the architecture before theorizing external causes; my Coliseum theory was refuted by game knowledge the user had and I did not.
+
+## S70 — E2 quest wiring + the emulator revolution
+
+- **CLAUDE CAN RUN THE ROM (PyBoy).** The defining lesson of the session:
+  every S70 bug was root-caused by headless emulation with RAM access,
+  hooks, and screenshots, and two of Claude's own bugs were caught before
+  delivery. Runtime claims must be measured, gameplay changes
+  emulator-verified before shipping. See PYBOY_DEBUGGING.md +
+  tools/pyboy_harness.py. Sixty-nine sessions of ship-and-wait were
+  unnecessary.
+- **Script text is serviced ONLY in dialog mode.** The text queue
+  ($D8D7.1 → $D8D9/DA) is drained by $C915-machine slot $0B ($06:$69D0);
+  field mode never runs it. NPC interactions enter dialog mode for you;
+  entry scripts and post-battle tails do NOT — a bare `text` there
+  deadlocks. The vanilla protocol (Healer post-battle FF07/0059…FF07/0146;
+  Warubou bedroom): **`init_dialog` ($07, 0 params — the "1 param" table
+  row is a set_bgm-class decompiler defect) before EVERY say outside an
+  interaction**, because dismissing a script-initiated text tears dialog
+  mode down again. The compiler now auto-injects it (project.py
+  `_lower_actions(dialog_prefix=True)`).
+- **Field-mode scripts tick 1/8 frames; dialog mode per frame.** Author
+  delays for the mode they run in (delay 30 = 4 s field, 0.5 s dialog).
+- **A script stream MUST terminate** (`end`/goto/warp_castle) or execution
+  falls into the next script's words with input suppressed forever — the
+  exact "can't move in the room" freeze, caused by an edit dropping
+  `['end']`. emit_script now hard-errors on non-terminated scripts.
+- **The encounter counter drains 100/step** (measured identically S64→S70).
+  The old "seed 100 ≈ 5 steps" note was fiction: 100 = a battle EVERY step.
+  gate_island now seeds 1200 (~12 steps) via one `write_ram2` ($13,
+  vanilla-proven 16-bit write: addr, value).
+- **Custom rooms classifying gate-like (≥ MAP_OLDWELL $30 in
+  CheckGateWorldMapType) is LOAD-BEARING**: Entries 6/9 and all custom-room
+  movement run on the gate side — flipping the classifier to town-like
+  freezes movement outright (emulator-proven). But that classification also
+  routed every exit FROM a custom room through the ~385-frame
+  "return-from-gateworld" ceremony — a **day-one defect** (identical in
+  five pinned historical builds back to the editor keystone), fixed by an
+  in-place 19→24-byte rewrite of the bank $0B transition tail (custom
+  sources → town fast path; 18 frames, faster than a vanilla door).
+- **Custom-room boundary exits are now WALK-ON** (S70v3): Entry 6's y=7
+  skip is data-driven via wCustomY7Cmp ($DE74, carved from the S65 pad),
+  armed fresh by bank $60 entry 7 before every scan — $07 on the vanilla
+  branch (semantics unchanged), $FE for custom rooms (arrival fires the
+  exit; Entry 9 push remains as fallback). Entry 9's caller is
+  movement-attempt-gated — it NEVER runs while standing, which is why
+  "stand on the tile" could never work through Entry 9.
+- **The canonicalizer erases hand-made party state at transitions** — poke
+  party RAM only AFTER the last warp, or battles abort in ~200 frames and
+  wedge $C88A=2, perfectly imitating an engine bug (this red herring cost
+  a third of the debugging session).
+- **Event flags pack MSB-first**: bit = 7-(idx&7) within $D99B+(idx>>3).
+- **NPC sprite ids ≠ species+$10** (disproven: $23 renders a draconic
+  guard, not GoldSlime; $11 hard-crashes the room render to black). A
+  sprite-id catalog needs its own empirical session.

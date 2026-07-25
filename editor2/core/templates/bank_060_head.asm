@@ -9,6 +9,8 @@
 ;   Entry 4: CustomScriptRead   — triple-index script data reader
 ;   Entry 5: CustomTextDisplay  — custom text renderer via ROM0 CallTextEngine
 ;   Entry 6: GateAwareDispatch  — B-fix: bank-$0F script dispatch routed by wMapID
+;   Entry 7: VanillaExitResolve — S70: unified exit resolve (custom rooms AND
+;            compiler-authored vanilla-room exit EXTENSIONS; HL=list or 0)
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
@@ -21,6 +23,7 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw CustomScriptRead     ; Entry 4
     dw CustomTextDisplay    ; Entry 5
     dw GateAwareDispatch    ; Entry 6 — gate-entry regression fix (B-fix): route by wMapID
+    dw VanillaExitResolve   ; Entry 7 — S70 unified exit resolve (bank $0B Entry 6 calls this for EVERY non-gate room)
 
 ; =============================================================================
 ; CustomPtrChase
@@ -143,6 +146,12 @@ CustomReadInteract:
     ret
 
 CustomExitCheck:
+    ; S70v3: custom branch of the y-skip arming (see VanillaExitResolve):
+    ; $FE never equals a real trigger_y, so Entry 6's scan no longer skips
+    ; y=7 rows here — custom-room boundary exits fire on WALK-ON arrival.
+    ; Entry 9 (push) reads the same list and still works as a fallback.
+    ld a, $FE
+    ld [wCustomY7Cmp], a
     call CustomPtrChase
     inc hl
     inc hl
@@ -151,6 +160,10 @@ CustomExitCheck:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
+    ; fall through into the shared copy loop (S70 factoring; behavior
+    ; identical to the pre-S70 inline loop — 7-byte entries, first-byte-$FF
+    ; terminator only, KEY_LESSONS v3-v4)
+CopyExitListToBuffer:
     ld de, wCustomExitBuffer
 .copyExit:
     ld a, [hl]
@@ -173,6 +186,83 @@ CustomExitCheck:
 CustomTilesetInfo:
     ld a, [wCustomRoomFlag]
     ret
+
+; =============================================================================
+; Entry 7: VanillaExitResolve  (S70 — vanilla-room exit extensions)
+; =============================================================================
+; Called by bank $0B RoomEntry6_ExitChecker (patches/bank_00b.asm) for EVERY
+; non-gate room step in place of the old ">= $6B -> entry 2" divert.
+; Contract: returns HL = exit list to scan (a WRAM buffer copy), or HL = 0
+; meaning "no override — caller runs the vanilla SharedPtrChase path".
+; rst $10 preserves HL/DE across the far call but clobbers A (bank byte) —
+; the caller tests HL, never A (CROSSBANK_ROOMS "rst $10 Clobbers Register A").
+;
+;   wMapID >= $6B  -> jp CustomExitCheck (identical to the pre-S70 behavior)
+;   wMapID <  $6B  -> scan VanillaExitExtTable (compiler-generated):
+;       row: db mapID / dw step_counter_addr / db n_steps / dw list0..listN-1
+;       table terminated by db $FF. Match: variant = min([counter], n-1),
+;       copy that 7-byte exit list to wCustomExitBuffer, return HL=buffer.
+;       No match: HL=0.
+; Entry 9 (boundary y=0/7 exits) is NOT extended — it still reads the vanilla
+; bank $0B lists directly. Extension rows with trigger_y 0/7 are therefore
+; inert (Entry 6 skips them); the compiler validator enforces/warns this.
+VanillaExitResolve:
+    ; S70v3: arm the Entry 6 scan's y-skip compare for the VANILLA branch —
+    ; $07 = skip y=7 rows (original engine semantics; y=7 stays Entry-9/push
+    ; territory in vanilla rooms). CustomExitCheck writes $FE instead, which
+    ; matches no real trigger_y, making custom-room y=7 rows WALK-ON exits.
+    ; Entry 6 calls this entry before every scan, so the byte is always fresh.
+    ld a, $07
+    ld [wCustomY7Cmp], a
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .vanillaScan
+    jp CustomExitCheck          ; custom room — exact old entry-2 behavior
+.vanillaScan:
+    ld c, a                     ; C = mapID
+    ld hl, VanillaExitExtTable
+.scan:
+    ld a, [hl+]
+    cp $FF
+    jr z, .none                 ; table end — no extension for this room
+    cp c
+    jr z, .match
+    inc hl                      ; skip step_counter addr (2)
+    inc hl
+    ld a, [hl+]                 ; n_steps
+    add a                       ; 2 bytes per variant ptr
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    jr .scan
+.none:
+    ld hl, $0000
+    ret
+.match:
+    ld a, [hl+]
+    ld e, a
+    ld a, [hl+]
+    ld d, a                     ; DE = step counter address (WRAM)
+    ld a, [hl+]                 ; A = n_steps
+    ld b, a
+    ld a, [de]                  ; current step value
+    cp b
+    jr c, .stepOk
+    ld a, b                     ; clamp out-of-range step to the last variant
+    dec a
+.stepOk:
+    add a                       ; x2 (dw index)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                     ; HL = the variant's exit list
+    jp CopyExitListToBuffer     ; -> HL = wCustomExitBuffer
 
 ; =============================================================================
 ; Entry 6: GateAwareDispatch  — gate-entry regression fix (B-fix)
