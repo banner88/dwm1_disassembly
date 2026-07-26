@@ -74,7 +74,10 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     dw CF3CopyFromSRAM              ; entry 6  — CopyFromSRAM body, farm-window read-skip (S60)
     dw CF3NewGameClear              ; entry 7  — new-game WRAM image zero + SRAM farm-flag zero (S60)
     dw CF3TradeRecv                 ; entry 8  — trade receive: staging $15 -> farm slot 19 SRAM (S60)
-    dw CF3SRAMBankedCopy            ; entry 9  — E3 (S69): the ONLY path to SRAM banks 1-3 (di-bracketed RAMB)
+    dw CF3SRAMBankedCopy            ; entry 9  — E3 (S69): general banked copy primitive (di-bracketed RAMB)
+    dw CF3PoolSwapRecord            ; entry 10 — FX1 (S71): swap array slot D <-> bank-2 pool slot E (149 B)
+    dw CF3PoolZeroInit              ; entry 11 — FX1 (S71): zero the 40-slot bank-2 pool + write "P1" magic
+    dw CF3PoolCounts                ; entry 12 — FX1 (S71): pool census -> E = awake-eligible (non-egg), D = eggs
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -94,10 +97,14 @@ CF2WarpCommitDrain:
     or [hl]
     ret z
 
+    ; FX1 v2 (S71): exp scale REMOVED by user veto — each eligible farm
+    ; monster receives the FULL pending (vanilla total/16-per-battle rate,
+    ; identical per-monster growth to vanilla; aggregate scales with farm
+    ; size). The v1 build halved the payout here (effective total/32).
     ; drain: pay + level every eligible farm monster, then zero pending
     ld a, [$cac0]                   ; preserve current slot selection
     push af
-    ld b, $00                       ; b = slot counter (0-19)
+    ld b, $00                       ; b = slot counter (0-39, FX1)
 
 .slot_loop:
     push bc
@@ -140,7 +147,7 @@ CF2WarpCommitDrain:
     ld a, [$cac0]
     ld hl, $cb0e
     call GetMonsterDataPtr
-    ld a, [wPendingFarmExp]
+    ld a, [wPendingFarmExp]         ; FX1 v2: full pending (vanilla rate)
     add [hl]
     ld [hl+], a
     ld e, a
@@ -207,10 +214,10 @@ CF2WarpCommitDrain:
     pop bc
     inc b
     ld a, b
-    cp $14
+    cp $28                          ; FX1: 40 slots (0-2 party, 3-39 farm)
     jp nz, .slot_loop
 
-    ; all 20 slots done — zero the accumulator, restore slot selection
+    ; all 40 slots done — zero the accumulator, restore slot selection
     xor a
     ld [wPendingFarmExp], a
     ld [wPendingFarmExp+1], a
@@ -485,27 +492,59 @@ CF3AdvanceDE:
     ld [$0100], a                   ; enable SRAM for the walker's derefs
     ret
 .uptest:
-    ; up-hop test: $AD9F <= DE <= $AE33
+    ; FX1 (S71) mid-hop: slot 19 -> 20. A stride advance off slot 19's end
+    ; ($AD0A+$95 = $AD9F, field f in [0,$94] -> [$AD9F,$AE33]) now continues
+    ; into the EXTENDED farm ($B124 + f): DE += $0385. (Pre-FX1 this window
+    ; up-hopped +$28C6 to staging — that defensive degrade moves to the new
+    ; end of the array, below.)
     ld a, d
     cp $ad
-    jr z, .ulow
+    jr z, .mlow
     cp $ae
-    ret nz
+    jr nz, .uptest2
     ld a, e
     cp $34
+    jr nc, .uptest2
+    jr .mid
+.mlow:
+    ld a, e
+    cp $9f
+    jr c, .uptest2
+.mid:
+    ld a, e
+    add $85
+    ld e, a
+    ld a, d
+    adc $03
+    ld d, a                         ; DE += $0385 -> extended farm SRAM
+    ld a, $0a
+    ld [$0100], a                   ; walker derefs continue in SRAM
+    ret
+.uptest2:
+    ; up-hop test (FX1: moved to the 40-slot end): $BCC8 <= DE <= $BD5C
+    ; (slot 39 end $BCC7 + 1, field f in [0,$94]). DE += $199D -> staging
+    ; $D665 + f — same defensive degrade as S60: no bounded walk goes past
+    ; slot 39, so this only fires on the discarded post-loop advance.
+    ld a, d
+    cp $bc
+    jr z, .ulow
+    cp $bd
+    ret nz
+    ld a, e
+    cp $5d
     ret nc
     jr .up
 .ulow:
     ld a, e
-    cp $9f
+    cp $c8
     ret c
 .up:
     ld a, e
-    add $c6
+    add $9d
     ld e, a
     ld a, d
-    adc $28
-    ld d, a                         ; DE += $28C6 -> staging WRAM
+    adc $19
+    ld d, a                         ; DE += $199D -> staging WRAM
     ret
 
 ; -----------------------------------------------------------------------------
@@ -516,6 +555,19 @@ CF3AdvanceDE:
 ; non-array base a caller might feed GMDP pass through untouched.
 ; -----------------------------------------------------------------------------
 CF3RebaseDE:
+    ; FX1 (S71): the computed (vanilla-WRAM-model) address space now decodes
+    ; THREE array regions. GMDP computes base+slot*$95 with slot masked $7F;
+    ; per-slot computed spans (record base .. +$94, field bases shift within):
+    ;   slots  3-19: [$CC80,$D664] -> real = computed - $28C6 (farm, SRAM b0)
+    ;   slots 20-39: [$D665,$E208] -> real = computed - $2541 (EXTENDED farm,
+    ;                SRAM b0 $B124-$BCC7 — the evicted sleep pool's home)
+    ;   slots 40/41: [$E209,$E332] -> real = computed - $0BA4 (staging WRAM
+    ;                $D665/$D6FA — the pseudo-slot INDICES moved 20/21 ->
+    ;                40/41 in FX1; their ADDRESSES are unchanged, so every
+    ;                address-based staging path — breeding field+$0BA4 math,
+    ;                trade copy loops — is untouched)
+    ; Anything else passes through (party fast-pathed in ROM0; non-array
+    ; bases; slots >= 42 = garbage-in-garbage-out, vanilla parity).
     ld a, d
     cp $cc
     jr nz, .hi
@@ -526,11 +578,43 @@ CF3RebaseDE:
 .hi:
     ld a, d
     cp $d6
-    jr c, .reb                      ; $CD00-$D5FF: in window
-    ret nz                          ; $D700+: out (staging $D7xx included)
+    jr c, .reb                      ; $CD00-$D5FF: in farm window
+    jr nz, .hi2
     ld a, e
     cp $65
-    ret nc                          ; $D665+: staging — leave
+    jr c, .reb                      ; $D600-$D664: farm window tail
+    jr .reb2                        ; $D665-$D6FF: extended farm head
+.hi2:
+    cp $e2
+    jr c, .reb2                     ; $D700-$E1FF: extended farm window
+    jr nz, .out                     ; $E300+ handled below
+    ld a, e
+    cp $09
+    jr c, .reb2                     ; $E200-$E208: extended farm tail
+    jr .stg                         ; $E209-$E2FF: staging window head
+.out:
+    ld a, d
+    cp $e3
+    ret nz                          ; $E400+: out
+    ld a, e
+    cp $33
+    ret nc                          ; $E333+: out
+.stg:
+    ld a, e
+    sub $a4
+    ld e, a
+    ld a, d
+    sbc $0b
+    ld d, a                         ; DE -= $0BA4 -> staging WRAM ($D665+)
+    ret
+.reb2:
+    ld a, e
+    sub $41
+    ld e, a
+    ld a, d
+    sbc $25
+    ld d, a                         ; DE -= $2541 -> extended farm SRAM
+    jr .en
 .reb:
     ld a, e
     sub $c6
@@ -538,76 +622,162 @@ CF3RebaseDE:
     ld a, d
     sbc $28
     ld d, a                         ; DE -= $28C6 -> farm SRAM
+.en:
     ld a, $0a
     ld [$0100], a                   ; pointer will be dereferenced by the caller
     ret
 
 ; -----------------------------------------------------------------------------
-; Entry 4 — CF3Checksum: replaces SRAMWriteBlock's interior.
-; All three vanilla call sites pass HL=$A002/BC=$1FFE (constant), so the
-; ranges are hardcoded. Returns DE = $4638 seed + byte-sum over
-; [$A002..$A1C6] + [$AD9F..$BFFF] — the vanilla sum MINUS the entire roster
-; image (list + library bits + party records + farm, $A1C7-$AD9E), which is
-; uniformly EAGER under S60v2 (live farm + canonicalize-time party mirror)
-; and must not be able to invalidate the save. Migration self-heal converts
-; pre-CF3 (vanilla-sum) and S60v1 (two-segment) saves in place at the boot
-; verify; details at .heal. At save time the extra passes are redundant but
-; harmless (SaveTimestamp overwrites $A000/$A001 anyway). Leaves SRAM
-; enabled (CF3 policy).
+; -----------------------------------------------------------------------------
+; Entry 4 — CF3Checksum: replaces SRAMWriteBlock's interior. All three
+; vanilla call sites pass HL=$A002/BC=$1FFE (constant). Returns DE = the
+; v3 sum; verify path compares stored, save path's caller stores DE.
+; Leaves SRAM enabled (CF3 policy).
 ; -----------------------------------------------------------------------------
 CF3Checksum:
     ld a, $0a
     ld [$0100], a
-    ; --- v2 formula: exclude the WHOLE roster image $A1C7-$AD9E ---
-    ; (party list + library bits + monster vars + party records + farm).
-    ; S60v2: the roster is uniformly EAGER — the canonicalizer tail mirrors
-    ; WRAM roster state into the image, so the checksum must not cover it,
-    ; exactly as it must not cover the live farm.
+    ; --- FX1 (S71) ONE-TIME REFORMAT ("F2" gate, $BFC8-$BFC9 of the reserved
+    ; tail). ORDER IS LOAD-BEARING (S71 PyBoy catch: writing F2 before the
+    ; legacy-sum heal broke every pre-FX1 save — the magic bytes sit INSIDE
+    ; all legacy checksum ranges AND inside v3's tail segment):
+    ;   F2 present -> compute v3, verify/heal, done (post-conversion path).
+    ;   F2 absent  -> [1] migrate any sleeping pool bank0 $B124 -> bank2
+    ;                 ("P1" magic) when the sleep flag image $A17B bit7 is
+    ;                 set, then ZERO $B124-$BCC7 (now farm slots 20-39 read
+    ;                 UNGATED - garbage here is the S54 phantom class);
+    ;                 [2] compute the three LEGACY sums over the F2-less
+    ;                 bytes and match against the stored checksum (the pool
+    ;                 contribution the zeroing removed is re-added from its
+    ;                 bank-2 image by .sum2);
+    ;                 [3] write F2; [4] compute v3 (F2 bytes now included);
+    ;                 [5] legacy match -> store v3 (converted in place);
+    ;                 no match -> return v3 unstored (a genuinely corrupt
+    ;                 save wipes exactly as vanilla).
+    ; The bank $40 4-bank wipe / corrupt-save wipe clear F2 -> next verify
+    ; re-runs (bit7 then clear; region re-zeroed; harmless).
+    ld a, [$bfc8]
+    cp $46                          ; 'F'
+    jr nz, .reformat
+    ld a, [$bfc9]
+    cp $32                          ; '2'
+    jp z, .v3direct
+.reformat:
+    ld a, [$a17b]
+    bit 7, a
+    jr z, .refzero                  ; pool never initialized -> just zero
+    ; migrate 20 pool records bank0 $B124+ -> bank2 $A010+ (per-byte RAMB
+    ; toggle; pin-safe: ISR graph is SRAM/RAMB-free — S69 audit)
+    ld hl, $b124
+    ld de, $a010
+    ld bc, $0ba4                    ; 20 x $95
+.refmig:
+    ld a, [hl+]
+    push af
+    ld a, $02
+    ld [$4100], a                   ; RAMB := 2
+    pop af
+    ld [de], a
+    xor a
+    ld [$4100], a                   ; pin re-asserted per byte
+    inc de
+    dec bc
+    ld a, b
+    or c
+    jr nz, .refmig
+    ld a, $02
+    ld [$4100], a
+    ld a, $50                       ; 'P'
+    ld [$a000], a
+    ld a, $31                       ; '1'
+    ld [$a001], a
+    xor a
+    ld [$4100], a
+.refzero:
+    ld hl, $b124
+    ld bc, $0ba4
+.refz:
+    xor a
+    ld [hl+], a
+    dec bc
+    ld a, b
+    or c
+    jr nz, .refz
+    ; --- legacy-format match, computed BEFORE F2 exists ---
+    ; formats: (1) vanilla full $A002 x $1FFE; (2) S60v1 $A002 x $3B8 +
+    ; $AD9F x $1261; (3) S60v2 $A002 x $1C5 + $AD9F x $1261. Each + .sum2
+    ; (bank-2 pool image) to restore the zeroed pool bytes' contribution.
     ld de, $4638
     ld hl, $a002
-    ld bc, $01c5                    ; $A002..$A1C6 (world state before the list)
+    ld bc, $1ffe
     call .sum
-    ld hl, $ad9f
-    ld bc, $1261                    ; $AD9F..$BFFF (image tail + sleep pool + buffers)
-    call .sum
-    ld a, [$a000]
-    cp e
-    jr nz, .heal
-    ld a, [$a001]
-    cp d
-    ret z                           ; stored matches v2
-.heal:
-    ; MIGRATION SELF-HEAL — accept and convert two legacy stored formats:
-    ;   (1) vanilla full sum over $A002 x $1FFE   (pre-CF3 saves)
-    ;   (2) S60v1 two-segment sum ($A002 x $3B8 + $AD9F x $1261)
-    ;       (saves written by the recalled first S60 build)
-    ; Either match rewrites stored := v2 and returns v2 (verify passes,
-    ; save converts in place). No match: return v2 untouched -> the vanilla
-    ; corrupt-save wipe path fires as designed.
-    push de                         ; save v2 sum
-    ld de, $4638
-    ld hl, $a002
-    ld bc, $1ffe                    ; vanilla full range
-    call .sum
+    call .sum2
     call .cmpstored
-    jr z, .mig
+    jr z, .convert
     ld de, $4638
     ld hl, $a002
-    ld bc, $03b8                    ; S60v1 head segment
+    ld bc, $03b8
     call .sum
     ld hl, $ad9f
     ld bc, $1261
     call .sum
+    call .sum2
     call .cmpstored
-    jr z, .mig
-    pop de
-    ret                             ; genuine mismatch -> vanilla wipe path
-.mig:
-    pop de
+    jr z, .convert
+    ld de, $4638
+    ld hl, $a002
+    ld bc, $01c5
+    call .sum
+    ld hl, $ad9f
+    ld bc, $1261
+    call .sum
+    call .sum2
+    call .cmpstored
+    jr z, .convert
+    ; no legacy match: stamp F2 anyway (the reformat DID run; leaving it
+    ; unstamped would re-zero forever) and return v3 unstored -> the
+    ; corrupt-save wipe path fires as designed.
+    call .stampf2
+    jr .v3sum
+.convert:
+    call .stampf2
+    call .v3sum_sub                 ; DE := v3 over the now-F2-stamped bytes
     ld a, e
     ld [$a000], a
     ld a, d
     ld [$a001], a
+    ret
+.v3direct:
+    call .v3sum_sub
+    ld a, [$a000]
+    cp e
+    ret nz                          ; mismatch -> caller wipes (vanilla path)
+    ld a, [$a001]
+    cp d
+    ret
+.v3sum:
+    call .v3sum_sub
+    ret
+.stampf2:
+    ld a, $46
+    ld [$bfc8], a
+    ld a, $32
+    ld [$bfc9], a
+    ret
+.v3sum_sub:
+    ; v3 formula (FX1): exclude the roster image $A1C7-$AD9E AND the
+    ; extended farm $B124-$BCC7 (both uniformly EAGER live stores):
+    ;   $A002 x $1C5 + $AD9F x $385 + $BCC8 x $338
+    ld de, $4638
+    ld hl, $a002
+    ld bc, $01c5
+    call .sum
+    ld hl, $ad9f
+    ld bc, $0385
+    call .sum
+    ld hl, $bcc8
+    ld bc, $0338
+    call .sum
     ret
 .cmpstored:                         ; Z set iff stored checksum == DE
     ld a, [$a000]
@@ -627,6 +797,35 @@ CF3Checksum:
     ld a, b
     or c
     jr nz, .sum
+    ret
+.sum2:
+    ; add bank2 pool image ($A010 x $BA4) to DE if "P1" magic present (i.e.
+    ; a pool was migrated); no-op when the pool was never initialized (the
+    ; old $B124 bytes were zero, contributing nothing to legacy sums).
+    ld a, $02
+    ld [$4100], a
+    ld a, [$a000]
+    cp $50
+    jr nz, .s2out
+    ld a, [$a001]
+    cp $31
+    jr nz, .s2out
+    ld hl, $a010
+    ld bc, $0ba4
+.s2l:
+    ld a, [hl+]
+    add e
+    ld e, a
+    ld a, $00
+    adc d
+    ld d, a
+    dec bc
+    ld a, b
+    or c
+    jr nz, .s2l
+.s2out:
+    xor a
+    ld [$4100], a
     ret
 
 ; -----------------------------------------------------------------------------
@@ -804,6 +1003,21 @@ CF3NewGameClear:
     ld h, a
     dec b
     jr nz, .fclr
+    ; FX1 (S71): extended farm slots 20-39 ($B124 + n*$95) — same flags-only
+    ; rule (every reader keys on +$00; inserts rebuild the record).
+    ld hl, $b124
+    ld b, $14                       ; 20 slots
+.fclr2:
+    xor a
+    ld [hl], a
+    ld a, l
+    add $95
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    dec b
+    jr nz, .fclr2
     ret
 
 ; -----------------------------------------------------------------------------
@@ -814,10 +1028,45 @@ CF3NewGameClear:
 ; vanilla did with the WRAM slot 19.
 ; -----------------------------------------------------------------------------
 CF3TradeRecv:
+    ; FX1 (S71): the vanilla hardcoded slot-19 insert is only safe while the
+    ; farm can never hold >16 monsters around a trade. At 37 farm slots the
+    ; target is FIRST-EMPTY over slots 3-39 (trade-away has always freed at
+    ; least one slot, so a hit is guaranteed; the pre-FX1 hardcoded slot 19
+    ; remains the impossible-case fallback). The canonicalizer immediately
+    ; after compacts it into place, exactly as vanilla did with slot 19.
     ld a, $0a
     ld [$0100], a
-    ld hl, $ad0a                    ; slot 19 @ SRAM ($A1FB + 19*$95)
-    ld de, $d6fa                    ; staging slot $15 (WRAM)
+    ld hl, $a3ba                    ; slot 3 in-use flag @ SRAM
+    ld b, $11                       ; slots 3-19
+.scan1:
+    ld a, [hl]
+    or a
+    jr z, .found
+    ld a, l
+    add $95
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    dec b
+    jr nz, .scan1
+    ld hl, $b124                    ; slots 20-39 (extended farm)
+    ld b, $14
+.scan2:
+    ld a, [hl]
+    or a
+    jr z, .found
+    ld a, l
+    add $95
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    dec b
+    jr nz, .scan2
+    ld hl, $ad0a                    ; fallback: slot 19 (unreachable by design)
+.found:
+    ld de, $d6fa                    ; staging slot $29 record (WRAM $D6FA)
     ld b, $95
 .loop:
     ld a, [de]
@@ -936,14 +1185,20 @@ CF3SRAMBankedCopy:
 ; farm did.
 ; -----------------------------------------------------------------------------
 
-; CF3SnapXfer: move the $BE0-byte snapshot region between banks, staged
+; CF3SnapXfer: move a 32-byte-chunked snapshot region between banks, staged
 ; through the 32-byte bounce buffer wSnapBounce ($DE92 — SRAM is not dual-
 ; port; the two banks cannot see each other directly).
-; entry: B = source RAMB, C = dest RAMB. clobbers A/D/E/HL. RAMB=0 on exit
-; (re-asserted after EVERY chunk so RAMB!=0 windows stay ~200 cycles).
+; entry: B = source RAMB, C = dest RAMB, HL = region start, D = chunk count.
+; (FX1/S71: parameterized — v3 hardcoded $A1BF/95.) clobbers A/D/E/HL.
+; RAMB=0 on exit (re-asserted after EVERY chunk so RAMB!=0 windows stay
+; ~200 cycles).
+; FX1 regions: $A1BF x 95 chunks (roster, as v3) and $B124 x 94 chunks
+; ($B124-$BCE3: extended farm $B124-$BCC7 + 28 bytes of the LAZY tile-buffer
+; image $BCC8-$BCE3 bought for exact chunking — lazy bytes only change at
+; explicit save, so bank 0 already holds their last-save values and the
+; restore overwrite is a proven no-op, same argument as v3's 8 leading
+; bytes).
 CF3SnapXfer:
-    ld hl, $a1bf
-    ld d, 95                        ; chunk count (95 x 32 = $BE0)
 .chunk:
     push de
     ld a, b
@@ -975,19 +1230,28 @@ CF3SnapXfer:
     jr nz, .chunk
     ret
 
-; CF3SnapCommit: bank 0 live roster -> bank 1 snapshot, then write magic.
-; Reached from entry 5's main-save detector and from the seed path below.
-; SRAM already enabled by the calling entry.
+; CF3SnapCommit: bank 0 live roster + extended farm -> bank 1 snapshot
+; (both regions), then write magic "R4". Reached from entry 5's main-save
+; detector and from the seed paths below. SRAM already enabled by the
+; calling entry.
 CF3SnapCommit:
     ld b, 0
     ld c, 1
+    ld hl, $a1bf
+    ld d, 95
     call CF3SnapXfer
+    ld b, 0
+    ld c, 1
+    ld hl, $b124
+    ld d, 94
+    call CF3SnapXfer
+.magic:
     ld a, 1
     ld [$4100], a
     ld hl, $a000
     ld a, $52
     ld [hl+], a
-    ld [hl], $33                    ; magic "R3" in bank 1
+    ld [hl], $34                    ; magic "R4" in bank 1 (FX1/S71; v3 = "R3")
     xor a
     ld [$4100], a
     ret
@@ -1001,6 +1265,11 @@ CF3SnapCommit:
 ; seed the snapshot from the live roster (current state becomes the saved
 ; state) via CF3SnapCommit.
 CF3SnapRestore:
+    ; FX1 (S71) magic ladder: "R4" -> restore BOTH regions; "R3" (a v3-era
+    ; bank 1) -> restore the roster region only, then SEED the extended
+    ; region from the live bytes (which the F2 reformat just zeroed or
+    ; migrated — current state becomes the saved state, one-time) and
+    ; upgrade the magic; anything else -> seed both (pre-v3 migration).
     ld a, 1
     ld [$4100], a
     ld hl, $a000
@@ -1008,13 +1277,39 @@ CF3SnapRestore:
     cp $52
     jr nz, .seed
     ld a, [hl]
+    cp $34
+    jr z, .r4
     cp $33
     jr nz, .seed
+    ; --- "R3": restore roster, seed extended, upgrade magic ---
     xor a
     ld [$4100], a
     ld b, 1
     ld c, 0
+    ld hl, $a1bf
+    ld d, 95
     call CF3SnapXfer
+    ld b, 0
+    ld c, 1
+    ld hl, $b124
+    ld d, 94
+    call CF3SnapXfer                ; seed extended live -> bank 1
+    call CF3SnapCommit.magic        ; stamp "R4"
+    jr .wramcopy
+.r4:
+    xor a
+    ld [$4100], a
+    ld b, 1
+    ld c, 0
+    ld hl, $a1bf
+    ld d, 95
+    call CF3SnapXfer
+    ld b, 1
+    ld c, 0
+    ld hl, $b124
+    ld d, 94
+    call CF3SnapXfer
+.wramcopy:
     ld hl, $a1c7                    ; rewound bank-0 roster -> WRAM
     ld de, $ca8d
     ld bc, $01f3
@@ -1030,4 +1325,165 @@ CF3SnapRestore:
 .seed:
     xor a
     ld [$4100], a
-    jr CF3SnapCommit
+    jp CF3SnapCommit
+
+; =============================================================================
+; FX1 (S71) — THE BANK-2 SLEEP POOL (the eviction that funded the expansion).
+;
+; The vanilla pool ($B124-$BCC7, 20 x $95, bank 0) is exactly the space the
+; extended farm slots 20-39 now occupy. The pool moves to SRAM BANK 2:
+;   bank2 $A000-$A001 = magic "P1" ($50,$31)
+;   bank2 $A010 + c*$95, c = 0..39 (40 slots — a FULL non-party mirror, so
+;   the whole-swap sleep exchange works at any party size; user decision S71
+;   "whole-swap: if 37 active, 37 can sleep")
+; Access is confined to these three entries + the checksum's .sum2 and the
+; F2 reformat migration (entry 4). All use the same discipline as the
+; snapshot hooks: short RAMB!=0 windows, no di/ei needed (ISR graph is
+; SRAM-free and RAMB-free under the pin — S69 audit), pin re-asserted
+; before return.
+; =============================================================================
+
+; Entry 10 — CF3PoolSwapRecord: exchange the 149-byte record of ARRAY slot D
+; with BANK-2 POOL slot E. Array side resolved like the rebase map: slots
+; 0-2 WRAM $CAC1+, 3-19 SRAM b0 $A1FB+s*$95, 20-39 SRAM b0 $B124+(s-20)*$95.
+; (Party slots are never passed — the exchange loop skips flag $02 — but the
+; resolver handles them anyway.) Per byte: read array (RAMB=0/WRAM), swap
+; with pool byte under RAMB=2, write back under RAMB=0. DE preserved
+; (dispatcher contract); BC dead (dispatcher clobbers).
+CF3PoolSwapRecord:
+    push de
+    ld a, $0a
+    ld [$0100], a
+    ; HL := array slot D record base (Mul8x8To16: HL = A*C, clobbers BC,
+    ; preserves A/DE)
+    ld a, d
+    cp $03
+    jr c, .party
+    cp $14
+    jr c, .oldfarm
+    sub $14                         ; slots 20-39: $B124 + (s-20)*$95
+    ld c, $95
+    call Mul8x8To16
+    ld bc, $b124
+    jr .base
+.party:
+    ld c, $95                       ; slots 0-2: WRAM $CAC1 + s*$95
+    call Mul8x8To16
+    ld bc, $cac1
+    jr .base
+.oldfarm:
+    ld c, $95                       ; slots 3-19: SRAM b0 $A1FB + s*$95
+    call Mul8x8To16
+    ld bc, $a1fb
+.base:
+    add hl, bc                      ; HL = array record base
+    ; DE' := bank-2 pool slot E record base = $A010 + e*$95
+    push hl
+    ld a, e
+    ld c, $95
+    call Mul8x8To16
+    ld bc, $a010
+    add hl, bc
+    ld d, h
+    ld e, l
+    pop hl                          ; HL = array ptr, DE = pool ptr (bank 2)
+    ld bc, $0095
+.swap:
+    ld a, [hl]
+    push af                         ; t1 = array byte
+    ld a, $02
+    ld [$4100], a                   ; RAMB := 2
+    ld a, [de]
+    ld [wPoolBounce], a             ; t2 (WRAM scratch — bank-independent)
+    pop af
+    ld [de], a                      ; pool := t1
+    xor a
+    ld [$4100], a                   ; RAMB := 0 (pin re-asserted per byte)
+    ld a, [wPoolBounce]
+    ld [hl+], a                     ; array := t2
+    inc de
+    dec bc
+    ld a, b
+    or c
+    jr nz, .swap
+    pop de
+    ret
+
+; Entry 11 — CF3PoolZeroInit: zero all 40 bank-2 pool records ($A010 x
+; $1744) and write the "P1" magic. Called from the sleep first-time init
+; (bank $12 SetItem_5fde replacement) — the vanilla equivalent zeroed
+; bank-0 $B124 x $BA4.
+CF3PoolZeroInit:
+    push de
+    ld a, $0a
+    ld [$0100], a
+    ld a, $02
+    ld [$4100], a
+    ld hl, $a010
+    ld bc, $1744                    ; 40 x $95
+.z:
+    xor a
+    ld [hl+], a
+    dec bc
+    ld a, b
+    or c
+    jr nz, .z
+    ld a, $50                       ; 'P'
+    ld [$a000], a
+    ld a, $31                       ; '1'
+    ld [$a001], a
+    xor a
+    ld [$4100], a
+    pop de
+    ret
+
+; Entry 12 — CF3PoolCounts: census of the bank-2 pool -> E = occupied
+; non-egg count, D = occupied egg count (E+D = total sleeping). Replaces
+; the four bank $07 in-place pool scans and the bank $12 pool probes.
+; Magic absent (pool never initialized) -> 0/0.
+CF3PoolCounts:
+    ld a, $0a
+    ld [$0100], a
+    ld a, $02
+    ld [$4100], a
+    ld de, $0000
+    ld a, [$a000]
+    cp $50
+    jr nz, .out
+    ld a, [$a001]
+    cp $31
+    jr nz, .out
+    ld hl, $a010
+    ld b, 40
+.slot:
+    ld a, [hl]
+    or a
+    jr z, .adv
+    push hl
+    ld a, l
+    add $63                         ; +$63 egg flag
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    ld a, [hl]
+    pop hl
+    or a
+    jr nz, .egg
+    inc e
+    jr .adv
+.egg:
+    inc d
+.adv:
+    ld a, l
+    add $95
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    dec b
+    jr nz, .slot
+.out:
+    xor a
+    ld [$4100], a
+    ret

@@ -309,6 +309,39 @@ dies structurally. Est. 2-3 sessions after the boundary-semantics RE.
       enter $6B/$6C/$70, NPC interact, exits both ways, step advance,
       save-in-room → reload → scroll (expect step-0), egg give in-room.
 
+- [x] **FX1 — active farm expansion 17 → 37 slots — DONE S71,
+      USER-CONFIRMED 2026-07-26 (farm menus >17, sleep whole-swap,
+      save/reload, breeding + 21-hatch session: "everything works").
+      Exp-scale VETOED same session → S71v2 restores the vanilla
+      per-monster rate (drain pays full pending; pin `46ba6991…`,
+      patched; v2 delta = payout only, PyBoy-verified both regions).** User decisions (S71): 37 active farm; whole-swap sleep
+      (pool scaled to a FULL 40-slot non-party mirror); exp "scale" =
+      payout halved at drain (each eligible farm monster gets pending/2 →
+      aggregate 37/32 of total ≈ vanilla 17/16; per-monster growth is HALF
+      vanilla's — flagged for veto); built incrementally. As built (owning
+      section MONSTER_DATA "FX1 as built (S71)"): array = 40 slots (0-2
+      party WRAM, 3-19 farm $A1FB+s*$95, 20-39 farm $B124+(s-20)*$95 = the
+      EVICTED sleep pool's bank-0 home); sleep pool → SRAM BANK 2 ($A010+
+      c*$95 ×40, "P1" magic) via bank $73 entries 10/11/12 (record swap /
+      zero-init / census); staging pseudo-slot INDICES 20/21 → 40/41
+      (computed-window remap in the rebase; ADDRESSES unchanged $D665/$D6FA
+      so every address-based staging path is untouched); one-time "F2"
+      reformat gate at $BFC8-9 inside entry 4 (ORDER LOAD-BEARING — see
+      KEY_LESSONS S71); checksum v3 (3 segments, excludes $B124-$BCC7 too;
+      heals vanilla/S60v1/S60v2); snapshot v4 "R4" dual-region ($A1BF ×95 +
+      $B124 ×94 chunks, R3 auto-upgrade); roster display lists + the
+      canonicalizer compaction map relocated $C0D8 → wMonList $D001 (40
+      entries overflow $C0D8's ~36-byte safe extent). PyBoy-verified on the
+      user's real .sav: reformat preserves the save; R3→R4 upgrade;
+      canonicalize/compaction with 25 farm across the slot-19 boundary;
+      farm list builds 28 entries incl. slots 20-27; reset-no-save rewind
+      over BOTH regions; dual-region snapshot commit+restore across a power
+      cycle; drain pays extended slots pending/2 and levels them; full
+      battle round-trip clean. *User accept (visual/UI, not yet run)*: farm
+      menu deposit/withdraw beyond 17 + browse/pages; sleep/wake whole-swap;
+      explicit save → reload; trade receive; breeding; battle join with
+      farm > 17; link viewer nav.
+
 - [x] **CF3 — farm storage → SRAM + path redirects — DONE S60,
       USER-CONFIRMED 2026-07-17 (sleep/unsleep, breeding + reload,
       in-gate saves; "all tests normal").** Farm slots 3-19 live at

@@ -1179,3 +1179,129 @@ verified in-engine S70: join 0 on a trigger_battle3 win adds the enemy to
 the party (canonicalizer recount → $CA8D increments). The **canonicalizer
 runs on room transitions** and erases hand-built party RAM that isn't
 flag+list consistent — see PYBOY_DEBUGGING trap #2.
+
+## FX1 as built (S71): active farm expansion 17 → 37 slots
+
+**BUILT S71, NOT yet user-tested.** User decisions: 37 active farm;
+whole-swap sleep (pool = full 40-slot non-party mirror so the exchange works
+at any party size); exp "scale" = payout halved at drain; incremental build.
+
+### The one fact everything derives from
+The array is now **40 logical slots**:
+
+| slots | home | addressing |
+|---|---|---|
+| 0-2 (party) | WRAM $CAC1-$CC7F | unchanged |
+| 3-19 (farm) | SRAM b0 $A1FB+s*$95 ($A3BA-$AD9E) | unchanged (CF3) |
+| 20-39 (farm) | SRAM b0 **$B124+(s-20)*$95** ($B124-$BCC7) | NEW — the evicted sleep pool's exact former home (20×$95 = $BA4, exact fit) |
+| 40/41 (staging) | WRAM $D665/$D6FA | INDICES moved from 20/21; ADDRESSES unchanged |
+
+Staging indices HAD to move: GetMonsterDataPtr computes $CAC1+s*$95, so
+computed index 20 *is* address $D665 — index 20 cannot mean both "farm slot"
+and "staging". Moving the indices (not the addresses) keeps every
+address-based staging path — breeding's field+$0BA4 math, the trade copy
+loops — byte-untouched; only index WRITERS changed ($15:$4c3b/$4c8d $14→$28,
+$15:$50da/$58e0 + $18:$42d6 $15→$29, $0A NPC-mate synth $15→$29, $50 link-
+loss wager park + battle-position cache $14→$28, $14:~$414f staging
+special-case cp $15→$29, $03 link viewer BCD cap "16"→"29").
+
+### Computed-address decode (bank $73 entry 3, CF3RebaseDE v2)
+GMDP's vanilla computed address now decodes three windows: [$CC80,$D664]
+−$28C6 → farm 3-19 (+SRAM enable); [$D665,$E208] −$2541 → farm 20-39
+(+SRAM); [$E209,$E332] −$0BA4 → staging (WRAM). Entry 2 (CF3AdvanceDE)
+stride hops: slot 2→3 [$CC80,$CD14] −$28C6 (unchanged); slot 19→20
+[$AD9F,$AE33] **+$0385** (was the up-hop to staging); slot 39→staging
+[$BCC8,$BD5C] **+$199D** (the defensive degrade, moved to the new end).
+
+### Loop bounds + lists
+All roster walker bounds $14→$28 (`cp`/`ld b`) across banks
+$01/$04/$07/$09/$0A/$12/$15/$16/$18/$50/$51 — every site individually
+adjudicated against inventory loops (also 20), menu-state numbers ($c906:=
+$14/$15/$16), level-tier compares, opcode dispatch, and per-record field
+walks (bank $0A label6518 walks the +$31 ID list with b=$19: NOT a slot
+walk). The canonicalizer's compaction went 20×19 → 40×39 passes. The give
+opcode's array-full fallback `ld c,$13` (overwrite slot 19) → `$27` — a
+latent vanilla-shape bug at any size.
+
+**wMonList ($D001, 64 B, carved from wCustomPool's top)**: at 40 slots the
+$C0D8 monster lists overflow — safe extent is ~36 B ($C0FC/$C0FD are live
+bank $02 mode-3 state; $C0FE/$C0FF bank $5F; $C100 per-screen content). ALL
+roster list builders (fill $FF ×$28 + GMDP walk), their page*4/cursor
+consumers, the $c930-registered scroll bases, and the canonicalizer's
+old→new compaction map moved to wMonList. STAYED at $C0D8 (adjudicated
+non-roster or ≤4/≤32 capacity): the S56 drop/pick 4-entry working set + its
+battle-side twin ($51 SetBtlS_64ac cluster), the skill working copy ($51
+~$5750, ×$28 by ID bytes), the breeding family display buffer ($12
+LibScanByFamily, emitter-capped 32), and the encounter-build scratch
+($01 ~$68xx). wPoolBounce ($D5E5, 128 B) carved alongside: pool-swap byte
+scratch + the drain's halved-pending 3 B.
+
+### Sleep pool → SRAM bank 2
+Layout: bank2 $A000-1 = "P1" ($50,$31); records $A010+c*$95, c=0-39 (full
+non-party mirror → whole-swap valid at party 0-3). Access confined to bank
+$73: **entry 10 CF3PoolSwapRecord** (D=array slot, E=pool slot; resolves the
+array side across all three regions; per-byte RAMB-2 windows, pin-safe per
+the S69 ISR audit, wPoolBounce scratch), **entry 11 CF3PoolZeroInit** (zero
+40×$95 + magic; called by the sleep first-init, which NO LONGER touches
+bank-0 $B124 — that's live farm now), **entry 12 CF3PoolCounts** (census →
+E=non-egg, D=egg; magic-absent = 0/0). Same-size rewrites consume the old
+in-place loops: bank $12 SaveItem_5fb3 (43 B) → entry 10; SetItem_5fde zero
+→ entry 11; the two bank $12 sleep-dialog pool probes + two wake-menu pool
+counts and both bank $07 library pool scans → entry 12. The exchange walk
+bound went $14→$28 (whole-swap over all 40, party $02 skipped, matching the
+40-slot pool).
+
+### Persistence: F2 reformat, checksum v3, snapshot R4
+**F2 gate** (entry 4, $BFC8-9 of the reserved tail — 54 B left): first
+verify of an FX1 build migrates any sleeping pool (bank0 $B124 ×20 → bank2
+slots 0-19 + "P1") when the sleep-flag image $A17B.7 is set, then zeroes
+$B124-$BCC7 (farm slots 20-39 read UNGATED — garbage = the S54 phantom
+class), stamps F2. **ORDER IS LOAD-BEARING** (S71 PyBoy catch, see
+KEY_LESSONS): legacy checksum sums are computed BEFORE the F2 stamp (the
+magic bytes sit inside every legacy range), with the zeroed pool's
+contribution re-added from its bank-2 image (.sum2); v3 is computed AFTER
+(F2 sits inside v3's tail segment too). **Checksum v3** = $4638 + $A002×$1C5
++ $AD9F×$385 + $BCC8×$338 (excludes the roster image AND the extended farm —
+both uniformly eager). Heal accepts vanilla-full, S60v1, S60v2 → rewrites
+v3 in place. **Snapshot v4** ("R4", bank 1): dual regions $A1BF ×95 chunks
+(as v3) + $B124 ×94 chunks ($B124-$BCE3; the 28-byte tail overlaps the LAZY
+tile-buffer image — restore there is a proven no-op, same argument as v3's
+8 leading bytes). Restore ladder: R4 → both; R3 → roster restore + seed
+extended from live + upgrade to R4; absent → seed both. Commit (explicit
+save via the entry-5 detector, unchanged) writes both regions + R4.
+Entry 5/6 copy-skip windows unchanged (no block copy touches $B124+).
+CF3NewGameClear adds the 20 extended flag zeroes.
+
+### Exp scale — VETOED, vanilla rate restored (S71v2)
+CF2FarmShareDivert still banks total/16 per battle; the DRAIN (entry 0)
+walks all 40 slots and pays each eligible farm monster the **FULL pending**
+— identical per-monster growth to vanilla. (The v1 build halved the payout
+for aggregate parity, 37/32 ≈ vanilla 17/16; the user vetoed it S71 same
+session: "restore growth to vanilla rate". Aggregate farm exp inflow now
+scales with farm size — accepted.) PyBoy-verified: pending 512 → 512 each
+in BOTH farm regions, silent levels applied, accumulator zeroed.
+
+### Trade receive (entry 8)
+First-empty over slots 3-39 (17-slot scan then 20-slot scan by real
+addresses), staging record $D6FA → the hit; hardcoded slot 19 remains only
+as the unreachable fallback. Comment-fixed at both bank $18 hook sites.
+
+### PyBoy verification (S71, on the user's real .sav)
+Reformat preserves the save (5 farm intact, F2 stamped, ck → v3 $4C61 — and
+the FIRST build DESTROYED the save until the F2 ordering fix); CONTINUE
+loads party [0,1,2], R3→R4 upgrade; 25 farm poked across the boundary
+survives canonicalize (party sorted, records + markers intact); farm-boy
+list builds 0..27,$FF into wMonList; unsaved 25-farm state persists in bank0
+across a power cycle and REWINDS to the R4 snapshot's 5 on CONTINUE;
+seed-path dual-region commit + reboot restore keeps all 25 with per-slot
+markers; drain with pending=512 pays slots 8/20/21/27 exactly 256 each +
+levels 5→6 + zeroes pending; full encounter battle round-trip clean (party
++2 exp each, farm untouched, mode restored). **USER-CONFIRMED 2026-07-26 (v1
+mechanics)**: farm menus past 17 monsters, sleep/wake whole-swap, explicit
+save/reload, breeding + 21-egg hatch session at scale — "everything works,
+as far as I can test". One benign observation, explained: after 21 hatches
+filled the early slots, a bred egg took the FIRST-EMPTY (= a late slot), so
+the hatchling ("Dran") displayed LAST in the farm list — insertion order +
+order-preserving compaction, same semantics as vanilla, just visible now
+that the farm exceeds 17. v2 (vanilla exp rate) built + PyBoy-verified same
+session; v2's only delta vs the confirmed v1 is the drain payout amount.

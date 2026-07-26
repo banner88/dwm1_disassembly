@@ -2488,3 +2488,41 @@ flag the trampoline leaks to its callers.
 - **NPC sprite ids ≠ species+$10** (disproven: $23 renders a draconic
   guard, not GoldSlime; $11 hard-crashes the room render to black). A
   sprite-id catalog needs its own empirical session.
+
+## S71 — FX1 farm expansion
+
+- **A magic byte written inside a checksummed range is a save-wiper if the
+  ordering is wrong.** The F2 reformat stamp ($BFC8-9) sits inside every
+  LEGACY checksum range AND v3's tail segment. The first build stamped F2
+  before the self-heal comparison → every legacy sum mismatched → the
+  vanilla corrupt-save wipe fired and ZEROED the user's farm. Caught by
+  PyBoy on the real .sav pre-delivery. Rule: when converting stored-format
+  data in place, compute the OLD format's validation over the OLD bytes,
+  mutate, then compute the NEW format over the NEW bytes — and re-add any
+  relocated bytes' contribution (here: the migrated pool, summed from its
+  bank-2 image) so legacy sums still match.
+- **GMDP's computed-address space makes slot INDEX and ADDRESS one fact:**
+  index 20 IS $D665. Any plan that reuses indices 20/21 for real slots must
+  move the staging INDICES (to 40/41), never the addresses — address-based
+  staging consumers (breeding +$0BA4 math, trade copy loops) then need zero
+  edits. The rebase entry decodes windows, so the index→address function
+  stays single-sourced in bank $73.
+- **Bound-literal sweeps need per-site adjudication, not grep-replace.**
+  `$14` in this ROM is: roster bound (extend), inventory bound (leave),
+  menu STATE number `[$c906]:=$14` (leave), level-tier compare (leave),
+  opcode-dispatch case (leave), staging INDEX (remap to $28), the
+  give-opcode's last-slot fallback `ld c,$13` (remap to $27), a timer
+  reload value $0014 (leave), and a per-record field-walk length (leave).
+  The walkers JSON's "nearest bound" attribution also mislabeled builder
+  bounds as count-walker bounds (±30-line proximity) — five count walkers
+  were nearly missed. Verify each edit against the actual loop label.
+- **PyBoy's .ram persistence is a foot-gun for SRAM experiments:** the
+  emulator writes SRAM back to `<rom>.ram` on stop, and savestate loads
+  carry their OWN SRAM — a later `p.stop()` from an old savestate silently
+  reverts the .ram. Sequence multi-boot SRAM tests inside explicit fresh
+  sessions and re-read the pre-continue state to know what you booted from.
+- **DWM renders text into tile PATTERNS, not readable tilemap indices** —
+  tilemap→charset OCR via dwm.tbl is a dead end for menu verification.
+  Verify menus by RAM state vars + list buffers (wMonList contents proved
+  the 28-entry farm list without reading a pixel), and hand VISUAL flows to
+  the user.

@@ -1224,7 +1224,7 @@ jr_001_4696:
     nop
     inc b
     ld a, b
-    cp $14
+    cp $28  ; FX1: 40 slots
     jr nz, jr_001_468b
 
     ret
@@ -1351,7 +1351,7 @@ jr_001_4722:
 
 jr_001_4738:
     ld hl, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
 
 jr_001_473d:
     ld a, [hl]
@@ -1410,13 +1410,13 @@ jr_001_4788:
     ld [hl], $ff
 
 jr_001_4798:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: compaction map -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: compaction map -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_001_47ad:
@@ -1438,11 +1438,11 @@ jr_001_47b3:
     dec b
     jr nz, jr_001_47ad
 
-    ld c, $14
+    ld c, $28  ; FX1: 40 slots
 
 jr_001_47c1:
     ld hl, $cac1
-    ld b, $13
+    ld b, $27  ; FX1: 40 slots
 
 jr_001_47c6:
     ld a, [hl]
@@ -1543,7 +1543,7 @@ RetIfSlotInvalid2:
     cp $ff
     ret z
 
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: compaction map -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -2306,7 +2306,7 @@ jr_001_4bab:
 
 IteratePartySlots20:
     ld hl, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
 jr_001_4bc6:
     push hl
     ld a, [hl]

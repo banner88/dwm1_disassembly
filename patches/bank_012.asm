@@ -1706,7 +1706,7 @@ LoadItem_49e5:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1725,7 +1725,7 @@ LoadItem_49ff:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1898,7 +1898,7 @@ jr_012_4b17:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1943,7 +1943,7 @@ jr_012_4b17:
     ret
 
 
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -2115,7 +2115,7 @@ jr_012_4ca9:
 
 SetItem_4cb7:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_4cbe:
@@ -2156,13 +2156,13 @@ jr_012_4cd4:
 
 
 SetItem_4ce5:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_4cfa:
@@ -2237,7 +2237,7 @@ LoadItem_4d5d:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -2484,7 +2484,7 @@ jr_012_4eef:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -2521,7 +2521,7 @@ jr_012_4eef:
     ret
 
 
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -2871,7 +2871,7 @@ jr_012_51a4:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -2924,7 +2924,7 @@ jr_012_51a4:
     ret
 
 
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -3320,7 +3320,7 @@ CallItem_551d:
     call LoadItem_4058
     push hl
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_5528:
@@ -3365,7 +3365,7 @@ CallItem_5551:
     call LoadItem_4058
     push hl
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_555c:
@@ -3410,40 +3410,48 @@ CallItem_5581:
     bit 7, a
     jr z, jr_012_55b8
 
+    ; FX1 (S71): pool census via bank $73 entry 12 (E = non-egg count).
+    ; Same-size rewrite (43 B), jr_012_5595/55ab retired.
     push hl
-    ld hl, $b124
-    ld b, $14
-    ld c, $00
-
-jr_012_5595:
-    push hl
-    call EnableSRAM
-    or a
-    jr z, jr_012_55ab
-
-    ld a, l
-    add $63
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    call EnableSRAM
-    or a
-    jr nz, jr_012_55ab
-
-    inc c
-
-jr_012_55ab:
-    pop hl
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    dec b
-    jr nz, jr_012_5595
-
+    push de
+    ld hl, $730c
+    rst $10
+    ld a, e
+    pop de
+    ld c, a
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     pop hl
 
 jr_012_55b8:
@@ -3459,40 +3467,48 @@ CallItem_55be:
     bit 7, a
     jr z, jr_012_55f5
 
+    ; FX1 (S71): pool census via bank $73 entry 12 (D = egg count).
+    ; Same-size rewrite (43 B), jr_012_55d2/55e8 retired.
     push hl
-    ld hl, $b124
-    ld b, $14
-    ld c, $00
-
-jr_012_55d2:
-    push hl
-    call EnableSRAM
-    or a
-    jr z, jr_012_55e8
-
-    ld a, l
-    add $63
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    call EnableSRAM
-    or a
-    jr z, jr_012_55e8
-
-    inc c
-
-jr_012_55e8:
-    pop hl
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    dec b
-    jr nz, jr_012_55d2
-
+    push de
+    ld hl, $730c
+    rst $10
+    ld a, d
+    pop de
+    ld c, a
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     pop hl
 
 jr_012_55f5:
@@ -3567,7 +3583,7 @@ jr_012_5662:
 
 SetItem_5670:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_5677:
@@ -3612,13 +3628,13 @@ jr_012_5695:
 
 
 SetItem_56a6:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_56bb:
@@ -3720,7 +3736,7 @@ LoadItem_5751:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -3805,7 +3821,7 @@ LoadItem_57d0:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -4021,7 +4037,7 @@ jr_012_5912:
 
 jr_012_5928:
     ld bc, $ffff
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -4236,7 +4252,7 @@ jr_012_5aa6:
 
 SetItem_5ab4:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_5abb:
@@ -4284,13 +4300,13 @@ jr_012_5add:
 
 
 SetItem_5aee:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_5b03:
@@ -4589,7 +4605,7 @@ jr_012_5cd8:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -4656,7 +4672,7 @@ jr_012_5d2c:
     ret
 
 
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -4737,7 +4753,7 @@ jr_012_5d2c:
     jp z, Jump_012_45ec
 
     ld hl, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
 
 jr_012_5e0b:
     ld a, [hl]
@@ -4757,26 +4773,31 @@ jr_012_5e0b:
     bit 7, a
     jr z, jr_012_5e3c
 
-    ld hl, $b124
-    ld b, $14
-
-jr_012_5e27:
-    push hl
-    push bc
-    call EnableSRAM
-    pop bc
-    pop hl
-    or a
+    ; FX1 (S71): pool moved to SRAM bank 2 — probe via bank $73 entry 12
+    ; (E=non-egg, D=egg; total nonzero = someone is sleeping). Same-size.
+    push de
+    ld hl, $730c
+    rst $10
+    ld a, e
+    or d
+    pop de
     jr nz, jr_012_5e48
-
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    dec b
-    jr nz, jr_012_5e27
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 jr_012_5e3c:
     ld hl, $06cc
@@ -4874,7 +4895,7 @@ jr_012_5ecb:
 
     call SetItem_5fde
     ld hl, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
 
 jr_012_5edf:
     ld a, [hl]
@@ -4898,26 +4919,30 @@ jr_012_5ef4:
     bit 7, a
     jr z, jr_012_5f15
 
-    ld hl, $b124
-    ld b, $14
-
-jr_012_5f00:
-    push hl
-    push bc
-    call EnableSRAM
-    pop bc
-    pop hl
-    or a
+    ; FX1 (S71): pool probe via bank $73 entry 12 (see above). Same-size.
+    push de
+    ld hl, $730c
+    rst $10
+    ld a, e
+    or d
+    pop de
     jr nz, jr_012_5f1a
-
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    dec b
-    jr nz, jr_012_5f00
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 jr_012_5f15:
     ld hl, $0023
@@ -4975,7 +5000,7 @@ jr_012_5f58:
 jr_012_5f68:
     inc b
     ld a, b
-    cp $14
+    cp $28                      ; FX1: whole-swap over all 40 slots
     jr nz, jr_012_5f58
 
     ld hl, $0105
@@ -5015,37 +5040,51 @@ jr_012_5f68:
 
 
 SaveItem_5fb3:
+    ; FX1 (S71): the pool record now lives in SRAM BANK 2 — the in-place
+    ; bank-0 byte swap is replaced by bank $73 entry 10 CF3PoolSwapRecord
+    ; (D = array slot, E = pool slot; per-byte RAMB-2 windows, pin-safe).
+    ; Same-size rewrite (43 B), jr_012_5fcd retired.
     push bc
-    ld a, b
-    ld hl, $cac1
-    call GetMonsterDataPtr
-    push hl
-    ld a, c
-    ld c, $95
-    call Mul8x8To16
-    ld a, l
-    add $24
-    ld l, a
-    ld a, h
-    adc $b1
-    ld h, a
-    pop de
-    ld b, $95
-
-jr_012_5fcd:
-    ld a, [de]
-    push af
-    call EnableSRAM
-    ld [de], a
-    pop af
-    call DisableIntAndPush
-    inc de
-    inc hl
-    dec b
-    jr nz, jr_012_5fcd
-
+    ld d, b
+    ld e, c
+    ld hl, $730a
+    rst $10
     pop bc
     ret
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
 SetItem_5fde:
@@ -5054,19 +5093,25 @@ SetItem_5fde:
     ret nz
 
     set 7, [hl]
-    ld hl, $b124
-    ld bc, $0ba4
-
-jr_012_5fec:
-    xor a
-    call DisableIntAndPush
-    inc hl
-    dec bc
-    ld a, b
-    or c
-    jr nz, jr_012_5fec
-
+    ; FX1 (S71): first-time pool init — zero the 40-slot BANK-2 pool and
+    ; write its "P1" magic via bank $73 entry 11 (the vanilla loop zeroed
+    ; bank-0 $B124, which is now farm slots 20-39 and must NOT be touched).
+    ; Same-size rewrite (17 B), jr_012_5fec retired.
+    ld hl, $730b
+    rst $10
     ret
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
     ld a, [$c825]
@@ -5577,7 +5622,7 @@ LoadItem_62ce:
     add a
     add a
     add b
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -5688,7 +5733,7 @@ jr_012_6369:
     and $7f
     add b
     ld [wPLAN_selection], a
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -5961,7 +6006,7 @@ jr_012_6543:
 
 LoadItem_6544:
     ld a, [wPLAN_selection]
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -5994,7 +6039,7 @@ LoadItem_6544:
 
 
     ld a, [wPLAN_selection]
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -6766,16 +6811,16 @@ LoadItem_6903:
 
 
 SetItem_690a:
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld bc, $0014
     ld a, $ff
     call FillNBytesWithRegA
     ld a, [$ca8e]
-    ld [$c0d8], a
+    ld [wMonList], a  ; FX1: roster list -> wMonList
     ld a, [$ca8f]
-    ld [$c0d9], a
+    ld [wMonList+1], a  ; FX1
     ld a, [$ca90]
-    ld [$c0da], a
+    ld [wMonList+2], a  ; FX1
     ret
 
 
@@ -6813,7 +6858,7 @@ LoadItem_695d:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -6996,7 +7041,7 @@ jr_012_6a61:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -7244,7 +7289,7 @@ jr_012_6bd0:
     ret nz
 
     ld hl, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_012_6bfa:
@@ -7264,7 +7309,7 @@ jr_012_6bfa:
 
 jr_012_6c0a:
     ld a, c
-    cp $14
+    cp $28  ; FX1: 40 slots
     jr nc, jr_012_6c84
 
     ld a, c

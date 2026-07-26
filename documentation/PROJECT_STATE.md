@@ -10,7 +10,51 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-25 (Session 70 — **E2 SIDE-QUEST WIRING SHIPPED + BUG-FIX PASS, USER-CONFIRMED (save, join, conditional, exits). Pin `a5a5e0d5…` (S70v3). Medal Chamber demo quest (room $71 via a MedalMan ext-table door): progression.quests[]/enemies[] lowering → quest:/entry: scripts + bank $14 EID 519; vanilla_exit_extensions → bank $60 entry 7. Bug-fix pass established the PYBOY EMULATOR WORKFLOW (Claude runs the ROM: PYBOY_DEBUGGING.md, tools/pyboy_harness.py) and with it: init_dialog protocol (text outside interactions deadlocks without it — auto-injected by lowering), script-terminator hard guard, encounter seed 1200 (drain measured 100/step), bank $0B custom-source fast transitions (18 f vs the day-one 385 f ceremony), S70v3 walk-on boundary exits (wCustomY7Cmp $DE74). Full battle round-trip emulator-proven: offer/decline, win → resume → flag → GoldSlime joins, loss → Castle re-arm.**)
+> Last verified: 2026-07-26 (Session 71 — **FX1: ACTIVE FARM 17 → 37 SLOTS. SHIPPED, USER-CONFIRMED (farm menus >17, sleep whole-swap, save/reload, breeding + 21-hatch session: "everything works"). Exp-scale VETOED → S71v2 vanilla rate, pin `46ba6991…` (patched; v1 `9c3af0d4…`, v2 delta = drain payout only, PyBoy-verified).** Array = 40 slots (20-39 = the evicted sleep pool's bank-0 home $B124; staging INDICES 20/21→40/41, addresses unchanged); pool → SRAM bank 2 ("P1", 40-slot whole-swap mirror, bank $73 entries 10-12); "F2" one-time reformat + checksum v3 + snapshot "R4" dual-region; roster lists + compaction map → wMonList $D001; exp payout halved at drain (veto-pending). PyBoy-verified on the user's .sav: reformat preserves the save (after fixing an F2-ordering bug that WIPED it), R3→R4 upgrade, 25-farm canonicalize/lists/rewind/dual-snapshot/drain/battle. User accept pending: farm menus >17, sleep whole-swap, save, trade, breeding, join.)
+>
+>
+> Session 71 (2026-07-26 — **FX1: farm expansion 17 → 37 active slots.
+> BUILT S71, NOT user-tested.** Owning: MONSTER_DATA "FX1 as built (S71)";
+> ARCHITECTURE SRAM map; KEY_LESSONS S71. User decisions: 37 farm;
+> whole-swap sleep (pool = full 40-slot non-party mirror in SRAM BANK 2,
+> $A010+c*$95, "P1" magic); exp "scale" = drain payout halved (aggregate
+> 37/32 ≈ vanilla 17/16, per-monster growth HALF vanilla — flagged for
+> veto). Mechanics: GMDP computed-window decode gains two windows
+> ([$D665,$E208]−$2541 → $B124 farm 20-39; [$E209,$E332]−$0BA4 → staging,
+> whose INDICES moved 20/21→40/41 because computed index 20 IS $D665);
+> stride hops re-cut (19→20 +$385; 39→staging +$199D); ~150 adjudicated
+> vanilla-bank edits (bounds $14→$28, staging index writers, $C0D8 roster
+> lists + canonicalizer map → wMonList $D001 64-B carve — 40 entries
+> overflow $C0D8's ~36-B safe extent; drop/pick working sets, skill copy,
+> family buffer, encounter scratch adjudicated STAY); give-opcode full
+> fallback `ld c,$13`→`$27` (latent vanilla-shape bug); sleep machinery →
+> bank $73 entries 10 (record swap, per-byte RAMB-2, pin-safe)/11 (pool
+> zero+magic)/12 (census) via same-size rewrites in banks $12/$07; trade
+> recv → first-empty 3-39; checksum v3 (excl. $B124-$BCC7; heals
+> vanilla/v1/v2) behind the "F2" reformat gate ($BFC8-9) whose ORDER IS
+> LOAD-BEARING (legacy sums before stamp, v3 after — the first build wiped
+> the user's save, caught by PyBoy pre-delivery; KEY_LESSONS); snapshot v4
+> "R4" dual-region ($A1BF×95 + $B124×94 chunks, 28-B lazy-tail no-op
+> overlap; R3 auto-upgrade). PyBoy battery on the real .sav: reformat
+> preserves save; R3→R4; 25-farm canonicalize + compaction across the
+> slot-19 boundary; farm list = 0..27,$FF in wMonList; unsaved pokes
+> persist bank0 across power-cycle then REWIND on continue; seed-path
+> dual-region commit + reboot restore (markers intact); drain pays
+> extended slots pending/2 + levels + zeroes; encounter battle round-trip
+> clean. Compiler re-pinned 38/38 `9c3af0d434f3d5bcd617677a42129778`
+> (S71 patched build; prev a5a5e0d5 S70v3 patched). **USER-CONFIRMED
+> same session** (farm menus >17, sleep whole-swap, save/reload, breeding
+> + a 21-egg hatch run: "everything works, as far as I can test"; the
+> "hatchling shown last" observation = first-empty insertion after the
+> early slots filled + order-preserving compaction — vanilla semantics,
+> newly visible past 17; explained in MONSTER_DATA). **Exp-scale VETOED →
+> S71v2**: drain pays FULL pending (vanilla per-monster rate; halving
+> block removed, payout reads wPendingFarmExp directly; wPoolBounce
+> keeps only its pool-swap role). v2 PyBoy-verified: 512 pending → 512
+> paid in BOTH farm regions + silent levels. Re-pinned 38/38
+> `46ba69918c7ddfdfcd8a441d967debb6` (S71v2 patched; prev 9c3af0d4
+> S71v1 patched). v2 delta vs the user-confirmed v1 = the drain payout
+> amount only.**)
 >
 >
 > Session 70 (2026-07-25 — **E2: data-driven side quests + the emulator
@@ -38,80 +82,9 @@
 > (species+$10 disproven; $11 hard-crashes the renderer).**)
 >
 >
-> Session 69 (2026-07-19 — **E3: 32 KB SRAM expansion via the RAMB PIN.
-> BUILT, NOT yet user-tested.** Owning: ARCHITECTURE "SRAM banking as built
-> S69". Headline: instead of disciplining every SRAM consumer, the quadrant
-> convention (`RAMB := rom_bank>>5` on every rst $10 / return trampoline /
-> audio-tick entry+exit) is REMOVED at its 19 ROM0 producer sites — each
-> `ld [$4100],a` retargeted one operand byte to the MBC5-ignored `$6100`
-> (A/flags/timing preserved for trampoline-flag observers; vanilla itself
-> writes $6100 at boot = proven-inert sink). Boot's three literal `RAMB:=0`
-> kept (the pin's establishment). RAMB is therefore $00 forever; every
-> existing consumer (vanilla quadrant-0 save cluster, CF3 bank $73 entries,
-> $50/$51 walker dereferences) hits bank 0 = exact 8 KB behavior, zero
-> consumer changes. WHY the S65 sketch ("RAMB=0 inside CF3's entry points")
-> was wrong: the vblank audio tick saves only the interrupted ROM bank and
-> RECOMPUTES `RAMB := quadrant(popped bank)` on exit (AudioPopSetDE) —
-> RAMB is not saved state; a per-entry set is clobbered by the first vblank
-> (DOC_AUDIT S69, KEY_LESSONS S69 ×2). Untouched writers adjudicated: bank
-> $40 di-bracketed 4×8 KB wipe ($FFA3-shadowed, exits via InitGameData →
-> boot re-zeros; now genuinely useful at 32 KB); bank $20 streaming system
-> ($C68A has NO initializing writer — provably 0; all exits write RAMB:=0).
-> `HeaderRAMSize $0149 = $03` (32 KB; rgbfix recomputes checksums). New
-> accessor: **CF3SRAMBankedCopy** (bank $73 entry 9; mailbox wSRAMXferBank/
-> Src/Dst/Len $DE8B-$DE91 carved from the reserve, 76 B left) — per-byte
-> di / RAMB:=n / copy / RAMB:=0 / ei; the pin invariant (RAMB==0 whenever
-> IME on) holds at every interruptible point; call with IME on; one side is
-> the SRAM side; SRAM stays enabled (CF3 policy); DE preserved. Banks 1-3
-> arrive UNINITIALIZED — first consumer brings format/magic (E3 residual).
-> Validation: byte-diff vs S65 baseline = exactly 19 operand bytes
-> $41→$61 (all ROM0, offsets $1F/$35/$640/$862/$891/$8A0/$8D2/$8E1/$D5F/
-> $D76/$1167/$11BA/$1575/$1625/$1632/$33F4/$345A/$34E0/$357A) + $0149 +
-> header/global checksums + bank $73 (+2 entry-table shift, label-safe per
-> S58 precedent, + entry 9 at $73:$4302); entry 9 byte-executed on emitted
-> bytes (copies both directions, bank isolation, len-0 no-op, DE preserved,
-> ZERO pin-invariant violations); clean build `1ca6579…` untouched;
-> verifier PASS 5/5; compiler 25/25 re-pinned `e719d286db0ff66e80755ec3ef1203e0`
-> (patched; prev `de0c5a67…` S65). ARCHITECTURE stale 40-flag claim fixed
-> (pre-CF2; DOC_AUDIT S69). E3 remains [~]: (a2) new-game INIT object +
-> (b2) banks-1-3 storage schema: BANK 1 NOW CLAIMED (v2 half, below).
-> User smoke SAME SESSION: old-save load / gate run / warp heal /
-> save+reload / breeding / farm pick+drop PASS; .sav = 32 KB confirmed.
-> **S69v2 — USER-FOUND DEFECT → PERSISTENCE v3 (ROSTER SNAPSHOT), same
-> session.** Report: unsaved battle deaths (and an unsaved catch) survive
-> reset+reload. NOT an S69 regression — the CF3 v2 EAGER roster's reload
-> consequence, confirmed from the user's uploaded .sav (party slots 1-2:
-> HP $0000 + status bit 7 @ +$4A; +$50 empirically = CURRENT HP). The
-> first coffin report was the same mechanism; the S69 Coliseum
-> adjudication was WRONG (user: Coliseum faints auto-revive; DOC_AUDIT
-> S69v2, KEY_LESSONS S69v2). FIX (owning: MONSTER_DATA "Persistence model
-> (v3)"): SRAM bank 1 "R3"-magic snapshot of $A1BF-$AD9E (95×32-B chunks
-> via wSnapBounce $DE92-$DEB1), committed by entry 5's DE==$B124 main-save
-> detector, restored over the eager image by entry 6's tail (then bank0
-> roster → WRAM $CA8D-$CC7F re-copy); magic-absent = one-time seed
-> (migration). No di/ei — ISR graph audited SRAM-free + RAMB-free under
-> the pin, so hooks are IME-agnostic (boot-safe). Reset-no-save now
-> rewinds party+farm to last explicit save (pending-exp rewinds with the
-> main image; pool stays vanilla-eager, sleep-flag-gated; unsaved trades
-> rewind). New game untouched (snapshot must survive unsaved new game);
-> corrupt-save wipe safe ($A002 gate); bank $40 wipe clears magic →
-> reseed. Validation: 4-scenario emitted-bytes execution (commit /
-> death+catch+reset rewind / migration seed / non-main no-trigger, exit
-> RAMB=0 all); diff v1→v2 = bank $73 + global checksum only; verifier
-> PASS 5/5; compiler 25/25 re-pinned `94731e601af28503060acf3884348015`
-> (patched; prev `e719d286…` S69v1). **v2 USER-CONFIRMED same session:
-> all 5 smoke tests PASS (migration heal+save; death→reset-no-save→
-> rewound; catch→reset-no-save→gone; breed/deposit+save persists;
-> sleep/wake + in-gate save). E3 expansion + persistence v3 are
-> user-tested.** Pool write timing verified in code (S69v2): sleep/wake
-> commit $B124-$BCC7 eagerly via the di accessors at action time; the
-> save funnel's blocks end/start flush at $BCC7/$BCC8 — pool is
-> VANILLA-eager, gated by flags in the rewinding image; all sleep reset
-> edges resolve exactly as vanilla.**
->
->
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S69** (2026-07-19): E3 — 32 KB SRAM via the RAMB PIN (19 ROM0 quadrant writers → $6100; header $03) + bank $73 entry 9 CF3SRAMBankedCopy; S69v2 persistence v3 roster snapshot (bank-1 "R3", reset-rewind semantics restored) — user-confirmed 5/5 smoke. Owning: ARCHITECTURE "SRAM banking as built S69", MONSTER_DATA, bank_073 banner.
 - **S67** (2026-07-19): E1 — arena/gate-boss roster format decoded (byte-neutral; NO roster table — op $1F EID formula $E0+9*group+3*match+slot over enemy-stats rows; 53-site boss-script census; $14:$4893 = fight→join redirect; Coliseum RNG bands; $DA02/03/05/07/09 battle-slot RAM; HW-verified same session). Owning: SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67", arena_brackets.json, DOC_AUDIT S67 (2), KEY_LESSONS S67 (2).
 - **S66** (2026-07-18): A′1 — mapID ≥$80 readiness audit: engine ≥$80-READY as patched (58/56 wMapID sites adjudicated; "sign-test" fear impossible on SM83; ceilings $FE hard/$EA practical; music cap $7F); audit_mapid_range.py → mapid_range_audit.json; CF4 v7 user-confirmed. Owning: CROSSBANK_ROOMS §mapID-audit, DOC_AUDIT S66, KEY_LESSONS S66.
 - **S65** (2026-07-18): CF4 — custom-room WRAM migration into the CF3-freed window (buffers $CC80/$CD00, counters $CD80×640, wCustomPool; TRANSIENT permanently) + SRAM-expansion audit (BLOCKED on RAMB discipline → E3); S58 EXPLOIT decision annotated foreclosed; audit_wram.py FREED_WINDOWS model. v7 USER-CONFIRMED S66. Owning: patches/wram.asm banner, PROJECT_COMPILER §2.6, ARCHITECTURE, DOC_AUDIT S65 (3 rows).

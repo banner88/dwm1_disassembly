@@ -6782,7 +6782,7 @@ jr_009_696f:
 jr_009_697c:
     inc c
     ld a, c
-    cp $14
+    cp $28  ; FX1: 40 slots
     jr nz, jr_009_692c
 
 jr_009_6982:

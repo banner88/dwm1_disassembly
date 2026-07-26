@@ -612,7 +612,7 @@ LoadAud_42d1:
     or a
     jr nz, jr_018_42da
 
-    ld a, $15
+    ld a, $29                   ; FX1: staging pseudo-slot 21 -> 41
     ret
 
 
@@ -1060,7 +1060,7 @@ jr_018_459b:
     pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc b
     ld a, b
-    cp $14
+    cp $28  ; FX1: 40 slots
     jr nz, jr_018_459b
 
     ld hl, $024b
@@ -1071,8 +1071,8 @@ jr_018_459b:
 
 
 jr_018_45b8:
-    ; CF3 (S60): trade receive — staging $15 ($D6FA) -> farm slot 19 at its
-    ; SRAM home ($AD0A), via bank $73 entry 8 (enables SRAM, 149-byte copy).
+    ; CF3 (S60)/FX1 (S71): trade receive — staging record ($D6FA) -> FIRST-
+    ; EMPTY farm slot 3-39, via bank $73 entry 8 (enables SRAM, 149-B copy).
     ; Same-size 14-byte window; local loop label pinned in place.
     ld h, $73
     ld l, $08
@@ -1312,7 +1312,7 @@ jr_018_470a:
     pop bc                      ; counters in BC). A/flags clobbered as vanilla.
     inc b
     ld a, b
-    cp $14
+    cp $28  ; FX1: 40 slots
     jr nz, jr_018_46dd
 
     ld a, c
@@ -1321,11 +1321,11 @@ jr_018_470a:
 
 
 SetAud_471e:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
     ld b, $00
     ld c, $00
@@ -1381,7 +1381,7 @@ jr_018_4763:
     inc c
     inc b
     ld a, b
-    cp $14
+    cp $28  ; FX1: 40 slots
     jr nz, jr_018_4733
 
     ret
@@ -1483,7 +1483,7 @@ LoadAud_480d:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -1614,7 +1614,7 @@ LoadAud_48c0:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -1737,7 +1737,7 @@ LoadAud_4970:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1811,7 +1811,7 @@ LoadAud_49f8:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1935,7 +1935,7 @@ jr_018_4abd:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -2167,7 +2167,7 @@ jr_018_4c34:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -2209,8 +2209,8 @@ jr_018_4c76:
     ld [hl], $00
     ld hl, $0105
     rst $10
-    ; CF3 (S60): trade receive — staging $15 ($D6FA) -> farm slot 19 at its
-    ; SRAM home ($AD0A), via bank $73 entry 8 (enables SRAM, 149-byte copy).
+    ; CF3 (S60)/FX1 (S71): trade receive — staging record ($D6FA) -> FIRST-
+    ; EMPTY farm slot 3-39, via bank $73 entry 8 (enables SRAM, 149-B copy).
     ; Same-size 14-byte window; local loop label pinned in place.
     ld h, $73
     ld l, $08

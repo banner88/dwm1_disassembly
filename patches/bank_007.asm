@@ -405,7 +405,7 @@ CallFld_42cd:
     call LoadFld_6880
     push hl
     ld de, $cac1
-    ld b, $14
+    ld b, $28                   ; FX1: 40 slots
     ld c, $00
 
 jr_007_42d8:
@@ -450,7 +450,7 @@ CallFld_4301:
     call LoadFld_6880
     push hl
     ld de, $cac1
-    ld b, $14
+    ld b, $28                   ; FX1: 40 slots
     ld c, $00
 
 jr_007_430c:
@@ -495,40 +495,50 @@ CallFld_4331:
     bit 7, a
     jr z, jr_007_4368
 
+    ; FX1 (S71): the sleep pool lives in SRAM BANK 2 — in-place scan replaced
+    ; by bank $73 entry 12 CF3PoolCounts (E = non-egg, D = egg; DE returns
+    ; through the dispatcher, caller DE saved around it; A carries E across
+    ; the pop). Same-size rewrite, nop-padded (jr_007_4345/435b retired).
     push hl
-    ld hl, $b124
-    ld b, $14
-    ld c, $00
-
-jr_007_4345:
-    push hl
-    call EnableSRAM
-    or a
-    jr z, jr_007_435b
-
-    ld a, l
-    add $63
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    call EnableSRAM
-    or a
-    jr nz, jr_007_435b
-
-    inc c
-
-jr_007_435b:
-    pop hl
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    dec b
-    jr nz, jr_007_4345
-
+    push de
+    ld hl, $730c
+    rst $10
+    ld a, e
+    pop de
+    ld c, a
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     pop hl
 
 jr_007_4368:
@@ -544,40 +554,48 @@ CallFld_436e:
     bit 7, a
     jr z, jr_007_43a5
 
+    ; FX1 (S71): pool egg count via bank $73 entry 12 (D = egg count).
+    ; Same-size rewrite, nop-padded (jr_007_4382/4398 retired).
     push hl
-    ld hl, $b124
-    ld b, $14
-    ld c, $00
-
-jr_007_4382:
-    push hl
-    call EnableSRAM
-    or a
-    jr z, jr_007_4398
-
-    ld a, l
-    add $63
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    call EnableSRAM
-    or a
-    jr z, jr_007_4398
-
-    inc c
-
-jr_007_4398:
-    pop hl
-    ld a, l
-    add $95
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    dec b
-    jr nz, jr_007_4382
-
+    push de
+    ld hl, $730c
+    rst $10
+    ld a, d
+    pop de
+    ld c, a
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     pop hl
 
 jr_007_43a5:

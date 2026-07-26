@@ -3389,7 +3389,7 @@ label4_5c14:
     ld a, b
     ld [$da13], a
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 CheckEnemyData:
@@ -3407,7 +3407,7 @@ CheckEnemyData:
     dec b
     jr nz, CheckEnemyData
 
-    ld c, $13
+    ld c, $27                   ; FX1: array-full fallback = last slot 39 (was 19)
 
 StoreEnemyID:
     ld a, c
@@ -3913,7 +3913,7 @@ label4_5f67:
     adc $00
     ld [$d8d6], a
     ld hl, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 CheckInventorySlot:
@@ -3933,7 +3933,7 @@ CheckInventorySlot:
 
 CheckItemCount14:
     ld a, c
-    cp $14
+    cp $28  ; FX1: 40 slots
     jp c, Jump_004_55f5
 
     call MapTypeDispatch
@@ -3958,7 +3958,7 @@ label4_5f9a:
     ld a, b
     ld [$da13], a
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 CheckItemData:
@@ -4033,7 +4033,7 @@ label4_6002:
     adc $00
     ld [$d8d6], a
     ld hl, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots (party-filtered dance walker)
     ld c, $00
 
 PushAndReadSlot:
@@ -4936,7 +4936,7 @@ label4_6646:
     adc $00
     ld [$d8d6], a
     ld hl, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots (party-filtered dance walker)
     ld c, $00
 
 PushAndCheckHL:

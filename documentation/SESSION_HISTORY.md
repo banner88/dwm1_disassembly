@@ -1,5 +1,78 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Session 69 (2026-07-19 — **E3: 32 KB SRAM expansion via the RAMB PIN.
+> BUILT, NOT yet user-tested.** Owning: ARCHITECTURE "SRAM banking as built
+> S69". Headline: instead of disciplining every SRAM consumer, the quadrant
+> convention (`RAMB := rom_bank>>5` on every rst $10 / return trampoline /
+> audio-tick entry+exit) is REMOVED at its 19 ROM0 producer sites — each
+> `ld [$4100],a` retargeted one operand byte to the MBC5-ignored `$6100`
+> (A/flags/timing preserved for trampoline-flag observers; vanilla itself
+> writes $6100 at boot = proven-inert sink). Boot's three literal `RAMB:=0`
+> kept (the pin's establishment). RAMB is therefore $00 forever; every
+> existing consumer (vanilla quadrant-0 save cluster, CF3 bank $73 entries,
+> $50/$51 walker dereferences) hits bank 0 = exact 8 KB behavior, zero
+> consumer changes. WHY the S65 sketch ("RAMB=0 inside CF3's entry points")
+> was wrong: the vblank audio tick saves only the interrupted ROM bank and
+> RECOMPUTES `RAMB := quadrant(popped bank)` on exit (AudioPopSetDE) —
+> RAMB is not saved state; a per-entry set is clobbered by the first vblank
+> (DOC_AUDIT S69, KEY_LESSONS S69 ×2). Untouched writers adjudicated: bank
+> $40 di-bracketed 4×8 KB wipe ($FFA3-shadowed, exits via InitGameData →
+> boot re-zeros; now genuinely useful at 32 KB); bank $20 streaming system
+> ($C68A has NO initializing writer — provably 0; all exits write RAMB:=0).
+> `HeaderRAMSize $0149 = $03` (32 KB; rgbfix recomputes checksums). New
+> accessor: **CF3SRAMBankedCopy** (bank $73 entry 9; mailbox wSRAMXferBank/
+> Src/Dst/Len $DE8B-$DE91 carved from the reserve, 76 B left) — per-byte
+> di / RAMB:=n / copy / RAMB:=0 / ei; the pin invariant (RAMB==0 whenever
+> IME on) holds at every interruptible point; call with IME on; one side is
+> the SRAM side; SRAM stays enabled (CF3 policy); DE preserved. Banks 1-3
+> arrive UNINITIALIZED — first consumer brings format/magic (E3 residual).
+> Validation: byte-diff vs S65 baseline = exactly 19 operand bytes
+> $41→$61 (all ROM0, offsets $1F/$35/$640/$862/$891/$8A0/$8D2/$8E1/$D5F/
+> $D76/$1167/$11BA/$1575/$1625/$1632/$33F4/$345A/$34E0/$357A) + $0149 +
+> header/global checksums + bank $73 (+2 entry-table shift, label-safe per
+> S58 precedent, + entry 9 at $73:$4302); entry 9 byte-executed on emitted
+> bytes (copies both directions, bank isolation, len-0 no-op, DE preserved,
+> ZERO pin-invariant violations); clean build `1ca6579…` untouched;
+> verifier PASS 5/5; compiler 25/25 re-pinned `e719d286db0ff66e80755ec3ef1203e0`
+> (patched; prev `de0c5a67…` S65). ARCHITECTURE stale 40-flag claim fixed
+> (pre-CF2; DOC_AUDIT S69). E3 remains [~]: (a2) new-game INIT object +
+> (b2) banks-1-3 storage schema: BANK 1 NOW CLAIMED (v2 half, below).
+> User smoke SAME SESSION: old-save load / gate run / warp heal /
+> save+reload / breeding / farm pick+drop PASS; .sav = 32 KB confirmed.
+> **S69v2 — USER-FOUND DEFECT → PERSISTENCE v3 (ROSTER SNAPSHOT), same
+> session.** Report: unsaved battle deaths (and an unsaved catch) survive
+> reset+reload. NOT an S69 regression — the CF3 v2 EAGER roster's reload
+> consequence, confirmed from the user's uploaded .sav (party slots 1-2:
+> HP $0000 + status bit 7 @ +$4A; +$50 empirically = CURRENT HP). The
+> first coffin report was the same mechanism; the S69 Coliseum
+> adjudication was WRONG (user: Coliseum faints auto-revive; DOC_AUDIT
+> S69v2, KEY_LESSONS S69v2). FIX (owning: MONSTER_DATA "Persistence model
+> (v3)"): SRAM bank 1 "R3"-magic snapshot of $A1BF-$AD9E (95×32-B chunks
+> via wSnapBounce $DE92-$DEB1), committed by entry 5's DE==$B124 main-save
+> detector, restored over the eager image by entry 6's tail (then bank0
+> roster → WRAM $CA8D-$CC7F re-copy); magic-absent = one-time seed
+> (migration). No di/ei — ISR graph audited SRAM-free + RAMB-free under
+> the pin, so hooks are IME-agnostic (boot-safe). Reset-no-save now
+> rewinds party+farm to last explicit save (pending-exp rewinds with the
+> main image; pool stays vanilla-eager, sleep-flag-gated; unsaved trades
+> rewind). New game untouched (snapshot must survive unsaved new game);
+> corrupt-save wipe safe ($A002 gate); bank $40 wipe clears magic →
+> reseed. Validation: 4-scenario emitted-bytes execution (commit /
+> death+catch+reset rewind / migration seed / non-main no-trigger, exit
+> RAMB=0 all); diff v1→v2 = bank $73 + global checksum only; verifier
+> PASS 5/5; compiler 25/25 re-pinned `94731e601af28503060acf3884348015`
+> (patched; prev `e719d286…` S69v1). **v2 USER-CONFIRMED same session:
+> all 5 smoke tests PASS (migration heal+save; death→reset-no-save→
+> rewound; catch→reset-no-save→gone; breed/deposit+save persists;
+> sleep/wake + in-gate save). E3 expansion + persistence v3 are
+> user-tested.** Pool write timing verified in code (S69v2): sleep/wake
+> commit $B124-$BCC7 eagerly via the di accessors at action time; the
+> save funnel's blocks end/start flush at $BCC7/$BCC8 — pool is
+> VANILLA-eager, gated by flags in the rewinding image; all sleep reset
+> edges resolve exactly as vanilla.**
+>
+>
+
 > Session 68 (2026-07-19 — **E2 RE half + AUTHORING SPEC: the battle↔story
 > engine decoded (byte-neutral). Owning section: SIDEQUEST_MAP "Story
 > progression ENGINE + AUTHORING SPEC — DECODED S68".**

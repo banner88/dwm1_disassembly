@@ -145,7 +145,13 @@
                  DOC_AUDIT.) **S65 layout of the window**: wCustomNPCBuffer
                  $CC80 (128 B) / wCustomExitBuffer $CD00 (127 B) /
                  step-counter region $CD80-$CFFF (compiler-owned, 640 B) /
-                 wCustomPool $D001-$D664 (1,636 B transient reserve).
+                 wMonList $D001-$D040 (64 B, FX1/S71: roster display
+                 lists + canonicalizer compaction map, relocated from $C0D8
+                 whose safe extent ~36 B overflows at 40 slots) /
+                 wCustomPool $D041-$D5E4 ($5A4 transient reserve) /
+                 wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
+                 scratch; the v1 drain halved-pending use died with the
+                 S71v2 exp-scale veto).
                  TRANSIENT permanently: the window's SRAM image is the live
                  farm, so the CF3 copy skips it BOTH ways; init guaranteed
                  zeroed at power-on/new-game/restore (bank $73 entry 6

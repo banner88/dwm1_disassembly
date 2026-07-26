@@ -7524,8 +7524,8 @@ jr_003_7e9d:
     ld a, $0f
     call BankTrampolineTable
     ld a, [$cac0]
-    cp $16
-    ret z
+    cp $29                      ; FX1: BCD nav cap "29" = binary 41 (staging 41;
+    ret z                       ; vanilla capped at BCD "16" = binary 22)
 
     add $01
     daa

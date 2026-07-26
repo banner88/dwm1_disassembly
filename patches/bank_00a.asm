@@ -1039,7 +1039,7 @@ label455e:
 
 SetFldA_4572:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_4579:
@@ -1077,13 +1077,13 @@ jr_00a_458b:
 
 
 SetFldA_459c:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_45b1:
@@ -1155,7 +1155,7 @@ LoadFldA_4610:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -1292,7 +1292,7 @@ jr_00a_4671:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1362,7 +1362,7 @@ LoadFldA_474b:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1466,7 +1466,7 @@ jr_00a_47f0:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1803,14 +1803,14 @@ label4a10:
     ld [wTempEnemyStatsId], a
     ld a, b
     ld [$da13], a
-    ld a, $15
+    ld a, $29                   ; FX1: NPC-mate synth into staging 21 -> 41
     ld [$da14], a
     ld hl, $1402
     rst $10
     ld a, [$d670]
     xor $01
     ld [$d705], a
-    ld a, $15
+    ld a, $29                   ; FX1: staging 21 -> 41
     ld hl, $caca
     call GetMonsterDataPtr
     ld a, [hl]
@@ -1897,7 +1897,7 @@ label4ad3:
 
 
 label4b1b:
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -2203,7 +2203,7 @@ label4d3c:
 
 SetFldA_4d4d:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_4d54:
@@ -2241,13 +2241,13 @@ jr_00a_4d66:
 
 
 SetFldA_4d77:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_4d8c:
@@ -2319,7 +2319,7 @@ LoadFldA_4deb:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -2404,7 +2404,7 @@ LoadFldA_4e55:
     ld a, [$c8e2]
     and $7f
     add b
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -2475,7 +2475,7 @@ LoadFldA_4ed3:
     ld a, [$c8e2]
     and $7f
     add b
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -2574,7 +2574,7 @@ jr_00a_4f76:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -2743,7 +2743,7 @@ label50a0:
 
 SetFldA_50b1:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
     ld h, $00
 
@@ -2787,13 +2787,13 @@ jr_00a_50d2:
 
 
 SetFldA_50e4:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_50f9:
@@ -2869,7 +2869,7 @@ LoadFldA_515e:
     ld a, [$c8e5]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -2904,7 +2904,7 @@ LoadFldA_5195:
     ld a, [$c8e4]
     and $7f
     add b
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -2956,7 +2956,7 @@ jr_00a_51f0:
     ld a, [$c8e4]
     and $7f
     add b
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -3069,7 +3069,7 @@ jr_00a_52ae:
     ld a, [$c8e4]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -3709,7 +3709,7 @@ jr_00a_57b2:
     ret
 
 label57b9:
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -3744,7 +3744,7 @@ label57e4:
     srl a
     ld [$c8e3], a
     ld a, [$c934]
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -3792,7 +3792,7 @@ label584e:
     ret
 
 label5868:
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -3908,7 +3908,7 @@ jr_00a_5939:
 
 SetFldA_5947:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_594e:
@@ -3946,13 +3946,13 @@ jr_00a_5960:
 
 
 SetFldA_5971:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_5986:
@@ -4021,7 +4021,7 @@ LoadFldA_59d9:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -4093,7 +4093,7 @@ LoadFldA_5a41:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -4269,7 +4269,7 @@ label5b46:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -4357,7 +4357,7 @@ jr_00a_5bed:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -4440,7 +4440,7 @@ label5c5b:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -4549,7 +4549,7 @@ label5d51:
     ret
 
 label5d62:
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld a, l
     ld [$c930], a
     ld a, h
@@ -4603,7 +4603,7 @@ label5d8d:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -5237,7 +5237,7 @@ jr_00a_61e4:
 
 SetFldA_61f2:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_61f9:
@@ -5275,13 +5275,13 @@ jr_00a_620b:
 
 
 SetFldA_621c:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_00a_6231:
@@ -5350,7 +5350,7 @@ LoadFldA_6287:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -5418,7 +5418,7 @@ LoadFldA_62e8:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -5608,7 +5608,7 @@ label63f7:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -5991,7 +5991,7 @@ label6659:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -6210,7 +6210,7 @@ label67bd:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00

@@ -5952,7 +5952,7 @@ CallBtl_61e2:
     nop
     nop
     ld hl, $cac1
-    ld b, $14
+    ld b, $28                   ; FX1: 40 slots (farm share stays CF2-diverted)
     xor a
     ld [$cac0], a
 
@@ -6176,7 +6176,7 @@ jr_050_6318:
 
     inc b
     ld a, b
-    cp $14
+    cp $28                      ; FX1: 40 slots (farm rows CF2-inert)
     jr nz, jr_050_6318
 
     ld hl, $d9ec
@@ -6668,7 +6668,7 @@ jr_050_65f9:
     call BtlFunc_669f
     ld a, $02
     call BtlFunc_669f
-    ld a, $14
+    ld a, $28                   ; FX1: wagered record parked at staging (idx 40)
     ld [$c8ba], a
 
 jr_050_6663:
@@ -6724,7 +6724,7 @@ BtlFunc_669f:
 
 
 jr_050_66b6:
-    ld [hl], $14
+    ld [hl], $28                ; FX1: battle-position cache -> staging idx 40
     ret
 
 

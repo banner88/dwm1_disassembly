@@ -179,7 +179,7 @@ label14_40b4:
     ld de, $da18
     call LoadEnemyStats
     ld a, [$da14]
-    cp $15
+    cp $29                      ; FX1: staging 21 -> 41 (no library bit for preview)
     jr z, jr_014_4158
 
     ld a, [$da18]

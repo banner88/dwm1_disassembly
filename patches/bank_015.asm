@@ -1079,7 +1079,7 @@ jr_015_4761:
     pop bc
     inc b
     ld a, b
-    cp $14
+    cp $28  ; FX1: 40 slots
     jr nz, jr_015_4737
 
     ld a, c
@@ -1088,13 +1088,13 @@ jr_015_4761:
 
 
 SetMap_476f:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_015_4784:
@@ -1186,7 +1186,7 @@ LoadMap_480b:
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -1255,7 +1255,7 @@ LoadMap_4860:
     ld a, [wMenu_selection]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1328,7 +1328,7 @@ LoadMap_48e5:
     ld a, [wMenu_selection]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1486,7 +1486,7 @@ jr_015_49d4:
     ld a, [wMenu_selection]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -1826,7 +1826,7 @@ jr_015_4c3b:
     call LoadMap_5dc0
     ld hl, $0229
     call SetupTilemapTransfer
-    ld a, $14
+    ld a, $28                   ; FX1: staging pseudo-slot index 20 -> 40
     ld [$cac0], a
     ld a, $00
     ld [$d665], a
@@ -1880,7 +1880,7 @@ Jump_015_4c8d:
     call LoadMap_5dc0
     ld hl, $0229
     call SetupTilemapTransfer
-    ld a, $14
+    ld a, $28                   ; FX1: staging pseudo-slot index 20 -> 40
     ld [$cac0], a
     ld a, $00
     ld [$d665], a
@@ -1891,7 +1891,7 @@ Jump_015_4c8d:
 
 SetMap_4cc2:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_015_4cc9:
@@ -1929,13 +1929,13 @@ jr_015_4cdb:
 
 
 SetMap_4cec:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_015_4d01:
@@ -2014,7 +2014,7 @@ LoadMap_4d73:
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -2143,7 +2143,7 @@ jr_015_4e1b:
     ld a, [wMenu_selection]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -2542,7 +2542,7 @@ Jump_015_50da:
     nop
     rst $38
     rst $38
-    ld a, $15
+    ld a, $29                   ; FX1: staging pseudo-slot index 21 -> 41
     ld [$cac0], a
     xor a
     ld [$c906], a
@@ -2859,7 +2859,7 @@ jr_015_5307:
     ld a, b
     ld [$ca8d], a
     ld a, [$c8ba]
-    cp $14
+    cp $28                      ; FX1: staging sentinel 20 -> 40
     jr nz, jr_015_5317
 
     ld a, $ff
@@ -3152,7 +3152,7 @@ FuncMap_54ab:
 
 SetMap_54bf:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_015_54c6:
@@ -3190,13 +3190,13 @@ jr_015_54d8:
 
 
 SetMap_54e9:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_015_54fe:
@@ -3273,7 +3273,7 @@ LoadMap_556a:
     ld a, [wOPTN_and_Item_selection]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -3405,7 +3405,7 @@ Jump_015_561e:
     ld a, [wMenu_selection]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -3806,7 +3806,7 @@ Jump_015_58e0:
     nop
     rst $38
     rst $38
-    ld a, $15
+    ld a, $29                   ; FX1: staging pseudo-slot index 21 -> 41
     ld [$cac0], a
     xor a
     ld [$c906], a
@@ -4107,7 +4107,7 @@ jr_015_5aa5:
     ld a, [wMenu_selection]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -4141,7 +4141,7 @@ jr_015_5b41:
     ld hl, $cac1
     call GetMonsterDataPtr
     ld [hl], $00
-    ld a, $15
+    ld a, $29                   ; FX1: staging 21 -> 41
     ld hl, $caca
     call GetMonsterDataPtr
     ld a, [hl]
@@ -4173,14 +4173,14 @@ jr_015_5b93:
     ld [$0100], a
     call SavePartyToSRAM
     ei
-    ld a, $14
+    ld a, $28                   ; FX1: staging 20 -> 40
     ld hl, $cac2
     call GetMonsterDataPtr
     ld e, l
     ld d, h
     ld hl, $c180
     call Copy4Bytes
-    ld a, $15
+    ld a, $29                   ; FX1: staging 21 -> 41
     ld hl, $cac2
     call GetMonsterDataPtr
     ld e, l

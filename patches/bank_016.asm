@@ -69,7 +69,7 @@ SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
 
 label16_4015:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_016_401c:

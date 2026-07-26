@@ -4910,7 +4910,7 @@ jr_051_5c23:
     ld hl, $89c0
     ld de, $0f01
     call LoadBtlS_73a3
-    ld a, $14
+    ld a, $28                   ; FX1: build display record into staging (idx 40)
     ld [$da14], a
     ld hl, $1403
     rst $10
@@ -4978,7 +4978,7 @@ jr_051_5d20:
     ld h, $05
     ld de, $c180
     call SetupVRAMParams
-    ld a, $14
+    ld a, $28                   ; FX1: staging 20 -> 40
     ld hl, $cacc
     call GetMonsterDataPtr
     ld a, [hl]
@@ -5105,7 +5105,7 @@ jr_051_5e33:
 
 SetBtlS_5e34:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_051_5e3b:
@@ -5248,7 +5248,7 @@ CallBtlS_5f07:
 
 SetBtlS_5f2e:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_051_5f35:
@@ -5293,13 +5293,13 @@ jr_051_5f53:
 
 
 SetBtlS_5f64:
-    ld hl, $c0d8
-    ld bc, $0014
+    ld hl, wMonList  ; FX1: roster list -> wMonList
+    ld bc, $0028  ; FX1: 40 slots
     ld a, $ff
     call FillNBytesWithRegA
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_051_5f79:
@@ -5390,7 +5390,7 @@ LoadBtlS_5fec:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -5521,7 +5521,7 @@ LoadBtlS_609f:
     ld a, [$c8e3]
     add a
     add a
-    ld de, $c0d8
+    ld de, wMonList  ; FX1: roster list -> wMonList
     add e
     ld e, a
     ld a, $00
@@ -5801,7 +5801,7 @@ jr_051_6260:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -5850,7 +5850,7 @@ jr_051_629d:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00
@@ -6010,12 +6010,12 @@ jr_051_63bb:
     ret
 
 
-; BATTLE JOIN first-empty scan (S56): returns c = first empty slot (or
-; $14 if full). The joined monster is built via the bank $14 builder and,
+; BATTLE JOIN first-empty scan (S56/FX1): returns c = first empty slot (or
+; $28 if full — capacity is guarded upstream by SetBtlS_5e34). The joined monster is built via the bank $14 builder and,
 ; if $CA8D < 3, appended to the party list + canonicalized (code below).
 SetBtlS_63e8:
     ld de, $cac1
-    ld b, $14
+    ld b, $28  ; FX1: 40 slots
     ld c, $00
 
 jr_051_63ef:
@@ -6368,7 +6368,7 @@ CmpBtlS_6650:
     ld a, [$c8e2]
     and $7f
     add b
-    ld hl, $c0d8
+    ld hl, wMonList  ; FX1: roster list -> wMonList
     add l
     ld l, a
     ld a, $00

@@ -257,7 +257,22 @@ CUSTOM_ROOM_START EQU $6B ; first custom map type (107 = one past last original)
 ; $CC80 banner). Future subsystems carve named spans from the TOP ($D001+)
 ; and document them here. The historical buffer/counter addresses inside
 ; ($D379/$D3F9/$D478-$D48B) are plain pool bytes since the S65 relocation.
-wCustomPool:: ds $664 ;d001-d664 — 1,636 B transient reserve (end = vanilla array end $D664)
+; FX1 (S71): wMonList — the roster display-list / compaction-map buffer.
+; Vanilla built monster slot-index lists AND the canonicalizer's old->new
+; compaction map at $C0D8, whose safe extent is only ~36 B ($C0FC/$C0FD are
+; live bank $02 state, $C100 is per-screen content). At 40 array slots the
+; map is 40 B and farm lists reach 37 entries, so every MONSTER-list use of
+; $C0D8 (canonicalizer map + count/list-builder pairs + $C0D8[cursor]
+; consumers in banks $01/$0A/$12/$15/$18/$51) is repointed here. Non-roster
+; $C0D8 scratch users (breeding family buffer, skill working copy, master
+; availability, the 4-entry drop/pick working set $C0D8-$C0DB) STAY at $C0D8.
+; Transient by design (init-zero guaranteed by the window-clear chain).
+wMonList:: ds 64 ;d001-d040 — 40 used at TOTAL_SLOTS=40; 64 reserved
+wCustomPool:: ds $5A4 ;d041-d5e4 — transient reserve (was $664; FX1 carved 64+128)
+; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
+; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
+; halved-pending scratch use was removed with the S71v2 exp-scale veto.)
+wPoolBounce:: ds 128 ;d5e5-d664 (end = vanilla array end $D664)
 
 ; Staging pseudo-slots $14/$15 ($D665/$D6FA, $95 B each) — LIVE vanilla:
 ; breeding parents, trade transit, menu scratch (S56; GetMonsterDataPtr
