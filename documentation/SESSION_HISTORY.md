@@ -1,5 +1,31 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Session 70 (2026-07-25 — **E2: data-driven side quests + the emulator
+> revolution. SHIPPED, user-confirmed.** Owning docs: PROJECT_COMPILER
+> (§progression, §vanilla_exit_extensions, §5 re-pin 358 B),
+> PYBOY_DEBUGGING (new), SIDEQUEST_MAP (as-built), CROSSBANK_ROOMS
+> (unified Entry-6 resolve + walk-on y=7), MONSTER_DATA (quest EID rows),
+> KEY_LESSONS ×9. Three pins this session: 6a6f4f87 (v1, wiring),
+> 22d30b66 (v2, bug-fix pass), **a5a5e0d5 (v3, walk-on exits — CURRENT)**.
+> Headline engine findings, all PyBoy-measured: script text is serviced
+> only in dialog mode ($C915 slot $0B) → init_dialog before every
+> out-of-interaction say (vanilla Healer protocol, auto-injected);
+> field-mode script cadence 1/8 frames; encounter drain 100/step;
+> CheckGateWorldMapType's gate-like sweep of $6B+ is load-bearing for
+> movement yet caused the 385-frame exit ceremony — fixed by an in-place
+> bank $0B tail rewrite (custom source → town path); Entry 9 never runs
+> while standing (movement-attempt-gated) → walk-on via the data-driven
+> Entry-6 y=7 skip (wCustomY7Cmp, armed by bank $60 entry 7 per scan;
+> vanilla rooms byte-semantics-unchanged, regression-checked). Compiler
+> hardening: emit_script rejects non-terminated scripts; write_ram2 $13 +
+> init_dialog $07 opcodes (both handler-verified; $07's "1 param" table
+> row is a decompiler defect). Legacy build.compat retired (narrow table =
+> ERROR since the entry-path change). Known cosmetic remainder: guardian
+> sprite $23 renders draconic; sprite-id catalog = future session
+> (species+$10 disproven; $11 hard-crashes the renderer).**)
+>
+>
+
 > Session 69 (2026-07-19 — **E3: 32 KB SRAM expansion via the RAMB PIN.
 > BUILT, NOT yet user-tested.** Owning: ARCHITECTURE "SRAM banking as built
 > S69". Headline: instead of disciplining every SRAM consumer, the quadrant

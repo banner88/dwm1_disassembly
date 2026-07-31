@@ -1,6 +1,11 @@
-# EDITOR DESIGN — Native macOS App + Romhack Architecture
+# EDITOR DESIGN — Cross-Platform Desktop App (PySide6) + Romhack Architecture
 
-> **Status: PLAN LOCKED (Session 13, 2026-06-17).** This document is the
+> **Status: PLAN LOCKED (Session 13, 2026-06-17). AMENDED S72 (user
+> decision): the app is cross-platform (macOS/Windows/Linux; PRIMARY
+> target macOS — the user's machine). PySide6 already satisfies this
+> (§4); the amendment is framing + packaging, not architecture. The
+> Phase 3 walking skeleton is BUILT (S72, `editor2/app/`) — see §9 M3
+> note + PROJECT_STATE.** This document is the
 > single home for the editor architecture *and* the romhack it serves
 > ("Milayou's Story"). Nothing in here is built yet — it is the agreed
 > scope. The build sequence lives in ROADMAP.md Phase 2/2C/3; the canonical
@@ -18,8 +23,10 @@ Two things, one informing the other:
    handful of its *systems*, but tells a new story from a new point of view,
    starting at the moment Milayou is dragged into the dresser. From there the
    world is new content built on the old ROM.
-2. **The editor** — a native macOS app whose job is to make (1) buildable by
-   someone with zero ASM knowledge, and debuggable by an LLM when it breaks.
+2. **The editor** — a cross-platform PySide6 desktop app (primary target
+   macOS — S72) whose job is to make (1) buildable by someone with zero ASM
+   knowledge, and debuggable by an LLM when it breaks. A real native-widget
+   program (Qt), NOT a web/HTML UI — user requirement, reaffirmed S72.
 
 The editor's scope is therefore not "edit everything in DWM1." It is "build
 Milayou's Story": custom tilesets, rooms, NPCs, text, cutscenes, plus the
@@ -283,16 +290,27 @@ source, wrong shape for a canvas editor.
 Claude-workable) · compiler is **deterministic** (same project → byte-identical
 ROM) · validators not folklore (every rule cites its KEY_LESSONS entry).
 
-### macOS specifics
-- **Toolchain bundled**: `rgbasm/rgblink/rgbfix/rgbgfx` as universal binaries in
-  `…app/Contents/Resources/bin/` — users never install RGBDS.
-- **Emulator**: `open -a SameBoy built.gbc`; stretch — drive SameBoy's debugger
-  for breakpoint/warp smoke tests (§6).
-- **Packaging**: PyInstaller `--windowed` → `.app`; codesign + notarize if
-  distributing. Briefcase fallback.
-- **ROM handling**: app never bundles the ROM; first launch asks for
-  `DWM-original.gbc`, verifies MD5 `1ca6579…`, remembers path.
-- Native niceties: QUndoStack ⌘Z, ⌘B build, ⌘R run, autosave, recent projects.
+### Platform packaging (AMENDED S72 — cross-platform; primary target macOS)
+- **Toolchain bundled per-OS**: `rgbasm/rgblink/rgbfix/rgbgfx` v0.6.1 —
+  macOS universal binaries in `…app/Contents/Resources/bin/`; Windows/Linux
+  builds beside the executable (RGBDS builds from source in ~2 min; CI can
+  produce all three). Users never install RGBDS.
+- **Emulator launch** (`editor2/core/emulator.py`, S72, pure Python — no Qt
+  in core): macOS `open -a SameBoy` (probed with `open -Ra`, falls back to
+  the OS default `.gbc` app); Windows `os.startfile` default association;
+  Linux `sameboy` on PATH else `xdg-open`. A user-set custom command with a
+  `{rom}` placeholder overrides all (persisted in QSettings). Stretch —
+  drive SameBoy's debugger for breakpoint/warp smoke tests (§6).
+- **Packaging**: PyInstaller `--windowed` per-OS (`.app` on macOS —
+  codesign + notarize only there; plain dir/installer elsewhere). Briefcase
+  fallback. Dev-mode run everywhere: `pip install PySide6` +
+  `python3 -m editor2.app`.
+- **ROM handling**: app never bundles the ROM; File → Locate original ROM
+  verifies MD5 `1ca6579…`, remembers path (QSettings). Building does NOT
+  need the ROM (the disassembly builds from committed source); the ROM is
+  for integrity checks and future extract/preview features.
+- Native niceties: QUndoStack ⌘Z, ⌘B build, ⌘R run (Ctrl+ elsewhere —
+  QKeySequence maps automatically), autosave, recent projects.
 
 ### Module → ROM primitive map
 | GUI module | Edits | Backed by |
@@ -415,7 +433,15 @@ assign to monster slot" rides the same PNG-import flow as custom room tilesets
    round-trips byte-perfect; v23 content re-expressed as `example-project/`.
 3. **M2 — Bifurcation**: repoint dresser ($2F), strip Terry intro, first Milayou
    room reachable & walkable; preserved-systems flag audit.
-4. **M3 — Walking-skeleton `.app`**: open project, room tree, Build, Run.
+4. **M3 — Walking-skeleton app**: open project, room tree, Build, Run.
+   > **✅ BUILT S72 (NOT yet user-tested).** `editor2/app/` (main.py window +
+   > room list + read-only field tree + build-log dock; build_worker.py
+   > QThread over the UNCHANGED core pipeline; core/emulator.py launcher).
+   > Machine-verified offscreen: opens the example project (7 rooms), and a
+   > GUI-path build is **byte-identical to the pinned reference**
+   > (`editor2/tests/test_app.py --rom`, pin read from test_compiler.py —
+   > GUI build == CLI build == hand overlay). Run: `pip install PySide6`,
+   > `python3 -m editor2.app`.
 5. **M4 — Room canvas + NPC inspector** (visual core).
 6. **M5 — Dialogue + script editors** with live validation.
 7. **M6 — Flags + world map + Sprite/GameData panels**, packaged signed `.app`.
@@ -428,3 +454,59 @@ editor2/
   example-project/   vanilla + v23 content as project.json (regression baseline)
   tests/  compiler determinism + validator unit tests (pytest)
 ```
+> **As built through S72:** `core/` = project.py compiler.py emitters.py
+> formats.py scriptgen.py textenc.py validators.py music.py builder.py
+> templates/ + **emulator.py (S72)**; `app/` = **main.py build_worker.py
+> __main__.py (S72 skeleton)**; `tests/` = test_compiler.py +
+> **test_app.py (S72, PySide6-SKIP-tolerant)**. `extract.py`/`romdata.py`
+> remain future (Layer A).
+
+---
+
+## 11. In-editor preview — simulate vs emulate (S72 design)
+
+**Principle.** The editor SIMULATES only what is *table-derived* —
+deterministic renders from project.json + `extracted/` + decoded formats —
+and EMULATES everything that involves engine state machines. A simulator
+that grows engine semantics beyond the decoded tables is a second
+implementation whose divergences masquerade as documentation; that is the
+failure class the S70 rule ("runtime claims are MEASURED in the emulator,
+not inferred") exists to prevent. Corollary: every Tier-1 renderer is
+validated once against emulator captures before it is trusted as WYSIWYG
+(the `derive_room_palette.py` 30/30-dumps pattern).
+
+**Tier 1 — static simulation (in-widget, no emulator, trustworthy):**
+- **Room canvas WYSIWYG** — layout + tileset + attr + palette are fully
+  ROM-derivable (`render_rooms.py` renders all 107 vanilla rooms;
+  `derive_room_palette.py` validated 30/30 vs SameBoy incl. the forced
+  idx1=`$6BFF`/idx3=`$0000` rule). Pixel-accurate by construction.
+- **Dialogue preview** — charmap/DTE, 18-cell wrap, page split are
+  deterministic (`dwm/text.py`, `core/textenc.py`); render pages with the
+  actual ROM font tiles → pixel-accurate boxes incl. YES/NO layout.
+- **NPC placement** — position/facing markers now; sprite thumbnails once
+  the NPC sprite-id catalog lands (ROADMAP Phase 3 box).
+- **Script/cutscene storyboard** — a SYMBOLIC stepper over the compiled
+  ops: dialogue pages, choice branches, flag set/check effects, gives,
+  warps, BGM changes shown as a navigable flow, with a virtual flag/
+  inventory panel the author toggles to walk each branch. Cutscene
+  blocking (npc_show/hide/moves) animates on the canvas as positional
+  keyframes. This is control-flow visualization over decoded opcode
+  semantics (all 100 opcodes; branch semantics proven by the
+  `all_scripts.json` branch-following work) — NOT timing emulation, and it
+  must never grow engine behavior that isn't in the decoded tables.
+
+**Tier 2 — embedded emulation (dissolves the tradeoff):**
+- **PyBoy as an in-editor preview widget.** PyBoy is pure Python, already
+  a proven project dependency (`tools/pyboy_harness.py`:
+  boot → to_bedroom → warp(mapID,x,y) skips the whole game;
+  PYBOY_DEBUGGING.md). The editor embeds it: Build → boot from a cached
+  post-boot savestate (~instant) → warp to the room under edit → blit
+  frames into a Qt widget at 60 fps with keyboard input. "Play this
+  room/cutscene" becomes one click and a few seconds at FULL engine
+  fidelity, cross-platform, no external install. Battles, music, timing,
+  camera — anything dynamic — previews this way, never by simulation.
+- **SameBoy stays the external ground truth + debugger** (loads
+  `game.sym`); the Run button ships builds there (§ Platform packaging).
+
+**Never simulate:** battle engine, gate generation, audio timing,
+camera/scroll, mode transitions, save/SRAM behavior — Tier 2 only.

@@ -10,7 +10,40 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-26 (Session 71 — **FX1: ACTIVE FARM 17 → 37 SLOTS. SHIPPED, USER-CONFIRMED (farm menus >17, sleep whole-swap, save/reload, breeding + 21-hatch session: "everything works"). Exp-scale VETOED → S71v2 vanilla rate, pin `46ba6991…` (patched; v1 `9c3af0d4…`, v2 delta = drain payout only, PyBoy-verified).** Array = 40 slots (20-39 = the evicted sleep pool's bank-0 home $B124; staging INDICES 20/21→40/41, addresses unchanged); pool → SRAM bank 2 ("P1", 40-slot whole-swap mirror, bank $73 entries 10-12); "F2" one-time reformat + checksum v3 + snapshot "R4" dual-region; roster lists + compaction map → wMonList $D001; exp payout halved at drain (veto-pending). PyBoy-verified on the user's .sav: reformat preserves the save (after fixing an F2-ordering bug that WIPED it), R3→R4 upgrade, 25-farm canonicalize/lists/rewind/dual-snapshot/drain/battle. User accept pending: farm menus >17, sleep whole-swap, save, trade, breeding, join.)
+> Last verified: 2026-07-31 (Session 72 — **Phase 3 walking skeleton BUILT
+> (NOT yet user-tested); byte-neutral session** — verifier PASS 5/5, clean
+> `1ca6579…`, compiler 38/38, ROM pins unchanged.)
+>
+>
+> Session 72 (2026-07-31 — **Phase 3 item 1: editor walking skeleton.
+> BUILT S72, NOT yet user-tested. Byte-neutral** (no patch/ROM changes;
+> pins untouched). Owning: EDITOR_DESIGN (S72 amendments + new §11);
+> ROADMAP Phase 3 + new boxes. As built: `editor2/app/` PySide6 window
+> (main.py: open/reload project, recent-project restore, room list +
+> read-only field tree, build-log dock, ROM-MD5 gate `1ca6579…` +
+> custom-emulator preference via QSettings; build_worker.py: QThread over
+> the UNCHANGED core compile/build pipeline — GUI build == CLI build by
+> construction) + `editor2/core/emulator.py` (cross-platform launch:
+> macOS `open -Ra`-probed SameBoy → `open`; Windows startfile; Linux
+> sameboy → xdg-open; `{rom}` custom command) + `editor2/tests/test_app.py`
+> (offscreen smoke, PySide6-absent → SKIP like verifier check 5; `--rom`
+> asserts GUI-path md5 == test_compiler REFERENCE_MD5 — **machine-verified
+> this session: 7 rooms listed, GUI build byte-identical to `46ba6991…`**).
+> USER DECISIONS (S72): editor is CROSS-PLATFORM (Win/Linux possible,
+> primary macOS), real native-widget app not HTML — EDITOR_DESIGN reframed;
+> preview strategy = simulate only table-derived renders, emulate the rest
+> via an embedded-PyBoy panel (EDITOR_DESIGN §11, new Phase 3 box).
+> Gap-audit boxes ADDED (user-directed): Phase 2 preserved-systems
+> flag-audit + orphaned-trigger validator (was cited by EDITOR_DESIGN but
+> never boxed); **E7 Milayou player art (campaign-blocking, zero prior
+> coverage)**; E8 shop RE (user: hex editors edit stock/prices — likely
+> shallow); **E9 item authoring incl. the USER SPEC: WarpWing →
+> single-slot like BeastTail + permanent (not consumed) for warping
+> anything**; Phase 3 NPC sprite-id catalog promoted from the S70
+> residual. Repo-layout doc fix: `editor2/` row added (was missing).**)
+>
+>
+> Session 71 headline (2026-07-26 — **FX1: ACTIVE FARM 17 → 37 SLOTS. SHIPPED, USER-CONFIRMED (farm menus >17, sleep whole-swap, save/reload, breeding + 21-hatch session: "everything works"). Exp-scale VETOED → S71v2 vanilla rate, pin `46ba6991…` (patched; v1 `9c3af0d4…`, v2 delta = drain payout only, PyBoy-verified).** Array = 40 slots (20-39 = the evicted sleep pool's bank-0 home $B124; staging INDICES 20/21→40/41, addresses unchanged); pool → SRAM bank 2 ("P1", 40-slot whole-swap mirror, bank $73 entries 10-12); "F2" one-time reformat + checksum v3 + snapshot "R4" dual-region; roster lists + compaction map → wMonList $D001; exp payout halved at drain (veto-pending). PyBoy-verified on the user's .sav: reformat preserves the save (after fixing an F2-ordering bug that WIPED it), R3→R4 upgrade, 25-farm canonicalize/lists/rewind/dual-snapshot/drain/battle. User accept pending: farm menus >17, sleep whole-swap, save, trade, breeding, join.)
 >
 >
 > Session 71 (2026-07-26 — **FX1: farm expansion 17 → 37 active slots.
@@ -57,33 +90,8 @@
 > amount only.**)
 >
 >
-> Session 70 (2026-07-25 — **E2: data-driven side quests + the emulator
-> revolution. SHIPPED, user-confirmed.** Owning docs: PROJECT_COMPILER
-> (§progression, §vanilla_exit_extensions, §5 re-pin 358 B),
-> PYBOY_DEBUGGING (new), SIDEQUEST_MAP (as-built), CROSSBANK_ROOMS
-> (unified Entry-6 resolve + walk-on y=7), MONSTER_DATA (quest EID rows),
-> KEY_LESSONS ×9. Three pins this session: 6a6f4f87 (v1, wiring),
-> 22d30b66 (v2, bug-fix pass), **a5a5e0d5 (v3, walk-on exits — CURRENT)**.
-> Headline engine findings, all PyBoy-measured: script text is serviced
-> only in dialog mode ($C915 slot $0B) → init_dialog before every
-> out-of-interaction say (vanilla Healer protocol, auto-injected);
-> field-mode script cadence 1/8 frames; encounter drain 100/step;
-> CheckGateWorldMapType's gate-like sweep of $6B+ is load-bearing for
-> movement yet caused the 385-frame exit ceremony — fixed by an in-place
-> bank $0B tail rewrite (custom source → town path); Entry 9 never runs
-> while standing (movement-attempt-gated) → walk-on via the data-driven
-> Entry-6 y=7 skip (wCustomY7Cmp, armed by bank $60 entry 7 per scan;
-> vanilla rooms byte-semantics-unchanged, regression-checked). Compiler
-> hardening: emit_script rejects non-terminated scripts; write_ram2 $13 +
-> init_dialog $07 opcodes (both handler-verified; $07's "1 param" table
-> row is a decompiler defect). Legacy build.compat retired (narrow table =
-> ERROR since the entry-path change). Known cosmetic remainder: guardian
-> sprite $23 renders draconic; sprite-id catalog = future session
-> (species+$10 disproven; $11 hard-crashes the renderer).**)
->
->
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S70** (2026-07-25): E2 — data-driven side quests (progression.quests/enemies → generated scripts + bank $14 quest EIDs; vanilla_exit_extensions; walk-on y=7 Entry-6 skip) + the PyBoy measurement regime; 3 pins, a5a5e0d5 current that session; init_dialog protocol; 385-frame exit ceremony fixed. SHIPPED, user-confirmed. Owning: PROJECT_COMPILER §progression, PYBOY_DEBUGGING, SIDEQUEST_MAP, CROSSBANK_ROOMS, MONSTER_DATA, KEY_LESSONS ×9.
 - **S69** (2026-07-19): E3 — 32 KB SRAM via the RAMB PIN (19 ROM0 quadrant writers → $6100; header $03) + bank $73 entry 9 CF3SRAMBankedCopy; S69v2 persistence v3 roster snapshot (bank-1 "R3", reset-rewind semantics restored) — user-confirmed 5/5 smoke. Owning: ARCHITECTURE "SRAM banking as built S69", MONSTER_DATA, bank_073 banner.
 - **S67** (2026-07-19): E1 — arena/gate-boss roster format decoded (byte-neutral; NO roster table — op $1F EID formula $E0+9*group+3*match+slot over enemy-stats rows; 53-site boss-script census; $14:$4893 = fight→join redirect; Coliseum RNG bands; $DA02/03/05/07/09 battle-slot RAM; HW-verified same session). Owning: SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67", arena_brackets.json, DOC_AUDIT S67 (2), KEY_LESSONS S67 (2).
 - **S66** (2026-07-18): A′1 — mapID ≥$80 readiness audit: engine ≥$80-READY as patched (58/56 wMapID sites adjudicated; "sign-test" fear impossible on SM83; ceilings $FE hard/$EA practical; music cap $7F); audit_mapid_range.py → mapid_range_audit.json; CF4 v7 user-confirmed. Owning: CROSSBANK_ROOMS §mapID-audit, DOC_AUDIT S66, KEY_LESSONS S66.
@@ -241,7 +249,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. Open boxes: InitBGM channel-count ext (4/5ch sources), gate/event music, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
-| Editor app (Phase 3) | Not started; backend keystone (S42) done |
+| Editor app (Phase 3) | 🟢 **Walking skeleton BUILT S72, NOT yet user-tested** (`editor2/app/`, PySide6, cross-platform — primary macOS; open/rooms/Build/Run; GUI build machine-verified byte-identical to the `46ba6991…` pin via `editor2/tests/test_app.py --rom`). Next boxes: NPC sprite-id catalog, embedded-PyBoy preview, room canvas (ROADMAP Phase 3). Backend keystone (S42) + compiler (S53+) done |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 
@@ -308,6 +316,10 @@ extracted/                     Generated JSON (generator noted in _generator key
 tools/                         Python tools incl. verify_integrity.py
 dwm/                           Python support package (rom, text, map_names, sprite_bank, sprite_codec)
 editor/  (legacy)              Frozen Streamlit editor — do not extend
+editor2/                       THE editor: core/ (headless compiler/builder/
+                               emulator — never imports Qt), app/ (PySide6 GUI,
+                               S72 skeleton), example-project/ (regression
+                               baseline), tests/ (test_compiler, test_app)
 examples/                      Reproducible swap/species examples (not baked)
 towards_editor/                DWM1_Tile_Editor.html — standalone room-design prototype
 data/                          DWM-original.gbc (gitignored, user-provided)

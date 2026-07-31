@@ -486,6 +486,18 @@ pipeline — never retrofit the overlay.
       intercept of `EncounterMonsterSelect`'s pool fetch for custom mapIDs (or
       reuse a verified-unreferenced pool slot). Project fields: up to 5
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
+- [ ] **Preserved-systems flag-dependency audit + orphaned-trigger validator
+      (ADDED S72 — EDITOR_DESIGN §1/§6 cite this box, but it had never been
+      created).** The romhack keeps six vanilla islands (Arena, Shrine,
+      Library, Vault, shops — EDITOR_DESIGN §1 table); any island that READS
+      a vanilla story flag the new campaign stops SETTING will misbehave.
+      Two halves: (a) one-time audit — for each preserved island, list every
+      flag it reads (from `all_scripts.json` branch data + EVENT_FLAGS) and
+      classify satisfy/strip/re-author; (b) the compiler's orphaned-trigger
+      validator (EDITOR_DESIGN §6, spec'd since S13, never implemented) —
+      when Layer A lands, error on any flag read by a kept script that
+      nothing sets in the project. *Accept:* (a) a table per island in
+      SIDEQUEST_MAP; (b) a failing fixture in test_compiler.py.
 
 ### Phase 2C — Gate generation (system mapped S37; see GATE_GENERATION.md)
 - [x] **Custom room into the gate rotation** — BOTH halves done, user-confirmed:
@@ -577,10 +589,35 @@ recipes are pure authoring.
       RoomScreenPtrTable; re-sectioned + repointed, user-confirmed.
       → KEY_LESSONS "Session 14 — Bank $0B repointing"; archive: SESSION_HISTORY.
 
-### Phase 3 — Editor app (see EDITOR_DESIGN.md — native macOS)
-- [ ] Walking skeleton: open project, room list, Build, Run-in-SameBoy
+### Phase 3 — Editor app (see EDITOR_DESIGN.md — PySide6, cross-platform, primary target macOS; S72)
+- [x] **Walking skeleton — BUILT S72, NOT yet user-tested** (`editor2/app/`:
+      open project, room list + read-only field tree, Build ⌘B off the GUI
+      thread over the UNCHANGED core pipeline, Run ⌘R via the new
+      cross-platform `editor2/core/emulator.py`, build-log dock, ROM-MD5
+      gate + emulator command in preferences). *Accept (machine half MET):*
+      `editor2/tests/test_app.py --rom` opens the example project (7 rooms)
+      and the GUI-path build is byte-identical to test_compiler's
+      `REFERENCE_MD5` pin (GUI == CLI == hand overlay). *User half:* runs on
+      the user's Mac (`pip install PySide6; python3 -m editor2.app`), opens
+      example-project, builds, launches SameBoy.
+- [ ] **NPC sprite-id catalog** (promoted S72 from the S70 residual note —
+      it blocks the NPC inspector's sprite picker AND Tier-1 canvas
+      thumbnails, EDITOR_DESIGN §11). Empirical PyBoy session: render each
+      sprite id in a room, screenshot, catalog id → appearance
+      (species+$10 DISPROVEN S70; $11 hard-crashes the renderer — bound the
+      valid range). *Accept:* `extracted/npc_sprite_catalog.json` +
+      thumbnail sheet; the guardian-renders-draconic S70 cosmetic gets its
+      correct id from the catalog.
+- [ ] **Embedded PyBoy preview panel** (EDITOR_DESIGN §11 Tier 2): Build →
+      cached post-boot savestate → warp to the room under edit → frames in
+      a Qt widget with input. *Accept:* one click plays the room being
+      edited, < 10 s from Build-done to walkable.
 - [ ] Room canvas editor → NPC editor → dialogue editor → script editor
-      → flag manager → world/warp map
+      → flag manager → world/warp map (canvas first exposes the
+      layout/tileset compiler-integration gap: bank $64/$67 are tool-owned,
+      referenced by {bank, entry} — folding their emission behind
+      project.json, or wrapping the tools, is the first backend item the
+      UI forces)
 - [ ] Game-data editors (monsters/encounters/breeding) after Phase D
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
@@ -692,6 +729,9 @@ current state (grounded in the repo), why it is campaign-critical, where it is o
 ### Phase E — Campaign-scale subsystems (the "new campaign" gaps)
 Priority: **E1 and E2 are the keystones** (E1 is the one true remaining RE gap; E2 is
 the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
+E7–E9 ADDED S72 (the gap-absent-from-scope audit): **E7 (Milayou player art)
+is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
+(shops, items — incl. the WarpWing spec) are likely-shallow RE+authoring.
 
 - [x] **E1 — Arena / gate-boss ROSTER data format — DECODED S67; arena path
       USER-VERIFIED on HW (SameBoy watchpoints: Class D wrote $DA02=$02 at
@@ -856,6 +896,47 @@ the authoring-model backbone). E3/E4 are important; E5/E6 are lighter.
       allocation/budget strategy so a campaign-length script *provably* fits. *Confidence:
       MEDIUM. Mostly covered by Phase 2; flag capacity-planning as an explicit acceptance test.
       Owning doc: TEXT_SYSTEM + Phase 2 `build_project.py` validations.*
+
+- [ ] **E7 — Player-character art = Milayou (ADDED S72 — the POV flip's most
+      glaring un-scoped requirement).** Zero coverage existed anywhere of
+      the PLAYER's walking sprite (Terry's sheet) or any other player-art
+      surface; the monster follower/battle sprite systems are solved but do
+      not cover the hero. Likely small once located (find the sheet + its
+      loader, same-size 2bpp swap through the proven codec pipeline), but
+      it is unlocated RE today. Also sweep for other player-art surfaces
+      (menu/status portraits if any exist, intro art). *Accept:* player
+      walks all 4 directions as Milayou in SameBoy; loader + sheet
+      addresses documented in MONSTER_DATA or a new ARCHITECTURE subsec.
+      *Confidence: MEDIUM-HIGH (pipeline proven; location unknown).*
+
+- [ ] **E8 — Shop system RE + authoring (ADDED S72).** EDITOR_DESIGN §1
+      assumes "new shops = scripted room type, replicable" — UNVERIFIED.
+      Total current knowledge: script opcode `$04` GameActionDispatch →
+      bank `$09`, subcommand 0 = shop (BANK04_SCRIPT_ENGINE). Inventory
+      lists, prices, buy/sell flow: undecoded. User note (S72): community
+      hex editors already edit shop stock/prices, so the data is likely a
+      simple table — find it, decode it, round-trip it
+      (keystone-first per Phase F methodology). *Accept:* shop
+      inventory/price table decoded + `extracted/` JSON + a changed price
+      visible in SameBoy; authoring schema (`gamedata.shops`) specced.
+      *Confidence: HIGH it's shallow (per user), unproven.*
+
+- [ ] **E9 — Item authoring: edit vanilla items + custom items (ADDED S72;
+      carries a concrete user spec).** Read-only knowledge exists
+      (ItemNamePtrTable/ItemDescPtrTable `$41`, 44 items; 37 item_effect
+      records in `skill_records.json`); there is NO edit/add arc. Wanted:
+      (a) edit existing items — names/descriptions (T-author path),
+      effects (item_effect record edits), and item CLASS bits (what makes
+      BeastTail single-slot/non-stacking, what makes an item consumed on
+      use vs permanent); (b) net-new item ids past 44 (table extents +
+      every indexer — same high-table pattern as Phase N species).
+      **USER SPEC (S72), the acceptance content:** make **WarpWing a
+      single-slot item like BeastTail AND permanent (not consumed on use)
+      for warping anything** — i.e. the inventory-class bit flip + the
+      consume-on-use flip, with warp behavior retained. *Accept:* that
+      WarpWing lands in SameBoy (stays in inventory after use, occupies a
+      single slot); the class/consume bit locations documented.
+      *Confidence: MEDIUM (bits unlocated; likely near the item tables).*
 
 **Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
 **E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work
