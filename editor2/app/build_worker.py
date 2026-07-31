@@ -30,10 +30,11 @@ class BuildWorker(QThread):
     log = Signal(str)
     finished_build = Signal(object)      # BuildResult
 
-    def __init__(self, repo, project_path, parent=None):
+    def __init__(self, repo, project_path, rgbds_dir=None, parent=None):
         super().__init__(parent)
         self.repo = repo
         self.project_path = project_path
+        self.rgbds_dir = rgbds_dir or None
 
     def run(self):
         res = BuildResult()
@@ -52,7 +53,8 @@ class BuildWorker(QThread):
             self.log.emit("Staging patches and running make "
                           "(about a minute)…")
             rom, sym, rom_md5 = B.build_rom(
-                self.repo, out, os.path.join(out, 'build'))
+                self.repo, out, os.path.join(out, 'build'),
+                rgbds_dir=self.rgbds_dir)
             mpath = B.write_manifest(os.path.join(out, 'build'), prj,
                                      self.project_path, rom, sym, rom_md5,
                                      warnings)

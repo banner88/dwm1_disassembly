@@ -1,0 +1,405 @@
+{
+  "bank_usage": {
+    "$60": 2272,
+    "$71": 293,
+    "$74": 13196
+  },
+  "flags": {
+    "vault_cutscene_seen": "$0159",
+    "vault_guardian_beaten": "$0158"
+  },
+  "music": {
+    "dq6_town1": "$A4",
+    "dwm2_bgm06_well": "$9E",
+    "dwm2_bgm07": "$A1",
+    "dwm2_bgm10": "$A7"
+  },
+  "project": "/Users/chklovsk/Desktop/Projects/PostDoc/ML/DWM1/dwm1_disassembly/editor2/example-project",
+  "project_sha256": "4b0d90ba580dcff361dad7fcf8a13c7d736ff0181222eae39c6bfa2ac2d503f7",
+  "rom_md5": "46ba69918c7ddfdfcd8a441d967debb6",
+  "scripts": {
+    "CustomRoom0_Scr00": "60:4180",
+    "CustomRoom0_Scr01": "60:4188",
+    "CustomRoom0_Scr01_declined": "60:41a2",
+    "CustomRoom0_Scr01_invFull": "60:419e",
+    "CustomRoom0_Scr02": "60:41a6",
+    "CustomRoom0_Scr02_declined": "60:41c0",
+    "CustomRoom0_Scr02_storageFull": "60:41bc",
+    "CustomRoom0_Scr03": "60:41c4",
+    "CustomRoom0_Scr03_declined": "60:41d6",
+    "CustomRoom0_Screen0": "60:47a0",
+    "CustomRoom0_Screen4": "60:47c0",
+    "CustomRoom0_ScriptPtrTable": "60:4178",
+    "CustomRoom1_Scr00": "60:41e8",
+    "CustomRoom1_Scr01": "60:41f0",
+    "CustomRoom1_Scr01_noAnswer": "60:41fe",
+    "CustomRoom1_Scr02": "60:4202",
+    "CustomRoom1_Scr02_declined": "60:4216",
+    "CustomRoom1_Scr03": "60:421a",
+    "CustomRoom1_Scr03_declined": "60:422e",
+    "CustomRoom1_Scr04": "60:4232",
+    "CustomRoom1_Scr04_declined": "60:4246",
+    "CustomRoom1_Scr05": "60:424a",
+    "CustomRoom1_Scr06": "60:424e",
+    "CustomRoom1_Scr06_declined": "60:4260",
+    "CustomRoom1_Screen0": "60:47eb",
+    "CustomRoom1_Screen4": "60:480b",
+    "CustomRoom1_ScriptPtrTable": "60:41da",
+    "CustomRoom2_Scr00": "60:481c",
+    "CustomRoom2_Screen0": "60:4826",
+    "CustomRoom2_ScriptPtrTable": "60:481a",
+    "CustomRoom5_Screen0": "60:4854",
+    "CustomRoom5_ScriptPtrTable": "60:4264",
+    "CustomRoom6_Scr00": "60:4268",
+    "CustomRoom6_Scr00_edone": "60:42aa",
+    "CustomRoom6_Scr00_eseen": "60:42a8",
+    "CustomRoom6_Scr01": "60:42b0",
+    "CustomRoom6_Scr01_declined": "60:42e0",
+    "CustomRoom6_Scr01_qdone": "60:42e4",
+    "CustomRoom6_Scr01_req0": "60:42c2",
+    "CustomRoom6_Screen0": "60:4872",
+    "CustomRoom6_ScriptPtrTable": "60:4264"
+  },
+  "step_counters": {
+    "wCustomStep_Room6B_S0": "$CD80",
+    "wCustomStep_Room6B_S4": "$CD81",
+    "wCustomStep_Room6C_S0": "$CD82",
+    "wCustomStep_Room6C_S4": "$CD83",
+    "wCustomStep_Room6C_S5": "$CD84",
+    "wCustomStep_Room6D_S0": "$CD85",
+    "wCustomStep_Room70_S0": "$CD86",
+    "wCustomStep_Room71_S0": "$CD87"
+  },
+  "symbols": {
+    "CopyCustomRoomRecord": "71:4007",
+    "CopyCustomRoomRecord.copy": "71:4046",
+    "CopyCustomRoomRecord.custom": "71:402c",
+    "CopyCustomRoomRecord.haveBase": "71:4027",
+    "CopyCustomRoomRecord.index": "71:4031",
+    "CopyCustomRoomRecord.setFlag": "71:4011",
+    "CopyExitListToBuffer": "60:40c5",
+    "CopyExitListToBuffer.copyByte": "60:40cf",
+    "CopyExitListToBuffer.copyExit": "60:40c8",
+    "CopyExitListToBuffer.exitDone": "60:40d7",
+    "Custom26DDTable": "71:408e",
+    "CustomEncResolve": "71:404d",
+    "CustomEncResolve.disabled": "71:4071",
+    "CustomExitCheck": "60:40b6",
+    "CustomPaletteColors_6B": "17:6cd4",
+    "CustomPaletteColors_6C": "17:6d14",
+    "CustomPaletteColors_6D": "17:6d8a",
+    "CustomPaletteColors_70": "17:6dca",
+    "CustomPtrChase": "60:4011",
+    "CustomPtrChase.validScreen": "60:404c",
+    "CustomReadInteract": "60:408e",
+    "CustomReadInteract.copyNPC": "60:4099",
+    "CustomReadInteract.npcDone": "60:40af",
+    "CustomReadStep": "60:4087",
+    "CustomRoom0_S0_Exits": "60:47b8",
+    "CustomRoom0_S0_NPCs": "60:47a8",
+    "CustomRoom0_S4_Exits": "60:47d3",
+    "CustomRoom0_S4_NPCs": "60:47c8",
+    "CustomRoom0_Scr00": "60:4180",
+    "CustomRoom0_Scr01": "60:4188",
+    "CustomRoom0_Scr01_declined": "60:41a2",
+    "CustomRoom0_Scr01_invFull": "60:419e",
+    "CustomRoom0_Scr02": "60:41a6",
+    "CustomRoom0_Scr02_declined": "60:41c0",
+    "CustomRoom0_Scr02_storageFull": "60:41bc",
+    "CustomRoom0_Scr03": "60:41c4",
+    "CustomRoom0_Scr03_declined": "60:41d6",
+    "CustomRoom0_Screen0": "60:47a0",
+    "CustomRoom0_Screen4": "60:47c0",
+    "CustomRoom0_ScriptPtrTable": "60:4178",
+    "CustomRoom0_SubTable": "60:4790",
+    "CustomRoom1_S0_Exits": "60:4803",
+    "CustomRoom1_S0_NPCs": "60:47f3",
+    "CustomRoom1_S4_Exits": "60:4819",
+    "CustomRoom1_S4_NPCs": "60:4813",
+    "CustomRoom1_Scr00": "60:41e8",
+    "CustomRoom1_Scr01": "60:41f0",
+    "CustomRoom1_Scr01_noAnswer": "60:41fe",
+    "CustomRoom1_Scr02": "60:4202",
+    "CustomRoom1_Scr02_declined": "60:4216",
+    "CustomRoom1_Scr03": "60:421a",
+    "CustomRoom1_Scr03_declined": "60:422e",
+    "CustomRoom1_Scr04": "60:4232",
+    "CustomRoom1_Scr04_declined": "60:4246",
+    "CustomRoom1_Scr05": "60:424a",
+    "CustomRoom1_Scr06": "60:424e",
+    "CustomRoom1_Scr06_declined": "60:4260",
+    "CustomRoom1_Screen0": "60:47eb",
+    "CustomRoom1_Screen4": "60:480b",
+    "CustomRoom1_ScriptPtrTable": "60:41da",
+    "CustomRoom1_SubTable": "60:47db",
+    "CustomRoom2_S0_Exits": "60:4834",
+    "CustomRoom2_S0_NPCs": "60:482e",
+    "CustomRoom2_Scr00": "60:481c",
+    "CustomRoom2_Screen0": "60:4826",
+    "CustomRoom2_ScriptPtrTable": "60:481a",
+    "CustomRoom2_SubTable": "60:481e",
+    "CustomRoom5_S0_Exits": "60:4862",
+    "CustomRoom5_S0_NPCs": "60:485c",
+    "CustomRoom5_Screen0": "60:4854",
+    "CustomRoom5_ScriptPtrTable": "60:4264",
+    "CustomRoom5_SubTable": "60:484c",
+    "CustomRoom6_S0_Exits": "60:4885",
+    "CustomRoom6_S0_NPCs": "60:487a",
+    "CustomRoom6_Scr00": "60:4268",
+    "CustomRoom6_Scr00_edone": "60:42aa",
+    "CustomRoom6_Scr00_eseen": "60:42a8",
+    "CustomRoom6_Scr01": "60:42b0",
+    "CustomRoom6_Scr01_declined": "60:42e0",
+    "CustomRoom6_Scr01_qdone": "60:42e4",
+    "CustomRoom6_Scr01_req0": "60:42c2",
+    "CustomRoom6_Screen0": "60:4872",
+    "CustomRoom6_ScriptPtrTable": "60:4264",
+    "CustomRoom6_SubTable": "60:486a",
+    "CustomRoomAttr": "17:6d7c",
+    "CustomRoomBGMResolve": "71:4076",
+    "CustomRoomBGMTable": "71:40b3",
+    "CustomRoomDummy_SubTable": "60:483c",
+    "CustomRoomPalPtr": "17:6d6e",
+    "CustomRoomPalette_71": "17:6e0a",
+    "CustomRoomPtrTable": "60:4782",
+    "CustomScriptMasterTable": "60:4166",
+    "CustomScriptNoop_Entry": "60:4176",
+    "CustomScriptNoop_PtrTable": "60:4174",
+    "CustomScriptRead": "60:4135",
+    "CustomSourceMapTable": "60:477b",
+    "CustomTextDisplay": "60:415f",
+    "CustomTextPtrTable": "60:42e8",
+    "CustomTextSection0": "60:42ea",
+    "CustomText_00": "60:432a",
+    "CustomText_01": "60:4344",
+    "CustomText_02": "60:435d",
+    "CustomText_03": "60:4372",
+    "CustomText_04": "60:4397",
+    "CustomText_05": "60:43b4",
+    "CustomText_06": "60:43d0",
+    "CustomText_07": "60:43ed",
+    "CustomText_08": "60:440a",
+    "CustomText_09": "60:4424",
+    "CustomText_0A": "60:4442",
+    "CustomText_0B": "60:4461",
+    "CustomText_0C": "60:4479",
+    "CustomText_0D": "60:449b",
+    "CustomText_0E": "60:44b4",
+    "CustomText_0F": "60:44d1",
+    "CustomText_10": "60:44ed",
+    "CustomText_11": "60:450b",
+    "CustomText_12": "60:4533",
+    "CustomText_13": "60:456a",
+    "CustomText_14": "60:458e",
+    "CustomText_15": "60:45c9",
+    "CustomText_16": "60:45e4",
+    "CustomText_17": "60:4602",
+    "CustomText_18": "60:461e",
+    "CustomText_19": "60:464f",
+    "CustomText_1A": "60:4683",
+    "CustomText_1B": "60:46b3",
+    "CustomText_1C": "60:46df",
+    "CustomText_1D": "60:4701",
+    "CustomText_1E": "60:471d",
+    "CustomText_1F": "60:474c",
+    "CustomTilesetInfo": "60:40de",
+    "DummyExits": "60:4063",
+    "DummyNPCs": "60:4062",
+    "DummyStepEntry": "60:405c",
+    "GateAwareDispatch": "60:4126",
+    "GateAwareDispatch.customRoom": "60:4132",
+    "RoomEncTable": "71:409e",
+    "VExt16_V0": "60:489e",
+    "VExt16_V1": "60:48ad",
+    "VExt16_V2": "60:48ca",
+    "VanillaExitExtTable": "60:488d",
+    "VanillaExitResolve": "60:40e2",
+    "VanillaExitResolve.match": "60:410d",
+    "VanillaExitResolve.none": "60:4109",
+    "VanillaExitResolve.scan": "60:40f5",
+    "VanillaExitResolve.stepOk": "60:4119",
+    "VanillaExitResolve.vanillaScan": "60:40f1",
+    "wCustomStep_Room6B_S0": "00:cd80",
+    "wCustomStep_Room6B_S4": "00:cd81",
+    "wCustomStep_Room6C_S0": "00:cd82",
+    "wCustomStep_Room6C_S4": "00:cd83",
+    "wCustomStep_Room6C_S5": "00:cd84",
+    "wCustomStep_Room6D_S0": "00:cd85",
+    "wCustomStep_Room70_S0": "00:cd86",
+    "wCustomStep_Room71_S0": "00:cd87"
+  },
+  "texts": {
+    "$0A00": {
+      "addr": "60:432a",
+      "id": "jerky_offer",
+      "label": "CustomText_00"
+    },
+    "$0A01": {
+      "addr": "60:4344",
+      "id": "jerky_given",
+      "label": "CustomText_01"
+    },
+    "$0A02": {
+      "addr": "60:435d",
+      "id": "jerky_declined",
+      "label": "CustomText_02"
+    },
+    "$0A03": {
+      "addr": "60:4372",
+      "id": "castle_q",
+      "label": "CustomText_03"
+    },
+    "$0A04": {
+      "addr": "60:4397",
+      "id": "castle_yes",
+      "label": "CustomText_04"
+    },
+    "$0A05": {
+      "addr": "60:43b4",
+      "id": "castle_no",
+      "label": "CustomText_05"
+    },
+    "$0A06": {
+      "addr": "60:43d0",
+      "id": "inv_full",
+      "label": "CustomText_06"
+    },
+    "$0A07": {
+      "addr": "60:43ed",
+      "id": "egg_offer",
+      "label": "CustomText_07"
+    },
+    "$0A08": {
+      "addr": "60:440a",
+      "id": "egg_given",
+      "label": "CustomText_08"
+    },
+    "$0A09": {
+      "addr": "60:4424",
+      "id": "egg_declined",
+      "label": "CustomText_09"
+    },
+    "$0A0A": {
+      "addr": "60:4442",
+      "id": "tp_castle_q",
+      "label": "CustomText_0A"
+    },
+    "$0A0B": {
+      "addr": "60:4461",
+      "id": "tp_declined",
+      "label": "CustomText_0B"
+    },
+    "$0A0C": {
+      "addr": "60:4479",
+      "id": "tp_6b_q",
+      "label": "CustomText_0C"
+    },
+    "$0A0D": {
+      "addr": "60:449b",
+      "id": "bgm_q",
+      "label": "CustomText_0D"
+    },
+    "$0A0E": {
+      "addr": "60:44b4",
+      "id": "bgm_changed",
+      "label": "CustomText_0E"
+    },
+    "$0A0F": {
+      "addr": "60:44d1",
+      "id": "bgm_declined",
+      "label": "CustomText_0F"
+    },
+    "$0A10": {
+      "addr": "60:44ed",
+      "id": "storage_full",
+      "label": "CustomText_10"
+    },
+    "$0A11": {
+      "addr": "60:450b",
+      "id": "gate_q",
+      "label": "CustomText_11"
+    },
+    "$0A12": {
+      "addr": "60:4533",
+      "id": "gate_opened",
+      "label": "CustomText_12"
+    },
+    "$0A13": {
+      "addr": "60:456a",
+      "id": "gate_declined",
+      "label": "CustomText_13"
+    },
+    "$0A14": {
+      "addr": "60:458e",
+      "id": "guard_greeting",
+      "label": "CustomText_14"
+    },
+    "$0A15": {
+      "addr": "60:45c9",
+      "id": "bgm07_q",
+      "label": "CustomText_15"
+    },
+    "$0A16": {
+      "addr": "60:45e4",
+      "id": "bgm07_changed",
+      "label": "CustomText_16"
+    },
+    "$0A17": {
+      "addr": "60:4602",
+      "id": "bgm07_declined",
+      "label": "CustomText_17"
+    },
+    "$0A18": {
+      "addr": "60:461e",
+      "id": "vault_c1",
+      "label": "CustomText_18"
+    },
+    "$0A19": {
+      "addr": "60:464f",
+      "id": "vault_c2",
+      "label": "CustomText_19"
+    },
+    "$0A1A": {
+      "addr": "60:4683",
+      "id": "vault_need_one",
+      "label": "CustomText_1A"
+    },
+    "$0A1B": {
+      "addr": "60:46b3",
+      "id": "vault_offer",
+      "label": "CustomText_1B"
+    },
+    "$0A1C": {
+      "addr": "60:46df",
+      "id": "vault_decline",
+      "label": "CustomText_1C"
+    },
+    "$0A1D": {
+      "addr": "60:4701",
+      "id": "vault_prebattle",
+      "label": "CustomText_1D"
+    },
+    "$0A1E": {
+      "addr": "60:471d",
+      "id": "vault_win",
+      "label": "CustomText_1E"
+    },
+    "$0A1F": {
+      "addr": "60:474c",
+      "id": "vault_done",
+      "label": "CustomText_1F"
+    }
+  },
+  "warnings": [
+    "room gate_island screen 4: exit at trigger_y=7 is a BOUNDARY exit (Entry 9 path, walk-into-edge); it cannot coexist with a scroll transition on that edge (KEY_LESSONS S10 Entry 6 vs Entry 9)",
+    "vanilla_exit_extensions[$16] step 0: row at y=7 is a BOUNDARY exit \u2014 Entry 9 is NOT extended (it reads the vanilla bank $0B list), so this row is INERT on the Entry 6 path; keep it only for list-parity documentation",
+    "vanilla_exit_extensions[$16] step 1: row at y=7 is a BOUNDARY exit \u2014 Entry 9 is NOT extended (it reads the vanilla bank $0B list), so this row is INERT on the Entry 6 path; keep it only for list-parity documentation",
+    "vanilla_exit_extensions[$16] step 2: row at y=7 is a BOUNDARY exit \u2014 Entry 9 is NOT extended (it reads the vanilla bank $0B list), so this row is INERT on the Entry 6 path; keep it only for list-parity documentation",
+    "vanilla_exit_extensions[$16] step 3: row at y=7 is a BOUNDARY exit \u2014 Entry 9 is NOT extended (it reads the vanilla bank $0B list), so this row is INERT on the Entry 6 path; keep it only for list-parity documentation",
+    "vanilla_exit_extensions[$16] step 4: row at y=7 is a BOUNDARY exit \u2014 Entry 9 is NOT extended (it reads the vanilla bank $0B list), so this row is INERT on the Entry 6 path; keep it only for list-parity documentation",
+    "vanilla_exit_extensions[$16] step 5: row at y=7 is a BOUNDARY exit \u2014 Entry 9 is NOT extended (it reads the vanilla bank $0B list), so this row is INERT on the Entry 6 path; keep it only for list-parity documentation",
+    "palette pal_6c rows [0, 1, 2, 3, 4, 5, 6, 7]: idx1 != $6BFF or idx3 != $0000 \u2014 engine FORCES those two colours at runtime; authored values there will not display (KEY_LESSONS S7/S39)",
+    "palette pal_6d rows [0, 1, 2, 3, 4, 5, 6, 7]: idx1 != $6BFF or idx3 != $0000 \u2014 engine FORCES those two colours at runtime; authored values there will not display (KEY_LESSONS S7/S39)",
+    "palette pal_70 rows [0, 1, 2, 3, 4, 5, 6, 7]: idx1 != $6BFF or idx3 != $0000 \u2014 engine FORCES those two colours at runtime; authored values there will not display (KEY_LESSONS S7/S39)"
+  ]
+}

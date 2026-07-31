@@ -291,6 +291,17 @@ Claude-workable) · compiler is **deterministic** (same project → byte-identic
 ROM) · validators not folklore (every rule cites its KEY_LESSONS entry).
 
 ### Platform packaging (AMENDED S72 — cross-platform; primary target macOS)
+- **Toolchain preflight (S72, user-hit)**: `builder.check_toolchain()` runs
+  `rgbasm --version` BEFORE staging and hard-errors with install
+  instructions unless it is exactly v0.6.1 (newer rgbasm removed this
+  source's macro syntax — the raw failure mode is a wall of hardware.inc
+  SECTION/ENDM errors). File → "Set RGBDS folder…" points the app at a
+  v0.6.1 binary folder without touching the system PATH (prepended only
+  for the make subprocess; persisted in QSettings). The v0.6.1 pin is
+  PERMANENT project policy (user decision S72): the byte-perfect guarantee
+  was established under it, migration to 1.x risks silent emission drift
+  for zero feature gain, and bundling (below) hides the version from end
+  users entirely.
 - **Toolchain bundled per-OS**: `rgbasm/rgblink/rgbfix/rgbgfx` v0.6.1 —
   macOS universal binaries in `…app/Contents/Resources/bin/`; Windows/Linux
   builds beside the executable (RGBDS builds from source in ~2 min; CI can
@@ -303,7 +314,7 @@ ROM) · validators not folklore (every rule cites its KEY_LESSONS entry).
   drive SameBoy's debugger for breakpoint/warp smoke tests (§6).
 - **Packaging**: PyInstaller `--windowed` per-OS (`.app` on macOS —
   codesign + notarize only there; plain dir/installer elsewhere). Briefcase
-  fallback. Dev-mode run everywhere: `pip install PySide6` +
+  fallback. Dev-mode run everywhere: `pip install PySide6 Pillow` +
   `python3 -m editor2.app`.
 - **ROM handling**: app never bundles the ROM; File → Locate original ROM
   verifies MD5 `1ca6579…`, remembers path (QSettings). Building does NOT
@@ -440,7 +451,7 @@ assign to monster slot" rides the same PNG-import flow as custom room tilesets
    > Machine-verified offscreen: opens the example project (7 rooms), and a
    > GUI-path build is **byte-identical to the pinned reference**
    > (`editor2/tests/test_app.py --rom`, pin read from test_compiler.py —
-   > GUI build == CLI build == hand overlay). Run: `pip install PySide6`,
+   > GUI build == CLI build == hand overlay). Run: `pip install PySide6 Pillow`,
    > `python3 -m editor2.app`.
 5. **M4 — Room canvas + NPC inspector** (visual core).
 6. **M5 — Dialogue + script editors** with live validation.
@@ -456,10 +467,11 @@ editor2/
 ```
 > **As built through S72:** `core/` = project.py compiler.py emitters.py
 > formats.py scriptgen.py textenc.py validators.py music.py builder.py
-> templates/ + **emulator.py (S72)**; `app/` = **main.py build_worker.py
-> __main__.py (S72 skeleton)**; `tests/` = test_compiler.py +
-> **test_app.py (S72, PySide6-SKIP-tolerant)**. `extract.py`/`romdata.py`
-> remain future (Layer A).
+> templates/ + **emulator.py + render.py (S72)**; `app/` = **main.py
+> room_view.py build_worker.py __main__.py (S72 skeleton + room display)**;
+> `tests/` = test_compiler.py + **test_app.py (S72,
+> PySide6-SKIP-tolerant)**. `extract.py`/`romdata.py` remain future
+> (Layer A).
 
 ---
 
@@ -480,6 +492,21 @@ validated once against emulator captures before it is trusted as WYSIWYG
   ROM-derivable (`render_rooms.py` renders all 107 vanilla rooms;
   `derive_room_palette.py` validated 30/30 vs SameBoy incl. the forced
   idx1=`$6BFF`/idx3=`$0000` rule). Pixel-accurate by construction.
+  > **✅ BUILT S72 (read-only display; NOT yet user-tested).**
+  > `editor2/core/render.py` (headless, no Qt) renders any project room
+  > from the LAST BUILT ROM + `game.sym` — screens via `CustomRoomPtrTable`
+  > (bank `$60`), tileset via `$26DD`/`Custom26DDTable`, attrs via
+  > `CustomRoomAttr` (base_entry / base_entry+2 per the Pillar-A stride),
+  > palettes via `CustomRoomPalPtr` with the forced rule (`dw $0000` →
+  > `derive()` on the source map; BG slots 4-7 shown as a neutral system
+  > stand-in, flagged for the canvas milestone). Screens are bounded by
+  > project.json, never blind sub-table walks. Zero new format code —
+  > reuses `render_screen`/`decompress_lz`/`derive`. GUI widget:
+  > `editor2/app/room_view.py` (zoom 1-3×, NPC/spawn/exit marker overlay).
+  > **Validated per the rule below S72:** a PyBoy in-game capture of room
+  > `$6B` (booted from the user's real `.sav`, warped in) shows the
+  > IDENTICAL color set the renderer emits (cream/water/gold/cyan/black,
+  > exact RGB) — exact scroll-aligned tile diff joins the canvas milestone.
 - **Dialogue preview** — charmap/DTE, 18-cell wrap, page split are
   deterministic (`dwm/text.py`, `core/textenc.py`); render pages with the
   actual ROM font tiles → pixel-accurate boxes incl. YES/NO layout.

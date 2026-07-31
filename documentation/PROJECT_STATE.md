@@ -10,37 +10,59 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-31 (Session 72 — **Phase 3 walking skeleton BUILT
-> (NOT yet user-tested); byte-neutral session** — verifier PASS 5/5, clean
-> `1ca6579…`, compiler 38/38, ROM pins unchanged.)
+> Last verified: 2026-07-31 (Session 72 — **Phase 3 walking skeleton +
+> visual room display BUILT (NOT yet user-tested); byte-neutral session**
+> — verifier PASS 5/5, clean `1ca6579…`, compiler 38/38, renderer
+> emulator-validated, ROM pins unchanged.)
 >
 >
-> Session 72 (2026-07-31 — **Phase 3 item 1: editor walking skeleton.
+> Session 72 (2026-07-31 — **Phase 3 item 1: editor walking skeleton +
+> VISUAL ROOM DISPLAY (user-directed extension same session).
 > BUILT S72, NOT yet user-tested. Byte-neutral** (no patch/ROM changes;
-> pins untouched). Owning: EDITOR_DESIGN (S72 amendments + new §11);
-> ROADMAP Phase 3 + new boxes. As built: `editor2/app/` PySide6 window
-> (main.py: open/reload project, recent-project restore, room list +
-> read-only field tree, build-log dock, ROM-MD5 gate `1ca6579…` +
-> custom-emulator preference via QSettings; build_worker.py: QThread over
-> the UNCHANGED core compile/build pipeline — GUI build == CLI build by
-> construction) + `editor2/core/emulator.py` (cross-platform launch:
-> macOS `open -Ra`-probed SameBoy → `open`; Windows startfile; Linux
-> sameboy → xdg-open; `{rom}` custom command) + `editor2/tests/test_app.py`
-> (offscreen smoke, PySide6-absent → SKIP like verifier check 5; `--rom`
+> pins untouched). Owning: EDITOR_DESIGN (S72 amendments + new §11 with
+> as-built notes); ROADMAP Phase 3 + new boxes. As built: `editor2/app/`
+> PySide6 window (main.py: toolbar, open/reload project, recent-project
+> restore, room list, **Room tab = rendered display** + Fields tab,
+> build-log dock, ROM-MD5 gate `1ca6579…` + custom-emulator preference
+> via QSettings; room_view.py: zoom 1-3×, NPC/spawn/exit markers;
+> build_worker.py: QThread over the UNCHANGED core pipeline — GUI build ==
+> CLI build by construction) + `editor2/core/render.py` (headless room
+> renderer from the last built ROM + game.sym: CustomRoomPtrTable screens
+> / $26DD+Custom26DDTable tileset / CustomRoomAttr base(+2) attrs /
+> CustomRoomPalPtr palettes with the forced idx1/idx3 rule, dw $0000 →
+> derive() borrow with neutral slots 4-7 stand-in; screens bounded by
+> project.json; ZERO new format code — reuses
+> render_screen/decompress_lz/derive) + `editor2/core/emulator.py`
+> (cross-platform launch: macOS `open -Ra`-probed SameBoy → `open`;
+> Windows startfile; Linux sameboy → xdg-open; `{rom}` custom command) +
+> `editor2/tests/test_app.py` (offscreen smoke, PySide6-absent → SKIP like
+> verifier check 5; room-view pixel assert + placeholder skip; `--rom`
 > asserts GUI-path md5 == test_compiler REFERENCE_MD5 — **machine-verified
-> this session: 7 rooms listed, GUI build byte-identical to `46ba6991…`**).
-> USER DECISIONS (S72): editor is CROSS-PLATFORM (Win/Linux possible,
-> primary macOS), real native-widget app not HTML — EDITOR_DESIGN reframed;
-> preview strategy = simulate only table-derived renders, emulate the rest
-> via an embedded-PyBoy panel (EDITOR_DESIGN §11, new Phase 3 box).
-> Gap-audit boxes ADDED (user-directed): Phase 2 preserved-systems
-> flag-audit + orphaned-trigger validator (was cited by EDITOR_DESIGN but
-> never boxed); **E7 Milayou player art (campaign-blocking, zero prior
-> coverage)**; E8 shop RE (user: hex editors edit stock/prices — likely
-> shallow); **E9 item authoring incl. the USER SPEC: WarpWing →
-> single-slot like BeastTail + permanent (not consumed) for warping
-> anything**; Phase 3 NPC sprite-id catalog promoted from the S70
-> residual. Repo-layout doc fix: `editor2/` row added (was missing).**)
+> this session: 7 rooms listed, room $6B/$70 render with correct
+> palettes (amber $70 matches the S42 proof room), GUI build
+> byte-identical to `46ba6991…` (the S71v2 patched pin)**). Renderer
+> EMULATOR-VALIDATED per the new §11 rule: PyBoy in-game capture of $6B
+> (user's real .sav, CONTINUE → warp) shows the identical color set the
+> renderer emits. USER DECISIONS (S72): editor is CROSS-PLATFORM
+> (Win/Linux possible, primary macOS), real native-widget app not HTML —
+> EDITOR_DESIGN reframed; preview strategy = simulate only table-derived
+> renders, emulate the rest via an embedded-PyBoy panel (EDITOR_DESIGN
+> §11, new Phase 3 box). Gap-audit boxes ADDED (user-directed): Phase 2
+> preserved-systems flag-audit + orphaned-trigger validator (was cited by
+> EDITOR_DESIGN but never boxed); **E7 Milayou player art
+> (campaign-blocking, zero prior coverage)**; E8 shop RE (user: hex
+> editors edit stock/prices — likely shallow); **E9 item authoring incl.
+> the USER SPEC: WarpWing → single-slot like BeastTail + permanent (not
+> consumed) for warping anything**; Phase 3 NPC sprite-id catalog promoted
+> from the S70 residual. Repo-layout doc fix: `editor2/` row added (was
+> missing). LATE S72 (first user run): Pillow added to run deps +
+> graceful import error; **RGBDS v0.6.1 preflight** in
+> builder.check_toolchain (the user's brew rgbasm v1.0.1 produced the raw
+> hardware.inc SECTION/ENDM wall — now a one-line versioned error with
+> install steps) + app "Set RGBDS folder" preference (build_rom
+> rgbds_dir kwarg, PATH prepended for make only); user decision: the
+> 0.6.1 pin is PERMANENT (vendored-toolchain policy; bundling hides it —
+> EDITOR_DESIGN "Toolchain preflight").**)
 >
 >
 > Session 71 headline (2026-07-26 — **FX1: ACTIVE FARM 17 → 37 SLOTS. SHIPPED, USER-CONFIRMED (farm menus >17, sleep whole-swap, save/reload, breeding + 21-hatch session: "everything works"). Exp-scale VETOED → S71v2 vanilla rate, pin `46ba6991…` (patched; v1 `9c3af0d4…`, v2 delta = drain payout only, PyBoy-verified).** Array = 40 slots (20-39 = the evicted sleep pool's bank-0 home $B124; staging INDICES 20/21→40/41, addresses unchanged); pool → SRAM bank 2 ("P1", 40-slot whole-swap mirror, bank $73 entries 10-12); "F2" one-time reformat + checksum v3 + snapshot "R4" dual-region; roster lists + compaction map → wMonList $D001; exp payout halved at drain (veto-pending). PyBoy-verified on the user's .sav: reformat preserves the save (after fixing an F2-ordering bug that WIPED it), R3→R4 upgrade, 25-farm canonicalize/lists/rewind/dual-snapshot/drain/battle. User accept pending: farm menus >17, sleep whole-swap, save, trade, breeding, join.)

@@ -18,6 +18,35 @@ import shutil
 import subprocess
 
 BUILD_ARTIFACTS = ['game.o', 'game.gbc', 'game.sym', 'game.map']
+RGBDS_REQUIRED = 'v0.6.1'      # PROJECT_STATE Canonical Facts — exact version
+
+
+def check_toolchain(rgbds_dir=None):
+    """Verify rgbasm exists and is exactly v0.6.1 (newer rgbasm changed
+    macro/conditional syntax and fails on this project's source with
+    'Cannot output data outside of a SECTION' / 'unexpected ENDM').
+    Returns the env dict for `make` (PATH-prefixed if rgbds_dir given)."""
+    env = os.environ.copy()
+    if rgbds_dir:
+        env['PATH'] = rgbds_dir + os.pathsep + env.get('PATH', '')
+    try:
+        r = subprocess.run(['rgbasm', '--version'], capture_output=True,
+                           text=True, env=env)
+        found = (r.stdout + r.stderr).strip()
+    except FileNotFoundError:
+        found = None
+    if found is None or RGBDS_REQUIRED not in found:
+        where = f" in {rgbds_dir}" if rgbds_dir else " on PATH"
+        raise RuntimeError(
+            f"RGBDS {RGBDS_REQUIRED} required, found "
+            f"{found or 'no rgbasm'}{where}.\n"
+            "This project builds byte-perfect ONLY with v0.6.1 "
+            "(newer rgbasm rejects its syntax).\n"
+            "Install:  git clone --branch v0.6.1 --depth 1 "
+            "https://github.com/gbdev/rgbds.git && make -C rgbds\n"
+            "Then either put rgbasm/rgblink/rgbfix/rgbgfx on PATH, or point "
+            "the editor at the folder (File -> Set RGBDS folder).")
+    return env
 
 
 def _patch_lists(repo):
@@ -33,9 +62,12 @@ def md5(path_or_bytes):
     return hashlib.md5(data).hexdigest()
 
 
-def build_rom(repo, generated_dir, out_dir):
+def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
     """Stage patches + generated over disassembly/, build, capture, restore.
+    rgbds_dir: optional folder holding the v0.6.1 binaries (prepended to
+    PATH for `make`); either way the version is verified first.
     Returns (rom_path, sym_path, rom_md5)."""
+    env = check_toolchain(rgbds_dir)
     dis = os.path.join(repo, 'disassembly')
     patches = os.path.join(repo, 'patches')
     patch_files, patch_new = _patch_lists(repo)
@@ -56,7 +88,8 @@ def build_rom(repo, generated_dir, out_dir):
             for f in sorted(os.listdir(gen_patches)):
                 shutil.copy(os.path.join(gen_patches, f),
                             os.path.join(dis, f))
-        r = subprocess.run(['make'], cwd=dis, capture_output=True, text=True)
+        r = subprocess.run(['make'], cwd=dis, capture_output=True,
+                           text=True, env=env)
         if r.returncode != 0:
             tail = "\n".join((r.stdout + r.stderr).splitlines()[-25:])
             raise RuntimeError(f"build failed:\n{tail}")

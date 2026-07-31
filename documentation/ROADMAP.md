@@ -590,16 +590,27 @@ recipes are pure authoring.
       → KEY_LESSONS "Session 14 — Bank $0B repointing"; archive: SESSION_HISTORY.
 
 ### Phase 3 — Editor app (see EDITOR_DESIGN.md — PySide6, cross-platform, primary target macOS; S72)
-- [x] **Walking skeleton — BUILT S72, NOT yet user-tested** (`editor2/app/`:
-      open project, room list + read-only field tree, Build ⌘B off the GUI
-      thread over the UNCHANGED core pipeline, Run ⌘R via the new
-      cross-platform `editor2/core/emulator.py`, build-log dock, ROM-MD5
-      gate + emulator command in preferences). *Accept (machine half MET):*
-      `editor2/tests/test_app.py --rom` opens the example project (7 rooms)
-      and the GUI-path build is byte-identical to test_compiler's
-      `REFERENCE_MD5` pin (GUI == CLI == hand overlay). *User half:* runs on
-      the user's Mac (`pip install PySide6; python3 -m editor2.app`), opens
-      example-project, builds, launches SameBoy.
+- [x] **Walking skeleton + visual room display — BUILT S72, NOT yet
+      user-tested** (`editor2/app/`: open project, toolbar + room list,
+      **rendered room view** — real tileset/attr/palette from the last
+      built ROM via `editor2/core/render.py` (symbol-driven, reuses the
+      proven render_screen/decompress_lz/derive pipeline; EDITOR_DESIGN
+      §11 Tier-1 as-built), NPC/spawn/exit marker overlay, zoom 1-3×,
+      Fields tab, Build ⌘B off the GUI thread over the UNCHANGED core
+      pipeline, Run ⌘R via the new cross-platform
+      `editor2/core/emulator.py`, build-log dock, ROM-MD5 gate + emulator
+      command in preferences; S72 late addition after the user's first
+      run: RGBDS v0.6.1 preflight in builder + File → Set RGBDS folder —
+      EDITOR_DESIGN "Toolchain preflight"). *Accept (machine half MET):*
+      `editor2/tests/test_app.py --rom` opens the example project (7
+      rooms), the room view renders pixels from an existing build
+      (placeholders correctly skipped), and the GUI-path build is
+      byte-identical to test_compiler's `REFERENCE_MD5` pin (GUI == CLI ==
+      hand overlay); renderer emulator-validated (room `$6B` color set ==
+      PyBoy in-game capture off the user's real .sav). *User half:* runs on
+      the user's Mac (`pip install PySide6 Pillow; python3 -m editor2.app`), opens
+      example-project, rooms display with correct tilesets, builds,
+      launches SameBoy.
 - [ ] **NPC sprite-id catalog** (promoted S72 from the S70 residual note —
       it blocks the NPC inspector's sprite picker AND Tier-1 canvas
       thumbnails, EDITOR_DESIGN §11). Empirical PyBoy session: render each

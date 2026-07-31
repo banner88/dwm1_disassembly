@@ -24,7 +24,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 try:
     from PySide6.QtWidgets import QApplication          # noqa: E402
 except ImportError:
-    print('SKIP: PySide6 not installed (pip install PySide6)')
+    print('SKIP: PySide6 not installed (pip install PySide6 Pillow)')
     sys.exit(0)
 
 
@@ -46,6 +46,30 @@ def main():
     assert n >= 6, f'room list has {n} entries, expected >= 6'
     assert w.a_build.isEnabled(), 'Build action not enabled after open'
     print(f'OK: window up, {n} rooms listed, Build enabled')
+
+    # Room view: if a build exists, the selected room must render to pixels.
+    from editor2.core.render import find_build            # noqa: E402
+    if find_build(w.project_path):
+        app.processEvents()
+        pm = w.room_view.canvas.pixmap()
+        assert pm is not None and not pm.isNull() and pm.width() > 100, \
+            'room view produced no pixmap from the existing build'
+        # placeholder room must NOT render (text instead of pixmap)
+        for i in range(n):
+            if 'placeholder' in w.room_list.item(i).text():
+                w.room_list.setCurrentRow(i)
+                app.processEvents()
+                pm2 = w.room_view.canvas.pixmap()
+                assert pm2 is None or pm2.isNull(), \
+                    'placeholder room unexpectedly rendered'
+                break
+        w.room_list.setCurrentRow(0)
+        app.processEvents()
+        print('OK: room view renders from the existing build '
+              '(placeholder rooms correctly skipped)')
+    else:
+        print('NOTE: no existing build — room-view render check skipped '
+              '(run with --rom to build first)')
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

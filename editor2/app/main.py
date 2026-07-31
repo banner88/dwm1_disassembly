@@ -6,7 +6,7 @@ EDITOR_DESIGN §4). The GUI is a shell over editor2.core; it never encodes
 game formats itself and a build here is byte-identical to
 `tools/build_project.py --build` by construction (same code path).
 
-Run:  pip install PySide6   then   python3 -m editor2.app
+Run:  pip install PySide6 Pillow   then   python3 -m editor2.app
 """
 
 import hashlib
@@ -19,10 +19,11 @@ from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QDockWidget, QFileDialog, QInputDialog, QLabel,
     QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPlainTextEdit,
-    QSplitter, QStatusBar, QTreeWidget, QTreeWidgetItem, QVBoxLayout,
-    QWidget)
+    QSplitter, QStatusBar, QStyle, QTabWidget, QToolBar, QTreeWidget,
+    QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from editor2.app.build_worker import BuildWorker
+from editor2.app.room_view import RoomView
 from editor2.core import emulator
 
 REPO = os.path.dirname(os.path.dirname(
@@ -58,14 +59,20 @@ class MainWindow(QMainWindow):
     # ---------------- UI scaffolding ----------------
     def _build_ui(self):
         self.setWindowTitle('DWM1 Editor')
-        self.resize(1100, 720)
+        self.resize(1200, 780)
 
         self.room_list = QListWidget()
         self.room_list.currentItemChanged.connect(self._show_room)
 
+        self.room_view = RoomView()
+
         self.detail = QTreeWidget()
         self.detail.setHeaderLabels(['Field', 'Value'])
         self.detail.setColumnWidth(0, 240)
+
+        tabs = QTabWidget()
+        tabs.addTab(self.room_view, 'Room')
+        tabs.addTab(self.detail, 'Fields')
 
         split = QSplitter()
         left = QWidget()
@@ -75,8 +82,9 @@ class MainWindow(QMainWindow):
         lv.addWidget(self.rooms_header)
         lv.addWidget(self.room_list)
         split.addWidget(left)
-        split.addWidget(self.detail)
+        split.addWidget(tabs)
         split.setStretchFactor(1, 1)
+        split.setSizes([260, 940])
         self.setCentralWidget(split)
 
         self.log = QPlainTextEdit()
@@ -109,6 +117,9 @@ class MainWindow(QMainWindow):
         a_emu = QAction('Set emulator command…', self)
         a_emu.triggered.connect(self._set_emulator)
         m_file.addAction(a_emu)
+        a_rgbds = QAction('Set RGBDS folder…', self)
+        a_rgbds.triggered.connect(self._set_rgbds)
+        m_file.addAction(a_rgbds)
 
         m_build = self.menuBar().addMenu('&Build')
         self.a_build = QAction('&Build ROM', self)
@@ -121,6 +132,22 @@ class MainWindow(QMainWindow):
         self.a_run.triggered.connect(self.run_rom)
         self.a_run.setEnabled(False)
         m_build.addAction(self.a_run)
+
+        # Toolbar — same actions as buttons with standard icons
+        style = self.style()
+        a_open2 = QAction(style.standardIcon(QStyle.SP_DirOpenIcon),
+                          'Open project…', self)
+        a_open2.triggered.connect(self._open_dialog)
+        self.a_build.setIcon(style.standardIcon(QStyle.SP_ArrowDown))
+        self.a_run.setIcon(style.standardIcon(QStyle.SP_MediaPlay))
+        tb = QToolBar('Main')
+        tb.setMovable(False)
+        tb.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        tb.addAction(a_open2)
+        tb.addSeparator()
+        tb.addAction(self.a_build)
+        tb.addAction(self.a_run)
+        self.addToolBar(tb)
 
     # ---------------- ROM + emulator preferences ----------------
     def _restore_rom_status(self):
@@ -147,6 +174,14 @@ class MainWindow(QMainWindow):
             return
         self.settings.setValue('rom/path', path)
         self._restore_rom_status()
+
+    def _set_rgbds(self):
+        path = QFileDialog.getExistingDirectory(
+            self, 'Folder containing the RGBDS v0.6.1 binaries '
+            '(rgbasm, rgblink, rgbfix, rgbgfx)')
+        if path:
+            self.settings.setValue('rgbds/dir', path)
+            self.log.appendPlainText(f'RGBDS folder set: {path}')
 
     def _set_emulator(self):
         cur = self.settings.value('emulator/command', '')
@@ -185,6 +220,11 @@ class MainWindow(QMainWindow):
         self._fill_rooms()
         self.a_build.setEnabled(True)
         self.a_run.setEnabled(False)
+        if self.room_view.attach_build(self.project_path):
+            self.log.appendPlainText(
+                'Found an existing build — rooms render from it. '
+                'Rebuild (⌘B / Ctrl+B) after editing project.json.')
+        self.room_view.refresh()
         self.log.appendPlainText(f'Opened project: {path}')
 
     def _fill_rooms(self):
@@ -205,6 +245,7 @@ class MainWindow(QMainWindow):
         if not item:
             return
         r = item.data(Qt.UserRole)
+        self.room_view.show_room(r)
 
         def add(parent, k, v):
             node = QTreeWidgetItem([str(k), '' if isinstance(v, (dict, list))
@@ -230,7 +271,9 @@ class MainWindow(QMainWindow):
         self.a_build.setEnabled(False)
         self.a_run.setEnabled(False)
         self.statusBar().showMessage('Building…')
-        self.worker = BuildWorker(REPO, self.project_path)
+        self.worker = BuildWorker(
+            REPO, self.project_path,
+            rgbds_dir=self.settings.value('rgbds/dir', '') or None)
         self.worker.log.connect(self.log.appendPlainText)
         self.worker.finished_build.connect(self._build_done)
         self.worker.start()
@@ -244,6 +287,8 @@ class MainWindow(QMainWindow):
                               for b, n in sorted(res.bank_usage.items()))
             self.statusBar().showMessage(
                 f'Built rom.gbc · md5 {res.rom_md5} · {usage}')
+            self.room_view.attach_build(self.project_path)
+            self.room_view.refresh()
         else:
             self.statusBar().showMessage('Build failed — see Build log')
 
