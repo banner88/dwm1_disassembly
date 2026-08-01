@@ -197,15 +197,18 @@
 ;   $4A     1     Battle status; bit7 = KO/incapacitated (no exp, not
 ;                 counted for the party share; bulk-cleared by
 ;                 $01:IteratePartySlots20) (S56)
+;   $29     8     Skill array (8 slots; the SKIL menu caches this to $CAEA) [S73]
 ;   $4B     1     Level
 ;   $4C     1     Level cap
 ;   $4D     3     Experience (24-bit)
-;   $50     2     HP (16-bit)
-;   $52     2     MP
-;   $54     2     ATK
-;   $56     2     DEF
-;   $58     2     AGL
-;   $5A     2     INT
+;   $50     2     Current HP (16-bit)
+;   $52     2     Max HP        [S73 CORRECTION — the old "+$52 MP" row was
+;   $54     2     Current MP     wrong: the field afford check reads +$54,
+;   $56     2     Max MP         Heal validates +$50 vs +$52, and the harness
+;   $58     2     ATK            record shows cur/max pairs 001B/001B,
+;   $5A     2     DEF            0062/0062. ATK/DEF/AGL/INT shift +4.]
+;   $5C     2     AGL
+;   $5E     2     INT
 ;   $62     1     Plus value (0-99)
 ;   $68     27    Resistances
 
@@ -468,3 +471,20 @@
                  $0F ($3C-$3F)=staircase. See GATE_GENERATION.md §5.1.
 
 {{Internal Data|game=Dragon Warrior Monsters}}
+
+; ---- S73 additions (Anchor + field-menu findings) ---------------------------
+;   C8DA    1    Field main-menu 2x2 grid cursor: 0 INFO / 1 ITEM / 2 SKIL /
+;                3 OPTN; bit7 = selection latched. [S73]
+;   C90D    1    Field menu SHELL state (dispatcher $07:$4009): 0 closed /
+;                1 (re)draw-main transition / 2 main menu / 3 sub-page /
+;                4 FULL teardown-to-field (label7_6b04). Code-close = write 4;
+;                writing 1 only returns to the main menu. [S73]
+;   DA5E    1    Field menu: SELECTED skill id (SKIL flow) or item id (ITEM
+;                flow); bank $14 entry 4 sets $FF = "fizzle". [S73]
+;   D9D7    1    wAnchorGate  — persistent (save image): anchored gate 0-31
+;   D9D8    1    wAnchorFloor — persistent: anchored floor, 1-BASED
+;                (wCurrentFloor is 0-based); 0 = no anchor. Flags $01E0-$01EF
+;                retired in exchange (EVENT_FLAGS). [S73]
+;   DEB2    1    wAnchorArm — transient protocol: 1 store / 2 install+charge /
+;                3 force-standard (GateDecisionFork consumes). [S73]
+;   DEB3    1    wAnchorCaster — caster party slot 0-2, captured at cast. [S73]

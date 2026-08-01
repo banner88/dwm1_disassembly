@@ -5488,12 +5488,24 @@ FamilyRecipeResolve:
 ; would re-run the standard path and clobber wMapID). HL is dead here (it gets
 ; reloaded in every downstream path), so popping into it is safe.
 GateDecisionFork:
+    ld a, [wAnchorArm]          ; [ANCHOR S73] arm==3 = anchor return in flight
+    cp 3                        ;   (set by the bank $73 commit hook): force the
+    jr z, .anchorStd            ;   STANDARD maze path for ANY gate — the user
+                                ;   spec says a regenerated anchor floor can
+                                ;   NEVER be a special room. Note: this also
+                                ;   bypasses the gate-1 custom rotation (Pillar
+                                ;   B POC) on anchor returns, by design.
     ld a, [wGateID]
     or a
     jr z, .gate0
     cp $01
     jr z, .gate1
     ret                         ; gates 2-31: continue to RNG gating ($5BAF)
+.anchorStd:
+    xor a
+    ld [wAnchorArm], a          ; consume arm (one floor only)
+    pop hl                      ; drop call return addr -> RET unwinds to caller
+    jp jr_016_5bbf              ; standard maze path
 .gate0:
     pop hl                      ; drop call return addr -> RET unwinds to caller
     jp jr_016_5bbf              ; standard maze (vanilla gate-0 behaviour)

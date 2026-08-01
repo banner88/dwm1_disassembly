@@ -21,6 +21,7 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
 ### Reverse engineering (formats fully decoded, ROM-verified)
 | Item | Evidence |
 |------|----------|
+| FIELD-cast skill pipeline (menu shell $c90d 0-4, usability whitelist, $da5e, bank $14 entries 4/5, menu-armed script protocol ctr=$FFFF) — S73 | BATTLE_SKILL_SYSTEM §14; skill $E4 Anchor round trip verified in PyBoy + USER-CONFIRMED in SameBoy |
 | Monster info table $03:$4461, 221×43 B | family bytes 0–9 across all entries (DOC_AUDIT B) |
 | Enemy stats $14:$4C1D, 487×25 B | 487/487 $FF delimiters at +$18 |
 | Boss table $14:$4897 (32×4 B) + redirect $4893 | ROM bytes + bank_014 header (DOC_AUDIT A.5) |
@@ -1219,3 +1220,22 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
       build_new_species.py; reproducible from the clean tree. *Accept:* rebuilding
       from the JSON alone reproduces the current baked state byte-for-byte; the
       hand-staged pieces are deleted.
+
+## S73 user-directed item — custom skill $E4 "Anchor" (outside the numbered phases)
+- [x] **SHIPPED, USER-CONFIRMED** (v1 mechanics + S73b descriptions/battle rejection; pin `224b1176…`): field-cast skill
+  "Anchor" — anchor a STANDARD gate floor → confirm dialog → warp to GreatTree
+  (WarpWing recipe); cast in town → confirm ("spend most MP") → return to the
+  exact anchored floor, regenerated + FORCED standard, 3/4 of current MP
+  charged upon arrival; anchor persists through save (save-image bytes
+  $D9D7-8), single-use, overwritten by re-anchoring. Error dialogs in
+  special/boss/custom rooms and for no-anchor town casts. Slim (new-game
+  harness) knows it. v2 backlog: boss-room anchoring (needs the 53-site
+  boss-script flag survey), "can't use in battle" message (battle cast is a
+  silent no-op in v1), YES/NO default-cursor feel, dedicated script-container
+  room instead of medal_vault hosting, optional persist-after-use policy flag.
+- [x] S73b (user feedback round 1): mechanics USER-CONFIRMED; skill
+  descriptions added for $E0-$E4 (blank-box fix; table $56:$6667 found);
+  battle cast now rejects via StepGuard's exact path (message, no turn
+  consumed, excluded from the AI pool). New pin `224b1176…`. The reported
+  save-wipe + castle-top corruption did not reproduce (user retest + 3 PyBoy
+  cycles) — transient/unconfirmed, watch.

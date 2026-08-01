@@ -1720,14 +1720,15 @@ jr_050_498a:
     jr z, jr_050_49a7
 
     ld a, [hl]
-    cp $37
-    jr z, jr_050_49a2
-
-    cp $38
-    jr z, jr_050_49a2
-
-    cp $7e
-    jr z, jr_050_49a2
+    call FieldOnlySkillA        ; [S73] was the inline cp $37/$38/$7e ladder
+    jr z, jr_050_49a2           ;   (12 bytes -> 3+2+7 nops, byte-neutral).
+    nop                         ;   Field-only skills (now incl. $E4 Anchor)
+    nop                         ;   don't count toward the usable-skill pool.
+    nop
+    nop
+    nop
+    nop
+    nop
 
     ld a, [wBattlePostFlag]
     inc a
@@ -2064,17 +2065,16 @@ Jump_050_4b97:
 
 
 LoadBtl_4b98:
-    ld a, b
-    cp $37
-    jr z, jr_050_4ba3
-
-    cp $38
-    jr z, jr_050_4ba3
-
-    cp $7e
-
-jr_050_4ba3:
-    ret
+    ld a, b                     ; [S73] field-only predicate rewritten IN PLACE
+    jp FieldOnlySkillA          ;   (12-byte window: was cp $37/$38/$7e ladder;
+    nop                         ;   4 bytes + 8 nops, byte-neutral). Z = the
+    nop                         ;   skill is FIELD-ONLY -> battle menu shows the
+    nop                         ;   vanilla $0302 "can't use" message via
+    nop                         ;   jr_050_4a57 and returns WITHOUT queueing the
+    nop                         ;   action (no turn consumed) — StepGuard's path.
+    nop
+    nop
+    nop
 
 
 SaveBtl_4ba4:
@@ -11676,18 +11676,7 @@ SetBtl_7e1e:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+    ; [S73] 12 pad nops consumed (funding FieldOnlySkillA at EOF)
 ; -----------------------------------------------------------------------------
 ; [CF2] CF2FarmShareDivert — called from the 14-byte window at $61FA (see the
 ; walker above). Entry: HL:E = 24-bit battle exp total ($DD23-25).
@@ -11745,3 +11734,21 @@ AliasCommit:               ; b = skill id being committed to action queue $dcec
     xor a
     ld [$db86], a          ; clear: this commit is not a custom skill
     jp LoadBtl_4f86
+
+; =============================================================================
+; [S73] FieldOnlySkillA — shared predicate: Z set iff the skill id in A is
+; FIELD-ONLY and must be rejected in battle (menu message $0302 via
+; jr_050_4a57, no turn consumed) and excluded from the usable-skill count.
+; Vanilla set: $37 StepGuard, $38 MapMagic, $7e (Whistle/summon); S73 adds
+; $E4 Anchor. Called from the two rewritten sites above. A preserved enough
+; (callers only need flags); B/C/HL untouched.
+; =============================================================================
+FieldOnlySkillA:
+    cp $37
+    ret z
+    cp $38
+    ret z
+    cp $7e
+    ret z
+    cp $E4
+    ret

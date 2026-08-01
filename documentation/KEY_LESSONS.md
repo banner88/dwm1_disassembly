@@ -2526,3 +2526,66 @@ flag the trampoline leaks to its callers.
   Verify menus by RAM state vars + list buffers (wMonList contents proved
   the 28-entry farm list without reading a pixel), and hand VISUAL flows to
   the user.
+
+## Session 73 Lessons — Anchor / field-cast skills
+
+### Arming a script from code: the counter must be $FFFF, not 0
+**Symptom**: externally-armed custom script skipped its first word (the text
+displayed but init_dialog never ran; counter read 1 with only one consume).
+**Root cause**: only `ScriptInit` (bank $04 entry 5) reads at counter 0 — the
+per-frame ticker `ScriptExecContinue` PRE-increments before every read.
+**Rule**: when arming a script by poking `$D8D3/$D8D4/$D8D7` (no ScriptInit
+call), set `$D8D5/$D8D6 = $FFFF`. The first tick lands on word[0].
+
+### Field-menu close from code = shell state 4, not `$c90d=1`
+**Symptom**: after the Anchor cast the "closed" menu reappeared at the main
+page and the armed script never ticked (UI-busy gate).
+**Root cause**: the item flow's `SetFld_6a8f + $c90d=1` is "back to main
+menu" (state 1 redraws and advances to 2). The FULL teardown is state 4
+(`label7_6b04` — the main-menu B-exit), which restores tiles/OAM, clears
+`wGameState.1` and `$c90d`, and reloads gate VRAM when needed.
+**Rule**: to close the field menu from a fork, write `$c90d = 4` and unwind.
+
+### Bank $07 is FULL — 2 bytes of slack
+The patched bank $07 section has ~2 free bytes. In-place byte-exact rewrites
+(e.g. `jr z,<ret-target>` → `ret z`, 4→3 bytes each) or consuming the $7F58
+free-run padding (S52 precedent; the run head at $7F58 itself is call-
+targeted — consume from the TAIL) are the only ways in. Measure with the
+`game.map` EMPTY line, not by counting by hand.
+
+### Explicit text_ids break test-fixture density — prefer auto-ids
+**Symptom**: `test_compiler --rom`'s no-quest fixture failed "text ids must
+be contiguous" after adding dialogue with explicit `text_id`s above the
+auto-assigned block.
+**Rule**: new project dialogue should omit `text_id` (auto-assign keeps every
+project VARIANT dense). Explicit ids are only for entries that something
+outside the project references by number.
+
+### The choice box answered "NO" to blind A-mashing
+`$E7` choice boxes: the first A dismisses the text, the next A confirms the
+CURRENT cursor — which landed on NO in scripted input; `up, up` then A gave
+YES ($C83C=0). Judge the default-cursor feel in real play before "fixing".
+
+### PyBoy hook_register silently never fired
+Code hooks at bank:addr registered without error but never hit even for code
+measured (by side effects) to have executed — in this environment, treat
+hook absence as MEANINGLESS and verify by RAM side effects instead.
+
+
+### S73b: skill descriptions live in bank $56, not $41
+The SKIL-menu description box reads a 256-entry dw table at **$56:$6667**
+(found by encoding "Heals" and searching the ROM — the $41 config-list modes
+are names/items only). Unused ids → the $664A empty string = the "blank box"
+symptom for every custom skill. The table renders in mgbdis output as
+`ld c,d / ld h,[hl]` instruction pairs (raw $4A,$66) — count pairs from the
+run end to index by id ($DB-$FF = the 37-pair run). Descriptions render as
+DRAWN TILES (sequential ids), not charset tilemap entries — verify via tile
+PATTERNS (plane 2; plane 1 is $FF paper), not tilemap decoding.
+
+### S73b: battle rejection of field-only skills = LoadBtl_4b98
+Z from $50:$4B98 → $0302 message + ret WITHOUT queueing (no turn used), and
+the $50:$498A ladder keeps the id out of the usable-count pool. Extend BOTH
+when adding a field-only skill. Bank $50's mid-bank pad run funds appended
+code; a shift audit (sym diff + grep old raw addresses) confirmed all
+post-pad helpers are label-relinked — the three raw-literal grep hits were
+other banks' coincidental data/comments.

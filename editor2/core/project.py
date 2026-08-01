@@ -19,8 +19,10 @@ from . import formats as F
 # $D9E8) — allocating there corrupts named engine variables. Per-byte audit
 # (engine literals + all_scripts.json) leaves exactly $D9C6-$D9C7 and
 # $D9D7-$D9D8 clean. Flags $0168-$017F ($D9C8-$D9CA) are RETIRED: those bytes
-# are wPendingFarmExp (CF2). See EVENT_FLAGS.md "Free Flag Slots".
-FLAG_SAFE_RANGES = [(0x0158, 0x0167), (0x01E0, 0x01EF)]
+# are wPendingFarmExp (CF2). Flags $01E0-$01EF ($D9D7-$D9D8) are RETIRED S73:
+# those bytes are wAnchorGate/wAnchorFloor (custom skill $E4 Anchor persistent
+# state). See EVENT_FLAGS.md "Free Flag Slots".
+FLAG_SAFE_RANGES = [(0x0158, 0x0167)]
 # S65 migration: step counters live in the CF3-freed window (WRAM $CC80-$D664,
 # freed S60 — MONSTER_DATA "CF3 as built"). $CD80-$CFFF is the counter region;
 # $CC80/$CD00 hold the relocated NPC/exit buffers; $D001-$D664 is the reserved

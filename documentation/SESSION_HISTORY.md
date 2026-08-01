@@ -3035,3 +3035,51 @@ two RE discovery sessions (M1, S3) before their authoring items depend on them.
 > egg give in-room.
 >
 >
+
+> Session 71 headline (2026-07-26 — **FX1: ACTIVE FARM 17 → 37 SLOTS. SHIPPED, USER-CONFIRMED (farm menus >17, sleep whole-swap, save/reload, breeding + 21-hatch session: "everything works"). Exp-scale VETOED → S71v2 vanilla rate, pin `46ba6991…` (patched; v1 `9c3af0d4…`, v2 delta = drain payout only, PyBoy-verified).** Array = 40 slots (20-39 = the evicted sleep pool's bank-0 home $B124; staging INDICES 20/21→40/41, addresses unchanged); pool → SRAM bank 2 ("P1", 40-slot whole-swap mirror, bank $73 entries 10-12); "F2" one-time reformat + checksum v3 + snapshot "R4" dual-region; roster lists + compaction map → wMonList $D001; exp payout halved at drain (veto-pending). PyBoy-verified on the user's .sav: reformat preserves the save (after fixing an F2-ordering bug that WIPED it), R3→R4 upgrade, 25-farm canonicalize/lists/rewind/dual-snapshot/drain/battle. User accept pending: farm menus >17, sleep whole-swap, save, trade, breeding, join.)
+>
+>
+> Session 71 (2026-07-26 — **FX1: farm expansion 17 → 37 active slots.
+> BUILT S71, NOT user-tested.** Owning: MONSTER_DATA "FX1 as built (S71)";
+> ARCHITECTURE SRAM map; KEY_LESSONS S71. User decisions: 37 farm;
+> whole-swap sleep (pool = full 40-slot non-party mirror in SRAM BANK 2,
+> $A010+c*$95, "P1" magic); exp "scale" = drain payout halved (aggregate
+> 37/32 ≈ vanilla 17/16, per-monster growth HALF vanilla — flagged for
+> veto). Mechanics: GMDP computed-window decode gains two windows
+> ([$D665,$E208]−$2541 → $B124 farm 20-39; [$E209,$E332]−$0BA4 → staging,
+> whose INDICES moved 20/21→40/41 because computed index 20 IS $D665);
+> stride hops re-cut (19→20 +$385; 39→staging +$199D); ~150 adjudicated
+> vanilla-bank edits (bounds $14→$28, staging index writers, $C0D8 roster
+> lists + canonicalizer map → wMonList $D001 64-B carve — 40 entries
+> overflow $C0D8's ~36-B safe extent; drop/pick working sets, skill copy,
+> family buffer, encounter scratch adjudicated STAY); give-opcode full
+> fallback `ld c,$13`→`$27` (latent vanilla-shape bug); sleep machinery →
+> bank $73 entries 10 (record swap, per-byte RAMB-2, pin-safe)/11 (pool
+> zero+magic)/12 (census) via same-size rewrites in banks $12/$07; trade
+> recv → first-empty 3-39; checksum v3 (excl. $B124-$BCC7; heals
+> vanilla/v1/v2) behind the "F2" reformat gate ($BFC8-9) whose ORDER IS
+> LOAD-BEARING (legacy sums before stamp, v3 after — the first build wiped
+> the user's save, caught by PyBoy pre-delivery; KEY_LESSONS); snapshot v4
+> "R4" dual-region ($A1BF×95 + $B124×94 chunks, 28-B lazy-tail no-op
+> overlap; R3 auto-upgrade). PyBoy battery on the real .sav: reformat
+> preserves save; R3→R4; 25-farm canonicalize + compaction across the
+> slot-19 boundary; farm list = 0..27,$FF in wMonList; unsaved pokes
+> persist bank0 across power-cycle then REWIND on continue; seed-path
+> dual-region commit + reboot restore (markers intact); drain pays
+> extended slots pending/2 + levels + zeroes; encounter battle round-trip
+> clean. Compiler re-pinned 38/38 `9c3af0d434f3d5bcd617677a42129778`
+> (S71 patched build; prev a5a5e0d5 S70v3 patched). **USER-CONFIRMED
+> same session** (farm menus >17, sleep whole-swap, save/reload, breeding
+> + a 21-egg hatch run: "everything works, as far as I can test"; the
+> "hatchling shown last" observation = first-empty insertion after the
+> early slots filled + order-preserving compaction — vanilla semantics,
+> newly visible past 17; explained in MONSTER_DATA). **Exp-scale VETOED →
+> S71v2**: drain pays FULL pending (vanilla per-monster rate; halving
+> block removed, payout reads wPendingFarmExp directly; wPoolBounce
+> keeps only its pool-swap role). v2 PyBoy-verified: 512 pending → 512
+> paid in BOTH farm regions + silent levels. Re-pinned 38/38
+> `46ba69918c7ddfdfcd8a441d967debb6` (S71v2 patched; prev 9c3af0d4
+> S71v1 patched). v2 delta vs the user-confirmed v1 = the drain payout
+> amount only.**)
+>
+>

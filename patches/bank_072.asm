@@ -26,6 +26,7 @@ SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
     db $72                              ; bank number (entry-table header)
     dw FarSkillFork                     ; entry 0  ($7200 -> $4001)
     dw CustomBattleExec                 ; entry 1  ($7201 -> $4003)
+    dw AnchorField14Tail                ; entry 2  ($7202 -> $4005) [ANCHOR S73]
 
 ; -----------------------------------------------------------------------------
 ; FarSkillFork (entry 0) — replaces the dispatch's `ld hl,$4011/add hl,bc/add hl,bc`
@@ -68,6 +69,10 @@ CustomBattleExec:
     jp z, SkillTame                     ; [Stage2] TameMore -> same handler, tiered meter
     cp $E3
     jp z, SkillTame                     ; [Stage2] TameMost -> same handler, tiered meter
+    ; $E4 Anchor is FIELD-ONLY: in battle it falls through to this ret and,
+    ; with its record's anim9=$02 (announce/animate gates clear — the MagicBurn
+    ; finding inverted), the cast is a silent no-op. [S73 v1; a "can't use in
+    ; battle" message is v2 polish.]
     ; (future custom battle skills dispatch here)
     ret
 
@@ -183,3 +188,63 @@ TameMeterTable:
     dw 10                               ; $E1 Tame     (FeedMeat tier)
     dw 100                              ; $E2 TameMore (PorkChop tier)
     dw 400                              ; $E3 TameMost (Sirloin tier)
+
+; =============================================================================
+; [ANCHOR S73] AnchorField14Tail (entry 2) — far target of bank $14 entry 4's
+; default tail (`rst $10 $7202`). For non-$E4 ids it reproduces the vanilla
+; fizzle default ($da5e := $FF) verbatim. For $E4 it classifies the cast
+; context and arms one of the four Anchor dialog scripts (medal_vault room
+; $71, script ids 2-5, authored in project.json):
+;   wInGateworld==1                  -> 2 gate-side confirm ("anchor + warp?")
+;   town (wMapID < $30), anchor set  -> 3 return confirm ("spend 3/4 MP?")
+;   gate-like room, not a maze floor -> 4 error: can't anchor here
+;   town, no anchor stored           -> 5 error: no anchor set
+; Arming = the measured ScriptInit-mimic (S73 PyBoy): wScriptMapType=$71
+; (routes via GateAwareDispatch's script-type branch to CustomScriptRead),
+; script id, counter=0, $D8D7 bit0. The script engine is gated on the UI-busy
+; flags, so it only starts ticking after Anchor07Post has torn the menu down.
+; The scripts' own init_dialog enters dialog mode (S70 protocol).
+; $da5e is left at $E4 as the marker Anchor07Post keys on.
+; Runs from bank $14 via rst: ROM0 + RAM only, no HL/BC assumptions on return.
+; =============================================================================
+AnchorField14Tail:
+    ld a, [$da5e]
+    cp $E4
+    jr z, .anchor
+    ld a, $ff                           ; vanilla default: unknown id -> fizzle
+    ld [$da5e], a
+    ret
+.anchor:
+    ld a, [wInGateworld]
+    or a
+    jr nz, .gateSide                    ; standard maze floor (only nonzero here)
+    ld a, [wMapID]
+    cp $30                              ; CheckGateWorldMapType threshold (MAP_OLDWELL):
+    jr nc, .errSpecial                  ;   $30+ = special/boss/custom gate rooms
+    ld a, [wAnchorFloor]                ; town side: anchor stored? (0 = none)
+    or a
+    jr z, .errNoAnchor
+    ld a, 3                             ; script 3: return confirm
+    jr .arm
+.gateSide:
+    ld a, 2                             ; script 2: gate-side confirm
+    jr .arm
+.errSpecial:
+    ld a, 4                             ; script 4: can't anchor here
+    jr .arm
+.errNoAnchor:
+    ld a, 5                             ; script 5: no anchor set
+.arm:
+    ld [$d8d4], a                       ; wScriptNPCId (CustomScriptRead index)
+    ld [$d8dc], a                       ; NPC number shadow (belt-and-braces)
+    ld a, $ff                           ; counter := $FFFF — the per-frame ticker
+    ld [$d8d5], a                       ;   (ScriptExecContinue) pre-increments
+    ld [$d8d6], a                       ;   BEFORE reading, landing on word[0]
+    ld a, $71
+    ld [$d8d3], a                       ; wScriptMapType := medal_vault
+    ld a, $01
+    ld [$d8d7], a                       ; script active (bit0)
+    ld a, [wOPTN_and_Item_selection]    ; caster = the monster whose skill menu
+    and $7f                             ;   we are in (party slot 0-2)
+    ld [wAnchorCaster], a
+    ret                                 ; $da5e stays $E4 -> Anchor07Post closes menu

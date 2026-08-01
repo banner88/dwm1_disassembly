@@ -1389,6 +1389,7 @@ CustomRecordPtrTable:       ; indexed by (id - $DE)*2
     dw CustomRecord_E1_Tame ; [$E1] Tame [S2e]
     dw CustomRecord_E2_TameMore ; [$E2] TameMore [Stage2]
     dw CustomRecord_E3_TameMost ; [$E3] TameMost [Stage2]
+    dw CustomRecord_E4_Anchor   ; [$E4] Anchor [S73]
 
 ; --- MagicBurn ($E0) 19-byte record ------------------------------------------
 ; Based on BigBang/MegaMagic-class all-foes magic, with mp_cost (+4) zeroed (the
@@ -1421,6 +1422,16 @@ CustomRecord_E2_TameMore:
     db $00,$13,$11,$14,$1E,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
 CustomRecord_E3_TameMost:
     db $00,$13,$11,$14,$32,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
+
+; --- Anchor ($E4) 19-byte record [S73] -----------------------------------------
+; FIELD-ONLY skill; the record exists so the id survives every id-keyed reader
+; (menus, AI, record walker). Tame-shaped except: MP mirror (+4) = 0 (menu
+; shows 0; the real 3/4-current-MP charge happens at the arrival commit, bank
+; $73) and anim9 (+9) = $02 — the MagicBurn finding INVERTED: $02 leaves the
+; $dcff announce/animate gate bits CLEAR, so a battle cast is a silent no-op
+; (CustomBattleExec has no $E4 handler on purpose; v1 behavior, user-ack'd).
+CustomRecord_E4_Anchor:
+    db $00,$13,$11,$14,$00,$00,$04,$41,$07,$02,$02,$00,$00,$00,$00,$00,$00,$00,$00
 
 ; pad the rest of the bank back out to $8000 (keeps bank $54 layout intact)
 CustomSkillBlobEnd_054:

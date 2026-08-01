@@ -574,7 +574,7 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_225_Tame        ; [225] $E1 [S2e]
     dw SkillName_226_TameMore    ; [226] $E2 [Stage2]
     dw SkillName_227_TameMost    ; [227] $E3 [Stage2]
-    dw SkillName_222_Unused_222  ; [228]
+    dw SkillName_228_Anchor      ; [228] $E4 Anchor [S73]
     dw SkillName_222_Unused_222  ; [229]
     dw SkillName_222_Unused_222  ; [230]
     dw SkillName_222_Unused_222  ; [231]
@@ -2664,6 +2664,8 @@ MiscText_03_Paged:
     db $ED, $F9, $00, $68, $62, $F9, $30, $FA, $F7, $F2            ; "[Mon]'s [Old]" <page>
     db $3F, $42, $40, $4C, $4A, $42, $50, $F1                      ; "becomes" <newline>
     db $F9, $20, $63, $FA, $F7, $F0                                ; "[New]!" <end>
+SkillName_228_Anchor:                                             ; [S73] $E4
+    db $24, $4b, $40, $45, $4c, $4f, $f0                          ; "Anchor" + terminator
 .pad224
     ds $7FF6 - .pad224, $00                                       ; pad to $7FF6 (NewSpecies tail unchanged)
 ;   Phase N: new-species SHORT (default-nickname) name table tail.

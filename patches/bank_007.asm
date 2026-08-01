@@ -3418,15 +3418,14 @@ jr_007_5635:
     cp $36
     jr z, jr_007_56a3
 
-    cp $37
-    jr z, jr_007_56a3
-
-    cp $38
-    jr z, jr_007_56a3
-
-    cp $7e
-    jr z, jr_007_56a3
-
+    cp $37                      ; [ANCHOR S73] tail rewritten IN PLACE, byte-exact
+    ret z                       ;   (24 bytes -> 24): the last three `jr z,
+    cp $38                      ;   jr_007_56a3` entries become `ret z` (56a3 IS a
+    ret z                       ;   bare ret, identical control flow), buying 3
+    cp $7e                      ;   bytes for the $E4 whitelist row. Unlisted ids
+    ret z                       ;   still hit the vanilla "Can't use here" reject
+    cp $E4                      ;   verbatim below. Context validation happens in
+    ret z                       ;   bank $14 entry 4 -> bank $72 AnchorField14Tail.
     ld hl, $0e0a
     call SetupTilemapTransfer
     ld a, $0a
@@ -4029,8 +4028,13 @@ jr_007_5a82:
     ld hl, $1404
     rst $10
     pop bc
-    ld a, [$da5e]
-    cp $ff
+    call Anchor07Post           ; [ANCHOR S73] was `ld a,[$da5e] / cp $ff` (5 bytes;
+    nop                         ;   9->3+2 byte-neutral). $E4 -> pop return + close
+    nop                         ;   the menu (the item flow's own exit primitive),
+                                ;   skipping the result-message ladder AND the
+                                ;   SetFld_5b1e deduct (Anchor charges on ARRIVAL).
+                                ;   Other ids: returns A=[$da5e] with cp $ff flags,
+                                ;   so the `ld a,b / jr z` below behaves verbatim.
     ld a, b
     jr z, jr_007_5b0c
 
@@ -11027,27 +11031,8 @@ jr_007_7f75:
     rst $38
     rst $38
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; [ANCHOR S73] 21 pad bytes of the $7F58 free run consumed below
+; (funding Anchor07Post + the CustomMPCostTable $E4 row; S52 precedent).
 FollowerArtResolve07:
     ld a, h
     cp $01
@@ -11118,3 +11103,36 @@ CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $DE)*2
     dw 10                       ; $E1 Tame
     dw 30                       ; $E2 TameMore
     dw 50                       ; $E3 TameMost
+    dw 0                        ; $E4 Anchor [S73] (menu shows 0 by design — the real
+                                ;   cost, 3/4 of current MP, is charged in the bank
+                                ;   $73 commit hook upon ARRIVAL at the anchored floor)
+
+; =============================================================================
+; [ANCHOR S73] Field-menu fork for custom skill $E4 "Anchor".
+; (The SELECT-time whitelist fork is an in-place byte-exact rewrite of the cp
+; ladder tail at the skill-select A-press — see the `cp $E4 / ret z` row there.)
+; -----------------------------------------------------------------------------
+; Anchor07Post — called right after the `rst $10 $1404` (bank $14 entry 4 =
+; field-effect validate/apply) in the skill-use state. Replaced bytes:
+; `ld a,[$da5e] / cp $ff` (the "did the effect fizzle" test).
+;   id == $E4 -> the entry-4 fork has already classified context + armed the
+;               Anchor dialog script; here we CLOSE the menu with the item
+;               flow's own exit primitive (SetFld_6a8f + $c90d=1, the herb
+;               close path) and unwind — no result message, no MP deduct.
+;   else      -> reproduce the replaced test exactly: A=[$da5e], flags from
+;               cp $ff (caller's `ld a,b / jr z` depends on Z only).
+; =============================================================================
+Anchor07Post:
+    ld a, [$da5e]
+    cp $E4
+    jr z, .anchor
+    cp $ff
+    ret
+.anchor:
+    pop hl                      ; drop return -> skip message ladder + 5b1e deduct
+    ld a, $04
+    ld [$c90d], a               ; menu-shell state 4 = the FULL teardown-to-field
+    ret                         ;   state (the main-menu B-exit path; it calls
+                                ;   SetFld_6a8f itself, restores tiles/OAM, clears
+                                ;   wGameState.1 and c90d — measured S73: c90d=1
+                                ;   only returns to the MAIN MENU page)

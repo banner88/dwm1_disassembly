@@ -604,3 +604,28 @@ delay $09/1, wait_movement $19/0, npc_walk_x/y $1A/$1B/2, trigger_anim
 $1C/1, lock/unlock $1D/$1E/0, begin_walk $22/0, trigger_battle3 $5A/1.
 Field-mode script cadence is 1/8 frames; dialog mode per-frame — author
 delays accordingly.
+
+## S73 amendments — Anchor field-cast content + template re-pin
+
+* **`bank_060_head.asm` template re-pinned** (`PINNED_SHA256` updated):
+  `GateAwareDispatch` (entry 6) gains a SCRIPT-TYPE branch —
+  `wScriptMapType >= $6B && != $70` routes straight to `CustomScriptRead`,
+  so menu-armed scripts (the Anchor protocol: `$D8D3=$71`, counter `$FFFF`,
+  `$D8D7=1`) run in ANY physical room, town and maze floors included. The
+  `$70` guard preserves the original B-bug fix verbatim (gate-world scripts
+  keep the wMapID route). Deliberate engine change per §5; the compat==hand
+  byte-identity property re-verified (patched pin `8fa605d795…`, S73).
+* **Reference patched pin**: `224b11766b28de88cdb206c31145e286` (S73b,
+  SHIPPED USER-CONFIRMED; full description in test_compiler.py; superseded
+  interim S73 pin `8fa605d795…` — historical).
+* **Anchor content in the example project**: medal_vault (`$71`) hosts
+  script ids 2-5 (`anchor_gate_confirm` / `anchor_return_confirm` /
+  `anchor_err_special` / `anchor_err_none`) + 4 AUTO-id dialogue entries
+  (explicit `text_id`s above the auto block break the no-quest fixture's
+  density check — KEY_LESSONS S73). The engine side (bank $72
+  `AnchorField14Tail`) hardcodes map `$71` + these script INDICES: if
+  medal_vault's script table is reordered or the room renumbered, that
+  constant must follow. A dedicated script-container room is the cleaner
+  v2 home for menu-armed scripts.
+* **Flag allocator**: `FLAG_SAFE_RANGES` shrank to `$0158-$0167` —
+  `$01E0-$01EF` retired to `wAnchorGate/wAnchorFloor` (EVENT_FLAGS).

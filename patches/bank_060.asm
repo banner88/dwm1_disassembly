@@ -278,6 +278,12 @@ VanillaExitResolve:
 ; all vanilla rooms) dispatches to the real bank $0F entry 0, exactly like vanilla.
 ; Returns next script command in BC (both paths preserve the vanilla contract).
 GateAwareDispatch:
+    ld a, [wScriptMapType]      ; [ANCHOR S73] script TYPE targets the custom bank?
+    cp $70                      ;   $70 = the gate-world script type — the B-bug
+    jr z, .byRoom               ;   poison value; MUST stay on the wMapID route.
+    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $71 armed by the
+    jr nc, .customRoom          ;   Anchor field-skill) reads bank $60 scripts
+.byRoom:                        ;   regardless of the physical room (maze/town).
     ld a, [wMapID]              ; $C968 — the actual room map-type
     cp CUSTOM_ROOM_START        ; $6B
     jr nc, .customRoom          ; wMapID >= $6B → genuine custom room
@@ -516,6 +522,10 @@ CustomRoom5_ScriptPtrTable:
 CustomRoom6_ScriptPtrTable:
     dw CustomRoom6_Scr00   ; [0] entry:medal_vault
     dw CustomRoom6_Scr01   ; [1] quest:medal_vault
+    dw CustomRoom6_Scr02   ; [2] anchor_gate_confirm
+    dw CustomRoom6_Scr03   ; [3] anchor_return_confirm
+    dw CustomRoom6_Scr04   ; [4] anchor_err_special
+    dw CustomRoom6_Scr05   ; [5] anchor_err_none
 
 CustomRoom6_Scr00:
     dw $FF01  ; if_flag_set
@@ -590,6 +600,55 @@ CustomRoom6_Scr01_qdone:
     dw $0A1F  ; vault_done
     dw $FFFF
 
+CustomRoom6_Scr02:
+    dw $FF07  ; init_dialog
+    dw $0A20  ; [S73] Anchor gate-side confirm [Y/N]
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom6_Scr02_no
+    dw $FF12  ; write_ram
+    dw $DEB2
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D92B
+    dw $0006
+    dw $FF0F  ; map_transition
+    dw $0000
+    dw $00E8
+    dw $0058
+    dw $FFFF
+CustomRoom6_Scr02_no:
+    dw $FFFF
+
+CustomRoom6_Scr03:
+    dw $FF07  ; init_dialog
+    dw $0A21  ; [S73] Anchor return confirm [Y/N] — charge lands on arrival
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom6_Scr03_no
+    dw $FF12  ; write_ram
+    dw $DEB2
+    dw $0002
+    dw $FF0F  ; map_transition
+    dw $8000
+    dw $0000
+    dw $0000
+    dw $FFFF
+CustomRoom6_Scr03_no:
+    dw $FFFF
+
+CustomRoom6_Scr04:
+    dw $FF07  ; init_dialog
+    dw $0A22  ; [S73] cast in a special/boss/custom gate room
+    dw $FFFF
+
+CustomRoom6_Scr05:
+    dw $FF07  ; init_dialog
+    dw $0A23  ; [S73] cast in town with no stored anchor
+    dw $FFFF
+
 ; =============================================================================
 ; TEXT DATA — two-level pointer table (generated)
 ; SaveBankAndSwitch ($00:$0940) indexes table[$C822*2] -> section,
@@ -633,6 +692,10 @@ CustomTextSection0:
     dw CustomText_1D   ; $0A1D: 
     dw CustomText_1E   ; $0A1E: win tail; GoldSlime joins engine-side (phase $0D)
     dw CustomText_1F   ; $0A1F: 
+    dw CustomText_20   ; $0A20: [S73] Anchor gate-side confirm [Y/N]
+    dw CustomText_21   ; $0A21: [S73] Anchor return confirm [Y/N] — charge lands on arrival
+    dw CustomText_22   ; $0A22: [S73] cast in a special/boss/custom gate room
+    dw CustomText_23   ; $0A23: [S73] cast in town with no stored anchor
 
 ; $0A00 — item offer [Y/N]
 CustomText_00:
@@ -832,6 +895,32 @@ CustomText_1F:
     db "The chamber is", $EF, $EE
     db "quiet. The", $EF, $EE
     db "shinies sleep.", $F7, $F0
+
+; $0A20 — [S73] Anchor gate-side confirm [Y/N]
+CustomText_20:
+    db $EA, $9F, $A3
+    db "Set an anchor", $EF, $EE
+    db "here and warp", $EF, $EE
+    db "to GreatTree?", $EF, $EE, $E7, $F0
+
+; $0A21 — [S73] Anchor return confirm [Y/N] — charge lands on arrival
+CustomText_21:
+    db $EA, $9F, $A3
+    db "Spend most MP", $EF, $EE
+    db "to return to the", $EF, $EE
+    db "anchored floor?", $EF, $EE, $E7, $F0
+
+; $0A22 — [S73] cast in a special/boss/custom gate room
+CustomText_22:
+    db $EA, $9F, $A3
+    db "The anchor", $EF, $EE
+    db "fails here!", $F7, $F0
+
+; $0A23 — [S73] cast in town with no stored anchor
+CustomText_23:
+    db $EA, $9F, $A3
+    db "No anchor", $EF, $EE
+    db "is set!", $F7, $F0
 
 ; =============================================================================
 ; ROOM DATA (generated)

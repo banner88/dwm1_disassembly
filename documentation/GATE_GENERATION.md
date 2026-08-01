@@ -636,3 +636,20 @@ rooms (`wMapID < $6B`) are untouched. (KEY_LESSONS S41.)
    enumerate every slot so reusable slots are known precisely.
 4. **`SetBrd_6744`/`SetBrd_6800` carve algorithm** 🟡 — outline understood;
    step-trace pending for guaranteed-connectivity guarantees.
+
+## §12 Town → arbitrary gate floor re-entry (S73, PyBoy-measured)
+
+The engine happily serves ANY floor of ANY gate from a cold town start:
+write `wGateID` ($C935) and `wCurrentFloor` ($C939, 0-based) = target−1, then
+kick a staircase-style transition (`wWarpGateId=0`, `wWarpFlag=$80`,
+`wIsPlayerChangingMaps=1`, `$C88F++`). The commit stores `wWarpFlag` →
+`wInGateworld` ($80, bit7 set = "subsequent floor"), entry-5 increments the
+floor, loads the gate config, rolls and builds the floor, and the placement
+pass positions the player — spawn mailbox values are ignored on maze floors.
+Script-side this is one `map_transition $8000,$0000,$0000` after `write_ram`s
+(the S73 Anchor return does exactly this; the gate/floor installs live in the
+bank $73 commit hook because scripts can only write constants). The commit
+hook runs BEFORE entry-5 in the same transition (measured), which is what
+makes the install ordering work. Special-vs-standard is still rolled per
+arrival — Anchor forces the standard path via a `GateDecisionFork` head
+branch (`wAnchorArm==3`).

@@ -1,6 +1,6 @@
 {
  "meta": {
-  "name": "DWM1 demo content — S53 regression baseline",
+  "name": "DWM1 demo content \u2014 S53 regression baseline",
   "schema_version": 1,
   "notes": [
    "Re-expresses the user-confirmed hand-authored custom content of",
@@ -14,10 +14,10 @@
   ]
  },
  "world": {
-  "_status": "NOT_IMPLEMENTED_V1 — Layer A (vanilla-room edits) is extraction work, ROADMAP Phase 2/F"
+  "_status": "NOT_IMPLEMENTED_V1 \u2014 Layer A (vanilla-room edits) is extraction work, ROADMAP Phase 2/F"
  },
  "gamedata": {
-  "_status": "NOT_IMPLEMENTED_V1 — Layer C keeps its proven per-system tools (build_breeding.py etc.)"
+  "_status": "NOT_IMPLEMENTED_V1 \u2014 Layer C keeps its proven per-system tools (build_breeding.py etc.)"
  },
  "custom": {
   "wram": {
@@ -26,7 +26,7 @@
     {
      "label": "wCustomStep_Room6C_S5",
      "addr": "0xCD84",
-     "comment": "Room $6C screen 5 step counter (legacy hole — kept at base+4 so the relative counter layout matches the proven S55 shape; S65 migration moved the base $DE74→$CD80)"
+     "comment": "Room $6C screen 5 step counter (legacy hole \u2014 kept at base+4 so the relative counter layout matches the proven S55 shape; S65 migration moved the base $DE74\u2192$CD80)"
     }
    ]
   },
@@ -312,7 +312,7 @@
         "screen_byte": "0x00",
         "spawn_x": 7,
         "spawn_y": 6,
-        "comment": "edge exit (3,1) -> Room $6B spawn (7,6) — close the loop"
+        "comment": "edge exit (3,1) -> Room $6B spawn (7,6) \u2014 close the loop"
        }
       ]
      }
@@ -338,7 +338,11 @@
     },
     "scripts": {
      "0": "entry:medal_vault",
-     "1": "quest:medal_vault"
+     "1": "quest:medal_vault",
+     "2": "anchor_gate_confirm",
+     "3": "anchor_return_confirm",
+     "4": "anchor_err_special",
+     "5": "anchor_err_none"
     },
     "screens": {
      "0": {
@@ -673,6 +677,42 @@
      "quiet. The",
      "shinies sleep."
     ]
+   },
+   {
+    "id": "anchor_gate_ask",
+    "lines": [
+     "Set an anchor",
+     "here and warp",
+     "to GreatTree?"
+    ],
+    "choice": true,
+    "comment": "[S73] Anchor gate-side confirm [Y/N]"
+   },
+   {
+    "id": "anchor_return_ask",
+    "lines": [
+     "Spend most MP",
+     "to return to the",
+     "anchored floor?"
+    ],
+    "choice": true,
+    "comment": "[S73] Anchor return confirm [Y/N] \u2014 charge lands on arrival"
+   },
+   {
+    "id": "anchor_err_special",
+    "lines": [
+     "The anchor",
+     "fails here!"
+    ],
+    "comment": "[S73] cast in a special/boss/custom gate room"
+   },
+   {
+    "id": "anchor_err_none",
+    "lines": [
+     "No anchor",
+     "is set!"
+    ],
+    "comment": "[S73] cast in town with no stored anchor"
    }
   ],
   "scripts": [
@@ -690,11 +730,11 @@
       "end"
      ]
     ],
-    "_comment": "S70v2 measured truth (PyBoy, both S69+S70 ROMs): the per-step handler drains 100/step — the old seed 100 armed a battle EVERY step (the '100=5 steps' note was wrong). $04B0=1200 = 12 steps between battles; write_ram2 is the vanilla 16-bit form (Healer post-battle uses it)."
+    "_comment": "S70v2 measured truth (PyBoy, both S69+S70 ROMs): the per-step handler drains 100/step \u2014 the old seed 100 armed a battle EVERY step (the '100=5 steps' note was wrong). $04B0=1200 = 12 steps between battles; write_ram2 is the vanilla 16-bit form (Healer post-battle uses it)."
    },
    {
     "id": "give_jerky",
-    "comment": "Beef Jerky giver — YES/NO, inventory-full branch, GiveItem wrapper opcode $2A",
+    "comment": "Beef Jerky giver \u2014 YES/NO, inventory-full branch, GiveItem wrapper opcode $2A",
     "ops": [
      [
       "text",
@@ -744,7 +784,7 @@
    },
    {
     "id": "give_egg",
-    "comment": "SkyDragon egg giver — AddMonster opcode $29 (enemy_stats_id $015E, same as the Farm event)",
+    "comment": "SkyDragon egg giver \u2014 AddMonster opcode $29 (enemy_stats_id $015E, same as the Farm event)",
     "ops": [
      [
       "text",
@@ -794,7 +834,7 @@
    },
    {
     "id": "bgm_change",
-    "comment": "SetBGM opcode $41 — VERIFIED 1 param (handler $04:$669D); track $9E = DWM2 BGM #06 port (S62; M3a/S63: bank $74)",
+    "comment": "SetBGM opcode $41 \u2014 VERIFIED 1 param (handler $04:$669D); track $9E = DWM2 BGM #06 port (S62; M3a/S63: bank $74)",
     "ops": [
      [
       "text",
@@ -934,7 +974,7 @@
    },
    {
     "id": "teleport_6b",
-    "comment": "MapTransitionFull to custom room $6B — spawn (120,104)px = grid (7,6)",
+    "comment": "MapTransitionFull to custom room $6B \u2014 spawn (120,104)px = grid (7,6)",
     "ops": [
      [
       "text",
@@ -969,7 +1009,7 @@
    },
    {
     "id": "gate_open",
-    "comment": "Gatekeeper — advances Room $6C screen 0 step counter to 1 (step-system demo)",
+    "comment": "Gatekeeper \u2014 advances Room $6C screen 0 step counter to 1 (step-system demo)",
     "ops": [
      [
       "text",
@@ -1021,6 +1061,128 @@
     "id": "noop_entry",
     "comment": "no-op room-entry script",
     "ops": [
+     [
+      "end"
+     ]
+    ]
+   },
+   {
+    "id": "anchor_gate_confirm",
+    "comment": "[S73] Armed by bank $72 AnchorField14Tail after the menu closes on a standard maze floor. YES: arm=1 (commit hook snapshots gate+floor), $D92B=6 + warp to Castle (14,5) = the WarpWing recipe verbatim. NO: end.",
+    "ops": [
+     [
+      "op",
+      "init_dialog"
+     ],
+     [
+      "text",
+      "anchor_gate_ask"
+     ],
+     [
+      "op",
+      "check_and_branch",
+      "0xC83C",
+      "0x0001",
+      "@no"
+     ],
+     [
+      "op",
+      "write_ram",
+      "0xDEB2",
+      "0x0001"
+     ],
+     [
+      "op",
+      "write_ram",
+      "0xD92B",
+      "0x0006"
+     ],
+     [
+      "op",
+      "map_transition",
+      "0x0000",
+      "0x00E8",
+      "0x0058"
+     ],
+     [
+      "end"
+     ],
+     "label:no",
+     [
+      "end"
+     ]
+    ]
+   },
+   {
+    "id": "anchor_return_confirm",
+    "comment": "[S73] Armed in town with an anchor stored. YES: arm=2 (commit hook installs wGateID/wCurrentFloor-1, charges 3/4 current MP on arrival, clears the anchor, arm->3 forces the standard maze in GateDecisionFork), then a staircase-style warp (flag $80; spawn ignored, the maze placement pass positions the player). NO: end.",
+    "ops": [
+     [
+      "op",
+      "init_dialog"
+     ],
+     [
+      "text",
+      "anchor_return_ask"
+     ],
+     [
+      "op",
+      "check_and_branch",
+      "0xC83C",
+      "0x0001",
+      "@no"
+     ],
+     [
+      "op",
+      "write_ram",
+      "0xDEB2",
+      "0x0002"
+     ],
+     [
+      "op",
+      "map_transition",
+      "0x8000",
+      "0x0000",
+      "0x0000"
+     ],
+     [
+      "end"
+     ],
+     "label:no",
+     [
+      "end"
+     ]
+    ]
+   },
+   {
+    "id": "anchor_err_special",
+    "comment": "[S73] Anchor cast in a gate-like non-maze room (special/boss/custom).",
+    "ops": [
+     [
+      "op",
+      "init_dialog"
+     ],
+     [
+      "text",
+      "anchor_err_special"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   {
+    "id": "anchor_err_none",
+    "comment": "[S73] Anchor cast in town with no anchor stored (wAnchorFloor==0).",
+    "ops": [
+     [
+      "op",
+      "init_dialog"
+     ],
+     [
+      "text",
+      "anchor_err_none"
+     ],
      [
       "end"
      ]
@@ -1103,7 +1265,7 @@
     "label": "CustomPaletteColors_6C",
     "placement": "a",
     "comment": [
-     "CustomPaletteColors_6C: Pillar A proof palette — twilight recolor of",
+     "CustomPaletteColors_6C: Pillar A proof palette \u2014 twilight recolor of",
      "the gate palette (rose sand, indigo water, dusk teal trees).",
      "(Throwaway proof palette; overwritten per-room by real projects.)"
     ],
@@ -1310,7 +1472,7 @@
     "label": "CustomRoomPalette_71",
     "placement": "b",
     "comment": [
-     "Medal Vault (room $71) — gold-tinted derivation of pal_6b",
+     "Medal Vault (room $71) \u2014 gold-tinted derivation of pal_6b",
      "(same layout bank $64 entry 0 / attrs base_entry 1; S70)"
     ],
     "colors_rgb555": [
@@ -1378,7 +1540,7 @@
       "library": "dwm2_bgm06"
      },
      "first_id": "0x9E",
-     "_comment": "DWM2 BGM #06 — played by the gate_island well NPC (set_bgm 0x9E)"
+     "_comment": "DWM2 BGM #06 \u2014 played by the gate_island well NPC (set_bgm 0x9E)"
     },
     {
      "id": "dwm2_bgm07",
@@ -1386,7 +1548,7 @@
       "library": "dwm2_bgm07"
      },
      "first_id": "0xA1",
-     "_comment": "DWM2 BGM #07 — dusk_mirror NPC (set_bgm 0xA1) AND gate_island room default"
+     "_comment": "DWM2 BGM #07 \u2014 dusk_mirror NPC (set_bgm 0xA1) AND gate_island room default"
     },
     {
      "id": "dq6_town1",
@@ -1394,7 +1556,7 @@
       "library": "dq6_town1"
      },
      "first_id": "0xA4",
-     "_comment": "DQ6 Town via tools/midi_to_song.py — Library (vanilla map $12) room default"
+     "_comment": "DQ6 Town via tools/midi_to_song.py \u2014 Library (vanilla map $12) room default"
     },
     {
      "id": "dwm2_bgm10",
@@ -1655,14 +1817,14 @@
  "build": {
   "bank_map": {
    "0x60": "rooms + scripts + text (compiler-owned file)",
-   "0x71": "dispatch tables — Custom26DDTable + RoomEncTable (compiler-owned file)",
+   "0x71": "dispatch tables \u2014 Custom26DDTable + RoomEncTable (compiler-owned file)",
    "0x17": "@BUILD_PROJECT regions (compiler) inside the hand-patched vanilla bank",
-   "0x64": "tile layouts + attrs (tools/build_gate_room.py — referenced by rooms, not compiled here)"
+   "0x64": "tile layouts + attrs (tools/build_gate_room.py \u2014 referenced by rooms, not compiled here)"
   },
-  "_compat_note": "S70: legacy narrow master table RETIRED — the bank $01 initial-entry revert routes EVERY custom room's entry through CustomScriptRead, so the master table must be full-width (rooms $6E-$71 would overshoot the 3-entry compat table at first entry, not just on scroll)."
+  "_compat_note": "S70: legacy narrow master table RETIRED \u2014 the bank $01 initial-entry revert routes EVERY custom room's entry through CustomScriptRead, so the master table must be full-width (rooms $6E-$71 would overshoot the 3-entry compat table at first entry, not just on scroll)."
  },
  "progression": {
-  "_comment": "S70 — ROADMAP E2 wiring demo. Quests lower to generated scripts (quest:<id> / entry:<id>) referenced from rooms[].scripts; enemies emit bank $14 tail rows (EIDs 519+).",
+  "_comment": "S70 \u2014 ROADMAP E2 wiring demo. Quests lower to generated scripts (quest:<id> / entry:<id>) referenced from rooms[].scripts; enemies emit bank $14 tail rows (EIDs 519+).",
   "enemies": [
    {
     "id": "vault_goldslime",
@@ -1793,7 +1955,7 @@
        20
       ]
      ],
-     "_comment": "S70v3: EVERY text outside an NPC interaction needs its own preceding init_dialog (vanilla Healer post-battle protocol FF07/say — dismissal tears script-initiated dialog mode down each time)."
+     "_comment": "S70v3: EVERY text outside an NPC interaction needs its own preceding init_dialog (vanilla Healer post-battle protocol FF07/say \u2014 dismissal tears script-initiated dialog mode down each time)."
     }
    }
   ]

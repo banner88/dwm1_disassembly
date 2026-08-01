@@ -51,7 +51,7 @@ PATCH_FILES = [
     "bank_011.asm", "bank_014.asm", "bank_016.asm", "bank_017.asm", "bank_018.asm", "bank_009.asm", "bank_036.asm", "bank_041.asm", "bank_04d.asm", "bank_04f.asm",
     "bank_054.asm", "bank_053.asm",
     "bank_04c.asm", "bank_058.asm", "bank_05f.asm", "bank_059.asm",
-    "bank_052.asm", "bank_050.asm",
+    "bank_052.asm", "bank_050.asm", "bank_056.asm",
     "bank_00a.asm", "bank_015.asm", "bank_051.asm",  # S60 CF3 walker redirects
     "wram.asm", "game.asm",
 ]

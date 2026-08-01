@@ -322,7 +322,21 @@ wPendingFarmExp:: ds 3 ;d9c8
 wColiseumBattle:: db ;d9cd — current consecutive battle in gates/arena
 wArenaGroup:: db ;d9ce — arena battle group index
 
-    ds $25
+    ds 8                            ; d9cf-d9d6 (poisoned bytes — see EVENT_FLAGS)
+
+; [ANCHOR S73] Persistent anchor state (custom skill $E4 "Anchor").
+; $D9D7-$D9D8 are the OTHER safe pair from the S57 per-byte audit (flag
+; indices $01E0-$01EF, zero engine literals, zero script refs) — appropriated
+; following the CF2/wPendingFarmExp precedent; flags $01E0-$01EF are RETIRED
+; from the allocator pool in exchange (EVENT_FLAGS.md; editor2/core/project.py
+; FLAG_SAFE_RANGES). Inside the $C8EA-$D9E9 save image -> persists through
+; save+reload; boot/new-game zeroed. VALIDITY = wAnchorFloor != 0 (floors are
+; 1-based; gate 0 is a legal anchor target, so the gate byte can't be the
+; sentinel). Pre-anchor saves load floor 0 = "no anchor" (clean migration).
+wAnchorGate:: db ;d9d7 — anchored gate id (0-31); meaningful only if floor != 0
+wAnchorFloor:: db ;d9d8 — anchored floor (1-based); 0 = no anchor set
+
+    ds $1B                          ; d9d9-d9f3 (poisoned bytes — see EVENT_FLAGS)
 
 wEventStateMachineIndex:: db ;d9f4 — 11 states (0-10), dispatch at $50:$4017
 
@@ -477,3 +491,15 @@ wSRAMXferLen::  dw ;de90 — byte count (LE, >=1; $0000 = no-op)
 ; Transient; live only inside the save/load funnels. Reserve now 42 B,
 ; growth starts $DEB2.
 wSnapBounce:: ds 32 ;de92-deb1
+
+; [ANCHOR S73] Transient anchor plumbing (outside the save image by design:
+; cast->arrival is one uninterruptible transition, nothing here must survive
+; a save). Boot-zeroed by the $1EE0 ClearAllWRAM extension.
+; wAnchorArm protocol: 0 idle; 1 = gate-side YES (commit hook stores
+; gate+floor from live wGateID/wCurrentFloor, then 0); 2 = town-side YES
+; (commit hook installs wGateID/wCurrentFloor-1, deducts 3/4 of the caster's
+; current MP, clears the stored anchor, then sets 3); 3 = consumed by
+; GateDecisionFork inside entry-5 to FORCE the standard-maze path (then 0).
+; Reserve now 40 B, growth starts $DEB4.
+wAnchorArm:: db ;deb2 — see protocol above (written by script write_ram + ASM)
+wAnchorCaster:: db ;deb3 — caster party slot (0-2), captured at cast time

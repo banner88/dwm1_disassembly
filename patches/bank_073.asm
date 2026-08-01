@@ -86,6 +86,77 @@ CF2WarpCommitDrain:
     ; displaced work from bank $0B RoomEntry0_TilesetLoader ($4020-$4025)
     ld a, [wWarpFlag]
     ld [wInGateworld], a
+
+    ; ------------------------------------------------------------------
+    ; [ANCHOR S73] arm protocol (runs at EVERY committed transition,
+    ; BEFORE entry-5 floor setup — that ordering is what makes the
+    ; return-side install work; PyBoy-measured in the S73 poke test).
+    ;   arm 1: gate-side YES just warped us out -> snapshot the LIVE
+    ;          gate context (still intact: dest is town, entry-5 will
+    ;          self-gate on inGateworld==0) into the persistent anchor.
+    ;   arm 2: town-side YES is warping us in (wWarpFlag=$80) -> install
+    ;          wGateID + wCurrentFloor := anchor-1 (entry-5 increments),
+    ;          charge the caster 3/4 of CURRENT MP (record +$54 :=
+    ;          cur>>2 — "arrival" = this commit), clear the stored
+    ;          anchor (v1 policy: single-use), then arm := 3 so
+    ;          GateDecisionFork forces the STANDARD maze path.
+    ;   arm 3 here = stray (fork didn't consume it) -> just clear.
+    ; ------------------------------------------------------------------
+    ld a, [wAnchorArm]
+    or a
+    jr z, .anchorDone
+    cp 1
+    jr z, .anchorStore
+    cp 2
+    jr z, .anchorInstall
+    xor a                           ; stray arm state -> clear
+    ld [wAnchorArm], a
+    jr .anchorDone
+.anchorStore:
+    ld a, [wGateID]
+    ld [wAnchorGate], a
+    ld a, [wCurrentFloor]
+    inc a                           ; wCurrentFloor is 0-BASED; store 1-based so
+    ld [wAnchorFloor], a            ;   the floor-0 anchor doesn't hit the sentinel
+    xor a
+    ld [wAnchorArm], a
+    jr .anchorDone
+.anchorInstall:
+    ld a, [wAnchorGate]
+    ld [wGateID], a
+    ld a, [wAnchorFloor]
+    dec a                           ; back to 0-based...
+    dec a                           ; ...minus one more: entry-5's inc restores it
+    ld [wCurrentFloor], a           ; -> entry-5 serves the anchored floor exactly
+    ; MP charge: caster record current MP (+$54) := cur >> 2
+    ld a, [wAnchorCaster]           ; party slot 0-2 (slots 0-2 are always WRAM)
+    ld hl, $CB15                    ; $CAC1 + $54 = slot 0 current MP
+    or a
+    jr z, .mpPtr
+    ld de, $0095                    ; record stride
+.mpMul:
+    add hl, de
+    dec a
+    jr nz, .mpMul
+.mpPtr:
+    ld a, [hl+]
+    ld c, a
+    ld b, [hl]                      ; BC = current MP (LE; HL at hi byte)
+    srl b
+    rr c
+    srl b
+    rr c                            ; BC = cur >> 2 = what REMAINS
+    ld [hl], b
+    dec hl
+    ld [hl], c
+    ; clear the stored anchor (single-use policy, user decision 6)
+    xor a
+    ld [wAnchorFloor], a            ; floor 0 = "no anchor" sentinel
+    ld a, 3
+    ld [wAnchorArm], a              ; -> GateDecisionFork force-standard
+.anchorDone:
+
+    ld a, [wInGateworld]            ; reload (A clobbered above); vanilla test:
     or a
     ret nz                          ; destination is gate-mode -> keep accruing
 

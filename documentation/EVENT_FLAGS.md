@@ -108,7 +108,7 @@ variables and/or script-referenced, on top of the known WriteRAM collisions:
 | $D9CB | $0180–$0187 | WriteRAM collision (pre-S57 table) | poisoned |
 | $D9CC | $0188–$018F | engine literals (2 files) | poisoned |
 | $D9CD–$D9D6 | $0190–$01DF | Coliseum / gate-reset named vars | poisoned |
-| $D9D7–$D9D8 | $01E0–$01EF | zero engine literals, zero script refs | **SAFE** |
+| $D9D7–$D9D8 | $01E0–$01EF | clean, but **RETIRED S73** → `wAnchorGate`/`wAnchorFloor` (skill $E4 Anchor persistent state; CF2 precedent) | reserved |
 | $D9D9–$D9DE | $01F0–$021F | engine literals (6 files each) | poisoned |
 | $D9DF–$D9E2 | $0220–$023F | engine literals and/or script refs | poisoned |
 | $D9E3 | $0240–$0247 | story progression counter | poisoned |
@@ -120,7 +120,7 @@ variables and/or script-referenced, on top of the known WriteRAM collisions:
 **SRAM boundary**: Flags at byte $D9EA+ ($0278+) are outside the SRAM save
 range and will NOT persist across save/load.
 
-**Actual safe+persistent pool: $0158–$0167 and $01E0–$01EF = 32 flags**
+**Actual safe+persistent pool: $0158–$0167 = 16 flags** (S73: $01E0–$01EF retired to `wAnchorGate`/`wAnchorFloor`)
 (not "~200"). `editor2/core/project.py FLAG_SAFE_RANGES` matches this list
 as of S57; keep the two in sync. Note the audit verdicts are conservative:
 an "engine literal" byte might in principle be a benign read, but nothing is

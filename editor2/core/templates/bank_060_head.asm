@@ -278,6 +278,12 @@ VanillaExitResolve:
 ; all vanilla rooms) dispatches to the real bank $0F entry 0, exactly like vanilla.
 ; Returns next script command in BC (both paths preserve the vanilla contract).
 GateAwareDispatch:
+    ld a, [wScriptMapType]      ; [ANCHOR S73] script TYPE targets the custom bank?
+    cp $70                      ;   $70 = the gate-world script type — the B-bug
+    jr z, .byRoom               ;   poison value; MUST stay on the wMapID route.
+    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $71 armed by the
+    jr nc, .customRoom          ;   Anchor field-skill) reads bank $60 scripts
+.byRoom:                        ;   regardless of the physical room (maze/town).
     ld a, [wMapID]              ; $C968 — the actual room map-type
     cp CUSTOM_ROOM_START        ; $6B
     jr nc, .customRoom          ; wMapID >= $6B → genuine custom room

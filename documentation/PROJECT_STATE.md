@@ -10,11 +10,55 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-07-31 (Session 72 — **Phase 3 walking skeleton +
-> visual room display BUILT (NOT yet user-tested); byte-neutral session**
-> — verifier PASS 5/5, clean `1ca6579…`, compiler 38/38, renderer
-> emulator-validated, ROM pins unchanged.)
+> Last verified: 2026-07-31 (Session 73 — **custom skill $E4 "Anchor"
+> SHIPPED, USER-CONFIRMED (incl. S73b: descriptions + battle rejection)** —
+> verifier PASS 5/5, clean `1ca6579…`, compiler 38/38, patched pin
+> `224b1176…`, full round trip verified in PyBoy AND by the user in SameBoy.)
 >
+>
+>
+> Session 73 (2026-07-31 — **custom skill $E4 "Anchor" (user-directed):
+> anchor a standard gate floor, warp to GreatTree, warp back later for 3/4
+> of the caster's current MP, charged upon ARRIVAL; anchor persists through
+> save (save-image bytes), single-use, forced-standard regenerated floor.
+> SHIPPED, USER-CONFIRMED (v1+S73b). Final patched pin `224b1176…`
+> (superseded interim: `8fa605d7…`)** (clean
+> `1ca6579…` untouched). Owning docs: BATTLE_SKILL_SYSTEM §14 (the
+> FIELD-cast system, RE'd this session), GATE_GENERATION (town→floor-N
+> re-entry recipe), EVENT_FLAGS ($01E0-$01EF retired), known_RAM_map
+> (record-layout correction +$50 curHP/+$52 maxHP/+$54 curMP/+$56 maxMP;
+> menu-shell vars), KEY_LESSONS (script-arm ctr=$FFFF; menu close = shell
+> state 4), PROJECT_COMPILER (template re-pin). As built: bank $07
+> usability whitelist rewritten IN PLACE byte-exact (`jr z`→`ret z`
+> compression buys `cp $E4/ret z`; the bank had 2 bytes slack) +
+> Anchor07Post (post-entry-4 fork: $E4 → menu-shell state 4 = the full
+> B-exit teardown; funded by 21 bytes of the $7F58 free run); bank $14
+> entry-4 default tail → `rst $10 $7202`; bank $72 AnchorField14Tail
+> (context classify: inGateworld=1 → confirm-2 / gate-like `wMapID≥$30` →
+> error-4 / town+anchored → confirm-3 / town bare → error-5; arms
+> medal_vault scripts via $D8D3=$71 + ctr=$FFFF; caster slot captured);
+> GateAwareDispatch template gains the script-type branch (≥$6B, ≠$70
+> poison guard; re-pinned); project.json: 4 scripts + 4 auto-id dialogue
+> entries (density fix for the no-quest fixture); bank $73 commit-hook arm
+> protocol (1=store anchor 1-BASED floor; 2=install gate/floor−2 +
+> `curMP := curMP>>2` at the commit = arrival + clear anchor + arm:=3;
+> 3 consumed by GateDecisionFork → force standard maze, also bypasses the
+> gate-1 POC rotation on returns); wAnchorGate/Floor $D9D7-8 (persistent,
+> floor 0 = no-anchor sentinel, hence 1-based storage), wAnchorArm/Caster
+> $DEB2-3; Slim harness skills → $E4,$E1,$09; skill name/record/MP-0 rows.
+> PyBoy-verified END-TO-END via the REAL menu (A → SKIL grid pos 2 via
+> $C8DA → monster → skill → use): cast → menu full-teardown → confirm
+> dialog (YES = A,up,up,A in scripted input) → WarpWing-recipe warp →
+> anchor stored → town cast → confirm → arrival on the exact floor with
+> MP 98→24 → anchor cleared → standard floor. Also verified: both error
+> dialogs, NO paths (clean, no side effects), regressions Heal-in-field
+> (HP 10→27, MP −2), WarpWing item, town NPC talk, vanilla-style gate
+> entry. v1 notes for user test: battle cast of Anchor is a SILENT no-op
+> (record anim9=$02); errors open a dialog after the menu closes; YES/NO
+> default feel to be judged in SameBoy; save/reload persistence is
+> architecture-verified (save-image bytes) but not priest-tested in the
+> emulator. Anchor scripts are hosted on medal_vault (room $71) — a
+> dedicated script-container room is a cleaner v2 home.)
 >
 > Session 72 (2026-07-31 — **Phase 3 item 1: editor walking skeleton +
 > VISUAL ROOM DISPLAY (user-directed extension same session).
@@ -65,54 +109,9 @@
 > EDITOR_DESIGN "Toolchain preflight").**)
 >
 >
-> Session 71 headline (2026-07-26 — **FX1: ACTIVE FARM 17 → 37 SLOTS. SHIPPED, USER-CONFIRMED (farm menus >17, sleep whole-swap, save/reload, breeding + 21-hatch session: "everything works"). Exp-scale VETOED → S71v2 vanilla rate, pin `46ba6991…` (patched; v1 `9c3af0d4…`, v2 delta = drain payout only, PyBoy-verified).** Array = 40 slots (20-39 = the evicted sleep pool's bank-0 home $B124; staging INDICES 20/21→40/41, addresses unchanged); pool → SRAM bank 2 ("P1", 40-slot whole-swap mirror, bank $73 entries 10-12); "F2" one-time reformat + checksum v3 + snapshot "R4" dual-region; roster lists + compaction map → wMonList $D001; exp payout halved at drain (veto-pending). PyBoy-verified on the user's .sav: reformat preserves the save (after fixing an F2-ordering bug that WIPED it), R3→R4 upgrade, 25-farm canonicalize/lists/rewind/dual-snapshot/drain/battle. User accept pending: farm menus >17, sleep whole-swap, save, trade, breeding, join.)
->
->
-> Session 71 (2026-07-26 — **FX1: farm expansion 17 → 37 active slots.
-> BUILT S71, NOT user-tested.** Owning: MONSTER_DATA "FX1 as built (S71)";
-> ARCHITECTURE SRAM map; KEY_LESSONS S71. User decisions: 37 farm;
-> whole-swap sleep (pool = full 40-slot non-party mirror in SRAM BANK 2,
-> $A010+c*$95, "P1" magic); exp "scale" = drain payout halved (aggregate
-> 37/32 ≈ vanilla 17/16, per-monster growth HALF vanilla — flagged for
-> veto). Mechanics: GMDP computed-window decode gains two windows
-> ([$D665,$E208]−$2541 → $B124 farm 20-39; [$E209,$E332]−$0BA4 → staging,
-> whose INDICES moved 20/21→40/41 because computed index 20 IS $D665);
-> stride hops re-cut (19→20 +$385; 39→staging +$199D); ~150 adjudicated
-> vanilla-bank edits (bounds $14→$28, staging index writers, $C0D8 roster
-> lists + canonicalizer map → wMonList $D001 64-B carve — 40 entries
-> overflow $C0D8's ~36-B safe extent; drop/pick working sets, skill copy,
-> family buffer, encounter scratch adjudicated STAY); give-opcode full
-> fallback `ld c,$13`→`$27` (latent vanilla-shape bug); sleep machinery →
-> bank $73 entries 10 (record swap, per-byte RAMB-2, pin-safe)/11 (pool
-> zero+magic)/12 (census) via same-size rewrites in banks $12/$07; trade
-> recv → first-empty 3-39; checksum v3 (excl. $B124-$BCC7; heals
-> vanilla/v1/v2) behind the "F2" reformat gate ($BFC8-9) whose ORDER IS
-> LOAD-BEARING (legacy sums before stamp, v3 after — the first build wiped
-> the user's save, caught by PyBoy pre-delivery; KEY_LESSONS); snapshot v4
-> "R4" dual-region ($A1BF×95 + $B124×94 chunks, 28-B lazy-tail no-op
-> overlap; R3 auto-upgrade). PyBoy battery on the real .sav: reformat
-> preserves save; R3→R4; 25-farm canonicalize + compaction across the
-> slot-19 boundary; farm list = 0..27,$FF in wMonList; unsaved pokes
-> persist bank0 across power-cycle then REWIND on continue; seed-path
-> dual-region commit + reboot restore (markers intact); drain pays
-> extended slots pending/2 + levels + zeroes; encounter battle round-trip
-> clean. Compiler re-pinned 38/38 `9c3af0d434f3d5bcd617677a42129778`
-> (S71 patched build; prev a5a5e0d5 S70v3 patched). **USER-CONFIRMED
-> same session** (farm menus >17, sleep whole-swap, save/reload, breeding
-> + a 21-egg hatch run: "everything works, as far as I can test"; the
-> "hatchling shown last" observation = first-empty insertion after the
-> early slots filled + order-preserving compaction — vanilla semantics,
-> newly visible past 17; explained in MONSTER_DATA). **Exp-scale VETOED →
-> S71v2**: drain pays FULL pending (vanilla per-monster rate; halving
-> block removed, payout reads wPendingFarmExp directly; wPoolBounce
-> keeps only its pool-swap role). v2 PyBoy-verified: 512 pending → 512
-> paid in BOTH farm regions + silent levels. Re-pinned 38/38
-> `46ba69918c7ddfdfcd8a441d967debb6` (S71v2 patched; prev 9c3af0d4
-> S71v1 patched). v2 delta vs the user-confirmed v1 = the drain payout
-> amount only.**)
->
->
+
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S71** (2026-07-26): FX1 — active farm 17→37 slots (array 40; sleep pool → SRAM bank 2 "P1"; "F2" reformat + checksum v3; snapshot "R4"; wMonList $D001). SHIPPED, USER-CONFIRMED; v2 exp-scale veto → pin `46ba6991…`. Owning: MONSTER_DATA (FX1 as built), ARCHITECTURE (checksum v3), KEY_LESSONS S71.
 - **S70** (2026-07-25): E2 — data-driven side quests (progression.quests/enemies → generated scripts + bank $14 quest EIDs; vanilla_exit_extensions; walk-on y=7 Entry-6 skip) + the PyBoy measurement regime; 3 pins, a5a5e0d5 current that session; init_dialog protocol; 385-frame exit ceremony fixed. SHIPPED, user-confirmed. Owning: PROJECT_COMPILER §progression, PYBOY_DEBUGGING, SIDEQUEST_MAP, CROSSBANK_ROOMS, MONSTER_DATA, KEY_LESSONS ×9.
 - **S69** (2026-07-19): E3 — 32 KB SRAM via the RAMB PIN (19 ROM0 quadrant writers → $6100; header $03) + bank $73 entry 9 CF3SRAMBankedCopy; S69v2 persistence v3 roster snapshot (bank-1 "R3", reset-rewind semantics restored) — user-confirmed 5/5 smoke. Owning: ARCHITECTURE "SRAM banking as built S69", MONSTER_DATA, bank_073 banner.
 - **S67** (2026-07-19): E1 — arena/gate-boss roster format decoded (byte-neutral; NO roster table — op $1F EID formula $E0+9*group+3*match+slot over enemy-stats rows; 53-site boss-script census; $14:$4893 = fight→join redirect; Coliseum RNG bands; $DA02/03/05/07/09 battle-slot RAM; HW-verified same session). Owning: SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67", arena_brackets.json, DOC_AUDIT S67 (2), KEY_LESSONS S67 (2).
@@ -249,6 +248,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Item give + inventory-full check | ✅ working | opcodes $2A (wrapped) / $2C |
 | Monster/egg give + storage-full check | ✅ working | opcodes $29 (wrapped) / $28; egg path is the practical choice |
 | Script-driven teleport | ✅ working | opcode $0F (MapTransitionFull); vanilla + custom destinations |
+| FIELD-cast custom skills (menu → context logic → dialog → effect) | ✅ SHIPPED, USER-CONFIRMED S73 (+S73b descriptions & battle rejection): skill $E4 "Anchor" (anchor gate floor → warp to GreatTree → return later for 3/4 current MP charged on arrival; persistent through save; single-use; forced-standard regenerated floor). Full field-cast pipeline RE'd: usability whitelist, $da5e, bank $14 entry 4/5, menu-shell states ($c90d 0-4), script arming from the menu. PyBoy-verified round trip via the real UI. | BATTLE_SKILL_SYSTEM §14; bank $72 AnchorField14Tail; patched pin `8fa605d7…` |
+| Menu-armed dialog scripts in ANY room (incl. maze floors) | ✅ user-confirmed S73 (part of Anchor): $D8D3=$71 + ctr=$FFFF arming; GateAwareDispatch script-type branch (≥$6B, ≠$70) | PROJECT_COMPILER §5 (template re-pin); KEY_LESSONS S73 |
 | BGM change | ✅ working | opcode $41 (SetBGM); reverts to the ROOM DEFAULT on exit/reload |
 | Room-default music (vanilla + custom rooms) | ✅ working (S64, user-confirmed v6): `music.room_defaults`/`rooms[].music` → `CustomRoomBGMTable` (bank $71 entry 2) consulted first by the rewritten `LoadNewBGMIdIntoA`; survives save/reload by construction; sources = inbuilt ids, DWM2 catalog (all 31), MIDI conversions | SOUND_SYSTEM §8; PROJECT_COMPILER §2.9 |
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 referenced, 298 with sets (branch-following) |

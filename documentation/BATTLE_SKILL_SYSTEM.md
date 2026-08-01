@@ -958,3 +958,100 @@ OBP flicker REMOVED — a no-op on the wrong render layer, §11.7), bank_054 (pt
 records + mp mirrors), bank_058 (announce fork), bank_05f (proxy $E2/$E3 = $c2), bank_072
 (dispatch + TameMeterTable), wram (comment only). Harness (bank_014) KEPT per user.
 
+## §14 FIELD-cast skills — the menu-side pipeline (RE'd S73, built with skill $E4 "Anchor")
+
+This closes the §13.4(c) open item. The field skill-use flow lives in bank $07
+(the field-menu bank) and is a `$c90e` state machine inside menu-shell page 3:
+
+**Menu shell (`$c90d`, dispatcher at $07:$4009):** 0 = closed / 1 = "(re)draw
+main menu" transition (→2) / 2 = main menu (2×2 grid cursor `$C8DA`:
+0 INFO, 1 ITEM, 2 SKIL, 3 OPTN; bit7 = latched) / 3 = sub-page / 4 = FULL
+teardown-to-field (`label7_6b04`: restores tiles/OAM/BG, `res 1,wGameState`,
+`$c90d=0`, gate-mode VRAM reload). The item flow's `SetFld_6a8f + $c90d=1`
+"close" only returns to the MAIN MENU — a real close from code is `$c90d=4`
+(measured S73; that's the main-menu B-exit path).
+
+**Skill select (A on a skill row):** the skill id (from the `$caea` cached
+copy of the monster's record skill array, record offset **+$29**, 8 slots) is
+stored to **`$da5e`** and run through the FIELD-USABILITY WHITELIST (cp
+ladder): $2b-$2f heals, $30/$31 Vivify/Revive, $33 Antidote, $36 CurseOff,
+$37 StepGuard, $38, $7e → proceed; anything else → `$0e0a` "Can't use here"
+tilemap message + state $0a. **S73 fork:** the ladder tail was rewritten IN
+PLACE byte-exact (the last three `jr z,jr_007_56a3` become `ret z` — 56a3 IS
+a bare ret — buying 3 bytes for `cp $E4 / ret z`). Bank $07 has ~2 bytes of
+tail slack; anything bigger must consume the $7F58 free run (S52 precedent).
+
+**Use flow after select:** single-target heals detour to a target-select
+state ($58E9 ladder); everything else skips (+2 states). Then the MP afford
+check (reads `SkillMPCostTable` via the S52 `MPPtrFromId` fork — a 0-cost
+row always affords; caster current MP compared at record **+$54**), then
+`rst $10 $1404` = **bank $14 entry 4** (per-skill field VALIDATION/effect
+prep: e.g. Heal sets `$da5e=$FF` "fizzle" when HP is full; unknown ids
+default to $FF), then a result-message ladder + `SetFld_5b1e` (bank $14
+entry 5 effect apply + the MP deduct).
+
+**S73 hooks:** (1) bank $14 entry-4's 6-byte default tail →
+`ld hl,$7202 / rst $10 / ret / nop` → bank $72 `AnchorField14Tail`
+reproduces the `$FF` default for non-$E4 and, for $E4, classifies context
+(`wInGateworld==1` → gate-side; else `wMapID>=$30` → gate-like special room;
+else town ± `wAnchorFloor`) and ARMS the dialog script (below), leaving
+`$da5e=$E4` as a marker. (2) `Anchor07Post` (bank $07, replacing the
+post-$1404 `ld a,[$da5e]/cp $ff` 5-byte window): $E4 → pop out of the state
+handler + `$c90d=4` (full menu close, no message, no deduct); others →
+byte-exact flag reproduction.
+
+**Arming a script from the menu (the S73 protocol):** `$D8D3=$71`
+(medal_vault; CustomScriptRead keys on wScriptMapType), `$D8D4`/`$D8DC` =
+script index, **counter `$D8D5/6 = $FFFF`** (the per-frame ticker
+`ScriptExecContinue` PRE-increments before reading — only `ScriptInit`
+reads at 0), `$D8D7 = $01`. The script engine is gated on the UI-busy
+flags, so it starts ticking only after the state-4 teardown; the script's
+own `init_dialog` then opens the box (works on generated maze floors —
+measured). `GateAwareDispatch` (bank $60 template, re-pinned S73) routes
+`wScriptMapType >= $6B && != $70` to CustomScriptRead so this works in any
+physical room; `$70` (the gate-world script type) stays on the wMapID route
+— that value caused the original B-bug freeze.
+
+**Anchor ($E4) semantics as built:** confirm scripts 2 (gate-side) / 3
+(return) with YES/NO, error scripts 4 (special/boss/custom room) / 5 (no
+anchor); YES writes `wAnchorArm` (1/2) + warps (script `map_transition`:
+$0000/$E8/$58 = the WarpWing recipe incl. `$d92b=6`; $8000 staircase-style
+for the return). Bank $73 commit hook: arm 1 → store gate + floor+1
+(1-BASED; `wAnchorFloor==0` is the no-anchor sentinel, and `wCurrentFloor`
+is 0-based) → $D9D7-8 in the save image; arm 2 → install gate +
+`wAnchorFloor-2` (entry-5's inc restores), charge `curMP := curMP >> 2`
+(record +$54; the commit IS the arrival), clear the anchor (single-use),
+arm:=3; `GateDecisionFork` consumes 3 → forced STANDARD maze (also bypasses
+the gate-1 POC rotation on returns, by design). Battle cast of $E4 =
+SILENT no-op (record anim9=$02 keeps the $dcff announce/animate gates
+clear — the MagicBurn finding inverted); v2 polish = a "can't use in
+battle" message. Status: **SHIPPED, USER-CONFIRMED (S73 v1 + S73b).**
+
+**Record-layout correction (S73):** the party record is +$50 curHP /
++$52 maxHP / +$54 curMP / +$56 maxMP (known_RAM_map's old "+$52 MP" row was
+wrong — the afford check reads +$54 and Heal validates +$50 vs +$52); the
+menu skill array is +$29 (8 bytes), NOT +$32.
+
+### §14.1 S73b additions — descriptions + battle rejection
+
+**Skill DESCRIPTIONS (SKIL-menu info box):** pointer table at **$56:$6667**
+(256 × dw, indexed by skill id; strings = charset + $62 space + $F1 newline +
+$F0 end, ≤3 lines ≤18 chars). Unused ids ($DB-$FF) all point at the $664A
+empty string — custom skills therefore showed a BLANK box until S73b.
+patches/bank_056.asm (NEW patch file, registered in verify_integrity
+PATCH_FILES which the compiler's builder parses) repoints entries $E0-$E4
+byte-neutrally (the table renders in the source as `ld c,d / ld h,[hl]` pairs
+= raw $4A,$66) and funds five description strings from the trailing nop pad.
+
+**Battle rejection of FIELD-only skills:** the vanilla predicate is
+`LoadBtl_4b98` ($50:$4B98; Z = field-only = $37 StepGuard/$38 MapMagic/$7e):
+on Z the battle skill menu shows the **$0302** "can't use" message
+(jr_050_4a57) and returns WITHOUT queueing the action — no turn consumed. A
+second inline ladder at $50:$498A excludes the same ids from the usable-skill
+count ($d9f6, the AI/order pool). S73b rewrites both sites byte-neutrally to
+call a shared `FieldOnlySkillA` predicate (bank $50 tail, funded from the
+mid-bank pad run; shift audit vs the previous ROM was clean — only the two
+sites, the label-relinked tail helpers, and header checksums differ) with
+**$E4 added**, so Anchor inherits StepGuard's exact battle behavior. Verified
+at instruction level in the built ROM; a live battle round exercised both
+rewritten sites without anomaly.

@@ -1465,7 +1465,7 @@ EnemyStats_001:
     db 1  ; Level
     dw 30, 100, 10, 6, 5, 1  ; HP, MP, ATK, DEF, AGL, INT  (MP 0->100 for S2 casting)
     db 100, 200, 100, 200  ; AI weights
-    db $E1, $09, $FF, $FF  ; [S2e] Tame ($E1) slot0 + Infernos ($09) slot1 — starter Tame test
+    db $E4, $E1, $09, $FF  ; [S73] Anchor ($E4) slot0 + Tame ($E1) + Infernos ($09) — starter test harness
 
 ; --- EID 2 (0x2): Slime Lv1 ---
 EnemyStats_002:
@@ -6358,9 +6358,11 @@ label14_7bac:
     cp $7e
     jp z, Jump_014_7cf5
 
-    ld a, $ff
-    ld [$da5e], a
-    ret
+    ld hl, $7202                ; [ANCHOR S73] was `ld a,$ff / ld [$da5e],a / ret`
+    rst $10                     ;   (6 bytes -> 3+1+1+nop, byte-neutral). Bank $72
+    ret                         ;   entry 2 (AnchorField14Tail) handles $E4 (context
+    nop                         ;   classify + dialog-script arm) and reproduces the
+                                ;   vanilla $da5e=$FF fizzle default for other ids.
 
 
 Jump_014_7bf4:
