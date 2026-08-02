@@ -10,6 +10,45 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-08-01 (Session 74 — **custom skill chain $E5-$E8
+> "Earthquake" (Tremor/Quake/QuakeMore/QuakeMost) BUILT + PyBoy-verified
+> end-to-end; NOT yet user-tested** — verifier PASS 5/5, clean `1ca6579…`
+> untouched, S74 patched build (pin recorded below; the S73 patched pin
+> `224b1176…` is superseded).)
+>
+> Session 74 (2026-08-01 — **custom skill #4: the 4-tier Earthquake chain
+> $E5-$E8 (user-directed): all-foes earth damage 40-60/90-120/150-190/
+> 240-270 (top = 1.5x WhiteAir), ALSO hits the caster's own side for 1/3,
+> skips caster + ALL flying combatants both sides, screen-shake + GreatTree
+> rumble ($68) presentation, MP 5/10/16/24, learn chain lvl 2/4/6/8 each
+> tier requiring the previous. BUILT, PyBoy-verified (damage both sides,
+> 1/3 ally division, caster + flying skips, crossover banner, repeat casts,
+> MP deduct, MagicBurn/attack/Infernos regressions), NOT user-tested; a
+> real-menu commit was not scriptable — the deterministic queue-poke rig
+> stood in (see §13.7 rig caveats)**. Owning docs: BATTLE_SKILL_SYSTEM
+> §13.7 (sweep-fork architecture + the TWO traps: looping-SE `$dd80`
+> deadlock with the ROM0 vector-gap stopper stub, and `$db88` mid-sweep
+> contamination -> wQuakeCaster/phase-keyed division), TOOLS_AND_DATA
+> (dump_flying_flags.py -> extracted/flying_flags.json: 221 species, 48
+> flying, per-species ROM offset for the editor), MONSTER_DATA (+$04 edit
+> note), KEY_LESSONS (4 new), DOC_AUDIT (stale-$17 record story corrected).
+> As built: bank $52 sweep window $719C -> QuakeSweep72 (rst-return-via-DE);
+> bank $72 SkillQuake + QuakePowerTable + QuakeSweep72; bank $53 gate
+> (QuakeGate_delay: ally-banner render + hold + delay==8 damage-pair refire)
+> + widened TameSound suppressors ($E1-$E8) + QuakeFirstTgt53; bank $00
+> QuakeShakeEnd stub in the AUDITED-DEAD vector-gap bytes $0051-$0057/
+> $005C-$005F + 4-for-4 wobble window at $0574 (SFX-$00 stopper when the
+> shake ends — `$c8b1` has no vanilla writers so it is Quake-only); banks
+> $54/$07/$06/$41/$4c/$58/$5f/$14 as per §13.7 (records POWER WORDS ZERO —
+> nonzero powers loop the presentation; bank $07 index rebase $DE->$E0 +
+> `inc a` byte-trick to fit; bank $06 second learn table past $7F7F with
+> tail bytes verified unmoved). WRAM: wQuakePhase $DEB4, wQuakeAllyMsg
+> $DEB5, wQuakeCaster $DEB6. v1 limitations (v2 items): single-line
+> wordings (vanilla multi-line battle enders `63 FC 10 EC F2` undecoded),
+> Infernos flame visual under the shake, ~80-frame rumble then stopper,
+> all-enemies-flying = no-op cast, first-match caster derivation, blank
+> $E5-$E8 descriptions (bank $056), earth-resistance slot deferred.)
+>
 > Last verified: 2026-07-31 (Session 73 — **custom skill $E4 "Anchor"
 > SHIPPED, USER-CONFIRMED (incl. S73b: descriptions + battle rejection)** —
 > verifier PASS 5/5, clean `1ca6579…`, compiler 38/38, patched pin
@@ -60,56 +99,6 @@
 > emulator. Anchor scripts are hosted on medal_vault (room $71) — a
 > dedicated script-container room is a cleaner v2 home.)
 >
-> Session 72 (2026-07-31 — **Phase 3 item 1: editor walking skeleton +
-> VISUAL ROOM DISPLAY (user-directed extension same session).
-> BUILT S72, NOT yet user-tested. Byte-neutral** (no patch/ROM changes;
-> pins untouched). Owning: EDITOR_DESIGN (S72 amendments + new §11 with
-> as-built notes); ROADMAP Phase 3 + new boxes. As built: `editor2/app/`
-> PySide6 window (main.py: toolbar, open/reload project, recent-project
-> restore, room list, **Room tab = rendered display** + Fields tab,
-> build-log dock, ROM-MD5 gate `1ca6579…` + custom-emulator preference
-> via QSettings; room_view.py: zoom 1-3×, NPC/spawn/exit markers;
-> build_worker.py: QThread over the UNCHANGED core pipeline — GUI build ==
-> CLI build by construction) + `editor2/core/render.py` (headless room
-> renderer from the last built ROM + game.sym: CustomRoomPtrTable screens
-> / $26DD+Custom26DDTable tileset / CustomRoomAttr base(+2) attrs /
-> CustomRoomPalPtr palettes with the forced idx1/idx3 rule, dw $0000 →
-> derive() borrow with neutral slots 4-7 stand-in; screens bounded by
-> project.json; ZERO new format code — reuses
-> render_screen/decompress_lz/derive) + `editor2/core/emulator.py`
-> (cross-platform launch: macOS `open -Ra`-probed SameBoy → `open`;
-> Windows startfile; Linux sameboy → xdg-open; `{rom}` custom command) +
-> `editor2/tests/test_app.py` (offscreen smoke, PySide6-absent → SKIP like
-> verifier check 5; room-view pixel assert + placeholder skip; `--rom`
-> asserts GUI-path md5 == test_compiler REFERENCE_MD5 — **machine-verified
-> this session: 7 rooms listed, room $6B/$70 render with correct
-> palettes (amber $70 matches the S42 proof room), GUI build
-> byte-identical to `46ba6991…` (the S71v2 patched pin)**). Renderer
-> EMULATOR-VALIDATED per the new §11 rule: PyBoy in-game capture of $6B
-> (user's real .sav, CONTINUE → warp) shows the identical color set the
-> renderer emits. USER DECISIONS (S72): editor is CROSS-PLATFORM
-> (Win/Linux possible, primary macOS), real native-widget app not HTML —
-> EDITOR_DESIGN reframed; preview strategy = simulate only table-derived
-> renders, emulate the rest via an embedded-PyBoy panel (EDITOR_DESIGN
-> §11, new Phase 3 box). Gap-audit boxes ADDED (user-directed): Phase 2
-> preserved-systems flag-audit + orphaned-trigger validator (was cited by
-> EDITOR_DESIGN but never boxed); **E7 Milayou player art
-> (campaign-blocking, zero prior coverage)**; E8 shop RE (user: hex
-> editors edit stock/prices — likely shallow); **E9 item authoring incl.
-> the USER SPEC: WarpWing → single-slot like BeastTail + permanent (not
-> consumed) for warping anything**; Phase 3 NPC sprite-id catalog promoted
-> from the S70 residual. Repo-layout doc fix: `editor2/` row added (was
-> missing). LATE S72 (first user run): Pillow added to run deps +
-> graceful import error; **RGBDS v0.6.1 preflight** in
-> builder.check_toolchain (the user's brew rgbasm v1.0.1 produced the raw
-> hardware.inc SECTION/ENDM wall — now a one-line versioned error with
-> install steps) + app "Set RGBDS folder" preference (build_rom
-> rgbds_dir kwarg, PATH prepended for make only); user decision: the
-> 0.6.1 pin is PERMANENT (vendored-toolchain policy; bundling hides it —
-> EDITOR_DESIGN "Toolchain preflight").**)
->
->
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
 - **S71** (2026-07-26): FX1 — active farm 17→37 slots (array 40; sleep pool → SRAM bank 2 "P1"; "F2" reformat + checksum v3; snapshot "R4"; wMonList $D001). SHIPPED, USER-CONFIRMED; v2 exp-scale veto → pin `46ba6991…`. Owning: MONSTER_DATA (FX1 as built), ARCHITECTURE (checksum v3), KEY_LESSONS S71.
 - **S70** (2026-07-25): E2 — data-driven side quests (progression.quests/enemies → generated scripts + bank $14 quest EIDs; vanilla_exit_extensions; walk-on y=7 Entry-6 skip) + the PyBoy measurement regime; 3 pins, a5a5e0d5 current that session; init_dialog protocol; 385-frame exit ceremony fixed. SHIPPED, user-confirmed. Owning: PROJECT_COMPILER §progression, PYBOY_DEBUGGING, SIDEQUEST_MAP, CROSSBANK_ROOMS, MONSTER_DATA, KEY_LESSONS ×9.
@@ -348,4 +337,5 @@ towards_editor/                DWM1_Tile_Editor.html — standalone room-design 
 data/                          DWM-original.gbc (gitignored, user-provided)
 FULL_FAQ.txt                   Full game guide (root; game structure/quests reference)
 ALL_ROOMS_FINAL.png            Rendered room atlas (root)
-```
+```- **S74** (2026-08-01, v2 2026-08-02): Earthquake chain $E5-$E8 — sweep fork + victory gate (allies hit even on a battle-winning cast), tier-scaled shake bursts (step-2 tick, entry 4), wind anim removed at the anim-index source (GetAnimPresentId → quiet id $12/idx $0D), 2-line announce, SKIL descriptions, flying export. ROM0 back to vanilla. Owner: BATTLE_SKILL_SYSTEM 13.7 (+13.7.9). v3 (2026-08-02b): shakes moved into the cast-anim slot (announce -> shakes -> blink/damage, the v2 simultaneity fixed), 3-line ally banner, fly-dodge beats ("But X flew above it!", both sides, solo-caster silent). v4 (2026-08-02c): banner "Allies are caught/in a seismic wave!" fits the 2-line box; fly line is party-side only (enemies keep "Has no effect"), keyed on $db89; the party-hit refire is gone and quake beats use vanilla per-beat damage sounds (damaged beats ding, flyers stay silent). PyBoy-verified, awaiting user test. Patched pin `d1f5eb49…`.
+

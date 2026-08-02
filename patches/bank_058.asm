@@ -7307,6 +7307,14 @@ AnnounceIdxFork:
     ret
 .custom:
     sub $E2
+    cp $03                  ; [QUAKE] ids $E5-$E8 (idx 3-6): announce time =
+    jr c, .idx              ;   the start of a NEW cast, so reset the sweep
+    push af                 ;   state here (stale-phase hardening: a phase
+    xor a                   ;   left over from any abnormal end would skip
+    ld [wQuakePhase], a     ;   the shake + the ally crossover on the next
+    ld [wQuakeAllyMsg], a   ;   cast)
+    pop af
+.idx:
     ld hl, CustomAnnounceTable
     add l
     ld l, a
@@ -7317,24 +7325,11 @@ AnnounceIdxFork:
 CustomAnnounceTable:        ; indexed (id - $E2)
     db $FD                  ; $E2 TameMore -> custom-message escape ("used TameMore!")
     db $FD                  ; $E3 TameMost -> custom-message escape ("used TameMost!")
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+    db $FF                  ; $E4 Anchor: no battle announce (field-only skill)
+    db $FD                  ; $E5 Tremor    \  [QUAKE] custom-message escape ->
+    db $FD                  ; $E6 Quake      |  shared "{caster} sets off /
+    db $FD                  ; $E7 QuakeMore  |  an earthquake!" line
+    db $FD                  ; $E8 QuakeMost /  (CustomMsgPtrTable idx 7-10)
     nop
     nop
     nop

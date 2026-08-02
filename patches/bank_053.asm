@@ -1401,7 +1401,8 @@ jr_053_47e8:
 
 jr_053_47f0:
     ld a, c
-    call CheckMonsterSlot
+    call QuakeFirstTgt53 ; [QUAKE] was CheckMonsterSlot (3-for-3): adds
+                         ;   caster+flying skips for Earthquake casts only
     jr nc, jr_053_47fb
 
     inc c
@@ -7671,6 +7672,10 @@ TameGateHook:            ; [S2e] heart plays during the delay; near the end, fir
     jr c, .stock         ; [Stage2] Tame tiers $E1-$E3 all take the delay path
     cp $e4
     jr c, TameGate_delay
+    cp $e5               ; [QUAKE] Earthquake tiers $E5-$E8: own gate (seismic
+    jr c, .stock         ;   ally message render + hold, no Tame sound refire)
+    cp $e9
+    jr c, QuakeGate_delay
 .stock:
     cp $84
     jr c, TameGate_go
@@ -7699,116 +7704,121 @@ TameGate_tame_go:
 TameGate_go:
     jp jr_053_5b17
 
-TameSound1Hook:              ; [S2e] early $5501 suppressed for Tame tiers ($E1-$E3) [Stage2]
+TameSound1Hook:              ; [S2e] early $5501 suppressed for Tame ($E1-$E3) AND
+                             ; Earthquake ($E5-$E8) tiers [QUAKE S74]. Safe ONLY
+                             ; because the gate REFIRES both at delay==8 — the
+                             ; refire replaces any lingering/looping SE (the $68
+                             ; rumble!) so the $dd80 sound-done handshake clears.
+                             ; ($E4 is field-only; the $E1-$E8 span is safe.)
     ld a, [$db8a]
     cp $e1
     jr c, .play
-    cp $e4
-    jr c, TameSound1_skip
-.play:
-    ld hl, $5501
+    cp $e5                              ; [v4] was $e9: only Tame $E1-$E4 stays
+    jr c, TameSound1_skip               ;   suppressed. Quake beats play the
+.play:                                  ;   vanilla per-beat damage sound again
+    ld hl, $5501                        ;   (the rumble no longer loops here).
     rst $10
 TameSound1_skip:
     jp $5ae1
-TameSound2Hook:              ; [S2e] early $5502 suppressed for Tame tiers ($E1-$E3) [Stage2]
+TameSound2Hook:              ; [S2e] early $5502 suppressed for Tame ($E1-$E3) AND
+                             ; Earthquake ($E5-$E8) tiers [QUAKE S74]. Safe ONLY
+                             ; because the gate REFIRES both at delay==8 — the
+                             ; refire replaces any lingering/looping SE (the $68
+                             ; rumble!) so the $dd80 sound-done handshake clears.
+                             ; ($E4 is field-only; the $E1-$E8 span is safe.)
     ld a, [$db8a]
     cp $e1
     jr c, .play
-    cp $e4
+    cp $e5                              ; [v4] was $e9 — see TameSound1Hook
     jr c, TameSound2_skip
 .play:
     ld hl, $5502
     rst $10
 TameSound2_skip:
     jp $5afe
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+
+; ----------------------------------------------------------------------------
+; [QUAKE] QuakeGate_delay — message-gate path for $E5-$E8 (jumped from the
+; widened TameGateHook, which runs once per frame in the damage-message step).
+; If the crossover just happened (wQuakeAllyMsg==1), render the "The allies
+; are caught in the seismic wave!" line via the $FD custom-message escape
+; (LoadB4c_Fork routes $FD to the ALLY string while the flag is set), then
+; hold wTameDelay frames (armed to 45 by QuakeSweep72) so it is readable
+; before the first ally's damage message replaces it. No Tame-style sound
+; refire: Quake's sounds are the handler's $68 rumble + the normal per-hit
+; pipeline sounds.
+; ----------------------------------------------------------------------------
+QuakeGate_delay:
+    ld a, [wQuakeAllyMsg]
+    or a
+    jr z, .tick
+    xor a
+    ld [$c822], a
+    ld a, $fd
+    ld [$c823], a
+    ld hl, $4c00                        ; battle-message renderer (forked)
+    rst $10
+    xor a
+    ld [wQuakeAllyMsg], a
+    ret                                 ; hold this frame (render just landed)
+.tick:
+    ld a, [wTameDelay]
+    or a
+    jr z, TameGate_go                   ; hold elapsed -> resume the pipeline
+    cp $08
+    jr nz, .dec
+    nop                                 ; [v4] the delay==8 damage-sound refire
+    nop                                 ;   is GONE: it made the party-hit
+    nop                                 ;   sound play even when every ally
+    nop                                 ;   flew above the quake, and its
+    nop                                 ;   rumble-stopper duty moved to the
+    nop                                 ;   anim-slot train (v3). Per-beat
+    nop                                 ;   damage sounds are vanilla again
+    nop                                 ;   for $E5-$E8 (see the Sound hooks).
+.dec:
+    ld a, [wTameDelay]
+    dec a
+    ld [wTameDelay], a
+    ret
+
+; ----------------------------------------------------------------------------
+; [QUAKE] QuakeFirstTgt53 — byte-neutral 3-for-3 stand-in for the
+; `call CheckMonsterSlot` inside the all-foes FIRST-target scan
+; (jr_053_47f0: side base + 3-slot loop, `jr nc` = found). Vanilla check
+; first (CF = dead/empty -> skip); then, for Earthquake casts only, ALSO
+; report CF (skip) for the caster itself and for flying combatants
+; ($db8b[slot] bit4), so the sweep never opens on an invalid Quake target.
+; A (the slot) is preserved on all paths, like CheckMonsterSlot itself.
+; ----------------------------------------------------------------------------
+QuakeFirstTgt53:
+    call CheckMonsterSlot
+    ret c                               ; dead/empty: skip regardless of skill
+    push bc                             ; B = the caller's 3-slot loop counter!
+    push af                             ; A = slot (preserve; F: CF clear)
+    ld a, [$db8a]
+    cp $e5
+    jr c, .pass
+    cp $e9
+    jr nc, .pass
+    ; Quake cast: extra skips. [v3] FLYING is no longer skipped here — a
+    ; flying combatant now takes a real per-target beat (0 damage + the
+    ; "flew above it!" line) so the sweep may legitimately OPEN on one.
+    ld a, [$db88]                       ; caster?
+    ld b, a
+    pop af
+    push af
+    cp b
+    jr z, .skip
+.pass:
+    pop af
+    pop bc
+    or a                                ; CF clear = usable
+    ret
+.skip:
+    pop af
+    pop bc
+    scf                                 ; CF set = skip this slot
+    ret
     nop
     nop
     nop

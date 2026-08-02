@@ -12,7 +12,7 @@
 | $01 | 1 | Level cap | Max level when raised (e.g., 45 for DrakSlime) |
 | $02 | 1 | Exp table index | Selects from growth curves at bank $13:$41E6 |
 | $03 | 1 | Female ratio | 0=0%, 1≈10%, 2=50%, 3≈84% |
-| $04 | 1 | Can fly | 1=floating/flying sprite (WingSlime, Dracky, ghosts, etc.) |
+| $04 | 1 | Can fly | 1=floating/flying sprite (WingSlime, Dracky, ghosts, etc.). Battle copy = $db8b[slot] bit4 (packed by bank $51 init); gates LegSweep $4E and the Earthquake tiers $E5-$E8 (both skip flyers). EDITOR: tools/dump_flying_flags.py exports all 221 flags + absolute ROM offsets to extracted/flying_flags.json for direct read/write. [S74] |
 | $05 | 1 | Metal body | 1=only Metaly, Metabble, MetalKing |
 | $06 | 1 | Skill 1 ID | See bank $41:$628E for skill names |
 | $07 | 1 | Skill 2 ID | |

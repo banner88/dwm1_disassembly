@@ -400,3 +400,4 @@ and aborts on drift. `--print` dumps the range-gate table. See BATTLE_SKILL_SYST
 1. Commit the tool with the data, same change. No exceptions.
 2. Any dumper that writes extracted/ should stamp a `"_generator"` key.
 3. Editor (Phase 2/3) consumes ONLY Tier A files.
+| tools/dump_flying_flags.py | extracted/flying_flags.json | Every species' can-fly flag (monster info +$04, $03:$4461+sp*43+4): 221 species, 48 flying, per-species name + ABSOLUTE ROM byte offset so the editor can read AND write the stat (0=grounded, 1=flying). Battle copy = $db8b[slot] bit4 (bank $51 init); gates LegSweep $4E + Earthquake $E5-$E8. [S74] |

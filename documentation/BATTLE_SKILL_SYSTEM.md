@@ -849,6 +849,62 @@ name-inserting announce templates; (b) a 2nd bespoke-message render path beyond
 `$FD`; (c) FIELD-cast skills (e.g. teleport) — a different code path the battle
 foundation doesn't touch yet.
 
+#### 13.4.1 S74 additions to the recipe (Earthquake-era techniques, all reusable)
+
+Everything below is built, PyBoy-verified, USER-CONFIRMED, and designed to be
+cribbed by the next skill. Deep dives live in §13.7.1–§13.7.11; this is the
+index a future session should read FIRST.
+
+- **No cast animation / custom presentation window:** point the anim-INDEX
+  lookup at a quiet id via `GetAnimPresentId` (bank `$5f`): any id whose
+  routine index is `$0D` in ALL THREE side tables (`$58dd/$59c3/$5aa9`;
+  `$12` qualifies, HealMore `$2c` does NOT — side-B `$00`) renders NOTHING and
+  completes instantly. Do NOT force `$da82` — the `$5F` driver also ticks the
+  d9ee setup machine and starving it wedges the action (§13.7.10).
+- **Presentation that must precede ALL per-target beats** (screen effects,
+  charge-ups, multi-pulse anything) belongs in the CAST-ANIM SLOT
+  (`d9ed==1 && d9ee==3`), held via the `$6c4d` 15-byte window + a bank-`$72`
+  fork that reports E=0 until done. Rules: arm once (guard both vars — d9ee
+  idle-cycles 1,2,3 under d9ed==0), keep the verdict STICKY until the machine
+  leaves the state, and let the fork keep servicing the vanilla driver for
+  non-custom ids. `QuakeAnimHold72`+`QuakeShakeSeq` are the template.
+- **Multi-target sweeps** (all-foes, both-sides, conditional skips): the
+  `$52:$719C` sweep window → `QuakeSweep72` (entry 3) + the first-target scan
+  stand-in `QuakeFirstTgt53`. Per-target damage handlers key side-dependent
+  math on `wQuakePhase`, NEVER on `$db88` (target-contaminated) — and the
+  per-beat target var of record is **`$db89`** (proved by the damage math AND
+  by the v4 `$db88` real-menu divergence).
+- **Battle-winning multi-target actions:** the step-6 side-wiped check
+  (`$7033 call $7782`) aborts iteration mid-sweep; gate it on your
+  phase/state var (`QuakeVictGate52`, funded from the sweep window pad — and
+  remember window pads are EXECUTED fall-through, `jr` over stashed code).
+  The scheduler's second call (`$70bd`) lands victory/defeat one action later
+  unconditionally.
+- **Per-target outcome text:** 0-damage hits auto-route to miss messages
+  `$B7/$B8`; intercept in `LoadB4c_Fork` keyed on (skill id, `$db89` side,
+  target state) and render a pooled string through a 1-entry mode table
+  (`LoadB4c_MaybeFlew` template). `F9 00` in the string = the current beat's
+  subject name. Gate-inserted renders cap at TWO lines (18 chars each) — the
+  `FC 10 EC F2` page-ender only works in engine-driven messages.
+- **Per-beat damage sounds are free:** the vanilla `$5501/$5502` sites ding
+  damaged beats and stay silent on 0-damage beats. Only suppress+refire
+  (Tame-style) if a looping SE would otherwise pin the `$dd80` handshake —
+  and delete the compensation the moment the loop is gone (§13.7.11).
+- **Looping SFX** (rumbles, drones): queue via `$c8b8`; ANY new SE replaces a
+  looping one, so a one-byte SFX-`$00` write is a universal stopper. Screen
+  shake = `$c8b1` (SCY wobble counter, no vanilla writers; ~16 frames reads
+  as one distinct jolt).
+- **Tiered skill chains:** learn levels + prereq-EVOLVE rows in
+  `CustomLearnReqTable2` (bank `$06`); the same level gates CAST-time
+  validity (below-level actors get vanilla msg `$1D` — enforced per actor).
+- **SKIL-menu descriptions:** repoint the bank-`$56` desc-table rows off the
+  `$664a` empty string and pool 3-line strings from the trailing nop pad
+  (§13.7 v2; `SkillDescPtr_E5..E8` are the pattern).
+- **Species-conditional targeting** (flying, and by extension any species
+  flag): battle-side per-slot flags at `$db8b[slot]` (bit 4 = flying); the
+  ROM species source + all offsets are exported in
+  `extracted/flying_flags.json` (`tools/dump_flying_flags.py`).
+
 ### 13.5 Custom skill #2 — Tame (`$E1`): reusable custom-message fork + note-then-hit timing  [S50/S2e, 2026-06-30, USER-CONFIRMED in SameBoy]
 Skill #2 = **Tame** (`$E1`): recruit (meat-meter) + small anti-abuse damage, single-target.
 Announce, heart animation, sound timing, damage, and recruitment are all confirmed correct;
@@ -1055,3 +1111,260 @@ sites, the label-relinked tail helpers, and header checksums differ) with
 **$E4 added**, so Anchor inherits StepGuard's exact battle behavior. Verified
 at instruction level in the built ROM; a live battle round exercised both
 rewritten sites without anomaly.
+
+### 13.7 Custom skill #4 — Earthquake 4-tier chain (`$E5`-`$E8`): the SWEEP FORK, screen shake, and the looping-SE deadlock  [S74, 2026-08-01; v2 feedback round 2026-08-02, PyBoy-verified]
+
+**Tremor/Quake/QuakeMore/QuakeMost** (`$E5`-`$E8`): all-foes earth damage
+(40-60/90-120/150-190/240-270, top = 1.5x WhiteAir; editor tunes
+`QuakePowerTable` in patches/bank_072.asm) that ALSO sweeps the caster's own
+side for 1/3 damage, skipping the caster and ANY flying combatant on both
+sides (`$db8b[slot]` bit4, packed from monster-info `+$04` by bank $51 init;
+`tools/dump_flying_flags.py` exports every species' flag + ROM offset to
+`extracted/flying_flags.json`). MP 5/10/16/24 (record `+4` + bank $07
+CustomMPCostTable, whose index base moved to `$E0`: the retired POC rows
+were dropped to fund the new entries in the FULL bank $07 tail — as was a
+1-byte `cp $ff`→`inc a` rewrite in Anchor07Post, Z-equivalent since its
+callers reload A). Learn chain lvl 2/4/6/8 with each tier requiring the
+previous (two-stage LearnLoopFork + CustomLearnReqTable2 in bank $06's
+post-`$7F7F` run; `$7F7F`/`$7FFF`/table06 tail bytes verified unmoved).
+
+**The sweep fork ($52:$719C).** Vanilla all-foes iteration lives in bank $52:
+a 20-byte window (`inc a / cp $04 / jr z` ... ceiling ladder) was replaced
+byte-neutrally with a far-call to bank $72 `QuakeSweep72` (entry 3) using the
+**rst-return-via-DE contract**: the window passes cur-target in A/E; the fork
+returns D=1 finish / D=0 continue with E=next-1 (the window's surviving
+`inc a` re-adds 1). Stock ids traverse `.vanilla` (A/B-proven with a live
+MagicBurn cast on the patched ROM: swept 4→5→6→7, damage landed, clean
+finish). Quake ids get: caster-skip + flying-skip on advance; at the first
+side's ceiling with `wQuakePhase`<2 → **crossover**: phase:=2, arm the ally
+banner (`wQuakeAllyMsg`=1 + `wTameDelay`=$2d hold) and re-aim at the caster's
+own side (base-1); at the second ceiling → clear all state, D=1.
+
+**THE TWO BIG TRAPS (both cost hours; both PyBoy-root-caused):**
+
+1. **A looping SE deadlocks the battle effect pipeline.** Effect step 2
+   ($52:$6D56) spins until `($dd80 & $dd9a) == $FF` — and that mask includes
+   the SOUND-DRIVER-done bits. SFX `$68` (the GreatTree growth rumble) is a
+   LOOPING ambience: play it anywhere before/during the effect and `$dd80`
+   cycles forever → `$d9ed` pins at 2 → soft-lock. Suppressing the engine's
+   hit sounds has the same signature (nothing ever completes) — which is
+   precisely why Tame's gate REFIRES `$5501/$5502` at delay==8: a newly
+   queued SE *replaces* the lingering one. The Quake solution: the handler
+   queues `$68` via `wSoundEffect` (`$c8b8`) + starts the SCY wobble
+   (`$c8b1`=$50), and a 15-byte ROM0 stub — **QuakeShakeEnd, living in the
+   audited-dead interrupt-vector gap bytes $0051-$0057 + $005C-$005F** (timer
+   `$50` and joypad `$60` vectors keep their `reti` first bytes; no
+   call/jp/jr anywhere in the ROM targets the gaps) — hooks the wobble's
+   `dec a / ld [$c8b1],a` (4-for-4 window at $0574) and queues **SFX `$00`
+   as a stopper** the frame the shake counter hits 0 (~80 frames). Any
+   queued SE replaces a looping one (measured: `$00` and `$6b` both free the
+   stall). Net effect: the pipeline HOLDS under rumble+shake for ~80 frames,
+   then damage flows. `$c8b1` has NO vanilla writers (BattleRex shakes use
+   the separate `$c8b2`/X copy), so the stub fires only for Quake shakes.
+   Note the corollary for step-1: it dispatches the handler at `$d9ee`==$0B
+   via the $6CD5 far-call, and unknown ids fall from step 1 STRAIGHT INTO
+   the step-2 body ($52:$6cfa `jp $6d56`) in the same frame.
+
+2. **`$db88` (wBattleAttackerIdx) is NOT the caster during a sweep.** The
+   per-target redirect ($53:CallBtlC_5e38) rewrites it to the CURRENT target,
+   so caster-skip/side tests against it mis-skip slots and re-aim the
+   crossover at the enemy side (measured: slot-5 skip + double enemy pass).
+   Fix: `wQuakeCaster` ($DEB6), derived at the phase-0 handler run by
+   scanning the action queue (`$dcec` id/target pairs) for our skill id
+   (first-match; two same-tier queuers collide — v1 note). The ally-1/3
+   decision doesn't use targets at all: it keys on **`wQuakePhase` >= 2**
+   (phase 1 = committed victim side full damage, phase 2 = own side /3),
+   immune to the first-dispatch `$db89` staleness (the target is set AFTER
+   the phase-0 dispatch) and to the `$db88` contamination.
+
+**Records** (bank $54): byte-for-byte the proven MagicBurn all-foes shape
+(`$46,$12,$12,...`) with only mp at +4 — **power words MUST stay zero**
+(nonzero powers loop the presentation: same `$dd80`-cycling stall signature).
+Damage lives in the handler's bank-local table. Announce = `$FD` custom
+escape → "{caster} sets off a quake!"; crossover banner "Allies are caught!"
+— both SINGLE-LINE (Tame pattern; the vanilla multi-line battle format ends
+pages with `63 FC 10 EC F2` and its handshake interaction is undecoded — the
+requested longer wordings are the v2 item). Early hit sounds are suppressed
+for `$E1`-`$E8` (widened TameSound hooks) so the cast is rumble+shake, then
+per-hit text; the crossover hold refires the damage pair at delay==8.
+Proxy = `$09` Infernos (HealMore `$2c` stalls the `$6c4d` done-spin on the
+offense side).
+
+**Measured end-to-end** (3 enemies + fabricated ally, deterministic
+queue-poke rig): rumble f+1, stopper f+83, shake SCY ±4, sweep
+4→5→6→7 → banner+hold → 1→2→3, enemy damage -43/-57/-40 (KOs), ally
+-17/-19 (= roll/3), caster untouched, flying slot-5 skip clean, MP -5,
+back-to-back casts clean (`$d9ed`/phase reset), MagicBurn + attack +
+Infernos regressions clean. **Rig caveats:** a real-menu commit was NOT
+exercised (menu navigation isn't scripted) — the queue-scan caster
+derivation and first-target selection ran only under poked state; Tame
+can't commit through the rig (tameability gate) — its ladder bytes are
+verified untouched. If ALL enemies fly, the sweep never starts (no ally
+pass either). Fabricated-ally harness lore: `$dd1b[slot]` must be **0**
+(nonzero-non-FF = invalid — see the fixed CheckMonsterSlot comment: CF SET
+= INVALID), `$dd13[slot]` a live turn-state, `$db8b[slot]` real flags.
+
+#### 13.7.9 v2 (user-feedback round, 2026-08-02) — victory-proof ally sweep, wind removal, tier-scaled shake bursts
+
+User feedback on v1: (1) a battle-winning quake never hit the caster's own
+side; (2) the borrowed Infernos "wind" cast animation played before
+everything and had to go, with the ordering fixed to shakes → blink/damage
+text; (3) the tiers should shake 1/2/3/4 distinct times; plus the announce
+split "quake" mid-word and the skills had no SKIL-menu descriptions.
+
+**(1) Victory gate.** Step 6 (`$52:$6ffa`, the per-target continuation step)
+opens with `call $7e85 / call $7782 / jp c,$70e0 / call $7dd7 / ret c`.
+`$7782` is the SIDE-WIPED check: BC=$0300 then $0304, per-slot `$77a8`
+calls, returns CARRY when either side is fully dead → `$70e0` = battle-end,
+abandoning the rest of the multi-target iteration (measured: a 3-kill Tremor
+ended the action at the third kill's step 6; the ally pass never ran).
+`$7782` has exactly TWO callers: `$7033` (this step-6 head) and `$70bd`
+(inside `$7085`, the iteration-done actor scheduler — runs unconditionally
+right AFTER the action). So the fix gates only `$7033`: it now calls
+`QuakeVictGate52`, a 9-byte trampoline living in the sweep window's former
+pad: `ld a,[$deb4] / or a / jp z,$7782 / xor a / ret` — while wQuakePhase!=0
+report "nobody wiped" (A=0, carry clear); once the sweep finishes, the
+`$70bd` call runs the real check and victory/defeat land one action later.
+PyBoy: all-3-kill Tremor → ally dispatched and damaged (−roll/3) AFTER the
+wipe, then battle mode 2→1 (won). A quake that wipes the caster's own side
+defers defeat the same way.
+
+**(2) Wind removal — two failed designs and the real mechanism.** Forcing
+`$da82:=1` for quake ids at the `$6c4d` gate (far-fork, entry-5) wedges the
+battle: the `$5f05` driver that gate calls is not just the cast-animation
+player — it is the engine that ticks the d9ee ACTION-SETUP machine, and
+starving it freezes d9ee (first wholesale, then even when scoped to
+d9ee==3, which the old traces show is precisely the cast-anim wait state
+spanning the wind window). The correct fix goes to the SOURCE: the Layer-1
+sprite-anim routine index is `table[$58dd/$59c3/$5aa9][GetPresentId()]`
+(§11.1), and index `$0D` is the documented bare-`ret` "no visual" sentinel.
+That one lookup site now calls `GetAnimPresentId` (bank $5f, 12 B from the
+pad): quake ids return `$12` — a skill whose index is `$0D` in ALL THREE
+side tables — every other presentation site (flash/SFX/messages) keeps the
+proven `$09` proxy, and stock ids fall through to `GetPresentId` unchanged
+(Infernos regression-checked). Related: HealMore `$2c` is `$0D/$00/$0D` —
+its non-quiet side-B selector is why it stalled as a full proxy in v1.
+Windows at `$6c4d` were reverted to vanilla bytes.
+
+**(3) Tier-scaled shake bursts.** The ROM0 stub + wobble window from v1 are
+fully REVERTED (ROM0 is vanilla again; the vector-gap bytes are free for
+future use). Instead, the head of effect-step 2 (`$52:$6D56`,
+`ld a,[$dd80] / ld hl,$dd9a / and [hl]`) is a 10-for-10 window far-calling
+bank $72 entry 4 `QuakeStepTick72`, which returns E = the same
+`[$dd80]&[$dd9a]` mask (A/flags do NOT survive the rst $10 bank-restore —
+register-return contract) and, while wQuakePhase!=0, runs the shake
+sequencer: `wQuakeBursts` ($DEB7, set to tier count 1..4 by the handler) ×
+16-frame `$c8b1` bursts with 12-frame `wQuakePause` ($DEB8) gaps, then one
+SFX-$00 write to `$c8b8` (the rumble stopper; wQuakePause=$FF marks
+terminal). Because step 2 is exactly the state the pipeline holds in while
+the $68 rumble loops, the whole burst train plays BEFORE any per-target
+presentation: announce → N clean shakes → blink/damage text, by
+construction. The handler no longer touches `$c8b1` directly. PyBoy: E5/E6/
+E7/E8 → 1/2/3/4 bursts (16 f each, ~13 f gaps), damage in tier range, ally
+/3 crossover intact (an E8 test even KO'd the fabricated ally cleanly).
+
+**(4) Cosmetics.** The announce is now the 2-line "{name} sets off"␊"a
+quake!" ($F1, byte-count-identical to the old single line; the v1 stall
+blamed on $F1 was really the rumble + nonzero record powers). All four
+tiers got SKIL-menu descriptions in bank $56 (4 table rows repointed off
+the `$664a` empty string + 186 string bytes funded from the 3213-nop pad).
+
+**Hard-won structure notes.** (a) The "spare nops" of a byte-neutral window
+are EXECUTED fall-through path, not dead pad — v2's first trampoline
+placement made step 6 `ret` out mid-flow every frame (sweep called every
+frame, d9ed pinned at 6). The window now `jr`s over the trampoline, paying
+for the jr with `ld a,e / dec d / jp z` (dec d: Z iff D==1, carry
+untouched) in place of `ld a,d / or a / ld a,e / jp nz`. (b) Per-target
+step chains: survivor `1→2→4→6→1`, kill `1→2→26→3→6→1` (step 26 =
+`$7ee3`); step 6 decides continue-vs-end. (c) `rst $10` operand is
+H=bank, L=ENTRY INDEX — `ld hl,$5305` is bank $53 entry 5, NOT address
+$5305. (d) Cast-time skill validation enforces the LEARN-LEVEL: an actor
+below a tier's CustomLearnReqTable2 level gets the vanilla "doesn't know
+that yet" reject (msg $1D) — which is the prereq chain working; harness
+runs must not poison OTHER actors' `$db8a` (the v2 rig gates its pokes on
+`$db88==0`, and pumps `$dc65` = the battle-side (level,id)-pair skill
+cache when casting an unlearned tier).
+
+#### 13.7.10 v3 (second feedback round, 2026-08-02) — the shake IS the cast animation; fly-dodge beats
+
+User feedback on v2: the first target's blink + damage text still landed
+simultaneously with the shake; the ally banner needed the full "Allies are
+caught in the seismic wave!" wording; and skipped flying combatants needed a
+visible "But X flew above it!" beat (including the all-allies-flying case,
+but NOT when the caster stands alone).
+
+**Root cause of the simultaneity.** The v2 stall lived at effect-step 2 of
+the FIRST target — which runs AFTER that target's step-1 (message + blink).
+So target 1's presentation always preceded the shakes. The fix moves the
+whole shake train into the CAST-ANIMATION slot (`d9ed==1`, `d9ee==3` — the
+exact slot the borrowed wind used to occupy), restoring the vanilla ordering
+anim → announce → per-target blink/damage with zero pipeline surgery.
+
+**Mechanism.** The `$6c4d` da82 gate is now a byte-neutral 15-for-15 window
+(it swallowed the trailing `ld a,[$da82] / or a / ret z` re-read as well:
+`ld hl,$7204 / rst $10 / ld a,e / or a / jr nz,<dispatch> / ret` + 6 nops).
+The 10-byte version failed because the fall-through re-read the REAL $da82
+(=1, the quiet `$0D` anim finishes instantly) and let the machine advance
+mid-burst with the rumble still looping. E is authoritative now; nothing
+branches into `$6c55-$6c5b` (bank-$53 `call $6c59` hits in a full-ROM scan
+are bank $53's own address space — same-address/different-bank scan trap).
+Entry 4 (`QuakeAnimHold72`) reproduces vanilla exactly for non-quake ids
+(including the nested `$5f05` driver call that ticks the d9ee setup
+machine); for `$E5-$E8` in the anim slot it arms (once) the `$68` rumble +
+tier-count burst train, ticks `QuakeShakeSeq` every frame ($10-frame
+`$c8b1` bursts, $0C-frame `wQuakePause` gaps, SFX-$00 stopper, `$FF`
+terminal), and reports E=0 until the real anim AND the train are done. Three
+measured traps encoded in the final shape: (a) the arm test needs
+`d9ed==1` — d9ee also cycles 1,2,3 while `d9ed==0` (idle), and arming there
+plays the train outside the action; (b) the done-report must be STICKY
+(`wQuakeArmed` stays set; the sub-machine takes several frames to leave
+d9ee==3, and clearing it re-armed the train each frame — six Tremor bursts);
+(c) `wQuakeArmed` ($DEB9) is cleared by the handler's phase-0 init and
+`.qfinish`. The step-2 window from v2 is fully reverted (vanilla bytes); the
+handler no longer touches the presentation at all.
+
+**Fly-dodge beats.** Flying combatants are no longer skipped: the sweep and
+the first-target scan (`QuakeFirstTgt53`) keep only the caster skip, so
+flyers get real per-target beats. The handler forces their damage to 0
+(`$db89` is the current target at every dispatch). The engine routes a
+0-damage hit to miss-message `$B8` "Has no effect on {name}!" (measured) —
+`LoadB4c_Fork` now intercepts `$B7`/`$B8` and, for a quake id with a flying
+current target (`$db8b[$db88]` bit 4), renders `CustomMsg_QuakeFlew`
+("But {F9 00} / flew above it!") through a 1-entry mode table instead; the
+`F9 00` escape resolves the current message subject = the flyer. This
+covers both sides, gives the all-allies-flying case its banner + per-ally
+fly lines (real beats exist), and the solo-caster case stays silent for
+free: no ally beats exist, and `.qfinish` clears the armed banner flag.
+The ally banner is now the full 3-line "Allies are caught / in the seismic
+/ wave!". All verified in PyBoy: enemy-flyer line, ally-flyer line after
+the banner, solo-caster silence, E8 = 4 bursts before any beat, all-kill →
+ally hit → victory, Infernos/plain-attack regressions.
+
+#### 13.7.11 v4 (third feedback round, 2026-08-02) — banner fit, side-scoped fly line, honest sounds
+
+Four user reports, four fixes:
+1. **Banner cut off** ("…in the seismic" and no third line): the battle box
+   shows two lines; a third `$F1` line never displays. The vanilla page
+   mechanism (`FC 10 EC F2` mid-string, as in msgs $67/$83) DOES scroll to a
+   third line — but inside a GATE-inserted render it swallowed the following
+   beat's own message (the ally fly line never posted; measured). Final:
+   2 lines that fit exactly — "Allies are caught" / "in a seismic wave!"
+   (line 2 = 18 chars; "the"→"a").
+2. **Fly line is PARTY-side only** (user preference): enemies keep the
+   vanilla "Has no effect on {name}!". `LoadB4c_MaybeFlew` now keys on
+   `$db89` (the target var the damage handler trusts — `$db88` proved flaky
+   on real-menu casts) and requires `$db89 < 4`. Hook-verified: enemy flyer
+   → vanilla text; ally flyer → the fly line at its own beat.
+3. **Party-hit sound played even when every ally flew**: the
+   `wTameDelay==8` `$5501/$5502` refire in `QuakeGate_delay` is deleted
+   (nop'd in place). Its rumble-stopper duty moved to the anim-slot train in
+   v3, so it had become a pure false-positive sound.
+4. **Enemy damage sound missing on the blink**: the Tame-era
+   `TameSound1Hook`/`TameSound2Hook` suppression covered `$E1-$E8`; the
+   quake half existed only because the early sounds used to fire under the
+   looping rumble. Range narrowed to `$E1-$E4` (one byte each: `cp $e9` →
+   `cp $e5`): quake beats play the vanilla per-beat damage sound again —
+   which is intrinsically honest: damaged beats ding (measured at each
+   damaging beat), flyer/0-damage beats stay silent (measured), on both
+   sides. Tame `$E1-$E3` behavior is untouched.
+

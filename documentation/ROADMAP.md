@@ -1239,3 +1239,20 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
   consumed, excluded from the AI pool). New pin `224b1176…`. The reported
   save-wipe + castle-top corruption did not reproduce (user retest + 3 PyBoy
   cycles) — transient/unconfirmed, watch.
+- **S74 (2026-08-01, v2 2026-08-02): Earthquake chain $E5-$E8 — v2 BUILT +
+  PyBoy-verified end-to-end, awaiting user test.** v2 delivered: allies hit
+  even on a battle-winning cast (step-6 victory gate; `$70bd` lands
+  victory/defeat one action later); Infernos wind anim removed at the
+  anim-index source (`GetAnimPresentId` → quiet id, idx `$0D`) with the
+  ordering announce → tier-count shake bursts (1/2/3/4 × 16 f) → damage
+  text; 2-line announce (`$F1` exonerated); bank $056 SKIL descriptions for
+  all four tiers; ROM0 reverted to vanilla. v3 (2026-08-02b): announce -> shakes ->
+  blink/damage ordering (shake train lives in the cast-anim slot), 3-line
+  "Allies are caught in the seismic wave!" banner, per-target "But X flew
+  above it!" fly beats on both sides (solo-caster silent). v4 (2026-08-02c): banner box-fit,
+  party-side-only fly line, honest per-beat damage sounds. Remaining
+  backlog: earth-resistance slot (+$29) semantics; caster derivation
+  robustness (two same-tier queuers); all-enemies-flying cast is a no-op
+  (the commit has no valid target — vanilla behavior); full "the seismic
+  wave" wording needs the engine-driven page path (gate-inserted renders
+  cap at 2 lines).

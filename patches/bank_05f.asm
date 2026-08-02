@@ -3470,7 +3470,15 @@ jr_05f_5412:
     ld hl, $5aa9
 
 jr_05f_5433:
-    call GetPresentId   ; [S2d] presentation-id proxy (identity for stock)
+    call GetAnimPresentId ; [QUAKE S74] anim-INDEX site only: was GetPresentId
+                        ;   (same 3-byte call). Quake tiers get $12 here — an
+                        ;   id whose animation index is $0D in ALL THREE side
+                        ;   tables ($58dd/$59c3/$5aa9) = the documented
+                        ;   "no visual" sentinel (bare-ret routine, §11.1) —
+                        ;   so no borrowed Infernos wind plays, while every
+                        ;   other presentation site (flash/SFX/message) keeps
+                        ;   the proven $09 proxy. The old da82-forcing gate
+                        ;   starved the d9ee setup machine and is reverted.
     add l
     ld l, a
     ld a, $00
@@ -13444,18 +13452,6 @@ jr_05f_68d1:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
 ; === Custom-skill presentation indirection (GetPresentId) ============== [S2d]
 ; Forked into bank $5f animation-selection reads of $db8a. Returns the skill id
 ; unchanged for stock skills (<$DE); for custom skills it returns a PROXY id so
@@ -13477,5 +13473,15 @@ GetPresentId::
     pop hl             ; 1
     ret                ; 1   (=21 bytes)
 CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id; default $09 (Infernos)
-    db $09, $09, $09, $c2, $c2, $c2, $09, $09   ; $DE-$E5  ($E0 MagicBurn=$09; $E1-$E3 Tame tiers=$c2 HEART [S2e/Stage2 ThrowMeat])
-    db $09, $09, $09, $09, $09, $09, $09, $09   ; $E6-$ED  (reserved for skills #2-#12; full 16 slots)
+    db $09, $09, $09, $c2, $c2, $c2, $09, $09   ; $DE-$E5  ($E0 MagicBurn=$09; $E1-$E3 Tame=$c2 HEART; $E5 Tremor=$09 Infernos [QUAKE: proven-complete proxy; $2c HealMore STALLS the $52:$6c4d done-spin on the offense side — PyBoy S74])
+    db $09, $09, $09, $09, $09, $09, $09, $09   ; $E6-$ED  ($E6-$E8 Quake tiers=$09 [QUAKE]; rest reserved)
+; [QUAKE S74] anim-index-site variant of GetPresentId (12 B, funded from the
+; pad above): the Layer-1 sprite-animation lookup alone sees a "quiet" id for
+; the Earthquake tiers, killing the borrowed cast animation at its source.
+GetAnimPresentId::
+    ld a, [$db8a]
+    sub $E5
+    cp $04
+    jr nc, GetPresentId ; non-quake -> the normal presentation proxy
+    ld a, $12           ; anim-quiet id ($0D routine on both sides)
+    ret

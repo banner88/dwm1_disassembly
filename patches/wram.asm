@@ -503,3 +503,21 @@ wSnapBounce:: ds 32 ;de92-deb1
 ; Reserve now 40 B, growth starts $DEB4.
 wAnchorArm:: db ;deb2 — see protocol above (written by script write_ram + ASM)
 wAnchorCaster:: db ;deb3 — caster party slot (0-2), captured at cast time
+; [QUAKE] Earthquake ($E5-$E8) battle-sweep state. Reset per cast by
+; AnnounceIdxFork (bank $58) and on sweep finish (QuakeSweep72).
+wQuakePhase:: db ;deb4 — 0 idle / 1 first-side sweep ran (shake+SFX fired) /
+                ;        2 crossed to the caster's own side (allies)
+wQuakeAllyMsg:: db ;deb5 — 1 = "seismic wave" ally message pending (rendered by
+                ;   the widened TameGateHook via the $FD escape, then cleared)
+wQuakeCaster:: db ;deb6 — TRUE caster slot, captured at the first handler run
+                ;   ($db88 is REWRITTEN to the current target mid-sweep by the
+                ;   per-target redirect $53:CallBtlC_5e38 — measured S74 — so
+                ;   every later caster/side test must use this instead)
+wQuakeBursts:: db ;deb7 — remaining shake bursts (tier count 1..4 at cast; the
+                ;   step-2 tick QuakeStepTick72 consumes them: burst/gap/burst)
+wQuakePause:: db ;deb8 — inter-burst gap countdown; $FF = terminal (stopper SE
+                ;   already queued). Only read while the shake train is armed.
+wQuakeArmed:: db ;deb9 — 1 while the cast-anim-slot shake train is running
+                ;   (armed by QuakeAnimHold72 on entering d9ee==3; cleared when
+                ;   the train completes and the anim slot is released; also
+                ;   hard-cleared by the handler's phase-0 init).

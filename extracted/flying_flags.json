@@ -1,0 +1,1384 @@
+{
+ "_generator": "tools/dump_flying_flags.py (S74); rom=DWM-original.gbc",
+ "flag_location": "monster info +$04 ($03:$4461 + species*43 + 4); battle copy = $db8b[slot] bit4 (packed by bank $51 init); gates LegSweep ($4E) and Earthquake ($E5-$E8)",
+ "edit_note": "0 = grounded, 1 = flying. Patch rom_offset directly, or edit the +$04 byte of the species' record in bank_003.asm and rebuild.",
+ "count_flying": 48,
+ "species": [
+  {
+   "id": 0,
+   "name": "DrakSlime",
+   "can_fly": false,
+   "rom_offset": "0x00C465"
+  },
+  {
+   "id": 1,
+   "name": "SpotSlime",
+   "can_fly": false,
+   "rom_offset": "0x00C490"
+  },
+  {
+   "id": 2,
+   "name": "WingSlime",
+   "can_fly": true,
+   "rom_offset": "0x00C4BB"
+  },
+  {
+   "id": 3,
+   "name": "TreeSlime",
+   "can_fly": false,
+   "rom_offset": "0x00C4E6"
+  },
+  {
+   "id": 4,
+   "name": "Snaily",
+   "can_fly": false,
+   "rom_offset": "0x00C511"
+  },
+  {
+   "id": 5,
+   "name": "SlimeNite",
+   "can_fly": false,
+   "rom_offset": "0x00C53C"
+  },
+  {
+   "id": 6,
+   "name": "Babble",
+   "can_fly": false,
+   "rom_offset": "0x00C567"
+  },
+  {
+   "id": 7,
+   "name": "BoxSlime",
+   "can_fly": false,
+   "rom_offset": "0x00C592"
+  },
+  {
+   "id": 8,
+   "name": "Slime",
+   "can_fly": false,
+   "rom_offset": "0x00C5BD"
+  },
+  {
+   "id": 9,
+   "name": "Healer",
+   "can_fly": false,
+   "rom_offset": "0x00C5E8"
+  },
+  {
+   "id": 10,
+   "name": "FangSlime",
+   "can_fly": false,
+   "rom_offset": "0x00C613"
+  },
+  {
+   "id": 11,
+   "name": "RockSlime",
+   "can_fly": false,
+   "rom_offset": "0x00C63E"
+  },
+  {
+   "id": 12,
+   "name": "SlimeBorg",
+   "can_fly": false,
+   "rom_offset": "0x00C669"
+  },
+  {
+   "id": 13,
+   "name": "Slabbit",
+   "can_fly": false,
+   "rom_offset": "0x00C694"
+  },
+  {
+   "id": 14,
+   "name": "SpotKing",
+   "can_fly": false,
+   "rom_offset": "0x00C6BF"
+  },
+  {
+   "id": 15,
+   "name": "KingSlime",
+   "can_fly": false,
+   "rom_offset": "0x00C6EA"
+  },
+  {
+   "id": 16,
+   "name": "Metaly",
+   "can_fly": false,
+   "rom_offset": "0x00C715"
+  },
+  {
+   "id": 17,
+   "name": "Metabble",
+   "can_fly": false,
+   "rom_offset": "0x00C740"
+  },
+  {
+   "id": 18,
+   "name": "MetalKing",
+   "can_fly": false,
+   "rom_offset": "0x00C76B"
+  },
+  {
+   "id": 19,
+   "name": "GoldSlime",
+   "can_fly": false,
+   "rom_offset": "0x00C796"
+  },
+  {
+   "id": 20,
+   "name": "DragonKid",
+   "can_fly": false,
+   "rom_offset": "0x00C7C1"
+  },
+  {
+   "id": 21,
+   "name": "Tortragon",
+   "can_fly": false,
+   "rom_offset": "0x00C7EC"
+  },
+  {
+   "id": 22,
+   "name": "Pteranod",
+   "can_fly": true,
+   "rom_offset": "0x00C817"
+  },
+  {
+   "id": 23,
+   "name": "Gasgon",
+   "can_fly": true,
+   "rom_offset": "0x00C842"
+  },
+  {
+   "id": 24,
+   "name": "FairyDrak",
+   "can_fly": true,
+   "rom_offset": "0x00C86D"
+  },
+  {
+   "id": 25,
+   "name": "LizardMan",
+   "can_fly": false,
+   "rom_offset": "0x00C898"
+  },
+  {
+   "id": 26,
+   "name": "Poisongon",
+   "can_fly": false,
+   "rom_offset": "0x00C8C3"
+  },
+  {
+   "id": 27,
+   "name": "Swordgon",
+   "can_fly": false,
+   "rom_offset": "0x00C8EE"
+  },
+  {
+   "id": 28,
+   "name": "Dragon",
+   "can_fly": false,
+   "rom_offset": "0x00C919"
+  },
+  {
+   "id": 29,
+   "name": "MiniDrak",
+   "can_fly": false,
+   "rom_offset": "0x00C944"
+  },
+  {
+   "id": 30,
+   "name": "MadDragon",
+   "can_fly": false,
+   "rom_offset": "0x00C96F"
+  },
+  {
+   "id": 31,
+   "name": "Rayburn",
+   "can_fly": true,
+   "rom_offset": "0x00C99A"
+  },
+  {
+   "id": 32,
+   "name": "Chamelgon",
+   "can_fly": false,
+   "rom_offset": "0x00C9C5"
+  },
+  {
+   "id": 33,
+   "name": "LizardFly",
+   "can_fly": true,
+   "rom_offset": "0x00C9F0"
+  },
+  {
+   "id": 34,
+   "name": "Andreal",
+   "can_fly": false,
+   "rom_offset": "0x00CA1B"
+  },
+  {
+   "id": 35,
+   "name": "KingCobra",
+   "can_fly": false,
+   "rom_offset": "0x00CA46"
+  },
+  {
+   "id": 36,
+   "name": "Spikerous",
+   "can_fly": false,
+   "rom_offset": "0x00CA71"
+  },
+  {
+   "id": 37,
+   "name": "GreatDrak",
+   "can_fly": false,
+   "rom_offset": "0x00CA9C"
+  },
+  {
+   "id": 38,
+   "name": "Crestpent",
+   "can_fly": false,
+   "rom_offset": "0x00CAC7"
+  },
+  {
+   "id": 39,
+   "name": "WingSnake",
+   "can_fly": false,
+   "rom_offset": "0x00CAF2"
+  },
+  {
+   "id": 40,
+   "name": "Coatol",
+   "can_fly": false,
+   "rom_offset": "0x00CB1D"
+  },
+  {
+   "id": 41,
+   "name": "Orochi",
+   "can_fly": false,
+   "rom_offset": "0x00CB48"
+  },
+  {
+   "id": 42,
+   "name": "BattleRex",
+   "can_fly": false,
+   "rom_offset": "0x00CB73"
+  },
+  {
+   "id": 43,
+   "name": "SkyDragon",
+   "can_fly": true,
+   "rom_offset": "0x00CB9E"
+  },
+  {
+   "id": 44,
+   "name": "Divinegon",
+   "can_fly": true,
+   "rom_offset": "0x00CBC9"
+  },
+  {
+   "id": 45,
+   "name": "Tonguella",
+   "can_fly": false,
+   "rom_offset": "0x00CBF4"
+  },
+  {
+   "id": 46,
+   "name": "Almiraj",
+   "can_fly": false,
+   "rom_offset": "0x00CC1F"
+  },
+  {
+   "id": 47,
+   "name": "CatFly",
+   "can_fly": true,
+   "rom_offset": "0x00CC4A"
+  },
+  {
+   "id": 48,
+   "name": "PillowRat",
+   "can_fly": false,
+   "rom_offset": "0x00CC75"
+  },
+  {
+   "id": 49,
+   "name": "Saccer",
+   "can_fly": false,
+   "rom_offset": "0x00CCA0"
+  },
+  {
+   "id": 50,
+   "name": "GulpBeast",
+   "can_fly": false,
+   "rom_offset": "0x00CCCB"
+  },
+  {
+   "id": 51,
+   "name": "Skullroo",
+   "can_fly": false,
+   "rom_offset": "0x00CCF6"
+  },
+  {
+   "id": 52,
+   "name": "WindBeast",
+   "can_fly": false,
+   "rom_offset": "0x00CD21"
+  },
+  {
+   "id": 53,
+   "name": "Anteater",
+   "can_fly": false,
+   "rom_offset": "0x00CD4C"
+  },
+  {
+   "id": 54,
+   "name": "SuperTen",
+   "can_fly": false,
+   "rom_offset": "0x00CD77"
+  },
+  {
+   "id": 55,
+   "name": "IronTurt",
+   "can_fly": false,
+   "rom_offset": "0x00CDA2"
+  },
+  {
+   "id": 56,
+   "name": "Mommonja",
+   "can_fly": false,
+   "rom_offset": "0x00CDCD"
+  },
+  {
+   "id": 57,
+   "name": "HammerMan",
+   "can_fly": false,
+   "rom_offset": "0x00CDF8"
+  },
+  {
+   "id": 58,
+   "name": "Grizzly",
+   "can_fly": false,
+   "rom_offset": "0x00CE23"
+  },
+  {
+   "id": 59,
+   "name": "Yeti",
+   "can_fly": false,
+   "rom_offset": "0x00CE4E"
+  },
+  {
+   "id": 60,
+   "name": "MadGopher",
+   "can_fly": false,
+   "rom_offset": "0x00CE79"
+  },
+  {
+   "id": 61,
+   "name": "FairyRat",
+   "can_fly": true,
+   "rom_offset": "0x00CEA4"
+  },
+  {
+   "id": 62,
+   "name": "Unicorn",
+   "can_fly": false,
+   "rom_offset": "0x00CECF"
+  },
+  {
+   "id": 63,
+   "name": "Goategon",
+   "can_fly": false,
+   "rom_offset": "0x00CEFA"
+  },
+  {
+   "id": 64,
+   "name": "WildApe",
+   "can_fly": false,
+   "rom_offset": "0x00CF25"
+  },
+  {
+   "id": 65,
+   "name": "Trumpeter",
+   "can_fly": false,
+   "rom_offset": "0x00CF50"
+  },
+  {
+   "id": 66,
+   "name": "KingLeo",
+   "can_fly": false,
+   "rom_offset": "0x00CF7B"
+  },
+  {
+   "id": 67,
+   "name": "DarkHorn",
+   "can_fly": false,
+   "rom_offset": "0x00CFA6"
+  },
+  {
+   "id": 68,
+   "name": "MadCat",
+   "can_fly": false,
+   "rom_offset": "0x00CFD1"
+  },
+  {
+   "id": 69,
+   "name": "BigEye",
+   "can_fly": false,
+   "rom_offset": "0x00CFFC"
+  },
+  {
+   "id": 70,
+   "name": "Picky",
+   "can_fly": false,
+   "rom_offset": "0x00D027"
+  },
+  {
+   "id": 71,
+   "name": "Wyvern",
+   "can_fly": true,
+   "rom_offset": "0x00D052"
+  },
+  {
+   "id": 72,
+   "name": "BullBird",
+   "can_fly": false,
+   "rom_offset": "0x00D07D"
+  },
+  {
+   "id": 73,
+   "name": "Florajay",
+   "can_fly": true,
+   "rom_offset": "0x00D0A8"
+  },
+  {
+   "id": 74,
+   "name": "DuckKite",
+   "can_fly": true,
+   "rom_offset": "0x00D0D3"
+  },
+  {
+   "id": 75,
+   "name": "MadPecker",
+   "can_fly": false,
+   "rom_offset": "0x00D0FE"
+  },
+  {
+   "id": 76,
+   "name": "MadRaven",
+   "can_fly": true,
+   "rom_offset": "0x00D129"
+  },
+  {
+   "id": 77,
+   "name": "MistyWing",
+   "can_fly": true,
+   "rom_offset": "0x00D154"
+  },
+  {
+   "id": 78,
+   "name": "Dracky",
+   "can_fly": true,
+   "rom_offset": "0x00D17F"
+  },
+  {
+   "id": 79,
+   "name": "BigRoost",
+   "can_fly": true,
+   "rom_offset": "0x00D1AA"
+  },
+  {
+   "id": 80,
+   "name": "StubBird",
+   "can_fly": false,
+   "rom_offset": "0x00D1D5"
+  },
+  {
+   "id": 81,
+   "name": "LandOwl",
+   "can_fly": false,
+   "rom_offset": "0x00D200"
+  },
+  {
+   "id": 82,
+   "name": "MadGoose",
+   "can_fly": true,
+   "rom_offset": "0x00D22B"
+  },
+  {
+   "id": 83,
+   "name": "MadCondor",
+   "can_fly": true,
+   "rom_offset": "0x00D256"
+  },
+  {
+   "id": 84,
+   "name": "Blizzardy",
+   "can_fly": true,
+   "rom_offset": "0x00D281"
+  },
+  {
+   "id": 85,
+   "name": "Phoenix",
+   "can_fly": true,
+   "rom_offset": "0x00D2AC"
+  },
+  {
+   "id": 86,
+   "name": "ZapBird",
+   "can_fly": true,
+   "rom_offset": "0x00D2D7"
+  },
+  {
+   "id": 87,
+   "name": "WhipBird",
+   "can_fly": true,
+   "rom_offset": "0x00D302"
+  },
+  {
+   "id": 88,
+   "name": "FunkyBird",
+   "can_fly": false,
+   "rom_offset": "0x00D32D"
+  },
+  {
+   "id": 89,
+   "name": "RainHawk",
+   "can_fly": false,
+   "rom_offset": "0x00D358"
+  },
+  {
+   "id": 90,
+   "name": "MadPlant",
+   "can_fly": false,
+   "rom_offset": "0x00D383"
+  },
+  {
+   "id": 91,
+   "name": "FireWeed",
+   "can_fly": false,
+   "rom_offset": "0x00D3AE"
+  },
+  {
+   "id": 92,
+   "name": "FloraMan",
+   "can_fly": false,
+   "rom_offset": "0x00D3D9"
+  },
+  {
+   "id": 93,
+   "name": "WingTree",
+   "can_fly": true,
+   "rom_offset": "0x00D404"
+  },
+  {
+   "id": 94,
+   "name": "CactiBall",
+   "can_fly": false,
+   "rom_offset": "0x00D42F"
+  },
+  {
+   "id": 95,
+   "name": "Gulpple",
+   "can_fly": false,
+   "rom_offset": "0x00D45A"
+  },
+  {
+   "id": 96,
+   "name": "Toadstool",
+   "can_fly": false,
+   "rom_offset": "0x00D485"
+  },
+  {
+   "id": 97,
+   "name": "AmberWeed",
+   "can_fly": false,
+   "rom_offset": "0x00D4B0"
+  },
+  {
+   "id": 98,
+   "name": "Stubsuck",
+   "can_fly": false,
+   "rom_offset": "0x00D4DB"
+  },
+  {
+   "id": 99,
+   "name": "Oniono",
+   "can_fly": false,
+   "rom_offset": "0x00D506"
+  },
+  {
+   "id": 100,
+   "name": "DanceVegi",
+   "can_fly": false,
+   "rom_offset": "0x00D531"
+  },
+  {
+   "id": 101,
+   "name": "TreeBoy",
+   "can_fly": false,
+   "rom_offset": "0x00D55C"
+  },
+  {
+   "id": 102,
+   "name": "FaceTree",
+   "can_fly": false,
+   "rom_offset": "0x00D587"
+  },
+  {
+   "id": 103,
+   "name": "HerbMan",
+   "can_fly": false,
+   "rom_offset": "0x00D5B2"
+  },
+  {
+   "id": 104,
+   "name": "BeanMan",
+   "can_fly": false,
+   "rom_offset": "0x00D5DD"
+  },
+  {
+   "id": 105,
+   "name": "EvilSeed",
+   "can_fly": false,
+   "rom_offset": "0x00D608"
+  },
+  {
+   "id": 106,
+   "name": "ManEater",
+   "can_fly": false,
+   "rom_offset": "0x00D633"
+  },
+  {
+   "id": 107,
+   "name": "Snapper",
+   "can_fly": false,
+   "rom_offset": "0x00D65E"
+  },
+  {
+   "id": 108,
+   "name": "Rosevine",
+   "can_fly": false,
+   "rom_offset": "0x00D689"
+  },
+  {
+   "id": 109,
+   "name": "Watabou",
+   "can_fly": false,
+   "rom_offset": "0x00D6B4"
+  },
+  {
+   "id": 110,
+   "name": "GiantSlug",
+   "can_fly": false,
+   "rom_offset": "0x00D6DF"
+  },
+  {
+   "id": 111,
+   "name": "Catapila",
+   "can_fly": false,
+   "rom_offset": "0x00D70A"
+  },
+  {
+   "id": 112,
+   "name": "Gophecada",
+   "can_fly": false,
+   "rom_offset": "0x00D735"
+  },
+  {
+   "id": 113,
+   "name": "Butterfly",
+   "can_fly": true,
+   "rom_offset": "0x00D760"
+  },
+  {
+   "id": 114,
+   "name": "WeedBug",
+   "can_fly": false,
+   "rom_offset": "0x00D78B"
+  },
+  {
+   "id": 115,
+   "name": "GiantWorm",
+   "can_fly": false,
+   "rom_offset": "0x00D7B6"
+  },
+  {
+   "id": 116,
+   "name": "Lipsy",
+   "can_fly": false,
+   "rom_offset": "0x00D7E1"
+  },
+  {
+   "id": 117,
+   "name": "StagBug",
+   "can_fly": false,
+   "rom_offset": "0x00D80C"
+  },
+  {
+   "id": 118,
+   "name": "ArmyAnt",
+   "can_fly": false,
+   "rom_offset": "0x00D837"
+  },
+  {
+   "id": 119,
+   "name": "GoHopper",
+   "can_fly": false,
+   "rom_offset": "0x00D862"
+  },
+  {
+   "id": 120,
+   "name": "TailEater",
+   "can_fly": false,
+   "rom_offset": "0x00D88D"
+  },
+  {
+   "id": 121,
+   "name": "ArmorPede",
+   "can_fly": false,
+   "rom_offset": "0x00D8B8"
+  },
+  {
+   "id": 122,
+   "name": "Eyeder",
+   "can_fly": true,
+   "rom_offset": "0x00D8E3"
+  },
+  {
+   "id": 123,
+   "name": "GiantMoth",
+   "can_fly": true,
+   "rom_offset": "0x00D90E"
+  },
+  {
+   "id": 124,
+   "name": "Droll",
+   "can_fly": false,
+   "rom_offset": "0x00D939"
+  },
+  {
+   "id": 125,
+   "name": "ArmyCrab",
+   "can_fly": false,
+   "rom_offset": "0x00D964"
+  },
+  {
+   "id": 126,
+   "name": "MadHornet",
+   "can_fly": true,
+   "rom_offset": "0x00D98F"
+  },
+  {
+   "id": 127,
+   "name": "HornBeet",
+   "can_fly": false,
+   "rom_offset": "0x00D9BA"
+  },
+  {
+   "id": 128,
+   "name": "Armorpion",
+   "can_fly": false,
+   "rom_offset": "0x00D9E5"
+  },
+  {
+   "id": 129,
+   "name": "Digster",
+   "can_fly": false,
+   "rom_offset": "0x00DA10"
+  },
+  {
+   "id": 130,
+   "name": "Pixy",
+   "can_fly": false,
+   "rom_offset": "0x00DA3B"
+  },
+  {
+   "id": 131,
+   "name": "ArcDemon",
+   "can_fly": false,
+   "rom_offset": "0x00DA66"
+  },
+  {
+   "id": 132,
+   "name": "AgDevil",
+   "can_fly": false,
+   "rom_offset": "0x00DA91"
+  },
+  {
+   "id": 133,
+   "name": "Demonite",
+   "can_fly": false,
+   "rom_offset": "0x00DABC"
+  },
+  {
+   "id": 134,
+   "name": "DarkEye",
+   "can_fly": true,
+   "rom_offset": "0x00DAE7"
+  },
+  {
+   "id": 135,
+   "name": "EyeBall",
+   "can_fly": false,
+   "rom_offset": "0x00DB12"
+  },
+  {
+   "id": 136,
+   "name": "SkulRider",
+   "can_fly": false,
+   "rom_offset": "0x00DB3D"
+  },
+  {
+   "id": 137,
+   "name": "EvilBeast",
+   "can_fly": false,
+   "rom_offset": "0x00DB68"
+  },
+  {
+   "id": 138,
+   "name": "1EyeClown",
+   "can_fly": true,
+   "rom_offset": "0x00DB93"
+  },
+  {
+   "id": 139,
+   "name": "Gremlin",
+   "can_fly": true,
+   "rom_offset": "0x00DBBE"
+  },
+  {
+   "id": 140,
+   "name": "MedusaEye",
+   "can_fly": true,
+   "rom_offset": "0x00DBE9"
+  },
+  {
+   "id": 141,
+   "name": "Lionex",
+   "can_fly": false,
+   "rom_offset": "0x00DC14"
+  },
+  {
+   "id": 142,
+   "name": "GoatHorn",
+   "can_fly": false,
+   "rom_offset": "0x00DC3F"
+  },
+  {
+   "id": 143,
+   "name": "Orc",
+   "can_fly": false,
+   "rom_offset": "0x00DC6A"
+  },
+  {
+   "id": 144,
+   "name": "Ogre",
+   "can_fly": false,
+   "rom_offset": "0x00DC95"
+  },
+  {
+   "id": 145,
+   "name": "GateGuard",
+   "can_fly": false,
+   "rom_offset": "0x00DCC0"
+  },
+  {
+   "id": 146,
+   "name": "ChopClown",
+   "can_fly": false,
+   "rom_offset": "0x00DCEB"
+  },
+  {
+   "id": 147,
+   "name": "Grendal",
+   "can_fly": false,
+   "rom_offset": "0x00DD16"
+  },
+  {
+   "id": 148,
+   "name": "Akubar",
+   "can_fly": false,
+   "rom_offset": "0x00DD41"
+  },
+  {
+   "id": 149,
+   "name": "MadKnight",
+   "can_fly": false,
+   "rom_offset": "0x00DD6C"
+  },
+  {
+   "id": 150,
+   "name": "Gigantes",
+   "can_fly": false,
+   "rom_offset": "0x00DD97"
+  },
+  {
+   "id": 151,
+   "name": "Centasaur",
+   "can_fly": false,
+   "rom_offset": "0x00DDC2"
+  },
+  {
+   "id": 152,
+   "name": "EvilArmor",
+   "can_fly": false,
+   "rom_offset": "0x00DDED"
+  },
+  {
+   "id": 153,
+   "name": "Jamirus",
+   "can_fly": false,
+   "rom_offset": "0x00DE18"
+  },
+  {
+   "id": 154,
+   "name": "Durran",
+   "can_fly": false,
+   "rom_offset": "0x00DE43"
+  },
+  {
+   "id": 155,
+   "name": "Spooky",
+   "can_fly": true,
+   "rom_offset": "0x00DE6E"
+  },
+  {
+   "id": 156,
+   "name": "Skullgon",
+   "can_fly": false,
+   "rom_offset": "0x00DE99"
+  },
+  {
+   "id": 157,
+   "name": "Putrepup",
+   "can_fly": false,
+   "rom_offset": "0x00DEC4"
+  },
+  {
+   "id": 158,
+   "name": "RotRaven",
+   "can_fly": false,
+   "rom_offset": "0x00DEEF"
+  },
+  {
+   "id": 159,
+   "name": "Mummy",
+   "can_fly": false,
+   "rom_offset": "0x00DF1A"
+  },
+  {
+   "id": 160,
+   "name": "DarkCrab",
+   "can_fly": false,
+   "rom_offset": "0x00DF45"
+  },
+  {
+   "id": 161,
+   "name": "DeadNite",
+   "can_fly": false,
+   "rom_offset": "0x00DF70"
+  },
+  {
+   "id": 162,
+   "name": "Shadow",
+   "can_fly": true,
+   "rom_offset": "0x00DF9B"
+  },
+  {
+   "id": 163,
+   "name": "Hork",
+   "can_fly": false,
+   "rom_offset": "0x00DFC6"
+  },
+  {
+   "id": 164,
+   "name": "Mudron",
+   "can_fly": false,
+   "rom_offset": "0x00DFF1"
+  },
+  {
+   "id": 165,
+   "name": "NiteWhip",
+   "can_fly": true,
+   "rom_offset": "0x00E01C"
+  },
+  {
+   "id": 166,
+   "name": "MadSpirit",
+   "can_fly": true,
+   "rom_offset": "0x00E047"
+  },
+  {
+   "id": 167,
+   "name": "WindMerge",
+   "can_fly": true,
+   "rom_offset": "0x00E072"
+  },
+  {
+   "id": 168,
+   "name": "Reaper",
+   "can_fly": true,
+   "rom_offset": "0x00E09D"
+  },
+  {
+   "id": 169,
+   "name": "DeadNoble",
+   "can_fly": false,
+   "rom_offset": "0x00E0C8"
+  },
+  {
+   "id": 170,
+   "name": "WhiteKing",
+   "can_fly": false,
+   "rom_offset": "0x00E0F3"
+  },
+  {
+   "id": 171,
+   "name": "BoneSlave",
+   "can_fly": false,
+   "rom_offset": "0x00E11E"
+  },
+  {
+   "id": 172,
+   "name": "Skeletor",
+   "can_fly": false,
+   "rom_offset": "0x00E149"
+  },
+  {
+   "id": 173,
+   "name": "Servant",
+   "can_fly": false,
+   "rom_offset": "0x00E174"
+  },
+  {
+   "id": 174,
+   "name": "Copycat",
+   "can_fly": true,
+   "rom_offset": "0x00E19F"
+  },
+  {
+   "id": 175,
+   "name": "JewelBag",
+   "can_fly": false,
+   "rom_offset": "0x00E1CA"
+  },
+  {
+   "id": 176,
+   "name": "EvilWand",
+   "can_fly": true,
+   "rom_offset": "0x00E1F5"
+  },
+  {
+   "id": 177,
+   "name": "MadCandle",
+   "can_fly": false,
+   "rom_offset": "0x00E220"
+  },
+  {
+   "id": 178,
+   "name": "CoilBird",
+   "can_fly": false,
+   "rom_offset": "0x00E24B"
+  },
+  {
+   "id": 179,
+   "name": "Facer",
+   "can_fly": false,
+   "rom_offset": "0x00E276"
+  },
+  {
+   "id": 180,
+   "name": "SpikyBoy",
+   "can_fly": false,
+   "rom_offset": "0x00E2A1"
+  },
+  {
+   "id": 181,
+   "name": "MadMirror",
+   "can_fly": false,
+   "rom_offset": "0x00E2CC"
+  },
+  {
+   "id": 182,
+   "name": "RogueNite",
+   "can_fly": false,
+   "rom_offset": "0x00E2F7"
+  },
+  {
+   "id": 183,
+   "name": "Goopi",
+   "can_fly": false,
+   "rom_offset": "0x00E322"
+  },
+  {
+   "id": 184,
+   "name": "Voodoll",
+   "can_fly": false,
+   "rom_offset": "0x00E34D"
+  },
+  {
+   "id": 185,
+   "name": "MetalDrak",
+   "can_fly": false,
+   "rom_offset": "0x00E378"
+  },
+  {
+   "id": 186,
+   "name": "Balzak",
+   "can_fly": false,
+   "rom_offset": "0x00E3A3"
+  },
+  {
+   "id": 187,
+   "name": "SabreMan",
+   "can_fly": true,
+   "rom_offset": "0x00E3CE"
+  },
+  {
+   "id": 188,
+   "name": "CurseLamp",
+   "can_fly": true,
+   "rom_offset": "0x00E3F9"
+  },
+  {
+   "id": 189,
+   "name": "Roboster",
+   "can_fly": false,
+   "rom_offset": "0x00E424"
+  },
+  {
+   "id": 190,
+   "name": "EvilPot",
+   "can_fly": true,
+   "rom_offset": "0x00E44F"
+  },
+  {
+   "id": 191,
+   "name": "Gismo",
+   "can_fly": true,
+   "rom_offset": "0x00E47A"
+  },
+  {
+   "id": 192,
+   "name": "LavaMan",
+   "can_fly": false,
+   "rom_offset": "0x00E4A5"
+  },
+  {
+   "id": 193,
+   "name": "IceMan",
+   "can_fly": false,
+   "rom_offset": "0x00E4D0"
+  },
+  {
+   "id": 194,
+   "name": "Mimic",
+   "can_fly": true,
+   "rom_offset": "0x00E4FB"
+  },
+  {
+   "id": 195,
+   "name": "MudDoll",
+   "can_fly": false,
+   "rom_offset": "0x00E526"
+  },
+  {
+   "id": 196,
+   "name": "Golem",
+   "can_fly": false,
+   "rom_offset": "0x00E551"
+  },
+  {
+   "id": 197,
+   "name": "StoneMan",
+   "can_fly": false,
+   "rom_offset": "0x00E57C"
+  },
+  {
+   "id": 198,
+   "name": "BombCrag",
+   "can_fly": false,
+   "rom_offset": "0x00E5A7"
+  },
+  {
+   "id": 199,
+   "name": "GoldGolem",
+   "can_fly": false,
+   "rom_offset": "0x00E5D2"
+  },
+  {
+   "id": 200,
+   "name": "DracoLord",
+   "can_fly": false,
+   "rom_offset": "0x00E5FD"
+  },
+  {
+   "id": 201,
+   "name": "DracoLord",
+   "can_fly": false,
+   "rom_offset": "0x00E628"
+  },
+  {
+   "id": 202,
+   "name": "Hargon",
+   "can_fly": false,
+   "rom_offset": "0x00E653"
+  },
+  {
+   "id": 203,
+   "name": "Sidoh",
+   "can_fly": true,
+   "rom_offset": "0x00E67E"
+  },
+  {
+   "id": 204,
+   "name": "Baramos",
+   "can_fly": false,
+   "rom_offset": "0x00E6A9"
+  },
+  {
+   "id": 205,
+   "name": "Zoma",
+   "can_fly": false,
+   "rom_offset": "0x00E6D4"
+  },
+  {
+   "id": 206,
+   "name": "Pizzaro",
+   "can_fly": false,
+   "rom_offset": "0x00E6FF"
+  },
+  {
+   "id": 207,
+   "name": "Esterk",
+   "can_fly": false,
+   "rom_offset": "0x00E72A"
+  },
+  {
+   "id": 208,
+   "name": "Mirudraas",
+   "can_fly": false,
+   "rom_offset": "0x00E755"
+  },
+  {
+   "id": 209,
+   "name": "Mirudraas",
+   "can_fly": false,
+   "rom_offset": "0x00E780"
+  },
+  {
+   "id": 210,
+   "name": "Mudou",
+   "can_fly": false,
+   "rom_offset": "0x00E7AB"
+  },
+  {
+   "id": 211,
+   "name": "DeathMore",
+   "can_fly": true,
+   "rom_offset": "0x00E7D6"
+  },
+  {
+   "id": 212,
+   "name": "DeathMore",
+   "can_fly": false,
+   "rom_offset": "0x00E801"
+  },
+  {
+   "id": 213,
+   "name": "DeathMore",
+   "can_fly": true,
+   "rom_offset": "0x00E82C"
+  },
+  {
+   "id": 214,
+   "name": "Darkdrium",
+   "can_fly": false,
+   "rom_offset": "0x00E857"
+  },
+  {
+   "id": 215,
+   "name": "TERRY?",
+   "can_fly": false,
+   "rom_offset": "0x00E882"
+  },
+  {
+   "id": 216,
+   "name": "Tatsu",
+   "can_fly": false,
+   "rom_offset": "0x00E8AD"
+  },
+  {
+   "id": 217,
+   "name": "Diago",
+   "can_fly": false,
+   "rom_offset": "0x00E8D8"
+  },
+  {
+   "id": 218,
+   "name": "Samsi",
+   "can_fly": false,
+   "rom_offset": "0x00E903"
+  },
+  {
+   "id": 219,
+   "name": "Bazoo",
+   "can_fly": false,
+   "rom_offset": "0x00E92E"
+  },
+  {
+   "id": 220,
+   "name": "",
+   "can_fly": false,
+   "rom_offset": "0x00E959"
+  }
+ ],
+ "flying_species": [
+  "WingSlime",
+  "Pteranod",
+  "Gasgon",
+  "FairyDrak",
+  "Rayburn",
+  "LizardFly",
+  "SkyDragon",
+  "Divinegon",
+  "CatFly",
+  "FairyRat",
+  "Wyvern",
+  "Florajay",
+  "DuckKite",
+  "MadRaven",
+  "MistyWing",
+  "Dracky",
+  "BigRoost",
+  "MadGoose",
+  "MadCondor",
+  "Blizzardy",
+  "Phoenix",
+  "ZapBird",
+  "WhipBird",
+  "WingTree",
+  "Butterfly",
+  "Eyeder",
+  "GiantMoth",
+  "MadHornet",
+  "DarkEye",
+  "1EyeClown",
+  "Gremlin",
+  "MedusaEye",
+  "Spooky",
+  "Shadow",
+  "NiteWhip",
+  "MadSpirit",
+  "WindMerge",
+  "Reaper",
+  "Copycat",
+  "EvilWand",
+  "SabreMan",
+  "CurseLamp",
+  "EvilPot",
+  "Gismo",
+  "Mimic",
+  "Sidoh",
+  "DeathMore",
+  "DeathMore"
+ ]
+}

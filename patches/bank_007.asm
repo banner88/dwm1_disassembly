@@ -11087,18 +11087,16 @@ MPPtrFromId:
     ld h, a
     ret
 .custom:
-    sub $DE
-    add a                       ; (id - $DE) * 2
-    add LOW(CustomMPCostTable)
-    ld l, a
-    ld a, $00
-    adc HIGH(CustomMPCostTable)
+    sub $E0                     ; [S74] index base moved $DE->$E0: the two retired
+    add a                       ;   POC ids ($DE/$DF) lost their dead rows (4 bytes
+    add LOW(CustomMPCostTable)  ;   freed for the $E5-$E8 rows in the full tail).
+    ld l, a                     ;   No live skill list contains $DE/$DF anymore
+    ld a, $00                   ;   (de-aliased retirement, S2d), so the underflow
+    adc HIGH(CustomMPCostTable) ;   path is unreachable in practice.
     ld h, a
     ret
 
-CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $DE)*2
-    dw 0                        ; $DE (retired POC)
-    dw 0                        ; $DF (retired POC)
+CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $E0)*2 [S74 base]
     dw 0                        ; $E0 MagicBurn (handler charges half current MP)
     dw 10                       ; $E1 Tame
     dw 30                       ; $E2 TameMore
@@ -11106,6 +11104,10 @@ CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $DE)*2
     dw 0                        ; $E4 Anchor [S73] (menu shows 0 by design — the real
                                 ;   cost, 3/4 of current MP, is charged in the bank
                                 ;   $73 commit hook upon ARRIVAL at the anchored floor)
+    dw 5                        ; $E5 Tremor    [QUAKE] (record +4 mirrors these —
+    dw 10                       ; $E6 Quake       the engine charges from the record;
+    dw 16                       ; $E7 QuakeMore   this table feeds the menus)
+    dw 24                       ; $E8 QuakeMost (1.5x WhiteAir-class cost)
 
 ; =============================================================================
 ; [ANCHOR S73] Field-menu fork for custom skill $E4 "Anchor".
@@ -11126,8 +11128,10 @@ Anchor07Post:
     ld a, [$da5e]
     cp $E4
     jr z, .anchor
-    cp $ff
-    ret
+    inc a                       ; [S74] Z iff A==$FF — same Z the replaced
+    ret                         ;   `cp $ff` produced (caller tests Z only and
+                                ;   reloads A right after); 1 byte shorter to
+                                ;   fit the $E5-$E8 MP rows in the full tail
 .anchor:
     pop hl                      ; drop return -> skip message ladder + 5b1e deduct
     ld a, $04

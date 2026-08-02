@@ -3646,14 +3646,10 @@ jr_056_67c9:
     dw SkillDescPtr_E2  ; [S73] skill-desc table entry $E2 TameMore (was dw $664a = the empty string; byte-neutral)
     dw SkillDescPtr_E3  ; [S73] skill-desc table entry $E3 TameMost (was dw $664a = the empty string; byte-neutral)
     dw SkillDescPtr_E4  ; [S73] skill-desc table entry $E4 Anchor (was dw $664a = the empty string; byte-neutral)
-    ld c, d
-    ld h, [hl]
-    ld c, d
-    ld h, [hl]
-    ld c, d
-    ld h, [hl]
-    ld c, d
-    ld h, [hl]
+    dw SkillDescPtr_E5  ; [QUAKE S74] skill-desc table entry $E5 Tremor (was dw $664a = the empty string; byte-neutral)
+    dw SkillDescPtr_E6  ; [QUAKE S74] skill-desc table entry $E6 Quake (was dw $664a = the empty string; byte-neutral)
+    dw SkillDescPtr_E7  ; [QUAKE S74] skill-desc table entry $E7 QuakeMore (was dw $664a = the empty string; byte-neutral)
+    dw SkillDescPtr_E8  ; [QUAKE S74] skill-desc table entry $E8 QuakeMost (was dw $664a = the empty string; byte-neutral)
     ld c, d
     ld h, [hl]
     ld c, d
@@ -8808,192 +8804,6 @@ jr_056_7217:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
     ; [S73] 226 trailing pad nops consumed below by the description strings
 ; ============================================================================
 ; [S73] Custom-skill DESCRIPTION strings (SKIL-menu info box). The pointer
@@ -9028,3 +8838,24 @@ SkillDescPtr_E4:  ; Anchor $E4: "Warps to GreatTree / and back for most / of its
     db $3e, $51, $37, $4f, $42, $42, $f1, $3e, $4b, $41, $62, $3f
     db $3e, $40, $48, $62, $43, $4c, $4f, $62, $4a, $4c, $50, $51
     db $f1, $4c, $43, $62, $46, $51, $50, $62, $30, $33, $f0
+SkillDescPtr_E5:  ; Tremor $E5: "A small quake / hits both sides / but not flyers"
+    db $24, $62, $50, $4a, $3e, $49, $49, $62, $4e, $52, $3e, $48
+    db $42, $f1, $45, $46, $51, $50, $62, $3f, $4c, $51, $45, $62
+    db $50, $46, $41, $42, $50, $f1, $3f, $52, $51, $62, $4b, $4c
+    db $51, $62, $43, $49, $56, $42, $4f, $50, $f0
+SkillDescPtr_E6:  ; Quake $E6: "A quake that hits / both sides but / not flyers"
+    db $24, $62, $4e, $52, $3e, $48, $42, $62, $51, $45, $3e, $51
+    db $62, $45, $46, $51, $50, $f1, $3f, $4c, $51, $45, $62, $50
+    db $46, $41, $42, $50, $62, $3f, $52, $51, $f1, $4b, $4c, $51
+    db $62, $43, $49, $56, $42, $4f, $50, $f0
+SkillDescPtr_E7:  ; QuakeMore $E7: "A big quake that / hits both sides / but not flyers"
+    db $24, $62, $3f, $46, $44, $62, $4e, $52, $3e, $48, $42, $62
+    db $51, $45, $3e, $51, $f1, $45, $46, $51, $50, $62, $3f, $4c
+    db $51, $45, $62, $50, $46, $41, $42, $50, $f1, $3f, $52, $51
+    db $62, $4b, $4c, $51, $62, $43, $49, $56, $42, $4f, $50, $f0
+SkillDescPtr_E8:  ; QuakeMost $E8: "A huge quake that / hits both sides / but not flyers"
+    db $24, $62, $45, $52, $44, $42, $62, $4e, $52, $3e, $48, $42
+    db $62, $51, $45, $3e, $51, $f1, $45, $46, $51, $50, $62, $3f
+    db $4c, $51, $45, $62, $50, $46, $41, $42, $50, $f1, $3f, $52
+    db $51, $62, $4b, $4c, $51, $62, $43, $49, $56, $42, $4f, $50
+    db $f0

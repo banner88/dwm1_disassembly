@@ -1390,6 +1390,10 @@ CustomRecordPtrTable:       ; indexed by (id - $DE)*2
     dw CustomRecord_E2_TameMore ; [$E2] TameMore [Stage2]
     dw CustomRecord_E3_TameMost ; [$E3] TameMost [Stage2]
     dw CustomRecord_E4_Anchor   ; [$E4] Anchor [S73]
+    dw CustomRecord_E5_Tremor   ; [$E5] Tremor    \  [QUAKE] Earthquake tier
+    dw CustomRecord_E6_Quake    ; [$E6] Quake      |  chain (evolves via the
+    dw CustomRecord_E7_QuakeMore; [$E7] QuakeMore  |  prereq mechanic in
+    dw CustomRecord_E8_QuakeMost; [$E8] QuakeMost /   CustomLearnReqTable2)
 
 ; --- MagicBurn ($E0) 19-byte record ------------------------------------------
 ; Based on BigBang/MegaMagic-class all-foes magic, with mp_cost (+4) zeroed (the
@@ -1432,6 +1436,24 @@ CustomRecord_E3_TameMost:
 ; (CustomBattleExec has no $E4 handler on purpose; v1 behavior, user-ack'd).
 CustomRecord_E4_Anchor:
     db $00,$13,$11,$14,$00,$00,$04,$41,$07,$02,$02,$00,$00,$00,$00,$00,$00,$00,$00
+
+; --- Earthquake tiers ($E5-$E8) 19-byte records [QUAKE] -----------------------
+; Byte-for-byte the PROVEN MagicBurn ($E0) all-foes announcing/animating shape
+; (target_mode +2 = $12 all-foes; presentation trio identical), with ONE change
+; per tier: +4 mp (mirrors CustomMPCostTable — the engine charges it). The four
+; power words stay ZERO like every working custom record: NONZERO record powers
+; sent the presentation phase into an endless $dd80 animation loop (effect
+; step 2 stall — PyBoy-measured S74, A/B vs MagicBurn). Damage numbers live in
+; bank $72 QuakePowerTable (the handler overrides $db56/57), which is also
+; where the editor tunes them.
+CustomRecord_E5_Tremor:
+    db $46,$12,$12,$00,$05,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
+CustomRecord_E6_Quake:
+    db $46,$12,$12,$00,$0A,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
+CustomRecord_E7_QuakeMore:
+    db $46,$12,$12,$00,$10,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
+CustomRecord_E8_QuakeMost:
+    db $46,$12,$12,$00,$18,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
 
 ; pad the rest of the bank back out to $8000 (keeps bank $54 layout intact)
 CustomSkillBlobEnd_054:

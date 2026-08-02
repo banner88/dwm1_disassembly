@@ -11763,12 +11763,53 @@ LoadB4c_Fork::
     ret z
     cp $fd
     jr z, LoadB4c_Fork_custom
+    cp $b7                           ; [QUAKE v3] miss family: the engine routes
+    jr z, LoadB4c_MaybeFlew          ;   a 0-damage hit to $B8 "Has no effect
+    cp $b8                           ;   on {name}!" (measured) / $B7 "Missed" —
+    jr z, LoadB4c_MaybeFlew          ;   for a flying quake target both become
+                                     ;   the "flew above it!" line
+LoadB4c_plain:
     ld de, $4009                     ; vanilla battle-message path (unchanged)
     call CallTextEngine
     ld a, $ff
     ld [$c823], a
     ret
+LoadB4c_MaybeFlew:                   ; [QUAKE v4] a FLYING PARTY member keeps
+    ld a, [$db8a]                    ; its per-target beat (damage forced to 0
+    cp $e5                           ; by the handler) but its line becomes
+    jr c, LoadB4c_plain              ; "But {name} flew above it!". ENEMY
+    cp $e9                           ; flyers keep the vanilla "Has no effect
+    jr nc, LoadB4c_plain             ; on {name}!" (user preference), which
+    ld a, [$db89]                    ; also sidesteps the $db88 flakiness seen
+    cp $04                           ; in real-menu casts — $db89 is the
+    jr nc, LoadB4c_plain             ; target var the damage handler trusts.
+    push hl
+    ld hl, $db8b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    bit 4, [hl]
+    pop hl
+    jr z, LoadB4c_plain
+    xor a
+    ld [$c822], a                    ; mode 0
+    ld [$c823], a                    ; string index 0
+    ld de, QuakeFlewModeTable
+    call CallTextEngine
+    ld a, $ff
+    ld [$c823], a
+    ret
+QuakeFlewModeTable:
+    dw QuakeFlewPtrTable             ; [QUAKE v3] mode 0 -> the 1-entry table
+QuakeFlewPtrTable:
+    dw CustomMsg_QuakeFlew
 LoadB4c_Fork_custom:
+    ld a, [wQuakeAllyMsg]            ; [QUAKE] crossover pending? then $FD means
+    or a                             ;   the shared "seismic wave" ally line, not
+    jr nz, LoadB4c_QuakeAllies       ;   the per-id announce (flag cleared by the
+                                     ;   QuakeGate_delay renderer right after)
     ld a, [$db8a]                    ; current skill id
     cp $de
     jr c, LoadB4c_Fork_stockfd       ; not a custom skill -> vanilla $FD
@@ -11787,9 +11828,22 @@ LoadB4c_Fork_stockfd:
     ld a, $ff
     ld [$c823], a
     ret
+LoadB4c_QuakeAllies:                 ; [QUAKE] fixed index 0 into the ally table
+    xor a
+    ld [$c822], a                    ; mode 0
+    ld [$c823], a                    ; string index 0
+    ld de, QuakeAlliesModeTable
+    call CallTextEngine
+    ld a, $ff
+    ld [$c823], a
+    ret
 
 CustomMsgModeTable:
     dw CustomMsgPtrTable             ; mode 0 -> the custom pointer table
+QuakeAlliesModeTable:
+    dw QuakeAlliesPtrTable           ; [QUAKE] mode 0 -> the 1-entry ally table
+QuakeAlliesPtrTable:
+    dw CustomMsg_QuakeAllies
 CustomMsgPtrTable:
     dw CustomMsg_dummy               ; idx 0 = skill $DE (unused)
     dw CustomMsg_dummy               ; idx 1 = skill $DF (unused)
@@ -11797,6 +11851,12 @@ CustomMsgPtrTable:
     dw CustomMsg_E1_Tame             ; idx 3 = skill $E1 (Tame)
     dw CustomMsg_E2_TameMore         ; idx 4 = skill $E2 (TameMore) [Stage2]
     dw CustomMsg_E3_TameMost         ; idx 5 = skill $E3 (TameMost) [Stage2]
+    dw CustomMsg_dummy               ; idx 6 = skill $E4 (Anchor: field-only, no
+                                     ;   battle announce; safe empty) [QUAKE pad]
+    dw CustomMsg_QuakeAnnounce       ; idx 7 = skill $E5 Tremor    \ shared
+    dw CustomMsg_QuakeAnnounce       ; idx 8 = skill $E6 Quake      | announce
+    dw CustomMsg_QuakeAnnounce       ; idx 9 = skill $E7 QuakeMore  | line
+    dw CustomMsg_QuakeAnnounce       ; idx 10= skill $E8 QuakeMost / [QUAKE]
 CustomMsg_dummy:
     db $F0                           ; empty/safe
 CustomMsg_E1_Tame:
@@ -11806,198 +11866,34 @@ CustomMsg_E2_TameMore:               ; [Stage2] "{caster} used TameMore!"
     db $ED, $F9, $00, $62, $52, $50, $42, $41, $62, $37, $3E, $4A, $42, $30, $4C, $4F, $42, $63, $EC, $F0
 CustomMsg_E3_TameMost:               ; [Stage2] "{caster} used TameMost!"
     db $ED, $F9, $00, $62, $52, $50, $42, $41, $62, $37, $3E, $4A, $42, $30, $4C, $50, $51, $63, $EC, $F0
+CustomMsg_QuakeAnnounce:             ; [QUAKE] "{caster} sets off" / "a quake!"
+    ;  (2-line via $F1, same total byte count as the old single-line whose
+    ;   auto-wrap split "quake" mid-word. The S74 stall originally blamed on
+    ;   $F1 was actually the looping $68 rumble + nonzero record powers —
+    ;   $F1 in battle strings is vanilla-proven, e.g. msg idx $40.)
+    db $ED, $F9, $00, $62            ; {mon}{name}<sp>
+    db $50, $42, $51, $50, $62       ; "sets "
+    db $4C, $43, $43                 ; "off"
+    db $F1                           ; line break
+    db $3E, $62                      ; "a "
+    db $4E, $52, $3E, $48, $42       ; "quake"
+    db $63, $EC, $F0                 ; "!" + close + end
+CustomMsg_QuakeAllies:               ; [QUAKE v4b] "Allies are caught" / "in a
+    ;   seismic wave!" — 2 lines fit the box exactly (line 2 = 18 chars). The
+    ;   paged 3-line version (FC 10 EC F2 inside a gate-inserted render)
+    ;   swallowed the following beat's own message (measured: the ally
+    ;   fly-line never posted), so the wording trades "the" for "a".
+    db $24, $49, $49, $46, $42, $50, $62, $3e, $4f, $42, $62, $40
+    db $3e, $52, $44, $45, $51, $f1, $46, $4b, $62, $3e, $62, $50
+    db $42, $46, $50, $4a, $46, $40, $62, $54, $3e, $53, $42, $63
+    db $ec, $f0
+CustomMsg_QuakeFlew:                 ; [QUAKE v3] "But {target} " / "flew above
+    ;   it!" — rendered IN PLACE of the $82 damage line for a flying target's
+    ;   beat (LoadB4c_MaybeFlew). $F9 $00 resolves the current message
+    ;   subject's name, which at a damage beat IS the current target.
+    db $ed, $25, $52, $51, $62, $f9, $00, $f1, $43, $49, $42, $54
+    db $62, $3e, $3f, $4c, $53, $42, $62, $46, $51, $63, $ec, $f0
 ; --- end S2e custom-message infrastructure ---
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
     nop
     nop
     nop

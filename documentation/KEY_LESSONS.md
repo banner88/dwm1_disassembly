@@ -2589,3 +2589,96 @@ when adding a field-only skill. Bank $50's mid-bank pad run funds appended
 code; a shift audit (sym diff + grep old raw addresses) confirmed all
 post-pad helpers are label-relinked — the three raw-literal grep hits were
 other banks' coincidental data/comments.
+
+## S74 — Earthquake chain ($E5-$E8)
+
+- **A LOOPING sound effect deadlocks the battle effect pipeline.** Effect
+  step 2 ($52:$6D56) requires `($dd80 & $dd9a)==$FF`, and that mask includes
+  the sound-driver-done bits. SFX `$68` (GreatTree rumble) loops until
+  replaced — play it near a battle effect and `$d9ed` pins at 2 forever.
+  ANY newly queued SE replaces a looping one (`$00` works and is silent).
+  Corollary: Tame's delay==8 `$5501/$5502` refire is LOAD-BEARING — it is
+  the stopper for its own suppressed/lingering audio, not a nicety.
+- **`$db88` (wBattleAttackerIdx) is target-contaminated mid-sweep** — the
+  per-target redirect ($53:CallBtlC_5e38) rewrites it to the current target.
+  Capture the caster once (queue-scan `$dcec` for your id) and key
+  side-dependent logic on your own phase variable, not on `$db88`/`$db89`
+  (the first dispatch also runs BEFORE the target is set).
+- **Custom record power words must stay ZERO** — nonzero powers in the
+  19-byte bank $54 record loop the presentation phase (same `$dd80`-cycling
+  signature). Drive damage from the handler; the doc claim that MagicBurn
+  needed `+9=$17` was stale (its live byte is `$02` and it works).
+- **The interrupt-vector gap bytes $0051-$0057/$005C-$005F are usable ROM0
+  free space** once audited (timer `$50` + joypad `$60` are immediate-reti;
+  no refs target the gaps; keep the `reti` first bytes and don't touch
+  `$58`'s serial jp or `$61+`). Pre-header `$00F0` is already taken
+  (LoadModeBaseRedirect); `$3A83`'s zero run is REFERENCED (live data);
+  `$31E4` sits inside fade-ramp gradients — leave both alone.
+- **Bank-full byte reclaim tricks that shipped:** `cp $ff`→`inc a` when
+  callers are Z-only and reload A (-1 B); dropping retired table rows by
+  rebasing the index (`sub $DE`→`sub $E0`, -4 B).
+- **Fabricating a battle-side combatant in RAM for harness tests** needs
+  `$dd1b[slot]=0` (0=valid, $FF=empty, other=skip — CheckMonsterSlot CF SET
+  means INVALID), a live `$dd13[slot]`, real `$db8b[slot]` flags, and HP.
+- **A byte-neutral window's "spare nop pad" is EXECUTED fall-through path,
+  not dead space.** Code placed there runs inline; a trampoline with a `ret`
+  makes the host routine return mid-flow (S74 v2: step 6 wedged, sweep
+  called every frame). Either `jr` over the stash — a byte can be paid for
+  with `ld a,e / dec d / jp z,…` replacing `ld a,d / or a / ld a,e /
+  jp nz,…` (dec d: Z iff D==1, carry untouched) — or find genuinely dead
+  bytes.
+- **The `$5F` entry-5 driver is BOTH the cast-animation player and the
+  engine that ticks the `d9ee` action-setup machine.** Forcing `$da82:=1`
+  to skip an animation starves the setup machine and wedges the action
+  (even scoped to d9ee==3, the cast-anim wait state). Kill an unwanted cast
+  animation at the SOURCE instead: the Layer-1 routine-index lookup
+  (`$5f` tables `$58dd/$59c3/$5aa9`), where index `$0D` is the bare-`ret`
+  "no visual" sentinel — substitute an id that is `$0D` in ALL THREE side
+  tables (e.g. `$12`; HealMore `$2c` is NOT — side-B `$00` — which is why
+  it stalled as a v1 proxy).
+- **After `verify_integrity` (which restores the clean tree), the next
+  build MUST re-overlay EVERY patch file, not just the ones edited this
+  round.** A partial overlay builds a clean/patched Franken-ROM that can
+  fail anywhere (S74 v2: vanilla bank $14 broke the harness intro flow →
+  `to_bedroom` hang blamed on innocent code).
+- **`rst $10`'s HL operand is H=bank, L=ENTRY INDEX** (`ld hl,$5305` =
+  bank $53 entry 5, not address $5305); and A/flags do NOT survive the
+  return (the dispatcher pops af to restore the bank) — far-fork contracts
+  must return through other registers (D/E) and re-derive flags.
+- **Cast-time validation enforces the learn-table LEVEL** ("doesn't know
+  that yet", msg $1D) per ACTOR — harness pokes that blanket-rewrite
+  `$db8a` poison enemy actions too; gate pokes on `$db88==0` and, to cast
+  a not-yet-learned tier, also rewrite `$dc65` (battle-side (level,id)
+  skill-pair cache) + the party record copy.
+- **Same-address/different-bank scan trap:** a full-ROM scan for branch
+  targets in a ROMX range also matches OTHER banks' code at those addresses
+  (bank $53 `call $6c59` is bank $53's own $6c59, not bank $52's). Only
+  same-bank branches (plus ROM0/rst paths) can actually enter a window.
+- **Effect-pipeline geography:** effect-step 2 of target N runs AFTER
+  target N's step-1 presentation — a stall there can never precede the
+  first target's message/blink. Presentation that must precede ALL targets
+  belongs in the cast-animation slot (`d9ed==1 && d9ee==3`); note d9ee also
+  idle-cycles 1,2,3 under `d9ed==0`, so the pair must be checked together.
+- **Far-fork verdicts must be authoritative end-to-end:** if the window's
+  fall-through re-derives the decision from the original variable (the
+  $6c4d re-read of $da82), the fork's return value is dead — widen the
+  window to swallow the re-read.
+- **Hold-release reports from a per-frame fork must be sticky** until the
+  observed machine actually leaves the state, or the fork re-triggers its
+  own entry actions every frame of the transition.
+- **0-damage hits auto-route to miss messages ($B7/$B8)** — a cheap,
+  handshake-safe place to substitute custom per-target outcome text
+  (LoadB4c_Fork interception keyed on skill id + target state).
+- **The battle box is a 2-line surface**: a third `$F1` line never shows.
+  The vanilla `FC 10 EC F2` page-ender scrolls to it in ENGINE-driven
+  messages, but inside a gate-inserted render it eats the next beat's
+  message — keep inserted strings to 2 lines (18 chars each).
+- **When two vars both claim to hold "the current target", trust the one
+  the damage math already proved** (`$db89` here; `$db88` diverged on
+  real-menu casts even though it passed in the harness rig).
+- **Prefer deleting a compensation over scoping it**: the Tame-style sound
+  suppress+refire existed only because of the looping rumble; once the
+  rumble stopped in the anim slot, restoring the vanilla per-beat sounds
+  (one byte per hook: `cp $e9`→`cp $e5`) made hit/miss audio honest for
+  free instead of hand-sequencing it.
+

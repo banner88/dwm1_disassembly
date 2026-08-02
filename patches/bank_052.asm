@@ -8112,15 +8112,22 @@ jr_052_6c26:
     ret
 
 
-    ld a, [$da82]
-    or a
-    jr nz, jr_052_6c5c
-
-    ld hl, $5f05
-    rst $10
-    ld a, [$da82]
-    or a
-    ret z
+    ld hl, $7204         ; [QUAKE v3] byte-neutral 15-for-15 window: was
+    rst $10              ;   `ld a,[$da82] / or a / jr nz,+9 / ld hl,$5f05 /
+    ld a, e              ;   rst $10 / ld a,[$da82] / or a / ret z`. Entry 4
+    or a                 ;   (QuakeAnimHold72) reproduces vanilla exactly for
+    jr nz, jr_052_6c5c   ;   every non-quake id (incl. the nested $5f05 driver
+    ret                  ;   call that also ticks the d9ee setup machine); for
+    nop                  ;   $E5-$E8 in the cast-anim slot (d9ed==1, d9ee==3)
+    nop                  ;   it plays the shake train and holds via E=0 until
+    nop                  ;   the last burst + stopper. E is AUTHORITATIVE: the
+    nop                  ;   10-byte version's fall-through re-read of the real
+    nop                  ;   $da82 (=1, the quiet anim finishes instantly)
+    nop                  ;   overrode the hold and let the sub-machine advance
+                         ;   mid-burst with the rumble still looping (measured
+                         ;   v4). No branches target $6c55-$6c5b (the bank-$53
+                         ;   `call $6c59` hits in a full-ROM scan are bank
+                         ;   $53's OWN address space, not ours).
 
 jr_052_6c5c:
     ld a, [$d9ed]
@@ -8858,7 +8865,13 @@ jr_052_702c:
     ld hl, $5004
     rst $10
     call LoadBattle_7e85
-    call BattleFunc_7782
+    call QuakeVictGate52 ; [QUAKE S74] was `call BattleFunc_7782` (same size).
+                         ;   While a quake sweep is mid-flight the side-wiped
+                         ;   check must not abort the multi-target iteration —
+                         ;   otherwise a battle-winning quake never reaches
+                         ;   the caster's own side. The scheduler's second
+                         ;   call site ($70bd) still runs the real check right
+                         ;   after the action, so victory/defeat land normally.
     jp c, Jump_052_70e0
 
     call LoadBattle_7dd7
@@ -9102,22 +9115,39 @@ jr_052_7198:
 
 
 jr_052_719c:
-    ld a, [wBattleTargetIdx]
-    bit 2, a
-    push af
-    jr z, jr_052_71a8
-
-    ld a, $07
-    jr jr_052_71aa
-
-jr_052_71a8:
-    ld a, $03
-
-jr_052_71aa:
-    ld c, a
-    pop af
-    cp c
+    ; [QUAKE] All-target sweep-advance fork (byte-neutral 20-for-20). The vanilla
+    ; window derived the side ceiling (bit2 -> $03 party / $07 enemy) from the
+    ; CURRENT target, finished at ceiling (jp z,$7085), else fell through to
+    ; `inc a` (next target). Replaced with a far-call to bank $72 entry 3
+    ; (QuakeSweep72), which reproduces those exact semantics for all stock ids
+    ; and, for Earthquake tiers $E5-$E8, ALSO (a) skips flying targets
+    ; ($db8b[k] bit4) and the caster, and (b) at the first side's ceiling
+    ; CROSSES OVER to the caster's own side (allies) instead of finishing,
+    ; arming the "seismic wave" message + hold. Contract (rst $10 clobbers
+    ; A/BC; DE survives): returns D=1 finish-sweep / D=0 continue with
+    ; E = next_target - 1 (the fall-through `inc a` below restores it).
+    ld hl, $7203                     ; bank $72 entry 3 = QuakeSweep72
+    rst $10
+    ld a, e                          ; fall-through target id (D=0 case)
+    dec d                            ; Z iff D==1 (iteration finished); C untouched
     jp z, Jump_052_7085
+    jr QSweepAfter52                 ; the former pad was EXECUTED fall-through
+                                     ; path — jump over the trampoline below
+; [QUAKE S74] the 20-byte window's remaining 9 bytes fund the victory-gate
+; trampoline. Called from the step-6 head in place of `call BattleFunc_7782`:
+; while wQuakePhase != 0 (a quake sweep mid-flight) it reports "nobody wiped"
+; (A=0, carry clear) so the iteration reaches the caster's own side even when
+; the cast just KO'd the whole enemy team; otherwise it tail-calls the real
+; check. The actor scheduler's second call site ($70bd) runs the real check
+; unconditionally right after the action, so victory/defeat land normally —
+; exactly one action later.
+QuakeVictGate52:
+    ld a, [$deb4]                    ; wQuakePhase
+    or a
+    jp z, BattleFunc_7782            ; phase 0: the real side-wiped check
+    xor a                            ; mid-quake: A=0 + carry CLEAR = alive
+    ret
+QSweepAfter52:
 
     inc a
     push af

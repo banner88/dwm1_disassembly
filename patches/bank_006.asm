@@ -9731,17 +9731,6 @@ jr_006_7f02:
     rst $38
     rst $38
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
 ; =============================================================================
 ; [Stage2] LearnLoopFork + CustomLearnReqTable — natural-learn/skill-evolve for
 ; CUSTOM skill ids. The scanner (bank $06 entry 5, $4f9a; caller = bank $51
@@ -9758,13 +9747,20 @@ jr_006_7f02:
 LearnLoopFork:                  ; in: C = next skill id; out: Z = end scan,
     ld a, c                     ;   NZ = continue (A/HL adjusted on range switch)
     cp $da
-    jr z, .toCustom             ; vanilla range done -> jump to the custom range
-    cp $e4                      ; one past the last custom learnable id
+    jr z, .toTame               ; vanilla range done -> Tame range ($E1-$E3)
+    cp $e4
+    jr z, .toQuake              ; [QUAKE] Tame range done -> Quake range ($E5-$E8)
+    cp $e9                      ; one past the last custom learnable id
     ret                         ; Z at end -> exit loop; NZ -> keep scanning
-.toCustom:
+.toTame:
     ld c, $e1                   ; first custom learnable id (Tame)
     ld hl, CustomLearnReqTable  ; scanner walks records from here (+$12/iter)
-    or a                        ; A=$da -> NZ (continue)
+    jr .go
+.toQuake:
+    ld c, $e5                   ; [QUAKE] first Earthquake tier (Tremor)
+    ld hl, CustomLearnReqTable2 ;   second table (post-$7F7F free run)
+.go:
+    or a                        ; A=$da/$e4 -> NZ (continue)
     ret
 
 CustomLearnReqTable:            ; 18 B/record, ids $E1..$E3 (walked by the scanner)
@@ -9778,78 +9774,22 @@ CustomLearnReqTable:            ; 18 B/record, ids $E1..$E3 (walked by the scann
 
 Jump_006_7f7f:
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; [QUAKE] CustomLearnReqTable2 — Earthquake tier chain ($E5-$E8), walked by the
+; two-stage LearnLoopFork after the Tame range. Same 18-byte record format
+; (+0 lvl, +1..+12 six u16 stat reqs, +13..+17 prereq ids, $FF pad). Prereq
+; chain = the vanilla EVOLVE mechanic: knowing the prereq + hitting the level
+; REPLACES it with the next tier. Levels are v1 placeholders (editor-tunable).
+; Placed at $7F80 (right after the referenced rst $38 trap byte at $7F7F);
+; the trailing rst $38 run shrinks 1:1 so NewFollowerGfxTable06 stays at $7FFC.
+CustomLearnReqTable2:
+    ; --- $E5 Tremor: lvl 2; no stat reqs; no prereq (species skill-slot grant)
+    db $02, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $ff,$ff,$ff,$ff,$ff
+    ; --- $E6 Quake: lvl 4; prereq $E5 (Tremor -> REPLACED on learn)
+    db $04, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e5,$ff,$ff,$ff,$ff
+    ; --- $E7 QuakeMore: lvl 6; prereq $E6
+    db $06, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e6,$ff,$ff,$ff,$ff
+    ; --- $E8 QuakeMost: lvl 8; prereq $E7
+    db $08, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e7,$ff,$ff,$ff,$ff
     rst $38
     rst $38
     rst $38

@@ -27,6 +27,8 @@ SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
     dw FarSkillFork                     ; entry 0  ($7200 -> $4001)
     dw CustomBattleExec                 ; entry 1  ($7201 -> $4003)
     dw AnchorField14Tail                ; entry 2  ($7202 -> $4005) [ANCHOR S73]
+    dw QuakeSweep72                     ; entry 3  ($7203 -> $4007) [QUAKE] sweep-advance fork
+    dw QuakeAnimHold72                  ; entry 4  ($7204 -> $4009) [QUAKE v3] $6c4d anim-gate fork: shakes live in the cast-anim slot (d9ee==3) and hold it until the train completes
 
 ; -----------------------------------------------------------------------------
 ; FarSkillFork (entry 0) — replaces the dispatch's `ld hl,$4011/add hl,bc/add hl,bc`
@@ -69,6 +71,11 @@ CustomBattleExec:
     jp z, SkillTame                     ; [Stage2] TameMore -> same handler, tiered meter
     cp $E3
     jp z, SkillTame                     ; [Stage2] TameMost -> same handler, tiered meter
+    cp $E5
+    jr c, .notquake
+    cp $E9
+    jp c, SkillQuake                    ; [QUAKE] $E5 Tremor / $E6 Quake / $E7 QuakeMore / $E8 QuakeMost
+.notquake:
     ; $E4 Anchor is FIELD-ONLY: in battle it falls through to this ret and,
     ; with its record's anim9=$02 (announce/animate gates clear — the MagicBurn
     ; finding inverted), the cast is a silent no-op. [S73 v1; a "can't use in
@@ -188,6 +195,377 @@ TameMeterTable:
     dw 10                               ; $E1 Tame     (FeedMeat tier)
     dw 100                              ; $E2 TameMore (PorkChop tier)
     dw 400                              ; $E3 TameMost (Sirloin tier)
+
+; =============================================================================
+; [QUAKE] SkillQuake ($E5-$E8 Tremor/Quake/QuakeMore/QuakeMost) — the Earthquake
+; tier chain. Far-called from CustomDispatch52 ONCE PER SWEEP TARGET (the
+; all-target loop at $52:$7184 re-runs the whole effect pipeline per alive
+; target — PyBoy-measured this session). Per run:
+;   (0) one-shot at sweep start (wQuakePhase==0): phase:=1, play the GreatTree
+;       rumble (SFX $68 — the EvtDemo scene-3 sound, PyBoy-measured) and arm
+;       the ROM0 VBlank SCY wobble ($c8b1 := frames; dormant vanilla driver at
+;       $00:$056e, applied AFTER ApplyScrollRegisters, self-terminating).
+;   (1) damage = record power roll, side-selected like the vanilla reader the
+;       $535F entry would do (attacker bit2 -> +11/party or +15/enemy pair),
+;       via the FORKED bank $54 generic reader (entry 0; custom ids resolve
+;       through CustomRecordPtrTable): damage = min + (wRNG1 mod (range+1)).
+;   (2) if the TARGET is on the ATTACKER's side (an ally caught in the wave),
+;       damage /= 3  (integer, subtract-loop).
+;   (3) $db56/57 := damage (overrides LoadBattle_653e's context value).
+; Flying targets never reach this handler (QuakeSweep72 + the first-target
+; fork skip them). ROM0 + RAM only; BC/DE free per CustomBattleExec contract.
+; =============================================================================
+SkillQuake:
+    ; (0) sweep-start one-shot
+    ld a, [wQuakePhase]
+    or a
+    jr nz, .damage
+    ld a, $01
+    ld [wQuakePhase], a
+    ; capture the TRUE caster: $db88 is unreliable (the per-target redirect
+    ; $53:CallBtlC_5e38 rewrites it — measured S74). Derive it from the ACTION
+    ; QUEUE instead: the slot whose queued action id == our skill id. (If two
+    ; monsters queued the same tier this frame the first match wins — v1 note.)
+    ld hl, $dcec                        ; action queue: (id, target) x 8, stride 2
+    ld a, [$db8a]
+    ld c, a                             ; C = our id
+    ld b, $00                           ; B = slot counter
+.findcaster:
+    ld a, [hl]
+    cp c
+    jr z, .foundcaster
+    inc hl
+    inc hl
+    inc b
+    ld a, b
+    cp $08
+    jr c, .findcaster
+    ld b, $00                           ; not found (shouldn't happen): slot 0
+.foundcaster:
+    ld a, b
+    ld [wQuakeCaster], a
+    ; presentation note [v3]: the rumble + tier-scaled shake bursts now play
+    ; INSIDE the cast-animation slot (d9ee==3), armed and sequenced by
+    ; QuakeAnimHold72 (entry 4) BEFORE this handler ever runs — the vanilla
+    ; ordering (anim -> announce -> per-target blink/damage) then holds by
+    ; construction. Hard-clear the train state here as staleness hardening.
+    xor a
+    ld [wQuakeArmed], a
+.damage:
+    ; (1) power roll from QuakePowerTable (bank-local: min/range bytes per tier;
+    ;     both sides use the same numbers). The record's power words stay 0 —
+    ;     nonzero record powers loop the presentation phase (S74 stall finding)
+    ;     — and reading the table here also avoids nested rst $10 record reads.
+    ld a, [$db8a]
+    sub $E5
+    add a                               ; (id - $E5) * 2
+    ld e, a
+    ld d, $00
+    ld hl, QuakePowerTable
+    add hl, de
+    ld a, [hl+]
+    ld e, a                             ; E = min (fits in a byte for all tiers? no —
+                                        ;   QuakeMost min 240 fits; all mins <= 240)
+    ld a, [hl]                          ; A = range
+    push af
+    ld l, e
+    ld h, $00                           ; HL = min
+    pop af
+    ; roll r = wRNG1 mod (range+1); range <= 255 here
+    inc a
+    ld b, a                             ; B = range+1 (modulus)
+    ld a, [wRNG1]
+.mod:
+    cp b
+    jr c, .rolled
+    sub b
+    jr .mod
+.rolled:
+    ; HL += r
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ; (2) ally? -> damage/3. Keyed on the SWEEP PHASE, not target-side compares:
+    ; phase 1 = the committed victim side (full damage), phase >= 2 = the
+    ; crossover onto the caster's OWN side (1/3). This is immune to the
+    ; first-dispatch $db89 staleness (target is set AFTER the phase-0 dispatch
+    ; — measured S74) and to the $db88 mid-sweep contamination.
+    ld a, [wQuakePhase]
+    cp $02
+    jr c, .store                        ; phase 0/1: victim side -> full damage
+    ; integer divide HL by 3 (subtract loop; HL <= ~300 here)
+    ld bc, $0000                        ; BC = quotient
+.div3:
+    ld a, l
+    sub $03
+    ld l, a
+    ld a, h
+    sbc $00
+    ld h, a
+    jr c, .divdone
+    inc bc
+    jr .div3
+.divdone:
+    ld l, c
+    ld h, b
+.store:
+    ; [v3] FLYING target: keep the beat (the fly line renders instead of the
+    ; damage text — LoadB4c_MaybeFlew) but land nothing. $db89 is the current
+    ; target at every dispatch (sweep E-contract + first-target scan).
+    push hl
+    ld a, [$db89]
+    ld hl, $db8b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    bit 4, [hl]
+    pop hl
+    jr z, .keep
+    ld hl, $0000
+.keep:
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ret
+
+; [QUAKE] Per-tier damage rolls, indexed (skill_id - $E5) * 2: min, range.
+; damage = min + (RNG mod (range+1)); allies then take 1/3. EDITOR-OWNED
+; tuning (v1 placeholders): 40-60 / 90-120 / 150-190 / 240-270; top tier =
+; 1.5x WhiteAir (160-180). Keep CustomMPCostTable (bank $07) + record +4
+; (bank $54) in sync when rebalancing costs.
+QuakePowerTable:
+    db 40, 20                           ; $E5 Tremor    40-60
+    db 90, 30                           ; $E6 Quake     90-120
+    db 150, 40                          ; $E7 QuakeMore 150-190
+    db 240, 30                          ; $E8 QuakeMost 240-270
+
+; =============================================================================
+; [QUAKE] QuakeSweep72 (entry 3) — far target of the $52:$719C sweep-advance
+; window. Reproduces the vanilla step exactly for stock ids; adds the Quake
+; behaviors for ids $E5-$E8. Called via rst $10 (A/BC clobbered on the way
+; back), so the contract is register-poor by design:
+;   out: D = 1 -> finish the sweep (jp Jump_052_7085)
+;        D = 0 -> continue; E = next_target - 1 (the window's `inc a` restores)
+; Vanilla semantics reproduced: ceiling = (cur & 4) ? $07 : $03; finish when
+; cur == ceiling; else next = cur+1 (the caller's CheckMonsterSlot dead-skip
+; loop then re-enters this fork for each dead/empty slot, so alive-checking
+; stays the caller's job).
+; Quake additions (id in $E5-$E8):
+;   - while advancing, ALSO skip the caster and any flying combatant
+;     ($db8b[k] bit4 — the LegSweep bit, both sides);
+;   - at the FIRST side's ceiling (wQuakePhase < 2): CROSS OVER to the
+;     caster's own side instead of finishing — set wQuakePhase=2, arm the
+;     "seismic wave" message (wQuakeAllyMsg=1; rendered + held by the widened
+;     TameGateHook in bank $53, wTameDelay=45), and aim the sweep at the own
+;     side's base-1 so the advance scan finds the first valid ally;
+;   - at the SECOND side's ceiling (wQuakePhase == 2): clear state, finish.
+; =============================================================================
+QuakeSweep72:
+    ld a, [$db89]                       ; wBattleTargetIdx (current)
+    ld e, a
+    and $04
+    jr z, .ceilParty
+    ld d, $07
+    jr .haveCeil
+.ceilParty:
+    ld d, $03
+.haveCeil:
+    ; is this a Quake cast?
+    ld a, [$db8a]
+    cp $E5
+    jr c, .vanilla
+    cp $E9
+    jr c, .quake
+.vanilla:
+    ld a, e
+    cp d
+    jr z, .vfinish
+    ; continue: E = cur (window's inc a -> cur+1)
+    ld d, $00
+    ret
+.vfinish:
+    ld d, $01
+    ret
+
+.quake:
+    ld a, e
+    cp d
+    jr z, .atCeiling
+.qadvance:
+    inc e                               ; candidate = next slot
+    ld a, e
+    cp d
+    jr z, .qcheckLast                   ; candidate == ceiling: still a real slot,
+                                        ;   check it (slot 3/7 can hold a monster)
+    jr nc, .atCeiling                   ; past ceiling (defensive)
+.qcheckLast:
+    ; skip the TRUE caster (NOT $db88 — target-contaminated mid-sweep).
+    ; [v3] FLYING combatants are NOT skipped any more: they get a real
+    ; per-target beat (0 damage + the "flew above it!" line) so the player
+    ; sees why nothing landed — including the all-allies-flying case.
+    ld a, [wQuakeCaster]
+    cp e
+    jr z, .qskip
+    ; candidate accepted: return E = candidate-1, D=0 (window incs back)
+    dec e
+    ld d, $00
+    ret
+.qskip:
+    ld a, e
+    cp d
+    jr c, .qadvance                     ; more slots on this side
+    ; skipped through the ceiling slot -> side exhausted
+.atCeiling:
+    ld a, [wQuakePhase]
+    cp $02
+    jr nc, .qfinish                     ; own-side pass done -> finish
+    ; ---- CROSSOVER: enemies done, sweep the caster's own side ----
+    ld a, $02
+    ld [wQuakePhase], a
+    ld a, $01
+    ld [wQuakeAllyMsg], a               ; TameGateHook renders the seismic msg
+    ld a, $2d                           ; ~45-frame hold so the message is readable
+    ld [wTameDelay], a
+    ld a, [wQuakeCaster]                ; TRUE caster's side base (0 or 4)
+    and $04
+    ld e, a
+    dec e                               ; E = base-1
+    ld a, e
+    add $04
+    ld d, a                             ; D(temp) = own-side ceiling = base+3
+    jr .qadvance                        ; scan for the first valid ally
+.qfinish:
+    xor a
+    ld [wQuakePhase], a
+    ld [wQuakeAllyMsg], a
+    ld [wQuakeArmed], a
+    ld d, $01
+    ret
+
+; -----------------------------------------------------------------------------
+; QuakeAnimHold72 (entry 4) — far-called from the byte-neutral window at the
+; $da82 animation gate ($52:$6c4d) in place of `ld a,[$da82] / or a /
+; jr nz,<dispatch> / ld hl,$5f05 / rst $10`. Contract: E = the $da82 value the
+; caller should act on (A/flags don't survive the rst $10 bank-restore).
+; For every non-quake id it reproduces vanilla EXACTLY (read $da82; if zero,
+; run the $5F animation driver via nested rst and re-read) — this keeps the
+; d9ee action-setup machine ticking (starving the driver wedges it; measured).
+; For the Earthquake tiers, ONLY in the cast-animation sub-state (d9ee==3,
+; the slot the borrowed wind used to occupy): on entry, arm the rumble + the
+; tier-count burst train (1..4); every frame, tick the train and keep
+; reporting E=0 ("animation still running") until the real (quiet, $0D) anim
+; has finished AND the last burst + stopper have played; then report done.
+; The shake IS the cast animation, so the vanilla ordering — anim -> announce
+; -> per-target blink/damage text — holds with zero pipeline surgery. The
+; step-2 window and ROM0 remain fully vanilla.
+; -----------------------------------------------------------------------------
+QuakeAnimHold72:
+    ld a, [$db8a]
+    sub $E5
+    cp $04
+    jr nc, .vanilla
+    ld a, [$d9ed]
+    dec a
+    jr nz, .vanilla                     ; the REAL anim slot lives under step 1
+                                        ; only — d9ee also cycles 1,2,3 while
+                                        ; d9ed==0 (idle), and arming there
+                                        ; plays the train outside the action
+                                        ; (measured v3 first run)
+    ld a, [$d9ee]
+    cp $03
+    jr nz, .vanilla                     ; setup states still get vanilla service
+    ld a, [wQuakeArmed]
+    or a
+    jr nz, .tick
+    ld a, $01                           ; entering the anim slot: arm the train
+    ld [wQuakeArmed], a
+    ld a, $68                           ; GreatTree rumble (loops until stopper)
+    ld [$c8b8], a
+    ld a, [$db8a]
+    sub $E5
+    inc a                               ; 1..4 bursts by tier
+    ld [wQuakeBursts], a
+    xor a
+    ld [wQuakePause], a
+.tick:
+    call QuakeShakeSeq
+    ; vanilla gate duties (the quiet anim finishes near-instantly)
+    ld a, [$da82]
+    or a
+    jr nz, .animreal
+    ld hl, $5f05
+    rst $10
+    ld a, [$da82]
+.animreal:
+    or a
+    jr z, .hold                         ; real anim not signalled yet
+    ld a, [wQuakePause]
+    cp $ff                              ; train terminal (stopper queued)?
+    jr nz, .hold
+    ld e, $01                           ; release the anim slot. STICKY: the
+    ret                                 ; sub-machine can take several frames
+                                        ; to leave d9ee==3, and clearing
+                                        ; wQuakeArmed here re-armed the whole
+                                        ; train each of those frames (measured
+                                        ; v5: six Tremor bursts). wQuakeArmed
+                                        ; is cleared by the handler's phase-0
+                                        ; init and by .qfinish instead.
+.hold:
+    ld e, $00
+    ret
+.vanilla:
+    ld a, [$da82]
+    or a
+    jr nz, .out
+    ld hl, $5f05
+    rst $10
+    ld a, [$da82]
+.out:
+    ld e, a
+    ret
+
+; -----------------------------------------------------------------------------
+; QuakeShakeSeq — the burst sequencer, called once per frame by QuakeAnimHold72
+; while the train is armed. Bursts of $10 frames of SCY wobble ($c8b1,
+; decremented by the vanilla ROM0 wobble), $0C-frame gaps (wQuakePause),
+; wQuakeBursts remaining; after the last burst queue SFX $00 (replaces the
+; looping $68 = the rumble stopper) and park at wQuakePause=$FF (terminal).
+; -----------------------------------------------------------------------------
+QuakeShakeSeq:
+    ld a, [$c8b1]
+    or a
+    ret nz                              ; a burst is on screen
+    ld a, [wQuakePause]
+    or a
+    jr z, .idle
+    cp $ff
+    ret z                               ; terminal
+    dec a
+    ld [wQuakePause], a
+    ret nz
+    ld a, $10                           ; gap expired -> next burst
+    ld [$c8b1], a
+    ret
+.idle:
+    ld a, [wQuakeBursts]
+    or a
+    jr z, .stopper
+    dec a
+    ld [wQuakeBursts], a
+    ld a, $0c
+    ld [wQuakePause], a
+    ret
+.stopper:
+    xor a
+    ld [$c8b8], a
+    ld a, $ff
+    ld [wQuakePause], a
+    ret
 
 ; =============================================================================
 ; [ANCHOR S73] AnchorField14Tail (entry 2) — far target of bank $14 entry 4's

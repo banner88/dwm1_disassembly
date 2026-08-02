@@ -3083,3 +3083,54 @@ two RE discovery sessions (M1, S3) before their authoring items depend on them.
 > amount only.**)
 >
 >
+
+> Session 72 (2026-07-31 — **Phase 3 item 1: editor walking skeleton +
+> VISUAL ROOM DISPLAY (user-directed extension same session).
+> BUILT S72, NOT yet user-tested. Byte-neutral** (no patch/ROM changes;
+> pins untouched). Owning: EDITOR_DESIGN (S72 amendments + new §11 with
+> as-built notes); ROADMAP Phase 3 + new boxes. As built: `editor2/app/`
+> PySide6 window (main.py: toolbar, open/reload project, recent-project
+> restore, room list, **Room tab = rendered display** + Fields tab,
+> build-log dock, ROM-MD5 gate `1ca6579…` + custom-emulator preference
+> via QSettings; room_view.py: zoom 1-3×, NPC/spawn/exit markers;
+> build_worker.py: QThread over the UNCHANGED core pipeline — GUI build ==
+> CLI build by construction) + `editor2/core/render.py` (headless room
+> renderer from the last built ROM + game.sym: CustomRoomPtrTable screens
+> / $26DD+Custom26DDTable tileset / CustomRoomAttr base(+2) attrs /
+> CustomRoomPalPtr palettes with the forced idx1/idx3 rule, dw $0000 →
+> derive() borrow with neutral slots 4-7 stand-in; screens bounded by
+> project.json; ZERO new format code — reuses
+> render_screen/decompress_lz/derive) + `editor2/core/emulator.py`
+> (cross-platform launch: macOS `open -Ra`-probed SameBoy → `open`;
+> Windows startfile; Linux sameboy → xdg-open; `{rom}` custom command) +
+> `editor2/tests/test_app.py` (offscreen smoke, PySide6-absent → SKIP like
+> verifier check 5; room-view pixel assert + placeholder skip; `--rom`
+> asserts GUI-path md5 == test_compiler REFERENCE_MD5 — **machine-verified
+> this session: 7 rooms listed, room $6B/$70 render with correct
+> palettes (amber $70 matches the S42 proof room), GUI build
+> byte-identical to `46ba6991…` (the S71v2 patched pin)**). Renderer
+> EMULATOR-VALIDATED per the new §11 rule: PyBoy in-game capture of $6B
+> (user's real .sav, CONTINUE → warp) shows the identical color set the
+> renderer emits. USER DECISIONS (S72): editor is CROSS-PLATFORM
+> (Win/Linux possible, primary macOS), real native-widget app not HTML —
+> EDITOR_DESIGN reframed; preview strategy = simulate only table-derived
+> renders, emulate the rest via an embedded-PyBoy panel (EDITOR_DESIGN
+> §11, new Phase 3 box). Gap-audit boxes ADDED (user-directed): Phase 2
+> preserved-systems flag-audit + orphaned-trigger validator (was cited by
+> EDITOR_DESIGN but never boxed); **E7 Milayou player art
+> (campaign-blocking, zero prior coverage)**; E8 shop RE (user: hex
+> editors edit stock/prices — likely shallow); **E9 item authoring incl.
+> the USER SPEC: WarpWing → single-slot like BeastTail + permanent (not
+> consumed) for warping anything**; Phase 3 NPC sprite-id catalog promoted
+> from the S70 residual. Repo-layout doc fix: `editor2/` row added (was
+> missing). LATE S72 (first user run): Pillow added to run deps +
+> graceful import error; **RGBDS v0.6.1 preflight** in
+> builder.check_toolchain (the user's brew rgbasm v1.0.1 produced the raw
+> hardware.inc SECTION/ENDM wall — now a one-line versioned error with
+> install steps) + app "Set RGBDS folder" preference (build_rom
+> rgbds_dir kwarg, PATH prepended for make only); user decision: the
+> 0.6.1 pin is PERMANENT (vendored-toolchain policy; bundling hides it —
+> EDITOR_DESIGN "Toolchain preflight").**)
+>
+>
+

@@ -575,10 +575,10 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_226_TameMore    ; [226] $E2 [Stage2]
     dw SkillName_227_TameMost    ; [227] $E3 [Stage2]
     dw SkillName_228_Anchor      ; [228] $E4 Anchor [S73]
-    dw SkillName_222_Unused_222  ; [229]
-    dw SkillName_222_Unused_222  ; [230]
-    dw SkillName_222_Unused_222  ; [231]
-    dw SkillName_222_Unused_222  ; [232]
+    dw SkillName_229_Tremor      ; [229] $E5 [QUAKE]
+    dw SkillName_230_Quake       ; [230] $E6 [QUAKE]
+    dw SkillName_231_QuakeMore   ; [231] $E7 [QUAKE]
+    dw SkillName_232_QuakeMost   ; [232] $E8 [QUAKE]
     dw SkillName_222_Unused_222  ; [233]
     dw SkillName_222_Unused_222  ; [234]
     dw SkillName_222_Unused_222  ; [235]
@@ -2666,6 +2666,14 @@ MiscText_03_Paged:
     db $F9, $20, $63, $FA, $F7, $F0                                ; "[New]!" <end>
 SkillName_228_Anchor:                                             ; [S73] $E4
     db $24, $4b, $40, $45, $4c, $4f, $f0                          ; "Anchor" + terminator
+SkillName_229_Tremor:                                             ; [QUAKE] $E5
+    db $37, $4f, $42, $4a, $4c, $4f, $f0                          ; "Tremor" + terminator
+SkillName_230_Quake:                                              ; [QUAKE] $E6
+    db $34, $52, $3e, $48, $42, $f0                               ; "Quake" + terminator
+SkillName_231_QuakeMore:                                          ; [QUAKE] $E7
+    db $34, $52, $3e, $48, $42, $30, $4c, $4f, $42, $f0           ; "QuakeMore" + terminator
+SkillName_232_QuakeMost:                                          ; [QUAKE] $E8
+    db $34, $52, $3e, $48, $42, $30, $4c, $50, $51, $f0           ; "QuakeMost" + terminator
 .pad224
     ds $7FF6 - .pad224, $00                                       ; pad to $7FF6 (NewSpecies tail unchanged)
 ;   Phase N: new-species SHORT (default-nickname) name table tail.

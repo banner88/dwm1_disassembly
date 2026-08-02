@@ -537,3 +537,36 @@ validated once against emulator captures before it is trusted as WYSIWYG
 
 **Never simulate:** battle engine, gate generation, audio timing,
 camera/scroll, mode transitions, save/SRAM behavior — Tier 2 only.
+
+## Skill editing surface (added S74 — the Earthquake chain as the worked example)
+
+Everything an editor needs to tune existing custom skills or scaffold new ones,
+with the source-of-truth location for each knob. Two addressing modes:
+**source labels** (edit `patches/*.asm`, rebuild — addresses resolve via
+`game.sym`) and **built-ROM offsets** (for direct-poke tooling; regenerate via
+the named dump tools after any rebuild, never hardcode).
+
+| Knob | Where (label, bank) | Format / notes |
+|---|---|---|
+| Damage per tier | `QuakePowerTable` (bank `$72`) | `(min, range)` byte pairs indexed `(id-$E5)*2`; damage = min + RNG mod (range+1); caster's own side takes 1/3 (phase-keyed in `SkillQuake`) |
+| MP cost | `CustomMPCostTable` (bank `$07`) AND record byte +4 (`CustomRecord_*`, bank `$54`) | MUST stay in sync — menu shows one, battle spends the other |
+| Learn level + prereq chain | `CustomLearnReqTable2` (bank `$06`) | 18 B rows: +0 level, +1..+12 six u16 stat reqs, +13..+17 prereq ids ($FF pad). Prereq = vanilla EVOLVE (old tier replaced on learn). The level ALSO gates cast-time validity per actor (msg `$1D` below it) |
+| Skill name | `SkillNamePtrTable` → `SkillName_*` (bank `$41`) | pooled, pointer-repointable |
+| SKIL-menu description | desc table rows + `SkillDescPtr_*` (bank `$56`) | 3 lines ≤18 chars, `$F1` breaks, `$F0` end; strings funded from the bank's trailing nop pad |
+| Announce line | `CustomMsgPtrTable[id-$DE]` → `CustomMsg_*` (bank `$4c`) | 2 lines max (18 chars each) for gate/`$FD` renders |
+| Ally-crossover banner | `CustomMsg_QuakeAllies` (bank `$4c`) | same 2-line cap |
+| Fly-dodge line | `CustomMsg_QuakeFlew` (bank `$4c`) | `F9 00` = the beat's subject name; party-side only by design (`LoadB4c_MaybeFlew` condition) |
+| Shake burst count | `(id-$E5)+1` in `QuakeAnimHold72` (bank `$72`) | burst length `$10` frames, gap `$0C` — both literals in `QuakeShakeSeq` |
+| Rumble SFX | `$68` literal in `QuakeAnimHold72` | any looping SE works; SFX `$00` is the universal stopper |
+| Cast animation | `GetAnimPresentId` (bank `$5f`): quiet id `$12`; other presentation via `CustomProxyTable[id-$DE]` | quiet = routine `$0D` in all three tables `$58dd/$59c3/$5aa9` (see `extracted/battle_animations.json` for every skill's indices) |
+| Flying flag (per species) | ROM offsets in `extracted/flying_flags.json` (`tools/dump_flying_flags.py`) | battle-side mirror: `$db8b[slot]` bit 4 — what the sweep/handler/fork actually test |
+| Skill charmap (all strings above) | a-z=`$3E`+, A-Z=`$24`+, space=`$62`, `!`=`$63`, newline=`$F1`, close/end=`$EC $F0` | page-ender `FC 10 EC F2` is ENGINE-driven messages only |
+
+**Editor-safety invariants** (violating any of these bricks the battle loop —
+all measured, see BATTLE_SKILL_SYSTEM §13.7.x): record power words (+9/+10)
+must stay ZERO for table-driven handlers; `CustomMPCostTable` and record +4
+must match; a tier's learn level must not exceed what its assigned species can
+reach; strings must respect the 2-line box in gate renders; and any byte-size
+change inside a patched bank must be funded from that bank's nop pad
+(byte-neutrality — see SESSION_PROTOCOL).
+
