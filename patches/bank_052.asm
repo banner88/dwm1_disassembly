@@ -8118,16 +8118,12 @@ jr_052_6c26:
     or a                 ;   (QuakeAnimHold72) reproduces vanilla exactly for
     jr nz, jr_052_6c5c   ;   every non-quake id (incl. the nested $5f05 driver
     ret                  ;   call that also ticks the d9ee setup machine); for
-    nop                  ;   $E5-$E8 in the cast-anim slot (d9ed==1, d9ee==3)
-    nop                  ;   it plays the shake train and holds via E=0 until
-    nop                  ;   the last burst + stopper. E is AUTHORITATIVE: the
-    nop                  ;   10-byte version's fall-through re-read of the real
-    nop                  ;   $da82 (=1, the quiet anim finishes instantly)
-    nop                  ;   overrode the hold and let the sub-machine advance
-                         ;   mid-burst with the rumble still looping (measured
-                         ;   v4). No branches target $6c55-$6c5b (the bank-$53
-                         ;   `call $6c59` hits in a full-ROM scan are bank
-                         ;   $53's OWN address space, not ours).
+                         ;   $E5-$E8/$E9 in the cast-anim slot: shake train or
+                         ;   double-slash replay. No branches target $6c55-$6c5b
+                         ;   (bank-$53 `call $6c59` is its OWN address space).
+MournDispatch52:         ; [MOURN S75] 6 bytes in the dead-code window ($6c56):
+    call CalcDefenseWrapper ;   ATK-vs-DEF damage -> $db56/57 (physical attack path)
+    jp CustomDispatch52_shared ;   then descriptor + far-call $72 for the multiplier
 
 jr_052_6c5c:
     ld a, [$d9ed]
@@ -11617,9 +11613,13 @@ CustomDispatch52:            ; $7FEF — jp'd in $52 ctx; runs the standard dama
                              ; CONTEXT setup here (only callable with bank $52 mapped),
                              ; THEN far-calls $72 for the per-skill custom override.
     call LoadBattle_653e     ; MegaMagic's exact setup: damage-result context + base $db56
+CustomDispatch52_shared:     ; [MOURN S75] shared tail — MournDispatch52 jp's here after
+                             ; calling CalcDefenseWrapper (defense-calc path vs MegaMagic path)
     call SetHLBattle_54e7    ; descriptor $dd6f=$a8, msg pair $dd70/71=$b882 (hit/miss ids)
     ld hl, $7201             ; bank $72, entry 1 = CustomBattleExec
     rst $10                  ; far-call: override $db56 with the skill's real damage + cost
     ret
+MournDispatchPtr:            ; [MOURN S75] the dw FarSkillFork returns for $E9 Mourn — 
+    dw MournDispatch52       ;   dereffed by the dispatcher to jp MournDispatch52 ($6c56)
 .pad
     ds $8000 - .pad, $00     ; pad remaining tail (preserves bank size)

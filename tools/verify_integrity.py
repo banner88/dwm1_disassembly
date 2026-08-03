@@ -88,7 +88,7 @@ def build():
 
 
 def check_clean_build():
-    print("[1/5] Clean build (byte-perfect check)...")
+    print("[1/6] Clean build (byte-perfect check)...")
     ok, log = build()
     if not ok:
         print("  FAIL: clean build did not produce game.gbc")
@@ -109,7 +109,7 @@ def check_clean_build():
 
 
 def check_patched_build():
-    print("[2/5] Patched build (custom content check)...")
+    print("[2/6] Patched build (custom content check)...")
     # Snapshot clean files we are about to overwrite
     backups = {}
     for f in PATCH_FILES:
@@ -126,6 +126,7 @@ def check_patched_build():
             print("\n".join(log.splitlines()[-15:]))
             return False
         rom = open(os.path.join(DIS, "game.gbc"), "rb").read()
+        open("/tmp/verify_patched.gbc", "wb").write(rom)  # for check 6
         bank60 = rom[0x60 * 0x4000:0x61 * 0x4000]
         used = sum(1 for b in bank60 if b != 0)
         if used < 16:
@@ -152,7 +153,7 @@ def check_patched_build():
 
 
 def check_tree_restored():
-    print("[3/5] Tree restore check...")
+    print("[3/6] Tree restore check...")
     bad = [f for f in PATCH_NEW_FILES
            if os.path.exists(os.path.join(DIS, f))]
     if bad:
@@ -163,7 +164,7 @@ def check_tree_restored():
 
 
 def check_doc_sanity():
-    print("[4/5] Documentation MD5 sanity...")
+    print("[4/6] Documentation MD5 sanity...")
     bad = []
     pat = re.compile(r"\b([0-9a-f]{32})\b")
     for root, _dirs, files in os.walk(DOCS):
@@ -198,7 +199,7 @@ def check_doc_sanity():
 
 
 def check_tool_selftests():
-    print("[5/5] Tool selftests (generated tables vs ROM)...")
+    print("[5/6] Tool selftests (generated tables vs ROM)...")
     # ROM-tolerant BY DESIGN. These generators decode tables straight out of the
     # original ROM, but data/DWM-original.gbc is gitignored and user-provided:
     # CI verifies the build with only the expected MD5 and has no ROM. Treating
@@ -231,6 +232,22 @@ def check_tool_selftests():
     return ok
 
 
+def check_custom_data():
+    print("[6/6] Custom-data crash-config validation (S75)...")
+    # Hard-errors on crash-capable configurations: universal-qualifier learn
+    # rows without the code-2 fence, missing slot-index fence, and redirected
+    # battle-sprite streams that do not decode to the original tile count.
+    rom_arg = "/tmp/verify_patched.gbc" if os.path.exists("/tmp/verify_patched.gbc") else None
+    cmd = "python3 tools/validate_custom_data.py" + (f" --rom {rom_arg}" if rom_arg else " --records-only")
+    r = run(cmd, REPO)
+    if r.returncode != 0:
+        print(r.stdout.rstrip())
+        print("  FAIL")
+        return False
+    print("  OK")
+    return True
+
+
 def main():
     clean_only = "--clean" in sys.argv
     results = [check_clean_build()]
@@ -240,6 +257,7 @@ def main():
         results.append(check_tree_restored())
         results.append(check_doc_sanity())
         results.append(check_tool_selftests())
+        results.append(check_custom_data())
     if all(results):
         print("\nINTEGRITY: PASS")
         return 0

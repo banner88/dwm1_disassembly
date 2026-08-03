@@ -401,3 +401,15 @@ and aborts on drift. `--print` dumps the range-gate table. See BATTLE_SKILL_SYST
 2. Any dumper that writes extracted/ should stamp a `"_generator"` key.
 3. Editor (Phase 2/3) consumes ONLY Tier A files.
 | tools/dump_flying_flags.py | extracted/flying_flags.json | Every species' can-fly flag (monster info +$04, $03:$4461+sp*43+4): 221 species, 48 flying, per-species name + ABSOLUTE ROM byte offset so the editor can read AND write the stat (0=grounded, 1=flying). Battle copy = $db8b[slot] bit4 (bank $51 init); gates LegSweep $4E + Earthquake $E5-$E8. [S74] |
+
+### tools/validate_custom_data.py (S75)
+Hard-error validator for crash-capable custom-data configurations. Checks:
+custom learn records (18-byte stride, level 1-99, prereq ids must be existing
+custom records, LearnLoopFork scan bound == last id + 1), universal-qualifier
+rows (no prereq + all-zero stats) require the LearnCode2Guard06 fence bytes in
+the built ROM, the SlotProbeGuard50 fence must be present in bank $50, and
+every redirected bank-$36 battle-sprite pointer must decode (dwm.sprite_codec)
+to exactly the original entry's tile count. `--rom <gbc>` = full check;
+`--records-only` = source-only. Exit 1 = FAIL. Runs as verify_integrity
+check 6 and inside editor2/core/builder.build_rom (the editor refuses to
+return a failing ROM).

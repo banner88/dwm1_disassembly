@@ -7330,7 +7330,8 @@ CustomAnnounceTable:        ; indexed (id - $E2)
     db $FD                  ; $E6 Quake      |  shared "{caster} sets off /
     db $FD                  ; $E7 QuakeMore  |  an earthquake!" line
     db $FD                  ; $E8 QuakeMost /  (CustomMsgPtrTable idx 7-10)
-    nop
+    db $FD                  ; $E9 Mourn [S75] -> custom-message escape "used Mourn!"
+                            ;   (1 nop consumed below to keep DataBtlFX_7959's offset)
     nop
     nop
     nop

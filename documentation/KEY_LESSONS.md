@@ -2682,3 +2682,85 @@ other banks' coincidental data/comments.
   (one byte per hook: `cp $e9`→`cp $e5`) made hit/miss audio honest for
   free instead of hand-sequencing it.
 
+
+## S75 — Mourn ($E9)
+
+- **`$dd1b[slot]` is THREE-state, and "alive" tests must pick the right two.**
+  `$00` = alive, `$01` = processed-KO ("skip"), `$FF` = never existed. The
+  engine flips a 0-HP combatant 0→1 only when its KO scan runs (~400 frames
+  after the HP hit in the measured battle). A "slot has a monster" test must
+  be `!= $FF`; a `== 0` test silently excludes corpses after the scan — the
+  Mourn boost worked for exactly two rounds and then quietly became 1×.
+  Rule: state bytes that look boolean rarely are; enumerate the values in the
+  emulator before comparing against one.
+- **The S74 sticky-release trap generalizes to ANY re-armed anim-slot
+  machine.** Using the work counter's 0 as both "not armed" and "finished"
+  re-arms the train every frame the sub-machine lingers in d9ee==3 (~2
+  frames) → infinite animation (measured: one EvilSlash per 26-frame lap,
+  forever). Reserve a terminal sentinel ($FF) distinct from idle (0), and
+  have the effect HANDLER clear it (it runs right after the anim slot in
+  every normal action). Rule: a per-frame fork's "done" report must stay
+  true until the observed machine actually leaves the state.
+- **A second dispatch trampoline is how a custom skill picks its vanilla
+  damage machine.** FarSkillFork can return per-id pointer-holders:
+  $7FED → CustomDispatch52 (LoadBattle_653e, the MP-context base) for the
+  MagicBurn family, MournDispatchPtr → MournDispatch52
+  (CalcDefenseWrapper, the physical ATK-vs-DEF base) for Mourn — both
+  converge on CustomDispatch52_shared (descriptor + $72 far-call). Zero
+  bytes of change to existing customs.
+- **`ld h, HIGH(table)` after an 8-bit index add is a 3-byte saving that
+  MUST carry a link-time ASSERT** (`ASSERT LOW(table) <= 256 - size`): it is
+  correct only while the table cannot cross a page. The assert turns a
+  future silent corruption (a new row pushing the table over a boundary)
+  into a build failure. Used to fit the Mourn MP row in the full bank $07.
+- **The battle rig can start a battle from ANY field state by mimicking
+  opcode $05 TriggerBattle's own writes**: `$DA03/04`=EID, `$DA02`=0 (single
+  enemy), `$DA09`=1, `$C905`=0, set bit6 of `$C8EB`. Combined with a real
+  .sav (legitimate party), per-frame forcing of `$dcec[slot0]` casts any
+  skill deterministically — no menu scripting, no gateworld entry, no
+  fabricated monsters.
+- **A .sav from the ORIGINAL ROM will not CONTINUE on the patched ROM** —
+  the S69/S71 checksum-v3 save format rejects it and the title menu shows
+  only NEW GAME. Ask for a save written by the hacked ROM.
+
+## S75b — crash investigation (fences + validator)
+
+- **Sweep input cadences before declaring a timing regression.** The A-only
+  masher wedges in post-battle menus (join naming flow) at unlucky press
+  alignments on ANY ROM — S74 "clean" at 3 cadences stalled at 4 others.
+  A single-cadence A/B that differs between two ROMs proves ONLY that their
+  timing differs, which any code change causes. Rule: an emulator-rig stall
+  is a rig artifact until it reproduces across a cadence sweep that the
+  control ROM survives.
+- **`$CAC1 + slot*$95` for slot 40 is $E209 = ECHO RAM aliasing $C209** (live
+  battle/menu state). The S71 farm walkers legitimately leave `$cac0 == 40`
+  (post-increment terminal), and any later stale-`$cac0` consumer processes
+  the phantom slot: reads garbage that varies with sprite streams, input
+  alignment, and upstream cycle counts — and the level probe's post-probe
+  path WRITES exp into the alias. Fenced at the single chokepoint
+  (SlotProbeGuard50: index >= $28 rejects with carry). Rule: any RAM-array
+  index that a walker leaves at its terminal value is a loaded gun for every
+  later reader; bound at the consumer chokepoint, not at each caller.
+- **The learn scanner has a THIRD exit (code 2, Jump_006_50b5): blanket
+  stat-qualification with no species latch** — vanilla DWM's stat-learning.
+  Custom ids had never traversed its display path; LearnCode2Guard06 diverts
+  ids $E1+ to the skip-record path (scan continues) so customs learn only
+  via code 0/1. The jr-reach trick: `jp nc, jr_006_507c` from the $7F1F
+  free run reaches the vanilla skip path with the scan's 3 pushes intact —
+  no stack surgery.
+- **Validators are the fence that survives refactors.** The crash-capable
+  CONFIGURATION (universal learn rows without the code-2 fence; slot fence
+  absent; sprite redirect decoding to a different tile count) is what the
+  build must reject — checking the built ROM's bytes for the fence
+  signatures makes the check robust to source-level rearrangement.
+  validate_custom_data.py runs as verify_integrity check 6 AND inside
+  editor2 build_rom, so neither build path can ship the config.
+- **A backtrace's deepest frames can be victims, not origins.** The user's
+  $58 FX-driver frames sat above an already-garbage stack (WRAM return
+  address); chasing the frames cost several instrument cycles. Check SP
+  sanity and the WRAM-address smell FIRST, then hunt the corruption source,
+  not the crash site.
+- **dwm.sprite_codec is the arbiter of stream validity** — the hand-made S21
+  Clam literal stream decodes to exactly 36 tiles, same as the original;
+  "literal vs compressed" is not a defect. Redirect validity = decoded
+  length equality, now enforced by the validator.

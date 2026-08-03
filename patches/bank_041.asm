@@ -579,7 +579,7 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_230_Quake       ; [230] $E6 [QUAKE]
     dw SkillName_231_QuakeMore   ; [231] $E7 [QUAKE]
     dw SkillName_232_QuakeMost   ; [232] $E8 [QUAKE]
-    dw SkillName_222_Unused_222  ; [233]
+    dw SkillName_233_Mourn       ; [233] $E9 [MOURN S75]
     dw SkillName_222_Unused_222  ; [234]
     dw SkillName_222_Unused_222  ; [235]
     dw SkillName_222_Unused_222  ; [236]
@@ -2641,7 +2641,7 @@ MonsterName_224_Gorbunok:  ; $7E46 — Phase N new species
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F46
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F56
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F66
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F76
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F76 (6 zeros consumed by SkillName_233_Mourn [MOURN S75]; dead fill — only $7FF9+ of the $7E39-based short-name region is ever indexed, redirect gates id>=224)
 SkillName_222_Scorch:                                             ; $7F86
     db $36, $40, $4c, $4f, $40, $45, $f0                          ; "Scorch" + terminator
 SkillName_223_Smite:                                              ; $7F8D
@@ -2674,6 +2674,8 @@ SkillName_231_QuakeMore:                                          ; [QUAKE] $E7
     db $34, $52, $3e, $48, $42, $30, $4c, $4f, $42, $f0           ; "QuakeMore" + terminator
 SkillName_232_QuakeMost:                                          ; [QUAKE] $E8
     db $34, $52, $3e, $48, $42, $30, $4c, $50, $51, $f0           ; "QuakeMost" + terminator
+SkillName_233_Mourn:                                              ; [MOURN S75] $E9
+    db $30, $4c, $52, $4f, $4b, $f0                               ; "Mourn" + terminator
 .pad224
     ds $7FF6 - .pad224, $00                                       ; pad to $7FF6 (NewSpecies tail unchanged)
 ;   Phase N: new-species SHORT (default-nickname) name table tail.

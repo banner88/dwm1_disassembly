@@ -11806,6 +11806,9 @@ QuakeFlewModeTable:
 QuakeFlewPtrTable:
     dw CustomMsg_QuakeFlew
 LoadB4c_Fork_custom:
+    ld a, [wMournBoosted]            ; [MOURN S75] boost banner pending?
+    or a
+    jr nz, LoadB4c_MournBoost
     ld a, [wQuakeAllyMsg]            ; [QUAKE] crossover pending? then $FD means
     or a                             ;   the shared "seismic wave" ally line, not
     jr nz, LoadB4c_QuakeAllies       ;   the per-id announce (flag cleared by the
@@ -11838,6 +11841,22 @@ LoadB4c_QuakeAllies:                 ; [QUAKE] fixed index 0 into the ally table
     ld [$c823], a
     ret
 
+LoadB4c_MournBoost:                  ; [MOURN S75] render the boost banner and
+    xor a                            ;   clear the flag (one-shot)
+    ld [$c822], a                    ; mode 0
+    ld [$c823], a                    ; index 0
+    ld de, MournBoostModeTable       ; private mode table -> boost string
+    call CallTextEngine
+    ld a, $ff
+    ld [$c823], a
+    xor a
+    ld [wMournBoosted], a            ; clear flag
+    ret
+MournBoostModeTable:
+    dw MournBoostPtrTable            ; [MOURN S75] mode 0 -> the 1-entry boost table
+MournBoostPtrTable:
+    dw CustomMsg_MournBoost
+
 CustomMsgModeTable:
     dw CustomMsgPtrTable             ; mode 0 -> the custom pointer table
 QuakeAlliesModeTable:
@@ -11857,6 +11876,7 @@ CustomMsgPtrTable:
     dw CustomMsg_QuakeAnnounce       ; idx 8 = skill $E6 Quake      | announce
     dw CustomMsg_QuakeAnnounce       ; idx 9 = skill $E7 QuakeMore  | line
     dw CustomMsg_QuakeAnnounce       ; idx 10= skill $E8 QuakeMost / [QUAKE]
+    dw CustomMsg_E9_Mourn            ; idx 11= skill $E9 Mourn [S75]
 CustomMsg_dummy:
     db $F0                           ; empty/safe
 CustomMsg_E1_Tame:
@@ -11887,6 +11907,19 @@ CustomMsg_QuakeAllies:               ; [QUAKE v4b] "Allies are caught" / "in a
     db $3e, $52, $44, $45, $51, $f1, $46, $4b, $62, $3e, $62, $50
     db $42, $46, $50, $4a, $46, $40, $62, $54, $3e, $53, $42, $63
     db $ec, $f0
+CustomMsg_E9_Mourn:                  ; [MOURN S75] "{caster} used Mourn!"
+    db $ED, $F9, $00, $62            ; {mon}{name}<sp>
+    db $52, $50, $42, $41, $62       ; "used "
+    db $30, $4c, $52, $4f, $4b       ; "Mourn"
+    db $63, $EC, $F0                 ; "!" + close + end
+CustomMsg_MournBoost:                ; [MOURN S75] "Fallen allies" / "lend power!"
+    ;   2-line ($F1); gameplay-transparent wording per user. Line1=13, line2=11.
+    db $29, $3e, $49, $49, $42, $4b, $62             ; "Fallen "
+    db $3e, $49, $49, $46, $42, $50                  ; "allies"
+    db $F1                                           ; line break
+    db $49, $42, $4b, $41, $62                       ; "lend "
+    db $4d, $4c, $54, $42, $4f                       ; "power"
+    db $63, $EC, $F0                                 ; "!" + close + end
 CustomMsg_QuakeFlew:                 ; [QUAKE v3] "But {target} " / "flew above
     ;   it!" — rendered IN PLACE of the $82 damage line for a flying target's
     ;   beat (LoadB4c_MaybeFlew). $F9 $00 resolves the current message
@@ -11894,82 +11927,6 @@ CustomMsg_QuakeFlew:                 ; [QUAKE v3] "But {target} " / "flew above
     db $ed, $25, $52, $51, $62, $f9, $00, $f1, $43, $49, $42, $54
     db $62, $3e, $3f, $4c, $53, $42, $62, $46, $51, $63, $ec, $f0
 ; --- end S2e custom-message infrastructure ---
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
     nop
     nop
     nop

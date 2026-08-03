@@ -1394,6 +1394,7 @@ CustomRecordPtrTable:       ; indexed by (id - $DE)*2
     dw CustomRecord_E6_Quake    ; [$E6] Quake      |  chain (evolves via the
     dw CustomRecord_E7_QuakeMore; [$E7] QuakeMore  |  prereq mechanic in
     dw CustomRecord_E8_QuakeMost; [$E8] QuakeMost /   CustomLearnReqTable2)
+    dw CustomRecord_E9_Mourn    ; [$E9] Mourn [S75]
 
 ; --- MagicBurn ($E0) 19-byte record ------------------------------------------
 ; Based on BigBang/MegaMagic-class all-foes magic, with mp_cost (+4) zeroed (the
@@ -1454,6 +1455,18 @@ CustomRecord_E7_QuakeMore:
     db $46,$12,$12,$00,$10,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
 CustomRecord_E8_QuakeMost:
     db $46,$12,$12,$00,$18,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
+
+; --- Mourn ($E9) 19-byte record [S75] -----------------------------------------
+; SINGLE-FOE physical-style attack. Target $11, presentation trio $41/$07/$17
+; (announce+animate, proven Tame shape). MP = 10 (mirrors CustomMPCostTable).
+; Power words = 0: the handler drives damage (CalcDefenseWrapper computed the
+; ATK-vs-DEF base, then SkillMourn multiplies by dead_allies+1). dmg_class = $04.
+; The record keeps the engine happy; all real damage logic is in the handler.
+;   +0 eclass=$00  +1 cat=$13  +2 target=$11(1 FOE)  +3 ai=$14  +4 mp=10
+;   +5 status=0  +6 dmg_class=$04  +7 $41  +8 $07  +9 $17  +10 $02
+;   +11.. power=0 (handler-driven)
+CustomRecord_E9_Mourn:
+    db $00,$13,$11,$14,$0A,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
 
 ; pad the rest of the bank back out to $8000 (keeps bank $54 layout intact)
 CustomSkillBlobEnd_054:

@@ -6239,9 +6239,22 @@ jr_050_6337:
 
 
 CmpBtl_6383:
-    cp $ff
-    jr z, jr_050_63a2
+; [S75 FENCE] Slot-index bound for the level probe. The vanilla probe guards
+; $FF / empty species / level 99 but NEVER bounds the slot index. Measured
+; S75: the exp-award walker legitimately leaves $cac0 == 40 (post-increment
+; terminal), and the stale-$cac0 re-probe (the `ld a,[$cac0]` caller below)
+; then probes phantom slot 40, whose "record" $CAC1+40*$95 = $E209 is ECHO
+; RAM aliasing battle state at $C209 — if the battle residue happens to look
+; alive (Clam-sprite-, input-alignment- and timing-dependent), the caller
+; WRITES exp into the aliased battle RAM and runs the level-up display on
+; garbage: black/white screen, wild jump (the S75 Dracky-join crash), and
+; plausibly the unreproduced S73b corruption. One guard at this chokepoint
+; (index < $28) gates every caller including the post-probe exp write
+; (jr c skips it). Byte-neutral: 4-byte head -> jp+nop; guard in tail fill.
+    jp SlotProbeGuard50
+    nop
 
+.body:
     ld [$cac0], a
     ld hl, $cb0c
     call GetMonsterDataPtr
@@ -11663,19 +11676,17 @@ SetBtl_7e1e:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; [S75 FENCE] SlotProbeGuard50 — displaced CmpBtl_6383 head + slot bound.
+; 13 bytes carved from this nop fill (net bank size unchanged).
+SlotProbeGuard50:
+    cp $ff
+    jr z, .reject
+    cp $28                      ; slot index must be < 40 (S71 farm array)
+    jr nc, .reject
+    jp CmpBtl_6383.body
+.reject:
+    scf                         ; carry = skip, same contract as jr_050_63a2
+    ret
     ; [S73] 12 pad nops consumed (funding FieldOnlySkillA at EOF)
 ; -----------------------------------------------------------------------------
 ; [CF2] CF2FarmShareDivert — called from the 14-byte window at $61FA (see the

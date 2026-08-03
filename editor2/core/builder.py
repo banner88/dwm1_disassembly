@@ -98,6 +98,16 @@ def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
         sym_path = os.path.join(out_dir, 'game.sym')
         shutil.copy(os.path.join(dis, 'game.gbc'), rom_path)
         shutil.copy(os.path.join(dis, 'game.sym'), sym_path)
+        # [S75] crash-config validation: refuse to hand back a ROM whose
+        # custom data forms a known crash-capable configuration (universal
+        # learn qualifiers without the code-2 fence, missing slot-index
+        # fence, sprite-stream size mismatches). Same checker as
+        # verify_integrity check 6 — the editor must never ship what the
+        # repo build would reject.
+        v = subprocess.run(['python3', os.path.join(repo, 'tools', 'validate_custom_data.py'),
+                            '--rom', rom_path], capture_output=True, text=True, cwd=repo)
+        if v.returncode != 0:
+            raise RuntimeError('crash-config validation failed:\n' + v.stdout.strip())
         return rom_path, sym_path, md5(rom_path)
     finally:
         for f, data in backups.items():

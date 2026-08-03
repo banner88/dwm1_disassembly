@@ -10,6 +10,89 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-08-02 (Session 75 — **custom skill #5 $E9 "Mourn":
+> v1 mechanics USER-CONFIRMED; v2 banner-ordering PyBoy-verified; v3/v4 =
+> the Dracky-crash investigation: TWO byte-neutral fences + the crash-config
+> VALIDATOR (verify_integrity check 6 + editor-builder-integrated)** —
+> verifier PASS 6/6, compiler 39/39, clean `1ca6579…` untouched, S75v4
+> patched pin `ce1e7369…` (supersedes v2 `762c0df0…`, v1 `a914e489…`, S74
+> `d1f5eb49…`).)
+>
+> S75 crash investigation (user-reported wild-gate-Dracky freeze: black →
+> white → frozen; SameBoy backtrace = garbage execution at $4d:$4a87 with a
+> WRAM return address $d7b5 and $58/$50 FX-driver frames). Findings, in
+> order of hard-won honesty: (1) **RETRACTION — the rig "bank_006
+> regression" was an input-alignment artifact**: the A-only masher wedges
+> in the post-battle join menus at unlucky cadences on EVERY ROM incl. S74
+> (measured: S74 stalls at cadences 19/23/27/29; the earlier 3-cadence
+> "S74 clean" sample was luck). Timing-shifting ANY code moves which
+> cadences stall. (2) The S21 Clam stream is VALID (decodes to exactly 36
+> tiles via dwm.sprite_codec — same as the original Dracky stream); the
+> stream-size theory is dead. (3) Two REAL latent hazards found and fenced
+> byte-neutrally: **LearnCode2Guard06** (bank $06 $7F1F, jp-trampoline at
+> Jump_006_50b5: custom ids $E1+ can never stat-learn via the unexercised
+> code-2 display path — they divert to the skip-record path; vanilla ids
+> unchanged) and **SlotProbeGuard50** (bank $50, CmpBtl_6383 head
+> trampoline + 13 tail-fill bytes: the level probe rejects slot index >=
+> $28; measured: the exp walker leaves $cac0==40 post-increment and a
+> stale-$cac0 re-probe processes phantom slot 40 whose "record"
+> $CAC1+40*$95=$E209 is ECHO RAM aliasing battle state at $C209, with a
+> post-probe exp WRITE into the alias when the residue looks alive). (4)
+> **tools/validate_custom_data.py**: hard-errors on crash-capable configs —
+> universal-qualifier learn rows without the code-2 fence, missing slot
+> fence, learn-record structural violations (18-byte stride, level range,
+> prereq refs, scan-bound == last id + 1), and bank-$36 sprite redirects
+> whose replacement stream does not decode to the original's exact tile
+> count. Wired into verify_integrity as check 6 AND editor2/core/builder
+> build_rom (the editor refuses to hand back a crash-config ROM);
+> test_compiler gains a PASS/FAIL validator test (39 tests). (5) The
+> user's actual crash is NOT yet reproduced (field-triggered battles all
+> clean; the $58:$401D id-keyed FX-pointer lookup fires only with the
+> basic-attack action id in tested modes — custom ids route through the
+> forked skill pipeline; the $58 backtrace frames are victims of prior
+> stack corruption, not the origin). User given a SameBoy trap kit
+> (watchpoints on the corruption channels) to catch the origin on next
+> occurrence.)
+>
+> Session 75 (2026-08-02 — **custom skill #5: $E9 "Mourn" (user-directed):
+> single-foe attack, damage = the VANILLA ATK-vs-DEF physical roll ×
+> (dead allies + 1) — 0 dead (all alive or caster alone) = 1×, 1 dead = 2×,
+> 2 dead = 3×; MP 10; natural learn standalone lvl 3; announce "used
+> Mourn!"; conditional boost banner "Fallen allies / lend power!" (renders
+> + 40-frame hold ONLY when the multiplier fired); presentation = EvilSlash
+> ($40 proxy) played TWICE back-to-back in the cast-anim slot. BUILT,
+> PyBoy-verified (0/1/2-dead multipliers incl. persistence across 8+ rounds
+> AFTER the engine's KO scan, MP deduct + afford stop, double-slash + clean
+> release, announce→banner→damage ordering measured safe, kill chain +
+> victory, Tremor/Infernos/plain-attack regressions), NOT user-tested; the
+> deterministic queue-poke rig stood in for a real-menu commit (§13.8 rig
+> caveats)**. Owning docs: BATTLE_SKILL_SYSTEM §13.8 (defense-calc dispatch
+> pattern = FarSkillFork returns a per-id pointer-holder: MournDispatchPtr
+> $52:$7FFA -> MournDispatch52 in the $6c56 dead-code window = `call
+> CalcDefenseWrapper / jp CustomDispatch52_shared`; the $dd1b THREE-STATE
+> finding $00 alive/$01 processed-KO/$FF empty — presence must test != $FF;
+> the sticky-terminal $FF slash counter), KEY_LESSONS (6 new incl. the
+> TriggerBattle-mimic battle rig $DA03/04+$DA02+$DA09+$C905+$C8EB.6 and the
+> original-ROM-.sav checksum rejection), wram.asm (wMournBoosted $DEBA,
+> wMournSlashes $DEBB). As built: banks $72 (SkillMourn + QuakeAnimHold72
+> .mourn replay), $52 (2nd trampoline, 6 dead bytes + 2 tail bytes), $53
+> (MournGate_delay + ladder jp), $4c (2 msgs + LoadB4c_MournBoost, pool
+> nops 1:1), $54/$07/$41/$56/$58/$5f/$06/$14 one-line recipe rows; bank $07
+> was FULL — 3 bytes reclaimed in MPPtrFromId via `ld h,HIGH(table)` with a
+> link-time page ASSERT; bank $41 name funded from the dead $00 fill before
+> Scorch. v1 notes: real-menu battle commit not rig-exercised; one -13
+> among eleven 2× events (possible apply-time variance — watch); an
+> abnormally aborted action leaves the $FF terminal -> next cast skips its
+> animation once, self-heals. v2 (2026-08-02b, after user
+> confirmation of v1 mechanics): banner moved BEFORE the attack animation —
+> MournCountDead shared counter evaluated in the anim fork on slot entry;
+> banner render + $FE hold (45 f + ~43 f typing, driver deferred — bounded,
+> measured safe) precede the two slash plays; handler keeps only the
+> multiplier; MournGate_delay now a natural pass-through; bank $72 only.
+> PyBoy: banner pixels identical to the v1-confirmed string, persists
+> through the slashes, announce replaces it; 2x/0-dead/Tremor/MP all
+> re-verified. Awaiting user test of the ordering.)
+>
 > Last verified: 2026-08-01 (Session 74 — **custom skill chain $E5-$E8
 > "Earthquake" (Tremor/Quake/QuakeMore/QuakeMost) BUILT + PyBoy-verified
 > end-to-end; NOT yet user-tested** — verifier PASS 5/5, clean `1ca6579…`
@@ -49,57 +132,10 @@
 > all-enemies-flying = no-op cast, first-match caster derivation, blank
 > $E5-$E8 descriptions (bank $056), earth-resistance slot deferred.)
 >
-> Last verified: 2026-07-31 (Session 73 — **custom skill $E4 "Anchor"
-> SHIPPED, USER-CONFIRMED (incl. S73b: descriptions + battle rejection)** —
-> verifier PASS 5/5, clean `1ca6579…`, compiler 38/38, patched pin
-> `224b1176…`, full round trip verified in PyBoy AND by the user in SameBoy.)
->
->
->
-> Session 73 (2026-07-31 — **custom skill $E4 "Anchor" (user-directed):
-> anchor a standard gate floor, warp to GreatTree, warp back later for 3/4
-> of the caster's current MP, charged upon ARRIVAL; anchor persists through
-> save (save-image bytes), single-use, forced-standard regenerated floor.
-> SHIPPED, USER-CONFIRMED (v1+S73b). Final patched pin `224b1176…`
-> (superseded interim: `8fa605d7…`)** (clean
-> `1ca6579…` untouched). Owning docs: BATTLE_SKILL_SYSTEM §14 (the
-> FIELD-cast system, RE'd this session), GATE_GENERATION (town→floor-N
-> re-entry recipe), EVENT_FLAGS ($01E0-$01EF retired), known_RAM_map
-> (record-layout correction +$50 curHP/+$52 maxHP/+$54 curMP/+$56 maxMP;
-> menu-shell vars), KEY_LESSONS (script-arm ctr=$FFFF; menu close = shell
-> state 4), PROJECT_COMPILER (template re-pin). As built: bank $07
-> usability whitelist rewritten IN PLACE byte-exact (`jr z`→`ret z`
-> compression buys `cp $E4/ret z`; the bank had 2 bytes slack) +
-> Anchor07Post (post-entry-4 fork: $E4 → menu-shell state 4 = the full
-> B-exit teardown; funded by 21 bytes of the $7F58 free run); bank $14
-> entry-4 default tail → `rst $10 $7202`; bank $72 AnchorField14Tail
-> (context classify: inGateworld=1 → confirm-2 / gate-like `wMapID≥$30` →
-> error-4 / town+anchored → confirm-3 / town bare → error-5; arms
-> medal_vault scripts via $D8D3=$71 + ctr=$FFFF; caster slot captured);
-> GateAwareDispatch template gains the script-type branch (≥$6B, ≠$70
-> poison guard; re-pinned); project.json: 4 scripts + 4 auto-id dialogue
-> entries (density fix for the no-quest fixture); bank $73 commit-hook arm
-> protocol (1=store anchor 1-BASED floor; 2=install gate/floor−2 +
-> `curMP := curMP>>2` at the commit = arrival + clear anchor + arm:=3;
-> 3 consumed by GateDecisionFork → force standard maze, also bypasses the
-> gate-1 POC rotation on returns); wAnchorGate/Floor $D9D7-8 (persistent,
-> floor 0 = no-anchor sentinel, hence 1-based storage), wAnchorArm/Caster
-> $DEB2-3; Slim harness skills → $E4,$E1,$09; skill name/record/MP-0 rows.
-> PyBoy-verified END-TO-END via the REAL menu (A → SKIL grid pos 2 via
-> $C8DA → monster → skill → use): cast → menu full-teardown → confirm
-> dialog (YES = A,up,up,A in scripted input) → WarpWing-recipe warp →
-> anchor stored → town cast → confirm → arrival on the exact floor with
-> MP 98→24 → anchor cleared → standard floor. Also verified: both error
-> dialogs, NO paths (clean, no side effects), regressions Heal-in-field
-> (HP 10→27, MP −2), WarpWing item, town NPC talk, vanilla-style gate
-> entry. v1 notes for user test: battle cast of Anchor is a SILENT no-op
-> (record anim9=$02); errors open a dialog after the menu closes; YES/NO
-> default feel to be judged in SameBoy; save/reload persistence is
-> architecture-verified (save-image bytes) but not priest-tested in the
-> emulator. Anchor scripts are hosted on medal_vault (room $71) — a
-> dedicated script-container room is a cleaner v2 home.)
+
 >
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S73** (2026-07-31): custom skill $E4 "Anchor" — field-cast pipeline RE'd (menu shell $c90d 0-4, usability whitelist, bank $14 entries 4/5, menu-armed script protocol ctr=$FFFF); anchor gate floor → warp GreatTree → return for 3/4 current MP charged on arrival; persists through save; S73b descriptions (table $56:$6667) + battle rejection (LoadBtl_4b98/FieldOnlySkillA). SHIPPED, USER-CONFIRMED; pin `224b1176…`. Owning: BATTLE_SKILL_SYSTEM §14 + §14.1, GATE_GENERATION, EVENT_FLAGS, known_RAM_map (+$50/+$52/+$54/+$56 correction), KEY_LESSONS S73, PROJECT_COMPILER (template re-pin).
 - **S71** (2026-07-26): FX1 — active farm 17→37 slots (array 40; sleep pool → SRAM bank 2 "P1"; "F2" reformat + checksum v3; snapshot "R4"; wMonList $D001). SHIPPED, USER-CONFIRMED; v2 exp-scale veto → pin `46ba6991…`. Owning: MONSTER_DATA (FX1 as built), ARCHITECTURE (checksum v3), KEY_LESSONS S71.
 - **S70** (2026-07-25): E2 — data-driven side quests (progression.quests/enemies → generated scripts + bank $14 quest EIDs; vanilla_exit_extensions; walk-on y=7 Entry-6 skip) + the PyBoy measurement regime; 3 pins, a5a5e0d5 current that session; init_dialog protocol; 385-frame exit ceremony fixed. SHIPPED, user-confirmed. Owning: PROJECT_COMPILER §progression, PYBOY_DEBUGGING, SIDEQUEST_MAP, CROSSBANK_ROOMS, MONSTER_DATA, KEY_LESSONS ×9.
 - **S69** (2026-07-19): E3 — 32 KB SRAM via the RAMB PIN (19 ROM0 quadrant writers → $6100; header $03) + bank $73 entry 9 CF3SRAMBankedCopy; S69v2 persistence v3 roster snapshot (bank-1 "R3", reset-rewind semantics restored) — user-confirmed 5/5 smoke. Owning: ARCHITECTURE "SRAM banking as built S69", MONSTER_DATA, bank_073 banner.
@@ -250,7 +286,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). Remaining: custom monster POOLS (Encounters #2, ROADMAP). | CROSSBANK_ROOMS; KEY_LESSONS S11 |
 | Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). B9 11th-family icon shipped; tab wiring open. | BREEDING_SYSTEM; ROADMAP Phase 2B |
-| Custom battle skills (net-new ids) | 🟢 FOUR custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52) — a 3-tier evolve chain on the full de-aliased stack incl. natural-learn (LearnLoopFork), real MP (MPPtrFromId, 10/30/50), announce (AnnounceIdxFork). Crank reverted S52; meter tiers 10/100/400. Learn/upgrade user-confirmed; MP charge + meter values built S52, NOT yet user-tested. | BATTLE_SKILL_SYSTEM §12–§13.6; ROADMAP Arc 2 |
+| Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed), Earthquake chain $E5-$E8 (S74, PyBoy-verified, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; PyBoy-verified, NOT yet user-tested)** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. | BATTLE_SKILL_SYSTEM §12–§13.8, §14; ROADMAP Arc 2 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; NOT yet user-tested)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual) | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66 | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
 

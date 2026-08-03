@@ -1256,3 +1256,44 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
   (the commit has no valid target — vanilla behavior); full "the seismic
   wave" wording needs the engine-driven page path (gate-inserted renders
   cap at 2 lines).
+
+## S75 user-directed item — custom skill $E9 "Mourn" (outside the numbered phases)
+- [x] **BUILT + PyBoy-VERIFIED, awaiting user test** (patched pin `a914e489…`):
+  battle skill "Mourn" — single-foe attack; damage = the vanilla ATK-vs-DEF
+  physical roll × (dead allies + 1): 0 dead (all alive or caster alone) = 1×
+  = a normal attack, 1 dead = 2×, 2 dead = 3×. MP 10. Natural learn:
+  standalone, lvl 3, no prereq. Announce "used Mourn!"; boost banner
+  "Fallen allies / lend power!" (2-line, 40-frame hold) only when the
+  multiplier fired. Presentation: EvilSlash proxy played TWICE back-to-back
+  (anim-slot replay, sticky $FF terminal). Architecture new to this session:
+  the SECOND dispatch trampoline (MournDispatch52 in the $52:$6c56 dead
+  bytes, `call CalcDefenseWrapper` instead of LoadBattle_653e) lets any
+  custom skill pick which vanilla damage machine seeds $db56 — zero cost to
+  existing customs. Measured: multipliers 1×/2×/3× incl. persistence across
+  8+ rounds after the engine's KO scan ($dd1b three-state finding: presence
+  = != $FF, NOT == 0); MP deduct + afford stop; announce→banner→damage
+  ordering; kill chain + victory; Tremor/Infernos/plain-attack regressions.
+  Details: BATTLE_SKILL_SYSTEM §13.8. v1 backlog: real-menu battle commit
+  not rig-exercised; one -13 among eleven 2× events (apply-time variance
+  suspicion — watch in user test); aborted-action $FF leftover skips one
+  animation then self-heals; slash count is fixed at 2 (could scale with
+  dead count as a v2 flourish).
+- [x] **v1 mechanics USER-CONFIRMED 2026-08-02 ("works perfectly").**
+- [x] **v2 (same day): banner BEFORE the attack animation (user feedback) —
+  BUILT + PyBoy-verified, awaiting user test.** Pin `762c0df0…`. Dead-count
+  evaluated in the anim fork (shared MournCountDead); banner + $FE hold
+  precede the slashes; handler keeps only the multiplier; bank $72 only.
+  v3 flourish ideas: N slashes scaling with dead count (arm with explicit
+  $da82 clear — see §13.8 v2 note on the stale done-flag).
+- [x] **S75 v3/v4 — crash investigation + hardening (user-reported wild-gate
+  Dracky freeze).** The rig-stall "bank_006 regression" was RETRACTED (input-
+  alignment artifact — S74 stalls at other cadences too). Shipped: the
+  LearnCode2Guard06 fence (custom ids can never stat-learn via code 2), the
+  SlotProbeGuard50 fence (level probe rejects slot >= 40; kills the phantom
+  slot-40 echo-RAM read/write hazard, plausibly the S73b transient), and
+  tools/validate_custom_data.py wired into verify_integrity check 6 + the
+  editor builder (crash-capable configs are build errors at every level, per
+  user directive). Pin `ce1e7369…`, verifier 6/6, compiler 39/39, Mourn
+  suite re-verified on v4. **The user's actual crash is NOT yet reproduced**
+  — SameBoy trap kit issued; if it fires, that trace lands the origin
+  directly (next session).

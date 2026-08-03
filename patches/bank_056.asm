@@ -3650,8 +3650,7 @@ jr_056_67c9:
     dw SkillDescPtr_E6  ; [QUAKE S74] skill-desc table entry $E6 Quake (was dw $664a = the empty string; byte-neutral)
     dw SkillDescPtr_E7  ; [QUAKE S74] skill-desc table entry $E7 QuakeMore (was dw $664a = the empty string; byte-neutral)
     dw SkillDescPtr_E8  ; [QUAKE S74] skill-desc table entry $E8 QuakeMost (was dw $664a = the empty string; byte-neutral)
-    ld c, d
-    ld h, [hl]
+    dw SkillDescPtr_E9  ; [MOURN S75] skill-desc table entry $E9 Mourn (was dw $664a = the empty string; byte-neutral)
     ld c, d
     ld h, [hl]
     ld c, d
@@ -8770,40 +8769,6 @@ jr_056_7217:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
     ; [S73] 226 trailing pad nops consumed below by the description strings
 ; ============================================================================
 ; [S73] Custom-skill DESCRIPTION strings (SKIL-menu info box). The pointer
@@ -8859,3 +8824,7 @@ SkillDescPtr_E8:  ; QuakeMost $E8: "A huge quake that / hits both sides / but no
     db $4c, $51, $45, $62, $50, $46, $41, $42, $50, $f1, $3f, $52
     db $51, $62, $4b, $4c, $51, $62, $43, $49, $56, $42, $4f, $50
     db $f0
+SkillDescPtr_E9:  ; [MOURN S75] Mourn $E9: "Power grows with / each fallen ally"
+    db $33, $4c, $54, $42, $4f, $62, $44, $4f, $4c, $54, $50, $62
+    db $54, $46, $51, $45, $f1, $42, $3e, $40, $45, $62, $43, $3e
+    db $49, $49, $42, $4b, $62, $3e, $49, $49, $56, $f0

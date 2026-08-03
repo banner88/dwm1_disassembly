@@ -29,6 +29,7 @@ SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
     dw AnchorField14Tail                ; entry 2  ($7202 -> $4005) [ANCHOR S73]
     dw QuakeSweep72                     ; entry 3  ($7203 -> $4007) [QUAKE] sweep-advance fork
     dw QuakeAnimHold72                  ; entry 4  ($7204 -> $4009) [QUAKE v3] $6c4d anim-gate fork: shakes live in the cast-anim slot (d9ee==3) and hold it until the train completes
+    ; entry 5 reserved for future
 
 ; -----------------------------------------------------------------------------
 ; FarSkillFork (entry 0) — replaces the dispatch's `ld hl,$4011/add hl,bc/add hl,bc`
@@ -47,8 +48,13 @@ FarSkillFork:
 .haveid:
     cp $DE
     jr c, .vanilla
+    cp $E9
+    jr z, .mourn                        ; [MOURN S75] defense-calc dispatch path
     ld hl, $7FED                        ; CustomSkillPtr (bank $52)
     ret
+.mourn:
+    ld hl, MournDispatchPtr             ; [MOURN S75] -> MournDispatch52 (CalcDefenseWrapper path)
+    ret                                 ; (cross-bank label; assembles in one pass via game.asm)
 .vanilla:
     ld c, a
     ld b, $00
@@ -75,6 +81,8 @@ CustomBattleExec:
     jr c, .notquake
     cp $E9
     jp c, SkillQuake                    ; [QUAKE] $E5 Tremor / $E6 Quake / $E7 QuakeMore / $E8 QuakeMost
+    cp $E9
+    jp z, SkillMourn                     ; [MOURN] $E9 Mourn: ATK×(dead_allies+1) with defense
 .notquake:
     ; $E4 Anchor is FIELD-ONLY: in battle it falls through to this ret and,
     ; with its record's anim9=$02 (announce/animate gates clear — the MagicBurn
@@ -466,6 +474,8 @@ QuakeSweep72:
 ; -----------------------------------------------------------------------------
 QuakeAnimHold72:
     ld a, [$db8a]
+    cp $E9
+    jp z, .mourn                        ; [MOURN S75] double-slash replay (block at end)
     sub $E5
     cp $04
     jr nc, .vanilla
@@ -529,6 +539,98 @@ QuakeAnimHold72:
     ld e, a
     ret
 
+; --- [MOURN S75v2] banner-then-double-slash for $E9 Mourn (jp'd from head) ---
+; User feedback: the boost banner must come BEFORE the attack animation.
+; The dead-ally condition is therefore evaluated HERE (MournCountDead, shared
+; with the damage handler), the banner renders on slot entry, holds ~45
+; frames, and only then do the two EvilSlash plays run. wMournSlashes is the
+; state machine:  0 = idle (first entry: count dead; >0 -> render banner +
+; wTameDelay=45 + state $FE; else -> state 2)  /  $FE = banner hold (tick
+; wTameDelay; at 0 -> state 2; the slash driver is NOT ticked during the
+; hold — the anim setup just waits in d9ee==3; measured safe, no starve)  /
+; 2..1 = slash plays ($da82 done -> dec; re-arm via $5f06 entry-6 re-init)
+; /  $FF = STICKY TERMINAL (the S74 trap: the sub-machine lingers in
+; d9ee==3 ~2 frames after E=1, and 0-as-done re-armed the train every lap =
+; infinite slashing, 26-frame period, measured). The handler's staleness
+; clear resets $FF for the next cast; an abnormally aborted action leaves
+; $FF -> the next cast skips banner+animation once and self-heals.
+; Banner routing: wMournBoosted=1 is set just before the $FD render so
+; LoadB4c_Fork routes it to the boost string; LoadB4c_MournBoost clears the
+; flag, so the LATER announce $FD (flag 0) still renders "used Mourn!".
+.mourn:
+    ld a, [$d9ed]
+    dec a
+    jr nz, .vanilla
+    ld a, [$d9ee]
+    cp $03
+    jr nz, .vanilla
+    ld a, [wMournSlashes]
+    cp $ff
+    jr z, .mournTerminal                ; sticky done: hold E=1 till state exit
+    cp $fe
+    jr z, .mournBannerHold
+    or a
+    jr nz, .mournTick
+    ; ---- first entry: banner phase decision ----
+    call MournCountDead                 ; B = dead allies (0-2)
+    ld a, b
+    or a
+    jr z, .mournArmSlashes              ; none dead: no banner, straight to slashes
+    ld a, $01
+    ld [wMournBoosted], a               ; route the $FD render to the boost string
+    xor a
+    ld [$c822], a                       ; mode 0
+    ld a, $fd
+    ld [$c823], a
+    ld hl, $4c00                        ; battle-message renderer (forked);
+    rst $10                             ;   LoadB4c_MournBoost clears the flag
+    ld a, $2d                           ; ~45-frame readable hold BEFORE the slashes
+    ld [wTameDelay], a
+    ld a, $fe
+    ld [wMournSlashes], a               ; state: banner hold
+    jr .mournHold
+.mournBannerHold:
+    ld a, [wTameDelay]
+    or a
+    jr z, .mournArmSlashes              ; hold elapsed -> start the slashes
+    dec a
+    ld [wTameDelay], a
+    jr .mournHold
+.mournArmSlashes:
+    ld a, $02                           ; arm 2 slash plays
+    ld [wMournSlashes], a
+.mournTick:
+    ; tick the vanilla animation driver
+    ld a, [$da82]
+    or a
+    jr nz, .mournSlashDone
+    ld hl, $5f05                        ; entry 5: animation + d9ee tick
+    rst $10
+    ld a, [$da82]
+    or a
+    jr z, .mournHold                    ; not done yet
+.mournSlashDone:
+    ld a, [wMournSlashes]
+    dec a
+    ld [wMournSlashes], a
+    or a
+    jr z, .mournFin                     ; last slash done -> terminal
+    ; re-arm: reset done-flag + re-init the animation via entry 6
+    xor a
+    ld [$da82], a
+    ld hl, $5f06                        ; entry 6: visual dispatch (re-setup)
+    rst $10
+    jr .mournHold
+.mournFin:
+    ld a, $ff
+    ld [wMournSlashes], a               ; terminal marker (sticky)
+.mournTerminal:
+    ld e, $01
+    ret
+.mournHold:
+    ld e, $00
+    ret
+
 ; -----------------------------------------------------------------------------
 ; QuakeShakeSeq — the burst sequencer, called once per frame by QuakeAnimHold72
 ; while the train is armed. Bursts of $10 frames of SCY wobble ($c8b1,
@@ -565,6 +667,92 @@ QuakeShakeSeq:
     ld [$c8b8], a
     ld a, $ff
     ld [wQuakePause], a
+    ret
+
+; =============================================================================
+; [MOURN S75] SkillMourn ($E9) — "Mourn" custom skill handler. Far-called from
+; CustomBattleExec AFTER CalcDefenseWrapper (via MournDispatch52 in bank $52)
+; has already written ATK-vs-DEF damage to $db56/57. This handler:
+;   (1) Counts dead allies (MournCountDead — shared with the anim fork).
+;   (2) Multiplies $db56/57 by (dead_count + 1): 0 dead = 1× (normal), 1 = 2×,
+;       2 dead = 3×. The multiplication is a simple add loop.
+; [S75v2] The boost banner is NO LONGER armed here — it renders BEFORE the
+; slashes, from QuakeAnimHold72's .mourn first entry (user feedback). The
+; staleness clears below double as the terminal reset for that fork.
+; ROM0 + RAM only; single-target, so $db88 is the stable caster.
+; =============================================================================
+SkillMourn:
+    ; staleness hardening + the anim fork's terminal reset: wMournSlashes is
+    ; $FF (sticky done) at this point in every normal action; clear it and
+    ; the boost flag so no state leaks into the next cast.
+    xor a
+    ld [wMournBoosted], a
+    ld [wMournSlashes], a
+    call MournCountDead                 ; B = dead allies (0-2)
+    ; multiply $db56/57 by (B + 1)
+    ld a, b
+    or a
+    ret z                               ; 0 dead: damage stays at 1× (CalcDefenseWrapper result)
+    ld a, [$db56]
+    ld e, a
+    ld a, [$db57]
+    ld d, a                             ; DE = base damage
+.mulLoop:
+    ld a, [$db56]
+    add e
+    ld [$db56], a
+    ld a, [$db57]
+    adc d
+    ld [$db57], a
+    dec b
+    jr nz, .mulLoop
+    ret
+
+; -----------------------------------------------------------------------------
+; [MOURN S75v2] MournCountDead — shared dead-ally counter. Out: B = count
+; (0-2). Party slots 0-3, skipping the caster ($db88 — stable: single-target,
+; no sweep redirect). Present = $dd1b[slot] != $FF ($00=alive, $01=
+; processed-KO "skip" — the engine flips 0->1 when its KO scan runs, measured
+; S75; $FF=never existed. A `==0` presence test excluded a processed corpse
+; -> the boost died after the scan). Dead = present && battle HP
+; ($DBA3+slot*2) == 0. Clobbers A/C/D/HL.
+; -----------------------------------------------------------------------------
+MournCountDead:
+    ld a, [$db88]                       ; caster slot
+    ld c, a                             ; C = caster
+    ld b, $00                           ; B = dead count
+    ld d, $00                           ; D = slot counter (0-3)
+.countLoop:
+    ld a, d
+    cp c
+    jr z, .skipSelf                     ; skip the caster
+    ld hl, $dd1b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    inc a                               ; Z iff was $FF
+    jr z, .skipSelf                     ; empty slot (no monster ever)
+    ; HP == 0 ?  ($DBA3 + slot * 2)
+    ld a, d
+    add a                               ; slot * 2
+    ld hl, $dba3                        ; wBattleHP base
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    or [hl]                             ; HP low | HP high
+    jr nz, .skipSelf                    ; alive
+    inc b                               ; dead!
+.skipSelf:
+    inc d
+    ld a, d
+    cp $04                              ; party slots 0-3
+    jr c, .countLoop
     ret
 
 ; =============================================================================

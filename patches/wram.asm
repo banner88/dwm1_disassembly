@@ -521,3 +521,10 @@ wQuakeArmed:: db ;deb9 — 1 while the cast-anim-slot shake train is running
                 ;   (armed by QuakeAnimHold72 on entering d9ee==3; cleared when
                 ;   the train completes and the anim slot is released; also
                 ;   hard-cleared by the handler's phase-0 init).
+; [MOURN S75] Mourn ($E9) battle state. Reset per cast by the handler.
+wMournBoosted:: db ;deba — 1 if dead allies were found (triggers the boost
+                ;   banner "The fallen lend power!" via MournGate_delay in
+                ;   bank $53; cleared after render). 0 = no dead allies.
+wMournSlashes:: db ;debb — double-slash replay counter (starts at 2; decremented
+                ;   by QuakeAnimHold72's .mourn path each time $da82→1;
+                ;   release at 0). Transient to the cast-anim slot.

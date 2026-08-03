@@ -1368,3 +1368,130 @@ Four user reports, four fixes:
    damaging beat), flyer/0-damage beats stay silent (measured), on both
    sides. Tame `$E1-$E3` behavior is untouched.
 
+### 13.8 Custom skill #5 — Mourn (`$E9`): defense-calc dispatch, dead-ally multiplier, double-slash replay  [S75, 2026-08-02; PyBoy-verified, NOT user-tested]
+
+**Mourn (`$E9`)**: single-foe physical-style attack whose damage is the
+vanilla ATK-vs-DEF roll multiplied by **(dead allies + 1)** — 0 dead = 1×
+(all alive or caster alone), 1 dead = 2×, 2 dead = 3×. MP 10 (record `+4` +
+`CustomMPCostTable`). Natural learn: standalone lvl 3, no prereq
+(`CustomLearnReqTable2` row appended past the `$E8` record; the LearnLoopFork
+end bound moved `cp $e9`→`cp $ea`). Announce "used Mourn!"; a boost banner
+"Fallen allies / lend power!" renders (then holds 40 frames) ONLY when the
+multiplier fired. Proxy = `$40` EvilSlash, played **twice** back-to-back.
+
+**The defense-calc dispatch (NEW pattern — second custom trampoline).**
+MagicBurn-class customs run `CustomDispatch52` = `LoadBattle_653e` (the
+MegaMagic MP-based context) + descriptor + far-call. Mourn needed the
+PHYSICAL damage base instead: `FarSkillFork` returns a *different*
+pointer-holder for `$E9` — `MournDispatchPtr` (`$52:$7FFA`, in the tail pad)
+→ **`MournDispatch52`** (`$52:$6C56`, funded from the 6 audited-dead bytes
+after the S74 anim-gate window): `call CalcDefenseWrapper / jp
+CustomDispatch52_shared`. The shared tail (label inside `CustomDispatch52`)
+runs the descriptor + `$72` far-call as usual. So "which vanilla damage
+machine seeds `$db56`" is now a per-skill choice at the fork, at zero cost
+to the existing customs.
+
+**Dead-ally counter (`SkillMourn`, bank `$72`).** Party slots 0-3, skipping
+the caster (`$db88` — stable here: single-target, no sweep redirect):
+present = `$dd1b[slot] != $FF`, dead = present && battle HP
+(`$DBA3+slot*2`) == 0. **`$dd1b` semantics (measured S75): `$00` alive,
+`$01` processed-KO ("skip"), `$FF` never existed.** The v1 `==0` presence
+test excluded a corpse once the engine's KO scan flipped 0→1 (~400 frames
+after death) — casts after that lost the boost; the `!=$FF` test holds for
+the whole battle (verified: 8 consecutive 2× casts post-KO-processing).
+Multiplier = add-loop (dmg += base, dead times). If dead>0: arm
+`wMournBoosted`=1 + `wTameDelay`=$28.
+
+**Double-slash replay (`QuakeAnimHold72 .mourn`, bank `$72` entry 4).**
+In the cast-anim slot (`d9ed==1 && d9ee==3`): arm `wMournSlashes`=2; tick
+the `$5f05` driver; each time `$da82`→1, decrement and **re-arm** the
+animation (`$da82`:=0 + `$5f06` entry-6 re-dispatch — re-reads the proxy id
+and re-inits the frame machine; measured: the second play runs identically).
+**Sticky terminal is mandatory** (the S74 trap, re-measured): the sub-machine
+lingers in d9ee==3 ~2 frames after E=1, and slashes==0 doubling as "not
+armed" re-armed the train every lap = INFINITE slashing (26-frame period).
+`wMournSlashes`=$FF marks done; the handler's staleness clear resets it
+(it runs right after the anim slot in every normal action). An abnormally
+aborted action can leave $FF → the next cast skips its animation once and
+self-heals (v1 note).
+
+**Boost banner (`MournGate_delay`, bank `$53`).** TameGateHook ladder gains
+`jp z, MournGate_delay` for `$E9` (jp — the target is past QuakeGate_delay,
+outside jr range). Gate: flag set → render `$FD` (LoadB4c_Fork_custom checks
+`wMournBoosted` FIRST → `LoadB4c_MournBoost` renders the banner and clears
+the flag) and hold that frame; then tick `wTameDelay` to 0 → resume. No
+dead allies: flag never set, delay never armed → zero-hold pass-through;
+vanilla per-beat damage sounds play (`$E9` is outside the `$E1-$E4`
+suppress range).
+
+**Announce-vs-banner ordering (the design risk, MEASURED SAFE).** Both are
+`$FD` renders, disambiguated by `wMournBoosted` — which would hijack the
+announce if the handler ran first. Measured order: anim slot (2 slashes) →
+announce renders (flag still 0 → "used Mourn!") → handler at effect
+dispatch (sets flag) → message step (gate renders banner + hold) → damage
+text. The flag is set strictly between the two renders.
+
+**Byte funding:** bank `$07` was 1 byte OVER — reclaimed 3 in
+`MPPtrFromId .custom` (`ld a,$00/adc HIGH/ld h,a` → `ld h,HIGH(table)`,
+valid only while the table sits in one page — **link-time ASSERT added**,
+build fails if a future row crosses). Bank `$41`: the Mourn name is funded
+from the dead `$00` fill before Scorch (only `$7FF9+` of the `$7E39` region
+is ever indexed; redirect gates id>=224). Bank `$56` desc + `$4c` messages
+consume their nop pads 1:1; bank `$58` announce row consumes 1 nop
+(DataBtlFX_7959 pin re-verified); bank `$06` learn row consumes 18 `rst $38`
+(db `$06` still at `$7FFF`).
+
+**Measured end-to-end (queue-poke rig, real .sav party of 3 WingSlimes,
+TriggerBattle-mimic pokes `$DA03/04`+`$DA02`+`$DA09`+`$C905`+`$C8EB`.6):**
+0 dead → rolls 6-9, no banner flag ever; 1 dead → 16/16/14/16... (2×,
+persists post-KO-processing), banner rendered + 40f hold, enemy HP -16
+applied; 2 dead → -31 (3×~10); MP 96→86 per cast, casting stops below 10;
+two slash plays then clean release (sl 2→1→$FF→advance); kill chain
+1→2→26→3→6; regressions Tremor (full sweep + ally pass) / Infernos / plain
+attacks clean. **Rig caveats:** real-menu commit NOT exercised (S74
+precedent; the queue was forced at `$dcec[0]`); one -13 among eleven 2×
+events (odd ≠ 2B — possibly apply-time variance in the shared vanilla
+pipeline; watch in user test); level-3 actor vs level-3 learn req passed
+the cast-time validation (>= semantics confirmed at the boundary).
+
+**v2 (user-feedback round, 2026-08-02) — the banner comes BEFORE the
+animation.** v1 rendered the boost banner in the damage-message step (after
+the slashes); the user wanted it first. The dead-ally condition therefore
+moved UP into the anim fork: `MournCountDead` (bank `$72`, shared by fork +
+handler — both run with the bank mapped, plain `call`) is evaluated on slot
+entry; if dead>0 the banner renders immediately (`wMournBoosted`=1 →
+`$FD` → LoadB4c_MournBoost, which clears the flag so the LATER announce
+`$FD` still resolves to "used Mourn!"), then a `wMournSlashes`=$FE hold
+state ticks `wTameDelay`=45 **without calling the `$5f05` driver** (a
+bounded deferral, unlike the S74 permanent starve — measured safe: the
+setup machine just waits in d9ee==3; the render's own text-typing adds
+~43 pipeline-held frames, total ≈88 frames of banner before slash 1), then
+$FE→2 and the slash phase runs unchanged. The handler keeps only the
+multiplier; `MournGate_delay` (bank `$53`) is now a natural pass-through
+(flag 0 + delay 0) and stays in place unchanged. Only bank `$72` changed.
+Measured (v2, PyBoy): banner box pixels during the pre-slash hold are
+IDENTICAL to the v1 visually-confirmed banner; the banner persists on
+screen through both slashes; announce replaces it; 2× events all even
+(16/10/14/12/14), MP -10 ×5, multiple rounds no wedge; 0-dead never enters
+the banner phase; Tremor regression clean. One incidental measurement:
+`$da82` is still 1 from the PREVIOUS action when the slash phase arms —
+the first .mournTick takes the done-path instantly and the "first" slash
+is really the entry-6 re-arm; both plays still show (v1-confirmed
+visually), but a v3 wanting N slashes should arm N+0 with an explicit
+$da82:=0 + entry-6 call at .mournArmSlashes instead of relying on the
+stale done-flag.
+
+**S75 fences (crash-investigation hardening).** (1) `LearnCode2Guard06`
+(bank `$06` `$7F1F`, jp-trampoline from `Jump_006_50b5`): the scanner's
+code-2 exit — vanilla blanket stat-qualification, no species latch — is
+closed for custom ids `$E1+` (divert to the skip-record path, scan
+continues); customs learn ONLY via code 0 (natural species slots) or code 1
+(prereq evolve). (2) `SlotProbeGuard50` (bank `$50`, `CmpBtl_6383` head):
+the level probe rejects slot indices `>= $28` — the exp walker leaves
+`$cac0 == 40` and a stale re-probe otherwise processes the phantom slot,
+whose "record" is echo RAM. Both byte-neutral. Their presence in the built
+ROM is ENFORCED by `tools/validate_custom_data.py` (verify_integrity check
+6 + the editor builder): a universal-qualifier learn row (no prereq +
+all-zero stats, like Tremor's and Mourn's) without the code-2 fence is a
+BUILD ERROR.
+

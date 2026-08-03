@@ -1,5 +1,56 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-07-31 (Session 73 — **custom skill $E4 "Anchor"
+> SHIPPED, USER-CONFIRMED (incl. S73b: descriptions + battle rejection)** —
+> verifier PASS 5/5, clean `1ca6579…`, compiler 38/38, patched pin
+> `224b1176…`, full round trip verified in PyBoy AND by the user in SameBoy.)
+>
+>
+>
+> Session 73 (2026-07-31 — **custom skill $E4 "Anchor" (user-directed):
+> anchor a standard gate floor, warp to GreatTree, warp back later for 3/4
+> of the caster's current MP, charged upon ARRIVAL; anchor persists through
+> save (save-image bytes), single-use, forced-standard regenerated floor.
+> SHIPPED, USER-CONFIRMED (v1+S73b). Final patched pin `224b1176…`
+> (superseded interim: `8fa605d7…`)** (clean
+> `1ca6579…` untouched). Owning docs: BATTLE_SKILL_SYSTEM §14 (the
+> FIELD-cast system, RE'd this session), GATE_GENERATION (town→floor-N
+> re-entry recipe), EVENT_FLAGS ($01E0-$01EF retired), known_RAM_map
+> (record-layout correction +$50 curHP/+$52 maxHP/+$54 curMP/+$56 maxMP;
+> menu-shell vars), KEY_LESSONS (script-arm ctr=$FFFF; menu close = shell
+> state 4), PROJECT_COMPILER (template re-pin). As built: bank $07
+> usability whitelist rewritten IN PLACE byte-exact (`jr z`→`ret z`
+> compression buys `cp $E4/ret z`; the bank had 2 bytes slack) +
+> Anchor07Post (post-entry-4 fork: $E4 → menu-shell state 4 = the full
+> B-exit teardown; funded by 21 bytes of the $7F58 free run); bank $14
+> entry-4 default tail → `rst $10 $7202`; bank $72 AnchorField14Tail
+> (context classify: inGateworld=1 → confirm-2 / gate-like `wMapID≥$30` →
+> error-4 / town+anchored → confirm-3 / town bare → error-5; arms
+> medal_vault scripts via $D8D3=$71 + ctr=$FFFF; caster slot captured);
+> GateAwareDispatch template gains the script-type branch (≥$6B, ≠$70
+> poison guard; re-pinned); project.json: 4 scripts + 4 auto-id dialogue
+> entries (density fix for the no-quest fixture); bank $73 commit-hook arm
+> protocol (1=store anchor 1-BASED floor; 2=install gate/floor−2 +
+> `curMP := curMP>>2` at the commit = arrival + clear anchor + arm:=3;
+> 3 consumed by GateDecisionFork → force standard maze, also bypasses the
+> gate-1 POC rotation on returns); wAnchorGate/Floor $D9D7-8 (persistent,
+> floor 0 = no-anchor sentinel, hence 1-based storage), wAnchorArm/Caster
+> $DEB2-3; Slim harness skills → $E4,$E1,$09; skill name/record/MP-0 rows.
+> PyBoy-verified END-TO-END via the REAL menu (A → SKIL grid pos 2 via
+> $C8DA → monster → skill → use): cast → menu full-teardown → confirm
+> dialog (YES = A,up,up,A in scripted input) → WarpWing-recipe warp →
+> anchor stored → town cast → confirm → arrival on the exact floor with
+> MP 98→24 → anchor cleared → standard floor. Also verified: both error
+> dialogs, NO paths (clean, no side effects), regressions Heal-in-field
+> (HP 10→27, MP −2), WarpWing item, town NPC talk, vanilla-style gate
+> entry. v1 notes for user test: battle cast of Anchor is a SILENT no-op
+> (record anim9=$02); errors open a dialog after the menu closes; YES/NO
+> default feel to be judged in SameBoy; save/reload persistence is
+> architecture-verified (save-image bytes) but not priest-tested in the
+> emulator. Anchor scripts are hosted on medal_vault (room $71) — a
+> dedicated script-container room is a cleaner v2 home.)
+>
+
 > Session 70 (2026-07-25 — **E2: data-driven side quests + the emulator
 > revolution. SHIPPED, user-confirmed.** Owning docs: PROJECT_COMPILER
 > (§progression, §vanilla_exit_extensions, §5 re-pin 358 B),

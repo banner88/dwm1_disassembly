@@ -3309,9 +3309,17 @@ Jump_006_50a6:
 
 
 Jump_006_50b5:
-    pop bc
-    pop hl
-    pop de
+; [MOURN S75 FENCE] Code-2 = the vanilla stat-qualification learn ("monster
+; meets a no-prereq record's level+stat reqs" -> learn it, no species latch).
+; Custom ids ($E1+) must NEVER take this path: it was never taught about
+; them, and an $E9 code-2 learn was measured (S75 crash investigation) to
+; drive the post-battle roster walk one past the 40-slot farm array ->
+; endless message loop / wild-jump crash (the Dracky-battle freeze).
+; Byte-neutral: the 3 pops (3 B) are replaced by jp (3 B) and displaced
+; into the guard. Custom skills learn ONLY via code 0 (natural species
+; slots) or code 1 (prereq evolve) — the S52/S74-proven paths. Vanilla ids
+; ($00-$D9) behave exactly as before.
+    jp LearnCode2Guard06
     ld a, c
     ldh [$d8], a
     ld a, $02
@@ -9715,22 +9723,25 @@ jr_006_7f02:
     ld d, c
     ld l, a
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+; --- [S75 FENCE] LearnCode2Guard06 — jp'd from Jump_006_50b5's head (the
+; code-2 stat-qualification exit). Entered with the scan's 3 pushes intact.
+; Custom ids ($E1+) divert to the skip-record path (jr reaches jr_006_507c,
+; which performs the 3 pops and continues the scan) — a custom skill can
+; NEVER be learned by blanket stat qualification, only via code 0 (natural
+; species slots) or code 1 (prereq evolve). Vanilla ids run the displaced
+; vanilla tail unchanged (A already holds C after the cp — flags only).
+; 16 bytes from the 17-byte $7F1E free run; 1 spare rst kept.
+LearnCode2Guard06:
+    ld a, c
+    cp $e1
+    jp nc, jr_006_507c          ; custom id -> not learnable here; scan on
+    pop bc
+    pop hl
+    pop de
+    ldh [$d8], a
+    ld a, $02
+    ldh [$d9], a
+    ret
 ; =============================================================================
 ; [Stage2] LearnLoopFork + CustomLearnReqTable — natural-learn/skill-evolve for
 ; CUSTOM skill ids. The scanner (bank $06 entry 5, $4f9a; caller = bank $51
@@ -9750,7 +9761,7 @@ LearnLoopFork:                  ; in: C = next skill id; out: Z = end scan,
     jr z, .toTame               ; vanilla range done -> Tame range ($E1-$E3)
     cp $e4
     jr z, .toQuake              ; [QUAKE] Tame range done -> Quake range ($E5-$E8)
-    cp $e9                      ; one past the last custom learnable id
+    cp $ea                      ; one past the last custom learnable id [MOURN S75: was $e9]
     ret                         ; Z at end -> exit loop; NZ -> keep scanning
 .toTame:
     ld c, $e1                   ; first custom learnable id (Tame)
@@ -9790,24 +9801,9 @@ CustomLearnReqTable2:
     db $06, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e6,$ff,$ff,$ff,$ff
     ; --- $E8 QuakeMost: lvl 8; prereq $E7
     db $08, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e7,$ff,$ff,$ff,$ff
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+    ; --- $E9 Mourn [S75]: lvl 3; no stat reqs; no prereq (species skill-slot
+    ;     grant, code-0 natural-learn path — standalone, not part of a chain)
+    db $03, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $ff,$ff,$ff,$ff,$ff
     rst $38
     rst $38
     rst $38

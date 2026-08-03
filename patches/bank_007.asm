@@ -11091,10 +11091,14 @@ MPPtrFromId:
     add a                       ;   POC ids ($DE/$DF) lost their dead rows (4 bytes
     add LOW(CustomMPCostTable)  ;   freed for the $E5-$E8 rows in the full tail).
     ld l, a                     ;   No live skill list contains $DE/$DF anymore
-    ld a, $00                   ;   (de-aliased retirement, S2d), so the underflow
-    adc HIGH(CustomMPCostTable) ;   path is unreachable in practice.
-    ld h, a
-    ret
+    ld h, HIGH(CustomMPCostTable) ; [MOURN S75] 3 bytes reclaimed (was ld a,$00 /
+    ret                         ;   adc HIGH / ld h,a): valid ONLY because the
+                                ;   table cannot cross a page — ASSERT below.
+
+; [MOURN S75] the ld h,HIGH() shortcut above requires the whole table (10 rows
+; x 2 B) to sit inside one 256-byte page (the add can then never carry into H).
+; If a future row pushes it over a page boundary, this assert fails the build.
+ASSERT LOW(CustomMPCostTable) <= 256 - 20
 
 CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $E0)*2 [S74 base]
     dw 0                        ; $E0 MagicBurn (handler charges half current MP)
@@ -11108,6 +11112,7 @@ CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $E0)*2 [S74 base
     dw 10                       ; $E6 Quake       the engine charges from the record;
     dw 16                       ; $E7 QuakeMore   this table feeds the menus)
     dw 24                       ; $E8 QuakeMost (1.5x WhiteAir-class cost)
+    dw 10                       ; $E9 Mourn [S75] (ATK×dead_allies+1; defense-calc'd)
 
 ; =============================================================================
 ; [ANCHOR S73] Field-menu fork for custom skill $E4 "Anchor".

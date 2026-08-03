@@ -13474,7 +13474,7 @@ GetPresentId::
     ret                ; 1   (=21 bytes)
 CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id; default $09 (Infernos)
     db $09, $09, $09, $c2, $c2, $c2, $09, $09   ; $DE-$E5  ($E0 MagicBurn=$09; $E1-$E3 Tame=$c2 HEART; $E5 Tremor=$09 Infernos [QUAKE: proven-complete proxy; $2c HealMore STALLS the $52:$6c4d done-spin on the offense side — PyBoy S74])
-    db $09, $09, $09, $09, $09, $09, $09, $09   ; $E6-$ED  ($E6-$E8 Quake tiers=$09 [QUAKE]; rest reserved)
+    db $09, $09, $09, $40, $09, $09, $09, $09   ; $E6-$ED  ($E6-$E8 Quake=$09; $E9 Mourn=$40 EvilSlash [MOURN S75]; rest reserved)
 ; [QUAKE S74] anim-index-site variant of GetPresentId (12 B, funded from the
 ; pad above): the Layer-1 sprite-animation lookup alone sees a "quiet" id for
 ; the Earthquake tiers, killing the borrowed cast animation at its source.

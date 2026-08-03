@@ -7676,6 +7676,7 @@ TameGateHook:            ; [S2e] heart plays during the delay; near the end, fir
     jr c, .stock         ;   ally message render + hold, no Tame sound refire)
     cp $e9
     jr c, QuakeGate_delay
+    jp z, MournGate_delay ; [MOURN S75] $E9: boost-banner render + hold (jp: out of jr range)
 .stock:
     cp $84
     jr c, TameGate_go
@@ -7782,6 +7783,37 @@ QuakeGate_delay:
     ret
 
 ; ----------------------------------------------------------------------------
+; [MOURN S75v2] MournGate_delay — message-gate path for $E9 (jumped from the
+; TameGateHook ladder). SINCE v2 this is an INERT SAFETY NET: the boost
+; banner renders BEFORE the slashes, from QuakeAnimHold72's .mourn first
+; entry (user feedback), which also drains wTameDelay to 0 during its hold
+; and whose renderer clears wMournBoosted — so by the time this gate runs,
+; both are 0 and it falls straight through to TameGate_go (vanilla-
+; equivalent). It stays wired as defense-in-depth: if the flag ever leaks
+; to the message step (an aborted anim path), the banner still renders
+; sanely here instead of hijacking a later $FD.
+; ----------------------------------------------------------------------------
+MournGate_delay:
+    ld a, [wMournBoosted]
+    or a
+    jr nz, .render
+    ld a, [wTameDelay]
+    or a
+    jp z, TameGate_go                   ; no hold pending -> resume pipeline
+                                        ;   (jp: ~90B back, outside safe jr range)
+    dec a
+    ld [wTameDelay], a
+    ret
+.render:
+    xor a
+    ld [$c822], a
+    ld a, $fd
+    ld [$c823], a
+    ld hl, $4c00                        ; battle-message renderer (forked);
+    rst $10                             ;   LoadB4c_MournBoost clears the flag
+    ret                                 ; hold this frame (render just landed)
+
+; ----------------------------------------------------------------------------
 ; [QUAKE] QuakeFirstTgt53 — byte-neutral 3-for-3 stand-in for the
 ; `call CheckMonsterSlot` inside the all-foes FIRST-target scan
 ; (jr_053_47f0: side base + 3-slot loop, `jr nc` = found). Vanilla check
@@ -7819,41 +7851,6 @@ QuakeFirstTgt53:
     pop bc
     scf                                 ; CF set = skip this slot
     ret
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
     nop
     nop
     nop
