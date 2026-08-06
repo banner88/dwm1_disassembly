@@ -1305,3 +1305,79 @@ the hatchling ("Dran") displayed LAST in the farm list — insertion order +
 order-preserving compaction, same semantics as vanilla, just visible now
 that the farm exceeds 17. v2 (vanilla exp rate) built + PyBoy-verified same
 session; v2's only delta vs the confirmed v1 is the drain payout amount.
+
+---
+
+## Exp curves & growth curves — full structure, MEASURED S76
+
+Both tables live in bank `$13`, which is **byte-identical in the German build**,
+so these offsets are region-independent.
+
+### Exp curves — `$13:$41E6`, 32 curves × 99 levels × 3 bytes LE
+
+Cumulative exp required to REACH each level (entry 0 = level 1 = 0). Total
+9,504 bytes, ending exactly at `$6706` where the growth table begins — which is
+the structural proof of the 32×99×3 shape.
+
+The 32 curves fall into **four tiers by the level-2 requirement**, and that
+first step is what the early game actually feels:
+
+| Tier | Curves | Exp for L2 | L50 range | Users |
+|---|---|---|---|---|
+| Cheap | 0–7 | 2 | ~20k–90k | 42 species |
+| Normal | 8–15 | 5 | ~60k–400k | 102 species |
+| Slow | 16–23 | 10 | ~180k–1.4M | 45 species |
+| **Brutal** | **24–31** | **100** | ~250k–2.2M | 26 species |
+
+The brutal tier is the metal/boss line: GoldSlime, MetalKing, Metaly, Metabble,
+Divinegon, Durran, Mudou, DeathMore, Esterk, Akubar, Mirudraas, Darkdrium,
+DracoLord, Rosevine, Armorpion, RainHawk, WhiteKing and friends.
+
+**Tier rank is NOT total difficulty.** Curve 19 (Poisongon/MadDragon) sits in
+the "slow" tier but needs 7,322,000 to reach 99 — more than most of the brutal
+tier. If you are remapping curves, decide explicitly whether you mean the
+early-game step (tier) or the lifetime total (L99), because they disagree.
+
+S76 remaps the brutal tier onto the slow tier rank-preserving
+(24→16, 25→17, … 31→23) to remove the 100-exp-for-level-2 wall.
+
+### Growth curves — `$13:$6706`, 32 curves × 99 bytes
+
+One byte per level = the stat increment gained on reaching that level. Entry 0
+is always 0 (level 1). 3,168 bytes; anything past `$7366` in that bank is code,
+not curve data.
+
+Curves are ordered by strength and the spread is wide:
+
+| Curve | Sum over 99 levels | Feel |
+|---|---|---|
+| 0 | 49 | barely grows |
+| 1 | 196 | |
+| 15 | 540 | mid |
+| 31 | 1,476 | endgame |
+
+A species' six growth indices (info offsets `$09`-`$0E` = HP, MP, ATK, DEF, AGL,
+INT) each select one of these. Indices are 0–31; anything higher indexes code.
+
+**Growth affects only monsters the player raises** — enemy stats come from the
+enemy-stats row, not from these curves. That makes growth safe to randomize
+aggressively without touching progression pacing, unlike resistances (see
+BATTLE_SKILL_SYSTEM "Resistances are an ENEMY stat too").
+
+### Skill-learn gating uses these, and it bites
+
+A skill is learnable only when level AND all six stat thresholds in
+`SkillLearnReqTable` (`$06:$50E0`, 222×18) are met. So a growth curve that is
+too flat can make a skill permanently unreachable even though it sits in the
+species' natural slots. Worked example (S76, guaranteeing a starter can heal):
+
+- Heal = skill 43: level 1, **MP ≥ 7, INT ≥ 6**, no prereq
+- Starter row (enemy-stats EID 1) has base MP 0, INT 1
+- So the starter species' MP and INT curves must supply ~7 and ~6 within the
+  first few levels, or Heal never appears
+
+The S76 randomizer swaps the starter's MP/INT curve indices with another
+species' (preserving the column multiset) until
+`base + Σ curve[1..4] ≥ threshold + 3`. The +3 margin exists because the
+creation roll can shave the base by up to 20% and the level-up routine applies
+its own per-stat scaling on top of the raw curve.

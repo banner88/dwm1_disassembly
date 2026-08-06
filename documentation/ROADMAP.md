@@ -1297,3 +1297,30 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
   suite re-verified on v4. **The user's actual crash is NOT yet reproduced**
   — SameBoy trap kit issued; if it fires, that trace lands the origin
   directly (next session).
+
+---
+
+## S76 user-directed item — standalone randomizer (outside the numbered phases)
+
+- [x] **Randomizer built, user-tested, SHIPPED.** `randomizer/`, no patches
+      applied, runs on the English and German builds. Bosses (identity, moves,
+      joinability), breeding (family + special), encounters, natural skills,
+      growth, resistances, exp-curve remap, arena rosters, starter-with-Heal.
+      Deterministic per seed; spoiler log in the ROM's own language.
+- [x] German build (`08bca718…`) audited for portability — see DATA_STRUCTURES
+      §"Region portability". Only bank `$14` moves (`+$70`); boss trigger EIDs
+      proven region-independent.
+- [x] Library recipe TEXT decoded (bank `$4D`, entry = species + 5) and made
+      rewritable — see BREEDING_SYSTEM §"Library recipe TEXT".
+- [x] Power calibration captured for editor use — BATTLE_SKILL_SYSTEM §"Power
+      calibration", PROJECT_COMPILER §"Coherence sets the editor must maintain".
+
+Follow-on candidates (not scheduled):
+- [ ] Editor: enforce the three coherence sets (PROJECT_COMPILER §"Coherence
+      sets") — regenerate bank `$4D` strings whenever a family recipe changes,
+      keep boss fight/join rows in sync, and run `audit_threat.py` in the build.
+- [ ] Randomizer: option to keep `SpecialRecipeTable` coherent with the family
+      defaults so the library's displayed default is not shadowed more often
+      than vanilla's 9%.
+- [ ] Third-region support: the tools fail loudly rather than guessing; a new
+      build needs its family-word strings identified for `librarytext.py`.

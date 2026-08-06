@@ -617,3 +617,83 @@ map, `_generator` stamped).
    (it pages into VRAM when any text uses byte `$1A`), or wait for the `$4D` wiring.
 
 Method: KEY_LESSONS "Session 20 — Family icons (B8/B9 name path)".
+
+---
+
+## Library recipe TEXT is pre-authored in bank $4D — DECODED S76
+
+The monster-detail page in the library shows a breeding recipe as two lines
+beside two parent sprites. **They come from different places, and only one of
+them is live data.**
+
+| Element | Source | Live? |
+|---|---|---|
+| Parent SPRITES | bank $12 `LoadItem_65a8` → far-call bank $16 entry 1 (`label16_485c`) → `FamilyRecipeTable[species*2]` → `$da71`/`$da72` | ✅ reads the table |
+| Recipe TEXT (two lines) | bank `$4D` dispatch table, **entry = species + 5** — hand-authored strings | ❌ baked at build time |
+
+So editing `FamilyRecipeTable` moves the sprites and leaves the words frozen.
+This bit S76: a randomized ROM showed Hausslime as "Slime / Insekt" (vanilla)
+with a sprite pair drawn from the randomized `[Teufel] × [Zombie]`.
+
+### Why "hand-authored" is not a guess
+
+Four vanilla strings per region contain **typos the tables do not have**, which
+no generator would produce:
+
+| Region | Species | Baked text | Name table says |
+|---|---|---|---|
+| DE | 32 Chamäleon | `Mistfigur` | Mystfigur |
+| DE | 125 Krabbe | `Drakcrab` | Darkcrab |
+| DE | 210 Mudo | `Baramoth` | Balamoth |
+| EN | 148 Akubar | `Grenadal` | Grendal |
+| EN | 202 Hargon | `Whiteking` | WhiteKing |
+| both | 86 ZapBird/Donnerer | parent 1 spelled `?????` | table says `$F3` = Bird |
+
+The remaining 193 of 197 reconstruct byte-for-byte from the tables, which is
+what proves the format below.
+
+### String format
+
+    <token1 padded to 9 bytes with the region's space byte><token2>$F0
+
+A token is either a FAMILY token or a SPECIES NAME (raw bytes, same encoding as
+the bank `$41` name table). **Three things differ by region and must be read
+from the ROM, never hardcoded:**
+
+| | German | English |
+|---|---|---|
+| Family token | the word — `Slime`, `Materie` | family icon byte + "family" — `$10 "family"` |
+| Pad byte | `$64` | `$62` |
+| token2 padded to 9? | no | yes |
+
+### Rewriting it
+
+`randomizer/librarytext.py` regenerates all 221 strings and repacks them. Two
+free blocks are available: the old recipe-string region
+`[ptr[5], ptr[5+221])` (3,592 B DE / 4,086 B EN) plus the unused bank tail
+(2,770 B DE / 2,278 B EN past `$752E`/`$771A`). A full rebuild uses ~3.7-4.2 KB,
+so it fits with headroom — but the writer sizes the job and refuses rather than
+overrunning.
+
+Two guards worth keeping in any future writer:
+
+1. **Reconstruct-before-write.** Rebuild the vanilla strings from the vanilla
+   tables and diff against the ROM. ≥95% byte-exact means the format is right
+   for this ROM; below that, refuse. This is what makes the tool safe on a
+   region it has never seen.
+2. **No foreign pointers into the repack region.** Abort if any dispatch entry
+   outside `species+5` range points inside the block being rewritten.
+
+### Note for the editor
+
+The library text is a THIRD thing that must stay coherent with the breeding
+tables, alongside the family table and the special table. Any editor that lets a
+user change a family recipe must regenerate the corresponding bank `$4D` string
+or the game will confidently display the old one. See PROJECT_COMPILER.md
+§"Coherence sets the editor must maintain".
+
+Also note the library only ever displays the FAMILY default — it has no access
+to `SpecialRecipeTable`, which is scanned FIRST and wins. In vanilla, 18 of the
+197 displayed defaults (9%) are already overridden by a special recipe at plus 0.
+The library was never a reliable predictor of offspring; it is decoration with a
+usually-true value.

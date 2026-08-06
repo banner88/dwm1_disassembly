@@ -629,3 +629,91 @@ delays accordingly.
   v2 home for menu-armed scripts.
 * **Flag allocator**: `FLAG_SAFE_RANGES` shrank to `$0158-$0167` —
   `$01E0-$01EF` retired to `wAnchorGate/wAnchorFloor` (EVENT_FLAGS).
+
+---
+
+## Coherence sets the editor must maintain (S76)
+
+Data in this ROM is duplicated in places that do not reference each other. If an
+editor lets a user change one member of a set and not the others, the game does
+not crash — it quietly displays or does the wrong thing, which is worse. Each set
+below is a hard requirement for editor v1 content editing.
+
+### Set 1 — breeding recipes ↔ library text
+
+Three artefacts, ONE user-facing concept:
+
+| Artefact | Address | Role |
+|---|---|---|
+| `FamilyRecipeTable` | `$16:$4974`, 222×2 | the family default; **result species = slot index** |
+| `SpecialRecipeTable` | `$16:$4B30`, 825×5 | exceptions; scanned FIRST, first match wins |
+| Library recipe strings | bank `$4D`, dispatch **entry = species + 5** | hand-authored TEXT, reads nothing |
+
+- Changing a family recipe **must** regenerate the bank `$4D` string, or the
+  library shows the old parents next to the new sprites. Use
+  `randomizer/librarytext.py`; format and region differences in
+  BREEDING_SYSTEM.md §"Library recipe TEXT".
+- Because family results are slot-indexed, a general×general pairing can only be
+  RE-POINTED (move the pair to another slot), never re-targeted in place.
+- The library cannot show special recipes at all. Vanilla already has 18 of 197
+  displayed defaults (9%) overridden by a special recipe at plus 0. An editor
+  should either surface that as a warning or accept the display is advisory.
+- **Obtainability is a graph property.** Adding or moving recipes can strand a
+  species. Compute the fixpoint closure (wild recruits + boss joins + starter,
+  closed under both recipe tables, with `$F0`-`$F9` matching any obtainable
+  member of that family) and compare against the vanilla closure — 214 of 221
+  species are reachable in vanilla. `randomizer/logic.py::obtainable_species`.
+
+### Set 2 — boss fight row ↔ boss join row
+
+`BossRedirectTable` (`$14:$4893` EN / `$14:$4903` DE, 34×4) maps fight EID →
+join EID. Change a boss's species and the join row must follow, or the player
+beats one monster and recruits a different one. Joinability lives at enemy-row
+`+3` (`$07` = never joins; anything else takes the RNG path).
+
+### Set 3 — species identity ↔ everything derived from it
+
+Enemy resistances are NOT stored on the enemy row: bank `$51` loads the SPECIES
+info block per combatant. So changing an enemy row's species silently changes its
+resistance profile too. Same for the metal-body flag and level cap.
+
+### Power calibration the editor should enforce
+
+Full data in BATTLE_SKILL_SYSTEM.md §"Power calibration"; the editor-relevant
+invariants:
+
+1. **Species-swap preserves pacing exactly.** Level, six stat words and exp
+   reward define a row's place in the curve. An editor changing only `species`
+   and the skill bytes cannot break progression.
+2. **Enemy skills must be banded on the ENEMY-side power pair** (record `+15`/
+   `+17` at `$54:$41CF`), matching kind, target breadth AND damage — never on
+   learn requirements, which are a "can this species ever learn it" gate and
+   admit flat 10–16 all-foes breath onto level-2 enemies.
+3. **Full heals (skills 45, 47, 163 — power 999) are banned on boss/arena rows**,
+   plus a cap of one row's own max HP on any heal, which catches flat-value heals
+   like Meditate (500).
+4. **Encounter-pool edits must preserve level**, grouped by exact level, not by
+   quantile rank.
+5. **Resistances move difficulty; growth curves do not.** Growth (`$13:$6706`)
+   affects only player-raised monsters. Resistances feed enemies too — scramble
+   within a tier bucket to hold the curve (vanilla per-tier immunity means: 0.00
+   / 1.24 / 1.53 / 2.62 / 8.21 / 4.57 for tiers 0/3/4/5/6/7).
+6. **Exp curve tiers** (`$13:$41E6`): the level-2 requirement sorts the 32 curves
+   into 2 / 5 / 10 / 100 tiers. Tier rank ≠ lifetime total; curve 19 is in the
+   "slow" tier but is the second-hardest curve to 99.
+
+`randomizer/audit_threat.py` is the regression harness for 1–4 and can be run
+against any edited ROM, not just randomized ones:
+
+    python3 randomizer/audit_threat.py <vanilla.gbc> <edited.gbc>
+
+It fails if any of the 487 enemy rows deals more skill damage than vanilla.
+
+### Region portability
+
+The randomizer runs on the English and German builds unmodified. Everything the
+editor needs about that — which tables move, the `+$70` bank-`$14` shift, the
+name-pointer bases, the German charmap deltas — is in DATA_STRUCTURES.md
+§"Region portability". The pattern to copy: locate by content signature with an
+MD5 fast path, and fail loudly on an unrecognised image rather than writing
+garbage.

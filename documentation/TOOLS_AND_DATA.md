@@ -395,6 +395,26 @@ and aborts on drift. `--print` dumps the range-gate table. See BATTLE_SKILL_SYST
 `build_rom.py` · root-level `build.py` ·
 `randomize.py` (writes monsters_full.json when run — never commit after)
 
+## 2.9 randomizer/ — standalone game randomizer (NEW S76)
+
+Its own top-level package, deliberately outside `tools/`: it edits ROM bytes
+directly, applies NO patches, and runs on the English AND German builds. Nothing
+in `disassembly/`, `patches/` or `editor2/` depends on it, and it depends on the
+repo only for `dwm.text` (charmap).
+
+| File | Role |
+|------|------|
+| `randomizer/romdata.py` | ROM layout resolution + typed table access. `RomLayout` locates the two bank-`$14` tables by content signature with an MD5 fast path for the two known builds, and runs structural sanity checks that fail loudly on an unrecognised image. Byte-perfect round-trip verified on both ROMs (load → write_all → identical MD5). Also fixes the header global checksum on save. |
+| `randomizer/logic.py` | The randomization passes: natural skills, growth, resistances, exp-curve remap, enemy identity, enemy movesets, boss joinability, encounter pools, breeding, obtainability closure, starter. Owns `BOSS_EIDS` (S67 census) and `validate_boss_eids()`, which proves the boss set is region-independent by counting `<opcode> $FF <eid16>` script tokens in banks `$0C`-`$0F`. |
+| `randomizer/librarytext.py` | Rebuilds the 221 bank-`$4D` library recipe strings (BREEDING_SYSTEM §"Library recipe TEXT"). Extracts family tokens, pad byte and token2 padding convention FROM the ROM; gates on reconstructing ≥95% of the vanilla strings byte-for-byte before writing; refuses if a foreign dispatch entry points into the repack region or if the rebuild would not fit. |
+| `randomizer/names.py` | Region-aware monster/skill name decoding for the spoiler log. Locates the bank-`$41` pointer tables by scoring candidates (German bases are −2) and auto-detects the German charmap overlay via the `$5B` tell. |
+| `randomizer/randomize_rom.py` | CLI. Deterministic per `--seed`; emits the ROM plus `.spoiler.txt` and `.spoiler.json`. Hard sanity pass refuses to emit a ROM with any out-of-range species/skill/growth/resistance/recipe field. |
+| `randomizer/audit_threat.py` | **Regression harness, useful beyond the randomizer.** Per-row worst-case enemy damage parity against a vanilla ROM across all 487 enemy rows; non-zero exit if any row got harder. Run it against ANY edited ROM. |
+| `randomizer/README.md` | Usage, flags, design invariants. |
+
+Produces no `extracted/` JSON — the spoiler log is a per-seed build artefact and
+is deliberately not committed.
+
 ## 3. Rules
 
 1. Commit the tool with the data, same change. No exceptions.

@@ -29,6 +29,9 @@ import subprocess
 import sys
 
 ORIGINAL_MD5 = "1ca6579359f21d8e27b446f865bf6b83"
+# S76: the German (SGB Enhanced) build. A second ORIGINAL ROM, never a build
+# target -- the byte-perfect check in step 1 still pins ORIGINAL_MD5 only.
+GERMAN_MD5 = "08bca718c62e3c2870a2df107fc0a562"
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIS = os.path.join(REPO, "disassembly")
 PATCHES = os.path.join(REPO, "patches")
@@ -181,6 +184,13 @@ def check_doc_sanity():
                     if any(k in line for k in
                            ("patched", "drift", "historical", "wrong",
                             "superseded", "do not use")):
+                        continue
+                    # S76: the German build is a SECOND original ROM, not a
+                    # patched or historical one, so none of the qualifiers above
+                    # describe it honestly. Allow it by exact identity and only
+                    # where the surrounding text names the region -- this stays
+                    # as tight as the rule it extends.
+                    if h == GERMAN_MD5 and "german" in line:
                         continue
                     bad.append((name, h))
     readme = os.path.join(REPO, "README.md")

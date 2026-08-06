@@ -1127,3 +1127,68 @@ GiveItemWrapper:
 Zero insertion. Use with `$FF2C` (CheckInvFull) before `$FF2A` for full pattern.
 
 (Merged from SESSION2_CUSTOM_CONTENT.md, 2026-06-13.)
+
+---
+
+## Region portability — the German build (SGB Enhanced), AUDITED S76
+
+MD5 `08bca718c62e3c2870a2df107fc0a562` (2 MB, MBC5+RAM+BATT, CGB+SGB, header and
+global checksums valid). 57 of 128 banks are byte-identical to the English build.
+
+**Every mechanical data table is at the SAME flat offset with IDENTICAL contents**
+except the two in bank `$14`, which are shifted by exactly `+$70` (German text
+expanded the code region ahead of them):
+
+| Table | English | German |
+|---|---|---|
+| MonsterInfoTable 221×43 | `$03:$4461` | same |
+| EncounterPoolData 128×26 | `$01:$6AAE` | same |
+| SpecialRecipeTable 825×5 | `$16:$4B30` | same (whole bank identical) |
+| FamilyRecipeTable 222×2 | `$16:$4974` | same |
+| Exp curves / growth curves | `$13:$41E6` / `$13:$6706` | same (whole bank identical) |
+| SkillLearnReqTable 222×18 | `$06:$50E0` | same |
+| SkillMPCost / FnTable / RecordData | `$07:$570C` / `$52:$4011` / `$54:$41CF` | same |
+| Arena sprites, Mimic, RandScaled, Coliseum bands | bank `$04` | same |
+| **EnemyStatsTable 487×25** | `$14:$4C1D` | **`$14:$4C8D` (+$70)** |
+| **BossRedirectTable 34×4** | `$14:$4893` | **`$14:$4903` (+$70)** |
+
+The `+$70` shift was confirmed three ways: a 12,175-byte exact content match at
+the shifted offset, the 136-byte redirect match, and bank `$14`'s `rst $10`
+entry-jump words all offset by `$70` (`$4849`→`$48B9`, `$4869`→`$48D9`,
+`$7BAC`→`$7C1C`, `$7D12`→`$7D82`).
+
+**Boss trigger EIDs are region-independent.** Script tokens in banks `$0C`-`$0F`
+are 2-byte pairs — `<opcode> $FF` followed by the 16-bit LE operand — and every
+boss EID from the S67 census occurs the same number of times in both builds
+(`randomizer/logic.py::validate_boss_eids`).
+
+### What DOES differ
+
+Text and name tables. Notably the pointer-table bases move by −2 in German
+(monster names `$41:$4339`→`$41:$4337`, skill names `$41:$4539`→`$41:$4537`), so
+a tool should locate them by scoring candidates rather than hardcoding.
+
+German re-uses five single-byte charmap slots the English font spends on
+punctuation, and uses **no DTE bytes at all** in names:
+
+| Byte | German | English |
+|---|---|---|
+| `$5B` | ä | (undefined — clean region tell) |
+| `$5C` | ö | apostrophe |
+| `$5D` | ü | `<right>` |
+| `$5E` | ß | comma |
+| `$64` | space | `?` |
+| `$9C` | hyphen | (DTE) |
+
+Derived by decoding known names: `Z<5D>ngler` = Züngler (Tonguella),
+`K<5D><5E>chen` = Küßchen (Lipsy), `D<5B>mon` = Dämon, `L<5C>wenhals` =
+Löwenhals, `MP<9C>Klau` = MP-Klau, `K<5C>nig<64>Leo` = König Leo.
+
+### Rule for region-portable tools
+
+Locate bank-`$14` tables by **content signature**, not by hardcoded offset — the
+25-byte all-zero EID 0 row plus the invariant head of EID 1 anchors it, and
+deliberately excludes EID 1's species byte so the locator still works on an
+already-edited ROM. `randomizer/romdata.py::RomLayout` does this, with an MD5
+fast path for the two known builds and structural sanity checks that fail loudly
+on an unrecognised image.

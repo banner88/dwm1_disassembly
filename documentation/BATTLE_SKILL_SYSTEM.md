@@ -1495,3 +1495,97 @@ ROM is ENFORCED by `tools/validate_custom_data.py` (verify_integrity check
 all-zero stats, like Tremor's and Mourn's) without the code-2 fence is a
 BUILD ERROR.
 
+
+---
+
+## Power calibration — what actually makes a fight hard (S76)
+
+Written after a randomizer shipped a first gate that hit for 15 a turn while
+every stat in the ROM was still "preserved". Everything here is the calibration
+data an editor needs to change content without wrecking progression.
+
+### Learn requirements are NOT a difficulty gate
+
+`SkillLearnReqTable` (`$06:$50E0`) answers "can this monster ever learn this?"
+It does NOT answer "is this appropriate for a level-3 enemy?" Breath skills in
+particular are gated by SPECIES in vanilla, not by stats, so their stat
+thresholds are low and a level-2 enemy passes them trivially.
+
+Enemy rows do not learn anything — their four skill bytes are handed to them
+directly. Filtering those by learn requirement lets a Gate-of-Beginning slime
+carry FireAir. **Filter by damage instead.**
+
+### The enemy-side power pair is the knob
+
+`SkillRecordData` `$54:$41CF`, 222 records × 19 bytes (indexed via `$54:$4013`).
+Region-identical. The fields that matter for calibration:
+
+| Offset | Meaning |
+|---|---|
+| +1 | category, hi-nibble: 1 damage, 2 status, 3 heal/buff, 6 item-ish, 8 item |
+| +2 | target mode: `$11` one foe, `$12` ALL foes, `$21` one ally, `$22` all allies, `$41` self |
+| +6 | damage class: `$00` none, `$04` spell, `$05` breath |
+| +11/+13 | party-side damage min / range |
+| **+15/+17** | **ENEMY-side damage min / range** |
+
+Two power pairs exist because the caster's side selects which is used — enemy
+Blaze (7–12) is weaker than party Blaze (12–15). **For enemy content, +15/+17 is
+the only number that matters.**
+
+Calibration samples:
+
+| Skill | Target | Enemy damage | Note |
+|---|---|---|---|
+| Blaze (0) | one foe | 7–12 | |
+| FireAir (92) | **ALL foes** | **10–16** | flat, ignores ATK/DEF/level |
+| Firebal (3) | ALL foes | 10–18 | |
+| Bang (6) | ALL foes | 15–20 | |
+| HealMore (44) | one ally | 75–90 | fine on a boss |
+| **HealAll (45)** | one ally | **999** | full bar |
+| **HealUsAll (47, 163)** | **all allies** | **999** | full bar, whole team |
+| Meditate (147) | self | 500 | flat — a full heal on anything under 500 HP |
+
+### Rules that hold difficulty steady
+
+1. **Match kind, target breadth AND damage.** Breadth is invisible to a power
+   comparison — HealAll and HealUsAll are both 999, so a naive "same power"
+   swap turns a single-ally heal into a whole-team full heal. S76 shipped that
+   bug before catching it.
+2. **Band asymmetrically.** Allow replacements to be weaker; keep the upward
+   allowance at 0. A symmetric ±35% band let six bosses gain damage (one 130 →
+   160) purely by luck of the draw.
+3. **Never give a boss or arena entrant a full heal.** Skills **45, 47, 163**
+   are banned outright on every boss / arena / boss-join row (169 rows). Also
+   cap any heal at the row's own max HP, which catches flat-value heals like
+   Meditate on low-HP rows without needing a blacklist entry per skill.
+4. **Swap species, keep stats.** An enemy row's level, six stat words and exp
+   reward define its place in the curve. Changing only `species` (+0) and the
+   four skill bytes gives you a completely different fight at identical pacing.
+5. **Group encounter pools by EXACT level, not by quantile.** S76 first bucketed
+   543 pool slots into 10 quantile bands; that is fine at the top of the curve
+   and catastrophic at the bottom, where it moved level-4/5 rows (ATK 26–35)
+   into the Gate of Beginning (vanilla: level 1, ATK 8–19). Low-level difficulty
+   tracks absolute stat deltas, not rank.
+
+`randomizer/audit_threat.py` enforces rules 1–4 as a per-row regression: for
+every one of the 487 enemy rows it compares worst-case enemy-side damage against
+vanilla and fails if any row got harder. Pool-level maxima are reported
+separately as informational, since EIDs permuting between same-level pools moves
+a pool's maximum without changing any row's threat.
+
+### Resistances are an ENEMY stat too
+
+Enemy resistances are NOT in the 25-byte enemy-stats row. The battle initialiser
+(bank `$51`, `ld hl,$0301` / `rst $10` per combatant) loads the **species** info
+block, so monster-info offsets `$0F`-`$29` drive both your monsters and every
+enemy in the game.
+
+This makes resistance edits a difficulty knob, and a global column shuffle
+flattens the curve badly — vanilla has 66 zero-immunity fodder species and four
+21-immunity bosses; shuffling columns independently gives everything ~3. Measured
+vanilla means by tier byte `$2A`: tier 0 = 0.00, tier 3 = 1.24, tier 4 = 1.53,
+tier 5 = 2.62, tier 6 = 8.21, tier 7 = 4.57.
+
+To scramble resistances without moving difficulty: permute each species' own 27
+values across the damage types, and swap whole vectors only WITHIN a tier bucket.
+That preserves resistance mass per tier exactly while changing every profile.

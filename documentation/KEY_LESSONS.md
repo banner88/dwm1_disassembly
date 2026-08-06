@@ -2764,3 +2764,61 @@ other banks' coincidental data/comments.
   Clam literal stream decodes to exactly 36 tiles, same as the original;
   "literal vs compressed" is not a defect. Redirect validity = decoded
   length equality, now enforced by the validator.
+
+## S76 — randomizer, region portability, and two shipped difficulty bugs
+
+- **A "learn gate" is not a "damage gate".** `SkillLearnReqTable` answers "can
+  this species ever learn this", not "is this fair at level 3". Breath skills are
+  species-gated in vanilla, so their stat thresholds are low; filtering enemy
+  movesets by learn requirement put FireAir (flat 10–16 to ALL foes, ignoring
+  ATK/DEF/level) on Gate-of-Beginning enemies. The user hit it in ten minutes.
+  Band on the enemy-side power pair (`$54:$41CF` +15/+17) instead.
+- **Sorting candidates by difficulty and taking the top is not "randomizing".**
+  The same pass then handed every enemy the nastiest legal option. Sample from a
+  band; do not rank and pick the max.
+- **Quantile banding is wrong at the bottom of a curve.** Bucketing 543
+  encounter slots into 10 quantile bands moved level-4/5 rows into a level-1
+  gate. Low-level difficulty tracks ABSOLUTE stat deltas; group by exact level.
+- **Asymmetric bands beat symmetric ones for "keep it the same".** ±35% let six
+  bosses gain damage by luck of the draw. −35%/+0% left 1,135 moves changed and
+  ZERO rows harder than vanilla. "No worse than before" is a cheap, checkable
+  invariant; "roughly the same" is not.
+- **Power comparison cannot see target breadth.** HealAll (one ally) and
+  HealUsAll (all allies) are both power 999, so a same-power swap turned a
+  single-ally full heal into a whole-team one — strictly worse than the vanilla
+  case the user complained about. Match breadth explicitly for EVERY skill kind,
+  not just damaging ones.
+- **Write the regression harness for the bug you shipped.**
+  `randomizer/audit_threat.py` does per-row damage parity across all 487 enemy
+  rows. Per-POOL comparison was the wrong granularity and produced 66 false
+  alarms; the row is the unit the design actually guarantees.
+- **Two sources for one fact means one of them is stale.** The library shows
+  breeding parents as sprites (live, from `FamilyRecipeTable`) and as text
+  (hand-authored strings in bank `$4D`, entry = species + 5). Randomizing the
+  table moved the sprites only. I asserted the opposite conclusion first — that
+  text and icons shared a source — from reading the icon path alone; the user's
+  four concrete examples proved it backwards. **Read BOTH paths before claiming
+  they agree.**
+- **Vanilla typos are evidence.** Four bank-`$4D` strings per region disagree
+  with the name table (`Mistfigur`/Mystfigur, `Drakcrab`/Darkcrab,
+  `Whiteking`/WhiteKing). No generator produces typos — that is what proved the
+  strings were hand-authored rather than derived, after a whole-ROM search for a
+  second recipe table (every stride, several encodings) found nothing.
+- **Reconstruct-before-write is the portable-format gate.** Before rewriting bank
+  `$4D`, rebuild the VANILLA strings from the VANILLA tables and diff: 193/197
+  byte-exact proves the format for that specific ROM. A tool that passes this
+  check can safely write a region it has never seen; one that cannot should
+  refuse.
+- **A "region port" can be nearly free.** Every mechanical table in the German
+  build is at the same offset with identical bytes except two in bank `$14`,
+  shifted `+$70`. Locating those by content signature — anchored on EID 0 and
+  deliberately NOT on bytes the tool itself rewrites — made one codebase serve
+  both builds. Only text moved.
+- **An empty `.sav` looks exactly like a real one.** The first save supplied was
+  8,192 bytes of zeros with a valid-flag of 0 and the checksum-of-nothing
+  (`$4638`) at `$A000` — worth 2 lines of validation before building a session
+  around it. The real save later turned a multi-hour static hunt into a
+  five-minute on-screen reproduction.
+- **Emulator UI navigation is worth brute-forcing.** Blind button-mashing never
+  opened the library detail page; enumerating short input sequences and stopping
+  on a hook fire (bank `$16` `$485C`) found the path (`up`,`a`) in seconds.

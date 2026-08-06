@@ -3185,3 +3185,8 @@ two RE discovery sessions (M1, S3) before their authoring items depend on them.
 >
 >
 
+---
+
+## S74 (aged out of PROJECT_STATE in S76, verbatim)
+
+- **S74** (2026-08-01, v2 2026-08-02): Earthquake chain $E5-$E8 — sweep fork + victory gate (allies hit even on a battle-winning cast), tier-scaled shake bursts (step-2 tick, entry 4), wind anim removed at the anim-index source (GetAnimPresentId → quiet id $12/idx $0D), 2-line announce, SKIL descriptions, flying export. ROM0 back to vanilla. Owner: BATTLE_SKILL_SYSTEM 13.7 (+13.7.9). v3 (2026-08-02b): shakes moved into the cast-anim slot (announce -> shakes -> blink/damage, the v2 simultaneity fixed), 3-line ally banner, fly-dodge beats ("But X flew above it!", both sides, solo-caster silent). v4 (2026-08-02c): banner "Allies are caught/in a seismic wave!" fits the 2-line box; fly line is party-side only (enemies keep "Has no effect"), keyed on $db89; the party-hit refire is gone and quake beats use vanilla per-beat damage sounds (damaged beats ding, flyers stay silent). PyBoy-verified, awaiting user test. Patched pin `d1f5eb49…`.
