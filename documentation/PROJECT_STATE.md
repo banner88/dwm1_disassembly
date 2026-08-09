@@ -10,6 +10,40 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-08-06 (Session 77 — **randomizer part 2**: breeding tree
+> regeneration, stratification, and a rebuild of skill assignment onto vanilla
+> placement.) — verifier PASS 6/6, clean `1ca6579…` untouched. S75v4 patched pin
+> `ce1e7369…` unchanged.
+>
+> S77's central finding: **the skill record's power field is 0 on 43 of the 222
+> skills**, because their handler computes damage internally (Sacrifice,
+> MegaMagic, BeDragon, GigaSlash, Beat, Kamikaze, SamsiCall). Every rule that
+> banded or capped on power was blind to exactly the dangerous ones, which
+> produced six separate "how is this in gate 1" bugs, each patched individually
+> before the pattern was seen. The fix needed no formula tracing: **vanilla's own
+> placement** (min level, median level, row count per skill) is a complete danger
+> rating for all 222. See BATTLE_SKILL_SYSTEM "The record power field is BLIND".
+>
+> Second finding, equally load-bearing: **every validation this project had was
+> an aggregate** — "0 rows harder than vanilla", correlations, depth profiles,
+> multiset equality — and all of them passed on a build with a species at 23x
+> vanilla MP growth and a skill on 44 rows instead of 1. `profile_check.py` adds
+> per-ENTITY envelope checks and found five real defects immediately. This is the
+> validation layer the editor needs too (PROJECT_COMPILER "Validation the editor
+> must run").
+>
+> Also decoded/measured this session: breeding depth is a function of matcher
+> SPECIFICITY (family x family can never exceed depth 1); boss joins are tree
+> roots and collapse depth if identity runs after generation; vanilla keeps 0 of
+> 15 early-encounter species free of specific x specific recipes; vanilla's
+> never-join rate climbs 0%/20%/62%/70%/88% by boss level band, which is what
+> protects the 82% breed-only endgame showcase.
+>
+> NOT yet resolved and listed in ROADMAP: starter roll is unconstrained and is
+> likely the biggest driver of early-game difficulty variance; 27 growth pairs
+> and 2 skills still fail `profile_check`; a combat simulator is blocked on
+> finishing the damage formula.
+>
 > Last verified: 2026-08-06 (Session 76 — **standalone randomizer, and the
 > German build brought in scope**. USER-TESTED and signed off. No patches are
 > applied by any of it: `randomizer/` rewrites data tables only, so saves stay
@@ -331,7 +365,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. Open boxes: InitBGM channel-count ext (4/5ch sources), gate/event music, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
-| Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED S76** — `randomizer/`, data tables only, zero patches, saves stay valid. Bosses (identity/moves/joinability, first 3 gate bosses pinned always-join), breeding (family derangement + special results, obtainability closure enforced: 214/214 vanilla-reachable species still reachable), encounters (exact-level permutation), natural skills, growth, resistances, exp-curve remap off the 100-exp tier, arena rosters, starter guaranteed able to learn Heal. Deterministic per seed; spoiler log in the ROM's own language; bank `$4D` library strings regenerated so text matches sprites. Regression: `randomizer/audit_threat.py` = 0 of 487 enemy rows harder than vanilla, 0 bosses harder, 0 full heals on the 169 boss/arena rows, both builds. | randomizer/README.md; DATA_STRUCTURES §Region portability; BATTLE_SKILL_SYSTEM §Power calibration; BREEDING_SYSTEM §Library recipe TEXT; PROJECT_COMPILER §Coherence sets |
+| Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
 | Editor app (Phase 3) | 🟢 **Walking skeleton BUILT S72, NOT yet user-tested** (`editor2/app/`, PySide6, cross-platform — primary macOS; open/rooms/Build/Run; GUI build machine-verified byte-identical to the `46ba6991…` pin via `editor2/tests/test_app.py --rom`). Next boxes: NPC sprite-id catalog, embedded-PyBoy preview, room canvas (ROADMAP Phase 3). Backend keystone (S42) + compiler (S53+) done |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)

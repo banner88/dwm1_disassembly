@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from randomizer import librarytext, logic, names
+from randomizer import breeding, librarytext, logic, names, plusgrowth
 from randomizer.romdata import FAMILY_NAMES, Rom
 
 
@@ -47,6 +47,35 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--enemy-skill-down", type=float, default=0.35,
                    help="how much WEAKER a replacement enemy move may be than the "
                         "vanilla move it replaces")
+    p.add_argument("--join-jitter", type=float, default=0.28,
+                   help="looseness of the level bias on boss joinability "
+                        "(vanilla correlates +0.62)")
+    p.add_argument("--strat-jitter-boss", type=float, default=0.06)
+    p.add_argument("--strat-jitter-arena", type=float, default=0.10)
+    p.add_argument("--strat-jitter-wild", type=float, default=0.25,
+                   help="looseness of level-vs-quality stratification; wild "
+                        "needs a lot (vanilla is only +0.45)")
+    p.add_argument("--easy-level", type=int, default=6,
+                   help="species first encountered at or below this level are "
+                        "kept as base monsters: no specific x specific recipe")
+    p.add_argument("--growth-bands", type=int, default=10,
+                   help="bands of the vanilla growth ordering to shuffle within; "
+                        "lower = closer to vanilla, higher = more chaos")
+    p.add_argument("--growth-depth-spread", type=float, default=0.30,
+                   help="noise in the depth-vs-growth bias (0 = rigid ladder)")
+    p.add_argument("--growth-bias", action="store_true",
+                   help="leave growth as a pure global shuffle, uncorrelated "
+                        "with breeding depth")
+    p.add_argument("--early-skill-floor", type=int, default=20,
+                   help="power budget for a species' natural skills at "
+                        "first-encounter level 0")
+    p.add_argument("--early-skill-slope", type=float, default=6.0,
+                   help="extra natural-skill power budget per level of first "
+                        "encounter")
+    p.add_argument("--no-caster-plus", action="store_true",
+                   help="do not extend the plus-value growth bonus to MP and INT "
+                        "(this is the ONLY code change the randomizer makes; "
+                        "without it, deep breeding rewards physical builds only)")
     p.add_argument("--no-library-text", action="store_true",
                    help="leave the bank $4D library recipe strings at their "
                         "vanilla values (they will then disagree with the "
@@ -56,8 +85,9 @@ def build_parser() -> argparse.ArgumentParser:
                         "fraction of that row's own max HP (full heals are "
                         "banned outright regardless)")
     p.add_argument("--enemy-skill-up", type=float, default=0.0,
-                   help="how much STRONGER it may be; kept tight so no row gains "
-                        "threat it did not already have")
+                   help="how much STRONGER a LATE enemy move may be; scales from "
+                        "0 at level 12 to this value at level 45, so early gates "
+                        "can never exceed vanilla")
     p.add_argument("--resistances", choices=["tier", "vector", "global"], default="tier",
                    help="tier (default): permute each species' 27 values AND swap "
                         "whole vectors within a tier; vector: permute in place only; "
@@ -116,7 +146,7 @@ def main(argv=None) -> int:
         logic.randomize_natural_skills(rom, rng, args.skills, args.skill_bands,
                                        args.skill_jitter, rep)
     if not args.no_growth:
-        logic.randomize_growth(rom, rng, rep)
+        logic.randomize_growth(rom, rng, rep, args.growth_bands)
     if not args.no_resistances:
         logic.randomize_resistances(rom, rng, args.resistances, rep)
     if not args.no_exp_remap:
@@ -125,22 +155,77 @@ def main(argv=None) -> int:
     # un-raisable rival species off any row the player can recruit.
     if not args.no_boss_joins:
         logic.randomize_boss_joinability(rom, rng,
-                                         not args.no_force_join_first3, rep)
+                                         not args.no_force_join_first3,
+                                         args.join_jitter, rep)
+
+    # Breeding runs FIRST so the identity pass can stratify rows by real
+    # breeding depth. Roots are the vanilla wild species set, which the wild
+    # assignment preserves by construction, so this is not circular.
+    depth = {}
+    if not args.no_breeding:
+        roots = {vanilla.enemies[e].species for e in groups["wild"]
+                 if vanilla.enemies[e].join != 7} | {vanilla.enemies[1].species}
+        easy = {vanilla.enemies[p.eids[i]].species
+                for p in vanilla.pools for i in p.live_slots()
+                if vanilla.enemies[p.eids[i]].level <= args.easy_level}
+        stats = breeding.regenerate(rom, rng, roots, rep, easy=easy)
+        depth = {s: (d if d < 99 else 9) for s, d in stats["depth"].items()}
+
+    identity_done = False
     if not args.no_enemy_identity:
-        logic.randomize_enemy_species(rom, rng, groups, args.allow_metal_bosses, rep)
+        identity_done = True
+        logic.randomize_enemy_species(rom, rng, groups, args.allow_metal_bosses,
+                                      depth,
+                                      {"boss": args.strat_jitter_boss,
+                                       "arena": args.strat_jitter_arena,
+                                       "wild": args.strat_jitter_wild}, rep)
+    # Second breeding pass against the FINAL roots. Identity assignment adds
+    # boss-JOIN species as new tree roots (measured: 6 of them), and each one
+    # shortcuts every chain that ran through it -- the first pass built to depth
+    # 5 and those roots collapsed it back to 4. Re-running with the real root
+    # set is what stops the tree being quietly hobbled.
+    if identity_done and not args.no_breeding:
+        final_roots = {rom.enemies[e].species for e in groups["wild"]
+                       if rom.enemies[e].join != 7} | {rom.enemies[1].species}
+        for _f, _j in rom.boss_redirect:
+            if rom.enemies[_f].join != 7:
+                final_roots.add(rom.enemies[_j].species)
+        easy2 = {rom.enemies[p.eids[i]].species
+                 for p in rom.pools for i in p.live_slots()
+                 if rom.enemies[p.eids[i]].level <= args.easy_level}
+        stats2 = breeding.regenerate(rom, rng, final_roots, rep, easy=easy2)
+        depth = {s: (d if d < 99 else 9) for s, d in stats2["depth"].items()}
+
     if not args.no_enemy_moves:
         logic.assert_full_heals(rom)
         logic.randomize_enemy_skills(rom, rng, args.enemy_skills, universe,
                                      args.enemy_skill_down, args.enemy_skill_up,
                                      logic.protected_rows(rom, groups),
-                                     args.heal_cap, rep)
+                                     args.heal_cap,
+                                     logic.vanilla_placement(vanilla), rep)
     if not args.no_encounters:
         logic.shuffle_encounter_pools(rom, rng, args.encounter_spread, rep)
-    if not args.no_breeding:
-        logic.randomize_breeding(rom, rng, rep)
+    if depth and args.growth_bias:
+        logic.bias_growth_by_depth(rom, rng, depth, args.growth_depth_spread, rep)
+    if not args.no_encounters:
+        logic.gate_early_skills(rom, rng, args.early_skill_slope,
+                                args.early_skill_floor, rep)
     if not args.no_starter_pass:
         logic.setup_starter(rom, rng, args.starter, args.starter_min_cap, rep)
     logic.enforce_obtainability(rom, rng, groups, vanilla_obtainable, rep)
+
+    if not args.no_caster_plus:
+        stats = plusgrowth.apply(rom)
+        if not plusgrowth.verify(rom):
+            raise SystemExit("caster-plus patch failed self-verification")
+        rep.note(
+            f"Caster plus bonus (THE ONLY CODE CHANGE): the vanilla plus-value "
+            f"routine FuncExp_4163 is now also called after the MP and INT curve "
+            f"lookups, not just HP and ATK. Byte-neutral in the growth routine "
+            f"(ld [nn],a -> call nn); {stats['bytes_written']} bytes of trampoline "
+            f"at ${stats['mp_trampoline']:04X}/${stats['int_trampoline']:04X} in "
+            f"bank $13's free tail. Breeding depth now grows a caster's MP pool "
+            f"and INT, using vanilla's own thresholds and divisors.")
 
     if not args.no_library_text:
         base = names._locate(raw, names.MONSTER_HINT, names.MONSTER_COUNT)

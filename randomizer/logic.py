@@ -22,6 +22,8 @@ from collections import Counter, defaultdict
 from .romdata import FAMILY_NAMES, Rom
 
 SKILL_NONE = 0xFF
+SAFE_LEVEL = 25      # at or below this, enemy moves may never exceed vanilla
+LATE_LEVEL = 45      # at or above this, the full late-game allowance applies
 HEAL_SKILL = 43              # Heal: learn level 1, needs MP>=7 INT>=6, no prereq
 FAMILY_CODE_LO = 0xF0
 SPECIES_COUNT = 221
@@ -63,6 +65,31 @@ FORCE_JOIN_BOSSES = (11, 31, 32)
 # banned from every boss / arena / boss-join row.  HealMore (75-90) and the rest
 # of the heal ladder are fine and stay in the pool.
 FULL_HEAL_SKILLS = (45, 47, 163)   # HealAll / Gigaheil, HealUsAll / Allheiler x2
+
+# Paralyze (105 / Lähmer) and PalsyAir (107 / Allähmer), damage_class $03.
+# A paralysed party member never acts again for the fight, so on a boss or an
+# arena entrant these end the run outright regardless of stats. Banned there,
+# exactly like the full heals.
+PARALYSIS_SKILLS = (105, 107)
+
+# Skills that remove the player's AGENCY rather than their HP. The power band
+# cannot see these: every status skill has record power 0, so Sap and Sleep look
+# identical to it and a mild debuff can be swapped for a hard disable. User-hit
+# S77: "Lahm" (Slow, id 32) on arena round 2 -- "that fucks you completely".
+# Banned outright on boss/arena/join rows, and level-gated everywhere else.
+HARD_DISABLE_SKILLS = (
+    21,   # Sleep / Schlaf
+    22,   # SleepAll / All-Koma
+    23,   # StopSpell / Schweig
+    25,   # PanicAll / Konfus
+    32,   # Slow / Lahm
+    33,   # SlowAll / All-Lahm
+    106,  # SleepAir / Allschlaf
+    107,  # PalsyAir / Allähmer
+    110,  # PaniDance / Konfutanz
+    111,  # Curse / Fluch
+)
+DISABLE_MIN_LEVEL = 15   # earliest a wild row may carry one
 
 
 class Report:
@@ -226,17 +253,34 @@ def randomize_natural_skills(rom: Rom, rng: random.Random, mode: str,
 # Pass 2 -- stat growth (item 6)
 # ---------------------------------------------------------------------------
 
-def randomize_growth(rom: Rom, rng: random.Random, rep: Report) -> None:
-    """Global shuffle: each of the six growth-curve columns is permuted across
-    all 221 species independently."""
+def randomize_growth(rom: Rom, rng: random.Random, rep: Report,
+                     bands: int = 6) -> None:
+    """Shuffle growth WITHIN vanilla's own tier for each stat.
+
+    A free global shuffle let any species draw any curve, which produced
+    Hausslime at 11.3 MP per level against vanilla's 3.0 and a worst case of 23x
+    vanilla -- 82 of 1326 species-stat pairs sat at >=2.5x. Dealing inside bands
+    of the vanilla ordering keeps every monster recognisably itself while still
+    changing which curve it gets.
+    """
     rows = [m.growth for m in rom.monsters]
     before = [Counter(r[c] for r in rows) for c in range(6)]
+    n = len(rows)
     for c in range(6):
-        column_shuffle(rng, rows, c)
+        order = sorted(range(n), key=lambda i: (rows[i][c], rng.random()))
+        values = sorted(rows[i][c] for i in range(n))
+        edges = [round(n * b / bands) for b in range(bands + 1)]
+        for b in range(bands):
+            idxs = order[edges[b]:edges[b + 1]]
+            vals = values[edges[b]:edges[b + 1]]
+            rng.shuffle(vals)
+            for i, v in zip(idxs, vals):
+                rows[i][c] = v
     after = [Counter(r[c] for r in rows) for c in range(6)]
     assert before == after
-    rep.note("Stat growth: all six growth-curve columns globally shuffled "
-             "across species (per-column curve distribution preserved).")
+    rep.note(f"Stat growth: six columns shuffled within {bands} bands of the "
+             f"vanilla ordering, so no species strays far from its own growth "
+             f"tier. Per-column curve distribution preserved exactly.")
 
 
 # ---------------------------------------------------------------------------
@@ -352,8 +396,66 @@ def classify_eids(rom: Rom) -> dict:
             "join": sorted(join_targets), "rest": sorted(rest)}
 
 
+def _deal_stratified(rows: list[int], levels: dict[int, int],
+                     candidates: list[int], quality: dict[int, tuple],
+                     jitter: float, rng: random.Random) -> dict:
+    """Map row LEVEL percentile onto species QUALITY percentile, plus noise.
+
+    Vanilla stratifies hard and the targets are measured, not guessed:
+    boss level vs breeding depth +0.73, arena vs cap +0.63, wild vs cap +0.45.
+    A flat random draw destroys all of it (measured S77: +0.18 / +0.04 / +0.04),
+    which guts the "here are the building blocks, here is what you could build"
+    arc the game is arranged around.
+
+    `jitter` is the knob: 0 gives a rigid ladder, higher values loosen it. Wild
+    encounters need a LOT of slack (vanilla is only +0.45 -- catchable monsters
+    are deliberately interchangeable), bosses very little.
+    """
+    rows = sorted(rows, key=lambda r: (levels[r], rng.random()))
+    pool = sorted(candidates, key=lambda sp: (quality[sp], rng.random()))
+    n, m = len(rows), len(pool)
+    out = {}
+    for i, r in enumerate(rows):
+        centre = (i / max(1, n - 1)) * (m - 1)
+        idx = int(round(centre + rng.gauss(0.0, jitter * m)))
+        out[r] = pool[max(0, min(m - 1, idx))]
+    return out
+
+
+def _deal_showcase(rows: list[int], levels: dict[int, int],
+                   candidates: list[int], quality: dict[int, tuple],
+                   depth: dict, lo: float, hi: float, jitter: float,
+                   rng: random.Random) -> dict:
+    """Deal rows so the SHOWCASE rate matches vanilla, not just the ordering.
+
+    A linear quality mapping cannot reproduce vanilla's arc, because breed-only
+    species are a minority of the roster (52 of 221) and get diluted. Vanilla
+    deliberately loads them into the endgame: bosses go 24% breed-only early to
+    82% late, the arena 2% to 59%. So the breed-only PROBABILITY is interpolated
+    across the level range and the sub-pool chosen from it, with quality
+    stratification applied inside each sub-pool.
+    """
+    roots_pool = [s for s in candidates if depth.get(s, 0) == 0]
+    breed_pool = [s for s in candidates if depth.get(s, 0) > 0]
+    if not breed_pool or not roots_pool:
+        return _deal_stratified(rows, levels, candidates, quality, jitter, rng)
+
+    rows = sorted(rows, key=lambda r: (levels[r], rng.random()))
+    roots_pool.sort(key=lambda sp: (quality[sp], rng.random()))
+    breed_pool.sort(key=lambda sp: (quality[sp], rng.random()))
+    n, out = len(rows), {}
+    for i, r in enumerate(rows):
+        q = i / max(1, n - 1)
+        pool = breed_pool if rng.random() < lo + (hi - lo) * q else roots_pool
+        m = len(pool)
+        idx = int(round(q * (m - 1) + rng.gauss(0.0, jitter * m)))
+        out[r] = pool[max(0, min(m - 1, idx))]
+    return out
+
+
 def randomize_enemy_species(rom: Rom, rng: random.Random, groups: dict,
-                            allow_metal_bosses: bool, rep: Report) -> None:
+                            allow_metal_bosses: bool, depth: dict, jitter: dict,
+                            rep: Report) -> None:
     metal = {m.id for m in rom.monsters if m.is_metal}
     # Rival / summon battlers: never a valid roll for any row (user decision).
     excluded = {m.id for m in rom.monsters if m.level_cap == 0} | set(EXCLUDED_SPECIES)
@@ -366,27 +468,51 @@ def randomize_enemy_species(rom: Rom, rng: random.Random, groups: dict,
 
     original = {e.id: e.species for e in rom.enemies}
 
-    # -- wild: permute the vanilla wild species multiset, so the set of species
-    #    obtainable from the wild is bit-for-bit the vanilla set.
+    quality = {s: (min(depth.get(s, 0), 9), rom.monsters[s].level_cap)
+               for s in range(SPECIES_COUNT)}
+    levels = {e.id: e.level for e in rom.enemies}
+
+    # -- wild: the species SET stays exactly vanilla's (obtainability parity),
+    #    but it is dealt against encounter level so weak monsters sit early.
     wild = groups["wild"]
     wild_species = [s if s not in excluded else rng.choice(all_species)
                     for s in (rom.enemies[e].species for e in wild)]
-    for e, s in zip(wild, derange(rng, wild_species)):
-        rom.enemies[e].species = s
+    # Wild must stay an exact PERMUTATION of the vanilla species multiset
+    # (obtainability parity), so it is a sorted pairing with a noisy swap pass
+    # rather than sampling with replacement.
+    order_rows = sorted(wild, key=lambda r: (levels[r], rng.random()))
+    order_sp = sorted(wild_species, key=lambda s: (quality[s], rng.random()))
+    for r, sp in zip(order_rows, order_sp):
+        rom.enemies[r].species = sp
+    swaps = int(len(order_rows) * jitter["wild"] * 4)
+    for _ in range(swaps):
+        a, b = rng.randrange(len(order_rows)), rng.randrange(len(order_rows))
+        ra, rb = order_rows[a], order_rows[b]
+        rom.enemies[ra].species, rom.enemies[rb].species = \
+            rom.enemies[rb].species, rom.enemies[ra].species
 
-    # -- arena: free choice, but no repeated species inside one 3-slot match.
+    # -- arena: dealt against match level, then de-duplicated within each match.
+    arena_rows = sorted(groups["arena"])
+    arena_assign = _deal_showcase(arena_rows, levels, boss_pool, quality, depth,
+                                  0.02, 0.59, jitter["arena"], rng)
+    for eid in arena_rows:
+        rom.enemies[eid].species = arena_assign[eid]
     for base in list(range(ARENA_BASE, ARENA_BASE + ARENA_ROWS, 3)) + [ARENA_KING[0]]:
-        picked: set[int] = set()
+        seen: set[int] = set()
         for slot in range(3):
             eid = base + slot
-            cand = [s for s in boss_pool if s not in picked] or boss_pool
-            s = pick(cand, eid)
-            picked.add(s)
-            rom.enemies[eid].species = s
+            if rom.enemies[eid].species in seen:
+                alt = [s for s in boss_pool
+                       if s not in seen and quality[s] == quality[rom.enemies[eid].species]]
+                if alt:
+                    rom.enemies[eid].species = rng.choice(alt)
+            seen.add(rom.enemies[eid].species)
 
-    # -- bosses and everything else: free choice.
+    # -- bosses: dealt against boss level, so the endgame shows off deep monsters.
+    boss_assign = _deal_showcase(groups["boss"], levels, boss_pool, quality,
+                                 depth, 0.24, 0.82, jitter["boss"], rng)
     for eid in groups["boss"]:
-        rom.enemies[eid].species = pick(boss_pool, eid)
+        rom.enemies[eid].species = boss_assign[eid]
     for eid in groups["rest"]:
         rom.enemies[eid].species = pick(all_species, eid)
 
@@ -423,7 +549,16 @@ def _skill_shape(rom: Rom, sid: int) -> tuple:
         # target breadth -- otherwise a single-ally heal can be swapped for an
         # ALL-ally heal, which is a large difficulty increase the power band
         # cannot see (both read as the same power).
-        kind = 2 if (rec.category >> 4) == 3 else 1
+        # Severity matters and power does not see it: every status skill has
+        # record power 0, so without this a Slow could be swapped for a
+        # Paralyze. Measured: that tripled paralysis on boss/arena rows (2 -> 7)
+        # and nearly doubled it overall (14 -> 26).
+        if (rec.category >> 4) == 3:
+            kind = 2                      # heal / buff
+        elif rec.damage_class == 3:
+            kind = 4                      # paralysis -- its own bucket
+        else:
+            kind = 1                      # ordinary status / debuff
         return (kind, 1 if rec.hits_all else 0, rec.enemy_max)
     return (0, 1 if rec.hits_all else 0, rec.enemy_max)
 
@@ -445,100 +580,115 @@ def protected_rows(rom: Rom, groups: dict) -> set[int]:
     return rows
 
 
+def vanilla_placement(vanilla) -> dict:
+    """Empirical danger rating for every skill, from where VANILLA uses it.
+
+    The skill record cannot tell us how dangerous a move is: 43 of the 222 have
+    power 0 because their handler computes damage internally (Sacrifice,
+    MegaMagic, BeDragon, GigaSlash, Beat, Kamikaze, SamsiCall). Every
+    power-based rule is blind exactly there, which is how FireAir, BigBang,
+    Lähmer, BeDragon and Sacrifice each reached the early game in turn.
+
+    Vanilla's own placement is a complete, formula-free substitute: it knows
+    Sacrifice belongs at level 20+, MegaMagic at 48+, GigaSlash at 40+. Returns
+    {skill: (min_level, median_level, row_count)}.
+    """
+    seen = defaultdict(list)
+    for e in vanilla.enemies:
+        if not e.level:
+            continue
+        for sid in e.skills:
+            if sid != SKILL_NONE:
+                seen[sid].append(e.level)
+    out = {}
+    for sid, levels in seen.items():
+        levels.sort()
+        out[sid] = (levels[0], levels[len(levels) // 2], len(levels))
+    return out
+
+
 def randomize_enemy_skills(rom: Rom, rng: random.Random, mode: str,
                            universe: list[int], down: float, up: float,
                            protected: set[int], heal_cap: float,
-                           rep: Report) -> None:
-    """Re-roll enemy movesets SLOT BY SLOT, matched to the vanilla move's threat.
+                           placement: dict, rep: Report) -> None:
+    """Re-deal enemy moves from vanilla's own usage multiset.
 
-    Each replacement must be the same kind (damage / status / heal), the same
-    target breadth (one foe vs all foes), and land inside a multiplicative band
-    around the vanilla move's maximum enemy-side damage.  A row that had a mild
-    single-target poke gets another mild single-target poke; a row that had
-    Blazemost gets something equally devastating.  This is what actually keeps
-    "power broadly the same" -- gating on learn requirements did not.
+    Two constraints the previous version lacked, both measured as broken:
 
-    The band is ASYMMETRIC on purpose: `down` may be generous, `up` is kept
-    tight, so no row can come out meaningfully more dangerous than it was.  A
-    symmetric band let six bosses gain damage (e.g. 130 -> 160) purely by luck
-    of the draw.
+    * FREQUENCY. It preserved moves-per-row but not rows-per-move, so rare
+      skills flooded (Speed 1 -> 44 rows, Sacrifice 9 -> 40, Whistle 1 -> 23)
+      while common ones vanished (ChargeUP 22 -> 4). Skills are now dealt from a
+      bag holding each skill exactly as many times as vanilla used it.
+    * PLACEMENT. A row may not carry a skill below the lowest level vanilla ever
+      used it at. 75 rows violated that before this change.
     """
-    by_kind: dict[tuple, list[int]] = defaultdict(list)
-    for sid in universe:
-        kind, breadth, _power = _skill_shape(rom, sid)
-        by_kind[(kind, breadth)].append(sid)
+    banned_set = set(FULL_HEAL_SKILLS) | set(PARALYSIS_SKILLS)
 
-    uset = set(universe)
-    banned_set = set(FULL_HEAL_SKILLS)
-    changed = swaps = widened = downgraded = 0
-    for e in rom.enemies:
-        if e.id in (0, 1):
-            continue
+    bag: list[int] = []
+    for sid, (_lo, _med, count) in placement.items():
+        bag.extend([sid] * count)
+    by_shape: dict[tuple, list[int]] = defaultdict(list)
+    for sid in bag:
+        by_shape[_skill_shape(rom, sid)[:2]].append(sid)
+    for v in by_shape.values():
+        rng.shuffle(v)
+
+    # LOWEST level first. A low-level row can only accept skills vanilla placed
+    # that low, so it must pick before the bag is drained; a high-level row can
+    # use almost anything and is safe to serve last. Dealing high-to-low left
+    # 34% of slots with no legal candidate, and they fell back to their vanilla
+    # move -- concentrated on exactly the early bosses the player sees first.
+    rows = sorted((e for e in rom.enemies if e.id not in (0, 1) and e.level),
+                  key=lambda e: (e.level, rng.random()))
+    changed = kept = 0
+    for e in rows:
         slots = [s for s in e.skills if s != SKILL_NONE]
         if not slots:
             continue
-
-        # A protected row may not full-heal at all, and may not carry any heal
-        # worth more than `heal_cap` x its own maximum HP.
-        is_protected = e.id in protected
-        own_hp = e.stats[0]
-
-        def allowed(sid: int) -> bool:
-            if not is_protected:
-                return True
-            if sid in banned_set:
-                return False
-            rec = rom.skill_records[sid]
-            if rec.damage_class == 0 and rec.target_mode in (0x21, 0x22, 0x41):
-                return rec.enemy_min <= max(1, int(own_hp * heal_cap))
-            return True
-
-        preferred = set()
-        if mode == "species":
-            preferred = set(learnable_set(rom, e.species, e.level, e.stats, uset))
-
         picked: list[int] = []
         for old in slots:
-            kind, breadth, power = _skill_shape(rom, old)
-            bucket = [s for s in by_kind[(kind, breadth)] if allowed(s)]
-            lo, hi = power * (1 - down), power * (1 + up)
-            if not allowed(old):
-                # The vanilla move itself is barred here (e.g. an arena entrant
-                # with HealAll).  Drop to the strongest LEGAL move of the same
-                # shape rather than sideways into another full heal.
-                legal = [_skill_shape(rom, s)[2] for s in bucket]
-                hi = max(legal) if legal else 0
-                lo = hi * (1 - down)
-                downgraded += 1
-            band = [s for s in bucket if s not in picked
-                    and lo <= _skill_shape(rom, s)[2] <= hi]
-            if not band:                       # widen once, then give up safely
-                band = [s for s in bucket if s not in picked
-                        and _skill_shape(rom, s)[2] <= hi]
-                widened += 1
-            if not band:
-                picked.append(old if allowed(old) else SKILL_NONE)
-                continue
-            liked = [s for s in band if s in preferred]
-            choice = rng.choice(liked or band)
-            picked.append(choice)
-            if choice != old:
-                swaps += 1
+            shape = _skill_shape(rom, old)
+            pool = by_shape.get(shape[:2], [])
+            def legal(cand: int) -> bool:
+                lo, _med, _c = placement[cand]
+                if cand in picked or e.level < lo:
+                    return False
+                if e.id in protected and cand in banned_set:
+                    return False
+                if _skill_shape(rom, cand)[2] > shape[2] * (1 + up):
+                    return False
+                return meets_requirement(rom, cand, e.level, e.stats)
 
-        picked = [s for s in picked if s != SKILL_NONE]
+            # Prefer a move that DIFFERS from vanilla. Preserving usage counts
+            # means a low-level row draws from a small pool where the commonest
+            # skills dominate (Heal alone is on 32 vanilla rows), so without this
+            # the early bosses -- the first thing the player sees -- kept coming
+            # out with their vanilla movesets.
+            choice = None
+            for want_new in (True, False):
+                for idx, cand in enumerate(pool):
+                    if want_new and cand == old:
+                        continue
+                    if legal(cand):
+                        choice = pool.pop(idx)
+                        break
+                if choice is not None:
+                    break
+            if choice is None:
+                lo = placement.get(old, (0, 0, 0))[0]
+                if e.level >= lo and not (e.id in protected and old in banned_set):
+                    choice = old
+                    kept += 1
+                else:
+                    continue
+            picked.append(choice)
         e.skills = picked + [SKILL_NONE] * (4 - len(picked))
         changed += 1
 
-    rep.note(f"Enemy movesets: {changed} rows re-rolled, {swaps} individual moves "
-             f"replaced ({mode} mode, -{int(down * 100)}%/+{int(up * 100)}% power "
-             f"band). Each "
-             f"replacement matches the vanilla move's KIND, TARGET BREADTH (one "
-             f"foe vs all foes) and enemy-side damage, so no row gains threat it "
-             f"did not already have"
-             + (f"; {widened} slots needed a widened band" if widened else "")
-             + (f"; {downgraded} full-heal/oversized-heal slots on boss or arena "
-                f"rows downgraded to the strongest legal heal" if downgraded else "")
-             + ".")
+    rep.note(f"Enemy movesets: {changed} rows dealt from vanilla's own usage bag "
+             f"(each skill appears as often as vanilla used it, and never below "
+             f"the lowest level vanilla placed it at); {kept} slots kept their "
+             f"vanilla move because nothing legal was left.")
 
 
 # ---------------------------------------------------------------------------
@@ -546,29 +696,58 @@ def randomize_enemy_skills(rom: Rom, rng: random.Random, mode: str,
 # ---------------------------------------------------------------------------
 
 def randomize_boss_joinability(rom: Rom, rng: random.Random, force_join: bool,
-                               rep: Report) -> None:
+                               jitter: float, rep: Report) -> None:
+    """Shuffle boss joinability, but LEVEL-BIASED like vanilla.
+
+    Vanilla does not spread recruitable bosses evenly -- never-joins climb
+    0% / 20% / 62% / 70% / 88% across the level bands (correlation +0.62,
+    51% overall). That is what protects the endgame showcase: the deep monsters
+    you fight late are things you must BREED, not things you can beat and keep.
+
+    A flat shuffle preserves the ratio but destroys the arc, and then late
+    bosses become recruitable, which turns them into breeding-tree roots and
+    quietly collapses the "breed-only" fraction the showcase depends on.
+
+    The value multiset is preserved exactly, so the overall recruitable count
+    matches vanilla; only WHICH rows get which value is re-dealt.
+    """
     pinned = set(FORCE_JOIN_BOSSES) if force_join else set()
     eids = [e for e in BOSS_EIDS if e not in pinned]
     before = {e: rom.enemies[e].join for e in BOSS_EIDS}
 
-    vals = [rom.enemies[e].join for e in eids]
-    new = derange(rng, vals)
-    for e, v in zip(eids, new):
-        rom.enemies[e].join = v
+    values = [rom.enemies[e].join for e in eids]
+    never = [v for v in values if v == 7]
+    joins = [v for v in values if v != 7]
+
+    # Rank rows by level plus noise; the highest-ranked get the never-join
+    # values. `jitter` controls how strictly the arc is followed.
+    lv = {e: rom.enemies[e].level for e in eids}
+    span = max(lv.values()) - min(lv.values()) or 1
+    ranked = sorted(eids, key=lambda e: (lv[e] - min(lv.values())) / span
+                    + rng.gauss(0.0, jitter))
+    rng.shuffle(joins)
+    for e in ranked[:len(joins)]:
+        rom.enemies[e].join = joins.pop()
+    for e in ranked[-len(never):] if never else []:
+        rom.enemies[e].join = 7
     for e in pinned:
-        rom.enemies[e].join = 0          # $00 = always joins
+        rom.enemies[e].join = 0
 
     after = {e: rom.enemies[e].join for e in BOSS_EIDS}
-    joiners = sum(1 for v in after.values() if v != 7)
-    rep.note(f"Boss joinability: shuffled across {len(eids)} boss rows"
-             + (f"; EIDs {', '.join(str(e) for e in sorted(pinned))} (the first "
-                f"three gate bosses) PINNED to always-join" if pinned else "")
-             + f"; {joiners} recruitable, was "
-               f"{sum(1 for v in before.values() if v != 7)}.")
+    nj = sum(1 for v in after.values() if v == 7)
+    rep.note(
+        f"Boss joinability: level-biased shuffle -- {nj} of {len(BOSS_EIDS)} "
+        f"never join (vanilla {sum(1 for v in before.values() if v == 7)}), with "
+        f"non-joiners loaded toward the high-level end so late bosses stay "
+        f"breed-only"
+        + (f"; EIDs {', '.join(str(e) for e in sorted(pinned))} pinned to "
+           f"always-join" if pinned else "") + ".")
     for e in BOSS_EIDS:
         tag = "  (ALWAYS joins, pinned)" if e in pinned else (
             "  (recruitable)" if after[e] != 7 else "  (never joins)")
-        rep.add("boss_joins", f"EID {e:3d}: join {before[e]} -> {after[e]}{tag}")
+        rep.add("boss_joins",
+                f"EID {e:3d} L{rom.enemies[e].level:<3} join {before[e]} -> "
+                f"{after[e]}{tag}")
 
 
 # ---------------------------------------------------------------------------
@@ -577,38 +756,82 @@ def randomize_boss_joinability(rom: Rom, rng: random.Random, force_join: bool,
 
 def shuffle_encounter_pools(rom: Rom, rng: random.Random, spread: int,
                             rep: Report) -> None:
-    """Permute which EID sits in which live pool slot, grouped by EXACT level.
+    """Permute pool slots within (level, power) groups, never duplicating.
 
-    An earlier version bucketed 543 slots into 10 quantile bands.  That is fine
-    at the top of the curve and catastrophic at the bottom: it moved level-4/5
-    rows (ATK 26-35) into the Gate of Beginning, whose vanilla rows are level 1
-    with ATK 8-19.  Difficulty at low level is driven by absolute stat deltas,
-    not by quantile rank, so the grouping is now by exact level with an optional
-    +/-`spread` merge.
+    Two bugs this fixes, both found in play (S77):
+
+    * Grouping by LEVEL alone is not enough. Same-level rows vary enormously --
+      level-7 rows run from 29 to 145 in HP+ATK -- so a slot could keep its
+      level and still gain 40% HP (measured: Picker L4 HP32/ATK30 became
+      Killerbot L4 HP45/ATK32). Rows are now grouped by level AND a coarse power
+      band, so a slot keeps a comparable monster.
+    * A global permutation let the SAME EID land twice in one pool, doubling how
+      often you meet it. Vanilla never does this: 0 of 128 pools contain a
+      duplicate, against 42 of 128 before this fix. That is what turned one
+      Feueratem carrier in gate 1's pool into two.
     """
     slots = [(p.id, i) for p in rom.pools for i in p.live_slots()]
     eids = [rom.pools[pid].eids[i] for pid, i in slots]
 
-    groups: dict[int, list[int]] = defaultdict(list)
+    def power(eid: int) -> int:
+        e = rom.enemies[eid]
+        return e.stats[0] + e.stats[2]
+
+    groups: dict[tuple, list[int]] = defaultdict(list)
     for idx, eid in enumerate(eids):
-        groups[rom.enemies[eid].level // (spread + 1)].append(idx)
+        e = rom.enemies[eid]
+        groups[(e.level // (spread + 1), power(eid) // 24)].append(idx)
 
     for idxs in groups.values():
         vals = [eids[i] for i in idxs]
-        rng.shuffle(vals)
+        for _ in range(24):
+            rng.shuffle(vals)
+            seen: dict[int, set] = defaultdict(set)
+            ok = True
+            for i, v in zip(idxs, vals):
+                pid = slots[i][0]
+                if v in seen[pid]:
+                    ok = False
+                    break
+                seen[pid].add(v)
+            if ok:
+                break
         for i, v in zip(idxs, vals):
             pid, slot = slots[i]
             rom.pools[pid].eids[slot] = v
 
+    # Final sweep: repair any pool that still holds a duplicate by swapping the
+    # offender with a same-group slot in another pool.
+    fixed = 0
+    for _ in range(6):
+        bad = [(p.id, i) for p in rom.pools for i in p.live_slots()
+               if [p.eids[j] for j in p.live_slots()].count(p.eids[i]) > 1]
+        if not bad:
+            break
+        for pid, i in bad:
+            cur = rom.pools[pid].eids[i]
+            e = rom.enemies[cur]
+            key = (e.level // (spread + 1), power(cur) // 24)
+            for j in groups.get(key, ()):
+                opid, oslot = slots[j]
+                cand = rom.pools[opid].eids[oslot]
+                pool_eids = [rom.pools[pid].eids[k] for k in rom.pools[pid].live_slots()]
+                other = [rom.pools[opid].eids[k] for k in rom.pools[opid].live_slots()]
+                if opid != pid and cand not in pool_eids and cur not in other:
+                    rom.pools[pid].eids[i], rom.pools[opid].eids[oslot] = cand, cur
+                    fixed += 1
+                    break
+
     after = [rom.pools[pid].eids[i] for pid, i in slots]
     assert Counter(after) == Counter(eids), "pool shuffle must be a permutation"
+    dups = sum(1 for p in rom.pools
+               if len({p.eids[i] for i in p.live_slots()}) < len(p.live_slots()))
     moved = sum(1 for x, y in zip(eids, after) if x != y)
     drift = max(abs(rom.enemies[x].level - rom.enemies[y].level)
                 for x, y in zip(eids, after))
-    rep.note(f"Encounter tables: {len(slots)} live pool slots permuted within "
-             f"exact-level groups (spread {spread}); {moved} slots changed, "
-             f"worst-case level drift {drift}. Weights and the encounterable-EID "
-             f"multiset are untouched.")
+    rep.note(f"Encounter tables: {len(slots)} slots permuted within (level, "
+             f"power) groups; {moved} changed, level drift {drift}, "
+             f"{dups} pools with a duplicate EID ({fixed} repaired).")
 
 
 # ---------------------------------------------------------------------------
@@ -677,13 +900,35 @@ def obtainable_species(rom: Rom, groups: dict) -> set[int]:
             if slot < SPECIES_COUNT and _matches(a, got, rom) and _matches(b, got, rom):
                 got.add(slot)
                 changed = True
-        for p1, p2, _plus, result, _mod in rom.special_recipes:
+        # Shadowing-aware: SpecialRecipeTable is first-match-wins, so a result
+        # only counts as obtainable if some concrete parent pair reaches THIS
+        # entry before any earlier entry claims that pair.
+        for idx, (p1, p2, _plus, result, _mod) in enumerate(rom.special_recipes):
             if result in got:
                 continue
-            if _matches(p1, got, rom) and _matches(p2, got, rom):
+            if not (_matches(p1, got, rom) and _matches(p2, got, rom)):
+                continue
+            if _first_match_index(rom, p1, p2, got) == idx:
                 got.add(result)
                 changed = True
     return got
+
+
+def _concretes(matcher: int, got: set[int], rom: Rom) -> list[int]:
+    if matcher >= FAMILY_CODE_LO:
+        fam = matcher - FAMILY_CODE_LO
+        return [s for s in got if rom.monsters[s].family == fam]
+    return [matcher] if matcher in got else []
+
+
+def _first_match_index(rom: Rom, p1: int, p2: int, got: set[int]) -> int | None:
+    """Index of the entry that actually fires for some pair this entry covers."""
+    for a in _concretes(p1, got, rom)[:6]:
+        for b in _concretes(p2, got, rom)[:6]:
+            for j, e in enumerate(rom.special_recipes):
+                if _matches(e[0], {a}, rom) and _matches(e[1], {b}, rom):
+                    return j
+    return None
 
 
 def enforce_obtainability(rom: Rom, rng: random.Random, groups: dict,
@@ -834,3 +1079,119 @@ def validate_boss_eids(rom_bytes: bytes) -> list[str]:
         if hits == 0 and eid not in (149, 151, 152, 342):  # opcode $13 multi-slot writes
             problems.append(f"boss EID {eid} has no $05/$5A trigger in this ROM")
     return problems
+
+
+# ---------------------------------------------------------------------------
+# Pass 12 -- keep heavy natural skills off early-encounter species (S77)
+# ---------------------------------------------------------------------------
+
+def gate_early_skills(rom: Rom, rng: random.Random, slope: float, floor: int,
+                      rep: Report) -> None:
+    """A species met in gate 1 must not have BigBang in its natural set.
+
+    The natural-skill band shuffle ranks monsters by tier byte and level cap,
+    neither of which knows where a species actually SHOWS UP. Measured on the
+    first build: a species first encountered at level 2 carried BigBang (power
+    300). This runs AFTER the encounter pass, when first-appearance level is
+    finally known, and swaps offenders with species that appear late or not at
+    all -- so the global skill multiset is still preserved exactly.
+    """
+    first: dict[int, int] = {}
+    for p in rom.pools:
+        for i in p.live_slots():
+            e = rom.enemies[p.eids[i]]
+            first[e.species] = min(first.get(e.species, 99), e.level)
+
+    def budget(species: int) -> float:
+        lv = first.get(species)
+        return 1e9 if lv is None else floor + slope * lv
+
+    def power(sid: int) -> int:
+        return rom.skill_records[sid].enemy_max
+
+    slots = [(m.id, k) for m in rom.monsters for k in range(3)]
+    before = Counter(rom.monsters[m].skills[k] for m, k in slots)
+
+    swaps = 0
+    for mid, k in slots:
+        sid = rom.monsters[mid].skills[k]
+        if power(sid) <= budget(mid):
+            continue
+        cands = [(om, ok) for om, ok in slots
+                 if om != mid
+                 and power(rom.monsters[om].skills[ok]) <= budget(mid)
+                 and power(sid) <= budget(om)]
+        if not cands:
+            continue
+        om, ok = rng.choice(cands)
+        rom.monsters[mid].skills[k], rom.monsters[om].skills[ok] = \
+            rom.monsters[om].skills[ok], sid
+        swaps += 1
+
+    assert Counter(rom.monsters[m].skills[k] for m, k in slots) == before, \
+        "early-skill gating must preserve the global skill multiset"
+
+    left = sum(1 for mid, k in slots
+               if power(rom.monsters[mid].skills[k]) > budget(mid))
+    rep.note(f"Early-skill gating: {swaps} natural skills swapped so a species' "
+             f"maximum natural power stays under {floor} + {slope:g} x its "
+             f"first-encounter level; {left} slots could not be resolved. "
+             f"Skill multiset preserved exactly.")
+
+
+# ---------------------------------------------------------------------------
+# Pass 13 -- make the FIRST breeding step worth taking (S77)
+# ---------------------------------------------------------------------------
+
+# Depth 0 sits at the MEDIAN, not below it. Pinning it at 0.40 put everything
+# catchable at the 36th percentile of roster growth -- a systematic nerf to the
+# player's whole early roster that read in play as "low HP, not doing much
+# damage". The rungs above are also compressed, so the ladder nudges rather than
+# steps.
+DEPTH_GROWTH_PERCENTILE = {0: 0.50, 1: 0.60, 2: 0.63, 3: 0.67,
+                           4: 0.72, 5: 0.77, 6: 0.83}
+
+
+def bias_growth_by_depth(rom: Rom, rng: random.Random, depth: dict,
+                         spread: float, rep: Report) -> None:
+    """Re-deal growth curves so breeding step ONE is immediately exciting.
+
+    Vanilla's depth-1 monsters average level cap ~30 against a wild average of
+    ~41, so the first thing you breed has a LOWER ceiling than what you could
+    just catch. Left alone that makes early breeding feel like a downgrade.
+
+    The fix is the shape the user described: give the shallow breeding tier
+    strong GROWTH but leave its low CAP alone. It out-levels your caught
+    monsters fast, then walls hard -- which is exactly the pressure that should
+    push you into the next breeding step rather than grinding it to cap.
+
+    Growth only affects monsters the PLAYER raises (enemy stats come from the
+    enemy row), so this cannot make the game harder. Column multisets are
+    preserved, so the global distribution of curves is untouched.
+    """
+    cols = 6
+    species = list(range(SPECIES_COUNT))
+    target = {s: DEPTH_GROWTH_PERCENTILE.get(min(depth.get(s, 0), 6), 0.40)
+              for s in species}
+
+    # One noise draw PER SPECIES, with only a little extra per column. Drawing
+    # independently per column produced lopsided monsters -- high MP with no HP
+    # -- which reads as "low HP, big MP, does nothing" in play.
+    base_noise = {s: rng.gauss(0.0, spread) for s in species}
+    for c in range(cols):
+        values = sorted(m.growth[c] for m in rom.monsters)
+        order = sorted(species,
+                       key=lambda s: target[s] + base_noise[s]
+                       + rng.gauss(0.0, spread * 0.35))
+        for rank, s in enumerate(order):
+            rom.monsters[s].growth[c] = values[rank]
+
+    got = defaultdict(list)
+    for s in species:
+        got[min(depth.get(s, 0), 6)].append(
+            sum(sum(rom.growth_curves[i]) for i in rom.monsters[s].growth))
+    summary = {d: round(sum(v) / len(v)) for d, v in sorted(got.items())}
+    rep.note(f"Growth biased by breeding depth: mean growth-sum by depth "
+             f"{summary}. Depth-1 monsters now out-grow caught ones early while "
+             f"keeping their low level cap, so the first breeding step pays off "
+             f"immediately and then walls. Per-column curve multisets preserved.")

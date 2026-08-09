@@ -2822,3 +2822,46 @@ other banks' coincidental data/comments.
 - **Emulator UI navigation is worth brute-forcing.** Blind button-mashing never
   opened the library detail page; enumerating short input sequences and stopping
   on a hook fire (bank `$16` `$485C`) found the path (`up`,`a`) in seconds.
+
+## S77 — aggregates hide outliers, and one blind field caused six bugs
+
+- **Six "how is this in gate 1" bugs were one bug.** FireAir, BigBang, Lähmer,
+  BeDragon, MegaMagic, Sacrifice — each got its own patch before anyone noticed
+  they were the same failure: 43 skills have record power 0 because their handler
+  computes damage, so every power-based rule was blind to exactly the dangerous
+  ones. **When the third instance of a bug class appears, stop patching instances
+  and go find what they share.**
+- **Vanilla's own placement is a free danger rating.** Rather than tracing 43
+  handlers or maintaining a blacklist, ask where vanilla is willing to USE each
+  skill: Sacrifice never below L20, MegaMagic never below L48. Complete coverage
+  of all 222 skills, no formula work. The shipping data is often a better oracle
+  than the code.
+- **Every check being an aggregate is itself a bug.** "0 rows harder than
+  vanilla", correlations, depth profiles and multiset equality all passed on a
+  build with a species at 23x vanilla MP growth and a skill on 44 rows instead of
+  1. Distributions are preserved by construction while individuals are absurd.
+  Per-ENTITY envelope checks against vanilla found five real defects in one run.
+- **Preserving one dimension is not preserving the thing.** Moves-per-row was
+  held exactly; rows-per-move drifted 44x. A constraint on one axis silently
+  licenses drift on every other.
+- **Order of dealing matters when supply is constrained.** Dealing enemy skills
+  highest-level-first drained the pool and left 34% of slots falling back to
+  vanilla, concentrated on the early bosses the player sees first. Serve the most
+  constrained consumers first.
+- **Count preservation fights novelty.** With usage counts and placement floors
+  both enforced, low-level rows draw from a small pool where common skills
+  dominate, so "randomized" content keeps coming out vanilla. An explicit
+  prefer-to-differ tiebreak is needed on top.
+- **Depth is a MIN, so one shallow recipe collapses a deep target.** Build tiers
+  in ascending order against MEASURED depth, never against target depth — the
+  picker will silently fall back to a shallower parent and cave the tier.
+- **Structural changes leak into each other.** Making late bosses non-joinable to
+  protect the showcase removed them as breeding roots and changed the whole tree;
+  identity assignment added 6 roots that collapsed depth 5 to 4. Any pipeline
+  where pass B consumes pass A's output needs A re-run after B, or an explicit
+  fixpoint.
+- **The user's "feels off" was right three times running while the metrics said
+  green.** Low HP + big MP traced to drawing growth noise independently per stat
+  column, producing lopsided monsters. "Enemies suddenly hit for 13" traced to
+  duplicate EIDs in a pool (42 of 128; vanilla 0), not to any stat change.
+  Subjective reports located defects the instrumentation was built to miss.

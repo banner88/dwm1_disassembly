@@ -415,6 +415,14 @@ repo only for `dwm.text` (charmap).
 Produces no `extracted/` JSON — the spoiler log is a per-seed build artefact and
 is deliberately not committed.
 
+### randomizer/ additions (S77)
+
+| File | Role |
+|------|------|
+| `randomizer/breeding.py` | Depth-targeted tree generation. Assigns target depths by level cap, builds tiers in ascending order against measured depth, best-of-N retry. Keeps species met at L<=6 free of specific x specific recipes. |
+| `randomizer/plusgrowth.py` | The ONE code change: extends vanilla's plus-value growth bonus (`FuncExp_4163`) to MP and INT. Byte-neutral trampoline in bank `$13`'s free tail, four guard checks before writing. |
+| `randomizer/profile_check.py` | **Per-entity envelope checker.** Six invariants against vanilla, non-zero exit. Runs on any edited ROM, not just randomized ones — see PROJECT_COMPILER "Validation the editor must run". |
+
 ## 3. Rules
 
 1. Commit the tool with the data, same change. No exceptions.

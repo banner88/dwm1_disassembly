@@ -1589,3 +1589,76 @@ tier 5 = 2.62, tier 6 = 8.21, tier 7 = 4.57.
 To scramble resistances without moving difficulty: permute each species' own 27
 values across the damage types, and swap whole vectors only WITHIN a tier bucket.
 That preserves resistance mass per tier exactly while changing every profile.
+
+---
+
+## The record power field is BLIND on 43 skills — S77
+
+The single most expensive lesson of the randomizer work. `SkillRecordData`'s
+enemy power pair (`$54:$41CF` +15/+17) is **0** for 43 of the 222 skills, because
+their handler computes damage itself rather than rolling the record:
+
+| Skill | Learn level | Why the record says 0 |
+|---|---|---|
+| Sacrifice / Opfer | 1 | damage from caster HP |
+| Kamikaze | 18 | damage from caster HP |
+| Beat / Defeat | 16 / 30 | instant death |
+| BeDragon | 28 | transforms the caster |
+| Chance / Mystik | 40 | random effect table |
+| MegaMagic / Madante | 38 | `(MP*2 + level*2) / 4` |
+| GigaSlash | 33 | handler-scaled |
+| SamsiCall | 33 | summon |
+
+Any rule that bands, caps or compares on record power **cannot see these at all**.
+That single blind spot produced six separate "how is this in gate 1" bugs in a
+row — FireAir, BigBang, Lähmer, BeDragon, MegaMagic, Sacrifice — each patched
+individually before the pattern was recognised.
+
+### The fix: vanilla's own placement is a complete danger rating
+
+Vanilla already encodes how dangerous every skill is, in **where it is willing to
+use it**. Build `{skill: (min_level, median_level, row_count)}` from the vanilla
+enemy table and the problem disappears for all 222 skills uniformly, with no
+formula tracing and no blacklist:
+
+| Skill | Vanilla rows | Min level | Median |
+|---|---|---|---|
+| Sacrifice | 9 | 20 | 26 |
+| MegaMagic | 2 | 48 | 48 |
+| GigaSlash | 4 | 40 | 45 |
+| SamsiCall | 2 | 33 | 35 |
+| Blaze | 33 | 1 | 12 |
+
+`randomizer/logic.py::vanilla_placement()`. Rule: **a row may not carry a skill
+below the lowest level vanilla ever placed it at.** Also require
+`meets_requirement()` against the row's own level AND stats — a row should only
+use what it could have learned.
+
+### Usage FREQUENCY is a second, independent constraint
+
+Preserving moves-per-row does not preserve rows-per-move. Measured on a build
+that passed every other check: `Speed` 1 → 44 rows, `Upper` 9 → 44,
+`Sacrifice` 9 → 40, `Whistle` 1 → 23, while `ChargeUP` fell 22 → 4 and
+`SleepAir` 16 → 2. Three skills vanilla never arms an enemy with appeared 12-15
+times. Deal skills from a **bag holding each skill exactly as many times as
+vanilla used it**.
+
+Two ordering traps when dealing from that bag:
+
+1. **Deal LOWEST level first.** A level-6 row can only accept skills vanilla
+   placed that low; a level-60 row can use nearly anything. Dealing high-to-low
+   drains the bag and leaves 34% of slots with no legal candidate, falling back
+   to their vanilla move — concentrated on the early bosses the player sees
+   first.
+2. **Prefer a candidate that differs from vanilla.** Count preservation means a
+   low-level row draws from a small pool where the commonest skills dominate
+   (Heal alone is on 32 vanilla rows), so without this the early game keeps its
+   vanilla movesets even though the algorithm "randomized" it.
+
+### Severity is invisible to power too
+
+Every status skill has record power 0, so Slow, StopSpell and **Paralyze** rank
+identically. Swapping between them tripled paralysis on boss/arena rows (2 → 7)
+and nearly doubled it overall (14 → 26). Paralysis (`damage_class $03` — 105
+Lähmer, 107 Allähmer) needs its own bucket, and is banned outright on boss /
+arena / boss-join rows alongside the full heals (45, 47, 163).

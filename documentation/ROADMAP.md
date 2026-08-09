@@ -1324,3 +1324,26 @@ Follow-on candidates (not scheduled):
       than vanilla's 9%.
 - [ ] Third-region support: the tools fail loudly rather than guessing; a new
       build needs its family-word strings identified for `librarytext.py`.
+
+
+## S77 — randomizer part 2 (user-directed)
+
+- [x] Breeding tree REGENERATED rather than re-pointed; depth targeted and
+      reached (3-6, tiers built in ascending order, best-of-N retry).
+- [x] Bosses / arena / wild stratified by breeding depth and level cap against
+      vanilla's measured correlations; boss joinability level-biased so the
+      endgame showcase survives.
+- [x] Skill assignment rebuilt on **vanilla placement** rather than record power,
+      fixing the whole handler-computed-damage blind spot in one change.
+- [x] Growth shuffled within vanilla-ordering bands; paralysis and full heals
+      banned on boss/arena rows; encounter pools de-duplicated.
+- [x] `randomizer/profile_check.py` — per-entity envelope checks, build gate.
+- [ ] Starter roll is unconstrained (`--starter-min-cap` floors at 20 only) and
+      is probably the largest single driver of early-game difficulty across
+      seeds. Constrain to a band.
+- [ ] Residual `profile_check` failures: 27 growth pairs (all on species whose
+      vanilla baseline is ~14 points, where ratio is misleading) and 2 skills
+      drifting >8 rows. Needs a per-species absolute clamp.
+- [ ] Combat simulator for pacing/TTK — BLOCKED on damage tracing: 43
+      handler-computed skills have no modelled damage, and the spell/DEF
+      interaction is untraced.

@@ -87,6 +87,32 @@ Diago, Samsi, Bazoo, #220) have level cap 0 and can never be raised.
 | `--no-library-text` | off | leave bank `$4D` strings vanilla (they will then disagree with the sprites) |
 | `--no-<pass>` | off | skip any individual pass |
 
+## Validation
+
+Two gates, both runnable against any edited ROM:
+
+```
+python3 randomizer/profile_check.py <vanilla.gbc> <edited.gbc>   # per-entity envelopes
+python3 randomizer/audit_threat.py  <vanilla.gbc> <edited.gbc>   # per-row damage parity
+```
+
+`profile_check` is the important one. Every check this project had before S77 was
+an aggregate, and aggregates are blind to individual outliers — a species at 23x
+vanilla MP growth preserves every distribution being measured. It checks growth
+envelopes, skill usage frequency, skill placement floors, base-monster recipes,
+per-row threat and pool duplicates, and exits non-zero.
+
+## Additional options (S77)
+
+| Flag | Default | Effect |
+|---|---|---|
+| `--growth-bands` | `10` | bands of the vanilla growth ordering to shuffle within; lower = closer to vanilla |
+| `--easy-level` | `6` | species first met at or below this level stay base monsters (no specific x specific recipe) |
+| `--join-jitter` | `0.28` | looseness of the level bias on boss joinability |
+| `--strat-jitter-boss/arena/wild` | `0.06/0.10/0.25` | looseness of level-vs-quality stratification |
+| `--growth-bias` | off | bias growth by breeding depth so the first breed step is stronger |
+| `--no-caster-plus` | off | disable the MP/INT plus-bonus code change |
+
 ## Reference
 
 - Region portability, the bank `$14` `+$70` shift, German charmap — `documentation/DATA_STRUCTURES.md` §"Region portability"

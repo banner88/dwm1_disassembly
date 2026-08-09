@@ -697,3 +697,59 @@ to `SpecialRecipeTable`, which is scanned FIRST and wins. In vanilla, 18 of the
 197 displayed defaults (9%) are already overridden by a special recipe at plus 0.
 The library was never a reliable predictor of offspring; it is decoration with a
 usually-true value.
+
+---
+
+## Depth is a function of matcher SPECIFICITY — S77
+
+Measured across vanilla's two tables, the depth of what a recipe produces tracks
+how specific its parents are, almost linearly:
+
+| Matcher | Family-table entries | Mean depth of result | Max |
+|---|---|---|---|
+| family x family | 80 | 1.08 | 3 |
+| family x specific | 70 | 2.00 | 3 |
+| specific x specific | 47 | 3.00 | 4 |
+
+The reason is structural: `[Slime] x [Dragon]` is satisfiable by any starter
+slime, so it can **only ever** be one step deep. Depth cannot be authored into a
+family x family pair. Of all species at depth >= 2, 202 recipes come from the
+special table against 21 from the family table — but the mechanism is specificity,
+not which table.
+
+### Building a tree to a target depth
+
+Naive generation does not work. Depth is the **MIN over every recipe producing a
+species**, so one shallow recipe collapses a deep target, and drawing parents by
+*target* depth falls back to something shallower whenever the tier below has not
+materialised yet. Both failures shipped: trees of depth 4 when 6 was requested.
+
+What works (`randomizer/breeding.py`):
+
+1. Assign target depths by ranking species on **level cap** — vanilla data the
+   randomizer never touches, so the quality spine is reproduced for free.
+2. Build tiers **in ascending order**, forcing every recipe for a target to
+   parents at *exactly* want-1, re-measuring after each tier.
+3. Convert family x family slots on deep targets to specific matchers.
+4. Best-of-N retry on the whole build, keeping the deepest result.
+
+### Boss joins are tree roots
+
+A recruitable boss becomes a breeding root and shortcuts every chain running
+through it. Measured: 6 boss-join species collapsed a depth-5 tree back to 4. If
+identity assignment runs after tree generation, the tree must be **regenerated
+against the final root set**.
+
+This also couples to the showcase arc: vanilla loads non-joinable bosses toward
+the high-level end (never-joins climb 0% / 20% / 62% / 70% / 88% by level band,
+correlation +0.62, 51% overall), which is what keeps late bosses breed-only at
+82%. A flat joinability shuffle preserves the ratio, destroys the arc, and
+quietly erases the endgame showcase.
+
+### Early monsters must stay base monsters
+
+Vanilla gives **0 of 15** species first encountered at level <= 6 a
+specific x specific recipe. Their recipes are family x family, family x specific
+or specific x family only. The first monsters you meet are meant to read as
+building blocks; giving them an SS recipe breaks that immediately and is visible
+to a player within minutes.

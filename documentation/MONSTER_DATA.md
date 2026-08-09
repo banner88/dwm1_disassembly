@@ -1381,3 +1381,23 @@ species' (preserving the column multiset) until
 `base + Σ curve[1..4] ≥ threshold + 3`. The +3 margin exists because the
 creation roll can shave the base by up to 20% and the level-up routine applies
 its own per-stat scaling on top of the raw curve.
+
+---
+
+## Growth randomization needs a per-species envelope — S77
+
+A free global shuffle of the six growth columns preserves the per-column
+distribution perfectly and is still wrong. Measured on a build that passed every
+aggregate check: Hausslime went from **3.0 MP/level to 11.3**, and 82 of the 1326
+species-stat pairs sat at **≥2.5x vanilla**, worst case **23x**.
+
+Shuffle **within bands of the vanilla ordering** for each column instead (10
+bands over 221 species). Each monster keeps its own growth tier while still
+drawing a different curve. After: early-caught species average 466 total gain by
+L20 against vanilla's 426, ceiling 589 against 498 — still below the roster mean
+of 536, which is where early monsters belong.
+
+Residual to be aware of: per-STAT swing inside a species is still real (a 44 →
+127 INT is possible), and the ratio metric is misleading where the vanilla
+baseline is tiny — metal slimes and the rival species sit at 14 points by L30, so
+any change reads as 12x. Gate on ratio AND an absolute delta.

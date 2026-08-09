@@ -717,3 +717,51 @@ name-pointer bases, the German charmap deltas — is in DATA_STRUCTURES.md
 §"Region portability". The pattern to copy: locate by content signature with an
 MD5 fast path, and fail loudly on an unrecognised image rather than writing
 garbage.
+
+---
+
+## Validation the editor must run — S77
+
+The randomizer shipped several builds that passed every check it had and still
+played wrong. Root cause: **every check was an AGGREGATE** — "0 rows harder than
+vanilla", correlations, depth profiles, multiset equality. Aggregates are
+structurally blind to individual outliers: a species at 23x vanilla MP growth and
+a skill on 44 rows instead of 1 both preserve every distribution being measured.
+
+Any editor that lets a user author content needs **per-entity envelope checks**,
+comparing each entity against the range vanilla assigns to comparable entities.
+`randomizer/profile_check.py` implements these and exits non-zero, so it can gate
+a build. It runs against ANY edited ROM, not just randomized ones:
+
+    python3 randomizer/profile_check.py <vanilla.gbc> <edited.gbc>
+
+| Check | Invariant |
+|---|---|
+| growth | no species-stat exceeds 2.5x vanilla AND +60 absolute |
+| skill frequency | no skill drifts more than 8 rows in usage; none appears that vanilla never arms |
+| skill placement | no row carries a skill below vanilla's minimum level for it |
+| base monsters | no species met at L<=6 needs a specific x specific recipe |
+| threat | no row deals more skill damage than its vanilla counterpart |
+| pools | no duplicate EID in a pool; encounter level drift 0 |
+
+Two further coherence rules for content editing, on top of the three sets above:
+
+* **Enemy row skills should match the species' natural set.** Vanilla authors
+  them that way — boss EID 32's three row skills are exactly species 196's three
+  naturals — so a boss fights with the moves it will join with. Ranking any other
+  constraint above this produces bosses using skills they do not have on
+  recruitment, which players notice immediately.
+* **Encounter pools must not contain a duplicate EID.** Vanilla: 0 of 128. A
+  duplicate doubles that monster's encounter rate inside its pool, which reads as
+  a difficulty spike with no stat change to explain it.
+
+### Still missing: a combat model
+
+A battle simulator would catch what these static checks cannot — time-to-kill,
+resource drain, pacing across a gate. It is currently **blocked**, and the
+blocker is worth naming: the 43 handler-computed skills have no modelled damage
+at all, and it is still untraced whether DEF reduces spell damage (the spell
+handlers route through `$5BFF`/`$54E7` rather than `CalcSkillDefense`). Building
+a simulator on unknown formulas produces confident wrong numbers. Finish the
+damage tracing first; it is valuable for the romhack independent of any
+simulator.
