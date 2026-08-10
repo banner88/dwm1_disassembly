@@ -10,6 +10,50 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-08-10 (Session 78 — **combat-simulator arc part 1:
+> the DAMAGE LAYER, traced and differentially validated.** Byte-neutral: no
+> patches touched; verifier PASS 6/6, clean `1ca6579…` and S75v4 patched pin
+> `ce1e7369…` both unchanged. New top-level package `simulator/`.)
+>
+> The whole damage pipeline is now formula-exact: the physical roll
+> (`CalcSkillDefense`, three regimes + the 3rd-party-slot ×0.8 + zero floor),
+> record spells (min + RNG1 mod (range+1), side-selected, **DEF does NOT
+> reduce spell damage** — S77's open question), resistances (27 levels packed
+> 2-bit MSB-first at $DD28+slot*7 — 15/15 element cores matched the FAQ),
+> every multiplier/hit ladder incl. the guard-bit rows, and all 43
+> handler-computed specials (MegaMagic = 2MP+2L ±10% — the old "(…)/4" note
+> was wrong; WindBeast/Vacuum level-based; Kamikaze/Sacrifice/Ramming;
+> slashes with a 1.3125× amplify row; BiAttack/QuadHits ATK-rewrites). The
+> Python model (`simulator/damage.py`) replays emulator captures **698/698
+> exact** (`simulator/validate_damage.py` + `s78_master_events.json`;
+> measured on the patched build + the user's hacked .sav via the S75 rig +
+> waypoint hooks).
+>
+> The discovery of the session: **$DB73 is the battle TYPE** (wild 0 / boss 1
+> / arena 2; $FF is just its loss value), and bank $53's `LoadBtlC_51aa`
+> gates {Beat, Defeat, Sacrifice, Kamikaze, Paralyze, $6B, K.O.Dance} to
+> AUTO-FAIL vs enemies in boss battles — the classic no-death-on-bosses rule,
+> now in code. Corollary for all future rig work: the S75 rig sets $DA09=1,
+> so rig battles are BOSS-typed; poke $db73=0 for wild-battle semantics.
+> Kamikaze forks on it (wild: targetHP−1; boss: (casterHP−1)/2 — both
+> measured).
+>
+> User directions logged: full simulator for the romhack (not just
+> randomizer); acceptance must cover BOTH control variants (gates/bosses =
+> per-monster commands; arena = tactics only); AI to be reverse-engineered in
+> a later session of this arc; EDITOR_DESIGN §11's never-simulate rule
+> superseded (amended in place — differential validation is the guardrail
+> now). DWM-original.sav is REJECTED by the English vanilla ROM (title shows
+> only NEW GAME); user confirms NO saves are from the German build, so the
+> likely origin is an older PATCHED build (pre/post-S69 checksum formats are
+> mutually rejecting) — the vanilla-formula ground truth remains the patched
+> ROM + DWM-hacked.sav pair, which is fine since patches leave the damage
+> machinery untouched.
+> Not yet measured (traced only, marked in §15.6): slot-2 ×0.8, arena
+> variants, RainSlash hits 2+, Sacrifice magnitudes. S79: turn order, apply
+> step, status durations, AI. Owning: BATTLE_SKILL_SYSTEM §15,
+> TOOLS_AND_DATA §2.10, known_RAM_map, ROADMAP S78.
+>
 > Last verified: 2026-08-06 (Session 77 — **randomizer part 2**: breeding tree
 > regeneration, stratification, and a rebuild of skill assignment onto vanilla
 > placement.) — verifier PASS 6/6, clean `1ca6579…` untouched. S75v4 patched pin
@@ -44,164 +88,10 @@
 > and 2 skills still fail `profile_check`; a combat simulator is blocked on
 > finishing the damage formula.
 >
-> Last verified: 2026-08-06 (Session 76 — **standalone randomizer, and the
-> German build brought in scope**. USER-TESTED and signed off. No patches are
-> applied by any of it: `randomizer/` rewrites data tables only, so saves stay
-> valid across builds and reseeds.) — verifier PASS 6/6, clean `1ca6579…`
-> untouched. S75v4 patched pin `ce1e7369…` unchanged (this session touched no
-> patch).
->
-> S76 in three parts. (1) **Region portability**: the German build
-> (`08bca718…`) carries every mechanical table at the SAME offset with
-> IDENTICAL bytes except the two in bank `$14`, shifted exactly `+$70`; boss
-> trigger EIDs proven region-independent by script-token census. One codebase
-> serves both. (2) **The randomizer** — bosses, breeding, encounters, skills,
-> growth, resistances, exp curves, arena, starter — built on the invariant that
-> an enemy row keeps its level, six stat words and exp reward, so only identity
-> and moves change and pacing is preserved by construction. (3) **Two shipped
-> difficulty bugs, both caught by the user, both now regression-tested**: enemy
-> moves were banded on `SkillLearnReqTable` (a LEARN gate, not a DAMAGE gate),
-> which put flat 10-16 all-foes breath on Gate-of-Beginning enemies; and
-> encounter pools were bucketed by quantile rather than exact level, which moved
-> level-4/5 rows (ATK 26-35) into a level-1 gate. `randomizer/audit_threat.py`
-> now proves per-row damage parity across all 487 enemy rows (currently 0 rows
-> harder than vanilla, 0 bosses harder, both builds).
->
-> S76 also decoded the **library recipe TEXT** (bank `$4D`, dispatch entry =
-> species + 5): hand-authored strings that read nothing, while the parent
-> SPRITES beside them resolve live through bank `$16` entry 1. Editing
-> `FamilyRecipeTable` moved the sprites and left the words frozen — user-caught,
-> emulator-reproduced, now regenerated by `randomizer/librarytext.py` behind a
-> reconstruct-before-write gate (193/197 vanilla strings rebuilt byte-for-byte;
-> the 4 that differ are vanilla TYPOS, which is what proved the strings were
-> hand-authored). Power-calibration numbers and the coherence sets an editor
-> must maintain are written up explicitly for editor use.
->
-> Last verified: 2026-08-02 (Session 75 — **custom skill #5 $E9 "Mourn":
-> v1 mechanics USER-CONFIRMED; v2 banner-ordering PyBoy-verified; v3/v4 =
-> the Dracky-crash investigation: TWO byte-neutral fences + the crash-config
-> VALIDATOR (verify_integrity check 6 + editor-builder-integrated)** —
-> verifier PASS 6/6, compiler 39/39, clean `1ca6579…` untouched, S75v4
-> patched pin `ce1e7369…` (supersedes v2 `762c0df0…`, v1 `a914e489…`, S74
-> `d1f5eb49…`).)
->
-> S75 crash investigation (user-reported wild-gate-Dracky freeze: black →
-> white → frozen; SameBoy backtrace = garbage execution at $4d:$4a87 with a
-> WRAM return address $d7b5 and $58/$50 FX-driver frames). Findings, in
-> order of hard-won honesty: (1) **RETRACTION — the rig "bank_006
-> regression" was an input-alignment artifact**: the A-only masher wedges
-> in the post-battle join menus at unlucky cadences on EVERY ROM incl. S74
-> (measured: S74 stalls at cadences 19/23/27/29; the earlier 3-cadence
-> "S74 clean" sample was luck). Timing-shifting ANY code moves which
-> cadences stall. (2) The S21 Clam stream is VALID (decodes to exactly 36
-> tiles via dwm.sprite_codec — same as the original Dracky stream); the
-> stream-size theory is dead. (3) Two REAL latent hazards found and fenced
-> byte-neutrally: **LearnCode2Guard06** (bank $06 $7F1F, jp-trampoline at
-> Jump_006_50b5: custom ids $E1+ can never stat-learn via the unexercised
-> code-2 display path — they divert to the skip-record path; vanilla ids
-> unchanged) and **SlotProbeGuard50** (bank $50, CmpBtl_6383 head
-> trampoline + 13 tail-fill bytes: the level probe rejects slot index >=
-> $28; measured: the exp walker leaves $cac0==40 post-increment and a
-> stale-$cac0 re-probe processes phantom slot 40 whose "record"
-> $CAC1+40*$95=$E209 is ECHO RAM aliasing battle state at $C209, with a
-> post-probe exp WRITE into the alias when the residue looks alive). (4)
-> **tools/validate_custom_data.py**: hard-errors on crash-capable configs —
-> universal-qualifier learn rows without the code-2 fence, missing slot
-> fence, learn-record structural violations (18-byte stride, level range,
-> prereq refs, scan-bound == last id + 1), and bank-$36 sprite redirects
-> whose replacement stream does not decode to the original's exact tile
-> count. Wired into verify_integrity as check 6 AND editor2/core/builder
-> build_rom (the editor refuses to hand back a crash-config ROM);
-> test_compiler gains a PASS/FAIL validator test (39 tests). (5) The
-> user's actual crash is NOT yet reproduced (field-triggered battles all
-> clean; the $58:$401D id-keyed FX-pointer lookup fires only with the
-> basic-attack action id in tested modes — custom ids route through the
-> forked skill pipeline; the $58 backtrace frames are victims of prior
-> stack corruption, not the origin). User given a SameBoy trap kit
-> (watchpoints on the corruption channels) to catch the origin on next
-> occurrence.)
->
-> Session 75 (2026-08-02 — **custom skill #5: $E9 "Mourn" (user-directed):
-> single-foe attack, damage = the VANILLA ATK-vs-DEF physical roll ×
-> (dead allies + 1) — 0 dead (all alive or caster alone) = 1×, 1 dead = 2×,
-> 2 dead = 3×; MP 10; natural learn standalone lvl 3; announce "used
-> Mourn!"; conditional boost banner "Fallen allies / lend power!" (renders
-> + 40-frame hold ONLY when the multiplier fired); presentation = EvilSlash
-> ($40 proxy) played TWICE back-to-back in the cast-anim slot. BUILT,
-> PyBoy-verified (0/1/2-dead multipliers incl. persistence across 8+ rounds
-> AFTER the engine's KO scan, MP deduct + afford stop, double-slash + clean
-> release, announce→banner→damage ordering measured safe, kill chain +
-> victory, Tremor/Infernos/plain-attack regressions), NOT user-tested; the
-> deterministic queue-poke rig stood in for a real-menu commit (§13.8 rig
-> caveats)**. Owning docs: BATTLE_SKILL_SYSTEM §13.8 (defense-calc dispatch
-> pattern = FarSkillFork returns a per-id pointer-holder: MournDispatchPtr
-> $52:$7FFA -> MournDispatch52 in the $6c56 dead-code window = `call
-> CalcDefenseWrapper / jp CustomDispatch52_shared`; the $dd1b THREE-STATE
-> finding $00 alive/$01 processed-KO/$FF empty — presence must test != $FF;
-> the sticky-terminal $FF slash counter), KEY_LESSONS (6 new incl. the
-> TriggerBattle-mimic battle rig $DA03/04+$DA02+$DA09+$C905+$C8EB.6 and the
-> original-ROM-.sav checksum rejection), wram.asm (wMournBoosted $DEBA,
-> wMournSlashes $DEBB). As built: banks $72 (SkillMourn + QuakeAnimHold72
-> .mourn replay), $52 (2nd trampoline, 6 dead bytes + 2 tail bytes), $53
-> (MournGate_delay + ladder jp), $4c (2 msgs + LoadB4c_MournBoost, pool
-> nops 1:1), $54/$07/$41/$56/$58/$5f/$06/$14 one-line recipe rows; bank $07
-> was FULL — 3 bytes reclaimed in MPPtrFromId via `ld h,HIGH(table)` with a
-> link-time page ASSERT; bank $41 name funded from the dead $00 fill before
-> Scorch. v1 notes: real-menu battle commit not rig-exercised; one -13
-> among eleven 2× events (possible apply-time variance — watch); an
-> abnormally aborted action leaves the $FF terminal -> next cast skips its
-> animation once, self-heals. v2 (2026-08-02b, after user
-> confirmation of v1 mechanics): banner moved BEFORE the attack animation —
-> MournCountDead shared counter evaluated in the anim fork on slot entry;
-> banner render + $FE hold (45 f + ~43 f typing, driver deferred — bounded,
-> measured safe) precede the two slash plays; handler keeps only the
-> multiplier; MournGate_delay now a natural pass-through; bank $72 only.
-> PyBoy: banner pixels identical to the v1-confirmed string, persists
-> through the slashes, announce replaces it; 2x/0-dead/Tremor/MP all
-> re-verified. Awaiting user test of the ordering.)
->
-> Last verified: 2026-08-01 (Session 74 — **custom skill chain $E5-$E8
-> "Earthquake" (Tremor/Quake/QuakeMore/QuakeMost) BUILT + PyBoy-verified
-> end-to-end; NOT yet user-tested** — verifier PASS 5/5, clean `1ca6579…`
-> untouched, S74 patched build (pin recorded below; the S73 patched pin
-> `224b1176…` is superseded).)
->
-> Session 74 (2026-08-01 — **custom skill #4: the 4-tier Earthquake chain
-> $E5-$E8 (user-directed): all-foes earth damage 40-60/90-120/150-190/
-> 240-270 (top = 1.5x WhiteAir), ALSO hits the caster's own side for 1/3,
-> skips caster + ALL flying combatants both sides, screen-shake + GreatTree
-> rumble ($68) presentation, MP 5/10/16/24, learn chain lvl 2/4/6/8 each
-> tier requiring the previous. BUILT, PyBoy-verified (damage both sides,
-> 1/3 ally division, caster + flying skips, crossover banner, repeat casts,
-> MP deduct, MagicBurn/attack/Infernos regressions), NOT user-tested; a
-> real-menu commit was not scriptable — the deterministic queue-poke rig
-> stood in (see §13.7 rig caveats)**. Owning docs: BATTLE_SKILL_SYSTEM
-> §13.7 (sweep-fork architecture + the TWO traps: looping-SE `$dd80`
-> deadlock with the ROM0 vector-gap stopper stub, and `$db88` mid-sweep
-> contamination -> wQuakeCaster/phase-keyed division), TOOLS_AND_DATA
-> (dump_flying_flags.py -> extracted/flying_flags.json: 221 species, 48
-> flying, per-species ROM offset for the editor), MONSTER_DATA (+$04 edit
-> note), KEY_LESSONS (4 new), DOC_AUDIT (stale-$17 record story corrected).
-> As built: bank $52 sweep window $719C -> QuakeSweep72 (rst-return-via-DE);
-> bank $72 SkillQuake + QuakePowerTable + QuakeSweep72; bank $53 gate
-> (QuakeGate_delay: ally-banner render + hold + delay==8 damage-pair refire)
-> + widened TameSound suppressors ($E1-$E8) + QuakeFirstTgt53; bank $00
-> QuakeShakeEnd stub in the AUDITED-DEAD vector-gap bytes $0051-$0057/
-> $005C-$005F + 4-for-4 wobble window at $0574 (SFX-$00 stopper when the
-> shake ends — `$c8b1` has no vanilla writers so it is Quake-only); banks
-> $54/$07/$06/$41/$4c/$58/$5f/$14 as per §13.7 (records POWER WORDS ZERO —
-> nonzero powers loop the presentation; bank $07 index rebase $DE->$E0 +
-> `inc a` byte-trick to fit; bank $06 second learn table past $7F7F with
-> tail bytes verified unmoved). WRAM: wQuakePhase $DEB4, wQuakeAllyMsg
-> $DEB5, wQuakeCaster $DEB6. v1 limitations (v2 items): single-line
-> wordings (vanilla multi-line battle enders `63 FC 10 EC F2` undecoded),
-> Infernos flame visual under the shake, ~80-frame rumble then stopper,
-> all-enemies-flying = no-op cast, first-match caster derivation, blank
-> $E5-$E8 descriptions (bank $056), earth-resistance slot deferred.)
->
-
->
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S77** (2026-08-06): randomizer part 2 — breeding tree regeneration (depth-targeted), stratification, skill assignment rebuilt onto vanilla placement; the BLIND power field finding (43 handler-computed skills); per-entity `profile_check.py`. Owning: BATTLE_SKILL_SYSTEM "power field is BLIND", ROADMAP S77, TOOLS_AND_DATA §2.9.
+- **S76** (2026-08-06): standalone randomizer + German build in scope (`08bca718…`, bank-$14 tables +$70); two user-caught difficulty bugs (learn-gate≠damage-gate; quantile banding) → `audit_threat.py` per-row parity; library recipe TEXT decoded. USER-TESTED. Owning: ROADMAP S76, TOOLS_AND_DATA §2.9, KEY_LESSONS S76.
+- **S75** (2026-08-02): custom skill $E9 "Mourn" (physical-base custom via MournDispatch52) + the battle RIG (TriggerBattle-mimic $DA03/04+$DA02+$DA09+$C905+$C8EB.6, per-frame $dcec forcing); .sav build-specificity lesson; v4 pin `ce1e7369…`. Owning: BATTLE_SKILL_SYSTEM 13.x, KEY_LESSONS S75/S75b.
 - **S74** (2026-08-01, v2/v3/v4 2026-08-02): custom skill chain $E5-$E8 "Earthquake" — sweep fork + victory gate, tier-scaled shake bursts in the cast-anim slot, wind anim removed at the anim-index source, 2/3-line announce banners, fly-dodge beats (party-side only, keyed on $db89), SKIL descriptions, ROM0 back to vanilla. PyBoy-verified. Patched pin `d1f5eb49…`. Owning: BATTLE_SKILL_SYSTEM 13.7 (+13.7.9).
 - **S73** (2026-07-31): custom skill $E4 "Anchor" — field-cast pipeline RE'd (menu shell $c90d 0-4, usability whitelist, bank $14 entries 4/5, menu-armed script protocol ctr=$FFFF); anchor gate floor → warp GreatTree → return for 3/4 current MP charged on arrival; persists through save; S73b descriptions (table $56:$6667) + battle rejection (LoadBtl_4b98/FieldOnlySkillA). SHIPPED, USER-CONFIRMED; pin `224b1176…`. Owning: BATTLE_SKILL_SYSTEM §14 + §14.1, GATE_GENERATION, EVENT_FLAGS, known_RAM_map (+$50/+$52/+$54/+$56 correction), KEY_LESSONS S73, PROJECT_COMPILER (template re-pin).
 - **S71** (2026-07-26): FX1 — active farm 17→37 slots (array 40; sleep pool → SRAM bank 2 "P1"; "F2" reformat + checksum v3; snapshot "R4"; wMonList $D001). SHIPPED, USER-CONFIRMED; v2 exp-scale veto → pin `46ba6991…`. Owning: MONSTER_DATA (FX1 as built), ARCHITECTURE (checksum v3), KEY_LESSONS S71.
@@ -365,6 +255,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. Open boxes: InitBGM channel-count ext (4/5ch sources), gate/event music, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
+| Combat simulator (arc S78-S80) | 🟡 **Damage layer DONE (S78)**: `simulator/damage.py` traced from bank $52/$53 and differentially validated 698/698 exact against the running engine (corpus + validator + rig in `simulator/`). DEF does not reduce spells; $DB73 boss-protection gate decoded. Remaining: turn order, apply-step exclusions, status durations, AI (both control variants: gate/boss commands vs arena tactics), pacing layer. | BATTLE_SKILL_SYSTEM §15; TOOLS_AND_DATA §2.10; ROADMAP S78 |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
 | Editor app (Phase 3) | 🟢 **Walking skeleton BUILT S72, NOT yet user-tested** (`editor2/app/`, PySide6, cross-platform — primary macOS; open/rooms/Build/Run; GUI build machine-verified byte-identical to the `46ba6991…` pin via `editor2/tests/test_app.py --rom`). Next boxes: NPC sprite-id catalog, embedded-PyBoy preview, room canvas (ROADMAP Phase 3). Backend keystone (S42) + compiler (S53+) done |
 

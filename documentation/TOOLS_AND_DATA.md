@@ -423,6 +423,15 @@ is deliberately not committed.
 | `randomizer/plusgrowth.py` | The ONE code change: extends vanilla's plus-value growth bonus (`FuncExp_4163`) to MP and INT. Byte-neutral trampoline in bank `$13`'s free tail, four guard checks before writing. |
 | `randomizer/profile_check.py` | **Per-entity envelope checker.** Six invariants against vanilla, non-zero exit. Runs on any edited ROM, not just randomized ones — see PROJECT_COMPILER "Validation the editor must run". |
 
+## 2.10 simulator/ — combat simulator package (NEW S78)
+
+| File | Purpose |
+|------|---------|
+| `simulator/damage.py` | The exact DWM1 damage model: LCG RNG, physical roll (`CalcSkillDefense` all 3 regimes + slot-2 rule + zero floor), record power rolls with side selection, packed-resistance decode ($DD28), every multiplier/hit ladder, the $DB73 boss-protection gate, and the handler-computed specials (MegaMagic, WindBeast, Vacuum, Kamikaze both paths, Ramming, slashes/cuts, multipliers). Every function names its bank-$52/$53 routine. Owning prose: BATTLE_SKILL_SYSTEM §15. |
+| `simulator/validate_damage.py` | Differential validator: replays a measure_rig event corpus through damage.py and diffs against the engine's own values at matching waypoints. S78 corpus: **698 comparisons, 0 mismatches** across 13 categories. Exit 1 on any mismatch. |
+| `simulator/measure_rig.py` | PyBoy capture rig: S75 TriggerBattle-mimic battle + per-frame skill/stat forcing + hooks at the damage waypoints ($52:$60D7/$61EC/$679C/$67BA/$54E7/$54EA, special entries, Beat outcome branches). `--db73 0` reproduces the wild-battle condition inside rig battles (the rig's $DA09=1 makes them "boss" type). Needs a patched ROM + CONTINUE-able .sav + post-boot savestate. |
+| `simulator/s78_master_events.json` | The S78 validation corpus (1,140 events; the 698 checks). Regenerable with measure_rig.py; kept so `validate_damage.py` runs without an emulator session. |
+
 ## 3. Rules
 
 1. Commit the tool with the data, same change. No exceptions.

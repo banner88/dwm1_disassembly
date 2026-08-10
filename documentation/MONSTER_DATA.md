@@ -178,7 +178,7 @@ of the post-battle level-up processing loop.
 
 **Battle phase machine** (`$D9EC`) — CORRECTED S68: **18 states** (not 15),
 dispatch table `BattlePhaseTable $50:$5F3A`, dispatcher `$5F2F`, gated by
-`$DB73` (`$FF` = frozen; loss jingle/fade). `$D9EC` drives the WHOLE battle
+`$DB73` = $FF (its loss-freeze value; S78: $DB73 is the BATTLE TYPE — wild 0 / boss 1 / arena 2 — see known_RAM_map). `$D9EC` drives the WHOLE battle
 (intro phases 0-3, main loop 4-8, turn sequencer 9), not just post-battle.
 Post-battle phases:
 - `$0A` ($60ED): Post-battle setup — link fork (no exp), loss skip
@@ -201,7 +201,7 @@ is looked up and replaced with the join EID (the monster stats for what joins).
 |---------|---------|
 | `$D9EC` | Battle phase index (18 states; S68) |
 | `$DB55` | Battle OUTCOME: 0=win, 1=loss, 2=undecided (S68; "always 0 for bosses" was a win-path observation) |
-| `$DB73` | Phase-machine freeze gate ($FF = frozen for defeat jingle/fade; S68) |
+| `$DB73` | BATTLE TYPE (wild 0 / boss 1 / arena 2; boss-protection gate for death/paralysis skills; $FF = loss freeze) [S68, retyped S78] |
 | `$DB85` | Joinability: $07=no, other=yes (RNG-based) |
 | `$DD61` | Join candidate species ($FF = none) |
 | `$DD6B` | Copy of $DB55 |

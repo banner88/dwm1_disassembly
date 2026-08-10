@@ -755,13 +755,15 @@ Two further coherence rules for content editing, on top of the three sets above:
   duplicate doubles that monster's encounter rate inside its pool, which reads as
   a difficulty spike with no stat change to explain it.
 
-### Still missing: a combat model
+### Still missing: a combat model — damage layer DONE (S78)
 
 A battle simulator would catch what these static checks cannot — time-to-kill,
-resource drain, pacing across a gate. It is currently **blocked**, and the
-blocker is worth naming: the 43 handler-computed skills have no modelled damage
-at all, and it is still untraced whether DEF reduces spell damage (the spell
-handlers route through `$5BFF`/`$54E7` rather than `CalcSkillDefense`). Building
-a simulator on unknown formulas produces confident wrong numbers. Finish the
-damage tracing first; it is valuable for the romhack independent of any
-simulator.
+resource drain, pacing across a gate. The S77 blocker is cleared: S78 traced
+the entire damage layer (physical roll, record spells, resistances/ladders,
+boss-protection gate, all 43 handler-computed specials) and validated the
+Python model differentially against the running engine — 698 exact checks, 0
+mismatches (`simulator/damage.py`, BATTLE_SKILL_SYSTEM §15). DEF does NOT
+reduce spell damage. What still stands between the model and a usable
+simulator: turn order, the damage-apply exclusions, status durations, and
+both AI variants (per-monster commands vs arena tactics) — the S79/S80 boxes
+on the ROADMAP.

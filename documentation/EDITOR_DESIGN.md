@@ -477,6 +477,18 @@ editor2/
 
 ## 11. In-editor preview — simulate vs emulate (S72 design)
 
+> **AMENDED S78 (user direction).** The "never simulate battle engine
+> semantics" reading of this principle is SUPERSEDED for combat: the
+> randomizer showed that statistical power-modelling is not a workable
+> substitute for simulation, so the project now builds a combat simulator
+> (`simulator/`). The guardrail that replaces the ban is DIFFERENTIAL
+> VALIDATION: every simulated formula is traced from the disassembly AND
+> replay-validated against emulator captures before it is trusted
+> (S78: 698/698 exact for the damage layer). A simulated subsystem without
+> a passing validation corpus is still forbidden — the failure class this
+> section names (a second implementation whose divergences masquerade as
+> documentation) is prevented by the corpus, not by abstinence.
+
 **Principle.** The editor SIMULATES only what is *table-derived* —
 deterministic renders from project.json + `extracted/` + decoded formats —
 and EMULATES everything that involves engine state machines. A simulator

@@ -1662,3 +1662,128 @@ identically. Swapping between them tripled paralysis on boss/arena rows (2 → 7
 and nearly doubled it overall (14 → 26). Paralysis (`damage_class $03` — 105
 Lähmer, 107 Allähmer) needs its own bucket, and is banned outright on boss /
 arena / boss-join rows alongside the full heals (45, 47, 163).
+
+
+## 15. DAMAGE FORMULAS — traced and differentially validated (S78)
+
+Everything below was read from `disassembly/bank_052.asm` (routine names
+cited), reimplemented exactly in `simulator/damage.py`, and validated by
+replaying PyBoy captures of the real engine through the model:
+**698 comparisons, 0 mismatches** (`simulator/s78_master_events.json`,
+`simulator/validate_damage.py`). RNG is the LCG `state16 = state16*5+$1357`
+(state = RNG1<<8|RNG2); damage code builds its 16-bit dividend SWAPPED as
+(RNG2<<8)|RNG1.
+
+### 15.1 The physical roll — `CalcSkillDefense` ($52:$60D7)
+
+One `BattleRNG` step at entry; all later RNG reads reuse that value.
+
+```
+if ATK <= DEF/2:           damage = RNG1 & 1                       [regime A]
+else base = (ATK - DEF/2) >> 1
+  if base <= ATK>>4:       damage = RNG16d mod (ATK>>4)            [regime B]
+                           (ATK>>4 == 0 -> regime A)
+  else:                                                            [regime C]
+    var = (RNG16d mod ((base>>3)+1)) >> 1
+    n = RNG2 & $0F:  n==0 none; n&8 -> base += var; else base -= var
+    t = RNG1 & 3:    t==0 none; t odd -> +1; else -1
+    damage = base
+```
+
+Then `LoadBattle_61ec`: the THIRD party slot (target idx 2; in arena, idx&3
+== 2 of either side) takes **×0.8** (traced; needs a 3-monster party to
+measure — S79). Finally the zero floor: damage==0 -> RNG2&1 (applies AFTER
+the slot-2 adjust; a hook at $61EC sees the pre-floor value).
+
+The plain attack command IS skill id 58 through this core. Physical
+multiplier handlers (validated): TwinSlash/PsycheUp ×1.5, Beserker ×2 (+
+sets $db08 bit2), SquallHit ×0.8, Ahhh ×0.5, RainSlash per-hit ×0.8/0.6/0.4
+($DD69 = hit counter), BiAttack rolls with ATK×0.75 (2 hits), QuadHits
+ATK×0.625 (4 hits, measured 100→75 / 100→62), CALLEVIL rolls with ATK=400,
+MetalCut ×1.5+1 iff target metal flag ($DB8B+slot bit0), family cuts
+(DrakSlash class) ×1.5 iff target family matches (Slime 0/Dragon 1/Beast 2/
+Bird 3/Plant 4 via `LookupTargetSpecies`).
+
+### 15.2 Record spells — `StoreDamageResult` ($52:$66D6) + `LoadBattle_679c`
+
+`damage = record_min + (RNG1 mod (range+1))` — **no RNG advance, no caster
+stat, and DEF does NOT reduce spell damage** (the S77 open question). Side
+selection: party caster +$0B/+$0D, enemy +$0F/+$11 (validated both sides,
+69 checks). Heals are the same roll (Heal 43 = 30+RNG1%11 for BOTH sides;
+HealAll = 999 -> clamp to max).
+
+### 15.3 Resistances — packing and ladders
+
+Species info +$0F..+$29 (27 levels 0-3) is packed 2-bit MSB-FIRST into 7
+bytes per combatant at `$DD28 + slot*7`; type t sits at packed position
+t+1 (byte (t+1)//4, bit-pair 3-((t+1)%4)); position 0 unused. Verified
+15/15 element cores vs the FAQ table (§ resistance_types.json order).
+
+Damage multiplier ladders, keyed on target status byte $DB05+slot*8 bits
+6/7 (`CheckTargetGuardA` family — the spell/GigaSlash path):
+
+| res level      | 0      | 1       | 2    | 3    |
+|----------------|--------|---------|------|------|
+| normal         | 1.0    | ×85/100 | 0.5  | 0    |
+| bit6           | 1.0    | 0.75    | 0.4  | 0    |
+| bit7 (amplify) | 1.3125 | 1.15625 | 0.75 | 0.30 |
+
+Breath ladder (`BitCheck_676c` — breaths, BigBang, RockThrow, MegaMagic):
+normal [1, 0.75, 0.4, 0]; bit6 [0.75, 0.5, 0.25, 0]; bit7 = amplify row.
+Elemental slashes (`BitCheck_6782`, after the phys roll): bit6 -> plain
+row, otherwise the AMPLIFY row (a 1.3125× bonus vs res-0!).
+
+Hit ladders (RNG1 < threshold after one step): `CheckTargetGuardB` normal
+[always, $D8, $7F, never], bit6 [always, $BF, $66, never], bit7 [always,
+always, $BF, never]. **`BitCheck_6749` (Beat/Defeat/K.O.Dance, ids < $72,
+and the status helpers) has NO bit6 branch**: bit7 clear -> [$BF, $7F,
+$3F, never] — an unguarded Beat vs res-0 is a 74.6% roll, not a sure hit
+(measured). `BitCheck_6733` (Kamikaze class): normal [always, $BF, $66,
+never].
+
+Element grid: Blaze grp→Fire(0), Firebal→Heat(1), Bang→Explosion(2),
+Infernos→Wind(3) (via the 3-byte $5C27 tail), Bolt/Lightning/Hellblast→
+Lightning(4), IceBolt→Ice(5), BigBang→Fire(0), FireAir grp→(16),
+FrigidAir grp→(17), RockThrow→Aid(24), GigaSlash→(25) — GigaSlash is
+RECORD-driven (350-410 party / 270-320 enemy), not handler-scaled.
+
+### 15.4 Boss protection — `LoadBtlC_51aa` (bank $53 entry $10)
+
+`$DB73` is the **battle type**, set by `LoadBtlS_43c9` (bank $51 init):
+arena→2, wild ($DA09==0)→0, scripted w/ wScriptMapType $5D→2, else
+(boss/scripted)→1; $FF = loss freeze. The gate: skills {$12 Beat, $13
+Defeat, $14 Sacrifice, $3E Kamikaze, $69 Paralyze, $6B, $71 K.O.Dance}
+AUTO-FAIL vs ENEMY targets when db73==1 — instant death and paralysis
+never work on bosses, and DO work on wild monsters (validated both ways;
+the rig sets $DA09=1 so rig battles are "boss" battles — poke db73=0 to
+reproduce the wild condition).
+
+### 15.5 Handler-computed specials (all validated unless noted)
+
+- **MegaMagic** (`LoadBattle_653e`): base = 2·MP + 2·level (level array
+  `$DB9B+slot`); variance = 0.1×base (((base×8/10)>>1)>>2), one RNG step,
+  RNG1&1 odd -> −(RNG16d mod var) else +. vs MegaMagic res (15) through the
+  breath ladder. **The §8-era note "(MP*2+level*2)/4" was WRONG** — no /4.
+- **Kamikaze** (`BattleCall_6232`): hit via Sacrifice-res ladder; caster
+  HP==1 -> 1; wild/arena -> damage = target current HP − 1 (floor 1);
+  boss (db73==1) -> (caster HP − 1)/2. Measured: HP200 -> 249 wild, 99 boss.
+- **Sacrifice** (state $D9ED=3 -> bank $53 ~$67A9): boss gate; res 14:
+  3=immune, 2=works only if RNG1<$C0; then RNG2<$7F (49.6%) -> damage =
+  target FULL HP (kill, msg $E9) else HP − max(HP/100,1) (~1% survivor).
+  Caster dies in the state chain. (Traced; magnitude not yet rig-measured.)
+- **WindBeast** 3L+10 party / 1.5L enemy, cap 180; **Vacuum** 2L+30 /
+  1.5L, cap 150; ±half the (mod-)remainder, sign from the shifted-out bit
+  (see damage.py for exact polarity per skill).
+- **Ramming**: target current HP × 0.8 + 1, Sacrifice-res via ladder A.
+- **Beat/Defeat**: pure hit ladder (15.3) then HP=0, presence $DD1B=1.
+- **CallHelp/YellHelp**: 50% (RNG1&1) to summon. **Massacre**: random
+  target with a $A0/256 gate. **Smashlime/Sheldodge/Branching**: family-
+  conditional (traced).
+
+### 15.6 What is NOT in the S78 model (next arc)
+
+Turn order, enemy/tactics AI move selection (gates/bosses = per-monster
+commands vs arena = tactics-only), status application/durations/wake
+chances, MISS/dodge and the $DA33 timers, and the damage APPLY step's
+exclusion lists ($52:$6DB0). Coverage gaps marked in-place: slot-2 ×0.8
+(traced), arena variants, RainSlash hits 2+, Sacrifice magnitudes.

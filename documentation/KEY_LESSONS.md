@@ -2865,3 +2865,43 @@ other banks' coincidental data/comments.
   column, producing lopsided monsters. "Enemies suddenly hit for 13" traced to
   duplicate EIDs in a pool (42 of 128; vanilla 0), not to any stat change.
   Subjective reports located defects the instrumentation was built to miss.
+
+
+## S78 — damage tracing: waypoints, ladder routers, and a mistyped flag
+
+- **$DB73 was documented as a "freeze gate" but is the BATTLE TYPE** (wild 0 /
+  boss 1 / arena 2 / $FF loss-freeze, set by LoadBtlS_43c9 from $DA09 and
+  $C86C). Three sessions had used it (S68 loss flow, S71/S75 edges) without the
+  type reading, and the boss-protection rule hiding behind it (death/paralysis
+  skills auto-fail vs enemies when ==1) was invisible until Beat "missed" at
+  resistance 0. A flag consumed in several places deserves a WRITER census, not
+  just a reader interpretation at the first site found.
+- **The S75 battle rig makes every battle a BOSS battle** ($DA09=1 is one of
+  TriggerBattle's own writes, and battle init types db73 from it). Any behavior
+  gated on battle type silently takes the scripted branch in rig measurements —
+  poke $db73=0 in-battle to reproduce the wild condition. The Kamikaze fork
+  ((casterHP-1)/2 vs targetHP-1) and the Beat gate both only surfaced this way.
+- **Differential validation compares values AT THE CAPTURE POINT, not the
+  routine's final answer.** The $61EC hook sees the physical roll BEFORE the
+  zero floor (RNG2&1) because the floor runs at the tail of Jump_052_6183;
+  the one "mismatch" in 47 was the model being right about the engine and
+  wrong about the waypoint. Pin each hook's position in the dataflow before
+  trusting a diff.
+- **Near-duplicate ladder routers differ in WIRING, not rows** — BitCheck_6749
+  has NO bit6 branch (unguarded Beat vs death-res-0 is a 74.6% roll, not a
+  sure hit), while its sibling CheckTargetGuardB does. Extrapolating a router
+  from its siblings produced a wrong model that 50 gate-blocked observations
+  could not catch; only wild-condition events exercised the rows. Validate
+  each router with events that actually REACH it.
+- **The damage code's 16-bit RNG dividend is byte-swapped** relative to the
+  LCG state: state = (RNG1<<8)|RNG2 but divisions consume (RNG2<<8)|RNG1.
+  Every mod-based formula (regimes B/C, MegaMagic/WindBeast/Vacuum variance)
+  needs the swap or validates as noise.
+- **A .sav is build-specific — verify CONTINUE loads before building a
+  measurement session on it.** The attached DWM-original.sav is rejected by
+  the English vanilla ROM (title shows only NEW GAME). User confirms no
+  saves are German-build, so a file NAMED for the original ROM was most
+  likely written by an older patched build (the S69/S71 checksum formats
+  reject across build generations in both directions). Filenames lie;
+  the title menu is the test. The patched ROM + DWM-hacked.sav pair was
+  the working ground truth (patches leave the damage machinery untouched).

@@ -350,9 +350,19 @@
                  phase-7 turn engine, backtrace-verified). Also briefly the
                  1/32 random intro-event marker at battle phase 2
                  (LoadBtl_5d29 rolls live RNG $C899/$C89A &$1F==$1F).
-   1:DB73   1    Battle phase-machine freeze gate: $FF = frozen (set on loss
+   1:DB73   1    BATTLE TYPE, set at init by LoadBtlS_43c9 ($51): arena
+                 ($C86C!=0)->2; wild ($DA09==0)->0; scripted w/
+                 wScriptMapType $5D->2; else (boss/scripted)->1. Gate
+                 LoadBtlC_51aa ($53 entry $10): death/paralysis-class
+                 skills ($12,$13,$14,$3E,$69,$6B,$71) auto-fail vs enemies
+                 when ==1 (boss protection). Kamikaze forks on it (wild:
+                 targetHP-1; boss: (casterHP-1)/2). $FF = loss freeze (set
                  for defeat jingle/fade; released at BattlePhaseFreezeWait
-                 $50:$5F5E when [$DD80]&[$DD9A]==$FF) [S68]
+                 $50:$5F5E when [$DD80]&[$DD9A]==$FF) [S68, retyped S78]
+   1:DB8B   8    Per-combatant METAL flag array (bit0; MetalCut ×1.5+1
+                 keys on it) [S78]
+   1:DB9B   8    Per-combatant LEVEL array (MegaMagic/WindBeast/Vacuum
+                 damage read it) [S78]
    1:DB85   1    Joinability: $07=non-joinable, other=recruitable via RNG
    1:DD62   1    Battle-running latch (S68): nonzero -> bank $50 entry 1 runs
                  bank $02 entry 0 per-frame; ==0 -> the $D9EC phase machine
@@ -363,6 +373,10 @@
    1:DBBB   2    Enemy 1 Max HP
    1:DBBD   2    Enemy 2 Max HP
    1:DBBF   2    Enemy 3 Max HP
+   1:DD28  56    Packed battle resistances: 7 bytes/combatant (8 slots),
+                 2-bit MSB-first, type t at packed position t+1 (byte
+                 (t+1)//4, pair 3-((t+1)%4)); levels 0-3 from species info
+                 +$0F..+$29; read via BattleFunc_67bb..67d9 [S78]
    1:DD23   3    Battle exp total, 24-bit (SOLVED S56; was "? related to
                  random battles or exp"): party share = total / eligible
                  party count; farm share = total/16 each (exp walker

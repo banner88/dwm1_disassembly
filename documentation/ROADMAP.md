@@ -1344,6 +1344,47 @@ Follow-on candidates (not scheduled):
 - [ ] Residual `profile_check` failures: 27 growth pairs (all on species whose
       vanilla baseline is ~14 points, where ratio is misleading) and 2 skills
       drifting >8 rows. Needs a per-species absolute clamp.
-- [ ] Combat simulator for pacing/TTK — BLOCKED on damage tracing: 43
-      handler-computed skills have no modelled damage, and the spell/DEF
-      interaction is untraced.
+- [ ] Combat simulator for pacing/TTK — UNBLOCKED by S78: the full damage
+      layer is traced and differentially validated (698 exact checks, 0
+      mismatches; `simulator/damage.py`, BATTLE_SKILL_SYSTEM §15). Spell/DEF
+      answered (DEF does NOT reduce spells). Remaining for the simulator
+      itself: turn order + AI (S79 boxes below).
+
+
+## S78 — combat simulator arc part 1: damage tracing (user-directed)
+
+User direction: full simulator, "not just for randomizer but the full
+romhack"; two control variants matter for acceptance — gates/bosses
+(per-monster commands) vs arena (tactics only, e.g. Passive = guard if
+high HP / heal if ally low); AI itself to be reverse-engineered "at some
+point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
+
+- [x] Physical roll, record spells, resistances (packing + all ladders),
+      boss-protection gate ($DB73 battle type), handler specials — traced,
+      modelled (`simulator/damage.py`), 698/698 differential checks exact.
+- [x] Measurement tooling: `simulator/measure_rig.py` (S75 rig + waypoint
+      hooks), `simulator/validate_damage.py`, corpus
+      `simulator/s78_master_events.json`.
+- [ ] S79 — simulator core: turn order (AGL formula), action loop, damage
+      APPLY step exclusions ($52:$6DB0), status application/durations;
+      measure the traced-only items (slot-2 ×0.8 via 3-monster party,
+      RainSlash hits 2+, Sacrifice magnitudes, arena variants).
+      S78 breadcrumbs for the tracer: the turn SEQUENCER is battle phase 9
+      = bank $50 $6AAC (sub-machine on $D9ED; the per-action dispatch is
+      the `ld a,[$d9ed] / rst $00` table at $52:$6C5C — states 0-7 =
+      6C98/6CB2/6D56/6E2B/6E74/6F56/6FFA/7227, state 3 routes Sacrifice
+      to bank $53 entry $0D). Candidate order/flee math glimpsed but NOT
+      traced: BattleFunc_6a13 ($52) compares target DEF×2-or-×4, and
+      BattleFunc_6a49 compares wBattleAGL×4 capped $01FF — likely the
+      flee/order checks. The damage APPLY (HP subtract + skill-id
+      exclusion lists) is the jr_052_6db0..6de8 block. Beat outcome hook
+      pattern for rigs: hit path $52:$4200, miss $52:$4225. To rebuild
+      the rig environment: make (emits disassembly/game.sym), pip install
+      pyboy, boot patched ROM + hacked .sav, CONTINUE, close menus,
+      p.save_state -> boot.state (recipe in simulator/measure_rig.py).
+- [ ] S79/S80 — AI reverse-engineering: enemy move selection; the TWO
+      player-side control variants (direct commands vs arena tactics —
+      Charge/Mixed/Cautious/Passive semantics) so the simulator can drive
+      both gate/boss fights and arena fights.
+- [ ] S80 — pacing layer: TTK sweeps over gate encounter tables for the
+      romhack + randomizer profiles; wire into `randomizer/profile_check`.
