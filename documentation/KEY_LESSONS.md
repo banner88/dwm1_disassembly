@@ -2905,3 +2905,48 @@ other banks' coincidental data/comments.
   reject across build generations in both directions). Filenames lie;
   the title menu is the test. The patched ROM + DWM-hacked.sav pair was
   the working ground truth (patches leave the damage machinery untouched).
+
+## S79 — simulator core: turn order, statuses, §15.6 measurements
+
+### Rig-forced HP above MaxHP wedges the enemy AI
+**Symptom**: rig battles stall forever in battle phase 5 (d9ed=2) after the
+enemy AI queues action $E9; some runs produce ZERO events for thousands of
+frames.
+**Root cause**: measurement rigs forced enemy current HP to 250 while the
+EID's real MaxHP stayed (e.g. 30). The AI's selection state re-rolls under
+that degenerate ratio and loops on the flee-class meta-action $E9 (action
+codes >= ~$BA are META actions, not skill ids).
+**Fix**: every rig that forces HP now forces MaxHP ($DBB3+slot*2) to the
+same value (measure_rig.py, measure_order.py).
+**Rule**: when poking battle stats, keep the invariants the engine
+maintains (HP <= MaxHP, MP <= MaxMP) or the AI machine — not the damage
+code — is what breaks. And treat any "battle produced no events" run as an
+AI stall first, not a hook bug. Corollary hazard filed in ROADMAP S80:
+enemies with CUSTOM skill ids need an AI-table audit or they can stall
+real battles.
+
+### "arena" in the S78 damage-fork notes meant the LINK flag
+**Symptom**: Kamikaze under real arena conditions (db73=2) dealt
+(casterHP−1)/2, contradicting §15.5's "wild/arena -> targetHP−1".
+**Root cause**: the forks at $52:$6259 (Kamikaze) and $52:$642B
+(WindBeast/Vacuum side split) test **$C86C (link)**, then db73==0. S78
+traced them correctly but NAMED the c86c branch "arena"; real Coliseum
+battles are db73=2 with c86c=0 and take the other branch.
+**Fix**: measured both skills under db73=0/2 (party- and enemy-cast);
+damage.py params renamed link= with arena= kept as deprecated alias;
+§15.5 corrected.
+**Rule**: $C86C = LINK, $DB73 = battle TYPE (0 wild / 1 boss / 2 arena)
+— never label a c86c test "arena". When a traced-only note names a
+condition, re-verify the actual RAM address before building on the name.
+
+### ROADMAP breadcrumbs are hypotheses, not findings
+**Symptom**: S78 left "BattleFunc_6a13/6a49 ... likely the flee/order
+checks" as the S79 starting point; both are actually the stat-CAP helpers
+inside the Upper (DEF x2/x4) and AglUp (AGL x4 cap $01FF) skill handlers.
+The real turn order lives in bank $58 ($54D1), found by tracing the live
+state machine instead.
+**Fix/Rule**: treat "candidate/glimpsed/likely" breadcrumbs as leads to
+FALSIFY first — 20 minutes of live state-machine tracing
+(trace_machine.py pattern: per-frame diff of the phase vars) beats hours
+of following a wrong static lead. The falsification itself is a
+deliverable: both routines are now correctly identified in §15.6 notes.

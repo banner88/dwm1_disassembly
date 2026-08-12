@@ -1690,15 +1690,19 @@ else base = (ATK - DEF/2) >> 1
     damage = base
 ```
 
-Then `LoadBattle_61ec`: the THIRD party slot (target idx 2; in arena, idx&3
-== 2 of either side) takes **×0.8** (traced; needs a 3-monster party to
-measure — S79). Finally the zero floor: damage==0 -> RNG2&1 (applies AFTER
+Then `LoadBattle_61ec`: the THIRD party slot (target idx 2; in LINK
+battles, idx&3 == 2 of either side) takes **×0.8** — **MEASURED S79** with
+a 3-monster party (rig `--party3`): ti=2 roll 45 at the $61EC waypoint ->
+36 at commit (=45*8//10), ti=1 control unchanged (46 -> 46). NB the $61EC
+hook sees the PRE-adjust value. Finally the zero floor: damage==0 -> RNG2&1 (applies AFTER
 the slot-2 adjust; a hook at $61EC sees the pre-floor value).
 
 The plain attack command IS skill id 58 through this core. Physical
 multiplier handlers (validated): TwinSlash/PsycheUp ×1.5, Beserker ×2 (+
-sets $db08 bit2), SquallHit ×0.8, Ahhh ×0.5, RainSlash per-hit ×0.8/0.6/0.4
-($DD69 = hit counter), BiAttack rolls with ATK×0.75 (2 hits), QuadHits
+sets $db08 bit2), SquallHit ×0.8, Ahhh ×0.5, RainSlash per-hit ×0.8/0.6/0.4/0.4
+($DD69 = hit counter, **4-hit cap MEASURED S79**: handler `$52:$48B4`
+stops at $DD69==5; hit1 = ×8/10 `$69B7`, hit2 = ×6/10 `$69D2`, hits 3-4 =
+(×8/10)>>1 `$69E1`; dead targets skipped by walking $DB89 within the side), BiAttack rolls with ATK×0.75 (2 hits), QuadHits
 ATK×0.625 (4 hits, measured 100→75 / 100→62), CALLEVIL rolls with ATK=400,
 MetalCut ×1.5+1 iff target metal flag ($DB8B+slot bit0), family cuts
 (DrakSlash class) ×1.5 iff target family matches (Slime 0/Dragon 1/Beast 2/
@@ -1765,12 +1769,19 @@ reproduce the wild condition).
   RNG1&1 odd -> −(RNG16d mod var) else +. vs MegaMagic res (15) through the
   breath ladder. **The §8-era note "(MP*2+level*2)/4" was WRONG** — no /4.
 - **Kamikaze** (`BattleCall_6232`): hit via Sacrifice-res ladder; caster
-  HP==1 -> 1; wild/arena -> damage = target current HP − 1 (floor 1);
-  boss (db73==1) -> (caster HP − 1)/2. Measured: HP200 -> 249 wild, 99 boss.
-- **Sacrifice** (state $D9ED=3 -> bank $53 ~$67A9): boss gate; res 14:
-  3=immune, 2=works only if RNG1<$C0; then RNG2<$7F (49.6%) -> damage =
-  target FULL HP (kill, msg $E9) else HP − max(HP/100,1) (~1% survivor).
-  Caster dies in the state chain. (Traced; magnitude not yet rig-measured.)
+  HP==1 -> 1; the fork at `$6259` keys on **$C86C (LINK) or db73==0 (wild)**
+  -> damage = target current HP − 1 (floor 1); otherwise — that is BOTH
+  boss (db73==1) AND arena (db73==2) — (caster HP − 1)/2. Measured: HP200
+  -> 249 wild, 99 boss (S78), **99 arena (S79)**. S78's "wild/arena" label
+  for the first branch was wrong; "arena" in the damage-layer forks means
+  the LINK flag throughout (same finding in WindBeast `$642B`).
+- **Sacrifice** (state $D9ED=3 -> bank $53 $67A9): boss gate; res 14
+  (packed low pair of $DD2B+slot*7): 3=immune, 2=works only if RNG1<$C0;
+  then RNG2<$7F (49.6%) -> damage = target **CURRENT** HP (kill, msg $E9)
+  else HP − max(HP/100,1) (~1% survivor, msg $82). `$2FE8` returns current
+  HP, not max — **MEASURED S79** with HP 180 / MaxHP 250: kill 180,
+  survivor 179, 4/4 branches exact; consumes NO RNG steps (all rolls read
+  the ambient state). Caster dies in the state chain.
 - **WindBeast** 3L+10 party / 1.5L enemy, cap 180; **Vacuum** 2L+30 /
   1.5L, cap 150; ±half the (mod-)remainder, sign from the shifted-out bit
   (see damage.py for exact polarity per skill).
@@ -1780,10 +1791,118 @@ reproduce the wild condition).
   target with a $A0/256 gate. **Smashlime/Sheldodge/Branching**: family-
   conditional (traced).
 
-### 15.6 What is NOT in the S78 model (next arc)
+### 15.6 TURN ORDER — traced and differentially validated (S79)
 
-Turn order, enemy/tactics AI move selection (gates/bosses = per-monster
-commands vs arena = tactics-only), status application/durations/wake
-chances, MISS/dodge and the $DA33 timers, and the damage APPLY step's
-exclusion lists ($52:$6DB0). Coverage gaps marked in-place: slot-2 ×0.8
-(traced), arena variants, RainSlash hits 2+, Sacrifice magnitudes.
+Built each round by **TurnOrderBuild `$58:$54D1`** (battle phase $05's
+machine, after the enemy-AI queue fill), validated **143/143 over 47
+rounds** (`simulator/turn_order.py` + `validate_order.py` + corpus
+`s79_order_events.json`; rig `measure_order.py`, 4 hooks: $54D1 / $5662 /
+$55C2 / $5707).
+
+For each combatant with `$DD13[slot]==2` (command queued; 1 = no-action
+marker, set by the bank $50 command committers), in slot order:
+one `GenerateRNG` step ($00:$12D0), then (`SaveBtlFX_5662`):
+
+```
+agl  = max(AGL16, 1)
+span = 1 + agl/4 + agl/16          (~31% of AGL)
+rand = ((RNG2 & 3) << 8) | RNG1    (10-bit, post-step)
+key  = agl - span + (rand mod' span)
+```
+where mod' is repeated subtraction with an exit-on-EQUAL quirk (result
+range is INCLUSIVE [0, span]). Floor: key < 2 -> 2. Action tweaks:
+- queued action in {$2A Ironize, $7F Imitate, $88 Cover, $89 Guardian,
+  $8C Dodge, $8D Defence, $8E StrongD, $8F SuckAll, $90 BladeD,
+  $DC IRONIZE} -> **+$0600** (`SetBtlFX_56cf` — defensive interceptions
+  always resolve first)
+- $55 SquallHit -> **+$0400** total ($0200 inside 5662 + $0200 in the
+  main loop) — the "strikes first" behavior
+- $56 PsycheUp -> key forced to **$0001** (always last)
+- link peer sentinel: id $10, key $0200, appended when $DB77 != $FF
+
+Keys land in `$DB61` (8×u16) with ids in `$DB4C`, then a descending
+shrinking-bound bubble sort (`$55C2`; **ties swap**, and pass 1 literally
+compares a 9th out-of-bounds pair $DB71/$DB72+$DB54 — modelled verbatim).
+Ties net to slot order in practice (party before enemy at equal keys —
+measured). Ids compact into **$DB79** (the round order list), consumed by
+bank $53 entry 0 with cursor **$DB82**, which skips dead actors.
+
+### 15.7 The ACTION machine and the damage APPLY step (S79)
+
+Battle phase $07 far-calls bank $52 entry 0 (`$6C4D`): waits on the anim
+done-flag $DA82, ticks bank $5F entry 5, then dispatches **$D9ED** through
+the 28-entry table at `$52:$6C60` (states $00-$1B; the old ROADMAP knew 8).
+State 0 ticks bank $53 entry 0 (per-actor setup, its own sub-machine on
+$D9EE; $D9EE==$0B triggers the skill-handler dispatch at `$6CC7`).
+$DB77/$DB78 = the pending actor/action pair; action codes >= ~$BA are
+META-actions (items/flee/shift etc., not skill ids — e.g. the AI queues
+$E9 as a flee-class action).
+
+Bank $53 entry 0's per-actor gate order (`$4558-$45C8`): $DB07&$C0 ->
+forced action $11; status +2 bit6 -> $13 (paralyzed); +2 bit7 -> the sleep
+wake roll (§15.8); status +5 bits0-5 one-shots -> actions
+$12/$14/$15/$16/$17/$18; +2 bit5 curse roll (25%: RNG1<$40 -> bank $53
+entry 2 self-hit, can KO); +2 bit4 confusion -> `LoadBattle_7ab5` rewrites
+the queued action (RNG1&3 over table $7AFF {$3A,$5E,$62,$80}; attack picks
+a random target with a cross-side wrap quirk: candidate&3==0 continues at
+absolute slot 2).
+
+APPLY step (state 2, `$6D56` -> the id lists at `$6D83-$6DB8` + block
+`$6DB0-$6DE8`): the real gate is descriptor **$DD6F bit5**; id overrides
+(skip the HP subtract): $1A RobMagic, $75 OddDance, $76 RobDance,
+$71 K.O.Dance, $94 Hustle, $12 Beat, $13 Defeat, and the sub-$3A status
+region except $37/$38; transformation specials $29/$AA/$D5 branch to their
+own states. HP subtract floors at 0; result 0 or borrow -> KO state $1A
+($D9F1=0).
+
+Battle phase $09 (bank $50 `$6AAC`, 6 sub-states) is the **END-OF-ROUND
+processor**, not the sequencer: per combatant, +2 bit0 poison -> damage
+MaxHP/16 (if >=10: RNG16/6+10), text $E1; +2 bit1 heavy DoT -> MaxHP/6
+(if >=30: RNG16/11+30), text $E2; floor 1 pre-cap; KO -> join-candidate
+($DD61) + side-wipe -> phase $0A. Then it rebuilds $DD13 (1 = alive) for
+the next round's command phase.
+
+### 15.8 STATUS system (S79 — byte map measured per-skill)
+
+Per-combatant 8-byte block at **$DB00+slot*8**. Model:
+`simulator/status.py` (sleep wake = exact code port of `$53:$4AEB`).
+
+| byte | bit(s) | status | set by (measured) |
+|------|--------|--------|-------------------|
+| +2 | 0 | poison (DoT /16) | PoisonHit $67, PoisonGas $6C |
+| +2 | 1 | heavy DoT (/6) | (applier not yet identified — OPEN) |
+| +2 | 3:2 | sleep counter | applied value $8C = flag+count 3 |
+| +2 | 4 | confusion | PanicAll $19 |
+| +2 | 5 | curse | Curse $6F |
+| +2 | 6 | paralyze (forced $13/turn) | Paralyze $69 |
+| +2 | 7 | asleep flag | Sleep $15 / SleepAll $16 / SleepAir $6A |
+| +3 | 0 | StopSpell | $17 |
+| +3 | 1 | Surround | $18 |
+| +3 | 4/5 | transformed | Transform $29 / CHGDRAGON $AA + BeDragon $D5 |
+| +3 | 6 | DanceShut | $91 |
+| +3 | 7 | MouthShut | $92 |
+| +5 | 6/7 | guard / amplify ladder rows (§15.3) | guard cmd / ChargeUp class |
+| +5 | 0-5 | ONE-SHOT compulsions (cleared at victim's turn) | LureDance $78 -> bit1, etc. |
+| +7 | $C0 | packed turn counters -> forced action $11 | OPEN (phase-9 sub 2 decrements) |
+
+**Sleep wake (`$53:$4AEB`, exact):** at the sleeper's own turn, wake iff
+RNG1 <= threshold by counter {3: $60 = 37.9%, 2: $A0 = 62.9%, 1: $E0 =
+88.0%, 0: always}; else the 2-bit counter decrements (floor 0) and the
+turn becomes the "asleep" action $0F. No RNG step consumed.
+
+### 15.9 What is NOT yet modelled (S80)
+
+Enemy AI move selection + the arena tactics variants (Charge/Mixed/
+Cautious/Passive); loop-level differential validation of
+`simulator/battle.py` (its components are engine-exact, the glue is
+traced-only); MISS/dodge + $DA33 timer interplay; meta-actions (flee $E9
+class, items, shift); the $DB07 timer statuses and the +2 bit1 applier;
+curse self-hit magnitude (bank $53 entry 2); sleep application counter
+source (constant $8C observed, writer not traced); PsycheUp carry-over;
+interception redirects (Cover/Guardian etc. beyond their order boost).
+
+**Hazard for the romhack (S79 finding):** the enemy-AI selection machine
+(phase 5, bank $58) can stall the battle when its pick needs re-rolling
+under degenerate conditions — reproduced when rig-forced HP exceeded
+MaxHP (flee-class $E9 loop). Enemies given CUSTOM skill ids must be
+AI-table-audited before the editor exposes enemy movepools (S80 box).

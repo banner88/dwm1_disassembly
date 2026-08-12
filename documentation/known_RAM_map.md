@@ -395,6 +395,32 @@
    1:DB86   1    *** OUR custom-skill stash (real id, single). Was an unused ds
                  gap between $DB85 and wBattleAttackerIdx $DB88. VERIFIED free
                  by in-game test. Only writer = AliasCommit (patches/bank_050).
+   1:DB61  16    Turn-order KEY array (8 x u16, AGL-derived; S79) — filled
+                 by TurnOrderBuild $58:$54D1, destructively sorted at $55C2
+                 (the sort's first pass touches $DB71/$DB72 out of range).
+                 Re-used as scratch by other battle code outside phase 5.
+   1:DB4C   9    (during phase 5 only) turn-order ID array parallel to
+                 $DB61; compacted into $DB79. Outside phase 5 this is the
+                 record-lookup index / text-param area (see below).
+   1:DB77   1    Pending-action ACTOR (bank $53 entry 0 -> $52 announce
+                 flow; $FF = consumed). [S79]
+   1:DB78   1    Pending-action CODE: skill id, or >= ~$BA = META action
+                 (items/flee/shift; $E9 = flee-class). [S79]
+   1:DB79   9    ROUND ORDER list (combatant indices, $FF-filled), built
+                 by the $58 sort each round; terminator/link sentinel $10.
+                 [S79, measured]
+   1:DB82   1    Round-order CURSOR into $DB79 (actors processed count;
+                 ==9 -> round done -> phase advance). [S79]
+   1:DD13   9    Per-combatant round-readiness: 2 = command queued (may
+                 act), 1 = alive/no-action, $FF = invalid slot. Rebuilt by
+                 phase 9; promoted to 2 by the command committers. [S79]
+   1:DB00  64    Battle STATUS blocks, 8 B/combatant (0-2 party, 4-6
+                 enemy). Byte map MEASURED S79 (BATTLE_SKILL_SYSTEM §15.8):
+                 +2 = poison(0)/heavyDoT(1)/sleepctr(3:2)/confusion(4)/
+                 curse(5)/paralyze(6)/asleep(7); +3 = StopSpell(0)/
+                 Surround(1)/transformed(4,5)/DanceShut(6)/MouthShut(7);
+                 +5 = one-shot compulsions(0-5) + guard(6)/amplify(7)
+                 ladder rows; +7 = packed $C0 turn counters (open).
    1:DB88   1    wBattleAttackerIdx — attacker combatant index (re-derived;
                  NOTE: repurposed during target processing, unreliable at
                  effect-dispatch time)

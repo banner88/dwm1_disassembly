@@ -431,6 +431,15 @@ is deliberately not committed.
 | `simulator/validate_damage.py` | Differential validator: replays a measure_rig event corpus through damage.py and diffs against the engine's own values at matching waypoints. S78 corpus: **698 comparisons, 0 mismatches** across 13 categories. Exit 1 on any mismatch. |
 | `simulator/measure_rig.py` | PyBoy capture rig: S75 TriggerBattle-mimic battle + per-frame skill/stat forcing + hooks at the damage waypoints ($52:$60D7/$61EC/$679C/$67BA/$54E7/$54EA, special entries, Beat outcome branches). `--db73 0` reproduces the wild-battle condition inside rig battles (the rig's $DA09=1 makes them "boss" type). Needs a patched ROM + CONTINUE-able .sav + post-boot savestate. |
 | `simulator/s78_master_events.json` | The S78 validation corpus (1,140 events; the 698 checks). Regenerable with measure_rig.py; kept so `validate_damage.py` runs without an emulator session. |
+| `simulator/turn_order.py` | Exact turn-order model (S79): per-combatant AGL key roll (GenerateRNG step + span math + $55/$56/defensive-class tweaks + floor), the literal 9-wide shrinking-bound bubble sort (ties swap; out-of-range pair modelled), $DB79 compaction. Owning prose: BATTLE_SKILL_SYSTEM §15.6. |
+| `simulator/measure_order.py` | Turn-order capture rig (S79): 4 hooks ($58:$54D1 build entry, $5662 per-combatant pre-RNG key roll, $55C2 unsorted keys+ids, $5707 final $DB79); `--agl` per-slot forcing, `--party3` (real slot-0 record duplicated into party 1/2 pre-battle). |
+| `simulator/validate_order.py` | Differential validator: replays key_roll pre-states through turn_order.py, diffs keys+ids at the sort entry AND the final order. S79 corpus: **143 comparisons, 0 mismatches over 47 rounds** (incl. a 4-actor round). Exit 1 on mismatch. |
+| `simulator/s79_order_events.json` | The S79 turn-order corpus (validate_order.py's default input). |
+| `simulator/s79_damage_events.json` | S79 damage-side captures: slot-2 ×0.8 (party3), RainSlash 1-4 hits, Sacrifice kill/survivor (HP≠MaxHP), Kamikaze/WindBeast/Vacuum under db73=0/2 incl. enemy-cast. Spot-validated in-session (not yet folded into validate_damage's category runner). |
+| `simulator/status.py` | Status model (S79): $DB00-block byte/bit map (measured per-skill), exact sleep-wake port of $53:$4AEB, curse/confusion gates, phase-9 DoT formulas. Owning prose: §15.8. |
+| `simulator/battle.py` | Round-loop core (S79): phase-5 order -> per-actor turn gates -> validated damage models -> phase-9 DoT. Components engine-exact; the LOOP GLUE is traced-only, NOT yet differentially validated (S80). |
+
+`measure_rig.py` S79 extensions: `--party3`, `--skip` (RNG shift), `--eskill/--etarget` (force the enemy queue), `--ecount`, `--thp` (current-HP-only), `--elvl`, `--emp`; MaxHP now forced alongside HP (HP>MaxHP sends the enemy AI into flee/re-roll loops — see KEY_LESSONS S79); bank-$53 Sacrifice hooks ($67DB roll / $684E out).
 
 ## 3. Rules
 

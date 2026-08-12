@@ -3351,3 +3351,40 @@ two RE discovery sessions (M1, S3) before their authoring items depend on them.
 >
 
 >
+
+## S77 verbose block (moved verbatim from PROJECT_STATE at S79)
+
+> Last verified: 2026-08-06 (Session 77 — **randomizer part 2**: breeding tree
+> regeneration, stratification, and a rebuild of skill assignment onto vanilla
+> placement.) — verifier PASS 6/6, clean `1ca6579…` untouched. S75v4 patched pin
+> `ce1e7369…` unchanged.
+>
+> S77's central finding: **the skill record's power field is 0 on 43 of the 222
+> skills**, because their handler computes damage internally (Sacrifice,
+> MegaMagic, BeDragon, GigaSlash, Beat, Kamikaze, SamsiCall). Every rule that
+> banded or capped on power was blind to exactly the dangerous ones, which
+> produced six separate "how is this in gate 1" bugs, each patched individually
+> before the pattern was seen. The fix needed no formula tracing: **vanilla's own
+> placement** (min level, median level, row count per skill) is a complete danger
+> rating for all 222. See BATTLE_SKILL_SYSTEM "The record power field is BLIND".
+>
+> Second finding, equally load-bearing: **every validation this project had was
+> an aggregate** — "0 rows harder than vanilla", correlations, depth profiles,
+> multiset equality — and all of them passed on a build with a species at 23x
+> vanilla MP growth and a skill on 44 rows instead of 1. `profile_check.py` adds
+> per-ENTITY envelope checks and found five real defects immediately. This is the
+> validation layer the editor needs too (PROJECT_COMPILER "Validation the editor
+> must run").
+>
+> Also decoded/measured this session: breeding depth is a function of matcher
+> SPECIFICITY (family x family can never exceed depth 1); boss joins are tree
+> roots and collapse depth if identity runs after generation; vanilla keeps 0 of
+> 15 early-encounter species free of specific x specific recipes; vanilla's
+> never-join rate climbs 0%/20%/62%/70%/88% by boss level band, which is what
+> protects the 82% breed-only endgame showcase.
+>
+> NOT yet resolved and listed in ROADMAP: starter roll is unconstrained and is
+> likely the biggest driver of early-game difficulty variance; 27 growth pairs
+> and 2 skills still fail `profile_check`; a combat simulator is blocked on
+> finishing the damage formula.
+>

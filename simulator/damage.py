@@ -326,12 +326,18 @@ def megamagic(mp, level, state, target_status=0, res=0):
     return max(dmg, 0), state
 
 
-def windbeast(level, state, enemy_side, arena=False):
-    """LoadBattle_641a (WindBeast): party base = 3*level+10, enemy
-    (non-arena) base = level + level//2; cap 180 ($B4).  Variance = base*0.3
+def windbeast(level, state, enemy_side, link=False, arena=None):
+    """LoadBattle_641a (WindBeast): party base = 3*level+10, enemy base =
+    level + level//2 (BCsrl1); cap 180 ($B4).  Variance = base*0.3
     (BattleCall_69e8); one BattleRNG step; rem = RNG16d % var; the shift-out
-    bit of rem>>1 decides subtract (carry set) vs add."""
-    if enemy_side and not arena:
+    bit of rem>>1 decides subtract (carry set) vs add.
+    The side fork keys on $C86C at $642B: LINK battles use the party
+    formula for BOTH sides.  MEASURED S79: real arena battles (db73=2)
+    use the normal side split (enemy Lv40 -> 60-cluster, 7/7 exact) --
+    S78's `arena` name for this fork meant the link flag."""
+    if arena is not None:
+        link = arena
+    if enemy_side and not link:
         base = level + (level >> 1)
     else:
         base = 3 * level + 10
@@ -346,11 +352,15 @@ def windbeast(level, state, enemy_side, arena=False):
     return dmg, state
 
 
-def vacuum(level, state, enemy_side, arena=False):
-    """LoadBattle_6491 (Vacuum): party base = 2*level+30, enemy (non-arena)
-    base = level + level//2; cap 150 ($96); variance unit = base//5; rem =
-    RNG16d % unit; shift-out bit of rem>>1: carry -> subtract, else add."""
-    if enemy_side and not arena:
+def vacuum(level, state, enemy_side, link=False, arena=None):
+    """LoadBattle_6491 (Vacuum): party base = 2*level+30, enemy base =
+    level + level//2; cap 150 ($96); variance unit = base//5; rem =
+    RNG16d % unit; shift-out bit of rem>>1: carry -> subtract, else add.
+    Side fork = the $C86C link flag, same as windbeast (arena db73=2 uses
+    the normal side split)."""
+    if arena is not None:
+        link = arena
+    if enemy_side and not link:
         base = level + (level >> 1)
     else:
         base = 2 * level + 30
@@ -365,23 +375,30 @@ def vacuum(level, state, enemy_side, arena=False):
     return dmg, state
 
 
-def kamikaze_damage(caster_hp, target_hp=None, arena=False, db73=1):
+def kamikaze_damage(caster_hp, target_hp=None, link=False, db73=1,
+                    arena=None):
     """BattleCall_6232 (Kamikaze; also the Sacrifice sweep core).  Hit is
     gated by the Sacrifice resistance (type 14) via LADDER_HIT_SACRIFICE
-    (miss -> damage 0).  On hit:
-      caster HP == 1                -> damage 1
-      arena ($C86C != 0) or $DB73 == 0 -> damage = target current HP - 1
-                                          (floors at 1) -- near-lethal
-      normal battle ($DB73 == 1)   -> damage = (caster current HP - 1) >> 1
-    $DB73 is 1 throughout normal battle processing (bank $51 init; $FF is
-    the loss freeze) -- measured S78; the (casterHP-1)/2 branch is the one
-    real wild battles take (caster HP 200 -> observed 99)."""
+    (miss -> damage 0).  On hit ($52:$6250):
+      caster HP == 1                    -> damage 1
+      $C86C != 0 (LINK) or $DB73 == 0 (wild)
+                                        -> damage = target current HP - 1
+                                           (floors at 1) -- near-lethal
+      $DB73 == 1 (boss) or 2 (ARENA)    -> damage = (caster HP - 1) >> 1
+    MEASURED S79 with db73=2: caster HP 200 -> 99, i.e. real Coliseum
+    battles take the caster-half branch.  S78's note that named this fork
+    "wild/arena" was wrong -- the first branch keys on the LINK flag $C86C,
+    not the arena battle type; real wild battles (db73=0 per LoadBtlS_43c9)
+    take the target-HP branch.  `arena` kept as a deprecated alias for the
+    link flag (older callers passed the c86c semantics under that name)."""
+    if arena is not None:
+        link = arena
     if caster_hp == 1:
         return 1
-    if arena or db73 == 0:      # arena OR wild battle: near-kill the target
+    if link or db73 == 0:
         d = (target_hp or 1) - 1
         return d if d else 1
-    return (caster_hp - 1) >> 1  # boss battle (db73 == 1)
+    return (caster_hp - 1) >> 1  # boss (1) AND arena (2)
 
 
 def ramming_damage(target_hp):
@@ -403,8 +420,15 @@ PHYS_MULT = {
     'Ahhh':        lambda d: d >> 1,                  # 0.5x
     'RainSlash1':  lambda d: (d * 8) // 10,           # hit 1: 0.8x
     'RainSlash2':  lambda d: (d * 6) // 10,           # hit 2: 0.6x
-    'RainSlash3+': lambda d: ((d * 8) // 10) >> 1,    # hits 3-5: 0.4x
+    'RainSlash3+': lambda d: ((d * 8) // 10) >> 1,    # hits 3-4: 0.4x
 }
+# RainSlash hit machinery (SkillRainSlash $52:$48B4, MEASURED S79):
+#   $DD69 counts hits 1..4; the handler stops at $DD69 == 5 (4 hits max).
+#   Multipliers: hit1 x8/10 ($69B7), hit2 x6/10 ($69D2), hits 3-4
+#   (x8/10)>>1 = 0.4 ($69E1).  Dead targets are skipped by walking
+#   $DB89 to the next slot on the SAME side (bound = (tgt&4)|2); when the
+#   current target is already the side's last slot the sweep ends early.
+#   Each hit re-rolls calc_skill_defense with a fresh RNG step.
 
 # BiAttack/QuadHits rewrite the attacker's ATK for the roll:
 #   BiAttack:  ATK' = ATK*0.75  (SaveBattle_69c6), 2 hits
@@ -445,3 +469,38 @@ CORE_RTYPE = {
     'PalsyAir': 19, 'Curse': 20, 'LureDance': 21, 'DanceShut': 22,
     'MouthShut': 23, 'RockThrow': 24, 'GigaSlash': 25,
 }
+
+
+# --------------------------------------------------------------------------
+# Sacrifice — bank $53 state-3 route ($D9ED=3 -> entry $0D, handler $67A9)
+# MEASURED S79 (4/4 branches exact, target HP != MaxHP disambiguated)
+# --------------------------------------------------------------------------
+
+def sacrifice(target_cur_hp, state, res=0, db73=0):
+    """Returns (damage, killed, worked).  Consumes NO RNG steps — every
+    roll reads the current state's RNG1/RNG2.
+
+    Gate order ($53:$67A9):
+      1. boss protection (LoadBtlC_51aa): db73==1 vs an enemy target -> fail
+         (handled by boss_gate_blocks; the db73 arg here only documents it)
+      2. Sacrifice resistance (type 14, packed byte $DD2B+slot*7 low pair):
+         level 3 -> immune; level 2 -> works only if RNG1 < $C0;
+         levels 0/1 -> always
+      3. RNG2 < $7F (127/256 = 49.6%) -> KILL: damage = target CURRENT HP
+         ($2FE8 returns current, NOT max — measured with HP 180 / Max 250)
+         else survivor: damage = HP - max(HP // 100, 1)
+    The caster dies in the state chain either way (not modelled here)."""
+    r1, r2 = rng1(state), rng2(state)
+    if res == 3:
+        return 0, False, False
+    if res == 2 and r1 >= 0xC0:
+        return 0, False, False
+    if r2 < 0x7F:
+        return target_cur_hp, True, True
+    chip = target_cur_hp // 100
+    if chip == 0:
+        chip = 1
+    dmg = target_cur_hp - chip
+    if dmg < 0:
+        dmg = 0
+    return dmg, False, True

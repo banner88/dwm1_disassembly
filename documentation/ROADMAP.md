@@ -1365,10 +1365,29 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
 - [x] Measurement tooling: `simulator/measure_rig.py` (S75 rig + waypoint
       hooks), `simulator/validate_damage.py`, corpus
       `simulator/s78_master_events.json`.
-- [ ] S79 — simulator core: turn order (AGL formula), action loop, damage
+- [x] S79 — simulator core: turn order (AGL formula), action loop, damage
       APPLY step exclusions ($52:$6DB0), status application/durations;
       measure the traced-only items (slot-2 ×0.8 via 3-monster party,
       RainSlash hits 2+, Sacrifice magnitudes, arena variants).
+      DONE S79: turn order traced ($58:$54D1 TurnOrderBuild — key =
+      AGL−span+rand, span≈31%, +$0600 defensive class / +$0400 SquallHit /
+      PsycheUp-last) and validated 143/143 over 47 rounds
+      (simulator/turn_order.py + measure_order.py + validate_order.py +
+      s79_order_events.json). All four traced-only items MEASURED: slot-2
+      ×0.8 (party3 rig), RainSlash 4-hit cap + per-hit ×0.8/0.6/0.4/0.4,
+      Sacrifice (CURRENT-HP kill/survivor, 4/4), arena variants — which
+      falsified two forks: Kamikaze's and WindBeast's "arena" branches key
+      on $C86C (LINK), and real arena (db73=2) takes the boss/enemy-side
+      paths (measured; damage.py corrected, S78 corpus still 698/698).
+      28-state action machine mapped ($52:$6C60), apply-step id lists
+      named, phase 9 = END-OF-ROUND DoT processor (poison /16, heavy /6,
+      caps), status byte map measured per-skill (§15.8), sleep wake exact
+      ($53:$4AEB port). Round core assembled: simulator/battle.py
+      (components engine-exact; loop glue NOT yet differentially
+      validated — S80 box below). NOT built S79: AI, meta-actions,
+      $DB07 timer statuses, curse magnitude, loop-level validation.
+      ROADMAP breadcrumb falsified: BattleFunc_6a13/6a49 are the
+      Upper/AglUp stat-CAP helpers, not flee/order checks.
       S78 breadcrumbs for the tracer: the turn SEQUENCER is battle phase 9
       = bank $50 $6AAC (sub-machine on $D9ED; the per-action dispatch is
       the `ld a,[$d9ed] / rst $00` table at $52:$6C5C — states 0-7 =
@@ -1382,9 +1401,18 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       the rig environment: make (emits disassembly/game.sym), pip install
       pyboy, boot patched ROM + hacked .sav, CONTINUE, close menus,
       p.save_state -> boot.state (recipe in simulator/measure_rig.py).
-- [ ] S79/S80 — AI reverse-engineering: enemy move selection; the TWO
-      player-side control variants (direct commands vs arena tactics —
-      Charge/Mixed/Cautious/Passive semantics) so the simulator can drive
-      both gate/boss fights and arena fights.
+- [ ] S80 — AI reverse-engineering: enemy move selection (bank $58 phase-5
+      machine — S79 located it and its queue writes; ai_weights[4] in the
+      enemy_stats rows are the obvious inputs); the TWO player-side control
+      variants (direct commands vs arena tactics — Charge/Mixed/Cautious/
+      Passive semantics) so the simulator can drive both gate/boss fights
+      and arena fights. MUST cover: meta-action codes (>= ~$BA; $E9 =
+      flee-class), the S79 stall hazard (AI re-roll loop under degenerate
+      state — reproduced via HP>MaxHP; custom skill ids on enemies need an
+      AI-table audit before the editor exposes movepools), and loop-level
+      differential validation of simulator/battle.py (full engine battle
+      replayed action-by-action). Also open from S79: $DB07 timer
+      statuses, +2 bit1 DoT applier, curse self-hit magnitude (bank $53
+      entry 2), sleep-application writer, MISS/dodge + $DA33.
 - [ ] S80 — pacing layer: TTK sweeps over gate encounter tables for the
       romhack + randomizer profiles; wire into `randomizer/profile_check`.

@@ -10,6 +10,52 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-08-10 (Session 79 — **combat-simulator arc part 2:
+> TURN ORDER, the action machine, and the status layer.** Byte-neutral:
+> no patches touched; verifier PASS 6/6, clean `1ca6579…` and S75v4
+> patched pin `ce1e7369…` both unchanged. Everything below lives in
+> `simulator/` + BATTLE_SKILL_SYSTEM §15.6-15.9.)
+>
+> Turn order is now formula-exact and differentially validated **143/143
+> over 47 rounds** (incl. a 4-actor round): TurnOrderBuild `$58:$54D1`
+> rolls key = AGL−span+rand (span = 1+AGL/4+AGL/16 ≈31%, one GenerateRNG
+> step per ready combatant, $DD13[slot]==2 = ready), floors at 2, boosts
+> the defensive-interception class {Ironize/Imitate/Cover/Guardian/Dodge/
+> Defence/StrongD/SuckAll/BladeD/IRONIZE} +$0600, SquallHit +$0400,
+> forces PsycheUp last ($0001), then a literal ties-swap bubble sort
+> (9th pair out-of-bounds — modelled verbatim) compacts into **$DB79**
+> (cursor $DB82). The ROADMAP breadcrumb was falsified: BattleFunc_6a13/
+> 6a49 are the Upper/AglUp stat-CAP helpers, not flee/order.
+>
+> All four §15.6 traced-only items MEASURED: slot-2 ×0.8 (rig `--party3`;
+> 45→36 with ti=1 control unchanged), RainSlash (4-hit cap, per-hit
+> ×8/10, ×6/10, then ×0.4×2; dead-target side-walk), Sacrifice (CURRENT
+> HP, not max — kill 180 / survivor 179 at HP 180/Max 250, 4/4 branches,
+> zero RNG steps), and the arena variants — which falsified two forks:
+> Kamikaze's `$6259` and WindBeast's `$642B` "arena" branches key on
+> **$C86C (LINK)**; real arena (db73=2) takes the boss/enemy-side paths
+> (Kamikaze arena = (casterHP−1)/2 = 99, measured). damage.py corrected;
+> S78 corpus still 698/698.
+>
+> Also mapped: the 28-state action machine ($52:$6C60; ROADMAP knew 8),
+> the apply-step exclusion ids by name (gate = $DD6F bit5), phase 9 =
+> END-OF-ROUND DoT processor (poison MaxHP/16 / heavy MaxHP/6 + caps),
+> $DB77/$DB78 pending-action pair + META action codes (>= ~$BA; $E9 =
+> flee-class), and the measured status byte map ($DB00-block: sleep/
+> paralyze/poison/confusion/curse/StopSpell/Surround/MouthShut/DanceShut/
+> LureDance one-shots) with the sleep wake roll ported exactly from
+> $53:$4AEB (37.9/62.9/88/100% by counter). Round core assembled in
+> `simulator/battle.py` — components engine-exact, **loop glue NOT yet
+> differentially validated** (S80, with AI).
+>
+> Hazards logged for the romhack: the enemy-AI phase-5 machine can stall
+> (re-roll loop on flee-class $E9) under degenerate state — reproduced by
+> rig-forcing HP>MaxHP, now structurally avoided in both rigs; enemies
+> with custom skill ids need an AI-table audit before the editor exposes
+> movepools (S80). Open S79 residuals in ROADMAP S80: $DB07 timer
+> statuses, +2 bit1 DoT applier, curse magnitude, sleep-application
+> writer, MISS/dodge, meta-actions.
+>
 > Last verified: 2026-08-10 (Session 78 — **combat-simulator arc part 1:
 > the DAMAGE LAYER, traced and differentially validated.** Byte-neutral: no
 > patches touched; verifier PASS 6/6, clean `1ca6579…` and S75v4 patched pin
@@ -54,41 +100,9 @@
 > step, status durations, AI. Owning: BATTLE_SKILL_SYSTEM §15,
 > TOOLS_AND_DATA §2.10, known_RAM_map, ROADMAP S78.
 >
-> Last verified: 2026-08-06 (Session 77 — **randomizer part 2**: breeding tree
-> regeneration, stratification, and a rebuild of skill assignment onto vanilla
-> placement.) — verifier PASS 6/6, clean `1ca6579…` untouched. S75v4 patched pin
-> `ce1e7369…` unchanged.
->
-> S77's central finding: **the skill record's power field is 0 on 43 of the 222
-> skills**, because their handler computes damage internally (Sacrifice,
-> MegaMagic, BeDragon, GigaSlash, Beat, Kamikaze, SamsiCall). Every rule that
-> banded or capped on power was blind to exactly the dangerous ones, which
-> produced six separate "how is this in gate 1" bugs, each patched individually
-> before the pattern was seen. The fix needed no formula tracing: **vanilla's own
-> placement** (min level, median level, row count per skill) is a complete danger
-> rating for all 222. See BATTLE_SKILL_SYSTEM "The record power field is BLIND".
->
-> Second finding, equally load-bearing: **every validation this project had was
-> an aggregate** — "0 rows harder than vanilla", correlations, depth profiles,
-> multiset equality — and all of them passed on a build with a species at 23x
-> vanilla MP growth and a skill on 44 rows instead of 1. `profile_check.py` adds
-> per-ENTITY envelope checks and found five real defects immediately. This is the
-> validation layer the editor needs too (PROJECT_COMPILER "Validation the editor
-> must run").
->
-> Also decoded/measured this session: breeding depth is a function of matcher
-> SPECIFICITY (family x family can never exceed depth 1); boss joins are tree
-> roots and collapse depth if identity runs after generation; vanilla keeps 0 of
-> 15 early-encounter species free of specific x specific recipes; vanilla's
-> never-join rate climbs 0%/20%/62%/70%/88% by boss level band, which is what
-> protects the 82% breed-only endgame showcase.
->
-> NOT yet resolved and listed in ROADMAP: starter roll is unconstrained and is
-> likely the biggest driver of early-game difficulty variance; 27 growth pairs
-> and 2 skills still fail `profile_check`; a combat simulator is blocked on
-> finishing the damage formula.
->
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S79** (2026-08-10): combat-simulator arc part 2 — turn order traced+validated 143/143 ($58:$54D1; $DB79/$DB82; defensive-class/SquallHit/PsycheUp priorities); 28-state action machine; apply-step ids; phase 9 = end-of-round DoT; status byte map + exact sleep wake; all four §15.6 items measured; link-vs-arena fork corrections; round core battle.py. Owning: BATTLE_SKILL_SYSTEM §15.6-15.9, TOOLS_AND_DATA §2.10, known_RAM_map, KEY_LESSONS S79, ROADMAP S79/S80.
+- **S78** (2026-08-10): combat-simulator arc part 1 — damage layer traced + validated 698/698 (simulator/damage.py); $DB73 battle type + boss-protection gate; resistances/ladders/specials. Owning: BATTLE_SKILL_SYSTEM §15, TOOLS_AND_DATA §2.10, ROADMAP S78.
 - **S77** (2026-08-06): randomizer part 2 — breeding tree regeneration (depth-targeted), stratification, skill assignment rebuilt onto vanilla placement; the BLIND power field finding (43 handler-computed skills); per-entity `profile_check.py`. Owning: BATTLE_SKILL_SYSTEM "power field is BLIND", ROADMAP S77, TOOLS_AND_DATA §2.9.
 - **S76** (2026-08-06): standalone randomizer + German build in scope (`08bca718…`, bank-$14 tables +$70); two user-caught difficulty bugs (learn-gate≠damage-gate; quantile banding) → `audit_threat.py` per-row parity; library recipe TEXT decoded. USER-TESTED. Owning: ROADMAP S76, TOOLS_AND_DATA §2.9, KEY_LESSONS S76.
 - **S75** (2026-08-02): custom skill $E9 "Mourn" (physical-base custom via MournDispatch52) + the battle RIG (TriggerBattle-mimic $DA03/04+$DA02+$DA09+$C905+$C8EB.6, per-frame $dcec forcing); .sav build-specificity lesson; v4 pin `ce1e7369…`. Owning: BATTLE_SKILL_SYSTEM 13.x, KEY_LESSONS S75/S75b.
