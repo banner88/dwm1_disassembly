@@ -452,6 +452,44 @@
                  [S52, partial]
    1:DCEC  ~16   Action queue: 2 bytes/combatant {skill id, target}, indexed by
                  combatant*2. The single source the cast re-derives $DB8A from.
+                 S80: the AI commit writes the SKILL byte only; target stays
+                 $FF at commit (resolved later, site untraced).
+   1:DC44   8    AI category-1 (damage) base weight per combatant slot, filled
+                 at battle init from enemy_stats ai_weights byte +17. [S80]
+   1:DC4C   8    AI category-2 (status) base weight ← ai_weights +19. [S80]
+   1:DC54   8    AI category-3 (heal) base weight ← ai_weights +18. [S80]
+   1:DC5C   8    AI 4th weight ← ai_weights +20 (w[3]); consumed by the
+                 state-0 act/flee preamble as $db4d = w3/10 (LoadBtlAI_7905),
+                 not by the category machine. [S80]
+   1:DC64  128   AI OPTION LISTS, 16 B/slot: up to 4 pairs {tag, skill}; tag =
+                 record effect_category hi-nibble; skill bytes (odd offsets)
+                 $FF-terminated, even offsets $00 after the last pair. The
+                 player-hero slot's list holds meta-actions (e.g. $E9) tagged
+                 1. BATTLE_SKILL_SYSTEM §15.10.1. [S80]
+   1:DCE4   8    AI per-skill scores: record_ai_weight + rand%16, then the
+                 tag filter zeroes non-chosen categories and the evaluator
+                 adds rule bumps. Argmax → commit. §15.10.4-6. [S80]
+   1:DCFC   3    AI category score CELLS (cat1/2/3; cat1 can carry the +$1E
+                 not-rank1 bonus). [S80]
+   1:DCFF   3    AI ranked category ids (rank1/2/3), seeded 1,2,3, quirky
+                 partial sort LoadBtlAI_7322. §15.10.3. [S80]
+   1:DD02   1    AI rank cursor: 3 = rank1; $76A9 retry increments WITHOUT
+                 BOUND — the S79 stall root cause. [S80]
+   1:DD03   8    Per-combatant AI decision flags: bit6 set when the state-0
+                 preamble commits to running the machine; ==3 diverts plan
+                 $81 "Command" to the direct path. Partial. [S80]
+   1:DD0B   8    Per-combatant AI mode: 0 lightweight direct picker ($76DF),
+                 1 full weighted machine, 2 finisher-augmented (MaxHP/6 scan).
+                 Assignment at battle init untraced. [S80]
+   1:DD26   2    AI evaluator suitability accumulator (16-bit, +$0A rule
+                 bumps; high byte $FF = veto). Also carries the bank $58
+                 entry 11 plain-attack score in the cat-1 epilogue. [S80]
+   1:DD6A   1    AI chosen category id for the current attempt
+                 (= [$DCFC + $DD02]). [S80]
+   1:DD6B   1    AI candidate skill record flags7 (fetched via bank $54
+                 entry 0 during the filter). [S80]
+   1:DD72   1    AI: stashed plan byte (state-0) / stashed base weight inside
+                 SaveBtlAI_72ce (transient, dual-use). [S80]
    1:DD6F   1    (INFERRED) Damage descriptor bitfield (bit5 = apply $DB56/57)
    1:DD70   2    (INFERRED) Animation pointer (Blaze = $B882)
    1:DD80  172   AUDIO ENGINE channel state + scalars (S55 correction — the

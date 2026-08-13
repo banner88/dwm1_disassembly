@@ -102,3 +102,28 @@ p = boot('<built rom>'); to_bedroom(p); warp(p, 0x6B, 3, 14)
 print(hex(p.memory[MAP_ID]))
 EOF
 ```
+
+## Hooks perturb input timing — the S80 "round-2 wedge" trap
+
+**Symptom**: any `hook_register`, even with an empty callback and a cold
+address, makes a rigged battle stall in round 2 (~f450-750) while the
+identical no-hook run sails through 1500+ frames. Debug logs show no
+breakpoint events during the stall; MBC writes continue (the game runs;
+the battle waits).
+
+**Mechanism**: PyBoy 2.7.0 installs hooks by patching opcode $DB and
+singlesteps past each hit (remove → step → reinject, `core/mb.py`).
+That singlestep shifts joypad/interrupt alignment by an instruction;
+a sparse input cadence (the old 3-of-24 A-mash) then misses a menu
+edge and the battle waits for input forever.
+
+**Rules**:
+- Use the dense 4-on/4-off cadence (`if i%8<4: press`) in ANY hooked
+  run. Verified: 1500 frames, 6 hooks, 0.4 s.
+- Never hook per-frame-polled addresses for long runs: each hit costs
+  10-20 ms wall (breakpoint dance + GIL). $57:$7129 is polled every
+  frame while the player menu waits — worst case.
+- `p.memory` reads and `p.frame_count` are safe INSIDE hook callbacks
+  (measured). Registers are readable via `pyboy.register_file`.
+- Enable pyboy's own logs with `PyBoy(..., log_level='DEBUG')`;
+  `logging.basicConfig` does NOT capture the Cython modules.

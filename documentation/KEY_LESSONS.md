@@ -2950,3 +2950,31 @@ FALSIFY first — 20 minutes of live state-machine tracing
 (trace_machine.py pattern: per-frame diff of the phase vars) beats hours
 of following a wrong static lead. The falsification itself is a
 deliverable: both routines are now correctly identified in §15.6 notes.
+
+### S80: blank-line-bounded sed reads hide instructions (the $73AB trap)
+**Symptom**: `sed -n '/^LoadBtlAI_73a5:/,/^$/p'` showed a 3-instruction
+routine ending `ret z`, apparently falling through into SetBtlAI_73b1 —
+producing a "+30 always" model that two live decisions contradicted
+(same rank2 value, different bump outcome: logically impossible).
+**Cause**: the routine has a SECOND check (`ld a,[$dd01]; cp $01; ret`)
+after the first blank line; the address gap ($73a5→$73b1 = 12 bytes vs
+6 decoded) was the tell.
+**Fix/Rule**: when a disassembly read informs a formula, check that the
+byte span between labels matches the instructions you read (or dump the
+raw ROM bytes). A contradiction between two clean measurements means the
+CODE READ is wrong, not the measurements.
+
+### S80: hooks are not free — and the wedge wasn't a wedge
+Three wrong theories (data-read corruption, bank-mismatch loop,
+callback deadlock) fell to one debug log: pyboy hooks singlestep and
+shift input timing; the "wedge" was a menu waiting for a missed A-press
+(PYBOY_DEBUGGING trap entry). Rule: when a hooked run diverges from a
+no-hook run, suspect INPUT ALIGNMENT before emulator internals, and get
+the emulator's own logs before theorizing.
+
+### S80: the AI machine rewards measure-then-read
+The category formula (base//10 + adj + r16'%ladder-mod), the weight→
+category mapping (+17/+19/+18→cat1/2/3), and the not-rank1 +30 bonus
+were each pinned by ONE targeted live capture that then made the static
+read unambiguous. Reading first produced two wrong sort models; the
+26/26 validator caught both.

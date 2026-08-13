@@ -1401,18 +1401,31 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       the rig environment: make (emits disassembly/game.sym), pip install
       pyboy, boot patched ROM + hacked .sav, CONTINUE, close menus,
       p.save_state -> boot.state (recipe in simulator/measure_rig.py).
-- [ ] S80 — AI reverse-engineering: enemy move selection (bank $58 phase-5
-      machine — S79 located it and its queue writes; ai_weights[4] in the
-      enemy_stats rows are the obvious inputs); the TWO player-side control
-      variants (direct commands vs arena tactics — Charge/Mixed/Cautious/
-      Passive semantics) so the simulator can drive both gate/boss fights
-      and arena fights. MUST cover: meta-action codes (>= ~$BA; $E9 =
-      flee-class), the S79 stall hazard (AI re-roll loop under degenerate
-      state — reproduced via HP>MaxHP; custom skill ids on enemies need an
-      AI-table audit before the editor exposes movepools), and loop-level
-      differential validation of simulator/battle.py (full engine battle
-      replayed action-by-action). Also open from S79: $DB07 timer
-      statuses, +2 bit1 DoT applier, curse self-hit magnitude (bank $53
-      entry 2), sleep-application writer, MISS/dodge + $DA33.
+- [x] S80 (partial) — AI reverse-engineering: the enemy decision machine
+      is traced + validated 26/26 (BATTLE_SKILL_SYSTEM §15.10;
+      simulator/ai.py + measure_ai.py + validate_ai.py; 10-EID event
+      corpus in simulator/ai_events_*.json). CORRECTION: the machine is
+      bank $57 (not $58 — $58 entry 11 is only the cat-1 plain-attack
+      score service). Pinned: ai_weights→category-base mapping
+      (+17/+19/+18→cat1/2/3, +20→$DC5C state-0 preamble), category score
+      formula + mod ladder, quirky partial sort + the not-rank1 +$1E
+      cat1 bonus (hidden $73AB check), option-list {tag, skill} layout,
+      per-skill sum, tag filter, pick argmax + RNG-bit0 tie, commit
+      (skill only, target $FF), $dd0b modes (0 lightweight/1 full/
+      2 finisher), retry $76A9 = the S79 stall ROOT CAUSE ($dd02++
+      unbounded). PyBoy hook-timing trap found + protocol fixed
+      (PYBOY_DEBUGGING).
+- [ ] S81 — AI residuals + loop validation: evaluator rule chains per
+      effect_class ($4308/$4358/$4404 tables; RuleChainStub in ai.py),
+      enemy target resolution (post-commit site), $dd0b assignment at
+      init, lightweight-picker tail ($76DF), state-0 flee/loaf branch
+      ($6F8C) + w[3] semantics, cat3 weak-heal checks ($77A4/$77B4),
+      bank $58 entry 11 internals, the player-side control variants
+      (direct commands vs arena tactics Charge/Mixed/Cautious/Passive —
+      $DB50-52 plan adjusts under each plan), meta-action codes, and
+      loop-level differential validation of simulator/battle.py. Also
+      still open from S79: $DB07 timer statuses, +2 bit1 DoT applier,
+      curse self-hit magnitude (bank $53 entry 2), sleep-application
+      writer, MISS/dodge + $DA33.
 - [ ] S80 — pacing layer: TTK sweeps over gate encounter tables for the
       romhack + randomizer profiles; wire into `randomizer/profile_check`.

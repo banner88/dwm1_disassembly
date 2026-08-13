@@ -10,6 +10,30 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-08-13 (Session 80 — **combat-simulator arc part 3:
+> the ENEMY AI decision machine, traced and differentially validated
+> 26/26 over 10 EIDs.** Byte-neutral: no patches touched; verifier PASS;
+> clean and S75v4 patched pins unchanged. Everything lives in
+> `simulator/ai.py` + `measure_ai.py` + `validate_ai.py` +
+> BATTLE_SKILL_SYSTEM §15.10; RAM rows in known_RAM_map [S80].)
+>
+> The machine is **bank $57** (S79's "$58" was imprecise; $58 entry 11 =
+> the cat-1 plain-attack score service only), phase 5/$d9ed=1, sub-state
+> $D9EE. Pinned + validated: enemy_stats ai_weights → category bases
+> (+17/+19/+18 → $DC44/$DC4C/$DC54 = dmg/status/heal; +20 → $DC5C, the
+> state-0 act/flee preamble); category score = base//10 + plan_adj +
+> swapped-r16 % ladder-mod; the quirky partial sort + the not-rank1 +$1E
+> cat1 "runner-up" bonus (hidden $73AB check — KEY_LESSONS); option
+> lists $DC64 {tag, skill}; per-skill sums (record ai_weight + rand%16);
+> tag filter + effect-class evaluator dispatch ($DD26 +10-bump/veto
+> accumulator; chains stubbed); pick argmax with RNG-bit0 ties; commit
+> writes skill only (target $FF, resolved later). $dd0b per-actor modes:
+> 0 lightweight picker / 1 full machine / 2 finisher scan. **S79 stall
+> ROOT CAUSE: retry $76A9 increments $dd02 unbounded.** PyBoy hook trap
+> found (hooks shift input timing → dense-cadence protocol,
+> PYBOY_DEBUGGING). Residuals → ROADMAP S81 (rule chains, target
+> resolution, tactics plan adjusts, loop validation).
+>
 > Last verified: 2026-08-10 (Session 79 — **combat-simulator arc part 2:
 > TURN ORDER, the action machine, and the status layer.** Byte-neutral:
 > no patches touched; verifier PASS 6/6, clean `1ca6579…` and S75v4
@@ -50,11 +74,12 @@
 >
 > Hazards logged for the romhack: the enemy-AI phase-5 machine can stall
 > (re-roll loop on flee-class $E9) under degenerate state — reproduced by
-> rig-forcing HP>MaxHP, now structurally avoided in both rigs; enemies
-> with custom skill ids need an AI-table audit before the editor exposes
-> movepools (S80). Open S79 residuals in ROADMAP S80: $DB07 timer
-> statuses, +2 bit1 DoT applier, curse magnitude, sleep-application
-> writer, MISS/dodge, meta-actions.
+> rig-forcing HP>MaxHP, now structurally avoided in both rigs; ROOT CAUSE
+> found S80 (unbounded $dd02 retry at $57:$76A9); enemies with custom
+> skill ids need an AI-table audit before the editor exposes movepools
+> (S81). Open residuals now tracked in ROADMAP S81: rule chains, target
+> resolution, $DB07 timer statuses, +2 bit1 DoT applier, curse magnitude,
+> sleep-application writer, MISS/dodge, meta-actions.
 >
 > Last verified: 2026-08-10 (Session 78 — **combat-simulator arc part 1:
 > the DAMAGE LAYER, traced and differentially validated.** Byte-neutral: no
@@ -101,6 +126,7 @@
 > TOOLS_AND_DATA §2.10, known_RAM_map, ROADMAP S78.
 >
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S80** (2026-08-13): combat-simulator arc part 3 — enemy AI decision machine traced + validated 26/26 over 10 EIDs (bank $57 correction; ai_weights→category-base mapping; score formula + mod ladder; quirky sort + hidden-$73AB not-rank1 bonus; option lists; sums; tag filter + $DD26 evaluators (stubbed); pick/tie/commit; $dd0b modes; S79 stall root cause = unbounded $dd02 retry); PyBoy hook input-timing trap + dense-cadence protocol. simulator/ai.py + measure_ai.py + validate_ai.py + ai_events corpus. Byte-neutral. Owning: BATTLE_SKILL_SYSTEM §15.9-15.10, known_RAM_map [S80], PYBOY_DEBUGGING, KEY_LESSONS S80 (3), ROADMAP S80/S81, TOOLS_AND_DATA §2.10.
 - **S79** (2026-08-10): combat-simulator arc part 2 — turn order traced+validated 143/143 ($58:$54D1; $DB79/$DB82; defensive-class/SquallHit/PsycheUp priorities); 28-state action machine; apply-step ids; phase 9 = end-of-round DoT; status byte map + exact sleep wake; all four §15.6 items measured; link-vs-arena fork corrections; round core battle.py. Owning: BATTLE_SKILL_SYSTEM §15.6-15.9, TOOLS_AND_DATA §2.10, known_RAM_map, KEY_LESSONS S79, ROADMAP S79/S80.
 - **S78** (2026-08-10): combat-simulator arc part 1 — damage layer traced + validated 698/698 (simulator/damage.py); $DB73 battle type + boss-protection gate; resistances/ladders/specials. Owning: BATTLE_SKILL_SYSTEM §15, TOOLS_AND_DATA §2.10, ROADMAP S78.
 - **S77** (2026-08-06): randomizer part 2 — breeding tree regeneration (depth-targeted), stratification, skill assignment rebuilt onto vanilla placement; the BLIND power field finding (43 handler-computed skills); per-entity `profile_check.py`. Owning: BATTLE_SKILL_SYSTEM "power field is BLIND", ROADMAP S77, TOOLS_AND_DATA §2.9.

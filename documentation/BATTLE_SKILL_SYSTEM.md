@@ -1890,19 +1890,102 @@ RNG1 <= threshold by counter {3: $60 = 37.9%, 2: $A0 = 62.9%, 1: $E0 =
 88.0%, 0: always}; else the 2-bit counter decrements (floor 0) and the
 turn becomes the "asleep" action $0F. No RNG step consumed.
 
-### 15.9 What is NOT yet modelled (S80)
+### 15.9 What is NOT yet modelled (S80 partial; residuals → S81)
 
-Enemy AI move selection + the arena tactics variants (Charge/Mixed/
-Cautious/Passive); loop-level differential validation of
-`simulator/battle.py` (its components are engine-exact, the glue is
-traced-only); MISS/dodge + $DA33 timer interplay; meta-actions (flee $E9
-class, items, shift); the $DB07 timer statuses and the +2 bit1 applier;
-curse self-hit magnitude (bank $53 entry 2); sleep application counter
-source (constant $8C observed, writer not traced); PsycheUp carry-over;
-interception redirects (Cover/Guardian etc. beyond their order boost).
+Loop-level differential validation of `simulator/battle.py` (components
+engine-exact, glue traced-only); MISS/dodge + $DA33 timer interplay;
+meta-actions beyond the option-list observation (flee $E9 class, items,
+shift — the state-0 preamble consumes w[3], §15.10.7); AI evaluator rule
+chains per effect_class (§15.10.5 — stubbed in simulator/ai.py); enemy
+TARGET resolution (queued target stays $FF at commit; resolved later,
+site untraced); $dd0b mode assignment at battle init; the player/tactics
+plan-adjust values $DB50-52 under each plan; the $DB07 timer statuses and
+the +2 bit1 applier; curse self-hit magnitude (bank $53 entry 2); sleep
+application counter source; PsycheUp carry-over; interception redirects.
 
-**Hazard for the romhack (S79 finding):** the enemy-AI selection machine
-(phase 5, bank $58) can stall the battle when its pick needs re-rolling
-under degenerate conditions — reproduced when rig-forced HP exceeded
-MaxHP (flee-class $E9 loop). Enemies given CUSTOM skill ids must be
-AI-table-audited before the editor exposes enemy movepools (S80 box).
+**Hazard for the romhack (S79 finding, ROOT CAUSE FOUND S80):** the AI
+re-roll loop lives at $57:$76A9: on an all-vetoed/all-zero pick it does
+`$dd02++` and reruns from the category stage WITH NO BOUND CHECK — once
+$dd02 walks past the three ranked-id cells ($DCFF-$DD01) it reads
+adjacent RAM as "category ids" forever. Enemies given CUSTOM skill ids
+must be AI-table-audited (tag byte + evaluator coverage) before the
+editor exposes enemy movepools. (S79's "bank $58" attribution was
+imprecise — the machine is bank $57; bank $58 entry 11 is only the
+cat-1 plain-attack comparison service, §15.10.6.)
+
+### 15.10 ENEMY/TACTICS AI — bank $57 decision machine (S80, traced + validated 26/26)
+
+Built S80, NOT yet user-tested. Model: `simulator/ai.py`; rig:
+`simulator/measure_ai.py`; validator: `simulator/validate_ai.py` (26/26
+checks over 10 EIDs incl. weightless EID 0). Phase 5 / $d9ed=1 runs this
+per actor; sub-state $D9EE, stages at $7129 ent / $73b9 cat / $7529 sum /
+$7439 filter / $75a2 pick / $7859 post.
+
+**15.10.1 Inputs.** Battle init fills, per combatant slot: category base
+arrays $DC44/$DC4C/$DC54[8] and $DC5C[8] from enemy_stats ai_weights with
+mapping +17→cat1, +19→cat2, +18→cat3, +20→$DC5C (w[3]; consumed by the
+state-0 act/flee preamble as $db4d=w3/10, not by the category machine);
+and the OPTION LIST at $DC64+idx*16: up to 4 pairs {tag, skill}, tag =
+skill record effect_category hi-nibble (1 dmg/2 status/3 heal), skill
+$FF-terminated on the odd bytes, $00 on the even. The player-hero slot's
+list holds meta-actions (e.g. $E9 flee class) tagged 1.
+
+**15.10.2 Category scores** (FuncBtlAI_71b9 → SaveBtlAI_72ce), one
+GenerateRNG step each, byte-swapped 16-bit dividend (S78 rule):
+`score[c] = base[c]//10 + plan_adj[c] + r16' % mod` with mod=10 for
+player slots (<3) and link, else the base ladder <50→30, <100→25,
+<150→20, ≥150→10. plan_adj = $DB50/51/52 (cat1 adj is skipped for
+enemies; cat2/3 adjs apply unconditionally — 0 outside player plans in
+all measurements). Heuristics: +$1E to cat1 if the actor's status+3 &
+$0C or status+6 & $33 (magic-limited → prefer attack; exact trigger
+statuses unmeasured); $dcfe −$1E floor-0 when $db76==0 (heal-category
+nerf, LoadBtlAI_719b); the finisher scan when $dd0b==2 (any opponent
+below MaxHP/6 → option-list walk, tail untraced).
+
+**15.10.3 Ranking** (LoadBtlAI_7322) — exact quirky partial sort over
+cells $DCFC/D/E with ids seeded 1,2,3 in $DCFF/$DD00/$DD01: (1) cat1 vs
+cat2 → possible rank1/rank2 id swap, winner kept; (2) winner vs cat3 →
+possible rank1↔rank3 id swap ONLY (rank2 untouched — ranking can be
+non-sorted); (3) **LoadBtlAI_73a5: iff cat1 is NOT rank1, +$1E to cat1's
+CELL** (the "attack as perennial runner-up" bonus — note the hidden
+rank3 check at $73AB, see KEY_LESSONS S80); (4) rank2 vs rank3 by their
+(possibly bumped) cells → possible id swap. $DD02=3 (cursor at rank1).
+
+**15.10.4 Per-skill sum** (Jump_057_7529): for every listed pair
+regardless of category, `$DCE4[i] = record_ai_weight(skill) + r16'%16`,
+saturating $FF; one RNG step per skill. The chosen category id for the
+current attempt is $DD6A = [$DCFC + $DD02].
+
+**15.10.5 Filter + evaluators** (Jump_057_7439): zero $DCE4 entries
+whose tag ≠ $DD6A; each surviving skill fetches record flags7 → $DD6B
+and dispatches state 7 through the per-category dw tables at
+$57:$4308/$4358/$4404 (misdisassembled as code; plausibly indexed by
+effect_class). Rules accumulate the 16-bit $DD26/27 in +$0A steps, high
+byte $FF = veto (ReadBtlAI_750c contract). Measured writeback on the
+traced decisions: dce4[c] += 50 with $DD26 ending 60; per-chain
+semantics NOT yet traced — simulator/ai.py stubs this (RuleChainStub)
+and loop validation will flag decisions where the stub is wrong.
+
+**15.10.6 Pick** (Jump_057_75a2). Status overrides first (attacker
+block): +2 bit4 (confusion) → force $3A; +6 bit2 → force $42; +7 bit4 →
+force $95. $dd0b==0 → the LIGHTWEIGHT picker Jump_057_76DF (no per-skill
+RNG; observed choosing by top-category tag match — EID 37; tail
+untraced). Else argmax over $DCE4[0..6], first-nonzero seeds, tie →
+one RNG step, RNG1 bit0: 0 keep incumbent / 1 take challenger. All-zero
+→ retry $76A9 ($dd02++, rerun from category stage — UNBOUNDED, see
+§15.9 hazard). Epilogues by chosen category: cat1 → far-call bank $58
+entry 11, returns a plain-attack score via $DD26; if ≥ best skill score
+→ queue plain Attack $3A; cat2 → commit; cat3 with best <$14 → extra
+checks (LoadBtlAI_77a4/77b4, untraced) that can retry, fall back to $3A,
+or queue Defence $8D. Commit writes the WINNING SKILL id to
+$DCEC+idx*2; the target byte stays $FF (resolved later, site untraced).
+Winner skill $FF → $3A.
+
+**15.10.7 State-0 preamble** (pre-$7129, ~$6EC1): plan read
+(wMenu_selection / link $C1D5-6) → $DD72; w[3]-derived $db4d
+(LoadBtlAI_7905) + threshold ladders on cat bases (FuncBtlAI_791a,
+b=0/9/18 rows — the personality-table row group offsets) feed
+LoadBtlAI_7a5d: carry → clear $DCEC pair to $FFFF, set bit6 of
+$DD03[idx], run the machine (plan $81 "Command" diverts to the direct
+path via $DD03[idx]==3 at $714E); no-carry → alternate outcome at
+$6F8C (flee/loaf class, untraced).
