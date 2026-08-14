@@ -1415,17 +1415,57 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       2 finisher), retry $76A9 = the S79 stall ROOT CAUSE ($dd02++
       unbounded). PyBoy hook-timing trap found + protocol fixed
       (PYBOY_DEBUGGING).
-- [ ] S81 — AI residuals + loop validation: evaluator rule chains per
-      effect_class ($4308/$4358/$4404 tables; RuleChainStub in ai.py),
-      enemy target resolution (post-commit site), $dd0b assignment at
-      init, lightweight-picker tail ($76DF), state-0 flee/loaf branch
-      ($6F8C) + w[3] semantics, cat3 weak-heal checks ($77A4/$77B4),
-      bank $58 entry 11 internals, the player-side control variants
-      (direct commands vs arena tactics Charge/Mixed/Cautious/Passive —
-      $DB50-52 plan adjusts under each plan), meta-action codes, and
-      loop-level differential validation of simulator/battle.py. Also
-      still open from S79: $DB07 timer statuses, +2 bit1 DoT applier,
+- [ ] **S82 — ANNOTATION CATCH-UP, part 1 (GATE — Iron Rule 6, user
+      decision S81): bank $57 AI machine.** Blocks all further decoding /
+      simulator / editor work until done. Annotate from the S78-S81
+      docs + corpus (knowledge is fresh and validated — transcription,
+      not re-derivation): the $d9ee state dispatch (convert misassembled
+      dw table, name states 0-7 incl. walker $7865), the three rule
+      chains $4308/$4358/$4404 (convert misassembled tables to commented
+      dw lists), semantic labels + one-line comments on the ~30
+      measured-semantics rules and shared helpers ($455F adder, $45E4
+      veto, $45EA indexer, $2FA5 contract note at call sites, $4456 scan
+      family), the category/sum/filter/pick stages per §15.10, and the
+      $4E36 bug comment at the non-incrementing scan. Acceptance:
+      byte-perfect rebuild (verifier check 1) + labels resolve
+      (no dangling references).
+- [ ] **S83 — ANNOTATION CATCH-UP, part 2 (GATE): banks $52/$53/$58
+      battle core.** Damage pipeline + action machine + status layer
+      (§15.1-15.8, S78/S79 findings), the bank $53 act-phase dispatcher
+      $51E8 + re-resolve $4799 + fallback scan $47E8, the bank $58 entry
+      table (name all 12 entries incl. target resolver $6379 and the
+      cat-1 plain-attack service), execution loop $52:$71B5/$71ED.
+      Census S81: banks 52/53/57/58 carry ~2150 auto-generated labels vs
+      ~150 comment lines total — split across two sessions deliberately;
+      ONE roadmap item per session still applies.
+- [ ] S81 — AI residuals + loop validation (**PARTIAL, S81 session 1;
+      REMAINDER BLOCKED behind S82/S83 annotation gate**):
+      ✔ evaluator rule chains DONE — per-CATEGORY chains (NOT
+      effect_class-indexed; hypothesis falsified), full 160-skill sweep,
+      model `simulator/ai_rules.py` **240/240** vs corpus
+      (`validate_rules.py` + `s81_sweep_corpus.json`); vanilla bug found
+      + user-flagged as romhack enemy-AI fix candidate ($4E36
+      non-incrementing AoE scan). §15.10.5 rewritten.
+      ◐ enemy target resolution ~2/3: act-time resolver = $58 entry 4
+      ($6379) RNG-slot fishing; queue byte = side base at commit;
+      OPEN: resolver side-constraint probe ($DD1B masking suspected) +
+      AI-side initial post-commit write site (§15.10.6 note).
+      Still open: $dd0b assignment at init, lightweight-picker tail
+      ($76DF), state-0 flee/loaf branch ($6F8C) + w[3] semantics, cat3
+      weak-heal checks ($77A4/$77B4), bank $58 entry 11 internals, the
+      player-side control variants (direct commands vs arena tactics
+      Charge/Mixed/Cautious/Passive — $DB50-52 plan adjusts; user
+      behavior anchors S81: Charge=phys+atk-skills/some breath,
+      Mixed=status effects, Cautious/Passive=defend-or-heal with
+      guard-over-heal at low ally HP observed, Command/GO after
+      first command=physical only via the $714E plan-$81 divert),
+      meta-action codes, loop-level differential validation of
+      simulator/battle.py, small rule residuals (§15.9: $4DF9
+      condition, Shut/util pass-branches, SuckAir/Surge presumptions).
+      Also still open from S79: $DB07 timer statuses, +2 bit1 DoT
+      applier (S81 candidate: skill $6D per the $4702 heavy-DoT trio),
       curse self-hit magnitude (bank $53 entry 2), sleep-application
       writer, MISS/dodge + $DA33.
-- [ ] S80 — pacing layer: TTK sweeps over gate encounter tables for the
+- [ ] S80 — pacing layer (**BLOCKED behind S82/S83 annotation gate**):
+      TTK sweeps over gate encounter tables for the
       romhack + randomizer profiles; wire into `randomizer/profile_check`.

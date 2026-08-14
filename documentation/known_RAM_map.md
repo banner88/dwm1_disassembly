@@ -414,6 +414,17 @@
    1:DD13   9    Per-combatant round-readiness: 2 = command queued (may
                  act), 1 = alive/no-action, $FF = invalid slot. Rebuilt by
                  phase 9; promoted to 2 by the command committers. [S79]
+   1:DD1B   8    Per-combatant life validity: 0 = alive/targetable, 1 =
+                 processed-dead (engine-handled KO; a silent HP=0 poke
+                 does NOT set it), $FF = invalid slot. Read by ROM0 helper
+                 $2FA5 (alive→NC/NZ, dead→C/NZ, invalid→C/Z); keys the AI
+                 rule-chain target scans and $67B1 revive gate. Init $FF
+                 (bank $51 $4257), populated at battle setup. [S81]
+   1:DB8B   8    Per-combatant trait byte = species info+5 | swap(info+4):
+                 bit0 metal body (species 16/17/18 only), bit4 flying.
+                 Built by bank $51 init loop $4358 via MonsterInfoLoad.
+                 Read by MetalCut AI rule ($57:$6873) and bank $53 flying
+                 checks. [S74 flying bit / S81 full byte]
    1:DB00  64    Battle STATUS blocks, 8 B/combatant (0-2 party, 4-6
                  enemy). Byte map MEASURED S79 (BATTLE_SKILL_SYSTEM §15.8):
                  +2 = poison(0)/heavyDoT(1)/sleepctr(3:2)/confusion(4)/

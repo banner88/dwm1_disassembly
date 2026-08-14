@@ -92,6 +92,11 @@ a failure pass.
 Pick ONE task from ROADMAP.md (or the user's explicit request). State it.
 Sessions that try three things finish zero.
 
+**Annotation gate (Iron Rule 6):** before picking any NEW decoding,
+feature, simulator, or editor task, check ROADMAP for open annotation
+backlog items. If any exist, the backlog IS the task. Only user override
+in the session brief bypasses this.
+
 ## 2. During the session
 
 - **Verify before believing.** Docs here have been wrong in specific,
@@ -137,6 +142,16 @@ Then update, in place:
 5. **TOOLS_AND_DATA.md** — any tool or extracted/ JSON you added or changed
    gets its manifest row THE SAME SESSION (the manifest drifted 40 tools
    behind once; S51 re-audited it — don't let it happen again).
+6. **Disassembly annotation (Iron Rule 6, user decision S81)** — every
+   engine region you decoded this session gets labels + one-line semantic
+   comments in `disassembly/` THE SAME SESSION, before the zip. Labels and
+   comments only (zero byte impact); rename means updating every reference
+   site (grep-mechanical); the byte-perfect rebuild in the verifier is the
+   safety check. Misassembled data (dw tables decoded as code) gets
+   converted to commented `dw` lists. If a region genuinely can't be
+   annotated in-session (budget), it MUST land as a named ROADMAP backlog
+   item the same session — and per Iron Rule 6 that backlog blocks new
+   decoding work until burned down.
 
 ### Delivery format (MANDATORY — do this exactly, every session)
 

@@ -2978,3 +2978,47 @@ category mapping (+17/+19/+18→cat1/2/3), and the not-rank1 +30 bonus
 were each pinned by ONE targeted live capture that then made the static
 read unambiguous. Reading first produced two wrong sort models; the
 26/26 validator caught both.
+
+## S81 — rule chains: measure-first paid off; three traps caught in-session
+
+### S81: sm83dis takes a BANK argument — a wrong bank decodes plausible garbage
+`python3 tools/sm83dis.py 00 45ea` (bank 00) instead of `57 45ea` produced
+a coherent-looking but wrong routine for $57:$45EA, which briefly derailed
+the $4E18 condition decode ("$45EA = dec h; ret z" garbage vs the real
+`hl += a*2` indexer). The fix that caught it: when a decoded helper
+contradicts measured behavior, re-dump the RAW BYTES at the address
+(bank-explicit) before trusting either. The measured MP matrix
+(250→+10, 100→+20, 40→+20, 9/9→0) was what exposed the bad decode.
+
+### S81: aggregate deltas can misattribute mid-chain vetoes
+The sweep aggregator paired each rule-call with the NEXT captured event;
+for walks ending in a veto, a later rule's $FF landed on the last
+delta-producing rule (K.O.Dance "vetoed by $5D8E" — actually an
+end-of-chain BORROW veto: bonus 0 < penalty 20, $78A2's `jr c, $788b`).
+Per-rule claims need the precise per-call pre/post capture
+(measure_rules.py), not the batch aggregate. Corollary decoded: $788B is
+entered from BOTH the mid-chain $FF check ($787D) and the end-of-chain
+borrow ($78B3/$78BA) — net-negative chains zero the cell too.
+
+### S81: off-by-one in a jump table produced a false "engine bug" claim
+First decode of the $6848 family-cut handler table indexed CleanCut at
+entry 7 instead of 6, making it look anti-Slime; the resulting "family
+constant clobbered via $db4c" theory was reported to the user before a
+4-point hook probe (entry hooks that never fired) exposed the misindex.
+CleanCut is anti-MATERIAL (family 8); the pair $6848/$4C41 is correct.
+Lesson: before reporting an engine bug, hook the ENTRY of the code
+you think is buggy and confirm it executes — a handler that never fires
+means your dispatch decode is wrong, not the engine. (The one REAL bug
+stands and was verified this way: $4E36 never increments its scan
+cursor; entry hook fires, cursor provably static across iterations.)
+
+### S81: the option-list force is the cheap path to exhaustive AI coverage
+Forcing $DC64+idx*16 (+ category bases $DC44/4C/54) per-frame lets ANY
+skill run the real evaluator chains — 160 skills × a board-state matrix
+beat static-reading 131 rule routines, and doubles as the S79-hazard
+custom-skill audit. Two rig rules learned: give the actor huge MP or the
+$45F2 usability veto turns the sweep into an all-veto $76A9 retry storm
+(wall-clock blowup via hook cost — the S79/S80 stall reproduced from a
+new direction); and with ecount>1 force EVERY enemy slot's list+bases,
+because decisions interleave and single-slot forcing yields
+actor-ambiguous captures.

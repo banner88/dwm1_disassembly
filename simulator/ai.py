@@ -22,6 +22,13 @@ tag filter, retry cursor, commit. Evaluator rule chains are stubbed as a
 per-decision score delta (see RuleChainStub); loop-level validation will
 surface which chains need real implementations.
 
+S81 UPDATE: the real rule-chain model now exists in simulator/ai_rules.py
+(240/240 vs the S81 sweep corpus, validate_rules.py). RuleChainStub is
+SUPERSEDED but left wired here untouched so validate_ai.py's S80 26/26
+result stays reproducible; swapping evaluate_chain() in belongs to the
+loop-validation step (ROADMAP S81) where the swap gets its own
+differential run.
+
 Status: built S80, NOT yet user-tested.
 """
 

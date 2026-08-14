@@ -1890,18 +1890,25 @@ RNG1 <= threshold by counter {3: $60 = 37.9%, 2: $A0 = 62.9%, 1: $E0 =
 88.0%, 0: always}; else the 2-bit counter decrements (floor 0) and the
 turn becomes the "asleep" action $0F. No RNG step consumed.
 
-### 15.9 What is NOT yet modelled (S80 partial; residuals → S81)
+### 15.9 What is NOT yet modelled (S81 partial; residuals open)
 
 Loop-level differential validation of `simulator/battle.py` (components
 engine-exact, glue traced-only); MISS/dodge + $DA33 timer interplay;
 meta-actions beyond the option-list observation (flee $E9 class, items,
-shift — the state-0 preamble consumes w[3], §15.10.7); AI evaluator rule
-chains per effect_class (§15.10.5 — stubbed in simulator/ai.py); enemy
+shift — the state-0 preamble consumes w[3], §15.10.7); enemy
 TARGET resolution (queued target stays $FF at commit; resolved later,
 site untraced); $dd0b mode assignment at battle init; the player/tactics
 plan-adjust values $DB50-52 under each plan; the $DB07 timer statuses and
-the +2 bit1 applier; curse self-hit magnitude (bank $53 entry 2); sleep
-application counter source; PsycheUp carry-over; interception redirects.
+the +2 bit1 applier (S81 note: skill $6D is in the heavy-DoT rule trio
+$67/$6C/$6D — candidate applier, unverified); curse self-hit magnitude
+(bank $53 entry 2); sleep application counter source; PsycheUp
+carry-over; interception redirects. AI rule chains are DONE (S81,
+§15.10.5, model `simulator/ai_rules.py` 240/240 vs sweep corpus) except
+small residuals: $4DF9's condition (+5, fired for FloraMan only —
+omitted from model with note); DanceShut/MouthShut/DeMagic/ThickFog
+pass-conditions (veto branches measured, pass branches untraced —
+modelled as conservative veto); SuckAir $4ACC own-MP-full semantics
+static-presumed; Surge +15 presumed.
 
 **Hazard for the romhack (S79 finding, ROOT CAUSE FOUND S80):** the AI
 re-roll loop lives at $57:$76A9: on an all-vetoed/all-zero pick it does
@@ -1957,14 +1964,66 @@ saturating $FF; one RNG step per skill. The chosen category id for the
 current attempt is $DD6A = [$DCFC + $DD02].
 
 **15.10.5 Filter + evaluators** (Jump_057_7439): zero $DCE4 entries
-whose tag ≠ $DD6A; each surviving skill fetches record flags7 → $DD6B
-and dispatches state 7 through the per-category dw tables at
-$57:$4308/$4358/$4404 (misdisassembled as code; plausibly indexed by
-effect_class). Rules accumulate the 16-bit $DD26/27 in +$0A steps, high
-byte $FF = veto (ReadBtlAI_750c contract). Measured writeback on the
-traced decisions: dce4[c] += 50 with $DD26 ending 60; per-chain
-semantics NOT yet traced — simulator/ai.py stubs this (RuleChainStub)
-and loop validation will flag decisions where the stub is wrong.
+whose tag ≠ $DD6A; each surviving (tag-matched) skill fetches record
+flags7 → $DD6B, loads a chain pointer, and switches to state 7.
+
+*Chain structure (S81, byte-verified — falsifies the S80 "indexed by
+effect_class" hypothesis):* level-1 table $57:$4302 = 3 dw → chain bases
+$4308 (cat1, 39 rules) / $4358 (cat2, 61) / $4404 (cat3, 40); each chain
+is a $0000-terminated dw list of rule routines (131 unique, ~27 shared).
+The WHOLE category chain runs for every tag-matched skill; rules
+self-select on the skill id ($DB8A) and board state. The live walker is
+the state-7 handler at $7865 ($d9ee dispatch: states 0-7 = $6E2A/$7129/
+$73B9/$7529/$7439/$75A2/$7859/$7865); ReadBtlAI_750c belongs to an
+apparently-dead inline path.
+
+*Accumulators:* $DD26 = BONUS, $DD27 = PENALTY (NOT one 16-bit value).
+All writes go through the saturating adder $455F ([hl]+=b, cap $FF);
+veto = ClearBattleAction $45E4 ($DD27:=$FF), which aborts the walk at
+$787D and zeroes the option's cell ($788B). Chain end $78A2: delta =
+$DD26−$DD27; borrow ALSO jumps to $788B (net-negative = veto);
+otherwise dce4[cell] += delta (8-bit add, no carry check). The S80
+"dce4[c] += 50 with $DD26 ending 60" decodes as bonus 60 − penalty 10.
+
+*Rule semantics (S81: full sweep of all 160 cat-1/2/3 skills through the
+real chains via forced option lists — `simulator/sweep_rules.py` — plus
+condition matrices; model `simulator/ai_rules.py` reproduces the entire
+corpus 240/240):* highlights — $45F2 universal MP+seal vetoes (flags7
+bit6/5/4 vs status +3 bits); $4702/$4725/$4745/$6267 "all live opposing
+targets already have status" vetoes ($2FA5 keys on $DD1B+slot: 0 alive /
+1 processed-dead / $FF invalid — NEW RAM row); $5D4D support-class
+needs-an-ally gate (own valid slots ≥2: Sacrifice/Vivify/Revive/
+Farewell/NumbOff/DeChaos/Cover/Guardian/LifeSong/LifeDance all veto when
+solo); $67B1 revive needs processed-dead ally; cures $4F2E/$4F61/$4F94/
+$4FB3 +15 per own-side status, veto otherwise; heals veto if own side
+unhurt ($49B7), +5 single-target ($4FD2 self / $5149 ally) +15 broad
+($502C/$51DA) — heal incentives cap at +20, exactly the §15.10.6 cat3
+weak-heal threshold $14; family cuts: $6848 veto iff no live matching
+target / $4C41 +20 iff present (DrakSlash→Dragon 1, BeastCut→Beast 2,
+BirdBlow→Bird 3, DevilCut→Devil 6, ZombieCut→Zombie 7, CleanCut→
+MATERIAL 8, Smashlime→Slime 0, Sheldodge→Bug 5, Branching→Plant 4;
+MetalCut tests $DB8B bit0 = metal body, species 16/17/18 only; $DB8B =
+info+5 | swap(info+4), bit4 flying); $4BCC element-aware +20 (record
+field +5 element, per-target resistance via service $5206, withheld iff
+resist sum > live count); $4E18 caster-profile spell bonus (+10 iff
+CurMP < MaxMP/2, +10 iff MaxMP ≥ MaxHP — pinned by 4-point MP matrix);
+$6C8C enemy-side-only broad +20 (party monsters never get it); $6AB4
+Rob-class veto when own MP full; $5FFD +20 incapacitate / $6180 +10
+poison / $61BC +10 Curse; $5A4C +20 Cover/Guardian with a downed ally.
+
+*VANILLA BUG (instruction-trace verified):* $4E36, the "+20 AoE bonus
+when facing 2+ targets" rule, never increments its slot cursor — it
+tests the FIRST opposing slot three times, i.e. effectively "+20 iff
+first opposing slot alive" (≈always). Its twin $5D8E (−20 when exactly
+1 live opposing target; RainSlash $57 hard-vetoes) is correct, so on
+lone-target boards AoE spells net +0 instead of the intended −40-ish
+discouragement. Candidate enemy-AI fix for the romhack (user-flagged
+S81); any fix is a patch decision, NOT part of the byte-neutral model.
+
+*Correction (S81):* an off-by-one in this session's first decode of the
+$6848 handler table misread CleanCut as anti-Slime and produced a false
+"$db4c clobber bug" claim (retracted same session). The family-cut
+bonus/veto pair is correct as shipped.
 
 **15.10.6 Pick** (Jump_057_75a2). Status overrides first (attacker
 block): +2 bit4 (confusion) → force $3A; +6 bit2 → force $42; +7 bit4 →
@@ -1978,8 +2037,29 @@ entry 11, returns a plain-attack score via $DD26; if ≥ best skill score
 → queue plain Attack $3A; cat2 → commit; cat3 with best <$14 → extra
 checks (LoadBtlAI_77a4/77b4, untraced) that can retry, fall back to $3A,
 or queue Defence $8D. Commit writes the WINNING SKILL id to
-$DCEC+idx*2; the target byte stays $FF (resolved later, site untraced).
-Winner skill $FF → $3A.
+$DCEC+idx*2; the target byte stays $FF (resolved later — see the S81
+target-resolution note below). Winner skill $FF → $3A.
+
+*Target resolution (S81, PARTIAL — ~2/3 traced):* the queue's target
+byte is a TWO-STAGE value. Player-command commits (bank $50 $4B6B) write
+the target SIDE BASE only (0 or 4, from record-field bit4 vs the actor's
+side) — not a slot. At act time, bank $53's own 16-state act-phase
+dispatcher ($51E8; sub-state 0 = $520C) copies the byte to
+wBattleTargetIdx and, iff it is $FF, far-calls **bank $58 entry 4
+($6379) — the concrete-slot resolver**: RNG-slot fishing over $2FA5
+validity — try RNG1&7, then RNG2&7, then (RNG1|RNG2)&7, then further
+mixes, then a decrementing scan from RNG2 until a valid slot answers;
+the chosen slot is written back to $DCED+idx*2. $53:$4799 is the
+re-resolve trigger (resets the byte to $FF, phase $19) — the observed
+act-time "$FF flip". Group skills never select: bank $52's execution
+loop ($71B5/$71ED) steps the target byte per victim. OPEN: the resolver
+has NO side filter ($2FA5 passes any live slot), so either $DD1B is
+side-masked around resolution or another constraint applies — one probe
+outstanding; and the AI-side initial post-commit write site (the value
+observed ~2 frames after commit, plausibly also a side base per the
+bank-$50 pattern) is unconfirmed. Dead-target redirect at act time also
+exists as a first-valid-on-side scan at $53:$47E8→$47FB (path
+conditional; not exercised in the S81 probes).
 
 **15.10.7 State-0 preamble** (pre-$7129, ~$6EC1): plan read
 (wMenu_selection / link $C1D5-6) → $DD72; w[3]-derived $db4d
