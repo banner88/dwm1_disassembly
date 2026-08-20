@@ -9795,7 +9795,12 @@ ReturnSlotResult:
     ret
 
 
-; CheckMonsterSlot: Check if party/battle slot A (0-7) has a valid monster. CF=valid
+; CheckMonsterSlot: validity of party/battle slot A (0-7).
+; CF SET = NOT a live monster (A>=8, $DD1B[slot]==$FF invalid, or ==1
+; processed-dead); CF CLEAR = live ($DD1B[slot]==0). The old comment here
+; said CF=valid — INVERTED (byte-verified S82). Heavily used by the
+; bank-$57 AI rule chains and scan family (AIScanSlots_4456); rules that
+; need the alive/processed-dead distinction read $DD1B directly.
 CheckMonsterSlot:
     push hl
     push bc

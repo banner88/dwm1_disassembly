@@ -263,7 +263,7 @@ byte-identical; `--emit record` / `--emit recordptr` print them.
 | +0 | effect_class | fine effect/message id; shared by same-effect skills (Heal/Healmore=$18) | HIGH |
 | +1 | effect_category | hi-nibble 1=damage 2=status/debuff 3=heal/buff 8=item | HIGH |
 | +2 | target_mode | $11=1 foe, $12=all foes, $21=1 ally, $22=all allies, $31/$41=special. Cached→`$dcfc`, read by AI & anim. FAQ-Range-validated | PROVEN |
-| +3 | ai_weight | per-skill AI score; enemy AI (`$57 Jump_057_7529`) SUMS record[+3] over its skill list into `$dce4` → weighted pick (Sacrifice/MegaMagic=0). The per-skill AI lever | HIGH |
+| +3 | ai_weight | per-skill AI score; enemy AI (`$57 AIState3SkillSums_7529`) SUMS record[+3] over its skill list into `$dce4` → weighted pick (Sacrifice/MegaMagic=0). The per-skill AI lever | HIGH |
 | +4 | mp_cost_byte | byte copy of MP cost (`$07` table); 19/19 match | PROVEN |
 | +5 | status_id | status/secondary-effect id; groups by effect (Sleep fam=$08, Poison=$13, Slow=$0e, instant-death=$09) | PROVEN |
 | +6 | damage_class | $00=non-damage, $04=spell-damage, $05=breath-damage (FireAir/Scorching breath=$05 vs Blaze spell=$04). Element itself is chosen in the handler | PROVEN |
@@ -1937,7 +1937,7 @@ skill record effect_category hi-nibble (1 dmg/2 status/3 heal), skill
 $FF-terminated on the odd bytes, $00 on the even. The player-hero slot's
 list holds meta-actions (e.g. $E9 flee class) tagged 1.
 
-**15.10.2 Category scores** (FuncBtlAI_71b9 → SaveBtlAI_72ce), one
+**15.10.2 Category scores** (AICategoryScoreCalc_71b9 → AICategoryScoreStore_72ce), one
 GenerateRNG step each, byte-swapped 16-bit dividend (S78 rule):
 `score[c] = base[c]//10 + plan_adj[c] + r16' % mod` with mod=10 for
 player slots (<3) and link, else the base ladder <50→30, <100→25,
@@ -1946,41 +1946,49 @@ enemies; cat2/3 adjs apply unconditionally — 0 outside player plans in
 all measurements). Heuristics: +$1E to cat1 if the actor's status+3 &
 $0C or status+6 & $33 (magic-limited → prefer attack; exact trigger
 statuses unmeasured); $dcfe −$1E floor-0 when $db76==0 (heal-category
-nerf, LoadBtlAI_719b); the finisher scan when $dd0b==2 (any opponent
+nerf, AIHealCatNerf_719b); the finisher scan when $dd0b==2 (any opponent
 below MaxHP/6 → option-list walk, tail untraced).
 
-**15.10.3 Ranking** (LoadBtlAI_7322) — exact quirky partial sort over
+**15.10.3 Ranking** (AICategoryRank_7322) — exact quirky partial sort over
 cells $DCFC/D/E with ids seeded 1,2,3 in $DCFF/$DD00/$DD01: (1) cat1 vs
 cat2 → possible rank1/rank2 id swap, winner kept; (2) winner vs cat3 →
 possible rank1↔rank3 id swap ONLY (rank2 untouched — ranking can be
-non-sorted); (3) **LoadBtlAI_73a5: iff cat1 is NOT rank1, +$1E to cat1's
+non-sorted); (3) **AICat1RunnerUpCheck_73a5: iff cat1 is NOT rank1, +$1E to cat1's
 CELL** (the "attack as perennial runner-up" bonus — note the hidden
 rank3 check at $73AB, see KEY_LESSONS S80); (4) rank2 vs rank3 by their
 (possibly bumped) cells → possible id swap. $DD02=3 (cursor at rank1).
 
-**15.10.4 Per-skill sum** (Jump_057_7529): for every listed pair
+**15.10.4 Per-skill sum** (AIState3SkillSums_7529): for every listed pair
 regardless of category, `$DCE4[i] = record_ai_weight(skill) + r16'%16`,
 saturating $FF; one RNG step per skill. The chosen category id for the
 current attempt is $DD6A = [$DCFC + $DD02].
 
-**15.10.5 Filter + evaluators** (Jump_057_7439): zero $DCE4 entries
+**15.10.5 Filter + evaluators** (AIState4FilterEval_7439): zero $DCE4 entries
 whose tag ≠ $DD6A; each surviving (tag-matched) skill fetches record
 flags7 → $DD6B, loads a chain pointer, and switches to state 7.
 
 *Chain structure (S81, byte-verified — falsifies the S80 "indexed by
 effect_class" hypothesis):* level-1 table $57:$4302 = 3 dw → chain bases
-$4308 (cat1, 39 rules) / $4358 (cat2, 61) / $4404 (cat3, 40); each chain
-is a $0000-terminated dw list of rule routines (131 unique, ~27 shared).
-The WHOLE category chain runs for every tag-matched skill; rules
-self-select on the skill id ($DB8A) and board state. The live walker is
-the state-7 handler at $7865 ($d9ee dispatch: states 0-7 = $6E2A/$7129/
-$73B9/$7529/$7439/$75A2/$7859/$7865); ReadBtlAI_750c belongs to an
-apparently-dead inline path.
+$4308 (cat1, 39 rules) / $4358 (cat2, **85** — the S81 write-up said 61,
+a miscount caught byte-side S82) / $4404 (cat3, 40); each chain is a
+$0000-terminated dw list of rule routines (131 unique, 27 shared). The
+WHOLE category chain runs for every tag-matched skill; rules self-select
+on the skill id ($DB8A) and board state. The live walker is the state-7
+handler AIState7ChainWalker_7865 ($d9ee dispatch AIDecisionStateDispatch_6e0e
+→ AIStateDispatchTable_6e12: states 0-7 = $6E2A/$7129/$73B9/$7529/$7439/
+$75A2/$7859/$7865); ReadBtlAI_750c belongs to an apparently-dead inline
+path. **Annotated in source S82**: the chains + state table are commented
+dw lists in disassembly/bank_057.asm; all 131 rules carry labels (semantic
+for the ~30 measured ones, neutral AIRule_<addr> otherwise) — see
+tools/resection_ai_bank57.py. Rule BODIES frequently embed inline rst $00
+handler tables that mgbdis desynced around (heads all boundary-align);
+body re-emission is a ROADMAP residual, not done in S82.
 
 *Accumulators:* $DD26 = BONUS, $DD27 = PENALTY (NOT one 16-bit value).
-All writes go through the saturating adder $455F ([hl]+=b, cap $FF);
-veto = ClearBattleAction $45E4 ($DD27:=$FF), which aborts the walk at
-$787D and zeroes the option's cell ($788B). Chain end $78A2: delta =
+All writes go through the saturating adder AISatAdd_455f ([hl]+=b, cap
+$FF); veto = ClearBattleAction $45E4 ($DD27:=$FF), which aborts the walk
+at $787D and zeroes the option's cell (AIChainZeroCell_788b). Chain end
+AIChainApplyDelta_78a2: delta =
 $DD26−$DD27; borrow ALSO jumps to $788B (net-negative = veto);
 otherwise dce4[cell] += delta (8-bit add, no carry check). The S80
 "dce4[c] += 50 with $DD26 ending 60" decodes as bonus 60 − penalty 10.
@@ -2025,7 +2033,7 @@ $6848 handler table misread CleanCut as anti-Slime and produced a false
 "$db4c clobber bug" claim (retracted same session). The family-cut
 bonus/veto pair is correct as shipped.
 
-**15.10.6 Pick** (Jump_057_75a2). Status overrides first (attacker
+**15.10.6 Pick** (AIState5Pick_75a2). Status overrides first (attacker
 block): +2 bit4 (confusion) → force $3A; +6 bit2 → force $42; +7 bit4 →
 force $95. $dd0b==0 → the LIGHTWEIGHT picker Jump_057_76DF (no per-skill
 RNG; observed choosing by top-category tag match — EID 37; tail
@@ -2035,7 +2043,7 @@ one RNG step, RNG1 bit0: 0 keep incumbent / 1 take challenger. All-zero
 §15.9 hazard). Epilogues by chosen category: cat1 → far-call bank $58
 entry 11, returns a plain-attack score via $DD26; if ≥ best skill score
 → queue plain Attack $3A; cat2 → commit; cat3 with best <$14 → extra
-checks (LoadBtlAI_77a4/77b4, untraced) that can retry, fall back to $3A,
+checks (AICat3WeakHealCheckA_77a4/77b4, untraced) that can retry, fall back to $3A,
 or queue Defence $8D. Commit writes the WINNING SKILL id to
 $DCEC+idx*2; the target byte stays $FF (resolved later — see the S81
 target-resolution note below). Winner skill $FF → $3A.
@@ -2063,9 +2071,9 @@ conditional; not exercised in the S81 probes).
 
 **15.10.7 State-0 preamble** (pre-$7129, ~$6EC1): plan read
 (wMenu_selection / link $C1D5-6) → $DD72; w[3]-derived $db4d
-(LoadBtlAI_7905) + threshold ladders on cat bases (FuncBtlAI_791a,
+(AIPreambleW3_7905) + threshold ladders on cat bases (AIPreambleLadder_791a,
 b=0/9/18 rows — the personality-table row group offsets) feed
-LoadBtlAI_7a5d: carry → clear $DCEC pair to $FFFF, set bit6 of
+AIPreambleDecide_7a5d: carry → clear $DCEC pair to $FFFF, set bit6 of
 $DD03[idx], run the machine (plan $81 "Command" diverts to the direct
 path via $DD03[idx]==3 at $714E); no-carry → alternate outcome at
 $6F8C (flee/loaf class, untraced).

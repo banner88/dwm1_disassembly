@@ -73,7 +73,7 @@ MON_SKILL_OFF = 0x06             # +6,+7,+8 = 3 base skill ids
 #                          $11=1 foe $12=all foes $21=1 ally $22=all allies,
 #                          $31/$41=special. FAQ-Range-validated.             PROVEN
 #   +3  b  ai_weight       per-skill AI action score; the enemy AI ($57
-#                          Jump_057_7529) SUMS record[+3] over its skill list
+#                          AIState3SkillSums_7529) SUMS record[+3] over its skill list
 #                          into the score table $dce4 -> picks weighted. The
 #                          per-skill AI lever (distinct from enemy-stats +17).  HIGH
 #   +4  b  mp_cost_byte    byte copy of MP cost ($07 table); 19/19 match     PROVEN

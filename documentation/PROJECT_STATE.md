@@ -10,6 +10,44 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-08-15 (Session 82 — **ANNOTATION CATCH-UP part 1
+> (Iron Rule 6 gate): the bank-$57 AI decision machine is now annotated
+> in source.** Byte-neutral: labels/comments/data-resection only; no
+> patches touched; verifier PASS 6/6; clean `1ca6579…` and S75v4 patched
+> pin `ce1e7369…` both unchanged. Built S82, NOT yet user-tested (no
+> test ROM this session — byte-neutral acceptance = verifier PASS +
+> unchanged hashes). Tool: `tools/resection_ai_bank57.py` (idempotent;
+> probe-build line→addr mapping; probe AND final builds asserted
+> byte-perfect). ROADMAP S82 box ticked; **S83 (banks $52/$53/$58) is
+> the remaining annotation gate** before the S81 residuals / pacing
+> layer unblock.)
+>
+> As annotated: state dispatch AIDecisionStateDispatch_6e0e + inline
+> AIStateDispatchTable_6e12 converted to dw (states 0-7 named
+> AIState0Preamble_6e2a … AIState7ChainWalker_7865);
+> AIRuleChainIndex_4302 + the three category chains converted to labeled
+> dw lists — counts BYTE-VERIFIED **39/85/40** (S81's "61" for cat2 was
+> a miscount; DOC_AUDIT S82); all 131 rule routines labeled (~30
+> semantic with S80/S81-provenance comments incl. the $4E36 vanilla-bug
+> block; rest neutral AIRule_<addr>); stage/helper renames with
+> repo-wide reference updates (AIState1CategoryScores_7129,
+> AICategoryRank_7322, AICat1RunnerUpCheck_73a5, AISatAdd_455f
+> [ex-AddBToHL16 — its "16-bit" description was wrong],
+> AIScanSlots_4456, AIRetryAllZero_76a9, AIChainZeroCell_788b /
+> AIChainApplyDelta_78a2, AICallRuleAtHL_78ca, preamble family, …).
+> Comment fixes from byte-reads: **CheckMonsterSlot ($00:$2FA5) header
+> said "CF=valid" — INVERTED** (CF SET = NOT a live monster; 101
+> bank-$57 call sites; DOC_AUDIT S82); DATA_STRUCTURES helper rows
+> corrected. Clarified in-session: §15.10.5's "$5206 resist service" is
+> the rst $10 FAR-CALL operand (bank $52 entry 6), not a bank-$57
+> address — doc idiom, no fix needed. Residuals (ROADMAP S82 box): rule
+> BODY re-emission (inline rst $00 handler tables desynced mgbdis inside
+> many bodies; all 131 heads boundary-align, probe-verified) +
+> DanceShut/MouthShut + DeMagic/ThickFog rule addresses unidentified
+> among the neutral labels. Owning: disassembly/bank_057.asm itself +
+> BATTLE_SKILL_SYSTEM §15.10.5, DOC_AUDIT S82 (3 rows), KEY_LESSONS S82
+> (2 lessons), TOOLS_AND_DATA (tool row), ROADMAP S82.
+
 > Last verified: 2026-08-14 (Session 81 — **combat-simulator arc part 4:
 > the EVALUATOR RULE CHAINS, decoded end-to-end and differentially
 > validated 240/240; target resolution ~2/3 traced.** Byte-neutral: no
@@ -21,8 +59,10 @@
 > rows $DD1B/$DB8B in known_RAM_map [S81].)
 >
 > Chain architecture (falsifies S80's "indexed by effect_class"): $4302
-> → per-CATEGORY $0000-terminated dw chains $4308/$4358/$4404 (39/61/40
-> rules, 131 unique); the whole chain runs per tag-matched skill, rules
+> → per-CATEGORY $0000-terminated dw chains $4308/$4358/$4404 (39/**85**/40
+> rules — this block originally said 61 for cat2, a miscount corrected
+> S82 (byte-verified; DOC_AUDIT S82) — 131 unique); the whole chain runs
+> per tag-matched skill, rules
 > self-select. $DD26 BONUS / $DD27 PENALTY pair (not 16-bit) via
 > saturating adder $455F; veto = $45E4 mid-chain OR end-of-chain borrow,
 > both → $788B cell-zero; else dce4[cell] += (26−27), 8-bit. Live walker
@@ -57,121 +97,6 @@
 > ROADMAP S82/S83 = annotation catch-up for banks $57 then $52/$53/$58,
 > blocking the S81 remainder and the pacing layer until burned down.**
 
-> Last verified: 2026-08-13 (Session 80 — **combat-simulator arc part 3:
-> the ENEMY AI decision machine, traced and differentially validated
-> 26/26 over 10 EIDs.** Byte-neutral: no patches touched; verifier PASS;
-> clean and S75v4 patched pins unchanged. Everything lives in
-> `simulator/ai.py` + `measure_ai.py` + `validate_ai.py` +
-> BATTLE_SKILL_SYSTEM §15.10; RAM rows in known_RAM_map [S80].)
->
-> The machine is **bank $57** (S79's "$58" was imprecise; $58 entry 11 =
-> the cat-1 plain-attack score service only), phase 5/$d9ed=1, sub-state
-> $D9EE. Pinned + validated: enemy_stats ai_weights → category bases
-> (+17/+19/+18 → $DC44/$DC4C/$DC54 = dmg/status/heal; +20 → $DC5C, the
-> state-0 act/flee preamble); category score = base//10 + plan_adj +
-> swapped-r16 % ladder-mod; the quirky partial sort + the not-rank1 +$1E
-> cat1 "runner-up" bonus (hidden $73AB check — KEY_LESSONS); option
-> lists $DC64 {tag, skill}; per-skill sums (record ai_weight + rand%16);
-> tag filter + effect-class evaluator dispatch ($DD26 +10-bump/veto
-> accumulator; chains stubbed); pick argmax with RNG-bit0 ties; commit
-> writes skill only (target $FF, resolved later). $dd0b per-actor modes:
-> 0 lightweight picker / 1 full machine / 2 finisher scan. **S79 stall
-> ROOT CAUSE: retry $76A9 increments $dd02 unbounded.** PyBoy hook trap
-> found (hooks shift input timing → dense-cadence protocol,
-> PYBOY_DEBUGGING). Residuals → ROADMAP S81 (rule chains, target
-> resolution, tactics plan adjusts, loop validation).
->
-> Last verified: 2026-08-10 (Session 79 — **combat-simulator arc part 2:
-> TURN ORDER, the action machine, and the status layer.** Byte-neutral:
-> no patches touched; verifier PASS 6/6, clean `1ca6579…` and S75v4
-> patched pin `ce1e7369…` both unchanged. Everything below lives in
-> `simulator/` + BATTLE_SKILL_SYSTEM §15.6-15.9.)
->
-> Turn order is now formula-exact and differentially validated **143/143
-> over 47 rounds** (incl. a 4-actor round): TurnOrderBuild `$58:$54D1`
-> rolls key = AGL−span+rand (span = 1+AGL/4+AGL/16 ≈31%, one GenerateRNG
-> step per ready combatant, $DD13[slot]==2 = ready), floors at 2, boosts
-> the defensive-interception class {Ironize/Imitate/Cover/Guardian/Dodge/
-> Defence/StrongD/SuckAll/BladeD/IRONIZE} +$0600, SquallHit +$0400,
-> forces PsycheUp last ($0001), then a literal ties-swap bubble sort
-> (9th pair out-of-bounds — modelled verbatim) compacts into **$DB79**
-> (cursor $DB82). The ROADMAP breadcrumb was falsified: BattleFunc_6a13/
-> 6a49 are the Upper/AglUp stat-CAP helpers, not flee/order.
->
-> All four §15.6 traced-only items MEASURED: slot-2 ×0.8 (rig `--party3`;
-> 45→36 with ti=1 control unchanged), RainSlash (4-hit cap, per-hit
-> ×8/10, ×6/10, then ×0.4×2; dead-target side-walk), Sacrifice (CURRENT
-> HP, not max — kill 180 / survivor 179 at HP 180/Max 250, 4/4 branches,
-> zero RNG steps), and the arena variants — which falsified two forks:
-> Kamikaze's `$6259` and WindBeast's `$642B` "arena" branches key on
-> **$C86C (LINK)**; real arena (db73=2) takes the boss/enemy-side paths
-> (Kamikaze arena = (casterHP−1)/2 = 99, measured). damage.py corrected;
-> S78 corpus still 698/698.
->
-> Also mapped: the 28-state action machine ($52:$6C60; ROADMAP knew 8),
-> the apply-step exclusion ids by name (gate = $DD6F bit5), phase 9 =
-> END-OF-ROUND DoT processor (poison MaxHP/16 / heavy MaxHP/6 + caps),
-> $DB77/$DB78 pending-action pair + META action codes (>= ~$BA; $E9 =
-> flee-class), and the measured status byte map ($DB00-block: sleep/
-> paralyze/poison/confusion/curse/StopSpell/Surround/MouthShut/DanceShut/
-> LureDance one-shots) with the sleep wake roll ported exactly from
-> $53:$4AEB (37.9/62.9/88/100% by counter). Round core assembled in
-> `simulator/battle.py` — components engine-exact, **loop glue NOT yet
-> differentially validated** (S80, with AI).
->
-> Hazards logged for the romhack: the enemy-AI phase-5 machine can stall
-> (re-roll loop on flee-class $E9) under degenerate state — reproduced by
-> rig-forcing HP>MaxHP, now structurally avoided in both rigs; ROOT CAUSE
-> found S80 (unbounded $dd02 retry at $57:$76A9); enemies with custom
-> skill ids need an AI-table audit before the editor exposes movepools
-> (S81). Open residuals now tracked in ROADMAP S81: rule chains, target
-> resolution, $DB07 timer statuses, +2 bit1 DoT applier, curse magnitude,
-> sleep-application writer, MISS/dodge, meta-actions.
->
-> Last verified: 2026-08-10 (Session 78 — **combat-simulator arc part 1:
-> the DAMAGE LAYER, traced and differentially validated.** Byte-neutral: no
-> patches touched; verifier PASS 6/6, clean `1ca6579…` and S75v4 patched pin
-> `ce1e7369…` both unchanged. New top-level package `simulator/`.)
->
-> The whole damage pipeline is now formula-exact: the physical roll
-> (`CalcSkillDefense`, three regimes + the 3rd-party-slot ×0.8 + zero floor),
-> record spells (min + RNG1 mod (range+1), side-selected, **DEF does NOT
-> reduce spell damage** — S77's open question), resistances (27 levels packed
-> 2-bit MSB-first at $DD28+slot*7 — 15/15 element cores matched the FAQ),
-> every multiplier/hit ladder incl. the guard-bit rows, and all 43
-> handler-computed specials (MegaMagic = 2MP+2L ±10% — the old "(…)/4" note
-> was wrong; WindBeast/Vacuum level-based; Kamikaze/Sacrifice/Ramming;
-> slashes with a 1.3125× amplify row; BiAttack/QuadHits ATK-rewrites). The
-> Python model (`simulator/damage.py`) replays emulator captures **698/698
-> exact** (`simulator/validate_damage.py` + `s78_master_events.json`;
-> measured on the patched build + the user's hacked .sav via the S75 rig +
-> waypoint hooks).
->
-> The discovery of the session: **$DB73 is the battle TYPE** (wild 0 / boss 1
-> / arena 2; $FF is just its loss value), and bank $53's `LoadBtlC_51aa`
-> gates {Beat, Defeat, Sacrifice, Kamikaze, Paralyze, $6B, K.O.Dance} to
-> AUTO-FAIL vs enemies in boss battles — the classic no-death-on-bosses rule,
-> now in code. Corollary for all future rig work: the S75 rig sets $DA09=1,
-> so rig battles are BOSS-typed; poke $db73=0 for wild-battle semantics.
-> Kamikaze forks on it (wild: targetHP−1; boss: (casterHP−1)/2 — both
-> measured).
->
-> User directions logged: full simulator for the romhack (not just
-> randomizer); acceptance must cover BOTH control variants (gates/bosses =
-> per-monster commands; arena = tactics only); AI to be reverse-engineered in
-> a later session of this arc; EDITOR_DESIGN §11's never-simulate rule
-> superseded (amended in place — differential validation is the guardrail
-> now). DWM-original.sav is REJECTED by the English vanilla ROM (title shows
-> only NEW GAME); user confirms NO saves are from the German build, so the
-> likely origin is an older PATCHED build (pre/post-S69 checksum formats are
-> mutually rejecting) — the vanilla-formula ground truth remains the patched
-> ROM + DWM-hacked.sav pair, which is fine since patches leave the damage
-> machinery untouched.
-> Not yet measured (traced only, marked in §15.6): slot-2 ×0.8, arena
-> variants, RainSlash hits 2+, Sacrifice magnitudes. S79: turn order, apply
-> step, status durations, AI. Owning: BATTLE_SKILL_SYSTEM §15,
-> TOOLS_AND_DATA §2.10, known_RAM_map, ROADMAP S78.
->
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
 - **S80** (2026-08-13): combat-simulator arc part 3 — enemy AI decision machine traced + validated 26/26 over 10 EIDs (bank $57 correction; ai_weights→category-base mapping; score formula + mod ladder; quirky sort + hidden-$73AB not-rank1 bonus; option lists; sums; tag filter + $DD26 evaluators (stubbed); pick/tie/commit; $dd0b modes; S79 stall root cause = unbounded $dd02 retry); PyBoy hook input-timing trap + dense-cadence protocol. simulator/ai.py + measure_ai.py + validate_ai.py + ai_events corpus. Byte-neutral. Owning: BATTLE_SKILL_SYSTEM §15.9-15.10, known_RAM_map [S80], PYBOY_DEBUGGING, KEY_LESSONS S80 (3), ROADMAP S80/S81, TOOLS_AND_DATA §2.10.
 - **S79** (2026-08-10): combat-simulator arc part 2 — turn order traced+validated 143/143 ($58:$54D1; $DB79/$DB82; defensive-class/SquallHit/PsycheUp priorities); 28-state action machine; apply-step ids; phase 9 = end-of-round DoT; status byte map + exact sleep wake; all four §15.6 items measured; link-vs-arena fork corrections; round core battle.py. Owning: BATTLE_SKILL_SYSTEM §15.6-15.9, TOOLS_AND_DATA §2.10, known_RAM_map, KEY_LESSONS S79, ROADMAP S79/S80.
@@ -362,8 +287,8 @@ Objective metric: meaningful (non-auto) labels + comment density per bank.
 | Tier | Banks | Notes |
 |------|-------|-------|
 | Fully annotated (11) | $00 $03 $04 $0B $0C $0D $0E $0F $13 $14 $41 | Core engine + script data banks |
-| Useful partial (≈14) | $01 (36%) $16 (30%) $17 (75%) $50 (21%) $51 (27%) $52 (36%) and tileset banks $23–$31/$37/$38 (data-only, trivially "done") | Post-S43 arcs also deepened $47 $54 $5f (not re-measured) |
-| Effectively raw (~80) | everything else | mgbdis output, auto labels |
+| Useful partial (≈15) | $01 (36%) $16 (30%) $17 (75%) $50 (21%) $51 (27%) $52 (36%) **$57 (S82: machine + chains + all 131 rule heads labeled; bodies partly soup — see ROADMAP S82 residual)** and tileset banks $23–$31/$37/$38 (data-only, trivially "done") | Post-S43 arcs also deepened $47 $54 $5f (not re-measured) |
+| Effectively raw (~79) | everything else | mgbdis output, auto labels |
 
 All 2,404 function entry points are named repo-wide, but most bank
 *internals* are raw. **Data tables inside raw banks are still misassembled as

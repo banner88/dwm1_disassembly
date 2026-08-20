@@ -730,8 +730,8 @@ Tables initialized by Bank $51 battle setup. Each table holds 16 bytes (up to 8 
 | `SetSkillAnimFlag` | $52:$548D | 43 | Set skill animation |
 | `ApplySkillDamage` | $52:$545D | 32 | Apply damage from skill |
 | `CheckSkillResistance` | $52:$54EA | 30 | Check target resistance |
-| `ClearBattleAction` | $57:$45E4 | 68 | Reset battle action state |
-| `AddBToHL16` | $57:$455F | 65 | `[HL] += B` (16-bit) |
+| `ClearBattleAction` | $57:$45E4 | 68 | AI rule VETO: `$DD27 := $FF` (walker aborts, option cell zeroed) — S81/S82 |
+| `AISatAdd_455f` | $57:$455F | 65 | Saturating 8-bit `[HL] += B`, cap $FF (AI $DD26/$DD27 accumulator writes; was mislabeled `AddBToHL16` "16-bit" — fixed S82) |
 
 ---
 

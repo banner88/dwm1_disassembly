@@ -5,11 +5,11 @@ Traced from bank $57 and measured live (see BATTLE_SKILL_SYSTEM "AI" section
 and simulator/measure_ai.py). Models phase 5 / $d9ed=1's per-actor pipeline:
 
   state 1  entry ($7129): plan fork, dd0b gate
-  state 2  category rank (FuncBtlAI_71b9 + LoadBtlAI_7322 -> $dcfc/$dcff-$dd01)
-  state 3  per-skill sum (Jump_057_7529 -> $dce4[i] = rec_ai_w + rand%16)
-  state 4  tag filter + per-effect-class evaluator (Jump_057_7439, rule chains
+  state 2  category rank (AICategoryScoreCalc_71b9 + AICategoryRank_7322 -> $dcfc/$dcff-$dd01)
+  state 3  per-skill sum (AIState3SkillSums_7529 -> $dce4[i] = rec_ai_w + rand%16)
+  state 4  tag filter + per-effect-class evaluator (AIState4FilterEval_7439, rule chains
            at $57:$4308/$4358/$4404 accumulate $dd26; NOT yet fully modelled)
-  state 5  pick (Jump_057_75a2: argmax, tie coin-flip, category epilogues)
+  state 5  pick (AIState5Pick_75a2: argmax, tie coin-flip, category epilogues)
   retry    ($76a9): $dd02++ (NO bound check - the S79 stall lives here)
 
 RNG contract: every rand here consumes exactly one GenerateRNG step and uses
@@ -46,7 +46,7 @@ OVERRIDE_STATUS7_BIT4 = 0x95   # +7 bit4 -> forced action $95
 
 
 def cat_mod(base, is_enemy):
-    """Random modulus for the category score (SaveBtlAI_72ce ladder).
+    """Random modulus for the category score (AICategoryScoreStore_72ce ladder).
     Player slots (<3) and link battles always use 10."""
     if not is_enemy:
         return 10
@@ -60,7 +60,7 @@ def cat_mod(base, is_enemy):
 
 
 def category_scores(bases, plan_adj, is_enemy, rng_step, seal_bump=False):
-    """FuncBtlAI_71b9: score[c] = base//10 + adj[c] + r16' % mod(base).
+    """AICategoryScoreCalc_71b9: score[c] = base//10 + adj[c] + r16' % mod(base).
     One RNG step per category, in order cat1, cat2, cat3.
     seal_bump: the +$1e 'prefer attack when magic-limited' heuristic on cat1
     (trigger bits on the actor's status block; pass the measured condition)."""
@@ -75,7 +75,7 @@ def category_scores(bases, plan_adj, is_enemy, rng_step, seal_bump=False):
 
 
 def rank_categories(scores):
-    """LoadBtlAI_7322 — exact quirky partial sort. Mutates a copy of scores
+    """AICategoryRank_7322 — exact quirky partial sort. Mutates a copy of scores
     (the +30 bonus lands in the cat1 CELL). Returns (scores, ids) where
     ids = [rank1, rank2, rank3] category ids (1-based), matching
     $dcff/$dd00/$dd01, cursor $dd02 starts at 3 (rank1)."""
@@ -89,7 +89,7 @@ def rank_categories(scores):
     # step 2: winner vs cat3 — swaps rank1 <-> rank3 only
     if winner < s[2]:
         ids[0], ids[2] = ids[2], ids[0]
-    # step 3 (LoadBtlAI_73a5 exact): +30 to cat1's CELL iff cat1 is NOT
+    # step 3 (AICat1RunnerUpCheck_73a5 exact): +30 to cat1's CELL iff cat1 is NOT
     # rank1 after step 2 (checks rank2 then rank3) — "attack as the
     # perennial runner-up" bonus
     if ids[1] == 1 or ids[2] == 1:
@@ -101,7 +101,7 @@ def rank_categories(scores):
 
 
 def skill_sums(option_list, rec_ai_weight, rng_step):
-    """Jump_057_7529: for each {tag, skill} pair (skill != 0xFF terminator),
+    """AIState3SkillSums_7529: for each {tag, skill} pair (skill != 0xFF terminator),
     dce4[i] = rec_ai_weight(skill) + r16' % 16, saturating at 0xFF.
     One RNG step per listed skill. Runs over ALL entries regardless of the
     chosen category (the tag filter happens afterwards)."""
@@ -131,7 +131,7 @@ class RuleChainStub:
 
 
 def tag_filter(option_list, sums, category, rules, state=None):
-    """Jump_057_7439: zero entries whose tag != category; matched entries run
+    """AIState4FilterEval_7439: zero entries whose tag != category; matched entries run
     the evaluator (delta/veto). Returns the filtered dce4 list."""
     out = []
     for (tag, skill), s in zip(option_list, sums):
@@ -147,7 +147,7 @@ def tag_filter(option_list, sums, category, rules, state=None):
 
 def pick(dce4, option_list, category, rng_step,
          attack_service=None, heal_checks=None):
-    """Jump_057_75a2 core scan + epilogues. Returns (action, retry):
+    """AIState5Pick_75a2 core scan + epilogues. Returns (action, retry):
     action None + retry True  -> caller bumps rank cursor and reruns from the
     category stage (the $76a9 loop; NO bound check in the ROM).
     Tie rule: equal score -> one RNG step, RNG1 bit0: 0 keep current, 1 take new.

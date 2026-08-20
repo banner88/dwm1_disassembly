@@ -2952,8 +2952,8 @@ of following a wrong static lead. The falsification itself is a
 deliverable: both routines are now correctly identified in §15.6 notes.
 
 ### S80: blank-line-bounded sed reads hide instructions (the $73AB trap)
-**Symptom**: `sed -n '/^LoadBtlAI_73a5:/,/^$/p'` showed a 3-instruction
-routine ending `ret z`, apparently falling through into SetBtlAI_73b1 —
+**Symptom**: `sed -n '/^AICat1RunnerUpCheck_73a5:/,/^$/p'` showed a 3-instruction
+routine ending `ret z`, apparently falling through into AICat1RunnerUpBump_73b1 —
 producing a "+30 always" model that two live decisions contradicted
 (same rank2 value, different bump outcome: logically impossible).
 **Cause**: the routine has a SECOND check (`ld a,[$dd01]; cp $01; ret`)
@@ -3022,3 +3022,37 @@ $45F2 usability veto turns the sweep into an all-veto $76A9 retry storm
 new direction); and with ecount>1 force EVERY enemy slot's list+bases,
 because decisions interleave and single-slot forcing yields
 actor-ambiguous captures.
+
+## S82 — annotation catch-up: census labels from game.sym, not name patterns
+
+### S82: a suffix-regex label census missed suffix-less labels — nearly double-labeled two helpers
+**Symptom:** the S82 pre-work census ("which target addresses already have
+labels?") reported $455F and $45E4 as UNLABELED, and a byte-scan found 64
+`call $455f` sites with ZERO textual matches in bank_057.asm — two
+"contradictions" that each burned a debugging loop.
+**Root cause:** the census regex extracted a `_<hex4>` suffix from label
+names, so suffix-less hand-era labels (`AddBToHL16` @ $455F,
+`ClearBattleAction` @ $45E4, ROM0's `CheckMonsterSlot` @ $2FA5) were
+invisible to it; the "missing" call sites rendered as `call AddBToHL16`
+all along (inside body soup for the accumulator — see the ROADMAP S82
+residual — which hid them from the instruction-shaped grep too).
+Blindly proceeding would have inserted DUPLICATE labels at those
+addresses (rgbasm would at least have errored) and, worse, written
+comments asserting the helpers were unlabeled/unreferenced.
+**Fix:** census from the linker's `game.sym` (authoritative addr→name for
+every label, any naming era) — `resection_ai_bank57.py` and the S82
+analysis both do this now.
+**Rule:** when asking "is address X labeled / who references it", parse
+`game.sym` (or build once to get it); never infer label existence from
+name patterns, and never conclude "no references" from a grep for the
+ADDRESS when a semantic label may carry the reference.
+
+### S82: list-splice insertion ops need end=start+1 when they re-emit the anchor line
+The tool's first apply pass used `(ln, ln, comment+[lines[ln]])` splice
+ops — `lines[ln:ln] = repl` INSERTS and leaves the anchor line in place,
+so every labeled instruction line was emitted twice (+1 bank overflow,
+caught by rgbasm, zero bytes shipped). The op that re-emits its anchor
+must span it: `(ln, ln+1, …)`. The guard that made this a 2-minute fix
+instead of a corruption: the tool builds and asserts the ORIGINAL_MD5
+before touching anything else, and `git checkout` of the two generated
+files is safe because the tool is idempotent from the clean tree.

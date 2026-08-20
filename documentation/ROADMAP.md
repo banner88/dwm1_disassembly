@@ -1067,7 +1067,7 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         battle foundation (§13) doesn't touch yet — genuinely new groundwork. *Accept:* a custom
         field skill (warp) fires from the field menu in SameBoy.
 - [~] **S3 — AI selection RE (partly answered S46).** **Found:** the per-skill AI lever is
-      **record +3 (`ai_weight`)** — the enemy AI (`$57 Jump_057_7529`) walks its skill list and
+      **record +3 (`ai_weight`)** — the enemy AI (`$57 AIState3SkillSums_7529`) walks its skill list and
       SUMS record[+3] into the score table `$dce4`, then picks weighted (Sacrifice/MegaMagic=0).
       Distinct from per-monster enemy-stats `+17..20`. *Remaining:* trace the weighted pick + how
       per-monster weights combine; confirm with a SameBoy watchpoint on `$dce4`/record+3.
@@ -1415,20 +1415,27 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       2 finisher), retry $76A9 = the S79 stall ROOT CAUSE ($dd02++
       unbounded). PyBoy hook-timing trap found + protocol fixed
       (PYBOY_DEBUGGING).
-- [ ] **S82 — ANNOTATION CATCH-UP, part 1 (GATE — Iron Rule 6, user
-      decision S81): bank $57 AI machine.** Blocks all further decoding /
-      simulator / editor work until done. Annotate from the S78-S81
-      docs + corpus (knowledge is fresh and validated — transcription,
-      not re-derivation): the $d9ee state dispatch (convert misassembled
-      dw table, name states 0-7 incl. walker $7865), the three rule
-      chains $4308/$4358/$4404 (convert misassembled tables to commented
-      dw lists), semantic labels + one-line comments on the ~30
-      measured-semantics rules and shared helpers ($455F adder, $45E4
-      veto, $45EA indexer, $2FA5 contract note at call sites, $4456 scan
-      family), the category/sum/filter/pick stages per §15.10, and the
-      $4E36 bug comment at the non-incrementing scan. Acceptance:
-      byte-perfect rebuild (verifier check 1) + labels resolve
-      (no dangling references).
+- [x] **S82 — ANNOTATION CATCH-UP, part 1 (GATE — Iron Rule 6): bank $57
+      AI machine. DONE S82** via `tools/resection_ai_bank57.py`
+      (idempotent, probe-build technique; both builds byte-perfect):
+      state dispatch AIDecisionStateDispatch_6e0e + AIStateDispatchTable_6e12
+      converted (states 0-7 named); AIRuleChainIndex_4302 + the three
+      chains converted to labeled dw lists — counts BYTE-VERIFIED
+      39/**85**/40 (the S81 "61" for cat2 was a miscount; DOC_AUDIT S82);
+      all 131 rules labeled (~30 semantic + provenance comments, rest
+      AIRule_<addr>); stage/helper renames (AIState1..7, AISatAdd_455f,
+      AIScanSlots_4456, AICategoryRank_7322, walker/veto/retry/commit
+      family) with references updated repo-wide; $4E36 bug comment;
+      CheckMonsterSlot ($00:$2FA5) contract comment FIXED — old comment
+      said CF=valid, actual is CF SET = NOT live (byte-verified).
+      Acceptance met: verifier PASS, clean build `1ca6579…`.
+      **Residuals (named backlog, per Iron Rule 6 → S83+):**
+      (a) rule BODIES: inline rst $00 handler tables desynced mgbdis
+      inside many rule internals (all 131 heads boundary-align;
+      64 `call AISatAdd_455f` sites render as soup) — body re-emission
+      with table-aware decode is future re-section work;
+      (b) DanceShut/MouthShut ($91/$92) + DeMagic/ThickFog ($80/$83)
+      rule addresses not yet identified among the neutral labels.
 - [ ] **S83 — ANNOTATION CATCH-UP, part 2 (GATE): banks $52/$53/$58
       battle core.** Damage pipeline + action machine + status layer
       (§15.1-15.8, S78/S79 findings), the bank $53 act-phase dispatcher

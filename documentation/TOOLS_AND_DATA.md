@@ -152,6 +152,19 @@ first addr + ROM trailing-fill end), boundaries snapped to real line addresses v
 probe-build so no fake instruction is split. Idempotent. bank `$47` done; rest of
 `$42-$4B,$4E` pending (ROADMAP Phase F Arc 1). See TEXT_SYSTEM.md "Source re-section") ·
 `resection_library_tables.py` (✅ Session 26/27 — same probe-build machinery for bank `$12`) ·
+`resection_ai_bank57.py` (✅ new S82 — Iron-Rule-6 annotation of the bank-`$57` AI
+decision machine, same probe-build machinery: converts the `$D9EE` state-dispatch
+table (`AIStateDispatchTable_6e12`, states 0-7 named) and the three evaluator rule
+chains (`AIRuleChainIndex_4302` → cat1/2/3 = 39/**85**/40 dw, byte-verified — the
+S81 "61" was a miscount) to labeled dw lists; labels all 131 rule routines
+(~30 semantic + S80/S81-provenance comments incl. the `$4E36` vanilla-bug block,
+rest `AIRule_<addr>`); renames the stage/helper family (`AIState0..7…`,
+`AISatAdd_455f`, `AIScanSlots_4456`, `AICategoryRank_7322`, walker/veto/retry) with
+repo-wide reference updates; fixes the INVERTED `CheckMonsterSlot` CF comment in
+`bank_000.asm`. Labels/comments only — probe AND final builds asserted
+`1ca6579…`; idempotent; `--analyze` reports alignment without writing. Produces no
+extracted/ data. Residual: rule-BODY re-emission around inline rst $00 handler
+tables — see ROADMAP S82 box) ·
 `gen_script_banks.py` · `render_rooms.py` · `dwm/` package ·
 `dwm/sprite_codec.py` (✅ new Session 22 — the SINGLE LZ codec for tiles+sprites:
 `decode` byte-exact = game + `decompress_tiles.py`; `encode`/`encode_safe` valid/compact

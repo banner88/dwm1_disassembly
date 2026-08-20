@@ -66,7 +66,7 @@ for path in sys.argv[1:]:
         bases = cat['bases']
         adj = cat['adj']
         raw = list(cells)
-        # undo the +30 (applied iff cat1 is not rank1 — LoadBtlAI_73a5)
+        # undo the +30 (applied iff cat1 is not rank1 — AICat1RunnerUpCheck_73a5)
         if ids[0] != 1:
             raw[0] = (raw[0] - 0x1E) & 0xFF
         good = True
