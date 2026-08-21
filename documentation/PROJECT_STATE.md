@@ -10,6 +10,53 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-08-20 (Session 83 — **ANNOTATION CATCH-UP part 2
+> (Iron Rule 6 gate CLEARED): the battle core — banks $52/$53/$58 — is
+> now annotated in source.** Byte-neutral: labels/comments/data-resection
+> only; verifier PASS 6/6; clean `1ca6579…` unchanged; patched build
+> assembles with all renames propagated (patches/bank_052/053/058/072).
+> Built S83, NOT yet user-tested (byte-neutral acceptance = verifier
+> PASS + unchanged hashes). Tool: `tools/resection_battle_core.py`
+> (idempotent per bank; S82 probe-build technique; probe AND final
+> builds asserted byte-perfect). **The S81 remainder and the pacing
+> layer are UNBLOCKED** (ROADMAP).)
+>
+> As annotated — bank $52: CalcSkillDefense regime comment; renames
+> DamageSlot2AdjustFloor_61ec, RecordDamageRoll_679c, MegaMagicDamage_653e,
+> KamikazeDamage_6232, ResLadderBreath_676c/ResLadderElemSlash_6782,
+> HitLadderBeat_6749/HitLadderKamikaze_6733, DamageMul8/6/4Tenths_69xx,
+> UpperStatCapCheck_6a13/AglUpStatCapCheck_6a49 (falsified-breadcrumb
+> note kept), SkillHandlerDispatch_6cc7, ConfusionActionRewrite_7ab5;
+> new BattleActionMachine_6c4d + **28-state BtlActStateTable_6c60
+> converted to dw** (states byte-verified; $12 duplicates 0; $1A = KO);
+> BtlActState2Apply_6d56 (the $6D83 cp ladder IS the id-exclusion list —
+> code, not data); GroupVictimLoopA/B_71b5/71ed; BtlOutcomeHitPath_4200/
+> MissPath_4225; ConfusionActionTable_7aff → db (**bank $52**, not $53 —
+> DOC_AUDIT S83). Bank $53: BtlPerActorSetup_44ca + 9-dw
+> SetupSubStateTable_44ce; ActPhaseDispatch_51e8 + **16-dw
+> ActPhaseStateTable_51ec** (geometry exact, $51EC+32=$520C);
+> PerActorStatusGates_4558; TargetReResolve_4799,
+> DeadTargetRedirectScan_47e8, SleepWakeRoll_4aeb, CurseSelfHit_4c50,
+> BossProtectionGate_51aa (ladder byte-verified: LINK skip, enemy-side,
+> db73==1, skills $12/$13/$14/$3E/$69/$6B/$71); SacrificeEntry_670e /
+> SacrificeResolve_67a9. Bank $58: TurnOrderBuild_54d1 (+init
+> byte-verified), TurnOrderKeyRoll_5662 (formula), TurnOrderSort_55c2
+> (ties+9th-pair), TurnOrderCompact_5707, TurnOrderDefensiveBoost_56cf,
+> QueuePlainAttack_54ce; head region re-emitted as **14 rst $10 service
+> slots + the previously-undocumented 230-dw per-skill table
+> BtlSkillTargetDispatch_401d** (skill names inline; structure-only
+> claims). **CORRECTION (DOC_AUDIT S83): §15.10.6's resolver far-call is
+> bank $58 ENTRY 8** (BtlQueueFetchService_5498 → per-skill dispatch),
+> not "entry 4"; TargetSlotResolver_6379 (dw slot 4) is the measured
+> RNG-fishing resolver, and TargetSelfWrite_6367 (byte-read) is the
+> 23-skill self-target service. **BREADCRUMB: $50:$4C87 is the ROM's
+> only direct entry-4 far-call — candidate for the OPEN post-commit
+> target write site (NOT measured).** rst $10 convention pinned against
+> $00:$0020: addr = $4001 + 2·L, L = entry index. Owning: the three
+> bank sources + BATTLE_SKILL_SYSTEM §15 (renamed citations + §15.10.6
+> fix), DOC_AUDIT S83 (2 rows), KEY_LESSONS S83, TOOLS_AND_DATA (tool
+> row), ROADMAP S83.
+
 > Last verified: 2026-08-15 (Session 82 — **ANNOTATION CATCH-UP part 1
 > (Iron Rule 6 gate): the bank-$57 AI decision machine is now annotated
 > in source.** Byte-neutral: labels/comments/data-resection only; no
@@ -48,56 +95,8 @@
 > BATTLE_SKILL_SYSTEM §15.10.5, DOC_AUDIT S82 (3 rows), KEY_LESSONS S82
 > (2 lessons), TOOLS_AND_DATA (tool row), ROADMAP S82.
 
-> Last verified: 2026-08-14 (Session 81 — **combat-simulator arc part 4:
-> the EVALUATOR RULE CHAINS, decoded end-to-end and differentially
-> validated 240/240; target resolution ~2/3 traced.** Byte-neutral: no
-> patches touched; verifier PASS 6/6; clean `1ca6579…` and S75v4 patched
-> pin `ce1e7369…` both unchanged. Built S81, NOT yet user-tested. Model
-> `simulator/ai_rules.py`; rigs `measure_rules.py` + `sweep_rules.py`;
-> validator `validate_rules.py` + corpus `s81_sweep_corpus.json`; prose
-> BATTLE_SKILL_SYSTEM §15.10.5 (rewritten) + §15.10.6 target note; RAM
-> rows $DD1B/$DB8B in known_RAM_map [S81].)
->
-> Chain architecture (falsifies S80's "indexed by effect_class"): $4302
-> → per-CATEGORY $0000-terminated dw chains $4308/$4358/$4404 (39/**85**/40
-> rules — this block originally said 61 for cat2, a miscount corrected
-> S82 (byte-verified; DOC_AUDIT S82) — 131 unique); the whole chain runs
-> per tag-matched skill, rules
-> self-select. $DD26 BONUS / $DD27 PENALTY pair (not 16-bit) via
-> saturating adder $455F; veto = $45E4 mid-chain OR end-of-chain borrow,
-> both → $788B cell-zero; else dce4[cell] += (26−27), 8-bit. Live walker
-> = state 7 at $7865. Semantics measured by a full 160-skill sweep
-> (forced option lists $DC64 + forced bases) across a board-state matrix
-> — highlights: $5D4D needs-an-ally gate (whole support class vetoes
-> solo), $67B1 processed-death revive gate ($DD1B==1, silent HP=0 pokes
-> don't count), symmetric cure rules +15, heal bonuses cap at +20 = the
-> cat3 weak-heal threshold, $4BCC element-awareness, $4E18 caster-profile
-> (+10 CurMP<MaxMP/2, +10 MaxMP≥MaxHP — 4-point MP matrix), $6C8C
-> ENEMY-SIDE-ONLY +20, family-cut veto/bonus pair $6848/$4C41 (CleanCut =
-> anti-MATERIAL 8; Smashlime = anti-Slime 0). **VANILLA BUG (verified,
-> user-flagged as romhack AI-fix candidate): $4E36's AoE "+20 iff 2+
-> targets" never increments its scan cursor → +20 iff first opposing
-> slot alive (≈always); twin $5D8E (−20 vs lone target; RainSlash hard
-> veto) is correct.** False alarm caught in-session: an off-by-one in
-> the $6848 handler-table decode briefly produced a "$db4c clobber"
-> claim — retracted, lesson filed (KEY_LESSONS S81).
->
-> Target resolution (partial): queue target byte = SIDE BASE at commit
-> (bank $50 $4B6B for commands); act-phase machine bank $53 $51E8
-> sub-state 0 far-calls **$58 entry 4 ($6379)** iff byte==$FF — RNG-slot
-> fishing (RNG1&7 → RNG2&7 → mixes → decrement scan) over $2FA5
-> validity; $53:$4799 = re-resolve trigger; group skills step per-victim
-> in $52:$71B5/$71ED. OPEN: resolver side-constraint (no side filter in
-> code — $DD1B masking suspected, one probe outstanding) and the AI-side
-> initial post-commit write site. Remaining S81 box: tactics $DB50-52
-> plan adjusts (user behavior anchors logged in ROADMAP), MISS/dodge,
-> loop-level validation of battle.py, small rule residuals (§15.9).
-> **USER DECISION (end of S81): annotation now gates progress — Iron
-> Rule 6 added; SESSION_PROTOCOL start-gate + wrap-up step 6 added;
-> ROADMAP S82/S83 = annotation catch-up for banks $57 then $52/$53/$58,
-> blocking the S81 remainder and the pacing layer until burned down.**
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S81** (2026-08-14): combat-simulator arc part 4 — evaluator rule chains decoded end-to-end + validated 240/240 (chain architecture $4302→$4308/$4358/$4404; $DD26/$DD27 accumulators; $4E36 vanilla AoE bug user-flagged as romhack fix candidate; family-cut pair; caster-profile matrix); target resolution ~2/3 ($51E8 act-phase machine, $6379 resolver, $4799 re-resolve; OPEN side-constraint + post-commit write). Iron Rule 6 + annotation gates decided. Owning: BATTLE_SKILL_SYSTEM §15.10.5-6, known_RAM_map [S81], KEY_LESSONS S81, ROADMAP S82/S83.
 - **S80** (2026-08-13): combat-simulator arc part 3 — enemy AI decision machine traced + validated 26/26 over 10 EIDs (bank $57 correction; ai_weights→category-base mapping; score formula + mod ladder; quirky sort + hidden-$73AB not-rank1 bonus; option lists; sums; tag filter + $DD26 evaluators (stubbed); pick/tie/commit; $dd0b modes; S79 stall root cause = unbounded $dd02 retry); PyBoy hook input-timing trap + dense-cadence protocol. simulator/ai.py + measure_ai.py + validate_ai.py + ai_events corpus. Byte-neutral. Owning: BATTLE_SKILL_SYSTEM §15.9-15.10, known_RAM_map [S80], PYBOY_DEBUGGING, KEY_LESSONS S80 (3), ROADMAP S80/S81, TOOLS_AND_DATA §2.10.
 - **S79** (2026-08-10): combat-simulator arc part 2 — turn order traced+validated 143/143 ($58:$54D1; $DB79/$DB82; defensive-class/SquallHit/PsycheUp priorities); 28-state action machine; apply-step ids; phase 9 = end-of-round DoT; status byte map + exact sleep wake; all four §15.6 items measured; link-vs-arena fork corrections; round core battle.py. Owning: BATTLE_SKILL_SYSTEM §15.6-15.9, TOOLS_AND_DATA §2.10, known_RAM_map, KEY_LESSONS S79, ROADMAP S79/S80.
 - **S78** (2026-08-10): combat-simulator arc part 1 — damage layer traced + validated 698/698 (simulator/damage.py); $DB73 battle type + boss-protection gate; resistances/ladders/specials. Owning: BATTLE_SKILL_SYSTEM §15, TOOLS_AND_DATA §2.10, ROADMAP S78.
@@ -287,7 +286,7 @@ Objective metric: meaningful (non-auto) labels + comment density per bank.
 | Tier | Banks | Notes |
 |------|-------|-------|
 | Fully annotated (11) | $00 $03 $04 $0B $0C $0D $0E $0F $13 $14 $41 | Core engine + script data banks |
-| Useful partial (≈15) | $01 (36%) $16 (30%) $17 (75%) $50 (21%) $51 (27%) $52 (36%) **$57 (S82: machine + chains + all 131 rule heads labeled; bodies partly soup — see ROADMAP S82 residual)** and tileset banks $23–$31/$37/$38 (data-only, trivially "done") | Post-S43 arcs also deepened $47 $54 $5f (not re-measured) |
+| Useful partial (≈17) | $01 (36%) $16 (30%) $17 (75%) $50 (21%) $51 (27%) **$52/$53/$58 (S83: damage pipeline, action machine + state tables, per-actor gates, act-phase machine, turn order, queue/target dispatch all labeled+commented; remaining internals neutral)** **$57 (S82: machine + chains + all 131 rule heads labeled; bodies partly soup — see ROADMAP S82 residual)** and tileset banks $23–$31/$37/$38 (data-only, trivially "done") | Post-S43 arcs also deepened $47 $54 $5f (not re-measured) |
 | Effectively raw (~79) | everything else | mgbdis output, auto labels |
 
 All 2,404 function entry points are named repo-wide, but most bank

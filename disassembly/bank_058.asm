@@ -7,255 +7,262 @@ SECTION "ROM Bank $058", ROMX[$4000], BANK[$58]
 
     db $58 ; Bank number
 
-    ; Cross-bank dispatch table (245 entries)
-    ; Called via: ld hl, $58XX / rst $10
-    dw $53CF                          ; Entry 0
-    dw $5749                          ; Entry 1
-    dw ClrBtlFX_5955                  ; Entry 2
-    dw $59DC                          ; Entry 3
-    dw $6379                          ; Entry 4
-    dw LoadBtlFX_642c                  ; Entry 5
-    dw $57C5                          ; Entry 6
-    dw $57A4                          ; Entry 7
-    dw LoadBtlFX_5498                  ; Entry 8
-    dw $591E                          ; Entry 9  — MeatFeedHandler ($591E): the
-                                      ; meat-item ($C2-$C6) recruitment-boost
-                                      ; effect (call $5c0b -> result; msg table
-                                      ; $5937). Routed here from $52:$4014. (S2 arc)
-    dw $41E9                          ; Entry 10
-    dw $67BA                          ; Entry 11
-    dw $5C48                          ; Entry 12
-    dw $6737                          ; Entry 13
-    dw $5069                          ; Entry 14
-    dw $5069                          ; Entry 15
-    dw $5069                          ; Entry 16
-    dw Jump_058_62bf                  ; Entry 17
-    dw Jump_058_62bf                  ; Entry 18
-    dw Jump_058_62bf                  ; Entry 19
-    dw Jump_058_62bf                  ; Entry 20
-    dw Jump_058_62bf                  ; Entry 21
-    dw Jump_058_62bf                  ; Entry 22
-    dw Jump_058_62bf                  ; Entry 23
-    dw Jump_058_62bf                  ; Entry 24
-    dw Jump_058_62bf                  ; Entry 25
-    dw Jump_058_62bf                  ; Entry 26
-    dw Jump_058_62bf                  ; Entry 27
-    dw Jump_058_62bf                  ; Entry 28
-    dw Jump_058_62bf                  ; Entry 29
-    dw Jump_058_62bf                  ; Entry 30
-    dw Jump_058_62bf                  ; Entry 31
-    dw $4FD2                          ; Entry 32
-    dw Jump_058_62bf                  ; Entry 33
-    dw Jump_058_62bf                  ; Entry 34
-    dw $5211                          ; Entry 35
-    dw Jump_058_62bf                  ; Entry 36
-    dw Jump_058_62bf                  ; Entry 37
-    dw Jump_058_62bf                  ; Entry 38
-    dw Jump_058_62bf                  ; Entry 39
-    dw $52A9                          ; Entry 40
-    dw $6367                          ; Entry 41
-    dw $4854                          ; Entry 42
-    dw Jump_058_62bf                  ; Entry 43
-    dw $474B                          ; Entry 44
-    dw $62CD                          ; Entry 45
-    dw $48AB                          ; Entry 46
-    dw Jump_058_62bf                  ; Entry 47
-    dw $490E                          ; Entry 48
-    dw $62CD                          ; Entry 49
-    dw $62CD                          ; Entry 50
-    dw $470B                          ; Entry 51
-    dw $62CD                          ; Entry 52
-    dw $6367                          ; Entry 53
-    dw $6367                          ; Entry 54
-    dw $4ED8                          ; Entry 55
-    dw $62CD                          ; Entry 56
-    dw $44F7                          ; Entry 57
-    dw $44F7                          ; Entry 58
-    dw $44F7                          ; Entry 59
-    dw $62CD                          ; Entry 60
-    dw $62CD                          ; Entry 61
-    dw $469E                          ; Entry 62
-    dw $469E                          ; Entry 63
-    dw $635F                          ; Entry 64
-    dw $46C7                          ; Entry 65
-    dw $62CD                          ; Entry 66
-    dw $62CD                          ; Entry 67
-    dw $62CD                          ; Entry 68
-    dw $41E9                          ; Entry 69
-    dw $41E9                          ; Entry 70
-    dw $63D6                          ; Entry 71
-    dw $41E9                          ; Entry 72
-    dw $41E9                          ; Entry 73
-    dw $5100                          ; Entry 74
-    dw $41E9                          ; Entry 75
-    dw $5100                          ; Entry 76
-    dw $6379                          ; Entry 77
-    dw $41E9                          ; Entry 78
-    dw $6367                          ; Entry 79
-    dw LoadBtlFX_642c                  ; Entry 80
-    dw $6367                          ; Entry 81
-    dw $5339                          ; Entry 82
-    dw $5352                          ; Entry 83
-    dw $536B                          ; Entry 84
-    dw $5384                          ; Entry 85
-    dw $4D1A                          ; Entry 86
-    dw $4D5D                          ; Entry 87
-    dw $4D6D                          ; Entry 88
-    dw $4D7D                          ; Entry 89
-    dw $4D8D                          ; Entry 90
-    dw $4D9D                          ; Entry 91
-    dw $4DAD                          ; Entry 92
-    dw Jump_058_62bf                  ; Entry 93
-    dw $41E9                          ; Entry 94
-    dw LoadBtlFX_642c                  ; Entry 95
-    dw LoadBtlFX_642c                  ; Entry 96
-    dw LoadBtlFX_642c                  ; Entry 97
-    dw $63D6                          ; Entry 98
-    dw $41E9                          ; Entry 99
-    dw $41E9                          ; Entry 100
-    dw Jump_058_62bf                  ; Entry 101
-    dw $539D                          ; Entry 102
-    dw Jump_058_62bf                  ; Entry 103
-    dw Jump_058_62bf                  ; Entry 104
-    dw Jump_058_62bf                  ; Entry 105
-    dw Jump_058_62bf                  ; Entry 106
-    dw Jump_058_62bf                  ; Entry 107
-    dw Jump_058_62bf                  ; Entry 108
-    dw Jump_058_62bf                  ; Entry 109
-    dw Jump_058_62bf                  ; Entry 110
-    dw Jump_058_62bf                  ; Entry 111
-    dw Jump_058_62bf                  ; Entry 112
-    dw Jump_058_62bf                  ; Entry 113
-    dw Jump_058_62bf                  ; Entry 114
-    dw Jump_058_62bf                  ; Entry 115
-    dw Jump_058_62bf                  ; Entry 116
-    dw $4DED                          ; Entry 117
-    dw $4C85                          ; Entry 118
-    dw $4E39                          ; Entry 119
-    dw Jump_058_62bf                  ; Entry 120
-    dw Jump_058_62bf                  ; Entry 121
-    dw Jump_058_62bf                  ; Entry 122
-    dw Jump_058_62bf                  ; Entry 123
-    dw Jump_058_62bf                  ; Entry 124
-    dw Jump_058_62bf                  ; Entry 125
-    dw $4E85                          ; Entry 126
-    dw Jump_058_62bf                  ; Entry 127
-    dw Jump_058_62bf                  ; Entry 128
-    dw Jump_058_62bf                  ; Entry 129
-    dw Jump_058_62bf                  ; Entry 130
-    dw $4CD1                          ; Entry 131
-    dw $4CD1                          ; Entry 132
-    dw $6367                          ; Entry 133
-    dw Jump_058_62bf                  ; Entry 134
-    dw $4E85                          ; Entry 135
-    dw $4B74                          ; Entry 136
-    dw $4C24                          ; Entry 137
-    dw Jump_058_62bf                  ; Entry 138
-    dw Jump_058_62bf                  ; Entry 139
-    dw $41E9                          ; Entry 140
-    dw $6367                          ; Entry 141
-    dw Jump_058_62bf                  ; Entry 142
-    dw $62CD                          ; Entry 143
-    dw $4A21                          ; Entry 144
-    dw $62FD                          ; Entry 145
-    dw $63D6                          ; Entry 146
-    dw $63D6                          ; Entry 147
-    dw $63D6                          ; Entry 148
-    dw $63D6                          ; Entry 149
-    dw $4ABA                          ; Entry 150
-    dw $62CD                          ; Entry 151
-    dw $6367                          ; Entry 152
-    dw $62CD                          ; Entry 153
-    dw $6367                          ; Entry 154
-    dw $6367                          ; Entry 155
-    dw $6367                          ; Entry 156
-    dw $62CD                          ; Entry 157
-    dw $6367                          ; Entry 158
-    dw Jump_058_62bf                  ; Entry 159
-    dw $4B26                          ; Entry 160
-    dw $6367                          ; Entry 161
-    dw $62CD                          ; Entry 162
-    dw $635F                          ; Entry 163
-    dw $635F                          ; Entry 164
-    dw $6367                          ; Entry 165
-    dw $6367                          ; Entry 166
-    dw LoadBtlFX_6479                  ; Entry 167
-    dw LoadBtlFX_642c                  ; Entry 168
-    dw $6367                          ; Entry 169
-    dw $6367                          ; Entry 170
-    dw $6367                          ; Entry 171
-    dw LoadBtlFX_642c                  ; Entry 172
-    dw $6367                          ; Entry 173
-    dw $6367                          ; Entry 174
-    dw $6367                          ; Entry 175
-    dw $62FD                          ; Entry 176
-    dw $62CD                          ; Entry 177
-    dw Jump_058_62bf                  ; Entry 178
-    dw $62FD                          ; Entry 179
-    dw $62CD                          ; Entry 180
-    dw Jump_058_62bf                  ; Entry 181
-    dw Jump_058_62bf                  ; Entry 182
-    dw $6367                          ; Entry 183
-    dw $6367                          ; Entry 184
-    dw Jump_058_62bf                  ; Entry 185
-    dw Jump_058_62bf                  ; Entry 186
-    dw $635F                          ; Entry 187
-    dw $62CD                          ; Entry 188
-    dw Jump_058_62bf                  ; Entry 189
-    dw $63D6                          ; Entry 190
-    dw $63D6                          ; Entry 191
-    dw $63D6                          ; Entry 192
-    dw $63D6                          ; Entry 193
-    dw $63D6                          ; Entry 194
-    dw $63D6                          ; Entry 195
-    dw $63D6                          ; Entry 196
-    dw $63D6                          ; Entry 197
-    dw $63D6                          ; Entry 198
-    dw $63D6                          ; Entry 199
-    dw $63D6                          ; Entry 200
-    dw $63D6                          ; Entry 201
-    dw $63D6                          ; Entry 202
-    dw $63D6                          ; Entry 203
-    dw $63D6                          ; Entry 204
-    dw $63D6                          ; Entry 205
-    dw $63D6                          ; Entry 206
-    dw $63D6                          ; Entry 207
-    dw $63D6                          ; Entry 208
-    dw $63D6                          ; Entry 209
-    dw $63D6                          ; Entry 210
-    dw $63D6                          ; Entry 211
-    dw $63D6                          ; Entry 212
-    dw $63D6                          ; Entry 213
-    dw $63D6                          ; Entry 214
-    dw $63D6                          ; Entry 215
-    dw $63D6                          ; Entry 216
-    dw $63D6                          ; Entry 217
-    dw $63D6                          ; Entry 218
-    dw $63D6                          ; Entry 219
-    dw $63D6                          ; Entry 220
-    dw $63D6                          ; Entry 221
-    dw $63D6                          ; Entry 222
-    dw $63D6                          ; Entry 223
-    dw $63D6                          ; Entry 224
-    dw $63D6                          ; Entry 225
-    dw $63D6                          ; Entry 226
-    dw $6367                          ; Entry 227
-    dw $4DBD                          ; Entry 228
-    dw $4DCD                          ; Entry 229
-    dw $4DDD                          ; Entry 230
-    dw $53B6                          ; Entry 231
-    dw $5164                          ; Entry 232
-    dw $6367                          ; Entry 233
-    dw $6367                          ; Entry 234
-    dw $41E9                          ; Entry 235
-    dw $6367                          ; Entry 236
-    dw $6367                          ; Entry 237
-    dw $6367                          ; Entry 238
-    dw $6367                          ; Entry 239
-    dw $6367                          ; Entry 240
-    dw $6367                          ; Entry 241
-    dw $6367                          ; Entry 242
-    dw $6367                          ; Entry 243
+; Cross-bank rst $10 service table (slots 0-13). Called via
+; ld hl,$58<entry>/rst $10 — the handler computes $4001 + 2*L, so L IS
+; the entry index (ARCHITECTURE.md; byte-verified S83 at $00:$0020).
+    dw $53CF ; Entry 0
+    dw $5749 ; Entry 1
+    dw ClrBtlFX_5955 ; Entry 2
+    dw $59DC ; Entry 3
+    dw TargetSlotResolver_6379 ; Entry 4 — concrete-slot RNG resolver (see label)
+    dw LoadBtlFX_642c ; Entry 5
+    dw AnnounceTemplateLookup_57c5 ; Entry 6 — announce msgid for queued skill (S2d)
+    dw $57A4 ; Entry 7
+    dw BtlQueueFetchService_5498 ; Entry 8 — queue fetch + per-skill dispatch (S83)
+    dw $591E ; Entry 9 — MeatFeedHandler ($591E): the meat-item ($C2-$C6) recruitment-boost effect (call $5c0b -> result; msg table $5937). Routed here from $52:$4014. (S2 arc)
+    dw $41E9 ; Entry 10 — also the per-skill service for plain Attack $3A (byte-read S83)
+    dw AICat1AttackScore_67ba ; Entry 11 — cat-1 plain-attack score service (§15.10.6)
+    dw $5C48 ; Entry 12
+    dw $6737 ; Entry 13
+
+; ====== PER-SKILL TARGET-RESOLUTION DISPATCH TABLE (230 dw) — S83 ======
+; Indexed by skill id ($00-$E5) from BtlQueueFetchService_5498
+; (hl = $401D + 2*skill; call $0008). Determines how each skill's queue
+; target byte gets resolved at act time: TargetSelfWrite_6367 = self,
+; TargetSlotResolver_6379 = concrete-slot RNG fishing, $62BF/$63D6/etc =
+; further services (semantics unlabeled — only byte-verified structure
+; here; behavioral claims stay measured-only per S70 rule).
+BtlSkillTargetDispatch_401d:
+    dw $5069 ; [$00] Blaze
+    dw $5069 ; [$01] Blazemore
+    dw $5069 ; [$02] Blazemost
+    dw Jump_058_62bf ; [$03] Firebal
+    dw Jump_058_62bf ; [$04] Firebane
+    dw Jump_058_62bf ; [$05] Firebolt
+    dw Jump_058_62bf ; [$06] Bang
+    dw Jump_058_62bf ; [$07] Boom
+    dw Jump_058_62bf ; [$08] Explodet
+    dw Jump_058_62bf ; [$09] Infernos
+    dw Jump_058_62bf ; [$0A] Infermore
+    dw Jump_058_62bf ; [$0B] Infermost
+    dw Jump_058_62bf ; [$0C] IceBolt
+    dw Jump_058_62bf ; [$0D] SnowStorm
+    dw Jump_058_62bf ; [$0E] Blizzard
+    dw Jump_058_62bf ; [$0F] Bolt
+    dw Jump_058_62bf ; [$10] Zap
+    dw Jump_058_62bf ; [$11] Thordain
+    dw $4FD2 ; [$12] Beat
+    dw Jump_058_62bf ; [$13] Defeat
+    dw Jump_058_62bf ; [$14] Sacrifice
+    dw $5211 ; [$15] Sleep
+    dw Jump_058_62bf ; [$16] SleepAll
+    dw Jump_058_62bf ; [$17] StopSpell
+    dw Jump_058_62bf ; [$18] Surround
+    dw Jump_058_62bf ; [$19] PanicAll
+    dw $52A9 ; [$1A] RobMagic
+    dw TargetSelfWrite_6367 ; [$1B] TakeMagic
+    dw $4854 ; [$1C] Sap
+    dw Jump_058_62bf ; [$1D] Defence
+    dw $474B ; [$1E] Upper
+    dw $62CD ; [$1F] Increase
+    dw $48AB ; [$20] Slow
+    dw Jump_058_62bf ; [$21] SlowAll
+    dw $490E ; [$22] Speed
+    dw $62CD ; [$23] SpeedUp
+    dw $62CD ; [$24] Barrier
+    dw $470B ; [$25] TwinHits
+    dw $62CD ; [$26] MagicWall
+    dw TargetSelfWrite_6367 ; [$27] MagicBack
+    dw TargetSelfWrite_6367 ; [$28] Bounce
+    dw $4ED8 ; [$29] Transform
+    dw $62CD ; [$2A] Ironize
+    dw $44F7 ; [$2B] Heal
+    dw $44F7 ; [$2C] HealMore
+    dw $44F7 ; [$2D] HealAll
+    dw $62CD ; [$2E] HealUs
+    dw $62CD ; [$2F] HealUsAll
+    dw $469E ; [$30] Vivify
+    dw $469E ; [$31] Revive
+    dw $635F ; [$32] Farewell
+    dw $46C7 ; [$33] Antidote
+    dw $62CD ; [$34] NumbOff
+    dw $62CD ; [$35] DeChaos
+    dw $62CD ; [$36] CurseOff
+    dw $41E9 ; [$37] StepGuard
+    dw $41E9 ; [$38] MapMagic
+    dw $63D6 ; [$39] Chance
+    dw $41E9 ; [$3A] Attack
+    dw $41E9 ; [$3B] TwinSlash
+    dw $5100 ; [$3C] Ramming
+    dw $41E9 ; [$3D] Beserker
+    dw $5100 ; [$3E] Kamikaze
+    dw TargetSlotResolver_6379 ; [$3F] Massacre
+    dw $41E9 ; [$40] EvilSlash
+    dw TargetSelfWrite_6367 ; [$41] ChargeUP
+    dw LoadBtlFX_642c ; [$42] HighJump
+    dw TargetSelfWrite_6367 ; [$43] SuckAir
+    dw $5339 ; [$44] FireSlash
+    dw $5352 ; [$45] BoltSlash
+    dw $536B ; [$46] VacuSlash
+    dw $5384 ; [$47] IceSlash
+    dw $4D1A ; [$48] MetalCut
+    dw $4D5D ; [$49] DrakSlash
+    dw $4D6D ; [$4A] BeastCut
+    dw $4D7D ; [$4B] BirdBlow
+    dw $4D8D ; [$4C] DevilCut
+    dw $4D9D ; [$4D] ZombieCut
+    dw $4DAD ; [$4E] CleanCut
+    dw Jump_058_62bf ; [$4F] MultiCut
+    dw $41E9 ; [$50] BiAttack
+    dw LoadBtlFX_642c ; [$51] QuadHits
+    dw LoadBtlFX_642c ; [$52] CallHelp
+    dw LoadBtlFX_642c ; [$53] YellHelp
+    dw $63D6 ; [$54] Focus
+    dw $41E9 ; [$55] SquallHit
+    dw $41E9 ; [$56] PsycheUp
+    dw Jump_058_62bf ; [$57] RainSlash
+    dw $539D ; [$58] WindBeast
+    dw Jump_058_62bf ; [$59] Vacuum
+    dw Jump_058_62bf ; [$5A] Lightning
+    dw Jump_058_62bf ; [$5B] RockThrow
+    dw Jump_058_62bf ; [$5C] FireAir
+    dw Jump_058_62bf ; [$5D] BlazeAir
+    dw Jump_058_62bf ; [$5E] Scorching
+    dw Jump_058_62bf ; [$5F] WhiteFire
+    dw Jump_058_62bf ; [$60] FrigidAir
+    dw Jump_058_62bf ; [$61] IceAir
+    dw Jump_058_62bf ; [$62] IceStorm
+    dw Jump_058_62bf ; [$63] WhiteAir
+    dw Jump_058_62bf ; [$64] Hellblast
+    dw Jump_058_62bf ; [$65] BigBang
+    dw Jump_058_62bf ; [$66] MegaMagic
+    dw $4DED ; [$67] PoisonHit
+    dw $4C85 ; [$68] NapAttack
+    dw $4E39 ; [$69] Paralyze
+    dw Jump_058_62bf ; [$6A] SleepAir
+    dw Jump_058_62bf ; [$6B] PalsyAir
+    dw Jump_058_62bf ; [$6C] PoisonGas
+    dw Jump_058_62bf ; [$6D] PoisonAir
+    dw Jump_058_62bf ; [$6E] PaniDance
+    dw Jump_058_62bf ; [$6F] Curse
+    dw $4E85 ; [$70] Ahhh
+    dw Jump_058_62bf ; [$71] K.O.Dance
+    dw Jump_058_62bf ; [$72] SandStorm
+    dw Jump_058_62bf ; [$73] Radiant
+    dw Jump_058_62bf ; [$74] EerieLite
+    dw $4CD1 ; [$75] OddDance
+    dw $4CD1 ; [$76] RobDance
+    dw TargetSelfWrite_6367 ; [$77] SideStep
+    dw Jump_058_62bf ; [$78] LureDance
+    dw $4E85 ; [$79] LushLicks
+    dw $4B74 ; [$7A] SickLick
+    dw $4C24 ; [$7B] LegSweep
+    dw Jump_058_62bf ; [$7C] BigTrip
+    dw Jump_058_62bf ; [$7D] WarCry
+    dw $41E9 ; [$7E] Whistle
+    dw TargetSelfWrite_6367 ; [$7F] Imitate
+    dw Jump_058_62bf ; [$80] DeMagic
+    dw $62CD ; [$81] Surge
+    dw $4A21 ; [$82] UltraDown
+    dw $62FD ; [$83] ThickFog
+    dw $63D6 ; [$84] TatsuCall
+    dw $63D6 ; [$85] DiagoCall
+    dw $63D6 ; [$86] SamsiCall
+    dw $63D6 ; [$87] BazooCall
+    dw $4ABA ; [$88] Cover
+    dw $62CD ; [$89] Guardian
+    dw TargetSelfWrite_6367 ; [$8A] TailWind
+    dw $62CD ; [$8B] StormWind
+    dw TargetSelfWrite_6367 ; [$8C] Dodge
+    dw TargetSelfWrite_6367 ; [$8D] Defence
+    dw TargetSelfWrite_6367 ; [$8E] StrongD
+    dw $62CD ; [$8F] SuckAll
+    dw TargetSelfWrite_6367 ; [$90] BladeD
+    dw Jump_058_62bf ; [$91] DanceShut
+    dw $4B26 ; [$92] MouthShut
+    dw TargetSelfWrite_6367 ; [$93] Meditate
+    dw $62CD ; [$94] Hustle
+    dw $635F ; [$95] LifeSong
+    dw $635F ; [$96] LifeDance
+    dw TargetSelfWrite_6367 ; [$97] Run
+    dw TargetSelfWrite_6367 ; [$98] Daze
+    dw LoadBtlFX_6479 ; [$99] HitAlly
+    dw LoadBtlFX_642c ; [$9A] HitEnemy
+    dw TargetSelfWrite_6367 ; [$9B] HitRandom
+    dw TargetSelfWrite_6367 ; [$9C] Scared
+    dw TargetSelfWrite_6367 ; [$9D] Dance
+    dw LoadBtlFX_642c ; [$9E] Trip
+    dw TargetSelfWrite_6367 ; [$9F] Paralyze
+    dw TargetSelfWrite_6367 ; [$A0] CANTMOVE
+    dw TargetSelfWrite_6367 ; [$A1] RUN
+    dw $62FD ; [$A2] CALLHOROR
+    dw $62CD ; [$A3] HealUsAll
+    dw Jump_058_62bf ; [$A4] Smashed
+    dw $62FD ; [$A5] FILTHZONE
+    dw $62CD ; [$A6] ALLCHANGE
+    dw Jump_058_62bf ; [$A7] BIGSLEEP
+    dw Jump_058_62bf ; [$A8] MP0
+    dw TargetSelfWrite_6367 ; [$A9] ECHO
+    dw TargetSelfWrite_6367 ; [$AA] CHGDRAGON
+    dw Jump_058_62bf ; [$AB] CALLEVIL
+    dw Jump_058_62bf ; [$AC] FREEZY
+    dw $635F ; [$AD] ALLREVIVE
+    dw $62CD ; [$AE] RESTOREMP
+    dw Jump_058_62bf ; [$AF] METEOR
+    dw $63D6 ; [$B0] HERB
+    dw $63D6 ; [$B1] HEALWATER
+    dw $63D6 ; [$B2] SAGESTONE
+    dw $63D6 ; [$B3] WARLDDEW
+    dw $63D6 ; [$B4] POTION
+    dw $63D6 ; [$B5] ELFWATER
+    dw $63D6 ; [$B6] ANTIDOTE
+    dw $63D6 ; [$B7] MOONHERB
+    dw $63D6 ; [$B8] SKYBELL
+    dw $63D6 ; [$B9] LAUREL
+    dw $63D6 ; [$BA] AWAKESAND
+    dw $63D6 ; [$BB] WARLDLEAF
+    dw $63D6 ; [$BC] LIFEACORN
+    dw $63D6 ; [$BD] MYSTICNUT
+    dw $63D6 ; [$BE] PWRSEED
+    dw $63D6 ; [$BF] DEFSEED
+    dw $63D6 ; [$C0] AGILSEED
+    dw $63D6 ; [$C1] INTSEED
+    dw $63D6 ; [$C2] FEEDMEAT
+    dw $63D6 ; [$C3] BEFFJERKY
+    dw $63D6 ; [$C4] PORKCHOP
+    dw $63D6 ; [$C5] BADMEAT
+    dw $63D6 ; [$C6] SIRLOIN
+    dw $63D6 ; [$C7] BOLTSTAFF
+    dw $63D6 ; [$C8] STAFF
+    dw $63D6 ; [$C9] BLOKSTAFF
+    dw $63D6 ; [$CA] LAVASTAFF
+    dw $63D6 ; [$CB] SNOWSTAFF
+    dw $63D6 ; [$CC] FIRESTAFF
+    dw $63D6 ; [$CD] WARPWING
+    dw $63D6 ; [$CE] TINYMEDAL
+    dw $63D6 ; [$CF] QuestBk
+    dw $63D6 ; [$D0] HORRORBK
+    dw $63D6 ; [$D1] BENICEBK
+    dw $63D6 ; [$D2] CHEATERBK
+    dw $63D6 ; [$D3] SMARTBK
+    dw $63D6 ; [$D4] COMEDYBK
+    dw TargetSelfWrite_6367 ; [$D5] BeDragon
+    dw $4DBD ; [$D6] Smashlime
+    dw $4DCD ; [$D7] Sheldodge
+    dw $4DDD ; [$D8] Branching
+    dw $53B6 ; [$D9] GigaSlash
+    dw $5164 ; [$DA] LIFE
+    dw TargetSelfWrite_6367 ; [$DB] RUN
+    dw TargetSelfWrite_6367 ; [$DC] IRONIZE
+    dw $41E9 ; [$DD] Ahhh
+    dw TargetSelfWrite_6367 ; [$DE]
+    dw TargetSelfWrite_6367 ; [$DF]
+    dw TargetSelfWrite_6367 ; [$E0]
+    dw TargetSelfWrite_6367 ; [$E1]
+    dw TargetSelfWrite_6367 ; [$E2]
+    dw TargetSelfWrite_6367 ; [$E3]
+    dw TargetSelfWrite_6367 ; [$E4]
+    dw TargetSelfWrite_6367 ; [$E5]
     ; NOTE: last 1 entry/entries (2B) merged into following instruction
 
     ld hl, $db56
@@ -3530,7 +3537,7 @@ jr_058_545b:
     ld a, [hl]
     cp $ff
     call z, WriteBtlFX_54ce
-    call LoadBtlFX_5498
+    call BtlQueueFetchService_5498
 
 jr_058_5478:
     call LoadBtlFX_5a40
@@ -3551,7 +3558,15 @@ jr_058_5478:
     jp Jump_058_53df
 
 
-LoadBtlFX_5498:
+; ========= QUEUE FETCH / PER-SKILL DISPATCH (bank $58 entry 8) =========
+; Byte-verified S83 (corrects §15.10.6's "entry 4" call-path claim —
+; DOC_AUDIT S83): act states >= $16 fetch the queue TARGET byte
+; ($DCED+2*idx) and invalidate it to $FF; earlier states fetch the
+; queued SKILL ($DCEC+2*idx) into $DB8A, then dispatch
+; BtlSkillTargetDispatch_401d[skill] — the per-skill target-resolution
+; service table. Called from bank $53 sub-state 0
+; (ActPhaseState0TargetFetch_520c) and from $53:$47D1.
+BtlQueueFetchService_5498:
     ld a, [$d9ed]
     cp $16
     jr c, jr_058_54b1
@@ -3581,7 +3596,7 @@ jr_058_54b1:
 jr_058_54be:
     ld a, [hl]
     ld [$db8a], a
-    ld hl, $401d
+    ld hl, BtlSkillTargetDispatch_401d
     ld c, a
     ld b, $00
     add hl, bc
@@ -3591,10 +3606,26 @@ jr_058_54be:
 
 
 WriteBtlFX_54ce:
+; Tiny helper: [hl] := $3A (queue plain Attack). Byte-read S83.
+QueuePlainAttack_54ce:
     ld [hl], $3a
     ret
 
 
+; ================= TURN ORDER BUILD — §15.6, S79 =================
+; Built each round by battle phase $05 after the enemy-AI queue fill;
+; validated 143/143 over 47 rounds (simulator/turn_order.py,
+; validate_order.py, s79_order_events.json; rig measure_order.py hooks
+; $54D1/$5662/$55C2/$5707). Init (byte-verified S83): $DB79 and $DB4C
+; filled 9x$FF, $DB61 16x0, $DB82/$DB55 zeroed. For each combatant with
+; $DD13[slot]==2 (command queued; 1 = no-action marker, set by the bank
+; $50 committers), in slot order: one GenerateRNG step ($00:$12D0), then
+; TurnOrderKeyRoll_5662. Keys land in $DB61 (8xu16) with ids in $DB4C,
+; sorted by TurnOrderSort_55c2, compacted into $DB79 by
+; TurnOrderCompact_5707 — the round order list, consumed by bank $53
+; entry 0 with cursor $DB82 (skips dead actors).
+; Link peer sentinel: id $10, key $0200, appended when $DB77 != $FF.
+TurnOrderBuild_54d1:
     ld hl, $db79
     ld bc, $0009
     ld a, $ff
@@ -3650,7 +3681,7 @@ Jump_058_5507:
     ld b, [hl]
     ld c, a
     ld a, e
-    call SaveBtlFX_5662
+    call TurnOrderKeyRoll_5662
     ld a, b
     or a
     jr nz, jr_058_5543
@@ -3663,7 +3694,7 @@ Jump_058_5507:
 
 jr_058_5543:
     ld a, e
-    call SetBtlFX_56cf
+    call TurnOrderDefensiveBoost_56cf
     jr c, jr_058_5561
 
     ld a, e
@@ -3742,7 +3773,7 @@ jr_058_5587:
 jr_058_55b3:
     ld hl, $d9ed
     inc [hl]
-    jr jr_058_55c2
+    jr TurnOrderSort_55c2
 
 LoadBtlFX_55b9:
     ld a, b
@@ -3756,7 +3787,11 @@ SetBtlFX_55be:
     ret
 
 
-jr_058_55c2:
+; Descending shrinking-bound bubble sort over $DB61 keys / $DB4C ids
+; (§15.6): TIES SWAP, and pass 1 literally compares a 9th out-of-bounds
+; pair $DB71/$DB72+$DB54 — modelled verbatim in turn_order.py. Ties net
+; to slot order in practice (party before enemy at equal keys, measured).
+TurnOrderSort_55c2:
     ld d, $08
 
 jr_058_55c4:
@@ -3865,10 +3900,20 @@ jr_058_5656:
     ld [$db82], a
     ld hl, $d9ed
     inc [hl]
-    jp Jump_058_5707
+    jp TurnOrderCompact_5707
 
 
-SaveBtlFX_5662:
+; Per-combatant AGL key roll (§15.6, exact):
+;   agl  = max(AGL16, 1)
+;   span = 1 + agl/4 + agl/16          (~31% of AGL)
+;   rand = ((RNG2 & 3) << 8) | RNG1    (10-bit, post-step)
+;   key  = agl - span + (rand mod' span)
+; mod' = repeated subtraction with an exit-on-EQUAL quirk (result range
+; INCLUSIVE [0, span]). Floor: key < 2 -> 2. $55 SquallHit gets +$0200
+; here (+$0200 more in the main loop = +$0400 total, "strikes first");
+; $56 PsycheUp forces key $0001 (always last); defensive interceptions
+; get +$0600 via TurnOrderDefensiveBoost_56cf.
+TurnOrderKeyRoll_5662:
     push hl
     push de
     push af
@@ -3959,7 +4004,11 @@ jr_058_56cc:
     ret
 
 
-SetBtlFX_56cf:
+; +$0600 for queued actions in {$2A Ironize, $7F Imitate, $88 Cover,
+; $89 Guardian, $8C Dodge, $8D Defence, $8E StrongD, $8F SuckAll,
+; $90 BladeD, $DC IRONIZE} — defensive interceptions always resolve
+; first (§15.6).
+TurnOrderDefensiveBoost_56cf:
     ld hl, $dcec
     add a
     add l
@@ -4008,7 +4057,8 @@ jr_058_5706:
     ret
 
 
-Jump_058_5707:
+; Compacts sorted ids into $DB79 — the round order list (§15.6).
+TurnOrderCompact_5707:
     xor a
     ld [$d9ed], a
     ld [$db82], a
@@ -4150,6 +4200,10 @@ jr_058_57c2:
     jp Jump_058_58e8
 
 
+; [S2d] Announce-template lookup (bank $58 entry 6): $db4c := announce
+; msgid for the queued skill (a = [AnnounceTemplateTable + skill_id]),
+; rendered by bank $50 entry 7. See the S2d arc notes in this bank.
+AnnounceTemplateLookup_57c5:
     ld a, [wBattleAttackerIdx]
     ld hl, $db06
     call HL_AddA_x8
@@ -5097,7 +5151,7 @@ LoadBtlFX_5c3e:
     ret
 
 
-    call LoadBtlFX_5498
+    call BtlQueueFetchService_5498
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
@@ -6398,6 +6452,10 @@ jr_058_6350:
     ld c, a
     jr jr_058_62ed
 
+; Per-skill target service: queue target := the actor's own index
+; ($DCED+2*[$db88] := [$db88]; byte-read S83) — the self-target writer
+; (23 skills dispatch here via BtlSkillTargetDispatch_401d).
+TargetSelfWrite_6367:
     ld a, [wBattleAttackerIdx]
     ld hl, $dced
     add a
@@ -6411,6 +6469,17 @@ jr_058_6350:
     ret
 
 
+; ========== CONCRETE-SLOT TARGET RESOLVER (dw slot 4) — §15.10.6 ==========
+; S81, measured: RNG-slot fishing over CheckMonsterSlot ($00:$2FA5,
+; CF SET = NOT live) validity — try RNG1&7, then RNG2&7, then
+; (RNG1|RNG2)&7, then further mixes, then a decrementing scan from RNG2
+; until a valid slot answers; the slot is written to $DCED+idx*2.
+; OPEN (§15.10.6): NO side filter in this code — either $DD1B is
+; side-masked around resolution or another constraint applies; one
+; probe outstanding. BREADCRUMB (byte-verified S83): $50:$4C87 far-calls
+; bank $58 entry 4 directly (ld hl,$5804/rst $10) — candidate for the
+; OPEN post-commit target write site; NOT yet measured.
+TargetSlotResolver_6379:
     ld a, [wRNG1]
     ld c, a
     and $07
@@ -7260,6 +7329,12 @@ jr_058_67ac:
     inc [hl]
     jr jr_058_67ac
 
+; Cat-1 plain-attack comparison service (bank $58 entry 11; §15.10.6,
+; S80/S81): called by the bank-$57 pick epilogue when category 1 wins;
+; returns a plain-attack score via $DD26 — if >= the best skill score,
+; the AI queues plain Attack $3A. (S79's "bank $58" attribution for the
+; whole AI machine was imprecise — only THIS service lives here.)
+AICat1AttackScore_67ba:
     ld a, $14
     ld [$dd26], a
     call LoadBtlFX_68a5

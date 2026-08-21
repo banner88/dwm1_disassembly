@@ -317,7 +317,7 @@ SkillBeat:  ; $41F7
     xor a
     ld [$d9f0], a
     call $5C51
-    jr nc, jr_052_4225
+    jr nc, BtlOutcomeMissPath_4225
     ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
@@ -338,7 +338,7 @@ SkillBeat:  ; $41F7
     pop hl
     ret
 
-jr_052_4225:
+BtlOutcomeMissPath_4225:
     ld a, $b8
     call ApplySkillDamage
     ret
@@ -1148,7 +1148,7 @@ SkillBeserker:
 SkillKamikaze:
 
 
-    call BattleCall_6232
+    call KamikazeDamage_6232
     call SetHLBattle_54e7
     ret
 
@@ -1517,7 +1517,7 @@ SkillSquallHit:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     ld a, l
     ld [$db56], a
     ld a, h
@@ -1549,15 +1549,15 @@ SkillRainSlash:
     cp $02
     jr z, jr_052_48e3
 
-    call BattleCall_69e1
+    call DamageMul4Tenths_69e1
     jr jr_052_48e6
 
 jr_052_48de:
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     jr jr_052_48e6
 
 jr_052_48e3:
-    call SaveBattle_69d2
+    call DamageMul6Tenths_69d2
 
 jr_052_48e6:
     ld a, l
@@ -1640,7 +1640,7 @@ SkillBigBang:
 SkillMegaMagic:
 
 
-    call LoadBattle_653e
+    call MegaMagicDamage_653e
     call SetHLBattle_54e7
     ret
 
@@ -4125,7 +4125,7 @@ jr_052_56ea:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
     ld a, l
     ld [$db5a], a
     ld a, h
@@ -4260,7 +4260,7 @@ jr_052_57c8:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
     ld a, l
     ld [$db5a], a
     ld a, h
@@ -4736,7 +4736,7 @@ LoadBattle_5ab2:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
     ld hl, $0000
     ret
 
@@ -5044,13 +5044,13 @@ BattleCall_5c51:
 
 jr_052_5c81:
     ld a, [$db4e]
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
 jr_052_5c88:
     ld a, [$db4e]
-    call BitCheck_6733
+    call HitLadderKamikaze_6733
     ret
 
 
@@ -5131,7 +5131,7 @@ jr_052_5cf4:
 
 
 jr_052_5d01:
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -5154,7 +5154,7 @@ SetHLBattle_5d05:
 
 
 jr_052_5d21:
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -5309,7 +5309,7 @@ jr_052_5deb:
 
 
 jr_052_5df8:
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -5368,7 +5368,7 @@ jr_052_5e3c:
 
 BattleTarget_5e3e:
     ld a, [wBattleTargetIdx]
-    call BattleFunc_6a13
+    call UpperStatCapCheck_6a13
     jr nc, jr_052_5e92
 
     jr z, jr_052_5e92
@@ -5391,7 +5391,7 @@ BattleTarget_5e3e:
     ld [hl], a
     ld a, [wBattleTargetIdx]
     push hl
-    call BattleFunc_6a13
+    call UpperStatCapCheck_6a13
     pop hl
     jr c, jr_052_5e90
 
@@ -5517,7 +5517,7 @@ jr_052_5f06:
 
 BattleTarget_5f08:
     ld a, [wBattleTargetIdx]
-    call BattleFunc_6a49
+    call AglUpStatCapCheck_6a49
     jr nc, jr_052_5f5c
 
     ld a, [wBattleTargetIdx]
@@ -5538,7 +5538,7 @@ BattleTarget_5f08:
     ld [hl], a
     ld a, [wBattleTargetIdx]
     push hl
-    call BattleFunc_6a49
+    call AglUpStatCapCheck_6a49
     pop hl
     jr c, jr_052_5f5a
 
@@ -5951,7 +5951,7 @@ jr_052_6183:
     ld [$db56], a
     ld a, d
     ld [$db57], a
-    call LoadBattle_61ec
+    call DamageSlot2AdjustFloor_61ec
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6019,7 +6019,7 @@ jr_052_61bd:
     ld a, [wBattleAttackerIdx]
     jr jr_052_6205
 
-LoadBattle_61ec:
+DamageSlot2AdjustFloor_61ec:
     ld a, [$c86c]
     or a
     jr nz, jr_052_61bd
@@ -6041,7 +6041,7 @@ jr_052_6205:
     cp $02
     ret nz
 
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     ld a, l
     ld [$db56], a
     ld a, h
@@ -6052,7 +6052,7 @@ jr_052_6205:
 BattleTarget_6214:
     ld a, [wBattleTargetIdx]
     call GetCombatantHP
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     inc hl
     ld a, l
     ld [$db56], a
@@ -6065,11 +6065,11 @@ BattleTarget_6214:
     ret
 
 
-BattleCall_6232:
+KamikazeDamage_6232:
     call GetTargetBattleSlot
     call BattleFunc_67ca
     and $03
-    call BitCheck_6733
+    call HitLadderKamikaze_6733
     jr nc, jr_052_628b
 
     ld a, [wBattleAttackerIdx]
@@ -6144,7 +6144,7 @@ BattleCall_6298:
     call BattleFunc_67bb
     swap a
     and $03
-    call BitCheck_6782
+    call ResLadderElemSlash_6782
     ret
 
 
@@ -6154,7 +6154,7 @@ BattleCall_62a9:
     call GetBattleStatAddr1
     swap a
     and $03
-    call BitCheck_6782
+    call ResLadderElemSlash_6782
     ret
 
 
@@ -6165,7 +6165,7 @@ BattleCall_62ba:
     rlca
     rlca
     and $03
-    call BitCheck_6782
+    call ResLadderElemSlash_6782
     ret
 
 
@@ -6176,7 +6176,7 @@ BattleCall_62cb:
     rrca
     rrca
     and $03
-    call BitCheck_6782
+    call ResLadderElemSlash_6782
     ret
 
 
@@ -6343,7 +6343,7 @@ jr_052_63a5:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
     call LookupTargetSpecies
     cp $07
     jr nz, jr_052_63ce
@@ -6364,7 +6364,7 @@ jr_052_63ce:
     rlca
     rlca
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6578,7 +6578,7 @@ BattleCall_6506:
     call BattleFunc_67d9
     swap a
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6587,7 +6587,7 @@ BattleCall_6514:
     call BattleFunc_67cf
     swap a
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6597,7 +6597,7 @@ BattleCall_6522:
     rrca
     rrca
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6606,11 +6606,11 @@ BattleCall_6530:
     call BattleFunc_67bb
     swap a
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
-LoadBattle_653e:
+MegaMagicDamage_653e:
     ld a, [wBattleAttackerIdx]
     ld e, a
     call GetCombatantMP
@@ -6638,7 +6638,7 @@ LoadBattle_653e:
     ld [$db56], a
     ld a, h
     ld [$db57], a
-    call BattleCall_69e1
+    call DamageMul4Tenths_69e1
     call HLsrl2
     ld a, l
     or h
@@ -6683,7 +6683,7 @@ jr_052_65a7:
     rlca
     rlca
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6696,7 +6696,7 @@ BattleCall_65b5:
     rlca
     rlca
     and $03
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -6704,7 +6704,7 @@ BattleCall_65c9:
     call GetTargetBattleSlot
     call BattleFunc_67cf
     and $03
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -6713,7 +6713,7 @@ BattleCall_65d5:
     call BattleFunc_67d4
     swap a
     and $03
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -6733,7 +6733,7 @@ BattleCall_65e3:
     jr jr_052_65fe
 
 jr_052_65fb:
-    call BitCheck_6749
+    call HitLadderBeat_6749
 
 jr_052_65fe:
     ret
@@ -6933,7 +6933,7 @@ jr_052_66f4:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
 
 GetTargetBattleSlot:
     ld a, [wBattleTargetIdx]
@@ -6977,7 +6977,7 @@ jr_052_6732:
     ret
 
 
-BitCheck_6733:
+HitLadderKamikaze_6733:
     bit 6, [hl]
     jr z, jr_052_673c
 
@@ -6998,7 +6998,7 @@ jr_052_6748:
     ret
 
 
-BitCheck_6749:
+HitLadderBeat_6749:
 Jump_052_6749:
     bit 7, [hl]
     jr z, jr_052_6752
@@ -7034,7 +7034,7 @@ jr_052_676b:
     ret
 
 
-BitCheck_676c:
+ResLadderBreath_676c:
     bit 6, [hl]
     jr z, jr_052_6775
 
@@ -7055,7 +7055,7 @@ jr_052_6781:
     ret
 
 
-BitCheck_6782:
+ResLadderElemSlash_6782:
     bit 6, [hl]
     jr z, jr_052_678b
 
@@ -7082,7 +7082,7 @@ jr_052_679b:
     ret
 
 
-LoadBattle_679c:
+RecordDamageRoll_679c:
     ld a, [$db4e]
     or a
     jr z, jr_052_67b2
@@ -7455,7 +7455,7 @@ Jump_052_6921:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call BattleCall_69e1
+    call DamageMul4Tenths_69e1
     ld a, l
     ld [$db56], a
     ld a, h
@@ -7561,7 +7561,7 @@ SaveBattle_69a8:
     ret
 
 
-SaveBattle_69b7:
+DamageMul8Tenths_69b7:
     push de
     ld b, h
     ld c, l
@@ -7584,7 +7584,7 @@ SaveBattle_69c6:
     ret
 
 
-SaveBattle_69d2:
+DamageMul6Tenths_69d2:
     push de
     ld b, h
     ld c, l
@@ -7596,14 +7596,14 @@ SaveBattle_69d2:
     ret
 
 
-BattleCall_69e1:
-    call SaveBattle_69b7
+DamageMul4Tenths_69e1:
+    call DamageMul8Tenths_69b7
     call HLsrl1
     ret
 
 
 BattleCall_69e8:
-    call SaveBattle_69d2
+    call DamageMul6Tenths_69d2
     call HLsrl1
     ret
 
@@ -7638,7 +7638,7 @@ SaveBattle_6a01:
     ret
 
 
-BattleFunc_6a13:
+UpperStatCapCheck_6a13:
     ld [$db4c], a
     call GetCombatantDEF
     ld bc, $03e7
@@ -7679,7 +7679,7 @@ jr_052_6a45:
     ret
 
 
-BattleFunc_6a49:
+AglUpStatCapCheck_6a49:
     ld [$db4c], a
     ld hl, wBattleAGL
     call CalcBattle_6ab1
@@ -8202,7 +8202,7 @@ jr_052_6c5c:
 
     ld a, [$d9ee]
     cp $0b
-    jr z, jr_052_6cc7
+    jr z, SkillHandlerDispatch_6cc7
 
     cp $10
     jr z, jr_052_6cf2
@@ -8213,7 +8213,7 @@ jr_052_6c5c:
     cp $0b
     ret nz
 
-jr_052_6cc7:
+SkillHandlerDispatch_6cc7:
     ld hl, $d9ee
     inc [hl]
     xor a
@@ -8263,7 +8263,7 @@ jr_052_6cf2:
     jr z, jr_052_6d0a
 
     cp $d5
-    jp nz, Jump_052_6d56
+    jp nz, BtlActState2Apply_6d56
 
 jr_052_6d0a:
     ld a, $04
@@ -8306,7 +8306,7 @@ jr_052_6d20:
     ret
 
 
-Jump_052_6d56:
+BtlActState2Apply_6d56:
     ld a, [$dd80]
     ld hl, $dd9a
     and [hl]
@@ -8706,7 +8706,7 @@ Jump_052_6f42:
     ld a, c
 
 Jump_052_6f4e:
-    call LoadBattle_7ab5
+    call ConfusionActionRewrite_7ab5
     ret
 
 
@@ -10527,7 +10527,7 @@ LoadBattle_7997:
     ld h, [hl]
     ld l, a
     push hl
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     inc hl
     ld a, l
     ld [$db5a], a
@@ -10694,7 +10694,7 @@ jr_052_7ab0:
     ret
 
 
-LoadBattle_7ab5:
+ConfusionActionRewrite_7ab5:
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     call HL_AddA_x2
@@ -11612,7 +11612,7 @@ CustomSkillPtr:              ; $7FED — the single &handler-pointer FarSkillFor
 CustomDispatch52:            ; $7FEF — jp'd in $52 ctx; runs the standard damage-skill
                              ; CONTEXT setup here (only callable with bank $52 mapped),
                              ; THEN far-calls $72 for the per-skill custom override.
-    call LoadBattle_653e     ; MegaMagic's exact setup: damage-result context + base $db56
+    call MegaMagicDamage_653e     ; MegaMagic's exact setup: damage-result context + base $db56
 CustomDispatch52_shared:     ; [MOURN S75] shared tail — MournDispatch52 jp's here after
                              ; calling CalcDefenseWrapper (defense-calc path vs MegaMagic path)
     call SetHLBattle_54e7    ; descriptor $dd6f=$a8, msg pair $dd70/71=$b882 (hit/miss ids)

@@ -11,7 +11,7 @@ SECTION "ROM Bank $053", ROMX[$4000], BANK[$53]
     ; Called via: ld hl, $53XX / rst $10
     dw $44CA                          ; Entry 0
     dw jr_053_4beb                    ; Entry 1
-    dw LoadBtlC_4c50                  ; Entry 2
+    dw CurseSelfHit_4c50                  ; Entry 2
     dw jr_053_4d7e                    ; Entry 3
     dw $4F4C                          ; Entry 4
     dw $51E8                          ; Entry 5
@@ -25,7 +25,7 @@ SECTION "ROM Bank $053", ROMX[$4000], BANK[$53]
     dw $670E                          ; Entry 13
     dw $6A9B                          ; Entry 14
     dw jr_053_6be2                    ; Entry 15
-    dw LoadBtlC_51aa                  ; Entry 16
+    dw BossProtectionGate_51aa                  ; Entry 16
     dw $5F15                          ; Entry 17
 
 ; --- Dispatch entry 0 ($44CA) ---
@@ -985,7 +985,7 @@ jr_053_4587:
     bit 7, [hl]
     jr z, jr_053_4591
 
-    call ReadBtlC_4aeb
+    call SleepWakeRoll_4aeb
     jp Jump_053_462c
 
 
@@ -1053,7 +1053,7 @@ jr_053_45ca:
     cp $40
     jr nc, jr_053_45f9
 
-    call LoadBtlC_4c50
+    call CurseSelfHit_4c50
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleHP
     add a
@@ -1154,7 +1154,7 @@ jr_053_4657:
     adc h
     ld h, a
     ld [hl], $00
-    call LoadBtlC_4799
+    call TargetReResolve_4799
     ld a, $01
     ld [$c1d5], a
 
@@ -1336,7 +1336,7 @@ jr_053_475e:
     cp $03
     ret z
 
-LoadBtlC_4799:
+TargetReResolve_4799:
 jr_053_4799:
     ld a, [wBattleAttackerIdx]
     ld hl, $dced
@@ -1367,7 +1367,7 @@ jr_053_47b2:
 
     ld a, [$dcfc]
     and $01
-    jr z, jr_053_47e8
+    jr z, DeadTargetRedirectScan_47e8
 
     call LoadBtlC_49dc
     or a
@@ -1393,7 +1393,7 @@ Jump_053_47d5:
     ld h, a
     jr jr_053_4809
 
-jr_053_47e8:
+DeadTargetRedirectScan_47e8:
     ld a, [wBattleTargetIdx]
     and $04
     ld c, a
@@ -1925,7 +1925,7 @@ jr_053_4ab0:
     ret
 
 
-ReadBtlC_4aeb:
+SleepWakeRoll_4aeb:
     ld a, [hl]
     and $0c
     jr z, jr_053_4b04
@@ -2204,7 +2204,7 @@ jr_053_4c32:
     ret
 
 
-LoadBtlC_4c50:
+CurseSelfHit_4c50:
     ld a, [wBattleTargetIdx]
     push af
     ld a, [wBattleAttackerIdx]
@@ -3199,7 +3199,7 @@ jr_053_51a8:
     ret
 
 
-LoadBtlC_51aa:
+BossProtectionGate_51aa:
     ld a, [$c86c]
     or a
     jr nz, jr_053_51dd
@@ -6881,7 +6881,7 @@ jr_053_67a8:
 
     ld hl, $d9ee
     inc [hl]
-    call LoadBtlC_51aa
+    call BossProtectionGate_51aa
     or a
     jp z, Jump_053_6858
 

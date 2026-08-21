@@ -1267,7 +1267,7 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
   multiplier fired. Presentation: EvilSlash proxy played TWICE back-to-back
   (anim-slot replay, sticky $FF terminal). Architecture new to this session:
   the SECOND dispatch trampoline (MournDispatch52 in the $52:$6c56 dead
-  bytes, `call CalcDefenseWrapper` instead of LoadBattle_653e) lets any
+  bytes, `call CalcDefenseWrapper` instead of MegaMagicDamage_653e) lets any
   custom skill pick which vanilla damage machine seeds $db56 — zero cost to
   existing customs. Measured: multipliers 1×/2×/3× incl. persistence across
   8+ rounds after the engine's KO scan ($dd1b three-state finding: presence
@@ -1436,27 +1436,40 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       with table-aware decode is future re-section work;
       (b) DanceShut/MouthShut ($91/$92) + DeMagic/ThickFog ($80/$83)
       rule addresses not yet identified among the neutral labels.
-- [ ] **S83 — ANNOTATION CATCH-UP, part 2 (GATE): banks $52/$53/$58
-      battle core.** Damage pipeline + action machine + status layer
-      (§15.1-15.8, S78/S79 findings), the bank $53 act-phase dispatcher
-      $51E8 + re-resolve $4799 + fallback scan $47E8, the bank $58 entry
-      table (name all 12 entries incl. target resolver $6379 and the
-      cat-1 plain-attack service), execution loop $52:$71B5/$71ED.
-      Census S81: banks 52/53/57/58 carry ~2150 auto-generated labels vs
-      ~150 comment lines total — split across two sessions deliberately;
-      ONE roadmap item per session still applies.
+- [x] **S83 — ANNOTATION CATCH-UP, part 2 (GATE): banks $52/$53/$58
+      battle core.** ✅ DONE 2026-08-20 (byte-neutral; verifier PASS 6/6;
+      `tools/resection_battle_core.py`, idempotent per bank). All §15.1-
+      15.8 damage/status/turn-order findings + the S81 target-resolution
+      trace are now labels/comments/dw-dp tables in source: 28-state
+      BtlActStateTable_6c60, SetupSubStateTable_44ce (9),
+      ActPhaseStateTable_51ec (16), the bank $58 head split into 14
+      rst $10 service slots + the 230-dw per-skill
+      BtlSkillTargetDispatch_401d (previously undocumented), turn-order
+      family, boss gate, sleep wake, Sacrifice, confusion rewrite
+      (+ table = bank $52, DOC_AUDIT). **CORRECTED: the act-time
+      resolver far-call is $58 ENTRY 8 (BtlQueueFetchService_5498), not
+      entry 4** — $6379 (dw slot 4) is the measured resolver reached
+      per-skill; rst $10 convention pinned (addr=$4001+2·L).
+      **THE ANNOTATION GATE IS CLEAR — the S81 remainder and S80 pacing
+      layer are UNBLOCKED.** Residual (non-gating): the neutral
+      BtlActState_/ActPhaseState_/SetupSub_ internals and the unlabeled
+      per-skill service bodies ($62BF/$63D6/$634D…) get semantics only
+      when future sessions measure them (S70 rule).
 - [ ] S81 — AI residuals + loop validation (**PARTIAL, S81 session 1;
-      REMAINDER BLOCKED behind S82/S83 annotation gate**):
+      REMAINDER was BLOCKED behind the S82/S83 annotation gate — GATE CLEARED S83**):
       ✔ evaluator rule chains DONE — per-CATEGORY chains (NOT
       effect_class-indexed; hypothesis falsified), full 160-skill sweep,
       model `simulator/ai_rules.py` **240/240** vs corpus
       (`validate_rules.py` + `s81_sweep_corpus.json`); vanilla bug found
       + user-flagged as romhack enemy-AI fix candidate ($4E36
       non-incrementing AoE scan). §15.10.5 rewritten.
-      ◐ enemy target resolution ~2/3: act-time resolver = $58 entry 4
-      ($6379) RNG-slot fishing; queue byte = side base at commit;
-      OPEN: resolver side-constraint probe ($DD1B masking suspected) +
-      AI-side initial post-commit write site (§15.10.6 note).
+      ◐ enemy target resolution ~2/3: act-time resolver =
+      TargetSlotResolver_6379 RNG-slot fishing, reached via $58 entry 8
+      per-skill dispatch (S83 correction); queue byte = side base at
+      commit; OPEN: resolver side-constraint probe ($DD1B masking
+      suspected) + AI-side initial post-commit write site — **S83
+      breadcrumb: $50:$4C87 is the ROM's only direct entry-4 far-call;
+      probe it first** (§15.10.6 note).
       Still open: $dd0b assignment at init, lightweight-picker tail
       ($76DF), state-0 flee/loaf branch ($6F8C) + w[3] semantics, cat3
       weak-heal checks ($77A4/$77B4), bank $58 entry 11 internals, the
@@ -1473,6 +1486,6 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       applier (S81 candidate: skill $6D per the $4702 heavy-DoT trio),
       curse self-hit magnitude (bank $53 entry 2), sleep-application
       writer, MISS/dodge + $DA33.
-- [ ] S80 — pacing layer (**BLOCKED behind S82/S83 annotation gate**):
+- [ ] S80 — pacing layer (**gate CLEARED S83 — unblocked**):
       TTK sweeps over gate encounter tables for the
       romhack + randomizer profiles; wire into `randomizer/profile_check`.

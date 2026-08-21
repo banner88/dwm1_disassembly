@@ -165,6 +165,14 @@ repo-wide reference updates; fixes the INVERTED `CheckMonsterSlot` CF comment in
 `1ca6579…`; idempotent; `--analyze` reports alignment without writing. Produces no
 extracted/ data. Residual: rule-BODY re-emission around inline rst $00 handler
 tables — see ROADMAP S82 box) ·
+`resection_battle_core.py` (✅ new S83 — Iron-Rule-6 annotation of the battle core,
+banks `$52/$53/$58`, same probe-build machinery per bank: converts the 28-state
+action table `BtlActStateTable_6c60`, the bank-`$53` `SetupSubStateTable_44ce` (9) +
+`ActPhaseStateTable_51ec` (16), and splits the bank-`$58` head into 14 rst `$10`
+service slots + the 230-dw per-skill `BtlSkillTargetDispatch_401d` (skill names
+inline); semantic renames across the damage/turn-order/status/target families with
+repo-wide reference updates incl. `patches/`; labelizes the raw `$7aff`/`$401d`
+pointers. Idempotent per bank (marker labels); probe AND final builds MD5-asserted) ·
 `gen_script_banks.py` · `render_rooms.py` · `dwm/` package ·
 `dwm/sprite_codec.py` (✅ new Session 22 — the SINGLE LZ codec for tiles+sprites:
 `decode` byte-exact = game + `decompress_tiles.py`; `encode`/`encode_safe` valid/compact
@@ -348,7 +356,7 @@ special table $16:$4B30 (predates B5; kept as the minimal-edit precedent). ·
 `SkillMPCostTable` ($07:$570C) + `SkillLearnReqTable` ($06:$50E0) from fake
 instructions to labeled `dw`/`db` in BOTH trees via the probe-build method;
 byte-perfect asserted; keeps outside-referenced fake-artifact labels at exact
-offsets; idempotent (`--check`). ·
+offsets; idempotent (`--check`) ·
 `sm83dis.py` — targeted SM83 disassembler for bank:addr regions mgbdis left as `db`
 (unreferenced routines / data-reached code); used by the RE arcs.
 

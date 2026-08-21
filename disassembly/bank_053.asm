@@ -11,7 +11,7 @@ SECTION "ROM Bank $053", ROMX[$4000], BANK[$53]
     ; Called via: ld hl, $53XX / rst $10
     dw $44CA                          ; Entry 0
     dw jr_053_4beb                    ; Entry 1
-    dw LoadBtlC_4c50                  ; Entry 2
+    dw CurseSelfHit_4c50                  ; Entry 2
     dw jr_053_4d7e                    ; Entry 3
     dw $4F4C                          ; Entry 4
     dw $51E8                          ; Entry 5
@@ -25,7 +25,7 @@ SECTION "ROM Bank $053", ROMX[$4000], BANK[$53]
     dw $670E                          ; Entry 13
     dw $6A9B                          ; Entry 14
     dw jr_053_6be2                    ; Entry 15
-    dw LoadBtlC_51aa                  ; Entry 16
+    dw BossProtectionGate_51aa                  ; Entry 16
     dw $5F15                          ; Entry 17
 
 ; --- Dispatch entry 0 ($44CA) ---
@@ -866,23 +866,26 @@ SetBtlC_44b5:
     ret
 
 
+; ============ PER-ACTOR SETUP (bank $53 entry 0) — §15.7, S79 ============
+; Ticked by action state 0 (BtlActState0Setup_6c98); consumes the round
+; order list $DB79 with cursor $DB82 (skips dead actors). Own sub-machine
+; on $D9EE via the inline table SetupSubStateTable_44ce below.
+BtlPerActorSetup_44ca:
     ld a, [$d9ee]
     rst $00
-    ldh [rLY], a
-    sub d
-    ld b, [hl]
-    ld c, $48
-    add sp, $49
-    ld c, h
-    ld c, d
-    ld d, l
-    ld c, d
-    pop bc
-    ld c, d
-    ld [hl-], a
-    ld c, a
-    ccf
-    ld c, a
+; 9-entry setup sub-state dispatch table on $D9EE — §15.7 (S79; converted
+; from misassembled instructions S83, byte-verified).
+SetupSubStateTable_44ce:
+    dw SetupSub_44e0 ; sub-state 0
+    dw SetupSub_4692 ; sub-state 1
+    dw SetupSub_480e ; sub-state 2
+    dw SetupSub_49e8 ; sub-state 3
+    dw SetupSub_4a4c ; sub-state 4
+    dw SetupSub_4a55 ; sub-state 5
+    dw SetupSub_4ac1 ; sub-state 6
+    dw jr_053_4f32 ; sub-state 7
+    dw SetupSub_4f3f ; sub-state 8
+SetupSub_44e0:
     xor a
     ld [$dd72], a
     ld a, [$d9ed]
@@ -951,6 +954,13 @@ jr_053_454f:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd13
     call CalcBtlC_4be3
+; Per-actor gate order ($4558-$45C8, §15.7 S79): $DB07&$C0 -> forced
+; action $11; status +2 bit6 -> $13 (paralyzed); +2 bit7 -> the sleep
+; wake roll (SleepWakeRoll_4aeb); +5 bits0-5 one-shots -> actions
+; $12/$14/$15/$16/$17/$18; +2 bit5 curse roll (25%: RNG1<$40 ->
+; CurseSelfHit_4c50, can KO); +2 bit4 confusion ->
+; ConfusionActionRewrite_7ab5 (bank $52) rewrites the queued action.
+PerActorStatusGates_4558:
     cp $02
     jp nz, Jump_053_463b
 
@@ -985,7 +995,7 @@ jr_053_4587:
     bit 7, [hl]
     jr z, jr_053_4591
 
-    call ReadBtlC_4aeb
+    call SleepWakeRoll_4aeb
     jp Jump_053_462c
 
 
@@ -1053,7 +1063,7 @@ jr_053_45ca:
     cp $40
     jr nc, jr_053_45f9
 
-    call LoadBtlC_4c50
+    call CurseSelfHit_4c50
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleHP
     add a
@@ -1154,7 +1164,7 @@ jr_053_4657:
     adc h
     ld h, a
     ld [hl], $00
-    call LoadBtlC_4799
+    call TargetReResolve_4799
     ld a, $01
     ld [$c1d5], a
 
@@ -1174,6 +1184,7 @@ jr_053_467c:
     ret
 
 
+SetupSub_4692:
     ld hl, $d9ee
     inc [hl]
     ld a, [$d9ef]
@@ -1336,7 +1347,9 @@ jr_053_475e:
     cp $03
     ret z
 
-LoadBtlC_4799:
+; Re-resolve trigger (§15.10.6, S81): resets the queue target byte to
+; $FF and re-enters resolution (phase $19).
+TargetReResolve_4799:
 jr_053_4799:
     ld a, [wBattleAttackerIdx]
     ld hl, $dced
@@ -1367,7 +1380,7 @@ jr_053_47b2:
 
     ld a, [$dcfc]
     and $01
-    jr z, jr_053_47e8
+    jr z, DeadTargetRedirectScan_47e8
 
     call LoadBtlC_49dc
     or a
@@ -1393,7 +1406,11 @@ Jump_053_47d5:
     ld h, a
     jr jr_053_4809
 
-jr_053_47e8:
+; Dead-target redirect at act time (§15.10.6, S81): first-valid-on-side
+; scan ($47E8 -> $47FB). Path conditional; NOT exercised in the S81
+; probes. ($53:$47D1 just above far-calls bank $58 entry 8 — the same
+; per-skill resolution service as sub-state 0.)
+DeadTargetRedirectScan_47e8:
     ld a, [wBattleTargetIdx]
     and $04
     ld c, a
@@ -1428,6 +1445,7 @@ jr_053_4809:
     ret
 
 
+SetupSub_480e:
     ld hl, $d9ee
     inc [hl]
     ld hl, $5402
@@ -1746,6 +1764,7 @@ LoadBtlC_49dc:
     ret
 
 
+SetupSub_49e8:
     call LoadBtlC_49dc
     jr nz, jr_053_49fc
 
@@ -1814,6 +1833,7 @@ LoadBtlC_4a04:
     ret
 
 
+SetupSub_4a4c:
     xor a
     ld [$d9ee], a
     ld hl, $db82
@@ -1821,6 +1841,7 @@ LoadBtlC_4a04:
     ret
 
 
+SetupSub_4a55:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleHP
     add a
@@ -1897,6 +1918,7 @@ jr_053_4ab0:
     ret
 
 
+SetupSub_4ac1:
     ld hl, $5202
     rst $10
     xor a
@@ -1924,7 +1946,12 @@ jr_053_4ab0:
     ret
 
 
-ReadBtlC_4aeb:
+; Sleep wake roll (§15.8, S79 — EXACT; simulator/status.py ports this
+; routine): at the sleeper's own turn, wake iff RNG1 <= threshold by
+; 2-bit counter {3:$60=37.9%, 2:$A0=62.9%, 1:$E0=88.0%, 0:always}; else
+; the counter decrements (floor 0) and the turn becomes the "asleep"
+; action $0F. No RNG step consumed.
+SleepWakeRoll_4aeb:
     ld a, [hl]
     and $0c
     jr z, jr_053_4b04
@@ -2203,7 +2230,10 @@ jr_053_4c32:
     ret
 
 
-LoadBtlC_4c50:
+; Curse self-hit (bank $53 entry 2; §15.7): reached on the 25% curse
+; roll (RNG1<$40) at the actor's turn; can KO. Magnitude NOT yet
+; traced (§15.9 residual).
+CurseSelfHit_4c50:
     ld a, [wBattleTargetIdx]
     push af
     ld a, [wBattleAttackerIdx]
@@ -2759,6 +2789,7 @@ jr_053_4f32:
     ret
 
 
+SetupSub_4f3f:
     ld a, [$db4c]
     dec a
     ld [$db4c], a
@@ -3198,7 +3229,17 @@ jr_053_51a8:
     ret
 
 
-LoadBtlC_51aa:
+; ======== BOSS PROTECTION GATE (bank $53 entry $10) — §15.4, S78 ========
+; Byte-verified ladder (S83): skip iff LINK ($C86C != 0); skip iff the
+; target side is party ($DB89 < 4); skip iff $DB73 != 1 (battle type:
+; wild 0 / boss+scripted 1 / arena+wScriptMapType-$5D 2, set by
+; LoadBtlS_43c9 in bank $51; $FF = loss freeze). Then the skill ladder
+; {$12 Beat, $13 Defeat, $14 Sacrifice, $3E Kamikaze, $69 Paralyze,
+;  $6B, $71 K.O.Dance} AUTO-FAILS vs enemy targets — instant death and
+; paralysis never work on bosses, and DO work on wild monsters
+; (validated both ways S78; the rig's $DA09=1 makes rig battles "boss" —
+;  poke db73=0 to reproduce the wild condition).
+BossProtectionGate_51aa:
     ld a, [$c86c]
     or a
     jr nz, jr_053_51dd
@@ -3245,39 +3286,42 @@ jr_053_51e3:
     ret
 
 
+; ========= ACT-PHASE DISPATCHER (bank $53 entry 5) — §15.10.6, S81 =========
+; 16-state machine on $D9EE via the inline table ActPhaseStateTable_51ec.
+; Sub-state 0 (ActPhaseState0TargetFetch_520c) performs act-time target
+; resolution; TargetReResolve_4799 resets the queue target byte to $FF
+; (phase $19) — the observed act-time "$FF flip".
+ActPhaseDispatch_51e8:
     ld a, [$d9ee]
     rst $00
-    inc c
-    ld d, d
-    ld b, d
-    ld d, d
-    ld a, d
-    ld d, d
-    jp hl
-
-
-    ld d, d
-    ld e, [hl]
-    ld d, e
-    ld a, d
-    ld d, e
-    xor c
-    ld d, e
-    ld de, $2254
-    ld d, [hl]
-    xor b
-    ld d, [hl]
-    ld l, d
-    ld e, b
-    or $58
-    ei
-    ld e, b
-    ld l, a
-    ld e, d
-    db $ed
-    ld e, d
-    rlca
-    ld e, e
+; 16-state act-phase dispatch table on $D9EE — §15.10.6 (S81; converted
+; from misassembled instructions S83, byte-verified).
+ActPhaseStateTable_51ec:
+    dw ActPhaseState0TargetFetch_520c ; act state $0
+    dw jr_053_5242 ; act state $1
+    dw jr_053_527a ; act state $2
+    dw ActPhaseState_52e9 ; act state $3
+    dw jr_053_535e ; act state $4
+    dw jr_053_537a ; act state $5
+    dw jr_053_53a9 ; act state $6
+    dw Jump_053_5411 ; act state $7
+    dw Jump_053_5622 ; act state $8
+    dw jr_053_56a8 ; act state $9
+    dw jr_053_586a ; act state $A
+    dw ActPhaseState_58f6 ; act state $B
+    dw jr_053_58fb ; act state $C
+    dw Jump_053_5a6f ; act state $D
+    dw jr_053_5aed ; act state $E
+    dw ActPhaseState_5b07 ; act state $F
+; Act-time target fetch (§15.10.6, S81; call path corrected S83):
+; increments $DD69, clears $DD6E, copies the queue target byte
+; $DCED+2*[$db88] -> $DB89; iff $FF, far-calls BANK $58 ENTRY 8
+; (ld hl,$5808 — BtlQueueFetchService_5498, which dispatches per-skill
+; via BtlSkillTargetDispatch_401d) and re-reads until != $FF.
+; The concrete-slot RNG resolver itself is TargetSlotResolver_6379
+; (bank $58 dw slot 4). §15.10.6's "far-calls entry 4" was the doc
+; error corrected S83 (DOC_AUDIT).
+ActPhaseState0TargetFetch_520c:
     ld hl, $d9ee
     inc [hl]
     ld hl, $dd69
@@ -3434,6 +3478,7 @@ jr_053_52c8:
     ld [wBattleTargetIdx], a
     jr jr_053_52c8
 
+ActPhaseState_52e9:
     ld a, [$da33]
     or a
     jr z, jr_053_52f4
@@ -4376,6 +4421,7 @@ jr_053_58ea:
     ret
 
 
+ActPhaseState_58f6:
     ld hl, $d9ee
     inc [hl]
     ret
@@ -4722,6 +4768,7 @@ jr_053_5aed:
 ;; [S2e/§11.7] message-vs-animation TIMING gate ($5b07): only skill ids $84-$87
     ;; (summon/TatsuCall) WAIT for the anim done-flag $da82 before the message; all other
     ;; ids fire it immediately (coincides with a brief anim). Tame forks here (patches).
+ActPhaseState_5b07:
     ld a, [$db8a]
     cp $84
     jr c, jr_053_5b17
@@ -6783,6 +6830,9 @@ jr_053_6705:
     ret
 
 
+; Sacrifice entry (bank $53 entry $0D): action state 3 routes Sacrifice
+; here (§15.7, S79).
+SacrificeEntry_670e:
     ld a, [$d9ee]
     rst $00
     jr nz, @+$69
@@ -6877,9 +6927,17 @@ jr_053_67a8:
     ret
 
 
+; Sacrifice resolution (§15.5, S78/S79 — validated 4/4 branches): boss
+; gate; res 14 (packed low pair of $DD2B+slot*7): 3=immune, 2=works only
+; if RNG1<$C0; then RNG2<$7F (49.6%) -> damage = target CURRENT HP
+; (kill, msg $E9) else HP - max(HP/100,1) (~1% survivor, msg $82).
+; $2FE8 returns CURRENT HP, not max (measured S79: 180/250 -> kill 180,
+; survivor 179). Consumes NO RNG steps (reads the ambient state).
+; Caster dies in the state chain. Rig hooks: roll $67DB, out $684E.
+SacrificeResolve_67a9:
     ld hl, $d9ee
     inc [hl]
-    call LoadBtlC_51aa
+    call BossProtectionGate_51aa
     or a
     jp z, Jump_053_6858
 

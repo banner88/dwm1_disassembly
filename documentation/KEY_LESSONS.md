@@ -3056,3 +3056,26 @@ must span it: `(ln, ln+1, …)`. The guard that made this a 2-minute fix
 instead of a corruption: the tool builds and asserts the ORIGINAL_MD5
 before touching anything else, and `git checkout` of the two generated
 files is safe because the tool is idempotent from the clean tree.
+
+## S83 (2026-08-20) — battle-core annotation catch-up (banks $52/$53/$58)
+
+- **"Entry N" prose must be re-derived from the far-call OPERAND, not the dw
+  slot you found the address in.** §15.10.6 said the act-time resolver is
+  "bank $58 entry 4 ($6379)" because $6379 sits in dw slot 4 — but the actual
+  far-call at $53:$522D is `ld hl,$5808` = ENTRY 8 under the rst $10
+  convention (byte-verified at $00:$0020: `add hl,hl; ld h,0; +$4001` → addr
+  = $4001 + 2·L, L = entry index). Entry 8 is a state-keyed queue service
+  that dispatches per-skill through a second, previously invisible table at
+  $58:$401D; $6379 is one of its services. The measurement (hooks at $6379)
+  was right; the call-path attribution was inferred and wrong. When a doc
+  says "entry N", grep the caller's `ld hl` operand before repeating it.
+- **A dw region can be TWO tables.** Bank $58's "245-entry dispatch table"
+  head comment hid the real structure: 14 rst $10 service slots + a 230-dw
+  per-skill table ($401D = slot 14 = skill $00). The tell: rst $10 can only
+  reach L ≤ $7F cleanly, and callers only ever used L ≤ 13, while
+  $58:$54C2 indexes $401D by SKILL ID with `call $0008`. If a table's tail
+  is only ever reached by a different indexing site, split it.
+- Tool-internal: rename collision checks must match label DEFINITIONS
+  (`^name:`), not word occurrences — cross-bank COMMENTS legitimately
+  mention new names before their own bank applies (bit in-session; the
+  multi-bank variant of the S82 single-bank assumption).

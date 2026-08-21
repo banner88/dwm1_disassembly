@@ -1380,7 +1380,7 @@ end bound moved `cp $e9`→`cp $ea`). Announce "used Mourn!"; a boost banner
 multiplier fired. Proxy = `$40` EvilSlash, played **twice** back-to-back.
 
 **The defense-calc dispatch (NEW pattern — second custom trampoline).**
-MagicBurn-class customs run `CustomDispatch52` = `LoadBattle_653e` (the
+MagicBurn-class customs run `CustomDispatch52` = `MegaMagicDamage_653e` (the
 MegaMagic MP-based context) + descriptor + far-call. Mourn needed the
 PHYSICAL damage base instead: `FarSkillFork` returns a *different*
 pointer-holder for `$E9` — `MournDispatchPtr` (`$52:$7FFA`, in the tail pad)
@@ -1666,6 +1666,13 @@ arena / boss-join rows alongside the full heals (45, 47, 163).
 
 ## 15. DAMAGE FORMULAS — traced and differentially validated (S78)
 
+*(S83: the §15 findings are now annotated in-source — banks $52/$53/$58
+carry semantic labels/comments via `tools/resection_battle_core.py`, and
+this section's citations use the post-rename names, e.g.
+`DamageSlot2AdjustFloor_61ec` was `LoadBattle_61ec`, `BossProtectionGate_51aa`
+was `LoadBtlC_51aa`, `TurnOrderKeyRoll_5662` was `SaveBtlFX_5662`. The
+tool header holds the full old→new map.)*
+
 Everything below was read from `disassembly/bank_052.asm` (routine names
 cited), reimplemented exactly in `simulator/damage.py`, and validated by
 replaying PyBoy captures of the real engine through the model:
@@ -1690,7 +1697,7 @@ else base = (ATK - DEF/2) >> 1
     damage = base
 ```
 
-Then `LoadBattle_61ec`: the THIRD party slot (target idx 2; in LINK
+Then `DamageSlot2AdjustFloor_61ec`: the THIRD party slot (target idx 2; in LINK
 battles, idx&3 == 2 of either side) takes **×0.8** — **MEASURED S79** with
 a 3-monster party (rig `--party3`): ti=2 roll 45 at the $61EC waypoint ->
 36 at commit (=45*8//10), ti=1 control unchanged (46 -> 46). NB the $61EC
@@ -1708,7 +1715,7 @@ MetalCut ×1.5+1 iff target metal flag ($DB8B+slot bit0), family cuts
 (DrakSlash class) ×1.5 iff target family matches (Slime 0/Dragon 1/Beast 2/
 Bird 3/Plant 4 via `LookupTargetSpecies`).
 
-### 15.2 Record spells — `StoreDamageResult` ($52:$66D6) + `LoadBattle_679c`
+### 15.2 Record spells — `StoreDamageResult` ($52:$66D6) + `RecordDamageRoll_679c`
 
 `damage = record_min + (RNG1 mod (range+1))` — **no RNG advance, no caster
 stat, and DEF does NOT reduce spell damage** (the S77 open question). Side
@@ -1732,17 +1739,17 @@ Damage multiplier ladders, keyed on target status byte $DB05+slot*8 bits
 | bit6           | 1.0    | 0.75    | 0.4  | 0    |
 | bit7 (amplify) | 1.3125 | 1.15625 | 0.75 | 0.30 |
 
-Breath ladder (`BitCheck_676c` — breaths, BigBang, RockThrow, MegaMagic):
+Breath ladder (`ResLadderBreath_676c` — breaths, BigBang, RockThrow, MegaMagic):
 normal [1, 0.75, 0.4, 0]; bit6 [0.75, 0.5, 0.25, 0]; bit7 = amplify row.
-Elemental slashes (`BitCheck_6782`, after the phys roll): bit6 -> plain
+Elemental slashes (`ResLadderElemSlash_6782`, after the phys roll): bit6 -> plain
 row, otherwise the AMPLIFY row (a 1.3125× bonus vs res-0!).
 
 Hit ladders (RNG1 < threshold after one step): `CheckTargetGuardB` normal
 [always, $D8, $7F, never], bit6 [always, $BF, $66, never], bit7 [always,
-always, $BF, never]. **`BitCheck_6749` (Beat/Defeat/K.O.Dance, ids < $72,
+always, $BF, never]. **`HitLadderBeat_6749` (Beat/Defeat/K.O.Dance, ids < $72,
 and the status helpers) has NO bit6 branch**: bit7 clear -> [$BF, $7F,
 $3F, never] — an unguarded Beat vs res-0 is a 74.6% roll, not a sure hit
-(measured). `BitCheck_6733` (Kamikaze class): normal [always, $BF, $66,
+(measured). `HitLadderKamikaze_6733` (Kamikaze class): normal [always, $BF, $66,
 never].
 
 Element grid: Blaze grp→Fire(0), Firebal→Heat(1), Bang→Explosion(2),
@@ -1751,7 +1758,7 @@ Lightning(4), IceBolt→Ice(5), BigBang→Fire(0), FireAir grp→(16),
 FrigidAir grp→(17), RockThrow→Aid(24), GigaSlash→(25) — GigaSlash is
 RECORD-driven (350-410 party / 270-320 enemy), not handler-scaled.
 
-### 15.4 Boss protection — `LoadBtlC_51aa` (bank $53 entry $10)
+### 15.4 Boss protection — `BossProtectionGate_51aa` (bank $53 entry $10)
 
 `$DB73` is the **battle type**, set by `LoadBtlS_43c9` (bank $51 init):
 arena→2, wild ($DA09==0)→0, scripted w/ wScriptMapType $5D→2, else
@@ -1764,11 +1771,11 @@ reproduce the wild condition).
 
 ### 15.5 Handler-computed specials (all validated unless noted)
 
-- **MegaMagic** (`LoadBattle_653e`): base = 2·MP + 2·level (level array
+- **MegaMagic** (`MegaMagicDamage_653e`): base = 2·MP + 2·level (level array
   `$DB9B+slot`); variance = 0.1×base (((base×8/10)>>1)>>2), one RNG step,
   RNG1&1 odd -> −(RNG16d mod var) else +. vs MegaMagic res (15) through the
   breath ladder. **The §8-era note "(MP*2+level*2)/4" was WRONG** — no /4.
-- **Kamikaze** (`BattleCall_6232`): hit via Sacrifice-res ladder; caster
+- **Kamikaze** (`KamikazeDamage_6232`): hit via Sacrifice-res ladder; caster
   HP==1 -> 1; the fork at `$6259` keys on **$C86C (LINK) or db73==0 (wild)**
   -> damage = target current HP − 1 (floor 1); otherwise — that is BOTH
   boss (db73==1) AND arena (db73==2) — (caster HP − 1)/2. Measured: HP200
@@ -1801,7 +1808,7 @@ $55C2 / $5707).
 
 For each combatant with `$DD13[slot]==2` (command queued; 1 = no-action
 marker, set by the bank $50 command committers), in slot order:
-one `GenerateRNG` step ($00:$12D0), then (`SaveBtlFX_5662`):
+one `GenerateRNG` step ($00:$12D0), then (`TurnOrderKeyRoll_5662`):
 
 ```
 agl  = max(AGL16, 1)
@@ -1813,7 +1820,7 @@ where mod' is repeated subtraction with an exit-on-EQUAL quirk (result
 range is INCLUSIVE [0, span]). Floor: key < 2 -> 2. Action tweaks:
 - queued action in {$2A Ironize, $7F Imitate, $88 Cover, $89 Guardian,
   $8C Dodge, $8D Defence, $8E StrongD, $8F SuckAll, $90 BladeD,
-  $DC IRONIZE} -> **+$0600** (`SetBtlFX_56cf` — defensive interceptions
+  $DC IRONIZE} -> **+$0600** (`TurnOrderDefensiveBoost_56cf` — defensive interceptions
   always resolve first)
 - $55 SquallHit -> **+$0400** total ($0200 inside 5662 + $0200 in the
   main loop) — the "strikes first" behavior
@@ -1842,10 +1849,12 @@ Bank $53 entry 0's per-actor gate order (`$4558-$45C8`): $DB07&$C0 ->
 forced action $11; status +2 bit6 -> $13 (paralyzed); +2 bit7 -> the sleep
 wake roll (§15.8); status +5 bits0-5 one-shots -> actions
 $12/$14/$15/$16/$17/$18; +2 bit5 curse roll (25%: RNG1<$40 -> bank $53
-entry 2 self-hit, can KO); +2 bit4 confusion -> `LoadBattle_7ab5` rewrites
-the queued action (RNG1&3 over table $7AFF {$3A,$5E,$62,$80}; attack picks
-a random target with a cross-side wrap quirk: candidate&3==0 continues at
-absolute slot 2).
+entry 2 self-hit, can KO); +2 bit4 confusion -> `ConfusionActionRewrite_7ab5` (**bank $52** — the
+S79 paragraph placement implied bank $53; clarified S83) rewrites
+the queued action (RNG1&3 over table `ConfusionActionTable_7aff` =
+$52:$7AFF {$3A,$5E,$62,$80}; attack picks a random target with a
+cross-side wrap quirk: candidate&3==0 continues at absolute slot 2 —
+the opposing side base is computed as wBattleAttackerIdx&4 XOR 4).
 
 APPLY step (state 2, `$6D56` -> the id lists at `$6D83-$6DB8` + block
 `$6DB0-$6DE8`): the real gate is descriptor **$DD6F bit5**; id overrides
@@ -2053,11 +2062,22 @@ byte is a TWO-STAGE value. Player-command commits (bank $50 $4B6B) write
 the target SIDE BASE only (0 or 4, from record-field bit4 vs the actor's
 side) — not a slot. At act time, bank $53's own 16-state act-phase
 dispatcher ($51E8; sub-state 0 = $520C) copies the byte to
-wBattleTargetIdx and, iff it is $FF, far-calls **bank $58 entry 4
-($6379) — the concrete-slot resolver**: RNG-slot fishing over $2FA5
-validity — try RNG1&7, then RNG2&7, then (RNG1|RNG2)&7, then further
-mixes, then a decrementing scan from RNG2 until a valid slot answers;
-the chosen slot is written back to $DCED+idx*2. $53:$4799 is the
+wBattleTargetIdx and, iff it is $FF, far-calls **bank $58 entry 8**
+(`BtlQueueFetchService_5498`, `ld hl,$5808` — **CORRECTED S83**, the S81
+write-up said "entry 4"; byte-verified against the rst $10 handler's
+`$4001 + 2·L` computation at `$00:$0020`): a state-keyed queue service
+(act states ≥ $16 fetch + invalidate the target byte; earlier states
+fetch the skill to $DB8A) that dispatches **per skill** through the
+230-dw table `BtlSkillTargetDispatch_401d` ($58:$401D, skills $00-$E5 =
+dw slots 14-243 of the bank head; annotated with skill names S83).
+Known services: `TargetSelfWrite_6367` writes the actor's own index (23
+skills — self-target class, byte-read S83); **`TargetSlotResolver_6379`
+(dw slot 4) is the concrete-slot resolver** the S81 probes measured:
+RNG-slot fishing over $2FA5 validity — try RNG1&7, then RNG2&7, then
+(RNG1|RNG2)&7, then further mixes, then a decrementing scan from RNG2
+until a valid slot answers; the chosen slot is written back to
+$DCED+idx*2. $62BF/$63D6/$634D etc. are further services, semantics
+unlabeled ($63D6 serves $39/$54/$84-$87 and the meta actions $B0+). $53:$4799 is the
 re-resolve trigger (resets the byte to $FF, phase $19) — the observed
 act-time "$FF flip". Group skills never select: bank $52's execution
 loop ($71B5/$71ED) steps the target byte per victim. OPEN: the resolver
@@ -2065,7 +2085,10 @@ has NO side filter ($2FA5 passes any live slot), so either $DD1B is
 side-masked around resolution or another constraint applies — one probe
 outstanding; and the AI-side initial post-commit write site (the value
 observed ~2 frames after commit, plausibly also a side base per the
-bank-$50 pattern) is unconfirmed. Dead-target redirect at act time also
+bank-$50 pattern) is unconfirmed — **BREADCRUMB (byte-verified S83):
+`$50:$4C87` far-calls bank $58 entry 4 (`ld hl,$5804/rst $10`), the ONLY
+direct entry-4 caller in the ROM; strong candidate for this write site,
+NOT yet measured (S70 rule).** Dead-target redirect at act time also
 exists as a first-valid-on-side scan at $53:$47E8→$47FB (path
 conditional; not exercised in the S81 probes).
 

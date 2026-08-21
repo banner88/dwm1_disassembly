@@ -317,7 +317,9 @@ SkillBeat:  ; $41F7
     xor a
     ld [$d9f0], a
     call $5C51
-    jr nc, jr_052_4225
+    jr nc, BtlOutcomeMissPath_4225
+; Beat-outcome HIT path — rig hook waypoint (TOOLS_AND_DATA §2.10).
+BtlOutcomeHitPath_4200:
     ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
@@ -338,7 +340,8 @@ SkillBeat:  ; $41F7
     pop hl
     ret
 
-jr_052_4225:
+; Beat-outcome MISS path — rig hook waypoint (TOOLS_AND_DATA §2.10).
+BtlOutcomeMissPath_4225:
     ld a, $b8
     call ApplySkillDamage
     ret
@@ -1155,7 +1158,7 @@ SkillBeserker:
 SkillKamikaze:
 
 
-    call BattleCall_6232
+    call KamikazeDamage_6232
     call SetHLBattle_54e7
     ret
 
@@ -1524,7 +1527,7 @@ SkillSquallHit:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     ld a, l
     ld [$db56], a
     ld a, h
@@ -1533,6 +1536,9 @@ SkillSquallHit:
     call CheckSkillResistance
     ret
 
+; RainSlash $57 (§15.1): $DD69 = hit counter, 4-HIT CAP MEASURED S79
+; (handler stops at $DD69==5); per-hit x.8/.6/.4/.4 via the DamageMul
+; helpers; dead targets skipped by walking $DB89 within the side.
 SkillRainSlash:
 
 
@@ -1556,15 +1562,15 @@ SkillRainSlash:
     cp $02
     jr z, jr_052_48e3
 
-    call BattleCall_69e1
+    call DamageMul4Tenths_69e1
     jr jr_052_48e6
 
 jr_052_48de:
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     jr jr_052_48e6
 
 jr_052_48e3:
-    call SaveBattle_69d2
+    call DamageMul6Tenths_69d2
 
 jr_052_48e6:
     ld a, l
@@ -1647,7 +1653,7 @@ SkillBigBang:
 SkillMegaMagic:
 
 
-    call LoadBattle_653e
+    call MegaMagicDamage_653e
     call SetHLBattle_54e7
     ret
 
@@ -4152,7 +4158,7 @@ jr_052_56ea:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
     ld a, l
     ld [$db5a], a
     ld a, h
@@ -4287,7 +4293,7 @@ jr_052_57c8:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
     ld a, l
     ld [$db5a], a
     ld a, h
@@ -4763,7 +4769,7 @@ LoadBattle_5ab2:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
     ld hl, $0000
     ret
 
@@ -5071,13 +5077,13 @@ BattleCall_5c51:
 
 jr_052_5c81:
     ld a, [$db4e]
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
 jr_052_5c88:
     ld a, [$db4e]
-    call BitCheck_6733
+    call HitLadderKamikaze_6733
     ret
 
 
@@ -5158,7 +5164,7 @@ jr_052_5cf4:
 
 
 jr_052_5d01:
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -5181,7 +5187,7 @@ SetHLBattle_5d05:
 
 
 jr_052_5d21:
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -5336,7 +5342,7 @@ jr_052_5deb:
 
 
 jr_052_5df8:
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -5395,7 +5401,7 @@ jr_052_5e3c:
 
 BattleTarget_5e3e:
     ld a, [wBattleTargetIdx]
-    call BattleFunc_6a13
+    call UpperStatCapCheck_6a13
     jr nc, jr_052_5e92
 
     jr z, jr_052_5e92
@@ -5418,7 +5424,7 @@ BattleTarget_5e3e:
     ld [hl], a
     ld a, [wBattleTargetIdx]
     push hl
-    call BattleFunc_6a13
+    call UpperStatCapCheck_6a13
     pop hl
     jr c, jr_052_5e90
 
@@ -5544,7 +5550,7 @@ jr_052_5f06:
 
 BattleTarget_5f08:
     ld a, [wBattleTargetIdx]
-    call BattleFunc_6a49
+    call AglUpStatCapCheck_6a49
     jr nc, jr_052_5f5c
 
     ld a, [wBattleTargetIdx]
@@ -5565,7 +5571,7 @@ BattleTarget_5f08:
     ld [hl], a
     ld a, [wBattleTargetIdx]
     push hl
-    call BattleFunc_6a49
+    call AglUpStatCapCheck_6a49
     pop hl
     jr c, jr_052_5f5a
 
@@ -5844,6 +5850,17 @@ jr_052_60d1:
     ret
 
 
+; ============ THE PHYSICAL DAMAGE ROLL (bank $52 entry 5) — §15.1 ============
+; Traced S78, differentially validated 698/698 (simulator/damage.py,
+; validate_damage.py, s78_master_events.json). One BattleRNG step at entry;
+; all later reads reuse it. Three regimes:
+;   A: ATK <= DEF/2            -> damage = RNG1 & 1
+;   B: base=(ATK-DEF/2)>>1 <= ATK>>4 -> RNG16d mod (ATK>>4)  (>>4==0 -> A)
+;   C: var=(RNG16d mod ((base>>3)+1))>>1; RNG2&$0F: 0 none/&8 +var/else -var;
+;      RNG1&3: 0 none/odd +1/even -1; damage = base
+; RNG16d is the LCG state read BYTE-SWAPPED: (RNG2<<8)|RNG1 (S78 rule).
+; The plain attack command IS skill id $3A through this core.
+; DEF does NOT reduce record spells — those roll in RecordDamageRoll_679c.
 CalcSkillDefense:
     call BattleRNG
     ld a, [wBattleTargetIdx]
@@ -5978,7 +5995,7 @@ jr_052_6183:
     ld [$db56], a
     ld a, d
     ld [$db57], a
-    call LoadBattle_61ec
+    call DamageSlot2AdjustFloor_61ec
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6046,7 +6063,12 @@ jr_052_61bd:
     ld a, [wBattleAttackerIdx]
     jr jr_052_6205
 
-LoadBattle_61ec:
+; Post-roll adjust (§15.1): the THIRD party slot (target idx 2; in LINK,
+; idx&3==2 of either side) takes x0.8 — MEASURED S79 (rig --party3:
+; 45 -> 36 = 45*8//10 at commit; ti=1 control unchanged). Then the zero
+; floor: damage==0 -> RNG2&1 (AFTER the slot-2 adjust). A hook here sees
+; the PRE-adjust value (measure_rig waypoint).
+DamageSlot2AdjustFloor_61ec:
     ld a, [$c86c]
     or a
     jr nz, jr_052_61bd
@@ -6068,7 +6090,7 @@ jr_052_6205:
     cp $02
     ret nz
 
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     ld a, l
     ld [$db56], a
     ld a, h
@@ -6079,7 +6101,7 @@ jr_052_6205:
 BattleTarget_6214:
     ld a, [wBattleTargetIdx]
     call GetCombatantHP
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     inc hl
     ld a, l
     ld [$db56], a
@@ -6092,11 +6114,17 @@ BattleTarget_6214:
     ret
 
 
-BattleCall_6232:
+; Kamikaze (§15.5, validated): hit via Sacrifice-res ladder; caster HP==1
+; -> 1. The fork at $6259 keys on $C86C (LINK) or $DB73==0 (wild) ->
+; damage = target current HP - 1 (floor 1); otherwise (boss db73==1 AND
+; arena db73==2) -> (caster HP - 1)/2. Measured: HP200 -> 249 wild,
+; 99 boss (S78), 99 arena (S79). "Arena" in damage-layer forks means
+; the LINK flag throughout — same finding in WindBeastDamage_642b.
+KamikazeDamage_6232:
     call GetTargetBattleSlot
     call BattleFunc_67ca
     and $03
-    call BitCheck_6733
+    call HitLadderKamikaze_6733
     jr nc, jr_052_628b
 
     ld a, [wBattleAttackerIdx]
@@ -6171,7 +6199,7 @@ BattleCall_6298:
     call BattleFunc_67bb
     swap a
     and $03
-    call BitCheck_6782
+    call ResLadderElemSlash_6782
     ret
 
 
@@ -6181,7 +6209,7 @@ BattleCall_62a9:
     call GetBattleStatAddr1
     swap a
     and $03
-    call BitCheck_6782
+    call ResLadderElemSlash_6782
     ret
 
 
@@ -6192,7 +6220,7 @@ BattleCall_62ba:
     rlca
     rlca
     and $03
-    call BitCheck_6782
+    call ResLadderElemSlash_6782
     ret
 
 
@@ -6203,7 +6231,7 @@ BattleCall_62cb:
     rrca
     rrca
     and $03
-    call BitCheck_6782
+    call ResLadderElemSlash_6782
     ret
 
 
@@ -6370,7 +6398,7 @@ jr_052_63a5:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
     call LookupTargetSpecies
     cp $07
     jr nz, jr_052_63ce
@@ -6391,7 +6419,7 @@ jr_052_63ce:
     rlca
     rlca
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6450,6 +6478,11 @@ LoadBattle_641a:
     ld h, $00
     ld b, h
     ld c, l
+; WindBeast (§15.5, validated): 3L+10 party / 1.5L enemy, cap 180;
+; +/- half the (mod-)remainder, sign from the shifted-out bit (exact
+; polarity per skill: simulator/damage.py). Same LINK-flag fork finding
+; as KamikazeDamage_6232.
+WindBeastDamage_642b:
     ld a, [$c86c]
     or a
     jr nz, jr_052_643d
@@ -6605,7 +6638,7 @@ BattleCall_6506:
     call BattleFunc_67d9
     swap a
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6614,7 +6647,7 @@ BattleCall_6514:
     call BattleFunc_67cf
     swap a
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6624,7 +6657,7 @@ BattleCall_6522:
     rrca
     rrca
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6633,11 +6666,15 @@ BattleCall_6530:
     call BattleFunc_67bb
     swap a
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
-LoadBattle_653e:
+; MegaMagic (§15.5, validated): base = 2*MP + 2*level (level array
+; $DB9B+slot); variance = 0.1*base (((base*8/10)>>1)>>2); one RNG step,
+; RNG1&1 odd -> -(RNG16d mod var) else +. vs MegaMagic res (15) through
+; the breath ladder. (The §8-era "(MP*2+level*2)/4" note was WRONG — no /4.)
+MegaMagicDamage_653e:
     ld a, [wBattleAttackerIdx]
     ld e, a
     call GetCombatantMP
@@ -6665,7 +6702,7 @@ LoadBattle_653e:
     ld [$db56], a
     ld a, h
     ld [$db57], a
-    call BattleCall_69e1
+    call DamageMul4Tenths_69e1
     call HLsrl2
     ld a, l
     or h
@@ -6710,7 +6747,7 @@ jr_052_65a7:
     rlca
     rlca
     and $03
-    call BitCheck_676c
+    call ResLadderBreath_676c
     ret
 
 
@@ -6723,7 +6760,7 @@ BattleCall_65b5:
     rlca
     rlca
     and $03
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -6731,7 +6768,7 @@ BattleCall_65c9:
     call GetTargetBattleSlot
     call BattleFunc_67cf
     and $03
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -6740,7 +6777,7 @@ BattleCall_65d5:
     call BattleFunc_67d4
     swap a
     and $03
-    call BitCheck_6749
+    call HitLadderBeat_6749
     ret
 
 
@@ -6760,7 +6797,7 @@ BattleCall_65e3:
     jr jr_052_65fe
 
 jr_052_65fb:
-    call BitCheck_6749
+    call HitLadderBeat_6749
 
 jr_052_65fe:
     ret
@@ -6933,6 +6970,11 @@ LoadBattle_66ba:
     ret
 
 
+; Record-spell roll commit (§15.2): damage = record_min + (RNG1 mod
+; (range+1)) — NO RNG advance, no caster stat, DEF does not reduce.
+; Side selection: party caster record +$0B/+$0D, enemy +$0F/+$11
+; (validated both sides, 69 checks S78). Heals are the same roll
+; (Heal = 30+RNG1%11 both sides; HealAll = 999 -> clamp to max).
 StoreDamageResult:
 ; $52:$66D6 -- the MAIN in-battle skill-magnitude reader. Re-derives the record
 ; index ($db4c) FROM the working skill id ($db8a), selects the side power-field
@@ -6967,7 +7009,7 @@ jr_052_66f4:
     ld l, a
     ld a, [$db4d]
     ld h, a
-    call LoadBattle_679c
+    call RecordDamageRoll_679c
 
 GetTargetBattleSlot:
     ld a, [wBattleTargetIdx]
@@ -7011,7 +7053,8 @@ jr_052_6732:
     ret
 
 
-BitCheck_6733:
+; Hit ladder, Kamikaze class (§15.3): normal [always, $BF, $66, never].
+HitLadderKamikaze_6733:
     bit 6, [hl]
     jr z, jr_052_673c
 
@@ -7032,7 +7075,11 @@ jr_052_6748:
     ret
 
 
-BitCheck_6749:
+; Hit ladder for Beat/Defeat/K.O.Dance, ids < $72, and the status helpers
+; (§15.3): NO bit6 branch. bit7 clear -> [$BF, $7F, $3F, never] — an
+; unguarded Beat vs res-0 is a 74.6% roll, not a sure hit (measured S78).
+; (RNG1 < threshold after one step.)
+HitLadderBeat_6749:
 Jump_052_6749:
     bit 7, [hl]
     jr z, jr_052_6752
@@ -7068,7 +7115,11 @@ jr_052_676b:
     ret
 
 
-BitCheck_676c:
+; Breath-class damage multiplier ladder (§15.3): breaths, BigBang,
+; RockThrow, MegaMagic. Keyed on target status $DB05+slot*8 bits 6/7:
+;   normal [1, .75, .4, 0]; bit6 [.75, .5, .25, 0];
+;   bit7 amplify [1.3125, 1.15625, .75, .30].
+ResLadderBreath_676c:
     bit 6, [hl]
     jr z, jr_052_6775
 
@@ -7089,7 +7140,10 @@ jr_052_6781:
     ret
 
 
-BitCheck_6782:
+; Elemental-slash multiplier ladder (§15.3), applied AFTER the phys roll:
+; bit6 -> the plain row, otherwise the AMPLIFY row — a 1.3125x bonus
+; vs res-0 targets.
+ResLadderElemSlash_6782:
     bit 6, [hl]
     jr z, jr_052_678b
 
@@ -7116,7 +7170,8 @@ jr_052_679b:
     ret
 
 
-LoadBattle_679c:
+; The record min/range fetch + roll used by StoreDamageResult (§15.2).
+RecordDamageRoll_679c:
     ld a, [$db4e]
     or a
     jr z, jr_052_67b2
@@ -7489,7 +7544,7 @@ Jump_052_6921:
     ld l, a
     ld a, [$db57]
     ld h, a
-    call BattleCall_69e1
+    call DamageMul4Tenths_69e1
     ld a, l
     ld [$db56], a
     ld a, h
@@ -7595,7 +7650,8 @@ SaveBattle_69a8:
     ret
 
 
-SaveBattle_69b7:
+; Shared x8/10 damage multiplier (§15.1): RainSlash hit 1, SquallHit, ...
+DamageMul8Tenths_69b7:
     push de
     ld b, h
     ld c, l
@@ -7618,7 +7674,8 @@ SaveBattle_69c6:
     ret
 
 
-SaveBattle_69d2:
+; Shared x6/10 damage multiplier (§15.1): RainSlash hit 2, ...
+DamageMul6Tenths_69d2:
     push de
     ld b, h
     ld c, l
@@ -7630,14 +7687,15 @@ SaveBattle_69d2:
     ret
 
 
-BattleCall_69e1:
-    call SaveBattle_69b7
+; Shared (x8/10)>>1 = x4/10 multiplier (§15.1): RainSlash hits 3-4, ...
+DamageMul4Tenths_69e1:
+    call DamageMul8Tenths_69b7
     call HLsrl1
     ret
 
 
 BattleCall_69e8:
-    call SaveBattle_69d2
+    call DamageMul6Tenths_69d2
     call HLsrl1
     ret
 
@@ -7672,7 +7730,10 @@ SaveBattle_6a01:
     ret
 
 
-BattleFunc_6a13:
+; Upper stat-CAP helper (S79): compares target DEF x2-or-x4 — the cap
+; check for the Upper class. (The old ROADMAP breadcrumb calling
+; BattleFunc_6a13/6a49 "likely flee/order checks" was FALSIFIED S79.)
+UpperStatCapCheck_6a13:
     ld [$db4c], a
     call GetCombatantDEF
     ld bc, $03e7
@@ -7713,7 +7774,9 @@ jr_052_6a45:
     ret
 
 
-BattleFunc_6a49:
+; AglUp stat-CAP helper (S79): compares wBattleAGL x4 capped $01FF.
+; See UpperStatCapCheck_6a13 note (falsified flee/order breadcrumb).
+AglUpStatCapCheck_6a49:
     ld [$db4c], a
     ld hl, wBattleAGL
     call CalcBattle_6ab1
@@ -8146,6 +8209,14 @@ jr_052_6c26:
     ret
 
 
+; ================ BATTLE ACTION MACHINE (bank $52 entry 0) ================
+; Battle phase $07 far-calls here (§15.7, S79): waits on the anim done-flag
+; $DA82, ticks bank $5F entry 5 (ld hl,$5f05/rst $10), then dispatches
+; state $D9ED through the 28-entry inline table BtlActStateTable_6c60
+; (states $00-$1B; the old ROADMAP knew 8). $DB77/$DB78 = the pending
+; actor/action pair; action codes >= ~$BA are META-actions (items/flee/
+; shift — e.g. the AI queues $E9 as a flee-class action), not skill ids.
+BattleActionMachine_6c4d:
     ld a, [$da82]
     or a
     jr nz, jr_052_6c5c
@@ -8159,60 +8230,38 @@ jr_052_6c26:
 jr_052_6c5c:
     ld a, [$d9ed]
     rst $00
-    sbc b
-    ld l, h
-    or d
-    ld l, h
-    ld d, [hl]
-    ld l, l
-    dec hl
-    ld l, [hl]
-    ld [hl], h
-    ld l, [hl]
-    ld d, [hl]
-    ld l, a
-    ld a, [$276f]
-    ld [hl], d
-    ld b, d
-    ld [hl], d
-    ld a, d
-    ld [hl], d
-    ld d, b
-    ld [hl], e
-    ld d, $74
-    ld [hl], h
-    ld [hl], h
-    db $ed
-    ld [hl], h
-    pop af
-    ld [hl], h
-    sub b
-    ld [hl], l
-    sbc c
-    ld [hl], l
-    and e
-    ld [hl], l
-    sbc b
-    ld l, h
-    xor b
-    ld [hl], l
-    or h
-    ld [hl], l
-    or l
-    ld a, [hl]
-    reti
-
-
-    ld a, [hl]
-    sbc $7e
-    reti
-
-
-    ld a, [hl]
-    sbc $7e
-    db $e3
-    ld a, [hl]
-    add sp, $7e
+; 28-entry action-state dispatch table on $D9ED (states $00-$1B) — §15.7
+; (S79; converted from misassembled instructions S83, byte-verified).
+BtlActStateTable_6c60:
+    dw BtlActState0Setup_6c98 ; state 0: per-actor setup — ticks BtlPerActorSetup_44ca (bank $53 entry 0)
+    dw BtlActState_6cb2 ; state 1: enemy-AI decision tick (bank $57 machine, §15.10)
+    dw BtlActState2Apply_6d56 ; state 2: damage APPLY (id-exclusion ladder + HP subtract)
+    dw BtlActState_6e2b ; state 3: routes Sacrifice to bank $53 entry $0D (§15.7)
+    dw Jump_052_6e74 ; state $04
+    dw Jump_052_6f56 ; state $05
+    dw Jump_052_6ffa ; state $06
+    dw BtlActState_7227 ; state $07
+    dw BattleTarget_7242 ; state $08
+    dw Jump_052_727a ; state $09
+    dw BtlActState_7350 ; state $0A
+    dw BtlActState_7416 ; state $0B
+    dw jr_052_7474 ; state $0C
+    dw BtlActState_74ed ; state $0D
+    dw jr_052_74f1 ; state $0E
+    dw BtlActState_7590 ; state $0F
+    dw BtlActState_7599 ; state $10
+    dw BtlActState_75a3 ; state $11
+    dw BtlActState0Setup_6c98 ; state $12: same handler as state 0 (byte-verified duplicate)
+    dw BtlActState_75a8 ; state $13
+    dw BtlActState_75b4 ; state $14
+    dw BtlActState_7eb5 ; state $15
+    dw BtlActState_7ed9 ; state $16
+    dw BtlActState_7ede ; state $17
+    dw BtlActState_7ed9 ; state $18
+    dw BtlActState_7ede ; state $19
+    dw BtlActState_7ee3 ; state $1A: KO state — actor HP hit 0, $D9F1=0 (§15.7)
+    dw BtlActState_7ee8 ; state $1B
+BtlActState0Setup_6c98:
     ld hl, $5300
     rst $10
     ld a, [$d9ed]
@@ -8231,9 +8280,10 @@ jr_052_6c5c:
     jp Jump_052_727a
 
 
+BtlActState_6cb2:
     ld a, [$d9ee]
     cp $0b
-    jr z, jr_052_6cc7
+    jr z, SkillHandlerDispatch_6cc7
 
     cp $10
     jr z, jr_052_6cf2
@@ -8247,7 +8297,10 @@ jr_052_6c5c:
 ; [S45] EFFECT DISPATCH: reads $db8a -> SkillFunctionTable ($4011). The 5 bytes
 ; at $6CD5 (ld hl,$4011/add hl,bc/add hl,bc) are patched to far-call FarSkillFork
 ; (bank $72) for custom-skill dispatch. See BATTLE_SKILL_SYSTEM.md §3.
-jr_052_6cc7:
+; Skill-handler dispatch (§15.7): reached when bank $53 entry 0's setup
+; sub-machine signals $D9EE==$0B; reads the queued skill id and calls
+; through SkillFunctionTable ($4011, 222 entries).
+SkillHandlerDispatch_6cc7:
     ld hl, $d9ee
     inc [hl]
     xor a
@@ -8291,7 +8344,7 @@ jr_052_6cf2:
     jr z, jr_052_6d0a
 
     cp $d5
-    jp nz, Jump_052_6d56
+    jp nz, BtlActState2Apply_6d56
 
 jr_052_6d0a:
     ld a, $04
@@ -8334,7 +8387,16 @@ jr_052_6d20:
     ret
 
 
-Jump_052_6d56:
+; ============ DAMAGE APPLY (action state 2) — §15.7, S79 ============
+; The real apply gate is descriptor $DD6F bit5. The cp ladder at $6D83
+; (ld a,[$db8a]...) is the id-override list — these SKIP the HP subtract:
+;   $1A RobMagic, $75 OddDance, $76 RobDance, $71 K.O.Dance, $94 Hustle,
+;   $12 Beat, $13 Defeat, and the sub-$3A status region except $37/$38;
+;   transformation specials $29/$AA/$D5 branch to their own states.
+; HP subtract floors at 0; result 0 or borrow -> KO state $1A ($D9F1=0).
+; Rig hook pattern: hit path BtlOutcomeHitPath_4200, miss
+; BtlOutcomeMissPath_4225 (TOOLS_AND_DATA §2.10).
+BtlActState2Apply_6d56:
     ld a, [$dd80]
     ld hl, $dd9a
     and [hl]
@@ -8480,6 +8542,7 @@ jr_052_6e26:
     ret
 
 
+BtlActState_6e2b:
     ld a, [$db8a]
     cp $14
     jr z, jr_052_6e60
@@ -8734,7 +8797,7 @@ Jump_052_6f42:
     ld a, c
 
 Jump_052_6f4e:
-    call LoadBattle_7ab5
+    call ConfusionActionRewrite_7ab5
     ret
 
 
@@ -9153,6 +9216,11 @@ jr_052_71aa:
     inc a
     push af
     ld a, [wBattleAttackerIdx]
+; Group-skill execution loop (§15.10.6, S81): group skills never SELECT
+; a target — this loop steps the queue target byte per victim.
+; (patches/bank_052.asm: the S74 Earthquake sweep fork QSweepAfter52
+;  lives in this area of the PATCHED bank.)
+GroupVictimLoopA_71b5:
     ld hl, $dced
     call HL_AddA_x2
     pop af
@@ -9184,6 +9252,8 @@ jr_052_71d7:
     ld a, $01
     ld [$d9ed], a
     ld a, [wBattleAttackerIdx]
+; Second per-victim stepping point of the group-skill loop (§15.10.6).
+GroupVictimLoopB_71ed:
     ld hl, $dced
     call HL_AddA_x2
     ld a, [wBattleTargetIdx]
@@ -9215,6 +9285,7 @@ Jump_052_71f8:
     ret
 
 
+BtlActState_7227:
     xor a
     ld [$d9ed], a
     ld hl, $d9ec
@@ -9387,6 +9458,7 @@ jr_052_733a:
     ret
 
 
+BtlActState_7350:
     ld a, [$da33]
     or a
     jr z, jr_052_735b
@@ -9519,6 +9591,7 @@ jr_052_7408:
     ret
 
 
+BtlActState_7416:
     ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     jr c, jr_052_7428
@@ -9653,6 +9726,7 @@ jr_052_74d5:
     ret
 
 
+BtlActState_74ed:
     call BattleCall_7085
     ret
 
@@ -9783,12 +9857,14 @@ jr_052_758a:
     ret
 
 
+BtlActState_7590:
     call BattleCall_7085
     ld a, $00
     ld [$d9ed], a
     ret
 
 
+BtlActState_7599:
     xor a
     ld [$d9ed], a
     ld a, $01
@@ -9796,11 +9872,13 @@ jr_052_758a:
     ret
 
 
+BtlActState_75a3:
     ld hl, $5301
     rst $10
     ret
 
 
+BtlActState_75a8:
     ld a, [$d9ee]
     rst $00
     db $76
@@ -9811,6 +9889,7 @@ jr_052_758a:
     ld a, l
     ld [hl+], a
     ld a, l
+BtlActState_75b4:
     ret
 
 
@@ -10532,7 +10611,7 @@ LoadBattle_7997:
     ld h, [hl]
     ld l, a
     push hl
-    call SaveBattle_69b7
+    call DamageMul8Tenths_69b7
     inc hl
     ld a, l
     ld [$db5a], a
@@ -10699,14 +10778,19 @@ jr_052_7ab0:
     ret
 
 
-LoadBattle_7ab5:
+; Confusion action rewrite (§15.7, S79): at a confused actor's turn
+; (+2 bit4), RNG1&3 indexes ConfusionActionTable_7aff {$3A,$5E,$62,$80}
+; and overwrites the queued action. The attack pick chooses a random
+; target with a cross-side wrap quirk: candidate&3==0 continues at
+; absolute slot 2 (b = own side base XOR 4 = OPPOSING side).
+ConfusionActionRewrite_7ab5:
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     call HL_AddA_x2
     push hl
     ld a, [wRNG1]
     and $03
-    ld hl, $7aff
+    ld hl, ConfusionActionTable_7aff
     add l
     ld l, a
     ld a, $00
@@ -10754,10 +10838,9 @@ jr_052_7af6:
     ret
 
 
-    ld a, [hl-]
-    ld e, [hl]
-    ld h, d
-    add b
+; Confusion action table (§15.7): RNG1&3 -> {Attack $3A, $5E, $62, $80}.
+ConfusionActionTable_7aff:
+    db $3a, $5e, $62, $80
     rst $38
     push af
     push bc
@@ -11386,6 +11469,7 @@ jr_052_7ea7:
     ret
 
 
+BtlActState_7eb5:
     ld a, $bb
     ld [$c823], a
     xor a
@@ -11404,21 +11488,25 @@ jr_052_7ea7:
     ret
 
 
+BtlActState_7ed9:
     ld hl, $5700
     rst $10
     ret
 
 
+BtlActState_7ede:
     ld hl, $580c
     rst $10
     ret
 
 
+BtlActState_7ee3:
     ld hl, $510f
     rst $10
     ret
 
 
+BtlActState_7ee8:
     ld a, [$c825]
     or a
     ret nz

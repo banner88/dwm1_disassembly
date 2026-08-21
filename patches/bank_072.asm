@@ -93,11 +93,11 @@ CustomBattleExec:
 
 ; -----------------------------------------------------------------------------
 ; SkillMagicBurn ($E0) — the per-skill CUSTOM override, far-called from
-; CustomDispatch52 AFTER it has run LoadBattle_653e (context + base damage) and
+; CustomDispatch52 AFTER it has run MegaMagicDamage_653e (context + base damage) and
 ; SetHLBattle_54e7 (descriptor). So the message/target context is already exactly
 ; MegaMagic's; here we only replace the damage value and charge the real cost:
 ;   spent = currentMP >> 1                  (floor; = damage dealt to each foe)
-;   $db56/57 <- spent                        (OVERRIDES LoadBattle_653e's value)
+;   $db56/57 <- spent                        (OVERRIDES MegaMagicDamage_653e's value)
 ;   wBattleMP[attacker] -= spent             (record+4=0, so the engine deducts none)
 ; Damage is RAW (we set the final $db56; the applier uses it directly). ROM0 + RAM only.
 ; -----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ SkillMagicBurn:
     ld a, l
     ld [$db56], a
     ld a, h
-    ld [$db57], a                       ; OVERRIDE the damage LoadBattle_653e computed
+    ld [$db57], a                       ; OVERRIDE the damage MegaMagicDamage_653e computed
     ; deduct the spent amount from wBattleMP[attacker]
     push hl                             ; save spent (-> DE)
     ld a, [$db88]
@@ -130,7 +130,7 @@ SkillMagicBurn:
 ; -----------------------------------------------------------------------------
 ; SkillTame ($E1/$E2/$E3) [S2e/Stage2] — the custom override for the Tame tier
 ; chain (Tame/TameMore/TameMost share this handler). Far-called from
-; CustomDispatch52 AFTER LoadBattle_653e (context+base dmg) + SetHLBattle_54e7
+; CustomDispatch52 AFTER MegaMagicDamage_653e (context+base dmg) + SetHLBattle_54e7
 ; (descriptor), so target/message context is already set (record = single-foe).
 ; Two effects:
 ;   (1) damage = ATK/4  -> $db56/57   (OVERRIDES the record's 0 power; anti-abuse cap)
@@ -219,7 +219,7 @@ TameMeterTable:
 ;       through CustomRecordPtrTable): damage = min + (wRNG1 mod (range+1)).
 ;   (2) if the TARGET is on the ATTACKER's side (an ally caught in the wave),
 ;       damage /= 3  (integer, subtract-loop).
-;   (3) $db56/57 := damage (overrides LoadBattle_653e's context value).
+;   (3) $db56/57 := damage (overrides MegaMagicDamage_653e's context value).
 ; Flying targets never reach this handler (QuakeSweep72 + the first-target
 ; fork skip them). ROM0 + RAM only; BC/DE free per CustomBattleExec contract.
 ; =============================================================================

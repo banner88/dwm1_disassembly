@@ -17,7 +17,7 @@ SECTION "ROM Bank $058", ROMX[$4000], BANK[$58]
     dw LoadBtlFX_642c                  ; Entry 5
     dw $57C5                          ; Entry 6
     dw $57A4                          ; Entry 7
-    dw LoadBtlFX_5498                  ; Entry 8
+    dw BtlQueueFetchService_5498                  ; Entry 8
     dw $591E                          ; Entry 9  — MeatFeedHandler ($591E): the
                                       ; meat-item ($C2-$C6) recruitment-boost
                                       ; effect (call $5c0b -> result; msg table
@@ -3530,7 +3530,7 @@ jr_058_545b:
     ld a, [hl]
     cp $ff
     call z, WriteBtlFX_54ce
-    call LoadBtlFX_5498
+    call BtlQueueFetchService_5498
 
 jr_058_5478:
     call LoadBtlFX_5a40
@@ -3551,7 +3551,7 @@ jr_058_5478:
     jp Jump_058_53df
 
 
-LoadBtlFX_5498:
+BtlQueueFetchService_5498:
     ld a, [$d9ed]
     cp $16
     jr c, jr_058_54b1
@@ -3650,7 +3650,7 @@ Jump_058_5507:
     ld b, [hl]
     ld c, a
     ld a, e
-    call SaveBtlFX_5662
+    call TurnOrderKeyRoll_5662
     ld a, b
     or a
     jr nz, jr_058_5543
@@ -3663,7 +3663,7 @@ Jump_058_5507:
 
 jr_058_5543:
     ld a, e
-    call SetBtlFX_56cf
+    call TurnOrderDefensiveBoost_56cf
     jr c, jr_058_5561
 
     ld a, e
@@ -3742,7 +3742,7 @@ jr_058_5587:
 jr_058_55b3:
     ld hl, $d9ed
     inc [hl]
-    jr jr_058_55c2
+    jr TurnOrderSort_55c2
 
 LoadBtlFX_55b9:
     ld a, b
@@ -3756,7 +3756,7 @@ SetBtlFX_55be:
     ret
 
 
-jr_058_55c2:
+TurnOrderSort_55c2:
     ld d, $08
 
 jr_058_55c4:
@@ -3865,10 +3865,10 @@ jr_058_5656:
     ld [$db82], a
     ld hl, $d9ed
     inc [hl]
-    jp Jump_058_5707
+    jp TurnOrderCompact_5707
 
 
-SaveBtlFX_5662:
+TurnOrderKeyRoll_5662:
     push hl
     push de
     push af
@@ -3959,7 +3959,7 @@ jr_058_56cc:
     ret
 
 
-SetBtlFX_56cf:
+TurnOrderDefensiveBoost_56cf:
     ld hl, $dcec
     add a
     add l
@@ -4008,7 +4008,7 @@ jr_058_5706:
     ret
 
 
-Jump_058_5707:
+TurnOrderCompact_5707:
     xor a
     ld [$d9ed], a
     ld [$db82], a
@@ -4895,7 +4895,7 @@ LoadBtlFX_5c3e:
     ret
 
 
-    call LoadBtlFX_5498
+    call BtlQueueFetchService_5498
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
