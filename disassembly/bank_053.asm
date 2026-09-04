@@ -4149,6 +4149,20 @@ jr_053_5746:
     ret
 
 
+; [S84] ===== ACT-TIME MISS/DODGE GATE MACHINE (byte-decoded) =====
+; $dcfd/$dcfe = skill record flags7/flags8 cached at act. ONE RNG step
+; (LoadBtlC_4e33; link loads RNG from $C1ED/EE), then ALL gates read the
+; SAME RNG1/RNG2 (correlated rolls — engine quirk):
+;  1. flags7 bit7 + target $db06 bit2 → block route, msg $C1 (bit
+;     semantics unpinned).
+;  2. flags7 bit1 (physical): attacker $db03 bit1 (Surround) → RNG1<$A0
+;     = 62.5% miss; then attacker $db07&$03 → RNG2<$60 = 37.5% miss.
+;  3. flags8 bit7 (dodge-able): target $db07&$0C (Dodge-status) →
+;     RNG1&1==0 = 50% dodge; else AGI ladder on target wBattleAGL:
+;     <$20 → 2/256, <$1C0 → 8/256, >= $1C0 → 43/256.
+; Spells carry none of these record bits → cannot be dodged or
+; surround-missed. The bank $52 twins ($51B3/$51CA) are DEAD CODE
+; (zero references ROM-wide). §15.10.9.
 jr_053_5747:
     ld a, [$dcfd]
     bit 7, a

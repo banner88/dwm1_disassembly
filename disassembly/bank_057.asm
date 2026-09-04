@@ -9033,6 +9033,13 @@ jr_057_6f64:
 
 
 ; State-0 no-carry outcome (flee/loaf class) — untraced (§15.10.7).
+; [S84] NOT flee/loaf — the TACTIC-BIAS path (reached when the obedience
+; gate 7a5d returns no-carry, incl. ALWAYS for party level < 21).
+; Tactic 3 (Command) with $DD72 != $81: queue plain Attack $3A, d9ee=6.
+; Tactics 0/1/2: $db50+tactic := $14 ($2D when $DD72 == $81) — a +20/+45
+; category-score bias (cat1 attack / cat2 support / cat3 heal, consumed
+; in AICategoryScoreCalc_71b9 for player/link slots) — then falls into
+; the category machine. Measured S84. §15.10.7a.
 AIState0AltOutcome_6f8c:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd03
@@ -9638,6 +9645,10 @@ jr_057_72c6:
 
 
 ; Store the rolled category score. §15.10.2 (S80).
+; [S84] score(cat) = adjust($db50/51/52, in c) + base/10 + RNG16 mod div;
+; div = 10 for player slots (<3) and link, else the enemy base ladder
+; <$32→30 / <$64→25 / <$96→20 / else 10. NOTE: $dd72 briefly holds the
+; BASE here (overload — not the plan). Byte-exact S84. §15.10.7a.
 AICategoryScoreStore_72ce:
     push hl
     push de
@@ -10395,6 +10406,15 @@ SetBtlAI_76cd:
 
 ; $dd0b==0 lightweight picker — no per-skill RNG; observed choosing by
 ; top-category tag match (EID 37); tail untraced (§15.9).
+; [S84] FULL DECODE (supersedes "tail untraced"): weights $db61+ =
+; (RNG1&7)+1 per option whose tag == chosen category d; for d != 2 an
+; implicit extra candidate ($db69 if d==1 else $db6a) = (RNG2&7)+1.
+; e==0 & d==2 → $dd02++ and re-read next rank cell (SELF-HEALING —
+; measured; NOT a stall); e==0 & d==3 → Cautious check → $8D else $3A;
+; e==0 otherwise → $3A. Else argmax (ties: later wins); winner index 8 →
+; $3A, 9 → weak-heal path, else skill id from the option list. Commit
+; via SetBtlAI_76cd, then FALLS THROUGH into 77a4 (its ret ends the
+; picker — intentional tail). §15.10.10.
 AILightweightPick_76df:
     ld b, $0a
     ld hl, $db61
@@ -10562,6 +10582,8 @@ jr_057_77a0:
 
 ; cat3 epilogue when best skill score < $14: extra checks (internals
 ; untraced) that can retry, fall back to Attack $3A, or queue Defence $8D. (S80)
+; [S84] Decoded: simply "$DD03[idx] == 2" — i.e. IS THE TACTIC CAUTIOUS.
+; Z = Cautious. §15.10.9/§15.10.10.
 AICat3WeakHealCheckA_77a4:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd03
@@ -10798,6 +10820,9 @@ LoadBtlAI_78ce:
     ret
 
 
+; [S84] a = $DD03[idx] (low bits = TACTIC 0-3): seeds $db4c for the
+; obedience decide from the tactic's category base — 0→$DC44, 1→$DC4C,
+; 2→$DC54, 3 (Command)→0. Scaled /10 via LoadBtlAI_78ce. §15.10.7a.
 CmpBtlAI_78d4:
     cp $03
     jr z, jr_057_78e5
@@ -11146,6 +11171,12 @@ jr_057_7a59:
 ; State-0 decision: carry -> clear the $DCEC pair to $FFFF, set bit6 of
 ; $DD03[idx], run the machine (plan $81 diverts at AIPlanCommandDivert_714e);
 ; no-carry -> AIState0AltOutcome_6f8c. §15.10.7 (S80).
+; [S84] The OBEDIENCE GATE, on wBattleLVL low byte: 0 or < $15 (21) →
+; no-carry (the $6F8C tactic-bias path — low-level party monsters ALWAYS
+; take it); >= $F0 → carry (act unbiased; enemy init forces LVL=$00FF so
+; enemies always act). Between: carry iff $db4e+$db4f > $db4c+c
+; ($db4e = LVL/4, $db4f = banded RNG, $db4c = 78d4 tactic seed).
+; §15.10.7a.
 AIPreambleDecide_7a5d:
     ld a, [wBattleAttackerIdx]
     add a

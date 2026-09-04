@@ -1265,6 +1265,13 @@ jr_051_47a3:
     ret
 
 
+; [S84] PARTY-side $DD0B (AI mode) assignment at init: 16-bit wBattleINT
+; compare — < $14 → 0 (lightweight), < $B3 → 1 (full), else 2 (finisher).
+; NOTE the ENEMY-side twin (~$48B6 below) uses the INT LOW BYTE ONLY with
+; thresholds $15/$B5 (off-by-one asymmetry; boundary-measured S84:
+; INT 20→0, 21→1, 65→1, 185→2). Vanilla max INT = 255 so the lo-byte
+; wrap never fires; authored enemies with INT >= 256 wrap their AI mode
+; (editor validation note). §15.10.10.
 SaveBtlS_47a5:
     push bc
     ld a, c

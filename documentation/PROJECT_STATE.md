@@ -10,7 +10,44 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-08-20 (Session 83 — **ANNOTATION CATCH-UP part 2
+> Last verified: 2026-09-03 (Session 84 — **S81-remainder measurements +
+> CRASH FOUND AND FIXED in the S74/S75 custom-skill dispatch.**
+> BtlSkillTargetDispatch_401d (230 rows, $00-$E5, abuts the $41E9
+> service) has NO bounds check in BtlQueueFetchService_5498; AI-committed
+> ids > $E5 far-jump through code bytes (E6→$5621, E7→$01DB, E8→$0008,
+> E9→$CDAF = WRAM execution — reproduced live: tactics AI committing
+> Mourn from the hacked save's starter). S74/S75 verification missed it
+> because rigs FORCE queues, bypassing the commit-time dispatch.
+> **Fix: DispatchBoundsStub** — same-size call-site replacement $54C2 →
+> stub at $694F free space ($E6-$E8 → $6367 like E5's slack row; $E9 →
+> $41E9 attack service; $EA+ → $6367). 40 changed bytes in bank $58 + 2
+> header checksum bytes; byte-diff verified surgical. Emulator-verified
+> (forced E9-only and E6-only movepools → clean AI commits, correct
+> targets, full battles with damage). Patched test ROM (S84, "patched"
+> md5 `b99455d67012e2f451cd5ed96a5020a1`) delivered. **USER-CONFIRMED
+> S84: Mourn activates via tactics AI under Charge on the real save**
+> (the pre-fix hard-freeze path). Quake ranks $E6-$E8: fix built +
+> PyBoy-verified, NOT yet user-tested. Enemy-side uses the identical
+> shared service (not reachable in normal play — no vanilla enemy
+> movepool holds ids > $E5).
+>
+> S81-remainder decodes (measured + byte-verified; owning §15.9/15.10.7a-
+> .10.10, KEY_LESSONS S84, known_RAM_map rows DD03/DD0B/DB50-53/DB61):
+> commit-time target write site = entry 8 itself (frame-exact; the S83
+> $50:$4C87 breadcrumb was the player Massacre path; $6379 side-blind BY
+> DESIGN); $dd0b per-slot INT ladders both sides incl. the enemy lo-byte
+> quirk (boundary-measured 20/21/65/185); the TACTICS mechanism ($DD03
+> nibble = tactic 0-3, +20/+45 category bias via $6F8C, obedience level
+> gate <21/≥$F0, score formula, $7997 4x27 table extracted); MISS/dodge
+> act-time gate machine in bank $53 (Surround 62.5%, $db07&3 37.5%,
+> Dodge-status 50%, AGI ladder 2/8/43 per 256; flags7/flags8 record bits;
+> $52 twins DEAD CODE; $DA33 = presentation countdown only); plain-attack
+> targeting $41E9/$441B full decode, rolls verified 4/4 (50/33/17
+> front-weighted); lightweight picker full decode incl. self-healing
+> empty-category cursor walk; 77a4 = "tactic==Cautious". Group-cast→$3A
+> round-conversion rule observed, MP-gate hypothesis FALSIFIED, rule
+> untraced. Loop-level battle.py validation still OPEN (ROADMAP).
+> Verifier PASS 6/6; clean `1ca6579…` unchanged.)
 > (Iron Rule 6 gate CLEARED): the battle core — banks $52/$53/$58 — is
 > now annotated in source.** Byte-neutral: labels/comments/data-resection
 > only; verifier PASS 6/6; clean `1ca6579…` unchanged; patched build
@@ -264,7 +301,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). Remaining: custom monster POOLS (Encounters #2, ROADMAP). | CROSSBANK_ROOMS; KEY_LESSONS S11 |
 | Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). B9 11th-family icon shipped; tab wiring open. | BREEDING_SYSTEM; ROADMAP Phase 2B |
-| Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed), Earthquake chain $E5-$E8 (S74, PyBoy-verified, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; PyBoy-verified, NOT yet user-tested)** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. | BATTLE_SKILL_SYSTEM §12–§13.8, §14; ROADMAP Arc 2 |
+| Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed), Earthquake chain $E5-$E8 (S74; **S84: AI-commit of $E6-$E8 was CRASH-CAPABLE on all pre-S84 builds** — dispatch-table overrun, fixed by DispatchBoundsStub; PyBoy re-verified S84, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; **S84: AI-commit was CRASH-CAPABLE (wild jump to WRAM) on all pre-S84 builds** — fixed S84; AI-commit activation USER-CONFIRMED on the real save (Charge tactics))** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. | BATTLE_SKILL_SYSTEM §12–§13.8, §14; ROADMAP Arc 2 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; NOT yet user-tested)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual) | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66 | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
 

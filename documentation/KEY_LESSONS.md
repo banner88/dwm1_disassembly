@@ -3079,3 +3079,56 @@ files is safe because the tool is idempotent from the clean tree.
   (`^name:`), not word occurrences — cross-bank COMMENTS legitimately
   mention new names before their own bank applies (bit in-session; the
   multi-bank variant of the S82 single-bank assumption).
+
+## S84 — AI residuals, tactics decode, dispatch-table crash + fix
+
+### BtlSkillTargetDispatch_401d has NO bounds check — ids > $E5 wild-jump
+**Symptom**: battle hard-hangs (PC executing WRAM, observed parked at $C1E2 in
+the $C1E0 menu save-buffer) the first time the tactics AI naturally committed
+Mourn ($E9) from the hacked save's starter movepool.
+**Root cause**: BtlQueueFetchService_5498 (bank $58 entry 8) computes
+`$401D + 2*id` and RST_08-dispatches with no range check. The table has 230
+rows ($00-$E5) and abuts the $41E9 Attack service, so out-of-range ids read
+CODE BYTES as pointers: E6->$5621, E7->$01DB, E8->$0008, E9->$CDAF (WRAM).
+Vanilla slack rows $DE-$E5 all hold $6367 (TargetSelfWrite) — which is why
+E4 Anchor / E5 Tremor AI-commits "worked" (self-target) while E6-E8 Quake
+ranks and E9 Mourn crashed.
+**Why S74/S75 verification missed it**: the measurement rigs FORCE the queue
+per-frame, bypassing the AI commit that triggers the commit-time dispatch
+(entry-8 at act-state 3). The hole only fires when the AI itself commits an
+out-of-range id — first possible on a save whose party knows one.
+**Fix (S84; Mourn AI-commit path USER-CONFIRMED on the real save —
+Charge tactics; Quake ranks PyBoy-verified, not yet user-tested)**:
+same-size call-site replacement at
+$54C2 -> DispatchBoundsStub in bank-$58 free space ($694F): in-range ids keep
+the exact vanilla index math; $E6-$E8 -> $6367 (matching E5's slack row);
+$E9 -> $41E9 attack-target service; $EA+ -> $6367 (harmless, no wild jump).
+Emulator-verified: forced E9-only and E6-only option lists -> AI commits,
+stub .custom route fires where the wild jump used to, targets $04/own-idx
+respectively, battles complete with damage.
+**Rules**:
+- Any new custom skill id > $E5 is AI-commit-CRASH-capable unless routed in
+  DispatchBoundsStub (or the table is relocated). Editor validation must
+  enforce dispatch coverage for every id reachable from any movepool.
+- Likely also the true mechanism of the S79 "enemy queues $E9 and stalls"
+  wreck (flee-meta code = $E9 on vanilla id space) — HYPOTHESIS, not yet
+  measured: the vanilla flee path may bypass entry 8; needs a trace or
+  SameBoy session before rewriting the S79 entry.
+
+### The "vanilla tactics stall" scare was wrong — the lightweight picker self-heals
+An apparent livelock when forcing tactics (Mixed on a monster with no cat2
+options) was chased through three wrong theories (bit6 clobber, sandbox
+slowdown, $76A9 retry storm). Measured truth: the lightweight picker
+(AILightweightPick_76df) handles an empty biased category by `$dd02++` and
+re-reading the next rank cell — actor commits cleanly from the next category
+(dd02 3->4 observed, then commit). The real hang was the E9 dispatch crash
+above, reached because the option-weight RNG picked Mourn. **Rule**: a hang
+with a frozen frame counter means PC may be outside ROM — sample PC from a
+watchdog thread (p.register_file.PC) before theorizing about AI loops. A
+run that dies with NO hook events and NO output is the same signature.
+
+### Rig lesson: per-frame forcing of $DD03 is safe only with bit6 preserved
+The preamble sets bit6 of $DD03[idx] as its "committed" flag; per-frame
+forcing must RMW (`(old & $C0) | tactic`) or the machine re-enters state 0
+forever. (This was a real bug in the first probe even though it wasn't the
+final hang cause.)

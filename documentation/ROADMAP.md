@@ -1463,29 +1463,36 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       (`validate_rules.py` + `s81_sweep_corpus.json`); vanilla bug found
       + user-flagged as romhack enemy-AI fix candidate ($4E36
       non-incrementing AoE scan). §15.10.5 rewritten.
-      ◐ enemy target resolution ~2/3: act-time resolver =
-      TargetSlotResolver_6379 RNG-slot fishing, reached via $58 entry 8
-      per-skill dispatch (S83 correction); queue byte = side base at
-      commit; OPEN: resolver side-constraint probe ($DD1B masking
-      suspected) + AI-side initial post-commit write site — **S83
-      breadcrumb: $50:$4C87 is the ROM's only direct entry-4 far-call;
-      probe it first** (§15.10.6 note).
-      Still open: $dd0b assignment at init, lightweight-picker tail
-      ($76DF), state-0 flee/loaf branch ($6F8C) + w[3] semantics, cat3
-      weak-heal checks ($77A4/$77B4), bank $58 entry 11 internals, the
-      player-side control variants (direct commands vs arena tactics
-      Charge/Mixed/Cautious/Passive — $DB50-52 plan adjusts; user
-      behavior anchors S81: Charge=phys+atk-skills/some breath,
-      Mixed=status effects, Cautious/Passive=defend-or-heal with
-      guard-over-heal at low ally HP observed, Command/GO after
-      first command=physical only via the $714E plan-$81 divert),
-      meta-action codes, loop-level differential validation of
-      simulator/battle.py, small rule residuals (§15.9: $4DF9
-      condition, Shut/util pass-branches, SuckAir/Surge presumptions).
-      Also still open from S79: $DB07 timer statuses, +2 bit1 DoT
+      ✔ S84: enemy target resolution CLOSED (commit-time write site =
+      entry 8 itself, frame-exact; $6379 side-blind BY DESIGN =
+      Massacre-class; $4C87 breadcrumb resolved = player Massacre path);
+      $dd0b init assignment CLOSED (per-slot INT ladders both sides,
+      boundary-measured, enemy lo-byte quirk = editor validation note);
+      tactics CLOSED ($DD03 nibble tactic 0-3, +20/+45 category bias via
+      $6F8C, obedience level gate, $7997 table extracted — the "$DB50-52
+      plan adjusts" hypothesis confirmed-with-mechanism; user anchors
+      match: Cautious biases cat3-heal, 77a4 IS the Cautious check);
+      lightweight picker tail CLOSED (full decode incl. self-healing
+      empty-category cursor walk); MISS/dodge CLOSED (bank $53 act-time
+      gate machine, thresholds byte-exact; $DA33 = presentation only;
+      $52 twins dead code). §15.10.7a-.10.10.
+      ✔✚ S84 CRASH FIX: dispatch-table bounds guard (DispatchBoundsStub)
+      for AI-committed ids > $E5 — built, PyBoy-verified, NOT yet
+      user-tested (PROJECT_STATE S84, KEY_LESSONS S84).
+      Still open: **loop-level differential validation of
+      simulator/battle.py (the remaining big rock)**; group-cast→$3A
+      round-conversion rule (observed S84, MP-gate falsified, untraced);
+      state-0 TRUE-loaf branch runtime sighting ($6f64 codes $98/$8D);
+      mode-2 finisher variant $448A internals; $7997 table consumption
+      point; bank $58 entry 11 internals; meta-action codes (vanilla
+      flee $E9 vs custom Mourn id COLLISION — vanilla flee path
+      reachability unmeasured, SameBoy candidate); small rule residuals
+      (§15.9: $4DF9 condition, Shut/util pass-branches, SuckAir/Surge
+      presumptions). Also still open from S79: $DB07 timer-status
+      WRITERS/tick (consumers now decoded §15.10.9), +2 bit1 DoT
       applier (S81 candidate: skill $6D per the $4702 heavy-DoT trio),
       curse self-hit magnitude (bank $53 entry 2), sleep-application
-      writer, MISS/dodge + $DA33.
+      writer; $db06 bit2 semantics, LoadBtlC_5857 condition.
 - [ ] S80 — pacing layer (**gate CLEARED S83 — unblocked**):
       TTK sweeps over gate encounter tables for the
       romhack + randomizer profiles; wire into `randomizer/profile_check`.

@@ -402,6 +402,18 @@
    1:DB4C   9    (during phase 5 only) turn-order ID array parallel to
                  $DB61; compacted into $DB79. Outside phase 5 this is the
                  record-lookup index / text-param area (see below).
+   1:DB50   3    (AI state-0/1 window) tactic category-score adjusts
+                 (cat1/cat2/cat3), consumed by AICategoryScoreCalc_71b9 for
+                 PLAYER/link slots only. Zeroed in the preamble; $6F8C
+                 writes $db50+tactic := 20 (45 under plan $81). HEAVILY
+                 OVERLOADED elsewhere: bank $50 text-param ($c180 buffers),
+                 bank $58 24-bit accumulator scratch. §15.10.7a. [S84]
+   1:DB53   1    Act/loaf threshold from the 4x27 tactics table $57:$7997
+                 (values 5..25); consumption point unpinned. [S84]
+   1:DB61  10    (AI state-5 lightweight picker overload of the turn-order
+                 KEY array above) per-option RNG weights (RNG&7)+1;
+                 $db69/$db6a = implicit cat1-attack / other extra
+                 candidates. [S84]
    1:DB77   1    Pending-action ACTOR (bank $53 entry 0 -> $52 announce
                  flow; $FF = consumed). [S79]
    1:DB78   1    Pending-action CODE: skill id, or >= ~$BA = META action
@@ -486,12 +498,18 @@
                  partial sort AICategoryRank_7322. §15.10.3. [S80]
    1:DD02   1    AI rank cursor: 3 = rank1; $76A9 retry increments WITHOUT
                  BOUND — the S79 stall root cause. [S80]
-   1:DD03   8    Per-combatant AI decision flags: bit6 set when the state-0
-                 preamble commits to running the machine; ==3 diverts plan
-                 $81 "Command" to the direct path. Partial. [S80]
+   1:DD03   8    Per-combatant TACTIC + flags: low bits = tactic (0 Charge /
+                 1 Mixed / 2 Cautious / 3 Command), from the record byte's
+                 high nibble at battle init (bank $51 ~$47E0; low nibble ->
+                 $DB93). bit6 set when the state-0 preamble commits to
+                 running the machine. ==3 diverts plan $81 "Command" to the
+                 direct path. Link exchanges quads DD03[0-3]/DD07[0-3] via
+                 $C1DA/$C1EA. §15.10.7a. [S80/S84]
    1:DD0B   8    Per-combatant AI mode: 0 lightweight direct picker ($76DF),
                  1 full weighted machine, 2 finisher-augmented (MaxHP/6 scan).
-                 Assignment at battle init untraced. [S80]
+                 Assigned at battle init from INT: party 16-bit <$14/<$B3
+                 ladder (SaveBtlS_47a5), enemy INT LOW BYTE <$15/<$B5
+                 (~$51:$48B6; boundary-measured S84). §15.10.10. [S80/S84]
    1:DD26   2    AI evaluator suitability accumulator (16-bit, +$0A rule
                  bumps; high byte $FF = veto). Also carries the bank $58
                  entry 11 plain-attack score in the cat-1 epilogue. [S80]

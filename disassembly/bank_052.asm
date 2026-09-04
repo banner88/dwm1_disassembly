@@ -3152,6 +3152,9 @@ LoadBattle_519e:
     ret
 
 
+; [S84] DEAD CODE (with its $db07-dodge twin below): no call/jp/rst/dw
+; references anywhere in the ROM. The LIVE surround-miss + dodge rolls
+; are the bank $53 act-time gate machine at $5747-$57F5 (§15.10.9).
     call BattleRNG
     scf
     ccf

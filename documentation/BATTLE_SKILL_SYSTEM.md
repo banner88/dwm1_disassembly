@@ -1899,25 +1899,39 @@ RNG1 <= threshold by counter {3: $60 = 37.9%, 2: $A0 = 62.9%, 1: $E0 =
 88.0%, 0: always}; else the 2-bit counter decrements (floor 0) and the
 turn becomes the "asleep" action $0F. No RNG step consumed.
 
-### 15.9 What is NOT yet modelled (S81 partial; residuals open)
+### 15.9 What is NOT yet modelled (S84 partial; remaining residuals)
 
 Loop-level differential validation of `simulator/battle.py` (components
-engine-exact, glue traced-only); MISS/dodge + $DA33 timer interplay;
-meta-actions beyond the option-list observation (flee $E9 class, items,
-shift — the state-0 preamble consumes w[3], §15.10.7); enemy
-TARGET resolution (queued target stays $FF at commit; resolved later,
-site untraced); $dd0b mode assignment at battle init; the player/tactics
-plan-adjust values $DB50-52 under each plan; the $DB07 timer statuses and
-the +2 bit1 applier (S81 note: skill $6D is in the heavy-DoT rule trio
-$67/$6C/$6D — candidate applier, unverified); curse self-hit magnitude
-(bank $53 entry 2); sleep application counter source; PsycheUp
-carry-over; interception redirects. AI rule chains are DONE (S81,
-§15.10.5, model `simulator/ai_rules.py` 240/240 vs sweep corpus) except
-small residuals: $4DF9's condition (+5, fired for FloraMan only —
+engine-exact, glue traced-only) — still the big open item. Remaining
+smaller residuals: meta-actions beyond the option-list observation
+(flee $E9 class on the VANILLA id space, items, shift — the state-0
+preamble consumes w[3], §15.10.7; note the id collision with custom
+Mourn $E9, §15.10.8); the $DB07 timer statuses' WRITERS and tick model
+(their act-time CONSUMERS are now decoded, §15.10.9) and the +2 bit1
+applier (S81 note: skill $6D is in the heavy-DoT rule trio $67/$6C/$6D —
+candidate applier, unverified); curse self-hit magnitude (bank $53
+entry 2); sleep application counter source; PsycheUp carry-over;
+interception redirects; $db06 bit2 semantics (the flags7-bit7 block
+route, §15.10.9); LoadBtlC_5857's target condition; the mode-2 finisher
+variant of plain-attack targeting ($58:$448A — HP-vs-damage-estimate
+compare, partially decoded S84); the exact rule converting a 2nd+
+group-skill cast in the same round to plain Attack (observed S84 across
+2 rounds x 2 actors with MP forced — MP-gate hypothesis FALSIFIED;
+single enemy never converts; rule untraced). AI rule chains are DONE
+(S81, §15.10.5, model `simulator/ai_rules.py` 240/240 vs sweep corpus)
+except small residuals: $4DF9's condition (+5, fired for FloraMan only —
 omitted from model with note); DanceShut/MouthShut/DeMagic/ThickFog
 pass-conditions (veto branches measured, pass branches untraced —
 modelled as conservative veto); SuckAir $4ACC own-MP-full semantics
 static-presumed; Surge +15 presumed.
+
+CLOSED by S84 (measured + byte-verified, details in §15.10.6/8/9/10):
+enemy target resolution write site; $dd0b INT ladders (both sides,
+boundary-measured); tactics mechanism ($DD03 nibble, $DB50-52 bias
+writes, obedience level gate, $7997 table); MISS/dodge (the bank $53
+act-time gate machine — $DA33 is only a presentation frame-countdown,
+no outcome relevance; the bank $52 twins at $51B3/$51CA are DEAD CODE,
+zero references ROM-wide).
 
 **Hazard for the romhack (S79 finding, ROOT CAUSE FOUND S80):** the AI
 re-roll loop lives at $57:$76A9: on an all-vetoed/all-zero pick it does
@@ -2100,3 +2114,111 @@ AIPreambleDecide_7a5d: carry → clear $DCEC pair to $FFFF, set bit6 of
 $DD03[idx], run the machine (plan $81 "Command" diverts to the direct
 path via $DD03[idx]==3 at $714E); no-carry → alternate outcome at
 $6F8C (flee/loaf class, untraced).
+
+**15.10.7a S84 corrections + full decode of the preamble path.** The
+$6F8C "flee/loaf" reading was wrong — decoded + measured S84:
+
+- **$DD03[idx] low bits = the per-monster TACTIC (0 Charge / 1 Mixed /
+  2 Cautious / 3 Command)**; bit6 remains the preamble "committed" flag.
+  Assigned at battle init (bank $51 per-slot copy, ~$47E0 family): the
+  monster record byte's HIGH nibble `and $03` → $DD03[slot]; the LOW
+  nibble → $db93[slot]. Link mode exchanges the two quads $DD03[0-3] /
+  $DD07[0-3] via $C1DA/$C1EA (bank $50 $558/$665).
+- **AIPreambleDecide_7a5d is the obedience gate**, on wBattleLVL low
+  byte: 0 or < $15 (21) → ALWAYS the $6F8C path; ≥ $F0 → always carry
+  (act unbiased). Enemy init forces wBattleLVL=$00FF, so enemies always
+  take the carry path. Between: carry iff $db4e+$db4f > $db4c+c, with
+  $db4e = LVL/4 ($7a03), $db4f = banded RNG ($7a16), $db4c seeded per
+  tactic by CmpBtlAI_78d4 (tactic 0→$DC44 cat1 base, 1→$DC4C, 2→$DC54,
+  3→0), scaled /10 (LoadBtlAI_78ce).
+- **$6F8C is NOT loaf — it is the tactic-bias path**: tactic 3 with
+  $DD72≠$81 queues plain Attack $3A directly (post, d9ee=6); tactics
+  0/1/2 write **$db50+tactic := $14 (20), or $2D (45) when $DD72==$81**,
+  then fall into AIState1CategoryScores_7129 — i.e. tactics act as a
+  +20/+45 score bias into their category (cat1 attack / cat2 support /
+  cat3 heal), consumed only for player/link slots in
+  AICategoryScoreCalc_71b9. Measured live: forced-tactic runs show the
+  bias written per-actor between state 0 and state 1. So low-level
+  party monsters follow tactics via the bias; monsters past the
+  obedience gate run the machine UNBIASED. TRUE loaf ($6f64 →
+  SetBtlAI_7f5f: $98 if all three cat bases < $3F, else $3A if cat1
+  dominant ≥ $3F, else Defence $8D) is reached from a different branch
+  (writer path byte-read; runtime sighting of $98/$8D still pending).
+- **Score formula (AICategoryScoreStore_72ce, byte-exact):**
+  score(cat) = adjust($db50/51/52) + base/10 + (RNG16 mod div), where
+  div = 10 for player slots (<3) and link, else the enemy base ladder
+  <$32→30, <$64→25, <$96→20, else 10. NOTE $dd72 is OVERLOADED here
+  (briefly holds the base for the ladder — not the plan).
+- **Act/loaf threshold table $57:$7997** (data misdisassembled as code
+  after AICategoryRank_7322's block): 4 tactics × 27 bytes, indexed
+  27*tactic + cat1row(0/9/18) + cat3*(0/3/6) + cat2*(0/1/2), values
+  ∈ {5,10,15,20,25} → $db53. Consumption point in the decide chain
+  still to pin.
+
+**15.10.8 Commit-time target write + dispatch bounds (S84).** The S81
+open "AI post-commit target write site" is CLOSED: it is **bank $58
+entry 8 (BtlQueueFetchService_5498) itself, called at commit time
+(act-state 3, from $53:$47D1)** — frame-exact: AI post at f, fetch at
+f+1, target written f+2, through the SAME per-skill table
+BtlSkillTargetDispatch_401d that serves act-time resolution. Normal
+skills get the opposite side base; self-class rows (TargetSelfWrite_6367)
+get own index. $50:$4C87 is unrelated: LoadBtl_4bd1 is the per-skill
+PLAYER-commit dispatcher and $4C87 is its Massacre ($3F) branch
+(swap-in actor → call TargetSlotResolver_6379 directly → restore).
+**$6379 is side-blind BY DESIGN** — it is the Massacre-class resolver;
+every $DD1B writer ROM-wide is a life-state mark (no side masking
+exists). The dispatch table has NO bounds check and 230 rows ($00-$E5)
+abutting the $41E9 service: ids > $E5 read code bytes as pointers
+(E6→$5621, E7→$01DB, E8→$0008, E9→$CDAF WRAM — the S84 crash via
+AI-committed Mourn). **Fixed S84** (built, NOT yet user-tested):
+same-size call-site replacement at $54C2 → DispatchBoundsStub ($694F
+free space): in-range = vanilla math; $E6-$E8 → $6367 (matches E5's
+slack row); $E9 → $41E9; $EA+ → $6367. Vanilla slack rows $DE-$E5 all
+hold $6367. Custom-skill rule: any id > $E5 needs a DispatchBoundsStub
+route (editor validation requirement).
+
+**15.10.9 MISS/dodge — the act-time gate machine (S84, byte-decoded;
+gate order measured only via its crash-free traversal, thresholds
+byte-exact).** Lives in bank $53 act flow (~$5747-$57F5); $dcfd/$dcfe
+are the skill record's flags7/flags8 cached at act. One RNG step
+(LoadBtlC_4e33; link mode loads RNG from $C1ED/EE), then ALL gates read
+that same RNG1/RNG2 (correlated rolls):
+1. flags7 bit7 + target $db06 bit2 → block route (msg $C1); semantics
+   of the status bit unpinned.
+2. flags7 bit1 (physical class): attacker $db03 bit1 (Surround, set by
+   SkillSurround) → RNG1 < $A0 = 62.5% miss; then attacker $db07 & $03
+   → RNG2 < $60 = 37.5% miss.
+3. flags8 bit7 (dodge-able): target $db07 & $0C (Dodge-status class) →
+   RNG1 & 1 == 0 = 50% dodge; else the **AGI dodge ladder** on target
+   wBattleAGL: < $20 → 2/256, < $1C0 → 8/256, ≥ $1C0 → 43/256 (16.8%).
+Record semantics verified across classes: all physicals (Attack $3A,
+Beserker, Massacre, HighJump, FireSlash…) carry f7b1+f7b7+f8b7; all
+spells (Blaze, Firebane, Beat, Surround…) carry none → spells cannot
+be dodged or surround-missed. The bank $52 twins ($51B3/$51CA) are
+DEAD CODE (zero call/jp/rst/dw references ROM-wide). $DA33 is a
+per-phase presentation frame-countdown only. AICat3WeakHealCheckA_77a4
+= simply "$DD03[idx]==2" (tactic Cautious); 77b4 = side HP-need scan
+(LoadBtlAI_77f5/7828 internals unpinned).
+
+**15.10.10 Plain-attack targeting $41E9/$441B (S84, byte-decoded +
+roll-verified 4/4).** Enemy path ($441B): $DD0B[attacker] mode 2 →
+finisher variant $448A (HP vs damage-estimate; partially decoded);
+modes 0/1 → enumerate live opposing slots via $5E5B/$5E75 into the
+$DB4C map, then front-weighted pick: 3 live → RNG1≥$80 step, then
+RNG1≥$AA step (P ≈ 50%/33%/17%); 2 live → single $AA roll (66%/34%);
+result written CONCRETE to $DCED+idx*2. Player path: opposite side
+base + 3-slot CheckMonsterSlot scan + $660D accept test. **$dd0b is
+PER-SLOT, assigned at init from INT**: party side (SaveBtlS_47a5)
+16-bit compare, <$14→0, <$B3→1, else 2; enemy side (~$48B6) LOW BYTE
+ONLY, <$15→0, <$B5→1, else 2 (off-by-one asymmetry; boundary-measured:
+INT 20→0, 21→1, 65→1, 185→2). Vanilla max INT is 255 so the lo-byte
+wrap never fires — but an AUTHORED enemy with INT ≥ 256 wraps its AI
+mode (editor validation note). **Lightweight picker ($dd0b==0,
+AILightweightPick_76df, S84 full decode)**: per matching option a
+weight (RNG1&7)+1 in $db61+; for d≠2 an implicit extra candidate
+($db69 cat1 / $db6a other, (RNG2&7)+1); argmax (ties → later wins);
+winner e=8 → $3A, e=9 → weak-heal path ($8D/$3A), else skill from the
+option list. Empty biased category (e==0, d==2) → $dd02++ and re-read
+the next rank cell — SELF-HEALING (measured: dd02 3→4 → cat1 → clean
+commit). The S84 "tactics stall" scare was the E9 dispatch crash, not
+this loop.

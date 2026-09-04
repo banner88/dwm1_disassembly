@@ -29,6 +29,10 @@ SECTION "ROM Bank $058", ROMX[$4000], BANK[$58]
 ; Indexed by skill id ($00-$E5) from BtlQueueFetchService_5498
 ; (hl = $401D + 2*skill; call $0008). Determines how each skill's queue
 ; target byte gets resolved at act time: TargetSelfWrite_6367 = self,
+; [S84] TargetSlotResolver_6379 is side-blind BY DESIGN — it is the
+; MASSACRE-class resolver (any slot incl. own side); every $DD1B writer
+; ROM-wide is a life-state mark, no side masking exists. $50:$4C87 (the
+; S83 breadcrumb) is the player-commit Massacre branch of LoadBtl_4bd1.
 ; TargetSlotResolver_6379 = concrete-slot RNG fishing, $62BF/$63D6/etc =
 ; further services (semantics unlabeled — only byte-verified structure
 ; here; behavioral claims stay measured-only per S70 rule).
@@ -91,6 +95,12 @@ BtlSkillTargetDispatch_401d:
     dw $41E9 ; [$37] StepGuard
     dw $41E9 ; [$38] MapMagic
     dw $63D6 ; [$39] Chance
+    ; [S84] $41E9 (plain-attack target service) decoded + roll-verified:
+    ; enemy attacker → $441B: $DD0B mode 2 → finisher variant $448A;
+    ; modes 0/1 → live-slot list via $5E5B/$5E75 into $DB4C, then
+    ; front-weighted pick (3 live: RNG1>=$80 step, RNG1>=$AA step ≈
+    ; 50/33/17; 2 live: $AA roll), CONCRETE slot → $DCED+idx*2.
+    ; Player attacker: opposite side base + 3-slot scan. §15.10.10.
     dw $41E9 ; [$3A] Attack
     dw $41E9 ; [$3B] TwinSlash
     dw $5100 ; [$3C] Ramming
@@ -3566,6 +3576,16 @@ jr_058_5478:
 ; BtlSkillTargetDispatch_401d[skill] — the per-skill target-resolution
 ; service table. Called from bank $53 sub-state 0
 ; (ActPhaseState0TargetFetch_520c) and from $53:$47D1.
+; [S84] CLOSES the S83 open: this service IS the "AI post-commit target
+; write site" — called at commit time too (act-state 3, from $53:$47D1):
+; AI post at frame f → fetch f+1 → per-skill service writes the initial
+; target f+2 (side base for normal skills, own idx for TargetSelfWrite
+; rows). HAZARD (vanilla): NO bounds check on the $401D index — ids >
+; $E5 read $41E9's code bytes as pointers (E6→$5621, E7→$01DB,
+; E8→$0008, E9→$CDAF WRAM). Vanilla id space tops at $DD (+slack rows
+; $DE-$E5 = $6367), so only meta codes could ever overrun here; the
+; patched build guards this (patches/bank_058.asm DispatchBoundsStub,
+; S84). §15.10.8.
 BtlQueueFetchService_5498:
     ld a, [$d9ed]
     cp $16

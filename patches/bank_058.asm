@@ -3581,12 +3581,15 @@ jr_058_54b1:
 jr_058_54be:
     ld a, [hl]
     ld [$db8a], a
-    ld hl, $401d
-    ld c, a
-    ld b, $00
-    add hl, bc
-    add hl, bc
-    call RST_08
+    call DispatchBoundsStub ; [S84] bounds guard for BtlSkillTargetDispatch_401d:
+    nop                     ;   ids > $E5 overran the 230-row table and far-jumped
+    nop                     ;   through $41E9's code bytes read as pointers
+    nop                     ;   (E6->$5621, E7->$01DB, E8->$0008, E9->$CDAF WRAM
+    nop                     ;   crash — measured S84, AI-committed Mourn).
+    nop                     ;   Same-size replacement of the 11-byte
+    nop                     ;   ld hl,$401d/ld c,a/ld b,$00/add/add/call RST_08
+    nop                     ;   block; the stub does the index math + dispatch.
+    nop                     ;   See DispatchBoundsStub in bank-end free space.
     ret
 
 
@@ -7332,41 +7335,40 @@ CustomAnnounceTable:        ; indexed (id - $E2)
     db $FD                  ; $E8 QuakeMost /  (CustomMsgPtrTable idx 7-10)
     db $FD                  ; $E9 Mourn [S75] -> custom-message escape "used Mourn!"
                             ;   (1 nop consumed below to keep DataBtlFX_7959's offset)
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+
+; [S84] Bounds guard for BtlSkillTargetDispatch_401d (called from
+; BtlQueueFetchService_5498's jr_058_54be). The vanilla table has 230 rows
+; ($00-$E5) and abuts the $41E9 Attack service; any queued id > $E5 read
+; code bytes as a dw and far-jumped (E9/Mourn -> $CDAF = WRAM execution,
+; the S84 crash; likely also the S79 "enemy queues $E9 and stalls" wreck).
+; In-range ids keep the exact vanilla index+dispatch. Custom ids:
+;   $E6-$E8 (Quake ranks) -> TargetSelfWrite_6367, matching the vanilla
+;       slack row that already serves $E5 Tremor (self target; the quake
+;       handler sweeps sides itself at act).
+;   $E9 (Mourn) -> $41E9 plain-attack target service (side-aware scan +
+;       concrete pick), matching Mourn's single-target ATK-vs-DEF damage.
+;   $EA+ (unknown/meta leakage) -> TargetSelfWrite_6367: harmless target
+;       write instead of a wild jump.
+; (35 nops consumed below to keep DataBtlFX_7959's offset.)
+DispatchBoundsStub:
+    cp $e6
+    jr nc, .custom
+    ld hl, $401d
+    ld c, a
+    ld b, $00
+    add hl, bc
+    add hl, bc
+    jp RST_08
+.custom:
+    cp $e9
+    jr z, .mourn
+    ld hl, .rowSelf
+    jp RST_08
+.mourn:
+    ld hl, .rowAtk
+    jp RST_08
+.rowSelf: dw $6367
+.rowAtk:  dw $41e9
     nop
     nop
     nop
