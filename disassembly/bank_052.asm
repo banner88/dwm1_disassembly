@@ -3868,6 +3868,11 @@ BattleTarget_5539:
     ret
 
 
+; BattleRNG [S85]: LINK ($C86C != 0) -> the private deterministic chain
+; $C1ED/EE (load, one step, store back: both GBs stay in sync); otherwise
+; plain GenerateRNG on the LIVE pair $C899/9A — which MainWaitLoop
+; ($00:$0457) also steps on every idle iteration, so between battle
+; waypoints the RNG advances a frame-timing-dependent number of times.
 BattleRNG:
     ld a, [$c86c]
     or a
@@ -5090,6 +5095,14 @@ jr_052_5c88:
     ret
 
 
+; SetHLBattle_5c8f — SLEEP hit roll [S85]: res level = $DD2A+slot*7 bits 7:6;
+; level 3 -> never; $DB42[attacker] bit2 -> sure hit; else CheckTargetGuardB
+; ($6710: [always,$D8,$7F,never] / guard bit6 [always,$BF,$66,never] / amp
+; bit7 [always,always,$BF,never], one BattleRNG step inside the threshold).
+; SetHLBattle_5cbc (StopSpell, level = $DD2A bits 1:0) and SetHLBattle_5cda
+; (Surround, $DD29 bits 1:0; only id $72 uses HitLadderBeat_6749 instead)
+; share the ladder. Measured S85: 20/20 rolls; already-afflicted targets
+; skip the roll (72/72).
 SetHLBattle_5c8f:
     ld hl, $0000
     ld a, l

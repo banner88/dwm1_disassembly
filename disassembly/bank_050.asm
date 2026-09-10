@@ -7411,7 +7411,12 @@ BattlePhase09_TurnSequencer:
 ; BattlePhase09SubTable — 6 entries indexed by $D9ED (turn sequencing).
 ; Re-sectioned S68 from fake instructions (byte-identical; 12 bytes).
 BattlePhase09SubTable:
-    dw $6abc                 ; sub 0: clear per-combatant status bits $DB00+
+    dw $6abc                 ; sub 0: END-OF-ROUND STATUS DECAY (S85, byte-exact in
+                             ;   simulator/battle.py phase9_decay, 201/201): $DB00/01
+                             ;   res 4/6; per block +4 bit7 cleared, +6 = ((v>>>1)&$55)
+                             ;   (four 2-bit round timers halve), +7 bit5->bit4 when
+                             ;   +7&$30; next block's +0 &= $C0, +1 := 0; $DB42-49 := 0;
+                             ;   $DB4A/4B &= 3
     dw $6b11                 ; sub 1
     dw $6b25                 ; sub 2
     dw $6c02                 ; sub 3
@@ -7596,6 +7601,12 @@ jr_050_6b99:
     ret
 
 
+; LoadBtl_6bc4 — DoT CAP [S85 correction of the S79 reading]: Div16x8To16
+; leaves the QUOTIENT in HL and the REMAINDER in A; the `add $0a`/`add $1e`
+; below is on A, so a capped tick = 10 + (RNG16 mod 6) for poison (base
+; >= 10) and 30 + (RNG16 mod 11) for the heavy class (base >= 30), where
+; RNG16 = (RNG2<<8)|RNG1 read without a step. Measured S85: heavy 13/13.
+; (The old "RNG16/6 + 10" reading would have dealt thousands.)
 LoadBtl_6bc4:
     ld a, [$db4c]
     cp $e1

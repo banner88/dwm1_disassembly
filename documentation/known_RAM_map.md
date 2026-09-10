@@ -19,12 +19,18 @@
                  loop re-runs the mode INIT table when set) [S68]
    C8AD     4    Saved wGameMode block for overlay modes 7/$0C (restored on
                  overlay exit) [S68]
-   C899     2    Pseudo-Random Number (wRNG1/wRNG2) — stays the LIVE,
-                 per-frame-advancing RNG pair during battle (HW-pinned S68:
-                 two adjacent examines differ); battle engine save/restores
-                 it via $C1ED/EE ($52:$556D, phase-6 cycle). LoadBtl_5d29's
-                 &$1F==$1F checks on it = the 1/32-per-side random
-                 battle-intro event roll [S68]
+   C899     2    Pseudo-Random Number (wRNG1/wRNG2) — stays the LIVE RNG
+                 pair during battle: MainWaitLoop ($00:$0457) steps it on
+                 EVERY idle iteration while $C86C==0 (frame-timing-
+                 dependent count between waypoints — KEY_LESSONS S85; HW-
+                 pinned S68: two adjacent examines differ). BattleRNG
+                 ($52:$556D) uses it directly in non-link play; in LINK mode
+                 it uses the private deterministic chain $C1ED/EE instead
+                 (S85 correction of the "phase-6 save/restore" reading).
+                 LoadBtl_5d29's &$1F==$1F checks on it = the 1/32-per-side
+                 random battle-intro event roll [S68]
+   C1ED     2    LINK-mode battle RNG chain (BattleRNG loads it, steps once,
+                 stores back) — keeps both GBs' rolls in sync [S85]
    C8A9     1    ? (related to floor change in Gate)
    C8B5     1    BGM (offset)
                  0x02 - No music
@@ -504,7 +510,9 @@
                  $DB93). bit6 set when the state-0 preamble commits to
                  running the machine. ==3 diverts plan $81 "Command" to the
                  direct path. Link exchanges quads DD03[0-3]/DD07[0-3] via
-                 $C1DA/$C1EA. §15.10.7a. [S80/S84]
+                 $C1DA/$C1EA. §15.10.7a. [S80/S84] Enemy slots hold $FF;
+                 SetupSub_4692's act-time re-resolve test is a FULL-byte
+                 `cp $03` (so enemies always pass it) [S85].
    1:DD0B   8    Per-combatant AI mode: 0 lightweight direct picker ($76DF),
                  1 full weighted machine, 2 finisher-augmented (MaxHP/6 scan).
                  Assigned at battle init from INT: party 16-bit <$14/<$B3

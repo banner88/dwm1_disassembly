@@ -1479,20 +1479,46 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       ✔✚ S84 CRASH FIX: dispatch-table bounds guard (DispatchBoundsStub)
       for AI-committed ids > $E5 — built, PyBoy-verified, NOT yet
       user-tested (PROJECT_STATE S84, KEY_LESSONS S84).
-      Still open: **loop-level differential validation of
-      simulator/battle.py (the remaining big rock)**; group-cast→$3A
-      round-conversion rule (observed S84, MP-gate falsified, untraced);
+      ✔ S85: **loop-level differential validation of simulator/battle.py
+      DONE** — `measure_battle.py` (31 waypoints, full board) + 25-battle
+      corpus `s85_battle_events.json` + `validate_battle.py`: **6614
+      comparisons / 0 mismatches**, 37 check kinds (BATTLE_SKILL_SYSTEM
+      §15.8b). CLOSED with it: group-cast→$3A rule
+      (`EnemyDupCastConversion_4e63`: enemy converts iff ANY enemy
+      precedes it in the order, per-EID flag table $53:$41DF, list
+      $4EE4, $DD0B!=2 — 424/424); $DB07 timer TICK (phase-9 sub 0/2);
+      +2 bit1 applier = PoisonAir $6D; curse self-hit (4 RNG2 branches,
+      MaxHP/6); LoadBtlC_5857 (= skill $41 exemption); act-time re-resolve
+      + MP/seal veto rules; status-spell ladders; DoT cap CORRECTED
+      (remainder, not quotient — status.py fixed).
+      ✚ S85 PATCH: AI-committed Tremor/Quake swept the PARTY (stub row
+      $6367 = own-side base) → $E5-$E8 now route to $62BF; AI-committed
+      Anchor was a self-inflicted MegaMagic → S85b: AI-committed $E4 is
+      rewritten to Attack at commit (vanilla-equivalent; the no-op showed
+      an orphan "Has no effect" line in the user's test). **USER-CONFIRMED
+      S85: AI Tremor/Mourn/Infernos work** (ROM `4c8de38a…`); the Anchor
+      rewrite (ROM `a17bff8e…`) NOT yet user-tested.
+      Still open: multi-candidate target RNG pick (commit/act dispatch RNG
+      not captured — validator takes the engine's); confusion action
+      table vs the curse-induced $99 HitAlly; PoisonHit/Paralyze rider
+      chances; poison cap >=10 sample; curse MP-drain amount;
+      $DB07 timer WRITERS; `simulate_round` driver not validated as a
+      whole (needs an RNG idle-step policy — the pacing layer's first
+      question); editor2 `test_compiler --rom` pin RE-PINNED S85b to `a17bff8e…`
+      (39/39; S84's `b99455d6…` move was never recorded there);
       state-0 TRUE-loaf branch runtime sighting ($6f64 codes $98/$8D);
       mode-2 finisher variant $448A internals; $7997 table consumption
       point; bank $58 entry 11 internals; meta-action codes (vanilla
       flee $E9 vs custom Mourn id COLLISION — vanilla flee path
       reachability unmeasured, SameBoy candidate); small rule residuals
       (§15.9: $4DF9 condition, Shut/util pass-branches, SuckAir/Surge
-      presumptions). Also still open from S79: $DB07 timer-status
-      WRITERS/tick (consumers now decoded §15.10.9), +2 bit1 DoT
-      applier (S81 candidate: skill $6D per the $4702 heavy-DoT trio),
-      curse self-hit magnitude (bank $53 entry 2), sleep-application
-      writer; $db06 bit2 semantics, LoadBtlC_5857 condition.
-- [ ] S80 — pacing layer (**gate CLEARED S83 — unblocked**):
+      presumptions). Also still open from S79: sleep-application writer;
+      $db06 bit2 semantics. (Timer tick, DoT applier, curse magnitude and
+      LoadBtlC_5857 closed S85 — see above.)
+- [ ] S80 — pacing layer (**gate CLEARED S83; core VALIDATED S85 — next**):
+      first decide the RNG policy for `battle.simulate_round` (the engine
+      idle-steps the RNG between waypoints; a uniform-random or measured
+      idle-count model both work for TTK statistics) and validate the
+      driver's aggregate against a few real-save battles before sweeping;
       TTK sweeps over gate encounter tables for the
       romhack + randomizer profiles; wire into `randomizer/profile_check`.

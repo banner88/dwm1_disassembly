@@ -1112,6 +1112,26 @@ sites, the label-relinked tail helpers, and header checksums differ) with
 at instruction level in the built ROM; a live battle round exercised both
 rewritten sites without anomaly.
 
+**S85 — the AI path was NOT covered.** The tactics/enemy AI commits to the
+queue without the menu predicate, and for an AI-committed $E4 the
+dispatcher `CustomDispatch52` had already run `MegaMagicDamage_653e` + the
+$a8 descriptor before bank $72's "field-only, falls through to ret": the
+S73 "silent no-op" was in fact a self-inflicted MegaMagic (measured on the
+real save: −67 HP on the caster's own side). Fix in `CustomBattleExec`
+(patches/bank_072.asm): for $E4 zero `$db56/57` and `res 5,[$dd6f]` (the
+apply gate, §15.7) — PyBoy-verified: no damage, the battle proceeds — but
+the presentation still ran and printed the self-targeted spell-class miss
+line "Has no effect on Slib!" (user-observed S85). **S85b — vanilla-
+equivalent fix:** vanilla's AI DOES commit its field-only ids ($37/$38
+carry Attack's record shape, tag $14) and they run the shared Attack
+handler — measured: a StepGuard-only monster under tactics queues $37 and
+lands a plain physical hit. So `DispatchBoundsStub` now rewrites an
+AI-committed $E4 in the queue to $3A and dispatches the $41E9 attack row:
+the turn is a normal "Slib attacks!" (PyBoy-verified, Anchor-only
+movepool, 5/5 rounds). The bank $72 no-op stays as a fence (unreachable:
+menu rejects, AI rewrites). Patched md5 `a17bff8e…` (S85b), NOT yet
+user-tested.
+
 ### 13.7 Custom skill #4 — Earthquake 4-tier chain (`$E5`-`$E8`): the SWEEP FORK, screen shake, and the looping-SE deadlock  [S74, 2026-08-01; v2 feedback round 2026-08-02, PyBoy-verified]
 
 **Tremor/Quake/QuakeMore/QuakeMost** (`$E5`-`$E8`): all-foes earth damage
@@ -1367,6 +1387,29 @@ Four user reports, four fixes:
    which is intrinsically honest: damaged beats ding (measured at each
    damaging beat), flyer/0-damage beats stay silent (measured), on both
    sides. Tame `$E1-$E3` behavior is untouched.
+
+#### 13.7.12 S85 — AI-commit targeting fix (the sweep hit the PARTY) + a measurement correction
+
+The tactics/enemy AI commits straight to the action queue through the
+bank $58 per-skill target dispatch. The S84 `DispatchBoundsStub` routed
+$E6-$E8 to `TargetSelfWrite_6367` — and the vanilla slack row for $E5 IS
+`$6367` — so an AI-committed Tremor/Quake got target base 0 = the
+caster's OWN side, and the sweep started there: measured on the real save
+(Slib, tactics AI, Tremor): Slib -55 HP, Gremlin untouched. The player
+MENU commit writes the record's side base and was never affected (the S74
+user test). Fix: the guard starts at $E5 and $E5-$E8 route to
+`Jump_058_62bf`, the opposite-side first-live-slot service every vanilla
+group attack uses (Firebal..BigBang, SleepAll). PyBoy-verified: AI-
+committed E5 and E8 target slot 4 and kill grounded enemies; vs a flying
+Gremlin the sweep visits and skips. Patched md5 `4c8de38a…` (S85), then
+`a17bff8e…` (S85b, + the Anchor rewrite, §14.1). **USER-CONFIRMED S85:
+AI-committed Tremor, Mourn and Infernos all work on the real save.**
+
+Correction to the v1 text above: flying victims are VISITED by the sweep
+(target fetch + act-state gate machine run for them — 3 flying Gremlins,
+all three visited) and only the DAMAGE is skipped (the v3 fly-dodge beat);
+`simulator/battle.quake_victims` models it that way (376/376 victim
+lists).
 
 ### 13.8 Custom skill #5 — Mourn (`$E9`): defense-calc dispatch, dead-ally multiplier, double-slash replay  [S75, 2026-08-02; PyBoy-verified, NOT user-tested]
 
@@ -1865,11 +1908,26 @@ own states. HP subtract floors at 0; result 0 or borrow -> KO state $1A
 ($D9F1=0).
 
 Battle phase $09 (bank $50 `$6AAC`, 6 sub-states) is the **END-OF-ROUND
-processor**, not the sequencer: per combatant, +2 bit0 poison -> damage
-MaxHP/16 (if >=10: RNG16/6+10), text $E1; +2 bit1 heavy DoT -> MaxHP/6
-(if >=30: RNG16/11+30), text $E2; floor 1 pre-cap; KO -> join-candidate
-($DD61) + side-wipe -> phase $0A. Then it rebuilds $DD13 (1 = alive) for
-the next round's command phase.
+processor**, not the sequencer. **Sub 0 = STATUS DECAY** over all 8 blocks
+(S85, byte-exact, 201/201): $DB00/01 bits 4/6 cleared; per block +4 bit7
+cleared, +6 = ((v>>>1)&$55) (four 2-bit round timers halve), +7 bit5->bit4
+when +7&$30; the NEXT block's +0 &= $C0 and +1 := 0; $DB42-49 := 0;
+$DB4A/4B &= 3. Subs 1/2 per LIVE combatant in slot order: a running +7&$C0
+counter is decremented by $40 ("returned to normal" $DD at 0) and that
+combatant gets NO DoT this round; else +2 bit0 poison -> MaxHP/16, text
+$E1; +2 bit1 heavy DoT -> MaxHP/6, text $E2; floor 1; then the CAP —
+**if base >= 10 (poison) / 30 (heavy): 10 + (RNG16 mod 6) / 30 + (RNG16
+mod 11)** (`Div16x8To16` leaves the REMAINDER in A and the code adds the
+constant to A; the S79 "RNG16/6+10" reading was WRONG — S85, heavy class
+measured 13/13 exact, poison twin same code shape but no >=10 sample yet);
+KO -> join-candidate ($DD61) + side-wipe -> phase $0A. Then it rebuilds
+$DD13 (1 = alive) for the next round's command phase.
+
+**KO bookkeeping (S85):** the KO state $1A marks $DD1B:=1 / $DD13:=$FF;
+during its second tick the slot shows a TRANSIENT full-HP value (the
+source MaxHP — seen on both sides) before settling at 0; a battle-ending
+KO leaves the transient in place. Boss-gated Sacrifice ($14 vs enemy at
+$DB73==1) leaves the CASTER at 1 HP (1/1).
 
 ### 15.8 STATUS system (S79 — byte map measured per-skill)
 
@@ -1879,7 +1937,7 @@ Per-combatant 8-byte block at **$DB00+slot*8**. Model:
 | byte | bit(s) | status | set by (measured) |
 |------|--------|--------|-------------------|
 | +2 | 0 | poison (DoT /16) | PoisonHit $67, PoisonGas $6C |
-| +2 | 1 | heavy DoT (/6) | (applier not yet identified — OPEN) |
+| +2 | 1 | heavy DoT (/6) | PoisonAir $6D (measured S85, 25 casts; hit-chance via BattleCall_65b5, chance not modelled) |
 | +2 | 3:2 | sleep counter | applied value $8C = flag+count 3 |
 | +2 | 4 | confusion | PanicAll $19 |
 | +2 | 5 | curse | Curse $6F |
@@ -1892,32 +1950,89 @@ Per-combatant 8-byte block at **$DB00+slot*8**. Model:
 | +3 | 7 | MouthShut | $92 |
 | +5 | 6/7 | guard / amplify ladder rows (§15.3) | guard cmd / ChargeUp class |
 | +5 | 0-5 | ONE-SHOT compulsions (cleared at victim's turn) | LureDance $78 -> bit1, etc. |
-| +7 | $C0 | packed turn counters -> forced action $11 | OPEN (phase-9 sub 2 decrements) |
+| +7 | $C0 | packed turn counters -> forced action $11; a TARGET with it running + flags8 bit2 makes the attacker's action FAIL ($BA, act state 9 pre-gate — S85) | phase-9 sub 2 decrements by $40/round (S85) |
+| +2 | 5 (curse) | at the cursed actor's turn, RNG1<$40 after the gate step fires CurseSelfHit_4c50; RNG2 of the same step picks: <$40 turn lost / <$80 HP -= MaxHP/6 then acts / <$C0 MP -= MaxMP/6 then acts / else CONFUSION set + immediate $99 HitAlly on itself (S85, 3/3) | Curse $6F |
+
+**Status-spell hit rolls (S85):** Sleep `$52:$5C8F`, StopSpell `$5CBC`
+and Surround `$5CDA` all go through `CheckTargetGuardB` = `$6710`
+(= `damage.LADDER_HIT_B`: [always,$D8,$7F,never] / guard bit6
+[always,$BF,$66,never] / amp bit7 [always,always,$BF,never]; one
+BattleRNG step inside the threshold; res level from $DD2A bits 7:6 /
+$DD2A bits 1:0 / $DD29 bits 1:0; `$DB42[attacker]` bit2 = sure hit).
+Already-afflicted targets get the "already" message with NO roll.
+Measured 20/20 rolls + 72/72 "already" cases. Application values: Sleep
++2 |= $8C, StopSpell +3 |= 1, Surround +3 |= 2. (Beat-class rolls stay on
+`$5C51`/`$6749`, §15.3.)
 
 **Sleep wake (`$53:$4AEB`, exact):** at the sleeper's own turn, wake iff
 RNG1 <= threshold by counter {3: $60 = 37.9%, 2: $A0 = 62.9%, 1: $E0 =
 88.0%, 0: always}; else the 2-bit counter decrements (floor 0) and the
 turn becomes the "asleep" action $0F. No RNG step consumed.
 
+### 15.8b ROUND LOOP — `simulator/battle.py`, differentially validated (S85)
+
+`simulator/measure_battle.py` (31 waypoint hooks, full 8-slot board per
+event: stats, HP/MP, the 64-byte status area, resistances, queue, order,
+$DD13/$DD1B/$DD03/$DD0B, RNG) captured 25 complete battles (real-save
+unforced tactics-AI fights vs 1/2/3 enemies, forced status/coverage runs,
+party and enemy KOs, heals, curse, stun, MP-veto) = `simulator/
+s85_battle_events.json`; `simulator/validate_battle.py` replays every
+round/actor/victim through the model with the engine's RNG injected at
+each waypoint and diffs the prediction against the next event: **6614
+comparisons, 0 mismatches** over 37 check kinds (order 216, gates 461,
+dup-conversion 424, veto 424, target 424, MISS/dodge 444, physical/record/
+quake damage 199/57/15, HP 257, KO 271, victims 376, decay 201, DoT 435,
+status rolls/bytes, boss gate, curse, unreachable, heal).
+
+Why injection: the LIVE RNG pair is stepped by `MainWaitLoop` ($00:$0457)
+on every idle iteration (non-link), so between waypoints it advances a
+frame-timing-dependent count; `BattleRNG` ($52:$556D) uses the private
+deterministic $C1ED/EE chain only in LINK mode. A seed-to-end replay is
+therefore impossible for wild/boss battles; the validator tests the glue.
+
+Rules the model encodes, with their byte source (all measured this
+session): round start = $DD13==2 & $DD1B==0 slots through
+`turn_order.round_order` with the 9th sort id always $FF (the build's own
+$FF fill covers $DB4C-$DB54) and the 9th key = $DB71/72 as found; gate
+order §15.7 (sleep roll reads RNG1 as found, curse after the step);
+`EnemyDupCastConversion_4e63` (§15.9 CLOSED); act-time re-resolve
+(`SetupSub_4692`); MP/seal veto (`SetupSub_480e`, re-decide for $DD0B==2);
+the act-state-9 unreachable pre-gate; the MISS machine §15.10.9 per VICTIM
+(the act-state machine cycles per target); damage cores by id; apply/KO;
+Quake sweep visits every live slot of the side (flying ones take no
+damage — §13.7's "flying-skip on advance" was wrong); phase-9 decay + DoT.
+
+Taken from the engine, not predicted (named residuals): the RNG target
+pick when >1 candidate is live on the side (commit-phase / act-time
+dispatch RNG not captured); the confusion action itself (the curse-induced
+case chose $99 HitAlly on itself 2/2 — `ConfusionActionTable_7aff`'s
+{$3A,$5E,$62,$80} is the +2-bit4 gate's table, so the two paths differ);
+PoisonHit/Paralyze status-rider chances (`BattleCall_65b5`, 1-2 samples);
+the curse MP-drain amount (MaxMP not on the board). `battle.simulate_round`
+is an offline driver over the same functions with a caller-supplied RNG
+policy — NOT validated as a whole (stand-ins marked in code).
+
 ### 15.9 What is NOT yet modelled (S84 partial; remaining residuals)
 
-Loop-level differential validation of `simulator/battle.py` (components
-engine-exact, glue traced-only) — still the big open item. Remaining
-smaller residuals: meta-actions beyond the option-list observation
+Loop-level differential validation of `simulator/battle.py` — **DONE S85
+(§15.8b, 6614/6614)**. Remaining smaller residuals: meta-actions beyond the option-list observation
 (flee $E9 class on the VANILLA id space, items, shift — the state-0
 preamble consumes w[3], §15.10.7; note the id collision with custom
 Mourn $E9, §15.10.8); the $DB07 timer statuses' WRITERS and tick model
-(their act-time CONSUMERS are now decoded, §15.10.9) and the +2 bit1
-applier (S81 note: skill $6D is in the heavy-DoT rule trio $67/$6C/$6D —
-candidate applier, unverified); curse self-hit magnitude (bank $53
-entry 2); sleep application counter source; PsycheUp carry-over;
-interception redirects; $db06 bit2 semantics (the flags7-bit7 block
-route, §15.10.9); LoadBtlC_5857's target condition; the mode-2 finisher
-variant of plain-attack targeting ($58:$448A — HP-vs-damage-estimate
-compare, partially decoded S84); the exact rule converting a 2nd+
-group-skill cast in the same round to plain Attack (observed S84 across
-2 rounds x 2 actors with MP forced — MP-gate hypothesis FALSIFIED;
-single enemy never converts; rule untraced). AI rule chains are DONE
+(their act-time CONSUMERS are now decoded, §15.10.9; their per-round TICK
+is phase-9 sub 0/2 — S85; WRITERS still open); sleep application counter
+source; PsycheUp carry-over; interception redirects; $db06 bit2 semantics
+(the flags7-bit7 block route, §15.10.9); the mode-2 finisher variant of
+plain-attack targeting ($58:$448A — HP-vs-damage-estimate compare,
+partially decoded S84); the multi-candidate target RNG pick (§15.8b);
+status-rider chances for PoisonHit/Paralyze; the poison cap >=10 sample.
+CLOSED S85: the 2nd-group-cast -> Attack rule (`EnemyDupCastConversion_
+4e63` + `EnemyDupConvFlagTable_41df` + `GroupDupSkillList_4ee4`, §15.8b
+— an enemy converts iff ANY enemy precedes it in the round order, EID
+flag set, $DD0B!=2; the S84 "single enemy never converts" observation is
+exactly this); +2 bit1 applier = PoisonAir $6D; curse self-hit magnitude
+(MaxHP/6 branch + 3 siblings, §15.8 table); LoadBtlC_5857 = the skill-$41
+attacker +6&3 exemption. AI rule chains are DONE
 (S81, §15.10.5, model `simulator/ai_rules.py` 240/240 vs sweep corpus)
 except small residuals: $4DF9's condition (+5, fired for FloraMan only —
 omitted from model with note); DanceShut/MouthShut/DeMagic/ThickFog

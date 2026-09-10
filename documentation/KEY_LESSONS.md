@@ -3132,3 +3132,72 @@ The preamble sets bit6 of $DD03[idx] as its "committed" flag; per-frame
 forcing must RMW (`(old & $C0) | tactic`) or the machine re-enters state 0
 forever. (This was a real bug in the first probe even though it wasn't the
 final hang cause.)
+
+## S85 (2026-09-05) — loop-level validation of the round core; the AI-commit target bugs
+
+### The battle RNG cannot be replayed seed-to-end (non-link) — validate by injection
+`MainWaitLoop` ($00:$0457) calls `GenerateRNG` on every idle iteration while
+`$C86C==0`, so between any two battle waypoints the live pair $C899/9A
+advances a frame-timing-dependent number of steps. `BattleRNG` ($52:$556D)
+switches to the private deterministic $C1ED/EE chain ONLY in LINK mode.
+**Rule**: a battle simulator validates against the engine by injecting the
+captured RNG at each waypoint (as S78-S81 did) and diffing everything
+else; a "replay from the seed" claim for wild/boss battles is impossible by
+construction. (known_RAM_map's C899 row called $C1ED a phase-6 save/
+restore — it is the link chain; corrected.)
+
+### Full-board waypoint capture beats targeted rigs for glue validation
+`simulator/measure_battle.py` snapshots ALL 8 slots (stats, HP/MP, the
+64-byte status area, resistances, queue, order, readiness/life marks, RNG)
+at 31 waypoints and lets the validator rebuild the board from the engine's
+own pre-state at every step. That is what made a 6614-comparison,
+zero-mismatch loop validation possible in one session — every mismatch
+pointed at a concrete rule (nine were real decode errors, listed below),
+none at rig noise. **Rule**: capture the whole board, not the variables you
+think matter; the byte you did not capture is the one you need next.
+
+### Decode errors the corpus caught (each now byte-read AND measured)
+- **DoT cap**: `Div16x8To16` returns the QUOTIENT in HL and the REMAINDER
+  in A; `add $0a`/`add $1e` are on A → capped ticks are 10+(RNG16 mod 6) /
+  30+(RNG16 mod 11), not "RNG16/6+10" (S79 doc + status.py were wrong;
+  heavy class measured 13/13). **Rule**: for every ROM0 helper, pin the
+  register CONVENTION (which register carries what on return) before
+  reading any caller — a wrong convention silently produces thousands.
+- **The "2nd group cast → Attack" rule** is not "same skill as an earlier
+  enemy": the scan in `EnemyDupCastConversion_4e63` never excludes the
+  actor's own $DB79 entry, so it self-matches — an enemy converts iff ANY
+  enemy precedes it in the order (EID flag set, $DD0B!=2). Modelling the
+  literal loop (not the intent one reads into it) is what matched 424/424.
+- **Flying victims are visited** by the Quake sweep; only the damage is
+  skipped (§13.7 "flying-skip on advance" was wrong).
+- **KO transient**: the KO state's second tick shows full HP in the slot
+  before it settles at 0 — compare HP AFTER the pair, not at the next
+  event.
+- **Sacrifice re-resolves before the $DD0B check**; the tactic byte compare
+  is the FULL byte (enemies hold $FF, not a nibble).
+- **Status-spell ladders**: Sleep/StopSpell/Surround all use `$6710`
+  (= LADDER_HIT_B), not the Beat ladder.
+- **The 9th turn-order sort id is always $FF** at build time (the build's
+  own fill covers $DB4C-$DB54); using $DB54 as found at build ENTRY gave a
+  phantom duplicate actor.
+
+### Custom skills have TWO commit paths — test both
+The player menu and the tactics/enemy AI reach the battle through different
+code: the menu writes the record's side base and runs the field-only
+rejection; the AI commits through the bank $58 per-skill target dispatch
+and no rejection at all. Two S73/S74 features that were "user-tested" only
+through the menu were broken on the AI path: Tremor/Quake swept the PARTY
+(self-target row → base 0) and Anchor was a self-inflicted MegaMagic (the
+dispatcher's damage setup precedes the "no-op" ret). **Rule**: every custom
+skill gets an AI-commit test on the real save (tactics on, skill in the
+movepool) in addition to the menu test — the S85 rig's unforced mode does
+exactly this; and any "harmless fall-through" claim about a dispatcher must
+be checked against what the dispatcher already did BEFORE the fall-through.
+
+### Rig: force queues in phases 4-6 only
+Forcing $DCEC every battle frame (the S78 rig) fights the sweep's own
+per-victim target stepping and the AI's phase-4 write order; forcing while
+`4 <= $D9EC <= 6` (command/order/fetch) and leaving phase 7 alone gives
+the engine a clean act. Stat forcing goes in ONCE at init (phase <= 3,
+$D9ED >= 1), never per round (phase 3 recurs between rounds and the
+re-force hides the engine's own HP bookkeeping — first S85 capture bug).

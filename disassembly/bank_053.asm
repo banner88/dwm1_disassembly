@@ -286,7 +286,13 @@ DispatchEntry_53_0:
     nop
     nop
     nop
-BattleHPLookupTable:
+; EnemyDupConvFlagTable_41df — ONE BYTE PER ENEMY-STATS ID (487 rows, 0/1),
+; read by EnemyDupCastConversion_4e63 with the actor's 16-bit EID
+; ($DA03/05/07): only flagged EIDs (181 of 487) are subject to the
+; duplicate-group-cast -> Attack downgrade. Semantics decoded + measured S85;
+; the historical "EnemyDupConvFlagTable_41df" name was wrong (no HP is looked up).
+; extracted/enemy_dupconv_flags.json (tools/dump_dupconv_table.py).
+EnemyDupConvFlagTable_41df:
     nop
     nop
     nop
@@ -1106,7 +1112,7 @@ jr_053_45f9:
 
 
 jr_053_4621:
-    call LoadBtlC_4e63
+    call EnemyDupCastConversion_4e63
     jr c, jr_053_464c
 
     ld hl, $d9ee
@@ -1184,6 +1190,14 @@ jr_053_467c:
     ret
 
 
+; SetupSub_4692 (entry 0 sub-state 1) [S85]: the ACT-TIME RE-RESOLVE rule.
+; With a VALID queued target: Sacrifice $14 re-resolves iff caster +3 bit0
+; clear (checked FIRST); $32/$96/$95/$AD never; then $DD0B==0 keeps the
+; committed target, confused (+2 bit4) keeps, tactic byte $DD03==3 keeps;
+; otherwise TargetReResolve_4799 resets the byte to $FF and phase $19
+; re-targets through the bank $58 per-skill dispatch (fresh RNG pick).
+; Dead queued target -> jr_053_47b2 (DeadTargetRedirectScan / $51-$53).
+; Measured S85: 114 re-resolves + 301 keeps, 0 mismatches.
 SetupSub_4692:
     ld hl, $d9ee
     inc [hl]
@@ -1445,6 +1459,14 @@ jr_053_4809:
     ret
 
 
+; SetupSub_480e (entry 0 sub-state 2) [S85]: ACT-TIME MP + SEAL VETO.
+; Record +4 (bank $54 entry 0) = MP cost; cost > current MP -> the turn is
+; wasted with msg $F7/$F9/$F8 (flags7 bit6/5/4 class) — or, for $DD0B==2
+; actors (LoadBtlC_490a), a RE-DECIDE: state $16 with $DD13:=1. Cost ok or
+; zero -> jr_053_4871 seal checks: flags7 bit6 spell vs side seal
+; $DB00/$DB01 bit3 -> msg $1F, vs attacker +3 bit0 StopSpell -> $1E; bit5
+; dance vs +3 bit6 -> $21; bit4 breath vs +3 bit7 -> $20. Measured S85
+; (424/424 veto decisions incl. 22 MP vetoes on MP-0 enemies).
 SetupSub_480e:
     ld hl, $d9ee
     inc [hl]
@@ -1768,7 +1790,7 @@ SetupSub_49e8:
     call LoadBtlC_49dc
     jr nz, jr_053_49fc
 
-    call LoadBtlC_4e63
+    call EnemyDupCastConversion_4e63
     jr nc, jr_053_49fc
 
     ld a, [$c1d5]
@@ -2233,6 +2255,17 @@ jr_053_4c32:
 ; Curse self-hit (bank $53 entry 2; §15.7): reached on the 25% curse
 ; roll (RNG1<$40) at the actor's turn; can KO. Magnitude NOT yet
 ; traced (§15.9 residual).
+; CurseSelfHit_4c50 [S85 byte-decoded + measured 3/3, simulator/battle.py
+; curse_effect] — reached from the gate machine when +2 bit5 (curse) and
+; RNG1 < $40 after the LoadBtlC_4e33 step; the SAME step's RNG2 picks:
+;   < $40  msg $1A: turn lost (d9ee=4, d9ed=0)
+;   < $80  msg $1B: HP -= MaxHP/6 (CalcBtlC_4cec; borrow -> HP 0), then
+;          d9ee=5 and the actor STILL ACTS
+;   < $C0  msg $1C: MP -= MaxMP/6 (LoadBtlC_4d1d; skipped at MaxMP 0), acts
+;   else   msg $19: +2 bit4 CONFUSION set, d9ed=$11 (immediate confusion
+;          rewrite: the caster hit itself with $99 HitAlly, 2/2 S85); the
+;          bit clears when the NEXT confusion-gated action finishes
+;          (act state 5 sub 3), one round later.
 CurseSelfHit_4c50:
     ld a, [wBattleTargetIdx]
     push af
@@ -2591,7 +2624,20 @@ jr_053_4e3d:
     ret
 
 
-LoadBtlC_4e63:
+; EnemyDupCastConversion_4e63 [S85, byte-decoded + measured 8/8 conversions,
+; 424/424 gate checks in simulator/validate_battle.py] — the "second group
+; cast in a round becomes plain Attack" rule the S84 corpus observed:
+;   carry SET  = convert (caller: $DD0B!=2 -> skill $3A, target $FF)
+;   carry CLEAR= keep
+; Conditions: not link; actor is an enemy 4-6; EnemyDupConvFlagTable_41df[EID]
+; != 0; cursor $DB82 > 0; then a LITERAL scan of $DB79 from the start with
+; b = cursor: a PARTY entry decrements b (b==0 -> keep), an ENEMY entry is
+; compared (DupCastQueueCompare_4eb1: same queued skill AND in
+; GroupDupSkillList_4ee4 -> convert) WITHOUT decrementing b — the actor's
+; own entry is never excluded, so it matches itself: an enemy converts iff
+; at least one enemy entry precedes it in the order (the earlier enemy's
+; skill is irrelevant). $DD0B==2 (finisher/high-INT mode) keeps the cast.
+EnemyDupCastConversion_4e63:
     ld a, [$c86c]
     or a
     jr nz, jr_053_4eae
@@ -2615,10 +2661,10 @@ LoadBtlC_4e63:
     ld h, [hl]
     ld l, a
     ld a, l
-    add LOW(BattleHPLookupTable)
+    add LOW(EnemyDupConvFlagTable_41df)
     ld l, a
     ld a, h
-    adc HIGH(BattleHPLookupTable)
+    adc HIGH(EnemyDupConvFlagTable_41df)
     ld h, a
     ld a, [hl]
     or a
@@ -2645,7 +2691,7 @@ jr_053_4e99:
     jr jr_053_4eae
 
 jr_053_4ea7:
-    call SaveBtlC_4eb1
+    call DupCastQueueCompare_4eb1
     jr nz, jr_053_4e99
 
     scf
@@ -2658,7 +2704,9 @@ jr_053_4eae:
     ret
 
 
-SaveBtlC_4eb1:
+; DupCastQueueCompare_4eb1: Z iff $DCEC[entry A] == $DCEC[attacker] and the
+; skill is in GroupDupSkillList_4ee4 (DupCastSkillListCheck_4ed6).
+DupCastQueueCompare_4eb1:
     push hl
     push bc
     ld hl, $dcec
@@ -2682,7 +2730,7 @@ SaveBtlC_4eb1:
     cp c
     jr nz, jr_053_4ed3
 
-    call SetBtlC_4ed6
+    call DupCastSkillListCheck_4ed6
 
 jr_053_4ed3:
     pop bc
@@ -2690,8 +2738,8 @@ jr_053_4ed3:
     ret
 
 
-SetBtlC_4ed6:
-    ld hl, $4ee4
+DupCastSkillListCheck_4ed6:
+    ld hl, GroupDupSkillList_4ee4
 
 jr_053_4ed9:
     ld a, [hl+]
@@ -2708,77 +2756,20 @@ jr_053_4ee2:
     ret
 
 
-    inc bc
-    inc b
-    dec b
-    ld b, $07
-    ld [$0a09], sp
-    dec bc
-    inc c
-    dec c
-    ld c, $0f
-    db $10
-    ld de, $1312
-    inc d
-    ld d, $17
-    jr jr_053_4f17
-
-    rra
-    ld hl, $2e23
-    cpl
-    jr nc, jr_053_4f32
-
-    ld [hl-], a
-    dec sp
-    inc a
-    ld a, $3f
-    ld b, b
-    ld c, b
-    ld c, c
-    ld c, d
-    ld c, e
-    ld c, h
-    ld c, l
-    ld c, [hl]
-    ld c, a
-    ld d, c
-    ld d, d
-    ld d, e
-    ld d, a
-    ld e, c
-    ld e, d
-    ld e, e
-    ld e, h
-
-jr_053_4f17:
-    ld e, l
-    ld e, [hl]
-    ld e, a
-    ld h, b
-    ld h, c
-    ld h, d
-    ld h, e
-    ld h, h
-    ld h, l
-    ld h, [hl]
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, l
-    ld l, [hl]
-    ld [hl], c
-    ld a, b
-    ld a, h
-    ld a, l
-    sub $d7
-    ret c
-
-    reti
-
-
-    jp c, $dcdb
-
-    rst $38
+; GroupDupSkillList_4ee4 — the $FF-terminated list of 77 skill ids the enemy
+; DUPLICATE-GROUP-CAST conversion (EnemyDupCastConversion_4e63) applies to:
+; every all-target spell/breath/dance + Beat/Defeat/Sacrifice/Vivify/Revive/
+; CallHelp/YellHelp/K.O.Dance/WarCry + the $D6-$DC meta rows. Re-sectioned
+; S85 from fake instructions (byte-identical; 78 bytes). Extracted to
+; extracted/enemy_dupconv_flags.json by tools/dump_dupconv_table.py.
+GroupDupSkillList_4ee4:
+    db $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+    db $10, $11, $12, $13, $14, $16, $17, $18, $1d, $1f, $21, $23, $2e
+    db $2f, $30, $31, $32, $3b, $3c, $3e, $3f, $40, $48, $49, $4a, $4b
+    db $4c, $4d, $4e, $4f, $51, $52, $53, $57, $59, $5a, $5b, $5c, $5d
+    db $5e, $5f, $60, $61, $62, $63, $64, $65, $66, $69, $6a, $6b, $6d
+    db $6e, $71, $78, $7c, $7d, $d6, $d7, $d8, $d9, $da, $db, $dc
+    db $ff
 
 jr_053_4f32:
     ld a, [wTextSpeed]
@@ -4086,6 +4077,11 @@ jr_053_56a8:
     ret
 
 
+; [S85] Act-state-9 pre-gate: a TARGET whose +7 & $C0 turn counter is
+; running (the dug-in / stun class) and a skill with flags8 bit2 -> the
+; action fails with msg $BA (LoadBtlC_583a route); $52/$53 CallHelp/YellHelp
+; and $14 keep going; $42 vs attacker +6&$0C is exempt (LoadBtlC_5844).
+; Measured S85 (stun_st: Mourn + Tremor both dropped vs a $80 counter).
 jr_053_56e1:
     ld hl, $d9ee
     inc [hl]
@@ -4337,6 +4333,9 @@ LoadBtlC_5844:
     ret
 
 
+; LoadBtlC_5857 [S85 — closes the §15.9 open]: the dodge-gate exemption is
+; SKILL $41 ONLY: returns Z (skip the dodge roll) when the attacker's
+; +6 & $03 == 0; every other skill returns NZ = roll normally.
 LoadBtlC_5857:
     ld a, [$db8a]
     cp $41

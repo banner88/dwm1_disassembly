@@ -1094,7 +1094,7 @@ and LOW/HIGH conversions. New labels created: NPCWalkDataTable, ScreenTransDataT
 SpriteFrameDataTable, MapNPCPosDataTable, SkillMPCostTable (×3, renamed S51), TileRefLookupTable,
 FieldPtrLookupTable, ItemSlotPtrTable, EnemyGroupTable, TransitionLookupTable,
 RoomAttrDataBlocks, PaletteColorData, AttrMapData, AttrMapDataB, TextDataPtrLookup,
-BattleHPLookupTable, SaveSlotPtrTable.
+EnemyDupConvFlagTable_41df (ex-BattleHPLookupTable, S85), SaveSlotPtrTable.
 
 > ⚠️ **Correction (S44; renamed S51 → `SkillMPCostTable`):** the old `TilesetLookupTable` label at $07:$570C was a **mislabel** — the data
 > is the `SkillMPCostTable` (222 × u16 LE; see the "Bank $07 — Skill MP Cost Table" entry

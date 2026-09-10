@@ -7342,16 +7342,26 @@ CustomAnnounceTable:        ; indexed (id - $E2)
 ; code bytes as a dw and far-jumped (E9/Mourn -> $CDAF = WRAM execution,
 ; the S84 crash; likely also the S79 "enemy queues $E9 and stalls" wreck).
 ; In-range ids keep the exact vanilla index+dispatch. Custom ids:
-;   $E6-$E8 (Quake ranks) -> TargetSelfWrite_6367, matching the vanilla
-;       slack row that already serves $E5 Tremor (self target; the quake
-;       handler sweeps sides itself at act).
+;   $E5-$E8 (Tremor + Quake ranks) -> Jump_058_62bf, the OPPOSITE-side
+;       first-live-slot service every vanilla group attack (Firebal..BigBang,
+;       SleepAll) uses. [S85] The S84 routing to TargetSelfWrite_6367 (and the
+;       vanilla slack row $E5 = $6367 itself) gave the AI-committed cast a
+;       target base of 0 = OWN side, so tactics-AI Tremor swept the PARTY
+;       (measured S85: Slib's AI Tremor took 55 HP off Slib, Gremlin
+;       untouched). The player-menu commit writes the record's side base and
+;       was never affected (S74 user test). Row $E5 is inside the vanilla
+;       table, so the guard now starts at $E5.
 ;   $E9 (Mourn) -> $41E9 plain-attack target service (side-aware scan +
 ;       concrete pick), matching Mourn's single-target ATK-vs-DEF damage.
 ;   $EA+ (unknown/meta leakage) -> TargetSelfWrite_6367: harmless target
 ;       write instead of a wild jump.
-; (35 nops consumed below to keep DataBtlFX_7959's offset.)
+; (35 nops consumed below to keep DataBtlFX_7959's offset; S85 +10 bytes, S85b +12.)
+;   $E4 Anchor (field-only) -> rewritten in the queue to $3A + the attack row
+;       [S85b]: vanilla-equivalent (StepGuard/MapMagic under AI run as Attack).
 DispatchBoundsStub:
-    cp $e6
+    cp $e4
+    jr z, .anchor
+    cp $e5
     jr nc, .custom
     ld hl, $401d
     ld c, a
@@ -7362,35 +7372,24 @@ DispatchBoundsStub:
 .custom:
     cp $e9
     jr z, .mourn
-    ld hl, .rowSelf
+    jr nc, .self            ; $EA+
+    ld hl, .rowFoe          ; $E5-$E8 Quake chain -> opposite side, first live slot
     jp RST_08
-.mourn:
+.anchor:                    ; [S85b] FIELD-ONLY $E4 committed by the tactics/enemy AI
+    ld a, $3a               ;   -> becomes a plain Attack, exactly what vanilla does
+    ld [hl], a              ;   with StepGuard/MapMagic under AI (measured: the AI
+    ld [$db8a], a           ;   queues $37 and it runs the shared Attack handler).
+                            ;   HL = the queue skill byte at BOTH call paths
+                            ;   (jr_058_54b1 / the >= $16 re-resolve path).
+.mourn:                     ;   falls into the $3A/$E9 row = $41E9 attack service
     ld hl, .rowAtk
+    jp RST_08
+.self:
+    ld hl, .rowSelf
     jp RST_08
 .rowSelf: dw $6367
 .rowAtk:  dw $41e9
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+.rowFoe:  dw Jump_058_62bf
     nop
     nop
     nop

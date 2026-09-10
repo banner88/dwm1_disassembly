@@ -3554,3 +3554,91 @@ two RE discovery sessions (M1, S3) before their authoring items depend on them.
 > step, status durations, AI. Owning: BATTLE_SKILL_SYSTEM §15,
 > TOOLS_AND_DATA §2.10, known_RAM_map, ROADMAP S78.
 >
+
+## S82 block (moved verbatim from PROJECT_STATE, S85)
+
+> Last verified: 2026-08-15 (Session 82 — **ANNOTATION CATCH-UP part 1
+> (Iron Rule 6 gate): the bank-$57 AI decision machine is now annotated
+> in source.** Byte-neutral: labels/comments/data-resection only; no
+> patches touched; verifier PASS 6/6; clean `1ca6579…` and S75v4 patched
+> pin `ce1e7369…` both unchanged. Built S82, NOT yet user-tested (no
+> test ROM this session — byte-neutral acceptance = verifier PASS +
+> unchanged hashes). Tool: `tools/resection_ai_bank57.py` (idempotent;
+> probe-build line→addr mapping; probe AND final builds asserted
+> byte-perfect). ROADMAP S82 box ticked; **S83 (banks $52/$53/$58) is
+> the remaining annotation gate** before the S81 residuals / pacing
+> layer unblock.)
+>
+> As annotated: state dispatch AIDecisionStateDispatch_6e0e + inline
+> AIStateDispatchTable_6e12 converted to dw (states 0-7 named
+> AIState0Preamble_6e2a … AIState7ChainWalker_7865);
+> AIRuleChainIndex_4302 + the three category chains converted to labeled
+> dw lists — counts BYTE-VERIFIED **39/85/40** (S81's "61" for cat2 was
+> a miscount; DOC_AUDIT S82); all 131 rule routines labeled (~30
+> semantic with S80/S81-provenance comments incl. the $4E36 vanilla-bug
+> block; rest neutral AIRule_<addr>); stage/helper renames with
+> repo-wide reference updates (AIState1CategoryScores_7129,
+> AICategoryRank_7322, AICat1RunnerUpCheck_73a5, AISatAdd_455f
+> [ex-AddBToHL16 — its "16-bit" description was wrong],
+> AIScanSlots_4456, AIRetryAllZero_76a9, AIChainZeroCell_788b /
+> AIChainApplyDelta_78a2, AICallRuleAtHL_78ca, preamble family, …).
+> Comment fixes from byte-reads: **CheckMonsterSlot ($00:$2FA5) header
+> said "CF=valid" — INVERTED** (CF SET = NOT a live monster; 101
+> bank-$57 call sites; DOC_AUDIT S82); DATA_STRUCTURES helper rows
+> corrected. Clarified in-session: §15.10.5's "$5206 resist service" is
+> the rst $10 FAR-CALL operand (bank $52 entry 6), not a bank-$57
+> address — doc idiom, no fix needed. Residuals (ROADMAP S82 box): rule
+> BODY re-emission (inline rst $00 handler tables desynced mgbdis inside
+> many bodies; all 131 heads boundary-align, probe-verified) +
+> DanceShut/MouthShut + DeMagic/ThickFog rule addresses unidentified
+> among the neutral labels. Owning: disassembly/bank_057.asm itself +
+> BATTLE_SKILL_SYSTEM §15.10.5, DOC_AUDIT S82 (3 rows), KEY_LESSONS S82
+> (2 lessons), TOOLS_AND_DATA (tool row), ROADMAP S82.
+
+## S83 block (moved verbatim from PROJECT_STATE, S85; the block had lost its "Last verified: 2026-08-20 (Session 83" header line in S84)
+
+> (Iron Rule 6 gate CLEARED): the battle core — banks $52/$53/$58 — is
+> now annotated in source.** Byte-neutral: labels/comments/data-resection
+> only; verifier PASS 6/6; clean `1ca6579…` unchanged; patched build
+> assembles with all renames propagated (patches/bank_052/053/058/072).
+> Built S83, NOT yet user-tested (byte-neutral acceptance = verifier
+> PASS + unchanged hashes). Tool: `tools/resection_battle_core.py`
+> (idempotent per bank; S82 probe-build technique; probe AND final
+> builds asserted byte-perfect). **The S81 remainder and the pacing
+> layer are UNBLOCKED** (ROADMAP).)
+>
+> As annotated — bank $52: CalcSkillDefense regime comment; renames
+> DamageSlot2AdjustFloor_61ec, RecordDamageRoll_679c, MegaMagicDamage_653e,
+> KamikazeDamage_6232, ResLadderBreath_676c/ResLadderElemSlash_6782,
+> HitLadderBeat_6749/HitLadderKamikaze_6733, DamageMul8/6/4Tenths_69xx,
+> UpperStatCapCheck_6a13/AglUpStatCapCheck_6a49 (falsified-breadcrumb
+> note kept), SkillHandlerDispatch_6cc7, ConfusionActionRewrite_7ab5;
+> new BattleActionMachine_6c4d + **28-state BtlActStateTable_6c60
+> converted to dw** (states byte-verified; $12 duplicates 0; $1A = KO);
+> BtlActState2Apply_6d56 (the $6D83 cp ladder IS the id-exclusion list —
+> code, not data); GroupVictimLoopA/B_71b5/71ed; BtlOutcomeHitPath_4200/
+> MissPath_4225; ConfusionActionTable_7aff → db (**bank $52**, not $53 —
+> DOC_AUDIT S83). Bank $53: BtlPerActorSetup_44ca + 9-dw
+> SetupSubStateTable_44ce; ActPhaseDispatch_51e8 + **16-dw
+> ActPhaseStateTable_51ec** (geometry exact, $51EC+32=$520C);
+> PerActorStatusGates_4558; TargetReResolve_4799,
+> DeadTargetRedirectScan_47e8, SleepWakeRoll_4aeb, CurseSelfHit_4c50,
+> BossProtectionGate_51aa (ladder byte-verified: LINK skip, enemy-side,
+> db73==1, skills $12/$13/$14/$3E/$69/$6B/$71); SacrificeEntry_670e /
+> SacrificeResolve_67a9. Bank $58: TurnOrderBuild_54d1 (+init
+> byte-verified), TurnOrderKeyRoll_5662 (formula), TurnOrderSort_55c2
+> (ties+9th-pair), TurnOrderCompact_5707, TurnOrderDefensiveBoost_56cf,
+> QueuePlainAttack_54ce; head region re-emitted as **14 rst $10 service
+> slots + the previously-undocumented 230-dw per-skill table
+> BtlSkillTargetDispatch_401d** (skill names inline; structure-only
+> claims). **CORRECTION (DOC_AUDIT S83): §15.10.6's resolver far-call is
+> bank $58 ENTRY 8** (BtlQueueFetchService_5498 → per-skill dispatch),
+> not "entry 4"; TargetSlotResolver_6379 (dw slot 4) is the measured
+> RNG-fishing resolver, and TargetSelfWrite_6367 (byte-read) is the
+> 23-skill self-target service. **BREADCRUMB: $50:$4C87 is the ROM's
+> only direct entry-4 far-call — candidate for the OPEN post-commit
+> target write site (NOT measured).** rst $10 convention pinned against
+> $00:$0020: addr = $4001 + 2·L, L = entry index. Owning: the three
+> bank sources + BATTLE_SKILL_SYSTEM §15 (renamed citations + §15.10.6
+> fix), DOC_AUDIT S83 (2 rows), KEY_LESSONS S83, TOOLS_AND_DATA (tool
+> row), ROADMAP S83.

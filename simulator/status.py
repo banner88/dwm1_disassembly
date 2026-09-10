@@ -7,7 +7,8 @@ Per-combatant status block: 8 bytes at $DB00 + slot*8 (slots 0-2 party,
 
   +2  main afflictions:
         bit0  POISON        (PoisonHit $67 / PoisonGas $6C; sets $01)
-        bit1  heavy DoT     (the $E2/MaxHP-6 class; phase-9 handles it;
+        bit1  heavy DoT     (the $E2/MaxHP-6 class; set by PoisonAir $6D
+                             (measured S85); phase-9 handles it;
                              applying skill not yet identified — open)
         bits3:2  SLEEP counter (see sleep_wake)
         bit4  CONFUSION     (PanicAll $19; sets $10) -> forced random
@@ -46,10 +47,11 @@ Turn-gate order for the ACTOR (bank $53 entry 0, $4558-$45C8):
   then +2 bit5 curse roll;  then +2 bit4 confusion rewrite.
 
 End-of-round DoT (battle phase 9, bank $50 $6B5E — the $DB02 low bits):
-  bit0 poison: base = MaxHP/16, text $E1; if base >= 10:
-       base = RNG16/6 + 10   (RNG16 = (RNG2<<8|RNG1) of the moment)
-  bit1 heavy:  base = MaxHP/6, text $E2; if base >= 30:
-       base = RNG16/11 + 30
+  bit0 poison: base = MaxHP/16, text $E1; if base >= 10: 10 + RNG16 mod 6
+               (remainder — S85 correction; RNG16 = (RNG2<<8|RNG1) of the
+               moment; see poison_tick)
+  bit1 heavy:  base = MaxHP/6, text $E2; if base >= 30: 30 + RNG16 mod 11
+               (S85, measured 13/13)
   applied with floor-at-zero; KO -> join-candidate/side-wipe handling.
 """
 
@@ -115,18 +117,26 @@ def confusion_action(state, attacker_idx, alive):
 
 
 def poison_tick(maxhp, state):
-    """Phase-9 bit0 DoT: MaxHP/16, capped-rerolled at >= 10."""
-    base = maxhp >> 4
+    """Phase-9 bit0 DoT ($50:$6B5E/$6BC4): base = MaxHP/16 (floor 1); if
+    base >= 10 the CAP replaces it with 10 + (RNG16 mod 6) — Div16x8To16
+    leaves the REMAINDER in A and the code does `add $0a` on A. The S79
+    reading "RNG16/6 + 10" was wrong (CORRECTED S85; the heavy twin is
+    measured 13/13 in the S85 corpus, this twin has the same code shape
+    but no >=10 sample yet). RNG16 = (RNG2<<8)|RNG1, read without a
+    step."""
+    base = max(maxhp >> 4, 1)
     if base >= 10:
         r16 = ((state & 0xFF) << 8) | ((state >> 8) & 0xFF)  # (RNG2<<8)|RNG1
-        base = r16 // 6 + 10
-    return max(base, 1)
+        base = 10 + r16 % 6
+    return base
 
 
 def heavy_dot_tick(maxhp, state):
-    """Phase-9 bit1 DoT: MaxHP/6, capped-rerolled at >= 30."""
-    base = maxhp // 6
+    """Phase-9 bit1 DoT (the PoisonAir $6D class, applier measured S85):
+    base = MaxHP/6 (floor 1); if base >= 30: 30 + (RNG16 mod 11)
+    (remainder, see poison_tick; measured S85 13/13 exact)."""
+    base = max(maxhp // 6, 1)
     if base >= 30:
         r16 = ((state & 0xFF) << 8) | ((state >> 8) & 0xFF)
-        base = r16 // 11 + 30
-    return max(base, 1)
+        base = 30 + r16 % 11
+    return base

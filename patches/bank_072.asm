@@ -84,11 +84,22 @@ CustomBattleExec:
     cp $E9
     jp z, SkillMourn                     ; [MOURN] $E9 Mourn: ATK×(dead_allies+1) with defense
 .notquake:
-    ; $E4 Anchor is FIELD-ONLY: in battle it falls through to this ret and,
-    ; with its record's anim9=$02 (announce/animate gates clear — the MagicBurn
-    ; finding inverted), the cast is a silent no-op. [S73 v1; a "can't use in
-    ; battle" message is v2 polish.]
-    ; (future custom battle skills dispatch here)
+    ; $E4 Anchor is FIELD-ONLY. The player MENU rejects it (FieldOnlySkillA,
+    ; S73b) but the tactics/enemy AI commits straight to the queue, and
+    ; CustomDispatch52 has already run MegaMagicDamage_653e + the $a8
+    ; descriptor by the time we get here — so the S73 "silent no-op" was in
+    ; fact a self-inflicted MegaMagic (measured S85: AI-committed Anchor took
+    ; 67 HP off the caster's own side). [S85] Make it a true no-op: zero the
+    ; damage and clear descriptor bit5 (the apply gate, §15.7) so the apply
+    ; step subtracts nothing. The AI still wastes the turn on it (a proper
+    ; AI-side exclusion is a ROADMAP item).
+    cp $E4
+    ret nz
+    xor a
+    ld [$db56], a
+    ld [$db57], a
+    ld hl, $dd6f
+    res 5, [hl]
     ret
 
 ; -----------------------------------------------------------------------------
