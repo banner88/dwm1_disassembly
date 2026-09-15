@@ -136,13 +136,63 @@ def check(van: Rom, new: Rom, sk: list[str], sp: list[str]) -> list[str]:
     return fails
 
 
+def check_ttk(van: Rom, new: Rom, trials: int = 60,
+              ratio_cap: float = 2.0) -> list[str]:
+    """S86 opt-in: simulated pool-level TTK parity (the pacing layer,
+    simulator/sweep_ttk.py driven by the aggregate-validated
+    simulator/pacing.py). For every pool live in BOTH ROMs, a reference
+    party level-scaled to the vanilla pool's mean enemy level
+    (sweep_ttk.party_for_level) fights each row 1-vs-1 under the
+    'attack' policy (the pessimistic floor); the weighted median
+    rounds-to-outcome may not exceed ratio_cap x vanilla (min-TTK floor
+    2.0 so one-round-kill pools can't false-positive). Slower than the
+    static checks by design — hence the flag."""
+    from simulator import sweep_ttk as SW
+    from simulator import pacing as P
+    records, dup = P.load_records(), P.load_dup_flags()
+    sp_van, sp_new = SW.rom_species_view(van), SW.rom_species_view(new)
+    fails: list[str] = []
+    worst: list[tuple[float, int, float, float]] = []
+    for pv, pn in zip(van.pools, new.pools):
+        if not pv.live_slots() or not pn.live_slots():
+            continue
+        lv = sum(van.enemies[pv.eids[i]].level
+                 for i in pv.live_slots()) / len(pv.live_slots())
+        party = SW.party_for_level(lv)
+        # fresh, identically-seeded idle policies per ROM: identical ROMs
+        # produce identical draws, so the vanilla-vs-vanilla ratio is
+        # exactly 1.00 and the envelope is pure signal
+        rv = SW.sweep_pool(van, sp_van, pv, party, [],
+                           ["attack"], trials, 7, 1, records, dup,
+                           P.IdlePolicy("empirical", seed=7 + pv.id))
+        rn = SW.sweep_pool(new, sp_new, pn, party, [],
+                           ["attack"], trials, 7, 1, records, dup,
+                           P.IdlePolicy("empirical", seed=7 + pv.id))
+        a = max(rv["attack"]["pool_ttk_med"], 2.0)
+        b = rn["attack"]["pool_ttk_med"]
+        worst.append((b / a, pv.id, a, b))
+    worst.sort(reverse=True)
+    print(f"[ttk]      pools checked: {len(worst)}; slowest ratios: "
+          + ", ".join(f"pool {p} {r:.2f}x ({a:.1f}->{b:.1f})"
+                      for r, p, a, b in worst[:3]))
+    over = [(r, p, a, b) for r, p, a, b in worst if r > ratio_cap]
+    if over:
+        fails.append(f"{len(over)} pools exceed {ratio_cap}x vanilla TTK "
+                     f"(worst: pool {over[0][1]} at {over[0][0]:.2f}x)")
+    return fails
+
+
 def main(argv) -> int:
     if len(argv) < 3:
         print(__doc__)
         return 2
+    ttk = "--ttk" in argv
+    argv = [x for x in argv if x != "--ttk"]
     van, new = Rom.load(argv[1]), Rom.load(argv[2])
     nm = names.load(open(argv[2], "rb").read())
     fails = check(van, new, nm["skills"], nm["species"])
+    if ttk:
+        fails += check_ttk(van, new)
     print()
     if fails:
         print("PROFILE CHECK: FAIL")

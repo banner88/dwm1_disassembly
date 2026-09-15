@@ -10,6 +10,46 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-09-15 (Session 86 — **PACING LAYER DONE: the S80
+> RNG-policy question ANSWERED BY MEASUREMENT, full-battle TTK driver
+> built, aggregate-validated at round AND battle level, wired into
+> `randomizer/profile_check --ttk`.** Byte-neutral (Python + docs only);
+> verifier PASS 6/6; clean `1ca6579…` unchanged.
+>
+> RNG idle model: the live RNG is a FULL-PERIOD 16-bit LCG, so the idle
+> step count between any two captured states is uniquely recoverable
+> offline — `simulator/measure_idle.py` recovered all 5,636 consecutive-
+> waypoint counts in the S85 corpus → `s86_idle_model.json` (8 measured
+> per-class pools). Structure: same-frame pairs move only the model's own
+> deterministic k∈{0,1}; the gate/curse block and the whole MISS→core
+> sequence are same-frame (NO idle); phase-9 consecutive DoT rolls carry
+> an IDENTICAL state (222/222 at k=0 — the wait loop doesn't step there);
+> idling lives at actor boundaries/animations (med ~10²–10⁴ steps).
+> `battle.simulate_round` restructured to idle at exactly those sites
+> (validate_battle regression intact 6614/6614) + the decoded §15.10.10
+> front-weighted target pick replaces the "first live" stand-in.
+> `simulator/pacing.py`: IdlePolicy (empirical/uniform, O(log k) affine
+> stepping), commit machine (category machine + S81 chains for $dd0b 1/2,
+> decoded lightweight picker for 0, tactics bias + obedience gate),
+> `simulate_battle`, `ttk`. **Aggregate validation
+> (`validate_pacing.py`): level 1 = PIT over 197 clean corpus rounds ×200
+> sims — engine outcomes rank UNIFORM (KS 0.038 < 0.097 crit, coverage
+> 87.8% in [5,95], KO sets always ≥5% model events) — and empirical vs
+> uniform idle policies are statistically indistinguishable (ROADMAP's
+> "both work" hypothesis is now a finding). Level 2 = 5 FRESH unforced
+> real-save battles (S86 .sav, patched a17bff8e) — validate_battle on
+> them: 802/802 on never-seen data; engine battle outcomes at sim
+> percentiles 75/46/85/82/48, no tail outliers.** `sweep_ttk.py` sweeps
+> gate pools per ROM (vanilla/romhack/randomized) with level-scaled
+> reference parties, both party policies; `profile_check --ttk` gates
+> pool-TTK ≤2× vanilla (identically-seeded → vanilla-vs-vanilla exactly
+> 1.00×; default run unchanged). Commit-model stand-ins (party category
+> bases, obedience mid-band, chain element→resist mapping) are ROADMAP
+> S86 residuals. **USER-CONFIRMED S86: the S85b Anchor rewrite (patched
+> ROM `a17bff8e…`) works — no orphan-line recurrence** (user-reported).
+> Owning: BATTLE_SKILL_SYSTEM §15.8c (new) + §15.9; TOOLS_AND_DATA
+> §2.10; KEY_LESSONS S86; ROADMAP S80/S86.)
+>
 > Last verified: 2026-09-05 (Session 85 — **LOOP-LEVEL DIFFERENTIAL VALIDATION
 > OF THE ROUND CORE: DONE — `simulator/battle.py` 6614 comparisons / 0
 > mismatches** over 25 complete engine battles (real-save unforced
@@ -52,52 +92,14 @@
 > the queue to $3A by DispatchBoundsStub** = vanilla behaviour (vanilla's
 > AI commits StepGuard/MapMagic and they run as Attack — measured), PyBoy-
 > verified 5/5 turns "Slib attacks!". **Patched test ROM md5
-> `a17bff8e67f3043fbff653c65128ea16` (S85b), NOT yet user-tested.** The
+> `a17bff8e67f3043fbff653c65128ea16` (S85b), USER-CONFIRMED S86.** The
 > player-menu path was never affected (why S74's test passed). editor2
 > `test_compiler --rom` re-pinned to `a17bff8e…` (39/39; S84's move was
 > never recorded there). Verifier PASS 6/6.)
 >
 
-> Last verified: 2026-09-03 (Session 84 — **S81-remainder measurements +
-> CRASH FOUND AND FIXED in the S74/S75 custom-skill dispatch.**
-> BtlSkillTargetDispatch_401d (230 rows, $00-$E5, abuts the $41E9
-> service) has NO bounds check in BtlQueueFetchService_5498; AI-committed
-> ids > $E5 far-jump through code bytes (E6→$5621, E7→$01DB, E8→$0008,
-> E9→$CDAF = WRAM execution — reproduced live: tactics AI committing
-> Mourn from the hacked save's starter). S74/S75 verification missed it
-> because rigs FORCE queues, bypassing the commit-time dispatch.
-> **Fix: DispatchBoundsStub** — same-size call-site replacement $54C2 →
-> stub at $694F free space ($E6-$E8 → $6367 like E5's slack row; $E9 →
-> $41E9 attack service; $EA+ → $6367). 40 changed bytes in bank $58 + 2
-> header checksum bytes; byte-diff verified surgical. Emulator-verified
-> (forced E9-only and E6-only movepools → clean AI commits, correct
-> targets, full battles with damage). Patched test ROM (S84, "patched"
-> md5 `b99455d67012e2f451cd5ed96a5020a1`) delivered. **USER-CONFIRMED
-> S84: Mourn activates via tactics AI under Charge on the real save**
-> (the pre-fix hard-freeze path). Quake ranks $E6-$E8: fix built +
-> PyBoy-verified, NOT yet user-tested. Enemy-side uses the identical
-> shared service (not reachable in normal play — no vanilla enemy
-> movepool holds ids > $E5).
->
-> S81-remainder decodes (measured + byte-verified; owning §15.9/15.10.7a-
-> .10.10, KEY_LESSONS S84, known_RAM_map rows DD03/DD0B/DB50-53/DB61):
-> commit-time target write site = entry 8 itself (frame-exact; the S83
-> $50:$4C87 breadcrumb was the player Massacre path; $6379 side-blind BY
-> DESIGN); $dd0b per-slot INT ladders both sides incl. the enemy lo-byte
-> quirk (boundary-measured 20/21/65/185); the TACTICS mechanism ($DD03
-> nibble = tactic 0-3, +20/+45 category bias via $6F8C, obedience level
-> gate <21/≥$F0, score formula, $7997 4x27 table extracted); MISS/dodge
-> act-time gate machine in bank $53 (Surround 62.5%, $db07&3 37.5%,
-> Dodge-status 50%, AGI ladder 2/8/43 per 256; flags7/flags8 record bits;
-> $52 twins DEAD CODE; $DA33 = presentation countdown only); plain-attack
-> targeting $41E9/$441B full decode, rolls verified 4/4 (50/33/17
-> front-weighted); lightweight picker full decode incl. self-healing
-> empty-category cursor walk; 77a4 = "tactic==Cautious". Group-cast→$3A
-> round-conversion rule observed, MP-gate hypothesis FALSIFIED, rule
-> untraced. Loop-level battle.py validation still OPEN (ROADMAP).
-> Verifier PASS 6/6; clean `1ca6579…` unchanged.)
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S84** (2026-09-03): S81-remainder measurements + the AI-commit dispatch-table overrun CRASH found and fixed (DispatchBoundsStub, ids > $E5; Mourn WRAM jump reproduced live) — commit-time target write site, $dd0b INT ladders, tactics mechanism, MISS/dodge machine, plain-attack targeting all decoded; patched pin `b99455d6…` (superseded by S85b `a17bff8e…`). Owning: BATTLE_SKILL_SYSTEM §15.10.6-10, KEY_LESSONS S84, known_RAM_map [S84], DOC_AUDIT S84.
 - **S83** (2026-08-20): annotation catch-up part 2 (gate CLEARED) — banks $52/$53/$58 battle core annotated (28-state BtlActStateTable, ActPhaseStateTable, TurnOrder*, the 230-dw BtlSkillTargetDispatch_401d; §15.10.6 entry-8 correction). Byte-neutral. Owning: the three bank sources, BATTLE_SKILL_SYSTEM §15, DOC_AUDIT S83, KEY_LESSONS S83, ROADMAP S83.
 - **S82** (2026-08-15): annotation catch-up part 1 (Iron Rule 6 gate) — bank $57 AI decision machine annotated in source (state dispatch + chain tables → dw, 131 rule routines labeled, CheckMonsterSlot CF-inverted comment fixed, cat2 count 85 not 61). Byte-neutral. Owning: bank_057.asm, BATTLE_SKILL_SYSTEM §15.10.5, DOC_AUDIT S82, KEY_LESSONS S82, ROADMAP S82.
 - **S81** (2026-08-14): combat-simulator arc part 4 — evaluator rule chains decoded end-to-end + validated 240/240 (chain architecture $4302→$4308/$4358/$4404; $DD26/$DD27 accumulators; $4E36 vanilla AoE bug user-flagged as romhack fix candidate; family-cut pair; caster-profile matrix); target resolution ~2/3 ($51E8 act-phase machine, $6379 resolver, $4799 re-resolve; OPEN side-constraint + post-commit write). Iron Rule 6 + annotation gates decided. Owning: BATTLE_SKILL_SYSTEM §15.10.5-6, known_RAM_map [S81], KEY_LESSONS S81, ROADMAP S82/S83.
@@ -279,7 +281,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. Open boxes: InitBGM channel-count ext (4/5ch sources), gate/event music, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
-| Combat simulator (arc S78-S85) | 🟢 **Round core VALIDATED (S85)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); **`battle.py` loop glue 6614/6614 over 25 engine battles (S85, `validate_battle.py` + `s85_battle_events.json`)**. Residuals (§15.9): multi-candidate target RNG pick, confusion action table, status-rider chances, `simulate_round` RNG idle policy (= the pacing layer's first question). Next: S80 pacing layer. | BATTLE_SKILL_SYSTEM §15; TOOLS_AND_DATA §2.10; ROADMAP S81/S80 |
+| Combat simulator (arc S78-S86) | 🟢 **COMPLETE through the pacing layer (S86)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. Residuals (§15.9 + ROADMAP S86): party-side category-base fill site, obedience mid-band RNG band, chain element→resist mapping, confusion action table, status-rider chances. | BATTLE_SKILL_SYSTEM §15, §15.8c; TOOLS_AND_DATA §2.10; ROADMAP S86 |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
 | Editor app (Phase 3) | 🟢 **Walking skeleton BUILT S72, NOT yet user-tested** (`editor2/app/`, PySide6, cross-platform — primary macOS; open/rooms/Build/Run; GUI build machine-verified byte-identical to the `46ba6991…` pin via `editor2/tests/test_app.py --rom`). Next boxes: NPC sprite-id catalog, embedded-PyBoy preview, room canvas (ROADMAP Phase 3). Backend keystone (S42) + compiler (S53+) done |
 

@@ -1497,7 +1497,8 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       rewritten to Attack at commit (vanilla-equivalent; the no-op showed
       an orphan "Has no effect" line in the user's test). **USER-CONFIRMED
       S85: AI Tremor/Mourn/Infernos work** (ROM `4c8de38a…`); the Anchor
-      rewrite (ROM `a17bff8e…`) NOT yet user-tested.
+      rewrite (patched ROM `a17bff8e…`) USER-CONFIRMED S86 (works, no
+      orphan-line recurrence; user-reported).
       Still open: multi-candidate target RNG pick (commit/act dispatch RNG
       not captured — validator takes the engine's); confusion action
       table vs the curse-induced $99 HitAlly; PoisonHit/Paralyze rider
@@ -1515,10 +1516,45 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       presumptions). Also still open from S79: sleep-application writer;
       $db06 bit2 semantics. (Timer tick, DoT applier, curse magnitude and
       LoadBtlC_5857 closed S85 — see above.)
-- [ ] S80 — pacing layer (**gate CLEARED S83; core VALIDATED S85 — next**):
-      first decide the RNG policy for `battle.simulate_round` (the engine
-      idle-steps the RNG between waypoints; a uniform-random or measured
-      idle-count model both work for TTK statistics) and validate the
-      driver's aggregate against a few real-save battles before sweeping;
-      TTK sweeps over gate encounter tables for the
-      romhack + randomizer profiles; wire into `randomizer/profile_check`.
+- [x] S80 — pacing layer — **DONE S86** (byte-neutral; verifier PASS):
+      ✔ RNG policy ANSWERED BY MEASUREMENT: the live RNG is a full-period
+      16-bit LCG, so every idle-step count between captured waypoints is
+      uniquely recoverable offline — `simulator/measure_idle.py` over the
+      S85 corpus (5,636 pairs) → `simulator/s86_idle_model.json` (8
+      measured per-class pools + proofs: same-frame pairs carry only the
+      deterministic k∈{0,1}; phase-9 consecutive DoT rolls are k=0, an
+      IDENTICAL state; MISS→core is same-frame). `battle.simulate_round`
+      restructured to idle at exactly the measured sites (+ the decoded
+      §15.10.10 front-weighted target pick); validate_battle regression
+      intact 6614/6614.
+      ✔ Full-battle driver `simulator/pacing.py`: IdlePolicy (empirical /
+      uniform / identity; O(log k) affine stepping), commit machine
+      (category machine + S81 chains for $dd0b 1/2; decoded lightweight
+      picker for 0; tactics bias + obedience gate per §15.10.7a),
+      `simulate_battle()`, `ttk()`, board construction from
+      enemy_stats/encounters/species (resistance packing).
+      ✔ Aggregate validation `simulator/validate_pacing.py`: LEVEL 1 =
+      round-level PIT, 197 clean corpus rounds ×200 sims from the
+      engine's own board+queue — engine outcomes rank UNIFORM (KS 0.038 <
+      0.097 crit, coverage 87.8% in [5,95], KO sets always ≥5% model
+      events); **empirical and uniform idle policies statistically
+      indistinguishable** (the "both work" hypothesis is now a finding —
+      'empirical' stays default as the measured one). LEVEL 2 = 5 FRESH
+      unforced real-save battles (S86 .sav; corpus
+      `simulator/s86_fresh_battles.json`): validate_battle 802/802 on
+      never-seen data; engine outcomes at sim percentiles 75/46/85/82/48.
+      ✔ TTK sweeps `simulator/sweep_ttk.py` (any ROM build via
+      randomizer Rom.load; gate pools from extracted/encounters.json;
+      level-scaled reference parties `party_for_level`; both party
+      policies) — vanilla early-gate curve is clean and monotonic.
+      ✔ Wired: `randomizer/profile_check --ttk` (opt-in; default run
+      unchanged) — per-pool weighted median TTK ≤ 2.0× vanilla,
+      level-scaled party, identically-seeded per ROM so
+      vanilla-vs-vanilla is exactly 1.00× (verified PASS, 128 pools).
+      RESIDUALS (S86, also §15.9): party-side category-base fill
+      ($DC44/4C/54 for player slots) untraced — PARTY_DEFAULT_BASES
+      stand-in; obedience mid-band banded-RNG term approximated; the
+      rule chains' element→resist_score mapping unpinned (validated with
+      the zero stub; pacing keeps that configuration — feeding flags9 is
+      WRONG and was reverted in-session); custom-room pool sweeps (bank
+      $71 RoomEncTable) out of sweep_ttk scope.

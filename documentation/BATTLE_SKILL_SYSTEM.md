@@ -1129,8 +1129,8 @@ lands a plain physical hit. So `DispatchBoundsStub` now rewrites an
 AI-committed $E4 in the queue to $3A and dispatches the $41E9 attack row:
 the turn is a normal "Slib attacks!" (PyBoy-verified, Anchor-only
 movepool, 5/5 rounds). The bank $72 no-op stays as a fence (unreachable:
-menu rejects, AI rewrites). Patched md5 `a17bff8e…` (S85b), NOT yet
-user-tested.
+menu rejects, AI rewrites). Patched md5 `a17bff8e…` (S85b), USER-CONFIRMED
+S86 (works, no orphan-line recurrence; user-reported).
 
 ### 13.7 Custom skill #4 — Earthquake 4-tier chain (`$E5`-`$E8`): the SWEEP FORK, screen shake, and the looping-SE deadlock  [S74, 2026-08-01; v2 feedback round 2026-08-02, PyBoy-verified]
 
@@ -2010,7 +2010,57 @@ case chose $99 HitAlly on itself 2/2 — `ConfusionActionTable_7aff`'s
 PoisonHit/Paralyze status-rider chances (`BattleCall_65b5`, 1-2 samples);
 the curse MP-drain amount (MaxMP not on the board). `battle.simulate_round`
 is an offline driver over the same functions with a caller-supplied RNG
-policy — NOT validated as a whole (stand-ins marked in code).
+idle policy — aggregate-validated S86 (§15.8c; round-level PIT uniform,
+whole battles inside simulation envelopes); commit-model stand-ins
+remain (§15.8c residual list).
+
+### 15.8c PACING LAYER — measured RNG idle model + full-battle driver (S86)
+
+**The idle model.** The live RNG pair is a FULL-PERIOD 16-bit LCG
+(state*5+$1357 mod 2^16; a≡1 mod 4, c odd), so the step count between any
+two captured states is unique mod 2^16 and recoverable by walking the
+chain — no emulator needed. `simulator/measure_idle.py` recovered all
+5,636 consecutive-waypoint counts in the S85 corpus →
+`simulator/s86_idle_model.json`: 8 per-class sample pools (round_gap med
+5236, post_order 153, actor_skip 130, post_action 12214, pre_target 491,
+pre_miss 9558, p9_entry 7318, post_dot_apply 51712) plus two structural
+PROOFS: every same-frame pair moves only the model's own deterministic
+k∈{0,1} (the gate/curse block and the whole MISS→damage/status-core
+sequence are same-frame — correlated rolls, NO idle), and all 222
+consecutive phase-9 slot rolls are k=0 — un-damaged neighbours read an
+IDENTICAL RNG state (the wait loop does not step there); idling resumes
+only at phase entry and after a DoT damage-apply animation.
+`battle.simulate_round` idles at exactly those sites (idle(state, cls)),
+and the multi-candidate target stand-in is now the decoded §15.10.10
+front-weighted pick. validate_battle regression: 6614/6614 unchanged.
+
+**The driver** (`simulator/pacing.py`): IdlePolicy
+('empirical'/'uniform'/'identity'; k-steps via O(log k) binary affine
+exponentiation, module-cached), the commit machine (ai.py category
+machine + the S81 chains through a ChainRules adapter for $dd0b 1/2
+actors; the decoded lightweight picker for $dd0b==0; tactics bias +
+obedience gate per §15.10.7a; commit-time targets per §15.10.8 with
+front-weighted plain attacks), `simulate_battle()` and `ttk()`.
+
+**Aggregate validation** (`simulator/validate_pacing.py`; exact replay is
+impossible by construction, §15.8b): LEVEL 1 — for each of 197 clean
+corpus rounds, 200 simulations from the engine's own board+queue; the
+engine's actual outcome PIT-ranks UNIFORM in the simulated distribution
+(KS 0.038 < 0.097 crit@5%, decile histogram flat, coverage 87.8% in
+[5,95] within the binomial envelope, engine KO sets always ≥5% model
+events). **Empirical vs uniform idle policies: statistically
+indistinguishable** — pacing is policy-insensitive; 'empirical' stays
+default as the measured one. LEVEL 2 — 5 fresh unforced real-save
+battles (`simulator/s86_fresh_battles.json`, captured S86 on patched
+`a17bff8e…`): validate_battle 802/802 on never-seen data; whole-battle
+outcomes under the full commit model sit at simulation percentiles
+75/46/85/82/48 with winners consistent.
+
+**Sweeps + gating**: `simulator/sweep_ttk.py` (per-pool weighted median
+rounds-to-outcome over gate encounter pools, any ROM build, level-scaled
+reference parties, 'attack' and 'tactics' policies);
+`randomizer/profile_check --ttk` (opt-in) gates pool TTK ≤ 2.0× vanilla
+with identically-seeded policies (vanilla-vs-vanilla exactly 1.00×).
 
 ### 15.9 What is NOT yet modelled (S84 partial; remaining residuals)
 
@@ -2024,8 +2074,14 @@ is phase-9 sub 0/2 — S85; WRITERS still open); sleep application counter
 source; PsycheUp carry-over; interception redirects; $db06 bit2 semantics
 (the flags7-bit7 block route, §15.10.9); the mode-2 finisher variant of
 plain-attack targeting ($58:$448A — HP-vs-damage-estimate compare,
-partially decoded S84); the multi-candidate target RNG pick (§15.8b);
-status-rider chances for PoisonHit/Paralyze; the poison cap >=10 sample.
+partially decoded S84); the multi-candidate target RNG pick (§15.8b — the offline DRIVER now
+uses the decoded §15.10.10 front-weighted roll, S86; the validator still
+takes the engine's); status-rider chances for PoisonHit/Paralyze; the
+poison cap >=10 sample. S86 pacing residuals: party-side category-base
+fill site ($DC44/4C/54 for player slots; PARTY_DEFAULT_BASES stand-in);
+obedience mid-band banded-RNG term; the chains' element→resist_score
+mapping (validated 240/240 with the zero stub — keep that configuration,
+do NOT feed flags9).
 CLOSED S85: the 2nd-group-cast -> Attack rule (`EnemyDupCastConversion_
 4e63` + `EnemyDupConvFlagTable_41df` + `GroupDupSkillList_4ee4`, §15.8b
 — an enemy converts iff ANY enemy precedes it in the round order, EID

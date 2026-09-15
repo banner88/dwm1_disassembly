@@ -3133,6 +3133,57 @@ forcing must RMW (`(old & $C0) | tactic`) or the machine re-enters state 0
 forever. (This was a real bug in the first probe even though it wasn't the
 final hang cause.)
 
+## S86 (2026-09-15) — the pacing layer; measuring what looked unmeasurable
+
+### A full-period LCG makes idle counts recoverable OFFLINE from any waypoint corpus
+The "frame-timing-dependent idle count" (S85) sounded like something only
+live instrumentation could measure. It is not: state*5+$1357 mod 2^16 is
+full-period (a≡1 mod 4, c odd), so the step count between ANY two captured
+RNG states is unique mod 2^16 — walk the chain, get the exact k. The whole
+S86 idle model came out of the EXISTING S85 corpus with zero emulator
+minutes. **Rule**: before instrumenting for a new quantity, check whether
+an existing capture already determines it — an invertible/countable
+process (LCG, counter, checksum chain) often does.
+
+### The engine's idle structure is not noise — model its SHAPE, not just its size
+Same-frame waypoint pairs move only the code's own deterministic k∈{0,1};
+the gate/curse block and MISS→damage-core are same-frame (correlated
+rolls); phase-9 consecutive DoT rolls share an IDENTICAL state (222/222 at
+k=0 — the wait loop is not idling there, so two poisoned neighbours roll
+the same capped tick); idling lives at actor boundaries and animations.
+A driver that sprays idle() uniformly between every step is WRONG in both
+directions. **Rule**: place stochastic elements where the measurement says
+the engine has them, and preserve the measured deterministic couplings.
+
+### Validate a policy-driven simulator by PIT, not by replay
+Exact replay is impossible by construction (S85), but "statistically
+right" is testable: replay each captured round N times from the engine's
+own pre-state under the policy, rank the engine's actual outcome in the
+simulated distribution, and demand the ranks be Uniform(0,1) (probability
+integral transform) — KS + decile histogram + central-coverage envelope.
+197 rounds sufficed to PASS cleanly and would have caught a biased damage
+core or misplaced idle immediately. Bonus finding: empirical and uniform
+idle policies are statistically indistinguishable here — the scrambling
+is so heavy that pacing is policy-insensitive (keep the measured one as
+default anyway; it costs nothing and needs no argument).
+
+### O(k) affine stepping is a real trap; compose the map in O(log k)
+k LCG steps form an affine map state'=a_k*state+c_k. Building (a_k,c_k)
+by iterating k times (k up to 65k, hundreds of unique ks, rebuilt per
+policy instance) made the first sweep ~50x slower than the fixed version:
+binary composition of the affine map + a module-level cache. **Rule**:
+any "apply this linear/affine update k times" gets exponentiation-by-
+squaring before it gets a loop.
+
+### Do not "upgrade" a validated stub without pinning the mapping
+ChainRules initially fed the skill's flags9 into the rule chains'
+resist_score — plausible, crash-capable (index >26), and UNVERIFIED: the
+chains were validated 240/240 with a ZERO resist stub, so zero is the
+configuration the validation covers. Reverted; the element→resist mapping
+is a named residual. **Rule**: a model component inherits exactly the
+configuration it was validated under; improving it requires re-validation,
+not plausibility.
+
 ## S85 (2026-09-05) — loop-level validation of the round core; the AI-commit target bugs
 
 ### The battle RNG cannot be replayed seed-to-end (non-link) — validate by injection

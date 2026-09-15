@@ -512,26 +512,64 @@ def mourn_multiplier(b, caster):
 # rules above together in the engine's order. NOT itself differentially
 # validated as a whole: the engine's RNG is idle-stepped between waypoints
 # by a frame-timing-dependent count (KEY_LESSONS S85), so a simulation must
-# choose an RNG policy — `idle(state)` is called between waypoints and
-# defaults to the identity (deterministic chain). Everything the validator
-# takes from the engine (multi-candidate target picks, confusion actions,
-# status-rider chances, curse MP drain) is a simple stand-in here and is
-# marked as such.
+# choose an RNG policy. `idle(state, cls)` is called at exactly the sites
+# the S86 corpus measurement found the engine idling (simulator/
+# measure_idle.py; class names match s86_idle_model.json):
+#   round_gap        before the order build (between rounds)
+#   post_order       after the order build, before the first actor
+#   post_action /    at each subsequent actor boundary — post_action after
+#   actor_skip       a completed action, actor_skip after a skipped one
+#   pre_target       before target resolution, and again between victims
+#   pre_miss         before each victim's MISS machine (attack animation)
+#   p9_entry         entering phase 9
+#   post_dot_apply   after a slot takes DoT damage (damage animation)
+# Measured NON-sites (same-frame, deterministic — do NOT idle there): the
+# whole gate/curse block after actor fetch; MISS machine -> damage/status
+# core; consecutive phase-9 slot rolls (k == 0: un-damaged neighbours read
+# an IDENTICAL RNG state — an engine quirk the model preserves).
+# Default idle=None = identity (deterministic chain, the pre-S86
+# behaviour). Everything the validator takes from the engine (confusion
+# actions, status-rider chances, curse MP drain) is a simple stand-in here
+# and is marked as such; the multi-candidate target pick uses the decoded
+# front-weighted roll (§15.10.10) via pick_front_weighted.
 # --------------------------------------------------------------------------
-def simulate_round(b, state, records, dup_flags, idle=lambda s: s):
+def pick_front_weighted(cands, state):
+    """$58:$441B modes 0/1 (S84, roll-verified 4/4): 3 live -> RNG1>=$80
+    step then RNG1>=$AA step (~50/33/17 front-weighted); 2 live -> one
+    $AA roll (66/34); 1 -> it. `cands` = live slots in front order."""
+    if len(cands) == 1:
+        return cands[0], state
+    if len(cands) == 2:
+        state = rng_step(state)
+        return (cands[1] if rng1(state) >= 0xAA else cands[0]), state
+    state = rng_step(state)
+    if rng1(state) < 0x80:
+        return cands[0], state
+    state = rng_step(state)
+    return (cands[2] if rng1(state) >= 0xAA else cands[1]), state
+
+
+def simulate_round(b, state, records, dup_flags, idle=None):
     """b: Board with the action queue committed (b.queue); state: RNG16.
+    `idle(state, cls) -> state` = RNG idle policy (None = identity).
     Returns (log, state). Mutates b (HP/status/$DD1B/$DD13)."""
+    if idle is None:
+        idle = lambda s, cls: s
     log = []
-    for s in range(8):
-        if b.dd13[s] == 2 and b.dd1b[s] == 0:
-            pass
+    state = idle(state, 'round_gap')
     order, state = round_order(b, state)
+    first_actor = True
+    prev_acted = False
     for cursor, a in enumerate(order):
         if side_wiped(b, 0) or side_wiped(b, 4):
             break
         if b.dd13[a] != 2 or not b.valid(a):
             continue
-        state = idle(state)
+        if first_actor:
+            state = idle(state, 'post_order'); first_actor = False
+        else:
+            state = idle(state, 'post_action' if prev_acted else 'actor_skip')
+        prev_acted = False
         forced = status_forced_action(b, a, state)
         if forced is not None:
             log.append((a, 'forced', forced)); continue
@@ -556,12 +594,20 @@ def simulate_round(b, state, records, dup_flags, idle=lambda s: s):
             log.append((a, 'veto', sk)); b.dd13[a] = 3; continue
         core = damage_core(sk, rec)
         qt = b.q_target(a)
+        state = idle(state, 'pre_target')
         if core == 'heal':
             t = heal_target(b, a)
         elif qt != 0xFF and b.valid(qt):
-            t = qt if not reresolves(b, a, sk) else b.live_side(qt & 4)[0]   # stand-in: first live
+            if not reresolves(b, a, sk):
+                t = qt
+            else:
+                t, state = pick_front_weighted(b.live_side(qt & 4), state)
         elif qt == 0xFF:
-            t = b.live_side((a & 4) ^ 4)[0] if b.live_side((a & 4) ^ 4) else None
+            opp = b.live_side((a & 4) ^ 4)
+            if opp:
+                t, state = pick_front_weighted(opp, state)
+            else:
+                t = None
         else:
             t = dead_redirect(b, qt)
         if t is None:
@@ -579,12 +625,16 @@ def simulate_round(b, state, records, dup_flags, idle=lambda s: s):
             victims = [(v, 1) for v in side_victims(b, t)]
         else:
             victims = [(t, 1)]
-        for v, div in victims:
-            state = idle(state); state = rng_step(state)
+        for vi, (v, div) in enumerate(victims):
+            if vi:
+                state = idle(state, 'pre_target')
+            state = idle(state, 'pre_miss')
+            state = rng_step(state)
             g = miss_gate(b, a, v, f.get('flags7', 0), f.get('flags8', 0), state)
             if g != 'pass':
                 log.append((a, g, v)); continue
-            state = idle(state)
+            # MISS machine -> damage/status core is SAME-FRAME (measured
+            # S86: no idle steps between them) — correlated rolls kept.
             if core == 'calcdef':
                 dmg, state = D.calc_skill_defense(b.atk[a], b.dfn[v], state, target_idx=v, arena=b.link, attacker_idx=a)
                 m = PHYSICAL_IDS.get(sk, 1)
@@ -611,16 +661,20 @@ def simulate_round(b, state, records, dup_flags, idle=lambda s: s):
             ko = apply_damage(b, v, dmg)
             log.append((a, 'hit', (v, dmg, ko)))
         b.dd13[a] = 3
+        prev_acted = True
     phase9_decay(b)
+    state = idle(state, 'p9_entry')
     for s in range(8):
         if side_wiped(b, 0) or side_wiped(b, 4):
             break
         if b.valid(s):
-            state = idle(state)
+            # NO idle between slot rolls (measured k == 0, S86): consecutive
+            # un-damaged slots read an identical RNG state.
             kind, dmg = dot_damage(b, s, state)
             if kind in ('poison', 'heavy'):
                 ko = apply_damage(b, s, dmg)
                 log.append((s, kind, (dmg, ko)))
+                state = idle(state, 'post_dot_apply')
     for s in range(8):
         if b.dd13[s] == 3:
             b.dd13[s] = 2
