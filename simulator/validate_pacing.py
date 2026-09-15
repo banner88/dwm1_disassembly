@@ -200,6 +200,8 @@ def _level2_one(name, ev, a, idle, skl, es):
     for t in range(a.trials):
         b = P.board_from_event(e0)
         b.party_skills = [skl, None, None] if skl else [None] * 3
+        if a.pbases:
+            b.party_bases[0] = tuple(int(x, 0) for x in a.pbases.split(','))
         r = P.simulate_battle(b, RECORDS, DUP, idle, rnd,
                               party_policy=a.party_policy,
                               enemy_recs=er)
@@ -224,6 +226,10 @@ def main(argv):
     ap.add_argument('--seed', type=int, default=7)
     ap.add_argument('--pskills')
     ap.add_argument('--party-policy', default='tactics')
+    ap.add_argument('--pbases', default='80,85,186,189', help='slot-0 '
+                    '(c1,c2,c3,w3) battle bases; default = the hacked-'
+                    'sav Slib record +$5B/+$5E/+$5C/+$5D (measured S87). '
+                    'Pass "" to use PARTY_FALLBACK_BASES.')
     ap.add_argument('--corpus', default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         's85_battle_events.json'))

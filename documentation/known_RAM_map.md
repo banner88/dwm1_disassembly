@@ -603,3 +603,16 @@
 ;   DEB2    1    wAnchorArm — transient protocol: 1 store / 2 install+charge /
 ;                3 force-standard (GateDecisionFork consumes). [S73]
 ;   DEB3    1    wAnchorCaster — caster party slot 0-2, captured at cast. [S73]
+
+## [S87] Obedience / WLD / party personality
+
+| Addr | Role |
+|------|------|
+| $DC23+2i (wBattleLVL) | MISNOMER: per-combatant **WLD** word (record slot+$60), NOT level; enemies forced $00FF at init; the obedience gate input (bank $57 $7a03/$7a5d). Display level = $db9b. |
+| $DB4C | obedience seed: tactic-category base /10 (CmpBtlAI_78d4; tactic 3 → 0) — state-0 scope; reused elsewhere |
+| $DB4D | obedience: w3 ($DC5C weight) /10 (AIPreambleW3_7905) |
+| $DB4E | obedience: WLD/4 (LoadBtlAI_7a03) |
+| $DB4F | obedience: banded RNG (LoadBtlAI_7a16; band 5..15 by WLD; RNG1&$3F mod b, nonzero multiples → b) |
+| $DB53 | ObedienceThreshTable_7997 value (AIPreambleLadder_791a) — direct addend in the 7a5d inequality |
+| $CB25/26/27/28 (slot+$64..$67) | party record AI-weight/personality bytes cat1/cat3/w3/cat2 → battle $DC44/$DC54/$DC5C/$DC4C (party fill jr_051_45f8; swap re-sync $53:$6236) |
+| $CB21 (slot+$60) | record WLD; INFO-screen stat; init 5×level−10×$CAB4; breeding zeroes; Add/SubMonsterWLD item adjusters |

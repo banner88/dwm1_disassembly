@@ -141,25 +141,41 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | $00 | 1 | In-use flag |
 | $09 | 1 | Species ID |
 | $0A | 1 | Family |
-| $4B | 1 | Level |
-| $4C | 1 | Level cap |
+| $29 | 8 | Skill list ($FF empty) — measure_battle `--pskills` target [S87] |
+| $4A | 1 | Status (bit7 KO; bit0/bit2 poison/curse persistents → battle init) [S87] |
+| $4B | 1 | Level (display; → battle `$db9b`) |
+| $4C | 1 | Individual MAX level = species base ±2, rolled at creation [S87 corrects S36] |
 | $4D | 3 | Experience (24-bit) |
 | $50 | 2 | HP (16-bit) |
-| $52 | 2 | MP |
-| $54 | 2 | ATK |
-| $56 | 2 | DEF |
-| $58 | 2 | AGL |
-| $5A | 2 | INT |
+| $52 | 2 | Max HP [S87 — the battle walk reads HP/MaxHP/MP/MaxMP as 4 words $50/$52/$54/$56] |
+| $54 | 2 | MP |
+| $56 | 2 | Max MP |
+| $58 | 2 | ATK |
+| $5A | 2 | DEF |
+| $5C | 2 | AGL |
+| $5E | 2 | INT |
+| $60 | 2 | **WLD (wildness)** — shown on the INFO screen; → battle `wBattleLVL` (misnomer); the obedience gate's input. Init = **5×level − 10×arenaTier ($CAB4)**, clamped 0..255; breeding ZEROES it (bank $16 `label16_474a` — hatchlings fully tactic-compliant); item effects adjust via ROM0 `Add/SubMonsterWLD` [S87, screen-verified] |
 | $62 | 1 | Plus value |
+| $64 | 4 | **AI weights / personality** in order cat1/cat3/w3/cat2 ($CB25/26/27/28 views) — source of the battle category-base arrays $DC44/$DC54/$DC5C/$DC4C (bank $51 `LoadBtlS_44cb` → `jr_051_45f8`); adjusted by field item effects only (`Add/SubMonsterAIWeight*`), never mid-battle [S87, hook-verified] |
 | $68 | 27 | Resistances |
 
-**Stat creation roll (verified S36)**: when a monster is built from enemy stats
-(`label14_40b4`, `$14:$40B4`), each of the six stats is scaled by `SaveEnem_4821`
-— multiply the base by a random factor of `205..256`, then `>>8` (i.e. **80–100%
-of the base, rolled independently per stat**). Species and level are copied
-verbatim. The growth/personality value (the "WLD"-style field) is set to a
-species-derived base ±2 (RNG). This is why a freshly-granted monster's displayed
-stats sit slightly below the enemy-stats field values and vary between new games.
+NOTE [S87]: the pre-S87 rows $4B..$5A ("Level/cap/HP/MP/ATK/DEF/AGL/INT")
+were off by the missing MaxHP/MaxMP words from $52; the stat block above is
+the corrected map, pinned by the bank $51 battle-init walk + live reads on
+the real save (Slib: level 1 at $4B, cap 38 at $4C, WLD 5 at $60 matching
+the INFO screen, AI bytes 80/186/189/85 at $64).
+
+**Creation (bank $14 entry 2 `label14_40b4`, script opcode $29 path) [S36,
+completed S87]**: every stat word is scaled by `SaveEnem_4821` and every AI
+weight byte by `SaveEnem_47fd` — the same one-time roll: factor
+`m256 = $CD + (RNG mod $34)`, applied as `value*m256 >> 8`, with the
+`m256==$100` overflow case keeping the original (**exactly** 1.0×); so
+independently-rolled **80.1–99.6% or exactly 100%** per value (mean ≈0.90×).
+Div8x8 convention: B=B//A, remainder in A. Species and level copy verbatim;
+the ±2 roll goes to the **level cap** (slot+$4C), not a "WLD-style" field —
+WLD is computed as above. This is why fresh monsters sit below the
+enemy-stats values and vary between games, and why the hacked sav's Slib
+weights (80/186/189/85) are a legitimate roll of EID 1's [100,200,100,200].
 
 ## Name Tables (Bank $41)
 

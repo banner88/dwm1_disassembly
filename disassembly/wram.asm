@@ -304,4 +304,4 @@ wBattleATK:: ds 16 ;dbe3 — attack per combatant
 wBattleDEF:: ds 16 ;dbf3 — defense per combatant
 wBattleAGL:: ds 16 ;dc03 — agility per combatant
 wBattleINT:: ds 16 ;dc13 — intelligence per combatant
-wBattleLVL:: ds 16 ;dc23 — level per combatant (tentative)
+wBattleLVL:: ds 16 ;dc23 — [S87] MISNOMER: per-combatant WLD (wildness) word, from record slot+$60; enemies forced $00FF. The obedience gate's level term (bank $57 $7a03/$7a5d). Display level lives in $db9b.

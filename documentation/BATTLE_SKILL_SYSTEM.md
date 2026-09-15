@@ -2034,6 +2034,17 @@ only at phase entry and after a DoT damage-apply animation.
 and the multi-candidate target stand-in is now the decoded §15.10.10
 front-weighted pick. validate_battle regression: 6614/6614 unchanged.
 
+**[S87] Commit-model upgrades**: the obedience gate is now the exact
+engine chain (OBED_THRESH + band + completed inequality, on WLD);
+party category bases come from the real record source
+(make_board `ai_weights`, `party_bases_from_row` creation-roll model,
+`default_wld`); the tactic-3 always-Attack shortcut is corrected
+(Command w/o menu is obedience-gated: carry → UNBIASED machine,
+no-carry → Attack). Level-2 envelopes re-run: 72/44/89/77/46 with
+winners consistent (invocation `--pskills 0xe9,0xe5 --pbases
+80,85,186,189`; the S86 recorded 75/46/85/82/48 used the same pskills —
+now recorded).
+
 **The driver** (`simulator/pacing.py`): IdlePolicy
 ('empirical'/'uniform'/'identity'; k-steps via O(log k) binary affine
 exponentiation, module-cached), the commit machine (ai.py category
@@ -2077,11 +2088,24 @@ plain-attack targeting ($58:$448A — HP-vs-damage-estimate compare,
 partially decoded S84); the multi-candidate target RNG pick (§15.8b — the offline DRIVER now
 uses the decoded §15.10.10 front-weighted roll, S86; the validator still
 takes the engine's); status-rider chances for PoisonHit/Paralyze; the
-poison cap >=10 sample. S86 pacing residuals: party-side category-base
-fill site ($DC44/4C/54 for player slots; PARTY_DEFAULT_BASES stand-in);
-obedience mid-band banded-RNG term; the chains' element→resist_score
-mapping (validated 240/240 with the zero stub — keep that configuration,
-do NOT feed flags9).
+poison cap >=10 sample. **CLOSED S87** (measured + byte-read +
+differentially validated; §15.10.1/.7a, MONSTER_DATA): the party-side
+category-base fill (instance record +$5B..$5E via LoadBtlS_44cb — real
+source replaces PARTY_DEFAULT_BASES; creation-roll model
+`party_bases_from_row`); the obedience mid-band (exact band + quirk +
+completed inequality, 889/889, validate_obedience.py); the $7997 table
+consumption point (= the decide's $db53 addend; table re-sectioned as
+`ObedienceThreshTable_7997`); the TRUE-loaf runtime sighting (plan-$81
+Command carry-divert, all three codes $98/$3A/$8D live; SetBtlAI_7f5f
+decoded exactly); and the wBattleLVL identity — it is the WLD stat
+(slot+$60; 5×level−10×arenaTier at creation), not the level. Remaining
+S86-family residual: the chains' element→resist_score mapping (validated
+240/240 with the zero stub — keep that configuration, do NOT feed
+flags9). S87 stand-ins, marked in pacing.py: `PARTY_FALLBACK_BASES` /
+`default_wld` for boards without real record values (board_from_event —
+the S85/S86 corpora predate the base/WLD capture fields), and any
+post-creation WLD level-up writer (untraced; creation + breeding + item
+adjusters are the known writers).
 CLOSED S85: the 2nd-group-cast -> Attack rule (`EnemyDupCastConversion_
 4e63` + `EnemyDupConvFlagTable_41df` + `GroupDupSkillList_4ee4`, §15.8b
 — an enemy converts iff ANY enemy precedes it in the round order, EID
@@ -2125,7 +2149,15 @@ $7439 filter / $75a2 pick / $7859 post.
 **15.10.1 Inputs.** Battle init fills, per combatant slot: category base
 arrays $DC44/$DC4C/$DC54[8] and $DC5C[8] from enemy_stats ai_weights with
 mapping +17→cat1, +19→cat2, +18→cat3, +20→$DC5C (w[3]; consumed by the
-state-0 act/flee preamble as $db4d=w3/10, not by the category machine);
+state-0 act/flee preamble as $db4d=w3/10, not by the category machine).
+**[S87] PARTY slots fill from the monster's own instance record** at
++$5B/+$5C/+$5D/+$5E (rel $CACA; = slot-record +$64..$67, the personality
+bytes) → $DC44/$DC54/$DC5C/$DC4C, in `LoadBtlS_44cb` → `jr_051_45f8`
+(bank $51); gated by wBattlePostFlag (fresh battle always fills;
+mid-battle reload refills only when $db03 bits 4-5 set); the same four
+pairs re-sync on swap-in ($53:~$6236). Record values = source enemy row
+ai_weights through the one-time creation roll — MONSTER_DATA "Party
+Monster Structure". Hook-verified on the real save (Slib 80/186/189/85);
 and the OPTION LIST at $DC64+idx*16: up to 4 pairs {tag, skill}, tag =
 skill record effect_category hi-nibble (1 dmg/2 status/3 heal), skill
 $FF-terminated on the odd bytes, $00 on the even. The player-hero slot's
@@ -2295,13 +2327,30 @@ $6F8C "flee/loaf" reading was wrong — decoded + measured S84:
   monster record byte's HIGH nibble `and $03` → $DD03[slot]; the LOW
   nibble → $db93[slot]. Link mode exchanges the two quads $DD03[0-3] /
   $DD07[0-3] via $C1DA/$C1EA (bank $50 $558/$665).
-- **AIPreambleDecide_7a5d is the obedience gate**, on wBattleLVL low
-  byte: 0 or < $15 (21) → ALWAYS the $6F8C path; ≥ $F0 → always carry
-  (act unbiased). Enemy init forces wBattleLVL=$00FF, so enemies always
-  take the carry path. Between: carry iff $db4e+$db4f > $db4c+c, with
-  $db4e = LVL/4 ($7a03), $db4f = banded RNG ($7a16), $db4c seeded per
-  tactic by CmpBtlAI_78d4 (tactic 0→$DC44 cat1 base, 1→$DC4C, 2→$DC54,
-  3→0), scaled /10 (LoadBtlAI_78ce).
+- **AIPreambleDecide_7a5d is the obedience gate**, on the wBattleLVL low
+  byte — **[S87] which holds the monster's WLD (wildness) stat, NOT its
+  level**: record slot+$60, the INFO-screen "WLD" number
+  (screen-verified), initialised by the constructor to
+  **5×level − 10×arenaTier($CAB4)**, clamped 0..255; breeding zeroes it;
+  field items adjust it (`Add/SubMonsterWLD`, ex-mislabels). Display
+  level travels separately in $db9b. WLD 0 or < $15 (21) → ALWAYS the
+  $6F8C path (tame → follows tactics); ≥ $F0 → always carry (wild → acts
+  unbiased). Enemy init forces wBattleLVL=$00FF, so enemies always take
+  the carry path.
+  **[S87] The mid-band inequality COMPLETE** (the S84 note dropped two
+  terms): carry iff **$db4e + $db4f > $db4c + $db4d + $db53** (STRICT),
+  with $db4e = WLD/4 ($7a03); $db4f = the banded RNG ($7a16): band b
+  from WLD (<$20→5, <$40→7, <$60→9, <$90→11, <$C0→13, else 15), one
+  live-RNG step, then (RNG1 & $3F) reduced mod b with the quirk that
+  NONZERO exact multiples of b return b itself (0 stays 0); $db4c =
+  tactic-category base/10 (CmpBtlAI_78d4: 0→$DC44, 1→$DC4C, 2→$DC54,
+  3→0; /10 = LoadBtlAI_78ce); $db4d = w3/10 ($7905); $db53 =
+  `ObedienceThreshTable_7997` value — **the $7997 consumption point
+  (S86 residual) is the decide itself**. Differentially validated
+  **889/889** (simulator/validate_obedience.py vs
+  s87_obedience_events.json: seeds, table, band incl. LCG-step replay,
+  every outcome; boundaries $00/$14/$15/$EF/$F0, all four tactics,
+  three base sets).
 - **$6F8C is NOT loaf — it is the tactic-bias path**: tactic 3 with
   $DD72≠$81 queues plain Attack $3A directly (post, d9ee=6); tactics
   0/1/2 write **$db50+tactic := $14 (20), or $2D (45) when $DD72==$81**,
@@ -2320,11 +2369,23 @@ $6F8C "flee/loaf" reading was wrong — decoded + measured S84:
   div = 10 for player slots (<3) and link, else the enemy base ladder
   <$32→30, <$64→25, <$96→20, else 10. NOTE $dd72 is OVERLOADED here
   (briefly holds the base for the ladder — not the plan).
-- **Act/loaf threshold table $57:$7997** (data misdisassembled as code
-  after AICategoryRank_7322's block): 4 tactics × 27 bytes, indexed
-  27*tactic + cat1row(0/9/18) + cat3*(0/3/6) + cat2*(0/1/2), values
-  ∈ {5,10,15,20,25} → $db53. Consumption point in the decide chain
-  still to pin.
+- **Act/loaf threshold table $57:$7997**: 4 tactics × 27 bytes, indexed
+  27*tactic + cat1row(≥$C0→0/≥$40→9/else 18) + cat3row(0/3/6) +
+  cat2row(0/1/2), values ∈ {5,10,15,20,25} → $db53. **[S87]
+  Re-sectioned to `db` in source (`ObedienceThreshTable_7997`,
+  byte-identical) and its consumption point CLOSED: $db53 is a direct
+  addend in the 7a5d obedience inequality (above). Full bytes are
+  embedded in simulator/pacing.py OBED_THRESH.**
+- **[S87] TRUE loaf = the plan-$81 Command carry-divert, runtime-sighted.**
+  At the carry site, $DD72==$81 increments $d9ee into the direct-pick
+  path ($6f1f→$6f64): `SetBtlAI_7f5f` reads the actor's RAW category
+  bases and queues b into $DCEC[idx] — **$98 (loaf) if all three <$3F;
+  else $3A (Attack) iff cat1≥$3F AND cat1≥cat2 AND cat1≥cat3; else $8D
+  (Defence)** — bypassing the category machine (d9ee=6). All three
+  codes reproduced live by forcing wMenu_selection=$81 + WLD≥$F0 +
+  base sets. (The $6f1f d9ed==1 branch adds status-clear checks and a
+  $c823=$B4 presentation call before the same queue.) The S84 "writer
+  path byte-read; runtime sighting pending" item is CLOSED.
 
 **15.10.8 Commit-time target write + dispatch bounds (S84).** The S81
 open "AI post-commit target write site" is CLOSED: it is **bank $58

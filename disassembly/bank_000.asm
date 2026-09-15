@@ -7065,6 +7065,13 @@ SubMonsterINT:
     ret
 
 
+; [S87] WLD (wildness/tame score) adjusters — record slot+$60 ($CB21
+; view), the stat shown on the INFO screen and copied to the battle
+; wBattleLVL array (MISNOMER — it is WLD, not level): the obedience
+; gate's level term. Init = 5*level - 10*arenaTier ($14 constructor);
+; breeding zeroes it (hatchlings fully tactic-compliant). Item-effect
+; dispatch callers (bank $03). ClearMonsterAGL was a MISLABEL (S87).
+AddMonsterWLD:
     call MonsterStatAddContext
     ld de, $cb21
     ld bc, $00ff
@@ -7072,7 +7079,7 @@ SubMonsterINT:
     ret
 
 
-ClearMonsterAGL:
+SubMonsterWLD:
     call MonsterStatSubContext
     ld de, $cb21
     ld bc, $0000
@@ -7080,7 +7087,15 @@ ClearMonsterAGL:
     ret
 
 
-SetMonsterSkill1:
+; [S87] MISLABEL FIX: the Add/SubMonsterAIWeight* family below adjusts the
+; monster record's four AI-WEIGHT / personality bytes (slot-record +$64..$67
+; = $CB25/26/28/27 views: cat1 attack / cat3 heal / cat2 support / w3), NOT
+; skills. They clamp-add/sub via MonsterStatCopyIn/Out; callers are the bank
+; $03 item-effect dispatch family ($da60 slot / $da6b amount) — personality
+; changes are FIELD/item-driven only (no mid-battle drift). These record
+; bytes are the source of the battle category-base arrays $DC44/54/4C/5C
+; (bank $51 LoadBtlS_44cb; MONSTER_DATA "instance record", S87).
+AddMonsterAIWeightCat1:
     call MonsterStatAddContext
     ld de, $cb25
     ld c, $ff
@@ -7088,17 +7103,17 @@ SetMonsterSkill1:
     ret
 
 
-ClearMonsterSkill1:
+SubMonsterAIWeightCat1:
     call MonsterStatSubContext
     ld de, $cb25
 
-ClearSkillSlot:
+SubMonsterAIWeightTail:
     ld c, $00
     call MonsterStatCopyOut
     ret
 
 
-SetMonsterSkill3:
+AddMonsterAIWeightCat2:
     call MonsterStatAddContext
     ld de, $cb28
     ld c, $ff
@@ -7106,7 +7121,7 @@ SetMonsterSkill3:
     ret
 
 
-ClearMonsterSkill3:
+SubMonsterAIWeightCat2:
     call MonsterStatSubContext
     ld de, $cb28
     ld c, $00
@@ -7125,12 +7140,12 @@ ClearMonsterSkill3:
     ld de, $cb27
     ld c, $00
 
-ClearSkill3Return:
+SubMonsterAIWeightW3Tail:
     call MonsterStatCopyOut
     ret
 
 
-SetMonsterSkill2:
+AddMonsterAIWeightCat3:
     call MonsterStatAddContext
     ld de, $cb26
     ld c, $ff
@@ -7138,7 +7153,7 @@ SetMonsterSkill2:
     ret
 
 
-ClearMonsterSkill2:
+SubMonsterAIWeightCat3:
     call MonsterStatSubContext
     ld de, $cb26
     ld c, $00
@@ -13095,7 +13110,7 @@ MenuCheckAndCall:
 
 MenuCursorUpdate:
     call $128a
-    call ClearSkillSlot
+    call SubMonsterAIWeightTail
     call $6dc8
     call $71f7
     call $747b

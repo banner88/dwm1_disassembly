@@ -3133,6 +3133,46 @@ forcing must RMW (`(old & $C0) | tactic`) or the machine re-enters state 0
 forever. (This was a real bug in the first probe even though it wasn't the
 final hang cause.)
 
+## S87 (2026-09-15) — WLD, the record source, and reproducing baselines before judging drift
+
+### A battle array named after the wrong stat cost three sessions of subtly wrong prose
+**Symptom**: S84/S86 docs describe the obedience gate as running "on
+wBattleLVL low byte" = the level; the model gated on `level`.
+**Root cause**: the sym label. wBattleLVL is filled from record slot+$60
+— the WLD (wildness) stat shown on the INFO screen — not from the level
+byte (slot+$4B → $db9b). One live read on the real save (display L1,
+wBattleLVL=5) plus one INFO-screen screenshot settled it.
+**Fix**: comments at the wram definition + every consumer; model input
+renamed; MONSTER_DATA record map corrected.
+**Rule**: a WRAM label is a HYPOTHESIS, not a fact — before building a
+model input on a named array, read the array AND its record source on a
+real save and check they say the same thing.
+
+### Reproduce the recorded baseline with HEAD before judging your diff
+**Symptom**: after the commit-model changes, validate_pacing --level2
+printed 2%/0% percentiles and flipped winners vs the recorded S86
+numbers — looking exactly like a regression.
+**Root cause**: the recorded run's INVOCATION wasn't written down; the
+defaults (no --pskills) never exercised the changed code path at all.
+HEAD code with the same defaults produced byte-identical "bad" output;
+`--pskills 0xe9,0xe5` reproduced the recorded numbers on both.
+**Fix**: invocation recorded in §15.8c; --pbases added with the
+measured default.
+**Rule**: when a validation result is quoted in docs, its exact
+command line ships next to it — and before blaming a diff for drift,
+rerun the OLD code under the SAME invocation first.
+
+### The record constructor is the answer key for "where does X come from"
+**Symptom**: the party bases (80/186/189/85) matched no enemy_stats row,
+suggesting the user's editor wrote them.
+**Root cause**: creation applies a per-value roll (($CD+RNG mod $34)/256)
+— the values are a legitimate transform of EID 1's row.
+**Rule**: before declaring a save-file value "hacked/custom", run it
+through the creation transforms (bank $14 entry 2: stat roll, level-cap
+±2, WLD formula); most "impossible" values are one measured roll away
+from a table row. And per the S85 convention rule: Div8x8 returns B=B//A
+with the REMAINDER in A — pin it before reading any caller.
+
 ## S86 (2026-09-15) — the pacing layer; measuring what looked unmeasurable
 
 ### A full-period LCG makes idle counts recoverable OFFLINE from any waypoint corpus

@@ -1551,10 +1551,63 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       unchanged) — per-pool weighted median TTK ≤ 2.0× vanilla,
       level-scaled party, identically-seeded per ROM so
       vanilla-vs-vanilla is exactly 1.00× (verified PASS, 128 pools).
-      RESIDUALS (S86, also §15.9): party-side category-base fill
-      ($DC44/4C/54 for player slots) untraced — PARTY_DEFAULT_BASES
-      stand-in; obedience mid-band banded-RNG term approximated; the
-      rule chains' element→resist_score mapping unpinned (validated with
-      the zero stub; pacing keeps that configuration — feeding flags9 is
-      WRONG and was reverted in-session); custom-room pool sweeps (bank
-      $71 RoomEncTable) out of sweep_ttk scope.
+      RESIDUALS (S86, also §15.9): ~~party-side category-base fill~~
+      **CLOSED S87** (instance record +$5B..$5E; creation roll; WLD);
+      ~~obedience mid-band banded-RNG term~~ **CLOSED S87** (exact,
+      889/889); the rule chains' element→resist_score mapping unpinned
+      (validated with the zero stub; pacing keeps that configuration —
+      feeding flags9 is WRONG and was reverted in-session); custom-room
+      pool sweeps (bank $71 RoomEncTable) out of sweep_ttk scope.
+
+## S87 — commit-model close-out: party bases, obedience, WLD (user-directed)
+
+User direction: finish the simulator arc's remaining stand-ins; "err on
+the side of doing more". Hacked .sav supplied (fresh game, Slib L1 with
+custom skills $E4/$E5/$E9).
+
+- [x] Party-side category-base fill DECODED + MEASURED (hook-verified on
+      the real save): bank $51 `LoadBtlS_44cb` walks the party monster's
+      own instance record; +$5B/+$5C/+$5D/+$5E → $DC44/$DC54/$DC5C/$DC4C
+      (wBattlePostFlag-gated; swap-in re-sync $53:$6236). Source =
+      enemy-stats ai_weights through the one-time CREATION ROLL
+      (bank $14 `SaveEnem_47fd`/`_4821`: ($CD+RNG mod $34)/256, the $100
+      overflow = exactly 1.0×). Slib's 80/186/189/85 = a legit roll of
+      EID 1's [100,200,100,200]. §15.10.1; MONSTER_DATA.
+- [x] Obedience gate EXACT + validated **889/889**
+      (measure_obedience.py → s87_obedience_events.json →
+      validate_obedience.py): band table {5,7,9,11,13,15}, the
+      mod-with-multiples-promoted quirk over RNG&$3F with LCG-step
+      replay, the COMPLETED inequality (S84's note dropped $db4d and
+      $db53), boundaries + all four tactics. §15.10.7a.
+- [x] $7997 consumption point CLOSED (= the decide's $db53 addend);
+      table re-sectioned to `db` (`ObedienceThreshTable_7997`,
+      byte-identical).
+- [x] TRUE-loaf RUNTIME-SIGHTED: plan-$81 Command carry-divert; all
+      three codes ($98/$3A/$8D) live; `SetBtlAI_7f5f` exact
+      (cat1-dominance rule). The sim's tactic-3 always-Attack shortcut
+      corrected.
+- [x] **wBattleLVL = the WLD stat, not the level** (INFO-screen
+      verified; record slot+$60; init 5×level − 10×arenaTier; breeding
+      zeroes it; Add/SubMonsterWLD item adjusters). Instance-record map
+      corrected (MONSTER_DATA — the old $4B..$5A rows were missing the
+      MaxHP/MaxMP words; the S36 "±2 WLD-style" prose was the LEVEL CAP
+      roll).
+- [x] Mislabels fixed both trees: SetMonsterSkill1/2/3 +
+      ClearMonsterSkill1/2/3 → Add/SubMonsterAIWeightCat1/3/2;
+      ClearMonsterAGL → SubMonsterWLD (+ AddMonsterWLD label).
+- [x] pacing.py: exact obedience on WLD; real party bases
+      (make_board `ai_weights`/`wld`, `party_bases_from_row`,
+      `default_wld`; PARTY_FALLBACK_BASES = labeled reference);
+      validate_pacing `--pbases` (default = the measured Slib record).
+      Full regression green: 6614/0 + 802/0, rules 240/240, ai 26/26,
+      idle CHECK OK, level-1 PIT unchanged, level-2 72/44/89/77/46
+      (S86's recorded 75/46/85/82/48 = `--pskills 0xe9,0xe5`, now
+      recorded), profile_check --ttk PASS 1.00× vanilla-vs-vanilla.
+      Byte-neutral session (clean `1ca6579…`, patched `a17bff8e…`
+      both verified after every annotation batch).
+      Still open (inherited, unchanged): element→resist_score zero-stub;
+      post-creation WLD level-up writer untraced; measure_battle events
+      don't carry the dc44 arrays/WLD (board_from_event uses
+      default_wld + PARTY_FALLBACK_BASES stand-ins — add the fields on
+      the NEXT corpus regeneration, not retroactively); bank $07
+      CallFld_451e INFO-screen renderer noted, internals unexplored.

@@ -8964,6 +8964,12 @@ jr_057_6edb:
     cp $81
     jp nz, AIState1CategoryScores_7129
 
+; [S87] Plan $81 (Command) + obedience CARRY -> the DIRECT-PICK divert:
+; d9ee++ then jr_057_6f1f. This is the TRUE-loaf writer path — the action
+; is auto-picked by SetBtlAI_7f5f ($98 loaf / $3A attack / $8D defence)
+; and queued at jr_057_6f64, bypassing the category machine. Runtime-
+; sighted S87: all three codes reproduced live by forcing wMenu_selection
+; =$81 + WLD>=$F0 + base sets. §15.10.7a.
     ld hl, $d9ee
     inc [hl]
 
@@ -9007,6 +9013,7 @@ jr_057_6f1f:
     ld hl, $4c00
     rst $10
 
+; [S87] Queue the 7f5f pick into $DCEC[idx] (b = $98/$3A/$8D), d9ee=6.
 jr_057_6f64:
     ld a, $06
     ld [$d9ee], a
@@ -10975,7 +10982,7 @@ jr_057_797d:
 
 jr_057_7988:
     add b
-    ld hl, $7997
+    ld hl, ObedienceThreshTable_7997
     add l
     ld l, a
     ld a, $00
@@ -10986,115 +10993,34 @@ jr_057_7988:
     ret
 
 
-    add hl, de
-    add hl, de
-    add hl, de
-    inc d
-    inc d
-    add hl, de
-    add hl, de
-    add hl, de
-    add hl, de
-    inc d
-    rrca
-    ld a, [bc]
-    inc d
-    inc d
-    inc d
-    inc d
-    rrca
-    inc d
-    dec b
-    rrca
-    ld a, [bc]
-    inc d
-    ld a, [bc]
-    ld a, [bc]
-    inc d
-    dec b
-    dec b
-    inc d
-    ld a, [bc]
-    dec b
-    inc d
-    dec b
-    ld a, [bc]
-    rrca
-    ld a, [bc]
-    dec b
-    add hl, de
-    inc d
-    add hl, de
-    add hl, de
-    rrca
-    inc d
-    inc d
-    inc d
-    ld a, [bc]
-    add hl, de
-    rrca
-    ld a, [bc]
-    inc d
-    ld a, [bc]
-    inc d
-    add hl, de
-    rrca
-    dec b
-    inc d
-    dec b
-    dec b
-    inc d
-    dec b
-    ld a, [bc]
-    dec b
-    rrca
-    dec b
-    add hl, de
-    inc d
-    add hl, de
-    add hl, de
-    inc d
-    inc d
-    inc d
-    ld a, [bc]
-    ld a, [bc]
-    add hl, de
-    inc d
-    ld a, [bc]
-    rrca
-    ld a, [bc]
-    ld a, [bc]
-    rrca
-    add hl, de
-    dec b
-    inc d
-    dec b
-    dec b
-    dec b
-    dec b
-    ld a, [bc]
-    dec b
-    dec b
-    dec b
-    add hl, de
-    rrca
-    ld a, [bc]
-    add hl, de
-    inc d
-    ld a, [bc]
-    dec b
-    dec b
-    dec b
-    add hl, de
-    inc d
-    rrca
-    inc d
-    inc d
-    add hl, de
-    inc d
-    add hl, de
-    dec b
+; [S87] Act/loaf threshold table (4 tactics x 27 bytes; values 5..25),
+; consumed by AIPreambleLadder_791a -> $db53 = a DIRECT ADDEND in the
+; obedience inequality (AIPreambleDecide_7a5d) — the S86 "consumption
+; point still to pin" is closed: this table IS an obedience threshold.
+; Index = 27*tactic + cat1row(>=$C0:0 / >=$40:9 / else 18)
+;         + cat3row(0/3/6) + cat2row(0/1/2).  (Was misassembled as code.)
+ObedienceThreshTable_7997:
+; tactic 0 Charge
+    db $19, $19, $19, $14, $14, $19, $19, $19, $19
+    db $14, $0f, $0a, $14, $14, $14, $14, $0f, $14
+    db $05, $0f, $0a, $14, $0a, $0a, $14, $05, $05
+; tactic 1 Mixed
+    db $14, $0a, $05, $14, $05, $0a, $0f, $0a, $05
+    db $19, $14, $19, $19, $0f, $14, $14, $14, $0a
+    db $19, $0f, $0a, $14, $0a, $14, $19, $0f, $05
+; tactic 2 Cautious
+    db $14, $05, $05, $14, $05, $0a, $05, $0f, $05
+    db $19, $14, $19, $19, $14, $14, $14, $0a, $0a
+    db $19, $14, $0a, $0f, $0a, $0a, $0f, $19, $05
+; tactic 3 Command
+    db $14, $05, $05, $05, $05, $0a, $05, $05, $05
+    db $19, $0f, $0a, $19, $14, $0a, $05, $05, $05
+    db $19, $14, $0f, $14, $14, $19, $14, $19, $05
 
+
+; [S87] $db4e = wBattleLVL[idx] >> 2 — the WLD (wildness) term:
+; wBattleLVL is a MISNOMER, it holds the record's WLD stat slot+$60
+; (5*level - 10*arenaTier at creation; 0 for hatchlings).
 LoadBtlAI_7a03:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleLVL
@@ -11107,6 +11033,12 @@ LoadBtlAI_7a03:
     ret
 
 
+; [S87] $db4f = the obedience BANDED RNG: band b from WLD (<$20:5 <$40:7
+; <$60:9 <$90:11 <$C0:13 else 15); one live-RNG step; a = RNG1 & $3F;
+; the tail loop is a MOD b with a quirk — nonzero exact multiples of b
+; return b itself (the `jr nz` fallthrough loads b), 0 stays 0.
+; Differentially validated S87 (validate_obedience.py, incl. the LCG
+; step replay). §15.10.7a.
 LoadBtlAI_7a16:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleLVL
@@ -11171,12 +11103,17 @@ jr_057_7a59:
 ; State-0 decision: carry -> clear the $DCEC pair to $FFFF, set bit6 of
 ; $DD03[idx], run the machine (plan $81 diverts at AIPlanCommandDivert_714e);
 ; no-carry -> AIState0AltOutcome_6f8c. §15.10.7 (S80).
-; [S84] The OBEDIENCE GATE, on wBattleLVL low byte: 0 or < $15 (21) →
+; [S84] The OBEDIENCE GATE, on the wBattleLVL low byte — [S87] which
+; is the WLD stat, NOT the level: 0 or < $15 (21) →
 ; no-carry (the $6F8C tactic-bias path — low-level party monsters ALWAYS
 ; take it); >= $F0 → carry (act unbiased; enemy init forces LVL=$00FF so
-; enemies always act). Between: carry iff $db4e+$db4f > $db4c+c
-; ($db4e = LVL/4, $db4f = banded RNG, $db4c = 78d4 tactic seed).
-; §15.10.7a.
+; enemies always act).
+; [S87] Mid-band inequality COMPLETED (the S84 note dropped two terms):
+; carry iff $db4e + $db4f  >  $db4c + $db4d + $db53   (STRICT)
+; ($db4e = WLD/4, $db4f = banded RNG [7a16], $db4c = 78d4 tactic-category
+; seed /10, $db4d = w3/10 [7905], $db53 = ObedienceThreshTable_7997 value
+; [791a] — the table's consumption point, closing the S86 residual).
+; 889/889 differential checks (validate_obedience.py). §15.10.7a.
 AIPreambleDecide_7a5d:
     ld a, [wBattleAttackerIdx]
     add a
@@ -12204,6 +12141,11 @@ jr_057_7f5d:
     ret
 
 
+; [S87] Command-divert DIRECT PICK: reads the actor's raw category bases
+; ($DC44/$DC4C/$DC54); each >= $3F sets a bit in $db4c. Returns b = $98
+; (loaf) if all three < $3F; else $3A (Attack) iff cat1 >= $3F AND
+; cat1 >= cat2 AND cat1 >= cat3; else $8D (Defence). Byte-read + runtime-
+; sighted S87 (all three codes). §15.10.7a.
 SetBtlAI_7f5f:
     ld hl, $db4c
     xor a

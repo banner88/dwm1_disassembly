@@ -54,6 +54,7 @@ def party_for_level(lv):
     for k in ('hp', 'mp', 'atk', 'dfn', 'agl', 'int'):
         out[k] = max(e[k], round(e[k] + (m[k] - e[k]) * t))
     out['level'] = max(1, min(int(lv), 99))
+    out['wld'] = 5 * out['level']    # creation-time WLD at arena tier 0
     return out
 
 

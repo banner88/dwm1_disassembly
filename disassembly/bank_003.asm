@@ -4848,7 +4848,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call ClearMonsterAGL
+    call SubMonsterWLD
     call CallMon_7134
     ret
 
@@ -4857,7 +4857,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call ClearMonsterAGL
+    call SubMonsterWLD
     ld a, [$da60]
     ld hl, $cb0b
     call GetCurrentMonsterPtr
@@ -4870,7 +4870,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call ClearMonsterAGL
+    call SubMonsterWLD
     call CallMon_7134
     ret
 
@@ -4901,7 +4901,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call SetMonsterSkill1
+    call AddMonsterAIWeightCat1
     call CallMon_7134
     ret
 
@@ -4910,7 +4910,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call ClearMonsterSkill1
+    call SubMonsterAIWeightCat1
     call CallMon_7134
     ret
 
@@ -4919,7 +4919,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call SetMonsterSkill2
+    call AddMonsterAIWeightCat3
     call CallMon_7134
     ret
 
@@ -4928,7 +4928,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call ClearMonsterSkill2
+    call SubMonsterAIWeightCat3
     call CallMon_7134
     ret
 
@@ -4937,7 +4937,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call SetMonsterSkill3
+    call AddMonsterAIWeightCat2
     call CallMon_7134
     ret
 
@@ -4946,7 +4946,7 @@ SetMon_6ef2:
     ld l, a
     ld h, $00
     ld a, [$da60]
-    call ClearMonsterSkill3
+    call SubMonsterAIWeightCat2
     call CallMon_7134
     ret
 

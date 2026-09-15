@@ -1,6 +1,56 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
 
+> Last verified: 2026-09-05 (Session 85 — **LOOP-LEVEL DIFFERENTIAL VALIDATION
+> OF THE ROUND CORE: DONE — `simulator/battle.py` 6614 comparisons / 0
+> mismatches** over 25 complete engine battles (real-save unforced
+> tactics-AI fights vs 1/2/3 enemies + forced status/coverage runs, both-
+> side KOs, heals, curse, stun, MP-veto): `simulator/measure_battle.py`
+> (31 waypoint hooks, full 8-slot board per event) → corpus
+> `simulator/s85_battle_events.json` → `simulator/validate_battle.py` (37
+> check kinds: order, gates, dup-conversion, veto, target, MISS/dodge,
+> damage cores, HP/KO, victims, decay, DoT, status rolls…). The live RNG is
+> idle-stepped between waypoints (`MainWaitLoop`; `BattleRNG` uses the
+> $C1ED chain only in LINK), so validation is by injection — a seed-to-end
+> replay is impossible by construction (KEY_LESSONS S85). Owning:
+> BATTLE_SKILL_SYSTEM **§15.8b** (new) + §15.7/15.8/15.9 updates.
+>
+> CLOSED with it (byte-read + measured): the S84 "2nd group cast → Attack"
+> rule = `EnemyDupCastConversion_4e63` — per-EID flag table
+> `EnemyDupConvFlagTable_41df` (181/487 set; ex-"BattleHPLookupTable",
+> misnamed) + 77-id list `GroupDupSkillList_4ee4` (re-sectioned to db,
+> byte-identical, extracted by `tools/dump_dupconv_table.py` →
+> `extracted/enemy_dupconv_flags.json`); the scan self-matches, so an
+> enemy converts iff ANY enemy precedes it in the order ($DD0B!=2 keeps);
+> **DoT cap was documented WRONG** (Div16x8To16 leaves the remainder in A
+> → 10+RNG16%6 / 30+RNG16%11; status.py corrected; heavy 13/13); +2 bit1
+> applier = PoisonAir $6D; curse self-hit = 4 RNG2 branches (turn lost /
+> HP−MaxHP/6 / MP−MaxMP/6 / confusion), actor still acts after HP/MP;
+> act-time re-resolve + MP/seal veto rules; status-spell ladders (all
+> $6710); KO transient full-HP; flying Quake victims are visited, not
+> damaged (§13.7 corrected); LoadBtlC_5857 = skill-$41 exemption; phase-9
+> sub 0 = byte-exact status decay. Annotated in source (bank $050/$052/
+> $053 comments + the 5 dup-conv labels; clean `1ca6579…` unchanged).
+>
+> **PATCH (item #4 test): two AI-commit bugs found on the real save and
+> fixed** — AI-committed Tremor/Quake swept the PARTY (S84 stub row $6367
+> = own-side base; vanilla $E5 slack row too) → $E5-$E8 now route to
+> `Jump_058_62bf` (the vanilla group-attack service); AI-committed Anchor
+> was a self-inflicted MegaMagic (CustomDispatch52's damage setup precedes
+> the "no-op" ret). **USER-TESTED S85 (ROM `4c8de38a…`): AI-committed
+> Tremor, Mourn, Infernos work**; the no-op Anchor turn showed an orphan
+> "Has no effect on Slib!" line → **S85b: AI-committed $E4 is rewritten in
+> the queue to $3A by DispatchBoundsStub** = vanilla behaviour (vanilla's
+> AI commits StepGuard/MapMagic and they run as Attack — measured), PyBoy-
+> verified 5/5 turns "Slib attacks!". **Patched test ROM md5
+> `a17bff8e67f3043fbff653c65128ea16` (S85b), USER-CONFIRMED S86.** The
+> player-menu path was never affected (why S74's test passed). editor2
+> `test_compiler --rom` re-pinned to `a17bff8e…` (39/39; S84's move was
+> never recorded there). Verifier PASS 6/6.)
+>
+
+
+
 > Last verified: 2026-09-03 (Session 84 — **S81-remainder measurements +
 > CRASH FOUND AND FIXED in the S74/S75 custom-skill dispatch.**
 > BtlSkillTargetDispatch_401d (230 rows, $00-$E5, abuts the $41E9

@@ -148,3 +148,16 @@ are made in place; no new session/handoff files, ever.
 | 2026-09-05 (S85) | **bank_053 label `BattleHPLookupTable` ($41DF)** looked up no HP — it is the per-EID flag table of the duplicate-group-cast conversion. Renamed `EnemyDupConvFlagTable_41df`; DATA_STRUCTURES mention updated. |
 | 2026-09-05 (S85b) | **S85 §14.1 wording "the AI still WASTES the turn on it; an AI-side exclusion is the follow-up"** assumed vanilla excludes field-only skills from the AI — it does not: vanilla's tactics AI commits StepGuard $37 (measured, StepGuard-only movepool) and it runs the shared Attack handler. Anchor now matches that (queue rewrite to $3A in DispatchBoundsStub). |
 
+## S87 addendum (2026-09-15)
+
+| Claim | Verdict | Correction |
+|-------|---------|------------|
+| ROM0 `SetMonsterSkill1/2/3` / `ClearMonsterSkill1/2/3` labels | WRONG | They clamp-adjust the record AI-weight/personality bytes ($CB25/26/28), not skills (skills live at slot+$29). Renamed `Add/SubMonsterAIWeightCat1/3/2` (both trees). |
+| ROM0 `ClearMonsterAGL` label | WRONG | Subtracts the WLD field ($CB21), not AGL. Renamed `SubMonsterWLD`; unnamed add sibling labeled `AddMonsterWLD`. |
+| §15.10.7a "carry iff $db4e+$db4f > $db4c+c" (S84) | INCOMPLETE | The RHS also adds $db4d (w3/10) and $db53 (ObedienceThreshTable value). Full inequality validated 889/889 (S87). |
+| §15.10.7a "$7997 … consumption point in the decide chain still to pin" (S84) | CLOSED | $db53 is a direct addend in AIPreambleDecide_7a5d. Table re-sectioned to `db` as `ObedienceThreshTable_7997` (byte-identical). |
+| "obedience gate on wBattleLVL low byte" read as LEVEL (S84/S86 prose + model) | MISLEADING | wBattleLVL holds the WLD stat (record slot+$60; INFO-screen "WLD"; 5×level−10×arenaTier at creation). Display level is $db9b (slot+$4B). |
+| MONSTER_DATA record rows "$4B Level / $4C Level cap / $50 HP / $52 MP / $54 ATK …" | WRONG (shifted) | $52/$56 are MaxHP/MaxMP; stat words run $58..$5E; $60 = WLD; $64..$67 = AI weights. Pinned by the bank $51 walk + live reads (S87). |
+| MONSTER_DATA S36 prose "growth/personality (WLD-style) set to species base ±2" | WRONG | The ±2 roll is the individual LEVEL CAP (slot+$4C). WLD is computed (5×level−10×tier). |
+| PROJECT_STATE/§15.8c level-2 percentiles quoted without invocation | GAP | The run used `--pskills 0xe9,0xe5`; recorded S87, `--pbases` added. |
+

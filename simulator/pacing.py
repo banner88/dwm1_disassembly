@@ -153,15 +153,20 @@ def make_board(party, enemies, species=None, db73=0):
     b.eid = [0, 0, 0]
     b.party_skills = [None] * 3
     b.tactic = [0] * 3
+    b.party_bases = [None] * 3
+    b.wld = [0] * 3
     for i, m in enumerate(party):
         b.hp[i] = b.maxhp[i] = m['hp']; b.mp[i] = m.get('mp', 0)
         b.atk[i] = m['atk']; b.dfn[i] = m['dfn']; b.agl[i] = m['agl']
         b.int[i] = m['int']; b.level[i] = m.get('level', 1)
+        b.wld[i] = m.get('wld', default_wld(b.level[i]))
         b.dd13[i] = 2; b.dd1b[i] = 0
         b.dd0b[i] = dd0b_mode(m['int'], enemy=False)
         b.dd03[i] = m.get('tactic', 0)
         b.tactic[i] = m.get('tactic', 0)
         b.party_skills[i] = list(m.get('skills', []))
+        if m.get('ai_weights'):                 # (c1,c2,c3,w3) battle
+            b.party_bases[i] = tuple(m['ai_weights'])   # order, pre-rolled
         sp = species.get(m.get('species'))
         if sp:
             b.res[i * 7:(i + 1) * 7] = pack_res(sp['resistances'])
@@ -190,6 +195,10 @@ def board_from_event(e):
     supplies via attach_commit_inputs)."""
     b = B.Board.from_event(e)
     b.party_skills = [None] * 3
+    b.wld = [default_wld(l) for l in list(b.level)[:3]]  # stand-in; the
+    # engine value is record slot+$60 (events do not carry it)
+    b.party_bases = [None] * 3      # events predate the S87 dc44-array
+    # capture; callers with real record bases attach them here
     b.tactic = [v & 3 if v != 0xFF else 0 for v in list(e['dd03'])[:3]]
     return b
 
@@ -309,25 +318,136 @@ def _commit_target(b, s, act, records, state_ref):
     return (s & 4) ^ 4
 
 
-def obedience_carries(level, cat_bases, tactic, rnd):
-    """AIPreambleDecide_7a5d on wBattleLVL low byte: <$15 -> ALWAYS the
-    tactic-bias path (return False); >=$F0 -> always carry (unbiased).
-    Between: carry iff LVL/4 + bandedRNG > seed(tactic)/10 — the banded
-    RNG term is approximated uniform over the observed 0..15 band
-    (stand-in; only affects mid-level party monsters)."""
-    lv = level & 0xFF
-    if lv < 0x15:
+# --------------------------------------------------------------------------
+# Obedience gate — EXACT (S87: byte-read + differentially validated,
+# simulator/validate_obedience.py vs s87_obedience_events.json)
+# --------------------------------------------------------------------------
+# Act/loaf threshold table $57:$7997 (4 tactics x 27; data bytes, was
+# misdisassembled as code). Consumed by AIPreambleLadder_791a -> $db53,
+# which is a DIRECT ADDEND in the decide inequality (the S86 "consumption
+# point still to pin" residual — closed S87).
+OBED_THRESH = (
+    25, 25, 25, 20, 20, 25, 25, 25, 25, 20, 15, 10, 20, 20,
+    20, 20, 15, 20, 5, 15, 10, 20, 10, 10, 20, 5, 5,          # 0 Charge
+    20, 10, 5, 20, 5, 10, 15, 10, 5, 25, 20, 25, 25, 15,
+    20, 20, 20, 10, 25, 15, 10, 20, 10, 20, 25, 15, 5,        # 1 Mixed
+    20, 5, 5, 20, 5, 10, 5, 15, 5, 25, 20, 25, 25, 20,
+    20, 20, 10, 10, 25, 20, 10, 15, 10, 10, 15, 25, 5,        # 2 Cautious
+    20, 5, 5, 5, 5, 10, 5, 5, 5, 25, 15, 10, 25, 20,
+    10, 5, 5, 5, 25, 20, 15, 20, 20, 25, 20, 25, 5)           # 3 Command
+
+
+def _band_row(v, hi_steps):
+    """Base -> ladder row: >=$C0 row 0, >=$40 row 1, else row 2, scaled."""
+    return 0 if v >= 0xC0 else (hi_steps if v >= 0x40 else 2 * hi_steps)
+
+
+def obed_thresh_index(tactic, c1, c3, c2):
+    """AIPreambleLadder_791a index: 27*tactic + cat1(0/9/18) +
+    cat3(0/3/6) + cat2(0/1/2)."""
+    return (27 * (tactic & 3) + _band_row(c1, 9)
+            + _band_row(c3, 3) + _band_row(c2, 1))
+
+
+def obed_band(wld):
+    """LoadBtlAI_7a16 band width b from the wBattleLVL low byte — which
+    holds the monster's WLD (wildness) stat, record slot+$60, NOT the
+    level (S87; display level is $db9b). Enemies are forced $00FF."""
+    lv = wld & 0xFF
+    for lim, b in ((0x20, 5), (0x40, 7), (0x60, 9), (0x90, 11), (0xC0, 13)):
+        if lv < lim:
+            return b
+    return 15
+
+
+def obed_band_reduce(a, b):
+    """The 7a16 tail loop over a = RNG1' & $3F: repeated `sub b` — result
+    is a mod b, EXCEPT nonzero multiples of b return b itself (the
+    `jr nz` fallthrough loads b). 0 stays 0."""
+    if a == 0:
+        return 0
+    r = a % b
+    return b if r == 0 else r
+
+
+def obedience_decide(wld, db4c, db4d, db4e, db4f, db53):
+    """AIPreambleDecide_7a5d on WLD: 0 or <$15 -> no-carry (tactic-bias
+    path — tame monsters FOLLOW tactics); >=$F0 -> carry (unbiased/wild
+    machine; enemy init forces $00FF). Between: carry iff
+    db4e+db4f > db4c+db4d+db53 (STRICT; 8-bit sums, no wrap with
+    vanilla-range weights)."""
+    lv = wld & 0xFF
+    if lv == 0 or lv < 0x15:
         return False
     if lv >= 0xF0:
         return True
-    seed = {0: cat_bases[0], 1: cat_bases[1], 2: cat_bases[2], 3: 0}[tactic]
-    return (lv // 4) + rnd.randrange(16) > seed // 10
+    return ((db4c + db4d + db53) & 0xFF) < ((db4e + db4f) & 0xFF)
 
 
-PARTY_DEFAULT_BASES = (150, 100, 100)   # stand-in party category bases:
-# the party-side $DC44/4C/54 fill site is not yet traced (ROADMAP S86
-# residual); measured S80 corpora only cover enemy slots. Attack-leaning
-# defaults; the tactic bias (+20/+45) rides on top exactly as decoded.
+def obedience_carries(wld, bases, tactic, state_ref):
+    """Full engine chain for one party actor. wld = the monster's WLD
+    stat (record slot+$60; 5*level - 10*arenaTier at creation, 0 for
+    hatchlings, item-adjustable). bases=(c1,c2,c3,w3) = battle arrays
+    $DC44/$DC4C/$DC54/$DC5C (= party record +$5B/+$5E/+$5C/+$5D).
+    Steps the modeled live RNG once (SaveBtlAI_7f2c in LoadBtlAI_7a16).
+    Returns True = carry = act UNBIASED (wild); False = +20 tactic
+    bias."""
+    c1, c2, c3, w3 = bases
+    db4c = {0: c1, 1: c2, 2: c3, 3: 0}[tactic & 3] // 10   # CmpBtlAI_78d4
+    db4d = w3 // 10                                        # AIPreambleW3_7905
+    db53 = OBED_THRESH[obed_thresh_index(tactic, c1, c3, c2)]
+    db4e = (wld & 0xFF) >> 2                               # LoadBtlAI_7a03
+    state_ref[0] = D.rng_step(state_ref[0])
+    db4f = obed_band_reduce((D.rng1(state_ref[0])) & 0x3F, obed_band(wld))
+    return obedience_decide(wld, db4c, db4d, db4e, db4f, db53)
+
+
+# --------------------------------------------------------------------------
+# Party category bases — REAL SOURCE (S87): the party monster's own
+# instance record +$5B/+$5C/+$5D/+$5E -> $DC44 (cat1) / $DC54 (cat3) /
+# $DC5C (w3) / $DC4C (cat2), filled by LoadBtlS_44cb at battle init.
+# Record values = source enemy-stats row ai_weights [w0,w1,w3,w2] each
+# through the one-time CREATION ROLL (bank $14 SaveEnem_47fd):
+# factor m256 = $CD + (RNG mod $34); m256==$100 keeps the original
+# (exactly 1.0x), else value = orig*m256 >> 8 — uniform ~0.801..0.996x
+# plus the 1/52 exact-1.0 case. No mid-battle drift (writers = creation
+# + breeding + field item effects only).
+# --------------------------------------------------------------------------
+def creation_roll(rnd):
+    """One SaveEnem_47fd multiplier draw: returns m256 in 205..256."""
+    return 0xCD + rnd.randrange(0x34)
+
+
+def roll_weight(v, rnd):
+    m256 = creation_roll(rnd)
+    return v if m256 == 0x100 else (v * m256) >> 8
+
+
+def party_bases_from_row(ai_weights, rnd=None):
+    """(c1,c2,c3,w3) battle bases from an enemy_stats ai_weights row
+    [+17..+20] = [w0(cat1), w1(cat3), w2(cat2), w3]. With rnd, applies
+    the per-byte creation roll (one-time, as at monster creation);
+    without, returns the raw row values (upper envelope)."""
+    w0, w1, w2, w3 = ai_weights[:4]
+    if rnd is None:
+        return (w0, w2, w1, w3)
+    return (roll_weight(w0, rnd), roll_weight(w2, rnd),
+            roll_weight(w1, rnd), roll_weight(w3, rnd))
+
+
+def default_wld(level, arena_tier=0):
+    """Creation-time WLD (constructor $14:label14_40b4): 5*level -
+    10*arenaTier ($CAB4), clamped 0..255. Post-creation it drifts via
+    items (Add/SubMonsterWLD) and possibly level-up (writer not yet
+    traced) — pass a measured value when you have one."""
+    return max(0, min(0xFF, 5 * int(level) - 10 * int(arena_tier)))
+
+
+PARTY_FALLBACK_BASES = (150, 100, 100, 100)  # documented REFERENCE
+# personality (attack-leaning) for boards built without real record
+# bases (board_from_event; synthetic parties that don't pass
+# ai_weights). The machinery around it is now exact — only this default
+# tuple is a modelling choice.
 
 
 def commit_round(b, records, rnd, state, party_policy='attack',
@@ -346,18 +466,23 @@ def commit_round(b, records, rnd, state, party_policy='attack',
                 tgt = _commit_target(b, s, act, records, state_ref)
             else:
                 tactic = getattr(b, 'tactic', [0] * 3)[s]
-                if tactic == 3:                     # Command w/o menu ->
-                    act = A.PLAIN_ATTACK            # engine queues $3A
+                pb = (getattr(b, 'party_bases', [None] * 3)[s]
+                      or PARTY_FALLBACK_BASES)
+                wld = getattr(b, 'wld', None)
+                wld = wld[s] if wld else default_wld(b.level[s])
+                carries = obedience_carries(wld, pb, tactic, state_ref)
+                if tactic == 3 and not carries:     # Command w/o menu,
+                    act = A.PLAIN_ATTACK            # no-carry: engine
                     tgt = _commit_target(b, s, act, records, state_ref)
-                else:
-                    adj = [0, 0, 0]
-                    if not obedience_carries(b.level[s],
-                                             PARTY_DEFAULT_BASES,
-                                             tactic, rnd):
-                        adj[tactic] = 0x14          # +20 bias ($6F8C)
-                    act, tgt = commit_actor(
-                        b, s, b.party_skills[s], list(PARTY_DEFAULT_BASES),
-                        records, rnd, state_ref, is_enemy=False,
+                else:                               # carry -> UNBIASED
+                    adj = [0, 0, 0]                 # machine (even tac 3
+                    if not carries:                 # — S87 corrects the
+                        adj[tactic] = 0x14          # old always-Attack
+                    act, tgt = commit_actor(        # shortcut); no-carry
+                        b, s, b.party_skills[s],    # tac 0-2: +20 bias
+                        list(pb[:3]),               # ($6F8C; $2D when
+                        records, rnd, state_ref,    # plan==$81 Command,
+                        is_enemy=False,             # not driven here)
                         plan_adj=adj)
         else:                                       # enemy
             er = enemy_recs.get(s) if enemy_recs else None

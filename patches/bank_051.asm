@@ -730,6 +730,17 @@ jr_051_44c4:
     ret
 
 
+; [S87] PARTY per-slot battle init: walks the party monster's own 149-byte
+; INSTANCE record (base $CACA + slot*$95; MONSTER_DATA "instance record").
+; Offsets read here (R = $CACA-relative): +0 species; +2 personality byte
+; (hi nibble&3 -> $DD03 tactic, lo -> $db93); +$41 status (bit7 KO ->
+; $dd1b); +$42 (= slot+$4B, the display LEVEL) -> $db9b; +$47/49/4b/4d
+; HP/MaxHP/MP/MaxMP; +$4f..$56 ATK/DEF/AGL/INT (words); +$57..58 =
+; slot+$60 WLD word -> wBattleLVL (MISNOMER; the obedience input);
+; +$5B/+$5C/+$5D/+$5E = the four AI-WEIGHT /
+; personality bytes -> $DC44 (cat1) / $DC54 (cat3) / $DC5C (w3) / $DC4C
+; (cat2) at jr_051_45f8 below — the party-side category-base fill (the
+; S86 pacing residual, closed S87; hook-verified on the real save).
 LoadBtlS_44cb:
 jr_051_44cb:
     ld a, c
@@ -932,6 +943,9 @@ jr_051_45b6:
     inc hl
     jr jr_051_4610
 
+; [S87] The party category-base fill: 4 record bytes R+$5B..$5E in copy
+; order cat1/cat3/w3/cat2. Fresh battle (wBattlePostFlag==0) always
+; fills; mid-battle reload refills only when $db03 bits 4-5 set.
 jr_051_45f8:
     ld de, $dc44
     call LoadBtlS_4692
