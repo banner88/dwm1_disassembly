@@ -121,6 +121,108 @@ def next_hp(evs, i, slot):
     return None
 
 
+def check_snap(b, a, vg, evs, sc, where, f9):
+    """Replay an on-hit snap-out roll ($53:$5F15, S88) when the corpus
+    carries the snap_roll waypoint. Mutates the board on a snap."""
+    se = next((e for e in vg if e['tag'] == 'snap_roll'), None)
+    if se is None:
+        return
+    t = se['db89']
+    rolled, snapped, _ = B.snap_out(b, t, f9, st16(se))
+    tally('snap_gate', rolled, dict(w=where, a=a, t=t, f9=f9, st=se['st'][t*8+2]))
+    idx = evs.index(se)
+    nxt = evs[idx + 1] if idx + 1 < len(evs) and evs[idx + 1]['sc'] == sc else None
+    if nxt is not None:
+        got_clear = not (nxt['st'][t*8+2] & 0x90)
+        tally('snap_roll', snapped == got_clear,
+              dict(w=where, a=a, t=t, rng=(se['rng1'], se['rng2']), pred=snapped, got=got_clear))
+        tally('snap_byte', nxt['st'][t*8+2] == b.stb(t, 2),
+              dict(w=where, a=a, t=t, got=nxt['st'][t*8+2], pred=b.stb(t, 2)))
+
+
+def validate_conf(b, a, g, evs, sc, where):
+    """Model-driven confusion-turn validation (S88): pick, target, whiff,
+    damage, snap-out. Requires the conf_pick waypoint in the group."""
+    tags = [e['tag'] for e in g]
+    cp = g[tags.index('conf_pick')]
+    b.db73 = cp['db73']; b.link = bool(cp['c86c'])
+    mid, s_after = B.confusion_pick(b, a, st16(cp))
+    tf = next((e for e in g if e['tag'] == 'target_fetch'), None)
+    got_mid = tf['dcec'][a*2] if tf else None
+    tally('conf_pick', got_mid is None or mid == got_mid,
+          dict(w=where, a=a, pred=hex(mid), got=None if got_mid is None else hex(got_mid),
+               rng=(cp['rng1'], cp['rng2'])))
+    if got_mid is not None and got_mid != mid:
+        mid = got_mid                       # keep walking with the engine's pick
+    if mid == B.CONF_HITALLY:
+        pt, s_after = B.uniform_side_pick(b, a & 4, s_after)
+    elif mid in (B.CONF_HITENEMY, B.CONF_TRIP):
+        pt, s_after = B.uniform_side_pick(b, (a & 4) ^ 4, s_after)
+    else:
+        pt = a
+    if tf is not None:
+        tally('conf_target', pt == tf['dcec'][a*2+1],
+              dict(w=where, a=a, mid=hex(mid), pred=pt, got=tf['dcec'][a*2+1]))
+    if mid == B.CONF_RUN:
+        tally('conf_act', 'meta_run' in tags, dict(w=where, a=a, tags=tags))
+        b.dd1b[a] = 0xFF; b.dd13[a] = 0xFF
+        return
+    if mid in (B.CONF_SCARED, B.CONF_DANCE):
+        tally('conf_act', 'meta_msg' in tags, dict(w=where, a=a, tags=tags))
+        return
+    if mid == B.CONF_TRIP:
+        tally('conf_act', 'meta_trip' in tags, dict(w=where, a=a, tags=tags))
+        b.set_stb(a, 5, b.stb(a, 5) | 0x04)
+        return
+    if mid in (B.CONF_PARA, B.CONF_CANTMOVE):
+        tally('conf_act', 'meta_selfpara' in tags, dict(w=where, a=a, tags=tags))
+        b.set_stb(a, 2, b.stb(a, 2) | 0x40)
+        return
+    # $99/$9A/$9B: physical
+    want_tag = {B.CONF_HITALLY: 'meta_hitally', B.CONF_HITENEMY: 'meta_hitenemy',
+                B.CONF_HITRANDOM: 'meta_hitrandom'}[mid]
+    tally('conf_act', want_tag in tags, dict(w=where, a=a, mid=hex(mid), tags=tags))
+    t = tf['dcec'][a*2+1] if tf else pt
+    mr = next((e for e in g if e['tag'] == 'miss_rng'), None)
+    fld = (RECORDS.get(mid) or {}).get('battle_record', {}).get('fields', {})
+    if mr:
+        pm = B.miss_gate(b, a, t, fld.get('flags7', 0), fld.get('flags8', 0), st16(mr))
+        outcome = next((x for x in tags if x in ('miss', 'dodge', 'block')), 'pass')
+        tally('miss', pm == outcome, dict(w=where, a=a, t=t, sk=hex(mid), pred=pm, got=outcome))
+        if outcome != 'pass':
+            return
+    cd = next((e for e in g if e['tag'] == 'calcdef_in'), None)
+    if mid in (B.CONF_HITALLY, B.CONF_HITENEMY):
+        me = next((e for e in g if e['tag'] == want_tag), None)
+        s2 = B.rng_step(st16(me))
+        thr = 0x40 if mid == B.CONF_HITALLY else 0xC0
+        pred_hit = B.rng1(s2) >= thr
+        tally('conf_whiff', pred_hit == (cd is not None),
+              dict(w=where, a=a, mid=hex(mid), r1=B.rng1(s2), pred=pred_hit, got=cd is not None))
+        if cd is None:
+            return
+    if cd is None:
+        return
+    ap = next((e for e in g if e['tag'] == 'apply_in'), None)
+    pd, _ = D.calc_skill_defense(b.atk[a], b.dfn[t], st16(cd), target_idx=t,
+                                 arena=b.link, attacker_idx=a)
+    dmg = ap['db56'] if ap else pd
+    tally('conf_dmg', pd == dmg, dict(w=where, a=a, t=t, mid=hex(mid), pred=pd, got=dmg))
+    ko = B.apply_damage(b, t, dmg)
+    if ap:
+        idx = evs.index(ap)
+        j = idx + 1
+        while j < len(evs) and evs[j]['tag'] == 'ko':
+            j += 1
+        if j < len(evs) and evs[j]['sc'] == sc:
+            tally('hp', evs[j]['hp'][t] == b.hp[t],
+                  dict(w=where, a=a, t=t, dmg=dmg, got=evs[j]['hp'][t], pred=b.hp[t]))
+    got_ko = 'ko' in tags
+    tally('ko', ko == got_ko, dict(w=where, a=a, t=t, dmg=dmg, pred=ko))
+    if not ko:
+        check_snap(b, a, g, evs, sc, where, fld.get('flags9', 0))
+
+
 def run(events):
     battles = split_battles(events)
     for sc, evs in battles.items():
@@ -179,17 +281,21 @@ def run(events):
                     cursor += 1
                     continue
                 if b.stb(a, 2) & 0x10:
-                    # confusion gate (+2 bit4): ConfusionActionRewrite picks the
-                    # action (engine-owned here — status.confusion_action's
-                    # table is NOT what the curse-induced case shows: $99
-                    # HitAlly on itself, 2/2 S85); the bit clears when that
-                    # action finishes (measured S85: act state 5 sub 3).
+                    if 'conf_pick' in tags:
+                        validate_conf(b, a, g, evs, sc, where)
+                        b.dd13[a] = 3
+                        cursor += 1
+                        continue
+                    # legacy corpus (no conf waypoints): engine-owned pass-through.
+                    # NOTE (S88): the bit does NOT clear when the actor's own
+                    # action finishes — only the on-hit snap-out clears it; a
+                    # legacy corpus can't validate that, so take engine bytes.
                     for e in g:
                         if e['tag'] == 'apply_in' and e['db56'] and b.valid(e['db89']):
                             B.apply_damage(b, e['db89'], e['db56'])
-                    b.set_stb(a, 2, b.stb(a, 2) & ~0x10)
                     nxt = next((x for x in rev[rev.index(g[-1]) + 1:] if x['tag'] in ('actor_fetch', 'p9_slot')), None)
-                    tally('confusion_clear', nxt is None or not (nxt['st'][a*8+2] & 0x10), dict(w=where, a=a))
+                    if nxt is not None:
+                        b.set_stb(a, 2, nxt['st'][a*8+2])
                     b.dd13[a] = 3
                     cursor += 1
                     continue
@@ -201,22 +307,36 @@ def run(events):
                         eff = B.curse_effect(b, a, st16(cs))
                         ch = g[tags.index('curse_hit')]
                         nxt = g[tags.index('curse_hit') + 1] if tags.index('curse_hit') + 1 < len(g) else None
-                        if eff == 'mp':
-                            b.mp[a] = max(b.mp[a] - (ch['mp'][a] and 0), 0)  # MaxMP not captured: take engine MP
                         if nxt is not None:
+                            # 'mp' modelled S88 (MaxMP//6, needs the maxmp
+                            # field -> legacy corpora fall back to engine MP).
+                            # Read at skill_load: MP there is PRE the cast's
+                            # own $480E spend, which otherwise leaks into
+                            # later events of the same group.
+                            slv = next((e for e in g if e['tag'] == 'skill_load' and e['frame'] > ch['frame']), nxt)
+                            _tf = next((e for e in g if e['tag'] == 'target_fetch'), None)
+                            _qsk = _tf['dcec'][a*2] if _tf else b.q_skill(a)
+                            _qc = (CUSTOM[_qsk]['mp'] if _qsk in CUSTOM else
+                                   (RECORDS.get(_qsk) or {}).get('battle_record', {})
+                                   .get('fields', {}).get('mp_cost_byte', 0))
+                            mp_ok = (slv['mp'][a] in (b.mp[a], max(b.mp[a] - _qc, 0))) if 'maxmp' in ch else True
                             tally('curse_effect', dict(skip='target_fetch' not in tags, hp=nxt['hp'][a] == b.hp[a],
-                                                       mp=True, confuse=bool(nxt['st'][a*8+2] & 0x10))[eff],
-                                  dict(w=where, a=a, eff=eff, rng=(cs['rng1'], cs['rng2']), hp=nxt['hp'][a], pred=b.hp[a]))
+                                                       mp=mp_ok, confuse=bool(nxt['st'][a*8+2] & 0x10))[eff],
+                                  dict(w=where, a=a, eff=eff, rng=(cs['rng1'], cs['rng2']), hp=nxt['hp'][a], pred=b.hp[a],
+                                       mp=nxt['mp'][a], mp_pred=b.mp[a]))
                             if eff == 'mp':
                                 b.mp[a] = nxt['mp'][a]
                         if eff == 'skip':
                             cursor += 1
                             continue
                         if eff == 'confuse':
-                            # confusion rewrite path: action/target from the engine
-                            for e in g:
-                                if e['tag'] == 'apply_in' and e['db56'] and b.valid(e['db89']):
-                                    B.apply_damage(b, e['db89'], e['db56'])
+                            if 'conf_pick' in tags:
+                                validate_conf(b, a, g, evs, sc, where)
+                            else:
+                                # legacy corpus: engine-owned pass-through
+                                for e in g:
+                                    if e['tag'] == 'apply_in' and e['db56'] and b.valid(e['db89']):
+                                        B.apply_damage(b, e['db89'], e['db56'])
                             b.dd13[a] = 3
                             cursor += 1
                             continue
@@ -364,13 +484,25 @@ def run(events):
                             pd = int(pd * mult)
                         tally('damage_phys', pd == dmg, dict(w=where, a=a, t=t, sk=hex(sk), pred=pd, got=dmg,
                                                              atk=b.atk[a], dfn=b.dfn[t], rng=(cd['rng1'], cd['rng2'])))
-                        if sk in B.PHYS_STATUS_RIDER and sc_:
-                            # rider chance not modelled: take the engine's
-                            # outcome from the round's first phase-9 event
+                        if sk in B.PHYS_STATUS_RIDER and (sc_ or sr):
+                            # S88: rider modelled (rider_roll, 41/41). The
+                            # statchance_in hook fires at helper entry —
+                            # BEFORE $69's BossProtectionGate veto. $68's
+                            # sleep roll fires the status_roll hook instead.
+                            re_ = sc_ or sr
                             off, mask = B.PHYS_STATUS_RIDER[sk]
-                            p9e = next((e for e in p9 if e['tag'] == 'p9_slot'), None)
-                            if p9e and p9e['st'][t*8+off] & mask:
-                                B.apply_status(b, t, sk)
+                            rh, _ = B.rider_roll(b, t, sk, st16(re_))
+                            # read the byte at the NEXT event after the roll:
+                            # a p9 read is too late for $68 — the victim's
+                            # own wake gate can clear the fresh sleep first.
+                            ri_ = evs.index(re_)
+                            ne = next((x for x in evs[ri_ + 1:]
+                                       if x['sc'] == sc and x['frame'] > re_['frame']), None)
+                            if ne is not None and rh is not None:
+                                got_r = bool(ne['st'][t*8+off] & mask)
+                                tally('rider', rh == got_r,
+                                      dict(w=where, a=a, t=t, sk=hex(sk), pred=rh, got=got_r,
+                                           rng=(re_['rng1'], re_['rng2']), db73=re_['db73']))
                     elif got_core in ('record', 'heal') and ri:
                         pmin = ri['db4c'] | (ri['db4d'] << 8); prng = ri['db4e']
                         pd, _ = D.record_roll(pmin, prng, st16(ri))
@@ -409,6 +541,9 @@ def run(events):
                         tally('hp', hp_after == b.hp[t], dict(w=where, a=a, t=t, before=hp_before, dmg=dmg, got=hp_after, pred=b.hp[t]))
                     got_ko = any(e['tag'] == 'ko' for e in g[g.index(ap):])
                     tally('ko', ko == got_ko, dict(w=where, a=a, t=t, hp=hp_before, dmg=dmg, pred=ko))
+                    if not ko:
+                        check_snap(b, a, vg, evs, sc, where,
+                                   rec['battle_record']['fields'].get('flags9', 0) if rec else 0)
                     if ko and (B.side_wiped(b, 4) or B.side_wiped(b, 0)):
                         ended = True
                 b.dd13[a] = 3

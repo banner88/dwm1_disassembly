@@ -450,9 +450,11 @@ CALLEVIL_ATK = 0x190
 #   ($FF = the loss-freeze value, end-of-battle only)
 # The gate: these skills AUTO-FAIL against an ENEMY target when db73 == 1
 # (boss battles), regardless of resistance:
-BOSS_PROTECTED_SKILLS = {0x12, 0x13, 0x14, 0x3E, 0x69, 0x6B, 0x71}
-#   $12 Beat, $13 Defeat, $14 Sacrifice, $3E Kamikaze, $69 Paralyze,
-#   $6B (Allähmer/107), $71 K.O.Dance
+BOSS_PROTECTED_SKILLS = {0x12, 0x13, 0x14, 0x3E, 0x6B, 0x71}
+#   $12 Beat, $13 Defeat, $14 Sacrifice, $3E Kamikaze, $6B PalsyAir,
+#   $71 K.O.Dance. $69 Paralyze is NOT here (S88): its damage lands and
+#   only the paralysis-rider application is vetoed, inside rider_roll —
+#   the $65B5 prologue runs BossProtectionGate per-application.
 
 
 def boss_gate_blocks(skill_id, target_is_enemy, db73, arena=False):

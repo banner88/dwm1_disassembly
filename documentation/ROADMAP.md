@@ -1605,6 +1605,47 @@ custom skills $E4/$E5/$E9).
       recorded), profile_check --ttk PASS 1.00× vanilla-vs-vanilla.
       Byte-neutral session (clean `1ca6579…`, patched `a17bff8e…`
       both verified after every annotation batch).
+
+## S88 — Simulator wrap-up part 1: Group A residuals (built S88, NOT yet user-tested)
+
+- [x] Confusion end-to-end (§15.8c): generator $4BEB decoded + measured
+      (10/10 picks incl. live RUN + blocked-$A1 re-roll), meta-actions
+      $99-$A1, uniform target picks ($642C/$6479 family), on-hit
+      snap-out $5F15 (8/8, mask &$63), curse-confusion unified (state
+      $11). The S79 $7AB5 attribution was WRONG (Transform/BeDragon —
+      DOC_AUDIT S88; labels corrected, byte-neutral).
+- [x] Status riders $67/$68/$69 modelled (rider_roll 40/40); $69 boss
+      veto = application-only ($69 REMOVED from BOSS_PROTECTED_SKILLS —
+      its damage lands); $68 = sleep rider via $5C8F -> $6749 STATUS
+      ladder (only Sleep $15 gets the B-ladder).
+- [x] Poison DoT cap >=10: 15/15 exact (10 + RNG16%6) on MaxHP 300.
+- [x] Curse MP drain = MaxMP//6 (4/4; maxmp plumbed through rig+Board).
+- [x] Sleep counter source: CONSTANT $8C (SleepApply_4262).
+- [x] PsycheUp carry-over: closed EMPTY — $56 shares the x1.5 TwinSlash
+      handler $462F; no charge mechanism. PHYSICAL_IDS += $56/$9A/$9B.
+- [x] $DB06 map + $DB07 surround/dodge writers + TailWind guard (+4
+      bit6) + incapacitated-target dodge exemption (miss_gate fix) +
+      one-shot consume-clear (status_forced_action fix).
+- [x] New corpora: s88_confusion_events (2824/0), s88_rider_events
+      (3422/1 — ONE flagged ±1 calcdef anomaly, repro in §15.9),
+      s88_curse_events (3083/0). Legacy corpora green: s85 6614/0
+      (count changed 6614->6614 after the wrong confusion_clear check
+      was replaced by modelled checks), s86 802/0. measure_battle: 9 new
+      waypoints + --db73 + maxmp capture.
+- [ ] $DB07 stun writers (natural setter unlocated; WarCry-family
+      sub-states are the candidates).
+- [ ] "Interception redirects" referent (see §15.9).
+- [x] element -> resist_score mapping PINNED (record status_id = res
+      pos; $6A8A service + $7AA6 shifts + $4532 prologue byte-read;
+      packing verified vs live arrays; 240/240 + PIT green; stub
+      retired in validate_rules AND the pacing adapter).
+- [x] S87 corpus-field deferral discharged: measure_battle now captures
+      ai_bases ($DC44..$DC63) + WLD words ($DC23+2i), live-verified
+      (Slib WLD 5 / enemy $00FF). s88 corpora predate the fields.
+- [ ] WLD post-creation level-up writer trace.
+- [ ] s85/s86 corpus regeneration carrying the new ai_bases/WLD fields (rig ready).
+- [ ] Meta-actions: vanilla flee $E9 class / items / shift (as feasible).
+
       Still open (inherited, unchanged): element→resist_score zero-stub;
       post-creation WLD level-up writer untraced; measure_battle events
       don't carry the dc44 arrays/WLD (board_from_event uses

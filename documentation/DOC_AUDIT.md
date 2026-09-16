@@ -161,3 +161,20 @@ are made in place; no new session/handoff files, ever.
 | MONSTER_DATA S36 prose "growth/personality (WLD-style) set to species base ±2" | WRONG | The ±2 roll is the individual LEVEL CAP (slot+$4C). WLD is computed (5×level−10×tier). |
 | PROJECT_STATE/§15.8c level-2 percentiles quoted without invocation | GAP | The run used `--pskills 0xe9,0xe5`; recorded S87, `--pbases` added. |
 
+
+## S88: ConfusionActionRewrite_7ab5 misattribution (S79 -> corrected S88)
+
+The S79 decode labeled $52:$7AB5 "ConfusionActionRewrite" and documented
+its table {$3A, Scorching, IceStorm, DeMagic} as the confused actor's
+action picker, including a "random target with cross-side wrap quirk".
+ALL of it was misattributed: the routine's only callers are the act-time
+id switch entries for $AA Transform / $D5 BeDragon. The real confusion
+generator is bank $53 entry 1 ($4BEB), producing meta ids $99-$A1 — a
+completely different mechanism (§15.8c). The "random target" claim was
+also internally wrong even for Transform: both RNG1&3 reads share one
+un-stepped value, so the attack pick's candidate is always the opposing
+base slot. Cost: S85's curse-confusion $99 observations sat unexplained
+for three sessions because the documented table contradicted them.
+Lesson reinforced: a decoded routine is not attributed until its CALLERS
+are traced; "reachable from the state machine" is not "reached by the
+gate you assumed".

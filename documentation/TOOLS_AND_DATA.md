@@ -502,3 +502,15 @@ to exactly the original entry's tile count. `--rom <gbc>` = full check;
 `--records-only` = source-only. Exit 1 = FAIL. Runs as verify_integrity
 check 6 and inside editor2/core/builder.build_rom (the editor refuses to
 return a failing ROM).
+
+### S88 additions
+
+| artifact | producer | notes |
+|---|---|---|
+| simulator/s88_confusion_events.json (403+ x8 sc) | measure_battle.py (S88 hooks) | confusion arc corpus; validate_battle 2824/0 |
+| simulator/s88_rider_events.json (10 sc) | measure_battle.py | rider corpus; 3422/1 (one flagged §15.9 anomaly) |
+| simulator/s88_curse_events.json (6 sc) | measure_battle.py | curse-branch amounts; 3083/0 |
+
+measure_battle.py S88: waypoints conf_pick/meta_*/snap_roll, `--db73`
+per-frame forcing, maxmp ($DBD3) captured per event. Battles run on the
+patched pin a17bff8e with boot.state from the user's S87-class .sav.

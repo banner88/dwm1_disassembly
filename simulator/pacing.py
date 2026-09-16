@@ -228,12 +228,13 @@ class ChainRules:
         st = [b.st[s * 8:(s + 1) * 8] for s in range(8)]
         # MaxMP is not tracked on the Board; use current MP (affects only
         # the own-MP-full SuckAir presumption). Families/traits: neutral.
-        # resist_score: the chains' element -> resistance-index mapping is
-        # NOT pinned (validate_rules validated 240/240 with a zero stub);
-        # matching that configuration here — S86 residual.
+        # resist_score PINNED S88: element = record status_id = res pos;
+        # level from the Board's live res bytes (loaded per battle).
+        _res = b.res
         self.view = R.BattleView(b.hp, b.maxhp, b.mp, b.mp, st, b.dd1b,
                                  [0] * 8, [None] * 8,
-                                 lambda s, e: 0)
+                                 lambda s, e: (_res[s*7 + (e >> 2)]
+                                               >> ((3 - (e & 3)) * 2)) & 3)
         self.actor = actor
         self.records = records
 
@@ -242,7 +243,7 @@ class ChainRules:
         f = rec['battle_record']['fields'] if rec else {}
         delta, veto = R.evaluate_chain(
             category, skill, self.actor, self.view,
-            f.get('mp_cost_byte', 0), f.get('flags9'), f.get('flags7', 0))
+            f.get('mp_cost_byte', 0), f.get('status_id', 0), f.get('flags7', 0))
         return delta, veto
 
 

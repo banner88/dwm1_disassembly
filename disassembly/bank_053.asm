@@ -960,12 +960,17 @@ jr_053_454f:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd13
     call CalcBtlC_4be3
-; Per-actor gate order ($4558-$45C8, §15.7 S79): $DB07&$C0 -> forced
-; action $11; status +2 bit6 -> $13 (paralyzed); +2 bit7 -> the sleep
-; wake roll (SleepWakeRoll_4aeb); +5 bits0-5 one-shots -> actions
-; $12/$14/$15/$16/$17/$18; +2 bit5 curse roll (25%: RNG1<$40 ->
-; CurseSelfHit_4c50, can KO); +2 bit4 confusion ->
-; ConfusionActionRewrite_7ab5 (bank $52) rewrites the queued action.
+; Per-actor gate order ($4558-$45C8, §15.7 S79; confusion branch
+; CORRECTED S88): $DB07&$C0 -> forced action $11; status +2 bit6 -> $13
+; (paralyzed); +2 bit7 -> the sleep wake roll (SleepWakeRoll_4aeb);
+; +5 bits0-5 one-shots -> actions $12/$14/$15/$16/$17/$18 (the CONSUMED
+; bit clears at this turn — measured S88, Trip $04 -> $00); +2 bit5
+; curse roll (25%: RNG1<$40 -> CurseSelfHit_4c50, can KO); +2 bit4
+; confusion -> banner + $db42+slot := 0 + act state $11 ->
+; ConfusionActionPick_4beb (bank $53 entry 1) queues a $99-$A1
+; meta-action which the actor ACTS this turn. bit4 is NOT cleared here
+; (only the on-hit snap-out clears it; see $5F15 note). The old S79
+; attribution to $52:$7AB5 was wrong — that is the TRANSFORM rewrite.
 PerActorStatusGates_4558:
     cp $02
     jp nz, Jump_053_463b
@@ -2182,6 +2187,18 @@ CalcBtlC_4be3:
     ret
 
 
+; CONFUSION ACTION GENERATOR (bank $53 entry 1, dispatched by act state
+; $11; S88, byte-read + measured 10/10 picks). One RNG step per
+; iteration (LoadBtlC_4e33; link swaps shadow RNG), then:
+;   RNG1 bit1 -> $99 HitAlly (50%); else bit0 -> $9A HitEnemy (25%);
+;   else non-link ENEMY attacker: $9A + (RNG2 & 7) with result $A1 RUN
+;   re-running the WHOLE routine while $DB73 != 0 (fresh step each try);
+;   party/link attacker: RNG2 < $55 -> $9E Trip, else $9B/$9C by RNG2&1.
+; Writes the id to $db8a + the queue, calls bank $58 entry 8 (per-id
+; target dispatch: $99 -> $6479 own-side uniform; $9A/$9E -> $642C
+; opposing uniform; others self), then state $10 -> state 0 sub 1: the
+; actor ACTS the meta-action this turn. +2 bit4 is NOT cleared here.
+ConfusionActionPick_4beb:
 jr_053_4beb:
     call LoadBtlC_4e33
     ld a, [wRNG1]
@@ -2264,8 +2281,13 @@ jr_053_4c32:
 ;   < $C0  msg $1C: MP -= MaxMP/6 (LoadBtlC_4d1d; skipped at MaxMP 0), acts
 ;   else   msg $19: +2 bit4 CONFUSION set, d9ed=$11 (immediate confusion
 ;          rewrite: the caster hit itself with $99 HitAlly, 2/2 S85); the
-;          bit clears when the NEXT confusion-gated action finishes
-;          (act state 5 sub 3), one round later.
+;          bit does NOT clear when the action finishes (S88 correction):
+;          only the on-hit snap-out clears it — act state 5, a landed
+;          flags9-bit3 skill on a +2&$90 victim rolls one RNG step vs
+;          $AA (party/link victim) / $40 (wild enemy victim); success
+;          masks +2 &= $63 (sleep flag+counter AND confusion cleared,
+;          DoTs/paralyze/curse kept). Measured 8/8 incl. both
+;          thresholds and persist cases.
 CurseSelfHit_4c50:
     ld a, [wBattleTargetIdx]
     push af

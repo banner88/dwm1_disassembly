@@ -9811,6 +9811,10 @@ ReturnSlotResult:
 
 
 ; CheckMonsterSlot: validity of party/battle slot A (0-7).
+; GetMonsterSlotInfo below: CF set additionally when the slot is
+; INCAPACITATED (+2 & $D0 asleep/paralyzed/confused, +5 & $3F one-shot
+; pending, +7 & $C0 stunned). S88: the MISS machine's dodge section
+; consults it on the TARGET — incapacitated targets cannot dodge.
 ; CF SET = NOT a live monster (A>=8, $DD1B[slot]==$FF invalid, or ==1
 ; processed-dead); CF CLEAR = live ($DD1B[slot]==0). The old comment here
 ; said CF=valid — INVERTED (byte-verified S82). Heavily used by the

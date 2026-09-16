@@ -6587,6 +6587,9 @@ jr_058_63c0:
     ret
 
 
+; Uniform side-pick pair (S88): FuncBtlFX_63ec counts LIVE slots on side
+; base E (3 scanned, CheckMonsterSlot CF-clear = live) -> D = count.
+UniformSideCount_63ec:
 FuncBtlFX_63ec:
     ld c, e
     ld b, $03
@@ -6607,6 +6610,13 @@ jr_058_63f8:
     ret
 
 
+; CallBtlFX_63fd: one RNG step (LoadBtlFX_5c3e), then Div8x8(RNG1, count)
+; remainder+1 selects that many live slots up from the side base —
+; a UNIFORM pick, unlike the front-weighted plain-attack roll
+; (§15.10.10). Resolver $642C (HighJump/QuadHits/CallHelp/YellHelp/
+; HitEnemy/Trip: opposing base) and $6479 (HitAlly: OWN base, so a
+; confused party monster can hit itself) both land here.
+UniformSidePick_63fd:
 CallBtlFX_63fd:
     call LoadBtlFX_5c3e
     ld a, [wRNG1]

@@ -3292,3 +3292,27 @@ per-victim target stepping and the AI's phase-4 write order; forcing while
 the engine a clean act. Stat forcing goes in ONCE at init (phase <= 3,
 $D9ED >= 1), never per round (phase 3 recurs between rounds and the
 re-force hides the engine's own HP bookkeeping — first S85 capture bug).
+
+## S88: How the resist stub was legitimately retired (and the $7AB5 lesson)
+
+The S86 guard said: do not upgrade a validated stub without PINNING the
+real mapping. The pin took three INDEPENDENT confirmations that all had
+to agree before touching the model: (1) the rule prologue LoadBtlAI_4532
+byte-read (field +5 -> e=elem&3, d=elem>>2); (2) the service chain
+$6A8A -> $67BB-$67D9 accessor table -> $7AA6 shift cases; (3) the
+cross-check that Sleep's status_id 8 lands on exactly the res position
+the INDEPENDENTLY decoded $5C8F sleep roll reads. Then the packing
+convention was verified byte-exact against LIVE battle res arrays for
+two species before the fixtures got real data. Only then: 240/240 with
+real values, and the PIT re-run because the pacing adapter changed.
+Retiring a stub is a chain of proofs, not a substitution.
+
+Same session, the inverse lesson: TransformActionRewrite_7ab5 (né
+"ConfusionActionRewrite") sat mislabeled for nine sessions because S79
+decoded the routine perfectly but never traced its CALLERS. The S85
+curse-confusion $99 observations contradicted the table the whole time
+and nobody reconciled them. When a measurement contradicts a documented
+mechanism, one of them is wrong TODAY — do not file the contradiction
+as a residual and move on. (It cost: battle.py shipped a 'skipped'
+stand-in for confusion that was wrong in KIND, not just detail — the
+engine acts a rewritten meta-action, including attacking its own side.)

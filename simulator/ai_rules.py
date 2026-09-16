@@ -96,7 +96,7 @@ def _all_live_opposing_have(view, actor, off, mask):
     return bool(live) and all(view.status[s][off] & mask for s in live)
 
 
-def evaluate_chain(category, skill, actor, view, mp_cost, element,
+def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = record status_id (res pos), S88
                    rec_flags7):
     """(delta, veto) for one tag-matched skill, mirroring $78A2/$788B."""
     bonus = penalty = 0
@@ -176,8 +176,13 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,
         else:
             return 0, True
 
-    # $4BCC element-aware +20 [measured; resist condition static]
-    if skill in R_4BCC:
+    # $4BCC element-aware +20 (S88, mapping PINNED: `element` = record
+    # field +5 status_id = a res-array POSITION 0-27; byte = elem>>2 via
+    # the $67BB-$67D9 accessor table, bit-pair = elem&3 via the $7AA6
+    # shift cases; level = (res7[elem>>2] >> ((3-(elem&3))*2)) & 3 =
+    # species resistances[elem-1]. The rule SELF-GATES on element == 0
+    # ($4BCC: ld a,[$db4c]; or a; ret z). Withheld iff rsum > live count.
+    if skill in R_4BCC and element:
         live = view.live_opposing(actor)
         rsum = sum(view.resist_score(s, element) & 3 for s in live)
         if rsum <= len(live):

@@ -112,6 +112,7 @@ class Board:
 
     def __init__(self):
         self.hp = [0] * 8; self.maxhp = [0] * 8; self.mp = [0] * 8
+        self.maxmp = [0] * 8
         self.atk = [0] * 8; self.dfn = [0] * 8; self.agl = [0] * 8
         self.int = [0] * 8; self.level = [0] * 8
         self.st = [0] * 64; self.res = [0] * 56
@@ -128,6 +129,8 @@ class Board:
         for k in ('hp', 'maxhp', 'mp', 'atk', 'dfn', 'agl', 'int', 'st', 'res',
                   'dd13', 'dd1b', 'dd03', 'dd0b', 'db8b'):
             setattr(b, k, list(e[k]))
+        if 'maxmp' in e:
+            b.maxmp = list(e['maxmp'])
         b.level = list(e['db9b']); b.queue = list(e['dcec']); b.eid = list(e['eid'])
         b.db73 = e['db73']; b.link = bool(e['c86c'])
         b.side_seal = [(e['st'][0] >> 3) & 1, (e['st'][1] >> 3) & 1]
@@ -189,6 +192,10 @@ def status_forced_action(b, a, state):
     if b5:
         for bit, code in ONESHOT_ACTIONS:
             if b5 & (1 << bit):
+                # one-shot consumed at the victim's turn (S88, measured:
+                # Trip's +5 bit2 $04 -> $00 across the forced-$16 turn).
+                # Clears the CONSUMED bit; multi-bit sample still open.
+                b.set_stb(a, 5, b5 & ~(1 << bit))
                 return code
     return None
 
@@ -199,13 +206,13 @@ def curse_fires(b, a, state_post_step):
 
 
 def curse_effect(b, a, state_post_step):
-    """CurseSelfHit_4c50 (byte-read + measured S85, 3/3): the SAME step's
+    """CurseSelfHit_4c50 (byte-read + measured S85 3/3 + S88 amounts): the SAME step's
     RNG2 picks the effect —
       < $40  'skip'    : msg $1A, the turn is lost (d9ee=4);
       < $80  'hp'      : msg $1B, HP -= MaxHP/6 (borrow -> 0 = death),
                          then the actor still acts;
-      < $C0  'mp'      : msg $1C, MP -= MaxMP/6 (skipped when MaxMP==0),
-                         then the actor still acts;
+      < $C0  'mp'      : msg $1C, MP -= MaxMP//6 (skipped when MaxMP==0;
+                         amount measured S88 4/4), then the actor still acts;
       else   'confuse' : msg $19, +2 bit4 set and the turn becomes the
                          confusion rewrite path (d9ed=$11).
     Returns the effect name; mutates the board."""
@@ -220,10 +227,113 @@ def curse_effect(b, a, state_post_step):
                 b.dd1b[a] = 1; b.dd13[a] = 0xFF
         return 'hp'
     if r2 < 0xC0:
-        mx = b.maxhp[a]  # placeholder; MaxMP not on the Board -> caller adjusts
+        # MaxMP//6 (S88, measured 4/4 on MaxMP 88 -> 14; skipped when
+        # MaxMP == 0 per the byte-read guard)
+        if b.maxmp[a]:
+            b.mp[a] = max(b.mp[a] - b.maxmp[a] // 6, 0)
         return 'mp'
     b.set_stb(a, 2, b.stb(a, 2) | 0x10)
     return 'confuse'
+
+
+# --------------------------------------------------------------------------
+# Confusion (S88: byte-read $53:$4BEB + $52:$4E3A-$4EF8, measured 23/23)
+# --------------------------------------------------------------------------
+# Meta-action ids a confused actor's turn is rewritten to. The old
+# "ConfusionActionTable_7aff {$3A,$5E,$62,$80}" attribution (S79) was WRONG
+# — that table is the Transform/BeDragon ($AA/$D5) action picker.
+CONF_HITALLY, CONF_HITENEMY, CONF_HITRANDOM = 0x99, 0x9A, 0x9B
+CONF_SCARED, CONF_DANCE, CONF_TRIP = 0x9C, 0x9D, 0x9E
+CONF_PARA, CONF_CANTMOVE, CONF_RUN = 0x9F, 0xA0, 0xA1
+CONF_META_IDS = set(range(0x99, 0xA2))
+SNAP_MASK = 0x63        # on-hit snap-out: clears sleep flag+counter AND confusion
+
+
+def confusion_pick(b, a, state):
+    """$53:$4BEB (act state $11): one RNG step per iteration, then
+    RNG1 bit1 -> $99 HitAlly; else bit0 -> $9A HitEnemy; else the &3==0
+    fork — non-link ENEMY attackers roll $9A+(RNG2&7) with the $A1 RUN
+    result re-running the whole routine when $DB73!=0; party (or link)
+    attackers roll RNG2<$55 -> $9E Trip else $9B/$9C by RNG2&1.
+    Measured 10/10 incl. a live RUN and the blocked-$A1 re-roll guard."""
+    while True:
+        state = rng_step(state)
+        r1, r2 = rng1(state), rng2(state)
+        if r1 & 2:
+            return CONF_HITALLY, state
+        if r1 & 1:
+            return CONF_HITENEMY, state
+        if not b.link and a >= 4:
+            x = 0x9A + (r2 & 7)
+            if x != CONF_RUN or b.db73 == 0:
+                return x, state
+            continue                      # jr jr_053_4beb: full re-run
+        return (CONF_TRIP, state) if r2 < 0x55 else (0x9B + (r2 & 1), state)
+
+
+def uniform_side_pick(b, base, state):
+    """$58:$63EC/$63FD (resolver $642C / $6479): one RNG step, then the
+    (RNG1 mod live_count + 1)-th live slot scanning up from `base`.
+    UNIFORM — unlike the front-weighted plain-attack pick (§15.10.10).
+    Shared by HighJump/QuadHits/CallHelp/YellHelp/HitEnemy/Trip (opposing
+    base) and HitAlly (own base). Returns (slot|None, state)."""
+    live = [s for s in range(base, base + 3) if b.valid(s)]
+    state = rng_step(state)
+    if not live:
+        return None, state
+    return live[rng1(state) % len(live)], state
+
+
+def snap_out(b, v, flags9, state):
+    """$53:$5F15 act-state-5 on-hit snap-out (S88, measured 8/8): after a
+    LANDED skill with flags9 bit3 (physical-contact family, 42 ids) on a
+    victim whose +2 & $90 (asleep|confused): one RNG step; RNG1 < $AA
+    (party/link victim) or < $40 (non-link enemy victim) -> +2 &= $63,
+    clearing sleep flag+counter and confusion, keeping DoT/paralyze/curse.
+    Whiffs, misses and non-bit3 skills (verified: Infernos) never roll.
+    Returns (rolled, snapped, state)."""
+    if not (flags9 & 0x08) or not (b.stb(v, 2) & 0x90):
+        return False, False, state
+    state = rng_step(state)
+    thr = 0x40 if (not b.link and v >= 4) else 0xAA
+    if rng1(state) < thr:
+        b.set_stb(v, 2, b.stb(v, 2) & SNAP_MASK)
+        return True, True, state
+    return True, False, state
+
+
+RIDER_RTYPE = {0x67: 18, 0x69: 19, 0x68: 7}
+
+
+def rider_roll(b, v, sk, state):
+    """PoisonHit/Paralyze status rider (S88, byte-read $52:$65B5/$65C9 +
+    measured 34/34): runs after the damage apply. Skip (no roll, no step)
+    when the target already carries a DoT (+2 & 3, poison rider) / bit6
+    (paralyze). $69's $65B5 prologue runs BossProtectionGate first —
+    vetoed = fail with NO RNG step (presumed step-free; per-event
+    injection insulates). Else: level = res rtype 18 (poison, res+4
+    bits1:0) / 19 (paralysis, res+5 bits7:6) through LADDER_HIT_STATUS
+    (row by target +5 bit7 only), one BattleRNG step, hit = RNG1 < thr.
+    Returns (hit|None, state); applies the bit on hit. Model order
+    rider-then-snap is a presumption (no overlapping sample yet)."""
+    off, mask = PHYS_STATUS_RIDER[sk]
+    if b.stb(v, off) & (0x03 if sk == 0x67 else mask):
+        return None, state
+    if sk == 0x69 and not b.link and v >= 4 and b.db73 == 1:
+        # $65B5 prologue = BossProtectionGate: rider-application veto ONLY
+        # (the physical damage already landed) — the FULL-action block set
+        # in damage.BOSS_PROTECTED_SKILLS no longer includes $69 (S88).
+        return False, state
+    lev = D.res_level(bytes(b.res[v*7:v*7+7]), RIDER_RTYPE[sk])
+    # ALL riders roll the $6749 STATUS ladder — $5C8F routes only skill
+    # $15 (Sleep proper) to the B-ladder $6710; $68 goes to $6749 like
+    # the $65B5/$65C9 helpers (byte-read $5CAE-$5CBB, S88).
+    thr = D.LADDER_HIT_STATUS[0x80 if (b.stb(v, 5) & 0x80) else 0][lev]
+    state = rng_step(state)
+    hit = True if thr is None else (False if thr == 0 else rng1(state) < thr)
+    if hit:
+        b.set_stb(v, off, b.stb(v, off) | mask)
+    return hit, state
 
 
 def target_unreachable(b, t, flags8, skill):
@@ -329,6 +439,12 @@ def miss_gate(b, a, t, flags7, flags8, state_post_step):
         if (b.stb(a, 7) & 0x03) and r2 < 0x60:
             return 'miss'
     if flags8 & 0x80 and b.valid(t):
+        # GetMonsterSlotInfo guard (S88, byte-read $00:$9763-area + measured
+        # conf_e1): an INCAPACITATED target — +2 & $D0 (asleep/paralyzed/
+        # confused), +5 & $3F (one-shot pending) or +7 & $C0 (stun) —
+        # cannot dodge; the whole dodge section is skipped.
+        if (b.stb(t, 2) & 0xD0) or (b.stb(t, 5) & 0x3F) or (b.stb(t, 7) & 0xC0):
+            return 'pass'
         # LoadBtlC_5857: skill $41 with attacker +6&3 == 0 skips the dodge
         # (handled by the caller via skill; not in corpus)
         if b.stb(t, 7) & 0x0C:
@@ -434,7 +550,9 @@ def dot_damage(b, s, state):
 # 'record' = record power roll (+ ladder), 'quake' = patched tier table,
 # 'none' = no damage core (status / meta / vetoed).
 # --------------------------------------------------------------------------
-PHYSICAL_IDS = {0x3A: 1, 0x67: 1, 0x68: 1, 0x69: 1, 0x3B: 1.5, 0x99: 1, 0xE9: 'mourn'}
+PHYSICAL_IDS = {0x3A: 1, 0x67: 1, 0x68: 1, 0x69: 1, 0x3B: 1.5, 0x56: 1.5, 0x99: 1, 0x9A: 1, 0x9B: 1, 0xE9: 'mourn'}
+# $56 PsycheUp SHARES handler $462F with $3B TwinSlash (S88): an immediate
+# x1.5 calcdef hit — there is NO charge/carry-over mechanism on PsycheUp.
 HEAL_IDS = {0x2B, 0x2C}                       # SkillHeal: record roll, HP += roll capped
 # Status spells: id -> (status byte offset, mask, hit ladder, rtype).
 # Sleep ($5C8F), StopSpell ($5CBC) and Surround ($5CDA, every id but $72)
@@ -446,9 +564,12 @@ HEAL_IDS = {0x2B, 0x2C}                       # SkillHeal: record roll, HP += ro
 # "already" message and NO roll (byte-read + measured S85, 87 casts).
 STATUS_SPELLS = {0x15: (2, 0x8C, 'B', 7), 0x17: (3, 0x01, 'B', 10),
                  0x18: (3, 0x02, 'B', 6)}
-# physical hits with a status rider through BattleCall_65b5/65c9
-# (statchance waypoint; chance NOT modelled S85 — 1-2 samples each):
-PHYS_STATUS_RIDER = {0x67: (2, 0x01), 0x69: (2, 0x40)}
+# physical hits with a status rider (S88, modelled: rider_roll, 41/41):
+# $67 PoisonHit -> poison (statchance/$65C9, rtype 18), $69 Paralyze ->
+# paralysis (statchance/$65B5, rtype 19, boss-vetoed), $68 SleepHit ->
+# sleep $8C via $5C8F (status_roll waypoint) with rtype 7 — but through
+# the $6749 STATUS ladder: only Sleep $15 itself gets the B-ladder $6710.
+PHYS_STATUS_RIDER = {0x67: (2, 0x01), 0x69: (2, 0x40), 0x68: (2, 0x8C)}
 # $6D PoisonAir sets +2 bit1 = the HEAVY DoT (MaxHP/6) — the applier the
 # S79 status table left OPEN (measured S85).
 AIR_STATUS = {0x6D: (2, 0x02)}
@@ -528,10 +649,12 @@ def mourn_multiplier(b, caster):
 # core; consecutive phase-9 slot rolls (k == 0: un-damaged neighbours read
 # an IDENTICAL RNG state — an engine quirk the model preserves).
 # Default idle=None = identity (deterministic chain, the pre-S86
-# behaviour). Everything the validator takes from the engine (confusion
-# actions, status-rider chances, curse MP drain) is a simple stand-in here
-# and is marked as such; the multi-candidate target pick uses the decoded
-# front-weighted roll (§15.10.10) via pick_front_weighted.
+# behaviour). Remaining engine-owned stand-ins (status-rider chances,
+# curse MP-drain amount) are marked at their sites; confusion turns and
+# the on-hit sleep/confusion snap-out are fully modelled (S88, 23/23).
+# The multi-candidate target pick for plain attack uses the decoded
+# front-weighted roll (§15.10.10) via pick_front_weighted; the six
+# $642C-resolver skills use uniform_side_pick.
 # --------------------------------------------------------------------------
 def pick_front_weighted(cands, state):
     """$58:$441B modes 0/1 (S84, roll-verified 4/4): 3 live -> RNG1>=$80
@@ -547,6 +670,67 @@ def pick_front_weighted(cands, state):
         return cands[0], state
     state = rng_step(state)
     return (cands[2] if rng1(state) >= 0xAA else cands[1]), state
+
+
+def confused_turn(b, a, state, records, log, idle):
+    """One confused turn (act state $11 -> $10 -> act): pick the meta-action,
+    resolve its target (uniform pickers step the RNG), then act it through
+    the normal MISS machine. bit4 is NOT cleared here — only the on-hit
+    snap-out clears it. Byte-read + measured S88 (23/23 replays)."""
+    if idle is None:
+        idle = lambda s, _k: s
+    mid, state = confusion_pick(b, a, state)
+    b.queue[a * 2] = mid
+    log.append((a, 'confused-act', mid))
+    # act-time target resolution (bank $58 e8 -> per-id dispatch):
+    if mid == CONF_HITALLY:
+        t, state = uniform_side_pick(b, a & 4, state)          # $6479 own side
+    elif mid in (CONF_HITENEMY, CONF_TRIP):
+        t, state = uniform_side_pick(b, (a & 4) ^ 4, state)    # $642C opposing
+    else:
+        t = a                                                  # $6367 self-write
+    b.queue[a * 2 + 1] = t if t is not None else 0xFF
+    if mid == CONF_RUN:
+        b.dd1b[a] = 0xFF; b.dd13[a] = 0xFF
+        log.append((a, 'flee', None))
+        return state
+    if mid in (CONF_SCARED, CONF_DANCE):
+        log.append((a, 'conf-msg', mid))
+        return state
+    if mid == CONF_TRIP:
+        b.set_stb(a, 5, b.stb(a, 5) | 0x04)   # one-shot -> forced $16 next turn
+        log.append((a, 'trip', None))
+        return state
+    if mid in (CONF_PARA, CONF_CANTMOVE):
+        b.set_stb(a, 2, b.stb(a, 2) | 0x40)   # self-paralyze
+        log.append((a, 'self-para', None))
+        return state
+    # $99/$9A/$9B: physical act through the normal MISS machine
+    if t is None or not b.valid(t):
+        return state
+    f = (records.get(mid) or {}).get('battle_record', {}).get('fields', {})
+    state = idle(state, 'pre_target')
+    state = idle(state, 'pre_miss')
+    state = rng_step(state)
+    g = miss_gate(b, a, t, f.get('flags7', 0), f.get('flags8', 0), state)
+    if g != 'pass':
+        log.append((a, g, t))
+        return state
+    if mid in (CONF_HITALLY, CONF_HITENEMY):
+        state = rng_step(state)               # $52:$5559 inside the handler
+        thr = 0x40 if mid == CONF_HITALLY else 0xC0
+        if rng1(state) < thr:
+            log.append((a, 'conf-whiff', mid))
+            return state
+    dmg, state = D.calc_skill_defense(b.atk[a], b.dfn[t], state,
+                                      target_idx=t, arena=b.link, attacker_idx=a)
+    ko = apply_damage(b, t, dmg)
+    log.append((a, 'hit', (t, dmg, ko)))
+    if not ko:
+        rolled, snapped, state = snap_out(b, t, f.get('flags9', 0), state)
+        if rolled:
+            log.append((a, 'snap', (t, snapped)))
+    return state
 
 
 def simulate_round(b, state, records, dup_flags, idle=None):
@@ -580,10 +764,14 @@ def simulate_round(b, state, records, dup_flags, idle=None):
             if eff == 'skip':
                 continue
             if eff == 'confuse':
-                log.append((a, 'confused', None)); b.dd13[a] = 3; continue
+                # d9ed=$11 IMMEDIATELY: the curse-set confusion acts this turn
+                state = confused_turn(b, a, state, records, log, idle)
+                b.dd13[a] = 3; prev_acted = True
+                continue
         if b.stb(a, 2) & 0x10:
-            log.append((a, 'confusion-action', 'stand-in: skipped'))
-            b.set_stb(a, 2, b.stb(a, 2) & ~0x10); b.dd13[a] = 3; continue
+            state = confused_turn(b, a, state, records, log, idle)
+            b.dd13[a] = 3; prev_acted = True
+            continue
         sk = b.q_skill(a)
         flag = dup_flags[b.eid[a - 4]] if 4 <= a < 7 and b.eid[a - 4] < len(dup_flags) else 0
         if dup_conversion(b, a, order, cursor, flag):
@@ -660,6 +848,14 @@ def simulate_round(b, state, records, dup_flags, idle=None):
                 log.append((a, 'no-effect', sk)); continue
             ko = apply_damage(b, v, dmg)
             log.append((a, 'hit', (v, dmg, ko)))
+            if not ko:
+                if sk in PHYS_STATUS_RIDER:
+                    rh, state = rider_roll(b, v, sk, state)
+                    if rh is not None:
+                        log.append((a, 'rider', (v, sk, rh)))
+                rolled, snapped, state = snap_out(b, v, f.get('flags9', 0), state)
+                if rolled:
+                    log.append((a, 'snap', (v, snapped)))
         b.dd13[a] = 3
         prev_acted = True
     phase9_decay(b)

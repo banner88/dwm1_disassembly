@@ -79,6 +79,7 @@ ap.add_argument('--rom', default='/home/claude/trace/patched_s85.gbc')
 ap.add_argument('--state', default='/home/claude/trace/boot.state')
 ap.add_argument('--out', default='/home/claude/trace/battle_events.json')
 ap.add_argument('--maxev', type=int, default=400)
+ap.add_argument('--db73', type=int, help='force wBattleType per-frame during battle (0 = wild condition inside the rig battle)')
 a = ap.parse_args()
 
 RNG1, RNG2 = 0xC899, 0xC89A
@@ -101,7 +102,11 @@ def snap(p, tag):
         dd13=arr(0xDD13, 8), dd1b=arr(0xDD1B, 8), dd03=arr(0xDD03, 8),
         dd0b=arr(0xDD0B, 8), db8b=arr(0xDB8B, 8), db9b=arr(0xDB9B, 8),
         db42=arr(0xDB42, 8),
-        hp=w16s(0xDBA3), maxhp=w16s(0xDBB3), mp=w16s(0xDBC3),
+        hp=w16s(0xDBA3), maxhp=w16s(0xDBB3), mp=w16s(0xDBC3), maxmp=w16s(0xDBD3),
+        # S88 (per the S87 deferral): the four AI category base arrays
+        # $DC44/$DC4C/$DC54/$DC5C (cat1/cat2/cat3/w3) + per-combatant WLD
+        # words $DC23+2i (wBattleLVL misnomer; enemies $00FF).
+        ai_bases=[m[0xDC44+i] for i in range(32)], wld=w16s(0xDC23),
         atk=w16s(0xDBE3), dfn=w16s(0xDBF3), agl=w16s(0xDC03), int=w16s(0xDC13),
         st=arr(0xDB00, 64), res=arr(0xDD28, 56),
         eid=[m[0xDA03] | (m[0xDA04] << 8), m[0xDA05] | (m[0xDA06] << 8),
@@ -156,6 +161,16 @@ HOOKS = [
     (0x50, 0x6C59, 'p9_dot_ko'),
     (0x53, 0x4640, 'round_end'),     # $DB82==9 -> next phase
     (0x50, 0x6CBE, 'side_wipe'),
+    # S88 confusion arc:
+    (0x53, 0x4BEB, 'conf_pick'),     # confusion action generator entry (pre RNG step)
+    (0x52, 0x4E8A, 'meta_hitally'),  # $99 handler entry (pre $5559 step)
+    (0x52, 0x4EA4, 'meta_hitenemy'), # $9A handler entry (pre step)
+    (0x52, 0x4EBE, 'meta_hitrandom'),# $9B handler: unconditional self-hit
+    (0x52, 0x4ED8, 'meta_trip'),     # $9E: set own +5 bit2 + msg
+    (0x52, 0x4EE3, 'meta_msg'),      # $9C Scared / $9D Dance: msg only
+    (0x52, 0x4EE7, 'meta_selfpara'), # $9F/$A0: set own +2 bit6
+    (0x52, 0x4E3A, 'meta_run'),      # $A1: dd1b[self]=$FF flee
+    (0x53, 0x5F3E, 'snap_roll'),     # on-hit sleep/confusion snap-out roll (pre step)
 ]
 for bank, addr, tag in HOOKS:
     p.hook_register(bank, addr, (lambda ctx, t=tag: events.append(snap(p, t))), None)
@@ -198,6 +213,8 @@ for i in range(a.frames):
                     for kv in spec.split(','):
                         off, val = kv.split('=')
                         m[base + int(off, 0)] = int(val, 0)
+        if a.db73 is not None and m[0xD9EC] >= 1:
+            m[0xDB73] = a.db73
         if 4 <= m[0xD9EC] <= 6:       # command/order/fetch phases: force queues (not during act)
             if a.skill is not None:
                 m[0xDCEC] = a.skill; m[0xDCED] = a.target

@@ -379,6 +379,10 @@ SkillSleep:
     ld hl, $bccc
     call LoadBattle_54d2
 
+; Sleep applier (S88): [target +2] |= $8C — flag + counter CONSTANT 3
+; (bits 3:2). No variable counter source exists. Used by Sleep $15 and
+; the SleepHit $68 rider.
+SleepApply_4262:
 BattleTarget_4262:
     ld a, [wBattleTargetIdx]
     ld hl, $db02
@@ -1109,6 +1113,9 @@ SkillPoisonHit_StepGuard_Whistle_Attack:
     call CheckSkillResistance
     ret
 
+; $56 PsycheUp AND $3B TwinSlash share this handler (S88): an IMMEDIATE
+; x1.5 calcdef hit (SetupBattle_6979). PsycheUp has NO charge/carry-over
+; mechanism — the §15.9 "PsycheUp carry-over" residual is closed empty.
 SkillPsycheUp_TwinSlash:
 
 
@@ -1202,6 +1209,8 @@ jr_052_46b8:
     call ApplySkillDamage
     ret
 
+; ChargeUP $41 (S88): own $DB06 |= $03 (bits 1:0 = charge; read by
+; LoadBtlC_5857 as the $41 dodge-skip condition).
 SkillChargeUP:
 
 
@@ -1214,6 +1223,11 @@ SkillChargeUP:
     call SetSkillAnimFlag
     ret
 
+; HighJump $42 (S88): turn 1 sets own $DB06 |= $0C = AIRBORNE (bits 3:2)
+; and ends the turn (d9ed=6); turn 2 (&$0C already set) clears &$F3 and
+; lands the x1.5 calcdef hit. $DB06 bit2 is THE flags7-bit7 "block
+; route" bit of the MISS machine (§15.10.9): grounded-only skills
+; cannot reach an airborne target (msg $C1).
 SkillHighJump:
 
 
@@ -1253,6 +1267,7 @@ jr_052_46ee:
     call CheckSkillResistance
     ret
 
+; SuckAir $50: own $DB06 |= $30 (bits 5:4 = SuckAir charge).
 SkillSuckAir:
 
 
@@ -1509,6 +1524,7 @@ jr_052_486b:
     call CheckSkillResistance
     ret
 
+; Focus: own $DB06 bit7 set.
 SkillFocus:
 
 
@@ -1900,6 +1916,9 @@ jr_052_4a9d:
     call ApplySkillDamage
     ret
 
+; SideStep $77 (S88): $DB07 dodge-status WRITER — one BattleRNG, then
+; own +7 |= (RNG1 & 4) + 4, i.e. bit2 OR bit3 chosen by coin. The MISS
+; machine treats &$0C as one flag (50% dodge coin, §15.10.9).
 SkillSideStep:
 
 
@@ -2562,6 +2581,9 @@ SkillGigaSlash:
     ret
 
 
+; $A1 RUN (S88, measured live): the confused actor FLEES —
+; $dd1b[self] := $FF (+ enemy record bookkeeping for slots 4-6). The
+; entry-1 generator re-rolls $A1 away while $DB73 != 0.
 SkillRUN:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd1b
@@ -2614,6 +2636,11 @@ SkillAhhh2:
     call CheckSkillResistance
     ret
 
+; ---- Confusion meta-actions $99-$A1 (S88, measured 23/23) -------------
+; Queued by the bank $53 entry-1 generator on a confused turn; they run
+; the NORMAL MISS machine first (all 9), then:
+; $99 HitAlly: one RNG step ($5559), RNG1 < $40 -> whiff msg $B6 (25%),
+; else plain calcdef on the resolved OWN-side uniform target ($6479).
 SkillHitAlly:
 
 
@@ -2633,6 +2660,9 @@ jr_052_4e9e:
     call ApplySkillDamage
     ret
 
+; $9A HitEnemy: one RNG step, RNG1 < $C0 -> whiff (75%!), else calcdef
+; on the opposing-side uniform target ($642C). A confused monster
+; connects with enemies only 25% of the time but with allies 75%.
 SkillHitEnemy:
 
 
@@ -2652,6 +2682,7 @@ jr_052_4eb8:
     call ApplySkillDamage
     ret
 
+; $9B HitRandom: NO roll — queue target := SELF, full calcdef self-hit.
 SkillHitRandom:
 
 
@@ -2666,6 +2697,7 @@ SkillHitRandom:
     call CheckSkillResistance
     ret
 
+; $9E Trip: own +5 bit2 one-shot (-> forced action $16 next turn), msg.
 SkillTrip:
 
 
@@ -2674,6 +2706,7 @@ SkillTrip:
     call HL_AddA_x8
     set 2, [hl]
 
+; $9C Scared / $9D Dance: message only, turn wasted.
 SkillScared:
     call SetSkillAnimFlag
     ret
@@ -8813,7 +8846,7 @@ Jump_052_6f42:
     ld a, c
 
 Jump_052_6f4e:
-    call ConfusionActionRewrite_7ab5
+    call TransformActionRewrite_7ab5
     ret
 
 
@@ -10794,19 +10827,25 @@ jr_052_7ab0:
     ret
 
 
-; Confusion action rewrite (§15.7, S79): at a confused actor's turn
-; (+2 bit4), RNG1&3 indexes ConfusionActionTable_7aff {$3A,$5E,$62,$80}
-; and overwrites the queued action. The attack pick chooses a random
-; target with a cross-side wrap quirk: candidate&3==0 continues at
-; absolute slot 2 (b = own side base XOR 4 = OPPOSING side).
-ConfusionActionRewrite_7ab5:
+; TRANSFORM action rewrite (S88 CORRECTION — the S79 confusion attribution
+; was WRONG; see DOC_AUDIT). Reached ONLY from the act-time id switch at
+; $6E89 for skills $AA Transform / $D5 BeDragon (Jump_052_6f4e): a
+; transformed monster's queued action is overwritten from
+; TransformActionTable_7aff {$3A Attack, $5E Scorching, $62 IceStorm,
+; $80 DeMagic}, index RNG1&3 with NO RNG step (reads the current value).
+; Because table[0] is the only Attack entry, the $3A path's initial
+; candidate is ALWAYS the opposing base slot (same un-stepped RNG1&3);
+; dead candidates walk (candidate&3)-1 downward in ABSOLUTE slots with
+; the &3==0 -> 2,1,0 cycle — deterministic, not random. CONFUSION turns
+; are generated elsewhere: bank $53 entry 1 ($4BEB) -> meta ids $99-$A1.
+TransformActionRewrite_7ab5:
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     call HL_AddA_x2
     push hl
     ld a, [wRNG1]
     and $03
-    ld hl, ConfusionActionTable_7aff
+    ld hl, TransformActionTable_7aff
     add l
     ld l, a
     ld a, $00
@@ -10855,7 +10894,7 @@ jr_052_7af6:
 
 
 ; Confusion action table (§15.7): RNG1&3 -> {Attack $3A, $5E, $62, $80}.
-ConfusionActionTable_7aff:
+TransformActionTable_7aff:
     db $3a, $5e, $62, $80
     rst $38
     push af

@@ -2073,22 +2073,95 @@ reference parties, 'attack' and 'tactics' policies);
 `randomizer/profile_check --ttk` (opt-in) gates pool TTK ≤ 2.0× vanilla
 with identically-seeded policies (vanilla-vs-vanilla exactly 1.00×).
 
-### 15.9 What is NOT yet modelled (S84 partial; remaining residuals)
+### 15.8c Confusion end-to-end (S88; byte-read + measured, all green)
+
+The S79 "ConfusionActionRewrite_7ab5" attribution was WRONG (DOC_AUDIT
+S88): $52:$7AB5 (now TransformActionRewrite_7ab5) serves ONLY
+Transform/BeDragon ($AA/$D5) via the act-time id switch $6E89, reads
+RNG1&3 with NO step, and its "random" attack target is deterministic
+(always the opposing base, absolute-slot fallback walk).
+
+The REAL confusion flow: gate (+2 bit4, after a non-firing curse) ->
+banner + $db42+slot := 0 -> act state $11 -> ConfusionActionPick_4beb
+(bank $53 entry 1): one RNG step per iteration; RNG1 bit1 -> $99
+HitAlly (50%); else bit0 -> $9A HitEnemy (25%); else non-link enemy
+attackers roll $9A+(RNG2&7) re-rolling $A1 RUN while $DB73 != 0, and
+party/link attackers roll RNG2 < $55 -> $9E Trip else $9B/$9C. Target
+dispatch (bank $58 e8): $99 -> $6479 uniform OWN side (self included);
+$9A/$9E -> $642C uniform opposing; others self. The actor then ACTS:
+all metas run the normal MISS machine; $99 whiffs at RNG1 < $40 and
+$9A at RNG1 < $C0 (post one handler step), else plain calcdef; $9B
+self-hits unconditionally; $9C/$9D message; $9E sets own +5 bit2
+(-> forced $16); $9F/$A0 self-paralyze (+2 bit6); $A1 flees
+($dd1b := $FF). Confusion NEVER decays and does not clear on acting —
+only the ON-HIT SNAP-OUT clears it (act state 5, $53:$5F15): a landed
+flags9-bit3 skill (42-id physical-contact family; verified negative:
+Infernos) on a +2 & $90 victim rolls one step vs $AA (party/link) /
+$40 (wild enemy); success masks +2 &= $63. Curse-induced confusion
+(CurseSelfHit $C0+ branch) sets the same state $11 — hence S85's $99
+observations. Model: battle.py confusion_pick / uniform_side_pick /
+confused_turn / snap_out; validation: validate_conf + check_snap
+(conf_pick/conf_target/conf_act/conf_whiff/conf_dmg/snap_* checks).
+
+Status riders (S88, rider_roll 40/40): $67 PoisonHit rolls rtype 18 and
+$69 Paralyze rtype 19 through the $6749 STATUS ladder [BF,7F,3F,never]
+(amp row on target +5 bit7); $68 SleepHit rolls rtype 7 via $5C8F —
+whose byte-read shows only Sleep $15 itself routes to the B-ladder
+$6710; every other caller falls to $6749. $69's $65B5 prologue runs
+BossProtectionGate: vs a db73==1 enemy the rider application is vetoed
+(no roll, no step) while the DAMAGE still lands. Helper map: $65C9 res+4
+bits1:0 (rtype 18), $65B5 res+5 bits7:6 (19), $65D5 bits5:4 (20, Curse's
+own hit roll), $65E3 bits3:2 (21, the dance/compulsion family: Ahhh,
+OddDance, SideStep, LureDance, LushLicks/SickLick, LegSweep/BigTrip,
+WarCry). $DCFD/FE/FF = the acting skill's flags7/8/9 cached at act.
+
+### 15.9 What is NOT yet modelled (S88 sweep; remaining residuals)
 
 Loop-level differential validation of `simulator/battle.py` — **DONE S85
-(§15.8b, 6614/6614)**. Remaining smaller residuals: meta-actions beyond the option-list observation
+(§15.8b, 6614/6614)**. **CLOSED S88** (byte-read + measured + validated;
+the element -> resist_score mapping — PINNED: `element` = record field
++5 status_id = a res-array POSITION (byte elem>>2 via the $67BB-$67D9
+accessors, bit-pair elem&3 via the $7AA6 shifts; = species
+resistances[elem-1], packing verified byte-exact against live battle
+arrays for two species); the $4BCC rule self-gates on element==0;
+zero-stub retired, validate_rules 240/240 with REAL res + real element,
+pacing adapter live, level-1 PIT re-run green (KS 0.042);
+corpora `s88_confusion_events.json` 2824/0, `s88_rider_events.json`
+3422/1, `s88_curse_events.json` 3083/0): confusion turns end-to-end
+(generator, meta-actions $99-$A1 incl. a live RUN, uniform target picks,
+on-hit snap-out — §15.8c); status riders $67/$68/$69 (rider_roll, 40/40;
+$69's application is BossProtectionGate-vetoed while its damage lands —
+$69 REMOVED from the full-block set); curse MP drain = MaxMP//6 (4/4);
+poison DoT cap >=10 (15/15 exact at MaxHP 300); sleep application
+counter = CONSTANT $8C (SleepApply_4262); PsycheUp carry-over = NO SUCH
+MECHANISM ($56 shares the x1.5 TwinSlash handler $462F); $DB06 map
+(bit7 Focus, $30 SuckAir, $0C HighJump AIRBORNE — bit2 is the
+flags7-bit7 block-route bit — $03 ChargeUP); $DB07 surround counter
+writer (target |= $03 after a $5CDA roll) and dodge-status writer
+(SideStep coin: |= (RNG1&4)+4); the incapacitated-target dodge
+exemption (GetMonsterSlotInfo guard, §15.10.9); one-shot +5 bits clear
+at the consumed turn; TailWind wind-guard (+4 bit6, tested by
+flags7-bit4 breaths except $43/$8F).
+
+Remaining residuals: meta-actions beyond the option-list observation
 (flee $E9 class on the VANILLA id space, items, shift — the state-0
 preamble consumes w[3], §15.10.7; note the id collision with custom
-Mourn $E9, §15.10.8); the $DB07 timer statuses' WRITERS and tick model
-(their act-time CONSUMERS are now decoded, §15.10.9; their per-round TICK
-is phase-9 sub 0/2 — S85; WRITERS still open); sleep application counter
-source; PsycheUp carry-over; interception redirects; $db06 bit2 semantics
-(the flags7-bit7 block route, §15.10.9); the mode-2 finisher variant of
+Mourn $E9, §15.10.8); the $DB07 STUN bits 7:6 WRITERS (consumers +
+tick decoded; the natural setter — WarCry-family sub-states are the
+candidates — is still unlocated; stun_st was poked); "interception
+redirects" (referent still unsharpened; TurnOrderDefensiveBoost's
+defensive set §15.6 is the likely home); the mode-2 finisher variant of
 plain-attack targeting ($58:$448A — HP-vs-damage-estimate compare,
-partially decoded S84); the multi-candidate target RNG pick (§15.8b — the offline DRIVER now
-uses the decoded §15.10.10 front-weighted roll, S86; the validator still
-takes the engine's); status-rider chances for PoisonHit/Paralyze; the
-poison cap >=10 sample. **CLOSED S87** (measured + byte-read +
+partially decoded S84); the multi-candidate target RNG pick in the
+VALIDATOR (the driver uses §15.10.10 front-weighted for plain attack
+and uniform_side_pick for the $642C family, S88);  a SINGLE ±1 calcdef
+anomaly (rid_yp2 r6: atk 9 / dfn 9, entry state $3100, engine 3 vs
+model 2 — one extra step reproduces it but 8 sibling casts contradict a
+systematic extra step; open low-stat edge, full repro in the corpus);
+two flagged presumptions: rider-before-snap RNG order (no overlapping
+sample) and consumed-bit-only one-shot clearing (no multi-bit sample).
+
+**CLOSED S87** (measured + byte-read +
 differentially validated; §15.10.1/.7a, MONSTER_DATA): the party-side
 category-base fill (instance record +$5B..$5E via LoadBtlS_44cb — real
 source replaces PARTY_DEFAULT_BASES; creation-roll model
@@ -2266,7 +2339,7 @@ RNG; observed choosing by top-category tag match — EID 37; tail
 untraced). Else argmax over $DCE4[0..6], first-nonzero seeds, tie →
 one RNG step, RNG1 bit0: 0 keep incumbent / 1 take challenger. All-zero
 → retry $76A9 ($dd02++, rerun from category stage — UNBOUNDED, see
-§15.9 hazard). Epilogues by chosen category: cat1 → far-call bank $58
+§15.9 hazard; conf actions via §15.8c). Epilogues by chosen category: cat1 → far-call bank $58
 entry 11, returns a plain-attack score via $DD26; if ≥ best skill score
 → queue plain Attack $3A; cat2 → commit; cat3 with best <$14 → extra
 checks (AICat3WeakHealCheckA_77a4/77b4, untraced) that can retry, fall back to $3A,
