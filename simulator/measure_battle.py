@@ -171,6 +171,8 @@ HOOKS = [
     (0x52, 0x4EE7, 'meta_selfpara'), # $9F/$A0: set own +2 bit6
     (0x52, 0x4E3A, 'meta_run'),      # $A1: dd1b[self]=$FF flee
     (0x53, 0x5F3E, 'snap_roll'),     # on-hit sleep/confusion snap-out roll (pre step)
+    (0x53, 0x5544, 'guard_redir'),   # S89: Cover/Guardian interception —
+    # target rewritten to protector ($DB08+8t bit4 -> $DB09+8t hi nibble)
 ]
 for bank, addr, tag in HOOKS:
     p.hook_register(bank, addr, (lambda ctx, t=tag: events.append(snap(p, t))), None)
@@ -187,6 +189,13 @@ started = False
 forced = False
 for i in range(a.frames):
     if p.memory[GAME_MODE] == 2:
+        if not started:
+            # [S89] disarm the rig trigger the moment the battle starts:
+            # leaving $C8EB bit6 armed re-fires a SECOND identical battle
+            # after teardown (same seeds), whose round_start then hands
+            # the validator a bogus "next event" across the end-of-battle
+            # HP refill (fresh_e artifact, S89).
+            p.memory[0xC8EB] &= ~0x40
         started = True
         m = p.memory
         # stat forcing only during battle INIT (phase <= 3, after the stat

@@ -118,6 +118,7 @@ class Board:
         self.st = [0] * 64; self.res = [0] * 56
         self.dd13 = [0xFF] * 8; self.dd1b = [0xFF] * 8
         self.dd03 = [0] * 8; self.dd0b = [0] * 8; self.db8b = [0] * 8
+        self.db42 = [0] * 8               # per-combatant flags; bit6 = x1.5 boost (S89)
         self.queue = [0xFF] * 16
         self.eid = [0, 0, 0]
         self.db73 = 1; self.link = False
@@ -129,6 +130,8 @@ class Board:
         for k in ('hp', 'maxhp', 'mp', 'atk', 'dfn', 'agl', 'int', 'st', 'res',
                   'dd13', 'dd1b', 'dd03', 'dd0b', 'db8b'):
             setattr(b, k, list(e[k]))
+        if 'db42' in e:                   # S89: $DB42 per-combatant flags
+            b.db42 = list(e['db42'])
         if 'maxmp' in e:
             b.maxmp = list(e['maxmp'])
         b.level = list(e['db9b']); b.queue = list(e['dcec']); b.eid = list(e['eid'])
@@ -336,11 +339,39 @@ def rider_roll(b, v, sk, state):
     return hit, state
 
 
+def guard_redirect(b, t, flags8=0x02):
+    """[S89] Cover $88 / Guardian $89 act-time interception (the
+    $53:$670E dispatcher region). The one-round guard record for slot t
+    lives one slot shifted: $DB08+8t bit4 = protected, $DB09+8t high
+    nibble = protector (physically slot t+1's +0/+1 — status.py map).
+    A live mark rewrites BOTH wBattleTargetIdx and the attacker's queue
+    target to the protector (msg $80). Differentially proven on the
+    real save: every attack aimed at the protected slot landed on the
+    protector. Marks are set at the defensive cast (which is why that
+    class gets the +$0600 turn-order boost) and cleared at the round
+    boundary. The main-path consumers are gated on the acting skill's
+    cached flags8 bit1 ($DCFE checks at $53:~$552x/$567x) — pass flags8
+    so non-interceptable classes pass through."""
+    if t is None or t >= 7:
+        return t
+    if not (flags8 & 0x02):
+        return t
+    if b.stb(t + 1, 0) & 0x10:
+        prot = (b.stb(t + 1, 1) >> 4) & 0x0F
+        if b.valid(prot) and b.hp[prot] > 0:
+            return prot
+    return t
+
+
 def target_unreachable(b, t, flags8, skill):
-    """Act state 9 pre-gate ($53:$56E1): a target whose +7 & $C0 counter is
-    running (dug-in / vanished class) and a skill with flags8 bit2 -> the
-    action fails with msg $BA (skills $52/$53 CallHelp/YellHelp and $14
-    Sacrifice are exempt). Measured S85 (stun_st, 2/2)."""
+    """Act state 9 pre-gate ($53:$56E1): a target whose +7 & $C0 counter
+    is running — [S89] the counter is the IRONIZE state (Ironize $2A /
+    IRONIZE $DC self-cast, 3 rounds; status.py) — and a skill with
+    flags8 bit2 (near-universal on offense) -> the action fails with
+    msg $BA: full physical AND magical immunity while iron, measured
+    S89 under sustained Attack and Blaze. Skills $52/$53
+    CallHelp/YellHelp and $14 Sacrifice are exempt. Measured S85
+    (stun_st, 2/2)."""
     if not (b.stb(t, 7) & 0xC0):
         return False
     if not (flags8 & 0x04):
@@ -475,14 +506,82 @@ def quake_victims(b, caster, first_target):
     return v
 
 
-def side_victims(b, first_target):
+def side_victims(b, first_target, start=None):
+    """Side sweep victim list. [S89] The sweep begins at the QUEUED
+    target and walks FORWARD to the end of that side — not from the
+    side base (measured: a $0A queued on slot 5 swept [5,6], never
+    touching 4). When the queued target IS the side base the two
+    readings coincide, which is why every pre-S89 corpus agreed."""
     base = first_target & 4
-    return [s for s in range(base, base + 3) if b.valid(s)]
+    s0 = base if start is None else max(base, min(start, base + 2))
+    return [s for s in range(s0, base + 3) if b.valid(s)]
 
 
 # --------------------------------------------------------------------------
 # Apply + KO
 # --------------------------------------------------------------------------
+GUARD_SKILLS = {0x88: 'one', 0x89: 'allies'}   # S89: Cover / Guardian
+
+
+def set_guard_mark(b, caster, target):
+    """[S89] Writer for the one-round guard table (bank $53 ~$4Fxx),
+    measured: the record for a protected slot t lives ONE SLOT SHIFTED
+    at $DB08+8t bit4 (= slot t+1's status +0 bit4) with the protector's
+    index in the high nibble of $DB09+8t (slot t+1's +1).
+
+    Cover $88 marks the single targeted ally; Guardian $89 marks BOTH
+    other allies on the caster's side (never the caster itself). The
+    engine's writer is first-protector-wins (it skips a slot that is
+    already marked) and preserves the LOW nibble of the +1 byte, which
+    is the separate $8D/$8E/$90 defence-level field."""
+    own = caster & 4
+    slots = ([target] if target is not None else
+             [s for s in range(own, own + 3) if s != caster])
+    for t in slots:
+        if t is None or not (0 <= t < 7) or t == caster:
+            continue
+        gi = (t + 1) * 8
+        if b.st[gi] & 0x10:            # first protector wins
+            continue
+        b.st[gi] |= 0x10
+        b.st[gi + 1] = (b.st[gi + 1] & 0x0F) | ((caster & 0x0F) << 4)
+
+
+def clear_guard_marks(b):
+    """Marks are one-round: cleared at the round boundary (measured)."""
+    for t in range(7):
+        gi = (t + 1) * 8
+        b.st[gi] &= ~0x10 & 0xFF
+        b.st[gi + 1] &= 0x0F
+
+
+def db42_boost(b, attacker, dmg):
+    """[S89, byte-decoded at $53:$59CD + measured 8/8] A per-combatant
+    damage boost the pre-S89 model missed entirely: the post-calc stage
+    reads `$DB42 + attacker` and, if **bit 6** is set, replaces the
+    damage with `dmg + (dmg >> 1)` = **x1.5** (the engine does it as
+    16-bit `hl = dmg; bc = dmg; hl >>= 1; hl += bc`, i.e. srl h / rr l /
+    add hl,bc — so the HALF is truncated, not the product).
+
+    This runs AFTER CalcSkillDefense and after DamageSlot2AdjustFloor,
+    on the value already stored in $DB56/57, so it stacks on top of the
+    slot-2 x0.8 and the zero floor rather than replacing them. It is the
+    writer that produced the long-standing "low-stat calcdef edge":
+    fresh_c r3 rolled 4 and applied 6 (4 + 4>>1). Correlation over the
+    whole battle was exact — every hit with db42 bit6 clear applied the
+    rolled value 1:1, the single hit with it set applied x1.5 (8/8).
+
+    Observed lifecycle: set during the command/order phase ($D9EC==5)
+    and cleared in phase 9, i.e. it is a ONE-ROUND mark on the actor.
+    The SETTER is not yet located (not a plain `set 6,[hl]` / `or $40` /
+    `ld [hl],$40` on a $DB42 pointer anywhere in banks $50-$5F) — see
+    ROADMAP; the consumer and its arithmetic are exact and that is what
+    the damage model needs."""
+    if 0 <= attacker < 8 and (b.db42[attacker] & 0x40):
+        return dmg + (dmg >> 1)
+    return dmg
+
+
 def apply_damage(b, t, dmg):
     """BtlActState2Apply: HP -= dmg floored at 0; on KO the engine marks
     $DD1B:=1 / $DD13:=$FF. (The KO state $1A shows a TRANSIENT full-HP
@@ -800,6 +899,11 @@ def simulate_round(b, state, records, dup_flags, idle=None):
             t = dead_redirect(b, qt)
         if t is None:
             b.dd13[a] = 3; continue
+        gt = guard_redirect(b, t, f.get('flags8', 0))
+        if gt != t:                       # Cover/Guardian interception:
+            log.append((a, 'guarded', t, gt))   # resolve on the
+            b.queue[2 * a + 1] = gt       # protector; the engine also
+            t = gt                        # rewrites the queue target
         if target_unreachable(b, t, f.get('flags8', 0), sk):
             log.append((a, 'unreachable', t)); b.dd13[a] = 3; continue
         if D.boss_gate_blocks(sk, t >= 4, b.db73, arena=b.link):

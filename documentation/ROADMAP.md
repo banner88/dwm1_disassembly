@@ -1632,9 +1632,18 @@ custom skills $E4/$E5/$E9).
       (count changed 6614->6614 after the wrong confusion_clear check
       was replaced by modelled checks), s86 802/0. measure_battle: 9 new
       waypoints + --db73 + maxmp capture.
-- [ ] $DB07 stun writers (natural setter unlocated; WarCry-family
-      sub-states are the candidates).
-- [ ] "Interception redirects" referent (see §15.9).
+- [x] $DB07 stun writers — CLOSED S89: **Ironize $2A / IRONIZE $DC**
+      ($C0 = 3-round counter, phase-9 tick; forced $11 + FULL incoming
+      immunity via the $56E1 flags8-bit2 gate; party cast irons the
+      WHOLE side per byte-read). WarCry-family EXONERATED (+5 one-shots:
+      $7D bit4, $7B/$7C bit2). §15.9 CLOSED S89.
+- [x] "Interception redirects" referent — CLOSED S89: the act-time
+      guard-table redirect (Cover $88 one ally / Guardian $89 both
+      others; $DB08/09+8t mark+protector, one round, first-protector-
+      wins; consumers ~$552x/$567x flags8-bit1-gated + $670E state 0;
+      HP-flow-proven). $670E rst table re-sectioned byte-neutrally.
+      Model: battle.guard_redirect (driver path; validator integration
+      = open box below).
 - [x] element -> resist_score mapping PINNED (record status_id = res
       pos; $6A8A service + $7AA6 shifts + $4532 prologue byte-read;
       packing verified vs live arrays; 240/240 + PIT green; stub
@@ -1642,13 +1651,73 @@ custom skills $E4/$E5/$E9).
 - [x] S87 corpus-field deferral discharged: measure_battle now captures
       ai_bases ($DC44..$DC63) + WLD words ($DC23+2i), live-verified
       (Slib WLD 5 / enemy $00FF). s88 corpora predate the fields.
-- [ ] WLD post-creation level-up writer trace.
-- [ ] s85/s86 corpus regeneration carrying the new ai_bases/WLD fields (rig ready).
-- [ ] Meta-actions: vanilla flee $E9 class / items / shift (as feasible).
+- [x] WLD post-creation level-up writer trace — CLOSED EMPTY S89:
+      L1→L13 one-scan, +$60 frame-sampled unchanged; writer set closed
+      (creation/breeding/items). MONSTER_DATA + default_wld updated.
+- [x] s85/s86 corpus regeneration carrying the new ai_bases/WLD fields —
+      DONE S89 (patched pin a17bff8e + the user's .sav boot.state):
+      s85_battle_events.json REPLACED (25 scenarios, 5751 ev, 6614/0
+      exact check parity); s86_fresh_battles.json KEPT (802/0);
+      s89_fresh_battles.json ADDED (5 fresh unforced, 343 ev, 426/1 —
+      the 1 = the flagged low-stat calcdef edge, §15.9).
+      board_from_event now consumes the fields; level-1 PIT re-run
+      GREEN with them (KS 0.055, coverage 91%).
+- [~] Meta-actions — PARTIAL S89: $E9-class metas are the HERO slot's
+      MENU verbs (queue-forcing idx 3 never enters the order —
+      readiness-gated); empty-option-list enemies never emit metas;
+      outleveled wild EID 3 never fled (db73=0). NEXT: real-menu drive
+      (directed d-pad) for Flee/Item/Shift commit writes; vanilla id
+      space needs the CLEAN ROM + franken-state (the hacked .sav is
+      REJECTED by the clean build — S75 build-specificity, confirmed
+      live S89).
 
-      Still open (inherited, unchanged): element→resist_score zero-stub;
-      post-creation WLD level-up writer untraced; measure_battle events
-      don't carry the dc44 arrays/WLD (board_from_event uses
-      default_wld + PARTY_FALLBACK_BASES stand-ins — add the fields on
-      the NEXT corpus regeneration, not retroactively); bank $07
-      CallFld_451e INFO-screen renderer noted, internals unexplored.
+      Still open (inherited): bank $07 CallFld_451e INFO-screen
+      renderer noted, internals unexplored. (S89 discharged: the WLD
+      writer trace, the corpus fields, the stand-ins.)
+
+## S89 — Simulator wrap-up part 2: Group B residuals (built S89, NOT yet user-tested)
+
+- [x] All four Group B boxes above (stun writers / interception / WLD /
+      corpora) + the defensive-set sweep (+8/+9 flags: Imitate/Dodge/
+      SuckAll/Defence-class levels — setters measured, §15.9).
+- [x] Annotation (byte-neutral, clean MD5 1ca6579… re-verified): $670E
+      dispatcher re-sectioned (7-state rst table) + InterceptGate_6720
+      label; GuardMark writer, $4BD3 checker, SkillIronize/SkillCover/
+      SkillDodge/SkillBladeD_Defense comments. SacrificeEntry_670e
+      attribution corrected (DOC_AUDIT S89).
+- [x] Validator suite re-run on the final layout: battle s85 6614/0,
+      s86 802/0, s88 2824/0+3083/0+3422/1(known), s89 426/1(flagged);
+      damage all-exact; obedience 889/0; rules 240/240; order 143/0;
+      ai 26/26; pacing level-1 UNIFORM w/ real fields (KS 0.055).
+- [x] LOW-STAT CALCDEF EDGE — SOLVED S89 (PyBoy): never a calcdef bug —
+      an unmodelled **×1.5 damage boost gated on `$DB42` bit 6**
+      (attacker). Consumer decoded byte-exact at `$53:$59CD`
+      (`dmg + (dmg>>1)`, half truncated), runs after CalcSkillDefense and
+      after the slot-2/floor adjust. Correlation 8/8. Closes BOTH
+      deterministic repros — s89_fresh 426/1→426/0 AND the S88 rider
+      anomaly 3422/1→3422/0. Model: `battle.db42_boost()` in the physical
+      and record damage paths; Board carries `db42`.
+- [ ] `$DB42` bit6 SETTER — the one genuinely open sub-item: observed set
+      in the command/order phase ($D9EC==5) and cleared in phase 9 (a
+      one-round actor mark), but NOT written as `set 6,[hl]` / `or $40` /
+      `ld [hl],$40` against a `$DB42` pointer anywhere in banks $50-$5F.
+      Find the writer (some other addressing form) and the game-facing
+      trigger (crit? charge? tactic?).
+- [x] guard_redirect FULL per-victim integration — DONE S89: marks are
+      set when Cover/Guardian resolve (`battle.set_guard_mark`) and
+      cleared each round (`clear_guard_marks`); side sweeps start at the
+      QUEUED target and walk forward (measured: $0A queued on slot 5
+      swept [5,6], never touching 4 — `side_victims(start=)`), each
+      victim redirecting independently WITHOUT dedupe (a protector
+      covering two allies is hit twice). s89_guard 20 mismatches → 1
+      (a residual waypoint-grouping edge where one victim group lacks a
+      `miss_in`), pinned corpora unaffected.
+- [x] guard_redirect VALIDATOR — DONE S89: new `guard_redir` waypoint
+      ($53:$5544) in measure_battle.py + `s89_guard_events.json`
+      (--eskill 0x89/0x88 --ecount 3); model validated **14/14** against
+      the captured marks (incl. dead-protector fall-through). Full per-
+      victim integration into validate_battle's main runner is the
+      remaining polish (standalone check green).
+- [ ] +8/+9 defensive-flag CONSUMERS (Imitate/Dodge/SuckAll/defense
+      levels) + the $4BD3 attacker $30 setter.
+- [ ] Meta-actions real-menu drive (recipe in the [~] box above).

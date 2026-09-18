@@ -1,6 +1,46 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
 
+> Last verified: 2026-09-15 (Session 86 — **PACING LAYER DONE: the S80
+> RNG-policy question ANSWERED BY MEASUREMENT, full-battle TTK driver
+> built, aggregate-validated at round AND battle level, wired into
+> `randomizer/profile_check --ttk`.** Byte-neutral (Python + docs only);
+> verifier PASS 6/6; clean `1ca6579…` unchanged.
+>
+> RNG idle model: the live RNG is a FULL-PERIOD 16-bit LCG, so the idle
+> step count between any two captured states is uniquely recoverable
+> offline — `simulator/measure_idle.py` recovered all 5,636 consecutive-
+> waypoint counts in the S85 corpus → `s86_idle_model.json` (8 measured
+> per-class pools). Structure: same-frame pairs move only the model's own
+> deterministic k∈{0,1}; the gate/curse block and the whole MISS→core
+> sequence are same-frame (NO idle); phase-9 consecutive DoT rolls carry
+> an IDENTICAL state (222/222 at k=0 — the wait loop doesn't step there);
+> idling lives at actor boundaries/animations (med ~10²–10⁴ steps).
+> `battle.simulate_round` restructured to idle at exactly those sites
+> (validate_battle regression intact 6614/6614) + the decoded §15.10.10
+> front-weighted target pick replaces the "first live" stand-in.
+> `simulator/pacing.py`: IdlePolicy (empirical/uniform, O(log k) affine
+> stepping), commit machine (category machine + S81 chains for $dd0b 1/2,
+> decoded lightweight picker for 0, tactics bias + obedience gate),
+> `simulate_battle`, `ttk`. **Aggregate validation
+> (`validate_pacing.py`): level 1 = PIT over 197 clean corpus rounds ×200
+> sims — engine outcomes rank UNIFORM (KS 0.038 < 0.097 crit, coverage
+> 87.8% in [5,95], KO sets always ≥5% model events) — and empirical vs
+> uniform idle policies are statistically indistinguishable (ROADMAP's
+> "both work" hypothesis is now a finding). Level 2 = 5 FRESH unforced
+> real-save battles (S86 .sav, patched a17bff8e) — validate_battle on
+> them: 802/802 on never-seen data; engine battle outcomes at sim
+> percentiles 75/46/85/82/48, no tail outliers.** `sweep_ttk.py` sweeps
+> gate pools per ROM (vanilla/romhack/randomized) with level-scaled
+> reference parties, both party policies; `profile_check --ttk` gates
+> pool-TTK ≤2× vanilla (identically-seeded → vanilla-vs-vanilla exactly
+> 1.00×; default run unchanged). Commit-model stand-ins (party category
+> bases, obedience mid-band, chain element→resist mapping) are ROADMAP
+> S86 residuals. **USER-CONFIRMED S86: the S85b Anchor rewrite (patched
+> ROM `a17bff8e…`) works — no orphan-line recurrence** (user-reported).
+> Owning: BATTLE_SKILL_SYSTEM §15.8c (new) + §15.9; TOOLS_AND_DATA
+> §2.10; KEY_LESSONS S86; ROADMAP S80/S86.)
+
 > Last verified: 2026-09-05 (Session 85 — **LOOP-LEVEL DIFFERENTIAL VALIDATION
 > OF THE ROUND CORE: DONE — `simulator/battle.py` 6614 comparisons / 0
 > mismatches** over 25 complete engine battles (real-save unforced

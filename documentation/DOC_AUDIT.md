@@ -178,3 +178,14 @@ for three sessions because the documented table contradicted them.
 Lesson reinforced: a decoded routine is not attributed until its CALLERS
 are traced; "reachable from the state machine" is not "reached by the
 gate you assumed".
+
+
+## S89 addendum (2026-09-17)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| status.py +7 "packed $C0 turn counters — candidates: scare/lick-class enemy sillies" (S79) | WRONG candidates | The writers are Ironize $2A / IRONIZE $DC (measured, deterministic set+tick). The WarCry family — the ROADMAP's named candidates — writes +5 one-shots instead (WarCry bit4, LegSweep/BigTrip bit2). |
+| §15.9 "interception redirects — TurnOrderDefensiveBoost's defensive set §15.6 is the likely home" | IMPRECISE | The order boost is only WHY defensives resolve first. The redirect itself is the act-time guard-table consumer ($53 ~$552x/$567x + the $670E state-0), keyed on $DB08/09+8t marks written by Cover/Guardian. |
+| `SacrificeEntry_670e` "action state 3 routes Sacrifice here" (S79) | INCOMPLETE | The label heads the SHARED state-3 dispatcher (7 rst-table states, table was misassembled as code until S89); Cover $88/Guardian $89 route here too. Label kept, comment corrected in source. |
+| pacing.default_wld "possibly level-up (writer not yet traced)" | CLOSED EMPTY | Level-up never writes slot+$60 (L1→L13 frame-sampled). Docstring corrected. |
+| known_RAM_map "$DB00 blocks: 8 B/combatant" byte roles for +0/+1 (unmapped) | GAP filled | +0/+1 are the guard/defensive pair, read one slot shifted ($DB08/09+8t = slot t's record). |

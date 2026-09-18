@@ -195,10 +195,17 @@ def board_from_event(e):
     supplies via attach_commit_inputs)."""
     b = B.Board.from_event(e)
     b.party_skills = [None] * 3
-    b.wld = [default_wld(l) for l in list(b.level)[:3]]  # stand-in; the
-    # engine value is record slot+$60 (events do not carry it)
-    b.party_bases = [None] * 3      # events predate the S87 dc44-array
-    # capture; callers with real record bases attach them here
+    if 'wld' in e:                  # S88+ events carry the real per-
+        b.wld = [v & 0xFF for v in list(e['wld'])[:3]]   # combatant WLD
+    else:                           # words ($DC23+2i; lo byte = the
+        b.wld = [default_wld(l) for l in list(b.level)[:3]]  # gate input)
+    if 'ai_bases' in e:             # S88+ events carry $DC44..$DC63:
+        ab = list(e['ai_bases'])    # 4 arrays x 8 slots, order
+        b.party_bases = [           # cat1($DC44)/cat2($DC4C)/
+            (ab[0 + s], ab[8 + s], ab[16 + s], ab[24 + s])  # cat3($DC54)
+            for s in range(3)]      # /w3($DC5C) -> per-slot tuple
+    else:                           # pre-S88 corpora predate the capture
+        b.party_bases = [None] * 3  # (fallback tuple applies)
     b.tactic = [v & 3 if v != 0xFF else 0 for v in list(e['dd03'])[:3]]
     return b
 
@@ -438,9 +445,13 @@ def party_bases_from_row(ai_weights, rnd=None):
 
 def default_wld(level, arena_tier=0):
     """Creation-time WLD (constructor $14:label14_40b4): 5*level -
-    10*arenaTier ($CAB4), clamped 0..255. Post-creation it drifts via
-    items (Add/SubMonsterWLD) and possibly level-up (writer not yet
-    traced) — pass a measured value when you have one."""
+    10*arenaTier ($CAB4), clamped 0..255. [S89] Level-up does NOT touch
+    it (measured: L1->L13 in one post-battle scan, record +$60 frame-
+    sampled unchanged) — post-creation writers are ONLY the field item
+    adjusters (Add/SubMonsterWLD) and breeding's zero. So this models a
+    monster CREATED at `level` (e.g. a wild join); a hand-raised monster
+    keeps its low creation WLD — pass the measured value when you have
+    one (S88+ corpora carry it)."""
     return max(0, min(0xFF, 5 * int(level) - 10 * int(arena_tier)))
 
 

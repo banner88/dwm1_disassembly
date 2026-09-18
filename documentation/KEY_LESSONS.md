@@ -3316,3 +3316,42 @@ mechanism, one of them is wrong TODAY — do not file the contradiction
 as a residual and move on. (It cost: battle.py shipped a 'skipped'
 stand-in for confusion that was wrong in KIND, not just detail — the
 engine acts a rewritten meta-action, including attacking its own side.)
+
+## S89 (2026-09-17) — corpus capture hygiene; the degenerate-measurement trap; candidates are not findings
+
+**Never run corpus writers in the background.** A `nohup`'d regeneration
+script was assumed reaped between tool calls, foreground re-runs were
+started — and the background process was in fact still alive, racing the
+foreground into the SAME `--out` file (measure_battle APPENDS). The
+poisoned file produced validator "mismatches" whose diagnostic signature
+is worth memorizing: per-scenario frame numbers RESET mid-stream and the
+event list is EXACTLY doubled. The check is now one line of hygiene
+after any capture: frames must be strictly increasing within a scenario.
+Cost before root-cause: one phantom "damage model bug" chased through the
+regime math. Rule: emulator captures run FOREGROUND, chunked under the
+call timeout; after any kill, `ps` for stragglers BEFORE the next write
+to the same file.
+
+**A 1-member party cannot distinguish "self" from "whole side".**
+Ironize measured as "self-cast sets own counter" — true but degenerate:
+the byte-read showed a b=4 side-walk (party branch) vs b=1 (enemy self).
+With one monster the two are indistinguishable. When a measurement is
+taken on a minimal board, check the routine for loops over slots before
+writing semantics; the measurement bounds the claim, the bytes complete
+it.
+
+**Named candidates in a residuals list are hypotheses, not leads to
+confirm.** The +7 stun writers carried "WarCry-family" as candidates for
+two sessions; measurement exonerated the whole family in one run (they
+set +5 one-shots) and the real writer (Ironize) was found by grepping
+CONSUMER sites instead. Hunting the candidate first cost three rig runs;
+grepping writers of the byte cost one. Prefer "who writes this byte" to
+"does the suspect write this byte".
+
+**Two anomalies with the same shape are one finding.** The S89 fresh_c
+calcdef case (atk 9/dfn 6, engine 6 vs model 2) landed next to S88's
+rid_yp2 (atk 9/dfn 9, engine 3 vs model 2) — both deterministic, both
+low-stat, both regime-C-adjacent. Filed as ONE low-stat edge with two
+repros for SameBoy rather than two unrelated flags; the level-2 tail
+percentile on that battle (~0%, engine faster than the whole envelope)
+corroborates it firing repeatedly, not once.

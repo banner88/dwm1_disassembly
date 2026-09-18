@@ -2164,6 +2164,9 @@ jr_053_4bd1:
     ret
 
 
+; [S89] Attacker-side +7 & $30 leg of the dodge/evade checker (target
+; leg above tests & $0C = SideStep dodge-status). $30's setter is still
+; unlocated — §15.9 residual (pairs with the +8/+9 defensive flags).
 jr_053_4bd3:
     ld a, [wBattleAttackerIdx]
     ld hl, $db07
@@ -2886,6 +2889,12 @@ jr_053_4fa8:
     cp [hl]
     jr z, jr_053_4fcd
 
+; [S89] GUARD-MARK WRITER (Cover $88 / Guardian $89 via the state-3
+; machine): for each candidate ally c != caster, if not already marked
+; (first-protector-wins), set $DB08+8c bit4 (= "slot c protected") and
+; OR the caster's nibble into $DB09+8c HIGH (low nibble preserved — it
+; is the $8D/$8E/$90 defense-level field). One-round marks, cleared at
+; the round boundary. Measured S89; consumers §15.9 CLOSED S89.
     ld hl, $db08
     call HL_AddA_x8
     bit 4, [hl]
@@ -6865,25 +6874,33 @@ jr_053_6705:
     ret
 
 
-; Sacrifice entry (bank $53 entry $0D): action state 3 routes Sacrifice
-; here (§15.7, S79).
+; Action-machine STATE-3 dispatcher on $D9EE (7 sub-states) — [S89]
+; CORRECTS the S79 attribution: not Sacrifice-only. Cover $88 / Guardian
+; $89 route here too (SkillCover in bank $52 sets $d9ed=3, $d9ee=0), and
+; the Sacrifice resolution (§15.7) lives in the later sub-states. The
+; rst $00 inline dw table was misassembled as code pre-S89; re-sectioned
+; byte-identically. State 0 ($6720, directly below) is the shared
+; iron-veto / guard-redirect gate; see §15.9 CLOSED S89.
 SacrificeEntry_670e:
     ld a, [$d9ee]
     rst $00
-    jr nz, @+$69
+    dw InterceptGate_6720            ; 0: iron $BA veto / guard state
+    dw $67a9                         ; 1
+    dw $6866                         ; 2
+    dw $68b4                         ; 3
+    dw $6971                         ; 4
+    dw $6a04                         ; 5
+    dw $6a89                         ; 6
 
-    xor c
-    ld h, a
-    ld h, [hl]
-    ld l, b
-    or h
-    ld l, b
-    ld [hl], c
-    ld l, c
-    inc b
-    ld l, d
-    adc c
-    ld l, d
+; [S89] State 0: bumps $D9EE, then (a) TARGET's $DB07 & $C0 (the Ironize
+; counter, §15.9) -> msg $BA + skip (the state-3 twin of the $56E1
+; pre-gate); (b) else the GUARD record — [hl+1]=$DB08+8t bit4 protected,
+; [hl+2]=$DB09+8t hi-nibble protector — redirects wBattleTargetIdx AND
+; the attacker's $DCED queue target to the protector (msg $80, $DD6E=4).
+; Behaviorally proven S89 (HP flow: attacks on the protected slot land
+; on the protector). Writer: GuardMark loop ~$4Fxx (first-protector-
+; wins); main-path consumers ~$552x/$567x gate on $DCFE (flags8) bit1.
+InterceptGate_6720:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]

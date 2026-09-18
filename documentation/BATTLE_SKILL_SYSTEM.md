@@ -2143,21 +2143,110 @@ exemption (GetMonsterSlotInfo guard, §15.10.9); one-shot +5 bits clear
 at the consumed turn; TailWind wind-guard (+4 bit6, tested by
 flags7-bit4 breaths except $43/$8F).
 
-Remaining residuals: meta-actions beyond the option-list observation
-(flee $E9 class on the VANILLA id space, items, shift — the state-0
-preamble consumes w[3], §15.10.7; note the id collision with custom
-Mourn $E9, §15.10.8); the $DB07 STUN bits 7:6 WRITERS (consumers +
-tick decoded; the natural setter — WarCry-family sub-states are the
-candidates — is still unlocated; stun_st was poked); "interception
-redirects" (referent still unsharpened; TurnOrderDefensiveBoost's
-defensive set §15.6 is the likely home); the mode-2 finisher variant of
+**CLOSED S89** (measured on the real save + byte-read; simulator/status.py
+map, battle.py `guard_redirect`/`target_unreachable`, MONSTER_DATA):
+the $DB07 bits 7:6 writers — they are **Ironize $2A and IRONIZE $DC**
+(behaviorally identical): self-cast sets $C0 (3-round counter, phase-9
+tick $C0→$80→$40→$00), actor forced $11, and the ironized monster is
+FULLY immune to incoming resolution (physicals AND magic, measured
+under sustained Attack + Blaze) via the S85 $56E1 pre-gate (flags8 bit2
+is near-universal on offense — that gate IS the iron immunity) plus the
+state-3 twin check in the $670E dispatcher. `SkillIronize` byte-read:
+a party-side cast walks the WHOLE SIDE (4-slot loop, per-slot liveness
+check — the S89 single-slot measurement was degenerate: 1-member
+party); the enemy self-cast branch irons only itself. The WarCry-family
+candidates are EXONERATED: WarCry $7D sets +5 one-shot bit4 (forced
+$17), LegSweep $7B / BigTrip $7C set +5 bit2 (forced $16), never +7.
+"Interception redirects" — referent SHARPENED and decoded end-to-end:
+a one-round GUARD table in the previously-unmapped status bytes,
+$DB08+8t bit4 = "slot t protected", $DB09+8t hi-nibble = protector
+(physically slot t+1's +0/+1). Writers: Cover $88 (one targeted ally),
+Guardian $89 (both OTHER allies, never self) — mark writer at bank $53
+~$4Fxx (first-protector-wins, preserves the +9 LOW nibble = the
+$8D/$8E/$90 defense-level field 1/2/4); marks cleared at the round
+boundary (which is WHY the class gets the §15.6 +$0600 order boost).
+Consumers: main-path redirect sites (~$552x/$567x, gated on cached
+flags8 bit1 in $DCFE) rewrite wBattleTargetIdx AND the attacker's
+queue target to the protector (msg $80) — differentially proven by HP
+flow (every attack aimed at the protected slot landed on the
+protector, 250→12 while the target never moved). The $670E rst-table is
+byte-decoded: 7 states $6720/$67A9/$6866/$68B4/$6971/$6A04/$6A89,
+state 0 = the iron-$BA / guard-redirect gate. Defensive-set sweep:
+Imitate $7F→+8 $08, Dodge $8C→+8 $20 (SkillDodge), SuckAll $8F→+8 $02,
+Defence $1D→+8 $80 (one sighting), Defence $8D/StrongD $8E/BladeD $90→
++9 low nibble 1/2/4 (shared handler); StepGuard $37 wrote nothing.
+The WLD level-up writer — CLOSED EMPTY: L1→L13 in one post-battle scan
+with record +$60 frame-sampled, WLD unchanged; writers remain creation /
+breeding-zero / field items only (MONSTER_DATA). Corpus regeneration:
+s85 was regenerated WITH the ai_bases/WLD fields and validates 6614/0
+(check parity), and `board_from_event` now consumes those fields (stand-
+ins retire automatically on S88+ corpora; pre-S88 corpora still fall
+back). The regen is delivered as `s85_battle_events.json` UNCHANGED in
+the tree pin (the S89 regen was verified equivalent but the pinned
+corpus is retained to avoid a same-session pin churn); the ai_bases/WLD
+consumption is exercised by the S88 corpora and the new guard corpus.
+
+Remaining residuals: meta-actions [S89 PARTIAL] — the $E9 flee class is
+the HERO slot's MENU verb space (§15.10.1's option-list observation),
+not an enemy-AI outcome: queue-forcing $E9 into idx 3 never enters the
+turn order (readiness-gated), an empty-option-list enemy never emits
+metas (8 rounds observed), and an outleveled wild EID 3 never fled
+(L40 vs L1, db73=0); NEXT STEP = drive the real battle menu (directed
+d-pad) to commit Flee/Item/Shift and capture the commit writes, on the
+CLEAN ROM for the vanilla id space (NB the S89 attempt found the
+hacked .sav is REJECTED by the clean build — S75 build-specificity —
+so use a franken-state there); the guard/defensive +8/+9 flags beyond
+their setters (Imitate/Dodge/SuckAll/defense-level consumers; the
+attacker-side +7 & $30 checker at $53:$4BD3 pairs with these); the
+LOW-STAT CALCDEF EDGE — **SOLVED S89 (PyBoy). It was never a calcdef
+bug: it is an UNMODELLED ×1.5 DAMAGE BOOST, `$DB42` bit 6.** Found by
+hooking all 75 `ld [$db56],a` sites in banks $52/$53 and catching which
+one fired: at the disputed hit `$52:$6184` stored the rolled 4, then
+**`$53:$59CD` overwrote it with 6**. Decoded there (byte-exact):
+```
+ld a,[$db88] / ld hl,$db42 / add l / ld l,a / ld a,0 / adc h / ld h,a
+bit 6,[hl] / jr z,+$19          ; skip unless ATTACKER's $DB42 bit6 set
+ld a,[$db56] / ld l,a / ld a,[$db57] / ld h,a
+ld b,h / ld c,l / srl h / rr l / add hl,bc   ; hl = dmg + (dmg>>1)
+ld a,l / ld [$db56],a / ld a,h / ld [$db57],a
+```
+i.e. **damage := dmg + (dmg>>1) = ×1.5 with the HALF truncated** (16-bit
+`srl h / rr l / add hl,bc`). It runs AFTER `CalcSkillDefense` and AFTER
+`DamageSlot2AdjustFloor_61ec`, on the value already in $DB56/57, so it
+stacks on top of the slot-2 ×0.8 and the zero floor. Gate is ONLY the
+attacker's bit — no skill/element condition.
+
+Correlation measured over a whole battle: **8/8** — every hit with bit6
+clear applied the rolled value 1:1; the single hit with it set applied
+×1.5 (4 → 6). This ALSO closes the separate S88 rider anomaly
+(`rid_yp2 r6`, atk9/dfn9, engine 3 vs model 2): same mechanism, same fix.
+
+Lifecycle (measured per-frame): set during the command/order phase
+($D9EC==5), cleared in phase 9 — a ONE-ROUND mark on the actor. **The
+SETTER is not yet located** — it is not a plain `set 6,[hl]`, `or $40`
+or `ld [hl],$40` against a `$DB42` pointer anywhere in banks $50-$5F, so
+it is written by some other addressing form (ROADMAP item). The consumer
+and its arithmetic are exact, which is what the damage model needs.
+
+Model: `battle.db42_boost()`, applied in BOTH the physical and
+record-roll damage predictions; `Board` now carries `db42` from the
+event (`measure_battle` already captured it). Result: s89_fresh
+**426/1 → 426/0**, s88_rider **3422/1 → 3422/0**, and every pinned
+corpus unchanged and green (s85 6614/0, s86 802/0, s88 confusion 2824/0,
+curse 3083/0). No unexplained damage discrepancy remains.
+validator integration of guard_redirect — [S89] DONE: the guard
+redirect is measured (new `guard_redir` waypoint at $53:$5544 in
+measure_battle.py) and the model validated 14/14 against
+`s89_guard_events.json` (Guardian protects both allies → protector 4;
+Cover protects the one targeted ally; incl. the dead-protector fall-
+through where the model correctly declines to redirect to a KO'd
+protector). Full per-victim integration into validate_battle's main
+runner (applying the table during target prediction) is the remaining
+polish; the standalone check is green; the mode-2 finisher variant of
 plain-attack targeting ($58:$448A — HP-vs-damage-estimate compare,
 partially decoded S84); the multi-candidate target RNG pick in the
 VALIDATOR (the driver uses §15.10.10 front-weighted for plain attack
-and uniform_side_pick for the $642C family, S88);  a SINGLE ±1 calcdef
-anomaly (rid_yp2 r6: atk 9 / dfn 9, entry state $3100, engine 3 vs
-model 2 — one extra step reproduces it but 8 sibling casts contradict a
-systematic extra step; open low-stat edge, full repro in the corpus);
+and uniform_side_pick for the $642C family, S88);
 two flagged presumptions: rider-before-snap RNG order (no overlapping
 sample) and consumed-bit-only one-shot clearing (no multi-bit sample).
 

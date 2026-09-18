@@ -234,6 +234,7 @@ def run(events):
             R = rev[0]
             b = B.Board.from_event(R)
             where = f'{sc} r{rn}'
+            B.clear_guard_marks(b)          # S89: guard marks are one-round
             actors, p9 = group_actions(rev)
             # ---- turn order --------------------------------------------
             if actors:
@@ -386,6 +387,10 @@ def run(events):
                 else:
                     pred_t = B.dead_redirect(b, qt)
                     tally('dead_redirect', 'dead_redirect' in tags or 'reresolve' in tags, dict(w=where, a=a))
+                if sk in B.GUARD_SKILLS:      # S89: Cover/Guardian cast
+                    B.set_guard_mark(b, a, first_t if B.GUARD_SKILLS[sk] == 'one' else None)
+                if pred_t is not None:            # S89: Cover/Guardian
+                    pred_t = B.guard_redirect(b, pred_t, f8)   # interception
                 tally('target', pred_t == first_t, dict(w=where, a=a, sk=hex(sk), qt=qt, pred=pred_t, got=first_t))
                 if first_t is not None and B.target_unreachable(b, first_t, f8, sk):
                     tally('unreachable', all(e['tag'] in ('target_fetch',) for vg in vgs for e in vg),
@@ -399,9 +404,16 @@ def run(events):
                     pred_v = B.quake_victims(b, a, first_t if first_t is not None else (a & 4) ^ 4)
                     core_by_victim = {s: ('quake' if not b.flying(s) else 'none') for s, _ in pred_v}
                 elif rec and rec['battle_record']['fields']['target_mode'] == 18 and core != 'none':
-                    pred_v = [(s, 1) for s in B.side_victims(b, first_t)]
+                    pred_v = [(s, 1) for s in B.side_victims(b, first_t, qt if qt != 0xFF else None)]
                 else:
                     pred_v = [(first_t, 1)]
+                if sk not in B.QUAKE_RANGE and len(pred_v) > 1:
+                    # S89: each victim of a side sweep passes the guard
+                    # table independently; a protected slot resolves on
+                    # its protector, and the engine does NOT de-duplicate
+                    # — a protector covering two allies is hit twice
+                    # (measured: Guardian victims [4,4]).
+                    pred_v = [(B.guard_redirect(b, _s, f8), _d) for _s, _d in pred_v]
                 got_v = []
                 for vg in vgs:
                     m = next((e for e in vg if e['tag'] == 'miss_in'), None)
@@ -482,6 +494,7 @@ def run(events):
                             pd = pd * dead_before
                         elif mult != 1:
                             pd = int(pd * mult)
+                        pd = B.db42_boost(b, a, pd)   # S89: $DB42 bit6 x1.5
                         tally('damage_phys', pd == dmg, dict(w=where, a=a, t=t, sk=hex(sk), pred=pd, got=dmg,
                                                              atk=b.atk[a], dfn=b.dfn[t], rng=(cd['rng1'], cd['rng2'])))
                         if sk in B.PHYS_STATUS_RIDER and (sc_ or sr):
@@ -520,6 +533,7 @@ def run(events):
                             lev = D.res_level(bytes(b.res[t*7:t*7+7]), rt)
                             ladder = D.LADDER_A if lad == 'A' else D.LADDER_BREATH
                             pd = D.apply_ladder(pd, ladder, b.stb(t, 5), lev)
+                        pd = B.db42_boost(b, a, pd)   # S89: $DB42 bit6 x1.5
                         tally('damage_record', pd == dmg, dict(w=where, a=a, t=t, sk=hex(sk), pred=pd, got=dmg))
                     elif got_core == 'quake':
                         lo, hi = B.QUAKE_RANGE[sk]
@@ -539,7 +553,17 @@ def run(events):
                     hp_after = evs[j]['hp'][t] if j < len(evs) and evs[j]['sc'] == sc else None
                     if hp_after is not None:
                         tally('hp', hp_after == b.hp[t], dict(w=where, a=a, t=t, before=hp_before, dmg=dmg, got=hp_after, pred=b.hp[t]))
-                    got_ko = any(e['tag'] == 'ko' for e in g[g.index(ap):])
+                    # [S89] bound the slice at the NEXT victim's segment:
+                    # an unbounded scan pairs a LATER victim's KO with an
+                    # earlier surviving victim (die_a: Infernos killed
+                    # victim 2 only, victim 1's check saw its ko events)
+                    seg = g[g.index(ap):]
+                    for k2, e2 in enumerate(seg[1:], 1):
+                        if e2['tag'] in ('apply_in', 'target_fetch',
+                                         'calcdef_in', 'final_54e7'):
+                            seg = seg[:k2]
+                            break
+                    got_ko = any(e['tag'] == 'ko' for e in seg)
                     tally('ko', ko == got_ko, dict(w=where, a=a, t=t, hp=hp_before, dmg=dmg, pred=ko))
                     if not ko:
                         check_snap(b, a, vg, evs, sc, where,
@@ -548,7 +572,13 @@ def run(events):
                         ended = True
                 b.dd13[a] = 3
                 cursor += 1
-            tally('fetch', walked == [x for x in order][:len(walked)] and (ended or len(walked) == len(order)),
+            # [S89] an actor KO'd before its turn is silently skipped by
+            # the engine (dd13 -> $FF at KO): missing walk entries are OK
+            # iff they are dead on the model board (die_a: Infernos
+            # killed the round's 3rd actor at the 1st actor's cast).
+            tally('fetch', walked == [x for x in order if x in walked]
+                  and (ended or all(b.hp[x] == 0
+                                    for x in order if x not in walked)),
                   dict(w=where, got=walked, pred=order, ended=ended))
             # ---- phase 9 -------------------------------------------------
             if p9:

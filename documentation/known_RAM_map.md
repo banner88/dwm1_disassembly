@@ -449,7 +449,17 @@
                  curse(5)/paralyze(6)/asleep(7); +3 = StopSpell(0)/
                  Surround(1)/transformed(4,5)/DanceShut(6)/MouthShut(7);
                  +5 = one-shot compulsions(0-5) + guard(6)/amplify(7)
-                 ladder rows; +7 = packed $C0 turn counters (open).
+                 ladder rows; +7 = bits7:6 IRON counter (Ironize $2A/$DC,
+                 3 rounds, phase-9 tick; forced $11 + full incoming
+                 immunity) / bits3:2 SideStep dodge / bits1:0 surround
+                 ctr / bits5:4 attacker-evade leg $53:$4BD3 (setter
+                 open) [S89]; +0/+1 = the GUARD/DEFENSIVE pair read ONE
+                 SLOT SHIFTED (slot t's record at $DB08/09+8t = slot
+                 t+1's +0/+1): +8 bit4 protected + $DB09 hi-nibble
+                 protector (Cover $88/Guardian $89, one round, act-time
+                 redirect); +8 also Imitate $7F($08)/Dodge $8C($20)/
+                 SuckAll $8F($02)/Defence $1D($80); +9 LOW nibble =
+                 defense level $8D/$8E/$90 -> 1/2/4 [S89 measured].
    1:DB88   1    wBattleAttackerIdx — attacker combatant index (re-derived;
                  NOTE: repurposed during target processing, unreliable at
                  effect-dispatch time)
@@ -608,6 +618,7 @@
 
 | Addr | Role |
 |------|------|
+| $DB42+slot | Per-combatant battle flags. **bit6 = ×1.5 DAMAGE BOOST on this slot's outgoing hits** [S89, measured 8/8]: consumer `$53:$59CD` recomputes the already-stored damage as `dmg + (dmg>>1)` (half truncated; 16-bit `srl h / rr l / add hl,bc`), AFTER CalcSkillDefense and AFTER DamageSlot2AdjustFloor_61ec, so it stacks on the slot-2 ×0.8 and the zero floor. Gated ONLY on the attacker's bit — no skill/element condition. Lifecycle: set in the command/order phase ($D9EC==5), cleared in phase 9 = a ONE-ROUND actor mark. Model: `battle.db42_boost()`. **Setter not yet located** — not a plain `set 6,[hl]` / `or $40` / `ld [hl],$40` on a $DB42 pointer in banks $50-$5F. This was the cause of BOTH long-standing "low-stat calcdef" anomalies (s89_fresh + S88 rider). Confusion also zeroes `$DB42+slot` (bank $53 ~$969). |
 | $DC23+2i (wBattleLVL) | MISNOMER: per-combatant **WLD** word (record slot+$60), NOT level; enemies forced $00FF at init; the obedience gate input (bank $57 $7a03/$7a5d). Display level = $db9b. |
 | $DB4C | obedience seed: tactic-category base /10 (CmpBtlAI_78d4; tactic 3 → 0) — state-0 scope; reused elsewhere |
 | $DB4D | obedience: w3 ($DC5C weight) /10 (AIPreambleW3_7905) |

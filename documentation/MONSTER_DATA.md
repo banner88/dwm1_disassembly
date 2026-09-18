@@ -154,7 +154,7 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | $5A | 2 | DEF |
 | $5C | 2 | AGL |
 | $5E | 2 | INT |
-| $60 | 2 | **WLD (wildness)** — shown on the INFO screen; → battle `wBattleLVL` (misnomer); the obedience gate's input. Init = **5×level − 10×arenaTier ($CAB4)**, clamped 0..255; breeding ZEROES it (bank $16 `label16_474a` — hatchlings fully tactic-compliant); item effects adjust via ROM0 `Add/SubMonsterWLD` [S87, screen-verified] |
+| $60 | 2 | **WLD (wildness)** — shown on the INFO screen; → battle `wBattleLVL` (misnomer); the obedience gate's input. Init = **5×level − 10×arenaTier ($CAB4)**, clamped 0..255; breeding ZEROES it (bank $16 `label16_474a` — hatchlings fully tactic-compliant); item effects adjust via ROM0 `Add/SubMonsterWLD` [S87, screen-verified]. **[S89] Level-up does NOT write it** — measured L1→L13 in one post-battle scan (stats applied normally), +$60 frame-sampled unchanged; static writer set is CLOSED (creation / breeding / items). So the 5×level formula describes a monster CREATED at that level; a hand-raised monster keeps its creation WLD |
 | $62 | 1 | Plus value |
 | $64 | 4 | **AI weights / personality** in order cat1/cat3/w3/cat2 ($CB25/26/27/28 views) — source of the battle category-base arrays $DC44/$DC54/$DC5C/$DC4C (bank $51 `LoadBtlS_44cb` → `jr_051_45f8`); adjusted by field item effects only (`Add/SubMonsterAIWeight*`), never mid-battle [S87, hook-verified] |
 | $68 | 27 | Resistances |

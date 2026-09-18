@@ -779,6 +779,14 @@ SkillTransform:
     call SetSkillAnimA
     ret
 
+; [S89] Ironize $2A / IRONIZE $DC (behaviorally identical; $DC head just
+; self-targets then falls through): writes the $DB07 bits 7:6 IRON
+; counter (|= $C0 = 3 rounds, phase-9 tick). A party-side cast walks the
+; WHOLE SIDE (b=4 loop below, per-slot CheckMonsterSlot); the enemy
+; self-cast branch (target bit2 set, $c86c==0) irons ONLY itself. While
+; iron: actor forced $11, and FULL incoming immunity (physical + magic)
+; via the $56E1 flags8-bit2 pre-gate + the $670E state-0 twin. Measured
+; S89 on the real save; §15.9 CLOSED S89.
 SkillIRONIZE:
 
 
@@ -2206,6 +2214,12 @@ jr_052_4c2b:
     call ApplySkillDamage
     ret
 
+; [S89] Cover $88 AND Guardian $89 share this handler: route to the
+; action-machine state 3 (the $53:$670E dispatcher), whose GuardMark
+; writer sets the one-round guard records — Cover marks ONE targeted
+; ally, Guardian marks BOTH other allies (never self). $DB08+8t bit4 =
+; protected, $DB09+8t hi-nibble = protector. Attacks aimed at a marked
+; slot redirect to the protector (msg $80). Measured S89; §15.9.
 SkillCover:
 
 
@@ -2251,6 +2265,8 @@ jr_052_4c6e:
     call SetSkillAnimFlag
     ret
 
+; [S89] Dodge $8C: own defensive flag $DB08+8*self bit5 (one round).
+; Consumer beyond the setter not yet traced (§15.9 residual).
 SkillDodge:
 
 
@@ -2261,6 +2277,10 @@ SkillDodge:
     call SetSkillAnimFlag
     ret
 
+; [S89] Defence $8D / StrongD $8E / BladeD $90 shared handler: writes
+; the DEFENSE-LEVEL into $DB09+8*self LOW nibble ($8D->1, $8E->2,
+; $90->4), HIGH nibble (the guard protector field) preserved — the two
+; systems share the byte. One-round; measured S89.
 SkillBladeD_Defense:
 
 

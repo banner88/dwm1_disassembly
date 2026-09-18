@@ -37,9 +37,34 @@ Per-combatant status block: 8 bytes at $DB00 + slot*8 (slots 0-2 party,
               bit0->act $12, bit1->act $14 (LureDance $78 sets $02 —
               measured: compelled once, then cleared), bit2->act $16,
               bit3->act $15, bit4->act $17, bit5->act $18
-  +7  packed $C0-class turn counters, decremented in phase-9 sub 2 and
-      gating action $11 at bank $53 $4566 — applying skills not yet
-      identified (open; candidates: scare/lick-class enemy sillies)
+  +7  bits7:6  IRON counter — set to 3 ($C0) by Ironize $2A and IRONIZE
+      $DC (self-cast; behaviorally identical), decremented once per
+      round in phase-9 sub 2 ($C0->$80->$40->$00), gating forced action
+      $11 at bank $53 $4566 while nonzero; AND the ironized monster is
+      fully immune to incoming resolution — physicals and magic both —
+      via the act-time target check in the $53:$670E interception
+      dispatcher (msg $BA path). [S89 MEASURED — the pre-S89 "scare/
+      lick-class candidates" note was wrong; WarCry $7D / LegSweep $7B /
+      BigTrip $7C write +5 ONE-SHOT bits instead (bit4->act $17, the
+      trips bit2->act $16), never +7.]
+      bits1:0  surround counter; bits3:2  dodge-status (SideStep) — S88.
+  +0/+1  (previously unmapped) the GUARD/DEFENSIVE scratch pair, read
+      ONE SLOT SHIFTED: the record for slot t lives at $DB08+8t/$DB09+8t
+      (physically slot t+1's +0/+1). All one-round flags, cleared at the
+      round boundary [S89 measured]:
+        (+8) bit4 = slot t is PROTECTED; (+9) hi-nibble = protector slot
+             — written by Cover $88 (one targeted ally) and Guardian $89
+             (both OTHER allies, never self). Consumer: the act-time
+             interception redirect ($53:$670E region) rewrites
+             wBattleTargetIdx AND the attacker's queue target to the
+             protector (msg $80) — differentially proven: attacks aimed
+             at a protected slot land on the protector.
+        (+8) bit3 = Imitate $7F; bit5 = Dodge $8C; bit1 = SuckAll $8F;
+             bit7 = Defence $1D (one sighting).
+        (+9) bit0 = Defence $8D; bit1 = StrongD $8E; bit2 = BladeD $90.
+             (Semantics of these one-round flags beyond their setters
+             not yet traced; StepGuard $37 wrote nothing in the S89
+             harness.)
 
 Turn-gate order for the ACTOR (bank $53 entry 0, $4558-$45C8):
   $DB07&$C0 -> action $11;  +2 bit6 -> $13 (paralyzed);
