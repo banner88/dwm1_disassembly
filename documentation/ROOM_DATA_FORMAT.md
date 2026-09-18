@@ -362,6 +362,63 @@ Walk grid: 10 columns × 8 rows per screen. Each cell = 16×16 pixels (2×2 tile
 $FF97 = walk X, $FF98 = walk Y. Screen offsets from $2DE7 table (indexed by
 screen_index × 2): X_offset (walk units) and Y_offset (walk units).
 
+## NPC capacity & sprite-sheet budget (S91, emulator-measured)
+
+**Hard slot ceiling: 8 NPC entries per (screen, step-state) block.**
+`RoomEntry7_RoomInit` ($0B:$470F) zero-fills exactly $101 bytes at $D7D2
+(8 × 32-byte slots + the terminator cell $D8D2; `FillNBytesWithRegA`'s BC is
+a plain 16-bit byte count) and the parser (`Call_00b_477e`) has **no bounds
+check**. Vanilla respects the ceiling: the valid-step census over every room
+maxes at exactly 8. Measured overflow (9 entries vs an 8-entry control, same
+warp): the terminator no longer lands at $D8D2 and the 9th entry's fields
+write into the **NPC-script state block** — $D8D9 (queued text id) and
+$D8E2/$D8E3/$D8E6/$D8E7/$D8E8 changed — silently, with **no crash**. The
+old bank_004.asm banner claim "up to 40 NPCs" was wrong (fixed S91,
+DOC_AUDIT S91). Editor rule: hard-cap 8 per screen-state.
+
+**Per-screen sprite-sheet VRAM budget (second, softer ceiling).** Each
+*distinct* sprite id in the block loads its sheet into a shared VRAM tile
+budget at room init, first-come in entry order; once exhausted, later
+distinct ids render **blank** (no crash). Measured: 8 distinct "human"
+sheets ($00-$0F range) all render; a batch of 8 distinct
+boss_composite_fragment ids rendered 2 full + 1 partial + 5 blank. Repeats
+of one id are free. Renders are deterministic (prior-VRAM priming produces
+pixel-identical crops). Per-sheet tile counts are unmeasured (capacities
+residual). Consequence for tooling: any per-id render census must place ids
+**solo** (tools/dump_npc_sprite_catalog.py).
+
+**Sprite-id catalog.** `extracted/npc_sprite_catalog.json` (+ thumbnail
+sheet + per-id crops in `extracted/npc_field_sprites/`) is the S91 empirical
+id → appearance census over $00-$7F, $E0-$E3, $F0-$F3, $FF: 72 normal ids,
+17 boss-composite fragments (bosses are multi-tile composites assembled
+from several NPC entries; regular monsters have single small icons — user
+classification), 6 deterministic aliases of $00 ($4E/$4F/$F0-$F3), 37 empty,
+5 glitch-invalid ($60/$6C/$73/$79/$7B). **No id crashes the renderer** in
+vanilla rooms — the S70 "$11 hard-crashes" observation was custom-room
+context (DOC_AUDIT S91), and the S70 vault-guardian "draconic" render is
+$23 = a boss-composite fragment. Some vanilla-used ids ($54/$E2/$E3/$FF,
+$FF = 50 uses) deterministically render nothing in field contexts.
+Hand-curated names/classes live in `extracted/npc_names.json`
+(`sprite_names` + `sprite_classes`) and merge into the catalog at
+`--finalize`.
+
+**Screens per room.** Engine ceiling = **16** (4×4): `RoomEntry2` scroll
+math clamps row = Y/128 to 0-3 and col = X/160 to 0-3. Vanilla max = the
+mt $54-$59 conveyor/maze rooms (12 declared slots, 9 valid); screen_index 8
+(row 2) render + scroll verified in PyBoy S91. The custom pipeline's schema
+currently accepts 4×2 = 8 (`screens` keys "0".."7", PROJECT_COMPILER);
+extending to 4×4 is a schema residual, not an engine limit. Room dims in
+the $26DD record must match the screen count (KEY_LESSONS S10).
+
+**Phantom-step hazard when scanning room data.** Step validation in the
+engine only checks `tileset_bank ∈ (0,$80)`, so tools that walk step
+entries past a screen's real list decode garbage that can pass shallow
+checks — `extracted/npc_catalog.json` contains such phantom rows (e.g.
+"Castle screen 0 step 6, 28 NPCs" decodes to junk coordinates). Filter on
+tileset_bank ∈ {$23-$31,$37,$38} + interact ptr ∈ $4000-$7FFF + sane
+coords, and dedup blocks by (mt, ptr) — see
+`tools/dump_npc_sprite_catalog.py --census` (DOC_AUDIT S91).
+
 ## NPC Type Byte Encoding
 
 

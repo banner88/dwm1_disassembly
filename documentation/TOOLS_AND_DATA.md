@@ -70,7 +70,7 @@ was lost; they were intentionally curated. Treat as documentation.
 | new_species.json | Phase-N authored spec (normalized/stamped by build_new_species.py): first_free_id 224, high bank $6A, per-species info/stats/encounter/name blocks. G3 (ROADMAP) will fold ALL Gorbunok artifacts into this schema. | tools/build_new_species.py → patches/bank_003/006a/014/001.asm |
 | spirit_family.json | B6 authored spec: Spirit-family reassignment list (`{id,name,from,to}`), `from` validated vs vanilla. | build_family_reassign.py, build_library_table.py |
 | skill_faq.json | **EXTERNAL ground truth** (community skill FAQ, transcribed — `_source`, deliberately NOT `_generator`): per-skill MP/target/learn/family data used to validate S44/S46 decodes. | build_skill_faq.py (writer); gen_skill_records.py + docs (validation) |
-| npc_names.json | Hand-curated naming reference: sprite/type names, NPC labels, room-name overrides. No generator by design. | dump_all_npcs.py, editor tooling |
+| npc_names.json | Hand-curated naming reference: sprite/type names, NPC labels, room-name overrides, **+ `sprite_classes` (S91: user visual classification — empty / glitch_invalid / boss_composite_fragment)**. No generator by design; merged into npc_sprite_catalog.json at `--finalize`. | dump_all_npcs.py, dump_npc_sprite_catalog.py, editor tooling |
 
 ### Tier S — Stable analysis output (generator not in repo; data is ROM-derived and unchanging)
 | File | Contents | Used by |
@@ -92,7 +92,11 @@ npc_with_text, npc_text_mapping, free_space, gate_names, orphan_pointers,
 pointer_tables, routing_table, screen_counts, sprite_reference,
 text_blobs): regenerable from named dumpers; not
 freshness-tested this session — verify before relying on one for the
-editor (snapshot → regen → diff).
+editor (snapshot → regen → diff). ⚠️ npc_catalog.json is CONTAMINATED by
+phantom-step rows (dump_all_npcs walks past each screen's real step list;
+DOC_AUDIT S91) — filter per the valid-step rules in
+tools/dump_npc_sprite_catalog.py --census, or regenerate the dumper with
+them (open ROADMAP residual).
 
 ## 2. tools/ — classification (102 files in tools/ + the `dwm/` package)
 
@@ -502,6 +506,16 @@ to exactly the original entry's tile count. `--rom <gbc>` = full check;
 `--records-only` = source-only. Exit 1 = FAIL. Runs as verify_integrity
 check 6 and inside editor2/core/builder.build_rom (the editor refuses to
 return a failing ROM).
+
+### S91 additions (P3.0 CAPACITIES + P3.1 sprite catalog)
+
+| Item | What | Notes |
+|---|---|---|
+| tools/dump_npc_sprite_catalog.py | NPC field-sprite render census (PyBoy): solo render per id via binary-poked temp ROM (Castle scr1 step4 block, flat 183595), `--render` (chunkable) / `--finalize` / valid-step `--census`; crop box snaps to the 16px cell grid | Committed crops = the S91 sav-mode canonical run (user-validated sheet); clean-ROM `--render` reproduces on the intro-skip state |
+| extracted/npc_sprite_catalog.json | Per-id record: renders, category (from npc_names.json sprite_classes), diff_px_vs_empty, name, alias_of; `_meta` documents method + valid range | 137 ids: 72 normal, 17 boss fragments, 6 aliases of $00, 37 empty, 5 glitch; ZERO crashes |
+| extracted/npc_field_sprites/ | 137 per-id 16×16 crops (throne-room background) — the sprite picker / canvas thumbnail source | id_XX.png |
+| extracted/npc_sprite_catalog_sheet.png | Labeled contact sheet (user-classified S91) | |
+| extracted/capacities.json | P3.0 CAPACITIES reference: every known authoring ceiling + evidence + status (measured_s91 / structural_s91 / documented); `_deferred_measurement_boxes` names the residuals | Hand-compiled, no generator by design; EDITOR_DESIGN §5.C meters read it |
 
 ### S88 additions
 

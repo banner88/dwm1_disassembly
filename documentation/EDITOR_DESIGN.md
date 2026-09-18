@@ -172,9 +172,10 @@ gap tag **[G-x]** resolved in §9.
 **No invisible ceilings.** Every panel shows its meter, sourced from the
 machine-readable **CAPACITIES reference** [G-M] (every known ceiling
 with its evidence; every unknown one as a measurement box):
-- Rooms: free mapIDs (~128 practical, `$6B..$EA`); per-room screen
-  count (ceiling UNMEASURED — G-M box); per-room/screen NPC count
-  (ceiling UNMEASURED — G-M box).
+- Rooms: free mapIDs (~128 practical, `$6B..$EA`); per-room screens
+  (engine 16 = 4×4, custom schema currently 8 — measured S91); per
+  screen-state NPCs (hard 8 + the distinct-sprite-sheet VRAM budget —
+  measured S91; capacities.json).
 - Palettes: 4 BG groups per room; the tile picker GREYS OUT tiles whose
   colours don't fit the remaining groups, and BADGES animated tiles
   (the mashup pipeline's animated-tile registry, already avoided by
@@ -560,7 +561,7 @@ row is click-navigable (§5.0).
 | Gap | What | Status / where |
 |-----|------|----------------|
 | G-A | Bank `$64` (layouts/attr) + `$67` (combined tilesets) emission folded behind project.json (today tool-owned, referenced by {bank,entry}) | ROADMAP P3.2 — the canvas prerequisite; flagged since S72 |
-| G-B | NPC sprite-id catalog (empirical PyBoy render census; species+$10 disproven, $11 crashes) | ROADMAP P3.1 (pre-existing box) |
+| G-B | NPC sprite-id catalog | ✅ CLOSED S91: `extracted/npc_sprite_catalog.json` + sheet + per-id crops (`npc_field_sprites/`), tools/dump_npc_sprite_catalog.py; classes/names hand-curated in npc_names.json. No id crashes ($11-crash was custom-room context); $23 = boss-composite fragment; aliases $4E/$4F/$F0-$F3 → $00. ROOM_DATA_FORMAT S91 section owns the facts |
 | G-C | Encounters #2 — custom monster pools in a free bank | ROADMAP P3.13a (pre-existing Phase-2 box, re-slotted) |
 | G-D | Layer A-lite `gamedata` emitters + readers (monsters/skills/breeding/encounters; port randomizer `romdata.py`) | ROADMAP P3.9 (new) |
 | G-E | Embedded PyBoy preview widget (cached savestate → warp → Qt blit + input) | ROADMAP P3.4 (pre-existing box, re-slotted) |
@@ -571,7 +572,7 @@ row is click-navigable (§5.0).
 | G-J | Clone-to-custom room extractor (vanilla room → full project.json custom clone + entrance repoint; per-island literal-mapID audit) | ROADMAP P3.2b (v2.1) — the fork mechanism |
 | G-K | E8 shops: stock/price table decode + `gamedata.shops` + shopkeeper NPC surface | ROADMAP P3.13c (v2.1; promoted from Phase E) |
 | G-L | E1→E2 arena authoring wiring (tiers×matches×slots grid over rows 224-304) | ROADMAP P3.10b (v2.1; promoted from Phase E) |
-| G-M | CAPACITIES reference (machine-readable ceilings + evidence) + the unmeasured-ceiling measurement boxes (screens/room, NPCs/room, E6 text budget, gate slots) | ROADMAP P3.0 (v2.1) |
+| G-M | CAPACITIES reference | ✅ CLOSED S91 (core): `extracted/capacities.json` (hand-compiled, evidence per entry); NPCs/screen = 8 hard (9th corrupts script state, measured) + a distinct-sprite-sheet VRAM budget (order-filled, blanks on overflow); screens/room engine=16, vanilla max 12-declared/9-valid, custom schema=8. Residual boxes live in the file's `_deferred_measurement_boxes` (E6 text budget, gate slots, per-sheet tile counts, 4x4 schema extension) |
 | G-N | AI ban-list mechanism (knows-it-never-casts-it option-list filter) — OPTIONAL | ROADMAP P3.11b (v2.1, optional) |
 | G-O | Flag-keyed encounter-pool variants (bank-$71 RoomEncTable resolver extension) | ROADMAP P3.13a acceptance (v2.1) |
 | G-P | Family-icon editor slot pipeline + the custom-sprite background white-vs-cream fix (sample vanilla RGB555, locate affected path) | ROADMAP P3.10 additions (v2.1); defect in PROJECT_STATE |

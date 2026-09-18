@@ -1,0 +1,732 @@
+{
+ "_generator": "tools/dump_npc_sprite_catalog.py (PyBoy render census, clean data/DWM-original.gbc, S91)",
+ "_meta": {
+  "method": "solo render per id, Castle throne room screen 1 step 4, cell (1,2); crops on throne-room background; solo is mandatory because of the per-screen VRAM sprite-sheet budget (ROOM_DATA_FORMAT S91)",
+  "valid_authorable_range": "normal category ids; hard sprite-byte range with art: $00-$5F sparse + $E0/$E1; no id crashes the renderer in vanilla rooms (S70 $11-crash was custom-room context, DOC_AUDIT S91)",
+  "categories": [
+   "normal",
+   "boss_composite_fragment",
+   "alias_of_00",
+   "empty",
+   "glitch_invalid"
+  ],
+  "names_source": "extracted/npc_names.json (hand-curated, GUI-owned; merged at finalize time \u2014 re-run --finalize after naming)",
+  "classification_source": "npc_names.json sprite_classes (hand-curated, user visual classification S91)",
+  "crops_provenance": "committed crops = the S91 sav-mode canonical run (user-validated sheet); clean-ROM --render reproduces the same art on the intro-skip state"
+ },
+ "sprites": {
+  "0x00": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 112,
+   "name": "Generic NPC / Terry-like"
+  },
+  "0x01": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 126,
+   "name": "Milayou"
+  },
+  "0x02": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 158
+  },
+  "0x03": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 174
+  },
+  "0x04": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 183
+  },
+  "0x05": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 158
+  },
+  "0x06": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 172
+  },
+  "0x07": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 163
+  },
+  "0x08": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 180,
+   "name": "Terry / Player sprite"
+  },
+  "0x09": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 172
+  },
+  "0x0A": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 185
+  },
+  "0x0B": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 198,
+   "name": "Watabou / generic helper"
+  },
+  "0x0C": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 195
+  },
+  "0x0D": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 203
+  },
+  "0x0E": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 204
+  },
+  "0x0F": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 173
+  },
+  "0x10": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 172,
+   "name": "Castle Guard"
+  },
+  "0x11": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 165,
+   "name": "King / Royalty"
+  },
+  "0x12": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 181
+  },
+  "0x13": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 187,
+   "name": "MedalMan"
+  },
+  "0x14": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 189
+  },
+  "0x15": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 224
+  },
+  "0x16": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 150
+  },
+  "0x17": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 144
+  },
+  "0x18": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 176
+  },
+  "0x19": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 226
+  },
+  "0x1A": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 191
+  },
+  "0x1B": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 148
+  },
+  "0x1C": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 152
+  },
+  "0x1D": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 206
+  },
+  "0x1E": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 207
+  },
+  "0x1F": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 173
+  },
+  "0x20": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 213
+  },
+  "0x21": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 160,
+   "name": "Off-screen trigger/marker"
+  },
+  "0x22": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 179
+  },
+  "0x23": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 189
+  },
+  "0x24": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 174
+  },
+  "0x25": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 205
+  },
+  "0x26": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 192
+  },
+  "0x27": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 183
+  },
+  "0x28": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 169
+  },
+  "0x29": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 131
+  },
+  "0x2A": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 120
+  },
+  "0x2B": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 183
+  },
+  "0x2C": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 193
+  },
+  "0x2D": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 219
+  },
+  "0x2E": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 241
+  },
+  "0x2F": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 184
+  },
+  "0x30": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 227
+  },
+  "0x31": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 215
+  },
+  "0x32": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 208
+  },
+  "0x33": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 158
+  },
+  "0x34": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 191
+  },
+  "0x35": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 222
+  },
+  "0x36": {
+   "renders": true,
+   "category": "boss_composite_fragment",
+   "diff_px_vs_empty": 172
+  },
+  "0x37": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 218
+  },
+  "0x38": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 163
+  },
+  "0x39": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 160
+  },
+  "0x3A": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 64
+  },
+  "0x3B": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 119
+  },
+  "0x3C": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 119
+  },
+  "0x3D": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 97
+  },
+  "0x3E": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 147
+  },
+  "0x3F": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 125
+  },
+  "0x40": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 113
+  },
+  "0x41": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 143
+  },
+  "0x42": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 90
+  },
+  "0x43": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 206
+  },
+  "0x44": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 116
+  },
+  "0x45": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 207
+  },
+  "0x46": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 175
+  },
+  "0x47": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 152
+  },
+  "0x48": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 187
+  },
+  "0x49": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 151
+  },
+  "0x4A": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 183
+  },
+  "0x4B": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 136
+  },
+  "0x4C": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 64,
+   "name": "MedalMan's Slime"
+  },
+  "0x4D": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 168,
+   "name": "Gate monster / wandering creature"
+  },
+  "0x4E": {
+   "renders": true,
+   "category": "alias_of_00",
+   "diff_px_vs_empty": 112,
+   "alias_of": "0x00"
+  },
+  "0x4F": {
+   "renders": true,
+   "category": "alias_of_00",
+   "diff_px_vs_empty": 112,
+   "alias_of": "0x00"
+  },
+  "0x50": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 120,
+   "name": "Terry in bed (head only)"
+  },
+  "0x51": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 125,
+   "name": "Milayou in bed (head only)"
+  },
+  "0x52": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 67,
+   "name": "Puff animation frame"
+  },
+  "0x53": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 30,
+   "name": "Small brown drop (unidentified)"
+  },
+  "0x54": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x55": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 152
+  },
+  "0x56": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 140
+  },
+  "0x57": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 117
+  },
+  "0x58": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x59": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x5A": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x5B": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x5C": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x5D": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x5E": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 171
+  },
+  "0x5F": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 156
+  },
+  "0x60": {
+   "renders": true,
+   "category": "glitch_invalid",
+   "diff_px_vs_empty": 42
+  },
+  "0x61": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x62": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x63": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x64": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x65": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x66": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x67": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x68": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x69": {
+   "renders": true,
+   "category": "empty",
+   "diff_px_vs_empty": 8
+  },
+  "0x6A": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x6B": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x6C": {
+   "renders": true,
+   "category": "glitch_invalid",
+   "diff_px_vs_empty": 20
+  },
+  "0x6D": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x6E": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x6F": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x70": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x71": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x72": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x73": {
+   "renders": true,
+   "category": "glitch_invalid",
+   "diff_px_vs_empty": 239
+  },
+  "0x74": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x75": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x76": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x77": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x78": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x79": {
+   "renders": true,
+   "category": "glitch_invalid",
+   "diff_px_vs_empty": 206
+  },
+  "0x7A": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x7B": {
+   "renders": true,
+   "category": "glitch_invalid",
+   "diff_px_vs_empty": 243
+  },
+  "0x7C": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x7D": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x7E": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0x7F": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  },
+  "0xE0": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 171,
+   "name": "Arena decoration A"
+  },
+  "0xE1": {
+   "renders": true,
+   "category": "normal",
+   "diff_px_vs_empty": 65,
+   "name": "Arena decoration B"
+  },
+  "0xE2": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0,
+   "name": "Arena decoration C"
+  },
+  "0xE3": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0,
+   "name": "Arena decoration D"
+  },
+  "0xF0": {
+   "renders": true,
+   "category": "alias_of_00",
+   "diff_px_vs_empty": 112,
+   "name": "Battle sprite A",
+   "alias_of": "0x00"
+  },
+  "0xF1": {
+   "renders": true,
+   "category": "alias_of_00",
+   "diff_px_vs_empty": 112,
+   "name": "Battle sprite B",
+   "alias_of": "0x00"
+  },
+  "0xF2": {
+   "renders": true,
+   "category": "alias_of_00",
+   "diff_px_vs_empty": 112,
+   "name": "Battle sprite C",
+   "alias_of": "0x00"
+  },
+  "0xF3": {
+   "renders": true,
+   "category": "alias_of_00",
+   "diff_px_vs_empty": 112,
+   "name": "Battle sprite D",
+   "alias_of": "0x00"
+  },
+  "0xFF": {
+   "renders": false,
+   "category": "empty",
+   "diff_px_vs_empty": 0
+  }
+ }
+}

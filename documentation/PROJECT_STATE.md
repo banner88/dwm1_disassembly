@@ -10,6 +10,49 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-09-18 (Session 91 — **P3.0 CAPACITIES + P3.1 NPC
+> SPRITE CATALOG (both boxes, user-directed pairing).** Byte-neutral
+> (tools + extracted + docs + one comment fix in bank_004; byte-perfect
+> rebuild verified); verifier PASS 6/6; clean `1ca6579…` unchanged. NOT
+> yet user-tested (the sprite sheet WAS user-classified in-session).
+>
+> **P3.1 (G-B CLOSED):** every candidate sprite id ($00-$7F, $E0-$E3,
+> $F0-$F3, $FF) solo-rendered in PyBoy (binary-poked temp ROM, Castle
+> throne-room block, real-.sav savestate) → `npc_sprite_catalog.json` +
+> labeled sheet + 137 crops (`npc_field_sprites/`), generator
+> `dump_npc_sprite_catalog.py` (`--render/--finalize/--census`). ZERO
+> ids crash — the S70 "$11 hard-crashes" was custom-room context; $23
+> ("draconic") = a boss_composite_fragment (bosses are multi-tile
+> composites of several NPC entries — user). Categories (user, S91): 72
+> normal / 17 boss fragments / 6 aliases of $00 ($4E,$4F,$F0-$F3,
+> pixel-identical, deterministic under VRAM priming) / 37 empty / 5
+> glitch. Names+classes live ONLY in npc_names.json (hand-curated) and
+> merge at --finalize. Guardian cosmetic: no GoldSlime icon exists;
+> closest = blue slime $3A; project.json left untouched (byte-neutral)
+> — swap next project-touching session.
+>
+> **P3.0 (G-M core CLOSED):** `extracted/capacities.json` (ceiling +
+> evidence + measured/documented status per entry). MEASURED: NPCs per
+> screen-state = **8 HARD** ($0B:$470F fills exactly $101 B at $D7D2;
+> vanilla valid-step census max = exactly 8; a 9th entry silently
+> corrupts $D8D9 + $D8E2-$D8E8 script state vs an 8-NPC control — no
+> crash) — and a SECOND ceiling: the per-screen **distinct-sprite-sheet
+> VRAM budget** (order-filled at init; 8 light sheets fit, ~2-3 heavy
+> exhaust; overflow renders blank). Screens/room: engine 16 (4×4
+> scroll clamp), vanilla max 12-declared/9-valid (mt $54-$59),
+> screen_idx 8 PyBoy-verified; custom schema currently 4×2=8.
+> Residuals in `_deferred_measurement_boxes` (E6 text budget, gate
+> slots, per-sheet tile counts, 4×4 schema).
+>
+> Also: `npc_catalog.json` is CONTAMINATED by phantom-step rows (its
+> dumper walks past each screen's real step list; engine validation
+> only checks bank ∈ (0,$80)) — filter rules in the new tool's
+> --census; dumper regen = residual. bank_004 "40 NPCs" banner comment
+> fixed (both copies, byte-perfect). Owning: ROOM_DATA_FORMAT "NPC
+> capacity & sprite-sheet budget (S91)"; capacities.json;
+> TOOLS_AND_DATA S91 rows; EDITOR_DESIGN gap register G-B/G-M;
+> DOC_AUDIT S91; KEY_LESSONS S91; ROADMAP P3.0/P3.1.)
+
 > Last verified: 2026-09-18 (Session 90 — **EDITOR_DESIGN v2: the
 > UI/use-perspective revision + Phase 3 re-sequencing (user-directed).**
 > Byte-neutral (docs only); verifier PASS 6/6; clean `1ca6579…` unchanged.
@@ -65,81 +108,10 @@
 > expansion — the expanded thing was SRAM).
 
 
-> Last verified: 2026-09-17 (Session 89 — **SIMULATOR WRAP-UP PART 2:
-> Group B residuals closed.** Byte-neutral (Python + docs + disassembly
-> annotation only); verifier PASS 6/6; clean `1ca6579…` and patched
-> `a17bff8e…` verified. NOT yet user-tested.
->
-> Four residuals CLOSED by measurement on the user's real .sav (Slib L1,
-> WLD 5, skills $E9/$E5/$E4):
-> - **$DB07 bits7:6 "stun" writer = the IRONIZE counter** (Ironize $2A /
->   IRONIZE $DC; `SkillIronize` walks the whole side on a party cast).
->   Sets $C0, phase-9 ticks $C0→$80→$40→$00, forces action $11, and
->   makes the monster immune to all incoming resolution (physical+magic,
->   measured under Attack+Blaze) via the flags8-bit2 $56E1 gate (= the
->   S85 `target_unreachable`, semantics now named). WarCry-family
->   EXONERATED (they write +5 one-shots).
-> - **"Interception redirects" = the Cover $88 / Guardian $89 guard
->   system.** One-round mark at $DB08+8t bit4 (protected) / $DB09+8t
->   hi-nibble (protector), read one slot shifted; consumers at
->   $53:~$552x/$567x (flags8 bit1) rewrite target + queue to the
->   protector. Model `battle.guard_redirect`, corpus
->   `s89_guard_events.json`, validated **14/14** incl. dead-protector
->   fall-through. New `guard_redir` waypoint ($53:$5544) in
->   measure_battle.py.
-> - **WLD level-up writer = NONE.** Measured L1→L13 in one post-battle
->   scan, record +$60 unchanged; static writer set closed (creation /
->   breeding-zero / field items).
-> - **Corpus fields:** `board_from_event` now consumes per-event
->   `ai_bases` ($DC44..$DC63) + `wld` ($DC23 words); the
->   PARTY_FALLBACK_BASES/default_wld stand-ins retire on S88+ corpora.
->   Defensive-set sweep folded into status.py (+0/+1 flags: Imitate
->   $7F/Dodge $8C/SuckAll $8F/Defence-class $8D/$8E/$90).
->
-> Meta-actions = **PARTIAL** (named ROADMAP box, NOT guessed): the $E9
-> flee class is the HERO slot's MENU verb space (option-list obs), not
-> an enemy-AI outcome — queue-forcing never reaches it (readiness gate),
-> an empty-list enemy emits none, an outleveled wild never fled. NEXT =
-> drive the real menu on the CLEAN ROM (the hacked .sav is rejected by
-> the clean build — S75 build-specificity — so franken-state there).
->
-> The LOW-STAT CALCDEF EDGE is **SOLVED S89 (PyBoy)** — and it was never
-> a calcdef bug. Hooking all 75 `ld [$db56],a` sites caught the writer:
-> `$53:$59CD` applies an unmodelled **×1.5 damage boost gated on the
-> ATTACKER's `$DB42` bit 6** (`dmg + (dmg>>1)`, half truncated, 16-bit
-> srl/rr/add), running AFTER CalcSkillDefense and AFTER the slot-2/zero
-> -floor adjust and stacking on them. Correlation 8/8 across a battle.
-> This closed BOTH long-standing repros: s89_fresh **426/1 → 426/0** and
-> the S88 rider anomaly **3422/1 → 3422/0**. Model: `battle.db42_boost()`
-> in the physical AND record damage paths; `Board` carries `db42`.
-> ALSO completed: full per-victim guard integration — marks written when
-> Cover/Guardian resolve, cleared per round, side sweeps start at the
-> QUEUED target and walk forward, each victim redirecting independently
-> without dedupe (s89_guard 20 → 1 mismatch).
-> **Full suite green**: battle 6614/0, 802/0, 2824/0, 3083/0, 3422/0,
-> 426/0, guard 826/1; damage all 13 categories 0; obedience 889/0; rules
-> 240/240; order 143/0; ai 26/26; pacing level-1 UNIFORM KS 0.042;
-> verifier PASS 6/6.
-> Open items (NON-user, none blocking): the `$DB42` bit6 SETTER (observed
-> set in phase 5, cleared in phase 9; not a plain set/or/ld form in banks
-> $50-$5F), one s89_guard waypoint-grouping edge, the +8/+9 defensive-flag
-> CONSUMERS, and meta-actions (PARTIAL).
->
-> Annotation (byte-neutral, MD5 re-verified): $670E dispatcher
-> re-sectioned (7-state rst table, `InterceptGate_6720`); GuardMark
-> writer, $4BD3 checker, `SkillIronize`/`SkillCover`/`SkillDodge`/
-> `SkillBladeD_Defense` comments; `SacrificeEntry_670e` attribution
-> corrected (DOC_AUDIT S89). Full validator suite green on the final
-> layout: battle 6614/0 + 802/0 + 2824/0 + 3083/0 + 3422/1(known) +
-> s89 426/1(flagged) + guard 14/14; obedience 889/0; rules 240/240;
-> order 143/0; ai 26/26; damage all-exact; pacing level-1 UNIFORM
-> KS 0.042. Owning: BATTLE_SKILL_SYSTEM §15.6/§15.9; status.py; battle.py
-> `guard_redirect`/`target_unreachable`; MONSTER_DATA "Party Monster
-> Structure"; known_RAM_map [S89]; TOOLS_AND_DATA S89 rows; ROADMAP S89;
-> DOC_AUDIT S89.)
 
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S89** (2026-09-17): simulator wrap-up part 2 — Group-B residuals closed ($DB07 = IRONIZE counter; Cover/Guardian guard-redirect table validated 14/14; WLD level-up writer = none; board_from_event real ai_bases/WLD; $DB42 ×1.5 boost writer found, suites 426/0 + 3422/0; $670E re-sectioned). Owning: BATTLE_SKILL_SYSTEM §15.6/§15.9, battle.py guard_redirect/target_unreachable, MONSTER_DATA "Party Monster Structure", known_RAM_map [S89], TOOLS_AND_DATA S89 rows, ROADMAP S89, DOC_AUDIT S89.
 - **S87** (2026-09-15): commit-model close-out — party category bases from the instance record (creation-roll decoded), obedience gate EXACT 889/889 on the WLD stat (wBattleLVL = WLD, not level), $7997 closed, TRUE-loaf sighted, pacing.py upgraded. Owning: BATTLE_SKILL_SYSTEM §15.10.1/.7a, MONSTER_DATA "Party Monster Structure", known_RAM_map [S87], KEY_LESSONS S87, ROADMAP S87, DOC_AUDIT S88.
 - **S86** (2026-09-15): pacing layer done — measured RNG idle model (`measure_idle.py`→`s86_idle_model.json`), full-battle driver `pacing.py`, aggregate-validated (`validate_pacing.py` round-level PIT uniform + 5 fresh real-save battles in envelope), `sweep_ttk.py`, `profile_check --ttk`. Owning: BATTLE_SKILL_SYSTEM §15.8c, TOOLS_AND_DATA §2.10, KEY_LESSONS S86, ROADMAP S80/S86.
 - **S85** (2026-09-05): loop-level differential validation of the round core (measure_battle 31 waypoints, 25 battles, validate_battle 6614/0) + the AI-commit Tremor/Quake party-sweep and Anchor-MegaMagic patches (S85b $E4→$3A rewrite; pin `a17bff8e…`, USER-CONFIRMED S86). Owning: BATTLE_SKILL_SYSTEM §15.8b + §15.7-15.9, KEY_LESSONS S85, TOOLS_AND_DATA §2.10, DOC_AUDIT S85.
@@ -327,7 +299,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
 | Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** **S90: arc adjudicated DONE FOR PURPOSE (user-conferred); residuals banked as non-blocking boxes ($DB42 setter, +8/+9 consumers, meta-actions menu drive, guard-validator polish).** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9; TOOLS_AND_DATA §2.10 + S89 rows; ROADMAP S89/S90 |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
-| Editor app (Phase 3) | 🟢 Walking skeleton BUILT S72 (`editor2/app/`, PySide6; GUI build byte-identical to the pin via `editor2/tests/test_app.py --rom`). **DESIGN v2 LOCKED S90 (user-directed UI/use pass): full tabbed UI spec, Layer A-lite gamedata decision, Balance tab (simulator-as-product), gap register G-A..G-I; Phase 3 re-sequenced into P3.1-P3.17 w/ acceptance tests. Entry points: P3.1 sprite catalog / P3.2 $64-$67 fold.** Backend keystone (S42) + compiler (S53+) done. Owning: EDITOR_DESIGN v2; ROADMAP Phase 3 |
+| Editor app (Phase 3) | 🟢 Walking skeleton BUILT S72 (`editor2/app/`, PySide6; GUI build byte-identical to the pin via `editor2/tests/test_app.py --rom`). **DESIGN v2 LOCKED S90 (user-directed UI/use pass): full tabbed UI spec, Layer A-lite gamedata decision, Balance tab (simulator-as-product), gap register G-A..G-I; Phase 3 re-sequenced into P3.1-P3.17 w/ acceptance tests.** **S91: P3.0 + P3.1 DONE (user-paired session, NOT yet user-tested): capacities.json + NPC ceilings measured (8 hard slots + sprite-sheet VRAM budget; screens engine 16/schema 8) + the 137-id sprite catalog (zero crashes; G-B and G-M core closed). Next entry point: P3.2 $64-$67 fold (canvas prerequisite) or P3.2b clone extractor.** Backend keystone (S42) + compiler (S53+) done. Owning: EDITOR_DESIGN v2; ROADMAP Phase 3 |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 
@@ -368,6 +340,11 @@ re-section items).
   (DOC_AUDIT S59; KEY_LESSONS S59.)
 - DOC_AUDIT.md's full-corpus audit is dated 2026-06-13; later findings are dated
   addenda inside it, not a re-audit.
+- `extracted/npc_catalog.json` is contaminated by phantom-step rows (dumper walks
+  past each screen's real step list — DOC_AUDIT S91); filter per
+  `dump_npc_sprite_catalog.py --census` rules until the dumper is regenerated
+  (ROADMAP residual). The S91 sprite catalog + max-8-NPC census already use the
+  filtered path.
 - `dump_monsters.py` WRITES the legacy `monsters.json` schema (43-byte parse) while
   READING `monsters_full.json` for names — TOOLS_AND_DATA's Tier-A attribution
   "monsters_full.json ← dump_monsters.py" is suspect (the legacy note says

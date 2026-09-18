@@ -618,21 +618,34 @@ recipes are pure authoring.
 > boxes ("room canvas → … → world map", "game-data editors after Phase D")
 > are replaced by P3.3-P3.15 below.
 
-- [ ] **P3.0 — CAPACITIES reference** [G-M]: machine-readable ceilings +
-      evidence (mapIDs, banks, palettes/animated tiles, flags, species,
-      quest EIDs, songs) + measurement of the UNMEASURED ones the UI
-      needs first (max screens/room, max NPCs/room+screen; E6 text
-      budget and gate-slot extension may land later as their own
-      passes). *Accept:* `extracted/capacities.json` + a CAPACITIES
-      section in the owning docs; screens/room + NPCs/room measured
-      empirically in PyBoy with the crash/degradation boundary stated.
-- [ ] **P3.1 — NPC sprite-id catalog** [G-B] (promoted S72; blocks the NPC
-      inspector's sprite picker AND canvas thumbnails). Empirical PyBoy
-      session: render each sprite id in a room, screenshot, catalog id →
-      appearance (species+$10 DISPROVEN S70; $11 hard-crashes the renderer
-      — bound the valid range). *Accept:* `extracted/npc_sprite_catalog.json`
-      + thumbnail sheet; the guardian-renders-draconic S70 cosmetic gets
-      its correct id from the catalog.
+- [x] **P3.0 — CAPACITIES reference** [G-M] — **DONE S91, NOT yet
+      user-tested.** `extracted/capacities.json` (ceilings + evidence +
+      measured/documented status); owning-doc section = ROOM_DATA_FORMAT
+      "NPC capacity & sprite-sheet budget (S91)". Measured: NPCs/screen-
+      state = 8 HARD ($D7D2 fill $101; vanilla census max 8; 9th entry
+      silently corrupts $D8D9+ script state vs control — no crash) + a
+      SECOND ceiling found: per-screen distinct-sprite-sheet VRAM budget
+      (order-filled; 8 light sheets fit, ~2-3 heavy exhaust; blanks on
+      overflow, no crash). Screens/room: engine 16 (4×4 scroll math),
+      vanilla max 12-declared/9-valid (mt $54-$59), screen_idx 8 render
+      PyBoy-verified; custom schema currently 8. Residuals named in
+      capacities.json `_deferred_measurement_boxes` (E6 text budget,
+      gate slots, per-sheet tile counts, 4×4 schema extension).
+- [x] **P3.1 — NPC sprite-id catalog** [G-B] — **DONE S91, NOT yet
+      user-tested** (sheet itself user-classified in-session).
+      `extracted/npc_sprite_catalog.json` + sheet + 137 per-id crops
+      (`npc_field_sprites/`) via tools/dump_npc_sprite_catalog.py (solo
+      render per id — mandatory, sprite-sheet budget). ZERO ids crash
+      ($11 renders the King; the S70 crash was custom-room context,
+      DOC_AUDIT S91). Categories (user, S91): 72 normal / 17
+      boss_composite_fragment / 6 alias_of_00 ($4E,$4F,$F0-$F3) / 37
+      empty / 5 glitch_invalid. Guardian cosmetic RESOLVED by catalog:
+      $23 = boss-composite fragment (the "draconic" tile); NO GoldSlime
+      field icon exists — closest intended look = blue slime $3A. The
+      project.json sprite byte + stale `_sprite_note` are deliberately
+      untouched (byte-neutral session); swap to $3A in the next
+      project.json-touching session. npc_catalog.json phantom-step
+      contamination found (DOC_AUDIT S91); dumper regen = residual.
 - [ ] **P3.2 — Bank $64/$67 emission behind project.json** [G-A] (the
       canvas prerequisite): layouts/attr ($64) + combined tilesets ($67)
       become compiler emitters driven by `custom.rooms[].layout` /

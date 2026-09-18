@@ -1,0 +1,80 @@
+{
+ "_comment": "CAPACITIES reference (ROADMAP P3.0, gap G-M) — every known authoring ceiling with its evidence. Hand-compiled S91; no generator by design (measured entries cite their S91 emulator experiment; documented entries cite the owning doc/session and were compiled, not re-derived, this session). The editor's capacity meters (EDITOR_DESIGN §5.C) read this file. status values: measured_s91 = empirically measured in PyBoy this session; structural_s91 = derived from disassembly/ROM bytes this session; documented = compiled from the owning doc.",
+ "npc_slots_per_screen_state": {
+  "value": 8,
+  "status": "measured_s91",
+  "detail": "Hard ceiling 8 NPC entries per (screen, step-state) interact block. RoomEntry7_RoomInit ($0B:$470F) zero-fills exactly $101 bytes at $D7D2 (8 x 32-byte slots + terminator cell $D8D2; FillNBytesWithRegA BC is a plain 16-bit count); the parser (Call_00b_477e) has NO bounds check. Vanilla respects it: valid-step census over all rooms maxes at exactly 8. MEASURED overflow: with 8 entries the terminator lands exactly at $D8D2 (safe); a 9th entry writes into the NPC-script state block — vs an 8-NPC control, corrupts $D8D9 (queued text id) and $D8E2/$D8E3/$D8E6/$D8E7/$D8E8 — silently, no crash. The editor must hard-cap at 8.",
+  "evidence": "disassembly/bank_00b.asm RoomEntry7_RoomInit + Call_00b_477e; ROOM_DATA_FORMAT 'NPC capacity & sprite-sheet budget (S91)'"
+ },
+ "npc_distinct_sprite_sheets_per_screen": {
+  "value": "tile-budget, order-filled; 8 light sheets OK, ~2-3 heavy sheets exhaust",
+  "status": "measured_s91",
+  "detail": "NPC sprite sheets load into a shared per-screen VRAM tile budget at room init, first-come in entry order; when the budget is exhausted, later distinct ids render BLANK (no crash, no wedge). Measured: 8 distinct human sheets ($00-$0F range) all render; a batch of 8 distinct boss_composite_fragment ids rendered 2 full + 1 partial + 5 blank. Repeats of the same id are free (share the sheet). Editor meter: warn when adding distinct sprite ids beyond what renders; exact tile counts per sheet are unmeasured (residual).",
+  "evidence": "S91 PyBoy batches (throne room); ROOM_DATA_FORMAT 'NPC capacity & sprite-sheet budget (S91)'"
+ },
+ "screens_per_room": {
+  "engine_value": 16,
+  "custom_schema_value": 8,
+  "vanilla_max_declared": 12,
+  "status": "structural_s91 + measured_s91 (engine); documented (schema)",
+  "detail": "Engine scroll math caps at a 4x4 grid = 16 screens (RoomEntry2: row = Y/128 clamped 0-3, col = X/160 clamped 0-3). Vanilla's largest grids are the conveyor/maze rooms mt $54-$59: 12 declared screen slots, 9 with valid steps; screen_index 8 (row 2) render + scroll VERIFIED in PyBoy (warp mt $54 abs (4,18) -> wScreenIndex 8, field renders). The CUSTOM pipeline currently accepts only 4x2 = 8 (project.json screens keys '0'..'7', PROJECT_COMPILER §room schema); extending the schema to 4x4 is a named residual, not an engine limit. Room dims in the $26DD record must match the screen count (KEY_LESSONS S10 hazard).",
+  "evidence": "disassembly/bank_00b.asm RoomEntry2_ScreenScroll; ROOM_DATA_FORMAT 'Scroll Boundary System'; S91 PyBoy warp; PROJECT_COMPILER"
+ },
+ "custom_mapids": {
+  "value": 128,
+  "range": "$6B-$EA",
+  "status": "documented",
+  "evidence": "extracted/mapid_range_audit.json; PROJECT_STATE S90 headroom audit"
+ },
+ "free_rom_banks": {
+  "value": 11,
+  "banks": ["$6B", "$6C", "$6D", "$6E", "$6F", "$70", "$75", "$76", "$77", "$79", "$7A", "$7C"],
+  "note": "list per PROJECT_STATE bank table ('$6B-$70, $75-$77, $79-$7A, $7C' = 11 banks, 176 KB) + $7F reserved next sprite-overflow bank",
+  "status": "documented",
+  "evidence": "PROJECT_STATE 'Bank allocation' table"
+ },
+ "event_flags_safe_pool": {
+  "value": 32,
+  "status": "documented",
+  "detail": "Truly-safe custom flag pool = 32 flags (S57 per-byte audit); auto-allocation from $0158+.",
+  "evidence": "EVENT_FLAGS (FLAG_SAFE_RANGES); DOC_AUDIT S65 row"
+ },
+ "custom_species_slots": {
+  "value": 32,
+  "range": "ids 224-255",
+  "status": "documented",
+  "evidence": "MONSTER_DATA 'Species ID geography'; ROADMAP Phase N"
+ },
+ "quest_eids": {
+  "value": "12-row tail at EID 519+, extendable by table move",
+  "status": "documented",
+  "evidence": "EDITOR_DESIGN §8-successor capacity list (v2 §5.C area); bank $14 tail rows (S70 E2 wiring)"
+ },
+ "song_slots": {
+  "value": 95,
+  "status": "documented",
+  "detail": "Bank $74 fixed 95-slot record area $4001-$417C ($00 = unassigned).",
+  "evidence": "SOUND_SYSTEM §8"
+ },
+ "sram": {
+  "value": "56 B unbanked tail (reserved) + 24 KB banked (banks 1-3, S69-built, NOT yet user-tested, uninitialized until a schema exists)",
+  "status": "documented",
+  "evidence": "PROJECT_STATE 'SRAM save layout' row; ARCHITECTURE 'SRAM banking as built S69'"
+ },
+ "bg_palettes_per_room": {
+  "value": "4 BG palette groups; idx1 forced $6BFF, idx3 forced $0000",
+  "status": "documented",
+  "evidence": "EDITOR_DESIGN §5.1 Palette inspector; build_combined_tileset pipeline"
+ },
+ "npc_sprite_ids": {
+  "value": "see extracted/npc_sprite_catalog.json (S91): 72 normal + 17 boss_composite_fragment + 6 alias_of_00 + 37 empty + 5 glitch_invalid; no id crashes",
+  "status": "measured_s91",
+  "evidence": "tools/dump_npc_sprite_catalog.py; extracted/npc_sprite_catalog.json"
+ },
+ "_deferred_measurement_boxes": [
+  "E6 per-bank text/script budget numbers (own pass, per P3.0 box text)",
+  "gate-slot extension beyond 32 (own pass, per P3.0 box text)",
+  "per-sheet VRAM tile counts for the sprite-sheet budget meter (exact meter math)",
+  "custom-schema 4x4 screens extension + its in-game crash/degradation probe (engine says 16; schema says 8)"
+ ]
+}

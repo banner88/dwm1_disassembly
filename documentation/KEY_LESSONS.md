@@ -3355,3 +3355,34 @@ low-stat, both regime-C-adjacent. Filed as ONE low-stat edge with two
 repros for SameBoy rather than two unrelated flags; the level-2 tail
 percentile on that battle (~0%, engine faster than the whole envelope)
 corroborates it firing repeatedly, not once.
+
+## S91 (2026-09-18) — phantom steps, solo renders, and measuring ceilings
+
+**Room-data scanners must re-implement the engine's *implicit* bounds, not
+its explicit ones.** Symptom: npc_catalog.json reported a 28-NPC castle
+step; the block decoded to sprite $FA at y=200. Root cause: step lists have
+NO terminator — count is implicit in which step values RAM can reach — and
+the engine's only explicit check (tileset_bank in (0,$80)) passes garbage,
+so a scanner walking "all steps" reads past the list into neighboring data.
+Fix: validity = tileset bank in the real tileset-bank set + pointer range +
+coordinate sanity, dedup by (mt, ptr). Rule: when a structure's bound is
+"whatever RAM values occur", a dumper inherits the burden of proving each
+index reachable or plausible — grep the consumers for the real invariant
+before trusting a linear walk.
+
+**Per-id render censuses need SOLO placements.** Symptom: sprite ids
+rendered blank in 8-id batches but fine alone; blank sets shifted with
+batch composition. Root cause: NPC sheets fill a shared per-screen VRAM
+tile budget first-come; overflow renders blank, silently. Fix: one id per
+boot, and verify determinism by priming VRAM differently (arena- vs
+castle-primed renders hashed identical). Rule: before cataloging "id X
+looks like Y", prove the render is a function of X alone — vary everything
+else once.
+
+**A ceiling has three separable facts: the structural bound, whether
+vanilla respects it, and the measured overflow behavior.** The 8-NPC slot
+ceiling needed all three (fill size $101; census max exactly 8; 9th entry
+corrupts $D8D9+ script state vs a same-warp control run) — and the control
+run mattered: two of the "corrupted" bytes change on ANY warp. Rule:
+overflow measurements get a compliant control under the identical harness,
+or normal churn gets reported as corruption.

@@ -21,7 +21,10 @@
 ;     B == $FF  → C is an opcode index into the 100-entry command table
 ;
 ; Key RAM Variables:
-;   $D7D2+     NPC RAM buffer (32 bytes per NPC, up to 40 NPCs)
+;   $D7D2+     NPC RAM buffer (32 bytes per NPC, 8 slots $D7D2-$D8D2 —
+;              RoomEntry7 zero-fills exactly $101 bytes; the old "40 NPCs"
+;              here was wrong (DOC_AUDIT S91); a 9th entry overruns into the
+;              $D8D3+ script-state block)
 ;   $D8D3      Map type copy (selects script data bank via MapTypeDispatch)
 ;   $D8D4      NPC script_id (selects per-NPC script data in script bank)
 ;   $D8D5-D8D6 Script counter / event counter (16-bit)
