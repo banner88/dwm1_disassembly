@@ -10,6 +10,61 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-09-18 (Session 90 — **EDITOR_DESIGN v2: the
+> UI/use-perspective revision + Phase 3 re-sequencing (user-directed).**
+> Byte-neutral (docs only); verifier PASS 6/6; clean `1ca6579…` unchanged.
+> NOT yet user-tested (doc review = the acceptance).
+>
+> Strategic adjudications made this session (user conferred first):
+> - **Simulator arc = DONE for purpose.** Full suite green (S89 rows);
+>   the four residuals are BANKED, non-blocking boxes ($DB42 bit6 setter,
+>   +8/+9 defensive-flag consumers, meta-actions real-menu drive — needs
+>   a CLEAN-build save or franken-state, the hacked .sav is rejected by
+>   the clean build — and the guard-validator main-runner polish).
+> - **Next major arc = Phase 3, the editor**, entered through a design
+>   revision rather than blind UI building.
+>
+> EDITOR_DESIGN rewritten as **v2** (owning doc; § refs below are its):
+> full tabbed UI spec (§5) — Rooms (one-screen canvas w/ explicit screen
+> boundaries + mini-map, room-STATE switcher over the step-counter
+> system, tileset/palette [pick-or-upload w/ forced idx1/idx3 shown],
+> NPCs, dialogue WYSIWYG, triggers, cutscene storyboard + PyBoy
+> playback, per-room encounters + music), Monsters (stats/AI-weights w/
+> sim-backed preview/learnset/battle+follower sprites over GFX-1..4),
+> Skills (S74 knob surface as forms), Breeding (edit + the randomizer's
+> tree/depth/reachability analytics live), Encounters, Music (library +
+> MIDI import + audition), Progression & Flags, World graph, **Balance
+> (the S78-S89 simulator as a product feature: TTK sweeps, what-if
+> deltas, obedience curves; unvalidated = greyed)**, Build & Play.
+> Decisions: **Layer A-lite** (§6 — vanilla DATA-TABLE editing via
+> same-size compiler emitters + randomizer/romdata.py readers, ahead of
+> full extraction; unedited gamedata ⇒ zero byte diffs is the
+> regression); backend **gap register** (§9, G-A..G-I); milestones
+> re-cut, M2 bifurcation re-slotted as M2R INSIDE the editor (World
+> tab, dogfooding Layer A). Stale v1 §7 (sprite sketch) + §8 (bank
+> table) retired with a ledger (§11; DOC_AUDIT S90 addendum).
+> ROADMAP Phase 3 replaced with one-session boxes **P3.1-P3.17**, each
+> with an acceptance test; recommended entry point = P3.1 (NPC sprite
+> catalog) or P3.2 (the $64/$67 project.json fold, the canvas
+> prerequisite). Owning: EDITOR_DESIGN v2; ROADMAP Phase 3 + S90;
+> DOC_AUDIT S90; this file (status row below).
+>
+> **v2.1 (same session — user workflow decisions):** FORK-DON'T-FIDDLE
+> (clone-to-custom + repoint is the default; in-place vanilla edits only
+> under capacity pressure — Layer A proper shrinks to exit repoints +
+> M2R) + CANVAS-FIRST (click-to-edit everything where you see it).
+> Added: P3.0 CAPACITIES reference + meters, P3.2b clone extractor
+> (arena first, per-island literal-mapID audit), P3.7b Gates tab,
+> Triggers-as-sentences (+G-O flag-keyed pool variants), P3.10b Arena
+> editor + P3.13c Shops (E8) promoted from Phase E, P3.11b AI ban-list
+> (optional), family-icon editor + follower visualizer + the sprite
+> background white-vs-cream DEFECT (Open defects). Headroom audit: 11
+> free banks/176 KB + ~128 mapIDs + 24 KB SRAM (S69) + 32 species slots
+> = fork-first affordable at campaign scope; ROM 2→4 MB assessed +
+> banked as contingency (grep-verified: NO prior session claimed ROM
+> expansion — the expanded thing was SRAM).
+
+
 > Last verified: 2026-09-17 (Session 89 — **SIMULATOR WRAP-UP PART 2:
 > Group B residuals closed.** Byte-neutral (Python + docs + disassembly
 > annotation only); verifier PASS 6/6; clean `1ca6579…` and patched
@@ -84,55 +139,8 @@
 > DOC_AUDIT S89.)
 
 
-> Last verified: 2026-09-15 (Session 87 — **COMMIT-MODEL CLOSE-OUT:
-> party category bases + obedience gate EXACT; the WLD identity.**
-> Byte-neutral (Python + docs + annotations); verifier PASS 6/6; clean
-> `1ca6579…` and patched `a17bff8e…` both verified after every batch.
->
-> PARTY category bases DECODED+MEASURED: bank $51 `LoadBtlS_44cb` fills
-> $DC44/$DC54/$DC5C/$DC4C from the party monster's OWN instance record
-> +$5B..$5E (hook-verified on the user's hacked .sav: Slib 80/186/189/85
-> landed exactly; swap-in re-sync $53:$6236 = 3rd confirmation). Source =
-> enemy-stats ai_weights through the one-time CREATION ROLL (bank $14
-> `SaveEnem_47fd`/`_4821`: ($CD + RNG mod $34)/256; $100-overflow =
-> exactly 1.0×; Div8x8 convention pinned B=B//A, rem in A) — Slib's
-> tuple is a legit roll of EID 1's [100,200,100,200]. No mid-battle
-> drift (writers: creation, breeding, field item adjusters).
->
-> OBEDIENCE gate EXACT, **889/889** (measure_obedience.py, 127
-> decisions → validate_obedience.py): band table {5,7,9,11,13,15}, the
-> RNG&$3F mod-b with nonzero-multiples→b quirk (LCG-step replayed),
-> the COMPLETED inequality — carry iff WLD/4 + bandedRNG >
-> tacticSeed/10 + w3/10 + $db53 (S84's note dropped the last two
-> terms). $7997 consumption point CLOSED ($db53 IS a decide addend);
-> table re-sectioned (`ObedienceThreshTable_7997`, byte-identical).
-> TRUE loaf RUNTIME-SIGHTED: plan-$81 Command carry-divert; all three
-> codes $98/$3A/$8D live; `SetBtlAI_7f5f` exact (cat1-dominance).
->
-> **wBattleLVL = the WLD (wildness) stat, NOT the level** — INFO-screen
-> verified ("WLD: 5" for the L1 Slib); record slot+$60; init =
-> 5×level − 10×arenaTier($CAB4), clamp 0..255; breeding ZEROES it
-> (bank $16 `label16_474a`); Add/SubMonsterWLD item adjusters. Display
-> level = $db9b (slot+$4B). Instance-record map CORRECTED in
-> MONSTER_DATA (old rows were missing the MaxHP/MaxMP words; the S36
-> "±2 WLD-style" prose was the LEVEL-CAP roll, slot+$4C). Mislabels
-> fixed both trees: SetMonsterSkill*/ClearMonsterSkill* →
-> Add/SubMonsterAIWeightCat1/3/2; ClearMonsterAGL → SubMonsterWLD.
->
-> pacing.py upgraded (exact obedience on WLD; real bases via
-> `ai_weights`/`party_bases_from_row`/`default_wld`; tactic-3
-> always-Attack shortcut corrected — Command w/o menu is
-> obedience-gated). Regression: 6614/0 + 802/0, rules 240/240, ai
-> 26/26, idle CHECK OK, level-1 PIT unchanged (KS 0.039), level-2
-> 72/44/89/77/46 winners consistent (S86's 75/46/85/82/48 =
-> `--pskills 0xe9,0xe5`, invocation now recorded + `--pbases` added),
-> profile_check --ttk PASS 1.00×. Owning: BATTLE_SKILL_SYSTEM
-> §15.10.1/.7a + §15.9 + §15.8c; MONSTER_DATA "Party Monster
-> Structure"; known_RAM_map [S87]; TOOLS_AND_DATA §2.10 + S88 rows;
-> ROADMAP S88; KEY_LESSONS S87; DOC_AUDIT S88; BATTLE_SKILL_SYSTEM
-> §15.8c/§15.9 [S88].)
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S87** (2026-09-15): commit-model close-out — party category bases from the instance record (creation-roll decoded), obedience gate EXACT 889/889 on the WLD stat (wBattleLVL = WLD, not level), $7997 closed, TRUE-loaf sighted, pacing.py upgraded. Owning: BATTLE_SKILL_SYSTEM §15.10.1/.7a, MONSTER_DATA "Party Monster Structure", known_RAM_map [S87], KEY_LESSONS S87, ROADMAP S87, DOC_AUDIT S88.
 - **S86** (2026-09-15): pacing layer done — measured RNG idle model (`measure_idle.py`→`s86_idle_model.json`), full-battle driver `pacing.py`, aggregate-validated (`validate_pacing.py` round-level PIT uniform + 5 fresh real-save battles in envelope), `sweep_ttk.py`, `profile_check --ttk`. Owning: BATTLE_SKILL_SYSTEM §15.8c, TOOLS_AND_DATA §2.10, KEY_LESSONS S86, ROADMAP S80/S86.
 - **S85** (2026-09-05): loop-level differential validation of the round core (measure_battle 31 waypoints, 25 battles, validate_battle 6614/0) + the AI-commit Tremor/Quake party-sweep and Anchor-MegaMagic patches (S85b $E4→$3A rewrite; pin `a17bff8e…`, USER-CONFIRMED S86). Owning: BATTLE_SKILL_SYSTEM §15.8b + §15.7-15.9, KEY_LESSONS S85, TOOLS_AND_DATA §2.10, DOC_AUDIT S85.
 - **S84** (2026-09-03): S81-remainder measurements + the AI-commit dispatch-table overrun CRASH found and fixed (DispatchBoundsStub, ids > $E5; Mourn WRAM jump reproduced live) — commit-time target write site, $dd0b INT ladders, tactics mechanism, MISS/dodge machine, plain-attack targeting all decoded; patched pin `b99455d6…` (superseded by S85b `a17bff8e…`). Owning: BATTLE_SKILL_SYSTEM §15.10.6-10, KEY_LESSONS S84, known_RAM_map [S84], DOC_AUDIT S84.
@@ -317,9 +325,9 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom monster pools (Encounters #2) | Specced in CROSSBANK_ROOMS; not built |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. Open boxes: InitBGM channel-count ext (4/5ch sources), gate/event music, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
-| Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9; TOOLS_AND_DATA §2.10 + S89 rows; ROADMAP S89 |
+| Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** **S90: arc adjudicated DONE FOR PURPOSE (user-conferred); residuals banked as non-blocking boxes ($DB42 setter, +8/+9 consumers, meta-actions menu drive, guard-validator polish).** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9; TOOLS_AND_DATA §2.10 + S89 rows; ROADMAP S89/S90 |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
-| Editor app (Phase 3) | 🟢 **Walking skeleton BUILT S72, NOT yet user-tested** (`editor2/app/`, PySide6, cross-platform — primary macOS; open/rooms/Build/Run; GUI build machine-verified byte-identical to the `46ba6991…` pin via `editor2/tests/test_app.py --rom`). Next boxes: NPC sprite-id catalog, embedded-PyBoy preview, room canvas (ROADMAP Phase 3). Backend keystone (S42) + compiler (S53+) done |
+| Editor app (Phase 3) | 🟢 Walking skeleton BUILT S72 (`editor2/app/`, PySide6; GUI build byte-identical to the pin via `editor2/tests/test_app.py --rom`). **DESIGN v2 LOCKED S90 (user-directed UI/use pass): full tabbed UI spec, Layer A-lite gamedata decision, Balance tab (simulator-as-product), gap register G-A..G-I; Phase 3 re-sequenced into P3.1-P3.17 w/ acceptance tests. Entry points: P3.1 sprite catalog / P3.2 $64-$67 fold.** Backend keystone (S42) + compiler (S53+) done. Owning: EDITOR_DESIGN v2; ROADMAP Phase 3 |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 
@@ -338,6 +346,12 @@ re-section items).
 
 ### Open defects
 
+- Custom-sprite BACKGROUND colour is pure white vs vanilla's slightly
+  creamy white (user-reported S90, subtle but real). Suspect: import
+  quantization to $7FFF instead of vanilla's exact background RGB555;
+  prime suspect path = MonsterBattlePalettes (follower OBJ idx0 is
+  hardware-transparent). Measurement + one-constant fix = G-P half of
+  ROADMAP P3.10.
 - Tame per-enemy hit-blink NOT IMPLEMENTED (cosmetic; deferred by user S52 — "bank it").
   The MECHANISM IS SOLVED (S52, HW-confirmed): enemy is BG-drawn; blink = tilemap toggle
   in bank `$5f` entry 5 (`$da83` phase → `$da84` sub-dispatch `$4b99`). Full map +

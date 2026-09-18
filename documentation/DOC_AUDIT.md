@@ -189,3 +189,10 @@ gate you assumed".
 | `SacrificeEntry_670e` "action state 3 routes Sacrifice here" (S79) | INCOMPLETE | The label heads the SHARED state-3 dispatcher (7 rst-table states, table was misassembled as code until S89); Cover $88/Guardian $89 route here too. Label kept, comment corrected in source. |
 | pacing.default_wld "possibly level-up (writer not yet traced)" | CLOSED EMPTY | Level-up never writes slot+$60 (L1→L13 frame-sampled). Docstring corrected. |
 | known_RAM_map "$DB00 blocks: 8 B/combatant" byte roles for +0/+1 (unmapped) | GAP filled | +0/+1 are the guard/defensive pair, read one slot shifted ($DB08/09+8t = slot t's record). |
+
+## S90 addendum (2026-09-18)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| EDITOR_DESIGN v1 §8 "Reserved bank map" ($6A=CustomRoomTable, $6B-$6E layouts, $6F-$72 tilesets, $73-$74 text, $75-$76 scripts, $77 metadata) | STALE (predates the real allocation) | The actual allocation diverged bank-by-bank ($6A=new-species info hi-table, $71=dispatch keystone, $72=custom skills, $73=Cold Farm, $74=songs; layouts=$64, tilesets=$67). PROJECT_STATE "Bank allocation" is the single source; the v1 table is retired (EDITOR_DESIGN v2 §11 ledger). |
+| EDITOR_DESIGN v1 §7 sprite-pipeline "flagged confirmations: pointer table repointable?; per-monster dimensions?" | SUPERSEDED | Both answered by the built GFX-1..4 stack (resolver has no bank gating, any of 221 repointable; dimensions = the 155-layout library). v1 §7 retired to the v2 §11 ledger; MONSTER_DATA owns the as-built facts. |

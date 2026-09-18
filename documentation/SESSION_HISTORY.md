@@ -1,6 +1,55 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
 
+> Last verified: 2026-09-15 (Session 87 — **COMMIT-MODEL CLOSE-OUT:
+> party category bases + obedience gate EXACT; the WLD identity.**
+> Byte-neutral (Python + docs + annotations); verifier PASS 6/6; clean
+> `1ca6579…` and patched `a17bff8e…` both verified after every batch.
+>
+> PARTY category bases DECODED+MEASURED: bank $51 `LoadBtlS_44cb` fills
+> $DC44/$DC54/$DC5C/$DC4C from the party monster's OWN instance record
+> +$5B..$5E (hook-verified on the user's hacked .sav: Slib 80/186/189/85
+> landed exactly; swap-in re-sync $53:$6236 = 3rd confirmation). Source =
+> enemy-stats ai_weights through the one-time CREATION ROLL (bank $14
+> `SaveEnem_47fd`/`_4821`: ($CD + RNG mod $34)/256; $100-overflow =
+> exactly 1.0×; Div8x8 convention pinned B=B//A, rem in A) — Slib's
+> tuple is a legit roll of EID 1's [100,200,100,200]. No mid-battle
+> drift (writers: creation, breeding, field item adjusters).
+>
+> OBEDIENCE gate EXACT, **889/889** (measure_obedience.py, 127
+> decisions → validate_obedience.py): band table {5,7,9,11,13,15}, the
+> RNG&$3F mod-b with nonzero-multiples→b quirk (LCG-step replayed),
+> the COMPLETED inequality — carry iff WLD/4 + bandedRNG >
+> tacticSeed/10 + w3/10 + $db53 (S84's note dropped the last two
+> terms). $7997 consumption point CLOSED ($db53 IS a decide addend);
+> table re-sectioned (`ObedienceThreshTable_7997`, byte-identical).
+> TRUE loaf RUNTIME-SIGHTED: plan-$81 Command carry-divert; all three
+> codes $98/$3A/$8D live; `SetBtlAI_7f5f` exact (cat1-dominance).
+>
+> **wBattleLVL = the WLD (wildness) stat, NOT the level** — INFO-screen
+> verified ("WLD: 5" for the L1 Slib); record slot+$60; init =
+> 5×level − 10×arenaTier($CAB4), clamp 0..255; breeding ZEROES it
+> (bank $16 `label16_474a`); Add/SubMonsterWLD item adjusters. Display
+> level = $db9b (slot+$4B). Instance-record map CORRECTED in
+> MONSTER_DATA (old rows were missing the MaxHP/MaxMP words; the S36
+> "±2 WLD-style" prose was the LEVEL-CAP roll, slot+$4C). Mislabels
+> fixed both trees: SetMonsterSkill*/ClearMonsterSkill* →
+> Add/SubMonsterAIWeightCat1/3/2; ClearMonsterAGL → SubMonsterWLD.
+>
+> pacing.py upgraded (exact obedience on WLD; real bases via
+> `ai_weights`/`party_bases_from_row`/`default_wld`; tactic-3
+> always-Attack shortcut corrected — Command w/o menu is
+> obedience-gated). Regression: 6614/0 + 802/0, rules 240/240, ai
+> 26/26, idle CHECK OK, level-1 PIT unchanged (KS 0.039), level-2
+> 72/44/89/77/46 winners consistent (S86's 75/46/85/82/48 =
+> `--pskills 0xe9,0xe5`, invocation now recorded + `--pbases` added),
+> profile_check --ttk PASS 1.00×. Owning: BATTLE_SKILL_SYSTEM
+> §15.10.1/.7a + §15.9 + §15.8c; MONSTER_DATA "Party Monster
+> Structure"; known_RAM_map [S87]; TOOLS_AND_DATA §2.10 + S88 rows;
+> ROADMAP S88; KEY_LESSONS S87; DOC_AUDIT S88; BATTLE_SKILL_SYSTEM
+> §15.8c/§15.9 [S88].)
+
+
 > Last verified: 2026-09-15 (Session 86 — **PACING LAYER DONE: the S80
 > RNG-policy question ANSWERED BY MEASUREMENT, full-battle TTK driver
 > built, aggregate-validated at round AND battle level, wired into

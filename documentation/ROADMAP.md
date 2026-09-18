@@ -612,25 +612,149 @@ recipes are pure authoring.
       the user's Mac (`pip install PySide6 Pillow; python3 -m editor2.app`), opens
       example-project, rooms display with correct tilesets, builds,
       launches SameBoy.
-- [ ] **NPC sprite-id catalog** (promoted S72 from the S70 residual note —
-      it blocks the NPC inspector's sprite picker AND Tier-1 canvas
-      thumbnails, EDITOR_DESIGN §11). Empirical PyBoy session: render each
-      sprite id in a room, screenshot, catalog id → appearance
-      (species+$10 DISPROVEN S70; $11 hard-crashes the renderer — bound the
-      valid range). *Accept:* `extracted/npc_sprite_catalog.json` +
-      thumbnail sheet; the guardian-renders-draconic S70 cosmetic gets its
-      correct id from the catalog.
-- [ ] **Embedded PyBoy preview panel** (EDITOR_DESIGN §11 Tier 2): Build →
-      cached post-boot savestate → warp to the room under edit → frames in
-      a Qt widget with input. *Accept:* one click plays the room being
-      edited, < 10 s from Build-done to walkable.
-- [ ] Room canvas editor → NPC editor → dialogue editor → script editor
-      → flag manager → world/warp map (canvas first exposes the
-      layout/tileset compiler-integration gap: bank $64/$67 are tool-owned,
-      referenced by {bank, entry} — folding their emission behind
-      project.json, or wrapping the tools, is the first backend item the
-      UI forces)
-- [ ] Game-data editors (monsters/encounters/breeding) after Phase D
+> **RE-SEQUENCED S90** per EDITOR_DESIGN v2 (§5 UI spec, §9 gap register,
+> §10 milestones). One box = one session. Order is dependency-driven, not
+> sacred: any box whose gap tags are closed may be picked. The old coarse
+> boxes ("room canvas → … → world map", "game-data editors after Phase D")
+> are replaced by P3.3-P3.15 below.
+
+- [ ] **P3.0 — CAPACITIES reference** [G-M]: machine-readable ceilings +
+      evidence (mapIDs, banks, palettes/animated tiles, flags, species,
+      quest EIDs, songs) + measurement of the UNMEASURED ones the UI
+      needs first (max screens/room, max NPCs/room+screen; E6 text
+      budget and gate-slot extension may land later as their own
+      passes). *Accept:* `extracted/capacities.json` + a CAPACITIES
+      section in the owning docs; screens/room + NPCs/room measured
+      empirically in PyBoy with the crash/degradation boundary stated.
+- [ ] **P3.1 — NPC sprite-id catalog** [G-B] (promoted S72; blocks the NPC
+      inspector's sprite picker AND canvas thumbnails). Empirical PyBoy
+      session: render each sprite id in a room, screenshot, catalog id →
+      appearance (species+$10 DISPROVEN S70; $11 hard-crashes the renderer
+      — bound the valid range). *Accept:* `extracted/npc_sprite_catalog.json`
+      + thumbnail sheet; the guardian-renders-draconic S70 cosmetic gets
+      its correct id from the catalog.
+- [ ] **P3.2 — Bank $64/$67 emission behind project.json** [G-A] (the
+      canvas prerequisite): layouts/attr ($64) + combined tilesets ($67)
+      become compiler emitters driven by `custom.rooms[].layout` /
+      `custom.tilesets[]` (wrapping tile_layout_compiler /
+      build_combined_tileset is acceptable v1). *Accept:* the example
+      project expresses its current $64/$67 content in project.json; the
+      build is byte-identical to the pinned regression (or the pin is
+      re-set in the same session with the example project updated —
+      PROJECT_COMPILER rule); test_compiler green.
+- [ ] **P3.2b — Clone-to-custom room extractor** [G-J] (the fork
+      mechanism, user decision S90): `extract_room.py` — vanilla room →
+      full project.json custom clone (layouts/attrs/NPCs/exits/scripts
+      decompiled), mapID auto-allocated, entrances repointed; per-island
+      literal-mapID audit for the first clone of each preserved island.
+      *Accept:* ARENA LOBBY cloned; clone reachable in-game via a
+      repointed entrance, renders identical to vanilla, vanilla room
+      untouched (clean MD5 unchanged); orphaned-flag list emitted;
+      custom→custom clone of an example room also proven.
+- [ ] **P3.3 — Room canvas v1: paint + states + screen paging** [G-G
+      backend half]: one-screen-at-native-size canvas, screen paging with
+      explicit boundaries + mini-map strip, tile paint with undo, and the
+      room-state switcher over first-class `states[]` (step-counter
+      variants) in the schema. *Accept:* author paints a layout change and
+      adds a 2-state room entirely in the GUI; Build; PyBoy shows both
+      states (step-counter poke) matching the canvas.
+- [ ] **P3.4 — Embedded PyBoy preview panel** [G-E] (EDITOR_DESIGN §7
+      Tier 2): Build → cached post-boot savestate → warp to the room under
+      edit → frames in a Qt widget with input. *Accept:* one click plays
+      the room being edited, < 10 s from Build-done to walkable.
+- [ ] **P3.5 — NPC inspector**: canvas drag placement, facing, sprite
+      picker (P3.1 catalog), per-state presence, show/hide mechanism
+      choice, flag gating, script binding. *Accept:* an NPC authored fully
+      in the GUI walks/talks in PyBoy with the chosen sprite.
+- [ ] **P3.6 — Dialogue editor**: WYSIWYG pages with ROM font tiles, live
+      wrap/DTE/page-split, YES/NO branch wiring. *Accept:* GUI-authored
+      multi-page + choice dialogue renders in-game byte-exact to preview.
+- [ ] **P3.7 — Triggers/exits editor + World graph v0**: interact/spawn/
+      exit editing incl. vanilla_exit_extensions; read-only world graph of
+      rooms/warps. *Accept:* a custom↔vanilla door pair authored in the
+      GUI works in-game; the graph shows it.
+- [ ] **P3.7b — Gates tab** [G-F partial]: per-gate config-row editing
+      (floors/weights/pool binding — Layer A-lite rows), custom-room-at-
+      depth-N insertion surfaced (built S41), boss floor (template +
+      boss EID script param + Set-2 coherence), entrance + unlock
+      trigger. *Accept:* a vanilla gate's floor count + pool edited and
+      a custom room inserted at a chosen depth, all from the GUI,
+      verified in PyBoy descent.
+- [ ] **P3.8 — Cutscene storyboard + playback** [G-H]: symbolic stepper
+      over ops, blocking keyframes on canvas, virtual flag/inventory
+      branch walking; playback via P3.4. *Accept:* the S70 demo quest's
+      entry cutscene is legible & editable in the storyboard; an edit
+      round-trips through compile_script and plays.
+- [ ] **P3.9 — Layer A-lite gamedata backend** [G-D]: `gamedata.monsters/
+      skills/breeding/encounters` emitters as same-size table patches;
+      readers ported from randomizer/romdata.py. *Accept:* unedited
+      gamedata → ZERO byte diffs (per-table regression); one stat edit
+      lands in-game; test_compiler extended + green.
+- [ ] **P3.10 — Monsters tab** (needs P3.9): stats/growth/ai_weights/
+      learnset forms + battle-sprite and follower pickers over the GFX
+      stack; new-species wizard hooks Phase N (G3 fold folded here or
+      ticked separately). *Accept:* a vanilla species stat+sprite edit and
+      a follower reassignment authored in GUI, verified in PyBoy.
+- [ ] **P3.10b — Arena editor** [G-L] (E1→E2 wiring, promoted from
+      Phase E): tiers×matches×slots grid over enemy-stats rows 224-304 +
+      King 481-483 (stats/skills/ai_weights per enemy via Layer A-lite);
+      victory cascade shown read-only. Bracket-shape constants = expert
+      knob only. *Accept:* one arena match's team re-authored in GUI and
+      fought as-authored in PyBoy.
+- [ ] **P3.11 — Skills tab**: the S74 knob surface as forms with the
+      invariant validators (MP pair sync, budgets, table existence).
+      *Accept:* a custom skill's damage tier + description edited in GUI,
+      verified in battle in PyBoy.
+- [ ] **P3.11b — AI ban-list (OPTIONAL)** [G-N]: measure the clean
+      knows-it-never-casts-it mechanism (option-list filter in the AI
+      build path; per-actor or per-skill ban table in a patch bank),
+      then the per-boss checkbox UI. *Accept:* a boss with HealAll
+      learned NEVER casts it across a scripted battle corpus; field-only
+      skills confirmed already rejected (S73b).
+- [ ] **P3.12 — Breeding tab: edit + simulation** (needs P3.9): table
+      editor over the B1-B7 stack + the randomizer-derived tree explorer
+      (depth profiles, reachability, orphans; live re-sim on edit;
+      coherence Set 1 live). *Accept:* an added recipe shows correct tree
+      placement + depth in the panel and works at the Starry Shrine in
+      PyBoy.
+- [ ] **P3.13 — Encounters + Music tabs**: (a) Encounters cross-view +
+      per-room pools — requires **Encounters #2 custom pools** [G-C]
+      (the Phase-2 box, folded here if not done earlier) — PLUS
+      **flag-keyed pool variants** [G-O] (bank-$71 RoomEncTable resolver
+      extension; the Triggers backend); (b) Music library/assignment
+      matrix + MIDI import UI + audition harness [G-I]. *Accept:* a
+      custom pool authored in GUI spawns in-game; a trigger flips a
+      room's pool variant in-game; a MIDI-imported song assigned to a
+      room plays on entry.
+- [ ] **P3.13c — Shops (E8, promoted from Phase E)** [G-K]: decode the
+      stock/price table (opcode $04 sub 0 → bank $09; expected shallow
+      per user S72), `gamedata.shops` emitter, shopkeeper-NPC click
+      surface. *Accept:* a changed price + item list visible in SameBoy;
+      a NEW shopkeeper in a custom room sells an authored list.
+- [ ] **P3.14 — Progression & Flags tab**: flag manager (named flags,
+      cross-ref), quest editor forms over progression.quests, orphaned-
+      trigger report, **Triggers-as-sentences authoring** (EDITOR_DESIGN
+      §5.1c; compiles to flag branches / state advances / show-hide /
+      [G-O] pool variants). *Accept:* the S70 demo quest is fully re-authorable
+      in forms; report lists preserved-island dependencies.
+- [ ] **P3.15 — Balance tab** (simulator-as-a-service): TTK/pacing sweeps,
+      what-if deltas on gamedata edits, obedience curves; unvalidated
+      subsystems greyed. *Accept:* a stat edit shows its TTK delta for an
+      affected pool before Build; numbers match a CLI sweep_ttk run.
+- [ ] **P3.16 — M2R bifurcation** (one of the only remaining in-place
+      vanilla edits under clone-to-custom, EDITOR_DESIGN §6.3): the
+      dresser repoint + Terry-intro strip, authored via the World tab. *Accept:* new game →
+      dresser → Milayou's first custom room in SameBoy; preserved-island
+      flag audit run.
+- [ ] **CONTINGENCY (banked, not scheduled) — ROM expansion 2→4 MB**:
+      assessed S90 (EDITOR_DESIGN §6.4) — MBC5 8-bit ROMB0 covers 256
+      banks; needs header size byte + link layout + a stored-bank-number
+      audit. Open ONLY if the 176 KB free + spill ever runs out. NO
+      prior session built or promised this (the expanded thing is SRAM,
+      S69).
+- [ ] **P3.17 — Packaging**: per-OS bundles with RGBDS v0.6.1 bundled,
+      signed macOS `.app`. *Accept:* a fresh Mac with no dev tools opens
+      the example project, builds, plays.
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:
@@ -1721,3 +1845,39 @@ custom skills $E4/$E5/$E9).
 - [ ] +8/+9 defensive-flag CONSUMERS (Imitate/Dodge/SuckAll/defense
       levels) + the $4BD3 attacker $30 setter.
 - [ ] Meta-actions real-menu drive (recipe in the [~] box above).
+
+## S90 — EDITOR_DESIGN v2: UI/use-perspective revision (user-directed; byte-neutral)
+
+User direction: "revisit plan but also from ui and use perspective" +
+tab list (rooms/palette/NPCs/dialogue/triggers/cutscenes+playback, room
+state switching, monster editing incl. sprites, breeding edit+simulation
+per the randomizer, encounters, flags, music/MIDI, one-screen canvas
+with obvious room boundaries) — "We want to make a game here."
+
+- [x] EDITOR_DESIGN rewritten as v2: full tabbed UI spec (§5, every
+      surface citing its decoded/built backing), Layer A-lite decision
+      (§6 — vanilla data-table editing via same-size emitters before
+      full extraction), simulator-as-a-product Balance tab (§5.9),
+      backend gap register (§9, G-A..G-I), milestones re-cut (§10),
+      superseded-v1 ledger (§11; stale v1 §7/§8 retired — DOC_AUDIT S90).
+- [x] Phase 3 re-sequenced into one-session boxes P3.1-P3.17, each with
+      an acceptance test (replaces the coarse "canvas → … → world map"
+      and "game-data editors after Phase D" boxes).
+- [x] Simulator arc adjudicated DONE for purpose (audit, this session):
+      residuals banked as existing boxes ($DB42 setter, +8/+9 consumers,
+      meta-actions menu drive [needs a CLEAN-build .sav or franken-state],
+      guard validator polish) — none block Phase 3.
+      Byte-neutral session: verifier PASS 6/6, clean MD5 1ca6579… only.
+- [x] v2.1 (same session, user workflow decisions): FORK-DON'T-FIDDLE
+      principle (clone vanilla→custom + repoint while capacity lasts;
+      in-place edits only under capacity pressure) + CANVAS-FIRST
+      interaction rule; clone-to-custom extractor specced (P3.2b, arena
+      first); Gates tab (P3.7b); Triggers-as-sentences (+ flag-keyed
+      pool variants G-O); Arena editor (P3.10b) + Shops decode (P3.13c)
+      promoted from Phase E; AI ban-list banked optional (P3.11b);
+      CAPACITIES reference (P3.0) + capacity-meters principle; family-
+      icon editor + follower visualizer + the sprite-background
+      white-vs-cream defect logged (G-P; PROJECT_STATE Open defects);
+      ROM-expansion 2→4 MB assessed + banked as contingency (NO prior
+      session claimed it; the S69 expansion was SRAM). Layer A proper
+      shrunk to exit repoints + M2R (EDITOR_DESIGN §6.3).
