@@ -277,43 +277,59 @@ def _room_data(prj, r):
     for i in sorted(screens):
         s = screens[i]
         ctr = prj.step_counter_label(r, i, s)
-        lay = s['layout']
+        states = prj.screen_states(s)          # S92: >=1 step entries
+        multi = len(states) > 1
         out.append(f"{tag}_Screen{i}:")
         out.append(f"    dw {ctr}    ; step counter")
-        out.append(f"    db {F.val(lay['entry'])}, {F.hexb(F.val(lay['bank']))}"
-                   f"   ; step_id, tileset_bank")
-        out.append(f"    dw {tag}_S{i}_NPCs")
-        out.append(f"    dw {tag}_S{i}_Exits")
+        for v, st in enumerate(states):
+            sfx = f"_V{v}" if multi else ""
+            lb, le = prj.resolve_layout(st['layout'],
+                                        ctx=f"{tag} screen {i} state {v}")
+            cm = st.get('comment')
+            out.append(f"    db {le}, {F.hexb(lb)}"
+                       f"   ; {'state %d: ' % v if multi else ''}step_id, "
+                       f"tileset_bank" + (f" — {cm}" if cm else ""))
+            out.append(f"    dw {tag}_S{i}{sfx}_NPCs")
+            out.append(f"    dw {tag}_S{i}{sfx}_Exits")
         out.append("")
-        out.append(f"{tag}_S{i}_NPCs:")
-        for n in s.get('npcs', []):
-            if n['kind'] == 'spawn':
-                b = F.npc_spawn_entry(n['x'], n['y'],
-                                      F.val(n.get('script', 0)))
-                out.append(F.db_line(b, comment=f"spawn ({n['x']},{n['y']})"
-                           + (f" — {n['comment']}" if n.get('comment') else "")))
-            else:
-                sid = n['script']
-                sidx = (0xFF if sid in (None, 'none')
-                        else prj.script_index(r, sid))
-                b = F.npc_entry(n.get('facing', 'down'), F.val(n['sprite']),
-                                n['x'], n['y'], sidx)
-                out.append(F.db_line(
-                    b, comment=f"NPC ({n['x']},{n['y']}) script "
-                               f"{sid if sid not in (None,'none') else 'none'}"))
-        out.append("    db $FF")
-        out.append("")
-        out.append(f"{tag}_S{i}_Exits:")
-        for e in s.get('exits', []):
-            dest = prj.resolve_dest(e['dest'])
-            b = F.exit_entry(e['x'], e['y'], dest,
-                             F.val(e.get('gate_flag', 0)),
-                             F.val(e['screen_byte']),
-                             e['spawn_x'], e['spawn_y'])
-            out.append(F.db_line(b, comment=e.get('comment',
-                       f"exit ({e['x']},{e['y']}) -> {e['dest']}")))
-        out.append("    db $FF")
-        out.append("")
+        for v, st in enumerate(states):
+            sfx = f"_V{v}" if multi else ""
+            out.append(f"{tag}_S{i}{sfx}_NPCs:")
+            for n in st.get('npcs', []):
+                if n['kind'] == 'raw':
+                    # S92 clone fidelity: verbatim 5-byte interact entry
+                    # ($90 walk-on markers, $82 markers, $8F spawns with
+                    # spawn-id params — forms the typed schema doesn't model)
+                    b = [F.val(v) for v in n['bytes']]
+                    out.append(F.db_line(b, comment=n.get('comment',
+                               'raw interact entry (cloned verbatim)')))
+                elif n['kind'] == 'spawn':
+                    b = F.npc_spawn_entry(n['x'], n['y'],
+                                          F.val(n.get('script', 0)))
+                    out.append(F.db_line(b, comment=f"spawn ({n['x']},{n['y']})"
+                               + (f" — {n['comment']}" if n.get('comment') else "")))
+                else:
+                    sid = n['script']
+                    sidx = (0xFF if sid in (None, 'none')
+                            else prj.script_index(r, sid))
+                    b = F.npc_entry(n.get('facing', 'down'), F.val(n['sprite']),
+                                    n['x'], n['y'], sidx)
+                    out.append(F.db_line(
+                        b, comment=f"NPC ({n['x']},{n['y']}) script "
+                                   f"{sid if sid not in (None,'none') else 'none'}"))
+            out.append("    db $FF")
+            out.append("")
+            out.append(f"{tag}_S{i}{sfx}_Exits:")
+            for e in st.get('exits', []):
+                dest = prj.resolve_dest(e['dest'])
+                b = F.exit_entry(e['x'], e['y'], dest,
+                                 F.val(e.get('gate_flag', 0)),
+                                 F.val(e['screen_byte']),
+                                 e['spawn_x'], e['spawn_y'])
+                out.append(F.db_line(b, comment=e.get('comment',
+                           f"exit ({e['x']},{e['y']}) -> {e['dest']}")))
+            out.append("    db $FF")
+            out.append("")
     return out
 
 
@@ -333,8 +349,17 @@ def emit_bank_071(prj, warnings):
         mid = F.val(r['mapID'])
         if mid < 0x70:
             continue
+        if r.get('placeholder'):
+            # S92: synthesized dense-sequence placeholder (a declared room
+            # above it exists). The row must occupy its (mapID-$70) slot;
+            # all-zero = unused shape (gfx 0, 0x0, threshold 0) — the room
+            # is unreachable (no exits target a placeholder).
+            lines.append(F.db_line([0] * 8,
+                         comment=f"{F.hexb(mid)} placeholder (zero row)"))
+            continue
         rec = r['record']
-        b = F.record_26dd(F.val(rec['gfx_id']), F.val(rec['gfx_bank']),
+        gb, gid = prj.resolve_gfx(rec, ctx=f"room {r.get('id')} record")
+        b = F.record_26dd(gid, gb,
                           F.val(rec['width_px']), F.val(rec['height_px']),
                           F.val(rec['collision_threshold']))
         lines.append(F.db_line(b, comment=F.hexb(mid)))
@@ -418,10 +443,10 @@ def emit_region_render_tables(prj, warnings):
     for r in prj.rooms:
         at = (r.get('render') or {}).get('attr')
         if at:
-            b = [F.val(at['bank']), F.val(at['base_entry'])]
+            ab, ae = prj.resolve_attr(at, ctx=f"room {r.get('id')}")
+            b = [ab, ae]
             cm = (f"{F.hexb(F.val(r['mapID']))} -> bank "
-                  f"{F.hexb(F.val(at['bank']))}, attr base entry "
-                  f"{F.val(at['base_entry'])}")
+                  f"{F.hexb(ab)}, attr base entry {ae}")
         else:
             b, cm = [0, 0], (f"{F.hexb(F.val(r['mapID']))} — vanilla attr "
                              "fallback")
@@ -527,10 +552,90 @@ def emit_region_enemies14(prj, warnings):
     return "\n".join(out) + "\n"
 
 
+# ---------------------------------------------------------------------------
+# bank $64 emitter — layouts + attr maps (owns file patches/bank_064.asm)
+# P3.2 [G-A], S92. Entry allocation lives in Project (declaration order,
+# tiles-then-attr per item) so room references resolve before emission.
+# ---------------------------------------------------------------------------
+
+def _stream_block(label, data, comment):
+    out = [f"{label}:  ; {comment}"]
+    for i in range(0, len(data), 16):
+        out.append("    db " + ", ".join(f"${b:02X}" for b in data[i:i + 16]))
+    return out
+
+
+def emit_bank_064(prj, warnings):
+    from . import layouts as L
+    repo = getattr(prj, 'repo_root', '.')
+    out = banner("BANK $64 — custom room layouts + attr maps (generated)", [
+        "Generated by build_project.py from custom.layouts[] — the P3.2",
+        "[G-A] fold. Entries allocated in declaration order, tiles entry",
+        "then attr entry per item (the L,A interleave CustomAttrCheck's",
+        "screen-0->base / other->base+2 stride expects — bank_017.asm).",
+        "Engine reads via DecompressTileLayout ($1627): D=bank, E=entry.",
+        "Formats: ROOM_DATA_FORMAT / GATE_GENERATION §7.2; LZSS via",
+        "tools/compress_tiles.py (deterministic — byte-identity regression)."])
+    out.append('SECTION "ROM Bank $064", ROMX[$4000], BANK[$64]')
+    out.append("    db $64  ; bank self-ID")
+    # pointer table in allocation order
+    ptr = [None] * (len(prj._layout_entry) + len(prj._attr_entry))
+    for lid, e in prj._layout_entry.items():
+        ptr[e] = (f"Layout_{lid}", lid, 'tiles')
+    for lid, e in prj._attr_entry.items():
+        ptr[e] = (f"Attr_{lid}", lid, 'attr')
+    for e, (lbl, lid, kind) in enumerate(ptr):
+        out.append(f"    dw {lbl}   ; entry {e}")
+    out.append("")
+    for lbl, lid, kind in ptr:
+        lay = prj._layout_by_id[lid]
+        if kind == 'tiles':
+            data = L.compile_tiles(repo, lay['tiles'])
+            cm = lay.get('comment', f"layout {lid} (LZSS)")
+        else:
+            data = L.compile_attr(repo, lay['attr'])
+            cm = f"attr map {lid} (LZSS)"
+        out += _stream_block(lbl, data, cm)
+        out.append("")
+    return "\n".join(out).rstrip("\n") + "\n"
+
+
+def emit_bank_067(prj, warnings):
+    from . import layouts as L
+    repo = getattr(prj, 'repo_root', '.')
+    pdir = getattr(prj, 'root', '.')
+    out = banner("BANK $67 — custom tileset GFX (generated)", [
+        "Generated by build_project.py from custom.tilesets[] — the P3.2",
+        "[G-A] fold of the S6-S10 multi-tileset import pipeline. Each entry",
+        "= 2048-byte 2bpp sheet (128 tiles), LZSS. Sources: committed",
+        "raw2bpp sheets, or a multi-tileset editor-export spec resolved via",
+        "tools/build_combined_tileset.py's cherry-pick core. Loaded by",
+        "DecompressTileLayout via a room record's gfx_bank/gfx_id",
+        "(ROOM_DATA_FORMAT 'Tileset Graphics System')."])
+    out.append('SECTION "ROM Bank $067", ROMX[$4000], BANK[$67]')
+    out.append("    db $67  ; bank self-ID")
+    for ts in prj.tilesets:
+        out.append(f"    dw TilesetGFX_{ts['id']}"
+                   f"   ; entry {prj._tileset_entry[ts['id']]}")
+    out.append("")
+    for ts in prj.tilesets:
+        sheet = L.tileset_bytes(repo, ts, pdir)
+        data = L.compress(repo, sheet)
+        cm = ts.get('comment',
+                    f"{len(data)} bytes compressed (2048 decompressed)")
+        out += _stream_block(f"TilesetGFX_{ts['id']}", data, cm)
+        out.append("")
+    return "\n".join(out).rstrip("\n") + "\n"
+
+
 REGISTRY = [
     # (name, schema_section, target, function, owned_banks)
     ("rooms60", "custom.rooms", "file:patches/bank_060.asm",
      emit_bank_060, [0x60]),
+    ("layouts64", "custom.layouts", "file:patches/bank_064.asm",
+     emit_bank_064, [0x64]),
+    ("tilesets67", "custom.tilesets", "file:patches/bank_067.asm",
+     emit_bank_067, [0x67]),
     ("enemies14", "progression.enemies",
      "region:patches/bank_014.asm#quest_enemy_stats", emit_region_enemies14,
      [0x14]),

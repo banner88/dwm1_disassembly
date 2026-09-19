@@ -76,6 +76,57 @@ class Project:
         self._text_by_id = {}
         self._assign_text_ids()
         self._scripts = {s['id']: s for s in self.custom.get('scripts', [])}
+        # S92: custom.script_preludes {script_id: [ops...]} — prepended to the
+        # named script's op stream AFTER quest lowering, so generated
+        # entry:/quest: scripts can be extended without touching the lowering.
+        # Motivating use: a hub room arms a destination room's step counter by
+        # rank BEFORE the player transitions (state selection happens at the
+        # destination's LOAD, before its own entry script runs — PyBoy-measured
+        # S92, so the destination cannot arm itself for the current load).
+        # Prelude labels share the script's namespace; use unique names.
+        for psid, pre in (self.custom.get('script_preludes') or {}).items():
+            if psid.startswith('_'):
+                continue                   # _doc / annotation keys
+            if psid not in self._scripts:
+                raise ProjectError(
+                    f"custom.script_preludes: script id {psid!r} not defined "
+                    "(hand scripts and generated quest:/entry: ids are both "
+                    "valid targets)")
+            tgt = self._scripts[psid]
+            tgt['ops'] = list(pre) + list(tgt['ops'])
+            tgt['_prelude'] = f"{len(pre)} prelude ops (S92)"
+        # P3.2 [G-A] (S92): banks $64/$67 fold behind project.json.
+        # custom.layouts[] items each own 1-2 consecutive bank $64 entries in
+        # DECLARATION order (tiles entry, then attr entry if present) — the
+        # interleave the proven bank_064.asm uses (L0,A0,L1,A1) and the layout
+        # CustomAttrCheck's hardwired stride expects (screen 0 -> base_entry,
+        # any other screen -> base_entry+2; patches/bank_017.asm).
+        self.layouts = self.custom.get('layouts', [])
+        self._layout_by_id = {}
+        self._layout_entry = {}       # id -> tiles entry index in bank $64
+        self._attr_entry = {}         # id -> attr entry index in bank $64
+        n64 = 0
+        for lay in self.layouts:
+            lid = lay.get('id')
+            if not lid or lid in self._layout_by_id:
+                raise ProjectError(f"custom.layouts: missing/duplicate id {lid!r}")
+            self._layout_by_id[lid] = lay
+            if 'tiles' in lay:
+                self._layout_entry[lid] = n64
+                n64 += 1
+            if 'attr' in lay:
+                self._attr_entry[lid] = n64
+                n64 += 1
+        # custom.tilesets[] items each own one bank $67 entry in declaration
+        # order (128-tile 2bpp sheets: raw2bpp committed file, or the S6-S10
+        # multi-tileset editor-export spec — see layouts.tileset_bytes).
+        self.tilesets = self.custom.get('tilesets', [])
+        self._tileset_entry = {}
+        for i, ts in enumerate(self.tilesets):
+            tid = ts.get('id')
+            if not tid or tid in self._tileset_entry:
+                raise ProjectError(f"custom.tilesets: missing/duplicate id {tid!r}")
+            self._tileset_entry[tid] = i
         self.wram_region_size = (self.custom.get('wram', {})
                                  .get('region_size', WRAM_REGION_SIZE_DEFAULT))
         if self.wram_region_size > WRAM_REGION_MAX:
@@ -346,6 +397,63 @@ class Project:
         top = max(scr) if scr else 0
         return 8 if top >= 4 else 4     # 4x2 grid halves (ROOM_DATA_FORMAT)
 
+    def screen_states(self, s):
+        """A screen's step-entry list (P3.3 [G-G] backend half, S92).
+
+        No 'states' key -> ONE state from the screen's own npcs/exits/layout
+        (byte-identical to the pre-states emission). With 'states': each item
+        {npcs?, exits?, layout?, comment?} becomes one 6-byte step entry;
+        an item omitting 'layout' inherits the screen's. The engine indexes
+        entries by [step counter]x6 with NO clamp (CustomPtrChase, template
+        head) — entry scripts must keep the counter < len(states)."""
+        states = s.get('states')
+        if not states:
+            return [s]
+        out = []
+        for st in states:
+            merged = dict(st)
+            if 'layout' not in merged:
+                merged['layout'] = s['layout']
+            merged.setdefault('npcs', st.get('npcs', []))
+            merged.setdefault('exits', st.get('exits', []))
+            out.append(merged)
+        return out
+
+    def resolve_layout(self, ref, ctx=""):
+        """Screen layout ref -> (bank, entry). Forms: {bank, entry} (any
+        bank — vanilla tileset banks included) or {id} -> allocated $64."""
+        if 'id' in ref:
+            lid = ref['id']
+            if lid not in self._layout_entry:
+                raise ProjectError(
+                    f"{ctx}: layout id {lid!r} not in custom.layouts "
+                    "(or it has no 'tiles')")
+            return 0x64, self._layout_entry[lid]
+        return F.val(ref['bank']), F.val(ref['entry'])
+
+    def resolve_attr(self, at, ctx=""):
+        """render.attr ref -> (bank, base_entry). Forms: {bank, base_entry}
+        or {id} -> the layout id's allocated $64 attr entry."""
+        if 'id' in at:
+            lid = at['id']
+            if lid not in self._attr_entry:
+                raise ProjectError(
+                    f"{ctx}: attr id {lid!r} not in custom.layouts "
+                    "(or it has no 'attr' grid)")
+            return 0x64, self._attr_entry[lid]
+        return F.val(at['bank']), F.val(at['base_entry'])
+
+    def resolve_gfx(self, rec, ctx=""):
+        """record gfx ref -> (gfx_bank, gfx_id). Forms: gfx_bank+gfx_id
+        (vanilla tileset), or {"tileset": id} -> bank $67 allocated entry."""
+        if 'tileset' in rec:
+            tid = rec['tileset']
+            if tid not in self._tileset_entry:
+                raise ProjectError(
+                    f"{ctx}: tileset id {tid!r} not in custom.tilesets")
+            return 0x67, self._tileset_entry[tid]
+        return F.val(rec['gfx_bank']), F.val(rec['gfx_id'])
+
     # --------------------------------------------------------------- scripts
     def room_script_table(self, r):
         tbl = r.get('scripts') or {}
@@ -470,6 +578,13 @@ class Project:
                                         .get('reserved', []))]:
             used[addr] = (lbl, cm)
         for r, i, s, sc in explicit:
+            if 'addr' not in sc:
+                # S92: label-only form — auto-allocate the address but pin
+                # the NAME (scripts reference counters by RGBDS symbol, e.g.
+                # the arena_clone rank prelude's write_ram2 target)
+                auto.append((r, i, s))
+                s['_ctr_name_override'] = sc['label']
+                continue
             addr = F.val(sc['addr'])
             if addr in used:
                 raise ProjectError(f"step counter addr {F.hexw(addr)} claimed "
@@ -483,8 +598,9 @@ class Project:
         for r, i, s in auto:
             while nxt in used:
                 nxt += 1
-            used[nxt] = (self._def_step_label(r, i),
-                         self._def_step_comment(r, i))
+            lbl = s.pop('_ctr_name_override', None) or \
+                self._def_step_label(r, i)
+            used[nxt] = (lbl, self._def_step_comment(r, i))
             s['_ctr_label'] = used[nxt][0]
             nxt += 1
         if used and (max(used) - STEP_COUNTER_BASE + 1) > self.wram_region_size:

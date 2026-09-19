@@ -3220,7 +3220,7 @@ Exit_GreatTree_s5:  ; $4FE5 — 0 exits
     db $FF  ; terminator
 
 Exit_GreatTree_s8:  ; $4FE6 — 2 exits
-    db $05, $03, $12, $00, $04, $05, $07  ; exit (5,3)→mt$12 Library  scr=4 spawn(5,7)
+    db $05, $03, $72, $00, $01, $04, $07  ; S92v3 REPOINT (user-directed): GreatTree Library door → arena_clone $72, sb $01 spawn (4,7) (the proven Lobby-entry pair). Was: db $05,$03,$12,$00,$04,$05,$07 (→ Library). In-place same-size edit (S70v2 bank $0B precedent); restore the original bytes to give the Library back.
     db $04, $05, $6B, $00, $00, $07, $06  ; exit (4,5)→mt$6B CUSTOM ROOM  scr=0 spawn(7,6)
     db $FF  ; terminator
 

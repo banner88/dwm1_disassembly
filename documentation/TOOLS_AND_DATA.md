@@ -530,3 +530,28 @@ return a failing ROM).
 measure_battle.py S88: waypoints conf_pick/meta_*/snap_roll, `--db73`
 per-frame forcing, maxmp ($DBD3) captured per event. Battles run on the
 patched pin a17bff8e with boot.state from the user's S87-class .sav.
+
+## S92 rows
+
+`tools/extract_room.py` — vanilla room → full project.json custom clone
+(P3.2b [G-J]): $26DD record, screens with RAW-verified interact/exit bytes
+(verbatim 5/7-byte pass-through), vanilla layout REFERENCES, attr decompressed
+→ custom.layouts re-emission, palette via derive_room_palette logic, all
+scripts via a segmentation-PROOF decoder (branch targets must land on op
+boundaries; merged param table = decompile_script overridden by
+handler/PyBoy-verified rows: $27=0p NOT-branch, $21=1p, $07=0, $41=1, $5A=1;
+bare words = text displays), BGM from RoomBGMTable, orphaned-flag report per
+script. `--source-custom <id>` = custom→custom deep-copy. Delivered WITH its
+regenerated data (the arena_clone/island_copy content in the example project)
+same session.
+
+`tools/build_gate_room.py` — RETIRED S92 (grids moved into
+editor2/example-project project.json custom.layouts; regen==committed verified
+at the move). Kept for history; do not run.
+
+`tools/decompile_script.py` — DEFECT LIST grew S92: 0x27 rendered as
+"post_battle_check, goto p[0]" (it is MonsterPartyOp2, 0 params, NOT a
+branch — PyBoy ctr trace + handler $04:$5F5C) and 0x21 param count 2 (actual
+1, bank_004 reference block "read 1 param, discard"). Twin-tool rule stands:
+do not "correct" the compiler from this tool; extract_room.py carries the
+verified overrides.

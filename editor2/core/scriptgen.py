@@ -30,7 +30,14 @@ OPS = {
     'check_and_branch':   (0x15, 3),   # addr, value, branch (aka cond_branch)
     'write_ram':          (0x12, 2),   # addr, value (low byte written)
     'map_transition':     (0x0F, 3),   # gate_id|flag, spawnX, spawnY (KEY_LESSONS S3)
-    'post_battle_check':  (0x27, 1),
+    'monster_party_op2':  (0x27, 0),   # S92 MEASURED (PyBoy ctr trace: 2F->30
+                                       # linear) + handler $04:$5F5C (bank $01
+                                       # entries 9+3, jp $55F5). NOT a branch.
+                                       # SIDEQUEST_MAP: party display setup.
+    'post_battle_check':  (0x27, 0),   # legacy alias — the old (0x27, 1) row
+                                       # was a decompile_script-inherited
+                                       # defect ($41/$07 class); never emitted
+                                       # by any project content pre-S92.
     'check_storage_full': (0x28, 1),   # branch if full
     'add_monster':        (0x29, 1),   # enemy_stats_id (egg path)
     'give_item':          (0x2A, 1),

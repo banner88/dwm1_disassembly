@@ -9,6 +9,8 @@ field. Warnings surface risky-but-legal authoring.
 Returns (errors, warnings): lists of strings. Errors abort the emit.
 """
 
+import os
+
 from . import formats as F
 from . import textenc as T
 from . import scriptgen as S
@@ -192,76 +194,32 @@ def validate(prj, generated=None):
             lay = s.get('layout')
             if not lay:
                 errors.append(f"room {rid} screen {i}: missing layout")
-            spawn_seen = False
-            for n in s.get('npcs', []):
-                x, y = n.get('x'), n.get('y')
-                if not (0 <= x <= 9 and 0 <= y <= 7):
-                    errors.append(f"room {rid} screen {i}: NPC/spawn at "
-                                  f"({x},{y}) outside 10x8 walk grid "
-                                  "(ROOM_DATA_FORMAT scroll/walk grid)")
-                if n['kind'] == 'spawn':
-                    spawn_seen = True
-                    if F.val(n.get('script', 0)) != 0:
-                        errors.append(
-                            f"room {rid} screen {i}: spawn entry script must "
-                            "be 0 — the interaction scan includes spawn "
-                            "entries; nonzero makes a 'ghost NPC' "
-                            "(KEY_LESSONS 'Spawn point NPC entry can be "
-                            "talked to')")
-                else:
-                    sid = n.get('script')
-                    if sid not in (None, 'none'):
-                        try:
-                            si = prj.script_index(r, sid)
-                            if si == 0:
-                                errors.append(
-                                    f"room {rid} screen {i}: NPC references "
-                                    "script index 0 — reserved for room "
-                                    "entry (KEY_LESSONS S2)")
-                        except Exception as e:
-                            errors.append(f"room {rid} screen {i}: {e}")
-                    if n.get('facing') and n['facing'] not in F.FACING:
-                        errors.append(f"room {rid} screen {i}: unknown "
-                                      f"facing {n['facing']!r}")
+                continue
+            # S92 states[] ([G-G] backend half): validate EVERY step entry.
+            states = prj.screen_states(s)
+            if s.get('states') and (s.get('npcs') or s.get('exits')):
+                errors.append(
+                    f"room {rid} screen {i}: has BOTH 'states' and top-level "
+                    "npcs/exits — with states, all content lives inside the "
+                    "state items (top-level layout is the inheritable "
+                    "default)")
+            if len(states) > 16:
+                warnings.append(
+                    f"room {rid} screen {i}: {len(states)} states — the "
+                    "engine indexes counter*6 with NO clamp (CustomPtrChase); "
+                    "keep the counter in range via the entry script")
+            for v, st in enumerate(states):
+                _validate_state(prj, r, rid, i, v, st, len(states),
+                                errors, warnings)
+            spawn_seen = any(n.get('kind') == 'spawn'
+                             for n in states[0].get('npcs', []))
             if not spawn_seen and i == min(screens):
                 warnings.append(f"room {rid} screen {i}: no spawn entry — "
                                 "entering from an exit still works (source "
                                 "exit supplies coords, KEY_LESSONS S4) but "
                                 "teleports need one")
-            for e in s.get('exits', []):
-                if 'screen_byte' not in e:
-                    errors.append(
-                        f"room {rid} screen {i}: exit ({e.get('x')},"
-                        f"{e.get('y')}) has no screen_byte — NEVER guessed; "
-                        "copy from an existing exit to the same destination "
-                        "(KEY_LESSONS v14-v18 + S40 off-map spawn)")
-                    continue
-                sb = F.val(e['screen_byte'])
-                dest = e.get('dest')
-                try:
-                    dmid = prj.resolve_dest(dest)
-                except Exception as ex:
-                    errors.append(f"room {rid} screen {i}: exit dest "
-                                  f"{dest!r}: {ex}")
-                    continue
-                if isinstance(dest, str) and dest.startswith('room:'):
-                    dr = prj.room_by_mid(dmid)
-                    drec = dr.get('record')
-                    d_single = (not drec) or F.val(drec['width_px']) <= 160
-                    if d_single and (sb & 0x0F) != 0:
-                        warnings.append(
-                            f"room {rid} screen {i}: exit to "
-                            f"{F.hexb(dmid)} has screen_byte "
-                            f"{F.hexb(sb)} but the destination is "
-                            "single-width — low nibble should be $00 or the "
-                            "player spawns off-map (KEY_LESSONS S40)")
-                ty = F.val(e.get('y'))
-                if ty in (0, 7):
-                    warnings.append(
-                        f"room {rid} screen {i}: exit at trigger_y={ty} is a "
-                        "BOUNDARY exit (Entry 9 path, walk-into-edge); it "
-                        "cannot coexist with a scroll transition on that "
-                        "edge (KEY_LESSONS S10 Entry 6 vs Entry 9)")
+
+    _validate_layouts_tilesets(prj, errors, warnings)
 
     # ---------------------------------------------- progression (S70, E2)
     from .project import QUEST_EID_BASE, QUEST_EID_CAP
@@ -406,10 +364,180 @@ def validate(prj, generated=None):
     return errors, warnings
 
 
+def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
+    """One screen step-entry's NPC/exit checks (S92: runs per state)."""
+    tag = (f"room {rid} screen {i}" if n_states == 1
+           else f"room {rid} screen {i} state {v}")
+    real_npcs = [n for n in st.get('npcs', [])
+                 if (n.get('kind') == 'npc'
+                     or (n.get('kind') == 'raw' and n.get('bytes')
+                         and F.val(n['bytes'][0]) < 0x80))]
+    if len(real_npcs) > 8:
+        errors.append(
+            f"{tag}: {len(real_npcs)} NPCs — the per-screen-state ceiling is "
+            "8 HARD (S91 measured: $0B:$470F fills exactly $101 B at $D7D2; "
+            "a 9th entry silently corrupts $D8D9+ script state — "
+            "capacities.json / ROOM_DATA_FORMAT 'NPC capacity')")
+    elif len(real_npcs) > 3:
+        warnings.append(
+            f"{tag}: {len(real_npcs)} NPCs with distinct sprites may exhaust "
+            "the per-screen sprite-sheet VRAM budget (S91: order-filled; "
+            "8 light sheets fit, ~2-3 heavy exhaust; overflow renders "
+            "BLANK, no crash) — verify in PyBoy")
+    try:
+        prj.resolve_layout(st['layout'], ctx=tag)
+    except Exception as ex:
+        errors.append(str(ex))
+    for n in st.get('npcs', []):
+        if n.get('kind') == 'raw':
+            bs = n.get('bytes', [])
+            if len(bs) != 5 or any(not (0 <= F.val(b) <= 255) for b in bs):
+                errors.append(f"{tag}: raw interact entry must be exactly "
+                              "5 bytes 0-255 (ROOM_DATA_FORMAT interact "
+                              "entry)")
+            continue
+        x, y = n.get('x'), n.get('y')
+        if not (0 <= x <= 9 and 0 <= y <= 7):
+            errors.append(f"{tag}: NPC/spawn at ({x},{y}) outside 10x8 walk "
+                          "grid (ROOM_DATA_FORMAT scroll/walk grid)")
+        if n['kind'] == 'spawn':
+            if F.val(n.get('script', 0)) != 0:
+                errors.append(
+                    f"{tag}: spawn entry script must be 0 — the interaction "
+                    "scan includes spawn entries; nonzero makes a 'ghost "
+                    "NPC' (KEY_LESSONS 'Spawn point NPC entry can be talked "
+                    "to')")
+        else:
+            sid = n.get('script')
+            if sid not in (None, 'none'):
+                try:
+                    si = prj.script_index(r, sid)
+                    if si == 0:
+                        errors.append(
+                            f"{tag}: NPC references script index 0 — "
+                            "reserved for room entry (KEY_LESSONS S2)")
+                except Exception as e:
+                    errors.append(f"{tag}: {e}")
+            if n.get('facing') and n['facing'] not in F.FACING:
+                errors.append(f"{tag}: unknown facing {n['facing']!r}")
+    for e in st.get('exits', []):
+        if 'screen_byte' not in e:
+            errors.append(
+                f"{tag}: exit ({e.get('x')},{e.get('y')}) has no "
+                "screen_byte — NEVER guessed; copy from an existing exit to "
+                "the same destination (KEY_LESSONS v14-v18 + S40 off-map "
+                "spawn)")
+            continue
+        sb = F.val(e['screen_byte'])
+        dest = e.get('dest')
+        try:
+            dmid = prj.resolve_dest(dest)
+        except Exception as ex:
+            errors.append(f"{tag}: exit dest {dest!r}: {ex}")
+            continue
+        if isinstance(dest, str) and dest.startswith('room:'):
+            dr = prj.room_by_mid(dmid)
+            drec = dr.get('record')
+            d_single = (not drec) or F.val(drec['width_px']) <= 160
+            if d_single and (sb & 0x0F) != 0:
+                warnings.append(
+                    f"{tag}: exit to {F.hexb(dmid)} has screen_byte "
+                    f"{F.hexb(sb)} but the destination is single-width — "
+                    "low nibble should be $00 or the player spawns off-map "
+                    "(KEY_LESSONS S40)")
+        ty = F.val(e.get('y'))
+        if ty in (0, 7):
+            warnings.append(
+                f"{tag}: exit at trigger_y={ty} is a BOUNDARY exit (Entry 9 "
+                "path, walk-into-edge); it cannot coexist with a scroll "
+                "transition on that edge (KEY_LESSONS S10 Entry 6 vs "
+                "Entry 9)")
+
+
+def _validate_layouts_tilesets(prj, errors, warnings):
+    """S92 [G-A]: content checks for custom.layouts / custom.tilesets."""
+    for lay in prj.layouts:
+        lid = lay.get('id', '?')
+        if 'tiles' not in lay and 'attr' not in lay:
+            errors.append(f"custom.layouts {lid!r}: needs 'tiles' and/or "
+                          "'attr'")
+        for key, name in (('tiles', 'tile'), ('attr', 'palette')):
+            grid = lay.get(key)
+            if grid is None:
+                continue
+            if len(grid) != 16 or any(len(row) != 20 for row in grid):
+                errors.append(f"custom.layouts {lid!r}: {key} must be 16 "
+                              "rows x 20 cols (visible grid; the 12 VRAM "
+                              "pad cols are added at compile)")
+                continue
+            hi = 255 if key == 'tiles' else 15
+            for rr, row in enumerate(grid):
+                for cc, vv in enumerate(row):
+                    if not (0 <= int(vv) <= hi):
+                        errors.append(
+                            f"custom.layouts {lid!r}: {name} value {vv} at "
+                            f"({rr},{cc}) outside 0-{hi}")
+                        break
+                else:
+                    continue
+                break
+    for ts in prj.tilesets:
+        tid = ts.get('id', '?')
+        if ('raw2bpp' in ts) == ('spec' in ts):
+            errors.append(f"custom.tilesets {tid!r}: exactly one of "
+                          "'raw2bpp' or 'spec'")
+            continue
+        key = 'raw2bpp' if 'raw2bpp' in ts else 'spec'
+        path = os.path.join(prj.root, ts[key])
+        if not os.path.exists(path):
+            errors.append(f"custom.tilesets {tid!r}: {key} file not found: "
+                          f"{ts[key]}")
+        elif key == 'raw2bpp' and os.path.getsize(path) != 2048:
+            errors.append(f"custom.tilesets {tid!r}: raw2bpp must be 2048 "
+                          f"bytes, got {os.path.getsize(path)}")
+        elif key == 'spec':
+            import json
+            try:
+                spec = json.load(open(path))
+            except Exception as ex:
+                errors.append(f"custom.tilesets {tid!r}: spec unreadable: "
+                              f"{ex}")
+                continue
+            for row in spec.get('palette', []):
+                slot = int(row.get('slot', -1))
+                if not (0 <= slot < 128):
+                    errors.append(f"custom.tilesets {tid!r}: spec slot "
+                                  f"{slot} outside 0-127")
+                if slot in (77, 78):
+                    warnings.append(
+                        f"custom.tilesets {tid!r}: spec places a tile at "
+                        f"slot {slot} — the animated no-go zone "
+                        "(KEY_LESSONS: indices 77-78 are animated by the "
+                        "engine; build_combined_tileset reserves them)")
+
+
 def _validate_accounting(prj, generated, errors, warnings):
     # EDITOR_DESIGN §6: bank overflow must fail BEFORE rgbasm runs (rgbasm
     # reports only the first excess byte — KEY_LESSONS S52 #3).
     if True:
+        # S92: banks $64/$67 have no engine template head — the db/dw payload
+        # (self-ID + pointer table + streams) IS the whole bank.
+        for bank, fname in ((0x64, 'patches/bank_064.asm'),
+                            (0x67, 'patches/bank_067.asm')):
+            text = generated.get(f"file:{fname}")
+            if text is None:
+                continue
+            gen_bytes = _payload_bytes(text)
+            if gen_bytes > BANK_SIZE:
+                errors.append(
+                    f"bank ${bank:02X} OVERFLOW: {gen_bytes} > {BANK_SIZE} "
+                    "bytes of layout/tileset data — trim content "
+                    "(KEY_LESSONS S52: rgbasm reports only the first excess "
+                    "byte)")
+            elif gen_bytes > BANK_SIZE - 256:
+                warnings.append(
+                    f"bank ${bank:02X}: {BANK_SIZE - gen_bytes} bytes free "
+                    "(under 256) — nearly full")
         for bank, fname in ((0x60, 'patches/bank_060.asm'),
                             (0x71, 'patches/bank_071.asm')):
             text = generated.get(f"file:{fname}")

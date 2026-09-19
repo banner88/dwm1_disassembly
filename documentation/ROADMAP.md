@@ -646,7 +646,7 @@ recipes are pure authoring.
       untouched (byte-neutral session); swap to $3A in the next
       project.json-touching session. npc_catalog.json phantom-step
       contamination found (DOC_AUDIT S91); dumper regen = residual.
-- [ ] **P3.2 — Bank $64/$67 emission behind project.json** [G-A] (the
+- [x] **P3.2 — Bank $64/$67 emission behind project.json** [G-A] (S92, built, NOT yet user-tested) (the
       canvas prerequisite): layouts/attr ($64) + combined tilesets ($67)
       become compiler emitters driven by `custom.rooms[].layout` /
       `custom.tilesets[]` (wrapping tile_layout_compiler /
@@ -655,7 +655,7 @@ recipes are pure authoring.
       build is byte-identical to the pinned regression (or the pin is
       re-set in the same session with the example project updated —
       PROJECT_COMPILER rule); test_compiler green.
-- [ ] **P3.2b — Clone-to-custom room extractor** [G-J] (the fork
+- [x] **P3.2b — Clone-to-custom room extractor** [G-J] (S92, built, NOT yet user-tested; single-version clone per user decision S92 — state variants are authored on top via states[]; rank-arming via custom.script_preludes because state selection reads the counter at destination LOAD, before its entry script — PyBoy-measured) (the fork
       mechanism, user decision S90): `extract_room.py` — vanilla room →
       full project.json custom clone (layouts/attrs/NPCs/exits/scripts
       decompiled), mapID auto-allocated, entrances repointed; per-island
@@ -665,7 +665,9 @@ recipes are pure authoring.
       untouched (clean MD5 unchanged); orphaned-flag list emitted;
       custom→custom clone of an example room also proven.
 - [ ] **P3.3 — Room canvas v1: paint + states + screen paging** [G-G
-      backend half]: one-screen-at-native-size canvas, screen paging with
+      backend half — SCHEMA/EMITTER HALF LANDED S92: screens[].states[]
+      first-class (validated, byte-identical when absent, engine already
+      counter×6 — no re-pin); remaining scope = the GUI canvas]: one-screen-at-native-size canvas, screen paging with
       explicit boundaries + mini-map strip, tile paint with undo, and the
       room-state switcher over first-class `states[]` (step-counter
       variants) in the schema. *Accept:* author paints a layout change and

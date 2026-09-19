@@ -2724,6 +2724,8 @@ CustomRoomPalPtr:
     dw $0000    ; $6F — borrow vanilla palette
     dw CustomPaletteColors_70    ; $70 — pal_70
     dw CustomRoomPalette_71    ; $71 — pal_71
+    dw CustomPaletteColors_arena_clone    ; $72 — pal_arena_clone
+    dw CustomPaletteColors_6B    ; $73 — pal_6b
 
 CustomRoomAttr:
     db $64, $01  ; $6B -> bank $64, attr base entry 1
@@ -2733,6 +2735,8 @@ CustomRoomAttr:
     db $00, $00  ; $6F — vanilla attr fallback
     db $64, $01  ; $70 -> bank $64, attr base entry 1
     db $64, $01  ; $71 -> bank $64, attr base entry 1
+    db $64, $04  ; $72 -> bank $64, attr base entry 4
+    db $64, $01  ; $73 -> bank $64, attr base entry 1
 
 ; $6D = VERDANT green (gate-rotation proof, reached via Gate of Villager).
 ; Luminance-themed recolour of the gate palette: structure preserved, hue fixed.
@@ -2768,4 +2772,15 @@ CustomRoomPalette_71:
     db $2D, $05, $FF, $6B, $DE, $16, $00, $00
     db $4E, $09, $FF, $6B, $1F, $17, $00, $00
     db $37, $0E, $FF, $6B, $BF, $1B, $00, $00
+
+; derived from vanilla $06 (derive_room_palette logic; idx1/idx3 forced)
+CustomPaletteColors_arena_clone:
+    db $D0, $19, $FF, $6B, $3D, $43, $00, $00
+    db $32, $05, $FF, $6B, $9F, $02, $00, $00
+    db $32, $05, $FF, $6B, $99, $2E, $00, $00
+    db $32, $05, $FF, $6B, $99, $2E, $00, $00
+    db $67, $4D, $FF, $6B, $FF, $7F, $00, $00
+    db $12, $00, $FF, $6B, $DE, $01, $00, $00
+    db $15, $00, $FF, $6B, $1F, $02, $00, $00
+    db $39, $01, $FF, $6B, $3F, $03, $00, $00
 ; @BUILD_PROJECT END room_render_tables

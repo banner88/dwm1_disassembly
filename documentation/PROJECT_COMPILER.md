@@ -767,3 +767,53 @@ reduce spell damage. What still stands between the model and a usable
 simulator: turn order, the damage-apply exclusions, status durations, and
 both AI variants (per-monster commands vs arena tactics) — the S79/S80 boxes
 on the ROADMAP.
+
+## §2.10 S92 schema additions (P3.2 [G-A] + states [G-G half] + preludes)
+
+**custom.layouts[]** — bank $64 content. Item: `{id, tiles?, attr?, comment?}`;
+`tiles` = 16 rows × 20 cols of tile ids (visible grid; the 12 VRAM pad cols are
+added at compile), `attr` = 16×20 palette codes 0-15 (packed per
+GATE_GENERATION §7.2, HIGH nibble = LEFT tile). Entries allocate in DECLARATION
+order, tiles entry then attr entry per item — this interleave is what
+CustomAttrCheck's hardwired stride expects (screen 0 → base_entry, any other
+screen → base_entry+2; bank_017.asm). References: screens[].layout `{id}` (or
+`{bank, entry}` — any bank, vanilla tileset banks included); render.attr `{id}`
+(or `{bank, base_entry}`). Emitter `layouts64` owns patches/bank_064.asm
+(whole file). tools/build_gate_room.py is RETIRED (its grids live in the
+example project; regen==committed was verified before the move).
+
+**custom.tilesets[]** — bank $67 content. Item: `{id, raw2bpp | spec,
+comment?}`. `spec` = a multi-tileset editor-export JSON (the S6-S10 import
+pipeline; resolved through build_combined_tileset's cherry-pick core; EXT:
+sources must be committed as raw2bpp instead). `raw2bpp` = a committed
+2048-byte sheet (compress_lz is deterministic, so recompression is
+byte-identical — proven S92 against the committed S6 sheet). Rooms may write
+`record: {"tileset": id, ...}` instead of gfx_bank/gfx_id. Emitter
+`tilesets67` owns patches/bank_067.asm.
+
+**screens[].states[]** — N step entries per screen ([G-G] backend half). Item:
+`{npcs, exits, layout?, comment?}`; omitted layout inherits the screen's. With
+`states` present, top-level npcs/exits are an ERROR. Emission = contiguous
+6-byte step entries after the counter; the head template's CustomPtrChase
+already indexes counter×6 with NO clamp (no engine change, no re-pin) — keep
+the counter < len(states) via scripts. Byte-identical to pre-S92 emission when
+absent. NPC entries also accept `{kind: "raw", bytes: [5]}` verbatim
+pass-through (clone fidelity: $8F spawn-id params, $90 walk-on markers, $82).
+S92 MEASURED load-order rule: state selection reads the counter at the
+destination room's LOAD, BEFORE its entry script runs — a room cannot arm its
+own current load; the HUB room arms the destination (see script_preludes).
+Step counters SURVIVE room transitions (zeroed at save-restore only, S65
+window-clear), so hub-side arming holds across the transition.
+
+**custom.script_preludes** — `{script_id: [ops...]}` prepended to the named
+script AFTER quest lowering (generated `entry:`/`quest:` ids are valid
+targets; `_`-prefixed keys are doc annotations). Labels share the target
+script's namespace. Motivating use: entry:medal_vault's rank ladder arming
+wCustomStep_ArenaClone_S1. Dangling target ids hard-error.
+
+**Placeholder rooms ≥ $70** (synthesized for mapID density) emit an all-zero
+Custom26DDTable row (the slot must exist; the room is unreachable).
+
+**Explicit step_counter label-only form** — `step_counter: {label: NAME}`
+auto-allocates the address but pins the RGBDS symbol (scripts reference
+counters by name).

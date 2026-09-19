@@ -3386,3 +3386,63 @@ corrupts $D8D9+ script state vs a same-warp control run) — and the control
 run mattered: two of the "corrupted" bytes change on ANY warp. Rule:
 overflow measurements get a compliant control under the identical harness,
 or normal churn gets reported as corruption.
+
+## S92 — clone extraction + room states
+
+- **State selection happens at room LOAD, before the entry script.** The NPC
+  buffer is built from the step counter's value at load; an entry script
+  writing its own room's counter affects the NEXT load only. The HUB room arms
+  the destination (custom.script_preludes on the hub's entry). PyBoy-measured:
+  vault prelude → counter=1 → clone loads V1 (buffer diff `40 54`→`40 3a`).
+- **Step counters survive room transitions.** The $CD80 window is zeroed at
+  save-restore (S65 tail), NOT per room load — presetting a counter in room A
+  and transitioning to room B reads the preset. Measured twice (Castle preset
+  → clone; vault prelude → clone).
+- **Script-word decode ground truth (measured over docs):** counter deltas in
+  a PyBoy dispatcher trace give effective params directly (next−cur−1).
+  $27 = 0 params, not a branch (scriptgen's (0x27,1) row was WRONG — inherited
+  from the decompiler; corrected S92 with alias). $21 = 1 param. Bare
+  non-$FFxx words are text displays (the compiler's ["text",id] naked dw).
+  Vanilla scripts legitimately FALL THROUGH into the next script's body
+  (lobby scr10→scr11) — clones duplicate the shared tail per script.
+- **A segmentation proof beats a trusted table:** requiring every branch
+  target to land on a decoded op boundary caught all three defects above
+  before any corrupt clone could be emitted.
+- **PyBoy driving:** A-spam after a cutscene OPENS MENUS (the S92 "identical
+  frozen screenshots" were the pause/INFO screen) — advance with A only while
+  $D8D7 ≠ 0, then close menus with B before walking. Warping into a
+  collision pocket (lobby trophy statues) or beside a blocking NPC
+  (MedalMan at the vault spawn) reads as "movement broken"; route from the
+  walkability grid (tiles ≥ threshold) first. Same-room chained warps do not
+  redraw the tilemap (trap #7 corollary): to screenshot another screen of the
+  same room, WALK the boundary or reload via a different room.
+- **PNG-file md5 ≠ framebuffer-bytes md5 for identity checks — pick one.**
+  (The S92 "everything frozen" scare was comparing the two.)
+- **vanilla_exit_extensions on multi-screen vanilla rooms is a trap:** the
+  replacement list applies wholesale to EVERY screen of the mapID (exit
+  entries have no screen field), so a door tile walkable on one floor
+  cross-fires wherever the same coords are walkable on another. The Library
+  ($12, 2 stacked screens) has NO safe tile; its single-screen Gate Room
+  ($13) does. Audit sub_room count BEFORE choosing an extension room.
+- **Entrance instructions must be written in the USER's game vocabulary**,
+  from the user's actual reachable topology — not repo room ids. S92's first
+  two instruction sets failed because the assumed vault-door route was not
+  the user's map.
+- **Repointing an EXISTING vanilla door beats injecting a new one** when the
+  source room is multi-screen: a dest-byte edit in bank $0B is same-size,
+  in-place (S70v2 precedent), screen-scoped by nature, and trivially
+  reversible — the S92v3 GreatTree→Library door edit is the pattern.
+  vanilla_exit_extensions stays for single-screen rooms.
+- **GreatTree floors are sub-rooms selected by the SOURCE exit's
+  screen_byte** — the warp mailbox cannot choose them ($C925 is re-derived
+  at load). To PyBoy-test a specific GreatTree floor, enter it through a
+  real exit from an adjacent room. Vertical 2-screen interiors: absolute
+  warp y = local y + 8 for the lower floor (the S92 Library tests failed
+  twice on this).
+- **Authoring visible state changes (S92v5):** ids only render reliably if
+  their sheet is already loaded on that screen; several vanilla-used ids
+  ($54 family) render empty BY DESIGN — they are interaction points (desk
+  talk-spots), and cloning them invisible is faithful. The zero-risk state
+  demo is REMOVAL of a visibly-rendered NPC; sprite swaps need the lobby's
+  loaded-sheet context checked first. And when pixel identity matters,
+  show the frames to the user — the S92 "blue slime" was never a slime.

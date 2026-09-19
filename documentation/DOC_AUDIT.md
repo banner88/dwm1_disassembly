@@ -204,3 +204,18 @@ gate you assumed".
 | bank_004.asm banner: "$D7D2+ NPC RAM buffer (32 bytes per NPC, up to 40 NPCs)" | WRONG | 8 slots ($D7D2-$D8D2): RoomEntry7 zero-fills exactly $101 bytes and vanilla's valid-step census maxes at 8; a 9th entry overruns into the $D8D3+ script-state block (measured S91). Comment fixed in place (byte-perfect rebuild verified). ROOM_DATA_FORMAT "NPC capacity & sprite-sheet budget (S91)" owns the facts. |
 | KEY_LESSONS S70 / project.json _sprite_note: "sprite $11 hard-crashes the room render" | CONTEXT-SPECIFIC, not a property of the id | $11 (King/Royalty) renders fine in vanilla rooms — solo-rendered along with every candidate id, ZERO crashes ($00-$7F, $E0-$E3, $F0-$F3, $FF). The S70 crash was custom-room/franken-state context. The S70 "guardian renders draconic" $23 = a boss_composite_fragment (one tile of a multi-tile boss), per user classification. No GoldSlime field icon exists; blue slime $3A is the closest intended look (catalog). |
 | extracted/npc_catalog.json rows (e.g. "Castle screen 0 step 6" with 28 NPCs, sprite $FA, y=200) | CONTAMINATED by phantom steps | dump_all_npcs walked step entries past each screen's real list; engine step validation only checks tileset_bank in (0,$80), so garbage decodes plausibly. Valid-step filter (tileset_bank in {$23-$31,$37,$38} + interact ptr in $4000-$7FFF + sane coords, dedup by (mt,ptr)) is in tools/dump_npc_sprite_catalog.py --census; vanilla's real distinct sprite set + max-8-NPC fact both come from the filtered census. npc_catalog.json itself left as-is (regen is a named ROADMAP residual). |
+
+## S92
+
+- `editor2/core/scriptgen.py` OPS row `post_battle_check: (0x27, 1)` was WRONG
+  (inherited from decompile_script's table; the op is MonsterPartyOp2, 0
+  params, not a branch — PyBoy ctr trace 2F→30 linear + handler $04:$5F5C).
+  Never emitted by any project content pre-S92, so no built ROM carried the
+  defect. Corrected with a fixed-count legacy alias. Lesson: "verified"
+  annotations in the compiler's own table were not all verified.
+- The S92 audit's "9-step Arena Lobby" claim (session audit text, not a doc)
+  was CASTLE's step block misattributed — the lobby is 3 screens × 1 step.
+  Measured before anything was built on it.
+- `editor2/tests/test_compiler.py` ran test_crash_config_validator
+  unconditionally while it consumes the --rom regression build — plain
+  invocations failed on any fresh machine. Guarded S92.

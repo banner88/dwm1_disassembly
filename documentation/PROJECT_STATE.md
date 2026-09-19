@@ -10,6 +10,84 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-09-19 (Session 92 — **P3.2 [G-A] + P3.2b [G-J] +
+> states[] backend [G-G half] (user-directed pairing).** Banks $64/$67
+> are compiler emitters: `custom.layouts[]` (16×20 tile+attr grids,
+> tile_layout_compiler path, declaration-order tiles/attr interleave
+> matching CustomAttrCheck's base/base+2 stride) + `custom.tilesets[]`
+> (multi-tileset editor-export `spec` form = the S6-S10 import pipeline,
+> or committed `raw2bpp` sheets; the orphaned S6 combined sheet carried
+> forward byte-identically — compress_lz roundtrip proven). Fold is
+> ZERO-DELTA (verified vs pin a17bff8e… before clone content).
+> `screens[].states[]` first-class: N step entries per screen, engine
+> already counter×6 (NO template re-pin), byte-identical when absent,
+> per-state validation (8-NPC HARD cap = error). `custom.script_preludes`
+> {script_id: ops} prepended post-lowering (generated entry:/quest: ids
+> valid targets). Placeholder rooms ≥$70 emit zero 26DD rows.
+>
+> **P3.2b:** `tools/extract_room.py` — vanilla→custom clone with a
+> segmentation-PROOF decoder (every branch target must land on an op
+> boundary; merged param table = decompiler overridden by verified rows).
+> MEASURED corrections: **$27 MonsterPartyOp2 = 0 params, NOT a branch**
+> (PyBoy ctr trace 2F→30 linear; scriptgen's (0x27,1) row was WRONG —
+> corrected, old name aliased; DOC_AUDIT S92), **$21 = 1 param**, and
+> **bare non-$FFxx words are text displays** (the compiler's ["text",id]
+> naked-dw form). Arena Lobby ($06: 3 horizontal screens ONE step each —
+> the "9-step lobby" in the S92 audit was Castle) cloned to $72:
+> record/layout-refs (vanilla bank $29 entries)/attr (re-emitted $64)/
+> palette (derive_room_palette)/12 scripts (780+ ops, scr10→scr11
+> fall-through duplicated)/BGM $1E; raw 5-byte interact pass-through for
+> $8F-param/$90/$82 entry classes. island_copy $73 = custom→custom.
+> PyBoy-VERIFIED on the user's .sav: clone renders pixel-identical to
+> vanilla (byte-identical PNGs, walk + 3-screen horizontal scroll);
+> **full path walk: medal_vault (entry cutscene→around MedalMan→
+> authored staircase metatile (8,3))→clone lands (14,7) screen 1**; rank
+> mechanic live: D9CE=3 → vault prelude arms wCustomStep_ArenaClone_S1=1
+> → clone loads state V1 (NPC buffer holds the $3A swap — the two rank
+> screenshots are pixel-same only because both sprites draw alike here;
+> buffer diff is the proof). KEY MECHANIC (measured): state selection
+> reads the counter at destination LOAD, BEFORE its entry script — the
+> hub arms the destination (hence script_preludes); counters SURVIVE room
+> transitions (zeroed at save-restore only). Arena literal-mapID audit:
+> exactly 2 sites — bank $01 cp MAP_BATTLE1 ("arena entrance"
+> special-case; clone gets default behavior) + bank $07 cp $06 &&
+> screen 0 (trophy-room party-display setup; silent no-op in the clone).
+> Pin (patched reference build): df3219623203cf5bc272cb6155f07a01
+> S92v5 — USER-TESTED: entrance repoint works ('teleports to arena');
+> all 3 clone screens accessible (normal save); the postgame
+> right-screen crash was the USER'S SAVESTATE, not the ROM; rank state
+> (flag $0030, visible-by-removal: the (7,6) $12 attendant leaves at
+> G+) user-confirmed vanishing. $54's empty render is VANILLA-FAITHFUL
+> (user: real lobby = 2 bunnies + 2 desks; the $54 entry is the desk
+> talk-point). Remaining NOT-user-verified: NPC dialogue/script parity
+> across all clone content, north-door round trips, island_copy. Old
+> v4 pin was
+> S92v4: rank trigger = event flag $0030 (the v3 $D9CE key was the
+> transient coliseum var — user-caught). Seam-cross re-read applies a
+> newly-armed state mid-visit (measured); postgame right-screen crash
+> NOT reproduced headless (three isolated probes clean) — awaiting user
+> SameBoy data. Old v3 pin was
+> S92v3 ENTRANCE (user-directed, supersedes v2 — the gate room sits
+> behind the 100-monster gate): the GreatTree→Library door is REPOINTED
+> to the clone (in-place same-size bytes, patches/bank_00b.asm $0B:$4FE6,
+> restore note at the site; S70v2 precedent). No injected triggers; both
+> ext rows removed. PyBoy: real transitions both ways. The Library is
+> unreachable while the repoint stands (testing stance). Old v2 pin was
+> (46/46 tests; supersedes interim S92 pins 9e5b592f/c3513d85, both
+> patched builds). S92v2 ENTRANCE (user-directed): Library Gate Room
+> ($13) door at (8,6) — bottom-right corner, mirror position of the
+> vanilla gate — via a vanilla_exit_extensions row (single sub-room, so
+> no cross-screen replacement hazard; Library $12 itself is 2 screens
+> sharing ONE wholesale-replacement list and was rejected — any tile
+> choice cross-fires on the other floor). Vanilla gate + return door
+> rows mirrored verbatim; return door PyBoy-regressed; corner door
+> PyBoy-verified end-to-end (lands clone (14,7) screen 1). The vault
+> staircase route remains but is NOT the advertised entrance. Also fixed at
+> HEAD: test_compiler crash-config ran unconditionally (fresh-machine
+> fail without --rom) — now guarded. Built S92, NOT yet user-tested.
+> Owning: PROJECT_COMPILER (schema §), TOOLS_AND_DATA (extract_room row),
+> KEY_LESSONS S92, DOC_AUDIT S92, ROADMAP P3.2/P3.2b/P3.3 note.)
+
 > Last verified: 2026-09-18 (Session 91 — **P3.0 CAPACITIES + P3.1 NPC
 > SPRITE CATALOG (both boxes, user-directed pairing).** Byte-neutral
 > (tools + extracted + docs + one comment fix in bank_004; byte-perfect

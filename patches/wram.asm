@@ -241,7 +241,12 @@ wCustomStep_Room6C_S5:: db ;cd84 — Room $6C screen 5 step counter (legacy hole
 wCustomStep_Room6D_S0:: db ;cd85 — Room $6D screen 0 step counter (gate_rotation)
 wCustomStep_Room70_S0:: db ;cd86 — Room $70 screen 0 step counter (ember_keystone)
 wCustomStep_Room71_S0:: db ;cd87 — Room $71 screen 0 step counter (medal_vault)
-    ds 632 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
+wCustomStep_Room72_S0:: db ;cd88 — Room $72 screen 0 step counter (arena_clone)
+wCustomStep_Room72_S2:: db ;cd89 — Room $72 screen 2 step counter (arena_clone)
+wCustomStep_Room73_S0:: db ;cd8a — Room $73 screen 0 step counter (island_copy)
+wCustomStep_Room73_S4:: db ;cd8b — Room $73 screen 4 step counter (island_copy)
+wCustomStep_ArenaClone_S1:: db ;cd8c — Room $72 screen 1 step counter (arena_clone)
+    ds 627 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
 ; @BUILD_PROJECT END wram_step_counters
 
 
