@@ -380,16 +380,29 @@ render code per room. Proven by adding a real second room, `$6C`.
    ROM0 `$2A3D` mirrors `$6B`'s (gate tileset `$280D`, 2-screen, threshold `$30`).
    **Per-room `$26DD` record addresses** (= `$26DD + mapID*8`, all ROM0 so file-offset =
    address): `$6B`=`$2A35`, `$6C`=`$2A3D`, `$6D`=`$2A45`, `$6E`=`$2A4D`, `$6F`=`$2A55`
-   (`$70` would land on `$2A5D` = the gate table, hence the `cp $70` ceiling). When editing
-   the `$6D` record in `patches/bank_000.asm`, the label **`Data_2A48`** falls inside it
-   (`$2A48` = the width-high byte) and is a referenced jump target — keep it in place.
-2. **Palette** — `CustomRoomPalPtr` (bank `$17` filler tail): one `dw` per room → a 64-byte
-   palette. `$0000` = borrow vanilla; a real pointer is loaded by `CustomPalCheck` with
-   **`b=$04` (slots 0–3 only)** — same hard rule as §7.3.
-3. **Attr (per-position palette map)** — `CustomRoomAttr`: `db bank, base_entry` per room.
-   `CustomAttrCheck` reads it, picks `base_entry` for screen 0 or `base_entry+2` for the
-   second vertical screen, and decompresses from `bank` to `$C200`. `bank=$00` = vanilla
-   fallback.
+   (`$70` would land on `$2A5D` = the gate table, hence the `cp $70` ceiling). **S94:** the
+   `$6B-$6F` rows (`$2A35-$2A5C`) are a compiler-owned `@BUILD_PROJECT rom0_room_records`
+   region in `patches/bank_000.asm`, emitted from `custom.rooms[].record` (undeclared /
+   placeholder mapIDs keep the vanilla filler `12 24 A0 00 80 00 50 00`); the labels inside
+   the window (`Data_2A38`, `DataTable_2A3D`, `DataLookup_2A40`, `Data_2A48`, `DataTable_2A56`,
+   `Data_2A58`, `DataLookup_2A59`) are referenced jump targets and the emitter keeps them at
+   their addresses.
+2. **Palette + 3. Attr, per (screen, STATE) in the VANILLA row format (S94b).**
+   `CustomAttrPtrTable`: one `dw` per custom room → `RoomAttr_<mid>` (16 `dw`, one per
+   screen slot) → `ScrAttr_<mid>_<k>` = `dw <step counter>` + per state
+   `db attr_entry, attr_bank` / `dw pal_ptr` — the exact shape of vanilla's
+   `AttrPtrTable → screen table → [counter] + [entry, bank, pal_ptr] per step`, so
+   `CustomAttrCheck` only swaps the table base (`HL = CustomAttrPtrTable, A = mapID-$6B`,
+   the vanilla walk then indexes `wScreenIndex` and the step counter as it always did) and
+   the palette path (`CustomPalCheck`) loads `pal_ptr` with **`b=$04` (slots 0–3 only)**,
+   keeping slot 7 for custom rooms — same hard rule as §7.3. `dw $0000` in
+   `CustomAttrPtrTable` = the vanilla walk (`ld hl, AttrPtrTable`). `pal_ptr` is either a
+   project palette label or the vanilla source room's palette pointer
+   (`derive_room_palette.normal_room_pal_ptr`). History: S40 `db bank, base_entry` with a
+   hardwired `base_entry+2` per non-zero screen (gave a 6-screen clone screen 1's attrs on
+   screens 2-6) → S94 17-byte per-screen map → S94b per-state rows, because vanilla varies
+   attr AND palette per step (Servant room `$3F` burning → cleared). Every renderer and the
+   compiler follow PROJECT_COMPILER §2.11.
 
 Both intercepts now do `index = mapID-$6B; …` table reads instead of `cp $6B`. The vanilla
 path is untouched for `mapID < $6B`, so the `$6B` regression is byte-identical (verified).
@@ -408,8 +421,9 @@ mappings were authored for the gate palette, so a high-contrast recolour turns a
 floor into glitchy stripes. Author by deriving from the source palette (§7.1), not from
 scratch. (KEY_LESSONS S40.)
 
-**Files:** `patches/bank_017.asm` (`CustomPalCheck`/`CustomAttrCheck` generalised +
-`CustomRoomPalPtr`/`CustomRoomAttr`/`CustomPaletteColors_6C`), `patches/bank_000.asm`
+**Files:** `patches/bank_017.asm` (`CustomPalCheck`/`CustomAttrCheck` generalised; tables
+`CustomAttrPtrTable`/`RoomAttr_*`/`ScrAttr_*`/`CustomPaletteColors_*` are compiler-emitted
+into the `room_render_tables` region since S94b), `patches/bank_000.asm`
 (`CustomGFXMapID` widen + `$26DD[$6C]` record), `patches/bank_060.asm` (`$6C` room data,
 2-screen mirror of `$6B`; the `$6B→$6C` warp **byte-4 must be `$00`**, see KEY_LESSONS S40),
 `patches/bank_064.asm` (shared layout/attr, unchanged from §7.3).

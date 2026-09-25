@@ -199,13 +199,13 @@ CustomTilesetInfo:
 ;
 ;   wMapID >= $6B  -> jp CustomExitCheck (identical to the pre-S70 behavior)
 ;   wMapID <  $6B  -> scan VanillaExitExtTable (compiler-generated):
-;       row: db mapID / dw step_counter_addr / db n_steps / dw list0..listN-1
-;       table terminated by db $FF. Match: variant = min([counter], n-1),
+;       row: db mapID, screen ($FF = any) / dw step_counter_addr / db n_steps /
+;            dw list0..listN-1; table terminated by db $FF.
+;       Match (mapID AND wScreenIndex): variant = min([counter], n-1),
 ;       copy that 7-byte exit list to wCustomExitBuffer, return HL=buffer.
 ;       No match: HL=0.
-; Entry 9 (boundary y=0/7 exits) is NOT extended — it still reads the vanilla
-; bank $0B lists directly. Extension rows with trigger_y 0/7 are therefore
-; inert (Entry 6 skips them); the compiler validator enforces/warns this.
+; S94b: bank $0B Entry 9 (boundary y=0/7 push exits) calls this entry too, so
+; extension rows with trigger_y 0/7 are LIVE (they were inert before S94b).
 VanillaExitResolve:
     ; S70v3: arm the Entry 6 scan's y-skip compare for the VANILLA branch —
     ; $07 = skip y=7 rows (original engine semantics; y=7 stays Entry-9/push
@@ -226,7 +226,20 @@ VanillaExitResolve:
     cp $FF
     jr z, .none                 ; table end — no extension for this room
     cp c
+    jr nz, .skipRow
+    ; S94b: rows are keyed per SCREEN too — db mapID, screen ($FF = any
+    ; screen, the S70 semantics). Multi-screen vanilla rooms (GreatTree)
+    ; can now have one door redirected without cross-firing on the other
+    ; floors (the S92 wholesale-replacement trap, KEY_LESSONS S92).
+    ld a, [hl]                  ; screen byte
+    cp $FF
     jr z, .match
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr z, .match
+.skipRow:
+    inc hl                      ; skip screen (1)
     inc hl                      ; skip step_counter addr (2)
     inc hl
     ld a, [hl+]                 ; n_steps
@@ -241,6 +254,7 @@ VanillaExitResolve:
     ld hl, $0000
     ret
 .match:
+    inc hl                      ; past the screen byte
     ld a, [hl+]
     ld e, a
     ld a, [hl+]
@@ -278,6 +292,12 @@ VanillaExitResolve:
 ; all vanilla rooms) dispatches to the real bank $0F entry 0, exactly like vanilla.
 ; Returns next script command in BC (both paths preserve the vanilla contract).
 GateAwareDispatch:
+    ld a, [wScriptMapType]      ; [ANCHOR S73] script TYPE targets the custom bank?
+    cp $70                      ;   $70 = the gate-world script type — the B-bug
+    jr z, .byRoom               ;   poison value; MUST stay on the wMapID route.
+    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $71 armed by the
+    jr nc, .customRoom          ;   Anchor field-skill) reads bank $60 scripts
+.byRoom:                        ;   regardless of the physical room (maze/town).
     ld a, [wMapID]              ; $C968 — the actual room map-type
     cp CUSTOM_ROOM_START        ; $6B
     jr nc, .customRoom          ; wMapID >= $6B → genuine custom room
@@ -347,6 +367,8 @@ CustomScriptMasterTable:
     dw CustomScriptNoop_PtrTable  ; scriptless/placeholder room — safe no-op
     dw CustomScriptNoop_PtrTable  ; scriptless/placeholder room — safe no-op
     dw CustomRoom6_ScriptPtrTable   ; mapID $71
+    dw CustomRoom7_ScriptPtrTable   ; mapID $72
+    dw CustomRoom8_ScriptPtrTable   ; mapID $73
 
 CustomScriptNoop_PtrTable:
     dw CustomScriptNoop_Entry   ; [0] room entry (no-op)
@@ -516,8 +538,22 @@ CustomRoom5_ScriptPtrTable:
 CustomRoom6_ScriptPtrTable:
     dw CustomRoom6_Scr00   ; [0] entry:medal_vault
     dw CustomRoom6_Scr01   ; [1] quest:medal_vault
+    dw CustomRoom6_Scr02   ; [2] anchor_gate_confirm
+    dw CustomRoom6_Scr03   ; [3] anchor_return_confirm
+    dw CustomRoom6_Scr04   ; [4] anchor_err_special
+    dw CustomRoom6_Scr05   ; [5] anchor_err_none
 
 CustomRoom6_Scr00:
+    dw $FF01  ; if_flag_set
+    dw $0030
+    dw CustomRoom6_Scr00_S92fArm
+    dw $FF14  ; goto
+    dw CustomRoom6_Scr00_S92fDone
+CustomRoom6_Scr00_S92fArm:
+    dw $FF13  ; write_ram2
+    dw wCustomStep_ArenaClone_S1
+    dw $0001
+CustomRoom6_Scr00_S92fDone:
     dw $FF01  ; if_flag_set
     dw $0158
     dw CustomRoom6_Scr00_edone
@@ -590,6 +626,1971 @@ CustomRoom6_Scr01_qdone:
     dw $0A1F  ; vault_done
     dw $FFFF
 
+CustomRoom6_Scr02:
+    dw $FF07  ; init_dialog
+    dw $0A20  ; [S73] Anchor gate-side confirm [Y/N]
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom6_Scr02_no
+    dw $FF12  ; write_ram
+    dw $DEB2
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D92B
+    dw $0006
+    dw $FF0F  ; map_transition
+    dw $0000
+    dw $00E8
+    dw $0058
+    dw $FFFF
+CustomRoom6_Scr02_no:
+    dw $FFFF
+
+CustomRoom6_Scr03:
+    dw $FF07  ; init_dialog
+    dw $0A21  ; [S73] Anchor return confirm [Y/N] — charge lands on arrival
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom6_Scr03_no
+    dw $FF12  ; write_ram
+    dw $DEB2
+    dw $0002
+    dw $FF0F  ; map_transition
+    dw $8000
+    dw $0000
+    dw $0000
+    dw $FFFF
+CustomRoom6_Scr03_no:
+    dw $FFFF
+
+CustomRoom6_Scr04:
+    dw $FF07  ; init_dialog
+    dw $0A22  ; [S73] cast in a special/boss/custom gate room
+    dw $FFFF
+
+CustomRoom6_Scr05:
+    dw $FF07  ; init_dialog
+    dw $0A23  ; [S73] cast in town with no stored anchor
+    dw $FFFF
+
+; --- $72 (arena_clone) scripts ---
+CustomRoom7_ScriptPtrTable:
+    dw CustomRoom7_Scr00   ; [0] arena_clone_scr00
+    dw CustomRoom7_Scr01   ; [1] arena_clone_scr01
+    dw CustomRoom7_Scr02   ; [2] arena_clone_scr02
+    dw CustomRoom7_Scr03   ; [3] arena_clone_scr03
+    dw CustomRoom7_Scr04   ; [4] arena_clone_scr04
+    dw CustomRoom7_Scr05   ; [5] arena_clone_scr05
+    dw CustomRoom7_Scr06   ; [6] arena_clone_scr06
+    dw CustomRoom7_Scr07   ; [7] arena_clone_scr07
+    dw CustomRoom7_Scr08   ; [8] arena_clone_scr08
+    dw CustomRoom7_Scr09   ; [9] arena_clone_scr09
+    dw CustomRoom7_Scr10   ; [10] arena_clone_scr10
+    dw CustomRoom7_Scr11   ; [11] arena_clone_scr11
+
+CustomRoom7_Scr00:
+    dw $FF01  ; if_flag_set
+    dw $0030
+    dw CustomRoom7_Scr00_S92rank1
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr00_S92body
+CustomRoom7_Scr00_S92rank1:
+    dw $FF13  ; write_ram2
+    dw wCustomStep_ArenaClone_S1
+    dw $0001
+CustomRoom7_Scr00_S92body:
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0000
+    dw $FF15  ; check_and_branch
+    dw $D951
+    dw $00F2
+    dw CustomRoom7_Scr00_L46F2
+    dw $FF0E  ; opcode $0E
+    dw $0001
+    dw CustomRoom7_Scr00_L4228
+    dw $FFFF
+CustomRoom7_Scr00_L4228:
+    dw $FF15  ; check_and_branch
+    dw $D9CD
+    dw $00FE
+    dw CustomRoom7_Scr00_L4270
+    dw $FF15  ; check_and_branch
+    dw $D9CD
+    dw $00FF
+    dw CustomRoom7_Scr00_L4242
+    dw $FF0D  ; opcode $0D
+    dw $0000
+    dw $FF90
+    dw $0000
+    dw $FFFF
+CustomRoom7_Scr00_L4242:
+    dw $FF27  ; monster_party_op2
+    dw $FF0D  ; opcode $0D
+    dw $0000
+    dw $FF90
+    dw $0000
+    dw $FF49  ; npc_show
+    dw $0000
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF07  ; init_dialog
+    dw $FF01  ; if_flag_set
+    dw $0033
+    dw CustomRoom7_Scr00_L426C
+    dw $FF01  ; if_flag_set
+    dw $0030
+    dw CustomRoom7_Scr00_L4268
+    dw $00E3
+    dw $FFFF
+CustomRoom7_Scr00_L4268:
+    dw $0179
+    dw $FFFF
+CustomRoom7_Scr00_L426C:
+    dw $043A
+    dw $FFFF
+CustomRoom7_Scr00_L4270:
+    dw $FF27  ; monster_party_op2
+    dw $FF0D  ; opcode $0D
+    dw $0000
+    dw $FF90
+    dw $0000
+    dw $FF49  ; npc_show
+    dw $0000
+    dw $FF01  ; if_flag_set
+    dw $0111
+    dw CustomRoom7_Scr00_L42C6
+    dw $FF15  ; check_and_branch
+    dw $D9CE
+    dw $0007
+    dw CustomRoom7_Scr00_L45F6
+    dw $FF15  ; check_and_branch
+    dw $D9CE
+    dw $0006
+    dw CustomRoom7_Scr00_L4590
+    dw $FF15  ; check_and_branch
+    dw $D9CE
+    dw $0005
+    dw CustomRoom7_Scr00_L453A
+    dw $FF15  ; check_and_branch
+    dw $D9CE
+    dw $0004
+    dw CustomRoom7_Scr00_L451E
+    dw $FF15  ; check_and_branch
+    dw $D9CE
+    dw $0003
+    dw CustomRoom7_Scr00_L4432
+    dw $FF15  ; check_and_branch
+    dw $D9CE
+    dw $0002
+    dw CustomRoom7_Scr00_L43D2
+    dw $FF15  ; check_and_branch
+    dw $D9CE
+    dw $0001
+    dw CustomRoom7_Scr00_L4392
+    dw $FF15  ; check_and_branch
+    dw $D9CE
+    dw $0000
+    dw CustomRoom7_Scr00_L42D6
+    dw $FFFF
+CustomRoom7_Scr00_L42C6:
+    dw $FF07  ; init_dialog
+    dw $07D1
+    dw $FF03  ; set_flag
+    dw $00FD
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FFFF
+CustomRoom7_Scr00_L42D6:
+    dw $FF12  ; write_ram
+    dw $CAB4
+    dw $0001
+    dw $FF03  ; set_flag
+    dw $0030
+    dw $FF12  ; write_ram
+    dw $D92B
+    dw $0000
+    dw $FF12  ; write_ram
+    dw $D92F
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D931
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D93C
+    dw $0003
+    dw $FF12  ; write_ram
+    dw $D941
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF07  ; init_dialog
+    dw $00E4
+    dw $FF0D  ; opcode $0D
+    dw $0003
+    dw $0000
+    dw $0000
+    dw $FF21  ; opcode $21
+    dw $0051
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0003
+    dw $FFF0
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF48  ; npc_hide
+    dw $0000
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0003
+    dw $FFE0
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF3D  ; opcode $3D
+    dw $FF07  ; init_dialog
+    dw $00E5
+    dw $FF1B  ; npc_walk_y
+    dw $0003
+    dw $0030
+    dw $FF1B  ; npc_walk_y
+    dw $0000
+    dw $0030
+    dw $FF19  ; wait_movement
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0001
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0003
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0007
+    dw $FF21  ; opcode $21
+    dw $0051
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $000F
+    dw $FF0D  ; opcode $0D
+    dw $0000
+    dw $FF90
+    dw $0040
+    dw $FF0D  ; opcode $0D
+    dw $0003
+    dw $0000
+    dw $0040
+    dw $FF08  ; opcode $08
+    dw $FF0F  ; map_transition
+    dw $0000
+    dw $00E8
+    dw $0058
+    dw $FFFF
+CustomRoom7_Scr00_L4392:
+    dw $FF12  ; write_ram
+    dw $CAB4
+    dw $0002
+    dw $FF03  ; set_flag
+    dw $0031
+    dw $FF12  ; write_ram
+    dw $D92F
+    dw $0003
+    dw $FF12  ; write_ram
+    dw $D931
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D933
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D93C
+    dw $0004
+    dw $FF12  ; write_ram
+    dw $D952
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D953
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D954
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF07  ; init_dialog
+    dw $017A
+    dw $FFFF
+CustomRoom7_Scr00_L43D2:
+    dw $FF12  ; write_ram
+    dw $CAB4
+    dw $0003
+    dw $FF03  ; set_flag
+    dw $0032
+    dw $FF12  ; write_ram
+    dw $D93B
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D942
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF00  ; if_flag_clear
+    dw $0031
+    dw CustomRoom7_Scr00_L43FA
+    dw $FF07  ; init_dialog
+    dw $01B6
+    dw $FFFF
+CustomRoom7_Scr00_L43FA:
+    dw $FF03  ; set_flag
+    dw $0031
+    dw $FF03  ; set_flag
+    dw $0049
+    dw $FF12  ; write_ram
+    dw $D92F
+    dw $0003
+    dw $FF12  ; write_ram
+    dw $D931
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D933
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D93C
+    dw $0004
+    dw $FF12  ; write_ram
+    dw $D952
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D953
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D954
+    dw $0001
+    dw $FF07  ; init_dialog
+    dw $01B7
+    dw $FFFF
+CustomRoom7_Scr00_L4432:
+    dw $FF01  ; if_flag_set
+    dw $0032
+    dw CustomRoom7_Scr00_L443C
+    dw $FF03  ; set_flag
+    dw $0119
+CustomRoom7_Scr00_L443C:
+    dw $FF12  ; write_ram
+    dw $CAB4
+    dw $0004
+    dw $FF03  ; set_flag
+    dw $0031
+    dw $FF03  ; set_flag
+    dw $0032
+    dw $FF03  ; set_flag
+    dw $0033
+    dw $FF12  ; write_ram
+    dw $D92B
+    dw $0000
+    dw $FF12  ; write_ram
+    dw $D92F
+    dw $0003
+    dw $FF12  ; write_ram
+    dw $D931
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D933
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D93B
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D93C
+    dw $0004
+    dw $FF12  ; write_ram
+    dw $D942
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D952
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D953
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D954
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF07  ; init_dialog
+    dw $021C
+    dw $FF0D  ; opcode $0D
+    dw $0003
+    dw $0000
+    dw $0000
+    dw $FF21  ; opcode $21
+    dw $0051
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0003
+    dw $FFF0
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF48  ; npc_hide
+    dw $0000
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0003
+    dw $FFE0
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF3D  ; opcode $3D
+    dw $FF07  ; init_dialog
+    dw $021D
+    dw $FF1B  ; npc_walk_y
+    dw $0003
+    dw $0030
+    dw $FF1B  ; npc_walk_y
+    dw $0000
+    dw $0030
+    dw $FF19  ; wait_movement
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0001
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0003
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0007
+    dw $FF21  ; opcode $21
+    dw $0051
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $000F
+    dw $FF0D  ; opcode $0D
+    dw $0000
+    dw $FF90
+    dw $0040
+    dw $FF0D  ; opcode $0D
+    dw $0003
+    dw $0000
+    dw $0040
+    dw $FF08  ; opcode $08
+    dw $FF0F  ; map_transition
+    dw $0000
+    dw $00E8
+    dw $0058
+    dw $FFFF
+CustomRoom7_Scr00_L451E:
+    dw $FF12  ; write_ram
+    dw $CAB4
+    dw $0005
+    dw $FF03  ; set_flag
+    dw $0034
+    dw $FF12  ; write_ram
+    dw $D93B
+    dw $0003
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF07  ; init_dialog
+    dw $02E1
+    dw $FFFF
+CustomRoom7_Scr00_L453A:
+    dw $FF12  ; write_ram
+    dw $CAB4
+    dw $0006
+    dw $FF03  ; set_flag
+    dw $0035
+    dw $FF12  ; write_ram
+    dw $D939
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D93D
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D945
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D946
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D947
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D963
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D964
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF00  ; if_flag_clear
+    dw $0034
+    dw CustomRoom7_Scr00_L4580
+    dw $FF07  ; init_dialog
+    dw $0341
+    dw $FFFF
+CustomRoom7_Scr00_L4580:
+    dw $FF03  ; set_flag
+    dw $0034
+    dw $FF12  ; write_ram
+    dw $D93B
+    dw $0003
+    dw $FF07  ; init_dialog
+    dw $0342
+    dw $FFFF
+CustomRoom7_Scr00_L4590:
+    dw $FF12  ; write_ram
+    dw $CAB4
+    dw $0007
+    dw $FF03  ; set_flag
+    dw $0036
+    dw $FF12  ; write_ram
+    dw $D93D
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF00  ; if_flag_clear
+    dw $0035
+    dw CustomRoom7_Scr00_L45B2
+    dw $FF07  ; init_dialog
+    dw $039F
+    dw $FFFF
+CustomRoom7_Scr00_L45B2:
+    dw $FF03  ; set_flag
+    dw $0035
+    dw $FF12  ; write_ram
+    dw $D939
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D945
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D946
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D947
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D963
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D964
+    dw $0001
+    dw $FF00  ; if_flag_clear
+    dw $0034
+    dw CustomRoom7_Scr00_L45E6
+    dw $FF07  ; init_dialog
+    dw $03A1
+    dw $FFFF
+CustomRoom7_Scr00_L45E6:
+    dw $FF03  ; set_flag
+    dw $0034
+    dw $FF12  ; write_ram
+    dw $D93B
+    dw $0003
+    dw $FF07  ; init_dialog
+    dw $03A0
+    dw $FFFF
+CustomRoom7_Scr00_L45F6:
+    dw $FF01  ; if_flag_set
+    dw $0036
+    dw CustomRoom7_Scr00_L4600
+    dw $FF03  ; set_flag
+    dw $011C
+CustomRoom7_Scr00_L4600:
+    dw $FF12  ; write_ram
+    dw $CAB4
+    dw $0008
+    dw $FF03  ; set_flag
+    dw $0034
+    dw $FF03  ; set_flag
+    dw $0035
+    dw $FF03  ; set_flag
+    dw $0036
+    dw $FF03  ; set_flag
+    dw $0037
+    dw $FF12  ; write_ram
+    dw $D92B
+    dw $0000
+    dw $FF12  ; write_ram
+    dw $D936
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D937
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D938
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D939
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D93B
+    dw $0003
+    dw $FF12  ; write_ram
+    dw $D93D
+    dw $0003
+    dw $FF12  ; write_ram
+    dw $D945
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D946
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D947
+    dw $0002
+    dw $FF12  ; write_ram
+    dw $D963
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D964
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF07  ; init_dialog
+    dw $03F1
+    dw $FF0D  ; opcode $0D
+    dw $0003
+    dw $0000
+    dw $0000
+    dw $FF21  ; opcode $21
+    dw $0051
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0003
+    dw $FFF0
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF48  ; npc_hide
+    dw $0000
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0003
+    dw $FFE0
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF3D  ; opcode $3D
+    dw $FF07  ; init_dialog
+    dw $03F2
+    dw $FF1B  ; npc_walk_y
+    dw $0003
+    dw $0030
+    dw $FF1B  ; npc_walk_y
+    dw $0000
+    dw $0030
+    dw $FF19  ; wait_movement
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0001
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0003
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0007
+    dw $FF21  ; opcode $21
+    dw $0051
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $000F
+    dw $FF0D  ; opcode $0D
+    dw $0000
+    dw $FF90
+    dw $0040
+    dw $FF0D  ; opcode $0D
+    dw $0003
+    dw $0000
+    dw $0040
+    dw $FF08  ; opcode $08
+    dw $FF0F  ; map_transition
+    dw $0000
+    dw $00E8
+    dw $0058
+    dw $FFFF
+CustomRoom7_Scr00_L46F2:
+    dw $FF0D  ; opcode $0D
+    dw $0000
+    dw $FF90
+    dw $0000
+    dw $FF44  ; opcode $44
+    dw $FF12  ; write_ram
+    dw $D951
+    dw $0000
+    dw $FFFF
+
+CustomRoom7_Scr01:
+    dw $FF15  ; check_and_branch
+    dw $C8ED
+    dw $0000
+    dw CustomRoom7_Scr01_L470E
+    dw $FFFF
+CustomRoom7_Scr01_L470E:
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0001
+    dw $FF0D  ; opcode $0D
+    dw $0001
+    dw $0000
+    dw $0000
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF0A  ; opcode $0A
+    dw $0000
+    dw $FFD0
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $0020
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0009
+    dw $FF0D  ; opcode $0D
+    dw $0004
+    dw $0000
+    dw $0000
+    dw $FF0A  ; opcode $0A
+    dw $0000
+    dw $0010
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $000D
+    dw $FF0D  ; opcode $0D
+    dw $0003
+    dw $0000
+    dw $0000
+    dw $FF0A  ; opcode $0A
+    dw $0000
+    dw $0010
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $000F
+    dw $FF0D  ; opcode $0D
+    dw $0002
+    dw $0000
+    dw $0000
+    dw $FF4A  ; opcode $4A
+    dw $0002
+    dw $FF4A  ; opcode $4A
+    dw $0003
+    dw $FF4A  ; opcode $4A
+    dw $0004
+    dw $FF0A  ; opcode $0A
+    dw $0000
+    dw $0010
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF49  ; npc_show
+    dw $0000
+    dw $FF08  ; opcode $08
+    dw $FF0D  ; opcode $0D
+    dw $0001
+    dw $0000
+    dw $0040
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $000E
+    dw $FFFF
+
+CustomRoom7_Scr02:
+    dw $FF2D  ; opcode $2D
+    dw $0000
+    dw $FFFF
+
+CustomRoom7_Scr03:
+    dw $FF2D  ; opcode $2D
+    dw $0001
+    dw $FFFF
+
+CustomRoom7_Scr04:
+    dw $FF2D  ; opcode $2D
+    dw $0002
+    dw $FFFF
+
+CustomRoom7_Scr05:
+    dw $00EB
+    dw $00EC
+    dw $FFFF
+
+CustomRoom7_Scr06:
+    dw $FF01  ; if_flag_set
+    dw $0103
+    dw CustomRoom7_Scr06_L4948
+    dw $FF01  ; if_flag_set
+    dw $0111
+    dw CustomRoom7_Scr06_L4940
+    dw $FF01  ; if_flag_set
+    dw $0110
+    dw CustomRoom7_Scr06_L490E
+    dw $FF01  ; if_flag_set
+    dw $00F1
+    dw CustomRoom7_Scr06_L48DC
+    dw $FF01  ; if_flag_set
+    dw $0025
+    dw CustomRoom7_Scr06_L48A8
+    dw $FF01  ; if_flag_set
+    dw $0037
+    dw CustomRoom7_Scr06_L48A4
+    dw $FF01  ; if_flag_set
+    dw $007D
+    dw CustomRoom7_Scr06_L4882
+    dw $FF01  ; if_flag_set
+    dw $001D
+    dw CustomRoom7_Scr06_L489A
+    dw $FF01  ; if_flag_set
+    dw $0033
+    dw CustomRoom7_Scr06_L4896
+    dw $FF01  ; if_flag_set
+    dw $005A
+    dw CustomRoom7_Scr06_L4882
+    dw $FF01  ; if_flag_set
+    dw $0030
+    dw CustomRoom7_Scr06_L488A
+    dw $FF01  ; if_flag_set
+    dw $0059
+    dw CustomRoom7_Scr06_L4882
+    dw $00E2
+    dw $FF03  ; set_flag
+    dw $0059
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr06_L47FE
+CustomRoom7_Scr06_L47FE:
+    dw $FF04  ; opcode $04
+    dw $0004
+    dw $0710
+    dw $FF15  ; check_and_branch
+    dw $D9CD
+    dw $00FF
+    dw CustomRoom7_Scr06_L4878
+    dw $FF12  ; write_ram
+    dw $D999
+    dw $0000
+    dw $FF09  ; delay
+    dw $0004
+    dw $FF47  ; opcode $47
+    dw $0000
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+CustomRoom7_Scr06_L4824:
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0001
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0003
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $0007
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $C8ED
+    dw $000F
+    dw $FF09  ; delay
+    dw $0002
+    dw $FF0D  ; opcode $0D
+    dw $0000
+    dw $FF90
+    dw $0040
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FF1F  ; opcode $1F
+    dw $FF0F  ; map_transition
+    dw $005D
+    dw $0078
+    dw $0058
+    dw $FFFF
+CustomRoom7_Scr06_L4878:
+    dw $0713
+    dw $FF12  ; write_ram
+    dw $D9CD
+    dw $0000
+    dw $FFFF
+CustomRoom7_Scr06_L4882:
+    dw $0710
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr06_L47FE
+CustomRoom7_Scr06_L488A:
+    dw $0178
+    dw $FF03  ; set_flag
+    dw $005A
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr06_L47FE
+CustomRoom7_Scr06_L4896:
+    dw $027C
+    dw $FFFF
+CustomRoom7_Scr06_L489A:
+    dw $02E0
+    dw $FF03  ; set_flag
+    dw $007D
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr06_L47FE
+CustomRoom7_Scr06_L48A4:
+    dw $044D
+    dw $FFFF
+CustomRoom7_Scr06_L48A8:
+    dw $04AF
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr06_L48D8
+    dw $04B1
+    dw $FF09  ; delay
+    dw $0004
+    dw $FF47  ; opcode $47
+    dw $0000
+    dw $FF09  ; delay
+    dw $000C
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $D9CE
+    dw $0008
+    dw $FF12  ; write_ram
+    dw $D999
+    dw $0001
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr06_L4824
+CustomRoom7_Scr06_L48D8:
+    dw $04B0
+    dw $FFFF
+CustomRoom7_Scr06_L48DC:
+    dw $07C7
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr06_L490A
+    dw $FF09  ; delay
+    dw $0004
+    dw $FF47  ; opcode $47
+    dw $0000
+    dw $FF09  ; delay
+    dw $000C
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $D9CE
+    dw $0009
+    dw $FF12  ; write_ram
+    dw $D999
+    dw $0004
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr06_L4824
+CustomRoom7_Scr06_L490A:
+    dw $07C8
+    dw $FFFF
+CustomRoom7_Scr06_L490E:
+    dw $07CC
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr06_L493C
+    dw $FF09  ; delay
+    dw $0004
+    dw $FF47  ; opcode $47
+    dw $0000
+    dw $FF09  ; delay
+    dw $000C
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $D9CE
+    dw $0009
+    dw $FF12  ; write_ram
+    dw $D999
+    dw $0004
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr06_L4824
+CustomRoom7_Scr06_L493C:
+    dw $07CD
+    dw $FFFF
+CustomRoom7_Scr06_L4940:
+    dw $07D1
+    dw $FF03  ; set_flag
+    dw $00FD
+    dw $FFFF
+CustomRoom7_Scr06_L4948:
+    dw $07D2
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr06_L4978
+    dw $08D4
+    dw $FF09  ; delay
+    dw $0004
+    dw $FF47  ; opcode $47
+    dw $0000
+    dw $FF09  ; delay
+    dw $000C
+    dw $FF0B  ; opcode $0B
+    dw $0000
+    dw $FFF0
+    dw $FF12  ; write_ram
+    dw $D9CE
+    dw $0009
+    dw $FF12  ; write_ram
+    dw $D999
+    dw $0004
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr06_L4824
+CustomRoom7_Scr06_L4978:
+    dw $08D5
+    dw $FFFF
+
+CustomRoom7_Scr07:
+    dw $FF01  ; if_flag_set
+    dw $00FE
+    dw CustomRoom7_Scr07_L4ACA
+    dw $FF01  ; if_flag_set
+    dw $0111
+    dw CustomRoom7_Scr07_L4AC0
+    dw $FF01  ; if_flag_set
+    dw $0110
+    dw CustomRoom7_Scr07_L4AAC
+    dw $FF01  ; if_flag_set
+    dw $00F1
+    dw CustomRoom7_Scr07_L4A98
+    dw $FF01  ; if_flag_set
+    dw $00B0
+    dw CustomRoom7_Scr07_L4A84
+    dw $FF01  ; if_flag_set
+    dw $0025
+    dw CustomRoom7_Scr07_L4A7C
+    dw $FF01  ; if_flag_set
+    dw $00A4
+    dw CustomRoom7_Scr07_L4A78
+    dw $FF01  ; if_flag_set
+    dw $0037
+    dw CustomRoom7_Scr07_L4A70
+    dw $FF01  ; if_flag_set
+    dw $0036
+    dw CustomRoom7_Scr07_L4A5E
+    dw $FF01  ; if_flag_set
+    dw $0035
+    dw CustomRoom7_Scr07_L4A4C
+    dw $FF01  ; if_flag_set
+    dw $0034
+    dw CustomRoom7_Scr07_L4A3A
+    dw $FF01  ; if_flag_set
+    dw $001D
+    dw CustomRoom7_Scr07_L4A28
+    dw $FF01  ; if_flag_set
+    dw $0033
+    dw CustomRoom7_Scr07_L4A24
+    dw $FF01  ; if_flag_set
+    dw $0032
+    dw CustomRoom7_Scr07_L4A12
+    dw $FF01  ; if_flag_set
+    dw $0031
+    dw CustomRoom7_Scr07_L4A00
+    dw $FF01  ; if_flag_set
+    dw $0030
+    dw CustomRoom7_Scr07_L49EE
+    dw $00E6
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L49EA
+    dw $00E7
+    dw $FFFF
+CustomRoom7_Scr07_L49EA:
+    dw $00E8
+    dw $FFFF
+CustomRoom7_Scr07_L49EE:
+    dw $00E6
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L49FC
+    dw $00E7
+    dw $FFFF
+CustomRoom7_Scr07_L49FC:
+    dw $017B
+    dw $FFFF
+CustomRoom7_Scr07_L4A00:
+    dw $00E6
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4A0E
+    dw $00E7
+    dw $FFFF
+CustomRoom7_Scr07_L4A0E:
+    dw $01B8
+    dw $FFFF
+CustomRoom7_Scr07_L4A12:
+    dw $00E6
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4A20
+    dw $00E7
+    dw $FFFF
+CustomRoom7_Scr07_L4A20:
+    dw $021E
+    dw $FFFF
+CustomRoom7_Scr07_L4A24:
+    dw $027D
+    dw $FFFF
+CustomRoom7_Scr07_L4A28:
+    dw $00E6
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4A36
+    dw $02E2
+    dw $FFFF
+CustomRoom7_Scr07_L4A36:
+    dw $02E3
+    dw $FFFF
+CustomRoom7_Scr07_L4A3A:
+    dw $00E6
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4A48
+    dw $02E2
+    dw $FFFF
+CustomRoom7_Scr07_L4A48:
+    dw $0343
+    dw $FFFF
+CustomRoom7_Scr07_L4A4C:
+    dw $00E6
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4A5A
+    dw $02E2
+    dw $FFFF
+CustomRoom7_Scr07_L4A5A:
+    dw $03A2
+    dw $FFFF
+CustomRoom7_Scr07_L4A5E:
+    dw $00E6
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4A6C
+    dw $02E2
+    dw $FFFF
+CustomRoom7_Scr07_L4A6C:
+    dw $03F3
+    dw $FFFF
+CustomRoom7_Scr07_L4A70:
+    dw $044E
+    dw $FF03  ; set_flag
+    dw $00A4
+    dw $FFFF
+CustomRoom7_Scr07_L4A78:
+    dw $044F
+    dw $FFFF
+CustomRoom7_Scr07_L4A7C:
+    dw $04B2
+    dw $FF03  ; set_flag
+    dw $00B0
+    dw $FFFF
+CustomRoom7_Scr07_L4A84:
+    dw $04B3
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4A92
+    dw $01AD
+    dw $FFFF
+CustomRoom7_Scr07_L4A92:
+    dw $04B4
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr07_L4ACC
+CustomRoom7_Scr07_L4A98:
+    dw $07C9
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4AA6
+    dw $07CA
+    dw $FFFF
+CustomRoom7_Scr07_L4AA6:
+    dw $07CB
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr07_L4ACC
+CustomRoom7_Scr07_L4AAC:
+    dw $07C9
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr07_L4ABA
+    dw $07CF
+    dw $FFFF
+CustomRoom7_Scr07_L4ABA:
+    dw $07CB
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr07_L4ACC
+CustomRoom7_Scr07_L4AC0:
+    dw $07D3
+    dw $FF03  ; set_flag
+    dw $00FE
+    dw $FF14  ; goto
+    dw CustomRoom7_Scr07_L4ACC
+CustomRoom7_Scr07_L4ACA:
+    dw $07D4
+CustomRoom7_Scr07_L4ACC:
+    dw $FF0D  ; opcode $0D
+    dw $0004
+    dw $0010
+    dw $0000
+    dw $FF0D  ; opcode $0D
+    dw $0004
+    dw $001A
+    dw $0060
+    dw $FF0D  ; opcode $0D
+    dw $0004
+    dw $0000
+    dw $0000
+    dw $FF09  ; delay
+    dw $0010
+    dw $FF0D  ; opcode $0D
+    dw $0004
+    dw $0000
+    dw $0040
+    dw $FFFF
+
+CustomRoom7_Scr08:
+    dw $FF01  ; if_flag_set
+    dw $0111
+    dw CustomRoom7_Scr08_L4AFC
+    dw $00E9
+    dw $FFFF
+CustomRoom7_Scr08_L4AFC:
+    dw $07D5
+    dw $FFFF
+
+CustomRoom7_Scr09:
+    dw $FF01  ; if_flag_set
+    dw $0111
+    dw CustomRoom7_Scr09_L4B0A
+    dw $00EA
+    dw $FFFF
+CustomRoom7_Scr09_L4B0A:
+    dw $07D6
+    dw $FFFF
+
+CustomRoom7_Scr10:
+    dw $FF48  ; npc_hide
+    dw $0001
+    dw $FF01  ; if_flag_set
+    dw $00FF
+    dw CustomRoom7_Scr10_L4CF8
+    dw $FF01  ; if_flag_set
+    dw $00F1
+    dw CustomRoom7_Scr10_L4CF0
+    dw $FF01  ; if_flag_set
+    dw $0025
+    dw CustomRoom7_Scr10_L4CEC
+    dw $FF00  ; if_flag_clear
+    dw $0037
+    dw CustomRoom7_Scr10_L4B30
+    dw $FF01  ; if_flag_set
+    dw $0096
+    dw CustomRoom7_Scr10_L4CE8
+CustomRoom7_Scr10_L4B30:
+    dw $FF01  ; if_flag_set
+    dw $0096
+    dw CustomRoom7_Scr10_L4CE4
+    dw $FF01  ; if_flag_set
+    dw $0095
+    dw CustomRoom7_Scr10_L4CC6
+    dw $FF01  ; if_flag_set
+    dw $0037
+    dw CustomRoom7_Scr10_L4CA4
+    dw $FF01  ; if_flag_set
+    dw $0036
+    dw CustomRoom7_Scr10_L4C82
+    dw $FF01  ; if_flag_set
+    dw $0035
+    dw CustomRoom7_Scr10_L4C7E
+    dw $FF01  ; if_flag_set
+    dw $008B
+    dw CustomRoom7_Scr10_L4C7A
+    dw $FF01  ; if_flag_set
+    dw $008A
+    dw CustomRoom7_Scr10_L4C5C
+    dw $FF01  ; if_flag_set
+    dw $0034
+    dw CustomRoom7_Scr10_L4C3A
+    dw $FF01  ; if_flag_set
+    dw $0089
+    dw CustomRoom7_Scr10_L4C36
+    dw $FF01  ; if_flag_set
+    dw $007E
+    dw CustomRoom7_Scr10_L4C32
+    dw $FF01  ; if_flag_set
+    dw $001D
+    dw CustomRoom7_Scr10_L4C2A
+    dw $FF00  ; if_flag_clear
+    dw $0058
+    dw CustomRoom7_Scr10_L4B7E
+    dw $FF01  ; if_flag_set
+    dw $0119
+    dw CustomRoom7_Scr10_L4D1E
+CustomRoom7_Scr10_L4B7E:
+    dw $FF00  ; if_flag_clear
+    dw $0033
+    dw CustomRoom7_Scr10_L4B8A
+    dw $FF01  ; if_flag_set
+    dw $0058
+    dw CustomRoom7_Scr10_L4C26
+CustomRoom7_Scr10_L4B8A:
+    dw $FF01  ; if_flag_set
+    dw $0058
+    dw CustomRoom7_Scr10_L4C22
+    dw $FF01  ; if_flag_set
+    dw $004F
+    dw CustomRoom7_Scr10_L4C04
+    dw $FF00  ; if_flag_clear
+    dw $0033
+    dw CustomRoom7_Scr10_L4BA2
+    dw $FF01  ; if_flag_set
+    dw $0119
+    dw CustomRoom7_Scr10_L4CFC
+CustomRoom7_Scr10_L4BA2:
+    dw $FF01  ; if_flag_set
+    dw $0032
+    dw CustomRoom7_Scr10_L4BE2
+    dw $FF01  ; if_flag_set
+    dw $0048
+    dw CustomRoom7_Scr10_L4BDE
+    dw $FF01  ; if_flag_set
+    dw $0031
+    dw CustomRoom7_Scr10_L4BDA
+    dw $FF01  ; if_flag_set
+    dw $0030
+    dw CustomRoom7_Scr10_L4BD6
+    dw $FF01  ; if_flag_set
+    dw $0121
+    dw CustomRoom7_Scr10_L4BC4
+    dw $00ED
+    dw $FFFF
+CustomRoom7_Scr10_L4BC4:
+    dw $044B
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr10_L4BD2
+    dw $086B
+    dw $FFFF
+CustomRoom7_Scr10_L4BD2:
+    dw $086A
+    dw $FFFF
+CustomRoom7_Scr10_L4BD6:
+    dw $017C
+    dw $FFFF
+CustomRoom7_Scr10_L4BDA:
+    dw $01B9
+    dw $FFFF
+CustomRoom7_Scr10_L4BDE:
+    dw $017D
+    dw $FFFF
+CustomRoom7_Scr10_L4BE2:
+    dw $FF3C  ; opcode $3C
+    dw $021F
+    dw $FF03  ; set_flag
+    dw $004F
+    dw $FF03  ; set_flag
+    dw $0058
+    dw $FF42  ; opcode $42
+    dw $0134
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0058
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr10_L4C04:
+    dw $FF3C  ; opcode $3C
+    dw $022A
+    dw $FF03  ; set_flag
+    dw $0058
+    dw $FF42  ; opcode $42
+    dw $0134
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0058
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr10_L4C22:
+    dw $022B
+    dw $FFFF
+CustomRoom7_Scr10_L4C26:
+    dw $027E
+    dw $FFFF
+CustomRoom7_Scr10_L4C2A:
+    dw $02E4
+    dw $FF03  ; set_flag
+    dw $007E
+    dw $FFFF
+CustomRoom7_Scr10_L4C32:
+    dw $02E5
+    dw $FFFF
+CustomRoom7_Scr10_L4C36:
+    dw $02E6
+    dw $FFFF
+CustomRoom7_Scr10_L4C3A:
+    dw $FF3C  ; opcode $3C
+    dw $0344
+    dw $FF03  ; set_flag
+    dw $008A
+    dw $FF03  ; set_flag
+    dw $008B
+    dw $FF42  ; opcode $42
+    dw $0136
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $008B
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr10_L4C5C:
+    dw $FF3C  ; opcode $3C
+    dw $0854
+    dw $FF03  ; set_flag
+    dw $008B
+    dw $FF42  ; opcode $42
+    dw $0136
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $008B
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr10_L4C7A:
+    dw $034F
+    dw $FFFF
+CustomRoom7_Scr10_L4C7E:
+    dw $03A3
+    dw $FFFF
+CustomRoom7_Scr10_L4C82:
+    dw $FF3C  ; opcode $3C
+    dw $03F4
+    dw $FF03  ; set_flag
+    dw $0095
+    dw $FF03  ; set_flag
+    dw $0096
+    dw $FF42  ; opcode $42
+    dw $0139
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0096
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr10_L4CA4:
+    dw $FF3C  ; opcode $3C
+    dw $0450
+    dw $FF03  ; set_flag
+    dw $0095
+    dw $FF03  ; set_flag
+    dw $0096
+    dw $FF42  ; opcode $42
+    dw $0139
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0096
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr10_L4CC6:
+    dw $FF3C  ; opcode $3C
+    dw $0855
+    dw $FF03  ; set_flag
+    dw $0096
+    dw $FF42  ; opcode $42
+    dw $0139
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0096
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr10_L4CE4:
+    dw $03F7
+    dw $FFFF
+CustomRoom7_Scr10_L4CE8:
+    dw $0451
+    dw $FFFF
+CustomRoom7_Scr10_L4CEC:
+    dw $04B5
+    dw $FFFF
+CustomRoom7_Scr10_L4CF0:
+    dw $07D7
+    dw $FF03  ; set_flag
+    dw $00FF
+    dw $FFFF
+CustomRoom7_Scr10_L4CF8:
+    dw $07D8
+    dw $FFFF
+CustomRoom7_Scr10_L4CFC:
+    dw $FF3C  ; opcode $3C
+    dw $07D0
+    dw $FF03  ; set_flag
+    dw $004F
+    dw $FF03  ; set_flag
+    dw $0058
+    dw $FF42  ; opcode $42
+    dw $0134
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0058
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr10_L4D1E:
+    dw $0858
+    dw $FFFF
+
+CustomRoom7_Scr11:
+    dw $FF01  ; if_flag_set
+    dw $00FF
+    dw CustomRoom7_Scr11_L4CF8
+    dw $FF01  ; if_flag_set
+    dw $00F1
+    dw CustomRoom7_Scr11_L4CF0
+    dw $FF01  ; if_flag_set
+    dw $0025
+    dw CustomRoom7_Scr11_L4CEC
+    dw $FF00  ; if_flag_clear
+    dw $0037
+    dw CustomRoom7_Scr11_L4B30
+    dw $FF01  ; if_flag_set
+    dw $0096
+    dw CustomRoom7_Scr11_L4CE8
+CustomRoom7_Scr11_L4B30:
+    dw $FF01  ; if_flag_set
+    dw $0096
+    dw CustomRoom7_Scr11_L4CE4
+    dw $FF01  ; if_flag_set
+    dw $0095
+    dw CustomRoom7_Scr11_L4CC6
+    dw $FF01  ; if_flag_set
+    dw $0037
+    dw CustomRoom7_Scr11_L4CA4
+    dw $FF01  ; if_flag_set
+    dw $0036
+    dw CustomRoom7_Scr11_L4C82
+    dw $FF01  ; if_flag_set
+    dw $0035
+    dw CustomRoom7_Scr11_L4C7E
+    dw $FF01  ; if_flag_set
+    dw $008B
+    dw CustomRoom7_Scr11_L4C7A
+    dw $FF01  ; if_flag_set
+    dw $008A
+    dw CustomRoom7_Scr11_L4C5C
+    dw $FF01  ; if_flag_set
+    dw $0034
+    dw CustomRoom7_Scr11_L4C3A
+    dw $FF01  ; if_flag_set
+    dw $0089
+    dw CustomRoom7_Scr11_L4C36
+    dw $FF01  ; if_flag_set
+    dw $007E
+    dw CustomRoom7_Scr11_L4C32
+    dw $FF01  ; if_flag_set
+    dw $001D
+    dw CustomRoom7_Scr11_L4C2A
+    dw $FF00  ; if_flag_clear
+    dw $0058
+    dw CustomRoom7_Scr11_L4B7E
+    dw $FF01  ; if_flag_set
+    dw $0119
+    dw CustomRoom7_Scr11_L4D1E
+CustomRoom7_Scr11_L4B7E:
+    dw $FF00  ; if_flag_clear
+    dw $0033
+    dw CustomRoom7_Scr11_L4B8A
+    dw $FF01  ; if_flag_set
+    dw $0058
+    dw CustomRoom7_Scr11_L4C26
+CustomRoom7_Scr11_L4B8A:
+    dw $FF01  ; if_flag_set
+    dw $0058
+    dw CustomRoom7_Scr11_L4C22
+    dw $FF01  ; if_flag_set
+    dw $004F
+    dw CustomRoom7_Scr11_L4C04
+    dw $FF00  ; if_flag_clear
+    dw $0033
+    dw CustomRoom7_Scr11_L4BA2
+    dw $FF01  ; if_flag_set
+    dw $0119
+    dw CustomRoom7_Scr11_L4CFC
+CustomRoom7_Scr11_L4BA2:
+    dw $FF01  ; if_flag_set
+    dw $0032
+    dw CustomRoom7_Scr11_L4BE2
+    dw $FF01  ; if_flag_set
+    dw $0048
+    dw CustomRoom7_Scr11_L4BDE
+    dw $FF01  ; if_flag_set
+    dw $0031
+    dw CustomRoom7_Scr11_L4BDA
+    dw $FF01  ; if_flag_set
+    dw $0030
+    dw CustomRoom7_Scr11_L4BD6
+    dw $FF01  ; if_flag_set
+    dw $0121
+    dw CustomRoom7_Scr11_L4BC4
+    dw $00ED
+    dw $FFFF
+CustomRoom7_Scr11_L4BC4:
+    dw $044B
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom7_Scr11_L4BD2
+    dw $086B
+    dw $FFFF
+CustomRoom7_Scr11_L4BD2:
+    dw $086A
+    dw $FFFF
+CustomRoom7_Scr11_L4BD6:
+    dw $017C
+    dw $FFFF
+CustomRoom7_Scr11_L4BDA:
+    dw $01B9
+    dw $FFFF
+CustomRoom7_Scr11_L4BDE:
+    dw $017D
+    dw $FFFF
+CustomRoom7_Scr11_L4BE2:
+    dw $FF3C  ; opcode $3C
+    dw $021F
+    dw $FF03  ; set_flag
+    dw $004F
+    dw $FF03  ; set_flag
+    dw $0058
+    dw $FF42  ; opcode $42
+    dw $0134
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0058
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr11_L4C04:
+    dw $FF3C  ; opcode $3C
+    dw $022A
+    dw $FF03  ; set_flag
+    dw $0058
+    dw $FF42  ; opcode $42
+    dw $0134
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0058
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr11_L4C22:
+    dw $022B
+    dw $FFFF
+CustomRoom7_Scr11_L4C26:
+    dw $027E
+    dw $FFFF
+CustomRoom7_Scr11_L4C2A:
+    dw $02E4
+    dw $FF03  ; set_flag
+    dw $007E
+    dw $FFFF
+CustomRoom7_Scr11_L4C32:
+    dw $02E5
+    dw $FFFF
+CustomRoom7_Scr11_L4C36:
+    dw $02E6
+    dw $FFFF
+CustomRoom7_Scr11_L4C3A:
+    dw $FF3C  ; opcode $3C
+    dw $0344
+    dw $FF03  ; set_flag
+    dw $008A
+    dw $FF03  ; set_flag
+    dw $008B
+    dw $FF42  ; opcode $42
+    dw $0136
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $008B
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr11_L4C5C:
+    dw $FF3C  ; opcode $3C
+    dw $0854
+    dw $FF03  ; set_flag
+    dw $008B
+    dw $FF42  ; opcode $42
+    dw $0136
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $008B
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr11_L4C7A:
+    dw $034F
+    dw $FFFF
+CustomRoom7_Scr11_L4C7E:
+    dw $03A3
+    dw $FFFF
+CustomRoom7_Scr11_L4C82:
+    dw $FF3C  ; opcode $3C
+    dw $03F4
+    dw $FF03  ; set_flag
+    dw $0095
+    dw $FF03  ; set_flag
+    dw $0096
+    dw $FF42  ; opcode $42
+    dw $0139
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0096
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr11_L4CA4:
+    dw $FF3C  ; opcode $3C
+    dw $0450
+    dw $FF03  ; set_flag
+    dw $0095
+    dw $FF03  ; set_flag
+    dw $0096
+    dw $FF42  ; opcode $42
+    dw $0139
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0096
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr11_L4CC6:
+    dw $FF3C  ; opcode $3C
+    dw $0855
+    dw $FF03  ; set_flag
+    dw $0096
+    dw $FF42  ; opcode $42
+    dw $0139
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0096
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr11_L4CE4:
+    dw $03F7
+    dw $FFFF
+CustomRoom7_Scr11_L4CE8:
+    dw $0451
+    dw $FFFF
+CustomRoom7_Scr11_L4CEC:
+    dw $04B5
+    dw $FFFF
+CustomRoom7_Scr11_L4CF0:
+    dw $07D7
+    dw $FF03  ; set_flag
+    dw $00FF
+    dw $FFFF
+CustomRoom7_Scr11_L4CF8:
+    dw $07D8
+    dw $FFFF
+CustomRoom7_Scr11_L4CFC:
+    dw $FF3C  ; opcode $3C
+    dw $07D0
+    dw $FF03  ; set_flag
+    dw $004F
+    dw $FF03  ; set_flag
+    dw $0058
+    dw $FF42  ; opcode $42
+    dw $0134
+    dw $0001
+    dw $FF04  ; opcode $04
+    dw $0005
+    dw $0600
+    dw $FF02  ; clear_flag
+    dw $0058
+    dw $FF3C  ; opcode $3C
+    dw $0600
+    dw $FFFF
+CustomRoom7_Scr11_L4D1E:
+    dw $0858
+    dw $FFFF
+
+; --- $73 (island_copy) scripts ---
+CustomRoom8_ScriptPtrTable:
+    dw CustomRoom8_Scr00   ; [0] arm_encounters
+    dw CustomRoom8_Scr01   ; [1] give_jerky
+    dw CustomRoom8_Scr02   ; [2] give_egg
+    dw CustomRoom8_Scr03   ; [3] bgm_change
+
+CustomRoom8_Scr00:
+    dw $FF13  ; write_ram2
+    dw $CA39
+    dw $04B0
+    dw $FFFF
+
+CustomRoom8_Scr01:
+    dw $0A00  ; item offer [Y/N]
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom8_Scr01_declined
+    dw $FF2C  ; check_inv_full
+    dw CustomRoom8_Scr01_invFull
+    dw $FF2A  ; give_item
+    dw ITEM_BEEF_JERKY
+    dw $0A01  ; item given
+    dw $FFFF
+CustomRoom8_Scr01_invFull:
+    dw $0A06  ; inventory full
+    dw $FFFF
+CustomRoom8_Scr01_declined:
+    dw $0A02  ; declined
+    dw $FFFF
+
+CustomRoom8_Scr02:
+    dw $0A07  ; monster offer [Y/N]
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom8_Scr02_declined
+    dw $FF28  ; check_storage_full
+    dw CustomRoom8_Scr02_storageFull
+    dw $FF29  ; add_monster
+    dw $015E
+    dw $0A08  ; monster joined
+    dw $FFFF
+CustomRoom8_Scr02_storageFull:
+    dw $0A10  ; monster storage full
+    dw $FFFF
+CustomRoom8_Scr02_declined:
+    dw $0A09  ; monster declined
+    dw $FFFF
+
+CustomRoom8_Scr03:
+    dw $0A0D  ; BGM change offer [Y/N]
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom8_Scr03_declined
+    dw $FF41  ; set_bgm
+    dw $009E
+    dw $0A0E  ; BGM changed
+    dw $FFFF
+CustomRoom8_Scr03_declined:
+    dw $0A0F  ; BGM declined
+    dw $FFFF
+
 ; =============================================================================
 ; TEXT DATA — two-level pointer table (generated)
 ; SaveBankAndSwitch ($00:$0940) indexes table[$C822*2] -> section,
@@ -633,6 +2634,10 @@ CustomTextSection0:
     dw CustomText_1D   ; $0A1D: 
     dw CustomText_1E   ; $0A1E: win tail; GoldSlime joins engine-side (phase $0D)
     dw CustomText_1F   ; $0A1F: 
+    dw CustomText_20   ; $0A20: [S73] Anchor gate-side confirm [Y/N]
+    dw CustomText_21   ; $0A21: [S73] Anchor return confirm [Y/N] — charge lands on arrival
+    dw CustomText_22   ; $0A22: [S73] cast in a special/boss/custom gate room
+    dw CustomText_23   ; $0A23: [S73] cast in town with no stored anchor
 
 ; $0A00 — item offer [Y/N]
 CustomText_00:
@@ -833,6 +2838,32 @@ CustomText_1F:
     db "quiet. The", $EF, $EE
     db "shinies sleep.", $F7, $F0
 
+; $0A20 — [S73] Anchor gate-side confirm [Y/N]
+CustomText_20:
+    db $EA, $9F, $A3
+    db "Set an anchor", $EF, $EE
+    db "here and warp", $EF, $EE
+    db "to GreatTree?", $EF, $EE, $E7, $F0
+
+; $0A21 — [S73] Anchor return confirm [Y/N] — charge lands on arrival
+CustomText_21:
+    db $EA, $9F, $A3
+    db "Spend most MP", $EF, $EE
+    db "to return to the", $EF, $EE
+    db "anchored floor?", $EF, $EE, $E7, $F0
+
+; $0A22 — [S73] cast in a special/boss/custom gate room
+CustomText_22:
+    db $EA, $9F, $A3
+    db "The anchor", $EF, $EE
+    db "fails here!", $F7, $F0
+
+; $0A23 — [S73] cast in town with no stored anchor
+CustomText_23:
+    db $EA, $9F, $A3
+    db "No anchor", $EF, $EE
+    db "is set!", $F7, $F0
+
 ; =============================================================================
 ; ROOM DATA (generated)
 ; =============================================================================
@@ -844,6 +2875,8 @@ CustomSourceMapTable:
     db $04   ; $6F — reserved_6f
     db $04   ; $70 — ember_keystone
     db $04   ; $71 — medal_vault
+    db $06   ; $72 — arena_clone
+    db $04   ; $73 — island_copy
 
 CustomRoomPtrTable:
     dw CustomRoom0_SubTable   ; $6B
@@ -853,6 +2886,8 @@ CustomRoomPtrTable:
     dw CustomRoomDummy_SubTable   ; $6F
     dw CustomRoom5_SubTable   ; $70
     dw CustomRoom6_SubTable   ; $71
+    dw CustomRoom7_SubTable   ; $72
+    dw CustomRoom8_SubTable   ; $73
 
 ; --- $6B (gate_island) room data ---
 CustomRoom0_SubTable:
@@ -986,7 +3021,7 @@ CustomRoom6_SubTable:
 
 CustomRoom6_Screen0:
     dw wCustomStep_Room71_S0    ; step counter
-    db 0, $64   ; step_id, tileset_bank
+    db 7, $64   ; step_id, tileset_bank
     dw CustomRoom6_S0_NPCs
     dw CustomRoom6_S0_Exits
 
@@ -997,6 +3032,125 @@ CustomRoom6_S0_NPCs:
 
 CustomRoom6_S0_Exits:
     db $07, $06, $16, $00, $00, $01, $02  ; back to MedalMan (1,2) vault-door tile; spawn-on-exit-tile is vanilla-precedented (SecretPassage->MedalMan lands on the north exit)
+    db $08, $03, $72, $00, $01, $04, $07  ; S92 staircase (visible, metatile 8,3) -> arena_clone; sb/spawn copied from the vanilla GreatTree->Lobby exit
+    db $FF
+
+; --- $72 (arena_clone) room data ---
+CustomRoom7_SubTable:
+    dw CustomRoom7_Screen0
+    dw CustomRoom7_Screen1
+    dw CustomRoom7_Screen2
+    dw $FFFF
+
+CustomRoom7_Screen0:
+    dw wCustomStep_Room72_S0    ; step counter
+    db 15, $29   ; step_id, tileset_bank
+    dw CustomRoom7_S0_NPCs
+    dw CustomRoom7_S0_Exits
+
+CustomRoom7_S0_NPCs:
+    db $90, $FF, $05, $04, $01  ; walkon_exit (5,4) [vanilla verbatim]
+    db $50, $E0, $05, $04, $FF  ; npc (5,4) [vanilla verbatim]
+    db $70, $E1, $03, $05, $02  ; npc (3,5) [vanilla verbatim]
+    db $40, $E2, $02, $04, $03  ; npc (2,4) [vanilla verbatim]
+    db $50, $E3, $03, $03, $04  ; npc (3,3) [vanilla verbatim]
+    db $FF
+
+CustomRoom7_S0_Exits:
+    db $05, $00, $07, $00, $04, $05, $07  ; vanilla exit -> map $07 [verbatim]
+    db $FF
+
+CustomRoom7_Screen1:
+    dw wCustomStep_ArenaClone_S1    ; step counter
+    db 16, $29   ; state 0: step_id, tileset_bank — rank 0 (vanilla clone content)
+    dw CustomRoom7_S1_V0_NPCs
+    dw CustomRoom7_S1_V0_Exits
+    db 16, $29   ; state 1: step_id, tileset_bank — rank G+ (flag $0030): the right-hand attendant ($12 at 7,6) LEAVES — visible-by-removal (S92v5: the previous swap target $54 renders empty in field contexts, S91 catalog)
+    dw CustomRoom7_S1_V1_NPCs
+    dw CustomRoom7_S1_V1_Exits
+
+CustomRoom7_S1_V0_NPCs:
+    db $8F, $FF, $04, $02, $05  ; spawn_point (4,2) [vanilla verbatim]
+    db $8F, $FF, $05, $02, $05  ; spawn_point (5,2) [vanilla verbatim]
+    db $8F, $FF, $03, $04, $06  ; spawn_point (3,4) [vanilla verbatim]
+    db $8F, $FF, $06, $06, $07  ; spawn_point (6,6) [vanilla verbatim]
+    db $37, $12, $02, $04, $08  ; npc (2,4) [vanilla verbatim]
+    db $17, $12, $07, $06, $09  ; npc (7,6) [vanilla verbatim]
+    db $60, $11, $04, $08, $0E  ; npc (4,8) [vanilla verbatim]
+    db $40, $54, $06, $05, $FF  ; npc (6,5) [vanilla verbatim]
+    db $FF
+
+CustomRoom7_S1_V0_Exits:
+    db $04, $07, $01, $00, $84, $04, $03  ; vanilla exit -> map $01 [verbatim]
+    db $05, $07, $01, $00, $84, $05, $03  ; vanilla exit -> map $01 [verbatim]
+    db $FF
+
+CustomRoom7_S1_V1_NPCs:
+    db $8F, $FF, $04, $02, $05  ; spawn_point (4,2) [vanilla verbatim]
+    db $8F, $FF, $05, $02, $05  ; spawn_point (5,2) [vanilla verbatim]
+    db $8F, $FF, $03, $04, $06  ; spawn_point (3,4) [vanilla verbatim]
+    db $8F, $FF, $06, $06, $07  ; spawn_point (6,6) [vanilla verbatim]
+    db $37, $12, $02, $04, $08  ; npc (2,4) [vanilla verbatim]
+    db $60, $11, $04, $08, $0E  ; npc (4,8) [vanilla verbatim]
+    db $40, $54, $06, $05, $FF  ; npc (6,5) [vanilla verbatim]
+    db $FF
+
+CustomRoom7_S1_V1_Exits:
+    db $04, $07, $01, $00, $84, $04, $03  ; vanilla exit -> map $01 [verbatim]
+    db $05, $07, $01, $00, $84, $05, $03  ; vanilla exit -> map $01 [verbatim]
+    db $FF
+
+CustomRoom7_Screen2:
+    dw wCustomStep_Room72_S2    ; step counter
+    db 17, $29   ; step_id, tileset_bank
+    dw CustomRoom7_S2_NPCs
+    dw CustomRoom7_S2_Exits
+
+CustomRoom7_S2_NPCs:
+    db $82, $FF, $06, $05, $0A  ; marker_82 (6,5) [vanilla verbatim]
+    db $00, $0B, $06, $04, $0B  ; npc (6,4) [vanilla verbatim]
+    db $FF
+
+CustomRoom7_S2_Exits:
+    db $04, $00, $07, $00, $06, $04, $07  ; vanilla exit -> map $07 [verbatim]
+    db $FF
+
+; --- $73 (island_copy) room data ---
+CustomRoom8_SubTable:
+    dw CustomRoom8_Screen0
+    dw $FFFF, $FFFF, $FFFF
+    dw CustomRoom8_Screen4
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom8_Screen0:
+    dw wCustomStep_Room73_S0    ; step counter
+    db 0, $64   ; step_id, tileset_bank
+    dw CustomRoom8_S0_NPCs
+    dw CustomRoom8_S0_Exits
+
+CustomRoom8_S0_NPCs:
+    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
+    db $00, $0B, $02, $07, $01  ; NPC (2,7) script give_jerky
+    db $00, $0B, $05, $06, $03  ; NPC (5,6) script bgm_change
+    db $FF
+
+CustomRoom8_S0_Exits:
+    db $03, $01, $6C, $00, $00, $07, $06  ; exit (3,1) -> Room $6C screen 0 spawn (7,6); screen_byte $00 = in-room ($2DE7[0]); $01 stranded the player off-map (KEY_LESSONS S40)
+    db $FF
+
+CustomRoom8_Screen4:
+    dw wCustomStep_Room73_S4    ; step counter
+    db 2, $64   ; step_id, tileset_bank
+    dw CustomRoom8_S4_NPCs
+    dw CustomRoom8_S4_Exits
+
+CustomRoom8_S4_NPCs:
+    db $8F, $FF, $05, $03, $00  ; spawn (5,3)
+    db $00, $09, $05, $04, $02  ; NPC (5,4) script give_egg
+    db $FF
+
+CustomRoom8_S4_Exits:
+    db $03, $07, $01, $00, $08, $04, $05  ; south edge exit (3,7) -> GreatTree screen 8 (screen_byte $08 copied from WellStairway per KEY_LESSONS v14-v18)
     db $FF
 
 ; =============================================================================
@@ -1007,10 +3161,14 @@ CustomRoom6_S0_Exits:
 ; Lists are copied to wCustomExitBuffer (<= 17 rows + terminator).
 ; =============================================================================
 VanillaExitExtTable:
-    db $16   ; mapID — MedalMan + Medal Vault door at (1,2); per-step lists mirror disassembly Exit_MedalManRoom_s0/_v1/_v2 (steps 0/1-2-4-5/3) + the door row
+    db $16, $FF   ; mapID, screen ($FF = any) — MedalMan + Medal Vault door at (1,2); per-step lists mirror disassembly Exit_MedalManRoom_s0/_v1/_v2 (steps 0/1-2-4-5/3) + the door row
     dw $D95E   ; vanilla step counter (WRAM)
     db 6   ; n_steps (variant count)
     dw VExt16_V0, VExt16_V1, VExt16_V1, VExt16_V2, VExt16_V1, VExt16_V1   ; per-step variant lists (deduped)
+    db $01, $08   ; mapID, screen ($FF = any) — entrance_redirects: vanilla $01 screen 8 (5,3)->room:$72, (4,5)->room:$6B
+    dw $D931   ; vanilla step counter (WRAM)
+    db 3   ; n_steps (variant count)
+    dw VExt01_V0, VExt01_V0, VExt01_V0   ; per-step variant lists (deduped)
     db $FF   ; table terminator
 
 VExt16_V0:
@@ -1029,5 +3187,10 @@ VExt16_V2:
     db $03, $07, $01, $00, $81, $03, $02  ; vanilla south exit -> GreatTree (INERT here: y=7 = Entry 9 path, unchanged vanilla list serves it; kept for list parity)
     db $03, $01, $0A, $00, $01, $03, $07  ; vanilla north exit -> SecretPassage
     db $01, $02, $71, $00, $00, $07, $06  ; S70 Medal Vault door -> room $71 spawn (7,6)
+    db $FF
+
+VExt01_V0:
+    db $05, $03, $72, $00, $01, $04, $07  ; S92 testing stance as DATA (S94b): GreatTree 2F Library door (5,3) -> arena_clone $72 screen 1 spawn (4,7); vanilla dest was Library $12
+    db $04, $05, $6B, $00, $00, $07, $06  ; S1-era Room $6B entrance as DATA (S94b): GreatTree 2F (4,5) -> gate_island $6B spawn (7,6); vanilla dest was $18
     db $FF
 

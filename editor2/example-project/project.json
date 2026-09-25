@@ -35,6 +35,13 @@
     "id": "gate_island",
     "mapID": "0x6B",
     "source_mapID": "0x04",
+    "record": {
+     "gfx_id": "0x0D",
+     "gfx_bank": "0x28",
+     "width_px": 160,
+     "height_px": 256,
+     "collision_threshold": "0x30"
+    },
     "render": {
      "palette": "pal_6b",
      "attr": {
@@ -133,6 +140,13 @@
     "id": "dusk_mirror",
     "mapID": "0x6C",
     "source_mapID": "0x04",
+    "record": {
+     "gfx_id": "0x0D",
+     "gfx_bank": "0x28",
+     "width_px": 160,
+     "height_px": 256,
+     "collision_threshold": "0x30"
+    },
     "render": {
      "palette": "pal_6c",
      "attr": {
@@ -209,6 +223,13 @@
     "id": "gate_rotation",
     "mapID": "0x6D",
     "source_mapID": "0x04",
+    "record": {
+     "gfx_id": "0x0D",
+     "gfx_bank": "0x28",
+     "width_px": 160,
+     "height_px": 128,
+     "collision_threshold": "0x30"
+    },
     "scripts_placement": "inline",
     "render": {
      "palette": "pal_6d",
@@ -481,6 +502,9 @@
        "bank": "0x29",
        "entry": "0x10"
       },
+      "attr": {
+       "id": "arena_clone_attr_s1"
+      },
       "step_counter": {
        "label": "wCustomStep_ArenaClone_S1"
       },
@@ -710,6 +734,9 @@
       "layout": {
        "bank": "0x29",
        "entry": "0x11"
+      },
+      "attr": {
+       "id": "arena_clone_attr_s2"
       },
       "npcs": [
        {
@@ -6660,6 +6687,30 @@
       ]
      }
     ]
+   }
+  ],
+  "entrance_redirects": [
+   {
+    "mapID": "0x01",
+    "screen": 8,
+    "x": 5,
+    "y": 3,
+    "dest": "room:$72",
+    "screen_byte": "0x01",
+    "spawn_x": 4,
+    "spawn_y": 7,
+    "comment": "S92 testing stance as DATA (S94b): GreatTree 2F Library door (5,3) -> arena_clone $72 screen 1 spawn (4,7); vanilla dest was Library $12"
+   },
+   {
+    "mapID": "0x01",
+    "screen": 8,
+    "x": 4,
+    "y": 5,
+    "dest": "room:$6B",
+    "screen_byte": "0x00",
+    "spawn_x": 7,
+    "spawn_y": 6,
+    "comment": "S1-era Room $6B entrance as DATA (S94b): GreatTree 2F (4,5) -> gate_island $6B spawn (7,6); vanilla dest was $18"
    }
   ],
   "layouts": [

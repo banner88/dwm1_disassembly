@@ -219,3 +219,12 @@ gate you assumed".
 - `editor2/tests/test_compiler.py` ran test_crash_config_validator
   unconditionally while it consumes the --rom regression build — plain
   invocations failed on any fresh machine. Guarded S92.
+
+## S94 addendum (2026-09-20)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| ROOM_DATA_FORMAT "Exit Checker": byte 0 `$00` = "arrival point", `$09` = "special marker", both "skipped" (also the `kind` labels in `tools/dump_map_table.py` / `extracted/map_table.json`) | MISLEADING | They are skipped by **Entry 6** only; **Entry 9** (`RoomEntry9`, patches/bank_00b.asm `jr_00b_44ec`) matches rows with x ∈ {0, 9} or y ∈ {0, 7} against the player — they are the LEFT/RIGHT edge exits (e.g. GreatTree screen 9 `09 03 02 …` = east edge → Bazaar). ROOM_DATA_FORMAT corrected; the JSON `kind` strings stay (regenerating is a residual) and `editor2/core/vanilla.py` keeps every row verbatim. |
+| PROJECT_COMPILER §11 / KEY_LESSONS S93: "attr grids are per screen, not per state — the engine never indexes attr by the step counter" | WRONG | The vanilla attr walk reads `[counter]` and selects a per-step `[attr_entry, attr_bank, pal_ptr]` row (bank $17 `AttrPtrTable` chain; measured: Servant room $3F steps differ in 221 attr cells + palette). Corrected in PROJECT_COMPILER §2.11/§11, ROOM_DATA_FORMAT, GATE_GENERATION §7.4; engine now mirrors the vanilla shape (S94b). |
+| PROJECT_COMPILER §vanilla_exit_extensions (S70): "y=0/7 extension rows are inert" | STALE since S94b | Entry 9 is diverted through bank $60 entry 7 too; boundary rows are live. Section updated. |
+

@@ -1,5 +1,247 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-19 (Session 93 — **P3.3 ROOM CANVAS v1 + the
+> editor SHELL — the first session where the editor is built as a product,
+> not a backend with a viewer bolted on** (user direction S93: "when is the
+> actual EDITOR getting built?"). Byte-neutral for the repo (no patches, no
+> disassembly, example project untouched — GUI build still == pin
+> `df321962…`); verifier PASS 6/6; test_compiler 46/46; test_app --rom
+> PASS; NEW `editor2/tests/test_canvas.py --rom` PASS = the ROADMAP P3.3
+> acceptance. NOT yet user-tested (test ROM
+> `DWM-S93-canvas-2state-test.gbc`, patched md5 `fd5de1b5…`, delivered).
+>
+> **As built (owning: EDITOR_DESIGN §5.1 "as built S93"; files in
+> PROJECT_COMPILER §11):**
+> - `editor2/core/render_project.py` — LIVE renderer straight from
+>   project.json + original ROM (custom layouts/tilesets/palettes, vanilla
+>   bank refs, derived palettes, the (then) base/base+2 attr stride, forced
+>   idx1/idx3). **Validated pixel-identical to the ROM-built renderer on
+>   all 12 example-project screens** (Tier-1 rule, EDITOR_DESIGN §7). ~1 ms
+>   per screen ('P'-mode compose), so paint previews without a build.
+> - `editor2/core/document.py` — the editable model: load/save that
+>   reproduces project.json BYTE-FOR-BYTE (indent detection + trailing
+>   newline; verified on the committed example), tile/attr cell edits,
+>   states (ensure/collapse/add/remove — the schema's states[]
+>   conversion is automatic), layout localization (vanilla {bank,entry} →
+>   editable custom.layouts item), add/remove screen with record
+>   width/height auto-synced (KL S10), 8-NPC capacity readout. New layout
+>   items ALWAYS append — inserting mid-list would shift later bank-$64
+>   entries and (until S94) broke other rooms' base+2 attr stride.
+> - `editor2/app/` — Session (doc + renderer + QUndoStack + signals);
+>   shell = §5.0 tab strip (Rooms live; Gates/Monsters/…/Balance stubs
+>   naming their P3 box; Build & Play), Save ⌘S, Undo/Redo, Build ⌘B
+>   (saves first), Play ⌘R, Validate (compile-only), History dock.
+> - **Rooms tab** (`editor2/app/rooms/`): room browser (screen/state
+>   counts) + 4×2 mini-map with live thumbnails (click = page, + = add
+>   screen, right-click = remove) | tool bar (pencil/rect/fill/eyedrop/
+>   select, brush = tile or palette slot, layer toggles grid/palettes/
+>   walkability/markers, zoom 1-6×) + state bar (◀ ▶, add: duplicate /
+>   duplicate-with-OWN-layout / empty; remove; NPC n/8 meter) + banner
+>   (read-only vanilla ref → "Make editable"; shared-layout warning;
+>   attr-stride WARNING) + canvas (one screen native, pixel-exact,
+>   sprite crops from the S91 catalog on NPC markers, spawn/exit/walk-on
+>   markers, hover readout incl. marker names) | 128-tile picker in the
+>   room's real palette with the collision threshold drawn as the wall
+>   boundary + palette panel (8 rows, idx1/idx3 locked, dbl-click edits
+>   project palettes) + inspector (Room: tileset/size/threshold spin/
+>   palette combo/attr base/encounters/music; Screen & state: layout ref,
+>   attr grid in effect with stride note, step counter, states, NPC
+>   slots; Selection: clicked marker fields read-only; Layout: users).
+>   Keys: B R F I V, right-click eyedrop, ⌘/Ctrl+wheel zoom, space-drag
+>   pan, G grid, , . / PgUp PgDn state, 0-7 screen.
+> - ENGINE FACT the UI surfaces (KEY_LESSONS S93): attr/palette-slot grids
+>   are per SCREEN (CustomAttrCheck: mapID + screen), NOT
+>   per state — painting palette slots in one state changes every state
+>   of that screen; only the tile layout is per state.
+>
+> **Acceptance (test_canvas.py --rom, on a scratch COPY of the example
+> project):** pencil/attr/rect strokes + a second state with its own
+> layout copy painted differently + a screen added, all through the real
+> GUI code path; exact undo (full undo → project.json byte-identical to
+> disk); save; compiler accepts; build; PyBoy warp into $71 with the step
+> counter at 0 and at 1: **VRAM tilemap == canvas grid 320/320 tiles in
+> both states** (chained warps repeat-stable). Same check re-run on the
+> user's .sav for the delivered ROM. Owning: EDITOR_DESIGN §5.1/§9 (G-G
+> CLOSED), PROJECT_COMPILER §11 + §2.10 note, TOOLS_AND_DATA S93 rows,
+> KEY_LESSONS S93, ROADMAP P3.3 (+ residuals).)
+
+
+> Last verified: 2026-09-19 (Session 92 — **P3.2 [G-A] + P3.2b [G-J] +
+> states[] backend [G-G half] (user-directed pairing).** Banks $64/$67
+> are compiler emitters: `custom.layouts[]` (16×20 tile+attr grids,
+> tile_layout_compiler path, declaration-order tiles/attr interleave
+> matching CustomAttrCheck's base/base+2 stride) + `custom.tilesets[]`
+> (multi-tileset editor-export `spec` form = the S6-S10 import pipeline,
+> or committed `raw2bpp` sheets; the orphaned S6 combined sheet carried
+> forward byte-identically — compress_lz roundtrip proven). Fold is
+> ZERO-DELTA (verified vs pin a17bff8e… before clone content).
+> `screens[].states[]` first-class: N step entries per screen, engine
+> already counter×6 (NO template re-pin), byte-identical when absent,
+> per-state validation (8-NPC HARD cap = error). `custom.script_preludes`
+> {script_id: ops} prepended post-lowering (generated entry:/quest: ids
+> valid targets). Placeholder rooms ≥$70 emit zero 26DD rows.
+>
+> **P3.2b:** `tools/extract_room.py` — vanilla→custom clone with a
+> segmentation-PROOF decoder (every branch target must land on an op
+> boundary; merged param table = decompiler overridden by verified rows).
+> MEASURED corrections: **$27 MonsterPartyOp2 = 0 params, NOT a branch**
+> (PyBoy ctr trace 2F→30 linear; scriptgen's (0x27,1) row was WRONG —
+> corrected, old name aliased; DOC_AUDIT S92), **$21 = 1 param**, and
+> **bare non-$FFxx words are text displays** (the compiler's ["text",id]
+> naked-dw form). Arena Lobby ($06: 3 horizontal screens ONE step each —
+> the "9-step lobby" in the S92 audit was Castle) cloned to $72:
+> record/layout-refs (vanilla bank $29 entries)/attr (re-emitted $64)/
+> palette (derive_room_palette)/12 scripts (780+ ops, scr10→scr11
+> fall-through duplicated)/BGM $1E; raw 5-byte interact pass-through for
+> $8F-param/$90/$82 entry classes. island_copy $73 = custom→custom.
+> PyBoy-VERIFIED on the user's .sav: clone renders pixel-identical to
+> vanilla (byte-identical PNGs, walk + 3-screen horizontal scroll);
+> **full path walk: medal_vault (entry cutscene→around MedalMan→
+> authored staircase metatile (8,3))→clone lands (14,7) screen 1**; rank
+> mechanic live: D9CE=3 → vault prelude arms wCustomStep_ArenaClone_S1=1
+> → clone loads state V1 (NPC buffer holds the $3A swap — the two rank
+> screenshots are pixel-same only because both sprites draw alike here;
+> buffer diff is the proof). KEY MECHANIC (measured): state selection
+> reads the counter at destination LOAD, BEFORE its entry script — the
+> hub arms the destination (hence script_preludes); counters SURVIVE room
+> transitions (zeroed at save-restore only). Arena literal-mapID audit:
+> exactly 2 sites — bank $01 cp MAP_BATTLE1 ("arena entrance"
+> special-case; clone gets default behavior) + bank $07 cp $06 &&
+> screen 0 (trophy-room party-display setup; silent no-op in the clone).
+> Pin (patched reference build): df3219623203cf5bc272cb6155f07a01
+> S92v5 — USER-TESTED: entrance repoint works ('teleports to arena');
+> all 3 clone screens accessible (normal save); the postgame
+> right-screen crash was the USER'S SAVESTATE, not the ROM; rank state
+> (flag $0030, visible-by-removal: the (7,6) $12 attendant leaves at
+> G+) user-confirmed vanishing. $54's empty render is VANILLA-FAITHFUL
+> (user: real lobby = 2 bunnies + 2 desks; the $54 entry is the desk
+> talk-point). Remaining NOT-user-verified: NPC dialogue/script parity
+> across all clone content, north-door round trips, island_copy. Old
+> v4 pin was
+> S92v4: rank trigger = event flag $0030 (the v3 $D9CE key was the
+> transient coliseum var — user-caught). Seam-cross re-read applies a
+> newly-armed state mid-visit (measured); postgame right-screen crash
+> NOT reproduced headless (three isolated probes clean) — awaiting user
+> SameBoy data. Old v3 pin was
+> S92v3 ENTRANCE (user-directed, supersedes v2 — the gate room sits
+> behind the 100-monster gate): the GreatTree→Library door is REPOINTED
+> to the clone (in-place same-size bytes, patches/bank_00b.asm $0B:$4FE6,
+> restore note at the site; S70v2 precedent). No injected triggers; both
+> ext rows removed. PyBoy: real transitions both ways. The Library is
+> unreachable while the repoint stands (testing stance). Old v2 pin was
+> (46/46 tests; supersedes interim S92 pins 9e5b592f/c3513d85, both
+> patched builds). S92v2 ENTRANCE (user-directed): Library Gate Room
+> ($13) door at (8,6) — bottom-right corner, mirror position of the
+> vanilla gate — via a vanilla_exit_extensions row (single sub-room, so
+> no cross-screen replacement hazard; Library $12 itself is 2 screens
+> sharing ONE wholesale-replacement list and was rejected — any tile
+> choice cross-fires on the other floor). Vanilla gate + return door
+> rows mirrored verbatim; return door PyBoy-regressed; corner door
+> PyBoy-verified end-to-end (lands clone (14,7) screen 1). The vault
+> staircase route remains but is NOT the advertised entrance. Also fixed at
+> HEAD: test_compiler crash-config ran unconditionally (fresh-machine
+> fail without --rom) — now guarded. Built S92, NOT yet user-tested.
+> Owning: PROJECT_COMPILER (schema §), TOOLS_AND_DATA (extract_room row),
+> KEY_LESSONS S92, DOC_AUDIT S92, ROADMAP P3.2/P3.2b/P3.3 note.)
+
+
+> Last verified: 2026-09-18 (Session 91 — **P3.0 CAPACITIES + P3.1 NPC
+> SPRITE CATALOG (both boxes, user-directed pairing).** Byte-neutral
+> (tools + extracted + docs + one comment fix in bank_004; byte-perfect
+> rebuild verified); verifier PASS 6/6; clean `1ca6579…` unchanged. NOT
+> yet user-tested (the sprite sheet WAS user-classified in-session).
+>
+> **P3.1 (G-B CLOSED):** every candidate sprite id ($00-$7F, $E0-$E3,
+> $F0-$F3, $FF) solo-rendered in PyBoy (binary-poked temp ROM, Castle
+> throne-room block, real-.sav savestate) → `npc_sprite_catalog.json` +
+> labeled sheet + 137 crops (`npc_field_sprites/`), generator
+> `dump_npc_sprite_catalog.py` (`--render/--finalize/--census`). ZERO
+> ids crash — the S70 "$11 hard-crashes" was custom-room context; $23
+> ("draconic") = a boss_composite_fragment (bosses are multi-tile
+> composites of several NPC entries — user). Categories (user, S91): 72
+> normal / 17 boss fragments / 6 aliases of $00 ($4E,$4F,$F0-$F3,
+> pixel-identical, deterministic under VRAM priming) / 37 empty / 5
+> glitch. Names+classes live ONLY in npc_names.json (hand-curated) and
+> merge at --finalize. Guardian cosmetic: no GoldSlime icon exists;
+> closest = blue slime $3A; project.json left untouched (byte-neutral)
+> — swap next project-touching session.
+>
+> **P3.0 (G-M core CLOSED):** `extracted/capacities.json` (ceiling +
+> evidence + measured/documented status per entry). MEASURED: NPCs per
+> screen-state = **8 HARD** ($0B:$470F fills exactly $101 B at $D7D2;
+> vanilla valid-step census max = exactly 8; a 9th entry silently
+> corrupts $D8D9 + $D8E2-$D8E8 script state vs an 8-NPC control — no
+> crash) — and a SECOND ceiling: the per-screen **distinct-sprite-sheet
+> VRAM budget** (order-filled at init; 8 light sheets fit, ~2-3 heavy
+> exhaust; overflow renders blank). Screens/room: engine 16 (4×4
+> scroll clamp), vanilla max 12-declared/9-valid (mt $54-$59),
+> screen_idx 8 PyBoy-verified; custom schema currently 4×2=8.
+> Residuals in `_deferred_measurement_boxes` (E6 text budget, gate
+> slots, per-sheet tile counts, 4×4 schema).
+>
+> Also: `npc_catalog.json` is CONTAMINATED by phantom-step rows (its
+> dumper walks past each screen's real step list; engine validation
+> only checks bank ∈ (0,$80)) — filter rules in the new tool's
+> --census; dumper regen = residual. bank_004 "40 NPCs" banner comment
+> fixed (both copies, byte-perfect). Owning: ROOM_DATA_FORMAT "NPC
+> capacity & sprite-sheet budget (S91)"; capacities.json;
+> TOOLS_AND_DATA S91 rows; EDITOR_DESIGN gap register G-B/G-M;
+> DOC_AUDIT S91; KEY_LESSONS S91; ROADMAP P3.0/P3.1.)
+
+> Last verified: 2026-09-18 (Session 90 — **EDITOR_DESIGN v2: the
+> UI/use-perspective revision + Phase 3 re-sequencing (user-directed).**
+> Byte-neutral (docs only); verifier PASS 6/6; clean `1ca6579…` unchanged.
+> NOT yet user-tested (doc review = the acceptance).
+>
+> Strategic adjudications made this session (user conferred first):
+> - **Simulator arc = DONE for purpose.** Full suite green (S89 rows);
+>   the four residuals are BANKED, non-blocking boxes ($DB42 bit6 setter,
+>   +8/+9 defensive-flag consumers, meta-actions real-menu drive — needs
+>   a CLEAN-build save or franken-state, the hacked .sav is rejected by
+>   the clean build — and the guard-validator main-runner polish).
+> - **Next major arc = Phase 3, the editor**, entered through a design
+>   revision rather than blind UI building.
+>
+> EDITOR_DESIGN rewritten as **v2** (owning doc; § refs below are its):
+> full tabbed UI spec (§5) — Rooms (one-screen canvas w/ explicit screen
+> boundaries + mini-map, room-STATE switcher over the step-counter
+> system, tileset/palette [pick-or-upload w/ forced idx1/idx3 shown],
+> NPCs, dialogue WYSIWYG, triggers, cutscene storyboard + PyBoy
+> playback, per-room encounters + music), Monsters (stats/AI-weights w/
+> sim-backed preview/learnset/battle+follower sprites over GFX-1..4),
+> Skills (S74 knob surface as forms), Breeding (edit + the randomizer's
+> tree/depth/reachability analytics live), Encounters, Music (library +
+> MIDI import + audition), Progression & Flags, World graph, **Balance
+> (the S78-S89 simulator as a product feature: TTK sweeps, what-if
+> deltas, obedience curves; unvalidated = greyed)**, Build & Play.
+> Decisions: **Layer A-lite** (§6 — vanilla DATA-TABLE editing via
+> same-size compiler emitters + randomizer/romdata.py readers, ahead of
+> full extraction; unedited gamedata ⇒ zero byte diffs is the
+> regression); backend **gap register** (§9, G-A..G-I); milestones
+> re-cut, M2 bifurcation re-slotted as M2R INSIDE the editor (World
+> tab, dogfooding Layer A). Stale v1 §7 (sprite sketch) + §8 (bank
+> table) retired with a ledger (§11; DOC_AUDIT S90 addendum).
+> ROADMAP Phase 3 replaced with one-session boxes **P3.1-P3.17**, each
+> with an acceptance test; recommended entry point = P3.1 (NPC sprite
+> catalog) or P3.2 (the $64/$67 project.json fold, the canvas
+> prerequisite). Owning: EDITOR_DESIGN v2; ROADMAP Phase 3 + S90;
+> DOC_AUDIT S90; this file (status row below).
+>
+> **v2.1 (same session — user workflow decisions):** FORK-DON'T-FIDDLE
+> (clone-to-custom + repoint is the default; in-place vanilla edits only
+> under capacity pressure — Layer A proper shrinks to exit repoints +
+> M2R) + CANVAS-FIRST (click-to-edit everything where you see it).
+> Added: P3.0 CAPACITIES reference + meters, P3.2b clone extractor
+> (arena first, per-island literal-mapID audit), P3.7b Gates tab,
+> Triggers-as-sentences (+G-O flag-keyed pool variants), P3.10b Arena
+> editor + P3.13c Shops (E8) promoted from Phase E, P3.11b AI ban-list
+> (optional), family-icon editor + follower visualizer + the sprite
+> background white-vs-cream DEFECT (Open defects). Headroom audit: 11
+> free banks/176 KB + ~128 mapIDs + 24 KB SRAM (S69) + 32 species slots
+> = fork-first affordable at campaign scope; ROM 2→4 MB assessed +
+> banked as contingency (grep-verified: NO prior session claimed ROM
+> expansion — the expanded thing was SRAM).
+
 
 > Last verified: 2026-09-17 (Session 89 — **SIMULATOR WRAP-UP PART 2:
 > Group B residuals closed.** Byte-neutral (Python + docs + disassembly

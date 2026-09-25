@@ -1,0 +1,1136 @@
+"""tab.py — the Rooms tab, v2 (EDITOR_DESIGN §5.1; S93 → S94).
+
+Layout:   [VANILLA rooms | CUSTOM rooms | mini-map]  |  [tool bar / state bar /
+          banner / canvas / status]  |  [metatile picker / palettes / inspector]
+
+Room model (user decision S94 — fork, don't fiddle):
+  • Vanilla rooms (97 named, all rendered live, read-only). "Make editable"
+    clones one into the project (extract_room.py + layouts localized) after
+    a confirmation; the original is untouched.
+  • Custom rooms: New (blank, on a vanilla tileset), Copy, Rename, Delete.
+Every edit goes through rooms/commands.py so ⌘Z always works.
+"""
+
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout,
+                               QHBoxLayout, QInputDialog, QLabel, QListWidget,
+                               QListWidgetItem, QMenu, QMessageBox, QPushButton,
+                               QScrollArea, QSizePolicy, QSplitter, QTabWidget,
+                               QToolBar, QToolButton, QVBoxLayout, QWidget)
+
+from editor2.core.document import val, GRID_COLS
+from editor2.app.session import REPO
+from editor2.app.rooms import commands as C
+from editor2.app.rooms.canvas import RoomCanvas, metatile_at
+from editor2.app.rooms.inspector import Inspector
+from editor2.app.rooms.metatile_editor import MetatileEditor
+from editor2.app.rooms.metatile_picker import MetatilePicker
+from editor2.app.rooms.minimap import MiniMap
+from editor2.app.rooms.palette_panel import PalettePanel
+from editor2.app.rooms.redirect_dialog import RedirectDialog, ExitDialog
+
+
+class NewRoomDialog(QDialog):
+    def __init__(self, renderer, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('New room')
+        f = QFormLayout(self)
+        self.name = QComboBox()
+        self.name.setEditable(True)
+        self.name.setCurrentText('New room')
+        self.src = QComboBox()
+        for mid, name, _scr in renderer.vanilla_rooms():
+            self.src.addItem(f'${mid:02X}  {name}', mid)
+        f.addRow('Name', self.name)
+        f.addRow('Tileset / palette from', self.src)
+        f.addRow(QLabel('The room starts as one screen of floor with a spawn point.'))
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(self.accept)
+        bb.rejected.connect(self.reject)
+        f.addRow(bb)
+
+
+class RoomsTab(QWidget):
+    status = Signal(str)
+    HELP = ('V select · B paint · R rect · F fill · I / right-click eyedrop · W walkability · '
+            'Esc select · ⌘/Ctrl+wheel zoom · space-drag pan · , . state · 0-9 screen · ⌘Z undo')
+
+    def __init__(self, session, parent=None):
+        super().__init__(parent)
+        self.s = session
+        self.room_id = None          # custom room id, or None when viewing vanilla
+        self.vanilla_mid = None
+        self.key = 0
+        self.state_idx = 0
+        self._build()
+        self.s.structureChanged.connect(self._on_structure)
+        self.s.layoutChanged.connect(self._on_layout)
+        self.s.paletteChanged.connect(lambda _p: self._refresh_side())
+        self._fill_rooms()
+
+    # ------------------------------------------------------------- build
+    def _build(self):
+        # ---------- left: vanilla | custom | minimap
+        left = QWidget()
+        lv = QVBoxLayout(left)
+        lv.setContentsMargins(4, 4, 4, 4)
+        lsplit = QSplitter(Qt.Vertical)
+
+        vbox = QWidget()
+        vl = QVBoxLayout(vbox)
+        vl.setContentsMargins(0, 0, 0, 0)
+        self.vanilla_header = QLabel('Vanilla rooms (read-only)')
+        self.vanilla_list = QListWidget()
+        self.vanilla_list.currentItemChanged.connect(self._vanilla_picked)
+        self.btn_clone = QPushButton('Make editable → clone into project')
+        self.btn_clone.clicked.connect(self._clone_vanilla)
+        vl.addWidget(self.vanilla_header)
+        vl.addWidget(self.vanilla_list, 1)
+        vl.addWidget(self.btn_clone)
+        lsplit.addWidget(vbox)
+
+        cbox = QWidget()
+        cl = QVBoxLayout(cbox)
+        cl.setContentsMargins(0, 0, 0, 0)
+        self.rooms_header = QLabel('Custom rooms')
+        self.room_list = QListWidget()
+        self.room_list.currentItemChanged.connect(self._room_picked)
+        self.room_list.itemDoubleClicked.connect(lambda _i: self._rename_room())
+        row = QHBoxLayout()
+        for text, fn, tip in (('New', self._new_room, 'Blank room on a vanilla tileset'),
+                              ('Copy', self._copy_room, 'Copy the selected custom room (own layouts)'),
+                              ('Rename', self._rename_room, 'Rename the selected room'),
+                              ('Delete', self._delete_room, 'Delete the selected room')):
+            b = QPushButton(text)
+            b.setToolTip(tip)
+            b.clicked.connect(fn)
+            row.addWidget(b)
+        cl.addWidget(self.rooms_header)
+        cl.addWidget(self.room_list, 1)
+        cl.addLayout(row)
+        lsplit.addWidget(cbox)
+        lsplit.setSizes([260, 300])
+        lv.addWidget(lsplit, 1)
+        lv.addWidget(QLabel('Screens (4×4 grid — click + to add, right-click to remove)'))
+        self.minimap = MiniMap()
+        self.minimap.screenSelected.connect(self.select_screen)
+        self.minimap.addScreenRequested.connect(self._add_screen)
+        self.minimap.removeScreenRequested.connect(self._remove_screen)
+        lv.addWidget(self.minimap, 0, Qt.AlignHCenter)
+
+        # ---------- centre
+        centre = QWidget()
+        centre.setMinimumWidth(320)
+        cv = QVBoxLayout(centre)
+        cv.setContentsMargins(0, 0, 0, 0)
+        cv.setSpacing(2)
+        self.tools = QToolBar('Tools')
+        self.tools.setMovable(False)
+        self.tools.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.tool_group = QActionGroup(self)
+        self.tool_actions = {}
+        for name, text, key in (('select', 'Select', 'V'), ('paint', 'Paint', 'B'),
+                                ('rect', 'Rect', 'R'), ('fill', 'Fill', 'F'),
+                                ('pick', 'Eyedrop', 'I'), ('walk', 'Walkability', 'W')):
+            a = QAction(f'{text} ({key})', self)
+            a.setCheckable(True)
+            a.setShortcut(QKeySequence(key))
+            a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+            a.triggered.connect(lambda _c, n=name: self._set_tool(n))
+            self.tool_group.addAction(a)
+            self.tools.addAction(a)
+            self.tool_actions[name] = a
+        self.tool_actions['select'].setChecked(True)
+        for seq, fn in ((',', lambda: self.select_state(self.state_idx - 1)),
+                        ('.', lambda: self.select_state(self.state_idx + 1)),
+                        ('PgUp', lambda: self.select_state(self.state_idx - 1)),
+                        ('PgDown', lambda: self.select_state(self.state_idx + 1))):
+            a = QAction(self)
+            a.setShortcut(QKeySequence(seq))
+            a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+            a.triggered.connect(fn)
+            self.addAction(a)
+        for k in range(10):
+            a = QAction(self)
+            a.setShortcut(QKeySequence(str(k)))
+            a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+            a.triggered.connect(lambda _c, kk=k: self._jump_screen(kk))
+            self.addAction(a)
+        self.tools.addSeparator()
+        self.brush_label = QLabel('  brush: none  ')
+        self.tools.addWidget(self.brush_label)
+        self.tools.addSeparator()
+        self.layer_buttons = {}
+        for name, text, tip in (('grid', 'Grid', 'cell grid (16px) + subtile grid'),
+                                ('attr', 'Palettes', 'palette-slot overlay per cell'),
+                                ('walk', 'Walk', 'walkability overlay: red = wall'),
+                                ('markers', 'Markers', 'NPC / spawn / exit markers')):
+            b = QToolButton()
+            b.setText(text)
+            b.setToolTip(tip)
+            b.setCheckable(True)
+            b.setChecked(name in ('grid', 'markers'))
+            b.toggled.connect(lambda on, n=name: self.canvas.set_layer(n, on))
+            self.tools.addWidget(b)
+            self.layer_buttons[name] = b
+        self.tools.addSeparator()
+        self.tools.addWidget(QLabel(' Zoom '))
+        self.zoom_box = QComboBox()
+        self.zoom_box.addItems([f'{z}×' for z in range(1, 7)])
+        self.zoom_box.currentIndexChanged.connect(lambda i: self.canvas.set_zoom(i + 1))
+        self.tools.addWidget(self.zoom_box)
+        cv.addWidget(self.tools)
+
+        sb = QHBoxLayout()
+        sb.setContentsMargins(6, 0, 6, 0)
+        self.screen_label = QLabel('Screen 0')
+        self.screen_label.setStyleSheet('font-weight: bold;')
+        sb.addWidget(self.screen_label)
+        sb.addSpacing(16)
+        sb.addWidget(QLabel('State'))
+        self.state_prev = QToolButton()
+        self.state_prev.setText('◀')
+        self.state_prev.clicked.connect(lambda: self.select_state(self.state_idx - 1))
+        self.state_box = QComboBox()
+        self.state_box.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.state_box.setMinimumContentsLength(18)
+        self.state_box.currentIndexChanged.connect(self._state_box_changed)
+        self.state_next = QToolButton()
+        self.state_next.setText('▶')
+        self.state_next.clicked.connect(lambda: self.select_state(self.state_idx + 1))
+        sb.addWidget(self.state_prev)
+        sb.addWidget(self.state_box)
+        sb.addWidget(self.state_next)
+        self.state_add = QToolButton()
+        self.state_add.setText('+ Add state')
+        self.state_add.setPopupMode(QToolButton.InstantPopup)
+        m = QMenu(self.state_add)
+        m.addAction('Duplicate this state (shares layout)', lambda: self._add_state(True, False))
+        m.addAction('Duplicate this state with its OWN layout copy', lambda: self._add_state(True, True))
+        m.addAction('Empty state (no NPCs / exits)', lambda: self._add_state(False, False))
+        self.state_add.setMenu(m)
+        self.state_del = QToolButton()
+        self.state_del.setText('− Remove state')
+        self.state_del.clicked.connect(self._remove_state)
+        sb.addWidget(self.state_add)
+        sb.addWidget(self.state_del)
+        sb.addStretch(1)
+        self.cap_label = QLabel('')
+        sb.addWidget(self.cap_label)
+        cv.addLayout(sb)
+
+        self.banner = QLabel('')
+        self.banner.setStyleSheet('background: #5a4a10; color: #ffe08a; padding: 4px;')
+        self.banner.setVisible(False)
+        self.banner.setWordWrap(True)
+        self.banner.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        cv.addWidget(self.banner)
+
+        self.canvas = RoomCanvas(self.s)
+        self.canvas.hoverInfo.connect(self._hover)
+        self.canvas.brushPicked.connect(self._brush_picked)
+        self.canvas.markerSelected.connect(self._marker_selected)
+        self.canvas.cellSelected.connect(self._cell_selected)
+        self.canvas.walkFlipRequested.connect(self._flip_walk)
+        self.canvas.zoomChanged.connect(lambda z: self.zoom_box.setCurrentIndex(z - 1))
+        self.canvas.editRequested.connect(self._edit_requested)
+        self.canvas.toolChanged.connect(lambda n: self.tool_actions[n].setChecked(True))
+        cv.addWidget(self.canvas, 1)
+        self.status_line = QLabel(self.HELP)
+        self.status_line.setStyleSheet('color: #bbb; padding: 2px 6px;')
+        self.status_line.setToolTip(self.HELP)
+        # S94b (user report: maximised window slid off-screen when hovering
+        # the right pane): a QLabel's minimum width follows its text, and
+        # hover strings are long — the growing minimum pushed the whole
+        # window wider than the screen. Ignored = never asks for width.
+        self.status_line.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.status_line.setMinimumWidth(0)
+        cv.addWidget(self.status_line)
+
+        # ---------- right
+        right = QWidget()
+        right.setFixedWidth(420)
+        rv = QVBoxLayout(right)
+        rv.setContentsMargins(4, 4, 4, 4)
+        rv.addWidget(QLabel('Metatiles (click = brush · corner dot: red wall / green walkable)'))
+        self._vocab_cache = {}
+        self.picker_tabs = QTabWidget()
+        # tab 1 — this room's tiles + my metatiles
+        self.picker = MetatilePicker(sections=('found', 'custom'))
+        self.picker.brushSelected.connect(self._brush_selected)
+        self.picker.hoverInfo.connect(self._hover)
+        self.picker.editRequested.connect(self._edit_metatile)
+        self.picker.removeRequested.connect(self._remove_metatile)
+        pscroll = QScrollArea()
+        pscroll.setWidgetResizable(True)
+        pscroll.setWidget(self.picker)
+        self.picker_tabs.addTab(pscroll, 'This room')
+        # tab 2 — borrow from another room (S95: separated on user request)
+        btab = QWidget()
+        bl = QVBoxLayout(btab)
+        bl.setContentsMargins(0, 0, 0, 0)
+        frow = QHBoxLayout()
+        frow.addWidget(QLabel('Room:'))
+        self.foreign_box = QComboBox()
+        self.foreign_box.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.foreign_box.setToolTip('Show another room\'s tiles, drawn with THIS room\'s '
+                                    'palettes. Same tileset: click = brush. Other tileset: '
+                                    'click imports the 4 subtiles into this room\'s tileset.')
+        self.foreign_box.currentIndexChanged.connect(lambda _i: self._refresh_foreign())
+        frow.addWidget(self.foreign_box, 1)
+        bl.addLayout(frow)
+        self.picker_foreign = MetatilePicker(sections=('foreign',))
+        self.picker_foreign.brushSelected.connect(self._brush_selected)
+        self.picker_foreign.hoverInfo.connect(self._hover)
+        self.picker_foreign.importRequested.connect(self._import_metatile)
+        fscroll = QScrollArea()
+        fscroll.setWidgetResizable(True)
+        fscroll.setWidget(self.picker_foreign)
+        bl.addWidget(fscroll, 1)
+        self.picker_tabs.addTab(btab, 'Borrow')
+        self.picker_tabs.setMinimumHeight(170)
+        self.picker_tabs.setMaximumHeight(300)
+        rv.addWidget(self.picker_tabs)
+        rv.addWidget(QLabel('BG palettes (dbl-click a colour to edit)'))
+        self.palettes = PalettePanel()
+        self.palettes.colorEdited.connect(self._color_edited)
+        self.palettes.hoverInfo.connect(self._hover)
+        self.palettes.makeEditableRequested.connect(self._palette_make_editable)
+        rv.addWidget(self.palettes, 0, Qt.AlignLeft)
+        self.inspector = Inspector()
+        self.inspector.thresholdEdited.connect(self._threshold_edited)
+        self.inspector.paletteChosen.connect(self._palette_chosen)
+        self.inspector.localizeRequested.connect(self._localize)
+        self.inspector.nameEdited.connect(self._rename_to)
+        self.inspector.addRedirectRequested.connect(self._add_redirect)
+        self.inspector.removeRedirectRequested.connect(self._remove_redirect)
+        self.inspector.routeDoorRequested.connect(self._route_door)
+        self.inspector.statePaletteChosen.connect(self._state_palette_chosen)
+        self.inspector.addExitRequested.connect(self._add_exit)
+        self.inspector.removeExitRequested.connect(self._remove_exit)
+        rv.addWidget(self.inspector, 1)
+
+        split = QSplitter()
+        split.addWidget(left)
+        split.addWidget(centre)
+        split.addWidget(right)
+        split.setStretchFactor(1, 1)
+        split.setSizes([340, 760, 420])
+        root = QHBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.addWidget(split)
+
+    # ------------------------------------------------------------ browser
+    def _fill_rooms(self, keep=None):
+        self.vanilla_list.blockSignals(True)
+        if self.vanilla_list.count() == 0:
+            for mid, name, scr in self.s.renderer.vanilla_rooms():
+                it = QListWidgetItem(f'${mid:02X}   {name}   ({len(scr)} scr)')
+                it.setData(Qt.UserRole, mid)
+                self.vanilla_list.addItem(it)
+        self.vanilla_list.blockSignals(False)
+        self.room_list.blockSignals(True)
+        self.room_list.clear()
+        rooms = self.s.doc.rooms
+        self.rooms_header.setText(f'Custom rooms ({len(rooms)})')
+        sel = -1
+        for i, r in enumerate(rooms):
+            mid = val(r.get('mapID', 0))
+            if r.get('placeholder'):
+                continue
+            scr = r.get('screens') or {}
+            nst = sum(max(1, len(v.get('states') or [])) for v in scr.values())
+            tag = f"   ({len(scr)} scr" + (f", {nst} states)" if nst > len(scr) else ')')
+            it = QListWidgetItem(f"${mid:02X}   {self.s.doc.room_name(r)}{tag}")
+            it.setData(Qt.UserRole, r.get('id'))
+            self.room_list.addItem(it)
+            if keep and r.get('id') == keep:
+                sel = self.room_list.count() - 1
+        self.room_list.blockSignals(False)
+        if sel >= 0:
+            self.room_list.setCurrentRow(sel)
+            self._room_picked(self.room_list.currentItem())
+        elif keep is None and self.room_list.count():
+            self.room_list.setCurrentRow(0)
+            self._room_picked(self.room_list.currentItem())
+        elif self.room_list.count() == 0 and self.vanilla_list.count() and self.vanilla_mid is None:
+            self.vanilla_list.setCurrentRow(0)
+            self._vanilla_picked(self.vanilla_list.currentItem())
+
+    def _room_picked(self, item, _prev=None):
+        if not item:
+            return
+        rid = item.data(Qt.UserRole)
+        self.vanilla_list.blockSignals(True)
+        self.vanilla_list.setCurrentRow(-1)
+        self.vanilla_list.blockSignals(False)
+        self.vanilla_mid = None
+        if rid != self.room_id:
+            self.room_id = rid
+            room = self.s.doc.room(rid)
+            keys = self.s.doc.screen_keys(room)
+            self.key = keys[0] if keys else 0
+            self.state_idx = 0
+        self._show()
+
+    def _vanilla_picked(self, item, _prev=None):
+        if not item:
+            return
+        mid = item.data(Qt.UserRole)
+        self.room_list.blockSignals(True)
+        self.room_list.setCurrentRow(-1)
+        self.room_list.blockSignals(False)
+        self.room_id = None
+        if mid != self.vanilla_mid:
+            self.vanilla_mid = mid
+            scr = next(s for m, _n, s in self.s.renderer.vanilla_rooms() if m == mid)
+            self.key = scr[0]
+            self.state_idx = 0
+        self._show()
+
+    def current_room(self):
+        return self.s.doc.room(self.room_id) if self.room_id else None
+
+    # ----------------------------------------------------------- display
+    def _show(self):
+        if self.vanilla_mid is not None:
+            self._show_vanilla()
+            return
+        room = self.current_room()
+        if room is None:
+            self.canvas.clear()
+            self.minimap.set_screens({}, 0)
+            self.state_box.clear()
+            return
+        if not room.get('screens'):
+            self.canvas.clear()
+            self.minimap.set_screens({}, 0)
+            self.banner.setText('Room declares no screens — add one on the mini-map.')
+            self.banner.setVisible(True)
+            self.inspector.show_room(self.s.doc, self.s.renderer, room, self.key, 0)
+            self.state_box.clear()
+            return
+        keys = self.s.doc.screen_keys(room)
+        if self.key not in keys:
+            self.key = keys[0]
+        nst = len(self.s.doc.states(room, self.key))
+        self.state_idx = max(0, min(self.state_idx, nst - 1))
+        try:
+            self.canvas.show_custom(self.room_id, self.key, self.state_idx)
+        except Exception as e:
+            self.banner.setText(f'Cannot render this screen: {e}')
+            self.banner.setVisible(True)
+            self.status.emit(str(e))
+            return
+        self._set_state_widgets(True)
+        self._refresh_side()
+        self._refresh_minimap()
+
+    def _show_vanilla(self):
+        mid = self.vanilla_mid
+        scr = next(s for m, _n, s in self.s.renderer.vanilla_rooms() if m == mid)
+        if self.key not in scr:
+            self.key = scr[0]
+        nst = len(self.s.renderer.vanilla_steps(mid, self.key))
+        self.state_idx = max(0, min(self.state_idx, nst - 1))
+        try:
+            self.canvas.show_vanilla(mid, self.key, self.state_idx)
+        except Exception as e:
+            self.banner.setText(f'Cannot render vanilla ${mid:02X}: {e}')
+            self.banner.setVisible(True)
+            return
+        self._set_state_widgets(False)
+        for w_ in (self.state_prev, self.state_next, self.state_box):
+            w_.setEnabled(True)
+        self.state_box.blockSignals(True)
+        self.state_box.clear()
+        for i in range(nst):
+            self.state_box.addItem(f'vanilla state {i} of {nst}')
+        self.state_box.setCurrentIndex(self.state_idx)
+        self.state_box.blockSignals(False)
+        self.state_prev.setEnabled(self.state_idx > 0)
+        self.state_next.setEnabled(self.state_idx < nst - 1)
+        self.screen_label.setText(f'Screen {self.key}  (col {self.key % 4}, row {self.key // 4})')
+        self.cap_label.setText('')
+        self.banner.setText(f'Vanilla room ${mid:02X} {self.s.renderer.vanilla_name(mid)} — '
+                            'read-only. "Make editable" clones it into your project; '
+                            'the original stays untouched.')
+        self.banner.setVisible(True)
+        gfx, pals = self.canvas.gfx, self.canvas.pals
+        self.picker.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
+        self.picker_foreign.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
+        self.picker.set_lists(self._harvest(), [])
+        self._fill_foreign_box()
+        self._refresh_foreign()
+        self.palettes.set_palettes(pals, None, None)
+        self.inspector.show_vanilla(self.s.renderer, mid, self.key)
+        imgs = {}
+        for k in scr:
+            try:
+                imgs[k] = self.s.renderer.render_vanilla_screen(mid, k, 1)
+            except Exception:
+                pass
+        self.minimap.set_screens(imgs, self.key)
+
+    def _set_state_widgets(self, on):
+        for w in (self.state_prev, self.state_next, self.state_add, self.state_del, self.state_box):
+            w.setEnabled(on)
+
+    @staticmethod
+    def _harvest_grid(tiles, attr, seen, out):
+        for cy in range(8):
+            for cx in range(10):
+                mt = metatile_at(tiles, attr, cx, cy)
+                key = (tuple(mt['tiles']), mt['pal'])
+                if key not in seen:
+                    seen.add(key)
+                    out.append(mt)
+
+    def _vanilla_vocab(self, mid):
+        """Every metatile a vanilla room uses on any screen/step (cached)."""
+        if mid not in self._vocab_cache:
+            r = self.s.renderer
+            seen, out = set(), []
+            try:
+                screens = next(sc for m, _n, sc in r.vanilla_rooms() if m == mid)
+            except StopIteration:
+                screens = []
+            for k in screens:
+                for st in range(len(r.vanilla_steps(mid, k))):
+                    try:
+                        tiles = r.vanilla_screen_grid(mid, k, st)
+                        attr = r.vanilla_attr_grid(mid, k, st)
+                    except Exception:
+                        continue
+                    self._harvest_grid(tiles, attr, seen, out)
+            self._vocab_cache[mid] = out
+        return self._vocab_cache[mid]
+
+    def _room_vocab(self, room):
+        """S95: the room's WHOLE vocabulary — every metatile on any of its
+        screens/states now, plus everything its vanilla source room uses —
+        so a tile painted over never disappears from the picker."""
+        seen, out = set(), []
+        r = self.s.renderer
+        for k in self.s.doc.screen_keys(room):
+            for n in range(len(self.s.doc.states(room, k))):
+                try:
+                    st = r.screen_state(room, k, n)
+                    tiles, _lid = r.layout_grid(st['layout'])
+                    attr, _note = r.attr_grid(room, k, n)
+                except Exception:
+                    continue
+                self._harvest_grid(tiles, attr or [[0] * 20 for _ in range(16)], seen, out)
+        src = val(room.get('source_mapID', 0)) if room.get('source_mapID') is not None else None
+        if src is not None and src < 0x6B:
+            for mt in self._vanilla_vocab(src):
+                key = (tuple(mt['tiles']), mt['pal'])
+                if key not in seen:
+                    seen.add(key)
+                    out.append(mt)
+        # the vocabulary's graphics must stay put: protect their slots
+        tid = (room.get('record') or {}).get('tileset')
+        if tid:
+            self.s.doc.protect_tiles(tid, [t for mt in out for t in mt['tiles']])
+        return out
+
+    def _harvest(self):
+        room = self.current_room()
+        if room is not None:
+            return self._room_vocab(room)
+        if self.vanilla_mid is not None:
+            return self._vanilla_vocab(self.vanilla_mid)
+        return []
+
+    def _fill_foreign_box(self):
+        if self.foreign_box.count():
+            return
+        self.foreign_box.blockSignals(True)
+        self.foreign_box.addItem('(none)', None)
+        for mid, name, _scr in self.s.renderer.vanilla_rooms():
+            self.foreign_box.addItem(f'${mid:02X}  {name}', int(mid))
+        self.foreign_box.blockSignals(False)
+
+    def _refresh_foreign(self):
+        sel = self.foreign_box.currentData()
+        room = self.current_room()
+        if sel is None or self.canvas.gfx is None:
+            self.picker_foreign.set_foreign('', [], None, 0, True)
+            return
+        r = self.s.renderer
+        mid = int(sel)
+        gfx = r.vanilla_gfx(mid)
+        same = (bytes(gfx.sheet[:2048]) == bytes(self.canvas.gfx.sheet[:2048]))
+        title = r.vanilla_name(mid)
+        if room is None:
+            same = same  # vanilla view: brush only when the sheets match
+        self.picker_foreign.set_foreign(title, self._vanilla_vocab(mid), gfx.sheet, gfx.threshold, same)
+
+    def _import_metatile(self, mt):
+        room = self.current_room()
+        sel = self.foreign_box.currentData()
+        if room is None or sel is None:
+            QMessageBox.information(self, 'Import', 'Select a custom room first — a vanilla '
+                                    'room is read-only (clone it to import tiles).')
+            return
+        r = self.s.renderer
+        mid = int(sel)
+        gfx = r.vanilla_gfx(mid)
+        src_sheet, src_thr = bytes(gfx.sheet[:2048]), gfx.threshold
+        own = bytes(self.canvas.gfx.sheet[:2048])
+        name = f"{r.vanilla_name(mid)} {mt['tiles']}"
+        rid = room['id']
+        cmd = C.SnapshotCommand(
+            self.s, f'Import metatile from {r.vanilla_name(mid)}',
+            lambda doc: doc.import_metatile(doc.room(rid), mt, src_sheet, src_thr,
+                                            own_sheet=own, name=name))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Import failed', str(cmd.error))
+            return
+        if cmd.result is not None:
+            self._brush_selected(cmd.result)
+
+    def _refresh_side(self):
+        room = self.current_room()
+        if room is None or self.canvas.tiles is None:
+            return
+        sts = self.s.doc.states(room, self.key)
+        self.state_box.blockSignals(True)
+        self.state_box.clear()
+        for i, st in enumerate(sts):
+            self.state_box.addItem(f"{i}: {st.get('comment', '') or 'state'}"[:40])
+        self.state_box.setCurrentIndex(self.state_idx)
+        self.state_box.blockSignals(False)
+        self.state_prev.setEnabled(self.state_idx > 0)
+        self.state_next.setEnabled(self.state_idx < len(sts) - 1)
+        self.state_del.setEnabled(len(sts) > 1)
+        self.screen_label.setText(f'Screen {self.key}  (col {self.key % GRID_COLS}, row {self.key // GRID_COLS})')
+        n, cap = self.s.doc.state_capacity(room, self.key, self.state_idx)
+        self.cap_label.setText(f'NPCs {n}/{cap}')
+        self.cap_label.setStyleSheet('color:#ff6060;' if n > cap else
+                                     'color:#e0b040;' if n == cap else 'color:#bbb;')
+        msgs = []
+        if not self.canvas.is_editable():
+            msgs.append('This state uses a VANILLA layout reference — it renders but cannot '
+                        'be painted. Use "Make editable" in the inspector.')
+        elif self.canvas.lid:
+            users = [u for u in self.s.doc.layout_users(self.canvas.lid) if u[3] == 'layout']
+            if len(users) > 1:
+                msgs.append(f"Layout '{self.canvas.lid}' is shared by {len(users)} screens/states "
+                            '— painting changes all of them.')
+        if self.canvas.attr_note.startswith('WARNING'):
+            msgs.append(self.canvas.attr_note)
+        self.banner.setText('\n'.join(msgs))
+        self.banner.setVisible(bool(msgs))
+        gfx, pals = self.canvas.gfx, self.canvas.pals
+        self.picker.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
+        self.picker_foreign.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
+        self.picker.set_lists(self._harvest(), self.s.doc.metatiles(self.s.doc.tileset_key(room)))
+        self._fill_foreign_box()
+        self._refresh_foreign()
+        if self.canvas.brush:
+            self.picker.select_metatile(self.canvas.brush)
+        pid, words = self.s.renderer.room_palettes_555(room, self.key, self.state_idx)
+        self.palettes.set_palettes(pals, words, pid if words else None)
+        self.inspector.show_room(self.s.doc, self.s.renderer, room, self.key, self.state_idx)
+        self._update_brush_label()
+
+    def _refresh_minimap(self):
+        room = self.current_room()
+        imgs = {}
+        for k in self.s.doc.screen_keys(room):
+            try:
+                imgs[k] = self.s.renderer.render_screen(room, k, 0, 1)
+            except Exception:
+                pass
+        self.minimap.set_screens(imgs, self.key)
+
+    # ------------------------------------------------------------ events
+    def _on_structure(self):
+        keep = self.room_id
+        if keep:
+            try:
+                self.s.doc.room(keep)
+            except KeyError:
+                keep = None
+                self.room_id = None
+        self._fill_rooms(keep=keep)
+        if self.vanilla_mid is not None and self.room_id is None:
+            self._show()
+
+    def _on_layout(self, lid):
+        if self.room_id:
+            self._refresh_minimap()
+            room = self.current_room()
+            self.picker.set_lists(self._harvest(), self.s.doc.metatiles(self.s.doc.tileset_key(room)))
+            if self.canvas.brush:
+                self.picker.select_metatile(self.canvas.brush)
+
+    def select_screen(self, key):
+        self.key = int(key)
+        self.state_idx = 0
+        self._show()
+
+    def _jump_screen(self, key):
+        if self.vanilla_mid is not None:
+            scr = next(s for m, _n, s in self.s.renderer.vanilla_rooms() if m == self.vanilla_mid)
+            if key in scr:
+                self.select_screen(key)
+            return
+        room = self.current_room()
+        if room and key in self.s.doc.screen_keys(room):
+            self.select_screen(key)
+
+    def select_state(self, idx):
+        if self.vanilla_mid is not None:
+            n = len(self.s.renderer.vanilla_steps(self.vanilla_mid, self.key))
+            self.state_idx = max(0, min(int(idx), n - 1))
+            self._show()
+            return
+        room = self.current_room()
+        if room is None:
+            return
+        n = len(self.s.doc.states(room, self.key))
+        self.state_idx = max(0, min(int(idx), n - 1))
+        self._show()
+
+    def _state_box_changed(self, i):
+        if i >= 0 and i != self.state_idx and (self.room_id or self.vanilla_mid is not None):
+            self.select_state(i)
+
+    def _set_tool(self, name):
+        self.canvas.set_tool(name)
+        self.canvas.setFocus()
+
+    def _update_brush_label(self):
+        b = self.canvas.brush
+        self.brush_label.setText('  brush: none  ' if not b else
+                                 f"  brush: {b.get('name', 'metatile')} {b['tiles']} pal {b.get('pal')}  ")
+
+    def _brush_selected(self, mt):
+        self.canvas.set_brush(mt)
+        self._update_brush_label()
+        if self.canvas.tool in ('select', 'walk', 'pick'):
+            self._set_tool('paint')
+        self.canvas.setFocus()
+
+    def _brush_picked(self, mt):
+        self.picker.select_metatile(mt)
+        self._update_brush_label()
+        if self.canvas.tool in ('select', 'pick'):
+            self._set_tool('paint')
+
+    def _hover(self, text):
+        self.status_line.setText(text or self.HELP)
+
+    def _marker_selected(self, sel):
+        self.inspector.show_selection(sel, editable=self.current_room() is not None)
+        if sel:
+            self.status_line.setText(sel['label'])
+
+    def _cell_selected(self, cell):
+        if cell is None or self.canvas.tiles is None:
+            self.inspector.show_selection(None)
+            return
+        self.inspector.show_cell(cell, self.canvas.cell_metatile(*cell),
+                                 self.canvas.cell_walkable(*cell),
+                                 editable=self.current_room() is not None)
+
+    def _edit_requested(self):
+        if self.vanilla_mid is not None:
+            self._clone_vanilla()
+        else:
+            self._localize_prompt()
+
+    # ------------------------------------------------------------- rooms
+    def _clone_vanilla(self):
+        if self.vanilla_mid is None:
+            it = self.vanilla_list.currentItem()
+            if not it:
+                return
+            mid = it.data(Qt.UserRole)
+        else:
+            mid = self.vanilla_mid
+        name = self.s.renderer.vanilla_name(mid)
+        if QMessageBox.question(
+                self, 'Make editable',
+                f'Clone vanilla room ${mid:02X} "{name}" into your project as a custom '
+                f'room?\n\nThe original stays untouched; the copy gets its own layouts, '
+                'palette and scripts (mapID ${:02X}).'.format(self.s.doc.next_free_mapid())
+        ) != QMessageBox.Yes:
+            return
+        rend = self.s.renderer
+        cmd = C.SnapshotCommand(self.s, f'Clone vanilla ${mid:02X} {name}',
+                                lambda doc: doc.clone_vanilla(mid, name, REPO, rend))
+        self.s.undo.push(cmd)
+        self.vanilla_mid = None
+        self.room_id = cmd.result
+        self.key, self.state_idx = 0, 0
+        self._fill_rooms(keep=cmd.result)
+
+    def _new_room(self):
+        dlg = NewRoomDialog(self.s.renderer, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        name = dlg.name.currentText().strip() or 'New room'
+        src = dlg.src.currentData()
+        rend = self.s.renderer
+        cmd = C.SnapshotCommand(self.s, f'New room {name}',
+                                lambda doc: doc.new_room(name, src, rend))
+        self.s.undo.push(cmd)
+        self.vanilla_mid = None
+        self.room_id = cmd.result
+        self.key, self.state_idx = 0, 0
+        self._fill_rooms(keep=cmd.result)
+
+    def _copy_room(self):
+        room = self.current_room()
+        if room is None:
+            return
+        name, ok = QInputDialog.getText(self, 'Copy room', 'Name for the copy:',
+                                        text=f'{self.s.doc.room_name(room)} copy')
+        if not ok or not name.strip():
+            return
+        rid = self.room_id
+        cmd = C.SnapshotCommand(self.s, f'Copy room {name}',
+                                lambda doc: doc.copy_room(rid, name.strip()))
+        self.s.undo.push(cmd)
+        self.room_id = cmd.result
+        self.key, self.state_idx = 0, 0
+        self._fill_rooms(keep=cmd.result)
+
+    def _rename_room(self):
+        room = self.current_room()
+        if room is None:
+            return
+        name, ok = QInputDialog.getText(self, 'Rename room', 'Name:',
+                                        text=self.s.doc.room_name(room))
+        if ok and name.strip():
+            self._rename_to(name.strip())
+
+    def _rename_to(self, name):
+        room = self.current_room()
+        if room is None or name == self.s.doc.room_name(room):
+            return
+        rid = self.room_id
+        self.s.undo.push(C.SnapshotCommand(self.s, f'Rename room to {name}',
+                                           lambda doc: doc.rename_room(rid, name)))
+
+    def _delete_room(self):
+        room = self.current_room()
+        if room is None:
+            return
+        if QMessageBox.question(
+                self, 'Delete room',
+                f'Delete "{self.s.doc.room_name(room)}" (${val(room["mapID"]):02X})? '
+                'Layouts only it used are removed too. Undo restores everything.') != QMessageBox.Yes:
+            return
+        rid = self.room_id
+        self.room_id = None
+        self.s.undo.push(C.SnapshotCommand(self.s, f'Delete room {rid}',
+                                           lambda doc: doc.delete_room(rid)))
+
+    # ---------------------------------------------------------- metatiles
+    # --------------------------------------------- entrance redirects (S94b)
+    def _add_redirect(self, preset=None):
+        room = self.current_room()
+        if room is None or room.get('placeholder'):
+            return
+        dlg = RedirectDialog(self.s, room['id'], self, preset=preset)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        v = dlg.values()
+        self._add_redirect_entry(v['source_mid'], v['screen'], v['x'], v['y'],
+                                 v['dest_screen'], v['spawn_x'], v['spawn_y'])
+
+    def _add_redirect_entry(self, src_mid, screen, x, y, dest_screen, sx, sy):
+        rid = self.room_id
+        name = self.s.renderer.vanilla_name(src_mid)
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, f'Route {name} door ({x},{y}) → {rid}',
+            lambda doc: doc.add_redirect(src_mid, screen, x, y, rid, dest_screen, sx, sy,
+                                         comment=f'{name} screen {screen} door ({x},{y}) -> {rid}')))
+
+    def _remove_redirect(self, index):
+        rd = self.s.doc.redirects()[index]
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, f"Remove entrance {rd['mapID']} ({rd['x']},{rd['y']})",
+            lambda doc: doc.remove_redirect(index)))
+
+    def _route_door(self, preset):
+        """From the vanilla view: pick WHICH custom room this door should
+        lead to, then open the dialog pre-filled with the door."""
+        rooms = [r for r in self.s.doc.rooms if not r.get('placeholder')]
+        if not rooms:
+            QMessageBox.information(self, 'No custom rooms',
+                                    'Clone or create a custom room first, then route this door to it.')
+            return
+        names = [f"${val(r['mapID']):02X}  {self.s.doc.room_name(r)}" for r in rooms]
+        pick, ok = QInputDialog.getItem(self, 'Route this door',
+                                        'Custom room the door should lead to:', names, 0, False)
+        if not ok:
+            return
+        room = rooms[names.index(pick)]
+        self.vanilla_mid = None
+        self.room_id = room['id']
+        self.key = self.s.doc.screen_keys(room)[0]
+        self.state_idx = 0
+        self._fill_rooms(keep=room['id'])
+        self._add_redirect(preset)
+
+    def _edit_metatile(self, seed):
+        cv = self.canvas
+        if cv.gfx is None:
+            return
+        dlg = MetatileEditor(self.s.renderer, cv.gfx.sheet, cv.pals, cv.gfx.threshold,
+                             seed=seed, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        mt = dlg.result_metatile()
+        room = self.current_room()
+        if room is None:
+            # vanilla view: just use it as the brush
+            self._brush_selected(mt)
+            return
+        key = self.s.doc.tileset_key(room)
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, f"New metatile {mt['name']}",
+            lambda doc: doc.add_metatile(key, mt['name'], mt['tiles'], mt['pal'])))
+        self._brush_selected(mt)
+
+    def _remove_metatile(self, index):
+        room = self.current_room()
+        if room is None:
+            return
+        key = self.s.doc.tileset_key(room)
+        self.s.undo.push(C.SnapshotCommand(self.s, 'Delete metatile',
+                                           lambda doc: doc.remove_metatile(key, index)))
+
+    # --------------------------------------------------------- walkability
+    def _flip_walk(self, cx, cy):
+        cv = self.canvas
+        if cv.is_vanilla():
+            self._clone_vanilla()
+            return
+        if not cv.is_editable():
+            self._localize_prompt()
+            return
+        room = self.current_room()
+        rec = room.get('record') or {}
+        if 'tileset' not in rec:
+            if QMessageBox.question(
+                    self, 'Copy tileset into project',
+                    'Walkability is a property of the TILESET (tile index < collision '
+                    'threshold = wall). Flipping a cell needs a twin of its bottom-right '
+                    'subtile on the other side of the threshold, which means editing the '
+                    'tileset — so it must be copied into your project first (bank $67).\n\n'
+                    'Copy this room\'s vanilla tileset into the project now?') != QMessageBox.Yes:
+                return
+        want = not cv.cell_walkable(cx, cy)
+        rid, lid, sheet = self.room_id, cv.lid, cv.gfx.sheet
+
+        def op(doc):
+            r = doc.room(rid)
+            tid = doc.localize_tileset(r, sheet)
+            return doc.set_cell_walkable(lid, tid, cx, cy, want)
+        try:
+            self.s.undo.push(C.SnapshotCommand(
+                self.s, f'Make cell ({cx},{cy}) {"walkable" if want else "a wall"}', op))
+        except RuntimeError as e:
+            QMessageBox.warning(self, 'Cannot flip walkability', str(e))
+        self._show()
+
+    # ---------------------------------------------------------- commands
+    def _add_state(self, copy=True, own=False):
+        room = self.current_room()
+        if room is None:
+            return
+        grid = self.canvas.tiles if own else None
+        n_before = len(self.s.doc.states(room, self.key))
+        self.s.undo.push(C.AddState(self.s, self.room_id, self.key,
+                                    copy_from=self.state_idx if copy else None,
+                                    own_layout=own, renderer_grid=grid))
+        self.state_idx = n_before
+        self._show()
+
+    def _remove_state(self):
+        room = self.current_room()
+        if room is None or len(self.s.doc.states(room, self.key)) <= 1:
+            return
+        if QMessageBox.question(self, 'Remove state',
+                                f'Remove state {self.state_idx} of screen {self.key}? '
+                                '(Undo restores it.)') != QMessageBox.Yes:
+            return
+        self.s.undo.push(C.RemoveState(self.s, self.room_id, self.key, self.state_idx))
+        self.state_idx = max(0, self.state_idx - 1)
+        self._show()
+
+    def _localize_prompt(self):
+        if QMessageBox.question(
+                self, 'Layout is read-only',
+                'This state renders a VANILLA layout (bank/entry reference). '
+                'Copy it into the project as an editable layout?') == QMessageBox.Yes:
+            self._localize()
+
+    def _localize(self):
+        room = self.current_room()
+        if room is None:
+            return
+        ref = self.s.doc.state_layout_ref(room, self.key, self.state_idx)
+        if not ref or 'id' in ref:
+            return
+        grid = self.s.renderer.vanilla_layout_grid(val(ref['bank']), val(ref['entry']))
+        self.s.undo.push(C.LocalizeLayout(self.s, self.room_id, self.key, self.state_idx, grid))
+        self._show()
+
+    def _add_screen(self, key):
+        room = self.current_room()
+        if room is None:
+            if self.vanilla_mid is not None:
+                self._clone_vanilla()
+            return
+        thr = self.s.renderer.room_gfx(room).threshold
+        grid = self.s.doc.blank_grid(min(thr, 127))
+        attr = self.s.doc.blank_grid(0)
+        # S95: the new screen shows the palette the author is looking at
+        pal = None
+        if str(self.key) in (room.get('screens') or {}):
+            pal = self.s.doc.effective_palette(room, self.key, self.state_idx)
+        self.s.undo.push(C.AddScreen(self.s, self.room_id, key, grid, attr, palette=pal))
+        self.key, self.state_idx = key, 0
+        self._show()
+
+    def _remove_screen(self, key):
+        room = self.current_room()
+        if room is None:
+            return
+        if len(self.s.doc.screen_keys(room)) <= 1:
+            QMessageBox.information(self, 'Remove screen', 'A room keeps at least one screen.')
+            return
+        if QMessageBox.question(self, 'Remove screen',
+                                f'Remove screen {key}? (Undo restores it.)') != QMessageBox.Yes:
+            return
+        self.s.undo.push(C.RemoveScreen(self.s, self.room_id, key))
+        self._show()
+
+    def _threshold_edited(self, v):
+        room = self.current_room()
+        if room is None or not room.get('record'):
+            return
+        self.s.undo.push(C.SetRoomField(self.s, self.room_id, ('record', 'collision_threshold'),
+                                        f'0x{v:02X}', 'Set collision threshold'))
+        self._show()
+
+    def _vanilla_palette_words(self, mid):
+        from editor2.app.rooms.palette_panel import to555
+        from PySide6.QtGui import QColor
+        pals = self.s.renderer.vanilla_palettes(mid)
+        return [[to555(QColor(*c)) for c in row] for row in pals]
+
+    def _palette_chosen(self, pid):
+        if self.room_id is None:
+            return
+        if isinstance(pid, tuple):            # ('vanilla', mid): copy into the project
+            mid = pid[1]
+            words = self._vanilla_palette_words(mid)
+            rid = self.room_id
+            name = self.s.renderer.vanilla_name(mid)
+
+            def op(doc):
+                new = doc.add_palette_from_words(f'pal_from_{mid:02X}', words,
+                                                 f'copied from vanilla ${mid:02X} {name}')
+                doc.room(rid).setdefault('render', {})['palette'] = new
+                return new
+            self.s.undo.push(C.SnapshotCommand(self.s, f'Room palette from {name}', op))
+        else:
+            self.s.undo.push(C.SetRoomField(self.s, self.room_id, ('render', 'palette'), pid,
+                                            'Set room palette'))
+        self._show()
+
+    def _state_palette_chosen(self, pid):
+        room = self.current_room()
+        if room is None:
+            return
+        rid, key, st = self.room_id, self.key, self.state_idx
+        if isinstance(pid, tuple):
+            mid = pid[1]
+            words = self._vanilla_palette_words(mid)
+            name = self.s.renderer.vanilla_name(mid)
+
+            def op(doc):
+                new = doc.add_palette_from_words(f'pal_from_{mid:02X}', words,
+                                                 f'copied from vanilla ${mid:02X} {name}')
+                doc.set_state_palette(doc.room(rid), key, st, new)
+                return new
+            label = f'Screen {key} palette from {name}'
+        else:
+            def op(doc):
+                return doc.set_state_palette(doc.room(rid), key, st, pid)
+            label = f'Screen {key} state {st} palette'
+        self.s.undo.push(C.SnapshotCommand(self.s, label, op))
+        self._show()
+
+    # ------------------------------------------------------------ exits (S95)
+    def _add_exit(self, cell):
+        room = self.current_room()
+        if room is None:
+            return
+        dlg = ExitDialog(self.s, room['id'], self.key, cell, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        v = dlg.values()
+        rid, key, st = self.room_id, self.key, self.state_idx
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, f"Add exit ({v['x']},{v['y']}) → {v['dest']}",
+            lambda doc: doc.add_exit(doc.room(rid), key, st, v['x'], v['y'], v['dest'],
+                                     v['dest_screen'], v['spawn_x'], v['spawn_y'])))
+        self._show()
+
+    def _remove_exit(self, index):
+        room = self.current_room()
+        if room is None:
+            return
+        rid, key, st = self.room_id, self.key, self.state_idx
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, f'Delete exit #{index}',
+            lambda doc: doc.remove_exit(doc.room(rid), key, st, index)))
+        self._show()
+
+    def _palette_make_editable(self, slot, idx):
+        """Double-click on a borrowed (vanilla) palette colour."""
+        if self.vanilla_mid is not None:
+            if QMessageBox.question(
+                    self, 'Vanilla palette',
+                    'This is a vanilla room (read-only). Clone it into your project '
+                    'to edit its colours?') == QMessageBox.Yes:
+                self._clone_vanilla()
+            return
+        room = self.current_room()
+        if room is None:
+            return
+        if QMessageBox.question(
+                self, 'Borrowed palette',
+                'This room still borrows its vanilla palette. Copy the palette into '
+                'your project so you can edit its colours?\n\n(The room then owns a '
+                'palette item; the vanilla original is untouched.)') != QMessageBox.Yes:
+            return
+        pals = self.s.renderer.room_palettes(room, self.key, self.state_idx)
+        from editor2.app.rooms.palette_panel import to555
+        from PySide6.QtGui import QColor
+        words = [[to555(QColor(*c)) for c in row] for row in pals]
+        key, st = self.key, self.state_idx
+        cmd = C.SnapshotCommand(
+            self.s, 'Make palette editable',
+            lambda doc: doc.localize_palette(doc.room(room['id']), key, st, words))
+        self.s.undo.push(cmd)
+        self._show()
+        self.palettes.edit_color(slot, idx)
+
+    def _color_edited(self, pid, slot, idx, rgb):
+        self.s.undo.push(C.SetPaletteColor(self.s, pid, slot, idx, rgb))
+        self._show()
+
+    def current_screen_image(self):
+        return self.canvas.screenshot()

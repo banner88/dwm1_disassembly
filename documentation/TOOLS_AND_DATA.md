@@ -513,7 +513,7 @@ return a failing ROM).
 |---|---|---|
 | tools/dump_npc_sprite_catalog.py | NPC field-sprite render census (PyBoy): solo render per id via binary-poked temp ROM (Castle scr1 step4 block, flat 183595), `--render` (chunkable) / `--finalize` / valid-step `--census`; crop box snaps to the 16px cell grid | Committed crops = the S91 sav-mode canonical run (user-validated sheet); clean-ROM `--render` reproduces on the intro-skip state |
 | extracted/npc_sprite_catalog.json | Per-id record: renders, category (from npc_names.json sprite_classes), diff_px_vs_empty, name, alias_of; `_meta` documents method + valid range | 137 ids: 72 normal, 17 boss fragments, 6 aliases of $00, 37 empty, 5 glitch; ZERO crashes |
-| extracted/npc_field_sprites/ | 137 per-id 16×16 crops (throne-room background) — the sprite picker / canvas thumbnail source | id_XX.png |
+| extracted/npc_field_sprites/ | 137 per-id 16×16 crops (throne-room background; the editor knocks the floor out at load, S94b) — the sprite picker / canvas thumbnail source | id_XX.png |
 | extracted/npc_sprite_catalog_sheet.png | Labeled contact sheet (user-classified S91) | |
 | extracted/capacities.json | P3.0 CAPACITIES reference: every known authoring ceiling + evidence + status (measured_s91 / structural_s91 / documented); `_deferred_measurement_boxes` names the residuals | Hand-compiled, no generator by design; EDITOR_DESIGN §5.C meters read it |
 
@@ -555,3 +555,38 @@ branch — PyBoy ctr trace + handler $04:$5F5C) and 0x21 param count 2 (actual
 1, bank_004 reference block "read 1 param, discard"). Twin-tool rule stands:
 do not "correct" the compiler from this tool; extract_room.py carries the
 verified overrides.
+
+## S93 rows (P3.3 room canvas + editor shell — editor2/, no extracted/ change)
+
+| Item | What | Notes |
+|---|---|---|
+| editor2/core/render_project.py | LIVE room renderer from project.json + original ROM (custom layouts/tilesets/palettes, vanilla bank refs, derived palettes, base/base+2 attr stride, forced idx1/idx3); tile-sheet + single-tile renders for the picker | Pixel-identical to core/render.py on all 12 example screens (test_canvas.py parity check); ~1 ms/screen |
+| editor2/core/document.py | Editable project.json model: byte-exact load/save (indent + trailing-newline detection), tile/attr cell edits, states ensure/collapse/add/remove, layout localization, add/remove screen with record dims synced, palette colour edit, NPC capacity | New layout items always APPEND (bank-$64 order == declaration order; mid-list insert would break other rooms' base+2 attr stride) |
+| editor2/app/session.py, main.py | One Session per project (Document + renderer + QUndoStack + signals); the §5.0 shell: tab strip, Save ⌘S, Undo/Redo, Build ⌘B (saves first), Play ⌘R, Validate, History + Build-log docks | Rooms live; other tabs = stubs naming their ROADMAP box |
+| editor2/app/rooms/ (tab, canvas, tile_picker, palette_panel, minimap, inspector, commands) | The Rooms tab: canvas v1 (paint tiles + palette slots, undo), states, screens, layers, markers with the S91 sprite crops, inspector | EDITOR_DESIGN §5.1 "As built S93" |
+| editor2/tests/test_canvas.py | P3.3 acceptance: render parity + GUI round trip (exact undo, save, compile) on a scratch copy of the example project; `--rom` builds it and asserts PyBoy VRAM tilemap == canvas grid in both states; `--out DIR` keeps project + ROM + screenshots | Produced the S93 test ROM; SKIPs without PySide6 |
+| editor2/tests/test_app.py | Updated for the shell (live canvas, placeholders, read-only vanilla refs, state switch, byte-exact doc round trip); `--rom` still asserts GUI build == the test_compiler pin | |
+
+## S94 rows (canvas v2 + room model; engine/compiler foundation)
+
+| Item | What | Notes |
+|---|---|---|
+| patches/bank_000.asm `@BUILD_PROJECT rom0_room_records` | ROM0 `$26DD` rows `$6B-$6F` (40 B) — compiler-owned; emitter `rom0_records` (editor2/core/emitters.py) keeps the jr-target labels at their addresses | GATE_GENERATION §7; `record` required for every room |
+| patches/bank_017.asm `CustomAttrCheck` / `CustomPalCheck` (rewrite) + `render17` emitter | per-(screen, state) attr + palette tables in the VANILLA format: `CustomAttrPtrTable` → `RoomAttr_<mid>` (16 dw) → `ScrAttr_<mid>_<k>` (`dw counter` + per state `db entry, bank / dw pal_ptr`); `dw $0000` = vanilla walk | S94b (supersedes the interim S94 17-byte map); pin `fc1caa98…`; PyBoy-verified on a 6-screen Farm clone and the 2-state Servant room |
+| editor2/core/vanilla.py (S94b) | PIL-free `VanillaTable`: `valid_steps` (the S91 prefix filter), `step_exits` (every 7-byte row verbatim), `counter` — shared by the compiler's redirect lowering and the renderer | source: extracted/map_table.json |
+| `custom.entrance_redirects[]` → project.py `_lower_entrance_redirects` + emitter `_vanilla_exit_exts` (`db mapID, screen`) + template `VanillaExitResolve` (383 B, re-pinned) + patches/bank_00b.asm `RoomEntry9` divert | route ONE vanilla door into a custom room; per-step lists rebuilt from map_table.json with that row substituted | PROJECT_COMPILER §2.12; `Exit_GreatTree_s8` vanilla again; example project carries the Library-door and (4,5)→$6B redirects |
+| editor2/app/rooms/redirect_dialog.py + inspector "Entrances" group + canvas `R`/`IN` markers | "Route a vanilla door here…" (room → screen → door, previews, wall warning); from the vanilla view: exit marker → "Route this door into a custom room…" | `Document.add_redirect/remove_redirect/redirects_to` |
+| editor2/core/render_project.py (vanilla API) | `vanilla_rooms/gfx/record/screen_grid/attr_grid/palettes/markers`, `render_vanilla_screen` — every vanilla room live from map_table.json + ROM | 98 rooms / 211 screens; clone == vanilla parity test |
+| editor2/core/document.py (S94 ops) | `clone_vanilla` (extract_room as a library + layouts localized per screen), `copy_room`, `new_room`, `rename_room`, `delete_room`, metatiles (`custom._editor`), `localize_tileset` (→ assets/<id>.2bpp + custom.tilesets), `ensure_twin` / `set_cell_walkable`, `snapshot/restore` | walkability twin logic skips animated 77/78; wall-side-full fallback moves the threshold and remaps |
+| editor2/app/rooms/metatile_picker.py, metatile_editor.py | found-in-room + my metatiles picker; the 4-slot editor (only subtile-level surface) | |
+| editor2/app/rooms/canvas.py v2, tab.py v2, inspector.py, commands.SnapshotCommand | cell-unit canvas, Select default, walkability mode, two-column browser, room actions, File→New project | |
+| editor2/templates/blank-project/project.json | the blank project template (compiles: placeholder $6B synthesized) | |
+| tools/extract_room.py (S94) | emits `screens[k].attr = {id}` per screen (per-screen attr maps) | |
+| editor2/tests/test_canvas.py (v2) | vanilla render + clone parity; v1 round trip on the 4×4 grid (screen 8); v2 fresh-project round trip; `--rom`: both PyBoy checks incl. WALKING into flipped cells | |
+| editor2/tests/test_compiler.py | 61 tests; pin `fc1caa98…`; new: 4×4 screen 12, ROM0 record row, record-required-below-$70, redirect lowering/validators, per-state ScrAttr rows | |
+| editor2/app/rooms/metatile_picker.py v2 + tab.py `_room_vocab/_vanilla_vocab/_refresh_foreign/_import_metatile` (S95) | picker sections: this room's VOCABULARY (never shrinks; slots protected) · From <room> (combo; this room's palettes; same tileset = brush, other = import) · My metatiles | `Document.used_tiles/protect_tiles/import_metatile`; `SnapshotCommand` rolls back + `setObsolete` on a failed op |
+| `screens[k].palette` + `Document.effective_palette/set_state_palette/add_palette_from_words` + inspector "palette here" / "copy from vanilla" (S95) | per-screen/state palettes; new screens inherit the shown palette; any vanilla room's palette copied into the project | compiler `state_palette_ref`, renderer `state_palette_id` |
+| `Document.add_exit/remove_exit` + `rooms/redirect_dialog.ExitDialog` + inspector "Add exit at this cell…" / "Delete this exit" (S95) | custom-room exits authored on the canvas (walk-on interior / push edge) | PyBoy-verified in test_canvas --rom; P3.7 seed |
+| `Document._migrate` / `LEGACY_RECORDS` (S95) | fills the hand-patched `$26DD` rows for `$6B-$6D` into pre-S94 projects on open | user S95 build failure (old project.json + new editor code) |
+| editor2/app/rooms/canvas.py `SpriteCache` (S94b) | NPC thumbnails knock out the throne-room floor (border flood-fill over the per-pixel mode of the 137 crops) — the committed crops are unchanged | user report: "castle red tiles where the boss should be"; bosses stay 16×16 fragments until P3.5 |
+

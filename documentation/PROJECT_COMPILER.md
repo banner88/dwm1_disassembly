@@ -27,6 +27,8 @@ to the proven overlay:
 | `patches/bank_071.asm` | whole file = verbatim engine template head + generated tables |
 | `patches/bank_017.asm` | two marked regions (`room_palettes_a`, `room_render_tables`) |
 | `patches/wram.asm` | one marked region (`wram_step_counters`) |
+| `patches/bank_000.asm` | one marked region (`rom0_room_records` — the `$26DD` rows `$6B-$6F`, S94) |
+| `patches/bank_064.asm`, `bank_067.asm`, `bank_074.asm`, `bank_014.asm` region | layouts / tilesets / songs / quest enemies (S64, S70, S92) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -544,12 +546,159 @@ missing spawn on the entry screen.
 ```
 editor2/
   core/ project.py formats.py textenc.py scriptgen.py validators.py
-        emitters.py compiler.py builder.py
+        emitters.py compiler.py builder.py layouts.py music.py
+        render.py            # ROM-built renderer (S72; PyBoy-validated)
+        render_project.py    # LIVE renderer from project.json (S93; == render.py, tested)
+        document.py          # editable model: byte-exact load/save + mutations (S93)
+        vanilla.py           # PIL-free vanilla room-table reader: valid steps / exits / counters (S94b)
+        emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
+  app/  main.py session.py build_worker.py     # shell (S93), one Session per project
+        rooms/ tab.py canvas.py tile_picker.py palette_panel.py minimap.py
+               inspector.py commands.py       # the Rooms tab (S93)
+               metatile_picker.py metatile_editor.py   # S94 metatiles
+               redirect_dialog.py                      # S94b "Route a vanilla door here"
+  templates/blank-project/project.json   # File > New project (S94)
   example-project/project.json      # regression baseline (build/ is regenerable output)
-  tests/test_compiler.py            # 18 tests; --rom adds the 2 ROM builds
+  tests/test_compiler.py            # 61 tests; --rom adds the ROM builds
+  tests/test_app.py                 # shell smoke test; --rom = GUI build == pin
+  tests/test_canvas.py              # P3.3 acceptance; --rom = build + PyBoy both states
 tools/build_project.py              # CLI
 ```
+
+**GUI save format (S93):** `document.py` writes `json.dumps(indent=<detected>)`
+plus the file's own trailing-newline convention — the committed example
+project round-trips byte-for-byte, so an editor session that changes nothing
+produces no diff. The GUI never hand-edits the generated `.asm`; Build saves
+project.json and runs the same `compile_project`/`build_rom` as the CLI.
+
+**Attr grids and palettes are per (screen, state) (S94b; corrects the S93/S94
+"per screen only" claim):** the vanilla attr walk indexes the screen's step
+counter, so each state may carry its own `attr` item and `palette`
+(§2.11). The canvas paints the grid/palette in effect for the state shown
+and says which item that is.
+
+## §2.11 S94 schema additions (editor canvas v2)
+
+**`record` is REQUIRED for every non-placeholder room** (any mapID). Rows
+`$6B-$6F` are emitted into the ROM0 `$26DD` table by the `rom0_records`
+emitter (`@BUILD_PROJECT rom0_room_records` in patches/bank_000.asm, 40 B,
+labels preserved — GATE_GENERATION §7); `$70+` into `Custom26DDTable` as
+before. Placeholder / undeclared `$6B-$6F` rows keep the vanilla filler.
+
+**4×4 screen grid**: `screens` keys `"0".."15"` (index = row×4 + col, the
+engine's scroll grid — capacities.json); the sub-table width is
+`(top_row+1)×4`; `record.width_px/height_px` must cover the occupied
+columns/rows (validator) and may not exceed 4×4.
+
+**Per-(screen, STATE) attr + palette tables in the VANILLA format** (S94b;
+engine change, template-free — patches/bank_017.asm `CustomAttrCheck` +
+`CustomPalCheck`; supersedes the S94 interim 17-byte per-screen map). Bank
+$17's `room_render_tables` region emits `CustomAttrPtrTable` (one `dw` per
+custom room; `$0000` = no custom attr → the vanilla `AttrPtrTable` walk) →
+`RoomAttr_<mid>` (16 `dw`, one per screen slot) → `ScrAttr_<mid>_<k>` =
+`dw <step counter label>` then per state `db attr_entry, attr_bank` /
+`dw pal_ptr`. That is exactly the vanilla row shape (`AttrPtrTable[map] →
+screen table → [counter] + [attr_entry, bank, pal_ptr] per step`), so the
+engine code only substitutes the table base (`A = mapID-$6B`) and the
+palette path keeps slot 7 for custom rooms. Attr for (k, n) resolves as
+**`states[n].attr` › the state's layout item's own `attr` › `screens[k].attr`
+› the screen's layout item's own `attr` › `render.attr` › vanilla**
+(`project.state_attr_entry`); palette as **`states[n].palette` ›
+`render.palette` › the vanilla source palette pointer**
+(`project.state_palette_ref` → project label or
+`derive_room_palette.normal_room_pal_ptr`). Vanilla varies attr AND palette
+per step (Servant room `$3F` burning → cleared), so a faithful clone needs
+both per state. The S92 `base_entry+2` stride and its declaration-order
+coupling are gone; `render.attr {bank, base_entry}` is still accepted as the
+room default. All entries of one room must live in one bank. The extractor
+emits `screens[k].attr = {id: <room>_attr_s<k>}` per screen; the editor's
+clone adds `<rid>_s<k>_st<n>` layout/attr items and `pal_<rid>_s<k>_st<n>`
+palettes only for steps that differ from step 0.
+
+**Empty projects compile**: with no `custom.rooms`, one unreachable placeholder
+at `$6B` is synthesized (warning) so every table has a row — the blank
+template `editor2/templates/blank-project/project.json` builds as-is.
+
+**`custom._editor`** (underscore = ignored by the compiler): editor-only data —
+`metatiles: {<tileset key>: [{name, tiles:[tl,tr,bl,br], pal}]}` where the key
+is the custom tileset id or `"<bank>:<id>"` for a vanilla tileset.
+
+**`custom.rooms[].name`**: display name (free text); `id` stays the stable
+reference. **`custom.tilesets[]` `raw2bpp` sheets may be created by the
+editor** (`Document.localize_tileset` copies a room's vanilla sheet into
+`assets/<id>.2bpp`; walkability flips edit that sheet — `ensure_twin`; S95
+`import_metatile` copies 8×8 graphics from another room's sheet into free
+slots — free = 128 − tiles placed in any layout on the tileset − author
+metatiles − 77/78 − the protected vocabulary of the rooms' vanilla sources).
+
+**`screens[k].palette` (S95):** a project palette id for one screen; resolution
+`states[n].palette › screens[k].palette › render.palette › vanilla source`
+(`project.state_palette_ref`, `render_project.state_palette_id`). The GUI
+writes it when a screen has no `states[]` ("palette here" combo) and when a
+new screen is added (it inherits the palette shown). **GUI exits (S95):**
+`Document.add_exit` writes ordinary `exits[]` rows (`dest room:/vanilla:`,
+`screen_byte` = destination screen, `spawn_x/y`, `gate_flag 0`) on the
+current state — nothing new for the compiler.
+
+**Migration on open (S95, `Document._migrate`)**: a project saved before
+S94 whose rooms `$6B-$6D` lack a `record` gets the legacy hand-patched
+`$26DD` rows filled in (logged "MIGRATED … Save to keep it"). The CLI
+compiler stays strict (`record` required).
+
+## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
+
+The user's "fastest way to test": hook a custom room onto a door the player
+already walks through. One row per door:
+
+```json
+{"mapID": "0x01", "screen": 8, "x": 5, "y": 3,
+ "dest": "room:$72", "screen_byte": "0x01", "spawn_x": 4, "spawn_y": 7,
+ "comment": "GreatTree 2F Library door -> arena_clone screen 1"}
+```
+
+`mapID`/`screen` = the vanilla room and screen index (row×4+col) that owns
+the door; `x`,`y` = its walk cell; `dest` = `room:$xx` (custom) or
+`vanilla:$xx`; `screen_byte` = destination screen (bit 7 = spawn y+8 as in
+every exit row — never guessed); `spawn_x/y` = arrival cell; `gate_flag`
+defaults 0 (custom destinations must be 0).
+
+**Lowering** (`project.py _lower_entrance_redirects`, before validation): rows
+are grouped by (mapID, screen); for each group the compiler reads the
+screen's VALID vanilla steps from `extracted/map_table.json`
+(`editor2/core/vanilla.py`, the same prefix filter the renderer uses:
+tileset bank ∈ $23-$31/$37/$38, pointers in $4000-$7FFF, NPC coords < 16 —
+the dump's step lists run past the real block into phantom rows, DOC_AUDIT
+S91), rebuilds EVERY step's full exit list (all 7-byte rows up to `$FF`,
+including the x=0/x=9 edge rows the dump labels "arrival_point"/
+"special_marker") and substitutes only the matching (x, y) row — a redirect
+on a cell with no vanilla exit APPENDS a door. The result is an ordinary
+`vanilla_exit_extensions` entry with `screen` and `step_counter` = the
+screen's vanilla counter, so everything downstream (emitter, validator,
+`VanillaExitResolve`) is the S70 machinery. Manual `vanilla_exit_extensions`
+entries and redirects may not overlap: one override per (room, screen), and an
+`'any'`-screen row may not coexist with per-screen rows of the same map
+(validator — the engine takes the first matching row).
+
+**Engine (S94b):** `VanillaExitExtTable` rows are `db mapID, screen` (`$FF` =
+any screen, the S70 semantics) / `dw step_counter` / `db n_steps` / `dw`
+variants; template `VanillaExitResolve` compares `wScreenIndex` against the
+screen byte (head 358 → **383 B**, `TEMPLATE_SIZE[0x60]=383`, re-pinned).
+**bank $0B `RoomEntry9`** (boundary push exits, y=0/7) now calls `$6007` too
+(same-size in-place rewrite: `rst $10` divert + `SharedPtrChase` fallback +
+5 `nop`), so extension rows on the boundary are LIVE — the S70 "y=0/7 rows
+are inert" caveat is gone. `Exit_GreatTree_s8` in patches/bank_00b.asm holds
+VANILLA bytes again; the S92 Library-door repoint and the S1-era `(4,5)→$6B`
+entrance live in the example project as redirects.
+
+**Editor:** inspector "Entrances — how the player gets here" lists the
+redirects into the room (`Document.redirects_to`), "Route a vanilla door
+here…" opens `rooms/redirect_dialog.py` (room → screen → door, previews with
+E/R/IN boxes, wall warning on the arrival cell); in the vanilla view an exit
+marker's Selection panel offers "Route this door into a custom room…".
+`Document.add_redirect / remove_redirect`; deleting a room drops redirects
+into it. Canvas markers: magenta `R` on the vanilla door, green `IN` on the
+arrival cell.
 
 ## §progression (S70) — quests + quest enemies
 
@@ -573,15 +722,19 @@ on `end`/goto/warp_castle (the S70 freeze class).
 ## §vanilla_exit_extensions (S70)
 
 Adds exits to VANILLA rooms (mapID < $6B) without touching bank $0B's packed
-lists: compiler emits `VanillaExitExtTable` (row: db mapID / dw step_counter /
-db n_steps / dw variant ptrs, $FF-terminated; variants deduped) consumed by
-template **entry 7 `VanillaExitResolve`** — Entry 6's unified divert calls
-$6007 every step in every non-gate room; vanilla rooms scan the ext table
-(variant = min([counter], n−1), copy via CopyExitListToBuffer, HL=0 → the
-original SharedPtrChase path), custom rooms `jp CustomExitCheck`. Validator:
-step_counter required, 1-16 steps, ≤17 rows/step, x=$FF error, y0/7 rows
-inert-warn (vanilla rooms keep the y=7 Entry-6 skip), custom-dest rows need
-gate_flag 0, screen_byte required. `build.compat` retired: a narrow master
+lists: compiler emits `VanillaExitExtTable` (row: db mapID, screen [S94b:
+`$FF` = any] / dw step_counter / db n_steps / dw variant ptrs,
+$FF-terminated; variants deduped) consumed by template **entry 7
+`VanillaExitResolve`** — Entry 6's unified divert calls $6007 every step in
+every non-gate room, and since S94b Entry 9 (boundary push) does too;
+vanilla rooms scan the ext table for (mapID, wScreenIndex) (variant =
+min([counter], n−1), copy via CopyExitListToBuffer, HL=0 → the original
+SharedPtrChase path), custom rooms `jp CustomExitCheck`. A matching variant
+REPLACES the (room, screen)'s list wholesale for that step, so it must carry
+the vanilla rows too — `entrance_redirects` (§2.12) generates that for you.
+Validator: step_counter required, 1-16 steps, ≤17 rows/step, x=$FF error,
+custom-dest rows need gate_flag 0, screen_byte required, `screen` 0-15 or
+'any', one override per (room, screen). `build.compat` retired: a narrow master
 table is now an **ERROR** with uncovered rooms (S70 entry-path routes first
 entry through CustomScriptRead); full-coverage compat = byte-identical +
 legacy-only warning.
@@ -595,6 +748,12 @@ CustomExitCheck → head **358 B**, `TEMPLATE_SIZE[0x60]=358`, sha
 `ce595c61…` in PINNED_SHA256 — format: `<sha256>  <filename>`). The arming
 makes Entry 6's y=7 skip data-driven: $07 vanilla (original semantics), $FE
 custom (walk-on boundary exits). bank_071 unchanged (142 B).
+
+**S94b re-pin:** `VanillaExitResolve` keys rows by (mapID, screen) — head
+**383 B** (`TEMPLATE_SIZE[0x60]=383`; sha in PINNED_SHA256 re-pinned via
+`tools/build_project.py --project <p> --pin-templates`). Measure the size
+from `CustomScriptMasterTable - $4000` in the fresh `game.sym` after any
+head change; the validator compares the emitted head against it.
 
 ## New verified opcodes (S70, handler-byte-verified)
 
@@ -774,11 +933,10 @@ on the ROADMAP.
 `tiles` = 16 rows × 20 cols of tile ids (visible grid; the 12 VRAM pad cols are
 added at compile), `attr` = 16×20 palette codes 0-15 (packed per
 GATE_GENERATION §7.2, HIGH nibble = LEFT tile). Entries allocate in DECLARATION
-order, tiles entry then attr entry per item — this interleave is what
-CustomAttrCheck's hardwired stride expects (screen 0 → base_entry, any other
-screen → base_entry+2; bank_017.asm). References: screens[].layout `{id}` (or
-`{bank, entry}` — any bank, vanilla tileset banks included); render.attr `{id}`
-(or `{bank, base_entry}`). Emitter `layouts64` owns patches/bank_064.asm
+order, tiles entry then attr entry per item (S94: the S92 `base_entry+2`
+stride is retired — attrs are resolved per screen, §2.11). References:
+screens[].layout `{id}` (or `{bank, entry}` — any bank, vanilla tileset banks
+included); screens[].attr `{id}` / render.attr `{id}` (or `{bank, base_entry}`). Emitter `layouts64` owns patches/bank_064.asm
 (whole file). tools/build_gate_room.py is RETIRED (its grids live in the
 example project; regen==committed was verified before the move).
 

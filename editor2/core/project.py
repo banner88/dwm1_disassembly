@@ -12,6 +12,8 @@ import os
 
 from . import formats as F
 
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 # EVENT_FLAGS.md "Free Flag Slots" — safe+persistent ranges the allocator may
 # use. CORRECTED S57: the previous ranges were derived from script analysis
 # only and included bytes with live ENGINE literal refs ($D9CC, $D9D9-$D9E2,
@@ -68,7 +70,8 @@ class Project:
         self._allocate_flags()
         self.quest_enemies = self._resolve_quest_enemies()
         self._lower_quests()
-        self.vanilla_exit_exts = self.custom.get('vanilla_exit_extensions', [])
+        self.vanilla_exit_exts = (list(self.custom.get('vanilla_exit_extensions', []))
+                                  + self._lower_entrance_redirects())
         self.rooms = self._dense_rooms()
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}
@@ -350,11 +353,81 @@ class Project:
                 scripts.append({'id': f'entry:{qid}', 'ops': e,
                                 '_generated': ctx})
 
+    # ------------------------------------------------ entrance redirects (S94b)
+    def _lower_entrance_redirects(self):
+        """custom.entrance_redirects[] -> vanilla_exit_extensions entries.
+
+        A redirect re-points ONE vanilla door: {mapID, screen, x, y, dest,
+        screen_byte, spawn_x, spawn_y}. The engine replaces a (room, screen)
+        exit list WHOLESALE per step (VanillaExitResolve), so the compiler
+        rebuilds every valid vanilla step's list from extracted/map_table.json
+        with just the named row substituted — the other doors of that screen
+        keep their vanilla rows in every state (KEY_LESSONS S92 trap). A
+        redirect on a cell with no vanilla exit ADDS a door there."""
+        reds = self.custom.get('entrance_redirects') or []
+        if not reds:
+            return []
+        from .vanilla import VanillaTable
+        vt = VanillaTable(getattr(self, "repo_root", None) or REPO_ROOT)
+        groups = {}
+        for i, r in enumerate(reds):
+            ctx = f"entrance_redirects[{i}]"
+            for k in ('mapID', 'screen', 'x', 'y', 'dest', 'screen_byte',
+                      'spawn_x', 'spawn_y'):
+                if k not in r:
+                    raise ProjectError(f"{ctx}: missing '{k}' (screen_byte is "
+                                       "NEVER guessed — KEY_LESSONS v14-v18/S40)")
+            mid, scr = F.val(r['mapID']), F.val(r['screen'])
+            if not (0 <= mid < 0x6B):
+                raise ProjectError(f"{ctx}: mapID must be a vanilla room (< $6B)")
+            try:
+                vt.screen(mid, scr)
+            except KeyError as ex:
+                raise ProjectError(f"{ctx}: {ex}")
+            groups.setdefault((mid, scr), []).append((ctx, r))
+        out = []
+        for (mid, scr), items in sorted(groups.items()):
+            steps = []
+            for si in range(len(vt.valid_steps(mid, scr))):
+                rows = vt.step_exits(mid, scr, si)
+                for ctx, r in items:
+                    x, y = F.val(r['x']), F.val(r['y'])
+                    new = {'x': x, 'y': y, 'dest': r['dest'],
+                           'gate_flag': F.val(r.get('gate_flag', 0)),
+                           'screen_byte': r['screen_byte'],
+                           'spawn_x': F.val(r['spawn_x']),
+                           'spawn_y': F.val(r['spawn_y']),
+                           'comment': r.get('comment') or
+                           f"redirect ({x},{y}) -> {r['dest']}"}
+                    hit = [k for k, e in enumerate(rows)
+                           if F.val(e['x']) == x and F.val(e['y']) == y]
+                    if hit:
+                        rows[hit[0]] = new
+                    else:
+                        rows.append(new)
+                steps.append({'exits': rows})
+            out.append({
+                'mapID': f"0x{mid:02X}", 'screen': scr,
+                'step_counter': f"0x{vt.counter(mid, scr):04X}",
+                'steps': steps,
+                'comment': f"entrance_redirects: vanilla ${mid:02X} screen {scr} "
+                           + ", ".join(f"({F.val(r['x'])},{F.val(r['y'])})->{r['dest']}"
+                                       for _, r in items),
+                '_generated': True,
+            })
+        return out
+
     # ----------------------------------------------------------------- rooms
     def _dense_rooms(self):
         rooms = list(self.custom.get('rooms', []))
         if not rooms:
-            raise ProjectError("custom.rooms is empty")
+            # S94: a fresh editor project has no rooms yet — every table
+            # still needs one row, so synthesize an unreachable placeholder
+            # at $6B (ROM0 record row keeps the vanilla filler).
+            self.warnings.append("custom.rooms is empty — emitting one "
+                                 "placeholder at $6B so the tables exist")
+            rooms = [{'mapID': 0x6B, 'id': 'placeholder_6b',
+                      'placeholder': True, 'source_mapID': 0x04}]
         by_mid = {}
         for r in rooms:
             mid = F.val(r['mapID'])
@@ -395,7 +468,7 @@ class Project:
         if w:
             return int(w)
         top = max(scr) if scr else 0
-        return 8 if top >= 4 else 4     # 4x2 grid halves (ROOM_DATA_FORMAT)
+        return (top // 4 + 1) * 4      # 4-wide rows of the 4x4 grid (ROOM_DATA_FORMAT)
 
     def screen_states(self, s):
         """A screen's step-entry list (P3.3 [G-G] backend half, S92).
@@ -430,6 +503,25 @@ class Project:
                     "(or it has no 'tiles')")
             return 0x64, self._layout_entry[lid]
         return F.val(ref['bank']), F.val(ref['entry'])
+
+    def screen_attr_entry(self, r, k, ctx=""):
+        """(bank, entry) of the attr grid the engine loads for screen k, or
+        None (= $FF, vanilla path). S94 per-screen rule: screens[k].attr
+        {id}|{bank,entry} > the screen's layout item's own attr grid >
+        the room-level render.attr > none."""
+        scr = (r.get('screens') or {}).get(str(k)) or {}
+        at = scr.get('attr')
+        if at:
+            if 'id' in at:
+                return self.resolve_attr(at, ctx)
+            return F.val(at['bank']), F.val(at['entry'])
+        lay = scr.get('layout') or {}
+        if 'id' in lay and lay['id'] in self._attr_entry:
+            return 0x64, self._attr_entry[lay['id']]
+        rat = (r.get('render') or {}).get('attr')
+        if rat:
+            return self.resolve_attr(rat, ctx)
+        return None
 
     def resolve_attr(self, at, ctx=""):
         """render.attr ref -> (bank, base_entry). Forms: {bank, base_entry}
@@ -627,6 +719,67 @@ class Project:
         return s['_ctr_label']
 
     # --------------------------------------------------------------- renders
+    def state_attr_entry(self, r, k, n, ctx=""):
+        """(bank, entry) of the attr grid for screen k, state n (S94b):
+        states[n].attr > the state's own layout item's attr > the screen rule
+        (screen_attr_entry). None when nothing resolves."""
+        scr = (r.get('screens') or {}).get(str(k)) or {}
+        sts = scr.get('states') or []
+        if n < len(sts):
+            st = sts[n]
+            at = st.get('attr')
+            if at:
+                if 'id' in at:
+                    return self.resolve_attr(at, ctx)
+                return F.val(at['bank']), F.val(at['entry'])
+            lay = st.get('layout') or {}
+            if 'id' in lay and lay['id'] in self._attr_entry:
+                return 0x64, self._attr_entry[lay['id']]
+        return self.screen_attr_entry(r, k, ctx)
+
+    def state_palette_ref(self, r, k, n):
+        """Palette for screen k, state n: ('label', asm label) for a project
+        palette (states[n].palette > render.palette) or ('addr', ptr) = the
+        vanilla source room's own palette block in bank $17 (borrow)."""
+        scr = (r.get('screens') or {}).get(str(k)) or {}
+        sts = scr.get('states') or []
+        pid = None
+        if n < len(sts):
+            pid = sts[n].get('palette')
+        # S95: screens[k].palette sits between the state and the room default
+        pid = pid or scr.get('palette') or (r.get('render') or {}).get('palette')
+        if pid:
+            if pid not in self._pal_by_id:
+                raise ProjectError(f"room {r.get('id')} references palette "
+                                   f"{pid!r} which is not defined")
+            return 'label', self._pal_by_id[pid]['label']
+        src = F.val(r.get('source_mapID', 0))
+        return 'addr', self.vanilla_palette_ptr(src)
+
+    def vanilla_palette_ptr(self, mid):
+        """Bank $17 pointer of a vanilla room's environment palette block
+        (derive_room_palette.normal_room_pal_ptr — the same derivation the
+        renderer's 'borrow' path uses). Needs data/DWM-original.gbc."""
+        cache = getattr(self, '_vpal_cache', None)
+        if cache is None:
+            cache = self._vpal_cache = {}
+        if mid not in cache:
+            import importlib.util
+            path = os.path.join(self.repo_root or '.', 'tools', 'derive_room_palette.py')
+            spec = importlib.util.spec_from_file_location('_drp', path)
+            drp = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(drp)
+            rom_path = os.path.join(self.repo_root or '.', 'data', 'DWM-original.gbc')
+            if not os.path.exists(rom_path):
+                raise ProjectError("borrowing a vanilla palette needs data/DWM-original.gbc "
+                                   "at compile time (or give the room a project palette)")
+            rom = open(rom_path, 'rb').read()
+            ptr = drp.normal_room_pal_ptr(rom, mid)
+            if ptr is None:
+                raise ProjectError(f"vanilla map ${mid:02X} has no attr palette to borrow")
+            cache[mid] = ptr
+        return cache[mid]
+
     def room_palette(self, r):
         pid = (r.get('render') or {}).get('palette')
         if not pid:

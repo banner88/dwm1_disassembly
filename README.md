@@ -91,6 +91,9 @@ documentation/   PROJECT_STATE / SESSION_PROTOCOL / ROADMAP / SESSION_HISTORY (c
 extracted/       Decoded game data as JSON (regenerable by tools/)
 tools/           100+ Python tools: dumpers, compilers, verify_integrity.py
 dwm/             Python support package (ROM access, text codec)
-editor/          Legacy Streamlit editor — frozen, superseded by EDITOR_DESIGN.md
+editor2/         THE editor: core/ (headless compiler + live renderer + document model),
+                 app/ (PySide6 shell + Rooms tab), example-project/, tests/
+                 Run:  pip install PySide6 Pillow   then   python3 -m editor2.app
+editor/          Legacy Streamlit editor — frozen, superseded by editor2/
 data/            DWM-original.gbc (user-provided, gitignored)
 ```

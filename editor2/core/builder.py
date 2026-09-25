@@ -149,6 +149,8 @@ def write_manifest(out_dir, prj, project_path, rom_path, sym_path, rom_md5,
         if bank in (0x60, 0x71) or name.startswith('wCustomStep_') or \
                 name.startswith('CustomRoomPal') or \
                 name.startswith('CustomRoomAttr') or \
+                name.startswith('CustomAttrPtrTable') or \
+                name.startswith('RoomAttr_') or name.startswith('ScrAttr_') or \
                 name.startswith('CustomPaletteColors'):
             owned[name] = f"{bank:02x}:{addr:04x}"
     texts = {}

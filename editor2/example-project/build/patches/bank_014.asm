@@ -48,7 +48,7 @@ SECTION "ROM Bank $014", ROMX[$4000], BANK[$14]
     ; Bank $14 jump table (7 entries, called via rst $10 with H=$14)
     dw label14_400f          ; Entry 0: Load enemy stats → $DA18
     dw label14_4016          ; Entry 1: Load enemy stats → $DA18 (same as entry 0)
-    dw label14_40b4          ; Entry 2: Unknown
+    dw label14_40b4          ; Entry 2: CREATE monster record from enemy-stats row (S87)
     dw label14_401d          ; Entry 3: Party monster slot init/clear
     dw label14_7bac          ; Entry 4: Unknown
     dw label14_7d12          ; Entry 5: Unknown
@@ -122,6 +122,17 @@ label14_401d:
     call LoadEnemyStats
     jp Jump_014_4158
 
+; [S87] MONSTER RECORD CONSTRUCTOR (entry 2; script opcode $29 path):
+; builds the 149-byte instance record for slot [$da14] from the loaded
+; enemy-stats row staged at $DA18+. Stats AND the four AI-weight /
+; personality bytes get a ONE-TIME per-value CREATION ROLL (SaveEnem_47fd
+; byte / SaveEnem_4821 word): factor = ($CD + RNG mod $34)/256, i.e.
+; uniform ~0.801..0.996x, with the $100 overflow case = exactly 1.0x.
+; AI weights land at slot-record +$64..$67 ($CB25/26/28/27 views) in
+; source order w0(cat1)/w1(cat3)/w3/w2(cat2). The individual LEVEL CAP
+; (slot+$4C, $CB0D) = species base +-2 (RNG mod 5 - 2). WLD (slot+$60,
+; $CB21) = 5*level - 10*arenaTier[$CAB4], clamped 0..$FF. See
+; MONSTER_DATA "instance record" (S87).
 label14_40b4:
     ld hl, $cac1
     ld a, [$da14]
@@ -1186,6 +1197,9 @@ jr_014_47f8:
     ret
 
 
+; [S87] CREATION ROLL (byte): [hl] *= ($CD + RNG1 mod $34)/256; the
+; mod-$33 case overflows add to $00 (Z) -> ret -> keep original (x1.0).
+; Div8x8 convention: B=B//A, A=B%A (remainder in A).
 SaveEnem_47fd:
     push hl
     call GenerateRNG
@@ -1211,6 +1225,7 @@ SaveEnem_47fd:
     ret
 
 
+; [S87] CREATION ROLL (word variant) — same factor, 16-bit stat.
 SaveEnem_4821:
     push hl
     call GenerateRNG
@@ -1465,7 +1480,7 @@ EnemyStats_001:
     db 1  ; Level
     dw 30, 100, 10, 6, 5, 1  ; HP, MP, ATK, DEF, AGL, INT  (MP 0->100 for S2 casting)
     db 100, 200, 100, 200  ; AI weights
-    db $E1, $09, $FF, $FF  ; [S2e] Tame ($E1) slot0 + Infernos ($09) slot1 — starter Tame test
+    db $E9, $E5, $E4, $09  ; [MOURN S75] Mourn ($E9) slot0 test harness + Tremor ($E5) + Anchor ($E4) + Infernos ($09)
 
 ; --- EID 2 (0x2): Slime Lv1 ---
 EnemyStats_002:
@@ -6358,9 +6373,11 @@ label14_7bac:
     cp $7e
     jp z, Jump_014_7cf5
 
-    ld a, $ff
-    ld [$da5e], a
-    ret
+    ld hl, $7202                ; [ANCHOR S73] was `ld a,$ff / ld [$da5e],a / ret`
+    rst $10                     ;   (6 bytes -> 3+1+1+nop, byte-neutral). Bank $72
+    ret                         ;   entry 2 (AnchorField14Tail) handles $E4 (context
+    nop                         ;   classify + dialog-script arm) and reproduces the
+                                ;   vanilla $da5e=$FF fizzle default for other ids.
 
 
 Jump_014_7bf4:

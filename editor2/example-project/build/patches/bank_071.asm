@@ -156,12 +156,14 @@ CustomRoomBGMResolve:
 Custom26DDTable:
     db $0D, $28, $A0, $00, $80, $00, $30, $00  ; $70
     db $0D, $28, $A0, $00, $80, $00, $30, $00  ; $71
+    db $0E, $29, $E0, $01, $80, $00, $5A, $00  ; $72
+    db $0D, $28, $A0, $00, $00, $01, $30, $00  ; $73
 
 ; -----------------------------------------------------------------------------
 ; RoomEncTable — 3 bytes/room [enabled, gate_id, floor], indexed
 ; (mapID-$6B). enabled=0 -> room is encounter-silent. (generated)
 ; -----------------------------------------------------------------------------
-ENC_TABLE_LEN EQU 7
+ENC_TABLE_LEN EQU 9
 RoomEncTable:
     db $01, $00, $01  ; $6B — enabled, gate 0, floor 1
     db $00, $00, $00  ; $6C — disabled
@@ -170,6 +172,8 @@ RoomEncTable:
     db $00, $00, $00  ; $6F — disabled
     db $01, $00, $01  ; $70 — enabled, gate 0, floor 1
     db $00, $00, $00  ; $71 — disabled
+    db $00, $00, $00  ; $72 — disabled
+    db $01, $00, $01  ; $73 — enabled, gate 0, floor 1
 
 ; -----------------------------------------------------------------------------
 ; CustomRoomBGMTable — 128 entries indexed by wMapID (S64, M3b).
@@ -188,4 +192,4 @@ CustomRoomBGMTable:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $40-$4F
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $50-$5F
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $A1, $00, $00, $00, $00  ; mapIDs $60-$6F: $6B=dwm2_bgm07
-    db $00, $A7, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $70-$7F: $71=dwm2_bgm10
+    db $00, $A7, $1E, $A1, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $70-$7F: $71=dwm2_bgm10, $72=$1E, $73=dwm2_bgm07

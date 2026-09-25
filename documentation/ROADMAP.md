@@ -664,19 +664,127 @@ recipes are pure authoring.
       repointed entrance, renders identical to vanilla, vanilla room
       untouched (clean MD5 unchanged); orphaned-flag list emitted;
       custom→custom clone of an example room also proven.
-- [ ] **P3.3 — Room canvas v1: paint + states + screen paging** [G-G
-      backend half — SCHEMA/EMITTER HALF LANDED S92: screens[].states[]
-      first-class (validated, byte-identical when absent, engine already
-      counter×6 — no re-pin); remaining scope = the GUI canvas]: one-screen-at-native-size canvas, screen paging with
-      explicit boundaries + mini-map strip, tile paint with undo, and the
-      room-state switcher over first-class `states[]` (step-counter
-      variants) in the schema. *Accept:* author paints a layout change and
-      adds a 2-state room entirely in the GUI; Build; PyBoy shows both
-      states (step-counter poke) matching the canvas.
+- [x] **P3.3 — Room canvas v1: paint + states + screen paging** [G-G
+      CLOSED] — **DONE S93, built, NOT yet user-tested** (schema/emitter
+      half landed S92; the GUI half + the §5.0 shell landed S93 — the
+      first "editor as a product" session, user-directed). As built:
+      live project.json renderer (pixel-identical to the ROM-built one on
+      all 12 example screens), one-screen native canvas zoom 1-6×, 4×2
+      mini-map with thumbnails + add/remove screen (record dims synced),
+      state switcher (add / duplicate / duplicate-with-own-layout /
+      remove; automatic states[] conversion), pencil/rect/fill/eyedrop
+      for tiles AND palette slots with QUndoStack, tile picker with the
+      collision threshold as the wall boundary, palette panel (idx1/idx3
+      locked), layers (grid / palette slots / walkability / markers with
+      the S91 sprite crops), "Make editable" for vanilla layout refs,
+      inspector (room / screen & state / selection / layout users),
+      byte-exact save, shell tabs + Build/Play/Validate/History.
+      *Accept MET (machine half):* `editor2/tests/test_canvas.py --rom` —
+      paint + 2-state room authored through the GUI code path on a copy
+      of the example project; Build; PyBoy VRAM tilemap == canvas grid
+      320/320 in BOTH states (step-counter poke), also re-run on the
+      user's .sav for the delivered test ROM. *User half:* open
+      example-project on the Mac, paint, add a state, Build, see it.
+      Residuals (named boxes, none block P3.4+): (a) palette-slot grids
+      are per SCREEN, not per state (engine CustomAttrCheck base/base+2;
+      KEY_LESSONS S93) — per-state attrs = an engine change (table-driven
+      attr per step entry in bank $17/$71) if ever wanted; (b) the
+      base+2 attr stride means a multi-screen room's attr items must sit
+      exactly 2 entries apart in custom.layouts — the inspector shows the
+      grid in effect and warns, the editor does not yet auto-arrange it
+      (an "attr set" abstraction or the same engine change fixes it);
+      (c) new-room / clone-room / delete-room actions (EDITOR_DESIGN §5.1
+      "Room actions") not yet in the GUI — extract_room.py is the backend;
+      (d) NPC/exit editing = P3.5/P3.7 (markers are click-to-inspect,
+      read-only); (e) rooms $6B-$6F keep hand-patched bank_000 records, so
+      their tileset/threshold/size are read-only in the editor (migrate
+      them to records = a byte-changing session with a re-pin); (f) 4×4
+      screen grid stays a schema residual (capacities.json).
+- [x] **P3.3b — Room canvas v2: the room model done right** — **DONE S94,
+      built, NOT yet user-tested** (user direction: the editor must not
+      be built around the POC content; vanilla vs custom room columns;
+      player-sized 4-subtile cells; Select as the basic tool; walkability
+      mode; the 4×2 grid was a schema leftover). Landed: vanilla column
+      (98 rooms live, read-only) + "Make editable" clone-with-confirm
+      (paintable at once) + custom column with New / Copy / Rename /
+      Delete + File → New project (blank template); metatiles (found-in-
+      room + my metatiles + editor) as the unit; Select-first with real
+      selection outlines; Walkability mode (bottom-right-subtile twin swap
+      — engine measurement in ROOM_DATA_FORMAT; vanilla tileset copied into
+      the project); 4×4 grid + schema; ENGINE: vanilla-format per-(screen,
+      state) attr + palette tables (CustomAttrCheck/CustomPalCheck rewrite)
+      and compiler-owned ROM0 records for $6B-$6F (`record` required
+      everywhere). **S94b (same session): ENTRANCE REDIRECTS** — "Route a
+      vanilla door here…" (inspector Entrances group / vanilla-view exit
+      marker) writes `custom.entrance_redirects[]`; the compiler rebuilds
+      that (room, screen)'s exit list per valid vanilla step with only
+      that door re-pointed (per-(map, screen) `VanillaExitExtTable` rows,
+      bank $0B Entry 9 diverted too, template re-pinned; pin `fc1caa98…`).
+      Vanilla rooms browse EVERY valid step; clones carry all of them as
+      states[] (per-state layout/attr/palette). *Accept MET (machine
+      half):* `test_canvas.py --rom` — fresh project → Farm clone → paint →
+      wall/open cells → Library door routed to the clone → PyBoy: VRAM ==
+      canvas, player blocked / walks through, walks through the GreatTree
+      Library door into the clone at the authored cell, the neighbouring
+      door still vanilla. *User half:* open the editor on the Mac, clone a
+      room, paint, flip walkability, route the Library door to it, Build,
+      walk through that door in SameBoy.
+      Residuals: (a) ~~no in-game route~~ closed S94b (redirects); the
+      exits editor proper (custom-room exit rows, return doors, world
+      graph) stays P3.7; (b) ~~S92 Library-door POC repoint in the hand
+      overlay~~ closed S94b (vanilla bytes restored; the repoint is example
+      data); (c) bank $64 capacity: clones localize every screen's
+      layout (~200-500 B each compressed; a clone with N states adds N-1
+      more) — needs the capacity meter and, eventually, layout spill into
+      a second bank (the step entry has a bank byte, so it is compiler
+      work only); (d) NPC editing = P3.5; (e) walkability fallback when
+      the wall side of a tileset is full moves the threshold (remaps
+      layouts) — works, but a per-tileset "free slots" meter belongs in
+      the picker — S95 added the import-time free-slot report; (f) ~~vanilla rooms show step 0 only~~ closed S94b
+      (valid-step filter in `editor2/core/vanilla.py`); (h) S95: the
+      metatile picker keeps the room's whole VOCABULARY (never shrinks) and
+      borrows tiles from any vanilla room under this room's palettes
+      (same tileset = brush, other tileset = import into free slots);
+      old projects migrate their missing $6B-$6D records on open; S95 round
+      2: `screens[k].palette` + "palette here" selector + copy-from-vanilla
+      palettes, GUI exits (see P3.7), Borrow tab;
+      (g) NPC thumbnails
+      are the S91 throne-room crops with the floor knocked out in the
+      editor — a transparent-background census (OBJ-only capture) and
+      whole-boss composites belong to P3.5's sprite picker.
+- [ ] **P3.3c — Tileset slot map + vocabulary release (NEXT — user
+      direction S95)**: the 128-tile-per-room budget is a hard engine limit
+      (one 2 KB sheet per room, ids ≥ 128 are font/HUD), and today the
+      only feedback is the import error text. Build a slot-map panel for
+      the room's tileset: 128 cells with the collision threshold drawn
+      (wall half below, walkable half above), coloured PLACED (on any
+      screen/state) / VOCABULARY-ONLY (protected source tiles not placed)
+      / MY METATILES / ANIMATED 77-78 / FREE, hover = which screens use
+      it, click = highlight every cell on the canvas using that tile. Add
+      "Release unused vocabulary" (un-protect vocabulary-only tiles so
+      imports/twins may take their slots — the picker then marks such a
+      metatile as "graphic may change") and its inverse. Show free counts
+      per side ("12 wall / 40 walkable free") in the picker header and in
+      the import error. *Accept:* on a Servant clone the map reports the
+      same numbers as `Document.used_tiles`; releasing the vocabulary lets
+      an import succeed that failed before; re-protecting restores the
+      count; a released tile that an import overwrote is visibly flagged
+      in "This room's tiles". Files: new `rooms/tileset_map.py`,
+      `Document.release_tiles/protect_tiles/tile_usage`, picker flag.
 - [ ] **P3.4 — Embedded PyBoy preview panel** [G-E] (EDITOR_DESIGN §7
       Tier 2): Build → cached post-boot savestate → warp to the room under
       edit → frames in a Qt widget with input. *Accept:* one click plays
       the room being edited, < 10 s from Build-done to walkable.
+- [ ] **P3.5a — Declarative room-state rules** (user question S95: "link a
+      teleport to a specific state?"): per screen `state_rules: [{flag,
+      state}]` evaluated by bank $60 entry 0 (`CustomReadStep`) BEFORE the
+      counter read, so flag-driven room versions (servant room burning →
+      cleared) need no script; a door-specific state = the source door's
+      script setting a flag (or, for redirects, a compiler-generated flag
+      set in the exit path). One small engine hook (template re-pin) +
+      compiler table + inspector "shown when" per state. *Accept:* a clone
+      with two states switches on a flag flip in PyBoy with no authored
+      script; a redirected door arrives in the chosen state.
 - [ ] **P3.5 — NPC inspector**: canvas drag placement, facing, sprite
       picker (P3.1 catalog), per-state presence, show/hide mechanism
       choice, flag gating, script binding. *Accept:* an NPC authored fully
@@ -686,8 +794,12 @@ recipes are pure authoring.
       multi-page + choice dialogue renders in-game byte-exact to preview.
 - [ ] **P3.7 — Triggers/exits editor + World graph v0**: interact/spawn/
       exit editing incl. vanilla_exit_extensions; read-only world graph of
-      rooms/warps. *Accept:* a custom↔vanilla door pair authored in the
-      GUI works in-game; the graph shows it.
+      rooms/warps. *Seeded S95:* "Add exit at this cell…" / "Delete this
+      exit" (custom-room exits, PyBoy-verified) + entrance redirects (S94b)
+      are the two halves; still needed: a DOOR object that owns both ends
+      (auto return exit, drag-to-move), spawn-point editing, edge-vs-scroll
+      conflict check on the canvas, and the graph. *Accept:* a custom↔vanilla
+      door pair authored in the GUI works in-game; the graph shows it.
 - [ ] **P3.7b — Gates tab** [G-F partial]: per-gate config-row editing
       (floors/weights/pool binding — Layer A-lite rows), custom-room-at-
       depth-N insertion surfaced (built S41), boss floor (template +

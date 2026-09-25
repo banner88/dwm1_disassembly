@@ -21,9 +21,10 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 358,   # addr(CustomScriptMasterTable)-$4000 — S70v3 reference game.sym
+    0x60: 383,   # addr(CustomScriptMasterTable)-$4000 — S94 reference game.sym
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
-                 # factored CopyExitListToBuffer in the template head)
+                 # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
+                 # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
     0x71: 142,    # addr(Custom26DDTable)-$4000, S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
 }
 BANK_SIZE = 0x4000
@@ -156,18 +157,13 @@ def validate(prj, generated=None):
             except Exception as e:
                 errors.append(f"room {rid}: script[{idx}]: {e}")
 
-        # $26DD record: required for mapID >= $70 (bank $71 far table lifts
-        # the ceiling — PROJECT_STATE keystone S42); ignored below $70
-        # (those read the in-ROM0 table by raw mapID).
-        if mid >= 0x70 and not r.get('record'):
-            errors.append(f"room {rid}: mapID {F.hexb(mid)} >= $70 requires "
-                          "a 'record' (Custom26DDTable row — bank $71 "
-                          "supplies tileset/dims/threshold past the $6F "
-                          "ceiling)")
-        if mid < 0x70 and r.get('record'):
-            warnings.append(f"room {rid}: 'record' ignored for mapID < $70 "
-                            "(in-ROM0 $26DD table is used; see "
-                            "PROJECT_COMPILER.md §records)")
+        # $26DD record: required for EVERY non-placeholder room (S94 — rows
+        # $6B-$6F are the compiler-owned ROM0 region, $70+ the bank $71
+        # Custom26DDTable; PROJECT_STATE keystone S42 + S94).
+        if not r.get('record'):
+            errors.append(f"room {rid}: mapID {F.hexb(mid)} requires a "
+                          "'record' (tileset/dims/collision threshold — "
+                          "ROM0 rows $6B-$6F or Custom26DDTable $70+)")
         rec = r.get('record')
         if rec:
             w, h = F.val(rec['width_px']), F.val(rec['height_px'])
@@ -177,20 +173,25 @@ def validate(prj, generated=None):
                               " height=rows*128; KEY_LESSONS S10 movement "
                               "clamp)")
             cols, rows_n = w // 160, h // 128
-            top = max(screens)
-            if top >= 4 and rows_n < 2:
-                errors.append(f"room {rid}: screen index {top} implies 2 "
-                              "rows but record height is 1 row "
+            need_rows = max(i // 4 for i in screens) + 1
+            need_cols = max(i % 4 for i in screens) + 1
+            if rows_n < need_rows or cols < need_cols:
+                errors.append(f"room {rid}: screens need {need_cols}x{need_rows}"
+                              f" (cols x rows) but record is {cols}x{rows_n} "
                               "(KEY_LESSONS S10: dimensions gate scrolling)")
+            if cols > 4 or rows_n > 4:
+                errors.append(f"room {rid}: record {cols}x{rows_n} exceeds the "
+                              "engine's 4x4 scroll grid (ROOM_DATA_FORMAT)")
 
         single_width = True
         if rec:
             single_width = F.val(rec['width_px']) <= 160
 
         for i, s in screens.items():
-            if not (0 <= i <= 7):
+            if not (0 <= i <= 15):
                 errors.append(f"room {rid} screen {i}: index outside the "
-                              "4x2 grid (ROOM_DATA_FORMAT)")
+                              "4x4 grid (ROOM_DATA_FORMAT: row*4+col, "
+                              "engine ceiling 16 — capacities.json)")
             lay = s.get('layout')
             if not lay:
                 errors.append(f"room {rid} screen {i}: missing layout")
@@ -262,12 +263,32 @@ def validate(prj, generated=None):
                 "as its creation base (80-100% roll, MONSTER_DATA)")
 
     # ------------------------------- vanilla exit extensions (S70, Entry 6)
+    # S94b: VanillaExitResolve takes the FIRST row matching (mapID, screen);
+    # an 'any' row shadows every per-screen row of the same map behind it,
+    # and two rows for one (map, screen) can never both fire.
+    seen_keys = {}
+    for ext in getattr(prj, 'vanilla_exit_exts', []):
+        mid = F.val(ext.get('mapID', -1))
+        scr = ext.get('screen', 'any')
+        scr_k = 'any' if scr in (None, 'any') else F.val(scr)
+        src = ('entrance_redirects' if ext.get('_generated')
+               else 'vanilla_exit_extensions')
+        for (pm, ps), psrc in seen_keys.items():
+            if pm == mid and (ps == scr_k or 'any' in (ps, scr_k)):
+                errors.append(
+                    f"{src}: vanilla ${mid:02X} screen {scr_k} already has an "
+                    f"exit override from {psrc} (screen {ps}) — one override "
+                    "per (room, screen); merge them into one entry")
+        seen_keys[(mid, scr_k)] = src
     for ext in getattr(prj, 'vanilla_exit_exts', []):
         mid = F.val(ext.get('mapID', -1))
         ctx = f"vanilla_exit_extensions[{F.hexb(mid) if mid >= 0 else '?'}]"
         if not (0 <= mid < 0x6B):
             errors.append(f"{ctx}: mapID must be a VANILLA room (< $6B) — "
                           "custom rooms own their exit lists in bank $60")
+        scr = ext.get('screen', 'any')
+        if scr not in (None, 'any') and not (0 <= F.val(scr) <= 15):
+            errors.append(f"{ctx}: screen must be 0-15 or 'any'")
         if 'step_counter' not in ext:
             errors.append(f"{ctx}: step_counter (the room's vanilla WRAM "
                           "counter, e.g. $D95E for MedalMan) is required — "
@@ -287,12 +308,7 @@ def validate(prj, generated=None):
                     errors.append(f"{ctx} step {si}: trigger_x $FF is the "
                                   "list terminator (CROSSBANK_ROOMS "
                                   "authoring rule 2)")
-                if y in (0, 7):
-                    warnings.append(
-                        f"{ctx} step {si}: row at y={y} is a BOUNDARY exit — "
-                        "Entry 9 is NOT extended (it reads the vanilla bank "
-                        "$0B list), so this row is INERT on the Entry 6 "
-                        "path; keep it only for list-parity documentation")
+                # S94b: Entry 9 (boundary y=0/7) reads the extension too.
                 if 'screen_byte' not in e:
                     errors.append(f"{ctx} step {si}: exit ({x},{y}) has no "
                                   "screen_byte — NEVER guessed (KEY_LESSONS "

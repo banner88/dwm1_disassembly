@@ -284,11 +284,21 @@ Read by Entry 6 (runs EVERY step) for walk-on exit detection.
 
 Special type values (byte 0):
 - $FF: terminator
-- $00: arrival point (skipped by exit checker)
-- $09: special marker (skipped)
+- $00 / $09: skipped by Entry 6 — they are the LEFT / RIGHT edge columns
+  (x=0, x=9) and are matched by Entry 9 instead (S94b correction, DOC_AUDIT
+  S94: the old "arrival point" / "special marker" names were wrong — they
+  are ordinary edge exits, e.g. the Great Tree's east/west screen edges).
 
 All other byte 0 values are treated as trigger_X coordinates.
 Player position is compared in screen-local coordinates (player_pos - screen_offset).
+
+Two scanners read the SAME list (both diverted through bank $60 entry 7 since
+S70 / S94b, PROJECT_COMPILER §vanilla_exit_extensions):
+- **Entry 6** (every step, walk-on): rows with 0 < x < 9 and 0 < y < 7 (the
+  y=7 skip is data-driven since S70v3 — custom rooms make y=7 rows walk-on).
+- **Entry 9** (push into the screen edge): rows with x ∈ {0, 9} or
+  y ∈ {0, 7}; the player must walk INTO the edge.
+`custom.entrance_redirects` (PROJECT_COMPILER §2.12) may re-point either kind.
 
 Verified example — Castle Screen 5 exits:
 - (2,5) → Gate Hub (mt=3): left door
@@ -323,6 +333,12 @@ All tilesets decompress to exactly 128 tiles. The same 9 tileset banks are used.
 
 GBC-only. Contains tile palette/attribute data for the background map.
 - Decompressed via LZSS from bank $17 (palette data tables at $5215/$5415)
+- Selected PER (screen, step): `AttrPtrTable[map] → screen table (dw per
+  screen) → [step counter addr:2] + per step [attr_entry, attr_bank,
+  pal_ptr:2]` — so a room state can change its attr grid AND its BG palette
+  (Servant room $3F: burning vs cleared differ in 221 attr cells and the
+  palette). Custom rooms use the same shape via `CustomAttrPtrTable`
+  (S94b, PROJECT_COMPILER §2.11; GATE_GENERATION §7.4).
 - 256 bytes total, 16 bytes per row (10 used + 6 padding)
 - Each byte = 2 nibbles = 2 palette indices (0-15, 4 bits each)
 - Written to VRAM $9800 in VRAM bank 1 (GBC attribute layer)
@@ -361,6 +377,20 @@ Entry 9 checks exits at Y=0 and Y=7 (boundary, requires walking into edge).
 Walk grid: 10 columns × 8 rows per screen. Each cell = 16×16 pixels (2×2 tiles).
 $FF97 = walk X, $FF98 = walk Y. Screen offsets from $2DE7 table (indexed by
 screen_index × 2): X_offset (walk units) and Y_offset (walk units).
+
+## Walkability: the bottom-right subtile decides (S94, emulator-measured)
+
+Collision is decided per TILESET INDEX (tile id < the room's collision threshold
+= WALL, KEY_LESSONS S6), sampled from the `$C300` screen buffer by
+`TileBuffer_1E96` at the player's TARGET position — and the sampled tile is the
+**bottom-right subtile of the target 16×16 cell**, from every approach direction.
+Measured S94 in PyBoy (gate_rotation `$6D`, tile 0 poked into one subtile of the
+neighbouring cell at a time, 16/16 trials: TL/TR/BL never block, BR always
+blocks; right/down/left/up approaches identical). Consequences: a cell's
+walkability can be flipped by swapping only its BR subtile for a graphic twin
+on the other side of the threshold (editor "Walkability mode"); the other three
+subtiles are cosmetic. The behavior class `$AA >> 2` (damage/stairs,
+GATE_GENERATION §5.1) is read from the same sampled subtile.
 
 ## NPC capacity & sprite-sheet budget (S91, emulator-measured)
 

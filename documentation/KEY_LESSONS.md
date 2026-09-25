@@ -3446,3 +3446,94 @@ or normal churn gets reported as corruption.
   demo is REMOVAL of a visibly-rendered NPC; sprite swaps need the lobby's
   loaded-sheet context checked first. And when pixel identity matters,
   show the frames to the user — the S92 "blue slime" was never a slime.
+
+## S93 — the room canvas (editor-as-product session)
+
+### Palette-slot (attr) grids are per SCREEN, not per state
+**Symptom**: painting palette slots while viewing state 1 of a screen also changed state 0's colours; the canvas and the game agree (PyBoy-verified), so it is not a renderer bug.
+**Root cause**: `CustomAttrCheck` (patches/bank_017.asm) selects the attr stream by mapID + screen index (base entry for screen 0, base+2 otherwise) and never consults the step counter; only the 6-byte step entry's `step_id/tileset_bank` (the TILE layout) varies per state. `states[]` therefore forks tiles, NPCs and exits — never attrs.
+**Fix**: the editor paints the one attr grid in effect and names it in the inspector; the shared-edit consequence is stated, not hidden. Per-state attrs would be an engine change (table-driven attr per step entry).
+**Rule**: any "per-state" editor surface must be checked against which ROM table the engine actually indexes by the step counter. Tiles yes; attrs no; palettes (`CustomRoomPalPtr`) no.
+
+### A layout list is a bank-$64 ENTRY ORDER — never insert, only append
+**Symptom**: (design-time catch) inserting a forked layout next to its source would have shifted every later entry, so gate_island's screen 4 attr (base+2) would silently point at a different item.
+**Root cause**: `custom.layouts[]` declaration order == bank $64 entry numbering (tiles then attr per item), and the engine's base+2 stride hardwires relative positions between items.
+**Fix**: `Document.add_layout` appends; the undo path is the only caller allowed to restore at an index.
+**Rule**: when a JSON list's order is a ROM table's index, editor operations must be append-only (or re-validate every dependent reference on reorder).
+
+### Exact undo needs the document to be the only truth
+**Symptom**: the acceptance test compared VRAM against a grid captured BEFORE a full undo/redo cycle and reported 92 differing tiles; the ROM was right.
+**Root cause**: AddState's undo REMOVES the state-1 layout item and its redo recreates it; a Python reference to the old list survives with stale contents.
+**Fix**: read grids from the Document by id after any command cycle; views re-read on `layoutChanged`/`structureChanged`, never cache dict references across commands.
+**Rule**: QUndoCommands that create/remove objects invalidate every outside reference to them — look objects up by id after undo/redo, and test with a full undo→redo→compare-to-disk pass (the test asserts project.json is byte-identical after full undo).
+
+### GUI acceptance = the same VRAM check the engine sees
+**Rule** (extends S70): a canvas is "correct" when the BG tilemap at $9800 in the running game equals the editor's grid tile-for-tile for every state, not when the screenshots look alike — the two vault states differed by 32 sand tiles that no eye could tell apart; the tilemap check is decisive and cheap.
+
+## S94 — canvas v2, the room model, and two engine facts
+
+### Collision samples the BOTTOM-RIGHT subtile of the target cell
+**Symptom**: "walkability per cell" seemed impossible — the engine keys on tile INDEX (< threshold = wall), not on position.
+**Root cause / measurement**: `TileBuffer_1E96` reads ONE tile from `$C300` at the player's target pixel position; PyBoy (gate_rotation `$6D`, tile 0 poked into one subtile of the neighbouring cell at a time, all four approach directions, 16/16): only the bottom-right subtile blocks.
+**Fix**: Walkability mode swaps a cell's BR subtile for a graphic twin on the other side of the threshold (`Document.ensure_twin`); the other three subtiles never matter for collision.
+**Rule**: measure which subtile a per-cell engine check samples before designing a per-cell UI; one PyBoy poke loop answers it in seconds.
+
+### `base_entry+2` was an engine limitation, not a schema quirk
+**Symptom**: a 6-screen Farm clone rendered screens 2/4/5/6 with screen 1's palette assignments — identically in the editor and in PyBoy (100+ mismatching tiles per screen vs vanilla).
+**Root cause**: `CustomAttrCheck` (S42) hardwired `base_entry+2` for EVERY non-zero `wScreenIndex`; the island proof rooms only ever had screens 0 and 4, so it passed.
+**Fix**: first a per-room 17-byte attr map indexed by `wScreenIndex` (S94), then — same session — the VANILLA table shape per (screen, state) (S94b, next lesson). The S93 append-only layout rule and the stride banner are retired.
+**Rule**: when a table-driven intercept is validated only on the proof content's shape, the first clone of a real room is the test — clone the biggest vanilla room and diff every screen against vanilla before calling a room pipeline done.
+
+### Attr AND palette are per STATE — copy the vanilla table shape, don't invent one
+**Symptom**: the S94 per-screen attr map could not reproduce the Servant boss room (`$3F`): its two steps (burning / cleared) differ in 221 attr cells and use a different BG palette, and the user remembered that from play.
+**Root cause**: bank $17's vanilla walk is `AttrPtrTable[map] → screen table → [step counter] + per step [attr_entry, attr_bank, pal_ptr]` — attr and palette are selected by the step counter, exactly like layouts. The S93 "attr is per screen, never per state" claim was an assumption that two earlier intercepts had baked in.
+**Fix**: `CustomAttrPtrTable → RoomAttr_<mid> → ScrAttr_<mid>_<k>` in the vanilla row format; `CustomAttrCheck` swaps only the table base and lets the engine walk it; clones carry per-state attr items and palettes (`<rid>_s<k>_st<n>`, `pal_<rid>_s<k>_st<n>`). PyBoy: Servant clone both states pixel-identical to vanilla.
+**Rule**: when replacing a vanilla table, emit the VANILLA shape and let the vanilla reader walk it — every dimension the original varies (screen, step) comes for free, and future "the engine can't do X" claims die on the spot.
+
+### Redirect a door by replacing ONE row per state, keyed per screen — never the whole map
+**Symptom**: the S92 Library-door repoint was a hand-edited byte in bank $0B (POC state that reached every project); a `vanilla_exit_extensions` row for GreatTree would have replaced the exit lists of ALL its screens (S92's wholesale-replacement trap).
+**Fix**: `VanillaExitExtTable` rows carry `(mapID, screen)`; `custom.entrance_redirects` lowers to per-step lists rebuilt from `extracted/map_table.json` with only the named `(x, y)` row substituted; Entry 9 is diverted like Entry 6 so edge doors qualify. `Exit_GreatTree_s8` is vanilla again.
+**Rule**: an override table for vanilla data must be keyed by every index the engine uses to select that data (here map AND screen AND step) — otherwise "add one door" silently rewrites unrelated rooms. And a testing convenience that lives in the hand overlay is POC state: put it in the example project as data the same session.
+
+### Labels grow the window: hover text in a QLabel becomes a minimum width
+**Symptom** (user): maximised editor slid off the right of the screen when hovering the right pane.
+**Root cause**: the status line / banner QLabels asked for the width of their (long) hover text; Qt honours a child's minimum size hint, so the top-level window grew past the screen.
+**Fix**: `QSizePolicy.Ignored` horizontally on labels whose text is data (tab minimum now 1106 px).
+**Rule**: any widget fed runtime strings must not carry a text-derived minimum width.
+
+### Snapshot undo must capture EVERY asset before the op, not after
+**Symptom**: undoing the second walkability flip deleted the tileset sheet the first flip had created; the doc still referenced it → render exceptions in slots (the test still passed — the file came back on redo).
+**Root cause**: `SnapshotCommand` computed its asset list AFTER running the op, so `files_before` was empty for assets that already existed; undo wrote `None` = delete.
+**Fix**: snapshot all existing asset files before the op, then union with anything the op created.
+**Rule**: a snapshot command's "before" must cover every file it might later restore; derive the file list from the document state before AND after the op.
+
+### VRAM checks off screen 0 must follow SCX/SCY
+**Symptom**: the tilemap check on screen 4 (grid row 1) reported 320/320 tiles wrong while the screenshot was right.
+**Root cause**: the BG map is 32×32; row-1 screens are written at SCY=128 (`$9A00`), not `$9800`.
+**Rule**: read the visible map as `$9800 + ((SCY/8 + r) % 32)*32 + ((SCX/8 + c) % 32)`; `$FF97/$FF98` walk coords are ABSOLUTE (row 1 = y+8) — the S92 GreatTree lesson generalized.
+
+## S95 — vocabulary, borrowing tiles, and mixed checkouts
+
+### A palette of "found" tiles must be a vocabulary, not a census of the current screen
+**Symptom** (user): the tiles "found in this room" vanished the moment the last copy was painted over — you could not paint them back.
+**Root cause**: the list was harvested from the screen being shown.
+**Fix**: harvest every screen/state of the room plus the vanilla source room's screens, and protect those sheet slots from reuse by twins/imports (a tile you can still pick must keep its graphic).
+**Rule**: anything offered as a brush must survive its own removal from the canvas, and the data behind it must be pinned while it is offered.
+
+### Tiles from another room are graphics, not indices
+A metatile is 4 sheet INDICES + a palette slot, so it only means the same thing on the same 2bpp sheet. Borrowing across tilesets = copying the 8×8 graphics into free slots of the destination sheet; the bottom-right subtile must land on the source's side of the destination threshold (it decides walkability, S94), the other three may sit anywhere. Free-slot budget is what makes this fail: GreatTree's sheet leaves 8 slots, Arena Rooms 1 — say so in the error, don't silently reuse.
+
+### Old data + new code is the most common "build failed"
+**Symptom** (user): "mapID $6B requires a 'record'" — the app ran from a Downloads checkout, the project lived in the Desktop repo, so S94b code met an S93 project.json.
+**Fix**: the editor migrates known schema gaps on open (legacy $26DD rows for $6B-$6D) and logs it; the compiler stays strict.
+**Rule**: every REQUIRED-field schema change ships with an on-open migration in the Document layer, because users run the new editor against yesterday's project before they apply the zip's project.json.
+
+### An undo command whose op can fail must undo itself
+`SnapshotCommand` used to let the exception out of `redo()` — Qt had already pushed the command. Now it restores the before-snapshot (doc + asset files), records `error`, and marks itself obsolete so the stack drops it. Rule: a command's first `redo()` must leave the document unchanged on failure.
+
+### Every level that can render needs a place to say which palette it shows
+**Symptom** (user): delete the servant room's burning state, add a second screen — the new screen came up burning.
+**Root cause**: palettes lived on `states[n]` or the room; a screen without states had no slot, so it inherited the room default the author had abandoned.
+**Fix**: `screens[k].palette`, and add-screen copies the palette in effect.
+**Rule**: whatever the engine varies per (screen, state) — layout, attr, palette — the schema must allow at every level the GUI can create, and a new item must inherit what the author is looking at, not a global default.
+

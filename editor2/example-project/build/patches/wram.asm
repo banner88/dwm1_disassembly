@@ -241,7 +241,12 @@ wCustomStep_Room6C_S5:: db ;cd84 — Room $6C screen 5 step counter (legacy hole
 wCustomStep_Room6D_S0:: db ;cd85 — Room $6D screen 0 step counter (gate_rotation)
 wCustomStep_Room70_S0:: db ;cd86 — Room $70 screen 0 step counter (ember_keystone)
 wCustomStep_Room71_S0:: db ;cd87 — Room $71 screen 0 step counter (medal_vault)
-    ds 632 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
+wCustomStep_Room72_S0:: db ;cd88 — Room $72 screen 0 step counter (arena_clone)
+wCustomStep_Room72_S2:: db ;cd89 — Room $72 screen 2 step counter (arena_clone)
+wCustomStep_Room73_S0:: db ;cd8a — Room $73 screen 0 step counter (island_copy)
+wCustomStep_Room73_S4:: db ;cd8b — Room $73 screen 4 step counter (island_copy)
+wCustomStep_ArenaClone_S1:: db ;cd8c — Room $72 screen 1 step counter (arena_clone)
+    ds 627 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
 ; @BUILD_PROJECT END wram_step_counters
 
 
@@ -322,7 +327,21 @@ wPendingFarmExp:: ds 3 ;d9c8
 wColiseumBattle:: db ;d9cd — current consecutive battle in gates/arena
 wArenaGroup:: db ;d9ce — arena battle group index
 
-    ds $25
+    ds 8                            ; d9cf-d9d6 (poisoned bytes — see EVENT_FLAGS)
+
+; [ANCHOR S73] Persistent anchor state (custom skill $E4 "Anchor").
+; $D9D7-$D9D8 are the OTHER safe pair from the S57 per-byte audit (flag
+; indices $01E0-$01EF, zero engine literals, zero script refs) — appropriated
+; following the CF2/wPendingFarmExp precedent; flags $01E0-$01EF are RETIRED
+; from the allocator pool in exchange (EVENT_FLAGS.md; editor2/core/project.py
+; FLAG_SAFE_RANGES). Inside the $C8EA-$D9E9 save image -> persists through
+; save+reload; boot/new-game zeroed. VALIDITY = wAnchorFloor != 0 (floors are
+; 1-based; gate 0 is a legal anchor target, so the gate byte can't be the
+; sentinel). Pre-anchor saves load floor 0 = "no anchor" (clean migration).
+wAnchorGate:: db ;d9d7 — anchored gate id (0-31); meaningful only if floor != 0
+wAnchorFloor:: db ;d9d8 — anchored floor (1-based); 0 = no anchor set
+
+    ds $1B                          ; d9d9-d9f3 (poisoned bytes — see EVENT_FLAGS)
 
 wEventStateMachineIndex:: db ;d9f4 — 11 states (0-10), dispatch at $50:$4017
 
@@ -394,7 +413,7 @@ wBattleATK:: ds 16 ;dbe3 — attack per combatant
 wBattleDEF:: ds 16 ;dbf3 — defense per combatant
 wBattleAGL:: ds 16 ;dc03 — agility per combatant
 wBattleINT:: ds 16 ;dc13 — intelligence per combatant
-wBattleLVL:: ds 16 ;dc23 — level per combatant (tentative)
+wBattleLVL:: ds 16 ;dc23 — [S87] MISNOMER: per-combatant WLD (wildness) word, from record slot+$60; enemies forced $00FF. The obedience gate's level term (bank $57 $7a03/$7a5d). Display level lives in $db9b.
 
     ds ($DE74 - ($DC23 + 16))       ; gap ($DC33-$DE73): battle vars, AI score
                                     ; table $DCE4, action queue $DCEC, AUDIO
@@ -477,3 +496,40 @@ wSRAMXferLen::  dw ;de90 — byte count (LE, >=1; $0000 = no-op)
 ; Transient; live only inside the save/load funnels. Reserve now 42 B,
 ; growth starts $DEB2.
 wSnapBounce:: ds 32 ;de92-deb1
+
+; [ANCHOR S73] Transient anchor plumbing (outside the save image by design:
+; cast->arrival is one uninterruptible transition, nothing here must survive
+; a save). Boot-zeroed by the $1EE0 ClearAllWRAM extension.
+; wAnchorArm protocol: 0 idle; 1 = gate-side YES (commit hook stores
+; gate+floor from live wGateID/wCurrentFloor, then 0); 2 = town-side YES
+; (commit hook installs wGateID/wCurrentFloor-1, deducts 3/4 of the caster's
+; current MP, clears the stored anchor, then sets 3); 3 = consumed by
+; GateDecisionFork inside entry-5 to FORCE the standard-maze path (then 0).
+; Reserve now 40 B, growth starts $DEB4.
+wAnchorArm:: db ;deb2 — see protocol above (written by script write_ram + ASM)
+wAnchorCaster:: db ;deb3 — caster party slot (0-2), captured at cast time
+; [QUAKE] Earthquake ($E5-$E8) battle-sweep state. Reset per cast by
+; AnnounceIdxFork (bank $58) and on sweep finish (QuakeSweep72).
+wQuakePhase:: db ;deb4 — 0 idle / 1 first-side sweep ran (shake+SFX fired) /
+                ;        2 crossed to the caster's own side (allies)
+wQuakeAllyMsg:: db ;deb5 — 1 = "seismic wave" ally message pending (rendered by
+                ;   the widened TameGateHook via the $FD escape, then cleared)
+wQuakeCaster:: db ;deb6 — TRUE caster slot, captured at the first handler run
+                ;   ($db88 is REWRITTEN to the current target mid-sweep by the
+                ;   per-target redirect $53:CallBtlC_5e38 — measured S74 — so
+                ;   every later caster/side test must use this instead)
+wQuakeBursts:: db ;deb7 — remaining shake bursts (tier count 1..4 at cast; the
+                ;   step-2 tick QuakeStepTick72 consumes them: burst/gap/burst)
+wQuakePause:: db ;deb8 — inter-burst gap countdown; $FF = terminal (stopper SE
+                ;   already queued). Only read while the shake train is armed.
+wQuakeArmed:: db ;deb9 — 1 while the cast-anim-slot shake train is running
+                ;   (armed by QuakeAnimHold72 on entering d9ee==3; cleared when
+                ;   the train completes and the anim slot is released; also
+                ;   hard-cleared by the handler's phase-0 init).
+; [MOURN S75] Mourn ($E9) battle state. Reset per cast by the handler.
+wMournBoosted:: db ;deba — 1 if dead allies were found (triggers the boost
+                ;   banner "The fallen lend power!" via MournGate_delay in
+                ;   bank $53; cleared after render). 0 = no dead allies.
+wMournSlashes:: db ;debb — double-slash replay counter (starts at 2; decremented
+                ;   by QuakeAnimHold72's .mourn path each time $da82→1;
+                ;   release at 0). Transient to the cast-anim slot.

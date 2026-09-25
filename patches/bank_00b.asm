@@ -974,15 +974,18 @@ labelb_4488:
     or a
     ret nz
 
-    ; Shared pointer table read → HL = step_entry
-    ; Check for custom overflow room
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    jr c, .normalSpecial
-    ld hl, $6002                ; rst $10: bank $60, entry 2 (CustomExitCheck)
+    ; S94b: unified exit resolve here too (bank $60 entry 7, the S70 Entry-6
+    ; divert) — custom rooms get their bank $60 list exactly as the old
+    ; entry-2 divert did, and VANILLA rooms with a compiler-authored exit
+    ; extension (entrance redirects) get the extension list, so boundary
+    ; (y=0/7) doors can be redirected as well as interior ones. HL=0 = no
+    ; override -> vanilla SharedPtrChase. (5 nops keep this block's size:
+    ; the old code was 5 bytes longer.)
+    ld hl, $6007
     rst $10
-    jr .specialDataReady
-.normalSpecial:
+    ld a, h
+    or l
+    jr nz, .specialDataReady
     call SharedPtrChase
     inc hl
     inc hl
@@ -991,6 +994,11 @@ labelb_4488:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
+    nop
+    nop
+    nop
+    nop
+    nop
 .specialDataReady:
     ld bc, $2de7
     ld a, [wScreenIndex]
@@ -3220,8 +3228,8 @@ Exit_GreatTree_s5:  ; $4FE5 — 0 exits
     db $FF  ; terminator
 
 Exit_GreatTree_s8:  ; $4FE6 — 2 exits
-    db $05, $03, $72, $00, $01, $04, $07  ; S92v3 REPOINT (user-directed): GreatTree Library door → arena_clone $72, sb $01 spawn (4,7) (the proven Lobby-entry pair). Was: db $05,$03,$12,$00,$04,$05,$07 (→ Library). In-place same-size edit (S70v2 bank $0B precedent); restore the original bytes to give the Library back.
-    db $04, $05, $6B, $00, $00, $07, $06  ; exit (4,5)→mt$6B CUSTOM ROOM  scr=0 spawn(7,6)
+    db $05, $03, $12, $00, $04, $05, $07  ; exit (5,3)→Library $12 (VANILLA bytes restored S94b — the S92v3 repoint to $72 and the S1-era (4,5)→$6B repoint are now `custom.entrance_redirects` in project.json, lowered to per-screen VanillaExitExtTable rows)
+    db $04, $05, $18, $00, $00, $04, $00  ; exit (4,5)→mt$18 (VANILLA bytes restored S94b)
     db $FF  ; terminator
 
 Exit_GreatTree_s9:  ; $4FF5 — 2 exits

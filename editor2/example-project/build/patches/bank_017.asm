@@ -33,7 +33,9 @@ label17_401d:
     jp nz, Jump_017_4064
 
     ld hl, AttrPtrTable
-    call MapIDClampForPalette   ; ROM0 helper: clamps mapID for custom rooms
+    call CustomAttrCheck        ; S94b: custom rooms → HL=CustomAttrPtrTable, A=mapID-$6B
+                                ;       (same per-screen/per-step walk as vanilla below);
+                                ;       vanilla rooms / no table → MapIDClampForPalette
     add a
     add l
     ld l, a
@@ -74,7 +76,7 @@ label17_401d:
     ld l, a
     ld c, $00
     ld b, $04
-    call CustomPalCheck         ; intercept: custom rooms → merged palette colors
+    call CustomPalCheck         ; intercept: custom rooms → this STATE's palette (slots 0-3)
     jp Jump_017_4102
 
 
@@ -2556,87 +2558,66 @@ AttrMapDataB:
     db $00, $00, $FD, $7F, $A5, $7E, $0E, $7F, $00, $00, $FF, $7F, $FF, $7F, $BF, $01
 
 ; ---------------------------------------------------------------------------
-; CustomAttrCheck: intercept for entry 1 (attr map decompression)
-; Called instead of MapIDClampForPalette in label17_409e.
-; For vanilla rooms + Room $6C+: falls through to MapIDClampForPalette.
-; For Room $6B: pops return address, selects per-screen attr entry,
-;   decompresses custom attr data from bank $64, returns to caller.
-; Multi-screen: screen 0 → entry 1, screen 4 → entry 3 (vertical pair)
+; CustomAttrCheck: intercept for the attr-map (entry 1) AND palette (entry 0)
+; table walks. Called with HL = AttrPtrTable in place of MapIDClampForPalette;
+; must return A = table index and HL = table base for the vanilla walk that
+; follows (room dw -> screen dw -> [counter:2] -> step*4 -> [attr_entry,
+; attr_bank, pal_ptr:2]).
 ; ---------------------------------------------------------------------------
-; PILLAR A (Phase 2C): TABLE-DRIVEN for ANY custom room (mapID >= $6B), not just
-; $6B. Per-room attr source = CustomRoomAttr[mapID-$6B] = {bank, base_entry}.
-; bank $00 = no custom attr (fall through to vanilla). Screen 0 -> base_entry;
-; any other screen -> base_entry+2 (vertical-pair stride; degenerate for
-; single-screen rooms since screen is always 0). The editor emits one
-; CustomRoomAttr entry per custom mapID, so adding a room is pure data.
+; S94b (editor canvas v2): custom rooms get a table in the VANILLA FORMAT —
+; CustomAttrPtrTable (one dw per custom mapID, index mapID-$6B) -> RoomAttr_
+; (16 screen dw) -> ScrAttr_ ([step counter:2] + 4 bytes per STATE) — emitted
+; by build_project.py. So attrs AND palettes are per (screen, state), exactly
+; like vanilla (the servant boss room's burning/cleared states). dw $0000 in
+; CustomAttrPtrTable = no table (placeholder rooms) -> the old Castle path.
+; History: S42 {bank, base_entry} + base_entry+2 stride -> S94 per-screen
+; 17-byte maps -> S94b vanilla-format per-state tables.
 CustomAttrCheck:
     ld a, [wMapID]             ; actual room
     cp CUSTOM_ROOM_START       ; $6B
     jr nc, .custom             ; >= $6B → consult the per-room table
-    jp MapIDClampForPalette    ; vanilla room: normal path
+    jp MapIDClampForPalette    ; vanilla room: normal path (A = mapID, HL intact)
 .custom:
     sub CUSTOM_ROOM_START       ; index = mapID - $6B
-    add a                        ; ×2 (2 bytes/entry: bank, base_entry)
+    push af
+    add a                        ; ×2 (dw per room)
     ld e, a
     ld d, $00
-    ld hl, CustomRoomAttr
+    ld hl, CustomAttrPtrTable
     add hl, de
-    ld a, [hl+]                  ; A = attr bank
-    ld d, [hl]                   ; D = base_entry (temp hold)
-    or a                         ; bank $00?
-    jr z, .vanillaAttr           ; → no custom attr for this room
-    ld e, d                      ; E = base_entry (screen 0)
-    ld d, a                      ; D = attr bank
-    ld a, [wScreenIndex]
-    or a
-    jr z, .attrReady             ; screen 0 → base_entry
-    inc e
-    inc e                        ; other screen → base_entry+2 (vertical pair)
-.attrReady:
-    pop hl                       ; discard return into entry 1 table lookup
-    ld hl, $c200                 ; attr decompression destination
-    call WaitLCDTransfer         ; decompress + copy to VRAM (D=bank, E=entry)
-    ret                          ; return to entry 1's caller
-.vanillaAttr:
-    jp MapIDClampForPalette      ; custom room without custom attr: vanilla path
+    ld a, [hl+]
+    or [hl]                      ; dw $0000?
+    jr z, .noTable
+    pop af                       ; A = index
+    ld hl, CustomAttrPtrTable    ; HL = table base — the caller walks it
+    ret
+.noTable:
+    pop af
+    ld hl, AttrPtrTable          ; restore the vanilla base
+    jp MapIDClampForPalette      ; A = $00 (Castle) as before for table-less rooms
 
 ; CustomPalCheck: intercept for entry 0 (palette color loading)
-; For Room $6B, redirects HL to merged palette colors instead of source pal_ptr
 ; IMPORTANT: Only loads slots 0-3. Slots 4-7 are SYSTEM palettes (used by
 ; monster display, menus, NPC rendering) — the game engine sets them from
 ; the source mapID's palette data. Overwriting them breaks the menu.
-; PILLAR A (Phase 2C): TABLE-DRIVEN for ANY custom room. Per-room palette =
-; CustomRoomPalPtr[mapID-$6B]. A pointer of $0000 = "borrow the vanilla
-; source-map palette" (caller's HL/b/c left intact). A real pointer = load
-; slots 0-3 from it (slots 4-7 stay as the engine's system palettes — widening
-; corrupts monster/menu colours, see GATE_GENERATION §7.3). Both callers of this
-; routine (entry-0 slots-0-3, and the slot-7 overwrite) get the same treatment:
-; a custom-palette room loads slots 0-3 in both, which is exactly how $6B behaved.
+; S94b: the palette pointer arrives in HL from the same vanilla-format table
+; walk as the attr map (CustomAttrCheck), so it is already per (screen,
+; state). This routine only fixes b/c to slots 0-3 for custom rooms and skips
+; the slot-7 system overwrite call (c=$07) in custom rooms, as the S42 code did.
 CustomPalCheck:
     ld a, [wMapID]
     cp CUSTOM_ROOM_START
     jr c, .vanilla              ; < $6B → vanilla, caller's HL/b/c intact
-    push hl                     ; save caller's fallback pal_ptr
-    sub CUSTOM_ROOM_START        ; index = mapID - $6B
-    add a                        ; ×2 (dw per entry)
-    ld e, a
-    ld d, $00
-    ld hl, CustomRoomPalPtr
-    add hl, de
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                      ; HL = room's custom palette ptr
-    ld a, h
-    or l
-    jr z, .borrowVanilla         ; $0000 → use the vanilla source palette
-    pop de                       ; drop saved fallback ptr
-    ld b, $04                    ; custom rooms: load slots 0-3
-    ld c, $00
-    jp LoadPal_46a1
-.borrowVanilla:
-    pop hl                       ; restore caller's fallback pal_ptr
+    ld a, c
+    cp $07
+    ret z                        ; custom room: skip the system slot-7 overwrite
+                                 ; (S94b; slots 0-3 were loaded by the entry-0 call)
+    ld b, $04                    ; custom rooms: load slots 0-3 from THIS STATE's
+    ld c, $00                    ; pal_ptr (HL, from the room's vanilla-format table:
+                                 ; a custom palette block, or the source room's
+                                 ; vanilla palette when the state borrows it)
 .vanilla:
-    jp LoadPal_46a1              ; caller's HL/b/c unchanged
+    jp LoadPal_46a1              ; caller's HL/b/c unchanged for vanilla rooms
 
 ; ---------------------------------------------------------------------------
 ; Per-custom-room render tables (Pillar A). Indexed by (wMapID - $6B). The
@@ -2646,9 +2627,10 @@ CustomPalCheck:
 ; is already table-driven in bank $60. Tileset + collision threshold + room
 ; dimensions live in the per-mapID $26DD record (ROM0) for mapIDs $6B-$6F;
 ; mapIDs $70+ need a $26DD intercept (follow-up). See ROADMAP Phase 2C.
-; Per-custom-room render tables RELOCATED to the bank tail (see CustomRoomPalPtr /
-; CustomRoomAttr below) so they can grow to 6 entries without shifting the palette
-; data that follows. These 12 bytes are reserved padding to keep that data in place.
+; Per-custom-room render tables RELOCATED to the bank tail (CustomAttrPtrTable /
+; RoomAttr_* / ScrAttr_* in the compiler-owned room_render_tables region, S94b) so
+; they can grow without shifting the palette data that follows. These 12 bytes are
+; reserved padding to keep that data in place.
     ds 12, $00
 
 ; @BUILD_PROJECT BEGIN room_palettes_a
@@ -2713,26 +2695,107 @@ HighBattlePal:
 
 ; @BUILD_PROJECT BEGIN room_render_tables
 ; Per-custom-room render tables (generated by build_project.py).
-; Indexed (wMapID - $6B) by CustomPalCheck / CustomAttrCheck
-; (patches/bank_017.asm engine code). ptr $0000 / bank $00 =
-; borrow the vanilla source-map palette/attr. One row per room.
-CustomRoomPalPtr:
-    dw CustomPaletteColors_6B    ; $6B — pal_6b
-    dw CustomPaletteColors_6C    ; $6C — pal_6c
-    dw CustomPaletteColors_6D    ; $6D — pal_6d
-    dw $0000    ; $6E — borrow vanilla palette
-    dw $0000    ; $6F — borrow vanilla palette
-    dw CustomPaletteColors_70    ; $70 — pal_70
-    dw CustomRoomPalette_71    ; $71 — pal_71
+; S94b: vanilla-format attr/palette table walked by the engine's own
+; entry-0/entry-1 code after CustomAttrCheck swaps in this base:
+;   room dw -> screen dw -> [step counter:2] -> per STATE
+;   [attr_entry, attr_bank, pal_ptr:2]. dw $0000 = none.
+CustomAttrPtrTable:
+    dw RoomAttr_6B    ; $6B gate_island
+    dw RoomAttr_6C    ; $6C dusk_mirror
+    dw RoomAttr_6D    ; $6D gate_rotation
+    dw $0000    ; $6E reserved_6e — no table
+    dw $0000    ; $6F reserved_6f — no table
+    dw RoomAttr_70    ; $70 ember_keystone
+    dw RoomAttr_71    ; $71 medal_vault
+    dw RoomAttr_72    ; $72 arena_clone
+    dw RoomAttr_73    ; $73 island_copy
 
-CustomRoomAttr:
-    db $64, $01  ; $6B -> bank $64, attr base entry 1
-    db $64, $01  ; $6C -> bank $64, attr base entry 1
-    db $64, $01  ; $6D -> bank $64, attr base entry 1
-    db $00, $00  ; $6E — vanilla attr fallback
-    db $00, $00  ; $6F — vanilla attr fallback
-    db $64, $01  ; $70 -> bank $64, attr base entry 1
-    db $64, $01  ; $71 -> bank $64, attr base entry 1
+RoomAttr_6B:    ; gate_island: screen 0-15
+    dw ScrAttr_6B_0, $0000, $0000, $0000
+    dw ScrAttr_6B_4, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+RoomAttr_6C:    ; dusk_mirror: screen 0-15
+    dw ScrAttr_6C_0, $0000, $0000, $0000
+    dw ScrAttr_6C_4, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+RoomAttr_6D:    ; gate_rotation: screen 0-15
+    dw ScrAttr_6D_0, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+RoomAttr_70:    ; ember_keystone: screen 0-15
+    dw ScrAttr_70_0, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+RoomAttr_71:    ; medal_vault: screen 0-15
+    dw ScrAttr_71_0, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+RoomAttr_72:    ; arena_clone: screen 0-15
+    dw ScrAttr_72_0, ScrAttr_72_1, ScrAttr_72_2, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+RoomAttr_73:    ; island_copy: screen 0-15
+    dw ScrAttr_73_0, $0000, $0000, $0000
+    dw ScrAttr_73_4, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+
+ScrAttr_6B_0:
+    dw wCustomStep_Room6B_S0    ; step counter
+    db $01, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_6B    ; state 0: project palette
+ScrAttr_6B_4:
+    dw wCustomStep_Room6B_S4    ; step counter
+    db $03, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_6B    ; state 0: project palette
+ScrAttr_6C_0:
+    dw wCustomStep_Room6C_S0    ; step counter
+    db $01, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_6C    ; state 0: project palette
+ScrAttr_6C_4:
+    dw wCustomStep_Room6C_S4    ; step counter
+    db $03, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_6C    ; state 0: project palette
+ScrAttr_6D_0:
+    dw wCustomStep_Room6D_S0    ; step counter
+    db $01, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_6D    ; state 0: project palette
+ScrAttr_70_0:
+    dw wCustomStep_Room70_S0    ; step counter
+    db $01, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_70    ; state 0: project palette
+ScrAttr_71_0:
+    dw wCustomStep_Room71_S0    ; step counter
+    db $08, $64    ; state 0: attr entry, bank
+    dw CustomRoomPalette_71    ; state 0: project palette
+ScrAttr_72_0:
+    dw wCustomStep_Room72_S0    ; step counter
+    db $04, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_arena_clone    ; state 0: project palette
+ScrAttr_72_1:
+    dw wCustomStep_ArenaClone_S1    ; step counter
+    db $05, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_arena_clone    ; state 0: project palette
+    db $05, $64    ; state 1: attr entry, bank
+    dw CustomPaletteColors_arena_clone    ; state 1: project palette
+ScrAttr_72_2:
+    dw wCustomStep_Room72_S2    ; step counter
+    db $06, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_arena_clone    ; state 0: project palette
+ScrAttr_73_0:
+    dw wCustomStep_Room73_S0    ; step counter
+    db $01, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_6B    ; state 0: project palette
+ScrAttr_73_4:
+    dw wCustomStep_Room73_S4    ; step counter
+    db $03, $64    ; state 0: attr entry, bank
+    dw CustomPaletteColors_6B    ; state 0: project palette
 
 ; $6D = VERDANT green (gate-rotation proof, reached via Gate of Villager).
 ; Luminance-themed recolour of the gate palette: structure preserved, hue fixed.
@@ -2768,4 +2831,15 @@ CustomRoomPalette_71:
     db $2D, $05, $FF, $6B, $DE, $16, $00, $00
     db $4E, $09, $FF, $6B, $1F, $17, $00, $00
     db $37, $0E, $FF, $6B, $BF, $1B, $00, $00
+
+; derived from vanilla $06 (derive_room_palette logic; idx1/idx3 forced)
+CustomPaletteColors_arena_clone:
+    db $D0, $19, $FF, $6B, $3D, $43, $00, $00
+    db $32, $05, $FF, $6B, $9F, $02, $00, $00
+    db $32, $05, $FF, $6B, $99, $2E, $00, $00
+    db $32, $05, $FF, $6B, $99, $2E, $00, $00
+    db $67, $4D, $FF, $6B, $FF, $7F, $00, $00
+    db $12, $00, $FF, $6B, $DE, $01, $00, $00
+    db $15, $00, $FF, $6B, $1F, $02, $00, $00
+    db $39, $01, $FF, $6B, $3F, $03, $00, $00
 ; @BUILD_PROJECT END room_render_tables

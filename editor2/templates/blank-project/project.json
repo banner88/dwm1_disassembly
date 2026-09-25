@@ -1,0 +1,43 @@
+{
+ "meta": {
+  "name": "New DWM1 project",
+  "schema_version": 1,
+  "notes": [
+   "Created by the DWM1 Editor (File > New project). Everything here is",
+   "authored in the editor; the compiler turns it into the patch overlay."
+  ]
+ },
+ "world": {
+  "_status": "NOT_IMPLEMENTED_V1"
+ },
+ "gamedata": {
+  "_status": "NOT_IMPLEMENTED_V1"
+ },
+ "custom": {
+  "wram": {
+   "region_size": 640
+  },
+  "rooms": [],
+  "layouts": [],
+  "tilesets": [],
+  "palettes": [],
+  "dialogue": [],
+  "scripts": [],
+  "music": {
+   "libraries": [
+    "extracted/dwm2_song_library.json",
+    "extracted/midi_song_library.json"
+   ],
+   "songs": [],
+   "room_defaults": {}
+  },
+  "_editor": {
+   "metatiles": {}
+  }
+ },
+ "progression": {
+  "quests": [],
+  "enemies": []
+ },
+ "build": {}
+}

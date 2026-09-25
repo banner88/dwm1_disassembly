@@ -152,6 +152,12 @@ gap tag **[G-x]** resolved in §9.
 
 ### 5.0 Shell
 
+*(As built S93: `editor2/app/main.py` — the tab strip below with Rooms
+live and every other tab a stub naming its ROADMAP box; toolbar Open /
+Save ⌘S / Undo / Redo / Build ⌘B (saves first) / Play ⌘R / Validate;
+Build-log + History docks; `editor2/app/session.py` = one Session per
+project: Document + live renderer + QUndoStack + change signals.)*
+
 - **Project window**: top-level tab strip (Rooms · Gates · Monsters ·
   Skills · Breeding · Encounters · Music · Progression & Flags · World ·
   Balance · Build & Play). Global toolbar: Build (⌘B), Play (⌘R →
@@ -215,6 +221,114 @@ Center: **canvas**. Right: inspector sub-tabs.
 - **Tile paint**: pick from the room's tileset strip; rectangle/fill;
   undo via QUndoStack. Requires layout emission behind project.json
   [G-A] (today bank $64 is tool-owned).
+
+**As built S93 (P3.3, canvas v1):** everything in the canvas spec above
+except NPC drag (P3.5) exists: `editor2/app/rooms/` = `tab.py` (browser +
+mini-map | tools / state bar / banner / canvas / status | picker /
+palettes / inspector), `canvas.py` (QGraphicsView, pixel-exact, tools
+pencil/rect/fill/eyedrop/select, tile OR palette-slot brush, layers
+grid/palette-slots/walkability/markers with the S91 sprite crops, one
+QUndoCommand per stroke), `tile_picker.py` (flat 16/row, threshold =
+wall boundary), `palette_panel.py` (idx1/idx3 locked), `minimap.py`
+(4×2, thumbnails, add/remove screen), `inspector.py`, `commands.py`
+(PaintCells / AddState / RemoveState / LocalizeLayout / SetStateLayout /
+AddScreen / RemoveScreen / SetPaletteColor / SetRoomField). The canvas
+renders from `editor2/core/render_project.py` (live, no build; validated
+pixel-identical to `render.py` on the example project — the §7 Tier-1
+rule) over `editor2/core/document.py` (byte-exact load/save + the
+mutations). Zoom is 1-6×. Two engine facts the UI surfaces rather than
+hides: palette-slot (attr) grids are per SCREEN, not per state
+(CustomAttrCheck keys on mapID + screen; KEY_LESSONS S93), and screen>0
+attrs come from the per-screen attr map (S94; the S93 `base_entry+2`
+stride is gone) — the inspector names the grid in effect. Acceptance:
+`editor2/tests/test_canvas.py --rom` (ROADMAP P3.3).
+
+**As built S94 (canvas v2 — user direction "not POC, real romhacking"):**
+the room model is now two columns — **Vanilla rooms** (98, named via
+`dwm/map_names.py`, all 211 screens rendered live, read-only; **Make
+editable** clones one into the project after a confirmation: extract_room +
+every screen's layout localized, so it is paintable at once) and **Custom
+rooms** (New = blank room on a vanilla tileset; Copy = own layout copies;
+Rename (`name` field, `id` stable); Delete). File → New project starts from
+`editor2/templates/blank-project`. The unit of editing is the **player-sized
+cell**: a METATILE = 4 subtiles + palette slot; the picker offers the
+metatiles *found in this room* plus the author's own (`custom._editor.
+metatiles`, built in the metatile editor — the only subtile-level surface).
+**Select (V) is the default tool** (cell or marker, yellow selection
+outline); paint/rect/fill/eyedrop work on cells; **Walkability mode (W)**
+shows red/green cells and a click flips one cell by swapping its
+bottom-right subtile (the one the engine samples — ROOM_DATA_FORMAT S94) for
+a cross-threshold twin, copying the vanilla tileset into the project first
+(`assets/<id>.2bpp`, bank $67). Mini-map is the engine's 4×4 grid. Structural
+edits are whole-document SnapshotCommands (exact undo incl. asset files).
+Engine/compiler foundation for this (same session): per-(screen, STATE)
+attr + palette tables in the vanilla format (`CustomAttrCheck`/`CustomPalCheck`
+rewrite — clones render every screen's and every state's own attr and
+palette), compiler-owned ROM0 `$26DD` rows for `$6B-$6F` (records for every
+room), 4×4 schema.
+
+**S94b additions (same session — user: "next logical step = functional gate
+redirects so you can test a room by hooking into an existing entrance";
+"rooms have multiple versions, e.g. the servant boss room on fire or clear —
+the editor must display that"):**
+- **Room states are first-class for vanilla rooms too.** The state bar
+  browses every VALID vanilla step ("vanilla state i of n", valid = the S91
+  prefix filter now in `editor2/core/vanilla.py`); a clone carries ALL of
+  them as `states[]` with per-state layout / attr / palette items and the
+  cloned scripts rewired to the room's own `wCustomStep_<rid>_S<k>` counters.
+  A vanilla room's variants are one mapID with N steps (flag → script →
+  counter), NOT duplicate rooms; the only by-name duplicates in the table
+  are the five "Castle: Chest Room (variant)" ids.
+- **Entrances.** Inspector group "Entrances — how the player gets here"
+  lists the vanilla doors routed into the room and offers **"Route a vanilla
+  door here…"** (`rooms/redirect_dialog.py`: room → screen → door with a
+  preview of both ends, wall warning on the arrival cell). In the vanilla
+  view, selecting an exit marker offers "Route this door into a custom
+  room…". Data: `custom.entrance_redirects[]` (PROJECT_COMPILER §2.12); the
+  compiler re-points that one door in every vanilla state and leaves the
+  other doors of the screen alone. Markers: magenta `R` = redirected vanilla
+  door, green `IN` = arrival cell. This is the in-game test route for any
+  custom room: route the GreatTree 2F Library door (the dialog's default)
+  to it, Build, walk through.
+- User-reported fixes: palette double-click on a borrowed palette now
+  offers to copy it into the project (or clone the vanilla room) and opens
+  the colour picker; labels no longer grow the window off-screen; NPC
+  thumbnails have the throne-room floor knocked out.
+
+**S95 additions (user feedback on S94b):**
+- **The picker's first section is the room's VOCABULARY, and it never
+  shrinks**: every metatile on any screen/state of the room plus everything
+  its vanilla source room uses. Painting over a tile does not remove it
+  (user: "otherwise I cannot use them again"). The vocabulary's sheet slots
+  are protected from reuse by twins/imports.
+- **Borrow tiles from another room** ("Borrow tiles from:" combo): that
+  room's vocabulary drawn with THIS room's palettes. Same tileset → click =
+  brush; different tileset → click imports the 4 subtiles into the room's
+  project-owned tileset (free slots; bottom-right subtile keeps its
+  wall/walkable side) and the result joins "My metatiles". The import
+  reports the free-slot budget when it cannot fit.
+- Old projects (no `record` on `$6B-$6D`) migrate on open, logged.
+- **Palettes per screen/state**: "palette here" combo in Screen & state
+  (`states[n].palette` / new `screens[k].palette`); both palette combos
+  offer "copy from vanilla $xx <room>" (the room's derived palette becomes
+  an editable project palette). A new screen inherits the palette on
+  display — the servant-clone "second screen went back to burning" bug.
+- **Exits from custom rooms (minimal P3.7 seed)**: Select a cell → "Add
+  exit at this cell…" (destination custom/vanilla room → screen → arrival
+  cell, previews, wall warning; edge cells are push exits) / select an exit
+  marker → "Delete this exit". PyBoy-verified. What is still missing for a
+  real routing system: one door object showing BOTH ends (and generating
+  the return exit), drag-to-place, and the world graph — P3.7.
+- The borrowed-tiles section lives in its own "Borrow" tab.
+
+Acceptance `editor2/tests/test_canvas.py --rom`: fresh project → Farm clone
+at `$6B` → metatiles painted → a lone metatile painted over stays in the
+picker → a Castle brick metatile imported (sheet bytes copied, threshold side
+kept, exact undo/redo) and placed → one grass cell walled, one fence opened →
+Library door routed to the clone → PyBoy: VRAM == canvas (incl. the imported
+cell), the player is blocked / walks through accordingly, AND walks through
+the Library door into the clone at the authored cell while the neighbouring
+door is still vanilla.
 
 **Inspector sub-tabs (per room):**
 1. **Tileset & Graphics** — select an existing vanilla tileset, a
@@ -560,13 +674,13 @@ row is click-navigable (§5.0).
 
 | Gap | What | Status / where |
 |-----|------|----------------|
-| G-A | Bank `$64` (layouts/attr) + `$67` (combined tilesets) emission folded behind project.json (today tool-owned, referenced by {bank,entry}) | ROADMAP P3.2 — the canvas prerequisite; flagged since S72 |
+| G-A | Bank `$64` (layouts/attr) + `$67` (combined tilesets) emission folded behind project.json (today tool-owned, referenced by {bank,entry}) | ✅ CLOSED S92 (`custom.layouts[]` / `custom.tilesets[]`, PROJECT_COMPILER §2.10); painted by the S93 canvas |
 | G-B | NPC sprite-id catalog | ✅ CLOSED S91: `extracted/npc_sprite_catalog.json` + sheet + per-id crops (`npc_field_sprites/`), tools/dump_npc_sprite_catalog.py; classes/names hand-curated in npc_names.json. No id crashes ($11-crash was custom-room context); $23 = boss-composite fragment; aliases $4E/$4F/$F0-$F3 → $00. ROOM_DATA_FORMAT S91 section owns the facts |
 | G-C | Encounters #2 — custom monster pools in a free bank | ROADMAP P3.13a (pre-existing Phase-2 box, re-slotted) |
 | G-D | Layer A-lite `gamedata` emitters + readers (monsters/skills/breeding/encounters; port randomizer `romdata.py`) | ROADMAP P3.9 (new) |
 | G-E | Embedded PyBoy preview widget (cached savestate → warp → Qt blit + input) | ROADMAP P3.4 (pre-existing box, re-slotted) |
 | G-F | E4 gate-network / world-hub schema | ROADMAP Phase E (design item; World tab ships without it) |
-| G-G | First-class `states[]` (step-counter variants) in the custom-room schema | ROADMAP P3.3 backend half (new) |
+| G-G | First-class `states[]` (step-counter variants) in the custom-room schema | ✅ CLOSED: schema/emitter S92 (PROJECT_COMPILER §2.10); GUI state switcher + add/duplicate/own-layout/remove S93 (ROADMAP P3.3) |
 | G-H | Cutscene storyboard model over compile/decompile_script | ROADMAP P3.8 (new) |
 | G-I | Music audition harness (PyBoy play-song) | ROADMAP P3.13b sub-item (new) |
 | G-J | Clone-to-custom room extractor (vanilla room → full project.json custom clone + entrance repoint; per-island literal-mapID audit) | ROADMAP P3.2b (v2.1) — the fork mechanism |

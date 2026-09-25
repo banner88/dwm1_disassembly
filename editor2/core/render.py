@@ -16,14 +16,13 @@ ROM + its game.sym. Design rules honored:
       tileset : mapID < $70 → ROM0 $26DD + mapID*8 (patched ROM carries the
                 $6B-$6F rows); mapID ≥ $70 → Custom26DDTable (bank $71,
                 (mapID-$70)*8) — mirrors CopyCustomRoomRecord (S42).
-      attrs   : CustomRoomAttr[mapID-$6B] = {bank, base_entry}; screen 0 →
-                base_entry, other screens → base_entry+2 (the vertical-pair
-                stride documented at CustomAttrCheck, patches/bank_017.asm
-                Pillar A); bank $00 → no custom attr.
-      palette : CustomRoomPalPtr[mapID-$6B] → 8×4 RGB555 rows in bank $17
-                with the FORCED idx1=$6BFF / idx3=$0000 rule (KEY_LESSONS
-                S7/S39); dw $0000 → borrow the vanilla source_mapID palette
-                via derive().
+      attrs + palette : CustomAttrPtrTable[mapID-$6B] → RoomAttr (16 dw) →
+                ScrAttr ([counter:2] + per state [attr_entry, attr_bank,
+                pal_ptr:2]) — the VANILLA table format (S94b), walked by
+                the engine itself after CustomAttrCheck swaps the base.
+                The pal_ptr → 8×4 RGB555 rows in bank $17 with the FORCED
+                idx1=$6BFF / idx3=$0000 rule (KEY_LESSONS S7/S39); a vanilla
+                pal_ptr (borrowed source palette) is read the same way.
   * Screens are bounded by project.json's `screens` keys (the source of
     truth) — never by walking the sub-table blind.
 
@@ -70,7 +69,7 @@ class RoomRenderer:
         self.rom = open(rom_path, 'rb').read()
         self.syms = parse_sym(sym_path)
         missing = [s for s in ('CustomRoomPtrTable', 'Custom26DDTable',
-                               'CustomRoomAttr', 'CustomRoomPalPtr')
+                               'CustomAttrPtrTable')
                    if s not in self.syms]
         if missing:
             raise RuntimeError(
@@ -102,23 +101,38 @@ class RoomRenderer:
                 f"for mapID ${mapid:02X}")
         return res[0]
 
-    def _palettes(self, mapid, source_mapid):
-        po = self._sym_off('CustomRoomPalPtr') + (mapid - 0x6B) * 2
-        ptr = self._u16(po)
+    def _state_row(self, mapid, screen_index, state=0):
+        """S94b: walk the vanilla-format custom table exactly like the engine:
+        CustomAttrPtrTable[mid-$6B] -> RoomAttr (16 dw) -> ScrAttr
+        ([counter:2] + 4 B per state) -> (attr_entry, attr_bank, pal_ptr)."""
+        po = self._sym_off('CustomAttrPtrTable') + (mapid - 0x6B) * 2
+        room_ptr = self._u16(po)
+        if room_ptr == 0:
+            return None
+        scr_ptr = self._u16(self._off(0x17, room_ptr) + screen_index * 2)
+        if scr_ptr == 0:
+            return None
+        row = self._off(0x17, scr_ptr) + 2 + state * 4
+        return (self.rom[row], self.rom[row + 1],
+                self._u16(row + 2))
+
+    def _palettes(self, mapid, source_mapid, screen_index=0, state=0):
+        row = self._state_row(mapid, screen_index, state)
+        ptr = row[2] if row else 0
         if ptr:
             base = self._off(0x17, ptr)
             pals = []
-            for p in range(8):
-                row = [self._u16(base + p * 8 + c * 2) for c in range(4)]
-                row[1], row[3] = 0x6BFF, 0x0000      # forced (S7/S39)
-                pals.append([_rgb555(c) for c in row])
+            # the engine loads slots 0-3 only for custom rooms (b=$04):
+            # 4 palettes from the block (custom 8x4 block or a 4-row
+            # vanilla block); slots 4-7 stay the system set
+            for p in range(4):
+                r4 = [self._u16(base + p * 8 + c * 2) for c in range(4)]
+                r4[1], r4[3] = 0x6BFF, 0x0000      # forced (S7/S39)
+                pals.append([_rgb555(c) for c in r4])
+            system = [(96, 96, 96), (248, 248, 208), (176, 176, 176), (0, 0, 0)]
+            while len(pals) < 8:
+                pals.append(list(system))
             return pals
-        # dw $0000 → borrow the vanilla source-map palette. derive() returns
-        # (env_slots_0_3, obj_palettes) with the forced rule applied
-        # (validated 30/30 vs SameBoy). BG slots 4-7 are the shared SYSTEM
-        # set (HUD/menus — GATE_GENERATION "BG slots 4-7"); room tiles
-        # rarely reference them, so a neutral grey stand-in is a display
-        # approximation only (flagged for the canvas milestone).
         env, _obj = derive_vanilla_palette(self.rom, mapid=source_mapid)
         pals = [[_rgb555(c) for c in p] for p in env]
         system = [(96, 96, 96), (248, 248, 208), (176, 176, 176), (0, 0, 0)]
@@ -126,12 +140,13 @@ class RoomRenderer:
             pals.append(list(system))
         return pals
 
-    def _attr(self, mapid, screen_index):
-        ao = self._sym_off('CustomRoomAttr') + (mapid - 0x6B) * 2
-        abank, abase = self.rom[ao], self.rom[ao + 1]
+    def _attr(self, mapid, screen_index, state=0):
+        row = self._state_row(mapid, screen_index, state)
+        if row is None:
+            return None
+        entry, abank = row[0], row[1]
         if abank == 0:
-            return None                              # vanilla fallback row
-        entry = abase if screen_index == 0 else abase + 2
+            return None
         res = decompress_lz(self.rom, abank, entry)
         return res[0] if res else None
 
@@ -158,13 +173,13 @@ class RoomRenderer:
         mapid = _val(room['mapID'])
         source = _val(room.get('source_mapID', 0))
         gfx = self._gfx(mapid)
-        pals = self._palettes(mapid, source)
         out = {}
         for key, scr in sorted(room.get('screens', {}).items(),
                                key=lambda kv: int(kv[0])):
             idx = int(key)
+            pals = self._palettes(mapid, source, idx, 0)
             layout = self._layout(mapid, idx)
-            attr = self._attr(mapid, idx)
+            attr = self._attr(mapid, idx, 0)
             img = render_screen(self.rom, gfx, layout, attr, pals,
                                 scale=scale)
             if markers:

@@ -199,13 +199,13 @@ CustomTilesetInfo:
 ;
 ;   wMapID >= $6B  -> jp CustomExitCheck (identical to the pre-S70 behavior)
 ;   wMapID <  $6B  -> scan VanillaExitExtTable (compiler-generated):
-;       row: db mapID / dw step_counter_addr / db n_steps / dw list0..listN-1
-;       table terminated by db $FF. Match: variant = min([counter], n-1),
+;       row: db mapID, screen ($FF = any) / dw step_counter_addr / db n_steps /
+;            dw list0..listN-1; table terminated by db $FF.
+;       Match (mapID AND wScreenIndex): variant = min([counter], n-1),
 ;       copy that 7-byte exit list to wCustomExitBuffer, return HL=buffer.
 ;       No match: HL=0.
-; Entry 9 (boundary y=0/7 exits) is NOT extended — it still reads the vanilla
-; bank $0B lists directly. Extension rows with trigger_y 0/7 are therefore
-; inert (Entry 6 skips them); the compiler validator enforces/warns this.
+; S94b: bank $0B Entry 9 (boundary y=0/7 push exits) calls this entry too, so
+; extension rows with trigger_y 0/7 are LIVE (they were inert before S94b).
 VanillaExitResolve:
     ; S70v3: arm the Entry 6 scan's y-skip compare for the VANILLA branch —
     ; $07 = skip y=7 rows (original engine semantics; y=7 stays Entry-9/push
@@ -226,7 +226,20 @@ VanillaExitResolve:
     cp $FF
     jr z, .none                 ; table end — no extension for this room
     cp c
+    jr nz, .skipRow
+    ; S94b: rows are keyed per SCREEN too — db mapID, screen ($FF = any
+    ; screen, the S70 semantics). Multi-screen vanilla rooms (GreatTree)
+    ; can now have one door redirected without cross-firing on the other
+    ; floors (the S92 wholesale-replacement trap, KEY_LESSONS S92).
+    ld a, [hl]                  ; screen byte
+    cp $FF
     jr z, .match
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr z, .match
+.skipRow:
+    inc hl                      ; skip screen (1)
     inc hl                      ; skip step_counter addr (2)
     inc hl
     ld a, [hl+]                 ; n_steps
@@ -241,6 +254,7 @@ VanillaExitResolve:
     ld hl, $0000
     ret
 .match:
+    inc hl                      ; past the screen byte
     ld a, [hl+]
     ld e, a
     ld a, [hl+]

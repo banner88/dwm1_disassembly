@@ -267,6 +267,9 @@ def extract(source_mid, room_id, target_mid, step, project_dir):
         screens[str(scr_idx)] = {
             "layout": {"bank": f"0x{lay_bank:02X}",
                        "entry": f"0x{lay_entry:02X}"},
+            # S94: per-screen attr map (CustomAttrCheck reads one entry per
+            # screen; the S92 base+2 stride is gone)
+            "attr": {"id": lid},
             "step_counter": "auto", "npcs": npcs, "exits": exits}
 
     # 5. palette (derive_room_palette logic, validated 30/30)

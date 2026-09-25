@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""test_app.py — walking-skeleton smoke test (S72), headless-safe.
+"""test_app.py — app smoke test (S72 skeleton, S93 shell), headless-safe.
 
 Runs the REAL app code offscreen (QT_QPA_PLATFORM=offscreen): opens the
-example project, checks the room list populated, drives a Build through
-the app's worker code path, and (with --rom) asserts the ROM md5 equals
-the pinned compat reference from editor2/tests/test_compiler.py — proving
-GUI build == CLI build == hand-staged overlay, byte-identical.
+example project, checks the Rooms tab renders LIVE from project.json (no
+build needed since S93), that placeholder rooms do not render, that a
+vanilla-referenced layout is read-only, that states switch, that the
+document model round-trips project.json byte-for-byte, and (with --rom)
+drives a Build through the app's worker code path and asserts the ROM md5
+equals the pinned compat reference from editor2/tests/test_compiler.py —
+proving GUI build == CLI build == hand-staged overlay, byte-identical.
 
 SKIPs (exit 0 with a message) when PySide6 is not installed, so CI without
 Qt stays green — the same ROM-tolerant posture as verify_integrity check 5.
+The canvas acceptance (paint / states / PyBoy) lives in test_canvas.py.
 """
 
 import os
@@ -45,31 +49,40 @@ def main():
     n = w.room_list.count()
     assert n >= 6, f'room list has {n} entries, expected >= 6'
     assert w.a_build.isEnabled(), 'Build action not enabled after open'
-    print(f'OK: window up, {n} rooms listed, Build enabled')
+    assert not w.session.dirty, 'opening must not dirty the project'
+    assert w.session.doc.dumps() == open(w.session.doc.path).read(), \
+        'document model must round-trip project.json byte-for-byte'
+    print(f'OK: window up, {n} rooms listed, Build enabled, doc round-trips')
 
-    # Room view: if a build exists, the selected room must render to pixels.
-    from editor2.core.render import find_build            # noqa: E402
-    if find_build(w.project_path):
-        app.processEvents()
-        pm = w.room_view.canvas.pixmap()
-        assert pm is not None and not pm.isNull() and pm.width() > 100, \
-            'room view produced no pixmap from the existing build'
-        # placeholder room must NOT render (text instead of pixmap)
-        for i in range(n):
-            if 'placeholder' in w.room_list.item(i).text():
-                w.room_list.setCurrentRow(i)
-                app.processEvents()
-                pm2 = w.room_view.canvas.pixmap()
-                assert pm2 is None or pm2.isNull(), \
-                    'placeholder room unexpectedly rendered'
-                break
-        w.room_list.setCurrentRow(0)
-        app.processEvents()
-        print('OK: room view renders from the existing build '
-              '(placeholder rooms correctly skipped)')
-    else:
-        print('NOTE: no existing build — room-view render check skipped '
-              '(run with --rom to build first)')
+    # Rooms tab: the canvas renders LIVE from project.json (S93) — no build
+    # needed. The selected room must produce pixels; placeholder rooms must
+    # not; the arena clone's vanilla-referenced layout must be read-only.
+    app.processEvents()
+    rt = w.rooms_tab
+    pm = rt.canvas.base.pixmap()
+    assert pm is not None and not pm.isNull() and pm.width() == 160, \
+        'canvas produced no 160px-wide screen pixmap'
+    for i in range(n):
+        if 'placeholder' in rt.room_list.item(i).text():
+            rt.room_list.setCurrentRow(i)
+            app.processEvents()
+            assert rt.canvas.room is None, 'placeholder room unexpectedly rendered'
+            break
+    for i in range(n):
+        if 'arena_clone' in rt.room_list.item(i).text():
+            rt.room_list.setCurrentRow(i)
+            app.processEvents()
+            rt.select_screen(1)
+            assert not rt.canvas.is_editable(), 'vanilla layout ref must be read-only'
+            assert rt.state_box.count() == 2, 'arena_clone screen 1 has 2 states'
+            rt.select_state(1)
+            assert len(rt.canvas.markers) > 0
+            break
+    rt.room_list.setCurrentRow(0)
+    app.processEvents()
+    assert w.tabs.count() >= 11, 'tab strip incomplete'
+    print('OK: Rooms tab renders live (placeholders skipped, vanilla refs '
+          'read-only, states switch); shell has the §5.0 tab strip')
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
