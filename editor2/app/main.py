@@ -117,7 +117,8 @@ class MainWindow(QMainWindow):
 
     # ---------------- UI scaffolding ----------------
     def _build_ui(self):
-        self.setWindowTitle('DWM1 Editor')
+        from editor2 import EDITOR_REVISION
+        self.setWindowTitle(f'DWM1 Editor ({EDITOR_REVISION})')
         self.resize(1500, 900)
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
@@ -152,6 +153,9 @@ class MainWindow(QMainWindow):
             self.rooms_tab = RoomsTab(self.session)
             self.rooms_tab.status.connect(self.statusBar().showMessage)
             self.tabs.addTab(self.rooms_tab, 'Rooms')
+            from editor2.app.import_tab import ImportTab
+            self.import_tab = ImportTab(self.session)
+            self.tabs.addTab(self.import_tab, 'Import art')
         else:
             self.rooms_tab = None
             self.tabs.addTab(_stub('Rooms', 'P3.3', 'Open a project (File → Open) to edit rooms.'),
@@ -335,7 +339,8 @@ class MainWindow(QMainWindow):
             return
         self.session = session
         self.settings.setValue('recent/project', path)
-        self.setWindowTitle(f'DWM1 Editor — {session.name}')
+        from editor2 import EDITOR_REVISION
+        self.setWindowTitle(f'DWM1 Editor ({EDITOR_REVISION}) — {session.name}')
         for a in (self.a_undo, self.a_redo):
             try:
                 a.triggered.disconnect()
@@ -349,6 +354,13 @@ class MainWindow(QMainWindow):
         session.undo.redoTextChanged.connect(self._redo_text)
         session.dirtyChanged.connect(self._dirty_changed)
         self.undo_view.setStack(session.undo)
+        # S96 space meters (banks $60/$64/$67/$71) in the status bar
+        from editor2.app.space_meter import SpaceMeter
+        if getattr(self, 'space_meter', None) is not None:
+            self.statusBar().removeWidget(self.space_meter)
+            self.space_meter.deleteLater()
+        self.space_meter = SpaceMeter(session, REPO)
+        self.statusBar().insertPermanentWidget(0, self.space_meter)
         self._fill_tabs()
         self.tabs.setCurrentIndex(0)
         self.a_build.setEnabled(True)
@@ -359,7 +371,8 @@ class MainWindow(QMainWindow):
             self.log.appendPlainText(
                 f'Found an existing build ({session.last_rom}) — Play is enabled.')
         self.build_tab.refresh(self)
-        self.log.appendPlainText(f'Opened project: {path}')
+        from editor2 import EDITOR_REVISION
+        self.log.appendPlainText(f'Opened project: {path}   (editor code: {EDITOR_REVISION})')
         for note in getattr(session.doc, 'migrations', []):
             self.log.appendPlainText(f'MIGRATED: {note} — Save to keep it')
         self.statusBar().showMessage(f'Opened {session.name}', 4000)
@@ -382,7 +395,8 @@ class MainWindow(QMainWindow):
 
     def _dirty_changed(self, dirty):
         name = self.session.name if self.session else ''
-        self.setWindowTitle(f"DWM1 Editor — {name}{' •' if dirty else ''}")
+        from editor2 import EDITOR_REVISION
+        self.setWindowTitle(f"DWM1 Editor ({EDITOR_REVISION}) — {name}{' •' if dirty else ''}")
         self.setWindowModified(dirty)
 
     def save(self):

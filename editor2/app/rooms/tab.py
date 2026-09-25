@@ -13,13 +13,13 @@ Every edit goes through rooms/commands.py so ⌘Z always works.
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                                QHBoxLayout, QInputDialog, QLabel, QListWidget,
                                QListWidgetItem, QMenu, QMessageBox, QPushButton,
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget,
                                QToolBar, QToolButton, QVBoxLayout, QWidget)
 
-from editor2.core.document import val, GRID_COLS
+from editor2.core.document import val, GRID_COLS, metatile_key
 from editor2.app.session import REPO
 from editor2.app.rooms import commands as C
 from editor2.app.rooms.canvas import RoomCanvas, metatile_at
@@ -29,6 +29,9 @@ from editor2.app.rooms.metatile_picker import MetatilePicker
 from editor2.app.rooms.minimap import MiniMap
 from editor2.app.rooms.palette_panel import PalettePanel
 from editor2.app.rooms.redirect_dialog import RedirectDialog, ExitDialog
+from editor2.app.rooms.tileset_map import TilesetMap
+from editor2.app.rooms.tileset_dialog import TilesetDialog
+from editor2.app.collapsible import Section
 
 
 class NewRoomDialog(QDialog):
@@ -44,6 +47,11 @@ class NewRoomDialog(QDialog):
             self.src.addItem(f'${mid:02X}  {name}', mid)
         f.addRow('Name', self.name)
         f.addRow('Tileset / palette from', self.src)
+        from PySide6.QtWidgets import QCheckBox
+        self.blank = QCheckBox('start with a BLANK tileset (for imported PNG art)')
+        self.blank.setToolTip('The room gets its own empty 128-slot sheet; palette and '
+                              'engine source still come from the room above.')
+        f.addRow('', self.blank)
         f.addRow(QLabel('The room starts as one screen of floor with a spawn point.'))
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(self.accept)
@@ -248,12 +256,15 @@ class RoomsTab(QWidget):
         self.status_line.setMinimumWidth(0)
         cv.addWidget(self.status_line)
 
-        # ---------- right
+        # ---------- right: three foldable, resizable sections (S96 user QOL)
         right = QWidget()
-        right.setFixedWidth(420)
+        right.setMinimumWidth(380)
+        right.setMaximumWidth(620)
         rv = QVBoxLayout(right)
         rv.setContentsMargins(4, 4, 4, 4)
-        rv.addWidget(QLabel('Metatiles (click = brush · corner dot: red wall / green walkable)'))
+        self.right_split = QSplitter(Qt.Vertical)
+        self.right_split.setChildrenCollapsible(False)
+        rv.addWidget(self.right_split)
         self._vocab_cache = {}
         self.picker_tabs = QTabWidget()
         # tab 1 — this room's tiles + my metatiles
@@ -289,15 +300,46 @@ class RoomsTab(QWidget):
         fscroll.setWidget(self.picker_foreign)
         bl.addWidget(fscroll, 1)
         self.picker_tabs.addTab(btab, 'Borrow')
-        self.picker_tabs.setMinimumHeight(170)
-        self.picker_tabs.setMaximumHeight(300)
-        rv.addWidget(self.picker_tabs)
-        rv.addWidget(QLabel('BG palettes (dbl-click a colour to edit)'))
+        # tab 3 — the tileset's 128 slots (P3.3c, S96)
+        self.tileset_map = TilesetMap()
+        self.tileset_map.hoverInfo.connect(self._hover)
+        self.tileset_map.highlightTile.connect(self._highlight_tile)
+        self.tileset_map.releaseToggled.connect(self._release_vocab)
+        tscroll = QScrollArea()
+        tscroll.setWidgetResizable(True)
+        tscroll.setWidget(self.tileset_map)
+        self.picker_tabs.addTab(tscroll, 'Tileset')
+        self.picker_tabs.setMinimumHeight(120)
+        self.sec_tiles = Section('Metatiles', self.picker_tabs, 'rooms_metatiles')
+        self.sec_tiles.setToolTip('click = brush · corner dot: red wall / green walkable')
+        self.right_split.addWidget(self.sec_tiles)
+        palbox = QWidget()
+        pl = QVBoxLayout(palbox)
+        pl.setContentsMargins(0, 0, 0, 0)
         self.palettes = PalettePanel()
         self.palettes.colorEdited.connect(self._color_edited)
         self.palettes.hoverInfo.connect(self._hover)
         self.palettes.makeEditableRequested.connect(self._palette_make_editable)
-        rv.addWidget(self.palettes, 0, Qt.AlignLeft)
+        pl.addWidget(self.palettes, 0, Qt.AlignLeft)
+        prow = QHBoxLayout()
+        self.pal_sys = QCheckBox('show system 4-7')
+        self.pal_sys.setToolTip('Slots 4-7 are the shared system palettes (HUD, menus, '
+                                'monsters) — shown read-only.')
+        self.pal_sys.toggled.connect(self.palettes.set_show_system)
+        self.pal_free1 = QCheckBox('own colour 1')
+        self.pal_free1.setToolTip(
+            'Colour 1 of slots 0-3 is normally forced to cream ($6BFF) by the engine. '
+            'Ticked, this palette keeps its own colour 1 in this custom room '
+            '(FreeColor1Hook, S96) — three colours of your own per slot.')
+        self.pal_free1.toggled.connect(self._free1_toggled)
+        prow.addWidget(self.pal_sys)
+        prow.addWidget(self.pal_free1)
+        prow.addStretch(1)
+        pl.addLayout(prow)
+        pl.addStretch(1)
+        self.sec_pal = Section('BG palettes', palbox, 'rooms_palettes')
+        self.sec_pal.setToolTip('double-click a colour to edit')
+        self.right_split.addWidget(self.sec_pal)
         self.inspector = Inspector()
         self.inspector.thresholdEdited.connect(self._threshold_edited)
         self.inspector.paletteChosen.connect(self._palette_chosen)
@@ -309,7 +351,22 @@ class RoomsTab(QWidget):
         self.inspector.statePaletteChosen.connect(self._state_palette_chosen)
         self.inspector.addExitRequested.connect(self._add_exit)
         self.inspector.removeExitRequested.connect(self._remove_exit)
-        rv.addWidget(self.inspector, 1)
+        self.inspector.tilesetChangeRequested.connect(self._change_tileset)
+        self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector')
+        self.right_split.addWidget(self.sec_insp)
+        self.right_split.setStretchFactor(0, 3)
+        self.right_split.setStretchFactor(1, 0)
+        self.right_split.setStretchFactor(2, 4)
+        from PySide6.QtCore import QSettings
+        st = QSettings('dwm1_disassembly', 'DWM1Editor').value('ui/rooms_right_split')
+        if st:
+            self.right_split.restoreState(st)
+        self.right_split.splitterMoved.connect(lambda *_a: QSettings(
+            'dwm1_disassembly', 'DWM1Editor').setValue('ui/rooms_right_split',
+                                                      self.right_split.saveState()))
+        for sec in (self.sec_tiles, self.sec_pal, self.sec_insp):
+            sec.toggled.connect(lambda _on: self._relayout_right())
+        self.pal_sys.toggled.connect(lambda _on: self._relayout_right())
 
         split = QSplitter()
         split.addWidget(left)
@@ -461,9 +518,13 @@ class RoomsTab(QWidget):
         self.picker.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
         self.picker_foreign.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
         self.picker.set_lists(self._harvest(), [])
+        self.picker.set_flags({}, '')
+        self.tileset_map.clear()
+        self.picker_tabs.setTabText(2, 'Tileset')
         self._fill_foreign_box()
         self._refresh_foreign()
         self.palettes.set_palettes(pals, None, None)
+        self.pal_free1.setEnabled(False)
         self.inspector.show_vanilla(self.s.renderer, mid, self.key)
         imgs = {}
         for k in scr:
@@ -482,7 +543,7 @@ class RoomsTab(QWidget):
         for cy in range(8):
             for cx in range(10):
                 mt = metatile_at(tiles, attr, cx, cy)
-                key = (tuple(mt['tiles']), mt['pal'])
+                key = metatile_key(mt)
                 if key not in seen:
                     seen.add(key)
                     out.append(mt)
@@ -525,14 +586,13 @@ class RoomsTab(QWidget):
         src = val(room.get('source_mapID', 0)) if room.get('source_mapID') is not None else None
         if src is not None and src < 0x6B:
             for mt in self._vanilla_vocab(src):
-                key = (tuple(mt['tiles']), mt['pal'])
+                key = metatile_key(mt)
                 if key not in seen:
                     seen.add(key)
                     out.append(mt)
-        # the vocabulary's graphics must stay put: protect their slots
-        tid = (room.get('record') or {}).get('tileset')
-        if tid:
-            self.s.doc.protect_tiles(tid, [t for mt in out for t in mt['tiles']])
+        # S96: the slots behind the vocabulary are protected by
+        # Document.tile_usage (derived from the source room, releasable) —
+        # no session registration here any more
         return out
 
     def _harvest(self):
@@ -628,14 +688,104 @@ class RoomsTab(QWidget):
         self.picker.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
         self.picker_foreign.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
         self.picker.set_lists(self._harvest(), self.s.doc.metatiles(self.s.doc.tileset_key(room)))
+        self._refresh_slots(room)
         self._fill_foreign_box()
         self._refresh_foreign()
         if self.canvas.brush:
             self.picker.select_metatile(self.canvas.brush)
         pid, words = self.s.renderer.room_palettes_555(room, self.key, self.state_idx)
-        self.palettes.set_palettes(pals, words, pid if words else None)
+        free1 = bool(words) and bool(self.s.doc.palette(pid).get('free_color1'))
+        self.palettes.set_palettes(pals, words, pid if words else None, free1=free1)
+        self.pal_free1.blockSignals(True)
+        self.pal_free1.setChecked(free1)
+        self.pal_free1.setEnabled(bool(words))
+        self.pal_free1.blockSignals(False)
         self.inspector.show_room(self.s.doc, self.s.renderer, room, self.key, self.state_idx)
         self._update_brush_label()
+
+    # ---------------------------------------------- tileset slots (P3.3c)
+    def _refresh_slots(self, room):
+        """Slot map + per-side free counts (picker header, tab title) +
+        'graphic may change' flags on the vocabulary metatiles."""
+        gfx = self.canvas.gfx
+        if gfx is None:
+            return
+        doc = self.s.doc
+        tid = doc.tileset_key(room)
+        self.tileset_map.set_room(doc, self.s.renderer, room, gfx.sheet,
+                                  self.canvas.pals, gfx.threshold)
+        fc = doc.free_counts(tid, gfx.threshold)
+        self.picker_tabs.setTabText(2, f"Tileset ({fc['total']} free)")
+        flags = {}
+        for i, u in enumerate(self.tileset_map.usage or []):
+            if u['placed']:
+                continue
+            if u['vocab'] and u['changed']:
+                flags[i] = 'changed'
+            elif u.get('released'):
+                flags[i] = 'released'
+        self.picker.set_flags(flags, f"{fc['wall']} wall / {fc['walkable']} walkable slots free")
+
+    def _change_tileset(self):
+        room = self.current_room()
+        if room is None:
+            return
+        dlg = TilesetDialog(self.s.doc, self.s.renderer, room, self.canvas.pals, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        kind, value, thr = dlg.choice()
+        rid = room['id']
+        cmd = C.SnapshotCommand(self.s, f'Change tileset ({kind})',
+                                lambda doc: doc.set_room_tileset(rid, kind, value, thr))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Change tileset', str(cmd.error))
+
+    def _relayout_right(self):
+        """Folded sections shrink to their header; the palette section takes
+        its natural height; Metatiles and the inspector share the rest in
+        their current ratio (S96 QOL)."""
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(0, self._do_relayout_right)
+
+    def _do_relayout_right(self):
+        sp = self.right_split
+        secs = [self.sec_tiles, self.sec_pal, self.sec_insp]
+        sizes = sp.sizes()
+        total = sum(sizes) or sp.height()
+        head = self.sec_tiles.button.sizeHint().height() + 6
+        pal_h = (self.palettes.sizeHint().height() + self.pal_sys.sizeHint().height()
+                 + head + 12) if self.sec_pal.is_expanded() else head
+        self.sec_pal.setMinimumHeight(pal_h if self.sec_pal.is_expanded() else 0)
+        flex = [i for i in (0, 2) if secs[i].is_expanded()]
+        rest = max(0, total - pal_h - sum(head for i in (0, 2) if i not in flex))
+        new = [head, pal_h, head]
+        if flex:
+            base = sum(max(sizes[i], 1) for i in flex)
+            for i in flex:
+                new[i] = int(rest * max(sizes[i], 1) / base)
+        sp.setSizes(new)
+
+    def _free1_toggled(self, on):
+        room = self.current_room()
+        pid = self.palettes.pid
+        if room is None or not pid:
+            return
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, ('Own' if on else 'Engine') + f' colour 1 for {pid}',
+            lambda doc: doc.set_palette_free1(pid, on)))
+
+    def _highlight_tile(self, i):
+        self.canvas.set_highlight(None if i < 0 else i)
+
+    def _release_vocab(self, on):
+        room = self.current_room()
+        if room is None:
+            return
+        tid = self.s.doc.tileset_key(room)
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, ('Release' if on else 'Protect') + ' tileset vocabulary',
+            lambda doc: doc.set_released(tid, on)))
 
     def _refresh_minimap(self):
         room = self.current_room()
@@ -665,6 +815,7 @@ class RoomsTab(QWidget):
             self._refresh_minimap()
             room = self.current_room()
             self.picker.set_lists(self._harvest(), self.s.doc.metatiles(self.s.doc.tileset_key(room)))
+            self._refresh_slots(room)
             if self.canvas.brush:
                 self.picker.select_metatile(self.canvas.brush)
 
@@ -776,9 +927,10 @@ class RoomsTab(QWidget):
             return
         name = dlg.name.currentText().strip() or 'New room'
         src = dlg.src.currentData()
+        blank = dlg.blank.isChecked()
         rend = self.s.renderer
         cmd = C.SnapshotCommand(self.s, f'New room {name}',
-                                lambda doc: doc.new_room(name, src, rend))
+                                lambda doc: doc.new_room(name, src, rend, blank_tileset=blank))
         self.s.undo.push(cmd)
         self.vanilla_mid = None
         self.room_id = cmd.result

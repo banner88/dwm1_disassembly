@@ -412,6 +412,15 @@ def _palette_asm(prj, pal):
     out = [f"{pal['label']}:"]
     rows = pal['colors_rgb555']
     cmts = pal.get('row_comments') or [None] * 8
+    if pal.get('free_color1'):
+        # S96: FreeColor1Hook (patches/bank_017.asm) keeps this palette's own
+        # colour 1 in each of slots 0-3 whose colour 3 carries bit 15 (ignored
+        # by the hardware; colour 3 is forced black anyway). Per slot and
+        # kept in the WRAM buffer, so the field menu's standalone palette
+        # re-force leaves it alone (S96 round 4).
+        rows = [list(r) for r in rows]
+        for s in range(4):
+            rows[s][3] = F.val(rows[s][3]) | 0x8000
     for row, cm in zip(rows, cmts):
         b = F.palette_row(row)
         out.append(F.db_line(b, comment=cm))

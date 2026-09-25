@@ -13,7 +13,7 @@ lock/unlock opcodes are needed for the player — only for NPC movement timing.
 ## Script Data Format
 
 Scripts are sequences of `dw` words:
-- `$FFxx` (where xx ≤ $63) = opcode with xx as the command number
+- `$FFxx` (where xx ≤ $65 — 102 opcodes, S96) = opcode with xx as the command number; parameter counts: BANK04_SCRIPT_ENGINE "Parameter counts"
 - `$FFFF` = script end, player regains control
 - Values $0000-$FEFF (with high byte ≠ $FF) = text ID or opcode parameter
 - Values $4000-$7FFF (odd-aligned) = branch target addresses

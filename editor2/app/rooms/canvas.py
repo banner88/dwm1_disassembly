@@ -25,7 +25,7 @@ from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView
 
-from editor2.core.document import val
+from editor2.core.document import val, metatile_pals, pal_value, metatile_key
 from editor2.core.render_project import SCREEN_H, SCREEN_W
 from editor2.app.session import REPO
 
@@ -135,9 +135,14 @@ class SpriteCache:
 
 
 def metatile_at(tiles, attr, cx, cy):
+    """The cell's metatile; 'pal' is per subtile when the four differ (S96 —
+    vanilla mixes slots inside a cell, the attr grid is per 8x8)."""
     r, c = cy * 2, cx * 2
+    pal = None
+    if attr:
+        pal = pal_value([attr[r][c], attr[r][c + 1], attr[r + 1][c], attr[r + 1][c + 1]])
     return {'tiles': [tiles[r][c], tiles[r][c + 1], tiles[r + 1][c], tiles[r + 1][c + 1]],
-            'pal': (attr[r][c] & 7) if attr else None}
+            'pal': pal}
 
 
 class RoomCanvas(QGraphicsView):
@@ -179,6 +184,7 @@ class RoomCanvas(QGraphicsView):
         self._hover = None
         self._panning = None
         self._space = False
+        self.highlight = None        # S96 slot map: tile index to outline
 
         self.scene_ = QGraphicsScene(self)
         self.setScene(self.scene_)
@@ -221,6 +227,10 @@ class RoomCanvas(QGraphicsView):
 
     def set_brush(self, metatile):
         self.brush = dict(metatile) if metatile else None
+
+    def set_highlight(self, tile):
+        self.highlight = tile
+        self.viewport().update()
 
     def set_layer(self, name, on):
         self.layers[name] = bool(on)
@@ -415,6 +425,16 @@ class RoomCanvas(QGraphicsView):
                 painter.drawLine(c * CELL, 0, c * CELL, SCREEN_H * TILE)
             for r in range(1, CELLS_H):
                 painter.drawLine(0, r * CELL, SCREEN_W * TILE, r * CELL)
+        if self.highlight is not None:
+            pen = QPen(QColor(255, 230, 0))
+            pen.setCosmetic(True)
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.setBrush(QBrush(QColor(255, 230, 0, 70)))
+            for r in range(SCREEN_H):
+                for c in range(SCREEN_W):
+                    if (self.tiles[r][c] & 0x7F) == self.highlight:
+                        painter.drawRect(QRectF(c * TILE, r * TILE, TILE, TILE))
         if self.layers['markers']:
             for kind, x, y, spr, label, ref in self.markers:
                 rc = QRectF(x * CELL, y * CELL, CELL, CELL)
@@ -495,11 +515,13 @@ class RoomCanvas(QGraphicsView):
             self._stroke['ot'].setdefault((r, c), self.tiles[r][c])
             self._stroke['tiles'][(r, c)] = v
             self.tiles[r][c] = v
-        if mt.get('pal') is not None and self.attr is not None and self.attr_lid:
-            for (r, c) in ((r0, c0), (r0, c0 + 1), (r0 + 1, c0), (r0 + 1, c0 + 1)):
+        pals = metatile_pals(mt)
+        if pals is not None and self.attr is not None and self.attr_lid:
+            for (r, c), p in zip(((r0, c0), (r0, c0 + 1), (r0 + 1, c0), (r0 + 1, c0 + 1)),
+                                 pals):
                 self._stroke['oa'].setdefault((r, c), self.attr[r][c])
-                self._stroke['attr'][(r, c)] = mt['pal']
-                self.attr[r][c] = mt['pal']
+                self._stroke['attr'][(r, c)] = p
+                self.attr[r][c] = p
         self._render()
 
     def _end_stroke(self, label='Paint'):
@@ -526,7 +548,8 @@ class RoomCanvas(QGraphicsView):
     def _flood(self, cell):
         target = self.cell_metatile(*cell)
         if target['tiles'] == self.brush['tiles'] and \
-                (self.brush.get('pal') is None or target['pal'] == self.brush['pal']):
+                (self.brush.get('pal') is None
+                 or metatile_key(target) == metatile_key(self.brush)):
             return
         seen, stack = set(), [cell]
         while stack:

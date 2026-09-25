@@ -2,7 +2,7 @@
 
 ## Overview
 
-Bank $04 is the heart of DWM1's NPC interaction system. It contains a **complete scripting virtual machine** with 100 opcodes that drives all NPC dialogue, cutscenes, story events, and in-game scripted sequences.
+Bank $04 is the heart of DWM1's NPC interaction system. It contains a **complete scripting virtual machine** with 102 opcodes ($00-$65; S96 — the long-quoted "100" missed $64/$65) that drives all NPC dialogue, cutscenes, story events, and in-game scripted sequences.
 
 Every time the player talks to an NPC, enters a room with a scripted event, or triggers a cutscene, bank $04's script engine executes a program stored in one of four script data banks ($0C/$0D/$0E/$0F).
 
@@ -122,7 +122,153 @@ Script emits BC as text ID
 
 This means the script VM pauses for one or more frames while text is being displayed, then resumes automatically.
 
-## Script Command Reference (100 opcodes, $00–$63)
+## Parameter counts — handler-derived, ALL 102 opcodes (S96)
+
+**Source of truth: `extracted/script_param_counts.json`, produced by
+`tools/script_param_counts.py` (verify_integrity check 5 selftest).** Every
+handler consumes a parameter word by INCREMENTING the 16-bit script counter
+(`ld a,[wScriptCounter] / add $01 / … / adc $00 / ld [$D8D6],a`) — usually
+followed by `call MapTypeDispatch` to read it, but a handler may skip a word
+without reading it, so counting reads under-counts (the tool's first pass
+did). The tracer walks each handler over the ROM bytes (jr/jp both edges,
+bank-$04 calls inlined) and stops at the three tails:
+
+* `jp ScriptExecContinue` (`$04:$55F5`) — counter+1, fetch the next op;
+* `jp ScriptReturnProcess` (`$04:$7212`) — BRANCH: counter += (BC−HL)/2,
+  BC = the last parameter read (an absolute script address);
+* `ret` — the op yields; Entry 4 continues next frame (ScriptExecContinue).
+
+Every opcode has exactly ONE arity (no path-dependent counts). Handlers that
+write the counter without a branch tail (`$19`, `$46`, `$4C`, `$65`)
+decrement it to re-run themselves next frame (wait loops). The table below
+agrees with every handler/PyBoy-verified row (scriptgen `OPS`, the S92
+`$27`/`$21` overrides) and CORRECTS 36 rows of
+`tools/decompile_script.py` PARAM_COUNTS (+2 missing opcodes) — that table is
+what `extract_room.py` used through S95 (DOC_AUDIT S96). Consistency proof:
+with these counts every script of all 98 vanilla rooms decodes with every
+branch target on an op boundary (test_canvas "all clones").
+Caveat: cross-bank calls (`rst $10`) are opaque to the tracer; the all-rooms
+decode proof is what rules out a hidden increment there.
+
+| Op | Handler | Params | Tail(s) | Kind | vs decompiler |
+|----|---------|--------|---------|------|---------------|
+| $00 | $5711 | 2 | branch/continue | **branch** (last param = target) |  |
+| $01 | $5740 | 2 | branch/continue | **branch** (last param = target) |  |
+| $02 | $576F | 1 | continue |  |  |
+| $03 | $5788 | 1 | continue |  |  |
+| $04 | $57A1 | 2 | ret |  |  |
+| $05 | $57EB | 1 | ret |  |  |
+| $06 | $5819 | 0 | ret |  |  |
+| $07 | $5824 | 0 | ret |  | decompile_script said 1 |
+| $08 | $5842 | 0 | ret |  |  |
+| $09 | $5843 | 1 | ret |  |  |
+| $0A | $5860 | 2 | ret |  |  |
+| $0B | $5898 | 2 | ret |  |  |
+| $0C | $58D0 | 2 | continue |  | decompile_script said 3 |
+| $0D | $5968 | 3 | continue |  |  |
+| $0E | $59D2 | 2 | branch/continue | **branch** (last param = target) |  |
+| $0F | $5A02 | 3 | ret |  |  |
+| $10 | $5A6F | 2 | ret |  |  |
+| $11 | $5AC5 | 2 | ret |  | decompile_script said 4 |
+| $12 | $5B1B | 2 | continue |  |  |
+| $13 | $5B49 | 2 | continue |  |  |
+| $14 | $5B79 | 1 | branch | **branch** (last param = target) |  |
+| $15 | $5B8F | 3 | branch/continue | **branch** (last param = target) |  |
+| $16 | $5BD4 | 0 | ret |  |  |
+| $17 | $5BDB | 0 | ret |  | decompile_script said 1 |
+| $18 | $5C14 | 1 | ret |  | decompile_script said 0 |
+| $19 | $5C6D | 0 | continue/ret | self-repeat (counter−1, waits) |  |
+| $1A | $5C86 | 2 | continue |  |  |
+| $1B | $5CCF | 2 | continue |  |  |
+| $1C | $5D1A | 1 | continue |  |  |
+| $1D | $5D4B | 0 | continue |  |  |
+| $1E | $5D53 | 0 | continue |  |  |
+| $1F | $5D5B | 0 | ret |  |  |
+| $20 | $5E5E | 0 | ret |  | decompile_script said 1 |
+| $21 | $5E6D | 1 | continue |  | decompile_script said 2 |
+| $22 | $5E87 | 0 | continue |  |  |
+| $23 | $5E8F | 2 | branch/continue | **branch** (last param = target) | decompile_script said 0 |
+| $24 | $5F13 | 0 | ret |  |  |
+| $25 | $5F36 | 0 | continue |  |  |
+| $26 | $5F52 | 0 | ret |  |  |
+| $27 | $5F5C | 0 | continue |  | decompile_script said 1 |
+| $28 | $5F67 | 1 | branch/continue | **branch** (last param = target) |  |
+| $29 | $5F9A | 1 | ret |  |  |
+| $2A | $5FDB | 1 | ret |  |  |
+| $2B | $6002 | 1 | branch/continue | **branch** (last param = target) |  |
+| $2C | $6064 | 1 | branch/continue | **branch** (last param = target) |  |
+| $2D | $6093 | 1 | ret |  |  |
+| $2E | $61E0 | 1 | continue |  |  |
+| $2F | $623A | 1 | continue |  | decompile_script said 2 |
+| $30 | $6253 | 2 | branch/continue | **branch** (last param = target) | decompile_script said 1 |
+| $31 | $62AB | 1 | branch/continue | **branch** (last param = target) | decompile_script said 2 |
+| $32 | $62DD | 2 | branch/continue | **branch** (last param = target) | decompile_script said 1 |
+| $33 | $6332 | 1 | continue |  | decompile_script said 2 |
+| $34 | $634F | 2 | branch/continue | **branch** (last param = target) | decompile_script said 0 |
+| $35 | $63BB | 0 | continue |  |  |
+| $36 | $63C6 | 0 | ret |  | decompile_script said 1 |
+| $37 | $6401 | 1 | continue |  | decompile_script said 2 |
+| $38 | $643F | 2 | branch/continue | **branch** (last param = target) | decompile_script said 1 |
+| $39 | $64A7 | 1 | continue |  | decompile_script said 0 |
+| $3A | $64C2 | 0 | ret |  | decompile_script said 3 |
+| $3B | $65AB | 3 | ret |  | decompile_script said 0 |
+| $3C | $6618 | 0 | continue |  |  |
+| $3D | $6620 | 0 | continue |  |  |
+| $3E | $6628 | 0 | ret |  |  |
+| $3F | $6632 | 0 | continue |  | decompile_script said 2 |
+| $40 | $6646 | 2 | branch/continue | **branch** (last param = target) | decompile_script said 1 |
+| $41 | $669D | 1 | continue |  | decompile_script said 2 |
+| $42 | $66BD | 2 | continue |  | decompile_script said 0 |
+| $43 | $6723 | 0 | ret |  |  |
+| $44 | $676F | 0 | ret |  |  |
+| $45 | $67B1 | 0 | continue |  |  |
+| $46 | $67FD | 0 | continue/ret | self-repeat (counter−1, waits) | decompile_script said 1 |
+| $47 | $6822 | 1 | continue |  |  |
+| $48 | $684D | 1 | continue |  |  |
+| $49 | $6866 | 1 | continue |  |  |
+| $4A | $687F | 1 | continue |  | decompile_script said 0 |
+| $4B | $6898 | 0 | continue |  |  |
+| $4C | $68A1 | 0 | continue/ret | self-repeat (counter−1, waits) | decompile_script said 1 |
+| $4D | $68BA | 1 | ret |  | decompile_script said 0 |
+| $4E | $68D7 | 0 | continue |  |  |
+| $4F | $690B | 0 | ret |  |  |
+| $50 | $6957 | 0 | continue |  |  |
+| $51 | $696C | 0 | continue |  |  |
+| $52 | $69A9 | 0 | ret |  |  |
+| $53 | $6A61 | 0 | continue |  |  |
+| $54 | $6ACE | 0 | continue |  |  |
+| $55 | $6AFA | 0 | continue |  |  |
+| $56 | $6B3A | 0 | continue |  |  |
+| $57 | $6B73 | 0 | continue |  |  |
+| $58 | $6BA0 | 0 | ret |  | decompile_script said 1 |
+| $59 | $6BDF | 1 | continue |  |  |
+| $5A | $6D56 | 1 | ret |  | decompile_script said 0 |
+| $5B | $6D84 | 0 | ret |  |  |
+| $5C | $6D93 | 0 | continue |  |  |
+| $5D | $6F64 | 0 | continue/ret |  | decompile_script said 2 |
+| $5E | $6F89 | 0 | continue |  | decompile_script said 1 |
+| $5F | $6F9B | 2 | branch/continue | **branch** (last param = target) | decompile_script said 0 |
+| $60 | $6FFB | 1 | branch/continue | **branch** (last param = target) | decompile_script said 0 |
+| $61 | $7038 | 0 | ret |  |  |
+| $62 | $705B | 0 | ret |  | decompile_script said 1 |
+| $63 | $707F | 0 | ret |  |  |
+| $64 | $70D5 | 1 | branch/continue | **branch** (last param = target) | missing from decompile_script |
+| $65 | $71D2 | 0 | continue/ret | self-repeat (counter−1, waits) | missing from decompile_script |
+
+`$64` BranchIfPartyHealthy (target): for each party slot < `$CA8D`, not KO
+(`$CB0B`=0), HP full (`$CB13`==`$CB11`), MP full (`$CB17`==`$CB15`) → branch;
+any failure → continue (the Priest gate floor `$51`). `$65` WaitDD80: re-runs
+until `[$DD80] & [$DD9A] == $FF` (intro bedroom `$2F`). Annotated in
+disassembly/bank_004.asm (catalog + `ScriptCmd64_BranchIfPartyHealthy`,
+`ScriptCmd65_WaitDD80`, `ScriptReadTargetAndBranch`, `ScriptContinueNoBranch`).
+
+**Script data bank per map type** (MapTypeDispatch; master table at `$41BA`
+in EVERY script bank, indexed by the FULL map type, rows outside the bank's
+range are filler): `< $06` → `$0C`, `< $20` → `$0D`, `< $40` → `$0E`,
+else `$0F`. Per-map pointer lists are packed back to back — a map's list
+ends where the next in-range map's list begins.
+
+## Script Command Reference (102 opcodes, $00–$65; names/semantics — arity is the table above)
 
 ### Flow Control
 | Cmd | Address | Name | Description |

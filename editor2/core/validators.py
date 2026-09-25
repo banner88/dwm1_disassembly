@@ -176,9 +176,18 @@ def validate(prj, generated=None):
             need_rows = max(i // 4 for i in screens) + 1
             need_cols = max(i % 4 for i in screens) + 1
             if rows_n < need_rows or cols < need_cols:
-                errors.append(f"room {rid}: screens need {need_cols}x{need_rows}"
-                              f" (cols x rows) but record is {cols}x{rows_n} "
-                              "(KEY_LESSONS S10: dimensions gate scrolling)")
+                # S96: a WARNING, not an error — vanilla rooms do this on
+                # purpose (Labyrinth $42, the Forest Mazes $53/$61-$63: record
+                # 1x1, extra screens entered only through an exit's
+                # screen_byte, like the GreatTree floors — KEY_LESSONS S92).
+                # A screen outside the record cannot be SCROLLED to.
+                outside = sorted(i for i in screens
+                                 if i // 4 >= rows_n or i % 4 >= cols)
+                warnings.append(
+                    f"room {rid}: screens {outside} lie outside the record's "
+                    f"{cols}x{rows_n} scroll area — reachable only through an "
+                    "exit/redirect naming them (screen_byte), never by "
+                    "walking off an edge (KEY_LESSONS S10/S92)")
             if cols > 4 or rows_n > 4:
                 errors.append(f"room {rid}: record {cols}x{rows_n} exceeds the "
                               "engine's 4x4 scroll grid (ROOM_DATA_FORMAT)")
@@ -367,8 +376,14 @@ def validate(prj, generated=None):
                           "rendering — KEY_LESSONS 'Palette regex must write "
                           "exactly 8 db lines')")
             continue
+        free1 = bool(pal.get('free_color1'))
         bad_rows = [ri for ri, row in enumerate(rows)
-                    if F.val(row[1]) != 0x6BFF or F.val(row[3]) != 0x0000]
+                    if (F.val(row[1]) != 0x6BFF and not (free1 and ri < 4))
+                    or F.val(row[3]) & 0x7FFF != 0x0000]
+        if free1 and any(F.val(r[1]) & 0x8000 or F.val(r[0]) & 0x8000 or
+                         F.val(r[2]) & 0x8000 for r in rows):
+            warnings.append(f"palette {pal.get('id')}: bit 15 set in a colour — "
+                            "ignored by the hardware")
         if bad_rows:
             warnings.append(
                 f"palette {pal.get('id')} rows {bad_rows}: idx1 != $6BFF or "
@@ -532,57 +547,73 @@ def _validate_layouts_tilesets(prj, errors, warnings):
                         "engine; build_combined_tileset reserves them)")
 
 
+def bank_usage(generated):
+    """{bank: (used_bytes, capacity)} for the compiler-owned banks, measured
+    on the generated text exactly as the pre-build overflow check does
+    (S96: the editor's space meters read this). Banks $64/$67 are pure
+    payload; $60/$71 add their pinned template head."""
+    out = {}
+    for bank, fname in ((0x64, 'patches/bank_064.asm'),
+                        (0x67, 'patches/bank_067.asm')):
+        text = generated.get(f"file:{fname}")
+        if text is not None:
+            out[bank] = (_payload_bytes(text), BANK_SIZE)
+    for bank, fname in ((0x60, 'patches/bank_060.asm'),
+                        (0x71, 'patches/bank_071.asm')):
+        text = generated.get(f"file:{fname}")
+        if text is None:
+            continue
+        gen_bytes = _payload_bytes(
+            text.split('SCRIPT DATA (generated', 1)[-1]
+            if bank == 0x60 else
+            text.split('Custom26DDTable —', 1)[-1])
+        out[bank] = ((TEMPLATE_SIZE.get(bank) or 0) + gen_bytes, BANK_SIZE)
+    return out
+
+
 def _validate_accounting(prj, generated, errors, warnings):
     # EDITOR_DESIGN §6: bank overflow must fail BEFORE rgbasm runs (rgbasm
     # reports only the first excess byte — KEY_LESSONS S52 #3).
-    if True:
+    usage = bank_usage(generated)
+    for bank in (0x64, 0x67):
         # S92: banks $64/$67 have no engine template head — the db/dw payload
         # (self-ID + pointer table + streams) IS the whole bank.
-        for bank, fname in ((0x64, 'patches/bank_064.asm'),
-                            (0x67, 'patches/bank_067.asm')):
-            text = generated.get(f"file:{fname}")
-            if text is None:
-                continue
-            gen_bytes = _payload_bytes(text)
+        if bank not in usage:
+            continue
+        gen_bytes = usage[bank][0]
+        if gen_bytes > BANK_SIZE:
+            errors.append(
+                f"bank ${bank:02X} OVERFLOW: {gen_bytes} > {BANK_SIZE} "
+                "bytes of layout/tileset data — trim content "
+                "(KEY_LESSONS S52: rgbasm reports only the first excess "
+                "byte)")
+        elif gen_bytes > BANK_SIZE - 256:
+            warnings.append(
+                f"bank ${bank:02X}: {BANK_SIZE - gen_bytes} bytes free "
+                "(under 256) — nearly full")
+    for bank in (0x60, 0x71):
+        if bank not in usage:
+            continue
+        tmpl = TEMPLATE_SIZE.get(bank)
+        total = usage[bank][0]
+        gen_bytes = total - (tmpl or 0)
+        if tmpl is None:
+            warnings.append(
+                f"bank ${bank:02X}: template size not pinned yet — "
+                "pre-build overflow check limited to generated payload "
+                f"({gen_bytes} bytes); run build_project.py "
+                "--pin-templates after the first successful build")
             if gen_bytes > BANK_SIZE:
+                errors.append(f"bank ${bank:02X}: generated payload "
+                              f"alone ({gen_bytes}) exceeds bank size")
+        else:
+            if total > BANK_SIZE:
                 errors.append(
-                    f"bank ${bank:02X} OVERFLOW: {gen_bytes} > {BANK_SIZE} "
-                    "bytes of layout/tileset data — trim content "
-                    "(KEY_LESSONS S52: rgbasm reports only the first excess "
-                    "byte)")
-            elif gen_bytes > BANK_SIZE - 256:
+                    f"bank ${bank:02X} OVERFLOW: template {tmpl} + "
+                    f"generated {gen_bytes} = {total} > {BANK_SIZE} "
+                    "bytes — trim content (rgbasm would only report the "
+                    "first excess byte; KEY_LESSONS S52)")
+            elif total > BANK_SIZE - 256:
                 warnings.append(
-                    f"bank ${bank:02X}: {BANK_SIZE - gen_bytes} bytes free "
+                    f"bank ${bank:02X}: {BANK_SIZE - total} bytes free "
                     "(under 256) — nearly full")
-        for bank, fname in ((0x60, 'patches/bank_060.asm'),
-                            (0x71, 'patches/bank_071.asm')):
-            text = generated.get(f"file:{fname}")
-            if text is None:
-                continue
-            tmpl = TEMPLATE_SIZE.get(bank)
-            gen_bytes = _payload_bytes(
-                text.split('SCRIPT DATA (generated', 1)[-1]
-                if bank == 0x60 else
-                text.split('Custom26DDTable —', 1)[-1])
-            if tmpl is None:
-                warnings.append(
-                    f"bank ${bank:02X}: template size not pinned yet — "
-                    "pre-build overflow check limited to generated payload "
-                    f"({gen_bytes} bytes); run build_project.py "
-                    "--pin-templates after the first successful build")
-                if gen_bytes > BANK_SIZE:
-                    errors.append(f"bank ${bank:02X}: generated payload "
-                                  f"alone ({gen_bytes}) exceeds bank size")
-            else:
-                total = tmpl + gen_bytes
-                if total > BANK_SIZE:
-                    errors.append(
-                        f"bank ${bank:02X} OVERFLOW: template {tmpl} + "
-                        f"generated {gen_bytes} = {total} > {BANK_SIZE} "
-                        "bytes — trim content (rgbasm would only report the "
-                        "first excess byte; KEY_LESSONS S52)")
-                elif total > BANK_SIZE - 256:
-                    warnings.append(
-                        f"bank ${bank:02X}: {BANK_SIZE - total} bytes free "
-                        "(under 256) — nearly full")
-

@@ -75,7 +75,29 @@ OPS = {
                                        #        (SIDEQUEST_MAP S68 engine guarantee)
 }
 
-BRANCH_LAST = {0x00, 0x01, 0x0E, 0x14, 0x15, 0x27, 0x28, 0x2C, 0x37}
+# S96: branch ops = handlers with a path into ScriptReturnProcess ($04:$7212)
+# (tools/script_param_counts.py). $27 and $37 were decompiler-inherited
+# mistakes (neither handler branches). Documentation only — '@label' params
+# are emitted as label words wherever they appear.
+BRANCH_LAST = {0x00, 0x01, 0x0E, 0x14, 0x15, 0x23, 0x28, 0x2B, 0x2C, 0x30,
+               0x31, 0x32, 0x34, 0x38, 0x40, 0x5F, 0x60, 0x64}
+
+
+def _handler_arity():
+    """{opcode: params} from extracted/script_param_counts.json (the handler
+    analysis), or {} when the file is absent (CI without extracted data)."""
+    import json
+    import os
+    p = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__)))), 'extracted', 'script_param_counts.json')
+    try:
+        return {int(k, 16): v['counts'][0]
+                for k, v in json.load(open(p))['ops'].items()}
+    except Exception:
+        return {}
+
+
+ARITY = _handler_arity()
 
 
 class ScriptError(ValueError):
@@ -164,6 +186,14 @@ def emit_script(label, items, text_names=None, warnings=None):
             if isinstance(opcode, tuple):
                 raise ScriptError(f"{label}: bad opcode {opname!r}")
             comment = f"opcode ${opcode:02X}"
+            n = ARITY.get(opcode)
+            if n is None and warnings is not None and ARITY:
+                warnings.append(f"{label}: opcode ${opcode:02X} does not exist "
+                                "(the table has $00-$65)")
+            elif n is not None and len(params) != n and warnings is not None:
+                warnings.append(
+                    f"{label}: opcode ${opcode:02X} takes {n} params (handler "
+                    f"analysis), got {len(params)}")
         lines.append(f"    dw $FF{opcode:02X}  ; {comment}")
         for p in params:
             if isinstance(p, tuple) and p[0] == 'label':
@@ -173,3 +203,87 @@ def emit_script(label, items, text_names=None, warnings=None):
     if missing:
         raise ScriptError(f"{label}: unresolved local labels: {sorted(missing)}")
     return lines
+
+
+def regroup_ops(items):
+    """Re-split a script's word stream by the HANDLER arity (S96).
+
+    Scripts cloned before S96 (tools/extract_room.py on the decompiler's
+    param table) group some words under the wrong opcode — e.g. $42 taken
+    as 0 params when its handler consumes 2, so the two words appear as
+    bogus ops of their own. The emitted WORDS are identical either way (1
+    word per op + 1 per param), so regrouping never changes the ROM; it
+    makes the script readable and silences the arity warnings. Returns
+    (new_items, changed); gives up (returns the input unchanged) when the
+    stream does not re-split cleanly (a label ref landing on an op slot,
+    an unknown opcode, or a truncated tail)."""
+    if not ARITY:
+        return items, False
+    code_by_name = {n: c for n, (c, _k) in OPS.items()}
+    name_by_code = {}
+    for n, (c, _k) in OPS.items():
+        name_by_code.setdefault(c, n)
+    name_by_code[0x27] = 'monster_party_op2'
+    words = []            # (kind, value) with kind 'w' word | 'lab' label ref
+    marks = {}            # word index -> [label names]
+    for it in items:
+        if isinstance(it, str):
+            if not it.startswith('label:'):
+                return items, False
+            marks.setdefault(len(words), []).append(it)
+            continue
+        head = it[0]
+        if head == 'end':
+            words.append(('w', 0xFFFF))
+        elif head == 'text':
+            v = _pval(it[1])
+            if isinstance(v, tuple):
+                return items, False
+            words.append(('w', v))
+        elif head == 'op':
+            name = it[1]
+            code = code_by_name.get(name) if isinstance(name, str) else None
+            if code is None:
+                code = _pval(name)
+                if isinstance(code, tuple):
+                    return items, False
+            words.append(('w', 0xFF00 | code))
+            for p in it[2:]:
+                pv = _pval(p)
+                words.append(('lab', p) if isinstance(pv, tuple) else ('w', pv))
+        else:
+            return items, False
+    out, i = [], 0
+    while i < len(words):
+        for lab in marks.get(i, []):
+            out.append(lab)
+        kind, w = words[i]
+        if kind != 'w':
+            return items, False
+        if w == 0xFFFF:
+            out.append(['end'])
+            i += 1
+            continue
+        if (w >> 8) != 0xFF:
+            out.append(['text', f'0x{w:04X}'])
+            i += 1
+            continue
+        code = w & 0xFF
+        n = ARITY.get(code)
+        if n is None or i + n >= len(words):
+            return items, False
+        params = []
+        for k in range(1, n + 1):
+            if i + k >= len(words) or (i + k) in marks:
+                return items, False       # a label inside an op: not clean
+            kd, pv = words[i + k]
+            params.append(pv if kd == 'lab' else f'0x{pv:04X}')
+        nm = name_by_code.get(code, f'0x{code:02X}')
+        if nm in OPS and OPS[nm][1] != n:
+            nm = f'0x{code:02X}'
+        out.append(['op', nm] + params)
+        i += n + 1
+    for lab in marks.get(len(words), []):
+        out.append(lab)
+    changed = out != items
+    return out, changed

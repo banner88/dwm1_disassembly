@@ -23,6 +23,8 @@ from PySide6.QtCore import QRect, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QMenu, QWidget
 
+from editor2.core.document import metatile_key, metatile_pals
+
 PER_ROW = 8
 S = 2                       # scale
 MT = 16 * S                 # metatile pixel size on screen
@@ -53,6 +55,8 @@ class MetatilePicker(QWidget):
         self.foreign_threshold = 0
         self.foreign_same = True  # foreign room shares this tileset?
         self.foreign_title = ''
+        self.flags = {}           # tile index -> 'released' | 'changed' (S96)
+        self.free_text = ''       # "12 wall / 40 walkable slots free"
         self.selected = None      # (section, index)
         self._hover = None
         self._pix = {}
@@ -63,6 +67,16 @@ class MetatilePicker(QWidget):
     def set_context(self, renderer, sheet, pals, threshold):
         self.renderer, self.sheet, self.pals, self.threshold = renderer, sheet, pals, threshold
         self._pix = {}
+
+    def set_flags(self, flags, free_text=''):
+        """P3.3c: vocabulary tiles whose slot is RELEASED (graphic may change
+        on the next import) or already CHANGED get a corner mark."""
+        self.flags, self.free_text = dict(flags), free_text
+        self.update()
+
+    def _flag(self, mt):
+        f = {self.flags.get(t & 0x7F) for t in mt['tiles']}
+        return 'changed' if 'changed' in f else 'released' if 'released' in f else None
 
     def set_lists(self, found, custom):
         self.found, self.custom = list(found), list(custom)
@@ -85,7 +99,7 @@ class MetatilePicker(QWidget):
         """Select the entry equal to mt (found list first); returns index or None."""
         for sec in ('found', 'custom'):
             for i, m in enumerate(self._list(sec)):
-                if m['tiles'] == mt['tiles'] and m.get('pal') == mt.get('pal'):
+                if metatile_key(m) == metatile_key(mt):
                     self.selected = (sec, i)
                     self.update()
                     return self.selected
@@ -110,14 +124,14 @@ class MetatilePicker(QWidget):
 
     def _render(self, sec, mt):
         sheet = self.foreign_sheet if sec == 'foreign' else self.sheet
-        key = (sec if sec == 'foreign' else 'own', tuple(mt['tiles']), mt.get('pal'))
+        key = (sec if sec == 'foreign' else 'own',) + metatile_key(mt)
         if key not in self._pix:
             if self.renderer is None or sheet is None:
                 return None
             img = Image.new('RGB', (16, 16))
-            p = mt.get('pal') or 0
+            pals = metatile_pals(mt) or [0] * 4
             for i, t in enumerate(mt['tiles']):
-                img.paste(self.renderer.render_tile(sheet, t & 0x7F, self.pals, p),
+                img.paste(self.renderer.render_tile(sheet, t & 0x7F, self.pals, pals[i]),
                           ((i % 2) * 8, (i // 2) * 8))
             img = img.resize((MT, MT), Image.NEAREST)
             self._pix[key] = QPixmap.fromImage(ImageQt.ImageQt(img))
@@ -153,7 +167,8 @@ class MetatilePicker(QWidget):
         p = QPainter(self)
         p.fillRect(self.rect(), QColor(36, 36, 40))
         titles = {
-            'found': f"This room's tiles ({len(self.found)})  — its whole vocabulary, never shrinks",
+            'found': (f"This room's tiles ({len(self.found)})  — whole vocabulary"
+                      + (f"  · {self.free_text}" if self.free_text else '')),
             'foreign': (f"From {self.foreign_title} ({len(self.foreign)})  — "
                         + ('same tileset: click = brush' if self.foreign_same
                            else 'other tileset: click = import into this tileset')),
@@ -194,6 +209,10 @@ class MetatilePicker(QWidget):
         wall = mt['tiles'][3] < thr
         p.fillRect(QRect(r.right() - 5, r.bottom() - 5, 5, 5),
                    QColor(255, 60, 60) if wall else QColor(60, 220, 90))
+        fl = self._flag(mt) if sec == 'found' else None
+        if fl:
+            p.fillRect(QRect(r.x(), r.y(), 7, 7),
+                       QColor(255, 40, 40) if fl == 'changed' else QColor(255, 150, 40))
         if self._hover == key:
             p.setPen(QPen(QColor(255, 255, 255, 180), 1))
             p.setBrush(Qt.NoBrush)
@@ -222,6 +241,11 @@ class MetatilePicker(QWidget):
                     thr = self.foreign_threshold if sec == 'foreign' else self.threshold
                     walk = 'WALL' if mt['tiles'][3] < thr else 'walkable'
                     extra = ''
+                    fl = self._flag(mt) if sec == 'found' else None
+                    if fl == 'changed':
+                        extra = '   GRAPHIC CHANGED — a released slot was reused'
+                    elif fl == 'released':
+                        extra = '   slot released — graphic may change on the next import'
                     if sec == 'foreign' and not self.foreign_same:
                         extra = '   (click imports the 4 subtiles into this tileset)'
                     self.hoverInfo.emit(

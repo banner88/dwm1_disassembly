@@ -419,8 +419,13 @@ Master table indexing: the script engine reads `$41BA + $D8D3 × 2` where `$D8D3
 | $48 | 1 | npc_hide | Hide NPC sprite |
 | $49 | 1 | npc_show | Show NPC sprite |
 
-All 100 opcodes decoded (0 unknowns across 5,377 commands in 530 scripts).
-Full reference: `CUSTOM_CUTSCENES.md`. Parameter counts: `tools/decompile_script.py`.
+~~All 100 opcodes decoded (0 unknowns across 5,377 commands in 530 scripts).~~
+**S96: WRONG on two counts** — the table has **102** opcodes ($00-$65), and
+decompile_script's parameter counts are wrong for 36 of them (its "0 unknowns"
+held only because a wrong arity desynchronises the stream into other valid
+opcodes). Parameter counts: **BANK04_SCRIPT_ENGINE "Parameter counts"** /
+`extracted/script_param_counts.json` (handler-derived, DOC_AUDIT S96).
+Full reference (names): `CUSTOM_CUTSCENES.md`.
 
 **Player control:** Automatic. ScriptInit sets $D8D7 bit 0 (script active) →
 player input suppressed. Script `end` ($FFFF) clears $D8D7 → control returns. Text IDs route through ROM0 `$0AD9` → handler banks $42–$4E → data banks $18/$1A/$1B/$1F/$21/$22/$3F. Event flags live in $D99B+ bitfield (see EVENT_FLAGS.md). NPC script_id is set in room data (Bank $0B) NPC entries.

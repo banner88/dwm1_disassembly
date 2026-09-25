@@ -78,6 +78,7 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     dw CF3PoolSwapRecord            ; entry 10 — FX1 (S71): swap array slot D <-> bank-2 pool slot E (149 B)
     dw CF3PoolZeroInit              ; entry 11 — FX1 (S71): zero the 40-slot bank-2 pool + write "P1" magic
     dw CF3PoolCounts                ; entry 12 — FX1 (S71): pool census -> E = awake-eligible (non-egg), D = eggs
+    dw MenuOpenFreePal              ; entry 13 — S96 r4: field-menu open, cream colour 1 in HW for free-colour slots
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -1557,4 +1558,53 @@ CF3PoolCounts:
 .out:
     xor a
     ld [$4100], a
+    ret
+
+
+; -----------------------------------------------------------------------------
+; Entry 13 — MenuOpenFreePal (S96 round 4). Called from the field A-press
+; menu-open path (patches/bank_006.asm, Jump_006_6247 tail) just before the
+; menu blanks the BG map with tile $E0 (colour 1) under the room's attrs.
+; Vanilla: every BG colour 1 is cream, so that blank reads as a cream wipe.
+; Custom room with `free_color1` palettes (FreeColor1Hook, bank $17): colour 1
+; is the room's own, so the blank showed coloured squares until the menu's
+; palette-7 attr fill. Here: for each BG slot 0-3 whose WRAM buffer colour 3
+; carries the free-colour marker (bit 15), write slot 7's colour 1 (cream,
+; $c7d1/$c7d2) into HARDWARE colour 1 only. The buffer is untouched, so the
+; menu-close push ($17 entry 8, label17_46dd) restores the room colours.
+; Vanilla rooms / DMG: returns at once.
+; -----------------------------------------------------------------------------
+MenuOpenFreePal:
+    ld a, [wIsGBC]
+    or a
+    ret z
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c
+    ld hl, $c79e                    ; slot 0 colour 3 high byte (marker bit 7)
+    ld c, $82                       ; BCPS: auto-increment | slot 0 colour 1
+.slot:
+    bit 7, [hl]
+    jr z, .next
+    di
+    call WaitVRAM
+    ld a, c
+    ldh [rBCPS], a
+    ld a, [$c7d1]
+    ldh [rBCPD], a
+    ei
+    di
+    call WaitVRAM
+    ld a, [$c7d2]
+    ldh [rBCPD], a
+    ei
+.next:
+    ld a, l
+    add $08
+    ld l, a
+    ld a, c
+    add $08
+    ld c, a
+    cp $82 + 4 * 8
+    jr nz, .slot
     ret

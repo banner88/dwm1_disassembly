@@ -62,36 +62,59 @@ from editor2.core import layouts as LAY                        # noqa: E402
 
 ROM_PATH = os.path.join(ROOT, 'data', 'DWM-original.gbc')
 MAP_TABLE = os.path.join(ROOT, 'extracted', 'map_table.json')
-SCRIPT_BANK = 0x0D          # vanilla map-script bank (decompile_script.py)
-SCRIPT_TBL = 0x41BA         # + map_type*2 → per-map script ptr list
+SCRIPT_TBL = 0x41BA         # + map_type*2 → per-map script ptr list (every script bank)
+
+
+def script_bank(mid):
+    """Vanilla map-script bank for a map type — bank $04 MapTypeDispatch
+    (BANK04_SCRIPT_ENGINE "Script Data Banks"): < $06 → $0C, < $20 → $0D,
+    < $40 → $0E, else $0F. Each bank's master table sits at $41BA and is
+    indexed by the FULL map type (rows outside the bank's range are filler).
+    S96: the extractor used to read bank $0D for every room, so clones of
+    Castle/GreatTree/Farm/... carried bank-$0D filler 'scripts' and boss
+    rooms ($30, $34) failed to decode — caught by the all-rooms clone sweep."""
+    return 0x0C if mid < 0x06 else 0x0D if mid < 0x20 else 0x0E if mid < 0x40 else 0x0F
 ATTR_PTR_TABLE = 0x476F     # bank $17 (derive_room_palette.py, validated)
 CUSTOM_ROOM_START = 0x6B
 
 
 def _load_param_counts():
-    """decompile_script.PARAM_COUNTS overridden by scriptgen's verified rows."""
-    src = open(os.path.join(SCRIPT_DIR, 'decompile_script.py')).read()
-    pc = {}
-    for m in re.finditer(r'0x([0-9A-Fa-f]{2}):(\d+)',
-                         src.split('PARAM_COUNTS = {')[1].split('}')[0]):
-        pc[int(m.group(1), 16)] = int(m.group(2))
-    bt = {}
-    for m in re.finditer(r'0x([0-9A-Fa-f]{2}):\s*(\d+),',
-                         src.split('BRANCH_TARGET_PARAM = {')[1].split('}')[0]):
-        bt[int(m.group(1), 16)] = int(m.group(2))
+    """Opcode arity + branch-target index.
+
+    S96: the source of truth is extracted/script_param_counts.json — the
+    per-path COUNTER-INCREMENT count of every bank-$04 handler
+    (tools/script_param_counts.py). It agrees with every handler/PyBoy-
+    verified row (scriptgen OPS, the S92 $27/$21 overrides) and corrects 30
+    rows of decompile_script.PARAM_COUNTS (e.g. $11 = 2 not 4, $37 = 1
+    param and NOT a branch — its 'target' was the next op's bytes). Branch
+    ops = handlers with a path into ScriptReturnProcess ($04:$7212); the
+    target is the last parameter word read before it. The decompiler table
+    is only a fallback when the JSON is missing."""
+    path = os.path.join(ROOT, 'extracted', 'script_param_counts.json')
+    pc, bt = {}, {}
+    if os.path.exists(path):
+        ops = json.load(open(path))['ops']
+        for k, v in ops.items():
+            code = int(k, 16)
+            pc[code] = v['counts'][0]
+            if 'branch' in v.get('ends', []) and v['counts'][0] > 0:
+                bt[code] = v['counts'][0] - 1
+    else:
+        src = open(os.path.join(SCRIPT_DIR, 'decompile_script.py')).read()
+        for m in re.finditer(r'0x([0-9A-Fa-f]{2}):(\d+)',
+                             src.split('PARAM_COUNTS = {')[1].split('}')[0]):
+            pc[int(m.group(1), 16)] = int(m.group(2))
+        for m in re.finditer(r'0x([0-9A-Fa-f]{2}):\s*(\d+),',
+                             src.split('BRANCH_TARGET_PARAM = {')[1].split('}')[0]):
+            bt[int(m.group(1), 16)] = int(m.group(2))
+        pc[0x27] = 0
+        bt.pop(0x27, None)
+        pc[0x21] = 1
     for name, (code, n) in SG.OPS.items():
-        pc[code] = n                       # handler-verified wins
-    # S92 handler/PyBoy-verified overrides (decompile_script rows of the
-    # $41/$07 defect class — PROJECT_COMPILER §8):
-    #   $27 MonsterPartyOp2: PyBoy ctr trace (real .sav, lobby class-complete
-    #   path) shows 2F->30 linear = ZERO params, not a branch; handler
-    #   $04:$5F5C (bank $01 entries 9+3, jp $55F5). scriptgen row corrected
-    #   the same session.
-    #   $21 SkipScriptData2: bank_004 reference block "read 1 param, discard"
-    #   ($04:$5E6D) — decompiler's 2 desyncs the stream at $0D:$4366.
-    pc[0x27] = 0
-    bt.pop(0x27, None)
-    pc[0x21] = 1
+        if pc.get(code, n) != n:
+            raise SystemExit(f'scriptgen OPS {name} (${code:02X}) = {n} params but the '
+                             f'handler analysis says {pc[code]} — fix one of them')
+        pc[code] = n
     name_by_code = {code: name for name, (code, n) in SG.OPS.items()}
     name_by_code[0x27] = 'monster_party_op2'
     return pc, bt, name_by_code
@@ -219,8 +242,21 @@ def extract(source_mid, room_id, target_mid, step, project_dir):
         'gam', os.path.join(SCRIPT_DIR, 'generate_attr_map.py'))
     gam = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(gam)
-    attr_entry = gam.parse_room_attr_entry(
-        rom, gam.get_attr_ptr_table(rom)[source_mid])
+    # S96: index the room's bank-$17 screen table DIRECTLY by screen index
+    # (row*4+col, the engine's own walk — ROOM_DATA_FORMAT / GATE_GENERATION
+    # §7.1). generate_attr_map.parse_room_attr_entry only reads 8 screen
+    # slots (the retired 4x2 assumption), so cloning GreatTree ($01, screens
+    # up to 11) died with KeyError 8.
+    def attr_step0(scr_idx):
+        b17 = 0x17 * 0x4000
+        tbl = rom[b17 + 0x476F - 0x4000 + source_mid * 2] | \
+            (rom[b17 + 0x476F - 0x4000 + source_mid * 2 + 1] << 8)
+        o = b17 + tbl - 0x4000 + scr_idx * 2
+        ent = rom[o] | (rom[o + 1] << 8)
+        if not (0x4000 <= ent < 0x8000):
+            raise SystemExit(f"no attr row for screen {scr_idx}")
+        row = b17 + ent - 0x4000 + 2 + min(step, 0) * 4
+        return rom[row], rom[row + 1], rom[row + 2] | (rom[row + 3] << 8)
     used_scripts = set()
     for sr in src['sub_rooms']:
         scr_idx = sr['c925']
@@ -254,7 +290,7 @@ def extract(source_mid, room_id, target_mid, step, project_dir):
                 "spawn_x": raw[5], "spawn_y": raw[6],
                 "comment": f"vanilla exit -> map ${raw[2]:02X} [verbatim]"})
         # attr → custom.layouts attr-only item
-        aidx, abank, _pal = attr_entry[scr_idx][0]
+        aidx, abank, _pal = attr_step0(scr_idx)
         res = gam.decompress_lz(rom, abank, aidx)
         if res is None or len(res[0]) != 256:
             raise SystemExit(f"attr decompress failed screen {scr_idx}")
@@ -301,9 +337,16 @@ def extract(source_mid, room_id, target_mid, step, project_dir):
                            "(derive_room_palette logic; idx1/idx3 forced)"]}
 
     # 6. scripts
+    SCRIPT_BANK = script_bank(source_mid)
     tbl = rw(rom, SCRIPT_BANK, SCRIPT_TBL + source_mid * 2)
+    # the per-map pointer lists are packed back to back: this map's list ends
+    # where the next map's list (any other master-table row) begins
+    lo, hi = {0x0C: (0, 6), 0x0D: (6, 0x20), 0x0E: (0x20, 0x40),
+              0x0F: (0x40, 0x6B)}[SCRIPT_BANK]
+    starts = {rw(rom, SCRIPT_BANK, SCRIPT_TBL + m * 2) for m in range(lo, hi)}
+    nxt = min([x for x in starts if x > tbl] + [0x8000])
     ptrs, a = [], tbl
-    while len(ptrs) < 100:
+    while len(ptrs) < 100 and a < nxt:
         p = rw(rom, SCRIPT_BANK, a)
         if not (0x4000 <= p <= 0x7FFF):
             break

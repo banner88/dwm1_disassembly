@@ -1,0 +1,1195 @@
+{
+ "_generator": "tools/script_param_counts.py (S96) over the original ROM (md5 1ca6579359f21d8e27b446f865bf6b83)",
+ "_method": "per-path count of `call MapTypeDispatch` ($04:$71EF) in each bank-$04 script opcode handler; counter writes = branch paths",
+ "_variable": [],
+ "ops": {
+  "0x00": {
+   "handler": "$04:5711",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x01": {
+   "handler": "$04:5740",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x02": {
+   "handler": "$04:576F",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x03": {
+   "handler": "$04:5788",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x04": {
+   "handler": "$04:57A1",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x05": {
+   "handler": "$04:57EB",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x06": {
+   "handler": "$04:5819",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x07": {
+   "handler": "$04:5824",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x08": {
+   "handler": "$04:5842",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x09": {
+   "handler": "$04:5843",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x0A": {
+   "handler": "$04:5860",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x0B": {
+   "handler": "$04:5898",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x0C": {
+   "handler": "$04:58D0",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x0D": {
+   "handler": "$04:5968",
+   "counts": [
+    3
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x0E": {
+   "handler": "$04:59D2",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x0F": {
+   "handler": "$04:5A02",
+   "counts": [
+    3
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x10": {
+   "handler": "$04:5A6F",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x11": {
+   "handler": "$04:5AC5",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x12": {
+   "handler": "$04:5B1B",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x13": {
+   "handler": "$04:5B49",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x14": {
+   "handler": "$04:5B79",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "branch"
+   ],
+   "branch_paths": [
+    1
+   ],
+   "exact": true
+  },
+  "0x15": {
+   "handler": "$04:5B8F",
+   "counts": [
+    3
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    3
+   ],
+   "exact": true
+  },
+  "0x16": {
+   "handler": "$04:5BD4",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x17": {
+   "handler": "$04:5BDB",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x18": {
+   "handler": "$04:5C14",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x19": {
+   "handler": "$04:5C6D",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue",
+    "ret"
+   ],
+   "branch_paths": [
+    0
+   ],
+   "exact": true
+  },
+  "0x1A": {
+   "handler": "$04:5C86",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x1B": {
+   "handler": "$04:5CCF",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x1C": {
+   "handler": "$04:5D1A",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x1D": {
+   "handler": "$04:5D4B",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x1E": {
+   "handler": "$04:5D53",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x1F": {
+   "handler": "$04:5D5B",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x20": {
+   "handler": "$04:5E5E",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x21": {
+   "handler": "$04:5E6D",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x22": {
+   "handler": "$04:5E87",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x23": {
+   "handler": "$04:5E8F",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x24": {
+   "handler": "$04:5F13",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x25": {
+   "handler": "$04:5F36",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x26": {
+   "handler": "$04:5F52",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x27": {
+   "handler": "$04:5F5C",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x28": {
+   "handler": "$04:5F67",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    1
+   ],
+   "exact": true
+  },
+  "0x29": {
+   "handler": "$04:5F9A",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x2A": {
+   "handler": "$04:5FDB",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x2B": {
+   "handler": "$04:6002",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    1
+   ],
+   "exact": true
+  },
+  "0x2C": {
+   "handler": "$04:6064",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    1
+   ],
+   "exact": true
+  },
+  "0x2D": {
+   "handler": "$04:6093",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x2E": {
+   "handler": "$04:61E0",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x2F": {
+   "handler": "$04:623A",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x30": {
+   "handler": "$04:6253",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x31": {
+   "handler": "$04:62AB",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    1
+   ],
+   "exact": true
+  },
+  "0x32": {
+   "handler": "$04:62DD",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x33": {
+   "handler": "$04:6332",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x34": {
+   "handler": "$04:634F",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x35": {
+   "handler": "$04:63BB",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x36": {
+   "handler": "$04:63C6",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x37": {
+   "handler": "$04:6401",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x38": {
+   "handler": "$04:643F",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x39": {
+   "handler": "$04:64A7",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x3A": {
+   "handler": "$04:64C2",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x3B": {
+   "handler": "$04:65AB",
+   "counts": [
+    3
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x3C": {
+   "handler": "$04:6618",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x3D": {
+   "handler": "$04:6620",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x3E": {
+   "handler": "$04:6628",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x3F": {
+   "handler": "$04:6632",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x40": {
+   "handler": "$04:6646",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x41": {
+   "handler": "$04:669D",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x42": {
+   "handler": "$04:66BD",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x43": {
+   "handler": "$04:6723",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x44": {
+   "handler": "$04:676F",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x45": {
+   "handler": "$04:67B1",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x46": {
+   "handler": "$04:67FD",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue",
+    "ret"
+   ],
+   "branch_paths": [
+    0
+   ],
+   "exact": true
+  },
+  "0x47": {
+   "handler": "$04:6822",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x48": {
+   "handler": "$04:684D",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x49": {
+   "handler": "$04:6866",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x4A": {
+   "handler": "$04:687F",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x4B": {
+   "handler": "$04:6898",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x4C": {
+   "handler": "$04:68A1",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue",
+    "ret"
+   ],
+   "branch_paths": [
+    0
+   ],
+   "exact": true
+  },
+  "0x4D": {
+   "handler": "$04:68BA",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x4E": {
+   "handler": "$04:68D7",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x4F": {
+   "handler": "$04:690B",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x50": {
+   "handler": "$04:6957",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x51": {
+   "handler": "$04:696C",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x52": {
+   "handler": "$04:69A9",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x53": {
+   "handler": "$04:6A61",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x54": {
+   "handler": "$04:6ACE",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x55": {
+   "handler": "$04:6AFA",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x56": {
+   "handler": "$04:6B3A",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x57": {
+   "handler": "$04:6B73",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x58": {
+   "handler": "$04:6BA0",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x59": {
+   "handler": "$04:6BDF",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x5A": {
+   "handler": "$04:6D56",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x5B": {
+   "handler": "$04:6D84",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x5C": {
+   "handler": "$04:6D93",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x5D": {
+   "handler": "$04:6F64",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue",
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x5E": {
+   "handler": "$04:6F89",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x5F": {
+   "handler": "$04:6F9B",
+   "counts": [
+    2
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    2
+   ],
+   "exact": true
+  },
+  "0x60": {
+   "handler": "$04:6FFB",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    1
+   ],
+   "exact": true
+  },
+  "0x61": {
+   "handler": "$04:7038",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x62": {
+   "handler": "$04:705B",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x63": {
+   "handler": "$04:707F",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "ret"
+   ],
+   "branch_paths": [],
+   "exact": true
+  },
+  "0x64": {
+   "handler": "$04:70D5",
+   "counts": [
+    1
+   ],
+   "ends": [
+    "branch",
+    "continue"
+   ],
+   "branch_paths": [
+    1
+   ],
+   "exact": true
+  },
+  "0x65": {
+   "handler": "$04:71D2",
+   "counts": [
+    0
+   ],
+   "ends": [
+    "continue",
+    "ret"
+   ],
+   "branch_paths": [
+    0
+   ],
+   "exact": true
+  }
+ }
+}

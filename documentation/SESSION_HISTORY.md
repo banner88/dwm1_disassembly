@@ -1,5 +1,119 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-20 (Session 94 — **ROOM CANVAS v2 + the room
+> model done right, then (same session, "S94b") ENTRANCE REDIRECTS + true
+> per-STATE rooms** (user direction: "don't build the editor around POC
+> trash; vanilla vs custom columns; the player walks in 4-subtile cells;
+> Select is the basic tool; walkability mode; why 4×2?"; then "next logical
+> step = functional gate redirects so you can test a room by hooking into
+> an existing entrance", and "some rooms have multiple versions — servant
+> boss room on fire or clear — the editor must display that"). Verifier
+> PASS 6/6; clean `1ca6579…` unchanged; **patched reference pin MOVED to
+> `fc1caa98…`** (S94 interim pin `cdadf834…` superseded in-session; engine
+> + compiler changes below; hand-staged patches/ == compiler build,
+> `--apply`'d, verify_integrity's own patched build == the pin);
+> test_compiler --rom 61/61; test_app --rom PASS; test_canvas --rom PASS
+> (v1 + v2 acceptance incl. the redirect walk-through). NOT yet
+> user-tested. Test ROM: `DWM-S94b-test.gbc` (example content, patched
+> `fc1caa98…`). Earlier S94 ROMs (`DWM-S94-test.gbc` `b3277cda…`,
+> `DWM-S94-fresh-farm.gbc` `033d1b35…`, patched) are superseded.
+>
+> **Engine + compiler (patches/, deliberate, byte-changing):**
+> - **Per-(screen, STATE) attr + palette tables in the VANILLA format
+>   (S94b).** Vanilla varies attr AND palette per step (Servant room `$3F`:
+>   221 attr cells + a different palette between its two steps). Bank $17
+>   now emits `CustomAttrPtrTable` (dw per custom room) → `RoomAttr_<mid>`
+>   (16 dw, one per screen) → `ScrAttr_<mid>_<k>` = `dw <step counter>` +
+>   per state `db attr_entry, attr_bank / dw pal_ptr` — the same walk the
+>   vanilla `AttrPtrTable` code does, so `CustomAttrCheck` just substitutes
+>   the table base and `CustomPalCheck` keeps slot 7 (PROJECT_COMPILER
+>   §2.11). Resolution: `states[n].attr › state layout item attr ›
+>   screens[k].attr › screen layout item attr › render.attr`; palette
+>   `states[n].palette › render.palette › vanilla source`. Supersedes the
+>   S94 interim 17-byte per-screen map. PyBoy: a fresh-project Servant-room
+>   clone renders both states pixel-identical to vanilla (only sprites
+>   differ); example-project screens A/B pixel-identical 12/12.
+> - **Entrance redirects (S94b, the user's "fastest way to test").**
+>   `custom.entrance_redirects[]` = `{mapID, screen, x, y, dest,
+>   screen_byte, spawn_x, spawn_y}` re-points ONE vanilla door. Lowered
+>   (project.py `_lower_entrance_redirects`) to a `vanilla_exit_extensions`
+>   entry keyed by **(mapID, screen)** whose per-step lists are rebuilt
+>   from `extracted/map_table.json` (new PIL-free `editor2/core/vanilla.py`
+>   valid-step reader shared with the renderer) with only the named row
+>   substituted — the other doors keep their vanilla rows in EVERY state
+>   (the S92 wholesale-replacement trap is closed). `VanillaExitExtTable`
+>   rows are now `db mapID, screen` (`$FF` = any screen; S70 semantics);
+>   template `VanillaExitResolve` compares `wScreenIndex` (head 358 → 383
+>   B, re-pinned). **bank $0B `RoomEntry9` (boundary push exits) is
+>   diverted through bank $60 entry 7 too** (same-size rewrite, 5 nops), so
+>   y=0/7 extension rows are LIVE. **`Exit_GreatTree_s8` is restored to
+>   VANILLA bytes**: the S92 Library-door POC repoint (`$72`) and the
+>   S1-era `(4,5)→$6B` entrance are now example-project DATA
+>   (`entrance_redirects`). Validator: one override per (room, screen),
+>   'any' rows may not shadow per-screen rows, screen must exist, dest
+>   room must exist, screen_byte never guessed. PyBoy: Library door → `$72`
+>   scr 1 (14,7); `(4,5)` → `$6B` (7,6); untouched GreatTree screen-12 door
+>   → `$0D`; MedalMan south edge (ext row via Entry 9) and OldManGate south
+>   edge (vanilla fallback) identical to the original ROM; fresh project:
+>   Farm clone + Library-door redirect walked through, neighbouring door
+>   still → `$18`.
+> - **ROM0 `$26DD` rows `$6B-$6F` are compiler-owned** (`@BUILD_PROJECT
+>   rom0_room_records` in patches/bank_000.asm, emitter `rom0_records`,
+>   jump-target labels kept at their addresses) — `record` is now REQUIRED
+>   for every room; the legacy "$6B-$6F are hand-patched" special case is
+>   gone (GATE_GENERATION §7).
+> - **4×4 screen grid schema** (keys 0-15, sub-table width per row, dims
+>   validated ≤4×4); **empty projects compile** (placeholder $6B synthesized).
+> - MEASURED (PyBoy, 16/16): **collision samples the BOTTOM-RIGHT subtile
+>   of the target cell** from every approach direction
+>   (ROOM_DATA_FORMAT "Walkability: the bottom-right subtile decides").
+>
+> **Editor (editor2/, canvas v2 — EDITOR_DESIGN §5.1 "As built S94"):**
+> vanilla column (98 rooms / 211 screens live, read-only, **every valid
+> vanilla step browsable as "vanilla state i of n"**) + custom column
+> (New / Copy / Rename / Delete) + **Make editable = clone with confirm**
+> (clone is paintable at once; **clones carry ALL valid vanilla steps as
+> `states[]`** with per-state layout/attr/palette items and the vanilla
+> counter rewired to `wCustomStep_<rid>_S<k>` in the cloned scripts); File
+> → New project from `editor2/templates/blank-project`; **metatile** = 4
+> subtiles + palette slot as the unit (picker: found-in-room + my
+> metatiles; metatile editor = the only subtile surface;
+> `custom._editor.metatiles`); **Select is the default tool** with a real
+> selection outline; paint/rect/fill/eyedrop on cells; **Walkability mode
+> (W)**: red/green cells, click flips one cell by swapping its BR subtile
+> for a cross-threshold twin (`Document.ensure_twin`; vanilla tileset
+> copied into the project first as `assets/<id>.2bpp`; animated indices
+> 77/78 skipped; wall-side-full fallback moves the threshold by one and
+> remaps); 4×4 mini-map; fixed inspector width; `name` field. **S94b:
+> inspector "Entrances" group + "Route a vanilla door here…" dialog
+> (`rooms/redirect_dialog.py`: room → screen → door with previews,
+> arrival screen + cell with a wall warning) and, from the vanilla view,
+> select an exit marker → "Route this door into a custom room…"; markers:
+> magenta `R` = redirected vanilla door, green `IN` = arrival cell.**
+> User-reported fixes: palette double-click on a borrowed palette now
+> OFFERS to copy the palette into the project (or clone the vanilla room)
+> and opens the picker; the maximised window no longer slides off-screen
+> (the status/banner labels asked for the width of their hover text —
+> now `QSizePolicy.Ignored`; tab minimum 1106 px); NPC thumbnails knock
+> out the throne-room floor (border flood-fill over the per-pixel mode of
+> the 137 S91 crops — bosses remain 16×16 composite FRAGMENTS, one crop per
+> NPC entry, ROOM_DATA_FORMAT S91). Structural edits = `SnapshotCommand`
+> (whole-doc + asset-file snapshots; exact undo — a captured ordering bug
+> fixed in-session, KEY_LESSONS S94).
+>
+> **Acceptance (test_canvas.py --rom):** fresh project → Farm cloned to
+> `$6B` (renders pixel-identical to vanilla on all 6 screens) → water
+> metatiles painted → grass cell (5,3) walled, fence cell (3,4) opened →
+> Library door routed to the clone (dialog defaults + `add_redirect`) →
+> exact undo/redo incl. the asset → build → PyBoy: screen-4 VRAM ==
+> canvas 320/320 (scroll-aware read), the player is BLOCKED by the new
+> wall, WALKS THROUGH the opened fence, and **walks through the GreatTree
+> Library door into the clone at the authored cell** while the door beside
+> it still leads to `$18`; plus the S93 vault-states check. Residuals:
+> ROADMAP P3.3b. Owning: EDITOR_DESIGN §5.1 as built S94; PROJECT_COMPILER
+> §2.11 + §2.12 + §11; ROOM_DATA_FORMAT (walkability, states);
+> GATE_GENERATION §7; TOOLS_AND_DATA S94; KEY_LESSONS S94; ROADMAP P3.3b.)
+
 > Last verified: 2026-09-19 (Session 93 — **P3.3 ROOM CANVAS v1 + the
 > editor SHELL — the first session where the editor is built as a product,
 > not a backend with a viewer bolted on** (user direction S93: "when is the

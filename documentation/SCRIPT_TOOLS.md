@@ -99,7 +99,7 @@ understand what any NPC or cutscene script does.
 - `$12` = write_ram (write value to RAM address, 335 uses)
 - `$19` = wait_movement (pause until NPC movement completes)
 - `$22` = begin_walk (required before walk commands)
-See PARAM_COUNTS dict in the source for all parameter counts.
+Parameter counts (S96): the decompiler, `compile_script.py` and `extract_room.py` all read **`extracted/script_param_counts.json`** (bank-$04 handler analysis, `tools/script_param_counts.py`; table in BANK04_SCRIPT_ENGINE "Parameter counts"). The literal PARAM_COUNTS dict in the source is the pre-S96 guess (wrong for 36 opcodes) and only a fallback when the JSON is missing; opcodes whose pretty form assumed a wrong arity print generically (`cmd_XX …`).
 
 **Usage:**
 ```bash

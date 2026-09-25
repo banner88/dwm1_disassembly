@@ -46,6 +46,7 @@ SELFTEST_TOOLS = [
     "build_breeding.py",       # breeding family/special tables round-trip
     "build_library_table.py",  # library grouping reproduces vanilla bounds
     "build_skill_tables.py",   # skill MP/learn/record tables byte-identical
+    "script_param_counts.py",  # S96: opcode arity table == bank-$04 handler analysis
 ]
 
 PATCH_FILES = [

@@ -48,7 +48,7 @@ Re-run spot checks any time with the snippets in each row's "How verified".
 | Event flag fns $26A0/$26A6/$26AE | ✅ | game.sym after byte-perfect build |
 | `wScreenIndex = $C925` (ROUTING) vs "?" (known_RAM_map) | ✅ | game.sym `00:c925 wScreenIndex`; known_RAM_map annotated |
 | Custom WRAM $D378+ free of original code refs | ✅ | Repo-wide grep: original references stop at `$D375` and `ld [$d376],sp` (touches $D376–77). $D378 onward clean. |
-| Script compiler functional, all 100 opcodes | ✅ | `compile_script.py --test` passes |
+| Script compiler functional, all 100 opcodes | ⚠️ S96: 102 opcodes; decompile_script/compile_script arity WRONG for 36 | `compile_script.py --test` passes (a self round trip cannot catch a wrong arity) — see S96 addendum |
 | LZSS compressor roundtrip | ✅ | compress→decompress == original (512 B layout) |
 | Text control codes ($E7=CHOICE, terminator `$F7 $F0`, `$EF $EE` newline) | ✅ (by prior in-game testing v23; consistent with bank $56 jump table) | Not re-traced this session |
 
@@ -228,3 +228,15 @@ gate you assumed".
 | PROJECT_COMPILER §11 / KEY_LESSONS S93: "attr grids are per screen, not per state — the engine never indexes attr by the step counter" | WRONG | The vanilla attr walk reads `[counter]` and selects a per-step `[attr_entry, attr_bank, pal_ptr]` row (bank $17 `AttrPtrTable` chain; measured: Servant room $3F steps differ in 221 attr cells + palette). Corrected in PROJECT_COMPILER §2.11/§11, ROOM_DATA_FORMAT, GATE_GENERATION §7.4; engine now mirrors the vanilla shape (S94b). |
 | PROJECT_COMPILER §vanilla_exit_extensions (S70): "y=0/7 extension rows are inert" | STALE since S94b | Entry 9 is diverted through bank $60 entry 7 too; boundary rows are live. Section updated. |
 
+
+## S96 addendum (2026-09-25)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| BANK04_SCRIPT_ENGINE / ARCHITECTURE / DATA_STRUCTURES / bank_004 catalog: "100 script opcodes ($00-$63)" | WRONG | The rst $00 ScriptCommandTable has **102** rows; `$64` (BranchIfPartyHealthy, 1 param) and `$65` (WaitDD80, 0) are used by vanilla scripts ($0F:$594A Priest floor, $0E:$4DFA intro bedroom). Found when cloning those rooms failed on "unknown opcode". |
+| `tools/decompile_script.py` PARAM_COUNTS ("parameter counts" reference in DATA_STRUCTURES; "0 unknowns across 5,377 commands") | WRONG for 36 opcodes (+2 missing) | Handler analysis = counter increments per path (`tools/script_param_counts.py` → `extracted/script_param_counts.json`, verify_integrity check 5). E.g. `$11` 2 not 4, `$37` 1 param and NOT a branch (its "target" was the next op), `$41` 1 not 2, `$42` 2 not 0. "0 unknowns" was self-consistency: a wrong arity resyncs onto other valid-looking opcodes. The table agrees with every previously verified row. |
+| `tools/extract_room.py` (S92): "all scripts via a segmentation-PROOF decoder" | WRONG for most rooms | It read bank `$0D` for EVERY room; scripts live in `$0C/$0D/$0E/$0F` by map type (MapTypeDispatch). Clones of Castle/GreatTree/Farm/… carried bank-$0D filler as "scripts" (the proof passed on garbage); boss rooms `$30/$34` failed. Fixed (`script_bank()`), plus per-map list bounds. The example project's arena clone ($06 → bank $0D) was correct. |
+| `tools/generate_attr_map.parse_room_attr_entry` reads 8 screen slots | STALE (4×2 era) | Screens are indexed row×4+col up to 15 — cloning GreatTree ($01, screens to 11) died with KeyError 8. extract_room now indexes the bank-$17 screen table directly. generate_attr_map itself unchanged (its own callers only use screens < 8). |
+| validators: "screens need WxH but record is …" = ERROR | TOO STRICT | Vanilla rooms keep sub-room screens outside the record's scroll area on purpose (Labyrinth $42, Forest Mazes $53/$61-$63 — record 1×1, screens entered via exit screen_byte). Now a warning. |
+| KEY_LESSONS S7: colour 1 is forced "every frame" by "a palette refresh/animation system tied to the source tileset" | WRONG mechanism | bank $17 `LoadPal_4102` copies slot 7's colours 1/3 into slots 0-6 when palettes are LOADED ($C797 buffer). Opt-out for custom rooms built S96 (FreeColor1Hook). GATE_GENERATION §7.1 updated. |
+| Room clones: palette = the room's screen-0 palette for every screen | INCOMPLETE | Labyrinth $42 screen 1 step 0 has its own palette; clones now get `screens[k].palette` where a screen's step-0 palette differs (all 211 screens / 526 states pixel-identical to vanilla, test_canvas all-clones). |

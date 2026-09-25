@@ -735,7 +735,7 @@ recipes are pure authoring.
       overlay~~ closed S94b (vanilla bytes restored; the repoint is example
       data); (c) bank $64 capacity: clones localize every screen's
       layout (~200-500 B each compressed; a clone with N states adds N-1
-      more) — needs the capacity meter and, eventually, layout spill into
+      more) — the capacity meter landed S96 (status bar); still needed eventually: layout spill into
       a second bank (the step entry has a bank byte, so it is compiler
       work only); (d) NPC editing = P3.5; (e) walkability fallback when
       the wall side of a tileset is full moves the threshold (remaps
@@ -752,8 +752,11 @@ recipes are pure authoring.
       are the S91 throne-room crops with the floor knocked out in the
       editor — a transparent-background census (OBJ-only capture) and
       whole-boss composites belong to P3.5's sprite picker.
-- [ ] **P3.3c — Tileset slot map + vocabulary release (NEXT — user
-      direction S95)**: the 128-tile-per-room budget is a hard engine limit
+- [x] **P3.3c — Tileset slot map + vocabulary release** — **DONE S96,
+      built, NOT yet user-tested** (acceptance MET in test_canvas v3: the map's
+      free count == `Document.used_tiles`; a GreatTree-sheet import fails with 8
+      free and succeeds after release (125); re-protect restores 8; overwritten
+      vocabulary flagged red in "This room"). Original spec (user direction S95): the 128-tile-per-room budget is a hard engine limit
       (one 2 KB sheet per room, ids ≥ 128 are font/HUD), and today the
       only feedback is the import error text. Build a slot-map panel for
       the room's tileset: 128 cells with the collision threshold drawn
@@ -771,6 +774,38 @@ recipes are pure authoring.
       count; a released tile that an import overwrote is visibly flagged
       in "This room's tiles". Files: new `rooms/tileset_map.py`,
       `Document.release_tiles/protect_tiles/tile_usage`, picker flag.
+- [x] **P3.3d — Rooms group A: tilesets + PNG art import + space meters**
+      — **DONE S96, USER-CONFIRMED 2026-09-25 ("Everything works")** (user: "finish out the rooms
+      stuff … do all of A"; EDITOR_DESIGN §5.1 "S96 additions"): Change
+      tileset (vanilla / project / blank) + New room with a blank sheet;
+      **Import art tab** (per-panel grids with nudge/auto-align, mask, walls,
+      key colours, palette fit with keep, GBC preview, stamp with spill onto
+      new screens — a whole DWM2 town in one import); metatile palettes per
+      subtile; bank $60/$64/$67/$71 space meters (closes P3.3b residual c's
+      "capacity meter"); **"Make editable" fixed for all 98 vanilla rooms**
+      (extract_room script bank, handler-derived opcode arity for all 102
+      opcodes, 4×4 attr lookup, per-screen palettes; test_canvas all-clones).
+      *Accept (machine half MET):* test_canvas v3 + `--rom` (imported screen
+      VRAM == canvas, BG palette RAM == project palette, WALL cell blocks) and
+      the all-clones sweep. *User half:* import a DWM2 panel on the Mac, mark
+      walls, stamp, route a door, walk it in SameBoy (test ROM
+      `DWM-S96-pei-import-test.gbc` = Pei behind the Library door).
+      Residuals: (a) ~~forced colour 1~~ **DONE S96 round 2** (user: "extra
+      colour would be good"): `FreeColor1Hook` + `free_color1` palettes
+      (three own colours per slot in custom rooms; PyBoy: palette RAM ==
+      project incl. colour 1, system slots 4-6 still cream, holds across
+      scrolls; menus/battles re-enter the same load path — user SameBoy
+      check still wanted); pin `07a71f20…` (patched);
+      round 4 (USER-CONFIRMED 2026-09-25 ("Everything works")): user SameBoy found the menu
+      washing the room out + colour-1 squares in the menu wipe → per-slot
+      markers kept in the buffer + bank $73 `MenuOpenFreePal` (menu, INFO,
+      scrolls, battle PyBoy-verified); pin `5db25d15…` (patched);
+      round 3 (USER-CONFIRMED 2026-09-25 ("Everything works")): walkability left to the author
+      (only Wall-marked cells bind a side; strict mode optional), import-tab
+      "New room…", `EDITOR_REVISION` in the title bar;
+      (b) import allocates tiles only, it never removes stale ones (the slot
+      map shows them); (c) flipped/mirrored duplicates in a rip cost separate
+      slots (DWM1 attrs carry no flip bits — vanilla census values 0-3 only).
 - [ ] **P3.4 — Embedded PyBoy preview panel** [G-E] (EDITOR_DESIGN §7
       Tier 2): Build → cached post-boot savestate → warp to the room under
       edit → frames in a Qt widget with input. *Accept:* one click plays

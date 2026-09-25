@@ -321,6 +321,61 @@ the editor must display that"):**
   the return exit), drag-to-place, and the world graph — P3.7.
 - The borrowed-tiles section lives in its own "Borrow" tab.
 
+**S96 additions (user: "finish out the rooms stuff" — group A, tiles &
+tilesets; built S96, USER-CONFIRMED 2026-09-25 ("Everything works")):**
+- **Tileset tab (P3.3c)** beside "This room" / "Borrow": the room sheet's 128
+  slots with status colours (placed / my metatiles / vocabulary / released /
+  animated / free), a red dot where the graphic differs from the sheet it was
+  copied from, the collision threshold as a step line, hover = users, click =
+  highlight on the canvas; per-side free counts in the tab title, the picker
+  header and every import error; **"Release unused vocabulary"** (persisted,
+  undoable) lets imports/twins take the source room's unplaced slots, and
+  "This room" marks affected metatiles (orange = may change, red = changed).
+  The vocabulary is now DERIVED (source room tiles when the room still draws
+  with that room's sheet), not registered by the GUI.
+- **Change tileset** (inspector "Change…"): another vanilla room's sheet, a
+  project sheet, or a new blank sheet; New room can start with a blank
+  sheet. Screens keep tile numbers.
+- **Import art tab** (top level, user spec: "import PNG, move the grid until
+  I am happy, block out what I don't want"): panels detected per rip with
+  their own grid offsets, nudge / Auto-align, Mask, Wall (same tile
+  everywhere), Panel and Key-colour tools, palette fit under the engine rule
+  (4 slots × 2 free colours; "keep" per slot), "Show as GBC" overlay, budget
+  line, Add to My metatiles / Stamp onto the room with spill onto new
+  screens. A whole DWM2 town (Pei) = one import, 87 slots, 6 screens.
+- **Metatile palettes per subtile** (`pal` int or list of 4): painting a
+  vanilla cell that mixes slots no longer flattens it.
+- **Space meters** for banks $60/$64/$67/$71 in the status bar (§5.C).
+- **Make editable works on every vanilla room** (98/98, all screens and
+  states pixel-identical, clones compile) after fixing the extractor's script
+  bank, the opcode arity table (BANK04_SCRIPT_ENGINE "Parameter counts"), the
+  4×4 attr lookup and per-screen palettes.
+- **Own colour 1 (user S96, second round: "can definitely feel the colour
+  loss … extra colour would be good"):** `FreeColor1Hook` (engine, bank $17)
+  lets a custom room's palette keep its own colour 1 in slots 0-3 — three
+  colours of the author's own per slot (colour 3 stays black). Opt-in per
+  palette (`free_color1`): the Import art tab ticks "Own colour 1" by default
+  (Pei fits 1417/1440 subtiles exactly vs 632 with the cream fold); the
+  palette panel has an "own colour 1" checkbox and unlocks colour 1.
+  Round 4 (USER-CONFIRMED 2026-09-25 ("Everything works"), SameBoy): survives the field menu and battles
+  (per-slot marker kept in the buffer; menu-open wipe forced cream in
+  hardware by bank $73 `MenuOpenFreePal`).
+- **Right panel QOL (user S96):** Metatiles / BG palettes / Room inspector
+  are foldable sections (▼/▶, state remembered) in a vertical splitter;
+  palettes show slots 0-3 unless "show system 4-7" is ticked.
+- **Walkability is the author's (user S96 round 3: "let me do the
+  walkability, there are many tricks to make a non-wall inaccessible to
+  thin out budget"):** the import only binds cells marked with the Wall tool
+  (bottom-right subtile below the threshold); every other graphic takes any
+  free slot, walkable side first — no twins spent. "Unmarked cells must be
+  walkable" restores the strict placement. "New room…" next to the target
+  combo creates a blank-tileset room for the art when a room's sheet is full.
+- **Editor revision** (`editor2.EDITOR_REVISION`) in the window title and the
+  build log on open — a stale or half-applied checkout shows at a glance.
+- **Import list:** every PNG opened stays in the project with its panels,
+  masks and walls; "Open PNG…" adds another, the image combo switches,
+  "Remove" drops one from the list (undoable).
+
 Acceptance `editor2/tests/test_canvas.py --rom`: fresh project → Farm clone
 at `$6B` → metatiles painted → a lone metatile painted over stays in the
 picker → a Castle brick metatile imported (sheet bytes copied, threshold side

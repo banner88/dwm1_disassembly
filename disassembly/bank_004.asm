@@ -2363,7 +2363,17 @@ MarkScriptActive:
     rst $00                  ; Dispatch via rst $00 jump table
 
 ; ===========================================================================
-; ScriptCommandTable — 100 script opcodes ($00-$63, indexed by C when B=$FF)
+; ScriptCommandTable — 102 script opcodes ($00-$65, indexed by C when B=$FF)
+; (S96: the table has 102 rows, not 100 — $64/$65 are used by vanilla scripts:
+;  $0F:$594A Priest gate floor, $0E:$4DFA intro bedroom.)
+;
+; PARAMETER COUNTS (S96, tools/script_param_counts.py → extracted/
+; script_param_counts.json): a parameter = one 16-bit script-counter
+; INCREMENT in the handler (ld a,[wScriptCounter] / add $01 / … / adc $00);
+; a handler may skip a word without reading it. Handlers end in one of three
+; tails: jp ScriptExecContinue ($55F5, counter+1 → next op), jp
+; ScriptReturnProcess ($7212, branch: the last word read is the target), or
+; ret (next frame continues). Every opcode has ONE fixed arity.
 ; ===========================================================================
 ; Each entry is a 2-byte pointer to a handler function.
 ; Commands handle: conditional branches, variable reads/writes, NPC movement,
@@ -2483,6 +2493,12 @@ MarkScriptActive:
 ; $61  $7038       Data         CallScriptBank_E2: call bank $0C/$0D/$0E entry 2
 ; $62  $705B       Screen       VRAMTileOp: VRAM operation at $9800
 ; $63  $707F       Monster      MonsterSpecialOp: bank $01 entry 3 (62 lines)
+; $64  $70D5       Flow         BranchIfPartyHealthy (1 param = target): for each
+;                                party slot < $CA8D: not KO ($CB0B=0), HP full
+;                                ($CB13==$CB11), MP full ($CB17==$CB15) → branch;
+;                                any slot fails → continue (the Priest's "no need")
+; $65  $71D2       Flow         WaitDD80: 0 params; repeats itself (counter-1,
+;                                ret) until [$DD80] & [$DD9A] == $FF
 ; ===========================================================================
 
     dw label4_5711
@@ -6603,6 +6619,8 @@ DrawRowLoop:
     ret
 
 
+; Script Command $64: BranchIfPartyHealthy — see the catalog above (S96).
+ScriptCmd64_BranchIfPartyHealthy:
 label4_70d5:
     ld a, [wScriptCounter]
     add $01
@@ -6748,17 +6766,25 @@ label4_70d5:
     or l
     jr nz, JumpToScriptInitEntry
 
+; S96: reached with the counter ON the target word: read it and branch
+; (ScriptReturnProcess). "Alias" names are historical auto-labels.
+ScriptReadTargetAndBranch:
 ScriptExecMapAlias:
 ScriptExecMapDispatch:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
 
+; S96: NOT script init — this is jp ScriptExecContinue (no branch taken).
+ScriptContinueNoBranch:
 JumpToScriptInitAlias:
 JumpToScriptInitEntry:
     jp Jump_004_55f5
 
 
+; Script Command $65: WaitDD80 — 0 params; re-executes (counter-1, ret)
+; until [$DD80] & [$DD9A] == $FF, then continues (S96).
+ScriptCmd65_WaitDD80:
 label4_71d2:
     ld a, [$dd80]
     ld hl, $dd9a

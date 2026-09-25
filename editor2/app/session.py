@@ -50,8 +50,10 @@ class Session(QObject):
         build_rom = found[0] if found else None
         if found:
             self.last_rom = found[0]
-        return ProjectRenderer(REPO, self.project_dir, self.doc.data,
-                               rom_path=rom, build_rom_path=build_rom)
+        r = ProjectRenderer(REPO, self.project_dir, self.doc.data,
+                            rom_path=rom, build_rom_path=build_rom)
+        self.doc.vanilla = r          # S96: tileset usage / vocabulary queries
+        return r
 
     def refresh_renderer(self):
         """After a build (new legacy rows) or a structural change."""

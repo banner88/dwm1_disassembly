@@ -195,6 +195,16 @@ jr_017_40e7:
     ret
 
 
+; ---------------------------------------------------------------------------
+; LoadPal_4102 (entry 9; also the tail of entries 0/1) — the "FORCED COLOURS"
+; of every BG palette (S96, KEY_LESSONS S7/S39 finally located): load the
+; system slot-7 palette ($5655) into the WRAM palette buffer $C797 (8 pal x 4
+; colours x 2 B; slot n colour i at $C797 + n*8 + i*2), then copy slot 7's
+; COLOUR 1 ($C7D1/$C7D2, = $6BFF cream) into colour 1 of slots 0-6 and slot
+; 7's COLOUR 3 ($C7D5/$C7D6, = $0000 black) into colour 3 of slots 0-6. That
+; is why every room palette reads "_ 6bff _ 0000" at runtime whatever its ROM
+; bytes say. The buffer is pushed to BCPD by label17_46dd / the fade code.
+; ---------------------------------------------------------------------------
 LoadPal_4102:
 Jump_017_4102:
 jr_017_4102:
@@ -206,7 +216,9 @@ jr_017_4102:
     ld c, $07
     ld b, $01
     call LoadPal_46a1
+LoadPal4102_Color1Pass:              ; S96: colour 1 of slots 0-6 := slot 7's
     ld a, [$c7d1]
+LoadPal4102_Color1Store:
     ld l, a
     ld a, [$c7d2]
     ld h, a
@@ -238,6 +250,7 @@ jr_017_4102:
     ld [$c7c9], a
     ld a, h
     ld [$c7ca], a
+LoadPal4102_Color3Pass:              ; S96: colour 3 of slots 0-6 := slot 7's
     ld a, [$c7d5]
     ld l, a
     ld a, [$c7d6]
@@ -272,6 +285,8 @@ jr_017_4102:
     ld [$c7ce], a
     ret
 
+; label17_4192 (entry 10): every BG attr ($9800 map, VRAM bank 1) := $07 —
+; the menu / battle-text screens draw on system palette 7 (S96 r4 trace).
 label17_4192:
     ld a, [wIsGBC]
     or a
@@ -691,6 +706,9 @@ Jump_017_440b:
 
 
     db $02, $04, $00, $06
+; ^ $440c: DMG-shade -> buffer byte offset for the GBC BGP emulation
+; (label17_4272 SavePal_42ac): shade 0 -> colour 1 (+2, cream), 1 -> colour
+; 2, 2 -> colour 0, 3 -> colour 3; wBGPalette $D2 = identity. S96 r4.
 
 label17_4410:
     ld a, [$c850]

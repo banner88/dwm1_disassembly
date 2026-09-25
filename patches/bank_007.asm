@@ -12,6 +12,13 @@ SECTION "ROM Bank $007", ROMX[$4000], BANK[$7]
     dw label7_6468
     dw GetSkillMPCost
 
+; ---------------------------------------------------------------------------
+; FIELD MENU SHELL (S96 round 4, PyBoy-traced): label7_4009 dispatches on
+; $c90d: 0 label7_6aaf (open), 1 label7_4017 (draw main page), 2 label7_43c8
+; (main page input), 3 label7_44a8, 4 label7_6b04 (close to field).
+; Opened from the field A-press with nothing to talk to (bank $06
+; Jump_006_6247 tail: wGameState bit 1, $c90d-$c910 := 0).
+; ---------------------------------------------------------------------------
 label7_4009:
     ld a, [$c90d]
     rst $00
@@ -6609,6 +6616,11 @@ jr_007_6a95:
     ret
 
 
+; SetFld_6a9e: BG map $9800-$9BFF := tile $E0 (blank, colour 1) through
+; Write_gfx_tile — takes ~8 frames, and the ROOM's attrs stay live until the
+; $17 entry 10 fill that follows in label7_6aaf. Vanilla shows a cream wipe
+; because every BG colour 1 is cream (LoadPal_4102); a free-colour custom
+; room needs bank $73 MenuOpenFreePal (S96 r4) to look the same.
 SetFld_6a9e:
     ld hl, $9800
     ld bc, $0400
@@ -6623,6 +6635,10 @@ jr_007_6aa4:
 
     ret
 
+; label7_6aaf (menu state 0, OPEN): clear menu vars, blank BG (SetFld_6a9e),
+; $17 entry 10 = every BG attr := palette 7; then state 1. The first page
+; draw calls $17 entry 6 (monster palette -> LoadPal_4102 standalone) and
+; entry 8 (buffer -> hardware).
 label7_6aaf:
     ld hl, wMenu_selection
     ld bc, $0008
@@ -6669,6 +6685,10 @@ SetFld_6aba:
     inc [hl]
     ret
 
+; label7_6b04 (menu state 4, CLOSE): attrs := palette 7, redraw the room
+; ($01 entry 3, $0B entries 1/2), $17 entry 8 pushes the WRAM palette
+; buffer to hardware (no palette RELOAD — whatever LoadPal_4102 left in the
+; buffer is what the room shows after the menu).
 label7_6b04:
     call SetFld_6a8f
     call LoadFld_690d

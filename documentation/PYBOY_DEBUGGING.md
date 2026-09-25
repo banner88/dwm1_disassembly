@@ -33,6 +33,12 @@ mailbox** ($C96D dest, $C96F-72 spawn pixels, $C96C=1, $C88F=1) after
 killing any running script ($D8D7=0). This teleports to any room with the
 real transition machinery. `warp(p, mapID, tile_x, tile_y)` does it.
 
+**Field menu in a hijacked state (S96 round 4):** A on nothing opens the
+menu only when the party is non-empty (bank $06 `Jump_006_6247` checks
+`[$ca8d]`) — call `give_party_monster(p)` after the last warp, then tap A;
+`wGameState` ($C8EB) bit 1 = menu open. That is enough to test menu /
+INFO pages and (with encounters enabled) a battle round trip.
+
 ## Real save files kill most traps (ask the user for a .sav!)
 
 A SameBoy/BGB `.sav` is a raw SRAM dump; PyBoy auto-loads `<rom>.ram`, so

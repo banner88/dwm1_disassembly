@@ -3537,3 +3537,47 @@ A metatile is 4 sheet INDICES + a palette slot, so it only means the same thing 
 **Fix**: `screens[k].palette`, and add-screen copies the palette in effect.
 **Rule**: whatever the engine varies per (screen, state) — layout, attr, palette — the schema must allow at every level the GUI can create, and a new item must inherit what the author is looking at, not a global default.
 
+
+## S96 — rooms build-out: tiles, tilesets, PNG import — and the clone pipeline was wrong
+
+### Count what a handler CONSUMES, not what it reads
+**Symptom**: the first handler-analysis pass (count `call MapTypeDispatch` per path) said set_flag takes 2 params, goto 2, set_bgm 2 — contradicting three PyBoy-verified rows.
+**Root cause**: (1) handlers end by jumping to ScriptExecContinue, which itself calls MapTypeDispatch to fetch the NEXT op — that read is not a parameter; (2) a handler can skip a word by incrementing the counter without reading it.
+**Fix**: count the 16-bit counter INCREMENT sequence per path and stop at the three tails ($55F5 continue, $7212 branch, ret). Result: one arity per opcode, agreeing with every verified row and correcting 36 guessed ones.
+**Rule**: when deriving an interface from handler code, first identify the dispatcher's own entry/exit tails and exclude them — then measure the resource that actually advances (the counter), not the operation that usually accompanies it (the read).
+
+### A decoder that "has 0 unknowns" can be wrong everywhere
+**Symptom**: decompile_script reported 0 unknown opcodes over 5,377 commands, and extract_room's "segmentation proof" passed — while 36 arities were wrong.
+**Root cause**: a wrong arity shifts the stream onto other words that ALSO look like valid opcodes/params; self-consistency checks pass on garbage. Worse, extract_room read every room's scripts from bank $0D, so most clones decoded filler that happened to parse.
+**Fix**: arity from the handlers; the script bank from MapTypeDispatch; then the proof re-run over ALL 98 rooms.
+**Rule**: a consistency check proves nothing about data you never cross-checked against an independent source; and a constant that is right for the proof case (the Arena, bank $0D) must be checked against the dispatch that chooses it.
+
+### Test the whole population, not the proof room
+**Symptom**: "Make editable" worked on every room anyone had tried (Farm, Arena, Servant) and crashed or silently mis-cloned GreatTree, Castle, Bazaar, boss rooms, Labyrinth.
+**Fix**: a 12-second sweep — clone every vanilla room, render every screen × state against vanilla, compile each — found five independent defects in one run (8-slot attr parse, script bank, arity, per-screen palettes, over-strict record validator). It now runs in test_canvas.
+**Rule**: when an operation applies to a finite, enumerable set (98 rooms, 102 opcodes, 128 slots), test all of it; it is usually cheaper than reasoning about which members are special.
+
+### Read-only accessors must not create keys
+**Symptom**: the full-undo acceptance ("project.json byte-identical after undoing everything") failed the moment the Import tab existed.
+**Root cause**: the tab's `imports()` accessor used `setdefault`, so merely opening a project added `custom._editor.imports: []`.
+**Rule**: split readers (`.get` chains) from writers (`setdefault`) in any model with a byte-exact save; the full-undo test is the detector.
+
+### The "forced colour" was one copy loop at palette load — and it has an off switch now
+**Finding (S96)**: KEY_LESSONS S7 guessed "a palette refresh/animation system … every frame"; the real mechanism is bank $17 `LoadPal_4102`: after the room palette lands in the WRAM buffer `$C797`, it copies the system slot-7 palette's colour 1 (cream) and colour 3 (black) into slots 0-6. Found in minutes by searching WRAM for a known authored colour and grepping the buffer address.
+**Fix**: `FreeColor1Hook` — same-size `jp` at the copy, opt-in per palette via a bit-15 marker in slot 0's colour 3 (a bit the hardware ignores and no vanilla palette sets), so no table, no emitter region and no change for existing content.
+**Rule**: to locate a runtime overwrite, find the RAM buffer that holds the final value (search WRAM for a value you authored), then grep who writes that buffer; and prefer an in-data marker in a hardware-ignored bit over a new lookup table when the data already flows through the hook.
+
+### A palette "load" routine is also a "re-force" routine — markers must survive their own consumer
+**Symptom** (user S96, SameBoy): in a free-colour room, opening the field menu and closing it left the room washed out permanently; the menu wipe showed coloured squares.
+**Root cause**: (1) the round-2 marker lived in colour 3, which the same routine then overwrote — fine for the room load, but the field menu calls `LoadPal_4102` STANDALONE (via $17 entry 6) and nothing reloads the room palette on close (entry 8 just pushes the buffer), so the second call saw no marker and forced cream for good. (2) The menu blanks the BG to a colour-1 tile under the room's attrs for ~8 frames — vanilla relies on every colour 1 being cream.
+**Fix**: per-slot markers put back after the colour-3 pass; a same-size far call at menu open sets hardware colour 1 to cream for marked slots (buffer untouched, the close push restores).
+**Rule**: when a hook keys on a marker in data the hooked routine rewrites, ask who ELSE calls the routine — and make the marker idempotent (restore it) so every later call decides the same way. And an "invariant" the vanilla game never breaks (colour 1 is always cream) is load-bearing for code you haven't read yet: grep for transitions that draw with it (blank tiles, wipes). Also: the harness "cannot open menus" was only an empty party — `give_party_monster(p)` makes the field menu testable.
+
+### Make the running code identify itself
+**Symptom** (user S96): "I don't see any arrows on the right panel" after applying the delivery — `rsync -av "$HOME/Downloads/S96_rooms_A_3" repo/` (no trailing slash) copies the FOLDER into the repo instead of its contents, so the editor ran the previous code; and macOS renames repeated downloads (`_2`, `_3`), so "which folder is current" is ambiguous too.
+**Fix**: `editor2.EDITOR_REVISION`, shown in the window title and the build log on open; deliveries use a unique wrapper name per round.
+**Rule**: any tool the user runs from files they copy by hand must print its own revision where they will see it — it turns a whole class of "your fix didn't work" reports into a one-glance check. (rsync: `rsync -av SRC/ DEST/` — trailing slash on the source.)
+
+### DWM2 art is black + THREE colours per palette; DWM1 gives two
+**Finding**: every DWM2 8×8 tile uses black plus up to three colours (the rips are exact GBC colours ×8); the DWM1 engine forces colour 1 = cream `$6BFF` and colour 3 = black in every BG palette (KL S7/S39), and a room has four BG palettes. The importer folds the colour nearest cream onto colour 1 and fits ≤4 palettes; water/sky/gold suffer when a map needs more. Same-graphic-different-palette tiles share one sheet slot (the DWM1 idiom), which is what makes a whole town fit in 128 slots (Pei: 87).
+**Rule**: before building an art importer, measure the source's colour structure per tile against the target engine's palette rules — the limit is colours per palette, not tile count.

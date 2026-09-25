@@ -295,6 +295,19 @@ the gate floor. Implemented in **`tools/derive_room_palette.py`** (`--map 0xNN` 
 The engine **overwrites colour index 1 → `$6BFF` and index 3 → `$0000`** in *every*
 BG palette at runtime (this is why every dump reads `_ 6bff _ 0000`). So to derive
 a palette: read colours 0 and 2 from the room's palette block; force 1 and 3.
+**Where (S96, located):** bank $17 `LoadPal_4102` (entry 9, also the tail of
+entries 0/1) loads the system slot-7 palette (`$5655`) into the WRAM palette
+buffer `$C797` (slot n colour i at `$C797+n*8+i*2`) and copies slot 7's colour 1
+(`$C7D1`) and colour 3 (`$C7D5`) into colours 1/3 of slots 0-6 — at every palette
+LOAD, not per frame. **Custom rooms can opt out for colour 1** (S96
+`FreeColor1Hook`, patches/bank_017.asm): a palette marked `free_color1` in
+project.json carries bit 15 in colour 3 of each of slots 0-3 (hardware-ignored;
+0 of the 101 vanilla room/gate palettes set it) and keeps its own colour 1 in
+those slots; slots 4-6, colour 3 and every vanilla room are unchanged. The
+marker is tested per slot and put back into the buffer after the colour-3
+pass (S96 round 4), because `LoadPal_4102` also runs STANDALONE — the field
+menu reaches it through entry 6 on every open, with no room reload before
+or after (the menu-close path only pushes the buffer, $17 entry 8).
 
 Where slots 0–3 come from:
 - **normal rooms:** `AttrPtrTable` (`$17:$476F`)[mapID] → room block → **first

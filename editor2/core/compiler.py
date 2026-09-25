@@ -106,6 +106,21 @@ def compile_project(project_path, repo_root):
     return outputs, prj, warnings
 
 
+def measure_banks(data, project_dir, repo_root):
+    """S96 space meters: {bank: (used, capacity)} for the in-memory project
+    `data` (the editor's unsaved document) without writing or assembling
+    anything. Returns (usage, errors) — errors = the validation failures
+    that stopped the measurement (then usage is {})."""
+    import copy
+    prj = Project(copy.deepcopy(data), project_dir)
+    prj.repo_root = repo_root
+    errors, _w = validators.validate(prj)
+    if errors:
+        return {}, errors
+    gen, _w = _emit_all(prj)
+    return validators.bank_usage(gen), []
+
+
 def content_hash(project_path):
     if os.path.isdir(project_path):
         project_path = os.path.join(project_path, 'project.json')

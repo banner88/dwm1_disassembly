@@ -496,7 +496,12 @@ user-confirmed hand-authored script uses one param. The compiler's own
 table uses 1. `compile_script.py` is NOT fixed this session (out of scope;
 its decompiler twin has an independent PARAM_COUNTS copy — fix both
 together and re-run their round-trip tests when touched). Do not "correct"
-the compiler from that tool.
+the compiler from that tool. **S96: fixed at the source for all three
+readers** — compile_script, decompile_script and extract_room take arity +
+branch set from `extracted/script_param_counts.json` (the bank-$04 handler
+analysis, BANK04_SCRIPT_ENGINE "Parameter counts"); scriptgen's OPS rows are
+cross-checked against it (extract_room refuses a disagreement) and hex ops
+in project scripts get an arity warning from it.
 
 ---
 
@@ -551,6 +556,7 @@ editor2/
         render_project.py    # LIVE renderer from project.json (S93; == render.py, tested)
         document.py          # editable model: byte-exact load/save + mutations (S93)
         vanilla.py           # PIL-free vanilla room-table reader: valid steps / exits / counters (S94b)
+        png_import.py        # PNG -> tiles/palettes/metatiles planning (S96)
         emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
   app/  main.py session.py build_worker.py     # shell (S93), one Session per project
@@ -558,6 +564,8 @@ editor2/
                inspector.py commands.py       # the Rooms tab (S93)
                metatile_picker.py metatile_editor.py   # S94 metatiles
                redirect_dialog.py                      # S94b "Route a vanilla door here"
+               tileset_map.py tileset_dialog.py        # S96 slot map, change tileset
+        import_tab.py space_meter.py                   # S96 Import art tab, bank meters
   templates/blank-project/project.json   # File > New project (S94)
   example-project/project.json      # regression baseline (build/ is regenerable output)
   tests/test_compiler.py            # 61 tests; --rom adds the ROM builds
@@ -640,6 +648,34 @@ new screen is added (it inherits the palette shown). **GUI exits (S95):**
 `Document.add_exit` writes ordinary `exits[]` rows (`dest room:/vanilla:`,
 `screen_byte` = destination screen, `spawn_x/y`, `gate_flag 0`) on the
 current state — nothing new for the compiler.
+
+**S96 editor-only data (`custom._editor`, ignored by the compiler):**
+`metatiles[...]` entries may carry `pal` as a list of 4 slots (per subtile);
+**`custom.palettes[].free_color1: true` (S96, engine-backed):** in a custom
+room the palette keeps its OWN colour 1 in slots 0-3 (bank $17
+FreeColor1Hook); the emitter ORs bit 15 into colour 3 of EACH of slots 0-3 as
+the marker (S96 round 4; round 2 marked slot 0 only — hardware-ignored,
+colour 3 is still forced black, the hook restores the bit in the buffer so
+the menu's standalone reload keeps the colours); the idx1 validator
+warning is skipped for slots 0-3 of such palettes; the live renderer and the
+palette panel honour it. Reference patched pin moved to `07a71f20…`
+(hook code only — the example project has no free palette), then to
+`5db25d15…` (patched, S96 round 4: per-slot marker + bank $06 menu-open
+far call to bank $73 entry 13 `MenuOpenFreePal`; code only again).
+`imports: [{file, keys, regions[{rect, offset, name}], masked, walls}]` (the
+Import-art tab's per-image settings; the PNG is copied to
+`assets/imports/`); `tileset_origin: {tid: [bank, id] | null}` (where a sheet
+came from — blank sheets have none); `released_vocab: [tid]` (P3.3c).
+**Validator change S96:** screens outside the record's scroll area are a
+WARNING (vanilla sub-room screens: Labyrinth, Forest Mazes), not an error.
+**`compiler.measure_banks(data, dir, repo)`** returns `{bank: (used, cap)}`
+for $60/$64/$67/$71 from an in-memory project (the editor's space meters;
+`validators.bank_usage` is shared with the pre-build overflow check).
+**Script arity:** scriptgen warns when a hex op's param count disagrees with
+`extracted/script_param_counts.json`; `scriptgen.regroup_ops` re-splits a
+pre-S96 clone's word stream by the handler arity (identical words — the S96
+on-open migration applied it to the example project's arena clone; pin
+`fc1caa98…` unchanged at the time — historical patched pin, superseded by the S96 hook pin `07a71f20…`).
 
 **Migration on open (S95, `Document._migrate`)**: a project saved before
 S94 whose rooms `$6B-$6D` lack a `record` gets the legacy hand-patched

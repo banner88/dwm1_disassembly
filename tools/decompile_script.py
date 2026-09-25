@@ -51,6 +51,36 @@ BRANCH_TARGET_PARAM = {
 UNCONDITIONAL_JUMPS = {0x14}  # goto — no fall-through
 TERMINATORS = {0x16}          # return — ends current execution path
 
+
+# ---------------------------------------------------------------------------
+# S96: ARITY FROM THE HANDLERS. The literal tables above were guessed and are
+# wrong for 36 opcodes (+$64/$65 missing) — DOC_AUDIT S96. The truth is
+# extracted/script_param_counts.json (tools/script_param_counts.py: counter
+# increments per path in each bank-$04 handler; branch = a path into
+# ScriptReturnProcess, target = last param). The literal dicts stay as the
+# record of what the pretty-printers below were written for.
+# ---------------------------------------------------------------------------
+def _handler_arity():
+    import json as _j
+    import os as _o
+    p = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), '..',
+                     'extracted', 'script_param_counts.json')
+    try:
+        ops = _j.load(open(p))['ops']
+    except Exception:
+        return None, None
+    ar = {int(k, 16): v['counts'][0] for k, v in ops.items()}
+    br = {int(k, 16): v['counts'][0] - 1 for k, v in ops.items()
+          if 'branch' in v.get('ends', []) and v['counts'][0] > 0}
+    return ar, br
+
+FORMAT_ARITY = dict(PARAM_COUNTS)          # what format_cmd's forms assume
+_AR, _BR = _handler_arity()
+if _AR:
+    PARAM_COUNTS = _AR
+    BRANCH_TARGET_PARAM = _BR
+N_OPCODES = 0x66                           # $00-$65 (S96: 102, not 100)
+
 def _s16(v):
     """Format as signed 16-bit."""
     if v >= 0x8000: return str(v - 0x10000)
@@ -69,12 +99,31 @@ def rw(rom, bank, addr):
     return rom[off] | (rom[off+1] << 8)
 
 def is_opcode(val):
-    return (val >> 8) == 0xFF and (val & 0xFF) <= 0x63
+    return (val >> 8) == 0xFF and (val & 0xFF) < N_OPCODES
 
 def format_cmd(opcode, params):
     """Format a single opcode + params into readable pseudo-code."""
     p = params  # shorthand
     lo = [v & 0xFF for v in p]  # low bytes (C register values)
+    # S96 forms for opcodes whose arity the old table had wrong/missing
+    if opcode == 0x07 and not p: return 'init_dialog'
+    if opcode == 0x41 and len(p) == 1: return f'set_bgm ${p[0]:04X}'
+    if opcode == 0x27 and not p: return 'monster_party_op2'
+    if opcode == 0x21 and len(p) == 1: return f'skip_data2 ${p[0]:04X}'
+    if opcode == 0x11 and len(p) == 2: return f'npc_moveto2 npc#{lo[0]}, ${p[1]:04X}'
+    if opcode == 0x37 and len(p) == 1: return f'check_story_variable ${p[0]:04X}'
+    if opcode == 0x64 and len(p) == 1: return f'if_party_healthy, goto .addr_{p[0]:04X}'
+    if opcode == 0x65 and not p: return 'wait_dd80'
+    if FORMAT_ARITY.get(opcode) != len(p):
+        # S96: the pretty form below was written for a wrong arity — print
+        # generically (branch target shown as a label) rather than mislabel
+        tail = ''
+        bi = BRANCH_TARGET_PARAM.get(opcode)
+        if bi is not None and bi < len(p):
+            body = [f'${v:04X}' for v in p[:bi]]
+            tail = f'goto .addr_{p[bi]:04X}'
+            return f"cmd_{opcode:02X} {', '.join(body + [tail])}".strip()
+        return f"cmd_{opcode:02X} {', '.join(f'${v:04X}' for v in p)}".strip()
     
     # Flow control
     if opcode == 0x00: return f'if_flag_clear ${p[0]:04X}, goto .addr_{p[1]:04X}'

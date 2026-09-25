@@ -141,10 +141,33 @@ BRANCH_OPCODES = {
     0x37,  # check_story_region
 }
 
+# S96: counts + branch set from the bank-$04 HANDLER analysis
+# (extracted/script_param_counts.json) — the literal counts above were the
+# decompiler's guesses (wrong for 36 opcodes, e.g. set_bgm 2 → 1, init_dialog
+# 1 → 0, check_story_region 2 → 1 and NOT a branch; DOC_AUDIT S96).
+def _apply_handler_arity():
+    import json as _j
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
+                     'extracted', 'script_param_counts.json')
+    try:
+        ops = _j.load(open(p))['ops']
+    except Exception:
+        return
+    for name, (code, _n) in list(OPCODES.items()):
+        v = ops.get(f'0x{code:02X}')
+        if v:
+            OPCODES[name] = (code, v['counts'][0])
+    BRANCH_OPCODES.clear()
+    BRANCH_OPCODES.update(int(k, 16) for k, v in ops.items()
+                          if 'branch' in v.get('ends', []) and v['counts'][0] > 0)
+
+
+_apply_handler_arity()
+
 # Additional opcode names not in format_cmd but used in scripts
 # (these are for opcodes with less common formatting)
 EXTRA_OPCODES = {}
-for code in range(0x64):
+for code in range(0x66):
     found = False
     for name, (opnum, _) in OPCODES.items():
         if opnum == code:

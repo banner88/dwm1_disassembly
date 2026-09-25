@@ -4,9 +4,11 @@ Rows 0-3 are the room environment palettes (`custom.palettes[]` 8x4
 RGB555, or a vanilla palette derived from source_mapID); rows 4-7 are
 the shared SYSTEM set (HUD/menus — GATE_GENERATION "BG slots 4-7").
 Clicking a row selects it as the ATTR brush (paint palette slots onto
-tiles). Double-clicking a colour edits it — except idx1 and idx3, which the
-engine FORCES to $6BFF / $0000 at runtime (KEY_LESSONS S7/S39): they are
-drawn locked instead of letting the author fight the engine.
+tiles). Double-clicking a colour edits it — except idx3 (forced black) and
+idx1, which the engine FORCES to cream $6BFF (bank $17 LoadPal_4102) unless
+the palette is marked "own colour 1" (S96 FreeColor1Hook, custom rooms):
+locked colours are drawn with an L. Slots 4-7 are hidden unless "show
+system 4-7" is ticked (S96 QOL).
 """
 
 from PySide6.QtCore import QRect, QSize, Qt, Signal
@@ -36,15 +38,29 @@ class PalettePanel(QWidget):
         self.words = None         # 8x4 RGB555 (editable) or None
         self.pid = None
         self.selected = 0
+        self.free1 = False        # S96: palette keeps its own colour 1 (slots 0-3)
+        self.show_system = False  # S96 QOL: slots 4-7 folded by default
         self._hover = None
         self.setMouseTracking(True)
         self.setFixedSize(self.sizeHint())
 
-    def sizeHint(self):
-        return QSize(LABEL_W + 4 * (SW + GAP) + 4, 8 * (SW + GAP) + 4)
+    def rows(self):
+        return 8 if self.show_system else 4
 
-    def set_palettes(self, pals, words=None, pid=None):
-        self.pals, self.words, self.pid = pals, words, pid
+    def sizeHint(self):
+        return QSize(LABEL_W + 4 * (SW + GAP) + 4, self.rows() * (SW + GAP) + 4)
+
+    def set_show_system(self, on):
+        self.show_system = bool(on)
+        self.setFixedSize(self.sizeHint())
+        self.updateGeometry()
+        self.update()
+
+    def locked(self, s, i):
+        return s < 4 and (i == 3 or (i == 1 and not self.free1))
+
+    def set_palettes(self, pals, words=None, pid=None, free1=False):
+        self.pals, self.words, self.pid, self.free1 = pals, words, pid, bool(free1)
         self.update()
 
     def set_selected(self, slot):
@@ -56,7 +72,7 @@ class PalettePanel(QWidget):
                      SW, SW)
 
     def _hit(self, pos):
-        for s in range(8):
+        for s in range(self.rows()):
             for i in range(4):
                 if self._rect(s, i).contains(pos):
                     return s, i
@@ -71,7 +87,7 @@ class PalettePanel(QWidget):
             p.setPen(QColor(160, 160, 160))
             p.drawText(self.rect(), Qt.AlignCenter, 'no palette')
             return
-        for s in range(8):
+        for s in range(self.rows()):
             y = 2 + s * (SW + GAP)
             if s == self.selected:
                 p.fillRect(QRect(0, y - 1, self.width(), SW + 2),
@@ -86,8 +102,7 @@ class PalettePanel(QWidget):
                 pen = QPen(QColor(0, 0, 0))
                 p.setPen(pen)
                 p.drawRect(r.adjusted(0, 0, -1, -1))
-                locked = (i in (1, 3)) and s < 4
-                if locked:
+                if self.locked(s, i):
                     p.setPen(QColor(255, 255, 255, 200) if i == 3
                              else QColor(0, 0, 0, 200))
                     p.drawText(r, Qt.AlignCenter, 'L')
@@ -107,8 +122,9 @@ class PalettePanel(QWidget):
                 txt = f'palette {s} colour {i}'
                 if w is not None:
                     txt += f'  ${w:04X}'
-                if i in (1, 3) and s < 4:
-                    txt += '  (engine-forced: idx1=$6BFF, idx3=$0000)'
+                if self.locked(s, i):
+                    txt += ('  (engine-forced black)' if i == 3 else
+                            '  (engine-forced cream — tick "own colour 1" to free it)')
                 if s >= 4:
                     txt += '  (system palette, shared by HUD/menus)'
                 self.hoverInfo.emit(txt)
@@ -149,11 +165,12 @@ class PalettePanel(QWidget):
                                     'Slots 4-7 are the shared system palettes (HUD / menus) '
                                     'and are not part of the room.')
             return
-        if i in (1, 3):
+        if self.locked(s, i):
             QMessageBox.information(self, 'Engine-forced colour',
-                                    'Colour 1 is forced to $6BFF and colour 3 to $0000 by the '
-                                    'engine at runtime (KEY_LESSONS S7/S39) — editing them '
-                                    'would not show in-game.')
+                                    'Colour 3 is forced to black by the engine. Colour 1 is '
+                                    'forced to cream ($6BFF) unless the palette has "own '
+                                    'colour 1" ticked (custom rooms, S96) — tick it below '
+                                    'the palettes to edit colour 1.')
             return
         cur = QColor(*rgb555(self.words[s][i]))
         qc = QColorDialog.getColor(cur, self, f'Palette {s} colour {i} (RGB555)')

@@ -43,6 +43,37 @@ def hexs(n, width=2):
     return f'0x{n:0{width}X}'
 
 
+# ------------------------------------------------ metatile palettes (S96)
+# A metatile's 'pal' is an int (all four subtiles on one BG palette slot) or
+# a list of four [tl, tr, bl, br]: the attr grid is per 8x8 subtile and
+# vanilla rooms really do mix slots inside one 16x16 cell (3,156 of 42,080
+# vanilla cells, S96 census — tree tops over a trunk, shore edges), and
+# imported art needs it too. Readers go through these two helpers.
+def metatile_pals(mt):
+    """-> [tl, tr, bl, br] palette slots, or None when the metatile carries
+    no palette (paint tiles only)."""
+    p = mt.get('pal')
+    if p is None:
+        return None
+    if isinstance(p, (list, tuple)):
+        return [int(x) & 7 for x in p]
+    return [int(p) & 7] * 4
+
+
+def pal_value(pals):
+    """Canonical storage form: an int when uniform, else a list of 4."""
+    if pals is None:
+        return None
+    pals = [int(x) & 7 for x in pals]
+    return pals[0] if len(set(pals)) == 1 else pals
+
+
+def metatile_key(mt):
+    """Hashable identity (tiles + palettes) for de-duplication."""
+    p = metatile_pals(mt)
+    return (tuple(int(t) for t in mt['tiles']), tuple(p) if p else None)
+
+
 class Document:
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
@@ -56,6 +87,10 @@ class Document:
         self.dirty = False
         self._saved_text = src
         self._protected = {}          # tileset id -> vocabulary indices (session)
+        # S96: the live renderer (vanilla_gfx / vanilla_tiles_used / rom_sheet)
+        # — set by the GUI Session; tileset-usage queries degrade gracefully
+        # (no vanilla vocabulary, no 'changed' flags) without it.
+        self.vanilla = None
         self.migrations = self._migrate()
 
     # ---------------------------------------------------------- migration
@@ -81,6 +116,16 @@ class Document:
                                'height_px': h, 'collision_threshold': thr}
                 notes.append(f"room {r.get('id')} (${mid:02X}): added the legacy "
                              "hand-patched $26DD record (S94 schema: record required)")
+        # S96: scripts cloned before the handler-arity table (S92 extract_room
+        # on decompile_script's counts) are regrouped — identical words, so the
+        # ROM does not change; the arity warnings go away
+        from editor2.core import scriptgen as SG
+        for sc in self.custom.get('scripts', []):
+            new, changed = SG.regroup_ops(sc.get('ops', []))
+            if changed:
+                sc['ops'] = new
+                notes.append(f"script {sc.get('id')}: regrouped by the handler "
+                             "arity table (same bytes)")
         if notes:
             self.dirty = True
         return notes
@@ -453,6 +498,21 @@ class Document:
         self.touch()
         return pid
 
+    def set_palette_free1(self, pid, on):
+        """S96: mark a palette `free_color1` — in a custom room its slots 0-3
+        keep their own colour 1 (FreeColor1Hook) instead of the engine's
+        cream. Turning it on leaves the authored colour 1 values as they
+        are (a localized vanilla palette already holds $6BFF there, so the
+        room looks the same until colour 1 is edited). Returns old state."""
+        pal = self.palette(pid)
+        old = bool(pal.get('free_color1'))
+        if on:
+            pal['free_color1'] = True
+        else:
+            pal.pop('free_color1', None)
+        self.touch()
+        return old
+
     def set_palette_color(self, pid, slot, idx, rgb555):
         row = self.palette(pid)['colors_rgb555'][slot]
         old = row[idx]
@@ -572,6 +632,21 @@ class Document:
                 label = f"wCustomStep_{rid}_S{k}".replace('-', '_')
                 scr['step_counter'] = {'label': label}
                 counters[renderer.vanilla_counter(source_mid, int(k))] = label
+                # S96: a screen whose step-0 palette is not the room's (e.g.
+                # Labyrinth $42 screen 1) gets its own screens[k].palette — the
+                # all-rooms clone parity sweep caught it
+                pal_k = renderer.vanilla_step_palette_words(source_mid, int(k), 0)
+                if pal_k and palette and \
+                        [[val(c) for c in row] for row in palette['colors_rgb555'][:4]] != \
+                        [list(r) for r in pal_k]:
+                    pid = f"{palette['id']}_s{k}"
+                    rows = [[hexs(c, 4) for c in r] for r in pal_k] + \
+                        [list(r) for r in palette['colors_rgb555'][4:]]
+                    self.palettes.append({'id': pid, 'label': f'CustomPaletteColors_{pid}',
+                                          'placement': 'b', 'colors_rgb555': rows,
+                                          'comment': [f'vanilla ${source_mid:02X} screen {k} '
+                                                      'step 0 palette']})
+                    scr['palette'] = pid
                 if len(steps) <= 1:
                     continue
                 base_lid = scr['layout']['id']
@@ -694,12 +769,20 @@ class Document:
         self.touch()
         return rid
 
-    def new_room(self, name, source_mid, renderer):
+    def new_room(self, name, source_mid, renderer, blank_tileset=False):
         """Blank single-screen room using a VANILLA room's tileset, palette
-        and collision threshold (source_mid). Floor = first walkable tile."""
+        and collision threshold (source_mid). Floor = first walkable tile.
+        blank_tileset (S96): the room gets its own EMPTY project sheet
+        (threshold $40) for imported art instead of the vanilla sheet."""
         rid = self.unique_room_id(self._slug(name))
         rec = renderer.vanilla_record(source_mid)
         rec['width_px'], rec['height_px'] = 160, 128
+        if blank_tileset:
+            tid = self.new_blank_tileset(f'ts_{rid}')
+            rec.pop('gfx_id')
+            rec.pop('gfx_bank')
+            rec = {'tileset': tid, **rec}
+            rec['collision_threshold'] = '0x40'
         thr = val(rec['collision_threshold'])
         lid = self.unique_layout_id(f'{rid}_s0')
         self.add_layout(lid, tiles=self.blank_grid(min(thr, 127)),
@@ -747,7 +830,8 @@ class Document:
     def add_metatile(self, tileset_key, name, tiles, pal):
         lst = self._metatiles_mut(tileset_key)
         lst.append({'name': name, 'tiles': [int(t) for t in tiles],
-                    'pal': int(pal)})
+                    'pal': pal_value(metatile_pals({'pal': pal})
+                                     if pal is not None else [0] * 4)})
         self.touch()
         return len(lst) - 1
 
@@ -771,8 +855,11 @@ class Document:
         raise KeyError(tid)
 
     def rooms_using_tileset(self, tid):
+        """Rooms drawing with tileset `tid` (a project tileset id, or a
+        vanilla 'BB:II' key for rooms still borrowing a ROM sheet)."""
         return [r for r in self.rooms
-                if (r.get('record') or {}).get('tileset') == tid]
+                if r.get('record') and not r.get('placeholder')
+                and self.tileset_key(r) == tid]
 
     def localize_tileset(self, room, sheet, name=None):
         """Copy the room's VANILLA tileset into the project (assets/<id>.2bpp
@@ -796,11 +883,81 @@ class Document:
             {'id': tid, 'raw2bpp': rel,
              'comment': f"copied from vanilla bank ${val(rec['gfx_bank']):02X} "
                         f"id ${val(rec['gfx_id']):02X}"})
+        old_key = self.tileset_key(room)
         rec['tileset'] = tid
         rec.pop('gfx_bank', None)
         rec.pop('gfx_id', None)
+        # S96: author metatiles made while the room borrowed the vanilla
+        # sheet belong to the copy too (they were keyed 'BB:II')
+        mts = self.metatiles(old_key)
+        if mts:
+            self._metatiles_mut(tid).extend(copy.deepcopy(mts))
+        if self.released(old_key):
+            self.set_released(tid, True)
         self.touch()
         return tid
+
+    def new_blank_tileset(self, base='ts_blank', origin=None, sheet=None):
+        """A project tileset with an all-colour-0 sheet (S96: rooms built
+        from imported PNG art start empty; every slot but 77/78 is free).
+        Returns the tileset id."""
+        ids = {t.get('id') for t in self.custom.get('tilesets', [])}
+        tid, n = base, 2
+        while tid in ids:
+            tid = f'{base}_{n}'
+            n += 1
+        assets = os.path.join(self.project_dir, 'assets')
+        os.makedirs(assets, exist_ok=True)
+        rel = os.path.join('assets', f'{tid}.2bpp')
+        with open(os.path.join(self.project_dir, rel), 'wb') as f:
+            f.write(bytes(sheet[:2048]) if sheet else bytes(2048))
+        self.custom.setdefault('tilesets', []).append(
+            {'id': tid, 'raw2bpp': rel,
+             'comment': 'blank sheet (editor)' if not sheet else 'copy (editor)'})
+        self.set_tileset_origin(tid, origin)
+        self.touch()
+        return tid
+
+    def set_room_tileset(self, room_id, kind, value=None, threshold=None):
+        """Point a room at another tileset (S96). kind:
+          'vanilla' — value = vanilla mapID: that room's ROM sheet + its
+                      collision threshold (record gfx_bank/gfx_id);
+          'project' — value = a custom.tilesets id (threshold = the given one,
+                      else that of another room on the sheet, else kept);
+          'blank'   — a new all-empty project sheet (threshold given or $40).
+        Layout grids keep their tile NUMBERS — they draw with the new sheet's
+        graphics. Returns the tileset key now in effect."""
+        room = self.room(room_id)
+        rec = room.setdefault('record', {})
+        if kind == 'vanilla':
+            if self.vanilla is None:
+                raise RuntimeError('no renderer bound — cannot read the vanilla record')
+            vr = self.vanilla.vanilla_record(int(value))
+            rec.pop('tileset', None)
+            rec['gfx_id'], rec['gfx_bank'] = vr['gfx_id'], vr['gfx_bank']
+            rec['collision_threshold'] = hexs(threshold) if threshold is not None \
+                else vr['collision_threshold']
+        elif kind == 'project':
+            self.tileset_item(value)                       # KeyError if unknown
+            if threshold is None:
+                others = [r for r in self.rooms_using_tileset(value) if r is not room]
+                if others:
+                    threshold = val(others[0]['record']['collision_threshold'])
+            rec.pop('gfx_id', None)
+            rec.pop('gfx_bank', None)
+            rec['tileset'] = value
+            if threshold is not None:
+                rec['collision_threshold'] = hexs(threshold)
+        elif kind == 'blank':
+            tid = self.new_blank_tileset(f"ts_{room_id}")
+            rec.pop('gfx_id', None)
+            rec.pop('gfx_bank', None)
+            rec['tileset'] = tid
+            rec['collision_threshold'] = hexs(0x40 if threshold is None else threshold)
+        else:
+            raise ValueError(kind)
+        self.touch()
+        return self.tileset_key(room)
 
     def sheet_path(self, tid):
         return os.path.join(self.project_dir, self.tileset_item(tid)['raw2bpp'])
@@ -824,24 +981,145 @@ class Document:
                         out.append(ref['id'])
         return out
 
+    # ---------------------------------------------- tileset usage (S96 P3.3c)
+    # One room tileset = one 2 KB sheet = 128 slots (ids >= 128 are the
+    # font/HUD half of VRAM — engine limit, per ROOM). A slot is:
+    #   PLACED      on some screen/state of a room drawing with this sheet
+    #   MINE        in an author metatile for this sheet
+    #   VOCABULARY  used by the vanilla room the sheet came from (the picker
+    #               keeps offering those metatiles, so their graphics are
+    #               protected — unless the author RELEASES the vocabulary)
+    #   ANIMATED    77/78 (Castle dispatch source rotates VRAM $94D0, KL S7)
+    #   FREE        none of the above — imports and walkability twins use it
+    TILESET_ORIGIN_RE = r'bank \$([0-9A-Fa-f]{2}) id \$([0-9A-Fa-f]{2})'
+
+    def tileset_origin(self, tid):
+        """(bank, id) of the vanilla sheet a project tileset was copied from
+        (or the key itself for a vanilla 'BB:II' key); None when unknown
+        (a blank or imported sheet)."""
+        import re
+        if ':' in str(tid) and len(str(tid)) == 5:
+            b, g = str(tid).split(':')
+            return int(b, 16), int(g, 16)
+        ed = (self.custom.get('_editor') or {}).get('tileset_origin') or {}
+        if tid in ed:
+            o = ed[tid]
+            return None if o is None else (val(o[0]), val(o[1]))
+        try:
+            item = self.tileset_item(tid)
+        except KeyError:
+            return None
+        m = re.search(self.TILESET_ORIGIN_RE, str(item.get('comment', '')))
+        return (int(m.group(1), 16), int(m.group(2), 16)) if m else None
+
+    def set_tileset_origin(self, tid, origin):
+        ed = self.custom.setdefault('_editor', {}).setdefault('tileset_origin', {})
+        ed[tid] = None if origin is None else [hexs(origin[0]), hexs(origin[1])]
+        self.touch()
+
+    def room_sources_vocab(self, room):
+        """Vanilla tile vocabulary that belongs to this room's sheet: the
+        source room's tiles, when the room still draws with (a copy of) the
+        source room's sheet. Empty without a renderer."""
+        if self.vanilla is None or room.get('source_mapID') is None:
+            return set()
+        src = val(room['source_mapID'])
+        if src >= 0x6B:
+            return set()
+        try:
+            g = self.vanilla.vanilla_gfx(src)
+        except Exception:
+            return set()
+        if self.tileset_origin(self.tileset_key(room)) != (g.gfx_bank, g.gfx_id):
+            return set()
+        return set(self.vanilla.vanilla_tiles_used(src))
+
+    def released(self, tid):
+        return tid in ((self.custom.get('_editor') or {}).get('released_vocab') or [])
+
+    def set_released(self, tid, on):
+        """'Release unused vocabulary' (P3.3c): the vanilla source room's
+        tiles stop being protected, so imports/twins may take their slots
+        (the picker then flags those metatiles 'graphic may change').
+        Returns the previous state."""
+        ed = self.custom.setdefault('_editor', {})
+        lst = ed.setdefault('released_vocab', [])
+        old = tid in lst
+        if on and not old:
+            lst.append(tid)
+        elif not on and old:
+            lst.remove(tid)
+        if not lst:
+            ed.pop('released_vocab')
+        self.touch()
+        return old
+
+    def tile_usage(self, tid):
+        """128 dicts: placed [(room_id, screen, state)], mine [names],
+        vocab bool, animated bool, changed bool (graphic differs from the
+        origin sheet), status (animated/placed/mine/vocab/free)."""
+        out = [{'placed': [], 'mine': [], 'vocab': False, 'animated': i in (77, 78),
+                'changed': False} for i in range(128)]
+        for r in self.rooms_using_tileset(tid):
+            for k, scr in (r.get('screens') or {}).items():
+                refs = [(None, scr.get('layout'))] + [
+                    (i, st.get('layout') or scr.get('layout'))
+                    for i, st in enumerate(scr.get('states') or [])]
+                for i, ref in refs:
+                    if not ref or 'id' not in ref or not self.has_layout(ref['id']):
+                        continue
+                    if i is None and scr.get('states'):
+                        continue
+                    for row in self.layout(ref['id'])['tiles']:
+                        for t in row:
+                            u = out[t & 0x7F]['placed']
+                            w = (r['id'], int(k), i or 0)
+                            if w not in u:
+                                u.append(w)
+            for t in self.room_sources_vocab(r):
+                out[t]['vocab'] = True
+        for mt in self.metatiles(tid):
+            for t in mt['tiles']:
+                out[t & 0x7F]['mine'].append(mt.get('name', 'metatile'))
+        for t in self._protected.get(tid, ()):
+            out[t]['vocab'] = True
+        origin = self.tileset_origin(tid)
+        if origin is not None and self.vanilla is not None and ':' not in str(tid):
+            try:
+                ref = self.vanilla.rom_sheet(*origin)
+                cur = self.read_sheet(tid)
+                for i in range(128):
+                    out[i]['changed'] = cur[i * 16:i * 16 + 16] != ref[i * 16:i * 16 + 16]
+            except Exception:
+                pass
+        rel = self.released(tid)
+        for i, u in enumerate(out):
+            u['released'] = rel and u['vocab']
+            u['status'] = ('animated' if u['animated'] else 'placed' if u['placed']
+                           else 'mine' if u['mine']
+                           else 'vocab' if (u['vocab'] and not rel) else 'free')
+        return out
+
     def used_tiles(self, tid):
         """Indices a free-slot search must NOT overwrite: every tile placed
         in any layout on this tileset, every author metatile for it, the
-        animated pair 77/78, and the PROTECTED VOCABULARY (S95: tiles of the
-        rooms' vanilla source screens — 'this room's tiles' never shrinks, so
-        the graphics behind them must never change either)."""
-        used = {77, 78}
-        for lid in self.layouts_using_tileset(tid):
-            for row in self.layout(lid)['tiles']:
-                used.update(t & 0x7F for t in row)
-        for mt in self.metatiles(tid):
-            used.update(t & 0x7F for t in mt['tiles'])
-        used.update(self._protected.get(tid, ()))
-        return used
+        animated pair 77/78, and — unless released — the VOCABULARY (S95: the
+        tiles of the rooms' vanilla source; 'this room's tiles' never shrinks,
+        so the graphics behind them must never change either)."""
+        return {i for i, u in enumerate(self.tile_usage(tid)) if u['status'] != 'free'}
+
+    def free_counts(self, tid, threshold):
+        """{'wall': n, 'walkable': n, 'total': n} free slots per side of the
+        collision threshold (tile < thr = WALL)."""
+        used = self.used_tiles(tid)
+        w = sum(1 for i in range(min(threshold, 128)) if i not in used)
+        k = sum(1 for i in range(min(threshold, 128), 128) if i not in used)
+        return {'wall': w, 'walkable': k, 'total': w + k}
 
     def protect_tiles(self, tid, indices):
-        """Register vocabulary indices for `used_tiles` (session-scoped;
-        the GUI registers the vanilla source room's tiles when it harvests)."""
+        """Register extra vocabulary indices (session-scoped). S96: the
+        vocabulary is derived by `tile_usage` from the source room; this
+        stays for callers without a renderer."""
         self._protected.setdefault(tid, set()).update(t & 0x7F for t in indices)
 
     def tile_used(self, tid, t):
@@ -887,11 +1165,13 @@ class Document:
                 side = [i for i in free if (i < thr) == want_wall]
                 pool = side or ([] if strict else free)
                 if not pool:
+                    nw = sum(1 for i in free if i < thr)
                     raise RuntimeError(
                         f"tileset {tid!r} has no free "
-                        f"{'wall' if want_wall else 'walkable'} slot "
-                        f"({len(free)} free in total) — delete unused author "
-                        "metatiles or pick a room with a roomier tileset")
+                        f"{'wall' if want_wall else 'walkable'} slot — "
+                        f"{nw} wall / {len(free) - nw} walkable free. Open the "
+                        "Tileset tab: release unused vocabulary, delete unused "
+                        "author metatiles, or pick a room with a roomier tileset")
                 cand = pool[-1] if want_wall else pool[0]
                 free.remove(cand)
                 sheet[cand * 16:cand * 16 + 16] = gfx
@@ -902,6 +1182,235 @@ class Document:
         self.add_metatile(tid, new['name'], out, new['pal'])
         self.touch()
         return new
+
+    # ------------------------------------------------ PNG import (S96)
+    def import_png_cells(self, room_id, plans, palettes, define_slots,
+                         key=0, state_idx=0, own_sheet=None, stamp=None,
+                         name_prefix='art', free_color1=False, strict_walk=False):
+        """Place imported art (editor2/core/png_import CellPlans) into a room.
+
+        * tileset — the room's sheet is copied into the project first if it
+          still borrows a vanilla one (`own_sheet`); every distinct 8x8
+          graphic reuses an identical slot when one exists, else takes a
+          FREE slot (`used_tiles`: placed / mine / vocabulary / 77-78 are
+          never touched). The bottom-right subtile of a cell marked WALL
+          must sit below the collision threshold (it decides walkability —
+          S94). Unmarked cells: with `strict_walk` their bottom-right
+          subtile must sit at/above it (a graphic used both ways costs two
+          slots); WITHOUT (the default since S96 round 3 — user: "let me do
+          the walkability") it goes wherever a slot is free, walkable side
+          first, and the author settles walkability afterwards (Walkability
+          mode, or cheaper tricks). Other subtiles take any free slot.
+        * palette — the palette in effect on (key, state_idx) gets the
+          fitted colours in `define_slots` (colour 0 and 2; 1 and 3 are the
+          engine-forced cream/black). A borrowed vanilla palette is copied
+          into the project first.
+        * metatiles — every distinct imported cell joins My metatiles.
+        * stamp — {(cx, cy): plan index}: those cells of screen `key` /
+          state `state_idx` are painted with the imported metatiles (the
+          layout is made editable first when it is a vanilla reference).
+        Raises RuntimeError (before anything is written) when the sheet has
+        too few free slots. Returns a summary dict."""
+        from editor2.core import png_import as PI
+        room = self.room(room_id)
+        rec = room['record']
+        if 'tileset' not in rec:
+            if own_sheet is None:
+                raise RuntimeError('room borrows a vanilla tileset — pass own_sheet')
+            self.localize_tileset(room, own_sheet)
+        tid = rec['tileset']
+        thr = val(rec['collision_threshold'])
+        sheet = self.read_sheet(tid)
+        used = self.used_tiles(tid)
+        free = [i for i in range(128) if i not in used and i not in (77, 78)]
+
+        def existing(g, side):
+            for i in range(128):
+                if i in (77, 78) or bytes(sheet[i * 16:i * 16 + 16]) != g:
+                    continue
+                if side == 'any' or (i < thr) == (side == 'wall'):
+                    return i
+            return None
+
+        # plan the allocation first (no writes) so failure leaves no trace:
+        # side-bound graphics (bottom-right subtiles) first, then the rest,
+        # which reuse any identical graphic on either side
+        want = []                                     # (gfx, side) in order
+        for p in plans:
+            for i, g in enumerate(p.gfx):
+                side = self._import_side(p, i, strict_walk)
+                if (g, side) not in want:
+                    want.append((g, side))
+        want.sort(key=lambda gs: gs[1] == 'any')
+        alloc = {}
+        free_w = [i for i in free if i < thr]
+        free_k = [i for i in free if i >= thr]
+        new_w = new_k = new_a = 0
+        pending = []
+        planned = {}                                  # gfx -> [(side, 'new'|index)]
+        for g, side in want:
+            hit = existing(g, side)
+            if hit is not None:
+                alloc[(g, side)] = hit
+                continue
+            prior = planned.get(g, [])
+            if side in ('any', 'any_br') and prior:
+                alloc[(g, side)] = ('same', prior[0])
+                continue
+            pending.append((g, side))
+            planned.setdefault(g, []).append(side)
+        need_w = sum(1 for _g, sd in pending if sd == 'wall')
+        need_k = sum(1 for _g, sd in pending if sd == 'walk')
+        need_a = sum(1 for _g, sd in pending if sd in ('any', 'any_br'))
+        if need_w > len(free_w) or need_k > len(free_k) or \
+                need_w + need_k + need_a > len(free_w) + len(free_k):
+            raise RuntimeError(
+                f'not enough free tileset slots in {tid!r}: the selection needs '
+                f'{need_w} wall + {need_k} walkable + {need_a} either-side new '
+                f'graphics; free: {len(free_w)} wall / {len(free_k)} walkable. '
+                'Select fewer cells, release unused vocabulary (Rooms tab → '
+                'Tileset tab), or give the room a blank tileset (inspector → '
+                'tileset → Change… → New blank tileset).')
+        for g, side in pending:
+            if side == 'wall':
+                i = free_w.pop()                       # walls from the top down
+            elif side == 'walk':
+                i = free_k.pop(0)
+            elif side == 'any_br':                     # walkable side first
+                i = free_k.pop(0) if free_k else free_w.pop()
+            elif len(free_k) >= len(free_w):
+                i = free_k.pop(0)
+            else:
+                i = free_w.pop()
+            sheet[i * 16:i * 16 + 16] = g
+            alloc[(g, side)] = i
+        for k, v in list(alloc.items()):
+            if isinstance(v, tuple):
+                alloc[k] = alloc[(k[0], v[1])]
+        self.write_sheet(tid, sheet)
+
+        # palettes
+        pid = self.effective_palette(room, key, state_idx)
+        if define_slots:
+            if not pid:
+                cur = self.vanilla.room_palettes(room, key, state_idx) if self.vanilla else \
+                    [[PI.CREAM, PI.CREAM, PI.BLACK, PI.BLACK]] * 8
+                words = [[PI.to555(c) for c in row] for row in cur[:8]]
+                pid = self.localize_palette(room, key, state_idx, words)
+            rows = self.palette(pid)['colors_rgb555']
+            if free_color1:
+                # S96: colour 1 is the palette's own (FreeColor1Hook) — slots
+                # not written here keep their current colour 1 (normally the
+                # $6BFF a localized palette already holds: no visible change)
+                self.palette(pid)['free_color1'] = True
+            for sl in define_slots:
+                pal = palettes[sl]
+                c1 = hexs(PI.to555(pal[1]), 4) if free_color1 else '0x6BFF'
+                rows[sl] = [hexs(PI.to555(pal[0]), 4), c1,
+                            hexs(PI.to555(pal[2]), 4), '0x0000']
+
+        # metatiles
+        mts = []
+        existing_keys = {metatile_key(m) for m in self.metatiles(tid)}
+        for n, p in enumerate(plans):
+            tiles = [alloc[(g, self._import_side(p, i, strict_walk))]
+                     for i, g in enumerate(p.gfx)]
+            mt = {'name': f'{name_prefix} {p.origin[0]},{p.origin[1]}',
+                  'tiles': tiles, 'pal': pal_value(p.pals)}
+            mts.append(mt)
+            if metatile_key(mt) not in existing_keys:
+                existing_keys.add(metatile_key(mt))
+                self.add_metatile(tid, mt['name'], tiles, mt['pal'])
+
+        # stamp onto the screen(s): keys (cx, cy) = screen `key`; keys
+        # (screen, cx, cy) may name other screens — missing ones are created
+        # (blank layout, the import's palette) and record dims follow
+        stamped, created, repaletted = 0, [], []
+        if stamp:
+            by_screen = {}
+            for k_, pi in stamp.items():
+                sk, cx, cy = (key,) + tuple(k_) if len(k_) == 2 else tuple(k_)
+                by_screen.setdefault(int(sk), {})[(cx, cy)] = pi
+            for sk in sorted(by_screen):
+                if not (0 <= sk < 16):
+                    continue
+                st_idx = state_idx if sk == key else 0
+                if str(sk) not in room.get('screens', {}):
+                    lid = self.unique_layout_id(f"{room['id']}_s{sk}")
+                    fill = min(thr, 127)
+                    self.add_layout(lid, tiles=self.blank_grid(fill),
+                                    attr=self.blank_grid(0),
+                                    comment=f"{room['id']} screen {sk} (PNG import)")
+                    self.add_screen(room, sk, {'id': lid}, palette=pid)
+                    self.screen(room, sk)['attr'] = {'id': lid}
+                    created.append(sk)
+                elif pid and self.effective_palette(room, sk, st_idx) != pid:
+                    self.set_state_palette(room, sk, st_idx, pid)
+                    repaletted.append(sk)
+                ref = self.state_layout_ref(room, sk, st_idx)
+                if ref is None:
+                    raise RuntimeError(f'screen {sk} has no layout')
+                if 'id' not in ref:
+                    grid = [list(r) for r in self.vanilla.layout_grid(ref)[0]]
+                    self.localize_layout(room, sk, st_idx, grid)
+                    ref = self.state_layout_ref(room, sk, st_idx)
+                tiles = self.layout(ref['id'])['tiles']
+                attr = self.layout(self.writable_attr_id(room, sk, st_idx))['attr']
+                for (cx, cy), pi in by_screen[sk].items():
+                    mt = mts[pi]
+                    pals = metatile_pals(mt)
+                    for j, (dr, dc) in enumerate(((0, 0), (0, 1), (1, 0), (1, 1))):
+                        tiles[cy * 2 + dr][cx * 2 + dc] = mt['tiles'][j]
+                        attr[cy * 2 + dr][cx * 2 + dc] = pals[j]
+                    stamped += 1
+        self.touch()
+        return {'tileset': tid, 'new_slots': len(pending), 'palette': pid,
+                'metatiles': mts, 'stamped': stamped, 'screens_created': created,
+                'screens_repaletted': repaletted}
+
+    @staticmethod
+    def _import_side(plan, i, strict_walk):
+        """Threshold side a subtile of an imported cell must land on."""
+        if i != 3:
+            return 'any'
+        if plan.wall:
+            return 'wall'
+        return 'walk' if strict_walk else 'any_br'
+
+    def writable_attr_id(self, room, key, state_idx):
+        """The custom.layouts item whose 'attr' grid is IN EFFECT for (key,
+        state) (same precedence as render_project.attr_grid), creating one
+        on the state's own layout item from the grid currently shown when
+        the effective attr is not a project item. Returns its layout id."""
+        scr = self.screen(room, key)
+        sts = scr.get('states') or []
+        cands = []                       # (ref, is_attr_ref)
+        if state_idx < len(sts):
+            st = sts[state_idx]
+            cands += [(st.get('attr'), True), (st.get('layout'), False)]
+        cands += [(scr.get('attr'), True), (scr.get('layout'), False),
+                  ((room.get('render') or {}).get('attr'), True)]
+        for c, is_attr in cands:
+            if not c:
+                continue
+            if 'id' in c and self.has_layout(c['id']) and 'attr' in self.layout(c['id']):
+                return c['id']
+            if is_attr:
+                break            # an attr reference that is not a project grid
+        # none writable: put a copy of the shown grid on the state's layout item
+        ref = self.state_layout_ref(room, key, state_idx)
+        grid = None
+        if self.vanilla is not None:
+            grid, _n = self.vanilla.attr_grid(room, key, state_idx)
+        grid = [list(r) for r in (grid or self.blank_grid(0))]
+        item = self.layout(ref['id'])
+        item['attr'] = grid
+        if sts:
+            sts[state_idx]['attr'] = {'id': ref['id']}
+        else:
+            scr['attr'] = {'id': ref['id']}
+        self.touch()
+        return ref['id']
 
     def ensure_twin(self, tid, t, want_wall):
         """Return an index whose graphic equals subtile `t` on the wanted
@@ -921,8 +1430,8 @@ class Document:
                 continue
             if bytes(sheet[i * 16:i * 16 + 16]) == gfx:
                 return i, thr
-        free = [i for i in range(128) if i not in (77, 78)
-                and not self.tile_used(tid, i)]
+        used = self.used_tiles(tid)
+        free = [i for i in range(128) if i not in (77, 78) and i not in used]
         on_side = [i for i in free if (i < thr) == want_wall]
         if on_side:
             i = on_side[-1] if want_wall else on_side[0]

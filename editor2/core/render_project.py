@@ -207,11 +207,16 @@ class ProjectRenderer:
         pid = self.state_palette_id(room, screen_idx, state)
         if pid and pid in self.palettes:
             rows = self.palettes[pid]['colors_rgb555']
+            free1 = bool(self.palettes[pid].get('free_color1'))
             pals = []
-            for row in rows[:8]:
+            for i, row in enumerate(rows[:8]):
                 r = [val(c) for c in row]
-                r[1], r[3] = FORCED_IDX1, FORCED_IDX3
-                pals.append([rgb555(c) for c in r])
+                # S96 FreeColor1Hook: a free_color1 palette keeps its own
+                # colour 1 in slots 0-3 (custom rooms); colour 3 stays black
+                if not (free1 and i < 4):
+                    r[1] = FORCED_IDX1
+                r[3] = FORCED_IDX3
+                pals.append([rgb555(c & 0x7FFF) for c in r])
             while len(pals) < 8:
                 pals.append(list(SYSTEM_PAL))
             return pals
@@ -424,6 +429,31 @@ class ProjectRenderer:
         o = 0x26DD + mid * 8
         b, g, thr = self.rom[o + 1], self.rom[o], self.rom[o + 6]
         return RoomGfx(self._sheet_from_rom(b, g), b, g, thr)
+
+    def vanilla_tiles_used(self, mid):
+        """Every tile index a vanilla room's screens use in any valid step
+        (the room's tile VOCABULARY, S95/S96 — protected from reuse when a
+        custom room still draws with that room's sheet). Cached."""
+        cache = self.__dict__.setdefault('_vocab_tiles', {})
+        if mid not in cache:
+            out = set()
+            try:
+                screens = next(sc for m, _n, sc in self.vanilla_rooms() if m == mid)
+            except StopIteration:
+                screens = []
+            for k in screens:
+                for st in range(len(self.vanilla_steps(mid, k))):
+                    try:
+                        for row in self.vanilla_screen_grid(mid, k, st):
+                            out.update(t & 0x7F for t in row)
+                    except Exception:
+                        continue
+            cache[mid] = out
+        return cache[mid]
+
+    def rom_sheet(self, bank, gid):
+        """A vanilla tileset sheet by (bank, id) — public alias."""
+        return self._sheet_from_rom(bank, gid)
 
     def vanilla_record(self, mid):
         o = 0x26DD + mid * 8

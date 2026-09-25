@@ -340,7 +340,12 @@ GBC-only. Contains tile palette/attribute data for the background map.
   palette). Custom rooms use the same shape via `CustomAttrPtrTable`
   (S94b, PROJECT_COMPILER §2.11; GATE_GENERATION §7.4).
 - 256 bytes total, 16 bytes per row (10 used + 6 padding)
-- Each byte = 2 nibbles = 2 palette indices (0-15, 4 bits each)
+- Each byte = 2 nibbles = 2 palette indices (0-15, 4 bits each); vanilla
+  uses only 0-3 (S96 census over every vanilla screen/step: values {0,1,2,3}).
+- The palette is per 8×8 SUBTILE, and vanilla really mixes slots inside a
+  16×16 walk cell: 3,156 of 42,080 vanilla cells (7.5%; boss rooms, Arena,
+  Bazaar …). The editor's metatile therefore carries one slot per subtile
+  (S96, PROJECT_COMPILER §2.11).
 - Written to VRAM $9800 in VRAM bank 1 (GBC attribute layer)
 - Skipped entirely on DMG Game Boy
 
@@ -370,6 +375,12 @@ Collision boundary clamp: the collision check at ROM0 $1E96 subtracts the
 scroll offset from the player position. If screen-local Y ≥ 128 or X ≥ 160,
 it returns early (player at screen edge). Movement past the boundary requires
 the room dimensions in $26DD bytes 2-5 to allow positions beyond one screen.
+
+Screens OUTSIDE the record's width/height are legal and used by vanilla
+(S96): Labyrinth `$42` (record 1×1, screens 0-1) and the Forest Mazes
+`$53/$61-$63` keep extra screens that are never scrolled to — they are
+entered through an exit whose screen_byte names them, exactly like the
+GreatTree floors (KEY_LESSONS S92). The compiler warns instead of failing.
 
 Exit handlers: Entry 6 checks exits at Y=1-6 (interior, walk-onto trigger).
 Entry 9 checks exits at Y=0 and Y=7 (boundary, requires walking into edge).

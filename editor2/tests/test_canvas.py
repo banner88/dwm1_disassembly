@@ -35,6 +35,19 @@ Layers, each a hard assertion:
    --out DIR keeps the scratch project + ROM (used to produce the user
    test ROM).
 
+6. ALL CLONES (S96, ~12 s) — clone EVERY vanilla room, render-parity every
+   screen/state against vanilla, and compile each clone.
+
+5. V3 (S96) — fresh project: a blank-tileset room; a rip-like PNG (vanilla
+   Farm art on a key-colour background, two panels at odd offsets) imported
+   through the Import-art tab code path (panels + offsets detected, nudge,
+   mask, WALL mark, exact palette fit, stamp pixel-identical, spill onto new
+   screens); slot map == used_tiles; per-subtile palette paint; tileset
+   switch with exact undo; release unused vocabulary turns a failing import
+   into a succeeding one and flags the overwritten vocabulary; space meters.
+   --rom: VRAM == canvas, BG palette RAM == project palette, the WALL cell
+   blocks the player.
+
 SKIPs (exit 0) without PySide6, like test_app.py.
 """
 
@@ -56,7 +69,7 @@ except ImportError:
     print('SKIP: PySide6 not installed (pip install PySide6 Pillow)')
     sys.exit(0)
 
-from editor2.core.document import val          # noqa: E402
+from editor2.core.document import val, metatile_key, metatile_pals          # noqa: E402
 
 EXAMPLE = os.path.join(REPO, 'editor2', 'example-project')
 ROOM = 'medal_vault'          # $71: own record, project-owned layout
@@ -236,20 +249,18 @@ def v2_round_trip(new_dir):
     assert cv.cell_metatile(8, 0) == water
     # S95: the picker keeps the room's whole vocabulary — paint over the only
     # cell holding some metatile and it must still be offered
-    before = {(tuple(m['tiles']), m['pal']) for m in rt.picker.found}
+    before = {metatile_key(m) for m in rt.picker.found}
     grid4 = s.doc.layout(f'{rid}_s4')['tiles']
     attr4 = s.doc.layout(f'{rid}_s4')['attr']
     from collections import Counter
-    cnt = Counter((tuple(metatile_at(grid4, attr4, cx, cy)['tiles']),
-                   metatile_at(grid4, attr4, cx, cy)['pal'])
+    cnt = Counter(metatile_key(metatile_at(grid4, attr4, cx, cy))
                   for cy in range(8) for cx in range(10))
     lonely = next(k for k, n in cnt.items() if n == 1)
     cell = next((cx, cy) for cy in range(8) for cx in range(10)
-                if (tuple(metatile_at(grid4, attr4, cx, cy)['tiles']),
-                    metatile_at(grid4, attr4, cx, cy)['pal']) == lonely)
+                if metatile_key(metatile_at(grid4, attr4, cx, cy)) == lonely)
     cv._begin_stroke(); cv._stroke_cell(cell); cv._end_stroke('Paint')
     app.processEvents()
-    after = {(tuple(m['tiles']), m['pal']) for m in rt.picker.found}
+    after = {metatile_key(m) for m in rt.picker.found}
     assert lonely in after and before <= after, 'vocabulary must never shrink'
     s.undo.undo()
     app.processEvents()
@@ -268,7 +279,7 @@ def v2_round_trip(new_dir):
     rec = s.doc.room(rid)['record']
     assert 'tileset' in rec, 'import must localize the tileset'
     mine = s.doc.metatiles(rec['tileset'])
-    assert mine and mine[-1]['pal'] == foreign_mt['pal']
+    assert mine and metatile_pals(mine[-1]) == metatile_pals(foreign_mt)
     imported = mine[-1]
     sheet = s.doc.read_sheet(rec['tileset'])
     src_sheet = s.renderer.vanilla_gfx(0x00).sheet
@@ -437,7 +448,7 @@ def v2_round_trip(new_dir):
     ref = _I.new('RGB', (16, 16))
     for i, t in enumerate(foreign_mt['tiles']):
         ref.paste(s.renderer.render_tile(src_sheet, t & 0x7F, s.renderer.room_palettes(s.doc.room(rid), 4, 0),
-                                         foreign_mt['pal']), ((i % 2) * 8, (i // 2) * 8))
+                                         metatile_pals(foreign_mt)[i]), ((i % 2) * 8, (i // 2) * 8))
     assert ImageChops.difference(cell_img, ref).getbbox() is None, 'imported cell must show the source graphic'
     print(f'OK: v2 round trip — fresh project, Farm cloned to $6B, metatiles painted, '
           f'walkability flipped both ways ({n} undoable edits, exact undo incl. asset)')
@@ -550,6 +561,341 @@ def test_rom_v2(w, s, rid, keep_dir=None):
     p.stop(save=False)
 
 
+# ------------------------------------------------------------ S96 (v3)
+V3_WALL_CELL = None          # set by v3_round_trip: a stamped cell marked WALL
+
+
+def synth_rip(path):
+    """A rip-like PNG built from VANILLA art (so the fit must be exact): two
+    Farm screens on a (237,28,36) key background at odd offsets, plus a
+    non-GBC 'caption' bar — the shape of the user's DWM2 rips (S96)."""
+    from PIL import Image
+    from editor2.core.render_project import ProjectRenderer
+    r = ProjectRenderer(REPO, os.path.dirname(path), {})
+    im = Image.new('RGB', (400, 330), (237, 28, 36))
+    im.paste(r.render_vanilla_screen(0x04, 0, 1, 0), (5, 3))
+    im.paste(r.render_vanilla_screen(0x04, 5, 1, 0), (200, 170))
+    im.paste((237, 20, 14), (10, 300, 150, 310))
+    im.save(path)
+    return im
+
+
+def v3_round_trip(new_dir):
+    """S96: metatile per-subtile palettes, tileset slot map + release,
+    tileset switching, PNG import (grid/panels/mask/wall/fit/stamp with
+    spill), space meters — on a fresh project."""
+    global V3_WALL_CELL
+    from PIL import ImageChops
+    from editor2.app.main import MainWindow
+    from editor2.app.rooms import commands as C
+    from editor2.core import png_import as P
+    from PySide6.QtWidgets import QMessageBox
+    app = QApplication.instance() or QApplication(sys.argv)
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    w = MainWindow()
+    w.new_project(new_dir, 'v3 acceptance')
+    app.processEvents()
+    s, rt, it = w.session, w.rooms_tab, w.import_tab
+    s.undo.push(C.SnapshotCommand(s, 'New room', lambda doc: doc.new_room(
+        'Art room', 0x04, s.renderer, blank_tileset=True)))
+    app.processEvents()
+    rid = s.doc.rooms[-1]['id']
+    room = s.doc.room(rid)
+    tid = room['record']['tileset']
+    assert s.doc.free_counts(tid, 0x40)['total'] == 128 - 2 - 1, \
+        'blank tileset: every slot free but 77/78 and the floor tile'
+    # --- PNG import through the tab's code path
+    png = os.path.join(new_dir, 'synth_rip.png')
+    src = synth_rip(png)
+    it._fill_rooms()
+    it.open_png(png)
+    app.processEvents()
+    assert [(r.x0, r.y0, r.ox, r.oy) for r in it.regions] == [(5, 3, 5, 3), (200, 170, 8, 10)], \
+        [(r.x0, r.y0, r.ox, r.oy) for r in it.regions]
+    assert os.path.exists(os.path.join(new_dir, 'assets', 'imports', 'synth_rip.png'))
+    it.region_list.setCurrentRow(0)
+    it._select_region()
+    assert len(it.view.selected) == 80, 'panel 1 = one 10x8 screen of cells'
+    # nudge the grid off and back (merged undo steps), mask a cell and unmask
+    it._nudge(1, 0)
+    assert it.regions[0].ox == 6
+    it._nudge(-1, 0)
+    assert it.regions[0].ox == 5
+    cell = (5 + 16 * 2, 3 + 16 * 7)
+    it._cells_painted('mask', [cell], True)
+    assert cell not in it.view.cell_region
+    it._cells_painted('mask', [cell], False)
+    assert cell in it.view.cell_region
+    it._select_region()
+    # a stump cell becomes a WALL (every identical cell with it)
+    grid0 = s.renderer.vanilla_screen_grid(0x04, 0, 0)
+    stump = None
+    for cy in range(8):
+        for cx in range(10):
+            if grid0[cy * 2 + 1][cx * 2 + 1] < s.renderer.vanilla_gfx(0x04).threshold and \
+                    grid0[cy * 2][cx * 2] != grid0[0][0]:
+                stump = (cx, cy)
+                break
+        if stump:
+            break
+    assert stump, 'no wall cell on Farm screen 0'
+    wc = (5 + stump[0] * 16, 3 + stump[1] * 16)
+    it._cells_painted('wall', [wc], True)
+    assert wc in it.view.walls
+    V3_WALL_CELL = stump
+    it.refit()
+    assert it.fit.exact == it.fit.total == 320, \
+        f'vanilla art must fit the DWM1 palette rules exactly ({it.fit.exact}/{it.fit.total})'
+    it.dst_x.setValue(0)
+    it.dst_y.setValue(0)
+    it._import(stamp=True)
+    app.processEvents()
+    room = s.doc.room(rid)
+    img = s.renderer.render_screen(room, 0, 0, 1)
+    assert ImageChops.difference(img, src.crop((5, 3, 165, 131))).getbbox() is None, \
+        'stamped screen must render pixel-identical to the PNG panel'
+    lid = room['screens']['0']['layout']['id']
+    br = s.doc.layout(lid)['tiles'][stump[1] * 2 + 1][stump[0] * 2 + 1]
+    assert br < 0x40, 'WALL cell: bottom-right subtile below the threshold'
+    print('OK: PNG import — 2 panels detected with their own grid offsets, key colour '
+          'masked, 80 cells fitted exactly, stamped pixel-identical, wall cell below '
+          'the threshold')
+    # spill: the second panel stamped from screen 0 cell (5,4) -> screens 0,1,4,5
+    it.region_list.setCurrentRow(1)
+    it._select_region()
+    it.refit()
+    for sl in range(4):                   # keep the palettes the first import set
+        it.pal_rows[sl][1].setChecked(True)
+    it.refit()
+    it.dst_x.setValue(5)
+    it.dst_y.setValue(4)
+    it._import(stamp=True)
+    app.processEvents()
+    room = s.doc.room(rid)
+    assert s.doc.screen_keys(room) == [0, 1, 4, 5], s.doc.screen_keys(room)
+    assert room['record']['width_px'] == 320 and room['record']['height_px'] == 256
+    print('OK: spill — a selection past the screen edge created screens 1, 4, 5 '
+          '(record 2x2) with the palettes kept')
+    # --- slot map == Document.used_tiles
+    rt._fill_rooms(keep=rid)
+    app.processEvents()
+    used = s.doc.used_tiles(tid)
+    fc = s.doc.free_counts(tid, 0x40)
+    assert fc['total'] == 128 - len(used)
+    assert sum(1 for u in rt.tileset_map.usage if u['status'] == 'free') == fc['total']
+    assert rt.picker_tabs.tabText(2) == f"Tileset ({fc['total']} free)"
+    print(f"OK: slot map — {fc['wall']} wall / {fc['walkable']} walkable free == "
+          'Document.used_tiles')
+    # --- per-subtile palettes: paint a mixed metatile, read it back, undo
+    cv = rt.canvas
+    rt.select_screen(0)
+    app.processEvents()
+    before = [row[:] for row in s.doc.layout(cv.attr_lid)['attr']]
+    mixed = {'tiles': cv.cell_metatile(0, 0)['tiles'], 'pal': [0, 1, 2, 3]}
+    cv.set_brush(mixed)
+    cv._begin_stroke(); cv._stroke_cell((9, 7)); cv._end_stroke('Paint')
+    a = s.doc.layout(cv.attr_lid)['attr']
+    assert [a[14][18], a[14][19], a[15][18], a[15][19]] == [0, 1, 2, 3]
+    assert cv.cell_metatile(9, 7)['pal'] == [0, 1, 2, 3]
+    s.undo.undo()
+    assert s.doc.layout(cv.attr_lid)['attr'] == before
+    print('OK: a metatile with four palettes paints per subtile (and undoes)')
+    # --- tileset switch (vanilla Library sheet) + exact undo
+    snap = s.doc.dumps()
+    rt._change_tileset_to = None
+    s.undo.push(C.SnapshotCommand(s, 'Change tileset', lambda doc: doc.set_room_tileset(
+        rid, 'vanilla', 0x12)))
+    rec = s.doc.room(rid)['record']
+    lib = s.renderer.vanilla_record(0x12)
+    assert 'tileset' not in rec and rec['gfx_bank'] == lib['gfx_bank'] and \
+        rec['collision_threshold'] == lib['collision_threshold']
+    s.undo.undo()
+    assert s.doc.dumps() == snap, 'tileset switch undo must be exact'
+    print('OK: tileset switched to the Library sheet and back (exact undo)')
+    # --- release unused vocabulary: a GreatTree-sheet room has ~8 free slots
+    s.undo.push(C.SnapshotCommand(s, 'New room', lambda doc: doc.new_room(
+        'GT room', 0x01, s.renderer)))
+    rid2 = s.doc.rooms[-1]['id']
+    key2 = s.doc.tileset_key(s.doc.room(rid2))
+    free_before = s.doc.free_counts(key2, s.renderer.vanilla_gfx(0x01).threshold)['total']
+    img_ = P.load_rgb(png)
+    keys_ = P.guess_key_colours(img_)
+    reg_ = P.detect_regions(img_, keys_)[0]
+    cells_ = P.valid_cells(img_, reg_, keys_)
+    subs_ = [x for (cx, cy) in cells_ for x in P.cell_subtiles(img_, cx, cy)]
+    fit_ = P.fit_palettes(subs_)
+    plans_ = P.plan_cells(img_, cells_, fit_)
+    # S96 round 3 (user: "let me do the walkability"): unmarked cells bind no
+    # threshold side unless strict_walk — never more slots than strict
+    d_free, d_strict = P.slot_demand(plans_), P.slot_demand(plans_, strict_walk=True)
+    assert d_free['walkable_br'] == 0 and d_free['total'] <= d_strict['total']
+    own = bytes(s.renderer.vanilla_gfx(0x01).sheet[:2048])
+    cmd = C.SnapshotCommand(s, 'Import', lambda doc: doc.import_png_cells(
+        rid2, plans_, fit_.palettes, [0, 1, 2], 0, 0, own_sheet=own))
+    s.undo.push(cmd)
+    assert cmd.error is not None and 'not enough free tileset slots' in str(cmd.error), cmd.error
+    s.undo.push(C.SnapshotCommand(s, 'Release', lambda doc: doc.set_released(key2, True)))
+    free_rel = s.doc.free_counts(key2, s.renderer.vanilla_gfx(0x01).threshold)['total']
+    assert free_rel > free_before + 50, (free_before, free_rel)
+    s.undo.undo()
+    assert s.doc.free_counts(key2, s.renderer.vanilla_gfx(0x01).threshold)['total'] == free_before, \
+        're-protecting restores the count'
+    s.undo.redo()
+    cmd = C.SnapshotCommand(s, 'Import', lambda doc: doc.import_png_cells(
+        rid2, plans_, fit_.palettes, [0, 1, 2], 0, 0, own_sheet=own))
+    s.undo.push(cmd)
+    assert cmd.error is None, cmd.error
+    rt._fill_rooms(keep=rid2)
+    app.processEvents()
+    flags = rt.picker.flags
+    assert any(v == 'changed' for v in flags.values()), 'overwritten vocabulary must be flagged'
+    print(f'OK: release — import failed with {free_before} free, succeeded after releasing '
+          f'({free_rel} free); re-protect restores {free_before}; overwritten vocabulary '
+          f'flagged in "This room" ({sum(1 for v in flags.values() if v == "changed")} tiles)')
+    # --- space meters measured the unsaved project
+    w.space_meter.measure()
+    assert w.space_meter.last.get(0x67, (0, 0))[0] > 0 and w.space_meter.last.get(0x64, (0, 0))[0] > 0
+    print('OK: space meters — ' + ', '.join(f'${b:02X} {u}/{c}' for b, (u, c)
+                                               in sorted(w.space_meter.last.items())))
+    # drop the GreatTree test room (keeps the --rom build to the art room)
+    s.undo.push(C.SnapshotCommand(s, 'Delete', lambda doc: doc.delete_room(rid2)))
+    assert w.save()
+    return w, s, rid
+
+
+def test_rom_v3(w, s, rid, keep_dir=None):
+    from editor2.app.build_worker import BuildWorker
+    app = QApplication.instance()
+    results = []
+    worker = BuildWorker(REPO, s.project_dir)
+    worker.finished_build.connect(results.append)
+    worker.start()
+    worker.wait()
+    app.processEvents()
+    res = results[0]
+    assert res.ok, f'build failed: {res.error}'
+    from tools.pyboy_harness import boot, to_bedroom, warp, adv, MAP_ID, give_party_monster
+    room = s.doc.room(rid)
+    p = boot(res.rom_path)
+    assert to_bedroom(p), 'scripted intro failed'
+    p.memory[0xCA39] = p.memory[0xCA3A] = 0xFF
+    cx, cy = V3_WALL_CELL
+    # stand on the cell above the wall (or below when it is on row 0)
+    sy = cy - 1 if cy > 0 else cy + 1
+    warp(p, 0x6B, cx, sy, settle=500)
+    adv(p, 120)
+    assert p.memory[MAP_ID] == 0x6B and p.memory[0xC925] == 0
+    grid = s.doc.layout(room['screens']['0']['layout']['id'])['tiles']
+    vram = [[p.memory[0x9800 + r * 32 + c] for c in range(20)] for r in range(16)]
+    diff = sum(1 for r in range(16) for c in range(20) if vram[r][c] != grid[r][c])
+    assert diff == 0, f'{diff} VRAM tiles differ from the imported screen'
+    pals = []
+    for i in range(32):
+        p.memory[0xFF68] = i
+        pals.append(p.memory[0xFF69])
+    # bit 15 of colour 3 = the per-slot free-colour marker (hardware ignores it)
+    words = [(pals[i] | (pals[i + 1] << 8)) & 0x7FFF for i in range(0, 32, 2)]
+    pid = room['render'].get('palette') or s.doc.effective_palette(room, 0, 0)
+    pal = s.doc.palette(pid)
+    assert pal.get('free_color1'), 'the import tab marks the palette "own colour 1" by default'
+    want = [int(x, 16) for row in pal['colors_rgb555'][:4] for x in row]
+    want = [0 if i % 4 == 3 else v for i, v in enumerate(want)]
+    assert words == want, f'BG palette RAM {words} != project {want}'
+    sys_c1 = []
+    for i in range(32, 64, 8):
+        p.memory[0xFF68] = i + 2
+        lo = p.memory[0xFF69]
+        p.memory[0xFF68] = i + 3
+        sys_c1.append(lo | (p.memory[0xFF69] << 8))
+    assert sys_c1[:3] == [0x6BFF] * 3, f'slots 4-6 colour 1 must stay forced: {sys_c1}'
+    print('OK: imported screen — VRAM tilemap == canvas (320/320), BG palette RAM == project '
+          'palette incl. its OWN colour 1 (FreeColor1Hook); system slots 4-6 still $6BFF')
+
+    # S96 round 4 (user, SameBoy: "opening menu then going back … everything
+    # becomes blinding white … coloured background squares as it opens"):
+    # the field menu re-runs LoadPal_4102 (marker must survive) and blanks
+    # the BG under the room's attrs (colour 1 must read cream meanwhile).
+    def bg_words(n=32):
+        out = []
+        for i in range(0, n, 2):
+            p.memory[0xFF68] = i
+            lo = p.memory[0xFF69]
+            p.memory[0xFF68] = i + 1
+            out.append((lo | (p.memory[0xFF69] << 8)) & 0x7FFF)
+        return out
+    give_party_monster(p)
+    seen_c1 = set()
+    for i in range(120):                          # A on nothing = open the menu
+        (p.button_press if i < 4 else p.button_release)('a')
+        p.tick()
+        if 4 <= i <= 12:                          # the tile-$E0 blanking frames
+            w = bg_words()
+            seen_c1 |= {w[k * 4 + 1] for k in range(4)}
+    assert p.memory[0xC8EB] & 0x02, 'the field menu did not open'
+    assert seen_c1 == {0x6BFF}, f'colour 1 during the menu wipe must be cream: {seen_c1}'
+    for i in range(150):
+        (p.button_press if i < 4 else p.button_release)('b')
+        p.tick()
+    assert not p.memory[0xC8EB] & 0x02, 'the field menu did not close'
+    assert bg_words() == want, f'after the menu: BG palette RAM {bg_words()} != project {want}'
+    print('OK: field menu open/close — cream wipe (no colour-1 squares), own colours back after close')
+    home = (p.memory[0xFF97], p.memory[0xFF98])
+    d = 'down' if sy < cy else 'up'
+    for _ in range(48):
+        p.button_press(d)
+        p.tick()
+    p.button_release(d)
+    adv(p, 24)
+    assert (p.memory[0xFF97], p.memory[0xFF98]) == home, 'the WALL cell must block the player'
+    print(f'OK: the cell marked WALL in the import tab blocks the player in-game')
+    if keep_dir:
+        p.screen.image.save(os.path.join(keep_dir, 'pyboy_import.png'))
+        shutil.copy(res.rom_path, os.path.join(keep_dir, 'rom_v3.gbc'))
+    p.stop(save=False)
+
+
+def test_all_clones():
+    """--all-clones (S96): EVERY vanilla room clones ("Make editable"),
+    every screen AND every valid state renders pixel-identical to vanilla,
+    and each single-clone project passes the compiler (scripts decoded by
+    the handler-arity table, attr rows read by direct screen index, per-
+    screen step-0 palettes). ~12 s."""
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core.compiler import compile_project
+    base = tempfile.mkdtemp(prefix='dwm_clones_')
+    r0 = ProjectRenderer(REPO, base, {})
+    n_scr = n_st = 0
+    bad = []
+    for mid, name, scr in r0.vanilla_rooms():
+        d = os.path.join(base, f'm{mid:02X}')
+        os.makedirs(d)
+        shutil.copy(os.path.join(REPO, 'editor2', 'templates', 'blank-project',
+                                 'project.json'), d)
+        doc = Document(d)
+        r = ProjectRenderer(REPO, d, doc.data)
+        doc.vanilla = r
+        try:
+            rid = doc.clone_vanilla(mid, name, REPO, r)
+            r.invalidate()
+            room = doc.room(rid)
+            for k in scr:
+                n_scr += 1
+                for st in range(len(r.vanilla_steps(mid, k))):
+                    n_st += 1
+                    if r.render_screen(room, k, st, 1).tobytes() != \
+                            r.render_vanilla_screen(mid, k, 1, st).tobytes():
+                        bad.append(f'${mid:02X} {name} screen {k} state {st}: render')
+            doc.save()
+            compile_project(d, REPO)
+        except Exception as e:
+            bad.append(f'${mid:02X} {name}: {str(e)[:200]}')
+    shutil.rmtree(base, ignore_errors=True)
+    assert not bad, '\n'.join(bad)
+    print(f'OK: all {len(r0.vanilla_rooms())} vanilla rooms clone — {n_scr} screens / '
+          f'{n_st} states pixel-identical, every clone compiles')
+
+
 def test_compile(project_dir):
     from editor2.core import compiler as C
     _out, _prj, warnings = C.compile_project(project_dir, REPO)
@@ -602,6 +948,7 @@ def test_rom(project_dir, grids, keep_dir=None):
 
 def main():
     do_rom = '--rom' in sys.argv
+    test_all_clones()
     keep = None
     if '--out' in sys.argv:
         keep = os.path.abspath(sys.argv[sys.argv.index('--out') + 1])
@@ -620,9 +967,15 @@ def main():
         shutil.rmtree(new_dir)
     w2, s2, rid = v2_round_trip(new_dir)
     test_compile(new_dir)
+    v3_dir = os.path.join(tmp, 'fresh_v3')
+    if os.path.exists(v3_dir):
+        shutil.rmtree(v3_dir)
+    w3, s3, rid3 = v3_round_trip(v3_dir)
+    test_compile(v3_dir)
     if do_rom:
         test_rom(proj, grids, keep)
         test_rom_v2(w2, s2, rid, keep)
+        test_rom_v3(w3, s3, rid3, keep)
     if not keep:
         shutil.rmtree(tmp, ignore_errors=True)
     print('PASS')

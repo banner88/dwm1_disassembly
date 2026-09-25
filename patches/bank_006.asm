@@ -4129,17 +4129,30 @@ Jump_006_6247:
     or a
     jr z, jr_006_6284
 
+    ; S96 round 4 — FIELD MENU OPEN (A with nothing to talk to). Same-size
+    ; rewrite (27 B -> 25 B + 2 nop): the four zero stores to $c90d-$c910
+    ; collapse to `ld [hl+], a` x4, which pays for a far call to bank $73
+    ; entry 13 MenuOpenFreePal. The menu blanks the whole BG map to tile $E0
+    ; (colour 1) under the ROOM's attrs for ~8 frames before its palette-7
+    ; attr fill; in a custom room with free colour 1 that showed as coloured
+    ; squares (vanilla: every colour 1 is cream). The far call sets hardware
+    ; colour 1 of the marked slots to cream for the menu; the buffer keeps the
+    ; room's colours, which the menu-close push ($17 entry 8) restores.
+    ld hl, $730d                 ; bank $73 entry 13: MenuOpenFreePal
+    rst $10
+    xor a
+    ld hl, $c90d                 ; $c90d-$c910 := 0 (menu state, as before)
+    ld [hl+], a
+    ld [hl+], a
+    ld [hl+], a
+    ld [hl+], a
     ld hl, wGameState
-    set 1, [hl]
-    xor a
-    ld [$c90d], a
-    ld [$c90e], a
-    xor a
-    ld [$c90f], a
-    ld [$c910], a
+    set 1, [hl]                  ; menu open (after the zeroing; same frame)
     ld a, $59
     call PlaySoundEffect
     jp Jump_006_6284
+    nop                          ; 2 B slack from the rewrite
+    nop
 
 
 Jump_006_6284:

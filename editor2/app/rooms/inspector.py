@@ -38,6 +38,7 @@ class Inspector(QWidget):
     addRedirectRequested = Signal()
     removeRedirectRequested = Signal(int)      # index into custom.entrance_redirects
     routeDoorRequested = Signal(object)        # vanilla door preset dict
+    tilesetChangeRequested = Signal()          # S96
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -84,7 +85,14 @@ class Inspector(QWidget):
         f.addRow('id', self.r_id)
         f.addRow('mapID', self.r_map)
         f.addRow('source map', self.r_src)
-        f.addRow('tileset', self.r_gfx)
+        trow = QHBoxLayout()
+        trow.addWidget(self.r_gfx, 1)
+        self.r_gfx_btn = QPushButton('Change…')
+        self.r_gfx_btn.setToolTip("Draw this room with another room's tileset, a "
+                                  'project tileset, or a new blank one for imported art.')
+        self.r_gfx_btn.clicked.connect(self.tilesetChangeRequested.emit)
+        trow.addWidget(self.r_gfx_btn)
+        f.addRow('tileset', trow)
         f.addRow('size', self.r_dims)
         f.addRow('collision ≥', self.r_thr)
         f.addRow('palette', self.r_pal)
@@ -200,6 +208,7 @@ class Inspector(QWidget):
         self.r_src.setText('—')
         gfx = renderer.vanilla_gfx(mid)
         self.r_gfx.setText(f'bank ${gfx.gfx_bank:02X} id ${gfx.gfx_id:02X}')
+        self.r_gfx_btn.setEnabled(False)
         self.r_thr.setValue(gfx.threshold)
         self.r_thr.setEnabled(False)
         rec = renderer.vanilla_record(mid)
@@ -239,6 +248,7 @@ class Inspector(QWidget):
         self.r_map.setText(f'${mid:02X}' + (' (placeholder)' if room.get('placeholder') else ''))
         self.r_src.setText(f"${val(room.get('source_mapID', 0)):02X}")
         rec = room.get('record') or {}
+        self.r_gfx_btn.setEnabled(bool(rec) and not room.get('placeholder'))
         note = ''
         try:
             gfx = renderer.room_gfx(room)

@@ -4131,6 +4131,9 @@ Jump_006_6247:
     or a
     jr z, jr_006_6284
 
+    ; FIELD MENU OPEN (A with nothing to talk to, party non-empty): bank $07
+    ; menu shell state 0 runs next frame. S96 round 4: patches/bank_006.asm
+    ; rewrites this tail same-size to far-call bank $73 MenuOpenFreePal.
     ld hl, wGameState
     set 1, [hl]
     xor a
