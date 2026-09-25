@@ -376,6 +376,56 @@ tilesets; built S96, USER-CONFIRMED 2026-09-25 ("Everything works")):**
   masks and walls; "Open PNG…" adds another, the image combo switches,
   "Remove" drops one from the list (undoable).
 
+**S97 additions (user: "all of group B" — P3.5a state rules + P3.5 NPC
+inspector; built S97, NOT yet user-tested):**
+- **State rules** (inspector group "State rules — which state shows when",
+  `rooms/rules_panel.py`): an ordered room-level list "state n ← flag A set
+  AND flag B clear […]" with Add / Edit / Remove / ▲▼, an **Otherwise**
+  combo (keep what scripts set | force a state), and a rule dialog with a
+  flag picker (project flags, well-known vanilla story flags, any number)
+  and **New named flag…** (auto-allocated, pool meter). Engine-backed
+  (bank $60 entry 8, run at every custom (re)load — PROJECT_COMPILER
+  §2.13), so a custom room's version survives save/reload. The canvas shows
+  "State shown when: …" under the state bar for the state on screen.
+- **NPC inspector** (`rooms/npc_panel.py`; select an NPC marker): sprite
+  picker over the S91 catalog (normal ids; "show all" for fragments/empty),
+  facing, **behaviour** (the 13 measured routines, named, with the measured
+  description; ROOM_DATA_FORMAT "NPC behaviour types"), **hidden** (type bit
+  6), talk script (any script of the room, or **New talk text…** /
+  **Edit text…** for plain talk scripts — pages auto-wrapped at 18 cells,
+  charmap-checked preview; the WYSIWYG editor is P3.6), **in states**
+  checkboxes (the same NPC across the screen's states), Delete. **Add NPC
+  here…** on a selected cell (8-per-state cap enforced). **Drag an NPC** on
+  the canvas to move it. The selected NPC's walk path is drawn (dots red on
+  walls / off-screen — walkers never test tiles); every NPC shows a facing
+  tick. Vanilla NPCs show the same form read-only (learn what a vanilla NPC
+  does by clicking it). Cloned raw entries become typed entries with the
+  same bytes on the first edit.
+- Selection/NPC panels reset on every room/screen/state change (they used
+  to keep a stale selection).
+
+**S97 round 2 (user test of r1; built, NOT yet user-tested):**
+- **Talk text per box** (`rooms/talk_editor.py`, replaces the r1 page box):
+  one editor per text box (Enter = the box's second line), ▲▼ / ✕ / **Fit**
+  per box, **+ Add box**, **Fit all**. Beside each box: the box exactly as
+  the game draws it — frame, "*:" on box 1, the ROM font (bank $4F $4010) —
+  with the word that crosses an edge in red, the lost cells / a scrolled
+  third line in a red strip under the box, and "line n: used/max cells".
+  OK is disabled until every box fits. Limits are the measured ones
+  (TEXT_SYSTEM "Text boxes": 16 on box 1 line 1, 18 elsewhere, 2 lines).
+  Saved as one `boxes` dialogue entry; older `text`/`lines` talk pages open
+  converted into boxes.
+- **Right panel**: NPC is its own foldable section under Room / screen /
+  selection (hint text when nothing is selected). Every launch opens with
+  **only Metatiles expanded** (BG palettes, Room / screen / selection and
+  NPC folded — not remembered between launches); selecting an NPC marker
+  opens the NPC section.
+- **Rule dialog**: "New named flag…" puts the flag into the selected
+  condition (or a new one) as a real list item in every flag list.
+  Nothing in the editor SETS a flag yet — the rule sees it clear until a
+  script op sets it (offered to the user: an NPC "sets flag when talked
+  to" option).
+
 Acceptance `editor2/tests/test_canvas.py --rom`: fresh project → Farm clone
 at `$6B` → metatiles painted → a lone metatile painted over stays in the
 picker → a Castle brick metatile imported (sheet bytes copied, threshold side

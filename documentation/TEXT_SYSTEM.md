@@ -57,8 +57,37 @@ Single bytes expanding to common 2-character pairs:
 $EA $9F $A3 line1_text $EF $EE line2_text $F7 $F0
 ```
 
+### Text boxes (PyBoy-measured S97 round 2)
+- A field dialog box shows **2 lines × 18 cells** (canvas tiles $B0-$C1 and
+  $C2-$D3; the glyphs are typed into those tiles, not into the BG map).
+- `$EA $9F $A3` prints "*:" in the first 2 cells of line 1 → **16 cells left
+  on the first line**; every other line (and every later box) starts at cell
+  0 — no indent. (The vanilla indent under "*:" comes from the **$EB**
+  opener: Bazaar `$EB $9F $A3 "Hello, welcome" $EF $EE "to the Bazaar!"`.)
+- **Between boxes: `$FA $F7 $EF $EE`** (6,029 vanilla uses): WAIT (arrow,
+  waits for A) + CLEAR + PAGE/NEWLINE → the next box starts clean on line 1.
+- **A line past its cells is NOT wrapped safely**: the extra cells go to the
+  next line and the next `$EF $EE` line overwrites them — they are lost; the
+  engine's line counter is then off by one (the next box scrolled instead of
+  clearing). A third `$EF $EE` line scrolls the box up **without waiting**.
+- The editor's `boxes` form (PROJECT_COMPILER §dialogue) emits exactly
+  these rules; custom text uses no DTE, but the charmap's ".." is ONE glyph
+  ($61), so "..." takes 2 cells.
+- **Font:** 2bpp 8×8 tiles at bank **$4F $4010 + code×16** (glyph = text
+  code; `disassembly/bank_04f.asm` INCBINs "0-9", "A-P" …) — verified: the
+  canvas tiles hold exactly these bytes for "*:Hello". The box frame tiles
+  ($FA-$FF, $EE/$EF, $E0 at VRAM $8E00-$8FFF) are NOT the font glyphs at
+  those codes.
+- **GBC colours:** the dialog machine (bank $06, `$C915` states; box base
+  `$C919/$C91A`, the room's tiles backed up at `$C100 + row×20`) and the
+  YES/NO box (bank $56 `SetB56_4855` backs the 18 visible rows up to
+  `$C500`, frame from `$56:$48DE` at screen row 8 col 14; bank $00
+  `ClearTextBitsRedraw` restores) write tile ids only — the room's attrs
+  stay under them. Vanilla looks cream only because colour 1 is forced to
+  $6BFF; free-colour custom rooms need bank $73 entries 14-18 (S97 r2).
+
 ### YES/NO Choice (two-part system, verified)
-Text ends with `$EF $EE $E7 $F0`. Script then checks `$C83C` via opcode `$15`:
+Text ends with `$EF $EE $E7 $F0` (the S2 custom form) or — the vanilla form, PyBoy S97 r2 — the question's last line directly followed by `$E7 $F0` (both lines stay, YES/NO opens; `$13:$67F7` "…again?" `$E7 $F0`). Script then checks `$C83C` via opcode `$15`:
 ```
 dw question_text_id       ; text ending in $E7 $F0
 dw $FF15                  ; CheckAndBranch

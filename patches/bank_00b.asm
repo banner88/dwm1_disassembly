@@ -1615,6 +1615,8 @@ jr_00b_471b:
     ret
 
 
+; NPC list parser (S97 annotation — see disassembly/bank_00b.asm Call_00b_477e
+; for the slot fields it fills; ROOM_DATA_FORMAT "NPC RAM slot").
 SetRoom_477e:
 jr_00b_477e:
     ld de, $d7d2

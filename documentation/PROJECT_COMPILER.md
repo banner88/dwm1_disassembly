@@ -153,7 +153,9 @@ the compiler never silently ignores authored data. Same for `custom.music`
       "npcs": [
         { "kind": "spawn", "x": 7, "y": 6 },              // script forced 0
         { "kind": "npc", "facing": "down", "sprite": "0x0B",
-          "x": 2, "y": 7, "script": "give_jerky" } ],     // or "none" -> $FF
+          "x": 2, "y": 7, "script": "give_jerky",       // or "none" -> $FF, or an int
+          "behaviour": "pace_x1",                       // S97, optional (default stand)
+          "hidden": false } ],                          // S97, optional (type bit 6)
       "exits": [
         { "x": 3, "y": 1, "dest": "room:$6C",   // or "vanilla:$01" or plain value
           "gate_flag": 0, "screen_byte": "0x00",// REQUIRED — never guessed
@@ -167,18 +169,28 @@ once in `editor2/core/formats.py` with doc citations.
 
 ### 2.3 `custom.dialogue[]`
 
-Three authoring forms; ids `$0A00+` (auto-assigned in order, or explicit
+Four authoring forms; ids `$0A00+` (auto-assigned in order, or explicit
 `text_id`; ids must be dense per 256-id section — section = hi-byte−`$0A`,
 routed by the bank-`$04` `TextQueueCheck_Ext` intercept):
 
 ```jsonc
 { "id": "jerky_offer", "text_id": "0x0A00",
   "lines": ["Want a", "Beef Jerky?"], "choice": true }   // explicit lines
-{ "id": "long_text", "text": "one long string …" }        // auto-wrap 18 cells
+{ "id": "long_text", "text": "one long string …" }        // flowed into boxes (S97 r2)
+{ "id": "talk", "boxes": [["Type 3. I walk a", "square, 2 by 2."],
+                          ["Each box waits", "for A now."]] }  // S97 r2: per box
 { "id": "exotic", "raw": [["box"], "Hi", ["br"], ["bytes","0xF7","0xF0"]] }
 ```
 
-`lines`/`text` forms open with the standard box (`$EA $9F $A3`), join lines
+**`boxes` (S97 r2, what the editor writes)**: each box = 1-2 lines; box 1
+line 1 ≤ 16 cells (after "*:"), every other line ≤ 18 (cells = charmap
+glyphs, ".." = one); boxes join with `$FA $F7 $EF $EE` (wait for A, clear);
+end `$F7 $F0`, or `$E7 $F0` right after the question (vanilla choice form).
+Violations are errors — TEXT_SYSTEM "Text boxes" (lost cells, scrolling).
+The auto `text` form now flows into boxes (`textenc.flow_boxes`) instead of
+one scrolling page. `lines` is unchanged (regression-grade; the example
+uses it) and warns when it has > 2 lines or a first line > 16 cells.
+`lines` form opens with the standard box (`$EA $9F $A3`), join lines
 with `$EF $EE`, and terminate `$F7 $F0` (plain; trailing break dropped) or
 `$E7 $F0` (`choice: true`; trailing break kept) — the proven byte shapes
 (TEXT_SYSTEM). `raw` is the escape hatch: tokens `box`, `br`, any control
@@ -248,7 +260,8 @@ used addresses; the emitted region is `ds`-padded to `region_size` for
 layout stability. `wRoomRecScratch` stays pinned at `$DE7B` by a static
 `ds 7` pad in `patches/wram.asm` (no longer coupled to this region). The
 relocated `wCustomNPCBuffer`/`wCustomExitBuffer` (`$CC80`/`$CD00`) and the
-`wCustomPool` reserve (`$D001-$D664`, 1,636 B) are hand-declared in
+`wCustomPool` reserve (S65 `$D001-$D664`; now `$D0C5-$D5E4` after the FX1 and
+S97 r2 carves — see `patches/wram.asm`) are hand-declared in
 `patches/wram.asm`, not compiler-emitted. The example project's auto
 allocation reproduces the proven relative layout at the new base (legacy
 hole `0xCD84`, was `0xDE78`/`0xD47C`).
@@ -565,12 +578,15 @@ editor2/
                metatile_picker.py metatile_editor.py   # S94 metatiles
                redirect_dialog.py                      # S94b "Route a vanilla door here"
                tileset_map.py tileset_dialog.py        # S96 slot map, change tileset
+               npc_panel.py rules_panel.py             # S97 NPC inspector, state rules
+               talk_editor.py                          # S97 r2 per-box talk text, ROM-font preview
         import_tab.py space_meter.py                   # S96 Import art tab, bank meters
   templates/blank-project/project.json   # File > New project (S94)
   example-project/project.json      # regression baseline (build/ is regenerable output)
-  tests/test_compiler.py            # 61 tests; --rom adds the ROM builds
+  tests/test_compiler.py            # 76 tests (79 with --rom: the ROM builds; S97 r2)
   tests/test_app.py                 # shell smoke test; --rom = GUI build == pin
-  tests/test_canvas.py              # P3.3 acceptance; --rom = build + PyBoy both states
+  tests/test_canvas.py              # P3.3 acceptance; --rom = build + PyBoy both states;
+                                    # v4 (S97) = state rules + NPC panel, PyBoy-verified
 tools/build_project.py              # CLI
 ```
 
@@ -682,6 +698,93 @@ S94 whose rooms `$6B-$6D` lack a `record` gets the legacy hand-patched
 `$26DD` rows filled in (logged "MIGRATED … Save to keep it"). The CLI
 compiler stays strict (`record` required).
 
+## §2.13 S97 — room state rules (P3.5a) + the NPC type byte (P3.5)
+
+**`custom.rooms[].state_rules`** — ordered, room level:
+
+```json
+"state_rules": [
+  {"state": 1, "when": [{"flag": "servant_beaten"},
+                        {"flag": "0x0031", "is": "clear"}],
+   "screens": [0], "comment": "optional"},
+  {"state": 0, "when": []}
+]
+```
+
+Each time a screen of the room (re)loads — entry, scroll, return from a
+battle or menu — the FIRST rule whose terms ALL hold writes its `state` into
+that screen's step counter; no match leaves the counter alone (scripts may
+drive it; after a reload the transient $CD80 counter is 0). A term's `flag`
+is a `custom.flags` name or any event flag number (vanilla story flags
+included — EVENT_FLAGS.md; ≥ `$0278` warns: not saved); `is` = `set`
+(default) / `clear`. `screens` limits a rule; default = every screen. A rule
+applies only to screens that HAVE that state (a 1-state screen never
+changes); a rule whose state exists on none of its screens is an error. An
+unconditional last rule (`when: []`, no `screens`) is the editor's
+"Otherwise". ≤ 8 terms per rule.
+
+Why it exists: custom step counters are transient (§2.6) — a state reached
+by a script is lost on reload; flags are saved. Rules make custom-room
+versions persistent, and replace hub-side arming (`script_preludes`) for
+the common case (the example project's S92 rank demo moved to a rule).
+
+**Lowering** (`project.state_rules`, emitter `_state_rule_tables` in
+`rooms60`): `CustomStateRulePtrTable` (bank $60, one `dw` per custom room,
+`$0000` = none — emitted always, the template references it) → per room
+`{db screen / dw step_counter / dw rules}… db $FF` → per screen
+`{db state / db n_terms / n_terms × dw flag}… db $FF`, flag word bit 15 =
+must be CLEAR.
+
+**Engine** (template entry 8 `CustomStateRules`, re-pinned S97; head 383 →
+**492 B**): evaluated with ROM0 `TestEventFlag` ($00:$26AE). Called from
+(1) bank $17 `CustomAttrCheck`'s custom path via `StateRulesHook17`
+(patches/bank_017.asm, `call` taken from the `ds 12` reserve → `ds 9`;
+rst $10 to `$6008`, BC/DE/HL preserved) — this is the FIRST reader of the
+counter at a room load (PyBoy hook order S97: attr/palette walk before bank
+$0B Entry 0), so the state's own attr AND palette load; and (2)
+`CustomReadStep` (Entry 0) before `CustomPtrChase`. Idempotent.
+PyBoy (test_canvas v4 --rom): flag clear → state 0, set → state 1 with its
+own palette, counter wiped → re-selected on the next load, flag cleared +
+otherwise-0 → back to state 0. Reference patched pin → `6e97fd37…`
+(patched; the example project's rule). (S97 round 1; round 2 → `ce24de8b…`, patched: text-box attrs, see
+§2.13 "Round 2").
+
+**NPC type byte** (`formats.npc_type_byte`; ROOM_DATA_FORMAT "NPC behaviour
+types"): `facing` (bits 4-5) | `hidden` (bit 6) | `behaviour` (bits 0-3:
+`stand` 0, `spin` 1, `pace_x2` 2, `square` 3, `figure8` 4, `pace_right3` 5,
+`stand_fixed` 6, `stand_return` 7, `pace_x1` 8, `pace_x2_left` 9, `sway` A,
+`gate_wander_meet` E, `gate_wander` F, or a number). Defaults reproduce the
+pre-S97 bytes. `script` may be an int = a raw index into the room's script
+table (a cloned raw entry edited in the GUI keeps its index when the table
+has no id for it). Validators: unknown behaviour = error; gate-only
+behaviours in a room warn; a walker whose measured path
+(`formats.BEHAVIOUR_PATHS`) leaves the 10×8 screen warns.
+
+**Editor data**: NPC edits convert a cloned `raw` entry to the typed form
+with the same bytes (`Document.update_npc`); `Document.new_talk_script`
+creates one `dialogue` entry (`boxes` since S97 r2; legacy `text`/`lines`
+pages are read back as boxes by `talk_boxes`) + a `[text…][end]` script
+registered at the next free index ≥ 1 (and a no-op index-0 entry script
+when the room had none); named flags from the rules dialog are plain
+`custom.flags` entries (`index: "auto"`).
+
+**Round 2 (S97 r2) — text boxes in free-colour rooms (code only, no
+schema).** The dialog box and the YES/NO box never set GBC attributes
+(TEXT_SYSTEM "Text boxes"), so in a room with its own colour 1 they showed
+the room's colours. Same-size far calls, all into bank $73:
+`LoadMapS_6939` (bank $06, middle rows) → entry 14 `BoxRowDraw`; dialog
+state 9 body → entry 15 `BoxFrameDraw` (frames + the vanilla SGB packet);
+`LoadMapS_6b3d` (close) → entry 16 `BoxRowRestore`; bank $00
+`ClearTextBitsRedraw` head → entry 17 `ChoiceBoxClose`; bank $56
+`SetB56_48a1` head → entry 18 `ChoiceBoxOpen`. Active only when
+`wIsGBC`, `wMapID ≥ CUSTOM_ROOM_START` and a slot 0-3 free-colour marker
+(bit 7 of colour 3's high byte, S96) is set: the covered attrs go to
+`wBoxAttrSave` (5×20) / `wChoiceAttrSave` (6×5), become 7, and are put back
+cell by cell on close (`wBoxAttrMask` bits 0-4 rows, bit 5 choice). VRAM
+bank-1 writes wait mode 3 → not-3 inside `di`. Other rooms: the same tiles
+in the same order, attrs untouched (PyBoy: vanilla + non-free frames
+pixel-identical). WRAM: 132 B carved from `wCustomPool` (now $D0C5-$D5E4).
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player
@@ -787,7 +890,10 @@ custom (walk-on boundary exits). bank_071 unchanged (142 B).
 
 **S94b re-pin:** `VanillaExitResolve` keys rows by (mapID, screen) — head
 **383 B** (`TEMPLATE_SIZE[0x60]=383`; sha in PINNED_SHA256 re-pinned via
-`tools/build_project.py --project <p> --pin-templates`). Measure the size
+`tools/build_project.py --project <p> --pin-templates`).
+
+**S97 re-pin:** entry 8 `CustomStateRules` (+ the `CustomReadStep` call) —
+head **492 B** (`TEMPLATE_SIZE[0x60]=492`, sha re-pinned). §2.13. Measure the size
 from `CustomScriptMasterTable - $4000` in the fresh `game.sym` after any
 head change; the validator compares the emitted head against it.
 

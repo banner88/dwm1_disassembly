@@ -225,7 +225,8 @@ restore** (its SRAM image $A3BA-$AD9E is the live farm — CF3CopyToSRAM/
 CF3CopyFromSRAM skip it both ways, bank $73 entries 5/6). S65 layout of the
 window: `wCustomNPCBuffer` $CC80 / `wCustomExitBuffer` $CD00 / step-counter
 region $CD80-$CFFF (compiler-owned, 640 B) / `wCustomPool` $D001-$D664
-(transient reserve). Init guarantee: ClearAllWRAM (power-on) +
+(transient reserve; carved since — FX1 wMonList/wPoolBounce, S97 r2 box-attr
+saves; current map in known_RAM_map). Init guarantee: ClearAllWRAM (power-on) +
 CF3NewGameClear (new game) + the S65 entry-6 tail-clear (after the
 main-image restore copy) — gameplay always starts with the window zeroed.
 **Flags at byte $D9EA+ (indices $0278+) are OUTSIDE the save range and will NOT

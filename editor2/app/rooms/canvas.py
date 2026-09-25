@@ -21,7 +21,7 @@ VANILLA room (read-only; "Make editable" clones it).
 import os
 
 from PIL import ImageQt
-from PySide6.QtCore import QRectF, Qt, Signal
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView
 
@@ -52,19 +52,42 @@ def classify_npc(entry):
         return 'spawn', int(entry['x']), int(entry['y']), None, 'spawn point'
     if k == 'npc':
         spr = val(entry.get('sprite', 0))
+        beh = entry.get('behaviour', 'stand')
         return ('npc', int(entry['x']), int(entry['y']), spr,
-                f"NPC ${spr:02X} {entry.get('facing', '')} → {entry.get('script', 'none')}")
+                f"NPC ${spr:02X} {entry.get('facing', 'down')} {beh}"
+                f"{' HIDDEN' if entry.get('hidden') else ''} → {entry.get('script', 'none')}")
     if k == 'raw':
         b = [val(x) for x in entry['bytes']]
         t = b[0]
         if t < 0x80:
-            return 'npc', b[2], b[3], b[1], f"NPC ${b[1]:02X} script ${b[4]:02X}"
+            from editor2.core import formats as F
+            beh = F.BEHAVIOUR_NAMES.get(t & 0x0F, f'type {t & 0x0F:X}')
+            return ('npc', b[2], b[3], b[1],
+                    f"NPC ${b[1]:02X} {F.FACING_NAMES[(t >> 4) & 3]} {beh}"
+                    f"{' HIDDEN' if t & 0x40 else ''} script ${b[4]:02X}")
         if t == 0x8F:
             return 'spawn', b[2], b[3], None, 'spawn point'
         if t == 0x90:
             return 'walkon', b[2], b[3], None, f"walk-on exit → ${b[4]:02X}"
         return 'special', b[2], b[3], None, f"special ${t:02X}"
     return 'special', int(entry.get('x', 0)), int(entry.get('y', 0)), None, '?'
+
+
+def npc_type(entry):
+    """(facing 0-3, behaviour 0-15, hidden) of an NPC entry (typed or raw);
+    None for spawn/exit markers. S97 — ROOM_DATA_FORMAT "NPC behaviour types"."""
+    from editor2.core import formats as F
+    k = entry.get('kind')
+    if k == 'npc':
+        fac = entry.get('facing', 'down')
+        t = F.FACING[fac] if isinstance(fac, str) else val(fac)
+        return ((t >> 4) & 3, F.behaviour_value(entry.get('behaviour', 0)),
+                bool(entry.get('hidden')) or bool(t & 0x40))
+    if k == 'raw':
+        t = val(entry['bytes'][0])
+        if t < 0x80:
+            return (t >> 4) & 3, t & 0x0F, bool(t & 0x40)
+    return None
 
 
 class SpriteCache:
@@ -154,6 +177,7 @@ class RoomCanvas(QGraphicsView):
     zoomChanged = Signal(int)
     editRequested = Signal()                  # painting attempted on read-only
     toolChanged = Signal(str)
+    markerMoveRequested = Signal(object, int, int)   # S97: marker ref, new cell
 
     TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk')
 
@@ -185,6 +209,7 @@ class RoomCanvas(QGraphicsView):
         self._panning = None
         self._space = False
         self.highlight = None        # S96 slot map: tile index to outline
+        self._drag = None            # S97: [marker ref, start cell, current cell]
 
         self.scene_ = QGraphicsScene(self)
         self.setScene(self.scene_)
@@ -349,6 +374,19 @@ class RoomCanvas(QGraphicsView):
             self.markers.append(('exit', int(e['x']), int(e['y']), None,
                                  f"exit → {e.get('dest')}", ('exit', i, e)))
 
+    def select_npc(self, index):
+        """Re-select the NPC entry `index` after a reload (marker refs are
+        rebuilt from the Document on every reload)."""
+        self.selected_marker = None
+        for m in self.markers:
+            ref = m[5]
+            if ref and ref[0] == 'npc' and ref[1] == index:
+                self.selected_marker = ref
+                self.selected_cell = (m[1], m[2])
+                break
+        self.viewport().update()
+        return self.selected_marker
+
     def _render(self):
         img = self.s.renderer.compose(self.gfx.sheet, self.tiles, self.attr, self.pals)
         self.base.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))
@@ -462,6 +500,8 @@ class RoomCanvas(QGraphicsView):
                     painter.setPen(pen)
                     painter.setBrush(Qt.NoBrush)
                     painter.drawRect(rc.adjusted(-1, -1, 1, 1))
+        if self.layers['markers']:
+            self._draw_npc_extras(painter)
         if self.selected_cell and self.selected_marker is None:
             cx, cy = self.selected_cell
             pen = QPen(SEL)
@@ -488,6 +528,55 @@ class RoomCanvas(QGraphicsView):
             painter.setBrush(Qt.NoBrush)
             painter.drawRect(QRectF(cx * CELL, cy * CELL, CELL, CELL).adjusted(0.5, 0.5, -0.5, -0.5))
         painter.restore()
+
+    def _draw_npc_extras(self, painter):
+        """S97: facing ticks on every NPC; the selected NPC's walk path
+        (measured tile offsets per behaviour, formats.BEHAVIOUR_PATHS — the
+        walkers never test walls, so a dot on a wall is a real problem);
+        the drag ghost while moving a marker."""
+        from editor2.core import formats as F
+        for kind, x, y, spr, label, ref in self.markers:
+            if kind != 'npc':
+                continue
+            nt = npc_type(ref[2]) if ref and len(ref) > 2 and isinstance(ref[2], dict) else None
+            if not nt:
+                continue
+            fac, beh, obj = nt
+            cx, cy = x * CELL + CELL / 2, y * CELL + CELL / 2
+            dx, dy = ((0, 1), (-1, 0), (0, -1), (1, 0))[fac]
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QBrush(QColor(255, 255, 255, 220) if not obj else QColor(160, 160, 160, 200)))
+            painter.drawEllipse(QRectF(cx + dx * 6 - 1.5, cy + dy * 6 - 1.5, 3, 3))
+            if self.selected_marker is ref and beh in F.BEHAVIOUR_PATHS and not obj:
+                pts = F.npc_path(beh)
+                pen = QPen(QColor(0, 220, 255, 220))
+                pen.setCosmetic(True)
+                pen.setWidth(2)
+                painter.setPen(pen)
+                prev = None
+                for ddx, ddy in pts + [pts[0]]:
+                    px, py = (x + ddx) * CELL + CELL / 2, (y + ddy) * CELL + CELL / 2
+                    if prev:
+                        painter.drawLine(QPointF(*prev), QPointF(px, py))
+                    prev = (px, py)
+                for ddx, ddy in pts:
+                    tx, ty = x + ddx, y + ddy
+                    bad = not (0 <= tx < CELLS_W and 0 <= ty < CELLS_H) or (
+                        self.tiles is not None and self.gfx is not None
+                        and not self.cell_walkable(tx, ty))
+                    painter.setPen(Qt.NoPen)
+                    painter.setBrush(QBrush(QColor(255, 60, 60, 230) if bad
+                                            else QColor(0, 220, 255, 230)))
+                    painter.drawEllipse(QRectF(tx * CELL + CELL / 2 - 2.5,
+                                               ty * CELL + CELL / 2 - 2.5, 5, 5))
+        if self._drag and self._drag[2] and self._drag[2] != self._drag[1]:
+            gx, gy = self._drag[2]
+            pen = QPen(QColor(0, 220, 255))
+            pen.setCosmetic(True)
+            pen.setStyle(Qt.DashLine)
+            painter.setPen(pen)
+            painter.setBrush(QBrush(QColor(0, 220, 255, 60)))
+            painter.drawRect(QRectF(gx * CELL, gy * CELL, CELL, CELL))
 
     # ------------------------------------------------------------- painting
     def _can_paint(self):
@@ -588,6 +677,10 @@ class RoomCanvas(QGraphicsView):
             m = self._marker_at(cell)
             self.selected_marker = m[5] if m else None
             self.selected_cell = cell
+            # S97: NPC / spawn markers of an editable custom room drag to move
+            if (m and m[0] in ('npc', 'spawn') and not self.is_vanilla()
+                    and m[5] and m[5][0] == 'npc'):
+                self._drag = [m[5], cell, cell]
             self.viewport().update()
             if m:
                 self.markerSelected.emit({'kind': m[0], 'x': m[1], 'y': m[2],
@@ -629,6 +722,10 @@ class RoomCanvas(QGraphicsView):
             self._emit_hover(cell)
         if cell is None:
             return
+        if self._drag is not None and cell != self._drag[2]:
+            self._drag[2] = cell
+            self.viewport().update()
+            return
         if self._stroke is not None and self.tool == 'paint':
             self._stroke_cell(cell)
         elif self._rect_anchor is not None:
@@ -641,6 +738,13 @@ class RoomCanvas(QGraphicsView):
             self.set_tool(self.tool)
             return
         if ev.button() != Qt.LeftButton:
+            return
+        if self._drag is not None:
+            ref, start, cur = self._drag
+            self._drag = None
+            self.viewport().update()
+            if cur and cur != start:
+                self.markerMoveRequested.emit(ref, cur[0], cur[1])
             return
         if self._stroke is not None and self.tool == 'paint':
             self._end_stroke('Paint')

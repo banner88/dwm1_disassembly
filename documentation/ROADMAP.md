@@ -810,24 +810,57 @@ recipes are pure authoring.
       Tier 2): Build → cached post-boot savestate → warp to the room under
       edit → frames in a Qt widget with input. *Accept:* one click plays
       the room being edited, < 10 s from Build-done to walkable.
-- [ ] **P3.5a — Declarative room-state rules** (user question S95: "link a
-      teleport to a specific state?"): per screen `state_rules: [{flag,
-      state}]` evaluated by bank $60 entry 0 (`CustomReadStep`) BEFORE the
-      counter read, so flag-driven room versions (servant room burning →
-      cleared) need no script; a door-specific state = the source door's
-      script setting a flag (or, for redirects, a compiler-generated flag
-      set in the exit path). One small engine hook (template re-pin) +
-      compiler table + inspector "shown when" per state. *Accept:* a clone
-      with two states switches on a flag flip in PyBoy with no authored
-      script; a redirected door arrives in the chosen state.
-- [ ] **P3.5 — NPC inspector**: canvas drag placement, facing, sprite
-      picker (P3.1 catalog), per-state presence, show/hide mechanism
-      choice, flag gating, script binding. *Accept:* an NPC authored fully
-      in the GUI walks/talks in PyBoy with the chosen sprite.
+- [x] **P3.5a — Declarative room-state rules** — **DONE S97, built, NOT yet
+      user-tested** (user: "all of group B"; terms are AND-ed flag set/clear
+      conditions — "Flag A set and Flag B set but C NOT set"). As built
+      (PROJECT_COMPILER §2.13): ROOM-level ordered `state_rules` (first match
+      wins, optional `screens`, trailing unconditional rule = "Otherwise"),
+      bank $60 entry 8 `CustomStateRules` called from bank $17
+      `CustomAttrCheck` FIRST (the attr/palette walk reads the counter before
+      Entry 0 — measured; A/B proven) and from `CustomReadStep`; inspector
+      rules group + "State shown when" line. Also the persistence fix: custom
+      counters are transient, flags are saved. *Accept MET (machine half):*
+      test_canvas v4 --rom — servant clone, flag clear/set selects layout +
+      palette + NPC set, wiped counter re-selected, flag cleared + otherwise
+      → state 0; example project's rank demo moved from the prelude to a rule
+      (pin `6e97fd37…`, patched). *User half:* test ROM
+      `DWM-S97-npc-rules-test.gbc` (fire out → save → reload → still out).
+      **Split out (user OK'd S97): "a redirected door arrives in the chosen
+      state" → P3.7** (exit rows have no spare byte; needs exit-path code).
+- [x] **P3.5 — NPC inspector** — **DONE S97, built, NOT yet user-tested**:
+      Add NPC here / drag to move / delete, sprite picker (S91 catalog),
+      facing, the 13 MEASURED behaviours (bank $06 NPCBehaviourTable decoded +
+      re-sectioned S97; ROOM_DATA_FORMAT "NPC behaviour types"), hidden bit,
+      script binding + plain talk text, per-state presence checkboxes, walk
+      path overlay, vanilla NPCs read-only in the same form. "Flag gating" =
+      states + state rules (P3.5a). *Accept MET (machine half):* test_canvas
+      v4 --rom — an NPC authored through the panel code path has the chosen
+      sprite/type byte in RAM, the pace_x1 walker visits exactly x−1..x+1, the
+      talker shows its GUI-authored text and turns to the player.
+      Residuals: (a) how vanilla REVEALS a hidden (bit-6) entry — candidate
+      `$0D` WriteNPCByte on field 0, unmeasured; (b) the named-flag pool is
+      16 flags (EVENT_FLAGS safe range) — campaign scale needs the E3 SRAM
+      flag schema; (c) walkers ignore walls (engine fact) — the editor warns
+      but cannot prevent; (d) per-screen sprite-sheet VRAM budget is still a
+      warning count, not a measured per-sheet meter (capacities residual);
+      (e) scripts beyond plain talk are edited in P3.6/P3.8.
+      **S97 round 2 (user test of r1; built, NOT yet user-tested):** text
+      boxes stay cream in free-colour rooms (dialog + YES/NO box attrs, bank
+      $73 entries 14-18, pin `ce24de8b…` patched); talk text authored per box
+      with the ROM-font preview (the measured 16/18-cell, 2-line rules; the
+      `boxes` form waits per box) — this delivers P3.6's preview/wrap/page
+      core for PLAIN talk text; NPC section of its own, panels start folded;
+      new-flag selection fixed. Open (offered, awaiting the user): an NPC
+      "sets flag X when talked to" option — nothing in the GUI sets a flag
+      yet. *User half:* `DWM-S97-r2-textbox-test.gbc`.
 - [ ] **P3.6 — Dialogue editor**: WYSIWYG pages with ROM font tiles, live
-      wrap/DTE/page-split, YES/NO branch wiring. *Accept:* GUI-authored
+      wrap/DTE/page-split, YES/NO branch wiring. (S97 r2 built the per-box
+      editor + ROM-font preview for plain talk text — `talk_editor.py`;
+      remaining: choice texts + branches, DTE, $EB indented opener, names.) *Accept:* GUI-authored
       multi-page + choice dialogue renders in-game byte-exact to preview.
-- [ ] **P3.7 — Triggers/exits editor + World graph v0**: interact/spawn/
+- [ ] **P3.7 — Triggers/exits editor + World graph v0** (+ S97 carry-over from
+      P3.5a: a door that arrives in a chosen STATE — needs exit-path code,
+      e.g. a per-door flag set by bank $60 entry 7 before the transition): interact/spawn/
       exit editing incl. vanilla_exit_extensions; read-only world graph of
       rooms/warps. *Seeded S95:* "Add exit at this cell…" / "Delete this
       exit" (custom-room exits, PyBoy-verified) + entrance redirects (S94b)

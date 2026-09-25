@@ -1304,6 +1304,8 @@ SetCancelFlag:
     ld a, $01
     ld [$c83c], a
 
+;; Closes the YES/NO box: restores the 18 BG rows saved to $C500 by bank $56
+;; SetB56_4855 (S97 r2).
 ClearTextBitsRedraw:
 ClearTextBitsRedrawJR:
     ld hl, $c825

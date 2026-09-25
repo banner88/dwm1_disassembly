@@ -67,7 +67,14 @@
    C8B7     1    BGM (offset) to load
    C8B8     1    ? (related to BGM)
    C8B9     1    ? (related to BGM)
-   C925     1    ? (related to current room or loading next room)
+   C8A6     1    Frame counter used as the NPC behaviour clock (bank $06:
+                 `and $01` = every 2nd frame, `and $07/$0F` = 8/16) [S97]
+   C925     1    wScreenIndex — current screen of the room (0-15, row*4+col)
+   C926     1    Gate wanderer's screen: bank $16 floor generation sets it
+                 to the screen holding the wandering NPC, $FF outside gates;
+                 NPC behaviours E/F act only when it == wScreenIndex [S97]
+   D7D2   257    NPC slots: 8 x 32 B + terminator cell $D8D2 (field map:
+                 ROOM_DATA_FORMAT "NPC RAM slot") [S91/S97]
    C935     1    Current Gate (wGateID)
    C936     3    Floor type 1/2/3 (maze biome / special-room / contents rolls)
    C939     1    Current Floor
@@ -79,6 +86,13 @@
    C950    16    Floor grid paired per-cell state buffer
    C960     1    Staircase screen index (down-stairs cell)
    C100    16    Per-screen content state (item/master placement)
+                 [S97 r2] ALSO the field dialog box's tile backup: the 5 box
+                 rows x 20 at $C100/$C114/$C128/$C13C/$C150 (bank $06 dialog
+                 state 0 saves, states 12/15/19 restore) — 100 B, while a
+                 box is open. $C915 = dialog state, $C919/$C91A = box base
+                 BG-map address (rows 13-17 or 0-4). The YES/NO box backs
+                 the 18 visible BG rows (32 each, 576 B) up to $C500
+                 (bank $56 SetB56_4855; bank $00 ClearTextBitsRedraw).
    C968     1    [[Dragon_Warrior_Monsters/Notes#Map_Type_IDs|Map type]] (wMapID)
    C969     1    flag_in_gate (wInGateworld)
                  00 - Not in a Gate (or fixed special-room template)
@@ -154,7 +168,11 @@
                  wMonList $D001-$D040 (64 B, FX1/S71: roster display
                  lists + canonicalizer compaction map, relocated from $C0D8
                  whose safe extent ~36 B overflows at 40 slots) /
-                 wCustomPool $D041-$D5E4 ($5A4 transient reserve) /
+                 wBoxAttrSave $D041-$D0A4 / wBoxAttrMask $D0A5 / wBoxAttrRow
+                 $D0A6 / wChoiceAttrSave $D0A7-$D0C4 (S97 r2: GBC attrs under
+                 the dialog / YES-NO box in free-colour custom rooms, bank
+                 $73 entries 14-18) /
+                 wCustomPool $D0C5-$D5E4 (transient reserve) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

@@ -79,6 +79,11 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     dw CF3PoolZeroInit              ; entry 11 — FX1 (S71): zero the 40-slot bank-2 pool + write "P1" magic
     dw CF3PoolCounts                ; entry 12 — FX1 (S71): pool census -> E = awake-eligible (non-egg), D = eggs
     dw MenuOpenFreePal              ; entry 13 — S96 r4: field-menu open, cream colour 1 in HW for free-colour slots
+    dw BoxRowDraw                   ; entry 14 — S97 r2: dialog box middle row (+ palette-7 attrs in free-colour rooms)
+    dw BoxFrameDraw                 ; entry 15 — S97 r2: dialog box top/bottom frame rows (+ attrs) + SGB packet
+    dw BoxRowRestore                ; entry 16 — S97 r2: dialog close, one row: tiles from $C1xx + the saved attrs
+    dw ChoiceBoxClose               ; entry 17 — S97 r2: YES/NO close ($00:$070E): res $C825 b2/b1 + choice tiles/attrs back
+    dw ChoiceBoxOpen                ; entry 18 — S97 r2: YES/NO open ($56:$48A1): cursor gfx + choice attrs -> 7
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -1607,4 +1612,435 @@ MenuOpenFreePal:
     ld c, a
     cp $82 + 4 * 8
     jr nz, .slot
+    ret
+
+
+; =============================================================================
+; S97 round 2 — DIALOG BOX ATTRIBUTES in free-colour custom rooms (entries
+; 14-16). The field dialog box (bank $06 dialog machine: $C915 states 0-2/6/9
+; draw, 12/15/19 restore; box base = $C919/$C91A, 5 rows x 20 cells, the
+; room's tiles backed up to $C100 + row*20) writes TILE ids only: on GBC the
+; box cells keep the room's attributes, and vanilla gets a cream box only
+; because the engine forces colour 1 = cream in every BG palette. A room with
+; own colour 1 (FreeColor1Hook, S96) therefore showed the box in its own
+; colours (user S97, SameBoy). Fix: when the room is a custom room whose
+; loaded palette carries a free-colour marker (bit 7 of colour 3's high byte,
+; slots 0-3 — the S96 per-slot markers), each box row's attributes are saved
+; to wBoxAttrSave and set to 7 (the system palette: cream / black) as the row
+; is drawn, and put back cell by cell as the row's tiles are restored. Other
+; rooms: identical tiles/order to vanilla, attributes untouched (the row's
+; mask bit is cleared so a stale save can never be written back).
+; VRAM bank-1 access: wait for mode 3 -> not mode 3 (a fresh h-blank + the
+; following OAM scan = >= 42 M-cycles of VRAM access), di around the VBK
+; switch; LCD off = no wait.
+; =============================================================================
+
+BoxAttrActive:                       ; -> NZ when attrs must be handled; clobbers A, B
+    ld a, [wIsGBC]
+    or a
+    ret z
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .no
+    ld a, [$c79e]                    ; colour 3 high bytes of slots 0-3
+    ld b, a
+    ld a, [$c7a6]
+    or b
+    ld b, a
+    ld a, [$c7ae]
+    or b
+    ld b, a
+    ld a, [$c7b6]
+    or b
+    and $80
+    ret
+.no:
+    xor a
+    ret
+
+BoxRowAddr:                          ; A = row 0-4 -> HL = base + row*32 (map-wrapped, as LoadMapS_682f)
+    ld l, a
+    ld h, $00
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    ld a, [$c919]
+    add l
+    ld l, a
+    ld a, [$c91a]
+    adc h
+    and $03
+    ld h, a
+    ld a, [$c91a]
+    and $fc
+    or h
+    ld h, a
+    ret
+
+BoxRowBit:                           ; A = row -> A = 1 << row; clobbers B
+    ld b, a
+    ld a, $01
+    inc b
+.sh:
+    dec b
+    ret z
+    add a
+    jr .sh
+
+BoxColNext:                          ; HL -> next column, wrapping within the 32-cell map row (SaveMapS_67f0)
+    ld a, l
+    and $e0
+    ld b, a
+    ld a, l
+    inc a
+    and $1f
+    or b
+    ld l, a
+    ret
+
+BoxVramWait:                         ; di is the caller's; returns in h-blank (or at once with the LCD off)
+    ldh a, [rLCDC]
+    bit 7, a
+    ret z
+.m3:
+    ldh a, [rSTAT]
+    and $03
+    cp $03
+    jr nz, .m3
+.m0:
+    ldh a, [rSTAT]
+    and $03
+    cp $03
+    jr z, .m0
+    ret
+
+; in: A = row (0-4), HL = row address. When active: save the 20 attrs of the
+; row and set them to 7, mark the row. Else: clear the row's mark.
+; Preserves HL.
+BoxRowAttrSet:
+    ld [wBoxAttrRow], a
+    call BoxAttrActive
+    jr nz, .set
+    ld a, [wBoxAttrRow]
+    call BoxRowBit
+    cpl
+    ld b, a
+    ld a, [wBoxAttrMask]
+    and b
+    ld [wBoxAttrMask], a
+    ret
+.set:
+    ld a, [wBoxAttrRow]
+    call BoxRowBit
+    ld b, a
+    ld a, [wBoxAttrMask]
+    or b
+    ld [wBoxAttrMask], a
+    push hl
+    ld a, [wBoxAttrRow]              ; DE = wBoxAttrSave + row*20
+    add a
+    add a
+    ld e, a                          ; row*4
+    add a
+    add a                            ; row*16
+    add e                            ; row*20
+    add LOW(wBoxAttrSave)
+    ld e, a
+    ld a, HIGH(wBoxAttrSave)
+    adc $00
+    ld d, a
+    ld c, 20
+.cell:
+    di
+    call BoxVramWait
+    ld a, $01
+    ldh [rVBK], a
+    ld b, [hl]                       ; the room's attr
+    ld [hl], $07                     ; system palette 7, VRAM bank 0 tiles, no flip
+    xor a
+    ldh [rVBK], a
+    ei
+    ld a, b
+    ld [de], a
+    inc de
+    call BoxColNext
+    dec c
+    jr nz, .cell
+    pop hl
+    ret
+
+; entry 14 — in: DE = row address (a middle row 1-3).
+BoxRowDraw:
+    ld h, d
+    ld l, e
+    ld a, [$c919]                    ; row = ((HL - base) & $3FF) >> 5
+    ld c, a
+    ld a, l
+    sub c
+    ld c, a
+    ld a, [$c91a]
+    ld b, a
+    ld a, h
+    sbc b
+    and $03
+    ld b, a
+    ld a, c
+    srl b
+    rra
+    srl b
+    rra
+    srl b
+    rra
+    srl b
+    rra
+    srl b
+    rra
+    call BoxRowAttrSet
+    ld a, $fe
+    call Write_gfx_tile
+    call BoxColNext
+    ld c, $12
+.fill:
+    ld a, $e0
+    call Write_gfx_tile
+    call BoxColNext
+    dec c
+    jr nz, .fill
+    ld a, $ff
+    jp Write_gfx_tile
+
+; entry 15 — the bank-$06 dialog state-9 body: top frame (row 0), bottom
+; frame (row 4), then the SGB ATTR_BLK packet exactly as vanilla.
+BoxFrameDraw:
+    xor a
+    call BoxRowAddr
+    xor a
+    call BoxRowAttrSet
+    ld a, $fa
+    ld d, $ef
+    ld e, $fb
+    call .frameRow
+    ld a, $04
+    call BoxRowAddr
+    ld a, $04
+    call BoxRowAttrSet
+    ld a, $fc
+    ld d, $ee
+    ld e, $fd
+    call .frameRow
+    call ScrollCalcDelta
+    ld hl, $0000
+    ldh a, [$d3]
+    cp $02
+    jr nz, .sgb
+    ld hl, $000d
+.sgb:
+    ld a, $00
+    ld bc, $1304
+    ld d, $01
+    call DataTable_1F27
+    jp CheckSGBFlag
+.frameRow:                           ; A = left, D = middle x18, E = right tile
+    call Write_gfx_tile
+    call BoxColNext
+    ld c, $12
+.mid:
+    ld a, d
+    call Write_gfx_tile
+    call BoxColNext
+    dec c
+    jr nz, .mid
+    ld a, e
+    jp Write_gfx_tile
+
+; entry 16 — in: DE = backup pointer ($C100 + row*20). Restores the row's 20
+; tiles (as vanilla LoadMapS_6b3d) and, when the row is marked, its attrs.
+BoxRowRestore:
+    ld a, e                          ; row = E / 20
+    ld c, $00
+.div:
+    cp 20
+    jr c, .gotRow
+    sub 20
+    inc c
+    jr .div
+.gotRow:
+    ld a, c
+    ld [wBoxAttrRow], a
+    call BoxRowAddr
+    ld a, [wBoxAttrRow]
+    call BoxRowBit
+    ld b, a
+    ld a, [wBoxAttrMask]
+    and b
+    ld c, 20
+    jr z, .plain
+.cell:
+    ld a, [de]
+    call Write_gfx_tile
+    push de
+    ld a, e                          ; save slot = wBoxAttrSave + E
+    add LOW(wBoxAttrSave)
+    ld e, a
+    ld a, HIGH(wBoxAttrSave)
+    adc $00
+    ld d, a
+    ld a, [de]
+    ld d, a
+    di
+    call BoxVramWait
+    ld a, $01
+    ldh [rVBK], a
+    ld [hl], d
+    xor a
+    ldh [rVBK], a
+    ei
+    pop de
+    inc de
+    call BoxColNext
+    dec c
+    jr nz, .cell
+    ld a, [wBoxAttrRow]
+    call BoxRowBit
+    cpl
+    ld b, a
+    ld a, [wBoxAttrMask]
+    and b
+    ld [wBoxAttrMask], a
+    ret
+.plain:
+    ld a, [de]
+    call Write_gfx_tile
+    inc de
+    call BoxColNext
+    dec c
+    jr nz, .plain
+    ret
+
+; -----------------------------------------------------------------------------
+; YES/NO choice box (text code $E7): bank $56 SetB56_4855 backs the 18 visible
+; BG rows up to $C500 (32 cells per row from the screen's left column) and
+; SetB56_48a1 draws the 6x5 frame at screen row 8, column 14; bank $00
+; ClearTextBitsRedraw ($070E) puts the 18 rows back. Same problem, same fix
+; as the dialog box: attrs 7 while open in a free-colour custom room.
+; wBoxAttrMask bit 5 = the choice box's attrs are saved in wChoiceAttrSave.
+; -----------------------------------------------------------------------------
+
+ChoiceCellAddr:                      ; -> HL = the box's top-left cell (screen row 8, col 14)
+    ld hl, $0100
+    call GetTilemapRowAddr
+    ld b, $0e
+    jp TilemapAdvanceColumns
+
+ChoiceNextRow:                       ; HL = +1 map row (wrapped to $9800-$9BFF); clobbers A
+    ld a, l
+    add $20
+    ld l, a
+    ld a, h
+    adc $00
+    and $03
+    or $98
+    ld h, a
+    ret
+
+; entry 18 — replaces the first 9 bytes of bank $56 SetB56_48a1.
+ChoiceBoxOpen:
+    ld de, $560a                     ; vanilla: the choice cursor tiles
+    ld hl, $8e50
+    call WaitDMATransfer
+    call BoxAttrActive
+    ld hl, wBoxAttrMask
+    jr nz, .set
+    res 5, [hl]
+    ret
+.set:
+    set 5, [hl]
+    call ChoiceCellAddr
+    ld de, wChoiceAttrSave
+    ld c, $05
+.row:
+    push hl
+    ld b, $06
+.cell:
+    di
+    call BoxVramWait
+    ld a, $01
+    ldh [rVBK], a
+    ld a, [hl]
+    ld [hl], $07
+    ld [de], a
+    xor a
+    ldh [rVBK], a
+    ei
+    inc de
+    call TilemapNextColumn
+    dec b
+    jr nz, .cell
+    pop hl
+    call ChoiceNextRow
+    dec c
+    jr nz, .row
+    ret
+
+; entry 17 — replaces the first 7 bytes of bank $00 ClearTextBitsRedraw.
+ChoiceBoxClose:
+    ld hl, $c825                     ; vanilla
+    res 2, [hl]
+    res 1, [hl]
+    ld hl, wBoxAttrMask
+    bit 5, [hl]
+    ret z
+    res 5, [hl]
+    call ChoiceCellAddr              ; pass 1: the room's tiles from the $C500 backup
+    push hl
+    ld de, $c500 + 8 * 32 + 14
+    ld c, $05
+.trow:
+    push hl
+    push de
+    ld b, $06
+.tcell:
+    ld a, [de]
+    call Write_gfx_tile
+    inc de
+    call TilemapNextColumn
+    dec b
+    jr nz, .tcell
+    pop de
+    ld a, e
+    add $20
+    ld e, a
+    ld a, d
+    adc $00
+    ld d, a
+    pop hl
+    call ChoiceNextRow
+    dec c
+    jr nz, .trow
+    pop hl                           ; pass 2: the saved attrs
+    ld de, wChoiceAttrSave
+    ld c, $05
+.arow:
+    push hl
+    ld b, $06
+.acell:
+    di
+    call BoxVramWait
+    ld a, $01
+    ldh [rVBK], a
+    ld a, [de]
+    ld [hl], a
+    xor a
+    ldh [rVBK], a
+    ei
+    inc de
+    call TilemapNextColumn
+    dec b
+    jr nz, .acell
+    pop hl
+    call ChoiceNextRow
+    dec c
+    jr nz, .arow
     ret

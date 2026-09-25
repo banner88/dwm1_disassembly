@@ -1,5 +1,94 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-24 (Session 95 — **user feedback round on S94b:
+> the metatile VOCABULARY, borrowing tiles from other rooms, and the
+> old-project build failure.** Editor-only session: no patches, no
+> disassembly, example project.json untouched; patched pin stays
+> `fc1caa98…` (GUI build == pin; verify_integrity PASS 6/6; test_compiler
+> --rom 61/61; test_app --rom PASS; test_canvas --rom PASS incl. the new
+> import checks). NOT yet user-tested.
+>
+> **User points answered/built:**
+> 1. **"This room's tiles" never shrinks.** The picker's first section is
+>    now the room's whole vocabulary: every metatile on ANY screen/state of
+>    the room plus everything its vanilla source room uses (cached per
+>    source map). Painting over a tile no longer removes it; the vocabulary's
+>    sheet slots are PROTECTED from reuse (`Document.protect_tiles` /
+>    `used_tiles`, which now also counts author metatiles and 77/78).
+> 1.5 **Borrow tiles from another room, drawn with THIS room's palettes** —
+>    "Borrow tiles from:" combo above the picker adds a "From <room>"
+>    section. Same tileset (byte-identical sheet): click = brush. Other
+>    tileset: click IMPORTS the 4 subtiles into the room's tileset
+>    (`Document.import_metatile`: localizes the vanilla sheet into the
+>    project if needed, reuses identical graphics already present, else
+>    copies into free slots — the bottom-right subtile keeps its wall/
+>    walkable side of the threshold, the others take any free slot — and
+>    the result lands in "My metatiles"). Free-slot budget = 128 − used −
+>    protected vocabulary (median vanilla room leaves ~75 slots; GreatTree
+>    8, Arena Rooms 1 — the import says so when it fails). PyBoy: a Castle
+>    brick metatile imported into a Farm clone renders in-game under the
+>    Farm palette (test_canvas --rom, sheet bytes + VRAM indices asserted).
+>    `SnapshotCommand` now rolls back and drops itself (`setObsolete`) when
+>    its op raises, so a failed import leaves no trace.
+> 2. **Teleport → specific state:** not possible as data yet — a door only
+>    carries destination/screen/spawn; the state shown is whatever the
+>    destination screen's step counter holds at LOAD (S92 load-order rule),
+>    and vanilla sets counters from flags via scripts. Designed, not built:
+>    declarative **state rules** `{flag → state}` per screen evaluated in
+>    bank $60 entry 0 (`CustomReadStep`) before the counter read — one
+>    small engine hook + compiler table — which gives flag-driven room
+>    versions without any script; a door-specific state then = the source
+>    door setting a flag. Queued as ROADMAP P3.5a.
+> 3. States confirmed good by the user.
+> 4. **Build failure "mapID $6B requires a 'record'"** = an S93-era
+>    project.json (the Desktop checkout) opened by S94b editor code (the
+>    Downloads checkout). `Document` now MIGRATES on open: rooms `$6B-$6D`
+>    without a record get the legacy hand-patched `$26DD` rows
+>    (`LEGACY_RECORDS`), logged as "MIGRATED … Save to keep it". The CLI
+>    compiler stays strict.
+>
+> **Round 2 (same session, user feedback on the clone workflow):**
+> 5. **New screen lost the palette** (servant clone: burning state deleted,
+>    second screen came up in the burning colours): a screen without
+>    states[] had no place for a palette, so it fell back to `render.
+>    palette`. Schema: **`screens[k].palette`** — resolution is now
+>    `states[n].palette › screens[k].palette › render.palette › vanilla`
+>    (compiler `state_palette_ref`, renderer `state_palette_id`,
+>    `Document.effective_palette`). Add-screen copies the palette the author
+>    is looking at into the new screen. Example-project bytes unchanged
+>    (pin `fc1caa98…` holds); a fresh-project build proves the row lands in
+>    `ScrAttr_6C_1` (test_canvas --rom).
+> 6. **Per-screen/state palette selector** ("palette here" combo in Screen
+>    & state) and **"copy from vanilla $xx <room>"** entries in BOTH palette
+>    combos: copies that room's derived palette into `custom.palettes`
+>    (`Document.add_palette_from_words`, id `pal_from_<mid>`) as an editable
+>    item — the user's "use a pre-existing room's palette".
+> 7. **Exits from custom rooms (staircases / doors), minimal:** Select a
+>    cell → Selection panel "Add exit at this cell…" → `ExitDialog`
+>    (destination custom or vanilla room → screen → arrival cell, preview,
+>    wall warning; edge cells explained as push exits) → an ordinary
+>    `exits[]` row on the current state (`Document.add_exit`); select an
+>    exit marker → "Delete this exit". PyBoy: a GUI-authored (5,5) exit in
+>    the servant clone walks the player into the Farm clone at the authored
+>    cell. This is the custom-room half of routing; the full routing view
+>    (both ends of a door as one object, return doors, world graph) stays
+>    P3.7.
+> 8. Borrowed tiles moved to their own **"Borrow" tab** beside "This room"
+>    (two pickers; the foreign one shows only the chosen room).
+> **NEXT (user direction, end of S95): ROADMAP P3.3c — tileset slot map +
+> "release unused vocabulary"** (the 128-tile budget is hard and per ROOM;
+> the protected source vocabulary is the biggest occupant; an "0 free"
+> report on a small room would be a bug — a fresh Servant clone shows 51
+> free after one import).
+> Answers in prose: screens scroll automatically when adjacent (record dims
+> auto-synced) — no exit needed; a building interior should be a SEPARATE
+> room (own tileset/palette/states, no 4×4 budget — what vanilla does),
+> sub-screens are for outdoor continuity.
+>
+> Owning: EDITOR_DESIGN §5.1 as built S95; PROJECT_COMPILER §2.11 (import
+> + migration + screens[k].palette + GUI exits) + §11; TOOLS_AND_DATA S95;
+> KEY_LESSONS S95; ROADMAP P3.3b residual + **P3.3c (next)** + P3.5a + P3.7.)
+
 > Last verified: 2026-09-20 (Session 94 — **ROOM CANVAS v2 + the room
 > model done right, then (same session, "S94b") ENTRANCE REDIRECTS + true
 > per-STATE rooms** (user direction: "don't build the editor around POC

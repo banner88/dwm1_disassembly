@@ -790,7 +790,21 @@
      "9": "arena_clone_scr09",
      "10": "arena_clone_scr10",
      "11": "arena_clone_scr11"
-    }
+    },
+    "state_rules": [
+     {
+      "state": 1,
+      "when": [
+       {
+        "flag": "0x0030"
+       }
+      ],
+      "screens": [
+       1
+      ],
+      "comment": "S97: rank G cleared (vanilla flag $0030) -> the right-hand attendant leaves (was the S92 entry:medal_vault prelude; a rule also survives save/reload)"
+     }
+    ]
    },
    {
     "id": "island_copy",
@@ -9830,28 +9844,7 @@
    }
   ],
   "script_preludes": {
-   "entry:medal_vault": [
-    [
-     "op",
-     "if_flag_set",
-     "0x0030",
-     "@S92fArm"
-    ],
-    [
-     "op",
-     "goto",
-     "@S92fDone"
-    ],
-    "label:S92fArm",
-    [
-     "op",
-     "write_ram2",
-     "wCustomStep_ArenaClone_S1",
-     1
-    ],
-    "label:S92fDone"
-   ],
-   "_doc": "S92: the hub arms arena_clone screen-1's rank state before the staircase transition (state selection reads the counter at destination LOAD, before its own entry script \u2014 PyBoy-measured)."
+   "_doc": "S92 used a prelude here (entry:medal_vault armed arena_clone screen 1 before the staircase, because state selection reads the counter at LOAD). S97: that rank state is now arena_clone.state_rules (flag $0030 -> state 1), evaluated at every load by bank $60 entry 8 \u2014 no hub arming, and it survives save/reload."
   }
  },
  "build": {

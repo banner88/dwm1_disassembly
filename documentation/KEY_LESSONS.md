@@ -3581,3 +3581,36 @@ A metatile is 4 sheet INDICES + a palette slot, so it only means the same thing 
 ### DWM2 art is black + THREE colours per palette; DWM1 gives two
 **Finding**: every DWM2 8×8 tile uses black plus up to three colours (the rips are exact GBC colours ×8); the DWM1 engine forces colour 1 = cream `$6BFF` and colour 3 = black in every BG palette (KL S7/S39), and a room has four BG palettes. The importer folds the colour nearest cream onto colour 1 and fits ≤4 palettes; water/sky/gold suffer when a map needs more. Same-graphic-different-palette tiles share one sheet slot (the DWM1 idiom), which is what makes a whole town fit in 128 slots (Pei: 87).
 **Rule**: before building an art importer, measure the source's colour structure per tile against the target engine's palette rules — the limit is colours per palette, not tile count.
+
+
+## S97 — room state rules, NPC behaviours, and "who reads it first"
+
+### Hook the FIRST reader of a value, not the obvious one
+**Symptom**: flag rules evaluated in bank $60 Entry 0 (`CustomReadStep`, "the step read") picked the right layout and NPCs but the servant clone came up in the BURNING palette with the cleared layout.
+**Root cause**: at a custom-room load, bank $17 `CustomAttrCheck`/`CustomPalCheck` walk the per-(screen, state) attr/palette table — reading the step counter — one frame BEFORE bank $0B Entry 0 runs (PyBoy code-hook order). The S92 "state is selected at LOAD" rule was right, but "load" has several readers.
+**Fix**: the rule evaluator is bank $60 entry 8, called from `CustomAttrCheck`'s custom path first (`StateRulesHook17`) and again from `CustomReadStep`; it is idempotent. A/B: without the bank-$17 call the palette RAM held state 0's colours with counter = 1.
+**Rule**: before hooking "where X is read", hook-trace EVERY reader of X during the event (a 5-line PyBoy script listing first-hit frames) and attach to the earliest; make the hook idempotent so later readers may call it too.
+
+### `rst $00` followed by nonsense is a jump table
+**Symptom**: `LoadMapS_4043` ended in `and $0f / rst $00 / ld [hl], b / ld b, b / sub b …` — "code" nobody could explain, and the NPC type low nibble had been a 3-year guess ("may control movement pattern").
+**Fix**: read the 32 bytes after the `rst $00` as `dw` — 16 handler addresses, each starting cleanly; the handlers had their own `rst $00` sub-tables (9 more) and two byte tables. Re-sectioned with a line-number script, byte-perfect.
+**Rule**: whenever mgbdis output shows `rst $00` (or `jp hl` after an index calc) followed by `ld b, X`/`ld [hl], b` runs, decode the bytes as a `dw` table before anything else — every entry should land on a clean instruction start in the same bank.
+
+### A behaviour table is decoded fastest by poking one slot and watching RAM
+Rewriting one NPC's type byte in a live slot ($D7D2+32·i) and logging +$06/+$18/+$1A for 900 frames named all 16 behaviours in minutes, including the ones vanilla never uses (9) and the gate-only ones (E/F do nothing without `$C926`). Talking/turning semantics needed a non-shop NPC (a shopkeeper's menu loop masked the test). Rule: for per-object engine behaviour, measure by poking the object's RAM record in a vanilla room — no build needed — and read the code afterwards to explain what was measured.
+
+### "No rule matched" must be explicit
+**Symptom** (demo ROM): clearing the flag did not bring the fire back — rules only WRITE on a match, and with "state 1 when flag" alone the counter kept its 1.
+**Fix**: "Otherwise: state n" = a trailing unconditional rule, shown as its own combo in the rules group; "keep" remains the default so script-driven counters keep working.
+**Rule**: a declarative selector over mutable state needs a visible default branch; decide and show what happens when nothing matches.
+
+### S97 r2 — Engines that "look right" because of a forced colour hide attribute debt
+**Symptom** (user, SameBoy): talking to an NPC in a room with its own colour 1 drew the text box in the room's tile colours.
+**Root cause**: the dialog box (bank $06) and the YES/NO box (bank $56/$00) write tile ids only; the cells keep the room's GBC attributes. Vanilla looked right solely because every BG palette's colour 1 is forced cream — the S96 FreeColor1Hook removed that assumption for custom rooms (the S96 menu wipe was the same debt, fixed there in hardware colour instead).
+**Fix**: same-size far calls to bank $73 entries 14-18 save the covered attrs, set palette 7 while the box is up, and restore them cell by cell on close — only when a free-colour marker is loaded, so every other room stays pixel-identical.
+**Rule**: when an engine patch removes a global invariant (a forced colour, a fixed palette, a reserved tile), list every renderer that silently relied on it — menus, text boxes, choice boxes, battle transitions — and test each in the new mode before shipping.
+
+### S97 r2 — Measure the text box before building a text editor
+**Symptom**: auto-wrapped NPC text cut words ("I spin i" / "place") and long text scrolled without stopping.
+**Root cause**: the wrap assumed 18 cells on every line, but "*:" takes 2 cells of box 1's first line; a line past its edge is NOT wrapped safely (the extra cells go to the next line and are overwritten — lost, and the line count goes off by one); consecutive `$EF $EE` lines scroll without waiting. Pages must be joined with `$FA $F7 $EF $EE` (6,029 vanilla uses).
+**Rule**: before writing an editor for a display format, dump what the engine actually draws for boundary cases (16/17/18/19 cells, 2/3 lines, box breaks) — one raw-bytes test text and a screenshot per stage. Then make the editor show exactly that, drawn with the ROM's own font.

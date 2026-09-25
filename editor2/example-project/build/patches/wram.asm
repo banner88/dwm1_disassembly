@@ -273,7 +273,16 @@ CUSTOM_ROOM_START EQU $6B ; first custom map type (107 = one past last original)
 ; availability, the 4-entry drop/pick working set $C0D8-$C0DB) STAY at $C0D8.
 ; Transient by design (init-zero guaranteed by the window-clear chain).
 wMonList:: ds 64 ;d001-d040 — 40 used at TOTAL_SLOTS=40; 64 reserved
-wCustomPool:: ds $5A4 ;d041-d5e4 — transient reserve (was $664; FX1 carved 64+128)
+; S97 round 2: dialog-box + YES/NO-box attribute saves for free-colour custom
+; rooms (bank $73 entries 14-18): 5 box rows x 20 cells and the 6x5 choice box
+; of the room's GBC attributes, a "saved" bitmask, one scratch byte.
+; Transient by design (a warp mid-dialog leaves stale mask bits 0-4: harmless,
+; every box draw rewrites a row's bit before any close reads it).
+wBoxAttrSave:: ds 100 ;d041-d0a4 — room attrs under the dialog box (row*20+col)
+wBoxAttrMask:: db ;d0a5 — bits 0-4: dialog box row r set to palette 7 (restore on close); bit 5: the YES/NO box (wChoiceAttrSave)
+wBoxAttrRow:: db ;d0a6 — scratch: the row being restored
+wChoiceAttrSave:: ds 30 ;d0a7-d0c4 — room attrs under the YES/NO choice box (6x5, row-major; S97 r2)
+wCustomPool:: ds $5A4 - 132 ;d0c5-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

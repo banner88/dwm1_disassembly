@@ -1669,6 +1669,15 @@ jr_00b_471b:
     ret
 
 
+; -----------------------------------------------------------------------------
+; Call_00b_477e — NPC list parser (S97 annotation; ROOM_DATA_FORMAT "NPC RAM
+; slot"): walks the step's interact block (HL) into the 8 slots at $D7D2
+; (32 B each). Entries with bit 7 set ($8F spawn / $90 talk-spot / ...) are
+; skipped. Per NPC: +$00 type, +$01 sprite, +$02/+$03 home tile = entry X/Y +
+; the screen's tile offset ($00:$2DE7[wScreenIndex]), +$04 script id,
+; +$06 facing = (type >> 4) & 3, +$11 sprite (again), +$16 = sprite-sheet slot
+; from Call_00b_4839, +$18/+$1A pixel X/Y = tile*16+8 (16-bit).
+; -----------------------------------------------------------------------------
 Call_00b_477e:
 jr_00b_477e:
     ld de, $d7d2

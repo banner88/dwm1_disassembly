@@ -155,6 +155,7 @@ def emit_bank_060(prj, warnings):
                else f"{room_tag(r)}_SubTable")
         lines.append(f"    dw {tgt}   ; {F.hexb(F.val(r['mapID']))}")
     lines.append("")
+    lines += _state_rule_tables(prj, rooms)
 
     dummy_emitted = False
     for r in rooms:
@@ -174,6 +175,52 @@ def emit_bank_060(prj, warnings):
 
     lines += _vanilla_exit_exts(prj)
     return "\n".join(lines) + "\n"
+
+
+def _state_rule_tables(prj, rooms):
+    """S97 (ROADMAP P3.5a) — custom.rooms[].state_rules -> the tables read by
+    template entry 8 CustomStateRules. Emitted ALWAYS (the label is referenced
+    by the template head): one dw per custom room, $0000 = no rules.
+      room list: db screen / dw step_counter / dw rules ... db $FF
+      rules:     db state / db n_terms / dw flag (bit 15 = must be clear) ...
+                 db $FF"""
+    out = banner("ROOM STATE RULES (S97, generated)", [
+        "Read by bank $60 entry 8 CustomStateRules (template head) at every",
+        "custom room/screen (re)load: first rule whose flag terms all hold",
+        "writes its state into the screen's step counter; none = untouched."])
+    out.append("CustomStateRulePtrTable:")
+    per_room = []
+    for r in rooms:
+        rules = [] if r.get('placeholder') else prj.state_rules(r)
+        if rules:
+            lbl = f"{room_tag(r)}_StateRules"
+            per_room.append((r, lbl, rules))
+            out.append(f"    dw {lbl}   ; {F.hexb(F.val(r['mapID']))} {r.get('id','')}")
+        else:
+            out.append(f"    dw $0000   ; {F.hexb(F.val(r['mapID']))} (no rules)")
+    out.append("")
+    for r, lbl, rules in per_room:
+        tag = room_tag(r)
+        screens = prj.room_screens(r)
+        out.append(f"{lbl}:")
+        for k, _ in rules:
+            ctr = prj.step_counter_label(r, k, screens[k])
+            out.append(f"    db {k}")
+            out.append(f"    dw {ctr}")
+            out.append(f"    dw {tag}_S{k}_Rules")
+        out.append("    db $FF")
+        for k, lst in rules:
+            out.append(f"{tag}_S{k}_Rules:")
+            for st, terms in lst:
+                words = [F.hexw(idx | (0x8000 if clr else 0)) for idx, clr in terms]
+                desc = " & ".join(f"{'!' if clr else ''}{F.hexw(idx)}"
+                                  for idx, clr in terms) or "always"
+                out.append(f"    db {st}, {len(terms)}   ; state {st} when {desc}")
+                if words:
+                    out.append("    dw " + ", ".join(words))
+            out.append("    db $FF")
+        out.append("")
+    return out
 
 
 def _vanilla_exit_exts(prj):
@@ -313,9 +360,12 @@ def _room_data(prj, r):
                 else:
                     sid = n['script']
                     sidx = (0xFF if sid in (None, 'none')
+                            else sid if isinstance(sid, int)   # S97: raw index kept
                             else prj.script_index(r, sid))
                     b = F.npc_entry(n.get('facing', 'down'), F.val(n['sprite']),
-                                    n['x'], n['y'], sidx)
+                                    n['x'], n['y'], sidx,
+                                    behaviour=n.get('behaviour', 0),
+                                    hidden=bool(n.get('hidden', False)))
                     out.append(F.db_line(
                         b, comment=f"NPC ({n['x']},{n['y']}) script "
                                    f"{sid if sid not in (None,'none') else 'none'}"))

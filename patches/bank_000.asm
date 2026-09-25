@@ -1333,9 +1333,14 @@ SetCancelFlag:
 
 ClearTextBitsRedraw:
 ClearTextBitsRedrawJR:
-    ld hl, $c825
-    res 2, [hl]
-    res 1, [hl]
+    ; S97 r2: same-size — bank $73 entry 17 ChoiceBoxClose does the two res
+    ; below ($C825 bits 2/1) and, when ChoiceBoxOpen set the choice box's attrs,
+    ; restores its tiles + saved attrs before the full-screen tile restore.
+    ld hl, $7311                 ; bank $73 entry 17: ChoiceBoxClose
+    rst $10
+    nop
+    nop
+    nop
     ld hl, $0000
     call GetTilemapRowAddr
     ld de, $c500

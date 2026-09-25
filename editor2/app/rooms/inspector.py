@@ -3,9 +3,10 @@
 Panels (top to bottom): Room · Screen & state · Selection (clicked
 marker) · Layout. Every value shown is read straight from the Document;
 editable fields push undo commands. Fields whose editing belongs to a
-later ROADMAP box (NPC forms = P3.5, triggers/exits = P3.7) are shown
-read-only rather than hidden, so the author always sees what the engine
-will get.
+later ROADMAP box (triggers/exits proper = P3.7) are shown read-only rather
+than hidden, so the author always sees what the engine will get. S97: NPCs
+are edited in the NPC panel (rooms/npc_panel.py, P3.5) and the room's flag
+rules in the State rules group (rooms/rules_panel.py, P3.5a).
 """
 
 from PySide6.QtCore import Qt, Signal
@@ -39,6 +40,7 @@ class Inspector(QWidget):
     removeRedirectRequested = Signal(int)      # index into custom.entrance_redirects
     routeDoorRequested = Signal(object)        # vanilla door preset dict
     tilesetChangeRequested = Signal()          # S96
+    addNpcRequested = Signal(object)           # (cx, cy)  S97
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,6 +49,7 @@ class Inspector(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         scroll = QScrollArea()
+        self.scroll = scroll
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
         body = QWidget()
@@ -127,6 +130,11 @@ class Inspector(QWidget):
         self.entr_group = g
         self.lay.addWidget(g)
 
+        # ---- State rules (S97, P3.5a) — room level
+        from editor2.app.rooms.rules_panel import RulesGroup
+        self.rules = RulesGroup()
+        self.lay.addWidget(self.rules)
+
         # ---- Screen & state
         g = QGroupBox('Screen & state')
         f = QFormLayout(g)
@@ -164,7 +172,7 @@ class Inspector(QWidget):
         self.sel_tree.setHeaderLabels(['field', 'value'])
         self.sel_tree.setRootIsDecorated(False)
         self.sel_tree.setMaximumHeight(170)
-        self.sel_note = _lbl('NPC / exit fields become editable in P3.5 / P3.7.')
+        self.sel_note = _lbl('Exit fields become editable in P3.7 (doors).')
         self.sel_note.setStyleSheet('color: #888;')
         self.sel_route = QPushButton('Route this door into a custom room…')
         self.sel_route.clicked.connect(self._route_selected)
@@ -174,6 +182,9 @@ class Inspector(QWidget):
         self.sel_add_exit.clicked.connect(self._add_exit_here)
         self.sel_add_exit.setVisible(False)
         self._sel_cell = None
+        self.sel_add_npc = QPushButton('Add NPC here…')
+        self.sel_add_npc.clicked.connect(self._add_npc_here)
+        self.sel_add_npc.setVisible(False)
         self.sel_del_exit = QPushButton('Delete this exit')
         self.sel_del_exit.clicked.connect(self._del_exit)
         self.sel_del_exit.setVisible(False)
@@ -181,10 +192,16 @@ class Inspector(QWidget):
         v.addWidget(self.sel_title)
         v.addWidget(self.sel_tree)
         v.addWidget(self.sel_route)
+        v.addWidget(self.sel_add_npc)
         v.addWidget(self.sel_add_exit)
         v.addWidget(self.sel_del_exit)
         v.addWidget(self.sel_note)
         self.lay.addWidget(g)
+
+        # ---- NPC (S97, P3.5): the form lives in the tab's own "NPC" section
+        # (S97 r2 user request); the tab sets self.npc so a new selection
+        # here hides it.
+        self.npc = None
 
         # ---- Layout
         g = QGroupBox('Layout')
@@ -224,6 +241,7 @@ class Inspector(QWidget):
                             'project (the original stays untouched).')
         self.r_note.setVisible(True)
         self.entr_group.setVisible(False)
+        self.rules.setVisible(False)
         self._vanilla_view = (mid, key)
         self.s_key.setText(f'{key}')
         self.s_layout.setText('vanilla layout (read-only)')
@@ -289,6 +307,8 @@ class Inspector(QWidget):
         self.r_note.setVisible(bool(note))
         self._vanilla_view = None
         self.show_entrances(doc, renderer, room)
+        self.rules.setVisible(not room.get('placeholder'))
+        self.rules.show_room(doc, room, key, state_idx)
         self.show_screen(doc, renderer, room, key, state_idx)
         self._building = False
 
@@ -381,6 +401,8 @@ class Inspector(QWidget):
         self.sel_tree.clear()
         self.sel_route.setVisible(False)
         self.sel_del_exit.setVisible(False)
+        if self.npc is not None:
+            self.npc.setVisible(False)
         self._sel_exit_idx = None
         if cell is None:
             self.show_selection(None)
@@ -388,6 +410,7 @@ class Inspector(QWidget):
         cx, cy = cell
         self._sel_cell = cell
         self.sel_add_exit.setVisible(bool(editable))
+        self.sel_add_npc.setVisible(bool(editable))
         self.sel_title.setText(f'Cell ({cx},{cy})')
         for name, t in zip(('top-left', 'top-right', 'bottom-left', 'bottom-right'),
                            mt['tiles']):
@@ -401,7 +424,10 @@ class Inspector(QWidget):
         self.sel_tree.clear()
         self.sel_route.setVisible(False)
         self.sel_add_exit.setVisible(False)
+        self.sel_add_npc.setVisible(False)
         self.sel_del_exit.setVisible(False)
+        if self.npc is not None:
+            self.npc.setVisible(False)
         self._sel_door = None
         self._sel_exit_idx = None
         if sel and sel['kind'] == 'exit' and editable and not self._vanilla_view:
@@ -417,7 +443,8 @@ class Inspector(QWidget):
             self._sel_door = {'mapID': mid, 'screen': key,
                               'x': sel['x'], 'y': sel['y']}
             self.sel_route.setVisible(True)
-        self.sel_note.setText('NPC / exit fields become editable in P3.5 / P3.7.')
+        self.sel_note.setText('' if sel['kind'] == 'npc' else
+                              'Exit fields become editable in P3.7 (doors).')
         self.sel_title.setText(f"{sel['label']}  at cell ({sel['x']},{sel['y']})")
         _kind, idx, entry = sel['ref']
         for k, v in entry.items():
@@ -436,6 +463,16 @@ class Inspector(QWidget):
     def _route_selected(self):
         if self._sel_door:
             self.routeDoorRequested.emit(dict(self._sel_door))
+
+    def reveal(self, widget):
+        """Scroll the inspector so `widget` is in view (S97: the NPC form
+        sits below the room groups; selecting an NPC brings it up)."""
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(0, lambda: self.scroll.ensureWidgetVisible(widget, 0, 0))
+
+    def _add_npc_here(self):
+        if self._sel_cell is not None:
+            self.addNpcRequested.emit(tuple(self._sel_cell))
 
     def _add_exit_here(self):
         if self._sel_cell is not None:

@@ -1744,9 +1744,17 @@ jr_056_486d:
 
 
 SetB56_48a1:
-    ld de, $560a
-    ld hl, $8e50
-    call WaitDMATransfer
+    ; S97 r2: same-size far call — bank $73 entry 18 ChoiceBoxOpen loads the
+    ; cursor tiles exactly as vanilla (WaitDMATransfer $560a -> $8E50) and, in
+    ; a free-colour custom room, saves + sets the choice box's 6x5 GBC attrs
+    ; to palette 7 (cream) before the frame below is drawn.
+    ld hl, $7312                 ; bank $73 entry 18: ChoiceBoxOpen
+    rst $10
+    nop
+    nop
+    nop
+    nop
+    nop
     ld hl, Boot
     call GetTilemapRowAddr
     ld b, $0e

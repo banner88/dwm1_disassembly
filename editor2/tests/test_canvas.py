@@ -854,6 +854,261 @@ def test_rom_v3(w, s, rid, keep_dir=None):
     p.stop(save=False)
 
 
+# ---------------------------------------------------------------- S97 (v4)
+V4_WALKER = (2, 7)       # servant clone screen 0, cleared state: open floor
+V4_TALKER = (5, 5)
+V4_STAND = (5, 6)        # the player's cell below the talker (faces up to talk)
+V4_BOXES = [['The servant is', 'gone.'], ['Thank you, hero!']]   # S97 r2: per-box text
+
+
+def v4_round_trip(new_dir):
+    """S97 (ROADMAP P3.5 + P3.5a) — fresh project: clone the Servant room
+    ($3F: burning / cleared, own layout + palette per state) to $6B; a flag
+    rule 'servant_beaten set -> state 1' authored through the rules path
+    (named flag created with it); NPCs added through the NPC-panel path
+    (sprite picker, behaviour, facing, new talk text, presence in the other
+    state, drag-move); a CLONED raw NPC edited (typed entry, same bytes but
+    the changed field); exact full undo/redo; compile."""
+    from editor2.app.main import MainWindow
+    from editor2.app.rooms import npc_panel
+    from PySide6.QtWidgets import QMessageBox, QDialog
+    from editor2.core import formats as F
+    app = QApplication.instance() or QApplication(sys.argv)
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    w = MainWindow()
+    w.new_project(new_dir, 'v4 acceptance')
+    app.processEvents()
+    rt, s = w.rooms_tab, w.session
+    for i in range(rt.vanilla_list.count()):
+        if rt.vanilla_list.item(i).data(0x100) == 0x3F:
+            rt.vanilla_list.setCurrentRow(i)
+    app.processEvents()
+    rt._clone_vanilla()
+    app.processEvents()
+    rid = rt.room_id
+    room = s.doc.room(rid)
+    assert len(s.doc.states(room, 0)) == 2, 'servant clone carries both vanilla states'
+    s.doc.save()
+    saved = open(s.doc.path).read()
+    n0 = s.undo.count()
+    # ---- state rule (P3.5a) with a NEW named flag, through the rules group
+    rule = {'state': 1, 'when': [{'flag': 'servant_beaten'}]}
+    rt._rules_edited([rule], ['servant_beaten'])
+    app.processEvents()
+    room = s.doc.room(rid)
+    assert s.doc.state_rules(room) == [rule] and s.doc.flags()[0]['name'] == 'servant_beaten'
+    # 'Otherwise: state 0' through the group's combo (a trailing always-rule)
+    rg = rt.inspector.rules
+    rg.otherwise.setCurrentIndex(rg.otherwise.findData(0))
+    app.processEvents()
+    room = s.doc.room(rid)
+    assert s.doc.state_rules(room) == [rule, {'state': 0, 'when': []}], s.doc.state_rules(room)
+    assert s.doc.rules_for_state(room, 0, 1) == [(0, rule)]
+    assert [ru for _i, ru in s.doc.rules_for_state(room, 0, 0)] == [{'state': 0, 'when': []}]
+    rt.select_state(1)
+    app.processEvents()
+    assert 'servant_beaten' in rt.shown_when.text(), rt.shown_when.text()
+    assert not rt.shown_when.isHidden()
+    # ---- NPCs (P3.5) through the panel code path (dialogs answered)
+    picks = iter([0x0B, 0x00])
+
+    def fake_pick(dlg):
+        dlg.value = next(picks)
+        return QDialog.Accepted
+    npc_panel.SpritePicker.exec = fake_pick
+    npc_panel.TalkDialog.exec = lambda dlg: QDialog.Accepted
+    npc_panel.TalkDialog.boxes = lambda dlg: V4_BOXES
+    rt._add_npc((4, 7))                                    # walker, placed then moved
+    app.processEvents()
+    wi = rt._sel_npc
+    assert wi is not None and not rt.npc_panel.isHidden() and rt.sec_npc.is_expanded()
+    rt._move_marker(('npc', wi, None), *V4_WALKER)        # drag-move
+    rt._npc_fields({'behaviour': F.BEHAVIOURS['pace_x1']})
+    rt._npc_fields({'facing': 'right'})
+    rt._add_npc(V4_TALKER)                                 # talker
+    ti = rt._sel_npc
+    rt._npc_fields({'behaviour': F.BEHAVIOURS['stand_return'], 'facing': 'left'})
+    rt._npc_new_talk()
+    app.processEvents()
+    room = s.doc.room(rid)
+    tv = s.doc.npc_view(room, s.doc.npc_entries(room, 0, 1)[ti])
+    wv = s.doc.npc_view(room, s.doc.npc_entries(room, 0, 1)[wi])
+    assert (wv['x'], wv['y'], wv['behaviour'], wv['facing'], wv['sprite']) == \
+        (*V4_WALKER, 8, 'right', 0x0B), wv
+    assert tv['behaviour'] == 7 and tv['facing'] == 'left' and tv['sprite'] == 0
+    assert s.doc.talk_boxes(tv['script']) == V4_BOXES, tv
+    assert room['scripts'].get('0'), 'a room-entry script 0 was created with the talk script'
+    # presence: the talker in the burning state too
+    rt._npc_presence(0, True)
+    room = s.doc.room(rid)
+    assert s.doc.npc_presence(room, 0, 1, ti) == [True, True]
+    # a CLONED raw NPC (state 0: `00 2B 01 05 01`) edited -> typed, same bytes + facing up
+    rt.select_state(0)
+    app.processEvents()
+    room = s.doc.room(rid)
+    ri = next(i for i, e in enumerate(s.doc.npc_entries(room, 0, 0))
+              if e.get('kind') == 'raw' and [val(b) for b in e['bytes']] == [0x00, 0x2B, 1, 5, 1])
+    rt._sel_npc = ri
+    rt._npc_fields({'facing': 'up'})
+    room = s.doc.room(rid)
+    e = s.doc.npc_entries(room, 0, 0)[ri]
+    assert e['kind'] == 'npc'
+    from editor2.core.project import Project
+    from editor2.core import compiler
+    # exact undo / redo
+    n = s.undo.count() - n0
+    for _ in range(n):
+        s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == saved, 'full undo must restore the project byte-for-byte'
+    for _ in range(n):
+        s.undo.redo()
+    app.processEvents()
+    s.doc.save()
+    # the typed entry of the edited clone NPC emits the vanilla bytes + facing
+    prj = Project.load(new_dir)
+    room_p = next(r for r in prj.rooms if r.get('id') == rid)
+    e = prj.screen_states(prj.room_screens(room_p)[0])[0]['npcs'][ri]
+    sidx = prj.script_index(room_p, e['script'])
+    b = F.npc_entry(e['facing'], F.val(e['sprite']), e['x'], e['y'], sidx,
+                    behaviour=e.get('behaviour', 0), hidden=e.get('hidden', False))
+    assert b == [0x20, 0x2B, 1, 5, 1], b
+    print(f'OK: v4 — servant clone at {room_p["mapID"]}: state rule servant_beaten -> 1 (new named '
+          f'flag), walker ${0x0B:02X} pace_x1 dragged to {V4_WALKER}, talker stand_return with a '
+          f'new talk script, presence in both states, cloned NPC edited to typed bytes '
+          f'{" ".join("%02X" % x for x in b)}; {n} undoable edits, exact undo/redo')
+    return w, s, rid, ti, wi
+
+
+def test_rom_v4(w, s, rid, ti, wi, keep_dir=None):
+    """--rom: the rule selects the state at LOAD — layout (VRAM), palette
+    (BG palette RAM, loaded BEFORE bank $0B Entry 0 — the hook placement)
+    and NPC set all follow the flag, and survive a wiped counter (= reload);
+    the walker paces as measured; talking to the talker shows the authored
+    text."""
+    from editor2.app.build_worker import BuildWorker
+    from editor2.core import formats as F
+    app = QApplication.instance()
+    results = []
+    worker = BuildWorker(REPO, s.project_dir)
+    worker.finished_build.connect(results.append)
+    worker.start()
+    worker.wait()
+    app.processEvents()
+    res = results[0]
+    assert res.ok, f'build failed: {res.error}'
+    man = json.load(open(os.path.join(os.path.dirname(res.rom_path), 'manifest.json')))
+    flag = int(man['flags']['servant_beaten'].lstrip('$'), 16)
+    ctr = int(next(v for k, v in man['step_counters'].items() if k.endswith('_S0'))
+              .lstrip('$'), 16)
+    from tools.pyboy_harness import boot, to_bedroom, warp, adv, MAP_ID, set_flag
+    room = s.doc.room(rid)
+    p = boot(res.rom_path)
+    assert to_bedroom(p), 'scripted intro failed'
+    p.memory[0xCA39] = p.memory[0xCA3A] = 0xFF
+    import tempfile as _t
+    base = os.path.join(_t.mkdtemp(prefix='v4_'), 'bed.state')
+    with open(base, 'wb') as f:
+        p.save_state(f)
+
+    def bg_words():
+        out = []
+        for i in range(0, 32, 2):
+            p.memory[0xFF68] = i
+            lo = p.memory[0xFF69]
+            p.memory[0xFF68] = i + 1
+            out.append((lo | (p.memory[0xFF69] << 8)) & 0x7FFF)
+        return out
+
+    def expect(state):
+        grid = s.renderer.layout_grid(s.renderer.screen_state(room, 0, state)['layout'])[0]
+        vram = [[p.memory[0x9800 + r * 32 + c] for c in range(20)] for r in range(16)]
+        d = sum(1 for r in range(16) for c in range(20) if vram[r][c] != grid[r][c])
+        assert d == 0, f'state {state}: {d} VRAM tiles differ'
+        pid = s.doc.effective_palette(room, 0, state)
+        want = [val(x) for row in s.doc.palette(pid)['colors_rgb555'][:4] for x in row]
+        want = [0x6BFF if i % 4 == 1 else 0 if i % 4 == 3 else v for i, v in enumerate(want)]
+        assert bg_words() == want, f'state {state}: BG palette RAM != {pid}'
+        npcs = []
+        for i in range(8):
+            b = 0xD7D2 + 32 * i
+            if p.memory[b] == 0xFF:
+                break
+            npcs.append((p.memory[b], p.memory[b + 1]))
+        return npcs
+    # flag clear -> state 0 (burning)
+    warp(p, 0x6B, *V4_STAND, settle=500)
+    adv(p, 60)
+    assert p.memory[MAP_ID] == 0x6B and p.memory[ctr] == 0
+    n0 = expect(0)
+    assert (0x20, 0x2B) in n0, f'edited clone NPC (facing up) in state 0: {n0}'
+    # flag set -> state 1 (cleared), incl. its palette (hook before the palette load)
+    p.load_state(open(base, 'rb'))
+    set_flag(p, flag)
+    warp(p, 0x6B, *V4_STAND, settle=500)
+    adv(p, 60)
+    assert p.memory[ctr] == 1, f'rule did not select state 1 (counter {p.memory[ctr]})'
+    n1 = expect(1)
+    assert (F.npc_type_byte('right', 8), 0x0B) in n1 and (F.npc_type_byte('left', 7), 0x00) in n1, n1
+    print(f'OK: state rule — flag {flag:#06x} clear: state 0 (VRAM + palette + NPCs), set: state 1 '
+          'incl. its own palette (rule runs before the palette load)')
+    # reload = counter wiped (the $CD80 window is zeroed at save-restore)
+    p.memory[ctr] = 0
+    warp(p, 0x6B, *V4_STAND, settle=500)
+    adv(p, 30)
+    assert p.memory[ctr] == 1, 'the rule must re-select state 1 after the counter is wiped'
+    expect(1)
+    print('OK: counter wiped (reload) -> the flag rule restores state 1 on the next load')
+    # flag cleared again -> 'otherwise: state 0' takes the room back
+    p.memory[0xD99B + (flag >> 3)] &= ~(1 << (7 - (flag & 7))) & 0xFF
+    warp(p, 0x6B, *V4_STAND, settle=500)
+    adv(p, 30)
+    assert p.memory[ctr] == 0, 'otherwise-rule must return the room to state 0'
+    expect(0)
+    p.load_state(open(base, 'rb'))
+    set_flag(p, flag)
+    warp(p, 0x6B, *V4_STAND, settle=500)
+    adv(p, 60)
+    print('OK: flag cleared -> "otherwise: state 0" puts the room back to state 0')
+    # the walker paces +-1 (measured behaviour 8)
+    slot = next(i for i in range(8) if p.memory[0xD7D2 + 32 * i + 1] == 0x0B)
+    b = 0xD7D2 + 32 * slot
+    xs = set()
+    for _ in range(300):
+        p.tick()
+        xs.add(((p.memory[b + 0x18] | p.memory[b + 0x19] << 8) - 8) // 16)
+    assert xs == {V4_WALKER[0] - 1, V4_WALKER[0], V4_WALKER[0] + 1}, f'walker tiles {xs}'
+    print(f'OK: walker (pace_x1) visits tiles {sorted(xs)} on row {V4_WALKER[1]}')
+    # talk: face up at the talker and press A
+    for _ in range(6):
+        p.button_press('up')
+        p.tick()
+    p.button_release('up')
+    adv(p, 20)
+    sid = s.doc.npc_view(room, s.doc.npc_entries(room, 0, 1)[ti])['script']
+    did = s.doc.script(sid)['ops'][0][1]
+    tid = next(int(k.lstrip('$'), 16) for k, v in man['texts'].items() if v['id'] == did)
+    seen = set()
+    for i in range(200):
+        (p.button_press if i < 4 else p.button_release)('a')
+        p.tick()
+        # $D8D9/$D8DA = the script's queued text id (LE; BANK04 "Key RAM")
+        if p.memory[0xC8EB] & 1:
+            seen.add(p.memory[0xD8D9] | p.memory[0xD8DA] << 8)
+    assert tid in seen, f'talk text {tid:#06x} never displayed (saw {sorted(hex(x) for x in seen)[:8]})'
+    # S97 r2: box 1 WAITS for A ($FA) — still open 196 frames after the talk press
+    assert p.memory[0xC8EB] & 1, 'the first box must wait for A (boxes form, $FA $F7 $EF $EE)'
+    sl = next(i for i in range(8) if p.memory[0xD7D2 + 32 * i + 1] == 0x00
+              and p.memory[0xD7D2 + 32 * i] & 0x0F == 7)
+    assert p.memory[0xD7D2 + 32 * sl + 6] == 0, 'stand_return NPC faces the player (down) while talking'
+    if keep_dir:
+        p.screen.image.save(os.path.join(keep_dir, 'pyboy_v4_talk.png'))
+    print(f'OK: talking to the talker displays its text {tid:#06x} and it turns to face the player')
+    if keep_dir:
+        shutil.copy(res.rom_path, os.path.join(keep_dir, 'rom_v4.gbc'))
+    p.stop(save=False)
+
+
 def test_all_clones():
     """--all-clones (S96): EVERY vanilla room clones ("Make editable"),
     every screen AND every valid state renders pixel-identical to vanilla,
@@ -972,10 +1227,16 @@ def main():
         shutil.rmtree(v3_dir)
     w3, s3, rid3 = v3_round_trip(v3_dir)
     test_compile(v3_dir)
+    v4_dir = os.path.join(tmp, 'fresh_v4')
+    if os.path.exists(v4_dir):
+        shutil.rmtree(v4_dir)
+    w4, s4, rid4, ti4, wi4 = v4_round_trip(v4_dir)
+    test_compile(v4_dir)
     if do_rom:
         test_rom(proj, grids, keep)
         test_rom_v2(w2, s2, rid, keep)
         test_rom_v3(w3, s3, rid3, keep)
+        test_rom_v4(w4, s4, rid4, ti4, wi4, keep)
     if not keep:
         shutil.rmtree(tmp, ignore_errors=True)
     print('PASS')

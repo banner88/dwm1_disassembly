@@ -195,6 +195,16 @@ jr_017_40e7:
     ret
 
 
+; ---------------------------------------------------------------------------
+; LoadPal_4102 (entry 9; also the tail of entries 0/1) — the "FORCED COLOURS"
+; of every BG palette (S96, KEY_LESSONS S7/S39 finally located): load the
+; system slot-7 palette ($5655) into the WRAM palette buffer $C797 (8 pal x 4
+; colours x 2 B; slot n colour i at $C797 + n*8 + i*2), then copy slot 7's
+; COLOUR 1 ($C7D1/$C7D2, = $6BFF cream) into colour 1 of slots 0-6 and slot
+; 7's COLOUR 3 ($C7D5/$C7D6, = $0000 black) into colour 3 of slots 0-6. That
+; is why every room palette reads "_ 6bff _ 0000" at runtime whatever its ROM
+; bytes say. The buffer is pushed to BCPD by label17_46dd / the fade code.
+; ---------------------------------------------------------------------------
 LoadPal_4102:
 Jump_017_4102:
 jr_017_4102:
@@ -206,7 +216,9 @@ jr_017_4102:
     ld c, $07
     ld b, $01
     call CustomPalCheck         ; intercept: custom rooms skip slot 7 overwrite
-    ld a, [$c7d1]
+LoadPal4102_Color1Pass:
+    jp FreeColor1Hook            ; S96 same-size (3 B) for `ld a, [$c7d1]`
+LoadPal4102_Color1Store:
     ld l, a
     ld a, [$c7d2]
     ld h, a
@@ -238,6 +250,7 @@ jr_017_4102:
     ld [$c7c9], a
     ld a, h
     ld [$c7ca], a
+LoadPal4102_Color3Pass:
     ld a, [$c7d5]
     ld l, a
     ld a, [$c7d6]
@@ -272,6 +285,8 @@ jr_017_4102:
     ld [$c7ce], a
     ret
 
+; label17_4192 (entry 10): every BG attr ($9800 map, VRAM bank 1) := $07 —
+; the menu / battle-text screens draw on system palette 7 (S96 r4 trace).
 label17_4192:
     ld a, [wIsGBC]
     or a
@@ -687,6 +702,9 @@ Jump_017_440b:
 
 
     db $02, $04, $00, $06
+; ^ $440c: DMG-shade -> buffer byte offset for the GBC BGP emulation
+; (label17_4272 SavePal_42ac): shade 0 -> colour 1 (+2, cream), 1 -> colour
+; 2, 2 -> colour 0, 3 -> colour 3; wBGPalette $D2 = identity. S96 r4.
 
 label17_4410:
     ld a, [$c850]
@@ -2578,6 +2596,9 @@ CustomAttrCheck:
     jr nc, .custom             ; >= $6B → consult the per-room table
     jp MapIDClampForPalette    ; vanilla room: normal path (A = mapID, HL intact)
 .custom:
+    call StateRulesHook17        ; S97: flag-driven state rules run FIRST (this is
+                                 ; the earliest custom hook of a room load — the
+                                 ; walk below reads the step counter); A = mapID
     sub CUSTOM_ROOM_START       ; index = mapID - $6B
     push af
     add a                        ; ×2 (dw per room)
@@ -2629,9 +2650,10 @@ CustomPalCheck:
 ; mapIDs $70+ need a $26DD intercept (follow-up). See ROADMAP Phase 2C.
 ; Per-custom-room render tables RELOCATED to the bank tail (CustomAttrPtrTable /
 ; RoomAttr_* / ScrAttr_* in the compiler-owned room_render_tables region, S94b) so
-; they can grow without shifting the palette data that follows. These 12 bytes are
-; reserved padding to keep that data in place.
-    ds 12, $00
+; they can grow without shifting the palette data that follows. These bytes are
+; reserved padding to keep that data in place (12 -> 9 S97: the 3-byte
+; `call StateRulesHook17` in CustomAttrCheck came out of it).
+    ds 9, $00
 
 ; @BUILD_PROJECT BEGIN room_palettes_a
 ; CustomPaletteColors_6B: 64 bytes (8 palettes x 4 colors x 2 bytes).
@@ -2692,6 +2714,113 @@ HighBattlePal:
     ret
 .pal:
     db $67, $4d, $ff, $6b, $ff, $7f, $00, $00  ; id-224 battle palette (RGB555 LE)
+
+; ---------------------------------------------------------------------------
+; FreeColor1Hook (S96; per-slot markers S96 round 4): lets a CUSTOM room keep
+; its own colour 1 in BG slots 0-3 — the engine otherwise overwrites colour 1
+; of slots 0-6 with slot 7's cream $6BFF (LoadPal_4102, see there). Opt-in per
+; palette, in the data: the compiler sets bit 15 of colour 3 (a bit the
+; hardware ignores; 0 of the 101 vanilla room/gate palettes set it) in each of
+; slots 0-3 of palettes marked `free_color1` in project.json.
+;   * The marker is tested PER SLOT and SURVIVES in the WRAM buffer: colour 3
+;     is still forced to slot 7's (black) but bit 15 is put back. LoadPal_4102
+;     also runs standalone — the field menu calls it (via the $17 entry 6
+;     monster-palette load) on every open — and round 3 cleared the marker on
+;     the first pass, so the menu re-forced cream into slots 0-3 and the room
+;     stayed washed out after closing (user S96, SameBoy). A slot that other
+;     code later overwrites with a vanilla palette (battle, cutscene) loses its
+;     marker with it, so that slot gets the vanilla forcing again.
+;   * Vanilla rooms and unmarked palettes run the original copy unchanged.
+; Registers: B/C are returned as the pre-S96 custom path left them (push/pop).
+; ---------------------------------------------------------------------------
+FreeColor1Hook:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .original
+    push bc
+    ld c, $00                    ; C bit n := slot n marked (colour 3 bit 15)
+    ld a, [$c7b6]                ; slot 3 colour 3 high byte
+    rla
+    rl c
+    ld a, [$c7ae]                ; slot 2
+    rla
+    rl c
+    ld a, [$c7a6]                ; slot 1
+    rla
+    rl c
+    ld a, [$c79e]                ; slot 0
+    rla
+    rl c
+    ld a, c
+    or a
+    jr z, .none
+    ld a, [$c7d1]                ; DE := slot 7 colour 1 (cream)
+    ld e, a
+    ld a, [$c7d2]
+    ld d, a
+    ld hl, $c799                 ; slot 0 colour 1
+    ld b, $07
+    push bc
+.colour1:
+    ld a, b
+    cp $04
+    jr c, .force                 ; slots 4-6: always forced (system slots)
+    rr c                         ; slots 0-3: carry = this slot's marker
+    jr c, .skip
+.force:
+    ld a, e
+    ld [hl+], a
+    ld a, d
+    ld [hl-], a
+.skip:
+    ld a, l
+    add $08                      ; next slot (all within page $c7)
+    ld l, a
+    dec b
+    jr nz, .colour1
+    call LoadPal4102_Color3Pass  ; colour 3 := slot 7's for slots 0-6 (clears bit 15)
+    pop bc                       ; C = markers again
+    ld hl, $c79e                 ; put each marker back
+    ld b, $04
+.remark:
+    rr c
+    jr nc, .unmarked
+    set 7, [hl]
+.unmarked:
+    ld a, l
+    add $08
+    ld l, a
+    dec b
+    jr nz, .remark
+    pop bc
+    ret
+.none:
+    pop bc
+.original:
+    ld a, [$c7d1]                ; the replaced instruction
+    jp LoadPal4102_Color1Store
+
+; ---------------------------------------------------------------------------
+; StateRulesHook17 (S97, ROADMAP P3.5a): CustomAttrCheck's custom path calls
+; this before walking the per-(screen, state) attr/palette table, so the step
+; counter already holds the state chosen by the room's flag rules (bank $60
+; entry 8 CustomStateRules) when the attr, the palette and — later in the same
+; load — bank $0B Entry 0/7 read it. PyBoy-measured S97: at a room load the
+; attr/palette walk runs BEFORE Entry 0, so a rule evaluated only in Entry 0
+; would load the previous state's palette. Preserves BC/DE/HL; returns
+; A = wMapID (what CustomAttrCheck's .custom path expects).
+; ---------------------------------------------------------------------------
+StateRulesHook17:
+    push bc
+    push de
+    push hl
+    ld hl, $6008                 ; bank $60 entry 8: CustomStateRules
+    rst $10
+    pop hl
+    pop de
+    pop bc
+    ld a, [wMapID]
+    ret
 
 ; @BUILD_PROJECT BEGIN room_render_tables
 ; Per-custom-room render tables (generated by build_project.py).

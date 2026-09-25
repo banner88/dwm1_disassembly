@@ -386,14 +386,16 @@ Each NPC occupies 32 bytes. NPC index calculation at Jump_004_42cd:
 HL = $D7D2 + (npc_number - 1) × 32
 ```
 
-Known offsets within each 32-byte NPC buffer:
+Known offsets within each 32-byte NPC buffer (the full S97 field map —
+type byte, home tile, status bits, timer, phase, pixel position — lives in
+ROOM_DATA_FORMAT "NPC RAM slot"; corrected S97, DOC_AUDIT S97):
 | Offset | Description |
 |--------|-------------|
-| +$00 | Type/flags from ROM NPC data |
-| +$05 | Status flags (bit 0 = interacting, bit 6 = cleared on interact) |
-| +$06 | Facing direction (0-3) |
-| +$18-$19 | Movement counter (16-bit, read at +$12 from status byte) |
-| +$1A-$1B | Y movement counter (read at +$14 from status byte) |
+| +$00 | Type byte: facing bits 4-5, hidden bit 6, behaviour bits 0-3 |
+| +$05 | Status: bit 0 = walking (walk animation; was "interacting"), bit 5 = blocked by the player, bit 6 = talking (faces the player), bit 7 = hidden from the animation picker |
+| +$06 | Facing direction (0 down, 1 left, 2 up, 3 right) |
+| +$18-$19 | Pixel X (16-bit, tile·16+8) |
+| +$1A-$1B | Pixel Y (16-bit) |
 
 ## Script Branch Mechanism
 

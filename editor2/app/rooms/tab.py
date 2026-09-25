@@ -68,6 +68,7 @@ class RoomsTab(QWidget):
         super().__init__(parent)
         self.s = session
         self.room_id = None          # custom room id, or None when viewing vanilla
+        self._sel_npc = None         # S97: index of the selected NPC entry
         self.vanilla_mid = None
         self.key = 0
         self.state_idx = 0
@@ -227,6 +228,12 @@ class RoomsTab(QWidget):
         self.cap_label = QLabel('')
         sb.addWidget(self.cap_label)
         cv.addLayout(sb)
+        self.shown_when = QLabel('')
+        self.shown_when.setStyleSheet('color: #7fe07f; padding: 0 6px;')
+        self.shown_when.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.shown_when.setToolTip('State rules that select this state (inspector → '
+                                   'State rules). Rules run every time a screen loads.')
+        cv.addWidget(self.shown_when)
 
         self.banner = QLabel('')
         self.banner.setStyleSheet('background: #5a4a10; color: #ffe08a; padding: 4px;')
@@ -239,6 +246,7 @@ class RoomsTab(QWidget):
         self.canvas.hoverInfo.connect(self._hover)
         self.canvas.brushPicked.connect(self._brush_picked)
         self.canvas.markerSelected.connect(self._marker_selected)
+        self.canvas.markerMoveRequested.connect(self._move_marker)
         self.canvas.cellSelected.connect(self._cell_selected)
         self.canvas.walkFlipRequested.connect(self._flip_walk)
         self.canvas.zoomChanged.connect(lambda z: self.zoom_box.setCurrentIndex(z - 1))
@@ -310,7 +318,8 @@ class RoomsTab(QWidget):
         tscroll.setWidget(self.tileset_map)
         self.picker_tabs.addTab(tscroll, 'Tileset')
         self.picker_tabs.setMinimumHeight(120)
-        self.sec_tiles = Section('Metatiles', self.picker_tabs, 'rooms_metatiles')
+        self.sec_tiles = Section('Metatiles', self.picker_tabs, 'rooms_metatiles',
+                                 expanded=True, remember=False)
         self.sec_tiles.setToolTip('click = brush · corner dot: red wall / green walkable')
         self.right_split.addWidget(self.sec_tiles)
         palbox = QWidget()
@@ -337,7 +346,8 @@ class RoomsTab(QWidget):
         prow.addStretch(1)
         pl.addLayout(prow)
         pl.addStretch(1)
-        self.sec_pal = Section('BG palettes', palbox, 'rooms_palettes')
+        self.sec_pal = Section('BG palettes', palbox, 'rooms_palettes',
+                               expanded=False, remember=False)
         self.sec_pal.setToolTip('double-click a colour to edit')
         self.right_split.addWidget(self.sec_pal)
         self.inspector = Inspector()
@@ -352,21 +362,57 @@ class RoomsTab(QWidget):
         self.inspector.addExitRequested.connect(self._add_exit)
         self.inspector.removeExitRequested.connect(self._remove_exit)
         self.inspector.tilesetChangeRequested.connect(self._change_tileset)
-        self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector')
+        # S97: NPC inspector (P3.5) + state rules (P3.5a)
+        self.inspector.addNpcRequested.connect(self._add_npc)
+        self.inspector.rules.rulesEdited.connect(self._rules_edited)
+        self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector',
+                                expanded=False, remember=False)
         self.right_split.addWidget(self.sec_insp)
+        # S97 r2: the NPC form is its own foldable section (user request)
+        from editor2.app.rooms.npc_panel import NpcPanel
+        npcbox = QWidget()
+        nl = QVBoxLayout(npcbox)
+        nl.setContentsMargins(0, 0, 0, 0)
+        self.npc_hint = QLabel('No NPC selected. Click an NPC marker with the Select tool (V), '
+                               'or click an empty cell and use “Add NPC here…” in '
+                               'Room / screen / selection.')
+        self.npc_hint.setWordWrap(True)
+        self.npc_hint.setStyleSheet('color: #aaa;')
+        nl.addWidget(self.npc_hint)
+        npc = self.npc_panel = NpcPanel()
+        npc.setTitle('')
+        npc.shownChanged.connect(lambda on: self.npc_hint.setVisible(not on))
+        npc.setVisible(False)
+        nl.addWidget(npc)
+        nl.addStretch(1)
+        nscroll = QScrollArea()
+        nscroll.setWidgetResizable(True)
+        nscroll.setWidget(npcbox)
+        self.npc_scroll = nscroll
+        self.inspector.npc = npc
+        npc.fieldsEdited.connect(self._npc_fields)
+        npc.spriteRequested.connect(self._npc_sprite)
+        npc.newTalkRequested.connect(self._npc_new_talk)
+        npc.editTalkRequested.connect(self._npc_edit_talk)
+        npc.presenceToggled.connect(self._npc_presence)
+        npc.deleteRequested.connect(self._npc_delete)
+        self.sec_npc = Section('NPC', nscroll, 'rooms_npc', expanded=False, remember=False)
+        self.right_split.addWidget(self.sec_npc)
         self.right_split.setStretchFactor(0, 3)
         self.right_split.setStretchFactor(1, 0)
         self.right_split.setStretchFactor(2, 4)
+        self.right_split.setStretchFactor(3, 4)
         from PySide6.QtCore import QSettings
-        st = QSettings('dwm1_disassembly', 'DWM1Editor').value('ui/rooms_right_split')
+        st = QSettings('dwm1_disassembly', 'DWM1Editor').value('ui/rooms_right_split4')
         if st:
             self.right_split.restoreState(st)
         self.right_split.splitterMoved.connect(lambda *_a: QSettings(
-            'dwm1_disassembly', 'DWM1Editor').setValue('ui/rooms_right_split',
+            'dwm1_disassembly', 'DWM1Editor').setValue('ui/rooms_right_split4',
                                                       self.right_split.saveState()))
-        for sec in (self.sec_tiles, self.sec_pal, self.sec_insp):
+        for sec in (self.sec_tiles, self.sec_pal, self.sec_insp, self.sec_npc):
             sec.toggled.connect(lambda _on: self._relayout_right())
         self.pal_sys.toggled.connect(lambda _on: self._relayout_right())
+        self._relayout_right()          # S97 r2: start folded (only Metatiles open)
 
         split = QSplitter()
         split.addWidget(left)
@@ -451,6 +497,10 @@ class RoomsTab(QWidget):
 
     # ----------------------------------------------------------- display
     def _show(self):
+        # the canvas drops its selection on every (re)show — so does the
+        # NPC form (S97; an edit re-selects through _after_npc_edit)
+        self._sel_npc = None
+        self.inspector.show_selection(None)
         if self.vanilla_mid is not None:
             self._show_vanilla()
             return
@@ -510,6 +560,8 @@ class RoomsTab(QWidget):
         self.state_next.setEnabled(self.state_idx < nst - 1)
         self.screen_label.setText(f'Screen {self.key}  (col {self.key % 4}, row {self.key // 4})')
         self.cap_label.setText('')
+        self.shown_when.setText('')
+        self.shown_when.setVisible(False)
         self.banner.setText(f'Vanilla room ${mid:02X} {self.s.renderer.vanilla_name(mid)} — '
                             'read-only. "Make editable" clones it into your project; '
                             'the original stays untouched.')
@@ -667,6 +719,11 @@ class RoomsTab(QWidget):
         self.state_next.setEnabled(self.state_idx < len(sts) - 1)
         self.state_del.setEnabled(len(sts) > 1)
         self.screen_label.setText(f'Screen {self.key}  (col {self.key % GRID_COLS}, row {self.key // GRID_COLS})')
+        rules = self.s.doc.rules_for_state(room, self.key, self.state_idx)
+        self.shown_when.setVisible(bool(rules))
+        self.shown_when.setText(('State shown when: ' + '  |  '.join(
+            (self.s.doc.describe_rule(ru) if ru.get('when') else 'no rule above matches')
+            for _i, ru in rules)) if rules else '')
         n, cap = self.s.doc.state_capacity(room, self.key, self.state_idx)
         self.cap_label.setText(f'NPCs {n}/{cap}')
         self.cap_label.setStyleSheet('color:#ff6060;' if n > cap else
@@ -750,20 +807,25 @@ class RoomsTab(QWidget):
 
     def _do_relayout_right(self):
         sp = self.right_split
-        secs = [self.sec_tiles, self.sec_pal, self.sec_insp]
+        secs = [self.sec_tiles, self.sec_pal, self.sec_insp, self.sec_npc]
         sizes = sp.sizes()
         total = sum(sizes) or sp.height()
         head = self.sec_tiles.button.sizeHint().height() + 6
         pal_h = (self.palettes.sizeHint().height() + self.pal_sys.sizeHint().height()
                  + head + 12) if self.sec_pal.is_expanded() else head
         self.sec_pal.setMinimumHeight(pal_h if self.sec_pal.is_expanded() else 0)
-        flex = [i for i in (0, 2) if secs[i].is_expanded()]
-        rest = max(0, total - pal_h - sum(head for i in (0, 2) if i not in flex))
-        new = [head, pal_h, head]
+        flexible = (0, 2, 3)
+        flex = [i for i in flexible if secs[i].is_expanded()]
+        rest = max(0, total - pal_h - sum(head for i in flexible if i not in flex))
+        new = [head, pal_h, head, head]
         if flex:
-            base = sum(max(sizes[i], 1) for i in flex)
+            # a section that was folded (header-sized) opens with an equal
+            # share instead of its old header height (S97 r2)
+            share = rest // len(flex)
+            want = {i: (sizes[i] if sizes[i] > 150 else share) for i in flex}
+            base = sum(max(want[i], 1) for i in flex)
             for i in flex:
-                new[i] = int(rest * max(sizes[i], 1) / base)
+                new[i] = int(rest * max(want[i], 1) / base)
         sp.setSizes(new)
 
     def _free1_toggled(self, on):
@@ -878,8 +940,189 @@ class RoomsTab(QWidget):
 
     def _marker_selected(self, sel):
         self.inspector.show_selection(sel, editable=self.current_room() is not None)
+        self._sel_npc = None
         if sel:
             self.status_line.setText(sel['label'])
+            ref = sel.get('ref')
+            if sel['kind'] == 'npc' and ref and ref[0] == 'npc':
+                self._show_npc_panel(ref[1], ref[2])
+
+    # ------------------------------------------------------ NPCs (S97, P3.5)
+    def _show_npc_panel(self, index, entry=None):
+        room = self.current_room()
+        panel = self.npc_panel
+        if room is None:
+            # vanilla view: read-only form from the raw bytes
+            view = self.s.doc.npc_view({}, entry)
+            panel.show_npc(view, [], None, None, editable=False,
+                           bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])))
+            panel.setVisible(True)
+            self.sec_npc.set_expanded(True)
+            return
+        lst = self.s.doc.npc_entries(room, self.key, self.state_idx)
+        if not 0 <= index < len(lst):
+            panel.setVisible(False)
+            return
+        entry = lst[index]
+        view = self.s.doc.npc_view(room, entry)
+        if view['kind'] != 'npc':
+            panel.setVisible(False)
+            return
+        self._sel_npc = index
+        sid = view.get('script')
+        talk = (self.s.doc.talk_boxes(sid) if isinstance(sid, str) and sid != 'none' else None)
+        pres = self.s.doc.npc_presence(room, self.key, self.state_idx, index)
+        panel.show_npc(view, self.s.doc.room_script_ids(room), talk,
+                       pres if len(pres) > 1 else None, editable=True,
+                       bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])))
+        panel.setVisible(True)
+        self.sec_npc.set_expanded(True)         # selecting an NPC opens its section
+
+    def _after_npc_edit(self, index):
+        """Reload, then keep the edited NPC selected (marker refs are rebuilt)."""
+        self._show()
+        if index is None:
+            return
+        ref = self.canvas.select_npc(index)
+        if ref is not None:
+            m = next(m for m in self.canvas.markers if m[5] is ref)
+            self.inspector.show_selection({'kind': m[0], 'x': m[1], 'y': m[2], 'sprite': m[3],
+                                           'label': m[4], 'ref': ref}, editable=True)
+            self._show_npc_panel(index)
+
+    def _npc_op(self, label, fn, keep=True):
+        room = self.current_room()
+        if room is None:
+            return None
+        rid, key, st = self.room_id, self.key, self.state_idx
+        cmd = C.SnapshotCommand(self.s, label, lambda doc: fn(doc, doc.room(rid), key, st))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, label, str(cmd.error))
+            return None
+        return cmd
+
+    def _add_npc(self, cell):
+        room = self.current_room()
+        if room is None:
+            return
+        n, cap = self.s.doc.state_capacity(room, self.key, self.state_idx)
+        if n >= cap:
+            QMessageBox.warning(self, 'Add NPC', f'This screen/state already has {n} NPCs — '
+                                f'the engine hard cap is {cap} (S91 measurement).')
+            return
+        from editor2.app.rooms.npc_panel import SpritePicker
+        dlg = SpritePicker(parent=self)
+        if dlg.exec() != QDialog.Accepted or dlg.value is None:
+            return
+        spr = int(dlg.value)
+        cx, cy = cell
+        cmd = self._npc_op(f'Add NPC ${spr:02X} at ({cx},{cy})',
+                           lambda doc, r, k, st: doc.add_npc(r, k, st, cx, cy, spr))
+        if cmd is not None:
+            self._after_npc_edit(cmd.result)
+
+    def _move_marker(self, ref, cx, cy):
+        if not ref or ref[0] != 'npc' or self.current_room() is None:
+            return
+        idx = ref[1]
+        cmd = self._npc_op(f'Move to ({cx},{cy})',
+                           lambda doc, r, k, st: doc.update_npc(r, k, st, idx, x=cx, y=cy))
+        if cmd is not None:
+            self._after_npc_edit(idx)
+
+    def _npc_fields(self, fields):
+        idx = self._sel_npc
+        if idx is None:
+            return
+        what = ', '.join(f'{k}={v}' for k, v in fields.items())
+        cmd = self._npc_op(f'NPC {what}',
+                           lambda doc, r, k, st: doc.update_npc(r, k, st, idx, **fields))
+        if cmd is not None:
+            self._after_npc_edit(idx)
+
+    def _npc_sprite(self):
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None:
+            return
+        from editor2.app.rooms.npc_panel import SpritePicker
+        cur = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
+        dlg = SpritePicker(current=cur.get('sprite'), parent=self)
+        if dlg.exec() == QDialog.Accepted and dlg.value is not None:
+            self._npc_fields({'sprite': int(dlg.value)})
+
+    def _npc_new_talk(self):
+        idx = self._sel_npc
+        if idx is None:
+            return
+        from editor2.app.rooms.npc_panel import TalkDialog
+        dlg = TalkDialog(rom=self.s.renderer.rom, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        boxes = dlg.boxes()
+
+        def op(doc, r, k, st):
+            sid = doc.new_talk_script(r, boxes)
+            doc.update_npc(r, k, st, idx, script=sid)
+            return sid
+        if self._npc_op('New talk text', op) is not None:
+            self._after_npc_edit(idx)
+
+    def _npc_edit_talk(self):
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None:
+            return
+        v = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
+        sid = v.get('script')
+        boxes = self.s.doc.talk_boxes(sid) if isinstance(sid, str) else None
+        if boxes is None:
+            return
+        from editor2.app.rooms.npc_panel import TalkDialog
+        dlg = TalkDialog(boxes, title=f'Edit {sid}', rom=self.s.renderer.rom, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        new = dlg.boxes()
+        if self._npc_op(f'Edit text of {sid}',
+                        lambda doc, r, k, st: doc.set_talk_boxes(sid, new)) is not None:
+            self._after_npc_edit(idx)
+
+    def _npc_presence(self, target, present):
+        idx = self._sel_npc
+        if idx is None:
+            return
+        cmd = self._npc_op(('Add NPC to' if present else 'Remove NPC from') + f' state {target}',
+                           lambda doc, r, k, st: doc.set_npc_presence(r, k, st, idx, target, present))
+        if cmd is not None:
+            self._after_npc_edit(idx)
+
+    def _npc_delete(self):
+        idx = self._sel_npc
+        if idx is None:
+            return
+        if self._npc_op('Delete NPC', lambda doc, r, k, st: doc.remove_npc(r, k, st, idx)) is not None:
+            self._sel_npc = None
+            self._show()
+            self.inspector.show_selection(None)
+
+    # ------------------------------------------------- state rules (P3.5a)
+    def _rules_edited(self, rules, new_flags):
+        room = self.current_room()
+        if room is None:
+            return
+        rid = self.room_id
+
+        def op(doc):
+            for nm in new_flags:
+                if not any(f.get('name') == doc._slug(nm) for f in doc.flags()):
+                    doc.add_flag(nm)
+            doc.set_state_rules(doc.room(rid), rules)
+        cmd = C.SnapshotCommand(self.s, 'Edit state rules', op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'State rules', str(cmd.error))
+        self._show()
 
     def _cell_selected(self, cell):
         if cell is None or self.canvas.tiles is None:

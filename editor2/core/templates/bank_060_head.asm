@@ -11,6 +11,8 @@
 ;   Entry 6: GateAwareDispatch  — B-fix: bank-$0F script dispatch routed by wMapID
 ;   Entry 7: VanillaExitResolve — S70: unified exit resolve (custom rooms AND
 ;            compiler-authored vanilla-room exit EXTENSIONS; HL=list or 0)
+;   Entry 8: CustomStateRules   — S97: flag-driven room states (P3.5a); writes
+;            the current screen's step counter from CustomStateRulePtrTable
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
@@ -24,6 +26,7 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw CustomTextDisplay    ; Entry 5
     dw GateAwareDispatch    ; Entry 6 — gate-entry regression fix (B-fix): route by wMapID
     dw VanillaExitResolve   ; Entry 7 — S70 unified exit resolve (bank $0B Entry 6 calls this for EVERY non-gate room)
+    dw CustomStateRules     ; Entry 8 — S97 state rules (bank $17 CustomAttrCheck + CustomReadStep call it)
 
 ; =============================================================================
 ; CustomPtrChase
@@ -105,6 +108,7 @@ DummyExits:
 ; Entry 0-3: Room data readers (proven, unchanged)
 ; =============================================================================
 CustomReadStep:
+    call CustomStateRules        ; S97: flag rules pick the state BEFORE the counter read
     call CustomPtrChase
     ld e, [hl]
     inc hl
@@ -186,6 +190,116 @@ CopyExitListToBuffer:
 CustomTilesetInfo:
     ld a, [wCustomRoomFlag]
     ret
+
+; =============================================================================
+; Entry 8: CustomStateRules  (S97 — ROADMAP P3.5a, declarative room states)
+; =============================================================================
+; Custom-room step counters live in the transient $CD80 window (zeroed at every
+; save-restore, PROJECT_COMPILER §2.6), so a state reached by a script is lost
+; on reload. Event flags persist. This routine re-derives the CURRENT screen's
+; state from flags: the compiler emits, per custom room, a list of screens that
+; carry rules, each with an ordered rule list; the FIRST rule whose terms all
+; hold writes its state into that screen's step counter. No match = counter
+; untouched (scripts that write_ram the counter keep working until the next
+; load). Idempotent, so it runs from every custom (re)load path:
+;   * bank $17 CustomAttrCheck (the FIRST custom hook of a room load — the
+;     attr/palette walk reads the counter before bank $0B Entry 0 does,
+;     PyBoy-measured S97), via StateRulesHook17 + rst $10 entry 8;
+;   * CustomReadStep (Entry 0) itself, before CustomPtrChase.
+; Tables (generated, bank $60):
+;   CustomStateRulePtrTable: dw per custom room (mapID - $6B), $0000 = none
+;   room list:  { db screen / dw step_counter / dw rules } ... db $FF
+;   rules:      { db state / db n_terms / n_terms x dw flag } ... db $FF
+;               flag word: bits 0-14 = event flag index, bit 15 = must be CLEAR
+;               (n_terms 0 = always).
+; Clobbers A/BC/DE/HL (callers preserve what they need).
+CustomStateRules:
+    ld a, [wMapID]
+    sub CUSTOM_ROOM_START
+    ret c                        ; not a custom room (defensive)
+    add a
+    ld hl, CustomStateRulePtrTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    or h
+    ret z                        ; room has no rules
+.screen:
+    ld a, [hl+]
+    cp $FF
+    ret z                        ; this screen has no rules
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr z, .found
+    inc hl                       ; skip dw counter + dw rules
+    inc hl
+    inc hl
+    inc hl
+    jr .screen
+.found:
+    ld e, [hl]
+    inc hl
+    ld d, [hl]                   ; DE = step counter address
+    inc hl
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                      ; HL = rule list
+.rule:
+    ld a, [hl+]                  ; target state
+    cp $FF
+    ret z                        ; no rule matched: counter untouched
+    push de                      ; [sp+2] counter
+    push af                      ; [sp]   A = state
+    ld a, [hl+]                  ; n_terms
+    or a
+    jr z, .match                 ; no terms = always
+.term:
+    push af                      ; terms left (incl. this one)
+    ld c, [hl]
+    inc hl
+    ld b, [hl]
+    inc hl
+    push hl
+    ld a, b
+    and $80
+    ld d, a                      ; D bit 7 = term wants the flag CLEAR
+    res 7, b
+    call TestEventFlag           ; Z = clear, NZ = set (clobbers A, HL)
+    pop hl
+    jr z, .isClear
+    bit 7, d
+    jr nz, .fail                 ; set, but must be clear
+    jr .next
+.isClear:
+    bit 7, d
+    jr z, .fail                  ; clear, but must be set
+.next:
+    pop af
+    dec a
+    jr nz, .term
+.match:
+    pop af                       ; A = state
+    pop de                       ; DE = counter
+    ld [de], a
+    ret
+.fail:
+    pop af                       ; terms left incl. the failed one
+    dec a
+    add a                        ; skip the remaining terms (2 B each)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    pop af                       ; drop the state
+    pop de                       ; DE = counter again
+    jr .rule
 
 ; =============================================================================
 ; Entry 7: VanillaExitResolve  (S70 — vanilla-room exit extensions)

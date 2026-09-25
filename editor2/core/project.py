@@ -25,6 +25,13 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 # those bytes are wAnchorGate/wAnchorFloor (custom skill $E4 Anchor persistent
 # state). See EVENT_FLAGS.md "Free Flag Slots".
 FLAG_SAFE_RANGES = [(0x0158, 0x0167)]
+# S97 state rules may TEST any event flag (vanilla story flags included). The
+# bitfield is $D99B + idx/8; vanilla references reach $02C1 (EVENT_FLAGS.md),
+# and $0278+ is not in the save image — readable, but a rule on it resets on
+# reload. The cap keeps a typo from reading unrelated WRAM.
+FLAG_INDEX_MAX = 0x02FF
+FLAG_PERSIST_LIMIT = 0x0278
+STATE_RULE_MAX_TERMS = 8
 # S65 migration: step counters live in the CF3-freed window (WRAM $CC80-$D664,
 # freed S60 — MONSTER_DATA "CF3 as built"). $CD80-$CFFF is the counter region;
 # $CC80/$CD00 hold the relocated NPC/exit buffers; $D001-$D664 is the reserved
@@ -649,6 +656,86 @@ class Project:
 
     def flag_map(self):
         return dict(self._flags)
+
+    # ------------------------------------------------------ state rules (S97)
+    def resolve_flag_ref(self, ref, ctx=""):
+        """A flag reference in authored data -> event flag index. Names are
+        custom.flags entries (auto-allocated from the safe pool); numbers
+        ("0x0030", 48) are ANY event flag — vanilla story flags included
+        (EVENT_FLAGS.md). Indices >= $0278 are readable but not saved."""
+        if isinstance(ref, str) and ref in self._flags:
+            return self._flags[ref]
+        try:
+            idx = F.val(ref)
+        except Exception:
+            idx = None
+        if not isinstance(idx, int):
+            raise ProjectError(f"{ctx}: flag {ref!r} is neither a named flag "
+                               "(custom.flags) nor a flag number")
+        if not 0 <= idx <= FLAG_INDEX_MAX:
+            raise ProjectError(f"{ctx}: flag {F.hexw(idx)} outside the event "
+                               f"flag bitfield ($0000-{F.hexw(FLAG_INDEX_MAX)})")
+        return idx
+
+    def state_rules(self, r):
+        """custom.rooms[].state_rules (S97, ROADMAP P3.5a) resolved per screen.
+
+        Authored (room level, ordered, first match wins):
+            {"state": 1, "when": [{"flag": "boss_beaten"},
+                                  {"flag": "0x0030", "is": "clear"}],
+             "screens": [0, 1],       # optional; default = every screen
+             "comment": "..."}
+        A rule applies to a screen only if that screen HAS the state (a
+        one-state screen never changes). Returns
+        [(screen, [(state, [(flag_idx, must_be_clear), ...]), ...]), ...]
+        for screens with at least one applicable rule, in screen order."""
+        rules = r.get('state_rules') or []
+        if not rules:
+            return []
+        ctx = f"room {r.get('id')} state_rules"
+        resolved = []
+        for i, ru in enumerate(rules):
+            c = f"{ctx}[{i}]"
+            unknown = set(ru) - {'state', 'when', 'screens', 'comment'}
+            if unknown:
+                raise ProjectError(f"{c}: unknown keys {sorted(unknown)}")
+            if 'state' not in ru:
+                raise ProjectError(f"{c}: 'state' is required")
+            st = int(F.val(ru['state']))
+            terms = []
+            for t in ru.get('when') or []:
+                is_ = t.get('is', 'set')
+                if is_ not in ('set', 'clear'):
+                    raise ProjectError(f"{c}: term 'is' must be set/clear, got {is_!r}")
+                terms.append((self.resolve_flag_ref(t.get('flag'), c),
+                              is_ == 'clear'))
+            if len(terms) > STATE_RULE_MAX_TERMS:
+                raise ProjectError(f"{c}: {len(terms)} terms (max "
+                                   f"{STATE_RULE_MAX_TERMS})")
+            scr_filter = ru.get('screens')
+            resolved.append((st, terms,
+                             None if scr_filter is None
+                             else {int(x) for x in scr_filter}))
+        out = []
+        screens = self.room_screens(r)
+        used = [False] * len(resolved)
+        for k in sorted(screens):
+            n = len(self.screen_states(screens[k]))
+            lst = []
+            for i, (st, terms, flt) in enumerate(resolved):
+                if flt is not None and k not in flt:
+                    continue
+                if st < n:
+                    lst.append((st, terms))
+                    used[i] = True
+            if lst:
+                out.append((k, lst))
+        for i, u in enumerate(used):
+            if not u:
+                raise ProjectError(
+                    f"{ctx}[{i}]: state {resolved[i][0]} exists on none of the "
+                    "screens it names — the rule could never apply")
+        return out
 
     # ---------------------------------------------------------- step counters
     def step_counter_allocation(self):

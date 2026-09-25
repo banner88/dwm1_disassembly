@@ -59,6 +59,24 @@ jr_006_402b:
     ld h, a
     jr jr_006_402b
 
+; =============================================================================
+; NPC BEHAVIOUR ENGINE (S97 annotation — ROOM_DATA_FORMAT "NPC behaviour types")
+; =============================================================================
+; label6_400f / jr_006_4028 walk the 8 NPC slots at $D7D2 (32 B each) every
+; frame and call LoadMapS_4043 per occupied slot ([slot+1] = sprite != $FF).
+; Slot fields used here: +$00 type byte (bits 4-5 authored facing, bit 6 =
+; HIDDEN / inactive entry — skipped here (no behaviour, no animation), by
+; entry 0's player-collision loop (not solid) and entry 1's sprite loop (not
+; drawn), and never talkable — PyBoy-measured S97; low nibble = behaviour),
+; +$02/+$03 home tile (absolute), +$05 status (bit 0 moving, bit 5 blocked by
+; the player -> $01:AdvanceNPCPointer reverts the step and sets a $20 pause,
+; bit 6 talking, bit 7 hidden), +$06 facing 0 down 1 left 2 up 3 right,
+; +$07 pause timer, +$08 pattern phase, +$17 OAM flip, +$18/+$1A pixel X/Y.
+; Patterned walkers (2-5, 8, 9, A) never test tiles: they walk through walls
+; and off-screen; only the player blocks them. Speed 1 px / 2 frames with a
+; 32-frame pause per tile (type A: 1 px / 8 frames, no pause). All freeze
+; while any script runs ($D8D7 != 0) — measured PyBoy S97.
+; -----------------------------------------------------------------------------
 LoadMapS_4043:
     ld a, l
     ldh [$d5], a
@@ -72,38 +90,27 @@ jr_006_4049:
 
     and $0f
     rst $00
-    ld [hl], b
-    ld b, b
-    sub b
-    ld b, b
-    or c
-    ld b, b
-    ld [hl+], a
-    ld b, c
-    and l
-    ld b, c
-    ld h, [hl]
-    ld b, d
-    rst $10
-    ld b, d
-    add hl, bc
-    ld b, e
-    ccf
-    ld b, e
-    or b
-    ld b, e
-    rra
-    ld b, h
-    ld [hl], b
-    ld b, b
-    ld [hl], b
-    ld b, b
-    ld [hl], b
-    ld b, b
-    push bc
-    ld b, h
-    sub c
-    ld b, [hl]
+    ; NPCBehaviourTable — rst $00 on (type & $0F); bit 6 of the type byte
+    ; (hidden entry) returned above.
+NPCBehaviourTable:
+    dw NPCBeh0_Stand        ; 0
+    dw NPCBeh1_Spin         ; 1
+    dw NPCBeh2_PaceX2       ; 2
+    dw NPCBeh3_Square2      ; 3
+    dw NPCBeh4_Figure8      ; 4
+    dw NPCBeh5_PaceRight3   ; 5
+    dw NPCBeh6_StandFixed   ; 6
+    dw NPCBeh7_StandReturn  ; 7
+    dw NPCBeh8_PaceX1       ; 8
+    dw NPCBeh9_PaceX2Left   ; 9
+    dw NPCBehA_Sway         ; A
+    dw NPCBeh0_Stand        ; B (alias of 0)
+    dw NPCBeh0_Stand        ; C (alias of 0)
+    dw NPCBeh0_Stand        ; D (alias of 0)
+    dw NPCBehE_GateWanderMeet ; E (gate floors only)
+    dw NPCBehF_GateWander   ; F (gate floors only)
+; $4070 type 0 (and B/C/D): stand; turns to face the player when talked to and KEEPS that facing
+NPCBeh0_Stand:
     ldh a, [$d5]
     add $05
     ld l, a
@@ -127,6 +134,8 @@ jr_006_408d:
     jp Jump_006_4a48
 
 
+; $4090 type 1: turn 90 deg every 16 frames (down>left>up>right); faces the player while talked to
+NPCBeh1_Spin:
     ld a, [$c8a6]
     and $07
     jp nz, Jump_006_4aa1
@@ -150,6 +159,8 @@ jr_006_40ae:
     jp Jump_006_4a48
 
 
+; $40B1 type 2: pace horizontally home+2 <-> home-2, starting RIGHT
+NPCBeh2_PaceX2:
     ld a, [$c8a6]
     and $01
     jp nz, Jump_006_4aa1
@@ -216,20 +227,21 @@ HramMapS_4100:
     ld h, a
     ld a, [hl]
     rst $00
-    db $10
-    ld b, c
-    add hl, de
-    ld b, c
+    dw NPCBeh2_Phase0, NPCBeh2_Phase1   ; +$08 phase: 0 right to +$20, 1 left to -$20
+NPCBeh2_Phase0:
     ld bc, $0001
     ld de, $0020
     jp Jump_006_49ba
 
 
+NPCBeh2_Phase1:
     ld bc, $ffff
     ld de, $ffe0
     jp Jump_006_49ba
 
 
+; $4122 type 3: 2-tile square: down 2, right 2, up 2, left 2 (phase counts DOWN 0,3,2,1)
+NPCBeh3_Square2:
     ld a, [$c8a6]
     and $01
     jp nz, Jump_006_4aa1
@@ -293,34 +305,33 @@ HramMapS_416d:
     ld h, a
     ld a, [hl]
     rst $00
-    add c
-    ld b, c
-    adc d
-    ld b, c
-    sub e
-    ld b, c
-    sbc h
-    ld b, c
+    dw NPCBeh3_Phase0, NPCBeh3_Phase1, NPCBeh3_Phase2, NPCBeh3_Phase3
+NPCBeh3_Phase0:
     ld bc, $0001
     ld de, $0020
     jp Jump_006_4a01
 
 
+NPCBeh3_Phase1:
     ld bc, $ffff
     ld de, $0000
     jp Jump_006_49ba
 
 
+NPCBeh3_Phase2:
     ld bc, $ffff
     ld de, $0000
     jp Jump_006_4a01
 
 
+NPCBeh3_Phase3:
     ld bc, $0001
     ld de, $0020
     jp Jump_006_49ba
 
 
+; $41A5 type 4: figure-8 of 3-tile legs: L3 U3 L3 D3 R3 U3 R3 D3 (phase 0-7, facing from NPCFigure8FacingTable)
+NPCBeh4_Figure8:
     ld a, [$c8a6]
     and $01
     jp nz, Jump_006_4aa1
@@ -337,7 +348,7 @@ HramMapS_416d:
 
     ld a, [hl-]
     and $07
-    ld de, $425e
+    ld de, NPCFigure8FacingTable
     add e
 
 Jump_006_41c3:
@@ -393,65 +404,60 @@ HramMapS_41fa:
     ld h, a
     ld a, [hl]
     rst $00
-    ld d, $42
-    rra
-    ld b, d
-    jr z, @+$44
-
-    ld sp, $3a42
-    ld b, d
-    ld b, e
-    ld b, d
-    ld c, h
-    ld b, d
-    ld d, l
-    ld b, d
+    dw NPCBeh4_Phase0, NPCBeh4_Phase1, NPCBeh4_Phase2, NPCBeh4_Phase3
+    dw NPCBeh4_Phase4, NPCBeh4_Phase5, NPCBeh4_Phase6, NPCBeh4_Phase7
+NPCBeh4_Phase0:
     ld bc, $ffff
     ld de, $ffd0
     jp Jump_006_49ba
 
 
+NPCBeh4_Phase1:
     ld bc, $ffff
     ld de, $ffd0
     jp Jump_006_4a01
 
 
+NPCBeh4_Phase2:
     ld bc, $ffff
     ld de, $ffa0
     jp Jump_006_49ba
 
 
+NPCBeh4_Phase3:
     ld bc, $0001
     ld de, $0000
     jp Jump_006_4a01
 
 
+NPCBeh4_Phase4:
     ld bc, $0001
     ld de, $ffd0
     jp Jump_006_49ba
 
 
+NPCBeh4_Phase5:
     ld bc, $ffff
     ld de, $ffd0
     jp Jump_006_4a01
 
 
+NPCBeh4_Phase6:
     ld bc, $0001
     ld de, $0000
     jp Jump_006_49ba
 
 
+NPCBeh4_Phase7:
     ld bc, $0001
     ld de, $0000
     jp Jump_006_4a01
 
 
-    ld bc, $0102
-    nop
-    inc bc
-    ld [bc], a
-    inc bc
-    nop
+NPCFigure8FacingTable:  ; $425E — facing per type-4 phase (0 down 1 left 2 up 3 right)
+    db 1, 2, 1, 0, 3, 2, 3, 0
+; $4266 type 5: pace home -> home+3 right and back
+NPCBeh5_PaceRight3:
     ld a, [$c8a6]
     and $01
     jp nz, Jump_006_4aa1
@@ -518,19 +524,21 @@ HramMapS_42b5:
     ld h, a
     ld a, [hl]
     rst $00
-    push bc
-    ld b, d
-    adc $42
+    dw NPCBeh5_Phase0, NPCBeh5_Phase1   ; 0 right to +$30, 1 left to home
+NPCBeh5_Phase0:
     ld bc, $0001
     ld de, $0030
     jp Jump_006_49ba
 
 
+NPCBeh5_Phase1:
     ld bc, $ffff
     ld de, $0000
     jp Jump_006_49ba
 
 
+; $42D7 type 6: stand, NEVER turns (still talkable; no timer/face-player tail)
+NPCBeh6_StandFixed:
     ldh a, [$d5]
     add $05
     ld l, a
@@ -565,6 +573,8 @@ jr_006_4306:
     jp Jump_006_4a83
 
 
+; $4309 type 7: faces the player while talked to, then snaps back to its AUTHORED facing (type bits 4-5)
+NPCBeh7_StandReturn:
     ldh a, [$d5]
     add $05
     ld l, a
@@ -603,6 +613,8 @@ jr_006_433c:
     jp Jump_006_4a48
 
 
+; $433F type 8: pace home+1 <-> home-1, starting right
+NPCBeh8_PaceX1:
     ld a, [$c8a6]
     and $01
     jp nz, Jump_006_4aa1
@@ -669,20 +681,21 @@ HramMapS_438e:
     ld h, a
     ld a, [hl]
     rst $00
-    sbc [hl]
-    ld b, e
-    and a
-    ld b, e
+    dw NPCBeh8_Phase0, NPCBeh8_Phase1   ; 0 right to +$10, 1 left to -$10
+NPCBeh8_Phase0:
     ld bc, $0001
     ld de, $0010
     jp Jump_006_49ba
 
 
+NPCBeh8_Phase1:
     ld bc, $ffff
     ld de, $fff0
     jp Jump_006_49ba
 
 
+; $43B0 type 9: pace home-2 <-> home+2, starting LEFT (vanilla-unused)
+NPCBeh9_PaceX2Left:
     ld a, [$c8a6]
     and $01
     jp nz, Jump_006_4aa1
@@ -748,19 +761,21 @@ HramMapS_43fd:
     ld h, a
     ld a, [hl]
     rst $00
-    dec c
-    ld b, h
-    ld d, $44
+    dw NPCBeh9_Phase0, NPCBeh9_Phase1   ; 0 left to -$20, 1 right to +$20
+NPCBeh9_Phase0:
     ld bc, $ffff
     ld de, $ffe0
     jp Jump_006_49ba
 
 
+NPCBeh9_Phase1:
     ld bc, $0001
     ld de, $0020
     jp Jump_006_49ba
 
 
+; $441F type A: slow sway +-1 tile horizontally, 1 px / 8 frames, no pauses, facing never changes (DeathMore boss)
+NPCBehA_Sway:
     ld a, [$c8a6]
     and $07
     jp nz, Jump_006_4aa1
@@ -825,20 +840,21 @@ HramMapS_446d:
     ld h, a
     ld a, [hl]
     rst $00
-    ld a, l
-    ld b, h
-    add [hl]
-    ld b, h
+    dw NPCBehA_Phase0, NPCBehA_Phase1   ; 0 right to +$10, 1 left to -$10
+NPCBehA_Phase0:
     ld bc, $0001
     ld de, $0010
     jp Jump_006_448f
 
 
+NPCBehA_Phase1:
     ld bc, $ffff
     ld de, $fff0
     jp Jump_006_448f
 
 
+; move X by BC with no tile snap/pause (type A); returns BC = X - home px
+NPCSlideX:
 Jump_006_448f:
     ld a, [wGameState]
     bit 0, a
@@ -882,6 +898,8 @@ Jump_006_448f:
     ret
 
 
+; $44C5 type E: GATE-ONLY wanderer (acts only when $C926 == wScreenIndex; $C926 = $FF outside gates): random walk with tile collision, auto-starts its script (wScriptMapType $70) on stepping beside the player
+NPCBehE_GateWanderMeet:
     ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
@@ -972,34 +990,33 @@ HramMapS_4543:
     ld a, [hl]
     and $03
     rst $00
-    ld e, c
-    ld b, l
-    ld h, d
-    ld b, l
-    ld l, e
-    ld b, l
-    ld [hl], h
-    ld b, l
+    dw NPCBehE_Dir0, NPCBehE_Dir1, NPCBehE_Dir2, NPCBehE_Dir3  ; by facing: down, left, up, right
+NPCBehE_Dir0:
     ld bc, $0001
     ld de, $0010
     jp Jump_006_4874
 
 
+NPCBehE_Dir1:
     ld bc, $ffff
     ld de, $fff0
     jp Jump_006_472e
 
 
+NPCBehE_Dir2:
     ld bc, $ffff
     ld de, $fff0
     jp Jump_006_4874
 
 
+NPCBehE_Dir3:
     ld bc, $0001
     ld de, $0010
     jp Jump_006_472e
 
 
+; type E: is the player on one of the 4 neighbouring tiles? -> NPCAutoTalk
+NPCCheckPlayerAdjacent:
 HramMapS_457d:
     ldh a, [$d5]
     add $18
@@ -1120,6 +1137,8 @@ jr_006_463e:
     ret
 
 
+; type E: start this NPC's script as if talked to (wScriptMapType := $70, status bit 6)
+NPCAutoTalk:
 Jump_006_463f:
 jr_006_463f:
     ldh a, [$d5]
@@ -1157,6 +1176,8 @@ jr_006_463f:
     ret
 
 
+; Z if NPC pixel pos (+BC) lands on the player's tile ($92/$93, $95/$96)
+NPCPosMatch:
 ReadMapS_467c:
     ld a, [hl+]
     ld h, [hl]
@@ -1179,6 +1200,8 @@ ReadMapS_467c:
     ret
 
 
+; $4691 type F: GATE-ONLY wanderer, same as E without the auto-talk
+NPCBehF_GateWander:
     ld a, [wScreenIndex]
     ld b, a
     ld a, [$c926]
@@ -1254,34 +1277,33 @@ HramMapS_46f4:
     ld a, [hl]
     and $03
     rst $00
-    ld a, [bc]
-    ld b, a
-    inc de
-    ld b, a
-    inc e
-    ld b, a
-    dec h
-    ld b, a
+    dw NPCBehF_Dir0, NPCBehF_Dir1, NPCBehF_Dir2, NPCBehF_Dir3  ; by facing: down, left, up, right
+NPCBehF_Dir0:
     ld bc, $0001
     ld de, $0010
     jp Jump_006_4874
 
 
+NPCBehF_Dir1:
     ld bc, $ffff
     ld de, $fff0
     jp Jump_006_472e
 
 
+NPCBehF_Dir2:
     ld bc, $ffff
     ld de, $fff0
     jp Jump_006_4874
 
 
+NPCBehF_Dir3:
     ld bc, $0001
     ld de, $0010
     jp Jump_006_472e
 
 
+; types E/F: step X with collision (behaviour class $0C-$0E blocks) inside the home..+7 box; A=0 moving, 1 arrived, 2 blocked
+NPCTryStepX:
 Jump_006_472e:
     ld a, [wGameState]
     bit 0, a
@@ -1512,6 +1534,8 @@ jr_006_4825:
     ret
 
 
+; types E/F: same for Y inside home..+5
+NPCTryStepY:
 Jump_006_4874:
     ld a, [wGameState]
     bit 0, a
@@ -1742,6 +1766,8 @@ jr_006_496b:
     ret
 
 
+; patterned step: X += BC (1 px), returns BC = X - home px; at a tile boundary +$07 := $10 (pause)
+NPCStepX:
 Jump_006_49ba:
     ld a, [wGameState]
     bit 0, a
@@ -1798,6 +1824,8 @@ jr_006_4a00:
     ret
 
 
+; patterned step on Y (see NPCStepX)
+NPCStepY:
 Jump_006_4a01:
     ld a, [wGameState]
     bit 0, a
@@ -1854,6 +1882,8 @@ jr_006_4a47:
     ret
 
 
+; common tail: pause timer +$07 (clears moving bit), clear talk bit when no script runs, face the player while talked to
+NPCBehTail:
 Jump_006_4a48:
     ldh a, [$d5]
     add $07
@@ -1899,6 +1929,8 @@ jr_006_4a6d:
     inc hl
     ld [hl], a
 
+; +$17 := NPCFacingFlipTable[facing] (left = X-flip of right)
+NPCAnimSetFlip:
 Jump_006_4a83:
 jr_006_4a83:
     ldh a, [$d5]
@@ -1908,7 +1940,7 @@ jr_006_4a83:
     adc $00
     ld h, a
     ld a, [hl]
-    ld de, $4b1b
+    ld de, NPCFacingFlipTable
     add e
     ld e, a
     ld a, $00
@@ -1923,6 +1955,8 @@ jr_006_4a83:
     ld a, [de]
     ld [hl], a
 
+; animation id = NPCFacingFrameTable[facing] + 0 stand / 3 walk (bit 0) / 6 talk (bit 6); hidden if +$05 bit 7
+NPCAnimSelect:
 Jump_006_4aa1:
     ldh a, [$d5]
     add $05
@@ -1946,7 +1980,7 @@ Jump_006_4aa1:
 jr_006_4abc:
     inc hl
     ld a, [hl]
-    ld de, $4b17
+    ld de, NPCFacingFrameTable
     add e
     ld e, a
     ld a, $00
@@ -2021,14 +2055,21 @@ jr_006_4b09:
     ret
 
 
-    nop
-    ld bc, $0102
-    nop
-    jr nz, jr_006_4b1e
+NPCFacingFrameTable:  ; $4B17 — animation base per facing (down 0, left 1, up 2, right 1)
+    db 0, 1, 2, 1
+NPCFacingFlipTable:   ; $4B1B — +$17 OAM attr per facing (left = X-flip $20)
+    db 0, $20, 0, 0
 
-jr_006_4b1e:
-    nop
-
+; -----------------------------------------------------------------------------
+; Entry 0 (label6_4b1f) — player vs NPC collision (S97 annotation): clears
+; every slot's +$05 bit 5, then (no script running) tests the player's target
+; position ($FF92/$FF93 X, $FF95/$FF96 Y copied to $FFDB-$FFDE) against each
+; slot's pixel position (+$18/+$1A) — slots with type bit 6 (hidden) or sprite
+; $4D are skipped, i.e. NOT solid. A hit sets $FF90 bit 5 (player blocked),
+; $D7BD = slot index and the slot's +$05 bit 5 (bank $01 AdvanceNPCPointer
+; then reverts the NPC's own step and pauses it $20 frames — walkers wait for
+; the player).
+; -----------------------------------------------------------------------------
 label6_4b1f:
     ld hl, $ff90
     res 5, [hl]
@@ -2350,6 +2391,12 @@ jr_006_4c9c:
     ldh [$de], a
     ret
 
+; -----------------------------------------------------------------------------
+; Entry 1 (label6_4cbc) — NPC sprite draw loop (S97 annotation): for each slot
+; with sprite != $FF and type bit 6 CLEAR, SaveMapS_4d0a builds the OAM entries
+; from +$18/+$1A — hidden (bit 6) entries are never drawn (PyBoy S97: OAM loses
+; the slot's 4 objects).
+; -----------------------------------------------------------------------------
 label6_4cbc:
     ld a, [$c8ec]
     or a
@@ -5384,16 +5431,32 @@ jr_006_6920:
     ld hl, $0040
     call LoadMapS_682f
 
+; S97 round 2 — dialog-box MIDDLE row (in: HL = the row's BG-map address).
+; Same-size rewrite (20 B): the row draw ($FE, 18 x $E0, $FF) moved to bank
+; $73 entry 14 BoxRowDraw, which first sets the row's GBC attributes to the
+; system palette 7 (saving the room's) when the room is a free-colour custom
+; room — the box tiles are drawn with colour 1, which is the ROOM's own colour
+; there (FreeColor1Hook), not cream. rst $10 keeps DE, so DE carries the row.
 LoadMapS_6939:
 jr_006_6939:
-    ld a, $fe
-    call Write_gfx_tile
-    call SaveMapS_67f0
-    ld b, $12
-    ld a, $e0
-    call CallMapS_694d
-    ld a, $ff
-    jp Write_gfx_tile
+    ld d, h
+    ld e, l
+    ld hl, $730e                 ; bank $73 entry 14: BoxRowDraw (DE = row addr)
+    rst $10
+    ret
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
 CallMapS_694d:
@@ -5428,45 +5491,16 @@ ReadMapS_6957:
     call LoadMapS_682f
     jr jr_006_6939
 
+    ; S97 round 2 — dialog state 9: box top/bottom frame rows. Same-size
+    ; rewrite: the body (frames + the SGB ATTR_BLK packet, unchanged) moved
+    ; to bank $73 entry 15 BoxFrameDraw, which also sets rows 0/4 to palette
+    ; 7 in free-colour custom rooms (see LoadMapS_6939).
     ld hl, $c915
     inc [hl]
-    ld a, [$c919]
-    ld l, a
-    ld a, [$c91a]
-    ld h, a
-    ld a, $fa
-    call Write_gfx_tile
-    call SaveMapS_67f0
-    ld b, $12
-    ld a, $ef
-    call CallMapS_694d
-    ld a, $fb
-    call Write_gfx_tile
-    ld hl, $0080
-    call LoadMapS_682f
-    ld a, $fc
-    call Write_gfx_tile
-    call SaveMapS_67f0
-    ld b, $12
-    ld a, $ee
-    call CallMapS_694d
-    ld a, $fd
-    call Write_gfx_tile
-    call ScrollCalcDelta
-    ld hl, $0000
-    ldh a, [$d3]
-    cp $02
-    jr nz, jr_006_69c2
-
-    ld hl, $000d
-
-jr_006_69c2:
-    ld a, $00
-    ld bc, $1304
-    ld d, $01
-    call DataTable_1F27
-    call CheckSGBFlag
+    ld hl, $730f                 ; bank $73 entry 15: BoxFrameDraw
+    rst $10
     ret
+    ds 78, $00                   ; old body bytes (next state stays at $69D0)
 
 
     ld a, [$c8aa]
@@ -5694,16 +5728,23 @@ SetMapS_6ad7:
     ld de, $c150
     ld b, $14
 
+; S97 round 2 — dialog close: restore one box row from its $C100 backup
+; (in: DE = $C100/$C114/$C128/$C13C/$C150, B = 20, HL = row address). Same-size
+; rewrite (12 B): bank $73 entry 16 BoxRowRestore recomputes HL from DE (row =
+; (E)/20) and puts the room's GBC attributes back with the tiles when that row
+; was switched to palette 7. DE survives rst $10.
 LoadMapS_6b3d:
 jr_006_6b3d:
-    ld a, [de]
-    call Write_gfx_tile
-    inc de
-    call SaveMapS_67f0
-    dec b
-    jr nz, jr_006_6b3d
-
+    ld hl, $7310                 ; bank $73 entry 16: BoxRowRestore (DE = backup)
+    rst $10
     ret
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
     ld a, $00

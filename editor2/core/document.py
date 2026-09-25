@@ -1579,3 +1579,312 @@ class Document:
         self.touch()
         return gone
 
+
+    # ================================================================ NPCs
+    # S97 (ROADMAP P3.5). An NPC entry is `{kind: 'npc', x, y, sprite,
+    # facing, behaviour, hidden, script}` (PROJECT_COMPILER §2.2 + S97): the
+    # type byte = facing (bits 4-5) | hidden (bit 6) | behaviour (0-3,
+    # ROOM_DATA_FORMAT "NPC behaviour types"). Cloned rooms carry `raw`
+    # 5-byte entries; editing one converts it to the typed form with the
+    # SAME bytes (script index -> the room's script id when the table has
+    # it, else the index is kept as an int).
+    NPC_FIELDS = ('x', 'y', 'sprite', 'facing', 'behaviour', 'hidden', 'script')
+
+    def _state_target(self, room, key, state_idx):
+        scr = self.screen(room, key)
+        return scr['states'][state_idx] if scr.get('states') else scr
+
+    def npc_entries(self, room, key, state_idx):
+        return self._state_target(room, key, state_idx).setdefault('npcs', [])
+
+    def npc_view(self, room, entry):
+        """Normalized view of an npcs[] entry: dict with kind ('npc',
+        'spawn', 'walkon', 'special'), x, y and — for NPCs — sprite, facing,
+        behaviour (0-15), hidden, script (id, None, or a raw int index),
+        raw (bool)."""
+        from editor2.core import formats as F
+        k = entry.get('kind')
+        if k == 'spawn':
+            return {'kind': 'spawn', 'x': int(entry['x']), 'y': int(entry['y'])}
+        if k == 'npc':
+            fac = entry.get('facing', 'down')
+            t = F.FACING[fac] if isinstance(fac, str) else val(fac)
+            return {'kind': 'npc', 'x': int(entry['x']), 'y': int(entry['y']),
+                    'sprite': val(entry.get('sprite', 0)),
+                    'facing': F.FACING_NAMES[(t >> 4) & 3],
+                    'behaviour': F.behaviour_value(entry.get('behaviour', 0)),
+                    'hidden': bool(entry.get('hidden')) or bool(t & 0x40),
+                    'script': entry.get('script'), 'raw': False}
+        if k == 'raw':
+            b = [val(x) for x in entry['bytes']]
+            if b[0] >= 0x80:
+                kind = {0x8F: 'spawn', 0x90: 'walkon'}.get(b[0], 'special')
+                return {'kind': kind, 'x': b[2], 'y': b[3], 'bytes': b}
+            table = {int(i): sid for i, sid in (room.get('scripts') or {}).items()}
+            script = None if b[4] == 0xFF else table.get(b[4], b[4])
+            return {'kind': 'npc', 'x': b[2], 'y': b[3], 'sprite': b[1],
+                    'facing': F.FACING_NAMES[(b[0] >> 4) & 3],
+                    'behaviour': b[0] & 0x0F, 'hidden': bool(b[0] & 0x40),
+                    'script': script, 'raw': True}
+        return {'kind': 'special', 'x': int(entry.get('x', 0)), 'y': int(entry.get('y', 0))}
+
+    @staticmethod
+    def _npc_entry(v):
+        from editor2.core import formats as F
+        e = {'kind': 'npc', 'x': int(v['x']), 'y': int(v['y']),
+             'sprite': hexs(int(v['sprite'])), 'facing': v.get('facing', 'down')}
+        beh = int(v.get('behaviour', 0))
+        if beh:
+            e['behaviour'] = F.BEHAVIOUR_NAMES.get(beh, beh)
+        if v.get('hidden'):
+            e['hidden'] = True
+        sc = v.get('script')
+        e['script'] = 'none' if sc in (None, 'none') else sc
+        if v.get('comment'):
+            e['comment'] = v['comment']
+        return e
+
+    def add_npc(self, room, key, state_idx, x, y, sprite, facing='down',
+                behaviour=0, hidden=False, script=None):
+        """Append an NPC to the screen/state; refuses past the 8-NPC hard
+        cap (S91). Returns its index in npcs[]."""
+        n, cap = self.state_capacity(room, key, state_idx)
+        if n >= cap:
+            raise ValueError(f'this screen/state already has {n} NPCs — the engine '
+                             f'hard cap is {cap} (S91: a 9th silently corrupts script '
+                             'state)')
+        lst = self.npc_entries(room, key, state_idx)
+        lst.append(self._npc_entry({'x': x, 'y': y, 'sprite': sprite, 'facing': facing,
+                                    'behaviour': behaviour, 'hidden': hidden,
+                                    'script': script}))
+        self.touch()
+        return len(lst) - 1
+
+    def update_npc(self, room, key, state_idx, index, **fields):
+        """Change NPC fields (any of NPC_FIELDS). A raw entry becomes the
+        typed form carrying the same bytes plus the change."""
+        lst = self.npc_entries(room, key, state_idx)
+        old = lst[index]
+        v = self.npc_view(room, old)
+        if v['kind'] != 'npc':
+            if set(fields) - {'x', 'y'}:
+                raise ValueError('only NPC entries have sprite/facing/behaviour/script')
+            new = copy.deepcopy(old)
+            if old.get('kind') == 'raw':
+                b = [val(x) for x in old['bytes']]
+                b[2], b[3] = int(fields.get('x', b[2])), int(fields.get('y', b[3]))
+                new['bytes'] = [hexs(x) for x in b]
+            else:
+                new.update({k: int(fields[k]) for k in ('x', 'y') if k in fields})
+            lst[index] = new
+            self.touch()
+            return old
+        unknown = set(fields) - set(self.NPC_FIELDS)
+        if unknown:
+            raise ValueError(f'unknown NPC fields {sorted(unknown)}')
+        v.update(fields)
+        if old.get('comment') and not old.get('kind') == 'raw':
+            v['comment'] = old['comment']
+        lst[index] = self._npc_entry(v)
+        self.touch()
+        return old
+
+    def remove_npc(self, room, key, state_idx, index):
+        gone = self.npc_entries(room, key, state_idx).pop(index)
+        self.touch()
+        return gone
+
+    def npc_signature(self, room, entry):
+        """What 'the same NPC' means across a screen's states: same sprite,
+        home cell and script (states are copies; the author then edits)."""
+        v = self.npc_view(room, entry)
+        return (v['kind'], v.get('sprite'), v['x'], v['y'], str(v.get('script')))
+
+    def npc_presence(self, room, key, state_idx, index):
+        """[bool per state]: does each state of the screen carry this NPC?"""
+        sig = self.npc_signature(room, self.npc_entries(room, key, state_idx)[index])
+        out = []
+        for n in range(len(self.states(room, key))):
+            out.append(any(self.npc_signature(room, e) == sig
+                           for e in self.npc_entries(room, key, n)))
+        return out
+
+    def set_npc_presence(self, room, key, state_idx, index, target_state, present):
+        """Add (a copy) / remove this NPC in another state of the screen."""
+        src = self.npc_entries(room, key, state_idx)[index]
+        sig = self.npc_signature(room, src)
+        lst = self.npc_entries(room, key, target_state)
+        hit = [i for i, e in enumerate(lst) if self.npc_signature(room, e) == sig]
+        if present and not hit:
+            n, cap = self.state_capacity(room, key, target_state)
+            if n >= cap:
+                raise ValueError(f'state {target_state} already has {n} NPCs (hard cap {cap})')
+            lst.append(copy.deepcopy(src))
+        elif not present:
+            for i in reversed(hit):
+                lst.pop(i)
+        self.touch()
+
+    # --------------------------------------------------- scripts for NPCs
+    def room_script_ids(self, room):
+        """[(index, script id)] of the room's script table, index order."""
+        return sorted(((int(i), sid) for i, sid in (room.get('scripts') or {}).items()),
+                      key=lambda t: t[0])
+
+    def script(self, sid):
+        for s in self.custom.get('scripts', []):
+            if s.get('id') == sid:
+                return s
+        raise KeyError(sid)
+
+    def dialogue(self, did):
+        for d in self.custom.get('dialogue', []):
+            if d.get('id') == did:
+                return d
+        raise KeyError(did)
+
+    def _unique_id(self, base, taken):
+        base = self._slug(base) or 'x'
+        n, cand = 1, base
+        while cand in taken:
+            n += 1
+            cand = f'{base}_{n}'
+        return cand
+
+    def talk_boxes(self, sid):
+        """The text boxes (lists of 1-2 lines) of a SIMPLE talk script
+        ([text d]... [end]), or None when the script does more than show
+        text (then it is edited as a script, P3.6/P3.8). Legacy entries are
+        converted: auto `text` flows into boxes, `lines` pair up (S97 r2)."""
+        from editor2.core import textenc as T
+        try:
+            ops = self.script(sid).get('ops', [])
+        except KeyError:
+            return None
+        boxes = []
+        for op in ops:
+            if isinstance(op, list) and op and op[0] == 'text' and len(op) == 2:
+                try:
+                    d = self.dialogue(op[1])
+                except KeyError:
+                    return None
+                if d.get('choice') or 'raw' in d:
+                    return None
+                try:
+                    b = T.entry_boxes(d)
+                except T.TextError:
+                    b = None
+                if b is None and 'lines' in d:
+                    ls = list(d['lines'])
+                    b = [ls[k:k + T.BOX_LINES] for k in range(0, len(ls), T.BOX_LINES)]
+                elif b is None and 'text' in d:
+                    b = [[d['text']]]
+                if b is None:
+                    return None
+                boxes += b
+            elif op == ['end']:
+                break
+            else:
+                return None
+        return boxes if boxes else None
+
+    def _talk_entry(self, sid, boxes):
+        dlg = self.custom.setdefault('dialogue', [])
+        did = self._unique_id(f'{sid}_text', {d.get('id') for d in dlg})
+        dlg.append({'id': did, 'boxes': [list(b) for b in boxes],
+                    'comment': f'{sid} ({len(boxes)} box{"es" if len(boxes) != 1 else ""})'})
+        return did
+
+    def new_talk_script(self, room, boxes, name='talk'):
+        """An NPC script that shows `boxes` (one dialogue entry; each box
+        waits for A, S97 r2) and ends. Registers it in the room's script
+        table at the next free index >= 1 (index 0 = the room-entry script,
+        created as a no-op when missing — KEY_LESSONS S2). Returns the id."""
+        scripts = self.custom.setdefault('scripts', [])
+        sids = {s.get('id') for s in scripts}
+        sid = self._unique_id(f"{room['id']}_{name}", sids)
+        scripts.append({'id': sid, 'ops': [['text', self._talk_entry(sid, boxes)], ['end']]})
+        table = room.setdefault('scripts', {})
+        if '0' not in table:
+            eid = self._unique_id(f"{room['id']}_entry", sids | {sid})
+            scripts.append({'id': eid, 'ops': [['end']]})
+            table['0'] = eid
+        idx = 1
+        while str(idx) in table:
+            idx += 1
+        table[str(idx)] = sid
+        self.touch()
+        return sid
+
+    def set_talk_boxes(self, sid, boxes):
+        """Rewrite a simple talk script's text (keeps the script id, so every
+        NPC bound to it follows). Entries only this script shows are dropped."""
+        if self.talk_boxes(sid) is None:
+            raise ValueError(f'script {sid!r} is not a plain talk script')
+        sc = self.script(sid)
+        dlg = self.custom.setdefault('dialogue', [])
+        old = [op[1] for op in sc['ops'] if isinstance(op, list) and op and op[0] == 'text']
+        users = {}
+        for s in self.custom.get('scripts', []):
+            for op in s.get('ops', []):
+                if isinstance(op, list) and op and op[0] == 'text' and len(op) == 2:
+                    users[op[1]] = users.get(op[1], 0) + 1
+        for did in old:
+            if users.get(did) == 1:
+                dlg[:] = [d for d in dlg if d.get('id') != did]
+        sc['ops'] = [['text', self._talk_entry(sid, boxes)], ['end']]
+        self.touch()
+
+    # ====================================================== flags (S97 UI)
+    def flags(self):
+        return self.custom.get('flags', [])
+
+    def add_flag(self, name):
+        """A named project flag, auto-allocated by the compiler from the
+        EVENT_FLAGS safe pool (PROJECT_COMPILER §2.7)."""
+        name = self._slug(name)
+        if not name:
+            raise ValueError('flag name is empty')
+        if any(f.get('name') == name for f in self.flags()):
+            raise ValueError(f'flag {name!r} already exists')
+        self.custom.setdefault('flags', []).append({'name': name, 'index': 'auto'})
+        self.touch()
+        return name
+
+    def flag_pool(self):
+        """(used, capacity) of the named-flag safe pool."""
+        from editor2.core.project import FLAG_SAFE_RANGES
+        cap = sum(hi - lo + 1 for lo, hi in FLAG_SAFE_RANGES)
+        return len(self.flags()), cap
+
+    # ================================================= state rules (P3.5a)
+    def state_rules(self, room):
+        return room.get('state_rules') or []
+
+    def set_state_rules(self, room, rules):
+        if rules:
+            room['state_rules'] = rules
+        else:
+            room.pop('state_rules', None)
+        self.touch()
+
+    def rules_for_state(self, room, key, state_idx):
+        """[(rule index, rule)] of rules that select this state on this
+        screen (the canvas state bar's 'shown when')."""
+        out = []
+        for i, ru in enumerate(self.state_rules(room)):
+            if int(ru.get('state', -1)) != int(state_idx):
+                continue
+            scr = ru.get('screens')
+            if scr is not None and int(key) not in [int(x) for x in scr]:
+                continue
+            out.append((i, ru))
+        return out
+
+    @staticmethod
+    def describe_rule(ru):
+        terms = ru.get('when') or []
+        if not terms:
+            return 'always'
+        return ' AND '.join(f"{t.get('flag')} {'is clear' if t.get('is') == 'clear' else 'is set'}"
+                            for t in terms)

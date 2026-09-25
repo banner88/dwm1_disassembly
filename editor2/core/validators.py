@@ -21,7 +21,7 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 383,   # addr(CustomScriptMasterTable)-$4000 — S94 reference game.sym
+    0x60: 492,   # addr(CustomScriptMasterTable)-$4000 — S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
@@ -156,6 +156,27 @@ def validate(prj, generated=None):
                 prj.script(sid)
             except Exception as e:
                 errors.append(f"room {rid}: script[{idx}]: {e}")
+
+        # S97 state rules (ROADMAP P3.5a): resolvable flags, states that
+        # exist, and a warning for flags outside the save image.
+        if r.get('state_rules') and not r.get('placeholder'):
+            try:
+                resolved = prj.state_rules(r)
+            except Exception as e:
+                errors.append(str(e))
+                resolved = []
+            from .project import FLAG_PERSIST_LIMIT
+            seen = set()
+            for k, lst in resolved:
+                for st, terms in lst:
+                    for idx, _clr in terms:
+                        if idx >= FLAG_PERSIST_LIMIT and idx not in seen:
+                            seen.add(idx)
+                            warnings.append(
+                                f"room {rid}: state rule tests flag "
+                                f"{F.hexw(idx)} — $0278+ is not in the save "
+                                "image, so the state resets on reload "
+                                "(EVENT_FLAGS.md)")
 
         # $26DD record: required for EVERY non-placeholder room (S94 — rows
         # $6B-$6F are the compiler-owned ROM0 region, $70+ the bank $71
@@ -353,6 +374,14 @@ def validate(prj, generated=None):
                     errors.append(
                         f"text {F.hexw(tid)}: bare $EE newline — must be "
                         "$EF $EE (KEY_LESSONS S2 '$EE needs $EF before it')")
+            if 'lines' in e and 'raw' not in e:
+                ls = e['lines']
+                if len(ls) > T.BOX_LINES or (ls and len(ls[0]) > T.FIRST_LINE):
+                    warnings.append(
+                        f"text {F.hexw(tid)} ({e.get('id','')}): 'lines' form — "
+                        f"lines past {T.BOX_LINES} scroll without waiting and the "
+                        f"first line has {T.FIRST_LINE} cells after '*:' (engine "
+                        "wraps mid-word); the 'boxes' form waits per box (S97 r2)")
         except T.TextError as ex:
             errors.append(f"text {F.hexw(tid)} ({e.get('id','')}): {ex}")
 
@@ -440,7 +469,12 @@ def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
                     "to')")
         else:
             sid = n.get('script')
-            if sid not in (None, 'none'):
+            if isinstance(sid, int):
+                # S97: a cloned raw entry edited in the GUI keeps its raw
+                # script index when the room's table has no id for it
+                if not 0 <= sid <= 0xFF:
+                    errors.append(f"{tag}: NPC script index {sid} out of range")
+            elif sid not in (None, 'none'):
                 try:
                     si = prj.script_index(r, sid)
                     if si == 0:
@@ -451,6 +485,27 @@ def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
                     errors.append(f"{tag}: {e}")
             if n.get('facing') and n['facing'] not in F.FACING:
                 errors.append(f"{tag}: unknown facing {n['facing']!r}")
+            # S97 behaviour (type byte low nibble — ROOM_DATA_FORMAT "NPC
+            # behaviour types"): gate-only wanderers freeze elsewhere; the
+            # patterned walkers never test tiles, so a path leaving the
+            # 10x8 screen walks the NPC off-screen.
+            try:
+                bv = F.behaviour_value(n.get('behaviour', 0))
+            except ValueError as e:
+                errors.append(f"{tag}: {e}")
+                bv = 0
+            if bv in F.GATE_ONLY_BEHAVIOURS:
+                warnings.append(
+                    f"{tag}: NPC ({x},{y}) behaviour {F.BEHAVIOUR_NAMES[bv]} "
+                    "only acts on the gate-floor wanderer screen ($C926) — "
+                    "in a room it stands frozen and unanimated")
+            off = [(x + dx, y + dy) for dx, dy in F.npc_path(bv)
+                   if not (0 <= x + dx <= 9 and 0 <= y + dy <= 7)]
+            if off:
+                warnings.append(
+                    f"{tag}: NPC ({x},{y}) {F.BEHAVIOUR_NAMES.get(bv, bv)} "
+                    f"walks off the screen at {off[0]} (walkers ignore "
+                    "walls and edges)")
     for e in st.get('exits', []):
         if 'screen_byte' not in e:
             errors.append(

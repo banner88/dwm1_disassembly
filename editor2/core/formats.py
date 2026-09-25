@@ -38,6 +38,56 @@ FACING = {  # ROOM_DATA_FORMAT.md "NPC entries": bits 4-5 of type byte
     'down': 0x00, 'left': 0x10, 'up': 0x20, 'right': 0x30,
     'down_static': 0x40, 'up_static': 0x60,
 }
+FACING_NAMES = ['down', 'left', 'up', 'right']      # slot +$06 value order
+
+# S97: the NPC type byte's low nibble picks the per-frame behaviour routine
+# (bank $06 NPCBehaviourTable — ROOM_DATA_FORMAT "NPC behaviour types",
+# PyBoy-measured). Bit 6 = HIDDEN (inactive entry): not drawn, not solid,
+# no behaviour, cannot be talked to (bank $06 NPCBehaviourTable caller, entry 0
+# collision + entry 1 draw loops all skip it). Names are the schema vocabulary.
+BEHAVIOURS = {
+    'stand': 0x0, 'spin': 0x1, 'pace_x2': 0x2, 'square': 0x3, 'figure8': 0x4,
+    'pace_right3': 0x5, 'stand_fixed': 0x6, 'stand_return': 0x7,
+    'pace_x1': 0x8, 'pace_x2_left': 0x9, 'sway': 0xA,
+    'gate_wander_meet': 0xE, 'gate_wander': 0xF,
+}
+BEHAVIOUR_NAMES = {v: k for k, v in BEHAVIOURS.items()}
+GATE_ONLY_BEHAVIOURS = {0xE, 0xF}      # act only on the gate wanderer screen ($C926)
+# tile offsets from the NPC's home that each patterned walker visits
+# (measured PyBoy S97, Bazaar slot 0); the walkers never test tiles.
+BEHAVIOUR_PATHS = {
+    0x2: [(dx, 0) for dx in (1, 2, 1, 0, -1, -2, -1, 0)],
+    0x3: [(0, 1), (0, 2), (1, 2), (2, 2), (2, 1), (2, 0), (1, 0), (0, 0)],
+    0x4: [(-1, 0), (-2, 0), (-3, 0), (-3, -1), (-3, -2), (-3, -3), (-4, -3),
+          (-5, -3), (-6, -3), (-6, -2), (-6, -1), (-6, 0), (-5, 0), (-4, 0),
+          (-3, 0), (-3, -1), (-3, -2), (-3, -3), (-2, -3), (-1, -3), (0, -3),
+          (0, -2), (0, -1), (0, 0)],
+    0x5: [(1, 0), (2, 0), (3, 0), (2, 0), (1, 0), (0, 0)],
+    0x8: [(1, 0), (0, 0), (-1, 0), (0, 0)],
+    0x9: [(-1, 0), (-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (1, 0), (0, 0)],
+    0xA: [(1, 0), (0, 0), (-1, 0), (0, 0)],
+}
+
+
+def behaviour_value(b):
+    """'pace_x2' / 2 / '0x2' -> 0-15."""
+    if isinstance(b, str) and b in BEHAVIOURS:
+        return BEHAVIOURS[b]
+    v = val(b)
+    if not isinstance(v, int) or not 0 <= v <= 15:
+        raise ValueError(f"unknown NPC behaviour {b!r}")
+    return v
+
+
+def npc_type_byte(facing='down', behaviour=0, hidden=False):
+    """Type byte = facing (bits 4-5) | hidden (bit 6) | behaviour (bits 0-3)."""
+    t = FACING[facing] if isinstance(facing, str) else val(facing)
+    return (t | (0x40 if hidden else 0) | behaviour_value(behaviour)) & 0x7F
+
+
+def npc_path(behaviour):
+    """Tiles (dx, dy) a behaviour walks through, home included."""
+    return [(0, 0)] + BEHAVIOUR_PATHS.get(behaviour_value(behaviour), [])
 
 
 # ---------------------------------------------------------------------------
@@ -54,11 +104,11 @@ def npc_spawn_entry(x, y, script=0x00):
     return [0x8F, 0xFF, x, y, script]
 
 
-def npc_entry(facing, sprite, x, y, script_id):
-    """NPC entry: byte0 type/facing, byte1 sprite, byte2/3 X/Y grid,
-    byte4 script_id ($FF = no script). ROOM_DATA_FORMAT.md."""
-    t = FACING[facing] if isinstance(facing, str) else facing
-    return [t, sprite, x, y, script_id]
+def npc_entry(facing, sprite, x, y, script_id, behaviour=0, hidden=False):
+    """NPC entry: byte0 type (facing bits 4-5 | hidden bit 6 | behaviour
+    bits 0-3, S97), byte1 sprite, byte2/3 X/Y grid, byte4 script_id ($FF = no
+    script). ROOM_DATA_FORMAT.md. Defaults reproduce the pre-S97 bytes."""
+    return [npc_type_byte(facing, behaviour, hidden), sprite, x, y, script_id]
 
 
 # ---------------------------------------------------------------------------

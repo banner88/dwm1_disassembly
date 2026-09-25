@@ -4706,6 +4706,12 @@ jr_001_5938:
     ret
 
 
+; S97 annotation: per NPC slot (HL = slot) — if bank $06 entry 0 flagged the
+; slot as blocked by the player (+$05 bit 5) and its PREVIOUS position
+; (+$1C..+$1F, copied from +$18..+$1B every frame by LoadNPCDataTable) is
+; tile-aligned, the current position +$18..+$1B is restored from it (the NPC's
+; step is undone) and the pause timer +$07 := $20. Measured S97: a walker
+; whose next tile holds the player waits there.
 AdvanceNPCPointer:
     push hl
     ld a, l

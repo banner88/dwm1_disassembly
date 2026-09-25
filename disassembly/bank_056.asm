@@ -1688,6 +1688,11 @@ jr_056_4806:
     ret
 
 
+;; YES/NO choice box (text code $E7; also $E6): backs the 18 visible BG rows
+;; up to $C500 (32 cells per row from the screen's left column), then
+;; SetB56_48a1 loads the cursor tiles and draws the 6x5 frame ($48DE, $D8 =
+;; next row, $D9 = end) at screen row 8, column 14. Bank $00
+;; ClearTextBitsRedraw ($070E) puts the 18 rows back. (S97 r2)
 SetB56_4855:
 Jump_056_4855:
     ld hl, $c826

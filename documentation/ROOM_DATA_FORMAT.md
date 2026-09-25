@@ -134,15 +134,22 @@ Key ranges:
 - $D998: Shared by all maze/conveyor/forest rooms (1 step each)
 - $D99A: Last used address (Room_5E)
 
-Custom rooms use $D478–$D47B (room $6B screen 0, room $6C screens
-0/1/5). These are in the verified-unused WRAM gap ($D478–$D790),
-avoiding the original step counter range ($D92A–$D99A) and the
-event flag range ($D99B–$D9BA). NOTE: $D478+ is NOT in the SRAM
-save range, so custom step counter values reset on power cycle.
-For save-persistent state changes, use event flags ($00/$01/$03)
-combined with room-entry script flag checks (opcode $15).
+Custom rooms' counters are compiler-allocated from **$CD80** (S65, the
+CF3-freed window — PROJECT_COMPILER §2.6; the old "$D478" home here was
+refuted S54). The window is TRANSIENT: zeroed at every save-restore, so a
+custom room's state reached by a script is lost on reload. **S97: flag
+STATE RULES** (`custom.rooms[].state_rules`, PROJECT_COMPILER §2.13) make
+state persistent: bank $60 entry 8 re-derives each screen's counter from
+event flags (which ARE saved) at every custom (re)load.
 
-### Runtime NPC show/hide (opcodes $48/$49)
+### Runtime NPC show/hide (opcodes $48/$49) — UNVERIFIED (S97)
+
+> S97: the bank-$04 handler table lists $48/$49 as 1-param flow ops
+> (`label4_684d` / `label4_6866`: read a word, `ld c,$01/$03`, jp
+> CheckZeroJPEnd) — nothing in them touches the NPC slots. The hide/show
+> semantics below were never measured; treat them as unconfirmed
+> (DOC_AUDIT S97). The measured NPC-visibility bit is type bit 6 (see
+> "NPC behaviour types").
 
 Separate from the step system, opcodes $48 and $49 provide **runtime**
 NPC visibility control within the current room visit:
@@ -253,7 +260,7 @@ the "Custom tile GRAPHICS" roadmap item.
 ### NPC entries (type byte $00-$7F):
 | Byte | Field |
 |------|-------|
-| 0 | NPC type (bits 4-5 encode facing direction: $00=down, $10=left, $20=up, $30=right) |
+| 0 | NPC type: bits 4-5 facing ($00 down, $10 left, $20 up, $30 right), bit 6 hidden, bits 0-3 behaviour — see "NPC behaviour types" (S97) |
 | 1 | Sprite ID |
 | 2 | X grid position (added to screen offset from $00:$2DE7) |
 | 3 | Y grid position (added to screen offset) |
@@ -460,13 +467,71 @@ tileset_bank ∈ {$23-$31,$37,$38} + interact ptr ∈ $4000-$7FFF + sane
 coords, and dedup blocks by (mt, ptr) — see
 `tools/dump_npc_sprite_catalog.py --census` (DOC_AUDIT S91).
 
-## NPC Type Byte Encoding
+## NPC behaviour types — the type byte (S97, PyBoy-measured)
 
+`type = facing (bits 4-5) | hidden (bit 6) | behaviour (bits 0-3)`; bit 7
+set = not an NPC (spawn $8F, talk-spot $90, markers $80-$82 — skipped by
+the parser). Facing: 0 down, 1 left, 2 up, 3 right (the same value lands in
+slot +$06).
 
+**Bit 6 = HIDDEN (inactive entry).** Measured S97 (Bazaar slot poked
+$00 → $40): the NPC is not drawn (its 4 OAM objects vanish), does not block
+the player (walked through), has no behaviour/animation and cannot be
+talked to. Code: bank $06 `LoadMapS_4043` returns before the behaviour
+table, entry 0 `label6_4b1f` (player collision) and entry 1 `label6_4cbc`
+(sprite draw) both skip bit-6 slots. Vanilla has 250 such entries (all
+low nibble 0) — cutscene actors / placeholders; how vanilla reveals them
+(e.g. `$0D` WriteNPCByte on field 0) is not yet measured.
 
-Common values: $00 (down,standard), $10 (left), $20 (up), $30 (right),
-$40 (down,non-interactive), $60 (up,non-interactive).
-Lower nibble values 6 and 7 appear frequently — may control movement pattern.
+**Low nibble = behaviour**: bank $06 `NPCBehaviourTable` ($4050, rst $00,
+16 `dw`; re-sectioned from fake code S97). Every frame `label6_400f` walks
+the 8 slots and dispatches each. Walkers step 1 px / 2 frames and pause
+32 frames on every tile (timer +$07 = $10 at a tile boundary); all
+behaviours freeze while any script runs. **Patterned walkers never test
+tiles** — they walk through walls and off the screen edge (type 5 at x=8
+walked to x=11) — but the player blocks them: bank $06 entry 0 flags the
+slot (+$05 bit 5) and bank $01 `AdvanceNPCPointer` undoes the step and
+pauses it $20 frames (the walker waits). Paths are tile offsets from HOME
+(+$02/+$03), measured on Bazaar slot 0:
+
+| nibble | handler | behaviour (measured) | vanilla uses |
+|---|---|---|---|
+| 0 (and B, C, D) | `NPCBeh0_Stand` | stands; turns to face the player when talked to and KEEPS that facing | 846 (+250 hidden) |
+| 1 | `NPCBeh1_Spin` | turns 90° every 16 frames (down, left, up, right); faces the player while talked to, then resumes | 14 (Castle throne, Stable) |
+| 2 | `NPCBeh2_PaceX2` | +1,+2,+1,0,−1,−2,−1,0 (starts right) | 17 |
+| 3 | `NPCBeh3_Square2` | 2-tile square: down 2, right 2, up 2, left 2 | 2 (Farm) |
+| 4 | `NPCBeh4_Figure8` | figure 8 of 3-tile legs: L3 U3 L3 D3 R3 U3 R3 D3 (a 7×4 area left of / above home; facing from `NPCFigure8FacingTable` $425E) | 2 (Arena Rooms) |
+| 5 | `NPCBeh5_PaceRight3` | home → +3 right and back | 1 (Joy boss room) |
+| 6 | `NPCBeh6_StandFixed` | stands and NEVER turns (still talkable) | 30 (Farm, Stable) |
+| 7 | `NPCBeh7_StandReturn` | faces the player while talked to, then snaps back to its authored facing | 42 (GreatTree, Bazaar) |
+| 8 | `NPCBeh8_PaceX1` | ±1 tile (starts right) | 1 (Goopy Room 2) |
+| 9 | `NPCBeh9_PaceX2Left` | ±2 tiles (starts left) | 0 |
+| A | `NPCBehA_Sway` | slides 1 px / 8 frames between +1 and −1 tile, no pauses, facing never changes | 1 (DeathMore boss) |
+| E | `NPCBehE_GateWanderMeet` | GATE ONLY: acts only when `$C926` (the gate floor screen holding the wanderer; $FF outside gates, bank $16) == wScreenIndex — random walk with tile collision (classes $0C-$0E block) inside home..+7 × home..+5; when it arrives beside the player it starts its own script (wScriptMapType $70) | 0 in room data (gate generator) |
+| F | `NPCBehF_GateWander` | as E without the auto-talk | 0 in room data |
+
+In a normal room E/F never act (measured: frozen and unanimated). The
+editor exposes these as `behaviour` names (PROJECT_COMPILER §2.13) and
+draws the walk path of the selected NPC; the compiler warns when a path
+leaves the 10×8 screen.
+
+### NPC RAM slot ($D7D2 + 32·i, 8 slots) — fields known S97
+
+| off | field | writer / reader |
+|---|---|---|
+| +$00 | type byte (above) | parser `$0B:Call_00b_477e` |
+| +$01 | sprite id ($FF = empty slot for the per-frame loops) | parser |
+| +$02/+$03 | HOME tile, absolute (entry X/Y + `$00:$2DE7[screen]`) | parser; walkers measure offsets from it |
+| +$04 | script id (index into the room's script table) | parser |
+| +$05 | status: bit 0 walking (walk animation), bit 5 blocked by the player, bit 6 talking (face the player), bit 7 hidden from the animation picker | bank $06 |
+| +$06 | facing 0-3 | parser ((type>>4)&3), behaviours, talk |
+| +$07 | pause timer (counts down per frame; $10 per tile, $20 when blocked, $08/$04 gate wanderers) | bank $06 |
+| +$08 | pattern phase | walkers |
+| +$11 | sprite id copy | parser |
+| +$16 | sprite-sheet VRAM slot (`Call_00b_4839`) | parser |
+| +$17 | OAM flip for the facing (`NPCFacingFlipTable`: left = X-flip) | `NPCAnimSetFlip` |
+| +$18/+$1A | pixel X/Y (16-bit, tile·16+8) | walkers |
+| +$1C/+$1E | previous pixel X/Y (copied each frame by bank $01 `LoadNPCDataTable`) | step undo |
 
 ## Gate Room Differences
 
@@ -493,9 +558,9 @@ All three use the same LZSS decompressor (Call_000_14cf).
 | $00:$26DD | Tileset graphics table (normal rooms) |
 | $00:$2A5D | Tileset graphics table (gate rooms) |
 | $00:$2DE7 | Screen offset table (per-screen X,Y pixel offsets) |
-| $D7D2 | NPC RAM buffer (17 bytes per slot) |
+| $D7D2 | NPC RAM buffer (8 slots × 32 bytes — fields: "NPC RAM slot") |
 | $C300 | Tile map buffer (512 bytes, 32×16 grid) |
-| $C925 | Current screen index (0-7 in the 4×2 grid) |
+| $C925 | Current screen index (0-15 on the 4×4 grid, row×4+col) |
 | $C968 | Current map_type (wMapID) |
 | $C969 | Gate flag (wInGateworld) |
 

@@ -21,6 +21,10 @@ There are only **3 call sites** to SetEventFlag in the entire ROM: the
 script engine opcode $03 handler (bank $04:$579B), and two engine-code
 sites in bank $12 ($4EE1 sets flag $0007, $6C78 conditionally sets $0057).
 All other flag setting goes through script opcode $03.
+**Reader added S97:** custom-room STATE RULES (bank $60 entry 8
+`CustomStateRules`, PROJECT_COMPILER §2.13) call `TestEventFlag` at every
+custom (re)load — a rule may test ANY flag (vanilla story flags included);
+named project flags come from the safe pool below (16 flags).
 
 ### Script Opcodes
 | Opcode | Name | Purpose |
