@@ -220,7 +220,7 @@ CustomRoomN_Screen0:
 
 ; NPC data (5-byte entries, $FF terminated):
 CustomRoomN_NPCs:
-    db $8F, $FF, X, Y, SRC_MT  ; spawn point
+    db $8F, $FF, X, Y, SCRIPT  ; examine spot (S98: not a spawn — A press runs SCRIPT)
     db FACE, SPRITE, X, Y, $FF ; NPC (script_id=$FF = no script)
     db $FF                      ; terminator
 
@@ -370,8 +370,8 @@ ROM is an **unsigned `cp`**, so a mapID ≥$80 takes the *identical branch*
 already proven by rooms $6B-$70 at every comparison site. The only `bit 7`
 hits near mapID reads are on *other* variables (wInGateworld, `$c8ea`, skill
 id `$db8a` in bank $53) or on the NPC-entry **type byte**, whose ≥$80 range is
-the by-design spawn/exit-entry discriminator ($8F=spawn, $90=walk-on exit —
-ROOM_DATA_FORMAT), not a mapID.
+the by-design NPC / interact-entry discriminator ($80-$83/$8F = examine
+spot, $90 = step-on trigger — S98 names; ROOM_DATA_FORMAT), not a mapID.
 
 ### The real ≥$80 hazard classes — and why each is already handled
 

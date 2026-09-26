@@ -3965,6 +3965,10 @@ jr_006_60e7:
     jp Jump_006_6284
 
 
+; S98: field A-press -> talk target. Probe = the player's OWN cell first,
+; then the FACING cell (player pos + $6285[$FF8E] offsets); each probe calls
+; bank $0B entry 4 RoomEntry4_TalkTargetLookup (live NPC slots, then $8x
+; examine spots). $FFD5 = script index, $FFD6 = NPC slot or $FF.
 Jump_006_611d:
 jr_006_611d:
     ld a, [wScriptStateFlags]
@@ -3995,7 +3999,7 @@ jr_006_611d:
     ldh [$dd], a
     ld a, h
     ldh [$de], a
-    ld hl, $0b04
+    ld hl, $0b04   ; S98: entry 4 — talk target at the OWN cell
     rst $10
     ldh a, [$d5]
     cp $ff
@@ -4035,7 +4039,7 @@ jr_006_611d:
     ldh [$dd], a
     ld a, h
     ldh [$de], a
-    ld hl, $0b04
+    ld hl, $0b04   ; S98: entry 4 — talk target at the FACING cell
     rst $10
     ldh a, [$d5]
     cp $ff

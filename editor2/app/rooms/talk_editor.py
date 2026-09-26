@@ -7,12 +7,18 @@ waits for A (an arrow) and clears before the next one. A line longer than
 its cells is wrapped by the engine in the middle of a word, and a third line
 scrolls the box without waiting — so text is authored box by box, and each
 box shows exactly what the game will draw (ROM font, bank $4F $4010).
+
+S98: the dialog also edits what the talk DOES (editor2/core/talk.py spec):
+an optional YES/NO question (the last box ends in the choice box), and per
+answer (or once, afterwards) a reply, flags to turn on / off, and moving the
+player (a warp: the room reloads, so state rules pick the new state at
+once — PyBoy S98: reply shown and waited for, flag set, warp done).
 """
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPixmap
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QHBoxLayout, QLabel,
-                               QPlainTextEdit, QPushButton, QScrollArea,
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QHBoxLayout,
+                               QLabel, QPlainTextEdit, QPushButton, QScrollArea,
                                QToolButton, QVBoxLayout, QWidget)
 
 from editor2.core import textenc as T
@@ -240,23 +246,15 @@ class BoxEditor(QWidget):
         self.changed.emit()
 
 
-class TalkDialog(QDialog):
-    """Talk text as a list of boxes. Enter = next line of the same box;
-    each box waits for A in the game. The preview is the game's own font."""
+class BoxList(QWidget):
+    """A list of BoxEditors (+ Add box / Fit all, OK-gating summary)."""
+    changed = Signal()
 
-    def __init__(self, boxes=None, title='What does this NPC say?', rom=None, parent=None):
+    def __init__(self, rom, boxes=None, first_default='Hello!', parent=None):
         super().__init__(parent)
-        self.setWindowTitle(title)
         self.rom = rom
-        self.resize(760, 560)
         v = QVBoxLayout(self)
-        intro = QLabel('Each box shows 2 lines and waits for A before the next box. '
-                       'Line 1 of box 1 has 16 cells (after "*:"), every other line 18. '
-                       'Press Enter to start the second line. Red = does not fit (the game '
-                       'loses the cells past the edge, a third line scrolls without waiting). Letters, digits, '
-                       "space and . , ; ! ? ' only.")
-        intro.setWordWrap(True)
-        v.addWidget(intro)
+        v.setContentsMargins(0, 0, 0, 0)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.holder = QWidget()
@@ -276,16 +274,12 @@ class TalkDialog(QDialog):
         self.summary = QLabel('')
         row.addWidget(self.summary)
         v.addLayout(row)
-        self.bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.bb.accepted.connect(self.accept)
-        self.bb.rejected.connect(self.reject)
-        v.addWidget(self.bb)
         self.editors = []
-        for b in (boxes or [['Hello!']]):
+        start = boxes if boxes is not None else ([[first_default]] if first_default else [])
+        for b in start:
             self._add('\n'.join(b))
         self._renumber()
 
-    # ------------------------------------------------------------ boxes
     def _add(self, text, at=None, focus=False):
         ed = BoxEditor(self.rom, text)
         ed.changed.connect(self._validate)
@@ -344,15 +338,283 @@ class TalkDialog(QDialog):
             if ed.problems() and ed.problems() != ['empty box']:
                 self._fit(ed)
 
+    def bad_boxes(self):
+        return [i + 1 for i, ed in enumerate(self.editors) if ed.problems()]
+
+    def is_blank(self):
+        return all(not any(ed.lines()) for ed in self.editors)
+
     def _validate(self):
-        bad = [i + 1 for i, ed in enumerate(self.editors) if ed.problems()]
+        bad = self.bad_boxes()
         n = len(self.editors)
         if bad:
             self.summary.setText(f'<span style="color:#ff6060;">{n} box(es) — fix box '
                                  + ', '.join(map(str, bad)) + '</span>')
         else:
             self.summary.setText(f'{n} box(es) — all fit')
-        self.bb.button(QDialogButtonBox.Ok).setEnabled(not bad)
+        self.changed.emit()
 
     def boxes(self):
         return [[ln for ln in ed.lines()] for ed in self.editors]
+
+
+class FlagList(QWidget):
+    """Flags to set / clear: project flags, well-known vanilla story flags or
+    any number, plus 'New flag…' (auto-allocated project flag)."""
+    changed = Signal()
+
+    def __init__(self, doc, title, flags=None, parent=None):
+        super().__init__(parent)
+        from PySide6.QtWidgets import QListWidget
+        self.doc = doc
+        self.new_flags = []
+        v = QVBoxLayout(self)
+        v.setContentsMargins(0, 0, 0, 0)
+        v.addWidget(QLabel(title))
+        self.list = QListWidget()
+        self.list.setMaximumHeight(70)
+        for f in flags or []:
+            self.list.addItem(str(f))
+        v.addWidget(self.list)
+        row = QHBoxLayout()
+        self.pick = QComboBox()
+        self.pick.setEditable(True)
+        self.pick.setMinimumContentsLength(16)
+        self._fill_pick()
+        row.addWidget(self.pick, 1)
+        b = QToolButton()
+        b.setText('Add')
+        b.clicked.connect(self._add)
+        row.addWidget(b)
+        b = QToolButton()
+        b.setText('New flag…')
+        b.setToolTip('A project flag, auto-allocated from the safe pool (saved with the game).')
+        b.clicked.connect(self._new)
+        row.addWidget(b)
+        b = QToolButton()
+        b.setText('Remove')
+        b.clicked.connect(self._remove)
+        row.addWidget(b)
+        v.addLayout(row)
+
+    def _fill_pick(self):
+        from editor2.app.rooms.rules_panel import WELL_KNOWN
+        self.pick.clear()
+        if self.doc is not None:
+            for fl in self.doc.flags():
+                self.pick.addItem(f"{fl['name']}  (project flag)", fl['name'])
+        for nm in self.new_flags:
+            self.pick.addItem(f'{nm}  (new project flag)', nm)
+        for idx, name in WELL_KNOWN:
+            self.pick.addItem(f'{idx}  {name}', idx)
+        self.pick.setToolTip('A project flag, or any event flag number (e.g. 0x0030). '
+                             'EVENT_FLAGS.md lists the vanilla story flags.')
+
+    def _value(self):
+        d = self.pick.currentData()
+        txt = self.pick.currentText().strip()
+        if d is not None and self.pick.itemText(self.pick.currentIndex()) == txt:
+            return d
+        return txt.split()[0] if txt else None
+
+    def _add(self):
+        v = self._value()
+        if v and v not in self.flags():
+            self.list.addItem(str(v))
+            self.changed.emit()
+
+    def _new(self):
+        from PySide6.QtWidgets import QInputDialog, QMessageBox
+        name, ok = QInputDialog.getText(self, 'New flag', 'Flag name (letters, digits, _):')
+        if not ok or not name.strip():
+            return
+        nm = self.doc._slug(name.strip()) if self.doc is not None else name.strip()
+        if not nm:
+            QMessageBox.warning(self, 'New flag', 'Use letters, digits and _.')
+            return
+        known = {fl['name'] for fl in (self.doc.flags() if self.doc else [])}
+        if nm not in known and nm not in self.new_flags:
+            self.new_flags.append(nm)
+            self._fill_pick()
+        if nm not in self.flags():
+            self.list.addItem(nm)
+        self.changed.emit()
+
+    def _remove(self):
+        r = self.list.currentRow()
+        if r < 0:
+            r = self.list.count() - 1
+        if r >= 0:
+            self.list.takeItem(r)
+            self.changed.emit()
+
+    def flags(self):
+        return [self.list.item(i).text() for i in range(self.list.count())]
+
+
+class BlockEditor(QWidget):
+    """What happens after the text (or after YES / NO): an optional reply,
+    flags to set / clear, and optionally moving the player (a warp: the
+    room reloads, so state rules pick the new state at once)."""
+    changed = Signal()
+
+    def __init__(self, rom, doc=None, room=None, block=None, key=0, parent=None):
+        super().__init__(parent)
+        from PySide6.QtWidgets import QCheckBox, QGroupBox, QSpinBox
+        from editor2.core.talk import empty_block
+        self.doc, self.room = doc, room
+        b = block or empty_block()
+        v = QVBoxLayout(self)
+        self.say = QCheckBox('Say something')
+        self.say.setChecked(bool(b.get('boxes')))
+        v.addWidget(self.say)
+        self.reply = BoxList(rom, b.get('boxes') or None, first_default='OK.')
+        self.reply.setMinimumHeight(140)
+        self.reply.setVisible(self.say.isChecked())
+        self.say.toggled.connect(self.reply.setVisible)
+        self.say.toggled.connect(lambda _on: self.changed.emit())
+        self.reply.changed.connect(self.changed.emit)
+        v.addWidget(self.reply, 1)
+        row = QHBoxLayout()
+        self.set_list = FlagList(doc, 'Turn these flags ON:', b.get('set'))
+        self.clear_list = FlagList(doc, 'Turn these flags OFF:', b.get('clear'))
+        for fl in (self.set_list, self.clear_list):
+            fl.changed.connect(self.changed.emit)
+            row.addWidget(fl)
+        v.addLayout(row)
+        mg = QGroupBox('Then move the player (reloads the room — state rules pick the new state)')
+        mg.setCheckable(True)
+        mv = b.get('move')
+        mg.setChecked(bool(mv))
+        mf = QHBoxLayout(mg)
+        self.m_room = QComboBox()
+        if doc is not None:
+            for r in doc.rooms:
+                if r.get('placeholder'):
+                    continue
+                self.m_room.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}",
+                                    f"room:${int(str(r['mapID']), 0):02X}")
+        self.m_screen = QSpinBox(); self.m_screen.setRange(0, 15)
+        self.m_x = QSpinBox(); self.m_x.setRange(0, 9)
+        self.m_y = QSpinBox(); self.m_y.setRange(0, 7)
+        for lab, w in (('room', self.m_room), ('screen', self.m_screen),
+                       ('x', self.m_x), ('y', self.m_y)):
+            mf.addWidget(QLabel(lab))
+            mf.addWidget(w)
+        self.move_group = mg
+        if mv:
+            i = self.m_room.findData(mv.get('dest'))
+            if i < 0:
+                self.m_room.addItem(str(mv.get('dest')), mv.get('dest'))
+                i = self.m_room.count() - 1
+            self.m_room.setCurrentIndex(i)
+            self.m_screen.setValue(int(mv.get('screen', 0)))
+            self.m_x.setValue(int(mv.get('x', 0)))
+            self.m_y.setValue(int(mv.get('y', 0)))
+        elif room is not None:
+            i = self.m_room.findData(f"room:${int(str(room['mapID']), 0):02X}")
+            self.m_room.setCurrentIndex(max(i, 0))
+            self.m_screen.setValue(int(key))
+        v.addWidget(mg)
+
+    def ok(self):
+        return not (self.say.isChecked() and self.reply.bad_boxes())
+
+    def block(self):
+        b = {'boxes': self.reply.boxes() if self.say.isChecked() and not self.reply.is_blank()
+             else [],
+             'set': self.set_list.flags(), 'clear': self.clear_list.flags(), 'move': None}
+        if self.move_group.isChecked() and self.m_room.currentData():
+            b['move'] = {'dest': self.m_room.currentData(), 'screen': self.m_screen.value(),
+                         'x': self.m_x.value(), 'y': self.m_y.value()}
+        return b
+
+    def new_flags(self):
+        return self.set_list.new_flags + [f for f in self.clear_list.new_flags
+                                          if f not in self.set_list.new_flags]
+
+
+class TalkDialog(QDialog):
+    """What an NPC / examine spot / step trigger says and does (S98; the
+    per-box text editor is S97 r2). Text as boxes; optionally a YES/NO
+    question (the last box is the question); then, per answer (or once):
+    a reply, flags to turn on/off, and optionally moving the player.
+    `spec()` returns the talk spec (editor2/core/talk.py)."""
+
+    def __init__(self, boxes=None, title='What does this NPC say?', rom=None, parent=None,
+                 spec=None, doc=None, room=None, key=0):
+        super().__init__(parent)
+        from PySide6.QtWidgets import QCheckBox, QTabWidget
+        self.setWindowTitle(title)
+        self.rom = rom
+        self.doc = doc
+        self.resize(820, 720)
+        spec = spec or {}
+        if boxes is None:
+            boxes = spec.get('boxes')
+        v = QVBoxLayout(self)
+        intro = QLabel('Each box shows 2 lines and waits for A before the next box. '
+                       'Line 1 of box 1 has 16 cells (after "*:"), every other line 18. '
+                       'Press Enter to start the second line. Red = does not fit (the game '
+                       'loses the cells past the edge, a third line scrolls without waiting). Letters, digits, '
+                       "space and . , ; ! ? ' only.")
+        intro.setWordWrap(True)
+        v.addWidget(intro)
+        self.box_list = BoxList(rom, boxes)
+        self.box_list.changed.connect(self._validate)
+        v.addWidget(self.box_list, 3)
+        self.question = QCheckBox('Ask YES / NO after the text (the last box is the question)')
+        self.question.setChecked(bool(spec.get('question')))
+        v.addWidget(self.question)
+        self.tabs = QTabWidget()
+        self.then = BlockEditor(rom, doc, room, spec.get('then'), key)
+        self.yes = BlockEditor(rom, doc, room, spec.get('yes'), key)
+        self.no = BlockEditor(rom, doc, room, spec.get('no'), key)
+        for be in (self.then, self.yes, self.no):
+            be.changed.connect(self._validate)
+        v.addWidget(self.tabs, 2)
+        self.question.toggled.connect(self._tabs)
+        self._tabs(self.question.isChecked())
+        self.bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.bb.accepted.connect(self.accept)
+        self.bb.rejected.connect(self.reject)
+        v.addWidget(self.bb)
+        self._validate()
+
+    def _tabs(self, q):
+        while self.tabs.count():
+            self.tabs.removeTab(0)
+        if q:
+            self.tabs.addTab(self.yes, 'If YES')
+            self.tabs.addTab(self.no, 'If NO')
+        else:
+            self.tabs.addTab(self.then, 'Afterwards')
+        self._validate()
+
+    def _validate(self):
+        if not hasattr(self, 'bb'):
+            return
+        ok = not self.box_list.bad_boxes()
+        blocks = (self.yes, self.no) if self.question.isChecked() else (self.then,)
+        ok = ok and all(b.ok() for b in blocks)
+        self.bb.button(QDialogButtonBox.Ok).setEnabled(ok)
+
+    # the S97 API (tests stub this one)
+    def boxes(self):
+        return self.box_list.boxes()
+
+    def spec(self):
+        from editor2.core.talk import empty_block
+        q = self.question.isChecked()
+        return {'boxes': self.boxes(), 'question': q,
+                'then': empty_block() if q else self.then.block(),
+                'yes': self.yes.block() if q else empty_block(),
+                'no': self.no.block() if q else empty_block()}
+
+    def new_flags(self):
+        out = []
+        for b in (self.then, self.yes, self.no):
+            for f in b.new_flags():
+                if f not in out:
+                    out.append(f)
+        return out

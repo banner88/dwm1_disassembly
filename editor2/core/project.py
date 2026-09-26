@@ -54,6 +54,12 @@ QUEST_EID_CAP = 12
 QUEST_REGION_BYTES = 308
 
 
+
+def _unlinked_door(e):
+    """S98 r2: a door object placed but not connected yet — no destination,
+    nothing to emit (validators warn)."""
+    return bool(e.get('door')) and 'dest' not in e
+
 class ProjectError(ValueError):
     pass
 
@@ -77,6 +83,7 @@ class Project:
         self._allocate_flags()
         self.quest_enemies = self._resolve_quest_enemies()
         self._lower_quests()
+        self._lower_talk_scripts()
         self.vanilla_exit_exts = (list(self.custom.get('vanilla_exit_extensions', []))
                                   + self._lower_entrance_redirects())
         self.rooms = self._dense_rooms()
@@ -274,6 +281,79 @@ class Project:
             else:
                 raise ProjectError(f"{ctx}: unknown action {a!r}")
         return ops
+
+    # ------------------------------------------------------ talk scripts (S98)
+    # A script may be authored as `talk` instead of `ops` (PROJECT_COMPILER
+    # §2.14): what an NPC / examine spot / step trigger does when it fires —
+    # show a text, optionally ask YES/NO, then set/clear flags and optionally
+    # move the player (which reloads a room, so state rules re-pick states).
+    #   {"id": s, "talk": {"text": dlg, "question": false,
+    #                      "then": {"set": [f], "clear": [f], "move": M}}}
+    #   {"id": s, "talk": {"text": dlg, "question": true,
+    #                      "yes": {"text": dlg?, "set": [], "clear": [], "move": M?},
+    #                      "no":  {...}}}
+    #   M = {"dest": "room:$6B" | "vanilla:$01", "screen": k, "x": cx, "y": cy}
+    # Flags: project flag names or event flag numbers (resolve_flag_ref).
+    # Lowered HERE into ordinary ops (before text ids resolve), so emitters
+    # and validators see plain scripts. YES/NO: the question text must be a
+    # `choice` dialogue ($E7 $F0); the engine leaves the answer in $C83C
+    # (1 = NO — the proven check_and_branch form of every quest/teleport).
+    TALK_BLOCK_KEYS = {'text', 'set', 'clear', 'move'}
+
+    def _talk_block_ops(self, b, ctx):
+        ops = []
+        b = b or {}
+        unknown = set(b) - self.TALK_BLOCK_KEYS - {'comment'}
+        if unknown:
+            raise ProjectError(f"{ctx}: unknown talk keys {sorted(unknown)}")
+        if b.get('text'):
+            ops.append(['text', b['text']])
+        for f in b.get('set') or []:
+            ops.append(['op', 'set_flag', self.resolve_flag_ref(f, ctx)])
+        for f in b.get('clear') or []:
+            ops.append(['op', 'clear_flag', self.resolve_flag_ref(f, ctx)])
+        mv = b.get('move')
+        if mv:
+            dest = str(mv.get('dest', ''))
+            if ':' not in dest:
+                raise ProjectError(f"{ctx}: move.dest must be room:$xx or vanilla:$xx")
+            mid = F.val(dest.split(':', 1)[1])
+            k, x, y = int(mv.get('screen', 0)), int(mv['x']), int(mv['y'])
+            if not (0 <= k <= 15 and 0 <= x <= 9 and 0 <= y <= 7):
+                raise ProjectError(f"{ctx}: move to screen {k} cell ({x},{y}) outside "
+                                   "the 4x4 grid / 10x8 cells")
+            # MapTransitionFull ($0F, bank $04 label4_5a02): word 1 = mapID
+            # (high byte = gate flag 0), words 2/3 = ABSOLUTE pixel x/y of the
+            # cell centre (screen col*10 / row*8 cells + cell*16 + 8)
+            px = ((k % 4) * 10 + x) * 16 + 8
+            py = ((k // 4) * 8 + y) * 16 + 8
+            ops.append(['op', 'map_transition', f'0x{mid:04X}', f'0x{px:04X}', f'0x{py:04X}'])
+        return ops
+
+    def _lower_talk_scripts(self):
+        for s in self.custom.get('scripts', []):
+            t = s.get('talk')
+            if t is None or s.get('_talk_lowered'):
+                continue
+            ctx = f"scripts[{s.get('id')}].talk"
+            if 'ops' in s:
+                raise ProjectError(f"{ctx}: a script has either 'talk' or 'ops', not both")
+            if not t.get('text'):
+                raise ProjectError(f"{ctx}: 'text' (the dialogue shown first) is required")
+            ops = [['text', t['text']]]
+            if t.get('question'):
+                if t.get('then'):
+                    raise ProjectError(f"{ctx}: a question uses 'yes'/'no', not 'then'")
+                ops.append(['op', 'check_and_branch', '0xC83C', '0x0001', '@no'])
+                ops += self._talk_block_ops(t.get('yes'), ctx + '.yes') + [['end']]
+                ops.append('label:no')
+                ops += self._talk_block_ops(t.get('no'), ctx + '.no') + [['end']]
+            else:
+                if t.get('yes') or t.get('no'):
+                    raise ProjectError(f"{ctx}: 'yes'/'no' need \"question\": true")
+                ops += self._talk_block_ops(t.get('then'), ctx + '.then') + [['end']]
+            s['ops'] = ops
+            s['_talk_lowered'] = True
 
     def quest_battle_eid(self, q):
         b = q.get('battle') or {}
@@ -488,6 +568,8 @@ class Project:
         head) — entry scripts must keep the counter < len(states)."""
         states = s.get('states')
         if not states:
+            if any(_unlinked_door(e) for e in s.get('exits') or []):
+                s = dict(s, exits=[e for e in s['exits'] if not _unlinked_door(e)])
             return [s]
         out = []
         for st in states:
@@ -495,7 +577,7 @@ class Project:
             if 'layout' not in merged:
                 merged['layout'] = s['layout']
             merged.setdefault('npcs', st.get('npcs', []))
-            merged.setdefault('exits', st.get('exits', []))
+            merged['exits'] = [e for e in st.get('exits', []) if not _unlinked_door(e)]
             out.append(merged)
         return out
 

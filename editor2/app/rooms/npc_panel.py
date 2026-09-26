@@ -64,6 +64,19 @@ BEHAVIOUR_UI = [
     (0xF, 'Gate wanderer (gate floors only)',
      'Random walk with collision on gate floors only. In a room it stands frozen.'),
 ]
+def talk_summary(talk, script_id):
+    """Preview line for a talk script: `talk` = a talk spec (S98), the S97
+    list of boxes, or None (the script does more than the talk form)."""
+    if isinstance(talk, dict):
+        from editor2.core.talk import TalkMixin
+        return TalkMixin.describe_talk(talk)
+    if talk:
+        return ' ▸ '.join('"' + ' '.join(ln for ln in b if ln) + '"' for b in talk)
+    if script_id not in (None, 'none'):
+        return '(script does more than talk — edited as a script in a later box, P3.6/P3.8)'
+    return ''
+
+
 WALK_NOTE = ('Walkers never test walls or screen edges — only the player blocks '
              'them (they wait). Keep the dotted path on open floor.')
 
@@ -202,9 +215,11 @@ class NpcPanel(QGroupBox):
         srow.addWidget(self.script, 1)
         f.addRow('talk script', srow)
         brow = QHBoxLayout()
-        self.btn_new_talk = QPushButton('New talk text…')
+        self.btn_new_talk = QPushButton('New talk…')
+        self.btn_new_talk.setToolTip('What the NPC says and does: text, an optional YES/NO '
+                                     'question, flags to turn on/off, moving the player')
         self.btn_new_talk.clicked.connect(self.newTalkRequested.emit)
-        self.btn_edit_talk = QPushButton('Edit text…')
+        self.btn_edit_talk = QPushButton('Edit talk…')
         self.btn_edit_talk.clicked.connect(self.editTalkRequested.emit)
         brow.addWidget(self.btn_new_talk)
         brow.addWidget(self.btn_edit_talk)
@@ -259,11 +274,7 @@ class NpcPanel(QGroupBox):
         k = self.script.findData(cur) if cur not in (None, 'none') else 0
         self.script.setCurrentIndex(max(0, k))
         self.btn_edit_talk.setEnabled(talk_pages is not None)
-        self.talk_preview.setText(' ▸ '.join('"' + ' '.join(ln for ln in b if ln) + '"'
-                                             for b in talk_pages) if talk_pages
-                                  else ('(script does more than talk — edited as a script '
-                                        'in a later box, P3.6/P3.8)' if cur not in (None, 'none')
-                                        else ''))
+        self.talk_preview.setText(talk_summary(talk_pages, cur))
         while self.presence_lay.count():
             w = self.presence_lay.takeAt(0).widget()
             if w:

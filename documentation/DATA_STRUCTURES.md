@@ -709,11 +709,12 @@ Tables initialized by Bank $51 battle setup. Each table holds 16 bytes (up to 8 
 | Label | Bank:Address | Refs | Purpose |
 |-------|-------------|------|---------|
 | `LoadNextDungeonFloor` | $01:$69E1 | — | Gate floor progression |
-| `CopyPlayerCoordsAndGetNextRoom` | $01:$55D7 | — | Room transition |
+| `CopyPlayerCoordsAndGetNextRoom` | $01:$55D7 | — | Step-trigger dispatcher (S98: runs a `$90` step-on script after a step; name kept for tools/audit_mapid_range.py) |
 | `MapTypeDispatch` | $04:$71EF | — | Route to script banks $0C-$0F |
 | `GetRoomDataPtr` | $0B:$4274 | — | Room data pointer lookup |
-| `SearchNPCAtFacing` | $0B:$43B8 | — | Find NPC at player facing pos |
-| `CheckExitCoords` | $0B:$4452 | — | Coordinate match for exits |
+| `RoomEntry4_TalkTargetLookup` | $0B:$4332 | — | A-press target at a cell: NPC slots (`TalkScanNPCSlots` $433F via `NPCSlotAtPos` $43E5), then EXAMINE spots $8x (`TalkScanExamineSpots` $4366, `ExamineSpotMatch` $438D, facing nibble) — S98 (was `RoomEntry4_NPCMovement`) |
+| `SearchStepTriggers` | $0B:$43B8 | — | STEP-ON trigger ($90) at the player's cell; entry 5 `RoomEntry5_StepTriggerLookup` $43A4 — S98 (was `SearchNPCAtFacing`) |
+| `InteractEntryAtPos` | $0B:$4452 | — | Coordinate match for an interact entry ≥$80; both scans stop at the first NPC entry — S98 (was `CheckExitCoords`) |
 | `AddCursorOffset` | $12:$441F | 82 | UI cursor offset calc |
 | `GetScreenPos` | $12:$40E5 | 62 | Screen position from RAM |
 | `ReadPtrFromDE` | $12:$40B4 | 44 | Read 2-byte ptr from [DE] |

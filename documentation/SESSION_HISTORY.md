@@ -1,5 +1,114 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-25 (Session 96 — **"Finish out the rooms stuff":
+> group A = tiles & tilesets — P3.3c slot map + vocabulary release, tileset
+> switching / blank sheets, the IMPORT ART tab (DWM2 PNG rips → room tiles,
+> palettes, metatiles, stamped screens), per-subtile metatile palettes,
+> bank space meters — and "Make editable" fixed for ALL 98 vanilla rooms.**
+> Round 1 changed no patch bytes (bank_004 patch/disassembly gained
+> comments + alias labels only — clean build `1ca6579…` byte-perfect), example
+> project regrouped (same words — pin `fc1caa98…` held); round 2 added the
+> FreeColor1Hook engine patch (pin → `07a71f20…`, patched, see below);
+> verify_integrity PASS 6/6 (check 5 now also selftests the new opcode
+> arity table); test_canvas --rom PASS incl. v3 + the all-clones sweep.
+> Round 4 (menu fix) moved the pin to `5db25d15…` (patched). **USER-CONFIRMED
+> 2026-09-25** ("Everything works"). Test ROM: `DWM-S96-pei-import-test.gbc`
+> (patched, md5 `f3d45a42…` round 1, superseded by `fe5f3f9d…` round 2 and
+> `023b7c65…` round 4 — all historical) — the GreatTree 2F Library door leads into DWM2 Pei imported
+> from the user's PNG (6 screens, 87 slots, auto-marked walls); an exit on
+> the left path returns to GreatTree 2F. PyBoy: door → Pei at the authored
+> cell, VRAM == canvas, walls block, scroll between screens, exit returns.
+>
+> **Built (owning: EDITOR_DESIGN §5.1 "S96 additions"; PROJECT_COMPILER
+> §2.11 S96 notes + §11; TOOLS_AND_DATA S96 rows):**
+> - **Tileset tab (P3.3c):** 128-slot map (placed / my metatiles /
+>   vocabulary / released / animated / free, changed-graphic dot, threshold
+>   line, hover users, click = canvas highlight), per-side free counts
+>   everywhere, "Release unused vocabulary" (persisted `_editor.
+>   released_vocab`), picker flags. Vocabulary now DERIVED from the source
+>   room (`Document.tile_usage`), not session-registered — which also fixes
+>   a latent hole: the first import after localizing a sheet did not
+>   protect the vocabulary.
+> - **Change tileset** (vanilla / project / new blank) + New room "blank
+>   tileset"; `Document.set_room_tileset`, `new_blank_tileset`,
+>   `tileset_origin`.
+> - **Import art tab** (`editor2/core/png_import.py` + `app/import_tab.py`):
+>   the user's spec — open PNG, per-panel grid (auto from each panel's
+>   corner; nudge with arrows; Auto-align), mask, walls (same tile
+>   everywhere), key colours, palette fit to 4 slots under the engine rule
+>   (colour 1 cream / 3 black forced → two free colours per slot; DWM2 art
+>   has three, the one nearest cream is folded), "keep" slots, "Show as
+>   GBC", budget, Add to My metatiles, Stamp with spill onto new screens.
+>   `Document.import_png_cells` reuses identical graphics, keeps wall BRs
+>   below / walkable BRs above the threshold, fails before writing.
+> - **Metatile `pal` per subtile** (int or list of 4): 7.5% of vanilla
+>   cells mix slots; painting them used to flatten them.
+> - **Space meters** $60/$64/$67/$71 (`compiler.measure_banks`).
+>
+> **Found + fixed (DOC_AUDIT S96; KEY_LESSONS S96):** cloning was broken for
+> most vanilla rooms — `extract_room.py` read every room's scripts from bank
+> `$0D` (clones of Castle/GreatTree/Farm… carried filler), parsed only 8
+> attr screen slots (GreatTree → KeyError 8), and used decompile_script's
+> opcode arity, wrong for 36 opcodes; the command table has **102** rows
+> (`$64` BranchIfPartyHealthy, `$65` WaitDD80), not 100. New
+> `tools/script_param_counts.py` derives every opcode's arity from the bank-
+> $04 handler code (counter increments per path; tails $55F5 / $7212 /
+> ret) → `extracted/script_param_counts.json`, used by extract_room,
+> compile_script, decompile_script and scriptgen; bank_004 catalog
+> annotated in both copies. Clones also get per-screen step-0 palettes
+> (Labyrinth screen 1), and screens outside the record's scroll area are a
+> warning (vanilla sub-room screens). Result: 98/98 rooms clone, 211
+> screens / 526 states pixel-identical, every clone compiles; nine clones
+> (Castle, GreatTree, Bazaar, Farm, Arena Lobby, Starry Shrine, Library,
+> Healer boss, Labyrinth) load and render in PyBoy with VRAM == canvas.
+>
+> **S96 round 2 (user feedback on the intermediate files — "imports
+> perfectly", "GreatTree make-editable works, copying, teleporting"):**
+> - **Own colour 1 (engine, byte-changing):** the forced cream is bank $17
+>   `LoadPal_4102` copying system slot 7's colours 1/3 into slots 0-6 at
+>   palette load (GATE_GENERATION §7.1). `FreeColor1Hook` (same-size jp +
+>   bank-tail code) skips slots 0-3 for custom rooms whose palette carries a
+>   bit-15 marker in slot 0 colour 3 (`free_color1` in project.json; no
+>   vanilla palette sets it). Import tab defaults to it (Pei: 1417/1440
+>   subtiles exact vs 632). **Reference patched pin → `07a71f20…`**
+>   (test_compiler 61/61, test_app --rom == pin, example rooms' palette RAM
+>   unchanged in PyBoy). User SameBoy test FAILED the menu (washed out
+>   after closing) → fixed in round 4 below.
+> - Right panel: foldable sections in a vertical splitter; palettes show
+>   slots 0-3 by default. Import list: "Remove" + tooltips (every opened PNG
+>   stays in the project).
+> - Test ROM `DWM-S96-pei-import-test.gbc` rebuilt with own colour 1
+>   (patched md5 `fe5f3f9d…`).
+> **Round 3 (user):** "not enough free tileset slots in ts_24_00" (a Servant
+> clone's sheet already full of earlier imports) → the import no longer binds
+> unmarked cells to the walkable side (walkability is the author's; strict
+> mode optional), the tab offers "New room…" (blank tileset) and the error
+> names release / blank-tileset; foldable right panel "not visible" = the
+> delivery folder rsync'd without a trailing slash (landed in a subfolder)
+> → `EDITOR_REVISION` now shows in the title bar and build log.
+> **User result 2026-09-25: "Great job. Everything works."** — rounds 1-4 of
+> group A USER-CONFIRMED (menu / battle return in a free-colour room included).
+>
+> **Round 4 (user SameBoy report: "opening menu then going back … everything
+> becomes blinding white … permanently, including when screen shifting";
+> "coloured background squares as it opens"):** reproduced in PyBoy (a
+> legitimate menu needs a non-empty party — `give_party_monster` — the
+> old "hijacked state cannot open menus" note was just an empty party).
+> Cause 1: the field menu calls `LoadPal_4102` standalone (via $17 entry 6)
+> and nothing reloads the room palette on close; round 2's marker was
+> cleared by the first load, so the menu re-forced cream into slots 0-3 for
+> good. Cause 2: the menu blanks the BG to tile $E0 (colour 1) under the
+> room's attrs for ~8 frames before its palette-7 attr fill. Fix: per-slot
+> markers that survive in the buffer (FreeColor1Hook) + bank $06 A-press
+> tail same-size far call to bank $73 entry 13 `MenuOpenFreePal` (hardware
+> colour 1 := cream for marked slots; the close push restores). PyBoy:
+> cream wipe, own colours after close, after INFO sub-pages, screen
+> scrolls and a won battle; vanilla-room menu 619/620 frames identical to
+> round 3. **Pin → `5db25d15…` (patched).** Test ROM
+> `DWM-S96-pei-import-test-r4.gbc` (patched, md5 `023b7c65…`).
+> Intermediate files are always delivered for GUI testing (user rule). The attached .sav has its save-exists
+> flag ($A002) = 0, so PyBoy could not continue from it.
+
 > Last verified: 2026-09-24 (Session 95 — **user feedback round on S94b:
 > the metatile VOCABULARY, borrowing tiles from other rooms, and the
 > old-project build failure.** Editor-only session: no patches, no

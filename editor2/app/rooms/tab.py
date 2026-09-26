@@ -29,6 +29,7 @@ from editor2.app.rooms.metatile_picker import MetatilePicker
 from editor2.app.rooms.minimap import MiniMap
 from editor2.app.rooms.palette_panel import PalettePanel
 from editor2.app.rooms.redirect_dialog import RedirectDialog, ExitDialog
+from editor2.app.rooms.door_dialog import DoorDialog
 from editor2.app.rooms.tileset_map import TilesetMap
 from editor2.app.rooms.tileset_dialog import TilesetDialog
 from editor2.app.collapsible import Section
@@ -52,16 +53,37 @@ class NewRoomDialog(QDialog):
         self.blank.setToolTip('The room gets its own empty 128-slot sheet; palette and '
                               'engine source still come from the room above.')
         f.addRow('', self.blank)
-        f.addRow(QLabel('The room starts as one screen of floor with a spawn point.'))
+        f.addRow(QLabel('The room starts as one screen of floor. Connect it with "Add door '
+                        'here…" on a cell (a vanilla door as the other end is the quickest '
+                        'in-game test).'))
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(self.accept)
         bb.rejected.connect(self.reject)
         f.addRow(bb)
 
 
+class _ObjectPanels:
+    """The inspector's `npc` hook (S97: 'a new selection hides the NPC
+    form') now hides every object panel of the Object section (S98)."""
+
+    def __init__(self, tab):
+        self.tab = tab
+
+    def setVisible(self, on):
+        t = self.tab
+        if not on:
+            for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel):
+                p.setVisible(False)
+            t.npc_hint.setVisible(True)
+
+    def isHidden(self):
+        t = self.tab
+        return all(p.isHidden() for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel))
+
+
 class RoomsTab(QWidget):
     status = Signal(str)
-    HELP = ('V select · B paint · R rect · F fill · I / right-click eyedrop · W walkability · '
+    HELP = ('V select · D / X add a door / examine spot on the selected cell · double-click to edit · B paint · I / right-click eyedrop · W walkability · '
             'Esc select · ⌘/Ctrl+wheel zoom · space-drag pan · , . state · 0-9 screen · ⌘Z undo')
 
     def __init__(self, session, parent=None):
@@ -139,17 +161,48 @@ class RoomsTab(QWidget):
         self.tools.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.tool_group = QActionGroup(self)
         self.tool_actions = {}
-        for name, text, key in (('select', 'Select', 'V'), ('paint', 'Paint', 'B'),
-                                ('rect', 'Rect', 'R'), ('fill', 'Fill', 'F'),
-                                ('pick', 'Eyedrop', 'I'), ('walk', 'Walkability', 'W')):
+        # S98 r2: Rect / Fill dropped from the bar (user: "kinda pointless")
+        # — their R / F keys still work. "Add door" sits next to Select.
+        for name, text, key, shown, tip in (
+                ('select', 'Select', 'V', True, 'select cells and markers; drag markers to move'),
+                ('paint', 'Paint', 'B', True, 'paint the picked metatile'),
+                ('rect', 'Rect', 'R', False, ''), ('fill', 'Fill', 'F', False, ''),
+                ('pick', 'Eyedrop', 'I', True, 'copy a cell\'s metatile (also right-click)'),
+                ('walk', 'Walkability', 'W', True, 'click a cell to flip wall / walkable')):
             a = QAction(f'{text} ({key})', self)
             a.setCheckable(True)
             a.setShortcut(QKeySequence(key))
             a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+            if tip:
+                a.setToolTip(f'{text} ({key}) — {tip}')
             a.triggered.connect(lambda _c, n=name: self._set_tool(n))
             self.tool_group.addAction(a)
-            self.tools.addAction(a)
+            if shown:
+                self.tools.addAction(a)
+            else:
+                self.addAction(a)
             self.tool_actions[name] = a
+            if name == 'select':
+                # S98 r2 (user design): select a cell, press Add door — the
+                # door appears there; double-click it to name / connect it
+                self.act_add_door = QAction('+ Door (D)', self)
+                self.act_add_door.setShortcut(QKeySequence('D'))
+                self.act_add_door.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+                self.act_add_door.setToolTip('Add a door on the selected cell — then '
+                                             'double-click it to name it and connect it to '
+                                             'another door')
+                self.act_add_door.triggered.connect(self._add_door_selected)
+                self.tools.addAction(self.act_add_door)
+                # S98 r2 (user: "Why is examine spot not a button?")
+                self.act_add_examine = QAction('+ Examine (X)', self)
+                self.act_add_examine.setShortcut(QKeySequence('X'))
+                self.act_add_examine.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+                self.act_add_examine.setToolTip('Add an examine spot on the selected cell (a '
+                                                'sign, a book, a pot…): the player presses A '
+                                                'on or facing it. Double-click it to edit.')
+                self.act_add_examine.triggered.connect(
+                    lambda: self._add_on_selected(lambda c: self._add_spot(c, 'examine')))
+                self.tools.addAction(self.act_add_examine)
         self.tool_actions['select'].setChecked(True)
         for seq, fn in ((',', lambda: self.select_state(self.state_idx - 1)),
                         ('.', lambda: self.select_state(self.state_idx + 1)),
@@ -181,6 +234,14 @@ class RoomsTab(QWidget):
             b.setCheckable(True)
             b.setChecked(name in ('grid', 'markers'))
             b.toggled.connect(lambda on, n=name: self.canvas.set_layer(n, on))
+            if name == 'walk':
+                # S98 r2 (user: "Why can I no longer change walkability by
+                # clicking walk button and click on a tile?"): the Walk
+                # button IS the walkability mode now — on = Walkability tool
+                # (click a cell to flip wall / walkable), off = back to Select
+                b.setToolTip('Walkability: click a cell to flip wall / walkable (red = wall). '
+                             'Same as the W tool.')
+                b.clicked.connect(self._walk_button)
             self.tools.addWidget(b)
             self.layer_buttons[name] = b
         self.tools.addSeparator()
@@ -251,7 +312,8 @@ class RoomsTab(QWidget):
         self.canvas.walkFlipRequested.connect(self._flip_walk)
         self.canvas.zoomChanged.connect(lambda z: self.zoom_box.setCurrentIndex(z - 1))
         self.canvas.editRequested.connect(self._edit_requested)
-        self.canvas.toolChanged.connect(lambda n: self.tool_actions[n].setChecked(True))
+        self.canvas.markerActivated.connect(self._marker_activated)
+        self.canvas.toolChanged.connect(self._tool_changed)
         cv.addWidget(self.canvas, 1)
         self.status_line = QLabel(self.HELP)
         self.status_line.setStyleSheet('color: #bbb; padding: 2px 6px;')
@@ -313,6 +375,8 @@ class RoomsTab(QWidget):
         self.tileset_map.hoverInfo.connect(self._hover)
         self.tileset_map.highlightTile.connect(self._highlight_tile)
         self.tileset_map.releaseToggled.connect(self._release_vocab)
+        self.tileset_map.ownCopyRequested.connect(self._own_tileset)
+        self.tileset_map.purgeRequested.connect(self._purge_metatiles)
         tscroll = QScrollArea()
         tscroll.setWidgetResizable(True)
         tscroll.setWidget(self.tileset_map)
@@ -364,40 +428,76 @@ class RoomsTab(QWidget):
         self.inspector.tilesetChangeRequested.connect(self._change_tileset)
         # S97: NPC inspector (P3.5) + state rules (P3.5a)
         self.inspector.addNpcRequested.connect(self._add_npc)
+        # S98 (P3.7): doors, examine spots / step triggers
+        self.inspector.addDoorRequested.connect(self._add_door)
+        self.inspector.addSpotRequested.connect(self._add_spot)
+        self.inspector.removeDoorRequested.connect(self._remove_door)
+        self.inspector.goDoorRequested.connect(self._go_door_here)
         self.inspector.rules.rulesEdited.connect(self._rules_edited)
         self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector',
                                 expanded=False, remember=False)
         self.right_split.addWidget(self.sec_insp)
-        # S97 r2: the NPC form is its own foldable section (user request)
+        # S97 r2: the NPC form is its own foldable section (user request);
+        # S98: the section holds whichever OBJECT is selected — NPC, door,
+        # one-way exit, examine spot / step trigger
         from editor2.app.rooms.npc_panel import NpcPanel
+        from editor2.app.rooms.object_panels import DoorPanel, SpotPanel, TeleportPanel
         npcbox = QWidget()
         nl = QVBoxLayout(npcbox)
         nl.setContentsMargins(0, 0, 0, 0)
-        self.npc_hint = QLabel('No NPC selected. Click an NPC marker with the Select tool (V), '
-                               'or click an empty cell and use “Add NPC here…” in '
-                               'Room / screen / selection.')
+        self.npc_hint = QLabel('Nothing selected. Click an NPC, a door (D), an examine spot (X) '
+                               'or a step trigger (T) with the Select tool (V) — or click an '
+                               'empty cell and use the "Add … here" buttons in Room / screen / '
+                               'selection.')
         self.npc_hint.setWordWrap(True)
         self.npc_hint.setStyleSheet('color: #aaa;')
         nl.addWidget(self.npc_hint)
         npc = self.npc_panel = NpcPanel()
         npc.setTitle('')
-        npc.shownChanged.connect(lambda on: self.npc_hint.setVisible(not on))
         npc.setVisible(False)
         nl.addWidget(npc)
+        self.door_panel = DoorPanel()
+        self.door_panel.setVisible(False)
+        nl.addWidget(self.door_panel)
+        self.tele_panel = TeleportPanel()
+        self.tele_panel.setVisible(False)
+        nl.addWidget(self.tele_panel)
+        self.spot_panel = SpotPanel()
+        self.spot_panel.setVisible(False)
+        nl.addWidget(self.spot_panel)
         nl.addStretch(1)
         nscroll = QScrollArea()
         nscroll.setWidgetResizable(True)
         nscroll.setWidget(npcbox)
         self.npc_scroll = nscroll
-        self.inspector.npc = npc
+        self.inspector.npc = _ObjectPanels(self)
         npc.fieldsEdited.connect(self._npc_fields)
         npc.spriteRequested.connect(self._npc_sprite)
         npc.newTalkRequested.connect(self._npc_new_talk)
         npc.editTalkRequested.connect(self._npc_edit_talk)
         npc.presenceToggled.connect(self._npc_presence)
         npc.deleteRequested.connect(self._npc_delete)
-        self.sec_npc = Section('NPC', nscroll, 'rooms_npc', expanded=False, remember=False)
+        dp = self.door_panel
+        dp.goRequested.connect(self._go_end)
+        dp.statesToggled.connect(self._door_states)
+        dp.deleteRequested.connect(self._door_delete)
+        dp.reaimRequested.connect(self._door_reaim)
+        dp.editRequested.connect(lambda: self._edit_door(getattr(self, '_sel_door', None)))
+        dp.disconnectRequested.connect(self._door_disconnect)
+        tp = self.tele_panel
+        tp.statesToggled.connect(self._exit_states)
+        tp.deleteRequested.connect(self._exit_delete)
+        tp.goRequested.connect(self._go_end)
+        sp = self.spot_panel
+        sp.fieldsEdited.connect(self._spot_fields)
+        sp.newTalkRequested.connect(self._npc_new_talk)
+        sp.editTalkRequested.connect(self._npc_edit_talk)
+        sp.presenceToggled.connect(self._npc_presence)
+        sp.deleteRequested.connect(self._npc_delete)
+        self.sec_npc = Section('Object (NPC / door / spot)', nscroll, 'rooms_npc',
+                               expanded=False, remember=False)
         self.right_split.addWidget(self.sec_npc)
+        self._sel_exit = None           # S98: index of the selected exit row
         self.right_split.setStretchFactor(0, 3)
         self.right_split.setStretchFactor(1, 0)
         self.right_split.setStretchFactor(2, 4)
@@ -798,6 +898,40 @@ class RoomsTab(QWidget):
         if cmd.error is not None:
             QMessageBox.warning(self, 'Change tileset', str(cmd.error))
 
+    def _purge_metatiles(self, kind):
+        """S98 r2: drop every unused own / borrowed metatile of this room's
+        tileset (one undo step)."""
+        room = self.current_room()
+        if room is None:
+            return
+        tid = self.s.doc.tileset_key(room)
+        thr = val(room['record']['collision_threshold'])
+        n, fr = self.s.doc.purge_preview(tid, kind, thr)
+        if not n:
+            return
+        cmd = C.SnapshotCommand(self.s, f'Purge {n} unused {kind} metatiles',
+                                lambda doc: doc.purge_unused_metatiles(tid, kind))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Purge', str(cmd.error))
+            return
+        self._show()
+        self.status_line.setText(f"Purged {n} unused {kind} metatiles — {fr['walkable']} walkable "
+                                 f"and {fr['wall']} wall slots free again (undo restores them).")
+
+    def _own_tileset(self):
+        """S98 r2: this room stops sharing its tileset (private copy)."""
+        room = self.current_room()
+        if room is None:
+            return
+        rid = room['id']
+        cmd = C.SnapshotCommand(self.s, 'Own copy of the tileset',
+                                lambda doc: doc.set_room_tileset(rid, 'own'))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Own copy of the tileset', str(cmd.error))
+        self._show()
+
     def _relayout_right(self):
         """Folded sections shrink to their header; the palette section takes
         its natural height; Metatiles and the inspector share the rest in
@@ -917,6 +1051,18 @@ class RoomsTab(QWidget):
         self.canvas.set_tool(name)
         self.canvas.setFocus()
 
+    def _tool_changed(self, name):
+        self.tool_actions[name].setChecked(True)
+        b = self.layer_buttons.get('walk')
+        if b is not None and b.isChecked() != (name == 'walk'):
+            b.blockSignals(True)
+            b.setChecked(name == 'walk')
+            b.blockSignals(False)
+            self.canvas.set_layer('walk', name == 'walk')
+
+    def _walk_button(self, on):
+        self._set_tool('walk' if on else 'select')
+
     def _update_brush_label(self):
         b = self.canvas.brush
         self.brush_label.setText('  brush: none  ' if not b else
@@ -941,11 +1087,398 @@ class RoomsTab(QWidget):
     def _marker_selected(self, sel):
         self.inspector.show_selection(sel, editable=self.current_room() is not None)
         self._sel_npc = None
+        self._sel_exit = None
         if sel:
             self.status_line.setText(sel['label'])
             ref = sel.get('ref')
             if sel['kind'] == 'npc' and ref and ref[0] == 'npc':
                 self._show_npc_panel(ref[1], ref[2])
+            elif sel['kind'] in ('examine', 'step', 'spawn') and ref and ref[0] == 'npc':
+                self._show_spot_panel(ref[1], ref[2])
+            elif sel['kind'] in ('door', 'door_open', 'door_dead') and ref:
+                self._show_door_panel(ref)
+            elif sel['kind'] == 'exit' and ref and ref[0] == 'exit':
+                self._show_exit_panel(ref[1], ref[2])
+
+    def _show_object(self, panel):
+        for p in (self.npc_panel, self.door_panel, self.tele_panel, self.spot_panel):
+            p.setVisible(p is panel)
+        self.npc_hint.setVisible(panel is None)
+        if panel is not None:
+            self.sec_npc.set_expanded(True)
+
+    # ------------------------------------------------- doors (S98, P3.7)
+    def _door_id_of_ref(self, ref):
+        """Door object id behind a canvas marker ref (custom door row, or a
+        vanilla door's redirect row / plain vanilla exit in a vanilla view)."""
+        if not ref:
+            return None
+        e = ref[2] if isinstance(ref[2], dict) else {}
+        if ref[0] == 'exit' and e.get('door'):
+            return e['door']
+        if ref[0] == 'redirect':
+            d = e.get('door')
+            if d and self.s.doc.parse_vanilla_door_id(d):
+                return d
+            if self.vanilla_mid is not None:
+                return self.s.doc.vanilla_door_id(self.vanilla_mid, self.key,
+                                                  val(e['x']), val(e['y']))
+        if ref[0] == 'exit' and self.vanilla_mid is not None:
+            return self.s.doc.vanilla_door_id(self.vanilla_mid, self.key,
+                                              val(e['x']), val(e['y']))
+        return None
+
+    def _show_door_panel(self, ref):
+        doc = self.s.doc
+        did = self._door_id_of_ref(ref)
+        me = doc.door_end(did) if did else None
+        if me is None:
+            return
+        room = self.current_room()
+        pres, note = None, ''
+        if me['kind'] == 'room' and room is not None:
+            self._sel_exit = ref[1]
+            pres = doc.exit_presence(room, self.key, self.state_idx, ref[1])
+            c = doc.edge_conflict(room, self.key, me['x'], me['y'])
+            if c and c[0] != 'bottom':
+                note = (f'This {c[0]} edge scrolls into screen {c[1]} — the door never fires '
+                        '(PyBoy S98). Drag it off the edge.')
+        self._sel_door = did
+        self.door_panel.show_door(doc, self.s.renderer, me, doc.door_partner(did), pres, note)
+        self.door_panel.btn_del.setEnabled(me['kind'] == 'room')
+        self._show_object(self.door_panel)
+
+    def _marker_activated(self, sel):
+        """S98 r2: double-click — a door (custom, or a vanilla door in a
+        vanilla view) opens its name / connection dialog."""
+        if not sel:
+            return
+        ref = sel.get('ref')
+        if sel['kind'] in ('door', 'door_open', 'door_dead') or \
+                (self.vanilla_mid is not None and sel['kind'] in ('exit', 'redirect')):
+            did = self._door_id_of_ref(ref)
+            if did:
+                self._edit_door(did)
+            return
+        self._marker_selected(sel)
+        if sel['kind'] in ('npc', 'examine', 'step', 'spawn') and self.current_room() is not None \
+                and self._sel_npc is not None:
+            self._npc_edit_talk()            # double-click = edit what it says / does
+
+    def _show_exit_panel(self, index, row):
+        room = self.current_room()
+        if room is not None:
+            self._sel_exit = index
+            pres = self.s.doc.exit_presence(room, self.key, self.state_idx, index)
+            note = ''
+            c = self.s.doc.edge_conflict(room, self.key, val(row['x']), val(row['y']))
+            if c and c[0] != 'bottom':
+                note = (f'This {c[0]} edge scrolls into screen {c[1]} — the exit never fires '
+                        '(PyBoy S98).')
+            self.tele_panel.show_exit(self.s.doc, self.s.renderer, row, pres, True, note)
+        else:
+            self.tele_panel.show_exit(self.s.doc, self.s.renderer, row, None, False,
+                                      'Vanilla door. Double-click it to connect it to one of '
+                                      'your doors (two-way), or use "Route this door into a '
+                                      'custom room…" for one-way.')
+        self._show_object(self.tele_panel)
+
+    def _door_op(self, label, fn):
+        cmd = C.SnapshotCommand(self.s, label, fn)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, label, str(cmd.error))
+            return None
+        return cmd
+
+    def _add_door_selected(self):
+        self._add_on_selected(self._add_door)
+
+    def _add_on_selected(self, fn):
+        cell = self.canvas.selected_cell
+        if self.current_room() is None:
+            self._edit_requested()
+            return
+        if cell is None:
+            self.status_line.setText('Select a cell first (Select tool, click a cell), then '
+                                     'press the + button.')
+            return
+        fn(cell)
+
+    def _dead_edge(self, cell, what='door'):
+        """S98 r2 (user: "I walk onto door but nothing happens"): an exit on
+        a screen edge that borders another screen of the room NEVER fires —
+        pushing into that edge scrolls (PyBoy S98). Returns the message, or
+        None when the cell is fine."""
+        room = self.current_room()
+        c = self.s.doc.edge_conflict(room, self.key, *cell) if room else None
+        if not c or c[0] == 'bottom':
+            return None
+        x, y = cell
+        inward = {'left': (x + 1, y), 'right': (x - 1, y), 'top': (x, y + 1)}[c[0]]
+        return (f'Cell ({x},{y}) is on the {c[0]} edge of screen {self.key}, and screen {c[1]} '
+                f'lies beyond it: walking into that edge SCROLLS to screen {c[1]}, so a {what} '
+                f'there can never fire (the game checks edge exits only where the room ends). '
+                f'Put the {what} one cell in, e.g. ({inward[0]},{inward[1]}).')
+
+    def _add_door(self, cell):
+        """S98 r2 (user design): the door appears on the cell at once, not
+        connected yet; double-click it to name it and connect it."""
+        room = self.current_room()
+        if room is None:
+            return
+        dead = self._dead_edge(cell)
+        if dead:
+            QMessageBox.warning(self, 'A door cannot go here', dead)
+            return
+        rid, key = room['id'], self.key
+        cmd = self._door_op(f"Add door ({cell[0]},{cell[1]})",
+                            lambda doc: doc.add_door(rid, key, cell[0], cell[1]))
+        if cmd is not None:
+            self._show()
+            self._select_exit_at(cell)
+            self.status_line.setText('Door added — double-click it to name it and connect it '
+                                     'to another door.')
+
+    def _edit_door(self, did):
+        """Name / connection / states of a door object (DoorPropsDialog)."""
+        if not did:
+            return
+        from editor2.app.rooms.door_dialog import DoorPropsDialog
+        if self.s.doc.door_end(did) is None:
+            return
+        dlg = DoorPropsDialog(self.s, did, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        v = dlg.result_values()
+        me = self.s.doc.door_end(did)
+        cur = me.get('link')
+
+        def apply(doc):
+            end = doc.door_end(did)
+            if end['kind'] == 'room' and v['name'] != end['name']:
+                doc.rename_door(did, v['name'])
+            if v['states'] is not None and sorted(v['states']) != end['states']:
+                doc.set_door_states(did, v['states'])
+            if v['link'] != cur:
+                if v['link'] is None:
+                    doc.unlink_door(did)
+                else:
+                    doc.link_doors(did, v['link'])
+        if v['name'] == me['name'] and v['link'] == cur and \
+                (v['states'] is None or sorted(v['states']) == me.get('states')):
+            return
+        cmd = self._door_op(f"Door '{v['name']}'", apply)
+        if cmd is not None:
+            cell = (me['x'], me['y'])
+            self._show()
+            if me['kind'] == 'room':
+                self._select_exit_at(cell)
+            else:
+                self.canvas.selected_cell = cell
+                self.canvas.viewport().update()
+
+    def _door_disconnect(self):
+        did = getattr(self, '_sel_door', None)
+        if did and self._door_op('Disconnect door', lambda doc: doc.unlink_door(did)) is not None:
+            cell = self.canvas.selected_cell
+            self._show()
+            if cell:
+                self._select_exit_at(cell)
+
+    def _select_exit_at(self, cell):
+        room = self.current_room()
+        if room is None:
+            return
+        rows = self.s.doc.exits_of(room, self.key, self.state_idx)
+        for i, e in enumerate(rows):
+            if (val(e['x']), val(e['y'])) == tuple(cell):
+                ref = self.canvas.select_marker('exit', i)
+                if ref is not None:
+                    m = next(m for m in self.canvas.markers if m[5] is ref)
+                    self._marker_selected({'kind': m[0], 'x': m[1], 'y': m[2], 'sprite': m[3],
+                                           'label': m[4], 'ref': ref})
+                return
+
+    def _door_states(self, target, present):
+        room = self.current_room()
+        if room is None or self._sel_exit is None:
+            return
+        rid, key, st, idx = self.room_id, self.key, self.state_idx, self._sel_exit
+        cmd = self._door_op(('Add door to' if present else 'Remove door from') + f' state {target}',
+                            lambda doc: doc.set_exit_presence(doc.room(rid), key, st, idx,
+                                                              target, present))
+        if cmd is not None:
+            cell = self.canvas.selected_cell
+            self._show()
+            if cell:
+                self._select_exit_at(cell)
+
+    def _door_delete(self):
+        sel = getattr(self, '_sel_door', None)
+        if not sel:
+            return
+        self._remove_door(sel)
+
+    def _remove_door(self, did):
+        if self._door_op(f"Delete door '{self.s.doc.door_name(did)}'",
+                         lambda doc: doc.remove_door(did)) is not None:
+            self._sel_door = None
+            self._show()
+            self.inspector.show_selection(None)
+
+    def _door_reaim(self):
+        sel = getattr(self, '_sel_door', None)
+        if sel and self._door_op('Re-aim door arrivals',
+                                 lambda doc: doc.refresh_door(sel)) is not None:
+            cell = self.canvas.selected_cell
+            self._show()
+            if cell:
+                self._select_exit_at(cell)
+
+    def open_node(self, key):
+        """Open a room given a world-graph key (S98)."""
+        if key[0] == 'room':
+            room = self.s.doc.room(key[1])
+            self._go_end({'kind': 'room', 'room': key[1],
+                          'screen': self.s.doc.screen_keys(room)[0], 'x': -1, 'y': -1,
+                          'states': [0]})
+            self.canvas.selected_cell = None
+        else:
+            scr = next(sc for m, _n, sc in self.s.renderer.vanilla_rooms() if m == key[1])
+            self._go_end({'kind': 'vanilla', 'mapID': key[1], 'screen': scr[0], 'x': -1, 'y': -1})
+            self.canvas.selected_cell = None
+        self.canvas.viewport().update()
+
+    def _go_door_here(self, did):
+        """Select this room's end of door `did` (Doors & entrances list)."""
+        e = self.s.doc.door_end(did)
+        if e is not None and e['kind'] == 'room':
+            self._go_end(e)
+        elif e is not None:
+            p = self.s.doc.door_partner(did)
+            if p is not None:
+                self._go_end(p)
+
+    def _go_end(self, end):
+        """Show a door end / exit destination: its room, screen, state, cell."""
+        if not end:
+            return
+        if end['kind'] == 'room':
+            self.vanilla_mid = None
+            self.room_id = end['room']
+            self.key = int(end['screen'])
+            sts = end.get('states') or [0]
+            self.state_idx = self.state_idx if self.state_idx in sts else sts[0]
+            self._fill_rooms(keep=end['room'])
+            self.key = int(end['screen'])
+            self._show()
+            self._select_exit_at((end['x'], end['y']))
+            if self.canvas.selected_marker is None:
+                self.canvas.selected_cell = (end['x'], end['y'])
+                self.canvas.viewport().update()
+        else:
+            self.room_id = None
+            self.room_list.blockSignals(True)
+            self.room_list.setCurrentRow(-1)
+            self.room_list.blockSignals(False)
+            self.vanilla_mid = int(end['mapID'])
+            for i in range(self.vanilla_list.count()):
+                if self.vanilla_list.item(i).data(Qt.UserRole) == self.vanilla_mid:
+                    self.vanilla_list.blockSignals(True)
+                    self.vanilla_list.setCurrentRow(i)
+                    self.vanilla_list.blockSignals(False)
+            self.key, self.state_idx = int(end['screen']), 0
+            self._show()
+            self.canvas.selected_cell = (end['x'], end['y'])
+            self.canvas.viewport().update()
+
+    # ------------------------------------------ one-way exits / teleports
+    def _exit_states(self, target, present):
+        room = self.current_room()
+        if room is None or self._sel_exit is None:
+            return
+        rid, key, st, idx = self.room_id, self.key, self.state_idx, self._sel_exit
+        cmd = self._door_op(('Add exit to' if present else 'Remove exit from') + f' state {target}',
+                            lambda doc: doc.set_exit_presence(doc.room(rid), key, st, idx,
+                                                              target, present))
+        if cmd is not None:
+            cell = self.canvas.selected_cell
+            self._show()
+            if cell:
+                self._select_exit_at(cell)
+
+    def _exit_delete(self):
+        if self._sel_exit is not None:
+            self._remove_exit(self._sel_exit)
+
+    # ----------------------------------------- examine spots / step triggers
+    def _show_spot_panel(self, index, entry=None):
+        room = self.current_room()
+        doc = self.s.doc
+        if room is None:
+            view = doc.npc_view({}, entry)
+            self.spot_panel.show_spot(view, [], None, None, editable=False)
+            self._show_object(self.spot_panel)
+            return
+        lst = doc.npc_entries(room, self.key, self.state_idx)
+        if not 0 <= index < len(lst):
+            return
+        view = doc.npc_view(room, lst[index])
+        self._sel_npc = index
+        sid = view.get('script')
+        talk = doc.talk_spec(sid) if isinstance(sid, str) and sid != 'none' else None
+        pres = doc.npc_presence(room, self.key, self.state_idx, index)
+        self.spot_panel.show_spot(view, doc.room_script_ids(room), talk,
+                                  pres if len(pres) > 1 else None, editable=True)
+        self._show_object(self.spot_panel)
+
+    def _add_spot(self, cell, kind):
+        room = self.current_room()
+        if room is None:
+            return
+        from editor2.app.rooms.npc_panel import TalkDialog
+        dlg = TalkDialog(title=('What does the player find here?' if kind == 'examine'
+                                else 'What happens when the player steps here?'),
+                         rom=self.s.renderer.rom, parent=self, doc=self.s.doc, room=room,
+                         key=self.key,
+                         boxes=[['There is nothing', 'special here.']] if kind == 'examine'
+                         else [['Something happens!']])
+        if dlg.exec() != QDialog.Accepted:
+            return
+        spec, new_flags = dlg.spec(), dlg.new_flags()
+        cx, cy = cell
+
+        def op(doc, r, k, st):
+            for nm in new_flags:
+                if not any(f.get('name') == nm for f in doc.flags()):
+                    doc.add_flag(nm)
+            sid = doc.new_talk(r, spec, name='examine' if kind == 'examine' else 'step')
+            return doc.add_spot(r, k, st, kind, cx, cy, sid)
+        cmd = self._npc_op(f'Add {kind} spot at ({cx},{cy})', op)
+        if cmd is not None:
+            self._after_spot_edit(cmd.result)
+
+    def _after_spot_edit(self, index):
+        self._show()
+        if index is None:
+            return
+        ref = self.canvas.select_npc(index)
+        if ref is not None:
+            m = next(m for m in self.canvas.markers if m[5] is ref)
+            self.inspector.show_selection({'kind': m[0], 'x': m[1], 'y': m[2], 'sprite': m[3],
+                                           'label': m[4], 'ref': ref}, editable=True)
+            self._show_spot_panel(index)
+
+    def _spot_fields(self, fields):
+        idx = self._sel_npc
+        if idx is None:
+            return
+        what = ', '.join(f'{k}={v}' for k, v in fields.items())
+        cmd = self._npc_op(f'Spot {what}',
+                           lambda doc, r, k, st: doc.update_spot(r, k, st, idx, **fields))
+        if cmd is not None:
+            self._after_spot_edit(idx)
 
     # ------------------------------------------------------ NPCs (S97, P3.5)
     def _show_npc_panel(self, index, entry=None):
@@ -956,8 +1489,7 @@ class RoomsTab(QWidget):
             view = self.s.doc.npc_view({}, entry)
             panel.show_npc(view, [], None, None, editable=False,
                            bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])))
-            panel.setVisible(True)
-            self.sec_npc.set_expanded(True)
+            self._show_object(panel)
             return
         lst = self.s.doc.npc_entries(room, self.key, self.state_idx)
         if not 0 <= index < len(lst):
@@ -970,13 +1502,12 @@ class RoomsTab(QWidget):
             return
         self._sel_npc = index
         sid = view.get('script')
-        talk = (self.s.doc.talk_boxes(sid) if isinstance(sid, str) and sid != 'none' else None)
+        talk = (self.s.doc.talk_spec(sid) if isinstance(sid, str) and sid != 'none' else None)
         pres = self.s.doc.npc_presence(room, self.key, self.state_idx, index)
         panel.show_npc(view, self.s.doc.room_script_ids(room), talk,
                        pres if len(pres) > 1 else None, editable=True,
                        bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])))
-        panel.setVisible(True)
-        self.sec_npc.set_expanded(True)         # selecting an NPC opens its section
+        self._show_object(panel)                # selecting an NPC opens its section
 
     def _after_npc_edit(self, index):
         """Reload, then keep the edited NPC selected (marker refs are rebuilt)."""
@@ -1023,9 +1554,48 @@ class RoomsTab(QWidget):
             self._after_npc_edit(cmd.result)
 
     def _move_marker(self, ref, cx, cy):
-        if not ref or ref[0] != 'npc' or self.current_room() is None:
+        room = self.current_room()
+        if not ref or room is None:
+            return
+        if ref[0] == 'exit':
+            e = ref[2]
+            dead = self._dead_edge((cx, cy), 'door' if e.get('door') else 'exit')
+            if dead:
+                QMessageBox.warning(self, 'Cannot move it there', dead)
+                self._show()
+                return
+            if e.get('door'):
+                did = e['door']
+                if self._door_op(f'Move door to ({cx},{cy})',
+                                 lambda doc: doc.move_door(did, cx, cy)) is not None:
+                    self._show()
+                    self._select_exit_at((cx, cy))
+                return
+            rid, key, st, idx = self.room_id, self.key, self.state_idx, ref[1]
+
+            def mv(doc):
+                r = doc.room(rid)
+                row = doc.exits_of(r, key, st)[idx]
+                sig = doc.exit_signature(row)
+                for n in range(len(doc.states(r, key))):
+                    for e2 in doc.exits_of(r, key, n):
+                        if doc.exit_signature(e2) == sig:
+                            e2['x'], e2['y'] = int(cx), int(cy)
+                doc.touch()
+            if self._door_op(f'Move exit to ({cx},{cy})', mv) is not None:
+                self._show()
+                self._select_exit_at((cx, cy))
+            return
+        if ref[0] != 'npc':
             return
         idx = ref[1]
+        v = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
+        if v['kind'] in ('examine', 'step', 'spawn'):
+            cmd = self._npc_op(f'Move spot to ({cx},{cy})',
+                               lambda doc, r, k, st: doc.update_spot(r, k, st, idx, x=cx, y=cy))
+            if cmd is not None:
+                self._after_spot_edit(idx)
+            return
         cmd = self._npc_op(f'Move to ({cx},{cy})',
                            lambda doc, r, k, st: doc.update_npc(r, k, st, idx, x=cx, y=cy))
         if cmd is not None:
@@ -1052,41 +1622,68 @@ class RoomsTab(QWidget):
         if dlg.exec() == QDialog.Accepted and dlg.value is not None:
             self._npc_fields({'sprite': int(dlg.value)})
 
-    def _npc_new_talk(self):
+    def _sel_is_spot(self):
+        room = self.current_room()
         idx = self._sel_npc
-        if idx is None:
+        if room is None or idx is None:
+            return False
+        lst = self.s.doc.npc_entries(room, self.key, self.state_idx)
+        return 0 <= idx < len(lst) and \
+            self.s.doc.npc_view(room, lst[idx])['kind'] in ('examine', 'step', 'spawn')
+
+    def _npc_new_talk(self):
+        """New talk script for the selected NPC / spot (S98: text, YES/NO,
+        flags, move — talk_editor.TalkDialog, editor2/core/talk.py)."""
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None:
             return
         from editor2.app.rooms.npc_panel import TalkDialog
-        dlg = TalkDialog(rom=self.s.renderer.rom, parent=self)
+        spot = self._sel_is_spot()
+        dlg = TalkDialog(rom=self.s.renderer.rom, parent=self, doc=self.s.doc, room=room,
+                         key=self.key)
         if dlg.exec() != QDialog.Accepted:
             return
-        boxes = dlg.boxes()
+        spec, new_flags = dlg.spec(), dlg.new_flags()
 
         def op(doc, r, k, st):
-            sid = doc.new_talk_script(r, boxes)
-            doc.update_npc(r, k, st, idx, script=sid)
+            for nm in new_flags:
+                if not any(f.get('name') == nm for f in doc.flags()):
+                    doc.add_flag(nm)
+            sid = doc.new_talk(r, spec, name='examine' if spot else 'talk')
+            if spot:
+                doc.update_spot(r, k, st, idx, script=sid)
+            else:
+                doc.update_npc(r, k, st, idx, script=sid)
             return sid
-        if self._npc_op('New talk text', op) is not None:
-            self._after_npc_edit(idx)
+        if self._npc_op('New talk', op) is not None:
+            (self._after_spot_edit if spot else self._after_npc_edit)(idx)
 
     def _npc_edit_talk(self):
         idx = self._sel_npc
         room = self.current_room()
         if idx is None or room is None:
             return
+        spot = self._sel_is_spot()
         v = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
         sid = v.get('script')
-        boxes = self.s.doc.talk_boxes(sid) if isinstance(sid, str) else None
-        if boxes is None:
+        spec = self.s.doc.talk_spec(sid) if isinstance(sid, str) else None
+        if spec is None:
             return
         from editor2.app.rooms.npc_panel import TalkDialog
-        dlg = TalkDialog(boxes, title=f'Edit {sid}', rom=self.s.renderer.rom, parent=self)
+        dlg = TalkDialog(title=f'Edit {sid}', rom=self.s.renderer.rom, parent=self,
+                         spec=spec, doc=self.s.doc, room=room, key=self.key)
         if dlg.exec() != QDialog.Accepted:
             return
-        new = dlg.boxes()
-        if self._npc_op(f'Edit text of {sid}',
-                        lambda doc, r, k, st: doc.set_talk_boxes(sid, new)) is not None:
-            self._after_npc_edit(idx)
+        new, new_flags = dlg.spec(), dlg.new_flags()
+
+        def op(doc, r, k, st):
+            for nm in new_flags:
+                if not any(f.get('name') == nm for f in doc.flags()):
+                    doc.add_flag(nm)
+            doc.set_talk(sid, new)
+        if self._npc_op(f'Edit talk {sid}', op) is not None:
+            (self._after_spot_edit if spot else self._after_npc_edit)(idx)
 
     def _npc_presence(self, target, present):
         idx = self._sel_npc
@@ -1101,7 +1698,8 @@ class RoomsTab(QWidget):
         idx = self._sel_npc
         if idx is None:
             return
-        if self._npc_op('Delete NPC', lambda doc, r, k, st: doc.remove_npc(r, k, st, idx)) is not None:
+        label = 'Delete spot' if self._sel_is_spot() else 'Delete NPC'
+        if self._npc_op(label, lambda doc, r, k, st: doc.remove_npc(r, k, st, idx)) is not None:
             self._sel_npc = None
             self._show()
             self.inspector.show_selection(None)
@@ -1325,16 +1923,38 @@ class RoomsTab(QWidget):
                 return
         want = not cv.cell_walkable(cx, cy)
         rid, lid, sheet = self.room_id, cv.lid, cv.gfx.sheet
+        shift = [False]
 
         def op(doc):
             r = doc.room(rid)
             tid = doc.localize_tileset(r, sheet)
-            return doc.set_cell_walkable(lid, tid, cx, cy, want)
-        try:
-            self.s.undo.push(C.SnapshotCommand(
-                self.s, f'Make cell ({cx},{cy}) {"walkable" if want else "a wall"}', op))
-        except RuntimeError as e:
-            QMessageBox.warning(self, 'Cannot flip walkability', str(e))
+            return doc.set_cell_walkable(lid, tid, cx, cy, want, shift_ok=shift[0])
+        # S98 r2 fix: SnapshotCommand CATCHES a failing op (S95: no trace
+        # left) and stores it in .error — the old `except RuntimeError` here
+        # never fired, so a refused flip (e.g. no free tileset slot for the
+        # twin subtile) did nothing, silently. Say why.
+        label = f'Make cell ({cx},{cy}) {"walkable" if want else "a wall"}'
+        cmd = C.SnapshotCommand(self.s, label, op)
+        self.s.undo.push(cmd)
+        from editor2.core.document import ThresholdShiftNeeded
+        if isinstance(cmd.error, ThresholdShiftNeeded):
+            # S98 r2 (user: "make that an option"): ask before moving the split
+            if QMessageBox.question(self, 'Walkable side is full', str(cmd.error)) \
+                    == QMessageBox.Yes:
+                shift[0] = True
+                cmd = C.SnapshotCommand(self.s, label + ' (split moved down)', op)
+                self.s.undo.push(cmd)
+            else:
+                cmd.error = None
+        if cmd.error is not None:
+            msg = str(cmd.error)
+            others = self.s.doc.tileset_sharers(self.s.doc.room(rid))
+            if others:
+                msg += ('\n\nThis tileset is SHARED with: '
+                        + ', '.join(self.s.doc.room_name(r) for r in others)
+                        + ' — their tiles use slots too. Tileset tab → "Give this room its '
+                          'own copy" stops sharing.')
+            QMessageBox.warning(self, 'Cannot flip walkability', msg)
         self._show()
 
     # ---------------------------------------------------------- commands
@@ -1469,19 +2089,21 @@ class RoomsTab(QWidget):
 
     # ------------------------------------------------------------ exits (S95)
     def _add_exit(self, cell):
+        """S98: 'One-way teleport here…' (the rare object; doors are the
+        two-way default). Arrives exactly on the chosen cell."""
         room = self.current_room()
         if room is None:
             return
-        dlg = ExitDialog(self.s, room['id'], self.key, cell, self)
+        dlg = DoorDialog(self.s, room['id'], self.key, self.state_idx, cell, self, teleport=True)
         if dlg.exec() != QDialog.Accepted:
             return
-        v = dlg.values()
+        v = dlg.teleport_values()
         rid, key, st = self.room_id, self.key, self.state_idx
-        self.s.undo.push(C.SnapshotCommand(
-            self.s, f"Add exit ({v['x']},{v['y']}) → {v['dest']}",
-            lambda doc: doc.add_exit(doc.room(rid), key, st, v['x'], v['y'], v['dest'],
-                                     v['dest_screen'], v['spawn_x'], v['spawn_y'])))
-        self._show()
+        cmd = self._door_op(f"One-way teleport ({v['x']},{v['y']}) → {v['dest']}",
+                            lambda doc: doc.add_teleport(doc.room(rid), key, st, **v))
+        if cmd is not None:
+            self._show()
+            self._select_exit_at(cell)
 
     def _remove_exit(self, index):
         room = self.current_room()

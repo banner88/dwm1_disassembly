@@ -97,11 +97,37 @@ def npc_path(behaviour):
 # ---------------------------------------------------------------------------
 
 def npc_spawn_entry(x, y, script=0x00):
-    """Spawn point entry: type $8F, param $FF. ROOM_DATA_FORMAT.md.
-    Byte 4 (script) MUST be 0 (KEY_LESSONS 'Spawn point NPC entry can be
-    talked to' — the interaction scan includes spawn entries; script 0 =
-    room entry no-op). Enforced by validators (spawn_script_zero)."""
+    """LEGACY name (S1-era schema kind 'spawn'): the bytes are an $8F EXAMINE
+    SPOT (S98, PyBoy-measured — ROOM_DATA_FORMAT "Interact entries ≥ $80"):
+    pressing A while standing on or facing the cell runs script `script`.
+    Nothing in the engine reads it as a spawn (arrival = the source exit's
+    bytes 4-6, KEY_LESSONS S4). Kept byte-identical for old projects; the
+    editor no longer creates it (validators warn: script 0 = the room's entry
+    script runs on an A press there)."""
     return [0x8F, 0xFF, x, y, script]
+
+
+# S98 (PyBoy-measured; bank $0B RoomEntry4_TalkTargetLookup /
+# RoomEntry5_StepTriggerLookup, ROOM_DATA_FORMAT "Interact entries ≥ $80"):
+#   $80-$83 / $8F  EXAMINE SPOT — answers an A press from the player's own cell
+#                  or the faced cell; low nibble = the facing the player must
+#                  have ($FF8E: 0 down 1 left 2 up 3 right) or $F = any.
+#   $90            STEP-ON TRIGGER — runs its script when the player WALKS
+#                  onto the cell (not on arrival through a door/warp).
+# Byte 1 is $FF in every vanilla entry; byte 4 = the room's script index.
+EXAMINE_FACING = {'any': 0xF, 'down': 0x0, 'left': 0x1, 'up': 0x2, 'right': 0x3}
+EXAMINE_FACING_NAMES = {v: k for k, v in EXAMINE_FACING.items()}
+
+
+def examine_entry(x, y, script_id, facing='any'):
+    """Examine spot: [$80 | facing nibble, $FF, x, y, script]."""
+    nib = EXAMINE_FACING[facing] if isinstance(facing, str) else int(facing) & 0x0F
+    return [0x80 | nib, 0xFF, x, y, script_id]
+
+
+def step_trigger_entry(x, y, script_id):
+    """Step-on trigger: [$90, $FF, x, y, script]."""
+    return [0x90, 0xFF, x, y, script_id]
 
 
 def npc_entry(facing, sprite, x, y, script_id, behaviour=0, hidden=False):

@@ -248,14 +248,42 @@ the "Custom tile GRAPHICS" roadmap item.
 
 5-byte entries, $FF terminated. Entry type determined by bit 7 of first byte.
 
-### Spawn/exit entries (type byte ≥ $80):
+### Interact entries ≥$80 — EXAMINE spots and STEP-ON triggers (S98, PyBoy-measured)
+
+The old "$8F = spawn point, $90 = walk-on exit" names were WRONG (DOC_AUDIT
+S98). Arrival position ALWAYS comes from the exit row's bytes 4-6 (see the
+Exit Checker Block); nothing reads a "spawn" entry at arrival. What the two
+kinds really are:
+
 | Byte | Field |
 |------|-------|
-| 0 | Type: $8F=spawn point, $90=walk-on exit, others=special |
-| 1 | Parameter (usually $FF) |
-| 2 | X grid position |
+| 0 | `$80-$83` / `$8F` = **EXAMINE spot**; `$90` = **STEP-ON trigger** |
+| 1 | Parameter (vanilla always `$FF`) |
+| 2 | X grid position (screen-local) |
 | 3 | Y grid position |
-| 4 | Source/destination map_type |
+| 4 | Script index into the room's script table (0 = the entry script) |
+
+- **Examine spot** (`$8x`) — answers an A press. Bank $0B
+  `RoomEntry4_TalkTargetLookup` (via bank $06 `Jump_006_611d`) looks up the
+  player's OWN cell first, then the FACED cell (both `ld hl,$0b04` calls in
+  bank $06). The low nibble is the required facing ($FF8E: 0 down, 1 left,
+  2 up, 3 right) or `F` = any facing. A matching spot runs its script like
+  an NPC talk (dialog mode, text boxes, YES/NO all work). Vanilla uses it
+  for signs, books, shelves and the pots/barrels that "talk".
+- **Step-on trigger** (`$90`) — bank $0B `RoomEntry5_StepTriggerLookup` /
+  `SearchStepTriggers`, dispatched from bank $01
+  `CopyPlayerCoordsAndGetNextRoom` (name kept for tools/audit_mapid_range.py)
+  runs the script when the player WALKS onto the cell. Arriving on it by
+  door/warp does NOT fire it (measured).
+- **Both scans STOP at the first NPC entry (bit 7 clear).** A spot listed
+  after an NPC is dead (measured: examine + step both silent until
+  re-ordered). Vanilla orders spots first in 157/160 lists; the `$1F`
+  screen-0 trailing `$81` is dead in the original game. The compiler emits
+  spots before NPCs (stable partition, PROJECT_COMPILER §2.14).
+- Script 0 on an examine spot re-runs the room's ENTRY script when the
+  player presses A there — the legacy example "spawn" `db $8F,$FF,7,6,0`
+  is exactly that (validator warning, S98). KEY_LESSONS "Spawn point NPC entry can be
+  'talked to' — ghost NPC" was this mechanism.
 
 ### NPC entries (type byte $00-$7F):
 | Byte | Field |
@@ -272,7 +300,8 @@ slots with `add $20`; fields written at +$00 type, +$01 sprite, +$02/+$03
 screen-adjusted X/Y, +$04 script_id area, +$11 facing-related, +$16, +$18).
 An earlier version of this doc said 17 bytes — that was the +$11 field
 offset misread as the stride. See DOC_AUDIT.md A.3.
-Spawn entries ($8F+) are skipped (don't consume NPC slots).
+Entries ≥$80 (examine spots / step-on triggers) are skipped by the NPC
+parser (they don't consume NPC slots).
 
 ## Exit Checker Block (at bytes 4-5, "exit_ptr")
 
@@ -311,6 +340,28 @@ Verified example — Castle Screen 5 exits:
 - (2,5) → Gate Hub (mt=3): left door
 - (7,5) → Farm (mt=4): right door
 - (4,7) → GreatTree (mt=1): double door (two entries for 2-tile-wide door)
+
+### Arrival and edge rules (S98, PyBoy-measured)
+
+- **Arriving on an exit cell never re-triggers it** — Entry 6 fires on a
+  STEP onto the cell, so a door's return row may land the player on the
+  partner door cell itself (edge doors do exactly that).
+- **screen_byte bit 7 = +8 px (half a cell down)**: the player stands in the
+  doorway and the next step is onto the cell below — "step out of the
+  door". Library → GreatTree uses sb `$88` spawn (5,3) and the player is
+  logically on (5,4) — PIXEL-measured S98 r3 on the original ROM: pixel
+  y = 320 = 20·16, i.e. y mod 16 = 0 while every standing position has
+  y mod 16 = 8: the player is drawn half a cell below the door. (The editor
+  used this in S98 r1; since S98 r2/r3 every door arrives ON its partner
+  door cell at a whole-tile position — user choice.)
+- **Edge exits vs scrolling:** an exit at x=0 / x=9 / y=0 on a screen edge
+  that borders another screen of the room (inside the record's scroll
+  area) NEVER fires — pushing into the edge scrolls first. A y=7 exit in a
+  CUSTOM room fires on walk-on (S70v3), so it blocks walking down into the
+  screen below through that cell. Validators warn on both (S98).
+- A double door is two rows (one per cell) with the same destination; the
+  editor's door object keeps vanilla double doors in step via `twin_of`
+  redirect rows (PROJECT_COMPILER §2.14).
 
 
 ## Tileset Graphics System
@@ -391,6 +442,9 @@ GreatTree floors (KEY_LESSONS S92). The compiler warns instead of failing.
 
 Exit handlers: Entry 6 checks exits at Y=1-6 (interior, walk-onto trigger).
 Entry 9 checks exits at Y=0 and Y=7 (boundary, requires walking into edge).
+(Custom rooms: y=7 rows are walk-on since S70v3; an edge exit bordering a
+neighbour screen never fires — pushing scrolls first. See "Arrival and edge
+rules (S98)".)
 
 Walk grid: 10 columns × 8 rows per screen. Each cell = 16×16 pixels (2×2 tiles).
 $FF97 = walk X, $FF98 = walk Y. Screen offsets from $2DE7 table (indexed by
@@ -470,8 +524,8 @@ coords, and dedup blocks by (mt, ptr) — see
 ## NPC behaviour types — the type byte (S97, PyBoy-measured)
 
 `type = facing (bits 4-5) | hidden (bit 6) | behaviour (bits 0-3)`; bit 7
-set = not an NPC (spawn $8F, talk-spot $90, markers $80-$82 — skipped by
-the parser). Facing: 0 down, 1 left, 2 up, 3 right (the same value lands in
+set = not an NPC (examine spots $80-$83/$8F, step-on triggers $90 — S98;
+skipped by the parser). Facing: 0 down, 1 left, 2 up, 3 right (the same value lands in
 slot +$06).
 
 **Bit 6 = HIDDEN (inactive entry).** Measured S97 (Bazaar slot poked

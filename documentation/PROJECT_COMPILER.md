@@ -151,7 +151,7 @@ the compiler never silently ignores authored data. Same for `custom.music`
       "layout": { "bank": "0x64", "entry": 0 },   // step_id + tileset_bank
       "step_counter": "auto",     // or {"label": "...", "addr": "0xDE78"}
       "npcs": [
-        { "kind": "spawn", "x": 7, "y": 6 },              // script forced 0
+        { "kind": "spawn", "x": 7, "y": 6 },              // legacy = $8F examine spot (S98, §2.14)
         { "kind": "npc", "facing": "down", "sprite": "0x0B",
           "x": 2, "y": 7, "script": "give_jerky",       // or "none" -> $FF, or an int
           "behaviour": "pace_x1",                       // S97, optional (default stand)
@@ -541,7 +541,7 @@ Debug loop: SameBoy break/watch address → look it up in `symbols`/`texts`/
 
 ## 10. Validator catalog (rule → source)
 
-Errors: spawn script ≠ 0 (KL "ghost NPC"); missing `screen_byte`
+Errors: missing `screen_byte`
 (KL v14-v18/S40); NPC references script index 0 or an undefined/absent
 script id (KL S2); script table without index 0; text terminator not
 `$F7$F0`/`$E7$F0`, bare `$EE`, non-charmap char, >18-cell line
@@ -551,11 +551,17 @@ compat list; duplicate text ids / non-dense sections; flag outside safe
 ranges (EVENT_FLAGS); step counters over region size; palette ≠ 8×4
 (KL S6); bank overflow (template+payload) (KL S52); non-deterministic
 emit; unresolved script labels; layer/music/skills content (§2.1).
-Warnings: compat overshoot exposure (§7); single-width destination with
-nonzero screen-byte nibble (KL S40); boundary-exit y=0/7 (KL S10);
+Warnings: compat overshoot exposure (§7);
 palette idx1/idx3 vs forced values (KL S7/S39); record on `<$70`;
-op param-count mismatch vs the bank-004 table; auto-placeholder fill;
-missing spawn on the entry screen.
+op param-count mismatch vs the bank-004 table; auto-placeholder fill.
+**S98 changes:** the "spawn script ≠ 0" error and the "missing spawn"
+warning are REMOVED (the "spawn" is an examine spot — §2.14); a legacy spawn
+with script 0 warns; the single-width nibble warning became the ERROR "exit
+arrives on a screen the destination room does not have" (KL S40); new: edge
+exits bordering a neighbour screen (warning — replaces the blanket
+"boundary exit y=0/7 cannot coexist with a scroll" warning, which fired on
+every edge exit even with no screen beyond; KL S10), talk-script and door
+checks (§2.14).
 
 ---
 
@@ -570,6 +576,8 @@ editor2/
         document.py          # editable model: byte-exact load/save + mutations (S93)
         vanilla.py           # PIL-free vanilla room-table reader: valid steps / exits / counters (S94b)
         png_import.py        # PNG -> tiles/palettes/metatiles planning (S96)
+        doors.py talk.py     # S98 door/teleport/spot mutations (DoorsMixin), talk specs (TalkMixin)
+        world.py             # S98 room/warp graph + deterministic layout (World tab)
         emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
   app/  main.py session.py build_worker.py     # shell (S93), one Session per project
@@ -580,13 +588,17 @@ editor2/
                tileset_map.py tileset_dialog.py        # S96 slot map, change tileset
                npc_panel.py rules_panel.py             # S97 NPC inspector, state rules
                talk_editor.py                          # S97 r2 per-box talk text, ROM-font preview
+               door_dialog.py object_panels.py         # S98 door / teleport dialog, door/teleport/spot panels
         import_tab.py space_meter.py                   # S96 Import art tab, bank meters
+        world_tab.py                                   # S98 World tab (read-only graph)
   templates/blank-project/project.json   # File > New project (S94)
   example-project/project.json      # regression baseline (build/ is regenerable output)
-  tests/test_compiler.py            # 76 tests (79 with --rom: the ROM builds; S97 r2)
+  tests/test_compiler.py            # 89 tests (92 with --rom: the ROM builds; S98)
   tests/test_app.py                 # shell smoke test; --rom = GUI build == pin
   tests/test_canvas.py              # P3.3 acceptance; --rom = build + PyBoy both states;
                                     # v4 (S97) = state rules + NPC panel, PyBoy-verified
+                                    # v5 (S98) = doors/teleport/spots/talk, PyBoy-verified
+                                    # (--only-v5 runs just v5)
 tools/build_project.py              # CLI
 ```
 
@@ -784,6 +796,97 @@ cell by cell on close (`wBoxAttrMask` bits 0-4 rows, bit 5 choice). VRAM
 bank-1 writes wait mode 3 → not-3 inside `di`. Other rooms: the same tiles
 in the same order, attrs untouched (PyBoy: vanilla + non-free frames
 pixel-identical). WRAM: 132 B carved from `wCustomPool` (now $D0C5-$D5E4).
+
+## §2.14 S98 — doors, one-way teleports, examine / step-on spots, talk scripts (P3.7)
+
+No engine or template change; the pin held (`ce24de8b…`, patched). All of
+this is schema + lowering + validators over formats already in the ROM.
+
+**Interact entries** (screen/state `npcs[]`; ROOM_DATA_FORMAT "Interact
+entries ≥$80"):
+
+```json
+{"kind": "examine", "x": 1, "y": 1, "script": "read_book", "facing": "up"},
+{"kind": "step",    "x": 6, "y": 5, "script": "squish"}
+```
+
+`examine` → `db $80|f, $FF, x, y, idx` (`facing` = `any` (F, default) /
+`down` 0 / `left` 1 / `up` 2 / `right` 3; `formats.examine_entry`);
+`step` → `db $90, $FF, x, y, idx` (`formats.step_trigger_entry`). `script`
+= a script id of the room's table (or an int index). **The emitter writes
+every ≥$80 entry BEFORE the NPCs** (stable partition in `_room_data`) —
+both engine scans stop at the first NPC entry (measured). The legacy
+`{"kind": "spawn"}` still emits `$8F` (= an examine spot, any facing) — with
+script 0 it warns (A there re-runs the entry script); the old "missing
+spawn" warning and the "spawn script must be 0" error are gone. Raw `$8x` /
+`$9x` entries from clones are shown as examine / step spots in the editor.
+
+**Doors** (S98 r2 — door OBJECTS; r1's "two rows sharing one id" is migrated
+on open with identical bytes). A custom door = the exit rows on ONE cell (one
+per state that carries it) with `"door": "<id>"`, `"name"` and, once
+connected, `"link": "<partner id>"` + the ordinary dest / gate_flag /
+screen_byte / spawn bytes leading to the partner's arrival. An UNCONNECTED
+door (no `dest`) is dropped by `Project.screen_states` — nothing is emitted —
+and warns. A vanilla door is the object `vdoor_MM_k_x_y`; connecting it
+writes an `entrance_redirects` row tagged `"door": "vdoor_…"`, `"link"`
+(+ `twin_of` rows for the other cell of a vanilla double door). Links are
+two-way; validators warn on a one-sided or dangling link and on a door
+object spanning several cells. Arrival bytes (`Document.default_arrival`,
+all measured S98): the vanilla partner's own exit bytes when the door is a
+vanilla door (Library → GreatTree `$88` (5,3)) in S98 r1/r2 — S98 r3: ALSO
+on the door cell (user: "You arrive on tile fully always"; vanilla's own $88
+lands at pixel y=320, half a cell below the door, measured on the original
+ROM); every custom door → arrive ON the partner door cell (S98 r2, user: "ON TOP OF the door" — arrival never
+re-fires an exit; step off and back on to go through again; PyBoy both ways).
+S98 r1 rows with the old "step out" arrival (bit 7 on the partner's own
+cell) are rewritten on open. **One-way teleport** = an exit row with no
+`door` (the "rare object" — More ▾ → One-way teleport here…).
+
+**Talk scripts** — a `custom.scripts[]` entry with `talk` instead of `ops`:
+
+```json
+{"id": "lab_talk", "talk": {
+   "text": "lab_q", "question": true,
+   "yes": {"text": "lab_yes", "set": ["lab_flag"],
+           "move": {"dest": "room:$6B", "screen": 0, "x": 3, "y": 4}},
+   "no":  {"text": "lab_no"}}}
+```
+
+Without `question`, one `then` block follows the text. A block may carry
+`text` (dialogue id), `set` / `clear` (flag names or event-flag numbers —
+`resolve_flag_ref`), `move` (`dest` room:/vanilla:, `screen`, `x`, `y`).
+`Project._lower_talk_scripts` (after `_lower_quests`, idempotent) turns it
+into ordinary ops: `[text]`, then for a question `check_and_branch $C83C
+1 @no` (the engine leaves 0 = YES / 1 = NO in `$C83C`) + the yes block +
+`end` + `label:no` + the no block + `end`; `set`/`clear` → `set_flag` /
+`clear_flag`; `move` → `map_transition mid, px, py` with ABSOLUTE pixel
+coordinates `((col·10 + x)·16 + 8, (row·8 + y)·16 + 8)` of the 4×4 grid
+(MapTransitionFull `$0F`). PyBoy S98: the reply is shown and waited for
+before the warp; a YES that sets a rule's flag and moves the player into
+the same room reloads it in the rule's state. Errors: `talk` + `ops`
+together, missing `text`, `then` with a question, `yes`/`no` without one,
+unknown block keys, a move outside the grid. Validators: a question's text
+must be a `choice` dialogue (`$E7 $F0`) — error; a choice text without a
+question, or a reply that opens another YES/NO box — warning; undefined
+dialogue ids and a move to a screen the destination room lacks — error.
+The editor writes the `boxes` dialogue form (`<script>_text`, `_yes`,
+`_no`, `_then`); a plain talk (no flags/move/question) stays in the classic
+`[text][end]` ops form.
+
+**Exit validators (S98):** an exit whose screen_byte low nibble names a
+screen the destination custom room does not have = ERROR (replaces the
+single-width warning; the nibble IS the 4×4 index). Edge exits: x=0/9 or
+y=0 bordering another screen of the room inside the record = WARNING
+"never fires" (pushing scrolls); y=7 above a neighbour screen = WARNING
+(walk-on blocks walking down).
+
+**Editor data** (`core/doors.py` DoorsMixin, `core/talk.py` TalkMixin, both
+mixed into `Document`): `add_door` (unconnected) / `link_doors` /
+`unlink_door` / `rename_door` / `move_door` / `set_door_states` /
+`remove_door` (partner stays) / `refresh_door`, `add_teleport`, `set_exit_presence`,
+`add_spot` / `update_spot`, `talk_spec` / `set_talk` / `new_talk`. Every
+mutation is one undo step. `core/world.py` builds the World tab's graph
+from the same data (no bytes re-derived).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
@@ -1098,7 +1201,8 @@ byte-identical — proven S92 against the committed S6 sheet). Rooms may write
 already indexes counter×6 with NO clamp (no engine change, no re-pin) — keep
 the counter < len(states) via scripts. Byte-identical to pre-S92 emission when
 absent. NPC entries also accept `{kind: "raw", bytes: [5]}` verbatim
-pass-through (clone fidelity: $8F spawn-id params, $90 walk-on markers, $82).
+pass-through (clone fidelity: $8x examine spots, $90 step-on triggers — S98
+names; their byte 4 is a room script index).
 S92 MEASURED load-order rule: state selection reads the counter at the
 destination room's LOAD, BEFORE its entry script runs — a room cannot arm its
 own current load; the HUB room arms the destination (see script_preludes).

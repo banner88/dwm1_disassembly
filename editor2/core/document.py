@@ -23,9 +23,12 @@ Schema facts honoured (PROJECT_COMPILER §2.2 / §2.10):
 import copy
 import importlib.util
 import json
+import re
 import os
 
 from editor2.core import layouts as L
+from editor2.core.doors import DoorsMixin
+from editor2.core.talk import TalkMixin
 
 SCREEN_W, SCREEN_H = 20, 16
 GRID_COLS, GRID_ROWS = 4, 4          # engine scroll grid (row*4+col), S94 schema
@@ -74,7 +77,14 @@ def metatile_key(mt):
     return (tuple(int(t) for t in mt['tiles']), tuple(p) if p else None)
 
 
-class Document:
+
+class ThresholdShiftNeeded(RuntimeError):
+    """S98 r2: the walkable side of the sheet is full but the wall side has
+    room — moving the wall/walkable split DOWN one slot would make space.
+    The GUI asks the author (user: "make that an option") and retries with
+    shift_ok=True."""
+
+class Document(DoorsMixin, TalkMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -126,6 +136,9 @@ class Document:
                 sc['ops'] = new
                 notes.append(f"script {sc.get('id')}: regrouped by the handler "
                              "arity table (same bytes)")
+        # S98 r2: door pairs -> linked door objects
+        self._migrate_doors(notes)
+        self._migrate_door_arrivals(notes)
         if notes:
             self.dirty = True
         return notes
@@ -735,6 +748,13 @@ class Document:
         room['id'] = rid
         room['name'] = name
         room['mapID'] = hexs(self.next_free_mapid())
+        # S98 r2 (user: "when I make a custom room it should STOP sharing
+        # tilesets by default"): a copy of a room with a project tileset
+        # gets its OWN copy of that sheet (+ its metatiles), so imports and
+        # walkability twins in one never eat the other's slots
+        rec = room.get('record') or {}
+        if rec.get('tileset'):
+            rec['tileset'] = self.duplicate_tileset(rec['tileset'], f'ts_{rid}')
         for k in list(room):
             if k.startswith('_'):
                 room.pop(k)
@@ -790,9 +810,10 @@ class Document:
         room = {'id': rid, 'name': name, 'mapID': hexs(self.next_free_mapid()),
                 'source_mapID': hexs(source_mid), 'record': rec,
                 'render': {'attr': {'id': lid}},
+                # S98: no 'spawn' marker — the $8F entry is an EXAMINE SPOT
+                # (PyBoy-measured); arrival comes from the door / warp
                 'screens': {'0': {'layout': {'id': lid}, 'step_counter': 'auto',
-                                  'npcs': [{'kind': 'spawn', 'x': 5, 'y': 4}],
-                                  'exits': []}}}
+                                  'npcs': [], 'exits': []}}}
         self.rooms.append(room)
         self.touch()
         return rid
@@ -804,6 +825,9 @@ class Document:
         owned = [lid for lid in [l['id'] for l in self.layouts]
                  if self.layout_users(lid)
                  and all(u[0] == room_id for u in self.layout_users(lid))]
+        # S98 r2: this room's doors go; their partners stay, unconnected
+        for d in self.doors_touching(room_id):
+            self.remove_door(d['id'])
         # S94b: redirects into the room would dangle (compiler: unknown dest)
         for i, _ in sorted(self.redirects_to(room_id), reverse=True):
             self.remove_redirect(i)
@@ -827,13 +851,75 @@ class Document:
         ed = self.custom.setdefault('_editor', {})
         return ed.setdefault('metatiles', {}).setdefault(tileset_key, [])
 
-    def add_metatile(self, tileset_key, name, tiles, pal):
+    def add_metatile(self, tileset_key, name, tiles, pal, src=None):
         lst = self._metatiles_mut(tileset_key)
-        lst.append({'name': name, 'tiles': [int(t) for t in tiles],
-                    'pal': pal_value(metatile_pals({'pal': pal})
-                                     if pal is not None else [0] * 4)})
+        item = {'name': name, 'tiles': [int(t) for t in tiles],
+                'pal': pal_value(metatile_pals({'pal': pal})
+                                 if pal is not None else [0] * 4)}
+        if src:
+            item['src'] = src        # S98 r2: 'borrowed' (from another room's sheet)
+        lst.append(item)
         self.touch()
         return len(lst) - 1
+
+    # ---- S98 r2: purge unused metatiles (user: "a good way to purge unused
+    # tiles, like a button … purge unused own and purge unused borrowed")
+    _BORROWED_NAME = re.compile(r'\[\d+, \d+, \d+, \d+\]$')
+
+    def metatile_kind(self, mt):
+        """'borrowed' (imported from another room's tileset via Borrow) or
+        'own' (made here, incl. PNG imports). Pre-S98r2 borrowed items are
+        recognised by their '<Room> [a, b, c, d]' name."""
+        if mt.get('src') == 'borrowed' or self._BORROWED_NAME.search(str(mt.get('name', ''))):
+            return 'borrowed'
+        return 'own'
+
+    def placed_metatile_keys(self, tid):
+        """The (tl, tr, bl, br) subtile tuples placed in any cell of any
+        screen/state of the rooms drawing with this tileset."""
+        out = set()
+        for lid in self.layouts_using_tileset(tid):
+            g = self.layout(lid)['tiles']
+            for r in range(0, len(g) - 1, 2):
+                for c in range(0, len(g[r]) - 1, 2):
+                    out.add((g[r][c] & 0x7F, g[r][c + 1] & 0x7F,
+                             g[r + 1][c] & 0x7F, g[r + 1][c + 1] & 0x7F))
+        return out
+
+    def unused_metatiles(self, tid, kind):
+        """Indices (into metatiles(tid)) of `kind` metatiles placed nowhere."""
+        placed = self.placed_metatile_keys(tid)
+        return [i for i, mt in enumerate(self.metatiles(tid))
+                if self.metatile_kind(mt) == kind
+                and tuple(t & 0x7F for t in mt['tiles']) not in placed]
+
+    def purge_preview(self, tid, kind, threshold):
+        """(n metatiles, slots freed {'wall', 'walkable'}) — without changing
+        anything."""
+        idx = set(self.unused_metatiles(tid, kind))
+        if not idx:
+            return 0, {'wall': 0, 'walkable': 0}
+        before = self.free_counts(tid, threshold)
+        lst = self._metatiles_mut(tid)
+        keep = list(lst)
+        lst[:] = [m for i, m in enumerate(keep) if i not in idx]
+        try:
+            after = self.free_counts(tid, threshold)
+        finally:
+            lst[:] = keep
+        return len(idx), {'wall': after['wall'] - before['wall'],
+                          'walkable': after['walkable'] - before['walkable']}
+
+    def purge_unused_metatiles(self, tid, kind):
+        """Remove every unused `kind` metatile of this tileset. Their sheet
+        slots become free unless something else still uses them. Returns the
+        number removed."""
+        idx = set(self.unused_metatiles(tid, kind))
+        if idx:
+            lst = self._metatiles_mut(tid)
+            lst[:] = [m for i, m in enumerate(lst) if i not in idx]
+            self.touch()
+        return len(idx)
 
     def remove_metatile(self, tileset_key, index):
         lst = self._metatiles_mut(tileset_key)
@@ -948,6 +1034,20 @@ class Document:
             rec['tileset'] = value
             if threshold is not None:
                 rec['collision_threshold'] = hexs(threshold)
+        elif kind == 'own':
+            # S98 r2: stop sharing — this room gets a private copy of the
+            # sheet it draws with now (other rooms keep the original)
+            if 'tileset' in rec:
+                old = rec['tileset']
+                keep = self._room_tiles(room)
+                rec['tileset'] = self.duplicate_tileset(
+                    old, f'ts_{room_id}',
+                    metatile_filter=lambda mt: all((t & 0x7F) in keep for t in mt['tiles']))
+            else:
+                if self.vanilla is None:
+                    raise RuntimeError('no renderer bound — cannot read the vanilla sheet')
+                sheet = self.vanilla.rom_sheet(val(rec['gfx_bank']), val(rec['gfx_id']))
+                self.localize_tileset(room, sheet, name=f'ts_{room_id}')
         elif kind == 'blank':
             tid = self.new_blank_tileset(f"ts_{room_id}")
             rec.pop('gfx_id', None)
@@ -958,6 +1058,54 @@ class Document:
             raise ValueError(kind)
         self.touch()
         return self.tileset_key(room)
+
+    def tileset_sharers(self, room):
+        """Other custom rooms drawing with the same PROJECT tileset (a
+        vanilla 'BB:II' sheet is read-only, so borrowing it shares nothing)."""
+        rec = room.get('record') or {}
+        if not rec.get('tileset'):
+            return []
+        return [r for r in self.rooms_using_tileset(rec['tileset']) if r is not room]
+
+    def _room_tiles(self, room):
+        out = set()
+        for scr in (room.get('screens') or {}).values():
+            refs = [scr.get('layout')] + [st.get('layout') for st in scr.get('states') or []]
+            for ref in refs:
+                if ref and 'id' in ref and self.has_layout(ref['id']):
+                    for row in self.layout(ref['id'])['tiles']:
+                        out.update(t & 0x7F for t in row)
+        return out
+
+    def duplicate_tileset(self, tid, base, metatile_filter=None):
+        """A new project tileset with the same sheet bytes as `tid` (its
+        origin, released flag and — filtered — metatiles carried over).
+        Returns the new id."""
+        item = self.tileset_item(tid)
+        ids = {t.get('id') for t in self.custom.get('tilesets', [])}
+        new, n = base, 2
+        while new in ids:
+            new = f'{base}_{n}'
+            n += 1
+        rel = os.path.join('assets', f'{new}.2bpp')
+        os.makedirs(os.path.join(self.project_dir, 'assets'), exist_ok=True)
+        with open(os.path.join(self.project_dir, rel), 'wb') as f:
+            f.write(bytes(self.read_sheet(tid)))
+        cp = {k: copy.deepcopy(v) for k, v in item.items() if k not in ('id', 'raw2bpp')}
+        cp.update(id=new, raw2bpp=rel)
+        cp['comment'] = (str(item.get('comment', '')) + f' — own copy of {tid}').strip(' —')
+        self.custom.setdefault('tilesets', []).append(cp)
+        o = (((self.custom.get('_editor') or {}).get('tileset_origin')) or {})
+        if tid in o:
+            self.set_tileset_origin(new, o[tid])
+        mts = [copy.deepcopy(m) for m in self.metatiles(tid)
+               if metatile_filter is None or metatile_filter(m)]
+        if mts:
+            self._metatiles_mut(new).extend(mts)
+        if self.released(tid):
+            self.set_released(new, True)
+        self.touch()
+        return new
 
     def sheet_path(self, tid):
         return os.path.join(self.project_dir, self.tileset_item(tid)['raw2bpp'])
@@ -1178,8 +1326,8 @@ class Document:
             out.append(cand)
         self.write_sheet(tid, sheet)
         new = {'name': name or mt.get('name') or 'imported',
-               'tiles': out, 'pal': mt.get('pal', 0)}
-        self.add_metatile(tid, new['name'], out, new['pal'])
+               'tiles': out, 'pal': mt.get('pal', 0), 'src': 'borrowed'}
+        self.add_metatile(tid, new['name'], out, new['pal'], src='borrowed')
         self.touch()
         return new
 
@@ -1412,7 +1560,18 @@ class Document:
         self.touch()
         return ref['id']
 
-    def ensure_twin(self, tid, t, want_wall):
+    def _remap_tile(self, tid, old, new):
+        """Every placed use of subtile `old` on this tileset (layouts and
+        author metatiles) now points at `new` (same graphic, moved slot)."""
+        for lid in self.layouts_using_tileset(tid):
+            for row in self.layout(lid)['tiles']:
+                for c, v in enumerate(row):
+                    if (v & 0x7F) == old:
+                        row[c] = (v & 0x80) | new
+        for mt in self.metatiles(tid):
+            mt['tiles'] = [((x & 0x80) | new) if (x & 0x7F) == old else x for x in mt['tiles']]
+
+    def ensure_twin(self, tid, t, want_wall, shift_ok=False):
         """Return an index whose graphic equals subtile `t` on the wanted
         side of the collision threshold (tile < thr = WALL, KEY_LESSONS S6),
         creating one if needed. Never touches animated indices 77/78
@@ -1439,7 +1598,36 @@ class Document:
             self.write_sheet(tid, sheet)
             return i, thr
         if not want_wall:
-            raise RuntimeError('tileset has no free walkable slot for a twin')
+            # S98 r2 (user option): walkable side full -> move the split DOWN
+            # one slot: the last wall slot (thr-1) becomes the first walkable
+            # one; its graphic (if in use) moves to a free wall slot below
+            s_idx = thr - 1
+            below = [i for i in free if i < s_idx]
+            if s_idx < 1 or s_idx in (77, 78) or (s_idx in used and not below):
+                raise RuntimeError(
+                    f'tileset {tid} is full on both sides (walkable side: no free slot; '
+                    'wall side: none to move a tile into) — release unused vocabulary '
+                    '(Tileset tab), give this room its own tileset copy, or reuse an '
+                    'existing walkable metatile')
+            if not shift_ok:
+                raise ThresholdShiftNeeded(
+                    f'The walkable side of {tid} is full, but the wall side has '
+                    f'{len(below) + (0 if s_idx in used else 1)} free slot(s). Move the '
+                    f'wall/walkable split down one slot (${thr:02X} -> ${s_idx:02X})? '
+                    f'Slot ${s_idx:02X} becomes walkable'
+                    + (f'; the wall tile there moves to free slot ${below[-1]:02X} (every '
+                       'room on this tileset is updated, nothing changes on screen)'
+                       if s_idx in used else ' (it is free)') + '.')
+            if s_idx in used:
+                f = below[-1]
+                sheet[f * 16:f * 16 + 16] = bytes(sheet[s_idx * 16:s_idx * 16 + 16])
+                self._remap_tile(tid, s_idx, f)
+            sheet[s_idx * 16:s_idx * 16 + 16] = gfx
+            self.write_sheet(tid, sheet)
+            for r in rooms:
+                r['record']['collision_threshold'] = hexs(s_idx)
+            self.touch()
+            return s_idx, s_idx
         # wall side full: relocate the first walkable tile (index thr) to a
         # free slot above, put the twin at thr, threshold += 1
         above = [i for i in free if i > thr]
@@ -1450,25 +1638,20 @@ class Document:
         sheet[f * 16:f * 16 + 16] = moved
         sheet[thr * 16:thr * 16 + 16] = gfx
         self.write_sheet(tid, sheet)
-        for lid in self.layouts_using_tileset(tid):
-            grid = self.layout(lid)['tiles']
-            for row in grid:
-                for c, v in enumerate(row):
-                    if v == thr:
-                        row[c] = f
+        self._remap_tile(tid, thr, f)
         for r in rooms:
             r['record']['collision_threshold'] = hexs(thr + 1)
         self.touch()
         return thr, thr + 1
 
-    def set_cell_walkable(self, lid, tid, cx, cy, walkable):
+    def set_cell_walkable(self, lid, tid, cx, cy, walkable, shift_ok=False):
         """Flip one placed cell: only its BOTTOM-RIGHT subtile decides
         (PyBoy-measured S94, 16/16 trials from all four approach
         directions), so swap that subtile for its cross-threshold twin."""
         grid = self.layout(lid)['tiles']
         r, c = cy * 2 + 1, cx * 2 + 1
         t = grid[r][c]
-        twin, _thr = self.ensure_twin(tid, t, want_wall=not walkable)
+        twin, _thr = self.ensure_twin(tid, t, want_wall=not walkable, shift_ok=shift_ok)
         grid[r][c] = twin
         self.touch()
         return t, twin
@@ -1485,6 +1668,8 @@ class Document:
         out = []
         for i, r in enumerate(self.redirects()):
             d = str(r.get('dest', ''))
+            if r.get('twin_of'):
+                continue          # S98: second cell of a door's vanilla double door
             if d.startswith('room:') and val(d[5:]) == mid:
                 out.append((i, r))
         return out
@@ -1605,7 +1790,16 @@ class Document:
         from editor2.core import formats as F
         k = entry.get('kind')
         if k == 'spawn':
-            return {'kind': 'spawn', 'x': int(entry['x']), 'y': int(entry['y'])}
+            # S98: legacy name of an $8F examine spot (any facing)
+            return {'kind': 'spawn', 'x': int(entry['x']), 'y': int(entry['y']),
+                    'facing': 'any', 'script': val(entry.get('script', 0)) or 0,
+                    'raw': False}
+        if k in ('examine', 'step'):
+            v = {'kind': k, 'x': int(entry['x']), 'y': int(entry['y']),
+                 'script': entry.get('script'), 'raw': False}
+            if k == 'examine':
+                v['facing'] = entry.get('facing', 'any')
+            return v
         if k == 'npc':
             fac = entry.get('facing', 'down')
             t = F.FACING[fac] if isinstance(fac, str) else val(fac)
@@ -1617,10 +1811,20 @@ class Document:
                     'script': entry.get('script'), 'raw': False}
         if k == 'raw':
             b = [val(x) for x in entry['bytes']]
-            if b[0] >= 0x80:
-                kind = {0x8F: 'spawn', 0x90: 'walkon'}.get(b[0], 'special')
-                return {'kind': kind, 'x': b[2], 'y': b[3], 'bytes': b}
             table = {int(i): sid for i, sid in (room.get('scripts') or {}).items()}
+            if b[0] >= 0x80:
+                # S98 (PyBoy-measured): $80-$8F = examine spot (low nibble =
+                # required facing, F = any), $90-$9F = step-on trigger
+                script = table.get(b[4], b[4])
+                if b[0] & 0xF0 == 0x80:
+                    nib = b[0] & 0x0F
+                    fac = F.EXAMINE_FACING_NAMES.get(nib, nib)
+                    return {'kind': 'examine', 'x': b[2], 'y': b[3], 'facing': fac,
+                            'script': script, 'raw': True, 'bytes': b}
+                if b[0] & 0xF0 == 0x90:
+                    return {'kind': 'step', 'x': b[2], 'y': b[3], 'script': script,
+                            'raw': True, 'bytes': b}
+                return {'kind': 'special', 'x': b[2], 'y': b[3], 'bytes': b}
             script = None if b[4] == 0xFF else table.get(b[4], b[4])
             return {'kind': 'npc', 'x': b[2], 'y': b[3], 'sprite': b[1],
                     'facing': F.FACING_NAMES[(b[0] >> 4) & 3],
@@ -1824,11 +2028,7 @@ class Document:
         sc = self.script(sid)
         dlg = self.custom.setdefault('dialogue', [])
         old = [op[1] for op in sc['ops'] if isinstance(op, list) and op and op[0] == 'text']
-        users = {}
-        for s in self.custom.get('scripts', []):
-            for op in s.get('ops', []):
-                if isinstance(op, list) and op and op[0] == 'text' and len(op) == 2:
-                    users[op[1]] = users.get(op[1], 0) + 1
+        users = self._dialogue_users()          # S98: talk-form aware
         for did in old:
             if users.get(did) == 1:
                 dlg[:] = [d for d in dlg if d.get('id') != did]

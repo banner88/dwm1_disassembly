@@ -215,8 +215,8 @@ Center: **canvas**. Right: inspector sub-tabs.
   NPC/exit overlays follow it. Authoring: rooms gain a first-class
   `states[]` list in the schema [G-G]; state 0 is the default.
 - **Layers/overlays** (toggleable): tiles · attrs/palette-slots · NPC
-  markers (thumbnails once the sprite catalog lands [G-B]) · spawn/exit
-  markers · encounter badge · walkability (seeded from the decoded tile
+  markers (thumbnails once the sprite catalog lands [G-B]) · door/exit/
+  examine/step markers (S98) · encounter badge · walkability (seeded from the decoded tile
   behavior classes, GATE_GENERATION §5.1).
 - **Tile paint**: pick from the room's tileset strip; rectangle/fill;
   undo via QUndoStack. Requires layout emission behind project.json
@@ -377,7 +377,7 @@ tilesets; built S96, USER-CONFIRMED 2026-09-25 ("Everything works")):**
   "Remove" drops one from the list (undoable).
 
 **S97 additions (user: "all of group B" — P3.5a state rules + P3.5 NPC
-inspector; built S97, NOT yet user-tested):**
+inspector; USER-CONFIRMED 2026-09-26):**
 - **State rules** (inspector group "State rules — which state shows when",
   `rooms/rules_panel.py`): an ordered room-level list "state n ← flag A set
   AND flag B clear […]" with Add / Edit / Remove / ▲▼, an **Otherwise**
@@ -404,7 +404,7 @@ inspector; built S97, NOT yet user-tested):**
 - Selection/NPC panels reset on every room/screen/state change (they used
   to keep a stale selection).
 
-**S97 round 2 (user test of r1; built, NOT yet user-tested):**
+**S97 round 2 (user test of r1; USER-CONFIRMED 2026-09-26):**
 - **Talk text per box** (`rooms/talk_editor.py`, replaces the r1 page box):
   one editor per text box (Enter = the box's second line), ▲▼ / ✕ / **Fit**
   per box, **+ Add box**, **Fit all**. Beside each box: the box exactly as
@@ -422,9 +422,117 @@ inspector; built S97, NOT yet user-tested):**
   opens the NPC section.
 - **Rule dialog**: "New named flag…" puts the flag into the selected
   condition (or a new one) as a real list item in every flag list.
-  Nothing in the editor SETS a flag yet — the rule sees it clear until a
-  script op sets it (offered to the user: an NPC "sets flag when talked
-  to" option).
+  (S97: nothing in the editor set a flag — S98 talk scripts do.)
+
+**S98 additions (user: "Let's finish room work" = group C, P3.7; built
+S98 — doors USER-CONFIRMED 2026-09-26 after rounds 2/3 below; talk / flags /
+spots in game NOT yet user-tested):**
+- **Doors — r1, SUPERSEDED by "S98 r2" below** (`rooms/door_dialog.py`, `rooms/object_panels.py`,
+  `core/doors.py`): select a cell → **Add door here…** → pick the other
+  room (any custom or vanilla room), screen and cell on a clickable preview
+  (vanilla doors listed; warnings for edge-vs-scroll, occupied cells and
+  unwalkable arrivals block OK). The editor writes BOTH ends (exit rows /
+  an entrance redirect sharing a `door` id; vanilla double doors get
+  `twin_of` rows) with the MEASURED arrivals — vanilla partner bytes, else
+  on the cell (S98 r2: always on the door cell — the user's choice; r1 stepped
+  out below interior doors) (ROOM_DATA_FORMAT
+  "Arrival and edge rules"). Canvas: teal **D** markers, the arrival cell
+  drawn as a dashed green box; drag either end to move it (the partner's
+  arrival follows). Door panel: this end / leads to / arrive there / arrive
+  here, **in states** checkboxes, **Go to the other end**, **Re-aim
+  arrivals**, **Delete door (both ends)**. Deleting a room removes its
+  doors.
+- **One-way teleport** (rare, under **More ▾**): an exit row with no
+  partner; red **→** marker, panel with destination, states, go, delete.
+  The inspector's "Doors & entrances" group lists doors and one-way
+  redirects (One-way from a vanilla door… / Show / Remove).
+- **Examine spots / step-on triggers** (**Add examine spot here…**, More ▾
+  → **Step-on trigger here…**): yellow **X** / pink **T** markers, spot
+  panel with facing (any / down / left / up / right; examine only), script
+  (New talk… / Edit talk…) and states. The legacy "spawn" shows as **X!**
+  with a note (script 0 = the entry script). New rooms no longer get a
+  spawn marker.
+- **Talk editor with actions** (`rooms/talk_editor.py` TalkDialog): the
+  per-box text, an **Ask YES/NO** checkbox, and tabs **Afterwards** or
+  **If YES / If NO**, each with *Say something* (boxes), *Turn flags ON*,
+  *Turn flags OFF* (project flags, vanilla story flags, New named flag…)
+  and *Then move the player* (room / screen / x / y). Saved as a `talk`
+  script (PROJECT_COMPILER §2.14). Used by NPCs and spots alike — this is
+  how an NPC sets a flag for a state rule.
+- **World tab** (§5.8 v0).
+- Canvas letter markers have dark backgrounds for contrast.
+- **S98 r2 — doors are OBJECTS (user: "click on a cell, then click 'add
+  door', then obviously the door should appear on that cell. Then you
+  doubleclick on the door to set its params … it should NOT need coordinate
+  adjustment in the room you placed it … namable and connected to another
+  door object"):** select a cell → **+ Door (D)** on the tool bar (next to
+  Select) or "Add door here" → the door appears on the cell, **unconnected**
+  (orange **D?**, its name drawn above it). **Double-click** it → door
+  dialog: **Name**, **Connected to** = a searchable list of door objects —
+  your doors in every room (with what each is connected to now) and every
+  vanilla door by room (double doors folded) — with a preview of the chosen
+  door and both arrivals; the door's own cell is never asked for (drag it
+  to move). Links are two-way; connecting to a door that is already linked
+  frees its old partner (the dialog says so); **Delete door** removes only
+  this door (the partner stays, unconnected); **Disconnect**. In a vanilla
+  room, double-clicking a vanilla door opens the same dialog (connect it
+  to one of your doors). Rect / Fill are off the tool bar (R / F keys still
+  work). The S98 r1 "Door tool" and pick-the-other-end-by-coordinates dialog
+  are gone; `DoorDialog` remains only for one-way teleports.
+- **S98 r2 — Walk button = walkability mode** (user: "Why can I no longer
+  change walkability by clicking walk button and click on a tile?"): the
+  tool-bar **Walk** toggle was only the overlay; it now switches to the
+  Walkability tool (W) and back to Select, and the two stay in step. A
+  refused flip (e.g. no free tileset slot for the twin subtile) now says
+  why — it failed SILENTLY since S95 (the op's error is caught inside
+  SnapshotCommand; `_flip_walk`'s `except RuntimeError` was dead code).
+- **S98 r2 — tilesets are not shared by default** (user: "when I make a
+  custom room it should STOP sharing tilesets by default, no?"): **Copy**
+  of a room with a project tileset gives the copy its OWN sheet
+  (`ts_<room>`, same bytes, metatiles carried). A room that still shares a
+  project sheet (older projects, or "A tileset in this project" chosen on
+  purpose) is flagged in the Tileset tab ("SHARED with: …") with **Give
+  this room its own copy**; Change tileset gains **Own copy of the current
+  tileset** (its metatiles filtered to the ones this room uses). Borrowing
+  a VANILLA sheet shares nothing (read-only; copied on the first edit, one
+  copy per room as before).
+- **S98 r2 — walkable side full → "move the split down" (user: "make that
+  an option")**: flipping a wall cell walkable when every walkable slot is
+  used but the wall side has room asks first; Yes = slot thr−1 becomes the
+  first walkable slot (its wall graphic, if placed, moves to a free wall
+  slot; layouts and metatiles are remapped; the screen looks identical),
+  every room on the sheet gets the new threshold; No = nothing changes. The
+  refusal message names the rooms a shared sheet is shared with.
+- **S98 r2 — Purge buttons** (user: "there needs to be a good way to purge
+  unused tiles, like a button … purge unused own and purge unused
+  borrowed"): Tileset tab **Purge unused borrowed (n) — frees x walkable /
+  y wall** and **Purge unused own (n) — …**. A metatile is UNUSED when its
+  four subtiles are placed in no cell of any screen/state of the rooms on
+  the sheet; BORROWED = brought in through Borrow (`src: borrowed`, older
+  ones recognised by their '<Room> [a, b, c, d]' name), OWN = everything
+  else (made here, PNG imports). One undo step each. (User project: 15
+  unplaced borrowed metatiles held 30 walkable + 13 wall slots of $6B's
+  sheet — deleting tiles from the canvas never removed them.)
+- **S98 r2 — dead edge doors refused** (user: "I walk onto door but nothing
+  happens"): a door (or a dragged door / exit) on an x=0/9 or y=0 cell whose
+  edge borders another screen of the room is REFUSED with the reason and the
+  cell one step in (the r1 dialog refused these; the place-first flow had
+  lost the check). Existing ones draw as a red **D!** ("NEVER FIRES"). The
+  user's DoorToVillage at Cities_FOUNT (9,3) (screen 1 to the right) was one;
+  moved to (8,3) it works both ways in PyBoy.
+- **S98 r2 — arrive ON the door** (user: "arriving on the other side puts you
+  half a tile down, instead of ON TOP OF the door"): custom doors arrive on
+  the partner door cell; existing rows migrate on open. PyBoy on the user's
+  project: Cities (8,3) → $6B on (7,2); step off, back on → Cities on (8,3).
+  **S98 r3** (user: "I still arrive half a tile below the door … You arrive on
+  tile fully always"): vanilla-door arrivals too (no vanilla $88 bytes);
+  PyBoy now checks the PIXEL position (y mod 16 = 8), not only the cell —
+  r2 only checked the cell, which hides a half-cell offset.
+  `EDITOR_REVISION` = 'S98r3'.
+- **S98 r2 — + Examine (X)** on the tool bar next to + Door (user: "Why is
+  examine spot not a button?"); double-clicking an NPC or a spot opens its
+  talk editor.
+
 
 Acceptance `editor2/tests/test_canvas.py --rom`: fresh project → Farm clone
 at `$6B` → metatiles painted → a lone metatile painted over stays in the
@@ -456,7 +564,8 @@ door is still vanilla.
    ROM font tiles, live 18-cell wrap, auto-DTE, auto page-split, YES/NO
    choice wiring with branch preview (built: `core/textenc.py` +
    `dwm/text.py`; preview rendering = Tier-1, §7).
-5. **Triggers** — interact entries, spawn points, exits (custom↔custom
+5. **Triggers** — interact entries (examine spots / step-on triggers — the
+   "spawn point" was a misnomer, S98), doors and exits (custom↔custom
    and custom↔vanilla incl. `vanilla_exit_extensions`), step-counter
    advance rules. Formats fully decoded (ROOM_DATA_FORMAT).
 6. **Cutscenes** — user spec: authoring + playback, per room.
@@ -642,7 +751,17 @@ Open engine boxes stay listed in ROADMAP (InitBGM channel-count ext).
 
 ### 5.8 World tab
 
-Room/warp graph (custom + vanilla islands): nodes = rooms (thumbnail
+**v0 as built S98 (`app/world_tab.py`, `core/world.py`; read-only):** nodes
+= custom rooms (first-screen thumbnail) + the vanilla rooms they connect to;
+edges = two-way doors (teal, both arrowheads), one-way exits (red), vanilla
+doors re-pointed one-way (magenta), script warps from talk `move` /
+`map_transition` ops (dashed yellow); **whole vanilla world** adds every
+vanilla exit (98 rooms / 206 links, ~0.8 s). Deterministic spring layout
+(seed 98), **Re-layout**, drag nodes (not saved), Ctrl+wheel zoom, hover =
+what the link is, double-click = open the room in the Rooms tab. Rebuilt on
+every structural change.
+
+*Target:* room/warp graph (custom + vanilla islands): nodes = rooms (thumbnail
 renders), edges = exits/warps/`vanilla_exit_extensions`/script
 teleports; the bifurcation edit (dresser repoint) is performed HERE
 (M2R). Gate-network authoring (which gates exist, unlock order, hub topology)

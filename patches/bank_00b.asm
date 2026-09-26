@@ -36,8 +36,8 @@ SECTION "ROM Bank $00b Code", ROMX[$4000], BANK[$b]
     dw RoomEntry1_GraphicsLoader    ; Entry 1: load tileset only (no map change)
     dw RoomEntry2_ScreenScroll      ; Entry 2: screen/scroll position manager
     dw RoomEntry3_NPCDispatch       ; Entry 3: NPC interaction handler
-    dw RoomEntry4_NPCMovement       ; Entry 4: NPC movement/patrol
-    dw RoomEntry5_NPCRender         ; Entry 5: NPC sprite render
+    dw RoomEntry4_TalkTargetLookup  ; Entry 4: A-press target: NPC slot or $8x examine spot (S98)
+    dw RoomEntry5_StepTriggerLookup ; Entry 5: $9x step-on trigger at the player cell (S98)
     dw RoomEntry6_ExitChecker       ; Entry 6: exit detection (RUNS EVERY STEP)
     dw RoomEntry7_RoomInit          ; Entry 7: room initializer (after transition)
     dw ReadStepBlock                ; Entry 8: read step_id + tileset from ptr table
@@ -614,26 +614,52 @@ LoadRoom_4309:
     ld [hl], a
     ret
 
-RoomEntry4_NPCMovement:
+; ---------------------------------------------------------------------------
+; Entry 4: RoomEntry4_TalkTargetLookup — who/what answers an A press at a
+; position (S98, PyBoy-measured; was mislabelled "NPC movement/patrol").
+; ---------------------------------------------------------------------------
+; Caller: bank $06 field A-press handler (Jump_006_611d area) — calls this
+; TWICE: first with the player's OWN position in $FFDB-$FFDE, then with the
+; FACING position (player pos + $06:$6285[facing]). Result: $FFD5 = script id
+; ($FF = nothing), $FFD6 = NPC slot index or $FF (interact-block entry).
+;   1. TalkScanNPCSlots: the 8 live NPC slots at $D7D2 (+$20 each); a slot
+;      with type bit 6 set (HIDDEN) is skipped; NPCSlotAtPos compares the
+;      slot's pixel position (+$13/+$15) within 16 px; hit -> slot +4 script.
+;   2. TalkScanExamineSpots: the current screen/state's interact block
+;      (GetRoomDataPtr; custom rooms via bank $60 entry 1) — entries with
+;      type & $F0 == $80 are EXAMINE SPOTS: invisible cells answering A.
+;      Low nibble = required player facing ($FF8E: 0 down, 1 left, 2 up,
+;      3 right) or $F = any facing. Byte 4 = the room's script index.
+;      The scan ENDS at the first entry with bit 7 clear (an NPC entry):
+;      spots must come BEFORE the NPCs of the list (vanilla does this in
+;      157 of 160 lists; $1F screen 0's trailing $81 can never fire).
+;      PyBoy S98: a spot appended after an NPC was dead; moved first, live.
+;      Measured S98: Castle scr0 $8F (2,1) "looked at the bookshelf" from
+;      (2,2) facing up; Library scr4 $82 (4,3) fires facing up, NOT from
+;      the sides; Farm scr4 $8F (2,1) fires while STANDING ON it (own-cell
+;      pass). The docs' old name "$8F = spawn point" was wrong — nothing
+;      reads it as a spawn (arrival = the source exit's bytes 4-6).
+; ---------------------------------------------------------------------------
+RoomEntry4_TalkTargetLookup:
 labelb_4332:
     ld a, $00
     ldh [$d6], a
     ld hl, $d7d2
-    call ReadRoom_433f
+    call TalkScanNPCSlots
     ldh [$d5], a
     ret
 
 
-ReadRoom_433f:
+TalkScanNPCSlots:
 jr_00b_433f:
     ld a, [hl]
     cp $ff
-    jr z, jr_00b_4366
+    jr z, TalkScanExamineSpots
 
     bit 6, a
     jr nz, jr_00b_4357
 
-    call SaveRoom_43e5
+    call NPCSlotAtPos
     jr nz, jr_00b_4357
 
     ld a, l
@@ -658,7 +684,7 @@ jr_00b_4357:
     ldh [$d6], a
     jr jr_00b_433f
 
-jr_00b_4366:
+TalkScanExamineSpots:
     ld a, $ff
     ldh [$d6], a
     call GetRoomDataPtr
@@ -672,23 +698,23 @@ jr_00b_436d:
     jr z, jr_00b_43a1
 
     and $f0
-    cp $80
+    cp $80                   ; $8x = examine spot
     jr nz, jr_00b_4397
 
-    call CheckExitCoords
+    call InteractEntryAtPos  ; at the probed cell?
     jr nz, jr_00b_4397
 
     ld a, [hl]
     and $0f
-    cp $0f
-    jr z, jr_00b_438d
+    cp $0f                   ; $8F = answers from any facing
+    jr z, ExamineSpotMatch
 
     ld b, a
-    ldh a, [$8e]
-    cp b
+    ldh a, [$8e]             ; player facing (0 down, 1 left, 2 up, 3 right)
+    cp b                     ; $80-$83 = only when facing that way
     jr nz, jr_00b_4397
 
-jr_00b_438d:
+ExamineSpotMatch:
     ld a, l
     add $04
     ld l, a
@@ -713,27 +739,21 @@ jr_00b_43a1:
     ret
 
 ; ---------------------------------------------------------------------------
-; Entry 5: NPCScriptIDLookup — Find NPC at facing position, return script_id
+; Entry 5: RoomEntry5_StepTriggerLookup — STEP-ON triggers ($9x entries)
+; (S98, PyBoy-measured; was mislabelled "NPC sprite render" / "facing").
 ; ---------------------------------------------------------------------------
-; Called by bank $01 NPCTalkHandler when player presses A.
-; Player position is pre-loaded to $FFDB-$FFDE by the caller.
-;
-; Flow:
-;   1. Default $FFD5 = $FF (no NPC)
-;   2. Guard: if $FF90 bit 6 set or $D8D7 non-zero → return
-;   3. Call SearchNPCAtFacing:
-;      a. Get current room's NPC list (interact block) via GetRoomDataPtr
-;      b. Walk NPC entries (5 bytes each, $FF terminated)
-;      c. For each: check type byte (bit 7 must be set = interactable)
-;      d. If type & $F0 == $90: check if NPC is at player's facing position
-;      e. If match: return byte 4 (script_id) in A
-;      f. If no match: advance 5 bytes, check next NPC
-;   4. Result stored to $FFD5 by caller
-;
-; NPC entry format (5 bytes): [type] [sprite] [X] [Y] [script_id]
-; Returns: A = script_id ($FF if no interactable NPC found)
+; Caller: bank $01 CopyPlayerCoordsAndGetNextRoom, run on EVERY tile change
+; (after Entry 6's exit check) with the player's OWN position in
+; $FFDB-$FFDE. Scans the interact block for type & $F0 == $90 at that cell
+; (low nibble ignored; vanilla uses $90 only; like Entry 4 the scan stops
+; at the first NPC entry, so triggers must precede NPCs) and returns byte 4 = script
+; index in $FFD5 ($FF = none); the caller then starts that script.
+; Fires when the player WALKS onto the cell — never on arrival by a door /
+; warp (measured S98: custom room, $90 at (5,5): walking down onto it opened
+; the text box; warping onto it did not). Guards: $FF90 bit 6, a running
+; script ($D8D7 != 0).
 ; ---------------------------------------------------------------------------
-RoomEntry5_NPCRender:
+RoomEntry5_StepTriggerLookup:
 labelb_43a4:
     ld a, $ff
     ldh [$d5], a             ; Default: no NPC found
@@ -745,15 +765,16 @@ labelb_43a4:
     or a
     ret nz                   ; Script already running → return
 
-    call SearchNPCAtFacing       ; Search for NPC at facing position
+    call SearchStepTriggers       ; $9x step-on trigger at the player cell?
     ldh [$d5], a             ; Store result (script_id or $FF)
     ret
 
 
 ; ---------------------------------------------------------------------------
-; NPCSearchAtFacing — Walk NPC list, find match at player's facing position
+; SearchStepTriggers — walk the interact block for a $9x entry at the
+; probe cell ($FFDB-$FFDE = the player's OWN position); A = script or $FF
 ; ---------------------------------------------------------------------------
-SearchNPCAtFacing:
+SearchStepTriggers:
     call GetRoomDataPtr       ; Get interact_block pointer for current room/step
 
 jr_00b_43bb:
@@ -762,14 +783,14 @@ jr_00b_43bb:
     ret z                    ; $FF terminator → no more NPCs, return $FF
 
     bit 7, a
-    jr z, jr_00b_43e2        ; Bit 7 clear → NPC not interactable, return $FF
+    jr z, jr_00b_43e2        ; bit 7 clear = an NPC entry: the $8x/$9x run is over, return $FF
 
     and $f0
     cp $90
-    jr nz, jr_00b_43d8       ; Type != $9x → skip this NPC
+    jr nz, jr_00b_43d8       ; Type & $F0 != $90 → not a step trigger, skip
 
-    call CheckExitCoords       ; Check if NPC is at player's facing position
-    jr nz, jr_00b_43d8       ; Not at facing position → skip
+    call InteractEntryAtPos       ; entry at the player's own cell?
+    jr nz, jr_00b_43d8       ; not this cell → skip
 
     ; NPC found at facing position! Read script_id (byte 4)
     ld a, l
@@ -796,7 +817,7 @@ jr_00b_43e2:
     ret
 
 
-SaveRoom_43e5:
+NPCSlotAtPos:
     push hl
     push bc
     push de
@@ -899,17 +920,18 @@ jr_00b_444c:
 
 
 ; ---------------------------------------------------------------------------
-; CheckNPCAtFacing — Compare NPC position against player's facing position
+; InteractEntryAtPos — does an interact entry sit at the probed cell?
+; (S98 rename; was CheckExitCoords / "CheckNPCAtFacing" — it serves the
+; examine-spot scan (Entry 4) and the step-trigger scan (Entry 5), not exits)
 ; ---------------------------------------------------------------------------
-; Input:  HL = pointer to NPC entry (byte 0 = type)
-;         $FFDB/$FFDC = player facing X position
-;         $FFDD/$FFDE = player facing Y position
-; Output: Z = NPC is at facing position (match)
-;         NZ = NPC is NOT at facing position
-;
-; Compares NPC entry bytes 2 (X) and 3 (Y) against computed facing coords.
+; Input:  HL = interact entry (5 bytes: type, param, X, Y, script)
+;         $FFDB/$FFDC = probe X in pixels, $FFDD/$FFDE = probe Y in pixels
+;         (the caller loads the player's own or facing position)
+; Output: Z = match, NZ = no match. Pixel/16 is reduced to SCREEN-LOCAL
+;         cells (mod 10 for X, mod 8 for Y via Div8x8) and compared with
+;         entry bytes 2/3.
 ; ---------------------------------------------------------------------------
-CheckExitCoords:
+InteractEntryAtPos:
     push hl
     push bc
     push de

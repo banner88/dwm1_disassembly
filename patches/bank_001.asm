@@ -4089,13 +4089,17 @@ RetIfInvalidFF_2:
 
 
 ; ===========================================================================
-; NPCTalkHandler — "Player pressed A near NPC" dispatcher
+; StepTrigger dispatcher (S98 correction — NOT an A-press/NPC handler)
 ; ===========================================================================
-; Called when the player presses A while facing an NPC.
-; Reads player position from HRAM ($FF92-$FF96), calls bank $0B entry 5
-; to find the NPC at the facing position and retrieve its script_id.
+; Runs on EVERY tile change (the bank $01 movement path, right after bank
+; $0B Entry 6's exit check). Copies the player's OWN position ($FF92-$FF96)
+; to the probe HRAM $FFDB-$FFDE and calls bank $0B entry 5
+; (RoomEntry5_StepTriggerLookup): a $9x STEP-ON trigger in the interact block
+; at the player's cell returns its script index (PyBoy S98: walking onto a
+; custom-room $90 cell opens its text; warping onto it does not). A presses
+; go through bank $06 -> bank $0B entry 4 instead (NPCs + $8x examine spots).
 ;
-; If an NPC is found ($FFD5 != $FF):
+; If a trigger is found ($FFD5 != $FF):
 ;   1. $D8D4 ← script_id (from NPC ROM data byte 4)
 ;   2. $D8D3 ← wMapID (current map type)
 ;   3. $D8D7 ← 0 (clear script state)
@@ -4110,24 +4114,24 @@ CopyPlayerCoordsAndGetNextRoom:
     ldh a, [$93]
     ld h, a
     ld a, l
-    ldh [$db], a             ; Store to $FFDB (facing position low)
+    ldh [$db], a             ; probe X = player X (own cell, not facing)
     ld a, h
-    ldh [$dc], a             ; Store to $FFDC (facing position high)
+    ldh [$dc], a             ; probe X high
     ldh a, [$95]
     ld l, a
     ldh a, [$96]
     ld h, a
     ld a, l
-    ldh [$dd], a             ; Store to $FFDD (facing tile low)
+    ldh [$dd], a             ; probe Y = player Y
     ld a, h
-    ldh [$de], a             ; Store to $FFDE (facing tile high)
-    ld hl, $0b05             ; Bank $0B entry 5: NPC lookup at facing position
-    rst $10                  ; Returns script_id in $FFD5 ($FF if no NPC)
+    ldh [$de], a             ; probe Y high
+    ld hl, $0b05             ; Bank $0B entry 5: $9x step-on trigger at the player cell
+    rst $10                  ; Returns script_id in $FFD5 ($FF if none)
     ldh a, [$d5]             ; Read script_id result
     cp $ff
     ret z                    ; No NPC found → return
 
-    ld [wScriptNPCId], a            ; ★ Store NPC script_id for script bank lookup
+    ld [wScriptNPCId], a            ; ★ trigger's script index -> script engine
     ld a, [wMapID]
     ld [wScriptMapType], a            ; Store map type for script bank selection
     xor a

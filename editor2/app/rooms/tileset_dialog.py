@@ -33,7 +33,12 @@ class TilesetDialog(QDialog):
         self.rb_v = QRadioButton("Another room's tileset (vanilla)")
         self.rb_p = QRadioButton('A tileset in this project')
         self.rb_b = QRadioButton('New blank tileset (for imported PNG art)')
-        for i, rb in enumerate((self.rb_v, self.rb_p, self.rb_b)):
+        others = doc.tileset_sharers(room)
+        self.rb_o = QRadioButton('Own copy of the current tileset (stop sharing with: '
+                                 + ', '.join(doc.room_name(r) for r in others) + ')'
+                                 if others else 'Own copy of the current tileset')
+        self.rb_o.setVisible(bool(others))
+        for i, rb in enumerate((self.rb_v, self.rb_p, self.rb_b, self.rb_o)):
             self.group.addButton(rb, i)
         self.v_box = QComboBox()
         for mid, name, _scr in renderer.vanilla_rooms():
@@ -55,8 +60,9 @@ class TilesetDialog(QDialog):
         g.addWidget(self.rb_p, 1, 0)
         g.addWidget(self.p_box, 1, 1)
         g.addWidget(self.rb_b, 2, 0)
-        g.addWidget(QLabel('wall | walkable split at'), 3, 0, Qt.AlignRight)
-        g.addWidget(self.thr, 3, 1)
+        g.addWidget(self.rb_o, 3, 0, 1, 2)
+        g.addWidget(QLabel('wall | walkable split at'), 4, 0, Qt.AlignRight)
+        g.addWidget(self.thr, 4, 1)
         v.addLayout(g)
         self.preview = QLabel()
         self.preview.setFixedSize(16 * 16 + 4, 8 * 16 + 4)
@@ -80,7 +86,7 @@ class TilesetDialog(QDialog):
 
     def _update(self):
         kind = self.choice()[0]
-        self.thr.setEnabled(kind != 'vanilla')
+        self.thr.setEnabled(kind not in ('vanilla', 'own'))
         if kind == 'blank' and getattr(self, '_last_kind', None) != 'blank':
             self.thr.setValue(0x40)
         self._last_kind = kind
@@ -95,6 +101,8 @@ class TilesetDialog(QDialog):
                 users = self.doc.rooms_using_tileset(self.p_box.currentData())
                 if users:
                     self.thr.setValue(val(users[0]['record']['collision_threshold']))
+            elif kind == 'own':
+                sheet = self.r.tileset_sheet(self.doc.tileset_key(self.room))
             else:
                 sheet = bytes(2048)
         except Exception:
@@ -112,4 +120,6 @@ class TilesetDialog(QDialog):
             return 'vanilla', self.v_box.currentData(), None
         if i == 1:
             return 'project', self.p_box.currentData(), self.thr.value()
+        if i == 3:
+            return 'own', None, None
         return 'blank', None, self.thr.value()

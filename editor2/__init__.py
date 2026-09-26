@@ -9,4 +9,4 @@ generated .asm files are build artifacts layered onto patches/.
 # when a project opens — so a stale or half-applied checkout is visible at a
 # glance (KEY_LESSONS S95 "old data + new code"; S96 round 3: a delivery
 # rsync'd without its trailing slash landed in a subfolder).
-EDITOR_REVISION = 'S97 r2'
+EDITOR_REVISION = 'S98r3'

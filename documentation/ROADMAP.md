@@ -806,12 +806,35 @@ recipes are pure authoring.
       (b) import allocates tiles only, it never removes stale ones (the slot
       map shows them); (c) flipped/mirrored duplicates in a rip cost separate
       slots (DWM1 attrs carry no flip bits — vanilla census values 0-3 only).
+- [ ] **P3.3e — Animated tiles (signposted S98 at the user's request —
+      "animated tiles and which are animated")**. KNOWN: per-frame tile
+      animation is a per-ROOM VRAM handler — bank $01 VRAM dispatch table at
+      `$6119` (107 entries, CROSSBANK_ROOMS "$6115"), indexed through ROM0
+      `MapIDClampForDispatch`, which returns **$00 (Castle) for every custom
+      room**; Castle's handler rotates VRAM `$94D0-$94FF` = sheet slots
+      **77-78** (KEY_LESSONS S7). Consequences today: (a) in ANY custom room
+      slots 77/78 animate whatever graphic sits there (the editor never
+      allocates them — slot map "animated", grey); (b) a CLONE of a vanilla
+      room with its own animation (water, torches, the Starry Shrine…) does
+      NOT animate those tiles (it runs Castle's handler, not its source's —
+      INFERRED from the dispatch, not yet measured in PyBoy);
+      (c) a bare `ret` handler corrupts the palette (CROSSBANK_ROOMS §6), so
+      "no animation" is not a free option. UNKNOWN (measure first): which of
+      the 107 handlers animate which VRAM ranges / tile slots and with which
+      frames; whether a custom room can safely run its SOURCE room's handler
+      (dispatch by `source_mapID`, a per-room table like the S94 records);
+      what each handler needs besides VRAM (state bytes, palette refresh).
+      *Accept:* a handler census (slots + frame source per vanilla room) in
+      ROOM_DATA_FORMAT; the slot map / picker mark the animated slots OF THE
+      ROOM'S handler (not a hard-coded 77/78); a water-room clone animates
+      its water in PyBoy; the author can pick the room's animation source
+      (none-safe / source room / Castle).
 - [ ] **P3.4 — Embedded PyBoy preview panel** [G-E] (EDITOR_DESIGN §7
       Tier 2): Build → cached post-boot savestate → warp to the room under
       edit → frames in a Qt widget with input. *Accept:* one click plays
       the room being edited, < 10 s from Build-done to walkable.
-- [x] **P3.5a — Declarative room-state rules** — **DONE S97, built, NOT yet
-      user-tested** (user: "all of group B"; terms are AND-ed flag set/clear
+- [x] **P3.5a — Declarative room-state rules** — **DONE S97, USER-CONFIRMED
+      2026-09-26** (user: "all of group B"; terms are AND-ed flag set/clear
       conditions — "Flag A set and Flag B set but C NOT set"). As built
       (PROJECT_COMPILER §2.13): ROOM-level ordered `state_rules` (first match
       wins, optional `screens`, trailing unconditional rule = "Otherwise"),
@@ -827,7 +850,7 @@ recipes are pure authoring.
       `DWM-S97-npc-rules-test.gbc` (fire out → save → reload → still out).
       **Split out (user OK'd S97): "a redirected door arrives in the chosen
       state" → P3.7** (exit rows have no spare byte; needs exit-path code).
-- [x] **P3.5 — NPC inspector** — **DONE S97, built, NOT yet user-tested**:
+- [x] **P3.5 — NPC inspector** — **DONE S97, USER-CONFIRMED 2026-09-26**:
       Add NPC here / drag to move / delete, sprite picker (S91 catalog),
       facing, the 13 MEASURED behaviours (bank $06 NPCBehaviourTable decoded +
       re-sectioned S97; ROOM_DATA_FORMAT "NPC behaviour types"), hidden bit,
@@ -844,30 +867,81 @@ recipes are pure authoring.
       but cannot prevent; (d) per-screen sprite-sheet VRAM budget is still a
       warning count, not a measured per-sheet meter (capacities residual);
       (e) scripts beyond plain talk are edited in P3.6/P3.8.
-      **S97 round 2 (user test of r1; built, NOT yet user-tested):** text
+      **S97 round 2 (user test of r1; USER-CONFIRMED 2026-09-26):** text
       boxes stay cream in free-colour rooms (dialog + YES/NO box attrs, bank
       $73 entries 14-18, pin `ce24de8b…` patched); talk text authored per box
       with the ROM-font preview (the measured 16/18-cell, 2-line rules; the
       `boxes` form waits per box) — this delivers P3.6's preview/wrap/page
       core for PLAIN talk text; NPC section of its own, panels start folded;
-      new-flag selection fixed. Open (offered, awaiting the user): an NPC
-      "sets flag X when talked to" option — nothing in the GUI sets a flag
-      yet. *User half:* `DWM-S97-r2-textbox-test.gbc`.
+      new-flag selection fixed. The NPC "sets flag X when talked to" option
+      → built S98 (P3.7: talk scripts). *User half:* `DWM-S97-r2-textbox-test.gbc`.
 - [ ] **P3.6 — Dialogue editor**: WYSIWYG pages with ROM font tiles, live
       wrap/DTE/page-split, YES/NO branch wiring. (S97 r2 built the per-box
       editor + ROM-font preview for plain talk text — `talk_editor.py`;
-      remaining: choice texts + branches, DTE, $EB indented opener, names.) *Accept:* GUI-authored
+      S98 added the YES/NO question + per-answer reply/flags/move for talk
+      scripts (TalkDialog tabs); remaining: nested choices, DTE, $EB indented
+      opener, names.) *Accept:* GUI-authored
       multi-page + choice dialogue renders in-game byte-exact to preview.
-- [ ] **P3.7 — Triggers/exits editor + World graph v0** (+ S97 carry-over from
-      P3.5a: a door that arrives in a chosen STATE — needs exit-path code,
-      e.g. a per-door flag set by bank $60 entry 7 before the transition): interact/spawn/
-      exit editing incl. vanilla_exit_extensions; read-only world graph of
-      rooms/warps. *Seeded S95:* "Add exit at this cell…" / "Delete this
-      exit" (custom-room exits, PyBoy-verified) + entrance redirects (S94b)
-      are the two halves; still needed: a DOOR object that owns both ends
-      (auto return exit, drag-to-move), spawn-point editing, edge-vs-scroll
-      conflict check on the canvas, and the graph. *Accept:* a custom↔vanilla
-      door pair authored in the GUI works in-game; the graph shows it.
+- [x] **P3.7 — Triggers/exits editor + World graph v0** — **DONE S98;
+      doors USER-CONFIRMED 2026-09-26 in the user's own project ("Works
+      now", arrival "Its now fixed"); talk / flags / spots in game built,
+      NOT yet user-tested** (user: "Let's finish room work" = group C;
+      "mostly two-way but I want the option of having a one-way teleport …
+      a separate, rare object"; "happy with state rules as long as they're
+      flexible enough"; "I just need the flag system to work so I can make
+      an NPC set a flag"). As built (EDITOR_DESIGN §5.1 "S98 additions",
+      PROJECT_COMPILER §2.14, ROOM_DATA_FORMAT "Interact entries ≥$80"):
+      (a) **DOOR objects** (S98 r2, the user's design) — + Door puts an
+      unconnected, named door on the selected cell; double-click → name +
+      connect it to another door object (your doors in any room, or any
+      vanilla door) from a searchable list — no coordinates; links are
+      two-way, re-linking frees the old partner, delete leaves the partner
+      unconnected; drag to move, re-aim, per-state presence; arrival
+      computed from the MEASURED rules (vanilla partner's own bytes first;
+      else ON the partner door cell — S98 r2 user choice, arrival never
+      re-fires; r1's "step out of the doorway" rows migrate on open);
+      doors on an edge that scrolls are refused; vanilla double doors get `twin_of`
+      redirect rows; (b) **one-way teleport** = a plain exit row (More ▾);
+      (c) **examine spots** ($80-$83/$8F, facing nibble) and **step-on
+      triggers** ($90) — the "$8F spawn point" was a misnomer (DOC_AUDIT
+      S98); spots are emitted before NPCs (both engine scans stop at the
+      first NPC entry — measured); (d) **talk scripts** — text, optional
+      YES/NO, then/yes/no blocks: say something, turn flags on/off, move
+      the player (`map_transition`) — lowered to ordinary ops; this is how
+      an NPC sets a flag; (e) edge-vs-scroll validators (x=0/9, y=0 with a
+      neighbour screen never fire; a bottom-row exit blocks walking down)
+      and "exit arrives on a screen the room lacks" (error); (f) **World
+      tab** — read-only graph (doors, one-way exits, redirects, script
+      warps; optional whole vanilla world), double-click opens the room.
+      Door-arrival STATE (S97 carry-over): closed by user decision — state
+      rules keyed on a flag the talk/examine sets cover it; no exit-path
+      code. *Accept MET (machine half):* test_canvas v5 --rom — a fresh
+      project authored through the dialog code paths: door A(4,7) ↔ the
+      GreatTree 2F Library door and door A(7,2) ↔ B (B's end dragged) both
+      ways with the measured arrivals, examine spot answers only when faced
+      from below and sets its flag, step trigger sets its flag, the YES/NO
+      NPC's YES sets `lab_flag` and reloads A in state 1 (VRAM == state-1
+      grid), one-way teleport lands as authored; world graph = 2 doors +
+      exit + warp. Pin unchanged (`ce24de8b…`, patched). *User half:*
+      `DWM-S98r3-doors-test.gbc` (patched, `72cd22fe…`) + the user's own
+      project (doors confirmed). **Round 2/3 (user feedback):** the door is
+      an OBJECT placed first and connected by double-click (no coordinate
+      dialog); arrival ON the partner door at a whole-tile pixel position
+      (the r1 "step out" half-cell arrival, and vanilla's own `$88`, were
+      rejected by the user); doors on a scrolling edge refused / red D!;
+      + Examine (X); tileset tools (own copies by default, split-down move,
+      purge unused borrowed / own; Walk toggle = walkability mode). v5 now
+      asserts pixel positions after every arrival.
+      Residuals: (1) arrival on a vanilla-to-vanilla double door edits only
+      the named twin set (the editor handles the vanilla twins it knows);
+      (2) the World graph layout is not saved (deterministic re-layout);
+      (3) script warps with computed targets are not drawn; (4) step-on
+      triggers fire on WALK-on only (never on arrival by door/warp —
+      measured, engine fact); (5) the named-flag pool is still 16 flags;
+      (6) the split-down move's "moved wall tile still blocks" path is
+      checked in the editor (screen pixel-identical) but was not exercised
+      in PyBoy (the test room had no placed tile at the moved slot);
+      (7) animated tiles → P3.3e.
 - [ ] **P3.7b — Gates tab** [G-F partial]: per-gate config-row editing
       (floors/weights/pool binding — Layer A-lite rows), custom-room-at-
       depth-N insertion surfaced (built S41), boss floor (template +

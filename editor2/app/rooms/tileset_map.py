@@ -21,7 +21,7 @@ S94). Hover = who uses the slot; click = highlight it on the canvas.
 from PIL import Image, ImageQt
 from PySide6.QtCore import QRect, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QPushButton,
                                QVBoxLayout, QWidget)
 
 COLS = 16
@@ -140,6 +140,8 @@ class TilesetMap(QWidget):
     hoverInfo = Signal(str)
     highlightTile = Signal(int)         # -1 = clear
     releaseToggled = Signal(bool)
+    ownCopyRequested = Signal()          # S98 r2: stop sharing the sheet
+    purgeRequested = Signal(str)         # S98 r2: 'own' | 'borrowed'
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -149,6 +151,18 @@ class TilesetMap(QWidget):
         self.summary = QLabel('')
         self.summary.setWordWrap(True)
         v.addWidget(self.summary)
+        from PySide6.QtWidgets import QPushButton
+        srow = QHBoxLayout()
+        self.shared = QLabel('')
+        self.shared.setWordWrap(True)
+        self.shared.setStyleSheet('color:#e0b040;')
+        srow.addWidget(self.shared, 1)
+        self.own_btn = QPushButton('Give this room its own copy')
+        self.own_btn.setToolTip('Copy the sheet for this room only — the other rooms keep '
+                                'theirs; tiles placed in them stop using this room\'s slots.')
+        self.own_btn.clicked.connect(self.ownCopyRequested.emit)
+        srow.addWidget(self.own_btn)
+        v.addLayout(srow)
         row = QHBoxLayout()
         self.release = QCheckBox('Release unused vocabulary')
         self.release.setToolTip(
@@ -166,6 +180,24 @@ class TilesetMap(QWidget):
         self.pal_box.currentIndexChanged.connect(lambda _i: self.refresh())
         row.addWidget(self.pal_box)
         v.addLayout(row)
+        # S98 r2 (user: "a good way to purge unused tiles, like a button …
+        # purge unused own and purge unused borrowed"): My metatiles placed
+        # nowhere keep their slots until removed — one click each
+        prow = QHBoxLayout()
+        self.purge_b = QPushButton('Purge unused borrowed')
+        self.purge_b.setToolTip('Remove every metatile borrowed from another room\'s tileset '
+                                'that is not placed on any screen/state of the rooms using '
+                                'this tileset — frees its slots. Undo brings them back.')
+        self.purge_b.clicked.connect(lambda: self.purgeRequested.emit('borrowed'))
+        self.purge_o = QPushButton('Purge unused own')
+        self.purge_o.setToolTip('Remove every metatile of your own (made here, or imported '
+                                'from a PNG) that is not placed anywhere — frees its slots. '
+                                'Undo brings them back.')
+        self.purge_o.clicked.connect(lambda: self.purgeRequested.emit('own'))
+        prow.addWidget(self.purge_b)
+        prow.addWidget(self.purge_o)
+        prow.addStretch(1)
+        v.addLayout(prow)
         self.grid = SlotGrid()
         self.grid.hovered.connect(self._hovered)
         self.grid.clicked.connect(self.highlightTile.emit)
@@ -219,6 +251,24 @@ class TilesetMap(QWidget):
             f"free: <b>{fc['wall']}</b> wall / <b>{fc['walkable']}</b> walkable "
             f"(<b>{fc['total']}</b> of 128) · placed {counts.get('placed', 0)} · "
             f"my metatiles {counts.get('mine', 0)} · vocabulary {counts.get('vocab', 0)}")
+        for btn, kind, label in ((self.purge_b, 'borrowed', 'borrowed'),
+                                 (self.purge_o, 'own', 'own')):
+            try:
+                n, fr = self.doc.purge_preview(tid, kind, self.threshold)
+            except Exception:
+                n, fr = 0, {'wall': 0, 'walkable': 0}
+            if n:
+                btn.setText(f"Purge unused {label} ({n}) — frees {fr['walkable']} walkable / "
+                            f"{fr['wall']} wall")
+            else:
+                btn.setText(f'Purge unused {label} (none)')
+            btn.setEnabled(bool(n) and ':' not in str(tid))
+        others = self.doc.tileset_sharers(self.room)
+        self.shared.setText(('SHARED with: ' + ', '.join(self.doc.room_name(r) for r in others)
+                             + ' — their placed tiles and metatiles use slots of this sheet too.')
+                            if others else '')
+        self.shared.setVisible(bool(others))
+        self.own_btn.setVisible(bool(others))
         self._building = True
         self.release.setChecked(self.doc.released(tid))
         self.release.setEnabled(any(u['vocab'] for u in usage))

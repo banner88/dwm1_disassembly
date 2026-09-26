@@ -1109,6 +1109,628 @@ def test_rom_v4(w, s, rid, ti, wi, keep_dir=None):
     p.stop(save=False)
 
 
+# ------------------------------------------------------------ S98 (v5)
+V5_NPC = (3, 3)          # the question NPC in room A
+V5_NPC_STAND = (3, 4)    # the player's cell below it (faces up to talk)
+V5_BOOK = (1, 1)         # examine spot (facing up), approached from (1, 2)
+V5_STEP = (6, 5)         # step-on trigger, approached from (6, 4)
+V5_TELE = (8, 6)         # one-way teleport in room B -> room A (5, 5)
+V5_B_DOOR = (3, 3)       # room B's end of door A(7,2)<->B, after the drag
+V5_SPECS = [
+    {'boxes': [['A dusty book.'], ['Nothing inside.']], 'question': False,
+     'then': {'boxes': [], 'set': ['book_read'], 'clear': [], 'move': None},
+     'yes': {'boxes': [], 'set': [], 'clear': [], 'move': None},
+     'no': {'boxes': [], 'set': [], 'clear': [], 'move': None}},
+    {'boxes': [['Squish.']], 'question': False,
+     'then': {'boxes': [], 'set': ['stepped'], 'clear': [], 'move': None},
+     'yes': {'boxes': [], 'set': [], 'clear': [], 'move': None},
+     'no': {'boxes': [], 'set': [], 'clear': [], 'move': None}},
+]
+
+
+def v5_round_trip(new_dir):
+    """S98 (ROADMAP P3.7) — fresh project, everything through the Rooms-tab
+    code path with the dialogs answered: room A (2 states, rule 'state 1 when
+    lab_flag set') and room B; door A(4,7) <-> the vanilla GreatTree 2F
+    Library door; door A(7,2) <-> B, B's end dragged; an examine spot (facing
+    up) that sets a flag; a step-on trigger; an NPC whose YES sets lab_flag
+    and moves the player (room reload -> the rule picks state 1); a one-way
+    teleport B -> A; exact undo/redo; world graph; compile."""
+    from editor2.app.main import MainWindow
+    from editor2.app.rooms import npc_panel, door_dialog
+    from editor2.app.rooms import commands as C
+    from PySide6.QtWidgets import QMessageBox, QDialog, QDialogButtonBox
+    from editor2.core import world as Wd
+    app = QApplication.instance() or QApplication(sys.argv)
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    w = MainWindow()
+    w.new_project(new_dir, 'v5 acceptance')
+    app.processEvents()
+    rt, s = w.rooms_tab, w.session
+    rend = s.renderer
+    s.undo.push(C.SnapshotCommand(s, 'New room A', lambda doc: doc.new_room('Door Lab', 0x04, rend)))
+    s.undo.push(C.SnapshotCommand(s, 'New room B', lambda doc: doc.new_room('Room B', 0x04, rend)))
+    app.processEvents()
+    a_id, b_id = [r['id'] for r in s.doc.rooms]
+    A = s.doc.room(a_id)
+    assert not A['screens']['0']['npcs'], 'S98: a new room carries no "spawn" marker'
+    s.doc.save()
+    saved = open(s.doc.path).read()
+    n0 = s.undo.count()
+
+    def open_room(rid, state=0):
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(0x100) == rid:
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        rt.select_state(state)
+        app.processEvents()
+    open_room(a_id)
+    # ---- a 2nd state with its own layout (a visible stripe) + the rule
+    rt._add_state(True, True)
+    app.processEvents()
+    A = s.doc.room(a_id)
+    lid1 = s.doc.states(A, 0)[1]['layout']['id']
+    stripe = [(r, c, 0x10) for r in (12, 13) for c in range(20)]
+    from editor2.app.rooms.commands import PaintCells
+    s.undo.push(PaintCells(s, lid1, 'tiles', stripe, 'stripe'))
+    rt._rules_edited([{'state': 1, 'when': [{'flag': 'lab_flag'}]}], ['lab_flag'])
+    open_room(a_id, 0)
+    # ---- doors, the S98 r2 way (user design): select a cell, press + Door —
+    # the door appears unconnected; double-click it, name it, pick the door
+    # it connects to from the list. No coordinates anywhere.
+    from PySide6.QtTest import QTest
+    from PySide6.QtCore import QPointF, QPoint, Qt
+    from editor2.app.rooms import canvas as CV
+
+    def vp(cell):
+        p = rt.canvas.mapFromScene(QPointF(cell[0] * CV.CELL + CV.CELL / 2,
+                                           cell[1] * CV.CELL + CV.CELL / 2))
+        return QPoint(p.x(), p.y())
+
+    def click(cell):
+        QTest.mouseClick(rt.canvas.viewport(), Qt.LeftButton, Qt.NoModifier, vp(cell))
+        app.processEvents()
+
+    link_plan = []          # (new name, target door id) per dialog opened
+
+    def fake_props(dlg):
+        name, target = link_plan.pop(0)
+        dlg.name.setText(name)
+        found = []
+
+        def walk(it):
+            d = it.data(0, Qt.UserRole)
+            if d and d[0] == 'door' and d[1] == target:
+                found.append(it)
+            for k in range(it.childCount()):
+                walk(it.child(k))
+        for k in range(dlg.tree.topLevelItemCount()):
+            walk(dlg.tree.topLevelItem(k))
+        assert found, f'{target} is not in the connection list'
+        dlg.tree.setCurrentItem(found[0])
+        assert dlg.bb.button(QDialogButtonBox.Ok).isEnabled(), dlg.warn.text()
+        return QDialog.Accepted
+    door_dialog.DoorPropsDialog.exec = fake_props
+    assert not any('rect' in a.text().lower() for a in rt.tools.actions()), 'Rect is off the bar'
+    click((4, 7))                                   # Select tool: pick the cell
+    rt.act_add_door.trigger()                       # + Door
+    app.processEvents()
+    A = s.doc.room(a_id)
+    d1 = s.doc.door_end_at(a_id, 0, 4, 7)
+    assert d1 and s.doc.door_partner(d1) is None, 'the new door sits on the cell, unconnected'
+    assert 'dest' not in s.doc.door_end(d1)['row']
+    assert s.doc.door_end(d1)['states'] == [0, 1], 'the door exists in both states'
+    # double-click it -> name it + connect it to the GreatTree 2F Library door
+    vid = s.doc.vanilla_door_id(0x01, 8, 5, 3)
+    link_plan.append(('Library door', vid))
+    QTest.mouseDClick(rt.canvas.viewport(), Qt.LeftButton, Qt.NoModifier, vp((4, 7)))
+    app.processEvents()
+    cus, van = s.doc.door_end(d1), s.doc.door_end(vid)
+    assert cus['name'] == 'Library door' and cus['link'] == vid and van['link'] == d1
+    # S98 r3 (user: "You arrive on tile fully always"): ON the vanilla door
+    # (vanilla's own $88 would be half a cell below it)
+    assert (cus['row']['screen_byte'], cus['row']['spawn_x'], cus['row']['spawn_y']) == \
+        ('0x08', 5, 3), cus['row']
+    # the custom door is on the bottom edge: arrive ON the door cell
+    assert (van['row']['screen_byte'], van['row']['spawn_x'], van['row']['spawn_y']) == \
+        ('0x00', 4, 7), van['row']
+    # second door in A at (7,2), one in B at (0,2); connect them from B's side
+    click((7, 2))
+    rt.act_add_door.trigger()
+    d2 = s.doc.door_end_at(a_id, 0, 7, 2)
+    open_room(b_id)
+    rt.canvas.selected_cell = (0, 2)
+    rt._add_door_selected()
+    d3 = s.doc.door_end_at(b_id, 0, 0, 2)
+    assert d2 and d3 and d2 != d3
+    link_plan.append(('Back to the lab', d2))
+    QTest.mouseDClick(rt.canvas.viewport(), Qt.LeftButton, Qt.NoModifier, vp((0, 2)))
+    app.processEvents()
+    assert s.doc.door_partner(d3)['id'] == d2 and s.doc.door_partner(d2)['id'] == d3
+    # drag B's door to its final cell: A's door re-aims at the new arrival
+    B = s.doc.room(b_id)
+    bi = next(i for i, e in enumerate(s.doc.exits_of(B, 0, 0)) if e.get('door') == d3)
+    rt._move_marker(('exit', bi, s.doc.exits_of(B, 0, 0)[bi]), *V5_B_DOOR)
+    endA, endB = s.doc.door_end(d2), s.doc.door_end(d3)
+    assert (endB['x'], endB['y']) == V5_B_DOOR
+    # S98 r2 (user): arrival = ON the partner door (arrival never re-fires it)
+    assert (endA['row']['screen_byte'], endA['row']['spawn_x'], endA['row']['spawn_y']) == \
+        ('0x00', *V5_B_DOOR), endA['row']
+    assert (endB['row']['screen_byte'], endB['row']['spawn_x'], endB['row']['spawn_y']) == \
+        ('0x00', 7, 2), endB['row']
+    # re-linking frees the old partner: connect d2 to d1 would free d3 and the
+    # vanilla door — check on a copy via undo
+    n_before = s.undo.count()
+    s.undo.push(C.SnapshotCommand(s, 'relink', lambda doc: doc.link_doors(d2, d1)))
+    assert s.doc.door_partner(d3) is None and s.doc.door_end(vid)['row'] is None
+    s.undo.undo()
+    assert s.undo.index() == n_before and s.doc.door_partner(d3)['id'] == d2
+    # deleting a door leaves its partner, unconnected (then undo)
+    s.undo.push(C.SnapshotCommand(s, 'del', lambda doc: doc.remove_door(d3)))
+    assert s.doc.door_end(d3) is None and s.doc.door_partner(d2) is None \
+        and s.doc.door_end(d2) is not None
+    s.undo.undo()
+    assert s.doc.door_partner(d2)['id'] == d3
+    # ---- one-way teleport B (8,6) -> A (5,5)
+    tele = iter([(('room', a_id), 0, 5, 5)])
+
+    def fake_tele(dlg):
+        data, k, x, y = next(tele)
+        for i in range(dlg.dst_room.count()):
+            if dlg.dst_room.itemData(i) == data:
+                dlg.dst_room.setCurrentIndex(i)
+        dlg.dst_screen.setCurrentIndex(dlg.dst_screen.findData(k))
+        dlg.dst_x.setValue(x)
+        dlg.dst_y.setValue(y)
+        dlg._refresh()
+        return QDialog.Accepted
+    door_dialog.DoorDialog.exec = fake_tele
+    rt._add_exit(V5_TELE)
+    B = s.doc.room(b_id)
+    tr = [e for e in s.doc.exits_of(B, 0, 0) if not e.get('door')]
+    assert len(tr) == 1 and (tr[0]['x'], tr[0]['y'], tr[0]['spawn_x'], tr[0]['spawn_y']) == \
+        (*V5_TELE, 5, 5), tr
+    # ---- examine spot + step trigger + the question NPC in room A
+    open_room(a_id, 0)
+    specs = iter(V5_SPECS + [{
+        'boxes': [['Want me to', 'turn the flag on?']], 'question': True,
+        'then': {'boxes': [], 'set': [], 'clear': [], 'move': None},
+        'yes': {'boxes': [['Done!']], 'set': ['lab_flag'], 'clear': [],
+                'move': {'dest': f"room:${val(A['mapID']):02X}", 'screen': 0,
+                         'x': V5_NPC_STAND[0], 'y': V5_NPC_STAND[1]}},
+        'no': {'boxes': [['Maybe later.']], 'set': [], 'clear': [], 'move': None}}])
+    npc_panel.TalkDialog.exec = lambda dlg: QDialog.Accepted
+    npc_panel.TalkDialog.spec = lambda dlg: next(specs)
+    npc_panel.TalkDialog.new_flags = lambda dlg: ['book_read', 'stepped']
+    rt.canvas.selected_cell = V5_BOOK             # S98 r2: the + Examine (X) button
+    rt.act_add_examine.trigger()
+    app.processEvents()
+    rt._spot_fields({'facing': 'up'})
+    rt._add_spot(V5_STEP, 'step')
+    npc_panel.SpritePicker.exec = lambda dlg: (setattr(dlg, 'value', 0x0B), QDialog.Accepted)[1]
+    rt._add_npc(V5_NPC)
+    rt._npc_new_talk()
+    app.processEvents()
+    A = s.doc.room(a_id)
+    views = [s.doc.npc_view(A, e) for e in s.doc.npc_entries(A, 0, 0)]
+    kinds = sorted(v['kind'] for v in views)
+    assert kinds == ['examine', 'npc', 'step'], kinds
+    book = next(v for v in views if v['kind'] == 'examine')
+    assert book['facing'] == 'up' and (book['x'], book['y']) == V5_BOOK
+    npcv = next(v for v in views if v['kind'] == 'npc')
+    spec = s.doc.talk_spec(npcv['script'])
+    assert spec['question'] and spec['yes']['set'] == ['lab_flag'] and spec['yes']['move'], spec
+    assert {f['name'] for f in s.doc.flags()} == {'lab_flag', 'book_read', 'stepped'}
+    # ---- world graph: A-B door, A-GreatTree door, B->A exit, A->A warp
+    nodes, edges = Wd.world_graph(s.doc, rend)
+    kinds = sorted(e['kind'] for e in edges)
+    assert kinds == ['door', 'door', 'exit', 'warp'], kinds
+    assert ('vanilla', 0x01) in {n['key'] for n in nodes}
+    # ---- exact undo / redo
+    n = s.undo.index() - n0   # (the undone 'del' probe stays redoable)
+    for _ in range(n):
+        s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == saved, 'full undo must restore the project byte-for-byte'
+    for _ in range(n):
+        s.undo.redo()
+    app.processEvents()
+    s.doc.save()
+    print(f'OK: v5 — doors A(4,7)<->GreatTree Library door (vanilla partner bytes $88 (5,3)), '
+          f'A(7,2)<->B dragged to {V5_B_DOOR} (step-out arrivals), one-way teleport, examine '
+          f'spot (facing up), step trigger, YES/NO NPC (flag + move), world graph '
+          f'{len(nodes)} rooms / {len(edges)} links; {n} undoable edits, exact undo/redo')
+    return w, s, a_id, b_id
+
+
+def tileset_sharing_check(new_dir):
+    """S98 r2 (user: "when I make a custom room it should STOP sharing
+    tilesets by default"; threshold shift "make that an option"): a copied
+    room gets its own sheet; a shared sheet is flagged and "own copy" ends
+    it; a full walkable side offers moving the split down one slot — Yes
+    flips the cell and nothing else on screen changes, No changes nothing."""
+    from editor2.app.main import MainWindow
+    from PySide6.QtWidgets import QMessageBox
+    from editor2.app.rooms import commands as C
+    app = QApplication.instance() or QApplication(sys.argv)
+    answers = []
+    QMessageBox.question = staticmethod(lambda *a, **k: answers.pop(0) if answers
+                                        else QMessageBox.Yes)
+    warned = []
+    QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]))
+    w = MainWindow()
+    w.new_project(new_dir, 'tileset sharing')
+    app.processEvents()
+    rt, s = w.rooms_tab, w.session
+    doc = s.doc
+    for i in range(rt.vanilla_list.count()):
+        if rt.vanilla_list.item(i).data(0x100) == 0x3F:
+            rt.vanilla_list.setCurrentRow(i)
+    app.processEvents()
+    rt._clone_vanilla()
+    app.processEvents()
+    sid = rt.room_id
+    rt.select_state(1)
+    app.processEvents()
+    answers.append(QMessageBox.Yes)                      # copy the tileset in
+    rt._flip_walk(4, 1)
+    app.processEvents()
+    tid = doc.room(sid)['record']['tileset']
+    # 1. Copy room -> its own sheet
+    s.undo.push(C.SnapshotCommand(s, 'copy', lambda d: d.copy_room(sid, 'Servant B')))
+    cid = [r['id'] for r in doc.rooms if r['id'] != sid][0]
+    ctid = doc.room(cid)['record']['tileset']
+    assert ctid != tid and os.path.exists(doc.sheet_path(ctid)), (ctid, tid)
+    assert doc.read_sheet(ctid) == doc.read_sheet(tid)
+    assert not doc.tileset_sharers(doc.room(sid)) and not doc.tileset_sharers(doc.room(cid))
+    # 2. make them share (the old behaviour) -> flagged
+    s.undo.push(C.SnapshotCommand(s, 'share', lambda d: d.set_room_tileset(cid, 'project', tid)))
+    assert [r['id'] for r in doc.tileset_sharers(doc.room(sid))] == [cid]
+    # 3. fill the walkable side, then flip a wall cell walkable
+    thr = val(doc.room(sid)['record']['collision_threshold'])
+    used = doc.used_tiles(tid)
+    for i in range(thr, 128):
+        if i not in used and i not in (77, 78):
+            doc.add_metatile(tid, f'fill {i}', [i] * 4, 0)
+    assert doc.free_counts(tid, thr)['walkable'] == 0
+    rt._show()
+    app.processEvents()
+    cv = rt.canvas
+    sheet = doc.read_sheet(tid)
+    cell = approach = None
+    DIRS = {'left': (-1, 0), 'right': (1, 0), 'up': (0, -1), 'down': (0, 1)}
+    for y in range(1, 7):
+        for x in range(1, 9):
+            if cv.cell_walkable(x, y):
+                continue
+            t = cv.tiles[y * 2 + 1][x * 2 + 1] & 0x7F
+            g = sheet[t * 16:t * 16 + 16]
+            if any(sheet[i * 16:i * 16 + 16] == g for i in range(thr, 128)):
+                continue
+            for d, (dx, dy) in DIRS.items():       # a walkable cell to walk in from
+                if cv.cell_walkable(x - dx, y - dy):
+                    cell, approach = (x, y), ((x - dx, y - dy), d)
+                    break
+            if cell:
+                break
+        if cell:
+            break
+    assert cell, 'no wall cell (with a walkable neighbour) lacking a walkable twin'
+    # which placed wall cells use the slot that will move ($thr-1)?
+    moved_cells = [(x, y) for y in range(8) for x in range(10)
+                   if (cv.tiles[y * 2 + 1][x * 2 + 1] & 0x7F) == thr - 1]
+    room = doc.room(sid)
+    before = s.renderer.render_screen(room, 0, 1, 1).convert('RGB')
+    snap = doc.dumps()
+    answers.append(QMessageBox.No)                       # decline the shift
+    rt._flip_walk(*cell)
+    app.processEvents()
+    assert doc.dumps() == snap and not warned, 'No = nothing changes, no error box'
+    answers.append(QMessageBox.Yes)
+    rt._flip_walk(*cell)
+    app.processEvents()
+    room = doc.room(sid)
+    assert val(room['record']['collision_threshold']) == thr - 1, room['record']
+    assert val(doc.room(cid)['record']['collision_threshold']) == thr - 1, 'sharer follows'
+    assert rt.canvas.cell_walkable(*cell), 'the cell is walkable now'
+    after = s.renderer.render_screen(room, 0, 1, 1).convert('RGB')
+    diff = [(x, y) for y in range(before.height) for x in range(before.width)
+            if before.getpixel((x, y)) != after.getpixel((x, y))]
+    assert not diff, f'the screen must look identical ({len(diff)} pixels changed)'
+    # 4. own copy ends the sharing
+    rt._show()
+    app.processEvents()
+    rt.room_list.setCurrentRow([rt.room_list.item(i).data(0x100)
+                                for i in range(rt.room_list.count())].index(cid))
+    app.processEvents()
+    rt._own_tileset()
+    app.processEvents()
+    assert doc.room(cid)['record']['tileset'] not in (tid, ctid)
+    assert not doc.tileset_sharers(doc.room(sid))
+    # 5. purge buttons (S98 r2): borrowed pieces placed nowhere go, a placed
+    # one stays; own metatiles are a separate button
+    rt.room_list.setCurrentRow([rt.room_list.item(i).data(0x100)
+                                for i in range(rt.room_list.count())].index(sid))
+    app.processEvents()
+    for i in range(rt.foreign_box.count()):
+        if rt.foreign_box.itemData(i) == 0x01:
+            rt.foreign_box.setCurrentIndex(i)
+    app.processEvents()
+    tid_now = doc.room(sid)['record']['tileset']
+    for mt in rt._vanilla_vocab(0x01)[:4]:
+        rt._import_metatile(mt)
+        app.processEvents()
+    mts = doc.metatiles(tid_now)
+    borrowed = [m for m in mts if doc.metatile_kind(m) == 'borrowed']
+    assert len(borrowed) == 4 and all(m.get('src') == 'borrowed' for m in borrowed)
+    keep = borrowed[0]
+    from editor2.app.rooms.commands import PaintCells
+    lid_s = s.renderer.screen_state(doc.room(sid), 0, 1)['layout']['id']
+    s.undo.push(PaintCells(s, lid_s, 'tiles', [(12, 2, keep['tiles'][0]), (12, 3, keep['tiles'][1]),
+                                              (13, 2, keep['tiles'][2]), (13, 3, keep['tiles'][3])],
+                           'place one'))
+    rt._show()
+    app.processEvents()
+    thr_s = val(doc.room(sid)['record']['collision_threshold'])
+    n_own = len(doc.unused_metatiles(tid_now, 'own'))
+    free0 = doc.free_counts(tid_now, thr_s)['total']
+    from PySide6.QtTest import QTest
+    from PySide6.QtCore import Qt as _Qt
+    QTest.mouseClick(rt.tileset_map.purge_b, _Qt.LeftButton)
+    app.processEvents()
+    left = [m for m in doc.metatiles(tid_now) if doc.metatile_kind(m) == 'borrowed']
+    assert left == [keep], f'only the placed borrowed metatile stays: {left}'
+    assert len(doc.unused_metatiles(tid_now, 'own')) == n_own, 'own ones untouched'
+    assert doc.free_counts(tid_now, thr_s)['total'] > free0
+    # 6. S98 r2 (user: "I walk onto door but nothing happens"): a door on an
+    # edge that scrolls into another screen can never fire — refused, and an
+    # existing one is drawn as a red 'D!'
+    rt._add_screen(1)
+    app.processEvents()
+    rt.select_screen(0)
+    app.processEvents()
+    n_warn = len(warned)
+    rt.canvas.selected_cell = (9, 3)
+    rt.act_add_door.trigger()
+    app.processEvents()
+    assert len(warned) == n_warn + 1 and 'SCROLLS' in warned[-1], warned[-1:]
+    assert doc.door_end_at(sid, 0, 9, 3) is None, 'no door written on the dead edge'
+    st1 = rt.state_idx
+    doc.exits_of(doc.room(sid), 0, st1).append({'x': 9, 'y': 3, 'door': 'door_x',
+                                                'name': 'hand-made'})
+    rt._show()
+    app.processEvents()
+    assert any(m[0] == 'door_dead' and (m[1], m[2]) == (9, 3) for m in rt.canvas.markers)
+    doc.exits_of(doc.room(sid), 0, st1).pop()
+    s.undo.undo()                                # the added screen
+    rt._show()
+    app.processEvents()
+    # for the ROM check: the room always shows state 1 (the edited layout)
+    s.undo.push(C.SnapshotCommand(s, 'rule', lambda d: d.set_state_rules(
+        d.room(sid), [{'state': 1, 'when': []}])))
+    doc.save()
+    w._ts_info = {'sid': sid, 'cell': cell, 'approach': approach, 'thr': thr,
+                  'moved_cells': moved_cells, 'dirs': DIRS}
+    print(f'OK: tilesets — Copy room gets its own sheet ({ctid}); a shared sheet is flagged; '
+          f'walkable side full -> "move the split down" asked (No = no change; Yes = cell '
+          f'{cell} walkable, split ${thr:02X}->${thr - 1:02X}, screen pixel-identical); '
+          f'"own copy" stops sharing; "Purge unused borrowed" drops the 3 unplaced '
+          f'borrowed metatiles and keeps the placed one')
+    return w
+
+
+def test_rom_tilesets(w, keep_dir=None):
+    """--rom: the cell made walkable by moving the split down is walkable
+    in game; the wall cells whose tile moved to a lower slot still block."""
+    from editor2.app.build_worker import BuildWorker
+    from tools.pyboy_harness import boot, to_bedroom, warp, adv, MAP_ID
+    app = QApplication.instance()
+    info, s = w._ts_info, w.session
+    results = []
+    worker = BuildWorker(REPO, s.project_dir)
+    worker.finished_build.connect(results.append)
+    worker.start()
+    worker.wait()
+    app.processEvents()
+    res = results[0]
+    assert res.ok, f'build failed: {res.error}'
+    mid = val(s.doc.room(info['sid'])['mapID'])
+    p = boot(res.rom_path)
+    assert to_bedroom(p), 'scripted intro failed'
+    p.memory[0xCA39] = p.memory[0xCA3A] = 0xFF
+
+    def walk_from(start, d):
+        warp(p, mid, *start, settle=500)
+        adv(p, 60)
+        assert p.memory[MAP_ID] == mid
+        for _ in range(40):
+            p.button_press(d)
+            p.tick()
+        p.button_release(d)
+        adv(p, 30)
+        return p.memory[0xFF97], p.memory[0xFF98]
+    (ax, ay), d = info['approach']
+    got = walk_from((ax, ay), d)
+    assert got == info['cell'], f"walking {d} from {(ax, ay)}: at {got}, want {info['cell']}"
+    blocked = 0
+    for (x, y) in info['moved_cells']:
+        for dd, (dx, dy) in info['dirs'].items():
+            sx, sy = x - dx, y - dy
+            if not (0 <= sx <= 9 and 0 <= sy <= 7) or (sx, sy) == info['cell']:
+                continue
+            grid = s.renderer.layout_grid(s.renderer.screen_state(
+                s.doc.room(info['sid']), 0, 1)['layout'])[0]
+            thr_now = val(s.doc.room(info['sid'])['record']['collision_threshold'])
+            if grid[sy * 2 + 1][sx * 2 + 1] < thr_now:
+                continue                               # start cell is a wall
+            got = walk_from((sx, sy), dd)
+            assert got == (sx, sy), f'moved wall tile at {(x, y)} let the player in ({got})'
+            blocked += 1
+            break
+    # control: another wall cell next to open floor still blocks
+    room = s.doc.room(info['sid'])
+    grid = s.renderer.layout_grid(s.renderer.screen_state(room, 0, 1)['layout'])[0]
+    thr_now = val(room['record']['collision_threshold'])
+    ctrl = None
+    for y in range(1, 7):
+        for x in range(1, 9):
+            if (x, y) == info['cell'] or grid[y * 2 + 1][x * 2 + 1] >= thr_now:
+                continue
+            for dd, (dx, dy) in info['dirs'].items():
+                sx, sy = x - dx, y - dy
+                if (sx, sy) != info['cell'] and grid[sy * 2 + 1][sx * 2 + 1] >= thr_now:
+                    ctrl = ((sx, sy), dd, (x, y))
+                    break
+            if ctrl:
+                break
+        if ctrl:
+            break
+    assert ctrl, 'no control wall cell'
+    got = walk_from(ctrl[0], ctrl[1])
+    assert got == ctrl[0], f'control wall {ctrl[2]} let the player in ({got})'
+    print(f"OK: split moved down — cell {info['cell']} walkable in game; wall {ctrl[2]} still "
+          f"blocks; {blocked} wall cell(s) whose tile changed slot checked")
+    if keep_dir:
+        shutil.copy(res.rom_path, os.path.join(keep_dir, 'rom_tilesets.gbc'))
+    p.stop(save=False)
+
+
+def test_rom_v5(w, s, a_id, b_id, keep_dir=None):
+    """--rom: PyBoy — both doors both ways with the measured arrivals, the
+    examine spot answers only when faced from below, the step trigger fires
+    and sets its flag, the NPC's YES sets lab_flag and reloads room A in
+    state 1 (the rule), the one-way teleport lands where authored."""
+    from editor2.app.build_worker import BuildWorker
+    app = QApplication.instance()
+    results = []
+    worker = BuildWorker(REPO, s.project_dir)
+    worker.finished_build.connect(results.append)
+    worker.start()
+    worker.wait()
+    app.processEvents()
+    res = results[0]
+    assert res.ok, f'build failed: {res.error}'
+    man = json.load(open(os.path.join(os.path.dirname(res.rom_path), 'manifest.json')))
+    fl = {k: int(v.lstrip('$'), 16) for k, v in man['flags'].items()}
+    ctr = int(next(v for k, v in man['step_counters'].items() if k.endswith('_S0'))
+              .lstrip('$'), 16)
+    A, B = s.doc.room(a_id), s.doc.room(b_id)
+    ma, mb = val(A['mapID']), val(B['mapID'])
+    from tools.pyboy_harness import boot, to_bedroom, warp, adv, MAP_ID, flag
+    import tempfile as _t
+    p = boot(res.rom_path)
+    assert to_bedroom(p), 'scripted intro failed'
+    base = os.path.join(_t.mkdtemp(prefix='v5_'), 'bed.state')
+    with open(base, 'wb') as f:
+        p.save_state(f)
+
+    def fresh():
+        p.load_state(open(base, 'rb'))
+
+    def pos():
+        return p.memory[MAP_ID], p.memory[0xFF97], p.memory[0xFF98]
+
+    def walk(d, frames):
+        p.button_press(d)
+        for _ in range(frames):
+            p.tick()
+        p.button_release(d)
+        adv(p, 120)
+        return pos()
+
+    def tap(b, wait=40):
+        p.button_press(b)
+        adv(p, 3)
+        p.button_release(b)
+        adv(p, wait)
+
+    def text_id():
+        return p.memory[0xD8D9] | p.memory[0xD8DA] << 8
+
+    def tid(did):
+        return next(int(k.lstrip('$'), 16) for k, v in man['texts'].items() if v['id'] == did)
+    # 1. Library door -> A on its door cell (4,7); walking back onto it -> GreatTree (5,4)
+    fresh()
+    p.memory[0xD95C] = 0
+    warp(p, 0x01, 5, 16 + 4, settle=400)
+    assert walk('up', 20) == (ma, 4, 7), pos()
+    assert walk('up', 20) == (ma, 4, 6), pos()
+    assert walk('down', 20)[0] == 0x01 and pos()[1:] == (5, 16 + 3), \
+        f'back through door_1: {pos()} (want GreatTree screen 8 ON the door (5,3))'
+    y = p.memory[0xFF95] | p.memory[0xFF96] << 8
+    assert y % 16 == 8, f'arrival pixel y {y}: not a whole-tile position'
+    print('OK: door_1 — Library door -> A (4,7) on the door cell; back -> GreatTree ON the '
+          'Library door (5,3), whole-tile pixel position')
+    # 2. A (7,2) -> B arrives ON its door; step off and back on -> A, on (7,2)
+    fresh()
+    warp(p, ma, 7, 3, settle=400)
+    assert walk('up', 20) == (mb, *V5_B_DOOR), pos()
+    y = p.memory[0xFF95] | p.memory[0xFF96] << 8
+    assert y % 16 == 8, f'arrival pixel y {y}: not a whole-tile position (half a cell off)'
+    adv(p, 60)
+    assert walk('down', 20) == (mb, V5_B_DOOR[0], V5_B_DOOR[1] + 1), \
+        f'arriving on the door must not re-fire it: {pos()}'
+    assert walk('up', 20) == (ma, 7, 2), pos()
+    print(f'OK: door_2 — A (7,2) <-> B {V5_B_DOOR}: both ways, arriving ON the door cell '
+          '(no re-fire; step off and on to go back)')
+    # 3. examine spot: answers facing up from (1,2), not from the side
+    fresh()
+    warp(p, ma, V5_BOOK[0] + 1, V5_BOOK[1], settle=400)
+    walk('left', 3)
+    tap('a', 60)
+    assert not (p.memory[0xC8EB] & 1), 'examine spot answered while facing left'
+    fresh()
+    warp(p, ma, V5_BOOK[0], V5_BOOK[1] + 1, settle=400)
+    walk('up', 3)
+    tap('a', 60)
+    ex = next(v for v in (s.doc.npc_view(A, e) for e in s.doc.npc_entries(A, 0, 0))
+              if v['kind'] == 'examine')
+    want = tid(s.doc.script(ex['script'])['talk']['text'])
+    assert p.memory[0xC8EB] & 1 and text_id() == want, (hex(text_id()), hex(want))
+    for _ in range(4):
+        tap('a', 40)
+    assert flag(p, fl['book_read']), 'the examine spot set book_read after its text'
+    print('OK: examine spot — answers facing up only; its talk set book_read')
+    # 4. step trigger
+    fresh()
+    warp(p, ma, V5_STEP[0], V5_STEP[1] - 1, settle=400)
+    walk('down', 20)
+    assert p.memory[0xC8EB] & 1, 'step trigger did not open its text'
+    for _ in range(3):
+        tap('a', 40)
+    assert flag(p, fl['stepped']), 'step trigger set stepped'
+    print('OK: step-on trigger — walking onto it shows its text and sets its flag')
+    # 5. the question NPC: YES -> reply, lab_flag, reload -> state 1 by the rule
+    fresh()
+    warp(p, ma, *V5_NPC_STAND, settle=400)
+    assert p.memory[ctr] == 0
+    walk('up', 3)
+    tap('a', 90)
+    tap('up', 20)                        # cursor to YES ($C83C 0)
+    assert p.memory[0xC83C] == 0
+    tap('a', 30)
+    adv(p, 60)
+    tap('a', 30)                          # dismiss "Done!"
+    adv(p, 300)
+    assert flag(p, fl['lab_flag']), 'YES must set lab_flag'
+    assert p.memory[MAP_ID] == ma and pos()[1:] == V5_NPC_STAND, pos()
+    assert p.memory[ctr] == 1, f'reload must pick state 1 via the rule (counter {p.memory[ctr]})'
+    grid = s.renderer.layout_grid(s.renderer.screen_state(A, 0, 1)['layout'])[0]
+    vram = [[p.memory[0x9800 + r * 32 + c] for c in range(20)] for r in range(16)]
+    assert vram == [list(r) for r in grid], 'VRAM != state 1 grid after the reload'
+    print('OK: NPC YES — reply shown, lab_flag set, player moved -> room A reloads in state 1 '
+          '(rule), VRAM == state 1 canvas')
+    # 6. one-way teleport B -> A (5,5)
+    fresh()
+    warp(p, mb, V5_TELE[0], V5_TELE[1] - 1, settle=400)
+    assert walk('down', 20) == (ma, 5, 5), pos()
+    print('OK: one-way teleport B (8,6) -> A (5,5)')
+    if keep_dir:
+        shutil.copy(res.rom_path, os.path.join(keep_dir, 'rom_v5.gbc'))
+    p.stop(save=False)
+
+
 def test_all_clones():
     """--all-clones (S96): EVERY vanilla room clones ("Make editable"),
     every screen AND every valid state renders pixel-identical to vanilla,
@@ -1203,6 +1825,28 @@ def test_rom(project_dir, grids, keep_dir=None):
 
 def main():
     do_rom = '--rom' in sys.argv
+    if '--only-v5' in sys.argv:          # S98: fast path while iterating on v5
+        tmp = tempfile.mkdtemp(prefix='dwm_v5_')
+        keep = None
+        if '--out' in sys.argv:
+            keep = os.path.abspath(sys.argv[sys.argv.index('--out') + 1])
+            os.makedirs(keep, exist_ok=True)
+            tmp = keep
+        v5_dir = os.path.join(tmp, 'fresh_v5')
+        if os.path.exists(v5_dir):
+            shutil.rmtree(v5_dir)
+        w5, s5, a5, b5 = v5_round_trip(v5_dir)
+        test_compile(v5_dir)
+        tsd = os.path.join(tmp, 'fresh_tilesets')
+        if os.path.exists(tsd):
+            shutil.rmtree(tsd)
+        wts = tileset_sharing_check(tsd)
+        test_compile(tsd)
+        if do_rom:
+            test_rom_v5(w5, s5, a5, b5, keep)
+            test_rom_tilesets(wts, keep)
+        print('PASS (v5 only)')
+        return
     test_all_clones()
     keep = None
     if '--out' in sys.argv:
@@ -1232,11 +1876,23 @@ def main():
         shutil.rmtree(v4_dir)
     w4, s4, rid4, ti4, wi4 = v4_round_trip(v4_dir)
     test_compile(v4_dir)
+    v5_dir = os.path.join(tmp, 'fresh_v5')
+    if os.path.exists(v5_dir):
+        shutil.rmtree(v5_dir)
+    w5, s5, a5, b5 = v5_round_trip(v5_dir)
+    test_compile(v5_dir)
+    tsd = os.path.join(tmp, 'fresh_tilesets')
+    if os.path.exists(tsd):
+        shutil.rmtree(tsd)
+    wts = tileset_sharing_check(tsd)
+    test_compile(tsd)
     if do_rom:
+        test_rom_tilesets(wts, keep)
         test_rom(proj, grids, keep)
         test_rom_v2(w2, s2, rid, keep)
         test_rom_v3(w3, s3, rid3, keep)
         test_rom_v4(w4, s4, rid4, ti4, wi4, keep)
+        test_rom_v5(w5, s5, a5, b5, keep)
     if not keep:
         shutil.rmtree(tmp, ignore_errors=True)
     print('PASS')

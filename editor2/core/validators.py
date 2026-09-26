@@ -242,13 +242,10 @@ def validate(prj, generated=None):
             for v, st in enumerate(states):
                 _validate_state(prj, r, rid, i, v, st, len(states),
                                 errors, warnings)
-            spawn_seen = any(n.get('kind') == 'spawn'
-                             for n in states[0].get('npcs', []))
-            if not spawn_seen and i == min(screens):
-                warnings.append(f"room {rid} screen {i}: no spawn entry — "
-                                "entering from an exit still works (source "
-                                "exit supplies coords, KEY_LESSONS S4) but "
-                                "teleports need one")
+            # S98: no "spawn entry" requirement any more — the $8F "spawn"
+            # is an EXAMINE SPOT (PyBoy-measured); arrival always comes from
+            # the source exit / warp (KEY_LESSONS S4). A map_transition warp
+            # lands on its own pixel coords (PyBoy S98, no $8F in the room).
 
     _validate_layouts_tilesets(prj, errors, warnings)
 
@@ -395,6 +392,97 @@ def validate(prj, generated=None):
             errors.append(str(ex))
     warnings += sw
 
+    # ------------------------------------------------ talk scripts (S98)
+    by_did = {e.get('id'): e for e in prj._dialogue if e.get('id')}
+    for sid, sc in prj._scripts.items():
+        t = sc.get('talk')
+        if not t:
+            continue
+        ctx = f"script {sid} (talk)"
+
+        def _dlg(did, what):
+            if did and did not in by_did:
+                errors.append(f"{ctx}: {what} dialogue {did!r} not defined")
+            return by_did.get(did)
+        q = _dlg(t.get('text'), 'question' if t.get('question') else 'text')
+        if q is not None:
+            if t.get('question') and not q.get('choice'):
+                errors.append(f"{ctx}: a YES/NO talk needs its text to end in the "
+                              "choice box — dialogue 'choice': true ($E7 $F0)")
+            if not t.get('question') and q.get('choice'):
+                warnings.append(f"{ctx}: the text opens a YES/NO box but the talk "
+                                "has no question (the answer is ignored)")
+        for part in ('yes', 'no', 'then'):
+            b = t.get(part) or {}
+            d = _dlg(b.get('text'), f'{part} reply')
+            if d is not None and d.get('choice'):
+                warnings.append(f"{ctx}: the {part} reply opens another YES/NO box "
+                                "that nothing reads")
+            mv = b.get('move')
+            if mv:
+                try:
+                    dmid = prj.resolve_dest(mv.get('dest'))
+                    dr = prj.room_by_mid(dmid) if str(mv.get('dest', '')).startswith('room:') else None
+                    if dr is not None and int(mv.get('screen', 0)) not in prj.room_screens(dr):
+                        errors.append(f"{ctx}: {part}.move goes to screen {mv.get('screen')} "
+                                      f"which room {dr.get('id')} does not have")
+                except Exception as ex:
+                    errors.append(f"{ctx}: {part}.move: {ex}")
+
+    # ------------------------------------------------------ doors (S98)
+    # S98 r2: a door is a named OBJECT (exit rows on one cell sharing a
+    # `door` id); `link` names the partner object (custom id or vanilla
+    # `vdoor_MM_k_x_y`, whose redirect row carries `door`/`link`). An
+    # unconnected door has no dest and is not emitted. S98 r1 projects
+    # (two ends sharing one id, no `link`) are checked the old way.
+    cells, links, names, unlinked = {}, {}, {}, []
+    for r in rooms:
+        for k, s in prj.room_screens(r).items():
+            for st in (s.get('states') or [s]):
+                for e in st.get('exits', []):
+                    did = e.get('door')
+                    if not did:
+                        continue
+                    cells.setdefault(did, set()).add(
+                        ('room', F.val(r['mapID']), k, F.val(e['x']), F.val(e['y'])))
+                    names[did] = e.get('name') or did
+                    if e.get('link'):
+                        links[did] = e['link']
+                    if 'dest' not in e:
+                        unlinked.append((did, r.get('id'), k, F.val(e['x']), F.val(e['y'])))
+    for rd in prj.custom.get('entrance_redirects') or []:
+        did = rd.get('door')
+        if did:
+            cells.setdefault(did, set()).add(
+                ('vanilla', F.val(rd['mapID']), F.val(rd['screen']),
+                 F.val(rd['x']), F.val(rd['y'])))
+            names.setdefault(did, did)
+            if rd.get('link'):
+                links[did] = rd['link']
+    seen_unlinked = set()
+    for did, rid, k, x, y in unlinked:
+        if did not in seen_unlinked:
+            seen_unlinked.add(did)
+            warnings.append(f"door '{names[did]}' (room {rid} screen {k} ({x},{y})) is not "
+                            "connected to another door yet — it does nothing in game")
+    for did, es in sorted(cells.items()):
+        if did in links or did in seen_unlinked:
+            if len(es) != 1:
+                warnings.append(f"door '{names[did]}' sits on {len(es)} cells {sorted(es)} — "
+                                "a door object is one cell (a hand edit?)")
+            if did in links:
+                other = links[did]
+                if other not in cells:
+                    warnings.append(f"door '{names[did]}' is linked to {other!r}, which does "
+                                    "not exist")
+                elif links.get(other) != did:
+                    warnings.append(f"door '{names[did]}' leads to '{names.get(other, other)}' "
+                                    "but that door does not lead back")
+        elif len(es) != 2:
+            warnings.append(f"door {did}: {len(es)} end(s) {sorted(es)} — a door has "
+                            "exactly two (the editor keeps them paired; a hand edit "
+                            "may have broken the pair)")
+
     # ----------------------------------------------------------- palettes
     for pal in prj.palettes:
         rows = pal.get('colors_rgb555')
@@ -461,12 +549,35 @@ def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
             errors.append(f"{tag}: NPC/spawn at ({x},{y}) outside 10x8 walk "
                           "grid (ROOM_DATA_FORMAT scroll/walk grid)")
         if n['kind'] == 'spawn':
-            if F.val(n.get('script', 0)) != 0:
-                errors.append(
-                    f"{tag}: spawn entry script must be 0 — the interaction "
-                    "scan includes spawn entries; nonzero makes a 'ghost "
-                    "NPC' (KEY_LESSONS 'Spawn point NPC entry can be talked "
-                    "to')")
+            # S98: the legacy 'spawn' kind emits an $8F EXAMINE SPOT (PyBoy-
+            # measured, ROOM_DATA_FORMAT "Interact entries"): an A press on or
+            # facing the cell runs its script — script 0 = the room's ENTRY
+            # script (KEY_LESSONS 'ghost NPC'). Nothing reads it as a spawn.
+            if F.val(n.get('script', 0)) == 0:
+                warnings.append(
+                    f"{tag}: legacy 'spawn' marker at ({x},{y}) is an $8F "
+                    "examine spot (S98) — pressing A on or facing it re-runs the "
+                    "room's ENTRY script (index 0). It does not choose where the "
+                    "player appears (the exit does); delete it unless intended")
+        elif n['kind'] in ('examine', 'step'):
+            sid = n.get('script')
+            if sid in (None, 'none'):
+                errors.append(f"{tag}: {n['kind']} spot ({x},{y}) needs a script "
+                              "(byte 4 = the room's script index)")
+            elif isinstance(sid, int):
+                if not 0 <= sid <= 0xFF:
+                    errors.append(f"{tag}: {n['kind']} spot script index {sid} out of range")
+            else:
+                try:
+                    if prj.script_index(r, sid) == 0:
+                        warnings.append(
+                            f"{tag}: {n['kind']} spot ({x},{y}) runs script index 0 "
+                            "— the room's ENTRY script")
+                except Exception as e:
+                    errors.append(f"{tag}: {e}")
+            if n['kind'] == 'examine' and n.get('facing', 'any') not in F.EXAMINE_FACING:
+                errors.append(f"{tag}: examine facing must be one of "
+                              f"{sorted(F.EXAMINE_FACING)}")
         else:
             sid = n.get('script')
             if isinstance(sid, int):
@@ -523,21 +634,57 @@ def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
             continue
         if isinstance(dest, str) and dest.startswith('room:'):
             dr = prj.room_by_mid(dmid)
-            drec = dr.get('record')
-            d_single = (not drec) or F.val(drec['width_px']) <= 160
-            if d_single and (sb & 0x0F) != 0:
+            # S98: the low nibble IS the destination screen index on the 4x4
+            # grid ($2DE7 offsets) — screen 4 of a 1-wide, 2-high room is
+            # legal; the check is "does that screen exist" (KEY_LESSONS S40:
+            # a stale nibble stranded the player off-map)
+            dscreens = prj.room_screens(dr) if not dr.get('placeholder') else {}
+            if dscreens and (sb & 0x0F) not in dscreens:
+                errors.append(
+                    f"{tag}: exit to {F.hexb(dmid)} arrives on screen "
+                    f"{sb & 0x0F} (screen_byte {F.hexb(sb)}), which that room "
+                    "does not have — the player would land off-map (KEY_LESSONS S40)")
+        ex, ey = F.val(e.get('x')), F.val(e.get('y'))
+        edge = _edge_neighbour(prj, r, i, ex, ey)
+        if edge:
+            side, nb = edge
+            if side == 'bottom':
                 warnings.append(
-                    f"{tag}: exit to {F.hexb(dmid)} has screen_byte "
-                    f"{F.hexb(sb)} but the destination is single-width — "
-                    "low nibble should be $00 or the player spawns off-map "
-                    "(KEY_LESSONS S40)")
-        ty = F.val(e.get('y'))
-        if ty in (0, 7):
-            warnings.append(
-                f"{tag}: exit at trigger_y={ty} is a BOUNDARY exit (Entry 9 "
-                "path, walk-into-edge); it cannot coexist with a scroll "
-                "transition on that edge (KEY_LESSONS S10 Entry 6 vs "
-                "Entry 9)")
+                    f"{tag}: exit ({ex},{ey}) on the bottom row borders screen "
+                    f"{nb} — in a custom room a y=7 exit fires on WALK-ON, so "
+                    "the player can never walk down into that screen through "
+                    "this cell (S70v3 / S98)")
+            else:
+                warnings.append(
+                    f"{tag}: edge exit ({ex},{ey}) on the {side} edge never "
+                    f"fires — screen {nb} lies beyond that edge and pushing "
+                    "into it SCROLLS instead (PyBoy S98: x=9 exit + neighbour "
+                    "screen -> scroll; Entry 6 skips x=0/9 and y=0 rows)")
+
+
+def _edge_neighbour(prj, r, key, x, y):
+    """S98: ('left'|'right'|'top'|'bottom', neighbour screen) when an exit
+    cell sits on a screen edge that borders another screen of the room inside
+    the record's scroll area (the engine scrolls there), else None."""
+    try:
+        screens = prj.room_screens(r)
+    except Exception:
+        return None
+    rec = r.get('record') or {}
+    try:
+        cols = F.val(rec.get('width_px', 160)) // 160
+        rows = F.val(rec.get('height_px', 128)) // 128
+    except Exception:
+        cols = rows = 1
+    c, rw = key % 4, key // 4
+    for side, cond, dc, dr in (('left', x == 0, -1, 0), ('right', x == 9, 1, 0),
+                               ('top', y == 0, 0, -1), ('bottom', y == 7, 0, 1)):
+        if not cond:
+            continue
+        nc, nr = c + dc, rw + dr
+        if 0 <= nc < cols and 0 <= nr < rows and (nr * 4 + nc) in screens:
+            return side, nr * 4 + nc
+    return None
 
 
 def _validate_layouts_tilesets(prj, errors, warnings):

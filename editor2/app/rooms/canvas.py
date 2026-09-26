@@ -38,18 +38,38 @@ PAL_TINTS = [QColor(255, 80, 80, 70), QColor(80, 160, 255, 70),
              QColor(80, 220, 120, 70), QColor(255, 200, 60, 70),
              QColor(200, 100, 255, 70), QColor(60, 220, 220, 70),
              QColor(255, 130, 200, 70), QColor(200, 200, 200, 70)]
-MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(40, 230, 90),
+MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(255, 170, 40),
           'exit': QColor(255, 70, 70), 'walkon': QColor(255, 160, 40),
           'redirect': QColor(255, 0, 255), 'entrance': QColor(120, 255, 120),
-          'special': QColor(200, 200, 200)}
+          'special': QColor(200, 200, 200),
+          # S98 (P3.7): doors / examine spots / step-on triggers
+          'door': QColor(0, 230, 200), 'door_open': QColor(255, 150, 40),
+          'door_dead': QColor(255, 40, 40),
+          'examine': QColor(255, 210, 60),
+          'step': QColor(255, 140, 200)}
+MARKER_TEXT = {'spawn': 'X!', 'exit': '→', 'walkon': 'T', 'special': '?',
+               'redirect': 'R', 'entrance': 'IN', 'door': 'D', 'door_open': 'D?',
+               'door_dead': 'D!',
+               'examine': 'X',
+               'step': 'T'}
 SEL = QColor(255, 230, 0)
 
 
 def classify_npc(entry):
-    """project.json npcs[] entry -> (kind, x, y, sprite|None, label)."""
+    """project.json npcs[] entry -> (kind, x, y, sprite|None, label).
+    S98: bit-7 entries are EXAMINE spots ($8x) and STEP-ON triggers ($9x)
+    (PyBoy-measured); the legacy 'spawn' kind is an $8F examine spot."""
     k = entry.get('kind')
     if k == 'spawn':
-        return 'spawn', int(entry['x']), int(entry['y']), None, 'spawn point'
+        return ('spawn', int(entry['x']), int(entry['y']), None,
+                f"examine spot (legacy 'spawn' marker) → script {entry.get('script', 0)} "
+                "= the room ENTRY script")
+    if k == 'examine':
+        return ('examine', int(entry['x']), int(entry['y']), None,
+                f"examine spot ({entry.get('facing', 'any')}) → {entry.get('script')}")
+    if k == 'step':
+        return ('step', int(entry['x']), int(entry['y']), None,
+                f"step-on trigger → {entry.get('script')}")
     if k == 'npc':
         spr = val(entry.get('sprite', 0))
         beh = entry.get('behaviour', 'stand')
@@ -65,10 +85,12 @@ def classify_npc(entry):
             return ('npc', b[2], b[3], b[1],
                     f"NPC ${b[1]:02X} {F.FACING_NAMES[(t >> 4) & 3]} {beh}"
                     f"{' HIDDEN' if t & 0x40 else ''} script ${b[4]:02X}")
-        if t == 0x8F:
-            return 'spawn', b[2], b[3], None, 'spawn point'
-        if t == 0x90:
-            return 'walkon', b[2], b[3], None, f"walk-on exit → ${b[4]:02X}"
+        if t & 0xF0 == 0x80:
+            from editor2.core import formats as F
+            fac = F.EXAMINE_FACING_NAMES.get(t & 0x0F, f'${t & 0x0F:X}')
+            return 'examine', b[2], b[3], None, f"examine spot ({fac}) → script ${b[4]:02X}"
+        if t & 0xF0 == 0x90:
+            return 'step', b[2], b[3], None, f"step-on trigger → script ${b[4]:02X}"
         return 'special', b[2], b[3], None, f"special ${t:02X}"
     return 'special', int(entry.get('x', 0)), int(entry.get('y', 0)), None, '?'
 
@@ -178,6 +200,7 @@ class RoomCanvas(QGraphicsView):
     editRequested = Signal()                  # painting attempted on read-only
     toolChanged = Signal(str)
     markerMoveRequested = Signal(object, int, int)   # S97: marker ref, new cell
+    markerActivated = Signal(object)          # S98 r2: double-click on a marker
 
     TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk')
 
@@ -348,6 +371,19 @@ class RoomCanvas(QGraphicsView):
             x, y = val(rd['x']), val(rd['y'])
             self.markers = [m for m in self.markers
                             if not (m[0] == 'exit' and m[1] == x and m[2] == y)]
+            if rd.get('door') or rd.get('twin_of'):
+                did = rd.get('door') or rd.get('twin_of')
+                try:
+                    pn = self.s.doc.door_name(rd.get('link')) if rd.get('link') else rd['dest']
+                except Exception:
+                    pn = rd['dest']
+                self.markers.append(('door', x, y, None,
+                                     f"vanilla door ↔ '{pn}' (two-way)"
+                                     + (' — second cell of the double door'
+                                        if rd.get('twin_of') else '')
+                                     + ' — double-click to edit',
+                                     ('redirect', i, dict(rd, door=did))))
+                continue
             self.markers.append(('redirect', x, y, None,
                                  f"door ({x},{y}) REDIRECTED → {rd['dest']} "
                                  f"screen {val(rd['screen_byte']) & 0x0F} "
@@ -356,6 +392,8 @@ class RoomCanvas(QGraphicsView):
 
     def _mark_entrances(self, room):
         for i, rd in self.s.doc.redirects_to(room['id']):
+            if rd.get('door') or rd.get('twin_of'):
+                continue            # S98: the door's own end marker shows it
             if (val(rd['screen_byte']) & 0x0F) != self.key:
                 continue
             x, y = val(rd['spawn_x']), val(rd['spawn_y'])
@@ -371,8 +409,46 @@ class RoomCanvas(QGraphicsView):
             kind, x, y, spr, label = classify_npc(e)
             self.markers.append((kind, x, y, spr, label, ('npc', i, e)))
         for i, e in enumerate(st.get('exits', [])):
-            self.markers.append(('exit', int(e['x']), int(e['y']), None,
-                                 f"exit → {e.get('dest')}", ('exit', i, e)))
+            if e.get('door'):
+                # S98 r2: a named door OBJECT; orange 'D?' until connected
+                name = e.get('name') or e['door']
+                if e.get('dest'):
+                    try:
+                        pn = self.s.doc.door_name(e.get('link')) if e.get('link') else e['dest']
+                    except Exception:
+                        pn = e.get('dest')
+                    label = f"door '{name}' ↔ {pn} — double-click to edit"
+                else:
+                    label = f"door '{name}' — not connected yet: double-click to connect it"
+                kind = 'door' if e.get('dest') else 'door_open'
+                try:
+                    c = self.s.doc.edge_conflict(self.room, self.key, int(e['x']), int(e['y']))
+                except Exception:
+                    c = None
+                if c and c[0] != 'bottom':
+                    kind = 'door_dead'          # S98 r2: can never fire (edge scrolls)
+                    label = (f"door '{name}' — NEVER FIRES: the {c[0]} edge scrolls into "
+                             f"screen {c[1]}; drag it one cell in")
+                self.markers.append((kind, int(e['x']), int(e['y']), None, label, ('exit', i, e)))
+            else:
+                self.markers.append(('exit', int(e['x']), int(e['y']), None,
+                                     f"one-way exit → {e.get('dest')} screen "
+                                     f"{val(e.get('screen_byte', 0)) & 0x0F} "
+                                     f"({e.get('spawn_x')},{e.get('spawn_y')})",
+                                     ('exit', i, e)))
+
+    def select_marker(self, kind, index):
+        """Re-select the marker whose ref is (kind, index) — 'npc' or
+        'exit' (S98) — after a reload."""
+        self.selected_marker = None
+        for m in self.markers:
+            ref = m[5]
+            if ref and ref[0] == kind and ref[1] == index:
+                self.selected_marker = ref
+                self.selected_cell = (m[1], m[2])
+                break
+        self.viewport().update()
+        return self.selected_marker
 
     def select_npc(self, index):
         """Re-select the NPC entry `index` after a reload (marker refs are
@@ -489,10 +565,21 @@ class RoomCanvas(QGraphicsView):
                 painter.drawRect(rc.adjusted(0.5, 0.5, -0.5, -0.5))
                 if kind != 'npc':
                     painter.setFont(QFont('Menlo', 6))
+                    tag = MARKER_TEXT.get(kind, '?')
+                    tw = 4 + 4 * len(tag)
+                    painter.fillRect(QRectF(rc.center().x() - tw / 2, rc.center().y() - 4, tw, 8),
+                                     QColor(0, 0, 0, 170))
                     painter.setPen(col)
-                    painter.drawText(rc, Qt.AlignCenter,
-                                     {'spawn': 'S', 'exit': 'E', 'walkon': 'W', 'special': '?',
-                                      'redirect': 'R', 'entrance': 'IN'}[kind])
+                    painter.drawText(rc, Qt.AlignCenter, tag)
+                if kind in ('door', 'door_open', 'door_dead') and ref and isinstance(ref[2], dict) \
+                        and ref[2].get('name'):
+                    nm = str(ref[2]['name'])[:14]
+                    painter.setFont(QFont('Helvetica', 4))
+                    tw = 3 + 2.6 * len(nm)
+                    tr = QRectF(rc.center().x() - tw / 2, rc.top() - 6, tw, 6)
+                    painter.fillRect(tr, QColor(0, 0, 0, 190))
+                    painter.setPen(col)
+                    painter.drawText(tr, Qt.AlignCenter, nm)
                 if self.selected_marker is ref:
                     pen = QPen(SEL)
                     pen.setCosmetic(True)
@@ -502,6 +589,7 @@ class RoomCanvas(QGraphicsView):
                     painter.drawRect(rc.adjusted(-1, -1, 1, 1))
         if self.layers['markers']:
             self._draw_npc_extras(painter)
+            self._draw_door_arrival(painter)
         if self.selected_cell and self.selected_marker is None:
             cx, cy = self.selected_cell
             pen = QPen(SEL)
@@ -528,6 +616,35 @@ class RoomCanvas(QGraphicsView):
             painter.setBrush(Qt.NoBrush)
             painter.drawRect(QRectF(cx * CELL, cy * CELL, CELL, CELL).adjusted(0.5, 0.5, -0.5, -0.5))
         painter.restore()
+
+    def _draw_door_arrival(self, painter):
+        """S98: for the selected door, the cell where the player appears
+        when he comes through its PARTNER (green, dashed) — the half-cell
+        'step out of the doorway' arrival lands on the cell below."""
+        ref = self.selected_marker
+        if not ref or ref[0] != 'exit' or not isinstance(ref[2], dict) or \
+                not ref[2].get('door') or self.room is None:
+            return
+        try:
+            p = self.s.doc.door_partner(ref[2]['door'])
+        except Exception:
+            return
+        if p is None or not p.get('row'):
+            return
+        row = p['row']
+        sb = val(row.get('screen_byte', 0))
+        if (sb & 0x0F) != self.key:
+            return
+        ax, ay = val(row['spawn_x']), val(row['spawn_y'])
+        if sb & 0x80:
+            ay += 1
+        pen = QPen(QColor(120, 255, 120))
+        pen.setCosmetic(True)
+        pen.setStyle(Qt.DashLine)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.setBrush(QBrush(QColor(120, 255, 120, 50)))
+        painter.drawRect(QRectF(ax * CELL + 2, ay * CELL + 2, CELL - 4, CELL - 4))
 
     def _draw_npc_extras(self, painter):
         """S97: facing ticks on every NPC; the selected NPC's walk path
@@ -678,8 +795,10 @@ class RoomCanvas(QGraphicsView):
             self.selected_marker = m[5] if m else None
             self.selected_cell = cell
             # S97: NPC / spawn markers of an editable custom room drag to move
-            if (m and m[0] in ('npc', 'spawn') and not self.is_vanilla()
-                    and m[5] and m[5][0] == 'npc'):
+            # S98: doors, one-way exits and examine/step spots too
+            if (m and m[0] in ('npc', 'spawn', 'examine', 'step', 'door', 'door_open',
+                               'door_dead', 'exit')
+                    and not self.is_vanilla() and m[5] and m[5][0] in ('npc', 'exit')):
                 self._drag = [m[5], cell, cell]
             self.viewport().update()
             if m:
@@ -706,6 +825,20 @@ class RoomCanvas(QGraphicsView):
             self.viewport().update()
         elif self.tool == 'fill':
             self._flood(cell)
+
+    def mouseDoubleClickEvent(self, ev):
+        """S98 r2: double-click a marker = edit it (a door: name +
+        connection)."""
+        if ev.button() != Qt.LeftButton:
+            return super().mouseDoubleClickEvent(ev)
+        self._drag = None
+        m = self._marker_at(self._cell_at(ev.position().toPoint()))
+        if m:
+            self.selected_marker = m[5]
+            self.selected_cell = (m[1], m[2])
+            self.viewport().update()
+            self.markerActivated.emit({'kind': m[0], 'x': m[1], 'y': m[2],
+                                       'sprite': m[3], 'label': m[4], 'ref': m[5]})
 
     def mouseMoveEvent(self, ev):
         pos = ev.position().toPoint()

@@ -41,6 +41,10 @@ class Inspector(QWidget):
     routeDoorRequested = Signal(object)        # vanilla door preset dict
     tilesetChangeRequested = Signal()          # S96
     addNpcRequested = Signal(object)           # (cx, cy)  S97
+    addDoorRequested = Signal(object)          # (cx, cy)  S98
+    addSpotRequested = Signal(object, str)     # (cx, cy), 'examine'|'step'  S98
+    removeDoorRequested = Signal(str)          # door id  S98
+    goDoorRequested = Signal(str)              # door id: select its end here  S98
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -106,23 +110,32 @@ class Inspector(QWidget):
         f.addRow(self.r_note)
         self.lay.addWidget(g)
 
-        # ---- Entrances (S94b redirects)
-        g = QGroupBox('Entrances — how the player gets here')
+        # ---- Doors & entrances (S94b redirects, S98 doors)
+        g = QGroupBox('Doors & entrances — how the player gets here')
         v = QVBoxLayout(g)
         self.redirect_list = QListWidget()
-        self.redirect_list.setMaximumHeight(90)
+        self.redirect_list.setMaximumHeight(110)
         self.redirect_list.setToolTip(
-            'Vanilla doors routed into this room (custom.entrance_redirects). '
-            'Walk through that door in-game to test the room.')
-        self.redirect_none = _lbl('No entrance yet — this room is reachable only by '
-                                  'warp. Route a vanilla door here to test it in-game.')
+            'This room\'s doors (and what each is connected to), and vanilla doors routed '
+            'one-way into it. Double-click a door to show it.')
+        self.redirect_list.itemDoubleClicked.connect(self._go_item)
+        self.redirect_none = _lbl('No door leads here yet — this room is reachable only by '
+                                  'warp. Select a cell and press + Door (D), then double-click '
+                                  'the door to connect it (a vanilla door is the quickest '
+                                  'in-game test).')
         self.redirect_none.setStyleSheet('color: #e0b040;')
         row = QHBoxLayout()
-        self.btn_add_redirect = QPushButton('Route a vanilla door here…')
+        self.btn_add_redirect = QPushButton('One-way from a vanilla door…')
+        self.btn_add_redirect.setToolTip('Re-point a vanilla door into this room WITHOUT a way '
+                                         'back (S94b). For two-way, add a door here (+ Door) '
+                                         'and connect it to the vanilla door.')
         self.btn_add_redirect.clicked.connect(self.addRedirectRequested.emit)
+        self.btn_go_redirect = QPushButton('Show')
+        self.btn_go_redirect.clicked.connect(lambda: self._go_item(self.redirect_list.currentItem()))
         self.btn_del_redirect = QPushButton('Remove')
         self.btn_del_redirect.clicked.connect(self._remove_redirect)
         row.addWidget(self.btn_add_redirect)
+        row.addWidget(self.btn_go_redirect)
         row.addWidget(self.btn_del_redirect)
         v.addWidget(self.redirect_none)
         v.addWidget(self.redirect_list)
@@ -167,7 +180,7 @@ class Inspector(QWidget):
         g = QGroupBox('Selection')
         v = QVBoxLayout(g)
         self.sel_title = _lbl('Nothing selected — use the Select tool (V) and '
-                              'click an NPC / spawn / exit marker.')
+                              'click a cell, an NPC, a door or a spot.')
         self.sel_tree = QTreeWidget()
         self.sel_tree.setHeaderLabels(['field', 'value'])
         self.sel_tree.setRootIsDecorated(False)
@@ -178,13 +191,37 @@ class Inspector(QWidget):
         self.sel_route.clicked.connect(self._route_selected)
         self.sel_route.setVisible(False)
         self._sel_door = None
-        self.sel_add_exit = QPushButton('Add exit at this cell…')
+        # S98: what can be placed on a cell (the rare ones under "More")
+        from PySide6.QtWidgets import QMenu, QToolButton
+        self.sel_add_npc = QPushButton('Add NPC here…')
+        self.sel_add_npc.clicked.connect(self._add_npc_here)
+        self.sel_add_door = QPushButton('Add door here')
+        self.sel_add_door.setToolTip('Puts a door on this cell (D). Double-click it to name it '
+                                     'and connect it to another door.')
+        self.sel_add_door.clicked.connect(lambda: self._emit_cell(self.addDoorRequested))
+        self.sel_add_spot = QPushButton('Add examine spot here…')
+        self.sel_add_spot.setToolTip('Invisible: answers an A press on / facing this cell '
+                                     '(signs, bookshelves, searchable things).')
+        self.sel_add_spot.clicked.connect(lambda: self._emit_spot('examine'))
+        self.sel_more = QToolButton()
+        self.sel_more.setText('More ▾')
+        self.sel_more.setPopupMode(QToolButton.InstantPopup)
+        m = QMenu(self.sel_more)
+        m.addAction('One-way teleport here…', self._add_exit_here)
+        m.addAction('Step-on trigger here…', lambda: self._emit_spot('step'))
+        self.sel_more.setMenu(m)
+        self.sel_add_row = QWidget()
+        ar = QHBoxLayout(self.sel_add_row)
+        ar.setContentsMargins(0, 0, 0, 0)
+        for w in (self.sel_add_npc, self.sel_add_door, self.sel_add_spot, self.sel_more):
+            ar.addWidget(w)
+        ar.addStretch(1)
+        self.sel_add_row.setVisible(False)
+        # kept for callers of the S95 API (hidden; "More" holds the teleport)
+        self.sel_add_exit = QPushButton('One-way teleport here…')
         self.sel_add_exit.clicked.connect(self._add_exit_here)
         self.sel_add_exit.setVisible(False)
         self._sel_cell = None
-        self.sel_add_npc = QPushButton('Add NPC here…')
-        self.sel_add_npc.clicked.connect(self._add_npc_here)
-        self.sel_add_npc.setVisible(False)
         self.sel_del_exit = QPushButton('Delete this exit')
         self.sel_del_exit.clicked.connect(self._del_exit)
         self.sel_del_exit.setVisible(False)
@@ -192,8 +229,7 @@ class Inspector(QWidget):
         v.addWidget(self.sel_title)
         v.addWidget(self.sel_tree)
         v.addWidget(self.sel_route)
-        v.addWidget(self.sel_add_npc)
-        v.addWidget(self.sel_add_exit)
+        v.addWidget(self.sel_add_row)
         v.addWidget(self.sel_del_exit)
         v.addWidget(self.sel_note)
         self.lay.addWidget(g)
@@ -323,25 +359,49 @@ class Inspector(QWidget):
             combo.addItem(f'copy from vanilla ${mid:02X} {name}', ('vanilla', mid))
 
     def show_entrances(self, doc, renderer, room):
+        from PySide6.QtWidgets import QListWidgetItem
+        from editor2.app.rooms.object_panels import describe_end
         self.entr_group.setVisible(not room.get('placeholder'))
         self.redirect_list.clear()
+        n = 0
+        from editor2.app.rooms.door_dialog import end_place
+        for end in doc.doors_touching(room['id']):
+            p = doc.door_partner(end['id'])
+            if end['kind'] == 'room':
+                txt = (f"'{end['name']}' screen {end['screen']} ({end['x']},{end['y']})  ↔  "
+                       + (f"'{p['name']}' ({end_place(doc, p)})" if p else 'not connected'))
+            else:
+                txt = f"{end_place(doc, end)}  ↔  '{p['name'] if p else '?'}'"
+            it = QListWidgetItem(txt)
+            it.setData(Qt.UserRole, ('door', end['id']))
+            self.redirect_list.addItem(it)
+            n += 1
         reds = doc.redirects_to(room['id'])
         for i, rd in reds:
+            if rd.get('door'):
+                continue
             try:
                 name = renderer.vanilla_name(val(rd['mapID']))
             except Exception:
                 name = f"${val(rd['mapID']):02X}"
-            it_text = (f"{name} screen {val(rd['screen'])} door "
-                       f"({val(rd['x'])},{val(rd['y'])})  →  screen "
-                       f"{val(rd['screen_byte']) & 0x0F} cell "
-                       f"({val(rd['spawn_x'])},{val(rd['spawn_y'])})")
-            from PySide6.QtWidgets import QListWidgetItem
-            it = QListWidgetItem(it_text)
-            it.setData(Qt.UserRole, i)
+            it = QListWidgetItem(f"one-way: {name} screen {val(rd['screen'])} door "
+                                 f"({val(rd['x'])},{val(rd['y'])})  →  screen "
+                                 f"{val(rd['screen_byte']) & 0x0F} cell "
+                                 f"({val(rd['spawn_x'])},{val(rd['spawn_y'])})")
+            it.setData(Qt.UserRole, ('redirect', i))
             self.redirect_list.addItem(it)
-        self.redirect_none.setVisible(not reds)
-        self.redirect_list.setVisible(bool(reds))
-        self.btn_del_redirect.setEnabled(bool(reds))
+            n += 1
+        self.redirect_none.setVisible(not n)
+        self.redirect_list.setVisible(bool(n))
+        self.btn_del_redirect.setEnabled(bool(n))
+        self.btn_go_redirect.setEnabled(bool(n))
+
+    def _go_item(self, it):
+        if it is None:
+            return
+        d = it.data(Qt.UserRole)
+        if d and d[0] == 'door':
+            self.goDoorRequested.emit(d[1])
 
     def show_screen(self, doc, renderer, room, key, state_idx):
         if str(key) not in room.get('screens', {}):
@@ -409,8 +469,7 @@ class Inspector(QWidget):
             return
         cx, cy = cell
         self._sel_cell = cell
-        self.sel_add_exit.setVisible(bool(editable))
-        self.sel_add_npc.setVisible(bool(editable))
+        self.sel_add_row.setVisible(bool(editable))
         self.sel_title.setText(f'Cell ({cx},{cy})')
         for name, t in zip(('top-left', 'top-right', 'bottom-left', 'bottom-right'),
                            mt['tiles']):
@@ -423,19 +482,15 @@ class Inspector(QWidget):
     def show_selection(self, sel, editable=False):
         self.sel_tree.clear()
         self.sel_route.setVisible(False)
-        self.sel_add_exit.setVisible(False)
-        self.sel_add_npc.setVisible(False)
+        self.sel_add_row.setVisible(False)
         self.sel_del_exit.setVisible(False)
         if self.npc is not None:
             self.npc.setVisible(False)
         self._sel_door = None
         self._sel_exit_idx = None
-        if sel and sel['kind'] == 'exit' and editable and not self._vanilla_view:
-            self._sel_exit_idx = sel['ref'][1]
-            self.sel_del_exit.setVisible(True)
         if not sel:
-            self.sel_title.setText('Nothing selected — click a cell or an NPC / '
-                                   'spawn / exit marker with the Select tool (V).')
+            self.sel_title.setText('Nothing selected — click a cell, an NPC, a door or a '
+                                   'spot with the Select tool (V).')
             self.sel_note.setText('')
             return
         if sel['kind'] in ('exit', 'redirect') and self._vanilla_view:
@@ -443,8 +498,9 @@ class Inspector(QWidget):
             self._sel_door = {'mapID': mid, 'screen': key,
                               'x': sel['x'], 'y': sel['y']}
             self.sel_route.setVisible(True)
-        self.sel_note.setText('' if sel['kind'] == 'npc' else
-                              'Exit fields become editable in P3.7 (doors).')
+        self.sel_note.setText('' if sel['kind'] in ('npc', 'door', 'exit', 'examine', 'step',
+                                                     'spawn') else
+                              'Edit it in the Object section below.')
         self.sel_title.setText(f"{sel['label']}  at cell ({sel['x']},{sel['y']})")
         _kind, idx, entry = sel['ref']
         for k, v in entry.items():
@@ -457,8 +513,13 @@ class Inspector(QWidget):
     def _remove_redirect(self):
         it = self.redirect_list.currentItem() or (
             self.redirect_list.item(0) if self.redirect_list.count() else None)
-        if it is not None:
-            self.removeRedirectRequested.emit(it.data(Qt.UserRole))
+        if it is None:
+            return
+        kind, v = it.data(Qt.UserRole)
+        if kind == 'door':
+            self.removeDoorRequested.emit(v)
+        else:
+            self.removeRedirectRequested.emit(v)
 
     def _route_selected(self):
         if self._sel_door:
@@ -473,6 +534,14 @@ class Inspector(QWidget):
     def _add_npc_here(self):
         if self._sel_cell is not None:
             self.addNpcRequested.emit(tuple(self._sel_cell))
+
+    def _emit_cell(self, sig):
+        if self._sel_cell is not None:
+            sig.emit(tuple(self._sel_cell))
+
+    def _emit_spot(self, kind):
+        if self._sel_cell is not None:
+            self.addSpotRequested.emit(tuple(self._sel_cell), kind)
 
     def _add_exit_here(self):
         if self._sel_cell is not None:

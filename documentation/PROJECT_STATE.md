@@ -10,11 +10,88 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-09-26 (Session 98 — **rooms group C = ROADMAP P3.7:
+> DOOR OBJECTS, one-way teleports, EXAMINE spots + STEP-ON triggers, TALK
+> scripts that set flags, World graph v0 — plus a user-driven round of
+> tileset / walkability tools** (user: "Let's finish room work"; "mostly
+> two-way but I want the option of having a one-way teleport … a separate,
+> rare object"; "happy with state rules as long as they're flexible
+> enough"; "I just need the flag system to work so I can make an NPC set a
+> flag"; P3.4 PyBoy preview left aside). S97 USER-CONFIRMED at session
+> start ("Can confirm s97 pass"). **User-tested in part 2026-09-26:** doors
+> in the user's own project work both ways ("Works now") and arrive ON the
+> door ("Its now fixed"); walkability flip / purge used on the user's
+> project. **Built, NOT yet user-tested:** talk scripts (YES/NO, flags,
+> move), examine / step spots in game, World tab. Verifier PASS 6/6; clean
+> `1ca6579…` byte-perfect (bank $0B/$01/$06 renames + comments, both
+> trees); **patched pin UNCHANGED `ce24de8b…` (patched)** — no engine,
+> template or example-project bytes changed; test_compiler --rom 97/97;
+> test_app --rom PASS (GUI build == pin); test_canvas --rom PASS (v5 doors
+> / spots / talk / teleport + the tileset checks, pixel-position arrival).
+> `EDITOR_REVISION` = 'S98r3'. Test ROMs (all patched): demo
+> `DWM-S98r3-doors-test.gbc` md5 `72cd22fe…` (GreatTree 2F Library door ⇄
+> "Door Lab": examine book facing up, step-on tile, YES/NO NPC that sets
+> `lab_flag` and reloads the room in its rule state ⇄ Room B with a one-way
+> teleport back; earlier builds `56e407cf…` r1 / `e55b0651…` r2 are
+> historical); the user's own project `my-dwm-hack-S98r3-doors.gbc` md5
+> `2537a593…` (patched).
+>
+> **Measured (Iron Rule 6 annotation same session; ROOM_DATA_FORMAT
+> "Interact entries ≥$80" + "Arrival and edge rules"; DOC_AUDIT S98):**
+> the "$8F spawn point" never existed — `$80-$83/$8F` are EXAMINE spots
+> (A press on the own or faced cell; low nibble = required facing, F =
+> any), `$90` is a STEP-ON trigger (walk onto the cell; not on arrival);
+> byte 4 = a room script index; both bank-$0B scans STOP at the first NPC
+> entry (spots must precede NPCs — vanilla 157/160; `$1F`'s trailing
+> `$81` is dead). Arrival = the exit row's bytes 4-6 only; arriving on an
+> exit cell never re-fires it; screen-byte bit 7 = +8 px = drawn HALF A
+> CELL below (pixel-measured r3: vanilla Library → GreatTree `$88` lands at
+> y=320, standing positions are ≡ 8 mod 16); x=0/9 / y=0 exits bordering
+> another screen never fire (the push scrolls); a custom y=7 exit blocks
+> scrolling down. MapTransitionFull takes absolute pixel coordinates;
+> YES/NO answer in `$C83C` (0 YES / 1 NO). Labels:
+> `RoomEntry4_TalkTargetLookup`, `RoomEntry5_StepTriggerLookup`,
+> `SearchStepTriggers`, `InteractEntryAtPos`, `TalkScanNPCSlots`,
+> `NPCSlotAtPos`, `TalkScanExamineSpots`, `ExamineSpotMatch`.
+>
+> **Compiler (PROJECT_COMPILER §2.14):** `examine` / `step` npc kinds
+> (emitted before NPCs); door OBJECTS = exit rows with `door` + `name` +
+> `link` (vanilla doors `vdoor_MM_k_x_y` via tagged `entrance_redirects`,
+> `twin_of` for double doors), an unconnected door emits nothing (warning);
+> `talk` scripts (text, optional `question`, then / yes / no blocks with
+> `text`, `set`, `clear`, `move`) lowered to ops; validators: spawn-script-0
+> warning replaces the spawn error/warning, exit to a missing destination
+> screen = error, edge-vs-scroll warnings, talk and door-link checks.
+>
+> **Editor (EDITOR_DESIGN §5.1 "S98 additions" + "S98 r2" bullets, §5.8):**
+> round 1 built pair-doors through a coordinate dialog; the user called it
+> "bad design" → **round 2/3 (the user's design):** select a cell →
+> **+ Door (D)** puts an unconnected named door there; double-click → name
+> + connect to any door object (yours in any room, or a vanilla door) from
+> a searchable list — no coordinates; links two-way; delete leaves the
+> partner unconnected; doors arrive ON the partner door (whole tile —
+> user: "You arrive on tile fully always"); doors on a scrolling edge are
+> refused / drawn red **D!**; **+ Examine (X)**; double-click an NPC / spot
+> = edit its talk; talk editor with Ask YES/NO and per-answer say / flags
+> ON / OFF / move; More ▾ → one-way teleport / step-on trigger; World tab.
+> Tiles (user reports): the Walk toggle = walkability mode, refused flips
+> say why (silent since S95); copied rooms get their OWN tileset copy
+> ("stop sharing by default"), a shared sheet is flagged with "Give this
+> room its own copy"; a full walkable side offers moving the wall/walkable
+> split down one slot (asked; PyBoy: the cell walks, a control wall blocks,
+> screen pixel-identical); Tileset tab **Purge unused borrowed / own**
+> (user project: 15 unplaced borrowed metatiles held 30 walkable slots).
+> Rect / Fill off the tool bar. S98 r1 projects migrate on open (door
+> pairs → linked objects; step-out arrivals → on-door). Door-arrival STATE
+> (S97 carry-over) closed by user decision: state rules keyed on a flag
+> the talk sets. Signposted for next session at the user's request:
+> **ROADMAP P3.3e animated tiles**. Residuals: ROADMAP P3.7.
+
 > Last verified: 2026-09-25 (Session 97 — **rooms group B: P3.5a flag
 > STATE RULES + P3.5 NPC INSPECTOR, with the NPC behaviour engine decoded**
 > (user: "all of B"; rule terms AND-ed — "Flag A set and Flag B set but C
-> NOT set"; door-arrival state moved to P3.7). Built S97, **NOT yet
-> user-tested.** Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $06
+> NOT set"; door-arrival state moved to P3.7). Built S97; **USER-CONFIRMED
+> 2026-09-26** (S98 start: "Can confirm s97 pass" — r1 + r2). Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $06
 > jump tables re-sectioned + bank $00B/$01/$06 comments, both trees);
 > **patched pin MOVED `5db25d15…` → `6e97fd37…` (patched)** — hand-staged
 > patches/ == compiler build == GUI build (`--apply`'d); test_compiler
@@ -68,7 +145,7 @@
 > named-flag pool is 16 flags; walkers ignore walls (warned); sprite-sheet
 > budget still a count warning.
 >
-> **S97 round 2 (user test of r1: 4 issues; built, NOT yet user-tested).**
+> **S97 round 2 (user test of r1: 4 issues; USER-CONFIRMED 2026-09-26).**
 > Patched pin MOVED again `6e97fd37…` → **`ce24de8b…` (patched)**; test ROM
 > `DWM-S97-r2-textbox-test.gbc` (patched, md5 `02c05364…`, the r1 demo with
 > own-colour-1 palettes in the zoo (magenta) and the servant room (green)).
@@ -96,116 +173,8 @@
 > **Still true: nothing in the editor SETS a flag yet** (script ops only) —
 > a new flag stays clear in game until a script sets it.
 
-> Last verified: 2026-09-25 (Session 96 — **"Finish out the rooms stuff":
-> group A = tiles & tilesets — P3.3c slot map + vocabulary release, tileset
-> switching / blank sheets, the IMPORT ART tab (DWM2 PNG rips → room tiles,
-> palettes, metatiles, stamped screens), per-subtile metatile palettes,
-> bank space meters — and "Make editable" fixed for ALL 98 vanilla rooms.**
-> Round 1 changed no patch bytes (bank_004 patch/disassembly gained
-> comments + alias labels only — clean build `1ca6579…` byte-perfect), example
-> project regrouped (same words — pin `fc1caa98…` held); round 2 added the
-> FreeColor1Hook engine patch (pin → `07a71f20…`, patched, see below);
-> verify_integrity PASS 6/6 (check 5 now also selftests the new opcode
-> arity table); test_canvas --rom PASS incl. v3 + the all-clones sweep.
-> Round 4 (menu fix) moved the pin to `5db25d15…` (patched). **USER-CONFIRMED
-> 2026-09-25** ("Everything works"). Test ROM: `DWM-S96-pei-import-test.gbc`
-> (patched, md5 `f3d45a42…` round 1, superseded by `fe5f3f9d…` round 2 and
-> `023b7c65…` round 4 — all historical) — the GreatTree 2F Library door leads into DWM2 Pei imported
-> from the user's PNG (6 screens, 87 slots, auto-marked walls); an exit on
-> the left path returns to GreatTree 2F. PyBoy: door → Pei at the authored
-> cell, VRAM == canvas, walls block, scroll between screens, exit returns.
->
-> **Built (owning: EDITOR_DESIGN §5.1 "S96 additions"; PROJECT_COMPILER
-> §2.11 S96 notes + §11; TOOLS_AND_DATA S96 rows):**
-> - **Tileset tab (P3.3c):** 128-slot map (placed / my metatiles /
->   vocabulary / released / animated / free, changed-graphic dot, threshold
->   line, hover users, click = canvas highlight), per-side free counts
->   everywhere, "Release unused vocabulary" (persisted `_editor.
->   released_vocab`), picker flags. Vocabulary now DERIVED from the source
->   room (`Document.tile_usage`), not session-registered — which also fixes
->   a latent hole: the first import after localizing a sheet did not
->   protect the vocabulary.
-> - **Change tileset** (vanilla / project / new blank) + New room "blank
->   tileset"; `Document.set_room_tileset`, `new_blank_tileset`,
->   `tileset_origin`.
-> - **Import art tab** (`editor2/core/png_import.py` + `app/import_tab.py`):
->   the user's spec — open PNG, per-panel grid (auto from each panel's
->   corner; nudge with arrows; Auto-align), mask, walls (same tile
->   everywhere), key colours, palette fit to 4 slots under the engine rule
->   (colour 1 cream / 3 black forced → two free colours per slot; DWM2 art
->   has three, the one nearest cream is folded), "keep" slots, "Show as
->   GBC", budget, Add to My metatiles, Stamp with spill onto new screens.
->   `Document.import_png_cells` reuses identical graphics, keeps wall BRs
->   below / walkable BRs above the threshold, fails before writing.
-> - **Metatile `pal` per subtile** (int or list of 4): 7.5% of vanilla
->   cells mix slots; painting them used to flatten them.
-> - **Space meters** $60/$64/$67/$71 (`compiler.measure_banks`).
->
-> **Found + fixed (DOC_AUDIT S96; KEY_LESSONS S96):** cloning was broken for
-> most vanilla rooms — `extract_room.py` read every room's scripts from bank
-> `$0D` (clones of Castle/GreatTree/Farm… carried filler), parsed only 8
-> attr screen slots (GreatTree → KeyError 8), and used decompile_script's
-> opcode arity, wrong for 36 opcodes; the command table has **102** rows
-> (`$64` BranchIfPartyHealthy, `$65` WaitDD80), not 100. New
-> `tools/script_param_counts.py` derives every opcode's arity from the bank-
-> $04 handler code (counter increments per path; tails $55F5 / $7212 /
-> ret) → `extracted/script_param_counts.json`, used by extract_room,
-> compile_script, decompile_script and scriptgen; bank_004 catalog
-> annotated in both copies. Clones also get per-screen step-0 palettes
-> (Labyrinth screen 1), and screens outside the record's scroll area are a
-> warning (vanilla sub-room screens). Result: 98/98 rooms clone, 211
-> screens / 526 states pixel-identical, every clone compiles; nine clones
-> (Castle, GreatTree, Bazaar, Farm, Arena Lobby, Starry Shrine, Library,
-> Healer boss, Labyrinth) load and render in PyBoy with VRAM == canvas.
->
-> **S96 round 2 (user feedback on the intermediate files — "imports
-> perfectly", "GreatTree make-editable works, copying, teleporting"):**
-> - **Own colour 1 (engine, byte-changing):** the forced cream is bank $17
->   `LoadPal_4102` copying system slot 7's colours 1/3 into slots 0-6 at
->   palette load (GATE_GENERATION §7.1). `FreeColor1Hook` (same-size jp +
->   bank-tail code) skips slots 0-3 for custom rooms whose palette carries a
->   bit-15 marker in slot 0 colour 3 (`free_color1` in project.json; no
->   vanilla palette sets it). Import tab defaults to it (Pei: 1417/1440
->   subtiles exact vs 632). **Reference patched pin → `07a71f20…`**
->   (test_compiler 61/61, test_app --rom == pin, example rooms' palette RAM
->   unchanged in PyBoy). User SameBoy test FAILED the menu (washed out
->   after closing) → fixed in round 4 below.
-> - Right panel: foldable sections in a vertical splitter; palettes show
->   slots 0-3 by default. Import list: "Remove" + tooltips (every opened PNG
->   stays in the project).
-> - Test ROM `DWM-S96-pei-import-test.gbc` rebuilt with own colour 1
->   (patched md5 `fe5f3f9d…`).
-> **Round 3 (user):** "not enough free tileset slots in ts_24_00" (a Servant
-> clone's sheet already full of earlier imports) → the import no longer binds
-> unmarked cells to the walkable side (walkability is the author's; strict
-> mode optional), the tab offers "New room…" (blank tileset) and the error
-> names release / blank-tileset; foldable right panel "not visible" = the
-> delivery folder rsync'd without a trailing slash (landed in a subfolder)
-> → `EDITOR_REVISION` now shows in the title bar and build log.
-> **User result 2026-09-25: "Great job. Everything works."** — rounds 1-4 of
-> group A USER-CONFIRMED (menu / battle return in a free-colour room included).
->
-> **Round 4 (user SameBoy report: "opening menu then going back … everything
-> becomes blinding white … permanently, including when screen shifting";
-> "coloured background squares as it opens"):** reproduced in PyBoy (a
-> legitimate menu needs a non-empty party — `give_party_monster` — the
-> old "hijacked state cannot open menus" note was just an empty party).
-> Cause 1: the field menu calls `LoadPal_4102` standalone (via $17 entry 6)
-> and nothing reloads the room palette on close; round 2's marker was
-> cleared by the first load, so the menu re-forced cream into slots 0-3 for
-> good. Cause 2: the menu blanks the BG to tile $E0 (colour 1) under the
-> room's attrs for ~8 frames before its palette-7 attr fill. Fix: per-slot
-> markers that survive in the buffer (FreeColor1Hook) + bank $06 A-press
-> tail same-size far call to bank $73 entry 13 `MenuOpenFreePal` (hardware
-> colour 1 := cream for marked slots; the close push restores). PyBoy:
-> cream wipe, own colours after close, after INFO sub-pages, screen
-> scrolls and a won battle; vanilla-room menu 619/620 frames identical to
-> round 3. **Pin → `5db25d15…` (patched).** Test ROM
-> `DWM-S96-pei-import-test-r4.gbc` (patched, md5 `023b7c65…`).
-> Intermediate files are always delivered for GUI testing (user rule). The attached .sav has its save-exists
-> flag ($A002) = 0, so PyBoy could not continue from it.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S96** (2026-09-25): rooms group A — P3.3c tileset slot map + vocabulary release, tileset switching / blank sheets, the Import Art tab (DWM2 PNG rips), per-subtile metatile palettes, bank space meters, "Make editable" fixed for all 98 vanilla rooms (extract_room bank/attr/arity fixes; `script_param_counts.py`, 102 opcodes); round 2/4 engine: FreeColor1Hook own colour 1 + MenuOpenFreePal; pin `5db25d15…` (patched, historical). USER-CONFIRMED 2026-09-25. Owning: EDITOR_DESIGN §5.1 S96, PROJECT_COMPILER §2.11 + §11, GATE_GENERATION §7.1, TOOLS_AND_DATA S96, KEY_LESSONS S96, DOC_AUDIT S96.
 - **S95** (2026-09-24): user feedback round on S94b — metatile VOCABULARY (never shrinks, protected slots), borrow tiles from any vanilla room (import across tilesets), on-open migration of pre-S94 projects, `screens[k].palette` + per-screen/state palette selector + copy-from-vanilla palettes, minimal GUI exits, Borrow tab; editor-only (pin `fc1caa98…` held, historical patched pin). Owning: EDITOR_DESIGN §5.1 as built S95, PROJECT_COMPILER §2.11 + §11, TOOLS_AND_DATA S95, KEY_LESSONS S95, ROADMAP P3.3b residual + P3.3c + P3.5a + P3.7.
 - **S94** (2026-09-20): P3.3b canvas v2 + the room model (vanilla/custom columns, clone-with-confirm, metatiles, walkability BR-subtile twins, 4×4 grid, per-(screen,state) attr+palette engine tables, compiler-owned ROM0 records) + S94b entrance redirects & per-state rooms; pin `fc1caa98…`. Owning: EDITOR_DESIGN §5.1 as built S94, PROJECT_COMPILER §2.11/§2.12/§11, ROOM_DATA_FORMAT (walkability, states), GATE_GENERATION §7, TOOLS_AND_DATA S94, KEY_LESSONS S94, ROADMAP P3.3b.
 - **S93** (2026-09-19): P3.3 room canvas v1 + the editor shell (live renderer render_project.py pixel-identical to render.py; byte-exact Document model; Session/QUndoStack; Rooms tab v1; test_canvas.py --rom acceptance). Byte-neutral. Owning: EDITOR_DESIGN §5.0/§5.1, PROJECT_COMPILER §11, TOOLS_AND_DATA S93, KEY_LESSONS S93.
@@ -381,9 +350,10 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Room-default music (vanilla + custom rooms) | ✅ working (S64, user-confirmed v6): `music.room_defaults`/`rooms[].music` → `CustomRoomBGMTable` (bank $71 entry 2) consulted first by the rewritten `LoadNewBGMIdIntoA`; survives save/reload by construction; sources = inbuilt ids, DWM2 catalog (all 31), MIDI conversions | SOUND_SYSTEM §8; PROJECT_COMPILER §2.9 |
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 referenced, 298 with sets (branch-following) |
 | NPC show/hide by step | ✅ working | step system; counters at $CD80+ (S65; transient); opcode $12 advances (v25) |
-| Flag-driven room states (persistent) | 🟢 built S97, NOT yet user-tested | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
-| NPC behaviours (movement types) | 🟢 decoded + authorable S97, NOT yet user-tested | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |
-| NPC talk text as boxes (2 lines, waits per box) + text boxes cream in free-colour rooms | 🟢 built S97 r2, NOT yet user-tested | `boxes` dialogue form (TEXT_SYSTEM "Text boxes"); bank $73 entries 14-18 + same-size calls in banks $00/$06/$56 |
+| Flag-driven room states (persistent) | ✅ built S97, USER-CONFIRMED 2026-09-26 | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
+| NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |
+| NPC talk text as boxes (2 lines, waits per box) + text boxes cream in free-colour rooms | ✅ built S97 r2, USER-CONFIRMED 2026-09-26 | `boxes` dialogue form (TEXT_SYSTEM "Text boxes"); bank $73 entries 14-18 + same-size calls in banks $00/$06/$56 |
+| Doors (two-way, auto return + measured arrival), one-way teleports, examine spots ($8x) + step-on triggers ($90), talk scripts that set/clear flags + YES/NO + move | 🟢 built S98; doors USER-CONFIRMED 2026-09-26 (user project, both ways, on-door arrival); talk / flags / spots in game NOT yet user-tested (PyBoy test_canvas v5) | `door` ids on exit/redirect rows, `talk` scripts; PROJECT_COMPILER §2.14; ROOM_DATA_FORMAT "Interact entries ≥$80" + "Arrival and edge rules" |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
 | Custom tile layouts + tileset selection | ✅ working | bank $64 + tile_layout_compiler.py; MapIDClampForPalette ROM0 $3FE8 |
 | Custom tile GRAPHICS (multi-tileset mashup) | ✅ working end-to-end (S6–S10): editor JSON → build_combined_tileset.py → bank $67/$17 patches. Remaining = editor multi-screen UI. | KEY_LESSONS S5–S8; TOOLS_AND_DATA |
@@ -404,7 +374,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
 | Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** **S90: arc adjudicated DONE FOR PURPOSE (user-conferred); residuals banked as non-blocking boxes ($DB42 setter, +8/+9 consumers, meta-actions menu drive, guard-validator polish).** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9; TOOLS_AND_DATA §2.10 + S89 rows; ROADMAP S89/S90 |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
-| Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (built, NOT yet user-tested): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** Next: group C = P3.7 doors (incl. door-arrival state), plus P3.3b residuals (exits editor proper = P3.7; bank-$64 spill; transparent NPC census crops). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
+| Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (USER-CONFIRMED 2026-09-26): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** **S98 (doors USER-CONFIRMED 2026-09-26; the rest built, NOT yet user-tested): rooms group C = P3.7 — named door objects linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, examine / step-on spots (the "$8F spawn" misnomer retired), talk scripts with YES/NO + set/clear flags + move, edge-vs-scroll guards, World tab v0; tileset tools (own copies, split move, purge).** Next: **P3.3e animated tiles** (signposted S98 at the user's request), then user's choice (P3.4 PyBoy preview deferred by the user; P3.6 dialogue, P3.7b gates, P3.8 storyboard open), plus P3.3b residuals (bank-$64 spill; transparent NPC census crops). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 

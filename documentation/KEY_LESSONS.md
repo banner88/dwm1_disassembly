@@ -186,6 +186,7 @@ This takes 30 seconds. Guessing takes hours.
 **Root cause**: The player enters Room $6B via `Exit_GreatTree_s8` in bank_00b.asm: `db $04, $05, $6B, $00, $00, $07, $06`. Bytes 5-6 of the exit data ($07, $06) are the spawn position in the DESTINATION room. The $8F marker in the destination room's NPC table and any teleport script coordinates are separate mechanisms — the exit data takes priority for normal room transitions.
 **Fix**: Change bytes 5-6 of `Exit_GreatTree_s8`'s Room $6B exit entry.
 **Rule**: To move the player spawn for Room $6B, edit the exit in `Exit_GreatTree_s8` (bank_00b.asm), not bank_060.asm. The source room's exit controls where the player appears.
+*S98 note:* the "$8F spawn marker" is not a spawn at all — it is an EXAMINE spot (A-press target; ROOM_DATA_FORMAT "Interact entries ≥$80"). Arrival is only ever the exit row's bytes 4-6.
 
 ### MapIDClampForPalette is hardcoded in ROM0, not table-driven
 **Symptom**: Changing `CustomSourceMapTable` in bank $60 from $16 to $04 had no effect — room still loaded MedalMan tileset.
@@ -325,6 +326,7 @@ This session's two biggest bugs (forced index 1 and animated tiles) were both in
 **Symptom**: Player could press A facing down from spawn position (7,6) and trigger NPC dialogue from the spawn entry.
 **Root cause**: Spawn entry `db $8F, $FF, $07, $06, $01` has script_id=$01. The interaction code iterates all NPC entries including spawn points. If the player's facing direction intersects the spawn position, it triggers the spawn entry's script.
 **Fix**: Changed spawn script_id from $01 to $00. Script 0 is the room entry script (no-op `dw $FFFF` for Room $6B).
+*S98 note:* measured — `$8F` IS an examine spot (any facing), and the lookup checks the player's own cell and the faced cell; that is why it answered. Script 0 still runs (the entry script) on A. The editor now authors these deliberately (`kind: examine`), and the legacy `spawn` kind warns.
 
 ### SRAM save audit confirmed — custom flags persist
 **Verified**: Event flag $0158 (RAM byte $D9C6, bit 0) set via NPC script opcode $03, persists through save and reload. Flag is within SRAM save range ($C8EA–$D9E9) and unused by the original game. Tested with a purpose-built ROM: set flag → save → close → reload → flag still set.
@@ -3614,3 +3616,41 @@ Rewriting one NPC's type byte in a live slot ($D7D2+32·i) and logging +$06/+$18
 **Symptom**: auto-wrapped NPC text cut words ("I spin i" / "place") and long text scrolled without stopping.
 **Root cause**: the wrap assumed 18 cells on every line, but "*:" takes 2 cells of box 1's first line; a line past its edge is NOT wrapped safely (the extra cells go to the next line and are overwritten — lost, and the line count goes off by one); consecutive `$EF $EE` lines scroll without waiting. Pages must be joined with `$FA $F7 $EF $EE` (6,029 vanilla uses).
 **Rule**: before writing an editor for a display format, dump what the engine actually draws for boundary cases (16/17/18/19 cells, 2/3 lines, box breaks) — one raw-bytes test text and a screenshot per stage. Then make the editor show exactly that, drawn with the ROM's own font.
+
+## S98 — doors, examine spots, and names that lie
+
+### A label that describes the value is not a description of the mechanism
+**Symptom**: every doc and tool called `$8F` a "spawn point" (and `$90` a "walk-on exit"); the pre-S98 validator even warned that rooms without a spawn broke teleports. A spot authored after an NPC never fired.
+**Root cause**: nothing ever reads a "spawn" at arrival — the exit row's bytes 4-6 place the player. `$80-$83/$8F` are EXAMINE spots (A press on the own/faced cell; low nibble = required facing, F = any) and `$90` is a STEP-ON trigger (walking onto the cell runs the script). Both bank-$0B scans STOP at the first NPC entry (bit 7 clear), so a spot listed after an NPC is dead — vanilla orders spots first in 157/160 lists, and `$1F` screen 0's trailing `$81` is dead in the original game.
+**Fix**: measured in PyBoy on an authored room (facing matrix, walk-on vs arrival, list order A/B); labels renamed in both trees (`RoomEntry4_TalkTargetLookup`, `RoomEntry5_StepTriggerLookup`, `InteractEntryAtPos`, …); the emitter partitions spots before NPCs; the legacy `spawn` kind warns.
+**Rule**: a name inherited from the first use of a value ("spawn" because the first room had one near the door) is a hypothesis. Before building an editor object on it, make one authored instance, vary its bytes and its list position, and watch what the engine does.
+
+### Measure arrival before auto-writing return exits
+A door editor must write the RETURN row for the author, so it has to know where the player appears. Measured S98: arrival on an exit cell never re-fires it (an edge door may land ON its partner); screen-byte bit 7 = +8 px (the vanilla "step out of the doorway" — Library → GreatTree sb `$88` (5,3) stands on (5,4)); an x=0/9 or y=0 exit bordering another screen of the room never fires (pushing scrolls first); a custom-room y=7 exit fires on walk-on and blocks scrolling down through that cell. The editor's default arrival = the vanilla partner's own bytes when one exists, else these rules. **Rule**: when a tool writes the other half of a pair automatically, derive its bytes from the engine's measured behaviour and prefer vanilla's own bytes for vanilla ends.
+
+### A talk that sets a flag is the whole "state switch" feature
+The S97 carry-over ("a door that arrives in a chosen state") needed no exit-path code: a talk / examine / step script sets a flag, and the S97 state rules pick the state when the room loads. The user confirmed rules are enough. **Rule**: before adding engine code for a special case, check whether two existing, measured primitives compose into it.
+
+### S98 r2 — Model editor objects the way the author thinks about them
+**Symptom** (user): "How do you add a new door?" then "this is bad design … OBVIOUSLY IT SHOULD NOT NEED COORDINATE ADJUSTMENT IN THE ROOM YOU PLACED IT". The r1 door was an abstract PAIR created in one dialog that asked for the other end's room/screen/x/y; a toolbar "Door tool" on top of it did not fix the model.
+**Fix**: a door is an OBJECT on a cell (placed like an NPC, named, unconnected at first) and a connection is a relation between two objects picked from a list. Same bytes as r1 (the demo ROM is identical); only the data model (`door` + `name` + `link`) and the UI changed.
+**Rule**: when an editor feature is "a thing in the world" (door, sign, NPC), make it an object you place first and configure second (select → add → double-click); relations between objects are chosen from a list of objects, never typed as coordinates. Ask "what would the author click?" before designing the dialog.
+
+### S98 r2 — A command that swallows errors turns every caller's `except` into dead code
+**Symptom** (user): "Why can I no longer change walkability by clicking walk button and click on a tile?" Two causes: the tool-bar **Walk** toggle was only an overlay (the flip lives on the W tool), and a flip the document REFUSES (no free slot for the twin subtile) did nothing at all.
+**Root cause**: S95 made `SnapshotCommand.redo` catch the op's exception (restore, `.error`, obsolete) so a failed edit leaves no trace; `_flip_walk` still wrapped `undo.push` in `except RuntimeError`, which could never fire.
+**Rule**: when a shared wrapper changes from raising to recording errors, grep every call site for try/except around it and switch them to the recorded error (`cmd.error`). And a button that looks like a mode (Walk) should BE the mode.
+
+### S98 r2 — Shared data between "copies" must be an explicit choice
+**Symptom** (user): "tileset has no free walkable slot for a twin" on a small vanilla-derived room ("Not custom. Seems a fairly small tileset") — then "when I make a custom room it should STOP sharing tilesets by default, no?"
+**Root cause** (likely — the user's project was not inspected): `copy_room` deep-copied the record, so the copy kept pointing at the SAME project tileset (and "A tileset in this project" shares on purpose); the slot budget (placed tiles, metatiles, vocabulary) is per sheet, so imports in one room silently consumed another's free slots. Fresh clones of the servant room have 34 free walkable slots — the tileset itself was never the problem.
+**Rule**: anything the author perceives as "my room" must not silently alias another room's mutable data; sharing is an explicit choice ("A tileset in this project") and the UI shows it ("SHARED with …") with a one-click way out.
+
+### S98 r2 — Redesigning a flow must carry its guards across
+**Symptom** (user): "I walk onto door but nothing happens." The door sat at (9,3) on screen 0's right edge with screen 1 beyond — the measured never-fires case. The S98 r1 dialog refused such cells; the r2 place-first redesign (+ Door, no dialog) dropped the check, so only a build-log warning remained.
+**Rule**: when a workflow is rebuilt, list every validation the old path enforced (here: edge-scroll, occupied cell) and re-attach each to the new entry points (add, drag) — and make impossible states visible on the canvas (red D!), not only in the build log.
+
+### S98 r3 — Measure the thing the user sees, not a proxy for it
+**Symptom** (user, twice): "I still arrive half a tile below the door." The r2 PyBoy check asserted the logical CELL ($FF97/$FF98) after arrival — identical whether or not the player is drawn half a cell off (screen-byte bit 7 = +8 px).
+**Fix**: assert the PIXEL position ($FF92-96: every standing position has x, y ≡ 8 mod 16). The same probe showed vanilla's own Library→GreatTree return ($88) lands at y=320 — half a cell below the door — so "copy vanilla's bytes" was not what the user wanted either.
+**Rule**: when the complaint is visual, the emulator check must read the quantity that is drawn (pixels / OAM), not a derived logical value.

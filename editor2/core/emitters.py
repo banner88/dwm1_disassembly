@@ -344,7 +344,21 @@ def _room_data(prj, r):
         for v, st in enumerate(states):
             sfx = f"_V{v}" if multi else ""
             out.append(f"{tag}_S{i}{sfx}_NPCs:")
-            for n in st.get('npcs', []):
+            # S98 (PyBoy-measured + bank $0B code): the examine-spot scan
+            # (RoomEntry4 TalkScanExamineSpots) and the step-trigger scan
+            # (SearchStepTriggers) both STOP at the first entry with bit 7
+            # clear (an NPC) — a spot listed after an NPC never fires. Vanilla
+            # lists spots first (157 of 160 lists; $1F screen 0's trailing
+            # $81 is dead). Emit spots first, NPCs after, each in authored
+            # order; the NPC parser (Entry 7) skips spots anywhere, so NPC
+            # slot numbers do not change.
+            def _is_spot(n):
+                if n['kind'] in ('spawn', 'examine', 'step'):
+                    return True
+                return n['kind'] == 'raw' and F.val(n['bytes'][0]) >= 0x80
+            npcs_in = st.get('npcs', [])
+            for n in [n for n in npcs_in if _is_spot(n)] + \
+                     [n for n in npcs_in if not _is_spot(n)]:
                 if n['kind'] == 'raw':
                     # S92 clone fidelity: verbatim 5-byte interact entry
                     # ($90 walk-on markers, $82 markers, $8F spawns with
@@ -357,6 +371,19 @@ def _room_data(prj, r):
                                           F.val(n.get('script', 0)))
                     out.append(F.db_line(b, comment=f"spawn ({n['x']},{n['y']})"
                                + (f" — {n['comment']}" if n.get('comment') else "")))
+                elif n['kind'] in ('examine', 'step'):
+                    # S98: invisible interact entries (formats.examine_entry /
+                    # step_trigger_entry — ROOM_DATA_FORMAT "Interact entries")
+                    sid = n.get('script')
+                    sidx = (sid if isinstance(sid, int) else prj.script_index(r, sid))
+                    if n['kind'] == 'examine':
+                        fac = n.get('facing', 'any')
+                        b = F.examine_entry(n['x'], n['y'], sidx, fac)
+                        what = f"examine spot ({n['x']},{n['y']}) facing {fac}"
+                    else:
+                        b = F.step_trigger_entry(n['x'], n['y'], sidx)
+                        what = f"step-on trigger ({n['x']},{n['y']})"
+                    out.append(F.db_line(b, comment=f"{what} script {sid}"))
                 else:
                     sid = n['script']
                     sidx = (0xFF if sid in (None, 'none')
@@ -378,8 +405,9 @@ def _room_data(prj, r):
                                  F.val(e.get('gate_flag', 0)),
                                  F.val(e['screen_byte']),
                                  e['spawn_x'], e['spawn_y'])
+                what = (f"door '{e.get('name') or e['door']}'" if e.get('door') else 'exit')
                 out.append(F.db_line(b, comment=e.get('comment',
-                           f"exit ({e['x']},{e['y']}) -> {e['dest']}")))
+                           f"{what} ({e['x']},{e['y']}) -> {e['dest']}")))
             out.append("    db $FF")
             out.append("")
     return out

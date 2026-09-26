@@ -41,7 +41,6 @@ STUB_TABS = [
     ('Encounters', 'P3.13a', 'Cross-room pool view; custom pools; flag-keyed variants.'),
     ('Music', 'P3.13b', 'Song library, MIDI import, room assignment matrix, audition.'),
     ('Progression && Flags', 'P3.14', 'Flag manager, quest forms, triggers-as-sentences.'),
-    ('World', 'P3.7', 'Room / warp graph; the M2R dresser repoint (P3.16).'),
     ('Balance', 'P3.15', 'TTK sweeps, what-if deltas, obedience curves (validated only).'),
 ]
 
@@ -161,9 +160,26 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(_stub('Rooms', 'P3.3', 'Open a project (File → Open) to edit rooms.'),
                              'Rooms')
         for title, box, blurb in STUB_TABS:
+            if title == 'Balance':
+                # S98 (P3.7): the World graph sits before Balance, as in §5.0
+                if self.session:
+                    from editor2.app.world_tab import WorldTab
+                    self.world_tab = WorldTab(self.session)
+                    self.world_tab.openRequested.connect(self._open_world_node)
+                    self.tabs.addTab(self.world_tab, 'World')
+                else:
+                    self.tabs.addTab(_stub('World', 'P3.7', 'Room / warp graph (open a project).'),
+                                     'World')
             self.tabs.addTab(_stub(title, box, blurb), title)
         self.build_tab = BuildPlayTab(self)
         self.tabs.addTab(self.build_tab, 'Build && Play')
+
+    def _open_world_node(self, key):
+        """World graph double-click -> the room in the Rooms tab (S98)."""
+        if self.rooms_tab is None:
+            return
+        self.tabs.setCurrentWidget(self.rooms_tab)
+        self.rooms_tab.open_node(key)
 
     def _build_menu(self):
         style = self.style()

@@ -31,12 +31,11 @@ Entry size is ~7 bytes, tightly packed. **Only overwrite bytes 0, 3, 4** when re
 ## Exit Data Format
 
 Exit data table (from step entries) contains 5-byte entries:
-- `$90 FF X Y dest_map_type` — walk-on coordinate triggers
-- `$8F ...` — arrival/spawn points (skipped by exit checker)
-- `$82/$80 ...` — skipped
-- Non-bit-7 byte or `$FF` — terminates search
+- `$90 FF X Y script` — STEP-ON trigger: walking onto (X,Y) runs room script `script` (S98, PyBoy-measured)
+- `$80-$83 / $8F FF X Y script` — EXAMINE spot: an A press on the own/faced cell runs `script`; low nibble = required facing, F = any (S98; the old "arrival/spawn point" name was wrong — DOC_AUDIT S98)
+- Non-bit-7 byte (an NPC entry) or `$FF` — terminates the search (spots after an NPC are dead)
 
-The `$90` exit byte 4 is the destination map_type directly (not a room_id).
+Byte 4 is a room SCRIPT index, not a map_type (S98 correction; ROOM_DATA_FORMAT "Interact entries ≥$80"). Room-to-room movement is the 7-byte exit block, not these entries.
 
 ## Bidirectional Routing Recipe
 
